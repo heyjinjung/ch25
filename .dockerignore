@@ -1,0 +1,98 @@
+# Git 관련 파일 제외
+.git/
+.gitignore
+.gitattributes
+
+# 환경 변수 파일
+.env
+.env.local
+.env.production
+.env.staging
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+dist/
+build/
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.npm
+.eslintcache
+
+# 빌드 결과물
+dist/
+build/
+*.min.js
+*.min.css
+
+# IDE 설정
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# 로그 파일
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# 데이터베이스
+*.db
+*.sqlite
+*.sqlite3
+
+# 백업 파일
+*.bak
+*.backup
+*.sql.gz
+
+# OS 관련
+Thumbs.db
+.DS_Store
+
+# 임시 파일
+*.tmp
+*.temp
+.cache/
+
+# SSL 인증서 (실제 인증서는 포함하지 않음)
+nginx/ssl/*.pem
+nginx/ssl/*.key
+*.pem
+*.key
+*.crt
+
+# Alembic
+alembic/versions/*.pyc
+
+# 테스트 커버리지
+.coverage
+.coverage.*
+coverage/
+*.cover
+.hypothesis/
+
+# Documentation
+site/
