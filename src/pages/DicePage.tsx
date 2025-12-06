@@ -9,13 +9,16 @@ const DicePage: React.FC = () => {
   const [result, setResult] = useState<"WIN" | "LOSE" | "DRAW" | null>(null);
   const [userDice, setUserDice] = useState<number[]>([]);
   const [dealerDice, setDealerDice] = useState<number[]>([]);
+  const [infoMessage, setInfoMessage] = useState<string | null>(null);
 
   const handlePlay = async () => {
     try {
+      setInfoMessage(null);
       const response = await playMutation.mutateAsync();
       setResult(response.result);
       setUserDice(response.user_dice);
       setDealerDice(response.dealer_dice);
+      setInfoMessage(response.message ?? null);
     } catch (e) {
       console.error("Dice play failed", e);
     }
@@ -58,6 +61,7 @@ const DicePage: React.FC = () => {
           {playMutation.isPending ? "굴리는 중..." : "주사위 던지기"}
         </button>
         {result && <p className="text-sm text-emerald-100">결과: {result}</p>}
+        {infoMessage && <p className="text-xs text-emerald-200">{infoMessage}</p>}
         <p className="text-xs text-slate-400">TODO: API 에러 코드에 맞춘 메시지 처리 추가</p>
       </div>
     </section>

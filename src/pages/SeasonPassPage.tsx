@@ -20,10 +20,19 @@ const SeasonPassPage: React.FC = () => {
     );
   }
 
-  if (isError || !data) {
+  if (isError) {
     return (
       <section className="rounded-xl border border-red-800/40 bg-red-950/60 p-6 text-center text-red-100 shadow-lg shadow-red-900/30">
         시즌 패스 정보를 가져오지 못했습니다.
+      </section>
+    );
+  }
+
+  if (!data) {
+    return (
+      <section className="space-y-3 rounded-xl border border-emerald-800/40 bg-slate-900/60 p-6 text-center text-slate-200 shadow-lg shadow-emerald-900/30">
+        <p className="text-lg font-semibold text-emerald-100">현재 진행 중인 시즌 패스가 없습니다.</p>
+        <p className="text-sm text-slate-300">관리자에서 시즌을 활성화하면 이 화면에서 진행도를 확인할 수 있습니다.</p>
       </section>
     );
   }
