@@ -27,27 +27,27 @@
   - `NO_ACTIVE_SEASON`: KST 오늘 기준 활성 시즌이 없을 때.
   - `NO_ACTIVE_SEASON_CONFLICT`: start/end 범위를 충족하는 시즌이 2개 이상인 데이터 충돌.
   - `INVALID_ROULETTE_CONFIG` / `INVALID_LOTTERY_CONFIG`: 설정 검증(6칸/가중치 합/재고 등) 실패.
-  - `DAILY_LIMIT_REACHED`: 일일 제한(max_daily_spins/plays/tickets) 초과. (현재 운영 설정: max_daily*=0 → 무제한, 오류 미발생)
+  - `DAILY_LIMIT_REACHED`: 일일 제한(max_daily_spins/plays/tickets) 초과. (현재 운영 설정: max_daily*=0 → 무제한; remaining 값이 0이어도 제한 없음 의미)
   - `LOCK_NOT_ACQUIRED`: DB 락 타임아웃/데드락으로 재시도 필요.
   - `UNAUTHORIZED`/`FORBIDDEN`: 인증 실패/권한 없음.
+  - `REWARD_ALREADY_CLAIMED` / `AUTO_CLAIM_LEVEL` / `LEVEL_NOT_REACHED`: 시즌패스 수동 클레임 관련 오류.
 
 
 ## 5. 공통 API
 ### 4-1. GET /api/today-feature
-- 설명: 오늘 활성화된 Feature 정보를 반환한다.
+- 설명: 오늘 활성화된 Feature 정보를 반환한다. 현재 페이로드는 최소 정보(`feature_type`, `user_id`)만 제공하며 FE가 라우팅을 결정한다.
 - 인증: ✅ 필요 (Authorization: Bearer JWT)
 - Method/Path: GET `/api/today-feature`
 - Params/Body: 없음
 - 성공 200 예시:
 ```json
 {
-  "date": "2025-12-24",
   "feature_type": "ROULETTE",
-  "title": "크리스마스 룰렛 Day",
-  "page_path": "/roulette"
+  "user_id": 1
 }
 ```
 - 주요 에러: 401(인증 실패), 404(`NO_FEATURE_TODAY`), 409(`INVALID_FEATURE_SCHEDULE`)
+- 비고: 스케줄이 없으면 `NO_FEATURE_TODAY`, 중복 스케줄이면 `INVALID_FEATURE_SCHEDULE`를 반환한다.
 
 ### 4-2. GET /api/feature
 - 설명: 특정 날짜의 Feature 정보를 조회한다(관리/디버깅용).
@@ -93,6 +93,8 @@
 }
 ```
 - 주요 에러: 400(이미 도장 찍음), 401(인증 실패), 404(`NO_ACTIVE_SEASON`), 409(`NO_ACTIVE_SEASON_CONFLICT`)
+- 비고: 하루 1회 스탬프 제한, XP=base_xp_per_stamp+xp_bonus, 다중 레벨업 시 auto_claim 레벨 보상 즉시 지급.
+  - remaining=0은 max_daily=0 sentinel로 "무제한" 의미.
 
 ### 5-3. POST /api/season-pass/claim
 - 설명: 특정 레벨의 보상을 수동 수령한다.
@@ -109,6 +111,8 @@
 }
 ```
 - 주요 에러: 400(이미 수령), 401(인증 실패), 404(해당 레벨 보상 없음)
+- 비고: auto_claim 레벨은 수동 클레임 불가; 진행도(current_level) 미달 시 400 반환.
+  - 이미 수령 시 `REWARD_ALREADY_CLAIMED`, auto_claim 레벨 요청 시 `AUTO_CLAIM_LEVEL`.
 
 ## 7. 게임별 API (룰렛/주사위/복권/랭킹)
 각 게임 엔드포인트 공통 규칙: 오늘 `feature_type` 검증 → 유저 조건 체크 → 결과/보상 계산 → 시즌패스 `add_stamp` 연동(필요 시) → 로그 저장.
@@ -121,13 +125,14 @@
 ```json
 {
   "playable": true,
-  "remaining": 1,
+  "remaining": 0,
   "slots": [
     {"label": "POINT_100", "weight": 40},
     {"label": "POINT_1000", "weight": 5}
   ]
 }
 ```
+- 비고: 현재 max_daily_spins=0이므로 remaining=0은 "무제한"을 의미한다.
 - 주요 에러: 400(`DAILY_LIMIT_REACHED`, `INVALID_ROULETTE_CONFIG`), 403(`NO_FEATURE_TODAY`), 401(`UNAUTHORIZED`)
 
 ### 6-2. POST /api/roulette/play (예시)
@@ -162,6 +167,7 @@
   "stamp_added": false
 }
 ```
+- 비고: max_daily_plays=0이라 remaining 표시는 0이어도 무제한으로 간주한다.
 - 주요 에러: 400(`DAILY_LIMIT_REACHED`, `INVALID_FEATURE_SCHEDULE`), 403(`NO_FEATURE_TODAY`), 401(`UNAUTHORIZED`)
 
 ### 6-4. POST /api/lottery/play (예시)
@@ -180,6 +186,7 @@
   "stamp_added": true
 }
 ```
+  - 비고: max_daily_tickets=0이라 remaining 표시는 0이어도 무제한으로 간주한다.
 - 주요 에러: 400(`DAILY_LIMIT_REACHED`, `INVALID_LOTTERY_CONFIG`), 403(`NO_FEATURE_TODAY`), 401(`UNAUTHORIZED`)
 
 ### 6-5. GET /api/ranking/today (예시)

@@ -6,6 +6,13 @@
 - 홈/레이아웃 헤더를 "지민코드 크리스마스 시즌 패스" 브랜딩과 당일 날짜 표기로 정비, 카드 리스트는 게이트 상태에 맞춰 활성/비활성 표시
 - 백엔드 룰렛/주사위/복권의 일일 1회 제한을 제거하고 상태 응답에 무제한(sentinal) 남은 횟수를 반환하도록 수정
 
+## 2025-12-06 (backend validation/tests refresh)
+- Alembic 초기 리비전(20241206_0001) 로컬 적용 및 검증; stage/prod는 DATABASE_URL 수신 후 실행 예정
+- 룰렛/복권/주사위 서비스 교차 검증(6칸·가중치합, 활성 가중치/재고, 주사위 값 범위)을 테스트로 추가
+- 시즌패스 멀티 레벨업·수동 클레임·활성 시즌 없음 케이스를 통합 테스트에 반영
+- 관리자 랭킹 업로드 성공/중복 랭크 충돌 테스트 추가
+- API/문서에 max_daily=0 시 remaining=0을 "무제한"으로 표기하는 현행 정책 명시
+
 ## 2025-12-06
 - FastAPI 커스텀 예외 핸들러 등록 방식을 예외별 `add_exception_handler`로 수정해 루트 500 오류 해소
 - 모든 Pydantic 스키마의 `orm_mode`/`allow_population_by_field_name` 설정을 V2 키(`from_attributes`, `validate_by_name`)로 교체하여 실행 시 경고 제거

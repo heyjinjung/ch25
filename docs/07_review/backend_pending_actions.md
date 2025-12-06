@@ -2,19 +2,17 @@
 - Document type: Action items
 - Date: 2025-12-06
 
-## Must-do
-- Update API docs to state daily limits are unlimited (max_daily=0) for roulette/dice/lottery until limits return.
-- Auth/token: issuance endpoint added (`/api/auth/token`), JWT decoding dependency added; ensure clients send Bearer token; update CORS accordingly.
-- Season pass FKs wired (`progress_id` on stamp/reward logs) and unit tests now passing; ensure migration/docs reflect the schema.
+## Must-do (open items only)
+- Stage/Prod Alembic: provide `DATABASE_URL` secrets, run `alembic upgrade head`, and verify `SELECT version_num FROM alembic_version;` returns `20241206_0001`.
+- Season pass hook: decide whether to skip stamp when `feature_type=NONE` (currently skips only on exceptions).
 
 ## Concurrency
-- Lottery stock: FOR UPDATE applied where supported; lock timeout now returns LOCK_NOT_ACQUIRED; consider retry policy for prod DB.
-- Roulette spin: FOR UPDATE guard added on segments; validate behavior on MySQL/Postgres under load.
-- Event logging: currently autocommit per play; if wrapped in outer txn, ensure log writes don’t conflict.
+- Lottery stock: FOR UPDATE + lock failure surfaced; optional retry for prod TBD.
+- Roulette spin: FOR UPDATE guard present; no further action unless load test shows issues.
+- Event logging: autocommit per play; acceptable unless outer txn introduced.
 
 ## Season Pass
-- Verify service flow vs doc: one stamp per day, XP calc, multi-level-up rewards, manual claim path; base tests now passing, expand coverage.
-- Decide if stamp hook should skip when feature_type=NONE (currently skips only on exceptions).
+- Flow validated against docs via tests (stamp/day enforcement, multi-level, manual claim). Remaining decision: stamp hook skip on `feature_type=NONE` (see Must-do).
 
 ## Testing
-- Add unit/integration tests for roulette/dice/lottery reward delivery, event logging, season-pass stamp hook, and schedule gating errors.
+- Integration tests added for roulette/dice/lottery reward delivery + event logging; season-pass stamp reuse/manual claim/no-active-season; admin ranking upload success/conflict.

@@ -35,7 +35,7 @@
   - `/admin/lottery` : 상품/확률/재고 설정.
   - `/admin/ranking` : 랭킹 수기 입력.
 - 내비게이션 규칙:
-  - `/` 진입 시 useTodayFeature → feature_type에 맞춰 navigate(`/roulette` 등).
+  - `/` 진입 시 useTodayFeature → feature_type에 맞춰 navigate(`/roulette` 등). today-feature 응답은 `{feature_type, user_id}`이며 max_daily=0 구간에서는 remaining=0이 "unlimited"로 해석되므로 UX copy에서 무제한 표기로 변환.
   - 인증 필요한 Admin 라우트는 PrivateRoute/loader로 토큰 검증 후 접근.
   - 잘못된 feature 호출 시 에러 페이지 혹은 홈으로 복귀.
 

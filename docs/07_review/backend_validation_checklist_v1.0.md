@@ -33,6 +33,7 @@
 - ✅ roulette_segment UNIQUE(config_id, slot_index) + slot_index 0~5 고정 명시. (docs/04_db/04_db_core_tables_v1.0.md)
 - ✅ ranking_daily UNIQUE(date, rank) 정의. (docs/04_db/04_db_core_tables_v1.0.md)
 - ✅ FK 관계는 각 테이블 설명에 season_id/user_id/config_id/prize_id 등을 통해 명시되어 모순 없음.
+- ⚠️ DAILY LIMIT: 현재 max_daily*=0을 무제한으로 해석하며 remaining=0 표기. API/프론트 문구가 이를 일관되게 안내하는지 확인 필요.
 
 ### 4-3. Season Pass 로직
 - ✅ add_stamp 단계(중복 체크 → XP 계산 → 레벨업 → 보상 지급 → 로그)가 순서대로 기술됨. (docs/05_modules/05_module_season_pass_service_v1.0.md)

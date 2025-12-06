@@ -12,6 +12,10 @@
 ## 2. 범위 (Scope)
 - 가용성 목표, 긴급 중단 절차, 스케줄/캐시 오류 대응, 로깅/모니터링 포인트를 다룬다.
 - 인프라 프로비저닝, CI/CD 스크립트 세부 내용은 제외한다.
+- 선행 작업: 배포 전 DB에 `alembic upgrade head`를 적용해 스키마를 최신화해야 한다. 절차:
+  1) `export DATABASE_URL=...` 또는 환경 변수 설정 (운영 DB 전용).
+  2) 가상환경 활성화 후 `alembic upgrade head` 실행.
+  3) `SELECT version_num FROM alembic_version;`가 `20241206_0001`인지 확인.
 
 ## 3. 용어 정의 (Definitions)
 - Feature OFF: `feature_config.is_enabled=0` 으로 전체 Feature를 비활성화하는 운영 스위치.

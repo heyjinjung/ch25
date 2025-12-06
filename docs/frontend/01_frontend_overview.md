@@ -18,7 +18,7 @@
 - User App: /, /roulette, /dice, /lottery, /ranking, /season-pass 등 유저 전용 SPA.
 - Admin App: /admin/* 라우트에서 실행되는 관리자용 SPA.
 - Feature Type: ROULETTE, DICE, LOTTERY, RANKING, SEASON_PASS.
-- Today Feature: /api/today-feature로 확인되는 금일 활성 이벤트.
+- Today Feature: /api/today-feature로 확인되는 금일 활성 이벤트 (payload: {"feature_type", "user_id"}). remaining=0은 백엔드에서 무제한으로 해석되므로 UI 표기 시 "unlimited" 메시지로 변환한다.
 
 ## 4. 본문 (개요)
 - 프론트 스택: React 18 + TypeScript 5 + Vite 6, React Router, Tailwind 3, TanStack Query v5, Axios, react-hook-form + Zod.

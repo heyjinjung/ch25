@@ -12,6 +12,7 @@
 ## 2. 범위 (Scope)
 - 코드 경로: `backend/app/services/ranking_service.py`와 랭킹 전용 라우터/스키마/DB 테이블 책임을 다룬다.
 - 랭킹 데이터는 관리자가 수기로 `ranking_daily`를 채우거나 업로드하며, 본 서비스는 조회만 담당한다.
+- Admin 업로드 경로: `/admin/ranking` 화면/엔드포인트를 통해 ranking_daily CSV/수기 입력을 반영하며, 업로드 성공 후 `/api/ranking/today`가 즉시 갱신된다.
 
 ## 3. 용어 정의 (Definitions)
 - Ranking Score: `ranking_daily.score`에 저장되는 당일 점수(예: 이용액, 충전액, 미션 점수 등).
@@ -46,6 +47,7 @@ def get_today_ranking(self, db, now, user_id: int, top_n: int = 10) -> dict:
 ## 7. API 연동
 - GET `/api/ranking/today`: get_today_ranking 결과를 그대로 반환.
 - 다른 게임과 달리 play/status가 없으며 조회만 제공한다.
+- Admin 업로드 후 회귀 테스트: 업로드 → `/api/ranking/today` 호출 시 업데이트된 top/me가 반영되는지 확인한다.
 
 ## 8. 예시 응답 (today)
 ```json

@@ -16,27 +16,28 @@ Evaluate how well current database schema and validation support consistent fron
 
 ## 3. Status Snapshot
 - Schema coverage: OK (tables/models aligned with docs after recent updates)
-- Constraints/indexes: Partial (per-row FK/indexes added; cross-row sum checks still needed in services)
-- Migrations: Risk (initial Alembic revision present but not yet applied; uses create_all)
-- API sync: Partial (daily-limit fields now default 0/unlimited; API contracts must reflect this)
+- Constraints/indexes: Per-row FKs/indexes present; cross-row rules enforced in services with tests (roulette 6 slots & weight sum > 0, lottery active weight > 0/stock, dice roll range 1-6).
+- Migrations: Pending for stage/prod (local sqlite run completed and verified `20241206_0001`; real DBs still need `alembic upgrade head`).
+- API sync: Improved (daily-limit fields default 0/unlimited; today-feature payload `{feature_type, user_id}` with remaining=0 = unlimited; docs updated; error catalog sync still open).
+- Tests: Green (pytest suite including new integration tests for roulette/dice/lottery play, season-pass edge cases, admin ranking upload) on in-memory SQLite using StaticPool create_all.
+- Front/Docs sync: Unlimited-limit behavior and today-feature payload documented; error catalog alignment pending.
 
 ## 4. Findings (by area)
 - Core tables: user, feature_schedule, feature_config now match doc fields; config_json now JSON. user_event_log added with indexes.
-- Season pass: Constraints (unique, FK) match docs; auto_claim is boolean; CASCADE FKs present (docs were silent) and acceptable. Service logic still must enforce stamp/day and level-up per docs.
-- Roulette: FKs and user+created_at index added; slot_index range and non-negative weight checks added. No DB-level enforcement of "exactly 6 slots" or weight sum > 0; must be validated in services/admin.
-- Dice: FKs and index added. No DB-level validation for dice value ranges (1-6); service must enforce.
-- Lottery: FKs, index, and non-negative checks added. No DB-level weight-sum > 0 or active-stock consistency; service/admin must enforce.
+- Season pass: Constraints (unique, FK) match docs; auto_claim is boolean; CASCADE FKs present. stamp/reward logs now carry progress_id FK; service logic enforces one-stamp-per-day and reward logs in tests, but broader doc-alignment still needed.
+- Roulette: FKs and user+created_at index added; slot_index range and non-negative weight checks added. "Exactly 6 slots" and weight sum > 0 enforced in service with tests.
+- Dice: FKs and index added. Dice value range enforced in service/tests; unlimited when max_daily_plays=0 documented.
+- Lottery: FKs, index, and non-negative checks added. Active prize weight sum > 0 and stock coherence enforced in service/tests; unlimited when max_daily_tickets=0 documented.
 - Ranking: FK to user added with SET NULL; matches doc intent.
 - Feature schedule: season_id and is_locked removed to match spec; ensure any code paths still compiling after field removal.
-- Migrations: Alembic env cleaned; version 20241206_0001_initial_schema creates tables via Base.metadata. Database remains unapplied until `alembic upgrade head` runs with a valid DATABASE_URL.
-- API contract drift: daily limit columns remain in schema but default to 0 (unlimited). Frontend/backend docs and responses should clarify this new behavior or reintroduce limits if required.
+- Migrations: Alembic env cleaned; version 20241206_0001_initial_schema creates tables via Base.metadata. Local sqlite applied; stage/prod pending `alembic upgrade head` with provided DATABASE_URL. Tests still use create_all + StaticPool.
+- API contract drift: daily limit columns remain in schema but default to 0 (unlimited) and are documented; `/api/today-feature` returns `{feature_type: str, user_id: int}`. Error catalog sync pending.
 
 ## 5. Required Actions
-1) Run migrations: set DATABASE_URL and execute `alembic upgrade head` (dev/stage/prod) before API use.
-2) Service-level validation: enforce roulette 6 slots and weight sum > 0; lottery weight sum > 0 and active-stock coherence; dice roll range 1-6; today-feature gating per schedule.
-3) Code cleanup: remove or refactor any usages of feature_schedule.season_id / is_locked that were dropped.
-4) Contract alignment: update API docs/responses to note daily limit = unlimited (0) unless product wants limits back; if limits needed, set defaults in config rows and validate.
-5) Admin/QA checklists: add pre-flight validations for roulette/lottery configs (slot count, weight sum, active prizes) and season-pass level monotonicity before enabling features.
+1) Run migrations: provide stage/prod DATABASE_URL secrets and execute `alembic upgrade head`; verify `alembic_version` = `20241206_0001`.
+2) Error catalog sync: document unlimited-limit semantics, lock failures, config errors, and today-feature payload.
+3) Code/flow check: confirm no remaining references to removed feature_schedule.season_id / is_locked; decide whether season-pass stamp hook should skip when feature_type=NONE.
+4) Admin/QA checklists: keep pre-flight validations (roulette slot count/weight sum; lottery active prize weight sum; season-pass level monotonicity) and ensure FE shows remaining=0 as "unlimited" while sentinel is active.
 
 ## 6. Verification Steps (per deploy)
 - `alembic upgrade head` succeeds on target DB.
@@ -46,5 +47,6 @@ Evaluate how well current database schema and validation support consistent fron
 - API smoke: today-feature/status matches feature_schedule; roulette/dice/lottery play endpoints write logs with FKs intact; season-pass stamp adds log and progress rows.
 
 ## 7. Updates (2025-12-06)
-- Admin validation tightened: roulette now enforces exactly 6 unique slots (0-5) with non-negative weights and total weight > 0; lottery requires non-negative weight/stock and at least one active prize with positive weight; dice allows 0 to represent unlimited daily plays.
-- Runtime guards: roulette and lottery services reject negative weights; feature_schedule admin no longer touches removed `season_id` field.
+- season_pass_stamp_log / reward_log now link to season_pass_progress via progress_id; pytest suite green with added integration tests (roulette/dice/lottery play, season-pass edge cases, admin ranking upload).
+- Alembic migration applied locally (sqlite) and verified `20241206_0001`; stage/prod still pending.
+- Service-level validations for roulette/lottery/dice cross-row rules implemented and covered by tests; feature_schedule admin no longer touches removed `season_id` field.
