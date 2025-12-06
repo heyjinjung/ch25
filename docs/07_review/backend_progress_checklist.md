@@ -5,10 +5,10 @@
 - Audience: Backend/QA/PM
 
 ## DB & Migrations
-- [x] `alembic upgrade head` executed on target DB (check `alembic_version` = 20241206_0001).
+- [ ] `alembic upgrade head` executed on target DB (tests use create_all; run upgrade and verify `alembic_version` = 20241206_0001).
 - [x] Tables/models aligned to docs/04_db (user/feature/season_pass/roulette/dice/lottery/ranking/user_event_log).
 - [x] FKs and key indexes present (logs indexed on user_id+created_at; configs linked).
-- [x] Admin/runtime validations cover cross-row rules: roulette 6 slots & weight sum >0; lottery active prize weight sum >0; dice negative weight/stock blocked; dice roll range enforced in service.
+- [ ] Admin/runtime validations cover cross-row rules: roulette 6 slots & weight sum >0; lottery active prize weight sum >0; dice negative weight/stock blocked; dice roll range enforced in service.
 
 ## Feature Gating / Schedule
 - [x] Today-feature gating enforced via `FeatureService` with KST normalization.
@@ -21,8 +21,8 @@
 - Ranking: [x] read-only snapshot; [ ] admin upload path doc/tests.
 
 ## Season Pass
-- [x] Tables and uniques in place; auto_claim boolean.
-- [ ] Service logic: confirm stamp/day enforcement, level-up chain, reward_log writes, XP calc per docs.
+- [x] Tables and uniques in place; auto_claim boolean; progress_id FKs wired on stamp/reward logs.
+- [ ] Service logic: confirm stamp/day enforcement, level-up chain, reward_log writes, XP calc per docs (base tests passing; expand scenarios).
 - [ ] API docs for season-pass status/stamp/reward flows.
 
 ## Auth & Security
@@ -37,4 +37,4 @@
 ## Ops & Docs
 - [x] Local/Deployment guides mention Alembic upgrade.
 - [ ] Error code catalog synced with current behaviors (unlimited limits, lock failures, config errors).
-- [ ] Tests: add/repair unit/integration for services, especially roulette/dice/lottery/season-pass.
+- [ ] Tests: add/repair unit/integration for services, especially roulette/dice/lottery/season-pass (baseline unit tests now green).

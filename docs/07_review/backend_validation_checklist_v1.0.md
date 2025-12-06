@@ -29,6 +29,7 @@
 - ✅ season_pass_progress UNIQUE(user_id, season_id) 정의. (docs/04_db/04_db_core_tables_v1.0.md)
 - ✅ season_pass_stamp_log UNIQUE(user_id, season_id, date) 정의. (docs/04_db/04_db_core_tables_v1.0.md)
 - ✅ season_pass_reward_log UNIQUE(user_id, season_id, level) 정의. (docs/04_db/04_db_core_tables_v1.0.md)
+- ✅ season_pass_stamp_log / season_pass_reward_log 이 progress_id FK로 season_pass_progress와 연결됨(최근 코드 반영, 문서 일치 확인 필요).
 - ✅ roulette_segment UNIQUE(config_id, slot_index) + slot_index 0~5 고정 명시. (docs/04_db/04_db_core_tables_v1.0.md)
 - ✅ ranking_daily UNIQUE(date, rank) 정의. (docs/04_db/04_db_core_tables_v1.0.md)
 - ✅ FK 관계는 각 테이블 설명에 season_id/user_id/config_id/prize_id 등을 통해 명시되어 모순 없음.

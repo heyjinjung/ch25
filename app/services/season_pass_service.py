@@ -163,6 +163,7 @@ class SeasonPassService:
                 reward_log = SeasonPassRewardLog(
                     user_id=user_id,
                     season_id=season.id,
+                    progress_id=progress.id,
                     level=level.level,
                     reward_type=level.reward_type,
                     reward_amount=level.reward_amount,
@@ -186,6 +187,7 @@ class SeasonPassService:
         stamp_log = SeasonPassStampLog(
             user_id=user_id,
             season_id=season.id,
+            progress_id=progress.id,
             date=today,
             stamp_count=1,
             source_feature_type=source_feature_type,
@@ -244,6 +246,7 @@ class SeasonPassService:
             reward_type=level_row.reward_type,
             reward_amount=level_row.reward_amount,
             claimed_at=datetime.utcnow(),
+            progress_id=progress.id,
         )
         db.add(reward_log)
         db.commit()

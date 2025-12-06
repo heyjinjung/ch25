@@ -1,6 +1,7 @@
 """Lottery service implementing status and play flows."""
 from datetime import date, datetime
 import random
+import time
 
 from sqlalchemy import func, select
 from sqlalchemy.exc import DBAPIError
@@ -75,7 +76,16 @@ class LotteryService:
         today = now.date() if isinstance(now, datetime) else now
         self.feature_service.validate_feature_active(db, today, FeatureType.LOTTERY)
         config = self._get_today_config(db)
-        prizes = self._eligible_prizes(db, config.id, lock=True)
+        prizes = None
+        for attempt in range(3):
+            try:
+                prizes = self._eligible_prizes(db, config.id, lock=True)
+                break
+            except LockAcquisitionError:
+                if attempt == 2:
+                    raise
+                time.sleep(0.05)
+        assert prizes is not None
 
         today_tickets = db.execute(
             select(func.count()).select_from(LotteryLog).where(
