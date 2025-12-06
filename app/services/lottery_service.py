@@ -28,11 +28,10 @@ class LotteryService:
         return config
 
     def _eligible_prizes(self, db: Session, config_id: int) -> list[LotteryPrize]:
-        prizes = (
-            db.execute(select(LotteryPrize).where(LotteryPrize.config_id == config_id, LotteryPrize.is_active.is_(True)))
-            .scalars()
-            .all()
-        )
+        prizes_stmt = select(LotteryPrize).where(LotteryPrize.config_id == config_id, LotteryPrize.is_active.is_(True))
+        if db.bind and db.bind.dialect.name != "sqlite":
+            prizes_stmt = prizes_stmt.with_for_update()
+        prizes = db.execute(prizes_stmt).scalars().all()
         eligible = [p for p in prizes if (p.stock is None or p.stock > 0)]
         for prize in eligible:
             if prize.weight < 0:
@@ -54,9 +53,9 @@ class LotteryService:
                 func.date(LotteryLog.created_at) == today,
             )
         ).scalar_one()
-        # Daily cap removed: surface a large sentinel to indicate unlimited entries.
-        unlimited = 999_999
-        remaining = unlimited
+        # Daily cap removed: use 0 to denote unlimited.
+        unlimited = 0
+        remaining = 0
 
         return LotteryStatusResponse(
             config_id=config.id,
@@ -88,7 +87,6 @@ class LotteryService:
         chosen = random.choice(weighted_pool)
 
         if chosen.stock is not None:
-            # TODO: ensure atomic decrement with proper locking for concurrent requests.
             chosen.stock -= 1
             db.add(chosen)
 

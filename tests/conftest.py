@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
-from app.api.deps import get_db
+from app.api.deps import get_db, get_current_user_id
 from app.db.base import Base
 from app.main import app
 
@@ -33,6 +33,7 @@ def client() -> Generator[TestClient, None, None]:
             db.close()
 
     app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_current_user_id] = lambda: 1
     app.state.test_session_factory = TestingSessionLocal
 
     with TestClient(app) as test_client:

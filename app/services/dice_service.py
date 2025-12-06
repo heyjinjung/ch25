@@ -43,9 +43,9 @@ class DiceService:
                 func.date(DiceLog.created_at) == today,
             )
         ).scalar_one()
-        # Daily cap removed: expose a high sentinel value.
-        unlimited = 999_999
-        remaining = unlimited
+        # Daily cap removed: use 0 to denote unlimited.
+        unlimited = 0
+        remaining = 0
 
         return DiceStatusResponse(
             config_id=config.id,

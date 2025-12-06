@@ -18,7 +18,7 @@
 ## Game Modules
 - Roulette: [x] segments ordered/6-count check; [x] rewards wired to RewardService; [ ] concurrency review (spin logging/weight pool).
 - Dice: [x] gameplay; [x] dice value validation (1-6 enforced); [x] rewards wired to RewardService; [ ] document unlimited daily plays (max_daily=0 sentinel).
-- Lottery: [x] stock decrement; [x] rewards wired to RewardService; [ ] add transactional guard for concurrent stock; [ ] document unlimited daily tickets (max_daily=0 sentinel).
+- Lottery: [x] stock decrement; [x] rewards wired to RewardService; [x] add transactional guard for concurrent stock (FOR UPDATE when supported); [ ] document unlimited daily tickets (max_daily=0 sentinel).
 - Ranking: [x] read-only snapshot; [ ] admin upload path doc/tests.
 
 ## Season Pass

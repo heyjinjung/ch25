@@ -57,9 +57,9 @@ class RouletteService:
                 func.date(RouletteLog.created_at) == today,
             )
         ).scalar_one()
-        # Daily cap removed: surface a large sentinel to indicate unlimited plays.
-        unlimited = 999_999
-        remaining = unlimited
+        # Daily cap removed: use 0 to denote unlimited.
+        unlimited = 0
+        remaining = 0
 
         return RouletteStatusResponse(
             config_id=config.id,
