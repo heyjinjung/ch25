@@ -6,6 +6,8 @@ from typing import Any, Optional
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import DailyLimitReachedError
+from app.models.feature import UserEventLog
+from app.services.season_pass_service import SeasonPassService
 
 
 @dataclass
@@ -20,10 +22,16 @@ class GamePlayContext:
 
 
 def log_game_play(ctx: GamePlayContext, db: Session, result_payload: dict[str, Any]) -> None:
-    """Placeholder for shared event logging across games."""
+    """Persist shared event logging across games into user_event_log."""
 
-    # TODO: Implement user_event_log persistence once the model is defined.
-    _ = (ctx, db, result_payload)
+    entry = UserEventLog(
+        user_id=ctx.user_id,
+        feature_type=ctx.feature_type,
+        event_name="PLAY",
+        meta_json=result_payload,
+    )
+    db.add(entry)
+    db.commit()
 
 
 def enforce_daily_limit(limit: int, played: int) -> None:
@@ -34,8 +42,11 @@ def enforce_daily_limit(limit: int, played: int) -> None:
 
 
 def apply_season_pass_stamp(ctx: GamePlayContext, db: Session, xp_bonus: int = 0) -> dict | None:
-    """Hook to call SeasonPassService.add_stamp when needed."""
+    """Hook to call SeasonPassService.add_stamp when season is active."""
 
-    # TODO: integrate SeasonPassService when authentication/user flows are ready.
-    _ = (ctx, db, xp_bonus)
-    return None
+    svc = SeasonPassService()
+    try:
+        return svc.add_stamp(db, user_id=ctx.user_id, source_feature_type=ctx.feature_type, xp_bonus=xp_bonus, now=ctx.today)
+    except Exception:
+        # If season pass is inactive or already stamped, do not block game flow.
+        return None
