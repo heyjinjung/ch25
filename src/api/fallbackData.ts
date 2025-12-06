@@ -2,20 +2,28 @@
 // Provides demo fallback data when backend APIs are unavailable so the UI remains interactive.
 import { FeatureType } from "../types/features";
 
+export interface FallbackRouletteSegment {
+  label: string;
+  weight: number;
+  isJackpot?: boolean;
+  reward_type?: string;
+  reward_amount?: number;
+}
+
 export interface FallbackRouletteState {
   remainingSpins: number;
-  segments: { label: string }[];
+  segments: FallbackRouletteSegment[];
 }
 
 const rouletteState: FallbackRouletteState = {
-  remainingSpins: 5,
+  remainingSpins: 0, // 0 = unlimited sentinel
   segments: [
-    { label: "100 코인" },
-    { label: "200 코인" },
-    { label: "500 코인" },
-    { label: "크리스탈" },
-    { label: "꽝" },
-    { label: "추가 회전" },
+    { label: "100 코인", weight: 30, reward_type: "POINT", reward_amount: 100 },
+    { label: "200 코인", weight: 25, reward_type: "POINT", reward_amount: 200 },
+    { label: "500 코인", weight: 15, reward_type: "POINT", reward_amount: 500 },
+    { label: "크리스탈", weight: 10, reward_type: "TOKEN", reward_amount: 1 },
+    { label: "꽝", weight: 15, reward_type: "NONE", reward_amount: 0 },
+    { label: "🎰 JACKPOT", weight: 5, isJackpot: true, reward_type: "POINT", reward_amount: 10000 },
   ],
 };
 
@@ -26,29 +34,32 @@ export const getFallbackRouletteStatus = () => ({
 });
 
 export const playFallbackRoulette = () => {
-  if (rouletteState.remainingSpins <= 0) {
-    return {
-      selected_index: 0,
-      segment: rouletteState.segments[0],
-      remaining_spins: 0,
-      message: "데모 모드: 오늘 남은 회차가 없습니다.",
-    };
+  const totalWeight = rouletteState.segments.reduce((sum, s) => sum + s.weight, 0);
+  let random = Math.random() * totalWeight;
+  let selectedIndex = 0;
+  
+  for (let i = 0; i < rouletteState.segments.length; i++) {
+    random -= rouletteState.segments[i].weight;
+    if (random <= 0) {
+      selectedIndex = i;
+      break;
+    }
   }
 
-  const index = Math.floor(Math.random() * rouletteState.segments.length);
-  const segment = rouletteState.segments[index];
-  rouletteState.remainingSpins = Math.max(rouletteState.remainingSpins - 1, 0);
+  const segment = rouletteState.segments[selectedIndex];
 
   return {
-    selected_index: index,
+    selected_index: selectedIndex,
     segment,
     remaining_spins: rouletteState.remainingSpins,
+    reward_type: segment.reward_type,
+    reward_value: segment.reward_amount,
     message: "데모 모드 결과입니다.",
   };
 };
 
 const diceState = {
-  remainingPlays: 5,
+  remainingPlays: 0, // 0 = unlimited sentinel
 };
 
 const rollDie = () => Math.floor(Math.random() * 6) + 1;
@@ -59,17 +70,6 @@ export const getFallbackDiceStatus = () => ({
 });
 
 export const playFallbackDice = () => {
-  if (diceState.remainingPlays <= 0) {
-    return {
-      user_dice: [1, 1],
-      dealer_dice: [1, 1],
-      result: "DRAW" as const,
-      remaining_plays: 0,
-      message: "데모 모드: 남은 횟수가 없습니다.",
-    };
-  }
-
-  diceState.remainingPlays = Math.max(diceState.remainingPlays - 1, 0);
   const userDice = [rollDie(), rollDie()];
   const dealerDice = [rollDie(), rollDie()];
   const userTotal = userDice.reduce((sum, value) => sum + value, 0);
@@ -87,43 +87,52 @@ export const playFallbackDice = () => {
     dealer_dice: dealerDice,
     result,
     remaining_plays: diceState.remainingPlays,
-    reward_type: result === "WIN" ? "코인" : undefined,
+    reward_type: result === "WIN" ? "POINT" : undefined,
     reward_value: result === "WIN" ? 200 : undefined,
+    message: result === "WIN" ? "승리! 200 코인 획득!" : result === "LOSE" ? "패배..." : "무승부!",
   };
 };
 
 const lotteryState = {
-  remainingPlays: 3,
+  remainingPlays: 0, // 0 = unlimited sentinel
   prizes: [
-    { id: 1, label: "눈사람 코스튬", reward_type: "아이템", reward_value: "코스튬", stock: null, is_active: true },
-    { id: 2, label: "1,000 코인", reward_type: "코인", reward_value: 1000, stock: null, is_active: true },
-    { id: 3, label: "50 크리스탈", reward_type: "크리스탈", reward_value: 50, stock: null, is_active: true },
+    { id: 1, label: "눈사람 코스튬", reward_type: "ITEM", reward_value: 1, stock: null, is_active: true, weight: 5 },
+    { id: 2, label: "1,000 코인", reward_type: "POINT", reward_value: 1000, stock: null, is_active: true, weight: 30 },
+    { id: 3, label: "50 크리스탈", reward_type: "TOKEN", reward_value: 50, stock: 10, is_active: true, weight: 15 },
+    { id: 4, label: "배민 2만원권", reward_type: "COUPON", reward_value: 20000, stock: 3, is_active: true, weight: 2 },
+    { id: 5, label: "꽝", reward_type: "NONE", reward_value: 0, stock: null, is_active: true, weight: 48 },
   ],
 };
 
 export const getFallbackLotteryStatus = () => ({
   feature_type: "LOTTERY" as const,
   remaining_plays: lotteryState.remainingPlays,
-  prizes: lotteryState.prizes.map((prize) => ({ ...prize })),
+  prizes: lotteryState.prizes.filter(p => p.is_active).map((prize) => ({ ...prize })),
 });
 
 export const playFallbackLottery = () => {
-  if (lotteryState.remainingPlays <= 0) {
-    return {
-      prize: lotteryState.prizes[0],
-      remaining_plays: 0,
-      message: "데모 모드: 남은 추첨 횟수가 없습니다.",
-    };
+  const activePrizes = lotteryState.prizes.filter(p => p.is_active && (p.stock === null || p.stock > 0));
+  const totalWeight = activePrizes.reduce((sum, p) => sum + p.weight, 0);
+  let random = Math.random() * totalWeight;
+  let selectedPrize = activePrizes[0];
+
+  for (const prize of activePrizes) {
+    random -= prize.weight;
+    if (random <= 0) {
+      selectedPrize = prize;
+      break;
+    }
   }
 
-  lotteryState.remainingPlays = Math.max(lotteryState.remainingPlays - 1, 0);
-  const prizeIndex = Math.floor(Math.random() * lotteryState.prizes.length);
-  const prize = lotteryState.prizes[prizeIndex];
+  // Decrease stock if applicable
+  if (selectedPrize.stock !== null && selectedPrize.stock > 0) {
+    selectedPrize.stock--;
+  }
 
   return {
-    prize,
+    prize: selectedPrize,
     remaining_plays: lotteryState.remainingPlays,
-    message: "데모 모드 결과입니다.",
+    message: selectedPrize.reward_type === "NONE" ? "아쉽네요! 다음 기회에!" : `${selectedPrize.label} 당첨!`,
   };
 };
 

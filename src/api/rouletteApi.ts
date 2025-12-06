@@ -6,6 +6,10 @@ import { isDemoFallbackEnabled } from "../config/featureFlags";
 
 export interface RouletteSegmentDto {
   readonly label: string;
+  readonly weight?: number;
+  readonly isJackpot?: boolean;
+  readonly reward_type?: string;
+  readonly reward_amount?: number;
 }
 
 export interface RouletteStatusResponse {
