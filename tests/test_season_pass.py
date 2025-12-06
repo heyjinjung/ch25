@@ -6,7 +6,13 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app.models.season_pass import SeasonPassConfig, SeasonPassLevel
+from app.models.season_pass import (
+    SeasonPassConfig,
+    SeasonPassLevel,
+    SeasonPassProgress,
+    SeasonPassRewardLog,
+    SeasonPassStampLog,
+)
 from app.models.user import User
 
 
@@ -104,6 +110,41 @@ def test_manual_claim_after_multi_level_gain(client: TestClient, seed_season) ->
     # Second claim should fail to prevent duplicates
     dup_claim = client.post("/api/season-pass/claim", json={"level": 2})
     assert dup_claim.status_code == 400
+
+
+def test_duplicate_stamp_returns_error_code(client: TestClient, seed_season) -> None:
+    client.post("/api/season-pass/stamp", json={"source_feature_type": "ROULETTE", "xp_bonus": 0})
+    dup_resp = client.post("/api/season-pass/stamp", json={"source_feature_type": "ROULETTE", "xp_bonus": 0})
+    assert dup_resp.status_code == 400
+    data = dup_resp.json()
+    assert data["error"]["code"] == "ALREADY_STAMPED_TODAY"
+
+
+def test_stamp_writes_logs_and_progress_fk(client: TestClient, seed_season, session_factory) -> None:
+    # Add XP to trigger multi-level-up and auto-claim reward logging
+    stamp_resp = client.post("/api/season-pass/stamp", json={"source_feature_type": "ROULETTE", "xp_bonus": 15})
+    assert stamp_resp.status_code == 200
+    stamp_data = stamp_resp.json()
+    assert stamp_data["current_level"] >= 3
+
+    session: Session = session_factory()
+    stamp_logs = session.query(SeasonPassStampLog).all()
+    assert len(stamp_logs) == 1
+    stamp_log = stamp_logs[0]
+    assert stamp_log.progress_id is not None
+    assert stamp_log.stamp_count == 1
+    assert stamp_log.xp_earned == 25  # base 10 + bonus 15
+
+    progress = session.query(SeasonPassProgress).filter_by(user_id=1, season_id=stamp_log.season_id).one()
+    assert progress.current_level == 3
+    assert progress.current_xp == 25
+
+    reward_logs = session.query(SeasonPassRewardLog).filter_by(user_id=1, season_id=stamp_log.season_id).all()
+    auto_levels = {log.level for log in reward_logs}
+    assert auto_levels == {3}, "Level 3 auto-claim reward should be logged once"
+    for log in reward_logs:
+        assert log.progress_id == progress.id
+    session.close()
 
 
 def test_no_active_season_returns_404(client: TestClient, session_factory) -> None:

@@ -67,6 +67,7 @@
 ## 5. POST /api/season-pass/stamp
 ### 5-1. 설명
 - 오늘 도장을 1개 찍고 XP/레벨을 갱신한다. 하루 1회 정책 기준으로 중복 요청을 차단한다.
+- max_daily=0 sentinel 정책으로 remaining=0이어도 "무제한"을 의미한다.
 
 ### 5-2. 인증
 - 필요 여부: ✅ 필요
@@ -103,6 +104,7 @@
 - 400: 이미 도장 찍음 / 시즌 기간 아님 / 잘못된 source_feature_type
 - 401: 인증 실패
 - 404: 활성 시즌 없음
+ - 비고: 다중 레벨업 시 auto_claim 레벨 보상은 즉시 지급되며 응답의 rewards에 포함된다.
 
 ## 6. POST /api/season-pass/claim
 ### 6-1. 설명
@@ -139,6 +141,7 @@
 - 400: 이미 수령 / 자동 지급 레벨 / 레벨 미달
 - 401: 인증 실패
 - 404: 해당 레벨 보상 없음
+ - 비고: 이미 수령한 레벨은 `REWARD_ALREADY_CLAIMED`, auto_claim 레벨은 `AUTO_CLAIM_LEVEL`로 응답한다.
 
 ## 변경 이력
 - v1.0 (2025-12-08, 시스템 설계팀)
