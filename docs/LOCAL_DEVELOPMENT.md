@@ -80,8 +80,7 @@ notepad .env
 ### 4. 데이터베이스 마이그레이션
 
 ```powershell
-# 마이그레이션 생성 (처음 한 번만)
-alembic revision --autogenerate -m "Initial migration"
+# 초기 마이그레이션은 이미 포함되어 있음 (alembic/versions/20241206_0001_initial_schema.py)
 
 # 마이그레이션 적용
 alembic upgrade head

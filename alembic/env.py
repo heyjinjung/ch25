@@ -1,45 +1,24 @@
 from logging.config import fileConfig
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
-from alembic import context
 import os
 import sys
 
-# Add parent directory to path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from alembic import context
+from sqlalchemy import engine_from_config, pool
 
-# Import your Base and models
-from app.db.base import Base
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 from app.core.config import get_settings
+from app.db.base import Base
 
-# Import all models to ensure they're registered with Base
-from app.models.user import User
-from app.models.feature import FeatureConfig, FeatureSchedule
-from app.models.season_pass import (
-    SeasonPassConfig,
-    SeasonPassLevelReward,
-    UserSeasonPassProgress,
-    UserSeasonPassStamp,
-    UserSeasonPassReward
-)
-from app.models.roulette import RouletteConfig, RouletteSegment, UserRoulettePlay
-from app.models.dice import DiceConfig, UserDicePlay
-from app.models.lottery import LotteryConfig, LotteryPrize, UserLotteryPlay
-from app.models.ranking import RankingConfig, UserRankingScore
-
-# Alembic Config object
 config = context.config
 
-# Interpret the config file for Python logging.
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# Set target metadata for 'autogenerate' support
-target_metadata = Base.metadata
-
-# Get database URL from settings
 settings = get_settings()
 config.set_main_option("sqlalchemy.url", settings.database_url)
+
+target_metadata = Base.metadata
 
 
 def run_migrations_offline() -> None:
