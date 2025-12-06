@@ -6,6 +6,7 @@ from typing import Callable
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
+from sqlalchemy.pool import StaticPool
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.api.deps import get_db, get_current_user_id
@@ -20,7 +21,11 @@ def client() -> Generator[TestClient, None, None]:
     NOTE: In real deployments we should use a dedicated test database per environment.
     """
 
-    engine = create_engine("sqlite+pysqlite:///:memory:", connect_args={"check_same_thread": False})
+    engine = create_engine(
+        "sqlite+pysqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
     TestingSessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, expire_on_commit=False)
     Base.metadata.create_all(engine)
 

@@ -34,4 +34,3 @@ def issue_token(payload: TokenRequest, db: Session = Depends(get_db)) -> TokenRe
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="USER_CREATE_FAILED")
     token = create_access_token(user_id=user.id)
     return TokenResponse(access_token=token)
-*** End Patch
