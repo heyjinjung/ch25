@@ -1,5 +1,13 @@
 # 프로젝트 변경 이력
 
+## 2025-12-06 (runtime hardening & dev UX)
+- Docker: MySQL 호스트 포트를 3307로 변경해 로컬 포트 충돌 해소.
+- Docker: `public/` 디렉터리 누락으로 프론트 빌드 실패하던 이슈를 `.gitkeep` 추가로 해결.
+- Backend: `PyJWT` 의존성을 추가해 컨테이너 기동 실패(`ModuleNotFoundError: jwt`) 해결.
+- Backend: TEST_MODE에서 토큰 없이도 user_id=1로 통과하도록 `get_current_user_id` 완화, 프론트 로컬 호출 401 제거.
+- Backend: `/api/today-feature` 응답이 Enum/None으로 검증 오류 나던 문제를 enum value 문자열 반환으로 수정하고, feature config 누락 시 404(`NO_FEATURE_TODAY`)로 정렬.
+- Backend: Pydantic V2 스타일(`validation_alias`/`SettingsConfigDict`)로 env 로딩 경고 제거.
+
 ## 2025-12-06 (frontend gating)
 - 프론트엔드 데모용 폴백 데이터를 기본 비활성화하고 `VITE_ENABLE_DEMO_FALLBACK` 플래그로만 동작하도록 변경
 - `FeatureGate` 컴포넌트를 도입해 실서비스 모드에서는 오늘 설정된 단일 이벤트 외의 페이지 진입을 차단, 테스트 모드에서는 전체 기능 체험 허용

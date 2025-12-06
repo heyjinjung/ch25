@@ -5,6 +5,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
+from app.core.config import get_settings
 from app.core.security import decode_access_token
 from app.db.session import SessionLocal
 
@@ -23,8 +24,12 @@ def get_db() -> Generator[Session, None, None]:
 
 def get_current_user_id(credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme)) -> int:
     """Extract user id from Bearer token; raise 401 if missing or invalid."""
+    settings = get_settings()
 
+    # In TEST_MODE, allow anonymous access and default to user id 1 for demo/testing flows.
     if credentials is None or not credentials.credentials:
+        if settings.test_mode:
+            return 1
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="AUTH_REQUIRED")
 
     payload = decode_access_token(credentials.credentials)
