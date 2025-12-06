@@ -1,0 +1,120 @@
+"""Dice service implementing status and play flows."""
+from datetime import date, datetime
+import random
+
+from sqlalchemy import func, select
+from sqlalchemy.orm import Session
+
+from app.core.exceptions import InvalidConfigError
+from app.models.dice import DiceConfig, DiceLog
+from app.models.feature import FeatureType
+from app.schemas.dice import DicePlayResponse, DiceResult, DiceStatusResponse
+from app.services.feature_service import FeatureService
+from app.services.game_common import GamePlayContext, apply_season_pass_stamp, enforce_daily_limit, log_game_play
+from app.services.reward_service import RewardService
+
+
+class DiceService:
+    """Encapsulates dice gameplay."""
+
+    def __init__(self) -> None:
+        self.feature_service = FeatureService()
+        self.reward_service = RewardService()
+
+    def _get_today_config(self, db: Session) -> DiceConfig:
+        config = db.execute(select(DiceConfig).where(DiceConfig.is_active.is_(True))).scalar_one_or_none()
+        if config is None:
+            raise InvalidConfigError("DICE_CONFIG_MISSING")
+        return config
+
+    def get_status(self, db: Session, user_id: int, today: date) -> DiceStatusResponse:
+        self.feature_service.validate_feature_active(db, today, FeatureType.DICE)
+        config = self._get_today_config(db)
+
+        today_plays = db.execute(
+            select(func.count()).select_from(DiceLog).where(
+                DiceLog.user_id == user_id,
+                DiceLog.config_id == config.id,
+                func.date(DiceLog.created_at) == today,
+            )
+        ).scalar_one()
+        remaining = max(config.max_daily_plays - today_plays, 0)
+
+        return DiceStatusResponse(
+            config_id=config.id,
+            name=config.name,
+            max_daily_plays=config.max_daily_plays,
+            today_plays=today_plays,
+            remaining_plays=remaining,
+            feature_type=FeatureType.DICE,
+        )
+
+    def play(self, db: Session, user_id: int, now: date | datetime) -> DicePlayResponse:
+        today = now.date() if isinstance(now, datetime) else now
+        self.feature_service.validate_feature_active(db, today, FeatureType.DICE)
+        config = self._get_today_config(db)
+
+        today_plays = db.execute(
+            select(func.count()).select_from(DiceLog).where(
+                DiceLog.user_id == user_id,
+                DiceLog.config_id == config.id,
+                func.date(DiceLog.created_at) == today,
+            )
+        ).scalar_one()
+        enforce_daily_limit(config.max_daily_plays, today_plays)
+
+        user_dice = [random.randint(1, 6), random.randint(1, 6)]
+        dealer_dice = [random.randint(1, 6), random.randint(1, 6)]
+        user_sum = sum(user_dice)
+        dealer_sum = sum(dealer_dice)
+
+        if user_sum > dealer_sum:
+            outcome = "WIN"
+            reward_type = config.win_reward_type
+            reward_amount = config.win_reward_amount
+        elif user_sum == dealer_sum:
+            outcome = "DRAW"
+            reward_type = config.draw_reward_type
+            reward_amount = config.draw_reward_amount
+        else:
+            outcome = "LOSE"
+            reward_type = config.lose_reward_type
+            reward_amount = config.lose_reward_amount
+
+        log_entry = DiceLog(
+            user_id=user_id,
+            config_id=config.id,
+            user_dice_1=user_dice[0],
+            user_dice_2=user_dice[1],
+            user_sum=user_sum,
+            dealer_dice_1=dealer_dice[0],
+            dealer_dice_2=dealer_dice[1],
+            dealer_sum=dealer_sum,
+            result=outcome,
+            reward_type=reward_type,
+            reward_amount=reward_amount,
+        )
+        db.add(log_entry)
+        db.commit()
+        db.refresh(log_entry)
+
+        ctx = GamePlayContext(user_id=user_id, feature_type=FeatureType.DICE.value, today=today)
+        log_game_play(ctx, db, {"result": outcome, "reward_type": reward_type})
+
+        # TODO: integrate RewardService to actually deliver rewards.
+        _ = self.reward_service
+        season_pass = apply_season_pass_stamp(ctx, db)
+
+        return DicePlayResponse(
+            result="OK",
+            game=DiceResult(
+                user_dice=user_dice,
+                dealer_dice=dealer_dice,
+                user_sum=user_sum,
+                dealer_sum=dealer_sum,
+                outcome=outcome,
+                reward_type=reward_type,
+                reward_amount=reward_amount,
+            ),
+            season_pass=season_pass,
+        )
