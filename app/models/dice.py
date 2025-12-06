@@ -3,7 +3,7 @@ from datetime import datetime
 
 from sqlalchemy import Boolean, Column, DateTime, Integer, String
 
-from app.db.base import Base
+from app.db.base_class import Base
 
 
 class DiceConfig(Base):

@@ -3,7 +3,7 @@ from datetime import datetime
 
 from sqlalchemy import Column, Date, DateTime, Integer, String, UniqueConstraint
 
-from app.db.base import Base
+from app.db.base_class import Base
 
 
 class RankingDaily(Base):

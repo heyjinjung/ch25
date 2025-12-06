@@ -4,7 +4,7 @@ from enum import Enum
 
 from sqlalchemy import Boolean, Column, Date, DateTime, Enum as SqlEnum, Integer, String, UniqueConstraint
 
-from app.db.base import Base
+from app.db.base_class import Base
 
 
 class FeatureType(str, Enum):
