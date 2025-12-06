@@ -69,3 +69,8 @@ def test_stamp_and_claim_flow(client: TestClient, seed_season) -> None:
     claim_data = claim_resp.json()
     assert claim_data["level"] == 2
     assert claim_data["reward_type"] == "POINT"
+
+
+def test_claim_before_progress_returns_error(client: TestClient, seed_season) -> None:
+    response = client.post("/api/season-pass/claim", json={"level": 2})
+    assert response.status_code == 400
