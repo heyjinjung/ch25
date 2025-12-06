@@ -1,6 +1,6 @@
 """Model package exports."""
 from app.models.dice import DiceConfig, DiceLog
-from app.models.feature import FeatureConfig, FeatureSchedule, FeatureType
+from app.models.feature import FeatureConfig, FeatureSchedule, FeatureType, UserEventLog
 from app.models.lottery import LotteryConfig, LotteryLog, LotteryPrize
 from app.models.ranking import RankingDaily
 from app.models.roulette import RouletteConfig, RouletteLog, RouletteSegment
@@ -17,6 +17,7 @@ __all__ = [
     "FeatureConfig",
     "FeatureSchedule",
     "FeatureType",
+    "UserEventLog",
     "SeasonPassConfig",
     "SeasonPassLevel",
     "SeasonPassProgress",

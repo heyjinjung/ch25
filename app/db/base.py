@@ -11,6 +11,7 @@ from app.models import (  # noqa: F401
     LotteryLog,
     LotteryPrize,
     RankingDaily,
+    UserEventLog,
     RouletteConfig,
     RouletteLog,
     RouletteSegment,

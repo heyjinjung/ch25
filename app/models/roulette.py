@@ -1,7 +1,7 @@
 """Roulette configuration and logs."""
 from datetime import datetime
 
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy import Boolean, CheckConstraint, Column, DateTime, ForeignKey, Index, Integer, String, UniqueConstraint
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
@@ -15,7 +15,7 @@ class RouletteConfig(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), nullable=False)
     is_active = Column(Boolean, nullable=False, default=True)
-    max_daily_spins = Column(Integer, nullable=False, default=1)
+    max_daily_spins = Column(Integer, nullable=False, default=0)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -26,7 +26,11 @@ class RouletteSegment(Base):
     """Six fixed roulette slots per config with weights and rewards."""
 
     __tablename__ = "roulette_segment"
-    __table_args__ = (UniqueConstraint("config_id", "slot_index", name="uq_roulette_segment_slot"),)
+    __table_args__ = (
+        UniqueConstraint("config_id", "slot_index", name="uq_roulette_segment_slot"),
+        CheckConstraint("slot_index >= 0 AND slot_index <= 5", name="ck_roulette_segment_slot_range"),
+        CheckConstraint("weight >= 0", name="ck_roulette_segment_weight_non_negative"),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
     config_id = Column(Integer, ForeignKey("roulette_config.id", ondelete="CASCADE"), nullable=False)
@@ -46,11 +50,14 @@ class RouletteLog(Base):
     """User roulette spin log."""
 
     __tablename__ = "roulette_log"
+    __table_args__ = (
+        Index("ix_roulette_log_user_created_at", "user_id", "created_at"),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, nullable=False)
-    config_id = Column(Integer, nullable=False)
-    segment_id = Column(Integer, nullable=False)
+    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
+    config_id = Column(Integer, ForeignKey("roulette_config.id", ondelete="CASCADE"), nullable=False)
+    segment_id = Column(Integer, ForeignKey("roulette_segment.id", ondelete="CASCADE"), nullable=False)
     reward_type = Column(String(50), nullable=False)
     reward_amount = Column(Integer, nullable=False, default=0)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
