@@ -3,9 +3,10 @@ from datetime import date, datetime
 import random
 
 from sqlalchemy import func, select
+from sqlalchemy.exc import DBAPIError
 from sqlalchemy.orm import Session
 
-from app.core.exceptions import InvalidConfigError
+from app.core.exceptions import InvalidConfigError, LockAcquisitionError
 from app.models.feature import FeatureType
 from app.models.roulette import RouletteConfig, RouletteLog, RouletteSegment
 from app.schemas.roulette import RoulettePlayResponse, RouletteStatusResponse
@@ -27,14 +28,14 @@ class RouletteService:
             raise InvalidConfigError("ROULETTE_CONFIG_MISSING")
         return config
 
-    def _get_segments(self, db: Session, config_id: int) -> list[RouletteSegment]:
-        segments = (
-            db.execute(
-                select(RouletteSegment).where(RouletteSegment.config_id == config_id).order_by(RouletteSegment.slot_index)
-            )
-            .scalars()
-            .all()
-        )
+    def _get_segments(self, db: Session, config_id: int, lock: bool = False) -> list[RouletteSegment]:
+        stmt = select(RouletteSegment).where(RouletteSegment.config_id == config_id).order_by(RouletteSegment.slot_index)
+        if lock and db.bind and db.bind.dialect.name != "sqlite":
+            stmt = stmt.with_for_update()
+        try:
+            segments = db.execute(stmt).scalars().all()
+        except DBAPIError as exc:
+            raise LockAcquisitionError("ROULETTE_LOCK_FAILED") from exc
         if len(segments) != 6:
             raise InvalidConfigError("INVALID_ROULETTE_CONFIG")
         for segment in segments:
@@ -75,7 +76,7 @@ class RouletteService:
         today = now.date() if isinstance(now, datetime) else now
         self.feature_service.validate_feature_active(db, today, FeatureType.ROULETTE)
         config = self._get_today_config(db)
-        segments = self._get_segments(db, config.id)
+        segments = self._get_segments(db, config.id, lock=True)
 
         today_spins = db.execute(
             select(func.count()).select_from(RouletteLog).where(

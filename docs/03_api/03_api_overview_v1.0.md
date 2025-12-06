@@ -27,14 +27,15 @@
   - `NO_ACTIVE_SEASON`: KST 오늘 기준 활성 시즌이 없을 때.
   - `NO_ACTIVE_SEASON_CONFLICT`: start/end 범위를 충족하는 시즌이 2개 이상인 데이터 충돌.
   - `INVALID_ROULETTE_CONFIG` / `INVALID_LOTTERY_CONFIG`: 설정 검증(6칸/가중치 합/재고 등) 실패.
-  - `DAILY_LIMIT_REACHED`: 일일 제한(max_daily_spins/plays/tickets) 초과.
+  - `DAILY_LIMIT_REACHED`: 일일 제한(max_daily_spins/plays/tickets) 초과. (현재 운영 설정: max_daily*=0 → 무제한, 오류 미발생)
+  - `LOCK_NOT_ACQUIRED`: DB 락 타임아웃/데드락으로 재시도 필요.
   - `UNAUTHORIZED`/`FORBIDDEN`: 인증 실패/권한 없음.
 
 
 ## 5. 공통 API
 ### 4-1. GET /api/today-feature
 - 설명: 오늘 활성화된 Feature 정보를 반환한다.
-- 인증: 필요 여부 ❌
+- 인증: ✅ 필요 (Authorization: Bearer JWT)
 - Method/Path: GET `/api/today-feature`
 - Params/Body: 없음
 - 성공 200 예시:
@@ -46,7 +47,7 @@
   "page_path": "/roulette"
 }
 ```
-- 주요 에러: 204 (오늘 일정 없음 → `feature_type=NONE`), 409(`INVALID_FEATURE_SCHEDULE`)
+- 주요 에러: 401(인증 실패), 404(`NO_FEATURE_TODAY`), 409(`INVALID_FEATURE_SCHEDULE`)
 
 ### 4-2. GET /api/feature
 - 설명: 특정 날짜의 Feature 정보를 조회한다(관리/디버깅용).

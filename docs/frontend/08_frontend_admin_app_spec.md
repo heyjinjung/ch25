@@ -23,7 +23,7 @@
 - `/admin/seasons`: 시즌 목록/생성/수정. 필수 필드: season_name, start/end, max_level, base_xp_per_stamp.
 - `/admin/feature-schedule`: 날짜별 feature_type 지정 테이블/캘린더, 중복 방지 경고.
 - `/admin/roulette`: slot_index 0~5 편집(라벨/보상/weight). Σweight>0 검증, is_active config 토글.
-- `/admin/dice`: max_daily_plays, win/draw/lose reward 타입/금액 설정.
+- `/admin/dice`: max_daily_plays, win/draw/lose reward 타입/금액 설정. (운영 중 max_daily_plays=0은 무제한으로 표기/저장)
 - `/admin/lottery`: prize 리스트 테이블(label/reward/weight/stock/is_active), Σweight>0 검증, stock 0 제외.
 - `/admin/ranking`: date별 rank/score/display_name 입력, UNIQUE(date, rank) 유효성.
 - 모든 폼: react-hook-form + Zod 스키마, 저장 전 클라이언트 검증.

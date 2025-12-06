@@ -8,6 +8,7 @@ from app.core.exceptions import (
     DailyLimitReachedError,
     FeatureNotActiveError,
     InvalidConfigError,
+    LockAcquisitionError,
     NoFeatureTodayError,
 )
 
@@ -17,6 +18,7 @@ ERROR_MAP = {
     NoFeatureTodayError: "NO_FEATURE_TODAY",
     InvalidConfigError: "INVALID_CONFIG",
     DailyLimitReachedError: "DAILY_LIMIT_REACHED",
+    LockAcquisitionError: "LOCK_NOT_ACQUIRED",
 }
 
 

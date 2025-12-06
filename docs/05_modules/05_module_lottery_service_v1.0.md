@@ -14,22 +14,20 @@
 - DB 스키마(lottery_config/prize/log) 및 API 계약은 각각 DB/문서/03_api 문서 참조.
 
 ## 3. 용어 정의 (Definitions)
-- Ticket Limit: config.max_daily_tickets로 정의된 일일 참여 한도.
-- Prize: lottery_prize 한 행, label/reward/weight/stock/is_active 정보를 포함(관리자 편집 가능).
-- Stock Aware Draw: prize.stock > 0인 항목만 추첨 대상에 포함시키고, 당첨 시 1 감소시키는 로직.
+ Ticket Limit: config.max_daily_tickets로 정의된 일일 참여 한도. 운영 기간 동안 `0`은 무제한(sentinal)으로 취급하며 remaining은 0으로 응답.
 
 ## 4. 책임 (Responsibilities)
 - 오늘 feature_type=LOTTERY인지, config.is_active가 켜져 있는지 검증.
 - get_today_config에서 남은 티켓 수와 prize 프리뷰 제공.
 - play에서 is_active=1이고 stock!=0인 prize만 대상으로 가중치 랜덤 추첨 + 재고 감소(필요 시), Σweight>0 검증, 보상 지급, 로그 기록을 수행.
-- SeasonPassService와 연동해 성공 시 스탬프/XP 처리(정책에 따라 호출).
-
+ remaining_tickets: max_daily_tickets - today_tickets (최소 0). max_daily_tickets가 0이면 무제한으로 간주하고 remaining은 0으로 표시.
 ## 5. 주요 메서드 시그니처
 
 ### 5-1. get_today_config
 ```python
 def get_today_config(self, db, now, user_id: int) -> dict:
     """오늘 lottery_config + remaining_tickets + prize 프리뷰를 반환한다."""
+  2) today_tickets < max_daily_tickets 검증. (max_daily_tickets=0이면 제한 미적용)
 ```
 - today_tickets: `lottery_log`에서 user_id+오늘 날짜 기준 카운트.
 - remaining_tickets: max_daily_tickets - today_tickets (최소 0).

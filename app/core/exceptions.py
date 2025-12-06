@@ -28,3 +28,10 @@ class DailyLimitReachedError(HTTPException):
 
     def __init__(self, message: str = "DAILY_LIMIT_REACHED"):
         super().__init__(status_code=status.HTTP_400_BAD_REQUEST, detail=message)
+
+
+class LockAcquisitionError(HTTPException):
+    """Raised when a DB lock cannot be acquired (timeout/deadlock)."""
+
+    def __init__(self, message: str = "LOCK_NOT_ACQUIRED"):
+        super().__init__(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=message)

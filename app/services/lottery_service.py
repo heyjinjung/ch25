@@ -3,9 +3,10 @@ from datetime import date, datetime
 import random
 
 from sqlalchemy import func, select
+from sqlalchemy.exc import DBAPIError
 from sqlalchemy.orm import Session
 
-from app.core.exceptions import InvalidConfigError
+from app.core.exceptions import InvalidConfigError, LockAcquisitionError
 from app.models.feature import FeatureType
 from app.models.lottery import LotteryConfig, LotteryLog, LotteryPrize
 from app.schemas.lottery import LotteryPlayResponse, LotteryPrizeSchema, LotteryStatusResponse
@@ -27,11 +28,14 @@ class LotteryService:
             raise InvalidConfigError("LOTTERY_CONFIG_MISSING")
         return config
 
-    def _eligible_prizes(self, db: Session, config_id: int) -> list[LotteryPrize]:
+    def _eligible_prizes(self, db: Session, config_id: int, lock: bool = False) -> list[LotteryPrize]:
         prizes_stmt = select(LotteryPrize).where(LotteryPrize.config_id == config_id, LotteryPrize.is_active.is_(True))
-        if db.bind and db.bind.dialect.name != "sqlite":
+        if lock and db.bind and db.bind.dialect.name != "sqlite":
             prizes_stmt = prizes_stmt.with_for_update()
-        prizes = db.execute(prizes_stmt).scalars().all()
+        try:
+            prizes = db.execute(prizes_stmt).scalars().all()
+        except DBAPIError as exc:
+            raise LockAcquisitionError("LOTTERY_LOCK_FAILED") from exc
         eligible = [p for p in prizes if (p.stock is None or p.stock > 0)]
         for prize in eligible:
             if prize.weight < 0:
@@ -71,7 +75,7 @@ class LotteryService:
         today = now.date() if isinstance(now, datetime) else now
         self.feature_service.validate_feature_active(db, today, FeatureType.LOTTERY)
         config = self._get_today_config(db)
-        prizes = self._eligible_prizes(db, config.id)
+        prizes = self._eligible_prizes(db, config.id, lock=True)
 
         today_tickets = db.execute(
             select(func.count()).select_from(LotteryLog).where(

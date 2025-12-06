@@ -14,7 +14,7 @@
 - DB 컬럼/제약은 DB 문서(dice_config/log) 참고, API 계약은 `docs/03_api/` 참고.
 
 ## 3. 용어 정의 (Definitions)
-- Daily Play Limit: config.max_daily_plays로 정의된 일일 플레이 한도.
+- Daily Play Limit: config.max_daily_plays로 정의된 일일 플레이 한도. 운영 기간 동안 `0`은 무제한(sentinal)으로 취급하며 remaining은 0으로 응답.
 - Outcome: WIN/DRAW/LOSE 중 하나로 승부 결과.
 - Reward Mapping: 결과별로 config가 지정한 reward_type/reward_amount 매핑.
 
@@ -32,7 +32,7 @@ def get_today_config(self, db, now, user_id: int) -> dict:
     """오늘 dice_config + today_plays/remaining_plays 정보를 반환한다."""
 ```
 - today_plays: `dice_log` 기준 user_id+오늘 날짜 카운트.
-- remaining_plays: max_daily_plays - today_plays (최소 0).
+- remaining_plays: max_daily_plays - today_plays (최소 0). max_daily_plays가 0이면 무제한으로 취급하고 remaining은 0으로 표시.
 
 ### 5-2. play
 ```python
@@ -41,7 +41,7 @@ def play(self, db, user_id: int, now) -> dict:
 ```
 - 단계:
   1) feature_type=DICE 여부 및 config.is_active 확인.
-  2) today_plays < max_daily_plays 검증.
+  2) today_plays < max_daily_plays 검증. (max_daily_plays=0이면 제한 미적용)
   3) 유저/딜러 각각 2개씩 주사위 생성: user_dice_1/2, dealer_dice_1/2 (1~6).
   4) user_sum, dealer_sum을 계산해 WIN/DRAW/LOSE 판단 후 reward_type/reward_amount 매핑.
   5) RewardService 처리, dice_log(user_dice_1/2, dealer_dice_1/2, user_sum, dealer_sum, outcome) + user_event_log 기록.
@@ -51,7 +51,7 @@ def play(self, db, user_id: int, now) -> dict:
 ## 6. 데이터 연동
 - 테이블: `dice_config`, `dice_log`, 공통 `user_event_log`.
 - 인덱스: `INDEX(user_id, created_at)`로 일일 플레이 횟수 계산 최적화.
-- config의 보상 정책(win/draw/lose)과 max_daily_plays를 운영자가 관리하도록 설계.
+- config의 보상 정책(win/draw/lose)과 max_daily_plays를 운영자가 관리하도록 설계. (현재 max_daily_plays=0 sentinel로 무제한)
 
 ## 7. API 연동
 - GET `/api/dice/status`: get_today_config 결과 전달.
@@ -84,7 +84,7 @@ def play(self, db, user_id: int, now) -> dict:
 - `NO_FEATURE_TODAY`: 오늘 feature_type이 DICE가 아니거나 비활성화된 경우.
 - `INVALID_FEATURE_SCHEDULE`: 동일 날짜 스케줄이 0개/2개 이상일 때.
 - `INVALID_DICE_CONFIG`: 보상 매핑/active 상태 검증 실패 등 설정 오류(필요 시 사용).
-- `DAILY_LIMIT_REACHED`: max_daily_plays 초과.
+- `DAILY_LIMIT_REACHED`: max_daily_plays 초과. (현재 max_daily_plays=0이라 발생하지 않음)
 
 ## 변경 이력
 - v1.1 (2025-12-09, 시스템 설계팀)

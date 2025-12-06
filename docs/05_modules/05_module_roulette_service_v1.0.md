@@ -16,13 +16,13 @@
 ## 3. 용어 정의 (Definitions)
 - Segment: 룰렛 한 칸, 보상/확률 정보를 가진다. 한 config 당 slot_index 0~5로 고정 6개가 존재해야 한다.
 - Weight Random: segment.weight 합을 기반으로 가중치 랜덤 추출.
-- Daily Spin Limit: config.max_daily_spins로 정의된 유저 당 일일 스핀 한도.
+ Daily Spin Limit: config.max_daily_spins로 정의된 유저 당 일일 스핀 한도. 운영 기간 동안 `0`은 무제한(sentinal)으로 취급하며 remaining은 0으로 응답.
 
-## 4. 책임 (Responsibilities)
+ remaining_spins: max_daily_spins - today_spins (0 미만이면 0). max_daily_spins=0이면 무제한으로 간주하고 remaining은 0으로 표시.
 - 오늘 feature_type이 ROULETTE인지 검증하고 비활성 시 400/403 응답 처리.
-- 활성화된 roulette_config/segment 목록 로딩 및 유효성 검증(6칸 고정, Σweight>0) 및 유저 일일 스핀 횟수 계산.
+  3) today_spins < max_daily_spins 확인. (max_daily_spins=0이면 제한 미적용)
 - play 시 가중치 랜덤으로 segment 선택, RewardService로 보상 지급(or 예약), 로그 기록.
-- SeasonPassService와 연동해 성공 시 스탬프/XP/레벨업 처리를 옵션으로 수행.
+ `DAILY_LIMIT_REACHED`: max_daily_spins 초과. (현재 max_daily_spins=0이라 발생하지 않음)
 
 ## 5. 주요 메서드 시그니처
 

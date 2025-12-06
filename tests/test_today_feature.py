@@ -29,7 +29,9 @@ def test_today_feature_returns_roulette(client: TestClient, db_session: Session)
 
     response = client.get("/api/today-feature")
     assert response.status_code == 200
-    assert response.json()["feature_type"] == FeatureType.ROULETTE.value
+    payload = response.json()
+    assert payload["feature_type"] == FeatureType.ROULETTE.value
+    assert payload["user_id"] == 1
 
 
 def test_today_feature_returns_not_found_when_missing(client: TestClient) -> None:
