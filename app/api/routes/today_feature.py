@@ -20,4 +20,6 @@ def get_today_feature(
 ) -> dict[str, str | int]:
     now_kst = datetime.now(ZoneInfo("Asia/Seoul"))
     feature_type = feature_service.get_today_feature(db, now_kst)
-    return {"feature_type": feature_type, "user_id": user_id}
+    # Ensure the response uses the enum value (string) for schema compatibility.
+    feature_value = feature_type.value if hasattr(feature_type, "value") else feature_type
+    return {"feature_type": feature_value, "user_id": user_id}

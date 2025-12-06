@@ -15,12 +15,9 @@ class FeatureService:
 
     def get_today_feature(self, db: Session, now: date | datetime) -> FeatureType:
         """Get today's active feature. In TEST_MODE, returns a special 'ALL' indicator."""
-        settings = get_settings()
-        
-        # TEST_MODE: Return None to indicate all features are accessible
-        # This is handled specially by validate_feature_active
-        if settings.test_mode:
-            return None  # type: ignore  # Signal that all features are allowed
+        # Even in TEST_MODE, we still resolve today's scheduled feature so that
+        # the /today-feature endpoint returns a concrete value (and raises
+        # the expected errors) instead of None.
         
         # Normalize to KST to avoid date drift for schedules stored in Asia/Seoul.
         if isinstance(now, datetime):
@@ -53,8 +50,10 @@ class FeatureService:
                 raise FeatureNotActiveError()
 
         config = db.execute(select(FeatureConfig).where(FeatureConfig.feature_type == expected_type)).scalar_one_or_none()
+        # If the feature configuration itself is missing, treat it like "no feature today"
+        # so clients receive a 404 instead of a 500.
         if config is None:
-            raise InvalidConfigError("FEATURE_CONFIG_MISSING")
+            raise NoFeatureTodayError()
         if not config.is_enabled:
             raise FeatureNotActiveError("FEATURE_DISABLED")
         return config
