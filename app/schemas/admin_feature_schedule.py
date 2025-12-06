@@ -2,7 +2,7 @@
 from datetime import date
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from app.models.feature import FeatureType
 
@@ -13,8 +13,7 @@ class AdminFeatureScheduleBase(BaseModel):
     season_id: Optional[int] = None
     is_active: bool = True
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class AdminFeatureScheduleCreate(AdminFeatureScheduleBase):
@@ -26,8 +25,7 @@ class AdminFeatureScheduleUpdate(BaseModel):
     season_id: Optional[int] = None
     is_active: Optional[bool] = None
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class AdminFeatureScheduleResponse(AdminFeatureScheduleBase):

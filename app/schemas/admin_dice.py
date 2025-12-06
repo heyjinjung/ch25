@@ -1,7 +1,7 @@
 # /workspace/ch25/app/schemas/admin_dice.py
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class AdminDiceConfigBase(BaseModel):
@@ -15,8 +15,7 @@ class AdminDiceConfigBase(BaseModel):
     lose_reward_type: str
     lose_reward_value: int
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class AdminDiceConfigCreate(AdminDiceConfigBase):
@@ -34,8 +33,7 @@ class AdminDiceConfigUpdate(BaseModel):
     lose_reward_type: Optional[str] = None
     lose_reward_value: Optional[int] = None
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class AdminDiceConfigResponse(AdminDiceConfigBase):

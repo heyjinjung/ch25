@@ -1,5 +1,9 @@
 # 프로젝트 변경 이력
 
+## 2025-12-06
+- FastAPI 커스텀 예외 핸들러 등록 방식을 예외별 `add_exception_handler`로 수정해 루트 500 오류 해소
+- 모든 Pydantic 스키마의 `orm_mode`/`allow_population_by_field_name` 설정을 V2 키(`from_attributes`, `validate_by_name`)로 교체하여 실행 시 경고 제거
+
 ## 2025-12-08
 - XMAS 1Week 시스템 총괄 기술서 v1.0 작성
 - 백엔드 아키텍처/모듈/API/DB/운영 문서 v1.0 추가

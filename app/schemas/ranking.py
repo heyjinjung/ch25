@@ -1,7 +1,7 @@
 """Pydantic schemas for ranking API."""
 from datetime import date
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from app.models.feature import FeatureType
 
@@ -11,8 +11,7 @@ class RankingEntry(BaseModel):
     display_name: str
     score: int
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class RankingTodayResponse(BaseModel):

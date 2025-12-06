@@ -1,5 +1,5 @@
 """Pydantic schemas for lottery APIs."""
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from app.models.feature import FeatureType
 
@@ -10,8 +10,7 @@ class LotteryPrizeSchema(BaseModel):
     reward_type: str
     reward_amount: int
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class LotteryStatusResponse(BaseModel):

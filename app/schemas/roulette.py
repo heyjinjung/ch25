@@ -1,5 +1,5 @@
 """Pydantic schemas for roulette APIs."""
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from app.models.feature import FeatureType
 
@@ -11,8 +11,7 @@ class RouletteSegmentSchema(BaseModel):
     reward_amount: int
     slot_index: int
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class RouletteStatusResponse(BaseModel):

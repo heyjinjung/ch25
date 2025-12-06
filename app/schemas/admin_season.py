@@ -2,7 +2,7 @@
 from datetime import date
 from typing import List, Optional
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, ConfigDict, Field, validator
 
 
 class AdminSeasonBase(BaseModel):
@@ -20,9 +20,7 @@ class AdminSeasonBase(BaseModel):
             raise ValueError("end_date must be greater than or equal to start_date")
         return end_date
 
-    class Config:
-        allow_population_by_field_name = True
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True, validate_by_name=True)
 
 
 class AdminSeasonCreate(AdminSeasonBase):
@@ -37,9 +35,7 @@ class AdminSeasonUpdate(BaseModel):
     base_xp_per_stamp: Optional[int] = None
     is_active: Optional[bool] = None
 
-    class Config:
-        allow_population_by_field_name = True
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True, validate_by_name=True)
 
 
 class AdminSeasonResponse(AdminSeasonBase):
@@ -54,5 +50,4 @@ class AdminSeasonListResponse(BaseModel):
     page: int
     size: int
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)

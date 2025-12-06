@@ -2,7 +2,7 @@
 from datetime import date
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class AdminRankingEntryBase(BaseModel):
@@ -12,9 +12,7 @@ class AdminRankingEntryBase(BaseModel):
     user_name: str = Field(..., alias="display_name")
     score: Optional[int] = None
 
-    class Config:
-        allow_population_by_field_name = True
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True, validate_by_name=True)
 
 
 class AdminRankingEntryCreate(AdminRankingEntryBase):
@@ -26,9 +24,7 @@ class AdminRankingEntryUpdate(BaseModel):
     user_name: Optional[str] = Field(None, alias="display_name")
     score: Optional[int] = None
 
-    class Config:
-        allow_population_by_field_name = True
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True, validate_by_name=True)
 
 
 class AdminRankingEntryResponse(AdminRankingEntryBase):
@@ -39,5 +35,4 @@ class AdminRankingListResponse(BaseModel):
     date: date
     items: List[AdminRankingEntryResponse]
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)

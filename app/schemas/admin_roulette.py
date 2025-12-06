@@ -1,7 +1,7 @@
 # /workspace/ch25/app/schemas/admin_roulette.py
 from typing import List, Optional
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, ConfigDict, Field, validator
 
 
 class AdminRouletteSegmentBase(BaseModel):
@@ -12,9 +12,7 @@ class AdminRouletteSegmentBase(BaseModel):
     reward_value: int = Field(..., alias="reward_amount")
     is_jackpot: bool = False
 
-    class Config:
-        allow_population_by_field_name = True
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True, validate_by_name=True)
 
 
 class AdminRouletteConfigBase(BaseModel):
@@ -29,8 +27,7 @@ class AdminRouletteConfigBase(BaseModel):
             raise ValueError("segments must include exactly 6 slots")
         return segments
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class AdminRouletteConfigCreate(AdminRouletteConfigBase):
@@ -43,8 +40,7 @@ class AdminRouletteConfigUpdate(BaseModel):
     max_daily_spins: Optional[int] = None
     segments: Optional[List[AdminRouletteSegmentBase]] = None
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class AdminRouletteSegmentResponse(AdminRouletteSegmentBase):

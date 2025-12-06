@@ -1,7 +1,7 @@
 # /workspace/ch25/app/schemas/admin_lottery.py
 from typing import List, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class AdminLotteryPrizeBase(BaseModel):
@@ -12,8 +12,7 @@ class AdminLotteryPrizeBase(BaseModel):
     reward_value: int
     is_active: bool = True
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class AdminLotteryConfigBase(BaseModel):
@@ -22,8 +21,7 @@ class AdminLotteryConfigBase(BaseModel):
     max_daily_plays: int = 1
     prizes: List[AdminLotteryPrizeBase]
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class AdminLotteryConfigCreate(AdminLotteryConfigBase):
@@ -36,8 +34,7 @@ class AdminLotteryConfigUpdate(BaseModel):
     max_daily_plays: Optional[int] = None
     prizes: Optional[List[AdminLotteryPrizeBase]] = None
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class AdminLotteryPrizeResponse(AdminLotteryPrizeBase):

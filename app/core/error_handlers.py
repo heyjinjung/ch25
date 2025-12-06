@@ -23,12 +23,15 @@ ERROR_MAP = {
 def register_exception_handlers(app: FastAPI) -> None:
     """Attach shared exception handlers to the FastAPI app."""
 
-    @app.exception_handler(tuple(ERROR_MAP.keys()))
-    async def handle_custom_errors(request: Request, exc: Exception) -> JSONResponse:  # type: ignore[arg-type]
+    async def handle_custom_errors(request: Request, exc: Exception) -> JSONResponse:
         code = ERROR_MAP.get(exc.__class__, "UNKNOWN_ERROR")
         message = exc.detail if hasattr(exc, "detail") else str(exc)
         status_code = getattr(exc, "status_code", 400)
         return JSONResponse(status_code=status_code, content={"error": {"code": code, "message": message}})
+
+    # Register the same handler for each custom exception type
+    for exc_cls in ERROR_MAP.keys():
+        app.add_exception_handler(exc_cls, handle_custom_errors)
 
     @app.exception_handler(RequestValidationError)
     async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
