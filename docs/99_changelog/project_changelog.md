@@ -3,6 +3,9 @@
 ## 2025-12-06
 - FastAPI 커스텀 예외 핸들러 등록 방식을 예외별 `add_exception_handler`로 수정해 루트 500 오류 해소
 - 모든 Pydantic 스키마의 `orm_mode`/`allow_population_by_field_name` 설정을 V2 키(`from_attributes`, `validate_by_name`)로 교체하여 실행 시 경고 제거
+- 프론트엔드 의존성 설치 및 타입 오류 정리(react-query v5 `isPending`, Modal prop 일치, vite-env 타입 추가, dayjs 추가)
+- PostCSS/Vite 빌드 에러 해소(`postcss.config.js` ESM 전환, CSS 주석 정리) 후 `npm run build` 성공
+- Dockerfile.frontend 빌드 인자/ENV를 Vite 키(`VITE_API_URL`, `VITE_ADMIN_API_BASE_URL`, `VITE_ENV`)로 정리
 
 ## 2025-12-08
 - XMAS 1Week 시스템 총괄 기술서 v1.0 작성
