@@ -111,7 +111,7 @@ const LotteryConfigPage: React.FC = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-100">복권 설정</h1>
-          <p className="text-sm text-slate-300">활성 상품 가중치 합>0, 재고 0 상품 제외 규칙을 UI에서 안내합니다.</p>
+          <p className="text-sm text-slate-300">활성 상품 가중치 합&gt;0, 재고 0 상품 제외 규칙을 UI에서 안내합니다.</p>
         </div>
         <Button onClick={() => setIsModalOpen(true)}>새 설정 생성</Button>
       </div>
@@ -173,7 +173,7 @@ const LotteryConfigPage: React.FC = () => {
         </div>
       )}
 
-      <Modal isOpen={isModalOpen} onClose={resetAndClose} title={editing ? "복권 설정 수정" : "새 복권 설정"}>
+      <Modal open={isModalOpen} onClose={resetAndClose} title={editing ? "복권 설정 수정" : "새 복권 설정"}>
         <form className="space-y-4" onSubmit={onSubmit}>
           <div className="space-y-1">
             <label className="text-sm text-slate-200">이름</label>
@@ -277,8 +277,8 @@ const LotteryConfigPage: React.FC = () => {
             <Button variant="secondary" type="button" onClick={resetAndClose}>
               취소
             </Button>
-            <Button type="submit" disabled={mutation.isLoading}>
-              {mutation.isLoading ? "저장 중..." : editing ? "수정" : "생성"}
+            <Button type="submit" disabled={mutation.isPending}>
+              {mutation.isPending ? "저장 중..." : editing ? "수정" : "생성"}
             </Button>
           </div>
         </form>

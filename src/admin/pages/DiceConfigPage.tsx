@@ -136,7 +136,7 @@ const DiceConfigPage: React.FC = () => {
         </div>
       )}
 
-      <Modal isOpen={isModalOpen} onClose={resetAndClose} title={editing ? "주사위 설정 수정" : "새 주사위 설정"}>
+      <Modal open={isModalOpen} onClose={resetAndClose} title={editing ? "주사위 설정 수정" : "새 주사위 설정"}>
         <form className="space-y-4" onSubmit={onSubmit}>
           <div className="space-y-1">
             <label className="text-sm text-slate-200">이름</label>
@@ -216,8 +216,8 @@ const DiceConfigPage: React.FC = () => {
             <Button variant="secondary" type="button" onClick={resetAndClose}>
               취소
             </Button>
-            <Button type="submit" disabled={mutation.isLoading}>
-              {mutation.isLoading ? "저장 중..." : editing ? "수정" : "생성"}
+            <Button type="submit" disabled={mutation.isPending}>
+              {mutation.isPending ? "저장 중..." : editing ? "수정" : "생성"}
             </Button>
           </div>
         </form>

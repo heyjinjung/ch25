@@ -53,17 +53,17 @@ const RoulettePage: React.FC = () => {
         <p className="text-sm text-slate-300">남은 횟수: {data.remaining_spins}회</p>
       </header>
 
-      <RouletteWheel segments={segmentLabels} isSpinning={playMutation.isLoading} selectedIndex={selectedIndex} />
+      <RouletteWheel segments={segmentLabels} isSpinning={playMutation.isPending} selectedIndex={selectedIndex} />
 
       <div className="space-y-3 text-center">
         {playErrorMessage && <p className="text-sm text-red-200">{playErrorMessage}</p>}
         <button
           type="button"
-          disabled={playMutation.isLoading || data.remaining_spins <= 0}
+          disabled={playMutation.isPending || data.remaining_spins <= 0}
           onClick={handlePlay}
           className="w-full rounded-lg bg-emerald-600 px-4 py-3 text-base font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:bg-emerald-900"
         >
-          {playMutation.isLoading ? "회전 중..." : "룰렛 돌리기"}
+          {playMutation.isPending ? "회전 중..." : "룰렛 돌리기"}
         </button>
         {playMutation.data && (
           <div className="rounded-lg border border-emerald-700/40 bg-emerald-900/40 px-4 py-3 text-emerald-50">

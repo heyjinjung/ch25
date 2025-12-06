@@ -48,14 +48,14 @@ const DicePage: React.FC = () => {
       <DiceView userDice={userDice} dealerDice={dealerDice} result={result} />
 
       <div className="space-y-3 text-center">
-        {playMutation.error && <p className="text-sm text-red-200">주사위를 던질 수 없습니다. 잠시 후 다시 시도해주세요.</p>}
+        {!!playMutation.error && <p className="text-sm text-red-200">주사위를 던질 수 없습니다. 잠시 후 다시 시도해주세요.</p>}
         <button
           type="button"
-          disabled={playMutation.isLoading || data.remaining_plays <= 0}
+          disabled={playMutation.isPending || data.remaining_plays <= 0}
           onClick={handlePlay}
           className="w-full rounded-lg bg-emerald-600 px-4 py-3 text-base font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:bg-emerald-900"
         >
-          {playMutation.isLoading ? "굴리는 중..." : "주사위 던지기"}
+          {playMutation.isPending ? "굴리는 중..." : "주사위 던지기"}
         </button>
         {result && <p className="text-sm text-emerald-100">결과: {result}</p>}
         <p className="text-xs text-slate-400">TODO: API 에러 코드에 맞춘 메시지 처리 추가</p>

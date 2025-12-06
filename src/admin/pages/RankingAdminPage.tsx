@@ -5,13 +5,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import dayjs from "dayjs";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  AdminRankingEntry,
-  AdminRankingEntryPayload,
-  fetchRankingByDate,
-  upsertRanking,
-  deleteRanking,
-} from "../api/adminRankingApi";
+import { AdminRankingEntryPayload, fetchRankingByDate, upsertRanking, deleteRanking } from "../api/adminRankingApi";
 import Button from "../../components/common/Button";
 
 const rankingEntrySchema = z.object({
@@ -126,7 +120,7 @@ const RankingAdminPage: React.FC = () => {
             type="button"
             variant="secondary"
             onClick={() => setIsDeleting(true)}
-            disabled={deleteMutation.isLoading}
+            disabled={deleteMutation.isPending}
           >
             전체 삭제
           </Button>
@@ -183,8 +177,8 @@ const RankingAdminPage: React.FC = () => {
           <Button type="button" variant="secondary" onClick={() => form.reset({ date: selectedDate, entries: data ?? [] })}>
             리셋
           </Button>
-          <Button type="submit" disabled={mutation.isLoading}>
-            {mutation.isLoading ? "저장 중..." : "저장"}
+          <Button type="submit" disabled={mutation.isPending}>
+            {mutation.isPending ? "저장 중..." : "저장"}
           </Button>
         </div>
       </form>
@@ -196,8 +190,8 @@ const RankingAdminPage: React.FC = () => {
             <Button variant="secondary" onClick={() => setIsDeleting(false)}>
               취소
             </Button>
-            <Button onClick={() => deleteMutation.mutate()} disabled={deleteMutation.isLoading}>
-              {deleteMutation.isLoading ? "삭제 중..." : "삭제"}
+            <Button onClick={() => deleteMutation.mutate()} disabled={deleteMutation.isPending}>
+              {deleteMutation.isPending ? "삭제 중..." : "삭제"}
             </Button>
           </div>
         </div>

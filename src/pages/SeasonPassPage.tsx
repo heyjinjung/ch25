@@ -70,7 +70,7 @@ const SeasonPassPage: React.FC = () => {
               <div className="mt-4">
                 <button
                   type="button"
-                  disabled={!canClaim || claimMutation.isLoading}
+                  disabled={!canClaim || claimMutation.isPending}
                   onClick={() => claimMutation.mutate(level.level)}
                   className="w-full rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:bg-emerald-900"
                 >

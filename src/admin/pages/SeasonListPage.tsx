@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   AdminSeason,
+  AdminSeasonListResponse,
   AdminSeasonPayload,
   fetchSeasons,
   createSeason,
@@ -37,10 +38,10 @@ const SeasonListPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const queryClient = useQueryClient();
 
-  const { data, isLoading, isError, error } = useQuery({
+  const { data, isLoading, isError, error } = useQuery<AdminSeasonListResponse>({
     queryKey: ["admin", "seasons", page, size],
     queryFn: () => fetchSeasons({ page, size }),
-    keepPreviousData: true,
+    placeholderData: (prev) => prev ?? undefined,
   });
 
   const defaultValues = useMemo<SeasonFormValues>(
@@ -171,7 +172,7 @@ const SeasonListPage: React.FC = () => {
         </div>
       )}
 
-      <Modal isOpen={isModalOpen} onClose={resetAndClose} title={editingSeason ? "시즌 수정" : "새 시즌 생성"}>
+      <Modal open={isModalOpen} onClose={resetAndClose} title={editingSeason ? "시즌 수정" : "새 시즌 생성"}>
         <form className="space-y-4" onSubmit={onSubmit}>
           <div className="space-y-1">
             <label className="text-sm text-slate-200">이름</label>
@@ -244,8 +245,8 @@ const SeasonListPage: React.FC = () => {
             <Button variant="secondary" onClick={resetAndClose} type="button">
               취소
             </Button>
-            <Button type="submit" disabled={mutation.isLoading}>
-              {mutation.isLoading ? "저장 중..." : editingSeason ? "수정" : "생성"}
+            <Button type="submit" disabled={mutation.isPending}>
+              {mutation.isPending ? "저장 중..." : editingSeason ? "수정" : "생성"}
             </Button>
           </div>
         </form>

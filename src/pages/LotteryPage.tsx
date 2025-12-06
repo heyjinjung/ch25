@@ -75,11 +75,11 @@ const LotteryPage: React.FC = () => {
         {playErrorMessage && <p className="text-sm text-red-200">{playErrorMessage}</p>}
         <button
           type="button"
-          disabled={playMutation.isLoading || data.remaining_plays <= 0}
+          disabled={playMutation.isPending || data.remaining_plays <= 0}
           onClick={handlePlay}
           className="w-full rounded-lg bg-emerald-600 px-4 py-3 text-base font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:bg-emerald-900"
         >
-          {playMutation.isLoading ? "뽑는 중..." : "복권 뽑기"}
+          {playMutation.isPending ? "뽑는 중..." : "복권 뽑기"}
         </button>
         {playMutation.data && (
           <div className="rounded-lg border border-emerald-700/40 bg-emerald-900/40 px-4 py-3 text-emerald-50">
