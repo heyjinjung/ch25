@@ -33,7 +33,10 @@ class LotteryService:
             .scalars()
             .all()
         )
-        eligible = [p for p in prizes if p.stock is None or p.stock > 0]
+        eligible = [p for p in prizes if (p.stock is None or p.stock > 0)]
+        for prize in eligible:
+            if prize.weight < 0:
+                raise InvalidConfigError("INVALID_LOTTERY_CONFIG")
         total_weight = sum(p.weight for p in eligible if p.weight > 0)
         if len(eligible) == 0 or total_weight <= 0:
             raise InvalidConfigError("INVALID_LOTTERY_CONFIG")
@@ -103,8 +106,13 @@ class LotteryService:
         ctx = GamePlayContext(user_id=user_id, feature_type=FeatureType.LOTTERY.value, today=today)
         log_game_play(ctx, db, {"prize_id": chosen.id, "reward_type": chosen.reward_type})
 
-        # TODO: integrate RewardService to actually deliver rewards.
-        _ = self.reward_service
+        self.reward_service.deliver(
+            db,
+            user_id=user_id,
+            reward_type=chosen.reward_type,
+            reward_amount=chosen.reward_amount,
+            meta={"reason": "lottery_play", "prize_id": chosen.id},
+        )
         season_pass = apply_season_pass_stamp(ctx, db)
 
         return LotteryPlayResponse(

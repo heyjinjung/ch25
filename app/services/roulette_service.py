@@ -37,6 +37,9 @@ class RouletteService:
         )
         if len(segments) != 6:
             raise InvalidConfigError("INVALID_ROULETTE_CONFIG")
+        for segment in segments:
+            if segment.weight < 0:
+                raise InvalidConfigError("INVALID_ROULETTE_CONFIG")
         total_weight = sum(segment.weight for segment in segments if segment.weight > 0)
         if total_weight <= 0:
             raise InvalidConfigError("INVALID_ROULETTE_CONFIG")
@@ -101,8 +104,14 @@ class RouletteService:
         ctx = GamePlayContext(user_id=user_id, feature_type=FeatureType.ROULETTE.value, today=today)
         log_game_play(ctx, db, {"segment_id": chosen.id, "reward_type": chosen.reward_type})
 
-        # TODO: integrate RewardService to actually deliver rewards.
-        _ = self.reward_service
+        # Deliver reward according to segment definition.
+        self.reward_service.deliver(
+            db,
+            user_id=user_id,
+            reward_type=chosen.reward_type,
+            reward_amount=chosen.reward_amount,
+            meta={"reason": "roulette_spin", "segment_id": chosen.id},
+        )
         season_pass = apply_season_pass_stamp(ctx, db)
 
         return RoulettePlayResponse(

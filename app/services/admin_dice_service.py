@@ -22,7 +22,7 @@ class AdminDiceService:
 
     @staticmethod
     def _validate_limits(max_daily_plays: int):
-        if max_daily_plays <= 0:
+        if max_daily_plays < 0:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="INVALID_MAX_DAILY_PLAYS")
 
     @staticmethod

@@ -10,7 +10,6 @@ from app.models.feature import FeatureType
 class AdminFeatureScheduleBase(BaseModel):
     date: date
     feature_type: FeatureType
-    season_id: Optional[int] = None
     is_active: bool = True
 
     model_config = ConfigDict(from_attributes=True)
@@ -22,7 +21,6 @@ class AdminFeatureScheduleCreate(AdminFeatureScheduleBase):
 
 class AdminFeatureScheduleUpdate(BaseModel):
     feature_type: Optional[FeatureType] = None
-    season_id: Optional[int] = None
     is_active: Optional[bool] = None
 
     model_config = ConfigDict(from_attributes=True)

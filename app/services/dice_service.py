@@ -27,6 +27,11 @@ class DiceService:
             raise InvalidConfigError("DICE_CONFIG_MISSING")
         return config
 
+    @staticmethod
+    def _validate_dice_values(values: list[int]) -> None:
+        if any(v < 1 or v > 6 for v in values):
+            raise InvalidConfigError("INVALID_DICE_RESULT")
+
     def get_status(self, db: Session, user_id: int, today: date) -> DiceStatusResponse:
         self.feature_service.validate_feature_active(db, today, FeatureType.DICE)
         config = self._get_today_config(db)
@@ -69,6 +74,10 @@ class DiceService:
         user_sum = sum(user_dice)
         dealer_sum = sum(dealer_dice)
 
+        # Guardrails: enforce dice value range in case of RNG/provider change.
+        self._validate_dice_values(user_dice)
+        self._validate_dice_values(dealer_dice)
+
         if user_sum > dealer_sum:
             outcome = "WIN"
             reward_type = config.win_reward_type
@@ -102,8 +111,13 @@ class DiceService:
         ctx = GamePlayContext(user_id=user_id, feature_type=FeatureType.DICE.value, today=today)
         log_game_play(ctx, db, {"result": outcome, "reward_type": reward_type})
 
-        # TODO: integrate RewardService to actually deliver rewards.
-        _ = self.reward_service
+        self.reward_service.deliver(
+            db,
+            user_id=user_id,
+            reward_type=reward_type,
+            reward_amount=reward_amount,
+            meta={"reason": "dice_play", "outcome": outcome},
+        )
         season_pass = apply_season_pass_stamp(ctx, db)
 
         return DicePlayResponse(

@@ -37,7 +37,6 @@ class AdminFeatureScheduleService:
         if schedule is None:
             schedule = FeatureSchedule(date=day)
         schedule.feature_type = data.feature_type
-        schedule.season_id = data.season_id
         schedule.is_active = data.is_active
 
         db.add(schedule)

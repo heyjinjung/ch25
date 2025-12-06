@@ -22,16 +22,26 @@ class AdminRouletteService:
         return config
 
     @staticmethod
-    def _validate_weights(total_weight: int):
+    def _validate_segments(segments_data):
+        if len(segments_data) != 6:
+            raise InvalidConfigError("INVALID_ROULETTE_CONFIG")
+        seen_slots = set()
+        total_weight = 0
+        for segment in segments_data:
+            if segment.index in seen_slots or segment.index < 0 or segment.index > 5:
+                raise InvalidConfigError("INVALID_ROULETTE_CONFIG")
+            seen_slots.add(segment.index)
+            if segment.weight < 0:
+                raise InvalidConfigError("INVALID_ROULETTE_CONFIG")
+            total_weight += segment.weight
         if total_weight <= 0:
             raise InvalidConfigError("INVALID_ROULETTE_CONFIG")
 
     @staticmethod
     def _apply_segments(db: Session, config: RouletteConfig, segments_data):
+        AdminRouletteService._validate_segments(segments_data)
         config.segments.clear()
-        total_weight = 0
         for segment in segments_data:
-            total_weight += segment.weight
             config.segments.append(
                 RouletteSegment(
                     slot_index=segment.index,
@@ -42,7 +52,6 @@ class AdminRouletteService:
                     is_jackpot=segment.is_jackpot,
                 )
             )
-        AdminRouletteService._validate_weights(total_weight)
 
     @staticmethod
     def create_config(db: Session, data: AdminRouletteConfigCreate) -> RouletteConfig:
