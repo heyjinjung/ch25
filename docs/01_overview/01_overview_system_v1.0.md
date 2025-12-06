@@ -1,8 +1,8 @@
 # XMAS 1Week Daily Feature & Season Pass System – 총괄
 
 - 문서 타입: 총괄
-- 버전: v1.0
-- 작성일: 2025-12-08
+- 버전: v1.1
+- 작성일: 2025-12-06
 - 작성자: 시스템 설계팀
 - 대상 독자: 백엔드/프론트엔드 개발자, 운영 담당자
 
@@ -27,7 +27,7 @@
   - 오늘의 이벤트 유형 조회 및 해당 UI만 노출
   - 룰렛/주사위/시즌패스/복권/랭킹 게임 로직 처리
   - 시즌패스 도장, XP, 레벨, 보상 관리
-  - 전 플레이/결과/시즌패스 변화 DB 로깅
+  - 전 플레이/결과/시즌패스 변화 DB 로깅(ENTER_PAGE/PLAY/RESULT/SEASON_PASS_* 등 user_event_log 필수)
 - 보안/성능 목표:
   - HTTPS 필수, 서버에서만 결과/보상 계산
   - `/api/today-feature` < 200ms, 게임 API < 500ms 평균 응답
@@ -37,6 +37,7 @@
 2) 활성 Feature에 따라 해당 게임/시즌패스 API를 호출한다.
 3) 서비스 로직은 인증(JWT) 검증 후 결과 계산, 시즌패스 연동(`add_stamp`), 로그 저장을 수행한다.
 4) 운영자는 `feature_config.is_enabled` 플래그로 긴급 ON/OFF가 가능하며, 스케줄 오류 시 `feature_type=NONE`을 반환한다.
+5) 일일 한도 max_daily가 0인 경우 remaining=0은 “무제한” 의미로 UI/BE 모두 차단 없이 플레이 가능하다.
 
 ## 6. 예시
 - 오늘 활성 Feature 조회 응답 예시:
@@ -50,6 +51,10 @@
 ```
 
 ## 변경 이력
+- v1.1 (2025-12-06, 시스템 설계팀)
+  - max_daily=0을 “무제한”으로 명시하고 remaining=0 의미를 UI/BE 공통으로 규정
+  - user_event_log 필수 이벤트 예시(ENTER_PAGE/PLAY/RESULT/SEASON_PASS_*)를 총괄 개요에 반영
+  - 운영 스위치(feature_config.is_enabled)와 today-feature 폴백 흐름을 재확인
 - v1.0 (2025-12-08, 시스템 설계팀)
   - 최초 작성: 전체 이벤트 시스템 개요와 운영 원칙 정리
   - 기간을 7일(예: 12/24~12/30)로 명시하고 플로우 설명을 최신화

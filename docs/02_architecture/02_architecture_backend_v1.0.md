@@ -1,8 +1,8 @@
-펴ㅣ# XMAS 1Week 시스템 백엔드 아키텍처
+# XMAS 1Week 시스템 백엔드 아키텍처
 
 - 문서 타입: 아키텍처
-- 버전: v1.0
-- 작성일: 2025-12-08
+- 버전: v1.1
+- 작성일: 2025-12-06
 - 작성자: 시스템 설계팀
 - 대상 독자: 백엔드 개발자, SRE/운영 담당자
 
@@ -20,9 +20,10 @@
 - Reverse Proxy: Nginx로 TLS 종료 및 백엔드 라우팅을 담당하는 계층.
 
 ## 4. 아키텍처 개요
-- 핵심 스택: Python 3.11+, FastAPI, Uvicorn, SQLAlchemy, Alembic, (선택) Redis 캐시.
+- 핵심 스택: Python 3.11+, FastAPI, Uvicorn, SQLAlchemy(AsyncSession), Alembic, (선택) Redis 캐시.
 - 인증: JWT 기반, 모든 게임/시즌패스 API는 Authorization 헤더 필요.
 - 타임존: Asia/Seoul 기준으로 날짜/시간 계산.
+- 비동기 원칙: 라우터/서비스/DB 접근은 async/await 일관 적용, 동기 DB 접근 금지.
 - 배포: Docker 컨테이너로 구성, Nginx가 HTTPS 종단 및 백엔드 리버스 프록시 역할을 수행.
 
 ## 5. 디렉터리 레이아웃
@@ -70,6 +71,7 @@ xmas-1week-event-system/
 - Nginx: HTTPS 종단, `/api` 경로를 백엔드로 프록시, 정적 자산 캐시 가능.
 - Docker Compose 예시: backend, db(MySQL/PostgreSQL), (옵션) redis, nginx, frontend로 구성.
 - CI/CD: GitHub Actions 또는 GitLab CI를 사용해 lint/test → docker build → deploy 단계를 수행.
+- 마이그레이션: 배포 전 `alembic upgrade head` 적용 후 `SELECT version_num FROM alembic_version;`가 `20241206_0001`인지 확인.
 
 ## 8. 운영 기준
 - 장애 시 `feature_config.is_enabled=0`으로 긴급 중단 가능.
@@ -77,6 +79,10 @@ xmas-1week-event-system/
 - 로깅: Python logging 기반, Sentry 등 APM 연동 권장.
 
 ## 변경 이력
+- v1.1 (2025-12-06, 시스템 설계팀)
+  - 비동기 원칙(AsyncSession/async def)과 JWT 필수, Python 3.11 스택을 재확인
+  - 배포 전 Alembic head 버전 확인 절차(20241206_0001) 명시
+  - 잘못된 선두 문자 제거
 - v1.0 (2025-12-08, 시스템 설계팀)
   - 최초 작성: 백엔드 스택, 레이아웃, 배포/운영 기준 정리
   - Python 3.11, JWT, Uvicorn, SQLAlchemy, Alembic 스택을 명시

@@ -1,8 +1,8 @@
 # 시즌패스 API 명세서
 
 - 문서 타입: API
-- 버전: v1.0
-- 작성일: 2025-12-08
+- 버전: v1.1
+- 작성일: 2025-12-06
 - 작성자: 시스템 설계팀
 - 대상 독자: 백엔드/프론트엔드 개발자
 
@@ -104,7 +104,8 @@
 - 400: 이미 도장 찍음 / 시즌 기간 아님 / 잘못된 source_feature_type
 - 401: 인증 실패
 - 404: 활성 시즌 없음
- - 비고: 다중 레벨업 시 auto_claim 레벨 보상은 즉시 지급되며 응답의 rewards에 포함된다.
+- 409: `NO_ACTIVE_SEASON_CONFLICT` (기간 겹치는 시즌 2개 이상)
+ - 비고: 다중 레벨업 시 auto_claim 레벨 보상은 즉시 지급되며 응답의 rewards에 포함된다. max_daily=0 sentinel 정책으로 remaining=0이어도 무제한이다.
 
 ## 6. POST /api/season-pass/claim
 ### 6-1. 설명
@@ -144,5 +145,8 @@
  - 비고: 이미 수령한 레벨은 `REWARD_ALREADY_CLAIMED`, auto_claim 레벨은 `AUTO_CLAIM_LEVEL`로 응답한다.
 
 ## 변경 이력
+- v1.1 (2025-12-06, 시스템 설계팀)
+  - stamp 에러 코드에 `NO_ACTIVE_SEASON_CONFLICT`(409) 추가, max_daily=0 무제한 비고를 강조
+  - 날짜/버전을 최신화
 - v1.0 (2025-12-08, 시스템 설계팀)
   - 최초 작성: 시즌패스 status/stamp/claim API 계약 정의
