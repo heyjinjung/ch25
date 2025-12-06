@@ -196,6 +196,11 @@ VITE_ADMIN_API_URL=https://yourdomain.com/admin/api
 openssl rand -hex 32
 ```
 
+**데이터베이스 마이그레이션 적용 (초기 스키마 포함):**
+```bash
+alembic upgrade head
+```
+
 ### 4.5 SSL 인증서 발급
 
 ```bash
