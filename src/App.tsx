@@ -1,6 +1,7 @@
 // src/App.tsx
 import React from "react";
 import AppRouter from "./router/AppRouter";
+import ToastProvider from "./components/common/ToastProvider";
 
 const App: React.FC = () => {
   return (
@@ -14,7 +15,9 @@ const App: React.FC = () => {
           </div>
         </header>
         <main className="flex-1">
-          <AppRouter />
+          <ToastProvider>
+            <AppRouter />
+          </ToastProvider>
         </main>
       </div>
     </div>
