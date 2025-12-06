@@ -1,8 +1,8 @@
 # LotteryService 모듈 기술서
 
 - 문서 타입: 모듈
-- 버전: v1.0
-- 작성일: 2025-12-08
+- 버전: v1.1
+- 작성일: 2025-12-09
 - 작성자: 시스템 설계팀
 - 대상 독자: 백엔드 개발자
 
@@ -14,13 +14,13 @@
 - DB 스키마(lottery_config/prize/log) 및 API 계약은 각각 DB/문서/03_api 문서 참조.
 
 ## 3. 용어 정의 (Definitions)
- Ticket Limit: config.max_daily_tickets로 정의된 일일 참여 한도. 운영 기간 동안 `0`은 무제한(sentinal)으로 취급하며 remaining은 0으로 응답.
+- Ticket Limit: config.max_daily_tickets로 정의된 일일 참여 한도. 운영 기간 동안 `0`은 무제한(sentinel)으로 취급하며 remaining은 0으로 응답하지만 차단하지 않는다.
 
 ## 4. 책임 (Responsibilities)
-- 오늘 feature_type=LOTTERY인지, config.is_active가 켜져 있는지 검증.
+- 오늘 feature_type=LOTTERY인지, feature_config.is_enabled=1인지, config.is_active=1인지 검증한다. 스케줄이 0건/2건이면 `INVALID_FEATURE_SCHEDULE` 처리.
 - get_today_config에서 남은 티켓 수와 prize 프리뷰 제공.
-- play에서 is_active=1이고 stock!=0인 prize만 대상으로 가중치 랜덤 추첨 + 재고 감소(필요 시), Σweight>0 검증, 보상 지급, 로그 기록을 수행.
- remaining_tickets: max_daily_tickets - today_tickets (최소 0). max_daily_tickets가 0이면 무제한으로 간주하고 remaining은 0으로 표시.
+- play에서 is_active=1이고 stock!=0인 prize만 대상으로 가중치 랜덤 추첨 + 재고 감소(필요 시), Σweight>0 검증, 보상 지급, 로그 기록을 수행한다.
+- remaining_tickets: max_daily_tickets - today_tickets (최소 0). max_daily_tickets가 0이면 무제한으로 간주하고 remaining은 0으로 표시한다.
 ## 5. 주요 메서드 시그니처
 
 ### 5-1. get_today_config
@@ -39,8 +39,8 @@ def play(self, db, user_id: int, now) -> dict:
     """1회 복권 긁기 후 당첨 prize/보상/시즌패스 결과를 반환한다."""
 ```
 - 단계:
-  1) feature_type=LOTTERY + config.is_active 확인.
-  2) today_tickets < max_daily_tickets 검증.
+  1) feature_type=LOTTERY + feature_config.is_enabled + config.is_active 확인. 스케줄 0/2건이면 `INVALID_FEATURE_SCHEDULE` 처리.
+  2) today_tickets < max_daily_tickets 검증. (max_daily_tickets=0 sentinel이면 제한 미적용)
   3) is_active=1이며 stock이 null 또는 >0인 prize만 대상으로 weight 랜덤 추출(Σweight>0 필수).
   4) 당첨 prize stock이 있다면 1 감소 반영, stock=0이 되면 추첨 대상에서 제외.
   5) RewardService 처리 후 lottery_log + user_event_log 기록.
@@ -84,6 +84,7 @@ def play(self, db, user_id: int, now) -> dict:
 
 ## 변경 이력
 - v1.1 (2025-12-09, 시스템 설계팀)
+  - max_daily_tickets=0 sentinel 무제한 규칙, feature_config.is_enabled/INVALID_FEATURE_SCHEDULE 검증, 버전/작성일 정정
   - lottery_prize의 label/reward/weight/stock/is_active를 관리자 편집 가능 항목으로 명시하고, is_active/stock 기반 필터와 Σweight>0 검증을 책임에 추가
 - v1.0 (2025-12-08, 시스템 설계팀)
   - 최초 작성: 복권 config/prize/log, 재고 기반 가중치 추첨, status/play 시그니처 정의

@@ -31,6 +31,18 @@ userApi.interceptors.response.use(
   (error) => {
     // eslint-disable-next-line no-console
     console.error("[userApi] response error", error);
+    // Handle 401/403 by redirecting to home or login (when login page exists)
+    const status = error?.response?.status;
+    if (status === 401 || status === 403) {
+      // Clear tokens and redirect; in future, redirect to login page
+      if (typeof localStorage !== "undefined") {
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("token");
+      }
+      if (typeof window !== "undefined" && window.location.pathname !== "/") {
+        window.location.href = "/";
+      }
+    }
     return Promise.reject(error);
   }
 );

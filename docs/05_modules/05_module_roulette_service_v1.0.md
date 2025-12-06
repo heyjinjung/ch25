@@ -1,8 +1,8 @@
 # RouletteService 모듈 기술서
 
 - 문서 타입: 모듈
-- 버전: v1.1
-- 작성일: 2025-12-08
+- 버전: v1.2
+- 작성일: 2025-12-09
 - 작성자: 시스템 설계팀
 - 대상 독자: 백엔드 개발자
 
@@ -16,13 +16,7 @@
 ## 3. 용어 정의 (Definitions)
 - Segment: 룰렛 한 칸, 보상/확률 정보를 가진다. 한 config 당 slot_index 0~5로 고정 6개가 존재해야 한다.
 - Weight Random: segment.weight 합을 기반으로 가중치 랜덤 추출.
- Daily Spin Limit: config.max_daily_spins로 정의된 유저 당 일일 스핀 한도. 운영 기간 동안 `0`은 무제한(sentinal)으로 취급하며 remaining은 0으로 응답.
-
- remaining_spins: max_daily_spins - today_spins (0 미만이면 0). max_daily_spins=0이면 무제한으로 간주하고 remaining은 0으로 표시.
-- 오늘 feature_type이 ROULETTE인지 검증하고 비활성 시 400/403 응답 처리.
-  3) today_spins < max_daily_spins 확인. (max_daily_spins=0이면 제한 미적용)
-- play 시 가중치 랜덤으로 segment 선택, RewardService로 보상 지급(or 예약), 로그 기록.
- `DAILY_LIMIT_REACHED`: max_daily_spins 초과. (현재 max_daily_spins=0이라 발생하지 않음)
+- Daily Spin Limit: config.max_daily_spins로 정의된 유저 당 일일 스핀 한도. `0`은 무제한(sentinel)으로 취급하며 remaining은 0으로 응답하지만 차단하지 않는다.
 
 ## 5. 주요 메서드 시그니처
 
@@ -32,7 +26,7 @@ def get_today_config(self, db, now, user_id: int) -> dict:
     """오늘 사용되는 roulette_config + today_spins/remaining_spins/segments를 반환한다."""
 ```
 - today_spins: `roulette_log`에서 user_id와 오늘 날짜 기준 카운트.
-- remaining_spins: max_daily_spins - today_spins (0 미만이면 0).
+- remaining_spins: max_daily_spins - today_spins (0 미만이면 0). max_daily_spins=0이면 무제한으로 간주하고 remaining은 0으로 표시한다.
 - segments: slot_index/id/label/reward_type/reward_amount 리스트. slot_index 0~5 총 6개가 아니면 비정상 설정으로 간주하고 비활성 처리 또는 에러 응답.
 - Σweight>0이 아닐 경우(모두 0) 비정상 설정으로 간주해 비활성 처리 또는 에러 응답.
 
@@ -42,9 +36,9 @@ def play(self, db, user_id: int, now) -> dict:
     """1회 스핀 실행 후 결과/보상/시즌패스 데이터를 반환한다."""
 ```
 - 단계:
-  1) 오늘 feature_type=ROULETTE 여부 검사 + config.is_active 체크.
+  1) 오늘 feature_type=ROULETTE 여부, feature_config.is_enabled=1, config.is_active=1 검사. 스케줄이 0건/2건이면 `INVALID_FEATURE_SCHEDULE` 처리.
   2) slot_index 0~5로 정확히 6개 segment 존재 여부와 Σweight>0 검증(불일치 시 에러/비활성 처리).
-  3) today_spins < max_daily_spins 확인.
+  3) today_spins < max_daily_spins 확인. (max_daily_spins=0 sentinel이면 제한 미적용)
   4) segments 중 weight 기반 랜덤 선택.
   5) RewardService 처리 후 roulette_log + user_event_log 기록. slot_index도 로그 메타에 포함.
   6) SeasonPassService.add_stamp() 호출 여부는 비즈니스 정책에 따라 적용.
@@ -87,6 +81,8 @@ def play(self, db, user_id: int, now) -> dict:
 - `DAILY_LIMIT_REACHED`: max_daily_spins 초과.
 
 ## 변경 이력
+- v1.2 (2025-12-09, 시스템 설계팀)
+  - max_daily_spins=0 sentinel 무제한 규칙, feature_config.is_enabled/INVALID_FEATURE_SCHEDULE 검증, 작성일 정정
 - v1.1 (2025-12-08, 시스템 설계팀)
   - segment를 slot_index 0~5 총 6칸 고정 구조로 명시하고 Σweight>0, 세그먼트 개수 검증 로직을 책임에 추가
 - v1.0 (2025-12-08, 시스템 설계팀)

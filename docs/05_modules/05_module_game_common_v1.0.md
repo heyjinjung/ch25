@@ -1,8 +1,8 @@
 # 공통 게임 모듈 가이드 (Roulette/Dice/Lottery/Ranking)
 
 - 문서 타입: 모듈
-- 버전: v1.0
-- 작성일: 2025-12-08
+- 버전: v1.1
+- 작성일: 2025-12-09
 - 작성자: 시스템 설계팀
 - 대상 독자: 백엔드 개발자
 
@@ -19,11 +19,13 @@
 - Game Log: 각 게임 전용 로그 테이블(*_log)과 공통 `user_event_log`에 남기는 기록.
 
 ## 4. 공통 규칙
-- 모든 게임 API는 먼저 "오늘 feature_type이 맞는지"를 검사하고, 불일치 시 400/403으로 "오늘은 이용 불가" 응답을 반환한다.
+- 모든 게임 API는 먼저 "오늘 feature_type이 맞는지"를 검사하고, 불일치 시 400/403으로 "오늘은 이용 불가" 응답을 반환한다. feature_config.is_enabled=0이면 `NO_FEATURE_TODAY`로 차단한다.
+- feature_schedule은 날짜당 1건이 전제이며, 0건 또는 2건 이상이면 `INVALID_FEATURE_SCHEDULE`로 처리한다.
 - status/play(혹은 ranking 조회) 모두 JWT 인증 필수로 가정하고, 공통 라우터 미들웨어에서 인증을 적용한다.
 - 모든 플레이/조회는 `user_event_log`에 event_name, feature_type, meta_json(결과/오류 이유 포함)으로 기록한다.
 - 각 게임은 전용 설정 테이블(*_config)과 결과 로그(*_log 또는 ranking_daily)를 사용하고, 설정 활성화 플래그(is_active)를 통해 긴급 ON/OFF를 지원한다.
 - SeasonPass 연동이 필요한 경우 성공 흐름에서 `SeasonPassService.add_stamp()`를 호출해 스탬프/XP/레벨업을 처리하고 응답에 `season_pass` 블록을 포함한다.
+- max_daily_spins/plays/tickets가 0이면 무제한 sentinel로 취급하며 remaining은 0으로 응답하되 차단하지 않는다.
 
 ## 5. 공통 에러 코드/응답 규칙
 - 표준 코드
@@ -53,5 +55,7 @@
 ```
 
 ## 변경 이력
+- v1.1 (2025-12-09, 시스템 설계팀)
+  - feature_config.is_enabled, feature_schedule 개수 검증, max_daily=0 sentinel 무제한 규칙을 공통 규칙에 반영
 - v1.0 (2025-12-08, 시스템 설계팀)
   - 공통 활성화 검증, 로깅, 시즌패스 연동, 테이블 개념 정의

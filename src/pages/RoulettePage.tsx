@@ -96,7 +96,6 @@ const RoulettePage: React.FC = () => {
               </p>
             </div>
           )}
-          <p className="text-xs text-slate-400">TODO: 실제 API 에러코드에 따른 상세 메시지 매핑 추가</p>
         </div>
       </section>
     );

@@ -1,8 +1,8 @@
 # DiceService 모듈 기술서
 
 - 문서 타입: 모듈
-- 버전: v1.0
-- 작성일: 2025-12-08
+- 버전: v1.1
+- 작성일: 2025-12-09
 - 작성자: 시스템 설계팀
 - 대상 독자: 백엔드 개발자
 
@@ -14,12 +14,12 @@
 - DB 컬럼/제약은 DB 문서(dice_config/log) 참고, API 계약은 `docs/03_api/` 참고.
 
 ## 3. 용어 정의 (Definitions)
-- Daily Play Limit: config.max_daily_plays로 정의된 일일 플레이 한도. 운영 기간 동안 `0`은 무제한(sentinal)으로 취급하며 remaining은 0으로 응답.
+- Daily Play Limit: config.max_daily_plays로 정의된 일일 플레이 한도. 운영 기간 동안 `0`은 무제한(sentinel)으로 취급하며 remaining은 0으로 응답하되 플레이를 차단하지 않는다.
 - Outcome: WIN/DRAW/LOSE 중 하나로 승부 결과.
 - Reward Mapping: 결과별로 config가 지정한 reward_type/reward_amount 매핑.
 
 ## 4. 책임 (Responsibilities)
-- 오늘 feature_type=DICE인지 확인하고 비활성 시 접근 차단 응답.
+- 오늘 feature_type=DICE인지, feature_config.is_enabled=1인지 확인하고 불일치/비활성 시 접근 차단(`NO_FEATURE_TODAY`).
 - 활성 dice_config 로딩, 유저의 today_plays/remaining_plays 계산.
 - play 시 유저/딜러 각각 2개씩 주사위 랜덤 생성 → 합계 비교로 승부 판단, 보상 결정, 로그 기록.
 - SeasonPassService 연동을 통해 성공 시 스탬프/XP 업데이트(정책에 따라 적용).
@@ -32,7 +32,7 @@ def get_today_config(self, db, now, user_id: int) -> dict:
     """오늘 dice_config + today_plays/remaining_plays 정보를 반환한다."""
 ```
 - today_plays: `dice_log` 기준 user_id+오늘 날짜 카운트.
-- remaining_plays: max_daily_plays - today_plays (최소 0). max_daily_plays가 0이면 무제한으로 취급하고 remaining은 0으로 표시.
+- remaining_plays: max_daily_plays - today_plays (최소 0). max_daily_plays가 0이면 무제한으로 취급하고 remaining은 0으로 표시한다.
 
 ### 5-2. play
 ```python
@@ -40,8 +40,8 @@ def play(self, db, user_id: int, now) -> dict:
     """주사위 1회 대결 후 결과/보상/시즌패스 정보를 반환한다."""
 ```
 - 단계:
-  1) feature_type=DICE 여부 및 config.is_active 확인.
-  2) today_plays < max_daily_plays 검증. (max_daily_plays=0이면 제한 미적용)
+  1) feature_type=DICE 여부, feature_config.is_enabled=1, config.is_active=1 확인. 스케줄 0/2건이면 `INVALID_FEATURE_SCHEDULE` 처리.
+  2) today_plays < max_daily_plays 검증. (max_daily_plays=0 sentinel이면 제한 미적용)
   3) 유저/딜러 각각 2개씩 주사위 생성: user_dice_1/2, dealer_dice_1/2 (1~6).
   4) user_sum, dealer_sum을 계산해 WIN/DRAW/LOSE 판단 후 reward_type/reward_amount 매핑.
   5) RewardService 처리, dice_log(user_dice_1/2, dealer_dice_1/2, user_sum, dealer_sum, outcome) + user_event_log 기록.
@@ -88,6 +88,7 @@ def play(self, db, user_id: int, now) -> dict:
 
 ## 변경 이력
 - v1.1 (2025-12-09, 시스템 설계팀)
+  - max_daily_plays=0 sentinel 무제한 규칙, feature_config.is_enabled/INVALID_FEATURE_SCHEDULE 검증, 버전/작성일 정정
   - 유저/딜러 각 2개 주사위 합계 비교 구조로 확정하고 dice_log 필드/응답 예시/책임을 갱신
 - v1.0 (2025-12-08, 시스템 설계팀)
   - 최초 작성: 주사위 config/log, 승부/보상 로직, status/play 시그니처 정의

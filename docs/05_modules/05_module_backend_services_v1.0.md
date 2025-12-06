@@ -1,8 +1,8 @@
 # Backend 모듈 기술서 (Services/Routes/Schemas)
 
 - 문서 타입: 모듈
-- 버전: v1.0
-- 작성일: 2025-12-08
+- 버전: v1.1
+- 작성일: 2025-12-09
 - 작성자: 시스템 설계팀
 - 대상 독자: 백엔드 개발자
 
@@ -22,11 +22,11 @@
 ## 4. 주요 모듈 책임
 - `app/core/`: 인증(JWT), 시큐리티, 타임존 유틸, 로깅 설정을 제공.
 - `app/config/`: 환경설정(Pydantic BaseSettings)과 DB/Redis 설정.
-- `app/db/`: SessionLocal, Base 정의 및 Alembic이 인식할 모델 import.
+- `app/db/`: AsyncSession 기반 SessionLocal, Base 정의 및 Alembic이 인식할 모델 import. 운영 시 마이그레이션 head `20241206_0001` 적용 여부를 확인한다.
 - `app/models/`: 공통/시즌패스/게임 SQLAlchemy 모델 정의.
 - `app/schemas/`: 요청/응답 Pydantic 스키마 정의.
 - `app/services/`: 비즈니스 로직 구현. 라우터는 여기 메서드를 호출만 한다.
-- `app/routes/`: api_router로 모든 엔드포인트를 묶고, 인증 의존성을 연결한다.
+- `app/routes/`: api_router로 모든 엔드포인트를 묶고, JWT 인증 의존성을 연결한다.
 - `app/utils/`: 가중치 랜덤, 페이지네이션 등 공통 유틸.
 
 ## 5. 핵심 서비스 요약
@@ -50,10 +50,10 @@
 ### 5-3. RouletteService / DiceService / LotteryService / RankingService
 - 책임: 각 게임 결과 계산, 일일 한도 검증, 시즌패스 add_stamp 연동, 로그 기록.
 - 연동: `SeasonPassService.add_stamp()` 호출하여 XP/레벨 보상 처리.
-- 공통 에러 처리: 오늘 feature_type 불일치 시 `NO_FEATURE_TODAY`, 설정 오류 시 `INVALID_<GAME>_CONFIG`(예: `INVALID_ROULETTE_CONFIG`), 일일 한도 초과 시 `DAILY_LIMIT_REACHED`를 반환한다.
+- 공통 에러 처리: 오늘 feature_type 불일치 시 `NO_FEATURE_TODAY`(feature_config.is_enabled=0 포함), 설정 오류 시 `INVALID_<GAME>_CONFIG`(예: `INVALID_ROULETTE_CONFIG`), 일일 한도 초과 시 `DAILY_LIMIT_REACHED`를 반환한다. max_daily_*=0은 무제한 sentinel로 취급하며 remaining은 0으로 응답하지만 차단하지 않는다.
 
 ### 5-4. SeasonPassService 활성 시즌 검증 보강
-- `get_current_season(now)`는 `start_date <= today <= end_date`인 시즌이 2개 이상이면 `NO_ACTIVE_SEASON_CONFLICT` 에러를 발생시켜 운영 데이터 오류를 빠르게 탐지한다.
+- `get_current_season(now)`는 `start_date <= today <= end_date`인 시즌이 2개 이상이면 `NO_ACTIVE_SEASON_CONFLICT`(409) 에러를 발생시켜 운영 데이터 오류를 빠르게 탐지한다.
 
 ### 5-5. RewardService
 - 책임: 포인트/쿠폰 등 보상 지급 로직을 통합, 게임/시즌패스 서비스에서 호출.
@@ -70,6 +70,9 @@
 5) 결과 JSON을 Router가 응답으로 반환.
 
 ## 변경 이력
+- v1.1 (2025-12-09, 시스템 설계팀)
+  - AsyncSession/Alembic head 확인, JWT 강제 및 max_daily=0 sentinel 무제한 규칙을 명시
+  - feature_config.is_enabled=0 시 `NO_FEATURE_TODAY`, `NO_ACTIVE_SEASON_CONFLICT` 409 응답을 책임에 반영
 - v1.0 (2025-12-08, 시스템 설계팀)
   - 최초 작성: 백엔드 모듈 책임 및 핵심 서비스/라우터 흐름 정리
   - SeasonPassService 세부 문서 및 xp_earned 기록 포인트를 추가 안내

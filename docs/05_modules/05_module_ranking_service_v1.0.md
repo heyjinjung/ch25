@@ -1,8 +1,8 @@
 # RankingService 모듈 기술서
 
 - 문서 타입: 모듈
-- 버전: v1.0
-- 작성일: 2025-12-08
+- 버전: v1.1
+- 작성일: 2025-12-09
 - 작성자: 시스템 설계팀
 - 대상 독자: 백엔드 개발자
 
@@ -21,7 +21,7 @@
 - Top N: 클라이언트가 조회할 상위 N명 목록, 기본 10명.
 
 ## 4. 책임 (Responsibilities)
-- 오늘 feature_type=RANKING인지 검증 후 비활성 시 조회 차단.
+- 오늘 feature_type=RANKING인지, feature_config.is_enabled=1인지 검증 후 비활성 시 조회 차단(`NO_FEATURE_TODAY`). feature_schedule이 0건/2건이면 `INVALID_FEATURE_SCHEDULE` 처리.
 - ranking_daily에서 오늘 날짜 기준 상위 N 레코드 조회, display_name 또는 nickname 포함해 응답 구성.
 - 현재 사용자(user_id)에 해당하는 레코드 조회하여 내 rank/score/is_in_top 여부 반환(없으면 rank=None, is_in_top=False).
 - user_event_log에 조회 이벤트 기록, SeasonPassService 연동은 기본 없음(정책 시 추가 가능).
@@ -72,6 +72,7 @@ def get_today_ranking(self, db, now, user_id: int, top_n: int = 10) -> dict:
 
 ## 변경 이력
 - v1.1 (2025-12-09, 시스템 설계팀)
+  - feature_config.is_enabled/feature_schedule 검증을 명시하고 버전/작성일을 정정
   - ranking_daily를 관리자 입력 모델로 명확히 정의하고 display_name 필드를 예시/로직에 반영
 - v1.0 (2025-12-08, 시스템 설계팀)
   - 최초 작성: 랭킹 조회 책임, ranking_daily 참조, get_today_ranking 시그니처 정의

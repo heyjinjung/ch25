@@ -1,8 +1,8 @@
 # SeasonPassService 모듈 기술서
 
 - 문서 타입: 모듈
-- 버전: v1.0
-- 작성일: 2025-12-08
+- 버전: v1.1
+- 작성일: 2025-12-09
 - 작성자: 시스템 설계팀
 - 대상 독자: 백엔드 개발자
 
@@ -25,7 +25,7 @@
 def get_current_season(self, now: datetime.date | datetime.datetime) -> SeasonPassConfig | None:
     """오늘 날짜 기준 활성 시즌을 반환한다."""
 ```
-- start_date <= today <= end_date 인 시즌을 조회.
+- start_date <= today <= end_date 인 시즌을 조회하며, 2건 이상이면 `NO_ACTIVE_SEASON_CONFLICT`(409)로 운영 오류를 알린다.
 
 ### 4-2. get_or_create_progress
 ```python
@@ -45,9 +45,9 @@ def add_stamp(self, user_id: int, source_feature_type: str, xp_bonus: int = 0) -
   3) season_pass_stamp_log UNIQUE(user_id, season_id, date)로 오늘 중복 방지.
   4) xp_to_add = base_xp_per_stamp + xp_bonus.
   5) current_xp, total_stamps, last_stamp_date 갱신.
-  6) required_xp <= current_xp 인 최대 level 찾고 레벨업 판단.
-  7) 신규 달성 레벨 중 auto_claim=1은 보상 지급 + reward_log 기록.
-  8) stamp_log insert (xp_earned=xp_to_add, source_feature_type 기록).
+    6) required_xp <= current_xp 인 최대 level 찾고 레벨업 판단.
+    7) 신규 달성 레벨 중 auto_claim=1은 즉시 보상 지급 + reward_log 기록, auto_claim=0은 claim_reward로 수동 수령.
+    8) stamp_log insert (xp_earned=xp_to_add, source_feature_type 기록) — xp_earned 필수.
   9) 결과 dict 반환: added_stamp, xp_added, current_level, leveled_up, rewards[].
 
 ### 4-4. get_status
@@ -76,5 +76,7 @@ def claim_reward(self, user_id: int, level: int) -> dict:
 4) stamp_log/ reward_log 기록 후 결과 dict 반환.
 
 ## 변경 이력
+- v1.1 (2025-12-09, 시스템 설계팀)
+    - 활성 시즌 중복 시 `NO_ACTIVE_SEASON_CONFLICT`(409) 처리, stamp_log xp_earned 필수 및 auto_claim 즉시 지급을 명시
 - v1.0 (2025-12-08, 시스템 설계팀)
-  - 최초 작성: SeasonPassService 책임/시그니처/연동 포인트 정의
+    - 최초 작성: SeasonPassService 책임/시그니처/연동 포인트 정의
