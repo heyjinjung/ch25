@@ -1,7 +1,16 @@
-"""Season pass related SQLAlchemy models."""
-from __future__ import annotations
-
-from sqlalchemy import Column, Date, DateTime, ForeignKey, Integer, String, UniqueConstraint, func
+# /workspace/ch25/app/models/season_pass.py
+from sqlalchemy import (
+    Boolean,
+    CheckConstraint,
+    Column,
+    Date,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.orm import relationship
 
 from app.db.base import Base
@@ -11,13 +20,18 @@ class SeasonPassConfig(Base):
     """Season metadata including duration and XP configuration."""
 
     __tablename__ = "season_pass_config"
+    __table_args__ = (
+        UniqueConstraint("season_name", name="uq_season_name"),
+        CheckConstraint("start_date <= end_date", name="ck_season_dates_order"),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
-    season_name = Column(String(100), unique=True, nullable=False)
-    start_date = Column(Date, nullable=False)
-    end_date = Column(Date, nullable=False)
+    season_name = Column(String(100), nullable=False)
+    start_date = Column(Date, nullable=False, index=True)
+    end_date = Column(Date, nullable=False, index=True)
     max_level = Column(Integer, nullable=False)
     base_xp_per_stamp = Column(Integer, nullable=False)
+    is_active = Column(Boolean, nullable=False, default=True, index=True)
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False)
 
