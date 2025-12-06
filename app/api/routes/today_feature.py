@@ -1,5 +1,6 @@
 """Endpoint for querying today's active feature."""
-from datetime import date
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
@@ -14,6 +15,6 @@ feature_service = FeatureService()
 
 @router.get("/today-feature", summary="Get today's active feature")
 def get_today_feature(db: Session = Depends(get_db)) -> dict[str, FeatureType]:
-    today = date.today()
-    feature_type = feature_service.get_today_feature(db, today)
+    now_kst = datetime.now(ZoneInfo("Asia/Seoul"))
+    feature_type = feature_service.get_today_feature(db, now_kst)
     return {"feature_type": feature_type}

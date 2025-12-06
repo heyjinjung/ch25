@@ -1,4 +1,4 @@
-"""Feature schedule and configuration models."""
+# /workspace/ch25/app/models/feature.py
 from datetime import datetime
 from enum import Enum
 
@@ -28,6 +28,8 @@ class FeatureSchedule(Base):
     date = Column(Date, nullable=False)
     feature_type = Column(SqlEnum(FeatureType), nullable=False)
     is_active = Column(Boolean, nullable=False, default=True)
+    season_id = Column(Integer, nullable=True)
+    is_locked = Column(Boolean, nullable=False, default=False)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 

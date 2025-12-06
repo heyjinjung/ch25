@@ -1,4 +1,4 @@
-"""FastAPI application entrypoint."""
+# /workspace/ch25/app/main.py
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
