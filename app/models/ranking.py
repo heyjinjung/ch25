@@ -1,7 +1,7 @@
 """Ranking daily snapshot model."""
 from datetime import datetime
 
-from sqlalchemy import Column, Date, DateTime, Integer, String, UniqueConstraint
+from sqlalchemy import Column, Date, DateTime, ForeignKey, Integer, String, UniqueConstraint
 
 from app.db.base_class import Base
 
@@ -14,7 +14,7 @@ class RankingDaily(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     date = Column(Date, nullable=False)
-    user_id = Column(Integer, nullable=True)
+    user_id = Column(Integer, ForeignKey("user.id", ondelete="SET NULL"), nullable=True)
     display_name = Column(String(50), nullable=False)
     score = Column(Integer, nullable=False, default=0)
     rank = Column(Integer, nullable=False)

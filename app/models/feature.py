@@ -2,7 +2,7 @@
 from datetime import datetime
 from enum import Enum
 
-from sqlalchemy import Boolean, Column, Date, DateTime, Enum as SqlEnum, Integer, String, UniqueConstraint
+from sqlalchemy import Boolean, Column, Date, DateTime, Enum as SqlEnum, ForeignKey, Index, Integer, JSON, String, UniqueConstraint
 
 from app.db.base_class import Base
 
@@ -28,8 +28,6 @@ class FeatureSchedule(Base):
     date = Column(Date, nullable=False)
     feature_type = Column(SqlEnum(FeatureType), nullable=False)
     is_active = Column(Boolean, nullable=False, default=True)
-    season_id = Column(Integer, nullable=True)
-    is_locked = Column(Boolean, nullable=False, default=False)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -45,6 +43,23 @@ class FeatureConfig(Base):
     title = Column(String(100), nullable=False)
     page_path = Column(String(100), nullable=False)
     is_enabled = Column(Boolean, nullable=False, default=True)
-    config_json = Column(String, nullable=True)
+    config_json = Column(JSON, nullable=True)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class UserEventLog(Base):
+    """User event audit trail for feature interactions."""
+
+    __tablename__ = "user_event_log"
+    __table_args__ = (
+        Index("ix_user_event_log_user_created_at", "user_id", "created_at"),
+        Index("ix_user_event_log_event_name", "event_name"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
+    feature_type = Column(String(30), nullable=False)
+    event_name = Column(String(50), nullable=False)
+    meta_json = Column(JSON, nullable=True)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)

@@ -53,7 +53,7 @@ class SeasonPassLevel(Base):
     required_xp = Column(Integer, nullable=False)
     reward_type = Column(String(50), nullable=False)
     reward_amount = Column(Integer, nullable=False)
-    auto_claim = Column(Integer, nullable=False)
+    auto_claim = Column(Boolean, nullable=False, default=True)
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False)
 
