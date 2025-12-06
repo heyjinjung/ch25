@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     log_level: str = Field("INFO", env="LOG_LEVEL")
     timezone: str = Field("Asia/Seoul", env="TIMEZONE")
     
+    # Test mode: bypasses feature_schedule validation (all games accessible)
+    test_mode: bool = Field(False, env="TEST_MODE")
+    
     # MySQL credentials (used by Docker Compose)
     mysql_root_password: str | None = Field(None, env="MYSQL_ROOT_PASSWORD")
     mysql_database: str | None = Field(None, env="MYSQL_DATABASE")
