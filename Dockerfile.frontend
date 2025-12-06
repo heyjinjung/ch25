@@ -21,8 +21,13 @@ COPY postcss.config.js .
 
 # Build arguments for environment variables
 ARG VITE_API_URL
-ARG VITE_ADMIN_API_URL
+ARG VITE_ADMIN_API_BASE_URL
 ARG VITE_ENV
+
+# Expose Vite env vars to build step
+ENV VITE_API_URL=${VITE_API_URL}
+ENV VITE_ADMIN_API_BASE_URL=${VITE_ADMIN_API_BASE_URL}
+ENV VITE_ENV=${VITE_ENV}
 
 # Build application
 RUN npm run build
