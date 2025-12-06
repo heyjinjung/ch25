@@ -49,4 +49,4 @@ def test_today_feature_multiple_entries_returns_error(monkeypatch, client: TestC
     )
     response = client.get("/api/today-feature")
     assert response.status_code == 500
-    assert response.json()["error"]["code"] == "INVALID_CONFIG"
+    assert response.json()["error"]["code"] == "INVALID_FEATURE_SCHEDULE"

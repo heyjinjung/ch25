@@ -11,15 +11,30 @@ const RoulettePage: React.FC = () => {
 
   const segmentLabels = useMemo(() => data?.segments.map((segment) => segment.label) ?? [], [data?.segments]);
 
+  const mapErrorMessage = (err: unknown) => {
+    const code = (err as any)?.response?.data?.error?.code as string | undefined;
+    if (code === "NO_FEATURE_TODAY") return "오늘 활성화된 이벤트가 없습니다.";
+    if (code === "INVALID_FEATURE_SCHEDULE") return "이벤트 스케줄이 잘못되었습니다. 관리자에게 문의하세요.";
+    if (code === "FEATURE_DISABLED") return "이벤트가 비활성화되었습니다.";
+    return "룰렛 정보를 불러오지 못했습니다.";
+  };
+
   const errorMessage = useMemo(() => {
     if (!error) return undefined;
-    return "룰렛 정보를 불러오지 못했습니다.";
+    return mapErrorMessage(error);
   }, [error]);
 
   const playErrorMessage = useMemo(() => {
     if (!playMutation.error) return undefined;
-    return "룰렛을 진행할 수 없습니다. 잠시 후 다시 시도해주세요.";
+    return mapErrorMessage(playMutation.error);
   }, [playMutation.error]);
+
+  const remainingLabel = useMemo(() => {
+    if (!data) return "-";
+    return data.remaining_spins === 0 ? "무제한" : `${data.remaining_spins}회`;
+  }, [data]);
+
+  const isUnlimited = data?.remaining_spins === 0;
 
   const handlePlay = async () => {
     try {
@@ -52,7 +67,7 @@ const RoulettePage: React.FC = () => {
         <header className="space-y-2 text-center">
           <p className="text-sm uppercase tracking-[0.2em] text-emerald-300">오늘의 이벤트</p>
           <h2 className="text-2xl font-bold text-emerald-100">룰렛</h2>
-          <p className="text-sm text-slate-300">남은 횟수: {data.remaining_spins}회</p>
+          <p className="text-sm text-slate-300">남은 횟수: {remainingLabel}</p>
         </header>
 
         <RouletteWheel segments={segmentLabels} isSpinning={playMutation.isPending} selectedIndex={selectedIndex} />
@@ -61,7 +76,7 @@ const RoulettePage: React.FC = () => {
           {playErrorMessage && <p className="text-sm text-red-200">{playErrorMessage}</p>}
           <button
             type="button"
-            disabled={playMutation.isPending || data.remaining_spins <= 0}
+            disabled={playMutation.isPending || (!isUnlimited && data.remaining_spins <= 0)}
             onClick={handlePlay}
             className="w-full rounded-lg bg-emerald-600 px-4 py-3 text-base font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:bg-emerald-900"
           >
@@ -76,7 +91,9 @@ const RoulettePage: React.FC = () => {
                 </p>
               )}
               {playMutation.data.message && <p className="text-sm text-emerald-200">{playMutation.data.message}</p>}
-              <p className="text-xs text-emerald-200">남은 횟수: {playMutation.data.remaining_spins}회</p>
+              <p className="text-xs text-emerald-200">
+                남은 횟수: {playMutation.data.remaining_spins === 0 ? "무제한" : `${playMutation.data.remaining_spins}회`}
+              </p>
             </div>
           )}
           <p className="text-xs text-slate-400">TODO: 실제 API 에러코드에 따른 상세 메시지 매핑 추가</p>

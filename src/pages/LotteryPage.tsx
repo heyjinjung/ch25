@@ -7,18 +7,32 @@ const LotteryPage: React.FC = () => {
   const { data, isLoading, isError, error } = useLotteryStatus();
   const playMutation = usePlayLottery();
 
+  const mapErrorMessage = (err: unknown) => {
+    const code = (err as any)?.response?.data?.error?.code as string | undefined;
+    if (code === "NO_FEATURE_TODAY") return "오늘 활성화된 이벤트가 없습니다.";
+    if (code === "INVALID_FEATURE_SCHEDULE") return "이벤트 스케줄이 잘못되었습니다. 관리자에게 문의하세요.";
+    if (code === "FEATURE_DISABLED") return "이벤트가 비활성화되었습니다.";
+    return "복권 정보를 불러올 수 없습니다.";
+  };
+
   const errorMessage = useMemo(() => {
     if (isLoading) return "";
     if (isError || !data) {
-      return "복권 정보를 불러올 수 없습니다.";
+      return mapErrorMessage(error);
     }
     return "";
-  }, [data, isError, isLoading]);
+  }, [data, error, isError, isLoading]);
 
   const playErrorMessage = useMemo(() => {
     if (!playMutation.error) return undefined;
-    return "복권을 진행할 수 없습니다. 잠시 후 다시 시도해주세요.";
+    return mapErrorMessage(playMutation.error);
   }, [playMutation.error]);
+
+  const remainingLabel = useMemo(() => {
+    if (!data) return "-";
+    return data.remaining_plays === 0 ? "무제한" : `${data.remaining_plays}회`;
+  }, [data]);
+  const isUnlimited = data?.remaining_plays === 0;
 
   const handlePlay = async () => {
     try {
@@ -50,7 +64,7 @@ const LotteryPage: React.FC = () => {
         <header className="space-y-2 text-center">
           <p className="text-sm uppercase tracking-[0.2em] text-emerald-300">오늘의 이벤트</p>
           <h1 className="text-2xl font-bold text-emerald-100">오늘 복권 1회 뽑기</h1>
-          <p className="text-sm text-slate-300">남은 횟수: {data.remaining_plays}회</p>
+          <p className="text-sm text-slate-300">남은 횟수: {remainingLabel}</p>
         </header>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -77,7 +91,7 @@ const LotteryPage: React.FC = () => {
           {playErrorMessage && <p className="text-sm text-red-200">{playErrorMessage}</p>}
           <button
             type="button"
-            disabled={playMutation.isPending || data.remaining_plays <= 0}
+            disabled={playMutation.isPending || (!isUnlimited && data.remaining_plays <= 0)}
             onClick={handlePlay}
             className="w-full rounded-lg bg-emerald-600 px-4 py-3 text-base font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:bg-emerald-900"
           >
@@ -90,10 +104,12 @@ const LotteryPage: React.FC = () => {
                 보상: {playMutation.data.prize.reward_type} {playMutation.data.prize.reward_value}
               </p>
               {playMutation.data.message && <p className="text-xs text-emerald-200">{playMutation.data.message}</p>}
-              <p className="text-xs text-emerald-200">남은 횟수: {playMutation.data.remaining_plays}회</p>
+              <p className="text-xs text-emerald-200">
+                남은 횟수: {playMutation.data.remaining_plays === 0 ? "무제한" : `${playMutation.data.remaining_plays}회`}
+              </p>
             </div>
           )}
-          <p className="text-xs text-slate-400">일일 제한, 비활성화 등 오류 메시지는 추후 상세 매핑 예정</p>
+          <p className="text-xs text-slate-400">일일 제한이 0이면 무제한으로 간주합니다.</p>
         </div>
       </section>
     );

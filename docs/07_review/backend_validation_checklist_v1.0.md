@@ -19,7 +19,7 @@
 - Today Feature: feature_schedule 상 오늘 날짜에 설정된 feature_type(ROULETTE/DICE/LOTTERY/RANKING/SEASON_PASS/NONE).
 - Validation Status: ✅ 충족, ⚠️ 보완 필요, ❌ 미충족으로 표시하며 근거/조치 메모를 함께 적는다.
 
-## 4. 본문 – 검증 결과
+## 4. 본문 – 검증 결과 (2025-12-06 기준)
 ### 4-1. 공통 규칙/제약
 - ✅ KST 기준 적용이 개요/아키텍처/공통 모듈 문서에 명시됨. (docs/01_overview/01_overview_system_v1.0.md, docs/02_architecture/02_architecture_backend_v1.0.md, docs/05_modules/05_module_game_common_v1.0.md)
 - ✅ feature_schedule은 UNIQUE(date)로 하루 하나의 feature_type만 허용하도록 정의됨. (docs/04_db/04_db_core_tables_v1.0.md)
@@ -29,11 +29,11 @@
 - ✅ season_pass_progress UNIQUE(user_id, season_id) 정의. (docs/04_db/04_db_core_tables_v1.0.md)
 - ✅ season_pass_stamp_log UNIQUE(user_id, season_id, date) 정의. (docs/04_db/04_db_core_tables_v1.0.md)
 - ✅ season_pass_reward_log UNIQUE(user_id, season_id, level) 정의. (docs/04_db/04_db_core_tables_v1.0.md)
-- ✅ season_pass_stamp_log / season_pass_reward_log 이 progress_id FK로 season_pass_progress와 연결됨(최근 코드 반영, 문서 일치 확인 필요).
+- ✅ season_pass_stamp_log / season_pass_reward_log 이 progress_id FK로 season_pass_progress와 연결됨(코드/문서 일치 확인 완료, 테스트 통과).
 - ✅ roulette_segment UNIQUE(config_id, slot_index) + slot_index 0~5 고정 명시. (docs/04_db/04_db_core_tables_v1.0.md)
 - ✅ ranking_daily UNIQUE(date, rank) 정의. (docs/04_db/04_db_core_tables_v1.0.md)
 - ✅ FK 관계는 각 테이블 설명에 season_id/user_id/config_id/prize_id 등을 통해 명시되어 모순 없음.
-- ⚠️ DAILY LIMIT: 현재 max_daily*=0을 무제한으로 해석하며 remaining=0 표기. API/프론트 문구가 이를 일관되게 안내하는지 확인 필요.
+- ⚠️ 무제한(max_daily=0) 정책: remaining=0 표기로 무제한 처리하며 API/프론트 문구 반영 완료. 에러 카탈로그/FE 안내 최종 검수 남음(⚠️ 유지).
 
 ### 4-3. Season Pass 로직
 - ✅ add_stamp 단계(중복 체크 → XP 계산 → 레벨업 → 보상 지급 → 로그)가 순서대로 기술됨. (docs/05_modules/05_module_season_pass_service_v1.0.md)
@@ -53,9 +53,11 @@
 
 ### 4-6. Admin → Runtime 안전성
 - ✅ 공통 에러 코드 테이블과 모듈별 에러 코드가 문서화됨(`INVALID_ROULETTE_CONFIG`, `INVALID_LOTTERY_CONFIG`, `DAILY_LIMIT_REACHED`, `NO_FEATURE_TODAY` 등). (docs/03_api/03_api_overview_v1.0.md, docs/05_modules/05_module_game_common_v1.0.md, 각 게임 모듈 문서)
+- ✅ 시즌패스 에러 코드 `REWARD_ALREADY_CLAIMED`, `AUTO_CLAIM_LEVEL`을 API/서비스/문서에 포함하여 보상 중복/자동지급 레벨을 명시.
 
 ### 4-7. 유저 시나리오
 - ✅ “룰렛 Day + 시즌패스 진행”과 “시즌 종료 후 호출” 시나리오를 운영/QA용으로 문서화하여 테스트 포인트와 연결. (docs/06_ops/06_ops_runbook_v1.0.md)
+- ✅ 통합 테스트 커버리지 반영: roulette/dice/lottery play 흐름, 시즌패스 다중 레벨업·수동 클레임·무활성 시즌 호출, admin ranking 업로드 성공/충돌 케이스를 포함.
 
 ## 5. 예시
 - 12/24 ROULETTE Day 시나리오(요약): /api/today-feature → roulette/status → roulette/play(RewardService 보상 + add_stamp) → season-pass/status 순으로 호출하여 XP/레벨 변동을 확인하는 플로우를 기준으로 테스트 케이스를 구성한다.

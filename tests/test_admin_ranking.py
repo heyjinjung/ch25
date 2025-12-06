@@ -54,4 +54,5 @@ def test_admin_ranking_conflict_on_duplicate_ranks(client: TestClient, session_f
 
     resp = client.put(f"/admin/api/ranking/{today}", json=duplicate_payload)
     assert resp.status_code == 409
-    assert resp.json()["detail"] == "RANKING_CONFLICT"
+    body = resp.json()
+    assert body["error"]["code"] == "RANKING_CONFLICT"
