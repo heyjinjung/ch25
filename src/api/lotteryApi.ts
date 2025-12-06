@@ -2,6 +2,7 @@
 import axios from "axios";
 import userApi from "./httpClient";
 import { getFallbackLotteryStatus, playFallbackLottery } from "./fallbackData";
+import { isDemoFallbackEnabled } from "../config/featureFlags";
 
 export interface LotteryPrizeDto {
   readonly id: number;
@@ -30,8 +31,11 @@ export const getLotteryStatus = async (): Promise<LotteryStatusResponse> => {
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      console.warn("[lotteryApi] Falling back to demo data", error.message);
-      return getFallbackLotteryStatus();
+      if (isDemoFallbackEnabled) {
+        console.warn("[lotteryApi] Falling back to demo data", error.message);
+        return getFallbackLotteryStatus();
+      }
+      throw error;
     }
     throw error;
   }
@@ -43,8 +47,11 @@ export const playLottery = async (): Promise<LotteryPlayResponse> => {
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      console.warn("[lotteryApi] Falling back to demo play", error.message);
-      return playFallbackLottery();
+      if (isDemoFallbackEnabled) {
+        console.warn("[lotteryApi] Falling back to demo play", error.message);
+        return playFallbackLottery();
+      }
+      throw error;
     }
     throw error;
   }

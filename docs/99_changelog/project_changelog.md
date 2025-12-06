@@ -1,5 +1,11 @@
 # 프로젝트 변경 이력
 
+## 2025-12-06 (frontend gating)
+- 프론트엔드 데모용 폴백 데이터를 기본 비활성화하고 `VITE_ENABLE_DEMO_FALLBACK` 플래그로만 동작하도록 변경
+- `FeatureGate` 컴포넌트를 도입해 실서비스 모드에서는 오늘 설정된 단일 이벤트 외의 페이지 진입을 차단, 테스트 모드에서는 전체 기능 체험 허용
+- 홈/레이아웃 헤더를 "지민코드 크리스마스 시즌 패스" 브랜딩과 당일 날짜 표기로 정비, 카드 리스트는 게이트 상태에 맞춰 활성/비활성 표시
+- 백엔드 룰렛/주사위/복권의 일일 1회 제한을 제거하고 상태 응답에 무제한(sentinal) 남은 횟수를 반환하도록 수정
+
 ## 2025-12-06
 - FastAPI 커스텀 예외 핸들러 등록 방식을 예외별 `add_exception_handler`로 수정해 루트 500 오류 해소
 - 모든 Pydantic 스키마의 `orm_mode`/`allow_population_by_field_name` 설정을 V2 키(`from_attributes`, `validate_by_name`)로 교체하여 실행 시 경고 제거

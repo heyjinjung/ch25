@@ -2,6 +2,7 @@
 import axios from "axios";
 import userApi from "./httpClient";
 import { getFallbackRanking } from "./fallbackData";
+import { isDemoFallbackEnabled } from "../config/featureFlags";
 
 export interface RankingEntryDto {
   readonly rank: number;
@@ -23,8 +24,11 @@ export const getTodayRanking = async (topN: number = 10): Promise<TodayRankingRe
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      console.warn("[rankingApi] Falling back to demo data", error.message);
-      return getFallbackRanking(topN);
+      if (isDemoFallbackEnabled) {
+        console.warn("[rankingApi] Falling back to demo data", error.message);
+        return getFallbackRanking(topN);
+      }
+      throw error;
     }
     throw error;
   }

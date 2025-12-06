@@ -10,7 +10,7 @@ from app.models.dice import DiceConfig, DiceLog
 from app.models.feature import FeatureType
 from app.schemas.dice import DicePlayResponse, DiceResult, DiceStatusResponse
 from app.services.feature_service import FeatureService
-from app.services.game_common import GamePlayContext, apply_season_pass_stamp, enforce_daily_limit, log_game_play
+from app.services.game_common import GamePlayContext, apply_season_pass_stamp, log_game_play
 from app.services.reward_service import RewardService
 
 
@@ -38,12 +38,14 @@ class DiceService:
                 func.date(DiceLog.created_at) == today,
             )
         ).scalar_one()
-        remaining = max(config.max_daily_plays - today_plays, 0)
+        # Daily cap removed: expose a high sentinel value.
+        unlimited = 999_999
+        remaining = unlimited
 
         return DiceStatusResponse(
             config_id=config.id,
             name=config.name,
-            max_daily_plays=config.max_daily_plays,
+            max_daily_plays=unlimited,
             today_plays=today_plays,
             remaining_plays=remaining,
             feature_type=FeatureType.DICE,
@@ -61,7 +63,6 @@ class DiceService:
                 func.date(DiceLog.created_at) == today,
             )
         ).scalar_one()
-        enforce_daily_limit(config.max_daily_plays, today_plays)
 
         user_dice = [random.randint(1, 6), random.randint(1, 6)]
         dealer_dice = [random.randint(1, 6), random.randint(1, 6)]

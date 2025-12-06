@@ -10,7 +10,7 @@ from app.models.feature import FeatureType
 from app.models.roulette import RouletteConfig, RouletteLog, RouletteSegment
 from app.schemas.roulette import RoulettePlayResponse, RouletteStatusResponse
 from app.services.feature_service import FeatureService
-from app.services.game_common import GamePlayContext, apply_season_pass_stamp, enforce_daily_limit, log_game_play
+from app.services.game_common import GamePlayContext, apply_season_pass_stamp, log_game_play
 from app.services.reward_service import RewardService
 
 
@@ -54,12 +54,14 @@ class RouletteService:
                 func.date(RouletteLog.created_at) == today,
             )
         ).scalar_one()
-        remaining = max(config.max_daily_spins - today_spins, 0)
+        # Daily cap removed: surface a large sentinel to indicate unlimited plays.
+        unlimited = 999_999
+        remaining = unlimited
 
         return RouletteStatusResponse(
             config_id=config.id,
             name=config.name,
-            max_daily_spins=config.max_daily_spins,
+            max_daily_spins=unlimited,
             today_spins=today_spins,
             remaining_spins=remaining,
             segments=segments,
@@ -79,7 +81,6 @@ class RouletteService:
                 func.date(RouletteLog.created_at) == today,
             )
         ).scalar_one()
-        enforce_daily_limit(config.max_daily_spins, today_spins)
 
         weighted_segments = []
         for seg in segments:

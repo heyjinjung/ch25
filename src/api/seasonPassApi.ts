@@ -2,6 +2,7 @@
 import axios from "axios";
 import userApi from "./httpClient";
 import { claimFallbackSeasonReward, getFallbackSeasonPassStatus } from "./fallbackData";
+import { isDemoFallbackEnabled } from "../config/featureFlags";
 
 export interface SeasonPassLevelDto {
   readonly level: number;
@@ -31,8 +32,11 @@ export const getSeasonPassStatus = async (): Promise<SeasonPassStatusResponse> =
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      console.warn("[seasonPassApi] Falling back to demo data", error.message);
-      return getFallbackSeasonPassStatus();
+      if (isDemoFallbackEnabled) {
+        console.warn("[seasonPassApi] Falling back to demo data", error.message);
+        return getFallbackSeasonPassStatus();
+      }
+      throw error;
     }
     throw error;
   }
@@ -44,8 +48,11 @@ export const claimSeasonReward = async (level: number): Promise<ClaimSeasonRewar
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      console.warn("[seasonPassApi] Falling back to demo claim", error.message);
-      return claimFallbackSeasonReward(level);
+      if (isDemoFallbackEnabled) {
+        console.warn("[seasonPassApi] Falling back to demo claim", error.message);
+        return claimFallbackSeasonReward(level);
+      }
+      throw error;
     }
     throw error;
   }
