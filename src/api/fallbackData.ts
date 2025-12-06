@@ -1,5 +1,6 @@
 // src/api/fallbackData.ts
 // Provides demo fallback data when backend APIs are unavailable so the UI remains interactive.
+import { FeatureType } from "../types/features";
 
 export interface FallbackRouletteState {
   remainingSpins: number;
@@ -126,8 +127,8 @@ export const playFallbackLottery = () => {
   };
 };
 
-export const getFallbackTodayFeature = () => ({
-  feature_type: "NONE" as const,
+export const getFallbackTodayFeature = (): { feature_type: FeatureType } => ({
+  feature_type: "NONE",
 });
 
 const rankingEntries = Array.from({ length: 10 }, (_, index) => ({

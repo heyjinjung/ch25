@@ -2,6 +2,7 @@
 import axios from "axios";
 import userApi from "./httpClient";
 import { getFallbackDiceStatus, playFallbackDice } from "./fallbackData";
+import { isDemoFallbackEnabled } from "../config/featureFlags";
 
 export interface DiceStatusResponse {
   readonly feature_type: string;
@@ -24,8 +25,11 @@ export const getDiceStatus = async (): Promise<DiceStatusResponse> => {
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      console.warn("[diceApi] Falling back to demo data", error.message);
-      return getFallbackDiceStatus();
+      if (isDemoFallbackEnabled) {
+        console.warn("[diceApi] Falling back to demo data", error.message);
+        return getFallbackDiceStatus();
+      }
+      throw error;
     }
     throw error;
   }
@@ -37,8 +41,11 @@ export const playDice = async (): Promise<DicePlayResponse> => {
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      console.warn("[diceApi] Falling back to demo play", error.message);
-      return playFallbackDice();
+      if (isDemoFallbackEnabled) {
+        console.warn("[diceApi] Falling back to demo play", error.message);
+        return playFallbackDice();
+      }
+      throw error;
     }
     throw error;
   }

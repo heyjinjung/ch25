@@ -10,7 +10,7 @@ from app.models.feature import FeatureType
 from app.models.lottery import LotteryConfig, LotteryLog, LotteryPrize
 from app.schemas.lottery import LotteryPlayResponse, LotteryPrizeSchema, LotteryStatusResponse
 from app.services.feature_service import FeatureService
-from app.services.game_common import GamePlayContext, apply_season_pass_stamp, enforce_daily_limit, log_game_play
+from app.services.game_common import GamePlayContext, apply_season_pass_stamp, log_game_play
 from app.services.reward_service import RewardService
 
 
@@ -51,12 +51,14 @@ class LotteryService:
                 func.date(LotteryLog.created_at) == today,
             )
         ).scalar_one()
-        remaining = max(config.max_daily_tickets - today_tickets, 0)
+        # Daily cap removed: surface a large sentinel to indicate unlimited entries.
+        unlimited = 999_999
+        remaining = unlimited
 
         return LotteryStatusResponse(
             config_id=config.id,
             name=config.name,
-            max_daily_tickets=config.max_daily_tickets,
+            max_daily_tickets=unlimited,
             today_tickets=today_tickets,
             remaining_tickets=remaining,
             prize_preview=[LotteryPrizeSchema.from_orm(p) for p in prizes],
@@ -76,7 +78,6 @@ class LotteryService:
                 func.date(LotteryLog.created_at) == today,
             )
         ).scalar_one()
-        enforce_daily_limit(config.max_daily_tickets, today_tickets)
 
         weighted_pool: list[LotteryPrize] = []
         for prize in prizes:

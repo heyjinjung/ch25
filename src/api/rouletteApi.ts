@@ -2,6 +2,7 @@
 import axios from "axios";
 import userApi from "./httpClient";
 import { getFallbackRouletteStatus, playFallbackRoulette } from "./fallbackData";
+import { isDemoFallbackEnabled } from "../config/featureFlags";
 
 export interface RouletteSegmentDto {
   readonly label: string;
@@ -28,8 +29,11 @@ export const getRouletteStatus = async (): Promise<RouletteStatusResponse> => {
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      console.warn("[rouletteApi] Falling back to demo data", error.message);
-      return getFallbackRouletteStatus();
+      if (isDemoFallbackEnabled) {
+        console.warn("[rouletteApi] Falling back to demo data", error.message);
+        return getFallbackRouletteStatus();
+      }
+      throw error;
     }
     throw error;
   }
@@ -41,8 +45,11 @@ export const playRoulette = async (): Promise<RoulettePlayResponse> => {
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      console.warn("[rouletteApi] Falling back to demo play", error.message);
-      return playFallbackRoulette();
+      if (isDemoFallbackEnabled) {
+        console.warn("[rouletteApi] Falling back to demo play", error.message);
+        return playFallbackRoulette();
+      }
+      throw error;
     }
     throw error;
   }

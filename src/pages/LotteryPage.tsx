@@ -1,6 +1,7 @@
 // src/pages/LotteryPage.tsx
 import React, { useMemo } from "react";
 import { usePlayLottery, useLotteryStatus } from "../hooks/useLottery";
+import FeatureGate from "../components/feature/FeatureGate";
 
 const LotteryPage: React.FC = () => {
   const { data, isLoading, isError, error } = useLotteryStatus();
@@ -27,74 +28,78 @@ const LotteryPage: React.FC = () => {
     }
   };
 
-  if (isLoading) {
+  const content = (() => {
+    if (isLoading) {
+      return (
+        <section className="rounded-xl border border-emerald-800/40 bg-slate-900/60 p-6 text-center text-emerald-100 shadow-lg shadow-emerald-900/30">
+          복권 정보를 불러오는 중입니다...
+        </section>
+      );
+    }
+
+    if (isError || !data) {
+      return (
+        <section className="rounded-xl border border-red-800/40 bg-red-950/60 p-6 text-center text-red-100 shadow-lg shadow-red-900/30">
+          {errorMessage || String(error)}
+        </section>
+      );
+    }
+
     return (
-      <section className="rounded-xl border border-emerald-800/40 bg-slate-900/60 p-6 text-center text-emerald-100 shadow-lg shadow-emerald-900/30">
-        복권 정보를 불러오는 중입니다...
+      <section className="space-y-6 rounded-xl border border-emerald-800/40 bg-slate-900/70 p-6 text-slate-100 shadow-lg shadow-emerald-900/30">
+        <header className="space-y-2 text-center">
+          <p className="text-sm uppercase tracking-[0.2em] text-emerald-300">오늘의 이벤트</p>
+          <h1 className="text-2xl font-bold text-emerald-100">오늘 복권 1회 뽑기</h1>
+          <p className="text-sm text-slate-300">남은 횟수: {data.remaining_plays}회</p>
+        </header>
+
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {data.prizes.map((prize) => (
+            <article key={prize.id} className="rounded-xl border border-emerald-800/40 bg-slate-900/60 p-4">
+              <h3 className="text-lg font-semibold text-emerald-100">{prize.label}</h3>
+              <p className="text-sm text-slate-200">
+                보상: {prize.reward_type} {prize.reward_value}
+              </p>
+              {prize.stock !== undefined && prize.stock !== null && (
+                <p className="text-xs text-slate-400">재고: {prize.stock}</p>
+              )}
+              {prize.is_active === false && <p className="text-xs text-red-300">비활성화된 상품</p>}
+            </article>
+          ))}
+          {data.prizes.length === 0 && (
+            <div className="rounded-xl border border-slate-700 bg-slate-950/60 p-4 text-center text-slate-200">
+              현재 당첨 가능 상품이 없습니다.
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-3 text-center">
+          {playErrorMessage && <p className="text-sm text-red-200">{playErrorMessage}</p>}
+          <button
+            type="button"
+            disabled={playMutation.isPending || data.remaining_plays <= 0}
+            onClick={handlePlay}
+            className="w-full rounded-lg bg-emerald-600 px-4 py-3 text-base font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:bg-emerald-900"
+          >
+            {playMutation.isPending ? "뽑는 중..." : "복권 뽑기"}
+          </button>
+          {playMutation.data && (
+            <div className="rounded-lg border border-emerald-700/40 bg-emerald-900/40 px-4 py-3 text-emerald-50">
+              <p className="text-lg font-semibold">당첨 상품: {playMutation.data.prize.label}</p>
+              <p className="text-sm text-emerald-100">
+                보상: {playMutation.data.prize.reward_type} {playMutation.data.prize.reward_value}
+              </p>
+              {playMutation.data.message && <p className="text-xs text-emerald-200">{playMutation.data.message}</p>}
+              <p className="text-xs text-emerald-200">남은 횟수: {playMutation.data.remaining_plays}회</p>
+            </div>
+          )}
+          <p className="text-xs text-slate-400">일일 제한, 비활성화 등 오류 메시지는 추후 상세 매핑 예정</p>
+        </div>
       </section>
     );
-  }
+  })();
 
-  if (isError || !data) {
-    return (
-      <section className="rounded-xl border border-red-800/40 bg-red-950/60 p-6 text-center text-red-100 shadow-lg shadow-red-900/30">
-        {errorMessage || String(error)}
-      </section>
-    );
-  }
-
-  return (
-    <section className="space-y-6 rounded-xl border border-emerald-800/40 bg-slate-900/70 p-6 text-slate-100 shadow-lg shadow-emerald-900/30">
-      <header className="space-y-2 text-center">
-        <p className="text-sm uppercase tracking-[0.2em] text-emerald-300">오늘의 이벤트</p>
-        <h1 className="text-2xl font-bold text-emerald-100">오늘 복권 1회 뽑기</h1>
-        <p className="text-sm text-slate-300">남은 횟수: {data.remaining_plays}회</p>
-      </header>
-
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {data.prizes.map((prize) => (
-          <article key={prize.id} className="rounded-xl border border-emerald-800/40 bg-slate-900/60 p-4">
-            <h3 className="text-lg font-semibold text-emerald-100">{prize.label}</h3>
-            <p className="text-sm text-slate-200">
-              보상: {prize.reward_type} {prize.reward_value}
-            </p>
-            {prize.stock !== undefined && prize.stock !== null && (
-              <p className="text-xs text-slate-400">재고: {prize.stock}</p>
-            )}
-            {prize.is_active === false && <p className="text-xs text-red-300">비활성화된 상품</p>}
-          </article>
-        ))}
-        {data.prizes.length === 0 && (
-          <div className="rounded-xl border border-slate-700 bg-slate-950/60 p-4 text-center text-slate-200">
-            현재 당첨 가능 상품이 없습니다.
-          </div>
-        )}
-      </div>
-
-      <div className="space-y-3 text-center">
-        {playErrorMessage && <p className="text-sm text-red-200">{playErrorMessage}</p>}
-        <button
-          type="button"
-          disabled={playMutation.isPending || data.remaining_plays <= 0}
-          onClick={handlePlay}
-          className="w-full rounded-lg bg-emerald-600 px-4 py-3 text-base font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:bg-emerald-900"
-        >
-          {playMutation.isPending ? "뽑는 중..." : "복권 뽑기"}
-        </button>
-        {playMutation.data && (
-          <div className="rounded-lg border border-emerald-700/40 bg-emerald-900/40 px-4 py-3 text-emerald-50">
-            <p className="text-lg font-semibold">당첨 상품: {playMutation.data.prize.label}</p>
-            <p className="text-sm text-emerald-100">
-              보상: {playMutation.data.prize.reward_type} {playMutation.data.prize.reward_value}
-            </p>
-            {playMutation.data.message && <p className="text-xs text-emerald-200">{playMutation.data.message}</p>}
-            <p className="text-xs text-emerald-200">남은 횟수: {playMutation.data.remaining_plays}회</p>
-          </div>
-        )}
-        <p className="text-xs text-slate-400">일일 제한, 비활성화 등 오류 메시지는 추후 상세 매핑 예정</p>
-      </div>
-    </section>
-  );
+  return <FeatureGate feature="LOTTERY">{content}</FeatureGate>;
 };
 
 export default LotteryPage;
