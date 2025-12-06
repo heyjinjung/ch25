@@ -1,5 +1,7 @@
 // src/api/rouletteApi.ts
+import axios from "axios";
 import userApi from "./httpClient";
+import { getFallbackRouletteStatus, playFallbackRoulette } from "./fallbackData";
 
 export interface RouletteSegmentDto {
   readonly label: string;
@@ -21,11 +23,27 @@ export interface RoulettePlayResponse {
 }
 
 export const getRouletteStatus = async (): Promise<RouletteStatusResponse> => {
-  const response = await userApi.get<RouletteStatusResponse>("/roulette/status");
-  return response.data;
+  try {
+    const response = await userApi.get<RouletteStatusResponse>("/roulette/status");
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.warn("[rouletteApi] Falling back to demo data", error.message);
+      return getFallbackRouletteStatus();
+    }
+    throw error;
+  }
 };
 
 export const playRoulette = async (): Promise<RoulettePlayResponse> => {
-  const response = await userApi.post<RoulettePlayResponse>("/roulette/play");
-  return response.data;
+  try {
+    const response = await userApi.post<RoulettePlayResponse>("/roulette/play");
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.warn("[rouletteApi] Falling back to demo play", error.message);
+      return playFallbackRoulette();
+    }
+    throw error;
+  }
 };

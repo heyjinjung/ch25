@@ -1,5 +1,7 @@
 // src/api/lotteryApi.ts
+import axios from "axios";
 import userApi from "./httpClient";
+import { getFallbackLotteryStatus, playFallbackLottery } from "./fallbackData";
 
 export interface LotteryPrizeDto {
   readonly id: number;
@@ -23,11 +25,27 @@ export interface LotteryPlayResponse {
 }
 
 export const getLotteryStatus = async (): Promise<LotteryStatusResponse> => {
-  const response = await userApi.get<LotteryStatusResponse>("/lottery/status");
-  return response.data;
+  try {
+    const response = await userApi.get<LotteryStatusResponse>("/lottery/status");
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.warn("[lotteryApi] Falling back to demo data", error.message);
+      return getFallbackLotteryStatus();
+    }
+    throw error;
+  }
 };
 
 export const playLottery = async (): Promise<LotteryPlayResponse> => {
-  const response = await userApi.post<LotteryPlayResponse>("/lottery/play");
-  return response.data;
+  try {
+    const response = await userApi.post<LotteryPlayResponse>("/lottery/play");
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.warn("[lotteryApi] Falling back to demo play", error.message);
+      return playFallbackLottery();
+    }
+    throw error;
+  }
 };

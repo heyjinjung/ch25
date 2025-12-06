@@ -16,7 +16,8 @@ const SeasonPassBar: React.FC = () => {
 
   const label = useMemo(() => {
     if (isLoading) return "시즌 패스 정보를 불러오는 중...";
-    if (isError || !data) return "시즌 패스 정보를 가져올 수 없습니다.";
+    if (isError) return "시즌 패스 정보를 가져올 수 없습니다.";
+    if (!data) return "현재 활성화된 시즌 패스가 없습니다.";
     return `Lv.${data.current_level} / ${data.max_level} (XP ${data.current_xp} / ${data.next_level_xp})`;
   }, [data, isError, isLoading]);
 
