@@ -1,8 +1,8 @@
 # XMAS 1Week API 개요 및 핵심 엔드포인트
 
 - 문서 타입: API
-- 버전: v1.0
-- 작성일: 2025-12-08
+- 버전: v1.1
+- 작성일: 2025-12-06
 - 작성자: 시스템 설계팀
 - 대상 독자: 백엔드/프론트엔드 개발자
 
@@ -27,7 +27,7 @@
   - `NO_ACTIVE_SEASON`: KST 오늘 기준 활성 시즌이 없을 때.
   - `NO_ACTIVE_SEASON_CONFLICT`: start/end 범위를 충족하는 시즌이 2개 이상인 데이터 충돌.
   - `INVALID_ROULETTE_CONFIG` / `INVALID_LOTTERY_CONFIG`: 설정 검증(6칸/가중치 합/재고 등) 실패.
-  - `DAILY_LIMIT_REACHED`: 일일 제한(max_daily_spins/plays/tickets) 초과. (현재 운영 설정: max_daily*=0 → 무제한; remaining 값이 0이어도 제한 없음 의미)
+  - `DAILY_LIMIT_REACHED`: 일일 제한(max_daily_spins/plays/tickets) 초과. (max_daily*=0이면 remaining=0이어도 "무제한" 의미로 차단 없이 허용)
   - `LOCK_NOT_ACQUIRED`: DB 락 타임아웃/데드락으로 재시도 필요.
   - `UNAUTHORIZED`/`FORBIDDEN`: 인증 실패/권한 없음.
   - `REWARD_ALREADY_CLAIMED` / `AUTO_CLAIM_LEVEL` / `LEVEL_NOT_REACHED`: 시즌패스 수동 클레임 관련 오류.
@@ -48,6 +48,7 @@
 ```
 - 주요 에러: 401(인증 실패), 404(`NO_FEATURE_TODAY`), 409(`INVALID_FEATURE_SCHEDULE`)
 - 비고: 스케줄이 없으면 `NO_FEATURE_TODAY`, 중복 스케줄이면 `INVALID_FEATURE_SCHEDULE`를 반환한다.
+ - 추가 비고: `feature_config.is_enabled=0`일 때도 `NO_FEATURE_TODAY`로 응답해 UI 차단.
 
 ### 4-2. GET /api/feature
 - 설명: 특정 날짜의 Feature 정보를 조회한다(관리/디버깅용).
@@ -133,6 +134,7 @@
 }
 ```
 - 비고: 현재 max_daily_spins=0이므로 remaining=0은 "무제한"을 의미한다.
+ - 비고: max_daily_spins=0 sentinel 정책은 remaining=0이어도 차단하지 않는다.
 - 주요 에러: 400(`DAILY_LIMIT_REACHED`, `INVALID_ROULETTE_CONFIG`), 403(`NO_FEATURE_TODAY`), 401(`UNAUTHORIZED`)
 
 ### 6-2. POST /api/roulette/play (예시)
@@ -168,6 +170,7 @@
 }
 ```
 - 비고: max_daily_plays=0이라 remaining 표시는 0이어도 무제한으로 간주한다.
+ - 비고: max_daily_plays=0 sentinel 정책은 remaining=0이어도 차단하지 않는다.
 - 주요 에러: 400(`DAILY_LIMIT_REACHED`, `INVALID_FEATURE_SCHEDULE`), 403(`NO_FEATURE_TODAY`), 401(`UNAUTHORIZED`)
 
 ### 6-4. POST /api/lottery/play (예시)
@@ -187,6 +190,7 @@
 }
 ```
   - 비고: max_daily_tickets=0이라 remaining 표시는 0이어도 무제한으로 간주한다.
+  - 비고: max_daily_tickets=0 sentinel 정책은 remaining=0이어도 차단하지 않는다.
 - 주요 에러: 400(`DAILY_LIMIT_REACHED`, `INVALID_LOTTERY_CONFIG`), 403(`NO_FEATURE_TODAY`), 401(`UNAUTHORIZED`)
 
 ### 6-5. GET /api/ranking/today (예시)
@@ -207,6 +211,9 @@
 - 주요 에러: 403(`NO_FEATURE_TODAY`), 401(`UNAUTHORIZED`)
 
 ## 변경 이력
+- v1.1 (2025-12-06, 시스템 설계팀)
+  - max_daily=0 sentinel 정책을 모든 게임/시즌패스 비고에 명시하고 `NO_FEATURE_TODAY`를 is_enabled=0에도 적용하는 설명 추가
+  - 공통 에러 코드 설명에서 무제한 정책 문구를 명확화
 - v1.0 (2025-12-08, 시스템 설계팀)
   - 최초 작성: 공통/시즌패스/게임 API 계약 정리 및 예시 응답 추가
   - 시즌패스 stamp 요청 본문을 `source_feature_type`, `xp_bonus`로 명시

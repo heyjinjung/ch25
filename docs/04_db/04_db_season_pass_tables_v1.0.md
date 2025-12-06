@@ -1,8 +1,8 @@
 # 시즌패스 테이블 설계
 
 - 문서 타입: DB
-- 버전: v1.0
-- 작성일: 2025-12-08
+- 버전: v1.1
+- 작성일: 2025-12-06
 - 작성자: 시스템 설계팀
 - 대상 독자: 백엔드 개발자, DBA, 데이터 분석가
 
@@ -113,7 +113,7 @@
 | created_at        | DATETIME |       | Y        | 생성 시각                      |
 
 ### 7-3. 인덱스/제약사항
-- UNIQUE(user_id, season_id, date)  — 일 1회 도장 정책을 enforcing
+- UNIQUE(user_id, season_id, date)  — 일 1회 도장 정책을 enforcing, xp_earned 필수 기록
 
 ### 7-4. 관련 테이블
 - `user` (N:1)
@@ -143,5 +143,8 @@
 - `season_pass_config` (N:1)
 
 ## 변경 이력
+- v1.1 (2025-12-06, 시스템 설계팀)
+  - stamp_log에 xp_earned 필수 기록 및 UNIQUE(user_id, season_id, date)로 일 1회 enforcing을 재강조
+  - 버전/작성일을 최신화
 - v1.0 (2025-12-08, 시스템 설계팀)
   - 최초 작성: 시즌패스 5개 테이블 스키마/제약/관계 정의

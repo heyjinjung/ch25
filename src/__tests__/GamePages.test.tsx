@@ -1,5 +1,5 @@
 import React from "react";
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { describe, expect, it, vi, beforeEach, Mock } from "vitest";
 import { render, screen } from "@testing-library/react";
 
 // Mock FeatureGate to pass children through without today-feature dependency.
@@ -36,13 +36,13 @@ describe("Game pages error/unlimited handling", () => {
   });
 
   it("Roulette shows unlimited when remaining_spins=0 and stays enabled", async () => {
-    (useRouletteStatus as unknown as vi.Mock).mockReturnValue({
+    (useRouletteStatus as unknown as Mock).mockReturnValue({
       data: { remaining_spins: 0, segments: [], feature_type: "ROULETTE" },
       isLoading: false,
       isError: false,
       error: null,
     });
-    (usePlayRoulette as unknown as vi.Mock).mockReturnValue({
+    (usePlayRoulette as unknown as Mock).mockReturnValue({
       mutateAsync: vi.fn(),
       isPending: false,
       error: null,
@@ -56,13 +56,13 @@ describe("Game pages error/unlimited handling", () => {
   });
 
   it("Roulette maps NO_FEATURE_TODAY error to friendly message", () => {
-    (useRouletteStatus as unknown as vi.Mock).mockReturnValue({
+    (useRouletteStatus as unknown as Mock).mockReturnValue({
       data: undefined,
       isLoading: false,
       isError: true,
       error: { response: { data: { error: { code: "NO_FEATURE_TODAY" } } } },
     });
-    (usePlayRoulette as unknown as vi.Mock).mockReturnValue({
+    (usePlayRoulette as unknown as Mock).mockReturnValue({
       mutateAsync: vi.fn(),
       isPending: false,
       error: null,
@@ -74,13 +74,13 @@ describe("Game pages error/unlimited handling", () => {
   });
 
   it("Dice shows unlimited when remaining_plays=0 and maps INVALID_FEATURE_SCHEDULE", () => {
-    (useDiceStatus as unknown as vi.Mock).mockReturnValue({
+    (useDiceStatus as unknown as Mock).mockReturnValue({
       data: { remaining_plays: 0, feature_type: "DICE" },
       isLoading: false,
       isError: false,
       error: null,
     });
-    (usePlayDice as unknown as vi.Mock).mockReturnValue({
+    (usePlayDice as unknown as Mock).mockReturnValue({
       mutateAsync: vi.fn(),
       isPending: false,
       error: { response: { data: { error: { code: "INVALID_FEATURE_SCHEDULE" } } } },
@@ -94,13 +94,13 @@ describe("Game pages error/unlimited handling", () => {
   });
 
   it("Lottery shows unlimited when remaining_plays=0 and maps FEATURE_DISABLED", () => {
-    (useLotteryStatus as unknown as vi.Mock).mockReturnValue({
+    (useLotteryStatus as unknown as Mock).mockReturnValue({
       data: { remaining_plays: 0, prizes: [], feature_type: "LOTTERY" },
       isLoading: false,
       isError: false,
       error: null,
     });
-    (usePlayLottery as unknown as vi.Mock).mockReturnValue({
+    (usePlayLottery as unknown as Mock).mockReturnValue({
       mutateAsync: vi.fn(),
       isPending: false,
       error: { response: { data: { error: { code: "FEATURE_DISABLED" } } } },

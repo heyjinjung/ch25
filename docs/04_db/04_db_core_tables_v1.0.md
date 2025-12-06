@@ -1,8 +1,8 @@
 # XMAS 1Week DB 설계 – 공통/시즌패스/게임 테이블
 
 - 문서 타입: DB
-- 버전: v1.1
-- 작성일: 2025-12-08
+- 버전: v1.3
+- 작성일: 2025-12-06
 - 작성자: 시스템 설계팀
 - 대상 독자: 백엔드 개발자, DBA, 데이터 분석가
 
@@ -42,7 +42,7 @@
 | created_at | DATETIME |  | Y | 생성 시각 |
 | updated_at | DATETIME |  | Y | 수정 시각 |
 
-- 인덱스/제약: UNIQUE(date), is_active 기본 1, feature_type ENUM 권장
+- 인덱스/제약: UNIQUE(date), is_active 기본 1, feature_type ENUM 권장 (UNIQUE 위반 시 `INVALID_FEATURE_SCHEDULE`)
 - 연관: 없음(조회용), 운영 시 7일치 미리 insert
 
 ### 4-3. feature_config
@@ -57,7 +57,7 @@
 | created_at | DATETIME |  | Y | 생성 시각 |
 | updated_at | DATETIME |  | Y | 수정 시각 |
 
-- 인덱스/제약: feature_type UNIQUE, is_enabled default 1
+- 인덱스/제약: feature_type UNIQUE, is_enabled default 1 (is_enabled=0이면 `NO_FEATURE_TODAY`로 UI 차단)
 - 연관: 서비스 설정 조회에 사용
 
 ### 4-4. user_event_log
@@ -163,7 +163,7 @@
 | id | INT | PK | Y | 기본키 |
 | name | VARCHAR(100) |  | Y | 룰렛 이름(예: XMAS_BASIC_ROULETTE) |
 | is_active | TINYINT |  | Y | 1=활성 |
-| max_daily_spins | INT |  | Y | 유저 당 하루 스핀 한도 |
+| max_daily_spins | INT |  | Y | 유저 당 하루 스핀 한도 (0=무제한; remaining=0 반환해도 차단 없음) |
 | created_at | DATETIME |  | Y | 생성 시각 |
 | updated_at | DATETIME |  | Y | 수정 시각 |
 
@@ -208,7 +208,7 @@
 | id | INT | PK | Y | 기본키 |
 | name | VARCHAR(100) |  | Y | 설정 이름 |
 | is_active | TINYINT |  | Y | 1=활성 |
-| max_daily_plays | INT |  | Y | 유저 일일 플레이 한도 |
+| max_daily_plays | INT |  | Y | 유저 일일 플레이 한도 (0=무제한; remaining=0 반환해도 차단 없음) |
 | win_reward_type | VARCHAR(50) |  | Y | 승리 보상 타입 |
 | win_reward_amount | INT |  | Y | 승리 보상 수치 |
 | draw_reward_type | VARCHAR(50) |  | Y | 무승부 보상 타입 |
@@ -247,7 +247,7 @@
 | id | INT | PK | Y | 기본키 |
 | name | VARCHAR(100) |  | Y | 복권 이름 |
 | is_active | TINYINT |  | Y | 1=활성 |
-| max_daily_tickets | INT |  | Y | 유저 당 하루 최대 긁기 수 |
+| max_daily_tickets | INT |  | Y | 유저 당 하루 최대 긁기 수 (0=무제한; remaining=0 반환해도 차단 없음) |
 | created_at | DATETIME |  | Y | 생성 시각 |
 | updated_at | DATETIME |  | Y | 수정 시각 |
 
@@ -301,6 +301,9 @@
 - 운영 규칙: 관리자가 직접 입력/업로드하며 API는 조회만 수행
 
 ## 변경 이력
+- v1.3 (2025-12-06, 시스템 설계팀)
+  - feature_schedule UNIQUE(date) 위반 시 INVALID_FEATURE_SCHEDULE, feature_config.is_enabled=0 시 NO_FEATURE_TODAY 차단 흐름을 주석으로 명시
+  - roulette/dice/lottery 일일 한도 컬럼에 0=무제한(sentinal)과 remaining=0 의미를 표기
 - v1.2 (2025-12-09, 시스템 설계팀)
   - 주사위 게임을 유저/딜러 2주사위 합계 비교 구조로 확정하고 dice_log 필드 확장
   - 복권 상품 관리에 is_active 추가, 관리자 편집(라벨/보상/확률/재고) 및 weight>0 검증 규칙 명시
