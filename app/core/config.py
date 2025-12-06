@@ -1,37 +1,37 @@
 """Application configuration settings."""
 from functools import lru_cache
-from pydantic import Field, ConfigDict
-from pydantic_settings import BaseSettings
+from pydantic import AliasChoices, Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     """Base application settings loaded from environment variables."""
 
     # Required settings
-    database_url: str = Field(..., env="DATABASE_URL")
-    jwt_secret: str = Field(..., env="JWT_SECRET")
-    
-    # Optional settings with defaults
-    jwt_algorithm: str = Field("HS256", env="JWT_ALGORITHM")
-    jwt_expire_minutes: int = Field(1440, env="JWT_EXPIRE_MINUTES")
-    env: str = Field("local", env="ENV")
-    cors_origins: list[str] = Field(default_factory=list, env="CORS_ORIGINS")
-    log_level: str = Field("INFO", env="LOG_LEVEL")
-    timezone: str = Field("Asia/Seoul", env="TIMEZONE")
-    
-    # Test mode: bypasses feature_schedule validation (all games accessible)
-    test_mode: bool = Field(False, env="TEST_MODE")
-    
-    # MySQL credentials (used by Docker Compose)
-    mysql_root_password: str | None = Field(None, env="MYSQL_ROOT_PASSWORD")
-    mysql_database: str | None = Field(None, env="MYSQL_DATABASE")
-    mysql_user: str | None = Field(None, env="MYSQL_USER")
-    mysql_password: str | None = Field(None, env="MYSQL_PASSWORD")
+    database_url: str = Field(..., validation_alias=AliasChoices("DATABASE_URL", "database_url"))
+    jwt_secret: str = Field(..., validation_alias=AliasChoices("JWT_SECRET", "jwt_secret"))
 
-    model_config = ConfigDict(
+    # Optional settings with defaults
+    jwt_algorithm: str = Field("HS256", validation_alias=AliasChoices("JWT_ALGORITHM", "jwt_algorithm"))
+    jwt_expire_minutes: int = Field(1440, validation_alias=AliasChoices("JWT_EXPIRE_MINUTES", "jwt_expire_minutes"))
+    env: str = Field("local", validation_alias=AliasChoices("ENV", "env"))
+    cors_origins: list[str] = Field(default_factory=list, validation_alias=AliasChoices("CORS_ORIGINS", "cors_origins"))
+    log_level: str = Field("INFO", validation_alias=AliasChoices("LOG_LEVEL", "log_level"))
+    timezone: str = Field("Asia/Seoul", validation_alias=AliasChoices("TIMEZONE", "timezone"))
+
+    # Test mode: bypasses feature_schedule validation (all games accessible)
+    test_mode: bool = Field(False, validation_alias=AliasChoices("TEST_MODE", "test_mode"))
+
+    # MySQL credentials (used by Docker Compose)
+    mysql_root_password: str | None = Field(None, validation_alias=AliasChoices("MYSQL_ROOT_PASSWORD", "mysql_root_password"))
+    mysql_database: str | None = Field(None, validation_alias=AliasChoices("MYSQL_DATABASE", "mysql_database"))
+    mysql_user: str | None = Field(None, validation_alias=AliasChoices("MYSQL_USER", "mysql_user"))
+    mysql_password: str | None = Field(None, validation_alias=AliasChoices("MYSQL_PASSWORD", "mysql_password"))
+
+    model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
-        extra="ignore"  # Ignore extra fields not defined in the model
+        extra="ignore",  # Ignore extra fields not defined in the model
     )
 
 
