@@ -1,5 +1,6 @@
 """Feature scheduling service utilities."""
 from datetime import date, datetime
+from zoneinfo import ZoneInfo
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -12,7 +13,13 @@ class FeatureService:
     """Resolve today's active feature and validate feature access."""
 
     def get_today_feature(self, db: Session, now: date | datetime) -> FeatureType:
-        today = now.date() if isinstance(now, datetime) else now
+        # Normalize to KST to avoid date drift for schedules stored in Asia/Seoul.
+        if isinstance(now, datetime):
+            kst_now = now.astimezone(ZoneInfo("Asia/Seoul"))
+            today = kst_now.date()
+        else:
+            # If a date is provided, treat it as already aligned to KST.
+            today = now
         rows = db.execute(select(FeatureSchedule).where(FeatureSchedule.date == today)).scalars().all()
         if not rows:
             raise NoFeatureTodayError()
