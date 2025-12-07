@@ -1,6 +1,6 @@
 import React from "react";
 import { useTodayFeature } from "../../hooks/useTodayFeature";
-import { FeatureType, FEATURE_LABELS, normalizeFeature } from "../../types/features";
+import { FeatureType, FEATURE_LABELS, normalizeFeature, NO_FEATURE_MESSAGE } from "../../types/features";
 import { isDemoFallbackEnabled, isFeatureGateActive } from "../../config/featureFlags";
 
 interface FeatureGateProps {
@@ -40,10 +40,11 @@ const FeatureGate: React.FC<FeatureGateProps> = ({ feature, children }) => {
 
   const todayFeature = normalizeFeature(data.feature_type);
 
-  if (todayFeature === "NONE") {
+  // todayFeature가 null이면 오늘 이벤트 없음 (스케줄 row 없음)
+  if (todayFeature === null) {
     return (
       <section className="rounded-xl border border-red-800/40 bg-red-950/60 p-6 text-center text-red-100 shadow-lg shadow-red-900/30">
-        <p className="text-lg font-semibold">오늘은 진행 중인 이벤트가 없습니다.</p>
+        <p className="text-lg font-semibold">{NO_FEATURE_MESSAGE}</p>
       </section>
     );
   }

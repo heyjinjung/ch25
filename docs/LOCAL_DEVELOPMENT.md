@@ -236,6 +236,28 @@ ch25/
 
 ---
 
+## 🧪 TEST_MODE 설정 (개발/QA 환경)
+
+로컬 개발 시 모든 게임에 접근할 수 있도록 TEST_MODE를 활성화할 수 있습니다.
+
+### 백엔드 (feature_schedule 검증 우회)
+```env
+# .env 파일에 추가
+TEST_MODE=true
+```
+
+### 프론트엔드 (게임 카드/라우트 게이트 해제)
+```env
+# .env 파일에 추가
+VITE_GATE_TODAY_FEATURE=false
+```
+
+> ⚠️ **주의**: TEST_MODE에서 플레이한 기록도 실제 DB에 저장됩니다. 운영 환경에서는 절대 활성화하지 마세요.
+
+> 📖 **상세 명세**: [TEST_MODE 명세서](./06_ops/06_test_mode_spec_v1.0.md) 참조
+
+---
+
 ## 🔧 개발 시 유용한 명령어
 
 ### 백엔드

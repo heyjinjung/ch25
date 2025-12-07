@@ -158,3 +158,89 @@ def test_no_active_season_returns_404(client: TestClient, session_factory) -> No
 
     stamp_resp = client.post("/api/season-pass/stamp", json={"source_feature_type": "ROULETTE", "xp_bonus": 0})
     assert stamp_resp.status_code == 404
+
+
+def test_xmas_2025_season_date_range(session_factory) -> None:
+    """Test that XMAS 2025 season (2025-12-09 ~ 2025-12-25) is correctly recognized.
+    
+    This verifies that the season is not restricted to 7 days but uses
+    start_date/end_date for N-day flexible season configuration.
+    """
+    from app.services.season_pass_service import SeasonPassService
+    
+    session: Session = session_factory()
+    
+    # Create XMAS 2025 season with 17 days (2025-12-09 ~ 2025-12-25)
+    xmas_season = SeasonPassConfig(
+        season_name="XMAS_2025",
+        start_date=date(2025, 12, 9),
+        end_date=date(2025, 12, 25),
+        max_level=5,
+        base_xp_per_stamp=10,
+        is_active=True,
+    )
+    session.add(xmas_season)
+    session.commit()
+    
+    service = SeasonPassService()
+    
+    # Test dates within the season range
+    test_dates = [
+        date(2025, 12, 9),   # Start date
+        date(2025, 12, 15),  # Middle
+        date(2025, 12, 25),  # End date
+    ]
+    for test_date in test_dates:
+        season = service.get_current_season(session, test_date)
+        assert season is not None, f"Season should be active on {test_date}"
+        assert season.season_name == "XMAS_2025"
+    
+    # Test dates outside the season range
+    outside_dates = [
+        date(2025, 12, 8),   # Day before start
+        date(2025, 12, 26),  # Day after end
+    ]
+    for test_date in outside_dates:
+        season = service.get_current_season(session, test_date)
+        assert season is None, f"Season should NOT be active on {test_date}"
+    
+    session.close()
+
+
+def test_season_conflict_raises_error(session_factory) -> None:
+    """Test that overlapping seasons raise NO_ACTIVE_SEASON_CONFLICT error."""
+    from fastapi import HTTPException
+    from app.services.season_pass_service import SeasonPassService
+    
+    session: Session = session_factory()
+    
+    # Create two overlapping seasons
+    season1 = SeasonPassConfig(
+        season_name="SEASON_1",
+        start_date=date(2025, 12, 1),
+        end_date=date(2025, 12, 15),
+        max_level=5,
+        base_xp_per_stamp=10,
+        is_active=True,
+    )
+    season2 = SeasonPassConfig(
+        season_name="SEASON_2",
+        start_date=date(2025, 12, 10),
+        end_date=date(2025, 12, 20),
+        max_level=5,
+        base_xp_per_stamp=10,
+        is_active=True,
+    )
+    session.add_all([season1, season2])
+    session.commit()
+    
+    service = SeasonPassService()
+    
+    # Test date that overlaps both seasons
+    overlap_date = date(2025, 12, 12)
+    with pytest.raises(HTTPException) as exc_info:
+        service.get_current_season(session, overlap_date)
+    assert exc_info.value.status_code == 500
+    assert "NO_ACTIVE_SEASON_CONFLICT" in exc_info.value.detail
+    
+    session.close()

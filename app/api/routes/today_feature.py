@@ -1,25 +1,44 @@
 """Endpoint for querying today's active feature."""
 from datetime import datetime
+from typing import Optional
 from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user_id, get_db
-from app.models.feature import FeatureType
+from app.api.deps import get_db
+from app.core.security import decode_access_token
 from app.services.feature_service import FeatureService
 
 router = APIRouter(prefix="/api", tags=["feature"])
 feature_service = FeatureService()
+bearer_scheme = HTTPBearer(auto_error=False)
+
+
+def get_optional_user_id(credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme)) -> Optional[int]:
+    """Extract user id from Bearer token if present; return None for anonymous users."""
+    if credentials is None or not credentials.credentials:
+        return None
+    try:
+        payload = decode_access_token(credentials.credentials)
+        sub = payload.get("sub")
+        return int(sub) if sub else None
+    except Exception:
+        return None
 
 
 @router.get("/today-feature", summary="Get today's active feature")
 def get_today_feature(
     db: Session = Depends(get_db),
-    user_id: int = Depends(get_current_user_id),
-) -> dict[str, str | int]:
+    user_id: Optional[int] = Depends(get_optional_user_id),
+) -> dict:
+    """Public endpoint - returns today's active feature. Authentication optional."""
     now_kst = datetime.now(ZoneInfo("Asia/Seoul"))
     feature_type = feature_service.get_today_feature(db, now_kst)
     # Ensure the response uses the enum value (string) for schema compatibility.
     feature_value = feature_type.value if hasattr(feature_type, "value") else feature_type
-    return {"feature_type": feature_value, "user_id": user_id}
+    result = {"feature_type": feature_value}
+    if user_id is not None:
+        result["user_id"] = user_id
+    return result

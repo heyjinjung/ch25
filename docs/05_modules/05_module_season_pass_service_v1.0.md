@@ -14,7 +14,7 @@
 - DB 스키마는 DB 문서를, API 페이로드는 API 문서를 참고한다.
 
 ## 3. 용어 정의 (Definitions)
-- Season: 7일 단위 시즌 기간 (예: XMAS_1WEEK_2025).
+- Season: DB의 `start_date ~ end_date`로 정의되는 시즌 기간 (예: XMAS_2025, 이번 시즌은 2025-12-09 ~ 2025-12-25). 시즌 이름에 '1WEEK'가 포함되어 있더라도 실제 기간은 start_date/end_date로 결정된다.
 - XP: 레벨 업에 필요한 경험치.
 - Stamp: 일 1회 적립 가능한 시즌패스 도장.
 

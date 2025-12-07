@@ -1,6 +1,6 @@
 // src/api/fallbackData.ts
 // Provides demo fallback data when backend APIs are unavailable so the UI remains interactive.
-import { FeatureType } from "../types/features";
+import { NullableFeatureType } from "../types/features";
 
 export interface FallbackRouletteSegment {
   label: string;
@@ -136,8 +136,8 @@ export const playFallbackLottery = () => {
   };
 };
 
-export const getFallbackTodayFeature = (): { feature_type: FeatureType } => ({
-  feature_type: "NONE",
+export const getFallbackTodayFeature = (): { feature_type: NullableFeatureType } => ({
+  feature_type: null, // 데모 모드에서는 feature 없음 (스케줄 row 없음과 동일)
 });
 
 const rankingEntries = Array.from({ length: 10 }, (_, index) => ({

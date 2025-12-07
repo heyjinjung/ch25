@@ -2,7 +2,7 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useTodayFeature } from "../hooks/useTodayFeature";
-import { FEATURE_LABELS, normalizeFeature } from "../types/features";
+import { FEATURE_LABELS, normalizeFeature, NO_FEATURE_MESSAGE, type NullableFeatureType } from "../types/features";
 import { isDemoFallbackEnabled, isFeatureGateActive } from "../config/featureFlags";
 
 const featureIcons: Record<string, string> = {
@@ -28,8 +28,11 @@ const HomePage: React.FC = () => {
     return new Intl.DateTimeFormat("ko-KR", { dateStyle: "full" }).format(new Date());
   }, []);
 
-  const featureType = normalizeFeature(data?.feature_type);
+  const featureType: NullableFeatureType = normalizeFeature(data?.feature_type);
   const gateActive = isFeatureGateActive && !isDemoFallbackEnabled;
+
+  // featureType이 null이면 오늘 이벤트 없음 (스케줄 row 없음)
+  const hasActiveFeature = featureType !== null;
 
   const features = [
     { key: "ROULETTE" as const, title: "룰렛", description: "행운의 룰렛을 돌려보세요!", path: "/roulette" },
@@ -68,8 +71,6 @@ const HomePage: React.FC = () => {
     );
   }
 
-  const isAnyEventActive = featureType !== "NONE";
-
   return (
     <section className="space-y-8">
       {/* Hero Section */}
@@ -98,13 +99,13 @@ const HomePage: React.FC = () => {
         
         {gateActive && (
           <div className={`mt-6 rounded-xl border p-4 text-center ${
-            isAnyEventActive 
+            hasActiveFeature 
               ? "border-emerald-500/30 bg-emerald-900/30 text-emerald-100" 
               : "border-amber-500/30 bg-amber-900/20 text-amber-200"
           }`}>
-            {isAnyEventActive 
+            {hasActiveFeature && featureType
               ? `🎉 오늘의 이벤트: ${FEATURE_LABELS[featureType]}` 
-              : "📅 오늘은 진행 중인 이벤트가 없습니다."}
+              : `📅 ${NO_FEATURE_MESSAGE}`}
           </div>
         )}
       </div>
@@ -112,7 +113,8 @@ const HomePage: React.FC = () => {
       {/* Feature Cards Grid */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {features.map((feature) => {
-          const isAllowed = !gateActive || featureType === "NONE" || featureType === feature.key;
+          // 게이트가 비활성화되거나, 오늘 이벤트가 없거나, 오늘 feature와 일치하면 접근 허용
+          const isAllowed = !gateActive || !hasActiveFeature || featureType === feature.key;
           const colors = featureColors[feature.key];
           const icon = featureIcons[feature.key];
           
@@ -150,7 +152,7 @@ const HomePage: React.FC = () => {
                 <h3 className="text-xl font-bold text-slate-400">{feature.title}</h3>
                 <p className="mt-1 text-sm text-slate-500">{feature.description}</p>
                 <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-slate-800/60 px-3 py-1 text-xs text-amber-300/80">
-                  🔒 오늘은 {FEATURE_LABELS[featureType]}만 열립니다
+                  🔒 오늘은 {featureType ? FEATURE_LABELS[featureType] : "이 이벤트"}만 열립니다
                 </div>
               </div>
             </div>
