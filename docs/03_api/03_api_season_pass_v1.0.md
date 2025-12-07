@@ -14,7 +14,7 @@
 - 게임 내 내부 호출 흐름은 모듈 문서에서 다룬다.
 
 ## 3. 용어 정의 (Definitions)
-- Season: 7일 단위 시즌 기간(예: XMAS_1WEEK_2025).
+- Season: DB의 `start_date ~ end_date`로 정의되는 시즌 기간 (예: XMAS_2025, 이번 시즌은 2025-12-09 ~ 2025-12-25).
 - Stamp: 시즌패스 도장 1회 기록.
 - XP: 시즌패스 경험치.
 
@@ -40,9 +40,9 @@
 {
   "season": {
     "id": 1,
-    "season_name": "XMAS_1WEEK_2025",
-    "start_date": "2025-12-24",
-    "end_date": "2025-12-30",
+    "season_name": "XMAS_2025",
+    "start_date": "2025-12-09",
+    "end_date": "2025-12-25",
     "max_level": 10,
     "base_xp_per_stamp": 20
   },
@@ -50,13 +50,13 @@
     "current_level": 3,
     "current_xp": 140,
     "total_stamps": 4,
-    "last_stamp_date": "2025-12-26"
+    "last_stamp_date": "2025-12-15"
   },
   "levels": [
     {"level":1,"required_xp":50,"reward_type":"POINT","reward_amount":100,"auto_claim":1},
     {"level":2,"required_xp":100,"reward_type":"POINT","reward_amount":300,"auto_claim":0}
   ],
-  "today": {"date": "2025-12-27", "stamped": true}
+  "today": {"date": "2025-12-16", "stamped": true}
 }
 ```
 

@@ -43,7 +43,7 @@
 | updated_at | DATETIME |  | Y | 수정 시각 |
 
 - 인덱스/제약: UNIQUE(date), is_active 기본 1, feature_type ENUM 권장 (UNIQUE 위반 시 `INVALID_FEATURE_SCHEDULE`)
-- 연관: 없음(조회용), 운영 시 7일치 미리 insert
+- 연관: 없음(조회용), 운영 시 시즌 기간(start_date ~ end_date)에 해당하는 날짜를 미리 insert (이번 시즌: 2025-12-09 ~ 2025-12-25)
 
 ### 4-3. feature_config
 | 컬럼명 | 타입 | PK/FK | Not Null | 설명 |

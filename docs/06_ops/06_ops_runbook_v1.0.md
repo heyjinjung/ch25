@@ -22,7 +22,7 @@
 - Today-feature fallback: 활성 스케줄이 없을 때 `feature_type=NONE`을 반환하는 보호 로직.
 
 ## 4. 운영 지표 및 목표
-- 가용성: 7일 이벤트 기간 중 99% 이상 가용성.
+- 가용성: 이벤트 기간(start_date ~ end_date, 이번 시즌: 2025-12-09 ~ 2025-12-25) 중 99% 이상 가용성.
 - 성능: `/api/today-feature` < 200ms, 게임 API < 500ms(평균).
 - 보안: HTTPS 강제, 서버 사이드에서만 결과/보상 계산.
 
