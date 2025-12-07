@@ -42,3 +42,8 @@
 - 모든 게임/시즌패스 API는 JWT 인증 필요, 보상/결과 계산은 서버 전담.
 - `/api/today-feature` < 200ms, 게임 API < 500ms(평균) 성능 목표.
 - `feature_config.is_enabled` 플래그로 긴급 ON/OFF 지원, 로깅/모니터링 필수.
+
+## 테스트 모드 로그인 메모
+- 프런트 ENV: `VITE_TEST_MODE=true`, `VITE_ENABLE_DEMO_FALLBACK=false`.
+- 테스트 계정: `user_id=999`, `external_id="test-qa-999"`.
+- /login 페이지에서 "테스트 계정으로 자동 로그인" 버튼 지원, TEST_MODE일 때만 노출/자동 시도.
