@@ -23,7 +23,7 @@ def test_token_issues_and_logs_login(client, session_factory, user_id, external_
         assert user is not None
         assert user.external_id == external_id
         assert user.last_login_at is not None
-        assert user.last_login_ip is not None
+        assert user.last_login_ip
         # last_login_at should be recent (within 5 minutes)
         assert datetime.utcnow() - user.last_login_at < timedelta(minutes=5)
 

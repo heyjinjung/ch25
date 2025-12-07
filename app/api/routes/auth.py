@@ -32,6 +32,8 @@ def issue_token(payload: TokenRequest, request: Request, db: Session = Depends(g
         db.add(user)
     # Capture client IP best-effort
     client_ip = request.client.host if request.client else None
+    if not client_ip:
+        client_ip = "unknown"
 
     try:
         # Update login audit fields
