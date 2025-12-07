@@ -20,6 +20,9 @@
 - Validation Status: ✅ 충족, ⚠️ 보완 필요, ❌ 미충족으로 표시하며 근거/조치 메모를 함께 적는다.
 
 ## 4. 본문 – 검증 결과 (2025-12-06 기준)
+### 신규 사항 (2025-12-07)
+- ⚠️ Alembic migration `20251207_0002_feature_config_and_seed` 작성됨: feature_config 컬럼 변경(config→config_json, title, page_path 추가) + demo 데이터 seed 포함. 대상 DB에 이미 수동 변경이 반영된 경우 중복 컬럼 오류 우려가 있으니 `alembic upgrade head`는 깨끗한 스키마에서 적용하거나 DDL을 조정 필요. 적용 여부 미확인 상태.
+
 ### 4-1. 공통 규칙/제약
 - ✅ KST 기준 적용이 개요/아키텍처/공통 모듈 문서에 명시됨. (docs/01_overview/01_overview_system_v1.0.md, docs/02_architecture/02_architecture_backend_v1.0.md, docs/05_modules/05_module_game_common_v1.0.md)
 - ✅ feature_schedule은 UNIQUE(date)로 하루 하나의 feature_type만 허용하도록 정의됨. (docs/04_db/04_db_core_tables_v1.0.md)
