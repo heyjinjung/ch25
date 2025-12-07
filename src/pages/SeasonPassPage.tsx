@@ -7,10 +7,16 @@ const SeasonPassPage: React.FC = () => {
   const { data, isLoading, isError } = useSeasonPassStatus();
   const claimMutation = useClaimSeasonReward();
 
+  const safeCurrentXp = data?.current_xp ?? 0;
+  const safeNextLevelXp = data?.next_level_xp ?? 0;
+  const safeCurrentLevel = data?.current_level ?? 0;
+  const safeMaxLevel = data?.max_level ?? 0;
+  const safeLevels = data?.levels ?? [];
+
   const progressPercent = useMemo(() => {
     if (!data) return 0;
     const totalXp = data.next_level_xp || 1;
-    return Math.min(100, Math.round((data.current_xp / totalXp) * 100));
+    return Math.min(100, Math.round(((data.current_xp ?? 0) / totalXp) * 100));
   }, [data]);
 
   const content = (() => {
@@ -58,15 +64,15 @@ const SeasonPassPage: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-wider text-emerald-300">현재 레벨</p>
-                <p className="text-5xl font-black text-white">{data.current_level}</p>
+                <p className="text-5xl font-black text-white">{safeCurrentLevel}</p>
               </div>
               <div className="text-center">
                 <p className="text-sm text-slate-400">최대 레벨</p>
-                <p className="text-2xl font-bold text-slate-300">{data.max_level}</p>
+                <p className="text-2xl font-bold text-slate-300">{safeMaxLevel}</p>
               </div>
               <div className="text-right">
-                <p className="text-sm text-gold-400 font-semibold">{data.current_xp.toLocaleString()} XP</p>
-                <p className="text-xs text-slate-400">/ {data.next_level_xp.toLocaleString()} XP</p>
+                <p className="text-sm text-gold-400 font-semibold">{safeCurrentXp.toLocaleString()} XP</p>
+                <p className="text-xs text-slate-400">/ {(safeNextLevelXp || 0).toLocaleString()} XP</p>
               </div>
             </div>
             
@@ -81,7 +87,7 @@ const SeasonPassPage: React.FC = () => {
               <div className="mt-2 flex justify-between text-xs text-slate-400">
                 <span>레벨 {data.current_level}</span>
                 <span className="font-semibold text-emerald-300">{progressPercent}%</span>
-                <span>레벨 {data.current_level + 1}</span>
+                <span>레벨 {safeCurrentLevel + 1}</span>
               </div>
             </div>
           </div>
@@ -94,8 +100,8 @@ const SeasonPassPage: React.FC = () => {
           </h3>
           
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {data.levels.map((level) => {
-              const isCurrent = level.level === data.current_level;
+            {safeLevels.map((level) => {
+              const isCurrent = level.level === safeCurrentLevel;
               const canClaim = level.is_unlocked && !level.is_claimed;
               const isLocked = !level.is_unlocked;
               
@@ -133,7 +139,7 @@ const SeasonPassPage: React.FC = () => {
                     레벨 {level.level} 보상
                   </h3>
                   <p className="mt-1 text-sm text-slate-300">{level.reward_label}</p>
-                  <p className="mt-1 text-xs text-slate-500">필요 XP: {level.required_xp.toLocaleString()}</p>
+                  <p className="mt-1 text-xs text-slate-500">필요 XP: {(level.required_xp ?? 0).toLocaleString()}</p>
                   
                   {isCurrent && !level.is_claimed && (
                     <p className="mt-2 inline-block rounded-full bg-emerald-800/50 px-3 py-1 text-xs font-semibold text-emerald-300">
