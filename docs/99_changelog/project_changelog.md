@@ -1,5 +1,11 @@
 # 프로젝트 변경 이력
 
+## 2025-12-11 (feature gate simplification & doc refresh)
+- Backend: `/api/today-feature`를 공개 엔드포인트로 전환해 JWT 없이도 호출 가능하도록 수정, JWT가 있을 때만 `user_id`를 포함하며 응답 `feature_type`을 문자열로 일관화.
+- Frontend: `FeatureType`에서 `NONE`을 제거하고 API 응답을 nullable로 정규화, `FeatureGate`/홈 카드가 null을 비활성 상태로 처리하며 폴백 데이터도 null 반환.
+- Ops/Docs: TEST_MODE 명세서 추가 및 공통 게임 모듈 가이드를 v1.2로 정리(스케줄 정책/NONE 제외/스탬프 훅), API 개요 문서를 v1.2로 갱신해 today-feature 인증 옵션 변경을 반영.
+- Tooling: 로컬 타입 오류 해소를 위해 `npm install` 실행(package-lock.json 업데이트), backend 빌드 시 `.env`에 `TEST_MODE=true` 적용 검증.
+
 ## 2025-12-06 (runtime hardening & dev UX)
 - Docker: MySQL 호스트 포트를 3307로 변경해 로컬 포트 충돌 해소.
 - Docker: `public/` 디렉터리 누락으로 프론트 빌드 실패하던 이슈를 `.gitkeep` 추가로 해결.
