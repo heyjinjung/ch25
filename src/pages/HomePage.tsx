@@ -29,7 +29,9 @@ const HomePage: React.FC = () => {
   }, []);
 
   const featureType: NullableFeatureType = normalizeFeature(data?.feature_type);
-  const gateActive = isFeatureGateActive && !isDemoFallbackEnabled && !isTestModeEnabled;
+  // In TEST_MODE we bypass today-feature filtering and surface every game entry for visual QA.
+  const shouldBypassFeatureGate = isTestModeEnabled;
+  const gateActive = isFeatureGateActive && !shouldBypassFeatureGate;
 
   // featureType이 null이면 오늘 이벤트 없음 (스케줄 row 없음)
   const hasActiveFeature = featureType !== null;
@@ -120,8 +122,8 @@ const HomePage: React.FC = () => {
       {/* Feature Cards Grid */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {features.map((feature) => {
-          // 게이트가 비활성화되거나, 오늘 이벤트가 없거나, 오늘 feature와 일치하면 접근 허용
-          const isAllowed = !gateActive || !hasActiveFeature || featureType === feature.key;
+          // 게이트가 비활성화되거나, TEST_MODE이거나, 오늘 이벤트가 없거나, 오늘 feature와 일치하면 접근 허용
+          const isAllowed = shouldBypassFeatureGate || !gateActive || !hasActiveFeature || featureType === feature.key;
           const colors = featureColors[feature.key];
           const icon = featureIcons[feature.key];
           
