@@ -8,9 +8,11 @@ from sqlalchemy.orm import Session
 from app.core.exceptions import InvalidConfigError
 from app.models.dice import DiceConfig, DiceLog
 from app.models.feature import FeatureType
+from app.models.game_wallet import GameTokenType
 from app.schemas.dice import DicePlayResponse, DiceResult, DiceStatusResponse
 from app.services.feature_service import FeatureService
 from app.services.game_common import GamePlayContext, apply_season_pass_stamp, log_game_play
+from app.services.game_wallet_service import GameWalletService
 from app.services.reward_service import RewardService
 
 
@@ -20,6 +22,7 @@ class DiceService:
     def __init__(self) -> None:
         self.feature_service = FeatureService()
         self.reward_service = RewardService()
+        self.wallet_service = GameWalletService()
 
     def _get_today_config(self, db: Session) -> DiceConfig:
         config = db.execute(select(DiceConfig).where(DiceConfig.is_active.is_(True))).scalar_one_or_none()
@@ -35,6 +38,8 @@ class DiceService:
     def get_status(self, db: Session, user_id: int, today: date) -> DiceStatusResponse:
         self.feature_service.validate_feature_active(db, today, FeatureType.DICE)
         config = self._get_today_config(db)
+        token_type = GameTokenType.DICE_TOKEN
+        token_balance = self.wallet_service.get_balance(db, user_id, token_type)
 
         today_plays = db.execute(
             select(func.count()).select_from(DiceLog).where(
@@ -53,6 +58,8 @@ class DiceService:
             max_daily_plays=unlimited,
             today_plays=today_plays,
             remaining_plays=remaining,
+            token_type=token_type.value,
+            token_balance=token_balance,
             feature_type=FeatureType.DICE,
         )
 
@@ -60,6 +67,8 @@ class DiceService:
         today = now.date() if isinstance(now, datetime) else now
         self.feature_service.validate_feature_active(db, today, FeatureType.DICE)
         config = self._get_today_config(db)
+        token_type = GameTokenType.DICE_TOKEN
+        self.wallet_service.require_and_consume_token(db, user_id, token_type, amount=1)
 
         today_plays = db.execute(
             select(func.count()).select_from(DiceLog).where(

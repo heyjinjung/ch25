@@ -10,6 +10,7 @@ from sqlalchemy.pool import StaticPool
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.api.deps import get_db, get_current_user_id
+from app.models.game_wallet import GameTokenType, UserGameWallet
 from app.db.base import Base
 from app.main import app
 
@@ -31,6 +32,16 @@ def client() -> Generator[TestClient, None, None]:
 
     def override_get_db() -> Generator[Session, None, None]:
         db = TestingSessionLocal()
+        # Seed default token balances for tests so gameplay calls succeed without admin grants.
+        for token in GameTokenType:
+            existing = (
+                db.query(UserGameWallet)
+                .filter(UserGameWallet.user_id == 1, UserGameWallet.token_type == token)
+                .one_or_none()
+            )
+            if existing is None:
+                db.add(UserGameWallet(user_id=1, token_type=token, balance=10))
+        db.commit()
         try:
             yield db
             db.commit()

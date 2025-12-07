@@ -19,6 +19,8 @@ class LotteryStatusResponse(BaseModel):
     max_daily_tickets: int
     today_tickets: int
     remaining_tickets: int
+    token_type: str
+    token_balance: int
     prize_preview: list[LotteryPrizeSchema]
     feature_type: FeatureType
 

@@ -35,3 +35,10 @@ class LockAcquisitionError(HTTPException):
 
     def __init__(self, message: str = "LOCK_NOT_ACQUIRED"):
         super().__init__(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=message)
+
+
+class NotEnoughTokensError(HTTPException):
+    """Raised when the wallet does not have enough game tokens."""
+
+    def __init__(self, message: str = "NOT_ENOUGH_TOKENS"):
+        super().__init__(status_code=status.HTTP_400_BAD_REQUEST, detail=message)

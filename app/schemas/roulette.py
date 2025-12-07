@@ -20,6 +20,8 @@ class RouletteStatusResponse(BaseModel):
     max_daily_spins: int
     today_spins: int
     remaining_spins: int
+    token_type: str
+    token_balance: int
     segments: list[RouletteSegmentSchema]
     feature_type: FeatureType
 

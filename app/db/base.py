@@ -7,6 +7,7 @@ from app.models import (  # noqa: F401
     DiceLog,
     FeatureConfig,
     FeatureSchedule,
+    GameTokenType,
     LotteryConfig,
     LotteryLog,
     LotteryPrize,
@@ -21,4 +22,5 @@ from app.models import (  # noqa: F401
     SeasonPassRewardLog,
     SeasonPassStampLog,
     User,
+    UserGameWallet,
 )

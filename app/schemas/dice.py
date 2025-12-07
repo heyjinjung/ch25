@@ -10,6 +10,8 @@ class DiceStatusResponse(BaseModel):
     max_daily_plays: int
     today_plays: int
     remaining_plays: int
+    token_type: str
+    token_balance: int
     feature_type: FeatureType
 
 

@@ -8,6 +8,7 @@ export interface FallbackRouletteSegment {
   isJackpot?: boolean;
   reward_type?: string;
   reward_amount?: number;
+  slot_index?: number;
 }
 
 export interface FallbackRouletteState {
@@ -18,18 +19,20 @@ export interface FallbackRouletteState {
 const rouletteState: FallbackRouletteState = {
   remainingSpins: 0, // 0 = unlimited sentinel
   segments: [
-    { label: "100 코인", weight: 30, reward_type: "POINT", reward_amount: 100 },
-    { label: "200 코인", weight: 25, reward_type: "POINT", reward_amount: 200 },
-    { label: "500 코인", weight: 15, reward_type: "POINT", reward_amount: 500 },
-    { label: "크리스탈", weight: 10, reward_type: "TOKEN", reward_amount: 1 },
-    { label: "꽝", weight: 15, reward_type: "NONE", reward_amount: 0 },
-    { label: "🎰 JACKPOT", weight: 5, isJackpot: true, reward_type: "POINT", reward_amount: 10000 },
+    { label: "100 코인", weight: 30, reward_type: "POINT", reward_amount: 100, slot_index: 0 },
+    { label: "200 코인", weight: 25, reward_type: "POINT", reward_amount: 200, slot_index: 1 },
+    { label: "500 코인", weight: 15, reward_type: "POINT", reward_amount: 500, slot_index: 2 },
+    { label: "크리스탈", weight: 10, reward_type: "TOKEN", reward_amount: 1, slot_index: 3 },
+    { label: "꽝", weight: 15, reward_type: "NONE", reward_amount: 0, slot_index: 4 },
+    { label: "🎰 JACKPOT", weight: 5, isJackpot: true, reward_type: "POINT", reward_amount: 10000, slot_index: 5 },
   ],
 };
 
 export const getFallbackRouletteStatus = () => ({
   feature_type: "ROULETTE" as const,
   remaining_spins: rouletteState.remainingSpins,
+  token_type: "ROULETTE_COIN" as const,
+  token_balance: 10,
   segments: rouletteState.segments.map((segment) => ({ ...segment })),
 });
 
@@ -60,6 +63,7 @@ export const playFallbackRoulette = () => {
 
 const diceState = {
   remainingPlays: 0, // 0 = unlimited sentinel
+  tokenBalance: 10,
 };
 
 const rollDie = () => Math.floor(Math.random() * 6) + 1;
@@ -67,6 +71,8 @@ const rollDie = () => Math.floor(Math.random() * 6) + 1;
 export const getFallbackDiceStatus = () => ({
   feature_type: "DICE" as const,
   remaining_plays: diceState.remainingPlays,
+  token_type: "DICE_TOKEN" as const,
+  token_balance: diceState.tokenBalance,
 });
 
 export const playFallbackDice = () => {
@@ -95,6 +101,7 @@ export const playFallbackDice = () => {
 
 const lotteryState = {
   remainingPlays: 0, // 0 = unlimited sentinel
+  tokenBalance: 10,
   prizes: [
     { id: 1, label: "눈사람 코스튬", reward_type: "ITEM", reward_value: 1, stock: null, is_active: true, weight: 5 },
     { id: 2, label: "1,000 코인", reward_type: "POINT", reward_value: 1000, stock: null, is_active: true, weight: 30 },
@@ -107,6 +114,8 @@ const lotteryState = {
 export const getFallbackLotteryStatus = () => ({
   feature_type: "LOTTERY" as const,
   remaining_plays: lotteryState.remainingPlays,
+  token_type: "LOTTERY_TICKET" as const,
+  token_balance: lotteryState.tokenBalance,
   prizes: lotteryState.prizes.filter(p => p.is_active).map((prize) => ({ ...prize })),
 });
 

@@ -9,10 +9,12 @@ from sqlalchemy.orm import Session
 
 from app.core.exceptions import InvalidConfigError, LockAcquisitionError
 from app.models.feature import FeatureType
+from app.models.game_wallet import GameTokenType
 from app.models.lottery import LotteryConfig, LotteryLog, LotteryPrize
 from app.schemas.lottery import LotteryPlayResponse, LotteryPrizeSchema, LotteryStatusResponse
 from app.services.feature_service import FeatureService
 from app.services.game_common import GamePlayContext, apply_season_pass_stamp, log_game_play
+from app.services.game_wallet_service import GameWalletService
 from app.services.reward_service import RewardService
 
 
@@ -22,6 +24,7 @@ class LotteryService:
     def __init__(self) -> None:
         self.feature_service = FeatureService()
         self.reward_service = RewardService()
+        self.wallet_service = GameWalletService()
 
     def _get_today_config(self, db: Session) -> LotteryConfig:
         config = db.execute(select(LotteryConfig).where(LotteryConfig.is_active.is_(True))).scalar_one_or_none()
@@ -49,6 +52,8 @@ class LotteryService:
     def get_status(self, db: Session, user_id: int, today: date) -> LotteryStatusResponse:
         self.feature_service.validate_feature_active(db, today, FeatureType.LOTTERY)
         config = self._get_today_config(db)
+        token_type = GameTokenType.LOTTERY_TICKET
+        token_balance = self.wallet_service.get_balance(db, user_id, token_type)
         prizes = self._eligible_prizes(db, config.id)
 
         today_tickets = db.execute(
@@ -68,6 +73,8 @@ class LotteryService:
             max_daily_tickets=unlimited,
             today_tickets=today_tickets,
             remaining_tickets=remaining,
+            token_type=token_type.value,
+            token_balance=token_balance,
             prize_preview=[LotteryPrizeSchema.from_orm(p) for p in prizes],
             feature_type=FeatureType.LOTTERY,
         )
@@ -76,6 +83,8 @@ class LotteryService:
         today = now.date() if isinstance(now, datetime) else now
         self.feature_service.validate_feature_active(db, today, FeatureType.LOTTERY)
         config = self._get_today_config(db)
+        token_type = GameTokenType.LOTTERY_TICKET
+        self.wallet_service.require_and_consume_token(db, user_id, token_type, amount=1)
         prizes = None
         for attempt in range(3):
             try:

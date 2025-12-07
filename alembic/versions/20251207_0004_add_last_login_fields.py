@@ -1,7 +1,7 @@
 """Add last_login columns to user
 
 Revision ID: 20251207_0004
-Revises: 20251207_0002
+Revises: 20251207_0003
 Create Date: 2025-12-07
 """
 from alembic import op

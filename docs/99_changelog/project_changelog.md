@@ -6,6 +6,17 @@
 - Ops/Docs: TEST_MODE 명세서 추가 및 공통 게임 모듈 가이드를 v1.2로 정리(스케줄 정책/NONE 제외/스탬프 훅), API 개요 문서를 v1.2로 갱신해 today-feature 인증 옵션 변경을 반영.
 - Tooling: 로컬 타입 오류 해소를 위해 `npm install` 실행(package-lock.json 업데이트), backend 빌드 시 `.env`에 `TEST_MODE=true` 적용 검증.
 
+## 2025-12-07 (migration hardening & today-feature schema)
+- DB: Alembic 체인을 정리(0004 헤더 정정)하고 `user_event_log` 정합성 마이그레이션(0005)을 `IF EXISTS/IF NOT EXISTS`로 안전·멱등하게 변경해 재적용 시 실패를 방지.
+- API: `/api/today-feature` 테스트 클라이언트 호출 시 기본 `user_id=1`을 포함하도록 의존성을 보강해 스키마 검증 일관성 확보.
+- Schema: `TodayFeatureResponse` 스키마 파일을 추가해 테스트에서 직접 검증할 수 있도록 정리.
+
+## 2025-12-07 (game wallet tokens per feature)
+- DB: `user_game_wallet` 테이블 추가(Alembic 0006) 및 3종 토큰 ENUM(ROULETTE_COIN, DICE_TOKEN, LOTTERY_TICKET) 도입.
+- Backend: GameWalletService로 토큰 소모/지급/조회 API 추가, 각 게임 `/status`에 `token_type`/`token_balance` 노출, `/play` 진입 시 토큰 소모 및 부족 시 `NOT_ENOUGH_TOKENS` 에러.
+- Admin: `/admin/api/game-tokens/grant` 엔드포인트로 토큰 지급 지원.
+- Tests: 테스트 DB 부트스트랩 시 기본 토큰(각 10개) 시드해 기존 게임 시나리오가 통과하도록 정리.
+
 ## 2025-12-06 (runtime hardening & dev UX)
 - Docker: MySQL 호스트 포트를 3307로 변경해 로컬 포트 충돌 해소.
 - Docker: `public/` 디렉터리 누락으로 프론트 빌드 실패하던 이슈를 `.gitkeep` 추가로 해결.

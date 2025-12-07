@@ -10,10 +10,12 @@ from sqlalchemy.orm import Session
 from app.core.config import get_settings
 from app.core.exceptions import InvalidConfigError, LockAcquisitionError
 from app.models.feature import FeatureType
+from app.models.game_wallet import GameTokenType
 from app.models.roulette import RouletteConfig, RouletteLog, RouletteSegment
 from app.schemas.roulette import RoulettePlayResponse, RouletteStatusResponse
 from app.services.feature_service import FeatureService
 from app.services.game_common import GamePlayContext, apply_season_pass_stamp, log_game_play
+from app.services.game_wallet_service import GameWalletService
 from app.services.reward_service import RewardService
 
 
@@ -23,6 +25,7 @@ class RouletteService:
     def __init__(self) -> None:
         self.feature_service = FeatureService()
         self.reward_service = RewardService()
+        self.wallet_service = GameWalletService()
 
     def _seed_default_segments(self, db: Session, config_id: int) -> list[RouletteSegment]:
         """Ensure six default segments exist for the given config (TEST_MODE bootstrap)."""
@@ -84,6 +87,8 @@ class RouletteService:
     def get_status(self, db: Session, user_id: int, today: date) -> RouletteStatusResponse:
         self.feature_service.validate_feature_active(db, today, FeatureType.ROULETTE)
         config = self._get_today_config(db)
+        token_type = GameTokenType.ROULETTE_COIN
+        token_balance = self.wallet_service.get_balance(db, user_id, token_type)
         segments = self._get_segments(db, config.id)
 
         today_spins = db.execute(
@@ -103,6 +108,8 @@ class RouletteService:
             max_daily_spins=unlimited,
             today_spins=today_spins,
             remaining_spins=remaining,
+            token_type=token_type.value,
+            token_balance=token_balance,
             segments=segments,
             feature_type=FeatureType.ROULETTE,
         )
@@ -111,6 +118,8 @@ class RouletteService:
         today = now.date() if isinstance(now, datetime) else now
         self.feature_service.validate_feature_active(db, today, FeatureType.ROULETTE)
         config = self._get_today_config(db)
+        token_type = GameTokenType.ROULETTE_COIN
+        self.wallet_service.require_and_consume_token(db, user_id, token_type, amount=1)
         segments = None
         for attempt in range(3):
             try:
