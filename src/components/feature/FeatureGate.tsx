@@ -1,7 +1,7 @@
 import React from "react";
 import { useTodayFeature } from "../../hooks/useTodayFeature";
 import { FeatureType, FEATURE_LABELS, normalizeFeature, NO_FEATURE_MESSAGE } from "../../types/features";
-import { isDemoFallbackEnabled, isFeatureGateActive } from "../../config/featureFlags";
+import { isDemoFallbackEnabled, isFeatureGateActive, isTestModeEnabled } from "../../config/featureFlags";
 
 interface FeatureGateProps {
   readonly feature: FeatureType;
@@ -11,7 +11,7 @@ interface FeatureGateProps {
 const FeatureGate: React.FC<FeatureGateProps> = ({ feature, children }) => {
   const { data, isLoading, isError, refetch } = useTodayFeature();
 
-  if (!isFeatureGateActive || isDemoFallbackEnabled) {
+  if (!isFeatureGateActive || isDemoFallbackEnabled || isTestModeEnabled) {
     return <>{children}</>;
   }
 

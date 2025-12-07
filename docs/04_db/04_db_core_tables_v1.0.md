@@ -26,10 +26,13 @@
 | id | INT | PK | Y | 기본키 |
 | external_id | VARCHAR(100) |  | Y | 외부 시스템 ID(예: 텔레그램) |
 | status | VARCHAR(20) |  | Y | ACTIVE/BLOCKED 등 상태 |
+| last_login_at | DATETIME |  | N | 마지막 로그인 시각 |
+| last_login_ip | VARCHAR(45) |  | N | 마지막 로그인 IP |
 | created_at | DATETIME |  | Y | 생성 시각 |
 | updated_at | DATETIME |  | Y | 수정 시각 |
 
 - 인덱스/제약: PK(id), external_id UNIQUE 고려
+- 로그인 시: last_login_at/last_login_ip 업데이트, user_event_log에 feature_type='AUTH', event_name='AUTH_LOGIN' 기록
 - 연관: user_event_log, season_pass_progress, 각 게임 로그와 1:N
 
 ### 4-2. feature_schedule
@@ -66,7 +69,7 @@
 | id | INT | PK | Y | 기본키 |
 | user_id | INT | FK(user.id) | Y | 유저 ID |
 | feature_type | VARCHAR(30) |  | Y | 이벤트 타입 |
-| event_name | VARCHAR(50) |  | Y | ENTER_PAGE/PLAY/RESULT/SEASON_PASS_* |
+| event_name | VARCHAR(50) |  | Y | ENTER_PAGE/PLAY/RESULT/SEASON_PASS_*/AUTH_LOGIN |
 | meta_json | JSON |  | N | 세부 정보 |
 | created_at | DATETIME |  | Y | 생성 시각 |
 

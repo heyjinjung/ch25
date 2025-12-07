@@ -3,7 +3,7 @@ import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useTodayFeature } from "../hooks/useTodayFeature";
 import { FEATURE_LABELS, normalizeFeature, NO_FEATURE_MESSAGE, type NullableFeatureType } from "../types/features";
-import { isDemoFallbackEnabled, isFeatureGateActive } from "../config/featureFlags";
+import { isDemoFallbackEnabled, isFeatureGateActive, isTestModeEnabled } from "../config/featureFlags";
 
 const featureIcons: Record<string, string> = {
   ROULETTE: "🎰",
@@ -29,7 +29,7 @@ const HomePage: React.FC = () => {
   }, []);
 
   const featureType: NullableFeatureType = normalizeFeature(data?.feature_type);
-  const gateActive = isFeatureGateActive && !isDemoFallbackEnabled;
+  const gateActive = isFeatureGateActive && !isDemoFallbackEnabled && !isTestModeEnabled;
 
   // featureType이 null이면 오늘 이벤트 없음 (스케줄 row 없음)
   const hasActiveFeature = featureType !== null;
@@ -86,15 +86,22 @@ const HomePage: React.FC = () => {
             </h1>
             <p className="mt-2 text-slate-300">미니게임에 참여하고 시즌 보상을 획득하세요!</p>
           </div>
-          <div className="shrink-0">
-            <div className={`rounded-full px-5 py-2.5 text-sm font-bold ${
-              isDemoFallbackEnabled 
-                ? "bg-gradient-to-r from-gold-600 to-gold-500 text-white" 
-                : "bg-emerald-800/60 text-emerald-200"
-            }`}>
-              {isDemoFallbackEnabled ? "🎮 데모 모드" : "🎯 실서비스"}
+            <div className="shrink-0 space-y-2 text-right">
+              <div
+                className={`rounded-full px-5 py-2.5 text-sm font-bold ${
+                  isDemoFallbackEnabled
+                    ? "bg-gradient-to-r from-gold-600 to-gold-500 text-white"
+                    : "bg-emerald-800/60 text-emerald-200"
+                }`}
+              >
+                {isDemoFallbackEnabled ? "🎮 데모 모드" : "🎯 실서비스"}
+              </div>
+              {isTestModeEnabled && (
+                <div className="rounded-full bg-indigo-800/70 px-4 py-1 text-xs font-semibold text-indigo-100">
+                  🧪 TEST_MODE: 오늘 이벤트 무시하고 전체 페이지 열람
+                </div>
+              )}
             </div>
-          </div>
         </div>
         
         {gateActive && (
