@@ -28,6 +28,9 @@ const AdminDashboardPage: React.FC = () => {
         <Link to="/admin/ranking" className="rounded-lg border border-emerald-800/40 bg-slate-900/60 p-3 text-slate-100 transition hover:border-emerald-500">
           랭킹 관리
         </Link>
+        <Link to="/admin/game-tokens" className="rounded-lg border border-emerald-800/40 bg-slate-900/60 p-3 text-slate-100 transition hover:border-emerald-500">
+          게임 토큰 지급
+        </Link>
       </div>
     </section>
   );

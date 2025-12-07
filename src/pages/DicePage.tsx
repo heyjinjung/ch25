@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import DiceView from "../components/game/DiceView";
 import { useDiceStatus, usePlayDice } from "../hooks/useDice";
 import FeatureGate from "../components/feature/FeatureGate";
+import { GAME_TOKEN_LABELS } from "../types/gameTokens";
 
 const DicePage: React.FC = () => {
   const { data, isLoading, isError } = useDiceStatus();
@@ -19,6 +20,7 @@ const DicePage: React.FC = () => {
     if (code === "INVALID_FEATURE_SCHEDULE") return "이벤트 스케줄이 잘못되었습니다. 관리자에게 문의하세요.";
     if (code === "FEATURE_DISABLED") return "이벤트가 비활성화되었습니다.";
     if (code === "DAILY_LIMIT_REACHED") return "오늘 참여 횟수를 모두 사용했습니다.";
+    if (code === "NOT_ENOUGH_TOKENS") return "토큰이 부족합니다. 관리자에게 충전 요청해주세요.";
     return "주사위를 진행할 수 없습니다. 잠시 후 다시 시도해주세요.";
   };
 
@@ -26,7 +28,13 @@ const DicePage: React.FC = () => {
     if (!data) return "-";
     return data.remaining_plays === 0 ? "무제한 🎉" : `${data.remaining_plays}회 남음`;
   }, [data]);
+
+  const tokenLabel = useMemo(() => {
+    if (!data) return "-";
+    return `${GAME_TOKEN_LABELS[data.token_type] ?? data.token_type} · ${data.token_balance}`;
+  }, [data]);
   const isUnlimited = data?.remaining_plays === 0;
+  const isOutOfTokens = (data?.token_balance ?? 0) <= 0;
 
   const handlePlay = async () => {
     try {
@@ -73,9 +81,15 @@ const DicePage: React.FC = () => {
         <header className="text-center">
           <p className="text-sm uppercase tracking-[0.3em] text-gold-400">🎄 오늘의 이벤트</p>
           <h1 className="mt-2 text-3xl font-bold text-white">주사위 대결</h1>
-          <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-emerald-900/60 px-4 py-2 text-sm font-semibold text-emerald-100">
-            <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
-            {remainingLabel}
+          <div className="mt-3 flex flex-wrap items-center justify-center gap-3">
+            <div className="inline-flex items-center gap-2 rounded-full bg-emerald-900/60 px-4 py-2 text-sm font-semibold text-emerald-100">
+              <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
+              {remainingLabel}
+            </div>
+            <div className="inline-flex items-center gap-2 rounded-full bg-slate-800/80 px-4 py-2 text-sm font-semibold text-amber-100">
+              <span className="h-2 w-2 rounded-full bg-amber-400" />
+              {tokenLabel}
+            </div>
           </div>
         </header>
 
@@ -90,9 +104,15 @@ const DicePage: React.FC = () => {
             </div>
           )}
 
+          {isOutOfTokens && (
+            <div className="rounded-xl border border-amber-600/30 bg-amber-900/20 px-4 py-3 text-center text-amber-100">
+              토큰이 부족합니다. 관리자에게 충전을 요청해주세요.
+            </div>
+          )}
+
           <button
             type="button"
-            disabled={isRolling || playMutation.isPending || (!isUnlimited && data.remaining_plays <= 0)}
+            disabled={isRolling || playMutation.isPending || (!isUnlimited && data.remaining_plays <= 0) || isOutOfTokens}
             onClick={handlePlay}
             className="group relative w-full overflow-hidden rounded-full bg-gradient-to-r from-emerald-600 to-emerald-500 px-8 py-4 text-lg font-bold text-white shadow-lg transition-all hover:from-emerald-500 hover:to-emerald-400 hover:shadow-emerald-500/30 disabled:cursor-not-allowed disabled:from-slate-700 disabled:to-slate-600"
           >
