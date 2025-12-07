@@ -69,20 +69,15 @@ class RouletteService:
             segments = db.execute(stmt).scalars().all()
         except DBAPIError as exc:
             raise LockAcquisitionError("ROULETTE_LOCK_FAILED") from exc
+        if len(segments) == 0 and settings.test_mode:
+            return self._seed_default_segments(db, config_id)
         if len(segments) != 6:
-            if settings.test_mode:
-                # Re-seed default segments in test mode to avoid 500s when config is incomplete.
-                return self._seed_default_segments(db, config_id)
             raise InvalidConfigError("INVALID_ROULETTE_CONFIG")
         for segment in segments:
             if segment.weight < 0:
-                if settings.test_mode:
-                    return self._seed_default_segments(db, config_id)
                 raise InvalidConfigError("INVALID_ROULETTE_CONFIG")
         total_weight = sum(segment.weight for segment in segments if segment.weight > 0)
         if total_weight <= 0:
-            if settings.test_mode:
-                return self._seed_default_segments(db, config_id)
             raise InvalidConfigError("INVALID_ROULETTE_CONFIG")
         return segments
 

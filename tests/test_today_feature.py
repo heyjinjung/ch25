@@ -1,6 +1,6 @@
 # /workspace/ch25/tests/test_today_feature.py
 """Scaffold tests for /api/today-feature behavior."""
-from datetime import datetime
+from datetime import date, datetime
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.core.exceptions import InvalidConfigError
 from app.models.feature import FeatureSchedule, FeatureType
+from app.schemas.today_feature import TodayFeatureResponse
 
 
 @pytest.fixture()
@@ -50,3 +51,16 @@ def test_today_feature_multiple_entries_returns_error(monkeypatch, client: TestC
     response = client.get("/api/today-feature")
     assert response.status_code == 500
     assert response.json()["error"]["code"] == "INVALID_FEATURE_SCHEDULE"
+
+
+def test_today_feature_response_schema(client: TestClient, db_session: Session) -> None:
+    today = datetime.now(ZoneInfo("Asia/Seoul")).date()
+    db_session.add(
+        FeatureSchedule(date=today, feature_type=FeatureType.ROULETTE, is_active=True)
+    )
+    db_session.commit()
+
+    response = client.get("/api/today-feature")
+    payload = response.json()
+    assert response.status_code == 200
+    assert TodayFeatureResponse.validate(payload) is None
