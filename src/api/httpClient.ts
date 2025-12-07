@@ -1,5 +1,6 @@
 // src/api/httpClient.ts
 import axios from "axios";
+import { clearAuth, getAuthToken } from "../auth/authStore";
 
 // Resolve API base URL with explicit warning when falling back to localhost.
 const resolvedBaseURL =
@@ -18,7 +19,7 @@ export const userApi = axios.create({
 
 // Attach bearer token if present in storage; keeps compatibility with existing `token` key.
 userApi.interceptors.request.use((config) => {
-  const token = localStorage.getItem("access_token") || localStorage.getItem("token");
+  const token = getAuthToken() || (typeof localStorage !== "undefined" ? localStorage.getItem("token") : null);
   if (token) {
     config.headers = config.headers ?? {};
     config.headers.Authorization = `Bearer ${token}`;
@@ -34,13 +35,9 @@ userApi.interceptors.response.use(
     // Handle 401/403 by redirecting to home or login (when login page exists)
     const status = error?.response?.status;
     if (status === 401 || status === 403) {
-      // Clear tokens and redirect; in future, redirect to login page
-      if (typeof localStorage !== "undefined") {
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("token");
-      }
-      if (typeof window !== "undefined" && window.location.pathname !== "/") {
-        window.location.href = "/";
+      clearAuth();
+      if (typeof window !== "undefined" && window.location.pathname !== "/login") {
+        window.location.href = "/login";
       }
     }
     return Promise.reject(error);

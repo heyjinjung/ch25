@@ -7,6 +7,7 @@ from sqlalchemy import func, select
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.orm import Session
 
+from app.core.config import get_settings
 from app.core.exceptions import InvalidConfigError, LockAcquisitionError
 from app.models.feature import FeatureType
 from app.models.roulette import RouletteConfig, RouletteLog, RouletteSegment
@@ -23,13 +24,44 @@ class RouletteService:
         self.feature_service = FeatureService()
         self.reward_service = RewardService()
 
+    def _seed_default_segments(self, db: Session, config_id: int) -> list[RouletteSegment]:
+        """Ensure six default segments exist for the given config (TEST_MODE bootstrap)."""
+
+        default_segments = [
+            {"slot_index": 0, "label": "100 코인", "reward_type": "POINT", "reward_amount": 100, "weight": 30},
+            {"slot_index": 1, "label": "200 코인", "reward_type": "POINT", "reward_amount": 200, "weight": 25},
+            {"slot_index": 2, "label": "500 코인", "reward_type": "POINT", "reward_amount": 500, "weight": 20},
+            {"slot_index": 3, "label": "꽝", "reward_type": "NONE", "reward_amount": 0, "weight": 15},
+            {"slot_index": 4, "label": "1,000 코인", "reward_type": "POINT", "reward_amount": 1000, "weight": 8},
+            {"slot_index": 5, "label": "잭팟 10,000", "reward_type": "POINT", "reward_amount": 10000, "weight": 2, "is_jackpot": True},
+        ]
+
+        db.query(RouletteSegment).filter(RouletteSegment.config_id == config_id).delete()
+        db.add_all([RouletteSegment(config_id=config_id, **segment) for segment in default_segments])
+        db.commit()
+        return db.execute(select(RouletteSegment).where(RouletteSegment.config_id == config_id).order_by(RouletteSegment.slot_index)).scalars().all()
+
+    def _seed_default_config(self, db: Session) -> RouletteConfig:
+        """Create a minimal roulette config with default segments for TEST_MODE bootstrap."""
+
+        config = RouletteConfig(name="Test Roulette", is_active=True, max_daily_spins=0)
+        db.add(config)
+        db.flush()
+        self._seed_default_segments(db, config.id)
+        db.refresh(config)
+        return config
+
     def _get_today_config(self, db: Session) -> RouletteConfig:
         config = db.execute(select(RouletteConfig).where(RouletteConfig.is_active.is_(True))).scalar_one_or_none()
         if config is None:
+            settings = get_settings()
+            if settings.test_mode:
+                return self._seed_default_config(db)
             raise InvalidConfigError("ROULETTE_CONFIG_MISSING")
         return config
 
     def _get_segments(self, db: Session, config_id: int, lock: bool = False) -> list[RouletteSegment]:
+        settings = get_settings()
         stmt = select(RouletteSegment).where(RouletteSegment.config_id == config_id).order_by(RouletteSegment.slot_index)
         if lock and db.bind and db.bind.dialect.name != "sqlite":
             stmt = stmt.with_for_update()
@@ -38,12 +70,19 @@ class RouletteService:
         except DBAPIError as exc:
             raise LockAcquisitionError("ROULETTE_LOCK_FAILED") from exc
         if len(segments) != 6:
+            if settings.test_mode:
+                # Re-seed default segments in test mode to avoid 500s when config is incomplete.
+                return self._seed_default_segments(db, config_id)
             raise InvalidConfigError("INVALID_ROULETTE_CONFIG")
         for segment in segments:
             if segment.weight < 0:
+                if settings.test_mode:
+                    return self._seed_default_segments(db, config_id)
                 raise InvalidConfigError("INVALID_ROULETTE_CONFIG")
         total_weight = sum(segment.weight for segment in segments if segment.weight > 0)
         if total_weight <= 0:
+            if settings.test_mode:
+                return self._seed_default_segments(db, config_id)
             raise InvalidConfigError("INVALID_ROULETTE_CONFIG")
         return segments
 

@@ -7,20 +7,25 @@ import DicePage from "../pages/DicePage";
 import LotteryPage from "../pages/LotteryPage";
 import RankingPage from "../pages/RankingPage";
 import SeasonPassPage from "../pages/SeasonPassPage";
+import LoginPage from "../pages/LoginPage";
 import UserLayout from "../components/layout/UserLayout";
+import RequireAuth from "../components/routing/RequireAuth";
 
 const UserRoutes: React.FC = () => {
   return (
     <Routes>
       <Route element={<UserLayout />}>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/roulette" element={<RoulettePage />} />
-        <Route path="/dice" element={<DicePage />} />
-        <Route path="/lottery" element={<LotteryPage />} />
-        <Route path="/ranking" element={<RankingPage />} />
-        <Route path="/season-pass" element={<SeasonPassPage />} />
+        <Route element={<RequireAuth />}>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/roulette" element={<RoulettePage />} />
+          <Route path="/dice" element={<DicePage />} />
+          <Route path="/lottery" element={<LotteryPage />} />
+          <Route path="/ranking" element={<RankingPage />} />
+          <Route path="/season-pass" element={<SeasonPassPage />} />
+        </Route>
       </Route>
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
 };
