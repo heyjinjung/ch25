@@ -1,8 +1,8 @@
 # XMAS 1Week API 개요 및 핵심 엔드포인트
 
 - 문서 타입: API
-- 버전: v1.1
-- 작성일: 2025-12-06
+- 버전: v1.2
+- 작성일: 2025-12-11
 - 작성자: 시스템 설계팀
 - 대상 독자: 백엔드/프론트엔드 개발자
 
@@ -35,8 +35,8 @@
 
 ## 5. 공통 API
 ### 4-1. GET /api/today-feature
-- 설명: 오늘 활성화된 Feature 정보를 반환한다. 현재 페이로드는 최소 정보(`feature_type`, `user_id`)만 제공하며 FE가 라우팅을 결정한다.
-- 인증: ✅ 필요 (Authorization: Bearer JWT)
+- 설명: 오늘 활성화된 Feature 정보를 반환한다. 최소 페이로드(`feature_type`)만 제공하며 FE가 라우팅을 결정한다. JWT가 있으면 `user_id`를 함께 돌려준다.
+- 인증: 선택 (Bearer JWT를 주면 `user_id` 포함, 없으면 익명 응답)
 - Method/Path: GET `/api/today-feature`
 - Params/Body: 없음
 - 성공 200 예시:
@@ -46,9 +46,9 @@
   "user_id": 1
 }
 ```
-- 주요 에러: 401(인증 실패), 404(`NO_FEATURE_TODAY`), 409(`INVALID_FEATURE_SCHEDULE`)
+- 주요 에러: 404(`NO_FEATURE_TODAY`), 409(`INVALID_FEATURE_SCHEDULE`)
 - 비고: 스케줄이 없으면 `NO_FEATURE_TODAY`, 중복 스케줄이면 `INVALID_FEATURE_SCHEDULE`를 반환한다.
- - 추가 비고: `feature_config.is_enabled=0`일 때도 `NO_FEATURE_TODAY`로 응답해 UI 차단.
+- 추가 비고: `feature_config.is_enabled=0`일 때도 `NO_FEATURE_TODAY`로 응답해 UI 차단. 익명 호출 시 `user_id` 필드는 생략된다.
 
 ### 4-2. GET /api/feature
 - 설명: 특정 날짜의 Feature 정보를 조회한다(관리/디버깅용).
@@ -211,6 +211,8 @@
 - 주요 에러: 403(`NO_FEATURE_TODAY`), 401(`UNAUTHORIZED`)
 
 ## 변경 이력
+- v1.2 (2025-12-11, 시스템 설계팀)
+  - `/api/today-feature` 인증을 선택 사항으로 전환하고 JWT가 있을 때만 `user_id`를 포함하도록 명세 수정
 - v1.1 (2025-12-06, 시스템 설계팀)
   - max_daily=0 sentinel 정책을 모든 게임/시즌패스 비고에 명시하고 `NO_FEATURE_TODAY`를 is_enabled=0에도 적용하는 설명 추가
   - 공통 에러 코드 설명에서 무제한 정책 문구를 명확화
