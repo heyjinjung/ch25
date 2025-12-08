@@ -56,8 +56,8 @@ const RoulettePage: React.FC = () => {
       setSelectedIndex(undefined);
       const result = await playMutation.mutateAsync();
       setSelectedIndex(result.selected_index);
-      if (result.reward_amount && result.reward_amount > 0 && result.reward_type !== "NONE") {
-        setRewardToast(`+${result.reward_amount} ${result.reward_type}`);
+      if (result.reward_value && Number(result.reward_value) > 0 && result.reward_type !== "NONE") {
+        setRewardToast(`+${result.reward_value} ${result.reward_type}`);
         setTimeout(() => setRewardToast(null), 2500);
       }
     } catch (e) {
