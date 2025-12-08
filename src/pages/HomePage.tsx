@@ -1,10 +1,11 @@
-import React, { useMemo } from "react";
+﻿import React, { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/authStore";
 import { useSeasonPassStatus } from "../hooks/useSeasonPass";
 import { useRouletteStatus } from "../hooks/useRoulette";
 import { useDiceStatus } from "../hooks/useDice";
 import { useLotteryStatus } from "../hooks/useLottery";
+import { useTodayRanking } from "../hooks/useRanking";
 import { GAME_TOKEN_LABELS } from "../types/gameTokens";
 
 interface GameCardProps {
@@ -12,19 +13,18 @@ interface GameCardProps {
   readonly path: string;
   readonly tokenType?: string;
   readonly tokenBalance?: number | null;
-  readonly disabledReason?: string | null;
   readonly state?: "idle" | "loading" | "error";
 }
 
-const GameCard: React.FC<GameCardProps> = ({ title, path, tokenType, tokenBalance, disabledReason, state = "idle" }) => {
+const GameCard: React.FC<GameCardProps> = ({ title, path, tokenType, tokenBalance, state = "idle" }) => {
   const navigate = useNavigate();
   const hasCoins = typeof tokenBalance === "number" && tokenBalance > 0;
   const tokenLabel = tokenType ? GAME_TOKEN_LABELS[tokenType as keyof typeof GAME_TOKEN_LABELS] ?? tokenType : "미지급";
   const statusBadge =
     state === "loading"
-      ? "잔액 로딩 중"
+      ? "상태 로딩 중"
       : state === "error"
-        ? "잔액 조회 실패 - 코인 지급 후 재시도"
+        ? "상태 조회 실패 - 코인 지급 확인"
         : undefined;
 
   return (
@@ -34,16 +34,14 @@ const GameCard: React.FC<GameCardProps> = ({ title, path, tokenType, tokenBalanc
         <span className="text-sm text-slate-300">{tokenLabel}</span>
       </div>
       <p className="text-sm text-slate-400">보유 코인: {hasCoins ? tokenBalance : 0}</p>
-      {(disabledReason || statusBadge) && (
-        <p className="text-xs text-amber-200">{disabledReason ?? statusBadge}</p>
-      )}
+      {statusBadge && <p className="text-xs text-amber-200">{statusBadge}</p>}
       <button
         type="button"
         onClick={() => navigate(path)}
         disabled={!hasCoins}
         className="w-full rounded-lg bg-gradient-to-r from-emerald-600 to-emerald-500 px-4 py-2 text-sm font-bold text-white shadow transition hover:from-emerald-500 hover:to-emerald-400 disabled:cursor-not-allowed disabled:from-slate-700 disabled:to-slate-600"
       >
-        {hasCoins ? "바로 입장" : "코인 없음 - 관리자에게 문의"}
+        {hasCoins ? "바로 입장" : "코인 없음 - 관리자 문의"}
       </button>
     </div>
   );
@@ -55,15 +53,29 @@ const HomePage: React.FC = () => {
   const roulette = useRouletteStatus();
   const dice = useDiceStatus();
   const lottery = useLotteryStatus();
+  const ranking = useTodayRanking();
 
   const seasonSummary = useMemo(() => {
-    if (season.isLoading) return { label: "로딩 중...", detail: "" };
-    if (season.isError || !season.data) return { label: "시즌패스 정보를 불러오지 못했습니다.", detail: "" };
+    if (season.isLoading) return { label: "로딩 중", detail: "" };
+    if (season.isError || !season.data) return { label: "시즌패스 상태를 불러오지 못했습니다", detail: "" };
     return {
-      label: `레벨 ${season.data.current_level} / XP ${season.data.current_xp} / 다음 레벨 ${season.data.next_level_xp}`,
-      detail: `최대 레벨 ${season.data.max_level}`,
+      label: `레벨 ${season.data.current_level} / XP ${season.data.current_xp.toLocaleString()}`,
+      detail: `다음 레벨까지 ${(season.data.next_level_xp - season.data.current_xp).toLocaleString()} XP 필요`,
     };
   }, [season.data, season.isError, season.isLoading]);
+
+  const external = ranking.data?.my_external_entry;
+  const top10Needed = external?.rank && external.rank > 10 ? external.rank - 10 : 0;
+  const deposit = external?.deposit_amount ?? 0;
+  const depositRemainder = 100_000 - (deposit % 100_000 || 100_000);
+  const playDone = (external?.play_count ?? 0) > 0;
+
+  const stampTips = [
+    { title: "외부 랭킹 TOP10", status: external?.rank ? `현재 ${external.rank}위${top10Needed > 0 ? `, ${top10Needed}위 상승 필요` : " (완료)"}` : "랭킹 데이터 없음" },
+    { title: "외부 사이트 첫 이용", status: playDone ? "완료" : "미완료" },
+    { title: "외부 입금 10만원마다", status: `누적 ${deposit.toLocaleString()}원 / 다음까지 ${depositRemainder === 100_000 ? 0 : depositRemainder.toLocaleString()}원` },
+    { title: "내부 게임 승리 50회", status: "집계 대기 (추가 데이터 필요)" },
+  ];
 
   const gameCards: GameCardProps[] = [
     {
@@ -71,7 +83,6 @@ const HomePage: React.FC = () => {
       path: "/roulette",
       tokenType: roulette.data?.token_type,
       tokenBalance: roulette.data?.token_balance ?? null,
-      disabledReason: null,
       state: roulette.isLoading ? "loading" : roulette.isError ? "error" : "idle",
     },
     {
@@ -79,7 +90,6 @@ const HomePage: React.FC = () => {
       path: "/dice",
       tokenType: dice.data?.token_type,
       tokenBalance: dice.data?.token_balance ?? null,
-      disabledReason: null,
       state: dice.isLoading ? "loading" : dice.isError ? "error" : "idle",
     },
     {
@@ -87,7 +97,6 @@ const HomePage: React.FC = () => {
       path: "/lottery",
       tokenType: lottery.data?.token_type,
       tokenBalance: lottery.data?.token_balance ?? null,
-      disabledReason: null,
       state: lottery.isLoading ? "loading" : lottery.isError ? "error" : "idle",
     },
   ];
@@ -97,26 +106,34 @@ const HomePage: React.FC = () => {
   return (
     <section className="space-y-8">
       <div className="rounded-3xl border border-emerald-700/40 bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 p-8 shadow-2xl">
-        <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">대시보드</p>
+        <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">내 정보</p>
         <p className="text-lg font-semibold text-white">{user?.external_id ?? "알 수 없음"}</p>
         {isTestAccount && (
-          <div className="rounded-xl border border-indigo-600/40 bg-indigo-900/30 p-4 text-indigo-100">
+          <div className="mt-3 rounded-xl border border-indigo-600/40 bg-indigo-900/30 p-4 text-indigo-100">
             <p className="text-xs">테스트 계정</p>
-            <p className="text-sm">로그/DB 연동 확인용 계정입니다.</p>
+            <p className="text-sm">로그/DB 동작 확인용 계정입니다.</p>
           </div>
         )}
       </div>
 
-      <div className="rounded-3xl border border-gold-600/30 bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 p-8 shadow-2xl">
+      <div className="rounded-3xl border border-gold-600/30 bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 p-8 shadow-2xl space-y-3">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.25em] text-gold-400">Season Pass</p>
-            <h2 className="text-2xl font-bold text-white">시즌패스 상태</h2>
+            <h2 className="text-2xl font-bold text-white">시즌패스 요약</h2>
           </div>
+          <div className="rounded-full bg-emerald-900/60 px-4 py-1 text-xs text-emerald-200">{seasonSummary.detail}</div>
         </div>
-        <div className="mt-4 rounded-xl border border-gold-600/40 bg-slate-900/60 p-4">
+        <div className="rounded-xl border border-gold-600/40 bg-slate-900/60 p-4">
           <p className="text-sm font-semibold text-emerald-100">{seasonSummary.label}</p>
-          {seasonSummary.detail && <p className="text-xs text-slate-400">{seasonSummary.detail}</p>}
+        </div>
+        <div className="grid gap-3 md:grid-cols-2">
+          {stampTips.map((tip) => (
+            <div key={tip.title} className="rounded-lg border border-slate-700/50 bg-slate-900/60 p-3">
+              <p className="text-sm font-semibold text-white">{tip.title}</p>
+              <p className="text-xs text-emerald-200">{tip.status}</p>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -125,7 +142,7 @@ const HomePage: React.FC = () => {
           <div>
             <p className="text-xs uppercase tracking-[0.25em] text-emerald-300">Games</p>
             <h2 className="text-2xl font-bold text-white">게임 선택</h2>
-            <p className="text-sm text-slate-400">코인이 있으면 언제든 입장 가능, 없으면 버튼이 비활성화됩니다.</p>
+            <p className="text-sm text-slate-400">코인이 있으면 바로 입장, 없으면 관리자에게 문의해 주세요.</p>
           </div>
         </div>
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -133,11 +150,6 @@ const HomePage: React.FC = () => {
             <GameCard key={card.title} {...card} />
           ))}
         </div>
-      </div>
-
-      <div className="rounded-2xl border border-slate-700/40 bg-slate-800/40 p-6 text-center">
-        <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-200">최근 보상/플레이 이력</h3>
-        <p className="mt-2 text-sm text-slate-400">곧 추가될 예정입니다. DB 로그로 우선 확인해주세요.</p>
       </div>
     </section>
   );

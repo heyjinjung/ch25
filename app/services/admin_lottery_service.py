@@ -35,11 +35,11 @@ class AdminLotteryService:
 
         for prize in prizes_data:
             if prize.weight < 0:
-                raise InvalidConfigError("INVALID_LOTTERY_CONFIG")
+                raise InvalidConfigError("INVALID_LOTTERY_WEIGHT")
             if prize.stock is not None and prize.stock < 0:
-                raise InvalidConfigError("INVALID_LOTTERY_CONFIG")
+                raise InvalidConfigError("INVALID_LOTTERY_STOCK")
             if prize.label in seen_labels:
-                raise InvalidConfigError("INVALID_LOTTERY_CONFIG")
+                raise InvalidConfigError("DUPLICATE_PRIZE_LABEL")
             seen_labels.add(prize.label)
 
             total_weight += prize.weight
@@ -57,8 +57,10 @@ class AdminLotteryService:
                 )
             )
 
-        if active_positive == 0 or total_weight <= 0:
-            raise InvalidConfigError("INVALID_LOTTERY_CONFIG")
+        if active_positive == 0:
+            raise InvalidConfigError("NO_ACTIVE_PRIZE")
+        if total_weight <= 0:
+            raise InvalidConfigError("ZERO_TOTAL_WEIGHT")
 
     @staticmethod
     def create_config(db: Session, data: AdminLotteryConfigCreate) -> LotteryConfig:
@@ -73,9 +75,9 @@ class AdminLotteryService:
             db.commit()
             db.refresh(config)
             return config
-        except InvalidConfigError:
+        except InvalidConfigError as exc:
             db.rollback()
-            raise
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=exc.detail)
         except Exception:
             db.rollback()
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="INVALID_LOTTERY_CONFIG")
@@ -97,9 +99,9 @@ class AdminLotteryService:
             db.commit()
             db.refresh(config)
             return config
-        except InvalidConfigError:
+        except InvalidConfigError as exc:
             db.rollback()
-            raise
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=exc.detail)
         except Exception:
             db.rollback()
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="INVALID_LOTTERY_CONFIG")

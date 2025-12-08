@@ -1,3 +1,4 @@
+﻿# /workspace/ch25/app/api/routes/season_pass.py
 """Season pass API endpoints."""
 from __future__ import annotations
 
@@ -10,6 +11,7 @@ from app.api.deps import get_current_user_id, get_db
 from app.schemas.season_pass import (
     ClaimRequest,
     ClaimResponse,
+    InternalWinStatusResponse,
     SeasonPassStatusResponse,
     StampRequest,
     StampResponse,
@@ -29,6 +31,21 @@ def get_status(
 
     result = service.get_status(db=db, user_id=user_id, now=date.today())
     return SeasonPassStatusResponse(**result)
+
+
+@router.get(
+    "/internal-wins",
+    response_model=InternalWinStatusResponse,
+    summary="Get internal game win progress toward stamp threshold",
+)
+def get_internal_wins(
+    db: Session = Depends(get_db),
+    user_id: int = Depends(get_current_user_id),
+) -> InternalWinStatusResponse:
+    """Return current internal win count and remaining to threshold."""
+
+    result = service.get_internal_win_progress(db=db, user_id=user_id, now=date.today())
+    return InternalWinStatusResponse(**result)
 
 
 @router.post("/stamp", response_model=StampResponse, summary="Add a daily stamp")
