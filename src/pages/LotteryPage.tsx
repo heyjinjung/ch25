@@ -18,6 +18,7 @@ const LotteryPage: React.FC = () => {
   const [revealedPrize, setRevealedPrize] = useState<RevealedPrize | null>(null);
   const [isScratching, setIsScratching] = useState(false);
   const [isRevealed, setIsRevealed] = useState(false);
+  const [rewardToast, setRewardToast] = useState<string | null>(null);
 
   const mapErrorMessage = (err: unknown) => {
     const code = (err as { response?: { data?: { error?: { code?: string } } } })?.response?.data?.error?.code;
@@ -72,6 +73,10 @@ const LotteryPage: React.FC = () => {
         reward_type: result.prize.reward_type,
         reward_value: result.prize.reward_value,
       });
+      if (result.prize.reward_value && Number(result.prize.reward_value) > 0 && result.prize.reward_type !== "NONE") {
+        setRewardToast(`+${result.prize.reward_value} ${result.prize.reward_type}`);
+        setTimeout(() => setRewardToast(null), 2500);
+      }
     } catch (mutationError) {
       setIsScratching(false);
       console.error("Lottery play failed", mutationError);
@@ -105,6 +110,11 @@ const LotteryPage: React.FC = () => {
 
     return (
       <section className="space-y-8 rounded-3xl border border-gold-600/30 bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 p-8 shadow-2xl">
+        {rewardToast && (
+          <div className="fixed bottom-6 right-6 z-30 rounded-2xl border border-emerald-500/60 bg-emerald-900/80 px-4 py-3 text-emerald-100 shadow-lg animate-bounce-in">
+            {rewardToast}
+          </div>
+        )}
         <header className="text-center">
           <p className="text-sm uppercase tracking-[0.3em] text-gold-400">오늘의 이벤트</p>
           <h1 className="mt-2 text-3xl font-bold text-white">크리스마스 복권</h1>
