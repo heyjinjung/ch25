@@ -1,5 +1,4 @@
-// src/components/game/RouletteWheel.tsx
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 
 interface Segment {
   readonly label: string;
@@ -13,14 +12,19 @@ interface RouletteWheelProps {
   readonly selectedIndex?: number;
 }
 
-const SEGMENT_COLORS = [
-  "from-emerald-600 to-emerald-700",
-  "from-red-600 to-red-700",
-  "from-emerald-700 to-emerald-800",
-  "from-red-700 to-red-800",
-  "from-emerald-600 to-emerald-700",
-  "from-red-600 to-red-700",
-];
+const COLORS = ["#10b981", "#ef4444", "#0ea5e9", "#f59e0b", "#22c55e", "#8b5cf6"];
+
+const polarToCartesian = (cx: number, cy: number, r: number, angle: number) => {
+  const rad = ((angle - 90) * Math.PI) / 180;
+  return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+};
+
+const describeArc = (cx: number, cy: number, r: number, startAngle: number, endAngle: number) => {
+  const start = polarToCartesian(cx, cy, r, endAngle);
+  const end = polarToCartesian(cx, cy, r, startAngle);
+  const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+  return `M ${cx} ${cy} L ${start.x} ${start.y} A ${r} ${r} 0 ${largeArcFlag} 0 ${end.x} ${end.y} Z`;
+};
 
 const RouletteWheel: React.FC<RouletteWheelProps> = ({ segments, isSpinning, selectedIndex }) => {
   const [rotation, setRotation] = useState(0);
@@ -32,11 +36,12 @@ const RouletteWheel: React.FC<RouletteWheelProps> = ({ segments, isSpinning, sel
   useEffect(() => {
     if (!isSpinning) return;
     setShowResult(false);
-    const spinTo = selectedIndex !== undefined 
-      ? 360 * 5 + (360 - anglePerSegment * selectedIndex - anglePerSegment / 2)
-      : 360 * 5;
+    const spinTo =
+      selectedIndex !== undefined
+        ? 360 * 5 + (360 - anglePerSegment * selectedIndex - anglePerSegment / 2)
+        : 360 * 5;
     setRotation(spinTo);
-    
+
     const timer = setTimeout(() => setShowResult(true), 2500);
     return () => clearTimeout(timer);
   }, [anglePerSegment, isSpinning, selectedIndex]);
@@ -50,75 +55,71 @@ const RouletteWheel: React.FC<RouletteWheelProps> = ({ segments, isSpinning, sel
         <div className="h-0 w-0 border-l-[12px] border-r-[12px] border-t-[20px] border-l-transparent border-r-transparent border-t-gold-400 drop-shadow-lg" />
       </div>
 
-      {/* Wheel Container */}
-      <div className="relative h-72 w-72 rounded-full border-4 border-gold-500 bg-gradient-to-br from-slate-900 to-slate-800 p-2 shadow-[0_0_40px_rgba(234,179,8,0.3)]">
-        {/* Inner decorative ring */}
-        <div className="absolute inset-3 rounded-full border-2 border-gold-600/40" />
-        
-        {/* Spinning wheel */}
-        <div
-          className="relative h-full w-full rounded-full transition-transform duration-[3000ms] ease-out"
-          style={{ transform: `rotate(${rotation}deg)` }}
+      {/* Wheel */}
+      <div className="relative aspect-square w-full max-w-[360px] rounded-[32px] border border-emerald-700/40 bg-slate-900/60 p-5 shadow-[0_10px_40px_rgba(0,0,0,0.4)]">
+        <svg
+          viewBox="0 0 200 200"
+          className="h-full w-full rounded-full bg-gradient-to-br from-slate-950 to-slate-900 shadow-[0_0_40px_rgba(234,179,8,0.25)]"
+          style={{ transform: `rotate(${rotation}deg)`, transition: "transform 3s ease-out" }}
         >
+          <circle cx="100" cy="100" r="96" fill="#0f172a" stroke="#fbbf24" strokeWidth="3" />
           {segments.map((segment, index) => {
-              const startAngle = anglePerSegment * index - 90;
-              const endAngle = startAngle + anglePerSegment;
-              const isJackpot = segment.isJackpot || segment.label.toLowerCase().includes("jackpot");            return (
-              <div
-                key={`${segment.label}-${index}`}
-                className="absolute inset-0"
-                style={{
-                  clipPath: `polygon(50% 50%, ${50 + 50 * Math.cos((startAngle * Math.PI) / 180)}% ${50 + 50 * Math.sin((startAngle * Math.PI) / 180)}%, ${50 + 50 * Math.cos((endAngle * Math.PI) / 180)}% ${50 + 50 * Math.sin((endAngle * Math.PI) / 180)}%)`,
-                }}
-              >
-                <div className={`h-full w-full bg-gradient-to-br ${isJackpot ? "from-gold-500 to-gold-600" : SEGMENT_COLORS[index % SEGMENT_COLORS.length]}`} />
-              </div>
-            );
-          })}
-
-          {/* Segment labels */}
-          {segments.map((segment, index) => {
-            const midAngle = anglePerSegment * index + anglePerSegment / 2 - 90;
-            const labelRadius = 42;
-            const x = 50 + labelRadius * Math.cos((midAngle * Math.PI) / 180);
-            const y = 50 + labelRadius * Math.sin((midAngle * Math.PI) / 180);
+            const startAngle = anglePerSegment * index;
+            const endAngle = startAngle + anglePerSegment;
             const isJackpot = segment.isJackpot || segment.label.toLowerCase().includes("jackpot");
+            const path = describeArc(100, 100, 90, startAngle, endAngle);
             const probability = segment.weight ? Math.round((segment.weight / totalWeight) * 100) : null;
+            const labelAngle = startAngle + anglePerSegment / 2;
+            const labelPos = polarToCartesian(100, 100, 55, labelAngle);
+            const color = isJackpot ? "#fbbf24" : COLORS[index % COLORS.length];
 
             return (
-              <div
-                key={`label-${segment.label}-${index}`}
-                className="absolute text-center"
-                style={{
-                  left: `${x}%`,
-                  top: `${y}%`,
-                  transform: `translate(-50%, -50%) rotate(${midAngle + 90}deg)`,
-                }}
-              >
-                <span className={`block text-xs font-bold drop-shadow-md ${isJackpot ? "text-slate-900" : "text-white"}`}>
-                  {isJackpot && "🎰 "}
+              <g key={`${segment.label}-${index}`}>
+                <path d={path} fill={color} stroke="#0f172a" strokeWidth="1" />
+                <text
+                  x={labelPos.x}
+                  y={labelPos.y}
+                  fill={isJackpot ? "#0f172a" : "#fff"}
+                  fontSize="8"
+                  fontWeight="700"
+                  textAnchor="middle"
+                  alignmentBaseline="middle"
+                  transform={`rotate(${labelAngle} ${labelPos.x} ${labelPos.y})`}
+                >
                   {segment.label}
-                </span>
+                </text>
                 {probability !== null && (
-                  <span className={`block text-[10px] ${isJackpot ? "text-slate-700" : "text-white/70"}`}>
+                  <text
+                    x={labelPos.x}
+                    y={labelPos.y + 10}
+                    fill={isJackpot ? "#0f172a" : "rgba(255,255,255,0.8)"}
+                    fontSize="7"
+                    textAnchor="middle"
+                    alignmentBaseline="middle"
+                  >
                     {probability}%
-                  </span>
+                  </text>
                 )}
-              </div>
+              </g>
             );
           })}
-
-          {/* Center hub */}
-          <div className="absolute left-1/2 top-1/2 h-12 w-12 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-gold-400 bg-gradient-to-br from-slate-800 to-slate-900 shadow-lg">
-            <div className="flex h-full w-full items-center justify-center text-lg">🎄</div>
-          </div>
-        </div>
+          <circle cx="100" cy="100" r="18" fill="url(#hub)" stroke="#fbbf24" strokeWidth="2" />
+          <text x="100" y="104" textAnchor="middle" fill="#fff" fontWeight="700" fontSize="10">
+            🎁
+          </text>
+          <defs>
+            <radialGradient id="hub" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#1f2937" />
+            </radialGradient>
+          </defs>
+        </svg>
       </div>
 
       {/* Result indicator */}
       {showResult && selectedIndex !== undefined && segments[selectedIndex] && (
         <div className="animate-bounce-in rounded-xl border border-gold-500/50 bg-gradient-to-r from-emerald-900/90 to-slate-900/90 px-6 py-3 text-center shadow-lg">
-          <p className="text-sm text-gold-300">당첨!</p>
+          <p className="text-sm text-gold-300">축하합니다!</p>
           <p className="text-xl font-bold text-white">{segments[selectedIndex].label}</p>
         </div>
       )}

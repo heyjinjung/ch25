@@ -114,6 +114,12 @@ const HomePage: React.FC = () => {
 
   const rankingSummary = ranking.data?.external_entries ? ranking.data.external_entries.slice(0, 3) : [];
 
+  const displayName = (entryUserId: number, entryUserName?: string) => {
+    if (entryUserName && entryUserName.trim().length > 0) return entryUserName;
+    if (user && entryUserId === user.id && user.external_id) return user.external_id;
+    return `ID ${entryUserId}`;
+  };
+
   return (
     <section className="space-y-8">
       <div className="rounded-3xl border border-emerald-700/40 bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 p-8 shadow-2xl">
@@ -184,7 +190,7 @@ const HomePage: React.FC = () => {
               <div key={entry.user_id} className="rounded-xl border border-amber-500/40 bg-slate-900/60 p-4">
                 <p className="text-sm font-semibold text-amber-200">{entry.rank}위</p>
                 <p className="text-base font-bold text-white">
-                  {entry.user_name ?? `ID ${entry.user_id}`}
+                  {displayName(entry.user_id, entry.user_name)}
                 </p>
                 <p className="text-xs text-slate-300">입금 {entry.deposit_amount.toLocaleString()}원 · 플레이 {entry.play_count}</p>
               </div>
