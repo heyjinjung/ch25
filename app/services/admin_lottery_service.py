@@ -25,7 +25,6 @@ class AdminLotteryService:
     def _apply_prizes(config: LotteryConfig, prizes_data):
         config.prizes.clear()
         total_weight = 0
-        active_weight = 0
         active_count = 0
         for prize in prizes_data:
             if prize.weight < 0:
@@ -35,7 +34,6 @@ class AdminLotteryService:
             total_weight += prize.weight
             if prize.is_active:
                 active_count += 1
-                active_weight += prize.weight
             config.prizes.append(
                 LotteryPrize(
                     label=prize.label,
@@ -46,7 +44,8 @@ class AdminLotteryService:
                     is_active=prize.is_active,
                 )
             )
-        if active_count == 0 or active_weight <= 0:
+        # 최소 한 개의 활성 상품은 필요
+        if active_count == 0:
             raise InvalidConfigError("INVALID_LOTTERY_CONFIG")
 
     @staticmethod

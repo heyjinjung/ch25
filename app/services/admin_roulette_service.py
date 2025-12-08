@@ -106,3 +106,9 @@ class AdminRouletteService:
         db.commit()
         db.refresh(config)
         return config
+
+    @staticmethod
+    def delete_config(db: Session, config_id: int) -> None:
+        config = AdminRouletteService.get_config(db, config_id)
+        db.delete(config)
+        db.commit()

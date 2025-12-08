@@ -36,3 +36,7 @@ export async function updateRouletteConfig(id: number, payload: AdminRouletteCon
   const { data } = await adminApi.put<AdminRouletteConfig>(`/roulette-config/${id}`, payload);
   return data;
 }
+
+export async function deleteRouletteConfig(id: number) {
+  await adminApi.delete(`/roulette-config/${id}`);
+}

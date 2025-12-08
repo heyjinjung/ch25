@@ -43,3 +43,8 @@ def activate_config(config_id: int, db: Session = Depends(get_db)):
 def deactivate_config(config_id: int, db: Session = Depends(get_db)):
     config = AdminRouletteService.toggle_active(db, config_id, False)
     return AdminRouletteConfigResponse.from_orm(config)
+
+
+@router.delete("/{config_id}", status_code=204)
+def delete_config(config_id: int, db: Session = Depends(get_db)) -> None:
+    AdminRouletteService.delete_config(db, config_id)
