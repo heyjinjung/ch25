@@ -2,8 +2,9 @@ import userApi from "./httpClient";
 import { AuthUser } from "../auth/authStore";
 
 export interface LoginRequest {
-  readonly user_id: number;
-  readonly external_id: string;
+  readonly user_id?: number;
+  readonly external_id?: string;
+  readonly password?: string;
 }
 
 export interface LoginResponse {
