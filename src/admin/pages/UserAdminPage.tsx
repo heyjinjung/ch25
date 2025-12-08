@@ -1,7 +1,7 @@
 // src/admin/pages/UserAdminPage.tsx
 import React, { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createUser, deleteUser, fetchUsers, updateUser, AdminUser, AdminUserPayload } from "../api/adminUserApi";
+import { createUser, deleteUser, fetchUsers, updateUser, AdminUserPayload } from "../api/adminUserApi";
 import Button from "../../components/common/Button";
 
 type EditableUser = Partial<AdminUserPayload> & { id?: number };
