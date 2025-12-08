@@ -44,17 +44,23 @@ class AdminExternalRankingService:
     @staticmethod
     def upsert_many(db: Session, data: Iterable[ExternalRankingCreate]) -> list[ExternalRankingData]:
         existing_by_user = {row.user_id: row for row in db.execute(select(ExternalRankingData)).scalars().all()}
-        prev_deposits: dict[int, int] = {uid: row.deposit_amount for uid, row in existing_by_user.items()}
-        prev_plays: dict[int, int] = {uid: row.play_count for uid, row in existing_by_user.items()}
         season_pass = SeasonPassService()
         today = date.today()
+        today_key = today.isoformat()
         results: list[ExternalRankingData] = []
+
         for payload in data:
             user_id = AdminExternalRankingService._resolve_user_id(db, payload.user_id, payload.external_id)
-            prev_row = existing_by_user.get(user_id)
-            if prev_row:
-                row = prev_row
-                row.user_id = user_id  # keep normalized user_id
+            row = existing_by_user.get(user_id)
+
+            # Daily reset for delta tracking
+            if row and row.last_daily_reset != today:
+                row.daily_base_deposit = row.deposit_amount
+                row.daily_base_play = row.play_count
+                row.last_daily_reset = today
+
+            if row:
+                row.user_id = user_id
                 row.deposit_amount = payload.deposit_amount
                 row.play_count = payload.play_count
                 row.memo = payload.memo
@@ -64,20 +70,25 @@ class AdminExternalRankingService:
                     deposit_amount=payload.deposit_amount,
                     play_count=payload.play_count,
                     memo=payload.memo,
+                    daily_base_deposit=payload.deposit_amount,
+                    daily_base_play=payload.play_count,
+                    last_daily_reset=today,
                 )
                 db.add(row)
                 existing_by_user[user_id] = row
             results.append(row)
+
         db.commit()
         for row in results:
             db.refresh(row)
 
-        # Season pass hooks: external deposit/play thresholds and TOP10.
+        # Season pass hooks with period keys (daily/weekly)
+        # Daily deltas
         for row in results:
-            prev_deposit = prev_deposits.get(row.user_id, 0)
-            prev_play = prev_plays.get(row.user_id, 0)
-            # 100,000 단위마다 stamp_count 누적
-            deposit_steps = row.deposit_amount // 100000 - prev_deposit // 100000
+            delta_deposit_today = max(row.deposit_amount - row.daily_base_deposit, 0)
+            delta_play_today = max(row.play_count - row.daily_base_play, 0)
+
+            deposit_steps = delta_deposit_today // 100000
             if deposit_steps > 0:
                 season_pass.maybe_add_stamp(
                     db,
@@ -85,16 +96,19 @@ class AdminExternalRankingService:
                     source_feature_type="EXTERNAL_DEPOSIT_100K",
                     stamp_count=deposit_steps,
                     now=today,
+                    period_key=f"DEPOSIT_{today_key}",
                 )
-            # 첫 이용(0 -> 1 이상) 스탬프
-            if prev_play == 0 and row.play_count > 0:
+            # 첫 이용: 오늘 증가가 1 이상이면 지급
+            if delta_play_today > 0:
                 season_pass.maybe_add_stamp(
                     db,
                     user_id=row.user_id,
                     source_feature_type="EXTERNAL_SITE_PLAY",
                     now=today,
+                    period_key=f"SITE_{today_key}",
                 )
 
+        # 주간 TOP10 (ISO 주차)
         top10 = (
             db.execute(
                 select(ExternalRankingData)
@@ -104,12 +118,15 @@ class AdminExternalRankingService:
             .scalars()
             .all()
         )
+        iso_year, iso_week, _ = today.isocalendar()
+        week_key = f"W{iso_year}-{iso_week:02d}"
         for entry in top10:
             season_pass.maybe_add_stamp(
                 db,
                 user_id=entry.user_id,
                 source_feature_type="EXTERNAL_RANKING_TOP10",
                 now=today,
+                period_key=f"TOP10_{week_key}",
             )
         return results
 

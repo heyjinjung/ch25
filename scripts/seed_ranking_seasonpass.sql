@@ -6,6 +6,9 @@ CREATE TABLE IF NOT EXISTS external_ranking_data (
   user_id INT NOT NULL,
   deposit_amount INT NOT NULL DEFAULT 0,
   play_count INT NOT NULL DEFAULT 0,
+  daily_base_deposit INT NOT NULL DEFAULT 0,
+  daily_base_play INT NOT NULL DEFAULT 0,
+  last_daily_reset DATE NULL,
   memo VARCHAR(255) NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -23,6 +26,16 @@ CREATE TABLE IF NOT EXISTS external_ranking_reward_log (
   data_id INT NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Season pass levels (simple curve)
+DELETE FROM season_pass_level;
+INSERT INTO season_pass_level (season_id, level, required_xp, reward_type, reward_amount, auto_claim)
+VALUES
+  (1, 1, 0,  'COIN', 100, 0),
+  (1, 2, 20, 'COIN', 200, 0),
+  (1, 3, 50, 'COIN', 300, 0),
+  (1, 4, 80, 'COIN', 500, 0),
+  (1, 5, 120,'COIN', 800, 0);
 
 -- Optional sample rows (commented out)
 -- INSERT INTO external_ranking_data (user_id, deposit_amount, play_count, memo)

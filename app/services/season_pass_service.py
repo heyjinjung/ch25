@@ -178,6 +178,7 @@ class SeasonPassService:
         xp_bonus: int = 0,
         now: date | datetime | None = None,
         stamp_count: int = 1,
+        period_key: str | None = None,
     ) -> dict:
         """Apply stamp(s): prevent duplicates, update XP, level-up, and log rewards."""
 
@@ -240,18 +241,20 @@ class SeasonPassService:
         if achieved_levels:
             progress.current_level = max(progress.current_level, max(level.level for level in achieved_levels))
 
+        key = period_key or today.isoformat()
         existing_stamp = db.execute(
             select(SeasonPassStampLog).where(
                 SeasonPassStampLog.user_id == user_id,
                 SeasonPassStampLog.season_id == season.id,
-                SeasonPassStampLog.date == today,
+                SeasonPassStampLog.source_feature_type == source_feature_type,
+                SeasonPassStampLog.period_key == key,
             )
         ).scalar_one_or_none()
 
         if existing_stamp:
             existing_stamp.stamp_count += stamp_count
             existing_stamp.xp_earned += xp_to_add
-            existing_stamp.source_feature_type = source_feature_type
+            existing_stamp.date = today
             stamp_log = existing_stamp
         else:
             stamp_log = SeasonPassStampLog(
@@ -259,6 +262,7 @@ class SeasonPassService:
                 season_id=season.id,
                 progress_id=progress.id,
                 date=today,
+                period_key=key,
                 stamp_count=stamp_count,
                 source_feature_type=source_feature_type,
                 xp_earned=xp_to_add,

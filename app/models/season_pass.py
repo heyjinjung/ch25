@@ -86,7 +86,7 @@ class SeasonPassStampLog(Base):
 
     __tablename__ = "season_pass_stamp_log"
     __table_args__ = (
-        UniqueConstraint("user_id", "season_id", "date", name="uq_stamp_user_season_date"),
+        UniqueConstraint("user_id", "season_id", "source_feature_type", "period_key", name="uq_stamp_user_season_period"),
     )
 
     id = Column(Integer, primary_key=True, index=True)
@@ -94,6 +94,7 @@ class SeasonPassStampLog(Base):
     season_id = Column(Integer, ForeignKey("season_pass_config.id", ondelete="CASCADE"), nullable=False)
     progress_id = Column(Integer, ForeignKey("season_pass_progress.id", ondelete="CASCADE"), nullable=True)
     date = Column(Date, nullable=False)
+    period_key = Column(String(32), nullable=False, default="")
     stamp_count = Column(Integer, nullable=False, default=1)
     source_feature_type = Column(String(30), nullable=False)
     xp_earned = Column(Integer, nullable=False)
