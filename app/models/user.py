@@ -13,6 +13,9 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     external_id = Column(String(100), nullable=False, unique=True)
+    nickname = Column(String(100), nullable=True)
+    password_hash = Column(String(128), nullable=True)
+    level = Column(Integer, nullable=False, default=1)
     status = Column(String(20), nullable=False, default="ACTIVE")
     last_login_at = Column(DateTime, nullable=True)
     last_login_ip = Column(String(45), nullable=True)

@@ -3,6 +3,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Dict
 
 import jwt
+import hashlib
 from fastapi import HTTPException, status
 
 from app.core.config import get_settings
@@ -26,3 +27,14 @@ def decode_access_token(token: str) -> Dict[str, Any]:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="TOKEN_EXPIRED") from exc
     except jwt.InvalidTokenError as exc:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="TOKEN_INVALID") from exc
+
+
+def hash_password(password: str) -> str:
+    """Simple SHA256-based hash (lightweight, not for production)."""
+    return hashlib.sha256(password.encode("utf-8")).hexdigest()
+
+
+def verify_password(password: str, password_hash: str | None) -> bool:
+    if not password_hash:
+        return False
+    return hash_password(password) == password_hash

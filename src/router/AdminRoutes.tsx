@@ -9,6 +9,7 @@ import RouletteConfigPage from "../admin/pages/RouletteConfigPage";
 import DiceConfigPage from "../admin/pages/DiceConfigPage";
 import LotteryConfigPage from "../admin/pages/LotteryConfigPage";
 import RankingAdminPage from "../admin/pages/RankingAdminPage";
+import ExternalRankingPage from "../admin/pages/ExternalRankingPage";
 import GameTokenGrantPage from "../admin/pages/GameTokenGrantPage";
 import GameTokenLogsPage from "../admin/pages/GameTokenLogsPage";
 import AdminLayout from "../admin/components/AdminLayout";
@@ -27,6 +28,7 @@ const AdminRoutes: React.FC = () => {
           <Route path="dice" element={<DiceConfigPage />} />
           <Route path="lottery" element={<LotteryConfigPage />} />
           <Route path="ranking" element={<RankingAdminPage />} />
+          <Route path="external-ranking" element={<ExternalRankingPage />} />
           <Route path="game-tokens" element={<GameTokenGrantPage />} />
           <Route path="game-token-logs" element={<GameTokenLogsPage />} />
         </Route>

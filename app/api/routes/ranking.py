@@ -14,7 +14,7 @@ service = RankingService()
 
 @router.get("/today", response_model=RankingTodayResponse)
 def ranking_today(
-    top_n: int = Query(10, ge=1, le=100),
+    top_n: int = Query(10, ge=1, le=100, alias="top"),
     db: Session = Depends(get_db),
     user_id: int = Depends(get_current_user_id),
 ) -> RankingTodayResponse:
