@@ -1,3 +1,4 @@
+2025-12-08: API/DB/코인 시스템/서비스/운영/체크리스트/overview/architecture 최신화 반영. 실제 코드/운영/QA 흐름과 일치하도록 문서 업데이트.
 # 프로젝트 변경 이력
 
 ## 2025-12-11 (feature gate simplification & doc refresh)

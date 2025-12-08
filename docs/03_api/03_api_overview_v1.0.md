@@ -38,6 +38,26 @@
 - 설명: 오늘 활성화된 Feature 정보를 반환한다. 최소 페이로드(`feature_type`)만 제공하며 FE가 라우팅을 결정한다. JWT가 있으면 `user_id`를 함께 돌려준다.
 - 인증: 선택 (Bearer JWT를 주면 `user_id` 포함, 없으면 익명 응답)
 - Method/Path: GET `/api/today-feature`
+- Response 예시:
+```json
+{
+  "feature_type": "ROULETTE" | "DICE" | "SEASON_PASS" | "LOTTERY" | "RANKING",
+  "user_id": 1234 // JWT 있을 때만
+}
+```
+- 404 시 `{ feature_type: null }` 폴백, 경고 배너만 표시
+### 4-2. 게임별 Status/Play API
+- 엔드포인트: `/roulette/status|play`, `/dice/status|play`, `/lottery/status|play`
+- Response 예시:
+```json
+{
+  "token_type": "ROULETTE_COIN" | "DICE_TOKEN" | "LOTTERY_TICKET",
+  "token_balance": 0
+  // 기타 게임별 필드
+}
+```
+- status 404/에러 시에도 홈 카드 항상 렌더, “잔액 정보를 불러오는 중/실패” 배지 표시
+- 실제 코드 기준 주요 에러코드: `NO_FEATURE_TODAY`, `LOCK_NOT_ACQUIRED`, `UNAUTHORIZED`, `DAILY_LIMIT_REACHED` 등
 - Params/Body: 없음
 - 성공 200 예시:
 ```json

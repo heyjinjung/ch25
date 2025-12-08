@@ -6,16 +6,16 @@
 - 코인 기반 흐름이 FE-BE-DB 전역에서 일관되게 동기화되도록 점검 및 개선.
 
 ## 현재 파악된 구조
-- 토큰 타입: `ROULETTE_COIN`, `DICE_TOKEN`, `LOTTERY_TICKET` (`src/types/gameTokens.ts`).
+- 토큰 타입: `ROULETTE_COIN`, `DICE_TOKEN`, `LOTTERY_TICKET` (`src/types/gameTokens.ts`, `app/models/game_wallet.py`).
 - 사용자 앱
   - 라우팅: `/login` → `/home`, 이후 `/roulette`, `/dice`, `/lottery`, `/season-pass`, `/ranking` (RequireAuth).
-  - 홈: `useRouletteStatus`/`useDiceStatus`/`useLotteryStatus`로 코인 잔액 표시, 코인 없으면 버튼 비활성.
+  - 홈: `useRouletteStatus`/`useDiceStatus`/`useLotteryStatus`로 코인 잔액 표시, 코인 없으면 버튼 비활성. status 쿼리 실패/404 시에도 카드 항상 렌더, 잔액 정보 로딩/실패 배지 표시
   - 게임 페이지: status 응답의 `token_balance`를 사용, 0 이하면 버튼 비활성. FeatureGate는 현재 children을 항상 렌더, today-feature 에러는 경고 배너만.
 - 관리자 앱
   - `/admin/game-tokens`: `grantGameTokens`로 코인 지급 폼 존재.
   - 기타 설정 페이지(룰렛/주사위/복권 설정, 시즌/스케줄 등) 이미 라우팅되어 있음.
 - API 계층
-  - `/roulette/status|play`, `/dice/status|play`, `/lottery/status|play`에서 `token_balance`, `token_type`을 내려받음.
+  - `/roulette/status|play`, `/dice/status|play`, `/lottery/status|play`에서 `token_balance`, `token_type`을 내려받음. status 404/에러 시에도 홈 카드 항상 렌더, “잔액 정보를 불러오는 중/실패” 배지 표시
   - `/today-feature`는 404 시 null 로 폴백 처리(경고만).
   - 시즌패스 `/season-pass/status|stamp|claim` 연동 존재.
 
@@ -30,7 +30,7 @@
 
 ### 1) 프론트 즉시 조치 (항상 노출 + 안전 폴백)
 - 홈
-  - status 쿼리 실패/404 시에도 게임 카드 3개를 기본 렌더하고, “잔액 정보를 불러오는 중/실패” 배지를 표시하도록 방어 로직 추가.
+  - status 쿼리 실패/404 시에도 게임 카드 3개를 기본 렌더하고, “잔액 정보를 불러오는 중/실패” 배지를 표시하도록 방어 로직 추가. 실제 코드에서 status 404/에러 시에도 홈 카드 항상 렌더됨을 확인.
   - today-feature 데이터와 무관하게 카드가 사라지지 않도록 별도 분기 제거/검증.
 - 게임 페이지
   - FeatureGate 경고를 소형 토스트/배지로 축소, UI 공간 차지 최소화.

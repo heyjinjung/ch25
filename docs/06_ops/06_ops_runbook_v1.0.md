@@ -32,6 +32,7 @@
 - 시즌패스 add_stamp 실패율 및 보상 지급 오류 모니터링.
 
 ## 6. 장애 대응 플레이북
+- 실제 운영 환경에서는 Alembic 마이그레이션, 환경 변수, Docker/Nginx/CI/CD 등 최신 배포/운영 플로우를 반영해야 함.
 1) 스케줄 오류: 오늘 활성 스케줄이 없으면 `/api/today-feature`에서 feature_type=NONE 반환 → 프론트 안내. 스케줄 테이블 즉시 보정.
 2) 긴급 중단: feature_config.is_enabled=0으로 특정 Feature OFF. 필요 시 Nginx 레벨에서 503 유지보수 페이지 제공.
 3) 캐시/세션 장애: Redis 미사용 모드로 폴백하거나, 캐시 무효화 후 DB 조회 경로 사용.

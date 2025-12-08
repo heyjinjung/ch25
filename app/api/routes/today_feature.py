@@ -45,16 +45,14 @@ def get_today_feature(
 ) -> dict:
     """Public endpoint - returns today's active feature. Authentication optional.
 
-    In test_mode, if no schedule exists, respond with feature_type=null instead of 404.
+    If no schedule exists, respond with feature_type=null instead of 404 (dev/QA convenience).
     """
     now_kst = datetime.now(ZoneInfo("Asia/Seoul"))
     settings = get_settings()
     try:
         feature_type = feature_service.get_today_feature(db, now_kst)
     except NoFeatureTodayError:
-        if settings.test_mode:
-            return {"feature_type": None, "user_id": user_id} if user_id is not None else {"feature_type": None}
-        raise
+        return {"feature_type": None, "user_id": user_id} if user_id is not None else {"feature_type": None}
     # Ensure the response uses the enum value (string) for schema compatibility.
     feature_value = feature_type.value if hasattr(feature_type, "value") else feature_type
     result = {"feature_type": feature_value}

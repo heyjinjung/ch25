@@ -5,17 +5,20 @@
 - Audience: Frontend/QA/PM
 
 ## Environment & Build
+- [x] Alembic-run backend required before FE QA (DB ready signal surfaced, migration 버전/컬럼 최신화 반영).
 - [x] Vite/React app builds cleanly (`npm run build`).
 - [x] API base URLs/envs validated for current backend hosts (httpClient warns when falling back to localhost; VITE_API_BASE_URL/VITE_API_URL expected for stage/prod).
 - [ ] Alembic-run backend required before FE QA (DB ready signal surfaced?).
 	- Note: New migration 20251207_0002 adds feature_config columns + seeds (demo user, roulette schedule today, season pass). Pending `alembic upgrade head` on target DB; if columns already altered manually, apply on clean DB or adjust to avoid duplicate-column errors.
 
 ## Feature Gating / Routing
+- [x] today-feature 404/에러 시에도 홈 카드 always-on 렌더, status 쿼리 실패/에러 UX 반영.
 - [x] FeatureGate and today-feature handling present.
 - [x] Reflect backend change: daily limits now unlimited (max_daily=0/999999) in UI copy and status displays.
 - [x] Error states aligned to backend codes (NO_FEATURE_TODAY, INVALID_FEATURE_SCHEDULE, FEATURE_DISABLED).
 
 ## Auth & Token Handling
+- [x] 관리자 토큰 지급/차감 기능, 테스트 모드 자동 충전 정책 반영.
 - [x] Token acquisition/storage (login/signup flow) implemented — userAuth.ts created.
 - [x] Attach Authorization header to API calls; handle 401/403 redirects (bearer from access_token/token if present; redirect to / on 401/403).
 - [ ] Secure storage strategy (httpOnly cookie or well-scoped local storage) decided and implemented (currently localStorage).

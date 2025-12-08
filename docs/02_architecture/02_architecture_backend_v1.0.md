@@ -20,6 +20,7 @@
 - Reverse Proxy: Nginx로 TLS 종료 및 백엔드 라우팅을 담당하는 계층.
 
 ## 4. 아키텍처 개요
+- 실제 배포 환경(Docker/Nginx/CI/CD), Alembic 마이그레이션, 테스트 모드, 코인 시스템 정책 등 최신 코드와 일치하도록 반영.
 - 핵심 스택: Python 3.11+, FastAPI, Uvicorn, SQLAlchemy(AsyncSession), Alembic, (선택) Redis 캐시.
 - 인증: JWT 기반, 모든 게임/시즌패스 API는 Authorization 헤더 필요.
 - 타임존: Asia/Seoul 기준으로 날짜/시간 계산.

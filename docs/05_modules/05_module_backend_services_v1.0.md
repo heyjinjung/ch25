@@ -30,6 +30,13 @@
 - `app/utils/`: 가중치 랜덤, 페이지네이션 등 공통 유틸.
 
 ## 5. 핵심 서비스 요약
+### 5-2. GameWalletService (`backend/app/services/game_wallet_service.py`)
+- 책임: 게임별 토큰 잔액 조회, 지급/차감, 테스트 모드 자동 충전 등 코인 시스템 비즈니스 로직 담당.
+- 주요 메서드:
+  - `_get_or_create_wallet(user_id, token_type)`: 지갑 없으면 생성, 있으면 반환
+  - `get_balance(user_id, token_type)`: 잔액 조회
+  - `require_and_consume_token(user_id, token_type, amount)`: 잔액 부족 시 예외, 테스트 모드에서는 자동 충전
+- 정책: 잔액 음수 불가, 지급/차감 트랜잭션 단위 명확화, 테스트 모드 자동 충전
 ### 5-1. SeasonPassService (`backend/app/services/season_pass_service.py`)
 - 책임: 현재 시즌 조회, 진행도 조회/생성, 도장 추가(add_stamp), 상태 조회(get_status), 보상 수령(claim_reward).
 - 주요 메서드:

@@ -20,6 +20,17 @@
 - Stamp: 시즌패스 도장 1회 기록
 
 ## 4. 공통 테이블
+### 4-3. user_game_wallet
+| 컬럼명      | 타입         | PK/FK | Not Null | 설명                       |
+|-------------|-------------|-------|----------|----------------------------|
+| id          | INT         | PK    | Y        | 기본키                     |
+| user_id     | INT         | FK    | Y        | user.id 참조, CASCADE      |
+| token_type  | ENUM        |       | Y        | ROULETTE_COIN 등           |
+| balance     | INT         |       | Y        | 잔액, default=0            |
+| updated_at  | DATETIME    |       | Y        | 수정 시각                  |
+
+- 제약: Unique(user_id, token_type)
+- 정책: balance는 음수 불가, 소수점 없음, 지급/차감 트랜잭션 단위 명확화 필요
 ### 4-1. user
 | 컬럼명 | 타입 | PK/FK | Not Null | 설명 |
 |--------|------|-------|----------|------|
