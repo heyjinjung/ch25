@@ -26,6 +26,7 @@ const ExternalRankingPage: React.FC = () => {
         data.items.map((item) => ({
           id: item.id,
           user_id: item.user_id,
+          external_id: item.external_id,
           deposit_amount: item.deposit_amount,
           play_count: item.play_count,
           memo: item.memo ?? "",
@@ -54,7 +55,10 @@ const ExternalRankingPage: React.FC = () => {
         idx === index
           ? {
               ...row,
-              [field]: field === "memo" ? value : Number(value),
+              [field]:
+                field === "deposit_amount" || field === "play_count" || field === "user_id"
+                  ? Number(value)
+                  : value,
             }
           : row
       )
@@ -64,7 +68,7 @@ const ExternalRankingPage: React.FC = () => {
   const addRow = () => {
     setRows((prev) => [
       ...prev,
-      { user_id: 0, deposit_amount: 0, play_count: 0, memo: "" },
+      { external_id: "", deposit_amount: 0, play_count: 0, memo: "" },
     ]);
   };
 
@@ -78,9 +82,9 @@ const ExternalRankingPage: React.FC = () => {
 
   const saveAll = () => {
     const payloads: ExternalRankingPayload[] = rows
-      .filter((row) => row.user_id > 0)
+      .filter((row) => !!row.external_id)
       .map((row) => ({
-        user_id: row.user_id,
+        external_id: row.external_id,
         deposit_amount: row.deposit_amount ?? 0,
         play_count: row.play_count ?? 0,
         memo: row.memo,
@@ -122,7 +126,7 @@ const ExternalRankingPage: React.FC = () => {
           <table className="min-w-full divide-y divide-slate-800 bg-slate-900 text-sm text-slate-100">
             <thead className="bg-slate-800/60">
               <tr>
-                <th className="px-3 py-2 text-left">User ID</th>
+                <th className="px-3 py-2 text-left">external_id</th>
                 <th className="px-3 py-2 text-left">입금액</th>
                 <th className="px-3 py-2 text-left">게임횟수</th>
                 <th className="px-3 py-2 text-left">메모</th>
@@ -134,11 +138,11 @@ const ExternalRankingPage: React.FC = () => {
                 <tr key={idx}>
                   <td className="px-3 py-2">
                     <input
-                      type="number"
-                      value={row.user_id}
-                      onChange={(e) => handleChange(idx, "user_id", Number(e.target.value))}
-                      className="w-full rounded border border-slate-700 bg-slate-800 px-2 py-1 text-right"
-                      min={0}
+                      type="text"
+                      value={row.external_id ?? ""}
+                      onChange={(e) => handleChange(idx, "external_id", e.target.value)}
+                      className="w-full rounded border border-slate-700 bg-slate-800 px-2 py-1"
+                      placeholder="external_id"
                     />
                   </td>
                   <td className="px-3 py-2">

@@ -2,7 +2,8 @@
 import { adminApi } from "./httpClient";
 
 export interface ExternalRankingPayload {
-  user_id: number;
+  user_id?: number;
+  external_id?: string;
   deposit_amount: number;
   play_count: number;
   memo?: string | null;

@@ -103,7 +103,13 @@ const RouletteConfigPage: React.FC = () => {
     },
   });
 
-  const onSubmit = form.handleSubmit((values) => mutation.mutate(values));
+  const onSubmit = form.handleSubmit((values) => {
+    const payload = {
+      ...values,
+      segments: values.segments.map((seg, idx) => ({ ...seg, index: idx })),
+    };
+    mutation.mutate(payload);
+  });
 
   return (
     <section className="space-y-6">
@@ -229,6 +235,8 @@ const RouletteConfigPage: React.FC = () => {
                     <label className="text-xs text-slate-300">Index</label>
                     <input
                       type="number"
+                      readOnly
+                      value={idx}
                       className="w-full rounded border border-emerald-700 bg-slate-800 px-2 py-1 text-sm"
                       {...form.register(`segments.${idx}.index`, { valueAsNumber: true })}
                     />

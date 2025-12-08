@@ -6,7 +6,8 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class ExternalRankingBase(BaseModel):
-    user_id: int
+    user_id: int | None = None
+    external_id: str | None = None
     deposit_amount: int = Field(0, ge=0)
     play_count: int = Field(0, ge=0)
     memo: Optional[str] = None

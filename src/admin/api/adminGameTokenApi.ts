@@ -3,13 +3,14 @@ import { adminApi } from "./httpClient";
 import { GameTokenType } from "../../types/gameTokens";
 
 export interface GrantGameTokensPayload {
-  user_id: number;
+  external_id: string;
   token_type: GameTokenType;
   amount: number;
 }
 
 export interface GrantGameTokensResponse {
   user_id: number;
+  external_id?: string;
   token_type: GameTokenType;
   balance: number;
 }
@@ -21,12 +22,13 @@ export async function grantGameTokens(payload: GrantGameTokensPayload) {
 
 export interface TokenBalance {
   user_id: number;
+  external_id?: string;
   token_type: GameTokenType;
   balance: number;
 }
 
 export interface RevokeGameTokensPayload {
-  user_id: number;
+  external_id: string;
   token_type: GameTokenType;
   amount: number;
 }
@@ -34,14 +36,15 @@ export interface RevokeGameTokensPayload {
 export interface PlayLogEntry {
   id: number;
   user_id: number;
+  external_id?: string;
   game: string;
   reward_type: string;
   reward_amount: number;
   created_at: string;
 }
 
-export async function fetchWallets(userId?: number) {
-  const params = userId ? { user_id: userId } : undefined;
+export async function fetchWallets(externalId?: string) {
+  const params = externalId ? { external_id: externalId } : undefined;
   const { data } = await adminApi.get<TokenBalance[]>("/game-tokens/wallets", { params });
   return data;
 }
