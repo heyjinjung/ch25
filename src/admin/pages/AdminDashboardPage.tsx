@@ -37,6 +37,9 @@ const AdminDashboardPage: React.FC = () => {
         <Link to="/admin/game-token-logs" className="rounded-lg border border-emerald-800/40 bg-slate-900/60 p-3 text-slate-100 transition hover:border-emerald-500">
           코인 로그/회수
         </Link>
+        <Link to="/admin/users" className="rounded-lg border border-emerald-800/40 bg-slate-900/60 p-3 text-slate-100 transition hover:border-emerald-500">
+          회원 CRUD
+        </Link>
       </div>
     </section>
   );

@@ -6,6 +6,7 @@ export interface AuthUser {
   readonly external_id: string;
   readonly nickname?: string;
   readonly status?: string;
+  readonly level?: number;
 }
 
 interface AuthState {
