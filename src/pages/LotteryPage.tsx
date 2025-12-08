@@ -21,47 +21,48 @@ const LotteryPage: React.FC = () => {
 
   const mapErrorMessage = (err: unknown) => {
     const code = (err as { response?: { data?: { error?: { code?: string } } } })?.response?.data?.error?.code;
-    if (code === "NO_FEATURE_TODAY") return "오늘 활성화된 이벤트가 없습니다.";
+    if (code === "NO_FEATURE_TODAY") return "오늘 설정된 이벤트가 없습니다.";
     if (code === "INVALID_FEATURE_SCHEDULE") return "이벤트 스케줄이 잘못되었습니다. 관리자에게 문의하세요.";
     if (code === "FEATURE_DISABLED") return "이벤트가 비활성화되었습니다.";
     if (code === "DAILY_LIMIT_REACHED") return "오늘 참여 횟수를 모두 사용했습니다.";
-    if (code === "NOT_ENOUGH_TOKENS") return "티켓이 부족합니다. 관리자에게 충전 요청해주세요.";
-    return "복권 정보를 불러올 수 없습니다.";
+    if (code === "NOT_ENOUGH_TOKENS") return "티켓이 부족합니다. 관리자에게 충전을 요청해주세요.";
+    return "복권 정보를 불러오지 못했습니다.";
   };
 
   const errorMessage = useMemo(() => {
     if (isLoading) return "";
-    if (isError || !data) {
-      return mapErrorMessage(error);
-    }
+    if (isError || !data) return mapErrorMessage(error);
     return "";
   }, [data, error, isError, isLoading]);
 
-  const playErrorMessage = useMemo(() => {
-    if (!playMutation.error) return undefined;
-    return mapErrorMessage(playMutation.error);
-  }, [playMutation.error]);
+  const playErrorMessage = useMemo(
+    () => (playMutation.error ? mapErrorMessage(playMutation.error) : undefined),
+    [playMutation.error],
+  );
 
   const remainingLabel = useMemo(() => {
     if (!data) return "-";
-    return data.remaining_plays === 0 ? "무제한 🎉" : `${data.remaining_plays}회 남음`;
+    return data.remaining_plays === 0 ? "남은 횟수: 무제한" : `남은 횟수: ${data.remaining_plays}회`;
   }, [data]);
-  const isUnlimited = data?.remaining_plays === 0;
+
   const tokenLabel = useMemo(() => {
     if (!data) return "-";
-    return `${GAME_TOKEN_LABELS[data.token_type] ?? data.token_type} · ${data.token_balance}`;
+    const typeLabel = data.token_type ? (GAME_TOKEN_LABELS[data.token_type] ?? data.token_type) : "-";
+    const balanceLabel = typeof data.token_balance === "number" ? String(data.token_balance) : "-";
+    return `${typeLabel} · ${balanceLabel}`;
   }, [data]);
-  const isOutOfTokens = (data?.token_balance ?? 0) <= 0;
+
+  const isUnlimited = data?.remaining_plays === 0;
+  const isOutOfTokens = typeof data?.token_balance === "number" && data.token_balance <= 0;
 
   const handleScratch = async () => {
     if (isScratching || isRevealed) return;
     if (!isUnlimited && data && data.remaining_plays <= 0) return;
-    if (data && data.token_balance <= 0) return;
+    if (isOutOfTokens) return;
 
     try {
       setIsScratching(true);
       const result = await playMutation.mutateAsync();
-      // Animation delay for scratch effect
       await new Promise((r) => setTimeout(r, 2000));
       setIsScratching(false);
       setIsRevealed(true);
@@ -104,9 +105,8 @@ const LotteryPage: React.FC = () => {
 
     return (
       <section className="space-y-8 rounded-3xl border border-gold-600/30 bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 p-8 shadow-2xl">
-        {/* Header */}
         <header className="text-center">
-          <p className="text-sm uppercase tracking-[0.3em] text-gold-400">🎄 오늘의 이벤트</p>
+          <p className="text-sm uppercase tracking-[0.3em] text-gold-400">오늘의 이벤트</p>
           <h1 className="mt-2 text-3xl font-bold text-white">크리스마스 복권</h1>
           <div className="mt-3 flex flex-wrap items-center justify-center gap-3">
             <div className="inline-flex items-center gap-2 rounded-full bg-emerald-900/60 px-4 py-2 text-sm font-semibold text-emerald-100">
@@ -120,7 +120,6 @@ const LotteryPage: React.FC = () => {
           </div>
         </header>
 
-        {/* Lottery Card Area */}
         <div className="flex justify-center">
           <LotteryCard
             prize={revealedPrize ?? undefined}
@@ -130,11 +129,8 @@ const LotteryPage: React.FC = () => {
           />
         </div>
 
-        {/* Prize List */}
         <div className="rounded-2xl border border-slate-700/50 bg-slate-800/40 p-4">
-          <h3 className="mb-3 text-center text-sm font-semibold uppercase tracking-wider text-gold-400">
-            🎁 당첨 상품 목록
-          </h3>
+          <h3 className="mb-3 text-center text-sm font-semibold uppercase tracking-wider text-gold-400">당첨 상품 목록</h3>
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {data.prizes.map((prize) => (
               <div
@@ -148,31 +144,24 @@ const LotteryPage: React.FC = () => {
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-gold-500 to-gold-700 text-lg">
                   🎁
                 </div>
-                <div className="flex-1 min-w-0">
+                <div className="min-w-0 flex-1">
                   <p className="truncate font-semibold text-white">{prize.label}</p>
                   <p className="text-xs text-emerald-300">
                     {prize.reward_type} +{prize.reward_value}
                   </p>
                 </div>
                 {prize.stock !== undefined && prize.stock !== null && (
-                  <span className="rounded-full bg-slate-700/50 px-2 py-0.5 text-xs text-slate-300">
-                    {prize.stock}개
-                  </span>
+                  <span className="rounded-full bg-slate-700/50 px-2 py-0.5 text-xs text-slate-300">{prize.stock}개</span>
                 )}
               </div>
             ))}
           </div>
-          {data.prizes.length === 0 && (
-            <p className="text-center text-sm text-slate-400">현재 당첨 가능 상품이 없습니다.</p>
-          )}
+          {data.prizes.length === 0 && <p className="text-center text-sm text-slate-400">현재 당첨 가능 상품이 없습니다.</p>}
         </div>
 
-        {/* Action area */}
         <div className="space-y-4">
           {playErrorMessage && (
-            <div className="rounded-xl border border-red-700/40 bg-red-900/30 px-4 py-3 text-center text-red-200">
-              {playErrorMessage}
-            </div>
+            <div className="rounded-xl border border-red-700/40 bg-red-900/30 px-4 py-3 text-center text-red-200">{playErrorMessage}</div>
           )}
 
           {isOutOfTokens && (
@@ -200,39 +189,35 @@ const LotteryPage: React.FC = () => {
                   긁는 중...
                 </span>
               ) : (
-                "🎫 복권 긁기"
+                "🎫 복권 뽑기"
               )}
             </span>
             <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform group-hover:translate-x-full" />
           </button>
 
-          {/* Result display */}
           {revealedPrize && !isScratching && (
             <div className="animate-bounce-in rounded-2xl border border-gold-500/50 bg-gradient-to-br from-gold-900/40 to-slate-900/80 p-6 text-center shadow-lg">
-              <p className="text-sm uppercase tracking-wider text-gold-400">🎉 당첨!</p>
+              <p className="text-sm uppercase tracking-wider text-gold-400">축하 당첨!</p>
               <p className="mt-2 text-2xl font-bold text-white">{revealedPrize.label}</p>
               <p className="mt-2 text-emerald-300">
                 +{revealedPrize.reward_value} {revealedPrize.reward_type}
               </p>
-              {playMutation.data?.message && (
-                <p className="mt-2 text-sm text-slate-300">{playMutation.data.message}</p>
-              )}
+              {playMutation.data?.message && <p className="mt-2 text-sm text-slate-300">{playMutation.data.message}</p>}
               {(isUnlimited || (data && data.remaining_plays > 0)) && (
                 <button
                   type="button"
                   onClick={handleReset}
                   className="mt-4 rounded-full bg-slate-700 px-6 py-2 text-sm font-semibold text-white transition hover:bg-slate-600"
                 >
-                  다시 뽑기
+                  다시 긁기
                 </button>
               )}
             </div>
           )}
         </div>
 
-        {/* Info footer */}
         <footer className="border-t border-slate-700/50 pt-4 text-center text-xs text-slate-400">
-          <p>💡 복권 결과는 서버에서 결정되며, 시즌패스 경험치가 적립됩니다.</p>
+          <p>복권 결과는 서버에서 결정되며, 시즌패스 경험치가 적립됩니다.</p>
         </footer>
       </section>
     );

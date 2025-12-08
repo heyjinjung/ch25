@@ -16,25 +16,28 @@ const DicePage: React.FC = () => {
 
   const mapErrorMessage = (err: unknown) => {
     const code = (err as { response?: { data?: { error?: { code?: string } } } })?.response?.data?.error?.code;
-    if (code === "NO_FEATURE_TODAY") return "오늘 활성화된 이벤트가 없습니다.";
+    if (code === "NO_FEATURE_TODAY") return "오늘 설정된 이벤트가 없습니다.";
     if (code === "INVALID_FEATURE_SCHEDULE") return "이벤트 스케줄이 잘못되었습니다. 관리자에게 문의하세요.";
     if (code === "FEATURE_DISABLED") return "이벤트가 비활성화되었습니다.";
     if (code === "DAILY_LIMIT_REACHED") return "오늘 참여 횟수를 모두 사용했습니다.";
-    if (code === "NOT_ENOUGH_TOKENS") return "토큰이 부족합니다. 관리자에게 충전 요청해주세요.";
-    return "주사위를 진행할 수 없습니다. 잠시 후 다시 시도해주세요.";
+    if (code === "NOT_ENOUGH_TOKENS") return "토큰이 부족합니다. 관리자에게 충전을 요청해주세요.";
+    return "주사위 전투를 진행할 수 없습니다. 잠시 후 다시 시도해주세요.";
   };
 
   const remainingLabel = useMemo(() => {
     if (!data) return "-";
-    return data.remaining_plays === 0 ? "무제한 🎉" : `${data.remaining_plays}회 남음`;
+    return data.remaining_plays === 0 ? "남은 횟수: 무제한" : `남은 횟수: ${data.remaining_plays}회`;
   }, [data]);
 
   const tokenLabel = useMemo(() => {
     if (!data) return "-";
-    return `${GAME_TOKEN_LABELS[data.token_type] ?? data.token_type} · ${data.token_balance}`;
+    const typeLabel = data.token_type ? (GAME_TOKEN_LABELS[data.token_type] ?? data.token_type) : "-";
+    const balanceLabel = typeof data.token_balance === "number" ? String(data.token_balance) : "-";
+    return `${typeLabel} · ${balanceLabel}`;
   }, [data]);
+
   const isUnlimited = data?.remaining_plays === 0;
-  const isOutOfTokens = (data?.token_balance ?? 0) <= 0;
+  const isOutOfTokens = typeof data?.token_balance === "number" && data.token_balance <= 0;
 
   const handlePlay = async () => {
     try {
@@ -42,7 +45,6 @@ const DicePage: React.FC = () => {
       setResult(null);
       setIsRolling(true);
       const response = await playMutation.mutateAsync();
-      // Animate rolling for 1.5s
       await new Promise((r) => setTimeout(r, 1500));
       setIsRolling(false);
       setResult(response.result);
@@ -60,7 +62,7 @@ const DicePage: React.FC = () => {
       return (
         <section className="flex flex-col items-center justify-center rounded-3xl border border-emerald-800/40 bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 p-8 shadow-2xl">
           <div className="h-12 w-12 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent" />
-          <p className="mt-4 text-lg font-semibold text-emerald-200">주사위 상태를 불러오는 중...</p>
+          <p className="mt-4 text-lg font-semibold text-emerald-200">주사위 정보를 불러오는 중...</p>
         </section>
       );
     }
@@ -77,10 +79,9 @@ const DicePage: React.FC = () => {
 
     return (
       <section className="space-y-8 rounded-3xl border border-gold-600/30 bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 p-8 shadow-2xl">
-        {/* Header */}
         <header className="text-center">
-          <p className="text-sm uppercase tracking-[0.3em] text-gold-400">🎄 오늘의 이벤트</p>
-          <h1 className="mt-2 text-3xl font-bold text-white">주사위 대결</h1>
+          <p className="text-sm uppercase tracking-[0.3em] text-gold-400">오늘의 이벤트</p>
+          <h1 className="mt-2 text-3xl font-bold text-white">주사위 배틀</h1>
           <div className="mt-3 flex flex-wrap items-center justify-center gap-3">
             <div className="inline-flex items-center gap-2 rounded-full bg-emerald-900/60 px-4 py-2 text-sm font-semibold text-emerald-100">
               <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
@@ -93,10 +94,8 @@ const DicePage: React.FC = () => {
           </div>
         </header>
 
-        {/* Dice Battle View */}
         <DiceView userDice={userDice} dealerDice={dealerDice} result={result} isRolling={isRolling} />
 
-        {/* Action area */}
         <div className="space-y-4">
           {!!playMutation.error && !isRolling && (
             <div className="rounded-xl border border-red-700/40 bg-red-900/30 px-4 py-3 text-center text-red-200">
@@ -120,7 +119,7 @@ const DicePage: React.FC = () => {
               {isRolling || playMutation.isPending ? (
                 <span className="flex items-center justify-center gap-2">
                   <span className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  🎲 굴리는 중...
+                  주사위를 굴리는 중...
                 </span>
               ) : (
                 "🎲 주사위 던지기"
@@ -129,14 +128,11 @@ const DicePage: React.FC = () => {
             <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform group-hover:translate-x-full" />
           </button>
 
-          {infoMessage && !isRolling && (
-            <p className="text-center text-sm text-emerald-200">{infoMessage}</p>
-          )}
+          {infoMessage && !isRolling && <p className="text-center text-sm text-emerald-200">{infoMessage}</p>}
         </div>
 
-        {/* Info footer */}
         <footer className="border-t border-slate-700/50 pt-4 text-center text-xs text-slate-400">
-          <p>💡 승리 시 추가 보상, 무승부는 기본 보상이 적립됩니다.</p>
+          <p>승리 시 추가 보상, 무승부는 기본 보상이 적립됩니다.</p>
         </footer>
       </section>
     );
