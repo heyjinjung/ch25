@@ -6,6 +6,7 @@ import { useRouletteStatus } from "../hooks/useRoulette";
 import { useDiceStatus } from "../hooks/useDice";
 import { useLotteryStatus } from "../hooks/useLottery";
 import { GAME_TOKEN_LABELS } from "../types/gameTokens";
+import { GameTokenType } from "../types/gameTokens";
 
 interface GameCardProps {
   readonly title: string;
@@ -19,7 +20,7 @@ interface GameCardProps {
 const GameCard: React.FC<GameCardProps> = ({ title, path, tokenType, tokenBalance, disabledReason, state = "idle" }) => {
   const navigate = useNavigate();
   const hasCoins = typeof tokenBalance === "number" && tokenBalance > 0;
-  const tokenLabel = tokenType ? GAME_TOKEN_LABELS[tokenType] ?? tokenType : "미지급";
+  const tokenLabel = tokenType ? GAME_TOKEN_LABELS[tokenType as keyof typeof GAME_TOKEN_LABELS] ?? tokenType : "미지급";
   const statusBadge =
     state === "loading"
       ? "잔액 로딩 중"
@@ -98,23 +99,13 @@ const HomePage: React.FC = () => {
     <section className="space-y-8">
       <div className="rounded-3xl border border-emerald-700/40 bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 p-8 shadow-2xl">
         <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">대시보드</p>
-        <h1 className="mt-2 text-3xl font-bold text-white">내 정보</h1>
-        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <div className="rounded-xl border border-slate-700/50 bg-slate-900/60 p-4">
-            <p className="text-xs text-slate-400">user_id</p>
-            <p className="text-lg font-semibold text-white">{user?.id ?? "알 수 없음"}</p>
+        <p className="text-lg font-semibold text-white">{user?.external_id ?? "알 수 없음"}</p>
+        {isTestAccount && (
+          <div className="rounded-xl border border-indigo-600/40 bg-indigo-900/30 p-4 text-indigo-100">
+            <p className="text-xs">테스트 계정</p>
+            <p className="text-sm">로그/DB 연동 확인용 계정입니다.</p>
           </div>
-          <div className="rounded-xl border border-slate-700/50 bg-slate-900/60 p-4">
-            <p className="text-xs text-slate-400">external_id</p>
-            <p className="text-lg font-semibold text-white">{user?.external_id ?? "알 수 없음"}</p>
-          </div>
-          {isTestAccount && (
-            <div className="rounded-xl border border-indigo-600/40 bg-indigo-900/30 p-4 text-indigo-100">
-              <p className="text-xs">테스트 계정</p>
-              <p className="text-sm">로그/DB 연동 확인용 계정입니다.</p>
-            </div>
-          )}
-        </div>
+        )}
       </div>
 
       <div className="rounded-3xl border border-gold-600/30 bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 p-8 shadow-2xl">

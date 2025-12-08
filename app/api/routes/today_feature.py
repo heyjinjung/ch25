@@ -9,6 +9,8 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
 from app.core.security import decode_access_token
+from app.core.config import get_settings
+from app.core.exceptions import NoFeatureTodayError
 from app.services.feature_service import FeatureService
 
 router = APIRouter(prefix="/api", tags=["feature"])
@@ -41,9 +43,18 @@ def get_today_feature(
     db: Session = Depends(get_db),
     user_id: Optional[int] = Depends(get_optional_user_id),
 ) -> dict:
-    """Public endpoint - returns today's active feature. Authentication optional."""
+    """Public endpoint - returns today's active feature. Authentication optional.
+
+    In test_mode, if no schedule exists, respond with feature_type=null instead of 404.
+    """
     now_kst = datetime.now(ZoneInfo("Asia/Seoul"))
-    feature_type = feature_service.get_today_feature(db, now_kst)
+    settings = get_settings()
+    try:
+        feature_type = feature_service.get_today_feature(db, now_kst)
+    except NoFeatureTodayError:
+        if settings.test_mode:
+            return {"feature_type": None, "user_id": user_id} if user_id is not None else {"feature_type": None}
+        raise
     # Ensure the response uses the enum value (string) for schema compatibility.
     feature_value = feature_type.value if hasattr(feature_type, "value") else feature_type
     result = {"feature_type": feature_value}

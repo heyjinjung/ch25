@@ -1,14 +1,19 @@
 import React, { useMemo } from "react";
 import { useTodayFeature } from "../../hooks/useTodayFeature";
 import { FEATURE_LABELS, FeatureType, normalizeFeature } from "../../types/features";
+import { isFeatureGateActive } from "../../config/featureFlags";
 
 interface FeatureGateProps {
   readonly feature: FeatureType;
   readonly children: React.ReactNode;
 }
 
-// Temporarily disable gating: always render children, surface only a small banner for today-feature fetch status.
+// Always render children. Only fetch today-feature and show a small banner when gating is explicitly active.
 const FeatureGate: React.FC<FeatureGateProps> = ({ feature, children }) => {
+  if (!isFeatureGateActive) {
+    return <>{children}</>;
+  }
+
   const { data, isError } = useTodayFeature();
 
   const infoBanner = useMemo(() => {

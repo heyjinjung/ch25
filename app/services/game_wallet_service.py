@@ -56,3 +56,16 @@ class GameWalletService:
         db.commit()
         db.refresh(wallet)
         return wallet.balance
+
+    def revoke_tokens(self, db: Session, user_id: int, token_type: GameTokenType, amount: int) -> int:
+        """Admin-only token revocation; prevents negative balance."""
+        if amount <= 0:
+            raise InvalidConfigError("INVALID_TOKEN_AMOUNT")
+        wallet = self._get_or_create_wallet(db, user_id, token_type)
+        if wallet.balance < amount:
+            raise NotEnoughTokensError("NOT_ENOUGH_TOKENS")
+        wallet.balance -= amount
+        db.add(wallet)
+        db.commit()
+        db.refresh(wallet)
+        return wallet.balance
