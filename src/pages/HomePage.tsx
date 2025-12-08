@@ -6,7 +6,6 @@ import { useRouletteStatus } from "../hooks/useRoulette";
 import { useDiceStatus } from "../hooks/useDice";
 import { useLotteryStatus } from "../hooks/useLottery";
 import { GAME_TOKEN_LABELS } from "../types/gameTokens";
-import { GameTokenType } from "../types/gameTokens";
 
 interface GameCardProps {
   readonly title: string;
