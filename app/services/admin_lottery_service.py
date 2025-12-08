@@ -51,33 +51,47 @@ class AdminLotteryService:
 
     @staticmethod
     def create_config(db: Session, data: AdminLotteryConfigCreate) -> LotteryConfig:
-        config = LotteryConfig(
-            name=data.name,
-            is_active=data.is_active,
-            max_daily_tickets=data.max_daily_plays,
-        )
-        AdminLotteryService._apply_prizes(config, data.prizes)
-        db.add(config)
-        db.commit()
-        db.refresh(config)
-        return config
+        try:
+            config = LotteryConfig(
+                name=data.name,
+                is_active=data.is_active,
+                max_daily_tickets=data.max_daily_plays,
+            )
+            AdminLotteryService._apply_prizes(config, data.prizes)
+            db.add(config)
+            db.commit()
+            db.refresh(config)
+            return config
+        except InvalidConfigError:
+            db.rollback()
+            raise
+        except Exception:
+            db.rollback()
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="INVALID_LOTTERY_CONFIG")
 
     @staticmethod
     def update_config(db: Session, config_id: int, data: AdminLotteryConfigUpdate) -> LotteryConfig:
         config = AdminLotteryService.get_config(db, config_id)
-        update_data = data.dict(exclude_unset=True)
-        if "name" in update_data:
-            config.name = update_data["name"]
-        if "is_active" in update_data:
-            config.is_active = update_data["is_active"]
-        if "max_daily_plays" in update_data:
-            config.max_daily_tickets = update_data["max_daily_plays"]
-        if data.prizes is not None:
-            AdminLotteryService._apply_prizes(config, data.prizes)
-        db.add(config)
-        db.commit()
-        db.refresh(config)
-        return config
+        try:
+            update_data = data.dict(exclude_unset=True)
+            if "name" in update_data:
+                config.name = update_data["name"]
+            if "is_active" in update_data:
+                config.is_active = update_data["is_active"]
+            if "max_daily_plays" in update_data:
+                config.max_daily_tickets = update_data["max_daily_plays"]
+            if data.prizes is not None:
+                AdminLotteryService._apply_prizes(config, data.prizes)
+            db.add(config)
+            db.commit()
+            db.refresh(config)
+            return config
+        except InvalidConfigError:
+            db.rollback()
+            raise
+        except Exception:
+            db.rollback()
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="INVALID_LOTTERY_CONFIG")
 
     @staticmethod
     def toggle_active(db: Session, config_id: int, active: bool) -> LotteryConfig:

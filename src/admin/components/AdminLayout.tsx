@@ -9,7 +9,6 @@ const navItems = [
   { path: "/admin/roulette", label: "Roulette" },
   { path: "/admin/dice", label: "Dice" },
   { path: "/admin/lottery", label: "Lottery" },
-  { path: "/admin/ranking", label: "Ranking" },
   { path: "/admin/external-ranking", label: "External Ranking" },
   { path: "/admin/game-tokens", label: "Coin Grant" },
   { path: "/admin/game-token-logs", label: "Coin Logs" },
