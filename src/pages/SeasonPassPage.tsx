@@ -1,6 +1,6 @@
 ﻿import React, { useMemo } from "react";
 import { useTodayRanking } from "../hooks/useRanking";
-import { useSeasonPassStatus, useInternalWinStatus } from "../hooks/useSeasonPass";
+import { useSeasonPassStatus, useInternalWinStatus, useClaimSeasonReward } from "../hooks/useSeasonPass";
 import FeatureGate from "../components/feature/FeatureGate";
 
 const formatCurrency = (value: number) => value.toLocaleString();
@@ -9,6 +9,7 @@ const SeasonPassPage: React.FC = () => {
   const season = useSeasonPassStatus();
   const ranking = useTodayRanking();
   const internalWins = useInternalWinStatus();
+  const claimMutation = useClaimSeasonReward();
 
   const progress = useMemo(() => {
     if (!season.data) return { percent: 0, nextLabel: "" };
