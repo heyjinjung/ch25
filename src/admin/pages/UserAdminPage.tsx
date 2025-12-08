@@ -1,0 +1,212 @@
+// src/admin/pages/UserAdminPage.tsx
+import React, { useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { createUser, deleteUser, fetchUsers, updateUser, AdminUser, AdminUserPayload } from "../api/adminUserApi";
+import Button from "../../components/common/Button";
+
+type EditableUser = Partial<AdminUserPayload> & { id?: number };
+
+const emptyUser: EditableUser = {
+  external_id: "",
+  nickname: "",
+  level: 1,
+  status: "ACTIVE",
+  password: "",
+};
+
+const UserAdminPage: React.FC = () => {
+  const queryClient = useQueryClient();
+  const { data, isLoading, isError, error } = useQuery({
+    queryKey: ["admin", "users"],
+    queryFn: fetchUsers,
+  });
+
+  const [rows, setRows] = useState<EditableUser[]>([emptyUser]);
+
+  useEffect(() => {
+    if (data) {
+      setRows(data.map((u) => ({ ...u, password: "" })));
+    }
+  }, [data]);
+
+  const createMutation = useMutation({
+    mutationFn: (payload: AdminUserPayload) => createUser(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
+      setRows([emptyUser]);
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, payload }: { id: number; payload: Partial<AdminUserPayload> }) => updateUser(id, payload),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "users"] }),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => deleteUser(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "users"] }),
+  });
+
+  const handleField = (index: number, field: keyof EditableUser, value: string | number) => {
+    setRows((prev) =>
+      prev.map((row, idx) =>
+        idx === index
+          ? {
+              ...row,
+              [field]: field === "level" || field === "user_id" ? Number(value) : value,
+            }
+          : row
+      )
+    );
+  };
+
+  const addNewRow = () => setRows((prev) => [...prev, { ...emptyUser }]);
+
+  const submitExisting = (row: EditableUser) => {
+    if (!row.id) return;
+    const payload: Partial<AdminUserPayload> = {
+      external_id: row.external_id,
+      nickname: row.nickname,
+      status: row.status,
+      level: row.level,
+    };
+    if (row.password) payload.password = row.password;
+    updateMutation.mutate({ id: row.id, payload });
+  };
+
+  const submitNew = (row: EditableUser) => {
+    if (!row.external_id) return;
+    const payload: AdminUserPayload = {
+      user_id: row.user_id,
+      external_id: row.external_id,
+      nickname: row.nickname,
+      status: row.status,
+      level: row.level ?? 1,
+      password: row.password,
+    };
+    createMutation.mutate(payload);
+  };
+
+  return (
+    <section className="space-y-4">
+      <header>
+        <h1 className="text-2xl font-bold text-slate-100">회원 관리 (생성/수정/삭제)</h1>
+        <p className="text-sm text-slate-300">
+          외부 링크로 아이디/비밀번호를 전달해 접속시키는 시크릿 운영 모드입니다. 비밀번호는 최소 4자 이상 입력하세요.
+        </p>
+      </header>
+
+      {isLoading && <div className="rounded-lg border border-emerald-800/40 bg-slate-900 p-3 text-slate-200">불러오는 중...</div>}
+      {isError && (
+        <div className="rounded-lg border border-red-700/40 bg-red-950 p-3 text-red-100">불러오기 실패: {(error as Error).message}</div>
+      )}
+
+      <div className="overflow-auto rounded-lg border border-slate-800">
+        <table className="min-w-full divide-y divide-slate-800 bg-slate-900 text-sm text-slate-100">
+          <thead className="bg-slate-800/60">
+            <tr>
+              <th className="px-3 py-2 text-left">User ID(옵션)</th>
+              <th className="px-3 py-2 text-left">External ID</th>
+              <th className="px-3 py-2 text-left">닉네임</th>
+              <th className="px-3 py-2 text-left">레벨</th>
+              <th className="px-3 py-2 text-left">상태</th>
+              <th className="px-3 py-2 text-left">비밀번호(초기화)</th>
+              <th className="px-3 py-2 text-right">액션</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-800">
+            {rows.map((row, idx) => (
+              <tr key={row.id ?? idx}>
+                <td className="px-3 py-2">
+                  <input
+                    type="number"
+                    value={row.user_id ?? ""}
+                    onChange={(e) => handleField(idx, "user_id", Number(e.target.value))}
+                    className="w-full rounded border border-slate-700 bg-slate-800 px-2 py-1 text-right"
+                    placeholder="자동증가 사용 시 비워두기"
+                  />
+                </td>
+                <td className="px-3 py-2">
+                  <input
+                    value={row.external_id ?? ""}
+                    onChange={(e) => handleField(idx, "external_id", e.target.value)}
+                    className="w-full rounded border border-slate-700 bg-slate-800 px-2 py-1"
+                    placeholder="필수"
+                  />
+                </td>
+                <td className="px-3 py-2">
+                  <input
+                    value={row.nickname ?? ""}
+                    onChange={(e) => handleField(idx, "nickname", e.target.value)}
+                    className="w-full rounded border border-slate-700 bg-slate-800 px-2 py-1"
+                    placeholder="닉네임"
+                  />
+                </td>
+                <td className="px-3 py-2">
+                  <input
+                    type="number"
+                    value={row.level ?? 1}
+                    onChange={(e) => handleField(idx, "level", Number(e.target.value))}
+                    className="w-24 rounded border border-slate-700 bg-slate-800 px-2 py-1 text-right"
+                    min={1}
+                  />
+                </td>
+                <td className="px-3 py-2">
+                  <select
+                    value={row.status ?? "ACTIVE"}
+                    onChange={(e) => handleField(idx, "status", e.target.value)}
+                    className="w-full rounded border border-slate-700 bg-slate-800 px-2 py-1"
+                  >
+                    <option value="ACTIVE">ACTIVE</option>
+                    <option value="INACTIVE">INACTIVE</option>
+                    <option value="BANNED">BANNED</option>
+                  </select>
+                </td>
+                <td className="px-3 py-2">
+                  <input
+                    type="password"
+                    value={row.password ?? ""}
+                    onChange={(e) => handleField(idx, "password", e.target.value)}
+                    className="w-full rounded border border-slate-700 bg-slate-800 px-2 py-1"
+                    placeholder="변경 시 입력"
+                  />
+                </td>
+                <td className="px-3 py-2 text-right space-x-2">
+                  {row.id ? (
+                    <>
+                      <Button variant="secondary" onClick={() => submitExisting(row)} disabled={updateMutation.isPending}>
+                        저장
+                      </Button>
+                      <Button variant="secondary" onClick={() => deleteMutation.mutate(row.id!)} disabled={deleteMutation.isPending}>
+                        삭제
+                      </Button>
+                    </>
+                  ) : (
+                    <Button onClick={() => submitNew(row)} disabled={createMutation.isPending || !row.external_id}>
+                      생성
+                    </Button>
+                  )}
+                </td>
+              </tr>
+            ))}
+            {rows.length === 0 && (
+              <tr>
+                <td colSpan={7} className="px-3 py-4 text-center text-slate-400">
+                  데이터가 없습니다. 행 추가를 눌러 새 유저를 만드세요.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="flex justify-end">
+        <Button variant="secondary" onClick={addNewRow}>
+          행 추가
+        </Button>
+      </div>
+    </section>
+  );
+};
+
+export default UserAdminPage;

@@ -1,7 +1,7 @@
 """External ranking data captured from other platforms and payout logs."""
 from datetime import datetime
 
-from sqlalchemy import Column, DateTime, Integer, String, UniqueConstraint
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
@@ -35,7 +35,7 @@ class ExternalRankingRewardLog(Base):
     reward_amount = Column(Integer, nullable=False)
     reason = Column(String(100), nullable=False)
     season_name = Column(String(50), nullable=False)
-    data_id = Column(Integer, nullable=True)
+    data_id = Column(Integer, ForeignKey("external_ranking_data.id", ondelete="SET NULL"), nullable=True)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
 
-    data = relationship("ExternalRankingData", back_populates="reward_logs", primaryjoin="ExternalRankingRewardLog.data_id==ExternalRankingData.id", viewonly=True)
+    data = relationship("ExternalRankingData", back_populates="reward_logs")

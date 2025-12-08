@@ -11,6 +11,7 @@ from app.api.admin.routes import (
     admin_roulette,
     admin_seasons,
     admin_external_ranking,
+    admin_users,
 )
 
 admin_router = APIRouter()
@@ -22,3 +23,4 @@ admin_router.include_router(admin_lottery.router)
 admin_router.include_router(admin_ranking.router)
 admin_router.include_router(admin_game_tokens.router)
 admin_router.include_router(admin_external_ranking.router)
+admin_router.include_router(admin_users.router)

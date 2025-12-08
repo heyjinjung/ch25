@@ -40,7 +40,7 @@ def upgrade() -> None:
         sa.Column("reward_amount", sa.Integer(), nullable=False),
         sa.Column("reason", sa.String(length=100), nullable=False),
         sa.Column("season_name", sa.String(length=50), nullable=False),
-        sa.Column("data_id", sa.Integer(), nullable=True),
+        sa.Column("data_id", sa.Integer(), sa.ForeignKey("external_ranking_data.id", ondelete="SET NULL"), nullable=True),
         sa.Column("created_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
     )
 

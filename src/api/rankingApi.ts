@@ -10,10 +10,20 @@ export interface RankingEntryDto {
   readonly score?: number;
 }
 
+export interface ExternalRankingEntryDto {
+  readonly rank: number;
+  readonly user_id: number;
+  readonly deposit_amount: number;
+  readonly play_count: number;
+  readonly memo?: string;
+}
+
 export interface TodayRankingResponse {
   readonly date: string;
   readonly entries: RankingEntryDto[];
   readonly my_entry?: RankingEntryDto;
+  readonly external_entries?: ExternalRankingEntryDto[];
+  readonly my_external_entry?: ExternalRankingEntryDto;
 }
 
 export const getTodayRanking = async (topN: number = 10): Promise<TodayRankingResponse> => {
