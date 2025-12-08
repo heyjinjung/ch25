@@ -1,4 +1,4 @@
-// src/admin/pages/LotteryConfigPage.tsx
+﻿// src/admin/pages/LotteryConfigPage.tsx
 import React, { useMemo, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
@@ -240,7 +240,7 @@ const LotteryConfigPage: React.FC = () => {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs text-slate-300">Stock (null=��)</label>
+                    <label className="text-xs text-slate-300">Stock (빈칸=무제한)</label>
                     <input
                       type="number"
                       className="w-full rounded border border-emerald-700 bg-slate-800 px-2 py-1 text-sm"

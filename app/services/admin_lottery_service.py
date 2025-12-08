@@ -1,4 +1,4 @@
-# /workspace/ch25/app/services/admin_lottery_service.py
+﻿# /workspace/ch25/app/services/admin_lottery_service.py
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -23,17 +23,29 @@ class AdminLotteryService:
 
     @staticmethod
     def _apply_prizes(config: LotteryConfig, prizes_data):
+        # Clear then flush so deletes happen before inserts (avoid unique constraint conflicts on label)
         config.prizes.clear()
+        state = config.__dict__.get("_sa_instance_state")
+        if state and hasattr(state, "session") and state.session:
+            state.session.flush()
+
         total_weight = 0
-        active_count = 0
+        active_positive = 0
+        seen_labels: set[str] = set()
+
         for prize in prizes_data:
             if prize.weight < 0:
                 raise InvalidConfigError("INVALID_LOTTERY_CONFIG")
             if prize.stock is not None and prize.stock < 0:
                 raise InvalidConfigError("INVALID_LOTTERY_CONFIG")
+            if prize.label in seen_labels:
+                raise InvalidConfigError("INVALID_LOTTERY_CONFIG")
+            seen_labels.add(prize.label)
+
             total_weight += prize.weight
-            if prize.is_active:
-                active_count += 1
+            if prize.is_active and prize.weight > 0:
+                active_positive += 1
+
             config.prizes.append(
                 LotteryPrize(
                     label=prize.label,
@@ -44,8 +56,8 @@ class AdminLotteryService:
                     is_active=prize.is_active,
                 )
             )
-        # 최소 한 개의 활성 상품은 필요
-        if active_count == 0:
+
+        if active_positive == 0 or total_weight <= 0:
             raise InvalidConfigError("INVALID_LOTTERY_CONFIG")
 
     @staticmethod

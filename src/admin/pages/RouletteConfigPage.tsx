@@ -1,4 +1,4 @@
-// src/admin/pages/RouletteConfigPage.tsx
+ï»¿// src/admin/pages/RouletteConfigPage.tsx
 import React, { useMemo, useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { z } from "zod";
@@ -17,21 +17,21 @@ import Modal from "../../components/common/Modal";
 
 const segmentSchema = z.object({
   index: z.number().int().nonnegative(),
-  label: z.string().min(1, "¶óº§À» ÀÔ·ÂÇÏ¼¼¿ä"),
-  weight: z.number().int().positive("°¡ÁßÄ¡´Â 1 ÀÌ»ó"),
-  reward_type: z.string().min(1, "º¸»ó Å¸ÀÔÀ» ÀÔ·Â"),
+  label: z.string().min(1, "ë¼ë²¨ì„ ìž…ë ¥í•˜ì„¸ìš”"),
+  weight: z.number().int().positive("ê°€ì¤‘ì¹˜ëŠ” 1 ì´ìƒ"),
+  reward_type: z.string().min(1, "ë³´ìƒ íƒ€ìž…ì„ ìž…ë ¥"),
   reward_value: z.number().int().nonnegative(),
 });
 
 const rouletteSchema = z
   .object({
-    name: z.string().min(1, "ÀÌ¸§À» ÀÔ·ÂÇÏ¼¼¿ä"),
+    name: z.string().min(1, "ì´ë¦„ì„ ìž…ë ¥í•˜ì„¸ìš”"),
     is_active: z.boolean().default(false),
-    max_daily_spins: z.number().int().nonnegative("0ÀÌ¸é ¹«Á¦ÇÑ"),
-    segments: z.array(segmentSchema).length(6, "¼¼±×¸ÕÆ®´Â 6°³ ¸ðµÎ ÀÔ·ÂÇÏ¼¼¿ä"),
+    max_daily_spins: z.number().int().nonnegative("0ì´ë©´ ë¬´ì œí•œ"),
+    segments: z.array(segmentSchema).length(6, "ì„¸ê·¸ë¨¼íŠ¸ëŠ” 6ê°œ ëª¨ë‘ ìž…ë ¥í•˜ì„¸ìš”"),
   })
   .refine((value) => value.segments.reduce((sum, s) => sum + s.weight, 0) > 0, {
-    message: "°¡ÁßÄ¡ ÇÕÀÌ 0º¸´Ù Ä¿¾ß ÇÕ´Ï´Ù",
+    message: "ê°€ì¤‘ì¹˜ í•©ì´ 0ë³´ë‹¤ ì»¤ì•¼ í•©ë‹ˆë‹¤",
     path: ["segments"],
   })
   .refine((value) => {
@@ -42,7 +42,7 @@ const rouletteSchema = z
       return true;
     });
   }, {
-    message: "index´Â Áßº¹µÉ ¼ö ¾ø½À´Ï´Ù",
+    message: "indexëŠ” ì¤‘ë³µë  ìˆ˜ ì—†ìŠµë‹ˆë‹¤",
     path: ["segments"],
   });
 
@@ -124,19 +124,19 @@ const RouletteConfigPage: React.FC = () => {
     <section className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-100">·ê·¿ ¼³Á¤</h1>
-          <p className="text-sm text-slate-300">¼¼±×¸ÕÆ® °¡ÁßÄ¡ ÇÕ°ú index Áßº¹À» UI¿¡¼­ °ËÁõÇÕ´Ï´Ù.</p>
+          <h1 className="text-2xl font-bold text-slate-100">ë£°ë › ì„¤ì •</h1>
+          <p className="text-sm text-slate-300">ì„¸ê·¸ë¨¼íŠ¸ ê°€ì¤‘ì¹˜ í•©ê³¼ index ì¤‘ë³µì„ UIì—ì„œ ê²€ì¦í•©ë‹ˆë‹¤.</p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)}>»õ ¼³Á¤ »ý¼º</Button>
+        <Button onClick={() => setIsModalOpen(true)}>ìƒˆ ì„¤ì • ìƒì„±</Button>
       </div>
 
-      {isLoading && <div className="rounded-lg border border-emerald-700/40 bg-slate-900 p-4 text-slate-200">ºÒ·¯¿À´Â Áß...</div>}
+      {isLoading && <div className="rounded-lg border border-emerald-700/40 bg-slate-900 p-4 text-slate-200">ë¶ˆëŸ¬ì˜¤ëŠ” ì¤‘...</div>}
       {isError && (
-        <div className="rounded-lg border border-red-500/40 bg-red-950 p-4 text-red-100">ºÒ·¯¿À±â ½ÇÆÐ: {(error as Error).message}</div>
+        <div className="rounded-lg border border-red-500/40 bg-red-950 p-4 text-red-100">ë¶ˆëŸ¬ì˜¤ê¸° ì‹¤íŒ¨: {(error as Error).message}</div>
       )}
 
       {!isLoading && data && data.length === 0 && (
-        <div className="rounded-lg border border-emerald-700/40 bg-slate-900 p-4 text-slate-200">µî·ÏµÈ ¼³Á¤ÀÌ ¾ø½À´Ï´Ù.</div>
+        <div className="rounded-lg border border-emerald-700/40 bg-slate-900 p-4 text-slate-200">ë“±ë¡ëœ ì„¤ì •ì´ ì—†ìŠµë‹ˆë‹¤.</div>
       )}
 
       {!isLoading && data && data.length > 0 && (
@@ -144,11 +144,11 @@ const RouletteConfigPage: React.FC = () => {
           <table className="min-w-full divide-y divide-emerald-800/60">
             <thead className="bg-emerald-900/40 text-left text-slate-200">
               <tr>
-                <th className="px-4 py-3 text-sm font-semibold">ÀÌ¸§</th>
-                <th className="px-4 py-3 text-sm font-semibold">ÀÏÀÏ Á¦ÇÑ</th>
-                <th className="px-4 py-3 text-sm font-semibold">¼¼±×¸ÕÆ® ¼ö</th>
-                <th className="px-4 py-3 text-sm font-semibold">È°¼º</th>
-                <th className="px-4 py-3 text-sm font-semibold">¾×¼Ç</th>
+                <th className="px-4 py-3 text-sm font-semibold">ì´ë¦„</th>
+                <th className="px-4 py-3 text-sm font-semibold">ì¼ì¼ ì œí•œ</th>
+                <th className="px-4 py-3 text-sm font-semibold">ì„¸ê·¸ë¨¼íŠ¸ ìˆ˜</th>
+                <th className="px-4 py-3 text-sm font-semibold">í™œì„±</th>
+                <th className="px-4 py-3 text-sm font-semibold">ì•¡ì…˜</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-emerald-800/40 text-slate-100">
@@ -159,7 +159,7 @@ const RouletteConfigPage: React.FC = () => {
                   <td className="px-4 py-3 text-sm">{config.segments.length}</td>
                   <td className="px-4 py-3 text-sm">
                     <span className={config.is_active ? "text-emerald-400" : "text-slate-400"}>
-                      {config.is_active ? "È°¼º" : "ºñÈ°¼º"}
+                      {config.is_active ? "í™œì„±" : "ë¹„í™œì„±"}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-sm flex gap-2">
@@ -176,14 +176,14 @@ const RouletteConfigPage: React.FC = () => {
                         });
                       }}
                     >
-                      ¼öÁ¤
+                      ìˆ˜ì •
                     </Button>
                     <Button
                       variant="secondary"
                       onClick={() => deleteMutation.mutate(config.id)}
                       disabled={deleteMutation.isPending}
                     >
-                      »èÁ¦
+                      ì‚­ì œ
                     </Button>
                   </td>
                 </tr>
@@ -193,21 +193,21 @@ const RouletteConfigPage: React.FC = () => {
         </div>
       )}
 
-      <Modal open={isModalOpen} onClose={resetAndClose} title={editing ? "·ê·¿ ¼³Á¤ ¼öÁ¤" : "»õ ·ê·¿ ¼³Á¤"}>
+      <Modal open={isModalOpen} onClose={resetAndClose} title={editing ? "ë£°ë › ì„¤ì • ìˆ˜ì •" : "ìƒˆ ë£°ë › ì„¤ì •"}>
         <form className="space-y-4" onSubmit={onSubmit}>
           <div className="space-y-1">
-            <label className="text-sm text-slate-200">ÀÌ¸§</label>
+            <label className="text-sm text-slate-200">ì´ë¦„</label>
             <input
               className="w-full rounded-md border border-emerald-700 bg-slate-800 px-3 py-2 text-slate-50 focus:border-emerald-400 focus:outline-none"
               {...form.register("name")}
               type="text"
-              placeholder="·ê·¿ ÀÌ¸§"
+              placeholder="ë£°ë › ì´ë¦„"
             />
             {form.formState.errors.name && <p className="text-sm text-red-300">{form.formState.errors.name.message}</p>}
           </div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-1">
-              <label className="text-sm text-slate-200">ÀÏÀÏ ÃÖ´ë ½ºÇÉ</label>
+              <label className="text-sm text-slate-200">ì¼ì¼ ìµœëŒ€ ìŠ¤í•€</label>
               <input
                 type="number"
                 className="w-full rounded-md border border-emerald-700 bg-slate-800 px-3 py-2 text-slate-50 focus:border-emerald-400 focus:outline-none"
@@ -219,13 +219,13 @@ const RouletteConfigPage: React.FC = () => {
             </div>
             <div className="flex items-center space-x-3 pt-6">
               <input type="checkbox" className="h-4 w-4" {...form.register("is_active")} />
-              <span className="text-sm text-slate-200">È°¼º</span>
+              <span className="text-sm text-slate-200">í™œì„±</span>
             </div>
           </div>
 
           <div className="space-y-3 rounded-lg border border-emerald-800/60 bg-slate-900/70 p-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-slate-100">¼¼±×¸ÕÆ®</h3>
+              <h3 className="text-sm font-semibold text-slate-100">ì„¸ê·¸ë¨¼íŠ¸</h3>
               <Button
                 variant="secondary"
                 type="button"
@@ -233,7 +233,7 @@ const RouletteConfigPage: React.FC = () => {
                   append({ index: fields.length, label: "New segment", weight: 1, reward_type: "POINT", reward_value: 0 })
                 }
               >
-                Çà Ãß°¡
+                í–‰ ì¶”ê°€
               </Button>
             </div>
             {form.formState.errors.segments && (
@@ -243,7 +243,7 @@ const RouletteConfigPage: React.FC = () => {
               {fields.map((field, idx) => (
                 <div key={field.id} className="grid grid-cols-1 gap-2 rounded-md border border-emerald-800/50 bg-slate-900 p-3 md:grid-cols-6">
                   <div className="space-y-1">
-                    <label className="text-xs text-slate-300">Index (ÀÚµ¿)</label>
+                    <label className="text-xs text-slate-300">Index (ìžë™)</label>
                     <input
                       type="number"
                       readOnly
@@ -253,7 +253,7 @@ const RouletteConfigPage: React.FC = () => {
                     />
                   </div>
                   <div className="space-y-1 md:col-span-2">
-                    <label className="text-xs text-slate-300">¶óº§</label>
+                    <label className="text-xs text-slate-300">ë¼ë²¨</label>
                     <input
                       type="text"
                       className="w-full rounded border border-emerald-700 bg-slate-800 px-2 py-1 text-sm"
@@ -261,7 +261,7 @@ const RouletteConfigPage: React.FC = () => {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs text-slate-300">°¡ÁßÄ¡</label>
+                    <label className="text-xs text-slate-300">ê°€ì¤‘ì¹˜</label>
                     <input
                       type="number"
                       className="w-full rounded border border-emerald-700 bg-slate-800 px-2 py-1 text-sm"
@@ -269,7 +269,7 @@ const RouletteConfigPage: React.FC = () => {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs text-slate-300">º¸»ó Å¸ÀÔ</label>
+                    <label className="text-xs text-slate-300">ë³´ìƒ íƒ€ìž…</label>
                     <input
                       type="text"
                       className="w-full rounded border border-emerald-700 bg-slate-800 px-2 py-1 text-sm"
@@ -277,7 +277,7 @@ const RouletteConfigPage: React.FC = () => {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs text-slate-300">º¸»ó °ª</label>
+                    <label className="text-xs text-slate-300">ë³´ìƒ ê°’</label>
                     <input
                       type="number"
                       className="w-full rounded border border-emerald-700 bg-slate-800 px-2 py-1 text-sm"
@@ -286,7 +286,7 @@ const RouletteConfigPage: React.FC = () => {
                   </div>
                   <div className="flex items-center justify-between space-x-2">
                     <Button variant="secondary" type="button" onClick={() => remove(idx)}>
-                      »èÁ¦
+                      ì‚­ì œ
                     </Button>
                   </div>
                 </div>
@@ -296,10 +296,10 @@ const RouletteConfigPage: React.FC = () => {
 
           <div className="flex justify-end space-x-2">
             <Button type="button" variant="secondary" onClick={resetAndClose}>
-              Ãë¼Ò
+              ì·¨ì†Œ
             </Button>
             <Button type="submit" disabled={mutation.isPending}>
-              {mutation.isPending ? "ÀúÀå Áß..." : "ÀúÀå"}
+              {mutation.isPending ? "ì €ìž¥ ì¤‘..." : "ì €ìž¥"}
             </Button>
           </div>
         </form>
