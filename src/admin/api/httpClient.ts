@@ -1,8 +1,9 @@
 // src/admin/api/httpClient.ts
 import axios from "axios";
 
-const adminBaseURL =
-  import.meta.env.VITE_ADMIN_API_BASE_URL ?? import.meta.env.VITE_API_URL ?? "http://localhost:8000/api";
+const apiBase = import.meta.env.VITE_ADMIN_API_BASE_URL ?? import.meta.env.VITE_API_URL ?? "http://localhost:8000/api";
+// If base URL does not already include /admin, append admin prefix for admin API routes.
+const adminBaseURL = apiBase.includes("/admin") ? apiBase : `${apiBase.replace(/\/$/, "")}/admin/api`;
 
 export const adminApi = axios.create({
   baseURL: adminBaseURL,
