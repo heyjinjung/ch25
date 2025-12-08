@@ -1,5 +1,6 @@
 # /workspace/ch25/app/schemas/admin_lottery.py
 from typing import List, Optional
+from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict
 
@@ -43,6 +44,6 @@ class AdminLotteryPrizeResponse(AdminLotteryPrizeBase):
 
 class AdminLotteryConfigResponse(AdminLotteryConfigBase):
     id: int
-    created_at: Optional[str]
-    updated_at: Optional[str]
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]
     prizes: List[AdminLotteryPrizeResponse]

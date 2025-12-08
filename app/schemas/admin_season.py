@@ -1,5 +1,5 @@
 # /workspace/ch25/app/schemas/admin_season.py
-from datetime import date
+from datetime import date, datetime
 from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, validator
@@ -40,8 +40,8 @@ class AdminSeasonUpdate(BaseModel):
 
 class AdminSeasonResponse(AdminSeasonBase):
     id: int
-    created_at: Optional[str]
-    updated_at: Optional[str]
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]
 
 
 class AdminSeasonListResponse(BaseModel):

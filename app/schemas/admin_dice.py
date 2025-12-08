@@ -1,5 +1,6 @@
 # /workspace/ch25/app/schemas/admin_dice.py
 from typing import Optional
+from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict
 
@@ -38,5 +39,5 @@ class AdminDiceConfigUpdate(BaseModel):
 
 class AdminDiceConfigResponse(AdminDiceConfigBase):
     id: int
-    created_at: Optional[str]
-    updated_at: Optional[str]
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]

@@ -1,5 +1,6 @@
 # /workspace/ch25/app/schemas/admin_roulette.py
 from typing import List, Optional
+from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field, validator
 
@@ -49,6 +50,6 @@ class AdminRouletteSegmentResponse(AdminRouletteSegmentBase):
 
 class AdminRouletteConfigResponse(AdminRouletteConfigBase):
     id: int
-    created_at: Optional[str]
-    updated_at: Optional[str]
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]
     segments: List[AdminRouletteSegmentResponse]
