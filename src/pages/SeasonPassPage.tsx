@@ -105,11 +105,11 @@ const SeasonPassPage: React.FC = () => {
               <p className="text-xs text-slate-400">최대 레벨 {data.max_level}</p>
             </div>
             <div className="flex-1">
-              <div className="flex items-center justify-between text-xs text-slate-300">
-                <span>{data.current_xp.toLocaleString()} XP</span>
-                <span>{progress.nextLabel}</span>
-                <span>{data.next_level_xp.toLocaleString()} XP</span>
-              </div>
+            <div className="flex items-center justify-between text-xs text-slate-300">
+              <span>{data.current_xp.toLocaleString()} XP</span>
+              <span>{progress.nextLabel}</span>
+              <span>{data.next_level_xp.toLocaleString()} XP</span>
+            </div>
               <div className="mt-2 h-4 w-full overflow-hidden rounded-full bg-slate-800/80">
                 <div
                   className="h-full bg-gradient-to-r from-emerald-400 via-emerald-500 to-gold-400 transition-all duration-500"

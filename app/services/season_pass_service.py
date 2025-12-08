@@ -15,6 +15,7 @@ from app.models.season_pass import (
     SeasonPassRewardLog,
     SeasonPassStampLog,
 )
+from app.schemas.season_pass import SeasonPassStatusResponse
 
 
 class SeasonPassService:
@@ -106,9 +107,19 @@ class SeasonPassService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="NO_ACTIVE_SEASON")
 
         progress = self.get_or_create_progress(db, user_id=user_id, season_id=season.id)
-        levels = db.execute(
-            select(SeasonPassLevel).where(SeasonPassLevel.season_id == season.id).order_by(SeasonPassLevel.level)
+        levels = (
+            db.execute(
+                select(SeasonPassLevel).where(SeasonPassLevel.season_id == season.id).order_by(SeasonPassLevel.level)
+            )
+            .scalars()
+            .all()
+        )
+        reward_logs = db.execute(
+            select(SeasonPassRewardLog).where(
+                SeasonPassRewardLog.season_id == season.id, SeasonPassRewardLog.user_id == user_id
+            )
         ).scalars().all()
+        claimed_levels = {log.level for log in reward_logs}
 
         today = now.date() if isinstance(now, datetime) else now
         stamped_today = db.execute(
@@ -118,6 +129,26 @@ class SeasonPassService:
                 SeasonPassStampLog.date == today,
             )
         ).scalar_one_or_none()
+
+        max_required = max((lvl.required_xp for lvl in levels), default=0)
+        next_level_req = next((lvl.required_xp for lvl in levels if lvl.required_xp > progress.current_xp), max_required)
+
+        level_payload = []
+        for level in levels:
+            is_unlocked = progress.current_xp >= level.required_xp
+            is_claimed = level.level in claimed_levels
+            level_payload.append(
+                {
+                    "level": level.level,
+                    "required_xp": level.required_xp,
+                    "reward_type": level.reward_type,
+                    "reward_amount": level.reward_amount,
+                    "auto_claim": level.auto_claim,
+                    "is_unlocked": is_unlocked,
+                    "is_claimed": is_claimed,
+                    "reward_label": f"{level.reward_type} {level.reward_amount}",
+                }
+            )
 
         return {
             "season": {
@@ -133,17 +164,9 @@ class SeasonPassService:
                 "current_xp": progress.current_xp,
                 "total_stamps": progress.total_stamps,
                 "last_stamp_date": progress.last_stamp_date,
+                "next_level_xp": next_level_req,
             },
-            "levels": [
-                {
-                    "level": level.level,
-                    "required_xp": level.required_xp,
-                    "reward_type": level.reward_type,
-                    "reward_amount": level.reward_amount,
-                    "auto_claim": level.auto_claim,
-                }
-                for level in levels
-            ],
+            "levels": level_payload,
             "today": {"date": today, "stamped": stamped_today is not None},
         }
 

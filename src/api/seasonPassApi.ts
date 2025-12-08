@@ -38,22 +38,19 @@ export const getSeasonPassStatus = async (): Promise<SeasonPassStatusResponse> =
     const response = await userApi.get("/season-pass/status");
     const raw = response.data as any;
     const currentXp = raw?.progress?.current_xp ?? 0;
+    const nextLevelXp = raw?.progress?.next_level_xp ?? currentXp;
     const levels = (raw?.levels ?? []).map((lvl: any) => ({
       level: lvl.level,
       required_xp: lvl.required_xp,
       reward_label: lvl.reward_label ?? `${lvl.reward_type ?? ""} ${lvl.reward_amount ?? ""}`.trim(),
       is_claimed: lvl.is_claimed ?? false,
-      is_unlocked: currentXp >= (lvl.required_xp ?? 0),
+      is_unlocked: lvl.is_unlocked ?? currentXp >= (lvl.required_xp ?? 0),
     })) as SeasonPassLevelDto[];
-    const nextLevel = levels.find((lvl) => currentXp < lvl.required_xp);
-    const nextLevelXp = nextLevel ? nextLevel.required_xp : currentXp;
     return {
       current_level: raw?.progress?.current_level ?? 0,
       current_xp: currentXp,
       next_level_xp: nextLevelXp,
-      max_level:
-        raw?.season?.max_level ??
-        (levels.length > 0 ? Math.max(...levels.map((l) => l.level)) : 0),
+      max_level: raw?.season?.max_level ?? (levels.length > 0 ? Math.max(...levels.map((l) => l.level)) : 0),
       levels,
       today: raw?.today,
     };

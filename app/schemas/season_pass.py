@@ -38,6 +38,9 @@ class SeasonLevelInfo(BaseModel):
     is_unlocked: Optional[bool] = None
     is_claimed: Optional[bool] = None
     reward_label: Optional[str] = None
+    is_unlocked: Optional[bool] = None
+    is_claimed: Optional[bool] = None
+    reward_label: Optional[str] = None
 
 
 class TodayInfo(BaseModel):
