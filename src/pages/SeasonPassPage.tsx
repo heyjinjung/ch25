@@ -1,6 +1,6 @@
 ﻿import React, { useMemo } from "react";
 import { useTodayRanking } from "../hooks/useRanking";
-import { useSeasonPassStatus } from "../hooks/useSeasonPass";
+import { useSeasonPassStatus, useInternalWinStatus } from "../hooks/useSeasonPass";
 import FeatureGate from "../components/feature/FeatureGate";
 
 const formatCurrency = (value: number) => value.toLocaleString();
@@ -8,6 +8,7 @@ const formatCurrency = (value: number) => value.toLocaleString();
 const SeasonPassPage: React.FC = () => {
   const season = useSeasonPassStatus();
   const ranking = useTodayRanking();
+  const internalWins = useInternalWinStatus();
 
   const progress = useMemo(() => {
     if (!season.data) return { percent: 0, nextLabel: "" };
@@ -53,7 +54,11 @@ const SeasonPassPage: React.FC = () => {
     {
       title: "내부 게임 승리 50회",
       desc: "승리 누적 50회 달성 시 스탬프 1개",
-      status: "집계 대기 (추가 데이터 필요)",
+      status: internalWins.data
+        ? `누적 승리 ${internalWins.data.total_wins}회 / 남은 ${internalWins.data.remaining}회`
+        : internalWins.isLoading
+        ? "집계 중..."
+        : "집계 실패",
     },
   ];
 
@@ -117,9 +122,11 @@ const SeasonPassPage: React.FC = () => {
         </div>
 
         <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-white">스탬프 받는 방법</h2>
-            <span className="rounded-full bg-emerald-900/60 px-3 py-1 text-xs text-emerald-200">오늘 스탬프: {data.today_stamped ? "완료" : "미완료"}</span>
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold text-white">스탬프 받는 방법</h2>
+            <span className="rounded-full bg-emerald-900/60 px-3 py-1 text-xs text-emerald-200">
+              오늘 스탬프: {data.today?.stamped ? "완료" : "미완료"}
+            </span>
           </div>
           <div className="grid gap-4 md:grid-cols-2">
             {cards.map((card) => (

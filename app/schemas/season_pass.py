@@ -1,4 +1,4 @@
-"""Pydantic schemas for season pass APIs."""
+﻿"""Pydantic schemas for season pass APIs."""
 from __future__ import annotations
 
 from datetime import date, datetime
@@ -35,6 +35,9 @@ class SeasonLevelInfo(BaseModel):
     reward_type: str
     reward_amount: int
     auto_claim: int
+    is_unlocked: Optional[bool] = None
+    is_claimed: Optional[bool] = None
+    reward_label: Optional[str] = None
 
 
 class TodayInfo(BaseModel):
@@ -61,6 +64,14 @@ class SeasonPassStatusResponse(BaseModel):
     progress: SeasonProgress
     levels: list[SeasonLevelInfo]
     today: TodayInfo
+
+
+class InternalWinStatusResponse(BaseModel):
+    """Internal wins toward stamp threshold."""
+
+    total_wins: int
+    threshold: int
+    remaining: int
 
 
 class StampRequest(BaseModel):
@@ -102,6 +113,7 @@ __all__ = [
     "TodayInfo",
     "RewardInfo",
     "SeasonPassStatusResponse",
+    "InternalWinStatusResponse",
     "StampRequest",
     "StampResponse",
     "ClaimRequest",

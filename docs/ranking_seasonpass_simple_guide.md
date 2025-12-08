@@ -78,6 +78,6 @@ SELECT * FROM season_pass_stamp_log WHERE source_feature_type LIKE 'EXTERNAL_%' 
 ```
 
 ## TODO(이 문서 이후 코드 반영 필요)
-- 외부 랭킹 upsert 시 TOP10/입금/플레이 조건 충족 → 자동 스탬프 + 중복 방지
-- 내부 게임 승리 누적 50회 달성 시 1회 스탬프
-- 스탬프 로그 source_feature_type 활용해 중복 차단
+- (완료) 외부 랭킹 upsert 시 TOP10/입금/플레이 조건 충족 → 자동 스탬프 + 중복 방지
+- (완료) 내부 게임 승리 누적 50회 달성 시 1회 스탬프
+- 스탬프 로그 source_feature_type 활용해 중복 차단 검증

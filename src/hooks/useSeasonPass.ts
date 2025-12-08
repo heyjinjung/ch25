@@ -6,15 +6,25 @@ import {
   claimSeasonReward,
   ClaimSeasonRewardResponse,
   getSeasonPassStatus,
+  getInternalWinStatus,
   SeasonPassStatusResponse,
+  InternalWinStatusResponse,
 } from "../api/seasonPassApi";
 
 export const SEASON_PASS_STATUS_QUERY_KEY = ["season-pass-status"] as const;
+export const INTERNAL_WINS_QUERY_KEY = ["season-pass-internal-wins"] as const;
 
 export const useSeasonPassStatus = () => {
   return useQuery<SeasonPassStatusResponse, unknown>({
     queryKey: SEASON_PASS_STATUS_QUERY_KEY,
     queryFn: getSeasonPassStatus,
+  });
+};
+
+export const useInternalWinStatus = () => {
+  return useQuery<InternalWinStatusResponse, unknown>({
+    queryKey: INTERNAL_WINS_QUERY_KEY,
+    queryFn: getInternalWinStatus,
   });
 };
 

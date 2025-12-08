@@ -1,4 +1,4 @@
-// src/api/seasonPassApi.ts
+﻿// src/api/seasonPassApi.ts
 import axios from "axios";
 import userApi from "./httpClient";
 import { claimFallbackSeasonReward, getFallbackSeasonPassStatus } from "./fallbackData";
@@ -18,6 +18,13 @@ export interface SeasonPassStatusResponse {
   readonly next_level_xp: number;
   readonly max_level: number;
   readonly levels: SeasonPassLevelDto[];
+  readonly today?: { stamped: boolean };
+}
+
+export interface InternalWinStatusResponse {
+  readonly total_wins: number;
+  readonly threshold: number;
+  readonly remaining: number;
 }
 
 export interface ClaimSeasonRewardResponse {
@@ -40,6 +47,11 @@ export const getSeasonPassStatus = async (): Promise<SeasonPassStatusResponse> =
     }
     throw error;
   }
+};
+
+export const getInternalWinStatus = async (): Promise<InternalWinStatusResponse> => {
+  const { data } = await userApi.get<InternalWinStatusResponse>("/season-pass/internal-wins");
+  return data;
 };
 
 export const claimSeasonReward = async (level: number): Promise<ClaimSeasonRewardResponse> => {

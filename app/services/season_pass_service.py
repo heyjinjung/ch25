@@ -284,6 +284,28 @@ class SeasonPassService:
     ) -> dict | None:
         """Award one stamp when total internal 게임 승리 횟수 >= threshold (once per season)."""
 
+        today = (now or date.today())
+        if isinstance(today, datetime):
+            today = today.date()
+
+        progress = self.get_internal_win_progress(db, user_id=user_id, threshold=threshold, now=today)
+        if progress["total_wins"] < threshold:
+            return None
+
+        return self.maybe_add_stamp(
+            db,
+            user_id=user_id,
+            source_feature_type="INTERNAL_WIN_50",
+            xp_bonus=0,
+            now=today,
+            stamp_count=1,
+        )
+
+    def get_internal_win_progress(
+        self, db: Session, user_id: int, threshold: int = 50, now: date | datetime | None = None
+    ) -> dict:
+        """Return current internal win count and remaining to threshold."""
+
         from sqlalchemy import func
         from app.models.dice import DiceLog
         from app.models.roulette import RouletteLog
@@ -292,23 +314,6 @@ class SeasonPassService:
         today = (now or date.today())
         if isinstance(today, datetime):
             today = today.date()
-
-        try:
-            season = self.get_current_season(db, today)
-        except HTTPException as exc:
-            if exc.detail == "NO_ACTIVE_SEASON":
-                return None
-            raise
-
-        already = db.execute(
-            select(SeasonPassStampLog).where(
-                SeasonPassStampLog.user_id == user_id,
-                SeasonPassStampLog.season_id == season.id,
-                SeasonPassStampLog.source_feature_type == "INTERNAL_WIN_50",
-            )
-        ).scalar_one_or_none()
-        if already:
-            return None
 
         dice_wins = db.execute(
             select(func.count()).select_from(DiceLog).where(DiceLog.user_id == user_id, DiceLog.result == "WIN")
@@ -324,17 +329,8 @@ class SeasonPassService:
             )
         ).scalar_one()
         total_wins = dice_wins + roulette_wins + lottery_wins
-        if total_wins < threshold:
-            return None
-
-        return self.maybe_add_stamp(
-            db,
-            user_id=user_id,
-            source_feature_type="INTERNAL_WIN_50",
-            xp_bonus=0,
-            now=today,
-            stamp_count=1,
-        )
+        remaining = max(threshold - total_wins, 0)
+        return {"total_wins": total_wins, "threshold": threshold, "remaining": remaining}
 
     def claim_reward(self, db: Session, user_id: int, level: int, now: date | datetime | None = None) -> dict:
         """Manually claim a non-auto reward for a reached level."""

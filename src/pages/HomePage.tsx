@@ -5,6 +5,7 @@ import { useSeasonPassStatus } from "../hooks/useSeasonPass";
 import { useRouletteStatus } from "../hooks/useRoulette";
 import { useDiceStatus } from "../hooks/useDice";
 import { useLotteryStatus } from "../hooks/useLottery";
+import { useInternalWinStatus } from "../hooks/useSeasonPass";
 import { useTodayRanking } from "../hooks/useRanking";
 import { GAME_TOKEN_LABELS } from "../types/gameTokens";
 
@@ -54,6 +55,7 @@ const HomePage: React.FC = () => {
   const dice = useDiceStatus();
   const lottery = useLotteryStatus();
   const ranking = useTodayRanking();
+  const internalWins = useInternalWinStatus();
 
   const seasonSummary = useMemo(() => {
     if (season.isLoading) return { label: "로딩 중", detail: "" };
@@ -74,7 +76,14 @@ const HomePage: React.FC = () => {
     { title: "외부 랭킹 TOP10", status: external?.rank ? `현재 ${external.rank}위${top10Needed > 0 ? `, ${top10Needed}위 상승 필요` : " (완료)"}` : "랭킹 데이터 없음" },
     { title: "외부 사이트 첫 이용", status: playDone ? "완료" : "미완료" },
     { title: "외부 입금 10만원마다", status: `누적 ${deposit.toLocaleString()}원 / 다음까지 ${depositRemainder === 100_000 ? 0 : depositRemainder.toLocaleString()}원` },
-    { title: "내부 게임 승리 50회", status: "집계 대기 (추가 데이터 필요)" },
+    {
+      title: "내부 게임 승리 50회",
+      status: internalWins.data
+        ? `누적 승리 ${internalWins.data.total_wins}회 / 남은 ${internalWins.data.remaining}회`
+        : internalWins.isLoading
+        ? "집계 중..."
+        : "집계 실패",
+    },
   ];
 
   const gameCards: GameCardProps[] = [
@@ -102,6 +111,10 @@ const HomePage: React.FC = () => {
   ];
 
   const isTestAccount = user?.id === 999 || user?.external_id === "test-qa-999";
+
+  const rankingSummary = ranking.data?.external_entries
+    ? ranking.data.external_entries.slice(0, 3)
+    : [];
 
   return (
     <section className="space-y-8">
@@ -150,6 +163,34 @@ const HomePage: React.FC = () => {
             <GameCard key={card.title} {...card} />
           ))}
         </div>
+      </div>
+
+      <div className="rounded-3xl border border-amber-600/30 bg-gradient-to-br from-slate-900 via-slate-800 to-amber-900/40 p-8 shadow-2xl">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-[0.25em] text-amber-300">Ranking</p>
+            <h2 className="text-2xl font-bold text-white">외부 랭킹</h2>
+            <p className="text-sm text-slate-300">입금액/플레이 수 기준. TOP10 진입 시 스탬프 1개.</p>
+          </div>
+          {external?.rank && (
+            <div className="rounded-full bg-amber-900/50 px-4 py-1 text-xs text-amber-100">
+              내 순위: {external.rank}위 / 입금 {deposit.toLocaleString()}원 / 플레이 {external.play_count}
+            </div>
+          )}
+        </div>
+        {rankingSummary.length === 0 ? (
+          <p className="mt-3 text-sm text-slate-400">랭킹 데이터 없음</p>
+        ) : (
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            {rankingSummary.map((entry) => (
+              <div key={entry.user_id} className="rounded-xl border border-amber-500/40 bg-slate-900/60 p-4">
+                <p className="text-sm font-semibold text-amber-200">{entry.rank}위</p>
+                <p className="text-base font-bold text-white">User {entry.user_id}</p>
+                <p className="text-xs text-slate-300">입금 {entry.deposit_amount.toLocaleString()}원 · 플레이 {entry.play_count}</p>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );
