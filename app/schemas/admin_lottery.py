@@ -2,7 +2,7 @@
 from typing import List, Optional
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class AdminLotteryPrizeBase(BaseModel):
@@ -10,10 +10,10 @@ class AdminLotteryPrizeBase(BaseModel):
     weight: int
     stock: Optional[int] = None
     reward_type: str
-    reward_value: int
+    reward_value: int = Field(..., alias="reward_amount")
     is_active: bool = True
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, validate_by_name=True)
 
 
 class AdminLotteryConfigBase(BaseModel):
@@ -22,7 +22,7 @@ class AdminLotteryConfigBase(BaseModel):
     max_daily_plays: int = 1
     prizes: List[AdminLotteryPrizeBase]
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, validate_by_name=True)
 
 
 class AdminLotteryConfigCreate(AdminLotteryConfigBase):

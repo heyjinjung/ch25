@@ -2,7 +2,7 @@
 from typing import Optional
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class AdminDiceConfigBase(BaseModel):
@@ -10,13 +10,13 @@ class AdminDiceConfigBase(BaseModel):
     is_active: bool = True
     max_daily_plays: int
     win_reward_type: str
-    win_reward_value: int
+    win_reward_value: int = Field(..., alias="win_reward_amount")
     draw_reward_type: str
-    draw_reward_value: int
+    draw_reward_value: int = Field(..., alias="draw_reward_amount")
     lose_reward_type: str
-    lose_reward_value: int
+    lose_reward_value: int = Field(..., alias="lose_reward_amount")
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, validate_by_name=True)
 
 
 class AdminDiceConfigCreate(AdminDiceConfigBase):
