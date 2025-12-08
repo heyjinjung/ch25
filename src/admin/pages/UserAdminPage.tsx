@@ -53,7 +53,7 @@ const UserAdminPage: React.FC = () => {
         idx === index
           ? {
               ...row,
-              [field]: field === "level" || field === "user_id" ? Number(value) : value,
+              [field]: field === "level" ? Number(value) : value,
             }
           : row
       )
@@ -77,7 +77,6 @@ const UserAdminPage: React.FC = () => {
   const submitNew = (row: EditableUser) => {
     if (!row.external_id) return;
     const payload: AdminUserPayload = {
-      user_id: row.user_id,
       external_id: row.external_id,
       nickname: row.nickname,
       status: row.status,
@@ -105,7 +104,6 @@ const UserAdminPage: React.FC = () => {
         <table className="min-w-full divide-y divide-slate-800 bg-slate-900 text-sm text-slate-100">
           <thead className="bg-slate-800/60">
             <tr>
-              <th className="px-3 py-2 text-left">User ID(옵션)</th>
               <th className="px-3 py-2 text-left">External ID</th>
               <th className="px-3 py-2 text-left">닉네임</th>
               <th className="px-3 py-2 text-left">레벨</th>
@@ -117,15 +115,6 @@ const UserAdminPage: React.FC = () => {
           <tbody className="divide-y divide-slate-800">
             {rows.map((row, idx) => (
               <tr key={row.id ?? idx}>
-                <td className="px-3 py-2">
-                  <input
-                    type="number"
-                    value={row.user_id ?? ""}
-                    onChange={(e) => handleField(idx, "user_id", Number(e.target.value))}
-                    className="w-full rounded border border-slate-700 bg-slate-800 px-2 py-1 text-right"
-                    placeholder="자동증가 사용 시 비워두기"
-                  />
-                </td>
                 <td className="px-3 py-2">
                   <input
                     value={row.external_id ?? ""}

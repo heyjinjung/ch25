@@ -43,9 +43,15 @@ def issue_token(payload: TokenRequest, request: Request, db: Session = Depends(g
         user = db.query(User).filter(User.external_id == payload.external_id).first()
 
     # Auto-create only if user_id provided (legacy flow) and user is missing.
-    if user is None and payload.user_id is not None:
-        external = payload.external_id or f"user-{payload.user_id}"
-        user = User(id=payload.user_id, external_id=external, status="ACTIVE")
+    if user is None:
+        if payload.external_id is None:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="USER_NOT_FOUND")
+        # Create with auto id when only external_id is provided
+        user = User(external_id=payload.external_id, status="ACTIVE")
+        if payload.password:
+            from app.core.security import hash_password  # local import
+
+            user.password_hash = hash_password(payload.password)
         db.add(user)
     # Capture client IP best-effort
     client_ip = request.client.host if request.client else None

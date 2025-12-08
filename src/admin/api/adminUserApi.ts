@@ -2,7 +2,6 @@
 import { adminApi } from "./httpClient";
 
 export interface AdminUserPayload {
-  user_id?: number;
   external_id: string;
   nickname?: string;
   level?: number;

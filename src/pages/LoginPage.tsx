@@ -10,7 +10,6 @@ const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [userId, setUserId] = useState<number | undefined>(TEST_ACCOUNT.user_id);
   const [externalId, setExternalId] = useState<string>(TEST_ACCOUNT.external_id);
   const [password, setPassword] = useState<string>("");
 
@@ -19,7 +18,6 @@ const LoginPage: React.FC = () => {
     setError(null);
     try {
       const response = await login({
-        user_id: userId,
         external_id: externalId,
         password: password || undefined,
       });
@@ -52,16 +50,6 @@ const LoginPage: React.FC = () => {
       {error && <p className="rounded-lg border border-rose-500/40 bg-rose-900/40 p-3 text-sm font-semibold text-rose-100">{error}</p>}
 
       <div className="space-y-3">
-        <div className="space-y-1">
-          <label className="text-xs text-slate-300">User ID (옵션)</label>
-          <input
-            type="number"
-            value={userId ?? ""}
-            onChange={(e) => setUserId(e.target.value ? Number(e.target.value) : undefined)}
-            className="w-full rounded-lg border border-emerald-800 bg-slate-900 px-3 py-2 text-slate-100"
-            placeholder="비워두면 external_id만 사용"
-          />
-        </div>
         <div className="space-y-1">
           <label className="text-xs text-slate-300">External ID (필수)</label>
           <input

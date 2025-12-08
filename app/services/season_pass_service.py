@@ -20,6 +20,41 @@ from app.models.season_pass import (
 class SeasonPassService:
     """Encapsulates season pass workflows (status, stamp, claim)."""
 
+    def _ensure_default_season(self, db: Session, today: date) -> SeasonPassConfig | None:
+        """When TEST_MODE is on and no season exists, create a simple default season."""
+        from datetime import timedelta
+        from app.core.config import get_settings
+
+        settings = get_settings()
+        if not settings.test_mode:
+            return None
+
+        existing = db.execute(
+            select(SeasonPassConfig).where(
+                and_(SeasonPassConfig.start_date <= today, SeasonPassConfig.end_date >= today)
+            )
+        ).scalar_one_or_none()
+        if existing:
+            return existing
+
+        season = SeasonPassConfig(
+            season_name=f"DEFAULT-{today.isoformat()}",
+            start_date=today,
+            end_date=today + timedelta(days=6),
+            max_level=5,
+            base_xp_per_stamp=10,
+            is_active=True,
+        )
+        levels = [
+            SeasonPassLevel(level=i, required_xp=20 * i, reward_type="POINT", reward_amount=100 * i, auto_claim=True)
+            for i in range(1, 6)
+        ]
+        season.levels = levels
+        db.add(season)
+        db.commit()
+        db.refresh(season)
+        return season
+
     def get_current_season(self, db: Session, now: date | datetime) -> SeasonPassConfig | None:
         """Return the active season for the given date or None if not found."""
 
@@ -29,6 +64,10 @@ class SeasonPassService:
         )
         seasons = db.execute(stmt).scalars().all()
         if not seasons:
+            # In TEST_MODE allow auto-creation so FE can proceed locally.
+            auto_season = self._ensure_default_season(db, today)
+            if auto_season:
+                return auto_season
             return None
         if len(seasons) > 1:
             raise HTTPException(
