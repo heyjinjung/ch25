@@ -10,8 +10,8 @@ settings = get_settings()
 
 app = FastAPI(title="XMAS 1Week Event System")
 
-# Apply environment-aware CORS policy: default to explicit origins; allow "*" only for local.
-cors_origins = settings.cors_origins or (["*"] if settings.env == "local" else [])
+# Apply permissive CORS in local/dev to unblock FE
+cors_origins = ["*"] if settings.env == "local" else (settings.cors_origins or [])
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
