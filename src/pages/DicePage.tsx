@@ -52,8 +52,8 @@ const DicePage: React.FC = () => {
       setUserDice(response.user_dice);
       setDealerDice(response.dealer_dice);
       setInfoMessage(response.message ?? null);
-      if (response.result === "WIN" && response.reward_amount > 0) {
-        setRewardToast(`+${response.reward_amount} ${response.reward_type ?? "보상"}`);
+      if (response.result === "WIN" && response.reward_value && Number(response.reward_value) > 0) {
+        setRewardToast(`+${response.reward_value} ${response.reward_type ?? "보상"}`);
         setTimeout(() => setRewardToast(null), 2500);
       }
     } catch (e) {
