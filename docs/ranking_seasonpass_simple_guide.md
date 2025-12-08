@@ -14,6 +14,7 @@
 
 ### 주요 API
 - GET /api/season-pass/status : 현재 시즌, 내 XP/레벨, 오늘 스탬프 여부
+- GET /api/season-pass/internal-wins : 내부 게임 승리 누적/임계치/남은 횟수
 - POST /api/season-pass/stamp : 스탬프 1개 + XP 지급 (중복 방지 필요)
 - POST /api/season-pass/claim : 보상 수령
 
@@ -41,12 +42,14 @@
 4) 내부 게임 승리 50회 달성 시 스탬프 1개
    - 기준: 승리 카운트가 50 미만→50 이상으로 처음 넘어갈 때 1회 지급
    - 중복 방지: 동일 조건으로 이미 찍힌 기록이 있으면 추가 지급 안 함
+   - 승리 집계: 주사위 WIN + 룰렛/복권 reward_amount > 0 합산
 
 ## 구현 상태 점검
 - 테이블 존재: external_ranking_*, season_pass_* (OK)
 - 랭킹: 내부 랭킹 제거, 외부 랭킹만 사용 (OK)
 - 시즌패스: 기본 API/테이블 존재 (OK)
 - 자동 스탬프: TOP10/입금/첫 이용/내부 50승 로직 추가
+- 내부 승리 진행률 API: GET /api/season-pass/internal-wins 추가 (홈/시즌패스 UI 연동)
 
 ## DB/마이그레이션/시드
 - Alembic 버전 20251208_0007_add_external_ranking_tables.py (외부 랭킹 테이블 포함)
@@ -65,8 +68,12 @@ docker compose exec db mysql -uroot -proot xmas_event_dev < scripts/seed_ranking
 
 ## 운영 시나리오(요약)
 - 외부 랭킹 입력: /admin/api/external-ranking 에 입금액/게임횟수 upsert
-- 홈/시즌패스 화면: GET /api/season-pass/status, GET /api/ranking/today 로 표시
+- 홈/시즌패스 화면: GET /api/season-pass/status, GET /api/ranking/today, GET /api/season-pass/internal-wins 로 표시
 - 스탬프 자동 지급: 위 4가지 규칙을 코드에 추가한 뒤, 로그가 쌓일 때마다 SeasonPassService를 통해 기록
+
+## 프런트 표시(현재 구현)
+- 홈: 시즌패스 요약 + 스탬프 가이드(외부 TOP10/첫 이용/10만 입금/내부 50승 진행률), 외부 랭킹 카드(내 순위/입금/플레이, 상위 3개)
+- 시즌패스 페이지: XP 진행도, 다음 보상, 오늘 스탬프 상태, 스탬프 가이드 4카드, 레벨 보상 목록/수령 버튼
 
 ## 빠른 점검 체크리스트
 - /api/ranking/today 200 OK, external_entries 노출
