@@ -12,6 +12,7 @@ const DicePage: React.FC = () => {
   const [userDice, setUserDice] = useState<number[]>([]);
   const [dealerDice, setDealerDice] = useState<number[]>([]);
   const [infoMessage, setInfoMessage] = useState<string | null>(null);
+  const [rewardToast, setRewardToast] = useState<string | null>(null);
   const [isRolling, setIsRolling] = useState(false);
 
   const mapErrorMessage = (err: unknown) => {
@@ -51,6 +52,10 @@ const DicePage: React.FC = () => {
       setUserDice(response.user_dice);
       setDealerDice(response.dealer_dice);
       setInfoMessage(response.message ?? null);
+      if (response.result === "WIN" && response.reward_amount > 0) {
+        setRewardToast(`+${response.reward_amount} ${response.reward_type ?? "보상"}`);
+        setTimeout(() => setRewardToast(null), 2500);
+      }
     } catch (e) {
       setIsRolling(false);
       console.error("Dice play failed", e);
@@ -79,6 +84,11 @@ const DicePage: React.FC = () => {
 
     return (
       <section className="space-y-8 rounded-3xl border border-gold-600/30 bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 p-8 shadow-2xl">
+        {rewardToast && (
+          <div className="fixed bottom-6 right-6 z-30 rounded-2xl border border-emerald-500/60 bg-emerald-900/80 px-4 py-3 text-emerald-100 shadow-lg animate-bounce-in">
+            {rewardToast}
+          </div>
+        )}
         <header className="text-center">
           <p className="text-sm uppercase tracking-[0.3em] text-gold-400">오늘의 이벤트</p>
           <h1 className="mt-2 text-3xl font-bold text-white">주사위 배틀</h1>

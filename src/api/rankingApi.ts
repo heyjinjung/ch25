@@ -13,6 +13,7 @@ export interface RankingEntryDto {
 export interface ExternalRankingEntryDto {
   readonly rank: number;
   readonly user_id: number;
+  readonly user_name?: string;
   readonly deposit_amount: number;
   readonly play_count: number;
   readonly memo?: string;

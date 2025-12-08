@@ -8,6 +8,7 @@ const RoulettePage: React.FC = () => {
   const { data, isLoading, isError, error } = useRouletteStatus();
   const playMutation = usePlayRoulette();
   const [selectedIndex, setSelectedIndex] = useState<number | undefined>();
+  const [rewardToast, setRewardToast] = useState<string | null>(null);
 
   const segments = useMemo(
     () =>
@@ -55,6 +56,10 @@ const RoulettePage: React.FC = () => {
       setSelectedIndex(undefined);
       const result = await playMutation.mutateAsync();
       setSelectedIndex(result.selected_index);
+      if (result.reward_amount && result.reward_amount > 0 && result.reward_type !== "NONE") {
+        setRewardToast(`+${result.reward_amount} ${result.reward_type}`);
+        setTimeout(() => setRewardToast(null), 2500);
+      }
     } catch (e) {
       console.error("Roulette play failed", e);
     }
@@ -82,6 +87,11 @@ const RoulettePage: React.FC = () => {
 
     return (
       <section className="space-y-8 rounded-3xl border border-gold-600/40 bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 p-8 shadow-2xl">
+        {rewardToast && (
+          <div className="fixed bottom-6 right-6 z-30 rounded-2xl border border-emerald-500/60 bg-emerald-900/80 px-4 py-3 text-emerald-100 shadow-lg animate-bounce-in">
+            {rewardToast}
+          </div>
+        )}
         <header className="text-center space-y-3">
           <p className="text-sm uppercase tracking-[0.35em] text-gold-400">Premium Prize Roulette</p>
           <h1 className="text-3xl font-bold text-white">럭셔리 보상 룰렛</h1>

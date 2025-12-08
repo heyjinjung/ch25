@@ -112,9 +112,7 @@ const HomePage: React.FC = () => {
 
   const isTestAccount = user?.id === 999 || user?.external_id === "test-qa-999";
 
-  const rankingSummary = ranking.data?.external_entries
-    ? ranking.data.external_entries.slice(0, 3)
-    : [];
+  const rankingSummary = ranking.data?.external_entries ? ranking.data.external_entries.slice(0, 3) : [];
 
   return (
     <section className="space-y-8">
@@ -185,7 +183,9 @@ const HomePage: React.FC = () => {
             {rankingSummary.map((entry) => (
               <div key={entry.user_id} className="rounded-xl border border-amber-500/40 bg-slate-900/60 p-4">
                 <p className="text-sm font-semibold text-amber-200">{entry.rank}위</p>
-                <p className="text-base font-bold text-white">User {entry.user_id}</p>
+                <p className="text-base font-bold text-white">
+                  {entry.user_name ?? `ID ${entry.user_id}`}
+                </p>
                 <p className="text-xs text-slate-300">입금 {entry.deposit_amount.toLocaleString()}원 · 플레이 {entry.play_count}</p>
               </div>
             ))}
