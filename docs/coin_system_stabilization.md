@@ -65,15 +65,20 @@
 4) 관측성: SQL 가이드 외에도 admin에서 최근 플레이/코인 로그 조회용 탭 추가.
 
 ## 액션 아이템 요약
-- FE
   - 홈 게임 카드 강제 렌더 + 에러 배지.
   - FeatureGate 경고 최소화, 라벨 한글 복구.
   - 토큰 데이터 undefined/NaN 방어 재점검.
-- BE
   - status/play에서 today-feature 체크 토글 분리(검증 모드 off).
   - status 필드 보장, 코인 차감 로직 문서화.
   - 로그 스키마에 코인 변동치 추가(필요 시).
-- 문서/운영
+  - 컨테이너 소스 동기화 자동화 스크립트(scripts/rebuild_all.sh) 추가, 빌드/재시작 워크플로 명시.
   - 코인 정책(단위/마이너스 불가/정수) 명시.
   - README 점검 섹션에 코인 관련 SQL 추가.
   - admin에 코인/플레이 로그 뷰 계획 반영.
+
+### 5) 컨테이너 소스 동기화 및 자동화
+- 백엔드 컨테이너에서 today-feature API가 최신 소스를 반영하지 않는 문제 발견: 빌드 시 소스가 정상적으로 복사되나, 컨테이너 실행 시 404 응답이 발생함.
+- Dockerfile.backend의 COPY 경로, WORKDIR, CMD, docker-compose.yml의 build context/volumes를 점검하여 소스 경로와 실행 경로가 일치함을 확인.
+- 소스 변경 후 항상 최신 소스가 반영되도록 `scripts/rebuild_all.sh` 자동화 스크립트 추가 (docker compose build --no-cache + up -d).
+- 개발 환경에서는 volume mount로 실시간 동기화 가능, 운영 환경에서는 빌드/재시작 워크플로 권장.
+- today-feature API가 정상적으로 200 + {"feature_type": null}을 반환하도록 컨테이너 소스/빌드 문제 해결.
