@@ -13,12 +13,19 @@ interface GameCardProps {
   readonly tokenType?: string;
   readonly tokenBalance?: number | null;
   readonly disabledReason?: string | null;
+  readonly state?: "idle" | "loading" | "error";
 }
 
-const GameCard: React.FC<GameCardProps> = ({ title, path, tokenType, tokenBalance, disabledReason }) => {
+const GameCard: React.FC<GameCardProps> = ({ title, path, tokenType, tokenBalance, disabledReason, state = "idle" }) => {
   const navigate = useNavigate();
   const hasCoins = typeof tokenBalance === "number" && tokenBalance > 0;
   const tokenLabel = tokenType ? GAME_TOKEN_LABELS[tokenType] ?? tokenType : "미지급";
+  const statusBadge =
+    state === "loading"
+      ? "잔액 로딩 중"
+      : state === "error"
+        ? "잔액 조회 실패 - 코인 지급 후 재시도"
+        : undefined;
 
   return (
     <div className="space-y-3 rounded-2xl border border-slate-700/50 bg-slate-900/50 p-5 shadow-lg shadow-emerald-900/10">
@@ -27,7 +34,9 @@ const GameCard: React.FC<GameCardProps> = ({ title, path, tokenType, tokenBalanc
         <span className="text-sm text-slate-300">{tokenLabel}</span>
       </div>
       <p className="text-sm text-slate-400">보유 코인: {hasCoins ? tokenBalance : 0}</p>
-      {disabledReason && <p className="text-xs text-amber-200">{disabledReason}</p>}
+      {(disabledReason || statusBadge) && (
+        <p className="text-xs text-amber-200">{disabledReason ?? statusBadge}</p>
+      )}
       <button
         type="button"
         onClick={() => navigate(path)}
@@ -62,21 +71,24 @@ const HomePage: React.FC = () => {
       path: "/roulette",
       tokenType: roulette.data?.token_type,
       tokenBalance: roulette.data?.token_balance ?? null,
-      disabledReason: roulette.isLoading || roulette.isError ? "잔액 정보를 불러오는 중입니다." : null,
+      disabledReason: null,
+      state: roulette.isLoading ? "loading" : roulette.isError ? "error" : "idle",
     },
     {
       title: "주사위",
       path: "/dice",
       tokenType: dice.data?.token_type,
       tokenBalance: dice.data?.token_balance ?? null,
-      disabledReason: dice.isLoading || dice.isError ? "잔액 정보를 불러오는 중입니다." : null,
+      disabledReason: null,
+      state: dice.isLoading ? "loading" : dice.isError ? "error" : "idle",
     },
     {
       title: "복권",
       path: "/lottery",
       tokenType: lottery.data?.token_type,
       tokenBalance: lottery.data?.token_balance ?? null,
-      disabledReason: lottery.isLoading || lottery.isError ? "잔액 정보를 불러오는 중입니다." : null,
+      disabledReason: null,
+      state: lottery.isLoading ? "loading" : lottery.isError ? "error" : "idle",
     },
   ];
 

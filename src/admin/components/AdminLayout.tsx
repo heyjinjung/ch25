@@ -10,6 +10,8 @@ const navItems = [
   { path: "/admin/dice", label: "Dice" },
   { path: "/admin/lottery", label: "Lottery" },
   { path: "/admin/ranking", label: "Ranking" },
+  { path: "/admin/game-tokens", label: "Coin Grant" },
+  { path: "/admin/game-token-logs", label: "Coin Logs" },
 ];
 
 const AdminLayout: React.FC = () => {

@@ -17,12 +17,24 @@ type Listener = () => void;
 
 const ACCESS_TOKEN_KEY = "xmas_access_token";
 const ACCESS_USER_KEY = "xmas_user";
+const AUTH_VERSION_KEY = "xmas_auth_version";
+const CURRENT_AUTH_VERSION = "v2";
 const LEGACY_KEYS = ["access_token", "token"];
 
 const isBrowser = typeof window !== "undefined" && typeof localStorage !== "undefined";
 
 const hydrateFromStorage = (): AuthState => {
   if (!isBrowser) return { token: null, user: null };
+
+  const storedVersion = localStorage.getItem(AUTH_VERSION_KEY);
+  if (storedVersion !== CURRENT_AUTH_VERSION) {
+    localStorage.removeItem(ACCESS_TOKEN_KEY);
+    localStorage.removeItem(ACCESS_USER_KEY);
+    LEGACY_KEYS.forEach((k) => localStorage.removeItem(k));
+    localStorage.setItem(AUTH_VERSION_KEY, CURRENT_AUTH_VERSION);
+    return { token: null, user: null };
+  }
+
   const storedToken = localStorage.getItem(ACCESS_TOKEN_KEY) ?? LEGACY_KEYS.map((k) => localStorage.getItem(k)).find(Boolean) ?? null;
   const storedUser = localStorage.getItem(ACCESS_USER_KEY);
   return {
@@ -43,6 +55,7 @@ export const setAuth = (token: string, user: AuthUser | null): void => {
   state.token = token;
   state.user = user;
   if (isBrowser) {
+    localStorage.setItem(AUTH_VERSION_KEY, CURRENT_AUTH_VERSION);
     localStorage.setItem(ACCESS_TOKEN_KEY, token);
     if (user) {
       localStorage.setItem(ACCESS_USER_KEY, JSON.stringify(user));

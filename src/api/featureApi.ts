@@ -19,8 +19,12 @@ export const getTodayFeature = async (): Promise<TodayFeatureResponse> => {
         console.warn("[featureApi] Falling back to demo data", error.message);
         return getFallbackTodayFeature();
       }
-      throw error;
+      // Gracefully degrade when today-feature API is not available (e.g., 404)
+      console.warn("[featureApi] today-feature unavailable, defaulting to no feature", error.message);
+      return { feature_type: null };
     }
-    throw error;
+    // Non-axios errors: still avoid throwing to keep UI functional
+    console.warn("[featureApi] unexpected error, defaulting to no feature", error);
+    return { feature_type: null };
   }
 };
