@@ -17,6 +17,7 @@ from app.services.feature_service import FeatureService
 from app.services.game_common import GamePlayContext, apply_season_pass_stamp, log_game_play
 from app.services.game_wallet_service import GameWalletService
 from app.services.reward_service import RewardService
+from app.services.season_pass_service import SeasonPassService
 
 
 class RouletteService:
@@ -26,6 +27,7 @@ class RouletteService:
         self.feature_service = FeatureService()
         self.reward_service = RewardService()
         self.wallet_service = GameWalletService()
+        self.season_pass_service = SeasonPassService()
 
     def _seed_default_segments(self, db: Session, config_id: int) -> list[RouletteSegment]:
         """Ensure six default segments exist for the given config (TEST_MODE bootstrap)."""
@@ -166,6 +168,8 @@ class RouletteService:
             reward_amount=chosen.reward_amount,
             meta={"reason": "roulette_spin", "segment_id": chosen.id},
         )
+        if chosen.reward_amount > 0:
+            self.season_pass_service.maybe_add_internal_win_stamp(db, user_id=user_id, now=today)
         season_pass = apply_season_pass_stamp(ctx, db)
 
         return RoulettePlayResponse(

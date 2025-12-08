@@ -154,12 +154,16 @@ class SeasonPassService:
         source_feature_type: str,
         xp_bonus: int = 0,
         now: date | datetime | None = None,
+        stamp_count: int = 1,
     ) -> dict:
-        """Apply one stamp: prevent duplicates, update XP, level-up, and log rewards."""
+        """Apply stamp(s): prevent duplicates, update XP, level-up, and log rewards."""
 
         today = (now or date.today())
         if isinstance(today, datetime):
             today = today.date()
+
+        if stamp_count < 1:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="INVALID_STAMP_COUNT")
 
         season = self.get_current_season(db, today)
         if season is None:
@@ -177,10 +181,10 @@ class SeasonPassService:
         if existing_stamp:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="ALREADY_STAMPED_TODAY")
 
-        xp_to_add = season.base_xp_per_stamp + xp_bonus
+        xp_to_add = season.base_xp_per_stamp * stamp_count + xp_bonus
         previous_level = progress.current_level
         progress.current_xp += xp_to_add
-        progress.total_stamps += 1
+        progress.total_stamps += stamp_count
         progress.last_stamp_date = today
 
         achieved_levels = self._eligible_levels(db, season.id, progress.current_xp)
@@ -228,7 +232,7 @@ class SeasonPassService:
             season_id=season.id,
             progress_id=progress.id,
             date=today,
-            stamp_count=1,
+            stamp_count=stamp_count,
             source_feature_type=source_feature_type,
             xp_earned=xp_to_add,
         )
@@ -239,12 +243,98 @@ class SeasonPassService:
 
         leveled_up = progress.current_level > previous_level
         return {
-            "added_stamp": 1,
+            "added_stamp": stamp_count,
             "xp_added": xp_to_add,
             "current_level": progress.current_level,
             "leveled_up": leveled_up,
             "rewards": rewards,
         }
+
+    def maybe_add_stamp(
+        self,
+        db: Session,
+        user_id: int,
+        source_feature_type: str,
+        xp_bonus: int = 0,
+        now: date | datetime | None = None,
+        stamp_count: int = 1,
+    ) -> dict | None:
+        """Best-effort stamp: ignore no-season or already-stamped-today errors."""
+
+        try:
+            return self.add_stamp(
+                db,
+                user_id=user_id,
+                source_feature_type=source_feature_type,
+                xp_bonus=xp_bonus,
+                now=now,
+                stamp_count=stamp_count,
+            )
+        except HTTPException as exc:
+            if exc.detail in {"ALREADY_STAMPED_TODAY", "NO_ACTIVE_SEASON"}:
+                return None
+            raise
+
+    def maybe_add_internal_win_stamp(
+        self,
+        db: Session,
+        user_id: int,
+        threshold: int = 50,
+        now: date | datetime | None = None,
+    ) -> dict | None:
+        """Award one stamp when total internal 게임 승리 횟수 >= threshold (once per season)."""
+
+        from sqlalchemy import func
+        from app.models.dice import DiceLog
+        from app.models.roulette import RouletteLog
+        from app.models.lottery import LotteryLog
+
+        today = (now or date.today())
+        if isinstance(today, datetime):
+            today = today.date()
+
+        try:
+            season = self.get_current_season(db, today)
+        except HTTPException as exc:
+            if exc.detail == "NO_ACTIVE_SEASON":
+                return None
+            raise
+
+        already = db.execute(
+            select(SeasonPassStampLog).where(
+                SeasonPassStampLog.user_id == user_id,
+                SeasonPassStampLog.season_id == season.id,
+                SeasonPassStampLog.source_feature_type == "INTERNAL_WIN_50",
+            )
+        ).scalar_one_or_none()
+        if already:
+            return None
+
+        dice_wins = db.execute(
+            select(func.count()).select_from(DiceLog).where(DiceLog.user_id == user_id, DiceLog.result == "WIN")
+        ).scalar_one()
+        roulette_wins = db.execute(
+            select(func.count()).select_from(RouletteLog).where(
+                RouletteLog.user_id == user_id, RouletteLog.reward_amount > 0
+            )
+        ).scalar_one()
+        lottery_wins = db.execute(
+            select(func.count()).select_from(LotteryLog).where(
+                LotteryLog.user_id == user_id, LotteryLog.reward_amount > 0
+            )
+        ).scalar_one()
+        total_wins = dice_wins + roulette_wins + lottery_wins
+        if total_wins < threshold:
+            return None
+
+        return self.maybe_add_stamp(
+            db,
+            user_id=user_id,
+            source_feature_type="INTERNAL_WIN_50",
+            xp_bonus=0,
+            now=today,
+            stamp_count=1,
+        )
 
     def claim_reward(self, db: Session, user_id: int, level: int, now: date | datetime | None = None) -> dict:
         """Manually claim a non-auto reward for a reached level."""

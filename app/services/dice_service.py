@@ -14,6 +14,7 @@ from app.services.feature_service import FeatureService
 from app.services.game_common import GamePlayContext, apply_season_pass_stamp, log_game_play
 from app.services.game_wallet_service import GameWalletService
 from app.services.reward_service import RewardService
+from app.services.season_pass_service import SeasonPassService
 
 
 class DiceService:
@@ -23,6 +24,7 @@ class DiceService:
         self.feature_service = FeatureService()
         self.reward_service = RewardService()
         self.wallet_service = GameWalletService()
+        self.season_pass_service = SeasonPassService()
 
     def _get_today_config(self, db: Session) -> DiceConfig:
         config = db.execute(select(DiceConfig).where(DiceConfig.is_active.is_(True))).scalar_one_or_none()
@@ -127,6 +129,8 @@ class DiceService:
             reward_amount=reward_amount,
             meta={"reason": "dice_play", "outcome": outcome},
         )
+        if outcome == "WIN":
+            self.season_pass_service.maybe_add_internal_win_stamp(db, user_id=user_id, now=today)
         season_pass = apply_season_pass_stamp(ctx, db)
 
         return DicePlayResponse(
