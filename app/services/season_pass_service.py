@@ -171,16 +171,6 @@ class SeasonPassService:
 
         progress = self.get_or_create_progress(db, user_id=user_id, season_id=season.id)
 
-        existing_stamp = db.execute(
-            select(SeasonPassStampLog).where(
-                SeasonPassStampLog.user_id == user_id,
-                SeasonPassStampLog.season_id == season.id,
-                SeasonPassStampLog.date == today,
-            )
-        ).scalar_one_or_none()
-        if existing_stamp:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="ALREADY_STAMPED_TODAY")
-
         xp_to_add = season.base_xp_per_stamp * stamp_count + xp_bonus
         previous_level = progress.current_level
         progress.current_xp += xp_to_add
@@ -227,16 +217,30 @@ class SeasonPassService:
         if achieved_levels:
             progress.current_level = max(progress.current_level, max(level.level for level in achieved_levels))
 
-        stamp_log = SeasonPassStampLog(
-            user_id=user_id,
-            season_id=season.id,
-            progress_id=progress.id,
-            date=today,
-            stamp_count=stamp_count,
-            source_feature_type=source_feature_type,
-            xp_earned=xp_to_add,
-        )
-        db.add(stamp_log)
+        existing_stamp = db.execute(
+            select(SeasonPassStampLog).where(
+                SeasonPassStampLog.user_id == user_id,
+                SeasonPassStampLog.season_id == season.id,
+                SeasonPassStampLog.date == today,
+            )
+        ).scalar_one_or_none()
+
+        if existing_stamp:
+            existing_stamp.stamp_count += stamp_count
+            existing_stamp.xp_earned += xp_to_add
+            existing_stamp.source_feature_type = source_feature_type
+            stamp_log = existing_stamp
+        else:
+            stamp_log = SeasonPassStampLog(
+                user_id=user_id,
+                season_id=season.id,
+                progress_id=progress.id,
+                date=today,
+                stamp_count=stamp_count,
+                source_feature_type=source_feature_type,
+                xp_earned=xp_to_add,
+            )
+            db.add(stamp_log)
 
         db.commit()
         db.refresh(progress)
