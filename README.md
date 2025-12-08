@@ -47,3 +47,42 @@
 - 프런트 ENV: `VITE_TEST_MODE=true`, `VITE_ENABLE_DEMO_FALLBACK=false`.
 - 테스트 계정: `user_id=999`, `external_id="test-qa-999"`.
 - /login 페이지에서 "테스트 계정으로 자동 로그인" 버튼 지원, TEST_MODE일 때만 노출/자동 시도.
+## 로컬 동기화 확인 시나리오
+시나리오 A: 로그인 동기화 확인
+- Step 1: 프론트에서 테스트 계정으로 로그인.
+- Step 2: DB에서 user 테이블 로그인 필드 확인
+```sql
+SELECT id, external_id, last_login_at, last_login_ip
+FROM public.user
+WHERE id = 999;
+```
+- Step 3: user_event_log에 AUTH 이벤트 생성 여부 확인
+```sql
+SELECT *
+FROM user_event_log
+WHERE user_id = 999 AND feature_type = 'AUTH' AND event_name = 'AUTH_LOGIN'
+ORDER BY created_at DESC
+LIMIT 5;
+```
+
+시나리오 B: 게임 플레이 동기화 확인
+- Step 1: 프론트에서 /roulette에서 1회 플레이.
+- Step 2: DB에서 가장 최근 룰렛 로그 조회
+```sql
+SELECT user_id, result, reward_type, reward_amount, created_at
+FROM roulette_log
+WHERE user_id = 999
+ORDER BY created_at DESC
+LIMIT 1;
+```
+- Step 3: 화면에 보였던 reward_type, reward_amount와 일치하는지 확인.
+
+시나리오 C: 시즌패스 연동 확인
+- Step 1: 시즌패스 도장 찍기(또는 임시 API) 수행.
+- Step 2: 시즌패스 관련 테이블 조회
+```sql
+SELECT * FROM season_pass_progress WHERE user_id = 999;
+SELECT * FROM season_pass_stamp_log WHERE user_id = 999 ORDER BY created_at DESC LIMIT 3;
+SELECT * FROM season_pass_reward_log WHERE user_id = 999 ORDER BY created_at DESC LIMIT 3;
+```
+- Step 3: 프론트 시즌패스 화면의 레벨/XP/보상 수령 여부와 DB 값이 일치하는지 비교.

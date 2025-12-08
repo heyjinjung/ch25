@@ -14,17 +14,18 @@ import RequireAuth from "../components/routing/RequireAuth";
 const UserRoutes: React.FC = () => {
   return (
     <Routes>
+      <Route path="/login" element={<LoginPage />} />
       <Route element={<UserLayout />}>
         <Route element={<RequireAuth />}>
-          <Route path="/" element={<HomePage />} />
+          <Route path="/home" element={<HomePage />} />
           <Route path="/roulette" element={<RoulettePage />} />
           <Route path="/dice" element={<DicePage />} />
           <Route path="/lottery" element={<LotteryPage />} />
           <Route path="/ranking" element={<RankingPage />} />
           <Route path="/season-pass" element={<SeasonPassPage />} />
+          <Route path="/" element={<Navigate to="/home" replace />} />
         </Route>
       </Route>
-      <Route path="/login" element={<LoginPage />} />
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );

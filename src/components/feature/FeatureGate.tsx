@@ -1,64 +1,37 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { useTodayFeature } from "../../hooks/useTodayFeature";
-import { FeatureType, FEATURE_LABELS, normalizeFeature, NO_FEATURE_MESSAGE } from "../../types/features";
-import { isDemoFallbackEnabled, isFeatureGateActive, isTestModeEnabled } from "../../config/featureFlags";
+import { FEATURE_LABELS, FeatureType, normalizeFeature } from "../../types/features";
 
 interface FeatureGateProps {
   readonly feature: FeatureType;
   readonly children: React.ReactNode;
 }
 
+// Temporarily disable gating: always render children, surface only a small banner for today-feature fetch status.
 const FeatureGate: React.FC<FeatureGateProps> = ({ feature, children }) => {
-  const { data, isLoading, isError, refetch } = useTodayFeature();
+  const { data, isError } = useTodayFeature();
 
-  if (!isFeatureGateActive || isDemoFallbackEnabled || isTestModeEnabled) {
-    return <>{children}</>;
-  }
+  const infoBanner = useMemo(() => {
+    if (isError) {
+      return "오늘 이벤트 정보 로드 실패 (진행은 계속 가능합니다).";
+    }
+    const activeFeature = normalizeFeature(data?.feature_type);
+    if (activeFeature && activeFeature !== feature) {
+      return `오늘의 이벤트는 ${FEATURE_LABELS[activeFeature] ?? activeFeature}지만, 테스트용으로 계속 진행합니다.`;
+    }
+    return null;
+  }, [data?.feature_type, feature, isError]);
 
-  if (isLoading) {
-    return (
-      <section className="rounded-xl border border-emerald-800/40 bg-slate-900/60 p-6 text-center shadow-lg shadow-emerald-900/30">
-        <p className="text-lg font-semibold text-emerald-200">오늘 이용 가능한 이벤트를 확인하는 중입니다…</p>
-      </section>
-    );
-  }
-
-  if (isError || !data) {
-    return (
-      <section className="space-y-4 rounded-xl border border-red-800/40 bg-red-950/60 p-6 text-center text-red-100 shadow-lg shadow-red-900/30">
-        <p className="text-lg font-semibold">이벤트 정보를 불러오지 못했습니다.</p>
-        <button
-          type="button"
-          className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500"
-          onClick={() => refetch()}
-        >
-          다시 시도
-        </button>
-      </section>
-    );
-  }
-
-  const todayFeature = normalizeFeature(data.feature_type);
-
-  // todayFeature가 null이면 오늘 이벤트 없음 (스케줄 row 없음)
-  if (todayFeature === null) {
-    return (
-      <section className="rounded-xl border border-red-800/40 bg-red-950/60 p-6 text-center text-red-100 shadow-lg shadow-red-900/30">
-        <p className="text-lg font-semibold">{NO_FEATURE_MESSAGE}</p>
-      </section>
-    );
-  }
-
-  if (todayFeature !== feature) {
-    return (
-      <section className="rounded-xl border border-amber-800/40 bg-amber-950/60 p-6 text-center text-amber-100 shadow-lg shadow-amber-900/30">
-        <p className="text-lg font-semibold">오늘은 {FEATURE_LABELS[todayFeature]}만 참여할 수 있습니다.</p>
-        <p className="text-sm text-amber-200">관리자 설정된 이벤트와 일치하는 링크로 접속해 주세요.</p>
-      </section>
-    );
-  }
-
-  return <>{children}</>;
+  return (
+    <>
+      {infoBanner && (
+        <div className="mb-4 rounded-lg border border-amber-600/40 bg-amber-900/30 px-4 py-2 text-sm text-amber-100">
+          {infoBanner}
+        </div>
+      )}
+      {children}
+    </>
+  );
 };
 
 export default FeatureGate;
