@@ -132,7 +132,7 @@ def list_recent_play_logs(limit: int = 50, db: Session = Depends(get_db)):
             elif game == "LOTTERY":
                 label = row.label
             elif game == "DICE":
-                label = f"{row.name} - {row.result}" if getattr(row, \"name\", None) else f\"{row.result}\"
+                label = f"{row.name} - {row.result}" if getattr(row, "name", None) else f"{row.result}"
             entries.append(
                 PlayLogEntry(
                     id=row.id,

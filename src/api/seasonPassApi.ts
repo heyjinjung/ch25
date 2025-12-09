@@ -17,6 +17,7 @@ export interface SeasonPassStatusResponse {
   readonly current_xp: number;
   readonly next_level_xp: number;
   readonly max_level: number;
+  readonly base_xp_per_stamp?: number;
   readonly levels: SeasonPassLevelDto[];
   readonly today?: { stamped: boolean };
 }
@@ -51,6 +52,7 @@ export const getSeasonPassStatus = async (): Promise<SeasonPassStatusResponse> =
       current_xp: currentXp,
       next_level_xp: nextLevelXp,
       max_level: raw?.season?.max_level ?? (levels.length > 0 ? Math.max(...levels.map((l) => l.level)) : 0),
+      base_xp_per_stamp: raw?.season?.base_xp_per_stamp,
       levels,
       today: raw?.today,
     };
