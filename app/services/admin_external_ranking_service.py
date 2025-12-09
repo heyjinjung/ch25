@@ -83,51 +83,84 @@ class AdminExternalRankingService:
             db.refresh(row)
 
         # Season pass hooks with period keys (daily/weekly)
-        # Daily deltas
-        for row in results:
-            delta_deposit_today = max(row.deposit_amount - row.daily_base_deposit, 0)
-            delta_play_today = max(row.play_count - row.daily_base_play, 0)
-
-            deposit_steps = delta_deposit_today // 100000
-            if deposit_steps > 0:
-                season_pass.maybe_add_stamp(
-                    db,
-                    user_id=row.user_id,
-                    source_feature_type="EXTERNAL_DEPOSIT_100K",
-                    stamp_count=deposit_steps,
-                    now=today,
-                    period_key=f"DEPOSIT_{today_key}",
+        current_season = season_pass.get_current_season(db, today)
+        if current_season:
+            season_id = current_season.id
+            # Daily: deposit and site play
+            for row in results:
+                deposit_steps_total = row.deposit_amount // 100_000
+                existing_deposit = (
+                    db.query(func.coalesce(func.sum(SeasonPassStampLog.stamp_count), 0))
+                    .filter(
+                        SeasonPassStampLog.user_id == row.user_id,
+                        SeasonPassStampLog.season_id == season_id,
+                        SeasonPassStampLog.source_feature_type == "EXTERNAL_DEPOSIT_100K",
+                        SeasonPassStampLog.period_key == f"DEPOSIT_{today_key}",
+                    )
+                    .scalar()
                 )
-            # 첫 이용: 오늘 증가가 1 이상이면 지급
-            if delta_play_today > 0:
-                season_pass.maybe_add_stamp(
-                    db,
-                    user_id=row.user_id,
-                    source_feature_type="EXTERNAL_SITE_PLAY",
-                    now=today,
-                    period_key=f"SITE_{today_key}",
-                )
+                to_give = max(deposit_steps_total - (existing_deposit or 0), 0)
+                if to_give > 0:
+                    season_pass.maybe_add_stamp(
+                        db,
+                        user_id=row.user_id,
+                        source_feature_type="EXTERNAL_DEPOSIT_100K",
+                        stamp_count=to_give,
+                        now=today,
+                        period_key=f"DEPOSIT_{today_key}",
+                    )
 
-        # 주간 TOP10 (ISO 주차)
-        top10 = (
-            db.execute(
-                select(ExternalRankingData)
-                .order_by(ExternalRankingData.deposit_amount.desc(), ExternalRankingData.play_count.desc())
-                .limit(10)
+                if row.play_count > 0:
+                    existing_site = (
+                        db.query(SeasonPassStampLog)
+                        .filter(
+                            SeasonPassStampLog.user_id == row.user_id,
+                            SeasonPassStampLog.season_id == season_id,
+                            SeasonPassStampLog.source_feature_type == "EXTERNAL_SITE_PLAY",
+                            SeasonPassStampLog.period_key == f"SITE_{today_key}",
+                        )
+                        .one_or_none()
+                    )
+                    if not existing_site:
+                        season_pass.maybe_add_stamp(
+                            db,
+                            user_id=row.user_id,
+                            source_feature_type="EXTERNAL_SITE_PLAY",
+                            now=today,
+                            period_key=f"SITE_{today_key}",
+                        )
+
+            # Weekly TOP10
+            top10 = (
+                db.execute(
+                    select(ExternalRankingData)
+                    .order_by(ExternalRankingData.deposit_amount.desc(), ExternalRankingData.play_count.desc())
+                    .limit(10)
+                )
+                .scalars()
+                .all()
             )
-            .scalars()
-            .all()
-        )
-        iso_year, iso_week, _ = today.isocalendar()
-        week_key = f"W{iso_year}-{iso_week:02d}"
-        for entry in top10:
-            season_pass.maybe_add_stamp(
-                db,
-                user_id=entry.user_id,
-                source_feature_type="EXTERNAL_RANKING_TOP10",
-                now=today,
-                period_key=f"TOP10_{week_key}",
-            )
+            iso_year, iso_week, _ = today.isocalendar()
+            week_key = f"W{iso_year}-{iso_week:02d}"
+            for entry in top10:
+                existing_top = (
+                    db.query(SeasonPassStampLog)
+                    .filter(
+                        SeasonPassStampLog.user_id == entry.user_id,
+                        SeasonPassStampLog.season_id == season_id,
+                        SeasonPassStampLog.source_feature_type == "EXTERNAL_RANKING_TOP10",
+                        SeasonPassStampLog.period_key == f"TOP10_{week_key}",
+                    )
+                    .one_or_none()
+                )
+                if not existing_top:
+                    season_pass.maybe_add_stamp(
+                        db,
+                        user_id=entry.user_id,
+                        source_feature_type="EXTERNAL_RANKING_TOP10",
+                        now=today,
+                        period_key=f"TOP10_{week_key}",
+                    )
         return results
 
     @staticmethod
