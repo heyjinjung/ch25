@@ -98,6 +98,8 @@ class SeasonPassStampLog(Base):
     stamp_count = Column(Integer, nullable=False, default=1)
     source_feature_type = Column(String(30), nullable=False)
     xp_earned = Column(Integer, nullable=False)
+    reward_type = Column(String(50), nullable=False, default="XP")
+    reward_amount = Column(Integer, nullable=False, default=0)
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
 
     season = relationship("SeasonPassConfig", back_populates="stamp_logs")

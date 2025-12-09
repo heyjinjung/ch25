@@ -38,22 +38,22 @@ const SeasonPassPage: React.FC = () => {
 
   const cards = [
     {
-      title: "외부 랭킹 TOP10",
+      title: "CC랭킹 TOP10",
       desc: "순위가 10위 안에 들면 스탬프 1개",
       status: external?.rank ? `현재 ${external.rank}위${top10Needed > 0 ? `, ${top10Needed}위 상승 필요` : " (완료)"}` : "랭킹 데이터 없음",
     },
     {
-      title: "외부 사이트 첫 이용",
+      title: "CC사이트 일일이용",
       desc: "플레이 수 0→1이 되면 스탬프 1개",
       status: playDone ? "완료" : "미완료",
     },
     {
-      title: "외부 입금 10만원마다",
+      title: "CC 입금 10만원마다",
       desc: "10만원 달성할 때마다 스탬프 1개",
       status: `누적 ${formatCurrency(deposit)}원 / 다음까지 ${depositRemainder === 100_000 ? "0" : formatCurrency(depositRemainder)}원`,
     },
     {
-      title: "내부 게임 승리 50회",
+      title: "크리스마스게임 승리 50회",
       desc: "승리 누적 50회 달성 시 스탬프 1개",
       status: internalWins.data
         ? `누적 승리 ${internalWins.data.total_wins}회 / 남은 ${internalWins.data.remaining}회`

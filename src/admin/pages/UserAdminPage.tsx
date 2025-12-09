@@ -104,7 +104,7 @@ const UserAdminPage: React.FC = () => {
         <table className="min-w-full divide-y divide-slate-800 bg-slate-900 text-sm text-slate-100">
           <thead className="bg-slate-800/60">
             <tr>
-              <th className="px-3 py-2 text-left">External ID</th>
+              <th className="px-3 py-2 text-left">ID</th>
               <th className="px-3 py-2 text-left">닉네임</th>
               <th className="px-3 py-2 text-left">레벨</th>
               <th className="px-3 py-2 text-left">상태</th>

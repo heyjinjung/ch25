@@ -9,7 +9,7 @@ import { grantGameTokens } from "../api/adminGameTokenApi";
 import { GAME_TOKEN_LABELS, GameTokenType } from "../../types/gameTokens";
 
 const grantSchema = z.object({
-  external_id: z.string().min(1, "external_id를 입력하세요"),
+  external_id: z.string().min(1, "id를 입력하세요"),
   token_type: z.enum(["ROULETTE_COIN", "DICE_TOKEN", "LOTTERY_TICKET"]),
   amount: z.number().int().positive("1 이상 입력"),
 });
@@ -33,7 +33,7 @@ const GameTokenGrantPage: React.FC = () => {
       <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-100">티켓 지급</h1>
-          <p className="text-sm text-slate-300">external_id 기준으로 지급합니다.</p>
+          <p className="text-sm text-slate-300">id 기준으로 지급합니다.</p>
         </div>
         <Button variant="secondary" type="button" onClick={() => form.reset({ external_id: "", token_type: "ROULETTE_COIN", amount: 10 })}>
           초기화

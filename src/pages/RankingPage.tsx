@@ -38,8 +38,8 @@ const RankingPage: React.FC = () => {
     return (
       <section className="space-y-8 rounded-3xl border border-gold-600/30 bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 p-8 shadow-2xl">
         <header className="text-center">
-          <p className="text-sm uppercase tracking-[0.3em] text-gold-400">오늘의 외부 랭킹</p>
-          <h1 className="mt-2 text-3xl font-bold text-white">{data.date} 외부 데이터</h1>
+          <p className="text-sm uppercase tracking-[0.3em] text-gold-400">오늘의 CC랭킹</p>
+          <h1 className="mt-2 text-3xl font-bold text-white">{data.date} CC 데이터</h1>
           <p className="mt-2 text-sm text-slate-400">입금액 / 게임횟수 기준으로 정렬됩니다.</p>
         </header>
 
@@ -62,12 +62,12 @@ const RankingPage: React.FC = () => {
 
         <div className="space-y-3">
           <h3 className="text-center text-sm font-semibold uppercase tracking-wider text-gold-400">
-            외부 랭킹 리스트
+            CC랭킹 리스트
           </h3>
 
           {externalEntries.length === 0 ? (
             <div className="rounded-2xl border border-slate-700/50 bg-slate-800/40 p-8 text-center text-slate-300">
-              아직 외부 랭킹 데이터가 없습니다.
+              아직 CC랭킹 데이터가 없습니다.
             </div>
           ) : (
             <div className="space-y-2">

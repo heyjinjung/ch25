@@ -73,9 +73,9 @@ const HomePage: React.FC = () => {
   const playDone = (external?.play_count ?? 0) > 0;
 
   const stampTips = [
-    { title: "외부 랭킹 TOP10", status: external?.rank ? `현재 ${external.rank}위${top10Needed > 0 ? `, ${top10Needed}위 상승 필요` : " (완료)"}` : "랭킹 데이터 없음" },
-    { title: "외부 사이트 첫 이용", status: playDone ? "완료" : "미완료" },
-    { title: "외부 입금 10만원마다", status: `누적 ${deposit.toLocaleString()}원 / 다음까지 ${depositRemainder === 100_000 ? 0 : depositRemainder.toLocaleString()}원` },
+    { title: "CC랭킹 TOP10", status: external?.rank ? `현재 ${external.rank}위${top10Needed > 0 ? `, ${top10Needed}위 상승 필요` : " (완료)"}` : "랭킹 데이터 없음" },
+    { title: "CC사이트 일일이용", status: playDone ? "완료" : "미완료" },
+    { title: "CC 입금 10만원마다", status: `누적 ${deposit.toLocaleString()}원 / 다음까지 ${depositRemainder === 100_000 ? 0 : depositRemainder.toLocaleString()}원` },
     {
       title: "내부 게임 승리 50회",
       status: internalWins.data
@@ -126,9 +126,9 @@ const HomePage: React.FC = () => {
         <div className="absolute right-6 -bottom-6 h-28 w-28 rounded-full bg-amber-400/20 blur-3xl" />
         <div className="relative flex flex-col gap-2 text-left">
           <p className="text-xs uppercase tracking-[0.35em] text-emerald-200">🎄 Christmas Week</p>
-          <h1 className="text-3xl font-bold text-white">따뜻한 크리스마스 보상 허브</h1>
+          <h1 className="text-3xl font-bold text-white">따뜻한 크리스마스 보상</h1>
           <p className="text-sm text-emerald-100">
-            매일 티켓을 모아 게임하고, 시즌패스 보상을 챙기세요. 눈꽃과 선물 상자가 곳곳에 숨겨져 있어요!
+            매일 티켓을 모아 게임하고, 시즌패스 보상을 챙기세요
           </p>
         </div>
       </div>
@@ -173,7 +173,7 @@ const HomePage: React.FC = () => {
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.25em] text-amber-300">Ranking</p>
-            <h2 className="text-2xl font-bold text-white">외부 랭킹</h2>
+            <h2 className="text-2xl font-bold text-white">CC랭킹</h2>
             <p className="text-sm text-slate-300">입금액/플레이 수 기준. TOP10 진입 시 스탬프 1개.</p>
           </div>
           {external?.rank && (

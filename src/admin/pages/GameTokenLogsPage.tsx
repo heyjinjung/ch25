@@ -42,14 +42,14 @@ const GameTokenLogsPage: React.FC = () => {
     <section className="space-y-6 rounded-xl border border-emerald-800/40 bg-slate-900/70 p-6 shadow-lg shadow-emerald-900/30">
       <header className="space-y-1">
         <h1 className="text-2xl font-bold text-slate-100">티켓 로그 / 회수</h1>
-        <p className="text-sm text-slate-300">external_id로 조회/회수합니다.</p>
+        <p className="text-sm text-slate-300">id로 조회/회수합니다.</p>
       </header>
 
       <div className="space-y-3 rounded-lg border border-slate-800/60 bg-slate-900/60 p-4">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div className="space-y-1">
             <p className="text-lg font-semibold text-white">티켓 잔액</p>
-            <p className="text-xs text-slate-400">external_id 필터 없으면 전체 목록</p>
+            <p className="text-xs text-slate-400">id 필터 없으면 전체 목록</p>
           </div>
           <div className="flex items-center gap-2">
             <input
@@ -73,7 +73,7 @@ const GameTokenLogsPage: React.FC = () => {
           <table className="min-w-full text-left text-sm text-slate-200">
             <thead className="border-b border-slate-800 text-xs uppercase text-slate-400">
               <tr>
-                <th className="px-2 py-2">external_id</th>
+                <th className="px-2 py-2">id</th>
                 <th className="px-2 py-2">토큰</th>
                 <th className="px-2 py-2">잔액</th>
               </tr>
@@ -114,7 +114,7 @@ const GameTokenLogsPage: React.FC = () => {
             <thead className="border-b border-slate-800 text-xs uppercase text-slate-400">
               <tr>
                 <th className="px-2 py-2">game</th>
-                <th className="px-2 py-2">external_id</th>
+                <th className="px-2 py-2">id</th>
                 <th className="px-2 py-2">reward</th>
                 <th className="px-2 py-2">시각</th>
               </tr>
