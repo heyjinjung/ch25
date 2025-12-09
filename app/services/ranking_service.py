@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.external_ranking import ExternalRankingData
+from app.models.user import User
 from app.models.feature import FeatureType
 from app.schemas.ranking import ExternalRankingEntry, RankingTodayResponse
 from app.services.feature_service import FeatureService
@@ -20,24 +21,23 @@ class RankingService:
         today = now.date() if isinstance(now, datetime) else now
         self.feature_service.validate_feature_active(db, today, FeatureType.RANKING)
 
-        external_rows = (
-            db.execute(
-                select(ExternalRankingData).order_by(
-                    ExternalRankingData.deposit_amount.desc(),
-                    ExternalRankingData.play_count.desc(),
-                    ExternalRankingData.user_id.asc(),
-                )
+        external_rows = db.execute(
+            select(ExternalRankingData, User.nickname, User.external_id)
+            .join(User, User.id == ExternalRankingData.user_id, isouter=True)
+            .order_by(
+                ExternalRankingData.deposit_amount.desc(),
+                ExternalRankingData.play_count.desc(),
+                ExternalRankingData.user_id.asc(),
             )
-            .scalars()
-            .all()
-        )
+        ).all()
         external_entries = [
             ExternalRankingEntry(
                 rank=idx + 1,
-                user_id=row.user_id,
-                deposit_amount=row.deposit_amount,
-                play_count=row.play_count,
-                memo=row.memo,
+                user_id=row.ExternalRankingData.user_id,
+                user_name=row.nickname or row.external_id or "",
+                deposit_amount=row.ExternalRankingData.deposit_amount,
+                play_count=row.ExternalRankingData.play_count,
+                memo=row.ExternalRankingData.memo,
             )
             for idx, row in enumerate(external_rows)
         ]

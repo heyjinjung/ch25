@@ -304,8 +304,9 @@ class SeasonPassService:
         xp_bonus: int = 0,
         now: date | datetime | None = None,
         stamp_count: int = 1,
+        period_key: str | None = None,
     ) -> dict | None:
-        """Best-effort stamp: ignore no-season or already-stamped-today errors."""
+        """Best-effort stamp: ignore no-season or already-stamped errors."""
 
         try:
             return self.add_stamp(
@@ -315,6 +316,7 @@ class SeasonPassService:
                 xp_bonus=xp_bonus,
                 now=now,
                 stamp_count=stamp_count,
+                period_key=period_key,
             )
         except HTTPException as exc:
             if exc.detail in {"ALREADY_STAMPED_TODAY", "NO_ACTIVE_SEASON"}:
