@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.core.config import get_settings
 from app.core.exceptions import InvalidConfigError, NotEnoughTokensError
 from app.models.game_wallet import GameTokenType, UserGameWallet
+from app.models.game_wallet_ledger import UserGameWalletLedger
 
 
 class GameWalletService:
@@ -20,11 +21,24 @@ class GameWalletService:
             db.refresh(wallet)
         return wallet
 
+    def _log_ledger(self, db: Session, user_id: int, token_type: GameTokenType, delta: int, balance_after: int, reason: str | None = None, label: str | None = None, meta: dict | None = None) -> None:
+        entry = UserGameWalletLedger(
+            user_id=user_id,
+            token_type=token_type,
+            delta=delta,
+            balance_after=balance_after,
+            reason=reason,
+            label=label,
+            meta_json=meta or {},
+        )
+        db.add(entry)
+        db.commit()
+
     def get_balance(self, db: Session, user_id: int, token_type: GameTokenType) -> int:
         wallet = self._get_or_create_wallet(db, user_id, token_type)
         return wallet.balance
 
-    def require_and_consume_token(self, db: Session, user_id: int, token_type: GameTokenType, amount: int = 1) -> int:
+    def require_and_consume_token(self, db: Session, user_id: int, token_type: GameTokenType, amount: int = 1, reason: str | None = None, label: str | None = None, meta: dict | None = None) -> int:
         if amount <= 0:
             raise InvalidConfigError("INVALID_TOKEN_AMOUNT")
 
@@ -45,9 +59,10 @@ class GameWalletService:
         db.add(wallet)
         db.commit()
         db.refresh(wallet)
+        self._log_ledger(db, user_id=user_id, token_type=token_type, delta=-amount, balance_after=wallet.balance, reason=reason or "CONSUME", label=label, meta=meta)
         return wallet.balance
 
-    def grant_tokens(self, db: Session, user_id: int, token_type: GameTokenType, amount: int) -> int:
+    def grant_tokens(self, db: Session, user_id: int, token_type: GameTokenType, amount: int, reason: str | None = None, label: str | None = None, meta: dict | None = None) -> int:
         if amount <= 0:
             raise InvalidConfigError("INVALID_TOKEN_AMOUNT")
         wallet = self._get_or_create_wallet(db, user_id, token_type)
@@ -55,9 +70,10 @@ class GameWalletService:
         db.add(wallet)
         db.commit()
         db.refresh(wallet)
+        self._log_ledger(db, user_id=user_id, token_type=token_type, delta=amount, balance_after=wallet.balance, reason=reason or "GRANT", label=label, meta=meta)
         return wallet.balance
 
-    def revoke_tokens(self, db: Session, user_id: int, token_type: GameTokenType, amount: int) -> int:
+    def revoke_tokens(self, db: Session, user_id: int, token_type: GameTokenType, amount: int, reason: str | None = None, label: str | None = None, meta: dict | None = None) -> int:
         """Admin-only token revocation; prevents negative balance."""
         if amount <= 0:
             raise InvalidConfigError("INVALID_TOKEN_AMOUNT")
@@ -68,4 +84,5 @@ class GameWalletService:
         db.add(wallet)
         db.commit()
         db.refresh(wallet)
+        self._log_ledger(db, user_id=user_id, token_type=token_type, delta=-amount, balance_after=wallet.balance, reason=reason or "REVOKE", label=label, meta=meta)
         return wallet.balance

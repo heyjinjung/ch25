@@ -13,6 +13,7 @@ from app.models.season_pass import (
     SeasonPassRewardLog,
     SeasonPassStampLog,
 )
+from app.models.game_wallet_ledger import UserGameWalletLedger
 from app.models.user import User
 
 __all__ = [
@@ -39,4 +40,5 @@ __all__ = [
     "RankingDaily",
     "UserGameWallet",
     "GameTokenType",
+    "UserGameWalletLedger",
 ]

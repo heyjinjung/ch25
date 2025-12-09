@@ -13,7 +13,7 @@ from app.models.game_wallet import GameTokenType
 from app.models.lottery import LotteryConfig, LotteryLog, LotteryPrize
 from app.schemas.lottery import LotteryPlayResponse, LotteryPrizeSchema, LotteryStatusResponse
 from app.services.feature_service import FeatureService
-from app.services.game_common import GamePlayContext, apply_season_pass_stamp, log_game_play
+from app.services.game_common import GamePlayContext, log_game_play
 from app.services.game_wallet_service import GameWalletService
 from app.services.reward_service import RewardService
 from app.services.season_pass_service import SeasonPassService
@@ -86,7 +86,15 @@ class LotteryService:
         self.feature_service.validate_feature_active(db, today, FeatureType.LOTTERY)
         config = self._get_today_config(db)
         token_type = GameTokenType.LOTTERY_TICKET
-        self.wallet_service.require_and_consume_token(db, user_id, token_type, amount=1)
+        self.wallet_service.require_and_consume_token(
+            db,
+            user_id,
+            token_type,
+            amount=1,
+            reason="LOTTERY_PLAY",
+            label=chosen.label,
+            meta={"prize_id": chosen.id},
+        )
         prizes = None
         for attempt in range(3):
             try:
@@ -147,8 +155,7 @@ class LotteryService:
         )
         if chosen.reward_amount > 0:
             self.season_pass_service.maybe_add_internal_win_stamp(db, user_id=user_id, now=today)
-        # 게임 설정 포인트를 시즌패스 XP 보너스로 반영
-        season_pass = apply_season_pass_stamp(ctx, db, xp_bonus=chosen.reward_amount)
+        season_pass = None  # 게임 1회당 자동 스탬프 발급 제거
 
         return LotteryPlayResponse(
             result="OK",

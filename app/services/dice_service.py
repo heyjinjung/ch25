@@ -11,7 +11,7 @@ from app.models.feature import FeatureType
 from app.models.game_wallet import GameTokenType
 from app.schemas.dice import DicePlayResponse, DiceResult, DiceStatusResponse
 from app.services.feature_service import FeatureService
-from app.services.game_common import GamePlayContext, apply_season_pass_stamp, log_game_play
+from app.services.game_common import GamePlayContext, log_game_play
 from app.services.game_wallet_service import GameWalletService
 from app.services.reward_service import RewardService
 from app.services.season_pass_service import SeasonPassService
@@ -70,7 +70,15 @@ class DiceService:
         self.feature_service.validate_feature_active(db, today, FeatureType.DICE)
         config = self._get_today_config(db)
         token_type = GameTokenType.DICE_TOKEN
-        self.wallet_service.require_and_consume_token(db, user_id, token_type, amount=1)
+        self.wallet_service.require_and_consume_token(
+            db,
+            user_id,
+            token_type,
+            amount=1,
+            reason="DICE_PLAY",
+            label=f"{config.name} - {outcome}",
+            meta={"result": outcome},
+        )
 
         today_plays = db.execute(
             select(func.count()).select_from(DiceLog).where(
@@ -123,7 +131,12 @@ class DiceService:
         log_game_play(
             ctx,
             db,
-            {"result": outcome, "reward_type": reward_type, "reward_amount": reward_amount},
+            {
+                "result": outcome,
+                "reward_type": reward_type,
+                "reward_amount": reward_amount,
+                "reward_label": f"{config.name} - {outcome}",
+            },
         )
 
         self.reward_service.deliver(
@@ -136,7 +149,7 @@ class DiceService:
         if outcome == "WIN":
             self.season_pass_service.maybe_add_internal_win_stamp(db, user_id=user_id, now=today)
         # 게임 설정 포인트를 시즌패스 XP 보너스로 반영
-        season_pass = apply_season_pass_stamp(ctx, db, xp_bonus=reward_amount)
+        season_pass = None  # 게임 1회당 자동 스탬프 발급을 중단하고, 조건 달성 시 별도 로직으로 처리
 
         return DicePlayResponse(
             result="OK",

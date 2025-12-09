@@ -40,6 +40,20 @@ export interface PlayLogEntry {
   game: string;
   reward_type: string;
   reward_amount: number;
+  reward_label?: string | null;
+  created_at: string;
+}
+
+export interface LedgerEntry {
+  id: number;
+  user_id: number;
+  external_id?: string;
+  token_type: GameTokenType;
+  delta: number;
+  balance_after: number;
+  reason?: string | null;
+  label?: string | null;
+  meta_json?: Record<string, unknown> | null;
   created_at: string;
 }
 
@@ -56,5 +70,12 @@ export async function revokeGameTokens(payload: RevokeGameTokensPayload) {
 
 export async function fetchRecentPlayLogs(limit: number = 50) {
   const { data } = await adminApi.get<PlayLogEntry[]>("/game-tokens/play-logs", { params: { limit } });
+  return data;
+}
+
+export async function fetchLedger(limit: number = 100, externalId?: string) {
+  const params: Record<string, any> = { limit };
+  if (externalId) params.external_id = externalId;
+  const { data } = await adminApi.get<LedgerEntry[]>("/game-tokens/ledger", { params });
   return data;
 }

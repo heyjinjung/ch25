@@ -40,3 +40,17 @@ class PlayLogEntry(BaseModel):
     reward_type: str
     reward_amount: int
     created_at: str
+    reward_label: str | None = None
+
+
+class LedgerEntry(BaseModel):
+    id: int
+    user_id: int
+    external_id: str | None = None
+    token_type: GameTokenType
+    delta: int
+    balance_after: int
+    reason: str | None = None
+    label: str | None = None
+    meta_json: dict | None = None
+    created_at: str

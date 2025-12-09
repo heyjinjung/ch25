@@ -8,8 +8,6 @@ from sqlalchemy.orm import Session
 from app.core.exceptions import DailyLimitReachedError
 from app.models.feature import UserEventLog
 from app.services.season_pass_service import SeasonPassService
-
-
 @dataclass
 class GamePlayContext:
     """Context container for a single game play action."""
