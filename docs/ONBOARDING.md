@@ -5,7 +5,7 @@
 ## 프로젝트 한눈에 보기
 - Backend: FastAPI + SQLAlchemy + Alembic, MySQL 8(옵션: Redis 7), JWT 발급 `/api/auth/token`(external_id로 자동 생성 가능), `ENV=local` 시 CORS `*`.
 - Frontend: React 18 + TypeScript 5 + Vite 6 + Tailwind, React Query 5, Axios. 관리자 UI는 `/admin`(임시 로그인 `admin/1234`).
-- 주요 도메인: 오늘의 Feature 게이트(`/api/today-feature`), 룰렛/주사위/복권, 시즌패스(XP 스탬프), 외부 랭킹 수동 입력/보상, **게임 토큰 지갑/원장**(ROULETTE_COIN, DICE_TOKEN, LOTTERY_TICKET) 관리자 지급·차감·로그.
+- 주요 도메인: 룰렛/주사위/복권, 시즌패스(XP 스탬프), 외부 랭킹 수동 입력/보상, **게임 토큰 지갑/원장**(ROULETTE_COIN, DICE_TOKEN, LOTTERY_TICKET) 관리자 지급·차감·로그. today-feature 스케줄 게이트는 **폐기(아카이브)** 되었고 기본으로 비활성입니다.
 - 시즌패스 현재 스펙: base_xp_per_stamp=20, 레벨 7단계(곡선/보상은 `season_pass_level`; 기본 시드 `scripts/seed_ranking_seasonpass.sql`). 게임별 XP 계산은 서비스 로직/DB 설정값에 따릅니다.
 
 ## 선행 설치물
@@ -28,9 +28,9 @@
 - 관리자 로그인: ID `admin` / PW `1234` (로컬 스토리지 토큰)
 
 ### 환경 변수 한눈에
-- 현장/실서버: Backend `TEST_MODE=false`, `ENV=production`, 실 DB URL. Frontend `VITE_GATE_TODAY_FEATURE=true`, `VITE_ENABLE_DEMO_FALLBACK=false`, `VITE_ENABLE_DEBUG=false`, `VITE_ENV=production`, API URL을 실 서버로 지정.
+- 현장/실서버: Backend `TEST_MODE=false`, `ENV=production`, 실 DB URL. Frontend `VITE_GATE_TODAY_FEATURE=true`(필요 시), `VITE_ENABLE_DEMO_FALLBACK=false`, `VITE_ENABLE_DEBUG=false`, `VITE_ENV=production`, API URL을 실 서버로 지정.
 - QA/개발: Backend `TEST_MODE=true`(게임 토큰 부족 자동 보충 + 게이트 무시), Frontend `VITE_GATE_TODAY_FEATURE=false`, `VITE_ENABLE_DEMO_FALLBACK=true`.
-- 테스트 모드 출처: `app/core/config.py`의 `test_mode`; 게임 토큰 소모 시 QA 편의로 자동 보충(`GameWalletService.require_and_consume_token`). 프런트 게이트는 `VITE_GATE_TODAY_FEATURE` / `VITE_ENABLE_DEMO_FALLBACK`로 별도 제어.
+- 테스트 모드 출처: `app/core/config.py`의 `test_mode`; 게임 토큰 소모 시 QA 편의로 자동 보충(`GameWalletService.require_and_consume_token`). 프런트 게이트는 `VITE_GATE_TODAY_FEATURE` / `VITE_ENABLE_DEMO_FALLBACK`로 별도 제어. Backend today-feature 게이트는 `FEATURE_GATE_ENABLED` (기본 false)로 다시 켤 수 있습니다.
 
 ## 로컬 실행 (네이티브)
 1) DB 준비(택1)
@@ -60,7 +60,6 @@ npm run dev -- --host --port 5173
 
 4) 빠른 스모크
 ```powershell
-curl http://localhost:8000/api/today-feature
 curl -X POST http://localhost:8000/api/auth/token `
   -H "Content-Type: application/json" `
   -d "{\"external_id\":\"test-qa-999\"}"
