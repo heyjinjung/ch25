@@ -281,6 +281,8 @@ class SeasonPassService:
                 stamp_count=stamp_count,
                 source_feature_type=source_feature_type,
                 xp_earned=xp_to_add,
+                reward_type="XP",
+                reward_amount=xp_to_add,
             )
             db.add(stamp_log)
 

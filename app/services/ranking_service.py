@@ -30,17 +30,21 @@ class RankingService:
                 ExternalRankingData.user_id.asc(),
             )
         ).all()
-        external_entries = [
-            ExternalRankingEntry(
-                rank=idx + 1,
-                user_id=row.ExternalRankingData.user_id,
-                user_name=row.nickname or row.external_id or f"ID {row.ExternalRankingData.user_id}",
-                deposit_amount=row.ExternalRankingData.deposit_amount,
-                play_count=row.ExternalRankingData.play_count,
-                memo=row.ExternalRankingData.memo,
+        external_entries = []
+        for idx, row in enumerate(external_rows):
+            display_name = row.nickname or row.external_id or ""
+            if not display_name:
+                display_name = "닉네임 없음"
+            external_entries.append(
+                ExternalRankingEntry(
+                    rank=idx + 1,
+                    user_id=row.ExternalRankingData.user_id,
+                    user_name=display_name,
+                    deposit_amount=row.ExternalRankingData.deposit_amount,
+                    play_count=row.ExternalRankingData.play_count,
+                    memo=row.ExternalRankingData.memo,
+                )
             )
-            for idx, row in enumerate(external_rows)
-        ]
         my_external_entry = next((entry for entry in external_entries if entry.user_id == user_id), None)
 
         return RankingTodayResponse(

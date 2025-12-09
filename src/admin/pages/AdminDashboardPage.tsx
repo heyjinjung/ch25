@@ -26,7 +26,7 @@ const AdminDashboardPage: React.FC = () => {
           복권 설정
         </Link>
         <Link to="/admin/external-ranking" className="rounded-lg border border-emerald-800/40 bg-slate-900/60 p-3 text-slate-100 transition hover:border-emerald-500">
-          외부 랭킹 입력
+          랭킹 입력
         </Link>
         <Link to="/admin/game-tokens" className="rounded-lg border border-emerald-800/40 bg-slate-900/60 p-3 text-slate-100 transition hover:border-emerald-500">
           티켓 지급
