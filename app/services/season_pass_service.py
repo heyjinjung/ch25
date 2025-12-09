@@ -137,10 +137,21 @@ class SeasonPassService:
         max_required = max((lvl.required_xp for lvl in levels), default=0)
         next_level_req = next((lvl.required_xp for lvl in levels if lvl.required_xp > progress.current_xp), max_required)
 
+        reward_labels = {
+            1: "복권 티켓 1장",
+            2: "주사위 티켓 2장",
+            3: "룰렛 티켓 2장",
+            4: "복권 티켓 2장 + 주사위 티켓 1장",
+            5: "주사위 티켓 3장 + 룰렛 티켓 2장",
+            6: "복권 티켓 3장 + 룰렛 티켓 3장",
+            7: "복권/주사위/룰렛 티켓 각 5장",
+        }
+
         level_payload = []
         for level in levels:
             is_unlocked = progress.current_xp >= level.required_xp
             is_claimed = level.level in claimed_levels
+            reward_label = reward_labels.get(level.level, f"{level.reward_type} {level.reward_amount}")
             level_payload.append(
                 {
                     "level": level.level,
@@ -150,7 +161,7 @@ class SeasonPassService:
                     "auto_claim": level.auto_claim,
                     "is_unlocked": is_unlocked,
                     "is_claimed": is_claimed,
-                    "reward_label": f"{level.reward_type} {level.reward_amount}",
+                    "reward_label": reward_label,
                 }
             )
 

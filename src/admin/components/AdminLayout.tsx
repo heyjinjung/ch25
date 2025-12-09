@@ -38,9 +38,6 @@ const AdminLayout: React.FC = () => {
         </nav>
       </aside>
       <main className="flex-1 px-4 py-6 sm:px-8">
-        <div className="mb-4 rounded-xl border border-emerald-800/30 bg-slate-900/60 px-4 py-3 text-sm text-slate-200">
-          TODO: Admin breadcrumbs / toolbar
-        </div>
         <Outlet />
       </main>
     </div>

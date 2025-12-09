@@ -32,7 +32,7 @@ const GameTokenGrantPage: React.FC = () => {
     <section className="space-y-6 rounded-xl border border-emerald-800/40 bg-slate-900/70 p-6 shadow-lg shadow-emerald-900/30">
       <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-100">코인 지급</h1>
+          <h1 className="text-2xl font-bold text-slate-100">티켓 지급</h1>
           <p className="text-sm text-slate-300">external_id 기준으로 지급합니다.</p>
         </div>
         <Button variant="secondary" type="button" onClick={() => form.reset({ external_id: "", token_type: "ROULETTE_COIN", amount: 10 })}>
@@ -93,7 +93,7 @@ const GameTokenGrantPage: React.FC = () => {
         </div>
 
         <Button type="submit" disabled={mutation.isPending}>
-          {mutation.isPending ? "지급 중..." : "코인 지급"}
+          {mutation.isPending ? "지급 중..." : "티켓 지급"}
         </Button>
       </form>
     </section>

@@ -26,7 +26,7 @@ const RoulettePage: React.FC = () => {
     if (code === "INVALID_FEATURE_SCHEDULE") return "이벤트 일정이 맞지 않습니다. 관리자에게 문의하세요.";
     if (code === "FEATURE_DISABLED") return "이벤트가 비활성화되었습니다.";
     if (code === "DAILY_LIMIT_REACHED") return "오늘 참여 횟수를 모두 사용했습니다.";
-    if (code === "NOT_ENOUGH_TOKENS") return "코인이 부족합니다. 관리자에게 충전을 요청하세요.";
+    if (code === "NOT_ENOUGH_TOKENS") return "티켓이 부족합니다. 관리자에게 충전을 요청하세요.";
     return "룰렛 정보를 불러오지 못했습니다.";
   };
 
@@ -121,7 +121,7 @@ const RoulettePage: React.FC = () => {
             )}
             {isOutOfTokens && (
               <div className="rounded-xl border border-amber-600/30 bg-amber-900/20 px-4 py-3 text-sm text-amber-100">
-                코인이 부족합니다. 관리자에게 충전을 요청하세요.
+                티켓이 부족합니다. 관리자에게 충전을 요청하세요.
               </div>
             )}
             <button

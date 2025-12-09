@@ -80,7 +80,7 @@ const LoginPage: React.FC = () => {
         {loading ? "로그인 중..." : "로그인"}
       </button>
 
-      <p className="text-center text-xs text-slate-500">로그인 후 홈에서 시즌패스/게임/코인 상태를 확인하세요.</p>
+      <p className="text-center text-xs text-slate-500">로그인 후 홈에서 시즌패스/게임/티켓 상태를 확인하세요.</p>
     </div>
   );
 };
