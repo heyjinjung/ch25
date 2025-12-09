@@ -49,8 +49,8 @@ const GameTokenLogsPage: React.FC = () => {
   return (
     <section className="space-y-6 rounded-xl border border-emerald-800/40 bg-slate-900/70 p-6 shadow-lg shadow-emerald-900/30">
       <header className="space-y-1">
-        <h1 className="text-2xl font-bold text-slate-100">코인/티켓 잔액 · 로그</h1>
-        <p className="text-sm text-slate-300">external_id 기준 조회, 플레이 로그, 원장, 회수를 한 화면에서 관리합니다.</p>
+        <h1 className="text-2xl font-bold text-slate-100">티켓 로그 / 회수</h1>
+        <p className="text-sm text-slate-300">external_id 기준으로 잔액, 플레이 로그, 원장을 확인하고 회수할 수 있습니다.</p>
       </header>
 
       {/* 잔액 */}
@@ -205,8 +205,8 @@ const GameTokenLogsPage: React.FC = () => {
       {/* 회수 */}
       <div className="space-y-3 rounded-lg border border-rose-700/50 bg-rose-950/30 p-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-white">코인 회수</h2>
-          <span className="text-xs text-rose-200">NOT_ENOUGH_TOKENS 방지</span>
+          <h2 className="text-lg font-semibold text-white">티켓 회수</h2>
+          <span className="text-xs text-rose-200">잔액 부족 시 NOT_ENOUGH_TOKENS 반환</span>
         </div>
         <div className="grid gap-3 sm:grid-cols-3">
           <input
@@ -246,7 +246,7 @@ const GameTokenLogsPage: React.FC = () => {
           }}
           className="w-full rounded-md border border-rose-600/60 px-4 py-2 text-sm font-bold text-rose-100 transition hover:bg-rose-700/20 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {revokeMutation.isPending ? "회수 중..." : "코인 회수"}
+          {revokeMutation.isPending ? "회수 중..." : "티켓 회수"}
         </button>
       </div>
     </section>
