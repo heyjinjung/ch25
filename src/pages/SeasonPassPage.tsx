@@ -89,6 +89,7 @@ const SeasonPassPage: React.FC = () => {
   }
 
   const data = season.data;
+  const stampXp = (data as any)?.base_xp_per_stamp ?? 0;
 
   return (
     <FeatureGate feature="SEASON_PASS">
@@ -99,7 +100,7 @@ const SeasonPassPage: React.FC = () => {
           <p className="text-sm text-emerald-100">스탬프를 모아 XP를 올리고 보상을 받으세요.</p>
           <div className="flex flex-wrap items-center justify-center gap-3 text-xs text-emerald-200">
             <span className="rounded-full border border-emerald-500/40 px-3 py-1">
-              스탬프당 {(data.base_xp_per_stamp ?? 0).toLocaleString()} XP
+              스탬프당 {stampXp.toLocaleString()} XP
             </span>
             <button
               type="button"
