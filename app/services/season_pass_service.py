@@ -122,13 +122,17 @@ class SeasonPassService:
         claimed_levels = {log.level for log in reward_logs}
 
         today = now.date() if isinstance(now, datetime) else now
-        stamped_today = db.execute(
-            select(SeasonPassStampLog).where(
-                SeasonPassStampLog.user_id == user_id,
-                SeasonPassStampLog.season_id == season.id,
-                SeasonPassStampLog.date == today,
+        stamped_today = (
+            db.execute(
+                select(SeasonPassStampLog).where(
+                    SeasonPassStampLog.user_id == user_id,
+                    SeasonPassStampLog.season_id == season.id,
+                    SeasonPassStampLog.date == today,
+                )
             )
-        ).scalar_one_or_none()
+            .scalars()
+            .first()
+        )
 
         max_required = max((lvl.required_xp for lvl in levels), default=0)
         next_level_req = next((lvl.required_xp for lvl in levels if lvl.required_xp > progress.current_xp), max_required)
