@@ -442,3 +442,79 @@ class SeasonPassService:
             .where(SeasonPassLevel.season_id == season_id, SeasonPassLevel.required_xp <= current_xp)
             .order_by(SeasonPassLevel.level)
         ).scalars().all()
+
+    def add_bonus_xp(
+        self,
+        db: Session,
+        user_id: int,
+        xp_amount: int,
+        now: date | datetime | None = None,
+    ) -> dict:
+        """Add raw XP without stamping (used for game 보상 포인트 → XP)."""
+
+        if xp_amount <= 0:
+            return {"added_xp": 0, "leveled_up": False, "rewards": []}
+
+        today = (now or date.today())
+        if isinstance(today, datetime):
+            today = today.date()
+
+        season = self.get_current_season(db, today)
+        if season is None:
+            return {"added_xp": 0, "leveled_up": False, "rewards": []}
+
+        progress = self.get_or_create_progress(db, user_id=user_id, season_id=season.id)
+        previous_level = progress.current_level
+        progress.current_xp += xp_amount
+        db.add(progress)
+
+        achieved_levels = self._eligible_levels(db, season.id, progress.current_xp)
+        new_levels = [level for level in achieved_levels if level.level > previous_level]
+        rewards: list[dict] = []
+
+        for level in new_levels:
+            reward_logged = db.execute(
+                select(SeasonPassRewardLog).where(
+                    SeasonPassRewardLog.user_id == user_id,
+                    SeasonPassRewardLog.season_id == season.id,
+                    SeasonPassRewardLog.level == level.level,
+                )
+            ).scalar_one_or_none()
+            if reward_logged:
+                continue
+
+            if level.auto_claim:
+                reward_log = SeasonPassRewardLog(
+                    user_id=user_id,
+                    season_id=season.id,
+                    progress_id=progress.id,
+                    level=level.level,
+                    reward_type=level.reward_type,
+                    reward_amount=level.reward_amount,
+                    claimed_at=datetime.utcnow(),
+                )
+                db.add(reward_log)
+                rewards.append(
+                    {
+                        "level": level.level,
+                        "reward_type": level.reward_type,
+                        "reward_amount": level.reward_amount,
+                        "auto_claim": level.auto_claim,
+                        "claimed_at": reward_log.claimed_at,
+                    }
+                )
+
+        progress.current_level = max(progress.current_level, previous_level)
+        if achieved_levels:
+            progress.current_level = max(progress.current_level, max(level.level for level in achieved_levels))
+
+        db.commit()
+        db.refresh(progress)
+
+        leveled_up = progress.current_level > previous_level
+        return {
+            "added_xp": xp_amount,
+            "leveled_up": leveled_up,
+            "current_level": progress.current_level,
+            "rewards": rewards,
+        }

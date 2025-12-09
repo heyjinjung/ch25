@@ -28,6 +28,9 @@ class Settings(BaseSettings):
     mysql_user: str | None = Field(None, validation_alias=AliasChoices("MYSQL_USER", "mysql_user"))
     mysql_password: str | None = Field(None, validation_alias=AliasChoices("MYSQL_PASSWORD", "mysql_password"))
 
+    # Feature flags
+    xp_from_game_reward: bool = Field(False, validation_alias=AliasChoices("XP_FROM_GAME_REWARD", "xp_from_game_reward"))
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

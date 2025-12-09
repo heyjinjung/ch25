@@ -3,6 +3,9 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
+from app.core.config import get_settings
+from app.services.season_pass_service import SeasonPassService
+
 
 class RewardService:
     """Centralize reward delivery (points, coupons, etc.)."""
@@ -24,8 +27,14 @@ class RewardService:
 
         if reward_amount == 0 or reward_type in {"NONE", "", None}:
             return
+        settings = get_settings()
+        xp_from_game_reward = settings.xp_from_game_reward
+        season_pass = SeasonPassService() if xp_from_game_reward else None
+
         if reward_type == "POINT":
             self.grant_point(db, user_id=user_id, amount=reward_amount, reason=meta.get("reason") if meta else None)
+            if xp_from_game_reward and season_pass:
+                season_pass.add_bonus_xp(db, user_id=user_id, xp_amount=reward_amount)
             return
         if reward_type == "COUPON":
             coupon_code = meta.get("coupon_type") if meta else "GENERIC"

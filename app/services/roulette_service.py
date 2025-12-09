@@ -174,6 +174,7 @@ class RouletteService:
                 "reward_type": chosen.reward_type,
                 "reward_amount": chosen.reward_amount,
                 "label": chosen.label,
+                "xp_from_reward": chosen.reward_amount if chosen.reward_amount > 0 else 0,
             },
         )
 

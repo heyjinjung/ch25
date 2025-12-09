@@ -136,6 +136,7 @@ class DiceService:
                 "reward_type": reward_type,
                 "reward_amount": reward_amount,
                 "reward_label": f"{config.name} - {outcome}",
+                "xp_from_reward": reward_amount if reward_amount > 0 else 0,
             },
         )
 
