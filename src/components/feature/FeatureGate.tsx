@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { useTodayFeature } from "../../hooks/useTodayFeature";
-import { FEATURE_LABELS, FeatureType, normalizeFeature } from "../../types/features";
+import { FeatureType, normalizeFeature } from "../../types/features";
 import { isFeatureGateActive } from "../../config/featureFlags";
 
 interface FeatureGateProps {
@@ -8,7 +8,7 @@ interface FeatureGateProps {
   readonly children: React.ReactNode;
 }
 
-// Always render children. Only fetch today-feature and show a small banner when gating is explicitly active.
+// Coin-system always open: we keep the fetch for future gating, but hide mismatch banners.
 const FeatureGate: React.FC<FeatureGateProps> = ({ feature, children }) => {
   if (!isFeatureGateActive) {
     return <>{children}</>;
@@ -17,13 +17,9 @@ const FeatureGate: React.FC<FeatureGateProps> = ({ feature, children }) => {
   const { data, isError } = useTodayFeature();
 
   const infoBanner = useMemo(() => {
-    if (isError) {
-      return "오늘 이벤트 정보 로드 실패 (진행은 계속 가능합니다).";
-    }
+    if (isError) return "이벤트 정보 로드에 실패했지만 게임 이용은 계속 가능합니다.";
     const activeFeature = normalizeFeature(data?.feature_type);
-    if (activeFeature && activeFeature !== feature) {
-      return `오늘의 이벤트는 ${FEATURE_LABELS[activeFeature] ?? activeFeature}지만, 테스트용으로 계속 진행합니다.`;
-    }
+    if (activeFeature && activeFeature !== feature) return null;
     return null;
   }, [data?.feature_type, feature, isError]);
 

@@ -46,8 +46,6 @@ const RouletteWheel: React.FC<RouletteWheelProps> = ({ segments, isSpinning, sel
     return () => clearTimeout(timer);
   }, [anglePerSegment, isSpinning, selectedIndex]);
 
-  const totalWeight = segments.reduce((sum, seg) => sum + (seg.weight ?? 1), 0);
-
   return (
     <div className="relative mx-auto flex flex-col items-center gap-4">
       {/* Pointer */}
@@ -68,7 +66,6 @@ const RouletteWheel: React.FC<RouletteWheelProps> = ({ segments, isSpinning, sel
             const endAngle = startAngle + anglePerSegment;
             const isJackpot = segment.isJackpot || segment.label.toLowerCase().includes("jackpot");
             const path = describeArc(100, 100, 90, startAngle, endAngle);
-            const probability = segment.weight ? Math.round((segment.weight / totalWeight) * 100) : null;
             const labelAngle = startAngle + anglePerSegment / 2;
             const labelPos = polarToCartesian(100, 100, 55, labelAngle);
             const color = isJackpot ? "#fbbf24" : COLORS[index % COLORS.length];
@@ -88,24 +85,12 @@ const RouletteWheel: React.FC<RouletteWheelProps> = ({ segments, isSpinning, sel
                 >
                   {segment.label}
                 </text>
-                {probability !== null && (
-                  <text
-                    x={labelPos.x}
-                    y={labelPos.y + 10}
-                    fill={isJackpot ? "#0f172a" : "rgba(255,255,255,0.8)"}
-                    fontSize="7"
-                    textAnchor="middle"
-                    alignmentBaseline="middle"
-                  >
-                    {probability}%
-                  </text>
-                )}
               </g>
             );
           })}
           <circle cx="100" cy="100" r="18" fill="url(#hub)" stroke="#fbbf24" strokeWidth="2" />
           <text x="100" y="104" textAnchor="middle" fill="#fff" fontWeight="700" fontSize="10">
-            🎁
+            WIN
           </text>
           <defs>
             <radialGradient id="hub" cx="50%" cy="50%" r="50%">

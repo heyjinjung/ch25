@@ -116,7 +116,7 @@ const LotteryPage: React.FC = () => {
           </div>
         )}
         <header className="text-center">
-          <p className="text-sm uppercase tracking-[0.3em] text-gold-400">오늘의 이벤트</p>
+          <p className="text-sm uppercase tracking-[0.3em] text-gold-400">스페셜 게임</p>
           <h1 className="mt-2 text-3xl font-bold text-white">크리스마스 복권</h1>
           <div className="mt-3 flex flex-wrap items-center justify-center gap-3">
             <div className="inline-flex items-center gap-2 rounded-full bg-emerald-900/60 px-4 py-2 text-sm font-semibold text-emerald-100">

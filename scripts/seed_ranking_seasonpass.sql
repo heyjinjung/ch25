@@ -27,15 +27,19 @@ CREATE TABLE IF NOT EXISTS external_ranking_reward_log (
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- Season pass levels (simple curve)
+-- Season pass levels (7-step curve, cumulative XP)
 DELETE FROM season_pass_level;
-INSERT INTO season_pass_level (season_id, level, required_xp, reward_type, reward_amount, auto_claim)
-VALUES
-  (1, 1, 0,  'COIN', 100, 0),
-  (1, 2, 20, 'COIN', 200, 0),
-  (1, 3, 50, 'COIN', 300, 0),
-  (1, 4, 80, 'COIN', 500, 0),
-  (1, 5, 120,'COIN', 800, 0);
+INSERT INTO season_pass_level (season_id, level, required_xp, reward_type, reward_amount, auto_claim) VALUES
+  (1, 1,   0,  'COIN',  100, 0),
+  (1, 2,  30,  'COIN',  200, 0),
+  (1, 3,  80,  'COIN',  300, 0),
+  (1, 4, 150,  'COIN',  500, 0),
+  (1, 5, 240,  'COIN',  800, 0),
+  (1, 6, 350,  'COIN', 1200, 0),
+  (1, 7, 480,  'COIN', 2000, 0);
+
+-- Align max level to 7 for the active season
+UPDATE season_pass_config SET max_level = 7 WHERE id = 1;
 
 -- Optional sample rows (commented out)
 -- INSERT INTO external_ranking_data (user_id, deposit_amount, play_count, memo)
