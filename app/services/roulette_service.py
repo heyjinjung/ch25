@@ -121,15 +121,6 @@ class RouletteService:
         self.feature_service.validate_feature_active(db, today, FeatureType.ROULETTE)
         config = self._get_today_config(db)
         token_type = GameTokenType.ROULETTE_COIN
-        self.wallet_service.require_and_consume_token(
-            db,
-            user_id,
-            token_type,
-            amount=1,
-            reason="ROULETTE_PLAY",
-            label=chosen.label,
-            meta={"segment_id": getattr(chosen, "id", None)},
-        )
         segments = None
         for attempt in range(3):
             try:
@@ -153,6 +144,16 @@ class RouletteService:
         for seg in segments:
             weighted_segments.extend([seg] * max(seg.weight, 0))
         chosen = random.choice(weighted_segments)
+
+        self.wallet_service.require_and_consume_token(
+            db,
+            user_id,
+            token_type,
+            amount=1,
+            reason="ROULETTE_PLAY",
+            label=chosen.label,
+            meta={"segment_id": getattr(chosen, "id", None)},
+        )
 
         log_entry = RouletteLog(
             user_id=user_id,

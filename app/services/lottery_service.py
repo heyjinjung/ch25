@@ -86,15 +86,6 @@ class LotteryService:
         self.feature_service.validate_feature_active(db, today, FeatureType.LOTTERY)
         config = self._get_today_config(db)
         token_type = GameTokenType.LOTTERY_TICKET
-        self.wallet_service.require_and_consume_token(
-            db,
-            user_id,
-            token_type,
-            amount=1,
-            reason="LOTTERY_PLAY",
-            label=chosen.label,
-            meta={"prize_id": chosen.id},
-        )
         prizes = None
         for attempt in range(3):
             try:
@@ -118,6 +109,16 @@ class LotteryService:
         for prize in prizes:
             weighted_pool.extend([prize] * max(prize.weight, 0))
         chosen = random.choice(weighted_pool)
+
+        self.wallet_service.require_and_consume_token(
+            db,
+            user_id,
+            token_type,
+            amount=1,
+            reason="LOTTERY_PLAY",
+            label=chosen.label,
+            meta={"prize_id": chosen.id},
+        )
 
         if chosen.stock is not None:
             chosen.stock -= 1

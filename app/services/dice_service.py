@@ -70,15 +70,6 @@ class DiceService:
         self.feature_service.validate_feature_active(db, today, FeatureType.DICE)
         config = self._get_today_config(db)
         token_type = GameTokenType.DICE_TOKEN
-        self.wallet_service.require_and_consume_token(
-            db,
-            user_id,
-            token_type,
-            amount=1,
-            reason="DICE_PLAY",
-            label=f"{config.name} - {outcome}",
-            meta={"result": outcome},
-        )
 
         today_plays = db.execute(
             select(func.count()).select_from(DiceLog).where(
@@ -109,6 +100,16 @@ class DiceService:
             outcome = "LOSE"
             reward_type = config.lose_reward_type
             reward_amount = config.lose_reward_amount
+
+        self.wallet_service.require_and_consume_token(
+            db,
+            user_id,
+            token_type,
+            amount=1,
+            reason="DICE_PLAY",
+            label=f"{config.name} - {outcome}",
+            meta={"result": outcome},
+        )
 
         log_entry = DiceLog(
             user_id=user_id,
