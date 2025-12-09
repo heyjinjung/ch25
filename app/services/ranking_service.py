@@ -34,7 +34,7 @@ class RankingService:
             ExternalRankingEntry(
                 rank=idx + 1,
                 user_id=row.ExternalRankingData.user_id,
-                user_name=row.nickname or row.external_id or "",
+                user_name=row.nickname or row.external_id or f"ID {row.ExternalRankingData.user_id}",
                 deposit_amount=row.ExternalRankingData.deposit_amount,
                 play_count=row.ExternalRankingData.play_count,
                 memo=row.ExternalRankingData.memo,
