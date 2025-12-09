@@ -3,10 +3,11 @@ from datetime import date
 from typing import Iterable
 
 from fastapi import HTTPException, status
-from sqlalchemy import delete, select
+from sqlalchemy import delete, select, func
 from sqlalchemy.orm import Session
 
 from app.models.external_ranking import ExternalRankingData
+from app.models.season_pass import SeasonPassStampLog
 from app.schemas.external_ranking import ExternalRankingCreate, ExternalRankingUpdate
 from app.models.user import User
 from app.services.season_pass_service import SeasonPassService
