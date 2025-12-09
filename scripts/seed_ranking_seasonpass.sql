@@ -36,11 +36,15 @@ INSERT INTO season_pass_level (season_id, level, required_xp, reward_type, rewar
   (1, 4,  300, 'TICKET_BUNDLE',    3, 0),   -- 복권2 + 주사위1
   (1, 5,  500, 'TICKET_BUNDLE',    5, 0),   -- 주사위3 + 룰렛2
   (1, 6,  750, 'TICKET_BUNDLE',    6, 0),   -- 복권3 + 룰렛3
-  (1, 7, 1000, 'TICKET_BUNDLE',   15, 0);   -- 각 5장씩 총 15
+  (1, 7, 1000, 'TICKET_BUNDLE',   15, 0);   -- 복권/주사위/룰렛 각 5장
 
--- Align max level to 7 for the active season
-UPDATE season_pass_config SET max_level = 7, base_xp_per_stamp = 40 WHERE id = 1;
-UPDATE season_pass_config SET base_xp_per_stamp = 20 WHERE id = 1;
+-- Align max level to 7 for the active season (XP per stamp = 20)
+UPDATE season_pass_config SET max_level = 7, base_xp_per_stamp = 20 WHERE id = 1;
+
+-- Ensure stamp log has reward columns for audit
+ALTER TABLE season_pass_stamp_log
+  ADD COLUMN IF NOT EXISTS reward_type VARCHAR(50) NOT NULL DEFAULT 'XP',
+  ADD COLUMN IF NOT EXISTS reward_amount INT NOT NULL DEFAULT 0;
 
 -- Optional sample rows (commented out)
 -- INSERT INTO external_ranking_data (user_id, deposit_amount, play_count, memo)

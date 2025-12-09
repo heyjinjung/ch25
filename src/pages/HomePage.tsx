@@ -112,10 +112,10 @@ const HomePage: React.FC = () => {
 
   const rankingSummary = ranking.data?.external_entries ? ranking.data.external_entries.slice(0, 3) : [];
 
-  const displayName = (entryUserId: number, entryUserName?: string) => {
+  const displayName = (entryUserName?: string) => {
     if (entryUserName && entryUserName.trim().length > 0) return entryUserName;
-    if (user && entryUserId === user.id && user.external_id) return user.external_id;
-    return `ID ${entryUserId}`;
+    if (user?.external_id) return user.external_id;
+    return "닉네임 없음";
   };
 
   return (
@@ -125,7 +125,7 @@ const HomePage: React.FC = () => {
         <div className="absolute -left-6 top-4 h-20 w-20 rounded-full bg-emerald-500/30 blur-3xl" />
         <div className="absolute right-6 -bottom-6 h-28 w-28 rounded-full bg-amber-400/20 blur-3xl" />
         <div className="relative flex flex-col gap-2 text-left">
-          <p className="text-xs uppercase tracking-[0.35em] text-emerald-200">🎄 Christmas Week</p>
+          <p className="text-xs uppercase tracking-[0.35em] text-emerald-200">🎄 ????? ??</p>
           <h1 className="text-3xl font-bold text-white">따뜻한 크리스마스 보상</h1>
           <p className="text-sm text-emerald-100">
             매일 티켓을 모아 게임하고, 시즌패스 보상을 챙기세요
@@ -190,7 +190,7 @@ const HomePage: React.FC = () => {
               <div key={entry.user_id} className="rounded-xl border border-amber-500/40 bg-slate-900/60 p-4">
                 <p className="text-sm font-semibold text-amber-200">{entry.rank}위</p>
                 <p className="text-base font-bold text-white">
-                  {displayName(entry.user_id, entry.user_name)}
+                  {displayName(entry.user_name)}
                 </p>
                 <p className="text-xs text-slate-300">입금 {entry.deposit_amount.toLocaleString()}원 · 플레이 {entry.play_count}</p>
               </div>

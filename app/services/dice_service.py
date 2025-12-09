@@ -131,7 +131,8 @@ class DiceService:
         )
         if outcome == "WIN":
             self.season_pass_service.maybe_add_internal_win_stamp(db, user_id=user_id, now=today)
-        season_pass = apply_season_pass_stamp(ctx, db)
+        # 게임 설정 포인트를 시즌패스 XP 보너스로 반영
+        season_pass = apply_season_pass_stamp(ctx, db, xp_bonus=reward_amount)
 
         return DicePlayResponse(
             result="OK",
