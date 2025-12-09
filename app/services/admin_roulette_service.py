@@ -23,36 +23,38 @@ class AdminRouletteService:
         return config
 
     @staticmethod
-    def _validate_segments(segments_data):
-        if len(segments_data) != 6:
-            raise InvalidConfigError("INVALID_ROULETTE_CONFIG")
-        seen_slots = set()
-        total_weight = 0
-        for segment in segments_data:
-            if segment.index in seen_slots or segment.index < 0 or segment.index > 5:
-                raise InvalidConfigError("INVALID_ROULETTE_CONFIG")
-            seen_slots.add(segment.index)
-            if segment.weight < 0:
-                raise InvalidConfigError("INVALID_ROULETTE_CONFIG")
-            total_weight += segment.weight
-        if total_weight <= 0:
-            raise InvalidConfigError("INVALID_ROULETTE_CONFIG")
-
-    @staticmethod
     def _apply_segments(db: Session, config: RouletteConfig, segments_data):
-        AdminRouletteService._validate_segments(segments_data)
+        # Normalize to exactly 6 slots (0~5). If fewer, pad with empty slots; if more, truncate.
+        normalized_input = list(segments_data[:6])
+        if len(normalized_input) < 6:
+            for i in range(len(normalized_input), 6):
+                normalized_input.append(
+                    type(normalized_input[0])(
+                        slot_index=i,
+                        label=f"빈 슬롯 {i+1}",
+                        weight=1,
+                        reward_type="NONE",
+                        reward_amount=0,
+                        is_jackpot=False,
+                    )
+                )
+
         config.segments.clear()
-        for segment in segments_data:
-            config.segments.append(
+        normalized = []
+        for i, segment in enumerate(normalized_input[:6]):
+            weight = segment.weight if segment.weight is not None else 0
+            weight = max(weight, 1)
+            normalized.append(
                 RouletteSegment(
-                    slot_index=segment.index,
+                    slot_index=i,
                     label=segment.label,
                     reward_type=segment.reward_type,
-                    reward_amount=segment.reward_value,
-                    weight=segment.weight,
+                    reward_amount=segment.reward_value if hasattr(segment, "reward_value") else getattr(segment, "reward_amount", 0),
+                    weight=weight,
                     is_jackpot=segment.is_jackpot,
                 )
             )
+        config.segments.extend(normalized)
 
     @staticmethod
     def create_config(db: Session, data: AdminRouletteConfigCreate) -> RouletteConfig:

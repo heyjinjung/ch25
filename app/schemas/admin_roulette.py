@@ -22,12 +22,7 @@ class AdminRouletteConfigBase(BaseModel):
     max_daily_spins: int
     segments: List[AdminRouletteSegmentBase]
 
-    @validator("segments")
-    def validate_segments(cls, segments: List[AdminRouletteSegmentBase]) -> List[AdminRouletteSegmentBase]:  # noqa: D417
-        if len(segments) != 6:
-            raise ValueError("segments must include exactly 6 slots")
-        return segments
-
+    # 길이 검증은 서비스에서 처리(부족분 패딩/초과분 자름)
     model_config = ConfigDict(from_attributes=True)
 
 
