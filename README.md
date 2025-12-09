@@ -1,88 +1,22 @@
-# XMAS 1Week Daily Feature & Season Pass System
+# XMAS 1Week Event System
+FastAPI 백엔드와 Vite 기반 React 프런트로 구성된 원위크 이벤트/시즌패스/게임 토큰 서비스입니다. 오늘의 Feature 게이트, 룰렛·주사위·복권, 시즌패스, 외부 랭킹, 게임 토큰 지갑/원장(ROULETTE_COIN/DICE_TOKEN/LOTTERY_TICKET) 기능을 제공합니다.
 
-크리스마스 7일 시즌패스 + 일간 이벤트(룰렛/주사위/복권/랭킹) 백엔드 프로젝트의 설계 문서 모음입니다. 모든 상세 설계는 `docs/` 하위에 규칙에 맞춰 분리되어 있습니다.
+## 빠른 시작 (로컬)
+1) `.env.local`을 `.env`로 복사 후 DB·`TEST_MODE` 확인 → MySQL 8 실행 → `alembic upgrade head`로 스키마 적용  
+2) 백엔드: `python -m venv venv && .\venv\Scripts\Activate.ps1 && pip install -r requirements.txt && uvicorn app.main:app --reload --port 8000`  
+3) 프런트: `npm install && npm run dev -- --host --port 5173` (필요 시 `.env.development`에서 `VITE_API_URL` 수정)  
+4) 접속: 사용자 http://localhost:5173 , 관리자 http://localhost:5173/admin (ID `admin` / PW `1234`)  
+5) 게임 토큰 지급/로그 화면: `/admin/game-tokens`, `/admin/game-token-logs`
 
-## 문서 맵
-- `docs/01_overview/01_overview_system_v1.0.md`: 이벤트 기간, 활성화 정책, 핵심 플로우를 설명하는 총괄 개요.
-- `docs/02_architecture/02_architecture_backend_v1.0.md`: FastAPI 백엔드 스택, 디렉터리 구조, 배포/운영 기준.
-- `docs/03_api/03_api_overview_v1.0.md`: today-feature, 시즌패스, 룰렛/주사위/복권/랭킹 API 계약과 예시 응답.
-- `docs/03_api/03_api_season_pass_v1.0.md`: 시즌패스 status/stamp/claim 엔드포인트 상세 계약.
-- `docs/04_db/04_db_core_tables_v1.0.md`: 공통/시즌패스/게임 테이블 스키마 및 제약.
-- `docs/04_db/04_db_season_pass_tables_v1.0.md`: 시즌패스 5개 테이블의 컬럼/제약/관계 상세 정의.
-- `docs/05_modules/05_module_backend_services_v1.0.md`: 서비스/라우터/스키마 등 백엔드 모듈 책임 정리.
-- `docs/05_modules/05_module_game_common_v1.0.md`: 룰렛/주사위/복권/랭킹 공통 규칙(활성화 검증, 로깅, 시즌패스 연동) 정리.
-- `docs/05_modules/05_module_season_pass_service_v1.0.md`: SeasonPassService 책임과 add_stamp/claim 로직 세부 안내.
-- `docs/05_modules/05_module_roulette_service_v1.0.md`: RouletteService status/play 흐름과 segment/보상 처리 정의.
-- `docs/05_modules/05_module_dice_service_v1.0.md`: DiceService status/play 흐름과 승부/보상 처리 정의.
-- `docs/05_modules/05_module_lottery_service_v1.0.md`: LotteryService status/play 흐름과 재고 기반 추첨/보상 처리 정의.
-- `docs/05_modules/05_module_ranking_service_v1.0.md`: RankingService today 조회 흐름과 Top N/내 위치 응답 정의.
-- `docs/06_ops/06_ops_runbook_v1.0.md`: 모니터링 지표, 장애 대응, 긴급 중단 절차.
-- `docs/07_review/backend_validation_checklist_v1.0.md`: 설계 충족/보완 항목을 정리한 백엔드 검증 체크리스트.
-- `docs/07_review/frontend_christmas_theme_review_v1.0.md`: 프론트엔드가 크리스마스 다크 카지노 톤을 충실히 따르는지 검증한 리포트.
-- `docs/99_changelog/project_changelog.md`: 버전 및 변경 이력.
+## 문서 바로가기
+- 온보딩/로컬 개발: `docs/ONBOARDING.md`
+- 시스템/아키텍처/API/DB 상세: `docs/01_overview`, `docs/02_architecture`, `docs/03_api`, `docs/04_db`, `docs/05_modules`
+- 외부 핸드오프 & 배포: `docs/external_dev_handoff.md`, `docs/DEPLOYMENT.md`, `docs/DEPLOYMENT_QUICKSTART.md`
+- 프런트 가이드: `docs/frontend/*.md`
 
-### 프론트엔드
-- `docs/frontend/01_frontend_overview.md`: User/Admin SPA 개요, 자동 라우팅 흐름, 스택 요약.
-- `docs/frontend/02_frontend_stack_spec.md`: React 18 + TS5 + Vite6 + Tailwind3 + Query v5 + Axios + RHF+Zod 버전/옵션 고정.
-- `docs/frontend/03_frontend_architecture.md`: src 폴더 구조, 레이어 책임, 코드 스플릿/라우팅 흐름.
-- `docs/frontend/04_frontend_routes_and_navigation.md`: User/Admin 라우트 테이블과 `/` → today-feature 리다이렉트 규칙.
-- `docs/frontend/05_frontend_state_and_api_layer.md`: Axios 인스턴스 분리, React Query 옵션, 주요 데이터 훅 설계.
-- `docs/frontend/06_frontend_ui_ux_guidelines.md`: 모바일 우선 UX, 로딩/에러/성공 패턴, Tailwind 기본 스타일.
-- `docs/frontend/07_frontend_user_app_spec.md`: 유저 이벤트 페이지별 UI/데이터 흐름.
-- `docs/frontend/08_frontend_admin_app_spec.md`: 관리자 화면 라우트, 폼/테이블 필드, Zod 검증 기준.
-- `docs/frontend/09_frontend_components_and_style_system.md`: 공통 컴포넌트, Tailwind 토큰, 라이브러리 선택 기준.
-- `docs/frontend/10_frontend_auth_and_security.md`: 토큰 저장, 보호 라우트, 401 처리, 민감정보 규칙.
-- `docs/frontend/11_frontend_error_loading_patterns.md`: 로딩/에러/빈 상태 UI 패턴, 재시도 규칙.
-- `docs/frontend/12_frontend_build_and_env.md`: Vite 빌드 옵션, 환경변수 키, 배포 산출물.
-- `docs/frontend/13_frontend_testing_and_qc.md`: 필수 시나리오, 브라우저 범위, QC 체크리스트.
-- `docs/frontend/14_frontend_validation_checklist.md`: 프론트 전역 설계 검증 체크리스트.
+## 최근 주요 변경 (2025-12)
+- 게임 토큰 지갑/원장 테이블 및 관리자 지급/차감/원장 API(`app/api/admin/routes/admin_game_tokens.py`) + UI(`src/admin/pages/GameTokenGrantPage.tsx`, `GameTokenLogsPage.tsx`)
+- 외부 랭킹 수동 입력/보상 테이블(`external_ranking_*`) 및 관리자 화면
+- 유저 `nickname/password_hash/level` 컬럼 추가(관리자 CRUD 대비)
 
-## 주요 원칙 요약
-- 하루 하나의 Feature만 활성(Asia/Seoul 기준), 비활성 페이지는 "오늘은 이용 불가" 응답.
-- 모든 게임/시즌패스 API는 JWT 인증 필요, 보상/결과 계산은 서버 전담.
-- `/api/today-feature` < 200ms, 게임 API < 500ms(평균) 성능 목표.
-- `feature_config.is_enabled` 플래그로 긴급 ON/OFF 지원, 로깅/모니터링 필수.
-
-## 테스트 모드 로그인 메모
-- 프런트 ENV: `VITE_TEST_MODE=true`, `VITE_ENABLE_DEMO_FALLBACK=false`.
-- 테스트 계정: `user_id=999`, `external_id="test-qa-999"`.
-- /login 페이지에서 "테스트 계정으로 자동 로그인" 버튼 지원, TEST_MODE일 때만 노출/자동 시도.
-## 로컬 동기화 확인 시나리오
-시나리오 A: 로그인 동기화 확인
-- Step 1: 프론트에서 테스트 계정으로 로그인.
-- Step 2: DB에서 user 테이블 로그인 필드 확인
-```sql
-SELECT id, external_id, last_login_at, last_login_ip
-FROM public.user
-WHERE id = 999;
-```
-- Step 3: user_event_log에 AUTH 이벤트 생성 여부 확인
-```sql
-SELECT *
-FROM user_event_log
-WHERE user_id = 999 AND feature_type = 'AUTH' AND event_name = 'AUTH_LOGIN'
-ORDER BY created_at DESC
-LIMIT 5;
-```
-
-시나리오 B: 게임 플레이 동기화 확인
-- Step 1: 프론트에서 /roulette에서 1회 플레이.
-- Step 2: DB에서 가장 최근 룰렛 로그 조회
-```sql
-SELECT user_id, result, reward_type, reward_amount, created_at
-FROM roulette_log
-WHERE user_id = 999
-ORDER BY created_at DESC
-LIMIT 1;
-```
-- Step 3: 화면에 보였던 reward_type, reward_amount와 일치하는지 확인.
-
-시나리오 C: 시즌패스 연동 확인
-- Step 1: 시즌패스 도장 찍기(또는 임시 API) 수행.
-- Step 2: 시즌패스 관련 테이블 조회
-```sql
-SELECT * FROM season_pass_progress WHERE user_id = 999;
-SELECT * FROM season_pass_stamp_log WHERE user_id = 999 ORDER BY created_at DESC LIMIT 3;
-SELECT * FROM season_pass_reward_log WHERE user_id = 999 ORDER BY created_at DESC LIMIT 3;
-```
-- Step 3: 프론트 시즌패스 화면의 레벨/XP/보상 수령 여부와 DB 값이 일치하는지 비교.
+자세한 실행·시드·테스트 흐름은 `docs/ONBOARDING.md`를 참고하세요.

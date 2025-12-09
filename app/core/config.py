@@ -30,6 +30,9 @@ class Settings(BaseSettings):
 
     # Feature flags
     xp_from_game_reward: bool = Field(False, validation_alias=AliasChoices("XP_FROM_GAME_REWARD", "xp_from_game_reward"))
+    feature_gate_enabled: bool = Field(
+        False, validation_alias=AliasChoices("FEATURE_GATE_ENABLED", "feature_gate_enabled")
+    )
 
     model_config = SettingsConfigDict(
         env_file=".env",

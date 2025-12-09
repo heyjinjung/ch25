@@ -37,21 +37,18 @@ class FeatureService:
         return schedule.feature_type
 
     def validate_feature_active(self, db: Session, now: date | datetime, expected_type: FeatureType) -> FeatureConfig:
-        """Validate that the requested feature is active today.
-        
-        In TEST_MODE, skips the schedule check and only validates FeatureConfig.
+        """Validate that the requested feature is enabled.
+
+        Today-feature 게이트는 기본 OFF이며, FEATURE_GATE_ENABLED=true일 때만 일정 검증을 수행한다.
         """
         settings = get_settings()
-        
-        # Skip schedule validation in TEST_MODE
-        if not settings.test_mode:
+
+        if settings.feature_gate_enabled and not settings.test_mode:
             today_feature = self.get_today_feature(db, now)
             if today_feature != expected_type:
                 raise FeatureNotActiveError()
 
         config = db.execute(select(FeatureConfig).where(FeatureConfig.feature_type == expected_type)).scalar_one_or_none()
-        # If the feature configuration itself is missing, treat it like "no feature today"
-        # so clients receive a 404 instead of a 500.
         if config is None:
             raise NoFeatureTodayError()
         if not config.is_enabled:
