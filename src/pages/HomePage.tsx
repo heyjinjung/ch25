@@ -25,7 +25,7 @@ const GameCard: React.FC<GameCardProps> = ({ title, path, tokenType, tokenBalanc
     state === "loading"
       ? "상태 로딩 중"
       : state === "error"
-        ? "상태 조회 실패 - 코인 지급 확인"
+        ? "상태 조회 실패 - 티켓 지급 확인"
         : undefined;
 
   return (
@@ -34,7 +34,7 @@ const GameCard: React.FC<GameCardProps> = ({ title, path, tokenType, tokenBalanc
         <h3 className="text-lg font-bold text-white">{title}</h3>
         <span className="text-sm text-slate-300">{tokenLabel}</span>
       </div>
-      <p className="text-sm text-slate-400">보유 코인: {hasCoins ? tokenBalance : 0}</p>
+      <p className="text-sm text-slate-400">보유 티켓: {hasCoins ? tokenBalance : 0}</p>
       {statusBadge && <p className="text-xs text-amber-200">{statusBadge}</p>}
       <button
         type="button"
@@ -42,7 +42,7 @@ const GameCard: React.FC<GameCardProps> = ({ title, path, tokenType, tokenBalanc
         disabled={!hasCoins}
         className="w-full rounded-lg bg-gradient-to-r from-emerald-600 to-emerald-500 px-4 py-2 text-sm font-bold text-white shadow transition hover:from-emerald-500 hover:to-emerald-400 disabled:cursor-not-allowed disabled:from-slate-700 disabled:to-slate-600"
       >
-        {hasCoins ? "바로 입장" : "코인 없음 - 관리자 문의"}
+        {hasCoins ? "바로 입장" : "티켓 없음 - 관리자 문의"}
       </button>
     </div>
   );
@@ -159,7 +159,7 @@ const HomePage: React.FC = () => {
           <div>
             <p className="text-xs uppercase tracking-[0.25em] text-emerald-300">Games</p>
             <h2 className="text-2xl font-bold text-white">게임 선택</h2>
-            <p className="text-sm text-slate-400">코인이 있으면 바로 입장, 없으면 관리자에게 문의해 주세요.</p>
+            <p className="text-sm text-slate-400">티켓이 있으면 바로 입장, 없으면 관리자에게 문의해 주세요.</p>
           </div>
         </div>
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
