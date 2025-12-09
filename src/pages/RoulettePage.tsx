@@ -3,10 +3,12 @@ import RouletteWheel from "../components/game/RouletteWheel";
 import { usePlayRoulette, useRouletteStatus } from "../hooks/useRoulette";
 import FeatureGate from "../components/feature/FeatureGate";
 import { GAME_TOKEN_LABELS } from "../types/gameTokens";
+import { useNavigate } from "react-router-dom";
 
 const RoulettePage: React.FC = () => {
   const { data, isLoading, isError, error } = useRouletteStatus();
   const playMutation = usePlayRoulette();
+  const navigate = useNavigate();
   const [selectedIndex, setSelectedIndex] = useState<number | undefined>();
   const [rewardToast, setRewardToast] = useState<string | null>(null);
 
@@ -154,6 +156,14 @@ const RoulettePage: React.FC = () => {
                 )}
               </div>
             )}
+
+            <button
+              type="button"
+              onClick={() => navigate("/home")}
+              className="w-full rounded-lg border border-emerald-500/50 px-4 py-2 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-900/40"
+            >
+              홈으로 돌아가기
+            </button>
           </div>
         </div>
 

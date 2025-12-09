@@ -1,5 +1,6 @@
 // src/pages/LotteryPage.tsx
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { usePlayLottery, useLotteryStatus } from "../hooks/useLottery";
 import FeatureGate from "../components/feature/FeatureGate";
 import LotteryCard from "../components/game/LotteryCard";
@@ -15,6 +16,7 @@ interface RevealedPrize {
 const LotteryPage: React.FC = () => {
   const { data, isLoading, isError, error } = useLotteryStatus();
   const playMutation = usePlayLottery();
+  const navigate = useNavigate();
   const [revealedPrize, setRevealedPrize] = useState<RevealedPrize | null>(null);
   const [isScratching, setIsScratching] = useState(false);
   const [isRevealed, setIsRevealed] = useState(false);
@@ -229,6 +231,16 @@ const LotteryPage: React.FC = () => {
         <footer className="border-t border-slate-700/50 pt-4 text-center text-xs text-slate-400">
           <p>복권 결과는 서버에서 결정되며, 시즌패스 경험치가 적립됩니다.</p>
         </footer>
+
+        <div className="mt-4 text-center">
+          <button
+            type="button"
+            onClick={() => navigate("/home")}
+            className="inline-flex items-center justify-center rounded-lg border border-emerald-500/50 px-4 py-2 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-900/40"
+          >
+            홈으로 돌아가기
+          </button>
+        </div>
       </section>
     );
   })();

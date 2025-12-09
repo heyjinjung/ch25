@@ -110,8 +110,6 @@ const HomePage: React.FC = () => {
     },
   ];
 
-  const isTestAccount = user?.id === 999 || user?.external_id === "test-qa-999";
-
   const rankingSummary = ranking.data?.external_entries ? ranking.data.external_entries.slice(0, 3) : [];
 
   const displayName = (entryUserId: number, entryUserName?: string) => {
@@ -122,15 +120,17 @@ const HomePage: React.FC = () => {
 
   return (
     <section className="space-y-8">
-      <div className="rounded-3xl border border-emerald-700/40 bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 p-8 shadow-2xl">
-        <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">내 정보</p>
-        <p className="text-lg font-semibold text-white">{user?.external_id ?? "알 수 없음"}</p>
-        {isTestAccount && (
-          <div className="mt-3 rounded-xl border border-indigo-600/40 bg-indigo-900/30 p-4 text-indigo-100">
-            <p className="text-xs">테스트 계정</p>
-            <p className="text-sm">로그/DB 동작 확인용 계정입니다.</p>
-          </div>
-        )}
+      {/* 크리스마스 히어로 배너 */}
+      <div className="relative overflow-hidden rounded-3xl border border-emerald-600/40 bg-gradient-to-br from-emerald-950 via-slate-900 to-amber-900 p-8 shadow-2xl">
+        <div className="absolute -left-6 top-4 h-20 w-20 rounded-full bg-emerald-500/30 blur-3xl" />
+        <div className="absolute right-6 -bottom-6 h-28 w-28 rounded-full bg-amber-400/20 blur-3xl" />
+        <div className="relative flex flex-col gap-2 text-left">
+          <p className="text-xs uppercase tracking-[0.35em] text-emerald-200">🎄 Christmas Week</p>
+          <h1 className="text-3xl font-bold text-white">따뜻한 크리스마스 보상 허브</h1>
+          <p className="text-sm text-emerald-100">
+            매일 티켓을 모아 게임하고, 시즌패스 보상을 챙기세요. 눈꽃과 선물 상자가 곳곳에 숨겨져 있어요!
+          </p>
+        </div>
       </div>
 
       <div className="rounded-3xl border border-gold-600/30 bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 p-8 shadow-2xl space-y-3">

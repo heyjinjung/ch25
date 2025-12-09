@@ -1,5 +1,6 @@
 // src/pages/DicePage.tsx
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import DiceView from "../components/game/DiceView";
 import { useDiceStatus, usePlayDice } from "../hooks/useDice";
 import FeatureGate from "../components/feature/FeatureGate";
@@ -8,6 +9,7 @@ import { GAME_TOKEN_LABELS } from "../types/gameTokens";
 const DicePage: React.FC = () => {
   const { data, isLoading, isError } = useDiceStatus();
   const playMutation = usePlayDice();
+  const navigate = useNavigate();
   const [result, setResult] = useState<"WIN" | "LOSE" | "DRAW" | null>(null);
   const [userDice, setUserDice] = useState<number[]>([]);
   const [dealerDice, setDealerDice] = useState<number[]>([]);
@@ -139,6 +141,14 @@ const DicePage: React.FC = () => {
           </button>
 
           {infoMessage && !isRolling && <p className="text-center text-sm text-emerald-200">{infoMessage}</p>}
+
+          <button
+            type="button"
+            onClick={() => navigate("/home")}
+            className="w-full rounded-lg border border-emerald-500/50 px-4 py-2 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-900/40"
+          >
+            홈으로 돌아가기
+          </button>
         </div>
 
         <footer className="border-t border-slate-700/50 pt-4 text-center text-xs text-slate-400">
