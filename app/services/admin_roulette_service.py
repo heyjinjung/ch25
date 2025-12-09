@@ -24,12 +24,12 @@ class AdminRouletteService:
 
     @staticmethod
     def _apply_segments(db: Session, config: RouletteConfig, segments_data):
-        # Normalize to exactly 6 slots (0~5). If fewer, pad with empty slots; if more, truncate.
-        normalized_input = list(segments_data[:6])
-        if len(normalized_input) < 6:
-            for i in range(len(normalized_input), 6):
-                normalized_input.append(
-                    type(normalized_input[0])(
+        # Normalize to exactly 6 slots (0~5). Accept both `index` and `slot_index`, pad/truncate silently.
+        raw_segments = list(segments_data)
+        if len(raw_segments) < 6:
+            for i in range(len(raw_segments), 6):
+                raw_segments.append(
+                    type(raw_segments[0])(
                         slot_index=i,
                         label=f"빈 슬롯 {i+1}",
                         weight=1,
@@ -38,20 +38,27 @@ class AdminRouletteService:
                         is_jackpot=False,
                     )
                 )
+        if len(raw_segments) > 6:
+            raw_segments = raw_segments[:6]
 
         config.segments.clear()
         normalized = []
-        for i, segment in enumerate(normalized_input[:6]):
-            weight = segment.weight if segment.weight is not None else 0
-            weight = max(weight, 1)
+        for i, segment in enumerate(raw_segments):
+            slot_idx = getattr(segment, "slot_index", None)
+            if slot_idx is None:
+                slot_idx = getattr(segment, "index", i)
+            weight = getattr(segment, "weight", 0) or 1
+            reward_value = getattr(segment, "reward_value", None)
+            if reward_value is None:
+                reward_value = getattr(segment, "reward_amount", 0)
             normalized.append(
                 RouletteSegment(
-                    slot_index=i,
+                    slot_index=i,  # 강제로 0~5 재배치
                     label=segment.label,
                     reward_type=segment.reward_type,
-                    reward_amount=segment.reward_value if hasattr(segment, "reward_value") else getattr(segment, "reward_amount", 0),
-                    weight=weight,
-                    is_jackpot=segment.is_jackpot,
+                    reward_amount=reward_value,
+                    weight=max(weight, 1),
+                    is_jackpot=getattr(segment, "is_jackpot", False),
                 )
             )
         config.segments.extend(normalized)

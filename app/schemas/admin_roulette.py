@@ -6,6 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field, validator
 
 
 class AdminRouletteSegmentBase(BaseModel):
+    # index or slot_index 모두 받도록 from_attributes + validate_by_name
     index: int = Field(..., alias="slot_index")
     label: str
     weight: int
