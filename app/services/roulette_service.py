@@ -158,7 +158,16 @@ class RouletteService:
         db.refresh(log_entry)
 
         ctx = GamePlayContext(user_id=user_id, feature_type=FeatureType.ROULETTE.value, today=today)
-        log_game_play(ctx, db, {"segment_id": chosen.id, "reward_type": chosen.reward_type})
+        log_game_play(
+            ctx,
+            db,
+            {
+                "segment_id": chosen.id,
+                "reward_type": chosen.reward_type,
+                "reward_amount": chosen.reward_amount,
+                "label": chosen.label,
+            },
+        )
 
         # Deliver reward according to segment definition.
         self.reward_service.deliver(

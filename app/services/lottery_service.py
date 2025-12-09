@@ -127,7 +127,16 @@ class LotteryService:
         db.refresh(log_entry)
 
         ctx = GamePlayContext(user_id=user_id, feature_type=FeatureType.LOTTERY.value, today=today)
-        log_game_play(ctx, db, {"prize_id": chosen.id, "reward_type": chosen.reward_type})
+        log_game_play(
+            ctx,
+            db,
+            {
+                "prize_id": chosen.id,
+                "reward_type": chosen.reward_type,
+                "reward_amount": chosen.reward_amount,
+                "label": chosen.label,
+            },
+        )
 
         self.reward_service.deliver(
             db,

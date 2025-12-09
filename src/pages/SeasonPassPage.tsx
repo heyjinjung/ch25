@@ -1,4 +1,5 @@
 ﻿import React, { useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTodayRanking } from "../hooks/useRanking";
 import { useSeasonPassStatus, useInternalWinStatus, useClaimSeasonReward } from "../hooks/useSeasonPass";
 import FeatureGate from "../components/feature/FeatureGate";
@@ -6,6 +7,7 @@ import FeatureGate from "../components/feature/FeatureGate";
 const formatCurrency = (value: number) => value.toLocaleString();
 
 const SeasonPassPage: React.FC = () => {
+  const navigate = useNavigate();
   const season = useSeasonPassStatus();
   const ranking = useTodayRanking();
   const internalWins = useInternalWinStatus();
@@ -95,6 +97,18 @@ const SeasonPassPage: React.FC = () => {
           <p className="text-sm uppercase tracking-[0.3em] text-gold-400">Season Pass</p>
           <h1 className="text-3xl font-bold text-white">크리스마스 시즌패스</h1>
           <p className="text-sm text-emerald-100">스탬프를 모아 XP를 올리고 보상을 받으세요.</p>
+          <div className="flex flex-wrap items-center justify-center gap-3 text-xs text-emerald-200">
+            <span className="rounded-full border border-emerald-500/40 px-3 py-1">
+              스탬프당 {data.base_xp_per_stamp.toLocaleString()} XP
+            </span>
+            <button
+              type="button"
+              onClick={() => navigate("/")}
+              className="rounded-full border border-gold-400/50 px-4 py-1 text-amber-200 hover:border-gold-300 hover:text-amber-100"
+            >
+              홈으로 가기
+            </button>
+          </div>
         </header>
 
         <div className="rounded-2xl border border-emerald-600/40 bg-slate-900/70 p-6 shadow-lg">

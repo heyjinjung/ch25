@@ -120,7 +120,11 @@ class DiceService:
         db.refresh(log_entry)
 
         ctx = GamePlayContext(user_id=user_id, feature_type=FeatureType.DICE.value, today=today)
-        log_game_play(ctx, db, {"result": outcome, "reward_type": reward_type})
+        log_game_play(
+            ctx,
+            db,
+            {"result": outcome, "reward_type": reward_type, "reward_amount": reward_amount},
+        )
 
         self.reward_service.deliver(
             db,
