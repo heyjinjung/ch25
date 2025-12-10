@@ -83,6 +83,17 @@ docker compose exec backend alembic upgrade head  # 스키마 적용(자동 아�
 - 게임 토큰/원장: 테이블 `user_game_wallet`, `user_game_wallet_ledger`; 관리자 화면 `/admin/game-tokens`(지급/차감), `/admin/game-token-logs`(지갑/플레이로그/원장 조회). API는 `app/api/admin/routes/admin_game_tokens.py` 참고.
 - 시즌패스: base_xp_per_stamp=20, 7레벨 곡선(`season_pass_level`); 기본 시드는 `scripts/seed_ranking_seasonpass.sql`. 현장 수치 변경 시 테이블만 업데이트하면 됩니다.
 
+## 서버(싱가포르 149.28.135.147) 배포/실행 요약
+- 백엔드 환경파일: `.env.production`을 서버에 올린 뒤 컨테이너/프로세스가 읽도록 `.env`로 복사 (`Copy-Item -Force .env.production .env`). 운영 값: `ENV=production`, `TEST_MODE=false`, `FEATURE_GATE_ENABLED=false`, DB `mysql+pymysql://xmasuser:xmaspass@db:3306/xmas_event`, CORS `http://149.28.135.147[:3000]`, JWT_SECRET은 운영 값으로 교체.
+- 프런트 환경파일: `.env.frontend.production`을 서버에 올려 `.env.production.vite` 또는 `.env.production`으로 사용. 주요 값: `VITE_API_URL=http://149.28.135.147:8000/api`, `VITE_ADMIN_API_URL=http://149.28.135.147:8000/admin/api`, `VITE_ENV=production`, 데모/디버그 OFF, 게이트 기본 false.
+- Docker Compose 빌드/실행(루트에서):
+  ```powershell
+  docker compose up -d --build
+  docker compose exec backend alembic upgrade head  # 스키마 적용
+  ```
+- 포트: backend 8000, frontend 3000(직접 접근), nginx 80/443(SSL 미구성 시 80 사용), DB 3307.
+- 운영 체크: `curl http://149.28.135.147:8000/` → 200, 프런트 http://149.28.135.147:3000 또는 프록시 도메인에서 화면 확인.
+
 ## 자주 쓰는 명령
 - 백엔드 테스트: `pytest -q`
 - 프런트 타입체크: `npx tsc --noEmit`
