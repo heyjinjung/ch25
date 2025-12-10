@@ -6,6 +6,7 @@ Create Date: 2025-12-07
 """
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy import text
 
 revision = "20251207_0006"
 down_revision = "20251207_0005"
@@ -19,27 +20,46 @@ token_enum = sa.Enum(
     name="gametokentype",
 )
 
+
+def _table_exists(table: str) -> bool:
+    conn = op.get_bind()
+    return bool(
+        conn.execute(
+            text(
+                """
+                SELECT 1
+                FROM information_schema.tables
+                WHERE table_schema = DATABASE()
+                  AND table_name = :table
+                """
+            ),
+            {"table": table},
+        ).scalar()
+    )
+
+
 def upgrade() -> None:
-    # Create enum type explicitly for MySQL/Postgres compatibility
     bind = op.get_bind()
     dialect = bind.dialect.name if bind and bind.dialect else ""
 
     if dialect != "sqlite":
         token_enum.create(bind, checkfirst=True)
 
-    op.create_table(
-        "user_game_wallet",
-        sa.Column("id", sa.Integer(), primary_key=True, index=True),
-        sa.Column("user_id", sa.Integer(), sa.ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True),
-        sa.Column("token_type", token_enum, nullable=False),
-        sa.Column("balance", sa.Integer(), nullable=False, server_default="0"),
-        sa.Column("updated_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
-        sa.UniqueConstraint("user_id", "token_type", name="uq_user_token_type"),
-    )
+    if not _table_exists("user_game_wallet"):
+        op.create_table(
+            "user_game_wallet",
+            sa.Column("id", sa.Integer(), primary_key=True, index=True),
+            sa.Column("user_id", sa.Integer(), sa.ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True),
+            sa.Column("token_type", token_enum, nullable=False),
+            sa.Column("balance", sa.Integer(), nullable=False, server_default="0"),
+            sa.Column("updated_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
+            sa.UniqueConstraint("user_id", "token_type", name="uq_user_token_type"),
+        )
 
 
 def downgrade() -> None:
-    op.drop_table("user_game_wallet")
+    if _table_exists("user_game_wallet"):
+        op.drop_table("user_game_wallet")
     bind = op.get_bind()
     dialect = bind.dialect.name if bind and bind.dialect else ""
     if dialect != "sqlite":
