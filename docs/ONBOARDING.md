@@ -106,3 +106,17 @@ docker compose exec backend alembic upgrade head  # ìŠ¤í‚¤ë§ˆ ì ìš©(ìë™ ì•„ë
 - DB ë§ˆì´ê·¸ë ˆì´ì…˜: `alembic/versions/20251207_0006_add_user_game_wallet.py`(ì§€ê°‘), `20251208_0007_add_external_ranking_tables.py`, `20251208_0008_add_user_credentials_and_level.py`
 
 í•„ìš”í•œ ë‚´ìš©ì´ ë” ìˆë‹¤ë©´ READMEì™€ `docs/` í•˜ìœ„ ì„¸ë¶€ ë¬¸ì„œë¥¼ ì°¸ê³ í•˜ì„¸ìš”. 
+## 2025-12 ¼­¹ö ¹èÆ÷ Æ®·¯ºí½´ÆÃ ¿ä¾à
+- Field 'level' doesn't have a default value: app/models/user.py¿¡ server_default="1" Ãß°¡, 0002¿¡¼­ ALTER TABLE user MODIFY level INT NOT NULL DEFAULT 1.
+- Unknown column 'title' in 'feature_config': 0002¿¡¼­ Á¤º¸ ½ºÅ°¸¶ Ã¼Å© ÈÄ ´©¶ô ÄÃ·³¸¸ Ãß°¡ÇÏµµ·Ï º¯°æ.
+- Duplicate column name 'last_login_at': 0004¸¦ Á¶°ÇºÎ ÄÃ·³ Ãß°¡·Î ¼öÁ¤.
+- Table 'user_game_wallet' already exists: 0006À» Å×ÀÌºí Á¸Àç ½Ã ½ºÅµÇÏµµ·Ï ¼öÁ¤.
+- docker-compose 1.29 vs ÃÖ½Å ¿£Áø ContainerConfig KeyError: ÄÁÅ×ÀÌ³Ê/ÀÌ¹ÌÁö/º¼·ı ÀüÃ¼ Á¤¸® ÈÄ Àçºôµå.
+- MySQL Á¢¼Ó ¿À·ù 2003: DB healthy ´ë±â ÈÄ 127.0.0.1:3306(TCP)·Î Á¢¼Ó.
+- Access denied for user 'xmasuser'@'%': ·çÆ® PW È®ÀÎ ÈÄ °èÁ¤/±ÇÇÑ Àç»ı¼º.
+  docker-compose exec db sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "\
+  CREATE DATABASE IF NOT EXISTS xmas_event;\
+  CREATE USER IF NOT EXISTS \'xmasuser\'@\'%\' IDENTIFIED BY \'xmaspass\';\
+  GRANT ALL PRIVILEGES ON xmas_event.* TO \'xmasuser\'@\'%\'; FLUSH PRIVILEGES;\
+  "'
+- ·çÆ® PW ÀÔ·Â ½Ç¼ö(-p<...>) ÁÖÀÇ: ½ÇÁ¦ °ª(rootpassword µî) »ç¿ë.
