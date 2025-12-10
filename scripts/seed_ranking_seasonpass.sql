@@ -31,12 +31,12 @@ CREATE TABLE IF NOT EXISTS external_ranking_reward_log (
 DELETE FROM season_pass_level;
 INSERT INTO season_pass_level (season_id, level, required_xp, reward_type, reward_amount, auto_claim) VALUES
   (1, 1,    0, 'LOTTERY_TICKET',   1, 0),
-  (1, 2,   80, 'DICE_TICKET',      2, 0),
-  (1, 3,  150, 'ROULETTE_TICKET',  2, 0),
-  (1, 4,  300, 'TICKET_BUNDLE',    3, 0),   -- 복권2 + 주사위1
-  (1, 5,  500, 'TICKET_BUNDLE',    5, 0),   -- 주사위3 + 룰렛2
-  (1, 6,  750, 'TICKET_BUNDLE',    6, 0),   -- 복권3 + 룰렛3
-  (1, 7, 1000, 'TICKET_BUNDLE',   15, 0);   -- 복권/주사위/룰렛 각 5장
+  (1, 2,   80, 'DICE_TOKEN',       2, 0),
+  (1, 3,  150, 'ROULETTE_COIN',    2, 0),
+  (1, 4,  300, 'LOTTERY_TICKET',   2, 0),
+  (1, 5,  500, 'DICE_TOKEN',       3, 0),
+  (1, 6,  750, 'ROULETTE_COIN',    3, 0),
+  (1, 7, 1000, 'LOTTERY_TICKET',   5, 0);
 
 -- Align max level to 7 for the active season (XP per stamp = 20)
 UPDATE season_pass_config SET max_level = 7, base_xp_per_stamp = 20 WHERE id = 1;

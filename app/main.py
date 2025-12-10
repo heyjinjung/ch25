@@ -10,8 +10,13 @@ settings = get_settings()
 
 app = FastAPI(title="XMAS 1Week Event System")
 
-# Apply permissive CORS in local/dev to unblock FE
-cors_origins = ["*"] if settings.env == "local" else (settings.cors_origins or ["*"])
+# Apply CORS: allow known local origins by default, avoid "*" when credentials are used.
+default_dev_origins = [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+cors_origins = settings.cors_origins or default_dev_origins
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,

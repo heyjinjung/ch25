@@ -29,6 +29,7 @@ const describeArc = (cx: number, cy: number, r: number, startAngle: number, endA
 const RouletteWheel: React.FC<RouletteWheelProps> = ({ segments, isSpinning, selectedIndex }) => {
   const [rotation, setRotation] = useState(0);
   const [showResult, setShowResult] = useState(false);
+  const [spinCount, setSpinCount] = useState(0);
 
   const segmentCount = segments.length || 6;
   const anglePerSegment = useMemo(() => 360 / segmentCount, [segmentCount]);
@@ -36,15 +37,18 @@ const RouletteWheel: React.FC<RouletteWheelProps> = ({ segments, isSpinning, sel
   useEffect(() => {
     if (!isSpinning) return;
     setShowResult(false);
+    // Increase base turns every spin so the transform value always changes.
+    const baseTurns = 6 + spinCount; // grows to force animation re-trigger
     const spinTo =
       selectedIndex !== undefined
-        ? 360 * 5 + (360 - anglePerSegment * selectedIndex - anglePerSegment / 2)
-        : 360 * 5;
+        ? 360 * baseTurns + (360 - anglePerSegment * selectedIndex - anglePerSegment / 2)
+        : 360 * baseTurns;
     setRotation(spinTo);
+    setSpinCount((prev) => prev + 1);
 
     const timer = setTimeout(() => setShowResult(true), 2500);
     return () => clearTimeout(timer);
-  }, [anglePerSegment, isSpinning, selectedIndex]);
+  }, [anglePerSegment, isSpinning, selectedIndex, spinCount]);
 
   return (
     <div className="relative mx-auto flex flex-col items-center gap-4">
