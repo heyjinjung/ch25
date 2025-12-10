@@ -5,6 +5,7 @@ Revises: 20241206_0001
 Create Date: 2025-12-07
 """
 from alembic import op
+from sqlalchemy import text
 
 revision = "20251207_0002"
 down_revision = "20241206_0001"
@@ -12,9 +13,33 @@ branch_labels = None
 depends_on = None
 
 
+def _add_column_if_missing(table: str, column: str, ddl: str) -> None:
+    """Add column only when missing to keep migration idempotent on recycled DBs."""
+    conn = op.get_bind()
+    exists = conn.execute(
+        text(
+            """
+            SELECT 1
+            FROM information_schema.columns
+            WHERE table_schema = DATABASE()
+              AND table_name = :table
+              AND column_name = :column
+            """
+        ),
+        {"table": table, "column": column},
+    ).scalar()
+    if not exists:
+        op.execute(ddl)
+
+
 def upgrade() -> None:
-    # Ensure user.level has a default
+    # Ensure user.level has a default for legacy rows
     op.execute("ALTER TABLE user MODIFY level INT NOT NULL DEFAULT 1;")
+
+    # Ensure feature_config has latest columns
+    _add_column_if_missing("feature_config", "title", "ALTER TABLE feature_config ADD COLUMN title VARCHAR(100) NOT NULL DEFAULT 'Event';")
+    _add_column_if_missing("feature_config", "page_path", "ALTER TABLE feature_config ADD COLUMN page_path VARCHAR(100) NOT NULL DEFAULT '/';")
+    _add_column_if_missing("feature_config", "config_json", "ALTER TABLE feature_config ADD COLUMN config_json JSON NULL;")
 
     # Seed demo user
     op.execute(
