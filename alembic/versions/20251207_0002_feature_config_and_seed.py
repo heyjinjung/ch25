@@ -1,4 +1,4 @@
-"""Add feature_config columns and seed demo data
+"""Add feature_config seed data (simplified)
 
 Revision ID: 20251207_0002
 Revises: 20241206_0001
@@ -13,21 +13,10 @@ depends_on = None
 
 
 def upgrade() -> None:
-    # Ensure user.level has server default before seeding demo user
+    # Ensure user.level has a default
     op.execute("ALTER TABLE user MODIFY level INT NOT NULL DEFAULT 1;")
 
-    # Schema changes for feature_config
-    op.execute(
-        """
-        ALTER TABLE feature_config
-          CHANGE COLUMN config config_json JSON NULL,
-          ADD COLUMN title VARCHAR(100) NOT NULL DEFAULT 'Event',
-          ADD COLUMN page_path VARCHAR(100) NOT NULL DEFAULT '/';
-        """
-    )
-
-    # Seed minimal demo data (idempotent via ON DUPLICATE KEY UPDATE)
-    # Each statement must be executed separately in MySQL
+    # Seed demo user
     op.execute(
         """
         INSERT INTO user (id, external_id, status, level, created_at, updated_at)
@@ -36,6 +25,7 @@ def upgrade() -> None:
         """
     )
 
+    # Seed feature config/schedule and season pass baseline
     op.execute(
         """
         INSERT INTO feature_config (feature_type, title, page_path, is_enabled, config_json, created_at, updated_at)
@@ -77,19 +67,8 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    # Remove seeded rows (safe deletes by keys)
     op.execute("DELETE FROM season_pass_level WHERE season_id = 1;")
     op.execute("DELETE FROM season_pass_config WHERE id = 1;")
     op.execute("DELETE FROM feature_schedule WHERE date = CURDATE();")
     op.execute("DELETE FROM feature_config WHERE feature_type = 'ROULETTE';")
     op.execute("DELETE FROM user WHERE id = 1;")
-
-    # Revert schema changes
-    op.execute(
-        """
-        ALTER TABLE feature_config
-          DROP COLUMN page_path,
-          DROP COLUMN title,
-          CHANGE COLUMN config_json config JSON NULL;
-        """
-    )
