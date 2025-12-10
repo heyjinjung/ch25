@@ -27,8 +27,8 @@ def upgrade() -> None:
     # Each statement must be executed separately in MySQL
     op.execute(
         """
-        INSERT INTO user (id, external_id, status, created_at, updated_at)
-        VALUES (1, 'demo-user', 'ACTIVE', NOW(), NOW())
+        INSERT INTO user (id, external_id, status, level, created_at, updated_at)
+        VALUES (1, 'demo-user', 'ACTIVE', 1, NOW(), NOW())
         ON DUPLICATE KEY UPDATE external_id=VALUES(external_id), status=VALUES(status), updated_at=NOW();
         """
     )

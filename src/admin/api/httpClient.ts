@@ -1,9 +1,10 @@
 // src/admin/api/httpClient.ts
 import axios from "axios";
 
-// Prefer explicit admin base URL; default to backend admin route prefix.
+// Prefer explicit admin base URL; fall back to VITE_ADMIN_API_URL, then localhost.
 const adminBaseURL =
   import.meta.env.VITE_ADMIN_API_BASE_URL ??
+  import.meta.env.VITE_ADMIN_API_URL ??
   "http://localhost:8000/admin/api";
 
 export const adminApi = axios.create({
