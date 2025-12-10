@@ -13,6 +13,9 @@ depends_on = None
 
 
 def upgrade() -> None:
+    # Ensure user.level has server default before seeding demo user
+    op.execute("ALTER TABLE user MODIFY level INT NOT NULL DEFAULT 1;")
+
     # Schema changes for feature_config
     op.execute(
         """
