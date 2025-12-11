@@ -342,6 +342,16 @@ class SeasonPassService:
         if progress["total_wins"] < threshold:
             return None
 
+        existing = db.execute(
+            select(SeasonPassStampLog).where(
+                SeasonPassStampLog.user_id == user_id,
+                SeasonPassStampLog.source_feature_type == "INTERNAL_WIN_50",
+                SeasonPassStampLog.period_key == "INTERNAL_WIN_50",
+            )
+        ).scalar_one_or_none()
+        if existing:
+            return None
+
         return self.maybe_add_stamp(
             db,
             user_id=user_id,
@@ -349,6 +359,7 @@ class SeasonPassService:
             xp_bonus=0,
             now=today,
             stamp_count=1,
+            period_key="INTERNAL_WIN_50",
         )
 
     def get_internal_win_progress(

@@ -70,9 +70,23 @@ def list_wallets(user_id: int | None = None, external_id: str | None = None, db:
 
 
 @router.get("/play-logs", response_model=list[PlayLogEntry])
-def list_recent_play_logs(limit: int = 50, db: Session = Depends(get_db)):
+def list_recent_play_logs(limit: int = 50, external_id: str | None = None, db: Session = Depends(get_db)):
     """Unified recent play logs from roulette/dice/lottery."""
     limit = min(max(limit, 1), 200)
+    
+    # Build optional user filter
+    user_filter_roulette = True
+    user_filter_dice = True
+    user_filter_lottery = True
+    if external_id:
+        user = db.query(User).filter(User.external_id == external_id).first()
+        if user:
+            user_filter_roulette = RouletteLog.user_id == user.id
+            user_filter_dice = DiceLog.user_id == user.id
+            user_filter_lottery = LotteryLog.user_id == user.id
+        else:
+            return []  # No user found with this external_id
+    
     roulette_rows = (
         db.query(
             RouletteLog.id,
@@ -85,6 +99,7 @@ def list_recent_play_logs(limit: int = 50, db: Session = Depends(get_db)):
         )
         .join(User, User.id == RouletteLog.user_id)
         .join(RouletteSegment, RouletteSegment.id == RouletteLog.segment_id)
+        .filter(user_filter_roulette)
         .order_by(RouletteLog.created_at.desc())
         .limit(limit)
         .all()
@@ -102,6 +117,7 @@ def list_recent_play_logs(limit: int = 50, db: Session = Depends(get_db)):
         )
         .join(User, User.id == DiceLog.user_id)
         .join(DiceConfig, DiceConfig.id == DiceLog.config_id)
+        .filter(user_filter_dice)
         .order_by(DiceLog.created_at.desc())
         .limit(limit)
         .all()
@@ -118,6 +134,7 @@ def list_recent_play_logs(limit: int = 50, db: Session = Depends(get_db)):
         )
         .join(User, User.id == LotteryLog.user_id)
         .join(LotteryPrize, LotteryPrize.id == LotteryLog.prize_id)
+        .filter(user_filter_lottery)
         .order_by(LotteryLog.created_at.desc())
         .limit(limit)
         .all()

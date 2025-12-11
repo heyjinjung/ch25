@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useRef, useState } from "react";
 
 interface Segment {
   readonly label: string;
@@ -10,6 +10,8 @@ interface RouletteWheelProps {
   readonly segments: Segment[];
   readonly isSpinning: boolean;
   readonly selectedIndex?: number;
+  readonly spinDurationMs?: number;
+  readonly onSpinEnd?: () => void;
 }
 
 const COLORS = ["#10b981", "#ef4444", "#0ea5e9", "#f59e0b", "#22c55e", "#8b5cf6"];
@@ -26,29 +28,73 @@ const describeArc = (cx: number, cy: number, r: number, startAngle: number, endA
   return `M ${cx} ${cy} L ${start.x} ${start.y} A ${r} ${r} 0 ${largeArcFlag} 0 ${end.x} ${end.y} Z`;
 };
 
-const RouletteWheel: React.FC<RouletteWheelProps> = ({ segments, isSpinning, selectedIndex }) => {
+const RouletteWheel: React.FC<RouletteWheelProps> = ({
+  segments,
+  isSpinning,
+  selectedIndex,
+  spinDurationMs = 3000,
+  onSpinEnd,
+}) => {
   const [rotation, setRotation] = useState(0);
-  const [showResult, setShowResult] = useState(false);
-  const [spinCount, setSpinCount] = useState(0);
+  const spinCountRef = useRef(0);
+  const wheelRef = useRef<SVGSVGElement | null>(null);
+  const fallbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const segmentCount = segments.length || 6;
   const anglePerSegment = useMemo(() => 360 / segmentCount, [segmentCount]);
 
   useEffect(() => {
     if (!isSpinning) return;
-    setShowResult(false);
+    if (fallbackTimeoutRef.current) {
+      clearTimeout(fallbackTimeoutRef.current);
+      fallbackTimeoutRef.current = null;
+    }
     // Increase base turns every spin so the transform value always changes.
-    const baseTurns = 6 + spinCount; // grows to force animation re-trigger
+    const baseTurns = 6 + spinCountRef.current; // grows to force animation re-trigger
     const spinTo =
       selectedIndex !== undefined
         ? 360 * baseTurns + (360 - anglePerSegment * selectedIndex - anglePerSegment / 2)
         : 360 * baseTurns;
+    console.log("[Roulette] wheel spin", {
+      baseTurns,
+      spinTo,
+      selectedIndex,
+      anglePerSegment,
+    });
     setRotation(spinTo);
-    setSpinCount((prev) => prev + 1);
+    spinCountRef.current += 1;
 
-    const timer = setTimeout(() => setShowResult(true), 2500);
-    return () => clearTimeout(timer);
-  }, [anglePerSegment, isSpinning, selectedIndex, spinCount]);
+    // Fallback: if transitionend is missed, fire onSpinEnd after spin duration.
+    fallbackTimeoutRef.current = setTimeout(() => {
+      console.warn("[Roulette] transitionend fallback fired");
+      onSpinEnd?.();
+    }, spinDurationMs + 50);
+  }, [anglePerSegment, isSpinning, selectedIndex, spinDurationMs, onSpinEnd]);
+
+  useEffect(() => {
+    if (!isSpinning) return;
+    const node = wheelRef.current;
+    if (!node) return;
+
+    const handleEnd = (e: TransitionEvent) => {
+      if (e.propertyName === "transform") {
+        onSpinEnd?.();
+        if (fallbackTimeoutRef.current) {
+          clearTimeout(fallbackTimeoutRef.current);
+          fallbackTimeoutRef.current = null;
+        }
+      }
+    };
+
+    node.addEventListener("transitionend", handleEnd);
+    return () => {
+      node.removeEventListener("transitionend", handleEnd);
+      if (fallbackTimeoutRef.current) {
+        clearTimeout(fallbackTimeoutRef.current);
+        fallbackTimeoutRef.current = null;
+      }
+    };
+  }, [isSpinning, onSpinEnd, spinDurationMs]);
 
   return (
     <div className="relative mx-auto flex flex-col items-center gap-4">
@@ -62,7 +108,8 @@ const RouletteWheel: React.FC<RouletteWheelProps> = ({ segments, isSpinning, sel
         <svg
           viewBox="0 0 200 200"
           className="h-full w-full rounded-full bg-gradient-to-br from-slate-950 to-slate-900 shadow-[0_0_40px_rgba(234,179,8,0.25)]"
-          style={{ transform: `rotate(${rotation}deg)`, transition: "transform 3s ease-out" }}
+          ref={wheelRef}
+          style={{ transform: `rotate(${rotation}deg)`, transition: `transform ${spinDurationMs}ms ease-out` }}
         >
           <circle cx="100" cy="100" r="96" fill="#0f172a" stroke="#fbbf24" strokeWidth="3" />
           {segments.map((segment, index) => {
@@ -104,14 +151,6 @@ const RouletteWheel: React.FC<RouletteWheelProps> = ({ segments, isSpinning, sel
           </defs>
         </svg>
       </div>
-
-      {/* Result indicator */}
-      {showResult && selectedIndex !== undefined && segments[selectedIndex] && (
-        <div className="animate-bounce-in rounded-xl border border-gold-500/50 bg-gradient-to-r from-emerald-900/90 to-slate-900/90 px-6 py-3 text-center shadow-lg">
-          <p className="text-sm text-gold-300">축하합니다!</p>
-          <p className="text-xl font-bold text-white">{segments[selectedIndex].label}</p>
-        </div>
-      )}
     </div>
   );
 };

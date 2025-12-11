@@ -10,6 +10,7 @@ export interface SeasonPassLevelDto {
   readonly reward_label: string;
   readonly is_claimed: boolean;
   readonly is_unlocked: boolean;
+  readonly auto_claim?: boolean;
 }
 
 export interface SeasonPassStatusResponse {
@@ -46,6 +47,7 @@ export const getSeasonPassStatus = async (): Promise<SeasonPassStatusResponse> =
       reward_label: lvl.reward_label ?? `${lvl.reward_type ?? ""} ${lvl.reward_amount ?? ""}`.trim(),
       is_claimed: lvl.is_claimed ?? false,
       is_unlocked: lvl.is_unlocked ?? currentXp >= (lvl.required_xp ?? 0),
+      auto_claim: lvl?.auto_claim === true || lvl?.auto_claim === 1,
     })) as SeasonPassLevelDto[];
     return {
       current_level: raw?.progress?.current_level ?? 0,

@@ -40,21 +40,25 @@ const SeasonPassPage: React.FC = () => {
 
   const cards = [
     {
+      icon: "🎄",
       title: "CC랭킹 TOP10",
       desc: "순위가 10위 안에 들면 스탬프 1개",
       status: external?.rank ? `현재 ${external.rank}위${top10Needed > 0 ? `, ${top10Needed}위 상승 필요` : " (완료)"}` : "랭킹 데이터 없음",
     },
     {
+      icon: "❄️",
       title: "CC사이트 일일이용",
       desc: "플레이 수 0→1이 되면 스탬프 1개",
       status: playDone ? "완료" : "미완료",
     },
     {
+      icon: "🎁",
       title: "CC 입금 10만원마다",
       desc: "10만원 달성할 때마다 스탬프 1개",
       status: `누적 ${formatCurrency(deposit)}원 / 다음까지 ${depositRemainder === 100_000 ? "0" : formatCurrency(depositRemainder)}원`,
     },
     {
+      icon: "⛄",
       title: "크리스마스게임 승리 50회",
       desc: "승리 누적 50회 달성 시 스탬프 1개",
       status: internalWins.data
@@ -93,10 +97,10 @@ const SeasonPassPage: React.FC = () => {
 
   return (
     <FeatureGate feature="SEASON_PASS">
-      <section className="space-y-8 rounded-3xl border border-gold-600/30 bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 p-8 shadow-2xl">
+      <section className="space-y-8 rounded-3xl border border-red-700/40 bg-gradient-to-br from-slate-950 via-red-950/30 to-emerald-950 p-8 shadow-2xl">
         <header className="text-center space-y-2">
           <p className="text-sm uppercase tracking-[0.3em] text-gold-400">Season Pass</p>
-          <h1 className="text-3xl font-bold text-white">크리스마스 시즌패스</h1>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-gold-300 via-gold-400 to-gold-300 bg-clip-text text-transparent">🎄 크리스마스 시즌패스</h1>
           <p className="text-sm text-emerald-100">스탬프를 모아 XP를 올리고 보상을 받으세요.</p>
           <div className="flex flex-wrap items-center justify-center gap-3 text-xs text-emerald-200">
             <span className="rounded-full border border-emerald-500/40 px-3 py-1">
@@ -146,10 +150,13 @@ const SeasonPassPage: React.FC = () => {
           </div>
           <div className="grid gap-4 md:grid-cols-2">
             {cards.map((card) => (
-              <div key={card.title} className="rounded-xl border border-slate-700/50 bg-slate-900/60 p-4 shadow">
-                <h3 className="text-base font-semibold text-white">{card.title}</h3>
-                <p className="text-sm text-slate-300">{card.desc}</p>
-                <p className="mt-2 text-sm font-semibold text-emerald-200">{card.status}</p>
+              <div key={card.title} className="rounded-xl border border-red-800/40 bg-gradient-to-br from-slate-900/80 to-red-950/20 p-4 shadow-lg hover:border-gold-500/50 hover:shadow-gold-500/10 transition-all duration-300">
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl" aria-hidden>{card.icon}</span>
+                  <h3 className="text-base font-semibold text-white">{card.title}</h3>
+                </div>
+                <p className="text-sm text-slate-300 mt-1">{card.desc}</p>
+                <p className="mt-2 text-sm font-semibold text-emerald-300">{card.status}</p>
               </div>
             ))}
           </div>
@@ -159,35 +166,66 @@ const SeasonPassPage: React.FC = () => {
           <h2 className="text-lg font-bold text-white">레벨 보상</h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {data.levels.map((level) => {
-              const canClaim = level.is_unlocked && !level.is_claimed;
+              const isAuto = !!level.auto_claim;
+              const canClaim = !isAuto && level.is_unlocked && !level.is_claimed;
+              const rewardOverride: Record<number, string> = {
+                1: "룰렛티켓 1장",
+                2: "주사위티켓 2장",
+                3: "복권티켓 2장",
+                4: "편의점 깁콘 1만",
+                5: "룰렛티켓 3장",
+                6: "복권티켓 3장",
+                7: "배민 2만",
+              };
+              const levelIcon: Record<number, string> = {
+                1: "🎅",
+                2: "🎁",
+                3: "🧊",
+                4: "🧣",
+                5: "🔔",
+                6: "❄️",
+                7: "⛄",
+              };
+              const displayReward = rewardOverride[level.level] ?? level.reward_label;
+              const buttonLabel = level.is_claimed
+                ? "신청완료"
+                : canClaim
+                ? "관리자신청"
+                : "잠금";
               return (
                 <article
                   key={level.level}
-                  className={`rounded-xl border p-4 shadow transition-all ${
+                  className={`rounded-xl border p-4 shadow-lg transition-all duration-300 ${
                     canClaim
-                      ? "border-gold-500/70 bg-gradient-to-br from-gold-900/20 to-emerald-900/20"
+                      ? "border-gold-400 bg-gradient-to-br from-gold-900/30 to-red-900/20 animate-pulse shadow-gold-500/20"
                       : level.is_claimed
-                      ? "border-emerald-600/40 bg-emerald-900/20"
-                      : "border-slate-700/40 bg-slate-900/40"
+                      ? "border-emerald-500/50 bg-gradient-to-br from-emerald-900/30 to-slate-900/40"
+                      : "border-slate-700/40 bg-slate-900/50 hover:border-red-800/40"
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-semibold text-slate-200">레벨 {level.level}</span>
+                    <span className="text-sm font-semibold text-slate-200">
+                      <span className="mr-2" aria-hidden>{levelIcon[level.level] ?? "🎄"}</span>
+                      레벨 {level.level}
+                    </span>
                     <span className="text-xs text-slate-400">필요 XP {level.required_xp.toLocaleString()}</span>
                   </div>
-                  <p className="mt-2 text-sm text-slate-100">{level.reward_label}</p>
+                  <p className="mt-2 text-sm text-slate-100">{displayReward}</p>
                   <button
                     type="button"
                     disabled={!canClaim}
-                    onClick={() => claimMutation.mutate(level.level)}
+                    onClick={() => canClaim && claimMutation.mutate(level.level)}
                     className={`mt-3 w-full rounded-full px-3 py-2 text-sm font-bold transition ${
                       canClaim
                         ? "bg-gradient-to-r from-gold-500 to-gold-600 text-white hover:from-gold-400 hover:to-gold-500"
                         : "bg-slate-700/60 text-slate-400 cursor-not-allowed"
                     }`}
                   >
-                    {level.is_claimed ? "수령 완료" : canClaim ? "보상 수령" : "잠금"}
+                    {buttonLabel}
                   </button>
+                  {isAuto && !level.is_claimed && (
+                    <p className="mt-1 text-xs text-emerald-200">자동 지급 레벨입니다.</p>
+                  )}
                 </article>
               );
             })}

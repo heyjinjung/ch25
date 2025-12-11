@@ -1,16 +1,25 @@
-﻿import { useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useRef, useState } from "react";
 import RouletteWheel from "../components/game/RouletteWheel";
 import { usePlayRoulette, useRouletteStatus } from "../hooks/useRoulette";
 import FeatureGate from "../components/feature/FeatureGate";
 import { GAME_TOKEN_LABELS } from "../types/gameTokens";
 import { useNavigate } from "react-router-dom";
+import type { RoulettePlayResponse } from "../api/rouletteApi";
 
 const RoulettePage: React.FC = () => {
   const { data, isLoading, isError, error } = useRouletteStatus();
   const playMutation = usePlayRoulette();
   const navigate = useNavigate();
   const [selectedIndex, setSelectedIndex] = useState<number | undefined>();
+  const SPIN_DURATION_MS = 3000;
+  const RESULT_DELAY_MS = 800;
+  const [isSpinning, setIsSpinning] = useState(false);
+  const [displayedResult, setDisplayedResult] = useState<RoulettePlayResponse | null>(null);
   const [rewardToast, setRewardToast] = useState<string | null>(null);
+  const spinTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingResultRef = useRef<RoulettePlayResponse | null>(null);
+  const spinStartAtRef = useRef<number | null>(null);
+  const transitionEndAtRef = useRef<number | null>(null);
 
   const segments = useMemo(
     () =>
@@ -55,17 +64,76 @@ const RoulettePage: React.FC = () => {
 
   const handlePlay = async () => {
     try {
-      setSelectedIndex(undefined);
-      const result = await playMutation.mutateAsync();
-      setSelectedIndex(result.selected_index);
-      if (result.reward_value && Number(result.reward_value) > 0 && result.reward_type !== "NONE") {
-        setRewardToast(`+${result.reward_value} ${result.reward_type}`);
-        setTimeout(() => setRewardToast(null), 2500);
+      if (spinTimeoutRef.current) {
+        clearTimeout(spinTimeoutRef.current);
+        spinTimeoutRef.current = null;
       }
+
+      pendingResultRef.current = null;
+      setSelectedIndex(undefined);
+      setDisplayedResult(null);
+      setRewardToast(null);
+
+      const requestAt = performance.now();
+      console.log("[Roulette] play start", { requestAt });
+
+      const result = await playMutation.mutateAsync();
+      const resultAt = performance.now();
+      console.log("[Roulette] result received", {
+        label: result.segment?.label,
+        reward: result.reward_value,
+        selectedIndex: result.selected_index,
+        latencyMs: resultAt - requestAt,
+      });
+
+      pendingResultRef.current = result;
+      setSelectedIndex(result.selected_index);
+      setIsSpinning(true);
+      spinStartAtRef.current = performance.now();
     } catch (e) {
       console.error("Roulette play failed", e);
     }
   };
+
+  const handleSpinEnd = () => {
+    if (!pendingResultRef.current) return;
+
+    transitionEndAtRef.current = performance.now();
+    console.log("[Roulette] wheel transitionend", {
+      spinMs:
+        spinStartAtRef.current && transitionEndAtRef.current
+          ? transitionEndAtRef.current - spinStartAtRef.current
+          : "n/a",
+    });
+
+    spinTimeoutRef.current = setTimeout(() => {
+      const result = pendingResultRef.current;
+      pendingResultRef.current = null;
+      setIsSpinning(false);
+      setDisplayedResult(result);
+      if (result && result.reward_value && Number(result.reward_value) > 0 && result.reward_type !== "NONE") {
+        setRewardToast(`+${result.reward_value} ${result.reward_type}`);
+        setTimeout(() => setRewardToast(null), 2500);
+      }
+      const applyAt = performance.now();
+      console.log("[Roulette] result applied", {
+        delayAfterTransitionMs: transitionEndAtRef.current ? applyAt - transitionEndAtRef.current : "n/a",
+        totalMs: spinStartAtRef.current ? applyAt - spinStartAtRef.current : "n/a",
+      });
+      spinTimeoutRef.current = null;
+    }, RESULT_DELAY_MS);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (spinTimeoutRef.current) {
+        clearTimeout(spinTimeoutRef.current);
+      }
+      pendingResultRef.current = null;
+      spinStartAtRef.current = null;
+      transitionEndAtRef.current = null;
+    };
+  }, []);
 
   const content = (() => {
     if (isLoading) {
@@ -89,7 +157,7 @@ const RoulettePage: React.FC = () => {
 
     return (
       <section className="space-y-8 rounded-3xl border border-gold-600/40 bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 p-8 shadow-2xl">
-        {rewardToast && (
+        {!isSpinning && rewardToast && (
           <div className="fixed bottom-6 right-6 z-30 rounded-2xl border border-emerald-500/60 bg-emerald-900/80 px-4 py-3 text-emerald-100 shadow-lg animate-bounce-in">
             {rewardToast}
           </div>
@@ -108,12 +176,17 @@ const RoulettePage: React.FC = () => {
             </div>
           </div>
         </header>
-
         <div className="grid gap-6 items-center lg:grid-cols-[1.2fr_0.8fr]">
           <div className="relative rounded-3xl border border-emerald-700/50 bg-gradient-to-br from-slate-950 to-slate-900 p-6 shadow-[0_10px_40px_rgba(0,0,0,0.45)]">
             <div className="absolute -left-6 -top-6 h-24 w-24 rounded-full bg-emerald-500/20 blur-3xl" />
             <div className="absolute -right-10 bottom-0 h-32 w-32 rounded-full bg-gold-400/10 blur-3xl" />
-            <RouletteWheel segments={segments} isSpinning={playMutation.isPending} selectedIndex={selectedIndex} />
+            <RouletteWheel
+              segments={segments}
+              isSpinning={isSpinning}
+              selectedIndex={selectedIndex}
+              spinDurationMs={SPIN_DURATION_MS}
+              onSpinEnd={handleSpinEnd}
+            />
           </div>
 
           <div className="space-y-4 rounded-3xl border border-emerald-700/40 bg-slate-900/70 p-6 shadow-lg">
@@ -128,7 +201,7 @@ const RoulettePage: React.FC = () => {
             )}
             <button
               type="button"
-              disabled={playMutation.isPending || (!isUnlimited && data.remaining_spins <= 0) || isOutOfTokens}
+              disabled={playMutation.isPending || isSpinning || (!isUnlimited && data.remaining_spins <= 0) || isOutOfTokens}
               onClick={handlePlay}
               className="group relative w-full overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-500 px-8 py-4 text-lg font-bold text-white shadow-lg transition-all hover:from-emerald-500 hover:to-emerald-400 hover:shadow-emerald-500/40 disabled:cursor-not-allowed disabled:from-slate-700 disabled:to-slate-600"
             >
@@ -145,13 +218,13 @@ const RoulettePage: React.FC = () => {
               <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform group-hover:translate-x-full" />
             </button>
 
-            {playMutation.data && !playMutation.isPending && (
-              <div className="rounded-2xl border border-gold-500/50 bg-gradient-to-br from-emerald-900/70 to-slate-900/80 p-5 text-center shadow-lg">
-                <p className="text-sm uppercase tracking-wider text-gold-400">결과</p>
-                <p className="mt-2 text-2xl font-bold text-white">{playMutation.data.segment.label}</p>
-                {playMutation.data.reward_type && playMutation.data.reward_type !== "NONE" && (
+            {!isSpinning && displayedResult && (
+              <div className="rounded-2xl border border-gold-500/50 bg-gradient-to-br from-emerald-900/70 to-slate-900/80 p-5 text-center shadow-lg animate-bounce-in">
+                <p className="text-sm uppercase tracking-wider text-gold-400">🎉 결과</p>
+                <p className="mt-2 text-2xl font-bold text-white">{displayedResult.segment.label}</p>
+                {displayedResult.reward_type && displayedResult.reward_type !== "NONE" && (
                   <p className="mt-2 text-emerald-300">
-                    +{playMutation.data.reward_value} {playMutation.data.reward_type}
+                    +{displayedResult.reward_value} {displayedResult.reward_type}
                   </p>
                 )}
               </div>

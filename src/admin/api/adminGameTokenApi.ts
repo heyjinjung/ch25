@@ -68,8 +68,10 @@ export async function revokeGameTokens(payload: RevokeGameTokensPayload) {
   return data;
 }
 
-export async function fetchRecentPlayLogs(limit: number = 50) {
-  const { data } = await adminApi.get<PlayLogEntry[]>("/game-tokens/play-logs", { params: { limit } });
+export async function fetchRecentPlayLogs(limit: number = 50, externalId?: string) {
+  const params: Record<string, any> = { limit };
+  if (externalId) params.external_id = externalId;
+  const { data } = await adminApi.get<PlayLogEntry[]>("/game-tokens/play-logs", { params });
   return data;
 }
 

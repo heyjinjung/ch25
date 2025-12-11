@@ -17,6 +17,7 @@ const tokenOptions: GameTokenType[] = ["ROULETTE_COIN", "DICE_TOKEN", "LOTTERY_T
 const GameTokenLogsPage: React.FC = () => {
   const queryClient = useQueryClient();
   const [filterExternalId, setFilterExternalId] = useState<string | undefined>();
+  const [playLogFilterId, setPlayLogFilterId] = useState<string | undefined>();
   const [revokeExternalId, setRevokeExternalId] = useState<string | undefined>();
   const [revokeTokenType, setRevokeTokenType] = useState<GameTokenType>("ROULETTE_COIN");
   const [revokeAmount, setRevokeAmount] = useState<number>(0);
@@ -27,8 +28,8 @@ const GameTokenLogsPage: React.FC = () => {
   });
 
   const playLogsQuery = useQuery<PlayLogEntry[], unknown>({
-    queryKey: ["admin-play-logs"],
-    queryFn: () => fetchRecentPlayLogs(100),
+    queryKey: ["admin-play-logs", playLogFilterId],
+    queryFn: () => fetchRecentPlayLogs(100, playLogFilterId),
   });
 
   const ledgerQuery = useQuery<LedgerEntry[], unknown>({
@@ -106,15 +107,25 @@ const GameTokenLogsPage: React.FC = () => {
 
       {/* 플레이 로그 */}
       <div className="space-y-3 rounded-lg border border-slate-800/60 bg-slate-900/60 p-4">
-        <div className="flex items-center justify-between">
-          <p className="text-lg font-semibold text-white">최근 플레이 로그</p>
-          <button
-            type="button"
-            onClick={() => playLogsQuery.refetch()}
-            className="rounded-md border border-emerald-600/60 px-3 py-2 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-700/20"
-          >
-            새로고침
-          </button>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div className="space-y-1">
+            <p className="text-lg font-semibold text-white">최근 플레이 로그</p>
+            <p className="text-xs text-slate-400">external_id로 필터링</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              placeholder="external_id 입력"
+              className="w-48 rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none"
+              onChange={(e) => setPlayLogFilterId(e.target.value || undefined)}
+            />
+            <button
+              type="button"
+              onClick={() => playLogsQuery.refetch()}
+              className="rounded-md border border-emerald-600/60 px-3 py-2 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-700/20"
+            >
+              새로고침
+            </button>
+          </div>
         </div>
         {playLogsQuery.isError && (
           <p className="rounded-md border border-rose-600/40 bg-rose-950/40 p-2 text-sm text-rose-100">플레이 로그 조회 실패</p>

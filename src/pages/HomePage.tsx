@@ -28,21 +28,25 @@ const GameCard: React.FC<GameCardProps> = ({ title, path, tokenType, tokenBalanc
         ? "상태 조회 실패 - 티켓 지급 확인"
         : undefined;
 
+  const gameIcons: Record<string, string> = { "룰렛": "🎰", "주사위": "🎲", "복권": "🎫" };
   return (
-    <div className="space-y-3 rounded-2xl border border-slate-700/50 bg-slate-900/50 p-5 shadow-lg shadow-emerald-900/10">
+    <div className="space-y-3 rounded-2xl border border-red-800/40 bg-gradient-to-br from-slate-900/80 to-red-950/20 p-5 shadow-lg hover:border-gold-500/50 hover:shadow-gold-500/10 transition-all duration-300">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-bold text-white">{title}</h3>
-        <span className="text-sm text-slate-300">{tokenLabel}</span>
+        <div className="flex items-center gap-2">
+          <span className="text-2xl">{gameIcons[title] ?? "🎮"}</span>
+          <h3 className="text-lg font-bold text-white">{title}</h3>
+        </div>
+        <span className="text-sm text-gold-300">{tokenLabel}</span>
       </div>
-      <p className="text-sm text-slate-400">보유 티켓: {hasCoins ? tokenBalance : 0}</p>
+      <p className="text-sm text-slate-300">보유 티켓: <span className="font-semibold text-emerald-300">{hasCoins ? tokenBalance : 0}</span></p>
       {statusBadge && <p className="text-xs text-amber-200">{statusBadge}</p>}
       <button
         type="button"
         onClick={() => navigate(path)}
         disabled={!hasCoins}
-        className="w-full rounded-lg bg-gradient-to-r from-emerald-600 to-emerald-500 px-4 py-2 text-sm font-bold text-white shadow transition hover:from-emerald-500 hover:to-emerald-400 disabled:cursor-not-allowed disabled:from-slate-700 disabled:to-slate-600"
+        className="w-full rounded-lg bg-gradient-to-r from-red-700 to-red-600 px-4 py-2 text-sm font-bold text-white shadow transition hover:from-red-600 hover:to-red-500 disabled:cursor-not-allowed disabled:from-slate-700 disabled:to-slate-600"
       >
-        {hasCoins ? "바로 입장" : "티켓 없음 - 관리자 문의"}
+        {hasCoins ? "🎄 바로 입장" : "티켓 없음 - 관리자 문의"}
       </button>
     </div>
   );
@@ -120,24 +124,11 @@ const HomePage: React.FC = () => {
 
   return (
     <section className="space-y-8">
-      {/* 크리스마스 히어로 배너 */}
-      <div className="relative overflow-hidden rounded-3xl border border-emerald-600/40 bg-gradient-to-br from-emerald-950 via-slate-900 to-amber-900 p-8 shadow-2xl">
-        <div className="absolute -left-6 top-4 h-20 w-20 rounded-full bg-emerald-500/30 blur-3xl" />
-        <div className="absolute right-6 -bottom-6 h-28 w-28 rounded-full bg-amber-400/20 blur-3xl" />
-        <div className="relative flex flex-col gap-2 text-left">
-          <p className="text-xs uppercase tracking-[0.35em] text-emerald-200">🎄 ????? ??</p>
-          <h1 className="text-3xl font-bold text-white">따뜻한 크리스마스 보상</h1>
-          <p className="text-sm text-emerald-100">
-            매일 티켓을 모아 게임하고, 시즌패스 보상을 챙기세요
-          </p>
-        </div>
-      </div>
-
-      <div className="rounded-3xl border border-gold-600/30 bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 p-8 shadow-2xl space-y-3">
+      <div className="rounded-3xl border border-red-700/40 bg-gradient-to-br from-slate-950 via-red-950/30 to-emerald-950 p-8 shadow-2xl space-y-3">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.25em] text-gold-400">Season Pass</p>
-            <h2 className="text-2xl font-bold text-white">시즌패스 요약</h2>
+            <p className="text-xs uppercase tracking-[0.25em] text-gold-400">🎄 Season Pass</p>
+            <h2 className="text-2xl font-bold bg-gradient-to-r from-gold-300 via-gold-400 to-gold-300 bg-clip-text text-transparent">시즌패스 요약</h2>
           </div>
           <div className="rounded-full bg-emerald-900/60 px-4 py-1 text-xs text-emerald-200">{seasonSummary.detail}</div>
         </div>
@@ -145,21 +136,27 @@ const HomePage: React.FC = () => {
           <p className="text-sm font-semibold text-emerald-100">{seasonSummary.label}</p>
         </div>
         <div className="grid gap-3 md:grid-cols-2">
-          {stampTips.map((tip) => (
-            <div key={tip.title} className="rounded-lg border border-slate-700/50 bg-slate-900/60 p-3">
-              <p className="text-sm font-semibold text-white">{tip.title}</p>
-              <p className="text-xs text-emerald-200">{tip.status}</p>
-            </div>
-          ))}
+          {stampTips.map((tip, idx) => {
+            const tipIcons = ["🎄", "❄️", "🎁", "⛄"];
+            return (
+              <div key={tip.title} className="rounded-lg border border-red-800/40 bg-gradient-to-br from-slate-900/80 to-red-950/20 p-3 hover:border-gold-500/40 transition-all">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">{tipIcons[idx] ?? "🎅"}</span>
+                  <p className="text-sm font-semibold text-white">{tip.title}</p>
+                </div>
+                <p className="text-xs text-emerald-300 mt-1">{tip.status}</p>
+              </div>
+            );
+          })}
         </div>
       </div>
 
-      <div className="rounded-3xl border border-slate-700/50 bg-slate-900/60 p-8 shadow-2xl">
+      <div className="rounded-3xl border border-red-700/40 bg-gradient-to-br from-slate-950 via-red-950/20 to-emerald-950 p-8 shadow-2xl">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.25em] text-emerald-300">Games</p>
-            <h2 className="text-2xl font-bold text-white">게임 선택</h2>
-            <p className="text-sm text-slate-400">티켓이 있으면 바로 입장, 없으면 관리자에게 문의해 주세요.</p>
+            <p className="text-xs uppercase tracking-[0.25em] text-gold-400">🎮 Games</p>
+            <h2 className="text-2xl font-bold bg-gradient-to-r from-red-400 via-gold-400 to-emerald-400 bg-clip-text text-transparent">게임 선택</h2>
+            <p className="text-sm text-slate-300">티켓이 있으면 바로 입장, 없으면 관리자에게 문의해 주세요.</p>
           </div>
         </div>
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -169,11 +166,11 @@ const HomePage: React.FC = () => {
         </div>
       </div>
 
-      <div className="rounded-3xl border border-amber-600/30 bg-gradient-to-br from-slate-900 via-slate-800 to-amber-900/40 p-8 shadow-2xl">
+      <div className="rounded-3xl border border-gold-600/40 bg-gradient-to-br from-slate-950 via-gold-950/20 to-red-950/30 p-8 shadow-2xl">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.25em] text-amber-300">Ranking</p>
-            <h2 className="text-2xl font-bold text-white">CC랭킹</h2>
+            <p className="text-xs uppercase tracking-[0.25em] text-gold-400">🏆 Ranking</p>
+            <h2 className="text-2xl font-bold bg-gradient-to-r from-gold-300 via-gold-400 to-gold-300 bg-clip-text text-transparent">CC랭킹</h2>
             <p className="text-sm text-slate-300">입금액/플레이 수 기준. TOP10 진입 시 스탬프 1개.</p>
           </div>
           {external?.rank && (
@@ -186,15 +183,21 @@ const HomePage: React.FC = () => {
           <p className="mt-3 text-sm text-slate-400">랭킹 데이터 없음</p>
         ) : (
           <div className="mt-4 grid gap-3 md:grid-cols-3">
-            {rankingSummary.map((entry) => (
-              <div key={entry.user_id} className="rounded-xl border border-amber-500/40 bg-slate-900/60 p-4">
-                <p className="text-sm font-semibold text-amber-200">{entry.rank}위</p>
-                <p className="text-base font-bold text-white">
-                  {displayName(entry.user_name)}
-                </p>
-                <p className="text-xs text-slate-300">입금 {entry.deposit_amount.toLocaleString()}원 · 플레이 {entry.play_count}</p>
-              </div>
-            ))}
+            {rankingSummary.map((entry, idx) => {
+              const medals = ["🥇", "🥈", "🥉"];
+              return (
+                <div key={entry.user_id} className="rounded-xl border border-gold-500/50 bg-gradient-to-br from-slate-900/80 to-gold-950/20 p-4 hover:border-gold-400 transition-all">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">{medals[idx] ?? "🏅"}</span>
+                    <p className="text-sm font-semibold text-gold-300">{entry.rank}위</p>
+                  </div>
+                  <p className="text-base font-bold text-white mt-1">
+                    {displayName(entry.user_name)}
+                  </p>
+                  <p className="text-xs text-slate-300">입금 {entry.deposit_amount.toLocaleString()}원 · 플레이 {entry.play_count}</p>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
