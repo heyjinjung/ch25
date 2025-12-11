@@ -15,8 +15,21 @@ default_dev_origins = [
     "http://localhost:3000",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "http://cc-jm.com",
+    "https://cc-jm.com",
+    "http://www.cc-jm.com",
+    "https://www.cc-jm.com",
 ]
-cors_origins = settings.cors_origins or default_dev_origins
+
+# Combine settings.cors_origins and default_dev_origins to ensure all are allowed
+cors_origins = list(set((settings.cors_origins or []) + default_dev_origins))
+
+# Remove '*' if present because allow_credentials=True doesn't allow it
+if "*" in cors_origins:
+    cors_origins.remove("*")
+
+print(f"Loading CORS origins: {cors_origins}", flush=True)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
@@ -24,6 +37,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.on_event("startup")
+async def startup_event():
+    print(f"Startup: CORS origins loaded: {cors_origins}", flush=True)
 
 register_exception_handlers(app)
 app.include_router(api_router)
