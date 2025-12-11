@@ -1,7 +1,7 @@
 # Admin Lottery Configuration Guide
 
 ## 어디서?
-- 로그인: `/admin/login` → 기본 `admin/1234`.
+- 로그인: `/admin/login` → 기본 `admin` 계정.
 - 메뉴: `/admin` → “복권 설정”.
 - API: `GET/POST/PUT /admin/api/lottery-config[/<id>]`.
 
