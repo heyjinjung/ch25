@@ -14,7 +14,7 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>;
 
 const ADMIN_USER = "admin";
-const ADMIN_PASS = "1234";
+const ADMIN_PASS = "2wP?+!Etm8#Qv4Mn";
 
 const AdminLoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -47,7 +47,7 @@ const AdminLoginPage: React.FC = () => {
         <input
           {...register("password")}
           type="password"
-          placeholder="비밀번호 (1234)"
+          placeholder="비밀번호"
           className="rounded px-3 py-2 bg-slate-800 border border-emerald-700 text-slate-100"
         />
         {errors.password && <span className="text-red-400 text-sm">{errors.password.message}</span>}

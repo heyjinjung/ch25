@@ -4,7 +4,7 @@
 
 ## í”„ë¡œì íŠ¸ í•œëˆˆì— ë³´ê¸°
 - Backend: FastAPI + SQLAlchemy + Alembic, MySQL 8(ì˜µì…˜: Redis 7), JWT ë°œê¸‰ `/api/auth/token`(external_idë¡œ ìë™ ìƒì„± ê°€ëŠ¥), `ENV=local` ì‹œ CORS `*`.
-- Frontend: React 18 + TypeScript 5 + Vite 6 + Tailwind, React Query 5, Axios. ê´€ë¦¬ì UIëŠ” `/admin`(ì„ì‹œ ë¡œê·¸ì¸ `admin/1234`).
+- Frontend: React 18 + TypeScript 5 + Vite 6 + Tailwind, React Query 5, Axios. ê´€ë¦¬ì UIëŠ” `/admin`(ë¡œê·¸ì¸ `admin` / secure password).
 - ì£¼ìš” ë„ë©”ì¸: ë£°ë ›/ì£¼ì‚¬ìœ„/ë³µê¶Œ, ì‹œì¦ŒíŒ¨ìŠ¤(XP ìŠ¤íƒ¬í”„), ì™¸ë¶€ ë­í‚¹ ìˆ˜ë™ ì…ë ¥/ë³´ìƒ, **ê²Œì„ í† í° ì§€ê°‘/ì›ì¥**(ROULETTE_COIN, DICE_TOKEN, LOTTERY_TICKET) ê´€ë¦¬ì ì§€ê¸‰Â·ì°¨ê°Â·ë¡œê·¸. today-feature ìŠ¤ì¼€ì¤„ ê²Œì´íŠ¸ëŠ” **íê¸°(ì•„ì¹´ì´ë¸Œ)** ë˜ì—ˆê³  ê¸°ë³¸ìœ¼ë¡œ ë¹„í™œì„±ì…ë‹ˆë‹¤.
 - ì‹œì¦ŒíŒ¨ìŠ¤ í˜„ì¬ ìŠ¤í™: base_xp_per_stamp=20, ë ˆë²¨ 7ë‹¨ê³„(ê³¡ì„ /ë³´ìƒì€ `season_pass_level`; ê¸°ë³¸ ì‹œë“œ `scripts/seed_ranking_seasonpass.sql`). ê²Œì„ë³„ XP ê³„ì‚°ì€ ì„œë¹„ìŠ¤ ë¡œì§/DB ì„¤ì •ê°’ì— ë”°ë¦…ë‹ˆë‹¤.
 
@@ -54,7 +54,7 @@ npm install
 # VITE_API_URL ë“± í•„ìš” ì‹œ .env.development ìˆ˜ì •
 npm run dev -- --host --port 5173
 ```
-í™•ì¸: ì‚¬ìš©ì http://localhost:5173 , ê´€ë¦¬ì http://localhost:5173/admin (admin/1234)
+í™•ì¸: ì‚¬ìš©ì http://localhost:5173 , ê´€ë¦¬ì http://localhost:5173/admin (admin / secure password)
 - ê²Œì„ í† í° ì§€ê¸‰: `/admin/game-tokens`
 - ê²Œì„ í† í° ì›ì¥/í”Œë ˆì´ ë¡œê·¸: `/admin/game-token-logs`
 
@@ -106,17 +106,17 @@ docker compose exec backend alembic upgrade head  # ìŠ¤í‚¤ë§ˆ ì ìš©(ìë™ ì•„ë
 - DB ë§ˆì´ê·¸ë ˆì´ì…˜: `alembic/versions/20251207_0006_add_user_game_wallet.py`(ì§€ê°‘), `20251208_0007_add_external_ranking_tables.py`, `20251208_0008_add_user_credentials_and_level.py`
 
 í•„ìš”í•œ ë‚´ìš©ì´ ë” ìˆë‹¤ë©´ READMEì™€ `docs/` í•˜ìœ„ ì„¸ë¶€ ë¬¸ì„œë¥¼ ì°¸ê³ í•˜ì„¸ìš”. 
-## 2025-12 ¼­¹ö ¹èÆ÷ Æ®·¯ºí½´ÆÃ ¿ä¾à
-- Field 'level' doesn't have a default value: app/models/user.py¿¡ server_default="1" Ãß°¡, 0002¿¡¼­ ALTER TABLE user MODIFY level INT NOT NULL DEFAULT 1.
-- Unknown column 'title' in 'feature_config': 0002¿¡¼­ Á¤º¸ ½ºÅ°¸¶ Ã¼Å© ÈÄ ´©¶ô ÄÃ·³¸¸ Ãß°¡ÇÏµµ·Ï º¯°æ.
-- Duplicate column name 'last_login_at': 0004¸¦ Á¶°ÇºÎ ÄÃ·³ Ãß°¡·Î ¼öÁ¤.
-- Table 'user_game_wallet' already exists: 0006À» Å×ÀÌºí Á¸Àç ½Ã ½ºÅµÇÏµµ·Ï ¼öÁ¤.
-- docker-compose 1.29 vs ÃÖ½Å ¿£Áø ContainerConfig KeyError: ÄÁÅ×ÀÌ³Ê/ÀÌ¹ÌÁö/º¼·ı ÀüÃ¼ Á¤¸® ÈÄ Àçºôµå.
-- MySQL Á¢¼Ó ¿À·ù 2003: DB healthy ´ë±â ÈÄ 127.0.0.1:3306(TCP)·Î Á¢¼Ó.
-- Access denied for user 'xmasuser'@'%': ·çÆ® PW È®ÀÎ ÈÄ °èÁ¤/±ÇÇÑ Àç»ı¼º.
+## 2025-12 ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Æ®ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
+- Field 'level' doesn't have a default value: app/models/user.pyï¿½ï¿½ server_default="1" ï¿½ß°ï¿½, 0002ï¿½ï¿½ï¿½ï¿½ ALTER TABLE user MODIFY level INT NOT NULL DEFAULT 1.
+- Unknown column 'title' in 'feature_config': 0002ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å°ï¿½ï¿½ Ã¼Å© ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ã·ï¿½ï¿½ï¿½ ï¿½ß°ï¿½ï¿½Ïµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½.
+- Duplicate column name 'last_login_at': 0004ï¿½ï¿½ ï¿½ï¿½ï¿½Çºï¿½ ï¿½Ã·ï¿½ ï¿½ß°ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½.
+- Table 'user_game_wallet' already exists: 0006ï¿½ï¿½ ï¿½ï¿½ï¿½Ìºï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½Åµï¿½Ïµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½.
+- docker-compose 1.29 vs ï¿½Ö½ï¿½ ï¿½ï¿½ï¿½ï¿½ ContainerConfig KeyError: ï¿½ï¿½ï¿½ï¿½ï¿½Ì³ï¿½/ï¿½Ì¹ï¿½ï¿½ï¿½/ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ã¼ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½.
+- MySQL ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ 2003: DB healthy ï¿½ï¿½ï¿½ ï¿½ï¿½ 127.0.0.1:3306(TCP)ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½.
+- Access denied for user 'xmasuser'@'%': ï¿½ï¿½Æ® PW È®ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½/ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½.
   docker-compose exec db sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "\
   CREATE DATABASE IF NOT EXISTS xmas_event;\
   CREATE USER IF NOT EXISTS \'xmasuser\'@\'%\' IDENTIFIED BY \'xmaspass\';\
   GRANT ALL PRIVILEGES ON xmas_event.* TO \'xmasuser\'@\'%\'; FLUSH PRIVILEGES;\
   "'
-- ·çÆ® PW ÀÔ·Â ½Ç¼ö(-p<...>) ÁÖÀÇ: ½ÇÁ¦ °ª(rootpassword µî) »ç¿ë.
+- ï¿½ï¿½Æ® PW ï¿½Ô·ï¿½ ï¿½Ç¼ï¿½(-p<...>) ï¿½ï¿½ï¿½ï¿½: ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½(rootpassword ï¿½ï¿½) ï¿½ï¿½ï¿½.

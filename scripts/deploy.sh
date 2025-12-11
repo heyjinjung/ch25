@@ -64,12 +64,15 @@ fi
 
 # Install Docker Compose
 print_info "Installing Docker Compose..."
-if ! command -v docker-compose &> /dev/null; then
+# Check for docker compose plugin (v2)
+if docker compose version &> /dev/null; then
+    print_warning "Docker Compose (v2) is already installed via plugin"
+elif ! command -v docker-compose &> /dev/null; then
     DOCKER_COMPOSE_VERSION="2.24.0"
     curl -L "https://github.com/docker/compose/releases/download/v${DOCKER_COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
     chmod +x /usr/local/bin/docker-compose
 else
-    print_warning "Docker Compose is already installed"
+    print_warning "Docker Compose (v1) is already installed"
 fi
 
 # Configure firewall
@@ -87,12 +90,17 @@ mkdir -p ${APP_DIR}
 cd ${APP_DIR}
 
 # Clone repository (update with your actual repo)
-print_info "Cloning repository..."
-read -p "Enter your Git repository URL: " GIT_REPO
-if [ ! -z "$GIT_REPO" ]; then
-    git clone ${GIT_REPO} .
+print_info "Checking for existing code..."
+if [ "$(ls -A $APP_DIR)" ]; then
+    print_warning "Directory $APP_DIR is not empty. Skipping git clone."
 else
-    print_warning "Skipping git clone. Please manually copy your code to ${APP_DIR}"
+    print_info "Cloning repository..."
+    read -p "Enter your Git repository URL (leave empty to skip): " GIT_REPO
+    if [ ! -z "$GIT_REPO" ]; then
+        git clone ${GIT_REPO} .
+    else
+        print_warning "Skipping git clone. Please manually copy your code to ${APP_DIR}"
+    fi
 fi
 
 # Setup environment file

@@ -6,7 +6,7 @@ This repo can be developed on another local machine with Docker. Follow these st
 - Frontend: Vite + React + TypeScript (`src/`), served by nginx container on port 3000.
 - Backend: FastAPI + Uvicorn (`app/`), on port 8000.
 - DB: MySQL 8 (port 3307 on host), Redis 7.
-- Auth: `/api/auth/token` issues JWT by `external_id` (password optional). Admin login form uses `admin/1234`.
+- Auth: `/api/auth/token` issues JWT by `external_id` (password optional). Admin login form uses `admin` / (secure password).
 - Season pass/ranking: relies on tables `season_pass_*` and `external_ranking_*`; daily/weekly stamp logic is in `app/services/admin_external_ranking_service.py` and `app/services/season_pass_service.py`.
 
 ## Prerequisites
@@ -94,7 +94,7 @@ Invoke-WebRequest -Uri 'http://localhost:8000/api/season-pass/status' -Headers @
 ## Frontend/UX Notes
 - Reward toasts are shown on dice/roulette/lottery when `reward_value > 0`.
 - Roulette wheel UI is `src/components/game/RouletteWheel.tsx` (SVG aspect-square). If you see a distorted wheel, hard-refresh browser cache.
-- Login page currently accepts only `external_id`; password optional. Admin login form uses `admin/1234` (see `src/admin/pages/AdminLoginPage.tsx`).
+- Login page currently accepts only `external_id`; password optional. Admin login form uses `admin` / (secure password) (see `src/admin/pages/AdminLoginPage.tsx`).
 - Ranking cards and season-pass cards rely on:
   - `/api/ranking/today?top=10` (external ranking only)
   - `/api/season-pass/status`
