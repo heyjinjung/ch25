@@ -79,7 +79,7 @@ class TeamEventLog(Base):
         Index("idx_tel_user", "user_id"),
     )
 
-    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    id = Column(BigInteger().with_variant(Integer, "sqlite"), primary_key=True, autoincrement=True)
     team_id = Column(Integer, ForeignKey("team.id", ondelete="CASCADE"), nullable=False)
     user_id = Column(Integer, ForeignKey("user.id", ondelete="SET NULL"), nullable=True)
     season_id = Column(Integer, ForeignKey("team_season.id", ondelete="CASCADE"), nullable=False)

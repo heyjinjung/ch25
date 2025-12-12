@@ -17,8 +17,18 @@ class UserLevelProgress(Base):
     xp = Column(Integer, nullable=False, default=0)
     updated_at = Column(DateTime, nullable=False, default=func.now(), onupdate=func.now())
 
-    reward_logs = relationship("UserLevelRewardLog", back_populates="progress")
-    xp_events = relationship("UserXpEventLog", back_populates="progress")
+    reward_logs = relationship(
+        "UserLevelRewardLog",
+        primaryjoin="UserLevelProgress.user_id==UserLevelRewardLog.user_id",
+        foreign_keys="UserLevelRewardLog.user_id",
+        back_populates="progress",
+    )
+    xp_events = relationship(
+        "UserXpEventLog",
+        primaryjoin="UserLevelProgress.user_id==UserXpEventLog.user_id",
+        foreign_keys="UserXpEventLog.user_id",
+        back_populates="progress",
+    )
 
 
 class UserLevelRewardLog(Base):
@@ -38,7 +48,13 @@ class UserLevelRewardLog(Base):
     granted_by = Column(Integer, nullable=True)  # admin_id when manual
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
 
-    progress = relationship("UserLevelProgress", back_populates="reward_logs")
+    progress = relationship(
+        "UserLevelProgress",
+        primaryjoin="UserLevelRewardLog.user_id==UserLevelProgress.user_id",
+        foreign_keys=[user_id],
+        back_populates="reward_logs",
+        viewonly=True,
+    )
 
 
 class UserXpEventLog(Base):
@@ -56,4 +72,10 @@ class UserXpEventLog(Base):
     meta = Column(JSON, nullable=True)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
 
-    progress = relationship("UserLevelProgress", back_populates="xp_events")
+    progress = relationship(
+        "UserLevelProgress",
+        primaryjoin="UserXpEventLog.user_id==UserLevelProgress.user_id",
+        foreign_keys=[user_id],
+        back_populates="xp_events",
+        viewonly=True,
+    )
