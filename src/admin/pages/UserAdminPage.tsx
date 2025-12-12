@@ -135,7 +135,6 @@ const UserAdminPage: React.FC = () => {
             <tr>
               <th className="px-3 py-2 text-left">ID</th>
               <th className="px-3 py-2 text-left">닉네임</th>
-<<<<<<< HEAD
               <th className="px-3 py-2 text-left">레벨(G)</th>
               <th className="px-3 py-2 text-left">시즌Lv</th>
               <th className="px-3 py-2 text-left">XP</th>
@@ -175,7 +174,6 @@ const UserAdminPage: React.FC = () => {
                 <td className="px-3 py-2">
                   <input
                     type="number"
-                    value={row.season_level ?? 1}
                     value={row.season_level ?? 1}
                     onChange={(e) => handleField(index, "season_level", Number(e.target.value))}
                     className="w-16 rounded border border-slate-700 bg-slate-800 px-2 py-1 text-right"

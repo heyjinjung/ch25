@@ -8,7 +8,6 @@ export interface AdminUserPayload {
   xp?: number;
   status?: string;
   password?: string;
-  xp?: number;
   season_level?: number;
 }
 
