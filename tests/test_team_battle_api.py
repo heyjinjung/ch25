@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.models.team_battle import TeamSeason, Team, TeamMember, TeamScore, TeamEventLog
 from app.models.user import User
+from app.models.game_wallet import GameTokenType, UserGameWallet
 
 
 @pytest.fixture()
@@ -147,4 +148,75 @@ def test_admin_create_activate_and_award_points(client: TestClient, session_fact
 
     log = session.query(TeamEventLog).filter_by(team_id=team_id, season_id=season_id, action="BONUS").one()
     assert log.delta == 25 and log.user_id == seed_leader_user
+    session.close()
+
+
+@pytest.mark.usefixtures("seed_active_season_with_teams")
+def test_daily_limit_enforced(client: TestClient, session_factory) -> None:
+    session: Session = session_factory()
+    team_id = session.query(Team.id).filter(Team.name == "Alpha").scalar()
+    season_id = session.query(TeamSeason.id).scalar()
+    session.close()
+
+    for _ in range(10):
+        resp = client.post(
+            "/admin/api/team-battle/teams/points",
+            json={"team_id": team_id, "delta": 1, "action": "GAME_PLAY", "user_id": 1, "season_id": season_id, "meta": None},
+        )
+        assert resp.status_code == 200
+
+    resp = client.post(
+        "/admin/api/team-battle/teams/points",
+        json={"team_id": team_id, "delta": 1, "action": "GAME_PLAY", "user_id": 1, "season_id": season_id, "meta": None},
+    )
+    assert resp.status_code == 429
+
+
+def test_settle_rewards_with_tiebreaker(client: TestClient, session_factory) -> None:
+    session: Session = session_factory()
+    now = datetime.utcnow()
+    season = TeamSeason(
+        name="Daily", starts_at=now - timedelta(hours=1), ends_at=now + timedelta(hours=1), is_active=True
+    )
+    t1 = Team(name="Team A", is_active=True)
+    t2 = Team(name="Team B", is_active=True)
+    u1 = User(id=10, external_id="u10", status="ACTIVE")
+    u2 = User(id=20, external_id="u20", status="ACTIVE")
+    session.add_all([season, t1, t2, u1, u2])
+    session.commit()
+    session.add_all(
+        [
+            TeamMember(user_id=u1.id, team_id=t1.id, role="member"),
+            TeamMember(user_id=u2.id, team_id=t2.id, role="member"),
+            TeamScore(team_id=t1.id, season_id=season.id, points=5),
+            TeamScore(team_id=t2.id, season_id=season.id, points=5),
+        ]
+    )
+    session.commit()
+
+    # Tiebreaker by latest event time: make Team B latest
+    earlier = now - timedelta(minutes=5)
+    later = now - timedelta(minutes=1)
+    session.add_all(
+        [
+            TeamEventLog(team_id=t1.id, season_id=season.id, user_id=u1.id, action="GAME_PLAY", delta=1, created_at=earlier),
+            TeamEventLog(team_id=t2.id, season_id=season.id, user_id=u2.id, action="GAME_PLAY", delta=1, created_at=later),
+        ]
+    )
+    session.commit()
+    session.close()
+
+    resp = client.post(f"/admin/api/team-battle/seasons/{season.id}/settle")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["winner_team_id"] == t2.id
+    assert 20 in data["rewarded_users"]
+
+    session = session_factory()
+    wallet = (
+        session.query(UserGameWallet)
+        .filter(UserGameWallet.user_id == 20, UserGameWallet.token_type == GameTokenType.CC_COIN)
+        .one_or_none()
+    )
+    assert wallet is not None and wallet.balance == 2
     session.close()

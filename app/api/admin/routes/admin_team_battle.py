@@ -36,3 +36,8 @@ def add_points(payload: TeamPointsRequest, db: Session = Depends(get_db)):
         season_id=payload.season_id,
         meta=payload.meta,
     )
+
+
+@router.post("/seasons/{season_id}/settle")
+def settle_rewards(season_id: int, db: Session = Depends(get_db)):
+    return service.settle_daily_rewards(db, season_id=season_id)

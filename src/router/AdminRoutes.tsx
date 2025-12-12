@@ -12,6 +12,7 @@ import ExternalRankingPage from "../admin/pages/ExternalRankingPage";
 import GameTokenGrantPage from "../admin/pages/GameTokenGrantPage";
 import GameTokenLogsPage from "../admin/pages/GameTokenLogsPage";
 import UserAdminPage from "../admin/pages/UserAdminPage";
+import AdminTeamBattlePage from "../admin/pages/AdminTeamBattlePage";
 import AdminLayout from "../admin/components/AdminLayout";
 import ProtectedRoute from "../components/routing/ProtectedRoute";
 
@@ -31,6 +32,7 @@ const AdminRoutes: React.FC = () => {
           <Route path="game-tokens" element={<GameTokenGrantPage />} />
           <Route path="game-token-logs" element={<GameTokenLogsPage />} />
           <Route path="users" element={<UserAdminPage />} />
+          <Route path="team-battle" element={<AdminTeamBattlePage />} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/admin" replace />} />

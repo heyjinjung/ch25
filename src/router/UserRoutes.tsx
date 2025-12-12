@@ -8,6 +8,7 @@ import LotteryPage from "../pages/LotteryPage";
 import RankingPage from "../pages/RankingPage";
 import SeasonPassPage from "../pages/SeasonPassPage";
 import LoginPage from "../pages/LoginPage";
+import TeamBattlePage from "../pages/TeamBattlePage";
 import UserLayout from "../components/layout/UserLayout";
 import RequireAuth from "../components/routing/RequireAuth";
 
@@ -23,6 +24,7 @@ const UserRoutes: React.FC = () => {
           <Route path="/lottery" element={<LotteryPage />} />
           <Route path="/ranking" element={<RankingPage />} />
           <Route path="/season-pass" element={<SeasonPassPage />} />
+          <Route path="/team-battle" element={<TeamBattlePage />} />
           <Route path="/" element={<Navigate to="/home" replace />} />
         </Route>
       </Route>

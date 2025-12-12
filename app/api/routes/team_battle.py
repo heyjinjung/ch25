@@ -8,6 +8,7 @@ from app.schemas.team_battle import (
     TeamJoinRequest,
     LeaderboardEntry,
     ContributorEntry,
+    TeamResponse,
 )
 from app.services.team_battle_service import TeamBattleService
 
@@ -46,3 +47,8 @@ def leaderboard(season_id: int | None = None, limit: int = 20, offset: int = 0, 
 def contributors(team_id: int, season_id: int | None = None, limit: int = 20, offset: int = 0, db: Session = Depends(get_db)):
     rows = svc.contributors(db, team_id=team_id, season_id=season_id, limit=min(limit, 100), offset=max(offset, 0))
     return [ContributorEntry(user_id=r.user_id, points=r.points or 0) for r in rows]
+
+
+@router.get("/teams", response_model=list[TeamResponse])
+def list_teams(db: Session = Depends(get_db)):
+    return svc.list_teams(db)
