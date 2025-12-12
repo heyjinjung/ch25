@@ -94,6 +94,7 @@ class AdminUserService:
             external_id=payload.external_id,
             nickname=payload.nickname,
             level=payload.level,
+            xp=payload.xp,
             status=payload.status,
         )
         if payload.password:
@@ -138,6 +139,8 @@ class AdminUserService:
             user.nickname = update_data["nickname"]
         if "level" in update_data:
             user.level = update_data["level"]
+        if "xp" in update_data:
+            user.xp = update_data["xp"]
         if "status" in update_data:
             user.status = update_data["status"]
         if "password" in update_data and update_data["password"]:

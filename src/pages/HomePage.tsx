@@ -26,40 +26,36 @@ const GameCard: React.FC<GameCardProps> = ({ title, path, tokenType, tokenBalanc
       ? "상태 로딩 중"
       : state === "error"
         ? "상태 조회 실패 - 티켓 지급 확인"
-        : undefined;
+        return (
+          <section className="space-y-8">
+            <div className="rounded-3xl border border-red-700/40 bg-gradient-to-br from-slate-950 via-red-950/30 to-emerald-950 p-8 shadow-2xl space-y-3">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.25em] text-gold-400">🎄 Season Pass</p>
+                  <h2 className="text-2xl font-bold bg-gradient-to-r from-gold-300 via-gold-400 to-gold-300 bg-clip-text text-transparent">시즌패스 요약</h2>
+                </div>
+                <div className="rounded-full bg-emerald-900/60 px-4 py-1 text-xs text-emerald-200">{seasonSummary.detail}</div>
+              </div>
+              <div className="rounded-xl border border-gold-600/40 bg-slate-900/60 p-4">
+                <p className="text-sm font-semibold text-emerald-100">{seasonSummary.label}</p>
+              </div>
+              <div className="grid gap-3 md:grid-cols-2">
+                {stampTips.map((tip, idx) => {
+                  const tipIcons = ["🎄", "❄️", "🎁", "⛄"];
+                  return (
+                    <div key={tip.title} className="rounded-lg border border-red-800/40 bg-gradient-to-br from-slate-900/80 to-red-950/20 p-3 hover:border-gold-500/40 transition-all">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">{tipIcons[idx] ?? "🎅"}</span>
+                        <p className="text-sm font-semibold text-white">{tip.title}</p>
+                      </div>
+                      <p className="text-xs text-emerald-300 mt-1">{tip.status}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
 
-  const gameIcons: Record<string, string> = { "룰렛": "🎰", "주사위": "🎲", "복권": "🎫" };
-  return (
-    <div className="space-y-3 rounded-2xl border border-red-800/40 bg-gradient-to-br from-slate-900/80 to-red-950/20 p-5 shadow-lg hover:border-gold-500/50 hover:shadow-gold-500/10 transition-all duration-300">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-2xl">{gameIcons[title] ?? "🎮"}</span>
-          <h3 className="text-lg font-bold text-white">{title}</h3>
-        </div>
-        <span className="text-sm text-gold-300">{tokenLabel}</span>
-      </div>
-      <p className="text-sm text-slate-300">보유 티켓: <span className="font-semibold text-emerald-300">{hasCoins ? tokenBalance : 0}</span></p>
-      {statusBadge && <p className="text-xs text-amber-200">{statusBadge}</p>}
-      <button
-        type="button"
-        onClick={() => navigate(path)}
-        disabled={!hasCoins}
-        className="w-full rounded-lg bg-gradient-to-r from-red-700 to-red-600 px-4 py-2 text-sm font-bold text-white shadow transition hover:from-red-600 hover:to-red-500 disabled:cursor-not-allowed disabled:from-slate-700 disabled:to-slate-600"
-      >
-        {hasCoins ? "🎄 바로 입장" : "티켓 없음 - 관리자 문의"}
-      </button>
-    </div>
-  );
-};
-
-const HomePage: React.FC = () => {
-  const { user } = useAuth();
-  const season = useSeasonPassStatus();
-  const roulette = useRouletteStatus();
-  const dice = useDiceStatus();
-  const lottery = useLotteryStatus();
-  const ranking = useTodayRanking();
-  const internalWins = useInternalWinStatus();
+            <div className="rounded-3xl border border-red-700/40 bg-gradient-to-br from-slate-950 via-red-950/20 to-emerald-950 p-8 shadow-2xl">
 
   const seasonSummary = useMemo(() => {
     if (season.isLoading) return { label: "로딩 중", detail: "" };
@@ -124,6 +120,10 @@ const HomePage: React.FC = () => {
 
   return (
     <section className="space-y-8">
+<<<<<<< HEAD
+=======
+      {/* Season Pass Section Hidden
+>>>>>>> origin/main
       <div className="rounded-3xl border border-red-700/40 bg-gradient-to-br from-slate-950 via-red-950/30 to-emerald-950 p-8 shadow-2xl space-y-3">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -150,6 +150,7 @@ const HomePage: React.FC = () => {
           })}
         </div>
       </div>
+      */}
 
       <div className="rounded-3xl border border-red-700/40 bg-gradient-to-br from-slate-950 via-red-950/20 to-emerald-950 p-8 shadow-2xl">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
