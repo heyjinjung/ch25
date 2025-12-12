@@ -1,5 +1,5 @@
 """Admin CRUD for external ranking data and season-pass hooks."""
-from datetime import date
+from datetime import date, datetime, timedelta
 from typing import Iterable
 
 from fastapi import HTTPException, status
@@ -11,6 +11,7 @@ from app.models.season_pass import SeasonPassStampLog
 from app.schemas.external_ranking import ExternalRankingCreate, ExternalRankingUpdate
 from app.models.user import User
 from app.services.season_pass_service import SeasonPassService
+from app.core.config import get_settings
 
 
 class AdminExternalRankingService:
@@ -45,8 +46,13 @@ class AdminExternalRankingService:
     @staticmethod
     def upsert_many(db: Session, data: Iterable[ExternalRankingCreate]) -> list[ExternalRankingData]:
         season_pass = SeasonPassService()
+        settings = get_settings()
         today = date.today()
-        today_key = today.isoformat()
+        now = datetime.utcnow()
+        step_amount = max(settings.external_ranking_deposit_step_amount, 1)
+        xp_per_step = max(settings.external_ranking_deposit_xp_per_step, 0)
+        max_steps_per_day = max(settings.external_ranking_deposit_max_steps_per_day, 0)
+        cooldown_minutes = max(settings.external_ranking_deposit_cooldown_minutes, 0)
 
         existing_by_user = {row.user_id: row for row in db.execute(select(ExternalRankingData)).scalars().all()}
         results: list[ExternalRankingData] = []
@@ -59,6 +65,7 @@ class AdminExternalRankingService:
             if row and row.last_daily_reset != today:
                 row.daily_base_deposit = row.deposit_amount
                 row.daily_base_play = row.play_count
+                row.deposit_remainder = 0
                 row.last_daily_reset = today
 
             if row:
@@ -92,17 +99,32 @@ class AdminExternalRankingService:
         season_id = current_season.id
 
         for row in results:
-            # 예치: 10만 단위당 20 XP 지급 (일일 누적 대비 증분 계산)
+            # 예치: step_amount 단위당 XP 지급 + remainder 누적
             deposit_delta = max(row.deposit_amount - (row.daily_base_deposit or 0), 0)
-            deposit_steps = deposit_delta // 100_000
-            if deposit_steps > 0:
-                xp_to_add = deposit_steps * 20
+            total_for_step = (row.deposit_remainder or 0) + deposit_delta
+            deposit_steps = total_for_step // step_amount
+            remainder = total_for_step % step_amount
+
+            # 상한 적용 (0이면 무제한)
+            if max_steps_per_day > 0:
+                deposit_steps = min(deposit_steps, max_steps_per_day)
+
+            # 쿨다운: 최근 업데이트가 cooldown_minutes 이내면 지급만 보류하고 remainder만 저장
+            if deposit_steps > 0 and cooldown_minutes > 0 and row.updated_at:
+                if now - row.updated_at < timedelta(minutes=cooldown_minutes):
+                    row.deposit_remainder = remainder
+                    continue
+
+            if deposit_steps > 0 and xp_per_step > 0:
+                xp_to_add = deposit_steps * xp_per_step
                 season_pass.add_bonus_xp(db, user_id=row.user_id, xp_amount=xp_to_add, now=today)
+
+            row.deposit_remainder = remainder
 
             # 이용 횟수: 1회당 20 XP 지급 (일일 누적 대비 증분 계산)
             play_delta = max(row.play_count - (row.daily_base_play or 0), 0)
-            if play_delta > 0:
-                xp_to_add = play_delta * 20
+            if play_delta > 0 and xp_per_step > 0:
+                xp_to_add = play_delta * xp_per_step
                 season_pass.add_bonus_xp(db, user_id=row.user_id, xp_amount=xp_to_add, now=today)
 
         # Weekly TOP10 (once per ISO week)

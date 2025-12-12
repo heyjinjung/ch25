@@ -17,6 +17,7 @@ class ExternalRankingData(Base):
     user_id = Column(Integer, nullable=False, index=True)
     deposit_amount = Column(Integer, nullable=False, default=0)
     play_count = Column(Integer, nullable=False, default=0)
+    deposit_remainder = Column(Integer, nullable=False, default=0)
     daily_base_deposit = Column(Integer, nullable=False, default=0)
     daily_base_play = Column(Integer, nullable=False, default=0)
     last_daily_reset = Column(Date, nullable=True)

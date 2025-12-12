@@ -23,6 +23,7 @@
 	- 게임 보상 포인트→XP 옵션: [app/services/reward_service.py](app/services/reward_service.py)에서 환경변수 `XP_FROM_GAME_REWARD`가 켜져 있으면 포인트 보상 수치를 그대로 `add_bonus_xp()`로 전달해 XP를 추가.
 	- 관리 콘솔: [app/services/admin_user_service.py](app/services/admin_user_service.py)에서 XP를 수정하면 `SeasonPassProgress`와 게임 레벨을 동기화.
 - 시즌 패스 ↔ 코어 레벨 동기화: [app/services/season_pass_service.py](app/services/season_pass_service.py)에서 `add_stamp`/`add_bonus_xp`가 `LevelXPService.add_xp`를 베스트에포트로 호출해 코어 레벨 진행도와 로그를 함께 갱신.
+- 외부랭킹 안티어뷰즈: [app/services/admin_external_ranking_service.py](app/services/admin_external_ranking_service.py)에서 `deposit_remainder`로 10만 단위 스텝 계산, 일일 리셋 시 0 초기화, 일일 최대 스텝/쿨다운을 환경변수(`EXTERNAL_RANKING_DEPOSIT_*`)로 제어.
 - 레벨업 판정: XP 갱신 시 필요 XP 이상이면 자동 레벨업
 - 지급 트랜잭션: 레벨 상승 + 보상 지급 + 지급 로그를 한 트랜잭션으로 처리
 - 중복 방지: 레벨별로 한 번만 지급 (unique 제약 또는 보상 로그 검증)

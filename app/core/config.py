@@ -34,6 +34,20 @@ class Settings(BaseSettings):
         False, validation_alias=AliasChoices("FEATURE_GATE_ENABLED", "feature_gate_enabled")
     )
 
+    # External ranking anti-abuse (deposit -> XP)
+    external_ranking_deposit_step_amount: int = Field(
+        100_000, validation_alias=AliasChoices("EXTERNAL_RANKING_DEPOSIT_STEP_AMOUNT", "external_ranking_deposit_step_amount")
+    )
+    external_ranking_deposit_xp_per_step: int = Field(
+        20, validation_alias=AliasChoices("EXTERNAL_RANKING_DEPOSIT_XP_PER_STEP", "external_ranking_deposit_xp_per_step")
+    )
+    external_ranking_deposit_max_steps_per_day: int = Field(
+        50, validation_alias=AliasChoices("EXTERNAL_RANKING_DEPOSIT_MAX_STEPS_PER_DAY", "external_ranking_deposit_max_steps_per_day")
+    )
+    external_ranking_deposit_cooldown_minutes: int = Field(
+        0, validation_alias=AliasChoices("EXTERNAL_RANKING_DEPOSIT_COOLDOWN_MINUTES", "external_ranking_deposit_cooldown_minutes")
+    )
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
