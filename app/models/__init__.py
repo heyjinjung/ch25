@@ -13,6 +13,7 @@ from app.models.season_pass import (
     SeasonPassRewardLog,
     SeasonPassStampLog,
 )
+from app.models.team_battle import TeamSeason, Team, TeamMember, TeamScore, TeamEventLog
 from app.models.level_xp import UserLevelProgress, UserLevelRewardLog, UserXpEventLog
 from app.models.game_wallet_ledger import UserGameWalletLedger
 from app.models.user import User
@@ -27,6 +28,11 @@ __all__ = [
     "SeasonPassProgress",
     "SeasonPassRewardLog",
     "SeasonPassStampLog",
+    "TeamSeason",
+    "Team",
+    "TeamMember",
+    "TeamScore",
+    "TeamEventLog",
     "UserLevelProgress",
     "UserLevelRewardLog",
     "UserXpEventLog",
