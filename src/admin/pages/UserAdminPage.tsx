@@ -10,6 +10,7 @@ const emptyUser: EditableUser = {
   external_id: "",
   nickname: "",
   level: 1,
+  xp: 0,
   status: "ACTIVE",
   password: "",
 };
@@ -66,7 +67,7 @@ const UserAdminPage: React.FC = () => {
         idx === index
           ? {
               ...row,
-              [field]: field === "level" ? Number(value) : value,
+              [field]: field === "level" || field === "xp" ? Number(value) : value,
             }
           : row
       )
@@ -82,6 +83,7 @@ const UserAdminPage: React.FC = () => {
       nickname: row.nickname,
       status: row.status,
       level: row.level,
+      xp: row.xp,
     };
     if (row.password) payload.password = row.password;
     updateMutation.mutate({ id: row.id, payload });
@@ -94,6 +96,7 @@ const UserAdminPage: React.FC = () => {
       nickname: row.nickname,
       status: row.status,
       level: row.level ?? 1,
+      xp: row.xp ?? 0,
       password: row.password,
     };
     createMutation.mutate(payload);
@@ -130,6 +133,7 @@ const UserAdminPage: React.FC = () => {
               <th className="px-3 py-2 text-left">ID</th>
               <th className="px-3 py-2 text-left">닉네임</th>
               <th className="px-3 py-2 text-left">레벨</th>
+              <th className="px-3 py-2 text-left">XP</th>
               <th className="px-3 py-2 text-left">상태</th>
               <th className="px-3 py-2 text-left">비밀번호(초기화)</th>
               <th className="px-3 py-2 text-right">액션</th>
@@ -161,6 +165,15 @@ const UserAdminPage: React.FC = () => {
                     onChange={(e) => handleField(index, "level", Number(e.target.value))}
                     className="w-24 rounded border border-slate-700 bg-slate-800 px-2 py-1 text-right"
                     min={1}
+                  />
+                </td>
+                <td className="px-3 py-2">
+                  <input
+                    type="number"
+                    value={row.xp ?? 0}
+                    onChange={(e) => handleField(index, "xp", Number(e.target.value))}
+                    className="w-24 rounded border border-slate-700 bg-slate-800 px-2 py-1 text-right"
+                    min={0}
                   />
                 </td>
                 <td className="px-3 py-2">
@@ -203,7 +216,7 @@ const UserAdminPage: React.FC = () => {
             ))}
             {filteredRowsWithIndex.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-3 py-4 text-center text-slate-400">
+                <td colSpan={8} className="px-3 py-4 text-center text-slate-400">
                   {searchTerm ? "검색 결과가 없습니다." : "데이터가 없습니다. 행 추가를 눌러 새 유저를 만드세요."}
                 </td>
               </tr>

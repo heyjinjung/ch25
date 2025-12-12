@@ -5,6 +5,7 @@ export interface AdminUserPayload {
   external_id: string;
   nickname?: string;
   level?: number;
+  xp?: number;
   status?: string;
   password?: string;
 }

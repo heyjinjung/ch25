@@ -124,6 +124,7 @@ const HomePage: React.FC = () => {
 
   return (
     <section className="space-y-8">
+      {/* Season Pass Section Hidden
       <div className="rounded-3xl border border-red-700/40 bg-gradient-to-br from-slate-950 via-red-950/30 to-emerald-950 p-8 shadow-2xl space-y-3">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -150,6 +151,7 @@ const HomePage: React.FC = () => {
           })}
         </div>
       </div>
+      */}
 
       <div className="rounded-3xl border border-red-700/40 bg-gradient-to-br from-slate-950 via-red-950/20 to-emerald-950 p-8 shadow-2xl">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
