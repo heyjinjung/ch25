@@ -173,7 +173,7 @@ def list_recent_play_logs(
             reward_label=row.detail,
             reward_type=row.reward_type,
             reward_amount=row.reward_amount,
-            created_at=row.created_at,
+            created_at=row.created_at.isoformat(),
         )
         for row in rows
     ]
