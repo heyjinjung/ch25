@@ -60,6 +60,8 @@ class AdminExternalRankingService:
         for payload in data:
             user_id = AdminExternalRankingService._resolve_user_id(db, payload.user_id, payload.external_id)
             row = existing_by_user.get(user_id)
+            prev_deposit = row.deposit_amount if row else 0
+            prev_play = row.play_count if row else 0
 
             # Daily baseline reset happens before overwriting with today's totals
             if row and row.last_daily_reset != today:
@@ -100,7 +102,7 @@ class AdminExternalRankingService:
 
         for row in results:
             # 예치: step_amount 단위당 XP 지급 + remainder 누적
-            deposit_delta = max(row.deposit_amount - (row.daily_base_deposit or 0), 0)
+            deposit_delta = max(row.deposit_amount - max(prev_deposit, row.daily_base_deposit or 0), 0)
             total_for_step = (row.deposit_remainder or 0) + deposit_delta
             deposit_steps = total_for_step // step_amount
             remainder = total_for_step % step_amount
