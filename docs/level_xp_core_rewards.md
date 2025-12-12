@@ -22,6 +22,7 @@
 	- 외부랭킹 연동: [app/services/admin_external_ranking_service.py](app/services/admin_external_ranking_service.py)에서 예치 10만 단위·이용 1회당 20 XP를 `add_bonus_xp()`로 추가, 주간 TOP10은 `maybe_add_stamp()`로 스탬프를 지급.
 	- 게임 보상 포인트→XP 옵션: [app/services/reward_service.py](app/services/reward_service.py)에서 환경변수 `XP_FROM_GAME_REWARD`가 켜져 있으면 포인트 보상 수치를 그대로 `add_bonus_xp()`로 전달해 XP를 추가.
 	- 관리 콘솔: [app/services/admin_user_service.py](app/services/admin_user_service.py)에서 XP를 수정하면 `SeasonPassProgress`와 게임 레벨을 동기화.
+- 시즌 패스 ↔ 코어 레벨 동기화: [app/services/season_pass_service.py](app/services/season_pass_service.py)에서 `add_stamp`/`add_bonus_xp`가 `LevelXPService.add_xp`를 베스트에포트로 호출해 코어 레벨 진행도와 로그를 함께 갱신.
 - 레벨업 판정: XP 갱신 시 필요 XP 이상이면 자동 레벨업
 - 지급 트랜잭션: 레벨 상승 + 보상 지급 + 지급 로그를 한 트랜잭션으로 처리
 - 중복 방지: 레벨별로 한 번만 지급 (unique 제약 또는 보상 로그 검증)
@@ -59,9 +60,10 @@ CREATE TABLE user_level_reward_log (
 	level INT NOT NULL,
 	reward_type VARCHAR(50) NOT NULL,
 	reward_payload JSON NULL,
+	auto_granted TINYINT(1) NOT NULL DEFAULT 0,
 	granted_by INT NULL, -- admin_id (수동 지급 추적)
 	created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	UNIQUE KEY uq_user_level (user_id, level),
+	UNIQUE KEY uq_user_level_reward (user_id, level),
 	INDEX idx_ulrl_user_created (user_id, created_at),
 	CONSTRAINT fk_ulrl_user FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE
 );
@@ -84,3 +86,4 @@ CREATE TABLE user_xp_event_log (
 - 기존 `user` 테이블과 FK 연결 확인 후 배포 전 백필(backfill) 로직이 필요하면 같은 migration 안에서 처리.
 - 수동 지급 관리자 추적용 `granted_by`는 `admin_user` 테이블 키를 FK로 묶거나, 일단 INT로 두고 나중에 FK 추가 가능.
 - 트랜잭션 범위: XP 증가/레벨업/보상 로그/티켓·쿠폰 지급이 한 트랜잭션에 묶이도록 서비스 계층도 함께 점검.
+- 자동 지급 여부는 `auto_granted`에 표시되고, 티켓류는 현재 로그만 남기고 실제 발급은 후속 구현(RewardService 연계)에서 처리.

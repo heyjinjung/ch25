@@ -4,7 +4,6 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
-from app.services.season_pass_service import SeasonPassService
 
 
 class RewardService:
@@ -29,7 +28,12 @@ class RewardService:
             return
         settings = get_settings()
         xp_from_game_reward = settings.xp_from_game_reward
-        season_pass = SeasonPassService() if xp_from_game_reward else None
+        season_pass = None
+        if xp_from_game_reward:
+            # Lazy import to avoid circular dependency with LevelXPService
+            from app.services.season_pass_service import SeasonPassService  # pylint: disable=import-outside-toplevel
+
+            season_pass = SeasonPassService()
 
         if reward_type == "POINT":
             self.grant_point(db, user_id=user_id, amount=reward_amount, reason=meta.get("reason") if meta else None)
