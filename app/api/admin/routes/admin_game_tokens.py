@@ -118,7 +118,7 @@ def list_recent_play_logs(
             RouletteLog.reward_type,
             RouletteLog.reward_amount,
             RouletteSegment.label.label("detail"),
-            RouletteLog.created_at,
+            RouletteLog.created_at.label("created_at"),
             literal("ROULETTE").label("game_type"),
         )
         .join(User, User.id == RouletteLog.user_id)
@@ -135,7 +135,7 @@ def list_recent_play_logs(
             DiceLog.reward_type,
             DiceLog.reward_amount,
             DiceLog.result.label("detail"),
-            DiceLog.created_at,
+            DiceLog.created_at.label("created_at"),
             literal("DICE").label("game_type"),
         )
         .join(User, User.id == DiceLog.user_id)
@@ -151,7 +151,7 @@ def list_recent_play_logs(
             LotteryLog.reward_type,
             LotteryLog.reward_amount,
             LotteryPrize.label.label("detail"),
-            LotteryLog.created_at,
+            LotteryLog.created_at.label("created_at"),
             literal("LOTTERY").label("game_type"),
         )
         .join(User, User.id == LotteryLog.user_id)
