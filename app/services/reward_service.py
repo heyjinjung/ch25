@@ -1,13 +1,18 @@
-"""Reward service placeholder for granting points or coupons."""
+"""Reward service for coupons, points, and game tickets."""
 from typing import Any
 
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
+from app.models.game_wallet import GameTokenType
+from app.services.game_wallet_service import GameWalletService
 
 
 class RewardService:
-    """Centralize reward delivery (points, coupons, etc.)."""
+    """Centralize reward delivery (points, coupons, game tickets)."""
+
+    def __init__(self) -> None:
+        self.wallet_service = GameWalletService()
 
     def grant_point(self, db: Session, user_id: int, amount: int, reason: str | None = None) -> None:
         """Grant points to a user (implementation deferred)."""
@@ -20,6 +25,19 @@ class RewardService:
 
         # TODO: Integrate with coupon provider.
         _ = (db, user_id, coupon_type, meta)
+
+    def grant_ticket(self, db: Session, user_id: int, token_type: GameTokenType, amount: int, meta: dict[str, Any] | None = None) -> None:
+        """Grant game tickets (roulette/dice/lottery) to the user wallet."""
+
+        self.wallet_service.grant_tokens(
+            db,
+            user_id=user_id,
+            token_type=token_type,
+            amount=amount,
+            reason=(meta or {}).get("reason") or "LEVEL_REWARD",
+            label=(meta or {}).get("label") or "AUTO_GRANT",
+            meta=meta,
+        )
 
     def deliver(self, db: Session, user_id: int, reward_type: str, reward_amount: int, meta: dict[str, Any] | None = None) -> None:
         """Dispatch reward based on reward_type; no-op for NONE/zero."""
@@ -44,5 +62,16 @@ class RewardService:
             coupon_code = meta.get("coupon_type") if meta else "GENERIC"
             self.grant_coupon(db, user_id=user_id, coupon_type=coupon_code, meta=meta)
             return
+
+        ticket_map = {
+            "TICKET_ROULETTE": GameTokenType.ROULETTE_COIN,
+            "TICKET_DICE": GameTokenType.DICE_TOKEN,
+            "TICKET_LOTTERY": GameTokenType.LOTTERY_TICKET,
+        }
+        if reward_type in ticket_map:
+            token_type = ticket_map[reward_type]
+            self.grant_ticket(db, user_id=user_id, token_type=token_type, amount=reward_amount, meta=meta)
+            return
+
         # Unknown reward types are ignored but should be monitored.
         _ = (db, user_id, reward_type, reward_amount, meta)

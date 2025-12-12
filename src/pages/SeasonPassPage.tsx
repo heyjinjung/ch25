@@ -1,8 +1,10 @@
-﻿import React, { useMemo } from "react";
+﻿import React, { useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTodayRanking } from "../hooks/useRanking";
 import { useSeasonPassStatus, useInternalWinStatus, useClaimSeasonReward } from "../hooks/useSeasonPass";
+import { useLevelXpStatus } from "../hooks/useLevelXp";
 import FeatureGate from "../components/feature/FeatureGate";
+import { useToast } from "../components/common/ToastProvider";
 
 const formatCurrency = (value: number) => value.toLocaleString();
 
@@ -12,6 +14,25 @@ const SeasonPassPage: React.FC = () => {
   const ranking = useTodayRanking();
   const internalWins = useInternalWinStatus();
   const claimMutation = useClaimSeasonReward();
+  const levelXp = useLevelXpStatus();
+  const { addToast } = useToast();
+
+  const lastLevelRef = useRef<number | null>(null);
+  const lastRewardCountRef = useRef<number>(0);
+
+  useEffect(() => {
+    if (!levelXp.data) return;
+    const { current_level, rewards } = levelXp.data;
+    if (lastLevelRef.current !== null && current_level > lastLevelRef.current) {
+      addToast(`레벨 ${current_level} 달성!`, "success");
+    }
+    if (rewards.length > lastRewardCountRef.current) {
+      const latest = rewards[rewards.length - 1];
+      addToast(`레벨 ${latest.level} 보상 지급: ${latest.reward_type}`, "info");
+    }
+    lastLevelRef.current = current_level;
+    lastRewardCountRef.current = rewards.length;
+  }, [levelXp.data, addToast]);
 
   const progress = useMemo(() => {
     if (!season.data) return { percent: 0, nextLabel: "" };
@@ -37,6 +58,16 @@ const SeasonPassPage: React.FC = () => {
   const deposit = external?.deposit_amount ?? 0;
   const depositRemainder = 100_000 - (deposit % 100_000 || 100_000);
   const playDone = (external?.play_count ?? 0) > 0;
+
+  const globalLevelSummary = useMemo(() => {
+    if (levelXp.isLoading) return { label: "레벨 불러오는 중", detail: "" };
+    if (levelXp.isError || !levelXp.data) return { label: "레벨 정보를 불러오지 못했습니다", detail: "" };
+    const xpToNext = levelXp.data.xp_to_next;
+    return {
+      label: `레벨 ${levelXp.data.current_level} / XP ${levelXp.data.current_xp.toLocaleString()}`,
+      detail: xpToNext != null ? `다음 레벨까지 ${xpToNext.toLocaleString()} XP` : "최고 레벨 달성",
+    };
+  }, [levelXp.data, levelXp.isError, levelXp.isLoading]);
 
   const cards = [
     {
@@ -116,19 +147,83 @@ const SeasonPassPage: React.FC = () => {
           </div>
         </header>
 
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="rounded-2xl border border-emerald-600/40 bg-slate-900/70 p-6 shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold text-emerald-300">시즌 진행도</p>
+                <p className="text-2xl font-black text-white">레벨 {data.current_level}</p>
+              </div>
+              <span className="text-xs text-slate-400">최대 {data.max_level}</span>
+            </div>
+            <div className="mt-4 flex-1">
+              <div className="flex items-center justify-between text-xs text-slate-300">
+                <span>{data.current_xp.toLocaleString()} XP</span>
+                <span>{progress.nextLabel}</span>
+                <span>{data.next_level_xp.toLocaleString()} XP</span>
+              </div>
+              <div className="mt-2 h-4 w-full overflow-hidden rounded-full bg-slate-800/80">
+                <div
+                  className="h-full bg-gradient-to-r from-emerald-400 via-emerald-500 to-gold-400 transition-all duration-500"
+                  style={{ width: `${progress.percent}%` }}
+                />
+              </div>
+              <div className="mt-2 text-xs font-semibold text-emerald-200">진행률 {progress.percent}%</div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-gold-600/40 bg-slate-900/70 p-6 shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold text-amber-300">레벨</p>
+                <p className="text-2xl font-black text-white">
+                  {levelXp.data ? `레벨 ${levelXp.data.current_level}` : "-"}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => levelXp.refetch()}
+                className="rounded-full border border-amber-400/50 px-3 py-1 text-xs text-amber-100 hover:border-amber-300"
+              >
+                새로고침
+              </button>
+            </div>
+            <p className="mt-2 text-sm text-amber-100">{globalLevelSummary.label}</p>
+            <p className="text-xs text-slate-400">{globalLevelSummary.detail}</p>
+
+            <div className="mt-3 space-y-2">
+              <p className="text-xs font-semibold text-slate-300">최근 보상</p>
+              <div className="space-y-2 text-sm text-slate-200">
+                {levelXp.isLoading && <p className="text-slate-400">불러오는 중...</p>}
+                {levelXp.isError && <p className="text-red-300">보상 기록을 불러오지 못했습니다.</p>}
+                {levelXp.data && levelXp.data.rewards.slice(-4).reverse().map((reward) => (
+                  <div key={`${reward.level}-${reward.granted_at}`} className="rounded-lg border border-amber-700/40 bg-amber-900/20 px-3 py-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-amber-200">레벨 {reward.level}</span>
+                      <span className="text-[11px] text-slate-400">{new Date(reward.granted_at).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })}</span>
+                    </div>
+                    <p className="text-sm font-semibold text-amber-100">{reward.reward_type}</p>
+                  </div>
+                ))}
+                {levelXp.data && levelXp.data.rewards.length === 0 && <p className="text-slate-400">아직 지급된 보상이 없습니다.</p>}
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div className="rounded-2xl border border-emerald-600/40 bg-slate-900/70 p-6 shadow-lg">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs font-semibold text-emerald-300">현재 레벨</p>
+              <p className="text-xs font-semibold text-emerald-300">시즌 레벨 진행</p>
               <p className="text-4xl font-black text-white">{data.current_level}</p>
               <p className="text-xs text-slate-400">최대 레벨 {data.max_level}</p>
             </div>
             <div className="flex-1">
-            <div className="flex items-center justify-between text-xs text-slate-300">
-              <span>{data.current_xp.toLocaleString()} XP</span>
-              <span>{progress.nextLabel}</span>
-              <span>{data.next_level_xp.toLocaleString()} XP</span>
-            </div>
+              <div className="flex items-center justify-between text-xs text-slate-300">
+                <span>{data.current_xp.toLocaleString()} XP</span>
+                <span>{progress.nextLabel}</span>
+                <span>{data.next_level_xp.toLocaleString()} XP</span>
+              </div>
               <div className="mt-2 h-4 w-full overflow-hidden rounded-full bg-slate-800/80">
                 <div
                   className="h-full bg-gradient-to-r from-emerald-400 via-emerald-500 to-gold-400 transition-all duration-500"

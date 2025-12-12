@@ -17,10 +17,14 @@ from app.models.season_pass import (
 )
 from app.schemas.season_pass import SeasonPassStatusResponse
 from app.services.level_xp_service import LevelXPService
+from app.services.reward_service import RewardService
 
 
 class SeasonPassService:
     """Encapsulates season pass workflows (status, stamp, claim)."""
+
+    def __init__(self) -> None:
+        self.reward_service = RewardService()
 
     def _ensure_default_season(self, db: Session, today: date) -> SeasonPassConfig | None:
         """When TEST_MODE is on and no season exists, create a simple default season."""
@@ -256,6 +260,26 @@ class SeasonPassService:
                     claimed_at=datetime.utcnow(),
                 )
                 db.add(reward_log)
+                reward_meta = {
+                    "season_id": season.id,
+                    "level": level.level,
+                    "source": "SEASON_PASS_AUTO_CLAIM",
+                    "trigger": "STAMP",
+                    "stamp_count": stamp_count,
+                    "xp_added": xp_to_add,
+                    "feature": source_feature_type,
+                }
+                try:
+                    self.reward_service.deliver(
+                        db,
+                        user_id=user_id,
+                        reward_type=level.reward_type,
+                        reward_amount=level.reward_amount,
+                        meta=reward_meta,
+                    )
+                except Exception:
+                    # Reward delivery failure should not block stamp flow; rely on logs for retry.
+                    pass
                 rewards.append(
                     {
                         "level": level.level,
@@ -448,6 +472,22 @@ class SeasonPassService:
             progress_id=progress.id,
         )
         db.add(reward_log)
+        reward_meta = {
+            "season_id": season.id,
+            "level": level,
+            "source": "SEASON_PASS_MANUAL_CLAIM",
+        }
+        try:
+            self.reward_service.deliver(
+                db,
+                user_id=user_id,
+                reward_type=level_row.reward_type,
+                reward_amount=level_row.reward_amount,
+                meta=reward_meta,
+            )
+        except Exception:
+            # Manual claim should still record the claim even if delivery fails; retry externally.
+            pass
         db.commit()
         db.refresh(reward_log)
 
@@ -530,6 +570,24 @@ class SeasonPassService:
                     claimed_at=datetime.utcnow(),
                 )
                 db.add(reward_log)
+                reward_meta = {
+                    "season_id": season.id,
+                    "level": level.level,
+                    "source": "SEASON_PASS_AUTO_CLAIM",
+                    "trigger": "BONUS_XP",
+                    "xp_added": xp_amount,
+                }
+                try:
+                    self.reward_service.deliver(
+                        db,
+                        user_id=user_id,
+                        reward_type=level.reward_type,
+                        reward_amount=level.reward_amount,
+                        meta=reward_meta,
+                    )
+                except Exception:
+                    # Reward delivery failure should not block XP flow; rely on logs for retry.
+                    pass
                 rewards.append(
                     {
                         "level": level.level,

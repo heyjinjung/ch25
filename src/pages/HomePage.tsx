@@ -1,5 +1,6 @@
 ﻿import React, { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../auth/authStore";
 import { useSeasonPassStatus } from "../hooks/useSeasonPass";
 import { useRouletteStatus } from "../hooks/useRoulette";
@@ -8,6 +9,7 @@ import { useLotteryStatus } from "../hooks/useLottery";
 import { useInternalWinStatus } from "../hooks/useSeasonPass";
 import { useTodayRanking } from "../hooks/useRanking";
 import { GAME_TOKEN_LABELS } from "../types/gameTokens";
+import { getActiveSeason, getLeaderboard } from "../api/teamBattleApi";
 
 interface GameCardProps {
   readonly title: string;
@@ -60,6 +62,7 @@ const GameCard: React.FC<GameCardProps> = ({ title, path, tokenType, tokenBalanc
 };
 
 const HomePage: React.FC = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const season = useSeasonPassStatus();
   const roulette = useRouletteStatus();
@@ -67,6 +70,8 @@ const HomePage: React.FC = () => {
   const lottery = useLotteryStatus();
   const ranking = useTodayRanking();
   const internalWins = useInternalWinStatus();
+  const teamSeason = useQuery({ queryKey: ["team-battle-season"], queryFn: getActiveSeason });
+  const teamLeaderboard = useQuery({ queryKey: ["team-battle-leaderboard"], queryFn: () => getLeaderboard(undefined, 3, 0) });
 
   const seasonSummary = useMemo(() => {
     if (season.isLoading) return { label: "로딩 중", detail: "" };
@@ -155,6 +160,64 @@ const HomePage: React.FC = () => {
               </div>
             );
           })}
+        </div>
+      </div>
+
+      <div className="rounded-3xl border border-emerald-700/40 bg-gradient-to-br from-slate-950 via-emerald-950/20 to-cyan-950 p-8 shadow-2xl">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-[0.25em] text-cyan-300">🛡️ Team Battle</p>
+            <h2 className="text-2xl font-bold bg-gradient-to-r from-cyan-300 via-emerald-300 to-gold-300 bg-clip-text text-transparent">오늘의 팀 배틀</h2>
+            <p className="text-sm text-slate-300">팀을 고르고 플레이 횟수로 경쟁하세요. 우승팀은 CC 코인 보상!</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate("/team-battle")}
+            className="rounded-full border border-cyan-400/60 px-4 py-2 text-sm font-semibold text-cyan-100 hover:border-cyan-300"
+          >
+            팀 배틀 참여하기 →
+          </button>
+        </div>
+
+        <div className="mt-4 grid gap-4 md:grid-cols-3">
+          <div className="md:col-span-1 rounded-2xl border border-cyan-700/40 bg-slate-900/70 p-4">
+            <p className="text-xs font-semibold text-cyan-200">활성 시즌</p>
+            {teamSeason.isLoading && <p className="text-sm text-slate-400">불러오는 중...</p>}
+            {teamSeason.isError && <p className="text-sm text-red-300">시즌 정보를 불러오지 못했습니다.</p>}
+            {teamSeason.data && (
+              <div className="mt-1 space-y-1 text-sm text-slate-200">
+                <p className="font-semibold">{teamSeason.data.name}</p>
+                <p className="text-xs text-slate-400">종료: {new Date(teamSeason.data.ends_at).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })}</p>
+              </div>
+            )}
+            {!teamSeason.data && !teamSeason.isLoading && !teamSeason.isError && (
+              <p className="text-sm text-slate-400">활성 시즌이 없습니다.</p>
+            )}
+          </div>
+
+          <div className="md:col-span-2 rounded-2xl border border-cyan-700/40 bg-slate-900/70 p-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold text-cyan-200">상위 팀</p>
+              <span className="text-xs text-slate-400">플레이 횟수 기준</span>
+            </div>
+            {teamLeaderboard.isLoading && <p className="mt-2 text-sm text-slate-400">리더보드 불러오는 중...</p>}
+            {teamLeaderboard.isError && <p className="mt-2 text-sm text-red-300">리더보드를 불러오지 못했습니다.</p>}
+            {teamLeaderboard.data && teamLeaderboard.data.length > 0 ? (
+              <div className="mt-3 divide-y divide-slate-800/60">
+                {teamLeaderboard.data.map((row, idx) => (
+                  <div key={row.team_id} className="flex items-center justify-between py-2">
+                    <div className="flex items-center gap-3">
+                      <span className="w-6 text-center font-semibold text-cyan-200">#{idx + 1}</span>
+                      <span className="text-sm font-bold text-white">{row.team_name}</span>
+                    </div>
+                    <span className="text-sm font-semibold text-emerald-300">{row.points}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              !teamLeaderboard.isLoading && <p className="mt-2 text-sm text-slate-400">아직 점수가 없습니다.</p>
+            )}
+          </div>
         </div>
       </div>
 
