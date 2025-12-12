@@ -18,6 +18,9 @@ const GameTokenLogsPage: React.FC = () => {
   const queryClient = useQueryClient();
   const [filterExternalId, setFilterExternalId] = useState<string | undefined>();
   const [playLogFilterId, setPlayLogFilterId] = useState<string | undefined>();
+  const [playLogPage, setPlayLogPage] = useState(1);
+  const PLAY_LOG_LIMIT = 50;
+
   const [revokeExternalId, setRevokeExternalId] = useState<string | undefined>();
   const [revokeTokenType, setRevokeTokenType] = useState<GameTokenType>("ROULETTE_COIN");
   const [revokeAmount, setRevokeAmount] = useState<number>(0);
@@ -28,8 +31,8 @@ const GameTokenLogsPage: React.FC = () => {
   });
 
   const playLogsQuery = useQuery<PlayLogEntry[], unknown>({
-    queryKey: ["admin-play-logs", playLogFilterId],
-    queryFn: () => fetchRecentPlayLogs(100, playLogFilterId),
+    queryKey: ["admin-play-logs", playLogFilterId, playLogPage],
+    queryFn: () => fetchRecentPlayLogs(PLAY_LOG_LIMIT, playLogFilterId, (playLogPage - 1) * PLAY_LOG_LIMIT),
   });
 
   const ledgerQuery = useQuery<LedgerEntry[], unknown>({
@@ -120,7 +123,10 @@ const GameTokenLogsPage: React.FC = () => {
             />
             <button
               type="button"
-              onClick={() => playLogsQuery.refetch()}
+              onClick={() => {
+                setPlayLogPage(1);
+                playLogsQuery.refetch();
+              }}
               className="rounded-md border border-emerald-600/60 px-3 py-2 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-700/20"
             >
               새로고침
@@ -159,6 +165,23 @@ const GameTokenLogsPage: React.FC = () => {
           {!playLogsQuery.isLoading && playLogsQuery.data?.length === 0 && (
             <p className="p-2 text-sm text-slate-400">데이터가 없습니다.</p>
           )}
+          <div className="flex items-center justify-center gap-4 border-t border-slate-800/60 p-4">
+            <button
+              disabled={playLogPage === 1 || playLogsQuery.isLoading}
+              onClick={() => setPlayLogPage((p) => Math.max(1, p - 1))}
+              className="rounded px-3 py-1 text-sm text-slate-300 hover:bg-slate-800 disabled:opacity-50"
+            >
+              이전
+            </button>
+            <span className="text-sm text-slate-400">Page {playLogPage}</span>
+            <button
+              disabled={!playLogsQuery.data || playLogsQuery.data.length < PLAY_LOG_LIMIT || playLogsQuery.isLoading}
+              onClick={() => setPlayLogPage((p) => p + 1)}
+              className="rounded px-3 py-1 text-sm text-slate-300 hover:bg-slate-800 disabled:opacity-50"
+            >
+              다음
+            </button>
+          </div>
         </div>
       </div>
 

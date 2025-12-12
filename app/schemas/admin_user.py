@@ -9,6 +9,7 @@ class AdminUserBase(BaseModel):
     external_id: str = Field(..., min_length=1, max_length=100)
     nickname: Optional[str] = Field(None, max_length=100)
     level: int = Field(1, ge=1)
+    xp: int = Field(0, ge=0)
     status: str = Field("ACTIVE", max_length=20)
 
 
@@ -21,6 +22,7 @@ class AdminUserUpdate(BaseModel):
     external_id: Optional[str] = Field(None, max_length=100)
     nickname: Optional[str] = Field(None, max_length=100)
     level: Optional[int] = Field(None, ge=1)
+    xp: Optional[int] = Field(None, ge=0)
     status: Optional[str] = Field(None, max_length=20)
     password: Optional[str] = Field(None, min_length=4)
 

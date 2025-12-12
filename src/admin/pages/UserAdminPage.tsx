@@ -22,12 +22,25 @@ const UserAdminPage: React.FC = () => {
   });
 
   const [rows, setRows] = useState<EditableUser[]>([emptyUser]);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     if (data) {
       setRows(data.map((u) => ({ ...u, password: "" })));
     }
   }, [data]);
+
+  const filteredRowsWithIndex = rows
+    .map((row, index) => ({ row, index }))
+    .filter(({ row }) => {
+      if (!searchTerm) return true;
+      const term = searchTerm.toLowerCase();
+      return (
+        row.external_id?.toLowerCase().includes(term) ||
+        row.nickname?.toLowerCase().includes(term) ||
+        (row.id && String(row.id).includes(term))
+      );
+    });
 
   const createMutation = useMutation({
     mutationFn: (payload: AdminUserPayload) => createUser(payload),
@@ -95,6 +108,16 @@ const UserAdminPage: React.FC = () => {
         </p>
       </header>
 
+      <div className="flex items-center gap-2">
+        <input
+          type="text"
+          placeholder="ID, 닉네임 검색..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full max-w-sm rounded border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
+        />
+      </div>
+
       {isLoading && <div className="rounded-lg border border-emerald-800/40 bg-slate-900 p-3 text-slate-200">불러오는 중...</div>}
       {isError && (
         <div className="rounded-lg border border-red-700/40 bg-red-950 p-3 text-red-100">불러오기 실패: {(error as Error).message}</div>
@@ -113,12 +136,12 @@ const UserAdminPage: React.FC = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-800">
-            {rows.map((row, idx) => (
-              <tr key={row.id ?? idx}>
+            {filteredRowsWithIndex.map(({ row, index }) => (
+              <tr key={row.id ?? index}>
                 <td className="px-3 py-2">
                   <input
                     value={row.external_id ?? ""}
-                    onChange={(e) => handleField(idx, "external_id", e.target.value)}
+                    onChange={(e) => handleField(index, "external_id", e.target.value)}
                     className="w-full rounded border border-slate-700 bg-slate-800 px-2 py-1"
                     placeholder="필수"
                   />
@@ -126,7 +149,7 @@ const UserAdminPage: React.FC = () => {
                 <td className="px-3 py-2">
                   <input
                     value={row.nickname ?? ""}
-                    onChange={(e) => handleField(idx, "nickname", e.target.value)}
+                    onChange={(e) => handleField(index, "nickname", e.target.value)}
                     className="w-full rounded border border-slate-700 bg-slate-800 px-2 py-1"
                     placeholder="닉네임"
                   />
@@ -135,7 +158,7 @@ const UserAdminPage: React.FC = () => {
                   <input
                     type="number"
                     value={row.level ?? 1}
-                    onChange={(e) => handleField(idx, "level", Number(e.target.value))}
+                    onChange={(e) => handleField(index, "level", Number(e.target.value))}
                     className="w-24 rounded border border-slate-700 bg-slate-800 px-2 py-1 text-right"
                     min={1}
                   />
@@ -143,7 +166,7 @@ const UserAdminPage: React.FC = () => {
                 <td className="px-3 py-2">
                   <select
                     value={row.status ?? "ACTIVE"}
-                    onChange={(e) => handleField(idx, "status", e.target.value)}
+                    onChange={(e) => handleField(index, "status", e.target.value)}
                     className="w-full rounded border border-slate-700 bg-slate-800 px-2 py-1"
                   >
                     <option value="ACTIVE">ACTIVE</option>
@@ -155,7 +178,7 @@ const UserAdminPage: React.FC = () => {
                   <input
                     type="password"
                     value={row.password ?? ""}
-                    onChange={(e) => handleField(idx, "password", e.target.value)}
+                    onChange={(e) => handleField(index, "password", e.target.value)}
                     className="w-full rounded border border-slate-700 bg-slate-800 px-2 py-1"
                     placeholder="변경 시 입력"
                   />
@@ -178,10 +201,10 @@ const UserAdminPage: React.FC = () => {
                 </td>
               </tr>
             ))}
-            {rows.length === 0 && (
+            {filteredRowsWithIndex.length === 0 && (
               <tr>
                 <td colSpan={7} className="px-3 py-4 text-center text-slate-400">
-                  데이터가 없습니다. 행 추가를 눌러 새 유저를 만드세요.
+                  {searchTerm ? "검색 결과가 없습니다." : "데이터가 없습니다. 행 추가를 눌러 새 유저를 만드세요."}
                 </td>
               </tr>
             )}

@@ -1,5 +1,6 @@
 // src/components/layout/MainLayout.tsx
 import React, { useMemo } from "react";
+import { useAuth } from "../../auth/authStore";
 
 interface MainLayoutProps {
   readonly children: React.ReactNode;
@@ -7,6 +8,7 @@ interface MainLayoutProps {
 
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const todayLabel = useMemo(() => new Intl.DateTimeFormat("ko-KR", { dateStyle: "medium" }).format(new Date()), []);
+  const { user } = useAuth();
 
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 text-slate-100">
@@ -16,7 +18,12 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
             <div className="text-center sm:text-left">
               <p className="text-xs uppercase tracking-[0.25em] text-emerald-300">{todayLabel}</p>
               <h1 className="text-2xl font-bold">지민코드 CC카지노이벤</h1>
-              </div>
+              {user && (
+                <p className="mt-1 text-sm text-emerald-200">
+                  {user.nickname || user.external_id}님 (Lv.{user.level ?? 1})
+                </p>
+              )}
+            </div>
             <div className="text-center text-xs text-slate-300 sm:text-right">MERRY CC-MAS</div>
           </div>
         </header>

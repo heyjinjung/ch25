@@ -1,5 +1,6 @@
 """Admin endpoints for granting game tokens."""
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import desc, literal
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
@@ -70,14 +71,15 @@ def list_wallets(user_id: int | None = None, external_id: str | None = None, db:
 
 
 @router.get("/play-logs", response_model=list[PlayLogEntry])
-def list_recent_play_logs(limit: int = 50, external_id: str | None = None, db: Session = Depends(get_db)):
-    """Unified recent play logs from roulette/dice/lottery."""
+def list_recent_play_logs(skip: int = 0, limit: int = 50, external_id: str | None = None, db: Session = Depends(get_db)):
+    """Unified recent play logs from roulette/dice/lottery with pagination."""
     limit = min(max(limit, 1), 200)
     
     # Build optional user filter
     user_filter_roulette = True
     user_filter_dice = True
     user_filter_lottery = True
+    
     if external_id:
         user = db.query(User).filter(User.external_id == external_id).first()
         if user:
@@ -86,87 +88,77 @@ def list_recent_play_logs(limit: int = 50, external_id: str | None = None, db: S
             user_filter_lottery = LotteryLog.user_id == user.id
         else:
             return []  # No user found with this external_id
-    
-    roulette_rows = (
+
+    # 1. Roulette Query
+    q_roulette = (
         db.query(
-            RouletteLog.id,
+            RouletteLog.id.label("id"),
             RouletteLog.user_id,
             User.external_id,
             RouletteLog.reward_type,
             RouletteLog.reward_amount,
-            RouletteSegment.label,
+            RouletteSegment.label.label("detail"),
             RouletteLog.created_at,
+            literal("ROULETTE").label("game_type"),
         )
         .join(User, User.id == RouletteLog.user_id)
         .join(RouletteSegment, RouletteSegment.id == RouletteLog.segment_id)
         .filter(user_filter_roulette)
-        .order_by(RouletteLog.created_at.desc())
-        .limit(limit)
-        .all()
     )
-    dice_rows = (
+
+    # 2. Dice Query
+    q_dice = (
         db.query(
-            DiceLog.id,
+            DiceLog.id.label("id"),
             DiceLog.user_id,
             User.external_id,
             DiceLog.reward_type,
             DiceLog.reward_amount,
-            DiceLog.result,
-            DiceConfig.name,
+            DiceLog.result.label("detail"),
             DiceLog.created_at,
+            literal("DICE").label("game_type"),
         )
         .join(User, User.id == DiceLog.user_id)
-        .join(DiceConfig, DiceConfig.id == DiceLog.config_id)
         .filter(user_filter_dice)
-        .order_by(DiceLog.created_at.desc())
-        .limit(limit)
-        .all()
     )
-    lottery_rows = (
+
+    # 3. Lottery Query
+    q_lottery = (
         db.query(
-            LotteryLog.id,
+            LotteryLog.id.label("id"),
             LotteryLog.user_id,
             User.external_id,
             LotteryLog.reward_type,
             LotteryLog.reward_amount,
-            LotteryPrize.label,
+            LotteryPrize.label.label("detail"),
             LotteryLog.created_at,
+            literal("LOTTERY").label("game_type"),
         )
         .join(User, User.id == LotteryLog.user_id)
         .join(LotteryPrize, LotteryPrize.id == LotteryLog.prize_id)
         .filter(user_filter_lottery)
-        .order_by(LotteryLog.created_at.desc())
-        .limit(limit)
-        .all()
     )
 
-    def to_entry(rows, game: str):
-        entries = []
-        for row in rows:
-            label = None
-            if game == "ROULETTE":
-                label = row.label
-            elif game == "LOTTERY":
-                label = row.label
-            elif game == "DICE":
-                label = f"{row.name} - {row.result}" if getattr(row, "name", None) else f"{row.result}"
-            entries.append(
-                PlayLogEntry(
-                    id=row.id,
-                    user_id=row.user_id,
-                    external_id=row.external_id,
-                    game=game,
-                    reward_type=row.reward_type,
-                    reward_amount=row.reward_amount,
-                    reward_label=label,
-                    created_at=row.created_at.isoformat(),
-                )
-            )
-        return entries
+    # Union All + Sort + Pagination
+    union_q = q_roulette.union_all(q_dice, q_lottery).order_by(desc("created_at"))
+    
+    # Apply pagination
+    rows = union_q.offset(skip).limit(limit).all()
 
-    merged = to_entry(roulette_rows, "ROULETTE") + to_entry(dice_rows, "DICE") + to_entry(lottery_rows, "LOTTERY")
-    merged.sort(key=lambda r: r.created_at, reverse=True)
-    return merged[:limit]
+    return [
+        PlayLogEntry(
+            id=row.id,
+            user_id=row.user_id,
+            external_id=row.external_id,
+            game=row.game_type,
+            reward_label=row.detail,
+            reward_type=row.reward_type,
+            reward_amount=row.reward_amount,
+            created_at=row.created_at,
+        )
+        for row in rows
+    ]
+
 
 
 @router.get("/ledger", response_model=list[LedgerEntry])
