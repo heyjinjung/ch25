@@ -7,6 +7,7 @@ from typing import Any, Dict, List
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.models.game_wallet import GameTokenType
 from app.models.level_xp import UserLevelProgress, UserLevelRewardLog, UserXpEventLog
 from app.services.reward_service import RewardService
 
@@ -88,13 +89,66 @@ class LevelXPService:
                     "auto_granted": row["auto_grant"],
                 }
             )
-            # Auto grant only for coupon/point types supported by RewardService
-            if row["auto_grant"] and row["reward_type"].startswith("COUPON"):
+            # Auto grant only for supported reward types; non-blocking
+            if row["auto_grant"]:
                 reward_meta = {"source": source, "level": row["level"], **(row["reward_payload"] or {})}
                 try:
-                    self.reward_service.grant_coupon(db, user_id=user_id, coupon_type=row["reward_type"], meta=reward_meta)
+                    if row["reward_type"].startswith("COUPON"):
+                        self.reward_service.grant_coupon(db, user_id=user_id, coupon_type=row["reward_type"], meta=reward_meta)
+                    elif row["reward_type"].startswith("TICKET"):
+                        ticket_map = {
+                            "TICKET_ROULETTE": GameTokenType.ROULETTE_COIN,
+                            "TICKET_DICE": GameTokenType.DICE_TOKEN,
+                            "TICKET_LOTTERY": GameTokenType.LOTTERY_TICKET,
+                        }
+                        token_type = ticket_map.get(row["reward_type"])
+                        payload = row.get("reward_payload") or {}
+                        amount = payload.get("tickets") or payload.get("amount") or 0
+                        if token_type and amount > 0:
+                            self.reward_service.grant_ticket(db, user_id=user_id, token_type=token_type, amount=amount, meta=reward_meta)
                 except Exception:
                     # Delivery errors should not break XP accrual; rely on logs for retries.
                     pass
         progress.level = current_level
         return {"added_xp": delta, "new_rewards": achieved, "level": progress.level, "xp": progress.xp}
+
+    def get_status(self, db: Session, user_id: int) -> dict:
+        """Return current level/XP snapshot and reward history."""
+
+        progress = self._get_or_create_progress(db, user_id=user_id)
+
+        next_row = next((row for row in self.LEVELS if row["required_xp"] > progress.xp), None)
+        next_level = next_row["level"] if next_row else None
+        next_required = next_row["required_xp"] if next_row else None
+        xp_to_next = (next_required - progress.xp) if next_required is not None else None
+
+        reward_logs = (
+            db.execute(
+                select(UserLevelRewardLog)
+                .where(UserLevelRewardLog.user_id == user_id)
+                .order_by(UserLevelRewardLog.level)
+            )
+            .scalars()
+            .all()
+        )
+
+        rewards = [
+            {
+                "level": log.level,
+                "reward_type": log.reward_type,
+                "reward_payload": log.reward_payload,
+                "auto_granted": log.auto_granted,
+                "granted_at": log.created_at,
+                "granted_by": log.granted_by,
+            }
+            for log in reward_logs
+        ]
+
+        return {
+            "current_level": progress.level,
+            "current_xp": progress.xp,
+            "next_level": next_level,
+            "next_required_xp": next_required,
+            "xp_to_next": xp_to_next,
+            "rewards": rewards,
+        }

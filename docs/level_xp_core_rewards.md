@@ -87,4 +87,5 @@ CREATE TABLE user_xp_event_log (
 - 기존 `user` 테이블과 FK 연결 확인 후 배포 전 백필(backfill) 로직이 필요하면 같은 migration 안에서 처리.
 - 수동 지급 관리자 추적용 `granted_by`는 `admin_user` 테이블 키를 FK로 묶거나, 일단 INT로 두고 나중에 FK 추가 가능.
 - 트랜잭션 범위: XP 증가/레벨업/보상 로그/티켓·쿠폰 지급이 한 트랜잭션에 묶이도록 서비스 계층도 함께 점검.
-- 자동 지급 여부는 `auto_granted`에 표시되고, 티켓류는 현재 로그만 남기고 실제 발급은 후속 구현(RewardService 연계)에서 처리.
+- 자동 지급 여부는 `auto_granted`에 표시되고, 티켓류는 RewardService→GameWalletService 경로로 자동 발급 완료 상태.
+- 쿠폰류는 외부 연동/실제 지급이 미구현이므로 운영자가 별도 수동 지급해야 함.
