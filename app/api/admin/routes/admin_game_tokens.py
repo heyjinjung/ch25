@@ -1,6 +1,6 @@
 """Admin endpoints for granting game tokens."""
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import desc, literal
+from sqlalchemy import desc, literal, literal_column
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
@@ -160,7 +160,7 @@ def list_recent_play_logs(
     )
 
     # Union All + Sort + Pagination
-    union_q = q_roulette.union_all(q_dice, q_lottery).order_by(desc("created_at"))
+    union_q = q_roulette.union_all(q_dice, q_lottery).order_by(desc(literal_column("created_at")))
 
     rows = union_q.offset(offset).limit(limit).all()
 
