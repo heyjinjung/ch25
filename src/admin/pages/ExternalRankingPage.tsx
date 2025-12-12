@@ -37,14 +37,30 @@ const ExternalRankingPage: React.FC = () => {
 
   const upsertMutation = useMutation({
     mutationFn: (payloads: ExternalRankingPayload[]) => upsertExternalRanking(payloads),
-    onSuccess: () => {
+    onSuccess: (res) => {
+      // 즉시 UI에 반영 후 서버 데이터도 새로고침
+      if (res?.items) {
+        queryClient.setQueryData(["admin", "external-ranking"], res);
+        setRows(
+          res.items.map((item) => ({
+            id: item.id,
+            user_id: item.user_id,
+            external_id: item.external_id,
+            deposit_amount: item.deposit_amount,
+            play_count: item.play_count,
+            memo: item.memo ?? "",
+          }))
+        );
+      }
       queryClient.invalidateQueries({ queryKey: ["admin", "external-ranking"] });
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: (userId: number) => deleteExternalRanking(userId),
-    onSuccess: () => {
+    onSuccess: (_res, userId) => {
+      // 삭제 직후 목록에서 제거하고 서버 데이터도 새로고침
+      setRows((prev) => prev.filter((row) => row.user_id !== userId));
       queryClient.invalidateQueries({ queryKey: ["admin", "external-ranking"] });
     },
   });
