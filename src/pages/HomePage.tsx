@@ -134,6 +134,20 @@ const HomePage: React.FC = () => {
     return "닉네임 없음";
   };
 
+  const seasonState = useMemo(() => {
+    if (teamSeason.isLoading) return { label: "시즌 불러오는 중", tone: "text-slate-300" };
+    if (teamSeason.isError) return { label: "시즌 정보를 불러오지 못했습니다", tone: "text-red-300" };
+    if (!teamSeason.data) return { label: "활성 시즌 없음", tone: "text-slate-300" };
+    return { label: teamSeason.data.name, tone: "text-emerald-200" };
+  }, [teamSeason.data, teamSeason.isError, teamSeason.isLoading]);
+
+  const formatEndsAt = (iso?: string) => {
+    if (!iso) return "종료 정보 없음";
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return "종료 정보 없음";
+    return d.toLocaleString("ko-KR", { timeZone: "Asia/Seoul" });
+  };
+
   return (
     <section className="space-y-8">
       <div className="rounded-3xl border border-red-700/40 bg-gradient-to-br from-slate-950 via-red-950/30 to-emerald-950 p-8 shadow-2xl space-y-3">
@@ -163,41 +177,49 @@ const HomePage: React.FC = () => {
         </div>
       </div>
 
-      <div className="rounded-3xl border border-emerald-700/40 bg-gradient-to-br from-slate-950 via-emerald-950/20 to-cyan-950 p-8 shadow-2xl">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-[0.25em] text-cyan-300">🛡️ Team Battle</p>
-            <h2 className="text-2xl font-bold bg-gradient-to-r from-cyan-300 via-emerald-300 to-gold-300 bg-clip-text text-transparent">오늘의 팀 배틀</h2>
-            <p className="text-sm text-slate-300">팀을 고르고 플레이 횟수로 경쟁하세요. 우승팀은 CC 코인 보상!</p>
+      <div className="rounded-3xl border border-amber-600/40 bg-gradient-to-br from-slate-950 via-indigo-950/40 to-emerald-950 p-8 shadow-[0_25px_80px_-30px_rgba(0,0,0,0.6)]">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-1">
+            <p className="text-xs uppercase tracking-[0.28em] text-amber-200">🛡️ Team Battle</p>
+            <h2 className="text-2xl font-extrabold bg-gradient-to-r from-amber-200 via-emerald-200 to-cyan-300 bg-clip-text text-transparent">오늘의 팀 배틀</h2>
+            <p className="text-sm text-slate-200">팀을 고르고 플레이 횟수로 경쟁하세요. 우승팀은 CC 코인 보상!</p>
           </div>
-          <button
-            type="button"
-            onClick={() => navigate("/team-battle")}
-            className="rounded-full border border-cyan-400/60 px-4 py-2 text-sm font-semibold text-cyan-100 hover:border-cyan-300"
-          >
-            팀 배틀 참여하기 →
-          </button>
+          <div className="flex items-center gap-2">
+            <span className={`rounded-full border border-amber-400/60 bg-amber-900/30 px-3 py-1 text-xs font-semibold ${seasonState.tone}`}>
+              {seasonState.label}
+            </span>
+            <button
+              type="button"
+              onClick={() => navigate("/team-battle")}
+              className="rounded-full border border-emerald-400/70 bg-emerald-900/30 px-4 py-2 text-sm font-semibold text-emerald-100 hover:border-emerald-300 hover:text-white"
+            >
+              팀 배틀 참여하기 →
+            </button>
+          </div>
         </div>
 
         <div className="mt-4 grid gap-4 md:grid-cols-3">
-          <div className="md:col-span-1 rounded-2xl border border-cyan-700/40 bg-slate-900/70 p-4">
-            <p className="text-xs font-semibold text-cyan-200">활성 시즌</p>
-            {teamSeason.isLoading && <p className="text-sm text-slate-400">불러오는 중...</p>}
-            {teamSeason.isError && <p className="text-sm text-red-300">시즌 정보를 불러오지 못했습니다.</p>}
+          <div className="md:col-span-1 rounded-2xl border border-amber-600/40 bg-gradient-to-br from-slate-900/80 to-amber-950/20 p-5 shadow-inner">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold text-amber-200">활성 시즌</p>
+              <span className="text-[11px] text-slate-400">Asia/Seoul</span>
+            </div>
+            {teamSeason.isLoading && <p className="mt-2 text-sm text-slate-400">불러오는 중...</p>}
+            {teamSeason.isError && <p className="mt-2 text-sm text-red-300">시즌 정보를 불러오지 못했습니다.</p>}
             {teamSeason.data && (
-              <div className="mt-1 space-y-1 text-sm text-slate-200">
-                <p className="font-semibold">{teamSeason.data.name}</p>
-                <p className="text-xs text-slate-400">종료: {new Date(teamSeason.data.ends_at).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })}</p>
+              <div className="mt-2 space-y-2 text-sm text-slate-100">
+                <p className="text-base font-bold text-white">{teamSeason.data.name}</p>
+                <p className="text-xs text-slate-300">종료: {formatEndsAt(teamSeason.data.ends_at)}</p>
               </div>
             )}
             {!teamSeason.data && !teamSeason.isLoading && !teamSeason.isError && (
-              <p className="text-sm text-slate-400">활성 시즌이 없습니다.</p>
+              <p className="mt-2 text-sm text-slate-400">활성 시즌이 없습니다.</p>
             )}
           </div>
 
-          <div className="md:col-span-2 rounded-2xl border border-cyan-700/40 bg-slate-900/70 p-4">
+          <div className="md:col-span-2 rounded-2xl border border-emerald-600/40 bg-gradient-to-br from-slate-900/80 to-emerald-950/20 p-5 shadow-inner">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-cyan-200">상위 팀</p>
+              <p className="text-sm font-semibold text-emerald-200">상위 팀</p>
               <span className="text-xs text-slate-400">플레이 횟수 기준</span>
             </div>
             {teamLeaderboard.isLoading && <p className="mt-2 text-sm text-slate-400">리더보드 불러오는 중...</p>}
@@ -205,17 +227,20 @@ const HomePage: React.FC = () => {
             {teamLeaderboard.data && teamLeaderboard.data.length > 0 ? (
               <div className="mt-3 divide-y divide-slate-800/60">
                 {teamLeaderboard.data.map((row, idx) => (
-                  <div key={row.team_id} className="flex items-center justify-between py-2">
+                  <div key={row.team_id} className="flex items-center justify-between py-3">
                     <div className="flex items-center gap-3">
-                      <span className="w-6 text-center font-semibold text-cyan-200">#{idx + 1}</span>
-                      <span className="text-sm font-bold text-white">{row.team_name}</span>
+                      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-900/50 text-sm font-bold text-emerald-200">#{idx + 1}</span>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-bold text-white">{row.team_name}</span>
+                        <span className="text-[11px] text-slate-400">team_id: {row.team_id}</span>
+                      </div>
                     </div>
-                    <span className="text-sm font-semibold text-emerald-300">{row.points}</span>
+                    <span className="rounded-full bg-emerald-800/50 px-3 py-1 text-sm font-semibold text-emerald-100">{row.points} pts</span>
                   </div>
                 ))}
               </div>
             ) : (
-              !teamLeaderboard.isLoading && <p className="mt-2 text-sm text-slate-400">아직 점수가 없습니다.</p>
+              !teamLeaderboard.isLoading && <p className="mt-3 text-sm text-slate-400">아직 점수가 없습니다.</p>
             )}
           </div>
         </div>

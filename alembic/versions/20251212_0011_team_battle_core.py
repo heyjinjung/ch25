@@ -4,6 +4,12 @@ Revision ID: 20251212_0011
 Revises: 20251212_0010
 Create Date: 2025-12-12
 """
+"""Add team battle core tables.
+
+Revision ID: 20251212_0011
+Revises: 20251212_0010
+Create Date: 2025-12-12
+"""
 from alembic import op
 import sqlalchemy as sa
 

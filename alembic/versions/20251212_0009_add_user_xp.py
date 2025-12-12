@@ -1,13 +1,13 @@
 """Add xp to user.
 
-Revision ID: 20251212_0009
+Revision ID: 20251212_0009a
 Revises: 20251208_0008
 Create Date: 2025-12-12
 """
 from alembic import op
 import sqlalchemy as sa
 
-revision = "20251212_0009"
+revision = "20251212_0009a"
 down_revision = "20251208_0008"
 branch_labels = None
 depends_on = None

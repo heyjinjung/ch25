@@ -4,10 +4,18 @@ Revision ID: 20251212_0012
 Revises: 20251212_0011
 Create Date: 2025-12-12
 """
+"""Add CC coin token type.
+
+Revision ID: 20251212_0012
+Revises: 20251212_0011
+Create Date: 2025-12-12
+"""
 from alembic import op
 import sqlalchemy as sa
 
 
+revision = "20251212_0012"
+down_revision = "20251212_0011"
 revision = "20251212_0012"
 down_revision = "20251212_0011"
 branch_labels = None

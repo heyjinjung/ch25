@@ -26,6 +26,7 @@ class ExternalRankingUpdate(BaseModel):
 class ExternalRankingEntry(BaseModel):
     id: int
     user_id: int
+    external_id: str | None = None
     deposit_amount: int
     play_count: int
     memo: Optional[str] = None

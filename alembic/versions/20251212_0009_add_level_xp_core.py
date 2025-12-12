@@ -1,14 +1,14 @@
 """Add core level XP tables.
 
-Revision ID: 20251212_0009
-Revises: 20251208_0008
+Revision ID: 20251212_0009b
+Revises: 20251212_0009a
 Create Date: 2025-12-12
 """
 from alembic import op
 import sqlalchemy as sa
 
-revision = "20251212_0009"
-down_revision = "20251208_0008"
+revision = "20251212_0009b"
+down_revision = "20251212_0009a"
 branch_labels = None
 depends_on = None
 
