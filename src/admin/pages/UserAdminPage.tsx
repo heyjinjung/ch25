@@ -12,6 +12,8 @@ const emptyUser: EditableUser = {
   level: 1,
   status: "ACTIVE",
   password: "",
+  xp: 0,
+  season_level: 1,
 };
 
 const UserAdminPage: React.FC = () => {
@@ -53,7 +55,7 @@ const UserAdminPage: React.FC = () => {
         idx === index
           ? {
               ...row,
-              [field]: field === "level" ? Number(value) : value,
+              [field]: (field === "level" || field === "xp" || field === "season_level") ? Number(value) : value,
             }
           : row
       )
@@ -69,6 +71,8 @@ const UserAdminPage: React.FC = () => {
       nickname: row.nickname,
       status: row.status,
       level: row.level,
+      xp: row.xp,
+      season_level: row.season_level,
     };
     if (row.password) payload.password = row.password;
     updateMutation.mutate({ id: row.id, payload });
@@ -82,6 +86,8 @@ const UserAdminPage: React.FC = () => {
       status: row.status,
       level: row.level ?? 1,
       password: row.password,
+      xp: row.xp ?? 0,
+      season_level: row.season_level ?? 1,
     };
     createMutation.mutate(payload);
   };
@@ -106,7 +112,9 @@ const UserAdminPage: React.FC = () => {
             <tr>
               <th className="px-3 py-2 text-left">ID</th>
               <th className="px-3 py-2 text-left">닉네임</th>
-              <th className="px-3 py-2 text-left">레벨</th>
+              <th className="px-3 py-2 text-left">레벨(G)</th>
+              <th className="px-3 py-2 text-left">시즌Lv</th>
+              <th className="px-3 py-2 text-left">XP</th>
               <th className="px-3 py-2 text-left">상태</th>
               <th className="px-3 py-2 text-left">비밀번호(초기화)</th>
               <th className="px-3 py-2 text-right">액션</th>
@@ -136,8 +144,26 @@ const UserAdminPage: React.FC = () => {
                     type="number"
                     value={row.level ?? 1}
                     onChange={(e) => handleField(idx, "level", Number(e.target.value))}
-                    className="w-24 rounded border border-slate-700 bg-slate-800 px-2 py-1 text-right"
+                    className="w-16 rounded border border-slate-700 bg-slate-800 px-2 py-1 text-right"
                     min={1}
+                  />
+                </td>
+                <td className="px-3 py-2">
+                  <input
+                    type="number"
+                    value={row.season_level ?? 1}
+                    onChange={(e) => handleField(idx, "season_level", Number(e.target.value))}
+                    className="w-16 rounded border border-slate-700 bg-slate-800 px-2 py-1 text-right"
+                    min={1}
+                  />
+                </td>
+                <td className="px-3 py-2">
+                  <input
+                    type="number"
+                    value={row.xp ?? 0}
+                    onChange={(e) => handleField(idx, "xp", Number(e.target.value))}
+                    className="w-20 rounded border border-slate-700 bg-slate-800 px-2 py-1 text-right"
+                    min={0}
                   />
                 </td>
                 <td className="px-3 py-2">
@@ -180,7 +206,7 @@ const UserAdminPage: React.FC = () => {
             ))}
             {rows.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-3 py-4 text-center text-slate-400">
+                <td colSpan={9} className="px-3 py-4 text-center text-slate-400">
                   데이터가 없습니다. 행 추가를 눌러 새 유저를 만드세요.
                 </td>
               </tr>

@@ -11,14 +11,18 @@ from app.services.admin_user_service import AdminUserService
 router = APIRouter(prefix="/admin/api/users", tags=["admin-users"])
 
 
+@router.get("", response_model=List[AdminUserResponse])
 @router.get("/", response_model=List[AdminUserResponse])
 def list_users(db: Session = Depends(get_db)) -> List[AdminUserResponse]:
+    # Support both /admin/api/users and /admin/api/users/ to avoid redirect-induced CORS noise
     users = AdminUserService.list_users(db)
     return [AdminUserResponse.model_validate(u) for u in users]
 
 
+@router.post("", response_model=AdminUserResponse, status_code=201)
 @router.post("/", response_model=AdminUserResponse, status_code=201)
 def create_user(payload: AdminUserCreate, db: Session = Depends(get_db)) -> AdminUserResponse:
+    # Accept both trailing and non-trailing slash
     user = AdminUserService.create_user(db, payload)
     return AdminUserResponse.model_validate(user)
 

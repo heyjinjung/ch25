@@ -84,7 +84,7 @@ class AdminExternalRankingService:
         for row in results:
             db.refresh(row)
 
-        # Season pass hooks with period keys (daily/weekly)
+        # Season pass XP hooks (daily deltas) + weekly TOP10 stamp
         current_season = season_pass.get_current_season(db, today)
         if not current_season:
             return results
@@ -92,49 +92,18 @@ class AdminExternalRankingService:
         season_id = current_season.id
 
         for row in results:
+            # 예치: 10만 단위당 20 XP 지급 (일일 누적 대비 증분 계산)
             deposit_delta = max(row.deposit_amount - (row.daily_base_deposit or 0), 0)
             deposit_steps = deposit_delta // 100_000
-            existing_deposit = (
-                db.query(func.coalesce(func.sum(SeasonPassStampLog.stamp_count), 0))
-                .filter(
-                    SeasonPassStampLog.user_id == row.user_id,
-                    SeasonPassStampLog.season_id == season_id,
-                    SeasonPassStampLog.source_feature_type == "EXTERNAL_DEPOSIT_100K",
-                    SeasonPassStampLog.period_key == f"DEPOSIT_{today_key}",
-                )
-                .scalar()
-            )
-            to_give = max(deposit_steps - (existing_deposit or 0), 0)
-            if to_give > 0:
-                season_pass.maybe_add_stamp(
-                    db,
-                    user_id=row.user_id,
-                    source_feature_type="EXTERNAL_DEPOSIT_100K",
-                    stamp_count=to_give,
-                    now=today,
-                    period_key=f"DEPOSIT_{today_key}",
-                )
+            if deposit_steps > 0:
+                xp_to_add = deposit_steps * 20
+                season_pass.add_bonus_xp(db, user_id=row.user_id, xp_amount=xp_to_add, now=today)
 
+            # 이용 횟수: 1회당 20 XP 지급 (일일 누적 대비 증분 계산)
             play_delta = max(row.play_count - (row.daily_base_play or 0), 0)
             if play_delta > 0:
-                existing_site = (
-                    db.query(SeasonPassStampLog)
-                    .filter(
-                        SeasonPassStampLog.user_id == row.user_id,
-                        SeasonPassStampLog.season_id == season_id,
-                        SeasonPassStampLog.source_feature_type == "EXTERNAL_SITE_PLAY",
-                        SeasonPassStampLog.period_key == f"SITE_{today_key}",
-                    )
-                    .one_or_none()
-                )
-                if not existing_site:
-                    season_pass.maybe_add_stamp(
-                        db,
-                        user_id=row.user_id,
-                        source_feature_type="EXTERNAL_SITE_PLAY",
-                        now=today,
-                        period_key=f"SITE_{today_key}",
-                    )
+                xp_to_add = play_delta * 20
+                season_pass.add_bonus_xp(db, user_id=row.user_id, xp_amount=xp_to_add, now=today)
 
         # Weekly TOP10 (once per ISO week)
         top10 = (

@@ -15,9 +15,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div className="text-center sm:text-left">
               <p className="text-xs uppercase tracking-[0.25em] text-emerald-300">{todayLabel}</p>
-              <h1 className="text-2xl font-bold">지민코드 크리스마스 시즌 패스</h1>
-              <p className="text-sm text-slate-400">오늘의 한정 이벤트 및 시즌 패스</p>
-            </div>
+              <h1 className="text-2xl font-bold">지민코드 CC카지노이벤</h1>
+              </div>
             <div className="text-center text-xs text-slate-300 sm:text-right">MERRY CC-MAS</div>
           </div>
         </header>

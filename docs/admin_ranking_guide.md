@@ -5,7 +5,7 @@
 - 설계 참고: `docs/external_ranking_design.md`.
 
 ## 입력/집계 절차
-1) 로그인: `/admin/login` (기본 `admin/1234`).
+1) 로그인: `/admin/login` (기본 `admin` 계정).
 2) 외부 데이터 입력
    - UI 준비 전: 설계 문서의 외부 랭킹 테이블에 직접 INSERT/UPDATE(입금액, 게임횟수, 메모).
    - UI 준비 후: 외부 랭킹 탭에서 user_id별 값 입력/수정/삭제.

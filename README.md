@@ -5,7 +5,7 @@ FastAPI 백엔드와 Vite 기반 React 프런트로 구성된 원위크 이벤�
 1) `.env.local`을 `.env`로 복사 후 DB·`TEST_MODE` 확인 → MySQL 8 실행 → `alembic upgrade head`로 스키마 적용  
 2) 백엔드: `python -m venv venv && .\venv\Scripts\Activate.ps1 && pip install -r requirements.txt && uvicorn app.main:app --reload --port 8000`  
 3) 프런트: `npm install && npm run dev -- --host --port 5173` (필요 시 `.env.development`에서 `VITE_API_URL` 수정)  
-4) 접속: 사용자 http://localhost:5173 , 관리자 http://localhost:5173/admin (ID `admin` / PW `1234`)  
+4) 접속: 사용자 http://localhost:5173 , 관리자 http://localhost:5173/admin (ID `admin` / PW `secure password`)  
 5) 게임 토큰 지급/로그 화면: `/admin/game-tokens`, `/admin/game-token-logs`
 
 ## 문서 바로가기

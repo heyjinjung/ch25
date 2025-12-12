@@ -51,13 +51,27 @@ def revoke_tokens(payload: RevokeGameTokensRequest, db: Session = Depends(get_db
 
 
 @router.get("/wallets", response_model=list[TokenBalance])
-def list_wallets(user_id: int | None = None, external_id: str | None = None, db: Session = Depends(get_db)):
+def list_wallets(
+    user_id: int | None = None,
+    external_id: str | None = None,
+    limit: int = 50,
+    offset: int = 0,
+    db: Session = Depends(get_db),
+):
+    limit = min(max(limit, 1), 200)
+    offset = max(offset, 0)
+
     query = db.query(UserGameWallet, User.external_id).join(User, User.id == UserGameWallet.user_id)
     if user_id:
         query = query.filter(UserGameWallet.user_id == user_id)
     if external_id:
         query = query.filter(User.external_id == external_id)
-    rows = query.order_by(UserGameWallet.user_id, UserGameWallet.token_type).all()
+    rows = (
+        query.order_by(UserGameWallet.user_id, UserGameWallet.token_type)
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
     return [
         TokenBalance(
             user_id=row.UserGameWallet.user_id,  # type: ignore[attr-defined]
@@ -70,9 +84,29 @@ def list_wallets(user_id: int | None = None, external_id: str | None = None, db:
 
 
 @router.get("/play-logs", response_model=list[PlayLogEntry])
-def list_recent_play_logs(limit: int = 50, db: Session = Depends(get_db)):
+def list_recent_play_logs(
+    limit: int = 50,
+    offset: int = 0,
+    external_id: str | None = None,
+    db: Session = Depends(get_db),
+):
     """Unified recent play logs from roulette/dice/lottery."""
     limit = min(max(limit, 1), 200)
+    offset = max(offset, 0)
+    
+    # Build optional user filter
+    user_filter_roulette = True
+    user_filter_dice = True
+    user_filter_lottery = True
+    if external_id:
+        user = db.query(User).filter(User.external_id == external_id).first()
+        if user:
+            user_filter_roulette = RouletteLog.user_id == user.id
+            user_filter_dice = DiceLog.user_id == user.id
+            user_filter_lottery = LotteryLog.user_id == user.id
+        else:
+            return []  # No user found with this external_id
+    
     roulette_rows = (
         db.query(
             RouletteLog.id,
@@ -85,7 +119,9 @@ def list_recent_play_logs(limit: int = 50, db: Session = Depends(get_db)):
         )
         .join(User, User.id == RouletteLog.user_id)
         .join(RouletteSegment, RouletteSegment.id == RouletteLog.segment_id)
+        .filter(user_filter_roulette)
         .order_by(RouletteLog.created_at.desc())
+        .offset(offset)
         .limit(limit)
         .all()
     )
@@ -102,7 +138,9 @@ def list_recent_play_logs(limit: int = 50, db: Session = Depends(get_db)):
         )
         .join(User, User.id == DiceLog.user_id)
         .join(DiceConfig, DiceConfig.id == DiceLog.config_id)
+        .filter(user_filter_dice)
         .order_by(DiceLog.created_at.desc())
+        .offset(offset)
         .limit(limit)
         .all()
     )
@@ -118,7 +156,9 @@ def list_recent_play_logs(limit: int = 50, db: Session = Depends(get_db)):
         )
         .join(User, User.id == LotteryLog.user_id)
         .join(LotteryPrize, LotteryPrize.id == LotteryLog.prize_id)
+        .filter(user_filter_lottery)
         .order_by(LotteryLog.created_at.desc())
+        .offset(offset)
         .limit(limit)
         .all()
     )
@@ -155,12 +195,14 @@ def list_recent_play_logs(limit: int = 50, db: Session = Depends(get_db)):
 @router.get("/ledger", response_model=list[LedgerEntry])
 def list_wallet_ledger(
     limit: int = 100,
+    offset: int = 0,
     user_id: int | None = None,
     external_id: str | None = None,
     token_type: str | None = None,
     db: Session = Depends(get_db),
 ):
     limit = min(max(limit, 1), 500)
+    offset = max(offset, 0)
     query = (
         db.query(
             UserGameWalletLedger,
@@ -175,7 +217,12 @@ def list_wallet_ledger(
     if token_type:
         query = query.filter(UserGameWalletLedger.token_type == token_type)
 
-    rows = query.order_by(UserGameWalletLedger.created_at.desc()).limit(limit).all()
+    rows = (
+        query.order_by(UserGameWalletLedger.created_at.desc())
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
     return [
         LedgerEntry(
             id=row.UserGameWalletLedger.id,  # type: ignore[attr-defined]

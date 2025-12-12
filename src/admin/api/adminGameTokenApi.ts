@@ -57,8 +57,9 @@ export interface LedgerEntry {
   created_at: string;
 }
 
-export async function fetchWallets(externalId?: string) {
-  const params = externalId ? { external_id: externalId } : undefined;
+export async function fetchWallets(externalId?: string, limit: number = 50, offset: number = 0) {
+  const params: Record<string, any> = { limit, offset };
+  if (externalId) params.external_id = externalId;
   const { data } = await adminApi.get<TokenBalance[]>("/game-tokens/wallets", { params });
   return data;
 }
@@ -68,13 +69,15 @@ export async function revokeGameTokens(payload: RevokeGameTokensPayload) {
   return data;
 }
 
-export async function fetchRecentPlayLogs(limit: number = 50) {
-  const { data } = await adminApi.get<PlayLogEntry[]>("/game-tokens/play-logs", { params: { limit } });
+export async function fetchRecentPlayLogs(limit: number = 50, externalId?: string, offset: number = 0) {
+  const params: Record<string, any> = { limit, offset };
+  if (externalId) params.external_id = externalId;
+  const { data } = await adminApi.get<PlayLogEntry[]>("/game-tokens/play-logs", { params });
   return data;
 }
 
-export async function fetchLedger(limit: number = 100, externalId?: string) {
-  const params: Record<string, any> = { limit };
+export async function fetchLedger(limit: number = 100, externalId?: string, offset: number = 0) {
+  const params: Record<string, any> = { limit, offset };
   if (externalId) params.external_id = externalId;
   const { data } = await adminApi.get<LedgerEntry[]>("/game-tokens/ledger", { params });
   return data;

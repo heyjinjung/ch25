@@ -7,6 +7,8 @@ export interface AdminUserPayload {
   level?: number;
   status?: string;
   password?: string;
+  xp?: number;
+  season_level?: number;
 }
 
 export interface AdminUser extends AdminUserPayload {
@@ -16,12 +18,12 @@ export interface AdminUser extends AdminUserPayload {
 }
 
 export async function fetchUsers() {
-  const { data } = await adminApi.get<AdminUser[]>("/users");
+  const { data } = await adminApi.get<AdminUser[]>("/users/");
   return data;
 }
 
 export async function createUser(payload: AdminUserPayload) {
-  const { data } = await adminApi.post<AdminUser>("/users", payload);
+  const { data } = await adminApi.post<AdminUser>("/users/", payload);
   return data;
 }
 

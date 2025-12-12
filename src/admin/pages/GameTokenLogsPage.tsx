@@ -17,23 +17,33 @@ const tokenOptions: GameTokenType[] = ["ROULETTE_COIN", "DICE_TOKEN", "LOTTERY_T
 const GameTokenLogsPage: React.FC = () => {
   const queryClient = useQueryClient();
   const [filterExternalId, setFilterExternalId] = useState<string | undefined>();
+  const [walletLimit, setWalletLimit] = useState<number>(20);
+  const [walletPage, setWalletPage] = useState<number>(0);
+
+  const [playLogFilterId, setPlayLogFilterId] = useState<string | undefined>();
+  const [playLogLimit, setPlayLogLimit] = useState<number>(50);
+  const [playLogPage, setPlayLogPage] = useState<number>(0);
+
   const [revokeExternalId, setRevokeExternalId] = useState<string | undefined>();
   const [revokeTokenType, setRevokeTokenType] = useState<GameTokenType>("ROULETTE_COIN");
   const [revokeAmount, setRevokeAmount] = useState<number>(0);
+  const [ledgerFilterId, setLedgerFilterId] = useState<string | undefined>();
+  const [ledgerLimit, setLedgerLimit] = useState<number>(50);
+  const [ledgerPage, setLedgerPage] = useState<number>(0);
 
   const walletsQuery = useQuery<TokenBalance[], unknown>({
-    queryKey: ["admin-wallets", filterExternalId],
-    queryFn: () => fetchWallets(filterExternalId),
+    queryKey: ["admin-wallets", filterExternalId, walletLimit, walletPage],
+    queryFn: () => fetchWallets(filterExternalId, walletLimit, walletPage * walletLimit),
   });
 
   const playLogsQuery = useQuery<PlayLogEntry[], unknown>({
-    queryKey: ["admin-play-logs"],
-    queryFn: () => fetchRecentPlayLogs(100),
+    queryKey: ["admin-play-logs", playLogFilterId, playLogLimit, playLogPage],
+    queryFn: () => fetchRecentPlayLogs(playLogLimit, playLogFilterId, playLogPage * playLogLimit),
   });
 
   const ledgerQuery = useQuery<LedgerEntry[], unknown>({
-    queryKey: ["admin-ledger", filterExternalId],
-    queryFn: () => fetchLedger(100, filterExternalId),
+    queryKey: ["admin-ledger", ledgerFilterId, ledgerLimit, ledgerPage],
+    queryFn: () => fetchLedger(ledgerLimit, ledgerFilterId, ledgerPage * ledgerLimit),
   });
 
   const revokeMutation = useMutation({
@@ -64,7 +74,23 @@ const GameTokenLogsPage: React.FC = () => {
             <input
               placeholder="external_id 입력"
               className="w-48 rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none"
-              onChange={(e) => setFilterExternalId(e.target.value || undefined)}
+              onChange={(e) => {
+                setFilterExternalId(e.target.value || undefined);
+                setWalletPage(0);
+              }}
+            />
+            <input
+              type="number"
+              min={1}
+              max={200}
+              value={walletLimit}
+              onChange={(e) => {
+                const next = Math.min(200, Math.max(1, Number(e.target.value) || 1));
+                setWalletLimit(next);
+                setWalletPage(0);
+              }}
+              className="w-20 rounded-md border border-slate-700 bg-slate-800 px-2 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none"
+              title="표시 개수 (1-200)"
             />
             <button
               type="button"
@@ -101,20 +127,65 @@ const GameTokenLogsPage: React.FC = () => {
           {!walletsQuery.isLoading && walletsQuery.data?.length === 0 && (
             <p className="p-2 text-sm text-slate-400">데이터가 없습니다.</p>
           )}
+          <div className="mt-2 flex items-center gap-2 text-sm text-slate-300">
+            <button
+              type="button"
+              className="rounded border border-slate-700 px-2 py-1 disabled:opacity-50"
+              disabled={walletPage === 0 || walletsQuery.isFetching}
+              onClick={() => setWalletPage((p) => Math.max(0, p - 1))}
+            >
+              이전
+            </button>
+            <span>페이지 {walletPage + 1}</span>
+            <button
+              type="button"
+              className="rounded border border-slate-700 px-2 py-1 disabled:opacity-50"
+              disabled={(walletsQuery.data?.length ?? 0) < walletLimit || walletsQuery.isFetching}
+              onClick={() => setWalletPage((p) => p + 1)}
+            >
+              다음
+            </button>
+          </div>
         </div>
       </div>
 
       {/* 플레이 로그 */}
       <div className="space-y-3 rounded-lg border border-slate-800/60 bg-slate-900/60 p-4">
-        <div className="flex items-center justify-between">
-          <p className="text-lg font-semibold text-white">최근 플레이 로그</p>
-          <button
-            type="button"
-            onClick={() => playLogsQuery.refetch()}
-            className="rounded-md border border-emerald-600/60 px-3 py-2 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-700/20"
-          >
-            새로고침
-          </button>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div className="space-y-1">
+            <p className="text-lg font-semibold text-white">최근 플레이 로그</p>
+            <p className="text-xs text-slate-400">external_id로 필터링</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              placeholder="external_id 입력"
+              className="w-48 rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none"
+              onChange={(e) => {
+                setPlayLogFilterId(e.target.value || undefined);
+                setPlayLogPage(0);
+              }}
+            />
+            <input
+              type="number"
+              min={1}
+              max={200}
+              value={playLogLimit}
+              onChange={(e) => {
+                const next = Math.min(200, Math.max(1, Number(e.target.value) || 1));
+                setPlayLogLimit(next);
+                setPlayLogPage(0);
+              }}
+              className="w-20 rounded-md border border-slate-700 bg-slate-800 px-2 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none"
+              title="표시 개수 (1-200)"
+            />
+            <button
+              type="button"
+              onClick={() => playLogsQuery.refetch()}
+              className="rounded-md border border-emerald-600/60 px-3 py-2 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-700/20"
+            >
+              새로고침
+            </button>
+          </div>
         </div>
         {playLogsQuery.isError && (
           <p className="rounded-md border border-rose-600/40 bg-rose-950/40 p-2 text-sm text-rose-100">플레이 로그 조회 실패</p>
@@ -148,20 +219,62 @@ const GameTokenLogsPage: React.FC = () => {
           {!playLogsQuery.isLoading && playLogsQuery.data?.length === 0 && (
             <p className="p-2 text-sm text-slate-400">데이터가 없습니다.</p>
           )}
+          <div className="mt-2 flex items-center gap-2 text-sm text-slate-300">
+            <button
+              type="button"
+              className="rounded border border-slate-700 px-2 py-1 disabled:opacity-50"
+              disabled={playLogPage === 0 || playLogsQuery.isFetching}
+              onClick={() => setPlayLogPage((p) => Math.max(0, p - 1))}
+            >
+              이전
+            </button>
+            <span>페이지 {playLogPage + 1}</span>
+            <button
+              type="button"
+              className="rounded border border-slate-700 px-2 py-1 disabled:opacity-50"
+              disabled={(playLogsQuery.data?.length ?? 0) < playLogLimit || playLogsQuery.isFetching}
+              onClick={() => setPlayLogPage((p) => p + 1)}
+            >
+              다음
+            </button>
+          </div>
         </div>
       </div>
 
       {/* 원장 */}
       <div className="space-y-3 rounded-lg border border-slate-800/60 bg-slate-900/60 p-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-lg font-semibold text-white">코인 원장</p>
-          <button
-            type="button"
-            onClick={() => ledgerQuery.refetch()}
-            className="rounded-md border border-emerald-600/60 px-3 py-2 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-700/20"
-          >
-            새로고침
-          </button>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <input
+              placeholder="external_id 입력"
+              className="w-48 rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none"
+              onChange={(e) => {
+                setLedgerFilterId(e.target.value || undefined);
+                setLedgerPage(0);
+              }}
+            />
+            <input
+              type="number"
+              min={1}
+              max={500}
+              value={ledgerLimit}
+              onChange={(e) => {
+                const next = Math.min(500, Math.max(1, Number(e.target.value) || 1));
+                setLedgerLimit(next);
+                setLedgerPage(0);
+              }}
+              className="w-24 rounded-md border border-slate-700 bg-slate-800 px-2 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none"
+              title="표시 개수 (1-500)"
+            />
+            <button
+              type="button"
+              onClick={() => ledgerQuery.refetch()}
+              className="rounded-md border border-emerald-600/60 px-3 py-2 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-700/20"
+            >
+              새로고침
+            </button>
+          </div>
         </div>
         {ledgerQuery.isError && (
           <p className="rounded-md border border-rose-600/40 bg-rose-950/40 p-2 text-sm text-rose-100">원장 조회 실패</p>
@@ -199,6 +312,25 @@ const GameTokenLogsPage: React.FC = () => {
           {!ledgerQuery.isLoading && ledgerQuery.data?.length === 0 && (
             <p className="p-2 text-sm text-slate-400">원장 데이터가 없습니다.</p>
           )}
+          <div className="mt-2 flex items-center gap-2 text-sm text-slate-300">
+            <button
+              type="button"
+              className="rounded border border-slate-700 px-2 py-1 disabled:opacity-50"
+              disabled={ledgerPage === 0 || ledgerQuery.isFetching}
+              onClick={() => setLedgerPage((p) => Math.max(0, p - 1))}
+            >
+              이전
+            </button>
+            <span>페이지 {ledgerPage + 1}</span>
+            <button
+              type="button"
+              className="rounded border border-slate-700 px-2 py-1 disabled:opacity-50"
+              disabled={(ledgerQuery.data?.length ?? 0) < ledgerLimit || ledgerQuery.isFetching}
+              onClick={() => setLedgerPage((p) => p + 1)}
+            >
+              다음
+            </button>
+          </div>
         </div>
       </div>
 

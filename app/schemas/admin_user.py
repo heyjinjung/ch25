@@ -10,6 +10,8 @@ class AdminUserBase(BaseModel):
     nickname: Optional[str] = Field(None, max_length=100)
     level: int = Field(1, ge=1)
     status: str = Field("ACTIVE", max_length=20)
+    xp: Optional[int] = Field(0, ge=0)
+    season_level: Optional[int] = Field(1, ge=1)
 
 
 class AdminUserCreate(AdminUserBase):
@@ -23,6 +25,8 @@ class AdminUserUpdate(BaseModel):
     level: Optional[int] = Field(None, ge=1)
     status: Optional[str] = Field(None, max_length=20)
     password: Optional[str] = Field(None, min_length=4)
+    xp: Optional[int] = Field(None, ge=0)
+    season_level: Optional[int] = Field(None, ge=1)
 
 
 class AdminUserResponse(AdminUserBase):
