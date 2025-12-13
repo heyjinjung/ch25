@@ -182,7 +182,7 @@ const HomePage: React.FC = () => {
           <div className="space-y-1">
             <p className="text-xs uppercase tracking-[0.28em] text-amber-200">🛡️ Team Battle</p>
             <h2 className="text-2xl font-extrabold bg-gradient-to-r from-amber-200 via-emerald-200 to-cyan-300 bg-clip-text text-transparent">오늘의 팀 배틀</h2>
-            <p className="text-sm text-slate-200">팀을 고르고 플레이 횟수로 경쟁하세요. 우승팀은 CC 코인 보상!</p>
+            <p className="text-sm text-slate-200">팀을 고르고 플레이 횟수로 경쟁하세요. 우승팀은 CC 포인트 보상!</p>
           </div>
           <div className="flex items-center gap-2">
             <span className={`rounded-full border border-amber-400/60 bg-amber-900/30 px-3 py-1 text-xs font-semibold ${seasonState.tone}`}>
