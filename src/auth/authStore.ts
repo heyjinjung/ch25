@@ -58,6 +58,8 @@ export const setAuth = (token: string, user: AuthUser | null): void => {
   if (isBrowser) {
     localStorage.setItem(AUTH_VERSION_KEY, CURRENT_AUTH_VERSION);
     localStorage.setItem(ACCESS_TOKEN_KEY, token);
+    // Legacy key for backward compatibility with older API clients.
+    localStorage.setItem("token", token);
     if (user) {
       localStorage.setItem(ACCESS_USER_KEY, JSON.stringify(user));
     }
@@ -71,6 +73,7 @@ export const clearAuth = (): void => {
   if (isBrowser) {
     localStorage.removeItem(ACCESS_TOKEN_KEY);
     localStorage.removeItem(ACCESS_USER_KEY);
+    localStorage.removeItem("token");
     LEGACY_KEYS.forEach((k) => localStorage.removeItem(k));
   }
   notify();

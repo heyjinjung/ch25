@@ -37,6 +37,9 @@ const AdminDashboardPage: React.FC = () => {
         <Link to="/admin/users" className="rounded-lg border border-emerald-800/40 bg-slate-900/60 p-3 text-slate-100 transition hover:border-emerald-500">
           회원 CRUD
         </Link>
+        <Link to="/admin/team-battle" className="rounded-lg border border-emerald-800/40 bg-slate-900/60 p-3 text-slate-100 transition hover:border-emerald-500">
+          팀 배틀 관리
+        </Link>
       </div>
     </section>
   );

@@ -47,6 +47,16 @@ export const createSeason = async (payload: { name: string; starts_at: string; e
   return res.data as TeamSeason;
 };
 
+export const updateSeason = async (seasonId: number, payload: Partial<{ name: string; starts_at: string; ends_at: string; is_active: boolean; rewards_schema?: Record<string, unknown> }>) => {
+  const res = await apiClient.patch(`/admin/api/team-battle/seasons/${seasonId}`, payload);
+  return res.data as TeamSeason;
+};
+
+export const deleteSeason = async (seasonId: number) => {
+  const res = await apiClient.delete(`/admin/api/team-battle/seasons/${seasonId}`);
+  return res.data;
+};
+
 export const setSeasonActive = async (seasonId: number, isActive: boolean) => {
   const res = await apiClient.post(`/admin/api/team-battle/seasons/${seasonId}/active`, null, { params: { is_active: isActive } });
   return res.data as TeamSeason;
@@ -57,7 +67,27 @@ export const createTeam = async (payload: { name: string; icon?: string | null }
   return res.data as Team;
 };
 
+export const listTeamsAdmin = async (includeInactive = true): Promise<Team[]> => {
+  const res = await apiClient.get("/admin/api/team-battle/teams", { params: { include_inactive: includeInactive } });
+  return res.data as Team[];
+};
+
+export const updateTeam = async (teamId: number, payload: Partial<{ name: string; icon?: string | null; is_active: boolean }>) => {
+  const res = await apiClient.patch(`/admin/api/team-battle/teams/${teamId}`, payload);
+  return res.data as Team;
+};
+
+export const deleteTeam = async (teamId: number) => {
+  const res = await apiClient.delete(`/admin/api/team-battle/teams/${teamId}`);
+  return res.data;
+};
+
 export const settleSeason = async (seasonId: number) => {
   const res = await apiClient.post(`/admin/api/team-battle/seasons/${seasonId}/settle`);
   return res.data;
+};
+
+export const forceJoinTeam = async (payload: { team_id: number; user_id: number }) => {
+  const res = await apiClient.post(`/admin/api/team-battle/teams/force-join`, payload);
+  return res.data as TeamJoinResponse & { bypass_selection?: boolean };
 };

@@ -4,7 +4,6 @@ import {
   getLeaderboard,
   getContributors,
   autoAssignTeam,
-  leaveTeam,
   listTeams,
   getMyTeam,
 } from "../api/teamBattleApi";
@@ -26,7 +25,6 @@ const TeamBattlePage: React.FC = () => {
   const [initialLoading, setInitialLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [joinBusy, setJoinBusy] = useState(false);
-  const [leaveBusy, setLeaveBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -122,24 +120,6 @@ const TeamBattlePage: React.FC = () => {
     }
   };
 
-  const handleLeave = async () => {
-    if (!selectedTeam) return;
-    setLeaveBusy(true);
-    setMessage(null);
-    setError(null);
-    try {
-      await leaveTeam();
-      setSelectedTeam(null);
-      setContributors([]);
-      setMessage("팀을 탈퇴했습니다");
-    } catch (err) {
-      console.error(err);
-      setError("팀 탈퇴에 실패했습니다");
-    } finally {
-      setLeaveBusy(false);
-    }
-  };
-
   return (
     <div className="space-y-6 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 p-4 sm:p-6 rounded-3xl border border-emerald-900/30 shadow-[0_25px_80px_-40px_rgba(0,0,0,0.65)]">
       <div className="rounded-2xl border border-emerald-700/40 bg-gradient-to-r from-emerald-900 via-cyan-800 to-emerald-600 p-6 shadow-lg">
@@ -183,9 +163,6 @@ const TeamBattlePage: React.FC = () => {
         <div className="md:col-span-2 rounded-2xl border border-emerald-700/40 bg-gradient-to-br from-slate-950/80 to-emerald-950/40 p-5 shadow-lg">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-lg font-bold text-white">팀 선택</h2>
-            <button className="text-sm text-amber-200 hover:text-amber-100" onClick={handleLeave} disabled={!selectedTeam || leaveBusy}>
-              {leaveBusy ? "탈퇴 중..." : "팀 탈퇴"}
-            </button>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
             <div className="flex items-center gap-2">

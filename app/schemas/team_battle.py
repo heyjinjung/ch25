@@ -26,6 +26,14 @@ class TeamSeasonResponse(TeamSeasonBase):
         from_attributes = True
 
 
+class TeamSeasonUpdate(BaseModel):
+    name: Optional[str] = None
+    starts_at: Optional[datetime] = None
+    ends_at: Optional[datetime] = None
+    is_active: Optional[bool] = None
+    rewards_schema: Optional[dict] = None
+
+
 class TeamBase(BaseModel):
     name: str
     icon: Optional[str] = None
@@ -43,6 +51,12 @@ class TeamResponse(TeamBase):
 
     class Config:
         from_attributes = True
+
+
+class TeamUpdate(BaseModel):
+    name: Optional[str] = None
+    icon: Optional[str] = None
+    is_active: Optional[bool] = None
 
 
 class TeamJoinRequest(BaseModel):

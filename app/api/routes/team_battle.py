@@ -66,4 +66,4 @@ def contributors(team_id: int, season_id: int | None = None, limit: int = 20, of
 
 @router.get("/teams", response_model=list[TeamResponse])
 def list_teams(db: Session = Depends(get_db)):
-    return svc.list_teams(db)
+    return svc.list_teams(db, include_inactive=False)

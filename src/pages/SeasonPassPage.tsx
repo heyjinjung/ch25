@@ -34,16 +34,6 @@ const SeasonPassPage: React.FC = () => {
     lastRewardCountRef.current = rewards.length;
   }, [levelXp.data, addToast]);
 
-  const progress = useMemo(() => {
-    if (!season.data) return { percent: 0, nextLabel: "" };
-    const total = season.data.next_level_xp || 1;
-    const percent = Math.min(100, Math.round(((season.data.current_xp ?? 0) / total) * 100));
-    return {
-      percent,
-      nextLabel: `다음 레벨까지 ${(total - (season.data.current_xp ?? 0)).toLocaleString()} XP 필요`,
-    };
-  }, [season.data]);
-
   const external = ranking.data?.my_external_entry;
   const top10Needed = external?.rank && external.rank > 10 ? external.rank - 10 : 0;
   const deposit = external?.deposit_amount ?? 0;
@@ -123,7 +113,6 @@ const SeasonPassPage: React.FC = () => {
         <header className="text-center space-y-2">
           <p className="text-sm uppercase tracking-[0.3em] text-gold-400">Season Pass</p>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-gold-300 via-gold-400 to-gold-300 bg-clip-text text-transparent">🎄 크리스마스 시즌패스</h1>
-          <p className="text-sm text-emerald-100">스탬프를 모아 XP를 올리고 보상을 받으세요.</p>
           <div className="flex flex-wrap items-center justify-center gap-3 text-xs text-emerald-200">
             <span className="rounded-full border border-emerald-500/40 px-3 py-1">
               스탬프당 {stampXp.toLocaleString()} XP
@@ -139,30 +128,6 @@ const SeasonPassPage: React.FC = () => {
         </header>
 
         <div className="grid gap-4 md:grid-cols-2">
-          <div className="rounded-2xl border border-emerald-600/40 bg-slate-900/70 p-6 shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-semibold text-emerald-300">시즌 진행도</p>
-                <p className="text-2xl font-black text-white">레벨 {data.current_level}</p>
-              </div>
-              <span className="text-xs text-slate-400">최대 {data.max_level}</span>
-            </div>
-            <div className="mt-4 flex-1">
-              <div className="flex items-center justify-between text-xs text-slate-300">
-                <span>{data.current_xp.toLocaleString()} XP</span>
-                <span>{progress.nextLabel}</span>
-                <span>{data.next_level_xp.toLocaleString()} XP</span>
-              </div>
-              <div className="mt-2 h-4 w-full overflow-hidden rounded-full bg-slate-800/80">
-                <div
-                  className="h-full bg-gradient-to-r from-emerald-400 via-emerald-500 to-gold-400 transition-all duration-500"
-                  style={{ width: `${progress.percent}%` }}
-                />
-              </div>
-              <div className="mt-2 text-xs font-semibold text-emerald-200">진행률 {progress.percent}%</div>
-            </div>
-          </div>
-
           <div className="rounded-2xl border border-gold-600/40 bg-slate-900/70 p-6 shadow-lg">
             <div className="flex items-center justify-between">
               <div>
@@ -204,7 +169,7 @@ const SeasonPassPage: React.FC = () => {
 
         <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-white">스탬프 받는 방법</h2>
+              <h2 className="text-lg font-bold text-white">스탬프</h2>
             <span className="rounded-full bg-emerald-900/60 px-3 py-1 text-xs text-emerald-200">
               오늘 스탬프: {data.today?.stamped ? "완료" : "미완료"}
             </span>

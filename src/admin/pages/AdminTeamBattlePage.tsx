@@ -1,5 +1,17 @@
 import React, { useEffect, useState } from "react";
-import { createSeason, setSeasonActive, createTeam, settleSeason, listTeams, getActiveSeason } from "../../api/teamBattleApi";
+import {
+  createSeason,
+  setSeasonActive,
+  createTeam,
+  settleSeason,
+  getActiveSeason,
+  updateSeason,
+  deleteSeason,
+  listTeamsAdmin,
+  updateTeam,
+  deleteTeam,
+  forceJoinTeam,
+} from "../../api/teamBattleApi";
 import { Team, TeamSeason } from "../../types/teamBattle";
 
 const formatDateTime = (iso?: string) => (iso ? new Date(iso).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" }) : "-");
@@ -7,23 +19,44 @@ const formatDateTime = (iso?: string) => (iso ? new Date(iso).toLocaleString("ko
 const AdminTeamBattlePage: React.FC = () => {
   const [season, setSeason] = useState<TeamSeason | null>(null);
   const [teams, setTeams] = useState<Team[]>([]);
+  const [teamEdits, setTeamEdits] = useState<Record<number, { name: string; icon: string; is_active: boolean }>>({});
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [seasonForm, setSeasonForm] = useState({ name: "", starts_at: "", ends_at: "", is_active: false });
+  const [seasonEditForm, setSeasonEditForm] = useState({ name: "", starts_at: "", ends_at: "", is_active: false });
   const [teamForm, setTeamForm] = useState({ name: "", icon: "", leader_user_id: "" });
+  const [forceJoinForm, setForceJoinForm] = useState({ user_id: "", team_id: "" });
   const [refreshing, setRefreshing] = useState(false);
   const [createSeasonBusy, setCreateSeasonBusy] = useState(false);
   const [activateBusy, setActivateBusy] = useState(false);
   const [createTeamBusy, setCreateTeamBusy] = useState(false);
   const [settleBusy, setSettleBusy] = useState(false);
+  const [updateSeasonBusy, setUpdateSeasonBusy] = useState(false);
+  const [deleteSeasonBusy, setDeleteSeasonBusy] = useState(false);
+  const [teamBusy, setTeamBusy] = useState<number | null>(null);
+  const [teamDeleteBusy, setTeamDeleteBusy] = useState<number | null>(null);
+  const [forceJoinBusy, setForceJoinBusy] = useState(false);
 
   const refresh = async () => {
     setError(null);
     setRefreshing(true);
     try {
-      const [s, t] = await Promise.all([getActiveSeason(), listTeams()]);
+      const [s, t] = await Promise.all([getActiveSeason(), listTeamsAdmin(true)]);
       setSeason(s);
+      if (s) {
+        setSeasonEditForm({
+          name: s.name,
+          starts_at: s.starts_at,
+          ends_at: s.ends_at,
+          is_active: s.is_active,
+        });
+      }
       setTeams(t);
+      const mapped = t.reduce<Record<number, { name: string; icon: string; is_active: boolean }>>((acc, team) => {
+        acc[team.id] = { name: team.name, icon: team.icon || "", is_active: team.is_active };
+        return acc;
+      }, {});
+      setTeamEdits(mapped);
     } catch (err) {
       console.error(err);
       setError("관리자 데이터를 불러오지 못했습니다.");
@@ -49,6 +82,7 @@ const AdminTeamBattlePage: React.FC = () => {
       };
       const res = await createSeason(payload);
       setSeason(res);
+      setSeasonEditForm({ name: res.name, starts_at: res.starts_at, ends_at: res.ends_at, is_active: res.is_active });
       setMessage("시즌 생성 완료");
     } catch (err) {
       console.error(err);
@@ -108,6 +142,91 @@ const AdminTeamBattlePage: React.FC = () => {
     }
   };
 
+  const handleUpdateSeason = async () => {
+    if (!season) return;
+    setError(null);
+    setMessage(null);
+    setUpdateSeasonBusy(true);
+    try {
+      const res = await updateSeason(season.id, seasonEditForm);
+      setSeason(res);
+      setMessage("시즌 수정 완료");
+    } catch (err) {
+      console.error(err);
+      setError("시즌 수정 실패");
+    } finally {
+      setUpdateSeasonBusy(false);
+    }
+  };
+
+  const handleDeleteSeason = async () => {
+    if (!season) return;
+    setError(null);
+    setMessage(null);
+    setDeleteSeasonBusy(true);
+    try {
+      await deleteSeason(season.id);
+      setSeason(null);
+      setMessage("시즌 삭제 완료");
+    } catch (err) {
+      console.error(err);
+      setError("시즌 삭제 실패");
+    } finally {
+      setDeleteSeasonBusy(false);
+    }
+  };
+
+  const handleTeamUpdate = async (teamId: number, overrides?: Partial<{ name: string; icon: string; is_active: boolean }>) => {
+    const base = teamEdits[teamId];
+    const edit = base ? { ...base, ...overrides } : undefined;
+    if (!edit) return;
+    setError(null);
+    setMessage(null);
+    setTeamBusy(teamId);
+    try {
+      await updateTeam(teamId, { name: edit.name, icon: edit.icon || null, is_active: edit.is_active });
+      await refresh();
+      setMessage("팀 수정 완료");
+    } catch (err) {
+      console.error(err);
+      setError("팀 수정 실패");
+    } finally {
+      setTeamBusy(null);
+    }
+  };
+
+  const handleTeamDelete = async (teamId: number) => {
+    setError(null);
+    setMessage(null);
+    setTeamDeleteBusy(teamId);
+    try {
+      await deleteTeam(teamId);
+      await refresh();
+      setMessage("팀 삭제 완료");
+    } catch (err) {
+      console.error(err);
+      setError("팀 삭제 실패");
+    } finally {
+      setTeamDeleteBusy(null);
+    }
+  };
+
+  const handleForceJoin = async () => {
+    if (!forceJoinForm.user_id || !forceJoinForm.team_id) return;
+    setError(null);
+    setMessage(null);
+    setForceJoinBusy(true);
+    try {
+      await forceJoinTeam({ user_id: Number(forceJoinForm.user_id), team_id: Number(forceJoinForm.team_id) });
+      setMessage("강제 배정 완료");
+    } catch (err) {
+      console.error(err);
+      setError("강제 배정 실패");
+    } finally {
+      setForceJoinBusy(false);
+    }
+  };
+
   return (
     <div className="p-4 space-y-4">
       <h1 className="text-2xl font-bold">팀 배틀 관리</h1>
@@ -136,11 +255,28 @@ const AdminTeamBattlePage: React.FC = () => {
       <div className="bg-white p-4 rounded shadow space-y-3">
         <h2 className="text-lg font-semibold">활성 시즌</h2>
         <p className="text-sm">{season ? `${season.name} (${formatDateTime(season.starts_at)} ~ ${formatDateTime(season.ends_at)})` : "없음"}</p>
-        <div className="flex gap-2">
-          <button className="px-3 py-2 bg-green-600 text-white rounded disabled:opacity-60" onClick={handleActivate} disabled={!season || activateBusy}>{activateBusy ? "활성화 중..." : "활성화"}</button>
-          <button className="px-3 py-2 bg-indigo-600 text-white rounded disabled:opacity-60" onClick={handleSettle} disabled={!season || settleBusy}>{settleBusy ? "정산 중..." : "정산"}</button>
-          <button className="px-3 py-2 border rounded" onClick={refresh} disabled={refreshing}>{refreshing ? "새로고침 중..." : "새로고침"}</button>
-        </div>
+        {season ? (
+          <>
+            <div className="grid md:grid-cols-2 gap-3">
+              <input className="border p-2 rounded" placeholder="이름" value={seasonEditForm.name} onChange={(e) => setSeasonEditForm({ ...seasonEditForm, name: e.target.value })} />
+              <label className="text-sm text-gray-500">Asia/Seoul 기준 ISO (예: 2025-12-12T00:00:00+09:00)</label>
+              <input className="border p-2 rounded" placeholder="시작 시각" value={seasonEditForm.starts_at} onChange={(e) => setSeasonEditForm({ ...seasonEditForm, starts_at: e.target.value })} />
+              <input className="border p-2 rounded" placeholder="종료 시각" value={seasonEditForm.ends_at} onChange={(e) => setSeasonEditForm({ ...seasonEditForm, ends_at: e.target.value })} />
+              <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={seasonEditForm.is_active} onChange={(e) => setSeasonEditForm({ ...seasonEditForm, is_active: e.target.checked })} /> 활성화</label>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button className="px-3 py-2 bg-green-600 text-white rounded disabled:opacity-60" onClick={handleActivate} disabled={!season || activateBusy}>{activateBusy ? "활성화 중..." : "활성화"}</button>
+              <button className="px-3 py-2 bg-indigo-600 text-white rounded disabled:opacity-60" onClick={handleSettle} disabled={!season || settleBusy}>{settleBusy ? "정산 중..." : "정산"}</button>
+              <button className="px-3 py-2 bg-amber-600 text-white rounded disabled:opacity-60" onClick={handleUpdateSeason} disabled={!season || updateSeasonBusy}>{updateSeasonBusy ? "수정 중..." : "수정"}</button>
+              <button className="px-3 py-2 bg-red-600 text-white rounded disabled:opacity-60" onClick={handleDeleteSeason} disabled={!season || deleteSeasonBusy}>{deleteSeasonBusy ? "삭제 중..." : "삭제"}</button>
+              <button className="px-3 py-2 border rounded" onClick={refresh} disabled={refreshing}>{refreshing ? "새로고침 중..." : "새로고침"}</button>
+            </div>
+          </>
+        ) : (
+          <div className="flex gap-2">
+            <button className="px-3 py-2 border rounded" onClick={refresh} disabled={refreshing}>{refreshing ? "새로고침 중..." : "새로고침"}</button>
+          </div>
+        )}
       </div>
 
       <div className="bg-white p-4 rounded shadow space-y-3">
@@ -160,13 +296,75 @@ const AdminTeamBattlePage: React.FC = () => {
 
         <div className="mt-3 grid sm:grid-cols-2 gap-2">
           {teams.map((t) => (
-            <div key={t.id} className="border rounded p-3">
-              <p className="font-semibold">{t.name}</p>
+            <div key={t.id} className="border rounded p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <p className="font-semibold">{t.name}</p>
+                <span className={`text-xs ${t.is_active ? "text-green-600" : "text-gray-500"}`}>{t.is_active ? "활성" : "비활성"}</span>
+              </div>
               <p className="text-xs text-gray-500">ID: {t.id}</p>
+              <input
+                className="border p-2 rounded w-full"
+                value={teamEdits[t.id]?.name || ""}
+                onChange={(e) => setTeamEdits({ ...teamEdits, [t.id]: { ...teamEdits[t.id], name: e.target.value, icon: teamEdits[t.id]?.icon || "", is_active: teamEdits[t.id]?.is_active ?? t.is_active } })}
+                placeholder="팀 이름"
+              />
+              <input
+                className="border p-2 rounded w-full"
+                value={teamEdits[t.id]?.icon || ""}
+                onChange={(e) => setTeamEdits({ ...teamEdits, [t.id]: { ...teamEdits[t.id], name: teamEdits[t.id]?.name || t.name, icon: e.target.value, is_active: teamEdits[t.id]?.is_active ?? t.is_active } })}
+                placeholder="아이콘 URL"
+              />
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={teamEdits[t.id]?.is_active ?? t.is_active}
+                  onChange={(e) => setTeamEdits({ ...teamEdits, [t.id]: { ...teamEdits[t.id], name: teamEdits[t.id]?.name || t.name, icon: teamEdits[t.id]?.icon || t.icon || "", is_active: e.target.checked } })}
+                />
+                활성화
+              </label>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  className="px-3 py-2 bg-amber-600 text-white rounded disabled:opacity-60"
+                  onClick={() => handleTeamUpdate(t.id)}
+                  disabled={teamBusy === t.id}
+                >
+                  {teamBusy === t.id ? "저장 중..." : "수정"}
+                </button>
+                <button
+                  className="px-3 py-2 bg-slate-700 text-white rounded disabled:opacity-60"
+                  onClick={() => {
+                    const current = teamEdits[t.id]?.is_active ?? t.is_active;
+                    const next = !current;
+                    setTeamEdits({ ...teamEdits, [t.id]: { ...teamEdits[t.id], name: teamEdits[t.id]?.name || t.name, icon: teamEdits[t.id]?.icon || t.icon || "", is_active: next } });
+                    handleTeamUpdate(t.id, { is_active: next });
+                  }}
+                  disabled={teamBusy === t.id}
+                >
+                  {teamBusy === t.id ? "처리 중..." : (teamEdits[t.id]?.is_active ?? t.is_active) ? "비활성" : "활성"}
+                </button>
+                <button
+                  className="px-3 py-2 bg-red-600 text-white rounded disabled:opacity-60"
+                  onClick={() => handleTeamDelete(t.id)}
+                  disabled={teamDeleteBusy === t.id}
+                >
+                  {teamDeleteBusy === t.id ? "삭제 중..." : "삭제"}
+                </button>
+              </div>
             </div>
           ))}
           {teams.length === 0 && <p className="text-sm text-gray-500">팀 없음</p>}
         </div>
+      </div>
+
+      <div className="bg-white p-4 rounded shadow space-y-3">
+        <h2 className="text-lg font-semibold">강제 팀 배정/이동</h2>
+        <div className="grid md:grid-cols-2 gap-3">
+          <input className="border p-2 rounded" placeholder="user_id" value={forceJoinForm.user_id} onChange={(e) => setForceJoinForm({ ...forceJoinForm, user_id: e.target.value })} />
+          <input className="border p-2 rounded" placeholder="team_id" value={forceJoinForm.team_id} onChange={(e) => setForceJoinForm({ ...forceJoinForm, team_id: e.target.value })} />
+        </div>
+        <button className="px-4 py-2 bg-indigo-600 text-white rounded disabled:opacity-60" onClick={handleForceJoin} disabled={forceJoinBusy || !forceJoinForm.user_id || !forceJoinForm.team_id}>
+          {forceJoinBusy ? "배정 중..." : "강제 배정"}
+        </button>
       </div>
 
       {message && <div className="p-3 bg-green-50 text-green-800 rounded">{message}</div>}

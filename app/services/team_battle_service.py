@@ -139,6 +139,31 @@ class TeamBattleService:
         db.refresh(season)
         return season
 
+    def update_season(self, db: Session, season_id: int, payload: dict) -> TeamSeason:
+        season = db.get(TeamSeason, season_id)
+        if not season:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="SEASON_NOT_FOUND")
+
+        for key, value in payload.items():
+            if value is None:
+                continue
+            setattr(season, key, value)
+
+        if payload.get("is_active"):
+            db.query(TeamSeason).filter(TeamSeason.id != season.id, TeamSeason.is_active == True).update({"is_active": False})  # noqa: E712
+
+        db.add(season)
+        db.commit()
+        db.refresh(season)
+        return season
+
+    def delete_season(self, db: Session, season_id: int) -> None:
+        season = db.get(TeamSeason, season_id)
+        if not season:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="SEASON_NOT_FOUND")
+        db.delete(season)
+        db.commit()
+
     def set_active(self, db: Session, season_id: int, is_active: bool) -> TeamSeason:
         season = db.get(TeamSeason, season_id)
         if not season:
@@ -157,6 +182,26 @@ class TeamBattleService:
         if leader_user_id:
             self.join_team(db, team.id, leader_user_id, role="leader")
         return team
+
+    def update_team(self, db: Session, team_id: int, payload: dict) -> Team:
+        team = db.get(Team, team_id)
+        if not team:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="TEAM_NOT_FOUND")
+        for key, value in payload.items():
+            if value is None:
+                continue
+            setattr(team, key, value)
+        db.add(team)
+        db.commit()
+        db.refresh(team)
+        return team
+
+    def delete_team(self, db: Session, team_id: int) -> None:
+        team = db.get(Team, team_id)
+        if not team:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="TEAM_NOT_FOUND")
+        db.delete(team)
+        db.commit()
 
     def join_team(self, db: Session, team_id: int, user_id: int, role: str = "member", now: datetime | None = None, bypass_selection: bool = False) -> TeamMember:
         now = now or self._now_utc()
@@ -547,8 +592,11 @@ class TeamBattleService:
         )
         return db.execute(stmt).all()
 
-    def list_teams(self, db: Session) -> Sequence[Team]:
-        return db.execute(select(Team).where(Team.is_active == True)).scalars().all()  # noqa: E712
+    def list_teams(self, db: Session, include_inactive: bool = False) -> Sequence[Team]:
+        stmt = select(Team)
+        if not include_inactive:
+            stmt = stmt.where(Team.is_active == True)  # noqa: E712
+        return db.execute(stmt).scalars().all()
 
     def contributors(self, db: Session, team_id: int, season_id: Optional[int], limit: int, offset: int) -> Sequence[tuple]:
         season = db.get(TeamSeason, season_id) if season_id else self.get_active_season(db)
