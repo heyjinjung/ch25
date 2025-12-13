@@ -25,6 +25,7 @@ export interface LeaderboardEntry {
 export interface ContributorEntry {
   user_id: number;
   points: number;
+  nickname?: string | null;
   latest_event_at?: string | null;
 }
 
