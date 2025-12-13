@@ -12,8 +12,9 @@ import {
   deleteTeam,
   forceJoinTeam,
   getLeaderboard,
+  getContributors,
 } from "../../api/teamBattleApi";
-import { Team, TeamSeason, LeaderboardEntry } from "../../types/teamBattle";
+import { Team, TeamSeason, LeaderboardEntry, ContributorEntry } from "../../types/teamBattle";
 
 const formatDateTime = (iso?: string) => (iso ? new Date(iso).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" }) : "-");
 
@@ -22,6 +23,10 @@ const AdminTeamBattlePage: React.FC = () => {
   const [teams, setTeams] = useState<Team[]>([]);
   const [teamEdits, setTeamEdits] = useState<Record<number, { name: string; icon: string; is_active: boolean }>>({});
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [contributors, setContributors] = useState<ContributorEntry[]>([]);
+  const [selectedTeamForContrib, setSelectedTeamForContrib] = useState<number | "" | null>(null);
+  const [contribLimit, setContribLimit] = useState(20);
+  const [contribOffset, setContribOffset] = useState(0);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [seasonForm, setSeasonForm] = useState({ name: "", starts_at: "", ends_at: "", is_active: false });
@@ -38,6 +43,7 @@ const AdminTeamBattlePage: React.FC = () => {
   const [teamBusy, setTeamBusy] = useState<number | null>(null);
   const [teamDeleteBusy, setTeamDeleteBusy] = useState<number | null>(null);
   const [forceJoinBusy, setForceJoinBusy] = useState(false);
+  const [contributorsBusy, setContributorsBusy] = useState(false);
 
   const inputClass =
     "w-full rounded-lg border border-emerald-800/50 bg-slate-900/80 p-2 text-slate-100 placeholder-slate-500 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40";
@@ -59,6 +65,9 @@ const AdminTeamBattlePage: React.FC = () => {
       }
       setTeams(t);
       setLeaderboard(lb);
+      if (lb.length && selectedTeamForContrib === null) {
+        setSelectedTeamForContrib(lb[0].team_id);
+      }
       const mapped = t.reduce<Record<number, { name: string; icon: string; is_active: boolean }>>((acc, team) => {
         acc[team.id] = { name: team.name, icon: team.icon || "", is_active: team.is_active };
         return acc;
@@ -75,6 +84,30 @@ const AdminTeamBattlePage: React.FC = () => {
   useEffect(() => {
     refresh();
   }, []);
+
+  const loadContributors = async (teamId: number | "" | null, seasonId?: number) => {
+    if (!teamId || !seasonId) {
+      setContributors([]);
+      return;
+    }
+    setContributorsBusy(true);
+    try {
+      const data = await getContributors(teamId as number, seasonId, contribLimit, contribOffset);
+      setContributors(data);
+    } catch (err) {
+      console.error(err);
+      setError("기여도 목록을 불러오지 못했습니다.");
+    } finally {
+      setContributorsBusy(false);
+    }
+  };
+
+  useEffect(() => {
+    if (season) {
+      loadContributors(selectedTeamForContrib, season.id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedTeamForContrib, contribLimit, contribOffset, season?.id]);
 
   const handleCreateSeason = async () => {
     setError(null);
@@ -168,6 +201,15 @@ const AdminTeamBattlePage: React.FC = () => {
     } finally {
       setUpdateSeasonBusy(false);
     }
+  };
+
+  const handleContribPrev = () => {
+    setContribOffset(Math.max(contribOffset - contribLimit, 0));
+  };
+
+  const handleContribNext = () => {
+    if (contributors.length < contribLimit) return;
+    setContribOffset(contribOffset + contribLimit);
   };
 
   const handleDeleteSeason = async () => {
@@ -298,7 +340,10 @@ const AdminTeamBattlePage: React.FC = () => {
       </div>
 
       <div className={cardClass + " space-y-3"}>
-        <h2 className="text-lg font-semibold text-emerald-100">팀 관리 (2팀 구성 권장)</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-emerald-100">팀 관리 (2팀 구성 권장)</h2>
+          <button className="px-3 py-2 border rounded" onClick={refresh} disabled={refreshing}>{refreshing ? "새로고침 중..." : "새로고침"}</button>
+        </div>
         <div className="grid md:grid-cols-3 gap-3">
           <input className={inputClass} placeholder="팀 이름" value={teamForm.name} onChange={(e) => setTeamForm({ ...teamForm, name: e.target.value })} />
           <input className={inputClass} placeholder="아이콘 URL (선택)" value={teamForm.icon} onChange={(e) => setTeamForm({ ...teamForm, icon: e.target.value })} />
@@ -374,38 +419,121 @@ const AdminTeamBattlePage: React.FC = () => {
         </div>
       </div>
 
-      <div className={cardClass + " space-y-3"}>
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-emerald-100">리더보드 미리보기</h2>
-          <button className="px-3 py-2 border rounded" onClick={refresh} disabled={refreshing}>{refreshing ? "새로고침 중..." : "새로고침"}</button>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div className={cardClass + " space-y-3"}>
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-emerald-100">리더보드</h2>
+            <button className="px-3 py-2 border rounded" onClick={refresh} disabled={refreshing}>{refreshing ? "새로고침 중..." : "새로고침"}</button>
+          </div>
+          {leaderboard.length === 0 && <p className="text-sm text-slate-400">점수가 없습니다.</p>}
+          {leaderboard.length > 0 && (
+            <div className="overflow-x-auto text-sm">
+              <table className="min-w-full divide-y divide-emerald-900/60">
+                <thead>
+                  <tr className="text-left text-emerald-200">
+                    <th className="py-2">순위</th>
+                    <th className="py-2">팀</th>
+                    <th className="py-2">점수</th>
+                    <th className="py-2">인원</th>
+                    <th className="py-2">최신 이벤트</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-emerald-900/40">
+                  {leaderboard.map((row, idx) => (
+                    <tr key={row.team_id}>
+                      <td className="py-2">#{idx + 1}</td>
+                      <td className="py-2">{row.team_name}</td>
+                      <td className="py-2">{row.points.toLocaleString()}</td>
+                      <td className="py-2">{row.member_count ?? 0}</td>
+                      <td className="py-2 text-xs text-slate-300">{row.latest_event_at ? formatDateTime(row.latest_event_at) : "-"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
-        {leaderboard.length === 0 && <p className="text-sm text-slate-400">점수가 없습니다.</p>}
-        {leaderboard.length > 0 && (
+
+        <div className={cardClass + " space-y-3"}>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-lg font-semibold text-emerald-100">팀별 기여도</h2>
+            <div className="flex flex-wrap items-center gap-2 text-sm">
+              <select
+                value={selectedTeamForContrib ?? ""}
+                onChange={(e) => {
+                  setContribOffset(0);
+                  setSelectedTeamForContrib(e.target.value === "" ? null : Number(e.target.value));
+                }}
+                className="rounded-lg border border-emerald-800/60 bg-slate-900/80 px-2 py-1 text-slate-100"
+              >
+                <option value="">팀 선택</option>
+                {teams.map((team) => (
+                  <option key={team.id} value={team.id}>
+                    {team.name}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={contribLimit}
+                onChange={(e) => {
+                  setContribOffset(0);
+                  setContribLimit(Number(e.target.value));
+                }}
+                className="rounded-lg border border-emerald-800/60 bg-slate-900/80 px-2 py-1 text-slate-100"
+              >
+                {[10, 20, 50, 100].map((n) => (
+                  <option key={n} value={n}>{n}개씩</option>
+                ))}
+              </select>
+              <button
+                onClick={() => {
+                  if (season) {
+                    loadContributors(selectedTeamForContrib, season.id);
+                  }
+                }}
+                className="rounded-lg bg-emerald-700 px-3 py-1 font-semibold text-white hover:bg-emerald-600"
+                disabled={contributorsBusy}
+              >
+                {contributorsBusy ? "불러오는 중" : "새로고침"}
+              </button>
+            </div>
+          </div>
+
           <div className="overflow-x-auto text-sm">
             <table className="min-w-full divide-y divide-emerald-900/60">
               <thead>
                 <tr className="text-left text-emerald-200">
                   <th className="py-2">순위</th>
-                  <th className="py-2">팀</th>
+                  <th className="py-2">user_id</th>
                   <th className="py-2">점수</th>
-                  <th className="py-2">인원</th>
-                  <th className="py-2">최신 이벤트</th>
+                  <th className="py-2">최근 적립</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-emerald-900/40">
-                {leaderboard.map((row, idx) => (
-                  <tr key={row.team_id}>
-                    <td className="py-2">#{idx + 1}</td>
-                    <td className="py-2">{row.team_name}</td>
-                    <td className="py-2">{row.points}</td>
-                    <td className="py-2">{row.member_count ?? 0}</td>
-                    <td className="py-2 text-xs text-slate-300">{row.latest_event_at ? formatDateTime(row.latest_event_at) : "-"}</td>
+                {contributors.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="py-3 text-center text-slate-400">기여도 데이터가 없습니다.</td>
+                  </tr>
+                )}
+                {contributors.map((c, idx) => (
+                  <tr key={`${c.user_id}-${idx}`}>
+                    <td className="py-2">{contribOffset + idx + 1}</td>
+                    <td className="py-2 font-mono">{c.user_id}</td>
+                    <td className="py-2">{c.points.toLocaleString()}</td>
+                    <td className="py-2 text-xs text-slate-300">{c.latest_event_at ? formatDateTime(c.latest_event_at) : "-"}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-        )}
+          <div className="flex items-center justify-between text-sm text-slate-200">
+            <div>표시: {contributors.length ? `${contribOffset + 1} - ${contribOffset + contributors.length}` : "0"}</div>
+            <div className="flex gap-2">
+              <button onClick={handleContribPrev} className="rounded border border-slate-700 px-3 py-1 hover:border-emerald-500">이전</button>
+              <button onClick={handleContribNext} className="rounded border border-slate-700 px-3 py-1 hover:border-emerald-500">다음</button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className={cardClass + " space-y-3"}>
