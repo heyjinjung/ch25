@@ -2,7 +2,9 @@
 import axios from 'axios';
 import { clearAuth, getAuthToken } from '../auth/authStore';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+// Backend routes already include the /api prefix where needed (e.g., /api/team-battle, /admin/api/*)
+// so the base URL should stop at the host.
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 const apiClient = axios.create({
   baseURL: API_URL,

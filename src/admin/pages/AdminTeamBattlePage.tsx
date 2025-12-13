@@ -37,6 +37,10 @@ const AdminTeamBattlePage: React.FC = () => {
   const [teamDeleteBusy, setTeamDeleteBusy] = useState<number | null>(null);
   const [forceJoinBusy, setForceJoinBusy] = useState(false);
 
+  const inputClass =
+    "w-full rounded-lg border border-emerald-800/50 bg-slate-900/80 p-2 text-slate-100 placeholder-slate-500 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40";
+  const cardClass = "rounded-xl border border-emerald-800/40 bg-slate-900/80 p-4 shadow-lg shadow-emerald-900/20";
+
   const refresh = async () => {
     setError(null);
     setRefreshing(true);
@@ -228,20 +232,20 @@ const AdminTeamBattlePage: React.FC = () => {
   };
 
   return (
-    <div className="p-4 space-y-4">
-      <h1 className="text-2xl font-bold">팀 배틀 관리</h1>
+    <div className="p-4 space-y-4 text-slate-100">
+      <h1 className="text-2xl font-bold text-emerald-100">팀 배틀 관리</h1>
 
-      <div className="bg-white p-4 rounded shadow space-y-3">
+      <div className={cardClass + " space-y-3"}>
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">시즌 생성</h2>
-          <div className="text-xs text-gray-500">모든 시각은 Asia/Seoul 기준</div>
+          <h2 className="text-lg font-semibold text-emerald-100">시즌 생성</h2>
+          <div className="text-xs text-slate-400">모든 시각은 Asia/Seoul 기준</div>
         </div>
         <div className="grid md:grid-cols-2 gap-3">
-          <input className="border p-2 rounded" placeholder="이름" value={seasonForm.name} onChange={(e) => setSeasonForm({ ...seasonForm, name: e.target.value })} />
-          <label className="text-sm text-gray-500">Asia/Seoul 기준 ISO (예: 2025-12-12T00:00:00+09:00)</label>
-          <input className="border p-2 rounded" placeholder="시작 시각" value={seasonForm.starts_at} onChange={(e) => setSeasonForm({ ...seasonForm, starts_at: e.target.value })} />
-          <input className="border p-2 rounded" placeholder="종료 시각" value={seasonForm.ends_at} onChange={(e) => setSeasonForm({ ...seasonForm, ends_at: e.target.value })} />
-          <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={seasonForm.is_active} onChange={(e) => setSeasonForm({ ...seasonForm, is_active: e.target.checked })} /> 활성화</label>
+          <input className={inputClass} placeholder="이름" value={seasonForm.name} onChange={(e) => setSeasonForm({ ...seasonForm, name: e.target.value })} />
+          <label className="text-sm text-slate-400">Asia/Seoul 기준 ISO (예: 2025-12-12T00:00:00+09:00)</label>
+          <input className={inputClass} placeholder="시작 시각" value={seasonForm.starts_at} onChange={(e) => setSeasonForm({ ...seasonForm, starts_at: e.target.value })} />
+          <input className={inputClass} placeholder="종료 시각" value={seasonForm.ends_at} onChange={(e) => setSeasonForm({ ...seasonForm, ends_at: e.target.value })} />
+          <label className="flex items-center gap-2 text-sm text-slate-200"><input type="checkbox" checked={seasonForm.is_active} onChange={(e) => setSeasonForm({ ...seasonForm, is_active: e.target.checked })} /> 활성화</label>
         </div>
         <button
           className="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-60"
@@ -252,17 +256,17 @@ const AdminTeamBattlePage: React.FC = () => {
         </button>
       </div>
 
-      <div className="bg-white p-4 rounded shadow space-y-3">
-        <h2 className="text-lg font-semibold">활성 시즌</h2>
+      <div className={cardClass + " space-y-3"}>
+        <h2 className="text-lg font-semibold text-emerald-100">활성 시즌</h2>
         <p className="text-sm">{season ? `${season.name} (${formatDateTime(season.starts_at)} ~ ${formatDateTime(season.ends_at)})` : "없음"}</p>
         {season ? (
           <>
             <div className="grid md:grid-cols-2 gap-3">
-              <input className="border p-2 rounded" placeholder="이름" value={seasonEditForm.name} onChange={(e) => setSeasonEditForm({ ...seasonEditForm, name: e.target.value })} />
-              <label className="text-sm text-gray-500">Asia/Seoul 기준 ISO (예: 2025-12-12T00:00:00+09:00)</label>
-              <input className="border p-2 rounded" placeholder="시작 시각" value={seasonEditForm.starts_at} onChange={(e) => setSeasonEditForm({ ...seasonEditForm, starts_at: e.target.value })} />
-              <input className="border p-2 rounded" placeholder="종료 시각" value={seasonEditForm.ends_at} onChange={(e) => setSeasonEditForm({ ...seasonEditForm, ends_at: e.target.value })} />
-              <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={seasonEditForm.is_active} onChange={(e) => setSeasonEditForm({ ...seasonEditForm, is_active: e.target.checked })} /> 활성화</label>
+              <input className={inputClass} placeholder="이름" value={seasonEditForm.name} onChange={(e) => setSeasonEditForm({ ...seasonEditForm, name: e.target.value })} />
+              <label className="text-sm text-slate-400">Asia/Seoul 기준 ISO (예: 2025-12-12T00:00:00+09:00)</label>
+              <input className={inputClass} placeholder="시작 시각" value={seasonEditForm.starts_at} onChange={(e) => setSeasonEditForm({ ...seasonEditForm, starts_at: e.target.value })} />
+              <input className={inputClass} placeholder="종료 시각" value={seasonEditForm.ends_at} onChange={(e) => setSeasonEditForm({ ...seasonEditForm, ends_at: e.target.value })} />
+              <label className="flex items-center gap-2 text-sm text-slate-200"><input type="checkbox" checked={seasonEditForm.is_active} onChange={(e) => setSeasonEditForm({ ...seasonEditForm, is_active: e.target.checked })} /> 활성화</label>
             </div>
             <div className="flex flex-wrap gap-2">
               <button className="px-3 py-2 bg-green-600 text-white rounded disabled:opacity-60" onClick={handleActivate} disabled={!season || activateBusy}>{activateBusy ? "활성화 중..." : "활성화"}</button>
@@ -279,12 +283,12 @@ const AdminTeamBattlePage: React.FC = () => {
         )}
       </div>
 
-      <div className="bg-white p-4 rounded shadow space-y-3">
-        <h2 className="text-lg font-semibold">팀 관리 (2팀 구성 권장)</h2>
+      <div className={cardClass + " space-y-3"}>
+        <h2 className="text-lg font-semibold text-emerald-100">팀 관리 (2팀 구성 권장)</h2>
         <div className="grid md:grid-cols-3 gap-3">
-          <input className="border p-2 rounded" placeholder="팀 이름" value={teamForm.name} onChange={(e) => setTeamForm({ ...teamForm, name: e.target.value })} />
-          <input className="border p-2 rounded" placeholder="아이콘 URL (선택)" value={teamForm.icon} onChange={(e) => setTeamForm({ ...teamForm, icon: e.target.value })} />
-          <input className="border p-2 rounded" placeholder="리더 user_id (선택)" value={teamForm.leader_user_id} onChange={(e) => setTeamForm({ ...teamForm, leader_user_id: e.target.value })} />
+          <input className={inputClass} placeholder="팀 이름" value={teamForm.name} onChange={(e) => setTeamForm({ ...teamForm, name: e.target.value })} />
+          <input className={inputClass} placeholder="아이콘 URL (선택)" value={teamForm.icon} onChange={(e) => setTeamForm({ ...teamForm, icon: e.target.value })} />
+          <input className={inputClass} placeholder="리더 user_id (선택)" value={teamForm.leader_user_id} onChange={(e) => setTeamForm({ ...teamForm, leader_user_id: e.target.value })} />
         </div>
         <button
           className="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-60"
@@ -296,20 +300,20 @@ const AdminTeamBattlePage: React.FC = () => {
 
         <div className="mt-3 grid sm:grid-cols-2 gap-2">
           {teams.map((t) => (
-            <div key={t.id} className="border rounded p-3 space-y-2">
+            <div key={t.id} className="rounded-lg border border-emerald-800/40 bg-slate-950/60 p-3 shadow-sm shadow-emerald-900/10 space-y-2">
               <div className="flex items-center justify-between">
                 <p className="font-semibold">{t.name}</p>
                 <span className={`text-xs ${t.is_active ? "text-green-600" : "text-gray-500"}`}>{t.is_active ? "활성" : "비활성"}</span>
               </div>
               <p className="text-xs text-gray-500">ID: {t.id}</p>
               <input
-                className="border p-2 rounded w-full"
+                className={inputClass}
                 value={teamEdits[t.id]?.name || ""}
                 onChange={(e) => setTeamEdits({ ...teamEdits, [t.id]: { ...teamEdits[t.id], name: e.target.value, icon: teamEdits[t.id]?.icon || "", is_active: teamEdits[t.id]?.is_active ?? t.is_active } })}
                 placeholder="팀 이름"
               />
               <input
-                className="border p-2 rounded w-full"
+                className={inputClass}
                 value={teamEdits[t.id]?.icon || ""}
                 onChange={(e) => setTeamEdits({ ...teamEdits, [t.id]: { ...teamEdits[t.id], name: teamEdits[t.id]?.name || t.name, icon: e.target.value, is_active: teamEdits[t.id]?.is_active ?? t.is_active } })}
                 placeholder="아이콘 URL"
@@ -356,19 +360,19 @@ const AdminTeamBattlePage: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-white p-4 rounded shadow space-y-3">
-        <h2 className="text-lg font-semibold">강제 팀 배정/이동</h2>
+      <div className={cardClass + " space-y-3"}>
+        <h2 className="text-lg font-semibold text-emerald-100">강제 팀 배정/이동</h2>
         <div className="grid md:grid-cols-2 gap-3">
-          <input className="border p-2 rounded" placeholder="user_id" value={forceJoinForm.user_id} onChange={(e) => setForceJoinForm({ ...forceJoinForm, user_id: e.target.value })} />
-          <input className="border p-2 rounded" placeholder="team_id" value={forceJoinForm.team_id} onChange={(e) => setForceJoinForm({ ...forceJoinForm, team_id: e.target.value })} />
+          <input className={inputClass} placeholder="user_id" value={forceJoinForm.user_id} onChange={(e) => setForceJoinForm({ ...forceJoinForm, user_id: e.target.value })} />
+          <input className={inputClass} placeholder="team_id" value={forceJoinForm.team_id} onChange={(e) => setForceJoinForm({ ...forceJoinForm, team_id: e.target.value })} />
         </div>
         <button className="px-4 py-2 bg-indigo-600 text-white rounded disabled:opacity-60" onClick={handleForceJoin} disabled={forceJoinBusy || !forceJoinForm.user_id || !forceJoinForm.team_id}>
           {forceJoinBusy ? "배정 중..." : "강제 배정"}
         </button>
       </div>
 
-      {message && <div className="p-3 bg-green-50 text-green-800 rounded">{message}</div>}
-      {error && <div className="p-3 bg-red-50 text-red-800 rounded">{error}</div>}
+      {message && <div className="p-3 rounded bg-emerald-900/60 text-emerald-100 border border-emerald-700/60">{message}</div>}
+      {error && <div className="p-3 rounded bg-red-900/60 text-red-100 border border-red-700/60">{error}</div>}
     </div>
   );
 };
