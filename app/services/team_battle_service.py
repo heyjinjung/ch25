@@ -51,6 +51,27 @@ class TeamBattleService:
         end_utc = end_local.astimezone(utc).replace(tzinfo=None)
         return start_utc, end_utc
 
+    def _normalize_to_utc(self, dt: datetime, now: datetime | None = None) -> datetime:
+        """Convert datetime to UTC naive while handling local tz inputs.
+
+        - If tz-aware, convert to UTC and drop tzinfo for DB storage/comparison.
+        - If naive but clearly ahead of current UTC time (likely local KST input),
+          treat it as local timezone and convert to UTC.
+        - Otherwise, assume the value is already UTC naive.
+        """
+
+        utc = ZoneInfo("UTC")
+        tz = ZoneInfo(get_settings().timezone)
+        reference = now or self._now_utc()
+
+        if dt.tzinfo:
+            return dt.astimezone(utc).replace(tzinfo=None)
+
+        if dt - reference > timedelta(hours=4):
+            return dt.replace(tzinfo=tz).astimezone(utc).replace(tzinfo=None)
+
+        return dt
+
     def ensure_current_season(self, db: Session, now: datetime | None = None) -> TeamSeason:
         """Ensure a 2-day rolling season (KST anchored) exists covering `now`."""
         today = now or self._now_utc()
@@ -125,6 +146,10 @@ class TeamBattleService:
         return db.get(TeamMember, user_id)
 
     def create_season(self, db: Session, payload: dict) -> TeamSeason:
+        payload = payload.copy()
+        payload["starts_at"] = self._normalize_to_utc(payload["starts_at"])
+        payload["ends_at"] = self._normalize_to_utc(payload["ends_at"])
+
         season = TeamSeason(**payload)
         if season.is_active:
             conflict = db.execute(
@@ -143,6 +168,12 @@ class TeamBattleService:
         season = db.get(TeamSeason, season_id)
         if not season:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="SEASON_NOT_FOUND")
+
+        payload = payload.copy()
+        if payload.get("starts_at"):
+            payload["starts_at"] = self._normalize_to_utc(payload["starts_at"])
+        if payload.get("ends_at"):
+            payload["ends_at"] = self._normalize_to_utc(payload["ends_at"])
 
         for key, value in payload.items():
             if value is None:
