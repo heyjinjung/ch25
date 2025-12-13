@@ -109,12 +109,21 @@ class TeamBattleService:
         return season
 
     def get_active_season(self, db: Session, now: datetime | None = None) -> TeamSeason | None:
-        today = (now or self._now_utc())
-        return db.execute(
-            select(TeamSeason).where(
-                and_(TeamSeason.is_active == True, TeamSeason.starts_at <= today, TeamSeason.ends_at >= today)  # noqa: E712
-            )
-        ).scalar_one_or_none()
+        reference = now or self._now_utc()
+
+        season = db.execute(select(TeamSeason).where(TeamSeason.is_active == True)).scalar_one_or_none()  # noqa: E712
+        if not season:
+            return None
+
+        start_utc = self._normalize_to_utc(season.starts_at, reference)
+        end_utc = self._normalize_to_utc(season.ends_at, reference)
+
+        if start_utc <= reference <= end_utc:
+            season.starts_at = start_utc
+            season.ends_at = end_utc
+            return season
+
+        return None
 
     def _get_active_or_current(self, db: Session, now: datetime | None = None) -> TeamSeason:
         season = self.get_active_season(db, now)
@@ -123,8 +132,9 @@ class TeamBattleService:
         return self.ensure_current_season(db, now)
 
     def _assert_selection_window_open(self, season: TeamSeason, now: datetime) -> None:
-        join_deadline = season.starts_at + timedelta(hours=self.TEAM_SELECTION_WINDOW_HOURS)
-        if now < season.starts_at or now > join_deadline:
+        start_utc = self._normalize_to_utc(season.starts_at, now)
+        join_deadline = start_utc + timedelta(hours=self.TEAM_SELECTION_WINDOW_HOURS)
+        if now < start_utc or now > join_deadline:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="TEAM_SELECTION_CLOSED")
 
     def _assert_today_usage(self, db: Session, user_id: int, now: datetime) -> None:
@@ -286,7 +296,8 @@ class TeamBattleService:
         now = now or self._now_utc()
         season = self.get_active_season(db, now)
         if season:
-            join_deadline = season.starts_at + timedelta(hours=self.TEAM_SELECTION_WINDOW_HOURS)
+            start_utc = self._normalize_to_utc(season.starts_at, now)
+            join_deadline = start_utc + timedelta(hours=self.TEAM_SELECTION_WINDOW_HOURS)
             if now > join_deadline:
                 raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="TEAM_LOCKED")
 
