@@ -2,16 +2,23 @@
 import axios from "axios";
 import { clearAuth, getAuthToken } from "../auth/authStore";
 
+const normalizeApiBase = (url: string) => {
+  const trimmed = url.replace(/\/+$/, "");
+  return trimmed.endsWith("/api") ? trimmed : `${trimmed}/api`;
+};
+
 // Resolve API base URL with explicit warning when falling back to localhost.
-const resolvedBaseURL =
+const rawBase =
   import.meta.env.VITE_API_BASE_URL ??
   import.meta.env.VITE_API_URL ??
-  "http://localhost:8000/api";
+  "http://localhost:8000";
 
 if (!import.meta.env.VITE_API_BASE_URL && !import.meta.env.VITE_API_URL) {
   // eslint-disable-next-line no-console
   console.warn("[httpClient] Using default localhost API base URL; set VITE_API_BASE_URL for stage/prod.");
 }
+
+const resolvedBaseURL = normalizeApiBase(rawBase);
 
 export const userApi = axios.create({
   baseURL: resolvedBaseURL,
