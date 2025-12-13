@@ -17,6 +17,10 @@ from app.core.config import get_settings
 class AdminExternalRankingService:
     """Manage external ranking data rows (deposit amount, play count)."""
 
+    STEP_AMOUNT = 100_000
+    XP_PER_STEP = 20
+    MAX_STEPS_PER_DAY = 50
+
     @staticmethod
     def _resolve_user_id(db: Session, payload_user_id: int | None, external_id: str | None) -> int:
         if payload_user_id:
@@ -49,9 +53,9 @@ class AdminExternalRankingService:
         settings = get_settings()
         today = date.today()
         now = datetime.utcnow()
-        step_amount = max(settings.external_ranking_deposit_step_amount, 1)
-        xp_per_step = max(settings.external_ranking_deposit_xp_per_step, 0)
-        max_steps_per_day = max(settings.external_ranking_deposit_max_steps_per_day, 0)
+        step_amount = self.STEP_AMOUNT
+        xp_per_step = self.XP_PER_STEP
+        max_steps_per_day = self.MAX_STEPS_PER_DAY
         cooldown_minutes = max(settings.external_ranking_deposit_cooldown_minutes, 0)
 
         existing_by_user = {row.user_id: row for row in db.execute(select(ExternalRankingData)).scalars().all()}
@@ -124,10 +128,7 @@ class AdminExternalRankingService:
             row.deposit_remainder = remainder
 
             # 이용 횟수: 1회당 20 XP 지급 (일일 누적 대비 증분 계산)
-            play_delta = max(row.play_count - (row.daily_base_play or 0), 0)
-            if play_delta > 0 and xp_per_step > 0:
-                xp_to_add = play_delta * xp_per_step
-                season_pass.add_bonus_xp(db, user_id=row.user_id, xp_amount=xp_to_add, now=today)
+            # play_count 기반 XP 지급은 비활성
 
         # Weekly TOP10 (once per ISO week)
         top10 = (

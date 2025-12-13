@@ -20,6 +20,9 @@ from app.services.season_pass_service import SeasonPassService
 class DiceService:
     """Encapsulates dice gameplay."""
 
+    BASE_GAME_XP = 5
+    WIN_GAME_XP = 20
+
     def __init__(self) -> None:
         self.feature_service = FeatureService()
         self.reward_service = RewardService()
@@ -128,6 +131,7 @@ class DiceService:
         db.commit()
         db.refresh(log_entry)
 
+        xp_award = self.WIN_GAME_XP if outcome == "WIN" else self.BASE_GAME_XP
         ctx = GamePlayContext(user_id=user_id, feature_type=FeatureType.DICE.value, today=today)
         log_game_play(
             ctx,
@@ -137,7 +141,7 @@ class DiceService:
                 "reward_type": reward_type,
                 "reward_amount": reward_amount,
                 "reward_label": f"{config.name} - {outcome}",
-                "xp_from_reward": reward_amount if reward_amount > 0 else 0,
+                "xp_from_reward": xp_award,
             },
         )
 
@@ -146,7 +150,7 @@ class DiceService:
             user_id=user_id,
             reward_type=reward_type,
             reward_amount=reward_amount,
-            meta={"reason": "dice_play", "outcome": outcome},
+            meta={"reason": "dice_play", "outcome": outcome, "game_xp": xp_award},
         )
         if outcome == "WIN":
             self.season_pass_service.maybe_add_internal_win_stamp(db, user_id=user_id, now=today)

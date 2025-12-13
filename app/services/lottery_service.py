@@ -22,6 +22,8 @@ from app.services.season_pass_service import SeasonPassService
 class LotteryService:
     """Encapsulates lottery gameplay with weighted prizes and stock handling."""
 
+    BASE_GAME_XP = 5
+
     def __init__(self) -> None:
         self.feature_service = FeatureService()
         self.reward_service = RewardService()
@@ -135,6 +137,7 @@ class LotteryService:
         db.commit()
         db.refresh(log_entry)
 
+        xp_award = self.BASE_GAME_XP
         ctx = GamePlayContext(user_id=user_id, feature_type=FeatureType.LOTTERY.value, today=today)
         log_game_play(
             ctx,
@@ -144,7 +147,7 @@ class LotteryService:
                 "reward_type": chosen.reward_type,
                 "reward_amount": chosen.reward_amount,
                 "label": chosen.label,
-                "xp_from_reward": chosen.reward_amount if chosen.reward_amount > 0 else 0,
+                "xp_from_reward": xp_award,
             },
         )
 
@@ -153,7 +156,7 @@ class LotteryService:
             user_id=user_id,
             reward_type=chosen.reward_type,
             reward_amount=chosen.reward_amount,
-            meta={"reason": "lottery_play", "prize_id": chosen.id},
+            meta={"reason": "lottery_play", "prize_id": chosen.id, "game_xp": xp_award},
         )
         if chosen.reward_amount > 0:
             self.season_pass_service.maybe_add_internal_win_stamp(db, user_id=user_id, now=today)

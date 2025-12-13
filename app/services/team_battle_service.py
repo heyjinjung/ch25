@@ -644,11 +644,21 @@ class TeamBattleService:
         season = db.get(TeamSeason, season_id) if season_id else self.get_active_season(db)
         if not season:
             return []
+        # Include members with zero points so 참여자 목록 is visible even before 점수 적립
+        points_sum = func.coalesce(func.sum(TeamEventLog.delta), 0).label("points")
         stmt = (
-            select(TeamEventLog.user_id, func.sum(TeamEventLog.delta).label("points"))
-            .where(TeamEventLog.team_id == team_id, TeamEventLog.season_id == season.id)
-            .group_by(TeamEventLog.user_id)
-            .order_by(func.sum(TeamEventLog.delta).desc())
+            select(TeamMember.user_id, points_sum)
+            .where(TeamMember.team_id == team_id)
+            .outerjoin(
+                TeamEventLog,
+                and_(
+                    TeamEventLog.team_id == TeamMember.team_id,
+                    TeamEventLog.user_id == TeamMember.user_id,
+                    TeamEventLog.season_id == season.id,
+                ),
+            )
+            .group_by(TeamMember.user_id)
+            .order_by(points_sum.desc(), TeamMember.user_id.asc())
             .offset(offset)
             .limit(limit)
         )

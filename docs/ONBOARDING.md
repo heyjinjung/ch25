@@ -4,8 +4,8 @@
 
 ## 프로젝트 한눈에 보기
 - Backend: FastAPI + SQLAlchemy + Alembic, MySQL 8(옵션: Redis 7), JWT 발급 `/api/auth/token`(external_id로 자동 생성 가능), `ENV=local` 시 CORS `*`.
-- Frontend: React 18 + TypeScript 5 + Vite 6 + Tailwind, React Query 5, Axios. 관리자 UI는 `/admin`(로그인 `admin` / secure password).
-- 주요 도메인: 룰렛/주사위/복권, 시즌패스(XP 스탬프), 외부 랭킹 수동 입력/보상, **게임 토큰 지갑/원장**(ROULETTE_COIN, DICE_TOKEN, LOTTERY_TICKET) 관리자 지급·차감·로그. today-feature 스케줄 게이트는 **폐기(아카이브)** 되었고 기본으로 비활성입니다.
+- Frontend: React 18 + TypeScript 5 + Vite 6 + Tailwind, React Query 5, Axios. 관리자 UI는 `/admin`(로그인 `admin` / `2wP?+!Etm8#Qv4Mn`).
+- 주요 도메인: 룰렛/주사위/복권, 시즌패스(XP 스탬프), 외부 랭킹 수동 입력/보상, **게임 토큰 지갑/원장**(ROULETTE_COIN, DICE_TOKEN, LOTTERY_TICKET, CC_COIN) 관리자 지급·차감·로그, **팀 배틀**, **레벨/XP 코어**. today-feature 스케줄 게이트는 **폐기(아카이브)** 되었고 기본으로 비활성입니다.
 - 시즌패스 현재 스펙: base_xp_per_stamp=20, 레벨 7단계(곡선/보상은 `season_pass_level`; 기본 시드 `scripts/seed_ranking_seasonpass.sql`). 게임별 XP 계산은 서비스 로직/DB 설정값에 따릅니다.
 
 ## 선행 설치물
@@ -80,7 +80,7 @@ docker compose exec backend alembic upgrade head  # 스키마 적용(자동 아�
   docker compose exec db sh -c "mysql -uroot -proot xmas_event_dev < /tmp/seed_ranking_seasonpass.sql"  # root PW는 .env에 맞게 수정
   ```
 - 사용자 생성은 `/api/auth/token` 호출 시 external_id로 자동 생성 가능.
-- 게임 토큰/원장: 테이블 `user_game_wallet`, `user_game_wallet_ledger`; 관리자 화면 `/admin/game-tokens`(지급/차감), `/admin/game-token-logs`(지갑/플레이로그/원장 조회). API는 `app/api/admin/routes/admin_game_tokens.py` 참고.
+- 게임 토큰/원장: 테이블 `user_game_wallet`, `user_game_wallet_ledger`; 관리자 화면 `/admin/game-tokens`(지급/차감), `/admin/game-token-logs`(지갑/플레이로그/원장 조회). API는 `app/api/admin/routes/admin_game_tokens.py` 참고. 토큰 타입에 CC_COIN이 추가되었습니다.
 - 시즌패스: base_xp_per_stamp=20, 7레벨 곡선(`season_pass_level`); 기본 시드는 `scripts/seed_ranking_seasonpass.sql`. 현장 수치 변경 시 테이블만 업데이트하면 됩니다.
 
 ## 서버(싱가포르 149.28.135.147) 배포/실행 요약
@@ -101,22 +101,25 @@ docker compose exec backend alembic upgrade head  # 스키마 적용(자동 아�
 - 로그 테일(Windows): `Get-Content logs/app.log -Wait`
 
 ## 참고 파일 위치
-- Backend 진입점/핵심: `app/main.py`, `app/api/routes/*`, `app/services/game_wallet_service.py`, `app/services/season_pass_service.py`, `app/services/admin_external_ranking_service.py`
-- Frontend 핵심: `src/router/AdminRoutes.tsx`, `src/admin/pages/GameTokenGrantPage.tsx`, `src/admin/pages/GameTokenLogsPage.tsx`, `src/api/httpClient.ts`, `src/admin/api/adminGameTokenApi.ts`
-- DB 마이그레이션: `alembic/versions/20251207_0006_add_user_game_wallet.py`(지갑), `20251208_0007_add_external_ranking_tables.py`, `20251208_0008_add_user_credentials_and_level.py`
+- Backend 진입점/핵심: `app/main.py`, `app/api/routes/*`, `app/services/game_wallet_service.py`, `app/services/season_pass_service.py`, `app/services/team_battle_service.py`, `app/services/level_xp_service.py`, `app/services/admin_external_ranking_service.py`
+- Frontend 핵심: `src/router/AdminRoutes.tsx`, `src/admin/pages/GameTokenGrantPage.tsx`, `src/admin/pages/GameTokenLogsPage.tsx`, `src/admin/pages/AdminTeamBattlePage.tsx`, `src/pages/TeamBattlePage.tsx`, `src/api/httpClient.ts`, `src/admin/api/adminGameTokenApi.ts`
+- DB 마이그레이션: `alembic/versions/20251212_0009_add_level_xp_core.py`, `20251212_0009_add_user_xp.py`, `20251212_0010_add_deposit_remainder_external_ranking.py`, `20251212_0011_team_battle_core.py`, `20251212_0012_add_cc_coin_token.py`
 
-필요한 내용이 더 있다면 README와 `docs/` 하위 세부 문서를 참고하세요. 
-## 2025-12 ���� ���� Ʈ�������� ���
-- Field 'level' doesn't have a default value: app/models/user.py�� server_default="1" �߰�, 0002���� ALTER TABLE user MODIFY level INT NOT NULL DEFAULT 1.
-- Unknown column 'title' in 'feature_config': 0002���� ���� ��Ű�� üũ �� ���� �÷��� �߰��ϵ��� ����.
-- Duplicate column name 'last_login_at': 0004�� ���Ǻ� �÷� �߰��� ����.
-- Table 'user_game_wallet' already exists: 0006�� ���̺� ���� �� ��ŵ�ϵ��� ����.
-- docker-compose 1.29 vs �ֽ� ���� ContainerConfig KeyError: �����̳�/�̹���/���� ��ü ���� �� �����.
-- MySQL ���� ���� 2003: DB healthy ��� �� 127.0.0.1:3306(TCP)�� ����.
-- Access denied for user 'xmasuser'@'%': ��Ʈ PW Ȯ�� �� ����/���� �����.
-  docker-compose exec db sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "\
-  CREATE DATABASE IF NOT EXISTS xmas_event;\
-  CREATE USER IF NOT EXISTS \'xmasuser\'@\'%\' IDENTIFIED BY \'xmaspass\';\
-  GRANT ALL PRIVILEGES ON xmas_event.* TO \'xmasuser\'@\'%\'; FLUSH PRIVILEGES;\
-  "'
-- ��Ʈ PW �Է� �Ǽ�(-p<...>) ����: ���� ��(rootpassword ��) ���.
+필요한 내용이 더 있다면 README와 `docs/` 하위 세부 문서를 참고하세요.
+
+## 2025-12 트러블슈팅 메모
+- Field 'level' doesn't have a default value: `app/models/user.py` server_default="1" 추가 후 마이그레이션 적용
+- Unknown column 'title' in 'feature_config': 초기 마이그레이션 재적용 또는 컬럼 수동 추가
+- Duplicate column name 'last_login_at': 중복 컬럼 정리 후 마이그레이션 재실행
+- Table 'user_game_wallet' already exists: 마이그레이션 충돌 시 테이블 삭제 또는 버전 리셋 후 재적용
+- docker-compose 1.29 vs 최신 버전 ContainerConfig KeyError: 최신 compose 사용 권장
+- MySQL 연결 에러 2003: DB healthy 이후 127.0.0.1:3306 접근 확인
+- Access denied for user 'xmasuser'@'%': 환경변수 PW 확인 후 권한 재부여
+  ```
+  docker compose exec db sh -c "mysql -uroot -p\"$MYSQL_ROOT_PASSWORD\" -e '
+    CREATE DATABASE IF NOT EXISTS xmas_event;
+    CREATE USER IF NOT EXISTS "xmasuser"@"%" IDENTIFIED BY "xmaspass";
+    GRANT ALL PRIVILEGES ON xmas_event.* TO "xmasuser"@"%";
+    FLUSH PRIVILEGES;'
+  "
+  ```
