@@ -44,15 +44,6 @@ const SeasonPassPage: React.FC = () => {
     };
   }, [season.data]);
 
-  const nextReward = useMemo(() => {
-    if (!season.data) return null;
-    const upcoming = season.data.levels.find((lvl) => !lvl.is_claimed && lvl.is_unlocked);
-    if (upcoming) return `레벨 ${upcoming.level} 보상: ${upcoming.reward_label}`;
-    const locked = season.data.levels.find((lvl) => !lvl.is_unlocked);
-    if (locked) return `레벨 ${locked.level} 보상(잠금): ${locked.reward_label}`;
-    return "모든 보상 수령 완료";
-  }, [season.data]);
-
   const external = ranking.data?.my_external_entry;
   const top10Needed = external?.rank && external.rank > 10 ? external.rank - 10 : 0;
   const deposit = external?.deposit_amount ?? 0;
@@ -79,7 +70,7 @@ const SeasonPassPage: React.FC = () => {
     {
       icon: "❄️",
       title: "CC사이트 일일이용",
-      desc: "플레이 수 0→1이 되면 스탬프 1개",
+        desc: "10만원 단위 플레이 시 20XP 지급",
       status: playDone ? "완료" : "미완료",
     },
     {
@@ -208,31 +199,6 @@ const SeasonPassPage: React.FC = () => {
                 {levelXp.data && levelXp.data.rewards.length === 0 && <p className="text-slate-400">아직 지급된 보상이 없습니다.</p>}
               </div>
             </div>
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-emerald-600/40 bg-slate-900/70 p-6 shadow-lg">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-xs font-semibold text-emerald-300">시즌 레벨 진행</p>
-              <p className="text-4xl font-black text-white">{data.current_level}</p>
-              <p className="text-xs text-slate-400">최대 레벨 {data.max_level}</p>
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center justify-between text-xs text-slate-300">
-                <span>{data.current_xp.toLocaleString()} XP</span>
-                <span>{progress.nextLabel}</span>
-                <span>{data.next_level_xp.toLocaleString()} XP</span>
-              </div>
-              <div className="mt-2 h-4 w-full overflow-hidden rounded-full bg-slate-800/80">
-                <div
-                  className="h-full bg-gradient-to-r from-emerald-400 via-emerald-500 to-gold-400 transition-all duration-500"
-                  style={{ width: `${progress.percent}%` }}
-                />
-              </div>
-              <div className="mt-2 text-xs font-semibold text-emerald-200">진행률 {progress.percent}%</div>
-            </div>
-            <div className="text-right text-sm text-slate-200">{nextReward}</div>
           </div>
         </div>
 
