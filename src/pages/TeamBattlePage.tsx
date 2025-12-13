@@ -30,7 +30,9 @@ const TeamBattlePage: React.FC = () => {
 
   const joinWindow = useMemo(() => {
     if (!season?.starts_at) return { closed: true, label: "-" };
-    const start = new Date(season.starts_at).getTime();
+    // UTC 명시 (백엔드가 Z 없이 UTC 반환하므로 보정)
+    const startStr = season.starts_at.endsWith("Z") ? season.starts_at : season.starts_at + "Z";
+    const start = new Date(startStr).getTime();
     const close = start + 2 * 60 * 60 * 1000;
     const now = Date.now();
     const remaining = close - now;
@@ -42,8 +44,10 @@ const TeamBattlePage: React.FC = () => {
 
   const countdown = useMemo(() => {
     if (!season?.ends_at) return "-";
+    // UTC 명시
+    const endStr = season.ends_at.endsWith("Z") ? season.ends_at : season.ends_at + "Z";
     const now = Date.now();
-    const end = new Date(season.ends_at).getTime();
+    const end = new Date(endStr).getTime();
     const diff = end - now;
     if (diff <= 0) return "종료";
     const hours = Math.floor(diff / (1000 * 60 * 60));
