@@ -1,5 +1,5 @@
 import apiClient from "./apiClient";
-import { TeamSeason, Team, LeaderboardEntry, ContributorEntry, TeamJoinResponse } from "../types/teamBattle";
+import { TeamSeason, Team, LeaderboardEntry, ContributorEntry, TeamJoinResponse, TeamMembership } from "../types/teamBattle";
 
 export const getActiveSeason = async (): Promise<TeamSeason | null> => {
   const res = await apiClient.get("/team-battle/seasons/active");
@@ -16,6 +16,11 @@ export const joinTeam = async (teamId: number): Promise<TeamJoinResponse> => {
   return res.data;
 };
 
+export const autoAssignTeam = async (): Promise<TeamJoinResponse> => {
+  const res = await apiClient.post("/team-battle/teams/auto-assign");
+  return res.data;
+};
+
 export const leaveTeam = async (): Promise<{ left: boolean }> => {
   const res = await apiClient.post("/team-battle/teams/leave");
   return res.data;
@@ -29,6 +34,11 @@ export const getLeaderboard = async (seasonId?: number, limit = 20, offset = 0):
 export const getContributors = async (teamId: number, seasonId?: number, limit = 10, offset = 0): Promise<ContributorEntry[]> => {
   const res = await apiClient.get(`/team-battle/teams/${teamId}/contributors`, { params: { season_id: seasonId, limit, offset } });
   return res.data;
+};
+
+export const getMyTeam = async (): Promise<TeamMembership | null> => {
+  const res = await apiClient.get("/team-battle/teams/me");
+  return res.data || null;
 };
 
 // Admin APIs

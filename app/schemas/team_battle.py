@@ -1,6 +1,7 @@
 """Pydantic schemas for team battle APIs."""
 from datetime import datetime
 from typing import Optional
+from datetime import date
 from pydantic import BaseModel, Field
 
 
@@ -48,6 +49,20 @@ class TeamJoinRequest(BaseModel):
     team_id: int
 
 
+class TeamForceJoinRequest(BaseModel):
+    team_id: int
+    user_id: int
+
+
+class TeamMembershipResponse(BaseModel):
+    team_id: int
+    role: str
+    joined_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
 class TeamPointsRequest(BaseModel):
     team_id: int
     delta: int = Field(..., description="Points to add (positive or negative)")
@@ -72,6 +87,26 @@ class TeamScoreResponse(BaseModel):
     team_id: int
     season_id: int
     points: int
+
+    class Config:
+        from_attributes = True
+
+
+class TeamAutoBalanceRequest(BaseModel):
+    target_date: Optional[date] = Field(None, description="기준 일자 (KST). 비우면 어제")
+    season_id: Optional[int] = None
+    apply: bool = Field(False, description="True면 즉시 팀 배정 반영")
+    weight_deposit: float = Field(0.6, ge=0, le=1)
+    weight_play: float = Field(0.4, ge=0, le=1)
+
+
+class TeamAutoBalanceResponse(BaseModel):
+    season_id: int
+    target_date: str
+    teams: list[int]
+    totals: list[float]
+    team1_count: int
+    team2_count: int
 
     class Config:
         from_attributes = True

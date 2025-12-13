@@ -3,9 +3,10 @@ import {
   getActiveSeason,
   getLeaderboard,
   getContributors,
-  joinTeam,
+  autoAssignTeam,
   leaveTeam,
   listTeams,
+  getMyTeam,
 } from "../api/teamBattleApi";
 import { TeamSeason, Team, LeaderboardEntry, ContributorEntry } from "../types/teamBattle";
 
@@ -28,6 +29,18 @@ const TeamBattlePage: React.FC = () => {
   const [leaveBusy, setLeaveBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const joinWindow = useMemo(() => {
+    if (!season?.starts_at) return { closed: true, label: "-" };
+    const start = new Date(season.starts_at).getTime();
+    const close = start + 2 * 60 * 60 * 1000;
+    const now = Date.now();
+    const remaining = close - now;
+    if (remaining <= 0) return { closed: true, label: "마감" };
+    const hours = Math.floor(remaining / (1000 * 60 * 60));
+    const minutes = Math.floor((remaining / (1000 * 60)) % 60);
+    return { closed: false, label: `${hours}시간 ${minutes}분 남음` };
+  }, [season?.starts_at]);
 
   const countdown = useMemo(() => {
     if (!season?.ends_at) return "-";
@@ -57,14 +70,21 @@ const TeamBattlePage: React.FC = () => {
     setRefreshing(true);
     setError(null);
     try {
-      const [seasonData, teamList, lb] = await Promise.all([
+      const [seasonData, teamList, lb, myTeam] = await Promise.all([
         getActiveSeason(),
         listTeams(),
         getLeaderboard(undefined, 20, 0),
+        getMyTeam(),
       ]);
       setSeason(seasonData);
       setTeams(teamList);
       setLeaderboard(lb);
+      if (myTeam) {
+        setSelectedTeam(myTeam.team_id);
+        if (seasonData) {
+          loadContributors(myTeam.team_id, seasonData.id);
+        }
+      }
       if (selectedTeam && seasonData) {
         loadContributors(selectedTeam, seasonData.id);
       }
@@ -83,20 +103,20 @@ const TeamBattlePage: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
-  const handleJoin = async (teamId: number) => {
+  const handleAutoAssign = async () => {
     setJoinBusy(true);
     setMessage(null);
     setError(null);
     try {
-      const res = await joinTeam(teamId);
+      const res = await autoAssignTeam();
       setSelectedTeam(res.team_id);
-      setMessage("팀에 합류했습니다");
+      setMessage(`팀에 합류했습니다 (team #${res.team_id})`);
       if (season) {
         loadContributors(res.team_id, season.id);
       }
     } catch (err) {
       console.error(err);
-      setError("팀 합류에 실패했습니다");
+      setError("팀 자동 배정에 실패했습니다");
     } finally {
       setJoinBusy(false);
     }
@@ -150,6 +170,15 @@ const TeamBattlePage: React.FC = () => {
         {initialLoading && <span className="text-xs text-amber-200">초기 로딩 중...</span>}
       </div>
 
+      <div className="rounded-2xl border border-emerald-700/40 bg-slate-900/70 p-4 text-emerald-100 text-sm space-y-1">
+        <div className="font-semibold text-emerald-200">룰 안내</div>
+        <div>• 목적: 2일간 팀 협력 배틀, 밸런스 기준 자동 배정(직접 선택 없음)</div>
+        <div>• 구조: 시즌 길이 2일, 시작 후 2시간만 팀 선택/자동 배정, 모든 시각 Asia/Seoul</div>
+        <div>• 점수: 게임 1회당 10점, 당일 플레이만 집계, 1인 하루 최대 500점</div>
+        <div>• 자격: 최소 20회 플레이(200점) 시 보상 대상</div>
+        <div>• 보상: 1위 팀 쿠폰 3만(수동), 2위 팀 포인트 100 자동, 팀별 TOP3 쿠폰 1만(수동)</div>
+      </div>
+
       <div className="grid md:grid-cols-3 gap-4">
         <div className="md:col-span-2 rounded-2xl border border-emerald-700/40 bg-gradient-to-br from-slate-950/80 to-emerald-950/40 p-5 shadow-lg">
           <div className="flex items-center justify-between mb-3">
@@ -157,6 +186,19 @@ const TeamBattlePage: React.FC = () => {
             <button className="text-sm text-amber-200 hover:text-amber-100" onClick={handleLeave} disabled={!selectedTeam || leaveBusy}>
               {leaveBusy ? "탈퇴 중..." : "팀 탈퇴"}
             </button>
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <button
+                className="px-4 py-2 rounded-full bg-gradient-to-r from-emerald-500 to-cyan-400 text-slate-900 font-semibold hover:from-emerald-400 hover:to-cyan-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={handleAutoAssign}
+                disabled={joinBusy || refreshing || joinWindow.closed}
+              >
+                {joinBusy ? "배정 중..." : "미스터리 팀 배정"}
+              </button>
+              <span className="text-xs text-emerald-100/80">밸런스 기준 자동 배정</span>
+            </div>
+            <div className="text-right text-xs text-amber-200">팀 선택 창: {joinWindow.label}</div>
           </div>
           <div className="grid sm:grid-cols-2 gap-3">
             {teams.map((team) => (
@@ -171,13 +213,7 @@ const TeamBattlePage: React.FC = () => {
                     <p className="text-xs text-emerald-200/70">팀</p>
                     <p className="text-xl font-bold text-white">{team.name}</p>
                   </div>
-                  <button
-                    className="px-3 py-1 text-sm rounded-full bg-gradient-to-r from-emerald-500 to-cyan-400 text-slate-900 font-semibold hover:from-emerald-400 hover:to-cyan-300"
-                    onClick={() => handleJoin(team.id)}
-                    disabled={joinBusy || refreshing}
-                  >
-                    {joinBusy ? "합류 중..." : "합류"}
-                  </button>
+                  <span className="text-[11px] text-emerald-100/70">자동 배정만 가능</span>
                 </div>
               </div>
             ))}

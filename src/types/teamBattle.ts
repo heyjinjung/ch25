@@ -30,3 +30,9 @@ export interface TeamJoinResponse {
   user_id: number;
   role: string;
 }
+
+export interface TeamMembership {
+  team_id: number;
+  role: string;
+  joined_at: string;
+}

@@ -6,6 +6,7 @@ from app.api.deps import get_current_user_id, get_db
 from app.schemas.team_battle import (
     TeamSeasonResponse,
     TeamJoinRequest,
+    TeamMembershipResponse,
     LeaderboardEntry,
     ContributorEntry,
     TeamResponse,
@@ -29,6 +30,20 @@ def join_team(
 ):
     member = svc.join_team(db, team_id=payload.team_id, user_id=user_id)
     return {"team_id": member.team_id, "user_id": member.user_id, "role": member.role}
+
+
+@router.post("/teams/auto-assign")
+def auto_assign(
+    db: Session = Depends(get_db),
+    user_id: int = Depends(get_current_user_id),
+):
+    member = svc.auto_assign_team(db, user_id=user_id)
+    return {"team_id": member.team_id, "user_id": member.user_id, "role": member.role}
+
+
+@router.get("/teams/me", response_model=TeamMembershipResponse | None)
+def my_team(db: Session = Depends(get_db), user_id: int = Depends(get_current_user_id)):
+    return svc.get_membership(db, user_id=user_id)
 
 
 @router.post("/teams/leave")

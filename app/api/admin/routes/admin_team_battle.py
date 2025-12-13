@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
-from app.schemas.team_battle import TeamSeasonCreate, TeamSeasonResponse, TeamCreate, TeamResponse, TeamPointsRequest, TeamScoreResponse
+from app.schemas.team_battle import TeamSeasonCreate, TeamSeasonResponse, TeamCreate, TeamResponse, TeamPointsRequest, TeamScoreResponse, TeamForceJoinRequest, TeamAutoBalanceRequest, TeamAutoBalanceResponse
 from app.services.team_battle_service import TeamBattleService
 
 router = APIRouter(prefix="/admin/api/team-battle", tags=["admin-team-battle"])
@@ -41,3 +41,37 @@ def add_points(payload: TeamPointsRequest, db: Session = Depends(get_db)):
 @router.post("/seasons/{season_id}/settle")
 def settle_rewards(season_id: int, db: Session = Depends(get_db)):
     return service.settle_daily_rewards(db, season_id=season_id)
+
+
+@router.post("/teams/force-join")
+def force_join(payload: TeamForceJoinRequest, db: Session = Depends(get_db)):
+    member = service.join_team(db, team_id=payload.team_id, user_id=payload.user_id, role="member", bypass_selection=True)
+    return {"team_id": member.team_id, "user_id": member.user_id, "role": member.role, "bypass_selection": True}
+
+
+@router.post("/teams/auto-balance", response_model=TeamAutoBalanceResponse)
+def auto_balance(payload: TeamAutoBalanceRequest, db: Session = Depends(get_db)):
+    if payload.apply:
+        result = service.apply_balanced_teams(
+            db,
+            season_id=payload.season_id,
+            target_date=payload.target_date,
+            weight_deposit=payload.weight_deposit,
+            weight_play=payload.weight_play,
+        )
+    else:
+        result = service.compute_balanced_teams(
+            db,
+            season_id=payload.season_id,
+            target_date=payload.target_date,
+            weight_deposit=payload.weight_deposit,
+            weight_play=payload.weight_play,
+        )
+    return TeamAutoBalanceResponse(
+        season_id=result["season_id"],
+        target_date=result["target_date"],
+        teams=result["teams"],
+        totals=result["totals"],
+        team1_count=result.get("team1_count", len(result.get("assignments", [[], []])[0])),
+        team2_count=result.get("team2_count", len(result.get("assignments", [[], []])[1])),
+    )
