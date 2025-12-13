@@ -78,7 +78,7 @@ services:
       context: .
       dockerfile: Dockerfile.frontend
       args:
-        VITE_API_URL: ${VITE_API_URL:-http://localhost:8000/api}
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
         VITE_ADMIN_API_URL: ${VITE_ADMIN_API_URL:-http://localhost:8000/admin/api}
         VITE_ENV: production
     container_name: xmas-frontend
