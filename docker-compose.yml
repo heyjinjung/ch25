@@ -11,6 +11,7 @@ services:
       MYSQL_DATABASE: ${MYSQL_DATABASE:-xmas_event}
       MYSQL_USER: ${MYSQL_USER:-xmasuser}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:-xmaspass}
+      TZ: Asia/Seoul
     volumes:
       - mysql_data:/var/lib/mysql
       - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -29,6 +30,8 @@ services:
     image: redis:7-alpine
     container_name: xmas-redis
     restart: unless-stopped
+    environment:
+      TZ: Asia/Seoul
     ports:
       - "6379:6379"
     networks:
@@ -51,6 +54,7 @@ services:
     environment:
       DATABASE_URL: mysql+pymysql://${MYSQL_USER:-xmasuser}:${MYSQL_PASSWORD:-xmaspass}@db:3306/${MYSQL_DATABASE:-xmas_event}
       REDIS_URL: redis://redis:6379/0
+      TZ: Asia/Seoul
     depends_on:
       db:
         condition: service_healthy
@@ -79,6 +83,8 @@ services:
         VITE_ENV: production
     container_name: xmas-frontend
     restart: unless-stopped
+    environment:
+      TZ: Asia/Seoul
     ports:
       - "3000:80"
     networks:
@@ -91,6 +97,8 @@ services:
     image: nginx:alpine
     container_name: xmas-nginx
     restart: unless-stopped
+    environment:
+      TZ: Asia/Seoul
     ports:
       - "80:80"
       - "443:443"
