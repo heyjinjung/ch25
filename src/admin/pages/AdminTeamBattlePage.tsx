@@ -499,12 +499,12 @@ const AdminTeamBattlePage: React.FC = () => {
             </div>
           </div>
 
-          <div className="overflow-x-auto text-sm">
+          <div className="overflow-x-auto overflow-y-auto max-h-96 text-sm">
             <table className="min-w-full divide-y divide-emerald-900/60">
               <thead>
                 <tr className="text-left text-emerald-200">
                   <th className="py-2">순위</th>
-                  <th className="py-2">user_id</th>
+                  <th className="py-2">닉네임 / user_id</th>
                   <th className="py-2">점수</th>
                   <th className="py-2">최근 적립</th>
                 </tr>
@@ -518,7 +518,10 @@ const AdminTeamBattlePage: React.FC = () => {
                 {contributors.map((c, idx) => (
                   <tr key={`${c.user_id}-${idx}`}>
                     <td className="py-2">{contribOffset + idx + 1}</td>
-                    <td className="py-2 font-mono">{c.user_id}</td>
+                    <td className="py-2">
+                      <div className="font-semibold text-slate-100">{c.nickname || "닉네임 없음"}</div>
+                      <div className="text-xs text-slate-400">#{c.user_id}</div>
+                    </td>
                     <td className="py-2">{c.points.toLocaleString()}</td>
                     <td className="py-2 text-xs text-slate-300">{c.latest_event_at ? formatDateTime(c.latest_event_at) : "-"}</td>
                   </tr>

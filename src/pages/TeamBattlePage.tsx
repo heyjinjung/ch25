@@ -28,7 +28,7 @@ const TeamBattlePage: React.FC = () => {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [selectedTeam, setSelectedTeam] = useState<number | null>(null);
   const [contributors, setContributors] = useState<ContributorEntry[]>([]);
-  const [myTeam, setMyTeam] = useState<TeamMembership | null>(null);
+  const [, setMyTeam] = useState<TeamMembership | null>(null);
   const [contributorsLoading, setContributorsLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -304,7 +304,8 @@ const TeamBattlePage: React.FC = () => {
                 {contributors.map((c) => (
                   <li key={c.user_id} className="flex justify-between rounded-lg bg-amber-900/30 px-3 py-2 border border-amber-700/30">
                     <div className="flex flex-col">
-                      <span className="text-amber-100">회원 #{c.user_id}</span>
+                      <span className="text-amber-100">{c.nickname || "닉네임 없음"}</span>
+                      <span className="text-[11px] text-amber-200/80">#{c.user_id}</span>
                       <span className="text-[11px] text-amber-200/70">최근 활동: {formatLatest(c.latest_event_at)}</span>
                     </div>
                     <span className="font-semibold text-amber-200">+{c.points}</span>
