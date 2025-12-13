@@ -11,8 +11,9 @@ import {
   updateTeam,
   deleteTeam,
   forceJoinTeam,
+  getLeaderboard,
 } from "../../api/teamBattleApi";
-import { Team, TeamSeason } from "../../types/teamBattle";
+import { Team, TeamSeason, LeaderboardEntry } from "../../types/teamBattle";
 
 const formatDateTime = (iso?: string) => (iso ? new Date(iso).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" }) : "-");
 
@@ -20,6 +21,7 @@ const AdminTeamBattlePage: React.FC = () => {
   const [season, setSeason] = useState<TeamSeason | null>(null);
   const [teams, setTeams] = useState<Team[]>([]);
   const [teamEdits, setTeamEdits] = useState<Record<number, { name: string; icon: string; is_active: boolean }>>({});
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [seasonForm, setSeasonForm] = useState({ name: "", starts_at: "", ends_at: "", is_active: false });
@@ -45,7 +47,7 @@ const AdminTeamBattlePage: React.FC = () => {
     setError(null);
     setRefreshing(true);
     try {
-      const [s, t] = await Promise.all([getActiveSeason(), listTeamsAdmin(true)]);
+      const [s, t, lb] = await Promise.all([getActiveSeason(), listTeamsAdmin(true), getLeaderboard(undefined, 100, 0)]);
       setSeason(s);
       if (s) {
         setSeasonEditForm({
@@ -56,6 +58,7 @@ const AdminTeamBattlePage: React.FC = () => {
         });
       }
       setTeams(t);
+      setLeaderboard(lb);
       const mapped = t.reduce<Record<number, { name: string; icon: string; is_active: boolean }>>((acc, team) => {
         acc[team.id] = { name: team.name, icon: team.icon || "", is_active: team.is_active };
         return acc;
@@ -132,6 +135,10 @@ const AdminTeamBattlePage: React.FC = () => {
 
   const handleSettle = async () => {
     if (!season) return;
+    if (!leaderboard.length) {
+      setError("정산할 점수가 없습니다. 리더보드가 비어있습니다.");
+      return;
+    }
     setError(null);
     setMessage(null);
     setSettleBusy(true);
@@ -225,7 +232,14 @@ const AdminTeamBattlePage: React.FC = () => {
       setMessage("강제 배정 완료");
     } catch (err) {
       console.error(err);
-      setError("강제 배정 실패");
+      const detail = (err as any)?.response?.data?.detail;
+      if (detail === "ALREADY_IN_TEAM") {
+        setError("이미 팀에 속한 사용자입니다. 이동하려면 먼저 기존 팀에서 제거하세요.");
+      } else if (detail === "TEAM_NOT_FOUND") {
+        setError("팀을 찾을 수 없습니다.");
+      } else {
+        setError("강제 배정 실패");
+      }
     } finally {
       setForceJoinBusy(false);
     }
@@ -358,6 +372,40 @@ const AdminTeamBattlePage: React.FC = () => {
           ))}
           {teams.length === 0 && <p className="text-sm text-gray-500">팀 없음</p>}
         </div>
+      </div>
+
+      <div className={cardClass + " space-y-3"}>
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-emerald-100">리더보드 미리보기</h2>
+          <button className="px-3 py-2 border rounded" onClick={refresh} disabled={refreshing}>{refreshing ? "새로고침 중..." : "새로고침"}</button>
+        </div>
+        {leaderboard.length === 0 && <p className="text-sm text-slate-400">점수가 없습니다.</p>}
+        {leaderboard.length > 0 && (
+          <div className="overflow-x-auto text-sm">
+            <table className="min-w-full divide-y divide-emerald-900/60">
+              <thead>
+                <tr className="text-left text-emerald-200">
+                  <th className="py-2">순위</th>
+                  <th className="py-2">팀</th>
+                  <th className="py-2">점수</th>
+                  <th className="py-2">인원</th>
+                  <th className="py-2">최신 이벤트</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-emerald-900/40">
+                {leaderboard.map((row, idx) => (
+                  <tr key={row.team_id}>
+                    <td className="py-2">#{idx + 1}</td>
+                    <td className="py-2">{row.team_name}</td>
+                    <td className="py-2">{row.points}</td>
+                    <td className="py-2">{row.member_count ?? 0}</td>
+                    <td className="py-2 text-xs text-slate-300">{row.latest_event_at ? formatDateTime(row.latest_event_at) : "-"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       <div className={cardClass + " space-y-3"}>

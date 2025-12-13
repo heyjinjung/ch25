@@ -55,13 +55,29 @@ def leave_team(db: Session = Depends(get_db), user_id: int = Depends(get_current
 @router.get("/teams/leaderboard", response_model=list[LeaderboardEntry])
 def leaderboard(season_id: int | None = None, limit: int = 20, offset: int = 0, db: Session = Depends(get_db)):
     rows = svc.leaderboard(db, season_id=season_id, limit=min(limit, 100), offset=max(offset, 0))
-    return [LeaderboardEntry(team_id=r.team_id, team_name=r.name, points=r.points) for r in rows]
+    return [
+        LeaderboardEntry(
+            team_id=r.team_id,
+            team_name=r.name,
+            points=r.points,
+            member_count=getattr(r, "member_count", 0) or 0,
+            latest_event_at=getattr(r, "latest_event_at", None),
+        )
+        for r in rows
+    ]
 
 
 @router.get("/teams/{team_id}/contributors", response_model=list[ContributorEntry])
 def contributors(team_id: int, season_id: int | None = None, limit: int = 20, offset: int = 0, db: Session = Depends(get_db)):
     rows = svc.contributors(db, team_id=team_id, season_id=season_id, limit=min(limit, 100), offset=max(offset, 0))
-    return [ContributorEntry(user_id=r.user_id, points=r.points or 0) for r in rows]
+    return [
+        ContributorEntry(
+            user_id=r.user_id,
+            points=r.points or 0,
+            latest_event_at=getattr(r, "latest_event_at", None),
+        )
+        for r in rows
+    ]
 
 
 @router.get("/teams", response_model=list[TeamResponse])

@@ -624,11 +624,23 @@ class TeamBattleService:
         season = db.get(TeamSeason, season_id) if season_id else self.get_active_season(db)
         if not season:
             return []
+
+        member_count = func.count(func.distinct(TeamMember.user_id)).label("member_count")
+        latest_event = func.max(TeamEventLog.created_at).label("latest_event_at")
         stmt = (
-            select(TeamScore.team_id, Team.name, TeamScore.points)
+            select(TeamScore.team_id, Team.name, TeamScore.points, member_count, latest_event)
             .join(Team, Team.id == TeamScore.team_id)
+            .outerjoin(TeamMember, TeamMember.team_id == TeamScore.team_id)
+            .outerjoin(
+                TeamEventLog,
+                and_(
+                    TeamEventLog.team_id == TeamScore.team_id,
+                    TeamEventLog.season_id == TeamScore.season_id,
+                ),
+            )
             .where(TeamScore.season_id == season.id)
-            .order_by(TeamScore.points.desc())
+            .group_by(TeamScore.team_id, Team.name, TeamScore.points)
+            .order_by(TeamScore.points.desc(), latest_event.desc().nulls_last(), TeamScore.team_id.asc())
             .offset(offset)
             .limit(limit)
         )
@@ -646,8 +658,9 @@ class TeamBattleService:
             return []
         # Include members with zero points so 참여자 목록 is visible even before 점수 적립
         points_sum = func.coalesce(func.sum(TeamEventLog.delta), 0).label("points")
+        latest_event = func.max(TeamEventLog.created_at).label("latest_event_at")
         stmt = (
-            select(TeamMember.user_id, points_sum)
+            select(TeamMember.user_id, points_sum, latest_event)
             .where(TeamMember.team_id == team_id)
             .outerjoin(
                 TeamEventLog,
@@ -658,7 +671,7 @@ class TeamBattleService:
                 ),
             )
             .group_by(TeamMember.user_id)
-            .order_by(points_sum.desc(), TeamMember.user_id.asc())
+            .order_by(points_sum.desc(), latest_event.desc().nulls_last(), TeamMember.user_id.asc())
             .offset(offset)
             .limit(limit)
         )

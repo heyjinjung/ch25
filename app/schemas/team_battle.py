@@ -90,11 +90,14 @@ class LeaderboardEntry(BaseModel):
     team_id: int
     team_name: str
     points: int
+    member_count: int = 0
+    latest_event_at: datetime | None = None
 
 
 class ContributorEntry(BaseModel):
     user_id: int
     points: int
+    latest_event_at: datetime | None = None
 
 
 class TeamScoreResponse(BaseModel):

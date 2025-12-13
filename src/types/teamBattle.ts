@@ -18,11 +18,14 @@ export interface LeaderboardEntry {
   team_id: number;
   team_name: string;
   points: number;
+  member_count?: number;
+  latest_event_at?: string | null;
 }
 
 export interface ContributorEntry {
   user_id: number;
   points: number;
+  latest_event_at?: string | null;
 }
 
 export interface TeamJoinResponse {

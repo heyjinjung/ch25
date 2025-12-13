@@ -9,7 +9,7 @@ import { useLotteryStatus } from "../hooks/useLottery";
 import { useInternalWinStatus } from "../hooks/useSeasonPass";
 import { useTodayRanking } from "../hooks/useRanking";
 import { GAME_TOKEN_LABELS } from "../types/gameTokens";
-import { getActiveSeason, getLeaderboard } from "../api/teamBattleApi";
+import { getActiveSeason, getLeaderboard, getMyTeam } from "../api/teamBattleApi";
 
 interface GameCardProps {
   readonly title: string;
@@ -71,7 +71,8 @@ const HomePage: React.FC = () => {
   const ranking = useTodayRanking();
   const internalWins = useInternalWinStatus();
   const teamSeason = useQuery({ queryKey: ["team-battle-season"], queryFn: getActiveSeason });
-  const teamLeaderboard = useQuery({ queryKey: ["team-battle-leaderboard"], queryFn: () => getLeaderboard(undefined, 3, 0) });
+  const teamLeaderboard = useQuery({ queryKey: ["team-battle-leaderboard"], queryFn: () => getLeaderboard(undefined, 50, 0) });
+  const myTeam = useQuery({ queryKey: ["team-battle-me"], queryFn: getMyTeam });
 
   const seasonSummary = useMemo(() => {
     if (season.isLoading) return { label: "로딩 중", detail: "" };
@@ -127,6 +128,14 @@ const HomePage: React.FC = () => {
   ];
 
   const rankingSummary = ranking.data?.external_entries ? ranking.data.external_entries.slice(0, 3) : [];
+
+  const myTeamRow = useMemo(() => {
+    if (!myTeam.data || !teamLeaderboard.data) return null;
+    return teamLeaderboard.data.find((row) => row.team_id === myTeam.data?.team_id) || null;
+  }, [myTeam.data, teamLeaderboard.data]);
+  const myTeamName = useMemo(() => myTeamRow?.team_name ?? (myTeam.data ? `team #${myTeam.data.team_id}` : "미배정"), [myTeamRow?.team_name, myTeam.data]);
+  const myTeamPoints = myTeamRow?.points ?? null;
+  const myTeamMembers = myTeamRow?.member_count ?? null;
 
   const displayName = (entryUserName?: string) => {
     if (entryUserName && entryUserName.trim().length > 0) return entryUserName;
@@ -193,7 +202,7 @@ const HomePage: React.FC = () => {
               onClick={() => navigate("/team-battle")}
               className="rounded-full border border-emerald-400/70 bg-emerald-900/30 px-4 py-2 text-sm font-semibold text-emerald-100 hover:border-emerald-300 hover:text-white"
             >
-              팀 배틀 참여하기 →
+              팀 배틀 바로가기 →
             </button>
           </div>
         </div>
@@ -210,6 +219,20 @@ const HomePage: React.FC = () => {
               <div className="mt-2 space-y-2 text-sm text-slate-100">
                 <p className="text-base font-bold text-white">{teamSeason.data.name}</p>
                 <p className="text-xs text-slate-300">종료: {formatEndsAt(teamSeason.data.ends_at)}</p>
+                <div className="rounded-lg border border-emerald-700/40 bg-emerald-900/30 p-2 text-xs text-emerald-100">
+                  <div className="font-semibold">내 팀 배정</div>
+                  {myTeam.isLoading && <div>배정 정보 불러오는 중...</div>}
+                  {myTeam.isError && <div className="text-red-200">배정 정보를 불러오지 못했습니다.</div>}
+                  {myTeam.data ? (
+                    <div className="space-y-1">
+                      <div>팀: {myTeamName}</div>
+                      <div>점수: {myTeamPoints !== null ? `${myTeamPoints} pts` : "점수 데이터 없음"}</div>
+                      <div>인원: {myTeamMembers !== null ? `${myTeamMembers}명` : "-"}</div>
+                    </div>
+                  ) : (
+                    !myTeam.isLoading && <div>아직 배정되지 않았습니다.</div>
+                  )}
+                </div>
               </div>
             )}
             {!teamSeason.data && !teamSeason.isLoading && !teamSeason.isError && (
