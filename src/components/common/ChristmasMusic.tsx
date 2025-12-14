@@ -1,8 +1,8 @@
 // src/components/common/ChristmasMusic.tsx
 import React, { useState, useRef, useEffect } from "react";
 
-// 무료 크리스마스 캐롤 URL (로열티 프리)
-const CHRISTMAS_MUSIC_URL = "https://www.bensound.com/bensound-music/bensound-jazzyfrenchy.mp3";
+// Pixabay 무료 크리스마스 캐롤 (로열티 프리)
+const CHRISTMAS_MUSIC_URL = "https://cdn.pixabay.com/download/audio/2022/10/25/audio_946b0939c8.mp3?filename=christmas-cooking-upbeat-christmas-music-royalty-free-137687.mp3";
 
 const ChristmasMusic: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState(false);
