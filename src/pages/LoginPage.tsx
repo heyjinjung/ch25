@@ -40,14 +40,14 @@ const LoginPage: React.FC = () => {
       <header className="space-y-2 text-center">
         <p className="text-xs uppercase tracking-[0.25em] text-emerald-300">CC지민 XMAS Week</p>
         <h1 className="text-2xl font-bold text-white">CC지민 로그인</h1>
-        <p className="text-sm text-slate-300">관리자 안내 ID/비밀번호만 입력하세요.</p>
+        <p className="text-sm text-slate-300">지민이 안내 ID/비밀번호만 입력하세요.</p>
       </header>
 
       {error && <p className="rounded-lg border border-rose-500/40 bg-rose-900/40 p-3 text-sm font-semibold text-rose-100">{error}</p>}
 
       <div className="space-y-3">
         <div className="space-y-1">
-          <label className="text-xs text-slate-300">관리자안내 (필수)</label>
+          <label className="text-xs text-slate-300">지민이 안내 (필수)</label>
           <input
             value={externalId}
             onChange={(e) => setExternalId(e.target.value)}

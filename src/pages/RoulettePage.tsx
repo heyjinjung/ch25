@@ -34,10 +34,10 @@ const RoulettePage: React.FC = () => {
   const mapErrorMessage = (err: unknown) => {
     const code = (err as { response?: { data?: { error?: { code?: string } } } })?.response?.data?.error?.code;
     if (code === "NO_FEATURE_TODAY") return "오늘 활성화된 이벤트가 없습니다.";
-    if (code === "INVALID_FEATURE_SCHEDULE") return "이벤트 일정이 맞지 않습니다. 관리자에게 문의하세요.";
+    if (code === "INVALID_FEATURE_SCHEDULE") return "이벤트 일정이 맞지 않습니다. 지민이에게 문의하세요.";
     if (code === "FEATURE_DISABLED") return "이벤트가 비활성화되었습니다.";
     if (code === "DAILY_LIMIT_REACHED") return "오늘 참여 횟수를 모두 사용했습니다.";
-    if (code === "NOT_ENOUGH_TOKENS") return "티켓이 부족합니다. 관리자에게 충전을 요청하세요.";
+    if (code === "NOT_ENOUGH_TOKENS") return "티켓이 부족합니다. 지민이에게 충전을 요청하세요.";
     return "룰렛 정보를 불러오지 못했습니다.";
   };
 
@@ -150,7 +150,7 @@ const RoulettePage: React.FC = () => {
         <section className="rounded-3xl border border-red-800/40 bg-gradient-to-br from-red-950 to-slate-900 p-8 text-center shadow-2xl">
           <div className="mb-4 text-5xl">⚠️</div>
           <p className="text-xl font-bold text-red-100">{errorMessage ?? "데이터를 불러오지 못했습니다."}</p>
-          <p className="mt-2 text-sm text-red-200/70">잠시 후 다시 시도하거나 관리자에게 문의하세요.</p>
+          <p className="mt-2 text-sm text-red-200/70">잠시 후 다시 시도하거나 지민이에게 문의하세요.</p>
         </section>
       );
     }
@@ -196,7 +196,7 @@ const RoulettePage: React.FC = () => {
             )}
             {isOutOfTokens && (
               <div className="rounded-xl border border-amber-600/30 bg-amber-900/20 px-4 py-3 text-sm text-amber-100">
-                티켓이 부족합니다. 관리자에게 충전을 요청하세요.
+                티켓이 부족합니다. 지민이에게 충전을 요청하세요.
               </div>
             )}
             <button

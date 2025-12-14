@@ -55,7 +55,7 @@ const GameCard: React.FC<GameCardProps> = ({ title, path, tokenType, tokenBalanc
         disabled={!hasCoins}
         className="w-full rounded-lg bg-gradient-to-r from-red-700 to-red-600 px-4 py-2 text-sm font-bold text-white shadow transition hover:from-red-600 hover:to-red-500 disabled:cursor-not-allowed disabled:from-slate-700 disabled:to-slate-600"
       >
-        {hasCoins ? "🎄 바로 입장" : "티켓 없음 - 관리자 문의"}
+        {hasCoins ? "🎄 바로 입장" : "티켓 없음 - 지민이 문의"}
       </button>
     </div>
   );
@@ -73,15 +73,6 @@ const HomePage: React.FC = () => {
   const teamSeason = useQuery({ queryKey: ["team-battle-season"], queryFn: getActiveSeason });
   const teamLeaderboard = useQuery({ queryKey: ["team-battle-leaderboard"], queryFn: () => getLeaderboard(undefined, 50, 0) });
   const myTeam = useQuery({ queryKey: ["team-battle-me"], queryFn: getMyTeam });
-
-  const seasonSummary = useMemo(() => {
-    if (season.isLoading) return { label: "로딩 중", detail: "" };
-    if (season.isError || !season.data) return { label: "시즌패스 상태를 불러오지 못했습니다", detail: "" };
-    return {
-      label: `레벨 ${season.data.current_level} / XP ${season.data.current_xp.toLocaleString()}`,
-      detail: `다음 레벨까지 ${(season.data.next_level_xp - season.data.current_xp).toLocaleString()} XP 필요`,
-    };
-  }, [season.data, season.isError, season.isLoading]);
 
   const external = ranking.data?.my_external_entry;
   const top10Needed = external?.rank && external.rank > 10 ? external.rank - 10 : 0;
@@ -141,7 +132,6 @@ const HomePage: React.FC = () => {
   const currentXp = season.data?.current_xp ?? 0;
   const nextXp = season.data?.next_level_xp ?? currentXp;
   const maxLevel = season.data?.max_level ?? 10;
-  const progressPct = Math.min(100, Math.round((currentXp / (nextXp || 1)) * 100));
 
   const displayName = (entryUserName?: string) => {
     if (entryUserName && entryUserName.trim().length > 0) return entryUserName;
@@ -196,35 +186,19 @@ const HomePage: React.FC = () => {
           </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="rounded-2xl border border-emerald-700/50 bg-slate-900/70 p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-emerald-200">시즌패스 진행도</p>
-              <span className="text-xs text-slate-300">다음 레벨까지 {(nextXp - currentXp).toLocaleString()} XP</span>
-            </div>
-            <div className="h-3 w-full overflow-hidden rounded-full bg-slate-800">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-emerald-500 via-emerald-400 to-amber-300 transition-all"
-                style={{ width: `${progressPct}%` }}
-              />
-            </div>
-            <p className="text-xs text-slate-300">{seasonSummary.label}</p>
-          </div>
-
-          <div className="rounded-2xl border border-emerald-700/50 bg-slate-900/70 p-4 space-y-2">
-            <p className="text-sm font-semibold text-emerald-200">오늘 할 일 체크</p>
-            <ul className="space-y-2 text-sm text-slate-200">
-              {stampTips.map((tip, idx) => (
-                <li key={tip.title} className="flex items-start gap-2">
-                  <span className="mt-[2px] text-lg">{tipIcons[idx] ?? "🎅"}</span>
-                  <div>
-                    <p className="font-semibold">{tip.title}</p>
-                    <p className="text-xs text-slate-400">{tip.status}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
+        <div className="rounded-2xl border border-emerald-700/50 bg-slate-900/70 p-4 space-y-2">
+          <p className="text-sm font-semibold text-emerald-200">오늘 할 일 체크</p>
+          <ul className="space-y-2 text-sm text-slate-200">
+            {stampTips.map((tip, idx) => (
+              <li key={tip.title} className="flex items-start gap-2">
+                <span className="mt-[2px] text-lg">{tipIcons[idx] ?? "🎅"}</span>
+                <div>
+                  <p className="font-semibold">{tip.title}</p>
+                  <p className="text-xs text-slate-400">{tip.status}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
 
@@ -316,7 +290,7 @@ const HomePage: React.FC = () => {
           <div>
             <p className="text-xs uppercase tracking-[0.25em] text-gold-400">🎮 Games</p>
             <h2 className="text-2xl font-bold bg-gradient-to-r from-red-400 via-gold-400 to-emerald-400 bg-clip-text text-transparent">게임 선택</h2>
-            <p className="text-sm text-slate-300">티켓이 있으면 바로 입장, 없으면 관리자에게 문의해 주세요.</p>
+            <p className="text-sm text-slate-300">티켓이 있으면 바로 입장, 없으면 지민이에게 문의해 주세요.</p>
           </div>
         </div>
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

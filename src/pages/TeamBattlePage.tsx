@@ -161,7 +161,7 @@ const TeamBattlePage: React.FC = () => {
       } else if (detail === "ALREADY_IN_TEAM") {
         setError("이미 팀에 가입되어 있습니다");
       } else if (detail === "TEAM_LOCKED") {
-        setError("팀이 잠금 상태입니다. 관리자에게 문의하세요.");
+        setError("팀이 잠금 상태입니다. 지민이에게 문의하세요.");
       } else if (status === 401) {
         setError("로그인이 필요합니다");
       } else {

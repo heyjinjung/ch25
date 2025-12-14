@@ -20,10 +20,10 @@ const DicePage: React.FC = () => {
   const mapErrorMessage = (err: unknown) => {
     const code = (err as { response?: { data?: { error?: { code?: string } } } })?.response?.data?.error?.code;
     if (code === "NO_FEATURE_TODAY") return "오늘 설정된 이벤트가 없습니다.";
-    if (code === "INVALID_FEATURE_SCHEDULE") return "이벤트 스케줄이 잘못되었습니다. 관리자에게 문의하세요.";
+    if (code === "INVALID_FEATURE_SCHEDULE") return "이벤트 스케줄이 잘못되었습니다. 지민이에게 문의하세요.";
     if (code === "FEATURE_DISABLED") return "이벤트가 비활성화되었습니다.";
     if (code === "DAILY_LIMIT_REACHED") return "오늘 참여 횟수를 모두 사용했습니다.";
-    if (code === "NOT_ENOUGH_TOKENS") return "티켓이 부족합니다. 관리자에게 충전을 요청해주세요.";
+    if (code === "NOT_ENOUGH_TOKENS") return "티켓이 부족합니다. 지민이에게 충전을 요청해주세요.";
     return "주사위 전투를 진행할 수 없습니다. 잠시 후 다시 시도해주세요.";
   };
 
@@ -117,7 +117,7 @@ const DicePage: React.FC = () => {
 
           {isOutOfTokens && (
             <div className="rounded-xl border border-amber-600/30 bg-amber-900/20 px-4 py-3 text-center text-amber-100">
-              티켓이 부족합니다. 관리자에게 충전을 요청해주세요.
+              티켓이 부족합니다. 지민이에게 충전을 요청해주세요.
             </div>
           )}
 

@@ -80,7 +80,7 @@ const AdminTeamBattlePage: React.FC = () => {
       setTeamEdits(mapped);
     } catch (err) {
       console.error(err);
-      setError("관리자 데이터를 불러오지 못했습니다.");
+      setError("지민이 데이터를 불러오지 못했습니다.");
     } finally {
       setRefreshing(false);
     }

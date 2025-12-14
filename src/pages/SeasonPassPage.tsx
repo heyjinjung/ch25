@@ -98,7 +98,7 @@ const SeasonPassPage: React.FC = () => {
         <section className="rounded-3xl border border-red-800/40 bg-gradient-to-br from-red-950 to-slate-900 p-8 text-center shadow-2xl">
           <div className="mb-4 text-5xl">⚠️</div>
           <p className="text-xl font-bold text-red-100">시즌패스를 불러오지 못했습니다.</p>
-          <p className="mt-2 text-sm text-red-200/70">잠시 후 다시 시도하거나 관리자에게 문의해주세요.</p>
+          <p className="mt-2 text-sm text-red-200/70">잠시 후 다시 시도하거나 지민이에게 문의해주세요.</p>
         </section>
       </FeatureGate>
     );
@@ -226,7 +226,7 @@ const SeasonPassPage: React.FC = () => {
                 : isAuto && level.is_unlocked
                 ? "자동지급"
                 : canClaim
-                ? "관리자신청"
+                ? "지민이 요청"
                 : "잠금";
               return (
                 <article
