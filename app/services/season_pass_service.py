@@ -16,7 +16,6 @@ from app.models.season_pass import (
     SeasonPassStampLog,
 )
 from app.schemas.season_pass import SeasonPassStatusResponse
-from app.services.level_xp_service import LevelXPService
 from app.services.reward_service import RewardService
 
 
@@ -221,24 +220,13 @@ class SeasonPassService:
         xp_to_add = season.base_xp_per_stamp * stamp_count + xp_bonus
         key = period_key or today.isoformat()
         previous_level = progress.current_level
+        reward_baseline_level = previous_level if previous_level > 1 else 0
         progress.current_xp += xp_to_add
         progress.total_stamps += stamp_count
         progress.last_stamp_date = today
 
-        # Mirror XP to core level system (best-effort; do not block game flow)
-        try:
-            LevelXPService().add_xp(
-                db,
-                user_id=user_id,
-                delta=xp_to_add,
-                source=f"SEASON_STAMP:{source_feature_type}",
-                meta={"season_id": season.id, "period_key": key, "stamp_count": stamp_count, "xp_bonus": xp_bonus},
-            )
-        except Exception:
-            pass
-
         achieved_levels = self._eligible_levels(db, season.id, progress.current_xp)
-        new_levels = [level for level in achieved_levels if level.level > previous_level]
+        new_levels = [level for level in achieved_levels if level.level > reward_baseline_level]
         rewards: list[dict] = []
 
         for level in new_levels:
@@ -532,6 +520,7 @@ class SeasonPassService:
 
         progress = self.get_or_create_progress(db, user_id=user_id, season_id=season.id)
         previous_level = progress.current_level
+        reward_baseline_level = previous_level if previous_level > 1 else 0
         progress.current_xp += xp_amount
         db.add(progress)
 
@@ -539,7 +528,7 @@ class SeasonPassService:
         # via LevelXPService auto rewards, causing overpayment.
 
         achieved_levels = self._eligible_levels(db, season.id, progress.current_xp)
-        new_levels = [level for level in achieved_levels if level.level > previous_level]
+        new_levels = [level for level in achieved_levels if level.level > reward_baseline_level]
         rewards: list[dict] = []
 
         for level in new_levels:

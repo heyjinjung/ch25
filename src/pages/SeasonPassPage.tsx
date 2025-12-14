@@ -2,7 +2,6 @@
 import { useNavigate } from "react-router-dom";
 import { useTodayRanking } from "../hooks/useRanking";
 import { useSeasonPassStatus, useInternalWinStatus, useClaimSeasonReward } from "../hooks/useSeasonPass";
-import { useLevelXpStatus } from "../hooks/useLevelXp";
 import FeatureGate from "../components/feature/FeatureGate";
 import { useToast } from "../components/common/ToastProvider";
 
@@ -14,25 +13,27 @@ const SeasonPassPage: React.FC = () => {
   const ranking = useTodayRanking();
   const internalWins = useInternalWinStatus();
   const claimMutation = useClaimSeasonReward();
-  const levelXp = useLevelXpStatus();
   const { addToast } = useToast();
-
-  const lastLevelRef = useRef<number | null>(null);
-  const lastRewardCountRef = useRef<number>(0);
+  const lastSeasonLevelRef = useRef<number | null>(null);
+  const lastClaimCountRef = useRef<number>(0);
 
   useEffect(() => {
-    if (!levelXp.data) return;
-    const { current_level, rewards } = levelXp.data;
-    if (lastLevelRef.current !== null && current_level > lastLevelRef.current) {
-      addToast(`레벨 ${current_level} 달성!`, "success");
+    if (!season.data) return;
+    const currentLevel = season.data.current_level;
+    const claimedLevels = season.data.levels.filter((l) => l.is_claimed);
+
+    if (lastSeasonLevelRef.current !== null && currentLevel > lastSeasonLevelRef.current) {
+      addToast(`시즌 레벨 ${currentLevel} 달성!`, "success");
     }
-    if (rewards.length > lastRewardCountRef.current) {
-      const latest = rewards[rewards.length - 1];
-      addToast(`레벨 ${latest.level} 보상 지급: ${latest.reward_type}`, "info");
+
+    if (claimedLevels.length > lastClaimCountRef.current) {
+      const latest = claimedLevels.sort((a, b) => a.level - b.level)[claimedLevels.length - 1];
+      if (latest) addToast(`레벨 ${latest.level} 보상 지급`, "info");
     }
-    lastLevelRef.current = current_level;
-    lastRewardCountRef.current = rewards.length;
-  }, [levelXp.data, addToast]);
+
+    lastSeasonLevelRef.current = currentLevel;
+    lastClaimCountRef.current = claimedLevels.length;
+  }, [season.data, addToast]);
 
   const external = ranking.data?.my_external_entry;
   const top10Needed = external?.rank && external.rank > 10 ? external.rank - 10 : 0;
@@ -40,18 +41,22 @@ const SeasonPassPage: React.FC = () => {
   const depositRemainder = 100_000 - (deposit % 100_000 || 100_000);
   const playDone = (external?.play_count ?? 0) > 0;
 
-  const globalLevelSummary = useMemo(() => {
-    if (levelXp.isLoading) return { label: "레벨 불러오는 중", detail: "", progressPct: 0 };
-    if (levelXp.isError || !levelXp.data) return { label: "레벨 정보를 불러오지 못했습니다", detail: "", progressPct: 0 };
-    const xpToNext = levelXp.data.xp_to_next;
-    const progressBase = xpToNext != null ? levelXp.data.current_xp + xpToNext : levelXp.data.current_xp || 1;
-    const progressPct = xpToNext != null ? Math.min(100, Math.round((levelXp.data.current_xp / progressBase) * 100)) : 100;
+  const seasonLevelSummary = useMemo(() => {
+    if (season.isLoading) return { detail: "레벨 불러오는 중", progressPct: 0 };
+    if (season.isError || !season.data) return { detail: "레벨 정보를 불러오지 못했습니다", progressPct: 0 };
+    const { current_xp, next_level_xp, current_level, max_level } = season.data;
+    const isMax = current_level >= max_level;
+    const progressPct = isMax
+      ? 100
+      : next_level_xp > 0
+      ? Math.min(100, Math.round((current_xp / next_level_xp) * 100))
+      : 0;
+    const remaining = next_level_xp > current_xp ? next_level_xp - current_xp : 0;
     return {
-      label: `레벨 ${levelXp.data.current_level}`,
-      detail: xpToNext != null ? `다음 레벨까지 ${xpToNext.toLocaleString()} XP` : "최고 레벨 달성",
+      detail: isMax ? "최대 레벨 달성" : `다음 레벨까지 ${remaining.toLocaleString()} XP`,
       progressPct,
     };
-  }, [levelXp.data, levelXp.isError, levelXp.isLoading]);
+  }, [season.data, season.isError, season.isLoading]);
 
   const cards = [
     {
@@ -152,7 +157,7 @@ const SeasonPassPage: React.FC = () => {
               <span className="rounded-full border border-emerald-600/50 px-3 py-1">스탬프당 {stampXp.toLocaleString()} XP</span>
               <button
                 type="button"
-                onClick={() => levelXp.refetch()}
+                onClick={() => season.refetch()}
                 className="rounded-full border border-slate-700 px-3 py-1 text-[11px] text-slate-200 hover:bg-slate-800"
               >
                 새로고침
@@ -168,17 +173,17 @@ const SeasonPassPage: React.FC = () => {
             <div className="h-2 w-full rounded-full bg-slate-800">
               <div
                 className="h-full rounded-full bg-emerald-500"
-                style={{ width: `${globalLevelSummary.progressPct ?? 0}%` }}
+                style={{ width: `${seasonLevelSummary.progressPct ?? 0}%` }}
               />
             </div>
-            <p className="text-xs text-slate-300">{globalLevelSummary.detail}</p>
+            <p className="text-xs text-slate-300">{seasonLevelSummary.detail}</p>
           </div>
         </header>
 
         <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <div className="text-sm text-slate-200">현재 레벨 {levelXp.data?.current_level ?? "-"}</div>
+              <div className="text-sm text-slate-200">현재 레벨 {season.data?.current_level ?? "-"}</div>
               <div className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300">MAX {data.max_level}레벨</div>
             </div>
             <div className="space-y-3">
