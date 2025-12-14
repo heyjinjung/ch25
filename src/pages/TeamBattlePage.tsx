@@ -8,6 +8,7 @@ import {
   getMyTeam,
 } from "../api/teamBattleApi";
 import { TeamSeason, Team, LeaderboardEntry, ContributorEntry, TeamMembership } from "../types/teamBattle";
+import { isAdminAuthenticated } from "../auth/adminAuth";
 
 const formatDateTime = (value?: string | null) => {
   if (!value) return "-";
@@ -275,6 +276,7 @@ const TeamBattlePage: React.FC = () => {
           </div>
         </div>
 
+        {isAdminAuthenticated() && (
         <div className="rounded-2xl border border-amber-600/40 bg-gradient-to-br from-slate-950/80 to-amber-950/30 p-5 shadow-lg">
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-lg font-bold text-white">내 팀 기여도</h2>
@@ -341,6 +343,7 @@ const TeamBattlePage: React.FC = () => {
             </div>
           )}
         </div>
+        )}
       </div>
 
       <div className="rounded-2xl border border-cyan-700/40 bg-gradient-to-br from-slate-950/80 to-cyan-900/40 p-5 shadow-lg">
