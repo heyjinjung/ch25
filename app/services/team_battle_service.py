@@ -629,6 +629,7 @@ class TeamBattleService:
 
         member_count = func.count(func.distinct(TeamMember.user_id)).label("member_count")
         latest_event = func.max(TeamEventLog.created_at).label("latest_event_at")
+        latest_nulls_last = func.case((latest_event.is_(None), 1), else_=0)
         stmt = (
             select(TeamScore.team_id, Team.name, TeamScore.points, member_count, latest_event)
             .join(Team, Team.id == TeamScore.team_id)
@@ -644,7 +645,7 @@ class TeamBattleService:
             .group_by(TeamScore.team_id, Team.name, TeamScore.points)
             .order_by(
                 TeamScore.points.desc(),
-                func.is_(latest_event, None),
+                latest_nulls_last,
                 latest_event.desc(),
                 TeamScore.team_id.asc(),
             )
@@ -666,6 +667,7 @@ class TeamBattleService:
         # Include members with zero points so 참여자 목록 is visible even before 점수 적립
         points_sum = func.coalesce(func.sum(TeamEventLog.delta), 0).label("points")
         latest_event = func.max(TeamEventLog.created_at).label("latest_event_at")
+        latest_nulls_last = func.case((latest_event.is_(None), 1), else_=0)
         stmt = (
             select(TeamMember.user_id, points_sum, latest_event)
             .where(TeamMember.team_id == team_id)
@@ -680,7 +682,7 @@ class TeamBattleService:
             .group_by(TeamMember.user_id)
             .order_by(
                 points_sum.desc(),
-                func.is_(latest_event, None),
+                latest_nulls_last,
                 latest_event.desc(),
                 TeamMember.user_id.asc(),
             )
