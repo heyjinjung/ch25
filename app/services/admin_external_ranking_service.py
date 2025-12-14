@@ -53,9 +53,9 @@ class AdminExternalRankingService:
         settings = get_settings()
         today = date.today()
         now = datetime.utcnow()
-        step_amount = self.STEP_AMOUNT
-        xp_per_step = self.XP_PER_STEP
-        max_steps_per_day = self.MAX_STEPS_PER_DAY
+        step_amount = AdminExternalRankingService.STEP_AMOUNT
+        xp_per_step = AdminExternalRankingService.XP_PER_STEP
+        max_steps_per_day = AdminExternalRankingService.MAX_STEPS_PER_DAY
         cooldown_minutes = max(settings.external_ranking_deposit_cooldown_minutes, 0)
 
         existing_by_user = {row.user_id: row for row in db.execute(select(ExternalRankingData)).scalars().all()}
