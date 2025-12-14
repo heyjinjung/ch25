@@ -55,6 +55,8 @@ def revoke_tokens(payload: RevokeGameTokensRequest, db: Session = Depends(get_db
 def list_wallets(
     user_id: int | None = None,
     external_id: str | None = None,
+    has_balance: bool | None = None,
+    token_type: str | None = None,
     limit: int = 50,
     offset: int = 0,
     db: Session = Depends(get_db),
@@ -67,6 +69,12 @@ def list_wallets(
         query = query.filter(UserGameWallet.user_id == user_id)
     if external_id:
         query = query.filter(User.external_id == external_id)
+    if has_balance is True:
+        query = query.filter(UserGameWallet.balance > 0)
+    elif has_balance is False:
+        query = query.filter(UserGameWallet.balance == 0)
+    if token_type:
+        query = query.filter(UserGameWallet.token_type == token_type)
     rows = (
         query.order_by(UserGameWallet.user_id, UserGameWallet.token_type)
         .offset(offset)

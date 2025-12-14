@@ -17,6 +17,8 @@ const tokenOptions: GameTokenType[] = ["ROULETTE_COIN", "DICE_TOKEN", "LOTTERY_T
 const GameTokenLogsPage: React.FC = () => {
   const queryClient = useQueryClient();
   const [filterExternalId, setFilterExternalId] = useState<string | undefined>();
+  const [filterHasBalance, setFilterHasBalance] = useState<boolean | undefined>();
+  const [filterTokenType, setFilterTokenType] = useState<string | undefined>();
   const [walletLimit, setWalletLimit] = useState<number>(20);
   const [walletPage, setWalletPage] = useState<number>(0);
 
@@ -32,8 +34,8 @@ const GameTokenLogsPage: React.FC = () => {
   const [ledgerPage, setLedgerPage] = useState<number>(0);
 
   const walletsQuery = useQuery<TokenBalance[], unknown>({
-    queryKey: ["admin-wallets", filterExternalId, walletLimit, walletPage],
-    queryFn: () => fetchWallets(filterExternalId, walletLimit, walletPage * walletLimit),
+    queryKey: ["admin-wallets", filterExternalId, walletLimit, walletPage, filterHasBalance, filterTokenType],
+    queryFn: () => fetchWallets(filterExternalId, walletLimit, walletPage * walletLimit, filterHasBalance, filterTokenType),
   });
 
   const playLogsQuery = useQuery<PlayLogEntry[], unknown>({
@@ -70,7 +72,7 @@ const GameTokenLogsPage: React.FC = () => {
             <p className="text-lg font-semibold text-white">지갑 잔액</p>
             <p className="text-xs text-slate-400">external_id로 필터링</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <input
               placeholder="external_id 입력"
               className="w-48 rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none"
@@ -79,6 +81,32 @@ const GameTokenLogsPage: React.FC = () => {
                 setWalletPage(0);
               }}
             />
+            <select
+              className="rounded-md border border-slate-700 bg-slate-800 px-2 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none"
+              value={filterHasBalance === undefined ? "" : filterHasBalance ? "has" : "empty"}
+              onChange={(e) => {
+                const v = e.target.value;
+                setFilterHasBalance(v === "" ? undefined : v === "has");
+                setWalletPage(0);
+              }}
+            >
+              <option value="">전체</option>
+              <option value="has">잔액 있음</option>
+              <option value="empty">잔액 없음</option>
+            </select>
+            <select
+              className="rounded-md border border-slate-700 bg-slate-800 px-2 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none"
+              value={filterTokenType || ""}
+              onChange={(e) => {
+                setFilterTokenType(e.target.value || undefined);
+                setWalletPage(0);
+              }}
+            >
+              <option value="">전체 토큰</option>
+              <option value="ROULETTE_COIN">룰렛</option>
+              <option value="DICE_TOKEN">주사위</option>
+              <option value="LOTTERY_TICKET">복권</option>
+            </select>
             <input
               type="number"
               min={1}

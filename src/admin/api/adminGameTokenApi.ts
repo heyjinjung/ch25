@@ -57,9 +57,17 @@ export interface LedgerEntry {
   created_at: string;
 }
 
-export async function fetchWallets(externalId?: string, limit: number = 50, offset: number = 0) {
+export async function fetchWallets(
+  externalId?: string,
+  limit: number = 50,
+  offset: number = 0,
+  hasBalance?: boolean,
+  tokenType?: string
+) {
   const params: Record<string, any> = { limit, offset };
   if (externalId) params.external_id = externalId;
+  if (hasBalance !== undefined) params.has_balance = hasBalance;
+  if (tokenType) params.token_type = tokenType;
   const { data } = await adminApi.get<TokenBalance[]>("/game-tokens/wallets", { params });
   return data;
 }
