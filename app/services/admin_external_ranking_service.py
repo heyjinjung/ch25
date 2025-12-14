@@ -59,6 +59,16 @@ class AdminExternalRankingService:
         cooldown_minutes = max(settings.external_ranking_deposit_cooldown_minutes, 0)
 
         existing_by_user = {row.user_id: row for row in db.execute(select(ExternalRankingData)).scalars().all()}
+        # Snapshot pre-update values per user to compute deltas correctly later
+        prev_snapshot: dict[int, dict] = {
+            row.user_id: {
+                "deposit_amount": row.deposit_amount,
+                "deposit_remainder": row.deposit_remainder or 0,
+                "daily_base_deposit": row.daily_base_deposit or 0,
+                "updated_at": row.updated_at,
+            }
+            for row in existing_by_user.values()
+        }
         results: list[ExternalRankingData] = []
 
         for payload in data:
@@ -105,9 +115,15 @@ class AdminExternalRankingService:
         season_id = current_season.id
 
         for row in results:
-            # 예치: step_amount 단위당 XP 지급 + remainder 누적
-            deposit_delta = max(row.deposit_amount - max(prev_deposit, row.daily_base_deposit or 0), 0)
-            total_for_step = (row.deposit_remainder or 0) + deposit_delta
+            # 예치: step_amount 단위당 XP 지급 + remainder 누적 (사용자별 이전 상태 기준)
+            snap = prev_snapshot.get(
+                row.user_id,
+                {"deposit_amount": 0, "deposit_remainder": 0, "daily_base_deposit": 0, "updated_at": None},
+            )
+
+            baseline = max(snap.get("deposit_amount", 0), row.daily_base_deposit or 0)
+            deposit_delta = max(row.deposit_amount - baseline, 0)
+            total_for_step = snap.get("deposit_remainder", 0) + deposit_delta
             deposit_steps = total_for_step // step_amount
             remainder = total_for_step % step_amount
 
@@ -116,8 +132,8 @@ class AdminExternalRankingService:
                 deposit_steps = min(deposit_steps, max_steps_per_day)
 
             # 쿨다운: 최근 업데이트가 cooldown_minutes 이내면 지급만 보류하고 remainder만 저장
-            if deposit_steps > 0 and cooldown_minutes > 0 and row.updated_at:
-                if now - row.updated_at < timedelta(minutes=cooldown_minutes):
+            if deposit_steps > 0 and cooldown_minutes > 0 and snap.get("updated_at"):
+                if now - snap["updated_at"] < timedelta(minutes=cooldown_minutes):
                     row.deposit_remainder = remainder
                     continue
 
