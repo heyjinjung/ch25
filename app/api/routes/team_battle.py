@@ -73,6 +73,7 @@ def contributors(team_id: int, season_id: int | None = None, limit: int = 20, of
     return [
         ContributorEntry(
             user_id=r.user_id,
+            nickname=getattr(r, "nickname", None),
             points=r.points or 0,
             latest_event_at=getattr(r, "latest_event_at", None),
         )

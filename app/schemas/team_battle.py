@@ -96,6 +96,7 @@ class LeaderboardEntry(BaseModel):
 
 class ContributorEntry(BaseModel):
     user_id: int
+    nickname: str | None = None
     points: int
     latest_event_at: datetime | None = None
 

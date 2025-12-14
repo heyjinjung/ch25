@@ -661,6 +661,7 @@ class TeamBattleService:
         return db.execute(stmt).scalars().all()
 
     def contributors(self, db: Session, team_id: int, season_id: Optional[int], limit: int, offset: int) -> Sequence[tuple]:
+        from app.models.user import User
         season = db.get(TeamSeason, season_id) if season_id else self.get_active_season(db)
         if not season:
             return []
@@ -669,7 +670,8 @@ class TeamBattleService:
         latest_event = func.max(TeamEventLog.created_at).label("latest_event_at")
         latest_nulls_last = case((latest_event.is_(None), 1), else_=0)
         stmt = (
-            select(TeamMember.user_id, points_sum, latest_event)
+            select(TeamMember.user_id, User.nickname, points_sum, latest_event)
+            .join(User, User.id == TeamMember.user_id)
             .where(TeamMember.team_id == team_id)
             .outerjoin(
                 TeamEventLog,
@@ -679,7 +681,7 @@ class TeamBattleService:
                     TeamEventLog.season_id == season.id,
                 ),
             )
-            .group_by(TeamMember.user_id)
+            .group_by(TeamMember.user_id, User.nickname)
             .order_by(
                 points_sum.desc(),
                 latest_nulls_last,
