@@ -13,6 +13,7 @@ import {
 } from "../api/adminDiceApi";
 import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
+import { REWARD_TYPES } from "../constants/rewardTypes";
 
 const diceSchema = z.object({
   name: z.string().min(1, "이름은 필수입니다"),
@@ -167,10 +168,14 @@ const DiceConfigPage: React.FC = () => {
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             <div className="space-y-1">
               <label className="text-sm text-slate-200">승리 보상 타입</label>
-              <input
+              <select
                 className="w-full rounded-md border border-emerald-700 bg-slate-800 px-3 py-2 text-slate-50 focus:border-emerald-400 focus:outline-none"
                 {...form.register("win_reward_type")}
-              />
+              >
+                {REWARD_TYPES.map((rt) => (
+                  <option key={rt.value} value={rt.value}>{rt.label}</option>
+                ))}
+              </select>
             </div>
             <div className="space-y-1">
               <label className="text-sm text-slate-200">승리 보상 값</label>
@@ -182,10 +187,14 @@ const DiceConfigPage: React.FC = () => {
             </div>
             <div className="space-y-1">
               <label className="text-sm text-slate-200">패배 보상 타입</label>
-              <input
+              <select
                 className="w-full rounded-md border border-emerald-700 bg-slate-800 px-3 py-2 text-slate-50 focus:border-emerald-400 focus:outline-none"
                 {...form.register("lose_reward_type")}
-              />
+              >
+                {REWARD_TYPES.map((rt) => (
+                  <option key={rt.value} value={rt.value}>{rt.label}</option>
+                ))}
+              </select>
             </div>
             <div className="space-y-1">
               <label className="text-sm text-slate-200">패배 보상 값</label>
@@ -197,10 +206,14 @@ const DiceConfigPage: React.FC = () => {
             </div>
             <div className="space-y-1">
               <label className="text-sm text-slate-200">무승부 보상 타입</label>
-              <input
+              <select
                 className="w-full rounded-md border border-emerald-700 bg-slate-800 px-3 py-2 text-slate-50 focus:border-emerald-400 focus:outline-none"
                 {...form.register("draw_reward_type")}
-              />
+              >
+                {REWARD_TYPES.map((rt) => (
+                  <option key={rt.value} value={rt.value}>{rt.label}</option>
+                ))}
+              </select>
             </div>
             <div className="space-y-1">
               <label className="text-sm text-slate-200">무승부 보상 값</label>

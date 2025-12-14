@@ -14,6 +14,7 @@ import {
 } from "../api/adminRouletteApi";
 import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
+import { REWARD_TYPES } from "../constants/rewardTypes";
 
 const segmentSchema = z.object({
   index: z.number().int().nonnegative(),
@@ -270,11 +271,14 @@ const RouletteConfigPage: React.FC = () => {
                   </div>
                   <div className="space-y-1">
                     <label className="text-xs text-slate-300">보상 타입</label>
-                    <input
-                      type="text"
+                    <select
                       className="w-full rounded border border-emerald-700 bg-slate-800 px-2 py-1 text-sm"
                       {...form.register(`segments.${idx}.reward_type`)}
-                    />
+                    >
+                      {REWARD_TYPES.map((rt) => (
+                        <option key={rt.value} value={rt.value}>{rt.label}</option>
+                      ))}
+                    </select>
                   </div>
                   <div className="space-y-1">
                     <label className="text-xs text-slate-300">보상 값</label>

@@ -13,6 +13,7 @@ import {
 } from "../api/adminLotteryApi";
 import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
+import { REWARD_TYPES } from "../constants/rewardTypes";
 
 const prizeSchema = z.object({
   label: z.string().min(1, "Enter prize name"),
@@ -249,11 +250,14 @@ const LotteryConfigPage: React.FC = () => {
                   </div>
                   <div className="space-y-1">
                     <label className="text-xs text-slate-300">Reward type</label>
-                    <input
-                      type="text"
+                    <select
                       className="w-full rounded border border-emerald-700 bg-slate-800 px-2 py-1 text-sm"
                       {...form.register(`prizes.${idx}.reward_type`)}
-                    />
+                    >
+                      {REWARD_TYPES.map((rt) => (
+                        <option key={rt.value} value={rt.value}>{rt.label}</option>
+                      ))}
+                    </select>
                   </div>
                   <div className="space-y-1">
                     <label className="text-xs text-slate-300">Reward value</label>
