@@ -102,6 +102,7 @@ const HomePage: React.FC = () => {
         : "집계 실패",
     },
   ];
+  const tipIcons = ["🎄", "❄️", "🎁", "⛄"];
 
   const gameCards: GameCardProps[] = [
     {
@@ -137,6 +138,11 @@ const HomePage: React.FC = () => {
   const myTeamPoints = myTeamRow?.points ?? null;
   const myTeamMembers = myTeamRow?.member_count ?? null;
 
+  const currentXp = season.data?.current_xp ?? 0;
+  const nextXp = season.data?.next_level_xp ?? currentXp;
+  const maxLevel = season.data?.max_level ?? 10;
+  const progressPct = Math.min(100, Math.round((currentXp / (nextXp || 1)) * 100));
+
   const displayName = (entryUserName?: string) => {
     if (entryUserName && entryUserName.trim().length > 0) return entryUserName;
     if (user?.external_id) return user.external_id;
@@ -159,34 +165,70 @@ const HomePage: React.FC = () => {
 
   return (
     <section className="space-y-8">
-      <div className="rounded-3xl border border-red-700/40 bg-gradient-to-br from-slate-950 via-red-950/30 to-emerald-950 p-8 shadow-2xl space-y-3">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-[0.25em] text-gold-400">🎄 Season Pass</p>
-            <h2 className="text-2xl font-bold bg-gradient-to-r from-gold-300 via-gold-400 to-gold-300 bg-clip-text text-transparent">시즌패스 요약</h2>
+      {/* 히어로 + 시즌패스 요약 */}
+      <div className="rounded-3xl border border-emerald-700/40 bg-slate-950/80 p-6 shadow-2xl space-y-4">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="space-y-1">
+            <p className="text-xs uppercase tracking-[0.25em] text-emerald-300">Merry CC-Mas</p>
+            <h2 className="text-3xl font-extrabold text-white">환영해요, {displayName(user?.external_id)}님</h2>
+            <div className="flex flex-wrap gap-2 text-xs text-emerald-100">
+              <span className="rounded-full border border-emerald-500/50 bg-emerald-900/30 px-3 py-1">레벨 {season.data?.current_level ?? 0}</span>
+              <span className="rounded-full border border-gold-400/50 bg-amber-900/30 px-3 py-1">XP {currentXp.toLocaleString()} / {nextXp.toLocaleString()}</span>
+              <span className="rounded-full border border-slate-600/60 bg-slate-800/60 px-3 py-1">MAX {maxLevel}레벨</span>
+            </div>
           </div>
-          <div className="rounded-full bg-emerald-900/60 px-4 py-1 text-xs text-emerald-200">{seasonSummary.detail}</div>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => navigate("/season-pass")}
+              className="rounded-full border border-gold-400/60 bg-gradient-to-r from-emerald-600 to-gold-500 px-4 py-2 text-sm font-semibold text-white shadow-lg hover:shadow-gold-500/30"
+            >
+              시즌패스 바로가기 →
+            </button>
+            <a
+              href="https://ccc-010.com"
+              target="_blank"
+              rel="noreferrer"
+              className="rounded-full border border-emerald-500/60 bg-slate-800/80 px-4 py-2 text-sm font-semibold text-emerald-100 hover:border-emerald-300 hover:text-white transition"
+            >
+              CC 사이트 바로가기 ↗
+            </a>
+          </div>
         </div>
-        <div className="rounded-xl border border-gold-600/40 bg-slate-900/60 p-4">
-          <p className="text-sm font-semibold text-emerald-100">{seasonSummary.label}</p>
-        </div>
-        <div className="grid gap-3 md:grid-cols-2">
-          {stampTips.map((tip, idx) => {
-            const tipIcons = ["🎄", "❄️", "🎁", "⛄"];
-            return (
-              <div key={tip.title} className="rounded-lg border border-red-800/40 bg-gradient-to-br from-slate-900/80 to-red-950/20 p-3 hover:border-gold-500/40 transition-all">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">{tipIcons[idx] ?? "🎅"}</span>
-                  <p className="text-sm font-semibold text-white">{tip.title}</p>
-                </div>
-                <p className="text-xs text-emerald-300 mt-1">{tip.status}</p>
-              </div>
-            );
-          })}
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="rounded-2xl border border-emerald-700/50 bg-slate-900/70 p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold text-emerald-200">시즌패스 진행도</p>
+              <span className="text-xs text-slate-300">다음 레벨까지 {(nextXp - currentXp).toLocaleString()} XP</span>
+            </div>
+            <div className="h-3 w-full overflow-hidden rounded-full bg-slate-800">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-emerald-500 via-emerald-400 to-amber-300 transition-all"
+                style={{ width: `${progressPct}%` }}
+              />
+            </div>
+            <p className="text-xs text-slate-300">{seasonSummary.label}</p>
+          </div>
+
+          <div className="rounded-2xl border border-emerald-700/50 bg-slate-900/70 p-4 space-y-2">
+            <p className="text-sm font-semibold text-emerald-200">오늘 할 일 체크</p>
+            <ul className="space-y-2 text-sm text-slate-200">
+              {stampTips.map((tip, idx) => (
+                <li key={tip.title} className="flex items-start gap-2">
+                  <span className="mt-[2px] text-lg">{tipIcons[idx] ?? "🎅"}</span>
+                  <div>
+                    <p className="font-semibold">{tip.title}</p>
+                    <p className="text-xs text-slate-400">{tip.status}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </div>
 
-      <div className="rounded-3xl border border-amber-600/40 bg-gradient-to-br from-slate-950 via-indigo-950/40 to-emerald-950 p-8 shadow-[0_25px_80px_-30px_rgba(0,0,0,0.6)]">
+      <div className="rounded-3xl border border-amber-600/40 bg-slate-950/80 p-8 shadow-[0_25px_80px_-30px_rgba(0,0,0,0.6)]">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-1">
             <p className="text-xs uppercase tracking-[0.28em] text-amber-200">🛡️ Team Battle</p>
@@ -208,7 +250,7 @@ const HomePage: React.FC = () => {
         </div>
 
         <div className="mt-4 grid gap-4 md:grid-cols-3">
-          <div className="md:col-span-1 rounded-2xl border border-amber-600/40 bg-gradient-to-br from-slate-900/80 to-amber-950/20 p-5 shadow-inner">
+          <div className="md:col-span-1 rounded-2xl border border-amber-600/40 bg-slate-900/80 p-5 shadow-inner">
             <div className="flex items-center justify-between">
               <p className="text-xs font-semibold text-amber-200">활성 시즌</p>
               <span className="text-[11px] text-slate-400">Asia/Seoul</span>
@@ -240,7 +282,7 @@ const HomePage: React.FC = () => {
             )}
           </div>
 
-          <div className="md:col-span-2 rounded-2xl border border-emerald-600/40 bg-gradient-to-br from-slate-900/80 to-emerald-950/20 p-5 shadow-inner">
+          <div className="md:col-span-2 rounded-2xl border border-emerald-600/40 bg-slate-900/80 p-5 shadow-inner">
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold text-emerald-200">상위 팀</p>
               <span className="text-xs text-slate-400">플레이 횟수 기준</span>
@@ -269,7 +311,7 @@ const HomePage: React.FC = () => {
         </div>
       </div>
 
-      <div className="rounded-3xl border border-red-700/40 bg-gradient-to-br from-slate-950 via-red-950/20 to-emerald-950 p-8 shadow-2xl">
+      <div className="rounded-3xl border border-red-700/40 bg-slate-950/80 p-8 shadow-2xl">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.25em] text-gold-400">🎮 Games</p>
@@ -284,7 +326,7 @@ const HomePage: React.FC = () => {
         </div>
       </div>
 
-      <div className="rounded-3xl border border-gold-600/40 bg-gradient-to-br from-slate-950 via-gold-950/20 to-red-950/30 p-8 shadow-2xl">
+      <div className="rounded-3xl border border-gold-600/40 bg-slate-950/80 p-8 shadow-2xl">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.25em] text-gold-400">🏆 Ranking</p>
