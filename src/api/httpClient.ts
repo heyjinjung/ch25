@@ -2,12 +2,8 @@
 import axios from "axios";
 import { clearAuth, getAuthToken } from "../auth/authStore";
 
-const normalizeApiBase = (url: string) => {
-  const trimmed = url.replace(/\/+$/, "");
-  return trimmed.endsWith("/api") ? trimmed : `${trimmed}/api`;
-};
-
 // Resolve API base URL with explicit warning when falling back to localhost.
+// Note: Do NOT append /api here; API paths already include /api prefix.
 const rawBase =
   import.meta.env.VITE_API_BASE_URL ??
   import.meta.env.VITE_API_URL ??
@@ -18,7 +14,7 @@ if (!import.meta.env.VITE_API_BASE_URL && !import.meta.env.VITE_API_URL) {
   console.warn("[httpClient] Using default localhost API base URL; set VITE_API_BASE_URL for stage/prod.");
 }
 
-const resolvedBaseURL = normalizeApiBase(rawBase);
+const resolvedBaseURL = rawBase.replace(/\/+$/, "");
 
 export const userApi = axios.create({
   baseURL: resolvedBaseURL,
