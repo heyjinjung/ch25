@@ -81,6 +81,7 @@ def _log_team_battle_points(ctx: GamePlayContext, db: Session, result_payload: d
             user_id=ctx.user_id,
             season_id=season.id,
             meta=meta,
+            enforce_usage=False,
         )
     except Exception:
         # Team battle should never block the main game play path.

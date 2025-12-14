@@ -313,6 +313,7 @@ class TeamBattleService:
         user_id: Optional[int],
         season_id: Optional[int],
         meta: Optional[dict],
+        enforce_usage: bool = True,
         now: datetime | None = None,
     ) -> TeamScore:
         if delta == 0:
@@ -329,7 +330,8 @@ class TeamBattleService:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="NOT_IN_TEAM")
 
         if action == "GAME_PLAY" and user_id:
-            self._assert_today_usage(db, user_id=user_id, now=now)
+            if enforce_usage:
+                self._assert_today_usage(db, user_id=user_id, now=now)
             delta = self.POINTS_PER_PLAY
             start, end = self._day_bounds(now)
             points_today = db.execute(
@@ -640,7 +642,12 @@ class TeamBattleService:
             )
             .where(TeamScore.season_id == season.id)
             .group_by(TeamScore.team_id, Team.name, TeamScore.points)
-            .order_by(TeamScore.points.desc(), latest_event.desc().nulls_last(), TeamScore.team_id.asc())
+            .order_by(
+                TeamScore.points.desc(),
+                func.is_(latest_event, None),
+                latest_event.desc(),
+                TeamScore.team_id.asc(),
+            )
             .offset(offset)
             .limit(limit)
         )
@@ -671,7 +678,12 @@ class TeamBattleService:
                 ),
             )
             .group_by(TeamMember.user_id)
-            .order_by(points_sum.desc(), latest_event.desc().nulls_last(), TeamMember.user_id.asc())
+            .order_by(
+                points_sum.desc(),
+                func.is_(latest_event, None),
+                latest_event.desc(),
+                TeamMember.user_id.asc(),
+            )
             .offset(offset)
             .limit(limit)
         )
