@@ -1,13 +1,17 @@
 // src/components/common/ChristmasMusic.tsx
 import React, { useState, useRef, useEffect } from "react";
 
-// Pixabay 무료 크리스마스 캐롤 (로열티 프리)
-const CHRISTMAS_MUSIC_URL = "https://cdn.pixabay.com/download/audio/2022/10/25/audio_946b0939c8.mp3?filename=christmas-cooking-upbeat-christmas-music-royalty-free-137687.mp3";
+// 로열티 프리 크리스마스 캐롤 (FMA, hotlink 허용) + 백업 URL
+const CHRISTMAS_MUSIC_SOURCES = [
+  "https://files.freemusicarchive.org/storage-freemusicarchive-org/music/no_curator/Scott_Holmes_Music/Happy_Music/Scott_Holmes_Music_-_Christmas_Spirit.mp3",
+  "https://files.freemusicarchive.org/storage-freemusicarchive-org/music/no_curator/Lobo_Loco/Christmas_Album/Lobo_Loco_-_01_-_We_Wish_You_a_Merry_Christmas.mp3",
+] as const;
 
 const ChristmasMusic: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(0.3);
   const [showVolume, setShowVolume] = useState(false);
+  const [sourceIdx, setSourceIdx] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
@@ -32,7 +36,7 @@ const ChristmasMusic: React.FC = () => {
 
   useEffect(() => {
     localStorage.setItem("xmas_music_playing", isPlaying.toString());
-    
+
     if (audioRef.current) {
       if (isPlaying) {
         audioRef.current.play().catch(() => {
@@ -44,6 +48,15 @@ const ChristmasMusic: React.FC = () => {
       }
     }
   }, [isPlaying]);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.load();
+      if (isPlaying) {
+        audioRef.current.play().catch(() => setIsPlaying(false));
+      }
+    }
+  }, [sourceIdx, isPlaying]);
 
   const togglePlay = () => {
     setIsPlaying(!isPlaying);
@@ -101,9 +114,19 @@ const ChristmasMusic: React.FC = () => {
       {/* 오디오 요소 */}
       <audio
         ref={audioRef}
-        src={CHRISTMAS_MUSIC_URL}
+        src={CHRISTMAS_MUSIC_SOURCES[sourceIdx]}
         loop
         preload="auto"
+        onError={() => {
+          setSourceIdx((idx) => {
+            const next = idx + 1;
+            if (next < CHRISTMAS_MUSIC_SOURCES.length) {
+              return next;
+            }
+            setIsPlaying(false);
+            return idx;
+          });
+        }}
       />
     </div>
   );

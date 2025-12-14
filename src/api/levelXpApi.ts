@@ -19,6 +19,6 @@ export interface LevelXpStatusResponse {
 }
 
 export const getLevelXpStatus = async (): Promise<LevelXpStatusResponse> => {
-  const { data } = await userApi.get<LevelXpStatusResponse>("/level-xp/status");
+  const { data } = await userApi.get<LevelXpStatusResponse>("/api/level-xp/status");
   return data;
 };
