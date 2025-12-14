@@ -245,15 +245,15 @@ const TeamBattlePage: React.FC = () => {
       <div className="rounded-2xl border border-emerald-700/40 bg-slate-900/70 p-4 text-emerald-100 text-sm space-y-1">
         <div className="font-semibold text-emerald-200">룰 안내</div>
         <div>• 목적: 2일간 팀 협력 배틀, 밸런스 기준 자동 배정(직접 선택 없음)</div>
-        <div>• 구조: 시즌 길이 2일, 시작 후 2시간만 팀 선택/자동 배정, 모든 시각 Asia/Seoul</div>
+        <div>• 구조: 시즌 길이 2일, 시작 후 6시간만 팀 선택/자동 배정, 모든 시각 Asia/Seoul</div>
         <div>• 점수: 게임 1회당 10점, 당일 플레이만 집계, 1인 하루 최대 500점</div>
-        <div>• 자격: 최소 20회 플레이(200점) 시 보상 대상</div>
-        <div>• 보상: 1위 팀 쿠폰 3만(수동), 2위 팀 포인트 100 자동, 팀별 TOP3 쿠폰 1만(수동)</div>
+        <div>• 자격: 최소 30회 플레이(300점) 시 보상 대상</div>
+        <div>• 보상: 1위 팀 쿠폰 3만(수동), 2위 팀 포인트 100 자동</div>
       </div>
 
       {joinWindow.closed && (
         <div className="rounded-xl border border-red-600/50 bg-red-900/40 p-3 text-sm text-red-100">
-          팀 선택 창이 닫혔습니다 (시작 후 2시간). 이미 배정된 팀에서만 참여가 가능합니다.
+          팀 선택 창이 닫혔습니다 (시작 후 6시간). 이미 배정된 팀에서만 참여가 가능합니다.
         </div>
       )}
 

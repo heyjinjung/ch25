@@ -143,13 +143,16 @@ class SeasonPassService:
         next_level_req = next((lvl.required_xp for lvl in levels if lvl.required_xp > progress.current_xp), max_required)
 
         reward_labels = {
-            1: "복권 티켓 1장",
-            2: "주사위 티켓 2장",
-            3: "룰렛 티켓 2장",
-            4: "복권 티켓 2장 + 주사위 티켓 1장",
-            5: "주사위 티켓 3장 + 룰렛 티켓 2장",
-            6: "복권 티켓 3장 + 룰렛 티켓 3장",
-            7: "복권/주사위/룰렛 티켓 각 5장",
+            1: "룰렛 티켓 1장",
+            2: "주사위 티켓 1장",
+            3: "룰렛 1장 + 주사위 1장",
+            4: "복권 티켓 1장",
+            5: "CC 코인 1개",
+            6: "주사위 2장 + 복권 1장",
+            7: "CC 코인 2개",
+            8: "쿠팡상품권 1만원",
+            9: "CC 포인트 2만",
+            10: "CC 포인트 5만",
         }
 
         level_payload = []
