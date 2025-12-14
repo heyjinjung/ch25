@@ -9,6 +9,7 @@ import {
 } from "../api/teamBattleApi";
 import { TeamSeason, Team, LeaderboardEntry, ContributorEntry, TeamMembership } from "../types/teamBattle";
 import { isAdminAuthenticated } from "../auth/adminAuth";
+import { TreeIcon, GiftIcon, StarIcon, BellIcon } from "../components/common/ChristmasDecorations";
 
 const formatDateTime = (value?: string | null) => {
   if (!value) return "-";
@@ -186,9 +187,35 @@ const TeamBattlePage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 p-4 sm:p-6 rounded-3xl border border-emerald-900/30 shadow-[0_25px_80px_-40px_rgba(0,0,0,0.65)]">
-      <div className="rounded-2xl border border-emerald-700/40 bg-gradient-to-r from-emerald-900 via-cyan-800 to-emerald-600 p-6 shadow-lg">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="space-y-6 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 p-4 sm:p-6 rounded-3xl border border-emerald-900/30 shadow-[0_25px_80px_-40px_rgba(0,0,0,0.65)] relative overflow-hidden">
+      {/* 크리스마스 배경 장식 */}
+      <div className="absolute top-4 left-4 opacity-20 pointer-events-none">
+        <TreeIcon className="w-24 h-24" />
+      </div>
+      <div className="absolute top-8 right-8 opacity-20 pointer-events-none">
+        <StarIcon className="w-16 h-16" />
+      </div>
+      <div className="absolute bottom-20 left-8 opacity-15 pointer-events-none">
+        <GiftIcon className="w-20 h-20" />
+      </div>
+      <div className="absolute bottom-32 right-4 opacity-15 pointer-events-none">
+        <BellIcon className="w-14 h-14" />
+      </div>
+
+      <div className="rounded-2xl border border-emerald-700/40 bg-gradient-to-r from-red-900/80 via-emerald-800 to-red-900/80 p-6 shadow-lg relative">
+        {/* 헤더 장식 */}
+        <div className="absolute top-2 left-4 flex gap-2 text-xl opacity-80">
+          <span>🎄</span>
+          <span>⭐</span>
+          <span>🎁</span>
+        </div>
+        <div className="absolute top-2 right-4 flex gap-2 text-xl opacity-80">
+          <span>🔔</span>
+          <span>❄️</span>
+          <span>🎅</span>
+        </div>
+        
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pt-6">
           <div className="space-y-1">
             <p className="text-xs uppercase tracking-[0.25em] text-emerald-100">🛡️ Team Battle</p>
             <h1 className="text-3xl font-extrabold text-white">{season ? season.name : "활성 시즌 없음"}</h1>
