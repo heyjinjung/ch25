@@ -264,7 +264,8 @@ const SeasonPassPage: React.FC = () => {
                 </article>
               );
             })}
-          </div>
+              </div>
+            </div>
           </div>
 
           <aside className="space-y-3 rounded-2xl border border-slate-800 bg-slate-900 p-4">
