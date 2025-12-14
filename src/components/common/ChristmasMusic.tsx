@@ -1,12 +1,10 @@
 // src/components/common/ChristmasMusic.tsx
 import React, { useState, useRef, useEffect } from "react";
 
-// 1) 로컬 mp3 (public) 우선 사용
-// 2) 외부 백업 소스 (FMA)
+// 로컬 mp3 (public)만 사용해 외부 404/차단 이슈를 방지
 const CHRISTMAS_MUSIC_SOURCES = [
   "/04.We%20Wish%20You%20A%20Merry%20Christmas.mp3",
   "/05.Jingle%20Bell(Flute).mp3",
-  "https://files.freemusicarchive.org/storage-freemusicarchive-org/music/no_curator/Scott_Holmes_Music/Happy_Music/Scott_Holmes_Music_-_Christmas_Spirit.mp3",
 ] as const;
 
 const ChristmasMusic: React.FC = () => {
