@@ -14,6 +14,7 @@ import {
   getLeaderboard,
   getContributors,
 } from "../../api/teamBattleApi";
+import { fetchUsers, AdminUser } from "../api/adminUserApi";
 import { Team, TeamSeason, LeaderboardEntry, ContributorEntry } from "../../types/teamBattle";
 
 const formatDateTime = (iso?: string) => (iso ? new Date(iso).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" }) : "-");
@@ -33,6 +34,9 @@ const AdminTeamBattlePage: React.FC = () => {
   const [seasonEditForm, setSeasonEditForm] = useState({ name: "", starts_at: "", ends_at: "", is_active: false });
   const [teamForm, setTeamForm] = useState({ name: "", icon: "", leader_user_id: "" });
   const [forceJoinForm, setForceJoinForm] = useState({ user_id: "", team_id: "" });
+  const [allUsers, setAllUsers] = useState<AdminUser[]>([]);
+  const [userSearchQuery, setUserSearchQuery] = useState("");
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [createSeasonBusy, setCreateSeasonBusy] = useState(false);
   const [activateBusy, setActivateBusy] = useState(false);
@@ -53,8 +57,9 @@ const AdminTeamBattlePage: React.FC = () => {
     setError(null);
     setRefreshing(true);
     try {
-      const [s, t, lb] = await Promise.all([getActiveSeason(), listTeamsAdmin(true), getLeaderboard(undefined, 100, 0)]);
+      const [s, t, lb, users] = await Promise.all([getActiveSeason(), listTeamsAdmin(true), getLeaderboard(undefined, 100, 0), fetchUsers()]);
       setSeason(s);
+      setAllUsers(users);
       if (s) {
         setSeasonEditForm({
           name: s.name,
@@ -272,6 +277,9 @@ const AdminTeamBattlePage: React.FC = () => {
     try {
       await forceJoinTeam({ user_id: Number(forceJoinForm.user_id), team_id: Number(forceJoinForm.team_id) });
       setMessage("강제 배정 완료");
+      // 성공 시 폼 초기화
+      setForceJoinForm({ user_id: "", team_id: "" });
+      setUserSearchQuery("");
     } catch (err) {
       console.error(err);
       const detail = (err as any)?.response?.data?.detail;
@@ -542,8 +550,65 @@ const AdminTeamBattlePage: React.FC = () => {
       <div className={cardClass + " space-y-3"}>
         <h2 className="text-lg font-semibold text-emerald-100">강제 팀 배정/이동</h2>
         <div className="grid md:grid-cols-2 gap-3">
-          <input className={inputClass} placeholder="user_id" value={forceJoinForm.user_id} onChange={(e) => setForceJoinForm({ ...forceJoinForm, user_id: e.target.value })} />
-          <input className={inputClass} placeholder="team_id" value={forceJoinForm.team_id} onChange={(e) => setForceJoinForm({ ...forceJoinForm, team_id: e.target.value })} />
+          {/* 사용자 검색 */}
+          <div className="relative">
+            <input
+              className={inputClass}
+              placeholder="닉네임으로 검색..."
+              value={userSearchQuery}
+              onChange={(e) => {
+                setUserSearchQuery(e.target.value);
+                setShowUserDropdown(true);
+              }}
+              onFocus={() => setShowUserDropdown(true)}
+            />
+            {showUserDropdown && userSearchQuery && (
+              <div className="absolute z-50 w-full mt-1 max-h-60 overflow-auto rounded-lg border border-emerald-800/50 bg-slate-800 shadow-lg">
+                {allUsers
+                  .filter((u) =>
+                    (u.nickname?.toLowerCase() || "").includes(userSearchQuery.toLowerCase()) ||
+                    u.external_id.toLowerCase().includes(userSearchQuery.toLowerCase())
+                  )
+                  .slice(0, 20)
+                  .map((u) => (
+                    <div
+                      key={u.id}
+                      className="px-3 py-2 cursor-pointer hover:bg-emerald-900/50 text-slate-100 border-b border-slate-700/50 last:border-b-0"
+                      onClick={() => {
+                        setForceJoinForm({ ...forceJoinForm, user_id: String(u.id) });
+                        setUserSearchQuery(`${u.nickname || u.external_id} (ID: ${u.id})`);
+                        setShowUserDropdown(false);
+                      }}
+                    >
+                      <span className="font-medium">{u.nickname || "(닉네임 없음)"}</span>
+                      <span className="text-slate-400 text-sm ml-2">ID: {u.id} / {u.external_id}</span>
+                    </div>
+                  ))}
+                {allUsers.filter((u) =>
+                  (u.nickname?.toLowerCase() || "").includes(userSearchQuery.toLowerCase()) ||
+                  u.external_id.toLowerCase().includes(userSearchQuery.toLowerCase())
+                ).length === 0 && (
+                  <div className="px-3 py-2 text-slate-400">검색 결과 없음</div>
+                )}
+              </div>
+            )}
+            {forceJoinForm.user_id && (
+              <div className="text-xs text-emerald-400 mt-1">선택된 user_id: {forceJoinForm.user_id}</div>
+            )}
+          </div>
+          {/* 팀 선택 드롭다운 */}
+          <select
+            className={inputClass}
+            value={forceJoinForm.team_id}
+            onChange={(e) => setForceJoinForm({ ...forceJoinForm, team_id: e.target.value })}
+          >
+            <option value="">팀 선택...</option>
+            {teams.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name} (ID: {t.id})
+              </option>
+            ))}
+          </select>
         </div>
         <button className="px-4 py-2 bg-indigo-600 text-white rounded disabled:opacity-60" onClick={handleForceJoin} disabled={forceJoinBusy || !forceJoinForm.user_id || !forceJoinForm.team_id}>
           {forceJoinBusy ? "배정 중..." : "강제 배정"}

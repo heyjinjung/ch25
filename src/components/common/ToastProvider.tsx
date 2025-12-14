@@ -1,6 +1,22 @@
 // src/components/common/ToastProvider.tsx
 import React, { createContext, useContext, useMemo, useState } from "react";
 
+const generateId = (): string => {
+  // Use crypto.randomUUID when available; fall back to RFC4122-ish manual uuid or random string.
+  if (typeof crypto !== "undefined") {
+    if (typeof crypto.randomUUID === "function") return crypto.randomUUID();
+    if (typeof crypto.getRandomValues === "function") {
+      const buf = new Uint8Array(16);
+      crypto.getRandomValues(buf);
+      buf[6] = (buf[6] & 0x0f) | 0x40;
+      buf[8] = (buf[8] & 0x3f) | 0x80;
+      const hex = Array.from(buf, (b) => b.toString(16).padStart(2, "0"));
+      return `${hex.slice(0, 4).join("")}-${hex.slice(4, 6).join("")}-${hex.slice(6, 8).join("")}-${hex.slice(8, 10).join("")}-${hex.slice(10, 16).join("")}`;
+    }
+  }
+  return `toast-${Math.random().toString(16).slice(2)}`;
+};
+
 type Toast = {
   id: string;
   message: string;
@@ -25,7 +41,7 @@ const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   const addToast = (message: string, tone: Toast["tone"] = "info") => {
-    const toast: Toast = { id: crypto.randomUUID(), message, tone };
+    const toast: Toast = { id: generateId(), message, tone };
     setToasts((prev) => [...prev, toast]);
     setTimeout(() => removeToast(toast.id), 3000);
   };

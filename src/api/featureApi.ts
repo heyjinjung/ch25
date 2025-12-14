@@ -11,7 +11,7 @@ export interface TodayFeatureResponse {
 
 export const getTodayFeature = async (): Promise<TodayFeatureResponse> => {
   try {
-    const response = await userApi.get<{ feature_type?: string | null }>("/today-feature");
+    const response = await userApi.get<{ feature_type?: string | null }>("/api/today-feature");
     return { feature_type: normalizeFeature(response.data.feature_type) };
   } catch (error) {
     if (axios.isAxiosError(error)) {
