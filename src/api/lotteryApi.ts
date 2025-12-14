@@ -51,7 +51,7 @@ export interface LotteryPlayResponse {
 
 export const getLotteryStatus = async (): Promise<LotteryStatusResponse> => {
   try {
-    const response = await userApi.get<BackendLotteryStatusResponse>("/lottery/status");
+    const response = await userApi.get<BackendLotteryStatusResponse>("/api/lottery/status");
     const data = response.data;
     return {
       feature_type: data.feature_type,
@@ -81,7 +81,7 @@ export const getLotteryStatus = async (): Promise<LotteryStatusResponse> => {
 
 export const playLottery = async (): Promise<LotteryPlayResponse> => {
   try {
-    const response = await userApi.post<{ result: string; prize: BackendLotteryPrizeDto }>("/lottery/play");
+    const response = await userApi.post<{ result: string; prize: BackendLotteryPrizeDto }>("/api/lottery/play");
     const data = response.data;
     return {
       prize: {

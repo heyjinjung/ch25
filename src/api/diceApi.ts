@@ -49,7 +49,7 @@ export interface DicePlayResponse {
 
 export const getDiceStatus = async (): Promise<DiceStatusResponse> => {
   try {
-    const response = await userApi.get<BackendDiceStatusResponse>("/dice/status");
+    const response = await userApi.get<BackendDiceStatusResponse>("/api/dice/status");
     const data = response.data;
     return {
       feature_type: data.feature_type,
@@ -71,7 +71,7 @@ export const getDiceStatus = async (): Promise<DiceStatusResponse> => {
 
 export const playDice = async (): Promise<DicePlayResponse> => {
   try {
-    const response = await userApi.post<BackendDicePlayResponse>("/dice/play");
+    const response = await userApi.post<BackendDicePlayResponse>("/api/dice/play");
     const data = response.data;
     return {
       user_dice: data.game.user_dice,

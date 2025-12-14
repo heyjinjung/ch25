@@ -29,7 +29,7 @@ export interface TodayRankingResponse {
 
 export const getTodayRanking = async (topN: number = 10): Promise<TodayRankingResponse> => {
   try {
-    const response = await userApi.get<TodayRankingResponse>("/ranking/today", {
+    const response = await userApi.get<TodayRankingResponse>("/api/ranking/today", {
       params: { top: topN },
     });
     return response.data;

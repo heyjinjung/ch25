@@ -61,7 +61,7 @@ export interface RoulettePlayResponse {
 
 export const getRouletteStatus = async (): Promise<RouletteStatusResponse> => {
   try {
-    const response = await userApi.get<BackendRouletteStatusResponse>("/roulette/status");
+    const response = await userApi.get<BackendRouletteStatusResponse>("/api/roulette/status");
     const data = response.data;
     const segments = data.segments
       .map((segment, index) => ({
@@ -95,7 +95,7 @@ export const getRouletteStatus = async (): Promise<RouletteStatusResponse> => {
 
 export const playRoulette = async (): Promise<RoulettePlayResponse> => {
   try {
-    const response = await userApi.post<BackendRoulettePlayResponse>("/roulette/play");
+    const response = await userApi.post<BackendRoulettePlayResponse>("/api/roulette/play");
     const data = response.data;
     const mappedSegment: RouletteSegmentDto = {
       label: data.segment.label,

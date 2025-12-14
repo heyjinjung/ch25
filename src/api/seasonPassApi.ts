@@ -37,7 +37,7 @@ export interface ClaimSeasonRewardResponse {
 
 export const getSeasonPassStatus = async (): Promise<SeasonPassStatusResponse> => {
   try {
-    const response = await userApi.get("/season-pass/status");
+    const response = await userApi.get("/api/season-pass/status");
     const raw = response.data as any;
     const currentXp = raw?.progress?.current_xp ?? 0;
     const nextLevelXp = raw?.progress?.next_level_xp ?? currentXp;
@@ -71,13 +71,13 @@ export const getSeasonPassStatus = async (): Promise<SeasonPassStatusResponse> =
 };
 
 export const getInternalWinStatus = async (): Promise<InternalWinStatusResponse> => {
-  const { data } = await userApi.get<InternalWinStatusResponse>("/season-pass/internal-wins");
+  const { data } = await userApi.get<InternalWinStatusResponse>("/api/season-pass/internal-wins");
   return data;
 };
 
 export const claimSeasonReward = async (level: number): Promise<ClaimSeasonRewardResponse> => {
   try {
-    const response = await userApi.post<ClaimSeasonRewardResponse>("/season-pass/claim", { level });
+    const response = await userApi.post<ClaimSeasonRewardResponse>("/api/season-pass/claim", { level });
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -106,7 +106,7 @@ export const addSeasonPassStamp = async (
   xpBonus: number = 0
 ): Promise<AddStampResponse> => {
   try {
-    const response = await userApi.post<AddStampResponse>("/season-pass/stamp", {
+    const response = await userApi.post<AddStampResponse>("/api/season-pass/stamp", {
       source_feature_type: sourceFeatureType,
       xp_bonus: xpBonus,
     });
