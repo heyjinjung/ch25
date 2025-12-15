@@ -1,6 +1,7 @@
 // src/pages/RankingPage.tsx
 import { useTodayRanking } from "../hooks/useRanking";
 import FeatureGate from "../components/feature/FeatureGate";
+import { AnimatePresence, motion } from "framer-motion";
 
 const getMedalEmoji = (rank: number): string => {
   if (rank === 1) return "🥇";
@@ -44,7 +45,13 @@ const RankingPage: React.FC = () => {
         </header>
 
         {myExternal && (
-          <div className="rounded-2xl border-2 border-emerald-500/50 bg-gradient-to-br from-emerald-900/60 to-slate-900/80 p-6 shadow-lg">
+          <motion.div
+            layout
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35 }}
+            className="rounded-2xl border-2 border-emerald-500/50 bg-gradient-to-br from-emerald-900/60 to-slate-900/80 p-6 shadow-lg"
+          >
             <div className="flex items-center gap-4">
               <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-600 text-2xl font-bold text-white shadow-lg">
                 {getMedalEmoji(myExternal.rank)}
@@ -57,7 +64,7 @@ const RankingPage: React.FC = () => {
                 </p>
               </div>
             </div>
-          </div>
+          </motion.div>
         )}
 
         <div className="space-y-3">
@@ -71,26 +78,33 @@ const RankingPage: React.FC = () => {
             </div>
           ) : (
             <div className="space-y-2">
-              {externalEntries.map((entry) => (
-                <div
-                  key={entry.rank}
-                  className="flex items-center justify-between rounded-xl border border-slate-700/50 bg-slate-900/70 p-4"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-800 text-sm font-bold text-slate-100">
-                      {getMedalEmoji(entry.rank)}
+              <AnimatePresence>
+                {externalEntries.map((entry) => (
+                  <motion.div
+                    key={entry.rank}
+                    layout
+                    initial={{ opacity: 0, y: 14 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.25 }}
+                    className="flex items-center justify-between rounded-xl border border-slate-700/50 bg-slate-900/70 p-4"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-800 text-sm font-bold text-slate-100">
+                        {getMedalEmoji(entry.rank)}
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-white">User #{entry.user_id}</p>
+                        {entry.memo && <p className="text-xs text-slate-400">{entry.memo}</p>}
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-semibold text-white">User #{entry.user_id}</p>
-                      {entry.memo && <p className="text-xs text-slate-400">{entry.memo}</p>}
+                    <div className="text-right text-sm text-slate-200">
+                      <p>입금: {entry.deposit_amount.toLocaleString()}</p>
+                      <p>게임횟수: {entry.play_count.toLocaleString()}</p>
                     </div>
-                  </div>
-                  <div className="text-right text-sm text-slate-200">
-                    <p>입금: {entry.deposit_amount.toLocaleString()}</p>
-                    <p>게임횟수: {entry.play_count.toLocaleString()}</p>
-                  </div>
-                </div>
-              ))}
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             </div>
           )}
         </div>

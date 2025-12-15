@@ -66,7 +66,6 @@ const LotteryPage: React.FC = () => {
     try {
       setIsScratching(true);
       const result = await playMutation.mutateAsync();
-      await new Promise((r) => setTimeout(r, 2000));
       setIsScratching(false);
       setIsRevealed(true);
       setRevealedPrize({

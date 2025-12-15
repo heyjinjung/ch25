@@ -22,7 +22,11 @@ const DiceFace: React.FC<{ value: number; isRolling?: boolean }> = ({ value, isR
   }, [value]);
 
   return (
-    <div className={`grid h-16 w-16 grid-cols-3 grid-rows-3 gap-1 rounded-xl border-2 border-gold-500/50 bg-gradient-to-br from-slate-100 to-slate-300 p-2 shadow-lg ${isRolling ? "animate-shake" : ""}`}>
+    <div
+      className={`grid h-16 w-16 grid-cols-3 grid-rows-3 gap-1 rounded-xl border-2 border-gold-500/50 bg-gradient-to-br from-slate-100 to-slate-300 p-2 shadow-lg ${
+        isRolling ? "animate-spin-fast" : ""
+      }`}
+    >
       {dots.map((pos, i) => (
         <div key={i} className={`${pos} flex items-center justify-center`}>
           <div className="h-2.5 w-2.5 rounded-full bg-slate-900 shadow-inner" />

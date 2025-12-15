@@ -14,6 +14,7 @@ const navItems = [
   { path: "/admin/game-token-logs", label: "Coin Logs" },
   { path: "/admin/users", label: "Users" },
   { path: "/admin/team-battle", label: "Team Battle" },
+  { path: "/admin/surveys", label: "Surveys" },
 ];
 
 const AdminLayout: React.FC = () => {

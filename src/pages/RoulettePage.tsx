@@ -6,6 +6,12 @@ import { GAME_TOKEN_LABELS } from "../types/gameTokens";
 import { useNavigate } from "react-router-dom";
 import type { RoulettePlayResponse } from "../api/rouletteApi";
 
+const FALLBACK_SEGMENTS = Array.from({ length: 12 }).map((_, idx) => ({
+  label: `BONUS ${idx + 1}`,
+  weight: 1,
+  isJackpot: idx === 0,
+}));
+
 const RoulettePage: React.FC = () => {
   const { data, isLoading, isError, error } = useRouletteStatus();
   const playMutation = usePlayRoulette();
@@ -21,15 +27,16 @@ const RoulettePage: React.FC = () => {
   const spinStartAtRef = useRef<number | null>(null);
   const transitionEndAtRef = useRef<number | null>(null);
 
-  const segments = useMemo(
-    () =>
-      (data?.segments ?? []).map((segment) => ({
-        label: segment.label,
-        weight: segment.weight,
-        isJackpot: segment.isJackpot,
-      })),
-    [data?.segments]
-  );
+  const segments = useMemo(() => {
+    const resolved = (data?.segments ?? []).map((segment) => ({
+      label: segment.label,
+      weight: segment.weight,
+      isJackpot: segment.isJackpot,
+    }));
+    return resolved.length > 0 ? resolved : FALLBACK_SEGMENTS;
+  }, [data?.segments]);
+
+  const usingFallbackSegments = useMemo(() => (data?.segments ?? []).length === 0, [data?.segments]);
 
   const mapErrorMessage = (err: unknown) => {
     const code = (err as { response?: { data?: { error?: { code?: string } } } })?.response?.data?.error?.code;
@@ -176,17 +183,24 @@ const RoulettePage: React.FC = () => {
             </div>
           </div>
         </header>
-        <div className="grid gap-6 items-center lg:grid-cols-[1.2fr_0.8fr]">
-          <div className="relative rounded-3xl border border-emerald-700/50 bg-gradient-to-br from-slate-950 to-slate-900 p-6 shadow-[0_10px_40px_rgba(0,0,0,0.45)]">
-            <div className="absolute -left-6 -top-6 h-24 w-24 rounded-full bg-emerald-500/20 blur-3xl" />
-            <div className="absolute -right-10 bottom-0 h-32 w-32 rounded-full bg-gold-400/10 blur-3xl" />
-            <RouletteWheel
-              segments={segments}
-              isSpinning={isSpinning}
-              selectedIndex={selectedIndex}
-              spinDurationMs={SPIN_DURATION_MS}
-              onSpinEnd={handleSpinEnd}
-            />
+        <div className="grid gap-6 items-start lg:grid-cols-[1.2fr_0.8fr]">
+          <div className="space-y-4">
+            <div className="relative rounded-3xl border border-emerald-700/50 bg-gradient-to-br from-slate-950 to-slate-900 p-6 shadow-[0_10px_40px_rgba(0,0,0,0.45)]">
+              <div className="absolute -left-6 -top-6 h-24 w-24 rounded-full bg-emerald-500/20 blur-3xl" />
+              <div className="absolute -right-10 bottom-0 h-32 w-32 rounded-full bg-gold-400/10 blur-3xl" />
+              <RouletteWheel
+                segments={segments}
+                isSpinning={isSpinning}
+                selectedIndex={selectedIndex}
+                spinDurationMs={SPIN_DURATION_MS}
+                onSpinEnd={handleSpinEnd}
+              />
+            </div>
+            {usingFallbackSegments && (
+              <div className="rounded-xl border border-amber-500/30 bg-amber-900/10 px-4 py-3 text-xs text-amber-100">
+                라이브 구간 데이터를 불러오지 못해 임시 구성을 표시합니다. /api/roulette/status 응답을 확인해 주세요.
+              </div>
+            )}
           </div>
 
           <div className="space-y-4 rounded-3xl border border-emerald-700/40 bg-slate-900/70 p-6 shadow-lg">

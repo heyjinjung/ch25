@@ -3,6 +3,7 @@ import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import AdminLoginPage from "../admin/pages/AdminLoginPage";
 import AdminDashboardPage from "../admin/pages/AdminDashboardPage";
+import SurveyAdminPage from "../admin/pages/SurveyAdminPage";
 import SeasonListPage from "../admin/pages/SeasonListPage";
 import FeatureSchedulePage from "../admin/pages/FeatureSchedulePage";
 import RouletteConfigPage from "../admin/pages/RouletteConfigPage";
@@ -25,6 +26,7 @@ const AdminRoutes: React.FC = () => {
           <Route path="" element={<AdminDashboardPage />} />
           <Route path="seasons" element={<SeasonListPage />} />
           <Route path="feature-schedule" element={<FeatureSchedulePage />} />
+          <Route path="surveys" element={<SurveyAdminPage />} />
           <Route path="roulette" element={<RouletteConfigPage />} />
           <Route path="dice" element={<DiceConfigPage />} />
           <Route path="lottery" element={<LotteryConfigPage />} />
