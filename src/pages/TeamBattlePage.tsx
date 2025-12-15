@@ -47,8 +47,10 @@ const TeamBattlePage: React.FC = () => {
     // UTC 명시 (백엔드가 Z 없이 UTC 반환하므로 보정)
     const startStr = season.starts_at.endsWith("Z") ? season.starts_at : season.starts_at + "Z";
     const start = new Date(startStr).getTime();
-    const close = start + 12 * 60 * 60 * 1000;
     const now = Date.now();
+    if (now < start) return { closed: true, label: "시작 전" };
+
+    const close = start + 24 * 60 * 60 * 1000;
     const remaining = close - now;
     if (remaining <= 0) return { closed: true, label: "마감" };
     const hours = Math.floor(remaining / (1000 * 60 * 60));
@@ -157,7 +159,7 @@ const TeamBattlePage: React.FC = () => {
       const detail = (err as any)?.response?.data?.detail;
       const status = (err as any)?.response?.status;
       if (detail === "TEAM_SELECTION_CLOSED") {
-        setError("팀 선택 창이 닫혔습니다 (시작 후 12시간 제한)");
+        setError("팀 선택 창이 닫혔습니다 (시작 후 24시간 제한)");
       } else if (detail === "ALREADY_IN_TEAM") {
         setError("이미 팀에 가입되어 있습니다");
       } else if (detail === "TEAM_LOCKED") {
@@ -244,8 +246,8 @@ const TeamBattlePage: React.FC = () => {
 
       <div className="rounded-2xl border border-emerald-700/40 bg-slate-900/70 p-4 text-emerald-100 text-sm space-y-1">
         <div className="font-semibold text-emerald-200">룰 안내</div>
-        <div>• 목적: 2일간 팀 협력 배틀, 밸런스 기준 자동 배정(직접 선택 없음)</div>
-        <div>• 구조: 시즌 길이 2일, 시작 후 12시간만 팀 선택/자동 배정, 모든 시각 Asia/Seoul</div>
+        <div>• 목적: 이벤트 기간 팀 협력 배틀, 밸런스 기준 자동 배정(직접 선택 없음)</div>
+        <div>• 구조: 시작 후 24시간만 팀 선택/자동 배정, 모든 시각 Asia/Seoul</div>
         <div>• 점수: 게임 1회당 10점, 당일 플레이만 집계, 1인 하루 최대 500점</div>
         <div>• 자격: 최소 30회 플레이(300점) 시 보상 대상</div>
         <div>• 보상: 1위 팀 쿠폰 3만(수동), 2위 팀 포인트 100 자동</div>
@@ -253,7 +255,7 @@ const TeamBattlePage: React.FC = () => {
 
       {joinWindow.closed && (
         <div className="rounded-xl border border-red-600/50 bg-red-900/40 p-3 text-sm text-red-100">
-          팀 선택 창이 닫혔습니다 (시작 후 12시간). 이미 배정된 팀에서만 참여가 가능합니다.
+          팀 선택 창이 닫혔습니다 (시작 후 24시간). 이미 배정된 팀에서만 참여가 가능합니다.
         </div>
       )}
 
@@ -262,7 +264,7 @@ const TeamBattlePage: React.FC = () => {
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-lg font-bold text-white">팀 선택</h2>
             <div className={`text-xs font-semibold ${joinWindow.closed ? "text-red-200" : "text-emerald-200"}`}>
-              {joinWindow.closed ? "선택 창 닫힘 (시작 후 12시간)" : "선택 창 열려 있음"}
+              {joinWindow.closed ? "선택 창 닫힘 (시작 후 24시간)" : "선택 창 열려 있음"}
             </div>
           </div>
           <div className="mb-2 text-xs text-emerald-100/80">내 팀: {myTeamName ?? "미배정"}</div>

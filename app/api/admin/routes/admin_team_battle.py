@@ -74,6 +74,8 @@ def add_points(payload: TeamPointsRequest, db: Session = Depends(get_db)):
         user_id=payload.user_id,
         season_id=payload.season_id,
         meta=payload.meta,
+        enforce_usage=False,
+        auto_join_if_missing=True,
     )
 
 

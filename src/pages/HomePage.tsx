@@ -79,7 +79,6 @@ const HomePage: React.FC = () => {
   const myTeam = useQuery({ queryKey: ["team-battle-me"], queryFn: getMyTeam });
 
   const external = ranking.data?.my_external_entry;
-  const top10Needed = external?.rank && external.rank > 10 ? external.rank - 10 : 0;
   const deposit = external?.deposit_amount ?? 0;
   const depositRemainder = 100_000 - (deposit % 100_000 || 100_000);
   const playDone = (external?.play_count ?? 0) > 0;

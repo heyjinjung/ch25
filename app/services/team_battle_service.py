@@ -19,7 +19,7 @@ from app.core.config import get_settings
 class TeamBattleService:
     POINTS_PER_PLAY = 10
     DAILY_POINT_CAP = 500  # 50 plays per day
-    TEAM_SELECTION_WINDOW_HOURS = 12
+    TEAM_SELECTION_WINDOW_HOURS = 24
     MIN_PLAYS_FOR_REWARD = 30
     DEFAULT_WEIGHT_DEPOSIT = 0.6
     DEFAULT_WEIGHT_PLAY = 0.4
@@ -75,6 +75,17 @@ class TeamBattleService:
     def ensure_current_season(self, db: Session, now: datetime | None = None) -> TeamSeason:
         """Ensure a 2-day rolling season (KST anchored) exists covering `now`."""
         today = now or self._now_utc()
+
+        # If an active season is configured but hasn't started yet, do not create a rolling season.
+        configured = db.execute(select(TeamSeason).where(TeamSeason.is_active == True)).scalar_one_or_none()  # noqa: E712
+        if configured:
+            start_utc = self._normalize_to_utc(configured.starts_at, today)
+            end_utc = self._normalize_to_utc(configured.ends_at, today)
+            if today < start_utc:
+                configured.starts_at = start_utc
+                configured.ends_at = end_utc
+                return configured
+
         settings = get_settings()
         tz = ZoneInfo(settings.timezone)
         utc = ZoneInfo("UTC")
@@ -221,7 +232,7 @@ class TeamBattleService:
         db.commit()
         db.refresh(team)
         if leader_user_id:
-            self.join_team(db, team.id, leader_user_id, role="leader")
+            self.join_team(db, team.id, leader_user_id, role="leader", bypass_selection=True)
         return team
 
     def update_team(self, db: Session, team_id: int, payload: dict) -> Team:
@@ -314,6 +325,7 @@ class TeamBattleService:
         season_id: Optional[int],
         meta: Optional[dict],
         enforce_usage: bool = True,
+        auto_join_if_missing: bool = False,
         now: datetime | None = None,
     ) -> TeamScore:
         if delta == 0:
@@ -326,6 +338,9 @@ class TeamBattleService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="NO_ACTIVE_TEAM_SEASON")
 
         member = db.get(TeamMember, user_id) if user_id else None
+        if user_id and not member and auto_join_if_missing:
+            member = self.join_team(db, team_id=team_id, user_id=user_id, role="member", now=now, bypass_selection=True)
+
         if user_id and (not member or member.team_id != team_id):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="NOT_IN_TEAM")
 
