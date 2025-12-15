@@ -19,7 +19,7 @@ from app.core.config import get_settings
 class TeamBattleService:
     POINTS_PER_PLAY = 10
     DAILY_POINT_CAP = 500  # 50 plays per day
-    TEAM_SELECTION_WINDOW_HOURS = 6
+    TEAM_SELECTION_WINDOW_HOURS = 12
     MIN_PLAYS_FOR_REWARD = 30
     DEFAULT_WEIGHT_DEPOSIT = 0.6
     DEFAULT_WEIGHT_PLAY = 0.4

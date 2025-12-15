@@ -1,5 +1,6 @@
 // src/admin/api/httpClient.ts
 import axios from "axios";
+import { clearAdminToken, getAdminToken } from "../../auth/adminAuth";
 
 // Prefer explicit admin base URL; if not set, derive from current origin (replace :3000 -> :8000) then fallback to localhost.
 const derivedAdminBase =
@@ -16,12 +17,32 @@ export const adminApi = axios.create({
   baseURL: adminBaseURL,
 });
 
+adminApi.interceptors.request.use((config) => {
+  const token =
+    getAdminToken() ||
+    (typeof localStorage !== "undefined"
+      ? localStorage.getItem("xmas_access_token") || localStorage.getItem("token")
+      : null);
+  if (token) {
+    config.headers = config.headers ?? {};
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 adminApi.interceptors.response.use(
   (response) => response,
   (error) => {
-    // TODO: inject admin auth token (e.g., JWT) when auth flow is implemented
     // eslint-disable-next-line no-console
     console.error("[adminApi] response error", error);
+
+    const status = error?.response?.status;
+    if (status === 401 || status === 403) {
+      clearAdminToken();
+      if (typeof window !== "undefined" && window.location.pathname !== "/admin/login") {
+        window.location.href = "/admin/login";
+      }
+    }
     return Promise.reject(error);
   }
 );

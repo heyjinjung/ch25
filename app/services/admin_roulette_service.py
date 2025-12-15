@@ -42,6 +42,10 @@ class AdminRouletteService:
             raw_segments = raw_segments[:6]
 
         config.segments.clear()
+        # On update, ensure orphan deletions are flushed before inserting new 0~5 slots.
+        # Otherwise, MySQL may attempt INSERTs before DELETEs and hit uq_roulette_segment_slot.
+        if getattr(config, "id", None) is not None:
+            db.flush()
         normalized = []
         for i, segment in enumerate(raw_segments):
             slot_idx = getattr(segment, "slot_index", None)

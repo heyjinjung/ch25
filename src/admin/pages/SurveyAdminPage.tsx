@@ -225,6 +225,8 @@ const SurveyAdminPage: React.FC = () => {
       ...rest,
       reward_json,
       target_segment_json: rest.target_segment_json ?? {},
+      start_at: rest.start_at && rest.start_at.trim() ? rest.start_at.trim() : null,
+      end_at: rest.end_at && rest.end_at.trim() ? rest.end_at.trim() : null,
     };
     upsertMutation.mutate(payload);
   });

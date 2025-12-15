@@ -5,6 +5,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
 import { setAdminToken } from "../../auth/adminAuth";
+import { userApi } from "../../api/httpClient";
 
 const schema = z.object({
   username: z.string().min(1, "아이디를 입력하세요."),
@@ -13,8 +14,11 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
-const ADMIN_USER = "admin";
-const ADMIN_PASS = "2wP?+!Etm8#Qv4Mn";
+type TokenResponse = {
+  access_token: string;
+  token_type: string;
+  user: { id: number; external_id: string; nickname?: string | null; status?: string | null; level?: number | null };
+};
 
 const AdminLoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -25,12 +29,21 @@ const AdminLoginPage: React.FC = () => {
     setError,
   } = useForm<FormData>({ resolver: zodResolver(schema) });
 
-  const onSubmit = (data: FormData) => {
-    if (data.username === ADMIN_USER && data.password === ADMIN_PASS) {
-      setAdminToken("admin-session");
+  const onSubmit = async (data: FormData) => {
+    try {
+      const res = await userApi.post<TokenResponse>("/api/auth/token", {
+        external_id: data.username,
+        password: data.password,
+      });
+      setAdminToken(res.data.access_token);
       navigate("/admin");
-    } else {
-      setError("password", { message: "아이디 또는 비밀번호가 올바르지 않습니다." });
+    } catch (err: any) {
+      const detail = err?.response?.data?.detail;
+      if (detail === "INVALID_CREDENTIALS") {
+        setError("password", { message: "아이디 또는 비밀번호가 올바르지 않습니다." });
+      } else {
+        setError("password", { message: "로그인에 실패했습니다. 잠시 후 다시 시도하세요." });
+      }
     }
   };
 
