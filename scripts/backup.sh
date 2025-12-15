@@ -9,13 +9,20 @@ BACKUP_DIR="/opt/backups/xmas-event"
 APP_DIR="/opt/xmas-event"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 
+# Prefer Docker Compose v2 plugin if available
+if docker compose version >/dev/null 2>&1; then
+	DC="docker compose"
+else
+	DC="docker-compose"
+fi
+
 mkdir -p ${BACKUP_DIR}
 
 echo "Starting backup at ${TIMESTAMP}..."
 
 # Backup database
 echo "Backing up database..."
-docker-compose exec -T db mysqldump -u root -p${MYSQL_ROOT_PASSWORD} ${MYSQL_DATABASE} | gzip > ${BACKUP_DIR}/db_backup_${TIMESTAMP}.sql.gz
+${DC} exec -T db sh -lc 'mysqldump -u root -p"$MYSQL_ROOT_PASSWORD" "$MYSQL_DATABASE"' | gzip > ${BACKUP_DIR}/db_backup_${TIMESTAMP}.sql.gz
 
 # Backup environment files
 echo "Backing up configuration files..."

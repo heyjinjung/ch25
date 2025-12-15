@@ -8,17 +8,24 @@ set -e
 APP_DIR="/opt/xmas-event"
 cd ${APP_DIR}
 
+# Prefer Docker Compose v2 plugin if available
+if docker compose version >/dev/null 2>&1; then
+	DC="docker compose"
+else
+	DC="docker-compose"
+fi
+
 echo "Pulling latest changes from Git..."
 git pull
 
 echo "Rebuilding containers..."
-docker-compose build
+${DC} build
 
 echo "Restarting services..."
-docker-compose up -d
+${DC} up -d
 
 echo "Running migrations (if any)..."
-docker-compose exec -T backend alembic upgrade head
+${DC} exec -T backend alembic upgrade head
 
 echo "Update completed!"
-echo "Check logs with: docker-compose logs -f"
+echo "Check logs with: ${DC} logs -f"
