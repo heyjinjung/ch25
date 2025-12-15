@@ -36,7 +36,7 @@ const GameCard: React.FC<GameCardProps> = ({ title, path, tokenType, tokenBalanc
        : undefined;
 
   return (
-    <div className="rounded-2xl border border-emerald-700/35 bg-slate-950/70 p-5 shadow-lg transition hover:border-emerald-400/50">
+    <div className="rounded-2xl border border-emerald-500/25 bg-white/5 backdrop-blur-xl p-5 shadow-lg transition hover:border-emerald-300/40">
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
@@ -158,22 +158,22 @@ const HomePage: React.FC = () => {
   return (
     <section className="space-y-10">
       {/* Hero */}
-      <div className="rounded-3xl border border-emerald-700/35 bg-slate-950/70 p-7 shadow-2xl">
+      <div className="rounded-3xl border border-emerald-500/25 bg-gradient-to-br from-white/10 via-white/5 to-emerald-500/10 backdrop-blur-2xl p-7 shadow-2xl">
         <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <div className="space-y-3">
             <p className="text-xs uppercase tracking-[0.28em] text-emerald-300">Christmas Event</p>
             <h2 className="text-3xl font-extrabold text-white md:text-4xl">
-              {displayName(user?.external_id)}님,
+              {displayName(user?.external_id)}님
               <br className="hidden sm:block" />
-              오늘은 딱 3분만 즐기고 가세요.
+              메리크리스마스!
             </h2>
-            <p className="text-sm text-slate-300">복잡한 설명 없이, 티켓 있으면 바로 시작합니다.</p>
+            <p className="text-sm text-slate-200/90">복잡한 설명 없이, 티켓 있으면 바로 시작합니다.</p>
 
             <div className="mt-4 flex flex-wrap gap-2">
               <span className="rounded-full border border-emerald-500/40 bg-emerald-900/25 px-3 py-1 text-xs text-emerald-100">{missionSummary.top10}</span>
-              <span className="rounded-full border border-slate-700/50 bg-slate-900/40 px-3 py-1 text-xs text-slate-200">{missionSummary.daily}</span>
-              <span className="rounded-full border border-gold-500/35 bg-amber-900/20 px-3 py-1 text-xs text-amber-100">{missionSummary.depositNext}</span>
-              <span className="rounded-full border border-slate-700/50 bg-slate-900/40 px-3 py-1 text-xs text-slate-200">{missionSummary.wins}</span>
+              <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs text-white/90">{missionSummary.daily}</span>
+              <span className="rounded-full border border-gold-500/25 bg-amber-900/15 px-3 py-1 text-xs text-amber-100">{missionSummary.depositNext}</span>
+              <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs text-white/90">{missionSummary.wins}</span>
             </div>
           </div>
 
@@ -181,14 +181,14 @@ const HomePage: React.FC = () => {
             <button
               type="button"
               onClick={() => document.getElementById("home-games")?.scrollIntoView()}
-              className="rounded-full border border-emerald-400/70 bg-emerald-900/30 px-5 py-3 text-sm font-extrabold text-white hover:border-emerald-300/80 hover:bg-emerald-800/35"
+              className="rounded-full border border-emerald-300/60 bg-emerald-900/15 px-5 py-3 text-sm font-extrabold text-white backdrop-blur hover:border-emerald-200/70 hover:bg-emerald-800/20"
             >
               게임 시작하기
             </button>
             <button
               type="button"
               onClick={() => navigate("/team-battle")}
-              className="rounded-full border border-slate-600/60 bg-slate-900/50 px-5 py-3 text-sm font-semibold text-slate-100 hover:border-slate-400/70"
+              className="rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white/90 backdrop-blur hover:border-white/25"
             >
               팀 배틀 참여
             </button>
@@ -196,7 +196,7 @@ const HomePage: React.FC = () => {
               href="https://ccc-010.com"
               target="_blank"
               rel="noreferrer"
-              className="rounded-full border border-gold-400/50 bg-amber-900/20 px-5 py-3 text-sm font-semibold text-amber-100 hover:border-gold-300/70"
+              className="rounded-full border border-gold-400/35 bg-amber-900/15 px-5 py-3 text-sm font-semibold text-amber-100 backdrop-blur hover:border-gold-300/55"
             >
               CC 사이트 ↗
             </a>
@@ -221,7 +221,7 @@ const HomePage: React.FC = () => {
       </div>
 
       {/* Team battle (compact) */}
-      <div className="rounded-3xl border border-amber-600/35 bg-slate-950/70 p-7 shadow-2xl">
+      <div className="rounded-3xl border border-amber-500/25 bg-gradient-to-br from-white/10 via-white/5 to-amber-500/10 backdrop-blur-2xl p-7 shadow-2xl">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-1">
             <p className="text-xs uppercase tracking-[0.28em] text-amber-200">Team Battle</p>
@@ -243,7 +243,7 @@ const HomePage: React.FC = () => {
         </div>
 
         <div className="mt-5 grid gap-4 md:grid-cols-3">
-          <div className="rounded-2xl border border-emerald-700/30 bg-slate-950/70 p-5">
+          <div className="rounded-2xl border border-emerald-500/20 bg-white/5 backdrop-blur-xl p-5">
             <p className="text-xs font-semibold text-slate-300">내 팀</p>
             <p className="mt-2 text-lg font-extrabold text-white">{myTeamName}</p>
             <div className="mt-2 text-sm text-slate-300 space-y-1">
@@ -255,7 +255,7 @@ const HomePage: React.FC = () => {
             </div>
           </div>
 
-          <div className="md:col-span-2 rounded-2xl border border-emerald-700/30 bg-slate-950/70 p-5">
+          <div className="md:col-span-2 rounded-2xl border border-emerald-500/20 bg-white/5 backdrop-blur-xl p-5">
             <div className="flex items-center justify-between">
               <p className="text-xs font-semibold text-slate-300">상위 팀 TOP3</p>
               {teamLeaderboard.isLoading && <span className="text-xs text-slate-400">불러오는 중...</span>}
@@ -266,7 +266,7 @@ const HomePage: React.FC = () => {
             ) : (
               <div className="mt-4 grid gap-3 sm:grid-cols-3">
                 {topTeams.map((row, idx) => (
-                  <div key={row.team_id} className="rounded-xl border border-emerald-700/25 bg-slate-900/50 p-4">
+                  <div key={row.team_id} className="rounded-xl border border-emerald-500/15 bg-white/5 backdrop-blur p-4">
                     <p className="text-xs text-slate-300">#{idx + 1}</p>
                     <p className="mt-1 text-sm font-bold text-white truncate">{row.team_name}</p>
                     <p className="mt-2 text-sm font-extrabold text-emerald-200">{row.points} pts</p>
@@ -279,7 +279,7 @@ const HomePage: React.FC = () => {
       </div>
 
       {/* Ranking (compact) */}
-      <div className="rounded-3xl border border-gold-600/35 bg-slate-950/70 p-7 shadow-2xl">
+      <div className="rounded-3xl border border-gold-500/25 bg-gradient-to-br from-white/10 via-white/5 to-amber-500/10 backdrop-blur-2xl p-7 shadow-2xl">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.28em] text-amber-200">Ranking</p>
@@ -299,7 +299,7 @@ const HomePage: React.FC = () => {
             {rankingSummary.map((entry, idx) => {
               const medals = ["🥇", "🥈", "🥉"];
               return (
-                <div key={entry.user_id} className="rounded-2xl border border-gold-500/35 bg-slate-900/45 p-5">
+                <div key={entry.user_id} className="rounded-2xl border border-gold-500/25 bg-white/5 backdrop-blur-xl p-5">
                   <div className="flex items-center gap-2">
                     <span className="text-xl">{medals[idx] ?? "🏅"}</span>
                     <p className="text-sm font-semibold text-amber-200">{entry.rank}위</p>

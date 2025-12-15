@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useActiveSurveys } from "../../hooks/useSurvey";
 import { useToast } from "../common/ToastProvider";
@@ -8,13 +8,39 @@ const SurveyPromptBanner: React.FC = () => {
   const { addToast } = useToast();
   const navigate = useNavigate();
 
+  const pending = useMemo(() => {
+    if (!data || data.length === 0) return null;
+    return data.find((s) => s.pending_response_id) ?? null;
+  }, [data]);
+
+  const pendingKey = useMemo(() => {
+    if (!pending) return null;
+    return `survey:resume:${pending.id}:${pending.pending_response_id}`;
+  }, [pending]);
+
+  const lastToastKeyRef = useRef<string | null>(null);
+
   useEffect(() => {
-    if (!data || data.length === 0) return;
-    const withPending = data.find((s) => s.pending_response_id);
-    if (withPending) {
-      addToast(`${withPending.title} 설문을 이어서 진행하세요`, "info");
+    if (!pending || !pendingKey) return;
+
+    const storageKey = "survey_resume_toast_key_v1";
+    let stored: string | null = null;
+    try {
+      stored = sessionStorage.getItem(storageKey);
+    } catch {
+      stored = null;
     }
-  }, [data, addToast]);
+
+    if (stored === pendingKey || lastToastKeyRef.current === pendingKey) return;
+
+    addToast(`${pending.title} 설문을 이어서 진행하세요`, "info");
+    lastToastKeyRef.current = pendingKey;
+    try {
+      sessionStorage.setItem(storageKey, pendingKey);
+    } catch {
+      // ignore
+    }
+  }, [pending, pendingKey, addToast]);
 
   if (isLoading || !data || data.length === 0) return null;
 

@@ -221,7 +221,9 @@ const TeamBattlePage: React.FC = () => {
           <div className="space-y-1">
             <p className="text-xs uppercase tracking-[0.25em] text-emerald-100">🛡️ Team Battle</p>
             <h1 className="text-3xl font-extrabold text-white">{season ? season.name : "활성 시즌 없음"}</h1>
-            <p className="text-sm text-emerald-100">종료: {formatDateTime(season?.ends_at)}</p>
+            <p className="text-sm text-emerald-100">
+              기간: {formatDateTime(season?.starts_at)} ~ {formatDateTime(season?.ends_at)}
+            </p>
           </div>
           <div className="text-right">
             <p className="text-xs text-emerald-100/80">남은 시간</p>
@@ -245,12 +247,11 @@ const TeamBattlePage: React.FC = () => {
       </div>
 
       <div className="rounded-2xl border border-emerald-700/40 bg-slate-900/70 p-4 text-emerald-100 text-sm space-y-1">
-        <div className="font-semibold text-emerald-200">룰 안내</div>
-        <div>• 목적: 이벤트 기간 팀 협력 배틀, 밸런스 기준 자동 배정(직접 선택 없음)</div>
-        <div>• 구조: 시작 후 24시간만 팀 선택/자동 배정, 모든 시각 Asia/Seoul</div>
-        <div>• 점수: 게임 1회당 10점, 당일 플레이만 집계, 1인 하루 최대 500점</div>
-        <div>• 자격: 최소 30회 플레이(300점) 시 보상 대상</div>
-        <div>• 보상: 1위 팀 쿠폰 3만(수동), 2위 팀 포인트 100 자동</div>
+        <div className="font-semibold text-emerald-200">룰 안내 (핵심)</div>
+        <div>• 참여: 밸런스 기준 자동 배정 (직접 선택 없음)</div>
+        <div>• 팀 선택: 시작 후 24시간 내 1회</div>
+        <div>• 점수: 게임 1회당 10점 · 1인 하루 최대 500점</div>
+        <div>• 보상: 1위 쿠폰 3만(수동) · 2위 포인트 100(자동) · 최소 30회(300점)</div>
       </div>
 
       {joinWindow.closed && (
@@ -378,26 +379,22 @@ const TeamBattlePage: React.FC = () => {
       <div className="rounded-2xl border border-cyan-700/40 bg-gradient-to-br from-slate-950/80 to-cyan-900/40 p-5 shadow-lg">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-bold text-white">리더보드</h2>
-          <div className="text-right text-xs text-cyan-100/80 space-y-0.5">
-            <div>실시간 점수 (플레이 횟수 기준)</div>
-            <div>최신 이벤트 기준 정렬</div>
-            <div className="flex items-center justify-end gap-1 text-[11px]">
-              <span>표시</span>
-              <select
-                value={lbLimit}
-                onChange={(e) => {
-                  setLbLimit(Number(e.target.value));
-                  setLbOffset(0);
-                }}
-                className="rounded border border-cyan-500/40 bg-slate-900/80 px-1 py-0.5 text-xs text-cyan-100"
-              >
-                {[5, 10, 20, 50].map((n) => (
-                  <option key={n} value={n}>
-                    {n}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <div className="flex items-center gap-2 text-[11px] text-cyan-100/80">
+            <span>표시</span>
+            <select
+              value={lbLimit}
+              onChange={(e) => {
+                setLbLimit(Number(e.target.value));
+                setLbOffset(0);
+              }}
+              className="rounded border border-cyan-500/40 bg-slate-900/80 px-1 py-0.5 text-xs text-cyan-100"
+            >
+              {[5, 10, 20, 50].map((n) => (
+                <option key={n} value={n}>
+                  {n}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
         <div className="divide-y divide-slate-800/60">
