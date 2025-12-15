@@ -15,9 +15,10 @@ interface LotteryCardProps {
   readonly isRevealed: boolean;
   readonly isScratching: boolean;
   readonly onScratch: () => void;
+  readonly onRevealComplete?: () => void;
 }
 
-const LotteryCard: React.FC<LotteryCardProps> = ({ prize, isRevealed, isScratching, onScratch }) => {
+const LotteryCard: React.FC<LotteryCardProps> = ({ prize, isRevealed, isScratching, onScratch, onRevealComplete }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const isDrawingRef = useRef(false);
@@ -47,16 +48,16 @@ const LotteryCard: React.FC<LotteryCardProps> = ({ prize, isRevealed, isScratchi
 
     ctx.clearRect(0, 0, width, height);
 
-    // Base foil gradient
+    // Base foil gradient (opaque enough to hide underlay until cleared)
     const gradient = ctx.createLinearGradient(0, 0, width, height);
-    gradient.addColorStop(0, "rgba(255,255,255,0.4)");
-    gradient.addColorStop(0.5, "rgba(255,255,255,0.15)");
-    gradient.addColorStop(1, "rgba(255,255,255,0.3)");
+    gradient.addColorStop(0, "rgba(255,255,255,1)");
+    gradient.addColorStop(0.5, "rgba(235,235,235,1)");
+    gradient.addColorStop(1, "rgba(250,250,250,1)");
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, width, height);
 
     // Scatter texture
-    ctx.fillStyle = "rgba(255,255,255,0.12)";
+    ctx.fillStyle = "rgba(255,255,255,0.25)";
     const texturePoints = Math.floor((width * height) / 180);
     for (let i = 0; i < texturePoints; i += 1) {
       const x = Math.random() * width;
@@ -65,7 +66,7 @@ const LotteryCard: React.FC<LotteryCardProps> = ({ prize, isRevealed, isScratchi
     }
 
     // Center prompt text
-    ctx.fillStyle = "rgba(0,0,0,0.5)";
+    ctx.fillStyle = "rgba(0,0,0,0.65)";
     ctx.font = "600 18px Arial";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
@@ -75,7 +76,7 @@ const LotteryCard: React.FC<LotteryCardProps> = ({ prize, isRevealed, isScratchi
     requestedRef.current = false;
     setOverlayCleared(false);
     if (canvas) {
-      canvas.style.opacity = "0.9";
+      canvas.style.opacity = "1";
       canvas.style.pointerEvents = "auto";
     }
   }, []);
@@ -126,11 +127,12 @@ const LotteryCard: React.FC<LotteryCardProps> = ({ prize, isRevealed, isScratchi
       const percent = Math.min(100, Math.round(ratio * 100));
       setScratchProgress(percent);
 
-      if (!overlayHiddenRef.current && ratio > 0.6) {
+      if (!overlayHiddenRef.current && ratio > 0.8) {
         overlayHiddenRef.current = true;
         setOverlayCleared(true);
         canvas.style.opacity = "0";
         canvas.style.pointerEvents = "none";
+        onRevealComplete?.();
       }
     }
   };
@@ -174,13 +176,20 @@ const LotteryCard: React.FC<LotteryCardProps> = ({ prize, isRevealed, isScratchi
             className="relative flex h-full min-h-[160px] flex-col items-center justify-center overflow-hidden rounded-xl bg-slate-900"
             style={{ touchAction: "none" }}
           >
-            {/* Underlay: prize/result is always rendered, and the canvas overlay is scratched away */}
+            {/* Underlay: do NOT reveal actual result until overlayCleared */}
             <div className="relative z-10 flex flex-col items-center text-center">
               {!isRevealed ? (
                 <>
                   <div className="mb-4 text-5xl">🎫</div>
                   <p className="text-lg font-bold text-gold-300">{isScratching ? "결과 생성 중..." : "긁어서 결과를 확인하세요"}</p>
                   <p className="mt-2 text-sm text-slate-400">터치/클릭 후 긁어보세요.</p>
+                </>
+              ) : !overlayCleared ? (
+                <>
+                  <div className="mb-2 text-5xl">🔒</div>
+                  <p className="text-sm uppercase tracking-wider text-gold-400">결과 잠금</p>
+                  <p className="mt-2 text-lg font-bold text-white">다 긁으면 공개됩니다</p>
+                  <p className="mt-2 text-sm text-slate-400">끝까지 긁어주세요.</p>
                 </>
               ) : prize ? (
                 <>
