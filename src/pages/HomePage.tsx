@@ -164,7 +164,7 @@ const HomePage: React.FC = () => {
             <p className="text-xs uppercase tracking-[0.28em] text-emerald-300">Christmas Event</p>
             <h2 className="text-3xl font-extrabold text-white md:text-4xl">
               {displayName(user?.external_id)}님
-              <br className="hidden sm:block" />
+              <br className="block sm:hidden" />
               메리크리스마스!
             </h2>
             <p className="text-sm text-slate-200/90">복잡한 설명 없이, 티켓 있으면 바로 시작합니다.</p>
@@ -209,7 +209,7 @@ const HomePage: React.FC = () => {
         <div className="flex items-end justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.28em] text-slate-300">Play</p>
-            <h3 className="text-2xl font-extrabold text-white">바로 즐기는 게임</h3>
+            <h3 className="text-2xl font-extrabold text-white">클스게임</h3>
           </div>
           <p className="text-xs text-slate-400">티켓이 0이면 입장이 제한됩니다.</p>
         </div>

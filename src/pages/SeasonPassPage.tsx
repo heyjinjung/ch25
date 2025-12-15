@@ -156,7 +156,10 @@ const SeasonPassPage: React.FC = () => {
           transition={{ duration: 0.35 }}
         >
           <p className="text-xs uppercase tracking-[0.28em] text-emerald-200">Season Pass</p>
-          <h1 className="text-3xl font-bold text-white">🎄 크리스마스 시즌패스</h1>
+          <h1 className="text-3xl font-bold text-white">
+            <span className="block">🎄 크리스마스</span>
+            <span className="block">시즌패스</span>
+          </h1>
           <p className="text-sm text-slate-300">지민이와 함께하는 겨울 시즌 패스</p>
           <div className="mx-auto max-w-2xl space-y-2">
             <div className="flex flex-wrap items-center justify-center gap-2 text-xs text-slate-200">

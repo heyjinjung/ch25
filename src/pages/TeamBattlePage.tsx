@@ -220,7 +220,7 @@ const TeamBattlePage: React.FC = () => {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pt-6">
           <div className="space-y-1">
             <p className="text-xs uppercase tracking-[0.25em] text-emerald-100">🛡️ Team Battle</p>
-            <h1 className="text-3xl font-extrabold text-white">{season ? season.name : "활성 시즌 없음"}</h1>
+            <h1 className="text-3xl font-extrabold text-white">팀배틀</h1>
             <p className="text-sm text-emerald-100">
               기간: {formatDateTime(season?.starts_at)} ~ {formatDateTime(season?.ends_at)}
             </p>
