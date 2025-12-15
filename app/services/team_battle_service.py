@@ -19,6 +19,7 @@ class TeamBattleService:
     POINTS_PER_PLAY = 10
     DAILY_POINT_CAP = 500  # 50 plays per day
     TEAM_SELECTION_WINDOW_HOURS = 24
+    TEAM_MAX_MEMBERS = 5
     MIN_PLAYS_FOR_REWARD = 30
     DEFAULT_WEIGHT_DEPOSIT = 0.6
     DEFAULT_WEIGHT_PLAY = 0.4
@@ -139,7 +140,7 @@ class TeamBattleService:
         season = self.get_active_season(db, now)
         if season:
             return season
-        return self.ensure_current_season(db, now)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="NO_ACTIVE_TEAM_SEASON")
 
     def _assert_selection_window_open(self, season: TeamSeason, now: datetime) -> None:
         start_utc = self._normalize_to_utc(season.starts_at, now)
@@ -260,7 +261,8 @@ class TeamBattleService:
         if not bypass_selection:
             self._assert_selection_window_open(season, now)
 
-        team = db.get(Team, team_id)
+        # Lock the team row to prevent concurrent overfilling.
+        team = db.execute(select(Team).where(Team.id == team_id).with_for_update()).scalar_one_or_none()
         if not team or not team.is_active:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="TEAM_NOT_FOUND")
 
@@ -269,6 +271,12 @@ class TeamBattleService:
             if existing.team_id == team_id:
                 return existing
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="ALREADY_IN_TEAM")
+
+        member_count = db.execute(
+            select(func.count(TeamMember.user_id)).where(TeamMember.team_id == team_id)
+        ).scalar_one()
+        if (member_count or 0) >= self.TEAM_MAX_MEMBERS:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="TEAM_FULL")
 
         member = TeamMember(user_id=user_id, team_id=team_id, role=role)
         db.add(member)
@@ -285,12 +293,14 @@ class TeamBattleService:
         if existing:
             return existing
 
+        member_count = func.count(TeamMember.user_id).label("member_count")
         counts = db.execute(
-            select(Team.id, func.count(TeamMember.user_id).label("member_count"))
+            select(Team.id, member_count)
             .where(Team.is_active == True)  # noqa: E712
             .outerjoin(TeamMember, TeamMember.team_id == Team.id)
             .group_by(Team.id)
-            .order_by(func.count(TeamMember.user_id).asc(), Team.id.asc())
+            .having(member_count < self.TEAM_MAX_MEMBERS)
+            .order_by(member_count.asc(), Team.id.asc())
         ).all()
         if not counts:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="NO_ACTIVE_TEAMS")
@@ -672,6 +682,18 @@ class TeamBattleService:
         stmt = select(Team)
         if not include_inactive:
             stmt = stmt.where(Team.is_active == True)  # noqa: E712
+        return db.execute(stmt).scalars().all()
+
+    def list_joinable_teams(self, db: Session) -> Sequence[Team]:
+        member_count = func.count(TeamMember.user_id)
+        stmt = (
+            select(Team)
+            .where(Team.is_active == True)  # noqa: E712
+            .outerjoin(TeamMember, TeamMember.team_id == Team.id)
+            .group_by(Team.id)
+            .having(member_count < self.TEAM_MAX_MEMBERS)
+            .order_by(Team.id.asc())
+        )
         return db.execute(stmt).scalars().all()
 
     def contributors(self, db: Session, team_id: int, season_id: Optional[int], limit: int, offset: int) -> Sequence[tuple]:
