@@ -89,8 +89,8 @@ curl -f http://127.0.0.1/health
 백업 파일로 덮어써야 하는 경우에만 사용하세요.
 
 ```bash
-# 예시: /opt/backups/xmas-event/db_backup_YYYYmmdd_HHMMSS.sql.gz
-BACKUP_FILE="/opt/backups/xmas-event/db_backup_YYYYmmdd_HHMMSS.sql.gz"
+# 예시: /root/backups/xmas-event/db_backup_YYYYmmdd_HHMMSS.sql.gz
+BACKUP_FILE="/root/backups/xmas-event/db_backup_YYYYmmdd_HHMMSS.sql.gz"
 
 APP_DIR="/opt/xmas-event"   # 필요 시 /root/ch25 등으로 수정
 cd "$APP_DIR" || exit 1

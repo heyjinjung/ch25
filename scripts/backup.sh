@@ -5,8 +5,9 @@
 
 set -e
 
-BACKUP_DIR="/opt/backups/xmas-event"
-APP_DIR="/opt/xmas-event"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+APP_DIR="${APP_DIR:-$(cd "$SCRIPT_DIR/.." && pwd)}"
+BACKUP_DIR="${BACKUP_DIR:-/root/backups/xmas-event}"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 
 # Prefer Docker Compose v2 plugin if available
@@ -30,7 +31,11 @@ cp ${APP_DIR}/.env ${BACKUP_DIR}/env_backup_${TIMESTAMP}
 
 # Backup logs
 echo "Backing up logs..."
-tar -czf ${BACKUP_DIR}/logs_backup_${TIMESTAMP}.tar.gz ${APP_DIR}/logs
+if [ -d "${APP_DIR}/logs" ]; then
+	tar -czf ${BACKUP_DIR}/logs_backup_${TIMESTAMP}.tar.gz ${APP_DIR}/logs
+else
+	echo "No logs directory found at ${APP_DIR}/logs (skipping)"
+fi
 
 # Keep only last 7 days of backups
 echo "Cleaning old backups..."

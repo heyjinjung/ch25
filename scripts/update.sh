@@ -5,8 +5,9 @@
 
 set -e
 
-APP_DIR="/opt/xmas-event"
-cd ${APP_DIR}
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+APP_DIR="${APP_DIR:-$(cd "$SCRIPT_DIR/.." && pwd)}"
+cd "$APP_DIR"
 
 # Prefer Docker Compose v2 plugin if available
 if docker compose version >/dev/null 2>&1; then
