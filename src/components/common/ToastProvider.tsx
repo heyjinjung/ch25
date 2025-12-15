@@ -19,13 +19,17 @@ const generateId = (): string => {
 
 type Toast = {
   id: string;
-  message: string;
+  content: React.ReactNode;
   tone?: "success" | "error" | "info";
+  durationMs?: number;
+  dismissOnClick?: boolean;
 };
 
 type ToastContextValue = {
   toasts: Toast[];
   addToast: (message: string, tone?: Toast["tone"]) => void;
+  addToastNode: (content: React.ReactNode, options?: { tone?: Toast["tone"]; durationMs?: number; dismissOnClick?: boolean }) => void;
+  addImageToast: (src: string, alt?: string, options?: { tone?: Toast["tone"]; width?: number; height?: number }) => void;
   removeToast: (id: string) => void;
 };
 
@@ -41,27 +45,69 @@ const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   const addToast = (message: string, tone: Toast["tone"] = "info") => {
-    const toast: Toast = { id: generateId(), message, tone };
+    const toast: Toast = { id: generateId(), content: message, tone, durationMs: 3000, dismissOnClick: true };
     setToasts((prev) => [...prev, toast]);
-    setTimeout(() => removeToast(toast.id), 3000);
+    if (toast.durationMs && toast.durationMs > 0) {
+      setTimeout(() => removeToast(toast.id), toast.durationMs);
+    }
+  };
+
+  const addToastNode: ToastContextValue["addToastNode"] = (content, options) => {
+    const tone = options?.tone ?? "info";
+    const durationMs = options?.durationMs;
+    const dismissOnClick = options?.dismissOnClick ?? true;
+    const toast: Toast = { id: generateId(), content, tone, durationMs, dismissOnClick };
+
+    setToasts((prev) => [...prev, toast]);
+    if (durationMs && durationMs > 0) {
+      setTimeout(() => removeToast(toast.id), durationMs);
+    }
+  };
+
+  const addImageToast: ToastContextValue["addImageToast"] = (src, alt, options) => {
+    const width = options?.width ?? 400;
+    const height = options?.height ?? 700;
+    const tone = options?.tone ?? "info";
+
+    addToastNode(
+      <div className="space-y-3">
+        <p className="text-xs font-semibold text-slate-200">이미지 보기 (클릭하면 닫힘)</p>
+        <img
+          src={src}
+          alt={alt ?? "toast image"}
+          style={{ width, height, maxWidth: "100%", maxHeight: "70vh" }}
+          className="max-w-full rounded-lg border border-slate-600/50 object-contain"
+        />
+      </div>,
+      { tone, durationMs: 0, dismissOnClick: true }
+    );
   };
 
   const removeToast = (id: string) => {
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
   };
 
-  const value = useMemo(() => ({ toasts, addToast, removeToast }), [toasts]);
+  const value = useMemo(() => ({ toasts, addToast, addToastNode, addImageToast, removeToast }), [toasts]);
 
   return (
     <ToastContext.Provider value={value}>
       {children}
-      <div className="pointer-events-none fixed bottom-6 right-6 z-50 flex w-full max-w-sm flex-col gap-3">
+      <div className="pointer-events-none fixed bottom-6 right-6 z-50 flex w-full max-w-md flex-col gap-3">
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className={`pointer-events-auto rounded-lg border px-4 py-3 text-sm text-slate-50 shadow-lg shadow-emerald-900/40 ${toneClassMap[toast.tone ?? "info"]}`}
+            role="button"
+            tabIndex={0}
+            onClick={() => {
+              if (toast.dismissOnClick) removeToast(toast.id);
+            }}
+            onKeyDown={(e) => {
+              if (!toast.dismissOnClick) return;
+              if (e.key === "Enter" || e.key === " ") removeToast(toast.id);
+            }}
+            className={`pointer-events-auto rounded-lg border px-4 py-3 text-sm text-slate-50 shadow-lg shadow-emerald-900/40 ${toneClassMap[toast.tone ?? "info"]} ${toast.dismissOnClick ? "cursor-pointer" : ""}`}
           >
-            {toast.message}
+            {toast.content}
           </div>
         ))}
       </div>

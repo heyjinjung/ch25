@@ -2,14 +2,18 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { login } from "../api/authApi";
 import { setAuth, useAuth } from "../auth/authStore";
+import { useToast } from "../components/common/ToastProvider";
 
 const LoginPage: React.FC = () => {
   const { token } = useAuth();
   const navigate = useNavigate();
+  const { addImageToast } = useToast();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [externalId, setExternalId] = useState<string>("");
   const [password, setPassword] = useState<string>("");
+
+  const loginToastKey = "xmas_login_toast_cycle_v1";
 
   const handleLogin = async () => {
     setLoading(true);
@@ -26,6 +30,12 @@ const LoginPage: React.FC = () => {
         password: password || undefined,
       });
       setAuth(response.access_token, response.user);
+
+      const prev = Number.parseInt(localStorage.getItem(loginToastKey) ?? "0", 10);
+      const src = prev % 2 === 0 ? "/ccx001.png" : "/ccx002.png";
+      localStorage.setItem(loginToastKey, String(prev + 1));
+
+      addImageToast(src, "login popup", { width: 400, height: 700 });
       navigate("/home", { replace: true });
     } catch (err) {
       console.error("[LoginPage] login error", err);

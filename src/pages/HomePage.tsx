@@ -2,7 +2,6 @@
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../auth/authStore";
-import { useSeasonPassStatus } from "../hooks/useSeasonPass";
 import { useRouletteStatus } from "../hooks/useRoulette";
 import { useDiceStatus } from "../hooks/useDice";
 import { useLotteryStatus } from "../hooks/useLottery";
@@ -37,26 +36,32 @@ const GameCard: React.FC<GameCardProps> = ({ title, path, tokenType, tokenBalanc
        : undefined;
 
   return (
-    <div className="space-y-3 rounded-2xl border border-red-800/40 bg-gradient-to-br from-slate-900/80 to-red-950/20 p-5 shadow-lg hover:border-gold-500/50 hover:shadow-gold-500/10 transition-all duration-300">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-2xl">{gameIcons[title] ?? "🎮"}</span>
-          <h3 className="text-lg font-bold text-white">{title}</h3>
+    <div className="rounded-2xl border border-emerald-700/35 bg-slate-950/70 p-5 shadow-lg transition hover:border-emerald-400/50">
+      <div className="flex items-start justify-between gap-3">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="text-2xl">{gameIcons[title] ?? "🎮"}</span>
+            <h3 className="text-lg font-extrabold text-white">{title}</h3>
+          </div>
+          <p className="text-xs text-slate-300">{tokenLabel}</p>
         </div>
-        <span className="text-sm text-gold-300">{tokenLabel}</span>
+        <div className="text-right">
+          <p className="text-[11px] uppercase tracking-[0.2em] text-slate-400">티켓</p>
+          <p className="text-xl font-extrabold text-emerald-200">{hasCoins ? tokenBalance : 0}</p>
+        </div>
       </div>
-      <p className="text-sm text-slate-300">
-        보유 티켓: <span className="font-semibold text-emerald-300">{hasCoins ? tokenBalance : 0}</span>
-      </p>
-      {statusBadge && <p className="text-xs text-amber-200">{statusBadge}</p>}
+
+      {statusBadge && <p className="mt-3 text-xs text-amber-200">{statusBadge}</p>}
+
       <button
         type="button"
         onClick={() => navigate(path)}
         disabled={!hasCoins}
-        className="w-full rounded-lg bg-gradient-to-r from-red-700 to-red-600 px-4 py-2 text-sm font-bold text-white shadow transition hover:from-red-600 hover:to-red-500 disabled:cursor-not-allowed disabled:from-slate-700 disabled:to-slate-600"
+        className="mt-4 w-full rounded-xl border border-emerald-500/40 bg-emerald-900/30 px-4 py-3 text-sm font-extrabold text-emerald-50 transition hover:border-emerald-300/60 hover:bg-emerald-800/35 disabled:cursor-not-allowed disabled:border-slate-700/50 disabled:bg-slate-800/60 disabled:text-slate-300"
       >
-        {hasCoins ? "🎄 바로 입장" : "티켓 없음 - 지민이 문의"}
+        {hasCoins ? "바로 시작하기" : "티켓이 필요해요"}
       </button>
+      {!hasCoins && <p className="mt-2 text-xs text-slate-400">티켓 지급 문의: 지민이</p>}
     </div>
   );
 };
@@ -64,7 +69,6 @@ const GameCard: React.FC<GameCardProps> = ({ title, path, tokenType, tokenBalanc
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const season = useSeasonPassStatus();
   const roulette = useRouletteStatus();
   const dice = useDiceStatus();
   const lottery = useLotteryStatus();
@@ -79,21 +83,6 @@ const HomePage: React.FC = () => {
   const deposit = external?.deposit_amount ?? 0;
   const depositRemainder = 100_000 - (deposit % 100_000 || 100_000);
   const playDone = (external?.play_count ?? 0) > 0;
-
-  const stampTips = [
-    { title: "CC랭킹 TOP10", status: external?.rank ? `현재 ${external.rank}위${top10Needed > 0 ? `, ${top10Needed}위 상승 필요` : " (완료)"}` : "랭킹 데이터 없음" },
-    { title: "CC사이트 일일이용", status: playDone ? "완료" : "미완료" },
-    { title: "CC 입금 10만원마다", status: `누적 ${deposit.toLocaleString()}원 / 다음까지 ${depositRemainder === 100_000 ? 0 : depositRemainder.toLocaleString()}원` },
-    {
-      title: "내부 게임 승리 50회",
-      status: internalWins.data
-        ? `누적 승리 ${internalWins.data.total_wins}회 / 남은 ${internalWins.data.remaining}회`
-        : internalWins.isLoading
-        ? "집계 중..."
-        : "집계 실패",
-    },
-  ];
-  const tipIcons = ["🎄", "❄️", "🎁", "⛄"];
 
   const gameCards: GameCardProps[] = [
     {
@@ -129,10 +118,6 @@ const HomePage: React.FC = () => {
   const myTeamPoints = myTeamRow?.points ?? null;
   const myTeamMembers = myTeamRow?.member_count ?? null;
 
-  const currentXp = season.data?.current_xp ?? 0;
-  const nextXp = season.data?.next_level_xp ?? currentXp;
-  const maxLevel = season.data?.max_level ?? 10;
-
   const displayName = (entryUserName?: string) => {
     if (entryUserName && entryUserName.trim().length > 0) return entryUserName;
     if (user?.external_id) return user.external_id;
@@ -153,180 +138,175 @@ const HomePage: React.FC = () => {
     return d.toLocaleString("ko-KR", { timeZone: "Asia/Seoul" });
   };
 
+  const topTeams = useMemo(() => {
+    if (!teamLeaderboard.data) return [];
+    return teamLeaderboard.data.slice(0, 3);
+  }, [teamLeaderboard.data]);
+
+  const missionSummary = useMemo(() => {
+    const rank = external?.rank;
+    const top10 = rank ? (rank <= 10 ? "TOP10 달성" : `TOP10까지 ${rank - 10}위`) : "랭킹 없음";
+    const daily = playDone ? "오늘 이용 완료" : "오늘 이용 필요";
+    const depositNext = depositRemainder === 100_000 ? "다음 10만까지 0" : `다음 10만까지 ${depositRemainder.toLocaleString()}`;
+    const wins = internalWins.data
+      ? `승리 ${internalWins.data.total_wins} (남은 ${internalWins.data.remaining})`
+      : internalWins.isLoading
+      ? "승리 집계 중"
+      : "승리 집계 실패";
+    return { top10, daily, depositNext, wins };
+  }, [depositRemainder, external?.rank, internalWins.data, internalWins.isLoading, playDone]);
+
   return (
-    <section className="space-y-8">
-      {/* 히어로 + 시즌패스 요약 */}
-      <div className="rounded-3xl border border-emerald-700/40 bg-slate-950/80 p-6 shadow-2xl space-y-4">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div className="space-y-1">
-            <p className="text-xs uppercase tracking-[0.25em] text-emerald-300">Merry CC-Mas</p>
-            <h2 className="text-3xl font-extrabold text-white">환영해요, {displayName(user?.external_id)}님</h2>
-            <div className="flex flex-wrap gap-2 text-xs text-emerald-100">
-              <span className="rounded-full border border-emerald-500/50 bg-emerald-900/30 px-3 py-1">레벨 {season.data?.current_level ?? 0}</span>
-              <span className="rounded-full border border-gold-400/50 bg-amber-900/30 px-3 py-1">XP {currentXp.toLocaleString()} / {nextXp.toLocaleString()}</span>
-              <span className="rounded-full border border-slate-600/60 bg-slate-800/60 px-3 py-1">MAX {maxLevel}레벨</span>
+    <section className="space-y-10">
+      {/* Hero */}
+      <div className="rounded-3xl border border-emerald-700/35 bg-slate-950/70 p-7 shadow-2xl">
+        <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+          <div className="space-y-3">
+            <p className="text-xs uppercase tracking-[0.28em] text-emerald-300">Christmas Event</p>
+            <h2 className="text-3xl font-extrabold text-white md:text-4xl">
+              {displayName(user?.external_id)}님,
+              <br className="hidden sm:block" />
+              오늘은 딱 3분만 즐기고 가세요.
+            </h2>
+            <p className="text-sm text-slate-300">복잡한 설명 없이, 티켓 있으면 바로 시작합니다.</p>
+
+            <div className="mt-4 flex flex-wrap gap-2">
+              <span className="rounded-full border border-emerald-500/40 bg-emerald-900/25 px-3 py-1 text-xs text-emerald-100">{missionSummary.top10}</span>
+              <span className="rounded-full border border-slate-700/50 bg-slate-900/40 px-3 py-1 text-xs text-slate-200">{missionSummary.daily}</span>
+              <span className="rounded-full border border-gold-500/35 bg-amber-900/20 px-3 py-1 text-xs text-amber-100">{missionSummary.depositNext}</span>
+              <span className="rounded-full border border-slate-700/50 bg-slate-900/40 px-3 py-1 text-xs text-slate-200">{missionSummary.wins}</span>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+
+          <div className="flex flex-wrap items-center gap-3">
             <button
               type="button"
-              onClick={() => navigate("/season-pass")}
-              className="rounded-full border border-gold-400/60 bg-gradient-to-r from-emerald-600 to-gold-500 px-4 py-2 text-sm font-semibold text-white shadow-lg hover:shadow-gold-500/30"
+              onClick={() => document.getElementById("home-games")?.scrollIntoView()}
+              className="rounded-full border border-emerald-400/70 bg-emerald-900/30 px-5 py-3 text-sm font-extrabold text-white hover:border-emerald-300/80 hover:bg-emerald-800/35"
             >
-              시즌패스 바로가기 →
+              게임 시작하기
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate("/team-battle")}
+              className="rounded-full border border-slate-600/60 bg-slate-900/50 px-5 py-3 text-sm font-semibold text-slate-100 hover:border-slate-400/70"
+            >
+              팀 배틀 참여
             </button>
             <a
               href="https://ccc-010.com"
               target="_blank"
               rel="noreferrer"
-              className="rounded-full border border-emerald-500/60 bg-slate-800/80 px-4 py-2 text-sm font-semibold text-emerald-100 hover:border-emerald-300 hover:text-white transition"
+              className="rounded-full border border-gold-400/50 bg-amber-900/20 px-5 py-3 text-sm font-semibold text-amber-100 hover:border-gold-300/70"
             >
-              CC 사이트 바로가기 ↗
+              CC 사이트 ↗
             </a>
           </div>
         </div>
-
-        <div className="rounded-2xl border border-emerald-700/50 bg-slate-900/70 p-4 space-y-2">
-          <p className="text-sm font-semibold text-emerald-200">오늘 할 일 체크</p>
-          <ul className="space-y-2 text-sm text-slate-200">
-            {stampTips.map((tip, idx) => (
-              <li key={tip.title} className="flex items-start gap-2">
-                <span className="mt-[2px] text-lg">{tipIcons[idx] ?? "🎅"}</span>
-                <div>
-                  <p className="font-semibold">{tip.title}</p>
-                  <p className="text-xs text-slate-400">{tip.status}</p>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
       </div>
 
-      <div className="rounded-3xl border border-amber-600/40 bg-slate-950/80 p-8 shadow-[0_25px_80px_-30px_rgba(0,0,0,0.6)]">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="space-y-1">
-            <p className="text-xs uppercase tracking-[0.28em] text-amber-200">🛡️ Team Battle</p>
-            <h2 className="text-2xl font-extrabold bg-gradient-to-r from-amber-200 via-emerald-200 to-cyan-300 bg-clip-text text-transparent">오늘의 팀 배틀</h2>
-            <p className="text-sm text-slate-200">팀을 고르고 플레이 횟수로 경쟁하세요. 우승팀은 CC 포인트 보상!</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className={`rounded-full border border-amber-400/60 bg-amber-900/30 px-3 py-1 text-xs font-semibold ${seasonState.tone}`}>
-              {seasonState.label}
-            </span>
-            <button
-              type="button"
-              onClick={() => navigate("/team-battle")}
-              className="rounded-full border border-emerald-400/70 bg-emerald-900/30 px-4 py-2 text-sm font-semibold text-emerald-100 hover:border-emerald-300 hover:text-white"
-            >
-              팀 배틀 바로가기 →
-            </button>
-          </div>
-        </div>
-
-        <div className="mt-4 grid gap-4 md:grid-cols-3">
-          <div className="md:col-span-1 rounded-2xl border border-amber-600/40 bg-slate-900/80 p-5 shadow-inner">
-            <div className="flex items-center justify-between">
-              <p className="text-xs font-semibold text-amber-200">활성 시즌</p>
-              <span className="text-[11px] text-slate-400">Asia/Seoul</span>
-            </div>
-            {teamSeason.isLoading && <p className="mt-2 text-sm text-slate-400">불러오는 중...</p>}
-            {teamSeason.isError && <p className="mt-2 text-sm text-red-300">시즌 정보를 불러오지 못했습니다.</p>}
-            {teamSeason.data && (
-              <div className="mt-2 space-y-2 text-sm text-slate-100">
-                <p className="text-base font-bold text-white">{teamSeason.data.name}</p>
-                <p className="text-xs text-slate-300">종료: {formatEndsAt(teamSeason.data.ends_at)}</p>
-                <div className="rounded-lg border border-emerald-700/40 bg-emerald-900/30 p-2 text-xs text-emerald-100">
-                  <div className="font-semibold">내 팀 배정</div>
-                  {myTeam.isLoading && <div>배정 정보 불러오는 중...</div>}
-                  {myTeam.isError && <div className="text-red-200">배정 정보를 불러오지 못했습니다.</div>}
-                  {myTeam.data ? (
-                    <div className="space-y-1">
-                      <div>팀: {myTeamName}</div>
-                      <div>점수: {myTeamPoints !== null ? `${myTeamPoints} pts` : "점수 데이터 없음"}</div>
-                      <div>인원: {myTeamMembers !== null ? `${myTeamMembers}명` : "-"}</div>
-                    </div>
-                  ) : (
-                    !myTeam.isLoading && <div>아직 배정되지 않았습니다.</div>
-                  )}
-                </div>
-              </div>
-            )}
-            {!teamSeason.data && !teamSeason.isLoading && !teamSeason.isError && (
-              <p className="mt-2 text-sm text-slate-400">활성 시즌이 없습니다.</p>
-            )}
-          </div>
-
-          <div className="md:col-span-2 rounded-2xl border border-emerald-600/40 bg-slate-900/80 p-5 shadow-inner">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-emerald-200">상위 팀</p>
-              <span className="text-xs text-slate-400">플레이 횟수 기준</span>
-            </div>
-            {teamLeaderboard.isLoading && <p className="mt-2 text-sm text-slate-400">리더보드 불러오는 중...</p>}
-            {teamLeaderboard.isError && <p className="mt-2 text-sm text-red-300">리더보드를 불러오지 못했습니다.</p>}
-            {teamLeaderboard.data && teamLeaderboard.data.length > 0 ? (
-              <div className="mt-3 divide-y divide-slate-800/60">
-                {teamLeaderboard.data.map((row, idx) => (
-                  <div key={row.team_id} className="flex items-center justify-between py-3">
-                    <div className="flex items-center gap-3">
-                      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-900/50 text-sm font-bold text-emerald-200">#{idx + 1}</span>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-bold text-white">{row.team_name}</span>
-                        <span className="text-[11px] text-slate-400">team_id: {row.team_id}</span>
-                      </div>
-                    </div>
-                    <span className="rounded-full bg-emerald-800/50 px-3 py-1 text-sm font-semibold text-emerald-100">{row.points} pts</span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              !teamLeaderboard.isLoading && <p className="mt-3 text-sm text-slate-400">아직 점수가 없습니다.</p>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div className="rounded-3xl border border-red-700/40 bg-slate-950/80 p-8 shadow-2xl">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+      {/* Games (Primary CTA area) */}
+      <div id="home-games" className="space-y-4">
+        <div className="flex items-end justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.25em] text-gold-400">🎮 Games</p>
-            <h2 className="text-2xl font-bold bg-gradient-to-r from-red-400 via-gold-400 to-emerald-400 bg-clip-text text-transparent">게임 선택</h2>
-            <p className="text-sm text-slate-300">티켓이 있으면 바로 입장, 없으면 지민이에게 문의해 주세요.</p>
+            <p className="text-xs uppercase tracking-[0.28em] text-slate-300">Play</p>
+            <h3 className="text-2xl font-extrabold text-white">바로 즐기는 게임</h3>
           </div>
+          <p className="text-xs text-slate-400">티켓이 0이면 입장이 제한됩니다.</p>
         </div>
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 lg:grid-cols-3">
           {gameCards.map((card) => (
             <GameCard key={card.title} {...card} />
           ))}
         </div>
       </div>
 
-      <div className="rounded-3xl border border-gold-600/40 bg-slate-950/80 p-8 shadow-2xl">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+      {/* Team battle (compact) */}
+      <div className="rounded-3xl border border-amber-600/35 bg-slate-950/70 p-7 shadow-2xl">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-1">
+            <p className="text-xs uppercase tracking-[0.28em] text-amber-200">Team Battle</p>
+            <h3 className="text-2xl font-extrabold text-white">팀 배틀</h3>
+            <p className="text-sm text-slate-300">팀 선택 후 플레이 횟수로 경쟁합니다.</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className={`rounded-full border border-amber-400/60 bg-amber-900/25 px-3 py-1 text-xs font-semibold ${seasonState.tone}`}>
+              {seasonState.label}
+            </span>
+            <button
+              type="button"
+              onClick={() => navigate("/team-battle")}
+              className="rounded-full border border-emerald-400/70 bg-emerald-900/30 px-4 py-2 text-sm font-semibold text-emerald-100 hover:border-emerald-300/80"
+            >
+              참여하기 →
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-5 grid gap-4 md:grid-cols-3">
+          <div className="rounded-2xl border border-emerald-700/30 bg-slate-950/70 p-5">
+            <p className="text-xs font-semibold text-slate-300">내 팀</p>
+            <p className="mt-2 text-lg font-extrabold text-white">{myTeamName}</p>
+            <div className="mt-2 text-sm text-slate-300 space-y-1">
+              <div>점수: {myTeamPoints !== null ? `${myTeamPoints} pts` : "-"}</div>
+              <div>인원: {myTeamMembers !== null ? `${myTeamMembers}명` : "-"}</div>
+              {teamSeason.data && <div className="text-xs text-slate-400">종료: {formatEndsAt(teamSeason.data.ends_at)}</div>}
+              {myTeam.isLoading && <div className="text-xs text-slate-400">불러오는 중...</div>}
+              {myTeam.isError && <div className="text-xs text-red-300">불러오기 실패</div>}
+            </div>
+          </div>
+
+          <div className="md:col-span-2 rounded-2xl border border-emerald-700/30 bg-slate-950/70 p-5">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold text-slate-300">상위 팀 TOP3</p>
+              {teamLeaderboard.isLoading && <span className="text-xs text-slate-400">불러오는 중...</span>}
+              {teamLeaderboard.isError && <span className="text-xs text-red-300">불러오기 실패</span>}
+            </div>
+            {topTeams.length === 0 ? (
+              !teamLeaderboard.isLoading && <p className="mt-3 text-sm text-slate-400">데이터 없음</p>
+            ) : (
+              <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                {topTeams.map((row, idx) => (
+                  <div key={row.team_id} className="rounded-xl border border-emerald-700/25 bg-slate-900/50 p-4">
+                    <p className="text-xs text-slate-300">#{idx + 1}</p>
+                    <p className="mt-1 text-sm font-bold text-white truncate">{row.team_name}</p>
+                    <p className="mt-2 text-sm font-extrabold text-emerald-200">{row.points} pts</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Ranking (compact) */}
+      <div className="rounded-3xl border border-gold-600/35 bg-slate-950/70 p-7 shadow-2xl">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.25em] text-gold-400">🏆 Ranking</p>
-            <h2 className="text-2xl font-bold bg-gradient-to-r from-gold-300 via-gold-400 to-gold-300 bg-clip-text text-transparent">CC랭킹</h2>
-            <p className="text-sm text-slate-300">입금액/플레이 수 기준. TOP10 진입 시 스탬프 1개.</p>
+            <p className="text-xs uppercase tracking-[0.28em] text-amber-200">Ranking</p>
+            <h3 className="text-2xl font-extrabold text-white">CC 랭킹 TOP3</h3>
           </div>
           {external?.rank && (
-            <div className="rounded-full bg-amber-900/50 px-4 py-1 text-xs text-amber-100">
-              내 순위: {external.rank}위 / 입금 {deposit.toLocaleString()}원 / 플레이 {external.play_count}
+            <div className="rounded-full border border-gold-500/35 bg-amber-900/20 px-4 py-2 text-xs text-amber-100">
+              내 순위 {external.rank}위 · 입금 {deposit.toLocaleString()} · 플레이 {external.play_count}
             </div>
           )}
         </div>
+
         {rankingSummary.length === 0 ? (
-          <p className="mt-3 text-sm text-slate-400">랭킹 데이터 없음</p>
+          <p className="mt-4 text-sm text-slate-400">랭킹 데이터 없음</p>
         ) : (
-          <div className="mt-4 grid gap-3 md:grid-cols-3">
+          <div className="mt-5 grid gap-3 md:grid-cols-3">
             {rankingSummary.map((entry, idx) => {
               const medals = ["🥇", "🥈", "🥉"];
               return (
-                <div key={entry.user_id} className="rounded-xl border border-gold-500/50 bg-gradient-to-br from-slate-900/80 to-gold-950/20 p-4 hover:border-gold-400 transition-all">
+                <div key={entry.user_id} className="rounded-2xl border border-gold-500/35 bg-slate-900/45 p-5">
                   <div className="flex items-center gap-2">
                     <span className="text-xl">{medals[idx] ?? "🏅"}</span>
-                    <p className="text-sm font-semibold text-gold-300">{entry.rank}위</p>
+                    <p className="text-sm font-semibold text-amber-200">{entry.rank}위</p>
                   </div>
-                  <p className="text-base font-bold text-white mt-1">{displayName(entry.user_name)}</p>
-                  <p className="text-xs text-slate-300">입금 {entry.deposit_amount.toLocaleString()}원 · 플레이 {entry.play_count}</p>
+                  <p className="mt-2 text-lg font-extrabold text-white truncate">{displayName(entry.user_name)}</p>
+                  <p className="mt-1 text-xs text-slate-300">입금 {entry.deposit_amount.toLocaleString()} · 플레이 {entry.play_count}</p>
                 </div>
               );
             })}
