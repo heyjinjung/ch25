@@ -11,7 +11,6 @@ from sqlalchemy.orm import Session
 from app.models.team_battle import TeamSeason, Team, TeamMember, TeamScore, TeamEventLog
 from app.models.external_ranking import ExternalRankingData
 from app.models.game_wallet import GameTokenType
-from app.services.game_wallet_service import GameWalletService
 from app.services.level_xp_service import LevelXPService
 from app.core.config import get_settings
 
@@ -428,7 +427,6 @@ class TeamBattleService:
             team_contrib = contrib_map.setdefault(row.team_id, {})
             team_contrib[row.user_id] = row.points
 
-        wallet = GameWalletService()
         min_points = self.MIN_PLAYS_FOR_REWARD * self.POINTS_PER_PLAY
 
         def eligible_users_for_team(team_id: int) -> list[dict]:
@@ -440,36 +438,37 @@ class TeamBattleService:
                     users.append({"user_id": m.user_id, "points": points})
             return users
 
+        # Rewards are fully manual for this event.
         rank1 = standings[0]
         rank2 = standings[1] if len(standings) > 1 else None
+        rank3 = standings[2] if len(standings) > 2 else None
 
-        auto_rewards: list[int] = []
-        if rank2:
-            for entry in eligible_users_for_team(rank2.team_id):
-                LevelXPService().add_xp(
-                    db,
-                    user_id=entry["user_id"],
-                    delta=100,
-                    source="TEAM_BATTLE_RANK2",
-                    meta={"season_id": season_id, "team_id": rank2.team_id, "rank": 2},
-                )
-                auto_rewards.append(entry["user_id"])
-
-        all_eligible = [
-            {"team_id": t_id, "user_id": u_id, "points": pts}
-            for t_id, by_user in contrib_map.items()
-            for u_id, pts in by_user.items()
-            if pts >= min_points
-        ]
-        top3_manual = sorted(all_eligible, key=lambda x: (-x["points"], x["team_id"], x["user_id"]))[:3]
-
+        # Event payouts (manual): 1st 30만, 2nd 20만, 3rd 5만
         return {
             "season_id": season_id,
-            "rank1": {"team_id": rank1.team_id, "points": rank1.points, "manual_coupon": 30000, "eligible_users": eligible_users_for_team(rank1.team_id)},
-            "rank2": {"team_id": rank2.team_id, "points": rank2.points} if rank2 else None,
-            "rank2_auto_rewarded": auto_rewards,
-            "top3_manual_coupon": top3_manual,
             "min_points_required": min_points,
+            "rank1": {
+                "team_id": rank1.team_id,
+                "points": rank1.points,
+                "manual_coupon": 300000,
+                "eligible_users": eligible_users_for_team(rank1.team_id),
+            },
+            "rank2": {
+                "team_id": rank2.team_id,
+                "points": rank2.points,
+                "manual_coupon": 200000,
+                "eligible_users": eligible_users_for_team(rank2.team_id),
+            }
+            if rank2
+            else None,
+            "rank3": {
+                "team_id": rank3.team_id,
+                "points": rank3.points,
+                "manual_coupon": 50000,
+                "eligible_users": eligible_users_for_team(rank3.team_id),
+            }
+            if rank3
+            else None,
         }
 
     def _percentile(self, values: list[int], pct: float) -> float:
