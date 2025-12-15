@@ -33,4 +33,10 @@ from app.models import (  # noqa: F401
     UserXpEventLog,
     User,
     UserGameWallet,
+    Survey,
+    SurveyQuestion,
+    SurveyOption,
+    SurveyTriggerRule,
+    SurveyResponse,
+    SurveyResponseAnswer,
 )

@@ -67,6 +67,7 @@ export default {
       },
       animation: {
         'spin-slow': 'spin 3s linear infinite',
+        'spin-fast': 'spin 0.3s linear infinite',
         'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
         'shake': 'shake 0.5s ease-in-out',
         'bounce-in': 'bounce-in 0.5s ease-out',

@@ -3,19 +3,25 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
+# Prevent tzdata from prompting during build
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Default timezone inside container
+ENV TZ=Asia/Seoul
+
+# Install system dependencies (use BuildKit cache for faster rebuilds)
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+  --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+  apt-get update && apt-get install -y --no-install-recommends \
   gcc \
   default-libmysqlclient-dev \
   pkg-config \
   curl \
   tzdata \
-  && ln -snf /usr/share/zoneinfo/Asia/Seoul /etc/localtime \
-  && echo "Asia/Seoul" > /etc/timezone \
+  && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime \
+  && echo "$TZ" > /etc/timezone \
+  && dpkg-reconfigure -f noninteractive tzdata \
   && rm -rf /var/lib/apt/lists/*
-
-# Default timezone inside container
-ENV TZ=Asia/Seoul
 
 # Copy requirements and install Python dependencies
 COPY requirements.txt .

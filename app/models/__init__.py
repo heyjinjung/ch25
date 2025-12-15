@@ -17,6 +17,14 @@ from app.models.team_battle import TeamSeason, Team, TeamMember, TeamScore, Team
 from app.models.level_xp import UserLevelProgress, UserLevelRewardLog, UserXpEventLog
 from app.models.game_wallet_ledger import UserGameWalletLedger
 from app.models.user import User
+from app.models.survey import (
+    Survey,
+    SurveyQuestion,
+    SurveyOption,
+    SurveyTriggerRule,
+    SurveyResponse,
+    SurveyResponseAnswer,
+)
 
 __all__ = [
     "FeatureConfig",
@@ -51,4 +59,10 @@ __all__ = [
     "UserGameWallet",
     "GameTokenType",
     "UserGameWalletLedger",
+    "Survey",
+    "SurveyQuestion",
+    "SurveyOption",
+    "SurveyTriggerRule",
+    "SurveyResponse",
+    "SurveyResponseAnswer",
 ]

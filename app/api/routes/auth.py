@@ -35,17 +35,19 @@ class TokenResponse(BaseModel):
 
 @router.post("/token", response_model=TokenResponse, summary="Issue JWT for user")
 def issue_token(payload: TokenRequest, request: Request, db: Session = Depends(get_db)) -> TokenResponse:
-    # external_id 우선, 없으면 user_id로 조회. 둘 다 없으면 400.
+    # external_id 우선, 없으면 user_id로 조회. 둘 다 없으면 401.
+    cleaned_external = payload.external_id.strip() if payload.external_id else None
+
     user = None
-    if payload.external_id:
-        user = db.query(User).filter(User.external_id == payload.external_id).first()
+    if cleaned_external:
+        user = db.query(User).filter(User.external_id == cleaned_external).first()
     if user is None and payload.user_id is not None:
         user = db.get(User, payload.user_id)
     if user is None:
         # external_id만 들어온 경우 자동 생성(패스워드 있으면 초기 설정)
-        if payload.external_id is None:
+        if not cleaned_external:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="INVALID_CREDENTIALS")
-        user = User(external_id=payload.external_id, status="ACTIVE")
+        user = User(external_id=cleaned_external, status="ACTIVE")
         if payload.password:
             from app.core.security import hash_password  # local import
 

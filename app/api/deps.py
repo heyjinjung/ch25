@@ -38,3 +38,9 @@ def get_current_user_id(credentials: HTTPAuthorizationCredentials = Depends(bear
         return int(sub)
     except (TypeError, ValueError) as exc:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="TOKEN_INVALID") from exc
+
+
+def get_current_admin_id(credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme)) -> int:
+    """Extract admin user id; reuse user auth for now with test-mode fallback."""
+
+    return get_current_user_id(credentials)

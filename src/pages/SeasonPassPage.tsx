@@ -4,6 +4,7 @@ import { useTodayRanking } from "../hooks/useRanking";
 import { useSeasonPassStatus, useInternalWinStatus, useClaimSeasonReward } from "../hooks/useSeasonPass";
 import FeatureGate from "../components/feature/FeatureGate";
 import { useToast } from "../components/common/ToastProvider";
+import { AnimatePresence, motion } from "framer-motion";
 
 const formatCurrency = (value: number) => value.toLocaleString();
 
@@ -68,7 +69,7 @@ const SeasonPassPage: React.FC = () => {
     {
       icon: "❄️",
       title: "CC사이트 일일이용",
-        desc: "10만원 단위 플레이 시 20XP 지급",
+      desc: "10만원 단위 플레이 시 20XP 지급",
       status: playDone ? "완료" : "미완료",
     },
     {
@@ -148,7 +149,12 @@ const SeasonPassPage: React.FC = () => {
   return (
     <FeatureGate feature="SEASON_PASS">
       <section className="space-y-8 rounded-3xl border border-emerald-800/40 bg-slate-950/90 p-6 md:p-8" style={snowPattern}>
-        <header className="space-y-3 text-center">
+        <motion.header
+          className="space-y-3 text-center"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35 }}
+        >
           <p className="text-xs uppercase tracking-[0.28em] text-emerald-200">Season Pass</p>
           <h1 className="text-3xl font-bold text-white">🎄 크리스마스 시즌패스</h1>
           <p className="text-sm text-slate-300">지민이와 함께하는 겨울 시즌 패스</p>
@@ -178,7 +184,7 @@ const SeasonPassPage: React.FC = () => {
             </div>
             <p className="text-xs text-slate-300">{seasonLevelSummary.detail}</p>
           </div>
-        </header>
+        </motion.header>
 
         <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
           <div className="space-y-4">
@@ -189,53 +195,59 @@ const SeasonPassPage: React.FC = () => {
             <div className="space-y-3">
               <h2 className="text-lg font-bold text-white">레벨 보상</h2>
               <div className="grid gap-3 sm:grid-cols-2">
-            {data.levels.map((level) => {
-              const isAuto = !!level.auto_claim;
-              const canClaim = !isAuto && level.is_unlocked && !level.is_claimed;
-              // 시즌 2차 보상 표 (10레벨)
-              const rewardOverride: Record<number, string> = {
-                1: "룰렛 티켓 1장",
-                2: "주사위 티켓 1장",
-                3: "룰렛 1장 + 주사위 1장",
-                4: "복권 티켓 1장",
-                5: "CC 코인 1개",
-                6: "주사위 2장 + 복권 1장",
-                7: "CC 코인 2개",
-                8: "쿠팡상품권 1만원",
-                9: "CC 포인트 2만",
-                10: "CC 포인트 5만",
-              };
-              const levelIcon: Record<number, string> = {
-                1: "🎄",
-                2: "⭐",
-                3: "🎄",
-                4: "⭐",
-                5: "🎄",
-                6: "⭐",
-                7: "🎄",
-                8: "⭐",
-                9: "🎄",
-                10: "⭐",
-              };
-              const displayReward = rewardOverride[level.level] ?? level.reward_label;
-              const buttonLabel = level.is_claimed
-                ? "지급완료"
-                : isAuto && level.is_unlocked
-                ? "자동지급"
-                : canClaim
-                ? "지민이 요청"
-                : "잠금";
-              return (
-                <article
-                  key={level.level}
-                  className={`rounded-xl border p-4 transition ${
-                    canClaim
-                      ? "border-amber-400 bg-slate-900"
-                      : level.is_claimed
-                      ? "border-emerald-500/60 bg-slate-900"
-                      : "border-slate-700 bg-slate-900"
-                  }`}
-                >
+                <AnimatePresence>
+                  {data.levels.map((level) => {
+                    const isAuto = !!level.auto_claim;
+                    const canClaim = !isAuto && level.is_unlocked && !level.is_claimed;
+                    // 시즌 2차 보상 표 (10레벨)
+                    const rewardOverride: Record<number, string> = {
+                      1: "룰렛 티켓 1장",
+                      2: "주사위 티켓 1장",
+                      3: "룰렛 1장 + 주사위 1장",
+                      4: "복권 티켓 1장",
+                      5: "CC 코인 1개",
+                      6: "주사위 2장 + 복권 1장",
+                      7: "CC 코인 2개",
+                      8: "쿠팡상품권 1만원",
+                      9: "CC 포인트 2만",
+                      10: "CC 포인트 5만",
+                    };
+                    const levelIcon: Record<number, string> = {
+                      1: "🎄",
+                      2: "⭐",
+                      3: "🎄",
+                      4: "⭐",
+                      5: "🎄",
+                      6: "⭐",
+                      7: "🎄",
+                      8: "⭐",
+                      9: "🎄",
+                      10: "⭐",
+                    };
+                    const displayReward = rewardOverride[level.level] ?? level.reward_label;
+                    const buttonLabel = level.is_claimed
+                      ? "지급완료"
+                      : isAuto && level.is_unlocked
+                      ? "자동지급"
+                      : canClaim
+                      ? "지민이 요청"
+                      : "잠금";
+                    return (
+                      <motion.article
+                        key={level.level}
+                        layout
+                        initial={{ opacity: 0, y: 18 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.25 }}
+                        className={`rounded-xl border p-4 transition ${
+                          canClaim
+                            ? "border-amber-400 bg-slate-900"
+                            : level.is_claimed
+                            ? "border-emerald-500/60 bg-slate-900"
+                            : "border-slate-700 bg-slate-900"
+                        }`}
+                      >
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-semibold text-slate-200">
                       <span className="mr-2" aria-hidden>{levelIcon[level.level] ?? "🎄"}</span>
@@ -258,36 +270,52 @@ const SeasonPassPage: React.FC = () => {
                   >
                     {buttonLabel}
                   </button>
-                  {isAuto && !level.is_claimed && (
-                    <p className="mt-1 text-xs text-emerald-200">자동지급</p>
-                  )}
-                </article>
-              );
-            })}
+                        {isAuto && !level.is_claimed && (
+                          <p className="mt-1 text-xs text-emerald-200">자동지급</p>
+                        )}
+                      </motion.article>
+                    );
+                  })}
+                </AnimatePresence>
               </div>
             </div>
           </div>
 
-          <aside className="space-y-3 rounded-2xl border border-slate-800 bg-slate-900 p-4">
+          <motion.aside
+            className="space-y-3 rounded-2xl border border-slate-800 bg-slate-900 p-4"
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: 0.05 }}
+          >
             <div className="flex items-center justify-between">
               <h2 className="text-base font-bold text-white">오늘 할 일</h2>
               <span className="text-xs text-emerald-200">스탬프 {data.today?.stamped ? "완료" : "미완료"}</span>
             </div>
             <div className="space-y-3">
-              {cards.map((card) => (
-                <div key={card.title} className="rounded-xl border border-slate-800 bg-slate-900/80 p-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg" aria-hidden>{card.icon}</span>
-                    <div>
-                      <p className="text-sm font-semibold text-white">{card.title}</p>
-                      <p className="text-xs text-slate-400">{card.desc}</p>
+              <AnimatePresence>
+                {cards.map((card) => (
+                  <motion.div
+                    key={card.title}
+                    layout
+                    initial={{ opacity: 0, x: 12 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -10 }}
+                    transition={{ duration: 0.2 }}
+                    className="rounded-xl border border-slate-800 bg-slate-900/80 p-3"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg" aria-hidden>{card.icon}</span>
+                      <div>
+                        <p className="text-sm font-semibold text-white">{card.title}</p>
+                        <p className="text-xs text-slate-400">{card.desc}</p>
+                      </div>
                     </div>
-                  </div>
-                  <p className="mt-2 text-sm text-emerald-200">{card.status}</p>
-                </div>
-              ))}
+                    <p className="mt-2 text-sm text-emerald-200">{card.status}</p>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             </div>
-          </aside>
+          </motion.aside>
         </div>
       </section>
     </FeatureGate>

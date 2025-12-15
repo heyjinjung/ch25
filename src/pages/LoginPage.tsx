@@ -14,9 +14,15 @@ const LoginPage: React.FC = () => {
   const handleLogin = async () => {
     setLoading(true);
     setError(null);
+    const trimmedId = externalId.trim();
+    if (!trimmedId) {
+      setLoading(false);
+      setError("ID를 입력해주세요.");
+      return;
+    }
     try {
       const response = await login({
-        external_id: externalId,
+        external_id: trimmedId,
         password: password || undefined,
       });
       setAuth(response.access_token, response.user);

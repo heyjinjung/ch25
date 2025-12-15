@@ -1,5 +1,5 @@
 # Frontend Dockerfile - Multi-stage build
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
@@ -7,7 +7,8 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci
+RUN --mount=type=cache,target=/root/.npm \
+  npm ci --no-audit --no-fund
 
 # Copy source code
 COPY src/ ./src/
