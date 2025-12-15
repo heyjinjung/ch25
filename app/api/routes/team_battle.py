@@ -1,4 +1,6 @@
 """Public/team endpoints for team battle."""
+from zoneinfo import ZoneInfo
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
@@ -19,7 +21,16 @@ svc = TeamBattleService()
 
 @router.get("/seasons/active", response_model=TeamSeasonResponse | None)
 def get_active_season(db: Session = Depends(get_db)):
-    return svc.get_active_season(db)
+    season = svc.get_active_season(db)
+    if not season:
+        return None
+
+    utc = ZoneInfo("UTC")
+    if season.starts_at and season.starts_at.tzinfo is None:
+        season.starts_at = season.starts_at.replace(tzinfo=utc)
+    if season.ends_at and season.ends_at.tzinfo is None:
+        season.ends_at = season.ends_at.replace(tzinfo=utc)
+    return season
 
 
 @router.post("/teams/join")

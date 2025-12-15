@@ -73,18 +73,22 @@ class TeamBattleService:
         return dt
 
     def ensure_current_season(self, db: Session, now: datetime | None = None) -> TeamSeason:
-        """Ensure a 2-day rolling season (KST anchored) exists covering `now`."""
+        """Ensure a season exists covering `now`.
+
+        If an active season is configured in DB, always respect it and never create
+        a rolling season. Rolling seasons are only used as a fallback when there is
+        no configured active season.
+        """
         today = now or self._now_utc()
 
-        # If an active season is configured but hasn't started yet, do not create a rolling season.
+        # If an active season is configured, always use it.
         configured = db.execute(select(TeamSeason).where(TeamSeason.is_active == True)).scalar_one_or_none()  # noqa: E712
         if configured:
             start_utc = self._normalize_to_utc(configured.starts_at, today)
             end_utc = self._normalize_to_utc(configured.ends_at, today)
-            if today < start_utc:
-                configured.starts_at = start_utc
-                configured.ends_at = end_utc
-                return configured
+            configured.starts_at = start_utc
+            configured.ends_at = end_utc
+            return configured
 
         settings = get_settings()
         tz = ZoneInfo(settings.timezone)
