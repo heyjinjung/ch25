@@ -69,6 +69,11 @@ def issue_token(payload: TokenRequest, request: Request, db: Session = Depends(g
         user.password_hash = hash_password(payload.password)
 
     try:
+        # If this is a newly-added user (external_id only flow), ensure PK is assigned
+        # before writing audit logs referencing user_id.
+        if user.id is None:
+            db.flush()
+
         # Update login audit fields
         user.last_login_at = datetime.utcnow()
         user.last_login_ip = client_ip
