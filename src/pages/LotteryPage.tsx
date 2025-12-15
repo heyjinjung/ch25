@@ -20,7 +20,9 @@ const LotteryPage: React.FC = () => {
   const [revealedPrize, setRevealedPrize] = useState<RevealedPrize | null>(null);
   const [isScratching, setIsScratching] = useState(false);
   const [isRevealed, setIsRevealed] = useState(false);
+  const [isRevealComplete, setIsRevealComplete] = useState(false);
   const [rewardToast, setRewardToast] = useState<string | null>(null);
+  const [pendingRewardToast, setPendingRewardToast] = useState<string | null>(null);
 
   const mapErrorMessage = (err: unknown) => {
     const code = (err as { response?: { data?: { error?: { code?: string } } } })?.response?.data?.error?.code;
@@ -68,6 +70,7 @@ const LotteryPage: React.FC = () => {
       const result = await playMutation.mutateAsync();
       setIsScratching(false);
       setIsRevealed(true);
+      setIsRevealComplete(false);
       setRevealedPrize({
         id: result.prize.id,
         label: result.prize.label,
@@ -75,8 +78,7 @@ const LotteryPage: React.FC = () => {
         reward_value: result.prize.reward_value,
       });
       if (result.prize.reward_value && Number(result.prize.reward_value) > 0 && result.prize.reward_type !== "NONE") {
-        setRewardToast(`+${result.prize.reward_value} ${result.prize.reward_type}`);
-        setTimeout(() => setRewardToast(null), 2500);
+        setPendingRewardToast(`+${result.prize.reward_value} ${result.prize.reward_type}`);
       }
     } catch (mutationError) {
       setIsScratching(false);
@@ -86,7 +88,18 @@ const LotteryPage: React.FC = () => {
 
   const handleReset = () => {
     setIsRevealed(false);
+    setIsRevealComplete(false);
     setRevealedPrize(null);
+    setPendingRewardToast(null);
+  };
+
+  const handleRevealComplete = () => {
+    setIsRevealComplete(true);
+    if (pendingRewardToast) {
+      setRewardToast(pendingRewardToast);
+      setPendingRewardToast(null);
+      setTimeout(() => setRewardToast(null), 2500);
+    }
   };
 
   const content = (() => {
@@ -137,6 +150,7 @@ const LotteryPage: React.FC = () => {
             isRevealed={isRevealed}
             isScratching={isScratching}
             onScratch={handleScratch}
+            onRevealComplete={handleRevealComplete}
           />
         </div>
 
@@ -206,7 +220,7 @@ const LotteryPage: React.FC = () => {
             <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform group-hover:translate-x-full" />
           </button>
 
-          {revealedPrize && !isScratching && (
+          {revealedPrize && isRevealComplete && !isScratching && (
             <div className="animate-bounce-in rounded-2xl border border-gold-500/50 bg-gradient-to-br from-gold-900/40 to-slate-900/80 p-6 text-center shadow-lg">
               <p className="text-sm uppercase tracking-wider text-gold-400">축하 당첨!</p>
               <p className="mt-2 text-2xl font-bold text-white">{revealedPrize.label}</p>
