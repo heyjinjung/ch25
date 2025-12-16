@@ -2,6 +2,7 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from sqlalchemy.exc import OperationalError, ProgrammingError, SQLAlchemyError
 from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
 
 from app.core.exceptions import (
@@ -63,3 +64,29 @@ def register_exception_handlers(app: FastAPI) -> None:
             status_code=HTTP_422_UNPROCESSABLE_ENTITY,
             content={"error": {"code": "VALIDATION_ERROR", "message": exc.errors()}},
         )
+
+    @app.exception_handler(SQLAlchemyError)
+    async def sqlalchemy_exception_handler(request: Request, exc: SQLAlchemyError) -> JSONResponse:
+        message = "DATABASE_ERROR"
+        code = "DB_ERROR"
+
+        # Common case during rollout: code is deployed but alembic upgrade hasn't run.
+        if isinstance(exc, (OperationalError, ProgrammingError)):
+            raw = ""
+            try:
+                raw = str(getattr(exc, "orig", exc))
+            except Exception:
+                raw = ""
+
+            lowered = raw.lower()
+            if (
+                "doesn't exist" in lowered
+                or "no such table" in lowered
+                or "unknown column" in lowered
+                or "undefined table" in lowered
+                or "relation" in lowered and "does not exist" in lowered
+            ):
+                code = "DB_SCHEMA_MISMATCH"
+                message = "DATABASE_SCHEMA_MISMATCH"
+
+        return JSONResponse(status_code=500, content={"error": {"code": code, "message": message}})
