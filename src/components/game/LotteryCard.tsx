@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+﻿import { useMemo } from "react";
 
 interface Prize {
   readonly id: number;
@@ -15,187 +15,9 @@ interface LotteryCardProps {
   readonly isRevealed: boolean;
   readonly isScratching: boolean;
   readonly onScratch: () => void;
-  readonly onRevealComplete?: () => void;
 }
-
-const REVEAL_THRESHOLD_RATIO = 0.4;
-
-const LotteryCard: React.FC<LotteryCardProps> = ({ prize, isRevealed, isScratching, onScratch, onRevealComplete }) => {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const isDrawingRef = useRef(false);
-  const sampleCounterRef = useRef(0);
-  const overlayHiddenRef = useRef(false);
-  const requestedRef = useRef(false);
-  const [scratchProgress, setScratchProgress] = useState(0);
-  const [overlayCleared, setOverlayCleared] = useState(false);
-
-  const disabled = useMemo(() => overlayCleared, [overlayCleared]);
-
-  const resizeCanvas = () => {
-    const canvas = canvasRef.current;
-    const container = containerRef.current;
-    if (!canvas || !container) return;
-    const rect = container.getBoundingClientRect();
-    canvas.width = rect.width;
-    canvas.height = rect.height;
-  };
-
-  const redrawOverlay = useCallback(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    const { width, height } = canvas;
-
-    ctx.clearRect(0, 0, width, height);
-
-    // Base foil gradient (opaque enough to hide underlay until cleared)
-    const gradient = ctx.createLinearGradient(0, 0, width, height);
-    gradient.addColorStop(0, "rgba(255,255,255,1)");
-    gradient.addColorStop(0.5, "rgba(235,235,235,1)");
-    gradient.addColorStop(1, "rgba(250,250,250,1)");
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, width, height);
-
-    // Scatter texture
-    ctx.fillStyle = "rgba(255,255,255,0.25)";
-    const texturePoints = Math.floor((width * height) / 180);
-    for (let i = 0; i < texturePoints; i += 1) {
-      const x = Math.random() * width;
-      const y = Math.random() * height;
-      ctx.fillRect(x, y, 2, 2);
-    }
-
-    // Center prompt text
-    ctx.fillStyle = "rgba(0,0,0,0.65)";
-    ctx.font = "600 18px Arial";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText("긁어서 확인하세요 ✨", width / 2, height / 2);
-
-    overlayHiddenRef.current = false;
-    requestedRef.current = false;
-    setOverlayCleared(false);
-    if (canvas) {
-      canvas.style.opacity = "1";
-      canvas.style.pointerEvents = "auto";
-    }
-  }, []);
-
-  useEffect(() => {
-    resizeCanvas();
-    redrawOverlay();
-    const handleResize = () => {
-      resizeCanvas();
-      redrawOverlay();
-    };
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, [redrawOverlay]);
-
-  useEffect(() => {
-    if (!isRevealed) {
-      setScratchProgress(0);
-      redrawOverlay();
-      isDrawingRef.current = false;
-      requestedRef.current = false;
-    }
-  }, [isRevealed, redrawOverlay]);
-
-  const scratchAt = (clientX: number, clientY: number) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    const rect = canvas.getBoundingClientRect();
-    const x = clientX - rect.left;
-    const y = clientY - rect.top;
-    const radius = Math.max(16, Math.min(rect.width, rect.height) * 0.06);
-    ctx.globalCompositeOperation = "destination-out";
-    ctx.beginPath();
-    ctx.arc(x, y, radius, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.globalCompositeOperation = "source-over";
-
-    sampleCounterRef.current += 1;
-    if (sampleCounterRef.current % 4 === 0) {
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      let transparent = 0;
-      for (let i = 3; i < imageData.data.length; i += 4) {
-        if (imageData.data[i] === 0) transparent += 1;
-      }
-      const ratio = transparent / (imageData.data.length / 4);
-      const percent = Math.min(100, Math.round(ratio * 100));
-      setScratchProgress(percent);
-
-      if (!overlayHiddenRef.current && ratio >= REVEAL_THRESHOLD_RATIO) {
-        overlayHiddenRef.current = true;
-        setOverlayCleared(true);
-        canvas.style.opacity = "0";
-        canvas.style.pointerEvents = "none";
-        onRevealComplete?.();
-      }
-    }
-  };
-
-  const handlePointerDown: React.PointerEventHandler<HTMLCanvasElement> = (e) => {
-    if (disabled) return;
-    isDrawingRef.current = true;
-    try {
-      e.currentTarget.setPointerCapture?.(e.pointerId);
-    } catch {
-      // Ignore browsers that don't support pointer capture reliably.
-    }
-
-    if (!overlayHiddenRef.current) {
-      setScratchProgress(0);
-    }
-
-    if (!requestedRef.current) {
-      requestedRef.current = true;
-      onScratch();
-    }
-    scratchAt(e.clientX, e.clientY);
-  };
-
-  const handlePointerMove: React.PointerEventHandler<HTMLCanvasElement> = (e) => {
-    if (!isDrawingRef.current || disabled) return;
-    scratchAt(e.clientX, e.clientY);
-  };
-
-  const handlePointerUpOrLeave: React.PointerEventHandler<HTMLCanvasElement> = () => {
-    isDrawingRef.current = false;
-  };
-
-  const handleTouchStart: React.TouchEventHandler<HTMLCanvasElement> = (e) => {
-    if (disabled) return;
-    const touch = e.touches[0];
-    if (!touch) return;
-    isDrawingRef.current = true;
-
-    if (!overlayHiddenRef.current) {
-      setScratchProgress(0);
-    }
-
-    if (!requestedRef.current) {
-      requestedRef.current = true;
-      onScratch();
-    }
-
-    scratchAt(touch.clientX, touch.clientY);
-  };
-
-  const handleTouchMove: React.TouchEventHandler<HTMLCanvasElement> = (e) => {
-    if (!isDrawingRef.current || disabled) return;
-    const touch = e.touches[0];
-    if (!touch) return;
-    scratchAt(touch.clientX, touch.clientY);
-  };
-
-  const handleTouchEndOrCancel: React.TouchEventHandler<HTMLCanvasElement> = () => {
-    isDrawingRef.current = false;
-  };
+const LotteryCard: React.FC<LotteryCardProps> = ({ prize, isRevealed, isScratching, onScratch }) => {
+  const disabled = useMemo(() => isScratching || isRevealed, [isScratching, isRevealed]);
 
   return (
     <div className="relative mx-auto w-full max-w-sm">
@@ -207,28 +29,31 @@ const LotteryCard: React.FC<LotteryCardProps> = ({ prize, isRevealed, isScratchi
 
         <div className="relative min-h-[200px] rounded-2xl border-2 border-gold-400/50 bg-gradient-to-br from-slate-900 to-slate-800 p-6">
           <div
-            ref={containerRef}
-            className="relative flex h-full min-h-[160px] flex-col items-center justify-center overflow-hidden rounded-xl bg-slate-900"
-            style={{ touchAction: "none" }}
+            className={`relative flex h-full min-h-[160px] flex-col items-center justify-center overflow-hidden rounded-xl bg-slate-900 ${
+              disabled ? "cursor-not-allowed" : "cursor-pointer"
+            }`}
+            role="button"
+            tabIndex={0}
+            onClick={() => {
+              if (!disabled) onScratch();
+            }}
+            onKeyDown={(e) => {
+              if (disabled) return;
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onScratch();
+              }
+            }}
           >
-            {/* Underlay: do NOT reveal actual result until overlayCleared */}
             <div className="relative z-10 flex flex-col items-center text-center">
               {!isRevealed ? (
                 <>
                   <div className="mb-4 text-5xl">🎫</div>
-                  <p className="text-lg font-bold text-gold-300">{isScratching ? "결과 생성 중..." : "긁어서 결과를 확인하세요"}</p>
-                  <p className="mt-2 text-sm text-slate-400">터치/클릭 후 긁어보세요.</p>
-                </>
-              ) : !overlayCleared ? (
-                <>
-                  <div className="mb-2 text-5xl">🔒</div>
-                  <p className="text-sm uppercase tracking-wider text-gold-400">결과 잠금</p>
-                  <p className="mt-2 text-lg font-bold text-white">다 긁으면 공개됩니다</p>
-                  <p className="mt-2 text-sm text-slate-400">끝까지 긁어주세요.</p>
+                  <p className="text-lg font-bold text-gold-300">{isScratching ? "뽑는 중..." : "카드를 눌러 바로 뽑기"}</p>
                 </>
               ) : prize ? (
                 <>
-                  <div className={`mb-2 text-5xl ${overlayCleared ? "animate-bounce-in" : ""}`}>🎉</div>
+                  <div className="mb-2 text-5xl animate-bounce-in">🎉</div>
                   <p className="text-sm uppercase tracking-wider text-gold-400">축하합니다!</p>
                   <p className="mt-2 text-2xl font-bold text-white">{prize.label}</p>
                   <p className="mt-1 text-sm text-emerald-300">
@@ -237,70 +62,13 @@ const LotteryCard: React.FC<LotteryCardProps> = ({ prize, isRevealed, isScratchi
                 </>
               ) : (
                 <>
-                  <div className={`mb-2 text-5xl ${overlayCleared ? "animate-bounce-in" : ""}`}>💨</div>
+                  <div className="mb-2 text-5xl animate-bounce-in">💨</div>
                   <p className="text-xl font-bold text-slate-300">다음 기회에!</p>
                   <p className="mt-2 text-sm text-slate-400">다시 시도해 주세요.</p>
                 </>
               )}
-
-              <p className="mt-2 text-xs text-emerald-300">{scratchProgress}% 제거됨</p>
             </div>
-
-            <canvas
-              ref={canvasRef}
-              className={`absolute inset-0 cursor-pointer transition-opacity ${disabled ? "opacity-0" : "opacity-80"}`}
-              style={{ touchAction: "none", pointerEvents: disabled ? "none" : "auto" }}
-              onTouchStart={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                handleTouchStart(e);
-              }}
-              onTouchMove={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                handleTouchMove(e);
-              }}
-              onTouchEnd={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                handleTouchEndOrCancel(e);
-              }}
-              onTouchCancel={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                handleTouchEndOrCancel(e);
-              }}
-              onPointerDown={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                handlePointerDown(e);
-              }}
-              onPointerMove={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                handlePointerMove(e);
-              }}
-              onPointerUp={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                handlePointerUpOrLeave(e);
-              }}
-              onPointerCancel={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                handlePointerUpOrLeave(e);
-              }}
-              onPointerLeave={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                handlePointerUpOrLeave(e);
-              }}
-            />
           </div>
-        </div>
-
-        <div className="mt-4 text-center">
-          <p className="text-sm font-semibold uppercase tracking-widest text-gold-400">스크래치 해서 경품 확인</p>
         </div>
       </div>
     </div>
