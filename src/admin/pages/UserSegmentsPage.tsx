@@ -19,7 +19,9 @@ const UserSegmentsPage: React.FC = () => {
 
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey,
-    queryFn: () => fetchUserSegments(trimmed ? { external_id: trimmed, limit: 50 } : { limit: 50 }),
+    // NOTE: Backend caps limit to 500. When searching by external_id we keep it small,
+    // otherwise we fetch the maximum to approximate "전체" 조회 without pagination UI.
+    queryFn: () => fetchUserSegments(trimmed ? { external_id: trimmed, limit: 50 } : { limit: 500 }),
   });
 
   const [editSegment, setEditSegment] = useState<Record<number, string>>({});
