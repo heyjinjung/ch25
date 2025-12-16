@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.core.security import hash_password
 from app.models.user import User
+from app.models.team_battle import TeamMember
 from app.models.season_pass import SeasonPassConfig, SeasonPassLevel, SeasonPassProgress
 from app.schemas.admin_user import AdminUserCreate, AdminUserUpdate
 
@@ -176,5 +177,9 @@ class AdminUserService:
         user = db.get(User, user_id)
         if not user:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="USER_NOT_FOUND")
+
+        # `team_member.user_id` is not a FK, so deleting a user can leave orphaned
+        # memberships that still occupy team slots / appear in counts.
+        db.query(TeamMember).filter(TeamMember.user_id == user_id).delete(synchronize_session=False)
         db.delete(user)
         db.commit()

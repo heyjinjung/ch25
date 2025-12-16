@@ -175,6 +175,29 @@ class TeamBattleService:
     def get_membership(self, db: Session, user_id: int) -> TeamMember | None:
         return db.get(TeamMember, user_id)
 
+    def _prune_team_memberships_for_deleted_users(self, db: Session, team_id: int | None = None) -> int:
+        """Remove team memberships for users that no longer exist or are not ACTIVE.
+
+        NOTE: `team_member.user_id` is not a FK to `user.id`, so orphaned rows can exist.
+        This makes joins/counts incorrect and can block team joins.
+        """
+
+        from sqlalchemy import delete, exists
+        from app.models.user import User
+
+        active_user_exists = exists(
+            select(User.id).where(
+                User.id == TeamMember.user_id,
+                User.status == "ACTIVE",
+            )
+        )
+
+        stmt = delete(TeamMember).where(~active_user_exists)
+        if team_id is not None:
+            stmt = stmt.where(TeamMember.team_id == team_id)
+        result = db.execute(stmt)
+        return int(getattr(result, "rowcount", 0) or 0)
+
     def create_season(self, db: Session, payload: dict) -> TeamSeason:
         payload = payload.copy()
         payload["starts_at"] = self._normalize_to_utc(payload["starts_at"], assume_local_if_naive=True)
@@ -261,6 +284,12 @@ class TeamBattleService:
         team = db.get(Team, team_id)
         if not team:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="TEAM_NOT_FOUND")
+
+        # Defensive deletes to ensure team removal works even if FK cascades
+        # are not enforced in the target DB (or were created without CASCADE).
+        db.query(TeamMember).filter(TeamMember.team_id == team_id).delete(synchronize_session=False)
+        db.query(TeamScore).filter(TeamScore.team_id == team_id).delete(synchronize_session=False)
+        db.query(TeamEventLog).filter(TeamEventLog.team_id == team_id).delete(synchronize_session=False)
         db.delete(team)
         db.commit()
 
@@ -269,6 +298,9 @@ class TeamBattleService:
         season = self._get_active_or_current(db, now)
         if not bypass_selection:
             self._assert_selection_window_open(season, now)
+
+        # Ensure deleted/orphaned users don't occupy slots.
+        self._prune_team_memberships_for_deleted_users(db, team_id=team_id)
 
         # Lock the team row to prevent concurrent overfilling.
         team = db.execute(select(Team).where(Team.id == team_id).with_for_update()).scalar_one_or_none()
@@ -281,9 +313,7 @@ class TeamBattleService:
                 return existing
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="ALREADY_IN_TEAM")
 
-        member_count = db.execute(
-            select(func.count(TeamMember.user_id)).where(TeamMember.team_id == team_id)
-        ).scalar_one()
+        member_count = db.execute(select(func.count(TeamMember.user_id)).where(TeamMember.team_id == team_id)).scalar_one()
         if (member_count or 0) >= self.TEAM_MAX_MEMBERS:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="TEAM_FULL")
 
@@ -335,6 +365,9 @@ class TeamBattleService:
         now = now or self._now_utc()
         season = self._get_active_or_current(db, now)
 
+        # Ensure deleted/orphaned users don't occupy slots.
+        self._prune_team_memberships_for_deleted_users(db, team_id=team_id)
+
         # Lock target team row to avoid concurrent overfilling.
         team = db.execute(select(Team).where(Team.id == team_id).with_for_update()).scalar_one_or_none()
         if not team or not team.is_active:
@@ -383,15 +416,21 @@ class TeamBattleService:
         season = self._get_active_or_current(db, now)
         self._assert_selection_window_open(season, now)
 
+        # Ensure deleted/orphaned users don't occupy slots.
+        self._prune_team_memberships_for_deleted_users(db)
+
         existing = db.get(TeamMember, user_id)
         if existing:
             return existing
 
-        member_count = func.count(TeamMember.user_id).label("member_count")
+        from app.models.user import User
+
+        member_count = func.count(func.distinct(User.id)).label("member_count")
         counts = db.execute(
             select(Team.id, member_count)
             .where(Team.is_active == True)  # noqa: E712
             .outerjoin(TeamMember, TeamMember.team_id == Team.id)
+            .outerjoin(User, and_(User.id == TeamMember.user_id, User.status == "ACTIVE"))
             .group_by(Team.id)
             .having(member_count < self.TEAM_MAX_MEMBERS)
             .order_by(member_count.asc(), Team.id.asc())
@@ -535,7 +574,14 @@ class TeamBattleService:
 
         def eligible_users_for_team(team_id: int) -> list[dict]:
             users: list[dict] = []
-            team_members = db.query(TeamMember).filter(TeamMember.team_id == team_id).all()
+            from app.models.user import User
+
+            team_members = (
+                db.query(TeamMember)
+                .join(User, User.id == TeamMember.user_id)
+                .filter(TeamMember.team_id == team_id, User.status == "ACTIVE")
+                .all()
+            )
             for m in team_members:
                 points = contrib_map.get(team_id, {}).get(m.user_id, 0)
                 if points >= min_points:
@@ -745,13 +791,16 @@ class TeamBattleService:
         if not season:
             return []
 
-        member_count = func.count(func.distinct(TeamMember.user_id)).label("member_count")
+        from app.models.user import User
+
+        member_count = func.count(func.distinct(User.id)).label("member_count")
         latest_event = func.max(TeamEventLog.created_at).label("latest_event_at")
         latest_nulls_last = case((latest_event.is_(None), 1), else_=0)
         stmt = (
             select(TeamScore.team_id, Team.name, TeamScore.points, member_count, latest_event)
             .join(Team, Team.id == TeamScore.team_id)
             .outerjoin(TeamMember, TeamMember.team_id == TeamScore.team_id)
+            .outerjoin(User, and_(User.id == TeamMember.user_id, User.status == "ACTIVE"))
             .outerjoin(
                 TeamEventLog,
                 and_(
@@ -779,11 +828,14 @@ class TeamBattleService:
         return db.execute(stmt).scalars().all()
 
     def list_joinable_teams(self, db: Session) -> Sequence[Team]:
-        member_count = func.count(TeamMember.user_id)
+        from app.models.user import User
+
+        member_count = func.count(func.distinct(User.id))
         stmt = (
             select(Team)
             .where(Team.is_active == True)  # noqa: E712
             .outerjoin(TeamMember, TeamMember.team_id == Team.id)
+            .outerjoin(User, and_(User.id == TeamMember.user_id, User.status == "ACTIVE"))
             .group_by(Team.id)
             .having(member_count < self.TEAM_MAX_MEMBERS)
             .order_by(Team.id.asc())
@@ -802,7 +854,7 @@ class TeamBattleService:
         stmt = (
             select(TeamMember.user_id, User.nickname, points_sum, latest_event)
             .join(User, User.id == TeamMember.user_id)
-            .where(TeamMember.team_id == team_id)
+            .where(TeamMember.team_id == team_id, User.status == "ACTIVE")
             .outerjoin(
                 TeamEventLog,
                 and_(
