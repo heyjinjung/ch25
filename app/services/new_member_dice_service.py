@@ -1,4 +1,4 @@
-"""Service for new-member dice judgement (single-use, admin-granted eligibility)."""
+"""Service for new-member dice game (single-use, admin-granted eligibility)."""
 
 from __future__ import annotations
 
@@ -72,12 +72,12 @@ class NewMemberDiceService:
             outcome = "WIN"
             user_roll = random.randint(2, 6)
             dealer_roll = random.randint(1, user_roll - 1)
-            message = "선착순 이벤트 당첨"
+            message = "축하합니다! 에어드랍 이벤트 당첨 🎁"
         else:
             outcome = "LOSE"
             dealer_roll = random.randint(2, 6)
             user_roll = random.randint(1, dealer_roll - 1)
-            message = "다음기회에, 다른 이벤혜택은 지민이 문의"
+            message = "아쉽게도 이번엔 꽝! 다른 이벤트 혜택은 지민이에게 문의해주세요."
 
         log = NewMemberDiceLog(
             user_id=user_id,
