@@ -4,11 +4,16 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Button from "../../components/common/Button";
 import {
   AdminNewMemberDiceEligibility,
-  fetchNewMemberDiceEligibility,
+  fetchNewMemberDiceEligibilityByExternalId,
   upsertNewMemberDiceEligibility,
-  updateNewMemberDiceEligibility,
-  deleteNewMemberDiceEligibility,
+  updateNewMemberDiceEligibilityByExternalId,
+  deleteNewMemberDiceEligibilityByExternalId,
 } from "../api/adminNewMemberDiceApi";
+
+const normalizeExternalId = (value: string): string | null => {
+  const trimmed = value.trim();
+  return trimmed ? trimmed : null;
+};
 
 const toIsoOrNull = (value: string): string | null => {
   if (!value) return null;
@@ -28,47 +33,46 @@ const fromIsoToLocalInput = (iso?: string | null): string => {
 const NewMemberDiceEligibilityPage: React.FC = () => {
   const queryClient = useQueryClient();
 
-  const [filterUserId, setFilterUserId] = useState<string>("");
-
-  const parsedFilterUserId = useMemo(() => {
-    const trimmed = filterUserId.trim();
-    if (!trimmed) return undefined;
-    const n = Number(trimmed);
-    if (!Number.isFinite(n) || n <= 0) return undefined;
-    return n;
-  }, [filterUserId]);
+  const [filterExternalId, setFilterExternalId] = useState<string>("");
+  const parsedFilterExternalId = useMemo(() => normalizeExternalId(filterExternalId) ?? undefined, [filterExternalId]);
 
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["admin", "new-member-dice", "eligibility", parsedFilterUserId],
-    queryFn: () => fetchNewMemberDiceEligibility(parsedFilterUserId),
+    queryKey: ["admin", "new-member-dice", "eligibility", parsedFilterExternalId],
+    queryFn: () => fetchNewMemberDiceEligibilityByExternalId(parsedFilterExternalId),
   });
 
   const [form, setForm] = useState({
-    user_id: "",
+    external_id: "",
     is_eligible: true,
     campaign_key: "",
     granted_by: "",
     expires_at: "",
   });
 
+  const parsedFormExternalId = useMemo(() => normalizeExternalId(form.external_id), [form.external_id]);
+
   const upsertMutation = useMutation({
-    mutationFn: () =>
-      upsertNewMemberDiceEligibility({
-        user_id: Number(form.user_id),
+    mutationFn: async () => {
+      if (!parsedFormExternalId) {
+        throw new Error("external_id는 필수입니다.");
+      }
+      return upsertNewMemberDiceEligibility({
+        external_id: parsedFormExternalId,
         is_eligible: form.is_eligible,
         campaign_key: form.campaign_key ? form.campaign_key : null,
         granted_by: form.granted_by ? form.granted_by : null,
         expires_at: toIsoOrNull(form.expires_at),
-      }),
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "new-member-dice", "eligibility"] });
-      setForm({ user_id: "", is_eligible: true, campaign_key: "", granted_by: "", expires_at: "" });
+      setForm({ external_id: "", is_eligible: true, campaign_key: "", granted_by: "", expires_at: "" });
     },
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ userId, payload }: { userId: number; payload: Partial<AdminNewMemberDiceEligibility> }) =>
-      updateNewMemberDiceEligibility(userId, {
+    mutationFn: ({ externalId, payload }: { externalId: string; payload: Partial<AdminNewMemberDiceEligibility> }) =>
+      updateNewMemberDiceEligibilityByExternalId(externalId, {
         is_eligible: payload.is_eligible,
         campaign_key: payload.campaign_key ?? null,
         granted_by: payload.granted_by ?? null,
@@ -79,13 +83,15 @@ const NewMemberDiceEligibilityPage: React.FC = () => {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (userId: number) => deleteNewMemberDiceEligibility(userId),
+    mutationFn: (externalId: string) => deleteNewMemberDiceEligibilityByExternalId(externalId),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "new-member-dice", "eligibility"] }),
   });
 
   const handleQuickRevoke = (row: AdminNewMemberDiceEligibility) => {
+    const externalId = row.external_id ?? "";
+    if (!externalId) return;
     updateMutation.mutate({
-      userId: row.user_id,
+      externalId,
       payload: {
         is_eligible: false,
         revoked_at: new Date().toISOString(),
@@ -107,12 +113,12 @@ const NewMemberDiceEligibilityPage: React.FC = () => {
         <h2 className="mb-3 text-lg font-bold text-emerald-100">대상자 등록/갱신(Upsert)</h2>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <label className="space-y-1">
-            <span className="text-xs text-slate-300">user_id (필수)</span>
+            <span className="text-xs text-slate-300">external_id (필수)</span>
             <input
-              value={form.user_id}
-              onChange={(e) => setForm((p) => ({ ...p, user_id: e.target.value }))}
+              value={form.external_id}
+              onChange={(e) => setForm((p) => ({ ...p, external_id: e.target.value }))}
               className="w-full rounded border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100"
-              placeholder="예: 123"
+              placeholder="예: ext-56"
             />
           </label>
 
@@ -159,7 +165,7 @@ const NewMemberDiceEligibilityPage: React.FC = () => {
           <div className="flex items-end">
             <Button
               onClick={() => upsertMutation.mutate()}
-              disabled={upsertMutation.isPending || !form.user_id.trim()}
+              disabled={upsertMutation.isPending || !parsedFormExternalId}
               className="w-full"
             >
               {upsertMutation.isPending ? "저장 중..." : "저장"}
@@ -171,9 +177,9 @@ const NewMemberDiceEligibilityPage: React.FC = () => {
       <div className="flex items-center gap-2">
         <input
           type="text"
-          placeholder="user_id로 필터링 (옵션)"
-          value={filterUserId}
-          onChange={(e) => setFilterUserId(e.target.value)}
+          placeholder="external_id로 필터링 (옵션)"
+          value={filterExternalId}
+          onChange={(e) => setFilterExternalId(e.target.value)}
           className="w-full max-w-xs rounded border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 placeholder-slate-500"
         />
         <span className="text-xs text-slate-500">(입력 시 자동 조회)</span>
@@ -189,6 +195,8 @@ const NewMemberDiceEligibilityPage: React.FC = () => {
           <thead className="bg-slate-800/60">
             <tr>
               <th className="px-3 py-2 text-left">user_id</th>
+              <th className="px-3 py-2 text-left">external_id</th>
+              <th className="px-3 py-2 text-left">nickname</th>
               <th className="px-3 py-2 text-left">eligible</th>
               <th className="px-3 py-2 text-left">campaign_key</th>
               <th className="px-3 py-2 text-left">granted_by</th>
@@ -202,17 +210,21 @@ const NewMemberDiceEligibilityPage: React.FC = () => {
             {(data ?? []).map((row) => (
               <tr key={row.user_id}>
                 <td className="px-3 py-2">{row.user_id}</td>
+                <td className="px-3 py-2">{row.external_id ?? "-"}</td>
+                <td className="px-3 py-2">{row.nickname ?? "-"}</td>
                 <td className="px-3 py-2">
                   <select
                     value={row.is_eligible ? "true" : "false"}
                     onChange={(e) =>
-                      updateMutation.mutate({
-                        userId: row.user_id,
-                        payload: { is_eligible: e.target.value === "true" },
-                      })
+                      row.external_id
+                        ? updateMutation.mutate({
+                            externalId: row.external_id,
+                            payload: { is_eligible: e.target.value === "true" },
+                          })
+                        : undefined
                     }
                     className="rounded border border-slate-700 bg-slate-800 px-2 py-1"
-                    disabled={updateMutation.isPending}
+                    disabled={updateMutation.isPending || !row.external_id}
                   >
                     <option value="true">true</option>
                     <option value="false">false</option>
@@ -222,10 +234,12 @@ const NewMemberDiceEligibilityPage: React.FC = () => {
                   <input
                     defaultValue={row.campaign_key ?? ""}
                     onBlur={(e) =>
-                      updateMutation.mutate({
-                        userId: row.user_id,
-                        payload: { campaign_key: e.target.value ? e.target.value : null },
-                      })
+                      row.external_id
+                        ? updateMutation.mutate({
+                            externalId: row.external_id,
+                            payload: { campaign_key: e.target.value ? e.target.value : null },
+                          })
+                        : undefined
                     }
                     className="w-40 rounded border border-slate-700 bg-slate-800 px-2 py-1"
                     placeholder="(옵션)"
@@ -235,10 +249,12 @@ const NewMemberDiceEligibilityPage: React.FC = () => {
                   <input
                     defaultValue={row.granted_by ?? ""}
                     onBlur={(e) =>
-                      updateMutation.mutate({
-                        userId: row.user_id,
-                        payload: { granted_by: e.target.value ? e.target.value : null },
-                      })
+                      row.external_id
+                        ? updateMutation.mutate({
+                            externalId: row.external_id,
+                            payload: { granted_by: e.target.value ? e.target.value : null },
+                          })
+                        : undefined
                     }
                     className="w-40 rounded border border-slate-700 bg-slate-800 px-2 py-1"
                     placeholder="(옵션)"
@@ -249,12 +265,15 @@ const NewMemberDiceEligibilityPage: React.FC = () => {
                     type="datetime-local"
                     defaultValue={fromIsoToLocalInput(row.expires_at)}
                     onBlur={(e) =>
-                      updateMutation.mutate({
-                        userId: row.user_id,
-                        payload: { expires_at: toIsoOrNull(e.target.value) },
-                      })
+                      row.external_id
+                        ? updateMutation.mutate({
+                            externalId: row.external_id,
+                            payload: { expires_at: toIsoOrNull(e.target.value) },
+                          })
+                        : undefined
                     }
                     className="rounded border border-slate-700 bg-slate-800 px-2 py-1"
+                    disabled={updateMutation.isPending || !row.external_id}
                   />
                 </td>
                 <td className="px-3 py-2">{row.revoked_at ?? "-"}</td>
@@ -263,14 +282,14 @@ const NewMemberDiceEligibilityPage: React.FC = () => {
                   <Button
                     variant="secondary"
                     onClick={() => handleQuickRevoke(row)}
-                    disabled={updateMutation.isPending}
+                    disabled={updateMutation.isPending || !row.external_id}
                   >
                     회수
                   </Button>
                   <Button
                     variant="secondary"
-                    onClick={() => deleteMutation.mutate(row.user_id)}
-                    disabled={deleteMutation.isPending}
+                    onClick={() => (row.external_id ? deleteMutation.mutate(row.external_id) : undefined)}
+                    disabled={deleteMutation.isPending || !row.external_id}
                   >
                     삭제
                   </Button>
@@ -279,7 +298,7 @@ const NewMemberDiceEligibilityPage: React.FC = () => {
             ))}
             {(data ?? []).length === 0 && !isLoading && !isError && (
               <tr>
-                <td colSpan={8} className="px-3 py-4 text-center text-slate-400">
+                <td colSpan={10} className="px-3 py-4 text-center text-slate-400">
                   데이터가 없습니다.
                 </td>
               </tr>
