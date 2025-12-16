@@ -116,15 +116,15 @@ const SegmentRulesPage: React.FC = () => {
   return (
     <div className="space-y-6">
       <header className="space-y-1">
-        <h1 className="text-2xl font-bold text-emerald-200">Segment Rules</h1>
-        <p className="text-sm text-slate-300">DB에서 세그먼트 분류 규칙을 관리합니다. priority가 낮을수록 먼저 적용됩니다.</p>
+        <h1 className="text-2xl font-bold text-emerald-200">세그먼트 규칙</h1>
+        <p className="text-sm text-slate-300">DB에서 세그먼트 분류 규칙을 관리합니다. 우선순위(priority)가 낮을수록 먼저 적용됩니다.</p>
       </header>
 
       <section className="rounded-2xl border border-emerald-800/40 bg-slate-900/70 p-4 space-y-3">
         <div className="text-sm font-semibold text-slate-100">새 규칙 추가</div>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
           <div>
-            <label className="mb-1 block text-xs font-semibold text-slate-200">name</label>
+            <label className="mb-1 block text-xs font-semibold text-slate-200">규칙명(name)</label>
             <input
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
@@ -132,7 +132,7 @@ const SegmentRulesPage: React.FC = () => {
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-semibold text-slate-200">segment</label>
+            <label className="mb-1 block text-xs font-semibold text-slate-200">세그먼트(segment)</label>
             <input
               value={newSegment}
               onChange={(e) => setNewSegment(e.target.value.toUpperCase())}
@@ -140,7 +140,7 @@ const SegmentRulesPage: React.FC = () => {
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-semibold text-slate-200">priority</label>
+            <label className="mb-1 block text-xs font-semibold text-slate-200">우선순위(priority)</label>
             <input
               type="number"
               value={newPriority}
@@ -151,7 +151,7 @@ const SegmentRulesPage: React.FC = () => {
           <div className="flex items-end gap-2">
             <label className="flex items-center gap-2 text-sm text-slate-200">
               <input type="checkbox" checked={newEnabled} onChange={(e) => setNewEnabled(e.target.checked)} />
-              enabled
+              활성화
             </label>
             <Button onClick={() => void onCreate()} disabled={createDisabled || createMutation.isPending}>
               추가
@@ -159,7 +159,7 @@ const SegmentRulesPage: React.FC = () => {
           </div>
         </div>
         <div>
-          <label className="mb-1 block text-xs font-semibold text-slate-200">condition_json</label>
+          <label className="mb-1 block text-xs font-semibold text-slate-200">조건(JSON)</label>
           <textarea
             value={newCondition}
             onChange={(e) => setNewCondition(e.target.value)}
@@ -178,13 +178,13 @@ const SegmentRulesPage: React.FC = () => {
         <table className="min-w-full text-sm">
           <thead className="bg-slate-900/60 text-slate-200">
             <tr>
-              <th className="px-3 py-2 text-left">id</th>
-              <th className="px-3 py-2 text-left">name</th>
-              <th className="px-3 py-2 text-left">segment</th>
-              <th className="px-3 py-2 text-left">priority</th>
-              <th className="px-3 py-2 text-left">enabled</th>
-              <th className="px-3 py-2 text-left">condition_json</th>
-              <th className="px-3 py-2 text-left">actions</th>
+              <th className="whitespace-nowrap px-3 py-2 text-left">ID</th>
+              <th className="whitespace-nowrap px-3 py-2 text-left">규칙명</th>
+              <th className="whitespace-nowrap px-3 py-2 text-left">세그먼트</th>
+              <th className="whitespace-nowrap px-3 py-2 text-left">우선순위</th>
+              <th className="whitespace-nowrap px-3 py-2 text-left">활성화</th>
+              <th className="whitespace-nowrap px-3 py-2 text-left">조건(JSON)</th>
+              <th className="whitespace-nowrap px-3 py-2 text-left">작업</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-800">
@@ -265,7 +265,7 @@ const SegmentRulesPage: React.FC = () => {
                             [r.id]: { ...(prev[r.id] ?? view), conditionText: ev.target.value },
                           }))
                         }
-                        className="h-24 w-96 rounded-md border border-slate-700 bg-slate-950 px-2 py-1 font-mono text-xs text-slate-100"
+                        className="h-24 w-96 min-w-[24rem] rounded-md border border-slate-700 bg-slate-950 px-2 py-1 font-mono text-xs text-slate-100"
                       />
                     </td>
                     <td className="px-3 py-2 align-top">

@@ -46,14 +46,14 @@ const UserSegmentsPage: React.FC = () => {
   return (
     <div className="space-y-6">
       <header className="space-y-1">
-        <h1 className="text-2xl font-bold text-emerald-200">User Segments</h1>
-        <p className="text-sm text-slate-300">external_id로 조회 후 segment를 수동 수정할 수 있습니다.</p>
+        <h1 className="text-2xl font-bold text-emerald-200">유저 세그먼트</h1>
+        <p className="text-sm text-slate-300">외부 ID(external_id)로 조회 후 세그먼트를 수동 수정할 수 있습니다.</p>
       </header>
 
       <section className="rounded-2xl border border-emerald-800/40 bg-slate-900/70 p-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
           <div className="flex-1">
-            <label className="mb-1 block text-xs font-semibold text-slate-200">external_id</label>
+            <label className="mb-1 block text-xs font-semibold text-slate-200">외부 ID(external_id)</label>
             <input
               value={externalId}
               onChange={(e) => setExternalId(e.target.value)}
@@ -87,16 +87,16 @@ const UserSegmentsPage: React.FC = () => {
         <table className="min-w-full text-sm">
           <thead className="bg-slate-900/60 text-slate-200">
             <tr>
-              <th className="px-3 py-2 text-left">user_id</th>
-              <th className="px-3 py-2 text-left">external_id</th>
-              <th className="px-3 py-2 text-left">segment</th>
-              <th className="px-3 py-2 text-left">segment_updated_at</th>
-              <th className="px-3 py-2 text-left">plays</th>
-              <th className="px-3 py-2 text-left">last_login_at</th>
-              <th className="px-3 py-2 text-left">last_charge_at</th>
-              <th className="px-3 py-2 text-left">last_bonus_used_at</th>
-              <th className="px-3 py-2 text-left">activity_updated_at</th>
-              <th className="px-3 py-2 text-left">actions</th>
+              <th className="whitespace-nowrap px-3 py-2 text-left">유저 ID</th>
+              <th className="whitespace-nowrap px-3 py-2 text-left">외부 ID</th>
+              <th className="whitespace-nowrap px-3 py-2 text-left">세그먼트</th>
+              <th className="whitespace-nowrap px-3 py-2 text-left">세그 변경시각</th>
+              <th className="whitespace-nowrap px-3 py-2 text-left">플레이</th>
+              <th className="whitespace-nowrap px-3 py-2 text-left">마지막 로그인</th>
+              <th className="whitespace-nowrap px-3 py-2 text-left">마지막 충전</th>
+              <th className="whitespace-nowrap px-3 py-2 text-left">마지막 보너스 사용</th>
+              <th className="whitespace-nowrap px-3 py-2 text-left">활동 업데이트</th>
+              <th className="whitespace-nowrap px-3 py-2 text-left">작업</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-800">
@@ -116,12 +116,12 @@ const UserSegmentsPage: React.FC = () => {
                       value={editSegment[row.user_id] ?? row.segment}
                       onChange={(e) => setEditSegment((prev) => ({ ...prev, [row.user_id]: e.target.value }))}
                       className="w-48 rounded-md border border-slate-700 bg-slate-950 px-2 py-1 text-xs text-slate-100"
-                      placeholder="NEW / VIP / DORMANT_SHORT ..."
+                      placeholder="예: NEW / VIP / DORMANT_SHORT"
                     />
                   </td>
                   <td className="px-3 py-2 align-top text-xs text-slate-300">{formatMaybeDate(row.segment_updated_at)}</td>
                   <td className="px-3 py-2 align-top text-xs text-slate-300">
-                    R:{row.roulette_plays} D:{row.dice_plays} L:{row.lottery_plays} · t:{row.total_play_duration}
+                    룰렛:{row.roulette_plays} 주사위:{row.dice_plays} 복권:{row.lottery_plays} · t:{row.total_play_duration}
                   </td>
                   <td className="px-3 py-2 align-top text-xs text-slate-300">{formatMaybeDate(row.last_login_at)}</td>
                   <td className="px-3 py-2 align-top text-xs text-slate-300">{formatMaybeDate(row.last_charge_at)}</td>
