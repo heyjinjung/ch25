@@ -26,7 +26,7 @@ echo "Restarting services..."
 ${DC} up -d
 
 echo "Running migrations (if any)..."
-${DC} exec -T backend alembic upgrade head
+${DC} exec -T backend alembic upgrade heads
 
 echo "Update completed!"
 echo "Check logs with: ${DC} logs -f"
