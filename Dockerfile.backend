@@ -32,6 +32,7 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 # Copy application code
 COPY app/ ./app/
 COPY alembic/ ./alembic/
+COPY scripts/ ./scripts/
 COPY alembic.ini .
 
 # Create non-root user

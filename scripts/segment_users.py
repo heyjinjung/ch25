@@ -15,8 +15,13 @@ Notes:
 
 from __future__ import annotations
 
+import os
+import sys
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+
+# Add project root to path (so `import app...` works when running as a script)
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
