@@ -22,6 +22,9 @@ const AdminDashboardPage: React.FC = () => {
         <Link to="/admin/dice" className="rounded-lg border border-emerald-800/40 bg-slate-900/60 p-3 text-slate-100 transition hover:border-emerald-500">
           주사위 설정
         </Link>
+        <Link to="/admin/new-member-dice" className="rounded-lg border border-emerald-800/40 bg-slate-900/60 p-3 text-slate-100 transition hover:border-emerald-500">
+          신규회원 판정
+        </Link>
         <Link to="/admin/lottery" className="rounded-lg border border-emerald-800/40 bg-slate-900/60 p-3 text-slate-100 transition hover:border-emerald-500">
           복권 설정
         </Link>

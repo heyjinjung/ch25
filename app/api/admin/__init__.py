@@ -16,6 +16,7 @@ from app.api.admin.routes import (
     admin_survey,
     admin_segments,
     admin_segment_rules,
+    admin_new_member_dice,
 )
 
 admin_router = APIRouter()
@@ -32,3 +33,4 @@ admin_router.include_router(admin_team_battle.router)
 admin_router.include_router(admin_survey.router)
 admin_router.include_router(admin_segments.router)
 admin_router.include_router(admin_segment_rules.router)
+admin_router.include_router(admin_new_member_dice.router)

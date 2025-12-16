@@ -43,4 +43,6 @@ from app.models import (  # noqa: F401
     UserActivityEvent,
     UserSegment,
     SegmentRule,
+    NewMemberDiceEligibility,
+    NewMemberDiceLog,
 )

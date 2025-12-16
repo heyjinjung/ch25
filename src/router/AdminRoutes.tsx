@@ -16,6 +16,7 @@ import UserAdminPage from "../admin/pages/UserAdminPage";
 import AdminTeamBattlePage from "../admin/pages/AdminTeamBattlePage";
 import UserSegmentsPage from "../admin/pages/UserSegmentsPage";
 import SegmentRulesPage from "../admin/pages/SegmentRulesPage";
+import NewMemberDiceEligibilityPage from "../admin/pages/NewMemberDiceEligibilityPage";
 import AdminLayout from "../admin/components/AdminLayout";
 import ProtectedRoute from "../components/routing/ProtectedRoute";
 
@@ -39,6 +40,7 @@ const AdminRoutes: React.FC = () => {
           <Route path="user-segments" element={<UserSegmentsPage />} />
           <Route path="segment-rules" element={<SegmentRulesPage />} />
           <Route path="team-battle" element={<AdminTeamBattlePage />} />
+          <Route path="new-member-dice" element={<NewMemberDiceEligibilityPage />} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/admin" replace />} />

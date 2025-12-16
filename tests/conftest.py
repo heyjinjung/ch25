@@ -1,5 +1,6 @@
 # /workspace/ch25/tests/conftest.py
 """Shared pytest fixtures for FastAPI client and test database."""
+import os
 from collections.abc import Generator
 from typing import Callable
 
@@ -8,6 +9,10 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.pool import StaticPool
 from sqlalchemy.orm import Session, sessionmaker
+
+# Provide minimal defaults so importing the app doesn't require a real .env.
+os.environ.setdefault("DATABASE_URL", "sqlite+pysqlite:///:memory:")
+os.environ.setdefault("JWT_SECRET", "test-secret")
 
 from app.api.deps import get_db, get_current_user_id
 from app.models.game_wallet import GameTokenType, UserGameWallet

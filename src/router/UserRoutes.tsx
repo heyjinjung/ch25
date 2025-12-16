@@ -11,6 +11,7 @@ import SurveyListPage from "../pages/SurveyListPage";
 import SurveyRunnerPage from "../pages/SurveyRunnerPage";
 import LoginPage from "../pages/LoginPage";
 import TeamBattlePage from "../pages/TeamBattlePage";
+import NewMemberDicePage from "../pages/NewMemberDicePage";
 import UserLayout from "../components/layout/UserLayout";
 import RequireAuth from "../components/routing/RequireAuth";
 
@@ -29,6 +30,7 @@ const UserRoutes: React.FC = () => {
           <Route path="/surveys" element={<SurveyListPage />} />
           <Route path="/surveys/:surveyId" element={<SurveyRunnerPage />} />
           <Route path="/team-battle" element={<TeamBattlePage />} />
+          <Route path="/new-member/dice" element={<NewMemberDicePage />} />
           <Route path="/" element={<Navigate to="/home" replace />} />
         </Route>
       </Route>
