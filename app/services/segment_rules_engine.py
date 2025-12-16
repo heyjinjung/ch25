@@ -11,8 +11,8 @@ Condition JSON formats supported:
 - {"field": "last_charge_at", "op": "is_null"}
 
 Supported fields:
-- last_login_at, last_charge_at, last_active_at (datetime or None)
-- days_since_last_login, days_since_last_charge, days_since_last_active (int or None)
+- last_login_at, last_charge_at, last_play_at, last_active_at (datetime or None)
+- days_since_last_login, days_since_last_charge, days_since_last_play, days_since_last_active (int or None)
 - deposit_amount (int)
 - roulette_plays, dice_plays, lottery_plays, total_play_duration (int)
 
@@ -32,10 +32,12 @@ from typing import Any
 class SegmentContext:
     last_login_at: datetime | None
     last_charge_at: datetime | None
+    last_play_at: datetime | None
     last_active_at: datetime | None
 
     days_since_last_login: int | None
     days_since_last_charge: int | None
+    days_since_last_play: int | None
     days_since_last_active: int | None
 
     deposit_amount: int
