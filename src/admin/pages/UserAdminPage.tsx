@@ -1,5 +1,5 @@
 // src/admin/pages/UserAdminPage.tsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createUser, deleteUser, fetchUsers, updateUser, AdminUserPayload } from "../api/adminUserApi";
 import Button from "../../components/common/Button";
@@ -23,12 +23,15 @@ const UserAdminPage: React.FC = () => {
     queryFn: fetchUsers,
   });
 
+  const tableContainerRef = useRef<HTMLDivElement | null>(null);
+
   const [rows, setRows] = useState<EditableUser[]>([emptyUser]);
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     if (data) {
-      setRows(data.map((u) => ({ ...u, password: "" })));
+      const sorted = [...data].sort((a, b) => (b.id ?? 0) - (a.id ?? 0));
+      setRows(sorted.map((u) => ({ ...u, password: "" })));
     }
   }, [data]);
 
@@ -75,7 +78,12 @@ const UserAdminPage: React.FC = () => {
     );
   };
 
-  const addNewRow = () => setRows((prev) => [...prev, { ...emptyUser }]);
+  const addNewRow = () => {
+    setSearchTerm("");
+    setRows((prev) => [{ ...emptyUser }, ...prev]);
+    tableContainerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const submitExisting = (row: EditableUser) => {
     if (!row.id) return;
@@ -122,6 +130,10 @@ const UserAdminPage: React.FC = () => {
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full max-w-sm rounded border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
         />
+
+        <Button variant="secondary" onClick={addNewRow}>
+          행 추가
+        </Button>
       </div>
 
       {isLoading && <div className="rounded-lg border border-emerald-800/40 bg-slate-900 p-3 text-slate-200">불러오는 중...</div>}
@@ -129,7 +141,7 @@ const UserAdminPage: React.FC = () => {
         <div className="rounded-lg border border-red-700/40 bg-red-950 p-3 text-red-100">불러오기 실패: {(error as Error).message}</div>
       )}
 
-      <div className="overflow-auto rounded-lg border border-slate-800">
+      <div ref={tableContainerRef} className="overflow-auto rounded-lg border border-slate-800">
         <table className="min-w-full divide-y divide-slate-800 bg-slate-900 text-sm text-slate-100">
           <thead className="bg-slate-800/60">
             <tr>
@@ -236,12 +248,6 @@ const UserAdminPage: React.FC = () => {
             )}
           </tbody>
         </table>
-      </div>
-
-      <div className="flex justify-end">
-        <Button variant="secondary" onClick={addNewRow}>
-          행 추가
-        </Button>
       </div>
     </section>
   );

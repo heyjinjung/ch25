@@ -30,7 +30,7 @@ const DiceFace: React.FC<{ value?: number; isRolling?: boolean }> = ({ value, is
   }, [value]);
 
   if (!value) {
-    return <div className="h-16 w-16 rounded-xl border-2 border-dashed border-primary-200 bg-white/60" />;
+    return <div className="h-16 w-16 rounded-xl border-2 border-dashed border-white/50 bg-white/10" />;
   }
 
   return (
@@ -137,10 +137,10 @@ const NewMemberDicePage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <section className="mx-auto w-full max-w-3xl rounded-3xl border border-white/20 bg-gradient-to-br from-primary-50/50 via-white/10 to-secondary-50/50 p-8 shadow-2xl backdrop-blur-xl">
+      <section className="mx-auto w-full max-w-3xl rounded-3xl border border-white/15 bg-christmas-gradient p-8 text-dark-900 shadow-2xl">
         <div className="flex flex-col items-center justify-center">
           <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary-400 border-t-transparent" />
-          <p className="mt-4 text-lg font-semibold text-slate-700">게임 정보를 불러오는 중...</p>
+          <p className="mt-4 text-lg font-semibold text-dark-800">게임 정보를 불러오는 중...</p>
         </div>
       </section>
     );
@@ -149,38 +149,38 @@ const NewMemberDicePage: React.FC = () => {
   if (isError || !data) {
     const msg = mapErrorMessage(error) ?? "게임 정보를 불러오지 못했습니다.";
     return (
-      <section className="mx-auto w-full max-w-3xl rounded-3xl border border-white/20 bg-gradient-to-br from-primary-50/50 via-white/10 to-secondary-50/50 p-8 text-center shadow-2xl backdrop-blur-xl">
-        <p className="text-xl font-bold text-primary-800">게임 정보를 불러오지 못했습니다.</p>
-        <p className="mt-2 text-sm text-slate-600">{msg}</p>
+      <section className="mx-auto w-full max-w-3xl rounded-3xl border border-white/15 bg-christmas-gradient p-8 text-center text-dark-900 shadow-2xl">
+        <p className="text-xl font-bold text-dark-900">게임 정보를 불러오지 못했습니다.</p>
+        <p className="mt-2 text-sm text-dark-700">{msg}</p>
       </section>
     );
   }
 
   return (
-    <section className="mx-auto w-full max-w-3xl space-y-6 rounded-3xl border border-white/20 bg-gradient-to-br from-primary-50/50 via-white/10 to-secondary-50/50 p-8 shadow-2xl backdrop-blur-xl">
+    <section className="mx-auto w-full max-w-3xl space-y-6 rounded-3xl border border-white/15 bg-christmas-gradient p-8 text-dark-900 shadow-2xl">
       <header className="text-center">
-        <p className="text-xs font-semibold uppercase tracking-[0.35em] text-primary-700">New Member</p>
-        <h1 className="mt-2 text-3xl font-bold text-slate-900">신규회원 에어드랍 이벤트</h1>
-        <p className="mt-2 text-sm font-semibold text-slate-700">가볍게 즐기는 주사위 한 판 🎲</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.35em] text-gold-200">New Member</p>
+        <h1 className="mt-2 text-3xl font-bold text-dark-900">신규회원 에어드랍 이벤트</h1>
+        <p className="mt-2 text-sm font-semibold text-dark-700">가볍게 즐기는 주사위 한 판</p>
         <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
-          <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-primary-900 ring-1 ring-white/20 backdrop-blur">
+          <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-semibold text-dark-900 ring-1 ring-white/25">
             무료 1회 참여
           </span>
-          <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-secondary-900 ring-1 ring-white/20 backdrop-blur">
-            크리스마스 시즌 🎄
+          <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-semibold text-dark-900 ring-1 ring-white/25">
+            크리스마스 시즌
           </span>
         </div>
       </header>
 
-      <div className="grid gap-6 rounded-2xl bg-white/10 p-6 ring-1 ring-white/20 backdrop-blur sm:grid-cols-2">
+      <div className="grid gap-6 rounded-2xl bg-white/20 p-6 ring-1 ring-white/20 backdrop-blur-sm sm:grid-cols-2">
         <div className="text-center">
-          <p className="mb-3 text-sm font-semibold text-slate-800">나</p>
+          <p className="mb-3 text-sm font-semibold text-dark-800">나</p>
           <div className="flex justify-center">
             <DiceFace value={userDice ?? undefined} isRolling={isRolling} />
           </div>
         </div>
         <div className="text-center">
-          <p className="mb-3 text-sm font-semibold text-slate-800">상대</p>
+          <p className="mb-3 text-sm font-semibold text-dark-800">상대</p>
           <div className="flex justify-center">
             <DiceFace value={dealerDice ?? undefined} isRolling={isRolling} />
           </div>
@@ -188,19 +188,19 @@ const NewMemberDicePage: React.FC = () => {
       </div>
 
       {uiError && (
-        <div className="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-center text-sm font-semibold text-primary-900 backdrop-blur">
+        <div className="rounded-xl border border-white/25 bg-white/20 px-4 py-3 text-center text-sm font-semibold text-dark-900 backdrop-blur-sm">
           {uiError}
         </div>
       )}
 
       {!data.eligible && (
-        <div className="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-center text-sm text-slate-700 backdrop-blur">
+        <div className="rounded-xl border border-white/25 bg-white/20 px-4 py-3 text-center text-sm text-dark-800 backdrop-blur-sm">
           참여 대상 확인이 필요합니다. 지민이에게 문의해주세요.
         </div>
       )}
 
       {data.alreadyPlayed && (
-        <div className="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-center text-sm font-semibold text-slate-800 backdrop-blur">
+        <div className="rounded-xl border border-white/25 bg-white/20 px-4 py-3 text-center text-sm font-semibold text-dark-900 backdrop-blur-sm">
           이미 1회 참여가 완료되었습니다.
         </div>
       )}
@@ -210,7 +210,7 @@ const NewMemberDicePage: React.FC = () => {
           type="button"
           onClick={handlePlay}
           disabled={!canPlay}
-          className="w-full rounded-full bg-gradient-to-r from-primary-600 to-secondary-600 px-8 py-4 text-lg font-bold text-white shadow-lg transition hover:from-primary-500 hover:to-secondary-500 disabled:cursor-not-allowed disabled:from-slate-300 disabled:to-slate-300"
+          className="w-full rounded-full bg-gradient-to-r from-primary-600 to-secondary-600 px-8 py-4 text-lg font-bold text-dark-900 shadow-lg transition hover:from-primary-500 hover:to-secondary-500 disabled:cursor-not-allowed disabled:from-dark-200 disabled:to-dark-200 disabled:text-dark-500"
         >
           {isRolling || playMutation.isPending ? (
             <span className="flex items-center justify-center gap-2">
@@ -223,20 +223,20 @@ const NewMemberDicePage: React.FC = () => {
         </button>
 
         {(isRolling || playMutation.isPending || progressMessage) && (
-          <div className="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-center text-sm font-semibold text-slate-800 backdrop-blur">
+          <div className="rounded-xl border border-white/25 bg-white/20 px-4 py-3 text-center text-sm font-semibold text-dark-900 backdrop-blur-sm">
             {progressMessage ?? "게임을 준비 중입니다"}
           </div>
         )}
 
         {message && (
-          <div className="rounded-2xl bg-white/10 p-5 text-center ring-1 ring-white/20 backdrop-blur">
-            <p className={`text-2xl font-extrabold ${outcome === "WIN" ? "text-secondary-700" : "text-primary-700"}`}>{message}</p>
+          <div className="rounded-2xl bg-white/20 p-5 text-center ring-1 ring-white/20 backdrop-blur-sm">
+            <p className={`text-2xl font-extrabold ${outcome === "WIN" ? "text-secondary-200" : "text-primary-200"}`}>{message}</p>
             {outcome === "WIN" && (
               <a
                 href={winLink}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-4 inline-flex items-center justify-center rounded-full bg-gold-500 px-6 py-3 text-sm font-bold text-slate-900 shadow hover:bg-gold-400"
+                className="mt-4 inline-flex items-center justify-center rounded-full bg-gold-500 px-6 py-3 text-sm font-bold text-dark-50 shadow hover:bg-gold-400"
               >
                 이벤트 확인하기
               </a>
@@ -245,7 +245,7 @@ const NewMemberDicePage: React.FC = () => {
         )}
       </div>
 
-      <footer className="text-center text-xs text-slate-500">
+      <footer className="text-center text-xs text-dark-500">
         이벤트 참여용 게임이며 시스템 보상은 지급되지 않습니다.
       </footer>
     </section>
