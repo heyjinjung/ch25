@@ -23,6 +23,9 @@ class UserActivity(Base):
     # In this codebase, "charge" is derived from external_ranking_data updates.
     last_charge_at = Column(DateTime, nullable=True)
 
+    # Most recent play time across roulette/dice/lottery (derived from logs or activity events)
+    last_play_at = Column(DateTime, nullable=True)
+
     roulette_plays = Column(Integer, nullable=False, default=0, server_default="0")
     dice_plays = Column(Integer, nullable=False, default=0, server_default="0")
     lottery_plays = Column(Integer, nullable=False, default=0, server_default="0")

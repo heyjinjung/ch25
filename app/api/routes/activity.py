@@ -52,10 +52,13 @@ def record_activity(
 
     if payload.event_type == ActivityEventType.ROULETTE_PLAY:
         activity.roulette_plays += 1
+        activity.last_play_at = now
     elif payload.event_type == ActivityEventType.DICE_PLAY:
         activity.dice_plays += 1
+        activity.last_play_at = now
     elif payload.event_type == ActivityEventType.LOTTERY_PLAY:
         activity.lottery_plays += 1
+        activity.last_play_at = now
     elif payload.event_type == ActivityEventType.BONUS_USED:
         activity.last_bonus_used_at = now
     elif payload.event_type == ActivityEventType.PLAY_DURATION:
