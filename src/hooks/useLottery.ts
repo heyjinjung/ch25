@@ -1,6 +1,7 @@
 // src/hooks/useLottery.ts
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getLotteryStatus, playLottery, LotteryPlayResponse, LotteryStatusResponse } from "../api/lotteryApi";
+import { recordActivity } from "../api/activityApi";
 
 const LOTTERY_STATUS_QUERY_KEY = ["lottery-status"] as const;
 
@@ -17,6 +18,7 @@ export const usePlayLottery = () => {
     mutationFn: playLottery,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: LOTTERY_STATUS_QUERY_KEY });
+      recordActivity({ event_type: "LOTTERY_PLAY" }).catch(() => undefined);
     },
   });
 };

@@ -17,6 +17,10 @@ from app.models.team_battle import TeamSeason, Team, TeamMember, TeamScore, Team
 from app.models.level_xp import UserLevelProgress, UserLevelRewardLog, UserXpEventLog
 from app.models.game_wallet_ledger import UserGameWalletLedger
 from app.models.user import User
+from app.models.user_activity import UserActivity
+from app.models.user_activity_event import UserActivityEvent
+from app.models.user_segment import UserSegment
+from app.models.segment_rule import SegmentRule
 from app.models.survey import (
     Survey,
     SurveyQuestion,
@@ -65,4 +69,8 @@ __all__ = [
     "SurveyTriggerRule",
     "SurveyResponse",
     "SurveyResponseAnswer",
+    "UserActivity",
+    "UserActivityEvent",
+    "UserSegment",
+    "SegmentRule",
 ]

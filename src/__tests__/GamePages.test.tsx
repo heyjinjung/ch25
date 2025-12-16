@@ -1,6 +1,7 @@
 import React from "react";
 import { describe, expect, it, vi, beforeEach, Mock } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 
 // Mock FeatureGate to pass children through without today-feature dependency.
 vi.mock("../components/feature/FeatureGate", () => ({
@@ -30,6 +31,10 @@ import { useRouletteStatus, usePlayRoulette } from "../hooks/useRoulette";
 import { useDiceStatus, usePlayDice } from "../hooks/useDice";
 import { useLotteryStatus, usePlayLottery } from "../hooks/useLottery";
 
+const renderWithRouter = (ui: React.ReactElement) => {
+  return render(<MemoryRouter>{ui}</MemoryRouter>);
+};
+
 describe("Game pages error/unlimited handling", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -49,7 +54,7 @@ describe("Game pages error/unlimited handling", () => {
       data: undefined,
     });
 
-    render(<RoulettePage />);
+    renderWithRouter(<RoulettePage />);
 
     expect(screen.getByText(/남은 횟수: 무제한/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /룰렛 돌리기/ })).not.toBeDisabled();
@@ -69,7 +74,7 @@ describe("Game pages error/unlimited handling", () => {
       data: undefined,
     });
 
-    render(<RoulettePage />);
+    renderWithRouter(<RoulettePage />);
     expect(screen.getByText(/오늘 활성화된 이벤트가 없습니다/)).toBeInTheDocument();
   });
 
@@ -87,7 +92,7 @@ describe("Game pages error/unlimited handling", () => {
       data: undefined,
     });
 
-    render(<DicePage />);
+    renderWithRouter(<DicePage />);
     expect(screen.getByText(/남은 횟수: 무제한/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /주사위 던지기/ })).not.toBeDisabled();
     expect(screen.getByText(/이벤트 스케줄이 잘못되었습니다/)).toBeInTheDocument();
@@ -107,7 +112,7 @@ describe("Game pages error/unlimited handling", () => {
       data: undefined,
     });
 
-    render(<LotteryPage />);
+    renderWithRouter(<LotteryPage />);
     expect(screen.getByText(/남은 횟수: 무제한/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /복권 뽑기/ })).not.toBeDisabled();
     expect(screen.getByText(/이벤트가 비활성화되었습니다/)).toBeInTheDocument();

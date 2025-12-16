@@ -12,7 +12,7 @@ import {
 } from "../api/adminGameTokenApi";
 import { GAME_TOKEN_LABELS, GameTokenType } from "../../types/gameTokens";
 
-const tokenOptions: GameTokenType[] = ["ROULETTE_COIN", "DICE_TOKEN", "LOTTERY_TICKET"];
+const tokenOptions: GameTokenType[] = ["ROULETTE_COIN", "DICE_TOKEN", "LOTTERY_TICKET", "CC_COIN"];
 
 const GameTokenLogsPage: React.FC = () => {
   const queryClient = useQueryClient();
@@ -106,6 +106,7 @@ const GameTokenLogsPage: React.FC = () => {
               <option value="ROULETTE_COIN">룰렛</option>
               <option value="DICE_TOKEN">주사위</option>
               <option value="LOTTERY_TICKET">복권</option>
+              <option value="CC_COIN">CC 코인</option>
             </select>
             <input
               type="number"

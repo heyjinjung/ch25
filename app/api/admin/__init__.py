@@ -14,6 +14,8 @@ from app.api.admin.routes import (
     admin_users,
     admin_team_battle,
     admin_survey,
+    admin_segments,
+    admin_segment_rules,
 )
 
 admin_router = APIRouter()
@@ -28,3 +30,5 @@ admin_router.include_router(admin_external_ranking.router)
 admin_router.include_router(admin_users.router)
 admin_router.include_router(admin_team_battle.router)
 admin_router.include_router(admin_survey.router)
+admin_router.include_router(admin_segments.router)
+admin_router.include_router(admin_segment_rules.router)

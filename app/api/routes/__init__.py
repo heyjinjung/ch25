@@ -3,12 +3,13 @@
 from fastapi import APIRouter
 
 from app.api import admin
-from app.api.routes import auth, dice, health, level_xp, lottery, ranking, roulette, season_pass, today_feature, team_battle, survey
+from app.api.routes import activity, auth, dice, health, level_xp, lottery, ranking, roulette, season_pass, today_feature, team_battle, survey
 
 api_router = APIRouter()
 api_router.include_router(health.router, prefix="", tags=["health"])
 api_router.include_router(today_feature.router)
 api_router.include_router(auth.router)
+api_router.include_router(activity.router)
 api_router.include_router(season_pass.router)
 api_router.include_router(roulette.router)
 api_router.include_router(dice.router)

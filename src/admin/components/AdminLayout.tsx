@@ -13,6 +13,8 @@ const navItems = [
   { path: "/admin/game-tokens", label: "Coin Grant" },
   { path: "/admin/game-token-logs", label: "Coin Logs" },
   { path: "/admin/users", label: "Users" },
+  { path: "/admin/user-segments", label: "User Segments" },
+  { path: "/admin/segment-rules", label: "Segment Rules" },
   { path: "/admin/team-battle", label: "Team Battle" },
   { path: "/admin/surveys", label: "Surveys" },
 ];

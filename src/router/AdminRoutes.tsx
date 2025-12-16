@@ -14,6 +14,8 @@ import GameTokenGrantPage from "../admin/pages/GameTokenGrantPage";
 import GameTokenLogsPage from "../admin/pages/GameTokenLogsPage";
 import UserAdminPage from "../admin/pages/UserAdminPage";
 import AdminTeamBattlePage from "../admin/pages/AdminTeamBattlePage";
+import UserSegmentsPage from "../admin/pages/UserSegmentsPage";
+import SegmentRulesPage from "../admin/pages/SegmentRulesPage";
 import AdminLayout from "../admin/components/AdminLayout";
 import ProtectedRoute from "../components/routing/ProtectedRoute";
 
@@ -34,6 +36,8 @@ const AdminRoutes: React.FC = () => {
           <Route path="game-tokens" element={<GameTokenGrantPage />} />
           <Route path="game-token-logs" element={<GameTokenLogsPage />} />
           <Route path="users" element={<UserAdminPage />} />
+          <Route path="user-segments" element={<UserSegmentsPage />} />
+          <Route path="segment-rules" element={<SegmentRulesPage />} />
           <Route path="team-battle" element={<AdminTeamBattlePage />} />
         </Route>
       </Route>

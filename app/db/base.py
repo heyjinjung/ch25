@@ -39,4 +39,8 @@ from app.models import (  # noqa: F401
     SurveyTriggerRule,
     SurveyResponse,
     SurveyResponseAnswer,
+    UserActivity,
+    UserActivityEvent,
+    UserSegment,
+    SegmentRule,
 )

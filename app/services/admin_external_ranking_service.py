@@ -7,6 +7,7 @@ from sqlalchemy import delete, select, func
 from sqlalchemy.orm import Session
 
 from app.models.external_ranking import ExternalRankingData
+from app.models.user_activity import UserActivity
 from app.models.season_pass import SeasonPassStampLog
 from app.schemas.external_ranking import ExternalRankingCreate, ExternalRankingUpdate
 from app.models.user import User
@@ -106,6 +107,19 @@ class AdminExternalRankingService:
         db.commit()
         for row in results:
             db.refresh(row)
+
+        # Personalization hook: if deposit_amount increased (vs pre-update snapshot), treat as "charge" update.
+        # We don't have per-transaction charge logs in this codebase; the best available timestamp is row.updated_at.
+        for row in results:
+            snap = prev_snapshot.get(row.user_id, {"deposit_amount": 0})
+            prev_amount = int(snap.get("deposit_amount") or 0)
+            if int(row.deposit_amount or 0) > prev_amount:
+                activity = db.query(UserActivity).filter(UserActivity.user_id == row.user_id).first()
+                if not activity:
+                    activity = UserActivity(user_id=row.user_id)
+                    db.add(activity)
+                activity.last_charge_at = row.updated_at
+        db.commit()
 
         # Season pass XP hooks (daily deltas) + weekly TOP10 stamp
         current_season = season_pass.get_current_season(db, today)
