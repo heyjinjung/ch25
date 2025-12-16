@@ -86,8 +86,8 @@ def settle_rewards(season_id: int, db: Session = Depends(get_db)):
 
 @router.post("/teams/force-join")
 def force_join(payload: TeamForceJoinRequest, db: Session = Depends(get_db)):
-    member = service.join_team(db, team_id=payload.team_id, user_id=payload.user_id, role="member", bypass_selection=True)
-    return {"team_id": member.team_id, "user_id": member.user_id, "role": member.role, "bypass_selection": True}
+    member = service.move_member(db, team_id=payload.team_id, user_id=payload.user_id, role="member", keep_points=True)
+    return {"team_id": member.team_id, "user_id": member.user_id, "role": member.role, "moved": True, "keep_points": True}
 
 
 @router.post("/teams/auto-balance", response_model=TeamAutoBalanceResponse)

@@ -293,6 +293,91 @@ class TeamBattleService:
         db.refresh(member)
         return member
 
+    def _recompute_team_score_from_logs(self, db: Session, season_id: int, team_id: int) -> None:
+        total = db.execute(
+            select(func.coalesce(func.sum(TeamEventLog.delta), 0)).where(
+                TeamEventLog.season_id == season_id,
+                TeamEventLog.team_id == team_id,
+            )
+        ).scalar_one()
+
+        score = db.execute(
+            select(TeamScore).where(
+                TeamScore.season_id == season_id,
+                TeamScore.team_id == team_id,
+            )
+        ).scalar_one_or_none()
+
+        if not score:
+            score = TeamScore(team_id=team_id, season_id=season_id, points=0)
+            db.add(score)
+            db.flush()
+
+        score.points = int(total or 0)
+        score.updated_at = self._now_utc()
+
+    def move_member(
+        self,
+        db: Session,
+        team_id: int,
+        user_id: int,
+        role: str = "member",
+        now: datetime | None = None,
+        keep_points: bool = True,
+    ) -> TeamMember:
+        """Admin move: allow moving an already-assigned user to another team.
+
+        If keep_points=True, the user's contribution for the *active season* is
+        transferred by moving their TeamEventLog.team_id and recomputing TeamScore
+        for the affected teams.
+        """
+
+        now = now or self._now_utc()
+        season = self._get_active_or_current(db, now)
+
+        # Lock target team row to avoid concurrent overfilling.
+        team = db.execute(select(Team).where(Team.id == team_id).with_for_update()).scalar_one_or_none()
+        if not team or not team.is_active:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="TEAM_NOT_FOUND")
+
+        # Lock membership row so two admins can't move the same user concurrently.
+        existing = db.execute(select(TeamMember).where(TeamMember.user_id == user_id).with_for_update()).scalar_one_or_none()
+        if existing and existing.team_id == team_id:
+            return existing
+
+        old_team_id = existing.team_id if existing else None
+
+        member_count = db.execute(select(func.count(TeamMember.user_id)).where(TeamMember.team_id == team_id)).scalar_one()
+        if (member_count or 0) >= self.TEAM_MAX_MEMBERS:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="TEAM_FULL")
+
+        if keep_points and old_team_id and old_team_id != team_id:
+            # Move the user's contribution logs in this season to the new team.
+            db.query(TeamEventLog).filter(
+                TeamEventLog.season_id == season.id,
+                TeamEventLog.user_id == user_id,
+                TeamEventLog.team_id == old_team_id,
+            ).update({"team_id": team_id}, synchronize_session=False)
+
+        if existing:
+            existing.team_id = team_id
+            existing.role = role
+            existing.joined_at = now
+            member = existing
+        else:
+            member = TeamMember(user_id=user_id, team_id=team_id, role=role, joined_at=now)
+            db.add(member)
+
+        db.flush()
+
+        if keep_points and old_team_id and old_team_id != team_id:
+            self._recompute_team_score_from_logs(db, season_id=season.id, team_id=old_team_id)
+            self._recompute_team_score_from_logs(db, season_id=season.id, team_id=team_id)
+
+        db.commit()
+        db.refresh(member)
+        return member
+
     def auto_assign_team(self, db: Session, user_id: int, now: datetime | None = None) -> TeamMember:
         now = now or self._now_utc()
         season = self._get_active_or_current(db, now)
