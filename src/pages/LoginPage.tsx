@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { login } from "../api/authApi";
 import { setAuth, useAuth } from "../auth/authStore";
 import { useToast } from "../components/common/ToastProvider";
@@ -7,6 +7,7 @@ import { useToast } from "../components/common/ToastProvider";
 const LoginPage: React.FC = () => {
   const { token } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { addImageToast } = useToast();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -14,6 +15,13 @@ const LoginPage: React.FC = () => {
   const [password, setPassword] = useState<string>("");
 
   const loginToastKey = "xmas_login_toast_cycle_v1";
+
+  const resolvePostLoginPath = (): string => {
+    const state = location.state as { from?: { pathname?: string; search?: string; hash?: string } } | null;
+    const from = state?.from;
+    if (!from?.pathname || from.pathname === "/login") return "/home";
+    return `${from.pathname ?? ""}${from.search ?? ""}${from.hash ?? ""}`;
+  };
 
   const handleLogin = async () => {
     setLoading(true);
@@ -36,7 +44,7 @@ const LoginPage: React.FC = () => {
       localStorage.setItem(loginToastKey, String(prev + 1));
 
       addImageToast(src, "login popup", { width: 400, height: 700 });
-      navigate("/home", { replace: true });
+      navigate(resolvePostLoginPath(), { replace: true });
     } catch (err) {
       console.error("[LoginPage] login error", err);
       setError("로그인에 실패했습니다. 다시 시도해 주세요.");
@@ -47,9 +55,9 @@ const LoginPage: React.FC = () => {
 
   useEffect(() => {
     if (token) {
-      navigate("/home", { replace: true });
+      navigate(resolvePostLoginPath(), { replace: true });
     }
-  }, [token, navigate]);
+  }, [token, navigate, location.state]);
 
   return (
     <div className="mx-auto mt-16 w-full max-w-md space-y-6 rounded-2xl border border-emerald-700/50 bg-slate-900/70 p-10 shadow-xl shadow-emerald-950/30">
