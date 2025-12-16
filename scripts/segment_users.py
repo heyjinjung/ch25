@@ -41,17 +41,14 @@ def _pick_segment(
     now: datetime,
     user_last_login_at: datetime | None,
     last_charge_at: datetime | None,
+    last_play_at: datetime | None,
     deposit_amount: int,
     rules: SegmentRules,
 ) -> str:
     if deposit_amount >= rules.vip_deposit_threshold:
         return "VIP"
 
-    last_active_at = None
-    if user_last_login_at and last_charge_at:
-        last_active_at = max(user_last_login_at, last_charge_at)
-    else:
-        last_active_at = user_last_login_at or last_charge_at
+    last_active_at = max([dt for dt in (user_last_login_at, last_charge_at, last_play_at) if dt is not None], default=None)
 
     if last_active_at is None:
         return "NEW"
@@ -107,19 +104,18 @@ def segment_all_users(db: Session, *, rules: SegmentRules, dry_run: bool = False
 
         last_login_at = user.last_login_at
         last_charge_at = (activity.last_charge_at if activity else None)
-        last_active_at = None
-        if last_login_at and last_charge_at:
-            last_active_at = max(last_login_at, last_charge_at)
-        else:
-            last_active_at = last_login_at or last_charge_at
+        last_play_at = (activity.last_play_at if activity else None)
+        last_active_at = max([dt for dt in (last_login_at, last_charge_at, last_play_at) if dt is not None], default=None)
 
         deposit_amount = int(ranking.deposit_amount) if ranking else 0
         ctx = SegmentContext(
             last_login_at=last_login_at,
             last_charge_at=last_charge_at,
+            last_play_at=last_play_at,
             last_active_at=last_active_at,
             days_since_last_login=_days_since(now, last_login_at),
             days_since_last_charge=_days_since(now, last_charge_at),
+            days_since_last_play=_days_since(now, last_play_at),
             days_since_last_active=_days_since(now, last_active_at),
             deposit_amount=deposit_amount,
             roulette_plays=getattr(activity, "roulette_plays", 0) if activity else 0,
@@ -134,6 +130,7 @@ def segment_all_users(db: Session, *, rules: SegmentRules, dry_run: bool = False
                 now,
                 user_last_login_at=last_login_at,
                 last_charge_at=last_charge_at,
+                last_play_at=last_play_at,
                 deposit_amount=deposit_amount,
                 rules=rules,
             )
