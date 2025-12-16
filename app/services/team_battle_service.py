@@ -51,23 +51,28 @@ class TeamBattleService:
         end_utc = end_local.astimezone(utc).replace(tzinfo=None)
         return start_utc, end_utc
 
-    def _normalize_to_utc(self, dt: datetime, now: datetime | None = None) -> datetime:
-        """Convert datetime to UTC naive while handling local tz inputs.
+    def _normalize_to_utc(self, dt: datetime, now: datetime | None = None, assume_local_if_naive: bool = False) -> datetime:
+        """Convert datetime to UTC naive.
 
-        - If tz-aware, convert to UTC and drop tzinfo for DB storage/comparison.
-        - If naive but clearly ahead of current UTC time (likely local KST input),
-          treat it as local timezone and convert to UTC.
-        - Otherwise, assume the value is already UTC naive.
+        Storage policy:
+        - DB stores UTC as *naive* datetime (tzinfo=None).
+
+        Conversion rules:
+        - If tz-aware: convert to UTC and drop tzinfo.
+        - If naive: treat as UTC-naive by default.
+        - Only when handling *external inputs* (e.g., admin payloads) and
+          assume_local_if_naive=True, interpret naive values as local timezone
+          and convert to UTC-naive.
         """
 
         utc = ZoneInfo("UTC")
         tz = ZoneInfo(get_settings().timezone)
-        reference = now or self._now_utc()
+        _ = now or self._now_utc()  # kept for backward-compatible signature
 
         if dt.tzinfo:
             return dt.astimezone(utc).replace(tzinfo=None)
 
-        if dt - reference > timedelta(hours=4):
+        if assume_local_if_naive:
             return dt.replace(tzinfo=tz).astimezone(utc).replace(tzinfo=None)
 
         return dt
@@ -172,8 +177,8 @@ class TeamBattleService:
 
     def create_season(self, db: Session, payload: dict) -> TeamSeason:
         payload = payload.copy()
-        payload["starts_at"] = self._normalize_to_utc(payload["starts_at"])
-        payload["ends_at"] = self._normalize_to_utc(payload["ends_at"])
+        payload["starts_at"] = self._normalize_to_utc(payload["starts_at"], assume_local_if_naive=True)
+        payload["ends_at"] = self._normalize_to_utc(payload["ends_at"], assume_local_if_naive=True)
 
         season = TeamSeason(**payload)
         if season.is_active:
@@ -196,9 +201,9 @@ class TeamBattleService:
 
         payload = payload.copy()
         if payload.get("starts_at"):
-            payload["starts_at"] = self._normalize_to_utc(payload["starts_at"])
+            payload["starts_at"] = self._normalize_to_utc(payload["starts_at"], assume_local_if_naive=True)
         if payload.get("ends_at"):
-            payload["ends_at"] = self._normalize_to_utc(payload["ends_at"])
+            payload["ends_at"] = self._normalize_to_utc(payload["ends_at"], assume_local_if_naive=True)
 
         for key, value in payload.items():
             if value is None:
