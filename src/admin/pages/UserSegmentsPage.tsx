@@ -3,6 +3,7 @@ import React, { useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import Button from "../../components/common/Button";
 import { fetchUserSegments, upsertUserSegment, type AdminUserSegmentRow } from "../api/adminSegmentsApi";
+import { segmentLabelKo, shouldShowLabelKo } from "../constants/segmentLabels";
 
 const formatMaybeDate = (value?: string | null) => {
   if (!value) return "-";
@@ -92,12 +93,12 @@ const UserSegmentsPage: React.FC = () => {
               <th className="whitespace-nowrap px-3 py-2 text-left">유저 ID</th>
               <th className="whitespace-nowrap px-3 py-2 text-left">외부 ID</th>
               <th className="whitespace-nowrap px-3 py-2 text-left">세그먼트</th>
-              <th className="whitespace-nowrap px-3 py-2 text-left">세그 변경시각</th>
+              <th className="hidden whitespace-nowrap px-3 py-2 text-left xl:table-cell">세그 변경시각</th>
               <th className="whitespace-nowrap px-3 py-2 text-left">플레이</th>
-              <th className="whitespace-nowrap px-3 py-2 text-left">마지막 로그인</th>
-              <th className="whitespace-nowrap px-3 py-2 text-left">마지막 충전</th>
-              <th className="whitespace-nowrap px-3 py-2 text-left">마지막 보너스 사용</th>
-              <th className="whitespace-nowrap px-3 py-2 text-left">활동 업데이트</th>
+              <th className="hidden whitespace-nowrap px-3 py-2 text-left lg:table-cell">마지막 로그인</th>
+              <th className="hidden whitespace-nowrap px-3 py-2 text-left lg:table-cell">마지막 충전</th>
+              <th className="hidden whitespace-nowrap px-3 py-2 text-left xl:table-cell">마지막 보너스 사용</th>
+              <th className="hidden whitespace-nowrap px-3 py-2 text-left xl:table-cell">활동 업데이트</th>
               <th className="whitespace-nowrap px-3 py-2 text-left">작업</th>
             </tr>
           </thead>
@@ -112,23 +113,38 @@ const UserSegmentsPage: React.FC = () => {
               rows.map((row) => (
                 <tr key={row.user_id} className="text-slate-100">
                   <td className="px-3 py-2 align-top">{row.user_id}</td>
-                  <td className="px-3 py-2 align-top">{row.external_id}</td>
                   <td className="px-3 py-2 align-top">
-                    <input
-                      value={editSegment[row.user_id] ?? row.segment}
-                      onChange={(e) => setEditSegment((prev) => ({ ...prev, [row.user_id]: e.target.value }))}
-                      className="w-48 rounded-md border border-slate-700 bg-slate-950 px-2 py-1 text-xs text-slate-100"
-                      placeholder="예: NEW / VIP / DORMANT_SHORT"
-                    />
+                    <span className="block max-w-[14rem] truncate" title={row.external_id}>
+                      {row.external_id}
+                    </span>
                   </td>
-                  <td className="px-3 py-2 align-top text-xs text-slate-300">{formatMaybeDate(row.segment_updated_at)}</td>
+                  <td className="px-3 py-2 align-top">
+                    <div className="flex items-center gap-2">
+                      <input
+                        value={editSegment[row.user_id] ?? row.segment}
+                        onChange={(e) => setEditSegment((prev) => ({ ...prev, [row.user_id]: e.target.value }))}
+                        className="w-40 rounded-md border border-slate-700 bg-slate-950 px-2 py-1 text-xs text-slate-100"
+                        placeholder="예: NEW / VIP"
+                        title={segmentLabelKo(editSegment[row.user_id] ?? row.segment)}
+                      />
+                      {shouldShowLabelKo(editSegment[row.user_id] ?? row.segment) && (
+                        <span className="whitespace-nowrap text-xs text-slate-400">
+                          {segmentLabelKo(editSegment[row.user_id] ?? row.segment)}
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="hidden px-3 py-2 align-top text-xs text-slate-300 xl:table-cell">
+                    {formatMaybeDate(row.segment_updated_at)}
+                  </td>
                   <td className="px-3 py-2 align-top text-xs text-slate-300">
-                    룰렛:{row.roulette_plays} 주사위:{row.dice_plays} 복권:{row.lottery_plays} · t:{row.total_play_duration}
+                    <div className="whitespace-nowrap">룰렛 {row.roulette_plays} · 주사위 {row.dice_plays}</div>
+                    <div className="whitespace-nowrap">복권 {row.lottery_plays} · t {row.total_play_duration}</div>
                   </td>
-                  <td className="px-3 py-2 align-top text-xs text-slate-300">{formatMaybeDate(row.last_login_at)}</td>
-                  <td className="px-3 py-2 align-top text-xs text-slate-300">{formatMaybeDate(row.last_charge_at)}</td>
-                  <td className="px-3 py-2 align-top text-xs text-slate-300">{formatMaybeDate(row.last_bonus_used_at)}</td>
-                  <td className="px-3 py-2 align-top text-xs text-slate-300">{formatMaybeDate(row.activity_updated_at)}</td>
+                  <td className="hidden px-3 py-2 align-top text-xs text-slate-300 lg:table-cell">{formatMaybeDate(row.last_login_at)}</td>
+                  <td className="hidden px-3 py-2 align-top text-xs text-slate-300 lg:table-cell">{formatMaybeDate(row.last_charge_at)}</td>
+                  <td className="hidden px-3 py-2 align-top text-xs text-slate-300 xl:table-cell">{formatMaybeDate(row.last_bonus_used_at)}</td>
+                  <td className="hidden px-3 py-2 align-top text-xs text-slate-300 xl:table-cell">{formatMaybeDate(row.activity_updated_at)}</td>
                   <td className="px-3 py-2 align-top">
                     <Button
                       onClick={() => void handleSave(row)}

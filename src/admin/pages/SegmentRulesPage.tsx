@@ -9,6 +9,7 @@ import {
   updateSegmentRule,
   type AdminSegmentRule,
 } from "../api/adminSegmentRulesApi";
+import { segmentLabelKo, shouldShowLabelKo } from "../constants/segmentLabels";
 
 const prettyJson = (value: unknown) => {
   try {
@@ -133,11 +134,17 @@ const SegmentRulesPage: React.FC = () => {
           </div>
           <div>
             <label className="mb-1 block text-xs font-semibold text-slate-200">세그먼트(segment)</label>
-            <input
-              value={newSegment}
-              onChange={(e) => setNewSegment(e.target.value.toUpperCase())}
-              className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-            />
+            <div className="flex items-center gap-2">
+              <input
+                value={newSegment}
+                onChange={(e) => setNewSegment(e.target.value.toUpperCase())}
+                className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                title={segmentLabelKo(newSegment)}
+              />
+              {shouldShowLabelKo(newSegment) && (
+                <span className="whitespace-nowrap text-xs text-slate-400">{segmentLabelKo(newSegment)}</span>
+              )}
+            </div>
           </div>
           <div>
             <label className="mb-1 block text-xs font-semibold text-slate-200">우선순위(priority)</label>
@@ -183,7 +190,7 @@ const SegmentRulesPage: React.FC = () => {
               <th className="whitespace-nowrap px-3 py-2 text-left">세그먼트</th>
               <th className="whitespace-nowrap px-3 py-2 text-left">우선순위</th>
               <th className="whitespace-nowrap px-3 py-2 text-left">활성화</th>
-              <th className="whitespace-nowrap px-3 py-2 text-left">조건(JSON)</th>
+              <th className="hidden whitespace-nowrap px-3 py-2 text-left xl:table-cell">조건(JSON)</th>
               <th className="whitespace-nowrap px-3 py-2 text-left">작업</th>
             </tr>
           </thead>
@@ -220,16 +227,22 @@ const SegmentRulesPage: React.FC = () => {
                       />
                     </td>
                     <td className="px-3 py-2 align-top">
-                      <input
-                        value={view.segment}
-                        onChange={(ev) =>
-                          setEdit((prev) => ({
-                            ...prev,
-                            [r.id]: { ...(prev[r.id] ?? view), segment: ev.target.value.toUpperCase() },
-                          }))
-                        }
-                        className="w-28 rounded-md border border-slate-700 bg-slate-950 px-2 py-1 text-xs text-slate-100"
-                      />
+                      <div className="flex items-center gap-2">
+                        <input
+                          value={view.segment}
+                          onChange={(ev) =>
+                            setEdit((prev) => ({
+                              ...prev,
+                              [r.id]: { ...(prev[r.id] ?? view), segment: ev.target.value.toUpperCase() },
+                            }))
+                          }
+                          className="w-24 rounded-md border border-slate-700 bg-slate-950 px-2 py-1 text-xs text-slate-100"
+                          title={segmentLabelKo(view.segment)}
+                        />
+                        {shouldShowLabelKo(view.segment) && (
+                          <span className="whitespace-nowrap text-xs text-slate-400">{segmentLabelKo(view.segment)}</span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-3 py-2 align-top">
                       <input
@@ -256,7 +269,7 @@ const SegmentRulesPage: React.FC = () => {
                         }
                       />
                     </td>
-                    <td className="px-3 py-2 align-top">
+                    <td className="hidden px-3 py-2 align-top xl:table-cell">
                       <textarea
                         value={view.conditionText}
                         onChange={(ev) =>
@@ -265,7 +278,7 @@ const SegmentRulesPage: React.FC = () => {
                             [r.id]: { ...(prev[r.id] ?? view), conditionText: ev.target.value },
                           }))
                         }
-                        className="h-24 w-96 min-w-[24rem] rounded-md border border-slate-700 bg-slate-950 px-2 py-1 font-mono text-xs text-slate-100"
+                        className="h-24 w-80 rounded-md border border-slate-700 bg-slate-950 px-2 py-1 font-mono text-xs text-slate-100"
                       />
                     </td>
                     <td className="px-3 py-2 align-top">
