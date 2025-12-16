@@ -18,6 +18,8 @@ interface LotteryCardProps {
   readonly onRevealComplete?: () => void;
 }
 
+const REVEAL_THRESHOLD_RATIO = 0.4;
+
 const LotteryCard: React.FC<LotteryCardProps> = ({ prize, isRevealed, isScratching, onScratch, onRevealComplete }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -127,7 +129,7 @@ const LotteryCard: React.FC<LotteryCardProps> = ({ prize, isRevealed, isScratchi
       const percent = Math.min(100, Math.round(ratio * 100));
       setScratchProgress(percent);
 
-      if (!overlayHiddenRef.current && ratio > 0.8) {
+      if (!overlayHiddenRef.current && ratio >= REVEAL_THRESHOLD_RATIO) {
         overlayHiddenRef.current = true;
         setOverlayCleared(true);
         canvas.style.opacity = "0";
@@ -140,7 +142,11 @@ const LotteryCard: React.FC<LotteryCardProps> = ({ prize, isRevealed, isScratchi
   const handlePointerDown: React.PointerEventHandler<HTMLCanvasElement> = (e) => {
     if (disabled) return;
     isDrawingRef.current = true;
-    e.currentTarget.setPointerCapture(e.pointerId);
+    try {
+      e.currentTarget.setPointerCapture?.(e.pointerId);
+    } catch {
+      // Ignore browsers that don't support pointer capture reliably.
+    }
 
     if (!overlayHiddenRef.current) {
       setScratchProgress(0);
@@ -159,6 +165,35 @@ const LotteryCard: React.FC<LotteryCardProps> = ({ prize, isRevealed, isScratchi
   };
 
   const handlePointerUpOrLeave: React.PointerEventHandler<HTMLCanvasElement> = () => {
+    isDrawingRef.current = false;
+  };
+
+  const handleTouchStart: React.TouchEventHandler<HTMLCanvasElement> = (e) => {
+    if (disabled) return;
+    const touch = e.touches[0];
+    if (!touch) return;
+    isDrawingRef.current = true;
+
+    if (!overlayHiddenRef.current) {
+      setScratchProgress(0);
+    }
+
+    if (!requestedRef.current) {
+      requestedRef.current = true;
+      onScratch();
+    }
+
+    scratchAt(touch.clientX, touch.clientY);
+  };
+
+  const handleTouchMove: React.TouchEventHandler<HTMLCanvasElement> = (e) => {
+    if (!isDrawingRef.current || disabled) return;
+    const touch = e.touches[0];
+    if (!touch) return;
+    scratchAt(touch.clientX, touch.clientY);
+  };
+
+  const handleTouchEndOrCancel: React.TouchEventHandler<HTMLCanvasElement> = () => {
     isDrawingRef.current = false;
   };
 
@@ -215,6 +250,26 @@ const LotteryCard: React.FC<LotteryCardProps> = ({ prize, isRevealed, isScratchi
               ref={canvasRef}
               className={`absolute inset-0 cursor-pointer transition-opacity ${disabled ? "opacity-0" : "opacity-80"}`}
               style={{ touchAction: "none", pointerEvents: disabled ? "none" : "auto" }}
+              onTouchStart={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleTouchStart(e);
+              }}
+              onTouchMove={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleTouchMove(e);
+              }}
+              onTouchEnd={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleTouchEndOrCancel(e);
+              }}
+              onTouchCancel={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleTouchEndOrCancel(e);
+              }}
               onPointerDown={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
