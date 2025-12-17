@@ -82,20 +82,20 @@ const UserSegmentsPage: React.FC = () => {
         </div>
       )}
 
-      <div className="overflow-auto rounded-lg border border-slate-800">
-        <table className="min-w-full table-fixed divide-y divide-slate-800 bg-slate-900 text-sm text-slate-100">
+      <div className="overflow-x-hidden rounded-lg border border-slate-800">
+        <table className="w-full table-fixed divide-y divide-slate-800 bg-slate-900 text-sm text-slate-100">
           <thead className="bg-slate-800/60">
             <tr>
-              <th className="w-24 px-3 py-2 text-left">유저 ID</th>
-              <th className="w-56 px-3 py-2 text-left">외부 ID</th>
-              <th className="w-[26rem] px-3 py-2 text-left">세그먼트</th>
-              <th className="hidden w-56 px-3 py-2 text-left xl:table-cell">세그 변경시각</th>
-              <th className="w-52 px-3 py-2 text-left">플레이</th>
-              <th className="hidden w-56 px-3 py-2 text-left lg:table-cell">마지막 로그인</th>
-              <th className="hidden w-56 px-3 py-2 text-left lg:table-cell">마지막 충전</th>
-              <th className="hidden w-56 px-3 py-2 text-left xl:table-cell">마지막 보너스 사용</th>
-              <th className="hidden w-56 px-3 py-2 text-left xl:table-cell">활동 업데이트</th>
-              <th className="w-24 px-3 py-2 text-left">작업</th>
+              <th className="w-20 px-3 py-2 text-left">유저 ID</th>
+              <th className="w-48 px-3 py-2 text-left">외부 ID</th>
+              <th className="px-3 py-2 text-left">세그먼트</th>
+              <th className="w-48 px-3 py-2 text-left">플레이</th>
+              <th className="hidden px-3 py-2 text-left xl:table-cell">마지막 로그인</th>
+              <th className="hidden px-3 py-2 text-left xl:table-cell">마지막 충전</th>
+              <th className="hidden px-3 py-2 text-left 2xl:table-cell">세그 변경시각</th>
+              <th className="hidden px-3 py-2 text-left 2xl:table-cell">마지막 보너스 사용</th>
+              <th className="hidden px-3 py-2 text-left 2xl:table-cell">활동 업데이트</th>
+              <th className="w-20 px-3 py-2 text-left">작업</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-800">
@@ -115,46 +115,49 @@ const UserSegmentsPage: React.FC = () => {
                     </span>
                   </td>
                   <td className="px-3 py-2 align-top">
-                    <div className="flex items-center gap-2">
+                    <div className="flex min-w-0 items-center gap-2">
                       <input
                         value={editSegment[row.user_id] ?? row.segment}
                         onChange={(e) => setEditSegment((prev) => ({ ...prev, [row.user_id]: e.target.value }))}
-                        className="w-40 rounded border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-slate-100"
+                        className="w-full min-w-0 rounded border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-slate-100"
                         placeholder="예: NEW / VIP"
                         title={segmentLabelKo(editSegment[row.user_id] ?? row.segment)}
                       />
                       {shouldShowLabelKo(editSegment[row.user_id] ?? row.segment) && (
-                        <span className="truncate text-xs text-slate-400" title={segmentLabelKo(editSegment[row.user_id] ?? row.segment)}>
+                        <span
+                          className="hidden max-w-[14rem] truncate text-xs text-slate-400 lg:inline"
+                          title={segmentLabelKo(editSegment[row.user_id] ?? row.segment)}
+                        >
                           {segmentLabelKo(editSegment[row.user_id] ?? row.segment)}
                         </span>
                       )}
                     </div>
                   </td>
-                  <td className="hidden px-3 py-2 align-top text-xs text-slate-300 xl:table-cell">
-                    <span className="block truncate" title={formatMaybeDate(row.segment_updated_at)}>
-                      {formatMaybeDate(row.segment_updated_at)}
-                    </span>
-                  </td>
                   <td className="px-3 py-2 align-top text-xs text-slate-300">
                     <div className="truncate">룰렛 {row.roulette_plays} · 주사위 {row.dice_plays}</div>
                     <div className="truncate">복권 {row.lottery_plays} · t {row.total_play_duration}</div>
                   </td>
-                  <td className="hidden px-3 py-2 align-top text-xs text-slate-300 lg:table-cell">
+                  <td className="hidden px-3 py-2 align-top text-xs text-slate-300 xl:table-cell">
                     <span className="block truncate" title={formatMaybeDate(row.last_login_at)}>
                       {formatMaybeDate(row.last_login_at)}
                     </span>
                   </td>
-                  <td className="hidden px-3 py-2 align-top text-xs text-slate-300 lg:table-cell">
+                  <td className="hidden px-3 py-2 align-top text-xs text-slate-300 xl:table-cell">
                     <span className="block truncate" title={formatMaybeDate(row.last_charge_at)}>
                       {formatMaybeDate(row.last_charge_at)}
                     </span>
                   </td>
-                  <td className="hidden px-3 py-2 align-top text-xs text-slate-300 xl:table-cell">
+                  <td className="hidden px-3 py-2 align-top text-xs text-slate-300 2xl:table-cell">
+                    <span className="block truncate" title={formatMaybeDate(row.segment_updated_at)}>
+                      {formatMaybeDate(row.segment_updated_at)}
+                    </span>
+                  </td>
+                  <td className="hidden px-3 py-2 align-top text-xs text-slate-300 2xl:table-cell">
                     <span className="block truncate" title={formatMaybeDate(row.last_bonus_used_at)}>
                       {formatMaybeDate(row.last_bonus_used_at)}
                     </span>
                   </td>
-                  <td className="hidden px-3 py-2 align-top text-xs text-slate-300 xl:table-cell">
+                  <td className="hidden px-3 py-2 align-top text-xs text-slate-300 2xl:table-cell">
                     <span className="block truncate" title={formatMaybeDate(row.activity_updated_at)}>
                       {formatMaybeDate(row.activity_updated_at)}
                     </span>
