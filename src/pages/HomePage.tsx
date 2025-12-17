@@ -1,4 +1,4 @@
-﻿import React, { useMemo } from "react";
+﻿import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../auth/authStore";
@@ -9,6 +9,7 @@ import { useInternalWinStatus } from "../hooks/useSeasonPass";
 import { useTodayRanking } from "../hooks/useRanking";
 import { GAME_TOKEN_LABELS } from "../types/gameTokens";
 import { getActiveSeason, getLeaderboard, getMyTeam } from "../api/teamBattleApi";
+import { getVaultStatus } from "../api/vaultApi";
 
 interface GameCardProps {
   readonly title: string;
@@ -74,6 +75,7 @@ const HomePage: React.FC = () => {
   const lottery = useLotteryStatus();
   const ranking = useTodayRanking();
   const internalWins = useInternalWinStatus();
+  const vault = useQuery({ queryKey: ["vault-status"], queryFn: getVaultStatus, staleTime: 30_000, retry: false });
   const teamSeason = useQuery({ queryKey: ["team-battle-season"], queryFn: getActiveSeason });
   const teamLeaderboard = useQuery({ queryKey: ["team-battle-leaderboard"], queryFn: () => getLeaderboard(undefined, 50, 0) });
   const myTeam = useQuery({ queryKey: ["team-battle-me"], queryFn: getMyTeam });
@@ -155,8 +157,64 @@ const HomePage: React.FC = () => {
     return { top10, daily, depositNext, wins };
   }, [depositRemainder, external?.rank, internalWins.data, internalWins.isLoading, playDone]);
 
+  const vaultAmount = vault.data?.vaultBalance ?? 0;
+  const showVaultBanner = !!vault.data?.eligible && vaultAmount > 0;
+  const formatWon = (amount: number) => `${amount.toLocaleString("ko-KR")}원`;
+  const [vaultBannerOpen, setVaultBannerOpen] = useState(false);
+
   return (
     <section className="space-y-10">
+      {showVaultBanner && (
+        <div className="sticky top-3 z-40">
+          <div className="rounded-3xl border border-gold-500/25 bg-black/40 backdrop-blur-2xl p-4 shadow-2xl">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div className="flex items-center gap-4">
+                <img
+                  src="/ccx001.png"
+                  alt="금고 배너"
+                  className="h-[80px] w-[200px] shrink-0 rounded-xl border border-white/10 object-cover"
+                  loading="lazy"
+                />
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold uppercase tracking-[0.28em] text-amber-200">Vault</p>
+                  <p className="mt-1 text-lg font-extrabold text-white">잠긴 금고 {formatWon(vaultAmount)}</p>
+                  <p className="mt-1 text-xs text-slate-200/90">인증 충전 1콩 확인 시 자동으로 보유 머니에 합산됩니다.</p>
+                  <div className="mt-2">
+                    <button
+                      type="button"
+                      onClick={() => setVaultBannerOpen((v) => !v)}
+                      className="text-xs font-semibold text-slate-200/90 underline underline-offset-4 hover:text-white"
+                    >
+                      {vaultBannerOpen ? "설명 닫기" : "자세히 보기"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <a
+                href="https://ccc-010.com"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center justify-center rounded-full border border-gold-400/35 bg-amber-900/15 px-5 py-3 text-sm font-extrabold text-amber-100 backdrop-blur hover:border-gold-300/55"
+              >
+                1콩 충전하고 해금 ↗
+              </a>
+            </div>
+
+            {vaultBannerOpen && (
+              <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-4">
+                <p className="text-sm font-semibold text-white">어떻게 해금되나요?</p>
+                <ul className="mt-2 space-y-1 text-xs text-slate-200/90">
+                  <li>- 금고 금액은 현재 잠겨 있어요.</li>
+                  <li>- 외부랭킹에 ‘입금(충전) 1콩’이 확인되면 자동으로 보유 머니에 합산됩니다.</li>
+                  <li>- 충전 완료 후에도 반영이 늦으면 관리자에게 입금 확인을 요청해주세요.</li>
+                </ul>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Hero */}
       <div className="rounded-3xl border border-emerald-500/25 bg-gradient-to-br from-white/10 via-white/5 to-emerald-500/10 backdrop-blur-2xl p-7 shadow-2xl">
         <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">

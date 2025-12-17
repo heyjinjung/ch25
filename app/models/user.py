@@ -20,5 +20,11 @@ class User(Base):
     status = Column(String(20), nullable=False, default="ACTIVE")
     last_login_at = Column(DateTime, nullable=True)
     last_login_ip = Column(String(45), nullable=True)
+
+    # Money system
+    vault_balance = Column(Integer, nullable=False, server_default="0", default=0)
+    cash_balance = Column(Integer, nullable=False, server_default="0", default=0)
+    vault_fill_used_at = Column(DateTime, nullable=True)
+
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)

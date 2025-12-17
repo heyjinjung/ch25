@@ -11,6 +11,8 @@ from app.models.user_activity import UserActivity
 from app.models.season_pass import SeasonPassStampLog
 from app.schemas.external_ranking import ExternalRankingCreate, ExternalRankingUpdate
 from app.models.user import User
+from app.models.new_member_dice import NewMemberDiceEligibility
+from app.services.reward_service import RewardService
 from app.services.season_pass_service import SeasonPassService
 from app.core.config import get_settings
 
@@ -51,6 +53,7 @@ class AdminExternalRankingService:
     @staticmethod
     def upsert_many(db: Session, data: Iterable[ExternalRankingCreate]) -> list[ExternalRankingData]:
         season_pass = SeasonPassService()
+        reward_service = RewardService()
         settings = get_settings()
         today = date.today()
         now = datetime.utcnow()
@@ -119,6 +122,39 @@ class AdminExternalRankingService:
                     activity = UserActivity(user_id=row.user_id)
                     db.add(activity)
                 activity.last_charge_at = row.updated_at
+
+                # Vault unlock hook (v1.0): deposit increase acts as "verification charge" trigger.
+                eligibility = db.execute(
+                    select(NewMemberDiceEligibility).where(NewMemberDiceEligibility.user_id == row.user_id)
+                ).scalar_one_or_none()
+                eligible_new_user = (
+                    eligibility is not None
+                    and bool(eligibility.is_eligible)
+                    and eligibility.revoked_at is None
+                    and (eligibility.expires_at is None or eligibility.expires_at > now)
+                )
+                if eligible_new_user:
+                    user_q = db.query(User).filter(User.id == row.user_id)
+                    if db.bind and db.bind.dialect.name != "sqlite":
+                        user_q = user_q.with_for_update()
+                    user = user_q.one_or_none()
+                    if user is not None and int(user.vault_balance or 0) > 0:
+                        unlock_amount = int(user.vault_balance or 0)
+                        user.vault_balance = 0
+                        db.add(user)
+                        reward_service.grant_point(
+                            db,
+                            user_id=user.id,
+                            amount=unlock_amount,
+                            reason="VAULT_UNLOCK",
+                            label="VAULT_UNLOCK",
+                            meta={
+                                "trigger": "EXTERNAL_RANKING_DEPOSIT_INCREASE",
+                                "external_ranking_deposit_prev": prev_amount,
+                                "external_ranking_deposit_new": int(row.deposit_amount or 0),
+                            },
+                            commit=False,
+                        )
         db.commit()
 
         # Season pass XP hooks (daily deltas) + weekly TOP10 stamp

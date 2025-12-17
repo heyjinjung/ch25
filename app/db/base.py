@@ -32,6 +32,7 @@ from app.models import (  # noqa: F401
     UserLevelRewardLog,
     UserXpEventLog,
     User,
+    UserCashLedger,
     UserGameWallet,
     Survey,
     SurveyQuestion,

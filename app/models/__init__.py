@@ -16,6 +16,7 @@ from app.models.season_pass import (
 from app.models.team_battle import TeamSeason, Team, TeamMember, TeamScore, TeamEventLog
 from app.models.level_xp import UserLevelProgress, UserLevelRewardLog, UserXpEventLog
 from app.models.game_wallet_ledger import UserGameWalletLedger
+from app.models.user_cash_ledger import UserCashLedger
 from app.models.user import User
 from app.models.user_activity import UserActivity
 from app.models.user_activity_event import UserActivityEvent
@@ -64,6 +65,7 @@ __all__ = [
     "UserGameWallet",
     "GameTokenType",
     "UserGameWalletLedger",
+    "UserCashLedger",
     "Survey",
     "SurveyQuestion",
     "SurveyOption",

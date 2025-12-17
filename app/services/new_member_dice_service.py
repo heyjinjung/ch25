@@ -11,6 +11,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.models.new_member_dice import NewMemberDiceEligibility, NewMemberDiceLog
+from app.models.user import User
 from app.schemas.new_member_dice import NewMemberDicePlayResponse, NewMemberDicePlayResult, NewMemberDiceStatusResponse
 
 
@@ -77,7 +78,12 @@ class NewMemberDiceService:
             outcome = "LOSE"
             dealer_roll = random.randint(2, 6)
             user_roll = random.randint(1, dealer_roll - 1)
-            message = "아쉽게도 이번엔 꽝! 다른 이벤트 혜택은 지민이에게 문의해주세요."
+            message = "잭팟은 아쉽게 놓쳤지만, 신규 정착 지원금이 임시 금고에 안전하게 보관되었습니다."
+
+            user = db.query(User).filter(User.id == user_id).one_or_none()
+            if user is not None:
+                user.vault_balance = max(int(user.vault_balance or 0), 10_000)
+                db.add(user)
 
         log = NewMemberDiceLog(
             user_id=user_id,
