@@ -9,16 +9,43 @@ const SeasonPassBar: React.FC = () => {
 
   const progressPercent = useMemo(() => {
     if (!data) return 0;
-    const totalXp = data.next_level_xp || 1;
-    const clampedXp = Math.min(Math.max(data.current_xp, 0), totalXp);
-    return Math.min(100, Math.round((clampedXp / totalXp) * 100));
+    const totalXp = Math.max(0, data.current_xp ?? 0);
+    const maxRequired = Math.max(0, ...data.levels.map((l) => l.required_xp ?? 0));
+    const isMax = data.current_level >= data.max_level || totalXp >= maxRequired;
+    if (isMax) return 100;
+
+    const sortedByReq = [...data.levels].sort((a, b) => (a.required_xp ?? 0) - (b.required_xp ?? 0));
+    const nextRow = sortedByReq.find((l) => (l.required_xp ?? 0) > totalXp);
+    const prevRow = [...sortedByReq].reverse().find((l) => (l.required_xp ?? 0) <= totalXp);
+    const startXp = Math.max(0, prevRow?.required_xp ?? 0);
+    const endXp = Math.max(startXp + 1, nextRow?.required_xp ?? maxRequired);
+
+    const segmentXp = Math.max(0, totalXp - startXp);
+    const segmentTotal = Math.max(1, endXp - startXp);
+    const remaining = Math.max(0, endXp - totalXp);
+
+    let pct = Math.floor((segmentXp / segmentTotal) * 100);
+    if (remaining > 0) pct = Math.min(99, Math.max(0, pct));
+    return pct;
   }, [data]);
 
   const label = useMemo(() => {
     if (isLoading) return "시즌 패스 정보를 불러오는 중...";
     if (isError) return "시즌 패스 정보를 가져올 수 없습니다.";
     if (!data) return "현재 활성화된 시즌 패스가 없습니다.";
-    return `Lv.${data.current_level} / ${data.max_level} (XP ${data.current_xp} / ${data.next_level_xp})`;
+
+    const totalXp = Math.max(0, data.current_xp ?? 0);
+    const maxRequired = Math.max(0, ...data.levels.map((l) => l.required_xp ?? 0));
+    const isMax = data.current_level >= data.max_level || totalXp >= maxRequired;
+    if (isMax) return `Lv.${data.max_level} (MAX)`;
+
+    const sortedByReq = [...data.levels].sort((a, b) => (a.required_xp ?? 0) - (b.required_xp ?? 0));
+    const nextRow = sortedByReq.find((l) => (l.required_xp ?? 0) > totalXp);
+    const targetLevel = nextRow?.level ?? Math.min(data.max_level, data.current_level + 1);
+    const targetXp = nextRow?.required_xp ?? data.next_level_xp;
+    const remaining = Math.max(0, (targetXp ?? 0) - totalXp);
+
+    return `Lv.${data.current_level} → Lv.${targetLevel} · ${remaining.toLocaleString()} XP 남음`;
   }, [data, isError, isLoading]);
 
   return (

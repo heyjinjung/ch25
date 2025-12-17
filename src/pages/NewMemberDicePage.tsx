@@ -8,11 +8,19 @@ import { getVaultStatus } from "../api/vaultApi";
 
 const VAULT_SEED_AMOUNT = 10000;
 
+const ROLL_VISUAL_MS = 1400;
+const RESULT_HOLD_MS = 900;
+const VAULT_FLY_MS = 500;
+const VAULT_BADGE_MS = 550;
+const VAULT_COUNT_MS = 850;
+
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
 
 const formatWon = (amount: number) => `${amount.toLocaleString("ko-KR")}원`;
+
+const randomDiceFace = () => (Math.floor(Math.random() * 6) + 1) as 1 | 2 | 3 | 4 | 5 | 6;
 
 const DiceFace: React.FC<{ value?: number; isRolling?: boolean }> = ({ value, isRolling }) => {
   const dots = useMemo(() => {
@@ -42,7 +50,20 @@ const DiceFace: React.FC<{ value?: number; isRolling?: boolean }> = ({ value, is
   }, [value]);
 
   if (!value) {
-    return <div className="h-16 w-16 rounded-xl border-2 border-dashed border-white/50 bg-white/10" />;
+    return (
+      <div
+        className={`grid h-16 w-16 grid-cols-3 grid-rows-3 gap-1 rounded-xl border-2 border-dashed border-white/50 bg-white/10 p-2 ${
+          isRolling ? "animate-spin-fast" : ""
+        }`}
+        aria-label="주사위"
+      >
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="col-start-2 row-start-2 flex items-center justify-center">
+            <div className="h-2 w-2 rounded-full bg-white/60" />
+          </div>
+        ))}
+      </div>
+    );
   }
 
   return (
@@ -79,6 +100,8 @@ const NewMemberDicePage: React.FC = () => {
   const [isDiceSpinning, setIsDiceSpinning] = useState(false);
   const [userDice, setUserDice] = useState<number | null>(null);
   const [dealerDice, setDealerDice] = useState<number | null>(null);
+  const [rollingUserFace, setRollingUserFace] = useState<1 | 2 | 3 | 4 | 5 | 6>(1);
+  const [rollingDealerFace, setRollingDealerFace] = useState<1 | 2 | 3 | 4 | 5 | 6>(1);
   const [outcome, setOutcome] = useState<"WIN" | "LOSE" | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [winLink, setWinLink] = useState<string>("https://ccc-010.com");
@@ -137,6 +160,15 @@ const NewMemberDicePage: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    if (!isDiceSpinning) return;
+    const id = window.setInterval(() => {
+      setRollingUserFace(randomDiceFace());
+      setRollingDealerFace(randomDiceFace());
+    }, 90);
+    return () => window.clearInterval(id);
+  }, [isDiceSpinning]);
+
+  useEffect(() => {
     if (vaultTargetAmount === vaultDisplayedAmount) return;
     if (numberAnimRafRef.current) window.cancelAnimationFrame(numberAnimRafRef.current);
 
@@ -185,44 +217,56 @@ const NewMemberDicePage: React.FC = () => {
 
     progressTimersRef.current.forEach((t) => window.clearTimeout(t));
     progressTimersRef.current = [];
-    setProgressMessage("게임을 시작하겠습니다");
+    setProgressMessage("주사위를 굴리는 중입니다");
     progressTimersRef.current.push(
       window.setTimeout(() => {
-        setProgressMessage("카케쿠루이마쇼우");
+        setProgressMessage("결과를 계산하고 있습니다");
       }, 500),
     );
 
     try {
+      const startedAt = performance.now();
       const resp = await playMutation.mutateAsync();
-      await new Promise((r) => setTimeout(r, 1200));
+
+      // 1) 주사위 액션이 눈에 보일 최소 시간 보장
+      const elapsed = performance.now() - startedAt;
+      await sleep(Math.max(0, ROLL_VISUAL_MS - elapsed));
+
+      // 2) 주사위 결과 먼저 보여주기
       setUserDice(resp.userDice[0] ?? null);
       setDealerDice(resp.dealerDice[0] ?? null);
       setIsDiceSpinning(false);
       setWinLink(resp.winLink);
 
+      await sleep(RESULT_HOLD_MS);
+
       if (resp.outcome === "LOSE") {
         setProgressMessage(null);
 
-        // 1) 전환 오버레이(짧게)
+        // 3) 안전하게 보관 중(보호 시스템 오버레이)
         setTransferStage("overlay");
         await sleep(900);
 
-        // 2) 금고로 슝 이동(Fly-to-vault)
+        // 4) 금고로 이동(Fly-to-vault)
         setTransferStage("fly");
-        await sleep(50);
+        await sleep(VAULT_FLY_MS);
         setTransferStage("vault");
-        await sleep(650);
+        await sleep(VAULT_BADGE_MS);
 
-        // 3) 숫자 드르륵 + 플래시 + 결과 카드
+        // 5) 숫자 카운트업
         setTransferStage("done");
         setVaultFlashPositive(true);
+        setVaultDisplayedAmount(0);
         setVaultTargetAmount(VAULT_SEED_AMOUNT);
+        await sleep(VAULT_COUNT_MS);
         addToast(`임시 금고에 +${formatWon(VAULT_SEED_AMOUNT)} 보관 완료`, "success");
         window.setTimeout(() => setVaultFlashPositive(false), 650);
 
         setOutcome("LOSE");
         setMessage(outcomeToUiMessage("LOSE"));
       } else {
+        setProgressMessage(null);
+        await sleep(350);
         setOutcome(resp.outcome);
         setMessage(outcomeToUiMessage(resp.outcome));
         setProgressMessage("게임이 완료되었습니다");
@@ -341,13 +385,13 @@ const NewMemberDicePage: React.FC = () => {
         <div className="text-center">
           <p className="mb-3 text-sm font-semibold text-dark-800">나</p>
           <div className="flex justify-center">
-            <DiceFace value={userDice ?? undefined} isRolling={isDiceSpinning} />
+            <DiceFace value={(userDice ?? (isDiceSpinning ? rollingUserFace : undefined)) as number | undefined} isRolling={isDiceSpinning} />
           </div>
         </div>
         <div className="text-center">
           <p className="mb-3 text-sm font-semibold text-dark-800">상대</p>
           <div className="flex justify-center">
-            <DiceFace value={dealerDice ?? undefined} isRolling={isDiceSpinning} />
+            <DiceFace value={(dealerDice ?? (isDiceSpinning ? rollingDealerFace : undefined)) as number | undefined} isRolling={isDiceSpinning} />
           </div>
         </div>
       </div>

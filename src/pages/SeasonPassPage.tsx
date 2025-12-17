@@ -45,16 +45,37 @@ const SeasonPassPage: React.FC = () => {
   const seasonLevelSummary = useMemo(() => {
     if (season.isLoading) return { detail: "레벨 불러오는 중", progressPct: 0 };
     if (season.isError || !season.data) return { detail: "레벨 정보를 불러오지 못했습니다", progressPct: 0 };
-    const { current_xp, next_level_xp, current_level, max_level } = season.data;
-    const isMax = current_level >= max_level;
-    const progressPct = isMax
-      ? 100
-      : next_level_xp > 0
-      ? Math.min(100, Math.round((current_xp / next_level_xp) * 100))
-      : 0;
-    const remaining = next_level_xp > current_xp ? next_level_xp - current_xp : 0;
+    const { current_xp, current_level, max_level, levels } = season.data;
+    const totalXp = Math.max(0, current_xp ?? 0);
+    const maxRequired = Math.max(0, ...levels.map((l) => l.required_xp ?? 0));
+    const isMax = current_level >= max_level || totalXp >= maxRequired;
+
+    if (isMax) {
+      return {
+        title: "최대 레벨 달성",
+        detail: "축하합니다! 모든 보상을 달성했어요.",
+        progressPct: 100,
+      };
+    }
+
+    const sortedByReq = [...levels].sort((a, b) => (a.required_xp ?? 0) - (b.required_xp ?? 0));
+    const nextRow = sortedByReq.find((l) => (l.required_xp ?? 0) > totalXp);
+    const prevRow = [...sortedByReq].reverse().find((l) => (l.required_xp ?? 0) <= totalXp);
+
+    const startXp = Math.max(0, prevRow?.required_xp ?? 0);
+    const endXp = Math.max(startXp + 1, nextRow?.required_xp ?? maxRequired);
+    const targetLevel = nextRow?.level ?? Math.min(max_level, current_level + 1);
+
+    const segmentXp = Math.max(0, totalXp - startXp);
+    const segmentTotal = Math.max(1, endXp - startXp);
+    const remaining = Math.max(0, endXp - totalXp);
+
+    let progressPct = Math.floor((segmentXp / segmentTotal) * 100);
+    if (remaining > 0) progressPct = Math.min(99, Math.max(0, progressPct));
+
     return {
-      detail: isMax ? "최대 레벨 달성" : `다음 레벨까지 ${remaining.toLocaleString()} XP`,
+      title: `레벨 ${targetLevel}까지`,
+      detail: `남은 ${remaining.toLocaleString()} XP (현재 ${segmentXp.toLocaleString()} / ${segmentTotal.toLocaleString()})`,
       progressPct,
     };
   }, [season.data, season.isError, season.isLoading]);
@@ -179,6 +200,9 @@ const SeasonPassPage: React.FC = () => {
                 홈으로
               </button>
             </div>
+            {seasonLevelSummary.title && (
+              <p className="text-xs font-semibold text-emerald-200">{seasonLevelSummary.title}</p>
+            )}
             <div className="h-2 w-full rounded-full bg-slate-800">
               <div
                 className="h-full rounded-full bg-emerald-500"
@@ -192,7 +216,14 @@ const SeasonPassPage: React.FC = () => {
         <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <div className="text-sm text-slate-200">현재 레벨 {season.data?.current_level ?? "-"}</div>
+              <div className="flex items-center gap-2 text-sm text-slate-200">
+                <span>현재 레벨 {season.data?.current_level ?? "-"}</span>
+                {season.data?.levels?.find((l) => l.level === season.data?.current_level)?.is_claimed ? (
+                  <span className="rounded-full border border-emerald-600/60 bg-emerald-900/30 px-2 py-0.5 text-xs text-emerald-100">
+                    보상 완료
+                  </span>
+                ) : null}
+              </div>
               <div className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300">MAX {data.max_level}레벨</div>
             </div>
             <div className="space-y-3">
