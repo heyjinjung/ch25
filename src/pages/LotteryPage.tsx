@@ -228,7 +228,7 @@ const LotteryPage: React.FC = () => {
         </div>
 
         <footer className="border-t border-slate-700/50 pt-4 text-center text-xs text-slate-400">
-          <p>복권 결과는 서버에서 결정되며, 시즌패스 경험치가 적립됩니다.</p>
+          <p>복권 결과는 서버에서 결정되며, 레벨 경험치가 적립됩니다.</p>
         </footer>
 
         <div className="mt-4 text-center">

@@ -1,4 +1,4 @@
-# 시즌패스 API 명세서
+# 레벨 API 명세서
 
 - 문서 타입: API
 - 버전: v1.1
@@ -7,7 +7,7 @@
 - 대상 독자: 백엔드/프론트엔드 개발자
 
 ## 1. 목적 (Purpose)
-- 시즌패스 관련 엔드포인트의 요청/응답 계약, 인증, 에러 코드를 상세히 정의하여 클라이언트와 서버 개발을 일관되게 한다.
+- 레벨 관련 엔드포인트의 요청/응답 계약, 인증, 에러 코드를 상세히 정의하여 클라이언트와 서버 개발을 일관되게 한다.
 
 ## 2. 범위 (Scope)
 - `/api/season-pass/status`, `/api/season-pass/stamp`, `/api/season-pass/claim` 세 엔드포인트의 동작과 페이로드를 다룬다.
@@ -15,8 +15,8 @@
 
 ## 3. 용어 정의 (Definitions)
 - Season: DB의 `start_date ~ end_date`로 정의되는 시즌 기간 (예: XMAS_2025, 이번 시즌은 2025-12-09 ~ 2025-12-25).
-- Stamp: 시즌패스 도장 1회 기록.
-- XP: 시즌패스 경험치.
+- Stamp: 레벨 도장 1회 기록.
+- XP: 레벨 경험치.
 
 ## 4. GET /api/season-pass/status
 ### 4-1. 설명
@@ -149,4 +149,4 @@
   - stamp 에러 코드에 `NO_ACTIVE_SEASON_CONFLICT`(409) 추가, max_daily=0 무제한 비고를 강조
   - 날짜/버전을 최신화
 - v1.0 (2025-12-08, 시스템 설계팀)
-  - 최초 작성: 시즌패스 status/stamp/claim API 계약 정의
+  - 최초 작성: 레벨 status/stamp/claim API 계약 정의

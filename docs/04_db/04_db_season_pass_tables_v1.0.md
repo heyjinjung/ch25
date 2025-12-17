@@ -1,4 +1,4 @@
-# 시즌패스 테이블 설계
+# 레벨 테이블 설계
 
 - 문서 타입: DB
 - 버전: v1.1
@@ -7,7 +7,7 @@
 - 대상 독자: 백엔드 개발자, DBA, 데이터 분석가
 
 ## 1. 목적 (Purpose)
-- 시즌패스(도장, XP, 레벨, 보상) 관련 테이블의 컬럼, 제약, 관계를 상세히 정의하여 SQLAlchemy/Alembic 구현을 일관되게 한다.
+- 레벨(도장, XP, 레벨, 보상) 관련 테이블의 컬럼, 제약, 관계를 상세히 정의하여 SQLAlchemy/Alembic 구현을 일관되게 한다.
 
 ## 2. 범위 (Scope)
 - season_pass_config, season_pass_level, season_pass_progress, season_pass_stamp_log, season_pass_reward_log 테이블을 포함한다.
@@ -16,7 +16,7 @@
 ## 3. 용어 정의 (Definitions)
 - Season: DB의 `start_date ~ end_date`로 정의되는 시즌 기간 (예: XMAS_2025, 이번 시즌은 2025-12-09 ~ 2025-12-25). 시즌 이름에 '1WEEK'가 포함되어 있더라도 실제 기간은 start_date/end_date로 결정된다.
 - XP: 레벨 상승에 사용하는 경험치.
-- Stamp: 일 1회 적립 가능한 시즌패스 도장.
+- Stamp: 일 1회 적립 가능한 레벨 도장.
 
 ## 4. season_pass_config
 ### 4-1. 용도
@@ -147,4 +147,4 @@
   - stamp_log에 xp_earned 필수 기록 및 UNIQUE(user_id, season_id, date)로 일 1회 enforcing을 재강조
   - 버전/작성일을 최신화
 - v1.0 (2025-12-08, 시스템 설계팀)
-  - 최초 작성: 시즌패스 5개 테이블 스키마/제약/관계 정의
+  - 최초 작성: 레벨 5개 테이블 스키마/제약/관계 정의

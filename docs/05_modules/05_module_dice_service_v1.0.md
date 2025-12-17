@@ -37,7 +37,7 @@ def get_today_config(self, db, now, user_id: int) -> dict:
 ### 5-2. play
 ```python
 def play(self, db, user_id: int, now) -> dict:
-    """주사위 1회 대결 후 결과/보상/시즌패스 정보를 반환한다."""
+    """주사위 1회 대결 후 결과/보상/레벨 정보를 반환한다."""
 ```
 - 단계:
   1) feature_type=DICE 여부, feature_config.is_enabled=1, config.is_active=1 확인. 스케줄 0/2건이면 `INVALID_FEATURE_SCHEDULE` 처리.

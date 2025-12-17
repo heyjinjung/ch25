@@ -47,7 +47,7 @@ python scripts/seed_test_data.py
 - ✅ feature_schedule (오늘 날짜)
 - ✅ roulette_segment (6개 세그먼트)
 - ✅ lottery_prize (5개 상품)
-- ✅ 테스트 유저 + 시즌패스 진행도
+- ✅ 테스트 유저 + 레벨 진행도
 
 ### Step 2: 백엔드 시작
 ```bash
@@ -98,7 +98,7 @@ npm run dev
 - [ ] 리더보드 표시
 - [ ] 내 순위 표시 (로그인 시)
 
-### 6. 시즌패스 테스트
+### 6. 레벨 테스트
 - [ ] 현재 레벨/XP 표시
 - [ ] 레벨별 보상 목록
 - [ ] 보상 수령 버튼 동작
@@ -151,7 +151,7 @@ npm run dev
 ### 데이터 일관성
 - [ ] 룰렛 세그먼트 API ↔ UI 매칭
 - [ ] 복권 상품 API ↔ UI 매칭
-- [ ] 시즌패스 레벨 API ↔ UI 매칭
+- [ ] 레벨 레벨 API ↔ UI 매칭
 
 ---
 

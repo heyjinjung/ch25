@@ -7,7 +7,7 @@
 - 대상 독자: 백엔드 개발자
 
 ## 1. 목적 (Purpose)
-- 룰렛/주사위/복권/랭킹 모듈이 공통으로 따라야 할 활성화 검증, 로깅, 시즌패스 연동 규칙을 정의해 일관된 게임 경험을 제공한다.
+- 룰렛/주사위/복권/랭킹 모듈이 공통으로 따라야 할 활성화 검증, 로깅, 레벨 연동 규칙을 정의해 일관된 게임 경험을 제공한다.
 
 ## 2. 범위 (Scope)
 - `backend/app/services/roulette_service.py`, `dice_service.py`, `lottery_service.py`, `ranking_service.py`에서 공유하는 정책과 데이터 개념을 다룬다.
@@ -64,7 +64,7 @@ VITE_GATE_TODAY_FEATURE=false
 ### 5-3. 적용 범위
 - **백엔드**: `FeatureService.validate_feature_active()`에서 schedule 검증 스킵
 - **프론트엔드**: 모든 라우트 진입 허용, 게임 카드 모두 활성화
-- **DB 저장**: TEST_MODE여도 플레이 로그, 보상, 시즌패스 변경은 정상 저장됨
+- **DB 저장**: TEST_MODE여도 플레이 로그, 보상, 레벨 변경은 정상 저장됨
 
 ## 6. SeasonPass Stamp Hook 정책
 
@@ -123,4 +123,4 @@ VITE_GATE_TODAY_FEATURE=false
 - v1.1 (2025-12-09, 시스템 설계팀)
   - feature_config.is_enabled, feature_schedule 개수 검증, max_daily=0 sentinel 무제한 규칙을 공통 규칙에 반영
 - v1.0 (2025-12-08, 시스템 설계팀)
-  - 공통 활성화 검증, 로깅, 시즌패스 연동, 테이블 개념 정의
+  - 공통 활성화 검증, 로깅, 레벨 연동, 테이블 개념 정의

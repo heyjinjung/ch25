@@ -29,7 +29,7 @@
 ## 5. 모니터링/알림 포인트
 - 4xx/5xx 에러율, API 지연 구간 별 APM 트레이스(Sentry 등) 관찰.
 - feature_schedule 누락/비활성 시 알림(오늘 feature_type 없음).
-- 시즌패스 add_stamp 실패율 및 보상 지급 오류 모니터링.
+- 레벨 add_stamp 실패율 및 보상 지급 오류 모니터링.
 
 ## 6. 장애 대응 플레이북
 - 실제 운영 환경에서는 Alembic 마이그레이션, 환경 변수, Docker/Nginx/CI/CD 등 최신 배포/운영 플로우를 반영해야 함.
@@ -43,7 +43,7 @@
 - 필수 로그: ENTER_PAGE, PLAY, RESULT, SEASON_PASS_STAMP, SEASON_PASS_LEVEL_UP, REWARD_CLAIM.
 
 ## 8. 일일 시나리오 예시(운영/QA 체크용)
-- **룰렛 Day + 시즌패스 진행**
+- **룰렛 Day + 레벨 진행**
   1) `/api/today-feature` → `feature_type=ROULETTE` 확인.
   2) `/api/season-pass/status` → 현재 레벨/XP/오늘 도장 여부 확인.
   3) `/api/roulette/status` → remaining_spins 확인, segment 6칸 유효성 체크.

@@ -7,17 +7,17 @@
 - 대상 독자: 백엔드/프론트엔드 개발자
 
 ## 1. 목적 (Purpose)
-- 이벤트 기간에 제공되는 공통/게임/시즌패스 API의 계약을 한 곳에 정리한다.
+- 이벤트 기간에 제공되는 공통/게임/레벨 API의 계약을 한 곳에 정리한다.
 - 프론트엔드와의 데이터 계약을 명확히 하여 개발/QA 효율을 높인다.
 
 ## 2. 범위 (Scope)
-- `/api/today-feature`, 시즌패스 3종 API, 게임별 status/play/today 엔드포인트의 요청/응답/인증/에러 코드를 다룬다.
+- `/api/today-feature`, 레벨 3종 API, 게임별 status/play/today 엔드포인트의 요청/응답/인증/에러 코드를 다룬다.
 - Admin 전용 API, 인증/토큰 발급 로직 상세는 범위 밖이다.
 
 ## 3. 용어 정의 (Definitions)
 - Feature: 오늘 활성화된 이벤트 타입(ROULETTE/DICE/SEASON_PASS/LOTTERY/RANKING).
-- Stamp: 시즌패스 도장 1회 기록.
-- XP: 시즌패스 경험치.
+- Stamp: 레벨 도장 1회 기록.
+- XP: 레벨 경험치.
 
 ## 4. 공통 에러 코드
 - 모든 API는 JSON 에러 응답에 `code`, `message`를 포함한다.
@@ -30,7 +30,7 @@
   - `DAILY_LIMIT_REACHED`: 일일 제한(max_daily_spins/plays/tickets) 초과. (max_daily*=0이면 remaining=0이어도 "무제한" 의미로 차단 없이 허용)
   - `LOCK_NOT_ACQUIRED`: DB 락 타임아웃/데드락으로 재시도 필요.
   - `UNAUTHORIZED`/`FORBIDDEN`: 인증 실패/권한 없음.
-  - `REWARD_ALREADY_CLAIMED` / `AUTO_CLAIM_LEVEL` / `LEVEL_NOT_REACHED`: 시즌패스 수동 클레임 관련 오류.
+  - `REWARD_ALREADY_CLAIMED` / `AUTO_CLAIM_LEVEL` / `LEVEL_NOT_REACHED`: 레벨 수동 클레임 관련 오류.
 
 
 ## 5. 공통 API
@@ -78,7 +78,7 @@
 - 성공 200 예시: today-feature와 동일 구조
 - 주요 에러: 400(형식 오류), 404(해당 날짜 스케줄 없음), 409(`INVALID_FEATURE_SCHEDULE`)
 
-## 6. 시즌패스 API 요약
+## 6. 레벨 API 요약
 - 상세 스펙은 `docs/03_api/03_api_season_pass_v1.0.md` 참고.
 
 ### 5-1. GET /api/season-pass/status
@@ -136,7 +136,7 @@
   - 이미 수령 시 `REWARD_ALREADY_CLAIMED`, auto_claim 레벨 요청 시 `AUTO_CLAIM_LEVEL`.
 
 ## 7. 게임별 API (룰렛/주사위/복권/랭킹)
-각 게임 엔드포인트 공통 규칙: 오늘 `feature_type` 검증 → 유저 조건 체크 → 결과/보상 계산 → 시즌패스 `add_stamp` 연동(필요 시) → 로그 저장.
+각 게임 엔드포인트 공통 규칙: 오늘 `feature_type` 검증 → 유저 조건 체크 → 결과/보상 계산 → 레벨 `add_stamp` 연동(필요 시) → 로그 저장.
 
 ### 6-1. GET /api/roulette/status (예시)
 - 설명: 오늘 룰렛 플레이 가능 여부, 잔여 횟수, 보상 구성을 반환한다.
@@ -234,8 +234,8 @@
 - v1.2 (2025-12-11, 시스템 설계팀)
   - `/api/today-feature` 인증을 선택 사항으로 전환하고 JWT가 있을 때만 `user_id`를 포함하도록 명세 수정
 - v1.1 (2025-12-06, 시스템 설계팀)
-  - max_daily=0 sentinel 정책을 모든 게임/시즌패스 비고에 명시하고 `NO_FEATURE_TODAY`를 is_enabled=0에도 적용하는 설명 추가
+  - max_daily=0 sentinel 정책을 모든 게임/레벨 비고에 명시하고 `NO_FEATURE_TODAY`를 is_enabled=0에도 적용하는 설명 추가
   - 공통 에러 코드 설명에서 무제한 정책 문구를 명확화
 - v1.0 (2025-12-08, 시스템 설계팀)
-  - 최초 작성: 공통/시즌패스/게임 API 계약 정리 및 예시 응답 추가
-  - 시즌패스 stamp 요청 본문을 `source_feature_type`, `xp_bonus`로 명시
+  - 최초 작성: 공통/레벨/게임 API 계약 정리 및 예시 응답 추가
+  - 레벨 stamp 요청 본문을 `source_feature_type`, `xp_bonus`로 명시

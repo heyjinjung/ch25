@@ -40,7 +40,7 @@
   - user_level_reward_log
   - user_game_wallet
   - user_game_wallet_ledger
-- 선택(시즌패스까지 초기화 시): season_pass_stamp_log, season_pass_progress
+- 선택(레벨까지 초기화 시): season_pass_stamp_log, season_pass_progress
 - external_ranking_data는 유지(재계산 소스).
 
 ## 5. 재계산 로직

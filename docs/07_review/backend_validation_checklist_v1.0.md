@@ -56,11 +56,11 @@
 
 ### 4-6. Admin → Runtime 안전성
 - ✅ 공통 에러 코드 테이블과 모듈별 에러 코드가 문서화됨(`INVALID_ROULETTE_CONFIG`, `INVALID_LOTTERY_CONFIG`, `DAILY_LIMIT_REACHED`, `NO_FEATURE_TODAY` 등). (docs/03_api/03_api_overview_v1.0.md, docs/05_modules/05_module_game_common_v1.0.md, 각 게임 모듈 문서)
-- ✅ 시즌패스 에러 코드 `REWARD_ALREADY_CLAIMED`, `AUTO_CLAIM_LEVEL`을 API/서비스/문서에 포함하여 보상 중복/자동지급 레벨을 명시.
+- ✅ 레벨 에러 코드 `REWARD_ALREADY_CLAIMED`, `AUTO_CLAIM_LEVEL`을 API/서비스/문서에 포함하여 보상 중복/자동지급 레벨을 명시.
 
 ### 4-7. 유저 시나리오
-- ✅ “룰렛 Day + 시즌패스 진행”과 “시즌 종료 후 호출” 시나리오를 운영/QA용으로 문서화하여 테스트 포인트와 연결. (docs/06_ops/06_ops_runbook_v1.0.md)
-- ✅ 통합 테스트 커버리지 반영: roulette/dice/lottery play 흐름, 시즌패스 다중 레벨업·수동 클레임·무활성 시즌 호출, admin ranking 업로드 성공/충돌 케이스를 포함.
+- ✅ “룰렛 Day + 레벨 진행”과 “시즌 종료 후 호출” 시나리오를 운영/QA용으로 문서화하여 테스트 포인트와 연결. (docs/06_ops/06_ops_runbook_v1.0.md)
+- ✅ 통합 테스트 커버리지 반영: roulette/dice/lottery play 흐름, 레벨 다중 레벨업·수동 클레임·무활성 시즌 호출, admin ranking 업로드 성공/충돌 케이스를 포함.
 
 ## 5. 예시
 - 12/24 ROULETTE Day 시나리오(요약): /api/today-feature → roulette/status → roulette/play(RewardService 보상 + add_stamp) → season-pass/status 순으로 호출하여 XP/레벨 변동을 확인하는 플로우를 기준으로 테스트 케이스를 구성한다.

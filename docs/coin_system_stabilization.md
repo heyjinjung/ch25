@@ -1,7 +1,7 @@
 # Coin System Stabilization & Always-On Mode Plan
 
 ## 목표
-- 로그인 → 홈에서 시즌패스/코인/게임 진입을 한 번에 확인하고 언제든 플레이 가능(테스트/검증 모드).
+- 로그인 → 홈에서 레벨/코인/게임 진입을 한 번에 확인하고 언제든 플레이 가능(테스트/검증 모드).
 - today-feature/TEST_MODE 없이도 동작하도록 안전한 기본 구조 확보.
 - 코인 기반 흐름이 FE-BE-DB 전역에서 일관되게 동기화되도록 점검 및 개선.
 
@@ -17,13 +17,13 @@
 - API 계층
   - `/roulette/status|play`, `/dice/status|play`, `/lottery/status|play`에서 `token_balance`, `token_type`을 내려받음. status 404/에러 시에도 홈 카드 항상 렌더, “잔액 정보를 불러오는 중/실패” 배지 표시
   - `/today-feature`는 404 시 null 로 폴백 처리(경고만).
-  - 시즌패스 `/season-pass/status|stamp|claim` 연동 존재.
+  - 레벨 `/season-pass/status|stamp|claim` 연동 존재.
 
 ## 문제점(관측/추정)
 - 홈에서 게임 카드가 안 보이는 사례 보고됨: today-feature 404 이후 status 쿼리 에러로 전체 섹션이 안 그려질 가능성, 또는 status 404 시 useQuery가 throw → 렌더 단에서 early return 로딩/에러 UI 없이 실패할 가능성.
 - 코인 라벨/문구가 깨져 있음(인코딩 문제).
 - today-feature 의존성이 완전히 제거되지 않아 404/에러 로그가 콘솔에 반복됨(경고는 남아 있음).
-- 전역 동기화 가시성 부족: 로그인/플레이/시즌패스 스탬프가 DB에 제대로 쌓이는지 수동 확인 필요.
+- 전역 동기화 가시성 부족: 로그인/플레이/레벨 스탬프가 DB에 제대로 쌓이는지 수동 확인 필요.
 - 코인 잔액/차감/지급 흐름의 단위/정책이 명문화되어 있지 않음(소수점 여부, 마이너스 허용 여부, 트랜잭션 경계).
 
 ## 개선 계획
@@ -53,7 +53,7 @@
 ### 3) 전역 동기화/관측성
 - README(또는 RUNBOOK)에 빠른 점검 섹션 추가
   - 로그인 후 user/로그 테이블 확인 SQL (already added) + 코인 잔액 조회 SQL.
-  - 각 게임 플레이 후 대응 로그/시즌패스 로그 조회 SQL 예시.
+  - 각 게임 플레이 후 대응 로그/레벨 로그 조회 SQL 예시.
   - 코인 지급 후 잔액/로그 확인 SQL 예시.
 - FE에 최소 상태 배지 추가
   - 홈 상단에 “DB 연결/ today-feature 응답 상태/ 코인 상태” 간단한 헬스 배지 노출(추가 예정).

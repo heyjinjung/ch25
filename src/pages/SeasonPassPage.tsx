@@ -116,7 +116,7 @@ const SeasonPassPage: React.FC = () => {
       <FeatureGate feature="SEASON_PASS">
         <section className="flex flex-col items-center justify-center rounded-3xl border border-emerald-800/30 bg-slate-950/80 p-10">
           <div className="h-12 w-12 animate-spin rounded-full border-3 border-emerald-500/70 border-t-transparent" />
-          <p className="mt-4 text-base font-semibold text-emerald-100">시즌패스 불러오는 중...</p>
+          <p className="mt-4 text-base font-semibold text-emerald-100">레벨 불러오는 중...</p>
           <button
             type="button"
             onClick={() => navigate("/")}
@@ -134,7 +134,7 @@ const SeasonPassPage: React.FC = () => {
       <FeatureGate feature="SEASON_PASS">
         <section className="rounded-3xl border border-red-800/40 bg-slate-950/85 p-8 text-center">
           <div className="mb-3 text-4xl">☃️</div>
-          <p className="text-lg font-bold text-red-100">시즌패스를 불러오지 못했습니다.</p>
+          <p className="text-lg font-bold text-red-100">레벨를 불러오지 못했습니다.</p>
           <p className="mt-2 text-sm text-slate-300">잠시 후 다시 시도하거나 지민이에게 문의해주세요.</p>
           <div className="mt-4 flex justify-center gap-2">
             <button
@@ -179,7 +179,7 @@ const SeasonPassPage: React.FC = () => {
           <p className="text-xs uppercase tracking-[0.28em] text-emerald-200">Season Pass</p>
           <h1 className="text-3xl font-bold text-white">
             <span className="block">🎄 크리스마스</span>
-            <span className="block">시즌패스</span>
+            <span className="block">레벨</span>
           </h1>
           <p className="text-sm text-slate-300">지민이와 함께하는 겨울 시즌 패스</p>
           <div className="mx-auto max-w-2xl space-y-2">

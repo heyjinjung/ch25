@@ -39,7 +39,7 @@ docker compose up -d
 - 백엔드: 포트 8000, 프론트: 포트 3000 (nginx SSL 템플릿은 무시하고 http://서버IP:3000 으로 접속)
 
 ## 7) DB 시드(선택)
-필요하면 시즌패스/랭킹 시드를 넣습니다.
+필요하면 레벨/랭킹 시드를 넣습니다.
 ```bash
 docker compose cp scripts/seed_ranking_seasonpass.sql db:/tmp/seed.sql
 docker compose exec db sh -c "mysql -uroot -proot xmas_event_dev < /tmp/seed.sql"

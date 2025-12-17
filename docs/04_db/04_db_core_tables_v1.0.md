@@ -1,4 +1,4 @@
-# XMAS 1Week DB 설계 – 공통/시즌패스/게임 테이블
+# XMAS 1Week DB 설계 – 공통/레벨/게임 테이블
 
 - 문서 타입: DB
 - 버전: v1.3
@@ -11,13 +11,13 @@
 
 ## 2. 범위 (Scope)
 - 공통 테이블(user, feature_schedule, feature_config, user_event_log)
-- 시즌패스 테이블(season_pass_config, season_pass_level, season_pass_progress, season_pass_stamp_log, season_pass_reward_log)
+- 레벨 테이블(season_pass_config, season_pass_level, season_pass_progress, season_pass_stamp_log, season_pass_reward_log)
 - 게임별 테이블 개요(roulette, dice, lottery, ranking)
 
 ## 3. 용어 정의 (Definitions)
-- Season: 시즌패스 기간 단위 (예: XMAS_1WEEK_2025)
+- Season: 레벨 기간 단위 (예: XMAS_1WEEK_2025)
 - Feature: ROULETTE / DICE / SEASON_PASS / LOTTERY / RANKING
-- Stamp: 시즌패스 도장 1회 기록
+- Stamp: 레벨 도장 1회 기록
 
 ## 4. 공통 테이블
 ### 4-3. user_game_wallet
@@ -87,7 +87,7 @@
 - 인덱스/제약: IDX user_id+created_at, event_name
 - 연관: user
 
-## 5. 시즌패스 테이블
+## 5. 레벨 테이블
 ### 5-1. season_pass_config
 | 컬럼명 | 타입 | PK/FK | Not Null | 설명 |
 |--------|------|-------|----------|------|
@@ -325,5 +325,5 @@
 - v1.1 (2025-12-08, 시스템 설계팀)
   - 룰렛을 slot_index 0~5의 6칸 고정 구조로 정의하고 roulette_segment/roulette_log 세부 테이블을 명시, Σweight>0 유효성 규칙 추가
 - v1.0 (2025-12-08, 시스템 설계팀)
-  - 최초 작성: 공통/시즌패스/게임 테이블 구조 및 제약 정리
+  - 최초 작성: 공통/레벨/게임 테이블 구조 및 제약 정리
   - season_pass_stamp_log.xp_earned, reward_log UNIQUE 제약을 명시

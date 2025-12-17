@@ -24,7 +24,7 @@
   - `/dice` : 주사위 페이지.
   - `/lottery` : 복권 페이지.
   - `/ranking` : 랭킹 조회 페이지.
-  - `/season-pass` : 시즌패스 상세.
+  - `/season-pass` : 레벨 상세.
 - Admin 라우트:
   - `/admin/login` : 관리자 로그인.
   - `/admin` : 대시보드.

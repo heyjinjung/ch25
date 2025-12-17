@@ -1,12 +1,12 @@
-﻿# 랭킹 + 시즌패스 간단 운영 가이드 (초간단 버전)
+﻿# 랭킹 + 레벨 간단 운영 가이드 (초간단 버전)
 
 ## 기간 & 목표
 - 테스트 1주차: 12/8 ~ 12/14
 - 테스트 2주차: 12/15 ~ 12/21
-- 목표: 두 주 동안 외부 랭킹 + 시즌패스가 동시에 작동하는지 검증
+- 목표: 두 주 동안 외부 랭킹 + 레벨가 동시에 작동하는지 검증
 
-## 시즌패스 개념 (두 줄 요약)
-- 시즌패스 레벨 = XP 누적량으로 오른다.
+## 레벨 개념 (두 줄 요약)
+- 레벨 레벨 = XP 누적량으로 오른다.
 - 행동(스탬프)마다 XP가 붙고, 일정 XP마다 레벨업 → 보상.
 
 ### 관련 테이블
@@ -47,9 +47,9 @@
 ## 구현 상태 점검
 - 테이블 존재: external_ranking_*, season_pass_* (OK)
 - 랭킹: 내부 랭킹 제거, 외부 랭킹만 사용 (OK)
-- 시즌패스: 기본 API/테이블 존재 (OK)
+- 레벨: 기본 API/테이블 존재 (OK)
 - 자동 스탬프: TOP10/입금/첫 이용/내부 50승 로직 추가
-- 내부 승리 진행률 API: GET /api/season-pass/internal-wins 추가 (홈/시즌패스 UI 연동)
+- 내부 승리 진행률 API: GET /api/season-pass/internal-wins 추가 (홈/레벨 UI 연동)
 
 ## DB/마이그레이션/시드
 - Alembic 버전 20251208_0007_add_external_ranking_tables.py (외부 랭킹 테이블 포함)
@@ -64,16 +64,16 @@ docker compose exec db mysql -uroot -proot xmas_event_dev < scripts/seed_ranking
 - 가중치(weight): 랜덤 뽑기에서 당첨 확률을 결정하는 숫자. 모든 가중치 합 대비 각 항목의 비율이 확률.
 - 타입(type): 보상 종류를 구분하는 문자열. 예) POINT, ITEM, TICKET.
 - 값(amount/value): 타입에 따라 지급되는 수량. 예) POINT 타입이면 포인트 개수.
-- 스탬프(stamp): 시즌패스에서 “행동 1회”를 기록하는 도장. 찍힐 때 XP가 함께 오른다.
+- 스탬프(stamp): 레벨에서 “행동 1회”를 기록하는 도장. 찍힐 때 XP가 함께 오른다.
 
 ## 운영 시나리오(요약)
 - 외부 랭킹 입력: /admin/api/external-ranking 에 입금액/게임횟수 upsert
-- 홈/시즌패스 화면: GET /api/season-pass/status, GET /api/ranking/today, GET /api/season-pass/internal-wins 로 표시
+- 홈/레벨 화면: GET /api/season-pass/status, GET /api/ranking/today, GET /api/season-pass/internal-wins 로 표시
 - 스탬프 자동 지급: 위 4가지 규칙을 코드에 추가한 뒤, 로그가 쌓일 때마다 SeasonPassService를 통해 기록
 
 ## 프런트 표시(현재 구현)
-- 홈: 시즌패스 요약 + 스탬프 가이드(외부 TOP10/첫 이용/10만 입금/내부 50승 진행률), 외부 랭킹 카드(내 순위/입금/플레이, 상위 3개)
-- 시즌패스 페이지: XP 진행도, 다음 보상, 오늘 스탬프 상태, 스탬프 가이드 4카드, 레벨 보상 목록/수령 버튼
+- 홈: 레벨 요약 + 스탬프 가이드(외부 TOP10/첫 이용/10만 입금/내부 50승 진행률), 외부 랭킹 카드(내 순위/입금/플레이, 상위 3개)
+- 레벨 페이지: XP 진행도, 다음 보상, 오늘 스탬프 상태, 스탬프 가이드 4카드, 레벨 보상 목록/수령 버튼
 
 ## 빠른 점검 체크리스트
 - /api/ranking/today 200 OK, external_entries 노출

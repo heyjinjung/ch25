@@ -1,5 +1,5 @@
 # XMAS 1Week Event System
-FastAPI 백엔드와 Vite 기반 React 프런트로 구성된 원위크 이벤트/시즌패스/게임 토큰 서비스입니다. 오늘의 Feature 게이트, 룰렛·주사위·복권, 시즌패스, 외부 랭킹, 게임 토큰 지갑/원장(ROULETTE_COIN/DICE_TOKEN/LOTTERY_TICKET) 기능을 제공합니다.
+FastAPI 백엔드와 Vite 기반 React 프런트로 구성된 원위크 이벤트/레벨/게임 토큰 서비스입니다. 오늘의 Feature 게이트, 룰렛·주사위·복권, 레벨, 외부 랭킹, 게임 토큰 지갑/원장(ROULETTE_COIN/DICE_TOKEN/LOTTERY_TICKET) 기능을 제공합니다.
 
 ## 빠른 시작 (로컬)
 1) `.env.local`을 `.env`로 복사 후 DB·`TEST_MODE` 확인 → MySQL 8 실행 → `alembic upgrade head`로 스키마 적용  

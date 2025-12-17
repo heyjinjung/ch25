@@ -15,7 +15,7 @@ const App: React.FC = () => {
     () => [
       { label: "홈", path: "/" },
       { label: "팀 배틀", path: "/team-battle" },
-      { label: "시즌패스", path: "/season-pass" },
+      { label: "레벨", path: "/season-pass" },
       { label: "설문", path: "/surveys" },
     ],
     []

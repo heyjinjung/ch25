@@ -7,7 +7,7 @@ const AdminDashboardPage: React.FC = () => {
     <section className="space-y-4 rounded-xl border border-emerald-800/40 bg-slate-900/70 p-6 shadow-lg shadow-emerald-900/30">
       <div>
         <h2 className="text-xl font-bold text-emerald-100">Admin 대시보드</h2>
-        <p className="text-sm text-slate-300">티켓/게임/시즌패스/랭킹 설정을 빠르게 이동하세요.</p>
+        <p className="text-sm text-slate-300">티켓/게임/레벨/랭킹 설정을 빠르게 이동하세요.</p>
       </div>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <Link to="/admin/seasons" className="rounded-lg border border-emerald-800/40 bg-slate-900/60 p-3 text-slate-100 transition hover:border-emerald-500">

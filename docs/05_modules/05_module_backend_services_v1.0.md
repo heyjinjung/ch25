@@ -23,7 +23,7 @@
 - `app/core/`: 인증(JWT), 시큐리티, 타임존 유틸, 로깅 설정을 제공.
 - `app/config/`: 환경설정(Pydantic BaseSettings)과 DB/Redis 설정.
 - `app/db/`: AsyncSession 기반 SessionLocal, Base 정의 및 Alembic이 인식할 모델 import. 운영 시 마이그레이션 head `20241206_0001` 적용 여부를 확인한다.
-- `app/models/`: 공통/시즌패스/게임 SQLAlchemy 모델 정의.
+- `app/models/`: 공통/레벨/게임 SQLAlchemy 모델 정의.
 - `app/schemas/`: 요청/응답 Pydantic 스키마 정의.
 - `app/services/`: 비즈니스 로직 구현. 라우터는 여기 메서드를 호출만 한다.
 - `app/routes/`: api_router로 모든 엔드포인트를 묶고, JWT 인증 의존성을 연결한다.
@@ -55,7 +55,7 @@
   - `feature_config.is_enabled=0` 상태면 해당 feature를 비활성 처리하여 `NO_FEATURE_TODAY` 또는 403 응답으로 차단한다.
 
 ### 5-3. RouletteService / DiceService / LotteryService / RankingService
-- 책임: 각 게임 결과 계산, 일일 한도 검증, 시즌패스 add_stamp 연동, 로그 기록.
+- 책임: 각 게임 결과 계산, 일일 한도 검증, 레벨 add_stamp 연동, 로그 기록.
 - 연동: `SeasonPassService.add_stamp()` 호출하여 XP/레벨 보상 처리.
 - 공통 에러 처리: 오늘 feature_type 불일치 시 `NO_FEATURE_TODAY`(feature_config.is_enabled=0 포함), 설정 오류 시 `INVALID_<GAME>_CONFIG`(예: `INVALID_ROULETTE_CONFIG`), 일일 한도 초과 시 `DAILY_LIMIT_REACHED`를 반환한다. max_daily_*=0은 무제한 sentinel로 취급하며 remaining은 0으로 응답하지만 차단하지 않는다.
 
@@ -63,7 +63,7 @@
 - `get_current_season(now)`는 `start_date <= today <= end_date`인 시즌이 2개 이상이면 `NO_ACTIVE_SEASON_CONFLICT`(409) 에러를 발생시켜 운영 데이터 오류를 빠르게 탐지한다.
 
 ### 5-5. RewardService
-- 책임: 포인트/쿠폰 등 보상 지급 로직을 통합, 게임/시즌패스 서비스에서 호출.
+- 책임: 포인트/쿠폰 등 보상 지급 로직을 통합, 게임/레벨 서비스에서 호출.
 
 ## 6. 라우터 구성
 - `app/routes/api_router.py`: feature, season-pass, roulette, dice, lottery, ranking 라우터를 prefix/tag와 함께 등록.

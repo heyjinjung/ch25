@@ -7,7 +7,7 @@
 - 대상 독자: 백엔드 개발자
 
 ## 1. 목적 (Purpose)
-- 시즌패스(도장, XP, 레벨, 보상)에 대한 비즈니스 로직을 정의하고, API/게임 서비스가 재사용할 수 있는 메서드 계약을 제시한다.
+- 레벨(도장, XP, 레벨, 보상)에 대한 비즈니스 로직을 정의하고, API/게임 서비스가 재사용할 수 있는 메서드 계약을 제시한다.
 
 ## 2. 범위 (Scope)
 - 코드 경로 `backend/app/services/season_pass_service.py`에 구현될 클래스/메서드 시그니처, 책임, 연동 포인트를 다룬다.
@@ -16,7 +16,7 @@
 ## 3. 용어 정의 (Definitions)
 - Season: DB의 `start_date ~ end_date`로 정의되는 시즌 기간 (예: XMAS_2025, 이번 시즌은 2025-12-09 ~ 2025-12-25). 시즌 이름에 '1WEEK'가 포함되어 있더라도 실제 기간은 start_date/end_date로 결정된다.
 - XP: 레벨 업에 필요한 경험치.
-- Stamp: 일 1회 적립 가능한 시즌패스 도장.
+- Stamp: 일 1회 적립 가능한 레벨 도장.
 
 ## 4. 메서드 시그니처 & 책임
 
@@ -66,7 +66,7 @@ def claim_reward(self, user_id: int, level: int) -> dict:
 
 ## 5. 연동 포인트
 - RouletteService/DiceService/LotteryService/RankingService: 게임 성공 시 `add_stamp()` 호출 가능.
-- FeatureService: 오늘 feature_type=SEASON_PASS 여부에 따라 시즌패스 전용 페이지 노출.
+- FeatureService: 오늘 feature_type=SEASON_PASS 여부에 따라 레벨 전용 페이지 노출.
 - RewardService: auto_claim 및 claim_reward 시 실제 포인트/쿠폰 지급 처리 담당.
 
 ## 6. 예시 시퀀스 (add_stamp)

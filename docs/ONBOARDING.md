@@ -5,8 +5,8 @@
 ## 프로젝트 한눈에 보기
 - Backend: FastAPI + SQLAlchemy + Alembic, MySQL 8(옵션: Redis 7), JWT 발급 `/api/auth/token`(external_id로 자동 생성 가능), `ENV=local` 시 CORS `*`.
 - Frontend: React 18 + TypeScript 5 + Vite 6 + Tailwind, React Query 5, Axios. 관리자 UI는 `/admin`(로그인 `admin` / `2wP?+!Etm8#Qv4Mn`).
-- 주요 도메인: 룰렛/주사위/복권, 시즌패스(XP 스탬프), 외부 랭킹 수동 입력/보상, **게임 토큰 지갑/원장**(ROULETTE_COIN, DICE_TOKEN, LOTTERY_TICKET, CC_COIN) 관리자 지급·차감·로그, **팀 배틀**, **레벨/XP 코어**. today-feature 스케줄 게이트는 **폐기(아카이브)** 되었고 기본으로 비활성입니다.
-- 시즌패스 현재 스펙: base_xp_per_stamp=20, 레벨 7단계(곡선/보상은 `season_pass_level`; 기본 시드 `scripts/seed_ranking_seasonpass.sql`). 게임별 XP 계산은 서비스 로직/DB 설정값에 따릅니다.
+- 주요 도메인: 룰렛/주사위/복권, 레벨(XP 스탬프), 외부 랭킹 수동 입력/보상, **게임 토큰 지갑/원장**(ROULETTE_COIN, DICE_TOKEN, LOTTERY_TICKET, CC_COIN) 관리자 지급·차감·로그, **팀 배틀**, **레벨/XP 코어**. today-feature 스케줄 게이트는 **폐기(아카이브)** 되었고 기본으로 비활성입니다.
+- 레벨 현재 스펙: base_xp_per_stamp=20, 레벨 7단계(곡선/보상은 `season_pass_level`; 기본 시드 `scripts/seed_ranking_seasonpass.sql`). 게임별 XP 계산은 서비스 로직/DB 설정값에 따릅니다.
 
 ## 선행 설치물
 - Python 3.11+, Node 18+, npm 10+, MySQL 8.x (3306). 선택: Redis 7, Docker/Compose v2.
@@ -18,7 +18,7 @@
 - `JWT_SECRET`, `JWT_ALGORITHM`, `JWT_EXPIRE_MINUTES`
 - `ENV=local`, `CORS_ORIGINS=["http://localhost:5173","http://localhost:3000"]`
 - `TEST_MODE=true` → today-feature 무시 + 게임 토큰 부족 시 자동 보충(QA 전용). **현장 실행 시 반드시 false.**
-- `XP_FROM_GAME_REWARD=true` → 게임 보상 포인트를 시즌패스 XP로 반영
+- `XP_FROM_GAME_REWARD=true` → 게임 보상 포인트를 레벨 XP로 반영
 - `LOG_LEVEL=DEBUG`, `TIMEZONE=Asia/Seoul`
 
 ### Frontend `.env.development` (Vite 자동 로드)
@@ -74,14 +74,14 @@ docker compose exec backend alembic upgrade head  # 스키마 적용(자동 아�
 - 프런트 빌드 인자: `VITE_API_URL`, `VITE_ADMIN_API_URL`(docker-compose.yml args 참고).
 
 ## 시드 / 테스트 데이터
-- 시즌패스 레벨 및 외부 랭킹 테이블 보정:  
+- 레벨 레벨 및 외부 랭킹 테이블 보정:  
   ```
   docker compose cp scripts/seed_ranking_seasonpass.sql db:/tmp/seed_ranking_seasonpass.sql
   docker compose exec db sh -c "mysql -uroot -proot xmas_event_dev < /tmp/seed_ranking_seasonpass.sql"  # root PW는 .env에 맞게 수정
   ```
 - 사용자 생성은 `/api/auth/token` 호출 시 external_id로 자동 생성 가능.
 - 게임 토큰/원장: 테이블 `user_game_wallet`, `user_game_wallet_ledger`; 관리자 화면 `/admin/game-tokens`(지급/차감), `/admin/game-token-logs`(지갑/플레이로그/원장 조회). API는 `app/api/admin/routes/admin_game_tokens.py` 참고. 토큰 타입에 CC_COIN이 추가되었습니다.
-- 시즌패스: base_xp_per_stamp=20, 7레벨 곡선(`season_pass_level`); 기본 시드는 `scripts/seed_ranking_seasonpass.sql`. 현장 수치 변경 시 테이블만 업데이트하면 됩니다.
+- 레벨: base_xp_per_stamp=20, 7레벨 곡선(`season_pass_level`); 기본 시드는 `scripts/seed_ranking_seasonpass.sql`. 현장 수치 변경 시 테이블만 업데이트하면 됩니다.
 
 ## 서버(싱가포르 149.28.135.147) 배포/실행 요약
 - 백엔드 환경파일: `.env.production`을 서버에 올린 뒤 컨테이너/프로세스가 읽도록 `.env`로 복사 (`Copy-Item -Force .env.production .env`). 운영 값: `ENV=production`, `TEST_MODE=false`, `FEATURE_GATE_ENABLED=false`, DB `mysql+pymysql://xmasuser:xmaspass@db:3306/xmas_event`, CORS `http://149.28.135.147[:3000]`, JWT_SECRET은 운영 값으로 교체.

@@ -36,7 +36,7 @@ def get_today_config(self, db, now, user_id: int) -> dict:
 ### 5-2. play
 ```python
 def play(self, db, user_id: int, now) -> dict:
-    """1회 복권 긁기 후 당첨 prize/보상/시즌패스 결과를 반환한다."""
+    """1회 복권 긁기 후 당첨 prize/보상/레벨 결과를 반환한다."""
 ```
 - 단계:
   1) feature_type=LOTTERY + feature_config.is_enabled + config.is_active 확인. 스케줄 0/2건이면 `INVALID_FEATURE_SCHEDULE` 처리.

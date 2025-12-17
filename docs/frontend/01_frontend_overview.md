@@ -25,7 +25,7 @@
 - 앱 구성: 단일 리포 내 User App / Admin App 분리, 라우터 기반 코드 스플릿.
 - 모바일 우선: User App은 모바일 화면 최적화, Admin App은 데스크톱 우선.
 - 백엔드 연동: 모든 데이터는 FastAPI 백엔드(`/api`, `/admin/api`)를 통해 수신/전송.
-- 핵심 플로우: 홈(/) → today-feature 조회 → 해당 게임/랭킹/시즌패스 페이지로 네비게이션.
+- 핵심 플로우: 홈(/) → today-feature 조회 → 해당 게임/랭킹/레벨 페이지로 네비게이션.
 
 ## 5. 예시
 - 초기 진입: `/` → `/api/today-feature` → feature_type=ROULETTE → `/roulette`로 redirect.

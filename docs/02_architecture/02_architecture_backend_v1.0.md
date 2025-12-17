@@ -22,7 +22,7 @@
 ## 4. 아키텍처 개요
 - 실제 배포 환경(Docker/Nginx/CI/CD), Alembic 마이그레이션, 테스트 모드, 코인 시스템 정책 등 최신 코드와 일치하도록 반영.
 - 핵심 스택: Python 3.11+, FastAPI, Uvicorn, SQLAlchemy(AsyncSession), Alembic, (선택) Redis 캐시.
-- 인증: JWT 기반, 모든 게임/시즌패스 API는 Authorization 헤더 필요.
+- 인증: JWT 기반, 모든 게임/레벨 API는 Authorization 헤더 필요.
 - 타임존: Asia/Seoul 기준으로 날짜/시간 계산.
 - 비동기 원칙: 라우터/서비스/DB 접근은 async/await 일관 적용, 동기 DB 접근 금지.
 - 배포: Docker 컨테이너로 구성, Nginx가 HTTPS 종단 및 백엔드 리버스 프록시 역할을 수행.
@@ -62,7 +62,7 @@ xmas-1week-event-system/
 - `app/core/`: JWT 검증(auth.py), 패스워드/토큰 보안(security.py), 타임존 유틸(time_utils.py), 로깅 설정(logging_config.py).
 - `app/config/`: 환경 변수 로딩(BaseSettings), DB/Redis URL 등 설정.
 - `app/db/`: SessionLocal, Base 정의, Alembic에서 인식할 모델 import.
-- `app/models/`: 공통/시즌패스/게임 SQLAlchemy 모델 정의.
+- `app/models/`: 공통/레벨/게임 SQLAlchemy 모델 정의.
 - `app/services/`: FeatureService/SeasonPassService/게임 서비스/RewardService 등 비즈니스 로직 구현.
 - `app/routes/`: 인증 의존성을 연결하고 서비스 메서드를 호출하는 얇은 계층.
 - `app/schemas/`: Pydantic 스키마로 요청/응답 계약 정의.

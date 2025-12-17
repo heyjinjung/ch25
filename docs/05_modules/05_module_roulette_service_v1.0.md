@@ -33,7 +33,7 @@ def get_today_config(self, db, now, user_id: int) -> dict:
 ### 5-2. play
 ```python
 def play(self, db, user_id: int, now) -> dict:
-    """1회 스핀 실행 후 결과/보상/시즌패스 데이터를 반환한다."""
+    """1회 스핀 실행 후 결과/보상/레벨 데이터를 반환한다."""
 ```
 - 단계:
   1) 오늘 feature_type=ROULETTE 여부, feature_config.is_enabled=1, config.is_active=1 검사. 스케줄이 0건/2건이면 `INVALID_FEATURE_SCHEDULE` 처리.
@@ -52,7 +52,7 @@ def play(self, db, user_id: int, now) -> dict:
 
 ## 7. API 연동
 - GET `/api/roulette/status`: get_today_config 결과를 그대로 전달 (UI용 segments 포함).
-- POST `/api/roulette/play`: play 결과 반환, 시즌패스 블록은 add_stamp 호출 시 포함.
+- POST `/api/roulette/play`: play 결과 반환, 레벨 블록은 add_stamp 호출 시 포함.
 
 ## 8. 예시 응답 (play)
 ```json
