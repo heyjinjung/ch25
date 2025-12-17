@@ -11,19 +11,6 @@ import { TeamSeason, Team, LeaderboardEntry, ContributorEntry, TeamMembership } 
 import { isAdminAuthenticated } from "../auth/adminAuth";
 import { TreeIcon, GiftIcon, StarIcon, BellIcon } from "../components/common/ChristmasDecorations";
 
-const formatDateTime = (value?: string | null) => {
-  if (!value) return "-";
-  const date = new Date(value);
-  return date.toLocaleString("ko-KR", { timeZone: "Asia/Seoul" });
-};
-
-const formatLatest = (value?: string | null) => {
-  if (!value) return "기록 없음";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "기록 없음";
-  return date.toLocaleString("ko-KR", { timeZone: "Asia/Seoul" });
-};
-
 const TeamBattlePage: React.FC = () => {
   const [season, setSeason] = useState<TeamSeason | null>(null);
   const [teams, setTeams] = useState<Team[]>([]);
@@ -224,9 +211,6 @@ const TeamBattlePage: React.FC = () => {
           <div className="space-y-1">
             <p className="text-xs uppercase tracking-[0.25em] text-emerald-100">🛡️ Team Battle</p>
             <h1 className="text-3xl font-extrabold text-white">팀배틀</h1>
-            <p className="text-sm text-emerald-100">
-              기간: {formatDateTime(season?.starts_at)} ~ {formatDateTime(season?.ends_at)}
-            </p>
           </div>
           <div className="text-right">
             <p className="text-xs text-emerald-100/80">남은 시간</p>
@@ -244,7 +228,6 @@ const TeamBattlePage: React.FC = () => {
           >
             {refreshing ? "새로고침 중..." : "데이터 새로고침"}
           </button>
-          <span className="text-xs">모든 시각은 Asia/Seoul 기준</span>
         </div>
         {initialLoading && <span className="text-xs text-amber-200">초기 로딩 중...</span>}
       </div>
@@ -344,7 +327,6 @@ const TeamBattlePage: React.FC = () => {
                     <div className="flex flex-col">
                       <span className="text-amber-100">{c.nickname || "닉네임 없음"}</span>
                       <span className="text-[11px] text-amber-200/80">#{c.user_id}</span>
-                      <span className="text-[11px] text-amber-200/70">최근 활동: {formatLatest(c.latest_event_at)}</span>
                     </div>
                     <span className="font-semibold text-amber-200">+{c.points}</span>
                   </li>
@@ -411,7 +393,7 @@ const TeamBattlePage: React.FC = () => {
                 <span className="flex h-8 w-8 items-center justify-center rounded-full bg-cyan-900/60 text-sm font-bold text-cyan-100">#{idx + 1}</span>
                 <div className="flex flex-col">
                   <span className="text-sm font-semibold text-white">{row.team_name}</span>
-                  <span className="text-[11px] text-cyan-100/70">인원 {row.member_count ?? 0}명 · 최근 이벤트 {formatLatest(row.latest_event_at)}</span>
+                  <span className="text-[11px] text-cyan-100/70">인원 {row.member_count ?? 0}명</span>
                   {selectedTeam === row.team_id && <span className="text-[11px] text-emerald-200">내 팀</span>}
                 </div>
               </div>

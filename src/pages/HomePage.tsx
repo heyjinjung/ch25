@@ -132,13 +132,6 @@ const HomePage: React.FC = () => {
     return { label: teamSeason.data.name, tone: "text-emerald-200" };
   }, [teamSeason.data, teamSeason.isError, teamSeason.isLoading]);
 
-  const formatEndsAt = (iso?: string) => {
-    if (!iso) return "종료 정보 없음";
-    const d = new Date(iso);
-    if (Number.isNaN(d.getTime())) return "종료 정보 없음";
-    return d.toLocaleString("ko-KR", { timeZone: "Asia/Seoul" });
-  };
-
   const topTeams = useMemo(() => {
     if (!teamLeaderboard.data) return [];
     return teamLeaderboard.data.slice(0, 3);
@@ -317,7 +310,6 @@ const HomePage: React.FC = () => {
             <div className="mt-2 text-sm text-slate-300 space-y-1">
               <div>점수: {myTeamPoints !== null ? `${myTeamPoints} pts` : "-"}</div>
               <div>인원: {myTeamMembers !== null ? `${myTeamMembers}명` : "-"}</div>
-              {teamSeason.data && <div className="text-xs text-slate-400">종료: {formatEndsAt(teamSeason.data.ends_at)}</div>}
               {myTeam.isLoading && <div className="text-xs text-slate-400">불러오는 중...</div>}
               {myTeam.isError && <div className="text-xs text-red-300">불러오기 실패</div>}
             </div>
