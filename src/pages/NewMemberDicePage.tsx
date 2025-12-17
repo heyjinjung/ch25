@@ -311,7 +311,7 @@ const NewMemberDicePage: React.FC = () => {
 
   return (
     <LayoutGroup>
-      <section className="relative mx-auto w-full max-w-3xl space-y-6 rounded-3xl border border-white/15 bg-christmas-gradient p-8 text-dark-900 shadow-2xl">
+      <section className="relative mx-auto w-full max-w-3xl space-y-6 rounded-3xl border border-white/15 bg-christmas-gradient p-5 text-dark-900 shadow-2xl sm:p-8">
         <AnimatePresence>
           {transferStage === "overlay" && (
             <motion.div
@@ -336,8 +336,8 @@ const NewMemberDicePage: React.FC = () => {
           )}
         </AnimatePresence>
 
-        <div className="flex items-start justify-between gap-4">
-          <header className="min-w-0">
+        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <header className="w-full min-w-0">
             <p className="text-xs font-semibold uppercase tracking-[0.35em] text-gold-200">New Member</p>
             <h1 className="mt-2 text-3xl font-bold text-dark-900">신규회원 주사위 이벤트</h1>
             <p className="mt-2 text-sm font-semibold text-dark-700">잭팟에 실패해도, 내 자산은 안전하게 보관됩니다</p>
@@ -347,7 +347,7 @@ const NewMemberDicePage: React.FC = () => {
             </div>
           </header>
 
-          <aside className="shrink-0 rounded-3xl border border-white/15 bg-black/40 px-5 py-4 backdrop-blur-md">
+          <aside className="w-full rounded-3xl border border-white/15 bg-black/40 px-5 py-4 backdrop-blur-md md:w-auto md:shrink-0">
             <div className="flex items-center gap-2">
               <div className="relative">
                 {vaultTargetAmount > 0 && (
@@ -364,7 +364,7 @@ const NewMemberDicePage: React.FC = () => {
                 </p>
               </div>
             </div>
-            <div className="mt-2 flex items-center justify-between gap-2">
+            <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-xs text-slate-200">인증 충전 1콩 → 즉시 합산</p>
               <button
                 type="button"
