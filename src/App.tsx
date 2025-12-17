@@ -1,5 +1,5 @@
 // src/App.tsx
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import AppRouter from "./router/AppRouter";
 import ToastProvider from "./components/common/ToastProvider";
