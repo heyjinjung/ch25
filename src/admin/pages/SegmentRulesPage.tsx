@@ -115,13 +115,13 @@ const SegmentRulesPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <header className="space-y-1">
-        <h1 className="text-2xl font-bold text-emerald-200">세그먼트 규칙</h1>
+    <section className="space-y-4">
+      <header>
+        <h1 className="text-2xl font-bold text-slate-100">세그먼트 규칙</h1>
         <p className="text-sm text-slate-300">DB에서 세그먼트 분류 규칙을 관리합니다. 우선순위(priority)가 낮을수록 먼저 적용됩니다.</p>
       </header>
 
-      <section className="rounded-2xl border border-emerald-800/40 bg-slate-900/70 p-4 space-y-3">
+      <section className="rounded-lg border border-slate-800 bg-slate-900 p-4 space-y-3">
         <div className="text-sm font-semibold text-slate-100">새 규칙 추가</div>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
           <div>
@@ -129,7 +129,7 @@ const SegmentRulesPage: React.FC = () => {
             <input
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
-              className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              className="w-full rounded border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
             />
           </div>
           <div>
@@ -138,11 +138,13 @@ const SegmentRulesPage: React.FC = () => {
               <input
                 value={newSegment}
                 onChange={(e) => setNewSegment(e.target.value.toUpperCase())}
-                className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                className="w-full rounded border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
                 title={segmentLabelKo(newSegment)}
               />
               {shouldShowLabelKo(newSegment) && (
-                <span className="whitespace-nowrap text-xs text-slate-400">{segmentLabelKo(newSegment)}</span>
+                <span className="max-w-[14rem] truncate text-xs text-slate-400" title={segmentLabelKo(newSegment)}>
+                  {segmentLabelKo(newSegment)}
+                </span>
               )}
             </div>
           </div>
@@ -152,7 +154,7 @@ const SegmentRulesPage: React.FC = () => {
               type="number"
               value={newPriority}
               onChange={(e) => setNewPriority(Number(e.target.value) || 0)}
-              className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              className="w-full rounded border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
             />
           </div>
           <div className="flex items-end gap-2">
@@ -170,28 +172,30 @@ const SegmentRulesPage: React.FC = () => {
           <textarea
             value={newCondition}
             onChange={(e) => setNewCondition(e.target.value)}
-            className="h-32 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-xs text-slate-100"
+            className="h-32 w-full rounded border border-slate-700 bg-slate-800 px-3 py-2 font-mono text-xs text-slate-100 placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
           />
           <p className="mt-1 text-xs text-slate-400">예: {`{"field":"deposit_amount","op":">=","value":1000000}`}</p>
         </div>
         {createMutation.isError && (
-          <div className="rounded-lg border border-red-700/40 bg-red-900/20 px-3 py-2 text-sm text-red-200">
-            {(createMutation.error as any)?.message ?? "생성에 실패했습니다."}
+          <div className="rounded-lg border border-red-700/40 bg-red-950 p-3 text-sm text-red-100">
+            생성 실패: {(createMutation.error as any)?.message ?? "요청에 실패했습니다."}
           </div>
         )}
       </section>
 
-      <section className="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-950/40">
-        <table className="min-w-full text-sm">
-          <thead className="bg-slate-900/60 text-slate-200">
+      {isLoading && <div className="rounded-lg border border-emerald-800/40 bg-slate-900 p-3 text-slate-200">불러오는 중...</div>}
+
+      <div className="overflow-auto rounded-lg border border-slate-800">
+        <table className="min-w-full table-fixed divide-y divide-slate-800 bg-slate-900 text-sm text-slate-100">
+          <thead className="bg-slate-800/60">
             <tr>
-              <th className="whitespace-nowrap px-3 py-2 text-left">ID</th>
-              <th className="whitespace-nowrap px-3 py-2 text-left">규칙명</th>
-              <th className="whitespace-nowrap px-3 py-2 text-left">세그먼트</th>
-              <th className="whitespace-nowrap px-3 py-2 text-left">우선순위</th>
-              <th className="whitespace-nowrap px-3 py-2 text-left">활성화</th>
-              <th className="hidden whitespace-nowrap px-3 py-2 text-left xl:table-cell">조건(JSON)</th>
-              <th className="whitespace-nowrap px-3 py-2 text-left">작업</th>
+              <th className="w-16 px-3 py-2 text-left">ID</th>
+              <th className="w-60 px-3 py-2 text-left">규칙명</th>
+              <th className="w-56 px-3 py-2 text-left">세그먼트</th>
+              <th className="w-28 px-3 py-2 text-left">우선순위</th>
+              <th className="w-20 px-3 py-2 text-left">활성화</th>
+              <th className="hidden px-3 py-2 text-left xl:table-cell">조건(JSON)</th>
+              <th className="w-40 px-3 py-2 text-left">작업</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-800">
@@ -223,7 +227,7 @@ const SegmentRulesPage: React.FC = () => {
                             [r.id]: { ...(prev[r.id] ?? view), name: ev.target.value },
                           }))
                         }
-                        className="w-40 rounded-md border border-slate-700 bg-slate-950 px-2 py-1 text-xs text-slate-100"
+                        className="w-full rounded border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-slate-100"
                       />
                     </td>
                     <td className="px-3 py-2 align-top">
@@ -236,11 +240,13 @@ const SegmentRulesPage: React.FC = () => {
                               [r.id]: { ...(prev[r.id] ?? view), segment: ev.target.value.toUpperCase() },
                             }))
                           }
-                          className="w-24 rounded-md border border-slate-700 bg-slate-950 px-2 py-1 text-xs text-slate-100"
+                          className="w-24 rounded border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-slate-100"
                           title={segmentLabelKo(view.segment)}
                         />
                         {shouldShowLabelKo(view.segment) && (
-                          <span className="whitespace-nowrap text-xs text-slate-400">{segmentLabelKo(view.segment)}</span>
+                          <span className="truncate text-xs text-slate-400" title={segmentLabelKo(view.segment)}>
+                            {segmentLabelKo(view.segment)}
+                          </span>
                         )}
                       </div>
                     </td>
@@ -254,7 +260,7 @@ const SegmentRulesPage: React.FC = () => {
                             [r.id]: { ...(prev[r.id] ?? view), priority: Number(ev.target.value) || 0 },
                           }))
                         }
-                        className="w-24 rounded-md border border-slate-700 bg-slate-950 px-2 py-1 text-xs text-slate-100"
+                        className="w-24 rounded border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-slate-100"
                       />
                     </td>
                     <td className="px-3 py-2 align-top">
@@ -278,7 +284,7 @@ const SegmentRulesPage: React.FC = () => {
                             [r.id]: { ...(prev[r.id] ?? view), conditionText: ev.target.value },
                           }))
                         }
-                        className="h-24 w-80 rounded-md border border-slate-700 bg-slate-950 px-2 py-1 font-mono text-xs text-slate-100"
+                        className="h-24 w-full rounded border border-slate-700 bg-slate-800 px-2 py-1 font-mono text-xs text-slate-100"
                       />
                     </td>
                     <td className="px-3 py-2 align-top">
@@ -304,14 +310,14 @@ const SegmentRulesPage: React.FC = () => {
             )}
           </tbody>
         </table>
-      </section>
+      </div>
 
       {isError && (
-        <div className="rounded-lg border border-red-700/40 bg-red-900/20 px-3 py-2 text-sm text-red-200">
-          {(error as any)?.message ?? "요청에 실패했습니다."}
+        <div className="rounded-lg border border-red-700/40 bg-red-950 p-3 text-sm text-red-100">
+          불러오기 실패: {(error as any)?.message ?? "요청에 실패했습니다."}
         </div>
       )}
-    </div>
+    </section>
   );
 };
 
