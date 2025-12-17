@@ -168,11 +168,11 @@ const HomePage: React.FC = () => {
         <div className="sticky top-3 z-40">
           <div className="rounded-3xl border border-gold-500/25 bg-black/40 backdrop-blur-2xl p-4 shadow-2xl">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div className="flex items-center gap-4">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                 <img
                   src="/banner01.gif"
                   alt="금고 배너"
-                  className="h-[180px] w-[320px] shrink-0 rounded-xl border border-white/10 object-cover"
+                  className="h-auto w-full max-w-[320px] shrink-0 rounded-xl border border-white/10 object-contain sm:h-[180px] sm:w-[320px]"
                   loading="lazy"
                 />
                 <div className="min-w-0">
