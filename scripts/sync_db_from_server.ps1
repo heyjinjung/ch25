@@ -8,8 +8,8 @@ $REMOTE_DB_ROOT_PASSWORD = "rootpassword" # Check your server .env if changed
 
 # Local Configuration
 $LOCAL_DB_CONTAINER = "xmas-db"
-$LOCAL_DB_NAME = "xmas_event_dev"
-$LOCAL_DB_ROOT_PASSWORD = "root" # Changed to 'root' to match .env.local connection string
+$LOCAL_DB_NAME = "xmas_event"
+$LOCAL_DB_ROOT_PASSWORD = "rootpassword" # Match docker-compose.yml
 
 # Temp File
 $DUMP_FILE = "server_dump.sql"

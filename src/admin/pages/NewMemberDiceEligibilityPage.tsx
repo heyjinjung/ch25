@@ -111,7 +111,7 @@ const NewMemberDiceEligibilityPage: React.FC = () => {
 
       <div className="rounded-xl border border-emerald-800/40 bg-slate-900/70 p-4 shadow-lg shadow-emerald-900/30">
         <h2 className="mb-3 text-lg font-bold text-emerald-100">대상자 등록/갱신(Upsert)</h2>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
           <label className="space-y-1">
             <span className="text-xs text-slate-300">external_id (필수)</span>
             <input
@@ -175,13 +175,13 @@ const NewMemberDiceEligibilityPage: React.FC = () => {
           <thead className="bg-slate-800/60">
             <tr>
               <th className="w-20 px-3 py-2 text-left">user_id</th>
-              <th className="w-40 px-3 py-2 text-left">external_id</th>
-              <th className="px-3 py-2 text-left">nickname</th>
-              <th className="w-28 px-3 py-2 text-left">eligible</th>
+              <th className="w-[12ch] px-3 py-2 text-left">external_id</th>
+              <th className="w-[12ch] px-3 py-2 text-left">nickname</th>
+              <th className="w-24 px-3 py-2 text-left">eligible</th>
               <th className="w-56 px-3 py-2 text-left">expires_at</th>
-              <th className="w-56 px-3 py-2 text-left">revoked_at</th>
-              <th className="w-56 px-3 py-2 text-left">updated_at</th>
-              <th className="w-32 px-3 py-2 text-right">액션</th>
+              <th className="hidden w-56 px-3 py-2 text-left xl:table-cell">revoked_at</th>
+              <th className="hidden w-56 px-3 py-2 text-left xl:table-cell">updated_at</th>
+              <th className="w-28 px-3 py-2 text-right">액션</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-800">
@@ -228,35 +228,37 @@ const NewMemberDiceEligibilityPage: React.FC = () => {
                           })
                         : undefined
                     }
-                    className="rounded border border-slate-700 bg-slate-800 px-2 py-1"
+                    className="w-full min-w-0 rounded border border-slate-700 bg-slate-800 px-2 py-1"
                     disabled={updateMutation.isPending || !row.external_id}
                   />
                 </td>
-                <td className="px-3 py-2">
+                <td className="hidden px-3 py-2 xl:table-cell">
                   <div className="truncate" title={row.revoked_at ?? "-"}>
                     {row.revoked_at ?? "-"}
                   </div>
                 </td>
-                <td className="px-3 py-2">
+                <td className="hidden px-3 py-2 xl:table-cell">
                   <div className="truncate" title={row.updated_at}>
                     {row.updated_at}
                   </div>
                 </td>
-                <td className="px-3 py-2 text-right space-x-2">
-                  <Button
-                    variant="secondary"
-                    onClick={() => handleQuickRevoke(row)}
-                    disabled={updateMutation.isPending || !row.external_id}
-                  >
-                    회수
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    onClick={() => (row.external_id ? deleteMutation.mutate(row.external_id) : undefined)}
-                    disabled={deleteMutation.isPending || !row.external_id}
-                  >
-                    삭제
-                  </Button>
+                <td className="px-3 py-2">
+                  <div className="flex justify-end gap-2 whitespace-nowrap">
+                    <Button
+                      variant="secondary"
+                      onClick={() => handleQuickRevoke(row)}
+                      disabled={updateMutation.isPending || !row.external_id}
+                    >
+                      회수
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      onClick={() => (row.external_id ? deleteMutation.mutate(row.external_id) : undefined)}
+                      disabled={deleteMutation.isPending || !row.external_id}
+                    >
+                      삭제
+                    </Button>
+                  </div>
                 </td>
               </tr>
             ))}
