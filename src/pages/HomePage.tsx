@@ -178,7 +178,7 @@ const HomePage: React.FC = () => {
                 <div className="min-w-0">
                   <p className="text-xs font-semibold uppercase tracking-[0.28em] text-amber-200">Vault</p>
                   <p className="mt-1 text-lg font-extrabold text-white">잠긴 금고 {formatWon(vaultAmount)}</p>
-                  <p className="mt-1 text-xs text-slate-200/90">인증 충전 1콩 확인 시 자동으로 보유 머니에 합산됩니다.</p>
+                  <p className="mt-1 text-xs text-slate-200/90">외부 충전 확인 시 금고 금액이 일부 해금되어 보유 머니에 합산됩니다.</p>
                   <div className="mt-2">
                     <button
                       type="button"
@@ -191,14 +191,24 @@ const HomePage: React.FC = () => {
                 </div>
               </div>
 
-              <a
-                href="https://ccc-010.com"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex w-full items-center justify-center rounded-full border border-gold-400/35 bg-amber-900/15 px-5 py-3 text-sm font-extrabold text-amber-100 backdrop-blur hover:border-gold-300/55 md:w-auto"
-              >
-                1콩 충전하고 해금 ↗
-              </a>
+              <div className="flex w-full flex-col gap-2 md:w-auto md:flex-row md:items-center md:justify-end">
+                <a
+                  href="https://ccc-010.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex w-full items-center justify-center rounded-full border border-gold-400/35 bg-amber-900/15 px-5 py-3 text-sm font-extrabold text-amber-100 backdrop-blur hover:border-gold-300/55 md:w-auto"
+                >
+                  1만원 충전 ↗
+                </a>
+                <a
+                  href="https://ccc-010.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex w-full items-center justify-center rounded-full border border-gold-400/35 bg-amber-900/15 px-5 py-3 text-sm font-extrabold text-amber-100 backdrop-blur hover:border-gold-300/55 md:w-auto"
+                >
+                  5만원 충전 ↗
+                </a>
+              </div>
             </div>
 
             {vaultBannerOpen && (
@@ -206,7 +216,7 @@ const HomePage: React.FC = () => {
                 <p className="text-sm font-semibold text-white">어떻게 해금되나요?</p>
                 <ul className="mt-2 space-y-1 text-xs text-slate-200/90">
                   <li>- 금고 금액은 현재 잠겨 있어요.</li>
-                  <li>- 외부랭킹에 ‘입금(충전) 1콩’이 확인되면 자동으로 보유 머니에 합산됩니다.</li>
+                  <li>- 외부 충전 확인 기준: 1만원 충전 시 5,000원 해금 / 5만원 충전 시 전액 해금</li>
                   <li>- 충전 완료 후에도 반영이 늦으면 관리자에게 입금 확인을 요청해주세요.</li>
                 </ul>
               </div>

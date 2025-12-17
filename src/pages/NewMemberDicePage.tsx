@@ -321,7 +321,7 @@ const NewMemberDicePage: React.FC = () => {
               exit={{ opacity: 0 }}
             >
               <div className="w-full max-w-sm rounded-2xl border border-white/20 bg-white/10 p-5 text-center text-slate-50 shadow-xl">
-                <p className="text-sm font-semibold text-slate-100">신규 유저 보호 시스템 가동 중…</p>
+                <p className="text-sm font-semibold text-slate-100">신규유저지원금 지원</p>
                 <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-white/10">
                   <motion.div
                     className="h-full w-1/3 rounded-full bg-white/60"
@@ -330,7 +330,7 @@ const NewMemberDicePage: React.FC = () => {
                     transition={{ duration: 0.9, ease: "easeInOut" }}
                   />
                 </div>
-                <p className="mt-3 text-xs text-slate-200">자산을 안전하게 이동 중입니다</p>
+                <p className="mt-3 text-xs text-slate-200">자산이 안전하게 이동중</p>
               </div>
             </motion.div>
           )}
@@ -340,7 +340,7 @@ const NewMemberDicePage: React.FC = () => {
           <header className="w-full min-w-0">
             <p className="text-xs font-semibold uppercase tracking-[0.35em] text-gold-200">New Member</p>
             <h1 className="mt-2 text-3xl font-bold text-dark-900">신규회원 주사위 이벤트</h1>
-            <p className="mt-2 text-sm font-semibold text-dark-700">잭팟에 실패해도, 내 자산은 안전하게 보관됩니다</p>
+            <p className="mt-2 text-sm font-semibold text-dark-700">잭팟에 실패해도, 내 지원금은 안전하게 보관됩니다</p>
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-semibold text-dark-900 ring-1 ring-white/25">무료 1회 참여</span>
               <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-semibold text-dark-900 ring-1 ring-white/25">크리스마스 시즌</span>
@@ -365,7 +365,7 @@ const NewMemberDicePage: React.FC = () => {
               </div>
             </div>
             <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-xs text-slate-200">인증 충전 1콩 → 즉시 합산</p>
+              <p className="text-xs text-slate-200">1만원 충전(5,000원 해금) · 5만원 충전(전액해금)</p>
               <button
                 type="button"
                 onClick={() => navigate("/")}
@@ -465,8 +465,8 @@ const NewMemberDicePage: React.FC = () => {
             <p className={`text-2xl font-extrabold ${outcome === "WIN" ? "text-secondary-200" : "text-primary-200"}`}>{message}</p>
             {outcome === "LOSE" && (
               <>
-                <p className="mt-3 text-sm font-semibold text-dark-800">시스템상 신규 정착 지원금이 임시 금고에 보관되었습니다.</p>
-                <p className="mt-1 text-xs text-dark-700">그냥 두면 소멸될 수 있어요. 금고에서 바로 확인하세요.</p>
+                <p className="mt-3 text-sm font-semibold text-dark-800">시스템상 신규정착금이 금고에 보관되었습니다.</p>
+                <p className="mt-1 text-xs text-dark-700"> 소멸될 수 있어요. 금고에서 바로 확인하세요.</p>
                 <button
                   type="button"
                   onClick={() => navigate("/")}
@@ -474,6 +474,29 @@ const NewMemberDicePage: React.FC = () => {
                 >
                   💰 내 금고 확인하러 가기
                 </button>
+
+                <div className="mt-3">
+                  <p className="text-xs font-semibold text-dark-700">외부 충전으로 해금하기</p>
+                  <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:justify-center">
+                    <a
+                      href="https://ccc-010.com"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center justify-center rounded-full border border-white/25 bg-white/20 px-5 py-2.5 text-sm font-extrabold text-dark-900 backdrop-blur hover:bg-white/25"
+                    >
+                      1만원 충전 ↗
+                    </a>
+                    <a
+                      href="https://ccc-010.com"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center justify-center rounded-full border border-white/25 bg-white/20 px-5 py-2.5 text-sm font-extrabold text-dark-900 backdrop-blur hover:bg-white/25"
+                    >
+                      5만원 충전 ↗
+                    </a>
+                  </div>
+                  <p className="mt-2 text-[11px] text-dark-600">1만원 충전 시 5,000원 / 5만원 충전 시 10,000원이 해금되어 보유 머니에 합산됩니다.</p>
+                </div>
               </>
             )}
             {outcome === "WIN" && (

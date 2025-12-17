@@ -18,27 +18,27 @@ def test_external_ranking_deposit_increase_unlocks_vault_to_cash(session_factory
     session.add(NewMemberDiceEligibility(user_id=1, is_eligible=True, campaign_key="test"))
     session.commit()
 
-    # First upsert counts as increase from 0 -> 1 (any increase triggers)
+    # Option A: 10,000 charge => unlock 5,000 and keep 5,000 locked
     AdminExternalRankingService.upsert_many(
         session,
-        [ExternalRankingCreate(user_id=1, deposit_amount=1, play_count=0)],
+        [ExternalRankingCreate(user_id=1, deposit_amount=10_000, play_count=0)],
     )
 
     session.expire_all()
     updated = session.get(User, 1)
     assert updated is not None
-    assert updated.vault_balance == 0
-    assert updated.cash_balance == 10_000
+    assert updated.vault_balance == 5_000
+    assert updated.cash_balance == 5_000
 
     ledger = session.query(UserCashLedger).filter(UserCashLedger.user_id == 1).all()
     assert len(ledger) == 1
-    assert ledger[0].delta == 10_000
+    assert ledger[0].delta == 5_000
     assert ledger[0].reason == "VAULT_UNLOCK"
 
-    # Second upsert with increased deposit should not double-unlock (vault already 0)
+    # Option B: additional 50,000 charge => unlock remaining 5,000 (target is 10,000 but only 5,000 remains)
     AdminExternalRankingService.upsert_many(
         session,
-        [ExternalRankingCreate(user_id=1, deposit_amount=2, play_count=0)],
+        [ExternalRankingCreate(user_id=1, deposit_amount=60_000, play_count=0)],
     )
     session.expire_all()
     updated2 = session.get(User, 1)
@@ -47,6 +47,7 @@ def test_external_ranking_deposit_increase_unlocks_vault_to_cash(session_factory
     assert updated2.cash_balance == 10_000
 
     ledger2 = session.query(UserCashLedger).filter(UserCashLedger.user_id == 1).all()
-    assert len(ledger2) == 1
+    assert len(ledger2) == 2
+    assert sum(entry.delta for entry in ledger2) == 10_000
 
     session.close()
