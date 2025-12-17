@@ -3,8 +3,7 @@ import React, { useState, useRef, useEffect } from "react";
 
 // 로컬 mp3 (public)만 사용해 외부 404/차단 이슈를 방지
 const CHRISTMAS_MUSIC_SOURCES = [
-  "/04.We%20Wish%20You%20A%20Merry%20Christmas.mp3",
-  "/05.Jingle%20Bell(Flute).mp3",
+  "/videoplayback.mp3",
 ] as const;
 
 const ChristmasMusic: React.FC = () => {
@@ -17,13 +16,9 @@ const ChristmasMusic: React.FC = () => {
   useEffect(() => {
     // 저장된 설정 불러오기
     const savedVolume = localStorage.getItem("xmas_music_volume");
-    const savedPlaying = localStorage.getItem("xmas_music_playing");
     
     if (savedVolume) {
       setVolume(parseFloat(savedVolume));
-    }
-    if (savedPlaying === "true") {
-      setIsPlaying(true);
     }
   }, []);
 
@@ -50,12 +45,11 @@ const ChristmasMusic: React.FC = () => {
   }, [isPlaying]);
 
   useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.load();
-      if (isPlaying) {
-        audioRef.current.play().catch(() => setIsPlaying(false));
-      }
-    }
+    if (!audioRef.current) return;
+    if (!isPlaying) return;
+
+    audioRef.current.load();
+    audioRef.current.play().catch(() => setIsPlaying(false));
   }, [sourceIdx, isPlaying]);
 
   const togglePlay = () => {
@@ -116,7 +110,7 @@ const ChristmasMusic: React.FC = () => {
         ref={audioRef}
         src={CHRISTMAS_MUSIC_SOURCES[sourceIdx]}
         loop
-        preload="auto"
+        preload="none"
         onError={() => {
           setSourceIdx((idx) => {
             const next = idx + 1;
