@@ -172,7 +172,7 @@ const HomePage: React.FC = () => {
                 <img
                   src="/banner01.gif"
                   alt="금고 배너"
-                  className="h-auto w-full max-w-[320px] shrink-0 rounded-xl border border-white/10 object-contain sm:h-[180px] sm:w-[320px]"
+                  className="mx-auto h-auto w-full max-w-[320px] shrink-0 rounded-xl border border-white/10 object-contain sm:mx-0 sm:h-[180px] sm:w-[320px]"
                   loading="lazy"
                 />
                 <div className="min-w-0">
@@ -195,7 +195,7 @@ const HomePage: React.FC = () => {
                 href="https://ccc-010.com"
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center justify-center rounded-full border border-gold-400/35 bg-amber-900/15 px-5 py-3 text-sm font-extrabold text-amber-100 backdrop-blur hover:border-gold-300/55"
+                className="inline-flex w-full items-center justify-center rounded-full border border-gold-400/35 bg-amber-900/15 px-5 py-3 text-sm font-extrabold text-amber-100 backdrop-blur hover:border-gold-300/55 md:w-auto"
               >
                 1콩 충전하고 해금 ↗
               </a>
