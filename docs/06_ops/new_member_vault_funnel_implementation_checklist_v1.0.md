@@ -220,9 +220,9 @@ v1.0에서는 “될 수 있으면 테이블을 늘리지 않는다”를 우선
 
 ## 8) 릴리즈/운영 체크
 
-- [ ] 마이그레이션 적용(도커 환경 포함)
-  - [ ] VS Code task: `apply alembic migrations` 실행
-  - [ ] `alembic current`로 head 확인
+- [x] 마이그레이션 적용(도커 환경 포함)
+  - [x] VS Code task: `apply alembic migrations` 실행
+  - [x] `alembic current`로 head 확인 (현재: `20251217_0023 (head)`)
 - [ ] 운영 로그/대시보드(선택)
   - [ ] 해금 이벤트(사용자/금액/시각) 로그 남기기
 

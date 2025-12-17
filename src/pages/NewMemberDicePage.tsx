@@ -121,12 +121,6 @@ const NewMemberDicePage: React.FC = () => {
       setDealerDice(typeof data.lastDealerDice === "number" ? data.lastDealerDice : null);
       setOutcome(data.lastOutcome ?? null);
       setMessage(outcomeToUiMessage(data.lastOutcome ?? null));
-
-      // 신규회원 주사위가 이미 끝났고(LOSE) 금고 연출이 필요한 경우
-      if (data.lastOutcome === "LOSE") {
-        setVaultTargetAmount(VAULT_SEED_AMOUNT);
-        setVaultDisplayedAmount(VAULT_SEED_AMOUNT);
-      }
     }
 
     return () => {
@@ -301,29 +295,29 @@ const NewMemberDicePage: React.FC = () => {
             </div>
           </header>
 
-          <aside className="shrink-0 rounded-2xl border border-white/15 bg-black/40 px-3 py-2 backdrop-blur-md">
+          <aside className="shrink-0 rounded-3xl border border-white/15 bg-black/40 px-5 py-4 backdrop-blur-md">
             <div className="flex items-center gap-2">
               <div className="relative">
                 {vaultTargetAmount > 0 && (
                   <span className="absolute inset-0 rounded-full bg-gold-300/20 blur-sm animate-pulse" aria-hidden="true" />
                 )}
-                <span className="relative text-gold-200" aria-label="금고">
+                <span className="relative text-xl text-gold-200" aria-label="금고">
                   🔒
                 </span>
               </div>
               <div className="leading-tight">
-                <p className="text-[10px] font-semibold text-slate-200">임시 금고 보관금</p>
-                <p className={`tabular-nums text-lg font-extrabold ${vaultFlashPositive ? "text-emerald-200" : "text-gold-200"}`}>
+                <p className="text-xs font-semibold text-slate-200">임시 금고 보관금</p>
+                <p className={`tabular-nums text-2xl font-extrabold ${vaultFlashPositive ? "text-emerald-200" : "text-gold-200"}`}>
                   {formatWon(vaultDisplayedAmount)}
                 </p>
               </div>
             </div>
             <div className="mt-2 flex items-center justify-between gap-2">
-              <p className="text-[10px] text-slate-200">인증 충전 1콩 → 즉시 합산</p>
+              <p className="text-xs text-slate-200">인증 충전 1콩 → 즉시 합산</p>
               <button
                 type="button"
                 onClick={() => navigate("/")}
-                className="rounded-full bg-gold-500 px-2.5 py-1 text-[11px] font-bold text-dark-900 active:scale-95 transition"
+                className="rounded-full bg-gold-500 px-3.5 py-1.5 text-sm font-bold text-dark-900 active:scale-95 transition"
               >
                 금고 확인
               </button>

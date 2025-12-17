@@ -4,7 +4,7 @@ from app.models.new_member_dice import NewMemberDiceEligibility
 from app.models.user import User
 
 
-def test_vault_status_seeds_for_eligible_user(client, session_factory):
+def test_vault_status_does_not_seed_on_fetch(client, session_factory):
     db = session_factory()
 
     user = User(external_id="u-vault")
@@ -19,9 +19,9 @@ def test_vault_status_seeds_for_eligible_user(client, session_factory):
     assert res.status_code == 200
     data = res.json()
     assert data["eligible"] is True
-    assert data["vault_balance"] == 10000
+    assert data["vault_balance"] == 0
     assert data["cash_balance"] == 0
-    assert data["seeded"] is True
+    assert data["seeded"] is False
 
 
 def test_vault_fill_only_once(client, session_factory):

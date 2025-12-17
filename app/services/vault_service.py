@@ -48,16 +48,10 @@ class VaultService:
         eligible = self._eligible(db, user_id, now_dt)
         user = self._get_or_create_user(db, user_id)
 
-        seeded = False
-        # Seed only once in v1.0: avoid re-seeding after unlock by requiring cash_balance==0 as well.
-        if eligible and (user.vault_balance or 0) == 0 and (user.cash_balance or 0) == 0:
-            user.vault_balance = self.VAULT_SEED_AMOUNT
-            db.add(user)
-            db.commit()
-            db.refresh(user)
-            seeded = True
-
-        return eligible, user, seeded
+        # IMPORTANT UX POLICY:
+        # Do not auto-seed on status fetch. The initial seed is granted on actual funnel events
+        # (e.g., 신규회원 주사위 LOSE 시 보관, 또는 무료 fill 사용 시).
+        return eligible, user, False
 
     def fill_free_once(self, db: Session, user_id: int, now: datetime | None = None) -> tuple[bool, User, int, datetime]:
         now_dt = now or datetime.utcnow()
