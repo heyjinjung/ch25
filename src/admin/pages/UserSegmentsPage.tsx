@@ -86,14 +86,12 @@ const UserSegmentsPage: React.FC = () => {
         <table className="w-full table-fixed divide-y divide-slate-800 bg-slate-900 text-sm text-slate-100">
           <thead className="bg-slate-800/60">
             <tr>
-              <th className="w-20 px-3 py-2 text-left">유저 ID</th>
-              <th className="w-48 px-3 py-2 text-left">외부 ID</th>
+              <th className="w-[7ch] px-3 py-2 text-left">외부 ID</th>
               <th className="px-3 py-2 text-left">세그먼트</th>
               <th className="w-48 px-3 py-2 text-left">플레이</th>
               <th className="hidden px-3 py-2 text-left xl:table-cell">마지막 로그인</th>
               <th className="hidden px-3 py-2 text-left xl:table-cell">마지막 충전</th>
               <th className="hidden px-3 py-2 text-left 2xl:table-cell">세그 변경시각</th>
-              <th className="hidden px-3 py-2 text-left 2xl:table-cell">마지막 보너스 사용</th>
               <th className="hidden px-3 py-2 text-left 2xl:table-cell">활동 업데이트</th>
               <th className="w-20 px-3 py-2 text-left">작업</th>
             </tr>
@@ -101,14 +99,13 @@ const UserSegmentsPage: React.FC = () => {
           <tbody className="divide-y divide-slate-800">
             {rows.length === 0 && !isLoading ? (
               <tr>
-                <td className="px-3 py-6 text-center text-slate-400" colSpan={10}>
+                <td className="px-3 py-6 text-center text-slate-400" colSpan={8}>
                   조회 결과가 없습니다.
                 </td>
               </tr>
             ) : (
               rows.map((row) => (
                 <tr key={row.user_id} className="text-slate-100">
-                  <td className="px-3 py-2 align-top">{row.user_id}</td>
                   <td className="px-3 py-2 align-top">
                     <span className="block truncate" title={row.external_id}>
                       {row.external_id}
@@ -150,11 +147,6 @@ const UserSegmentsPage: React.FC = () => {
                   <td className="hidden px-3 py-2 align-top text-xs text-slate-300 2xl:table-cell">
                     <span className="block truncate" title={formatMaybeDate(row.segment_updated_at)}>
                       {formatMaybeDate(row.segment_updated_at)}
-                    </span>
-                  </td>
-                  <td className="hidden px-3 py-2 align-top text-xs text-slate-300 2xl:table-cell">
-                    <span className="block truncate" title={formatMaybeDate(row.last_bonus_used_at)}>
-                      {formatMaybeDate(row.last_bonus_used_at)}
                     </span>
                   </td>
                   <td className="hidden px-3 py-2 align-top text-xs text-slate-300 2xl:table-cell">

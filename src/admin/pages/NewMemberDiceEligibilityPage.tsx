@@ -10,6 +10,16 @@ import {
   deleteNewMemberDiceEligibilityByExternalId,
 } from "../api/adminNewMemberDiceApi";
 
+const pickUpdatePayload = (payload: Partial<AdminNewMemberDiceEligibility>) => {
+  const next: Record<string, unknown> = {};
+  if (Object.prototype.hasOwnProperty.call(payload, "is_eligible")) next.is_eligible = payload.is_eligible;
+  if (Object.prototype.hasOwnProperty.call(payload, "campaign_key")) next.campaign_key = payload.campaign_key;
+  if (Object.prototype.hasOwnProperty.call(payload, "granted_by")) next.granted_by = payload.granted_by;
+  if (Object.prototype.hasOwnProperty.call(payload, "expires_at")) next.expires_at = payload.expires_at;
+  if (Object.prototype.hasOwnProperty.call(payload, "revoked_at")) next.revoked_at = payload.revoked_at;
+  return next as any;
+};
+
 const normalizeExternalId = (value: string): string | null => {
   const trimmed = value.trim();
   return trimmed ? trimmed : null;
@@ -44,8 +54,6 @@ const NewMemberDiceEligibilityPage: React.FC = () => {
   const [form, setForm] = useState({
     external_id: "",
     is_eligible: true,
-    campaign_key: "",
-    granted_by: "",
     expires_at: "",
   });
 
@@ -59,26 +67,20 @@ const NewMemberDiceEligibilityPage: React.FC = () => {
       return upsertNewMemberDiceEligibility({
         external_id: parsedFormExternalId,
         is_eligible: form.is_eligible,
-        campaign_key: form.campaign_key ? form.campaign_key : null,
-        granted_by: form.granted_by ? form.granted_by : null,
+        campaign_key: null,
+        granted_by: null,
         expires_at: toIsoOrNull(form.expires_at),
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "new-member-dice", "eligibility"] });
-      setForm({ external_id: "", is_eligible: true, campaign_key: "", granted_by: "", expires_at: "" });
+      setForm({ external_id: "", is_eligible: true, expires_at: "" });
     },
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ externalId, payload }: { externalId: string; payload: Partial<AdminNewMemberDiceEligibility> }) =>
-      updateNewMemberDiceEligibilityByExternalId(externalId, {
-        is_eligible: payload.is_eligible,
-        campaign_key: payload.campaign_key ?? null,
-        granted_by: payload.granted_by ?? null,
-        expires_at: payload.expires_at ?? null,
-        revoked_at: payload.revoked_at ?? null,
-      }),
+      updateNewMemberDiceEligibilityByExternalId(externalId, pickUpdatePayload(payload)),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "new-member-dice", "eligibility"] }),
   });
 
@@ -95,8 +97,6 @@ const NewMemberDiceEligibilityPage: React.FC = () => {
       payload: {
         is_eligible: false,
         revoked_at: new Date().toISOString(),
-        campaign_key: row.campaign_key ?? null,
-        granted_by: row.granted_by ?? null,
         expires_at: row.expires_at ?? null,
       },
     });
@@ -119,26 +119,6 @@ const NewMemberDiceEligibilityPage: React.FC = () => {
               onChange={(e) => setForm((p) => ({ ...p, external_id: e.target.value }))}
               className="w-full rounded border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100"
               placeholder="예: ext-56"
-            />
-          </label>
-
-          <label className="space-y-1">
-            <span className="text-xs text-slate-300">campaign_key (옵션)</span>
-            <input
-              value={form.campaign_key}
-              onChange={(e) => setForm((p) => ({ ...p, campaign_key: e.target.value }))}
-              className="w-full rounded border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100"
-              placeholder="예: 2025-xmas"
-            />
-          </label>
-
-          <label className="space-y-1">
-            <span className="text-xs text-slate-300">granted_by (옵션)</span>
-            <input
-              value={form.granted_by}
-              onChange={(e) => setForm((p) => ({ ...p, granted_by: e.target.value }))}
-              className="w-full rounded border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100"
-              placeholder="예: admin_jimin"
             />
           </label>
 
@@ -190,28 +170,34 @@ const NewMemberDiceEligibilityPage: React.FC = () => {
         <div className="rounded-lg border border-red-700/40 bg-red-950 p-3 text-red-100">불러오기 실패: {(error as Error).message}</div>
       )}
 
-      <div className="overflow-auto rounded-lg border border-slate-800">
-        <table className="min-w-full divide-y divide-slate-800 bg-slate-900 text-sm text-slate-100">
+      <div className="overflow-x-hidden rounded-lg border border-slate-800">
+        <table className="w-full table-fixed divide-y divide-slate-800 bg-slate-900 text-sm text-slate-100">
           <thead className="bg-slate-800/60">
             <tr>
-              <th className="px-3 py-2 text-left">user_id</th>
-              <th className="px-3 py-2 text-left">external_id</th>
+              <th className="w-20 px-3 py-2 text-left">user_id</th>
+              <th className="w-40 px-3 py-2 text-left">external_id</th>
               <th className="px-3 py-2 text-left">nickname</th>
-              <th className="px-3 py-2 text-left">eligible</th>
-              <th className="px-3 py-2 text-left">campaign_key</th>
-              <th className="px-3 py-2 text-left">granted_by</th>
-              <th className="px-3 py-2 text-left">expires_at</th>
-              <th className="px-3 py-2 text-left">revoked_at</th>
-              <th className="px-3 py-2 text-left">updated_at</th>
-              <th className="px-3 py-2 text-right">액션</th>
+              <th className="w-28 px-3 py-2 text-left">eligible</th>
+              <th className="w-56 px-3 py-2 text-left">expires_at</th>
+              <th className="w-56 px-3 py-2 text-left">revoked_at</th>
+              <th className="w-56 px-3 py-2 text-left">updated_at</th>
+              <th className="w-32 px-3 py-2 text-right">액션</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-800">
             {(data ?? []).map((row) => (
               <tr key={row.user_id}>
                 <td className="px-3 py-2">{row.user_id}</td>
-                <td className="px-3 py-2">{row.external_id ?? "-"}</td>
-                <td className="px-3 py-2">{row.nickname ?? "-"}</td>
+                <td className="px-3 py-2">
+                  <div className="truncate" title={row.external_id ?? "-"}>
+                    {row.external_id ?? "-"}
+                  </div>
+                </td>
+                <td className="px-3 py-2">
+                  <div className="truncate" title={row.nickname ?? "-"}>
+                    {row.nickname ?? "-"}
+                  </div>
+                </td>
                 <td className="px-3 py-2">
                   <select
                     value={row.is_eligible ? "true" : "false"}
@@ -232,36 +218,6 @@ const NewMemberDiceEligibilityPage: React.FC = () => {
                 </td>
                 <td className="px-3 py-2">
                   <input
-                    defaultValue={row.campaign_key ?? ""}
-                    onBlur={(e) =>
-                      row.external_id
-                        ? updateMutation.mutate({
-                            externalId: row.external_id,
-                            payload: { campaign_key: e.target.value ? e.target.value : null },
-                          })
-                        : undefined
-                    }
-                    className="w-40 rounded border border-slate-700 bg-slate-800 px-2 py-1"
-                    placeholder="(옵션)"
-                  />
-                </td>
-                <td className="px-3 py-2">
-                  <input
-                    defaultValue={row.granted_by ?? ""}
-                    onBlur={(e) =>
-                      row.external_id
-                        ? updateMutation.mutate({
-                            externalId: row.external_id,
-                            payload: { granted_by: e.target.value ? e.target.value : null },
-                          })
-                        : undefined
-                    }
-                    className="w-40 rounded border border-slate-700 bg-slate-800 px-2 py-1"
-                    placeholder="(옵션)"
-                  />
-                </td>
-                <td className="px-3 py-2">
-                  <input
                     type="datetime-local"
                     defaultValue={fromIsoToLocalInput(row.expires_at)}
                     onBlur={(e) =>
@@ -276,8 +232,16 @@ const NewMemberDiceEligibilityPage: React.FC = () => {
                     disabled={updateMutation.isPending || !row.external_id}
                   />
                 </td>
-                <td className="px-3 py-2">{row.revoked_at ?? "-"}</td>
-                <td className="px-3 py-2">{row.updated_at}</td>
+                <td className="px-3 py-2">
+                  <div className="truncate" title={row.revoked_at ?? "-"}>
+                    {row.revoked_at ?? "-"}
+                  </div>
+                </td>
+                <td className="px-3 py-2">
+                  <div className="truncate" title={row.updated_at}>
+                    {row.updated_at}
+                  </div>
+                </td>
                 <td className="px-3 py-2 text-right space-x-2">
                   <Button
                     variant="secondary"
@@ -298,7 +262,7 @@ const NewMemberDiceEligibilityPage: React.FC = () => {
             ))}
             {(data ?? []).length === 0 && !isLoading && !isError && (
               <tr>
-                <td colSpan={10} className="px-3 py-4 text-center text-slate-400">
+                <td colSpan={8} className="px-3 py-4 text-center text-slate-400">
                   데이터가 없습니다.
                 </td>
               </tr>

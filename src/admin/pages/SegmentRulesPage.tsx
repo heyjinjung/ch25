@@ -123,7 +123,7 @@ const SegmentRulesPage: React.FC = () => {
 
       <section className="rounded-lg border border-slate-800 bg-slate-900 p-4 space-y-3">
         <div className="text-sm font-semibold text-slate-100">새 규칙 추가</div>
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,12ch)_minmax(0,10ch)_minmax(0,8ch)_minmax(0,1fr)]">
           <div>
             <label className="mb-1 block text-xs font-semibold text-slate-200">규칙명(name)</label>
             <input
@@ -190,8 +190,8 @@ const SegmentRulesPage: React.FC = () => {
           <thead className="bg-slate-800/60">
             <tr>
               <th className="w-16 px-3 py-2 text-left">ID</th>
-              <th className="w-60 px-3 py-2 text-left">규칙명</th>
-              <th className="w-56 px-3 py-2 text-left">세그먼트</th>
+              <th className="w-[12ch] px-3 py-2 text-left">규칙명</th>
+              <th className="w-[10ch] px-3 py-2 text-left">세그먼트</th>
               <th className="w-28 px-3 py-2 text-left">우선순위</th>
               <th className="w-20 px-3 py-2 text-left">활성화</th>
               <th className="hidden px-3 py-2 text-left xl:table-cell">조건(JSON)</th>
@@ -227,11 +227,11 @@ const SegmentRulesPage: React.FC = () => {
                             [r.id]: { ...(prev[r.id] ?? view), name: ev.target.value },
                           }))
                         }
-                        className="w-full rounded border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-slate-100"
+                        className="w-full min-w-0 rounded border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-slate-100"
                       />
                     </td>
                     <td className="px-3 py-2 align-top">
-                      <div className="flex items-center gap-2">
+                      <div className="flex min-w-0 items-center gap-2">
                         <input
                           value={view.segment}
                           onChange={(ev) =>
@@ -240,11 +240,11 @@ const SegmentRulesPage: React.FC = () => {
                               [r.id]: { ...(prev[r.id] ?? view), segment: ev.target.value.toUpperCase() },
                             }))
                           }
-                          className="w-24 rounded border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-slate-100"
+                          className="w-[9ch] rounded border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-slate-100"
                           title={segmentLabelKo(view.segment)}
                         />
                         {shouldShowLabelKo(view.segment) && (
-                          <span className="truncate text-xs text-slate-400" title={segmentLabelKo(view.segment)}>
+                          <span className="max-w-[10ch] truncate text-xs text-slate-400" title={segmentLabelKo(view.segment)}>
                             {segmentLabelKo(view.segment)}
                           </span>
                         )}
