@@ -176,6 +176,9 @@ const TeamBattlePage: React.FC = () => {
 
   const joinButtonLabel = joinWindow.closed ? "선택 마감" : joinBusy ? "배정 중..." : "미스터리 팀 배정";
   const myTeamName = useMemo(() => teams.find((t) => t.id === selectedTeam)?.name, [teams, selectedTeam]);
+  const showAdminPanel = isAdminAuthenticated();
+  const showTeamSelectPanel = !joinWindow.closed && selectedTeam === null;
+  const showTopGrid = showTeamSelectPanel || showAdminPanel;
 
   const handleLbPrev = () => setLbOffset(Math.max(lbOffset - lbLimit, 0));
   const handleLbNext = () => {
@@ -260,54 +263,57 @@ const TeamBattlePage: React.FC = () => {
         </div>
       )}
 
-      <div className="grid md:grid-cols-3 gap-4">
-        <div className="md:col-span-2 rounded-2xl border border-emerald-700/40 bg-gradient-to-br from-slate-950/80 to-emerald-950/40 p-5 shadow-lg">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-bold text-white">팀 선택</h2>
-            <div className={`text-xs font-semibold ${joinWindow.closed ? "text-red-200" : "text-emerald-200"}`}>
-              {joinWindow.closed ? "선택 창 닫힘 (시작 후 24시간)" : "선택 창 열려 있음"}
-            </div>
-          </div>
-          <div className="mb-2 text-xs text-emerald-100/80">내 팀: {myTeamName ?? "미배정"}</div>
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <button
-                className="px-4 py-2 rounded-full bg-gradient-to-r from-emerald-500 to-cyan-400 text-slate-900 font-semibold hover:from-emerald-400 hover:to-cyan-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                onClick={handleAutoAssign}
-                disabled={joinBusy || refreshing || joinWindow.closed}
-              >
-                {joinButtonLabel}
-              </button>
-              <span className="text-xs text-emerald-100/80">밸런스 기준 자동 배정</span>
-            </div>
-            <div className={`text-right text-xs ${joinWindow.closed ? "text-red-200" : "text-amber-200"}`}>
-              팀 선택 창: {joinWindow.label}
-            </div>
-          </div>
-          <div className="grid sm:grid-cols-2 gap-3">
-            {teams.map((team) => (
-              <div
-                key={team.id}
-                className={`rounded-xl border p-4 shadow-inner transition hover:-translate-y-0.5 hover:shadow-lg bg-slate-900/60 ${
-                  selectedTeam === team.id ? "border-emerald-400/80" : "border-emerald-800/40"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-emerald-200/70">팀</p>
-                    <p className="text-xl font-bold text-white">{team.name}</p>
-                  </div>
-                  <span className="text-[11px] text-emerald-100/70">자동 배정만 가능</span>
-                </div>
-                {selectedTeam === team.id && <p className="mt-1 text-xs text-emerald-300">내 팀으로 배정됨</p>}
+      {showTopGrid && (
+        <div className="grid md:grid-cols-3 gap-4">
+          {showTeamSelectPanel && (
+            <div className="md:col-span-2 rounded-2xl border border-emerald-700/40 bg-gradient-to-br from-slate-950/80 to-emerald-950/40 p-5 shadow-lg">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-lg font-bold text-white">팀 선택</h2>
+                <div className="text-xs font-semibold text-emerald-200">선택 창 열려 있음</div>
               </div>
-            ))}
-            {teams.length === 0 && <p className="text-sm text-emerald-200/70">활성 팀이 없습니다.</p>}
-          </div>
-        </div>
+              <div className="mb-2 text-xs text-emerald-100/80">내 팀: {myTeamName ?? "미배정"}</div>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <button
+                    className="px-4 py-2 rounded-full bg-gradient-to-r from-emerald-500 to-cyan-400 text-slate-900 font-semibold hover:from-emerald-400 hover:to-cyan-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={handleAutoAssign}
+                    disabled={joinBusy || refreshing || joinWindow.closed}
+                  >
+                    {joinButtonLabel}
+                  </button>
+                  <span className="text-xs text-emerald-100/80">밸런스 기준 자동 배정</span>
+                </div>
+                <div className="text-right text-xs text-amber-200">팀 선택 창: {joinWindow.label}</div>
+              </div>
+              <div className="grid sm:grid-cols-2 gap-3">
+                {teams.map((team) => (
+                  <div
+                    key={team.id}
+                    className={`rounded-xl border p-4 shadow-inner transition hover:-translate-y-0.5 hover:shadow-lg bg-slate-900/60 ${
+                      selectedTeam === team.id ? "border-emerald-400/80" : "border-emerald-800/40"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs text-emerald-200/70">팀</p>
+                        <p className="text-xl font-bold text-white">{team.name}</p>
+                      </div>
+                      <span className="text-[11px] text-emerald-100/70">자동 배정만 가능</span>
+                    </div>
+                    {selectedTeam === team.id && <p className="mt-1 text-xs text-emerald-300">내 팀으로 배정됨</p>}
+                  </div>
+                ))}
+                {teams.length === 0 && <p className="text-sm text-emerald-200/70">활성 팀이 없습니다.</p>}
+              </div>
+            </div>
+          )}
 
-        {isAdminAuthenticated() && (
-        <div className="rounded-2xl border border-amber-600/40 bg-gradient-to-br from-slate-950/80 to-amber-950/30 p-5 shadow-lg">
+          {showAdminPanel && (
+        <div
+          className={`rounded-2xl border border-amber-600/40 bg-gradient-to-br from-slate-950/80 to-amber-950/30 p-5 shadow-lg ${
+            showTeamSelectPanel ? "" : "md:col-span-3"
+          }`}
+        >
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-lg font-bold text-white">내 팀 기여도</h2>
             <div className="flex items-center gap-2 text-[11px] text-amber-200">
@@ -375,6 +381,7 @@ const TeamBattlePage: React.FC = () => {
         </div>
         )}
       </div>
+      )}
 
       <div className="rounded-2xl border border-cyan-700/40 bg-gradient-to-br from-slate-950/80 to-cyan-900/40 p-5 shadow-lg">
         <div className="flex items-center justify-between mb-3">
