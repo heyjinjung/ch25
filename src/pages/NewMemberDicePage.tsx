@@ -9,12 +9,14 @@ import { getVaultStatus } from "../api/vaultApi";
 const VAULT_SEED_AMOUNT = 10000;
 
 const ROLL_VISUAL_MS = 1400;
-const RESULT_HOLD_MS = 900;
+const RESULT_HOLD_MS = 1200;
+const RESULT_BEAT_MS = 350;
 const VAULT_FLY_MS = 500;
 const VAULT_BADGE_MS = 550;
 const VAULT_COUNT_MS = 850;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const nextPaint = () => new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()));
 
 const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
 
@@ -238,7 +240,13 @@ const NewMemberDicePage: React.FC = () => {
       setIsDiceSpinning(false);
       setWinLink(resp.winLink);
 
+      // 결과가 실제로 화면에 반영된 뒤(페인트 이후) 홀드가 시작되도록 보장
+      setProgressMessage("결과 확인!");
+      await nextPaint();
+      await nextPaint();
+
       await sleep(RESULT_HOLD_MS);
+      await sleep(RESULT_BEAT_MS);
 
       if (resp.outcome === "LOSE") {
         setProgressMessage(null);

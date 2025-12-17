@@ -170,9 +170,9 @@ const HomePage: React.FC = () => {
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div className="flex items-center gap-4">
                 <img
-                  src="/ccx001.png"
+                  src="/banner01.gif"
                   alt="금고 배너"
-                  className="h-[80px] w-[200px] shrink-0 rounded-xl border border-white/10 object-cover"
+                  className="h-[180px] w-[320px] shrink-0 rounded-xl border border-white/10 object-cover"
                   loading="lazy"
                 />
                 <div className="min-w-0">
