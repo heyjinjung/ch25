@@ -13,7 +13,7 @@
 
 - [x] 신규회원 eligible 유저가 `/new-member/dice`에서 1회 플레이 가능
 - [x] 잭팟 실패(LOSE) 시, UI는 ‘꽝/패배’ 없이 보호 시스템 → 금고 이체 연출이 노출됨
-- [x] `GET /api/vault/status`가 vault/cash 상태를 반환하고, 필요 시 **시드 10,000**을 보장함
+- [x] `GET /api/vault/status`가 vault/cash 상태를 반환함(주사위 플레이 전에는 0원)
 - [x] `POST /api/vault/fill`이 무료 1회(+5,000)를 처리하고, FE에서 카운트업이 동작함
 - [x] 외부랭킹 업서트에서 deposit 증가가 감지되면(신규유저 + vault>0), `vault_balance`가 0으로 내려가고 `cash_balance`가 증가하며 원장에 기록됨
 - [x] Alembic 마이그레이션 + 최소 단위 테스트(또는 통합 테스트)가 추가되어 회귀를 방지함
@@ -68,7 +68,7 @@ v1.0에서는 “될 수 있으면 테이블을 늘리지 않는다”를 우선
 ### 2.1 Vault 상태 조회
 - [x] `GET /api/vault/status`
   - [x] 반환: `vault_balance`, `cash_balance`, `eligible`, `expires_at(선택)`
-  - [x] 시드 정책: eligible AND vault_balance==0 이면 vault_balance=10,000으로 세팅
+  - [x] 정책: status 조회는 seed를 생성하지 않음(주사위 LOSE/무료 fill 등 이벤트에서 seed 발생)
 - [x] 라우터/스키마 추가
   - [x] 라우터 위치: `app/api/routes/vault.py`(신규) + `app/api/routes/__init__.py` 등록
   - [x] 스키마 위치: `app/schemas/vault.py`(신규)
@@ -203,7 +203,7 @@ v1.0에서는 “될 수 있으면 테이블을 늘리지 않는다”를 우선
     - LOSE 직후 토스트(‘금고 보관 완료’) 노출 확인
 
 - [x] 금고 API
-  - [x] `GET /api/vault/status` 첫 호출에서 시드 10,000 부여(eligible 조건일 때)
+  - [x] `GET /api/vault/status`는 seed를 생성하지 않음(플레이 전에는 0원)
   - [x] `POST /api/vault/fill` 1회 성공 후 2회 호출은 실패/무시(정책대로)
   - 자동 검증
     - pytest: `tests/test_vault_api.py`
