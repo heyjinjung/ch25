@@ -86,7 +86,7 @@ const UserSegmentsPage: React.FC = () => {
         <table className="w-full table-fixed divide-y divide-slate-800 bg-slate-900 text-sm text-slate-100">
           <thead className="bg-slate-800/60">
             <tr>
-              <th className="w-[7ch] px-3 py-2 text-left">외부 ID</th>
+              <th className="w-[12ch] px-3 py-2 text-left">외부 ID</th>
               <th className="px-3 py-2 text-left">세그먼트</th>
               <th className="w-48 px-3 py-2 text-left">플레이</th>
               <th className="hidden px-3 py-2 text-left xl:table-cell">마지막 로그인</th>

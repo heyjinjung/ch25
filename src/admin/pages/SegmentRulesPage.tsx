@@ -192,7 +192,7 @@ const SegmentRulesPage: React.FC = () => {
               <th className="w-16 px-3 py-2 text-left">ID</th>
               <th className="w-[12ch] px-3 py-2 text-left">규칙명</th>
               <th className="w-[10ch] px-3 py-2 text-left">세그먼트</th>
-              <th className="w-28 px-3 py-2 text-left">우선순위</th>
+              <th className="w-[6ch] px-3 py-2 text-left">우선순위</th>
               <th className="w-20 px-3 py-2 text-left">활성화</th>
               <th className="hidden px-3 py-2 text-left xl:table-cell">조건(JSON)</th>
               <th className="w-40 px-3 py-2 text-left">작업</th>
@@ -260,7 +260,7 @@ const SegmentRulesPage: React.FC = () => {
                             [r.id]: { ...(prev[r.id] ?? view), priority: Number(ev.target.value) || 0 },
                           }))
                         }
-                        className="w-24 rounded border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-slate-100"
+                        className="w-[6ch] rounded border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-slate-100"
                       />
                     </td>
                     <td className="px-3 py-2 align-top">
