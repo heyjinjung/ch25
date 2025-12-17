@@ -17,7 +17,7 @@ from app.schemas.new_member_dice import NewMemberDicePlayResponse, NewMemberDice
 
 class NewMemberDiceService:
     WIN_LINK = "https://ccc-010.com"
-    USER_WIN_RATE = 0.05
+    USER_WIN_RATE = 0.0
 
     @staticmethod
     def _is_eligible_row_active(row: NewMemberDiceEligibility | None, now: datetime) -> bool:
