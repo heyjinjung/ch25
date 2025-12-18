@@ -24,6 +24,43 @@ const navLinks = [
   { label: "내금고", href: "https://figma.com/sites" },
 ];
 
+const gameTiles: { title: string; icon: string }[] = [
+  { title: "레벨 주사위", icon: assets.iconLevel },
+  { title: "랜덤 복권", icon: assets.iconLottery },
+  { title: "룰렛 경품뽑기", icon: assets.iconRoulette },
+];
+
+const howToIcons: { title: string; icon: string }[] = [
+  { title: "씨씨이용하기", icon: assets.iconWallet },
+  { title: "금고서비스", icon: assets.iconSecurity },
+  { title: "포인트게임하기", icon: assets.iconGraph },
+  { title: "친구초대", icon: assets.iconPeople },
+];
+
+const bento: { title: string; description?: string; icon?: string | null }[] = [
+  {
+    title: "2x",
+    description: "어디와도 비교불가한 포인트서비스",
+    icon: null,
+  },
+  {
+    title: "Efficiency Increase Per Transfer",
+    description: "",
+    icon: assets.vectorBar,
+  },
+  {
+    title: "안전하고 빠른 환전",
+    icon: assets.vectorStreamline,
+  },
+  {
+    title: "고객만족도 1위",
+    icon: assets.img130,
+  },
+];
+
+const baseAccent = "#d2fd9c";
+const deepOlive = "#394508";
+
 const Sidebar: React.FC = () => {
   return (
     <header className="w-full max-w-[827px] bg-black flex flex-col gap-[30px] px-[20px] py-[20px] text-white lg:px-[40px] lg:gap-[50px]">
