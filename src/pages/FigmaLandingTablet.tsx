@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 // Tablet-specific assets (stored under public/assets/figma)
 const assets = {
@@ -24,16 +25,16 @@ const assets = {
 };
 
 const navLinks = [
-  { label: "CC카지노", href: "https://figma.com/sites" },
-  { label: "레벨", href: "https://figma.com/sites" },
-  { label: "팀배틀", href: "https://figma.com/sites" },
-  { label: "내금고", href: "https://figma.com/sites" },
+  { label: "CC카지노", to: "/home" },
+  { label: "레벨", to: "/season-pass" },
+  { label: "팀배틀", to: "/team-battle" },
+  { label: "내금고", to: "/home" },
 ];
 
-const gameTiles: { title: string; icon: string; fallback: string }[] = [
-  { title: "레벨 주사위", icon: assets.levelSvg, fallback: assets.iconLevel },
-  { title: "랜덤 복권", icon: assets.lotterySvg, fallback: assets.iconLottery },
-  { title: "룰렛 경품뽑기", icon: assets.rouletteSvg, fallback: assets.iconRoulette },
+const gameTiles: { title: string; to: string; icon: string; fallback: string }[] = [
+  { title: "레벨 주사위", to: "/dice", icon: assets.levelSvg, fallback: assets.iconLevel },
+  { title: "랜덤 복권", to: "/lottery", icon: assets.lotterySvg, fallback: assets.iconLottery },
+  { title: "룰렛 경품뽑기", to: "/roulette", icon: assets.rouletteSvg, fallback: assets.iconRoulette },
 ];
 
 const howToIcons: { title: string; icon: string }[] = [
@@ -103,8 +104,9 @@ const Sidebar: React.FC = () => {
         </h3>
         <div className="grid w-full gap-[10px] grid-cols-1 sm:grid-cols-3">
           {gameTiles.map((tile) => (
-            <button
+            <Link
               key={tile.title}
+              to={tile.to}
               className="flex-1 h-[120px] rounded-[4px] bg-[#d2fd9c] px-[10px] py-[20px] flex flex-col items-center gap-[14px]"
             >
               <div className="relative h-[30px] w-[30px]">
@@ -119,16 +121,16 @@ const Sidebar: React.FC = () => {
                 />
               </div>
               <p className="text-[18px] lg:text-[20px] font-medium leading-[1.15] text-black text-center">{tile.title}</p>
-            </button>
+            </Link>
           ))}
         </div>
       </div>
 
       <div className="flex flex-wrap gap-[18px] items-center justify-center w-full text-[18px] lg:text-[20px] font-medium" style={{ color: baseAccent }}>
         {navLinks.map((item) => (
-          <a key={item.label} href={item.href} className="leading-[1.15]">
+          <Link key={item.label} to={item.to} className="leading-[1.15]">
             {item.label}
-          </a>
+          </Link>
         ))}
       </div>
     </header>
