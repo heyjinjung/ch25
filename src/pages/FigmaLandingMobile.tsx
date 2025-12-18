@@ -12,6 +12,9 @@ const assets = {
   iconLevel: "/assets/figma/icon-level-mobile.png",
   iconLottery: "/assets/figma/icon-lottery-mobile.png",
   iconRoulette: "/assets/figma/icon-roulette-mobile.png",
+  rouletteSvg: "/images/layer-1.svg", // lightning
+  levelSvg: "/images/layer-2.svg", // globe
+  lotterySvg: "/images/layer-3.svg", // shield
 };
 
 const navLinks = [
@@ -22,9 +25,9 @@ const navLinks = [
 ];
 
 const gameTiles = [
-  { title: "레벨 주사위", icon: assets.iconLevel },
-  { title: "복권 랜덤뽑기", icon: assets.iconLottery },
-  { title: "룰렛 경품뽑기", icon: assets.iconRoulette },
+  { title: "레벨 주사위", icon: assets.levelSvg, fallback: assets.iconLevel },
+  { title: "복권 랜덤뽑기", icon: assets.lotterySvg, fallback: assets.iconLottery },
+  { title: "룰렛 경품뽑기", icon: assets.rouletteSvg, fallback: assets.iconRoulette },
 ];
 
 const howToIcons = [
@@ -76,7 +79,16 @@ const MobileLanding: React.FC = () => {
                 className="flex-1 min-w-[110px] h-[120px] rounded-[4px] bg-[#d2fd9c] px-[10px] py-[20px] flex flex-col items-center gap-[14px]"
               >
                 <div className="relative h-[30px] w-[30px]">
-                  <img src={tile.icon} alt={tile.title} className="absolute inset-0 h-full w-full object-contain" />
+                  <img
+                    src={tile.icon}
+                    alt={tile.title}
+                    className="absolute inset-0 h-full w-full object-contain"
+                    onError={(e) => {
+                      if (!("fallback" in tile) || !tile.fallback) return;
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = tile.fallback;
+                    }}
+                  />
                 </div>
                 <p className="text-[20px] font-medium leading-[1.15] text-black text-center whitespace-pre-wrap">{tile.title}</p>
               </button>

@@ -15,6 +15,12 @@ const assets = {
   vectorBar: "/assets/figma/vector-bar.png",
   vectorStreamline: "/assets/figma/vector-streamline.png",
   img130: "/assets/figma/label-130.png",
+  rouletteSvg: "/images/layer-1.svg", // lightning mark
+  levelSvg: "/images/layer-2.svg", // globe line icon
+  lotterySvg: "/images/layer-3.svg", // shield check
+  bentoEfficiency: "/images/vector111.svg",
+  bentoFastExchange: "/images/vector112.svg",
+  bentoCustomerSat: "/images/unnamed113.svg",
 };
 
 const navLinks = [
@@ -25,9 +31,9 @@ const navLinks = [
 ];
 
 const gameTiles = [
-  { title: "룰렛 경품뽑기", icon: assets.iconRoulette },
-  { title: "레벨 주사위", icon: assets.iconLevel },
-  { title: "랜덤 복권", icon: assets.iconLottery },
+  { title: "룰렛 경품뽑기", icon: assets.rouletteSvg, fallback: assets.iconRoulette },
+  { title: "레벨 주사위", icon: assets.levelSvg, fallback: assets.iconLevel },
+  { title: "랜덤 복권", icon: assets.lotterySvg, fallback: assets.iconLottery },
 ];
 
 const howToIcons = [
@@ -47,15 +53,18 @@ const bento = [
   {
     title: "Efficiency Increase Per Transfer",
     description: "",
-    icon: assets.vectorBar,
+    icon: assets.bentoEfficiency,
+    fallback: assets.vectorBar,
   },
   {
     title: "안전하고 빠른 환전",
-    icon: assets.vectorStreamline,
+    icon: assets.bentoFastExchange,
+    fallback: assets.vectorStreamline,
   },
   {
     title: "고객만족도 1위",
-    icon: assets.img130,
+    icon: assets.bentoCustomerSat,
+    fallback: assets.img130,
   },
 ];
 
@@ -97,7 +106,16 @@ const Sidebar: React.FC = () => {
           {gameTiles.map((tile) => (
             <button key={tile.title} className="flex-1 h-[120px] rounded-[4px] bg-[#d2fd9c] px-[10px] py-[20px] flex flex-col items-center gap-[14px]">
               <div className="relative h-[30px] w-[30px]">
-                <img src={tile.icon} alt={tile.title} className="absolute inset-0 h-full w-full object-contain" />
+                <img
+                  src={tile.icon}
+                  alt={tile.title}
+                  className="absolute inset-0 h-full w-full object-contain"
+                  onError={(e) => {
+                    if (!tile.fallback) return;
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = tile.fallback;
+                  }}
+                />
               </div>
               <p className="text-[20px] font-medium leading-[1.15] text-black text-center">{tile.title}</p>
             </button>
@@ -188,7 +206,16 @@ const BentoGrid: React.FC = () => (
             <div className="flex flex-col items-center gap-[30px] text-center text-[#394508] w-full">
               {item.icon ? (
                 <div className="relative" style={{ height: 98.459, width: 142.264 }}>
-                  <img src={item.icon} alt={item.title} className="h-full w-full object-contain" />
+                  <img
+                    src={item.icon}
+                    alt={item.title}
+                    className="h-full w-full object-contain"
+                    onError={(e) => {
+                      if (!("fallback" in item) || !item.fallback) return;
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = item.fallback;
+                    }}
+                  />
                 </div>
               ) : (
                 <p className="text-[72px] lg:text-[90px] leading-[1.04] tracking-[-3.6px]">{item.title}</p>
@@ -208,7 +235,16 @@ const BentoGrid: React.FC = () => (
             <div className="flex flex-col items-center gap-[30px] text-center text-[#394508] w-full">
               {item.icon && (
                 <div className="relative" style={{ height: item.title === "고객만족도 1위" ? 67.5 : 112, width: item.title === "고객만족도 1위" ? 199.281 : 124.31 }}>
-                  <img src={item.icon} alt={item.title} className="h-full w-full object-contain" />
+                  <img
+                    src={item.icon}
+                    alt={item.title}
+                    className="h-full w-full object-contain"
+                    onError={(e) => {
+                      if (!("fallback" in item) || !item.fallback) return;
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = item.fallback;
+                    }}
+                  />
                 </div>
               )}
               <p className="text-[16px] leading-[1.09]">{item.title}</p>
