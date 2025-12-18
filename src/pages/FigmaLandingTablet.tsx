@@ -215,42 +215,5 @@ const FigmaLandingTablet: React.FC = () => {
     </div>
   );
 };
-    </div>
-  </section>
-);
-
-const Footer: React.FC = () => (
-  <footer className="w-[800px] bg-[#394508] px-[40px] py-[31px] text-[#d2fd9c]">
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-[12px]">
-        <p className="text-[20px] font-medium leading-[1.15]">Contact</p>
-        <div className="flex flex-col gap-[2px] text-[20px] font-medium leading-[1.15]">
-          <p>텔레그램</p>
-          <p>지민공지채널</p>
-          <p>씨씨사이트</p>
-        </div>
-      </div>
-      <div className="flex flex-col gap-[2px] text-[20px] font-medium leading-[1.15]">
-        <a href="https://figma.com/sites">Terms & Conditions</a>
-        <a href="https://figma.com/sites">Privacy</a>
-      </div>
-    </div>
-  </footer>
-);
-
-const FigmaLandingTablet: React.FC = () => {
-  return (
-    <div className="min-h-screen bg-white flex flex-col items-center">
-      <Sidebar />
-      <main className="w-full flex flex-col">
-        <Events />
-        <OngoingEvents />
-        <HowToUse />
-        <BentoGrid />
-        <Footer />
-      </main>
-    </div>
-  );
-};
 
 export default FigmaLandingTablet;
