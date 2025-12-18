@@ -39,7 +39,7 @@ const deepOlive = "#394508";
 
 const MobileLanding: React.FC = () => {
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center">
+    <div className="min-h-screen bg-black flex flex-col items-center gap-[16px] pb-[20px]">
       {/* Header / Sidebar container */}
       <header className="w-full max-w-[388px] bg-black text-white flex flex-col gap-[20px] px-[20px] pt-[20px] pb-[30px]">
         <nav className="flex items-start justify-between w-full">
@@ -96,15 +96,15 @@ const MobileLanding: React.FC = () => {
       {/* Main content */}
       <main className="w-full max-w-[388px] flex flex-col">
         <a href="https://ccc-010.com" className="flex flex-col items-center bg-white px-[20px] pt-0 pb-[7px]">
-          <div className="relative h-[216px] w-[323px] overflow-hidden rounded-[20px]">
+          <div className="relative w-full max-w-[340px] overflow-hidden rounded-[20px]" style={{ aspectRatio: "323/216" }}>
             <img src={assets.headerImage} alt="이벤트 배너" className="absolute inset-0 h-full w-full object-contain" />
           </div>
         </a>
 
-        <section className="bg-white flex flex-col items-center gap-[30px] px-[20px] pt-[17px] pb-[50px]">
-          <h2 className="w-full text-center text-[42px] font-medium tracking-[-0.84px] text-black">진행중인 이벤트</h2>
-          <div className="flex flex-col gap-[20px] w-full">
-            <div className="flex flex-col gap-[19px] w-[335px]">
+        <section className="bg-white flex flex-col items-center gap-[24px] px-[20px] pt-[17px] pb-[40px]">
+          <h2 className="w-full text-center text-[32px] font-medium tracking-[-0.64px] text-black">진행중인 이벤트</h2>
+          <div className="flex flex-col gap-[20px] w-full items-center">
+            <div className="flex flex-col gap-[19px] w-full max-w-[335px]">
               <div className="relative w-full overflow-hidden rounded-[10px]" style={{ aspectRatio: "285/221" }}>
                 <img src={assets.benefitImage} alt="매일 터지는 룰렛 경품추첨" className="absolute inset-0 h-full w-full object-cover" />
               </div>
@@ -114,7 +114,7 @@ const MobileLanding: React.FC = () => {
         </section>
 
         <section className="bg-white flex flex-col items-center gap-[20px] px-[20px] pt-[18px] pb-[29px]">
-          <h2 className="text-[42px] font-medium tracking-[-0.84px] text-center" style={{ color: deepOlive }}>
+          <h2 className="text-[32px] font-medium tracking-[-0.64px] text-center" style={{ color: deepOlive }}>
             지민이벤트 이용하는 법
           </h2>
           <div className="flex flex-wrap justify-center gap-[20px] w-full">
@@ -123,7 +123,7 @@ const MobileLanding: React.FC = () => {
                 <div className="relative w-full overflow-hidden rounded-[10px]" style={{ aspectRatio: "335/250" }}>
                   <img src={item.icon} alt={item.title} className="absolute inset-0 h-full w-full object-cover" />
                 </div>
-                <p className="text-[20px] font-medium leading-[1.15] text-center text-black whitespace-pre-wrap">{item.title}</p>
+                <p className="text-[18px] font-medium leading-[1.15] text-center text-black whitespace-pre-wrap">{item.title}</p>
               </div>
             ))}
           </div>

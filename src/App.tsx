@@ -11,6 +11,8 @@ const App: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
+  const isLandingRoute = ["/", "/tablet", "/mobile"].includes(location.pathname);
+
   const navItems = useMemo(
     () => [
       { label: "홈", path: "/" },
@@ -25,6 +27,16 @@ const App: React.FC = () => {
   const shellClass = isAdminRoute
     ? "mx-auto flex min-h-screen w-full max-w-7xl px-4 sm:px-6 lg:px-10 py-8"
     : "mx-auto flex min-h-screen max-w-5xl px-4 py-8";
+
+  if (isLandingRoute) {
+    return (
+      <ErrorBoundary>
+        <div className="min-h-screen bg-black text-white">
+          <AppRouter />
+        </div>
+      </ErrorBoundary>
+    );
+  }
 
   return (
     <ErrorBoundary>

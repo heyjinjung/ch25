@@ -64,7 +64,7 @@ const deepOlive = "#394508";
 
 const Sidebar: React.FC = () => {
   return (
-    <aside className="flex w-[491px] flex-col gap-[49px] px-0 py-[30px] text-white" style={{ position: "absolute", left: 15, top: 0 }}>
+    <aside className="flex w-full max-w-[491px] flex-col gap-[49px] px-4 py-[30px] text-white lg:px-0">
       <nav className="flex items-start justify-between w-full">
         <div className="flex items-center gap-5 w-[184px]" aria-label="Company logo">
           <div className="relative h-[27px] w-[26px] overflow-hidden rounded-[18px]" style={{ backgroundColor: baseAccent }}>
@@ -89,11 +89,11 @@ const Sidebar: React.FC = () => {
         <h2 className="text-[16px] font-normal leading-[1.09] text-[#cbcbcb]">No personal cre핵심 캐치문구</h2>
       </div>
 
-      <div className="flex flex-col gap-5 w-[498px]">
+      <div className="flex flex-col gap-5 w-full max-w-[498px]">
         <h3 className="text-[20px] font-medium text-[20px]" style={{ color: baseAccent }}>
           게임 바로가기
         </h3>
-        <div className="flex gap-[10px] w-[488px]">
+        <div className="flex gap-[10px] w-full max-w-[488px]">
           {gameTiles.map((tile) => (
             <button key={tile.title} className="flex-1 h-[120px] rounded-[4px] bg-[#d2fd9c] px-[10px] py-[20px] flex flex-col items-center gap-[14px]">
               <div className="relative h-[30px] w-[30px]">
@@ -117,25 +117,33 @@ const Sidebar: React.FC = () => {
 };
 
 const Events: React.FC = () => (
-  <section className="bg-white flex flex-col items-center px-[40px] py-[50px] w-full h-[414px]">
-    <a href="https://ccc-010.com" className="relative block h-[348px] w-[624px] overflow-hidden rounded-[20px]">
+  <section className="bg-white flex flex-col items-center px-[20px] py-[30px] w-full lg:px-[40px] lg:py-[50px]">
+    <a
+      href="https://ccc-010.com"
+      className="relative block w-full max-w-[624px] overflow-hidden rounded-[20px]"
+      style={{ aspectRatio: "624/348" }}
+    >
       <img src={assets.headerImage} alt="이벤트 배너" className="absolute inset-0 h-full w-full object-contain" />
     </a>
   </section>
 );
 
 const OngoingEvents: React.FC = () => (
-  <section className="bg-white flex flex-col items-center gap-[30px] w-full h-[499px] px-[40px] py-[40px]">
-    <h2 className="text-[42px] font-medium tracking-[-0.84px]" style={{ color: "#394508" }}>
+  <section className="bg-white flex flex-col items-center gap-[30px] w-full px-[20px] py-[40px] lg:px-[40px]">
+    <h2 className="text-[32px] lg:text-[42px] font-medium tracking-[-0.84px]" style={{ color: "#394508" }}>
       진행중인 이벤트
     </h2>
-    <div className="flex w-full gap-[20px]">
+    <div className="flex w-full flex-col gap-[20px] md:flex-row md:flex-wrap md:justify-center">
       {[1, 2].map((key) => (
-        <a key={key} href="https://figma.com/sites" className="flex w-[330px] flex-col gap-[19px]">
+        <a
+          key={key}
+          href="https://figma.com/sites"
+          className="flex w-full md:w-[330px] flex-col gap-[19px]"
+        >
           <div className="relative w-full overflow-hidden rounded-[10px]" style={{ aspectRatio: "285/221.8667" }}>
             <img src={assets.benefitImage} alt="Benefit" className="absolute inset-0 h-full w-full object-cover" />
           </div>
-          <p className="text-[20px] font-medium leading-[1.15] text-left" style={{ color: deepOlive }}>
+          <p className="text-[18px] lg:text-[20px] font-medium leading-[1.15] text-left" style={{ color: deepOlive }}>
             {key === 1 ? "매일 터지는 룰렛 경품추첨" : "크리스마스 경품이벤트"}
           </p>
         </a>
@@ -145,17 +153,17 @@ const OngoingEvents: React.FC = () => (
 );
 
 const HowToUse: React.FC = () => (
-  <section className="bg-white flex flex-col items-center gap-[30px] w-full h-[337px] px-[40px] pt-[48px] pb-[80px]">
-    <h2 className="text-[42px] font-medium tracking-[-0.84px] text-center" style={{ color: deepOlive }}>
+  <section className="bg-white flex flex-col items-center gap-[30px] w-full px-[20px] pt-[48px] pb-[60px] lg:px-[40px]">
+    <h2 className="text-[32px] lg:text-[42px] font-medium tracking-[-0.84px] text-center" style={{ color: deepOlive }}>
       지민이벤트 이용하는 법
     </h2>
-    <div className="flex w-full gap-[40px] items-center">
+    <div className="grid w-full gap-[20px] sm:grid-cols-2 lg:grid-cols-4 lg:gap-[40px]">
       {howToIcons.map((item) => (
-        <div key={item.title} className="flex flex-1 flex-col items-center gap-[15px]">
+        <div key={item.title} className="flex flex-col items-center gap-[15px]">
           <div className="relative w-full overflow-hidden rounded-[10px]" style={{ aspectRatio: "140.75/115.75" }}>
             <img src={item.icon} alt={item.title} className="absolute inset-0 h-full w-full object-cover" />
           </div>
-          <p className="text-[20px] font-medium leading-[1.15] text-center text-black">{item.title}</p>
+          <p className="text-[18px] lg:text-[20px] font-medium leading-[1.15] text-center text-black">{item.title}</p>
         </div>
       ))}
     </div>
@@ -163,14 +171,14 @@ const HowToUse: React.FC = () => (
 );
 
 const BentoGrid: React.FC = () => (
-  <section className="bg-white flex flex-col items-center justify-center gap-[30px] w-full h-[622px] px-[40px] py-[80px]">
+  <section className="bg-white flex flex-col items-center justify-center gap-[30px] w-full px-[20px] py-[60px] lg:px-[40px] lg:py-[80px]">
     <div className="text-center">
-      <h2 className="text-[42px] font-medium tracking-[-0.84px]" style={{ color: deepOlive }}>
+      <h2 className="text-[32px] lg:text-[42px] font-medium tracking-[-0.84px]" style={{ color: deepOlive }}>
         지민이와 함께하는 씨씨카지노
       </h2>
     </div>
     <div className="flex flex-col gap-[20px] items-center w-full">
-      <div className="flex gap-[20px] w-[612px] justify-center">
+      <div className="grid w-full max-w-[900px] gap-[20px] sm:grid-cols-2">
         {bento.slice(0, 2).map((item) => (
           <div
             key={item.title}
@@ -179,20 +187,18 @@ const BentoGrid: React.FC = () => (
           >
             <div className="flex flex-col items-center gap-[30px] text-center text-[#394508] w-full">
               {item.icon ? (
-                <div className="relative" style={{ height: item.title === "Efficiency Increase Per Transfer" ? 98.459 : undefined, width: item.title === "Efficiency Increase Per Transfer" ? 142.264 : undefined }}>
+                <div className="relative" style={{ height: 98.459, width: 142.264 }}>
                   <img src={item.icon} alt={item.title} className="h-full w-full object-contain" />
                 </div>
               ) : (
-                <p className="text-[90px] leading-[1.04] tracking-[-3.6px]">{item.title}</p>
+                <p className="text-[72px] lg:text-[90px] leading-[1.04] tracking-[-3.6px]">{item.title}</p>
               )}
-              <p className="text-[16px] leading-[1.09]">
-                {item.description || item.title}
-              </p>
+              <p className="text-[16px] leading-[1.09]">{item.description || item.title}</p>
             </div>
           </div>
         ))}
       </div>
-      <div className="flex gap-[20px] w-[600px] justify-center">
+      <div className="grid w-full max-w-[900px] gap-[20px] sm:grid-cols-2">
         {bento.slice(2).map((item) => (
           <div
             key={item.title}
@@ -235,9 +241,9 @@ const Footer: React.FC = () => (
 
 const FigmaLanding: React.FC = () => {
   return (
-    <div className="min-h-screen bg-black flex justify-center relative">
+    <div className="min-h-screen bg-black flex flex-col items-center lg:flex-row lg:items-start lg:justify-center gap-8 px-4 py-8 lg:px-8">
       <Sidebar />
-      <main className="relative flex flex-col gap-[0px]" style={{ width: 760, marginLeft: 520 }}>
+      <main className="relative flex w-full max-w-[760px] flex-col gap-[0px]">
         <Events />
         <OngoingEvents />
         <HowToUse />
