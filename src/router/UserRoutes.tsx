@@ -12,6 +12,9 @@ import SurveyRunnerPage from "../pages/SurveyRunnerPage";
 import LoginPage from "../pages/LoginPage";
 import TeamBattlePage from "../pages/TeamBattlePage";
 import NewMemberDicePage from "../pages/NewMemberDicePage";
+import FigmaLanding from "../pages/FigmaLanding";
+import FigmaLandingTablet from "../pages/FigmaLandingTablet";
+import FigmaLandingMobile from "../pages/FigmaLandingMobile";
 import UserLayout from "../components/layout/UserLayout";
 import RequireAuth from "../components/routing/RequireAuth";
 
@@ -19,6 +22,10 @@ const UserRoutes: React.FC = () => {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      {/* Public landing pages */}
+      <Route path="/" element={<FigmaLanding />} />
+      <Route path="/tablet" element={<FigmaLandingTablet />} />
+      <Route path="/mobile" element={<FigmaLandingMobile />} />
       <Route element={<UserLayout />}>
         <Route element={<RequireAuth />}>
           <Route path="/home" element={<HomePage />} />
@@ -31,7 +38,7 @@ const UserRoutes: React.FC = () => {
           <Route path="/surveys/:surveyId" element={<SurveyRunnerPage />} />
           <Route path="/team-battle" element={<TeamBattlePage />} />
           <Route path="/new-member/dice" element={<NewMemberDicePage />} />
-          <Route path="/" element={<Navigate to="/home" replace />} />
+          <Route path="/app" element={<Navigate to="/home" replace />} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/login" replace />} />
