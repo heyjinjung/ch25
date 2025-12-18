@@ -219,7 +219,7 @@ const HomePage: React.FC = () => {
       )}
 
       {/* Hero */}
-      <div className="rounded-3xl border border-emerald-500/25 bg-gradient-to-br from-white/10 via-white/5 to-emerald-500/10 backdrop-blur-2xl p-7 shadow-2xl">
+      <div className="rounded-3xl border border-emerald-500/25 bg-gradient-to-br from-white/10 via-white/5 to-emerald-500/10 backdrop-blur-2xl p-6 shadow-2xl">
         <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <div className="space-y-3">
             <p className="text-xs uppercase tracking-[0.28em] text-emerald-300">Christmas Event</p>
@@ -282,7 +282,7 @@ const HomePage: React.FC = () => {
       </div>
 
       {/* Team battle (compact) */}
-      <div className="rounded-3xl border border-amber-500/25 bg-gradient-to-br from-white/10 via-white/5 to-amber-500/10 backdrop-blur-2xl p-7 shadow-2xl">
+      <div className="rounded-3xl border border-amber-500/25 bg-gradient-to-br from-white/10 via-white/5 to-amber-500/10 backdrop-blur-2xl p-6 shadow-2xl">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-1">
             <p className="text-xs uppercase tracking-[0.28em] text-amber-200">Team Battle</p>
@@ -339,7 +339,7 @@ const HomePage: React.FC = () => {
       </div>
 
       {/* Ranking (compact) */}
-      <div className="rounded-3xl border border-gold-500/25 bg-gradient-to-br from-white/10 via-white/5 to-amber-500/10 backdrop-blur-2xl p-7 shadow-2xl">
+      <div className="rounded-3xl border border-gold-500/25 bg-gradient-to-br from-white/10 via-white/5 to-amber-500/10 backdrop-blur-2xl p-6 shadow-2xl">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.28em] text-amber-200">Ranking</p>

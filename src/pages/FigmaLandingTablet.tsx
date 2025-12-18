@@ -140,7 +140,7 @@ const Sidebar: React.FC = () => {
 const Events: React.FC = () => (
   <a
     href="https://ccc-010.com"
-    className="bg-white flex flex-col items-center pt-[30px] pb-0 px-[20px] w-full lg:px-[40px] lg:pt-[50px]"
+    className="bg-white flex flex-col items-center pt-[20px] pb-0 px-[20px] w-full lg:px-[40px] lg:pt-[20px]"
   >
     <div className="relative w-full max-w-[740px] overflow-hidden rounded-[20px]" style={{ aspectRatio: "740/392" }}>
       <img src={assets.headerImage} alt="이벤트 배너" className="absolute inset-0 h-full w-full object-contain" />
@@ -149,7 +149,7 @@ const Events: React.FC = () => (
 );
 
 const OngoingEvents: React.FC = () => (
-  <section className="bg-white flex flex-col items-center gap-[30px] w-full px-[20px] pt-[27px] pb-[10px] lg:px-[40px]">
+  <section className="bg-white flex flex-col items-center gap-[30px] w-full px-[20px] pt-[27px] pb-[20px] lg:px-[40px]">
     <h2 className="text-[32px] lg:text-[42px] font-medium tracking-[-0.84px]" style={{ color: deepOlive }}>
       진행중인 이벤트
     </h2>
@@ -169,7 +169,7 @@ const OngoingEvents: React.FC = () => (
 );
 
 const HowToUse: React.FC = () => (
-  <section className="bg-white flex flex-col items-center gap-[30px] w-full px-[20px] pt-[40px] pb-[20px] lg:px-[40px] lg:pt-[48px]">
+  <section className="bg-white flex flex-col items-center gap-[30px] w-full px-[20px] pt-[20px] pb-[20px] lg:px-[40px] lg:pt-[20px]">
     <h2 className="text-[32px] lg:text-[42px] font-medium tracking-[-0.84px] text-center" style={{ color: deepOlive }}>
       지민이벤트 이용하는 법
     </h2>
@@ -187,7 +187,7 @@ const HowToUse: React.FC = () => (
 );
 
 const BentoGrid: React.FC = () => (
-  <section className="bg-white flex flex-col items-center justify-center gap-[30px] w-full px-[20px] pt-[40px] pb-[30px] lg:px-[40px] lg:pt-[50px]">
+  <section className="bg-white flex flex-col items-center justify-center gap-[30px] w-full px-[20px] pt-[20px] pb-[30px] lg:px-[40px] lg:pt-[20px]">
     <div className="text-center w-full max-w-[500px]">
       <h2 className="text-[32px] lg:text-[42px] font-medium tracking-[-0.84px]" style={{ color: deepOlive }}>
         지민이와 함께하는 씨씨카지노
@@ -257,7 +257,7 @@ const BentoGrid: React.FC = () => (
 );
 
 const Footer: React.FC = () => (
-  <footer className="w-full max-w-[800px] bg-[#394508] px-[20px] py-[31px] text-[#d2fd9c] lg:px-[40px]">
+  <footer className="w-full max-w-[800px] bg-[#394508] px-[20px] py-[30px] text-[#d2fd9c] lg:px-[40px]">
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-[12px]">
         <p className="text-[20px] font-medium leading-[1.15]">Contact</p>
@@ -277,7 +277,7 @@ const Footer: React.FC = () => (
 
 const FigmaLandingTablet: React.FC = () => {
   return (
-    <div className="min-h-screen bg-black flex flex-col items-center gap-8 px-[20px] py-[20px] lg:px-[32px] lg:py-[32px]">
+    <div className="min-h-screen bg-black flex flex-col items-center gap-8 px-[20px] py-[20px] lg:px-[32px] lg:py-[30px]">
       <Sidebar />
       <main className="w-full flex flex-col items-center">
         <Events />

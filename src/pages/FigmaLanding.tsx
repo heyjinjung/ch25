@@ -140,7 +140,7 @@ const Sidebar: React.FC = () => {
 };
 
 const Events: React.FC = () => (
-  <section className="bg-white flex flex-col items-center px-[20px] py-[30px] w-full lg:px-[40px] lg:py-[50px]">
+  <section className="bg-white flex flex-col items-center px-[40px] py-[20px] w-full">
     <a
       href="https://ccc-010.com"
       className="relative block w-full max-w-[624px] overflow-hidden rounded-[20px]"
@@ -152,7 +152,7 @@ const Events: React.FC = () => (
 );
 
 const OngoingEvents: React.FC = () => (
-  <section className="bg-white flex flex-col items-center gap-[30px] w-full px-[20px] py-[40px] lg:px-[40px]">
+  <section className="bg-white flex flex-col items-center gap-[30px] w-full px-[40px] py-[20px]">
     <h2 className="text-[32px] lg:text-[42px] font-medium tracking-[-0.84px]" style={{ color: "#394508" }}>
       진행중인 이벤트
     </h2>
@@ -176,7 +176,7 @@ const OngoingEvents: React.FC = () => (
 );
 
 const HowToUse: React.FC = () => (
-  <section className="bg-white flex flex-col items-center gap-[30px] w-full px-[20px] pt-[48px] pb-[60px] lg:px-[40px]">
+  <section className="bg-white flex flex-col items-center gap-[30px] w-full px-[20px] pt-[20px] pb-[20px] lg:px-[40px]">
     <h2 className="text-[32px] lg:text-[42px] font-medium tracking-[-0.84px] text-center" style={{ color: deepOlive }}>
       지민이벤트 이용하는 법
     </h2>
@@ -194,7 +194,7 @@ const HowToUse: React.FC = () => (
 );
 
 const BentoGrid: React.FC = () => (
-  <section className="bg-white flex flex-col items-center justify-center gap-[30px] w-full px-[20px] py-[60px] lg:px-[40px] lg:py-[80px]">
+  <section className="bg-white flex flex-col items-center justify-center gap-[30px] w-full px-[20px] py-[20px] lg:px-[40px]">
     <div className="text-center">
       <h2 className="text-[32px] lg:text-[42px] font-medium tracking-[-0.84px]" style={{ color: deepOlive }}>
         지민이와 함께하는 씨씨카지노
@@ -262,7 +262,7 @@ const BentoGrid: React.FC = () => (
 );
 
 const Footer: React.FC = () => (
-  <footer className="w-full bg-[#394508] px-[40px] py-[31px] text-[#d2fd9c]">
+  <footer className="w-full bg-[#394508] px-[40px] py-[30px] text-[#d2fd9c]">
     <div className="flex flex-col gap-6 w-[300px]">
       <div className="flex flex-col gap-[12px]">
         <p className="text-[20px] font-medium leading-[1.15]">Contact</p>
@@ -282,7 +282,7 @@ const Footer: React.FC = () => (
 
 const FigmaLanding: React.FC = () => {
   return (
-    <div className="min-h-screen bg-black flex flex-col items-center lg:flex-row lg:items-start lg:justify-center gap-8 px-4 py-8 lg:px-8">
+    <div className="min-h-screen bg-black flex flex-col items-center lg:flex-row lg:items-start lg:justify-center gap-8 px-4 py-7 lg:px-8">
       <Sidebar />
       <main className="relative flex w-full max-w-[760px] flex-col gap-[0px]">
         <Events />

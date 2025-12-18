@@ -22,10 +22,17 @@ const UserRoutes: React.FC = () => {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
-      {/* Public landing pages */}
-      <Route path="/" element={<FigmaLanding />} />
-      <Route path="/tablet" element={<FigmaLandingTablet />} />
-      <Route path="/mobile" element={<FigmaLandingMobile />} />
+      {/* Login-first flow */}
+      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="/tablet" element={<Navigate to="/login" replace />} />
+      <Route path="/mobile" element={<Navigate to="/login" replace />} />
+
+      {/* Figma landing pages (authenticated) */}
+      <Route element={<RequireAuth />}>
+        <Route path="/landing" element={<FigmaLanding />} />
+        <Route path="/landing/tablet" element={<FigmaLandingTablet />} />
+        <Route path="/landing/mobile" element={<FigmaLandingMobile />} />
+      </Route>
       <Route element={<UserLayout />}>
         <Route element={<RequireAuth />}>
           <Route path="/home" element={<HomePage />} />

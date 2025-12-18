@@ -108,13 +108,13 @@ const MobileLanding: React.FC = () => {
 
       {/* Main content */}
       <main className="w-full max-w-[388px] flex flex-col">
-        <a href="https://ccc-010.com" className="flex flex-col items-center bg-white px-[20px] pt-0 pb-[7px]">
+        <a href="https://ccc-010.com" className="flex flex-col items-center bg-white px-[20px] py-[20px]">
           <div className="relative w-full max-w-[340px] overflow-hidden rounded-[20px]" style={{ aspectRatio: "323/216" }}>
             <img src={assets.headerImage} alt="이벤트 배너" className="absolute inset-0 h-full w-full object-contain" />
           </div>
         </a>
 
-        <section className="bg-white flex flex-col items-center gap-[24px] px-[20px] pt-[17px] pb-[40px]">
+        <section className="bg-white flex flex-col items-center gap-[24px] px-[20px] py-[20px]">
           <h2 className="w-full text-center text-[32px] font-medium tracking-[-0.64px] text-black">진행중인 이벤트</h2>
           <div className="flex flex-col gap-[20px] w-full items-center">
             <div className="flex flex-col gap-[19px] w-full max-w-[335px]">
@@ -126,7 +126,7 @@ const MobileLanding: React.FC = () => {
           </div>
         </section>
 
-        <section className="bg-white flex flex-col items-center gap-[20px] px-[20px] pt-[18px] pb-[29px]">
+        <section className="bg-white flex flex-col items-center gap-[20px] px-[20px] pt-[20px] pb-[29px]">
           <h2 className="text-[32px] font-medium tracking-[-0.64px] text-center" style={{ color: deepOlive }}>
             지민이벤트 이용하는 법
           </h2>
@@ -143,7 +143,7 @@ const MobileLanding: React.FC = () => {
         </section>
       </main>
 
-      <footer className="w-full max-w-[375px] bg-[#394508] px-[20px] py-[31px] text-[#d2fd9c]">
+      <footer className="w-full max-w-[375px] bg-[#394508] px-[20px] py-[30px] text-[#d2fd9c]">
         <div className="flex flex-col gap-6">
           <div className="flex flex-col gap-[12px]">
             <p className="text-[20px] font-medium leading-[1.15]">Contact</p>
