@@ -31,7 +31,7 @@ const App: React.FC = () => {
   if (isLandingRoute) {
     return (
       <ErrorBoundary>
-        <div className="min-h-screen bg-black text-white">
+        <div className="landing-font min-h-screen bg-black text-white">
           <AppRouter />
         </div>
       </ErrorBoundary>

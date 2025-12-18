@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 // Mobile-specific assets stored under public/assets/figma
 const assets = {
@@ -18,16 +19,16 @@ const assets = {
 };
 
 const navLinks = [
-  { label: "CC 카지노", href: "https://figma.com/sites" },
-  { label: "레벨확인", href: "https://figma.com/sites" },
-  { label: "팀배틀", href: "https://figma.com/sites" },
-  { label: "내 금고", href: "https://figma.com/sites" },
+  { label: "CC 카지노", to: "/home" },
+  { label: "레벨확인", to: "/season-pass" },
+  { label: "팀배틀", to: "/team-battle" },
+  { label: "내 금고", to: "/home" },
 ];
 
 const gameTiles = [
-  { title: "레벨 주사위", icon: assets.levelSvg, fallback: assets.iconLevel },
-  { title: "복권 랜덤뽑기", icon: assets.lotterySvg, fallback: assets.iconLottery },
-  { title: "룰렛 경품뽑기", icon: assets.rouletteSvg, fallback: assets.iconRoulette },
+  { title: "레벨 주사위", to: "/dice", icon: assets.levelSvg, fallback: assets.iconLevel },
+  { title: "복권 랜덤뽑기", to: "/lottery", icon: assets.lotterySvg, fallback: assets.iconLottery },
+  { title: "룰렛 경품뽑기", to: "/roulette", icon: assets.rouletteSvg, fallback: assets.iconRoulette },
 ];
 
 const howToIcons = [
@@ -74,8 +75,9 @@ const MobileLanding: React.FC = () => {
           </h3>
           <div className="flex flex-wrap gap-[10px] w-full">
             {gameTiles.map((tile) => (
-              <button
+              <Link
                 key={tile.title}
+                to={tile.to}
                 className="flex-1 min-w-[110px] h-[120px] rounded-[4px] bg-[#d2fd9c] px-[10px] py-[20px] flex flex-col items-center gap-[14px]"
               >
                 <div className="relative h-[30px] w-[30px]">
@@ -84,23 +86,22 @@ const MobileLanding: React.FC = () => {
                     alt={tile.title}
                     className="absolute inset-0 h-full w-full object-contain"
                     onError={(e) => {
-                      if (!("fallback" in tile) || !tile.fallback) return;
                       e.currentTarget.onerror = null;
                       e.currentTarget.src = tile.fallback;
                     }}
                   />
                 </div>
                 <p className="text-[20px] font-medium leading-[1.15] text-black text-center whitespace-pre-wrap">{tile.title}</p>
-              </button>
+              </Link>
             ))}
           </div>
         </div>
 
         <div className="flex flex-wrap items-center justify-start gap-[12.8px] text-[20px] font-medium" style={{ color: baseAccent }}>
           {navLinks.map((item) => (
-            <a key={item.label} href={item.href} className="leading-[1.15]">
+            <Link key={item.label} to={item.to} className="leading-[1.15]">
               {item.label}
-            </a>
+            </Link>
           ))}
         </div>
       </header>
