@@ -131,9 +131,9 @@ export const SeasonPassRewardsAndTasks: React.FC = () => {
         <div className="w-full lg:w-3/5">
           <PanelShell title="레벨 보상">
             {season.isLoading ? (
-              <p className="text-[12px] text-white/60">불러오는 중...</p>
+              <p className="text-[clamp(13px,2.8vw,14px)] text-white/65">불러오는 중...</p>
             ) : season.isError ? (
-              <p className="text-[12px] text-white/60">보상 정보를 불러오지 못했습니다.</p>
+              <p className="text-[clamp(13px,2.8vw,14px)] text-white/65">보상 정보를 불러오지 못했습니다.</p>
             ) : (
               <div className="flex flex-col gap-3">
                 {rewards.map((reward) => {
@@ -163,21 +163,21 @@ export const SeasonPassRewardsAndTasks: React.FC = () => {
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
-                            <p className={`text-[14px] font-semibold ${labelTone}`}>레벨 {reward.level}</p>
+                            <p className={`text-[clamp(14px,2.8vw,16px)] font-semibold ${labelTone}`}>레벨 {reward.level}</p>
                             {reward.isCurrent && (
-                              <span className="rounded-full bg-[#d2fd9c] px-2 py-0.5 text-[11px] font-bold text-black">
+                              <span className="rounded-full bg-[#d2fd9c] px-2 py-0.5 text-[clamp(11px,2.6vw,12px)] font-bold text-black">
                                 현재
                               </span>
                             )}
                             {!reward.isUnlocked && (
-                              <span className="rounded-full border border-white/10 bg-black/30 px-2 py-0.5 text-[11px] text-white/60">
+                              <span className="rounded-full border border-white/10 bg-black/30 px-2 py-0.5 text-[clamp(11px,2.6vw,12px)] text-white/65">
                                 잠금
                               </span>
                             )}
                             {reward.auto_claim && (
                               <button
                                 type="button"
-                                className="rounded-full border border-white/10 bg-black/30 px-2 py-0.5 text-[11px] text-white/70 hover:border-white/20"
+                                className="rounded-full border border-white/10 bg-black/30 px-2 py-0.5 text-[clamp(11px,2.6vw,12px)] text-white/75 hover:border-white/20"
                                 onClick={() => {
                                   addToast(
                                     "자동지급 보상입니다. 레벨 달성 후 자동 반영돼요. 지금은 룰렛/주사위/복권으로 XP를 더 모아보세요.",
@@ -189,25 +189,25 @@ export const SeasonPassRewardsAndTasks: React.FC = () => {
                               </button>
                             )}
                           </div>
-                          <p className="mt-2 truncate text-[13px] text-white/85">{reward.reward_label}</p>
+                          <p className="mt-2 truncate text-[clamp(14px,2.7vw,15px)] text-white/88">{reward.reward_label}</p>
                         </div>
 
                         <div className="shrink-0 text-right">
-                          <p className="text-[12px] text-white/60">필요 XP</p>
-                          <p className="text-[12px] font-semibold text-white/80">{reward.required_xp.toLocaleString()}</p>
+                          <p className="text-[clamp(13px,2.6vw,14px)] text-white/65">필요 XP</p>
+                          <p className="text-[clamp(13px,2.6vw,14px)] font-semibold text-white/85">{reward.required_xp.toLocaleString()}</p>
                         </div>
                       </div>
 
                       <div className="mt-3 flex items-center justify-between gap-3">
                         <div className="flex items-center gap-2">
                           {reward.is_claimed ? (
-                            <span className="text-[12px] font-semibold" style={{ color: baseAccent }}>
+                            <span className="text-[clamp(13px,2.6vw,14px)] font-semibold" style={{ color: baseAccent }}>
                               지급완료
                             </span>
                           ) : reward.isUnlocked ? (
-                            <span className="text-[12px] text-white/70">획득 가능</span>
+                            <span className="text-[clamp(13px,2.6vw,14px)] text-white/75">획득 가능</span>
                           ) : (
-                            <span className="text-[12px] text-white/50">잠금</span>
+                            <span className="text-[clamp(13px,2.6vw,14px)] text-white/55">잠금</span>
                           )}
                         </div>
 
@@ -216,7 +216,7 @@ export const SeasonPassRewardsAndTasks: React.FC = () => {
                             type="button"
                             disabled={isPending}
                             className={
-                              "rounded-[10px] px-3 py-2 text-[12px] font-semibold " +
+                              "rounded-[10px] px-3 py-2 text-[clamp(13px,2.6vw,14px)] font-semibold " +
                               (isPending
                                 ? "cursor-not-allowed bg-white/10 text-white/50"
                                 : "bg-[#d2fd9c] text-black hover:brightness-95")
@@ -253,12 +253,12 @@ export const SeasonPassRewardsAndTasks: React.FC = () => {
                 <div key={task.title} className="rounded-[14px] border border-white/10 bg-black/35 p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="text-[14px] font-semibold" style={{ color: baseAccent }}>
+                      <p className="text-[clamp(14px,2.8vw,16px)] font-semibold" style={{ color: baseAccent }}>
                         {task.title}
                       </p>
-                      <p className="mt-1 text-[12px] text-white/70">{task.description}</p>
+                      <p className="mt-1 text-[clamp(13px,2.6vw,14px)] text-white/75">{task.description}</p>
                     </div>
-                    <p className="shrink-0 text-[12px] text-white/70">{task.status}</p>
+                    <p className="shrink-0 text-[clamp(13px,2.6vw,14px)] text-white/75">{task.status}</p>
                   </div>
 
                   {typeof task.progressPct === "number" && (
