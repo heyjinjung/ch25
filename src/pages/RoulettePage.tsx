@@ -234,12 +234,15 @@ const RoulettePage: React.FC = () => {
     return (
       <div className="space-y-6 sm:space-y-8">
         {!isSpinning && rewardToast && (
-          <div className="fixed bottom-6 right-6 z-30 rounded-2xl border border-white/15 bg-black/80 px-4 py-3 text-white shadow-lg backdrop-blur animate-bounce-in">
-            <span className="font-bold text-cc-lime">+</span>
-            <span className="ml-1 font-extrabold text-white">
-              <AnimatedNumber value={rewardToast.value} from={0} />
-            </span>
-            <span className="ml-2 text-white/70">{rewardToast.type}</span>
+          <div className="fixed bottom-6 right-6 z-30 overflow-hidden rounded-2xl border border-white/15 bg-black/85 px-4 py-3 text-white shadow-lg backdrop-blur animate-bounce-in">
+            <div className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-cc-lime/80" />
+            <div className="flex items-center gap-2 pl-2">
+              <span className="font-extrabold text-cc-lime">+</span>
+              <span className="text-[clamp(18px,4.6vw,22px)] font-extrabold leading-none text-white">
+                <AnimatedNumber value={rewardToast.value} from={0} />
+              </span>
+              <span className="text-[clamp(12px,2.6vw,13px)] font-semibold text-white/70">{rewardToast.type}</span>
+            </div>
           </div>
         )}
 
@@ -263,24 +266,29 @@ const RoulettePage: React.FC = () => {
             )}
           </div>
 
-          <div className="space-y-4 rounded-3xl border border-white/10 bg-black/35 p-4 shadow-lg sm:p-6">
+          <div className="relative space-y-4 overflow-hidden rounded-3xl border border-white/10 bg-black/35 p-4 shadow-lg sm:p-6">
+            <div className="pointer-events-none absolute -right-12 -top-16 h-40 w-40 rounded-full bg-cc-lime/8 blur-3xl" />
+            <div className="pointer-events-none absolute inset-y-0 left-0 w-[2px] bg-gradient-to-b from-cc-lime/70 via-white/10 to-transparent" />
+
             <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-full border border-white/10 bg-black/40 px-3 py-1 text-[clamp(12px,2.4vw,13px)] font-bold text-white/90">
+              <span className="rounded-full border border-white/10 bg-black/45 px-3 py-1 text-[clamp(12px,2.4vw,13px)] font-extrabold text-white/90">
                 {remainingLabel}
               </span>
-              <span className="rounded-full border border-white/10 bg-black/40 px-3 py-1 text-[clamp(12px,2.4vw,13px)] font-bold text-white/70">
+              <span className="rounded-full border border-white/10 bg-black/45 px-3 py-1 text-[clamp(12px,2.4vw,13px)] font-bold text-white/70">
                 {tokenLabel}
               </span>
             </div>
 
             {playErrorMessage && (
-              <div className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-[clamp(12px,2.6vw,14px)] text-white/80">
-                {playErrorMessage}
+              <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-[clamp(12px,2.6vw,14px)] text-white/80">
+                <div className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-cc-lime/50" />
+                <div className="pl-2">{playErrorMessage}</div>
               </div>
             )}
             {isOutOfTokens && (
-              <div className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-[clamp(12px,2.6vw,14px)] text-white/80">
-                티켓이 부족합니다. 운영자에게 충전을 요청하세요.
+              <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-[clamp(12px,2.6vw,14px)] text-white/80">
+                <div className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-cc-lime/50" />
+                <div className="pl-2">티켓이 부족합니다. 운영자에게 충전을 요청하세요.</div>
               </div>
             )}
             <button
@@ -303,11 +311,12 @@ const RoulettePage: React.FC = () => {
             </button>
 
             {!isSpinning && displayedResult && (
-              <div className="rounded-2xl border border-white/10 bg-black/30 p-5 text-center shadow-lg animate-bounce-in">
+              <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/30 p-5 text-center shadow-lg animate-bounce-in">
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-cc-lime/60 to-transparent" />
                 <p className="text-[clamp(12px,2.6vw,13px)] font-bold uppercase tracking-[0.35em] text-white/60">결과</p>
-                <p className="mt-2 text-[clamp(20px,5vw,26px)] font-extrabold text-white">{displayedResult.segment.label}</p>
+                <p className="mt-2 text-[clamp(20px,5vw,26px)] font-extrabold leading-tight text-white">{displayedResult.segment.label}</p>
                 {displayedResult.reward_type && displayedResult.reward_type !== "NONE" && (
-                  <p className="mt-2 text-[clamp(14px,3.4vw,16px)] font-bold text-cc-lime">
+                  <p className="mt-3 text-[clamp(14px,3.4vw,16px)] font-extrabold text-cc-lime">
                     +<AnimatedNumber value={Number(displayedResult.reward_value ?? 0)} from={0} />
                     <span className="ml-2 text-white/70">{displayedResult.reward_type}</span>
                   </p>
