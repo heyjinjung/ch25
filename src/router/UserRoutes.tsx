@@ -14,6 +14,7 @@ import FigmaLanding from "../pages/FigmaLanding";
 import FigmaLandingTablet from "../pages/FigmaLandingTablet";
 import FigmaLandingMobile from "../pages/FigmaLandingMobile";
 import SeasonPassFigmaPage from "../pages/SeasonPassFigmaPage";
+import GuidePage from "../pages/GuidePage";
 import UserLayout from "../components/layout/UserLayout";
 import SidebarAppLayout from "../components/layout/SidebarAppLayout";
 import RequireAuth from "../components/routing/RequireAuth";
@@ -38,6 +39,7 @@ const UserRoutes: React.FC = () => {
           <Route path="/roulette" element={<RoulettePage />} />
           <Route path="/dice" element={<DicePage />} />
           <Route path="/lottery" element={<LotteryPage />} />
+          <Route path="/guide" element={<GuidePage />} />
         </Route>
       </Route>
       <Route element={<UserLayout />}>

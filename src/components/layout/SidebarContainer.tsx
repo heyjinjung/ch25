@@ -95,14 +95,12 @@ const Logo: React.FC = () => (
 );
 
 const GuideButton: React.FC = () => (
-  <a
-    href="https://figma.com/sites"
-    target="_blank"
-    rel="noreferrer"
-    className="shrink-0 rounded-[2px] bg-[#d2fd9c] px-[14px] py-[11px] text-[10px] tracking-[-0.2px] text-black"
+  <Link
+    to="/guide"
+    className="shrink-0 rounded-[2px] bg-[#d2fd9c] px-[14px] py-[11px] text-[10px] tracking-[-0.2px] text-black hover:bg-[#b8e685]"
   >
     홈페이지 가이드
-  </a>
+  </Link>
 );
 
 const UserBadge: React.FC = () => {
@@ -139,7 +137,11 @@ const DesktopSidebarContent: React.FC = () => {
             <br />
             <span style={{ color: baseAccent }}>포인트서비스</span>
           </h1>
-          <h2 className="text-[16px] font-normal leading-[1.09] text-[#cbcbcb]">No personal cre핵심 캐치문구</h2>
+          <h2 className="text-[16px] font-normal leading-[1.09] text-[#cbcbcb]">
+            개인정보 입력 없이
+            <br />
+            자유롭게 이용하세요
+          </h2>
         </div>
 
         <div className="flex flex-col gap-[20px]">
