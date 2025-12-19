@@ -1,12 +1,10 @@
 // src/router/UserRoutes.tsx
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import HomePage from "../pages/HomePage";
 import RoulettePage from "../pages/RoulettePage";
 import DicePage from "../pages/DicePage";
 import LotteryPage from "../pages/LotteryPage";
 import RankingPage from "../pages/RankingPage";
-import SeasonPassPage from "../pages/SeasonPassPage";
 import SurveyListPage from "../pages/SurveyListPage";
 import SurveyRunnerPage from "../pages/SurveyRunnerPage";
 import LoginPage from "../pages/LoginPage";
@@ -15,6 +13,7 @@ import NewMemberDicePage from "../pages/NewMemberDicePage";
 import FigmaLanding from "../pages/FigmaLanding";
 import FigmaLandingTablet from "../pages/FigmaLandingTablet";
 import FigmaLandingMobile from "../pages/FigmaLandingMobile";
+import SeasonPassFigmaDesktopPage from "../pages/SeasonPassFigmaDesktopPage";
 import UserLayout from "../components/layout/UserLayout";
 import RequireAuth from "../components/routing/RequireAuth";
 
@@ -32,15 +31,15 @@ const UserRoutes: React.FC = () => {
         <Route path="/landing" element={<FigmaLanding />} />
         <Route path="/landing/tablet" element={<FigmaLandingTablet />} />
         <Route path="/landing/mobile" element={<FigmaLandingMobile />} />
+        <Route path="/season-pass" element={<SeasonPassFigmaDesktopPage />} />
       </Route>
       <Route element={<UserLayout />}>
         <Route element={<RequireAuth />}>
-          <Route path="/home" element={<HomePage />} />
+          <Route path="/home" element={<Navigate to="/landing" replace />} />
           <Route path="/roulette" element={<RoulettePage />} />
           <Route path="/dice" element={<DicePage />} />
           <Route path="/lottery" element={<LotteryPage />} />
           <Route path="/ranking" element={<RankingPage />} />
-          <Route path="/season-pass" element={<SeasonPassPage />} />
           <Route path="/surveys" element={<SurveyListPage />} />
           <Route path="/surveys/:surveyId" element={<SurveyRunnerPage />} />
           <Route path="/team-battle" element={<TeamBattlePage />} />

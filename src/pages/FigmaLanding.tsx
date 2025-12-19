@@ -28,7 +28,7 @@ const navLinks = [
   { label: "CC카지노", to: "/landing" },
   { label: "레벨", to: "/season-pass" },
   { label: "팀배틀", to: "/team-battle" },
-  { label: "내금고", to: "/home" },
+  { label: "내금고", to: "/landing" },
 ];
 
 const gameTiles = [
@@ -128,7 +128,10 @@ const Sidebar: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-[12.8px] text-[20px] font-medium" style={{ color: baseAccent }}>
+      <div
+        className="flex w-full flex-wrap items-center justify-center gap-x-[12.8px] gap-y-2 text-[20px] font-medium text-center"
+        style={{ color: baseAccent }}
+      >
         {navLinks.map((item) => (
           <Link key={item.label} to={item.to} className="h-[18px] leading-[1.15]">
             {item.label}
