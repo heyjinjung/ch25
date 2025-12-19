@@ -5,7 +5,6 @@ import AppRouter from "./router/AppRouter";
 import ToastProvider from "./components/common/ToastProvider";
 import ErrorBoundary from "./components/common/ErrorBoundary";
 import ChristmasMusic from "./components/common/ChristmasMusic";
-import Snowfall from "./components/common/Snowfall";
 
 const App: React.FC = () => {
   const location = useLocation();
@@ -16,7 +15,6 @@ const App: React.FC = () => {
   return (
     <ErrorBoundary>
       <div className="min-h-screen">
-        {showDecorations && <Snowfall />}
         {showDecorations && <ChristmasMusic />}
         <ToastProvider>
           <AppRouter />

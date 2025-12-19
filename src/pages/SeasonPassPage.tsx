@@ -159,17 +159,10 @@ const SeasonPassPage: React.FC = () => {
 
   const data = season.data;
   const stampXp = (data as any)?.base_xp_per_stamp ?? 0;
-  const snowPattern = {
-    backgroundImage:
-      "radial-gradient(circle at 10% 20%, rgba(255,255,255,0.05) 1px, transparent 1px)," +
-      "radial-gradient(circle at 80% 10%, rgba(255,255,255,0.06) 1px, transparent 1px)," +
-      "radial-gradient(circle at 30% 70%, rgba(255,255,255,0.05) 1px, transparent 1px)",
-    backgroundSize: "120px 120px, 160px 160px, 140px 140px",
-  } as React.CSSProperties;
 
   return (
     <FeatureGate feature="SEASON_PASS">
-      <section className="space-y-8 rounded-3xl border border-emerald-800/40 bg-slate-950/90 p-6 md:p-8" style={snowPattern}>
+      <section className="space-y-8 rounded-3xl border border-emerald-800/40 bg-slate-950/90 p-6 md:p-8">
         <motion.header
           className="space-y-3 text-center"
           initial={{ opacity: 0, y: 16 }}

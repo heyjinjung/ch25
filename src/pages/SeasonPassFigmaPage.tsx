@@ -81,13 +81,13 @@ const LevelCard: React.FC<{ variant: LevelCardVariant }> = ({ variant }) => {
       className={
         "w-full " +
         sizing.maxW +
-        " rounded-[16px] border border-emerald-200/20 bg-emerald-900/15 text-white backdrop-blur-sm " +
+        " rounded-[16px] border border-black/15 bg-cc-moss text-white backdrop-blur-sm " +
         sizing.pad
       }
       aria-label="내 레벨 카드"
     >
       <header className="flex items-center gap-4">
-        <div className={"relative rounded-full bg-emerald-950/25 " + sizing.avatar}>
+        <div className={"relative rounded-full bg-cc-olive/20 " + sizing.avatar}>
           <div className={"absolute inset-0 flex items-center justify-center font-semibold text-[#d2fd9c] " + sizing.avatarText}>
             {displayName.slice(0, 1)}
           </div>
@@ -108,29 +108,29 @@ const LevelCard: React.FC<{ variant: LevelCardVariant }> = ({ variant }) => {
       </header>
 
       <div className="mt-6">
-        <div className="flex items-center justify-between text-[clamp(13px,2.8vw,14px)] text-[#d2fd9c]">
+        <div className="flex items-center justify-between text-[clamp(13px,2.8vw,14px)] text-white">
           <span>레벨 {derived.currentLevel}</span>
           <span>레벨 {derived.nextLevel}</span>
         </div>
         <div className={`mt-2 w-full rounded-full bg-[#d2fd9c]/20 ${barHeight}`}>
           <div className="h-full rounded-full bg-[#d2fd9c]" style={{ width: `${derived.pct}%` }} />
         </div>
-        <div className="mt-2 flex items-center justify-between text-[clamp(13px,2.8vw,14px)] text-white/85">
-          <span>{derived.currentXp.toLocaleString()} XP</span>
-          <span>다음 레벨까지 {derived.remaining.toLocaleString()} XP 남음</span>
+        <div className="mt-2 flex items-center justify-between text-[clamp(13px,2.8vw,14px)]">
+          <span className="text-white/85">{derived.currentXp.toLocaleString()} XP</span>
+          <span className="text-[#d2fd9c]">다음 레벨까지 {derived.remaining.toLocaleString()} XP 남음</span>
         </div>
       </div>
 
       <div className={"mt-8 flex gap-4 " + (isMobile ? "flex-col" : "flex-row")}>
-        <div className={"rounded-[6px] bg-emerald-950/20 px-5 py-4 text-center " + (isMobile ? "w-full" : "flex-1")}>
+        <div className={"rounded-[6px] border border-black/15 bg-cc-olive/20 px-5 py-4 text-center " + (isMobile ? "w-full" : "flex-1")}>
           <p className={"font-bold text-[#d2fd9c] " + sizing.statNumber}>{derived.totalStamps}</p>
           <p className="mt-1 text-[clamp(13px,2.8vw,14px)] text-white/85">완료한 미션</p>
         </div>
-        <div className={"rounded-[6px] bg-emerald-950/20 px-5 py-4 text-center " + (isMobile ? "w-full" : "flex-1")}>
+        <div className={"rounded-[6px] border border-black/15 bg-cc-olive/20 px-5 py-4 text-center " + (isMobile ? "w-full" : "flex-1")}>
           <p className={"font-bold text-[#d2fd9c] " + sizing.statNumber}>{derived.claimedBadges}</p>
           <p className="mt-1 text-[clamp(13px,2.8vw,14px)] text-white/85">획득한 뱃지</p>
         </div>
-        <div className={"rounded-[6px] bg-emerald-950/20 px-5 py-4 text-center " + (isMobile ? "w-full" : "flex-1")}>
+        <div className={"rounded-[6px] border border-black/15 bg-cc-olive/20 px-5 py-4 text-center " + (isMobile ? "w-full" : "flex-1")}>
           <p className={"font-bold text-[#d2fd9c] " + sizing.statNumber}>{derived.currentXp.toLocaleString()}</p>
           <p className="mt-1 text-[clamp(13px,2.8vw,14px)] text-white/85">총 획득 XP</p>
         </div>
