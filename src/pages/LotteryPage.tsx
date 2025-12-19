@@ -104,7 +104,7 @@ const LotteryPage: React.FC = () => {
 
     if (isError || !data) {
       return (
-        <div className="rounded-3xl border border-white/10 bg-black/35 p-6 text-center">
+        <div className="rounded-3xl border border-white/15 bg-white/5 p-6 text-center backdrop-blur">
           <p className="text-[clamp(16px,3.2vw,20px)] font-bold text-white">{errorMessage || "데이터를 불러올 수 없습니다."}</p>
           <p className="mt-2 text-[clamp(12px,2.6vw,14px)] text-white/60">잠시 후 다시 시도해주세요.</p>
         </div>
@@ -114,31 +114,34 @@ const LotteryPage: React.FC = () => {
     return (
       <div className="space-y-6 sm:space-y-8">
         {rewardToast && (
-          <div className="fixed bottom-6 right-6 z-30 rounded-2xl border border-white/15 bg-black/80 px-4 py-3 text-white shadow-lg backdrop-blur animate-bounce-in">
-            <span className="font-bold text-cc-lime">+</span>
-            <span className="ml-1 font-extrabold text-white">
-              <AnimatedNumber value={rewardToast.value} from={0} />
-            </span>
-            <span className="ml-2 text-white/70">{rewardToast.type}</span>
+          <div className="fixed bottom-6 right-6 z-30 overflow-hidden rounded-2xl border border-white/15 bg-black/75 px-4 py-3 text-white shadow-lg backdrop-blur animate-bounce-in">
+            <div className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-cc-orange/80" />
+            <div className="flex items-center pl-2">
+              <span className="font-extrabold text-cc-lime">+</span>
+              <span className="ml-1 font-extrabold text-white">
+                <AnimatedNumber value={rewardToast.value} from={0} />
+              </span>
+              <span className="ml-2 text-white/70">{rewardToast.type}</span>
+            </div>
           </div>
         )}
 
         <div className="flex flex-wrap items-center justify-center gap-2">
-          <span className="rounded-full border border-white/10 bg-black/40 px-3 py-1 text-[clamp(12px,2.4vw,13px)] font-bold text-white/90">
+          <span className="rounded-full border border-white/15 bg-white/6 px-3 py-1 text-[clamp(12px,2.4vw,13px)] font-bold text-white/90">
             {remainingLabel}
           </span>
-          <span className="rounded-full border border-white/10 bg-black/40 px-3 py-1 text-[clamp(12px,2.4vw,13px)] font-bold text-white/70">
+          <span className="rounded-full border border-white/15 bg-white/6 px-3 py-1 text-[clamp(12px,2.4vw,13px)] font-bold text-white/70">
             {tokenLabel}
           </span>
         </div>
 
         <div className="flex justify-center">
-          <div className="w-full max-w-[520px] rounded-3xl border border-white/10 bg-black/30 p-4 shadow-[0_14px_40px_rgba(0,0,0,0.55)] sm:p-6">
+          <div className="w-full max-w-[520px] rounded-3xl border border-white/15 bg-white/5 p-4 shadow-[0_14px_40px_rgba(0,0,0,0.55)] sm:p-6">
             <LotteryCard prize={revealedPrize ?? undefined} isRevealed={isRevealed} isScratching={isScratching} onScratch={handleScratch} />
           </div>
         </div>
 
-        <div className="rounded-3xl border border-white/10 bg-black/30 p-4 sm:p-6">
+        <div className="rounded-3xl border border-white/15 bg-white/5 p-4 sm:p-6">
           <h3 className="mb-3 text-center text-[clamp(12px,2.4vw,13px)] font-extrabold uppercase tracking-[0.35em] text-white/60">
             당첨 상품 목록
           </h3>
@@ -148,11 +151,11 @@ const LotteryPage: React.FC = () => {
                 key={prize.id}
                 className={`flex items-center gap-3 rounded-2xl border p-3 ${
                   prize.is_active === false
-                    ? "border-white/10 bg-black/25 opacity-50"
-                    : "border-white/10 bg-black/35"
+                    ? "border-white/15 bg-white/4 opacity-50"
+                    : "border-white/15 bg-white/6"
                 }`}
               >
-                <div className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-black/40 text-[clamp(14px,3vw,16px)]">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-white/6 text-[clamp(14px,3vw,16px)]">
                   🎁
                 </div>
                 <div className="min-w-0 flex-1">
@@ -162,7 +165,7 @@ const LotteryPage: React.FC = () => {
                   </p>
                 </div>
                 {prize.stock !== undefined && prize.stock !== null && (
-                  <span className="rounded-full border border-white/10 bg-black/35 px-2 py-0.5 text-[clamp(11px,2.2vw,12px)] text-white/70">
+                  <span className="rounded-full border border-white/15 bg-white/6 px-2 py-0.5 text-[clamp(11px,2.2vw,12px)] text-white/70">
                     {prize.stock}개
                   </span>
                 )}
@@ -176,13 +179,13 @@ const LotteryPage: React.FC = () => {
 
         <div className="space-y-4">
           {playErrorMessage && (
-            <div className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-center text-[clamp(12px,2.6vw,14px)] text-white/80">
+            <div className="rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-center text-[clamp(12px,2.6vw,14px)] text-white/80">
               {playErrorMessage}
             </div>
           )}
 
           {isOutOfTokens && (
-            <div className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-center text-[clamp(12px,2.6vw,14px)] text-white/80">
+            <div className="rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-center text-[clamp(12px,2.6vw,14px)] text-white/80">
               티켓이 부족합니다. 운영자에게 충전을 요청해주세요.
             </div>
           )}
@@ -219,7 +222,7 @@ const LotteryPage: React.FC = () => {
           </button>
 
           {revealedPrize && isRevealed && !isScratching && (
-            <div className="animate-bounce-in rounded-3xl border border-white/10 bg-black/30 p-6 text-center shadow-lg">
+            <div className="animate-bounce-in rounded-3xl border border-white/15 bg-white/5 p-6 text-center shadow-lg">
               <p className="text-[clamp(12px,2.4vw,13px)] font-extrabold uppercase tracking-[0.35em] text-white/60">축하 당첨!</p>
               <p className="mt-2 text-[clamp(20px,5vw,26px)] font-extrabold text-white">{revealedPrize.label}</p>
               <p className="mt-2 text-[clamp(14px,3.4vw,16px)] font-bold text-cc-lime">

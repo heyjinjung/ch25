@@ -21,7 +21,7 @@ const LotteryCard: React.FC<LotteryCardProps> = ({ prize, isRevealed, isScratchi
 
   return (
     <div className="relative mx-auto w-full max-w-sm">
-      <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-black/30 p-6 shadow-[0_14px_40px_rgba(0,0,0,0.55)] sm:p-8">
+      <div className="relative overflow-hidden rounded-3xl border border-white/15 bg-white/5 p-6 shadow-[0_14px_40px_rgba(0,0,0,0.55)] sm:p-8">
         <div className="pointer-events-none absolute left-4 top-4 text-4xl opacity-15">🎄</div>
         <div className="pointer-events-none absolute bottom-4 right-4 text-4xl opacity-15">🎁</div>
         <div className="pointer-events-none absolute right-4 top-4 text-4xl opacity-15">⭐</div>
@@ -29,9 +29,9 @@ const LotteryCard: React.FC<LotteryCardProps> = ({ prize, isRevealed, isScratchi
         <div className="pointer-events-none absolute -left-10 -top-14 h-40 w-40 rounded-full bg-cc-lime/10 blur-3xl" />
         <div className="pointer-events-none absolute -right-14 bottom-0 h-44 w-44 rounded-full bg-white/5 blur-3xl" />
 
-        <div className="relative min-h-[200px] rounded-3xl border border-white/10 bg-black/35 p-6">
+        <div className="relative min-h-[200px] rounded-3xl border border-white/15 bg-white/5 p-6">
           <div
-            className={`relative flex h-full min-h-[160px] flex-col items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-black/50 focus:outline-none focus:ring-2 focus:ring-cc-lime/60 ${
+            className={`relative flex h-full min-h-[160px] flex-col items-center justify-center overflow-hidden rounded-2xl border border-white/15 bg-black/40 focus:outline-none focus:ring-2 focus:ring-cc-lime/60 ${
               disabled ? "cursor-not-allowed opacity-80" : "cursor-pointer"
             }`}
             role="button"

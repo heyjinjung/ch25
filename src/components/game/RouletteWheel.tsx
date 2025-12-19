@@ -113,10 +113,10 @@ const RouletteWheel: React.FC<RouletteWheelProps> = ({
       </div>
 
       {/* Wheel */}
-      <div className="relative aspect-square w-full max-w-[360px] rounded-[32px] border border-white/10 bg-black/30 p-4 shadow-[0_14px_40px_rgba(0,0,0,0.55)] sm:p-5">
+      <div className="relative aspect-square w-full max-w-[360px] rounded-[32px] border border-white/15 bg-white/5 p-4 shadow-[0_14px_40px_rgba(0,0,0,0.55)] sm:p-5">
         <svg
           viewBox="0 0 200 200"
-          className="h-full w-full rounded-full bg-black shadow-[0_0_46px_rgba(210,253,156,0.12)]"
+          className="h-full w-full rounded-full bg-black/60 shadow-[0_0_46px_rgba(210,253,156,0.12)]"
           ref={wheelRef}
           style={{ transform: `rotate(${rotation}deg)`, transition: `transform ${spinDurationMs}ms ease-out` }}
         >

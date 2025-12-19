@@ -224,7 +224,7 @@ const RoulettePage: React.FC = () => {
 
     if (isError || !data) {
       return (
-        <div className="rounded-3xl border border-white/10 bg-black/35 p-6 text-center">
+        <div className="rounded-3xl border border-white/15 bg-white/5 p-6 text-center backdrop-blur">
           <p className="text-[clamp(16px,3.2vw,20px)] font-bold text-white">{errorMessage ?? "데이터를 불러오지 못했습니다."}</p>
           <p className="mt-2 text-[clamp(12px,2.6vw,14px)] text-white/60">잠시 후 다시 시도하거나 운영자에게 문의하세요.</p>
         </div>
@@ -234,8 +234,8 @@ const RoulettePage: React.FC = () => {
     return (
       <div className="space-y-6 sm:space-y-8">
         {!isSpinning && rewardToast && (
-          <div className="fixed bottom-6 right-6 z-30 overflow-hidden rounded-2xl border border-white/15 bg-black/85 px-4 py-3 text-white shadow-lg backdrop-blur animate-bounce-in">
-            <div className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-cc-lime/80" />
+          <div className="fixed bottom-6 right-6 z-30 overflow-hidden rounded-2xl border border-white/15 bg-black/75 px-4 py-3 text-white shadow-lg backdrop-blur animate-bounce-in">
+            <div className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-cc-orange/80" />
             <div className="flex items-center gap-2 pl-2">
               <span className="font-extrabold text-cc-lime">+</span>
               <span className="text-[clamp(18px,4.6vw,22px)] font-extrabold leading-none text-white">
@@ -248,8 +248,8 @@ const RoulettePage: React.FC = () => {
 
         <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
           <div className="space-y-4">
-            <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-black/35 p-4 shadow-[0_14px_40px_rgba(0,0,0,0.55)] sm:p-6">
-              <div className="pointer-events-none absolute -left-8 -top-10 h-28 w-28 rounded-full bg-cc-lime/10 blur-3xl" />
+            <div className="relative overflow-hidden rounded-3xl border border-white/15 bg-white/5 p-4 shadow-[0_14px_40px_rgba(0,0,0,0.55)] sm:p-6">
+              <div className="pointer-events-none absolute -left-8 -top-10 h-28 w-28 rounded-full bg-cc-teal/16 blur-3xl" />
               <div className="pointer-events-none absolute -right-12 bottom-0 h-36 w-36 rounded-full bg-white/5 blur-3xl" />
               <RouletteWheel
                 segments={segments}
@@ -260,34 +260,34 @@ const RoulettePage: React.FC = () => {
               />
             </div>
             {usingFallbackSegments && (
-              <div className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-[clamp(11px,2.2vw,12px)] text-white/70">
+              <div className="rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-[clamp(11px,2.2vw,12px)] text-white/70">
                 라이브 구간 데이터를 불러오지 못해 임시 구성을 표시합니다. /api/roulette/status 응답을 확인해 주세요.
               </div>
             )}
           </div>
 
-          <div className="relative space-y-4 overflow-hidden rounded-3xl border border-white/10 bg-black/35 p-4 shadow-lg sm:p-6">
+          <div className="relative space-y-4 overflow-hidden rounded-3xl border border-white/15 bg-white/5 p-4 shadow-lg sm:p-6">
             <div className="pointer-events-none absolute -right-12 -top-16 h-40 w-40 rounded-full bg-cc-lime/8 blur-3xl" />
-            <div className="pointer-events-none absolute inset-y-0 left-0 w-[2px] bg-gradient-to-b from-cc-lime/70 via-white/10 to-transparent" />
+            <div className="pointer-events-none absolute inset-y-0 left-0 w-[2px] bg-gradient-to-b from-cc-orange/70 via-white/10 to-transparent" />
 
             <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-full border border-white/10 bg-black/45 px-3 py-1 text-[clamp(12px,2.4vw,13px)] font-extrabold text-white/90">
+              <span className="rounded-full border border-white/15 bg-white/6 px-3 py-1 text-[clamp(12px,2.4vw,13px)] font-extrabold text-white/90">
                 {remainingLabel}
               </span>
-              <span className="rounded-full border border-white/10 bg-black/45 px-3 py-1 text-[clamp(12px,2.4vw,13px)] font-bold text-white/70">
+              <span className="rounded-full border border-white/15 bg-white/6 px-3 py-1 text-[clamp(12px,2.4vw,13px)] font-bold text-white/70">
                 {tokenLabel}
               </span>
             </div>
 
             {playErrorMessage && (
-              <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-[clamp(12px,2.6vw,14px)] text-white/80">
-                <div className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-cc-lime/50" />
+              <div className="relative overflow-hidden rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-[clamp(12px,2.6vw,14px)] text-white/80">
+                <div className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-cc-orange/60" />
                 <div className="pl-2">{playErrorMessage}</div>
               </div>
             )}
             {isOutOfTokens && (
-              <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-[clamp(12px,2.6vw,14px)] text-white/80">
-                <div className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-cc-lime/50" />
+              <div className="relative overflow-hidden rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-[clamp(12px,2.6vw,14px)] text-white/80">
+                <div className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-cc-orange/60" />
                 <div className="pl-2">티켓이 부족합니다. 운영자에게 충전을 요청하세요.</div>
               </div>
             )}
@@ -311,8 +311,8 @@ const RoulettePage: React.FC = () => {
             </button>
 
             {!isSpinning && displayedResult && (
-              <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/30 p-5 text-center shadow-lg animate-bounce-in">
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-cc-lime/60 to-transparent" />
+              <div className="relative overflow-hidden rounded-2xl border border-white/15 bg-white/5 p-5 text-center shadow-lg animate-bounce-in">
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-cc-orange/70 to-transparent" />
                 <p className="text-[clamp(12px,2.6vw,13px)] font-bold uppercase tracking-[0.35em] text-white/60">결과</p>
                 <p className="mt-2 text-[clamp(20px,5vw,26px)] font-extrabold leading-tight text-white">{displayedResult.segment.label}</p>
                 {displayedResult.reward_type && displayedResult.reward_type !== "NONE" && (
