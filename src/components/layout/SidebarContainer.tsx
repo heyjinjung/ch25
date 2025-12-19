@@ -123,7 +123,7 @@ const UserBadge: React.FC = () => {
 
 const DesktopSidebarContent: React.FC = () => {
   return (
-    <div className="hidden min-h-[100dvh] w-full flex-col lg:flex">
+    <div className="hidden h-full w-full flex-col overflow-hidden lg:flex">
       <div className="flex flex-1 flex-col gap-[49px] overflow-y-auto px-[20px] py-[30px]">
         <nav className="flex w-full items-start justify-between">
           <Logo />
@@ -190,7 +190,7 @@ const DesktopSidebarContent: React.FC = () => {
         </div>
       </div>
 
-      <footer className="mt-auto w-full bg-[#394508] px-[20px] py-[31px] text-[#d2fd9c]">
+      <footer className="w-full shrink-0 bg-[#394508] px-[20px] py-[31px] text-[#d2fd9c]">
         <div className="flex flex-col gap-[12px]">
           <p className="text-[20px] font-medium leading-[1.15]">Contact</p>
           <div className="flex flex-col gap-[2px] text-[20px] font-medium leading-[1.15]">
@@ -212,8 +212,8 @@ const DesktopSidebarContent: React.FC = () => {
 
 const MobileSidebarContent: React.FC = () => {
   return (
-    <div className="flex min-h-[100dvh] w-full flex-col lg:hidden">
-      <div className="flex flex-1 flex-col gap-[20px] overflow-y-auto bg-black px-[20px] pb-[30px] pt-[20px]">
+    <div className="flex h-full w-full flex-col overflow-hidden lg:hidden">
+      <div className="flex flex-1 flex-col gap-[20px] bg-black px-[20px] pb-[30px] pt-[20px] md:overflow-y-auto">
         <div className="flex w-full items-start justify-between">
           <Logo />
           <div className="flex items-center gap-2">
@@ -278,37 +278,44 @@ const MobileSidebarContent: React.FC = () => {
         </div>
       </div>
 
-      <footer className="mt-auto bg-[#394508] px-[20px] py-[31px] text-[#d2fd9c]">
-        <div className="flex flex-col gap-[12px]">
-          <p className="text-[20px] font-medium leading-[1.15]">Contact</p>
-          <div className="flex flex-col gap-[2px] text-[20px] font-medium leading-[1.15]">
-            <a href="https://t.me/jm956" target="_blank" rel="noreferrer" className="hover:opacity-90">
-              텔레그램
-            </a>
-            <a href="https://t.me/+LksI3XlSjLlhZmE0" target="_blank" rel="noreferrer" className="hover:opacity-90">
-              지민공지채널
-            </a>
-            <a href="https://ccc-010.com" target="_blank" rel="noreferrer" className="hover:opacity-90">
-              씨씨사이트
-            </a>
-          </div>
-          <div className="mt-6 flex flex-col gap-[2px] text-[20px] font-medium leading-[1.15]">
-            <a href="https://figma.com/sites" target="_blank" rel="noreferrer" className="hover:opacity-90">
-              Terms & Conditions
-            </a>
-            <a href="https://figma.com/sites" target="_blank" rel="noreferrer" className="hover:opacity-90">
-              Privacy
-            </a>
-          </div>
-        </div>
-      </footer>
+      {/* Tablet footer stays inside sidebar; on mobile it's rendered after <Outlet /> by SidebarAppLayout. */}
+      <SidebarMobileFooter className="hidden md:block" />
     </div>
+  );
+};
+
+export const SidebarMobileFooter: React.FC<{ className?: string }> = ({ className }) => {
+  return (
+    <footer className={"shrink-0 bg-[#394508] px-[20px] py-[31px] text-[#d2fd9c] " + (className ?? "")}>
+      <div className="flex flex-col gap-[12px]">
+        <p className="text-[20px] font-medium leading-[1.15]">Contact</p>
+        <div className="flex flex-col gap-[2px] text-[20px] font-medium leading-[1.15]">
+          <a href="https://t.me/jm956" target="_blank" rel="noreferrer" className="hover:opacity-90">
+            텔레그램
+          </a>
+          <a href="https://t.me/+LksI3XlSjLlhZmE0" target="_blank" rel="noreferrer" className="hover:opacity-90">
+            지민공지채널
+          </a>
+          <a href="https://ccc-010.com" target="_blank" rel="noreferrer" className="hover:opacity-90">
+            씨씨사이트
+          </a>
+        </div>
+        <div className="mt-6 flex flex-col gap-[2px] text-[20px] font-medium leading-[1.15]">
+          <a href="https://figma.com/sites" target="_blank" rel="noreferrer" className="hover:opacity-90">
+            Terms & Conditions
+          </a>
+          <a href="https://figma.com/sites" target="_blank" rel="noreferrer" className="hover:opacity-90">
+            Privacy
+          </a>
+        </div>
+      </div>
+    </footer>
   );
 };
 
 const SidebarContainer: React.FC = () => {
   return (
-    <header className="landing-font min-h-[100dvh] w-full">
+    <header className="landing-font h-full w-full">
       <DesktopSidebarContent />
       <MobileSidebarContent />
     </header>

@@ -46,31 +46,31 @@ const LevelCard: React.FC<{ variant: LevelCardVariant }> = ({ variant }) => {
     variant === "desktop"
       ? {
           maxW: "max-w-none",
-          pad: "px-[clamp(18px,2.2vw,34px)] py-[clamp(18px,2.2vw,30px)]",
-          avatar: "h-[clamp(54px,5vw,74px)] w-[clamp(54px,5vw,74px)]",
-          avatarText: "text-[clamp(18px,2.2vw,24px)]",
-          badge: "h-[clamp(22px,2.2vw,28px)] w-[clamp(22px,2.2vw,28px)] text-[clamp(11px,1.4vw,13px)]",
-          name: "text-[clamp(16px,2vw,20px)]",
-          statNumber: "text-[clamp(22px,2.6vw,30px)]",
+          pad: "px-[clamp(26px,2.8vw,44px)] py-[clamp(24px,2.6vw,38px)]",
+          avatar: "h-[clamp(66px,5.6vw,90px)] w-[clamp(66px,5.6vw,90px)]",
+          avatarText: "text-[clamp(22px,2.6vw,30px)]",
+          badge: "h-[clamp(26px,2.4vw,34px)] w-[clamp(26px,2.4vw,34px)] text-[clamp(12px,1.4vw,14px)]",
+          name: "text-[clamp(18px,2.2vw,24px)]",
+          statNumber: "text-[clamp(28px,3vw,38px)]",
         }
       : variant === "tablet"
         ? {
             maxW: "max-w-none",
-            pad: "px-[clamp(18px,3vw,30px)] py-[clamp(18px,3vw,28px)]",
-            avatar: "h-[clamp(54px,6vw,70px)] w-[clamp(54px,6vw,70px)]",
-            avatarText: "text-[clamp(18px,2.6vw,22px)]",
-            badge: "h-[clamp(22px,2.6vw,28px)] w-[clamp(22px,2.6vw,28px)] text-[clamp(11px,1.8vw,13px)]",
-            name: "text-[clamp(16px,2.6vw,18px)]",
-            statNumber: "text-[clamp(22px,3.2vw,28px)]",
+            pad: "px-[clamp(22px,4vw,36px)] py-[clamp(22px,4vw,34px)]",
+            avatar: "h-[clamp(62px,7vw,84px)] w-[clamp(62px,7vw,84px)]",
+            avatarText: "text-[clamp(20px,3.2vw,28px)]",
+            badge: "h-[clamp(24px,3.2vw,32px)] w-[clamp(24px,3.2vw,32px)] text-[clamp(12px,2.2vw,14px)]",
+            name: "text-[clamp(18px,3.2vw,22px)]",
+            statNumber: "text-[clamp(26px,4vw,34px)]",
           }
         : {
             maxW: "max-w-none",
-            pad: "px-[clamp(16px,4vw,22px)] py-[clamp(18px,4vw,22px)]",
-            avatar: "h-[clamp(54px,12vw,64px)] w-[clamp(54px,12vw,64px)]",
-            avatarText: "text-[clamp(18px,4.4vw,22px)]",
-            badge: "h-[clamp(22px,5vw,26px)] w-[clamp(22px,5vw,26px)] text-[clamp(11px,2.8vw,12px)]",
-            name: "text-[clamp(16px,4.2vw,18px)]",
-            statNumber: "text-[clamp(22px,5vw,26px)]",
+            pad: "px-[clamp(20px,6vw,30px)] py-[clamp(22px,6vw,32px)]",
+            avatar: "h-[clamp(64px,16vw,86px)] w-[clamp(64px,16vw,86px)]",
+            avatarText: "text-[clamp(22px,5.6vw,28px)]",
+            badge: "h-[clamp(26px,6.2vw,34px)] w-[clamp(26px,6.2vw,34px)] text-[clamp(12px,3.4vw,14px)]",
+            name: "text-[clamp(18px,5vw,22px)]",
+            statNumber: "text-[clamp(28px,7vw,36px)]",
           };
 
   const isMobile = variant === "mobile";

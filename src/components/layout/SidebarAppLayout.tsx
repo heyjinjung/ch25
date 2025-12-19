@@ -1,6 +1,6 @@
 import React from "react";
 import { Outlet } from "react-router-dom";
-import SidebarContainer from "./SidebarContainer";
+import SidebarContainer, { SidebarMobileFooter } from "./SidebarContainer";
 import HomeShortcutButton from "../common/HomeShortcutButton";
 
 const SidebarAppLayout: React.FC = () => {
@@ -12,13 +12,17 @@ const SidebarAppLayout: React.FC = () => {
             <SidebarContainer />
           </div>
         </aside>
+
         <main className="min-w-0 flex-1 md:h-full md:overflow-y-auto">
-          <div className="h-full w-full p-4 md:p-8">
+          <div className="w-full p-4 md:p-8">
             <div className="mb-4 flex justify-end">
               <HomeShortcutButton />
             </div>
             <Outlet />
           </div>
+
+          {/* Mobile footer must come after main content (Figma mobile section order). */}
+          <SidebarMobileFooter className="md:hidden" />
         </main>
       </div>
     </div>
