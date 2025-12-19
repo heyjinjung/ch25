@@ -130,3 +130,52 @@
 - 프론트 프리뷰: npm run preview --host --port 4175 시도했으나 "dist 없음" 오류로 기동 실패(동일 경고 반복). dist 디렉터리는 존재해 원인 추가 조사 필요.
 - 스크립트 실행: docker compose up -d db redis backend 후 컨테이너 내부에서 실행. scripts/backup.sh --help는 CRLF로 인해 `command not found`/`invalid option name` 오류로 실패. scripts/seed_test_data.py --help 실행 시 feature_config에 max_daily_plays 컬럼 부재로 OperationalError(1054) 발생(현 스키마와 스크립트 불일치). 
 - 추가 메모: 기존 user_level_progress 중복 오류는 idempotent guard로 해결. heyjin/main 기능 스모크를 완전 재현하려면 남은 엔드포인트/프론트 경로 추가 확인 필요.
+
+---
+
+## (추가) 프론트엔드 UI/라우팅 작업 반영 (대화 기반 정리)
+
+> 아래 항목은 Git 로그 스캔 외에, 작업 요청(대화) 기준으로 실제 반영된 프론트 변경사항을 별도로 정리한 내용입니다.
+
+### 라우팅/플로우
+- 앱 진입 플로우를 `로그인 → 메인(/home) → 상세`로 정리.
+  - `/`(기존 랜딩) 접근 시 `/login`으로 리다이렉트.
+  - Figma 랜딩은 인증 후 접근하도록 `/landing`, `/landing/tablet`, `/landing/mobile`로 이동(보호 라우트).
+- 로그인 페이지는 단독 화면으로 취급하여 전역 헤더/음악/눈 효과를 숨김 처리.
+
+### Figma 랜딩(데스크탑/태블릿/모바일)
+- Figma 기반 랜딩 3종 추가 및 빌드/런타임 오류 수정.
+- 랜딩 내부 클릭 동작을 기존 페이지로 연결(React Router `Link` 사용).
+  - 게임 타일: `/roulette`, `/dice`, `/lottery`
+  - 메뉴: `/home`, `/season-pass`, `/team-battle` (금고는 임시로 `/home` 연결)
+
+### 자산(아이콘/이미지) 복구
+- 게임 타일 아이콘 경로를 실제 존재하는 SVG로 정정:
+  - `/images/layer-1.svg`, `/images/layer-2.svg`, `/images/layer-3.svg`
+- Bento 영역 아이콘도 실제 SVG로 매핑:
+  - `/images/vector111.svg`, `/images/vector112.svg`, `/images/unnamed113.svg`
+- SVG 로드 실패 시 PNG로 폴백하도록 `<img onError>` 처리 추가.
+
+### 폰트
+- Google Fonts `Noto Sans KR`를 추가.
+- 전체 앱에 강제하지 않고, 랜딩 라우트에만 적용되도록 `.landing-font` 래퍼로 스코프 제한.
+
+### 패딩(간격) 정책 반영
+- 랜딩 페이지 전반 세로 패딩을 20~30px 범위로 정규화(요청: “전체적으로 20-30 사이”).
+- 홈 페이지 주요 카드 래퍼 패딩을 축소(`p-7` → `p-6`)하여 과도한 세로 간격을 완화.
+- Figma 특정 노드의 패딩 값(“패딩만”)을 기존 코드에 반영:
+  - 노드 `1:57` Header container
+  - 노드 `1:59` Reliable app section(ongoing events)
+
+### 배포/실행 확인(프론트)
+- Vite production build 성공 확인.
+- Docker(멀티 스테이지 빌드)로 프론트 정적 배포(Nginx) 구성 및 포트 `8080` 서빙 확인.
+
+### 문서
+- 프론트 UI 전면 개편을 위한 “API/Auth 계약 고정(변경 금지)” 문서 추가:
+  - `docs/frontend_api_contract_freeze.md`
+  - 내용: 토큰 저장/헤더 규칙, 401/403 시 `/login` 처리, RequireAuth 리다이렉트, 주요 API 엔드포인트/필드 계약 정리
+
+### 남은 확인 포인트(리스크)
+- “Figma 노드 패딩을 그대로 적용” 요구와 “세로 패딩 20~30 정규화” 요구가 충돌할 수 있어,
+  특정 섹션(예: 노드 `1:57`의 큰 py 값)에서 최종 우선순위 확정이 필요.
