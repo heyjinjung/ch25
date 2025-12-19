@@ -45,7 +45,7 @@ const LevelCard: React.FC<{ variant: LevelCardVariant }> = ({ variant }) => {
   const sizing =
     variant === "desktop"
       ? {
-          maxW: "max-w-[min(820px,calc(100vw-4rem))]",
+          maxW: "max-w-none",
           pad: "px-[clamp(18px,2.2vw,34px)] py-[clamp(18px,2.2vw,30px)]",
           avatar: "h-[clamp(54px,5vw,74px)] w-[clamp(54px,5vw,74px)]",
           avatarText: "text-[clamp(18px,2.2vw,24px)]",
@@ -55,7 +55,7 @@ const LevelCard: React.FC<{ variant: LevelCardVariant }> = ({ variant }) => {
         }
       : variant === "tablet"
         ? {
-            maxW: "max-w-[min(740px,calc(100vw-3rem))]",
+            maxW: "max-w-none",
             pad: "px-[clamp(18px,3vw,30px)] py-[clamp(18px,3vw,28px)]",
             avatar: "h-[clamp(54px,6vw,70px)] w-[clamp(54px,6vw,70px)]",
             avatarText: "text-[clamp(18px,2.6vw,22px)]",
@@ -64,7 +64,7 @@ const LevelCard: React.FC<{ variant: LevelCardVariant }> = ({ variant }) => {
             statNumber: "text-[clamp(22px,3.2vw,28px)]",
           }
         : {
-            maxW: "max-w-[min(560px,calc(100vw-2rem))]",
+            maxW: "max-w-none",
             pad: "px-[clamp(16px,4vw,22px)] py-[clamp(18px,4vw,22px)]",
             avatar: "h-[clamp(54px,12vw,64px)] w-[clamp(54px,12vw,64px)]",
             avatarText: "text-[clamp(18px,4.4vw,22px)]",
@@ -144,7 +144,7 @@ const LevelCard: React.FC<{ variant: LevelCardVariant }> = ({ variant }) => {
 const SeasonPassMainPanel: React.FC = () => {
   return (
     <div className="landing-font w-full">
-      <div className="mx-auto w-full max-w-[1040px]">
+      <div className="mx-auto w-full px-4 md:px-8">
         <div className="pt-2">
           <p className="text-[clamp(15px,2.8vw,21px)] font-medium leading-[1.15] tracking-[-0.2px]" style={{ color: baseAccent }}>
             지민이와 함께하는 겨울 시즌 패스

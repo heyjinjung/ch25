@@ -123,8 +123,8 @@ const UserBadge: React.FC = () => {
 
 const DesktopSidebarContent: React.FC = () => {
   return (
-    <div className="hidden min-h-dvh w-full flex-col lg:flex">
-      <div className="flex flex-1 flex-col gap-[49px] px-[20px] py-[30px]">
+    <div className="hidden min-h-[100dvh] w-full flex-col lg:flex">
+      <div className="flex flex-1 flex-col gap-[49px] overflow-y-auto px-[20px] py-[30px]">
         <nav className="flex w-full items-start justify-between">
           <Logo />
           <div className="flex items-center gap-2">
@@ -212,8 +212,8 @@ const DesktopSidebarContent: React.FC = () => {
 
 const MobileSidebarContent: React.FC = () => {
   return (
-    <div className="flex min-h-dvh w-full flex-col lg:hidden">
-      <div className="flex flex-1 flex-col gap-[20px] bg-black px-[20px] pb-[30px] pt-[20px]">
+    <div className="flex min-h-[100dvh] w-full flex-col lg:hidden">
+      <div className="flex flex-1 flex-col gap-[20px] overflow-y-auto bg-black px-[20px] pb-[30px] pt-[20px]">
         <div className="flex w-full items-start justify-between">
           <Logo />
           <div className="flex items-center gap-2">
@@ -308,7 +308,7 @@ const MobileSidebarContent: React.FC = () => {
 
 const SidebarContainer: React.FC = () => {
   return (
-    <header className="landing-font h-full w-full">
+    <header className="landing-font min-h-[100dvh] w-full">
       <DesktopSidebarContent />
       <MobileSidebarContent />
     </header>
