@@ -45,35 +45,36 @@ const LevelCard: React.FC<{ variant: LevelCardVariant }> = ({ variant }) => {
   const sizing =
     variant === "desktop"
       ? {
-          maxW: "max-w-none",
-          pad: "px-[clamp(26px,2.8vw,44px)] py-[clamp(24px,2.6vw,38px)]",
-          avatar: "h-[clamp(66px,5.6vw,90px)] w-[clamp(66px,5.6vw,90px)]",
-          avatarText: "text-[clamp(22px,2.6vw,30px)]",
-          badge: "h-[clamp(26px,2.4vw,34px)] w-[clamp(26px,2.4vw,34px)] text-[clamp(12px,1.4vw,14px)]",
-          name: "text-[clamp(18px,2.2vw,24px)]",
-          statNumber: "text-[clamp(28px,3vw,38px)]",
+          maxW: "w-full max-w-[980px]",
+          pad: "px-[clamp(30px,3vw,48px)] py-[clamp(26px,3vw,42px)]",
+          avatar: "h-[clamp(80px,6vw,110px)] w-[clamp(80px,6vw,110px)]",
+          avatarText: "text-[clamp(26px,2.8vw,34px)]",
+          badge: "h-[clamp(32px,2.8vw,40px)] w-[clamp(32px,2.8vw,40px)] text-[clamp(12px,1.6vw,14px)]",
+          name: "text-[clamp(20px,2.4vw,26px)]",
+          statNumber: "text-[clamp(32px,3.4vw,44px)]",
         }
       : variant === "tablet"
         ? {
-            maxW: "max-w-none",
-            pad: "px-[clamp(22px,4vw,36px)] py-[clamp(22px,4vw,34px)]",
-            avatar: "h-[clamp(62px,7vw,84px)] w-[clamp(62px,7vw,84px)]",
-            avatarText: "text-[clamp(20px,3.2vw,28px)]",
-            badge: "h-[clamp(24px,3.2vw,32px)] w-[clamp(24px,3.2vw,32px)] text-[clamp(12px,2.2vw,14px)]",
-            name: "text-[clamp(18px,3.2vw,22px)]",
-            statNumber: "text-[clamp(26px,4vw,34px)]",
+            maxW: "w-full max-w-[980px]",
+            pad: "px-[clamp(30px,3.4vw,48px)] py-[clamp(26px,3.4vw,42px)]",
+            avatar: "h-[clamp(78px,7vw,108px)] w-[clamp(78px,7vw,108px)]",
+            avatarText: "text-[clamp(24px,3vw,32px)]",
+            badge: "h-[clamp(30px,3vw,40px)] w-[clamp(30px,3vw,40px)] text-[clamp(12px,2vw,14px)]",
+            name: "text-[clamp(20px,3vw,24px)]",
+            statNumber: "text-[clamp(30px,3.8vw,42px)]",
           }
         : {
-            maxW: "max-w-none",
-            pad: "px-[clamp(20px,6vw,30px)] py-[clamp(22px,6vw,32px)]",
-            avatar: "h-[clamp(64px,16vw,86px)] w-[clamp(64px,16vw,86px)]",
-            avatarText: "text-[clamp(22px,5.6vw,28px)]",
-            badge: "h-[clamp(26px,6.2vw,34px)] w-[clamp(26px,6.2vw,34px)] text-[clamp(12px,3.4vw,14px)]",
+            maxW: "w-full max-w-[980px]",
+            pad: "px-[clamp(24px,6vw,44px)] py-[clamp(26px,6vw,42px)]",
+            avatar: "h-[clamp(76px,18vw,108px)] w-[clamp(76px,18vw,108px)]",
+            avatarText: "text-[clamp(24px,5.6vw,32px)]",
+            badge: "h-[clamp(30px,6.2vw,40px)] w-[clamp(30px,6.2vw,40px)] text-[clamp(12px,3.4vw,14px)]",
             name: "text-[clamp(18px,5vw,22px)]",
-            statNumber: "text-[clamp(28px,7vw,36px)]",
+            statNumber: "text-[clamp(32px,7.2vw,42px)]",
           };
 
   const isMobile = variant === "mobile";
+  const barHeight = variant === "mobile" ? "h-[12px]" : "h-[14px]";
 
   return (
     <section
@@ -108,7 +109,7 @@ const LevelCard: React.FC<{ variant: LevelCardVariant }> = ({ variant }) => {
           <span>레벨 {derived.currentLevel}</span>
           <span>레벨 {derived.nextLevel}</span>
         </div>
-        <div className="mt-2 h-[6px] w-full rounded-full bg-[#d2fd9c]/20">
+        <div className={`mt-2 w-full rounded-full bg-[#d2fd9c]/20 ${barHeight}`}>
           <div className="h-full rounded-full bg-[#d2fd9c]" style={{ width: `${derived.pct}%` }} />
         </div>
         <div className="mt-2 flex items-center justify-between text-[clamp(13px,2.8vw,14px)] text-white/85">
