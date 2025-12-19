@@ -9,12 +9,16 @@ import SurveyPromptBanner from "../survey/SurveyPromptBanner";
 const UserLayout: React.FC = () => {
   const location = useLocation();
   const isLanding = location.pathname.startsWith("/landing");
+  const isGamePage = location.pathname === "/roulette" || location.pathname === "/dice" || location.pathname === "/lottery";
+  const isSeasonPass = location.pathname === "/season-pass";
+  const isTeamBattle = location.pathname === "/team-battle";
+  const hideTopBars = isLanding || isGamePage || isSeasonPass || isTeamBattle;
 
   return (
     <MainLayout>
       <div className="space-y-6">
-        {!isLanding && <SurveyPromptBanner />}
-        {!isLanding && <SeasonPassBar />}
+        {!hideTopBars && <SurveyPromptBanner />}
+        {!hideTopBars && <SeasonPassBar />}
         <Outlet />
       </div>
     </MainLayout>

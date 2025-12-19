@@ -31,17 +31,16 @@ const UserRoutes: React.FC = () => {
         <Route path="/landing" element={<FigmaLanding />} />
         <Route path="/landing/tablet" element={<FigmaLandingTablet />} />
         <Route path="/landing/mobile" element={<FigmaLandingMobile />} />
-        <Route path="/season-pass" element={<SeasonPassFigmaPage />} />
-        <Route path="/team-battle" element={<TeamBattleFigmaPage />} />
-
-        {/* Games (no app header/nav) */}
-        <Route path="/roulette" element={<RoulettePage />} />
-        <Route path="/dice" element={<DicePage />} />
-        <Route path="/lottery" element={<LotteryPage />} />
       </Route>
       <Route element={<UserLayout />}>
         <Route element={<RequireAuth />}>
           <Route path="/home" element={<Navigate to="/landing" replace />} />
+          <Route path="/season-pass" element={<SeasonPassFigmaPage />} />
+          <Route path="/team-battle" element={<TeamBattleFigmaPage />} />
+
+          <Route path="/roulette" element={<RoulettePage />} />
+          <Route path="/dice" element={<DicePage />} />
+          <Route path="/lottery" element={<LotteryPage />} />
           <Route path="/ranking" element={<RankingPage />} />
           <Route path="/surveys" element={<SurveyListPage />} />
           <Route path="/surveys/:surveyId" element={<SurveyRunnerPage />} />
