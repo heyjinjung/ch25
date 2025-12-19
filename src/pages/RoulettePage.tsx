@@ -271,10 +271,10 @@ const RoulettePage: React.FC = () => {
             <div className="pointer-events-none absolute inset-y-0 left-0 w-[2px] bg-gradient-to-b from-cc-orange/70 via-white/10 to-transparent" />
 
             <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-full border border-white/15 bg-white/6 px-3 py-1 text-[clamp(12px,2.4vw,13px)] font-extrabold text-white/90">
+              <span className="rounded-full border border-cc-lime/20 bg-white/8 px-3 py-1 text-[clamp(12px,2.4vw,13px)] font-extrabold text-white/90">
                 {remainingLabel}
               </span>
-              <span className="rounded-full border border-white/15 bg-white/6 px-3 py-1 text-[clamp(12px,2.4vw,13px)] font-bold text-white/70">
+              <span className="rounded-full border border-cc-lime/20 bg-white/8 px-3 py-1 text-[clamp(12px,2.4vw,13px)] font-bold text-white/70">
                 {tokenLabel}
               </span>
             </div>
@@ -295,7 +295,7 @@ const RoulettePage: React.FC = () => {
               type="button"
               disabled={playMutation.isPending || isSpinning || (!isUnlimited && data.remaining_spins <= 0) || isOutOfTokens}
               onClick={handlePlay}
-              className="group relative w-full overflow-hidden rounded-2xl border border-white/10 bg-cc-lime px-6 py-4 text-[clamp(16px,3.8vw,18px)] font-extrabold text-cc-olive shadow-lg transition hover:brightness-105 active:brightness-95 disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/40"
+              className="group relative w-full overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-r from-cc-lime via-cc-lime to-cc-green px-6 py-4 text-[clamp(16px,3.8vw,18px)] font-extrabold text-cc-olive shadow-lg transition hover:brightness-105 active:brightness-95 disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/40"
             >
               <span className="relative z-10 flex items-center justify-center gap-2">
                 {playMutation.isPending ? (

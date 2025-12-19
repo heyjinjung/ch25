@@ -102,27 +102,27 @@ const DicePage: React.FC = () => {
         )}
 
         <div className="flex flex-wrap items-center justify-center gap-2">
-          <span className="rounded-full border border-white/15 bg-white/6 px-3 py-1 text-[clamp(12px,2.4vw,13px)] font-bold text-white/90">
+          <span className="rounded-full border border-cc-lime/20 bg-white/8 px-3 py-1 text-[clamp(12px,2.4vw,13px)] font-bold text-white/90">
             {remainingLabel}
           </span>
-          <span className="rounded-full border border-white/15 bg-white/6 px-3 py-1 text-[clamp(12px,2.4vw,13px)] font-bold text-white/70">
+          <span className="rounded-full border border-cc-lime/20 bg-white/8 px-3 py-1 text-[clamp(12px,2.4vw,13px)] font-bold text-white/70">
             {tokenLabel}
           </span>
         </div>
 
-        <div className="rounded-3xl border border-white/15 bg-white/5 p-4 shadow-[0_14px_40px_rgba(0,0,0,0.55)] sm:p-6">
+        <div className="rounded-3xl border border-white/15 bg-white/8 p-4 shadow-[0_14px_40px_rgba(0,0,0,0.55)] sm:p-6">
           <DiceView userDice={userDice} dealerDice={dealerDice} result={result} isRolling={isRolling} />
         </div>
 
         <div className="space-y-4">
           {!!playMutation.error && !isRolling && (
-            <div className="rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-center text-[clamp(12px,2.6vw,14px)] text-white/80">
+            <div className="rounded-2xl border border-white/15 bg-white/8 px-4 py-3 text-center text-[clamp(12px,2.6vw,14px)] text-white/80">
               {mapErrorMessage(playMutation.error)}
             </div>
           )}
 
           {isOutOfTokens && (
-            <div className="rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-center text-[clamp(12px,2.6vw,14px)] text-white/80">
+            <div className="rounded-2xl border border-white/15 bg-white/8 px-4 py-3 text-center text-[clamp(12px,2.6vw,14px)] text-white/80">
               티켓이 부족합니다. 운영자에게 충전을 요청해주세요.
             </div>
           )}
@@ -131,7 +131,7 @@ const DicePage: React.FC = () => {
             type="button"
             disabled={isRolling || playMutation.isPending || (!isUnlimited && data.remaining_plays <= 0) || isOutOfTokens}
             onClick={handlePlay}
-            className="group relative w-full overflow-hidden rounded-2xl border border-white/10 bg-cc-lime px-6 py-4 text-[clamp(16px,3.8vw,18px)] font-extrabold text-cc-olive shadow-lg transition hover:brightness-105 active:brightness-95 disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/40"
+            className="group relative w-full overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-r from-cc-lime via-cc-lime to-cc-green px-6 py-4 text-[clamp(16px,3.8vw,18px)] font-extrabold text-cc-olive shadow-lg transition hover:brightness-105 active:brightness-95 disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/40"
           >
             <span className="relative z-10">
               {isRolling || playMutation.isPending ? (
