@@ -12,7 +12,9 @@ const GamePageShell: React.FC<Props> = ({ title, subtitle, rightSlot, children, 
       <div className="mx-auto w-full max-w-[1040px]">
         {rightSlot ? <div className="mb-6 flex items-center justify-end gap-3">{rightSlot}</div> : null}
 
-        <header className="rounded-3xl border border-white/10 bg-black/55 px-4 py-6 backdrop-blur sm:px-8">
+        <header className="relative overflow-hidden rounded-3xl border border-white/15 bg-gradient-to-b from-white/10 via-white/5 to-black/35 px-4 py-6 backdrop-blur sm:px-8">
+          <div className="pointer-events-none absolute -left-12 -top-16 h-44 w-44 rounded-full bg-cc-teal/18 blur-3xl" />
+          <div className="pointer-events-none absolute -right-16 -bottom-20 h-56 w-56 rounded-full bg-cc-lime/14 blur-3xl" />
           {subtitle && (
             <p className="text-center text-[clamp(12px,2.6vw,14px)] font-bold uppercase tracking-[0.35em] text-cc-lime/90">
               {subtitle}
@@ -24,7 +26,9 @@ const GamePageShell: React.FC<Props> = ({ title, subtitle, rightSlot, children, 
           <div className="mx-auto mt-5 h-px w-full max-w-[720px] bg-gradient-to-r from-transparent via-cc-lime/60 to-transparent" />
         </header>
 
-        <section className="mt-6 rounded-3xl border border-white/10 bg-black/55 p-4 backdrop-blur sm:mt-8 sm:p-8">
+        <section className="relative mt-6 overflow-hidden rounded-3xl border border-white/15 bg-gradient-to-b from-white/8 via-white/5 to-black/40 p-4 backdrop-blur sm:mt-8 sm:p-8">
+          <div className="pointer-events-none absolute -left-10 top-10 h-40 w-40 rounded-full bg-cc-orange/10 blur-3xl" />
+          <div className="pointer-events-none absolute -right-14 -bottom-10 h-44 w-44 rounded-full bg-cc-green/10 blur-3xl" />
           {children}
         </section>
 
