@@ -13,7 +13,7 @@ import NewMemberDicePage from "../pages/NewMemberDicePage";
 import FigmaLanding from "../pages/FigmaLanding";
 import FigmaLandingTablet from "../pages/FigmaLandingTablet";
 import FigmaLandingMobile from "../pages/FigmaLandingMobile";
-import SeasonPassFigmaDesktopPage from "../pages/SeasonPassFigmaDesktopPage";
+import SeasonPassFigmaPage from "../pages/SeasonPassFigmaPage";
 import UserLayout from "../components/layout/UserLayout";
 import RequireAuth from "../components/routing/RequireAuth";
 
@@ -31,7 +31,7 @@ const UserRoutes: React.FC = () => {
         <Route path="/landing" element={<FigmaLanding />} />
         <Route path="/landing/tablet" element={<FigmaLandingTablet />} />
         <Route path="/landing/mobile" element={<FigmaLandingMobile />} />
-        <Route path="/season-pass" element={<SeasonPassFigmaDesktopPage />} />
+        <Route path="/season-pass" element={<SeasonPassFigmaPage />} />
       </Route>
       <Route element={<UserLayout />}>
         <Route element={<RequireAuth />}>
