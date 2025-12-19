@@ -219,7 +219,7 @@ const DesktopSidebarContent: React.FC = () => {
 const MobileSidebarContent: React.FC = () => {
   return (
     <div className="flex h-full w-full flex-col overflow-hidden lg:hidden">
-      <div className="flex flex-1 flex-col gap-[20px] bg-black px-[20px] pb-[30px] pt-[20px] md:overflow-y-auto">
+      <div className="flex flex-1 flex-col gap-[20px] bg-black px-[20px] pb-[30px] pt-[20px]">
         <div className="flex w-full items-start justify-between">
           <Logo />
           <div className="flex items-center gap-2">
@@ -283,9 +283,6 @@ const MobileSidebarContent: React.FC = () => {
           </Link>
         </div>
       </div>
-
-      {/* Tablet footer stays inside sidebar; on mobile it's rendered after <Outlet /> by SidebarAppLayout. */}
-      <SidebarMobileFooter className="hidden md:block" />
     </div>
   );
 };

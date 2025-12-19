@@ -6,14 +6,14 @@ import HomeShortcutButton from "../common/HomeShortcutButton";
 const SidebarAppLayout: React.FC = () => {
   return (
     <div className="min-h-screen w-full bg-black text-white">
-      <div className="flex min-h-screen w-full flex-col md:h-[100dvh] md:flex-row md:overflow-hidden">
-        <aside className="w-full shrink-0 md:h-full md:w-[396px] md:border-r md:border-white/10 md:overflow-hidden">
+      <div className="flex min-h-screen w-full flex-col lg:h-[100dvh] lg:flex-row lg:overflow-hidden">
+        <aside className="w-full shrink-0 lg:h-full lg:w-[396px] lg:border-r lg:border-white/10 lg:overflow-hidden">
           <div className="h-full w-full">
             <SidebarContainer />
           </div>
         </aside>
 
-        <main className="min-w-0 flex-1 md:h-full md:overflow-y-auto">
+        <main className="min-w-0 flex-1 lg:h-full lg:overflow-y-auto">
           <div className="w-full p-4 md:p-8">
             <div className="mb-4 flex justify-end">
               <HomeShortcutButton />
@@ -21,8 +21,8 @@ const SidebarAppLayout: React.FC = () => {
             <Outlet />
           </div>
 
-          {/* Mobile footer must come after main content (Figma mobile section order). */}
-          <SidebarMobileFooter className="md:hidden" />
+          {/* Mobile/Tablet footer must come after main content (Figma section order). */}
+          <SidebarMobileFooter className="lg:hidden" />
         </main>
       </div>
     </div>
