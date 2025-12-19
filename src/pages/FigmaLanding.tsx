@@ -1,6 +1,4 @@
 import React from "react";
-import { Link } from "react-router-dom";
-import { useAuth } from "../auth/authStore";
 
 // Local asset paths (place files under public/assets/figma/)
 const assets = {
@@ -24,19 +22,6 @@ const assets = {
   bentoFastExchange: "/images/vector112.svg",
   bentoCustomerSat: "/images/unnamed113.svg",
 };
-
-const navLinks = [
-  { label: "CC카지노", to: "https://ccc-010.com" },
-  { label: "레벨", to: "/season-pass" },
-  { label: "팀배틀", to: "/team-battle" },
-  { label: "내금고", to: "/landing" },
-];
-
-const gameTiles = [
-  { title: "룰렛 경품뽑기", to: "/roulette", icon: assets.rouletteSvg, fallback: assets.iconRoulette },
-  { title: "레벨 주사위", to: "/dice", icon: assets.levelSvg, fallback: assets.iconLevel },
-  { title: "랜덤 복권", to: "/lottery", icon: assets.lotterySvg, fallback: assets.iconLottery },
-];
 
 const howToIcons: { title: string; icon: string; href?: string }[] = [
   { title: "씨씨이용하기", icon: assets.iconWallet, href: "https://ccc-010.com" },
@@ -72,100 +57,6 @@ const bento = [
 
 const baseAccent = "#d2fd9c";
 const deepOlive = "#394508";
-
-const Sidebar: React.FC = () => {
-  const { user } = useAuth();
-
-  return (
-    <aside className="flex w-full max-w-[491px] flex-col gap-[49px] px-4 py-[30px] text-white lg:px-0">
-      <nav className="flex items-start justify-between w-full">
-        <div className="flex items-center gap-5 w-[184px]" aria-label="Company logo">
-          <div className="relative h-[27px] w-[26px] overflow-hidden rounded-[18px]" style={{ backgroundColor: baseAccent }}>
-            <img src={assets.starDynamicPremium} alt="CC Casino mark" className="absolute inset-0 h-full w-full object-cover" />
-          </div>
-          <p className="text-[16px] font-semibold tracking-[-0.32px]">CC CASINO</p>
-        </div>
-        <div className="flex items-center gap-2">
-          {user ? (
-            <div className="max-w-[220px] rounded-full border border-white/15 bg-white/5 px-3 py-[6px] text-[12px] leading-none text-white/85">
-              <span className="max-w-[140px] truncate align-middle">{user.nickname || user.external_id}</span>{" "}
-              <span className="align-middle font-semibold" style={{ color: baseAccent }}>
-                Lv.{user.level ?? 1}
-              </span>
-            </div>
-          ) : null}
-          <a
-            href="https://figma.com/sites"
-            className="rounded-[2px] bg-[#d2fd9c] px-[14px] py-[11px] text-[10px] text-black"
-          >
-            홈페이지 가이드
-          </a>
-        </div>
-      </nav>
-
-      <div className="flex flex-col gap-5">
-        <h1 className="w-[412px] text-[42px] font-medium leading-[1.06] tracking-[-0.84px]">
-          지민코드 전용
-          <br />
-          <span style={{ color: baseAccent }}>포인트서비스</span>
-        </h1>
-        <h2 className="text-[16px] font-normal leading-[1.09] text-[#cbcbcb]">No personal cre핵심 캐치문구</h2>
-      </div>
-
-      <div className="flex flex-col gap-5 w-full max-w-[498px]">
-        <h3 className="text-[20px] font-medium text-[20px]" style={{ color: baseAccent }}>
-          게임 바로가기
-        </h3>
-        <div className="flex gap-[10px] w-full max-w-[488px]">
-          {gameTiles.map((tile) => (
-            <Link
-              key={tile.title}
-              to={tile.to}
-              className="flex-1 h-[120px] rounded-[4px] bg-[#d2fd9c] px-[10px] py-[20px] flex flex-col items-center gap-[14px]"
-            >
-              <div className="relative h-[30px] w-[30px]">
-                <img
-                  src={tile.icon}
-                  alt={tile.title}
-                  className="absolute inset-0 h-full w-full object-contain"
-                  onError={(e) => {
-                    if (!tile.fallback) return;
-                    e.currentTarget.onerror = null;
-                    e.currentTarget.src = tile.fallback;
-                  }}
-                />
-              </div>
-              <p className="text-[20px] font-medium leading-[1.15] text-black text-center">{tile.title}</p>
-            </Link>
-          ))}
-        </div>
-      </div>
-
-      <div
-        className="flex w-full flex-wrap items-center justify-center gap-x-[12.8px] gap-y-2 text-[20px] font-medium text-center"
-        style={{ color: baseAccent }}
-      >
-        {navLinks.map((item) =>
-          item.to.startsWith("http") ? (
-            <a
-              key={item.label}
-              href={item.to}
-              target="_blank"
-              rel="noreferrer"
-              className="h-[18px] leading-[1.15]"
-            >
-              {item.label}
-            </a>
-          ) : (
-            <Link key={item.label} to={item.to} className="h-[18px] leading-[1.15]">
-              {item.label}
-            </Link>
-          )
-        )}
-      </div>
-    </aside>
-  );
-};
 
 const Events: React.FC = () => (
   <section className="bg-white flex flex-col items-center px-[40px] py-[20px] w-full">
@@ -302,38 +193,16 @@ const BentoGrid: React.FC = () => (
   </section>
 );
 
-const Footer: React.FC = () => (
-  <footer className="w-full bg-[#394508] px-[40px] py-[30px] text-[#d2fd9c]">
-    <div className="flex flex-col gap-6 w-[300px]">
-      <div className="flex flex-col gap-[12px]">
-        <p className="text-[20px] font-medium leading-[1.15]">Contact</p>
-          <div className="flex flex-col gap-[2px] text-[20px] font-medium leading-[1.15] underline">
-            <a href="https://t.me/jm956" target="_blank" rel="noreferrer" className="hover:opacity-90">텔레그램</a>
-            <a href="https://t.me/+LksI3XlSjLlhZmE0" target="_blank" rel="noreferrer" className="hover:opacity-90">지민공지채널</a>
-            <a href="https://ccc-010.com" target="_blank" rel="noreferrer" className="hover:opacity-90">씨씨사이트</a>
-            <a href="https://t.me/+IE0NYpuze_k1YWZk" target="_blank" rel="noreferrer" className="hover:opacity-90">씨씨카지노 공식채널</a>
-        </div>
-      </div>
-      <div className="flex flex-col gap-[2px] text-[20px] font-medium leading-[1.15]">
-        <a href="https://figma.com/sites">Terms & Conditions</a>
-        <a href="https://figma.com/sites">Privacy</a>
-      </div>
-    </div>
-  </footer>
-);
-
 const FigmaLanding: React.FC = () => {
   return (
-    <div className="min-h-screen bg-black flex flex-col items-center lg:flex-row lg:items-start lg:justify-center gap-8 px-4 py-7 lg:px-8">
-      <Sidebar />
-      <main className="relative flex w-full max-w-[760px] flex-col gap-[0px]">
+    <main className="w-full min-w-0">
+      <div className="mx-auto w-full max-w-[980px]">
         <Events />
         <OngoingEvents />
         <HowToUse />
         <BentoGrid />
-        <Footer />
-      </main>
-    </div>
+      </div>
+    </main>
   );
 };
 

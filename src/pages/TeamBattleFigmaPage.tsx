@@ -4,24 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getActiveSeason, getLeaderboard, getMyTeam } from "../api/teamBattleApi";
 import { useToast } from "../components/common/ToastProvider";
 
-const assets = {
-  starDynamicPremium: "/assets/figma/star-dynamic-premium.png",
-  rouletteSvg: "/images/layer-1.svg",
-  levelSvg: "/images/layer-2.svg",
-  lotterySvg: "/images/layer-3.svg",
-  iconRoulette: "/assets/figma/icon-roulette.png",
-  iconLevel: "/assets/figma/icon-level.png",
-  iconLottery: "/assets/figma/icon-lottery.png",
-};
-
 const baseAccent = "#d2fd9c";
-
-const navLinks = [
-  { label: "CC카지노", to: "https://ccc-010.com" },
-  { label: "레벨", to: "/season-pass" },
-  { label: "팀배틀", to: "/team-battle" },
-  { label: "내금고", to: "/landing" },
-];
 
 const formatCountdown = (endsAt?: string | null) => {
   if (!endsAt) return "-";
@@ -36,48 +19,6 @@ const formatCountdown = (endsAt?: string | null) => {
 };
 
 type ViewportVariant = "desktop" | "tablet" | "mobile";
-
-const LogoAndGuide: React.FC<{ className?: string }> = ({ className }) => (
-  <nav className={"flex items-start justify-between " + (className ?? "")}
-  >
-    <div className="flex items-center gap-5" aria-label="Company logo">
-      <div
-        className="relative h-[27px] w-[26px] overflow-hidden rounded-[18px]"
-        style={{ backgroundColor: baseAccent }}
-      >
-        <img
-          src={assets.starDynamicPremium}
-          alt="CC Casino mark"
-          className="absolute inset-0 h-full w-full object-cover"
-        />
-      </div>
-      <p className="text-[16px] font-semibold tracking-[-0.32px]">CC CASINO</p>
-    </div>
-    <a
-      href="https://figma.com/sites"
-      className="rounded-[2px] bg-[#d2fd9c] px-[14px] py-[11px] text-[clamp(11px,2.6vw,12px)] font-medium text-black"
-    >
-      홈페이지 가이드
-    </a>
-  </nav>
-);
-
-const FooterContact: React.FC<{ maxWidthClass: string }> = ({ maxWidthClass }) => (
-  <footer className="w-full bg-[#394508] px-[20px] py-[31px] text-[#d2fd9c]">
-    <div className={"mx-auto " + maxWidthClass}
-    >
-      <div className="flex flex-col gap-[12px]">
-        <p className="text-[20px] font-medium leading-[1.15]">Contact</p>
-        <div className="flex flex-col gap-[2px] text-[20px] font-medium leading-[1.15]">
-          <a href="https://t.me/jm956" target="_blank" rel="noreferrer" className="hover:opacity-90">텔레그램</a>
-          <a href="https://t.me/+LksI3XlSjLlhZmE0" target="_blank" rel="noreferrer" className="hover:opacity-90">지민공지채널</a>
-          <a href="https://ccc-010.com" target="_blank" rel="noreferrer" className="hover:opacity-90">씨씨사이트</a>
-          <a href="https://t.me/+IE0NYpuze_k1YWZk" target="_blank" rel="noreferrer" className="hover:opacity-90">씨씨카지노 공식채널</a>
-        </div>
-      </div>
-    </div>
-  </footer>
-);
 
 const TeamBattleMainPanel: React.FC<{ variant: ViewportVariant }> = ({ variant }) => {
   const [refreshing, setRefreshing] = useState(false);
@@ -347,276 +288,27 @@ const TeamBattleMainPanel: React.FC<{ variant: ViewportVariant }> = ({ variant }
   );
 };
 
-const DesktopLayout: React.FC = () => {
-  const desktopTiles = [
-    { title: "룰렛 경품", to: "/roulette", icon: assets.rouletteSvg, fallback: assets.iconRoulette },
-    { title: "레벨 주사위", to: "/dice", icon: assets.levelSvg, fallback: assets.iconLevel },
-    { title: "랜덤 복권", to: "/lottery", icon: assets.lotterySvg, fallback: assets.iconLottery },
-  ];
-
+const TeamBattleMainOnly: React.FC = () => {
   return (
-    <div className="hidden lg:block landing-font min-h-screen bg-black text-white overflow-x-auto">
-      <div className="mx-auto flex min-h-screen w-[1280px]">
-        <div className="flex w-[396px] flex-col justify-between">
-          <header className="pl-[10px] pr-[10px] pt-[30px]">
-            <div className="flex flex-col gap-[49px] w-[386px]">
-              <LogoAndGuide />
-
-              <div className="flex flex-col gap-5">
-                <h1 className="w-[381px] text-[42px] font-medium leading-[1.06] tracking-[-0.84px]">
-                  지민코드 전용
-                  <br />
-                  <span style={{ color: baseAccent }}>포인트서비스</span>
-                </h1>
-                <h2 className="text-[16px] font-normal leading-[1.09] text-[#cbcbcb]">No personal cre핵심 캐치문구</h2>
-              </div>
-
-              <div className="flex flex-col gap-5">
-                <h3 className="text-[20px] font-medium" style={{ color: baseAccent }}>
-                  게임 바로가기
-                </h3>
-                <div className="flex gap-[10px]">
-                  {desktopTiles.map((tile) => (
-                    <Link
-                      key={tile.title}
-                      to={tile.to}
-                      className="flex h-[108px] flex-col items-center justify-center gap-[14px] rounded-[4px] bg-[#d2fd9c] px-[10px] py-[20px]"
-                      style={{ width: tile.title === "레벨 주사위" ? 124 : tile.title === "룰렛 경품" ? 116 : 110 }}
-                    >
-                      <div className="relative h-[30px] w-[30px]">
-                        <img
-                          src={tile.icon}
-                          alt={tile.title}
-                          className="absolute inset-0 h-full w-full object-contain"
-                          onError={(e) => {
-                            if (!tile.fallback) return;
-                            e.currentTarget.onerror = null;
-                            e.currentTarget.src = tile.fallback;
-                          }}
-                        />
-                      </div>
-                      <p className="text-[20px] font-medium leading-[1.15] text-black text-center">{tile.title}</p>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex w-full items-center justify-center gap-x-3 text-[20px] font-medium" style={{ color: baseAccent }}>
-                {navLinks.map((item) =>
-                  item.to.startsWith("http") ? (
-                    <a
-                      key={item.label}
-                      href={item.to}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="leading-[1.15]"
-                    >
-                      {item.label}
-                    </a>
-                  ) : (
-                    <Link key={item.label} to={item.to} className="leading-[1.15]">
-                      {item.label}
-                    </Link>
-                  )
-                )}
-              </div>
-            </div>
-          </header>
-
-          <footer className="w-[396px] bg-[#394508] px-[20px] py-[31px] text-[#d2fd9c]">
-            <div className="flex flex-col gap-[12px]">
-              <p className="text-[20px] font-medium leading-[1.15]">Contact</p>
-              <div className="flex flex-col gap-[2px] text-[20px] font-medium leading-[1.15]">
-                <a href="https://t.me/jm956" target="_blank" rel="noreferrer" className="hover:opacity-90">텔레그램</a>
-                <a href="https://t.me/+LksI3XlSjLlhZmE0" target="_blank" rel="noreferrer" className="hover:opacity-90">지민공지채널</a>
-                <a href="https://ccc-010.com" target="_blank" rel="noreferrer" className="hover:opacity-90">씨씨사이트</a>
-                <a href="https://t.me/+IE0NYpuze_k1YWZk" target="_blank" rel="noreferrer" className="hover:opacity-90">씨씨카지노 공식채널</a>
-              </div>
-            </div>
-          </footer>
+    <div className="landing-font w-full">
+      <div className="mx-auto w-full max-w-[1040px]">
+        <div className="hidden lg:block">
+          <TeamBattleMainPanel variant="desktop" />
         </div>
-
-        <main className="flex flex-1 flex-col items-center justify-start">
-          <div className="w-[884px] pt-[40px]">
-            <div className="px-[43px]">
-              <TeamBattleMainPanel variant="desktop" />
-            </div>
-          </div>
-        </main>
-      </div>
-    </div>
-  );
-};
-
-const TabletLayout: React.FC = () => {
-  const tabletModules: Array<{ label: React.ReactNode; to: string }> = [
-    { label: <>씨씨<br />카지노</>, to: "https://ccc-010.com" },
-    { label: <>내 레벨</>, to: "/season-pass" },
-    { label: <>랜덤<br />복권</>, to: "/lottery" },
-    { label: <>레벨<br />주사위</>, to: "/dice" },
-    { label: <>룰렛<br />경품</>, to: "/roulette" },
-    { label: <>팀배틀</>, to: "/team-battle" },
-    { label: <>금고<br />서비스</>, to: "/landing" },
-  ];
-
-  return (
-    <div className="hidden md:flex lg:hidden min-h-screen bg-black text-white flex-col">
-      <div className="flex-1 flex flex-col items-center">
-        <header className="w-full max-w-[800px] px-[24px] pt-[21px] pb-[30px]">
-          <div className="flex flex-col gap-[20px]">
-            <LogoAndGuide className="w-full" />
-
-            <div className="flex flex-col gap-[20px]">
-              <h1 className="text-[clamp(28px,5vw,42px)] font-medium leading-[1.06] tracking-[-0.84px]">
-                지민코드 전용 <span style={{ color: baseAccent }}>포인트서비스</span>
-              </h1>
-            </div>
-
-            <div className="flex flex-col gap-[9px]">
-              <h3 className="text-[20px] font-medium leading-[1.15]" style={{ color: baseAccent }}>
-                게임 바로가기
-              </h3>
-              <div className="w-full overflow-x-auto">
-                <div className="flex min-w-max items-center justify-center gap-[26px] px-0 py-[5px]">
-                  {tabletModules.map((m, idx) =>
-                    m.to.startsWith("http") ? (
-                      <a
-                        key={idx}
-                        href={m.to}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="shrink-0 flex h-[85px] w-[85px] flex-col items-center justify-center rounded-[4px] bg-[#d2fd9c] px-[10px] py-[20px]"
-                      >
-                        <p className="text-center text-[clamp(16px,2.4vw,20px)] font-medium leading-[1.15] text-black whitespace-pre-wrap">
-                          {m.label}
-                        </p>
-                      </a>
-                    ) : (
-                      <Link
-                        key={idx}
-                        to={m.to}
-                        className="shrink-0 flex h-[85px] w-[85px] flex-col items-center justify-center rounded-[4px] bg-[#d2fd9c] px-[10px] py-[20px]"
-                      >
-                        <p className="text-center text-[clamp(16px,2.4vw,20px)] font-medium leading-[1.15] text-black whitespace-pre-wrap">
-                          {m.label}
-                        </p>
-                      </Link>
-                    )
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </header>
-
-        <main className="w-full max-w-[800px] pb-[40px]">
+        <div className="hidden md:block lg:hidden">
           <TeamBattleMainPanel variant="tablet" />
-        </main>
-      </div>
-
-      <FooterContact maxWidthClass="max-w-[800px]" />
-    </div>
-  );
-};
-
-const MobileLayout: React.FC = () => {
-  const mobileTiles = [
-    { title: "룰렛 경품", to: "/roulette", icon: assets.rouletteSvg, fallback: assets.iconRoulette },
-    { title: "레벨 주사위", to: "/dice", icon: assets.levelSvg, fallback: assets.iconLevel },
-    { title: "랜덤 복권", to: "/lottery", icon: assets.lotterySvg, fallback: assets.iconLottery },
-  ];
-
-  const renderTileLabel = (title: string) => {
-    const parts = title.split(" ").filter(Boolean);
-    if (parts.length !== 2) {
-      return <span className="block whitespace-nowrap">{title}</span>;
-    }
-
-    return (
-      <span className="flex flex-col items-center leading-[1.05]">
-        <span className="block whitespace-nowrap">{parts[0]}</span>
-        <span className="block whitespace-nowrap">{parts[1]}</span>
-      </span>
-    );
-  };
-
-  return (
-    <div className="md:hidden min-h-screen bg-black text-white flex flex-col">
-      <div className="flex-1 flex flex-col items-center">
-        <header className="w-full max-w-[388px] px-[10px] pt-[20px]">
-          <div className="flex flex-col gap-[20px]">
-            <LogoAndGuide className="w-full" />
-
-            <div className="flex flex-col gap-[20px]">
-              <h1 className="text-[clamp(28px,7vw,42px)] font-medium leading-[1.06] tracking-[-0.84px]">
-                지민코드 전용 <span style={{ color: baseAccent }}>포인트서비스</span>
-              </h1>
-            </div>
-
-            <div className="flex flex-col gap-[11px]">
-              <h3 className="text-[20px] font-medium leading-[1.15]" style={{ color: baseAccent }}>
-                게임 바로가기
-              </h3>
-              <div className="grid grid-cols-3 gap-[10px]">
-                {mobileTiles.map((tile) => (
-                  <Link
-                    key={tile.title}
-                    to={tile.to}
-                    className="min-w-0 flex h-[99px] w-full flex-col items-center justify-between rounded-[4px] bg-[#d2fd9c] px-[10px] py-[20px]"
-                  >
-                    <div className="relative h-[30px] w-[30px]">
-                      <img
-                        src={tile.icon}
-                        alt={tile.title}
-                        className="absolute inset-0 h-full w-full object-contain"
-                        onError={(e) => {
-                          if (!tile.fallback) return;
-                          e.currentTarget.onerror = null;
-                          e.currentTarget.src = tile.fallback;
-                        }}
-                      />
-                    </div>
-                    <p className="text-center text-[clamp(14px,4vw,20px)] font-medium leading-[1.1] text-black">
-                      {renderTileLabel(tile.title)}
-                    </p>
-                  </Link>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex w-full items-center justify-center gap-x-[12.8px] text-[20px] font-medium" style={{ color: baseAccent }}>
-              {navLinks.map((item) =>
-                item.to.startsWith("http") ? (
-                  <a key={item.label} href={item.to} target="_blank" rel="noreferrer" className="leading-[1.15]">
-                    {item.label}
-                  </a>
-                ) : (
-                  <Link key={item.label} to={item.to} className="leading-[1.15]">
-                    {item.label}
-                  </Link>
-                )
-              )}
-            </div>
-          </div>
-        </header>
-
-        <main className="w-full max-w-[388px] pb-[40px]">
+        </div>
+        <div className="md:hidden">
           <TeamBattleMainPanel variant="mobile" />
-        </main>
+        </div>
       </div>
-
-      <FooterContact maxWidthClass="max-w-[388px]" />
     </div>
   );
 };
 
 const TeamBattleFigmaPage: React.FC = () => {
   return (
-    <div className="bg-black">
-      <DesktopLayout />
-      <TabletLayout />
-      <MobileLayout />
-    </div>
+    <TeamBattleMainOnly />
   );
 };
 

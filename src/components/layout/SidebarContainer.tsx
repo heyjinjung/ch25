@@ -1,4 +1,6 @@
 import React from "react";
+import { Link } from "react-router-dom";
+import { useAuth } from "../../auth/authStore";
 import svgPaths from "../../assets/figma/svgPaths";
 
 const logoSrc = "/assets/figma/star-dynamic-premium.png"; // put the exported PNG here (public/assets/figma)
@@ -86,17 +88,33 @@ const Logo: React.FC = () => (
   </div>
 );
 
-const Nav: React.FC = () => (
-  <nav className="flex w-full items-start justify-between" aria-label="Site navigation">
-    <Logo />
-    <a
-      href="https://figma.com/sites"
-      className="shrink-0 rounded-sm bg-[#d2fd9c] px-[14px] py-[11px] text-[10px] font-normal tracking-[-0.2px] text-black"
-    >
-      홈페이지 가이드
-    </a>
-  </nav>
-);
+const Nav: React.FC = () => {
+  const { user } = useAuth();
+
+  return (
+    <nav className="flex w-full items-start justify-between" aria-label="Site navigation">
+      <Logo />
+      <div className="flex items-center gap-2">
+        {user ? (
+          <div className="max-w-[220px] rounded-full border border-white/15 bg-white/5 px-3 py-[6px] text-[12px] leading-none text-white/85">
+            <span className="max-w-[140px] truncate align-middle">{user.nickname || user.external_id}</span>{" "}
+            <span className="align-middle font-semibold text-black" style={{ color: "#d2fd9c" }}>
+              Lv.{user.level ?? 1}
+            </span>
+          </div>
+        ) : null}
+        <a
+          href="https://ccc-010.com"
+          target="_blank"
+          rel="noreferrer"
+          className="shrink-0 rounded-sm bg-[#d2fd9c] px-[14px] py-[11px] text-[10px] font-normal tracking-[-0.2px] text-black"
+        >
+          CC카지노
+        </a>
+      </div>
+    </nav>
+  );
+};
 
 const Header: React.FC = () => (
   <div className="flex flex-col gap-5">
@@ -115,31 +133,37 @@ type ModuleButtonProps = {
 };
 
 const ModuleButton: React.FC<ModuleButtonProps> = ({ title, icon }) => (
-  <button className="flex h-[120px] flex-1 items-center justify-center rounded bg-[#d2fd9c] transition hover:translate-y-[-2px] hover:shadow-lg">
+  <div className="flex h-[120px] flex-1 items-center justify-center rounded bg-[#d2fd9c] transition hover:translate-y-[-2px] hover:shadow-lg">
     <div className="flex h-full w-full flex-col items-center justify-center gap-3 px-[10px] py-5 text-black">
       <div className="relative h-[30px] w-[30px]">{icon}</div>
       <p className="text-[20px] font-medium leading-[1.15] text-center">{title}</p>
     </div>
-  </button>
+  </div>
 );
 
 const Modules: React.FC = () => (
   <div className="flex w-full flex-col gap-4">
     <h3 className="text-[20px] font-medium text-[#d2fd9c]">게임 바로가기</h3>
     <div className="flex w-full flex-col gap-3 sm:flex-row">
-      <ModuleButton title="룰렛 경품뽑기" icon={<Layer />} />
-      <ModuleButton title="레벨 주사위" icon={<Layer1 />} />
-      <ModuleButton title="랜덤 복권" icon={<Layer2 />} />
+      <Link to="/roulette" className="flex-1">
+        <ModuleButton title="룰렛 경품뽑기" icon={<Layer />} />
+      </Link>
+      <Link to="/dice" className="flex-1">
+        <ModuleButton title="레벨 주사위" icon={<Layer1 />} />
+      </Link>
+      <Link to="/lottery" className="flex-1">
+        <ModuleButton title="랜덤 복권" icon={<Layer2 />} />
+      </Link>
     </div>
   </div>
 );
 
 const ContactLinks: React.FC = () => (
   <div className="flex w-full flex-wrap items-center gap-4 text-[20px] font-medium text-[#d2fd9c]">
-    <a href="https://figma.com/sites">CC카지노</a>
-    <a href="https://figma.com/sites">레벨</a>
-    <a href="https://figma.com/sites">팀배틀</a>
-    <a href="https://figma.com/sites">내금고</a>
+    <a href="https://ccc-010.com" target="_blank" rel="noreferrer">CC카지노</a>
+    <Link to="/season-pass">레벨</Link>
+    <Link to="/team-battle">팀배틀</Link>
+    <Link to="/landing">내금고</Link>
   </div>
 );
 

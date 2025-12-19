@@ -15,6 +15,7 @@ import FigmaLandingTablet from "../pages/FigmaLandingTablet";
 import FigmaLandingMobile from "../pages/FigmaLandingMobile";
 import SeasonPassFigmaPage from "../pages/SeasonPassFigmaPage";
 import UserLayout from "../components/layout/UserLayout";
+import SidebarAppLayout from "../components/layout/SidebarAppLayout";
 import RequireAuth from "../components/routing/RequireAuth";
 
 const UserRoutes: React.FC = () => {
@@ -26,21 +27,22 @@ const UserRoutes: React.FC = () => {
       <Route path="/tablet" element={<Navigate to="/login" replace />} />
       <Route path="/mobile" element={<Navigate to="/login" replace />} />
 
-      {/* Figma landing pages (authenticated) */}
-      <Route element={<RequireAuth />}>
-        <Route path="/landing" element={<FigmaLanding />} />
-        <Route path="/landing/tablet" element={<FigmaLandingTablet />} />
-        <Route path="/landing/mobile" element={<FigmaLandingMobile />} />
+      {/* Primary user experience with sidebar */}
+      <Route element={<SidebarAppLayout />}>
+        <Route element={<RequireAuth />}>
+          <Route path="/landing" element={<FigmaLanding />} />
+          <Route path="/landing/tablet" element={<FigmaLandingTablet />} />
+          <Route path="/landing/mobile" element={<FigmaLandingMobile />} />
+          <Route path="/season-pass" element={<SeasonPassFigmaPage />} />
+          <Route path="/team-battle" element={<TeamBattleFigmaPage />} />
+          <Route path="/roulette" element={<RoulettePage />} />
+          <Route path="/dice" element={<DicePage />} />
+          <Route path="/lottery" element={<LotteryPage />} />
+        </Route>
       </Route>
       <Route element={<UserLayout />}>
         <Route element={<RequireAuth />}>
           <Route path="/home" element={<Navigate to="/landing" replace />} />
-          <Route path="/season-pass" element={<SeasonPassFigmaPage />} />
-          <Route path="/team-battle" element={<TeamBattleFigmaPage />} />
-
-          <Route path="/roulette" element={<RoulettePage />} />
-          <Route path="/dice" element={<DicePage />} />
-          <Route path="/lottery" element={<LotteryPage />} />
           <Route path="/ranking" element={<RankingPage />} />
           <Route path="/surveys" element={<SurveyListPage />} />
           <Route path="/surveys/:surveyId" element={<SurveyRunnerPage />} />

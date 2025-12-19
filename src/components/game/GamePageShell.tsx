@@ -8,8 +8,8 @@ type Props = {
 
 const GamePageShell: React.FC<Props> = ({ title, subtitle, rightSlot, children, footerNote }) => {
   return (
-    <main className="min-h-screen w-full bg-gradient-to-b from-cc-moss via-black to-black text-white">
-      <div className="mx-auto w-full max-w-[1040px] px-4 py-6 sm:px-6 sm:py-10">
+    <div className="w-full text-white">
+      <div className="mx-auto w-full max-w-[1040px]">
         {rightSlot ? <div className="mb-6 flex items-center justify-end gap-3">{rightSlot}</div> : null}
 
         <header className="rounded-3xl border border-white/10 bg-black/55 px-4 py-6 backdrop-blur sm:px-8">
@@ -34,7 +34,7 @@ const GamePageShell: React.FC<Props> = ({ title, subtitle, rightSlot, children, 
           </footer>
         )}
       </div>
-    </main>
+    </div>
   );
 };
 
