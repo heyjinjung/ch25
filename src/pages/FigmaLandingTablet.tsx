@@ -25,7 +25,7 @@ const assets = {
 };
 
 const navLinks = [
-  { label: "CC카지노", to: "/home" },
+  { label: "CC카지노", to: "/landing" },
   { label: "레벨", to: "/season-pass" },
   { label: "팀배틀", to: "/team-battle" },
   { label: "내금고", to: "/home" },

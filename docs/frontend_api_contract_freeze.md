@@ -44,7 +44,7 @@
 - [src/components/routing/RequireAuth.tsx](src/components/routing/RequireAuth.tsx)
 
 ### 로그인 후 리다이렉트
-- `location.state.from`이 있으면 해당 경로로, 없으면 기본 `"/home"`
+- `location.state.from`이 있으면 해당 경로로, 없으면 기본 `"/landing"`
 
 근거 구현
 - [src/pages/LoginPage.tsx](src/pages/LoginPage.tsx)

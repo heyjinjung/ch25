@@ -76,8 +76,11 @@ services:
       context: .
       dockerfile: Dockerfile.frontend
       args:
-        VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
-        VITE_ADMIN_API_URL: ${VITE_ADMIN_API_URL:-http://localhost:8000/admin/api}
+        # IMPORTANT: Do not default to http://localhost:8000 here.
+        # In production, the browser's localhost is the user's machine, not the server.
+        # Prefer empty (so frontend derives same-origin) and rely on nginx proxy (/api, /admin/api).
+        VITE_API_URL: ${VITE_API_URL:-}
+        VITE_ADMIN_API_URL: ${VITE_ADMIN_API_URL:-}
         VITE_ENV: production
     container_name: xmas-frontend
     restart: unless-stopped

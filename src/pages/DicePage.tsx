@@ -144,7 +144,7 @@ const DicePage: React.FC = () => {
 
           <button
             type="button"
-            onClick={() => navigate("/home")}
+            onClick={() => navigate("/landing")}
             className="w-full rounded-lg border border-emerald-500/50 px-4 py-2 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-900/40"
           >
             홈으로 돌아가기

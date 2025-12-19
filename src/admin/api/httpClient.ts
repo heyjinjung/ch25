@@ -2,16 +2,24 @@
 import axios from "axios";
 import { clearAdminToken, getAdminToken } from "../../auth/adminAuth";
 
-// Prefer explicit admin base URL; if not set, derive from current origin (replace :3000 -> :8000) then fallback to localhost.
-const derivedAdminBase =
-  typeof window !== "undefined"
-    ? `${window.location.origin.replace(/:3000$/, ":8000")}/admin/api`
-    : "http://localhost:8000/admin/api";
+// Prefer explicit admin base URL; otherwise derive at runtime.
+// - localhost/127.0.0.1: talk to backend on :8000
+// - non-local host: use same-origin (expects reverse proxy)
+const envAdminBase = (
+  import.meta.env.VITE_ADMIN_API_BASE_URL ||
+  import.meta.env.VITE_ADMIN_API_URL ||
+  ""
+).trim();
 
-const adminBaseURL =
-  import.meta.env.VITE_ADMIN_API_BASE_URL ??
-  import.meta.env.VITE_ADMIN_API_URL ??
-  derivedAdminBase;
+const derivedAdminBase = (() => {
+  if (typeof window === "undefined") return "";
+  const { protocol, hostname, origin } = window.location;
+  const isLocalHost = hostname === "localhost" || hostname === "127.0.0.1";
+  const base = isLocalHost ? `${protocol}//${hostname}:8000` : origin;
+  return `${base.replace(/\/+$/, "")}/admin/api`;
+})();
+
+const adminBaseURL = (envAdminBase || derivedAdminBase).replace(/\/+$/, "");
 
 export const adminApi = axios.create({
   baseURL: adminBaseURL,

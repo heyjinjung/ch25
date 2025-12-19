@@ -16,7 +16,7 @@ const App: React.FC = () => {
 
   const navItems = useMemo(
     () => [
-      { label: "홈", path: "/home" },
+      { label: "홈", path: "/landing" },
       { label: "팀 배틀", path: "/team-battle" },
       { label: "레벨", path: "/season-pass" },
       { label: "설문", path: "/surveys" },

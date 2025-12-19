@@ -19,7 +19,7 @@ const LoginPage: React.FC = () => {
   const resolvePostLoginPath = (): string => {
     const state = location.state as { from?: { pathname?: string; search?: string; hash?: string } } | null;
     const from = state?.from;
-    if (!from?.pathname || from.pathname === "/login") return "/home";
+    if (!from?.pathname || from.pathname === "/login") return "/landing";
     return `${from.pathname ?? ""}${from.search ?? ""}${from.hash ?? ""}`;
   };
 

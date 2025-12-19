@@ -45,7 +45,7 @@ const UserRoutes: React.FC = () => {
           <Route path="/surveys/:surveyId" element={<SurveyRunnerPage />} />
           <Route path="/team-battle" element={<TeamBattlePage />} />
           <Route path="/new-member/dice" element={<NewMemberDicePage />} />
-          <Route path="/app" element={<Navigate to="/home" replace />} />
+          <Route path="/app" element={<Navigate to="/landing" replace />} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/login" replace />} />

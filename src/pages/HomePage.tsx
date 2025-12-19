@@ -16,16 +16,20 @@ interface GameCardProps {
   readonly path: string;
   readonly tokenType?: string;
   readonly tokenBalance?: number | null;
+  readonly iconSrc?: string;
+  readonly iconFallbackSrc?: string;
   readonly state?: "idle" | "loading" | "error";
 }
 
-const gameIcons: Record<string, string> = {
-  "룰렛": "🎰",
-  "주사위": "🎲",
-  "복권": "🎟️",
-};
-
-const GameCard: React.FC<GameCardProps> = ({ title, path, tokenType, tokenBalance, state = "idle" }) => {
+const GameCard: React.FC<GameCardProps> = ({
+  title,
+  path,
+  tokenType,
+  tokenBalance,
+  iconSrc,
+  iconFallbackSrc,
+  state = "idle",
+}) => {
   const navigate = useNavigate();
   const hasCoins = typeof tokenBalance === "number" && tokenBalance > 0;
   const tokenLabel = tokenType ? GAME_TOKEN_LABELS[tokenType as keyof typeof GAME_TOKEN_LABELS] ?? tokenType : "미지급";
@@ -36,12 +40,29 @@ const GameCard: React.FC<GameCardProps> = ({ title, path, tokenType, tokenBalanc
         ? "상태 조회 실패 - 티켓 지급 확인"
        : undefined;
 
+  const shouldRenderIcon = !!iconSrc;
+
   return (
     <div className="rounded-2xl border border-emerald-500/25 bg-white/5 backdrop-blur-xl p-5 shadow-lg transition hover:border-emerald-300/40">
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <span className="text-2xl">{gameIcons[title] ?? "🎮"}</span>
+            {shouldRenderIcon ? (
+              <span className="relative h-7 w-7 shrink-0">
+                <img
+                  src={iconSrc}
+                  alt={title}
+                  className="absolute inset-0 h-full w-full object-contain"
+                  onError={(e) => {
+                    if (!iconFallbackSrc) return;
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = iconFallbackSrc;
+                  }}
+                />
+              </span>
+            ) : (
+              <span className="text-2xl">🎮</span>
+            )}
             <h3 className="text-lg font-extrabold text-white">{title}</h3>
           </div>
           <p className="text-xs text-slate-300">{tokenLabel}</p>
@@ -91,6 +112,8 @@ const HomePage: React.FC = () => {
       path: "/roulette",
       tokenType: roulette.data?.token_type,
       tokenBalance: roulette.data?.token_balance ?? null,
+      iconSrc: "/images/layer-1.svg",
+      iconFallbackSrc: "/assets/figma/icon-roulette.png",
       state: roulette.isLoading ? "loading" : roulette.isError ? "error" : "idle",
     },
     {
@@ -98,6 +121,8 @@ const HomePage: React.FC = () => {
       path: "/dice",
       tokenType: dice.data?.token_type,
       tokenBalance: dice.data?.token_balance ?? null,
+      iconSrc: "/images/layer-2.svg",
+      iconFallbackSrc: "/assets/figma/icon-level.png",
       state: dice.isLoading ? "loading" : dice.isError ? "error" : "idle",
     },
     {
@@ -105,6 +130,8 @@ const HomePage: React.FC = () => {
       path: "/lottery",
       tokenType: lottery.data?.token_type,
       tokenBalance: lottery.data?.token_balance ?? null,
+      iconSrc: "/images/layer-3.svg",
+      iconFallbackSrc: "/assets/figma/icon-lottery.png",
       state: lottery.isLoading ? "loading" : lottery.isError ? "error" : "idle",
     },
   ];
