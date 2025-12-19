@@ -79,7 +79,7 @@ const DicePage: React.FC = () => {
 
     if (isError || !data) {
       return (
-        <div className="rounded-3xl border border-white/10 bg-black/35 p-6 text-center">
+        <div className="rounded-3xl border border-white/15 bg-white/5 p-6 text-center backdrop-blur">
           <p className="text-[clamp(16px,3.2vw,20px)] font-bold text-white">주사위 정보를 불러오지 못했습니다.</p>
           <p className="mt-2 text-[clamp(12px,2.6vw,14px)] text-white/60">잠시 후 다시 시도해주세요.</p>
         </div>
@@ -89,37 +89,40 @@ const DicePage: React.FC = () => {
     return (
       <div className="space-y-6 sm:space-y-8">
         {rewardToast && (
-          <div className="fixed bottom-6 right-6 z-30 rounded-2xl border border-white/15 bg-black/80 px-4 py-3 text-white shadow-lg backdrop-blur animate-bounce-in">
-            <span className="font-bold text-cc-lime">+</span>
-            <span className="ml-1 font-extrabold text-white">
-              <AnimatedNumber value={rewardToast.value} from={0} />
-            </span>
-            <span className="ml-2 text-white/70">{rewardToast.type}</span>
+          <div className="fixed bottom-6 right-6 z-30 overflow-hidden rounded-2xl border border-white/15 bg-black/75 px-4 py-3 text-white shadow-lg backdrop-blur animate-bounce-in">
+            <div className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-cc-teal/80" />
+            <div className="flex items-center pl-2">
+              <span className="font-extrabold text-cc-lime">+</span>
+              <span className="ml-1 font-extrabold text-white">
+                <AnimatedNumber value={rewardToast.value} from={0} />
+              </span>
+              <span className="ml-2 text-white/70">{rewardToast.type}</span>
+            </div>
           </div>
         )}
 
         <div className="flex flex-wrap items-center justify-center gap-2">
-          <span className="rounded-full border border-white/10 bg-black/40 px-3 py-1 text-[clamp(12px,2.4vw,13px)] font-bold text-white/90">
+          <span className="rounded-full border border-white/15 bg-white/6 px-3 py-1 text-[clamp(12px,2.4vw,13px)] font-bold text-white/90">
             {remainingLabel}
           </span>
-          <span className="rounded-full border border-white/10 bg-black/40 px-3 py-1 text-[clamp(12px,2.4vw,13px)] font-bold text-white/70">
+          <span className="rounded-full border border-white/15 bg-white/6 px-3 py-1 text-[clamp(12px,2.4vw,13px)] font-bold text-white/70">
             {tokenLabel}
           </span>
         </div>
 
-        <div className="rounded-3xl border border-white/10 bg-black/30 p-4 shadow-[0_14px_40px_rgba(0,0,0,0.55)] sm:p-6">
+        <div className="rounded-3xl border border-white/15 bg-white/5 p-4 shadow-[0_14px_40px_rgba(0,0,0,0.55)] sm:p-6">
           <DiceView userDice={userDice} dealerDice={dealerDice} result={result} isRolling={isRolling} />
         </div>
 
         <div className="space-y-4">
           {!!playMutation.error && !isRolling && (
-            <div className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-center text-[clamp(12px,2.6vw,14px)] text-white/80">
+            <div className="rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-center text-[clamp(12px,2.6vw,14px)] text-white/80">
               {mapErrorMessage(playMutation.error)}
             </div>
           )}
 
           {isOutOfTokens && (
-            <div className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-center text-[clamp(12px,2.6vw,14px)] text-white/80">
+            <div className="rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-center text-[clamp(12px,2.6vw,14px)] text-white/80">
               티켓이 부족합니다. 운영자에게 충전을 요청해주세요.
             </div>
           )}

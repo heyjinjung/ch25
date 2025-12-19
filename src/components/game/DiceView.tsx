@@ -41,14 +41,14 @@ const DiceView: React.FC<DiceViewProps> = ({ userDice, dealerDice, result, isRol
   const dealerSum = dealerDice.reduce((a, b) => a + b, 0);
 
   const resultConfig = useMemo(() => {
-    if (!result) return { text: "주사위를 굴려보세요!", color: "text-white/70", bg: "bg-black/25" };
+    if (!result) return { text: "주사위를 굴려보세요!", color: "text-white/70", bg: "bg-white/5" };
     switch (result) {
       case "WIN":
-        return { text: "🎉 승리!", color: "text-cc-lime", bg: "bg-black/25" };
+        return { text: "🎉 승리!", color: "text-cc-lime", bg: "bg-cc-green/15" };
       case "LOSE":
-        return { text: "😢 패배", color: "text-white/80", bg: "bg-black/25" };
+        return { text: "😢 패배", color: "text-white/80", bg: "bg-white/5" };
       case "DRAW":
-        return { text: "🤝 무승부", color: "text-cc-steel", bg: "bg-black/25" };
+        return { text: "🤝 무승부", color: "text-cc-teal", bg: "bg-cc-teal/12" };
     }
   }, [result]);
 
@@ -57,15 +57,15 @@ const DiceView: React.FC<DiceViewProps> = ({ userDice, dealerDice, result, isRol
       {/* Battle area */}
       <div className="grid gap-6 sm:grid-cols-2">
         {/* User dice */}
-        <div className="rounded-3xl border border-white/10 bg-black/30 p-5 text-center shadow-[0_14px_40px_rgba(0,0,0,0.55)] sm:p-6">
+        <div className="rounded-3xl border border-white/15 bg-white/5 p-5 text-center shadow-[0_14px_40px_rgba(0,0,0,0.55)] sm:p-6">
           <p className="mb-4 text-[clamp(12px,2.6vw,13px)] font-extrabold uppercase tracking-[0.35em] text-cc-lime/90">👤 나의 주사위</p>
           <div className="flex justify-center gap-3">
             {userDice.length > 0 ? (
               userDice.map((val, i) => <DiceFace key={i} value={val} isRolling={isRolling} />)
             ) : (
               <>
-                <div className="h-16 w-16 rounded-2xl border-2 border-dashed border-white/15 bg-black/20" />
-                <div className="h-16 w-16 rounded-2xl border-2 border-dashed border-white/15 bg-black/20" />
+                <div className="h-16 w-16 rounded-2xl border-2 border-dashed border-white/20 bg-white/5" />
+                <div className="h-16 w-16 rounded-2xl border-2 border-dashed border-white/20 bg-white/5" />
               </>
             )}
           </div>
@@ -73,15 +73,15 @@ const DiceView: React.FC<DiceViewProps> = ({ userDice, dealerDice, result, isRol
         </div>
 
         {/* Dealer dice */}
-        <div className="rounded-3xl border border-white/10 bg-black/30 p-5 text-center shadow-[0_14px_40px_rgba(0,0,0,0.55)] sm:p-6">
+        <div className="rounded-3xl border border-white/15 bg-white/5 p-5 text-center shadow-[0_14px_40px_rgba(0,0,0,0.55)] sm:p-6">
           <p className="mb-4 text-[clamp(12px,2.6vw,13px)] font-extrabold uppercase tracking-[0.35em] text-white/70">🎰 딜러 주사위</p>
           <div className="flex justify-center gap-3">
             {dealerDice.length > 0 ? (
               dealerDice.map((val, i) => <DiceFace key={i} value={val} isRolling={isRolling} />)
             ) : (
               <>
-                <div className="h-16 w-16 rounded-2xl border-2 border-dashed border-white/15 bg-black/20" />
-                <div className="h-16 w-16 rounded-2xl border-2 border-dashed border-white/15 bg-black/20" />
+                <div className="h-16 w-16 rounded-2xl border-2 border-dashed border-white/20 bg-white/5" />
+                <div className="h-16 w-16 rounded-2xl border-2 border-dashed border-white/20 bg-white/5" />
               </>
             )}
           </div>
@@ -90,7 +90,7 @@ const DiceView: React.FC<DiceViewProps> = ({ userDice, dealerDice, result, isRol
       </div>
 
       {/* Result display */}
-      <div className={`rounded-3xl border border-white/10 ${resultConfig.bg} p-6 text-center shadow-[0_14px_40px_rgba(0,0,0,0.55)]`}>
+      <div className={`rounded-3xl border border-white/15 ${resultConfig.bg} p-6 text-center shadow-[0_14px_40px_rgba(0,0,0,0.55)]`}>
         <p className={`text-[clamp(22px,5vw,32px)] font-extrabold ${resultConfig.color}`}>{resultConfig.text}</p>
         {result && userDice.length > 0 && (
           <p className="mt-2 text-[clamp(12px,2.6vw,14px)] text-white/60">
