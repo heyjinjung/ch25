@@ -131,7 +131,7 @@ const DicePage: React.FC = () => {
             type="button"
             disabled={isRolling || playMutation.isPending || (!isUnlimited && data.remaining_plays <= 0) || isOutOfTokens}
             onClick={handlePlay}
-            className="group relative w-full overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-r from-cc-lime via-cc-lime to-cc-green px-6 py-4 text-[clamp(16px,3.8vw,18px)] font-extrabold text-cc-olive shadow-lg transition hover:brightness-105 active:brightness-95 disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/40"
+            className="group relative w-full overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-r from-emerald-950/70 via-emerald-900/60 to-emerald-800/55 px-6 py-4 text-[clamp(16px,3.8vw,18px)] font-extrabold text-white shadow-lg transition hover:brightness-110 active:brightness-95 disabled:cursor-not-allowed disabled:bg-none disabled:bg-white/10 disabled:text-white/40"
           >
             <span className="relative z-10">
               {isRolling || playMutation.isPending ? (
@@ -143,7 +143,7 @@ const DicePage: React.FC = () => {
                 result || infoMessage ? "다시 하기" : "🎲 주사위 던지기"
               )}
             </span>
-            <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/40 to-transparent transition-transform group-hover:translate-x-full" />
+            <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform group-hover:translate-x-full" />
           </button>
 
           {infoMessage && !isRolling && <p className="text-center text-[clamp(12px,2.6vw,14px)] text-white/75">{infoMessage}</p>}

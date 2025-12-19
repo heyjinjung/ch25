@@ -81,13 +81,13 @@ const LevelCard: React.FC<{ variant: LevelCardVariant }> = ({ variant }) => {
       className={
         "w-full " +
         sizing.maxW +
-        " rounded-[16px] border border-emerald-300/15 bg-emerald-950/35 text-white backdrop-blur-sm " +
+        " rounded-[16px] border border-emerald-200/20 bg-emerald-900/15 text-white backdrop-blur-sm " +
         sizing.pad
       }
       aria-label="내 레벨 카드"
     >
       <header className="flex items-center gap-4">
-        <div className={"relative rounded-full bg-emerald-950/35 " + sizing.avatar}>
+        <div className={"relative rounded-full bg-emerald-950/25 " + sizing.avatar}>
           <div className={"absolute inset-0 flex items-center justify-center font-semibold text-[#d2fd9c] " + sizing.avatarText}>
             {displayName.slice(0, 1)}
           </div>
@@ -122,15 +122,15 @@ const LevelCard: React.FC<{ variant: LevelCardVariant }> = ({ variant }) => {
       </div>
 
       <div className={"mt-8 flex gap-4 " + (isMobile ? "flex-col" : "flex-row")}>
-        <div className={"rounded-[6px] bg-emerald-950/25 px-5 py-4 text-center " + (isMobile ? "w-full" : "flex-1")}>
+        <div className={"rounded-[6px] bg-emerald-950/20 px-5 py-4 text-center " + (isMobile ? "w-full" : "flex-1")}>
           <p className={"font-bold text-[#d2fd9c] " + sizing.statNumber}>{derived.totalStamps}</p>
           <p className="mt-1 text-[clamp(13px,2.8vw,14px)] text-white/85">완료한 미션</p>
         </div>
-        <div className={"rounded-[6px] bg-emerald-950/25 px-5 py-4 text-center " + (isMobile ? "w-full" : "flex-1")}>
+        <div className={"rounded-[6px] bg-emerald-950/20 px-5 py-4 text-center " + (isMobile ? "w-full" : "flex-1")}>
           <p className={"font-bold text-[#d2fd9c] " + sizing.statNumber}>{derived.claimedBadges}</p>
           <p className="mt-1 text-[clamp(13px,2.8vw,14px)] text-white/85">획득한 뱃지</p>
         </div>
-        <div className={"rounded-[6px] bg-emerald-950/25 px-5 py-4 text-center " + (isMobile ? "w-full" : "flex-1")}>
+        <div className={"rounded-[6px] bg-emerald-950/20 px-5 py-4 text-center " + (isMobile ? "w-full" : "flex-1")}>
           <p className={"font-bold text-[#d2fd9c] " + sizing.statNumber}>{derived.currentXp.toLocaleString()}</p>
           <p className="mt-1 text-[clamp(13px,2.8vw,14px)] text-white/85">총 획득 XP</p>
         </div>
