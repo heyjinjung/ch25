@@ -2,6 +2,7 @@
 import React, { useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "../../auth/authStore";
+import HomeShortcutButton from "../common/HomeShortcutButton";
 
 interface MainLayoutProps {
   readonly children: React.ReactNode;
@@ -27,6 +28,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                 )}
               </div>
               <div className="text-center text-xs text-slate-300 sm:text-right">MERRY CC-MAS</div>
+              <div className="mt-3 flex justify-center sm:mt-0 sm:justify-end">
+                <HomeShortcutButton />
+              </div>
             </div>
           </header>
         )}

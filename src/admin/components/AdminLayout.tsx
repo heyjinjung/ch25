@@ -1,6 +1,7 @@
 // src/admin/components/AdminLayout.tsx
 import React from "react";
 import { Link, NavLink, Outlet } from "react-router-dom";
+import HomeShortcutButton from "../../components/common/HomeShortcutButton";
 
 const navItems = [
   { path: "/admin", label: "Dashboard" },
@@ -43,6 +44,9 @@ const AdminLayout: React.FC = () => {
         </nav>
       </aside>
       <main className="flex-1 px-4 py-6 sm:px-8">
+        <div className="mb-4 flex justify-end">
+          <HomeShortcutButton />
+        </div>
         <Outlet />
       </main>
     </div>
