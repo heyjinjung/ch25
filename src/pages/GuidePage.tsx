@@ -589,7 +589,7 @@ const Footer: React.FC = () => {
                   <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" />
                   <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z" />
                 </svg>
-                <a className="hover:text-[#d2fd9c]" href="#">텔레그램</a>
+                <a className="hover:text-[#d2fd9c]" href="#">실장텔레그램</a>
               </li>
               <li className="flex items-center gap-2">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#d2fd9c]" viewBox="0 0 20 20" fill="currentColor">
@@ -601,16 +601,6 @@ const Footer: React.FC = () => {
                 </svg>
                 <a className="hover:text-[#d2fd9c]" href="#">지민공지채널</a>
               </li>
-              <li className="flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#d2fd9c]" viewBox="0 0 20 20" fill="currentColor">
-                  <path
-                    fillRule="evenodd"
-                    d="M4.083 9h1.946c.089-1.546.383-2.97.837-4.118A6.004 6.004 0 004.083 9zM10 2a8 8 0 100 16 8 8 0 000-16zm0 2c-.076 0-.232.032-.465.262-.238.234-.497.623-.737 1.182-.389.907-.673 2.142-.766 3.556h3.936c-.093-1.414-.377-2.649-.766-3.556-.24-.56-.5-.948-.737-1.182C10.232 4.032 10.076 4 10 4zm3.971 5c-.089-1.546-.383-2.97-.837-4.118A6.004 6.004 0 0115.917 9h-1.946zm-2.003 2H8.032c.093 1.414.377 2.649.766 3.556.24.56.5.948.737 1.182.233.23.389.262.465.262.076 0 .232-.032.465-.262.238-.234.498-.623.737-1.182.389-.907.673-2.142.766-3.556zm1.166 4.118c.454-1.147.748-2.572.837-4.118h1.946a6.004 6.004 0 01-2.783 4.118zm-6.268 0C6.412 13.97 6.118 12.546 6.03 11H4.083a6.004 6.004 0 002.783 4.118z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                <a className="hover:text-[#d2fd9c]" href="#">씨씨사이트</a>
-              </li>
             </ul>
             <p className="mt-4 text-sm text-gray-400">운영 시간: 10:00–22:00</p>
           </div>
@@ -620,8 +610,6 @@ const Footer: React.FC = () => {
           <div className="mt-4 flex flex-col justify-between gap-4 md:flex-row">
             <p>&copy; 2023 CC카지노 이벤트. All rights reserved.</p>
             <div className="flex flex-wrap gap-4">
-              <a className="hover:text-[#d2fd9c]" href="#">Terms & Conditions</a>
-              <a className="hover:text-[#d2fd9c]" href="#">Privacy</a>
               <a className="hover:text-[#d2fd9c]" href="#">Contact</a>
             </div>
           </div>

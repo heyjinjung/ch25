@@ -183,15 +183,10 @@ const MobileLanding: React.FC = () => {
           <div className="flex flex-col gap-[12px]">
             <p className="text-[20px] font-medium leading-[1.15]">Contact</p>
             <div className="flex flex-col gap-[2px] text-[20px] font-medium leading-[1.15]">
-              <a href="https://t.me/jm956" target="_blank" rel="noreferrer" className="hover:opacity-90">텔레그램</a>
+              <a href="https://t.me/jm956" target="_blank" rel="noreferrer" className="hover:opacity-90">실장텔레그램</a>
               <a href="https://t.me/+LksI3XlSjLlhZmE0" target="_blank" rel="noreferrer" className="hover:opacity-90">지민공지채널</a>
-              <a href="https://ccc-010.com" target="_blank" rel="noreferrer" className="hover:opacity-90">씨씨사이트</a>
               <a href="https://t.me/+IE0NYpuze_k1YWZk" target="_blank" rel="noreferrer" className="hover:opacity-90">씨씨카지노 공식채널</a>
             </div>
-          </div>
-          <div className="flex flex-col gap-[2px] text-[20px] font-medium leading-[1.15]">
-            <a href="https://figma.com/sites">Terms & Conditions</a>
-            <a href="https://figma.com/sites">Privacy</a>
           </div>
         </div>
       </footer>
