@@ -1,7 +1,8 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { getActiveSeason, getLeaderboard, getMyTeam } from "../api/teamBattleApi";
+import { useToast } from "../components/common/ToastProvider";
 
 const assets = {
   starDynamicPremium: "/assets/figma/star-dynamic-premium.png",
@@ -80,6 +81,7 @@ const FooterContact: React.FC<{ maxWidthClass: string }> = ({ maxWidthClass }) =
 
 const TeamBattleMainPanel: React.FC<{ variant: ViewportVariant }> = ({ variant }) => {
   const [refreshing, setRefreshing] = useState(false);
+  const { addToast } = useToast();
 
   const seasonQuery = useQuery({
     queryKey: ["team-battle-season"],
@@ -105,6 +107,66 @@ const TeamBattleMainPanel: React.FC<{ variant: ViewportVariant }> = ({ variant }
   const myTeamId = myTeamQuery.data?.team_id ?? null;
 
   const leaderboard = leaderboardQuery.data ?? [];
+
+  const myLeaderboardIndex = useMemo(() => {
+    if (myTeamId === null) return -1;
+    return leaderboard.findIndex((row) => row.team_id === myTeamId);
+  }, [leaderboard, myTeamId]);
+
+  const myRank = myLeaderboardIndex >= 0 ? myLeaderboardIndex + 1 : null;
+  const myPoints = myLeaderboardIndex >= 0 ? leaderboard[myLeaderboardIndex]?.points ?? 0 : null;
+
+  const behindBy = useMemo(() => {
+    if (myTeamId === null || myLeaderboardIndex < 0 || leaderboard.length === 0) return null;
+    const top = leaderboard[0];
+    const mine = leaderboard[myLeaderboardIndex];
+    if (!top || !mine) return null;
+    if (top.team_id === myTeamId) return 0;
+    return Math.max(0, (top.points ?? 0) - (mine.points ?? 0));
+  }, [leaderboard, myLeaderboardIndex, myTeamId]);
+
+  const showBehindBanner = typeof behindBy === "number" && behindBy >= 50;
+
+  useEffect(() => {
+    if (!seasonId || myTeamId === null) return;
+    if (leaderboardQuery.isLoading || leaderboardQuery.isError) return;
+    if (myLeaderboardIndex < 0) return;
+    if (myRank === null || myPoints === null) return;
+
+    const snapshotKey = `teamBattle.snapshot.${seasonId}.${myTeamId}`;
+    const behindToastKey = `teamBattle.behindToast.${seasonId}.${myTeamId}`;
+
+    try {
+      const rawPrev = localStorage.getItem(snapshotKey);
+      if (rawPrev) {
+        const parsed = JSON.parse(rawPrev) as { points?: unknown; rank?: unknown; capturedAt?: unknown };
+        const prevPoints = typeof parsed.points === "number" ? parsed.points : null;
+        const prevRank = typeof parsed.rank === "number" ? parsed.rank : null;
+
+        if (prevRank !== null && myRank < prevRank) {
+          addToast(`역전! 우리 팀이 ${myRank}위로 올라왔어요.`, "success");
+        }
+
+        if (prevPoints !== null) {
+          const delta = myPoints - prevPoints;
+          if (delta >= 50) {
+            addToast(`추격 중! 우리 팀 점수 +${delta.toLocaleString()} (현재 ${myPoints.toLocaleString()}점)`, "info");
+          }
+        }
+      }
+
+      if (typeof behindBy === "number" && behindBy >= 50) {
+        if (sessionStorage.getItem(behindToastKey) !== "1") {
+          sessionStorage.setItem(behindToastKey, "1");
+          addToast(`우리 팀이 1위와 ${behindBy.toLocaleString()}점 차이예요. 지금 달려요!`, "info");
+        }
+      }
+
+      localStorage.setItem(snapshotKey, JSON.stringify({ points: myPoints, rank: myRank, capturedAt: Date.now() }));
+    } catch {
+      // storage 접근/파싱 실패 시 알림 로직을 스킵합니다.
+    }
+  }, [addToast, behindBy, leaderboardQuery.isError, leaderboardQuery.isLoading, myLeaderboardIndex, myPoints, myRank, myTeamId, seasonId]);
 
   const titleSize = variant === "desktop" ? 32 : variant === "tablet" ? 28 : 26;
 
@@ -160,6 +222,30 @@ const TeamBattleMainPanel: React.FC<{ variant: ViewportVariant }> = ({ variant }
             </button>
           </div>
         </div>
+
+        {showBehindBanner && myRank !== null && myPoints !== null ? (
+          <div className="mt-[12px] rounded-[10px] border border-white/10 bg-[#394508]/20 px-[18px] py-[14px]">
+            <p className="text-[clamp(13px,2.6vw,14px)] font-semibold text-white/90">
+              지금 우리 팀이 <span style={{ color: baseAccent }}>#{myRank}</span> ( {myPoints.toLocaleString()}점 ) · 1위와{" "}
+              <span style={{ color: baseAccent }}>{behindBy?.toLocaleString()}점</span> 차이
+            </p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <Link
+                to="/dice"
+                className="rounded-[6px] bg-[#d2fd9c] px-3 py-2 text-[clamp(12px,2.8vw,13px)] font-semibold text-black hover:brightness-95"
+              >
+                게임하러 가기
+              </Link>
+              <button
+                type="button"
+                className="rounded-[6px] border border-white/15 bg-white/5 px-3 py-2 text-[clamp(12px,2.8vw,13px)] font-semibold text-white/85 hover:bg-white/10"
+                onClick={() => leaderboardQuery.refetch()}
+              >
+                리더보드 새로고침
+              </button>
+            </div>
+          </div>
+        ) : null}
 
         <div className="mt-[18px] rounded-[12px] border border-white/10 bg-black/70 px-[18px] py-[16px]">
           <p className="text-[clamp(15px,2.8vw,16px)] font-semibold" style={{ color: baseAccent }}>
@@ -364,7 +450,7 @@ const DesktopLayout: React.FC = () => {
 
 const TabletLayout: React.FC = () => {
   const tabletModules: Array<{ label: React.ReactNode; to: string }> = [
-    { label: <>씨씨<br />카지노</>, to: "/landing" },
+    { label: <>씨씨<br />카지노</>, to: "https://ccc-010.com" },
     { label: <>내 레벨</>, to: "/season-pass" },
     { label: <>랜덤<br />복권</>, to: "/lottery" },
     { label: <>레벨<br />주사위</>, to: "/dice" },
@@ -392,17 +478,31 @@ const TabletLayout: React.FC = () => {
               </h3>
               <div className="w-full overflow-x-auto">
                 <div className="flex min-w-max items-center justify-center gap-[26px] px-0 py-[5px]">
-                  {tabletModules.map((m, idx) => (
-                    <Link
-                      key={idx}
-                      to={m.to}
-                      className="shrink-0 flex h-[85px] w-[85px] flex-col items-center justify-center rounded-[4px] bg-[#d2fd9c] px-[10px] py-[20px]"
-                    >
-                      <p className="text-center text-[clamp(16px,2.4vw,20px)] font-medium leading-[1.15] text-black whitespace-pre-wrap">
-                        {m.label}
-                      </p>
-                    </Link>
-                  ))}
+                  {tabletModules.map((m, idx) =>
+                    m.to.startsWith("http") ? (
+                      <a
+                        key={idx}
+                        href={m.to}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="shrink-0 flex h-[85px] w-[85px] flex-col items-center justify-center rounded-[4px] bg-[#d2fd9c] px-[10px] py-[20px]"
+                      >
+                        <p className="text-center text-[clamp(16px,2.4vw,20px)] font-medium leading-[1.15] text-black whitespace-pre-wrap">
+                          {m.label}
+                        </p>
+                      </a>
+                    ) : (
+                      <Link
+                        key={idx}
+                        to={m.to}
+                        className="shrink-0 flex h-[85px] w-[85px] flex-col items-center justify-center rounded-[4px] bg-[#d2fd9c] px-[10px] py-[20px]"
+                      >
+                        <p className="text-center text-[clamp(16px,2.4vw,20px)] font-medium leading-[1.15] text-black whitespace-pre-wrap">
+                          {m.label}
+                        </p>
+                      </Link>
+                    )
+                  )}
                 </div>
               </div>
             </div>
@@ -485,11 +585,17 @@ const MobileLayout: React.FC = () => {
             </div>
 
             <div className="flex w-full items-center justify-center gap-x-[12.8px] text-[20px] font-medium" style={{ color: baseAccent }}>
-              {navLinks.map((item) => (
-                <Link key={item.label} to={item.to} className="leading-[1.15]">
-                  {item.label}
-                </Link>
-              ))}
+              {navLinks.map((item) =>
+                item.to.startsWith("http") ? (
+                  <a key={item.label} href={item.to} target="_blank" rel="noreferrer" className="leading-[1.15]">
+                    {item.label}
+                  </a>
+                ) : (
+                  <Link key={item.label} to={item.to} className="leading-[1.15]">
+                    {item.label}
+                  </Link>
+                )
+              )}
             </div>
           </div>
         </header>

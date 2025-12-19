@@ -17,7 +17,7 @@ const assets = {
 const baseAccent = "#d2fd9c";
 
 const navLinks = [
-  { label: "CC카지노", to: "/landing" },
+  { label: "CC카지노", to: "https://ccc-010.com" },
   { label: "레벨", to: "/season-pass" },
   { label: "팀배틀", to: "/team-battle" },
   { label: "내금고", to: "/landing" },
@@ -198,11 +198,17 @@ const SeasonPassFigmaDesktopPage: React.FC = () => {
               </div>
 
               <div className="flex w-full items-center justify-center gap-x-3 text-[20px] font-medium" style={{ color: baseAccent }}>
-                {navLinks.map((item) => (
-                  <Link key={item.label} to={item.to} className="leading-[1.15]">
-                    {item.label}
-                  </Link>
-                ))}
+                {navLinks.map((item) =>
+                  item.to.startsWith("http") ? (
+                    <a key={item.label} href={item.to} target="_blank" rel="noreferrer" className="leading-[1.15]">
+                      {item.label}
+                    </a>
+                  ) : (
+                    <Link key={item.label} to={item.to} className="leading-[1.15]">
+                      {item.label}
+                    </Link>
+                  )
+                )}
               </div>
             </div>
           </header>

@@ -1,20 +1,21 @@
 // src/pages/DicePage.tsx
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import DiceView from "../components/game/DiceView";
 import { useDiceStatus, usePlayDice } from "../hooks/useDice";
 import FeatureGate from "../components/feature/FeatureGate";
 import { GAME_TOKEN_LABELS } from "../types/gameTokens";
+import AnimatedNumber from "../components/common/AnimatedNumber";
+import { tryHaptic } from "../utils/haptics";
+import GamePageShell from "../components/game/GamePageShell";
 
 const DicePage: React.FC = () => {
   const { data, isLoading, isError } = useDiceStatus();
   const playMutation = usePlayDice();
-  const navigate = useNavigate();
   const [result, setResult] = useState<"WIN" | "LOSE" | "DRAW" | null>(null);
   const [userDice, setUserDice] = useState<number[]>([]);
   const [dealerDice, setDealerDice] = useState<number[]>([]);
   const [infoMessage, setInfoMessage] = useState<string | null>(null);
-  const [rewardToast, setRewardToast] = useState<string | null>(null);
+  const [rewardToast, setRewardToast] = useState<{ value: number; type: string } | null>(null);
   const [isRolling, setIsRolling] = useState(false);
 
   const mapErrorMessage = (err: unknown) => {
@@ -44,18 +45,20 @@ const DicePage: React.FC = () => {
 
   const handlePlay = async () => {
     try {
+      tryHaptic(12);
       setInfoMessage(null);
       setResult(null);
       setIsRolling(true);
       const response = await playMutation.mutateAsync();
-      await new Promise((r) => setTimeout(r, 1500));
       setIsRolling(false);
       setResult(response.result);
       setUserDice(response.user_dice);
       setDealerDice(response.dealer_dice);
       setInfoMessage(response.message ?? null);
-      if (response.result === "WIN" && response.reward_value && Number(response.reward_value) > 0) {
-        setRewardToast(`+${response.reward_value} ${response.reward_type ?? "보상"}`);
+      const rewardValue = response.reward_value ? Number(response.reward_value) : 0;
+      const rewardType = response.reward_type ?? "보상";
+      if (response.result === "WIN" && rewardValue > 0) {
+        setRewardToast({ value: rewardValue, type: rewardType });
         setTimeout(() => setRewardToast(null), 2500);
       }
     } catch (e) {
@@ -67,57 +70,57 @@ const DicePage: React.FC = () => {
   const content = (() => {
     if (isLoading) {
       return (
-        <section className="flex flex-col items-center justify-center rounded-3xl border border-emerald-800/40 bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 p-8 shadow-2xl">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent" />
-          <p className="mt-4 text-lg font-semibold text-emerald-200">주사위 정보를 불러오는 중...</p>
-        </section>
+        <div className="flex flex-col items-center justify-center gap-4 py-16">
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-cc-lime/70 border-t-transparent" />
+          <p className="text-[clamp(14px,3vw,18px)] font-semibold text-white/85">주사위 정보를 불러오는 중...</p>
+        </div>
       );
     }
 
     if (isError || !data) {
       return (
-        <section className="rounded-3xl border border-red-800/40 bg-gradient-to-br from-red-950 to-slate-900 p-8 text-center shadow-2xl">
-          <div className="mb-4 text-5xl">😢</div>
-          <p className="text-xl font-bold text-red-100">주사위 정보를 불러오지 못했습니다.</p>
-          <p className="mt-2 text-sm text-red-200/70">잠시 후 다시 시도해주세요</p>
-        </section>
+        <div className="rounded-3xl border border-white/10 bg-black/35 p-6 text-center">
+          <p className="text-[clamp(16px,3.2vw,20px)] font-bold text-white">주사위 정보를 불러오지 못했습니다.</p>
+          <p className="mt-2 text-[clamp(12px,2.6vw,14px)] text-white/60">잠시 후 다시 시도해주세요.</p>
+        </div>
       );
     }
 
     return (
-      <section className="space-y-8 rounded-3xl border border-gold-600/30 bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 p-8 shadow-2xl">
+      <div className="space-y-6 sm:space-y-8">
         {rewardToast && (
-          <div className="fixed bottom-6 right-6 z-30 rounded-2xl border border-emerald-500/60 bg-emerald-900/80 px-4 py-3 text-emerald-100 shadow-lg animate-bounce-in">
-            {rewardToast}
+          <div className="fixed bottom-6 right-6 z-30 rounded-2xl border border-white/15 bg-black/80 px-4 py-3 text-white shadow-lg backdrop-blur animate-bounce-in">
+            <span className="font-bold text-cc-lime">+</span>
+            <span className="ml-1 font-extrabold text-white">
+              <AnimatedNumber value={rewardToast.value} from={0} />
+            </span>
+            <span className="ml-2 text-white/70">{rewardToast.type}</span>
           </div>
         )}
-        <header className="text-center">
-          <p className="text-sm uppercase tracking-[0.3em] text-gold-400">스페셜 게임</p>
-          <h1 className="mt-2 text-3xl font-bold text-white">주사위 배틀</h1>
-          <div className="mt-3 flex flex-wrap items-center justify-center gap-3">
-            <div className="inline-flex items-center gap-2 rounded-full bg-emerald-900/60 px-4 py-2 text-sm font-semibold text-emerald-100">
-              <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
-              {remainingLabel}
-            </div>
-            <div className="inline-flex items-center gap-2 rounded-full bg-slate-800/80 px-4 py-2 text-sm font-semibold text-amber-100">
-              <span className="h-2 w-2 rounded-full bg-amber-400" />
-              {tokenLabel}
-            </div>
-          </div>
-        </header>
 
-        <DiceView userDice={userDice} dealerDice={dealerDice} result={result} isRolling={isRolling} />
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          <span className="rounded-full border border-white/10 bg-black/40 px-3 py-1 text-[clamp(12px,2.4vw,13px)] font-bold text-white/90">
+            {remainingLabel}
+          </span>
+          <span className="rounded-full border border-white/10 bg-black/40 px-3 py-1 text-[clamp(12px,2.4vw,13px)] font-bold text-white/70">
+            {tokenLabel}
+          </span>
+        </div>
+
+        <div className="rounded-3xl border border-white/10 bg-black/30 p-4 shadow-[0_14px_40px_rgba(0,0,0,0.55)] sm:p-6">
+          <DiceView userDice={userDice} dealerDice={dealerDice} result={result} isRolling={isRolling} />
+        </div>
 
         <div className="space-y-4">
           {!!playMutation.error && !isRolling && (
-            <div className="rounded-xl border border-red-700/40 bg-red-900/30 px-4 py-3 text-center text-red-200">
+            <div className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-center text-[clamp(12px,2.6vw,14px)] text-white/80">
               {mapErrorMessage(playMutation.error)}
             </div>
           )}
 
           {isOutOfTokens && (
-            <div className="rounded-xl border border-amber-600/30 bg-amber-900/20 px-4 py-3 text-center text-amber-100">
-              티켓이 부족합니다. 지민이에게 충전을 요청해주세요.
+            <div className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-center text-[clamp(12px,2.6vw,14px)] text-white/80">
+              티켓이 부족합니다. 운영자에게 충전을 요청해주세요.
             </div>
           )}
 
@@ -125,40 +128,38 @@ const DicePage: React.FC = () => {
             type="button"
             disabled={isRolling || playMutation.isPending || (!isUnlimited && data.remaining_plays <= 0) || isOutOfTokens}
             onClick={handlePlay}
-            className="group relative w-full overflow-hidden rounded-full bg-gradient-to-r from-emerald-600 to-emerald-500 px-8 py-4 text-lg font-bold text-white shadow-lg transition-all hover:from-emerald-500 hover:to-emerald-400 hover:shadow-emerald-500/30 disabled:cursor-not-allowed disabled:from-slate-700 disabled:to-slate-600"
+            className="group relative w-full overflow-hidden rounded-2xl border border-white/10 bg-cc-lime px-6 py-4 text-[clamp(16px,3.8vw,18px)] font-extrabold text-cc-olive shadow-lg transition hover:brightness-105 active:brightness-95 disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/40"
           >
             <span className="relative z-10">
               {isRolling || playMutation.isPending ? (
                 <span className="flex items-center justify-center gap-2">
-                  <span className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  <span className="h-5 w-5 animate-spin rounded-full border-2 border-cc-olive border-t-transparent" />
                   주사위를 굴리는 중...
                 </span>
               ) : (
-                "🎲 주사위 던지기"
+                result || infoMessage ? "다시 하기" : "🎲 주사위 던지기"
               )}
             </span>
-            <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform group-hover:translate-x-full" />
+            <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/40 to-transparent transition-transform group-hover:translate-x-full" />
           </button>
 
-          {infoMessage && !isRolling && <p className="text-center text-sm text-emerald-200">{infoMessage}</p>}
-
-          <button
-            type="button"
-            onClick={() => navigate("/landing")}
-            className="w-full rounded-lg border border-emerald-500/50 px-4 py-2 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-900/40"
-          >
-            홈으로 돌아가기
-          </button>
+          {infoMessage && !isRolling && <p className="text-center text-[clamp(12px,2.6vw,14px)] text-white/75">{infoMessage}</p>}
         </div>
 
-        <footer className="border-t border-slate-700/50 pt-4 text-center text-xs text-slate-400">
-          <p>승리 시 추가 보상, 무승부는 기본 보상이 적립됩니다.</p>
-        </footer>
-      </section>
+        <div className="pt-2 text-center text-[clamp(11px,2.2vw,13px)] text-white/60">
+          승리 시 추가 보상, 무승부는 기본 보상이 적립됩니다.
+        </div>
+      </div>
     );
   })();
 
-  return <FeatureGate feature="DICE">{content}</FeatureGate>;
+  return (
+    <FeatureGate feature="DICE">
+      <GamePageShell title="주사위 배틀" subtitle="Special Game Dice Battle">
+        {content}
+      </GamePageShell>
+    </FeatureGate>
+  );
 };
 
 export default DicePage;

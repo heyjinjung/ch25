@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../auth/authStore";
 
 // Local asset paths (place files under public/assets/figma/)
 const assets = {
@@ -73,6 +74,8 @@ const baseAccent = "#d2fd9c";
 const deepOlive = "#394508";
 
 const Sidebar: React.FC = () => {
+  const { user } = useAuth();
+
   return (
     <aside className="flex w-full max-w-[491px] flex-col gap-[49px] px-4 py-[30px] text-white lg:px-0">
       <nav className="flex items-start justify-between w-full">
@@ -82,12 +85,22 @@ const Sidebar: React.FC = () => {
           </div>
           <p className="text-[16px] font-semibold tracking-[-0.32px]">CC CASINO</p>
         </div>
-        <a
-          href="https://figma.com/sites"
-          className="rounded-[2px] bg-[#d2fd9c] px-[14px] py-[11px] text-[10px] text-black"
-        >
-          홈페이지 가이드
-        </a>
+        <div className="flex items-center gap-2">
+          {user ? (
+            <div className="max-w-[220px] rounded-full border border-white/15 bg-white/5 px-3 py-[6px] text-[12px] leading-none text-white/85">
+              <span className="max-w-[140px] truncate align-middle">{user.nickname || user.external_id}</span>{" "}
+              <span className="align-middle font-semibold" style={{ color: baseAccent }}>
+                Lv.{user.level ?? 1}
+              </span>
+            </div>
+          ) : null}
+          <a
+            href="https://figma.com/sites"
+            className="rounded-[2px] bg-[#d2fd9c] px-[14px] py-[11px] text-[10px] text-black"
+          >
+            홈페이지 가이드
+          </a>
+        </div>
       </nav>
 
       <div className="flex flex-col gap-5">
@@ -132,11 +145,23 @@ const Sidebar: React.FC = () => {
         className="flex w-full flex-wrap items-center justify-center gap-x-[12.8px] gap-y-2 text-[20px] font-medium text-center"
         style={{ color: baseAccent }}
       >
-        {navLinks.map((item) => (
-          <Link key={item.label} to={item.to} className="h-[18px] leading-[1.15]">
-            {item.label}
-          </Link>
-        ))}
+        {navLinks.map((item) =>
+          item.to.startsWith("http") ? (
+            <a
+              key={item.label}
+              href={item.to}
+              target="_blank"
+              rel="noreferrer"
+              className="h-[18px] leading-[1.15]"
+            >
+              {item.label}
+            </a>
+          ) : (
+            <Link key={item.label} to={item.to} className="h-[18px] leading-[1.15]">
+              {item.label}
+            </Link>
+          )
+        )}
       </div>
     </aside>
   );

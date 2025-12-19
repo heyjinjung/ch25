@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../auth/authStore";
 
 // Tablet-specific assets (stored under public/assets/figma)
 const assets = {
@@ -25,7 +26,7 @@ const assets = {
 };
 
 const navLinks = [
-  { label: "CC카지노", to: "/landing" },
+  { label: "CC카지노", to: "https://ccc-010.com" },
   { label: "레벨", to: "/season-pass" },
   { label: "팀배틀", to: "/team-battle" },
   { label: "내금고", to: "/landing" },
@@ -72,6 +73,8 @@ const baseAccent = "#d2fd9c";
 const deepOlive = "#394508";
 
 const Sidebar: React.FC = () => {
+  const { user } = useAuth();
+
   return (
     <header className="w-full max-w-[827px] bg-black flex flex-col gap-[30px] px-[20px] py-[20px] text-white lg:px-[40px] lg:gap-[50px]">
       <nav className="flex flex-wrap items-center justify-between gap-4 w-full">
@@ -81,12 +84,22 @@ const Sidebar: React.FC = () => {
           </div>
           <p className="text-[16px] font-semibold tracking-[-0.32px]">CC CASINO</p>
         </div>
-        <a
-          href="https://figma.com/sites"
-          className="shrink-0 rounded-[2px] bg-[#d2fd9c] px-[14px] py-[11px] text-[10px] text-black"
-        >
-          홈페이지 가이드
-        </a>
+        <div className="flex items-center gap-2">
+          {user ? (
+            <div className="max-w-[240px] rounded-full border border-white/15 bg-white/5 px-3 py-[6px] text-[12px] leading-none text-white/85">
+              <span className="max-w-[160px] truncate align-middle">{user.nickname || user.external_id}</span>{" "}
+              <span className="align-middle font-semibold" style={{ color: baseAccent }}>
+                Lv.{user.level ?? 1}
+              </span>
+            </div>
+          ) : null}
+          <a
+            href="https://figma.com/sites"
+            className="shrink-0 rounded-[2px] bg-[#d2fd9c] px-[14px] py-[11px] text-[10px] text-black"
+          >
+            홈페이지 가이드
+          </a>
+        </div>
       </nav>
 
       <div className="flex flex-col gap-5 w-full">
@@ -127,11 +140,17 @@ const Sidebar: React.FC = () => {
       </div>
 
       <div className="flex flex-wrap gap-[18px] items-center justify-center w-full text-[18px] lg:text-[20px] font-medium" style={{ color: baseAccent }}>
-        {navLinks.map((item) => (
-          <Link key={item.label} to={item.to} className="leading-[1.15]">
-            {item.label}
-          </Link>
-        ))}
+        {navLinks.map((item) =>
+          item.to.startsWith("http") ? (
+            <a key={item.label} href={item.to} target="_blank" rel="noreferrer" className="leading-[1.15]">
+              {item.label}
+            </a>
+          ) : (
+            <Link key={item.label} to={item.to} className="leading-[1.15]">
+              {item.label}
+            </Link>
+          )
+        )}
       </div>
     </header>
   );

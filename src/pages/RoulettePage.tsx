@@ -3,8 +3,10 @@ import RouletteWheel from "../components/game/RouletteWheel";
 import { usePlayRoulette, useRouletteStatus } from "../hooks/useRoulette";
 import FeatureGate from "../components/feature/FeatureGate";
 import { GAME_TOKEN_LABELS } from "../types/gameTokens";
-import { useNavigate } from "react-router-dom";
 import type { RoulettePlayResponse } from "../api/rouletteApi";
+import AnimatedNumber from "../components/common/AnimatedNumber";
+import { tryHaptic } from "../utils/haptics";
+import GamePageShell from "../components/game/GamePageShell";
 
 const FALLBACK_SEGMENTS = Array.from({ length: 12 }).map((_, idx) => ({
   label: `BONUS ${idx + 1}`,
@@ -15,17 +17,16 @@ const FALLBACK_SEGMENTS = Array.from({ length: 12 }).map((_, idx) => ({
 const RoulettePage: React.FC = () => {
   const { data, isLoading, isError, error } = useRouletteStatus();
   const playMutation = usePlayRoulette();
-  const navigate = useNavigate();
   const [selectedIndex, setSelectedIndex] = useState<number | undefined>();
   const SPIN_DURATION_MS = 3000;
-  const RESULT_DELAY_MS = 800;
   const [isSpinning, setIsSpinning] = useState(false);
   const [displayedResult, setDisplayedResult] = useState<RoulettePlayResponse | null>(null);
-  const [rewardToast, setRewardToast] = useState<string | null>(null);
-  const spinTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [rewardToast, setRewardToast] = useState<{ value: number; type: string } | null>(null);
   const pendingResultRef = useRef<RoulettePlayResponse | null>(null);
   const spinStartAtRef = useRef<number | null>(null);
   const transitionEndAtRef = useRef<number | null>(null);
+  const spinHapticIntervalRef = useRef<number | null>(null);
+  const spinHapticTimeoutsRef = useRef<number[]>([]);
 
   const segments = useMemo(() => {
     const resolved = (data?.segments ?? []).map((segment) => ({
@@ -71,10 +72,7 @@ const RoulettePage: React.FC = () => {
 
   const handlePlay = async () => {
     try {
-      if (spinTimeoutRef.current) {
-        clearTimeout(spinTimeoutRef.current);
-        spinTimeoutRef.current = null;
-      }
+      tryHaptic([10, 35, 10]);
 
       pendingResultRef.current = null;
       setSelectedIndex(undefined);
@@ -113,81 +111,143 @@ const RoulettePage: React.FC = () => {
           : "n/a",
     });
 
-    spinTimeoutRef.current = setTimeout(() => {
-      const result = pendingResultRef.current;
-      pendingResultRef.current = null;
-      setIsSpinning(false);
-      setDisplayedResult(result);
-      if (result && result.reward_value && Number(result.reward_value) > 0 && result.reward_type !== "NONE") {
-        setRewardToast(`+${result.reward_value} ${result.reward_type}`);
-        setTimeout(() => setRewardToast(null), 2500);
-      }
-      const applyAt = performance.now();
-      console.log("[Roulette] result applied", {
-        delayAfterTransitionMs: transitionEndAtRef.current ? applyAt - transitionEndAtRef.current : "n/a",
-        totalMs: spinStartAtRef.current ? applyAt - spinStartAtRef.current : "n/a",
-      });
-      spinTimeoutRef.current = null;
-    }, RESULT_DELAY_MS);
+    const result = pendingResultRef.current;
+    pendingResultRef.current = null;
+
+    setIsSpinning(false);
+    setDisplayedResult(result);
+
+    const rewardValue = result?.reward_value ? Number(result.reward_value) : 0;
+    const rewardType = result?.reward_type ?? "NONE";
+    if (rewardValue > 0 && rewardType !== "NONE") {
+      setRewardToast({ value: rewardValue, type: rewardType });
+      window.setTimeout(() => setRewardToast(null), 2500);
+    }
+
+    const applyAt = performance.now();
+    console.log("[Roulette] result applied", {
+      delayAfterTransitionMs: transitionEndAtRef.current ? applyAt - transitionEndAtRef.current : "n/a",
+      totalMs: spinStartAtRef.current ? applyAt - spinStartAtRef.current : "n/a",
+    });
   };
 
   useEffect(() => {
     return () => {
-      if (spinTimeoutRef.current) {
-        clearTimeout(spinTimeoutRef.current);
-      }
       pendingResultRef.current = null;
       spinStartAtRef.current = null;
       transitionEndAtRef.current = null;
+
+      if (spinHapticIntervalRef.current) {
+        window.clearInterval(spinHapticIntervalRef.current);
+        spinHapticIntervalRef.current = null;
+      }
+      spinHapticTimeoutsRef.current.forEach((t) => window.clearTimeout(t));
+      spinHapticTimeoutsRef.current = [];
     };
   }, []);
+
+  useEffect(() => {
+    const canHaptic = (() => {
+      if (typeof window === "undefined") return false;
+      if (typeof navigator === "undefined") return false;
+      if (!("vibrate" in navigator)) return false;
+      if (typeof document !== "undefined" && document.visibilityState !== "visible") return false;
+
+      // Prefer haptics on mobile-like pointers only.
+      if (typeof window.matchMedia === "function") {
+        if (!window.matchMedia("(pointer: coarse)").matches) return false;
+      }
+      return true;
+    })();
+
+    if (!isSpinning || !canHaptic) {
+      if (spinHapticIntervalRef.current) {
+        window.clearInterval(spinHapticIntervalRef.current);
+        spinHapticIntervalRef.current = null;
+      }
+      spinHapticTimeoutsRef.current.forEach((t) => window.clearTimeout(t));
+      spinHapticTimeoutsRef.current = [];
+      return;
+    }
+
+    // Rate-limited spin haptics: short pulses, slightly faster near the end.
+    const maxPulses = 6;
+    let pulses = 0;
+
+    spinHapticIntervalRef.current = window.setInterval(() => {
+      if (!spinStartAtRef.current) return;
+      if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
+
+      const elapsed = performance.now() - spinStartAtRef.current;
+      if (elapsed < 350) return; // let the wheel start visually
+
+      pulses += 1;
+      const intensity = Math.min(14, 6 + pulses);
+      tryHaptic(intensity);
+
+      if (pulses >= maxPulses) {
+        if (spinHapticIntervalRef.current) {
+          window.clearInterval(spinHapticIntervalRef.current);
+          spinHapticIntervalRef.current = null;
+        }
+      }
+    }, 420);
+
+    // Final accent close to the stop (kept short to avoid over-vibration).
+    const finalAccentAt = Math.max(0, SPIN_DURATION_MS - 220);
+    spinHapticTimeoutsRef.current.push(
+      window.setTimeout(() => {
+        if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
+        tryHaptic([12, 35, 12]);
+      }, finalAccentAt)
+    );
+
+    return () => {
+      if (spinHapticIntervalRef.current) {
+        window.clearInterval(spinHapticIntervalRef.current);
+        spinHapticIntervalRef.current = null;
+      }
+      spinHapticTimeoutsRef.current.forEach((t) => window.clearTimeout(t));
+      spinHapticTimeoutsRef.current = [];
+    };
+  }, [SPIN_DURATION_MS, isSpinning]);
 
   const content = (() => {
     if (isLoading) {
       return (
-        <section className="flex flex-col items-center justify-center rounded-3xl border border-emerald-800/40 bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 p-8 shadow-2xl">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent" />
-          <p className="mt-4 text-lg font-semibold text-emerald-200">룰렛 정보를 불러오는 중...</p>
-        </section>
+        <div className="flex flex-col items-center justify-center gap-4 py-16">
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-cc-lime/70 border-t-transparent" />
+          <p className="text-[clamp(14px,3vw,18px)] font-semibold text-white/85">룰렛 정보를 불러오는 중...</p>
+        </div>
       );
     }
 
     if (isError || !data) {
       return (
-        <section className="rounded-3xl border border-red-800/40 bg-gradient-to-br from-red-950 to-slate-900 p-8 text-center shadow-2xl">
-          <div className="mb-4 text-5xl">⚠️</div>
-          <p className="text-xl font-bold text-red-100">{errorMessage ?? "데이터를 불러오지 못했습니다."}</p>
-          <p className="mt-2 text-sm text-red-200/70">잠시 후 다시 시도하거나 지민이에게 문의하세요.</p>
-        </section>
+        <div className="rounded-3xl border border-white/10 bg-black/35 p-6 text-center">
+          <p className="text-[clamp(16px,3.2vw,20px)] font-bold text-white">{errorMessage ?? "데이터를 불러오지 못했습니다."}</p>
+          <p className="mt-2 text-[clamp(12px,2.6vw,14px)] text-white/60">잠시 후 다시 시도하거나 운영자에게 문의하세요.</p>
+        </div>
       );
     }
 
     return (
-      <section className="space-y-8 rounded-3xl border border-gold-600/40 bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 p-8 shadow-2xl">
+      <div className="space-y-6 sm:space-y-8">
         {!isSpinning && rewardToast && (
-          <div className="fixed bottom-6 right-6 z-30 rounded-2xl border border-emerald-500/60 bg-emerald-900/80 px-4 py-3 text-emerald-100 shadow-lg animate-bounce-in">
-            {rewardToast}
+          <div className="fixed bottom-6 right-6 z-30 rounded-2xl border border-white/15 bg-black/80 px-4 py-3 text-white shadow-lg backdrop-blur animate-bounce-in">
+            <span className="font-bold text-cc-lime">+</span>
+            <span className="ml-1 font-extrabold text-white">
+              <AnimatedNumber value={rewardToast.value} from={0} />
+            </span>
+            <span className="ml-2 text-white/70">{rewardToast.type}</span>
           </div>
         )}
-        <header className="text-center space-y-3">
-          <p className="text-sm uppercase tracking-[0.35em] text-gold-400">Premium Prize Roulette</p>
-          <h1 className="text-3xl font-bold text-white">럭셔리 CC룰렛</h1>
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            <div className="inline-flex items-center gap-2 rounded-full bg-emerald-900/70 px-4 py-2 text-sm font-semibold text-emerald-100 shadow">
-              <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
-              {remainingLabel}
-            </div>
-            <div className="inline-flex items-center gap-2 rounded-full bg-slate-800/80 px-4 py-2 text-sm font-semibold text-amber-100 shadow">
-              <span className="h-2 w-2 rounded-full bg-amber-400" />
-              {tokenLabel}
-            </div>
-          </div>
-        </header>
-        <div className="grid gap-6 items-start lg:grid-cols-[1.2fr_0.8fr]">
+
+        <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
           <div className="space-y-4">
-            <div className="relative rounded-3xl border border-emerald-700/50 bg-gradient-to-br from-slate-950 to-slate-900 p-6 shadow-[0_10px_40px_rgba(0,0,0,0.45)]">
-              <div className="absolute -left-6 -top-6 h-24 w-24 rounded-full bg-emerald-500/20 blur-3xl" />
-              <div className="absolute -right-10 bottom-0 h-32 w-32 rounded-full bg-gold-400/10 blur-3xl" />
+            <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-black/35 p-4 shadow-[0_14px_40px_rgba(0,0,0,0.55)] sm:p-6">
+              <div className="pointer-events-none absolute -left-8 -top-10 h-28 w-28 rounded-full bg-cc-lime/10 blur-3xl" />
+              <div className="pointer-events-none absolute -right-12 bottom-0 h-36 w-36 rounded-full bg-white/5 blur-3xl" />
               <RouletteWheel
                 segments={segments}
                 isSpinning={isSpinning}
@@ -197,71 +257,80 @@ const RoulettePage: React.FC = () => {
               />
             </div>
             {usingFallbackSegments && (
-              <div className="rounded-xl border border-amber-500/30 bg-amber-900/10 px-4 py-3 text-xs text-amber-100">
+              <div className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-[clamp(11px,2.2vw,12px)] text-white/70">
                 라이브 구간 데이터를 불러오지 못해 임시 구성을 표시합니다. /api/roulette/status 응답을 확인해 주세요.
               </div>
             )}
           </div>
 
-          <div className="space-y-4 rounded-3xl border border-emerald-700/40 bg-slate-900/70 p-6 shadow-lg">
-            <h3 className="text-lg font-semibold text-white">플레이 정보</h3>
+          <div className="space-y-4 rounded-3xl border border-white/10 bg-black/35 p-4 shadow-lg sm:p-6">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-full border border-white/10 bg-black/40 px-3 py-1 text-[clamp(12px,2.4vw,13px)] font-bold text-white/90">
+                {remainingLabel}
+              </span>
+              <span className="rounded-full border border-white/10 bg-black/40 px-3 py-1 text-[clamp(12px,2.4vw,13px)] font-bold text-white/70">
+                {tokenLabel}
+              </span>
+            </div>
+
             {playErrorMessage && (
-              <div className="rounded-xl border border-red-700/40 bg-red-900/30 px-4 py-3 text-sm text-red-100">{playErrorMessage}</div>
+              <div className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-[clamp(12px,2.6vw,14px)] text-white/80">
+                {playErrorMessage}
+              </div>
             )}
             {isOutOfTokens && (
-              <div className="rounded-xl border border-amber-600/30 bg-amber-900/20 px-4 py-3 text-sm text-amber-100">
-                티켓이 부족합니다. 지민이에게 충전을 요청하세요.
+              <div className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-[clamp(12px,2.6vw,14px)] text-white/80">
+                티켓이 부족합니다. 운영자에게 충전을 요청하세요.
               </div>
             )}
             <button
               type="button"
               disabled={playMutation.isPending || isSpinning || (!isUnlimited && data.remaining_spins <= 0) || isOutOfTokens}
               onClick={handlePlay}
-              className="group relative w-full overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-500 px-8 py-4 text-lg font-bold text-white shadow-lg transition-all hover:from-emerald-500 hover:to-emerald-400 hover:shadow-emerald-500/40 disabled:cursor-not-allowed disabled:from-slate-700 disabled:to-slate-600"
+              className="group relative w-full overflow-hidden rounded-2xl border border-white/10 bg-cc-lime px-6 py-4 text-[clamp(16px,3.8vw,18px)] font-extrabold text-cc-olive shadow-lg transition hover:brightness-105 active:brightness-95 disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/40"
             >
               <span className="relative z-10 flex items-center justify-center gap-2">
                 {playMutation.isPending ? (
                   <>
-                    <span className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    <span className="h-5 w-5 animate-spin rounded-full border-2 border-cc-olive border-t-transparent" />
                     스핀 중...
                   </>
                 ) : (
-                  "럭셔리 룰렛 돌리기"
+                  (!isSpinning && displayedResult ? "다시 하기" : "럭셔리 룰렛 돌리기")
                 )}
               </span>
-              <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform group-hover:translate-x-full" />
+              <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/40 to-transparent transition-transform group-hover:translate-x-full" />
             </button>
 
             {!isSpinning && displayedResult && (
-              <div className="rounded-2xl border border-gold-500/50 bg-gradient-to-br from-emerald-900/70 to-slate-900/80 p-5 text-center shadow-lg animate-bounce-in">
-                <p className="text-sm uppercase tracking-wider text-gold-400">🎉 결과</p>
-                <p className="mt-2 text-2xl font-bold text-white">{displayedResult.segment.label}</p>
+              <div className="rounded-2xl border border-white/10 bg-black/30 p-5 text-center shadow-lg animate-bounce-in">
+                <p className="text-[clamp(12px,2.6vw,13px)] font-bold uppercase tracking-[0.35em] text-white/60">결과</p>
+                <p className="mt-2 text-[clamp(20px,5vw,26px)] font-extrabold text-white">{displayedResult.segment.label}</p>
                 {displayedResult.reward_type && displayedResult.reward_type !== "NONE" && (
-                  <p className="mt-2 text-emerald-300">
-                    +{displayedResult.reward_value} {displayedResult.reward_type}
+                  <p className="mt-2 text-[clamp(14px,3.4vw,16px)] font-bold text-cc-lime">
+                    +<AnimatedNumber value={Number(displayedResult.reward_value ?? 0)} from={0} />
+                    <span className="ml-2 text-white/70">{displayedResult.reward_type}</span>
                   </p>
                 )}
               </div>
             )}
-
-            <button
-              type="button"
-              onClick={() => navigate("/landing")}
-              className="w-full rounded-lg border border-emerald-500/50 px-4 py-2 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-900/40"
-            >
-              홈으로 돌아가기
-            </button>
           </div>
         </div>
 
-        <footer className="border-t border-slate-700/50 pt-4 text-center text-xs text-slate-400">
-          <p>룰렛 결과는 서버에서 결정되며, 레벨 경험치가 적립됩니다.</p>
-        </footer>
-      </section>
+        <div className="pt-2 text-center text-[clamp(11px,2.2vw,13px)] text-white/60">
+          룰렛 결과는 서버에서 결정되며, 레벨 경험치가 적립됩니다.
+        </div>
+      </div>
     );
   })();
 
-  return <FeatureGate feature="ROULETTE">{content}</FeatureGate>;
+  return (
+    <FeatureGate feature="ROULETTE">
+      <GamePageShell title="럭셔리 CC룰렛" subtitle="Premium Prize Roulette">
+        {content}
+      </GamePageShell>
+    </FeatureGate>
+  );
 };
 
 export default RoulettePage;

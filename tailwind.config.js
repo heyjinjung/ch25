@@ -56,6 +56,16 @@ export default {
           800: '#f4f4f5',
           900: '#fafafa',
         },
+
+        // CC palette (from design SVG)
+        cc: {
+          lime: '#D2FD9C',
+          olive: '#394508',
+          moss: '#282D1A',
+          steel: '#5D5D5D',
+          black: '#000000',
+          white: '#FFFFFF',
+        },
       },
       backgroundImage: {
         'christmas-gradient': 'linear-gradient(135deg, #b91c1c 0%, #14532d 100%)',
@@ -63,7 +73,7 @@ export default {
         'casino-dark': 'linear-gradient(180deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)',
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['"Noto Sans KR"', 'Inter', 'system-ui', 'sans-serif'],
       },
       animation: {
         'spin-slow': 'spin 3s linear infinite',

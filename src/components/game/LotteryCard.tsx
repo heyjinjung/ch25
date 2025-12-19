@@ -21,16 +21,18 @@ const LotteryCard: React.FC<LotteryCardProps> = ({ prize, isRevealed, isScratchi
 
   return (
     <div className="relative mx-auto w-full max-w-sm">
-      <div className="relative overflow-hidden rounded-3xl border-4 border-gold-500 bg-gradient-to-br from-red-900 via-red-800 to-green-900 p-8 shadow-[0_0_30px_rgba(234,179,8,0.3)]">
-        <div className="absolute left-4 top-4 text-4xl opacity-20">🎄</div>
-        <div className="absolute bottom-4 right-4 text-4xl opacity-20">🎁</div>
-        <div className="absolute right-4 top-4 text-4xl opacity-20">⭐</div>
-        <div className="absolute bottom-4 left-4 text-4xl opacity-20">❄️</div>
+      <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-black/30 p-6 shadow-[0_14px_40px_rgba(0,0,0,0.55)] sm:p-8">
+        <div className="pointer-events-none absolute left-4 top-4 text-4xl opacity-15">🎄</div>
+        <div className="pointer-events-none absolute bottom-4 right-4 text-4xl opacity-15">🎁</div>
+        <div className="pointer-events-none absolute right-4 top-4 text-4xl opacity-15">⭐</div>
+        <div className="pointer-events-none absolute bottom-4 left-4 text-4xl opacity-15">❄️</div>
+        <div className="pointer-events-none absolute -left-10 -top-14 h-40 w-40 rounded-full bg-cc-lime/10 blur-3xl" />
+        <div className="pointer-events-none absolute -right-14 bottom-0 h-44 w-44 rounded-full bg-white/5 blur-3xl" />
 
-        <div className="relative min-h-[200px] rounded-2xl border-2 border-gold-400/50 bg-gradient-to-br from-slate-900 to-slate-800 p-6">
+        <div className="relative min-h-[200px] rounded-3xl border border-white/10 bg-black/35 p-6">
           <div
-            className={`relative flex h-full min-h-[160px] flex-col items-center justify-center overflow-hidden rounded-xl bg-slate-900 ${
-              disabled ? "cursor-not-allowed" : "cursor-pointer"
+            className={`relative flex h-full min-h-[160px] flex-col items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-black/50 focus:outline-none focus:ring-2 focus:ring-cc-lime/60 ${
+              disabled ? "cursor-not-allowed opacity-80" : "cursor-pointer"
             }`}
             role="button"
             tabIndex={0}
@@ -49,22 +51,25 @@ const LotteryCard: React.FC<LotteryCardProps> = ({ prize, isRevealed, isScratchi
               {!isRevealed ? (
                 <>
                   <div className="mb-4 text-5xl">🎫</div>
-                  <p className="text-lg font-bold text-gold-300">{isScratching ? "뽑는 중..." : "카드를 눌러 바로 뽑기"}</p>
+                  <p className="text-[clamp(16px,3.6vw,18px)] font-extrabold text-cc-lime">
+                    {isScratching ? "뽑는 중..." : "카드를 눌러 바로 뽑기"}
+                  </p>
+                  <p className="mt-2 text-[clamp(12px,2.6vw,14px)] text-white/60">결과는 즉시 공개됩니다.</p>
                 </>
               ) : prize ? (
                 <>
                   <div className="mb-2 text-5xl animate-bounce-in">🎉</div>
-                  <p className="text-sm uppercase tracking-wider text-gold-400">축하합니다!</p>
-                  <p className="mt-2 text-2xl font-bold text-white">{prize.label}</p>
-                  <p className="mt-1 text-sm text-emerald-300">
-                    {prize.reward_type} +{prize.reward_value}
+                  <p className="text-[clamp(12px,2.4vw,13px)] font-extrabold uppercase tracking-[0.35em] text-white/60">축하합니다!</p>
+                  <p className="mt-2 text-[clamp(20px,5vw,26px)] font-extrabold text-white">{prize.label}</p>
+                  <p className="mt-1 text-[clamp(12px,2.6vw,14px)] font-bold text-cc-lime">
+                    +{prize.reward_value} <span className="text-white/70">{prize.reward_type}</span>
                   </p>
                 </>
               ) : (
                 <>
                   <div className="mb-2 text-5xl animate-bounce-in">💨</div>
-                  <p className="text-xl font-bold text-slate-300">다음 기회에!</p>
-                  <p className="mt-2 text-sm text-slate-400">다시 시도해 주세요.</p>
+                  <p className="text-[clamp(18px,4.4vw,22px)] font-extrabold text-white/85">다음 기회에!</p>
+                  <p className="mt-2 text-[clamp(12px,2.6vw,14px)] text-white/60">다시 시도해 주세요.</p>
                 </>
               )}
             </div>

@@ -23,13 +23,13 @@ const DiceFace: React.FC<{ value: number; isRolling?: boolean }> = ({ value, isR
 
   return (
     <div
-      className={`grid h-16 w-16 grid-cols-3 grid-rows-3 gap-1 rounded-xl border-2 border-gold-500/50 bg-gradient-to-br from-slate-100 to-slate-300 p-2 shadow-lg ${
+      className={`grid h-16 w-16 grid-cols-3 grid-rows-3 gap-1 rounded-2xl border-2 border-white/10 bg-gradient-to-br from-white to-cc-lime/70 p-2 shadow-[0_10px_24px_rgba(0,0,0,0.45)] ${
         isRolling ? "animate-spin-fast" : ""
       }`}
     >
       {dots.map((pos, i) => (
         <div key={i} className={`${pos} flex items-center justify-center`}>
-          <div className="h-2.5 w-2.5 rounded-full bg-slate-900 shadow-inner" />
+          <div className="h-2.5 w-2.5 rounded-full bg-cc-olive shadow-inner" />
         </div>
       ))}
     </div>
@@ -41,11 +41,14 @@ const DiceView: React.FC<DiceViewProps> = ({ userDice, dealerDice, result, isRol
   const dealerSum = dealerDice.reduce((a, b) => a + b, 0);
 
   const resultConfig = useMemo(() => {
-    if (!result) return { text: "주사위를 굴려보세요!", color: "text-slate-300", bg: "bg-slate-800/60" };
+    if (!result) return { text: "주사위를 굴려보세요!", color: "text-white/70", bg: "bg-black/25" };
     switch (result) {
-      case "WIN": return { text: "🎉 승리!", color: "text-emerald-400", bg: "bg-emerald-900/40" };
-      case "LOSE": return { text: "😢 패배", color: "text-red-400", bg: "bg-red-900/40" };
-      case "DRAW": return { text: "🤝 무승부", color: "text-gold-400", bg: "bg-gold-900/40" };
+      case "WIN":
+        return { text: "🎉 승리!", color: "text-cc-lime", bg: "bg-black/25" };
+      case "LOSE":
+        return { text: "😢 패배", color: "text-white/80", bg: "bg-black/25" };
+      case "DRAW":
+        return { text: "🤝 무승부", color: "text-cc-steel", bg: "bg-black/25" };
     }
   }, [result]);
 
@@ -54,43 +57,43 @@ const DiceView: React.FC<DiceViewProps> = ({ userDice, dealerDice, result, isRol
       {/* Battle area */}
       <div className="grid gap-6 sm:grid-cols-2">
         {/* User dice */}
-        <div className="rounded-2xl border border-emerald-700/40 bg-gradient-to-br from-emerald-950/80 to-slate-900/80 p-6 text-center shadow-lg">
-          <p className="mb-4 text-sm font-semibold uppercase tracking-wider text-emerald-300">👤 나의 주사위</p>
+        <div className="rounded-3xl border border-white/10 bg-black/30 p-5 text-center shadow-[0_14px_40px_rgba(0,0,0,0.55)] sm:p-6">
+          <p className="mb-4 text-[clamp(12px,2.6vw,13px)] font-extrabold uppercase tracking-[0.35em] text-cc-lime/90">👤 나의 주사위</p>
           <div className="flex justify-center gap-3">
             {userDice.length > 0 ? (
               userDice.map((val, i) => <DiceFace key={i} value={val} isRolling={isRolling} />)
             ) : (
               <>
-                <div className="h-16 w-16 rounded-xl border-2 border-dashed border-slate-600 bg-slate-800/40" />
-                <div className="h-16 w-16 rounded-xl border-2 border-dashed border-slate-600 bg-slate-800/40" />
+                <div className="h-16 w-16 rounded-2xl border-2 border-dashed border-white/15 bg-black/20" />
+                <div className="h-16 w-16 rounded-2xl border-2 border-dashed border-white/15 bg-black/20" />
               </>
             )}
           </div>
-          <p className="mt-3 text-2xl font-bold text-white">{userDice.length > 0 ? userSum : "-"}</p>
+          <p className="mt-3 text-[clamp(22px,5vw,30px)] font-extrabold text-white">{userDice.length > 0 ? userSum : "-"}</p>
         </div>
 
         {/* Dealer dice */}
-        <div className="rounded-2xl border border-red-700/40 bg-gradient-to-br from-red-950/80 to-slate-900/80 p-6 text-center shadow-lg">
-          <p className="mb-4 text-sm font-semibold uppercase tracking-wider text-red-300">🎰 딜러 주사위</p>
+        <div className="rounded-3xl border border-white/10 bg-black/30 p-5 text-center shadow-[0_14px_40px_rgba(0,0,0,0.55)] sm:p-6">
+          <p className="mb-4 text-[clamp(12px,2.6vw,13px)] font-extrabold uppercase tracking-[0.35em] text-white/70">🎰 딜러 주사위</p>
           <div className="flex justify-center gap-3">
             {dealerDice.length > 0 ? (
               dealerDice.map((val, i) => <DiceFace key={i} value={val} isRolling={isRolling} />)
             ) : (
               <>
-                <div className="h-16 w-16 rounded-xl border-2 border-dashed border-slate-600 bg-slate-800/40" />
-                <div className="h-16 w-16 rounded-xl border-2 border-dashed border-slate-600 bg-slate-800/40" />
+                <div className="h-16 w-16 rounded-2xl border-2 border-dashed border-white/15 bg-black/20" />
+                <div className="h-16 w-16 rounded-2xl border-2 border-dashed border-white/15 bg-black/20" />
               </>
             )}
           </div>
-          <p className="mt-3 text-2xl font-bold text-white">{dealerDice.length > 0 ? dealerSum : "-"}</p>
+          <p className="mt-3 text-[clamp(22px,5vw,30px)] font-extrabold text-white">{dealerDice.length > 0 ? dealerSum : "-"}</p>
         </div>
       </div>
 
       {/* Result display */}
-      <div className={`rounded-2xl border border-gold-600/30 ${resultConfig.bg} p-6 text-center shadow-lg`}>
-        <p className={`text-3xl font-bold ${resultConfig.color}`}>{resultConfig.text}</p>
+      <div className={`rounded-3xl border border-white/10 ${resultConfig.bg} p-6 text-center shadow-[0_14px_40px_rgba(0,0,0,0.55)]`}>
+        <p className={`text-[clamp(22px,5vw,32px)] font-extrabold ${resultConfig.color}`}>{resultConfig.text}</p>
         {result && userDice.length > 0 && (
-          <p className="mt-2 text-sm text-slate-300">
+          <p className="mt-2 text-[clamp(12px,2.6vw,14px)] text-white/60">
             {userSum} vs {dealerSum}
           </p>
         )}

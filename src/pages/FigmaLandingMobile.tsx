@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../auth/authStore";
 
 // Mobile-specific assets stored under public/assets/figma
 const assets = {
@@ -19,7 +20,7 @@ const assets = {
 };
 
 const navLinks = [
-  { label: "CC 카지노", to: "/landing" },
+  { label: "CC 카지노", to: "https://ccc-010.com" },
   { label: "레벨확인", to: "/season-pass" },
   { label: "팀배틀", to: "/team-battle" },
   { label: "내 금고", to: "/landing" },
@@ -42,6 +43,8 @@ const baseAccent = "#d2fd9c";
 const deepOlive = "#394508";
 
 const MobileLanding: React.FC = () => {
+  const { user } = useAuth();
+
   return (
     <div className="min-h-screen bg-black flex flex-col items-center gap-[16px] pb-[20px]">
       {/* Header / Sidebar container */}
@@ -53,12 +56,22 @@ const MobileLanding: React.FC = () => {
             </div>
             <p className="text-[16px] font-semibold tracking-[-0.32px]">CC CASINO</p>
           </div>
-          <a
-            href="https://figma.com/sites"
-            className="shrink-0 rounded-[2px] bg-[#d2fd9c] px-[14px] py-[11px] text-[10px] text-black"
-          >
-            홈페이지 가이드
-          </a>
+          <div className="flex flex-col items-end gap-2">
+            {user ? (
+              <div className="max-w-[220px] rounded-full border border-white/15 bg-white/5 px-3 py-[6px] text-[12px] leading-none text-white/85">
+                <span className="max-w-[140px] truncate align-middle">{user.nickname || user.external_id}</span>{" "}
+                <span className="align-middle font-semibold" style={{ color: baseAccent }}>
+                  Lv.{user.level ?? 1}
+                </span>
+              </div>
+            ) : null}
+            <a
+              href="https://figma.com/sites"
+              className="shrink-0 rounded-[2px] bg-[#d2fd9c] px-[14px] py-[11px] text-[10px] text-black"
+            >
+              홈페이지 가이드
+            </a>
+          </div>
         </nav>
 
         <div className="flex flex-col gap-[20px] w-full">
@@ -101,11 +114,17 @@ const MobileLanding: React.FC = () => {
           className="flex w-full flex-wrap items-center justify-center gap-x-[12.8px] gap-y-2 text-[20px] font-medium text-center"
           style={{ color: baseAccent }}
         >
-          {navLinks.map((item) => (
-            <Link key={item.label} to={item.to} className="leading-[1.15]">
-              {item.label}
-            </Link>
-          ))}
+          {navLinks.map((item) =>
+            item.to.startsWith("http") ? (
+              <a key={item.label} href={item.to} target="_blank" rel="noreferrer" className="leading-[1.15]">
+                {item.label}
+              </a>
+            ) : (
+              <Link key={item.label} to={item.to} className="leading-[1.15]">
+                {item.label}
+              </Link>
+            )
+          )}
         </div>
       </header>
 

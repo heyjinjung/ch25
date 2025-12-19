@@ -287,7 +287,7 @@ const DesktopLayout: React.FC = () => {
 
 const TabletLayout: React.FC = () => {
   const tabletModules: Array<{ label: React.ReactNode; to: string }> = [
-    { label: <>씨씨<br />카지노</>, to: "/landing" },
+    { label: <>씨씨<br />카지노</>, to: "https://ccc-010.com" },
     { label: <>내 레벨</>, to: "/season-pass" },
     { label: <>랜덤<br />복권</>, to: "/lottery" },
     { label: <>레벨<br />주사위</>, to: "/dice" },
@@ -315,17 +315,31 @@ const TabletLayout: React.FC = () => {
               </h3>
               <div className="w-full overflow-x-auto">
                 <div className="flex min-w-max items-center justify-center gap-[26px] px-0 py-[5px]">
-                  {tabletModules.map((m, idx) => (
-                    <Link
-                      key={idx}
-                      to={m.to}
-                      className="shrink-0 flex h-[85px] w-[85px] flex-col items-center justify-center rounded-[4px] bg-[#d2fd9c] px-[10px] py-[20px]"
-                    >
-                      <p className="text-center text-[clamp(16px,2.4vw,20px)] font-medium leading-[1.15] text-black whitespace-pre-wrap">
-                        {m.label}
-                      </p>
-                    </Link>
-                  ))}
+                  {tabletModules.map((m, idx) =>
+                    m.to.startsWith("http") ? (
+                      <a
+                        key={idx}
+                        href={m.to}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="shrink-0 flex h-[85px] w-[85px] flex-col items-center justify-center rounded-[4px] bg-[#d2fd9c] px-[10px] py-[20px]"
+                      >
+                        <p className="text-center text-[clamp(16px,2.4vw,20px)] font-medium leading-[1.15] text-black whitespace-pre-wrap">
+                          {m.label}
+                        </p>
+                      </a>
+                    ) : (
+                      <Link
+                        key={idx}
+                        to={m.to}
+                        className="shrink-0 flex h-[85px] w-[85px] flex-col items-center justify-center rounded-[4px] bg-[#d2fd9c] px-[10px] py-[20px]"
+                      >
+                        <p className="text-center text-[clamp(16px,2.4vw,20px)] font-medium leading-[1.15] text-black whitespace-pre-wrap">
+                          {m.label}
+                        </p>
+                      </Link>
+                    )
+                  )}
                 </div>
               </div>
             </div>
