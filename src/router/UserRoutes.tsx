@@ -8,7 +8,7 @@ import RankingPage from "../pages/RankingPage";
 import SurveyListPage from "../pages/SurveyListPage";
 import SurveyRunnerPage from "../pages/SurveyRunnerPage";
 import LoginPage from "../pages/LoginPage";
-import TeamBattlePage from "../pages/TeamBattlePage";
+import TeamBattleFigmaPage from "../pages/TeamBattleFigmaPage";
 import NewMemberDicePage from "../pages/NewMemberDicePage";
 import FigmaLanding from "../pages/FigmaLanding";
 import FigmaLandingTablet from "../pages/FigmaLandingTablet";
@@ -42,7 +42,7 @@ const UserRoutes: React.FC = () => {
           <Route path="/ranking" element={<RankingPage />} />
           <Route path="/surveys" element={<SurveyListPage />} />
           <Route path="/surveys/:surveyId" element={<SurveyRunnerPage />} />
-          <Route path="/team-battle" element={<TeamBattlePage />} />
+          <Route path="/team-battle" element={<TeamBattleFigmaPage />} />
           <Route path="/new-member/dice" element={<NewMemberDicePage />} />
           <Route path="/app" element={<Navigate to="/landing" replace />} />
         </Route>
