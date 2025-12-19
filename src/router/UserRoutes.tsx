@@ -32,6 +32,7 @@ const UserRoutes: React.FC = () => {
         <Route path="/landing/tablet" element={<FigmaLandingTablet />} />
         <Route path="/landing/mobile" element={<FigmaLandingMobile />} />
         <Route path="/season-pass" element={<SeasonPassFigmaPage />} />
+        <Route path="/team-battle" element={<TeamBattleFigmaPage />} />
       </Route>
       <Route element={<UserLayout />}>
         <Route element={<RequireAuth />}>
@@ -42,7 +43,6 @@ const UserRoutes: React.FC = () => {
           <Route path="/ranking" element={<RankingPage />} />
           <Route path="/surveys" element={<SurveyListPage />} />
           <Route path="/surveys/:surveyId" element={<SurveyRunnerPage />} />
-          <Route path="/team-battle" element={<TeamBattleFigmaPage />} />
           <Route path="/new-member/dice" element={<NewMemberDicePage />} />
           <Route path="/app" element={<Navigate to="/landing" replace />} />
         </Route>

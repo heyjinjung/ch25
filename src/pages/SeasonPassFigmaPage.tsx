@@ -18,7 +18,7 @@ const assets = {
 const baseAccent = "#d2fd9c";
 
 const navLinks = [
-  { label: "CC카지노", to: "/landing" },
+  { label: "CC카지노", to: "https://ccc-010.com" },
   { label: "레벨", to: "/season-pass" },
   { label: "팀배틀", to: "/team-battle" },
   { label: "내금고", to: "/landing" },
@@ -84,19 +84,19 @@ const LevelCard: React.FC<{ variant: LevelCardVariant }> = ({ variant }) => {
         </div>
         <div className="min-w-0">
           <p className="truncate text-[16px] font-semibold">{displayName}</p>
-          <p className="text-[12px] text-[#d2fd9c]">{statusLabel}</p>
+          <p className="text-[clamp(13px,2.8vw,14px)] text-[#d2fd9c]">{statusLabel}</p>
         </div>
       </header>
 
       <div className="mt-6">
-        <div className="flex items-center justify-between text-[12px] text-[#d2fd9c]">
+        <div className="flex items-center justify-between text-[clamp(13px,2.8vw,14px)] text-[#d2fd9c]">
           <span>레벨 {derived.currentLevel}</span>
           <span>레벨 {derived.nextLevel}</span>
         </div>
         <div className="mt-2 h-[6px] w-full rounded-full bg-[#d2fd9c]/20">
           <div className="h-full rounded-full bg-[#d2fd9c]" style={{ width: `${derived.pct}%` }} />
         </div>
-        <div className="mt-2 flex items-center justify-between text-[12px] text-white/80">
+        <div className="mt-2 flex items-center justify-between text-[clamp(13px,2.8vw,14px)] text-white/85">
           <span>{derived.currentXp.toLocaleString()} XP</span>
           <span>다음 레벨까지 {derived.remaining.toLocaleString()} XP 남음</span>
         </div>
@@ -107,24 +107,24 @@ const LevelCard: React.FC<{ variant: LevelCardVariant }> = ({ variant }) => {
         <div className={"rounded-[6px] bg-black/25 px-4 py-3 text-center " + (isMobile ? "w-full" : "flex-1")}
         >
           <p className="text-[22px] font-bold text-[#d2fd9c]">{derived.totalStamps}</p>
-          <p className="mt-1 text-[12px] text-white/80">완료한 미션</p>
+          <p className="mt-1 text-[clamp(13px,2.8vw,14px)] text-white/85">완료한 미션</p>
         </div>
         <div className={"rounded-[6px] bg-black/25 px-4 py-3 text-center " + (isMobile ? "w-full" : "flex-1")}
         >
           <p className="text-[22px] font-bold text-[#d2fd9c]">{derived.claimedBadges}</p>
-          <p className="mt-1 text-[12px] text-white/80">획득한 뱃지</p>
+          <p className="mt-1 text-[clamp(13px,2.8vw,14px)] text-white/85">획득한 뱃지</p>
         </div>
         <div className={"rounded-[6px] bg-black/25 px-4 py-3 text-center " + (isMobile ? "w-full" : "flex-1")}
         >
           <p className="text-[22px] font-bold text-[#d2fd9c]">{derived.currentXp.toLocaleString()}</p>
-          <p className="mt-1 text-[12px] text-white/80">총 획득 XP</p>
+          <p className="mt-1 text-[clamp(13px,2.8vw,14px)] text-white/85">총 획득 XP</p>
         </div>
       </div>
 
       {season.isLoading ? (
-        <p className="mt-6 text-[12px] text-white/60">레벨 정보를 불러오는 중...</p>
+        <p className="mt-6 text-[clamp(13px,2.8vw,14px)] text-white/65">레벨 정보를 불러오는 중...</p>
       ) : season.isError ? (
-        <p className="mt-6 text-[12px] text-white/60">레벨 정보를 불러오지 못했습니다.</p>
+        <p className="mt-6 text-[clamp(13px,2.8vw,14px)] text-white/65">레벨 정보를 불러오지 못했습니다.</p>
       ) : null}
     </section>
   );
@@ -159,9 +159,10 @@ const FooterContact: React.FC<{ maxWidthClass: string }> = ({ maxWidthClass }) =
       <div className="flex flex-col gap-[12px]">
         <p className="text-[20px] font-medium leading-[1.15]">Contact</p>
         <div className="flex flex-col gap-[2px] text-[20px] font-medium leading-[1.15]">
-          <p>텔레그램</p>
-          <p>지민공지채널</p>
-          <p>씨씨사이트</p>
+          <a href="https://t.me/jm956" target="_blank" rel="noreferrer" className="hover:opacity-90">텔레그램</a>
+          <a href="https://t.me/+LksI3XlSjLlhZmE0" target="_blank" rel="noreferrer" className="hover:opacity-90">지민공지채널</a>
+          <a href="https://ccc-010.com" target="_blank" rel="noreferrer" className="hover:opacity-90">씨씨사이트</a>
+          <a href="https://t.me/+IE0NYpuze_k1YWZk" target="_blank" rel="noreferrer" className="hover:opacity-90">씨씨카지노 공식채널</a>
         </div>
       </div>
     </div>
@@ -225,11 +226,23 @@ const DesktopLayout: React.FC = () => {
                 className="flex w-full items-center justify-center gap-x-3 text-[20px] font-medium"
                 style={{ color: baseAccent }}
               >
-                {navLinks.map((item) => (
-                  <Link key={item.label} to={item.to} className="leading-[1.15]">
-                    {item.label}
-                  </Link>
-                ))}
+                {navLinks.map((item) =>
+                  item.to.startsWith("http") ? (
+                    <a
+                      key={item.label}
+                      href={item.to}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="leading-[1.15]"
+                    >
+                      {item.label}
+                    </a>
+                  ) : (
+                    <Link key={item.label} to={item.to} className="leading-[1.15]">
+                      {item.label}
+                    </Link>
+                  )
+                )}
               </div>
             </div>
           </header>
@@ -238,9 +251,10 @@ const DesktopLayout: React.FC = () => {
             <div className="flex flex-col gap-[12px]">
               <p className="text-[20px] font-medium leading-[1.15]">Contact</p>
               <div className="flex flex-col gap-[2px] text-[20px] font-medium leading-[1.15]">
-                <p>텔레그램</p>
-                <p>지민공지채널</p>
-                <p>씨씨사이트</p>
+                <a href="https://t.me/jm956" target="_blank" rel="noreferrer" className="hover:opacity-90">텔레그램</a>
+                <a href="https://t.me/+LksI3XlSjLlhZmE0" target="_blank" rel="noreferrer" className="hover:opacity-90">지민공지채널</a>
+                <a href="https://ccc-010.com" target="_blank" rel="noreferrer" className="hover:opacity-90">씨씨사이트</a>
+                <a href="https://t.me/+IE0NYpuze_k1YWZk" target="_blank" rel="noreferrer" className="hover:opacity-90">씨씨카지노 공식채널</a>
               </div>
             </div>
           </footer>
@@ -413,11 +427,23 @@ const MobileLayout: React.FC = () => {
             </div>
 
             <div className="flex w-full items-center justify-center gap-x-[12.8px] text-[20px] font-medium" style={{ color: baseAccent }}>
-              {navLinks.map((item) => (
-                <Link key={item.label} to={item.to} className="leading-[1.15]">
-                  {item.label}
-                </Link>
-              ))}
+              {navLinks.map((item) =>
+                item.to.startsWith("http") ? (
+                  <a
+                    key={item.label}
+                    href={item.to}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="leading-[1.15]"
+                  >
+                    {item.label}
+                  </a>
+                ) : (
+                  <Link key={item.label} to={item.to} className="leading-[1.15]">
+                    {item.label}
+                  </Link>
+                )
+              )}
             </div>
           </div>
         </header>

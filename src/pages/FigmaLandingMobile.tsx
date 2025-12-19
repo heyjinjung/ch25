@@ -31,9 +31,9 @@ const gameTiles = [
   { title: "룰렛 경품뽑기", to: "/roulette", icon: assets.rouletteSvg, fallback: assets.iconRoulette },
 ];
 
-const howToIcons = [
+const howToIcons: { title: string; icon: string; href?: string }[] = [
   { title: "친구초대", icon: assets.iconPeople },
-  { title: "씨씨이용하기", icon: assets.iconWallet },
+  { title: "씨씨이용하기", icon: assets.iconWallet, href: "https://ccc-010.com" },
   { title: "금고서비스", icon: assets.iconSecurity },
   { title: "포인트게임하기", icon: assets.iconGraph },
 ];
@@ -134,14 +134,27 @@ const MobileLanding: React.FC = () => {
             지민이벤트 이용하는 법
           </h2>
           <div className="flex flex-wrap justify-center gap-[20px] w-full">
-            {howToIcons.map((item) => (
-              <div key={item.title} className="flex flex-col items-center gap-[15px] w-[140px]">
-                <div className="relative w-full overflow-hidden rounded-[10px]" style={{ aspectRatio: "335/250" }}>
-                  <img src={item.icon} alt={item.title} className="absolute inset-0 h-full w-full object-cover" />
-                </div>
-                <p className="text-[18px] font-medium leading-[1.15] text-center text-black whitespace-pre-wrap">{item.title}</p>
-              </div>
-            ))}
+            {howToIcons.map((item) => {
+              const Wrapper = item.href ? "a" : "div";
+              return (
+                <Wrapper
+                  key={item.title}
+                  {...(item.href
+                    ? {
+                        href: item.href,
+                        target: "_blank",
+                        rel: "noreferrer",
+                        className: "flex flex-col items-center gap-[15px] w-[140px] hover:opacity-90",
+                      }
+                    : { className: "flex flex-col items-center gap-[15px] w-[140px]" })}
+                >
+                  <div className="relative w-full overflow-hidden rounded-[10px]" style={{ aspectRatio: "335/250" }}>
+                    <img src={item.icon} alt={item.title} className="absolute inset-0 h-full w-full object-cover" />
+                  </div>
+                  <p className="text-[18px] font-medium leading-[1.15] text-center text-black whitespace-pre-wrap">{item.title}</p>
+                </Wrapper>
+              );
+            })}
           </div>
         </section>
       </main>
@@ -151,9 +164,10 @@ const MobileLanding: React.FC = () => {
           <div className="flex flex-col gap-[12px]">
             <p className="text-[20px] font-medium leading-[1.15]">Contact</p>
             <div className="flex flex-col gap-[2px] text-[20px] font-medium leading-[1.15]">
-              <p>텔레그램</p>
-              <p>지민공지채널</p>
-              <p>씨씨사이트</p>
+              <a href="https://t.me/jm956" target="_blank" rel="noreferrer" className="hover:opacity-90">텔레그램</a>
+              <a href="https://t.me/+LksI3XlSjLlhZmE0" target="_blank" rel="noreferrer" className="hover:opacity-90">지민공지채널</a>
+              <a href="https://ccc-010.com" target="_blank" rel="noreferrer" className="hover:opacity-90">씨씨사이트</a>
+              <a href="https://t.me/+IE0NYpuze_k1YWZk" target="_blank" rel="noreferrer" className="hover:opacity-90">씨씨카지노 공식채널</a>
             </div>
           </div>
           <div className="flex flex-col gap-[2px] text-[20px] font-medium leading-[1.15]">

@@ -16,7 +16,7 @@ const assets = {
 const baseAccent = "#d2fd9c";
 
 const navLinks = [
-  { label: "CC카지노", to: "/landing" },
+  { label: "CC카지노", to: "https://ccc-010.com" },
   { label: "레벨", to: "/season-pass" },
   { label: "팀배틀", to: "/team-battle" },
   { label: "내금고", to: "/landing" },
@@ -52,7 +52,10 @@ const LogoAndGuide: React.FC<{ className?: string }> = ({ className }) => (
       </div>
       <p className="text-[16px] font-semibold tracking-[-0.32px]">CC CASINO</p>
     </div>
-    <a href="https://figma.com/sites" className="rounded-[2px] bg-[#d2fd9c] px-[14px] py-[11px] text-[10px] text-black">
+    <a
+      href="https://figma.com/sites"
+      className="rounded-[2px] bg-[#d2fd9c] px-[14px] py-[11px] text-[clamp(11px,2.6vw,12px)] font-medium text-black"
+    >
       홈페이지 가이드
     </a>
   </nav>
@@ -65,9 +68,10 @@ const FooterContact: React.FC<{ maxWidthClass: string }> = ({ maxWidthClass }) =
       <div className="flex flex-col gap-[12px]">
         <p className="text-[20px] font-medium leading-[1.15]">Contact</p>
         <div className="flex flex-col gap-[2px] text-[20px] font-medium leading-[1.15]">
-          <p>텔레그램</p>
-          <p>지민공지채널</p>
-          <p>씨씨사이트</p>
+          <a href="https://t.me/jm956" target="_blank" rel="noreferrer" className="hover:opacity-90">텔레그램</a>
+          <a href="https://t.me/+LksI3XlSjLlhZmE0" target="_blank" rel="noreferrer" className="hover:opacity-90">지민공지채널</a>
+          <a href="https://ccc-010.com" target="_blank" rel="noreferrer" className="hover:opacity-90">씨씨사이트</a>
+          <a href="https://t.me/+IE0NYpuze_k1YWZk" target="_blank" rel="noreferrer" className="hover:opacity-90">씨씨카지노 공식채널</a>
         </div>
       </div>
     </div>
@@ -132,14 +136,14 @@ const TeamBattleMainPanel: React.FC<{ variant: ViewportVariant }> = ({ variant }
         <div className="mt-[18px] rounded-[10px] border border-white/10 bg-[#394508]/30 px-[18px] py-[16px]">
           <div className="flex items-center justify-between gap-4">
             <div className="min-w-0">
-              <p className="text-[14px] font-medium text-white/85">팀배틀</p>
-              <p className="mt-1 text-[12px] text-white/60">남은 시간</p>
-              <p className="mt-1 text-[20px] font-semibold text-white">{countdown}</p>
+              <p className="text-[clamp(15px,2.8vw,16px)] font-semibold text-white/90">팀배틀</p>
+              <p className="mt-1 text-[clamp(13px,2.5vw,14px)] text-white/65">남은 시간</p>
+              <p className="mt-1 text-[clamp(20px,3.6vw,24px)] font-semibold text-white">{countdown}</p>
             </div>
             <button
               type="button"
               className={
-                "shrink-0 rounded-[6px] px-[18px] py-[12px] text-[12px] font-semibold text-black " +
+                "shrink-0 rounded-[6px] px-[18px] py-[12px] text-[clamp(12px,2.8vw,14px)] font-semibold text-black " +
                 (refreshing ? "bg-[#d2fd9c]/70" : "bg-[#d2fd9c] hover:brightness-95")
               }
               onClick={async () => {
@@ -158,10 +162,10 @@ const TeamBattleMainPanel: React.FC<{ variant: ViewportVariant }> = ({ variant }
         </div>
 
         <div className="mt-[18px] rounded-[12px] border border-white/10 bg-black/70 px-[18px] py-[16px]">
-          <p className="text-[14px] font-semibold" style={{ color: baseAccent }}>
+          <p className="text-[clamp(15px,2.8vw,16px)] font-semibold" style={{ color: baseAccent }}>
             룰 안내 (핵심)
           </p>
-          <ul className="mt-3 space-y-2 text-[12px] text-white/85">
+          <ul className="mt-3 space-y-2 text-[clamp(13px,2.8vw,14px)] text-white/85">
             <li className="flex gap-2">
               <span className="mt-[6px] inline-block h-[6px] w-[6px] rounded-full" style={{ backgroundColor: baseAccent }} />
               <span>참여: 밸런스 기준 자동 배정 (직접 선택 없음)</span>
@@ -183,23 +187,23 @@ const TeamBattleMainPanel: React.FC<{ variant: ViewportVariant }> = ({ variant }
 
         <div className="mt-[18px]">
           <div className="flex items-center justify-between">
-            <p className="text-[14px] font-semibold" style={{ color: baseAccent }}>
+            <p className="text-[clamp(15px,2.8vw,16px)] font-semibold" style={{ color: baseAccent }}>
               리더보드
             </p>
-            <p className="text-[12px] text-white/50">표시 10</p>
+            <p className="text-[clamp(13px,2.8vw,14px)] text-white/55">표시 10</p>
           </div>
 
           <div className="mt-[10px] space-y-[10px]">
             {leaderboardQuery.isLoading ? (
-              <div className="rounded-[12px] border border-white/10 bg-[#394508]/20 px-[18px] py-[18px] text-[12px] text-white/70">
+              <div className="rounded-[12px] border border-white/10 bg-[#394508]/20 px-[18px] py-[18px] text-[clamp(13px,2.8vw,14px)] text-white/70">
                 불러오는 중...
               </div>
             ) : leaderboardQuery.isError ? (
-              <div className="rounded-[12px] border border-white/10 bg-[#394508]/20 px-[18px] py-[18px] text-[12px] text-white/70">
+              <div className="rounded-[12px] border border-white/10 bg-[#394508]/20 px-[18px] py-[18px] text-[clamp(13px,2.8vw,14px)] text-white/70">
                 리더보드를 불러오지 못했습니다.
               </div>
             ) : leaderboard.length === 0 ? (
-              <div className="rounded-[12px] border border-white/10 bg-[#394508]/20 px-[18px] py-[18px] text-[12px] text-white/70">
+              <div className="rounded-[12px] border border-white/10 bg-[#394508]/20 px-[18px] py-[18px] text-[clamp(13px,2.8vw,14px)] text-white/70">
                 표시할 데이터가 없습니다.
               </div>
             ) : (
@@ -217,24 +221,27 @@ const TeamBattleMainPanel: React.FC<{ variant: ViewportVariant }> = ({ variant }
                       <div className="min-w-0">
                         <div className="flex items-center gap-3">
                           <p
-                            className="text-[14px] font-semibold"
+                            className="text-[clamp(14px,2.8vw,15px)] font-semibold"
                             style={{ color: idx < 3 ? baseAccent : "rgba(255,255,255,0.85)" }}
                           >
                             #{idx + 1}
                           </p>
-                          <p className="truncate text-[14px] font-semibold text-white/90">{row.team_name}</p>
+                          <p className="truncate text-[clamp(14px,2.8vw,15px)] font-semibold text-white/90">{row.team_name}</p>
                           {isMine ? (
-                            <span className="rounded-full px-2 py-[3px] text-[10px] font-semibold tracking-[-0.2px] text-black" style={{ backgroundColor: baseAccent }}>
+                            <span
+                              className="rounded-full px-2 py-[3px] text-[clamp(11px,2.6vw,12px)] font-semibold tracking-[-0.2px] text-black"
+                              style={{ backgroundColor: baseAccent }}
+                            >
                               내팀
                             </span>
                           ) : null}
                         </div>
-                        <p className="mt-1 text-[12px] text-white/55">인원 {row.member_count ?? "-"}명</p>
+                        <p className="mt-1 text-[clamp(13px,2.6vw,14px)] text-white/60">인원 {row.member_count ?? "-"}명</p>
                       </div>
 
                       <div className="shrink-0 text-right">
-                        <p className="text-[11px] text-white/55">점수</p>
-                        <p className="text-[16px] font-bold" style={{ color: baseAccent }}>
+                        <p className="text-[clamp(12px,2.6vw,13px)] text-white/60">점수</p>
+                        <p className="text-[clamp(16px,3.2vw,18px)] font-bold" style={{ color: baseAccent }}>
                           {row.points.toLocaleString()}
                         </p>
                       </div>
@@ -309,11 +316,23 @@ const DesktopLayout: React.FC = () => {
               </div>
 
               <div className="flex w-full items-center justify-center gap-x-3 text-[20px] font-medium" style={{ color: baseAccent }}>
-                {navLinks.map((item) => (
-                  <Link key={item.label} to={item.to} className="leading-[1.15]">
-                    {item.label}
-                  </Link>
-                ))}
+                {navLinks.map((item) =>
+                  item.to.startsWith("http") ? (
+                    <a
+                      key={item.label}
+                      href={item.to}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="leading-[1.15]"
+                    >
+                      {item.label}
+                    </a>
+                  ) : (
+                    <Link key={item.label} to={item.to} className="leading-[1.15]">
+                      {item.label}
+                    </Link>
+                  )
+                )}
               </div>
             </div>
           </header>
@@ -322,9 +341,10 @@ const DesktopLayout: React.FC = () => {
             <div className="flex flex-col gap-[12px]">
               <p className="text-[20px] font-medium leading-[1.15]">Contact</p>
               <div className="flex flex-col gap-[2px] text-[20px] font-medium leading-[1.15]">
-                <p>텔레그램</p>
-                <p>지민공지채널</p>
-                <p>씨씨사이트</p>
+                <a href="https://t.me/jm956" target="_blank" rel="noreferrer" className="hover:opacity-90">텔레그램</a>
+                <a href="https://t.me/+LksI3XlSjLlhZmE0" target="_blank" rel="noreferrer" className="hover:opacity-90">지민공지채널</a>
+                <a href="https://ccc-010.com" target="_blank" rel="noreferrer" className="hover:opacity-90">씨씨사이트</a>
+                <a href="https://t.me/+IE0NYpuze_k1YWZk" target="_blank" rel="noreferrer" className="hover:opacity-90">씨씨카지노 공식채널</a>
               </div>
             </div>
           </footer>
