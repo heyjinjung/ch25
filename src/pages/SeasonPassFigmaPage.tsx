@@ -40,32 +40,65 @@ const LevelCard: React.FC<{ variant: LevelCardVariant }> = ({ variant }) => {
   }, [season.data]);
 
   const displayName = user?.nickname || user?.external_id || "플레이어";
-  const statusLabel = user?.status || "활동 중";
+  const statusLabel = user?.status || "ACTIVE";
+
+  const sizing =
+    variant === "desktop"
+      ? {
+          maxW: "max-w-[min(820px,calc(100vw-4rem))]",
+          pad: "px-[clamp(18px,2.2vw,34px)] py-[clamp(18px,2.2vw,30px)]",
+          avatar: "h-[clamp(54px,5vw,74px)] w-[clamp(54px,5vw,74px)]",
+          avatarText: "text-[clamp(18px,2.2vw,24px)]",
+          badge: "h-[clamp(22px,2.2vw,28px)] w-[clamp(22px,2.2vw,28px)] text-[clamp(11px,1.4vw,13px)]",
+          name: "text-[clamp(16px,2vw,20px)]",
+          statNumber: "text-[clamp(22px,2.6vw,30px)]",
+        }
+      : variant === "tablet"
+        ? {
+            maxW: "max-w-[min(740px,calc(100vw-3rem))]",
+            pad: "px-[clamp(18px,3vw,30px)] py-[clamp(18px,3vw,28px)]",
+            avatar: "h-[clamp(54px,6vw,70px)] w-[clamp(54px,6vw,70px)]",
+            avatarText: "text-[clamp(18px,2.6vw,22px)]",
+            badge: "h-[clamp(22px,2.6vw,28px)] w-[clamp(22px,2.6vw,28px)] text-[clamp(11px,1.8vw,13px)]",
+            name: "text-[clamp(16px,2.6vw,18px)]",
+            statNumber: "text-[clamp(22px,3.2vw,28px)]",
+          }
+        : {
+            maxW: "max-w-[min(560px,calc(100vw-2rem))]",
+            pad: "px-[clamp(16px,4vw,22px)] py-[clamp(18px,4vw,22px)]",
+            avatar: "h-[clamp(54px,12vw,64px)] w-[clamp(54px,12vw,64px)]",
+            avatarText: "text-[clamp(18px,4.4vw,22px)]",
+            badge: "h-[clamp(22px,5vw,26px)] w-[clamp(22px,5vw,26px)] text-[clamp(11px,2.8vw,12px)]",
+            name: "text-[clamp(16px,4.2vw,18px)]",
+            statNumber: "text-[clamp(22px,5vw,26px)]",
+          };
 
   const isMobile = variant === "mobile";
 
   return (
     <section
       className={
-        "w-full rounded-[10px] bg-[#394508]/55 text-white " +
-        (isMobile ? "max-w-[353px] px-[16px] py-[18px]" : "max-w-[616px] px-[26px] py-[22px]")
+        "w-full rounded-[10px] bg-[#394508]/55 text-white " + sizing.maxW + " " + sizing.pad
       }
       aria-label="내 레벨 카드"
     >
       <header className="flex items-center gap-4">
-        <div className="relative h-[54px] w-[54px] rounded-full bg-black/30">
-          <div className="absolute inset-0 flex items-center justify-center text-[18px] font-semibold text-[#d2fd9c]">
+        <div className={"relative rounded-full bg-black/30 " + sizing.avatar}>
+          <div className={"absolute inset-0 flex items-center justify-center font-semibold text-[#d2fd9c] " + sizing.avatarText}>
             {displayName.slice(0, 1)}
           </div>
           <div
-            className="absolute -bottom-1 -right-1 flex h-[22px] w-[22px] items-center justify-center rounded-full bg-[#d2fd9c] text-[11px] font-bold text-black"
+            className={
+              "absolute -bottom-1 -right-1 flex items-center justify-center rounded-full bg-[#d2fd9c] font-bold text-black " +
+              sizing.badge
+            }
             aria-label="현재 레벨"
           >
             {derived.currentLevel}
           </div>
         </div>
         <div className="min-w-0">
-          <p className="truncate text-[16px] font-semibold">{displayName}</p>
+          <p className={"truncate font-semibold " + sizing.name}>{displayName}</p>
           <p className="text-[clamp(13px,2.8vw,14px)] text-[#d2fd9c]">{statusLabel}</p>
         </div>
       </header>
@@ -84,21 +117,17 @@ const LevelCard: React.FC<{ variant: LevelCardVariant }> = ({ variant }) => {
         </div>
       </div>
 
-      <div className={"mt-8 flex gap-3 " + (isMobile ? "flex-col" : "flex-row")}
-      >
-        <div className={"rounded-[6px] bg-black/25 px-4 py-3 text-center " + (isMobile ? "w-full" : "flex-1")}
-        >
-          <p className="text-[22px] font-bold text-[#d2fd9c]">{derived.totalStamps}</p>
+      <div className={"mt-8 flex gap-3 " + (isMobile ? "flex-col" : "flex-row")}>
+        <div className={"rounded-[6px] bg-black/25 px-4 py-3 text-center " + (isMobile ? "w-full" : "flex-1")}>
+          <p className={"font-bold text-[#d2fd9c] " + sizing.statNumber}>{derived.totalStamps}</p>
           <p className="mt-1 text-[clamp(13px,2.8vw,14px)] text-white/85">완료한 미션</p>
         </div>
-        <div className={"rounded-[6px] bg-black/25 px-4 py-3 text-center " + (isMobile ? "w-full" : "flex-1")}
-        >
-          <p className="text-[22px] font-bold text-[#d2fd9c]">{derived.claimedBadges}</p>
+        <div className={"rounded-[6px] bg-black/25 px-4 py-3 text-center " + (isMobile ? "w-full" : "flex-1")}>
+          <p className={"font-bold text-[#d2fd9c] " + sizing.statNumber}>{derived.claimedBadges}</p>
           <p className="mt-1 text-[clamp(13px,2.8vw,14px)] text-white/85">획득한 뱃지</p>
         </div>
-        <div className={"rounded-[6px] bg-black/25 px-4 py-3 text-center " + (isMobile ? "w-full" : "flex-1")}
-        >
-          <p className="text-[22px] font-bold text-[#d2fd9c]">{derived.currentXp.toLocaleString()}</p>
+        <div className={"rounded-[6px] bg-black/25 px-4 py-3 text-center " + (isMobile ? "w-full" : "flex-1")}>
+          <p className={"font-bold text-[#d2fd9c] " + sizing.statNumber}>{derived.currentXp.toLocaleString()}</p>
           <p className="mt-1 text-[clamp(13px,2.8vw,14px)] text-white/85">총 획득 XP</p>
         </div>
       </div>

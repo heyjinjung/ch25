@@ -123,7 +123,7 @@ const UserBadge: React.FC = () => {
 
 const DesktopSidebarContent: React.FC = () => {
   return (
-    <div className="hidden h-full w-full flex-col lg:flex">
+    <div className="hidden min-h-dvh w-full flex-col lg:flex">
       <div className="flex flex-1 flex-col gap-[49px] px-[20px] py-[30px]">
         <nav className="flex w-full items-start justify-between">
           <Logo />
@@ -190,7 +190,7 @@ const DesktopSidebarContent: React.FC = () => {
         </div>
       </div>
 
-      <footer className="w-full bg-[#394508] px-[20px] py-[31px] text-[#d2fd9c]">
+      <footer className="mt-auto w-full bg-[#394508] px-[20px] py-[31px] text-[#d2fd9c]">
         <div className="flex flex-col gap-[12px]">
           <p className="text-[20px] font-medium leading-[1.15]">Contact</p>
           <div className="flex flex-col gap-[2px] text-[20px] font-medium leading-[1.15]">
@@ -212,7 +212,7 @@ const DesktopSidebarContent: React.FC = () => {
 
 const MobileSidebarContent: React.FC = () => {
   return (
-    <div className="flex h-full w-full flex-col lg:hidden">
+    <div className="flex min-h-dvh w-full flex-col lg:hidden">
       <div className="flex flex-1 flex-col gap-[20px] bg-black px-[20px] pb-[30px] pt-[20px]">
         <div className="flex w-full items-start justify-between">
           <Logo />
@@ -278,7 +278,7 @@ const MobileSidebarContent: React.FC = () => {
         </div>
       </div>
 
-      <footer className="bg-[#394508] px-[20px] py-[31px] text-[#d2fd9c]">
+      <footer className="mt-auto bg-[#394508] px-[20px] py-[31px] text-[#d2fd9c]">
         <div className="flex flex-col gap-[12px]">
           <p className="text-[20px] font-medium leading-[1.15]">Contact</p>
           <div className="flex flex-col gap-[2px] text-[20px] font-medium leading-[1.15]">
