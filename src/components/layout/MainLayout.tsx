@@ -11,7 +11,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const location = useLocation();
   const todayLabel = useMemo(() => new Intl.DateTimeFormat("ko-KR", { dateStyle: "medium" }).format(new Date()), []);
   const { user } = useAuth();
-  const showHeader = location.pathname !== "/home";
+  const showHeader = !location.pathname.startsWith("/landing");
 
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 text-slate-100">

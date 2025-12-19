@@ -28,7 +28,7 @@ const navLinks = [
   { label: "CC카지노", to: "/landing" },
   { label: "레벨", to: "/season-pass" },
   { label: "팀배틀", to: "/team-battle" },
-  { label: "내금고", to: "/home" },
+  { label: "내금고", to: "/landing" },
 ];
 
 const gameTiles: { title: string; to: string; icon: string; fallback: string }[] = [

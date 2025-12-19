@@ -8,13 +8,13 @@ import SurveyPromptBanner from "../survey/SurveyPromptBanner";
 
 const UserLayout: React.FC = () => {
   const location = useLocation();
-  const isHome = location.pathname === "/home";
+  const isLanding = location.pathname.startsWith("/landing");
 
   return (
     <MainLayout>
       <div className="space-y-6">
-        {!isHome && <SurveyPromptBanner />}
-        {!isHome && <SeasonPassBar />}
+        {!isLanding && <SurveyPromptBanner />}
+        {!isLanding && <SeasonPassBar />}
         <Outlet />
       </div>
     </MainLayout>
