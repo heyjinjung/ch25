@@ -126,11 +126,14 @@ class SeasonPassService:
         claimed_levels = {log.level for log in reward_logs}
 
         today = now.date() if isinstance(now, datetime) else now
+        # "오늘 스탬프"는 일일 체크인(오늘 날짜 period_key)만 인정합니다.
+        daily_key = today.isoformat()
         stamped_today = (
             db.execute(
                 select(SeasonPassStampLog).where(
                     SeasonPassStampLog.user_id == user_id,
                     SeasonPassStampLog.season_id == season.id,
+                    SeasonPassStampLog.period_key == daily_key,
                     SeasonPassStampLog.date == today,
                 )
             )
@@ -219,6 +222,18 @@ class SeasonPassService:
 
         xp_to_add = season.base_xp_per_stamp * stamp_count + xp_bonus
         key = period_key or today.isoformat()
+
+        # 일일 체크인(period_key=today.isoformat())은 하루 1회만 허용합니다.
+        if key == today.isoformat():
+            already = db.execute(
+                select(SeasonPassStampLog).where(
+                    SeasonPassStampLog.user_id == user_id,
+                    SeasonPassStampLog.season_id == season.id,
+                    SeasonPassStampLog.period_key == key,
+                )
+            ).scalar_one_or_none()
+            if already:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="ALREADY_STAMPED_TODAY")
         previous_level = progress.current_level
         reward_baseline_level = previous_level if previous_level > 1 else 0
         progress.current_xp += xp_to_add

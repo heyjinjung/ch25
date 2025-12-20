@@ -11,7 +11,6 @@ from sqlalchemy.orm import Session
 from app.models.team_battle import TeamSeason, Team, TeamMember, TeamScore, TeamEventLog
 from app.models.external_ranking import ExternalRankingData
 from app.models.game_wallet import GameTokenType
-from app.services.level_xp_service import LevelXPService
 from app.core.config import get_settings
 
 

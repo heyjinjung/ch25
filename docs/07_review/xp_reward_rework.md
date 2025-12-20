@@ -48,7 +48,7 @@
 - 스텝 계산: steps = floor(deposit_amount / 100000)
 - XP = steps * 20
 - play_count는 0 처리(미사용)
-- 사용자별 XP를 LevelXPService.add_xp로 반영 → 자동 보상 재발급
+- 사용자별 XP를 시즌패스 진행도(`SeasonPassService.add_bonus_xp`)로 반영 → 시즌패스 레벨/보상 갱신
 - (향후) 게임별 플레이/승리 테이블이 있으면: 플레이당 5 XP, 주사위 승리당 추가 15 XP(총 20)로 후처리 가능
 
 ## 6. 필요 정보/확인 방법

@@ -27,19 +27,25 @@ CREATE TABLE IF NOT EXISTS external_ranking_reward_log (
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- Season pass levels (7-step curve, cumulative XP)
-DELETE FROM season_pass_level;
-INSERT INTO season_pass_level (season_id, level, required_xp, reward_type, reward_amount, auto_claim) VALUES
-  (1, 1,    0, 'LOTTERY_TICKET',   1, 0),
-  (1, 2,   80, 'DICE_TOKEN',       2, 0),
-  (1, 3,  150, 'ROULETTE_COIN',    2, 0),
-  (1, 4,  300, 'LOTTERY_TICKET',   2, 0),
-  (1, 5,  500, 'DICE_TOKEN',       3, 0),
-  (1, 6,  750, 'ROULETTE_COIN',    3, 0),
-  (1, 7, 1000, 'LOTTERY_TICKET',   5, 0);
+-- Season pass levels (10-step, active season)
+-- NOTE: Uses the currently active season (is_active=1). If multiple actives exist, it picks the highest id.
+SET @season_id := (SELECT id FROM season_pass_config WHERE is_active = 1 ORDER BY id DESC LIMIT 1);
 
--- Align max level to 7 for the active season (XP per stamp = 20)
-UPDATE season_pass_config SET max_level = 7, base_xp_per_stamp = 20 WHERE id = 1;
+DELETE FROM season_pass_level WHERE season_id = @season_id;
+INSERT INTO season_pass_level (season_id, level, required_xp, reward_type, reward_amount, auto_claim) VALUES
+  (@season_id,  1,   20, 'TICKET_ROULETTE',  1, 1),
+  (@season_id,  2,   50, 'TICKET_DICE',     1, 1),
+  (@season_id,  3,  100, 'TICKET_ROULETTE',  1, 1),
+  (@season_id,  4,  180, 'TICKET_LOTTERY',  1, 1),
+  (@season_id,  5,  300, 'POINT',        1000, 1),
+  (@season_id,  6,  450, 'TICKET_DICE',     2, 1),
+  (@season_id,  7,  650, 'POINT',        2000, 1),
+  (@season_id,  8,  900, 'COUPON',      10000, 0),
+  (@season_id,  9, 1200, 'POINT',       20000, 0),
+  (@season_id, 10, 1600, 'POINT',       50000, 0);
+
+-- Align max level to 10 for the active season (XP per stamp = 20)
+UPDATE season_pass_config SET max_level = 10, base_xp_per_stamp = 20 WHERE id = @season_id;
 
 -- Ensure stamp log has reward columns for audit
 ALTER TABLE season_pass_stamp_log
