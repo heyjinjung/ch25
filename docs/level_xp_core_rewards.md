@@ -1,91 +1,63 @@
-# 기본 핵심 레벨/XP 보상안
+﻿# 시즌패스 단일 레벨/XP 기준(통합)
 
-- 목적: 모든 사용자 공통으로 적용되는 핵심 레벨/XP 보상 정책을 별도 관리
-- 원칙: 자동 레벨업, 자동 보상 지급, 중복 지급 방지(idempotent)
-- 분리: 팀 대항전 포인트·미션 보상과는 별개로 운영
+이 문서는 레벨/진행도를 **시즌패스(Season Pass)** 한 가지로 통합한 기준 문서입니다.
 
-## 레벨 테이블 (자동 지급)
-| 레벨 | 필요 XP | 보상 | 비고 |
-|------|--------:|------|------|
-| 🎅 1 | 40  | 룰렛티켓 1장 | 자동 지급 |
-| 🎁 2 | 100 | 주사위티켓 2장 | 자동 지급 |
-| 🧊 3 | 180 | 복권티켓 2장 | 자동 지급 |
-| 🧣 4 | 300 | 편의점 기프티콘 1만 | 관리자수동지급 |
-| 🔔 5 | 450 | 룰렛티켓 3장 | 자동 지급 |
-| ❄️ 6 | 600 | 복권티켓 3장 | 자동 지급 |
-| ⛄ 7 | 1,000 | 배민 2만 | 관리자수동지급 |
+중요: 과거의 글로벌 코어 레벨XP(`LevelXPService`, `/api/level-xp/*`)는 현재 UI/운영 기준에서 사용하지 않으며, 백엔드 라우터 노출도 중단되었습니다.
 
-## 처리 플로우 (개요)
-- XP 적립(현행 코드 기준):
-	- 게임 플레이 후 시즌 패스 스탬프 적립: [app/services/game_common.py](app/services/game_common.py) `apply_season_pass_stamp()`이 실행되어 `base_xp_per_stamp`(시즌 설정) + `xp_bonus`만큼 `current_xp`를 누적.
-	- 스탬프/레벨업 처리: [app/services/season_pass_service.py](app/services/season_pass_service.py) `add_stamp()`가 XP 증가, 레벨업 판정, 보상 로그(`SeasonPassRewardLog`) 기록을 한 트랜잭션으로 처리하고 `SeasonPassStampLog`로 중복 스탬프를 방지.
-	- 외부랭킹 연동: [app/services/admin_external_ranking_service.py](app/services/admin_external_ranking_service.py)에서 예치 10만 단위·이용 1회당 20 XP를 `add_bonus_xp()`로 추가, 주간 TOP10은 `maybe_add_stamp()`로 스탬프를 지급.
-	- 게임 보상 포인트→XP 옵션: [app/services/reward_service.py](app/services/reward_service.py)에서 환경변수 `XP_FROM_GAME_REWARD`가 켜져 있으면 포인트 보상 수치를 그대로 `add_bonus_xp()`로 전달해 XP를 추가.
-	- 관리 콘솔: [app/services/admin_user_service.py](app/services/admin_user_service.py)에서 XP를 수정하면 `SeasonPassProgress`와 게임 레벨을 동기화.
-- 시즌 패스 ↔ 코어 레벨 동기화: [app/services/season_pass_service.py](app/services/season_pass_service.py)에서 `add_stamp`/`add_bonus_xp`가 `LevelXPService.add_xp`를 베스트에포트로 호출해 코어 레벨 진행도와 로그를 함께 갱신.
-- 외부랭킹 안티어뷰즈: [app/services/admin_external_ranking_service.py](app/services/admin_external_ranking_service.py)에서 `deposit_remainder`로 10만 단위 스텝 계산, 일일 리셋 시 0 초기화, 일일 최대 스텝/쿨다운을 환경변수(`EXTERNAL_RANKING_DEPOSIT_*`)로 제어.
-- 레벨업 판정: XP 갱신 시 필요 XP 이상이면 자동 레벨업
-- 지급 트랜잭션: 레벨 상승 + 보상 지급 + 지급 로그를 한 트랜잭션으로 처리
-- 중복 방지: 레벨별로 한 번만 지급 (unique 제약 또는 보상 로그 검증)
+## 1) 단일 기준(시즌패스) 원칙
+- 기준 데이터: `season_pass_level.required_xp`(레벨업 임계치), `season_pass_progress.current_xp/current_level`
+- 레벨업 판정: `current_xp >= required_xp`인 레벨들을 달성으로 판단
+- 중복 지급 방지: `season_pass_reward_log`의 Unique(`user_id`, `season_id`, `level`)로 1회만 지급
+- auto_claim:
+  - `auto_claim=true`이면 XP가 추가되는 흐름(스탬프/보너스XP)에서 자동 지급 시도
+  - `auto_claim=false`이면 `POST /api/season-pass/claim`로 수동 청구
 
-## 데이터 모델 (제안)
-- user_level_progress(user_id PK, level INT, xp INT, updated_at)
-- user_level_reward_log(id, user_id, level, reward_type, reward_payload JSON, created_at)
+근거 구현
+- 백엔드: `SeasonPassService` ([app/services/season_pass_service.py](../app/services/season_pass_service.py))
+- 모델: 시즌패스 테이블/로그 ([app/models/season_pass.py](../app/models/season_pass.py))
+- API: 시즌패스 엔드포인트 ([app/api/routes/season_pass.py](../app/api/routes/season_pass.py))
 
-## 운영 메모
-- 보상 타입 예시: ticket_roulette, ticket_dice, ticket_lottery, coupon(convenience, 배민 등)
-- 동시성: XP 업데이트 시 행 잠금으로 레벨업/보상 중복 방지
-- 확장: 레벨 7 이후 단계 추가 시 표만 확장하면 됨
+## 2) XP/스탬프 적립 규칙(현행 코드 그대로)
 
-## DB/스키마 통합 고려
-- 기존 사용자/티켓/쿠폰 테이블 연계: `user_level_progress.user_id` → `user.id` FK, 보상 지급 시 티켓/쿠폰 재고/지급 로그 테이블과 트랜잭션으로 묶기.
-- XP 적립 이벤트 로그(선택): `user_xp_event_log(id, user_id, source, delta, meta JSON, created_at)`를 두어 재계산·감사 가능하게 유지.
-- 지급 로그: `user_level_reward_log`에 unique(user_id, level) 인덱스로 중복 지급 방지.
-- 성능/인덱스: `user_level_progress`는 PK로 커버; 로그 테이블은 `user_id, created_at` 복합 인덱스로 조회 최적화.
-- 운영자 수동 지급 단계(예: 레벨 4, 7): `user_level_reward_log`에 `granted_by`(admin_id) 필드 추가하여 감사 가능하게 관리.
+### 2.1 외부랭킹 입금액 기반 보너스 XP
+- 경로: 관리자 업서트  예치 증분을 10만원 단위로 환산해 XP 지급
+- 기본 상수: `STEP_AMOUNT=100_000`, `XP_PER_STEP=20` (즉 10만원당 20XP)
+- Anti-abuse:
+  - 사용자별 `deposit_remainder` 누적
+  - 일일 baseline(리셋) 고려
+  - 쿨다운(minutes) 내 지급 보류 (remainder만 저장)
+- 근거 구현: [app/services/admin_external_ranking_service.py](../app/services/admin_external_ranking_service.py)
 
-## 마이그레이션 초안 (Alembic)
-```sql
--- 필수: 진행/지급 로그
-CREATE TABLE user_level_progress (
-	user_id INT NOT NULL PRIMARY KEY,
-	level INT NOT NULL DEFAULT 1,
-	xp INT NOT NULL DEFAULT 0,
-	updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-	CONSTRAINT fk_ul_user FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE
-);
+### 2.2 외부랭킹 TOP10 스탬프(주간 1회)
+- 경로: 관리자 업서트에서 TOP10 계산 후 지급
+- 기준: ISO week 단위 1회(중복 방지)
+- 근거 구현: [app/services/admin_external_ranking_service.py](../app/services/admin_external_ranking_service.py)
 
-CREATE TABLE user_level_reward_log (
-	id BIGINT AUTO_INCREMENT PRIMARY KEY,
-	user_id INT NOT NULL,
-	level INT NOT NULL,
-	reward_type VARCHAR(50) NOT NULL,
-	reward_payload JSON NULL,
-	auto_granted TINYINT(1) NOT NULL DEFAULT 0,
-	granted_by INT NULL, -- admin_id (수동 지급 추적)
-	created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	UNIQUE KEY uq_user_level_reward (user_id, level),
-	INDEX idx_ulrl_user_created (user_id, created_at),
-	CONSTRAINT fk_ulrl_user FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE
-);
+### 2.3 내부게임 승리 50회 스탬프(시즌 1회)
+- 기준: 주사위 WIN + 룰렛/복권 reward_amount>0 승리 합산이 50회 이상
+- 중복 방지: `source_feature_type="INTERNAL_WIN_50"`, `period_key="INTERNAL_WIN_50"`로 1회만 지급
+- 근거 구현:
+  - [app/services/season_pass_service.py](../app/services/season_pass_service.py) `maybe_add_internal_win_stamp()` / `get_internal_win_progress()`
+  - 호출: [app/services/dice_service.py](../app/services/dice_service.py), [app/services/roulette_service.py](../app/services/roulette_service.py), [app/services/lottery_service.py](../app/services/lottery_service.py)
 
--- 선택: XP 이벤트 근거 로그 (재계산/감사)
-CREATE TABLE user_xp_event_log (
-	id BIGINT AUTO_INCREMENT PRIMARY KEY,
-	user_id INT NOT NULL,
-	source VARCHAR(100) NOT NULL, -- GAME_ROULETTE, EXTERNAL_RANKING_DEPOSIT 등
-	delta INT NOT NULL,
-	meta JSON NULL,
-	created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	INDEX idx_uxel_user_created (user_id, created_at),
-	CONSTRAINT fk_uxel_user FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE
-);
-```
+### 2.4 (옵션) 게임 보상 포인트  시즌패스 보너스 XP
+- 조건: `XP_FROM_GAME_REWARD=true`일 때만 동작
+- 조건: reward_type이 `POINT`이고, meta.reason이 `dice_play|roulette_spin|lottery_play`인 경우
+- XP량: `meta.game_xp` 우선, 없으면 5
+- 근거 구현: [app/services/reward_service.py](../app/services/reward_service.py)
 
-### Alembic 메모
-- 새 revision에서 위 2~3개 테이블 생성. 선택 로그는 운영 판단에 따라 생략 가능.
-- 기존 `user` 테이블과 FK 연결 확인 후 배포 전 백필(backfill) 로직이 필요하면 같은 migration 안에서 처리.
-- 수동 지급 관리자 추적용 `granted_by`는 `admin_user` 테이블 키를 FK로 묶거나, 일단 INT로 두고 나중에 FK 추가 가능.
-- 트랜잭션 범위: XP 증가/레벨업/보상 로그/티켓·쿠폰 지급이 한 트랜잭션에 묶이도록 서비스 계층도 함께 점검.
-- 자동 지급 여부는 `auto_granted`에 표시되고, 티켓류는 RewardService→GameWalletService 경로로 자동 발급 완료 상태.
-- 쿠폰류는 외부 연동/실제 지급이 미구현이므로 운영자가 별도 수동 지급해야 함.
+### 2.5 스탬프 API(직접 호출)
+- `POST /api/season-pass/stamp`는 `base_xp_per_stamp * stamp_count + xp_bonus`만큼 XP를 추가하고, 레벨업/보상까지 처리
+- 근거 구현: [app/api/routes/season_pass.py](../app/api/routes/season_pass.py)
+
+## 3) 프론트 진행도(%) 계산 공식
+프론트는 서버가 퍼센트를 내려주지 않고, `current_xp`와 `levels[].required_xp`로 구간 퍼센트를 계산합니다.
+
+- 구현: [src/components/season-pass/SeasonPassBar.tsx](../src/components/season-pass/SeasonPassBar.tsx), [src/pages/SeasonPassPage.tsx](../src/pages/SeasonPassPage.tsx)
+- 규칙:
+  - MAX: `current_level >= max_level` 또는 `current_xp >= max(required_xp)`이면 100%
+  - 그 외: 현재 XP가 속한 구간(startXp~endXp)의 비율을 `floor()`로 계산하되, 아직 남은 XP가 있으면 99%로 cap
+
+## 4) 레거시(코어 레벨XP) 처리 방침
+- 과거 구현물(테이블/서비스)은 DB에 남아있을 수 있으나, 운영 기준/UX 기준에서는 사용하지 않습니다.
+- 백엔드에서 `/api/level-xp/*`는 라우팅에서 제외되어 외부 노출을 중단합니다.

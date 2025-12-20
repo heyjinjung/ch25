@@ -101,7 +101,7 @@ docker compose exec backend alembic upgrade head  # 스키마 적용(자동 아�
 - 로그 테일(Windows): `Get-Content logs/app.log -Wait`
 
 ## 참고 파일 위치
-- Backend 진입점/핵심: `app/main.py`, `app/api/routes/*`, `app/services/game_wallet_service.py`, `app/services/season_pass_service.py`, `app/services/team_battle_service.py`, `app/services/level_xp_service.py`, `app/services/admin_external_ranking_service.py`
+- Backend 진입점/핵심: `app/main.py`, `app/api/routes/*`, `app/services/game_wallet_service.py`, `app/services/season_pass_service.py`, `app/services/team_battle_service.py`, `app/services/admin_external_ranking_service.py`
 - Frontend 핵심: `src/router/AdminRoutes.tsx`, `src/admin/pages/GameTokenGrantPage.tsx`, `src/admin/pages/GameTokenLogsPage.tsx`, `src/admin/pages/AdminTeamBattlePage.tsx`, `src/pages/TeamBattlePage.tsx`, `src/api/httpClient.ts`, `src/admin/api/adminGameTokenApi.ts`
 - DB 마이그레이션: `alembic/versions/20251212_0009_add_level_xp_core.py`, `20251212_0009_add_user_xp.py`, `20251212_0010_add_deposit_remainder_external_ranking.py`, `20251212_0011_team_battle_core.py`, `20251212_0012_add_cc_coin_token.py`
 

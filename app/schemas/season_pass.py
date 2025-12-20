@@ -25,6 +25,7 @@ class SeasonProgress(BaseModel):
     current_xp: int
     total_stamps: int
     last_stamp_date: Optional[date] = None
+    next_level_xp: int
 
 
 class SeasonLevelInfo(BaseModel):
