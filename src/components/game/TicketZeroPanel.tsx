@@ -48,39 +48,40 @@ const TicketZeroPanel: React.FC<Props> = ({ tokenType, onClaimSuccess }) => {
 
   const config = useMemo(() => {
     const value = ui.data?.value ?? null;
-    const title = typeof value?.title === "string" ? value.title : DEFAULT_COPY.title;
-    const body = typeof value?.body === "string" ? value.body : DEFAULT_COPY.body;
+    const v = value as Record<string, any> | null;
+    const title = typeof v?.title === "string" ? v.title : DEFAULT_COPY.title;
+    const body = typeof v?.body === "string" ? v.body : DEFAULT_COPY.body;
 
     const primaryLabel =
-      typeof value?.primaryCta?.label === "string"
-        ? value.primaryCta.label
-        : typeof value?.primary_cta_label === "string"
-          ? value.primary_cta_label
+      typeof v?.primaryCta?.label === "string"
+        ? v.primaryCta.label
+        : typeof v?.primary_cta_label === "string"
+          ? v.primary_cta_label
           : DEFAULT_COPY.primaryCta.label;
     const primaryUrl =
-      typeof value?.primaryCta?.url === "string"
-        ? value.primaryCta.url
-        : typeof value?.primary_cta_url === "string"
-          ? value.primary_cta_url
+      typeof v?.primaryCta?.url === "string"
+        ? v.primaryCta.url
+        : typeof v?.primary_cta_url === "string"
+          ? v.primary_cta_url
           : DEFAULT_COPY.primaryCta.url;
 
-    const legacySecondaryLabel = typeof value?.cta_label === "string" ? value.cta_label : null;
-    const legacySecondaryUrl = typeof value?.cta_url === "string" ? value.cta_url : null;
+    const legacySecondaryLabel = typeof v?.cta_label === "string" ? v.cta_label : null;
+    const legacySecondaryUrl = typeof v?.cta_url === "string" ? v.cta_url : null;
 
     const secondaryLabel =
-      typeof value?.secondaryCta?.label === "string"
-        ? value.secondaryCta.label
-        : typeof value?.secondary_cta_label === "string"
-          ? value.secondary_cta_label
+      typeof v?.secondaryCta?.label === "string"
+        ? v.secondaryCta.label
+        : typeof v?.secondary_cta_label === "string"
+          ? v.secondary_cta_label
           : legacySecondaryLabel ?? DEFAULT_COPY.secondaryCta.label;
     const secondaryUrl =
-      typeof value?.secondaryCta?.url === "string"
-        ? value.secondaryCta.url
-        : typeof value?.secondary_cta_url === "string"
-          ? value.secondary_cta_url
+      typeof v?.secondaryCta?.url === "string"
+        ? v.secondaryCta.url
+        : typeof v?.secondary_cta_url === "string"
+          ? v.secondary_cta_url
           : legacySecondaryUrl ?? DEFAULT_COPY.secondaryCta.url;
 
-    const note = typeof value?.note === "string" ? value.note : null;
+    const note = typeof v?.note === "string" ? v.note : null;
 
     const primaryCta: UiCta = { label: primaryLabel, url: primaryUrl };
     const secondaryCta: UiCta = { label: secondaryLabel, url: secondaryUrl };
@@ -120,7 +121,7 @@ const TicketZeroPanel: React.FC<Props> = ({ tokenType, onClaimSuccess }) => {
               <p className="text-sm font-extrabold text-cc-lime">{formatWon(vault.data?.vaultBalance ?? 0)}</p>
             </div>
             <p className="mt-1 text-[clamp(11px,2.2vw,12px)] text-white/60">
-              외부 이용/충전 확인 시 잠금 금액이 해금됩니다.
+              씨씨카지노 이용 확인 시 잠금 금액이 해금됩니다.
             </p>
           </div>
         )}

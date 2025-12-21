@@ -63,7 +63,10 @@ def get_current_user_id(
     return user_id
 
 
-def get_current_admin_id(credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme)) -> int:
+def get_current_admin_id(
+    db: Session = Depends(get_db),
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+) -> int:
     """Extract admin user id; reuse user auth for now with test-mode fallback."""
 
-    return get_current_user_id(credentials)
+    return get_current_user_id(db=db, credentials=credentials)

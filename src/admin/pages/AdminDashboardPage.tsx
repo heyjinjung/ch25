@@ -10,6 +10,9 @@ const AdminDashboardPage: React.FC = () => {
         <p className="text-sm text-slate-300">티켓/게임/레벨/랭킹 설정을 빠르게 이동하세요.</p>
       </div>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <Link to="/admin/ui-config" className="rounded-lg border border-emerald-800/40 bg-slate-900/60 p-3 text-slate-100 transition hover:border-emerald-500">
+          UI 문구/CTA
+        </Link>
         <Link to="/admin/seasons" className="rounded-lg border border-emerald-800/40 bg-slate-900/60 p-3 text-slate-100 transition hover:border-emerald-500">
           시즌 설정
         </Link>

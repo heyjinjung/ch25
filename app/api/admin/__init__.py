@@ -1,6 +1,6 @@
 # /workspace/ch25/app/api/admin/__init__.py
 """Admin API router registration."""
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 from app.api.admin.routes import (
     admin_dice,
@@ -20,7 +20,9 @@ from app.api.admin.routes import (
     admin_ui_config,
 )
 
-admin_router = APIRouter()
+from app.api.deps import get_current_admin_id
+
+admin_router = APIRouter(dependencies=[Depends(get_current_admin_id)])
 admin_router.include_router(admin_seasons.router)
 admin_router.include_router(admin_feature_schedule.router)
 admin_router.include_router(admin_roulette.router)

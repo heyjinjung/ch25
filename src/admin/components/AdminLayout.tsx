@@ -5,6 +5,7 @@ import HomeShortcutButton from "../../components/common/HomeShortcutButton";
 
 const navItems = [
   { path: "/admin", label: "Dashboard" },
+  { path: "/admin/ui-config", label: "UI 문구/CTA" },
   { path: "/admin/seasons", label: "Seasons" },
   { path: "/admin/feature-schedule", label: "Feature Schedule" },
   { path: "/admin/roulette", label: "Roulette" },
