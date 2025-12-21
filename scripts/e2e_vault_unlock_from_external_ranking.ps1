@@ -65,7 +65,7 @@ if ([int]$exists -lt 1) {
   } else {
     Write-Host "No users found; creating an E2E user." -ForegroundColor Yellow
     $externalId = "e2e_" + [Guid]::NewGuid().ToString("N")
-    Exec-MySql "INSERT INTO user (external_id, nickname, status, vault_balance, cash_balance, created_at, updated_at) VALUES ('$externalId', 'E2E', 'ACTIVE', 0, 0, UTC_TIMESTAMP(), UTC_TIMESTAMP());" | Out-Null
+    Exec-MySql "INSERT INTO user (external_id, nickname, status, vault_locked_balance, vault_balance, cash_balance, created_at, updated_at) VALUES ('$externalId', 'E2E', 'ACTIVE', 0, 0, 0, UTC_TIMESTAMP(), UTC_TIMESTAMP());" | Out-Null
     $newId = Exec-MySql "SELECT LAST_INSERT_ID();"
     if (-not $newId) {
       throw "Failed to create E2E user."
@@ -89,7 +89,8 @@ ON DUPLICATE KEY UPDATE
 "@ | Out-Null
 
 Write-Host "[3/6] Seed vault + reset cash + clear prior VAULT_UNLOCK ledger" -ForegroundColor Cyan
-Exec-MySql "UPDATE user SET vault_balance = $VaultSeedAmount, cash_balance = 0 WHERE id = $UserId;" | Out-Null
+# Phase 1: vault_locked_balance is source of truth; vault_balance is legacy mirror.
+Exec-MySql "UPDATE user SET vault_locked_balance = $VaultSeedAmount, vault_balance = $VaultSeedAmount, cash_balance = 0 WHERE id = $UserId;" | Out-Null
 Exec-MySql "DELETE FROM user_cash_ledger WHERE user_id = $UserId AND reason = 'VAULT_UNLOCK';" | Out-Null
 
 Write-Host "[4/6] Set external-ranking baseline (deposit_amount=$DepositBaseline)" -ForegroundColor Cyan
@@ -99,19 +100,23 @@ Write-Host "[5/6] Upsert deposit increase (deposit_amount=$DepositNew)" -Foregro
 Post-ExternalRanking -DepositAmount $DepositNew -Memo "E2E deposit increase"
 
 Write-Host "[6/6] Verify in DB (vault->cash, 1 ledger row)" -ForegroundColor Cyan
-$balances = Exec-MySql "SELECT vault_balance, cash_balance FROM user WHERE id = $UserId;"
+$balances = Exec-MySql "SELECT vault_locked_balance, vault_balance, cash_balance FROM user WHERE id = $UserId;"
 $ledgerCnt = Exec-MySql "SELECT COUNT(*) FROM user_cash_ledger WHERE user_id = $UserId AND reason = 'VAULT_UNLOCK';"
 $ledgerLast = Exec-MySql "SELECT delta, balance_after, created_at FROM user_cash_ledger WHERE user_id = $UserId AND reason = 'VAULT_UNLOCK' ORDER BY id DESC LIMIT 1;"
 
-"user balances: vault_balance, cash_balance = $balances" | Write-Host
+"user balances: vault_locked_balance, vault_balance(mirror), cash_balance = $balances" | Write-Host
 "ledger count (reason=VAULT_UNLOCK) = $ledgerCnt" | Write-Host
 "ledger last: delta, balance_after, created_at = $ledgerLast" | Write-Host
 
-$vaultBal = [int]($balances -split "\t")[0]
-$cashBal = [int]($balances -split "\t")[1]
+$lockedBal = [int]($balances -split "\t")[0]
+$mirrorBal = [int]($balances -split "\t")[1]
+$cashBal = [int]($balances -split "\t")[2]
 
-if ($vaultBal -ne 0) {
-  throw "Verification failed: vault_balance is not 0. (vault_balance=$vaultBal)"
+if ($lockedBal -ne 0) {
+  throw "Verification failed: vault_locked_balance is not 0. (vault_locked_balance=$lockedBal)"
+}
+if ($mirrorBal -ne 0) {
+  throw "Verification failed: vault_balance(mirror) is not 0. (vault_balance=$mirrorBal)"
 }
 if ($cashBal -lt $VaultSeedAmount) {
   throw "Verification failed: cash_balance is smaller than expected. (cash_balance=$cashBal, expected >= $VaultSeedAmount)"

@@ -12,8 +12,15 @@ from app.services.admin_external_ranking_service import AdminExternalRankingServ
 def test_external_ranking_deposit_increase_unlocks_vault_to_cash(session_factory) -> None:
     session: Session = session_factory()
 
-    # Eligible new user with locked vault balance
-    user = User(id=1, external_id="tester", status="ACTIVE", vault_balance=10_000, cash_balance=0)
+    # Eligible new user with locked vault balance (Phase 1: locked is source of truth)
+    user = User(
+        id=1,
+        external_id="tester",
+        status="ACTIVE",
+        vault_locked_balance=10_000,
+        vault_balance=10_000,  # legacy mirror
+        cash_balance=0,
+    )
     session.add(user)
     session.add(NewMemberDiceEligibility(user_id=1, is_eligible=True, campaign_key="test"))
     session.commit()
@@ -27,6 +34,7 @@ def test_external_ranking_deposit_increase_unlocks_vault_to_cash(session_factory
     session.expire_all()
     updated = session.get(User, 1)
     assert updated is not None
+    assert updated.vault_locked_balance == 5_000
     assert updated.vault_balance == 5_000
     assert updated.cash_balance == 5_000
 
@@ -43,6 +51,7 @@ def test_external_ranking_deposit_increase_unlocks_vault_to_cash(session_factory
     session.expire_all()
     updated2 = session.get(User, 1)
     assert updated2 is not None
+    assert updated2.vault_locked_balance == 0
     assert updated2.vault_balance == 0
     assert updated2.cash_balance == 10_000
 

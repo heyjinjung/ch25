@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 from app.models.new_member_dice import NewMemberDiceEligibility, NewMemberDiceLog
 from app.models.user import User
 from app.schemas.new_member_dice import NewMemberDicePlayResponse, NewMemberDicePlayResult, NewMemberDiceStatusResponse
+from app.services.vault_service import VaultService
 
 
 class NewMemberDiceService:
@@ -82,7 +83,8 @@ class NewMemberDiceService:
 
             user = db.query(User).filter(User.id == user_id).one_or_none()
             if user is not None:
-                user.vault_balance = max(int(user.vault_balance or 0), 10_000)
+                user.vault_locked_balance = max(int(user.vault_locked_balance or 0), 10_000)
+                VaultService.sync_legacy_mirror(user)
                 db.add(user)
 
         log = NewMemberDiceLog(

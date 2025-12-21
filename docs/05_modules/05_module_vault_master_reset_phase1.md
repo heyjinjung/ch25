@@ -31,6 +31,13 @@
 - **expires_at**: 현재 잠긴 잔액이 만료되는 시각(Phase 1에서는 “다음 만료 시각 1개”를 우선 지원)
 - **recommended_action**: ticket=0 등 상황에서 프론트가 수행해야 하는 권장 행동(예: `OPEN_VAULT_MODAL`)
 
+Phase 1 단일 기준(중요)
+- Phase 1에서는 `vault_balance`를 계산 기준으로 사용하지 않는다.
+- `vault_locked_balance`가 **단일 기준(source of truth)** 이며,
+  `vault_balance`는 레거시 UI 호환을 위한 **read-only mirror**로만 유지한다.
+- Phase 1에서 `available_balance`는 만료되지 않는다.
+  `available_balance`의 사용/정산/출금 정책은 기존 `cash_balance` 정책을 그대로 따른다.
+
 시간 정책
 - 백엔드는 naive `datetime.utcnow()`를 사용해도 됨. 스키마는 `KstBaseModel`이라 JSON은 KST(+09:00)로 직렬화된다.
 
@@ -256,7 +263,11 @@
   - `vault_available_balance INT NOT NULL DEFAULT 0`
   - `vault_expires_at DATETIME NULL`
 - 점진적 호환
-  - 기존 `vault_balance`는 Phase 1 전환 동안 **읽기 호환(=locked_balance mirror)** 로만 유지하고, 쓰기는 새 컬럼으로 이동
+  - 기존 `vault_balance`는 Phase 1 전환 동안 **read-only mirror(=vault_locked_balance)** 로만 유지하고, 계산/쓰기 기준은 `vault_locked_balance`로 일원화
+
+만료 범위(중요)
+- 만료(Expired) 대상은 **locked만**이다.
+- `vault_available_balance`는 만료되지 않으며, 사용/정산/출금은 기존 `cash_balance` 정책을 그대로 따른다.
 
 옵션 B (정석 확장)
 - `vault_account`, `vault_earn_log` 등 별도 테이블 신설
@@ -283,8 +294,10 @@ Phase 1에서는 옵션 A로 가고, v1.1 이후 옵션 B로 확장하는 것이
   - 동시에 `expires_at = now + 24h` (Phase 1에서는 단일 만료로 시작)
 
 - 해금(locked → available)
-  - 입금 증가 훅에서 `locked`를 깎고 `available`을 올림
-  - Phase 1 스펙의 unlock 단위/비율(예: 1콩당 15,000)은 정책 결정 후 반영
+  - `admin_external_ranking_service`는 "입금 발생 여부"만을 신호로 제공한다.
+  - 해금 계산 로직(얼마나/어떻게 해금할지)은 `vault_service`로 일원화한다.
+  - 결과 적용은 `vault_locked_balance`를 깎고 `vault_available_balance`를 올린다.
+  - Phase 1 스펙의 unlock 단위/비율(예: 1콩당 15,000)은 정책 결정 후 `vault_service`에 반영
 
 - 만료(expire)
   - `expires_at <= now`이면 `locked = 0`, `expires_at = NULL` (Phase 1 단순 버전)
