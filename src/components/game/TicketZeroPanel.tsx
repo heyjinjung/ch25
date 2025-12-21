@@ -1,10 +1,11 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { GameTokenType } from "../../types/gameTokens";
 import { getUiConfig } from "../../api/uiConfigApi";
 import { requestTrialGrant } from "../../api/trialGrantApi";
 import { useToast } from "../common/ToastProvider";
 import { getVaultStatus } from "../../api/vaultApi";
+import VaultModal from "../vault/VaultModal";
 
 type Props = {
   tokenType: GameTokenType;
@@ -32,6 +33,7 @@ type UiCta = {
 const TicketZeroPanel: React.FC<Props> = ({ tokenType, onClaimSuccess }) => {
   const { addToast } = useToast();
   const queryClient = useQueryClient();
+  const [vaultModalOpen, setVaultModalOpen] = useState(false);
 
   const ui = useQuery({
     queryKey: ["ui-config", "ticket_zero"],
@@ -114,6 +116,16 @@ const TicketZeroPanel: React.FC<Props> = ({ tokenType, onClaimSuccess }) => {
         <p className="font-extrabold text-white/90">{config.title}</p>
         <p className="mt-1 text-white/75">{config.body}</p>
 
+        <div className="mt-2">
+          <button
+            type="button"
+            onClick={() => setVaultModalOpen(true)}
+            className="text-xs font-semibold text-slate-200/90 underline underline-offset-4 hover:text-white"
+          >
+            금고 안내 보기
+          </button>
+        </div>
+
         {(vault.data?.vaultBalance ?? 0) > 0 && (
           <div className="mt-3 rounded-xl border border-white/12 bg-white/5 px-4 py-3">
             <div className="flex items-center justify-between gap-3">
@@ -164,6 +176,8 @@ const TicketZeroPanel: React.FC<Props> = ({ tokenType, onClaimSuccess }) => {
           <p className="mt-2 text-[clamp(11px,2.2vw,12px)] text-white/55">{config.note}</p>
         ) : null}
       </div>
+
+      <VaultModal open={vaultModalOpen} onClose={() => setVaultModalOpen(false)} />
     </div>
   );
 };

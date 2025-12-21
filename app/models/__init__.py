@@ -24,6 +24,7 @@ from app.models.user_segment import UserSegment
 from app.models.segment_rule import SegmentRule
 from app.models.new_member_dice import NewMemberDiceEligibility, NewMemberDiceLog
 from app.models.app_ui_config import AppUiConfig
+from app.models.vault2 import VaultProgram, VaultStatus
 from app.models.survey import (
     Survey,
     SurveyQuestion,
@@ -80,4 +81,6 @@ __all__ = [
     "NewMemberDiceEligibility",
     "NewMemberDiceLog",
     "AppUiConfig",
+    "VaultProgram",
+    "VaultStatus",
 ]
