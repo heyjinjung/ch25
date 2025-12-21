@@ -72,9 +72,53 @@
 
 ---
 
+### 4) 티켓 제로(게임 토큰 0) 락아웃 제거: 해결 경로 패널 + 어드민 즉시 반영
+- 목표
+  - “티켓 0이면 플레이 불가” 락아웃 UX를 제거하고, 부족 상태에서 유저가 즉시 행동할 수 있는 해결 경로(CTA)를 제공.
+  - 운영(어드민)이 문구/CTA를 매일 바꿔도 유저 화면에 빠르게 반영되도록 구성.
+
+- Backend
+  - DB 기반 UI 설정 저장소 `app_ui_config` 도입(keyed JSON).
+  - Public API: `GET /api/ui-config/{key}` (유저 화면에서 읽기)
+  - Admin API: `GET/PUT /admin/api/ui-config/{key}` (어드민에서 편집)
+  - 어드민 라우터 전역 인증을 정리하고, 인증 의존성 버그를 수정해 `/admin/api/*` 보호가 일관되도록 보강.
+
+- Frontend
+  - 토큰 부족 시 안내/해결 패널 `TicketZeroPanel`로 통일:
+    - 문구/CTA는 `ticket_zero` UI-config를 읽어 표시
+    - CTA 2개(Primary/Secondary) 지원 + 레거시 필드 호환
+    - “체험 티켓 1장 받기” 액션 제공(서버 멱등)
+    - 금고 프리뷰(보유 금액) 노출
+  - 앱 진입 1회(일 1회, KST 기준) 자동 체험지급 트리거(로컬 스토리지 키로 중복 방지)
+  - 룰렛/주사위/복권 페이지에서 `token_balance <= 0`이면 패널이 뜨도록 연동
+
+- 운영/즉시반영 포인트
+  - 유저 화면은 `ui-config`를 staleTime 최소화로 조회 → 새 문구는 다음 조회/진입에서 즉시 반영.
+
+---
+
+### 5) 도커 환경 반영 이슈: DB_SCHEMA_MISMATCH 해결(마이그레이션 누락)
+- 증상
+  - 도커에서 최신 UI/백엔드 기능이 “반영 안 되는 것처럼” 보이고, `GET /api/ui-config/ticket_zero`가 실패.
+  - 응답 에러 코드: `DB_SCHEMA_MISMATCH`
+
+- 원인
+  - 이미지 재빌드만 수행하고 DB 마이그레이션(`alembic upgrade head`)이 적용되지 않아, 신규 테이블/컬럼이 누락된 상태.
+
+- 해결
+  - 백엔드 컨테이너에서 `alembic upgrade head` 실행하여 스키마 동기화.
+
+- 검증
+  - `GET http://localhost:8000/api/ui-config/ticket_zero` → 200
+  - `GET http://localhost/api/ui-config/ticket_zero`(nginx 경유) → 200
+  - 유저 status API에서 `token_balance=0` 확인 후 패널 노출 조건이 성립함을 확인.
+
+---
+
 ## 남은 이슈/다음 작업 후보
 - (선택) 팀 배틀에서 “의도한 팀만 보이게” 하려면 기존 팀 데이터 정리(비활성화) 정책을 확정해야 함.
 - (선택) GuidePage 콘텐츠가 잦게 바뀐다면, 운영 배포 플로우에서 `frontend` 빌드 캐시 정책/CI 캐시 정책을 한 번 더 점검 필요.
+- (선택) 티켓 0 패널 운영을 위해 `admin/ui-config` 화면에서 일일 문구 교체 루틴을 운영에 반영.
 
 ---
 

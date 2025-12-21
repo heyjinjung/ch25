@@ -13,7 +13,7 @@ type FormState = {
   note: string;
 };
 
-const DEFAULTS: FormState = {
+const DEFAULT_TICKET_ZERO: FormState = {
   title: "티켓이 잠깐 부족해요",
   body: "지금 이용하면 바로 이어서 플레이 가능합니다.",
   primaryLabel: "씨씨카지노 바로가기",
@@ -23,58 +23,76 @@ const DEFAULTS: FormState = {
   note: "문구는 매일 변경됩니다.",
 };
 
-const UiConfigTicketZeroPage: React.FC = () => {
+const DEFAULT_COIN_ZERO: FormState = {
+  title: "코인이 부족해요",
+  body: "씨씨카지노 이용/충전 후 바로 이어서 플레이 가능합니다.",
+  primaryLabel: "씨씨카지노 바로가기",
+  primaryUrl: "https://ccc-010.com",
+  secondaryLabel: "실장 텔레 문의",
+  secondaryUrl: "https://t.me/jm956",
+  note: "문구는 매일 변경됩니다.",
+};
+
+const coerceFormState = (value: Record<string, any> | null, defaults: FormState): FormState => {
+  const title = typeof value?.title === "string" ? value.title : defaults.title;
+  const body = typeof value?.body === "string" ? value.body : defaults.body;
+
+  const primaryLabel =
+    typeof value?.primaryCta?.label === "string"
+      ? value.primaryCta.label
+      : typeof value?.primary_cta_label === "string"
+        ? value.primary_cta_label
+        : defaults.primaryLabel;
+  const primaryUrl =
+    typeof value?.primaryCta?.url === "string"
+      ? value.primaryCta.url
+      : typeof value?.primary_cta_url === "string"
+        ? value.primary_cta_url
+        : defaults.primaryUrl;
+
+  const secondaryLabel =
+    typeof value?.secondaryCta?.label === "string"
+      ? value.secondaryCta.label
+      : typeof value?.secondary_cta_label === "string"
+        ? value.secondary_cta_label
+        : typeof value?.cta_label === "string"
+          ? value.cta_label
+          : defaults.secondaryLabel;
+  const secondaryUrl =
+    typeof value?.secondaryCta?.url === "string"
+      ? value.secondaryCta.url
+      : typeof value?.secondary_cta_url === "string"
+        ? value.secondary_cta_url
+        : typeof value?.cta_url === "string"
+          ? value.cta_url
+          : defaults.secondaryUrl;
+
+  const note = typeof value?.note === "string" ? value.note : defaults.note;
+
+  return { title, body, primaryLabel, primaryUrl, secondaryLabel, secondaryUrl, note };
+};
+
+type UiConfigEditorProps = {
+  configKey: string;
+  heading: string;
+  description: string;
+  defaults: FormState;
+};
+
+const UiConfigEditor: React.FC<UiConfigEditorProps> = ({ configKey, heading, description, defaults }) => {
   const queryClient = useQueryClient();
-  const key = "ticket_zero";
 
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["admin", "ui-config", key],
-    queryFn: () => fetchAdminUiConfig(key),
+    queryKey: ["admin", "ui-config", configKey],
+    queryFn: () => fetchAdminUiConfig(configKey),
   });
 
   const initial = useMemo<FormState>(() => {
-    const value = data?.value ?? null;
-    const v = value as Record<string, any> | null;
+    const raw = (data?.value ?? null) as Record<string, any> | null;
+    return coerceFormState(raw, defaults);
+  }, [data?.value, defaults]);
 
-    const title = typeof v?.title === "string" ? v.title : DEFAULTS.title;
-    const body = typeof v?.body === "string" ? v.body : DEFAULTS.body;
-
-    const primaryLabel =
-      typeof v?.primaryCta?.label === "string"
-        ? v.primaryCta.label
-        : typeof v?.primary_cta_label === "string"
-          ? v.primary_cta_label
-          : DEFAULTS.primaryLabel;
-    const primaryUrl =
-      typeof v?.primaryCta?.url === "string"
-        ? v.primaryCta.url
-        : typeof v?.primary_cta_url === "string"
-          ? v.primary_cta_url
-          : DEFAULTS.primaryUrl;
-
-    const secondaryLabel =
-      typeof v?.secondaryCta?.label === "string"
-        ? v.secondaryCta.label
-        : typeof v?.secondary_cta_label === "string"
-          ? v.secondary_cta_label
-          : typeof v?.cta_label === "string"
-            ? v.cta_label
-            : DEFAULTS.secondaryLabel;
-    const secondaryUrl =
-      typeof v?.secondaryCta?.url === "string"
-        ? v.secondaryCta.url
-        : typeof v?.secondary_cta_url === "string"
-          ? v.secondary_cta_url
-          : typeof v?.cta_url === "string"
-            ? v.cta_url
-            : DEFAULTS.secondaryUrl;
-
-    const note = typeof v?.note === "string" ? v.note : DEFAULTS.note;
-
-    return { title, body, primaryLabel, primaryUrl, secondaryLabel, secondaryUrl, note };
-  }, [data?.value]);
-
-  const [form, setForm] = useState<FormState>(DEFAULTS);
+  const [form, setForm] = useState<FormState>(defaults);
 
   useEffect(() => {
     if (!data) return;
@@ -92,23 +110,23 @@ const UiConfigTicketZeroPage: React.FC = () => {
           note: form.note,
         },
       };
-      return upsertAdminUiConfig(key, payload);
+      return upsertAdminUiConfig(configKey, payload);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "ui-config", key] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "ui-config", configKey] });
     },
   });
 
   const updatedAt = data?.updated_at ? new Date(data.updated_at).toLocaleString("ko-KR") : "-";
 
   return (
-    <section className="space-y-6">
-      <div className="rounded-xl border border-emerald-800/40 bg-slate-900/70 p-6 shadow-lg shadow-emerald-900/30">
-        <h1 className="text-2xl font-bold text-slate-100">티켓 0 안내/CTA (유저 화면)</h1>
-        <p className="mt-2 text-sm text-slate-300">
-          룰렛/주사위/복권에서 티켓이 0일 때 노출되는 문구/CTA를 매일 바꿀 수 있습니다.
-        </p>
-        <p className="mt-1 text-xs text-slate-400">최근 저장: {updatedAt}</p>
+    <section className="space-y-4 rounded-xl border border-emerald-800/40 bg-slate-900/70 p-6 shadow-lg shadow-emerald-900/30">
+      <div>
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h2 className="text-xl font-bold text-slate-100">{heading}</h2>
+          <p className="text-xs text-slate-400">키: {configKey} · 최근 저장: {updatedAt}</p>
+        </div>
+        <p className="mt-2 text-sm text-slate-300">{description}</p>
       </div>
 
       {isLoading && (
@@ -121,7 +139,7 @@ const UiConfigTicketZeroPage: React.FC = () => {
       )}
 
       {!isLoading && !isError && (
-        <div className="rounded-xl border border-emerald-800/40 bg-slate-900/70 p-6 shadow-lg shadow-emerald-900/30">
+        <>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-1">
               <label className="text-sm text-slate-200">제목</label>
@@ -190,17 +208,10 @@ const UiConfigTicketZeroPage: React.FC = () => {
           </div>
 
           <div className="mt-6 flex flex-wrap items-center gap-3">
-            <Button
-              onClick={() => mutation.mutate()}
-              disabled={mutation.isPending}
-            >
+            <Button onClick={() => mutation.mutate()} disabled={mutation.isPending}>
               {mutation.isPending ? "저장 중..." : "저장"}
             </Button>
-            <Button
-              variant="secondary"
-              onClick={() => setForm(initial)}
-              disabled={mutation.isPending}
-            >
+            <Button variant="secondary" onClick={() => setForm(initial)} disabled={mutation.isPending}>
               되돌리기
             </Button>
           </div>
@@ -208,12 +219,37 @@ const UiConfigTicketZeroPage: React.FC = () => {
           {mutation.isError && (
             <p className="mt-3 text-sm text-red-200">저장 실패: {(mutation.error as Error).message}</p>
           )}
-          {mutation.isSuccess && (
-            <p className="mt-3 text-sm text-emerald-200">저장 완료</p>
-          )}
-        </div>
+          {mutation.isSuccess && <p className="mt-3 text-sm text-emerald-200">저장 완료</p>}
+        </>
       )}
     </section>
+  );
+};
+
+const UiConfigTicketZeroPage: React.FC = () => {
+  return (
+    <div className="space-y-6">
+      <div className="rounded-xl border border-emerald-800/40 bg-slate-900/70 p-6 shadow-lg shadow-emerald-900/30">
+        <h1 className="text-2xl font-bold text-slate-100">UI 문구/CTA (전역)</h1>
+        <p className="mt-2 text-sm text-slate-300">
+          유저 화면에서 “부족 상태”에 노출되는 해결 경로 문구/CTA를 키별로 운영합니다.
+        </p>
+      </div>
+
+      <UiConfigEditor
+        configKey="ticket_zero"
+        heading="티켓 0 안내/CTA"
+        description="룰렛/주사위/복권에서 티켓이 0일 때 노출되는 문구/CTA"
+        defaults={DEFAULT_TICKET_ZERO}
+      />
+
+      <UiConfigEditor
+        configKey="coin_zero"
+        heading="코인 부족 안내/CTA"
+        description="코인(CC_COIN) 부족 상태에서 노출할 해결 경로 문구/CTA (현재는 운영 키만 준비)"
+        defaults={DEFAULT_COIN_ZERO}
+      />
+    </div>
   );
 };
 
