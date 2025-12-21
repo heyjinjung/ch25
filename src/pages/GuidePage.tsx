@@ -109,7 +109,7 @@ const CoreActionSection: React.FC = () => {
             <p className="mb-4 text-gray-700">버튼 한 번으로 바로 시작하고 결과는 즉시 확인할 수 있어요. 원하는 게임을 선택하세요.</p>
             <div className="rounded-lg border border-gray-200 bg-white p-3">
               <p className="text-sm text-gray-600">
-                <span className="font-bold text-[#394508]">TIP</span>: 주사위는 레벨 경험치만 쌓여요.
+                <span className="font-bold text-[#394508]">TIP</span>:주사위는 레벨경험치만 쌓여요.
               </p>
             </div>
           </div>
@@ -123,7 +123,7 @@ const CoreActionSection: React.FC = () => {
             <p className="mb-4 text-gray-700">게임 결과로 얻은 포인트가 레벨에 반영되고, 레벨별 특별 보상을 받을 수 있어요.</p>
             <div className="rounded-lg border border-gray-200 bg-white p-3">
               <p className="text-sm text-gray-600">
-                <span className="font-bold text-[#394508]">TIP</span>: 내 금고에서 누적 포인트와 레벨을 확인하세요.
+                <span className="font-bold text-[#394508]">TIP</span>: 레벨에서 누적 레벨포인트와 보상레벨을 확인하세요.
               </p>
             </div>
           </div>
@@ -167,7 +167,7 @@ const GamesSection: React.FC = () => {
   const games: GameCardProps[] = [
     {
       title: "룰렛",
-      description: "룰렛을 돌려 랜덤 보상을 즉시 획득",
+      description: "룰렛돌려 랜덤보상을 즉시획득",
       beginnerTip: "매일 보상이 바뀝니다",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 20 20" fill="white">
@@ -178,8 +178,8 @@ const GamesSection: React.FC = () => {
     },
     {
       title: "주사위 배틀",
-      description: "주사위 결과로 승/무/패 결정, 승리 시 추가 보상",
-      beginnerTip: "팀배틀전에 사용, 경험치쌓는 용도.",
+      description: "주사위 결과로 승/무/패 결정, 승리시 추가 20xp보상",
+      beginnerTip: "팀배틀 전에 사용, 경험치 쌓는 용도.",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 20 20" fill="white">
           <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
@@ -189,7 +189,7 @@ const GamesSection: React.FC = () => {
     },
     {
       title: "복권",
-      description: "긁거나 뽑아서 당첨 상품/보상 포인트 확인",
+      description: "긁거나 뽑아서 매일 달라지는 당첨상품/보상포인트 확인",
       beginnerTip: "당첨 결과는 즉시 공개",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 20 20" fill="white">
@@ -245,7 +245,7 @@ const TeamBattleSection: React.FC = () => {
           <p className="mb-6 text-gray-700">우리 팀이 이길수록 보상이 커집니다. 내 플레이가 팀 점수에 기여돼요.</p>
           <ul className="mb-6 space-y-3">
             {[
-              "내가 플레이하면 팀 점수가 오릅니다(기여).",
+              "내가 플레이하면 팀 점수가 오릅니다.",
               "상대 팀과 점수 차가 벌어지면 알림/배너로 알려줍니다.",
               "시즌제 랭킹 초기화, 최대 5명까지 한 팀 가능",
             ].map((text) => (
@@ -295,12 +295,12 @@ const MyVaultSection: React.FC = () => {
         <div className="mb-10 w-full md:mb-0 md:w-1/2 md:pl-10">
           <span className="text-sm font-bold uppercase tracking-wider text-[#394508]">추가 동기부여</span>
           <h2 className="mt-1 mb-4 text-2xl font-bold text-[#282d1a] md:text-3xl">내 금고</h2>
-          <p className="mb-6 text-gray-700">씨씨카지노 이용 시 해금됩니다.</p>
+          <p className="mb-6 text-gray-700">씨씨카지노 이용시 해금됩니다.</p>
           <div className="mb-6 space-y-4">
             {[
-              "플레이와 이벤트 참여로 보상/포인트가 누적됩니다.",
+              "플레이와 이벤트 참여로 금고머니가 누적됩니다.",
               "금고 화면에서 누적 상태를 한눈에 확인할 수 있어요.",
-              "해금/정산 조건이 필요한 경우, 안내에 따라 진행합니다.",
+              "해금조건이 필요한 경우, 안내에 따라 진행.",
             ].map((text) => (
               <div key={text} className="rounded-lg bg-white p-4 shadow-sm">
                 <p className="text-gray-700">
@@ -309,31 +309,31 @@ const MyVaultSection: React.FC = () => {
               </div>
             ))}
           </div>
-          <button className="rounded-full bg-[#282d1a] px-6 py-3 text-lg font-bold text-white transition hover:bg-opacity-90">내금고 확인하기</button>
+          <button className="rounded-full bg-[#282d1a] px-6 py-3 text-lg font-bold text-white transition hover:bg-opacity-90">예시 내금고 확인</button>
         </div>
         <div className="flex w-full justify-center md:w-1/2">
           <div className="relative w-full max-w-sm">
             <div className="rounded-2xl border border-[#d2fd9c] bg-white p-6 shadow-xl">
               <div className="mb-6 flex items-center justify-between">
-                <h3 className="text-xl font-bold text-[#282d1a]">내 포인트</h3>
+                <h3 className="text-xl font-bold text-[#282d1a]">내 금고머니</h3>
                 <div className="rounded-full bg-[#d2fd9c] px-3 py-1 text-sm font-bold text-[#394508] shadow">Lv.5</div>
               </div>
               <div className="mb-6 rounded-xl bg-[#f3f7eb] p-4">
-                <div className="mb-1 text-sm text-[#394508]">총 보유 포인트</div>
-                <div className="text-3xl font-bold text-[#282d1a]">12,500 P</div>
+                <div className="mb-1 text-sm text-[#394508]">총 보유머니</div>
+                <div className="text-3xl font-bold text-[#282d1a]">12,500원</div>
               </div>
               <div className="mb-6 grid grid-cols-2 gap-4">
                 <div className="rounded-xl bg-[#f3f7eb] p-3">
                   <div className="mb-1 text-xs text-[#394508]">이번 주 적립</div>
-                  <div className="text-xl font-bold text-[#282d1a]">2,340 P</div>
+                  <div className="text-xl font-bold text-[#282d1a]">2,340원</div>
                 </div>
                 <div className="rounded-xl bg-[#f3f7eb] p-3">
                   <div className="mb-1 text-xs text-[#394508]">다음 레벨까지</div>
-                  <div className="text-xl font-bold text-[#282d1a]">4,500 P</div>
+                  <div className="text-xl font-bold text-[#282d1a]">4,500원</div>
                 </div>
               </div>
               <button className="w-full rounded-xl bg-[#394508] py-3 text-center font-bold text-white transition hover:bg-opacity-90 focus:ring-2 focus:ring-[#394508] focus:ring-offset-2">
-                포인트 전환하기
+                씨씨로 전환하기
               </button>
             </div>
             <motion.div
@@ -360,26 +360,26 @@ const PointSystemSection: React.FC = () => {
         </div>
 
         <div className="mb-10 grid grid-cols-1 gap-6 md:grid-cols-3">
-          {["외부 플랫폼 이용", "포인트 적립", "레벨 상승 & 보상"].map((title, index) => (
+          {["씨씨카지노이용", "포인트 적립", "레벨상승 & 보상"].map((title, index) => (
             <div key={title} className="rounded-xl bg-[rgb(0,0,0)] bg-opacity-10 p-6 text-center">
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#d2fd9c] text-2xl font-bold text-[#394508]">
                 {index + 1}
               </div>
               <h3 className="mb-2 text-xl font-bold">{title}</h3>
               <p className="text-gray-300">
-                {index === 0 && "씨씨사이트에서 서비스를 이용하면 이용 금액에 따라 자동으로 포인트가 적립됩니다."}
-                {index === 1 && "이벤트 시스템에서 포인트가 적립되며, 게임 플레이로 추가 포인트를 획득할 수 있습니다."}
-                {index === 2 && "쌓인 포인트는 레벨(시즌패스) 진행에 사용되며, 레벨이 오르면 특별 보상을 받을 수 있습니다."}
+                {index === 0 && "씨씨카지노를 이용하면 이용 금액에 따라 자동으로 포인트가 적립됩니다."}
+                {index === 1 && "이벤트 시스템에서 레벨포인트가 적립되며, 게임 플레이로 추가 레벨포인트를 획득할 수 있습니다."}
+                {index === 2 && "쌓인 레벨포인트는 레벨(시즌패스) 진행에 사용되며, 레벨이 오르면 특별 보상을 받을 수 있습니다."}
               </p>
             </div>
           ))}
         </div>
 
         <div className="rounded-xl bg-white bg-opacity-10 p-6 md:p-8">
-          <h3 className="mb-6 text-xl font-bold">자주 묻는 포인트 질문</h3>
+          <h3 className="mb-6 text-xl font-bold">자주 묻는 레벨포인트 질문</h3>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
             <div className="rounded-lg bg-[rgb(5,39,16)] bg-opacity-10 p-4">
-              <h4 className="mb-2 font-bold text-[#d2fd9c]">포인트란?</h4>
+              <h4 className="mb-2 font-bold text-[#d2fd9c]">레벨포인트란?</h4>
               <p className="text-sm text-gray-300">레벨 진행도에 반영되는 값입니다. 게임 플레이와 씨씨사이트 이용으로 쌓입니다.</p>
             </div>
             <div className="rounded-lg bg-[rgb(5,39,16)] bg-opacity-10 p-4">
@@ -388,7 +388,7 @@ const PointSystemSection: React.FC = () => {
             </div>
             <div className="rounded-lg bg-[rgb(5,39,16)] bg-opacity-10 p-4">
               <h4 className="mb-2 font-bold text-[#d2fd9c]">팀배틀 점수란?</h4>
-              <p className="text-sm text-gray-300">포인트 기반으로 산정되는 팀 경쟁용 점수입니다. 내 활동이 팀 전체의 순위에 기여합니다.</p>
+              <p className="text-sm text-gray-300">레벨포인트 기반으로 산정되는 팀 경쟁용 점수입니다. 내 활동이 팀 전체의 순위에 기여합니다.</p>
             </div>
           </div>
         </div>
@@ -435,7 +435,7 @@ const StepContent: React.FC<{ step: number }> = ({ step }) => {
     1: {
       title: "로그인 후 티켓 확인",
       desc: "각 게임은 티켓이 필요할 수 있어요. 화면 상단/게임 정보에서 잔여 티켓을 확인하세요.",
-      tip: "티켓이 없을 경우, 씨씨사이트 이용 시 자동으로 티켓이 지급됩니다.",
+      tip: "티켓이 없을 경우, 씨씨카지노 이용 시 자동으로 티켓이 지급됩니다.",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
           <path
@@ -459,7 +459,7 @@ const StepContent: React.FC<{ step: number }> = ({ step }) => {
     3: {
       title: "결과 확인 후 '다시 하기'로 빠르게 반복",
       desc: "결과를 봤다면 같은 자리에서 바로 '다시 하기'로 다음 판을 진행하세요.",
-      tip: "빠르게 플레이할수록 더 많은 포인트를 모을 수 있습니다.",
+      tip: "빠르게 플레이할수록 더 많은 레벨포인트를 모을 수 있습니다.",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
           <path
@@ -471,9 +471,9 @@ const StepContent: React.FC<{ step: number }> = ({ step }) => {
       ),
     },
     4: {
-      title: "포인트/레벨 보상 확인",
-      desc: "플레이로 쌓인 포인트가 레벨 진행에 반영되고, 레벨 보상을 받을 수 있어요.",
-      tip: "내 금고에서 포인트와 레벨을 확인하세요.",
+      title: "레벨포인트/레벨 보상 확인",
+      desc: "플레이로 쌓인 레벨포인트가 레벨 진행에 반영되고, 레벨 보상을 받을 수 있어요.",
+      tip: "레벨에서 레벨포인트와 레벨을 확인하세요.",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
           <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
@@ -488,7 +488,7 @@ const StepContent: React.FC<{ step: number }> = ({ step }) => {
     5: {
       title: "팀배틀 참여 & 누적 상태 확인",
       desc: "팀배틀에 참여하고 내 금고에서 누적 상태를 한눈에 확인하세요.",
-      tip: "우리 팀이 지고 있다면 지금 참여가 더 큰 임팩트를 만듭니다.",
+      tip: "우리 팀이 지고 있다면 지금 참여로 반전을 만들수 있습니다.",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
           <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
@@ -518,16 +518,16 @@ const FAQSection: React.FC = () => {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const faqs = [
     {
-      question: "적립된 포인트는 어떻게 확인하나요?",
-      answer: "내금고 서비스에서 적립된 포인트와 사용 내역을 확인할 수 있습니다. 레벨별 적립률과 다음 레벨까지 필요한 포인트도 확인 가능합니다.",
+      question: "적립된 레벨포인트는 어떻게 확인하나요?",
+      answer: "레벨버튼에서 적립된 레벨포인트와 남은 보상을 확인할 수 있습니다. 레벨별 적립률과 다음 레벨까지 필요한 포인트도 확인 가능합니다.",
     },
     {
       question: "팀 배틀전은 어떻게 참여하나요?",
-      answer: "팀 배틀전 메뉴에서 팀을 생성하거나 기존 팀에 참여할 수 있습니다. 최대 5명까지 한 팀으로 참여 가능하며, 주간 랭킹에 따라 팀원 모두에게 보상이 지급됩니다.",
+      answer: "팀 배틀전 메뉴에서 미스터리 팀배정에 참여할 수 있습니다. 최대 5명까지 한 팀으로 참여 가능하며, 주간 랭킹에 따라 팀원 모두에게 보상이 지급됩니다.",
     },
     {
-      question: "포인트는 어떻게 전환하나요?",
-      answer: "내금고 서비스에서 포인트 전환 및 출금 신청을 할 수 있습니다. 최소 전환 가능 포인트는 10,000P이며, 신청 후 1-3일 내에 처리됩니다.",
+      question: "금고머니는 어떻게 전환하나요?",
+      answer: "내금고 서비스에서 금고 머니 전환 및 출금 신청을 할 수 있습니다. 최소 전환 가능 머니는 10,000P이며, 신청 후 1일 내에 처리됩니다.",
     },
   ];
 
@@ -602,13 +602,12 @@ const Footer: React.FC = () => {
                 <a className="hover:text-[#d2fd9c]" href="#">지민공지채널</a>
               </li>
             </ul>
-            <p className="mt-4 text-sm text-gray-400">운영 시간: 10:00–22:00</p>
-          </div>
+           </div>
         </div>
         <div className="mt-8 border-t border-gray-700 pt-6 text-sm text-gray-400">
           <p>이벤트 참여 및 보상 정책은 상황에 따라 변경될 수 있습니다. 만 19세 이상 이용 권장 / 과몰입 주의</p>
           <div className="mt-4 flex flex-col justify-between gap-4 md:flex-row">
-            <p>&copy; 2023 CC카지노 이벤트. All rights reserved.</p>
+            <p>&copy; 2025 CC카지노 이벤트. All rights reserved.</p>
             <div className="flex flex-wrap gap-4">
               <a className="hover:text-[#d2fd9c]" href="#">Contact</a>
             </div>
