@@ -8,7 +8,6 @@ import {
   getMyTeam,
 } from "../api/teamBattleApi";
 import { TeamSeason, Team, LeaderboardEntry, ContributorEntry, TeamMembership } from "../types/teamBattle";
-import { isAdminAuthenticated } from "../auth/adminAuth";
 import { TreeIcon, GiftIcon, StarIcon, BellIcon } from "../components/common/ChristmasDecorations";
 
 const TeamBattlePage: React.FC = () => {
@@ -163,9 +162,9 @@ const TeamBattlePage: React.FC = () => {
 
   const joinButtonLabel = joinWindow.closed ? "선택 마감" : joinBusy ? "배정 중..." : "미스터리 팀 배정";
   const myTeamName = useMemo(() => teams.find((t) => t.id === selectedTeam)?.name, [teams, selectedTeam]);
-  const showAdminPanel = isAdminAuthenticated();
   const showTeamSelectPanel = !joinWindow.closed && selectedTeam === null;
-  const showTopGrid = showTeamSelectPanel || showAdminPanel;
+  const showContribPanel = selectedTeam !== null;
+  const showTopGrid = showTeamSelectPanel || showContribPanel;
 
   const handleLbPrev = () => setLbOffset(Math.max(lbOffset - lbLimit, 0));
   const handleLbNext = () => {
@@ -291,7 +290,7 @@ const TeamBattlePage: React.FC = () => {
             </div>
           )}
 
-          {showAdminPanel && (
+          {showContribPanel && (
         <div
           className={`rounded-2xl border border-amber-600/40 bg-gradient-to-br from-slate-950/80 to-amber-950/30 p-5 shadow-lg ${
             showTeamSelectPanel ? "" : "md:col-span-3"
