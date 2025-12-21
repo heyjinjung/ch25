@@ -8,11 +8,17 @@ import { useAuth } from "../auth/authStore";
 
 const baseAccent = "#d2fd9c";
 
+const normalizeIsoForDate = (value: string) => {
+  // Accept: 2025-12-21T12:34:56Z, 2025-12-21T12:34:56+09:00
+  // If timezone is missing, treat it as UTC for backward compatibility.
+  const hasTimezone = /([zZ]|[+-]\d{2}:?\d{2})$/.test(value);
+  return hasTimezone ? value : `${value}Z`;
+};
+
 const formatCountdown = (endsAt?: string | null) => {
   if (!endsAt) return "-";
-  const endStr = endsAt.endsWith("Z") ? endsAt : `${endsAt}Z`;
   const now = Date.now();
-  const end = new Date(endStr).getTime();
+  const end = new Date(normalizeIsoForDate(endsAt)).getTime();
   const diff = end - now;
   if (diff <= 0) return "종료";
   const hours = Math.floor(diff / (1000 * 60 * 60));
@@ -70,8 +76,7 @@ const TeamBattleMainPanel: React.FC<{ variant: ViewportVariant }> = ({ variant }
       return { canJoin: true, reason: null as string | null };
     }
 
-    const startStr = rawStartsAt.endsWith("Z") ? rawStartsAt : `${rawStartsAt}Z`;
-    const startMs = new Date(startStr).getTime();
+    const startMs = new Date(normalizeIsoForDate(rawStartsAt)).getTime();
     if (!Number.isFinite(startMs)) {
       return { canJoin: true, reason: null as string | null };
     }

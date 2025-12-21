@@ -1,5 +1,5 @@
 """Pydantic schemas for dice APIs."""
-from pydantic import BaseModel
+from app.schemas.base import KstBaseModel as BaseModel
 
 from app.models.feature import FeatureType
 

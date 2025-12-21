@@ -1,5 +1,5 @@
 """Schema for today's active feature response."""
-from pydantic import BaseModel
+from app.schemas.base import KstBaseModel as BaseModel
 
 
 class TodayFeatureResponse(BaseModel):

@@ -10,6 +10,11 @@ import {
 import { TeamSeason, Team, LeaderboardEntry, ContributorEntry, TeamMembership } from "../types/teamBattle";
 import { TreeIcon, GiftIcon, StarIcon, BellIcon } from "../components/common/ChristmasDecorations";
 
+const normalizeIsoForDate = (value: string) => {
+  const hasTimezone = /([zZ]|[+-]\d{2}:?\d{2})$/.test(value);
+  return hasTimezone ? value : value + "Z";
+};
+
 const TeamBattlePage: React.FC = () => {
   const [season, setSeason] = useState<TeamSeason | null>(null);
   const [teams, setTeams] = useState<Team[]>([]);
@@ -30,9 +35,8 @@ const TeamBattlePage: React.FC = () => {
 
   const joinWindow = useMemo(() => {
     if (!season?.starts_at) return { closed: true, label: "-" };
-    // UTC 명시 (백엔드가 Z 없이 UTC 반환하므로 보정)
-    const startStr = season.starts_at.endsWith("Z") ? season.starts_at : season.starts_at + "Z";
-    const start = new Date(startStr).getTime();
+    // Z/+09:00 모두 파싱, timezone 미표기만 UTC로 보정
+    const start = new Date(normalizeIsoForDate(season.starts_at)).getTime();
     const now = Date.now();
     if (now < start) return { closed: true, label: "시작 전" };
 
@@ -46,10 +50,8 @@ const TeamBattlePage: React.FC = () => {
 
   const countdown = useMemo(() => {
     if (!season?.ends_at) return "-";
-    // UTC 명시
-    const endStr = season.ends_at.endsWith("Z") ? season.ends_at : season.ends_at + "Z";
     const now = Date.now();
-    const end = new Date(endStr).getTime();
+    const end = new Date(normalizeIsoForDate(season.ends_at)).getTime();
     const diff = end - now;
     if (diff <= 0) return "종료";
     const hours = Math.floor(diff / (1000 * 60 * 60));
