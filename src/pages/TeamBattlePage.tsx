@@ -92,9 +92,8 @@ const TeamBattlePage: React.FC = () => {
       setSeason(seasonData);
       setTeams(teamList);
       setMyTeam(myTeamRes);
-      if (myTeamRes) {
-        setSelectedTeam(myTeamRes.team_id);
-      }
+      // 서버 기준 현재 소속이 없으면(selectedTeam stale 방지) 클라이언트 상태도 명시적으로 초기화
+      setSelectedTeam(myTeamRes ? myTeamRes.team_id : null);
       await loadLeaderboard(seasonData?.id);
       const targetTeamId = myTeamRes?.team_id ?? selectedTeam;
       if (targetTeamId && seasonData) {

@@ -45,7 +45,7 @@ const LevelCard: React.FC<{ variant: LevelCardVariant }> = ({ variant }) => {
   const sizing =
     variant === "desktop"
       ? {
-          maxW: "w-full max-w-[1080px]",
+          maxW: "w-full max-w-[900px]",
           pad: "px-[clamp(34px,3.4vw,56px)] py-[clamp(30px,3.4vw,50px)]",
           avatar: "h-[clamp(92px,6.4vw,124px)] w-[clamp(92px,6.4vw,124px)]",
           avatarText: "text-[clamp(28px,3vw,38px)]",

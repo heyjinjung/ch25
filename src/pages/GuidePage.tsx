@@ -31,19 +31,19 @@ const IntroSection: React.FC = () => {
       <div className="mx-auto flex max-w-screen-xl flex-col items-center md:flex-row">
         <div className="mb-10 w-full md:mb-0 md:w-3/5 md:pr-10">
           <h2 className="mb-4 text-2xl font-bold leading-tight md:text-3xl lg:text-4xl">
-            3가지 게임 + 팀배틀 + 내 금고로,
+            게임+팀배틀+금고로
             <br />
-            매일 빠르게 보상 포인트를 쌓아보세요.
+            매일 보상혜택 챙기세요
           </h2>
           <p className="mb-6 text-lg font-medium">
-            티켓만 있으면 바로 플레이 → 결과 즉시 확인 → 포인트/레벨 보상으로 누적됩니다.
+            플레이→결과확인→레벨보상으로 누적
           </p>
           <div className="mb-6 flex flex-wrap gap-2">
             <span className="rounded-full bg-[#d2fd9c] px-3 py-1 text-sm font-bold text-[#394508]">결과 즉시</span>
-            <span className="rounded-full bg-[#d2fd9c] px-3 py-1 text-sm font-bold text-[#394508]">레벨 보상 누적</span>
-            <span className="rounded-full bg-[#d2fd9c] px-3 py-1 text-sm font-bold text-[#394508]">팀과 경쟁</span>
+            <span className="rounded-full bg-[#d2fd9c] px-3 py-1 text-sm font-bold text-[#394508]">레벨 보상누적</span>
+            <span className="rounded-full bg-[#d2fd9c] px-3 py-1 text-sm font-bold text-[#394508]">팀배틀</span>
           </div>
-          <p className="mb-6 text-sm text-gray-300">처음이신가요? 아래 '3분 가이드'만 보고 바로 시작할 수 있어요.</p>
+          <p className="mb-6 text-sm text-gray-300">처음이세요? '3분가이드'보고 바로 시작하세요.</p>
           <div className="flex flex-wrap gap-3">
             <button className="rounded-full bg-[#d2fd9c] px-6 py-3 text-base font-bold text-[#394508] transition hover:bg-opacity-90">
               지금 시작하기
@@ -92,10 +92,10 @@ const CoreActionSection: React.FC = () => {
               </div>
               <h3 className="text-xl font-bold text-[#282d1a]">티켓 확인</h3>
             </div>
-            <p className="mb-4 text-gray-700">게임 플레이에 필요한 티켓을 확인하세요. 각 게임마다 필요한 티켓이 다를 수 있어요.</p>
+            <p className="mb-4 text-gray-700">게임 플레이에 필요한 티켓을 확인하세요. 씨씨카지노를 이용하면 티켓이 발생됩니다.</p>
             <div className="rounded-lg border border-gray-200 bg-white p-3">
               <p className="text-sm text-gray-600">
-                <span className="font-bold text-[#394508]">TIP</span>: 화면 상단에서 보유 티켓을 확인할 수 있어요.
+                <span className="font-bold text-[#394508]">TIP</span>: 각 게임화면에서 보유 티켓을 확인할 수 있어요.
               </p>
             </div>
           </div>
@@ -109,7 +109,7 @@ const CoreActionSection: React.FC = () => {
             <p className="mb-4 text-gray-700">버튼 한 번으로 바로 시작하고 결과는 즉시 확인할 수 있어요. 원하는 게임을 선택하세요.</p>
             <div className="rounded-lg border border-gray-200 bg-white p-3">
               <p className="text-sm text-gray-600">
-                <span className="font-bold text-[#394508]">TIP</span>: '다시 하기'로 빠르게 반복 플레이 가능해요.
+                <span className="font-bold text-[#394508]">TIP</span>: 주사위는 레벨 경험치만 쌓여요.
               </p>
             </div>
           </div>
@@ -168,7 +168,7 @@ const GamesSection: React.FC = () => {
     {
       title: "룰렛",
       description: "룰렛을 돌려 랜덤 보상을 즉시 획득",
-      beginnerTip: "눌러서 시작하면 끝. 결과가 바로 표시됩니다.",
+      beginnerTip: "매일 보상이 바뀝니다",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 20 20" fill="white">
           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
@@ -179,7 +179,7 @@ const GamesSection: React.FC = () => {
     {
       title: "주사위 배틀",
       description: "주사위 결과로 승/무/패 결정, 승리 시 추가 보상",
-      beginnerTip: "한 판이 짧고, 피드백이 빠릅니다.",
+      beginnerTip: "팀배틀전에 사용, 경험치쌓는 용도.",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 20 20" fill="white">
           <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
@@ -190,7 +190,7 @@ const GamesSection: React.FC = () => {
     {
       title: "복권",
       description: "긁거나 뽑아서 당첨 상품/보상 포인트 확인",
-      beginnerTip: "당첨 결과는 즉시 공개, '다시 하기'도 바로 가능합니다.",
+      beginnerTip: "당첨 결과는 즉시 공개",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 20 20" fill="white">
           <path
@@ -209,7 +209,7 @@ const GamesSection: React.FC = () => {
       <div className="mx-auto max-w-screen-xl">
         <div className="mb-10 text-center">
           <span className="text-sm font-bold uppercase tracking-wider text-[#394508]">게임 소개</span>
-          <h2 className="mt-1 text-2xl font-bold text-[#282d1a] md:text-3xl">빠르고 쉬운 3가지 게임</h2>
+          <h2 className="mt-1 text-2xl font-bold text-[#282d1a] md:text-3xl">씨씨지민 코드만 가능한 보상</h2>
           <p className="mt-2 mx-auto max-w-2xl text-gray-600">티켓만 있으면 바로 플레이 가능한 게임들로 포인트를 모으세요.</p>
         </div>
         <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
@@ -220,7 +220,7 @@ const GamesSection: React.FC = () => {
 
         <div className="mt-10 rounded-xl border border-[#d2fd9c] bg-[#f3f7eb] p-6 shadow-sm">
           <h3 className="mb-3 text-lg font-bold text-[#394508]">티켓이 없으면 어떻게 하나요?</h3>
-          <p className="mb-4 text-gray-800">티켓이 부족하면 일부 게임 참여가 제한될 수 있어요. 씨씨사이트에서 서비스를 이용하면 티켓을 획득할 수 있습니다.</p>
+          <p className="mb-4 text-gray-800">씨씨사이트에서 서비스를 이용하면 티켓을 획득할 수 있습니다.</p>
           <div className="flex flex-wrap gap-3">
             <button className="rounded-full bg-[#394508] px-4 py-2 text-sm font-bold text-white transition hover:bg-opacity-90 focus:ring-2 focus:ring-[#394508] focus:ring-offset-2">
               티켓 안내 보기
@@ -240,14 +240,14 @@ const TeamBattleSection: React.FC = () => {
     <section id="team-battle" className="bg-white px-4 py-12 md:px-8 lg:px-12">
       <div className="mx-auto flex max-w-screen-xl flex-col items-center md:flex-row">
         <div className="mb-10 w-full md:mb-0 md:w-1/2 md:pr-10">
-          <span className="text-sm font-bold uppercase tracking-wider text-[#394508]">추가 동기부여</span>
+          <span className="text-sm font-bold uppercase tracking-wider text-[#394508]">새로운 시스템</span>
           <h2 className="mt-1 mb-4 text-2xl font-bold text-[#282d1a] md:text-3xl">팀 배틀전</h2>
           <p className="mb-6 text-gray-700">우리 팀이 이길수록 보상이 커집니다. 내 플레이가 팀 점수에 기여돼요.</p>
           <ul className="mb-6 space-y-3">
             {[
               "내가 플레이하면 팀 점수가 오릅니다(기여).",
               "상대 팀과 점수 차가 벌어지면 알림/배너로 알려줍니다.",
-              "매주 월요일 랭킹 초기화, 최대 5명까지 한 팀 가능",
+              "시즌제 랭킹 초기화, 최대 5명까지 한 팀 가능",
             ].map((text) => (
               <li key={text} className="flex items-start">
                 <svg xmlns="http://www.w3.org/2000/svg" className="mr-2 h-5 w-5 text-[#394508]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -295,7 +295,7 @@ const MyVaultSection: React.FC = () => {
         <div className="mb-10 w-full md:mb-0 md:w-1/2 md:pl-10">
           <span className="text-sm font-bold uppercase tracking-wider text-[#394508]">추가 동기부여</span>
           <h2 className="mt-1 mb-4 text-2xl font-bold text-[#282d1a] md:text-3xl">내 금고</h2>
-          <p className="mb-6 text-gray-700">내 금고는 '내가 쌓아둔 가치'를 보여주는 곳입니다. 씨씨카지노 이용 시 해금됩니다.</p>
+          <p className="mb-6 text-gray-700">씨씨카지노 이용 시 해금됩니다.</p>
           <div className="mb-6 space-y-4">
             {[
               "플레이와 이벤트 참여로 보상/포인트가 누적됩니다.",

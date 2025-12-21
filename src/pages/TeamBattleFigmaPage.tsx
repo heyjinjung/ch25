@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { getActiveSeason, getLeaderboard, getMyTeam } from "../api/teamBattleApi";
+import { autoAssignTeam, getActiveSeason, getLeaderboard, getMyTeam } from "../api/teamBattleApi";
 import { useToast } from "../components/common/ToastProvider";
 
 const baseAccent = "#d2fd9c";
@@ -22,6 +22,7 @@ type ViewportVariant = "desktop" | "tablet" | "mobile";
 
 const TeamBattleMainPanel: React.FC<{ variant: ViewportVariant }> = ({ variant }) => {
   const [refreshing, setRefreshing] = useState(false);
+  const [assigning, setAssigning] = useState(false);
   const { addToast } = useToast();
 
   const seasonQuery = useQuery({
@@ -46,6 +47,30 @@ const TeamBattleMainPanel: React.FC<{ variant: ViewportVariant }> = ({ variant }
 
   const countdown = useMemo(() => formatCountdown(seasonQuery.data?.ends_at), [seasonQuery.data?.ends_at]);
   const myTeamId = myTeamQuery.data?.team_id ?? null;
+
+  const joinWindowState = useMemo(() => {
+    const rawStartsAt = seasonQuery.data?.starts_at;
+    if (!rawStartsAt) {
+      return { canJoin: true, reason: null as string | null };
+    }
+
+    const startStr = rawStartsAt.endsWith("Z") ? rawStartsAt : `${rawStartsAt}Z`;
+    const startMs = new Date(startStr).getTime();
+    if (!Number.isFinite(startMs)) {
+      return { canJoin: true, reason: null as string | null };
+    }
+
+    const nowMs = Date.now();
+    const joinEndMs = startMs + 24 * 60 * 60 * 1000;
+
+    if (nowMs < startMs) {
+      return { canJoin: false, reason: "시즌 시작 전입니다." };
+    }
+    if (nowMs > joinEndMs) {
+      return { canJoin: false, reason: "시즌 시작 후 24시간이 지나 팀 배정이 종료됐습니다." };
+    }
+    return { canJoin: true, reason: null as string | null };
+  }, [seasonQuery.data?.starts_at]);
 
   const leaderboard = leaderboardQuery.data ?? [];
 
@@ -163,6 +188,50 @@ const TeamBattleMainPanel: React.FC<{ variant: ViewportVariant }> = ({ variant }
             </button>
           </div>
         </div>
+
+        {myTeamId === null ? (
+          <div className="mt-[12px] rounded-[10px] border border-white/10 bg-[#394508]/20 px-[18px] py-[14px]">
+            <p className="text-[clamp(13px,2.6vw,14px)] font-semibold text-white/90">아직 팀이 없어요</p>
+            <p className="mt-1 text-[clamp(12px,2.6vw,13px)] text-white/65">버튼을 누르면 밸런스 기준으로 자동 배정됩니다.</p>
+
+            {!joinWindowState.canJoin && joinWindowState.reason ? (
+              <p className="mt-2 text-[clamp(12px,2.6vw,13px)] text-white/55">{joinWindowState.reason}</p>
+            ) : null}
+
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                type="button"
+                className={
+                  "rounded-[6px] px-3 py-2 text-[clamp(12px,2.8vw,13px)] font-semibold text-black " +
+                  (assigning ? "bg-[#d2fd9c]/70" : "bg-[#d2fd9c] hover:brightness-95")
+                }
+                disabled={assigning || !joinWindowState.canJoin}
+                onClick={async () => {
+                  if (assigning) return;
+                  setAssigning(true);
+                  try {
+                    await autoAssignTeam();
+                    await Promise.all([myTeamQuery.refetch(), leaderboardQuery.refetch()]);
+                    addToast("팀 배정이 완료됐어요.", "success");
+                  } catch {
+                    addToast("팀 배정에 실패했습니다. 잠시 후 다시 시도해주세요.", "error");
+                  } finally {
+                    setAssigning(false);
+                  }
+                }}
+              >
+                미스터리 팀 배정
+              </button>
+
+              <Link
+                to="/dice"
+                className="rounded-[6px] border border-white/15 bg-white/5 px-3 py-2 text-[clamp(12px,2.8vw,13px)] font-semibold text-white/85 hover:bg-white/10"
+              >
+                게임하러 가기
+              </Link>
+            </div>
+          </div>
+        ) : null}
 
         {showBehindBanner && myRank !== null && myPoints !== null ? (
           <div className="mt-[12px] rounded-[10px] border border-white/10 bg-[#394508]/20 px-[18px] py-[14px]">
