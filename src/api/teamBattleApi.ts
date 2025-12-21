@@ -36,6 +36,11 @@ export const getContributors = async (teamId: number, seasonId?: number, limit =
   return res.data;
 };
 
+export const getMyContribution = async (teamId: number, seasonId?: number): Promise<ContributorEntry | null> => {
+  const res = await apiClient.get(`/api/team-battle/teams/${teamId}/contributors/me`, { params: { season_id: seasonId } });
+  return res.data || null;
+};
+
 export const getMyTeam = async (): Promise<TeamMembership | null> => {
   const res = await apiClient.get("/api/team-battle/teams/me");
   return res.data || null;

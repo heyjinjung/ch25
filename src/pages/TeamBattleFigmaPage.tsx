@@ -1,8 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { autoAssignTeam, getActiveSeason, getLeaderboard, getMyTeam } from "../api/teamBattleApi";
+import { autoAssignTeam, getActiveSeason, getLeaderboard, getMyContribution, getMyTeam } from "../api/teamBattleApi";
 import { useToast } from "../components/common/ToastProvider";
+import { getGapToAboveTeam } from "../utils/teamBattleGap";
+import { useAuth } from "../auth/authStore";
 
 const baseAccent = "#d2fd9c";
 
@@ -24,6 +26,7 @@ const TeamBattleMainPanel: React.FC<{ variant: ViewportVariant }> = ({ variant }
   const [refreshing, setRefreshing] = useState(false);
   const [assigning, setAssigning] = useState(false);
   const { addToast } = useToast();
+  const { user } = useAuth();
 
   const seasonQuery = useQuery({
     queryKey: ["team-battle-season"],
@@ -47,6 +50,19 @@ const TeamBattleMainPanel: React.FC<{ variant: ViewportVariant }> = ({ variant }
 
   const countdown = useMemo(() => formatCountdown(seasonQuery.data?.ends_at), [seasonQuery.data?.ends_at]);
   const myTeamId = myTeamQuery.data?.team_id ?? null;
+
+  const myContributionQuery = useQuery({
+    queryKey: ["team-battle-my-contribution", myTeamId, seasonId],
+    queryFn: () => getMyContribution(myTeamId as number, seasonId),
+    enabled: myTeamId !== null,
+    refetchInterval: 60_000,
+  });
+
+  const myNickname = useMemo(() => {
+    if (user?.nickname) return user.nickname;
+    if (user?.external_id) return user.external_id;
+    return "나";
+  }, [user?.external_id, user?.nickname]);
 
   const joinWindowState = useMemo(() => {
     const rawStartsAt = seasonQuery.data?.starts_at;
@@ -82,16 +98,12 @@ const TeamBattleMainPanel: React.FC<{ variant: ViewportVariant }> = ({ variant }
   const myRank = myLeaderboardIndex >= 0 ? myLeaderboardIndex + 1 : null;
   const myPoints = myLeaderboardIndex >= 0 ? leaderboard[myLeaderboardIndex]?.points ?? 0 : null;
 
-  const behindBy = useMemo(() => {
-    if (myTeamId === null || myLeaderboardIndex < 0 || leaderboard.length === 0) return null;
-    const top = leaderboard[0];
-    const mine = leaderboard[myLeaderboardIndex];
-    if (!top || !mine) return null;
-    if (top.team_id === myTeamId) return 0;
-    return Math.max(0, (top.points ?? 0) - (mine.points ?? 0));
-  }, [leaderboard, myLeaderboardIndex, myTeamId]);
+  const gapToAbove = useMemo(() => getGapToAboveTeam(leaderboard, myTeamId), [leaderboard, myTeamId]);
+  const gapToAbovePoints = gapToAbove?.gap ?? null;
 
-  const showBehindBanner = typeof behindBy === "number" && behindBy >= 50;
+  const showBehindBanner = typeof gapToAbovePoints === "number" && gapToAbovePoints >= 50;
+
+  const myContributionPoints = myContributionQuery.data?.points ?? 0;
 
   useEffect(() => {
     if (!seasonId || myTeamId === null) return;
@@ -100,7 +112,7 @@ const TeamBattleMainPanel: React.FC<{ variant: ViewportVariant }> = ({ variant }
     if (myRank === null || myPoints === null) return;
 
     const snapshotKey = `teamBattle.snapshot.${seasonId}.${myTeamId}`;
-    const behindToastKey = `teamBattle.behindToast.${seasonId}.${myTeamId}`;
+    const behindToastKey = `teamBattle.behindToast.v2.${seasonId}.${myTeamId}.${gapToAbove?.aboveTeamId ?? "none"}`;
 
     try {
       const rawPrev = localStorage.getItem(snapshotKey);
@@ -121,10 +133,10 @@ const TeamBattleMainPanel: React.FC<{ variant: ViewportVariant }> = ({ variant }
         }
       }
 
-      if (typeof behindBy === "number" && behindBy >= 50) {
+      if (typeof gapToAbovePoints === "number" && gapToAbovePoints >= 50) {
         if (sessionStorage.getItem(behindToastKey) !== "1") {
           sessionStorage.setItem(behindToastKey, "1");
-          addToast(`우리 팀이 1위와 ${behindBy.toLocaleString()}점 차이예요. 지금 달려요!`, "info");
+          addToast(`우리 팀이 바로 위 팀과 ${gapToAbovePoints.toLocaleString()}점 차이예요. 지금 달려요!`, "info");
         }
       }
 
@@ -132,7 +144,7 @@ const TeamBattleMainPanel: React.FC<{ variant: ViewportVariant }> = ({ variant }
     } catch {
       // storage 접근/파싱 실패 시 알림 로직을 스킵합니다.
     }
-  }, [addToast, behindBy, leaderboardQuery.isError, leaderboardQuery.isLoading, myLeaderboardIndex, myPoints, myRank, myTeamId, seasonId]);
+  }, [addToast, gapToAbove?.aboveTeamId, gapToAbovePoints, leaderboardQuery.isError, leaderboardQuery.isLoading, myLeaderboardIndex, myPoints, myRank, myTeamId, seasonId]);
 
   const titleSize = variant === "desktop" ? 32 : variant === "tablet" ? 28 : 26;
 
@@ -189,6 +201,17 @@ const TeamBattleMainPanel: React.FC<{ variant: ViewportVariant }> = ({ variant }
           </div>
         </div>
 
+        {myTeamId !== null ? (
+          <div className="sticky top-3 z-20 mt-[12px] rounded-[10px] border border-white/10 bg-black/70 px-[18px] py-[14px] backdrop-blur">
+            <p className="text-[clamp(13px,2.6vw,14px)] font-semibold text-white/90">
+              {myNickname} · <span style={{ color: baseAccent }}>+{myContributionPoints.toLocaleString()}</span>
+            </p>
+            <p className="mt-1 text-[clamp(12px,2.6vw,13px)] text-white/65">
+              {showBehindBanner ? "내가 빠지면 팀이 진다. 지금 한 판만 더!" : "내가 빠지면 팀이 흔들린다. 지금 점수 쌓자"}
+            </p>
+          </div>
+        ) : null}
+
         {myTeamId === null ? (
           <div className="mt-[12px] rounded-[10px] border border-white/10 bg-[#394508]/20 px-[18px] py-[14px]">
             <p className="text-[clamp(13px,2.6vw,14px)] font-semibold text-white/90">아직 팀이 없어요</p>
@@ -236,8 +259,8 @@ const TeamBattleMainPanel: React.FC<{ variant: ViewportVariant }> = ({ variant }
         {showBehindBanner && myRank !== null && myPoints !== null ? (
           <div className="mt-[12px] rounded-[10px] border border-white/10 bg-[#394508]/20 px-[18px] py-[14px]">
             <p className="text-[clamp(13px,2.6vw,14px)] font-semibold text-white/90">
-              지금 우리 팀이 <span style={{ color: baseAccent }}>#{myRank}</span> ( {myPoints.toLocaleString()}점 ) · 1위와{" "}
-              <span style={{ color: baseAccent }}>{behindBy?.toLocaleString()}점</span> 차이
+              지금 우리 팀이 <span style={{ color: baseAccent }}>#{myRank}</span> ( {myPoints.toLocaleString()}점 ) · 바로 위 팀과{" "}
+              <span style={{ color: baseAccent }}>{gapToAbovePoints?.toLocaleString()}점</span> 차이
             </p>
             <div className="mt-2 flex flex-wrap gap-2">
               <Link

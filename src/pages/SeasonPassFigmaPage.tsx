@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { useSeasonPassStatus } from "../hooks/useSeasonPass";
 import { useAuth } from "../auth/authStore";
 import SeasonPassRewardsAndTasks from "../components/seasonPass/SeasonPassRewardsAndTasks";
@@ -7,6 +8,31 @@ import { useToast } from "../components/common/ToastProvider";
 const baseAccent = "#d2fd9c";
 
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
+
+const getLocalDateKey = (now: Date) => {
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const dd = String(now.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+};
+
+const msUntilLocalMidnight = (now: Date) => {
+  const next = new Date(now);
+  next.setHours(24, 0, 0, 0);
+  return Math.max(0, next.getTime() - now.getTime());
+};
+
+const parseSeasonEndMs = (endDate?: string | null) => {
+  if (!endDate) return null;
+  // backend는 date(YYYY-MM-DD) 형태를 내려줍니다.
+  const parts = endDate.split("-").map((v) => Number(v));
+  if (parts.length !== 3) return null;
+  const [y, m, d] = parts;
+  if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) return null;
+  const end = new Date(y, m - 1, d, 23, 59, 59, 999);
+  const ms = end.getTime();
+  return Number.isFinite(ms) ? ms : null;
+};
 
 type LevelCardVariant = "desktop" | "tablet" | "mobile";
 
@@ -181,6 +207,60 @@ const SeasonPassMainPanel: React.FC = () => {
 const SeasonPassFigmaPage: React.FC = () => {
   const season = useSeasonPassStatus();
   const { addToast } = useToast();
+  const { user } = useAuth();
+
+  const [nudgeDismissed, setNudgeDismissed] = useState(false);
+
+  const nudge = useMemo(() => {
+    if (!season.data) return null;
+
+    const now = new Date();
+    const userKey = String(user?.id ?? user?.external_id ?? "anon");
+    const dayKey = getLocalDateKey(now);
+
+    const { current_xp, current_level, max_level, levels } = season.data;
+    const totalXp = Math.max(0, current_xp ?? 0);
+    const maxRequired = Math.max(0, ...(levels ?? []).map((l) => l.required_xp ?? 0));
+    const isMax = (current_level ?? 0) >= (max_level ?? 0) || totalXp >= maxRequired;
+    if (isMax) return null;
+
+    const sortedByReq = [...(levels ?? [])].sort((a, b) => (a.required_xp ?? 0) - (b.required_xp ?? 0));
+    const nextRow = sortedByReq.find((l) => (l.required_xp ?? 0) > totalXp);
+    const prevRow = [...sortedByReq].reverse().find((l) => (l.required_xp ?? 0) <= totalXp);
+
+    const startXp = Math.max(0, prevRow?.required_xp ?? 0);
+    const endXp = Math.max(startXp + 1, nextRow?.required_xp ?? maxRequired);
+    const remainingXp = Math.max(0, endXp - totalXp);
+
+    const msToMidnight = msUntilLocalMidnight(now);
+    const resetSoon = msToMidnight <= 2 * 60 * 60 * 1000;
+    const needsStampToday = season.data?.today?.stamped === false;
+
+    const seasonEndMs = parseSeasonEndMs(season.data?.season?.end_date);
+    const msToSeasonEnd = seasonEndMs ? seasonEndMs - now.getTime() : null;
+    const seasonEndingSoon = typeof msToSeasonEnd === "number" && msToSeasonEnd <= 24 * 60 * 60 * 1000 && msToSeasonEnd > 0;
+
+    let kind: "season_end" | "daily_reset" | null = null;
+    if (seasonEndingSoon) kind = "season_end";
+    else if (resetSoon && needsStampToday) kind = "daily_reset";
+    if (!kind) return null;
+
+    const seenKey = `seasonPass.nudge.v1.${kind}.${userKey}.${dayKey}`;
+    try {
+      if (localStorage.getItem(seenKey) === "1") return null;
+    } catch {
+      // storage 접근 실패 시에는 배너를 아예 띄우지 않아 과도한 노출을 방지합니다.
+      return null;
+    }
+
+    const headline = kind === "season_end" ? "시즌 마감이 임박했어요" : "오늘 누적 진행을 챙겨요";
+    const body =
+      remainingXp > 0
+        ? `다음 보상까지 ${remainingXp.toLocaleString()} XP만 더 모으면 돼요.`
+        : "조금만 더 하면 다음 보상을 받을 수 있어요.";
+
+    return { kind, seenKey, headline, body };
+  }, [season.data, user?.external_id, user?.id]);
 
   useEffect(() => {
     if (season.isLoading || season.isError || !season.data) return;
@@ -223,7 +303,56 @@ const SeasonPassFigmaPage: React.FC = () => {
   }, [season.data, season.isError, season.isLoading, addToast]);
 
   return (
-    <SeasonPassMainPanel />
+    <>
+      {!nudgeDismissed && nudge ? (
+        <div className="landing-font w-full">
+          <div className="mx-auto w-full px-4 pt-4 md:px-8">
+            <div className="rounded-[12px] border border-black/15 bg-cc-olive/20 px-4 py-3 text-white">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em]" style={{ color: baseAccent }}>
+                    Tip
+                  </p>
+                  <p className="mt-1 text-[clamp(14px,2.8vw,16px)] font-semibold text-white/90">{nudge.headline}</p>
+                  <p className="mt-1 text-[clamp(12px,2.6vw,13px)] text-white/75">{nudge.body}</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Link
+                    to="/dice"
+                    className="rounded-[8px] bg-[#d2fd9c] px-3 py-2 text-[12px] font-semibold text-black hover:brightness-95"
+                    onClick={() => {
+                      try {
+                        localStorage.setItem(nudge.seenKey, "1");
+                      } catch {
+                        // ignore
+                      }
+                    }}
+                  >
+                    게임하러 가기
+                  </Link>
+                  <button
+                    type="button"
+                    className="rounded-[8px] border border-black/15 bg-white/5 px-3 py-2 text-[12px] font-semibold text-white/80 hover:bg-white/10"
+                    onClick={() => {
+                      try {
+                        localStorage.setItem(nudge.seenKey, "1");
+                      } catch {
+                        // ignore
+                      }
+                      setNudgeDismissed(true);
+                    }}
+                  >
+                    오늘은 그만 보기
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      <SeasonPassMainPanel />
+    </>
   );
 };
 
