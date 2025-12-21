@@ -23,6 +23,12 @@ class User(Base):
 
     # Money system
     vault_balance = Column(Integer, nullable=False, server_default="0", default=0)
+    # Phase 1: `vault_locked_balance` is the source of truth; `vault_balance` is legacy mirror.
+    vault_locked_balance = Column(Integer, nullable=False, server_default="0", default=0)
+    # Phase 1: reserved for future separation; does not expire.
+    vault_available_balance = Column(Integer, nullable=False, server_default="0", default=0)
+    # Phase 1: expiration applies only to locked balance.
+    vault_locked_expires_at = Column(DateTime, nullable=True)
     cash_balance = Column(Integer, nullable=False, server_default="0", default=0)
     vault_fill_used_at = Column(DateTime, nullable=True)
 
