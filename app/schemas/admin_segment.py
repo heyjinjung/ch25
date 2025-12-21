@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import ConfigDict, Field
+
+from app.schemas.base import KstBaseModel as BaseModel
 
 
 class AdminUserSegmentResponse(BaseModel):

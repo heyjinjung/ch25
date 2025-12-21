@@ -2,7 +2,9 @@
 from typing import List, Optional
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import ConfigDict, Field
+
+from app.schemas.base import KstBaseModel as BaseModel
 
 
 class AdminLotteryPrizeBase(BaseModel):

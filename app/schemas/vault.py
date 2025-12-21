@@ -1,7 +1,7 @@
 """Schemas for vault (locked balance) APIs."""
 
 from datetime import datetime
-from pydantic import BaseModel
+from app.schemas.base import KstBaseModel as BaseModel
 
 
 class VaultStatusResponse(BaseModel):

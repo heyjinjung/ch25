@@ -2,7 +2,9 @@
 from datetime import date, datetime
 from typing import List, Optional
 
-from pydantic import BaseModel, ConfigDict, Field, validator
+from pydantic import ConfigDict, Field, validator
+
+from app.schemas.base import KstBaseModel as BaseModel
 
 
 class AdminSeasonBase(BaseModel):

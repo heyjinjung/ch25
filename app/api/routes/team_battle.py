@@ -1,10 +1,12 @@
 """Public/team endpoints for team battle."""
 from datetime import timezone
+from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user_id, get_db
+from app.core.config import get_settings
 from app.schemas.team_battle import (
     TeamSeasonResponse,
     TeamJoinRequest,
@@ -26,10 +28,14 @@ def get_active_season(db: Session = Depends(get_db)):
         return None
 
     utc = timezone.utc
-    if season.starts_at and season.starts_at.tzinfo is None:
-        season.starts_at = season.starts_at.replace(tzinfo=utc)
-    if season.ends_at and season.ends_at.tzinfo is None:
-        season.ends_at = season.ends_at.replace(tzinfo=utc)
+    local_tz = ZoneInfo(get_settings().timezone)
+
+    if season.starts_at:
+        base = season.starts_at if season.starts_at.tzinfo else season.starts_at.replace(tzinfo=utc)
+        season.starts_at = base.astimezone(local_tz)
+    if season.ends_at:
+        base = season.ends_at if season.ends_at.tzinfo else season.ends_at.replace(tzinfo=utc)
+        season.ends_at = base.astimezone(local_tz)
     return season
 
 

@@ -3,7 +3,9 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import ConfigDict, Field, model_validator
+
+from app.schemas.base import KstBaseModel as BaseModel
 
 
 class AdminNewMemberDiceEligibilityCreate(BaseModel):
