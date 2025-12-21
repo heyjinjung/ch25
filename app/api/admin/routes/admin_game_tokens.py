@@ -18,6 +18,7 @@ from app.schemas.game_tokens import (
     RevokeGameTokensRequest,
     TokenBalance,
 )
+from app.schemas.base import to_kst_iso
 from app.services.game_wallet_service import GameWalletService
 
 router = APIRouter(prefix="/admin/api/game-tokens", tags=["admin-game-tokens"])
@@ -181,7 +182,7 @@ def list_recent_play_logs(
             reward_label=row.detail,
             reward_type=row.reward_type,
             reward_amount=row.reward_amount,
-            created_at=row.created_at.isoformat(),
+            created_at=to_kst_iso(row.created_at),
         )
         for row in rows
     ]
@@ -230,7 +231,7 @@ def list_wallet_ledger(
             reason=row.UserGameWalletLedger.reason,  # type: ignore[attr-defined]
             label=row.UserGameWalletLedger.label,  # type: ignore[attr-defined]
             meta_json=row.UserGameWalletLedger.meta_json,  # type: ignore[attr-defined]
-            created_at=row.UserGameWalletLedger.created_at.isoformat(),  # type: ignore[attr-defined]
+            created_at=to_kst_iso(row.UserGameWalletLedger.created_at),  # type: ignore[attr-defined]
         )
         for row in rows
     ]
