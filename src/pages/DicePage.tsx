@@ -7,10 +7,13 @@ import { GAME_TOKEN_LABELS } from "../types/gameTokens";
 import AnimatedNumber from "../components/common/AnimatedNumber";
 import { tryHaptic } from "../utils/haptics";
 import GamePageShell from "../components/game/GamePageShell";
+import TicketZeroPanel from "../components/game/TicketZeroPanel";
+import { useQueryClient } from "@tanstack/react-query";
 
 const DicePage: React.FC = () => {
   const { data, isLoading, isError } = useDiceStatus();
   const playMutation = usePlayDice();
+  const queryClient = useQueryClient();
   const [result, setResult] = useState<"WIN" | "LOSE" | "DRAW" | null>(null);
   const [userDice, setUserDice] = useState<number[]>([]);
   const [dealerDice, setDealerDice] = useState<number[]>([]);
@@ -122,9 +125,12 @@ const DicePage: React.FC = () => {
           )}
 
           {isOutOfTokens && (
-            <div className="rounded-2xl border border-white/15 bg-white/8 px-4 py-3 text-center text-[clamp(12px,2.6vw,14px)] text-white/80">
-              티켓이 부족합니다. 운영자에게 충전을 요청해주세요.
-            </div>
+            <TicketZeroPanel
+              tokenType={data.token_type}
+              onClaimSuccess={() => {
+                queryClient.invalidateQueries({ queryKey: ["dice-status"] });
+              }}
+            />
           )}
 
           <button

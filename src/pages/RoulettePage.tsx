@@ -7,6 +7,8 @@ import type { RoulettePlayResponse } from "../api/rouletteApi";
 import AnimatedNumber from "../components/common/AnimatedNumber";
 import { tryHaptic } from "../utils/haptics";
 import GamePageShell from "../components/game/GamePageShell";
+import TicketZeroPanel from "../components/game/TicketZeroPanel";
+import { useQueryClient } from "@tanstack/react-query";
 
 const FALLBACK_SEGMENTS = Array.from({ length: 12 }).map((_, idx) => ({
   label: `BONUS ${idx + 1}`,
@@ -17,6 +19,7 @@ const FALLBACK_SEGMENTS = Array.from({ length: 12 }).map((_, idx) => ({
 const RoulettePage: React.FC = () => {
   const { data, isLoading, isError, error } = useRouletteStatus();
   const playMutation = usePlayRoulette();
+  const queryClient = useQueryClient();
   const [selectedIndex, setSelectedIndex] = useState<number | undefined>();
   const SPIN_DURATION_MS = 3000;
   const [isSpinning, setIsSpinning] = useState(false);
@@ -286,10 +289,12 @@ const RoulettePage: React.FC = () => {
               </div>
             )}
             {isOutOfTokens && (
-              <div className="relative overflow-hidden rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-[clamp(12px,2.6vw,14px)] text-white/80">
-                <div className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-cc-orange/60" />
-                <div className="pl-2">티켓이 부족합니다. 운영자에게 충전을 요청하세요.</div>
-              </div>
+              <TicketZeroPanel
+                tokenType={data.token_type}
+                onClaimSuccess={() => {
+                  queryClient.invalidateQueries({ queryKey: ["roulette-status"] });
+                }}
+              />
             )}
             <button
               type="button"
