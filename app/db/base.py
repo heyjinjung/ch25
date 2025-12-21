@@ -7,6 +7,7 @@ from app.models import (  # noqa: F401
     DiceLog,
     FeatureConfig,
     FeatureSchedule,
+    AppUiConfig,
     ExternalRankingData,
     ExternalRankingRewardLog,
     GameTokenType,
