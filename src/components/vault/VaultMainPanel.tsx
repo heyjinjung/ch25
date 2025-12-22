@@ -4,6 +4,7 @@ import { getVaultStatus } from "../../api/vaultApi";
 import { getUiConfig } from "../../api/uiConfigApi";
 import VaultModal from "./VaultModal";
 import { useAuth } from "../../auth/authStore";
+import AnimatedCountdown from "../common/AnimatedCountdown";
 
 type RewardPreviewItem = {
   label: string;
@@ -43,7 +44,6 @@ const formatDateTime = (d: Date | null): string | null => {
 };
 
 const CountdownTimer: React.FC<{ expiresAt: Date }> = ({ expiresAt }) => {
-  const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
   const [isWarning, setIsWarning] = useState(false);
 
   useEffect(() => {
@@ -51,19 +51,15 @@ const CountdownTimer: React.FC<{ expiresAt: Date }> = ({ expiresAt }) => {
       const difference = expiresAt.getTime() - new Date().getTime();
       if (difference <= 0) {
         setIsWarning(false);
-        return { hours: 0, minutes: 0, seconds: 0 };
+        return;
       }
 
       setIsWarning(difference < 60 * 60 * 1000);
-      return {
-        hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
-        minutes: Math.floor((difference / 1000 / 60) % 60),
-        seconds: Math.floor((difference / 1000) % 60),
-      };
+      return;
     };
 
-    setTimeLeft(calculate());
-    const timer = setInterval(() => setTimeLeft(calculate()), 1000);
+    calculate();
+    const timer = setInterval(() => calculate(), 1000);
     return () => clearInterval(timer);
   }, [expiresAt]);
 
@@ -76,9 +72,14 @@ const CountdownTimer: React.FC<{ expiresAt: Date }> = ({ expiresAt }) => {
           clipRule="evenodd"
         />
       </svg>
-      <span className={isWarning ? "font-bold" : ""}>
-        {String(timeLeft.hours).padStart(2, "0")}:{String(timeLeft.minutes).padStart(2, "0")}:{String(timeLeft.seconds).padStart(2, "0")} 후 소멸
-      </span>
+      <AnimatedCountdown
+        targetMs={expiresAt.getTime()}
+        warnUnderMs={60 * 60 * 1000}
+        expiredText="00시간 00분 00초"
+        suffix="후 소멸"
+        className={isWarning ? "font-bold" : ""}
+        showDays={false}
+      />
     </div>
   );
 };

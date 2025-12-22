@@ -4,6 +4,7 @@ import { useSeasonPassStatus } from "../hooks/useSeasonPass";
 import { useAuth } from "../auth/authStore";
 import SeasonPassRewardsAndTasks from "../components/seasonPass/SeasonPassRewardsAndTasks";
 import { useToast } from "../components/common/ToastProvider";
+import AnimatedCountdown from "../components/common/AnimatedCountdown";
 
 const baseAccent = "#d2fd9c";
 
@@ -204,6 +205,10 @@ const LevelCard: React.FC<{ variant: LevelCardVariant }> = ({ variant }) => {
 };
 
 const SeasonPassMainPanel: React.FC = () => {
+  const season = useSeasonPassStatus();
+
+  const seasonEndMs = useMemo(() => parseSeasonEndMs(season.data?.season?.end_date), [season.data?.season?.end_date]);
+
   return (
     <div className="landing-font w-full">
       <div className="mx-auto w-full px-4 md:px-8">
@@ -225,6 +230,19 @@ const SeasonPassMainPanel: React.FC = () => {
               <h1 className="mt-2 text-[clamp(20px,6vw,24px)] font-bold leading-[1.1] tracking-[0.2px]" style={{ color: baseAccent }}>
                 내 레벨 확인
               </h1>
+              <div className="mt-3 flex flex-wrap items-center gap-2 text-white/75">
+                <span className="text-[clamp(12px,2.6vw,13px)] font-semibold" style={{ color: baseAccent }}>
+                  시즌 종료까지
+                </span>
+                <span className="inline-flex items-center rounded-[10px] border border-white/15 bg-black/25 px-3 py-1.5">
+                  <AnimatedCountdown
+                    targetMs={seasonEndMs}
+                    expiredText="종료"
+                    className="text-[clamp(14px,2.8vw,16px)] font-semibold text-white"
+                    showDays
+                  />
+                </span>
+              </div>
             </div>
           </div>
         </div>
