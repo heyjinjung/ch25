@@ -15,6 +15,7 @@ import FigmaLandingMobile from "../pages/FigmaLandingMobile";
 import SeasonPassFigmaPage from "../pages/SeasonPassFigmaPage";
 import GuidePage from "../pages/GuidePage";
 import TeamBattleFigmaPage from "../pages/TeamBattleFigmaPage";
+import VaultPage from "../pages/VaultPage";
 import UserLayout from "../components/layout/UserLayout";
 import SidebarAppLayout from "../components/layout/SidebarAppLayout";
 import RequireAuth from "../components/routing/RequireAuth";
@@ -34,6 +35,7 @@ const UserRoutes: React.FC = () => {
           <Route path="/landing" element={<FigmaLanding />} />
           <Route path="/landing/tablet" element={<FigmaLandingTablet />} />
           <Route path="/landing/mobile" element={<FigmaLandingMobile />} />
+          <Route path="/vault" element={<VaultPage />} />
           <Route path="/season-pass" element={<SeasonPassFigmaPage />} />
           <Route path="/team-battle" element={<TeamBattleFigmaPage />} />
           <Route path="/roulette" element={<RoulettePage />} />
