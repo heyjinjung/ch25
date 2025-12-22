@@ -1,7 +1,7 @@
 // src/admin/pages/UserAdminPage.tsx
 import React, { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight, Edit2, Plus, Save, Search, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Edit2, Plus, Save, Search, Trash2 } from "lucide-react";
 import { createUser, deleteUser, fetchUsers, updateUser, AdminUser, AdminUserPayload } from "../api/adminUserApi";
 import { useToast } from "../../components/common/ToastProvider";
 
@@ -18,6 +18,9 @@ type MemberRow = AdminUser & {
 };
 
 const ITEMS_PER_PAGE = 10;
+
+type SortKey = "id" | "nickname" | "level" | "season_level" | "xp" | "status";
+type SortDirection = "asc" | "desc";
 
 const mapErrorDetail = (error: unknown): string => {
   const detail = (error as any)?.response?.data?.detail;
@@ -52,6 +55,9 @@ const UserAdminPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+
+  const [sortKey, setSortKey] = useState<SortKey>("nickname");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
 
   const [newMember, setNewMember] = useState({
     nickname: "",
@@ -115,6 +121,15 @@ const UserAdminPage: React.FC = () => {
     setCurrentPage(1);
   };
 
+  useEffect(() => {
+    const trimmed = searchInput.trim();
+    const handle = window.setTimeout(() => {
+      setSearchTerm(trimmed);
+      setCurrentPage(1);
+    }, 250);
+    return () => window.clearTimeout(handle);
+  }, [searchInput]);
+
   const filteredMembers = useMemo(() => {
     if (!searchTerm) return members;
     const term = searchTerm.toLowerCase();
@@ -126,17 +141,62 @@ const UserAdminPage: React.FC = () => {
     });
   }, [members, searchTerm]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredMembers.length / ITEMS_PER_PAGE));
+  const sortedMembers = useMemo(() => {
+    const list = [...filteredMembers];
+
+    const dir = sortDirection === "asc" ? 1 : -1;
+    const compareText = (a: string, b: string) => a.localeCompare(b, "ko") * dir;
+    const compareNumber = (a: number, b: number) => (a - b) * dir;
+
+    list.sort((a, b) => {
+      if (sortKey === "id") return compareNumber(a.id ?? 0, b.id ?? 0);
+      if (sortKey === "nickname") {
+        const an = (a.nickname ?? a.external_id ?? "").trim();
+        const bn = (b.nickname ?? b.external_id ?? "").trim();
+        const res = compareText(an, bn);
+        return res !== 0 ? res : compareNumber(a.id ?? 0, b.id ?? 0);
+      }
+      if (sortKey === "status") return compareText(String(a.status ?? ""), String(b.status ?? ""));
+      if (sortKey === "level") return compareNumber(a.level ?? 1, b.level ?? 1);
+      if (sortKey === "season_level") return compareNumber(a.season_level ?? 1, b.season_level ?? 1);
+      if (sortKey === "xp") return compareNumber(a.xp ?? 0, b.xp ?? 0);
+      return 0;
+    });
+    return list;
+  }, [filteredMembers, sortDirection, sortKey]);
+
+  const handleSort = (key: SortKey) => {
+    setCurrentPage(1);
+    setSortKey((prevKey) => {
+      if (prevKey !== key) {
+        setSortDirection(key === "nickname" ? "asc" : "desc");
+        return key;
+      }
+      setSortDirection((prevDir) => (prevDir === "asc" ? "desc" : "asc"));
+      return prevKey;
+    });
+  };
+
+  const renderSortIcon = (key: SortKey) => {
+    if (sortKey !== key) return null;
+    return sortDirection === "asc" ? (
+      <ChevronUp className="ml-1 inline-block h-4 w-4" />
+    ) : (
+      <ChevronDown className="ml-1 inline-block h-4 w-4" />
+    );
+  };
+
+  const totalPages = Math.max(1, Math.ceil(sortedMembers.length / ITEMS_PER_PAGE));
   const safePage = Math.min(currentPage, totalPages);
   const startIndex = (safePage - 1) * ITEMS_PER_PAGE;
-  const currentMembers = filteredMembers.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  const currentMembers = sortedMembers.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
   const itemCountText = useMemo(() => {
-    if (filteredMembers.length === 0) return "0개 항목 표시";
+    if (sortedMembers.length === 0) return "0개 항목 표시";
     const from = startIndex + 1;
-    const to = Math.min(startIndex + ITEMS_PER_PAGE, filteredMembers.length);
-    return `${from}-${to}/${filteredMembers.length}개 항목 표시`;
-  }, [filteredMembers.length, startIndex]);
+    const to = Math.min(startIndex + ITEMS_PER_PAGE, sortedMembers.length);
+    return `${from}-${to}/${sortedMembers.length}개 항목 표시`;
+  }, [sortedMembers.length, startIndex]);
 
   const toggleEdit = (id: number, next: boolean) => {
     setMembers((prev) =>
@@ -401,16 +461,58 @@ const UserAdminPage: React.FC = () => {
 
       {!isLoading && !isError && (
         <div className="rounded-lg border border-[#333333] bg-[#111111] shadow-md">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="border-b border-[#333333] bg-[#1A1A1A]">
+          <div className="max-h-[70vh] overflow-auto">
+            <table className="w-full min-w-[980px]">
+              <thead className="sticky top-0 z-10 border-b border-[#333333] bg-[#1A1A1A]">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">ID</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">닉네임</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">레벨(G)</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">시즌Lv</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">XP</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">상태</th>
+                  <th
+                    className={`px-4 py-3 text-left text-xs font-medium uppercase tracking-wider ${
+                      sortKey === "id" ? "bg-[#2D6B3B] text-[#91F402]" : "text-gray-400"
+                    } cursor-pointer hover:bg-[#2D6B3B]`}
+                    onClick={() => handleSort("id")}
+                  >
+                    ID{renderSortIcon("id")}
+                  </th>
+                  <th
+                    className={`px-4 py-3 text-left text-xs font-medium uppercase tracking-wider ${
+                      sortKey === "nickname" ? "bg-[#2D6B3B] text-[#91F402]" : "text-gray-400"
+                    } cursor-pointer hover:bg-[#2D6B3B]`}
+                    onClick={() => handleSort("nickname")}
+                  >
+                    닉네임{renderSortIcon("nickname")}
+                  </th>
+                  <th
+                    className={`px-4 py-3 text-left text-xs font-medium uppercase tracking-wider ${
+                      sortKey === "level" ? "bg-[#2D6B3B] text-[#91F402]" : "text-gray-400"
+                    } cursor-pointer hover:bg-[#2D6B3B]`}
+                    onClick={() => handleSort("level")}
+                  >
+                    레벨(G){renderSortIcon("level")}
+                  </th>
+                  <th
+                    className={`px-4 py-3 text-left text-xs font-medium uppercase tracking-wider ${
+                      sortKey === "season_level" ? "bg-[#2D6B3B] text-[#91F402]" : "text-gray-400"
+                    } cursor-pointer hover:bg-[#2D6B3B]`}
+                    onClick={() => handleSort("season_level")}
+                  >
+                    시즌Lv{renderSortIcon("season_level")}
+                  </th>
+                  <th
+                    className={`px-4 py-3 text-left text-xs font-medium uppercase tracking-wider ${
+                      sortKey === "xp" ? "bg-[#2D6B3B] text-[#91F402]" : "text-gray-400"
+                    } cursor-pointer hover:bg-[#2D6B3B]`}
+                    onClick={() => handleSort("xp")}
+                  >
+                    XP{renderSortIcon("xp")}
+                  </th>
+                  <th
+                    className={`px-4 py-3 text-left text-xs font-medium uppercase tracking-wider ${
+                      sortKey === "status" ? "bg-[#2D6B3B] text-[#91F402]" : "text-gray-400"
+                    } cursor-pointer hover:bg-[#2D6B3B]`}
+                    onClick={() => handleSort("status")}
+                  >
+                    상태{renderSortIcon("status")}
+                  </th>
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">비밀번호(초기화)</th>
                   <th className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-400">액션</th>
                 </tr>
@@ -548,7 +650,7 @@ const UserAdminPage: React.FC = () => {
             </table>
           </div>
 
-          {filteredMembers.length === 0 && (
+          {sortedMembers.length === 0 && (
             <div className="py-8 text-center text-gray-400">검색 결과가 없습니다.</div>
           )}
 
