@@ -411,3 +411,30 @@ Phase 1에서는 옵션 A로 가고, v1.1 이후 옵션 B로 확장하는 것이
 VIP/복귀까지 가려면, 룰을 서버에서 결정하고 프론트는 “표시만” 하게 만드는 게 운영/버그 측면에서 안전해.
 
 
+결론부터 말하면 “문서에 적힌 Phase 1 전체(locked→available→expired + 24h 만료 + 상태/CTA 확장)”가 백/프론트/API/스키마/DB까지 ‘완성’된 상태는 아니고, “일부는 구현 완료 + 일부는 스캐폴딩(뼈대만)” 상태예요.
+
+구현된 것(코드 기준으로 “돌아감”)
+
+DB/스키마(코드·마이그레이션 준비됨): user 테이블에 Phase 1 컬럼 추가 마이그레이션이 존재함
+20251221_0026_add_vault_phase1_locked_columns.py
+모델에도 컬럼이 실제로 있음: user.py
+해금 로직(Phase 1 전제 일부): 계산 기준을 vault_locked_balance로 두고, vault_balance를 mirror로 동기화하는 로직이 실제로 구현돼 있음
+vault_service.py
+외부랭킹 deposit delta 훅 위임: 외부랭킹 upsert에서 deposit 증가를 감지하고, 해금 처리를 VaultService.handle_deposit_increase_signal()로 위임함
+admin_external_ranking_service.py
+Vault2 스캐폴딩 + admin tick 엔드포인트: Vault2 테이블/서비스/관리자 tick 라우트가 실제로 있음(전이 helper 포함)
+모델/서비스: vault2.py, vault2_service.py
+관리자 tick: admin_vault2.py (라우터도 include 되어 있음)
+아직 “문서의 Phase 1 목표대로 전부 구현”은 아닌 것(핵심 차이)
+
+Public API /api/vault/status가 Phase 1 필드를 안 내려줌: 응답이 여전히 vault_balance 중심이고 expires_at도 항상 None으로 내려가요.
+라우트: vault.py
+스키마: vault.py
+문서 7.2에서 말한 locked_balance/available_balance/recommended_action/cta_payload 확장은 현재 스키마/응답에 없음
+프론트도 Phase 1 확장필드를 소비하지 않음(현재로선 받을 게 없음): 프론트는 vault_balance, cash_balance, expires_at만 매핑하고 있고, 서버가 expires_at=null이라 만료 기반 UX를 “서버 진실”로 보여줄 수는 없어요.
+vaultApi.ts
+24h 만료(locked 만료) 로직이 v1(유저 balance) 경로에는 실제로 안 돌아감: vault_locked_expires_at 컬럼은 있지만, 신규회원 주사위 등 v1 흐름에서 만료시각을 세팅/만료처리하는 코드가 현재 보이지 않아요.
+예: new_member_dice_service.py에서는 locked를 10,000으로 올리지만 expires는 세팅 안 함
+DB에 “적용까지 완료”됐냐는 부분(중요)
+
+레포에는 마이그레이션 파일이 있으니 구현(코드/스키마 정의)은 되어 있는데, 실제 DB에 컬럼이 생겼는지는 alembic upgrade가 실행돼서 해당 리비전이 적용됐는지에 따라 달라요.

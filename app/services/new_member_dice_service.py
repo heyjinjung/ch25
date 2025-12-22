@@ -14,6 +14,7 @@ from app.models.new_member_dice import NewMemberDiceEligibility, NewMemberDiceLo
 from app.models.user import User
 from app.schemas.new_member_dice import NewMemberDicePlayResponse, NewMemberDicePlayResult, NewMemberDiceStatusResponse
 from app.services.vault_service import VaultService
+from app.services.vault2_service import Vault2Service
 
 
 class NewMemberDiceService:
@@ -83,9 +84,21 @@ class NewMemberDiceService:
 
             user = db.query(User).filter(User.id == user_id).one_or_none()
             if user is not None:
-                user.vault_locked_balance = max(int(user.vault_locked_balance or 0), 10_000)
+                prev_locked = int(user.vault_locked_balance or 0)
+                next_locked = max(prev_locked, 10_000)
+                delta_added = max(next_locked - prev_locked, 0)
+
+                user.vault_locked_balance = next_locked
+                VaultService._ensure_locked_expiry(user, now_dt)
                 VaultService.sync_legacy_mirror(user)
                 db.add(user)
+
+                # Phase 2/3-stage prep: record accrual into Vault2 bookkeeping (no v1 behavior change).
+                if delta_added > 0:
+                    try:
+                        Vault2Service().accrue_locked(db, user_id=user.id, amount=delta_added, now=now_dt, commit=False)
+                    except Exception:
+                        pass
 
         log = NewMemberDiceLog(
             user_id=user_id,

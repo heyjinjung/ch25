@@ -20,10 +20,14 @@ def status(db: Session = Depends(get_db), user_id: int = Depends(get_current_use
     return VaultStatusResponse(
         eligible=eligible,
         vault_balance=user.vault_balance or 0,
+        locked_balance=int(getattr(user, "vault_locked_balance", 0) or 0),
+        available_balance=int(getattr(user, "vault_available_balance", 0) or 0),
         cash_balance=user.cash_balance or 0,
         vault_fill_used_at=user.vault_fill_used_at,
         seeded=seeded,
-        expires_at=None,
+        expires_at=getattr(user, "vault_locked_expires_at", None),
+        recommended_action=None,
+        cta_payload=None,
     )
 
 

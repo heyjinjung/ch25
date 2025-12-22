@@ -7,7 +7,7 @@ Phase 1 rules implemented here:
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from fastapi import HTTPException, status
 from sqlalchemy import select
@@ -22,6 +22,7 @@ from app.services.vault2_service import Vault2Service
 class VaultService:
     VAULT_SEED_AMOUNT = 10_000
     VAULT_FILL_AMOUNT = 5_000
+    VAULT_LOCKED_DURATION_HOURS = 24
 
     # Vault unlock tiers (Phase 1): determined by deposit increase delta.
     # Option A (10,000 charge): unlock 5,000 and keep remainder locked.
@@ -35,6 +36,48 @@ class VaultService:
     def sync_legacy_mirror(user: User) -> None:
         # `vault_balance` is a legacy mirror for UI compatibility.
         user.vault_balance = int(user.vault_locked_balance or 0)
+
+    @classmethod
+    def _compute_locked_expires_at(cls, now: datetime) -> datetime:
+        return now + timedelta(hours=cls.VAULT_LOCKED_DURATION_HOURS)
+
+    @classmethod
+    def _ensure_locked_expiry(cls, user: User, now: datetime) -> bool:
+        """Ensure `vault_locked_expires_at` is set when locked balance is positive.
+
+        Returns True if the user row was mutated.
+        """
+        locked = int(getattr(user, "vault_locked_balance", 0) or 0)
+        if locked <= 0:
+            if getattr(user, "vault_locked_expires_at", None) is not None:
+                user.vault_locked_expires_at = None
+                return True
+            return False
+
+        expires_at = getattr(user, "vault_locked_expires_at", None)
+        if expires_at is None or expires_at <= now:
+            user.vault_locked_expires_at = cls._compute_locked_expires_at(now)
+            return True
+        return False
+
+    @classmethod
+    def _expire_locked_if_due(cls, user: User, now: datetime) -> bool:
+        """Expire locked balance when `vault_locked_expires_at` is due.
+
+        Phase 1: expiration applies only to locked balance.
+        Returns True if the user row was mutated.
+        """
+        expires_at = getattr(user, "vault_locked_expires_at", None)
+        locked = int(getattr(user, "vault_locked_balance", 0) or 0)
+        if expires_at is None or locked <= 0:
+            return False
+        if expires_at > now:
+            return False
+
+        user.vault_locked_balance = 0
+        user.vault_locked_expires_at = None
+        cls.sync_legacy_mirror(user)
+        return True
 
     @staticmethod
     def _is_eligible_row_active(row: NewMemberDiceEligibility | None, now: datetime) -> bool:
@@ -68,6 +111,16 @@ class VaultService:
         eligible = self._eligible(db, user_id, now_dt)
         user = self._get_or_create_user(db, user_id)
 
+        # Expire due locked balance (Phase 1) without auto-seeding.
+        mutated = self._expire_locked_if_due(user, now_dt)
+        # Keep legacy mirror consistent even if other code wrote vault_balance directly.
+        # (This is a cheap assignment and helps avoid stale UI.)
+        self.sync_legacy_mirror(user)
+        if mutated:
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+
         # IMPORTANT UX POLICY:
         # Do not auto-seed on status fetch. The initial seed is granted on actual funnel events
         # (e.g., 신규회원 주사위 LOSE 시 보관, 또는 무료 fill 사용 시).
@@ -94,14 +147,29 @@ class VaultService:
         if user.vault_fill_used_at is not None:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="VAULT_FILL_ALREADY_USED")
 
+        # Phase 1: clear expired locked first.
+        self._expire_locked_if_due(user, now_dt)
+
         # Ensure the initial seed exists for a first-time eligible user.
+        seed_added = 0
         if (user.vault_locked_balance or 0) == 0 and (user.cash_balance or 0) == 0:
             user.vault_locked_balance = self.VAULT_SEED_AMOUNT
+            seed_added = self.VAULT_SEED_AMOUNT
 
         user.vault_locked_balance = (user.vault_locked_balance or 0) + self.VAULT_FILL_AMOUNT
+        total_added = seed_added + self.VAULT_FILL_AMOUNT
+        self._ensure_locked_expiry(user, now_dt)
         self.sync_legacy_mirror(user)
         user.vault_fill_used_at = now_dt
         db.add(user)
+
+        # Phase 2/3-stage prep: record accrual into Vault2 bookkeeping (no v1 behavior change).
+        try:
+            Vault2Service().accrue_locked(db, user_id=user.id, amount=total_added, now=now_dt, commit=False)
+        except Exception:
+            # Keep v1 flow resilient; Vault2 is scaffolding.
+            pass
+
         db.commit()
         db.refresh(user)
 
@@ -160,12 +228,15 @@ class VaultService:
         if user is None:
             return 0
 
+        # Phase 1: if locked expired, do not unlock.
+        self._expire_locked_if_due(user, now_dt)
         locked = int(user.vault_locked_balance or 0)
         if locked <= 0:
             return 0
 
         unlock_amount = min(locked, unlock_target)
         user.vault_locked_balance = max(locked - unlock_amount, 0)
+        self._ensure_locked_expiry(user, now_dt)
         self.sync_legacy_mirror(user)
         db.add(user)
 
@@ -188,21 +259,24 @@ class VaultService:
         )
 
         # Phase 2/3-stage prep: record unlock event into Vault2 status (bookkeeping only).
-        Vault2Service().record_unlock_event(
-            db,
-            user_id=user.id,
-            unlock_amount=unlock_amount,
-            trigger="EXTERNAL_RANKING_DEPOSIT_INCREASE",
-            meta={
-                "tier": tier,
-                "unlock_target": unlock_target,
-                "external_ranking_deposit_prev": prev_amount,
-                "external_ranking_deposit_new": new_amount,
-                "external_ranking_deposit_delta": deposit_delta,
-            },
-            now=now_dt,
-            commit=False,
-        )
+        try:
+            Vault2Service().record_unlock_event(
+                db,
+                user_id=user.id,
+                unlock_amount=unlock_amount,
+                trigger="EXTERNAL_RANKING_DEPOSIT_INCREASE",
+                meta={
+                    "tier": tier,
+                    "unlock_target": unlock_target,
+                    "external_ranking_deposit_prev": prev_amount,
+                    "external_ranking_deposit_new": new_amount,
+                    "external_ranking_deposit_delta": deposit_delta,
+                },
+                now=now_dt,
+                commit=False,
+            )
+        except Exception:
+            pass
 
         if commit:
             db.commit()
