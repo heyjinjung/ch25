@@ -283,7 +283,7 @@ const RoulettePage: React.FC = () => {
             <div className="pointer-events-none absolute inset-y-0 left-0 w-[2px] bg-gradient-to-b from-cc-orange/70 via-white/10 to-transparent" />
 
             <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-2 rounded-full border border-cc-lime/20 bg-white/8 px-3 py-1 text-[clamp(12px,2.4vw,13px)] font-extrabold text-white/90">
+              <span className="inline-flex items-center gap-2 rounded-full border border-cc-lime/20 bg-white/8 px-3 py-1 text-[clamp(14px,2.4vw,16px)] font-extrabold text-white/90">
                 <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-white/15 bg-black/25">
                   <img
                     src="/images/flag.svg"
@@ -295,7 +295,7 @@ const RoulettePage: React.FC = () => {
                 </span>
                 {remainingLabel}
               </span>
-              <span className="inline-flex items-center gap-2 rounded-full border border-cc-lime/20 bg-white/8 px-3 py-1 text-[clamp(12px,2.4vw,13px)] font-bold text-white/70">
+              <span className="inline-flex items-center gap-2 rounded-full border border-cc-lime/20 bg-white/8 px-3 py-1 text-[clamp(14px,2.4vw,16px)] font-bold text-white/90">
                 <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-white/15 bg-black/25">
                   <img
                     src="/images/wallet.svg"

@@ -72,7 +72,7 @@ const LevelCard: React.FC<{ variant: LevelCardVariant }> = ({ variant }) => {
     variant === "desktop"
       ? {
           maxW: "w-full max-w-[900px]",
-          pad: "px-[10px] py-[clamp(30px,3.4vw,50px)]",
+          pad: "px-[clamp(16px,3vw,28px)] py-[clamp(26px,3.2vw,44px)]",
           avatar: "h-[clamp(92px,6.4vw,124px)] w-[clamp(92px,6.4vw,124px)]",
           avatarText: "text-[clamp(28px,3vw,38px)]",
           badge: "h-[clamp(36px,3vw,46px)] w-[clamp(36px,3vw,46px)] text-[clamp(13px,1.8vw,15px)]",
@@ -82,7 +82,7 @@ const LevelCard: React.FC<{ variant: LevelCardVariant }> = ({ variant }) => {
       : variant === "tablet"
         ? {
             maxW: "w-full max-w-[1024px]",
-            pad: "px-[10px] py-[clamp(28px,3.8vw,46px)]",
+            pad: "px-[clamp(16px,3.6vw,26px)] py-[clamp(24px,4vw,42px)]",
             avatar: "h-[clamp(86px,7.4vw,118px)] w-[clamp(86px,7.4vw,118px)]",
             avatarText: "text-[clamp(26px,3.2vw,34px)]",
             badge: "h-[clamp(34px,3.4vw,44px)] w-[clamp(34px,3.4vw,44px)] text-[clamp(12px,2vw,14px)]",
@@ -91,7 +91,7 @@ const LevelCard: React.FC<{ variant: LevelCardVariant }> = ({ variant }) => {
           }
         : {
             maxW: "w-full max-w-[980px]",
-            pad: "px-[10px] py-[clamp(28px,7vw,46px)]",
+            pad: "px-[clamp(14px,6vw,22px)] py-[clamp(22px,7vw,40px)]",
             avatar: "h-[clamp(82px,18vw,116px)] w-[clamp(82px,18vw,116px)]",
             avatarText: "text-[clamp(25px,5.8vw,34px)]",
             badge: "h-[clamp(32px,6.6vw,42px)] w-[clamp(32px,6.6vw,42px)] text-[clamp(12px,3.6vw,14px)]",
@@ -99,7 +99,6 @@ const LevelCard: React.FC<{ variant: LevelCardVariant }> = ({ variant }) => {
             statNumber: "text-[clamp(34px,7.4vw,46px)]",
           };
 
-  const isMobile = variant === "mobile";
   const barHeight = variant === "mobile" ? "h-[14px]" : "h-[16px]";
 
   return (
@@ -112,7 +111,7 @@ const LevelCard: React.FC<{ variant: LevelCardVariant }> = ({ variant }) => {
       }
       aria-label="내 레벨 카드"
     >
-      <header className="flex items-center gap-4">
+      <header className="flex items-center gap-4 sm:gap-5">
         <div className={"relative rounded-full bg-cc-olive/20 " + sizing.avatar}>
           <div className={"absolute inset-0 flex items-center justify-center font-semibold text-[#d2fd9c] " + sizing.avatarText}>
             {displayName.slice(0, 1)}
@@ -133,7 +132,7 @@ const LevelCard: React.FC<{ variant: LevelCardVariant }> = ({ variant }) => {
         </div>
       </header>
 
-      <div className="mt-6">
+      <div className="mt-7">
         <div className="flex items-center justify-between text-[clamp(13px,2.8vw,14px)] text-white">
           <span>레벨 {derived.currentLevel}</span>
           <span>레벨 {derived.nextLevel}</span>
@@ -147,8 +146,8 @@ const LevelCard: React.FC<{ variant: LevelCardVariant }> = ({ variant }) => {
         </div>
       </div>
 
-      <div className={"mt-8 flex gap-4 " + (isMobile ? "flex-col" : "flex-row")}>
-        <div className={"rounded-[6px] border border-black/15 bg-cc-olive/20 px-5 py-4 text-center " + (isMobile ? "w-full" : "flex-1")}>
+      <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
+        <div className="rounded-[10px] border border-black/15 bg-cc-olive/20 px-5 py-5 text-center">
           <p className={"font-bold text-[#d2fd9c] " + sizing.statNumber}>{derived.totalStamps}</p>
           <div className="mt-1 flex items-center justify-center gap-2 text-[clamp(13px,2.8vw,14px)] text-white/85">
             <span className="inline-flex h-7 w-7 items-center justify-center rounded-[10px] border border-white/15 bg-black/25">
@@ -163,7 +162,7 @@ const LevelCard: React.FC<{ variant: LevelCardVariant }> = ({ variant }) => {
             완료한 미션
           </div>
         </div>
-        <div className={"rounded-[6px] border border-black/15 bg-cc-olive/20 px-5 py-4 text-center " + (isMobile ? "w-full" : "flex-1")}>
+        <div className="rounded-[10px] border border-black/15 bg-cc-olive/20 px-5 py-5 text-center">
           <p className={"font-bold text-[#d2fd9c] " + sizing.statNumber}>{derived.claimedBadges}</p>
           <div className="mt-1 flex items-center justify-center gap-2 text-[clamp(13px,2.8vw,14px)] text-white/85">
             <span className="inline-flex h-7 w-7 items-center justify-center rounded-[10px] border border-white/15 bg-black/25">
@@ -178,7 +177,7 @@ const LevelCard: React.FC<{ variant: LevelCardVariant }> = ({ variant }) => {
             획득한 뱃지
           </div>
         </div>
-        <div className={"rounded-[6px] border border-black/15 bg-cc-olive/20 px-5 py-4 text-center " + (isMobile ? "w-full" : "flex-1")}>
+        <div className="rounded-[10px] border border-black/15 bg-cc-olive/20 px-5 py-5 text-center">
           <p className={"font-bold text-[#d2fd9c] " + sizing.statNumber}>{derived.currentXp.toLocaleString()}</p>
           <div className="mt-1 flex items-center justify-center gap-2 text-[clamp(13px,2.8vw,14px)] text-white/85">
             <span className="inline-flex h-7 w-7 items-center justify-center rounded-[10px] border border-white/15 bg-black/25">

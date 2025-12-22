@@ -521,33 +521,33 @@ const VaultMainPanel: React.FC = () => {
                   <img
                     src="/images/flag.svg"
                     alt=""
-                    className="h-5 w-5 opacity-90"
+                    className="h-5 w-auto max-w-5 object-contain invert brightness-200 contrast-125"
                     loading="lazy"
                     aria-hidden="true"
                   />
                 </span>
-                <p className="text-sm font-extrabold text-white">최근 활동 내역</p>
+                <p className="text-[20px] font-extrabold text-white">최근 활동 내역</p>
               </div>
-              <p className="mt-1 text-xs text-white/60">금고와 관련된 최근 상태를 확인합니다.</p>
+              <p className="mt-1 text-[16px] text-white/60">금고와 관련된 최근 상태를 확인합니다.</p>
             </div>
           </div>
 
           <div className="mt-4 space-y-2">
             <div className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-sm font-semibold text-white/90">외부 충전 확인 상태</p>
-                <p className={view.eligible ? "text-sm font-bold text-secondary-200" : "text-sm font-bold text-white/70"}>
+                <p className="text-[18px] font-semibold text-white/90">외부 충전 확인 상태</p>
+                <p className={view.eligible ? "text-[18px] font-bold text-secondary-200" : "text-[18px] font-bold text-white/90"}>
                   {view.eligible ? "확인됨" : "미확인"}
                 </p>
               </div>
-              <p className="mt-1 text-xs text-white/60">확인되면 잠긴 금고 금액이 일부/전액 해금됩니다.</p>
+              <p className="mt-1 text-[16px] text-white/60">확인되면 잠긴 금고 금액이 일부/전액 해금됩니다.</p>
             </div>
 
             {view.usedAt ? (
               <div className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3">
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-sm font-semibold text-white/90">금고 채우기 사용</p>
-                  <p className="text-sm font-bold text-white/80">{formatDateTime(view.usedAt)}</p>
+                  <p className="text-[18px] font-semibold text-white/90">금고 채우기 사용</p>
+                  <p className="text-[18px] font-bold text-white/90">{formatDateTime(view.usedAt)}</p>
                 </div>
               </div>
             ) : null}
@@ -555,16 +555,16 @@ const VaultMainPanel: React.FC = () => {
             {view.expiresAt ? (
               <div className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3">
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-sm font-semibold text-white/90">만료 예정</p>
-                  <p className="text-sm font-bold text-white/80">{formatDateTime(view.expiresAt)}</p>
+                  <p className="text-[18px] font-semibold text-white/90">만료 예정</p>
+                  <p className="text-[18px] font-bold text-white/90">{formatDateTime(view.expiresAt)}</p>
                 </div>
               </div>
             ) : null}
 
             {!view.usedAt && !view.expiresAt ? (
               <div className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3">
-                <p className="text-sm font-semibold text-white/90">표시할 내역이 아직 없어요</p>
-                <p className="mt-1 text-xs text-white/60">금고 이벤트 참여 후 내역이 표시됩니다.</p>
+                <p className="text-[18px] font-semibold text-white/90">표시할 내역이 아직 없어요</p>
+                <p className="mt-1 text-[16px] text-white/60">금고 이벤트 참여 후 내역이 표시됩니다.</p>
               </div>
             ) : null}
           </div>
