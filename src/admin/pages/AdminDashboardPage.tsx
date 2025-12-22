@@ -123,7 +123,7 @@ const quickLinks = [
 
 const AdminDashboardPage: React.FC = () => {
   return (
-    <section className="space-y-6 rounded-xl border border-[#1F2A1D] bg-[#0B0B0F] p-6 shadow-[0_12px_40px_rgba(0,0,0,0.45)]">
+    <section className="space-y-6">
       <header className="space-y-2">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#91F402]">overview</p>
         <h1 className="text-2xl font-bold text-white">운영 대시보드</h1>

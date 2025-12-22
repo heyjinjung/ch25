@@ -1,294 +1,449 @@
 ﻿// src/admin/pages/LotteryConfigPage.tsx
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Edit, Plus, Trash2, X } from "lucide-react";
 import {
   AdminLotteryConfig,
   AdminLotteryConfigPayload,
-  fetchLotteryConfigs,
   createLotteryConfig,
+  fetchLotteryConfigs,
   updateLotteryConfig,
 } from "../api/adminLotteryApi";
-import Button from "../../components/common/Button";
-import Modal from "../../components/common/Modal";
 import { REWARD_TYPES } from "../constants/rewardTypes";
+import { useToast } from "../../components/common/ToastProvider";
+
+const normalizeStock = (value: unknown): number | null => {
+  if (value === null || value === undefined) return null;
+  if (typeof value === "number") return Number.isNaN(value) ? null : value;
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (trimmed.length === 0) return null;
+    const parsed = Number(trimmed);
+    return Number.isNaN(parsed) ? null : parsed;
+  }
+  return null;
+};
 
 const prizeSchema = z.object({
-  label: z.string().min(1, "Enter prize name"),
-  weight: z.number().int().nonnegative(),
-  stock: z.number().int().nullable().optional(),
-  reward_type: z.string().min(1, "Enter reward type"),
-  reward_value: z.number().int().nonnegative(),
+  label: z.string().min(1, "상품명을 입력하세요"),
+  weight: z.number().int().nonnegative("가중치는 0 이상"),
+  stock: z.preprocess(normalizeStock, z.number().int().nonnegative("재고는 0 이상").nullable()),
+  reward_type: z.string().min(1, "보상 타입을 선택하세요"),
+  reward_value: z.number().int().nonnegative("보상 값은 0 이상"),
   is_active: z.boolean().default(true),
 });
 
 const lotterySchema = z
   .object({
-    name: z.string().min(1, "Name is required"),
+    name: z.string().min(1, "이름을 입력하세요"),
     is_active: z.boolean().default(false),
-    max_daily_plays: z.number().int().positive("At least 1 per day"),
-    prizes: z.array(prizeSchema).min(1, "Add at least 1 prize"),
-  })
-  .refine((value) => value.prizes.some((p) => p.is_active && p.weight > 0), {
-    message: "At least one active prize must have weight > 0",
-    path: ["prizes"],
+    max_daily_plays: z.number().int().nonnegative("0이면 무제한"),
+    prizes: z.array(prizeSchema).min(1, "상품을 1개 이상 추가하세요"),
   })
   .refine((value) => {
     const labels = value.prizes.map((p) => p.label.trim());
     return new Set(labels).size === labels.length;
   }, {
-    message: "Prize names must be unique",
+    message: "상품명은 중복될 수 없습니다",
+    path: ["prizes"],
+  })
+  .refine((value) => value.prizes.some((p) => p.is_active && p.weight > 0), {
+    message: "활성 상품 중 가중치가 0보다 큰 항목이 1개 이상 필요합니다",
+    path: ["prizes"],
+  })
+  .refine((value) => value.prizes.reduce((sum, p) => sum + p.weight, 0) > 0, {
+    message: "전체 가중치 합이 0보다 커야 합니다",
     path: ["prizes"],
   });
 
 type LotteryFormValues = z.infer<typeof lotterySchema>;
 
+const mapErrorDetail = (error: unknown): string => {
+  const detail = (error as any)?.response?.data?.detail;
+  if (typeof detail === "string") {
+    const map: Record<string, string> = {
+      LOTTERY_CONFIG_NOT_FOUND: "복권 설정을 찾을 수 없습니다.",
+      INVALID_LOTTERY_WEIGHT: "가중치는 0 이상이어야 합니다.",
+      INVALID_LOTTERY_STOCK: "재고는 0 이상 또는 비워두세요.",
+      DUPLICATE_PRIZE_LABEL: "상품명이 중복되었습니다.",
+      NO_ACTIVE_PRIZE: "활성 상품(가중치>0)이 1개 이상 필요합니다.",
+      ZERO_TOTAL_WEIGHT: "전체 가중치 합이 0보다 커야 합니다.",
+      INVALID_LOTTERY_CONFIG: "복권 설정 값이 올바르지 않습니다.",
+    };
+    return map[detail] ?? detail;
+  }
+  return (error as any)?.message ?? "요청 처리 중 오류가 발생했습니다.";
+};
+
 const LotteryConfigPage: React.FC = () => {
+  const { addToast } = useToast();
+  const queryClient = useQueryClient();
   const [editing, setEditing] = useState<AdminLotteryConfig | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const queryClient = useQueryClient();
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["admin", "lottery"],
     queryFn: fetchLotteryConfigs,
   });
 
-  const defaultValues = useMemo<LotteryFormValues>(
-    () =>
-      editing
-        ? {
-            name: editing.name,
-            is_active: editing.is_active,
-            max_daily_plays: editing.max_daily_plays,
-            prizes: editing.prizes,
-          }
-        : {
-            name: "Test Lottery",
-            is_active: true,
-            max_daily_plays: 1,
-            prizes: [
-              { label: "100P", weight: 50, stock: null, reward_type: "POINT", reward_value: 100, is_active: true },
-              { label: "Coupon", weight: 10, stock: 100, reward_type: "COUPON", reward_value: 1, is_active: true },
-            ],
-          },
-    [editing]
+  const initialValues = useMemo<LotteryFormValues>(
+    () => ({
+      name: "",
+      is_active: false,
+      max_daily_plays: 0,
+      prizes: [
+        {
+          label: "",
+          weight: 0,
+          stock: null,
+          reward_type: "POINT",
+          reward_value: 0,
+          is_active: true,
+        },
+      ],
+    }),
+    []
   );
 
   const form = useForm<LotteryFormValues>({
     resolver: zodResolver(lotterySchema),
-    defaultValues,
+    defaultValues: initialValues,
   });
 
-  const { fields, append, remove } = useFieldArray({ control: form.control, name: "prizes" });
+  const prizes = useFieldArray({
+    control: form.control,
+    name: "prizes",
+  });
 
-  const resetAndClose = () => {
+  const closeModal = () => {
     setIsModalOpen(false);
     setEditing(null);
-    form.reset(defaultValues);
+    form.reset(initialValues);
   };
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (!isModalOpen) return;
+      if (e.key === "Escape") closeModal();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isModalOpen]);
 
   const mutation = useMutation({
     mutationFn: (payload: AdminLotteryConfigPayload) =>
       editing ? updateLotteryConfig(editing.id, payload) : createLotteryConfig(payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "lottery"] });
-      resetAndClose();
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["admin", "lottery"] });
+      addToast("저장 완료", "success");
+      closeModal();
+    },
+    onError: (err) => {
+      addToast(mapErrorDetail(err), "error");
     },
   });
 
+  const openCreate = () => {
+    setEditing(null);
+    setIsModalOpen(true);
+    form.reset(initialValues);
+  };
+
+  const openEdit = (config: AdminLotteryConfig) => {
+    setEditing(config);
+    setIsModalOpen(true);
+    form.reset({
+      name: config.name,
+      is_active: config.is_active,
+      max_daily_plays: config.max_daily_plays,
+      prizes: config.prizes.map((p) => ({
+        id: p.id,
+        label: p.label,
+        weight: p.weight,
+        stock: p.stock ?? null,
+        reward_type: p.reward_type,
+        reward_value: p.reward_value,
+        is_active: p.is_active,
+      })) as any,
+    });
+  };
+
   const onSubmit = form.handleSubmit((values) => {
     const payload: AdminLotteryConfigPayload = {
-      ...values,
-      prizes: values.prizes.map((p) => ({
+      name: values.name.trim(),
+      is_active: values.is_active,
+      max_daily_plays: values.max_daily_plays,
+      prizes: values.prizes.map((p: any) => ({
         ...p,
-        stock: p.stock === null || p.stock === undefined || Number.isNaN(p.stock) ? null : p.stock,
+        label: String(p.label ?? "").trim(),
+        stock: normalizeStock(p.stock),
       })),
     };
     mutation.mutate(payload);
   });
 
   return (
-    <section className="space-y-6">
-      <div className="flex items-center justify-between">
+    <section className="space-y-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-100">Lottery Config</h1>
-          <p className="text-sm text-slate-300">At least one active prize must have weight &gt; 0. Prize names must be unique.</p>
+          <h2 className="text-2xl font-bold text-[#91F402]">복권 설정</h2>
+          <p className="mt-1 text-sm text-gray-400">상품/가중치/재고를 설정하고, 활성 상품(가중치&gt;0)을 최소 1개 유지하세요.</p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)}>New Config</Button>
+        <button
+          type="button"
+          onClick={openCreate}
+          className="flex items-center rounded-md bg-[#2D6B3B] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#91F402] hover:text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-[#91F402]"
+        >
+          <Plus size={18} className="mr-2" />
+          새 항목 추가
+        </button>
       </div>
 
-      {isLoading && <div className="rounded-lg border border-emerald-700/40 bg-slate-900 p-4 text-slate-200">Loading...</div>}
+      {isLoading && (
+        <div className="rounded-lg border border-[#333333] bg-[#111111] p-4 text-gray-200">불러오는 중...</div>
+      )}
+
       {isError && (
-        <div className="rounded-lg border border-red-500/40 bg-red-950 p-4 text-red-100">Load failed: {(error as Error).message}</div>
+        <div className="rounded-lg border border-red-500/40 bg-red-950 p-4 text-red-100">{mapErrorDetail(error)}</div>
       )}
 
-      {!isLoading && data && data.length === 0 && (
-        <div className="rounded-lg border border-emerald-700/40 bg-slate-900 p-4 text-slate-200">No configs yet.</div>
-      )}
-
-      {!isLoading && data && data.length > 0 && (
-        <div className="overflow-hidden rounded-xl border border-emerald-800/40 bg-slate-900/70 shadow-lg shadow-emerald-900/30">
-          <table className="min-w-full divide-y divide-emerald-800/60">
-            <thead className="bg-emerald-900/40 text-left text-slate-200">
-              <tr>
-                <th className="px-4 py-3 text-sm font-semibold">Name</th>
-                <th className="px-4 py-3 text-sm font-semibold">Daily Limit</th>
-                <th className="px-4 py-3 text-sm font-semibold">Prizes</th>
-                <th className="px-4 py-3 text-sm font-semibold">Status</th>
-                <th className="px-4 py-3 text-sm font-semibold">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-emerald-800/40 text-slate-100">
-              {data.map((config) => (
-                <tr key={config.id} className="hover:bg-emerald-900/20">
-                  <td className="px-4 py-3 text-sm font-semibold">{config.name}</td>
-                  <td className="px-4 py-3 text-sm">{config.max_daily_plays}</td>
-                  <td className="px-4 py-3 text-sm">{config.prizes.length}</td>
-                  <td className="px-4 py-3 text-sm">
-                    <span className={config.is_active ? "text-emerald-400" : "text-slate-400"}>
-                      {config.is_active ? "Active" : "Inactive"}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-sm">
-                    <Button
-                      variant="secondary"
-                      onClick={() => {
-                        setEditing(config);
-                        setIsModalOpen(true);
-                        form.reset({
-                          name: config.name,
-                          is_active: config.is_active,
-                          max_daily_plays: config.max_daily_plays,
-                          prizes: config.prizes,
-                        });
-                      }}
-                    >
-                      Edit
-                    </Button>
-                  </td>
+      {!isLoading && !isError && (
+        <div className="rounded-lg border border-[#333333] bg-[#111111] shadow-md">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="border-b border-[#333333] bg-[#1A1A1A]">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">이름</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">일일 제한</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">상품 수</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">상태</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#91F402]">기능</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-[#333333]">
+                {(data ?? []).map((config) => (
+                  <tr key={config.id} className="hover:bg-[#1A1A1A]">
+                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-white">{config.name}</td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-400">
+                      {config.max_daily_plays === 0 ? "무제한" : config.max_daily_plays.toLocaleString()}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-400">{config.prizes.length.toLocaleString()}</td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm">
+                      <span
+                        className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-medium ${
+                          config.is_active ? "border-[#2D6B3B] text-[#91F402]" : "border-[#333333] text-gray-400"
+                        }`}
+                      >
+                        {config.is_active ? "활성" : "비활성"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium">
+                      <button
+                        type="button"
+                        onClick={() => openEdit(config)}
+                        className="text-[#91F402] hover:text-white"
+                        title="수정"
+                        aria-label="복권 설정 수정"
+                      >
+                        <Edit size={18} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {(data ?? []).length === 0 && (
+            <div className="py-8 text-center text-gray-400">데이터가 없습니다. 새 항목을 추가해보세요.</div>
+          )}
         </div>
       )}
 
-      <Modal open={isModalOpen} onClose={resetAndClose} title={editing ? "Edit Lottery" : "New Lottery"}>
-        <form className="space-y-4" onSubmit={onSubmit}>
-          <div className="space-y-1">
-            <label className="text-sm text-slate-200">Name</label>
-            <input
-              className="w-full rounded-md border border-emerald-700 bg-slate-800 px-3 py-2 text-slate-50 focus:border-emerald-400 focus:outline-none"
-              {...form.register("name")}
-              type="text"
-              placeholder="Lottery name"
-            />
-            {form.formState.errors.name && <p className="text-sm text-red-300">{form.formState.errors.name.message}</p>}
-          </div>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div className="space-y-1">
-              <label className="text-sm text-slate-200">Max tickets per day</label>
-              <input
-                type="number"
-                className="w-full rounded-md border border-emerald-700 bg-slate-800 px-3 py-2 text-slate-50 focus:border-emerald-400 focus:outline-none"
-                {...form.register("max_daily_plays", { valueAsNumber: true })}
-              />
-              {form.formState.errors.max_daily_plays && (
-                <p className="text-sm text-red-300">{form.formState.errors.max_daily_plays.message}</p>
-              )}
+      {isModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 p-4"
+          role="dialog"
+          aria-modal="true"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) closeModal();
+          }}
+        >
+          <div className="w-full max-w-5xl overflow-hidden rounded-lg border border-[#333333] bg-[#111111] shadow-xl">
+            <div className="flex items-center justify-between border-b border-[#333333] bg-[#2D6B3B] p-6">
+              <h3 className="text-xl font-bold text-white">{editing ? "복권 설정 수정" : "복권 설정 추가"}</h3>
+              <button type="button" onClick={closeModal} className="text-white hover:text-[#91F402]" aria-label="닫기">
+                <X size={24} />
+              </button>
             </div>
-            <div className="flex items-center space-x-3 pt-6">
-              <input type="checkbox" className="h-4 w-4" {...form.register("is_active")} />
-              <span className="text-sm text-slate-200">Active</span>
-            </div>
-          </div>
 
-          <div className="space-y-3 rounded-lg border border-emerald-800/60 bg-slate-900/70 p-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-slate-100">Prizes</h3>
-              <Button
-                variant="secondary"
-                type="button"
-                onClick={() =>
-                  append({ label: "New prize", weight: 1, reward_type: "POINT", reward_value: 0, stock: null, is_active: true })
-                }
-              >
-                Add row
-              </Button>
-            </div>
-            {form.formState.errors.prizes && (
-              <p className="text-sm text-red-300">{form.formState.errors.prizes.message as string}</p>
-            )}
-            <div className="space-y-2">
-              {fields.map((field, idx) => (
-                <div key={field.id} className="grid grid-cols-1 gap-2 rounded-md border border-emerald-800/50 bg-slate-900 p-3 md:grid-cols-6">
-                  <div className="space-y-1 md:col-span-2">
-                    <label className="text-xs text-slate-300">Prize</label>
-                    <input
-                      type="text"
-                      className="w-full rounded border border-emerald-700 bg-slate-800 px-2 py-1 text-sm"
-                      {...form.register(`prizes.${idx}.label`)}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs text-slate-300">Weight</label>
-                    <input
-                      type="number"
-                      className="w-full rounded border border-emerald-700 bg-slate-800 px-2 py-1 text-sm"
-                      {...form.register(`prizes.${idx}.weight`, { valueAsNumber: true })}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs text-slate-300">Stock (빈칸=무제한)</label>
-                    <input
-                      type="number"
-                      className="w-full rounded border border-emerald-700 bg-slate-800 px-2 py-1 text-sm"
-                      {...form.register(`prizes.${idx}.stock`, { valueAsNumber: true })}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs text-slate-300">Reward type</label>
-                    <select
-                      className="w-full rounded border border-emerald-700 bg-slate-800 px-2 py-1 text-sm"
-                      {...form.register(`prizes.${idx}.reward_type`)}
-                    >
-                      {REWARD_TYPES.map((rt) => (
-                        <option key={rt.value} value={rt.value}>{rt.label}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs text-slate-300">Reward value</label>
-                    <input
-                      type="number"
-                      className="w-full rounded border border-emerald-700 bg-slate-800 px-2 py-1 text-sm"
-                      {...form.register(`prizes.${idx}.reward_value`, { valueAsNumber: true })}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between space-x-2">
-                    <label className="text-xs text-slate-300">Active</label>
-                    <input type="checkbox" className="h-4 w-4" {...form.register(`prizes.${idx}.is_active`)} />
-                    <Button variant="secondary" type="button" onClick={() => remove(idx)}>
-                      Delete
-                    </Button>
-                  </div>
+            <form onSubmit={onSubmit} className="space-y-5 bg-[#0A0A0A] p-6">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="space-y-1">
+                  <label htmlFor="lottery_name" className="text-sm text-gray-200">이름</label>
+                  <input
+                    id="lottery_name"
+                    type="text"
+                    className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
+                    {...form.register("name")}
+                  />
+                  {form.formState.errors.name?.message && <p className="text-sm text-red-300">{form.formState.errors.name.message}</p>}
                 </div>
-              ))}
-            </div>
-          </div>
+                <div className="space-y-1">
+                  <label htmlFor="lottery_max" className="text-sm text-gray-200">일일 최대 플레이 (0=무제한)</label>
+                  <input
+                    id="lottery_max"
+                    type="number"
+                    className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
+                    {...form.register("max_daily_plays", { valueAsNumber: true })}
+                  />
+                  {form.formState.errors.max_daily_plays?.message && (
+                    <p className="text-sm text-red-300">{form.formState.errors.max_daily_plays.message}</p>
+                  )}
+                </div>
+              </div>
 
-          <div className="flex justify-end space-x-2">
-            <Button type="button" variant="secondary" onClick={resetAndClose}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={mutation.isPending}>
-              {mutation.isPending ? "Saving..." : "Save"}
-            </Button>
+              <label className="flex items-center gap-2 text-sm text-gray-200">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-[#333333] bg-[#1A1A1A] text-[#91F402] focus:ring-[#2D6B3B]"
+                  {...form.register("is_active")}
+                />
+                활성
+              </label>
+
+              <div className="space-y-3 rounded-lg border border-[#333333] bg-[#111111] p-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-semibold text-[#91F402]">상품 목록</h4>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      prizes.append({
+                        label: "",
+                        weight: 0,
+                        stock: null,
+                        reward_type: "POINT",
+                        reward_value: 0,
+                        is_active: true,
+                      } as any)
+                    }
+                    className="flex items-center rounded-md bg-[#2D6B3B] px-3 py-2 text-sm text-white hover:bg-[#91F402] hover:text-black"
+                  >
+                    <Plus size={16} className="mr-2" />
+                    행 추가
+                  </button>
+                </div>
+
+                {form.formState.errors.prizes?.message && (
+                  <p className="text-sm text-red-300">{form.formState.errors.prizes.message as string}</p>
+                )}
+
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="border-b border-[#333333] bg-[#1A1A1A]">
+                      <tr>
+                        <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-400">상품명</th>
+                        <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-400">가중치</th>
+                        <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-400">재고</th>
+                        <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-400">보상 타입</th>
+                        <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-400">보상 값</th>
+                        <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-400">활성</th>
+                        <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-[#91F402]">삭제</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#333333]">
+                      {prizes.fields.map((field, idx) => (
+                        <tr key={field.id} className="hover:bg-[#1A1A1A]">
+                          <td className="px-3 py-2">
+                            <input
+                              type="text"
+                              className="w-full rounded-md border border-[#333333] bg-[#111111] px-2 py-1 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
+                              {...form.register(`prizes.${idx}.label`)}
+                            />
+                          </td>
+                          <td className="px-3 py-2">
+                            <input
+                              type="number"
+                              className="w-full rounded-md border border-[#333333] bg-[#111111] px-2 py-1 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
+                              {...form.register(`prizes.${idx}.weight`, { valueAsNumber: true })}
+                            />
+                          </td>
+                          <td className="px-3 py-2">
+                            <input
+                              type="number"
+                              placeholder="빈칸=무제한"
+                              className="w-full rounded-md border border-[#333333] bg-[#111111] px-2 py-1 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
+                              {...form.register(`prizes.${idx}.stock` as any, { valueAsNumber: true })}
+                            />
+                          </td>
+                          <td className="px-3 py-2">
+                            <select
+                              className="w-full rounded-md border border-[#333333] bg-[#111111] px-2 py-1 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
+                              {...form.register(`prizes.${idx}.reward_type`)}
+                            >
+                              {REWARD_TYPES.map((rt) => (
+                                <option key={rt.value} value={rt.value}>
+                                  {rt.label}
+                                </option>
+                              ))}
+                            </select>
+                          </td>
+                          <td className="px-3 py-2">
+                            <input
+                              type="number"
+                              className="w-full rounded-md border border-[#333333] bg-[#111111] px-2 py-1 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
+                              {...form.register(`prizes.${idx}.reward_value`, { valueAsNumber: true })}
+                            />
+                          </td>
+                          <td className="px-3 py-2">
+                            <input
+                              type="checkbox"
+                              className="h-4 w-4 rounded border-[#333333] bg-[#111111] text-[#91F402] focus:ring-[#2D6B3B]"
+                              {...form.register(`prizes.${idx}.is_active`)}
+                            />
+                          </td>
+                          <td className="px-3 py-2">
+                            <button
+                              type="button"
+                              onClick={() => prizes.remove(idx)}
+                              className="text-red-400 hover:text-red-200"
+                              aria-label="상품 삭제"
+                              title="삭제"
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  className="rounded-md border border-[#333333] bg-[#111111] px-4 py-2 text-sm text-gray-200 hover:bg-[#1A1A1A]"
+                >
+                  취소
+                </button>
+                <button
+                  type="submit"
+                  disabled={mutation.isPending}
+                  className="rounded-md bg-[#2D6B3B] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#91F402] hover:text-black disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {mutation.isPending ? "저장 중..." : "저장"}
+                </button>
+              </div>
+            </form>
           </div>
-        </form>
-      </Modal>
+        </div>
+      )}
     </section>
   );
 };
