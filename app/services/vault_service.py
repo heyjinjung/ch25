@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session
 from app.models.new_member_dice import NewMemberDiceEligibility
 from app.models.user import User
 from app.services.reward_service import RewardService
+from app.services.vault2_service import Vault2Service
 
 
 class VaultService:
@@ -183,6 +184,23 @@ class VaultService:
                 "external_ranking_deposit_new": new_amount,
                 "external_ranking_deposit_delta": deposit_delta,
             },
+            commit=False,
+        )
+
+        # Phase 2/3-stage prep: record unlock event into Vault2 status (bookkeeping only).
+        Vault2Service().record_unlock_event(
+            db,
+            user_id=user.id,
+            unlock_amount=unlock_amount,
+            trigger="EXTERNAL_RANKING_DEPOSIT_INCREASE",
+            meta={
+                "tier": tier,
+                "unlock_target": unlock_target,
+                "external_ranking_deposit_prev": prev_amount,
+                "external_ranking_deposit_new": new_amount,
+                "external_ranking_deposit_delta": deposit_delta,
+            },
+            now=now_dt,
             commit=False,
         )
 

@@ -42,7 +42,15 @@ def fill(db: Session = Depends(get_db), user_id: int = Depends(get_current_user_
 def list_programs(db: Session = Depends(get_db)) -> list[VaultProgramResponse]:
     programs = v2_service.list_programs(db)
     return [
-        VaultProgramResponse(key=p.key, name=p.name, duration_hours=int(p.duration_hours))
+        VaultProgramResponse(
+            key=p.key,
+            name=p.name,
+            duration_hours=int(p.duration_hours),
+            expire_policy=getattr(p, "expire_policy", None),
+            is_active=bool(getattr(p, "is_active", True)),
+            unlock_rules_json=getattr(p, "unlock_rules_json", None),
+            ui_copy_json=getattr(p, "ui_copy_json", None),
+        )
         for p in programs
     ]
 
@@ -56,7 +64,9 @@ def top(db: Session = Depends(get_db)) -> list[VaultTopItem]:
             program_key=program.key,
             state=status.state,
             locked_amount=int(status.locked_amount or 0),
+            available_amount=int(getattr(status, "available_amount", 0) or 0),
             expires_at=status.expires_at,
+            progress_json=getattr(status, "progress_json", None),
         )
         for status, program in rows
     ]

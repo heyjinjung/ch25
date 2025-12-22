@@ -115,13 +115,61 @@
 
 ---
 
+### 6) Vault Phase 1: locked 단일 기준 전환 + external_ranking 책임 분리
+- 목표
+  - Phase 1 원칙을 코드/DB에 반영:
+    - 계산 기준은 `user.vault_locked_balance` 단일 기준
+    - `user.vault_balance`는 legacy read-only mirror(UI/호환용)
+    - external_ranking은 “입금 증가 신호”만 제공, unlock 계산/지급은 `VaultService`로 일원화
+
+- DB / Migration
+  - Alembic 마이그레이션 추가:
+    - `20251221_0026_add_vault_phase1_locked_columns.py`
+      - `user.vault_locked_balance`, `user.vault_available_balance`, `user.vault_locked_expires_at` 컬럼 추가
+      - 기존 `vault_balance` → `vault_locked_balance` 백필
+      - `vault_balance`를 locked mirror로 동기화
+
+- Backend
+  - `VaultService`가 locked 기준으로 seed/fill 처리 및 legacy mirror 동기화(`sync_legacy_mirror`)를 단일 책임으로 보장
+  - `AdminExternalRankingService`에서 unlock 계산/지급 제거 → deposit 증가 감지 후 `VaultService.handle_deposit_increase_signal()` 호출로 책임 이동
+  - `NewMemberDiceService`에서 신규 정착 seed를 locked에 적립하고 mirror 동기화
+
+- Tests / E2E
+  - `tests/test_external_ranking_vault_unlock.py`를 Phase 1 locked+mirror 기준으로 업데이트
+  - `scripts/e2e_vault_unlock_from_external_ranking.ps1`를 `vault_locked_balance` 기준으로 seed/검증하도록 업데이트
+
+- 문서
+  - Phase 1 백엔드 체크리스트 문서 추가 및 완료 체크 반영:
+    - `docs/05_modules/05_module_vault_phase1_backend_checklist.md`
+
+---
+
+### 7) 도커 전체 최신 재빌드 + 마이그레이션 적용
+- 수행
+  - `docker compose pull db redis nginx`
+  - `docker compose build --no-cache backend frontend`
+  - `docker compose up -d --force-recreate`
+  - `docker compose exec -T backend alembic upgrade head`
+
+- 결과
+  - 컨테이너 재기동 및 healthcheck 정상
+  - Alembic 업그레이드 로그 확인:
+    - `20251221_0024 -> 20251221_0025` (Vault 2.0 scaffold)
+    - `20251221_0025 -> 20251221_0026` (Vault Phase 1 user columns)
+
+---
+
 ## 남은 이슈/다음 작업 후보
 - (선택) 팀 배틀에서 “의도한 팀만 보이게” 하려면 기존 팀 데이터 정리(비활성화) 정책을 확정해야 함.
 - (선택) GuidePage 콘텐츠가 잦게 바뀐다면, 운영 배포 플로우에서 `frontend` 빌드 캐시 정책/CI 캐시 정책을 한 번 더 점검 필요.
 - (선택) 티켓 0 패널 운영을 위해 `admin/ui-config` 화면에서 일일 문구 교체 루틴을 운영에 반영.
+- (다음) Vault Phase 1 후속: `vault_locked_expires_at` 기반 24h 상태머신(locked→available→expired) “행동 변경” 적용 전, 백필/운영 데이터 점검 및 모니터링 포인트 확정.
+- (다음) 프론트 호환: status 응답은 계속 `vault_balance`(mirror=locked)로 제공하되, Phase 1 UI에서 locked/available 분리 노출 시 API 스키마 확장 필요.
 
 ---
 
 ## 오늘 결론
 - Team Battle: Figma UI 플로우로 복구하면서도 실제 “미스터리 팀 배정”이 동작하도록 연결 완료.
 - GuidePage: 배포 후 텍스트가 안 바뀌는 문제는 SPA shell 캐시가 핵심이었고, `index.html` 캐시를 끄는 방식으로 안정화.
+- Vault Phase 1: locked 단일 기준 전환(서비스 책임 재배치 포함) 및 신규 컬럼 마이그레이션까지 적용 완료.
+- 도커: 전체 재빌드 + `alembic upgrade head`로 스키마/이미지 정합성 확보.
