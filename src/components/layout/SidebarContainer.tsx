@@ -186,7 +186,7 @@ const DesktopSidebarContent: React.FC = () => {
           <Link to="/team-battle" className="leading-[1.15]">
             팀배틀
           </Link>
-          <Link to="/landing" className="leading-[1.15]">
+          <Link to="/vault" className="leading-[1.15]">
             내금고
           </Link>
         </div>
@@ -324,7 +324,7 @@ const MobileSidebarContent: React.FC = () => {
           <Link to="/team-battle" className="leading-[1.15]">
             팀배틀
           </Link>
-          <Link to="/landing" className="leading-[1.15]">
+          <Link to="/vault" className="leading-[1.15]">
             내 금고
           </Link>
         </div>

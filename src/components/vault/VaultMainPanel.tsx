@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getVaultStatus } from "../../api/vaultApi";
 import { getUiConfig } from "../../api/uiConfigApi";
 import VaultModal from "./VaultModal";
+import { useAuth } from "../../auth/authStore";
 
 type RewardPreviewItem = {
   label: string;
@@ -82,8 +83,75 @@ const CountdownTimer: React.FC<{ expiresAt: Date }> = ({ expiresAt }) => {
   );
 };
 
+const VaultDoorVisual: React.FC<{ stateLabel: string; accentTone?: "active" | "idle" }> = ({
+  stateLabel,
+  accentTone = "idle",
+}) => {
+  const accentRing = accentTone === "active" ? "border-cc-lime/60" : "border-white/15";
+  const accentGlow = accentTone === "active" ? "animate-pulse-glow" : "";
+  const accentText = accentTone === "active" ? "text-cc-lime" : "text-white/70";
+
+  return (
+    <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-dark-100">
+      <div className="absolute inset-0 opacity-60">
+        <div className="absolute -left-10 -top-10 h-40 w-40 rounded-full bg-cc-lime/8 blur-3xl" />
+        <div className="absolute -bottom-12 -right-12 h-52 w-52 rounded-full bg-white/5 blur-3xl" />
+      </div>
+
+      <div className="relative z-10 flex items-center justify-between gap-4 p-5">
+        <div className="min-w-0">
+          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-white/60">Premium Vault</p>
+          <p className="mt-1 text-sm font-extrabold text-white">활동 금고</p>
+          <p className={`mt-1 inline-flex items-center gap-2 text-xs font-bold ${accentText}`}>
+            <span className="inline-block h-2 w-2 rounded-full bg-cc-lime/70" />
+            {stateLabel}
+          </p>
+        </div>
+
+        <div className="relative h-[88px] w-[88px] shrink-0">
+          <div className={`absolute inset-0 rounded-full border ${accentRing} ${accentGlow}`} />
+          <div className="absolute inset-[6px] rounded-full border border-white/10 bg-dark-50" />
+          <div className="absolute inset-[14px] rounded-full border border-white/10 bg-black/30" />
+
+          <div className="absolute inset-[18px] rounded-full border border-white/15 bg-dark-100">
+            <div className="absolute inset-0 animate-spin-slow rounded-full">
+              {[...Array(10)].map((_, idx) => (
+                <div
+                  key={idx}
+                  className="absolute left-1/2 top-1/2 h-8 w-[2px] -translate-x-1/2 -translate-y-1/2 bg-white/15"
+                  style={{ transform: `translate(-50%, -50%) rotate(${idx * 36}deg) translateY(-30px)` }}
+                />
+              ))}
+            </div>
+            <div className="absolute inset-[18px] rounded-full border border-white/15 bg-black/35" />
+            <div className="absolute inset-[28px] rounded-full bg-cc-lime/10" />
+            <div className="absolute inset-[34px] rounded-full bg-black/40" />
+          </div>
+
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="h-3 w-3 rounded-full bg-cc-lime/70 shadow" />
+          </div>
+        </div>
+      </div>
+
+      <div className="relative z-10 px-5 pb-5">
+        <div className="grid grid-cols-6 gap-2">
+          {[...Array(12)].map((_, idx) => (
+            <div key={idx} className="h-2 rounded-full bg-white/5" />
+          ))}
+        </div>
+        <div className="mt-3 flex items-center justify-between text-[11px] text-white/50">
+          <span>보안 금고 잠금</span>
+          <span className="font-semibold text-white/65">Vault Door</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const VaultMainPanel: React.FC = () => {
   const [vaultModalOpen, setVaultModalOpen] = useState(false);
+  const { user } = useAuth();
 
   const vault = useQuery({
     queryKey: ["vault-status"],
@@ -177,42 +245,133 @@ const VaultMainPanel: React.FC = () => {
 
   return (
     <section className="mx-auto w-full max-w-[980px] space-y-6">
-      <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-lg">
-        <div className="relative bg-casino-dark px-6 py-6">
-          <div className="absolute inset-0 opacity-40">
-            <div className="absolute left-6 top-6 h-16 w-16 rounded-full bg-cc-lime/15 blur-2xl" />
-            <div className="absolute bottom-6 right-6 h-24 w-24 rounded-full bg-cc-lime/10 blur-2xl" />
+      <div className="rounded-3xl border border-white/10 bg-black/40 p-6 shadow-lg">
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-center">
+            <div className="inline-flex items-center gap-2 rounded-full border border-cc-lime/25 bg-black/40 px-5 py-2 text-sm font-extrabold text-cc-lime">
+              <span className="inline-block h-2 w-2 rounded-full bg-cc-lime/70" />
+              XMAS 이벤트 금고
+            </div>
           </div>
 
-          <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div className="min-w-0">
-              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-white/70">Vault</p>
-              <h1 className="mt-2 text-2xl font-extrabold text-white">내 금고</h1>
-              <p className="mt-2 text-sm text-white/70">외부 충전 확인 시 잠긴 금고 금액이 해금되어 보유 머니에 합산됩니다.</p>
+          <div>
+            <h1 className="text-2xl font-extrabold text-white sm:text-3xl">
+              {(user?.nickname || user?.external_id || "플레이어").toString()}님의 활동 금고
+            </h1>
+            <p className="mt-2 text-sm text-white/70">
+              활동에 따라 <span className="font-semibold text-cc-lime">자동으로 적립된</span> 보상 금액이 금고에 있습니다.
+            </p>
+          </div>
 
-              {view.expiresAt ? (
-                <div className="mt-3">
-                  <CountdownTimer expiresAt={view.expiresAt} />
+          <div className="grid gap-4 lg:grid-cols-3">
+            <div className="lg:col-span-2">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="md:col-span-2">
+                  <div className="rounded-2xl border border-white/10 bg-dark-100 shadow-[0_0_15px_rgba(255,255,255,0.02)]">
+                    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-cc-olive/70 to-cc-moss/70 p-6">
+                      <div className="absolute inset-0 opacity-40">
+                        <div className="absolute left-6 top-6 h-16 w-16 rounded-full bg-cc-lime/20 blur-2xl" />
+                        <div className="absolute bottom-6 right-6 h-28 w-28 rounded-full bg-cc-lime/10 blur-2xl" />
+                      </div>
+
+                      <div className="relative z-10 flex flex-wrap items-start justify-between gap-4">
+                        <div>
+                          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/30 px-3 py-1 text-xs font-bold text-white/85">
+                            통합 금고 현황
+                            <span className="rounded-full border border-white/10 bg-white/10 px-2 py-0.5 text-[10px] font-extrabold text-white/70">Phase 1</span>
+                          </div>
+                          <p className="mt-3 text-3xl font-extrabold text-white">{formatWon(view.vaultBalance)}</p>
+                          {view.expiresAt ? (
+                            <div className="mt-2">
+                              <CountdownTimer expiresAt={view.expiresAt} />
+                            </div>
+                          ) : (
+                            <p className="mt-2 text-sm text-white/60">만료 정보 없음</p>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <div className={`rounded-full border border-white/10 bg-black/30 px-3 py-1 text-xs font-extrabold ${view.statusTone}`}>
+                            {view.statusLabel}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setVaultModalOpen(true)}
+                            className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white/90 hover:bg-white/10"
+                          >
+                            금고 안내 보기
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="relative z-10 mt-5">
+                        <div className="grid gap-3 md:grid-cols-2">
+                          <div className="rounded-xl border border-white/10 bg-black/30 p-5">
+                            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">잠긴 금고</p>
+                            <p className="mt-2 text-2xl font-extrabold text-cc-lime">{formatWon(view.vaultBalance)}</p>
+                            <p className="mt-1 text-xs text-white/60">해금 전까지 금액은 잠금 상태입니다.</p>
+                          </div>
+                          <div className="rounded-xl border border-white/10 bg-black/30 p-5">
+                            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">보유 머니</p>
+                            <p className="mt-2 text-2xl font-extrabold text-white">{formatWon(view.cashBalance)}</p>
+                            <p className="mt-1 text-xs text-white/60">해금된 금액은 보유 머니에 합산됩니다.</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              ) : null}
+
+                <div className="md:col-span-2">
+                  <VaultDoorVisual stateLabel={view.statusLabel} accentTone={view.eligible ? "active" : "idle"} />
+                </div>
+              </div>
             </div>
 
-            <div className="flex flex-col gap-2 sm:items-end">
-              <div className={`inline-flex items-center rounded-full border border-white/10 bg-black/30 px-3 py-1 text-xs font-bold ${view.statusTone}`}>
-                {view.statusLabel}
+            <aside className="rounded-2xl border border-white/10 bg-dark-100 p-5">
+              <p className="text-sm font-extrabold text-white">티켓이 부족해요</p>
+              <p className="mt-1 text-xs text-white/60">씨씨카지노 이용 확인 후 금고 해금이 진행됩니다.</p>
+
+              <div className="mt-4 flex flex-col gap-2">
+                <a
+                  href="https://ccc-010.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex w-full items-center justify-center rounded-xl border border-black/15 bg-cc-lime px-4 py-3 text-sm font-extrabold text-black"
+                >
+                  1만원 충전 ↗
+                </a>
+                <a
+                  href="https://ccc-010.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex w-full items-center justify-center rounded-xl border border-white/15 bg-white/8 px-4 py-3 text-sm font-extrabold text-white/90 hover:bg-white/12"
+                >
+                  5만원 충전 ↗
+                </a>
+                <a
+                  href="https://t.me/jm956"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex w-full items-center justify-center rounded-xl border border-white/15 bg-white/6 px-4 py-3 text-sm font-bold text-white/80 hover:bg-white/10"
+                >
+                  실장 텔레 문의
+                </a>
               </div>
-              <button
-                type="button"
-                onClick={() => setVaultModalOpen(true)}
-                className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white/90 hover:bg-white/10"
-              >
-                금고 안내 보기
-              </button>
-            </div>
+
+              <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4">
+                <p className="text-xs font-semibold text-white/80">금고 시스템 안내</p>
+                <ul className="mt-2 space-y-1 text-xs text-white/60">
+                  <li>- 1만원 충전 확인: 5,000원 해금</li>
+                  <li>- 5만원 충전 확인: 전액 해금</li>
+                  <li>- 반영이 늦으면 관리자에게 문의해주세요</li>
+                </ul>
+              </div>
+            </aside>
           </div>
         </div>
 
-        <div className="p-6">
+        <div className="mt-6">
           {vault.isLoading ? (
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="h-[92px] animate-pulse rounded-2xl border border-white/10 bg-white/5" />
@@ -223,21 +382,7 @@ const VaultMainPanel: React.FC = () => {
               <p className="text-sm font-semibold text-white">금고 상태를 불러오지 못했습니다.</p>
               <p className="mt-1 text-xs text-white/60">잠시 후 다시 시도해주세요.</p>
             </div>
-          ) : (
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="rounded-2xl border border-white/10 bg-black/30 p-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/55">잠긴 금고</p>
-                <p className="mt-2 text-2xl font-extrabold text-cc-lime">{formatWon(view.vaultBalance)}</p>
-                <p className="mt-1 text-xs text-white/60">해금 전까지 금액은 잠금 상태입니다.</p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-black/30 p-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/55">보유 머니</p>
-                <p className="mt-2 text-2xl font-extrabold text-white">{formatWon(view.cashBalance)}</p>
-                <p className="mt-1 text-xs text-white/60">해금된 금액은 보유 머니에 합산됩니다.</p>
-              </div>
-            </div>
-          )}
+          ) : null}
 
           {rewardPreview.items?.length ? (
             <div className="mt-4 rounded-2xl border border-white/10 bg-black/25 p-5">
@@ -329,38 +474,10 @@ const VaultMainPanel: React.FC = () => {
         </div>
 
         <aside className="rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
-          <p className="text-sm font-extrabold text-white">티켓이 부족해요</p>
-          <p className="mt-1 text-xs text-white/60">씨씨카지노 이용 확인 후 금고 해금이 진행됩니다.</p>
-
-          <div className="mt-4 flex flex-col gap-2">
-            <a
-              href="https://ccc-010.com"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex w-full items-center justify-center rounded-xl border border-black/15 bg-cc-lime px-4 py-3 text-sm font-extrabold text-black"
-            >
-              1만원 충전 ↗
-            </a>
-            <a
-              href="https://ccc-010.com"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex w-full items-center justify-center rounded-xl border border-white/15 bg-white/8 px-4 py-3 text-sm font-extrabold text-white/90 hover:bg-white/12"
-            >
-              5만원 충전 ↗
-            </a>
-            <a
-              href="https://t.me/jm956"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex w-full items-center justify-center rounded-xl border border-white/15 bg-white/6 px-4 py-3 text-sm font-bold text-white/80 hover:bg-white/10"
-            >
-              실장 텔레 문의
-            </a>
-          </div>
-
+          <p className="text-sm font-extrabold text-white">금고 시스템 안내</p>
+          <p className="mt-1 text-xs text-white/60">안내를 확인하고 해금 조건을 충족하세요.</p>
           <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4">
-            <p className="text-xs font-semibold text-white/80">금고 시스템 안내</p>
+            <p className="text-xs font-semibold text-white/80">기본 규칙</p>
             <ul className="mt-2 space-y-1 text-xs text-white/60">
               <li>- 1만원 충전 확인: 5,000원 해금</li>
               <li>- 5만원 충전 확인: 전액 해금</li>
