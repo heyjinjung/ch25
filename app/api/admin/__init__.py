@@ -19,6 +19,7 @@ from app.api.admin.routes import (
     admin_new_member_dice,
     admin_ui_config,
     admin_ui_copy,
+    admin_vault2,
 )
 
 from app.api.deps import get_current_admin_id
@@ -40,3 +41,4 @@ admin_router.include_router(admin_segment_rules.router)
 admin_router.include_router(admin_new_member_dice.router)
 admin_router.include_router(admin_ui_config.router)
 admin_router.include_router(admin_ui_copy.router)
+admin_router.include_router(admin_vault2.router)

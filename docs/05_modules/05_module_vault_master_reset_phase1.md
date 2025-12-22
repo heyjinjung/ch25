@@ -21,6 +21,11 @@
 - ticket=0에서 열 수 있는 **Vault Modal(안내 모달)** 을 추가했고, 모달 카피는 **DB(app_ui_config)** 기반으로 운영이 daily 변경 가능하도록 엔드포인트를 분리했다.
 - Vault 2.0 상태머신을 위한 DB/서비스/라우트는 **스캐폴딩만** 추가했다(현재 경제/동작 변화 없음).
 
+2025-12-22 추가(이번 작업)
+- Phase 1 기준으로 **`vault_locked_balance`를 단일 기준(source of truth)** 으로 전환했고, `vault_balance`는 **read-only mirror**로만 유지한다.
+- 외부랭킹(deposit delta) 해금 계산/처리를 `admin_external_ranking_service`에서 제거하고, `vault_service`로 **책임을 일원화**했다.
+- Vault2는 (행동 변화 없이) 정책 JSON/상태전환 helper + 이벤트 기록을 확장했고, 전이를 실제로 돌릴 수 있도록 **admin 전용 tick 엔드포인트**를 추가했다.
+
 ---
 
 ## 1) 용어(Phase 1 기준)
@@ -48,24 +53,34 @@ Phase 1 단일 기준(중요)
 ### 2.1 DB(현재)
 
 - `app/models/user.py`
-  - `vault_balance INT NOT NULL DEFAULT 0`
+  - `vault_balance INT NOT NULL DEFAULT 0` (레거시 UI 호환용 mirror)
+  - `vault_locked_balance INT NOT NULL DEFAULT 0` (Phase 1 단일 기준)
+  - `vault_available_balance INT NOT NULL DEFAULT 0` (Phase 2/3 확장용, 현재 v1 경제에는 미사용)
+  - `vault_locked_expires_at DATETIME NULL` (Phase 2/3 확장용, 현재 v1 경로에서는 미사용)
   - `cash_balance INT NOT NULL DEFAULT 0`
   - `vault_fill_used_at DATETIME NULL`
 
 - (스캐폴딩/행동 변화 없음) `app/models/vault2.py`
   - `vault_program`, `vault_status`
+  - 2025-12-22 확장: `expire_policy`, `unlock_rules_json`, `ui_copy_json`, `is_active`, `available_amount`, `progress_json`
 
-> 현재 DB는 locked/available/expires_at을 분리하지 않고, `vault_balance`를 "잠긴 금고" 총액처럼 사용한다.
+> 현재 v1 경제 동작은 여전히 "해금 시 cash로 지급"이며,
+> Phase 1 구현에서는 계산/쓰기 기준을 `vault_locked_balance`로 전환하고 `vault_balance`는 mirror로만 유지한다.
 
 ### 2.2 백엔드 API(현재)
 
 - `app/api/routes/vault.py`
   - `GET /api/vault/status`
-    - 응답: `eligible`, `vault_balance`, `cash_balance`, `vault_fill_used_at`, `seeded`, `expires_at(항상 None)`
+    - 응답: `eligible`, `vault_balance(=mirror)`, `cash_balance`, `vault_fill_used_at`, `seeded`, `expires_at(현재 None)`
   - `POST /api/vault/fill`
     - 신규 eligible 유저에 한해 무료 1회 fill(+5,000)
   - (스캐폴딩/행동 변화 없음) `GET /api/vault/programs`
   - (스캐폴딩/행동 변화 없음) `GET /api/vault/top`
+
+- Vault2 운영 트리거(관리자 전용)
+  - Admin: `POST /admin/api/vault2/tick?limit=500`
+    - 동작: `Vault2Service.apply_transitions()`를 실행해 LOCKED→AVAILABLE (옵션으로 AVAILABLE→EXPIRED) 전이를 적용
+    - 반환: `{ updated: N }`
 
 - UI Copy(운영 daily 변경)
   - Public: `GET /api/ui-copy/ticket0`
@@ -84,19 +99,24 @@ Phase 1 단일 기준(중요)
   - `fill_free_once()`
     - eligible이 아니면 `VAULT_NOT_ELIGIBLE`
     - `vault_fill_used_at`이 있으면 `VAULT_FILL_ALREADY_USED`
-    - `(vault_balance==0 && cash_balance==0)`이면 **10,000 시드 후** +5,000
+    - `(vault_locked_balance==0 && cash_balance==0)`이면 **10,000 시드 후** +5,000
+  - `handle_deposit_increase_signal()`
+    - 외부랭킹 deposit delta 신호를 받아 unlock 계산/적용(locked 감소 + cash 지급)을 **여기서 일원화**
+    - Phase 2/3 준비로 Vault2 `record_unlock_event()`를 함께 기록(경제 변화 없음)
 
 - `app/services/new_member_dice_service.py`
   - 잭팟 실패(outcome=LOSE) 시
-    - `user.vault_balance = max(user.vault_balance, 10_000)` (시드 보장)
+    - `user.vault_locked_balance`를 기준으로 시드 보장 + `vault_balance` mirror는 `VaultService.sync_legacy_mirror()`로만 갱신
 
 - `app/services/admin_external_ranking_service.py`
   - 외부 랭킹 upsert에서 `deposit_amount` 증가 감지
-  - 신규 eligible 유저 + `user.vault_balance > 0`이면
-    - 10,000 증가: 5,000 해금
-    - 50,000 증가: 10,000 해금
-    - `user.vault_balance -= unlock_amount`
-    - `RewardService.grant_point(... reason="VAULT_UNLOCK")`로 `cash_balance`에 반영
+  - 신규 eligible 유저 + `user.vault_locked_balance > 0`이면
+    - unlock 계산/처리 자체는 `VaultService.handle_deposit_increase_signal()`에 위임
+    - `RewardService.grant_point(... reason="VAULT_UNLOCK")`로 `cash_balance`에 반영(기존 경제 유지)
+
+- `app/services/vault2_service.py` (스캐폴딩 + helper)
+  - `accrue_locked()`, `record_unlock_event()` : Phase 2/3 관측/마이그레이션 준비용 이벤트 기록
+  - `apply_transitions()` : LOCKED→AVAILABLE, (옵션) AVAILABLE→EXPIRED 전이 적용 helper
 
 ### 2.4 프론트(현재)
 
@@ -131,7 +151,8 @@ Phase 1 단일 기준(중요)
   - fill은 1회만 성공(시드+5,000)
 
 - `tests/test_external_ranking_vault_unlock.py`
-  - deposit 증가 시 vault 일부 해금 → cash 반영 + 원장 생성
+  - deposit 증가 시 `vault_locked_balance` 일부 해금 → cash 반영 + 원장 생성
+  - `vault_balance` mirror가 locked와 동기화되는지도 함께 검증
 
 ---
 

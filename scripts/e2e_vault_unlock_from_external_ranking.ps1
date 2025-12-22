@@ -3,9 +3,9 @@ param(
   [int]$UserId = 1,
   [int]$VaultSeedAmount = 10000,
   [int]$DepositBaseline = 0,
-  [int]$DepositNew = 1,
-  [string]$MysqlRootPassword = "rootpassword",
-  [string]$MysqlDatabase = "xmas_event",
+  [int]$DepositNew = 50000,
+  [string]$MysqlRootPassword = "root",
+  [string]$MysqlDatabase = "xmas_event_dev",
   [switch]$SkipDuplicateCheck
 )
 
@@ -112,14 +112,32 @@ $lockedBal = [int]($balances -split "\t")[0]
 $mirrorBal = [int]($balances -split "\t")[1]
 $cashBal = [int]($balances -split "\t")[2]
 
-if ($lockedBal -ne 0) {
-  throw "Verification failed: vault_locked_balance is not 0. (vault_locked_balance=$lockedBal)"
+# Phase 1 tier logic (must match VaultService):
+# - Tier A: deposit_delta >= 10,000 => unlock 5,000
+# - Tier B: deposit_delta >= 50,000 => unlock 10,000
+$depositDelta = [int]$DepositNew - [int]$DepositBaseline
+$unlockTarget = 0
+if ($depositDelta -ge 50000) {
+  $unlockTarget = 10000
+} elseif ($depositDelta -ge 10000) {
+  $unlockTarget = 5000
 }
-if ($mirrorBal -ne 0) {
-  throw "Verification failed: vault_balance(mirror) is not 0. (vault_balance=$mirrorBal)"
+
+if ($unlockTarget -le 0) {
+  throw "Deposit delta is too small to trigger unlock. (deposit_delta=$depositDelta)"
 }
-if ($cashBal -lt $VaultSeedAmount) {
-  throw "Verification failed: cash_balance is smaller than expected. (cash_balance=$cashBal, expected >= $VaultSeedAmount)"
+
+$expectedUnlock = [Math]::Min([int]$VaultSeedAmount, [int]$unlockTarget)
+$expectedLockedAfter = [int]$VaultSeedAmount - [int]$expectedUnlock
+
+if ($lockedBal -ne $expectedLockedAfter) {
+  throw "Verification failed: vault_locked_balance mismatch. (vault_locked_balance=$lockedBal, expected=$expectedLockedAfter)"
+}
+if ($mirrorBal -ne $expectedLockedAfter) {
+  throw "Verification failed: vault_balance(mirror) mismatch. (vault_balance=$mirrorBal, expected=$expectedLockedAfter)"
+}
+if ($cashBal -lt $expectedUnlock) {
+  throw "Verification failed: cash_balance is smaller than expected. (cash_balance=$cashBal, expected >= $expectedUnlock)"
 }
 if ([int]$ledgerCnt -ne 1) {
   throw "Verification failed: VAULT_UNLOCK ledger row count is not 1. (count=$ledgerCnt)"
