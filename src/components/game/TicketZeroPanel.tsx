@@ -30,6 +30,18 @@ type UiCta = {
   url: string;
 };
 
+type RewardPreviewItem = {
+  label: string;
+  amount: number | undefined;
+  unit: string | undefined;
+};
+
+type RewardPreviewProgress = {
+  currentPoints: number;
+  nextPoints: number;
+  unitLabel: string;
+};
+
 const TicketZeroPanel: React.FC<Props> = ({ tokenType, onClaimSuccess }) => {
   const { addToast } = useToast();
   const queryClient = useQueryClient();
@@ -85,12 +97,66 @@ const TicketZeroPanel: React.FC<Props> = ({ tokenType, onClaimSuccess }) => {
 
     const note = typeof v?.note === "string" ? v.note : null;
 
+    const rawItems: unknown[] | null = Array.isArray(v?.reward_preview_items)
+      ? (v.reward_preview_items as unknown[])
+      : Array.isArray(v?.rewardPreviewItems)
+        ? (v.rewardPreviewItems as unknown[])
+        : null;
+
+    const rewardPreviewItems: RewardPreviewItem[] | null = rawItems
+      ? rawItems
+          .map((item) => {
+            if (!item || typeof item !== "object") return null;
+            const r = item as Record<string, unknown>;
+            if (typeof r.label !== "string" || !r.label) return null;
+            const amount = typeof r.amount === "number" ? r.amount : undefined;
+            const unit = typeof r.unit === "string" ? r.unit : undefined;
+            return { label: r.label, amount, unit };
+          })
+          .filter((item): item is RewardPreviewItem => item !== null)
+      : null;
+
+    const rawProgress = (v?.reward_preview_progress ?? v?.rewardPreviewProgress) as Record<string, any> | null;
+    const currentPoints = typeof rawProgress?.current_points === "number"
+      ? rawProgress.current_points
+      : typeof rawProgress?.currentPoints === "number"
+        ? rawProgress.currentPoints
+        : null;
+    const nextPoints = typeof rawProgress?.next_points === "number"
+      ? rawProgress.next_points
+      : typeof rawProgress?.nextPoints === "number"
+        ? rawProgress.nextPoints
+        : null;
+    const unitLabel = typeof rawProgress?.unit_label === "string"
+      ? rawProgress.unit_label
+      : typeof rawProgress?.unitLabel === "string"
+        ? rawProgress.unitLabel
+        : "점";
+
+    const rewardPreviewProgress: RewardPreviewProgress | null =
+      typeof currentPoints === "number" && typeof nextPoints === "number" && nextPoints > 0
+        ? { currentPoints, nextPoints, unitLabel }
+        : null;
+
     const primaryCta: UiCta = { label: primaryLabel, url: primaryUrl };
     const secondaryCta: UiCta = { label: secondaryLabel, url: secondaryUrl };
-    return { title, body, primaryCta, secondaryCta, note };
+    return { title, body, primaryCta, secondaryCta, note, rewardPreviewItems, rewardPreviewProgress };
   }, [ui.data?.value]);
 
   const formatWon = (amount: number) => `${amount.toLocaleString("ko-KR")}원`;
+
+  const rewardDeltaLabel = useMemo(() => {
+    if (!config.rewardPreviewProgress) return null;
+    const remaining = Math.max(0, config.rewardPreviewProgress.nextPoints - config.rewardPreviewProgress.currentPoints);
+    return `${remaining.toLocaleString("ko-KR")}${config.rewardPreviewProgress.unitLabel}`;
+  }, [config.rewardPreviewProgress]);
+
+  const rewardProgressPercent = useMemo(() => {
+    if (!config.rewardPreviewProgress) return null;
+    const { currentPoints, nextPoints } = config.rewardPreviewProgress;
+    if (nextPoints <= 0) return 0;
+    return Math.max(0, Math.min(100, Math.round((currentPoints / nextPoints) * 100)));
+  }, [config.rewardPreviewProgress]);
 
   const claimMutation = useMutation({
     mutationFn: () => requestTrialGrant({ token_type: tokenType }),
@@ -135,6 +201,46 @@ const TicketZeroPanel: React.FC<Props> = ({ tokenType, onClaimSuccess }) => {
             <p className="mt-1 text-[clamp(11px,2.2vw,12px)] text-white/60">
               씨씨카지노 이용 확인 시 잠금 금액이 해금됩니다.
             </p>
+
+            {config.rewardPreviewItems?.length ? (
+              <div className="mt-3 rounded-xl border border-white/12 bg-black/20 p-3">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-xs font-bold text-white/80">실제 획득 가능한 보상</p>
+                  {rewardDeltaLabel ? (
+                    <p className="text-[11px] font-semibold text-white/60">다음 보상까지 {rewardDeltaLabel}</p>
+                  ) : null}
+                </div>
+
+                {typeof rewardProgressPercent === "number" ? (
+                  <div className="mt-2">
+                    <div className="h-2 w-full rounded-full bg-white/10">
+                      <div
+                        className="h-2 rounded-full bg-cc-lime"
+                        style={{ width: `${rewardProgressPercent}%` }}
+                        aria-label="다음 보상 진행률"
+                      />
+                    </div>
+                    <div className="mt-1 flex items-center justify-between text-[11px] text-white/55">
+                      <span>{config.rewardPreviewProgress?.currentPoints?.toLocaleString("ko-KR") ?? 0}{config.rewardPreviewProgress?.unitLabel ?? "점"}</span>
+                      <span>{config.rewardPreviewProgress?.nextPoints?.toLocaleString("ko-KR") ?? 0}{config.rewardPreviewProgress?.unitLabel ?? "점"}</span>
+                    </div>
+                  </div>
+                ) : null}
+
+                <div className="mt-2 max-h-[132px] space-y-2 overflow-y-auto pr-1">
+                  {config.rewardPreviewItems.map((item, idx) => (
+                    <div key={`${item.label}-${idx}`} className="flex items-center justify-between gap-3 border-b border-white/10 pb-2 last:border-0 last:pb-0">
+                      <p className="text-sm font-semibold text-white/85">{item.label}</p>
+                      {typeof item.amount === "number" ? (
+                        <p className="text-sm font-extrabold text-cc-lime">
+                          {item.amount.toLocaleString("ko-KR")}{item.unit ?? ""}
+                        </p>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </div>
         )}
 
