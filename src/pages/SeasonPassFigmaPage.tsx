@@ -113,8 +113,14 @@ const LevelCard: React.FC<{ variant: LevelCardVariant }> = ({ variant }) => {
       aria-label="내 레벨 카드"
     >
       <header className="flex items-center gap-4 sm:gap-5">
-        <div className={"relative rounded-full bg-cc-olive/20 " + sizing.avatar}>
-          <div className={"absolute inset-0 flex items-center justify-center font-semibold text-[#d2fd9c] " + sizing.avatarText}>
+        <div className={"relative rounded-full border border-white/15 bg-black/35 " + sizing.avatar}>
+          <div className="absolute inset-[10%] rounded-full bg-black/35" aria-hidden="true" />
+          <div
+            className={
+              "absolute inset-0 flex items-center justify-center font-semibold text-[#d2fd9c] drop-shadow-none " +
+              sizing.avatarText
+            }
+          >
             {displayName.slice(0, 1)}
           </div>
           <div
