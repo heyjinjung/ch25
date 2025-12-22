@@ -9,8 +9,8 @@ export interface AdminDiceConfigPayload {
   win_reward_value: number;
   lose_reward_type: string;
   lose_reward_value: number;
-  draw_reward_type?: string;
-  draw_reward_value?: number;
+  draw_reward_type: string;
+  draw_reward_value: number;
 }
 
 export interface AdminDiceConfig extends AdminDiceConfigPayload {

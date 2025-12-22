@@ -2,6 +2,7 @@
 import { adminApi } from "./httpClient";
 
 export interface AdminRouletteSegmentPayload {
+  id?: number;
   index: number;
   label: string;
   weight: number;

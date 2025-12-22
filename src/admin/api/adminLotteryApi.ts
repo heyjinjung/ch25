@@ -2,6 +2,7 @@
 import { adminApi } from "./httpClient";
 
 export interface AdminLotteryPrizePayload {
+  id?: number;
   label: string;
   weight: number;
   stock?: number | null;
