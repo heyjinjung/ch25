@@ -167,8 +167,17 @@ const TeamBattleMainPanel: React.FC<{ variant: ViewportVariant }> = ({ variant }
     >
       <div className="mt-[20px]">
         <div className="flex items-center gap-3">
-          <div className="relative h-[34px] w-[34px] rounded-full border-[4px]" style={{ borderColor: baseAccent }}>
-            <div className="absolute left-1/2 top-1/2 h-[14px] w-[14px] -translate-x-1/2 -translate-y-1/2 rounded-full" style={{ backgroundColor: baseAccent, opacity: 0.9 }} />
+          <div
+            className="relative flex h-[34px] w-[34px] items-center justify-center rounded-full border-[4px] bg-black/30"
+            style={{ borderColor: baseAccent }}
+          >
+            <img
+              src="/images/flag.svg"
+              alt=""
+              className="h-[16px] w-[16px] invert brightness-200"
+              loading="lazy"
+              aria-hidden="true"
+            />
           </div>
           <p
             className="font-semibold tracking-[-0.4px]"
@@ -181,7 +190,18 @@ const TeamBattleMainPanel: React.FC<{ variant: ViewportVariant }> = ({ variant }
         <div className="mt-[18px] rounded-[10px] border border-white/10 bg-[#394508]/30 px-[18px] py-[16px]">
           <div className="flex items-center justify-between gap-4">
             <div className="min-w-0">
-              <p className="text-[clamp(15px,2.8vw,16px)] font-semibold text-white/90">팀배틀</p>
+              <div className="flex items-center gap-2">
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-[10px] border border-white/15 bg-black/30">
+                  <img
+                    src="/images/moon.svg"
+                    alt=""
+                    className="h-4 w-4 invert brightness-200"
+                    loading="lazy"
+                    aria-hidden="true"
+                  />
+                </span>
+                <p className="text-[clamp(15px,2.8vw,16px)] font-semibold text-white/90">팀배틀</p>
+              </div>
               <p className="mt-1 text-[clamp(13px,2.5vw,14px)] text-white/65">남은 시간</p>
               <p className="mt-1 text-[clamp(20px,3.6vw,24px)] font-semibold text-white">{countdown}</p>
             </div>
@@ -208,10 +228,10 @@ const TeamBattleMainPanel: React.FC<{ variant: ViewportVariant }> = ({ variant }
 
         {myTeamId !== null ? (
           <div className="sticky top-3 z-20 mt-[12px] rounded-[10px] border border-white/10 bg-black/70 px-[18px] py-[14px] backdrop-blur">
-            <p className="text-[clamp(13px,2.6vw,14px)] font-semibold text-white/90">
+            <p className="text-[clamp(13px,2.6vw,15px)] font-semibold text-white/90">
               {myNickname} · <span style={{ color: baseAccent }}>+{myContributionPoints.toLocaleString()}</span>
             </p>
-            <p className="mt-1 text-[clamp(12px,2.6vw,13px)] text-white/65">
+            <p className="mt-1 text-[clamp(12px,2.6vw,15px)] text-white/65">
               {showBehindBanner ? "내가 빠지면 팀이 진다. 지금 한 판만 더!" : "내가 빠지면 팀이 흔들린다. 지금 점수 쌓자"}
             </p>
           </div>
@@ -289,7 +309,7 @@ const TeamBattleMainPanel: React.FC<{ variant: ViewportVariant }> = ({ variant }
           <p className="text-[clamp(15px,2.8vw,16px)] font-semibold" style={{ color: baseAccent }}>
             룰 안내 (핵심)
           </p>
-          <ul className="mt-3 space-y-2 text-[clamp(13px,2.8vw,14px)] text-white/85">
+          <ul className="mt-3 space-y-2 text-[clamp(13px,2.8vw,16px)] text-white/85">
             <li className="flex gap-2">
               <span className="mt-[6px] inline-block h-[6px] w-[6px] rounded-full" style={{ backgroundColor: baseAccent }} />
               <span>참여: 밸런스 기준 자동 배정 (직접 선택 없음)</span>
@@ -345,12 +365,12 @@ const TeamBattleMainPanel: React.FC<{ variant: ViewportVariant }> = ({ variant }
                       <div className="min-w-0">
                         <div className="flex items-center gap-3">
                           <p
-                            className="text-[clamp(14px,2.8vw,15px)] font-semibold"
+                            className="text-[clamp(14px,2.8vw,16px)] font-semibold"
                             style={{ color: idx < 3 ? baseAccent : "rgba(255,255,255,0.85)" }}
                           >
                             #{idx + 1}
                           </p>
-                          <p className="truncate text-[clamp(14px,2.8vw,15px)] font-semibold text-white/90">{row.team_name}</p>
+                          <p className="truncate text-[clamp(14px,2.8vw,16px)] font-semibold text-white/90">{row.team_name}</p>
                           {isMine ? (
                             <span
                               className="rounded-full px-2 py-[3px] text-[clamp(11px,2.6vw,12px)] font-semibold tracking-[-0.2px] text-black"
@@ -360,11 +380,11 @@ const TeamBattleMainPanel: React.FC<{ variant: ViewportVariant }> = ({ variant }
                             </span>
                           ) : null}
                         </div>
-                        <p className="mt-1 text-[clamp(13px,2.6vw,14px)] text-white/60">인원 {row.member_count ?? "-"}명</p>
+                        <p className="mt-1 text-[clamp(13px,2.6vw,16px)] text-white/60">인원 {row.member_count ?? "-"}명</p>
                       </div>
 
                       <div className="shrink-0 text-right">
-                        <p className="text-[clamp(12px,2.6vw,13px)] text-white/60">점수</p>
+                        <p className="text-[clamp(13px,2.6vw,16px)] text-white/60">점수</p>
                         <p className="text-[clamp(16px,3.2vw,18px)] font-bold" style={{ color: baseAccent }}>
                           {row.points.toLocaleString()}
                         </p>

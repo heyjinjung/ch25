@@ -240,6 +240,15 @@ const RoulettePage: React.FC = () => {
           <div className="fixed bottom-6 right-6 z-30 overflow-hidden rounded-2xl border border-white/15 bg-black/75 px-4 py-3 text-white shadow-lg backdrop-blur animate-bounce-in">
             <div className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-cc-orange/80" />
             <div className="flex items-center gap-2 pl-2">
+              <span className="inline-flex h-7 w-7 items-center justify-center rounded-xl border border-white/15 bg-white/10">
+                <img
+                  src="/images/coin.svg"
+                  alt=""
+                  className="h-4 w-4 invert brightness-200"
+                  loading="lazy"
+                  aria-hidden="true"
+                />
+              </span>
               <span className="font-extrabold text-cc-lime">+</span>
               <span className="text-[clamp(18px,4.6vw,22px)] font-extrabold leading-none text-white">
                 <AnimatedNumber value={rewardToast.value} from={0} />
@@ -274,10 +283,28 @@ const RoulettePage: React.FC = () => {
             <div className="pointer-events-none absolute inset-y-0 left-0 w-[2px] bg-gradient-to-b from-cc-orange/70 via-white/10 to-transparent" />
 
             <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-full border border-cc-lime/20 bg-white/8 px-3 py-1 text-[clamp(12px,2.4vw,13px)] font-extrabold text-white/90">
+              <span className="inline-flex items-center gap-2 rounded-full border border-cc-lime/20 bg-white/8 px-3 py-1 text-[clamp(12px,2.4vw,13px)] font-extrabold text-white/90">
+                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-white/15 bg-black/25">
+                  <img
+                    src="/images/flag.svg"
+                    alt=""
+                    className="h-3.5 w-3.5 invert brightness-200"
+                    loading="lazy"
+                    aria-hidden="true"
+                  />
+                </span>
                 {remainingLabel}
               </span>
-              <span className="rounded-full border border-cc-lime/20 bg-white/8 px-3 py-1 text-[clamp(12px,2.4vw,13px)] font-bold text-white/70">
+              <span className="inline-flex items-center gap-2 rounded-full border border-cc-lime/20 bg-white/8 px-3 py-1 text-[clamp(12px,2.4vw,13px)] font-bold text-white/70">
+                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-white/15 bg-black/25">
+                  <img
+                    src="/images/wallet.svg"
+                    alt=""
+                    className="h-3.5 w-3.5 invert brightness-200"
+                    loading="lazy"
+                    aria-hidden="true"
+                  />
+                </span>
                 {tokenLabel}
               </span>
             </div>
@@ -309,7 +336,18 @@ const RoulettePage: React.FC = () => {
                     스핀 중...
                   </>
                 ) : (
-                  (!isSpinning && displayedResult ? "다시 하기" : "럭셔리 룰렛 돌리기")
+                  <>
+                    <span className="inline-flex h-7 w-7 items-center justify-center rounded-xl border border-black/20 bg-black/10">
+                      <img
+                        src="/images/dia.svg"
+                        alt=""
+                        className="h-4 w-4"
+                        loading="lazy"
+                        aria-hidden="true"
+                      />
+                    </span>
+                    {!isSpinning && displayedResult ? "다시 하기" : "럭셔리 룰렛 돌리기"}
+                  </>
                 )}
               </span>
               <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/15 to-transparent transition-transform group-hover:translate-x-full" />

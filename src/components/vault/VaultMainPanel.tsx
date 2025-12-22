@@ -512,8 +512,8 @@ const VaultMainPanel: React.FC = () => {
         </div>
       </div>
 
-      <section className="grid gap-3 lg:grid-cols-3">
-        <div className="rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl lg:col-span-2">
+      <section className="grid gap-3">
+        <div className="rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
           <div className="flex items-start justify-between gap-3">
             <div>
               <div className="flex items-center gap-2">
@@ -569,30 +569,6 @@ const VaultMainPanel: React.FC = () => {
             ) : null}
           </div>
         </div>
-
-        <aside className="rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
-          <div className="flex items-center gap-2">
-            <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-white/10">
-              <img
-                src="/images/clip-path-group.svg"
-                alt=""
-                className="h-5 w-5 opacity-90"
-                loading="lazy"
-                aria-hidden="true"
-              />
-            </span>
-            <p className="text-sm font-extrabold text-white">금고 시스템 안내</p>
-          </div>
-          <p className="mt-1 text-xs text-white/60">안내를 확인하고 해금 조건을 충족하세요.</p>
-          <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4">
-            <p className="text-xs font-semibold text-white/80">기본 규칙</p>
-            <ul className="mt-2 space-y-1 text-xs text-white/60">
-              <li>- 1만원 충전 확인: 5,000원 해금</li>
-              <li>- 5만원 충전 확인: 전액 해금</li>
-              <li>- 반영이 늦으면 관리자에게 문의해주세요</li>
-            </ul>
-          </div>
-        </aside>
       </section>
 
       <VaultModal open={vaultModalOpen} onClose={() => setVaultModalOpen(false)} />

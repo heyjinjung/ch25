@@ -72,7 +72,7 @@ const LevelCard: React.FC<{ variant: LevelCardVariant }> = ({ variant }) => {
     variant === "desktop"
       ? {
           maxW: "w-full max-w-[900px]",
-          pad: "px-[clamp(34px,3.4vw,56px)] py-[clamp(30px,3.4vw,50px)]",
+          pad: "px-[10px] py-[clamp(30px,3.4vw,50px)]",
           avatar: "h-[clamp(92px,6.4vw,124px)] w-[clamp(92px,6.4vw,124px)]",
           avatarText: "text-[clamp(28px,3vw,38px)]",
           badge: "h-[clamp(36px,3vw,46px)] w-[clamp(36px,3vw,46px)] text-[clamp(13px,1.8vw,15px)]",
@@ -82,7 +82,7 @@ const LevelCard: React.FC<{ variant: LevelCardVariant }> = ({ variant }) => {
       : variant === "tablet"
         ? {
             maxW: "w-full max-w-[1024px]",
-            pad: "px-[clamp(32px,3.8vw,52px)] py-[clamp(28px,3.8vw,46px)]",
+            pad: "px-[10px] py-[clamp(28px,3.8vw,46px)]",
             avatar: "h-[clamp(86px,7.4vw,118px)] w-[clamp(86px,7.4vw,118px)]",
             avatarText: "text-[clamp(26px,3.2vw,34px)]",
             badge: "h-[clamp(34px,3.4vw,44px)] w-[clamp(34px,3.4vw,44px)] text-[clamp(12px,2vw,14px)]",
@@ -91,7 +91,7 @@ const LevelCard: React.FC<{ variant: LevelCardVariant }> = ({ variant }) => {
           }
         : {
             maxW: "w-full max-w-[980px]",
-            pad: "px-[clamp(26px,7vw,48px)] py-[clamp(28px,7vw,46px)]",
+            pad: "px-[10px] py-[clamp(28px,7vw,46px)]",
             avatar: "h-[clamp(82px,18vw,116px)] w-[clamp(82px,18vw,116px)]",
             avatarText: "text-[clamp(25px,5.8vw,34px)]",
             badge: "h-[clamp(32px,6.6vw,42px)] w-[clamp(32px,6.6vw,42px)] text-[clamp(12px,3.6vw,14px)]",
@@ -150,15 +150,48 @@ const LevelCard: React.FC<{ variant: LevelCardVariant }> = ({ variant }) => {
       <div className={"mt-8 flex gap-4 " + (isMobile ? "flex-col" : "flex-row")}>
         <div className={"rounded-[6px] border border-black/15 bg-cc-olive/20 px-5 py-4 text-center " + (isMobile ? "w-full" : "flex-1")}>
           <p className={"font-bold text-[#d2fd9c] " + sizing.statNumber}>{derived.totalStamps}</p>
-          <p className="mt-1 text-[clamp(13px,2.8vw,14px)] text-white/85">완료한 미션</p>
+          <div className="mt-1 flex items-center justify-center gap-2 text-[clamp(13px,2.8vw,14px)] text-white/85">
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-[10px] border border-white/15 bg-black/25">
+              <img
+                src="/images/flag.svg"
+                alt=""
+                className="h-4 w-4 invert brightness-200"
+                loading="lazy"
+                aria-hidden="true"
+              />
+            </span>
+            완료한 미션
+          </div>
         </div>
         <div className={"rounded-[6px] border border-black/15 bg-cc-olive/20 px-5 py-4 text-center " + (isMobile ? "w-full" : "flex-1")}>
           <p className={"font-bold text-[#d2fd9c] " + sizing.statNumber}>{derived.claimedBadges}</p>
-          <p className="mt-1 text-[clamp(13px,2.8vw,14px)] text-white/85">획득한 뱃지</p>
+          <div className="mt-1 flex items-center justify-center gap-2 text-[clamp(13px,2.8vw,14px)] text-white/85">
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-[10px] border border-white/15 bg-black/25">
+              <img
+                src="/images/coin.svg"
+                alt=""
+                className="h-4 w-4 invert brightness-200"
+                loading="lazy"
+                aria-hidden="true"
+              />
+            </span>
+            획득한 뱃지
+          </div>
         </div>
         <div className={"rounded-[6px] border border-black/15 bg-cc-olive/20 px-5 py-4 text-center " + (isMobile ? "w-full" : "flex-1")}>
           <p className={"font-bold text-[#d2fd9c] " + sizing.statNumber}>{derived.currentXp.toLocaleString()}</p>
-          <p className="mt-1 text-[clamp(13px,2.8vw,14px)] text-white/85">총 획득 XP</p>
+          <div className="mt-1 flex items-center justify-center gap-2 text-[clamp(13px,2.8vw,14px)] text-white/85">
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-[10px] border border-white/15 bg-black/25">
+              <img
+                src="/images/dia.svg"
+                alt=""
+                className="h-4 w-4 invert brightness-200"
+                loading="lazy"
+                aria-hidden="true"
+              />
+            </span>
+            총 획득 XP
+          </div>
         </div>
       </div>
 
@@ -176,12 +209,25 @@ const SeasonPassMainPanel: React.FC = () => {
     <div className="landing-font w-full">
       <div className="mx-auto w-full px-4 md:px-8">
         <div className="pt-2">
-          <p className="text-[clamp(15px,2.8vw,21px)] font-medium leading-[1.15] tracking-[-0.2px]" style={{ color: baseAccent }}>
-            지민이와 함께하는 겨울 시즌 패스
-          </p>
-          <h1 className="mt-2 text-[clamp(34px,6vw,60px)] font-bold leading-[1.1] tracking-[0.2px]" style={{ color: baseAccent }}>
-            내 레벨 확인
-          </h1>
+          <div className="flex items-center gap-3">
+            <span className="inline-flex h-10 w-10 items-center justify-center rounded-[14px] border border-white/15 bg-black/25">
+              <img
+                src="/images/dia.svg"
+                alt=""
+                className="h-5 w-5 invert brightness-200"
+                loading="lazy"
+                aria-hidden="true"
+              />
+            </span>
+            <div>
+              <p className="text-[clamp(15px,2.8vw,21px)] font-medium leading-[1.15] tracking-[-0.2px]" style={{ color: baseAccent }}>
+                지민이와 함께하는 겨울 시즌 패스
+              </p>
+              <h1 className="mt-2 text-[clamp(34px,6vw,60px)] font-bold leading-[1.1] tracking-[0.2px]" style={{ color: baseAccent }}>
+                내 레벨 확인
+              </h1>
+            </div>
+          </div>
         </div>
 
         <div className="mt-8 flex w-full justify-center">
