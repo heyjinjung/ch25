@@ -28,6 +28,8 @@ def status(db: Session = Depends(get_db), user_id: int = Depends(get_current_use
         expires_at=getattr(user, "vault_locked_expires_at", None),
         recommended_action=None,
         cta_payload=None,
+        program_key=service.PROGRAM_KEY,
+        unlock_rules_json=service.phase1_unlock_rules_json() if eligible else None,
     )
 
 

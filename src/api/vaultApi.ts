@@ -12,6 +12,8 @@ interface BackendVaultStatusResponse {
   readonly expires_at?: string | null;
   readonly recommended_action?: string | null;
   readonly cta_payload?: Record<string, unknown> | null;
+  readonly program_key?: string | null;
+  readonly unlock_rules_json?: Record<string, unknown> | null;
 }
 
 export interface VaultStatusResponse {
@@ -25,6 +27,10 @@ export interface VaultStatusResponse {
   readonly expiresAt?: string | null;
   readonly recommendedAction?: string | null;
   readonly ctaPayload?: Record<string, unknown> | null;
+
+  // Phase 2/3 rollout helpers
+  readonly programKey?: string | null;
+  readonly unlockRulesJson?: Record<string, unknown> | null;
 }
 
 export const getVaultStatus = async (): Promise<VaultStatusResponse> => {
@@ -36,7 +42,7 @@ export const getVaultStatus = async (): Promise<VaultStatusResponse> => {
     eligible: data.eligible,
     // Keep legacy name but prefer source-of-truth locked balance when available
     vaultBalance: locked,
-    lockedBalance: data.locked_balance ?? null,
+    lockedBalance: data.locked_balance ?? undefined,
     availableBalance: available,
     cashBalance: data.cash_balance ?? 0,
     vaultFillUsedAt: data.vault_fill_used_at ?? null,
@@ -44,5 +50,8 @@ export const getVaultStatus = async (): Promise<VaultStatusResponse> => {
     expiresAt: data.expires_at ?? null,
     recommendedAction: data.recommended_action ?? null,
     ctaPayload: (data.cta_payload as Record<string, unknown> | null) ?? null,
+
+    programKey: data.program_key ?? null,
+    unlockRulesJson: (data.unlock_rules_json as Record<string, unknown> | null) ?? null,
   };
 };

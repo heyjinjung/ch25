@@ -32,6 +32,26 @@ class VaultService:
     VAULT_TIER_B_MIN_DELTA = 50_000
     VAULT_TIER_B_UNLOCK = 10_000
 
+    PROGRAM_KEY = "NEW_MEMBER_VAULT"
+
+    @classmethod
+    def phase1_unlock_rules_json(cls) -> dict:
+        """Return current Phase 1 unlock rules as JSON for UI.
+
+        This is intentionally derived from code constants so the server remains the source of truth,
+        while the UI can render a clear "다음 해금 조건" line.
+        """
+
+        return {
+            "version": 1,
+            "trigger": "EXTERNAL_RANKING_DEPOSIT_INCREASE",
+            "tiers": [
+                {"min_deposit_delta": cls.VAULT_TIER_A_MIN_DELTA, "unlock_amount": cls.VAULT_TIER_A_UNLOCK},
+                {"min_deposit_delta": cls.VAULT_TIER_B_MIN_DELTA, "unlock_amount": cls.VAULT_TIER_B_UNLOCK},
+            ],
+            "notes": "unlock_amount는 vault_locked_balance를 초과할 수 없으며 min(locked, unlock_target)로 적용됨",
+        }
+
     @staticmethod
     def sync_legacy_mirror(user: User) -> None:
         # `vault_balance` is a legacy mirror for UI compatibility.

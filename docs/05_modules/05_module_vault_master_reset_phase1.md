@@ -26,6 +26,14 @@
 - 외부랭킹(deposit delta) 해금 계산/처리를 `admin_external_ranking_service`에서 제거하고, `vault_service`로 **책임을 일원화**했다.
 - Vault2는 (행동 변화 없이) 정책 JSON/상태전환 helper + 이벤트 기록을 확장했고, 전이를 실제로 돌릴 수 있도록 **admin 전용 tick 엔드포인트**를 추가했다.
 
+2025-12-23 추가(이번 작업)
+- `GET /api/vault/status` 응답을 Phase 1 기준으로 확장했다.
+  - `locked_balance`, `available_balance`, `expires_at`, `recommended_action`, `cta_payload`
+  - Phase2/3 확장 발판으로 `program_key`, `unlock_rules_json`(룰 기반 UI 표시용)까지 옵션 필드로 추가
+- Phase 1 최소 만료 로직을 실제 v1 경로에 연결했다.
+  - locked가 생기면 `vault_locked_expires_at = now + 24h`를 세팅하고, 만료되면 locked를 0으로 정리
+  - (주의) 아직 “locked→available 전이”를 user 컬럼 기반으로 실제로 돌리지는 않음(현재 v1 경제는 해금 시 cash로 지급 유지)
+
 ---
 
 ## 1) 용어(Phase 1 기준)
@@ -71,7 +79,15 @@ Phase 1 단일 기준(중요)
 
 - `app/api/routes/vault.py`
   - `GET /api/vault/status`
-    - 응답: `eligible`, `vault_balance(=mirror)`, `cash_balance`, `vault_fill_used_at`, `seeded`, `expires_at(현재 None)`
+    - 응답(Phase 1 + 호환):
+      - `eligible`
+      - `vault_balance` (레거시 호환용 mirror)
+      - `locked_balance` (source of truth)
+      - `available_balance` (확장용: 현재 v1 경제에서는 실사용 안 함)
+      - `expires_at` (locked 만료 시각)
+      - `cash_balance`, `vault_fill_used_at`, `seeded`
+      - `recommended_action`, `cta_payload` (현재는 null)
+      - `program_key`, `unlock_rules_json` (룰 기반 UI 표시용; eligible일 때만 내려줌)
   - `POST /api/vault/fill`
     - 신규 eligible 유저에 한해 무료 1회 fill(+5,000)
   - (스캐폴딩/행동 변화 없음) `GET /api/vault/programs`
@@ -122,7 +138,10 @@ Phase 1 단일 기준(중요)
 
 - `src/api/vaultApi.ts`
   - `getVaultStatus()` → `GET /api/vault/status`
-  - 응답 매핑: `vaultBalance`, `cashBalance`, `vaultFillUsedAt`, `expiresAt`
+  - 응답 매핑(호환 유지):
+    - `vaultBalance`: `locked_balance` 우선(없으면 `vault_balance` fallback)
+    - `expiresAt`: `expires_at`
+    - 확장 필드: `lockedBalance`, `availableBalance`, `recommendedAction`, `ctaPayload` (필요 시 UI에서 사용)
 
 - `src/pages/HomePage.tsx`
   - `useQuery(['vault-status'])`로 조회
@@ -256,7 +275,8 @@ Phase 1 단일 기준(중요)
 
 ### 5.4 “신규회원 주사위로 시드(10,000)”
 
-- `NewMemberDiceService.play()`의 LOSE 분기에서 `vault_balance` 하한을 10,000으로 올림
+- `NewMemberDiceService.play()`의 LOSE 분기에서 `vault_locked_balance` 하한을 10,000으로 올림
+- 이 시점에 Phase 1 만료 시각(`vault_locked_expires_at`)도 함께 세팅됨(단일 24h)
 
 ---
 
@@ -317,7 +337,9 @@ Phase 1에서는 옵션 A로 가고, v1.1 이후 옵션 B로 확장하는 것이
 - 해금(locked → available)
   - `admin_external_ranking_service`는 "입금 발생 여부"만을 신호로 제공한다.
   - 해금 계산 로직(얼마나/어떻게 해금할지)은 `vault_service`로 일원화한다.
-  - 결과 적용은 `vault_locked_balance`를 깎고 `vault_available_balance`를 올린다.
+  - (설계상 목표) 결과 적용은 `vault_locked_balance`를 깎고 `vault_available_balance`를 올리는 구조가 정석이다.
+  - (현재 v1 경제 구현) 해금은 `vault_locked_balance`를 줄이고, 해금액은 `cash_balance`로 지급한다.
+    - `vault_available_balance`는 Phase 2/3 전환을 위한 컬럼으로 유지(현재 v1 경제에서는 실사용 안 함)
   - Phase 1 스펙의 unlock 단위/비율(예: 1콩당 15,000)은 정책 결정 후 `vault_service`에 반영
 
 - 만료(expire)
@@ -410,31 +432,52 @@ Phase 1에서는 옵션 A로 가고, v1.1 이후 옵션 B로 확장하는 것이
 이 문서에 이미 적혀있듯 Vault2에는 `unlock_rules_json` 같은 확장 자리가 있음.
 VIP/복귀까지 가려면, 룰을 서버에서 결정하고 프론트는 “표시만” 하게 만드는 게 운영/버그 측면에서 안전해.
 
+---
 
-결론부터 말하면 “문서에 적힌 Phase 1 전체(locked→available→expired + 24h 만료 + 상태/CTA 확장)”가 백/프론트/API/스키마/DB까지 ‘완성’된 상태는 아니고, “일부는 구현 완료 + 일부는 스캐폴딩(뼈대만)” 상태예요.
+## 13) 현재 상태 업데이트(2025-12-23)
 
-구현된 것(코드 기준으로 “돌아감”)
+### 13.1 DB/마이그레이션 적용 상태
 
-DB/스키마(코드·마이그레이션 준비됨): user 테이블에 Phase 1 컬럼 추가 마이그레이션이 존재함
-20251221_0026_add_vault_phase1_locked_columns.py
-모델에도 컬럼이 실제로 있음: user.py
-해금 로직(Phase 1 전제 일부): 계산 기준을 vault_locked_balance로 두고, vault_balance를 mirror로 동기화하는 로직이 실제로 구현돼 있음
-vault_service.py
-외부랭킹 deposit delta 훅 위임: 외부랭킹 upsert에서 deposit 증가를 감지하고, 해금 처리를 VaultService.handle_deposit_increase_signal()로 위임함
-admin_external_ranking_service.py
-Vault2 스캐폴딩 + admin tick 엔드포인트: Vault2 테이블/서비스/관리자 tick 라우트가 실제로 있음(전이 helper 포함)
-모델/서비스: vault2.py, vault2_service.py
-관리자 tick: admin_vault2.py (라우터도 include 되어 있음)
-아직 “문서의 Phase 1 목표대로 전부 구현”은 아닌 것(핵심 차이)
+- 도커 DB 기준 Alembic 적용 리비전: `20251222_0001 (head)`
+- DB에는 아래 스키마가 실제로 반영되어 있음
+  - `user.vault_locked_balance`, `user.vault_available_balance`, `user.vault_locked_expires_at`
+  - `vault_program`, `vault_status` + `unlock_rules_json` 등 확장 컬럼
 
-Public API /api/vault/status가 Phase 1 필드를 안 내려줌: 응답이 여전히 vault_balance 중심이고 expires_at도 항상 None으로 내려가요.
-라우트: vault.py
-스키마: vault.py
-문서 7.2에서 말한 locked_balance/available_balance/recommended_action/cta_payload 확장은 현재 스키마/응답에 없음
-프론트도 Phase 1 확장필드를 소비하지 않음(현재로선 받을 게 없음): 프론트는 vault_balance, cash_balance, expires_at만 매핑하고 있고, 서버가 expires_at=null이라 만료 기반 UX를 “서버 진실”로 보여줄 수는 없어요.
-vaultApi.ts
-24h 만료(locked 만료) 로직이 v1(유저 balance) 경로에는 실제로 안 돌아감: vault_locked_expires_at 컬럼은 있지만, 신규회원 주사위 등 v1 흐름에서 만료시각을 세팅/만료처리하는 코드가 현재 보이지 않아요.
-예: new_member_dice_service.py에서는 locked를 10,000으로 올리지만 expires는 세팅 안 함
-DB에 “적용까지 완료”됐냐는 부분(중요)
+### 13.2 API 응답 확인 방법(Windows PowerShell)
 
-레포에는 마이그레이션 파일이 있으니 구현(코드/스키마 정의)은 되어 있는데, 실제 DB에 컬럼이 생겼는지는 alembic upgrade가 실행돼서 해당 리비전이 적용됐는지에 따라 달라요.
+PowerShell에서는 `curl | head`가 기대대로 안 동작할 수 있으니, 아래처럼 확인하는 걸 권장:
+
+```powershell
+Invoke-RestMethod -Uri "http://localhost:8000/api/vault/status" | ConvertTo-Json -Depth 10
+```
+
+현재 응답에는(eligible일 때) `program_key`, `unlock_rules_json`까지 포함되어,
+프론트가 "다음 해금 조건"을 룰 기반으로 자동 표시할 수 있는 최소 기반이 마련됨.
+
+### 13.3 아직 남아있는 Phase 1/2 간 갭(정리)
+
+- Phase 1 최소 만료(locked 24h 만료)는 user 컬럼 기반으로 연결됨
+- 하지만 user 컬럼 기반의 “locked→available 전이(available_balance 사용)”는 아직 v1 경제에 반영하지 않음
+  - 현 경제는 “해금 시 cash 지급”을 유지
+
+---
+
+## 14) 다음 단계(Phase 2/3): 룰(JSON)로 “다음 해금 조건” 자동 표시
+
+목표
+- 프론트는 하드코딩 없이, 서버가 준 룰(JSON)을 그대로 한 줄로 렌더한다.
+
+현재 상태
+- `/api/vault/status`에 이미 `program_key`, `unlock_rules_json`이 옵션 필드로 포함됨.
+- 지금은 Phase 1 룰을 코드에서 생성해 내려주지만, Phase 2/3에서는 아래처럼 “DB 룰”로 전환하면 운영 난이도가 내려간다.
+
+권장 전환(Phase 2)
+- source of truth를 `vault_program.unlock_rules_json`로 옮긴다.
+  - `/api/vault/status`는 `program_key`로 프로그램을 찾고 `unlock_rules_json`을 그대로 내려준다.
+- 프론트는 `unlock_rules_json.tiers[]`를 읽어 “다음 해금 조건: …” 한 줄을 구성한다.
+
+Phase 3 확장
+- 세그먼트(VIP/일반/복귀)별로 다른 룰을 쓰려면,
+  - program을 세그먼트별로 분리하거나
+  - 룰 JSON에 segment 키를 추가하고 서버가 유저 세그먼트를 판정해 맞는 룰만 내려준다.
+

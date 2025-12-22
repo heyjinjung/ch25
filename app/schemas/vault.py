@@ -26,6 +26,10 @@ class VaultStatusResponse(BaseModel):
     recommended_action: str | None = None
     cta_payload: dict[str, Any] | None = None
 
+    # Phase 2/3 rollout helpers (optional, for rule-driven UI)
+    program_key: str | None = None
+    unlock_rules_json: dict[str, Any] | None = None
+
 
 class VaultFillResponse(BaseModel):
     eligible: bool
