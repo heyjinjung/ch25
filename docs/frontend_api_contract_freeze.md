@@ -218,4 +218,27 @@
   - API 호출 모듈(`src/api/*`)과 토큰 인터셉터
   - `RequireAuth` + `LoginPage`의 from 리다이렉트 로직
 
+---
+
+## 9) 금고 API (신규회원 금고 퍼널)
+
+목적: 신규회원 퍼널에서 “잠긴 금고(vault) → 해금 후 보유 머니(cash)” 흐름을 UI가 안정적으로 표시하기 위한 최소 계약.
+
+### GET /api/vault/status
+프론트가 사용하는 필드(중요)
+- `eligible: boolean` (프로모션 대상 여부/해금 가능 상태 판단에 사용)
+- `vault_balance: number` (잠긴 금고 잔액)
+- `cash_balance: number` (해금 후 보유 머니)
+- `vault_fill_used_at?: string | null` (무료 채우기 1회 사용 여부)
+- `expires_at?: string | null` (선택; 만료 카운트다운 표시에 사용)
+
+근거 구현
+- [src/api/vaultApi.ts](src/api/vaultApi.ts)
+
+메모(정책 설명 / UI 이해용)
+- 해금 금액은 “현재 vault_balance 전액” 기준으로 처리되는 것으로 가정하고 UI를 구성한다.
+- 세부 정책/운영 체크리스트는 아래 문서에 있으며, 프론트는 우선 위 필드 계약만 고정한다.
+  - [docs/06_ops/new_member_vault_funnel_implementation_checklist_v1.0.md](docs/06_ops/new_member_vault_funnel_implementation_checklist_v1.0.md)
+
+
 이 문서의 목적은 “UI 리뉴얼” 작업이 백엔드를 흔들지 않도록 계약을 명확히 하는 것이다.

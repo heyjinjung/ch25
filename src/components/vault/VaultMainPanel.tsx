@@ -286,6 +286,21 @@ const VaultMainPanel: React.FC = () => {
             <p className="mt-2 text-sm text-white/70">
               활동에 따라 <span className="font-semibold text-secondary-200">자동으로 적립된</span> 보상 금액이 금고에 있습니다.
             </p>
+
+            <div className="mt-4 rounded-2xl border border-white/10 bg-black/25 p-4 text-white/75">
+              <p className="text-[12px] font-bold uppercase tracking-[0.22em] text-white/70">금고 해금 규칙</p>
+              <ul className="mt-2 space-y-1 text-[clamp(13px,2.6vw,14px)]">
+                <li>
+                  <span className="font-semibold text-white/85">대상</span>: 신규 회원 프로모션 대상(상태가 “해금 대기”로 표시됩니다)
+                </li>
+                <li>
+                  <span className="font-semibold text-white/85">해금 금액</span>: “잠긴 금고” 금액 <span className="font-semibold text-secondary-200">전액</span>
+                </li>
+                <li>
+                  <span className="font-semibold text-white/85">해금 조건</span>: 씨씨카지노 이용 확인(충전/입금) 후 보유 머니로 합산
+                </li>
+              </ul>
+            </div>
           </div>
 
           <div className="grid gap-4 lg:grid-cols-3">
