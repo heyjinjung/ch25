@@ -564,60 +564,6 @@ const FAQSection: React.FC = () => {
   );
 };
 
-const Footer: React.FC = () => {
-  return (
-    <footer className="bg-[#282d1a] px-4 py-10 text-white md:px-8 lg:px-12">
-      <div className="mx-auto max-w-screen-xl">
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
-          <div>
-            <h3 className="mb-4 text-xl font-bold">CC카지노 이벤트</h3>
-            <p className="mb-4 text-gray-300">빠르게 플레이하고 보상을 확인하세요</p>
-          </div>
-          <div>
-            <h3 className="mb-4 text-lg font-bold">바로가기</h3>
-            <ul className="space-y-2 text-gray-300">
-              <li><a className="hover:text-[#d2fd9c]" href="#">이용 가이드</a></li>
-              <li><a className="hover:text-[#d2fd9c]" href="#">자주 묻는 질문</a></li>
-              <li><a className="hover:text-[#d2fd9c]" href="#">문의하기</a></li>
-            </ul>
-          </div>
-          <div>
-            <h3 className="mb-4 text-lg font-bold">Contact</h3>
-            <ul className="space-y-2 text-gray-300">
-              <li className="flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#d2fd9c]" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" />
-                  <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z" />
-                </svg>
-                <a className="hover:text-[#d2fd9c]" href="#">실장텔레그램</a>
-              </li>
-              <li className="flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#d2fd9c]" viewBox="0 0 20 20" fill="currentColor">
-                  <path
-                    fillRule="evenodd"
-                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                <a className="hover:text-[#d2fd9c]" href="#">지민공지채널</a>
-              </li>
-            </ul>
-           </div>
-        </div>
-        <div className="mt-8 border-t border-gray-700 pt-6 text-sm text-gray-400">
-          <p>이벤트 참여 및 보상 정책은 상황에 따라 변경될 수 있습니다. 만 19세 이상 이용 권장 / 과몰입 주의</p>
-          <div className="mt-4 flex flex-col justify-between gap-4 md:flex-row">
-            <p>&copy; 2025 CC카지노 이벤트. All rights reserved.</p>
-            <div className="flex flex-wrap gap-4">
-              <a className="hover:text-[#d2fd9c]" href="#">Contact</a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </footer>
-  );
-};
-
 const GuidePage: React.FC = () => {
   return (
     <GamePageShell title="홈페이지 가이드" subtitle="3분 만에 시작하는 온보딩">
@@ -631,7 +577,6 @@ const GuidePage: React.FC = () => {
         <PointSystemSection />
         <QuickGuideSection />
         <FAQSection />
-        <Footer />
       </div>
     </GamePageShell>
   );

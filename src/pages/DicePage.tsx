@@ -105,10 +105,10 @@ const DicePage: React.FC = () => {
         )}
 
         <div className="flex flex-wrap items-center justify-center gap-2">
-          <span className="rounded-full border border-cc-lime/20 bg-white/8 px-3 py-1 text-[clamp(12px,2.4vw,13px)] font-bold text-white/90">
+          <span className="rounded-full border border-cc-lime/30 bg-white/12 px-3 py-1 text-[clamp(14px,2.4vw,16px)] font-bold text-white">
             {remainingLabel}
           </span>
-          <span className="rounded-full border border-cc-lime/20 bg-white/8 px-3 py-1 text-[clamp(12px,2.4vw,13px)] font-bold text-white/70">
+          <span className="rounded-full border border-cc-lime/30 bg-white/12 px-3 py-1 text-[clamp(14px,2.4vw,16px)] font-bold text-white/90">
             {tokenLabel}
           </span>
         </div>

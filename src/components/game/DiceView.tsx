@@ -58,7 +58,7 @@ const DiceView: React.FC<DiceViewProps> = ({ userDice, dealerDice, result, isRol
       <div className="grid gap-6 sm:grid-cols-2">
         {/* User dice */}
         <div className="rounded-3xl border border-white/15 bg-white/5 p-5 text-center shadow-[0_14px_40px_rgba(0,0,0,0.55)] sm:p-6">
-          <p className="mb-4 text-[clamp(12px,2.6vw,13px)] font-extrabold uppercase tracking-[0.35em] text-cc-lime/90">👤 나의 주사위</p>
+          <p className="mb-4 text-[clamp(14px,2.6vw,16px)] font-extrabold uppercase tracking-[0.35em] text-cc-lime">👤 나의 주사위</p>
           <div className="flex justify-center gap-3">
             {userDice.length > 0 ? (
               userDice.map((val, i) => <DiceFace key={i} value={val} isRolling={isRolling} />)
@@ -74,7 +74,7 @@ const DiceView: React.FC<DiceViewProps> = ({ userDice, dealerDice, result, isRol
 
         {/* Dealer dice */}
         <div className="rounded-3xl border border-white/15 bg-white/5 p-5 text-center shadow-[0_14px_40px_rgba(0,0,0,0.55)] sm:p-6">
-          <p className="mb-4 text-[clamp(12px,2.6vw,13px)] font-extrabold uppercase tracking-[0.35em] text-white/70">🎰 딜러 주사위</p>
+          <p className="mb-4 text-[clamp(14px,2.6vw,16px)] font-extrabold uppercase tracking-[0.35em] text-white/90">🎰 딜러 주사위</p>
           <div className="flex justify-center gap-3">
             {dealerDice.length > 0 ? (
               dealerDice.map((val, i) => <DiceFace key={i} value={val} isRolling={isRolling} />)

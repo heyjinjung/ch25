@@ -265,11 +265,11 @@ const VaultMainPanel: React.FC = () => {
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-center">
             <div className="inline-flex items-center gap-2 rounded-full border border-secondary-300/35 bg-black/25 px-5 py-2 text-sm font-extrabold text-secondary-200">
-              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-white/10 bg-white/10">
+              <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/10">
                 <img
                   src="/images/coin.svg"
                   alt=""
-                  className="h-4 w-4 opacity-90"
+                  className="h-4 w-auto max-w-4 object-contain invert brightness-200 contrast-125"
                   loading="lazy"
                   aria-hidden="true"
                 />
@@ -293,9 +293,9 @@ const VaultMainPanel: React.FC = () => {
                 <div className="md:col-span-2">
                   <div className="rounded-2xl border border-white/10 bg-dark-100 shadow-[0_0_15px_rgba(255,255,255,0.03)]">
                     <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-cc-olive/70 to-cc-moss/70 p-6">
-                      <div className="absolute inset-0 opacity-40">
-                        <div className="absolute left-6 top-6 h-16 w-16 rounded-full bg-secondary-400/20 blur-2xl" />
-                        <div className="absolute bottom-6 right-6 h-28 w-28 rounded-full bg-secondary-300/12 blur-2xl" />
+                      <div className="absolute inset-0 opacity-55">
+                        <div className="absolute left-6 top-6 h-16 w-16 rounded-full bg-secondary-200/35 blur-2xl" />
+                        <div className="absolute bottom-6 right-6 h-28 w-28 rounded-full bg-secondary-100/25 blur-2xl" />
                         <img
                           src="/images/money.svg"
                           alt=""
@@ -308,11 +308,11 @@ const VaultMainPanel: React.FC = () => {
                       <div className="relative z-10 flex flex-wrap items-start justify-between gap-4">
                         <div>
                           <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/25 px-3 py-1 text-xs font-bold text-white/85">
-                            <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-white/10 bg-white/10">
+                            <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/10">
                               <img
                                 src="/images/wallet.svg"
                                 alt=""
-                                className="h-4 w-4 opacity-90"
+                                className="h-4 w-auto max-w-4 object-contain invert brightness-200 contrast-125"
                                 loading="lazy"
                                 aria-hidden="true"
                               />
@@ -348,11 +348,11 @@ const VaultMainPanel: React.FC = () => {
                         <div className="grid gap-3 md:grid-cols-2">
                           <div className="rounded-xl border border-white/10 bg-black/30 p-5">
                             <div className="flex items-center gap-2">
-                              <span className="inline-flex h-7 w-7 items-center justify-center rounded-xl border border-white/10 bg-white/10">
+                              <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/10">
                                 <img
                                   src="/images/coin.svg"
                                   alt=""
-                                  className="h-4 w-4 opacity-90"
+                                  className="h-4 w-auto max-w-4 object-contain invert brightness-200 contrast-125"
                                   loading="lazy"
                                   aria-hidden="true"
                                 />
@@ -364,11 +364,11 @@ const VaultMainPanel: React.FC = () => {
                           </div>
                           <div className="rounded-xl border border-white/10 bg-black/30 p-5">
                             <div className="flex items-center gap-2">
-                              <span className="inline-flex h-7 w-7 items-center justify-center rounded-xl border border-white/10 bg-white/10">
+                              <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/10">
                                 <img
                                   src="/images/wallet.svg"
                                   alt=""
-                                  className="h-4 w-4 opacity-90"
+                                  className="h-4 w-auto max-w-4 object-contain invert brightness-200 contrast-125"
                                   loading="lazy"
                                   aria-hidden="true"
                                 />
@@ -392,11 +392,11 @@ const VaultMainPanel: React.FC = () => {
 
             <aside className="rounded-2xl border border-white/10 bg-dark-100 p-5">
               <div className="flex items-center gap-3">
-                <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/10">
+                <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/10">
                   <img
                     src="/images/tele.svg"
                     alt=""
-                    className="h-6 w-6 opacity-90"
+                    className="h-6 w-auto max-w-6 object-contain invert brightness-200 contrast-125"
                     loading="lazy"
                     aria-hidden="true"
                   />
@@ -435,8 +435,8 @@ const VaultMainPanel: React.FC = () => {
               </div>
 
               <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4">
-                <p className="text-xs font-semibold text-white/80">금고 시스템 안내</p>
-                <ul className="mt-2 space-y-1 text-xs text-white/60">
+                <p className="text-[16px] font-semibold text-white/80">금고 시스템 안내</p>
+                <ul className="mt-2 space-y-1 text-[16px] text-white/60">
                   <li>- 1만원 충전 확인: 5,000원 해금</li>
                   <li>- 5만원 충전 확인: 전액 해금</li>
                   <li>- 반영이 늦으면 관리자에게 문의해주세요</li>

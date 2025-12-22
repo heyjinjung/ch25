@@ -223,7 +223,7 @@ const SeasonPassMainPanel: React.FC = () => {
               <p className="text-[clamp(15px,2.8vw,21px)] font-medium leading-[1.15] tracking-[-0.2px]" style={{ color: baseAccent }}>
                 지민이와 함께하는 겨울 시즌 패스
               </p>
-              <h1 className="mt-2 text-[clamp(34px,6vw,60px)] font-bold leading-[1.1] tracking-[0.2px]" style={{ color: baseAccent }}>
+              <h1 className="mt-2 text-[clamp(20px,6vw,24px)] font-bold leading-[1.1] tracking-[0.2px]" style={{ color: baseAccent }}>
                 내 레벨 확인
               </h1>
             </div>
