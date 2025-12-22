@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { autoAssignTeam, getActiveSeason, getLeaderboard, getMyContribution, getMyTeam } from "../api/teamBattleApi";
 import { useToast } from "../components/common/ToastProvider";
+import AnimatedCountdown from "../components/common/AnimatedCountdown";
 import { getGapToAboveTeam } from "../utils/teamBattleGap";
 import { useAuth } from "../auth/authStore";
 
@@ -15,15 +16,10 @@ const normalizeIsoForDate = (value: string) => {
   return hasTimezone ? value : `${value}Z`;
 };
 
-const formatCountdown = (endsAt?: string | null) => {
-  if (!endsAt) return "-";
-  const now = Date.now();
+const parseEndsAtMs = (endsAt?: string | null) => {
+  if (!endsAt) return null;
   const end = new Date(normalizeIsoForDate(endsAt)).getTime();
-  const diff = end - now;
-  if (diff <= 0) return "종료";
-  const hours = Math.floor(diff / (1000 * 60 * 60));
-  const minutes = Math.floor((diff / (1000 * 60)) % 60);
-  return `${hours}시간 ${minutes}분`;
+  return Number.isFinite(end) ? end : null;
 };
 
 type ViewportVariant = "desktop" | "tablet" | "mobile";
@@ -54,7 +50,7 @@ const TeamBattleMainPanel: React.FC<{ variant: ViewportVariant }> = ({ variant }
     refetchInterval: 60_000,
   });
 
-  const countdown = useMemo(() => formatCountdown(seasonQuery.data?.ends_at), [seasonQuery.data?.ends_at]);
+  const endsAtMs = useMemo(() => parseEndsAtMs(seasonQuery.data?.ends_at), [seasonQuery.data?.ends_at]);
   const myTeamId = myTeamQuery.data?.team_id ?? null;
 
   const myContributionQuery = useQuery({
@@ -203,7 +199,9 @@ const TeamBattleMainPanel: React.FC<{ variant: ViewportVariant }> = ({ variant }
                 <p className="text-[clamp(15px,2.8vw,16px)] font-semibold text-white/90">팀배틀</p>
               </div>
               <p className="mt-1 text-[clamp(13px,2.5vw,14px)] text-white/65">남은 시간</p>
-              <p className="mt-1 text-[clamp(20px,3.6vw,24px)] font-semibold text-white">{countdown}</p>
+              <p className="mt-1 text-[clamp(20px,3.6vw,24px)] font-semibold text-white">
+                <AnimatedCountdown targetMs={endsAtMs} expiredText="종료" showDays />
+              </p>
             </div>
             <button
               type="button"
