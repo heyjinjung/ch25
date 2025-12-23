@@ -132,6 +132,24 @@ Phase 1 단일 기준(중요)
 - `src/components/game/TicketZeroPanel.tsx` (ticket=0 패널)
 - `src/components/vault/VaultModal.tsx` (ticket0 카피 fetch)
 
+### 3.5 구현/미구현 경계(중요)
+
+이 문서는 **(A) 이미 레포에 구현된 것**과 **(B) 앞으로 구현해야 하는 설계**를 함께 담는다. 혼동 방지를 위해 아래를 기준으로 해석한다.
+
+- ✅ 이미 구현됨(레포 기준)
+  - 금고: `vault_locked_balance` 단일 기준 + 24h 만료 + mirror 동기화 + free fill 1회
+  - 해금 트리거: 외부랭킹 예치(deposit) 증가 신호 → locked 감소 + `cash_balance` 지급(원장 기록)
+  - 체험티켓: ticket=0 대응용 **토큰(게임 지갑) 1장 지급**(일 1회, 멱등)
+
+- ❌ 아직 구현되지 않음(현재 코드에는 없음)
+  - “체험티켓 결과 보상(가치)이 금고에 적립되어 누적된다” (본 문서의 설계/정책)
+  - “금고 누적 가치가 1만원 도달 시 자동 해금된다” (본 문서에서 별도 기능로 정의해야 하며, 현재 Phase 1 코드에는 없음)
+
+- 구현 시 주의(최소 변경 기준)
+  - **trial-play 식별**이 필요하다(현재는 ‘토큰’만 지급되므로, 해당 플레이가 trial인지 판별 정보가 없다)
+  - “결과 확정” 시점에만 적립해야 한다(소모만 있고 결과가 취소/에러면 적립 금지)
+  - 멱등 키(earn_event_id) 없이는 중복 적립을 막기 어렵다
+
 ---
 
 ## 4) ✅ Phase 1 적립 정책(권장): “50판 황금선(11,000~14,000)”
@@ -246,9 +264,21 @@ stateDiagram-v2
 - 목적: 테이블/스키마 없이도 체험티켓 보상 적립을 안전하게 흡수(표준 이벤트 + 멱등 + 금액 환산 가드).
 - 적용 원칙: 금고 적립 입력은 **VaultEarnEvent** DTO로만 받는다. 금액 환산이 불가능한 상품은 적립하지 않고 로그만 남긴다.
 
+### 8.0 현재 코드 갭(왜 필요한가)
+
+현재 레포 구현은 “체험티켓=게임 지갑 토큰 지급”까지이며, **체험티켓 플레이 결과를 금고로 적립하는 연결은 아직 없다**.
+
+- trial 지급은 `UserGameWalletLedger`로만 기록된다(토큰 잔액 관점).
+- 게임 보상 지급은 `RewardService.deliver()`가 `cash_balance`/게임토큰으로 분기한다.
+- 따라서 “trial 결과만 금고로 적립”을 하려면 최소한 아래가 추가되어야 한다.
+  - (필수) trial-play 여부를 결과 로그/이벤트에서 식별할 수 있는 정보
+  - (필수) earn_event_id(멱등 키) 생성/검증
+  - (선택) 금액 환산 맵(미정의 보상은 SKIP)
+
 ### 8.1 정책 요약 (방어책)
 - 입력 표준화: 게임 결과 → `VaultEarnEvent { earn_event_id, user_id, amount, source="TRIAL", token_type, game_type, reward_kind }`
-- 강제 멱등: `earn_event_id`는 결과 로그 ID 또는 `(game_result_id, user_id, ts)` 해시. 적립 시 중복 체크 테이블/캐시 기록.
+- 강제 멱등: `earn_event_id`는 결과 로그 ID 또는 `(game_result_id, user_id, ts)` 해시.
+  - 새 테이블을 추가하지 않는다면, **기존 로그/ledger에 earn_event_id를 meta로 기록**하고 동일 키가 이미 존재하는지 조회하는 방식으로 중복을 막는다(성능 이슈가 생기면 Phase 2에서 전용 테이블/인덱스로 승격).
 - 보상 타입 태깅: `reward_kind ∈ {CASH, ITEM, TOKEN, TICKET, BUNDLE}`. 금액형만 적립. 비금액형은 금액 환산 테이블로만 적립.
 - 금액 환산 테이블: `trial_reward_valuation`(설정/맵)에서만 환산 허용. 환산값이 없으면 적립 SKIP.
 - validation: `amount <= 0` 또는 `reward_kind` 누락 → 적립 거부 + 로그.
@@ -285,21 +315,40 @@ stateDiagram-v2
 ```
 - 맵에 없는 reward_id/상품은 적립 SKIP + 로그. 운영이 맵을 보강 후 재적립 가능.
 
-## 9) 구현 가이드(Phase 1에 “게임당 적립”을 넣기 위한 최소 변경)
+---
 
-### 9.1 필요한 성질
+## 9) 체험티켓 배포(티어·단계별) — 현 스키마 그대로 적용
+
+- 목표: 기존 `trial_grant_service` 멱등 로직과 grant_label(`TRIAL_<token>_<date>`)을 유지하면서 플래그/쿼리만으로 티어·단계별 차등 지급. 새 테이블 없이 정책·설정으로 운용.
+- 공통 가드: 일 1장 기본, 주간 캡(`trial_weekly_cap`), 플래그 `tiered_grant_enabled`, 자동지급 플래그 `enable_trial_grant_auto`.
+
+### 9.1 단계별 정책
+- **초반(런칭/온보딩)**: 진입 시 자동 1장 + 첫 3일 보장(일 1장, 첫주 총 3~5장 캡). 카피 “오늘 바로 써보고 느낌 보세요”.
+- **운영 중반(학습·재방문)**: 최근 7일 플레이/결제/방문으로 Low/Med/High 티어 산출(쿼리 계산). Low=일 1장 주3장, Med=일1+미션성공 추가1(주4), High=CTA 요청형 주2. 트리거: 24h 미접속, ticket0 도달, 미션 완료. 카피 “다시 이어서 확인/금고 잠금 풀고 이어가기”.
+- **정착화(프로그램 유지)**: 복귀군(7~30일 미접속) 화이트리스트만 자동 1장 주1~2; 나머지 옵트인/요청형. 상위 결제/잔존군은 요청형만, 하위군은 미션형. 카피 “다시 잠금 해제 기회”.
+
+### 9.2 구현 힌트(새 스키마 없이)
+- 멱등: 현 `grant_label` 방식 그대로. 티어/미션 로직은 지급 전 계산만 하고 승인/거부.
+- 캡/플래그: 설정/환경변수로 `daily_cap`, `weekly_cap`, `tiered_grant_enabled`, `enable_trial_grant_auto` 추가.
+- 티어 산출: 최근 7일 플레이수·결제액·방문수 쿼리(필요 시 캐시). 별도 저장 없이 즉시 계산.
+- 로그: 지급/스킵 사유를 ledger/meta에 남겨 관측(추가 테이블 불필요).
+- 알림/CTA: `/api/trial-grant` 기존 엔드포인트 재사용 + ticket0 `recommended_action` 유지.
+
+## 10) 구현 가이드(Phase 1에 “게임당 적립”을 넣기 위한 최소 변경)
+
+### 10.1 필요한 성질
 - 정확한 트리거: “비용 소모”가 아니라 반드시 “결과 확정”까지 포함
 - 중복 방지(idempotency): 같은 게임 결과가 2번 들어와도 2번 적립되지 않도록 이벤트 ID 필요
 - 로그/관측: Phase 2/3로 갈수록 earn log가 필요(최소라도 남기는 것을 권장)
 
-### 9.2 최소 변경 권장안
+### 10.2 최소 변경 권장안
 - Vault2(또는 별도 로그)에 `earn_event_id`, `earn_type`, `amount`, `created_at` 기록
 - `vault_locked_balance += amount` (source of truth)
 - `vault_locked_expires_at`는 첫 적립 시에만 세팅(Phase 1 규칙)
 
 ---
 
-## 10) 정책-카피-코드 일치(중요)
+## 11) 정책-카피-코드 일치(중요)
 
 - 홈 배너/티켓0 패널/모달 카피에서 반드시 한 줄 고정:
   - “다음 해금 조건: ___ 하면 ___원 해금”
@@ -307,7 +356,7 @@ stateDiagram-v2
 
 ---
 
-## 11) 체크리스트(이 문서를 기준으로)
+## 12) 체크리스트(이 문서를 기준으로)
 
 - [ ] Phase 1 적립 훅: “비용 소모 + 결과 확정” 지점에 locked 적립 연결
 - [ ] 체험티켓 보상 결과값 전액 locked 적립(earn_event_id 멱등 + reward_kind 태깅 + 금액 환산 맵)
@@ -319,27 +368,8 @@ stateDiagram-v2
 
 ---
 
-## 12) 오픈 퀘스천(확정 필요)
+## 13) 오픈 퀘스천(확정 필요)
 
 - “판당 적립”을 어떤 게임들(룰렛/주사위/복권/팀배틀)에 동일 적용할지
 - 결과 확정 이벤트의 식별자(게임 로그 ID 등) 확보 방식
 - 해금 정책(부분/전액) 룰을 Phase 1에서 고정할지, 즉시 `unlock_rules_json`로 전환할지
-
-Vault Phase1 설계 핵심(온보딩 메모)
-
-상태/만료: locked → available → expired, 첫 적립 시 expires_at = now+24h, 추가 적립해도 갱신 없음. Phase2부터 보호/연장(PROTECT)로만 연장.
-철학: “보너스”가 아니라 “이미 벌어둔 자산이 잠겨 있다”는 락인 자산. ticket=0 시 Vault Modal/CTA로 노출.
-소스 기준: user.vault_locked_balance 단일 기준. vault_balance는 mirror(read-only).
-적립 규칙(Phase1): 플레이 비용 소모 + 결과 확정 시 +200원/판, 패배 시 추가 +100원. 목표: 50판 ≈ 11,000~14,000원(황금선).
-만료/해금: 만료 시 locked=0. 해금(입금 확인 등)으로 locked → available/cash 전환(Phase1은 cash 지급 유지 가능).
-API 스냅샷:
-Public: GET /api/vault/status(locked/available/expires_at/recommended_action/cta_payload), POST /api/vault/fill, GET /api/ui-copy/ticket0.
-Admin: POST /admin/api/vault2/tick?limit=500, PUT /api/admin/ui-copy/ticket0.
-서비스 포인트: VaultService.get_status, fill_free_once, handle_deposit_increase_signal; AdminExternalRankingService에서 deposit 증가 감지→VaultService 위임.
-UI 접점: Home 배너, TicketZeroPanel, VaultModal; unlock_rules_json으로 “다음 해금 조건” 카피를 서버에서 내려 프런트 하드코딩 제거 권장.
-구현 체크리스트:
- “비용 소모 + 결과 확정” 지점에서 locked 적립(+200/+100) 연결, idempotent 이벤트 ID 확보.
- expires_at 첫 적립만 세팅, 추가 적립 시 미갱신 유지.
- ticket=0 시 recommended_action=OPEN_VAULT_MODAL + cta_payload.
- 테스트: 중복 적립 방지, 만료, 해금(부분/전액) 시나리오.
-오픈 결정사항: 적용 게임 범위(룰렛/주사위/복권/팀배틀), 결과 확정 이벤트 식별자 확보 방식, 해금 정책을 룰 기반(unlock_rules_json)으로 바로 갈지 고정할지.
