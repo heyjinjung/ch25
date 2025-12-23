@@ -26,12 +26,13 @@ const assets = {
 
 const gameLinks = ["/roulette", "/dice", "/lottery"] as const;
 const randomGameLink = gameLinks[Math.floor(Math.random() * gameLinks.length)];
+const noticeLink = "https://t.me/+LksI3XlSjLlhZmE0";
 
 const howToIcons: { title: string; icon: string; href?: string; to?: string }[] = [
   { title: "씨씨이용하기", icon: assets.iconWallet, href: "https://ccc-010.com" },
   { title: "금고서비스", icon: assets.iconSecurity, to: "/vault" },
   { title: "포인트게임하기", icon: assets.iconGraph, to: randomGameLink },
-  { title: "친구초대", icon: assets.iconPeople, to: "/vault" },
+  { title: "친구초대", icon: assets.iconPeople, href: noticeLink },
 ];
 
 const bento = [
@@ -83,7 +84,9 @@ const OngoingEvents: React.FC = () => (
       {[1, 2].map((key) => (
         <a
           key={key}
-          href="https://figma.com/sites"
+          href={noticeLink}
+          target="_blank"
+          rel="noreferrer"
           className="flex w-full md:w-[330px] flex-col gap-[19px]"
         >
           <div className="relative w-full overflow-hidden rounded-[10px]" style={{ aspectRatio: "285/221.8667" }}>

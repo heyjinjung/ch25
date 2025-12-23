@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../auth/authStore";
 
 const baseAccent = "#d2fd9c";
@@ -113,6 +113,26 @@ const GuideButton: React.FC = () => (
   </Link>
 );
 
+const LogoutButton: React.FC = () => {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login", { replace: true });
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={handleLogout}
+      className="shrink-0 rounded-[2px] border border-white/25 px-[12px] py-[10px] text-[10px] tracking-[-0.2px] text-white hover:bg-white/10"
+    >
+      로그아웃
+    </button>
+  );
+};
+
 const UserBadge: React.FC = () => {
   const { user } = useAuth();
   const name = (user?.nickname || user?.external_id || "지민").toString();
@@ -138,6 +158,7 @@ const DesktopSidebarContent: React.FC = () => {
           <div className="flex items-center gap-2">
             <UserBadge />
             <GuideButton />
+            <LogoutButton />
           </div>
         </nav>
 
@@ -168,7 +189,7 @@ const DesktopSidebarContent: React.FC = () => {
                   tile.widthClassDesktop
                 }
               >
-                <div className="relative h-[30px] w-[30px]">
+                <div className="relative h-[30px] w-[30px] min-h-[30px] min-w-[30px] shrink-0">
                   <img
                     src={tile.icon}
                     alt=""
@@ -281,6 +302,7 @@ const MobileSidebarContent: React.FC = () => {
           <div className="flex items-center gap-2">
             <UserBadge />
             <GuideButton />
+            <LogoutButton />
           </div>
         </div>
 
@@ -305,7 +327,7 @@ const MobileSidebarContent: React.FC = () => {
                 className="flex-1 min-w-[110px]"
               >
                 <div className="flex h-[120px] w-full flex-col items-center justify-center gap-[14px] rounded-[4px] bg-[#d2fd9c] px-[10px] py-[20px]">
-                  <div className="relative h-[30px] w-[30px]">
+                  <div className="relative h-[30px] w-[30px] min-h-[30px] min-w-[30px] shrink-0">
                     <img
                       src={tile.icon}
                       alt=""

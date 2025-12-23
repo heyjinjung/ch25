@@ -34,6 +34,7 @@ const navLinks = [
 
 const gameLinks = ["/roulette", "/dice", "/lottery"] as const;
 const randomGameLink = gameLinks[Math.floor(Math.random() * gameLinks.length)];
+const noticeLink = "https://t.me/+LksI3XlSjLlhZmE0";
 
 const gameTiles: { title: string; to: string; icon: string; fallback: string }[] = [
   { title: "레벨 주사위", to: "/dice", icon: assets.levelSvg, fallback: assets.iconLevel },
@@ -45,7 +46,7 @@ const howToIcons: { title: string; icon: string; href?: string; to?: string }[] 
   { title: "씨씨이용하기", icon: assets.iconWallet, href: "https://ccc-010.com" },
   { title: "금고서비스", icon: assets.iconSecurity, to: "/vault" },
   { title: "포인트게임하기", icon: assets.iconGraph, to: randomGameLink },
-  { title: "친구초대", icon: assets.iconPeople, to: "/vault" },
+  { title: "친구초대", icon: assets.iconPeople, href: noticeLink },
 ];
 
 const bento: { title: string; description?: string; icon?: string | null; fallback?: string }[] = [
@@ -177,7 +178,13 @@ const OngoingEvents: React.FC = () => (
     </h2>
     <div className="flex w-full flex-col gap-[20px] md:flex-row md:flex-wrap md:justify-center">
       {[1, 2].map((key) => (
-        <a key={key} href="https://figma.com/sites" className="flex w-full md:w-[350px] flex-col gap-[19px]">
+        <a
+          key={key}
+          href={noticeLink}
+          target="_blank"
+          rel="noreferrer"
+          className="flex w-full md:w-[350px] flex-col gap-[19px]"
+        >
           <div className="relative w-full overflow-hidden rounded-[10px]" style={{ aspectRatio: "285/221" }}>
             <img src={assets.benefitImage} alt="Benefit" className="absolute inset-0 h-full w-full object-cover" />
           </div>

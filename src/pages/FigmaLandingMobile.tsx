@@ -28,6 +28,7 @@ const navLinks = [
 
 const gameLinks = ["/roulette", "/dice", "/lottery"] as const;
 const randomGameLink = gameLinks[Math.floor(Math.random() * gameLinks.length)];
+const noticeLink = "https://t.me/+LksI3XlSjLlhZmE0";
 
 const gameTiles = [
   { title: "레벨 주사위", to: "/dice", icon: assets.levelSvg, fallback: assets.iconLevel },
@@ -36,7 +37,7 @@ const gameTiles = [
 ];
 
 const howToIcons: { title: string; icon: string; href?: string; to?: string }[] = [
-  { title: "친구초대", icon: assets.iconPeople, to: "/vault" },
+  { title: "친구초대", icon: assets.iconPeople, href: noticeLink },
   { title: "씨씨이용하기", icon: assets.iconWallet, href: "https://ccc-010.com" },
   { title: "금고서비스", icon: assets.iconSecurity, to: "/vault" },
   { title: "포인트게임하기", icon: assets.iconGraph, to: randomGameLink },
@@ -142,12 +143,17 @@ const MobileLanding: React.FC = () => {
         <section className="bg-white flex flex-col items-center gap-[24px] px-[20px] py-[20px]">
           <h2 className="w-full text-center text-[32px] font-medium tracking-[-0.64px] text-black">진행중인 이벤트</h2>
           <div className="flex flex-col gap-[20px] w-full items-center">
-            <div className="flex flex-col gap-[19px] w-full max-w-[335px]">
+            <a
+              href={noticeLink}
+              target="_blank"
+              rel="noreferrer"
+              className="flex flex-col gap-[19px] w-full max-w-[335px] hover:opacity-90"
+            >
               <div className="relative w-full overflow-hidden rounded-[10px]" style={{ aspectRatio: "285/221" }}>
                 <img src={assets.benefitImage} alt="매일 터지는 룰렛 경품추첨" className="absolute inset-0 h-full w-full object-cover" />
               </div>
               <p className="text-[20px] font-medium leading-[1.15] text-left text-black"> 매일 터지는 룰렛 경품추첨</p>
-            </div>
+            </a>
           </div>
         </section>
 
