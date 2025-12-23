@@ -6,7 +6,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import dayjs from "dayjs";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AdminRankingEntryPayload, fetchRankingByDate, upsertRanking, deleteRanking } from "../api/adminRankingApi";
-import Button from "../../components/common/Button";
 
 const rankingEntrySchema = z.object({
   date: z.string().min(1),
@@ -30,8 +29,50 @@ type RankingFormValues = z.infer<typeof rankingSchema>;
 
 const RankingAdminPage: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<string>(dayjs().format("YYYY-MM-DD"));
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
   const queryClient = useQueryClient();
+
+  const inputBase =
+    "w-full rounded-md border border-[#333333] bg-[#1A1A1A] px-3 py-2 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]";
+
+  const PrimaryButton = ({
+    children,
+    ...props
+  }: React.ButtonHTMLAttributes<HTMLButtonElement> & { children: React.ReactNode }) => (
+    <button
+      type="button"
+      className="inline-flex items-center rounded-md bg-[#2D6B3B] px-4 py-2 text-sm font-medium text-white hover:bg-[#91F402] hover:text-black disabled:cursor-not-allowed disabled:opacity-60"
+      {...props}
+    >
+      {children}
+    </button>
+  );
+
+  const SecondaryButton = ({
+    children,
+    ...props
+  }: React.ButtonHTMLAttributes<HTMLButtonElement> & { children: React.ReactNode }) => (
+    <button
+      type="button"
+      className="inline-flex items-center rounded-md border border-[#333333] bg-[#1A1A1A] px-4 py-2 text-sm font-medium text-gray-200 hover:bg-[#2C2C2E] disabled:cursor-not-allowed disabled:opacity-60"
+      {...props}
+    >
+      {children}
+    </button>
+  );
+
+  const DangerButton = ({
+    children,
+    ...props
+  }: React.ButtonHTMLAttributes<HTMLButtonElement> & { children: React.ReactNode }) => (
+    <button
+      type="button"
+      className="inline-flex items-center rounded-md border border-red-500/50 bg-red-950 px-4 py-2 text-sm font-medium text-red-100 hover:bg-red-900 disabled:cursor-not-allowed disabled:opacity-60"
+      {...props}
+    >
+      {children}
+    </button>
+  );
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["admin", "ranking", selectedDate],
@@ -74,128 +115,156 @@ const RankingAdminPage: React.FC = () => {
   };
 
   return (
-    <section className="space-y-6">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <section className="space-y-5">
+      <header className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-100">랭킹 수기 입력</h1>
-          <p className="text-sm text-slate-300">rank 중복을 UI에서 막고, 날짜별 랭킹을 교체/삭제합니다.</p>
+          <h2 className="text-2xl font-bold text-[#91F402]">랭킹 입력 (날짜별)</h2>
+          <p className="mt-1 text-sm text-gray-400">선택한 날짜의 랭킹을 불러오거나, 행을 추가해 수기로 입력한 뒤 저장합니다.</p>
         </div>
-        <div className="flex items-center space-x-3">
-          <input
-            type="date"
-            value={selectedDate}
-            onChange={(e) => {
-              setSelectedDate(e.target.value);
-              form.reset({ date: e.target.value, entries: [] });
-            }}
-            className="rounded-md border border-emerald-700 bg-slate-900 px-3 py-2 text-slate-100"
-          />
-          <Button variant="secondary" onClick={loadExisting}>
-            불러오기
-          </Button>
+      </header>
+
+      <div className="rounded-lg border border-[#333333] bg-[#111111] p-4">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="flex flex-col">
+              <label className="text-xs text-gray-400">날짜</label>
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => {
+                  setSelectedDate(e.target.value);
+                  form.reset({ date: e.target.value, entries: [] });
+                }}
+                className={inputBase}
+              />
+            </div>
+
+            <SecondaryButton onClick={loadExisting} disabled={isLoading}>
+              {isLoading ? "불러오는 중..." : "불러오기"}
+            </SecondaryButton>
+
+            <SecondaryButton
+              onClick={() =>
+                append({
+                  date: selectedDate,
+                  rank: fields.length + 1,
+                  user_name: "",
+                  score: undefined,
+                  user_id: undefined,
+                })
+              }
+            >
+              행 추가
+            </SecondaryButton>
+
+            <DangerButton onClick={() => setIsDeleting(true)} disabled={deleteMutation.isPending}>
+              전체 삭제
+            </DangerButton>
+          </div>
+
+          <PrimaryButton onClick={() => void onSubmit()} disabled={mutation.isPending}>
+            {mutation.isPending ? "저장 중..." : "저장"}
+          </PrimaryButton>
         </div>
-      </div>
 
-      {isLoading && <div className="rounded-lg border border-emerald-700/40 bg-slate-900 p-4 text-slate-200">랭킹을 불러오는 중...</div>}
-      {isError && (
-        <div className="rounded-lg border border-red-500/40 bg-red-950 p-4 text-red-100">불러오기 실패: {(error as Error).message}</div>
-      )}
-
-      {data && data.length === 0 && (
-        <div className="rounded-lg border border-emerald-700/40 bg-slate-900 p-4 text-slate-200">해당 날짜에 등록된 랭킹이 없습니다.</div>
-      )}
-
-      {data && data.length > 0 && (
-        <div className="rounded-lg border border-emerald-800/40 bg-slate-900/70 p-4 text-slate-100">
-          <p className="text-sm text-slate-200">등록된 랭킹 {data.length}개가 있습니다. 불러오기를 눌러 편집할 수 있습니다.</p>
-        </div>
-      )}
-
-      <form className="space-y-4" onSubmit={onSubmit}>
-        <div className="flex items-center space-x-3">
-          <Button type="button" variant="secondary" onClick={() => append({ date: selectedDate, rank: fields.length + 1, user_name: "", score: undefined, user_id: undefined })}>
-            행 추가
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={() => setIsDeleting(true)}
-            disabled={deleteMutation.isPending}
-          >
-            전체 삭제
-          </Button>
+        <div className="mt-3 text-sm text-gray-300">
+          현재 <span className="font-medium text-white">{fields.length}</span>행 · rank 중복은 저장 시 차단됩니다.
         </div>
 
-        {form.formState.errors.entries && (
-          <p className="text-sm text-red-300">{form.formState.errors.entries.message as string}</p>
+        {isLoading && (
+          <div className="mt-3 rounded-lg border border-[#333333] bg-[#111111] p-3 text-gray-200">랭킹을 불러오는 중...</div>
+        )}
+        {isError && (
+          <div className="mt-3 rounded border border-red-500/40 bg-red-950 p-3 text-sm text-red-100">
+            불러오기 실패: {(error as Error).message}
+          </div>
         )}
 
-        <div className="space-y-3">
-          {fields.map((field, idx) => (
-            <div key={field.id} className="grid grid-cols-1 gap-3 rounded-lg border border-emerald-800/60 bg-slate-900/70 p-3 md:grid-cols-5">
-              <div className="space-y-1">
-                <label className="text-xs text-slate-300">Rank</label>
-                <input
-                  type="number"
-                  className="w-full rounded border border-emerald-700 bg-slate-800 px-2 py-1 text-sm"
-                  {...form.register(`entries.${idx}.rank`, { valueAsNumber: true })}
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs text-slate-300">유저명</label>
-                <input
-                  className="w-full rounded border border-emerald-700 bg-slate-800 px-2 py-1 text-sm"
-                  {...form.register(`entries.${idx}.user_name`)}
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs text-slate-300">Score</label>
-                <input
-                  type="number"
-                  className="w-full rounded border border-emerald-700 bg-slate-800 px-2 py-1 text-sm"
-                  {...form.register(`entries.${idx}.score`, { valueAsNumber: true })}
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs text-slate-300">User ID(optional)</label>
-                <input
-                  type="number"
-                  className="w-full rounded border border-emerald-700 bg-slate-800 px-2 py-1 text-sm"
-                  {...form.register(`entries.${idx}.user_id`, { valueAsNumber: true })}
-                />
-              </div>
-              <div className="flex items-end justify-end">
-                <Button variant="secondary" type="button" onClick={() => remove(idx)}>
-                  삭제
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
+        {form.formState.errors.entries && (
+          <div className="mt-3 rounded border border-red-500/40 bg-red-950 p-3 text-sm text-red-100">
+            {(form.formState.errors.entries.message as string) ?? "입력값을 확인해주세요."}
+          </div>
+        )}
 
-        <div className="flex justify-end space-x-2">
-          <Button type="button" variant="secondary" onClick={() => form.reset({ date: selectedDate, entries: data ?? [] })}>
-            리셋
-          </Button>
-          <Button type="submit" disabled={mutation.isPending}>
-            {mutation.isPending ? "저장 중..." : "저장"}
-          </Button>
-        </div>
-      </form>
-
-      {isDeleting && (
-        <div className="rounded-lg border border-amber-500/40 bg-amber-950 p-4 text-amber-100">
-          <p className="text-sm">정말 전체 랭킹을 삭제하시겠습니까?</p>
-          <div className="mt-3 flex space-x-2">
-            <Button variant="secondary" onClick={() => setIsDeleting(false)}>
-              취소
-            </Button>
-            <Button onClick={() => deleteMutation.mutate()} disabled={deleteMutation.isPending}>
-              {deleteMutation.isPending ? "삭제 중..." : "삭제"}
-            </Button>
+        <div className="mt-4 rounded-lg border border-[#333333] bg-[#111111] shadow-md">
+          <div className="max-h-[600px] overflow-auto">
+            <table className="w-full">
+              <thead className="sticky top-0 z-10 border-b border-[#333333] bg-[#1A1A1A]">
+                <tr>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">rank</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">user_id</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">닉네임</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">점수</th>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">액션</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#333333]">
+                {fields.map((field, idx) => (
+                  <tr key={field.id} className={idx % 2 === 0 ? "bg-[#111111]" : "bg-[#1A1A1A]"}>
+                    <td className="px-4 py-3">
+                      <input
+                        type="number"
+                        className={inputBase + " text-right"}
+                        {...form.register(`entries.${idx}.rank`, { valueAsNumber: true })}
+                        min={1}
+                      />
+                    </td>
+                    <td className="px-4 py-3">
+                      <input
+                        type="number"
+                        className={inputBase}
+                        placeholder="user_id"
+                        {...form.register(`entries.${idx}.user_id`, { valueAsNumber: true })}
+                      />
+                      {form.formState.errors.entries?.[idx]?.user_id && (
+                        <p className="mt-1 text-xs text-red-300">user_id를 입력하세요</p>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <input
+                        type="text"
+                        className={inputBase}
+                        placeholder="닉네임/유저명"
+                        {...form.register(`entries.${idx}.user_name`)}
+                      />
+                    </td>
+                    <td className="px-4 py-3">
+                      <input
+                        type="number"
+                        className={inputBase + " text-right"}
+                        {...form.register(`entries.${idx}.score`, { valueAsNumber: true })}
+                        min={0}
+                      />
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <SecondaryButton onClick={() => remove(idx)}>삭제</SecondaryButton>
+                    </td>
+                  </tr>
+                ))}
+                {fields.length === 0 && (
+                  <tr>
+                    <td className="px-4 py-10 text-center text-gray-400" colSpan={5}>
+                      아직 데이터가 없습니다. “불러오기” 또는 “행 추가”를 사용하세요.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
-      )}
+
+        {isDeleting && (
+          <div className="mt-4 rounded-lg border border-amber-500/40 bg-amber-950 p-4 text-amber-100">
+            <p className="text-sm">정말 이 날짜의 랭킹을 전체 삭제하시겠습니까?</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <SecondaryButton onClick={() => setIsDeleting(false)}>취소</SecondaryButton>
+              <DangerButton onClick={() => void deleteMutation.mutateAsync()} disabled={deleteMutation.isPending}>
+                {deleteMutation.isPending ? "삭제 중..." : "삭제"}
+              </DangerButton>
+            </div>
+          </div>
+        )}
+      </div>
     </section>
   );
 };
