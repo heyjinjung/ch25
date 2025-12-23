@@ -1,5 +1,5 @@
 // src/admin/pages/AdminDashboardPage.tsx
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Activity,
@@ -16,41 +16,41 @@ import {
   Trophy,
   Users,
 } from "lucide-react";
+import { fetchDashboardMetrics, DashboardMetricsResponse } from "../api/adminDashboardApi";
 
-const stats = [
-  {
-    title: "활성 사용자",
-    value: "12,480",
-    change: "+3.2% (전일)",
-    isPositive: true,
-    icon: <Users className="h-5 w-5 text-[#91F402]" />,
-    color: "bg-[#1F3D24]",
-  },
-  {
-    title: "게임 참여",
-    value: "8,120",
-    change: "+1.4% (전일)",
-    isPositive: true,
-    icon: <Activity className="h-5 w-5 text-[#91F402]" />,
-    color: "bg-[#1F3D24]",
-  },
-  {
-    title: "티켓 사용량",
-    value: "27,540",
-    change: "-0.8% (전일)",
-    isPositive: false,
-    icon: <Ticket className="h-5 w-5 text-[#91F402]" />,
-    color: "bg-[#1F3D24]",
-  },
-  {
-    title: "평균 체류 시간",
-    value: "12m 30s",
-    change: "+0.6% (전일)",
-    isPositive: true,
-    icon: <Clock3 className="h-5 w-5 text-[#91F402]" />,
-    color: "bg-[#1F3D24]",
-  },
-];
+const baseAccent = "#91F402";
+
+const formatNumber = (value: number | null | undefined) => {
+  if (value === null || value === undefined) return "--";
+  return value.toLocaleString();
+};
+
+const formatDuration = (seconds: number | null | undefined) => {
+  if (!seconds || seconds <= 0) return "--";
+  const m = Math.floor(seconds / 60);
+  const s = Math.round(seconds % 60);
+  if (m > 0) return `${m}m ${s}s`;
+  return `${s}s`;
+};
+
+const formatChange = (diff: number | null | undefined) => {
+  if (diff === null || diff === undefined) return "--";
+  const sign = diff > 0 ? "+" : "";
+  return `${sign}${diff.toFixed(1)}% (전일)`;
+};
+
+const isPositive = (diff: number | null | undefined) => diff === null ? true : diff >= 0;
+
+
+type StatCard = {
+  title: string;
+  value: string;
+  change: string;
+  isPositive: boolean;
+  icon: React.ReactNode;
+  color: string;
+  subtitle?: string;
+};
 
 const quickLinks = [
   {
@@ -122,6 +122,66 @@ const quickLinks = [
 ];
 
 const AdminDashboardPage: React.FC = () => {
+  const [data, setData] = useState<DashboardMetricsResponse | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetchDashboardMetrics(24);
+      setData(res);
+    } catch (err) {
+      setError("지표를 불러오지 못했습니다. 다시 시도해주세요.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  const stats: StatCard[] = useMemo(() => {
+    const d = data;
+    return [
+      {
+        title: "활성 사용자",
+        value: formatNumber(d?.active_users.value),
+        change: formatChange(d?.active_users.diff_percent),
+        isPositive: isPositive(d?.active_users.diff_percent),
+        icon: <Users className="h-5 w-5" style={{ color: baseAccent }} />,
+        color: "bg-[#1F3D24]",
+      },
+      {
+        title: "게임 참여",
+        value: formatNumber(d?.game_participation.value),
+        change: formatChange(d?.game_participation.diff_percent),
+        isPositive: isPositive(d?.game_participation.diff_percent),
+        icon: <Activity className="h-5 w-5" style={{ color: baseAccent }} />,
+        color: "bg-[#1F3D24]",
+        subtitle: d?.unique_players?.value !== undefined ? `유니크 ${formatNumber(d?.unique_players.value)}명` : undefined,
+      },
+      {
+        title: "티켓 사용량",
+        value: formatNumber(d?.ticket_usage.value),
+        change: formatChange(d?.ticket_usage.diff_percent),
+        isPositive: isPositive(d?.ticket_usage.diff_percent),
+        icon: <Ticket className="h-5 w-5" style={{ color: baseAccent }} />,
+        color: "bg-[#1F3D24]",
+      },
+      {
+        title: "평균 체류 시간",
+        value: formatDuration(d?.avg_session_time_seconds.value),
+        change: formatChange(d?.avg_session_time_seconds.diff_percent),
+        isPositive: isPositive(d?.avg_session_time_seconds.diff_percent),
+        icon: <Clock3 className="h-5 w-5" style={{ color: baseAccent }} />,
+        color: "bg-[#1F3D24]",
+      },
+    ];
+  }, [data]);
+
   return (
     <section className="space-y-6">
       <header className="space-y-2">
@@ -129,6 +189,21 @@ const AdminDashboardPage: React.FC = () => {
         <h1 className="text-2xl font-bold text-white">운영 대시보드</h1>
         <p className="text-sm text-gray-400">핵심 지표와 자주 수정하는 설정을 한 곳에서 관리하세요.</p>
       </header>
+
+      {error && (
+        <div className="rounded-lg border border-[#3A1F1F] bg-[#1A0D0D] p-4 text-sm text-red-200">
+          <div className="flex items-center justify-between">
+            <span>{error}</span>
+            <button
+              type="button"
+              onClick={load}
+              className="rounded border border-red-300 px-3 py-1 text-red-100 hover:bg-red-800/40"
+            >
+              다시 불러오기
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         {stats.map((stat) => (
@@ -140,6 +215,7 @@ const AdminDashboardPage: React.FC = () => {
               <div className="space-y-1">
                 <p className="text-xs text-gray-400">{stat.title}</p>
                 <h3 className="text-2xl font-bold text-white">{stat.value}</h3>
+                {stat.subtitle ? <p className="text-[11px] text-gray-400">{stat.subtitle}</p> : null}
                 <p className={`text-xs ${stat.isPositive ? "text-[#91F402]" : "text-[#F97935]"}`}>
                   {stat.change}
                 </p>
@@ -150,6 +226,11 @@ const AdminDashboardPage: React.FC = () => {
             </div>
           </div>
         ))}
+        {loading && (
+          <div className="rounded-lg border border-[#262626] bg-[#111111] p-5 shadow-md">
+            <p className="text-sm text-gray-400">지표 로딩 중...</p>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">

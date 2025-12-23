@@ -20,4 +20,5 @@ class UserActivityEvent(Base):
     user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True)
     event_id = Column(String(36), nullable=False)
     event_type = Column(String(50), nullable=False)
+    duration_seconds = Column(Integer, nullable=True)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
