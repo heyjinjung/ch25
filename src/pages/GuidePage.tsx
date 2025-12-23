@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import GamePageShell from "../components/game/GamePageShell";
 
 const Header: React.FC = () => {
@@ -13,12 +14,18 @@ const Header: React.FC = () => {
           <h1 className="text-xl font-bold md:text-2xl">CC카지노 이벤트</h1>
         </div>
         <div className="flex items-center gap-2 text-sm font-bold">
-          <button className="hidden rounded-full bg-[#d2fd9c] px-3 py-2 text-[#394508] transition hover:bg-opacity-90 md:block">
+          <Link
+            to="/season-pass"
+            className="hidden rounded-full bg-[#d2fd9c] px-3 py-2 text-[#394508] transition hover:bg-opacity-90 md:block"
+          >
             내 보상 확인하기
-          </button>
-          <button className="rounded-full border border-[#d2fd9c] bg-[#394508] px-4 py-2 text-white transition hover:bg-opacity-90">
+          </Link>
+          <Link
+            to="/landing"
+            className="rounded-full border border-[#d2fd9c] bg-[#394508] px-4 py-2 text-white transition hover:bg-opacity-90"
+          >
             지금 시작하기
-          </button>
+          </Link>
         </div>
       </div>
     </header>
@@ -45,12 +52,18 @@ const IntroSection: React.FC = () => {
           </div>
           <p className="mb-6 text-sm text-gray-300">처음이세요? '3분가이드'보고 바로 시작하세요.</p>
           <div className="flex flex-wrap gap-3">
-            <button className="rounded-full bg-[#d2fd9c] px-6 py-3 text-base font-bold text-[#394508] transition hover:bg-opacity-90">
+            <Link
+              to="/landing"
+              className="rounded-full bg-[#d2fd9c] px-6 py-3 text-base font-bold text-[#394508] transition hover:bg-opacity-90"
+            >
               지금 시작하기
-            </button>
-            <button className="rounded-full border border-white px-6 py-3 text-base font-bold text-white transition hover:bg-white hover:bg-opacity-10">
+            </Link>
+            <a
+              href="#quick-guide"
+              className="rounded-full border border-white px-6 py-3 text-base font-bold text-white transition hover:bg-white hover:bg-opacity-10"
+            >
               3분 가이드 보기
-            </button>
+            </a>
           </div>
         </div>
         <div className="flex w-full justify-center md:w-2/5">
@@ -139,9 +152,10 @@ type GameCardProps = {
   beginnerTip: string;
   icon: React.ReactNode;
   color: string;
+  to: string;
 };
 
-const GameCard: React.FC<GameCardProps> = ({ title, description, beginnerTip, icon, color }) => {
+const GameCard: React.FC<GameCardProps> = ({ title, description, beginnerTip, icon, color, to }) => {
   return (
     <motion.div
       className="flex h-full flex-col rounded-xl bg-white p-6 shadow-lg"
@@ -156,9 +170,12 @@ const GameCard: React.FC<GameCardProps> = ({ title, description, beginnerTip, ic
           <span className="font-bold text-[#394508]">초보 TIP</span>: {beginnerTip}
         </p>
       </div>
-      <button className="w-full rounded-lg bg-[rgb(38,103,44)] py-3 text-center font-bold text-white transition hover:bg-opacity-90">
+      <Link
+        to={to}
+        className="w-full rounded-lg bg-[rgb(38,103,44)] py-3 text-center font-bold text-white transition hover:bg-opacity-90"
+      >
         플레이하기
-      </button>
+      </Link>
     </motion.div>
   );
 };
@@ -175,6 +192,7 @@ const GamesSection: React.FC = () => {
         </svg>
       ),
       color: "bg-[#394508]",
+      to: "/roulette",
     },
     {
       title: "주사위 배틀",
@@ -186,6 +204,7 @@ const GamesSection: React.FC = () => {
         </svg>
       ),
       color: "bg-[#282d1a]",
+      to: "/dice",
     },
     {
       title: "복권",
@@ -201,6 +220,7 @@ const GamesSection: React.FC = () => {
         </svg>
       ),
       color: "bg-[#5d5d5d]",
+      to: "/lottery",
     },
   ];
 
@@ -222,12 +242,20 @@ const GamesSection: React.FC = () => {
           <h3 className="mb-3 text-lg font-bold text-[#394508]">티켓이 없으면 어떻게 하나요?</h3>
           <p className="mb-4 text-gray-800">씨씨사이트에서 서비스를 이용하면 티켓을 획득할 수 있습니다.</p>
           <div className="flex flex-wrap gap-3">
-            <button className="rounded-full bg-[#394508] px-4 py-2 text-sm font-bold text-white transition hover:bg-opacity-90 focus:ring-2 focus:ring-[#394508] focus:ring-offset-2">
+            <a
+              href="#point-system"
+              className="rounded-full bg-[#394508] px-4 py-2 text-sm font-bold text-white transition hover:bg-opacity-90 focus:ring-2 focus:ring-[#394508] focus:ring-offset-2"
+            >
               티켓 안내 보기
-            </button>
-            <button className="rounded-full border border-[#394508] px-4 py-2 text-sm font-bold text-[#394508] transition hover:border-[#d2fd9c] hover:bg-[#d2fd9c] hover:text-[#394508] focus:ring-2 focus:ring-[#d2fd9c] focus:ring-offset-2">
+            </a>
+            <a
+              href="https://t.me/jm956"
+              target="_blank"
+              rel="noreferrer"
+              className="rounded-full border border-[#394508] px-4 py-2 text-sm font-bold text-[#394508] transition hover:border-[#d2fd9c] hover:bg-[#d2fd9c] hover:text-[#394508] focus:ring-2 focus:ring-[#d2fd9c] focus:ring-offset-2"
+            >
               운영자에게 문의하기
-            </button>
+            </a>
           </div>
         </div>
       </div>
@@ -258,12 +286,18 @@ const TeamBattleSection: React.FC = () => {
             ))}
           </ul>
           <div className="flex flex-wrap gap-3">
-            <button className="rounded-full bg-[#394508] px-4 py-2 text-sm font-bold text-white transition hover:bg-opacity-90">
+            <Link
+              to="/team-battle"
+              className="rounded-full bg-[#394508] px-4 py-2 text-sm font-bold text-white transition hover:bg-opacity-90"
+            >
               팀배틀 보러가기
-            </button>
-            <button className="rounded-full border border-[#394508] px-4 py-2 text-sm font-bold text-[#394508] transition hover:bg-[#394508] hover:bg-opacity-5">
+            </Link>
+            <Link
+              to="/team-battle"
+              className="rounded-full border border-[#394508] px-4 py-2 text-sm font-bold text-[#394508] transition hover:bg-[#394508] hover:bg-opacity-5"
+            >
               현재 순위 새로고침
-            </button>
+            </Link>
           </div>
         </div>
         <div className="flex w-full justify-center md:w-1/2">
@@ -309,7 +343,9 @@ const MyVaultSection: React.FC = () => {
               </div>
             ))}
           </div>
-          <button className="rounded-full bg-[#282d1a] px-6 py-3 text-lg font-bold text-white transition hover:bg-opacity-90">예시 내금고 확인</button>
+          <Link to="/vault" className="rounded-full bg-[#282d1a] px-6 py-3 text-lg font-bold text-white transition hover:bg-opacity-90">
+            예시 내금고 확인
+          </Link>
         </div>
         <div className="flex w-full justify-center md:w-1/2">
           <div className="relative w-full max-w-sm">
@@ -332,9 +368,14 @@ const MyVaultSection: React.FC = () => {
                   <div className="text-xl font-bold text-[#282d1a]">4,500원</div>
                 </div>
               </div>
-              <button className="w-full rounded-xl bg-[#394508] py-3 text-center font-bold text-white transition hover:bg-opacity-90 focus:ring-2 focus:ring-[#394508] focus:ring-offset-2">
+              <a
+                href="https://ccc-010.com"
+                target="_blank"
+                rel="noreferrer"
+                className="w-full rounded-xl bg-[#394508] py-3 text-center font-bold text-white transition hover:bg-opacity-90 focus:ring-2 focus:ring-[#394508] focus:ring-offset-2"
+              >
                 씨씨로 전환하기
-              </button>
+              </a>
             </div>
             <motion.div
               className="absolute -bottom-4 -right-4 flex h-20 w-20 items-center justify-center rounded-full bg-[#d2fd9c] text-3xl font-bold text-[#394508] shadow-lg"
@@ -399,7 +440,7 @@ const PointSystemSection: React.FC = () => {
 
 const QuickGuideSection: React.FC = () => {
   return (
-    <section className="bg-white px-4 py-12 md:px-8 lg:px-12">
+    <section id="quick-guide" className="bg-white px-4 py-12 md:px-8 lg:px-12">
       <div className="mx-auto max-w-screen-xl">
         <div className="mb-10 text-center">
           <span className="text-sm font-bold uppercase tracking-wider text-[#394508]">빠른 시작</span>
@@ -421,9 +462,12 @@ const QuickGuideSection: React.FC = () => {
         </div>
 
         <div className="mt-10 text-center">
-          <button className="rounded-full bg-[#394508] px-8 py-3 text-lg font-bold text-white transition hover:bg-opacity-90">
+          <Link
+            to="/landing"
+            className="rounded-full bg-[#394508] px-8 py-3 text-lg font-bold text-white transition hover:bg-opacity-90"
+          >
             지금 시작하기
-          </button>
+          </Link>
         </div>
       </div>
     </section>

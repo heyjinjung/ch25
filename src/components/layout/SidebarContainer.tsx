@@ -32,7 +32,12 @@ const DesktopTiles: ModuleTile[] = [
   },
   {
     to: "/dice",
-    title: "레벨 주사위",
+    title: (
+      <span className="flex flex-col items-center leading-[1.15]">
+        <span>레벨</span>
+        <span>주사위</span>
+      </span>
+    ),
     icon: assets.levelSvg,
     fallback: assets.iconLevel,
     widthClassDesktop: "w-[124px]",
@@ -49,7 +54,12 @@ const DesktopTiles: ModuleTile[] = [
 const MobileTiles: ModuleTile[] = [
   {
     to: "/dice",
-    title: "레벨 주사위",
+    title: (
+      <span className="flex flex-col items-center leading-[1.15]">
+        <span>레벨</span>
+        <span>주사위</span>
+      </span>
+    ),
     icon: assets.levelSvg,
     fallback: assets.iconLevel,
     widthClassDesktop: "",

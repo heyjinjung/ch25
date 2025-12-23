@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 // Local asset paths (place files under public/assets/figma/)
 const assets = {
@@ -23,11 +24,14 @@ const assets = {
   bentoCustomerSat: "/images/unnamed113.svg",
 };
 
-const howToIcons: { title: string; icon: string; href?: string }[] = [
+const gameLinks = ["/roulette", "/dice", "/lottery"] as const;
+const randomGameLink = gameLinks[Math.floor(Math.random() * gameLinks.length)];
+
+const howToIcons: { title: string; icon: string; href?: string; to?: string }[] = [
   { title: "씨씨이용하기", icon: assets.iconWallet, href: "https://ccc-010.com" },
-  { title: "금고서비스", icon: assets.iconSecurity },
-  { title: "포인트게임하기", icon: assets.iconGraph },
-  { title: "친구초대", icon: assets.iconPeople },
+  { title: "금고서비스", icon: assets.iconSecurity, to: "/vault" },
+  { title: "포인트게임하기", icon: assets.iconGraph, to: randomGameLink },
+  { title: "친구초대", icon: assets.iconPeople, to: "/vault" },
 ];
 
 const bento = [
@@ -38,7 +42,7 @@ const bento = [
     icon: null,
   },
   {
-    title: "Efficiency Increase Per Transfer",
+    title: "빠르고 신속한 고객응대 서비스",
     description: "",
     icon: assets.bentoEfficiency,
     fallback: assets.vectorBar,
@@ -101,7 +105,7 @@ const HowToUse: React.FC = () => (
     </h2>
     <div className="grid w-full gap-[20px] sm:grid-cols-2 lg:grid-cols-4 lg:gap-[40px]">
       {howToIcons.map((item) => {
-        const Wrapper = item.href ? "a" : "div";
+        const Wrapper = item.href ? "a" : item.to ? Link : "div";
         return (
           <Wrapper
             key={item.title}
@@ -110,6 +114,11 @@ const HowToUse: React.FC = () => (
                   href: item.href,
                   target: "_blank",
                   rel: "noreferrer",
+                  className: "flex flex-col items-center gap-[15px] hover:opacity-90",
+                }
+              : item.to
+              ? {
+                  to: item.to,
                   className: "flex flex-col items-center gap-[15px] hover:opacity-90",
                 }
               : { className: "flex flex-col items-center gap-[15px]" })}
