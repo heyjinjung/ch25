@@ -1,7 +1,7 @@
-# Vault(금고) 통합 설계서 — Phase 1 Reset + 기존유저 전략 + 적립 단위(50판 황금선)
+# Vault(금고) 최종 설계 — Phase 1 Reset + 기존유저 전략 + 체험티켓 보상 적립(50판 황금선)
 
 - 문서 타입: 통합(정책 + UX 흐름 + 상태머신 + BE/FE/DB 맵핑)
-- 버전: v2.1
+- 버전: v2.2
 - 작성일: 2025-12-23
 - 대상 독자: 기획자, 백엔드/프론트엔드 개발자
 - 스코프: Phase 1(Reset) + Phase 2 확장 가드레일(Protect)까지
@@ -23,6 +23,7 @@
 - (리텐션 철학) 기존유저용 Vault: “보너스 이벤트”가 아니라 “내가 이미 벌어둔 자산이 잠겨 있다”는 Lock-in 자산
 - (핵심 추가) Phase 1 적립 단위를 게임 플레이(비용 소모 + 결과 확정) 기반으로 정의한다.
   - 50판 기준 locked 누적이 11,000~14,000원(황금선)으로 수렴하도록 단위를 설계한다.
+- (체험티켓) 보상은 “표준화된 earn 이벤트”로만 금고에 적립한다(earn_event_id 멱등 + reward_kind 태깅 + 금액 환산 테이블 + 롤아웃 플래그).
 
 ---
 
@@ -139,6 +140,7 @@ Phase 1 단일 기준(중요)
 - 트리거: **비용 소모 + 결과 확정**(ticket/coin spend AND game result finalized)
 - 판당 기본 적립(비용 소모 + 결과 발생 시): **200원**
 - 패배 추가 적립(lose 보정): **+100원**
+- 체험티켓(무료/프로모) 보상은 **게임 결과로 산출된 보상 금액 전액을 locked에 적립**한다(earn_amount = payout), 단 동일 이벤트 중복 적립 방지를 위해 earn_event_id 필수.
 
 권장 운영 원칙
 - 금고는 “락인 자산” 역할 고정(예측 가능한 누적/만료/해금)
@@ -219,6 +221,7 @@ stateDiagram-v2
 | GAME_PLAY_SPEND_RESULT | EARN | PHASE_1 | 티켓/코인 소모 + 결과 확정 | `+200/판` | “판수=자산” 핵심 |
 | GAME_LOSE_BONUS | EARN | PHASE_1 | 결과가 LOSE | `+100/패` | 운 나쁜 날 더 쌓임 |
 | TEAM_BATTLE_PLAY_SPEND_RESULT | EARN | PHASE_1 | 팀배틀 참여 + 결과 확정 | `+200/판 (+100/패)` | 단위 통일 |
+| TRIAL_TICKET_RESULT | EARN | PHASE_1 | 체험티켓 플레이 결과 확정 | `보상 금액 전액`(earn_amount = payout) | 무료/프로모 보상 그대로 적립, 중복 방지 필요 |
 | TICKET_SPEND_ONLY_BLOCKED | EARN | PHASE_1 | (선택) 소모만 있고 결과 취소/에러 | `+0` | 금지 권장(가치/결과 없음) |
 
 ### 7.2 Phase 2 — 유지/보호/연장(PROTECT)
@@ -238,21 +241,65 @@ stateDiagram-v2
 
 ---
 
-## 8) 구현 가이드(Phase 1에 “게임당 적립”을 넣기 위한 최소 변경)
+## 8) 체험티켓 보상 적립 충돌 방지(표준 이벤트)
 
-### 8.1 필요한 성질
+- 목적: 테이블/스키마 없이도 체험티켓 보상 적립을 안전하게 흡수(표준 이벤트 + 멱등 + 금액 환산 가드).
+- 적용 원칙: 금고 적립 입력은 **VaultEarnEvent** DTO로만 받는다. 금액 환산이 불가능한 상품은 적립하지 않고 로그만 남긴다.
+
+### 8.1 정책 요약 (방어책)
+- 입력 표준화: 게임 결과 → `VaultEarnEvent { earn_event_id, user_id, amount, source="TRIAL", token_type, game_type, reward_kind }`
+- 강제 멱등: `earn_event_id`는 결과 로그 ID 또는 `(game_result_id, user_id, ts)` 해시. 적립 시 중복 체크 테이블/캐시 기록.
+- 보상 타입 태깅: `reward_kind ∈ {CASH, ITEM, TOKEN, TICKET, BUNDLE}`. 금액형만 적립. 비금액형은 금액 환산 테이블로만 적립.
+- 금액 환산 테이블: `trial_reward_valuation`(설정/맵)에서만 환산 허용. 환산값이 없으면 적립 SKIP.
+- validation: `amount <= 0` 또는 `reward_kind` 누락 → 적립 거부 + 로그.
+- 분리 로깅: `source=TRIAL`, `reward_kind`, `payout_raw`(가능하면) 기록. SKIP 사유 집계.
+- 롤아웃 가드: `enable_trial_payout_to_vault` 플래그 + 화이트리스트(게임/유저 범위)로 점진 적용.
+
+### 8.2 VaultEarnEvent DTO 예시
+```
+{
+  "earn_event_id": "roulette:result:12345",   // 멱등 키
+  "user_id": 42,
+  "amount": 12500,                             // 환산된 원화 기준 금액; 미환산 시 null/0으로 스킵
+  "source": "TRIAL",                         // trial/ticket_zero 출처 식별
+  "token_type": "ROULETTE_COIN",             // GameTokenType
+  "game_type": "ROULETTE",                   // 게임 분류
+  "reward_kind": "CASH",                     // CASH | ITEM | TOKEN | TICKET | BUNDLE
+  "payout_raw": { "reward_id": "promo_box_A", "items": [ ... ] },
+  "meta": { "tier": "A/B bucket", "ts": "2025-12-23T12:00:00Z" }
+}
+```
+
+### 8.3 trial_reward_valuation 샘플(설정 맵)
+```json
+{
+  "ROULETTE": {
+    "promo_box_A": 5000,
+    "promo_box_B": 10000,
+    "coin_pack_small": 2000
+  },
+  "DICE": {
+    "free_spin_reward": 1500
+  }
+}
+```
+- 맵에 없는 reward_id/상품은 적립 SKIP + 로그. 운영이 맵을 보강 후 재적립 가능.
+
+## 9) 구현 가이드(Phase 1에 “게임당 적립”을 넣기 위한 최소 변경)
+
+### 9.1 필요한 성질
 - 정확한 트리거: “비용 소모”가 아니라 반드시 “결과 확정”까지 포함
 - 중복 방지(idempotency): 같은 게임 결과가 2번 들어와도 2번 적립되지 않도록 이벤트 ID 필요
 - 로그/관측: Phase 2/3로 갈수록 earn log가 필요(최소라도 남기는 것을 권장)
 
-### 8.2 최소 변경 권장안
+### 9.2 최소 변경 권장안
 - Vault2(또는 별도 로그)에 `earn_event_id`, `earn_type`, `amount`, `created_at` 기록
 - `vault_locked_balance += amount` (source of truth)
 - `vault_locked_expires_at`는 첫 적립 시에만 세팅(Phase 1 규칙)
 
 ---
 
-## 9) 정책-카피-코드 일치(중요)
+## 10) 정책-카피-코드 일치(중요)
 
 - 홈 배너/티켓0 패널/모달 카피에서 반드시 한 줄 고정:
   - “다음 해금 조건: ___ 하면 ___원 해금”
@@ -260,9 +307,10 @@ stateDiagram-v2
 
 ---
 
-## 10) 체크리스트(이 문서를 기준으로)
+## 11) 체크리스트(이 문서를 기준으로)
 
 - [ ] Phase 1 적립 훅: “비용 소모 + 결과 확정” 지점에 locked 적립 연결
+- [ ] 체험티켓 보상 결과값 전액 locked 적립(earn_event_id 멱등 + reward_kind 태깅 + 금액 환산 맵)
 - [ ] lose 판정 경로에서 +100 보정 추가
 - [ ] expires_at 규칙(Phase 1: 갱신 없음) 보장
 - [ ] ticket=0에서 `recommended_action=OPEN_VAULT_MODAL` + `cta_payload`로 연결
@@ -271,7 +319,7 @@ stateDiagram-v2
 
 ---
 
-## 11) 오픈 퀘스천(확정 필요)
+## 12) 오픈 퀘스천(확정 필요)
 
 - “판당 적립”을 어떤 게임들(룰렛/주사위/복권/팀배틀)에 동일 적용할지
 - 결과 확정 이벤트의 식별자(게임 로그 ID 등) 확보 방식
