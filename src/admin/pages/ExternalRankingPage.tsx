@@ -20,6 +20,11 @@ const ExternalRankingPage: React.FC = () => {
 
   const [rows, setRows] = useState<EditableRow[]>([]);
   const newRowInputRef = useRef<HTMLInputElement | null>(null);
+  const [rowSearchInput, setRowSearchInput] = useState<string>("");
+  const [rowSearchApplied, setRowSearchApplied] = useState<string>("");
+  const [pageSize, setPageSize] = useState<number>(50);
+  const [page, setPage] = useState<number>(0);
+  const [isDirty, setIsDirty] = useState<boolean>(false);
 
   useEffect(() => {
     if (data?.items) {
@@ -34,6 +39,8 @@ const ExternalRankingPage: React.FC = () => {
           __isNew: false,
         }))
       );
+      setIsDirty(false);
+      setPage(0);
     }
   }, [data]);
 
@@ -55,6 +62,7 @@ const ExternalRankingPage: React.FC = () => {
         );
       }
       queryClient.invalidateQueries({ queryKey: ["admin", "external-ranking"] });
+      setIsDirty(false);
     },
   });
 
@@ -81,6 +89,7 @@ const ExternalRankingPage: React.FC = () => {
           : row
       )
     );
+    setIsDirty(true);
   };
 
   const addRow = () => {
@@ -88,6 +97,7 @@ const ExternalRankingPage: React.FC = () => {
       ...prev,
       { external_id: "", deposit_amount: 0, play_count: 0, memo: "", __isNew: true },
     ]);
+    setIsDirty(true);
     setTimeout(() => newRowInputRef.current?.focus(), 0);
   };
 
@@ -97,6 +107,7 @@ const ExternalRankingPage: React.FC = () => {
       deleteMutation.mutate(target.user_id);
     }
     setRows((prev) => prev.filter((_, idx) => idx !== index));
+    setIsDirty(true);
   };
 
   const saveAll = () => {
@@ -110,6 +121,39 @@ const ExternalRankingPage: React.FC = () => {
       }));
     upsertMutation.mutate(payloads);
   };
+
+  const normalize = (value: unknown) => String(value ?? "").toLowerCase();
+  const includesAny = (hay: string, needle: string) => {
+    const n = needle.trim().toLowerCase();
+    if (!n) return true;
+    return hay.includes(n);
+  };
+
+  const applyRowSearch = () => {
+    setRowSearchApplied(rowSearchInput.trim());
+    setPage(0);
+  };
+
+  const clearRowSearch = () => {
+    setRowSearchInput("");
+    setRowSearchApplied("");
+    setPage(0);
+  };
+
+  const visible = rows
+    .map((row, index) => ({ row, index }))
+    .filter(({ row }) => {
+      if (!rowSearchApplied.trim()) return true;
+      const hay = normalize(`${row.external_id ?? ""} ${row.user_id ?? ""} ${row.deposit_amount ?? ""} ${row.play_count ?? ""} ${row.memo ?? ""}`);
+      return includesAny(hay, rowSearchApplied);
+    });
+
+  const totalVisible = visible.length;
+  const totalPages = Math.max(1, Math.ceil(totalVisible / pageSize));
+  const safePage = Math.min(page, totalPages - 1);
+  const pageStart = safePage * pageSize;
+  const pageEnd = Math.min(pageStart + pageSize, totalVisible);
+  const pageItems = visible.slice(pageStart, pageEnd);
 
   const inputBase =
     "w-full rounded-md border border-[#333333] bg-[#1A1A1A] px-3 py-2 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]";
@@ -152,7 +196,7 @@ const ExternalRankingPage: React.FC = () => {
             <Plus size={18} className="mr-2" />
             행 추가
           </SecondaryButton>
-          <PrimaryButton onClick={saveAll} disabled={upsertMutation.isPending}>
+          <PrimaryButton onClick={saveAll} disabled={upsertMutation.isPending || !isDirty}>
             {upsertMutation.isPending ? "저장 중..." : "전체 저장"}
           </PrimaryButton>
         </div>
@@ -167,7 +211,49 @@ const ExternalRankingPage: React.FC = () => {
 
       <div className="rounded-lg border border-[#333333] bg-[#111111] px-4 py-3 text-sm text-gray-300">
         총 <span className="font-medium text-white">{rows.length}</span>행
-        <span className="ml-2 text-gray-500">(입력 후 전체 저장을 누르세요)</span>
+        {rowSearchApplied ? (
+          <span className="ml-2 text-gray-500">(검색 적용: {totalVisible}행)</span>
+        ) : (
+          <span className="ml-2 text-gray-500">(입력 후 전체 저장을 누르세요)</span>
+        )}
+        <span className="ml-3 text-xs text-gray-500">변경사항: {isDirty ? "있음" : "없음"}</span>
+      </div>
+
+      <div className="rounded-lg border border-[#333333] bg-[#0A0A0A] p-3">
+        <div className="flex flex-wrap items-end gap-2">
+          <div className="flex flex-col">
+            <label className="text-xs text-gray-400">행 검색(적용형)</label>
+            <input
+              value={rowSearchInput}
+              onChange={(e) => setRowSearchInput(e.target.value)}
+              className={inputBase + " w-72"}
+              placeholder="external_id / memo / user_id"
+            />
+          </div>
+          <SecondaryButton onClick={applyRowSearch}>검색 적용</SecondaryButton>
+          <SecondaryButton onClick={clearRowSearch} disabled={!rowSearchInput && !rowSearchApplied}>
+            초기화
+          </SecondaryButton>
+
+          <div className="ml-auto flex flex-wrap items-end gap-2">
+            <div className="flex flex-col">
+              <label className="text-xs text-gray-400">페이지 크기</label>
+              <select
+                className={inputBase + " w-32"}
+                value={pageSize}
+                onChange={(e) => {
+                  setPageSize(Number(e.target.value));
+                  setPage(0);
+                }}
+              >
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+            </div>
+            <div className="text-xs text-gray-500">{totalVisible === 0 ? "0" : pageStart + 1}-{pageEnd} / {totalVisible}</div>
+          </div>
+        </div>
       </div>
 
       <div className="overflow-hidden rounded-lg border border-[#333333] bg-[#111111] shadow-md">
@@ -183,13 +269,13 @@ const ExternalRankingPage: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#333333]">
-              {rows.map((row, idx) => (
+              {pageItems.map(({ row, index }, viewIdx) => (
                 <tr
-                  key={idx}
+                  key={index}
                   className={
                     row.__isNew
                       ? "bg-[#2D6B3B]/20"
-                      : idx % 2 === 0
+                      : viewIdx % 2 === 0
                       ? "bg-[#111111]"
                       : "bg-[#1A1A1A]"
                   }
@@ -198,17 +284,17 @@ const ExternalRankingPage: React.FC = () => {
                     <input
                       type="text"
                       value={row.external_id ?? ""}
-                      onChange={(e) => handleChange(idx, "external_id", e.target.value)}
+                      onChange={(e) => handleChange(index, "external_id", e.target.value)}
                       className={inputBase}
                       placeholder="external_id"
-                      ref={idx === rows.length - 1 && row.__isNew ? newRowInputRef : null}
+                      ref={index === rows.length - 1 && row.__isNew ? newRowInputRef : null}
                     />
                   </td>
                   <td className="px-4 py-3">
                     <input
                       type="number"
                       value={row.deposit_amount}
-                      onChange={(e) => handleChange(idx, "deposit_amount", Number(e.target.value))}
+                      onChange={(e) => handleChange(index, "deposit_amount", Number(e.target.value))}
                       className={inputBase + " text-right"}
                       min={0}
                     />
@@ -217,7 +303,7 @@ const ExternalRankingPage: React.FC = () => {
                     <input
                       type="number"
                       value={row.play_count}
-                      onChange={(e) => handleChange(idx, "play_count", Number(e.target.value))}
+                      onChange={(e) => handleChange(index, "play_count", Number(e.target.value))}
                       className={inputBase + " text-right"}
                       min={0}
                     />
@@ -226,7 +312,7 @@ const ExternalRankingPage: React.FC = () => {
                     <input
                       type="text"
                       value={row.memo ?? ""}
-                      onChange={(e) => handleChange(idx, "memo", e.target.value)}
+                      onChange={(e) => handleChange(index, "memo", e.target.value)}
                       className={inputBase}
                       placeholder="예: 5만원 입금"
                     />
@@ -234,7 +320,7 @@ const ExternalRankingPage: React.FC = () => {
                   <td className="px-4 py-3 text-center">
                     <button
                       type="button"
-                      onClick={() => removeRow(idx)}
+                      onClick={() => removeRow(index)}
                       disabled={deleteMutation.isPending}
                       className="rounded-md border border-[#333333] bg-[#1A1A1A] px-3 py-2 text-sm font-medium text-gray-200 hover:bg-red-950 hover:text-red-200 disabled:cursor-not-allowed disabled:opacity-60"
                     >
@@ -250,10 +336,40 @@ const ExternalRankingPage: React.FC = () => {
                   </td>
                 </tr>
               )}
+              {rows.length > 0 && totalVisible === 0 && (
+                <tr>
+                  <td className="px-4 py-10 text-center text-gray-400" colSpan={5}>
+                    검색 결과가 없습니다. “초기화”를 눌러 전체를 확인하세요.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
       </div>
+
+      {rows.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[#333333] bg-[#0A0A0A] p-3">
+          <div className="text-xs text-gray-500">페이지 {safePage + 1} / {totalPages}</div>
+          <div className="flex flex-wrap items-center gap-2">
+            <SecondaryButton
+              onClick={() => setPage((p) => Math.max(0, p - 1))}
+              disabled={safePage <= 0}
+            >
+              이전
+            </SecondaryButton>
+            <SecondaryButton
+              onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+              disabled={safePage >= totalPages - 1}
+            >
+              다음
+            </SecondaryButton>
+            <PrimaryButton onClick={saveAll} disabled={upsertMutation.isPending || !isDirty}>
+              {upsertMutation.isPending ? "저장 중..." : "전체 저장"}
+            </PrimaryButton>
+          </div>
+        </div>
+      )}
     </section>
   );
 };

@@ -13,10 +13,30 @@ import {
   TokenBalance,
 } from "../api/adminGameTokenApi";
 import { GAME_TOKEN_LABELS, GameTokenType } from "../../types/gameTokens";
+import { REWARD_TYPES } from "../constants/rewardTypes";
 
 const tokenOptions: GameTokenType[] = ["ROULETTE_COIN", "DICE_TOKEN", "LOTTERY_TICKET", "CC_COIN"];
 
+const gameLabel = (game?: string | null) => {
+  const raw = String(game ?? "").trim();
+  const key = raw.toUpperCase();
+  if (!raw) return "-";
+  if (key.includes("ROULETTE")) return "룰렛";
+  if (key.includes("DICE")) return "주사위";
+  if (key.includes("LOTTERY")) return "복권";
+  return raw;
+};
+
+const rewardTypeLabel = (rewardType?: string | null) => {
+  const raw = String(rewardType ?? "").trim();
+  if (!raw) return "-";
+  const match = REWARD_TYPES.find((t) => t.value === raw);
+  return match?.label ?? raw;
+};
+
 type ActiveTab = "wallets" | "playLogs" | "ledger" | "revoke";
+
+type SortDir = "asc" | "desc";
 
 const GameTokenLogsPage: React.FC = () => {
   const queryClient = useQueryClient();
@@ -31,8 +51,18 @@ const GameTokenLogsPage: React.FC = () => {
   const [walletLimit, setWalletLimit] = useState<number>(20);
   const [walletPage, setWalletPage] = useState<number>(0);
 
+  const [walletSearch, setWalletSearch] = useState<string>("");
+  const [walletSortKey, setWalletSortKey] = useState<"external_id" | "token_type" | "balance">("balance");
+  const [walletSortDir, setWalletSortDir] = useState<SortDir>("desc");
+
   const [playLogLimit, setPlayLogLimit] = useState<number>(50);
   const [playLogPage, setPlayLogPage] = useState<number>(0);
+
+  const [playLogSearch, setPlayLogSearch] = useState<string>("");
+  const [playLogGameFilter, setPlayLogGameFilter] = useState<string>("");
+  const [playLogRewardTypeFilter, setPlayLogRewardTypeFilter] = useState<string>("");
+  const [playLogSortKey, setPlayLogSortKey] = useState<"created_at" | "reward_amount" | "game">("created_at");
+  const [playLogSortDir, setPlayLogSortDir] = useState<SortDir>("desc");
 
   const [revokeExternalId, setRevokeExternalId] = useState<string>("");
   const [revokeTokenType, setRevokeTokenType] = useState<GameTokenType>("ROULETTE_COIN");
@@ -40,6 +70,12 @@ const GameTokenLogsPage: React.FC = () => {
   const [ledgerLimit, setLedgerLimit] = useState<number>(50);
   const [ledgerPage, setLedgerPage] = useState<number>(0);
   const [revokeResult, setRevokeResult] = useState<GrantGameTokensResponse | null>(null);
+
+  const [ledgerSearch, setLedgerSearch] = useState<string>("");
+  const [ledgerTokenTypeFilter, setLedgerTokenTypeFilter] = useState<string>("");
+  const [ledgerDeltaFilter, setLedgerDeltaFilter] = useState<"" | "pos" | "neg">("");
+  const [ledgerSortKey, setLedgerSortKey] = useState<"created_at" | "delta" | "balance_after" | "id">("created_at");
+  const [ledgerSortDir, setLedgerSortDir] = useState<SortDir>("desc");
 
   const [selectedLedgerIds, setSelectedLedgerIds] = useState<Record<number, boolean>>({});
   const [expandedLedgerId, setExpandedLedgerId] = useState<number | null>(null);
@@ -116,6 +152,21 @@ const GameTokenLogsPage: React.FC = () => {
     return d.isValid() ? d.format("YYYY-MM-DD HH:mm:ss") : value;
   };
 
+  const normalize = (value: unknown) => String(value ?? "").toLowerCase();
+  const includesAny = (hay: string, needle: string) => {
+    const n = needle.trim().toLowerCase();
+    if (!n) return true;
+    return hay.includes(n);
+  };
+
+  const compareStr = (a: string, b: string, dir: SortDir) => (dir === "asc" ? a.localeCompare(b) : b.localeCompare(a));
+  const compareNum = (a: number, b: number, dir: SortDir) => (dir === "asc" ? a - b : b - a);
+  const compareTime = (a: string | null | undefined, b: string | null | undefined, dir: SortDir) => {
+    const at = a ? dayjs(a).valueOf() : 0;
+    const bt = b ? dayjs(b).valueOf() : 0;
+    return compareNum(at, bt, dir);
+  };
+
   const applyExternalId = () => {
     const next = externalIdInput.trim();
     const nextFilter = next ? next : undefined;
@@ -137,6 +188,14 @@ const GameTokenLogsPage: React.FC = () => {
     setWalletPage(0);
     setPlayLogPage(0);
     setLedgerPage(0);
+
+    setWalletSearch("");
+    setPlayLogSearch("");
+    setPlayLogGameFilter("");
+    setPlayLogRewardTypeFilter("");
+    setLedgerSearch("");
+    setLedgerTokenTypeFilter("");
+    setLedgerDeltaFilter("");
   };
 
   const prettyJson = (value: unknown) => {
@@ -146,6 +205,68 @@ const GameTokenLogsPage: React.FC = () => {
       return "{}";
     }
   };
+
+  const walletVisibleRows = useMemo(() => {
+    const base = walletsQuery.data ?? [];
+    const filtered = base.filter((r) => {
+      const hay = normalize(`${r.external_id ?? ""} ${r.user_id} ${r.token_type} ${GAME_TOKEN_LABELS[r.token_type]} ${r.balance}`);
+      return includesAny(hay, walletSearch);
+    });
+    const sorted = [...filtered].sort((a, b) => {
+      if (walletSortKey === "balance") return compareNum(a.balance ?? 0, b.balance ?? 0, walletSortDir);
+      if (walletSortKey === "token_type") {
+        return compareStr(normalize(GAME_TOKEN_LABELS[a.token_type] ?? a.token_type), normalize(GAME_TOKEN_LABELS[b.token_type] ?? b.token_type), walletSortDir);
+      }
+      const ax = normalize(a.external_id ?? String(a.user_id ?? ""));
+      const bx = normalize(b.external_id ?? String(b.user_id ?? ""));
+      return compareStr(ax, bx, walletSortDir);
+    });
+    return sorted;
+  }, [walletsQuery.data, walletSearch, walletSortKey, walletSortDir]);
+
+  const playLogVisibleRows = useMemo(() => {
+    const base = playLogsQuery.data ?? [];
+    const filtered = base.filter((r) => {
+      if (playLogGameFilter && normalize(r.game) !== normalize(playLogGameFilter)) return false;
+      if (playLogRewardTypeFilter && normalize(r.reward_type) !== normalize(playLogRewardTypeFilter)) return false;
+      const hay = normalize(
+        `${r.game} ${gameLabel(r.game)} ${r.external_id ?? ""} ${r.user_id} ${r.reward_type} ${rewardTypeLabel(r.reward_type)} ${r.reward_amount} ${r.reward_label ?? ""}`
+      );
+      return includesAny(hay, playLogSearch);
+    });
+    const sorted = [...filtered].sort((a, b) => {
+      if (playLogSortKey === "reward_amount") return compareNum(a.reward_amount ?? 0, b.reward_amount ?? 0, playLogSortDir);
+      if (playLogSortKey === "game") return compareStr(normalize(gameLabel(a.game)), normalize(gameLabel(b.game)), playLogSortDir);
+      return compareTime(a.created_at, b.created_at, playLogSortDir);
+    });
+    return sorted;
+  }, [playLogsQuery.data, playLogGameFilter, playLogRewardTypeFilter, playLogSearch, playLogSortKey, playLogSortDir]);
+
+  const ledgerVisibleRows = useMemo(() => {
+    const base = ledgerQuery.data ?? [];
+    const filtered = base.filter((r) => {
+      if (ledgerTokenTypeFilter && String(r.token_type) !== ledgerTokenTypeFilter) return false;
+      if (ledgerDeltaFilter === "pos" && !(r.delta >= 0)) return false;
+      if (ledgerDeltaFilter === "neg" && !(r.delta < 0)) return false;
+      const hay = normalize(`${r.id} ${r.external_id ?? ""} ${r.user_id} ${r.token_type} ${GAME_TOKEN_LABELS[r.token_type]} ${r.delta} ${r.balance_after} ${r.reason ?? ""} ${r.label ?? ""}`);
+      return includesAny(hay, ledgerSearch);
+    });
+    const sorted = [...filtered].sort((a, b) => {
+      if (ledgerSortKey === "id") return compareNum(a.id ?? 0, b.id ?? 0, ledgerSortDir);
+      if (ledgerSortKey === "delta") return compareNum(a.delta ?? 0, b.delta ?? 0, ledgerSortDir);
+      if (ledgerSortKey === "balance_after") return compareNum(a.balance_after ?? 0, b.balance_after ?? 0, ledgerSortDir);
+      return compareTime(a.created_at, b.created_at, ledgerSortDir);
+    });
+    return sorted;
+  }, [ledgerQuery.data, ledgerSearch, ledgerTokenTypeFilter, ledgerDeltaFilter, ledgerSortKey, ledgerSortDir]);
+
+  const playLogGameOptions = useMemo(() => {
+    const set = new Set<string>();
+    for (const r of playLogsQuery.data ?? []) set.add(String(r.game));
+    return Array.from(set).sort();
+  }, [playLogsQuery.data]);
+
+  const playLogRewardTypeOptions = useMemo(() => REWARD_TYPES.map((t) => t.value), []);
 
   return (
     <section className="space-y-5">
@@ -224,6 +345,22 @@ const GameTokenLogsPage: React.FC = () => {
               <p className="mt-1 text-xs text-gray-500">대용량 데이터는 필터 적용 후 조회하는 것을 권장합니다.</p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
+              <input
+                value={walletSearch}
+                onChange={(e) => setWalletSearch(e.target.value)}
+                className="w-60 rounded-md border border-[#333333] bg-[#1A1A1A] px-3 py-2 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
+                placeholder="현재 페이지 내 검색"
+                title="현재 페이지 데이터에서만 검색됩니다"
+              />
+              <select className={selectClass} value={walletSortKey} onChange={(e) => setWalletSortKey(e.target.value as any)}>
+                <option value="balance">잔액</option>
+                <option value="external_id">external_id</option>
+                <option value="token_type">토큰</option>
+              </select>
+              <select className={selectClass} value={walletSortDir} onChange={(e) => setWalletSortDir(e.target.value as SortDir)}>
+                <option value="desc">내림차순</option>
+                <option value="asc">오름차순</option>
+              </select>
               <select
                 className={selectClass}
                 value={filterHasBalance === undefined ? "" : filterHasBalance ? "has" : "empty"}
@@ -284,7 +421,7 @@ const GameTokenLogsPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#333333]">
-                {walletsQuery.data?.map((row, idx) => (
+                {walletVisibleRows.map((row, idx) => (
                   <tr key={`${row.user_id}-${row.token_type}`} className={idx % 2 === 0 ? "bg-[#111111]" : "bg-[#1A1A1A]"}>
                     <td className="px-4 py-3">
                       <div className="text-sm font-medium text-white">{row.external_id ?? row.user_id}</div>
@@ -356,6 +493,38 @@ const GameTokenLogsPage: React.FC = () => {
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <input
+                value={playLogSearch}
+                onChange={(e) => setPlayLogSearch(e.target.value)}
+                className="w-60 rounded-md border border-[#333333] bg-[#1A1A1A] px-3 py-2 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
+                placeholder="현재 페이지 내 검색"
+                title="현재 페이지 데이터에서만 검색됩니다"
+              />
+              <select className={selectClass} value={playLogGameFilter} onChange={(e) => setPlayLogGameFilter(e.target.value)}>
+                <option value="">전체 게임</option>
+                {playLogGameOptions.map((g) => (
+                  <option key={g} value={g}>
+                    {gameLabel(g)}
+                  </option>
+                ))}
+              </select>
+              <select className={selectClass} value={playLogRewardTypeFilter} onChange={(e) => setPlayLogRewardTypeFilter(e.target.value)}>
+                <option value="">전체 reward_type</option>
+                {playLogRewardTypeOptions.map((rt) => (
+                  <option key={rt} value={rt}>
+                    {rewardTypeLabel(rt)}
+                  </option>
+                ))}
+              </select>
+              <select className={selectClass} value={playLogSortKey} onChange={(e) => setPlayLogSortKey(e.target.value as any)}>
+                <option value="created_at">시각</option>
+                <option value="reward_amount">reward_amount</option>
+                <option value="game">game</option>
+              </select>
+              <select className={selectClass} value={playLogSortDir} onChange={(e) => setPlayLogSortDir(e.target.value as SortDir)}>
+                <option value="desc">내림차순</option>
+                <option value="asc">오름차순</option>
+              </select>
+              <input
                 type="number"
                 min={1}
                 max={200}
@@ -390,7 +559,7 @@ const GameTokenLogsPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#333333]">
-                {playLogsQuery.data?.map((row, idx) => (
+                {playLogVisibleRows.map((row, idx) => (
                   <tr key={`${row.game}-${row.id}`} className={idx % 2 === 0 ? "bg-[#111111]" : "bg-[#1A1A1A]"}>
                     <td className="px-4 py-3 text-sm text-gray-200">{row.game}</td>
                     <td className="px-4 py-3">
@@ -466,6 +635,36 @@ const GameTokenLogsPage: React.FC = () => {
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <input
+                value={ledgerSearch}
+                onChange={(e) => setLedgerSearch(e.target.value)}
+                className="w-60 rounded-md border border-[#333333] bg-[#1A1A1A] px-3 py-2 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
+                placeholder="사유/라벨/ID 검색"
+                title="현재 페이지 데이터에서만 검색됩니다"
+              />
+              <select className={selectClass} value={ledgerTokenTypeFilter} onChange={(e) => setLedgerTokenTypeFilter(e.target.value)}>
+                <option value="">전체 토큰</option>
+                {tokenOptions.map((t) => (
+                  <option key={t} value={t}>
+                    {GAME_TOKEN_LABELS[t]}
+                  </option>
+                ))}
+              </select>
+              <select className={selectClass} value={ledgerDeltaFilter} onChange={(e) => setLedgerDeltaFilter(e.target.value as any)}>
+                <option value="">증감 전체</option>
+                <option value="pos">증가(0 이상)</option>
+                <option value="neg">감소(0 미만)</option>
+              </select>
+              <select className={selectClass} value={ledgerSortKey} onChange={(e) => setLedgerSortKey(e.target.value as any)}>
+                <option value="created_at">시각</option>
+                <option value="id">id</option>
+                <option value="delta">증감</option>
+                <option value="balance_after">잔액</option>
+              </select>
+              <select className={selectClass} value={ledgerSortDir} onChange={(e) => setLedgerSortDir(e.target.value as SortDir)}>
+                <option value="desc">내림차순</option>
+                <option value="asc">오름차순</option>
+              </select>
+              <input
                 type="number"
                 min={1}
                 max={500}
@@ -519,14 +718,13 @@ const GameTokenLogsPage: React.FC = () => {
                         aria-label="현재 페이지 전체 선택"
                         className="h-4 w-4 rounded border-[#333333] bg-[#1A1A1A] text-[#91F402] focus:ring-[#2D6B3B]"
                         checked={
-                          (ledgerQuery.data?.length ?? 0) > 0 &&
-                          (ledgerQuery.data ?? []).every((r) => selectedLedgerIds[r.id])
+                          ledgerVisibleRows.length > 0 && ledgerVisibleRows.every((r) => selectedLedgerIds[r.id])
                         }
                         onChange={(e) => {
                           const checked = e.target.checked;
                           setSelectedLedgerIds((prev) => {
                             const next = { ...prev };
-                            for (const r of ledgerQuery.data ?? []) {
+                            for (const r of ledgerVisibleRows) {
                               next[r.id] = checked;
                             }
                             return next;
@@ -546,7 +744,7 @@ const GameTokenLogsPage: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#333333]">
-                  {ledgerQuery.data?.map((row, idx) => {
+                  {ledgerVisibleRows.map((row, idx) => {
                     const selected = !!selectedLedgerIds[row.id];
                     const expanded = expandedLedgerId === row.id;
                     const baseRowBg = idx % 2 === 0 ? "bg-[#111111]" : "bg-[#1A1A1A]";
@@ -635,10 +833,10 @@ const GameTokenLogsPage: React.FC = () => {
                       </td>
                     </tr>
                   )}
-                  {!ledgerQuery.isLoading && (ledgerQuery.data?.length ?? 0) === 0 && (
+                  {!ledgerQuery.isLoading && ledgerVisibleRows.length === 0 && (
                     <tr>
                       <td colSpan={10} className="px-4 py-8 text-center text-gray-400">
-                        원장 데이터가 없습니다.
+                        데이터가 없습니다.
                       </td>
                     </tr>
                   )}

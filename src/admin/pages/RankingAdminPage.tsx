@@ -30,6 +30,10 @@ type RankingFormValues = z.infer<typeof rankingSchema>;
 const RankingAdminPage: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<string>(dayjs().format("YYYY-MM-DD"));
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
+  const [rowSearchInput, setRowSearchInput] = useState<string>("");
+  const [rowSearchApplied, setRowSearchApplied] = useState<string>("");
+  const [pageSize, setPageSize] = useState<number>(50);
+  const [page, setPage] = useState<number>(0);
   const queryClient = useQueryClient();
 
   const inputBase =
@@ -89,6 +93,35 @@ const RankingAdminPage: React.FC = () => {
 
   const { fields, append, remove } = useFieldArray({ control: form.control, name: "entries" });
 
+  const normalize = (value: unknown) => String(value ?? "").toLowerCase();
+  const includesAny = (hay: string, needle: string) => {
+    const n = needle.trim().toLowerCase();
+    if (!n) return true;
+    return hay.includes(n);
+  };
+
+  const visibleIndices = useMemo(() => {
+    const indices = Array.from({ length: fields.length }, (_, i) => i);
+    if (!rowSearchApplied.trim()) return indices;
+
+    const entries = form.getValues("entries") ?? [];
+    return indices.filter((idx) => {
+      const e = entries[idx];
+      const hay = normalize(`${e?.rank ?? ""} ${e?.user_id ?? ""} ${e?.user_name ?? ""} ${e?.score ?? ""}`);
+      return includesAny(hay, rowSearchApplied);
+    });
+  }, [fields, rowSearchApplied, form]);
+
+  const totalVisible = visibleIndices.length;
+  const totalPages = Math.max(1, Math.ceil(totalVisible / pageSize));
+  const safePage = Math.min(page, totalPages - 1);
+  const pageStart = safePage * pageSize;
+  const pageEnd = Math.min(pageStart + pageSize, totalVisible);
+  const pageIndices = useMemo(
+    () => visibleIndices.slice(pageStart, pageEnd),
+    [visibleIndices, pageStart, pageEnd]
+  );
+
   const mutation = useMutation({
     mutationFn: (payload: RankingFormValues) =>
       upsertRanking(payload.date, payload.entries as AdminRankingEntryPayload[]),
@@ -111,7 +144,19 @@ const RankingAdminPage: React.FC = () => {
   const loadExisting = () => {
     if (data) {
       form.reset({ date: selectedDate, entries: data });
+      setPage(0);
     }
+  };
+
+  const applyRowSearch = () => {
+    setRowSearchApplied(rowSearchInput.trim());
+    setPage(0);
+  };
+
+  const clearRowSearch = () => {
+    setRowSearchInput("");
+    setRowSearchApplied("");
+    setPage(0);
   };
 
   return (
@@ -167,8 +212,54 @@ const RankingAdminPage: React.FC = () => {
           </PrimaryButton>
         </div>
 
-        <div className="mt-3 text-sm text-gray-300">
-          현재 <span className="font-medium text-white">{fields.length}</span>행 · rank 중복은 저장 시 차단됩니다.
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm text-gray-300">
+          <div>
+            현재 <span className="font-medium text-white">{fields.length}</span>행
+            <span className="text-gray-500"> · rank 중복은 저장 시 차단됩니다.</span>
+            {rowSearchApplied && (
+              <span className="ml-2 text-gray-400">
+                (검색 적용: <span className="font-medium text-white">{totalVisible}</span>행)
+              </span>
+            )}
+          </div>
+          <div className="text-xs text-gray-500">변경사항: {form.formState.isDirty ? "있음" : "없음"}</div>
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-end gap-2 rounded-lg border border-[#333333] bg-[#0A0A0A] p-3">
+          <div className="flex flex-col">
+            <label className="text-xs text-gray-400">행 검색(적용형)</label>
+            <input
+              value={rowSearchInput}
+              onChange={(e) => setRowSearchInput(e.target.value)}
+              placeholder="rank / user_id / 닉네임 / score"
+              className={inputBase + " w-72"}
+            />
+          </div>
+          <SecondaryButton onClick={applyRowSearch}>검색 적용</SecondaryButton>
+          <SecondaryButton onClick={clearRowSearch} disabled={!rowSearchInput && !rowSearchApplied}>
+            초기화
+          </SecondaryButton>
+
+          <div className="ml-auto flex flex-wrap items-end gap-2">
+            <div className="flex flex-col">
+              <label className="text-xs text-gray-400">페이지 크기</label>
+              <select
+                className={inputBase + " w-32"}
+                value={pageSize}
+                onChange={(e) => {
+                  setPageSize(Number(e.target.value));
+                  setPage(0);
+                }}
+              >
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+            </div>
+            <div className="text-xs text-gray-500">
+              {totalVisible === 0 ? "0" : pageStart + 1}-{pageEnd} / {totalVisible}
+            </div>
+          </div>
         </div>
 
         {isLoading && (
@@ -199,9 +290,11 @@ const RankingAdminPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#333333]">
-                {fields.map((field, idx) => (
+                {pageIndices.map((idx) => {
+                  const field = fields[idx];
+                  return (
                   <tr key={field.id} className={idx % 2 === 0 ? "bg-[#111111]" : "bg-[#1A1A1A]"}>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-2">
                       <input
                         type="number"
                         className={inputBase + " text-right"}
@@ -209,7 +302,7 @@ const RankingAdminPage: React.FC = () => {
                         min={1}
                       />
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-2">
                       <input
                         type="number"
                         className={inputBase}
@@ -220,7 +313,7 @@ const RankingAdminPage: React.FC = () => {
                         <p className="mt-1 text-xs text-red-300">user_id를 입력하세요</p>
                       )}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-2">
                       <input
                         type="text"
                         className={inputBase}
@@ -228,7 +321,7 @@ const RankingAdminPage: React.FC = () => {
                         {...form.register(`entries.${idx}.user_name`)}
                       />
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-2">
                       <input
                         type="number"
                         className={inputBase + " text-right"}
@@ -236,11 +329,12 @@ const RankingAdminPage: React.FC = () => {
                         min={0}
                       />
                     </td>
-                    <td className="px-4 py-3 text-center">
+                    <td className="px-4 py-2 text-center">
                       <SecondaryButton onClick={() => remove(idx)}>삭제</SecondaryButton>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
                 {fields.length === 0 && (
                   <tr>
                     <td className="px-4 py-10 text-center text-gray-400" colSpan={5}>
@@ -248,10 +342,42 @@ const RankingAdminPage: React.FC = () => {
                     </td>
                   </tr>
                 )}
+                {fields.length > 0 && totalVisible === 0 && (
+                  <tr>
+                    <td className="px-4 py-10 text-center text-gray-400" colSpan={5}>
+                      검색 결과가 없습니다. “초기화”를 눌러 전체를 확인하세요.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
         </div>
+
+        {fields.length > 0 && (
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[#333333] bg-[#0A0A0A] p-3">
+            <div className="text-xs text-gray-500">
+              페이지 {safePage + 1} / {totalPages}
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <SecondaryButton
+                onClick={() => setPage((p) => Math.max(0, p - 1))}
+                disabled={safePage <= 0}
+              >
+                이전
+              </SecondaryButton>
+              <SecondaryButton
+                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                disabled={safePage >= totalPages - 1}
+              >
+                다음
+              </SecondaryButton>
+              <PrimaryButton onClick={() => void onSubmit()} disabled={mutation.isPending}>
+                {mutation.isPending ? "저장 중..." : "저장"}
+              </PrimaryButton>
+            </div>
+          </div>
+        )}
 
         {isDeleting && (
           <div className="mt-4 rounded-lg border border-amber-500/40 bg-amber-950 p-4 text-amber-100">
