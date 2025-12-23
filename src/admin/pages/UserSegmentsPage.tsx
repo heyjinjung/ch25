@@ -2,7 +2,6 @@
 import React, { useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { fetchUserSegments, upsertUserSegment, type AdminUserSegmentRow } from "../api/adminSegmentsApi";
-import { SEGMENT_LABELS_KO, segmentLabelKo, shouldShowLabelKo } from "../constants/segmentLabels";
 
 const formatMaybeDate = (value?: string | null) => {
   if (!value) return "-";
@@ -23,12 +22,11 @@ const UserSegmentsPage: React.FC = () => {
     | "dice_plays"
     | "lottery_plays"
     | "total_play_duration"
-    | "last_login_at"
     | "last_charge_at"
     | "segment_updated_at"
     | "activity_updated_at";
 
-  const [sortKey, setSortKey] = useState<SortKey>("last_login_at");
+  const [sortKey, setSortKey] = useState<SortKey>("activity_updated_at");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
 
   const inputBase =
@@ -96,7 +94,6 @@ const UserSegmentsPage: React.FC = () => {
       if (sortKey === "dice_plays") return compareNum(a.dice_plays ?? 0, b.dice_plays ?? 0, sortDir);
       if (sortKey === "lottery_plays") return compareNum(a.lottery_plays ?? 0, b.lottery_plays ?? 0, sortDir);
       if (sortKey === "total_play_duration") return compareNum(a.total_play_duration ?? 0, b.total_play_duration ?? 0, sortDir);
-      if (sortKey === "last_login_at") return compareDate(a.last_login_at, b.last_login_at, sortDir);
       if (sortKey === "last_charge_at") return compareDate(a.last_charge_at, b.last_charge_at, sortDir);
       if (sortKey === "segment_updated_at") return compareDate(a.segment_updated_at, b.segment_updated_at, sortDir);
       if (sortKey === "activity_updated_at") return compareDate(a.activity_updated_at, b.activity_updated_at, sortDir);
@@ -230,7 +227,6 @@ const UserSegmentsPage: React.FC = () => {
                   </button>
                 </div>
               </th>
-              <SortHeader label="마지막 로그인" k="last_login_at" className="hidden px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider xl:table-cell" />
               <SortHeader label="마지막 충전" k="last_charge_at" className="hidden px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider xl:table-cell" />
               <SortHeader label="세그 변경" k="segment_updated_at" className="hidden px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider 2xl:table-cell" />
               <SortHeader label="활동 업데이트" k="activity_updated_at" className="hidden px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider 2xl:table-cell" />
@@ -240,7 +236,7 @@ const UserSegmentsPage: React.FC = () => {
           <tbody className="divide-y divide-[#333333]">
             {visibleRows.length === 0 && !isLoading ? (
               <tr>
-                <td className="px-4 py-10 text-center text-gray-400" colSpan={8}>
+                <td className="px-4 py-10 text-center text-gray-400" colSpan={7}>
                   조회 결과가 없습니다.
                 </td>
               </tr>
@@ -257,30 +253,15 @@ const UserSegmentsPage: React.FC = () => {
                   </td>
                   <td className="px-4 py-3 align-top">
                     <div className="flex min-w-0 items-center gap-2">
-                      <datalist id="segment-suggestions">
-                        {Object.keys(SEGMENT_LABELS_KO).map((k) => (
-                          <option key={k} value={k} />
-                        ))}
-                      </datalist>
                       <input
                         value={editSegment[row.user_id] ?? row.segment}
                         onChange={(e) => setEditSegment((prev) => ({ ...prev, [row.user_id]: e.target.value }))}
                         className={inputBase + " px-2 py-1 text-xs"}
                         placeholder="예: NEW / VIP"
-                        title={segmentLabelKo(editSegment[row.user_id] ?? row.segment)}
-                        list="segment-suggestions"
                         onKeyDown={(e) => {
                           if (e.key === "Enter") void handleSave(row);
                         }}
                       />
-                      {shouldShowLabelKo(editSegment[row.user_id] ?? row.segment) && (
-                        <span
-                          className="hidden max-w-[14rem] truncate rounded-md border border-[#333333] bg-[#111111] px-2 py-1 text-xs text-gray-200 lg:inline"
-                          title={segmentLabelKo(editSegment[row.user_id] ?? row.segment)}
-                        >
-                          {segmentLabelKo(editSegment[row.user_id] ?? row.segment)}
-                        </span>
-                      )}
                     </div>
                   </td>
                   <td className="px-4 py-3 align-top text-xs text-gray-300">
@@ -290,11 +271,6 @@ const UserSegmentsPage: React.FC = () => {
                       <span className="rounded-md border border-[#333333] bg-[#111111] px-2 py-1">복권 {row.lottery_plays}</span>
                       <span className="rounded-md border border-[#333333] bg-[#111111] px-2 py-1">t {row.total_play_duration}</span>
                     </div>
-                  </td>
-                  <td className="hidden px-4 py-3 align-top text-xs text-gray-300 xl:table-cell">
-                    <span className="block truncate" title={formatMaybeDate(row.last_login_at)}>
-                      {formatMaybeDate(row.last_login_at)}
-                    </span>
                   </td>
                   <td className="hidden px-4 py-3 align-top text-xs text-gray-300 xl:table-cell">
                     <span className="block truncate" title={formatMaybeDate(row.last_charge_at)}>

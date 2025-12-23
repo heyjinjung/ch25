@@ -8,7 +8,6 @@ import {
   updateSegmentRule,
   type AdminSegmentRule,
 } from "../api/adminSegmentRulesApi";
-import { segmentLabelKo, shouldShowLabelKo } from "../constants/segmentLabels";
 
 const prettyJson = (value: unknown) => {
   try {
