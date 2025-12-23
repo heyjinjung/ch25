@@ -161,19 +161,11 @@ const SegmentRulesPage: React.FC = () => {
           </div>
           <div>
             <label className="mb-1 block text-xs font-semibold text-gray-200">세그먼트(segment)</label>
-            <div className="flex items-center gap-2">
-              <input
-                value={newSegment}
-                onChange={(e) => setNewSegment(e.target.value.toUpperCase())}
-                className={inputBase}
-                title={segmentLabelKo(newSegment)}
-              />
-              {shouldShowLabelKo(newSegment) && (
-                <span className="max-w-[14rem] truncate text-xs text-gray-400" title={segmentLabelKo(newSegment)}>
-                  {segmentLabelKo(newSegment)}
-                </span>
-              )}
-            </div>
+            <input
+              value={newSegment}
+              onChange={(e) => setNewSegment(e.target.value.toUpperCase())}
+              className={inputBase}
+            />
           </div>
           <div>
             <label className="mb-1 block text-xs font-semibold text-gray-200">우선순위(priority)</label>
@@ -261,24 +253,16 @@ const SegmentRulesPage: React.FC = () => {
                       />
                     </td>
                     <td className="px-4 py-3 align-top">
-                      <div className="flex min-w-0 items-center gap-2">
-                        <input
-                          value={view.segment}
-                          onChange={(ev) =>
-                            setEdit((prev) => ({
-                              ...prev,
-                              [r.id]: { ...(prev[r.id] ?? view), segment: ev.target.value.toUpperCase() },
-                            }))
-                          }
-                          className={inputBase + " w-[9ch] px-2 py-1 text-xs"}
-                          title={segmentLabelKo(view.segment)}
-                        />
-                        {shouldShowLabelKo(view.segment) && (
-                          <span className="max-w-[10ch] truncate text-xs text-gray-400" title={segmentLabelKo(view.segment)}>
-                            {segmentLabelKo(view.segment)}
-                          </span>
-                        )}
-                      </div>
+                      <input
+                        value={view.segment}
+                        onChange={(ev) =>
+                          setEdit((prev) => ({
+                            ...prev,
+                            [r.id]: { ...(prev[r.id] ?? view), segment: ev.target.value.toUpperCase() },
+                          }))
+                        }
+                        className={inputBase + " w-[9ch] px-2 py-1 text-xs"}
+                      />
                     </td>
                     <td className="px-4 py-3 align-top">
                       <input
