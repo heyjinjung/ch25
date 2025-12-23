@@ -105,29 +105,41 @@ const HowToUse: React.FC = () => (
     </h2>
     <div className="grid w-full gap-[20px] sm:grid-cols-2 lg:grid-cols-4 lg:gap-[40px]">
       {howToIcons.map((item) => {
-        const Wrapper = item.href ? "a" : item.to ? Link : "div";
+        if (item.to) {
+          return (
+            <Link key={item.title} to={item.to} className="flex flex-col items-center gap-[15px] hover:opacity-90">
+              <div className="relative w-full overflow-hidden rounded-[10px]" style={{ aspectRatio: "140.75/115.75" }}>
+                <img src={item.icon} alt={item.title} className="absolute inset-0 h-full w-full object-cover" />
+              </div>
+              <p className="text-[18px] lg:text-[20px] font-medium leading-[1.15] text-center text-black">{item.title}</p>
+            </Link>
+          );
+        }
+
+        if (item.href) {
+          return (
+            <a
+              key={item.title}
+              href={item.href}
+              target="_blank"
+              rel="noreferrer"
+              className="flex flex-col items-center gap-[15px] hover:opacity-90"
+            >
+              <div className="relative w-full overflow-hidden rounded-[10px]" style={{ aspectRatio: "140.75/115.75" }}>
+                <img src={item.icon} alt={item.title} className="absolute inset-0 h-full w-full object-cover" />
+              </div>
+              <p className="text-[18px] lg:text-[20px] font-medium leading-[1.15] text-center text-black">{item.title}</p>
+            </a>
+          );
+        }
+
         return (
-          <Wrapper
-            key={item.title}
-            {...(item.href
-              ? {
-                  href: item.href,
-                  target: "_blank",
-                  rel: "noreferrer",
-                  className: "flex flex-col items-center gap-[15px] hover:opacity-90",
-                }
-              : item.to
-              ? {
-                  to: item.to,
-                  className: "flex flex-col items-center gap-[15px] hover:opacity-90",
-                }
-              : { className: "flex flex-col items-center gap-[15px]" })}
-          >
+          <div key={item.title} className="flex flex-col items-center gap-[15px]">
             <div className="relative w-full overflow-hidden rounded-[10px]" style={{ aspectRatio: "140.75/115.75" }}>
               <img src={item.icon} alt={item.title} className="absolute inset-0 h-full w-full object-cover" />
             </div>
             <p className="text-[18px] lg:text-[20px] font-medium leading-[1.15] text-center text-black">{item.title}</p>
-          </Wrapper>
+          </div>
         );
       })}
     </div>
