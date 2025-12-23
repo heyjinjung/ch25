@@ -58,16 +58,26 @@ const RoulettePage: React.FC = () => {
     [playMutation.error]
   );
 
-  const remainingLabel = useMemo(() => {
+  const tokenTypeLabel = useMemo(() => {
     if (!data) return "-";
-    return data.remaining_spins === 0 ? "남은 횟수: 무제한" : `남은 횟수: ${data.remaining_spins}회`;
+    return data.token_type ? GAME_TOKEN_LABELS[data.token_type] ?? data.token_type : "-";
+  }, [data]);
+
+  const tokenBalance = useMemo(() => {
+    if (typeof data?.token_balance !== "number") return null;
+    return data.token_balance;
+  }, [data?.token_balance]);
+
+  const remainingSpins = useMemo(() => {
+    if (!data) return null;
+    if (typeof data.remaining_spins !== "number") return null;
+    return data.remaining_spins;
   }, [data]);
 
   const tokenLabel = useMemo(() => {
     if (!data) return "-";
     const typeLabel = data.token_type ? (GAME_TOKEN_LABELS[data.token_type] ?? data.token_type) : "-";
-    const balanceLabel = typeof data.token_balance === "number" ? String(data.token_balance) : "-";
-    return `${typeLabel} · ${balanceLabel}`;
+    return typeLabel;
   }, [data]);
 
   const isUnlimited = data?.remaining_spins === 0;
@@ -125,6 +135,9 @@ const RoulettePage: React.FC = () => {
     if (rewardValue > 0 && rewardType !== "NONE") {
       setRewardToast({ value: rewardValue, type: rewardType });
       window.setTimeout(() => setRewardToast(null), 2500);
+      tryHaptic([18, 50, 18]);
+    } else {
+      tryHaptic(12);
     }
 
     const applyAt = performance.now();
@@ -293,7 +306,13 @@ const RoulettePage: React.FC = () => {
                     aria-hidden="true"
                   />
                 </span>
-                {remainingLabel}
+                {remainingSpins === null ? "남은 횟수: -" : remainingSpins === 0 ? (
+                  "남은 횟수: 무제한"
+                ) : (
+                  <>
+                    남은 횟수: <AnimatedNumber value={remainingSpins} durationMs={800} />회
+                  </>
+                )}
               </span>
               <span className="inline-flex items-center gap-2 rounded-full border border-cc-lime/20 bg-white/8 px-3 py-1 text-[clamp(14px,2.4vw,16px)] font-bold text-white/90">
                 <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-white/15 bg-black/25">
@@ -306,6 +325,8 @@ const RoulettePage: React.FC = () => {
                   />
                 </span>
                 {tokenLabel}
+                <span aria-hidden className="text-white/60">·</span>
+                {tokenBalance !== null ? <AnimatedNumber value={tokenBalance} durationMs={850} /> : "-"}
               </span>
             </div>
 

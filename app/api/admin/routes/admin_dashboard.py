@@ -16,7 +16,9 @@ from app.models.game_wallet_ledger import UserGameWalletLedger
 from app.models.user_activity_event import UserActivityEvent
 from app.schemas.admin_dashboard import DashboardMetricsResponse, MetricValue
 
-router = APIRouter(prefix="/dashboard", tags=["dashboard"])
+# Note: Admin routers use full path prefixes (include_router is prefix-less).
+# Keep the full `/admin/api/...` prefix here to align with frontend adminApi base.
+router = APIRouter(prefix="/admin/api/dashboard", tags=["dashboard"])
 
 _CACHE: dict[str, Any] = {"expires_at": None, "range_hours": None, "data": None}
 
