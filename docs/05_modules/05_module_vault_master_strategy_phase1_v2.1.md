@@ -276,3 +276,22 @@ stateDiagram-v2
 - “판당 적립”을 어떤 게임들(룰렛/주사위/복권/팀배틀)에 동일 적용할지
 - 결과 확정 이벤트의 식별자(게임 로그 ID 등) 확보 방식
 - 해금 정책(부분/전액) 룰을 Phase 1에서 고정할지, 즉시 `unlock_rules_json`로 전환할지
+
+Vault Phase1 설계 핵심(온보딩 메모)
+
+상태/만료: locked → available → expired, 첫 적립 시 expires_at = now+24h, 추가 적립해도 갱신 없음. Phase2부터 보호/연장(PROTECT)로만 연장.
+철학: “보너스”가 아니라 “이미 벌어둔 자산이 잠겨 있다”는 락인 자산. ticket=0 시 Vault Modal/CTA로 노출.
+소스 기준: user.vault_locked_balance 단일 기준. vault_balance는 mirror(read-only).
+적립 규칙(Phase1): 플레이 비용 소모 + 결과 확정 시 +200원/판, 패배 시 추가 +100원. 목표: 50판 ≈ 11,000~14,000원(황금선).
+만료/해금: 만료 시 locked=0. 해금(입금 확인 등)으로 locked → available/cash 전환(Phase1은 cash 지급 유지 가능).
+API 스냅샷:
+Public: GET /api/vault/status(locked/available/expires_at/recommended_action/cta_payload), POST /api/vault/fill, GET /api/ui-copy/ticket0.
+Admin: POST /admin/api/vault2/tick?limit=500, PUT /api/admin/ui-copy/ticket0.
+서비스 포인트: VaultService.get_status, fill_free_once, handle_deposit_increase_signal; AdminExternalRankingService에서 deposit 증가 감지→VaultService 위임.
+UI 접점: Home 배너, TicketZeroPanel, VaultModal; unlock_rules_json으로 “다음 해금 조건” 카피를 서버에서 내려 프런트 하드코딩 제거 권장.
+구현 체크리스트:
+ “비용 소모 + 결과 확정” 지점에서 locked 적립(+200/+100) 연결, idempotent 이벤트 ID 확보.
+ expires_at 첫 적립만 세팅, 추가 적립 시 미갱신 유지.
+ ticket=0 시 recommended_action=OPEN_VAULT_MODAL + cta_payload.
+ 테스트: 중복 적립 방지, 만료, 해금(부분/전액) 시나리오.
+오픈 결정사항: 적용 게임 범위(룰렛/주사위/복권/팀배틀), 결과 확정 이벤트 식별자 확보 방식, 해금 정책을 룰 기반(unlock_rules_json)으로 바로 갈지 고정할지.
