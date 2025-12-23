@@ -26,17 +26,20 @@ const navLinks = [
   { label: "내 금고", to: "/landing" },
 ];
 
+const gameLinks = ["/roulette", "/dice", "/lottery"] as const;
+const randomGameLink = gameLinks[Math.floor(Math.random() * gameLinks.length)];
+
 const gameTiles = [
   { title: "레벨 주사위", to: "/dice", icon: assets.levelSvg, fallback: assets.iconLevel },
   { title: "복권 랜덤뽑기", to: "/lottery", icon: assets.lotterySvg, fallback: assets.iconLottery },
   { title: "룰렛 경품뽑기", to: "/roulette", icon: assets.rouletteSvg, fallback: assets.iconRoulette },
 ];
 
-const howToIcons: { title: string; icon: string; href?: string }[] = [
-  { title: "친구초대", icon: assets.iconPeople },
+const howToIcons: { title: string; icon: string; href?: string; to?: string }[] = [
+  { title: "친구초대", icon: assets.iconPeople, to: "/vault" },
   { title: "씨씨이용하기", icon: assets.iconWallet, href: "https://ccc-010.com" },
-  { title: "금고서비스", icon: assets.iconSecurity },
-  { title: "포인트게임하기", icon: assets.iconGraph },
+  { title: "금고서비스", icon: assets.iconSecurity, to: "/vault" },
+  { title: "포인트게임하기", icon: assets.iconGraph, to: randomGameLink },
 ];
 
 const baseAccent = "#d2fd9c";
@@ -154,24 +157,41 @@ const MobileLanding: React.FC = () => {
           </h2>
           <div className="flex flex-wrap justify-center gap-[20px] w-full">
             {howToIcons.map((item) => {
-              const Wrapper = item.href ? "a" : "div";
+              if (item.to) {
+                return (
+                  <Link key={item.title} to={item.to} className="flex flex-col items-center gap-[15px] w-[140px] hover:opacity-90">
+                    <div className="relative w-full overflow-hidden rounded-[10px]" style={{ aspectRatio: "335/250" }}>
+                      <img src={item.icon} alt={item.title} className="absolute inset-0 h-full w-full object-cover" />
+                    </div>
+                    <p className="text-[18px] font-medium leading-[1.15] text-center text-black whitespace-pre-wrap">{item.title}</p>
+                  </Link>
+                );
+              }
+
+              if (item.href) {
+                return (
+                  <a
+                    key={item.title}
+                    href={item.href}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex flex-col items-center gap-[15px] w-[140px] hover:opacity-90"
+                  >
+                    <div className="relative w-full overflow-hidden rounded-[10px]" style={{ aspectRatio: "335/250" }}>
+                      <img src={item.icon} alt={item.title} className="absolute inset-0 h-full w-full object-cover" />
+                    </div>
+                    <p className="text-[18px] font-medium leading-[1.15] text-center text-black whitespace-pre-wrap">{item.title}</p>
+                  </a>
+                );
+              }
+
               return (
-                <Wrapper
-                  key={item.title}
-                  {...(item.href
-                    ? {
-                        href: item.href,
-                        target: "_blank",
-                        rel: "noreferrer",
-                        className: "flex flex-col items-center gap-[15px] w-[140px] hover:opacity-90",
-                      }
-                    : { className: "flex flex-col items-center gap-[15px] w-[140px]" })}
-                >
+                <div key={item.title} className="flex flex-col items-center gap-[15px] w-[140px]">
                   <div className="relative w-full overflow-hidden rounded-[10px]" style={{ aspectRatio: "335/250" }}>
                     <img src={item.icon} alt={item.title} className="absolute inset-0 h-full w-full object-cover" />
                   </div>
                   <p className="text-[18px] font-medium leading-[1.15] text-center text-black whitespace-pre-wrap">{item.title}</p>
-                </Wrapper>
+                </div>
               );
             })}
           </div>
