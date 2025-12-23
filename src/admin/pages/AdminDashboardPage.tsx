@@ -39,7 +39,10 @@ const formatChange = (diff: number | null | undefined) => {
   return `${sign}${diff.toFixed(1)}% (전일)`;
 };
 
-const isPositive = (diff: number | null | undefined) => diff === null ? true : diff >= 0;
+const isPositive = (diff: number | null | undefined) => {
+  if (diff === null || diff === undefined) return true;
+  return diff >= 0;
+};
 
 
 type StatCard = {
