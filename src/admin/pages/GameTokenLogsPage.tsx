@@ -38,6 +38,14 @@ type ActiveTab = "wallets" | "playLogs" | "ledger" | "revoke";
 
 type SortDir = "asc" | "desc";
 
+type PlayLogGameFilterValue = "" | "roulette" | "dice" | "lottery" | string;
+
+const BASE_PLAY_LOG_GAME_FILTERS: Array<{ value: PlayLogGameFilterValue; label: string }> = [
+  { value: "roulette", label: "룰렛" },
+  { value: "dice", label: "주사위" },
+  { value: "lottery", label: "복권" },
+];
+
 const GameTokenLogsPage: React.FC = () => {
   const queryClient = useQueryClient();
 
@@ -59,7 +67,7 @@ const GameTokenLogsPage: React.FC = () => {
   const [playLogPage, setPlayLogPage] = useState<number>(0);
 
   const [playLogSearch, setPlayLogSearch] = useState<string>("");
-  const [playLogGameFilter, setPlayLogGameFilter] = useState<string>("");
+  const [playLogGameFilter, setPlayLogGameFilter] = useState<PlayLogGameFilterValue>("");
   const [playLogRewardTypeFilter, setPlayLogRewardTypeFilter] = useState<string>("");
   const [playLogSortKey, setPlayLogSortKey] = useState<"created_at" | "reward_amount" | "game">("created_at");
   const [playLogSortDir, setPlayLogSortDir] = useState<SortDir>("desc");
@@ -227,7 +235,15 @@ const GameTokenLogsPage: React.FC = () => {
   const playLogVisibleRows = useMemo(() => {
     const base = playLogsQuery.data ?? [];
     const filtered = base.filter((r) => {
-      if (playLogGameFilter && normalize(r.game) !== normalize(playLogGameFilter)) return false;
+      if (playLogGameFilter) {
+        const g = normalize(r.game);
+        const filter = String(playLogGameFilter).trim().toLowerCase();
+        if (filter === "roulette" || filter === "dice" || filter === "lottery") {
+          if (!g.includes(filter)) return false;
+        } else {
+          if (g !== normalize(filter)) return false;
+        }
+      }
       if (playLogRewardTypeFilter && normalize(r.reward_type) !== normalize(playLogRewardTypeFilter)) return false;
       const hay = normalize(
         `${r.game} ${gameLabel(r.game)} ${r.external_id ?? ""} ${r.user_id} ${r.reward_type} ${rewardTypeLabel(r.reward_type)} ${r.reward_amount} ${r.reward_label ?? ""}`
@@ -261,9 +277,21 @@ const GameTokenLogsPage: React.FC = () => {
   }, [ledgerQuery.data, ledgerSearch, ledgerTokenTypeFilter, ledgerDeltaFilter, ledgerSortKey, ledgerSortDir]);
 
   const playLogGameOptions = useMemo(() => {
-    const set = new Set<string>();
-    for (const r of playLogsQuery.data ?? []) set.add(String(r.game));
-    return Array.from(set).sort();
+    const extra: Array<{ value: PlayLogGameFilterValue; label: string }> = [];
+    const seen = new Set<string>();
+
+    for (const r of playLogsQuery.data ?? []) {
+      const raw = String(r.game ?? "").trim();
+      if (!raw) continue;
+      const n = raw.toLowerCase();
+      if (n.includes("roulette") || n.includes("dice") || n.includes("lottery")) continue;
+      if (seen.has(n)) continue;
+      seen.add(n);
+      extra.push({ value: raw, label: gameLabel(raw) });
+    }
+
+    extra.sort((a, b) => String(a.label).localeCompare(String(b.label)));
+    return [...BASE_PLAY_LOG_GAME_FILTERS, ...extra];
   }, [playLogsQuery.data]);
 
   const playLogRewardTypeOptions = useMemo(() => REWARD_TYPES.map((t) => t.value), []);
@@ -502,8 +530,8 @@ const GameTokenLogsPage: React.FC = () => {
               <select className={selectClass} value={playLogGameFilter} onChange={(e) => setPlayLogGameFilter(e.target.value)}>
                 <option value="">전체 게임</option>
                 {playLogGameOptions.map((g) => (
-                  <option key={g} value={g}>
-                    {gameLabel(g)}
+                  <option key={String(g.value)} value={String(g.value)}>
+                    {g.label}
                   </option>
                 ))}
               </select>

@@ -11,6 +11,9 @@ import {
 
 type EditableRow = ExternalRankingPayload & { id?: number; __isNew?: boolean };
 
+type SortDir = "asc" | "desc";
+type SortKey = "external_id" | "deposit_amount" | "play_count" | "memo";
+
 const ExternalRankingPage: React.FC = () => {
   const queryClient = useQueryClient();
   const { data, isLoading, isError, error } = useQuery({
@@ -25,6 +28,9 @@ const ExternalRankingPage: React.FC = () => {
   const [pageSize, setPageSize] = useState<number>(50);
   const [page, setPage] = useState<number>(0);
   const [isDirty, setIsDirty] = useState<boolean>(false);
+
+  const [sortKey, setSortKey] = useState<SortKey>("external_id");
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
 
   useEffect(() => {
     if (data?.items) {
@@ -93,9 +99,12 @@ const ExternalRankingPage: React.FC = () => {
   };
 
   const addRow = () => {
+    setRowSearchInput("");
+    setRowSearchApplied("");
+    setPage(0);
     setRows((prev) => [
-      ...prev,
       { external_id: "", deposit_amount: 0, play_count: 0, memo: "", __isNew: true },
+      ...prev.map((r) => ({ ...r, __isNew: false })),
     ]);
     setIsDirty(true);
     setTimeout(() => newRowInputRef.current?.focus(), 0);
@@ -140,6 +149,17 @@ const ExternalRankingPage: React.FC = () => {
     setPage(0);
   };
 
+  const compareStr = (a: string, b: string, dir: SortDir) => (dir === "asc" ? a.localeCompare(b) : b.localeCompare(a));
+  const compareNum = (a: number, b: number, dir: SortDir) => (dir === "asc" ? a - b : b - a);
+  const toggleSort = (k: SortKey) => {
+    if (sortKey !== k) {
+      setSortKey(k);
+      setSortDir(k === "external_id" || k === "memo" ? "asc" : "desc");
+      return;
+    }
+    setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+  };
+
   const visible = rows
     .map((row, index) => ({ row, index }))
     .filter(({ row }) => {
@@ -148,12 +168,21 @@ const ExternalRankingPage: React.FC = () => {
       return includesAny(hay, rowSearchApplied);
     });
 
-  const totalVisible = visible.length;
+  const sortedVisible = [...visible].sort((a, b) => {
+    if (!!a.row.__isNew !== !!b.row.__isNew) return a.row.__isNew ? -1 : 1;
+
+    if (sortKey === "deposit_amount") return compareNum(a.row.deposit_amount ?? 0, b.row.deposit_amount ?? 0, sortDir);
+    if (sortKey === "play_count") return compareNum(a.row.play_count ?? 0, b.row.play_count ?? 0, sortDir);
+    if (sortKey === "memo") return compareStr(String(a.row.memo ?? ""), String(b.row.memo ?? ""), sortDir);
+    return compareStr(String(a.row.external_id ?? ""), String(b.row.external_id ?? ""), sortDir);
+  });
+
+  const totalVisible = sortedVisible.length;
   const totalPages = Math.max(1, Math.ceil(totalVisible / pageSize));
   const safePage = Math.min(page, totalPages - 1);
   const pageStart = safePage * pageSize;
   const pageEnd = Math.min(pageStart + pageSize, totalVisible);
-  const pageItems = visible.slice(pageStart, pageEnd);
+  const pageItems = sortedVisible.slice(pageStart, pageEnd);
 
   const inputBase =
     "w-full rounded-md border border-[#333333] bg-[#1A1A1A] px-3 py-2 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]";
@@ -228,6 +257,9 @@ const ExternalRankingPage: React.FC = () => {
               onChange={(e) => setRowSearchInput(e.target.value)}
               className={inputBase + " w-72"}
               placeholder="external_id / memo / user_id"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") applyRowSearch();
+              }}
             />
           </div>
           <SecondaryButton onClick={applyRowSearch}>검색 적용</SecondaryButton>
@@ -261,10 +293,38 @@ const ExternalRankingPage: React.FC = () => {
           <table className="w-full">
             <thead className="sticky top-0 z-10 border-b border-[#333333] bg-[#1A1A1A]">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">external_id</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">입금액</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">게임횟수</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">메모</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                  <button type="button" onClick={() => toggleSort("external_id")} className="inline-flex items-center gap-1 text-gray-400 hover:text-gray-200" title="정렬">
+                    external_id
+                    <span className={sortKey === "external_id" ? "text-[#91F402]" : "text-gray-600"}>
+                      {sortKey === "external_id" ? (sortDir === "asc" ? "▲" : "▼") : "↕"}
+                    </span>
+                  </button>
+                </th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">
+                  <button type="button" onClick={() => toggleSort("deposit_amount")} className="inline-flex items-center gap-1 text-gray-400 hover:text-gray-200" title="정렬">
+                    입금액
+                    <span className={sortKey === "deposit_amount" ? "text-[#91F402]" : "text-gray-600"}>
+                      {sortKey === "deposit_amount" ? (sortDir === "asc" ? "▲" : "▼") : "↕"}
+                    </span>
+                  </button>
+                </th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">
+                  <button type="button" onClick={() => toggleSort("play_count")} className="inline-flex items-center gap-1 text-gray-400 hover:text-gray-200" title="정렬">
+                    게임횟수
+                    <span className={sortKey === "play_count" ? "text-[#91F402]" : "text-gray-600"}>
+                      {sortKey === "play_count" ? (sortDir === "asc" ? "▲" : "▼") : "↕"}
+                    </span>
+                  </button>
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                  <button type="button" onClick={() => toggleSort("memo")} className="inline-flex items-center gap-1 text-gray-400 hover:text-gray-200" title="정렬">
+                    메모
+                    <span className={sortKey === "memo" ? "text-[#91F402]" : "text-gray-600"}>
+                      {sortKey === "memo" ? (sortDir === "asc" ? "▲" : "▼") : "↕"}
+                    </span>
+                  </button>
+                </th>
                 <th className="px-4 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">액션</th>
               </tr>
             </thead>
@@ -287,7 +347,7 @@ const ExternalRankingPage: React.FC = () => {
                       onChange={(e) => handleChange(index, "external_id", e.target.value)}
                       className={inputBase}
                       placeholder="external_id"
-                      ref={index === rows.length - 1 && row.__isNew ? newRowInputRef : null}
+                      ref={row.__isNew ? newRowInputRef : null}
                     />
                   </td>
                   <td className="px-4 py-3">
