@@ -26,7 +26,7 @@ const VaultPage: React.FC = () => {
             홈으로 돌아가기
           </Link>
           <a
-            href="https://pf.kakao.com/_Uxmxns"
+            href="https://t.me/jm956"
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center justify-center rounded-full border border-white/15 px-4 py-3 text-sm font-semibold text-white transition hover:border-white/40 hover:bg-white/5"

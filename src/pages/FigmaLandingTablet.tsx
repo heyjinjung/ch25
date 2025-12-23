@@ -32,17 +32,20 @@ const navLinks = [
   { label: "내금고", to: "/landing" },
 ];
 
+const gameLinks = ["/roulette", "/dice", "/lottery"] as const;
+const randomGameLink = gameLinks[Math.floor(Math.random() * gameLinks.length)];
+
 const gameTiles: { title: string; to: string; icon: string; fallback: string }[] = [
   { title: "레벨 주사위", to: "/dice", icon: assets.levelSvg, fallback: assets.iconLevel },
   { title: "랜덤 복권", to: "/lottery", icon: assets.lotterySvg, fallback: assets.iconLottery },
   { title: "룰렛 경품뽑기", to: "/roulette", icon: assets.rouletteSvg, fallback: assets.iconRoulette },
 ];
 
-const howToIcons: { title: string; icon: string; href?: string }[] = [
+const howToIcons: { title: string; icon: string; href?: string; to?: string }[] = [
   { title: "씨씨이용하기", icon: assets.iconWallet, href: "https://ccc-010.com" },
-  { title: "금고서비스", icon: assets.iconSecurity },
-  { title: "포인트게임하기", icon: assets.iconGraph },
-  { title: "친구초대", icon: assets.iconPeople },
+  { title: "금고서비스", icon: assets.iconSecurity, to: "/vault" },
+  { title: "포인트게임하기", icon: assets.iconGraph, to: randomGameLink },
+  { title: "친구초대", icon: assets.iconPeople, to: "/vault" },
 ];
 
 const bento: { title: string; description?: string; icon?: string | null; fallback?: string }[] = [
@@ -52,7 +55,7 @@ const bento: { title: string; description?: string; icon?: string | null; fallba
     icon: null,
   },
   {
-    title: "Efficiency Increase Per Transfer",
+    title: "빠르고 신속한 고객응대 서비스",
     description: "",
     icon: assets.bentoEfficiency,
     fallback: assets.vectorBar,
@@ -194,24 +197,41 @@ const HowToUse: React.FC = () => (
     </h2>
     <div className="grid w-full gap-[20px] sm:grid-cols-2 lg:grid-cols-4 lg:gap-[40px]">
       {howToIcons.map((item) => {
-        const Wrapper = item.href ? "a" : "div";
+        if (item.to) {
+          return (
+            <Link key={item.title} to={item.to} className="flex flex-col items-center gap-[15px] hover:opacity-90">
+              <div className="relative w-full overflow-hidden rounded-[10px]" style={{ aspectRatio: "150/115.75" }}>
+                <img src={item.icon} alt={item.title} className="absolute inset-0 h-full w-full object-cover" />
+              </div>
+              <p className="text-[18px] lg:text-[20px] font-medium leading-[1.15] text-center text-black">{item.title}</p>
+            </Link>
+          );
+        }
+
+        if (item.href) {
+          return (
+            <a
+              key={item.title}
+              href={item.href}
+              target="_blank"
+              rel="noreferrer"
+              className="flex flex-col items-center gap-[15px] hover:opacity-90"
+            >
+              <div className="relative w-full overflow-hidden rounded-[10px]" style={{ aspectRatio: "150/115.75" }}>
+                <img src={item.icon} alt={item.title} className="absolute inset-0 h-full w-full object-cover" />
+              </div>
+              <p className="text-[18px] lg:text-[20px] font-medium leading-[1.15] text-center text-black">{item.title}</p>
+            </a>
+          );
+        }
+
         return (
-          <Wrapper
-            key={item.title}
-            {...(item.href
-              ? {
-                  href: item.href,
-                  target: "_blank",
-                  rel: "noreferrer",
-                  className: "flex flex-col items-center gap-[15px] hover:opacity-90",
-                }
-              : { className: "flex flex-col items-center gap-[15px]" })}
-          >
+          <div key={item.title} className="flex flex-col items-center gap-[15px]">
             <div className="relative w-full overflow-hidden rounded-[10px]" style={{ aspectRatio: "150/115.75" }}>
               <img src={item.icon} alt={item.title} className="absolute inset-0 h-full w-full object-cover" />
             </div>
             <p className="text-[18px] lg:text-[20px] font-medium leading-[1.15] text-center text-black">{item.title}</p>
-          </Wrapper>
+          </div>
         );
       })}
     </div>

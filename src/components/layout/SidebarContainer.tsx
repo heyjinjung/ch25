@@ -148,9 +148,9 @@ const DesktopSidebarContent: React.FC = () => {
             <span style={{ color: baseAccent }}>포인트서비스</span>
           </h1>
           <h2 className="text-[16px] font-normal leading-[1.09] text-[#cbcbcb]">
-            개인정보 입력 없이
+            즐거운 연말연시
             <br />
-            자유롭게 이용하세요
+            지민이와 함께 하세요
           </h2>
         </div>
 
