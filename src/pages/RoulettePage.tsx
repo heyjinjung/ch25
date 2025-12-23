@@ -58,11 +58,6 @@ const RoulettePage: React.FC = () => {
     [playMutation.error]
   );
 
-  const tokenTypeLabel = useMemo(() => {
-    if (!data) return "-";
-    return data.token_type ? GAME_TOKEN_LABELS[data.token_type] ?? data.token_type : "-";
-  }, [data]);
-
   const tokenBalance = useMemo(() => {
     if (typeof data?.token_balance !== "number") return null;
     return data.token_balance;
