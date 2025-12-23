@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import Button from "../../components/common/Button";
 import { fetchAdminUiConfig, upsertAdminUiConfig } from "../api/adminUiConfigApi";
 
 type FormState = {
@@ -82,6 +81,37 @@ type UiConfigEditorProps = {
 const UiConfigEditor: React.FC<UiConfigEditorProps> = ({ configKey, heading, description, defaults }) => {
   const queryClient = useQueryClient();
 
+  const inputClass =
+    "w-full rounded-md border border-[#333333] bg-[#1A1A1A] px-3 py-2 text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]";
+  const labelClass = "text-sm font-medium text-gray-300";
+  const panelClass = "rounded-lg border border-[#333333] bg-[#0A0A0A] p-4";
+
+  const PrimaryButton = ({
+    children,
+    ...props
+  }: React.ButtonHTMLAttributes<HTMLButtonElement> & { children: React.ReactNode }) => (
+    <button
+      type="button"
+      className="inline-flex items-center rounded-md bg-[#2D6B3B] px-4 py-2 text-sm font-medium text-white hover:bg-[#91F402] hover:text-black disabled:cursor-not-allowed disabled:opacity-60"
+      {...props}
+    >
+      {children}
+    </button>
+  );
+
+  const SecondaryButton = ({
+    children,
+    ...props
+  }: React.ButtonHTMLAttributes<HTMLButtonElement> & { children: React.ReactNode }) => (
+    <button
+      type="button"
+      className="inline-flex items-center rounded-md border border-[#333333] bg-[#1A1A1A] px-4 py-2 text-sm font-medium text-gray-200 hover:bg-[#2C2C2E] disabled:cursor-not-allowed disabled:opacity-60"
+      {...props}
+    >
+      {children}
+    </button>
+  );
+
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["admin", "ui-config", configKey],
     queryFn: () => fetchAdminUiConfig(configKey),
@@ -120,17 +150,17 @@ const UiConfigEditor: React.FC<UiConfigEditorProps> = ({ configKey, heading, des
   const updatedAt = data?.updated_at ? new Date(data.updated_at).toLocaleString("ko-KR") : "-";
 
   return (
-    <section className="space-y-4 rounded-xl border border-emerald-800/40 bg-slate-900/70 p-6 shadow-lg shadow-emerald-900/30">
+    <section className="space-y-4 rounded-lg border border-[#333333] bg-[#111111] p-6 shadow-md">
       <div>
         <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="text-xl font-bold text-slate-100">{heading}</h2>
-          <p className="text-xs text-slate-400">키: {configKey} · 최근 저장: {updatedAt}</p>
+          <h2 className="text-lg font-medium text-[#91F402]">{heading}</h2>
+          <p className="text-xs text-gray-500">키: {configKey} · 최근 저장: {updatedAt}</p>
         </div>
-        <p className="mt-2 text-sm text-slate-300">{description}</p>
+        <p className="mt-2 text-sm text-gray-400">{description}</p>
       </div>
 
       {isLoading && (
-        <div className="rounded-lg border border-emerald-700/40 bg-slate-900 p-4 text-slate-200">불러오는 중...</div>
+        <div className="rounded-lg border border-[#333333] bg-[#0A0A0A] p-4 text-gray-200">불러오는 중...</div>
       )}
       {isError && (
         <div className="rounded-lg border border-red-500/40 bg-red-950 p-4 text-red-100">
@@ -142,17 +172,17 @@ const UiConfigEditor: React.FC<UiConfigEditorProps> = ({ configKey, heading, des
         <>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-1">
-              <label className="text-sm text-slate-200">제목</label>
+              <label className={labelClass}>제목</label>
               <input
-                className="w-full rounded-md border border-emerald-700 bg-slate-800 px-3 py-2 text-slate-50 focus:border-emerald-400 focus:outline-none"
+                className={inputClass}
                 value={form.title}
                 onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))}
               />
             </div>
             <div className="space-y-1">
-              <label className="text-sm text-slate-200">노트(옵션)</label>
+              <label className={labelClass}>노트(옵션)</label>
               <input
-                className="w-full rounded-md border border-emerald-700 bg-slate-800 px-3 py-2 text-slate-50 focus:border-emerald-400 focus:outline-none"
+                className={inputClass}
                 value={form.note}
                 onChange={(e) => setForm((prev) => ({ ...prev, note: e.target.value }))}
               />
@@ -160,27 +190,27 @@ const UiConfigEditor: React.FC<UiConfigEditorProps> = ({ configKey, heading, des
           </div>
 
           <div className="mt-4 space-y-1">
-            <label className="text-sm text-slate-200">본문</label>
+            <label className={labelClass}>본문</label>
             <textarea
               rows={3}
-              className="w-full rounded-md border border-emerald-700 bg-slate-800 px-3 py-2 text-slate-50 focus:border-emerald-400 focus:outline-none"
+              className={inputClass}
               value={form.body}
               onChange={(e) => setForm((prev) => ({ ...prev, body: e.target.value }))}
             />
           </div>
 
           <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div className="rounded-lg border border-white/10 bg-white/5 p-4">
-              <p className="text-sm font-semibold text-slate-100">Primary CTA (씨씨카지노)</p>
+            <div className={panelClass}>
+              <p className="text-sm font-semibold text-white">Primary CTA (씨씨카지노)</p>
               <div className="mt-3 space-y-2">
                 <input
-                  className="w-full rounded-md border border-emerald-700 bg-slate-800 px-3 py-2 text-slate-50 focus:border-emerald-400 focus:outline-none"
+                  className={inputClass}
                   value={form.primaryLabel}
                   onChange={(e) => setForm((prev) => ({ ...prev, primaryLabel: e.target.value }))}
                   placeholder="버튼 라벨"
                 />
                 <input
-                  className="w-full rounded-md border border-emerald-700 bg-slate-800 px-3 py-2 text-slate-50 focus:border-emerald-400 focus:outline-none"
+                  className={inputClass}
                   value={form.primaryUrl}
                   onChange={(e) => setForm((prev) => ({ ...prev, primaryUrl: e.target.value }))}
                   placeholder="https://..."
@@ -188,17 +218,17 @@ const UiConfigEditor: React.FC<UiConfigEditorProps> = ({ configKey, heading, des
               </div>
             </div>
 
-            <div className="rounded-lg border border-white/10 bg-white/5 p-4">
-              <p className="text-sm font-semibold text-slate-100">Secondary CTA (실장 텔레)</p>
+            <div className={panelClass}>
+              <p className="text-sm font-semibold text-white">Secondary CTA (실장 텔레)</p>
               <div className="mt-3 space-y-2">
                 <input
-                  className="w-full rounded-md border border-emerald-700 bg-slate-800 px-3 py-2 text-slate-50 focus:border-emerald-400 focus:outline-none"
+                  className={inputClass}
                   value={form.secondaryLabel}
                   onChange={(e) => setForm((prev) => ({ ...prev, secondaryLabel: e.target.value }))}
                   placeholder="버튼 라벨"
                 />
                 <input
-                  className="w-full rounded-md border border-emerald-700 bg-slate-800 px-3 py-2 text-slate-50 focus:border-emerald-400 focus:outline-none"
+                  className={inputClass}
                   value={form.secondaryUrl}
                   onChange={(e) => setForm((prev) => ({ ...prev, secondaryUrl: e.target.value }))}
                   placeholder="https://..."
@@ -208,18 +238,18 @@ const UiConfigEditor: React.FC<UiConfigEditorProps> = ({ configKey, heading, des
           </div>
 
           <div className="mt-6 flex flex-wrap items-center gap-3">
-            <Button onClick={() => mutation.mutate()} disabled={mutation.isPending}>
+            <PrimaryButton onClick={() => mutation.mutate()} disabled={mutation.isPending}>
               {mutation.isPending ? "저장 중..." : "저장"}
-            </Button>
-            <Button variant="secondary" onClick={() => setForm(initial)} disabled={mutation.isPending}>
+            </PrimaryButton>
+            <SecondaryButton onClick={() => setForm(initial)} disabled={mutation.isPending}>
               되돌리기
-            </Button>
+            </SecondaryButton>
           </div>
 
           {mutation.isError && (
             <p className="mt-3 text-sm text-red-200">저장 실패: {(mutation.error as Error).message}</p>
           )}
-          {mutation.isSuccess && <p className="mt-3 text-sm text-emerald-200">저장 완료</p>}
+          {mutation.isSuccess && <p className="mt-3 text-sm text-gray-200">저장 완료</p>}
         </>
       )}
     </section>
@@ -228,13 +258,11 @@ const UiConfigEditor: React.FC<UiConfigEditorProps> = ({ configKey, heading, des
 
 const UiConfigTicketZeroPage: React.FC = () => {
   return (
-    <div className="space-y-6">
-      <div className="rounded-xl border border-emerald-800/40 bg-slate-900/70 p-6 shadow-lg shadow-emerald-900/30">
-        <h1 className="text-2xl font-bold text-slate-100">UI 문구/CTA (전역)</h1>
-        <p className="mt-2 text-sm text-slate-300">
-          유저 화면에서 “부족 상태”에 노출되는 해결 경로 문구/CTA를 키별로 운영합니다.
-        </p>
-      </div>
+    <section className="space-y-5">
+      <header>
+        <h2 className="text-2xl font-bold text-[#91F402]">UI 문구/CTA (전역)</h2>
+        <p className="mt-1 text-sm text-gray-400">유저 화면에서 “부족 상태”에 노출되는 해결 경로 문구/CTA를 키별로 운영합니다.</p>
+      </header>
 
       <UiConfigEditor
         configKey="ticket_zero"
@@ -249,7 +277,7 @@ const UiConfigTicketZeroPage: React.FC = () => {
         description="코인(CC_COIN) 부족 상태에서 노출할 해결 경로 문구/CTA (현재는 운영 키만 준비)"
         defaults={DEFAULT_COIN_ZERO}
       />
-    </div>
+    </section>
   );
 };
 
