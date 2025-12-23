@@ -16,7 +16,6 @@ import {
   updateAdminSurvey,
   upsertAdminSurveyTriggers,
 } from "../api/adminSurveyApi";
-import Button from "../../components/common/Button";
 
 const rewardPresets = [
   { label: "주사위 티켓 1장", value: { reward_type: "TICKET_DICE", amount: 1, toast_message: "주사위 티켓 지급" } },
@@ -239,6 +238,21 @@ const SurveyAdminPage: React.FC = () => {
     "w-full rounded-md border border-[#333333] bg-[#1A1A1A] px-3 py-2 text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]";
   const labelClass = "text-sm font-medium text-gray-300";
 
+  const statusBadgeClass = (status: string) => {
+    switch (status) {
+      case "ACTIVE":
+        return "inline-flex items-center rounded-full border border-[#2D6B3B] bg-[#2D6B3B]/20 px-2 py-0.5 text-xs font-medium text-[#91F402]";
+      case "DRAFT":
+        return "inline-flex items-center rounded-full border border-[#333333] bg-[#1A1A1A] px-2 py-0.5 text-xs font-medium text-gray-300";
+      case "PAUSED":
+        return "inline-flex items-center rounded-full border border-[#F0AB48] bg-[#F0AB48]/10 px-2 py-0.5 text-xs font-medium text-[#F0AB48]";
+      case "ARCHIVED":
+        return "inline-flex items-center rounded-full border border-red-500/40 bg-red-950 px-2 py-0.5 text-xs font-medium text-red-200";
+      default:
+        return "inline-flex items-center rounded-full border border-[#333333] bg-[#1A1A1A] px-2 py-0.5 text-xs font-medium text-gray-300";
+    }
+  };
+
   const PrimaryButton = ({
     children,
     ...props
@@ -267,14 +281,14 @@ const SurveyAdminPage: React.FC = () => {
 
   const ModalShell = ({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) => (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-      <div className="w-full max-w-5xl rounded-lg border border-[#333333] bg-[#111111] shadow-lg">
-        <div className="flex items-center justify-between border-b border-[#333333] px-6 py-4">
+      <div className="flex w-full max-w-5xl max-h-[90vh] flex-col overflow-hidden rounded-lg border border-[#333333] bg-[#111111] shadow-lg">
+        <div className="flex items-center justify-between border-b border-[#333333] px-4 py-4 sm:px-6">
           <h3 className="text-lg font-medium text-[#91F402]">{title}</h3>
           <button type="button" onClick={onClose} className="rounded-md p-2 text-gray-300 hover:bg-[#1A1A1A]" aria-label="닫기">
             <X size={18} />
           </button>
         </div>
-        <div className="px-6 py-5">{children}</div>
+        <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-6">{children}</div>
       </div>
     </div>
   );
@@ -316,7 +330,9 @@ const SurveyAdminPage: React.FC = () => {
                       <div className="text-xs text-gray-500">ID: {survey.id}</div>
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-300">{survey.channel}</td>
-                    <td className="px-4 py-3 text-sm text-gray-300">{survey.status}</td>
+                    <td className="px-4 py-3 text-sm text-gray-300">
+                      <span className={statusBadgeClass(String(survey.status))}>{survey.status}</span>
+                    </td>
                     <td className="px-4 py-3 text-sm text-white">{survey.question_count}</td>
                     <td className="px-4 py-3 text-center text-sm">
                       <div className="flex justify-center gap-2">
