@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from typing import Any
 
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import func
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
@@ -86,15 +86,16 @@ def _play_counts(db: Session, start: datetime, end: datetime) -> tuple[int, int]
     total = int(roulette_count + dice_count + lottery_count)
 
     # unique players across all games
-    union_user_ids = (
-        db.query(RouletteLog.user_id)
-        .filter(RouletteLog.created_at >= start, RouletteLog.created_at < end)
-        .union(
-            db.query(DiceLog.user_id).filter(DiceLog.created_at >= start, DiceLog.created_at < end),
-            db.query(LotteryLog.user_id).filter(LotteryLog.created_at >= start, LotteryLog.created_at < end),
-        )
-        .subquery()
+    first_select = select(RouletteLog.user_id.label("user_id")).where(
+        RouletteLog.created_at >= start, RouletteLog.created_at < end
     )
+    union_stmt = first_select.union(
+        select(DiceLog.user_id.label("user_id")).where(DiceLog.created_at >= start, DiceLog.created_at < end),
+        select(LotteryLog.user_id.label("user_id")).where(
+            LotteryLog.created_at >= start, LotteryLog.created_at < end
+        ),
+    )
+    union_user_ids = union_stmt.subquery()
     unique_players = int(db.query(func.count(func.distinct(union_user_ids.c.user_id))).scalar() or 0)
     return total, unique_players
 
