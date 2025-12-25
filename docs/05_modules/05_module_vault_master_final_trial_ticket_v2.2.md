@@ -448,3 +448,51 @@ stateDiagram-v2
   - 12/31 종료 직후 DB 백업 + 랭킹/플레이로그 초기화(ops_gap_playbook 기준) + 수동 지급 라벨 검증.
   - 공백기 배너/푸시 교체: 12/28, 12/31, 1/5에 “수동 지급/재개 시각” 포함 안내.
   - 정산/CS 가이드에 “자동 지급 없음, 관리자 확인 후 지급”을 명시해 기대 관리.
+
+
+
+요구사항별로 정리합니다. 현재 상태와 필요한 변경, 구현 아이디어를 함께 적습니다. (지금은 코드 변경 없이 설계/가이드만)
+
+금고 노출 eligibility를 어드민에서 확인/변경
+현상: 금고 적립 허용 여부가 유저별 플래그(eligibility)에 따라 결정되지만, 어드민에서 조회/토글 UI가 없음.
+제안 구현:
+테이블/모델: NewMemberDiceEligibility 또는 별도 vault_eligibility 테이블을 사용(현재 코드에서 eligibility 체크 로직 활용).
+어드민 페이지: 유저 검색 → eligibility on/off 스위치 추가 → 저장 시 해당 플래그 업데이트.
+API: GET/PUT /admin/api/vault/eligibility/{userId} (response: is_eligible, expires_at 등).
+목록: 필터(eligible only / ineligible only), 검색(닉네임/ID).
+결과: 어드민이 “금고가 안 보인다” 문의 시 즉시 확인/수정 가능.
+unlock_rules_json에서 “충전 확인시 해금” 문구 제거, “게임 N판 시 얼마 적립”만 남기기
+현상: UI 룰 카드가 unlock_rules_json에 들어 있고, 예시 이미지처럼 충전 기반 해금 텍스트가 노출.
+제안 구현:
+unlock_rules_json 스키마에서 충전/입금 관련 규칙 섹션을 주석 처리 또는 비활성 플래그(show_deposit_rules: false) 추가.
+규칙 카드 예시: “게임 50판 → 10,000원”, “게임 25판 → 10,000원(배율 2.0 이벤트 시)”.
+어드민 UI: rules editor에서 텍스트만 관리하도록 단순화(숫자/라벨 입력 + 프리뷰).
+게임 적립 on/off (enable_vault_game_earn_events)를 어드민에서 토글
+현상: .env 플래그로만 제어.
+제안 구현:
+VaultProgram config_json에 enable_game_earn_events 키를 추가하고, 서비스에서 env보다 DB 값을 우선 적용.
+어드민 금고 설정에 토글 스위치 추가 → 저장 시 config_json 업데이트.
+백엔드: VaultService에서 env → DB override 순서를 DB 우선으로 변경.
+24h 만료 타이머를 유저별로 어드민에서 관리
+현상: 10,000원 이상일 때 자동 24h 타이머 시작, 만료 시 0; 수동 관리 UI 없음.
+제안 구현:
+어드민에서 유저 금고 상세 조회 시: vault_locked_balance, vault_locked_expires_at, timer_active 표시.
+액션 버튼:
+“타이머 리셋(해제)” → expires_at null, 잔액 유지.
+“타이머 즉시 만료” → 잔액 0, expires_at null.
+“타이머 시작/재설정” → 현재 시점 + 24h로 설정(운영자가 강제 시작).
+API: POST /admin/api/vault/timer/{userId} with actions: reset | expire_now | start_now.
+이벤트 “충전 시 금액 적립” 스페셜 바이브 설계
+목표: 특정 기간/충전액 조건으로 보너스 적립.
+설계안:
+VaultProgram config_json에 charge_bonus_rules 배열 추가:
+예) { min_deposit: 100000, bonus_amount: 10000, window: {start, end} }
+VaultService에 optional 훅: deposit 이벤트 발생 시 조건 만족하면 vault_locked_balance += bonus_amount (멱등키: DEPOSIT:USER:TXID).
+어드민 UI: “이벤트 추가” (시작/종료, 최소 충전액, 보너스 금액) / “비활성화” 버튼.
+우선순위/범위 제안
+빠른 값·문구 변경만: unlock_rules_json 단순화 + UI 문구 교체.
+운영 편의: eligibility 조회/토글 UI, game earn on/off 토글 추가.
+고급 제어: 타이머 수동 관리, 충전 이벤트 보너스.
+원하는 적용 방식 알려주세요
+“바로 개발”을 원하면: 위 1)~4)에서 필요한 항목 번호를 주시면 순서대로 구현에 들어가겠습니다 (예: 1,2,3만 우선).
+게임 50판=1만원을 정확히 고정하려면: GAME_EARN_DICE_LOSE_BONUS를 0으로 낮추고, multiplier 1.0 유지 (수정 필요 여부 알려주세요).

@@ -13,6 +13,9 @@ from app.schemas.vault2 import (
     VaultProgramUiCopyUpsertRequest,
     VaultProgramUnlockRulesUpsertRequest,
     VaultProgramConfigUpsertRequest,
+    VaultEligibilityRequest,
+    VaultEligibilityResponse,
+    VaultGameEarnToggleRequest,
 )
 from app.services.vault2_service import Vault2Service
 
@@ -93,3 +96,46 @@ def upsert_config(
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
     return _to_response(program)
+
+
+@router.post("/{program_key}/game-earn-toggle", response_model=VaultProgramResponse)
+def toggle_game_earn(
+    program_key: str,
+    payload: VaultGameEarnToggleRequest,
+    db: Session = Depends(get_db),
+    admin_id: int = Depends(get_current_admin_id),
+) -> VaultProgramResponse:
+    try:
+        program = service.toggle_game_earn(db, program_key=program_key, enabled=payload.enabled, admin_id=admin_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    return _to_response(program)
+
+
+@router.get("/{program_key}/eligibility/{user_id}", response_model=VaultEligibilityResponse)
+def get_user_eligibility(
+    program_key: str,
+    user_id: int,
+    db: Session = Depends(get_db),
+) -> VaultEligibilityResponse:
+    try:
+        eligible = service.get_eligibility(db, program_key=program_key, user_id=user_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    return VaultEligibilityResponse(user_id=user_id, eligible=eligible)
+
+
+@router.post("/{program_key}/eligibility/{user_id}", response_model=VaultEligibilityResponse)
+def upsert_user_eligibility(
+    program_key: str,
+    user_id: int,
+    payload: VaultEligibilityRequest,
+    db: Session = Depends(get_db),
+    admin_id: int = Depends(get_current_admin_id),
+) -> VaultEligibilityResponse:
+    try:
+        service.upsert_eligibility(db, program_key=program_key, user_id=user_id, eligible=payload.eligible, admin_id=admin_id)
+        eligible = service.get_eligibility(db, program_key=program_key, user_id=user_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    return VaultEligibilityResponse(user_id=user_id, eligible=eligible)

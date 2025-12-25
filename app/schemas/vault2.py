@@ -32,6 +32,29 @@ class VaultProgramConfigUpsertRequest(BaseModel):
     config_json: dict | None = None
 
 
+class VaultEligibilityRequest(BaseModel):
+    eligible: bool
+
+
+class VaultEligibilityResponse(BaseModel):
+    user_id: int
+    eligible: bool
+
+
+class VaultGameEarnToggleRequest(BaseModel):
+    enabled: bool
+
+
+class VaultTimerActionRequest(BaseModel):
+    action: str  # reset | expire_now | start_now
+
+
+class VaultTimerState(BaseModel):
+    user_id: int
+    locked_balance: int
+    locked_expires_at: datetime | None = None
+
+
 class VaultTopItem(BaseModel):
     user_id: int
     program_key: str

@@ -24,6 +24,20 @@ from sqlalchemy import func, select
 from app.services.audit_service import AuditService
 
 
+# Default config knobs for Vault program operations
+DEFAULT_CONFIG = {
+    # 전역 적립 온/오프 (env보다 우선 적용)
+    "enable_game_earn_events": True,
+    # 적립 대상 정책: all | allowlist | blocklist
+    "eligibility_mode": "all",
+    # allowlist/blocklist는 간단히 user_id 정수 배열로 관리 (소규모 운영용)
+    "eligibility_allow": [],
+    "eligibility_block": [],
+    # 이벤트 보너스 규칙 (예: 충전 기반 보너스) 확장용
+    "charge_bonus_rules": [],
+}
+
+
 class Vault2Service:
     DEFAULT_PROGRAM_KEY = "NEW_MEMBER_VAULT"
     DEFAULT_PROGRAM_NAME = "신규 정착 금고"
@@ -48,6 +62,7 @@ class Vault2Service:
             },
             ui_copy_json=None,
             is_active=True,
+            config_json=DEFAULT_CONFIG.copy(),
         )
         db.add(program)
         db.flush()
@@ -64,6 +79,109 @@ class Vault2Service:
         if program and isinstance(program.config_json, dict):
             return program.config_json.get(key, default)
         return default
+
+    def update_config_value(self, db: Session, *, program_key: str, key: str, value: Any, admin_id: int = 0) -> VaultProgram:
+        program = self.get_program_by_key(db, program_key=program_key)
+        if program is None:
+            if program_key == self.DEFAULT_PROGRAM_KEY:
+                program = self._ensure_default_program(db)
+            else:
+                raise ValueError("PROGRAM_NOT_FOUND")
+
+        cfg = DEFAULT_CONFIG.copy()
+        if isinstance(program.config_json, dict):
+            cfg.update(program.config_json)
+        before = {"config_json": program.config_json}
+        cfg[key] = value
+        program.config_json = cfg
+        after = {"config_json": program.config_json}
+
+        AuditService.record_admin_audit(
+            db,
+            admin_id=admin_id,
+            action="UPDATE_CONFIG_FIELD",
+            target_type="VaultProgram",
+            target_id=program_key,
+            before=before,
+            after=after,
+        )
+
+        db.add(program)
+        db.commit()
+        db.refresh(program)
+        return program
+
+    def toggle_game_earn(self, db: Session, *, program_key: str, enabled: bool, admin_id: int = 0) -> VaultProgram:
+        return self.update_config_value(db, program_key=program_key, key="enable_game_earn_events", value=bool(enabled), admin_id=admin_id)
+
+    def upsert_eligibility(self, db: Session, *, program_key: str, user_id: int, eligible: bool, admin_id: int = 0) -> VaultProgram:
+        program = self.get_program_by_key(db, program_key=program_key)
+        if program is None:
+            if program_key == self.DEFAULT_PROGRAM_KEY:
+                program = self._ensure_default_program(db)
+            else:
+                raise ValueError("PROGRAM_NOT_FOUND")
+
+        cfg = DEFAULT_CONFIG.copy()
+        if isinstance(program.config_json, dict):
+            cfg.update(program.config_json)
+
+        allow = set(cfg.get("eligibility_allow") or [])
+        block = set(cfg.get("eligibility_block") or [])
+
+        if eligible:
+            block.discard(user_id)
+            allow.add(user_id)
+        else:
+            allow.discard(user_id)
+            block.add(user_id)
+
+        cfg["eligibility_allow"] = sorted(allow)
+        cfg["eligibility_block"] = sorted(block)
+        cfg["eligibility_mode"] = cfg.get("eligibility_mode") or "all"
+
+        before = {"config_json": program.config_json}
+        program.config_json = cfg
+        after = {"config_json": program.config_json}
+
+        AuditService.record_admin_audit(
+            db,
+            admin_id=admin_id,
+            action="UPSERT_ELIGIBILITY",
+            target_type="VaultProgram",
+            target_id=f"{program_key}:{user_id}",
+            before=before,
+            after=after,
+        )
+
+        db.add(program)
+        db.commit()
+        db.refresh(program)
+        return program
+
+    def get_eligibility(self, db: Session, *, program_key: str, user_id: int) -> bool:
+        program = self.get_program_by_key(db, program_key=program_key)
+        if program is None:
+            if program_key == self.DEFAULT_PROGRAM_KEY:
+                program = self._ensure_default_program(db)
+            else:
+                raise ValueError("PROGRAM_NOT_FOUND")
+
+        cfg = DEFAULT_CONFIG.copy()
+        if isinstance(program.config_json, dict):
+            cfg.update(program.config_json)
+        mode = (cfg.get("eligibility_mode") or "all").lower()
+        allow = set(cfg.get("eligibility_allow") or [])
+        block = set(cfg.get("eligibility_block") or [])
+
+        if mode == "allowlist":
+            return user_id in allow
+        if mode == "blocklist":
+            return user_id not in block
+        # default: all
+        if user_id in block:
+            return False
+        return True
 
     def get_program_by_key(self, db: Session, *, program_key: str) -> VaultProgram | None:
         return db.query(VaultProgram).filter(VaultProgram.key == program_key).one_or_none()

@@ -183,6 +183,34 @@ class VaultService:
         cls.sync_legacy_mirror(user)
         return True
 
+    # Admin-only helpers for timer control
+    @classmethod
+    def admin_timer_action(cls, db: Session, *, user_id: int, action: str, now: datetime | None = None) -> User:
+        now_dt = now or datetime.utcnow()
+        q = db.query(User).filter(User.id == user_id)
+        if db.bind and db.bind.dialect.name != "sqlite":
+            q = q.with_for_update()
+        user = q.one_or_none()
+        if user is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="USER_NOT_FOUND")
+
+        action_l = action.lower()
+        if action_l == "reset":
+            user.vault_locked_expires_at = None
+        elif action_l == "expire_now":
+            user.vault_locked_balance = 0
+            user.vault_locked_expires_at = None
+        elif action_l == "start_now":
+            user.vault_locked_expires_at = cls._compute_locked_expires_at(now_dt)
+        else:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="INVALID_ACTION")
+
+        cls.sync_legacy_mirror(user)
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        return user
+
     @staticmethod
     def _is_eligible_row_active(row: NewMemberDiceEligibility | None, now: datetime) -> bool:
         if row is None:
@@ -208,10 +236,22 @@ class VaultService:
 
     def _eligible(self, db: Session, user_id: int, now: datetime) -> bool:
         """Eligibility guard for Phase 1.
-        
-        Phase 1.2 simplification: All logged-in users are eligible for vault accrual
-        to maximize engagement and retention.
+
+        Default: 모두 허용. 단, VaultProgram config_json에 allow/block 정책이 있으면 그것을 우선 적용한다.
         """
+        cfg_service = Vault2Service()
+        program = cfg_service.get_default_program(db, ensure=True)
+        cfg = {} if program is None else (program.config_json or {})
+        mode = (cfg.get("eligibility_mode") or "all").lower()
+        allow = set(cfg.get("eligibility_allow") or [])
+        block = set(cfg.get("eligibility_block") or [])
+
+        if mode == "allowlist":
+            return user_id in allow
+        if mode == "blocklist":
+            return user_id not in block
+        if user_id in block:
+            return False
         return True
 
     def get_status(self, db: Session, user_id: int, now: datetime | None = None) -> tuple[bool, User, bool]:
@@ -437,7 +477,12 @@ class VaultService:
         """
 
         settings = get_settings()
-        if not bool(getattr(settings, "enable_vault_game_earn_events", False)):
+
+        # DB 우선: VaultProgram config_json.enable_game_earn_events; 없으면 env 사용
+        cfg_service = Vault2Service()
+        db_flag = cfg_service.get_config_value(db, "enable_game_earn_events", None)
+        enable_game_earn = bool(db_flag) if db_flag is not None else bool(getattr(settings, "enable_vault_game_earn_events", False))
+        if not enable_game_earn:
             return 0
 
         now_dt = now or datetime.utcnow()
