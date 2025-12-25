@@ -14,7 +14,7 @@ if ! [ -x "$(command -v docker-compose)" ]; then
   exit 1
 fi
 
-domains=(cc-jm.com www.cc-jm.com)
+domains=(cc-jm.com)
 rsa_key_size=4096
 data_path="/etc/letsencrypt"
 email="admin@cc-jm.com"
