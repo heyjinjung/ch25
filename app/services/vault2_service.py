@@ -58,6 +58,13 @@ class Vault2Service:
             return self._ensure_default_program(db)
         return db.query(VaultProgram).filter(VaultProgram.key == self.DEFAULT_PROGRAM_KEY).one_or_none()
 
+    def get_config_value(self, db: Session, key: str, default: Any = None) -> Any:
+        """Helper to get value from the default program's config_json."""
+        program = self.get_default_program(db, ensure=False)
+        if program and isinstance(program.config_json, dict):
+            return program.config_json.get(key, default)
+        return default
+
     def get_program_by_key(self, db: Session, *, program_key: str) -> VaultProgram | None:
         return db.query(VaultProgram).filter(VaultProgram.key == program_key).one_or_none()
 
