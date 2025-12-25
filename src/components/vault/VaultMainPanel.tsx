@@ -311,7 +311,7 @@ const VaultMainPanel: React.FC = () => {
               <p className="text-white/40 text-xs font-black tracking-widest uppercase">My Cash</p>
               <h3 className="text-white text-4xl font-black">{formatWon(view.cashBalance)}</h3>
             </div>
-            <p className="text-white/30 text-xs mt-4">현재 즉시 사용 가능한 보유 머니입니다.</p>
+            <p className="text-white/30 text-xs mt-4">현재 적립된 금고 보유머니입니다.</p>
           </div>
         </div>
       </div>
