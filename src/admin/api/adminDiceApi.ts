@@ -20,12 +20,12 @@ export interface AdminDiceConfig extends AdminDiceConfigPayload {
 }
 
 export async function fetchDiceConfigs() {
-  const { data } = await adminApi.get<AdminDiceConfig[]>("/dice-config");
+  const { data } = await adminApi.get<AdminDiceConfig[]>("/dice-config/");
   return data;
 }
 
 export async function createDiceConfig(payload: AdminDiceConfigPayload) {
-  const { data } = await adminApi.post<AdminDiceConfig>("/dice-config", payload);
+  const { data } = await adminApi.post<AdminDiceConfig>("/dice-config/", payload);
   return data;
 }
 
