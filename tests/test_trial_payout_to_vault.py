@@ -1,6 +1,7 @@
 """Tests for trial payout routing into Vault and trial token bookkeeping."""
 
 import os
+from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
 
@@ -112,3 +113,41 @@ def test_trial_reward_routed_to_vault_with_skip_logging(session_factory) -> None
     assert events[0].amount == 777
     assert events[1].earn_type == "TRIAL_PAYOUT"
     assert events[1].amount == 0
+
+
+def test_trial_reward_routed_to_vault_applies_multiplier(session_factory, monkeypatch) -> None:
+    monkeypatch.setenv("ENABLE_TRIAL_PAYOUT_TO_VAULT", "true")
+    monkeypatch.setenv("TRIAL_REWARD_VALUATION", '{"ITEM:1": 777}')
+    monkeypatch.setenv("VAULT_ACCRUAL_MULTIPLIER_ENABLED", "true")
+    monkeypatch.setenv("VAULT_ACCRUAL_MULTIPLIER_VALUE", "2.0")
+    monkeypatch.setenv("VAULT_ACCRUAL_MULTIPLIER_START_KST", "2025-12-25")
+    monkeypatch.setenv("VAULT_ACCRUAL_MULTIPLIER_END_KST", "2025-12-27")
+    get_settings.cache_clear()
+
+    session: Session = session_factory()
+    session.add(User(id=1, external_id="tester", status="ACTIVE", cash_balance=0, vault_locked_balance=0, vault_balance=0))
+    session.add(NewMemberDiceEligibility(user_id=1, is_eligible=True, campaign_key="test"))
+    session.commit()
+
+    vault = VaultService()
+    now = datetime(2025, 12, 25, 0, 0, 0, tzinfo=timezone.utc)
+
+    added = vault.record_trial_result_earn_event(
+        session,
+        user_id=1,
+        game_type="DICE",
+        game_log_id=900,
+        token_type="DICE_TOKEN",
+        reward_type="ITEM",
+        reward_amount=1,
+        payout_raw={"case": "valued"},
+        now=now,
+    )
+    session.expire_all()
+    user = session.get(User, 1)
+    assert user is not None
+    assert added == 1554
+    assert user.vault_locked_balance == 1554
+
+    ev = session.query(VaultEarnEvent).filter(VaultEarnEvent.earn_event_id.like("TRIAL:DICE:900:%")).one()
+    assert ev.amount == 1554

@@ -1,6 +1,7 @@
 """Tests for VaultEarnEvent idempotent game accrual."""
 
 import os
+from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
 
@@ -103,3 +104,35 @@ def test_vault_game_earn_event_lose_bonus(session_factory) -> None:
     assert user is not None
     assert added == 300
     assert user.vault_locked_balance == 300
+
+
+def test_vault_game_earn_event_applies_multiplier_when_enabled(session_factory, monkeypatch) -> None:
+    monkeypatch.setenv("ENABLE_VAULT_GAME_EARN_EVENTS", "true")
+    monkeypatch.setenv("VAULT_ACCRUAL_MULTIPLIER_ENABLED", "true")
+    monkeypatch.setenv("VAULT_ACCRUAL_MULTIPLIER_VALUE", "2.0")
+    monkeypatch.setenv("VAULT_ACCRUAL_MULTIPLIER_START_KST", "2025-12-25")
+    monkeypatch.setenv("VAULT_ACCRUAL_MULTIPLIER_END_KST", "2025-12-27")
+    get_settings.cache_clear()
+
+    session: Session = session_factory()
+    session.add(User(id=1, external_id="tester", status="ACTIVE", cash_balance=0, vault_locked_balance=0, vault_balance=0))
+    session.add(NewMemberDiceEligibility(user_id=1, is_eligible=True, campaign_key="test"))
+    session.commit()
+
+    now = datetime(2025, 12, 25, 0, 0, 0, tzinfo=timezone.utc)
+    svc = VaultService()
+    added = svc.record_game_play_earn_event(
+        session,
+        user_id=1,
+        game_type="DICE",
+        game_log_id=999,
+        token_type="DICE_TOKEN",
+        outcome="WIN",
+        payout_raw={"result": "WIN"},
+        now=now,
+    )
+    session.expire_all()
+    user = session.get(User, 1)
+    assert user is not None
+    assert added == 400
+    assert user.vault_locked_balance == 400

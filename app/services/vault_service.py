@@ -410,11 +410,17 @@ class VaultService:
         if exists is not None:
             return 0
 
-        amount = int(self.GAME_EARN_BASE_AMOUNT)
+        base_amount = int(self.GAME_EARN_BASE_AMOUNT)
+        bonus_amount = 0
         if str(game_type).upper() == "DICE" and str(outcome).upper() == "LOSE":
-            amount += int(self.GAME_EARN_DICE_LOSE_BONUS)
-        if amount <= 0:
+            bonus_amount = int(self.GAME_EARN_DICE_LOSE_BONUS)
+
+        amount_before_multiplier = base_amount + bonus_amount
+        if amount_before_multiplier <= 0:
             return 0
+
+        multiplier = float(self.vault_accrual_multiplier(now_dt))
+        amount = max(int(round(amount_before_multiplier * multiplier)), amount_before_multiplier)
 
         # Lock user row for update when supported.
         q = db.query(User).filter(User.id == user_id)
@@ -431,20 +437,25 @@ class VaultService:
 
         # Phase 1: clear expired locked first, then accrue.
         self._expire_locked_if_due(user, now_dt)
-        user.vault_locked_balance = int(user.vault_locked_balance or 0) + amount
+        user.vault_locked_balance = int(user.vault_locked_balance or 0) + int(amount)
         self._ensure_locked_expiry(user, now_dt)
         self.sync_legacy_mirror(user)
 
+        reward_kind = "BASE" if bonus_amount == 0 else "BASE_PLUS_BONUS"
         event = VaultEarnEvent(
             user_id=user.id,
             earn_event_id=earn_event_id,
             earn_type="GAME_PLAY",
-            amount=amount,
+            amount=int(amount),
             source=str(game_type).upper(),
-            reward_kind="BASE" if amount == self.GAME_EARN_BASE_AMOUNT else "BASE_PLUS_BONUS",
+            reward_kind=reward_kind,
             game_type=str(game_type).upper(),
             token_type=token_type,
-            payout_raw_json=payout_raw or {},
+            payout_raw_json={
+                **(payout_raw or {}),
+                "vault_accrual_multiplier": multiplier,
+                "amount_before_multiplier": int(amount_before_multiplier),
+            },
             created_at=now_dt,
         )
 
@@ -453,7 +464,7 @@ class VaultService:
 
         # Phase 2/3-stage prep: record accrual into Vault2 bookkeeping (no v1 behavior change).
         try:
-            Vault2Service().accrue_locked(db, user_id=user.id, amount=amount, now=now_dt, commit=False)
+            Vault2Service().accrue_locked(db, user_id=user.id, amount=int(amount), now=now_dt, commit=False)
         except Exception:
             pass
 
@@ -464,7 +475,7 @@ class VaultService:
             db.rollback()
             return 0
 
-        return amount
+        return int(amount)
 
     def record_trial_result_earn_event(
         self,
@@ -511,9 +522,11 @@ class VaultService:
             return 0
 
         amount = 0
+        amount_before_multiplier = 0
         reward_kind: str | None = None
         if rt == "POINT" and ra > 0:
             amount = ra
+            amount_before_multiplier = ra
             reward_kind = "POINT"
         else:
             valuation = getattr(settings, "trial_reward_valuation", {}) or {}
@@ -521,7 +534,12 @@ class VaultService:
                 amount = int(valuation.get(reward_id, 0) or 0)
             except Exception:
                 amount = 0
+            amount_before_multiplier = int(amount)
             reward_kind = "VALUED" if amount > 0 else "SKIP_NO_VALUATION"
+
+        multiplier = float(self.vault_accrual_multiplier(now_dt))
+        if amount > 0:
+            amount = max(int(round(int(amount) * multiplier)), int(amount))
 
         # Only mutate vault when amount > 0; still record a 0-amount SKIP event.
         user = None
@@ -558,6 +576,8 @@ class VaultService:
                 "reward_type": reward_type,
                 "reward_amount": reward_amount,
                 "reward_id": reward_id,
+                "vault_accrual_multiplier": multiplier,
+                "amount_before_multiplier": int(amount_before_multiplier),
             },
             created_at=now_dt,
         )
