@@ -5,6 +5,7 @@ import { useLocation } from "react-router-dom";
 import MainLayout from "./MainLayout";
 import SeasonPassBar from "../season-pass/SeasonPassBar";
 import SurveyPromptBanner from "../survey/SurveyPromptBanner";
+import DowntimeBanner from "../common/DowntimeBanner";
 
 const UserLayout: React.FC = () => {
   const location = useLocation();
@@ -17,6 +18,7 @@ const UserLayout: React.FC = () => {
   return (
     <MainLayout>
       <div className="space-y-6">
+        <DowntimeBanner />
         {!hideTopBars && <SurveyPromptBanner />}
         {!hideTopBars && <SeasonPassBar />}
         <Outlet />
