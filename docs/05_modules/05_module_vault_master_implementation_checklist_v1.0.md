@@ -12,14 +12,14 @@
 - 용어: locked/available/expired, expires_at, recommended_action, VaultEarnEvent(earn_event_id/earn_type/amount/source/reward_kind), trial_reward_valuation 맵.
 
 ## 2. 선행 준비(플래그/설정/데이터)
-- [ ] `enable_trial_payout_to_vault` 플래그 기본값 false로 추가(환경/설정 레이어).
-- [ ] `trial_reward_valuation` 맵(게임별 reward_id → 금액) 정의 후 기본값 비어있는 상태로 배포(미정의 보상은 적립 SKIP을 기본값으로 확인).
-- [ ] ticket0 카피/CTA 운영 API(`/api/admin/ui-copy/ticket0`)에 금고 메시지 템플릿 등록(OPEN_VAULT_MODAL 시 금액/조건 변수 포함 확인).
-- [ ] Vault UI unlock rule JSON을 운영이 편집 가능하도록 설정 파일 또는 admin 입력 경로 점검(응답 스키마 버전 표기 포함).
-- [ ] 일일/주간 trial 지급 캡 설정(`trial_weekly_cap`, `daily_cap`, `tiered_grant_enabled`, `enable_trial_grant_auto`) 값 정리.
-- [ ] 12/25~12/27 Vault 적립 2배 플래그/환경변수 설정: `VAULT_ACCRUAL_MULTIPLIER_ENABLED`, `VAULT_ACCRUAL_MULTIPLIER_VALUE`, `VAULT_ACCRUAL_MULTIPLIER_START_KST`, `VAULT_ACCRUAL_MULTIPLIER_END_KST`(기본 OFF). 기간은 KST 기준이며 종료/플래그 OFF 시 자동 1.0 복귀.
-- [ ] unlock_rules_json에 Gold 인출율(30/50/70), Diamond 해금 조건(Diamond Key ≥ 2 + Gold 누적 ≥ 1,000,000), 시드 이월 범위(10~30%, 기본 20%) 값을 운영이 수정 가능하도록 설정 저장 위치/포맷 확정.
-- [ ] downtime/배너 일정(12/28, 12/31, 1/5) 및 12/31 백업/초기화 스크립트 경로(`/root/ch25/backups/`) 확인.
+- [x] `enable_trial_payout_to_vault` 플래그 기본값 false로 추가(환경/설정 레이어).
+- [x] `trial_reward_valuation` 맵(게임별 reward_id → 금액) 정의 후 기본값 비어있는 상태로 배포(미정의 보상은 적립 SKIP을 기본값으로 확인).
+- [x] ticket0 카피/CTA 운영 API(`/api/admin/ui-copy/ticket0`)에 금고 메시지 템플릿 등록(OPEN_VAULT_MODAL 시 금액/조건 변수 포함 확인).
+- [x] Vault UI unlock rule JSON을 운영이 편집 가능하도록 admin 입력 경로 추가: `/api/admin/vault-programs/{program_key}/unlock-rules` (응답 스키마 버전 표기 포함).
+- [x] 일일/주간 trial 지급 캡 설정(`trial_weekly_cap`, `trial_daily_cap`, `tiered_grant_enabled`, `enable_trial_grant_auto`) 값 정리.
+- [x] 12/25~12/27 Vault 적립 2배 플래그/환경변수 설정: `VAULT_ACCRUAL_MULTIPLIER_ENABLED`, `VAULT_ACCRUAL_MULTIPLIER_VALUE`, `VAULT_ACCRUAL_MULTIPLIER_START_KST`, `VAULT_ACCRUAL_MULTIPLIER_END_KST`(기본 OFF). 기간은 KST 기준이며 종료/플래그 OFF 시 자동 1.0 복귀.
+- [x] unlock_rules_json에 Gold 인출율(30/50/70), Diamond 해금 조건(Diamond Key ≥ 2 + Gold 누적 ≥ 1,000,000), 시드 이월 범위(10~30%, 기본 20%) 값을 운영이 수정 가능하도록 설정 저장 위치/포맷 확정.
+- [ ] downtime/배너 일정(12/28, 12/31, 1/5) 및 12/31 백업/초기화 스크립트 경로 확인(기본 백업 스크립트: `scripts/backup.sh`, 기본 경로: `/root/backups/xmas-event`).
 
 ## 3. 백엔드 구현 체크리스트
 - [ ] 비용 소모 + 결과 확정 지점에 VaultEarnEvent 생성/호출 연결(게임별 결과 핸들러 기준). 기존 로그/보상 파이프라인과 중복 호출되지 않는지 확인.
@@ -91,6 +91,7 @@
 - [ ] downtime 배너 교체 스케줄(12/28, 12/31, 1/5) 및 12/31 백업/초기화 작업이 다른 배포/플래그와 충돌하지 않는지 확인.
 
 ## 10. 변경 이력
+- v1.4 (2025-12-25, BE팀): trial 설정 플래그/캡(`ENABLE_TRIAL_GRANT_AUTO`, `TRIAL_DAILY_CAP`, `TRIAL_WEEKLY_CAP`, `TIERED_GRANT_ENABLED`, `ENABLE_TRIAL_PAYOUT_TO_VAULT`, `TRIAL_REWARD_VALUATION`) 추가 및 TrialGrantService에 auto/cap 반영. VaultProgram 운영 편집 API(`/api/admin/vault-programs/*`) 추가, `GET /api/vault/status`가 DB `unlock_rules_json` 오버라이드(merge) 우선 사용.
 - v1.3 (2025-12-25, BE팀): `VAULT_ACCRUAL_MULTIPLIER_*` 환경변수(기본 OFF) 추가, `GET /api/vault/status`에 `accrual_multiplier` 노출, `unlock_rules_json`에 Gold(30/50/70)·Diamond(Key≥2+Gold≥1,000,000)·시드 이월(10~30%, 기본20) 규격 포함. `POST /api/vault/fill`/신규 주사위 LOSE 적립에 multiplier 적용. FE `vaultApi` 타입에 `accrualMultiplier` 수용.
 - v1.2 (2025-12-25, BE팀): 12/25~27 2배 적립 플래그, unlock_rules_json(30/50/70·Key+1,000,000·시드 10~30%), 관리자 지급 라벨/티켓0 카피, downtime/백업 일정 체크 추가
 - v1.1 (2025-12-25, BE팀): 충돌 방지/정합성 체크 추가, 세부 가드 및 옵스 플래그 보강

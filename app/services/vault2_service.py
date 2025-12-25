@@ -47,6 +47,40 @@ class Vault2Service:
         db.flush()
         return program
 
+    def get_default_program(self, db: Session, *, ensure: bool = True) -> VaultProgram | None:
+        if ensure:
+            return self._ensure_default_program(db)
+        return db.query(VaultProgram).filter(VaultProgram.key == self.DEFAULT_PROGRAM_KEY).one_or_none()
+
+    def get_program_by_key(self, db: Session, *, program_key: str) -> VaultProgram | None:
+        return db.query(VaultProgram).filter(VaultProgram.key == program_key).one_or_none()
+
+    def update_program_unlock_rules(self, db: Session, *, program_key: str, unlock_rules_json: dict | None) -> VaultProgram:
+        program = self.get_program_by_key(db, program_key=program_key)
+        if program is None:
+            if program_key == self.DEFAULT_PROGRAM_KEY:
+                program = self._ensure_default_program(db)
+            else:
+                raise ValueError("PROGRAM_NOT_FOUND")
+        program.unlock_rules_json = unlock_rules_json
+        db.add(program)
+        db.commit()
+        db.refresh(program)
+        return program
+
+    def update_program_ui_copy(self, db: Session, *, program_key: str, ui_copy_json: dict | None) -> VaultProgram:
+        program = self.get_program_by_key(db, program_key=program_key)
+        if program is None:
+            if program_key == self.DEFAULT_PROGRAM_KEY:
+                program = self._ensure_default_program(db)
+            else:
+                raise ValueError("PROGRAM_NOT_FOUND")
+        program.ui_copy_json = ui_copy_json
+        db.add(program)
+        db.commit()
+        db.refresh(program)
+        return program
+
     @staticmethod
     def _get_available_grace_hours(program: VaultProgram) -> int:
         rules = getattr(program, "unlock_rules_json", None)

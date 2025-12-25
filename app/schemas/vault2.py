@@ -18,6 +18,14 @@ class VaultProgramResponse(BaseModel):
     ui_copy_json: dict | None = None
 
 
+class VaultProgramUnlockRulesUpsertRequest(BaseModel):
+    unlock_rules_json: dict | None = None
+
+
+class VaultProgramUiCopyUpsertRequest(BaseModel):
+    ui_copy_json: dict | None = None
+
+
 class VaultTopItem(BaseModel):
     user_id: int
     program_key: str

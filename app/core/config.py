@@ -82,6 +82,55 @@ class Settings(BaseSettings):
         ),
     )
 
+    # Trial (ticket-zero) controls
+    enable_trial_grant_auto: bool = Field(
+        True,
+        validation_alias=AliasChoices(
+            "ENABLE_TRIAL_GRANT_AUTO",
+            "enable_trial_grant_auto",
+        ),
+    )
+    trial_daily_cap: int = Field(
+        1,
+        validation_alias=AliasChoices(
+            "TRIAL_DAILY_CAP",
+            "trial_daily_cap",
+        ),
+    )
+    # 0 means "no weekly cap" (keep legacy behavior unless configured).
+    trial_weekly_cap: int = Field(
+        0,
+        validation_alias=AliasChoices(
+            "TRIAL_WEEKLY_CAP",
+            "trial_weekly_cap",
+        ),
+    )
+    tiered_grant_enabled: bool = Field(
+        False,
+        validation_alias=AliasChoices(
+            "TIERED_GRANT_ENABLED",
+            "tiered_grant_enabled",
+        ),
+    )
+
+    # If enabled, trial rewards can be routed into Vault rather than direct token grants.
+    # Default OFF to avoid behavior changes.
+    enable_trial_payout_to_vault: bool = Field(
+        False,
+        validation_alias=AliasChoices(
+            "ENABLE_TRIAL_PAYOUT_TO_VAULT",
+            "enable_trial_payout_to_vault",
+        ),
+    )
+    # Optional: valuation map for trial rewards (operational tuning).
+    trial_reward_valuation: dict[str, int] = Field(
+        default_factory=dict,
+        validation_alias=AliasChoices(
+            "TRIAL_REWARD_VALUATION",
+            "trial_reward_valuation",
+        ),
+    )
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

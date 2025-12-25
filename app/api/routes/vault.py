@@ -16,10 +16,31 @@ service = VaultService()
 v2_service = Vault2Service()
 
 
+def _deep_merge_dict(base: dict, override: dict) -> dict:
+    out = dict(base)
+    for key, value in override.items():
+        if isinstance(value, dict) and isinstance(out.get(key), dict):
+            out[key] = _deep_merge_dict(out[key], value)
+        else:
+            out[key] = value
+    return out
+
+
 @router.get("/status", response_model=VaultStatusResponse)
 def status(db: Session = Depends(get_db), user_id: int = Depends(get_current_user_id)) -> VaultStatusResponse:
     now = datetime.utcnow()
     eligible, user, seeded = service.get_status(db=db, user_id=user_id, now=now)
+
+    unlock_rules_json = None
+    if eligible:
+        computed = service.phase1_unlock_rules_json(now=now)
+        program = v2_service.get_default_program(db, ensure=True)
+        override = getattr(program, "unlock_rules_json", None)
+        if isinstance(override, dict) and override:
+            unlock_rules_json = _deep_merge_dict(computed, override)
+        else:
+            unlock_rules_json = computed
+
     return VaultStatusResponse(
         eligible=eligible,
         vault_balance=user.vault_balance or 0,
@@ -32,7 +53,7 @@ def status(db: Session = Depends(get_db), user_id: int = Depends(get_current_use
         recommended_action=None,
         cta_payload=None,
         program_key=service.PROGRAM_KEY,
-        unlock_rules_json=service.phase1_unlock_rules_json(now=now) if eligible else None,
+        unlock_rules_json=unlock_rules_json,
         accrual_multiplier=service.vault_accrual_multiplier(now) if eligible else 1.0,
     )
 
