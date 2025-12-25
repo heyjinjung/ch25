@@ -32,3 +32,4 @@ class RoulettePlayResponse(BaseModel):
     result: str
     segment: RouletteSegmentSchema
     season_pass: dict | None = None
+    vault_earn: int = 0

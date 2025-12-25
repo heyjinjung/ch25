@@ -48,6 +48,7 @@ interface BackendRoulettePlayResponse {
   readonly result: string;
   readonly segment: BackendRouletteSegmentDto;
   readonly season_pass?: Record<string, unknown> | null;
+  readonly vault_earn?: number;
 }
 
 export interface RoulettePlayResponse {
@@ -57,6 +58,7 @@ export interface RoulettePlayResponse {
   readonly reward_type?: string;
   readonly reward_value?: number | string;
   readonly message?: string;
+  readonly vaultEarn?: number;
 }
 
 export const getRouletteStatus = async (): Promise<RouletteStatusResponse> => {
@@ -114,6 +116,7 @@ export const playRoulette = async (): Promise<RoulettePlayResponse> => {
       reward_type: mappedSegment.reward_type,
       reward_value: mappedSegment.reward_amount,
       message: data.result !== "OK" ? data.result : undefined,
+      vaultEarn: data.vault_earn,
     };
   } catch (error) {
     if (axios.isAxiosError(error)) {

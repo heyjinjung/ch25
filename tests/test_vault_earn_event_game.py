@@ -1,7 +1,7 @@
 """Tests for VaultEarnEvent idempotent game accrual."""
 
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.orm import Session
 
@@ -21,15 +21,16 @@ def test_vault_game_earn_event_idempotent_and_expires_not_refreshed(session_fact
     _enable_game_earn_events()
 
     session: Session = session_factory()
-    session.add(User(id=1, external_id="tester", status="ACTIVE", cash_balance=0, vault_locked_balance=0, vault_balance=0))
-    session.add(NewMemberDiceEligibility(user_id=1, is_eligible=True, campaign_key="test"))
+    user = User(id=2001, external_id="tester", status="ACTIVE", cash_balance=0, vault_locked_balance=0, vault_balance=0)
+    session.add(user)
+    session.add(NewMemberDiceEligibility(user_id=user.id, is_eligible=True, campaign_key="test"))
     session.commit()
 
     svc = VaultService()
 
     added1 = svc.record_game_play_earn_event(
         session,
-        user_id=1,
+        user_id=2001,
         game_type="DICE",
         game_log_id=100,
         token_type="DICE_TOKEN",
@@ -37,7 +38,7 @@ def test_vault_game_earn_event_idempotent_and_expires_not_refreshed(session_fact
         payout_raw={"result": "WIN"},
     )
     session.expire_all()
-    user = session.get(User, 1)
+    user = session.get(User, 2001)
     assert user is not None
     assert added1 == 200
     assert user.vault_locked_balance == 200
@@ -47,7 +48,7 @@ def test_vault_game_earn_event_idempotent_and_expires_not_refreshed(session_fact
     # Duplicate earn_event_id should not re-add.
     added_dup = svc.record_game_play_earn_event(
         session,
-        user_id=1,
+        user_id=2001,
         game_type="DICE",
         game_log_id=100,
         token_type="DICE_TOKEN",
@@ -55,28 +56,32 @@ def test_vault_game_earn_event_idempotent_and_expires_not_refreshed(session_fact
         payout_raw={"result": "WIN"},
     )
     session.expire_all()
-    user2 = session.get(User, 1)
+    user2 = session.get(User, 2001)
     assert user2 is not None
     assert added_dup == 0
     assert user2.vault_locked_balance == 200
+    # Duplicate call should not refresh expiration.
     assert user2.vault_locked_expires_at == expires1
     assert session.query(VaultEarnEvent).count() == 1
 
-    # A new game_log_id should accrue again but should NOT refresh expires_at.
+    # A new game_log_id should accrue again but should NOT refresh expires_at (Policy Restored).
+    # Advance time slightly to ensure diff.
     added2 = svc.record_game_play_earn_event(
         session,
-        user_id=1,
+        user_id=2001,
         game_type="DICE",
         game_log_id=101,
         token_type="DICE_TOKEN",
         outcome="WIN",
         payout_raw={"result": "WIN"},
+        now=datetime.utcnow() + timedelta(seconds=10) # Simulate time passing
     )
     session.expire_all()
-    user3 = session.get(User, 1)
+    user3 = session.get(User, 2001)
     assert user3 is not None
     assert added2 == 200
     assert user3.vault_locked_balance == 400
+    # Expiration should remain the same (original start time + 24h).
     assert user3.vault_locked_expires_at == expires1
     assert session.query(VaultEarnEvent).count() == 2
 

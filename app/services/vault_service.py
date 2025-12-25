@@ -137,6 +137,8 @@ class VaultService:
                 return True
             return False
 
+        # Phase 1 Policy Restored: Do NOT extend expiration on activity.
+        # The user must unlock within the fixed 24h window from the initial lock.
         expires_at = getattr(user, "vault_locked_expires_at", None)
         if expires_at is None or expires_at <= now:
             user.vault_locked_expires_at = cls._compute_locked_expires_at(now)
