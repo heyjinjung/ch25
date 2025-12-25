@@ -16,6 +16,12 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from app.models.vault2 import VaultProgram, VaultStatus
+from app.models.admin_audit_log import AdminAuditLog
+from app.models.vault_earn_event import VaultEarnEvent
+from app.models.user_cash_ledger import UserCashLedger
+from app.models.user import User
+from sqlalchemy import func, select
+from app.services.audit_service import AuditService
 
 
 class Vault2Service:
@@ -55,40 +61,58 @@ class Vault2Service:
     def get_program_by_key(self, db: Session, *, program_key: str) -> VaultProgram | None:
         return db.query(VaultProgram).filter(VaultProgram.key == program_key).one_or_none()
 
-    def update_program_unlock_rules(self, db: Session, *, program_key: str, unlock_rules_json: dict | None) -> VaultProgram:
+    def update_program_unlock_rules(self, db: Session, *, program_key: str, unlock_rules_json: dict | None, admin_id: int = 0) -> VaultProgram:
         program = self.get_program_by_key(db, program_key=program_key)
         if program is None:
             if program_key == self.DEFAULT_PROGRAM_KEY:
                 program = self._ensure_default_program(db)
             else:
                 raise ValueError("PROGRAM_NOT_FOUND")
+        
+        before = {"unlock_rules_json": program.unlock_rules_json}
         program.unlock_rules_json = unlock_rules_json
+        after = {"unlock_rules_json": unlock_rules_json}
+        
+        AuditService.record_admin_audit(db, admin_id=admin_id, action="UPDATE_UNLOCK_RULES", target_type="VaultProgram", target_id=program_key, before=before, after=after)
+        
         db.add(program)
         db.commit()
         db.refresh(program)
         return program
 
-    def update_program_ui_copy(self, db: Session, *, program_key: str, ui_copy_json: dict | None) -> VaultProgram:
+    def update_program_ui_copy(self, db: Session, *, program_key: str, ui_copy_json: dict | None, admin_id: int = 0) -> VaultProgram:
         program = self.get_program_by_key(db, program_key=program_key)
         if program is None:
             if program_key == self.DEFAULT_PROGRAM_KEY:
                 program = self._ensure_default_program(db)
             else:
                 raise ValueError("PROGRAM_NOT_FOUND")
+        
+        before = {"ui_copy_json": program.ui_copy_json}
         program.ui_copy_json = ui_copy_json
+        after = {"ui_copy_json": ui_copy_json}
+        
+        AuditService.record_admin_audit(db, admin_id=admin_id, action="UPDATE_UI_COPY", target_type="VaultProgram", target_id=program_key, before=before, after=after)
+        
         db.add(program)
         db.commit()
         db.refresh(program)
         return program
 
-    def update_program_config(self, db: Session, *, program_key: str, config_json: dict | None) -> VaultProgram:
+    def update_program_config(self, db: Session, *, program_key: str, config_json: dict | None, admin_id: int = 0) -> VaultProgram:
         program = self.get_program_by_key(db, program_key=program_key)
         if program is None:
             if program_key == self.DEFAULT_PROGRAM_KEY:
                 program = self._ensure_default_program(db)
             else:
                 raise ValueError("PROGRAM_NOT_FOUND")
+        
+        before = {"config_json": program.config_json}
         program.config_json = config_json
+        after = {"config_json": config_json}
+        
+        AuditService.record_admin_audit(db, admin_id=admin_id, action="UPDATE_CONFIG", target_type="VaultProgram", target_id=program_key, before=before, after=after)
+        
         db.add(program)
         db.commit()
         db.refresh(program)
@@ -298,3 +322,49 @@ class Vault2Service:
             .all()
         )
         return list(rows)
+
+    def get_vault_stats(self, db: Session, now: datetime | None = None) -> dict[str, Any]:
+        """Aggregate performance metrics for Vault Phase 1."""
+        now_dt = now or datetime.utcnow()
+        today_start = now_dt.replace(hour=0, minute=0, second=0, microsecond=0)
+        
+        # 1. Today's Accrual
+        accrual_stats = (
+            db.query(VaultEarnEvent.earn_type, func.count(VaultEarnEvent.id), func.sum(VaultEarnEvent.amount))
+            .filter(VaultEarnEvent.created_at >= today_start)
+            .group_by(VaultEarnEvent.earn_type)
+            .all()
+        )
+        accrual_summary = {row[0]: {"count": row[1], "total": int(row[2] or 0)} for row in accrual_stats}
+        
+        # 2. Trial SKIP Reasons
+        skip_stats = (
+            db.query(VaultEarnEvent.source, func.count(VaultEarnEvent.id))
+            .filter(VaultEarnEvent.created_at >= today_start, VaultEarnEvent.reward_kind == "SKIP_NO_VALUATION")
+            .group_by(VaultEarnEvent.source)
+            .all()
+        )
+        skip_summary = {row[0]: row[1] for row in skip_stats}
+        
+        # 3. Expirations in next 24h (Critical for retention ops)
+        expiring_soon_count = (
+            db.query(func.count(User.id))
+            .filter(User.vault_locked_balance > 0, User.vault_locked_expires_at.between(now_dt, now_dt + timedelta(hours=24)))
+            .scalar()
+        )
+        
+        # 4. Total Unlocked Cash (Today)
+        unlocked_cash_today = (
+            db.query(func.sum(UserCashLedger.delta))
+            .filter(UserCashLedger.reason == "VAULT_UNLOCK", UserCashLedger.created_at >= today_start)
+            .scalar()
+        ) or 0
+
+        return {
+            "today_accrual": accrual_summary,
+            "today_skips": skip_summary,
+            "expiring_soon_24h": expiring_soon_count,
+            "today_unlock_cash": int(unlocked_cash_today),
+            "timestamp": now_dt.isoformat()
+        }
+

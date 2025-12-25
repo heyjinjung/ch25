@@ -3,11 +3,11 @@
 Operational endpoints to edit Vault2 program JSON fields (unlock_rules_json/ui_copy_json)
 without redeploying.
 """
-
+from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db
+from app.api.deps import get_db, get_current_admin_id
 from app.schemas.vault2 import (
     VaultProgramResponse,
     VaultProgramUiCopyUpsertRequest,
@@ -19,6 +19,11 @@ from app.services.vault2_service import Vault2Service
 
 router = APIRouter(prefix="/api/admin/vault-programs", tags=["admin-vault-programs"])
 service = Vault2Service()
+
+
+@router.get("/stats")
+def get_vault_stats(db: Session = Depends(get_db)) -> dict[str, Any]:
+    return service.get_vault_stats(db)
 
 
 def _to_response(p) -> VaultProgramResponse:
@@ -53,9 +58,10 @@ def upsert_unlock_rules(
     program_key: str,
     payload: VaultProgramUnlockRulesUpsertRequest,
     db: Session = Depends(get_db),
+    admin_id: int = Depends(get_current_admin_id),
 ) -> VaultProgramResponse:
     try:
-        program = service.update_program_unlock_rules(db, program_key=program_key, unlock_rules_json=payload.unlock_rules_json)
+        program = service.update_program_unlock_rules(db, program_key=program_key, unlock_rules_json=payload.unlock_rules_json, admin_id=admin_id)
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
     return _to_response(program)
@@ -66,9 +72,10 @@ def upsert_ui_copy(
     program_key: str,
     payload: VaultProgramUiCopyUpsertRequest,
     db: Session = Depends(get_db),
+    admin_id: int = Depends(get_current_admin_id),
 ) -> VaultProgramResponse:
     try:
-        program = service.update_program_ui_copy(db, program_key=program_key, ui_copy_json=payload.ui_copy_json)
+        program = service.update_program_ui_copy(db, program_key=program_key, ui_copy_json=payload.ui_copy_json, admin_id=admin_id)
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
     return _to_response(program)
@@ -79,9 +86,10 @@ def upsert_config(
     program_key: str,
     payload: VaultProgramConfigUpsertRequest,
     db: Session = Depends(get_db),
+    admin_id: int = Depends(get_current_admin_id),
 ) -> VaultProgramResponse:
     try:
-        program = service.update_program_config(db, program_key=program_key, config_json=payload.config_json)
+        program = service.update_program_config(db, program_key=program_key, config_json=payload.config_json, admin_id=admin_id)
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
     return _to_response(program)

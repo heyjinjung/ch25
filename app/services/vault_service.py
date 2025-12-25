@@ -19,6 +19,7 @@ from app.core.config import get_settings
 from app.models.new_member_dice import NewMemberDiceEligibility
 from app.models.user import User
 from app.models.vault_earn_event import VaultEarnEvent
+from app.core.notifications import notify_vault_skip_error
 from app.services.reward_service import RewardService
 from app.services.vault2_service import Vault2Service
 
@@ -544,7 +545,11 @@ class VaultService:
             except Exception:
                 amount = 0
             amount_before_multiplier = int(amount)
-            reward_kind = "VALUED" if amount > 0 else "SKIP_NO_VALUATION"
+            if amount > 0:
+                reward_kind = "VALUED"
+            else:
+                reward_kind = "SKIP_NO_VALUATION"
+                notify_vault_skip_error(source=str(game_type), reward_id=reward_id, reason="MISSING_VALUATION")
 
         multiplier = float(self.vault_accrual_multiplier(now_dt))
         if amount > 0:

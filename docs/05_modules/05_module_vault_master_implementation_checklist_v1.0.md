@@ -84,10 +84,10 @@
 - [x] downtime 배너 일정(12/28, 12/31, 1/5) 노출/교체, 12/31 백업/초기화 절차 실행 여부 확인.
 
 ## 7. 관측/알림
-- [ ] 적립/스킵/만료/해금 로그 대시보드 쿼리 정의(earn_event_id 기준, user_id 파티션 포함). 
-- [ ] trial 적립 SKIP 사유(valuation 없음/amount<=0/reward_kind 누락) 집계 메트릭 추가(알림 임계값 설정 여부 판단).
-- [ ] expires_at 임박/만료 이벤트 알림(옵스/슬랙) 필요 여부 결정.
-- [ ] 12/25~12/27 multiplier ON/OFF 이벤트, unlock_rules_json 변경, downtime 배너 교체 로그 관측 경로 정의.
+- [x] 적립/스킵/만료/해금 로그 대시보드 쿼리 정의(earn_event_id 기준, user_id 파티션 포함). 
+- [x] trial 적립 SKIP 사유(valuation 없음/amount<=0/reward_kind 누락) 집계 메트릭 추가(알림 임계값 설정 여부 판단).
+- [x] expires_at 임박/만료 이벤트 알림(옵스/슬랙) 필요 여부 결정.
+- [x] 12/25~12/27 multiplier ON/OFF 이벤트, unlock_rules_json 변경, downtime 배너 교체 로그 관측 경로 정의.
 
 ## 8. 롤백/가드레일
 - [ ] 플래그로 trial 적립 기능 즉시 중단 가능하도록 구현(OFF 시 기존 흐름만 유지).
@@ -107,6 +107,7 @@
 - [x] downtime 배너 교체 스케줄(12/28, 12/31, 1/5) 및 12/31 백업/초기화 작업이 다른 배포/플래그와 충돌하지 않는지 확인.
 
 ## 10. 변경 이력
+- v2.6 (2025-12-25, BE팀): 운영 관측성(Observability) 강화. AdminAuditLog 테이블 및 AuditService 추가하여 설정 변경 이력 추적. 실시간 Discord/Slack 알림(Missing Valuation SKIP) 및 어드민 통계 API(/stats) 구현 완료.
 - v2.5 (2025-12-25, Full Stack): Vault Phase 1 전체 연동 검증 및 QA 항목 마감. 멱등(Duplicate Skip), 해금(Deposit Unlock), 고액 보상 관리자 지급 라벨, 점검 배너 스케줄링 및 백업 스크립트 정합성 확인 완료.
 - v2.4 (2025-12-25, BE팀): 금고 만료 정책을 Milestone(10,000원) 기반 Fixed Window로 정교화. 적립액이 1만 원 미만일 때는 타이머가 작동하지 않으며, 1만 원 도달 시 24시간 타이머가 고정(Fixed)됩니다. 해금 후 잔액이 1만 원 미만으로 떨어지면 타이머가 해제되어 다음 사이클을 준비합니다.
 - v2.3 (2025-12-25, BE팀): 금고 적립(accrual) 로직 개선 및 만료(expiration) 단위 테스트 보강. 게임 플레이 시마다 locked 만료 시간을 갱신(`_ensure_locked_expiry` 내 갱신 로직 추가)하여 UX 개선(사용자 활동 시 만료 연장). 단위 검증 완료. (v2.4에서 Fixed Window 정책으로 최종 확정 및 수정됨)

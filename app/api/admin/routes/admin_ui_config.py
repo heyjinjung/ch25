@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db
+from app.api.deps import get_db, get_current_admin_id
 from app.schemas.ui_config import UiConfigResponse, UiConfigUpsertRequest
 from app.services.ui_config_service import UiConfigService
 
@@ -19,6 +19,6 @@ def get_ui_config(key: str, db: Session = Depends(get_db)) -> UiConfigResponse:
 
 
 @router.put("/{key}", response_model=UiConfigResponse)
-def upsert_ui_config(key: str, payload: UiConfigUpsertRequest, db: Session = Depends(get_db)) -> UiConfigResponse:
-    row = UiConfigService.upsert(db, key, payload.value)
+def upsert_ui_config(key: str, payload: UiConfigUpsertRequest, db: Session = Depends(get_db), admin_id: int = Depends(get_current_admin_id)) -> UiConfigResponse:
+    row = UiConfigService.upsert(db, key, payload.value, admin_id=admin_id)
     return UiConfigResponse(key=row.key, value=row.value_json, updated_at=row.updated_at)
