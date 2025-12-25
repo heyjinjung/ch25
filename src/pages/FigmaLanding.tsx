@@ -5,7 +5,8 @@ import { Link } from "react-router-dom";
 const assets = {
   starDynamicPremium: "/assets/figma/star-dynamic-premium.png",
   headerImage: "/assets/figma/header-banner.png",
-  benefitImage: "/assets/figma/benefit-card.png",
+  benefitImage1: "/images/2026001.jpg",
+  benefitImage2: "/images/2026002.jpg",
   iconWallet: "/assets/figma/icon-wallet.png",
   iconSecurity: "/assets/figma/icon-security.png",
   iconGraph: "/assets/figma/icon-graph.png",
@@ -90,7 +91,7 @@ const OngoingEvents: React.FC = () => (
           className="flex w-full md:w-[330px] flex-col gap-[19px]"
         >
           <div className="relative w-full overflow-hidden rounded-[10px]" style={{ aspectRatio: "285/221.8667" }}>
-            <img src={assets.benefitImage} alt="Benefit" className="absolute inset-0 h-full w-full object-cover" />
+            <img src={key === 1 ? assets.benefitImage1 : assets.benefitImage2} alt="Benefit" className="absolute inset-0 h-full w-full object-cover" />
           </div>
           <p className="text-[18px] lg:text-[20px] font-medium leading-[1.15] text-left" style={{ color: deepOlive }}>
             {key === 1 ? "매일 터지는 룰렛 경품추첨" : "크리스마스 경품이벤트"}
