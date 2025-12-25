@@ -94,7 +94,6 @@ class GameWalletService:
                 consumed_trial_count = min(int(bucket.balance), int(amount))
                 bucket.balance = max(int(bucket.balance) - consumed_trial_count, 0)
                 db.add(bucket)
-                db.commit()
         except Exception:
             # Fail-open: consuming tokens must not be blocked by trial bookkeeping.
             consumed_trial_count = 0
