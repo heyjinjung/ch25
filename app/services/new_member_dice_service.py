@@ -85,7 +85,15 @@ class NewMemberDiceService:
             user = db.query(User).filter(User.id == user_id).one_or_none()
             if user is not None:
                 prev_locked = int(user.vault_locked_balance or 0)
-                next_locked = max(prev_locked, 10_000)
+                base_target = max(prev_locked, 10_000)
+                base_delta = max(base_target - prev_locked, 0)
+
+                multiplier = VaultService.vault_accrual_multiplier(now_dt)
+                awarded_delta = max(int(round(base_delta * multiplier)), base_delta)
+                next_locked = prev_locked + awarded_delta
+                if next_locked < base_target:
+                    next_locked = base_target
+
                 delta_added = max(next_locked - prev_locked, 0)
 
                 user.vault_locked_balance = next_locked

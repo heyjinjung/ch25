@@ -1,5 +1,8 @@
 """Application configuration settings."""
+
+from datetime import date
 from functools import lru_cache
+
 from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -46,6 +49,37 @@ class Settings(BaseSettings):
     )
     external_ranking_deposit_cooldown_minutes: int = Field(
         0, validation_alias=AliasChoices("EXTERNAL_RANKING_DEPOSIT_COOLDOWN_MINUTES", "external_ranking_deposit_cooldown_minutes")
+    )
+
+    # Vault event flags
+    # Disabled by default so local dev/tests are deterministic.
+    vault_accrual_multiplier_enabled: bool = Field(
+        False,
+        validation_alias=AliasChoices(
+            "VAULT_ACCRUAL_MULTIPLIER_ENABLED",
+            "vault_accrual_multiplier_enabled",
+        ),
+    )
+    vault_accrual_multiplier_value: float = Field(
+        2.0,
+        validation_alias=AliasChoices(
+            "VAULT_ACCRUAL_MULTIPLIER_VALUE",
+            "vault_accrual_multiplier_value",
+        ),
+    )
+    vault_accrual_multiplier_start_kst: date | None = Field(
+        None,
+        validation_alias=AliasChoices(
+            "VAULT_ACCRUAL_MULTIPLIER_START_KST",
+            "vault_accrual_multiplier_start_kst",
+        ),
+    )
+    vault_accrual_multiplier_end_kst: date | None = Field(
+        None,
+        validation_alias=AliasChoices(
+            "VAULT_ACCRUAL_MULTIPLIER_END_KST",
+            "vault_accrual_multiplier_end_kst",
+        ),
     )
 
     model_config = SettingsConfigDict(

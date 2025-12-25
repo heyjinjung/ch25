@@ -7,12 +7,14 @@ Phase 1 rules implemented here:
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.config import get_settings
 from app.models.new_member_dice import NewMemberDiceEligibility
 from app.models.user import User
 from app.services.reward_service import RewardService
@@ -35,21 +37,77 @@ class VaultService:
     PROGRAM_KEY = "NEW_MEMBER_VAULT"
 
     @classmethod
-    def phase1_unlock_rules_json(cls) -> dict:
-        """Return current Phase 1 unlock rules as JSON for UI.
+    def vault_accrual_multiplier(cls, now: datetime | None = None) -> float:
+        """Return a multiplier for vault accrual amounts.
 
-        This is intentionally derived from code constants so the server remains the source of truth,
-        while the UI can render a clear "다음 해금 조건" line.
+        This is a time-window event flag, evaluated in KST.
+        Disabled by default to keep local dev/tests deterministic.
         """
 
+        settings = get_settings()
+        if not bool(getattr(settings, "vault_accrual_multiplier_enabled", False)):
+            return 1.0
+
+        start_kst = getattr(settings, "vault_accrual_multiplier_start_kst", None)
+        end_kst = getattr(settings, "vault_accrual_multiplier_end_kst", None)
+        if start_kst is None or end_kst is None:
+            return 1.0
+
+        raw_value = float(getattr(settings, "vault_accrual_multiplier_value", 1.0) or 1.0)
+        value = max(raw_value, 1.0)
+
+        now_dt = now or datetime.utcnow()
+        if now_dt.tzinfo is None:
+            now_dt = now_dt.replace(tzinfo=timezone.utc)
+        tz = ZoneInfo(getattr(settings, "timezone", "Asia/Seoul"))
+        today_kst = now_dt.astimezone(tz).date()
+
+        if start_kst <= today_kst <= end_kst:
+            return value
+        return 1.0
+
+    @classmethod
+    def phase1_unlock_rules_json(cls, now: datetime | None = None) -> dict:
+        """Return unlock rules JSON for UI.
+
+        Keep Phase 1 deposit-unlock tiers for backward compatibility, while also exposing
+        the grand-cycle rule payload used by the newer vault UX.
+        """
+
+        settings = get_settings()
+        mult = cls.vault_accrual_multiplier(now)
         return {
-            "version": 1,
-            "trigger": "EXTERNAL_RANKING_DEPOSIT_INCREASE",
-            "tiers": [
-                {"min_deposit_delta": cls.VAULT_TIER_A_MIN_DELTA, "unlock_amount": cls.VAULT_TIER_A_UNLOCK},
-                {"min_deposit_delta": cls.VAULT_TIER_B_MIN_DELTA, "unlock_amount": cls.VAULT_TIER_B_UNLOCK},
-            ],
-            "notes": "unlock_amount는 vault_locked_balance를 초과할 수 없으며 min(locked, unlock_target)로 적용됨",
+            "version": 2,
+            "program_key": cls.PROGRAM_KEY,
+            "accrual_multiplier": {
+                "active": mult,
+                "default": 1.0,
+                "enabled": bool(getattr(settings, "vault_accrual_multiplier_enabled", False)),
+                "window_kst": {
+                    "start": str(getattr(settings, "vault_accrual_multiplier_start_kst", None) or ""),
+                    "end": str(getattr(settings, "vault_accrual_multiplier_end_kst", None) or ""),
+                },
+            },
+            "phase1_deposit_unlock": {
+                "trigger": "EXTERNAL_RANKING_DEPOSIT_INCREASE",
+                "tiers": [
+                    {"min_deposit_delta": cls.VAULT_TIER_A_MIN_DELTA, "unlock_amount": cls.VAULT_TIER_A_UNLOCK},
+                    {"min_deposit_delta": cls.VAULT_TIER_B_MIN_DELTA, "unlock_amount": cls.VAULT_TIER_B_UNLOCK},
+                ],
+                "notes": "unlock_amount는 vault_locked_balance를 초과할 수 없으며 min(locked, unlock_target)로 적용됨",
+            },
+            "grand_cycle_unlock": {
+                "gold_unlock_tiers": [30, 50, 70],
+                "diamond_unlock": {
+                    "min_diamond_keys": 2,
+                    "min_gold_cumulative": 1_000_000,
+                },
+                "seed_carryover": {
+                    "min_percent": 10,
+                    "max_percent": 30,
+                    "default_percent": 20,
+                },
+            },
         }
 
     @staticmethod
@@ -176,8 +234,10 @@ class VaultService:
             user.vault_locked_balance = self.VAULT_SEED_AMOUNT
             seed_added = self.VAULT_SEED_AMOUNT
 
-        user.vault_locked_balance = (user.vault_locked_balance or 0) + self.VAULT_FILL_AMOUNT
-        total_added = seed_added + self.VAULT_FILL_AMOUNT
+        multiplier = self.vault_accrual_multiplier(now_dt)
+        fill_added = max(int(round(self.VAULT_FILL_AMOUNT * multiplier)), self.VAULT_FILL_AMOUNT)
+        user.vault_locked_balance = (user.vault_locked_balance or 0) + fill_added
+        total_added = seed_added + fill_added
         self._ensure_locked_expiry(user, now_dt)
         self.sync_legacy_mirror(user)
         user.vault_fill_used_at = now_dt
@@ -193,7 +253,7 @@ class VaultService:
         db.commit()
         db.refresh(user)
 
-        return eligible, user, self.VAULT_FILL_AMOUNT, now_dt
+        return eligible, user, fill_added, now_dt
 
     def handle_deposit_increase_signal(
         self,

@@ -14,6 +14,7 @@ interface BackendVaultStatusResponse {
   readonly cta_payload?: Record<string, unknown> | null;
   readonly program_key?: string | null;
   readonly unlock_rules_json?: Record<string, unknown> | null;
+  readonly accrual_multiplier?: number | null;
 }
 
 export interface VaultStatusResponse {
@@ -31,6 +32,9 @@ export interface VaultStatusResponse {
   // Phase 2/3 rollout helpers
   readonly programKey?: string | null;
   readonly unlockRulesJson?: Record<string, unknown> | null;
+
+  // Event flags
+  readonly accrualMultiplier?: number | null;
 }
 
 export const getVaultStatus = async (): Promise<VaultStatusResponse> => {
@@ -53,5 +57,7 @@ export const getVaultStatus = async (): Promise<VaultStatusResponse> => {
 
     programKey: data.program_key ?? null,
     unlockRulesJson: (data.unlock_rules_json as Record<string, unknown> | null) ?? null,
+
+    accrualMultiplier: data.accrual_multiplier ?? null,
   };
 };
