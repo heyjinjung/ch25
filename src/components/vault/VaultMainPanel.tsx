@@ -54,114 +54,71 @@ const CountdownTimer: React.FC<{ expiresAt: Date }> = ({ expiresAt }) => {
         setIsWarning(false);
         return;
       }
-
       setIsWarning(difference < 60 * 60 * 1000);
       return;
     };
-
     calculate();
     const timer = setInterval(() => calculate(), 1000);
     return () => clearInterval(timer);
   }, [expiresAt]);
 
   return (
-    <div className={`inline-flex items-center ${isWarning ? "text-red-300" : "text-white/70"} text-sm font-medium`}>
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="mr-1 h-4 w-4">
-        <path
-          fillRule="evenodd"
-          d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
-          clipRule="evenodd"
-        />
+    <div className={`px-4 py-2 rounded-full border ${isWarning ? "border-red-500/50 bg-red-500/10 text-red-300" : "border-white/10 bg-white/5 text-white/70"} text-sm font-bold flex items-center gap-2 backdrop-blur-md shadow-lg`}>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
       </svg>
       <AnimatedCountdown
         targetMs={expiresAt.getTime()}
         warnUnderMs={60 * 60 * 1000}
-        expiredText="00시간 00분 00초"
-        suffix="후 소멸"
-        className={isWarning ? "font-bold" : ""}
+        expiredText="00:00:00"
+        suffix=" 후 소멸"
+        className={isWarning ? "font-bold animate-pulse" : ""}
         showDays={false}
       />
     </div>
   );
 };
 
-const VaultDoorVisual: React.FC<{ stateLabel: string; accentTone?: "active" | "idle" }> = ({
-  stateLabel,
-  accentTone = "idle",
-}) => {
-  const accentRing = accentTone === "active" ? "border-secondary-300/70" : "border-white/15";
-  const accentGlow = accentTone === "active" ? "animate-pulse-glow" : "";
-  const accentText = accentTone === "active" ? "text-secondary-200" : "text-white/70";
-
+const VaultVisual: React.FC<{ stateLabel: string; eligible: boolean }> = ({ stateLabel, eligible }) => {
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-dark-200/80 to-dark-100">
-      <div className="absolute inset-0 opacity-60">
-        <div className="absolute -left-10 -top-10 h-40 w-40 rounded-full bg-secondary-400/10 blur-3xl" />
-        <div className="absolute -bottom-12 -right-12 h-52 w-52 rounded-full bg-white/8 blur-3xl" />
-        <img
-          src="/images/coin.svg"
-          alt=""
-          className="absolute -right-6 -top-10 h-40 w-40 rotate-12 opacity-[0.08]"
-          loading="lazy"
-          aria-hidden="true"
-        />
+    <div className="relative aspect-square w-full max-w-[280px] mx-auto">
+      {/* Glow background */}
+      <div className={`absolute inset-0 rounded-full blur-[60px] opacity-40 transition-colors duration-700 ${eligible ? 'bg-cc-lime' : 'bg-blue-500'}`} />
+
+      {/* Outer ring */}
+      <div className={`absolute inset-0 rounded-full border-2 border-white/20 p-2 ${eligible ? 'animate-spin-slow' : ''}`}>
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-4 h-4 bg-white/40 rounded-full blur-sm" />
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-4 bg-white/40 rounded-full blur-sm" />
       </div>
 
-      <div className="relative z-10 flex items-center justify-between gap-4 p-5">
-        <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-white/60">Premium Vault</p>
-          <p className="mt-1 text-sm font-extrabold text-white">활동 금고</p>
-          <p className={`mt-1 inline-flex items-center gap-2 text-xs font-bold ${accentText}`}>
-            <span className="inline-block h-2 w-2 rounded-full bg-secondary-300/80" />
+      {/* Main vault body */}
+      <div className="absolute inset-[15px] rounded-full border border-white/10 bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-xl shadow-2xl flex items-center justify-center">
+        <div className="absolute inset-0 rounded-full overflow-hidden">
+          <div className={`absolute top-0 left-0 w-full h-full bg-gradient-to-tr from-transparent via-white/5 to-transparent ${eligible ? 'animate-pulse' : ''}`} />
+        </div>
+
+        {/* Center icon / status */}
+        <div className="relative z-10 flex flex-col items-center">
+          <div className={`mb-2 p-4 rounded-2xl bg-black/40 border border-white/10 ${eligible ? 'shadow-[0_0_20px_rgba(210,253,156,0.3)]' : ''}`}>
+            <img
+              src={eligible ? "/images/layer-3.svg" : "/images/coin.svg"}
+              className={`h-12 w-12 ${eligible ? '' : 'grayscale opacity-50'}`}
+              alt="Vault status"
+            />
+          </div>
+          <p className={`text-xs font-black uppercase tracking-[0.3em] ${eligible ? 'text-cc-lime' : 'text-white/40'}`}>
             {stateLabel}
           </p>
         </div>
 
-        <div className="relative h-[92px] w-[92px] shrink-0">
-          <div className={`absolute inset-0 rounded-full border ${accentRing} ${accentGlow}`} />
-          <div className="absolute inset-[6px] rounded-full border border-white/10 bg-dark-50" />
-          <div className="absolute inset-[14px] rounded-full border border-white/10 bg-black/30" />
-
-          <div className="absolute inset-[18px] rounded-full border border-white/15 bg-dark-100">
-            <div className="absolute inset-0 animate-spin-slow rounded-full">
-              {[...Array(10)].map((_, idx) => (
-                <div
-                  key={idx}
-                  className="absolute left-1/2 top-1/2 h-8 w-[2px] -translate-x-1/2 -translate-y-1/2 bg-white/15"
-                  style={{ transform: `translate(-50%, -50%) rotate(${idx * 36}deg) translateY(-30px)` }}
-                />
-              ))}
-            </div>
-            <div className="absolute inset-[18px] rounded-full border border-white/15 bg-black/35" />
-            <div className="absolute inset-[28px] rounded-full bg-secondary-400/12" />
-            <div className="absolute inset-[34px] rounded-full bg-black/40" />
-          </div>
-
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="relative">
-              <div className="h-4 w-4 rounded-full bg-secondary-300/80 shadow" />
-              <img
-                src="/images/dia.svg"
-                alt=""
-                className="absolute left-1/2 top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 opacity-80"
-                loading="lazy"
-                aria-hidden="true"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="relative z-10 px-5 pb-5">
-        <div className="grid grid-cols-6 gap-2">
-          {[...Array(12)].map((_, idx) => (
-            <div key={idx} className="h-2 rounded-full bg-white/5" />
-          ))}
-        </div>
-        <div className="mt-3 flex items-center justify-between text-[11px] text-white/50">
-          <span>보안 금고 잠금</span>
-          <span className="font-semibold text-white/65">Vault Door</span>
-        </div>
+        {/* Mechanical details */}
+        {[...Array(8)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-1 h-3 bg-white/20 rounded-full"
+            style={{ transform: `rotate(${i * 45}deg) translateY(-90px)` }}
+          />
+        ))}
       </div>
     </div>
   );
@@ -192,8 +149,8 @@ const VaultMainPanel: React.FC = () => {
     const expiresAt = parseDate(data?.expiresAt ?? null);
     const usedAt = parseDate(data?.vaultFillUsedAt ?? null);
 
-    const statusLabel = vaultBalance > 0 ? (eligible ? "해금 대기" : "잠금") : "비어있음";
-    const statusTone = eligible ? "text-cc-lime" : "text-white/70";
+    const statusLabel = vaultBalance > 0 ? (eligible ? "ACCESSIBLE" : "LOCKED") : "EMPTY";
+    const statusTone = eligible ? "text-cc-lime shadow-[0_0_10px_#d2fd9c44]" : "text-white/40";
 
     const unlockRulesJson = data?.unlockRulesJson;
     const accrualMultiplier = data?.accrualMultiplier ?? 1.0;
@@ -216,7 +173,6 @@ const VaultMainPanel: React.FC = () => {
     };
   }, [vault.data]);
 
-  // Auto-open modal if recommended
   useEffect(() => {
     if (view.recommendedAction === "OPEN_VAULT_MODAL" && !vaultModalOpen) {
       setVaultModalOpen(true);
@@ -226,8 +182,6 @@ const VaultMainPanel: React.FC = () => {
   const unlockRules = useMemo(() => {
     const parsed = parseVaultUnlockRules(view.unlockRulesJson);
     if (parsed.length > 0) return parsed;
-
-    // Fallback hardcoded rules (Updated Request)
     return [
       "해금 조건: 게임 플레이를 통해 적립된 포인트 (적립형)",
       "비고: 이용 내역이 확인되면 자동으로 금고가 해금되어 보유 머니로 전환됩니다.",
@@ -238,385 +192,228 @@ const VaultMainPanel: React.FC = () => {
   const rewardPreview = useMemo(() => {
     const value = ui.data?.value ?? null;
     const v = value as Record<string, unknown> | null;
-
     const rawItems: unknown[] | null = Array.isArray(v?.reward_preview_items)
       ? (v?.reward_preview_items as unknown[])
       : Array.isArray(v?.rewardPreviewItems)
-        ? (v?.rewardPreviewItems as unknown[])
-        : null;
+        ? (v?.rewardPreviewItems as unknown[]) : null;
 
-    const items: RewardPreviewItem[] | null = rawItems
-      ? rawItems
-        .map((item) => {
-          if (!item || typeof item !== "object") return null;
-          const r = item as Record<string, unknown>;
-          if (typeof r.label !== "string" || !r.label) return null;
-          const amount = typeof r.amount === "number" ? r.amount : undefined;
-          const unit = typeof r.unit === "string" ? r.unit : undefined;
-          return { label: r.label, amount, unit };
-        })
-        .filter((item): item is RewardPreviewItem => item !== null)
-      : null;
+    const items: RewardPreviewItem[] | null = rawItems ? rawItems.map((item) => {
+      if (!item || typeof item !== "object") return null;
+      const r = item as Record<string, unknown>;
+      return { label: r.label as string, amount: r.amount as number, unit: r.unit as string };
+    }).filter((i): i is RewardPreviewItem => i !== null) : null;
 
     const rawProgress = (v?.reward_preview_progress ?? v?.rewardPreviewProgress) as Record<string, unknown> | null;
-    const currentPoints = typeof rawProgress?.current_points === "number"
-      ? (rawProgress.current_points as number)
-      : typeof rawProgress?.currentPoints === "number"
-        ? (rawProgress.currentPoints as number)
-        : null;
-    const nextPoints = typeof rawProgress?.next_points === "number"
-      ? (rawProgress.next_points as number)
-      : typeof rawProgress?.nextPoints === "number"
-        ? (rawProgress.nextPoints as number)
-        : null;
-    const unitLabel = typeof rawProgress?.unit_label === "string"
-      ? (rawProgress.unit_label as string)
-      : typeof rawProgress?.unitLabel === "string"
-        ? (rawProgress.unitLabel as string)
-        : "점";
+    const currentPoints = (rawProgress?.current_points ?? rawProgress?.currentPoints ?? null) as number | null;
+    const nextPoints = (rawProgress?.next_points ?? rawProgress?.nextPoints ?? null) as number | null;
+    const unitLabel = (rawProgress?.unit_label ?? rawProgress?.unitLabel ?? "점") as string;
 
-    const progress: RewardPreviewProgress | null =
-      typeof currentPoints === "number" && typeof nextPoints === "number" && nextPoints > 0
-        ? { currentPoints, nextPoints, unitLabel }
-        : null;
+    const progress: RewardPreviewProgress | null = (currentPoints !== null && nextPoints !== null && nextPoints > 0) ? { currentPoints, nextPoints, unitLabel } : null;
+    const percent = progress ? Math.max(0, Math.min(100, Math.round((progress.currentPoints / progress.nextPoints) * 100))) : null;
 
-    const remainingLabel = progress
-      ? `${Math.max(0, progress.nextPoints - progress.currentPoints).toLocaleString("ko-KR")}${progress.unitLabel}`
-      : null;
-    const percent = progress
-      ? Math.max(0, Math.min(100, Math.round((progress.currentPoints / progress.nextPoints) * 100)))
-      : null;
-
-    return { items, progress, remainingLabel, percent };
+    return { items, progress, percent };
   }, [ui.data?.value]);
 
   return (
-    <section className="mx-auto w-full max-w-[980px] space-y-6">
-      <div className="rounded-3xl border border-white/10 bg-dark-200/60 p-6 shadow-lg backdrop-blur">
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-center">
-            <div className="inline-flex items-center gap-2 rounded-full border border-secondary-300/35 bg-black/25 px-5 py-2 text-sm font-extrabold text-secondary-200">
-              <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/10">
-                <img
-                  src="/images/coin.svg"
-                  alt=""
-                  className="h-4 w-auto max-w-4 object-contain invert brightness-200 contrast-125"
-                  loading="lazy"
-                  aria-hidden="true"
-                />
-              </span>
-              XMAS 이벤트 금고
-              {(view.accrualMultiplier ?? 1) > 1 && (
-                <span className="ml-2 inline-flex items-center rounded bg-red-500/20 px-1.5 py-0.5 text-[10px] font-bold text-red-400 border border-red-500/30 animate-pulse">
-                  {view.accrualMultiplier}배 적립 중
-                </span>
-              )}
-            </div>
-          </div>
-
-          <div>
-            <h1 className="text-2xl font-extrabold text-white sm:text-3xl">
-              {(user?.nickname || user?.external_id || "플레이어").toString()}님의 활동 금고
-            </h1>
-            <p className="mt-2 text-sm text-white/70">
-              활동에 따라 <span className="font-semibold text-secondary-200">자동으로 적립된</span> 보상 금액이 금고에 있습니다.
-            </p>
-
-            <div className="mt-4 rounded-2xl border border-white/10 bg-black/25 p-4 text-white/75">
-              <p className="text-[12px] font-bold uppercase tracking-[0.22em] text-white/70">금고 해금 규칙</p>
-              <ul className="mt-2 space-y-1 text-[clamp(13px,2.6vw,14px)]">
-                {unlockRules.map((rule, idx) => (
-                  <li key={idx}>
-                    <span className="font-semibold text-white/85">- {rule}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
-          <div className="grid gap-4 lg:grid-cols-3">
-            <div className="lg:col-span-2">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="md:col-span-2">
-                  <div className="rounded-2xl border border-white/10 bg-dark-100 shadow-[0_0_15px_rgba(255,255,255,0.03)]">
-                    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-cc-olive/70 to-cc-moss/70 p-6">
-                      <div className="absolute inset-0 opacity-55">
-                        <div className="absolute left-6 top-6 h-16 w-16 rounded-full bg-secondary-200/35 blur-2xl" />
-                        <div className="absolute bottom-6 right-6 h-28 w-28 rounded-full bg-secondary-100/25 blur-2xl" />
-                        <img
-                          src="/images/money.svg"
-                          alt=""
-                          className="absolute -right-8 -top-10 h-44 w-44 rotate-12 opacity-[0.08]"
-                          loading="lazy"
-                          aria-hidden="true"
-                        />
-                      </div>
-
-                      <div className="relative z-10 flex flex-wrap items-start justify-between gap-4">
-                        <div>
-                          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/25 px-3 py-1 text-xs font-bold text-white/85">
-                            <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/10">
-                              <img
-                                src="/images/wallet.svg"
-                                alt=""
-                                className="h-4 w-auto max-w-4 object-contain invert brightness-200 contrast-125"
-                                loading="lazy"
-                                aria-hidden="true"
-                              />
-                            </span>
-                            {(view.uiCopyJson?.title as string) || "통합 금고 현황"}
-                            <span className="rounded-full border border-white/10 bg-white/10 px-2 py-0.5 text-[10px] font-extrabold text-white/70">Phase 1</span>
-                          </div>
-                          <p className="mt-3 text-3xl font-extrabold text-white">{formatWon(view.vaultBalance)}</p>
-                          {view.expiresAt ? (
-                            <div className="mt-2">
-                              <CountdownTimer expiresAt={view.expiresAt} />
-                            </div>
-                          ) : (
-                            <p className="mt-2 text-sm text-white/60">만료 정보 없음</p>
-                          )}
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          <div className={`rounded-full border border-white/10 bg-black/30 px-3 py-1 text-xs font-extrabold ${view.statusTone}`}>
-                            {view.statusLabel}
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => setVaultModalOpen(true)}
-                            className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white/90 hover:bg-white/10"
-                          >
-                            금고 안내 보기
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="relative z-10 mt-5">
-                        <div className="grid gap-3 md:grid-cols-2">
-                          <div className="rounded-xl border border-white/10 bg-black/30 p-5">
-                            <div className="flex items-center gap-2">
-                              <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/10">
-                                <img
-                                  src="/images/coin.svg"
-                                  alt=""
-                                  className="h-4 w-auto max-w-4 object-contain invert brightness-200 contrast-125"
-                                  loading="lazy"
-                                  aria-hidden="true"
-                                />
-                              </span>
-                              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">잠긴 금고</p>
-                            </div>
-                            <p className="mt-2 text-2xl font-extrabold text-secondary-200">{formatWon(view.vaultBalance)}</p>
-                            <p className="mt-1 text-xs text-white/60">해금 전까지 금액은 잠금 상태입니다.</p>
-                          </div>
-                          <div className="rounded-xl border border-white/10 bg-black/30 p-5">
-                            <div className="flex items-center gap-2">
-                              <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/10">
-                                <img
-                                  src="/images/wallet.svg"
-                                  alt=""
-                                  className="h-4 w-auto max-w-4 object-contain invert brightness-200 contrast-125"
-                                  loading="lazy"
-                                  aria-hidden="true"
-                                />
-                              </span>
-                              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">보유 머니</p>
-                            </div>
-                            <p className="mt-2 text-2xl font-extrabold text-white">{formatWon(view.cashBalance)}</p>
-                            <p className="mt-1 text-xs text-white/60">해금된 금액은 보유 머니에 합산됩니다.</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="md:col-span-2">
-                  <VaultDoorVisual stateLabel={view.statusLabel} accentTone={view.eligible ? "active" : "idle"} />
-                </div>
-              </div>
-            </div>
-
-            <aside className="rounded-2xl border border-white/10 bg-dark-100 p-5">
-              <div className="flex items-center gap-3">
-                <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/10">
-                  <img
-                    src="/images/tele.svg"
-                    alt=""
-                    className="h-6 w-auto max-w-6 object-contain invert brightness-200 contrast-125"
-                    loading="lazy"
-                    aria-hidden="true"
-                  />
-                </span>
-                <div>
-                  <p className="text-sm font-extrabold text-white">티켓이 부족해요</p>
-                  <p className="mt-1 text-xs text-white/60">{(view.uiCopyJson?.desc as string) || "씨씨카지노 이용 확인 후 금고 해금이 진행됩니다."}</p>
-                </div>
-              </div>
-
-              <div className="mt-4 flex flex-col gap-2">
-                <a
-                  href="https://ccc-010.com"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex w-full items-center justify-center rounded-xl border border-black/15 bg-cc-lime px-4 py-3 text-sm font-extrabold text-black"
-                >
-                  1만원 충전 ↗
-                </a>
-                <a
-                  href="https://ccc-010.com"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex w-full items-center justify-center rounded-xl border border-white/15 bg-white/8 px-4 py-3 text-sm font-extrabold text-white/90 hover:bg-white/12"
-                >
-                  5만원 충전 ↗
-                </a>
-                <a
-                  href="https://t.me/jm956"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex w-full items-center justify-center rounded-xl border border-white/15 bg-white/6 px-4 py-3 text-sm font-bold text-white/80 hover:bg-white/10"
-                >
-                  실장 텔레 문의
-                </a>
-              </div>
-
-              <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4">
-                <p className="text-[16px] font-semibold text-white/80">금고 시스템 안내</p>
-                <ul className="mt-2 space-y-1 text-[16px] text-white/60">
-                  <li>- 게임 플레이 시 자동 적립</li>
-                  <li>- 이용 내역 확인 시 즉시 해금</li>
-                  <li>- 반영이 늦으면 관리자에게 문의해주세요</li>
-                </ul>
-              </div>
-            </aside>
-          </div>
+    <section className="mx-auto w-full max-w-[1100px] flex flex-col gap-10">
+      {/* 1. Hero Header */}
+      <div className="relative w-full rounded-[40px] overflow-hidden bg-gradient-to-br from-cc-olive to-cc-moss p-8 md:p-12 lg:p-16 border border-white/5 shadow-2xl">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute -top-24 -left-24 w-96 h-96 bg-cc-lime/40 blur-[100px] rounded-full" />
+          <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-cc-lime/40 blur-[100px] rounded-full" />
         </div>
 
-        <div className="mt-6">
-          {vault.isLoading ? (
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="h-[92px] animate-pulse rounded-2xl border border-white/10 bg-white/5" />
-              <div className="h-[92px] animate-pulse rounded-2xl border border-white/10 bg-white/5" />
-            </div>
-          ) : vault.isError ? (
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <p className="text-sm font-semibold text-white">금고 상태를 불러오지 못했습니다.</p>
-              <p className="mt-1 text-xs text-white/60">잠시 후 다시 시도해주세요.</p>
-            </div>
-          ) : null}
-
-          {rewardPreview.items?.length ? (
-            <div className="mt-4 rounded-2xl border border-white/10 bg-black/25 p-5">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-white/10">
-                      <img
-                        src="/images/direction.svg"
-                        alt=""
-                        className="h-5 w-5 opacity-90"
-                        loading="lazy"
-                        aria-hidden="true"
-                      />
-                    </span>
-                    <p className="text-sm font-extrabold text-white">금고 미리보기(보상 프리뷰)</p>
-                  </div>
-                  <p className="mt-1 text-xs text-white/60">실제 획득 가능한 보상을 확인하세요.</p>
-                </div>
-                {rewardPreview.remainingLabel ? (
-                  <p className="text-xs font-semibold text-white/70">다음 보상까지 {rewardPreview.remainingLabel}</p>
-                ) : null}
+        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div className="flex flex-col gap-8">
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-3">
+                <div className="h-px w-8 bg-cc-lime/60" />
+                <span className="text-cc-lime text-sm font-black tracking-widest uppercase">Safe & Digital Vault</span>
               </div>
+              <h1 className="text-[48px] md:text-[64px] font-black leading-none text-white tracking-tighter">
+                MY <span className="text-cc-lime">VAULT</span>
+              </h1>
+            </div>
 
-              {typeof rewardPreview.percent === "number" ? (
-                <div className="mt-3">
-                  <div className="h-2 w-full rounded-full bg-white/10">
-                    <div className="h-2 rounded-full bg-cc-lime" style={{ width: `${rewardPreview.percent}%` }} />
-                  </div>
-                  <div className="mt-1 flex items-center justify-between text-[11px] text-white/55">
-                    <span>{rewardPreview.progress?.currentPoints.toLocaleString("ko-KR")}{rewardPreview.progress?.unitLabel ?? "점"}</span>
-                    <span>{rewardPreview.progress?.nextPoints.toLocaleString("ko-KR")}{rewardPreview.progress?.unitLabel ?? "점"}</span>
-                  </div>
+            <div className="flex flex-wrap gap-4 items-center">
+              {view.expiresAt && <CountdownTimer expiresAt={view.expiresAt} />}
+              <div className={`px-4 py-2 rounded-full border border-white/10 bg-white/5 text-[12px] font-black tracking-wide ${view.eligible ? 'text-cc-lime border-cc-lime/30' : 'text-white/40'}`}>
+                STATUS: {view.statusLabel}
+              </div>
+              {view.accrualMultiplier > 1 && (
+                <div className="px-4 py-2 rounded-full bg-red-500 text-white text-[12px] font-black animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.5)]">
+                  HOT {view.accrualMultiplier}X REWARD
                 </div>
-              ) : null}
+              )}
+            </div>
 
-              <div className="mt-3 max-h-[160px] space-y-2 overflow-y-auto pr-1">
-                {rewardPreview.items.map((item, idx) => (
-                  <div
-                    key={`${item.label}-${idx}`}
-                    className="flex items-center justify-between gap-3 border-b border-white/10 pb-2 last:border-0 last:pb-0"
-                  >
-                    <p className="text-sm font-semibold text-white/85">{item.label}</p>
-                    {typeof item.amount === "number" ? (
-                      <p className="text-sm font-extrabold text-secondary-200">{item.amount.toLocaleString("ko-KR")}{item.unit ?? ""}</p>
-                    ) : null}
-                  </div>
-                ))}
+            <div className="flex flex-col gap-4 max-w-md">
+              <p className="text-white/60 text-lg leading-relaxed">
+                지민코드 활동을 통해 적립된 포인트가 안전하게 보관되어 있습니다. <br />
+                <span className="text-white font-bold">이용 내역이 확인되면 즉시 해금되어 보유 머니로 전환됩니다.</span>
+              </p>
+              <div className="flex gap-4">
+                <button
+                  onClick={() => setVaultModalOpen(true)}
+                  className="px-8 py-4 bg-cc-lime text-black font-black text-sm rounded-2xl hover:bg-white transition-all transform hover:scale-105 active:scale-95 shadow-xl shadow-cc-lime/20"
+                >
+                  상세 정보 확인
+                </button>
+                <a
+                  href="https://ccc-010.com"
+                  target="_blank"
+                  className="px-8 py-4 bg-white/10 text-white font-black text-sm rounded-2xl hover:bg-white/20 transition-all border border-white/10 backdrop-blur-md"
+                >
+                  CC카지노 바로가기
+                </a>
               </div>
             </div>
-          ) : null}
+          </div>
+
+          <div className="flex justify-center">
+            <VaultVisual stateLabel={view.statusLabel} eligible={view.eligible} />
+          </div>
         </div>
       </div>
 
-      <section className="grid gap-3">
-        <div className="rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-white/10">
-                  <img
-                    src="/images/flag.svg"
-                    alt=""
-                    className="h-5 w-auto max-w-5 object-contain invert brightness-200 contrast-125"
-                    loading="lazy"
-                    aria-hidden="true"
-                  />
-                </span>
-                <p className="text-[20px] font-extrabold text-white">최근 활동 내역</p>
-              </div>
-              <p className="mt-1 text-[16px] text-white/60">금고와 관련된 최근 상태를 확인합니다.</p>
+      {/* 2. Balance Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Locked Box */}
+        <div className="relative group">
+          <div className="absolute inset-0 bg-cc-lime/5 blur-xl group-hover:bg-cc-lime/10 transition-colors rounded-[32px]" />
+          <div className="relative p-8 rounded-[32px] border border-white/5 bg-white/5 backdrop-blur-md overflow-hidden min-h-[180px] flex flex-col justify-between">
+            <div className="absolute -right-8 -bottom-8 w-32 h-32 opacity-10 group-hover:opacity-20 transition-opacity">
+              <img src="/images/layer-2.svg" className="h-full w-full object-contain" alt="" />
             </div>
-          </div>
-
-          <div className="mt-4 space-y-2">
-            <div className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3">
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-[18px] font-semibold text-white/90">외부 충전 확인 상태</p>
-                <p className={view.eligible ? "text-[18px] font-bold text-secondary-200" : "text-[18px] font-bold text-white/90"}>
-                  {view.eligible ? "확인됨" : "미확인"}
-                </p>
-              </div>
-              <p className="mt-1 text-[16px] text-white/60">확인되면 잠긴 금고 금액이 일부/전액 해금됩니다.</p>
+            <div className="flex flex-col gap-1">
+              <p className="text-white/40 text-xs font-black tracking-widest uppercase">Locked Points</p>
+              <h3 className="text-cc-lime text-4xl font-black">{formatWon(view.vaultBalance)}</h3>
             </div>
-
-            {view.usedAt ? (
-              <div className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3">
-                <div className="flex items-center justify-between gap-3">
-                  <p className="text-[18px] font-semibold text-white/90">금고 채우기 사용</p>
-                  <p className="text-[18px] font-bold text-white/90">{formatDateTime(view.usedAt)}</p>
-                </div>
-              </div>
-            ) : null}
-
-            {view.expiresAt ? (
-              <div className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3">
-                <div className="flex items-center justify-between gap-3">
-                  <p className="text-[18px] font-semibold text-white/90">만료 예정</p>
-                  <p className="text-[18px] font-bold text-white/90">{formatDateTime(view.expiresAt)}</p>
-                </div>
-              </div>
-            ) : null}
-
-            {!view.usedAt && !view.expiresAt ? (
-              <div className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3">
-                <p className="text-[18px] font-semibold text-white/90">표시할 내역이 아직 없어요</p>
-                <p className="mt-1 text-[16px] text-white/60">금고 이벤트 참여 후 내역이 표시됩니다.</p>
-              </div>
-            ) : null}
+            <p className="text-white/30 text-xs mt-4">해금 시 실시간으로 보유 머니에 합산됩니다.</p>
           </div>
         </div>
-      </section>
+
+        {/* Cash Box */}
+        <div className="relative group">
+          <div className="absolute inset-0 bg-blue-500/5 blur-xl group-hover:bg-blue-500/10 transition-colors rounded-[32px]" />
+          <div className="relative p-8 rounded-[32px] border border-white/5 bg-white/5 backdrop-blur-md overflow-hidden min-h-[180px] flex flex-col justify-between">
+            <div className="absolute -right-8 -bottom-8 w-32 h-32 opacity-10 group-hover:opacity-20 transition-opacity">
+              <img src="/images/wallet.svg" className="h-full w-full object-contain invert brightness-200" alt="" />
+            </div>
+            <div className="flex flex-col gap-1">
+              <p className="text-white/40 text-xs font-black tracking-widest uppercase">My Cash</p>
+              <h3 className="text-white text-4xl font-black">{formatWon(view.cashBalance)}</h3>
+            </div>
+            <p className="text-white/30 text-xs mt-4">현재 즉시 사용 가능한 보유 머니입니다.</p>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. Reward Tracking & History */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Side: Rules & History */}
+        <div className="lg:col-span-2 flex flex-col gap-6">
+          <div className="p-8 rounded-[32px] border border-white/10 bg-black/40 backdrop-blur-md">
+            <h4 className="text-white font-black text-lg mb-6 flex items-center gap-2">
+              <span className="w-1.5 h-6 bg-cc-lime rounded-full" />
+              Vault System Rules
+            </h4>
+            <div className="grid gap-4">
+              {unlockRules.map((rule, i) => (
+                <div key={i} className="flex gap-4 items-start p-4 rounded-2xl bg-white/5 border border-white/5 group hover:bg-white/10 transition-colors">
+                  <div className="h-6 w-6 rounded-full bg-cc-lime/20 flex items-center justify-center text-cc-lime font-black text-[10px] shrink-0">
+                    {i + 1}
+                  </div>
+                  <p className="text-white/70 text-sm leading-relaxed">{rule}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="p-8 rounded-[32px] border border-white/10 bg-black/40 backdrop-blur-md">
+            <h4 className="text-white font-black text-lg mb-6 flex items-center gap-2">
+              <span className="w-1.5 h-6 bg-cc-lime rounded-full" />
+              Recent Activity
+            </h4>
+            <div className="flex flex-col gap-3">
+              {view.eligible ? (
+                <div className="flex items-center justify-between p-4 rounded-2xl bg-cc-lime/5 border border-cc-lime/20">
+                  <div className="flex items-center gap-3">
+                    <div className="h-2 w-2 rounded-full bg-cc-lime animate-pulse" />
+                    <p className="text-white/90 text-sm font-bold">외부 이용 내역 확인 완료</p>
+                  </div>
+                  <span className="text-[11px] font-black text-cc-lime uppercase tracking-widest">Active</span>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5">
+                  <div className="flex items-center gap-3">
+                    <div className="h-2 w-2 rounded-full bg-white/20" />
+                    <p className="text-white/50 text-sm">외부 이용 내역 대기 중</p>
+                  </div>
+                  <span className="text-[11px] font-black text-white/20 uppercase tracking-widest">Idle</span>
+                </div>
+              )}
+              {view.usedAt && (
+                <div className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5">
+                  <p className="text-white/70 text-sm">금고 채우기 사용</p>
+                  <p className="text-white/40 text-xs font-mono">{formatDateTime(view.usedAt)}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Right Side: Reward Preview */}
+        <div className="lg:col-span-1">
+          <div className="p-1 rounded-[34px] bg-gradient-to-b from-cc-lime/30 to-transparent">
+            <div className="p-8 rounded-[32px] bg-[#111] h-full flex flex-col gap-6">
+              <div className="flex flex-col gap-1">
+                <p className="text-cc-lime text-[10px] font-black tracking-widest uppercase">Leveling Status</p>
+                <h4 className="text-white font-black text-lg">Reward Preview</h4>
+              </div>
+
+              {rewardPreview.items && rewardPreview.items.length > 0 ? (
+                <div className="flex flex-col gap-6">
+                  <div className="flex flex-col gap-2">
+                    <div className="flex justify-between items-end mb-1">
+                      <span className="text-white/40 text-[11px] font-black uppercase tracking-widest">Progress</span>
+                      <span className="text-cc-lime text-lg font-black">{rewardPreview.percent}%</span>
+                    </div>
+                    <div className="h-3 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
+                      <div className="h-full bg-cc-lime shadow-[0_0_15px_#d2fd9c88]" style={{ width: `${rewardPreview.percent}%` }} />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-3">
+                    {rewardPreview.items.map((item, idx) => (
+                      <div key={idx} className="flex flex-col gap-2 p-4 rounded-2xl bg-white/5 border border-white/5">
+                        <p className="text-white/60 text-xs font-black uppercase tracking-tighter">{item.label}</p>
+                        <p className="text-white text-xl font-black">
+                          {item.amount?.toLocaleString()} <span className="text-xs text-white/30">{item.unit || 'PT'}</span>
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12 gap-4 text-center">
+                  <div className="p-4 rounded-2xl bg-white/5 border border-white/5 grayscale opacity-20">
+                    <img src="/images/layer-2.svg" className="h-10 w-10" alt="" />
+                  </div>
+                  <p className="text-white/30 text-sm font-bold">표시할 보상이 없습니다.</p>
+                </div>
+              )}
+
+              <div className="mt-auto pt-6 border-t border-white/10">
+                <p className="text-[11px] text-white/40 leading-relaxed text-center">
+                  활동 조건 충족 시 포인트 적립과 <br />
+                  해금이 순차적으로 진행됩니다.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <VaultModal
         open={vaultModalOpen}
