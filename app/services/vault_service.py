@@ -109,12 +109,9 @@ class VaultService:
                 },
             },
             "phase1_deposit_unlock": {
-                "trigger": "EXTERNAL_RANKING_DEPOSIT_INCREASE",
-                "tiers": [
-                    {"min_deposit_delta": cls.VAULT_TIER_A_MIN_DELTA, "unlock_amount": cls.VAULT_TIER_A_UNLOCK},
-                    {"min_deposit_delta": cls.VAULT_TIER_B_MIN_DELTA, "unlock_amount": cls.VAULT_TIER_B_UNLOCK},
-                ],
-                "notes": "unlock_amount는 vault_locked_balance를 초과할 수 없으며 min(locked, unlock_target)로 적용됨",
+                "trigger": "GAME_PLAY_ACCRUAL",
+                "tiers": [],
+                "notes": "게임 플레이 시 포인트가 금고에 적립되며, 이용 내역 확인 시 보유 머니로 전환됩니다.",
             },
             "grand_cycle_unlock": {
                 "gold_unlock_tiers": [30, 50, 70],
@@ -336,14 +333,14 @@ class VaultService:
                     tier = f"TIER_{m_delta}"
                     break
         
-        # 2. Hardcoded Fallback
-        if unlock_target <= 0:
-            if deposit_delta >= self.VAULT_TIER_B_MIN_DELTA:
-                unlock_target = self.VAULT_TIER_B_UNLOCK
-                tier = "B"
-            elif deposit_delta >= self.VAULT_TIER_A_MIN_DELTA:
-                unlock_target = self.VAULT_TIER_A_UNLOCK
-                tier = "A"
+        # 2. Hardcoded Fallback (DISABLED as per user request Step 344)
+        # if unlock_target <= 0:
+        #     if deposit_delta >= self.VAULT_TIER_B_MIN_DELTA:
+        #         unlock_target = self.VAULT_TIER_B_UNLOCK
+        #         tier = "B"
+        #     elif deposit_delta >= self.VAULT_TIER_A_MIN_DELTA:
+        #         unlock_target = self.VAULT_TIER_A_UNLOCK
+        #         tier = "A"
 
         if unlock_target <= 0:
             return 0
