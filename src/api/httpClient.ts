@@ -8,16 +8,19 @@ import { clearAuth, getAuthToken } from "../auth/authStore";
 // 2) Runtime-derived: localhost -> :8000, otherwise same-origin (expects reverse proxy)
 const envBase = (import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || "").trim();
 
-const derivedBase = (() => {
-  if (typeof window === "undefined") return "";
-  const { protocol, hostname, origin } = window.location;
-  const isLocalHost = hostname === "localhost" || hostname === "127.0.0.1";
-  return isLocalHost ? `${protocol}//${hostname}:8000` : origin;
-})();
-
 const resolvedBaseURL = (() => {
   if (envBase) return envBase.replace(/\/+$/, "");
-  return derivedBase;
+
+  if (typeof window !== "undefined") {
+    const { hostname, protocol } = window.location;
+    const isLocalHost = hostname === "localhost" || hostname === "127.0.0.1";
+
+    if (isLocalHost) return `${protocol}//${hostname}:8000`;
+
+    // In production, use empty or relative if paths are handled by proxy
+    return "";
+  }
+  return "";
 })();
 
 export const userApi = axios.create({

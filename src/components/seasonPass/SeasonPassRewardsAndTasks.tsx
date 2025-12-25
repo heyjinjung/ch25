@@ -149,7 +149,12 @@ export const SeasonPassRewardsAndTasks: React.FC = () => {
                       ? "text-white"
                       : "text-white/60";
 
-                  const isManualAdmin = /CC\s*코인/i.test(reward.reward_label);
+                  // Manual Payout targets: CC Point, CC Coin, Keys, or any non-auto_claim reward
+                  const isManualAdmin =
+                    /CC\s*(포인트|코인|POINT|COIN)/i.test(reward.reward_label) ||
+                    /KEY/i.test(reward.reward_label) ||
+                    (!reward.auto_claim && reward.reward_label.length > 0);
+
                   const canClaim = reward.isUnlocked && !reward.is_claimed && !reward.auto_claim && !isManualAdmin;
                   const isPending = pendingClaimLevel === reward.level && claimReward.isPending;
 
@@ -175,16 +180,15 @@ export const SeasonPassRewardsAndTasks: React.FC = () => {
                                 잠금
                               </span>
                             )}
-                            {(reward.auto_claim || isManualAdmin) && (
-                              <button
-                                type="button"
-                                className="rounded-full border border-white/10 bg-black/30 px-2 py-0.5 text-[clamp(11px,2.6vw,12px)] text-white/75 hover:border-white/20"
-                                onClick={() => {
-                                  addToast("관리자 확인 후 지급됩니다. 자동 수령/정산 없음.", "info");
-                                }}
-                              >
+                            {isManualAdmin && (
+                              <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[clamp(11px,2.6vw,12px)] text-amber-200">
                                 관리자 지급
-                              </button>
+                              </span>
+                            )}
+                            {reward.auto_claim && reward.isUnlocked && (
+                              <span className="rounded-full border border-cc-lime/30 bg-cc-lime/10 px-2 py-0.5 text-[clamp(11px,2.6vw,12px)] text-cc-lime font-bold">
+                                자동 지급 완료
+                              </span>
                             )}
                           </div>
                           <p className="mt-2 truncate text-[clamp(14px,2.7vw,15px)] text-white/88">{reward.reward_label}</p>
@@ -200,10 +204,12 @@ export const SeasonPassRewardsAndTasks: React.FC = () => {
                         <div className="flex items-center gap-2">
                           {reward.is_claimed ? (
                             <span className="text-[clamp(13px,2.6vw,14px)] font-semibold" style={{ color: baseAccent }}>
-                              지급완료
+                              수령 완료
                             </span>
-                          ) : isManualAdmin || reward.auto_claim ? (
-                            <span className="text-[clamp(13px,2.6vw,14px)] text-amber-200">관리자 지급 예정</span>
+                          ) : isManualAdmin ? (
+                            <span className="text-[clamp(13px,2.6vw,14px)] text-amber-200">해금 시 관리자 확인 후 지급</span>
+                          ) : reward.auto_claim ? (
+                            <span className="text-[clamp(13px,2.6vw,14px)] text-cc-lime">자동 지급 대상</span>
                           ) : reward.isUnlocked ? (
                             <span className="text-[clamp(13px,2.6vw,14px)] text-white/75">획득 가능</span>
                           ) : (
@@ -238,8 +244,8 @@ export const SeasonPassRewardsAndTasks: React.FC = () => {
                           </button>
                         ) : null}
 
-                        {(isManualAdmin || reward.auto_claim) && !reward.is_claimed ? (
-                          <p className="text-[clamp(12px,2.5vw,13px)] text-amber-200">관리자 확인 후 지급됩니다. 자동 수령/정산 없음.</p>
+                        {isManualAdmin && !reward.is_claimed && reward.isUnlocked ? (
+                          <p className="text-[clamp(12px,2.5vw,13px)] text-amber-200 font-medium">관리자 확인 후 외부 지급됩니다.</p>
                         ) : null}
                       </div>
                     </motion.div>

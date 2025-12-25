@@ -11,20 +11,22 @@ const envAdminBase = (
   ""
 ).trim();
 
-const derivedAdminBase = (() => {
-  if (typeof window === "undefined") return "";
-  const { protocol, hostname, origin } = window.location;
-  const isLocalHost = hostname === "localhost" || hostname === "127.0.0.1";
-
-  // In production, if we're on HTTPS, ensure base uses HTTPS.
-  // Using origin directly is safest as it includes the protocol used to load the page.
-  const base = isLocalHost ? `${protocol}//${hostname}:8000` : origin;
-  return `${base.replace(/\/+$/, "")}/admin/api`;
-})();
-
 const resolvedBaseURL = (() => {
+  // 1. If explicitly provided via env, use it.
   if (envAdminBase) return envAdminBase.replace(/\/+$/, "");
-  if (derivedAdminBase) return derivedAdminBase;
+
+  // 2. In browser (production/development)
+  if (typeof window !== "undefined") {
+    const { hostname, protocol } = window.location;
+    const isLocalHost = hostname === "localhost" || hostname === "127.0.0.1";
+
+    // On localhost, we need to point to the backend port (8000)
+    if (isLocalHost) return `${protocol}//${hostname}:8000/admin/api`;
+
+    // In production (on the server), use relative path to let NGINX handle it over HTTPS.
+    return "/admin/api";
+  }
+
   return "";
 })();
 
