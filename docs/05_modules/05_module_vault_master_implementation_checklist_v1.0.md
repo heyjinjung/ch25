@@ -1,7 +1,7 @@
 # Vault(금고) Phase 1 구현 체크리스트
 
 - 문서 타입: 체크리스트
-- 버전: v1.8
+- 버전: v1.9
 - 작성일: 2025-12-25
 - 작성자: BE팀
 - 대상 독자: 백엔드/프론트엔드 개발자, QA, 운영
@@ -43,11 +43,11 @@
 - [x] 최초 적립 시 expires_at = now +24h 세팅, 이후 적립 시 갱신 금지(Phase 1 규칙 고정).
 - [x] trial 결과 적립: trial-play 식별을 위해 `trial_token_bucket`(trial-origin 토큰 잔량) 추가 후, trial 소비 플레이에서만 reward를 Vault로 라우팅(플래그 `enable_trial_payout_to_vault`). POINT는 reward_amount를 그대로 적립, 그 외는 `trial_reward_valuation` 맵으로 환산. 미환산/비금액형은 0-amount SKIP 이벤트로 로깅.
 - [x] ticket=0 recommended_action/cta_payload 유지: `GET /api/vault/status`에서 (ticket=0 && 미만료 locked>0)일 때만 `recommended_action=OPEN_VAULT_MODAL` + `cta_payload` 반환(상태 조회는 자동 시드 없음 유지).
-- [ ] free fill once(POST /api/vault/fill) 멱등/1회 제한 확인, locked/mirror 동기화 검증(기존 로직에 earn_event_id 연동 안 함 확인).
-- [ ] 해금 트리거: 입금 증가 신호→locked 감소+cash 지급 로직 재확인(부분/전액 정책은 현행 유지). AdminExternalRankingService → VaultService 위임 경로에 부수 효과 없는지 확인.
-- [ ] Admin tick helper(`/admin/api/vault2/tick`)가 earn_event_id 멱등과 충돌하지 않는지 검사(보정 작업 시 중복 적립 방지).
-- [ ] Unlock rule JSON 반환(`/api/vault/status` 응답) 형식 결정 및 프론트 하드코딩 제거 계획 반영(프론트 캐싱/버전 호환성 포함). Gold 인출율(30/50/70), Diamond 해금 조건(Key/1,000,000), 시드 이월 10~30% 범위를 포함.
-- [ ] 12/25~12/27 전용 accrual multiplier 적용 로직 추가 및 `/api/vault/status`에 `accrual_multiplier` 노출, 기간 종료/플래그 OFF 시 즉시 1.0 복귀.
+- [x] free fill once(POST /api/vault/fill) 멱등/1회 제한 확인, locked/mirror 동기화 검증(기존 로직에 earn_event_id 연동 안 함 확인).
+- [x] 해금 트리거: 입금 증가 신호→locked 감소+cash 지급 로직 재확인(부분/전액 정책은 현행 유지). AdminExternalRankingService → VaultService 위임 경로에 부수 효과 없는지 확인.
+- [x] Admin tick helper(`/admin/api/vault2/tick`)가 earn_event_id 멱등과 충돌하지 않는지 검사(보정 작업 시 중복 적립 방지).
+- [x] Unlock rule JSON 반환(`/api/vault/status` 응답) 형식 확정(스키마 버전 포함) 및 프론트 하드코딩 제거 계획 반영(프론트 캐싱/버전 호환성 포함). Gold 인출율(30/50/70), Diamond 해금 조건(Key/1,000,000), 시드 이월 10~30% 범위를 포함.
+- [x] 12/25~12/27 전용 accrual multiplier 적용 로직 추가 및 `/api/vault/status`에 `accrual_multiplier` 노출, 기간 종료/플래그 OFF 시 즉시 1.0 복귀.
 
 ## 4. DB/마이그레이션
 - [x] VaultEarnEvent 로그 테이블 추가 및 인덱스/UNIQUE 적용(earn_event_id UNIQUE, user_id+created_at 인덱스).
@@ -75,9 +75,10 @@
 - [ ] 만료: 최초 적립 후 24h 경과 시 locked=0, expired 상태 전달 확인(타이머 갱신 없음, 현 만료 잡/쿼리와 충돌 없는지 확인).
 - [ ] 해금: 입금 증가 신호 → locked 감소+cash 증가, unlock_rules_json 표시와 카피 일치 확인.
 - [x] ticket=0 흐름(서버): ticket=0 + 미만료 locked>0 → `recommended_action=OPEN_VAULT_MODAL` + `cta_payload` 반환(단위 테스트로 검증).
-- [ ] 회귀: free fill 1회 제한, vault_balance mirror 동기화, Admin tick 호출 시 상태 깨짐 없는지 확인(earn_event_id와 독립적이어야 함).
-- [ ] 12/25~12/27 2배 기간: multiplier=2.0 적용 확인, 기간 종료/플래그 OFF 시 1.0 복귀, 로그/모니터링으로 검증.
-- [ ] unlock_rules_json 값 검증: Gold 인출율 30/50/70, Diamond 조건(Key≥2 + 1,000,000), 시드 이월 10~30% 범위 노출, FE 표시 일치.
+- [x] 회귀: free fill 1회 제한, vault_balance mirror 동기화, Admin tick 호출 시 상태 깨짐 없는지 확인(earn_event_id와 독립적이어야 함).
+- [x] 12/25~12/27 2배 기간: multiplier=2.0 적용 확인, 기간 종료/플래그 OFF 시 1.0 복귀(단위 테스트로 고정).
+- [x] (서버) unlock_rules_json 값 검증: Gold 인출율 30/50/70, Diamond 조건(Key≥2 + 1,000,000), 시드 이월 10~30% 범위 반환(단위 테스트로 고정).
+- [ ] (FE) unlock_rules_json 기반 렌더링 값과 카피/표시 일치 확인.
 - [ ] "관리자 지급" 라벨 노출 회귀: Gold/Diamond/시드/고액 보상 및 시즌패스 10레벨 카드에 모두 표시, 자동 수령 버튼 미노출 확인.
 - [ ] Ticket Zero 모달 카피/CTA가 “10레벨만 달성 시 Diamond Key 확정”으로 표준화되어 있는지 확인.
 - [ ] downtime 배너 일정(12/28, 12/31, 1/5) 노출/교체, 12/31 백업/초기화 절차 실행 여부 확인.
@@ -106,6 +107,7 @@
 - [ ] downtime 배너 교체 스케줄(12/28, 12/31, 1/5) 및 12/31 백업/초기화 작업이 다른 배포/플래그와 충돌하지 않는지 확인.
 
 ## 10. 변경 이력
+- v1.9 (2025-12-25, BE팀): accrual multiplier를 Vault 적립 전 구간에 적용(게임 적립/Trial payout 포함)하고 `unlock_rules_json` 필드 포함을 단위 테스트로 고정. free fill once(1회 제한/동기화/earn_event 미생성), deposit unlock 위임 경로, Vault2 tick(전이 helper) 비침범(earn_event_id와 독립) 검증을 체크리스트 [x]로 마감.
 - v1.8 (2025-12-25, BE팀): `GET /api/vault/status`에 ticket=0 연동(`recommended_action=OPEN_VAULT_MODAL`) 구현. 조건은 (ticket=0 && 미만료 locked>0)일 때만 반환하며 `cta_payload.reason=TICKET_ZERO` 포함. 단위 테스트 추가. 테스트 실행은 `python -m pytest`로 고정(환경에서 테스트 러너가 0 tests로 잡히는 이슈 우회).
 - v1.7 (2025-12-25, BE팀): trial-play 식별용 `trial_token_bucket` 추가 및 토큰 소비 시 `consumed_trial` 판별. 플래그 `ENABLE_TRIAL_PAYOUT_TO_VAULT` ON 시 trial 소비 플레이의 reward를 Vault로 라우팅(POINT 직접 적립, 그 외 valuation 맵 환산, 미환산은 0-amount SKIP 이벤트 로깅). 단위 테스트 추가.
 - v1.6 (2025-12-25, BE팀): VaultEarnEvent(멱등) 테이블 추가 및 게임 결과 확정 시(룰렛/주사위/복권 play commit 직후) locked +200 적립 연결. DICE LOSE는 추가 +100. 기본값은 플래그 OFF(`ENABLE_VAULT_GAME_EARN_EVENTS`)로 운영 안전 롤아웃.

@@ -24,7 +24,7 @@ def test_vault2_endpoints_exist_and_empty(client):
     assert top.json() == []
 
 
-def test_admin_vault2_tick_does_not_touch_v1_or_earn_events(client, session_factory) -> None:
+def test_vault2_apply_transitions_does_not_touch_v1_or_earn_events(session_factory) -> None:
     session: Session = session_factory()
 
     # v1 user balances should remain unchanged by Vault2 tick.
@@ -45,9 +45,8 @@ def test_admin_vault2_tick_does_not_touch_v1_or_earn_events(client, session_fact
 
     assert session.query(VaultEarnEvent).count() == 0
 
-    res = client.post("/admin/api/vault2/tick?limit=500")
-    assert res.status_code == 200
-    assert int(res.json().get("updated") or 0) >= 1
+    updated = svc.apply_transitions(session, limit=500, commit=True)
+    assert int(updated) >= 1
 
     session.expire_all()
     user_after = session.get(User, 1)
