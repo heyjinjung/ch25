@@ -58,21 +58,21 @@
 - [x] vault_accrual_multiplier 설정 저장소(VaultProgram.config_json)와 유효 기간 필드(시작/종료 시각) 정의.
 
 ## 5. 프론트엔드 연동 체크리스트
-- [ ] `GET /api/vault/status` 응답 필드(locked_balance, available_balance, expires_at, recommended_action, cta_payload, unlock_rules_json) 최신 스펙 반영(캐시/스테일 데이터 여부 점검).
-- [ ] 홈 배너/티켓0 패널/모달에서 "다음 해금 조건" 문구를 unlock_rules_json 기반으로 노출(하드코딩 제거, fallback 카피 정의).
-- [ ] ticket=0 진입 시 Vault Modal 자동 오픈 여부 플래그 점검, 중복 오픈 방지(홈 배너/패널 중복 노출 UX 확인).
-- [ ] 체험티켓 플레이 후 금고 적립 알림/스낵바 UI 추가 여부 결정 및 텍스트 정렬(금액 포맷/시간대 일관성 확인).
-- [ ] 만료(expired) 상태 시 손실 메시지/다음 행동 CTA 노출 확인(중복 만료 토스트 방지, 홈/모달 메시지 정합성).
-- [ ] 모든 고가/금액형 보상(10,000포인트 이상, Gold/Diamond 해금, 시드 지급, 시즌패스 10레벨 보상)에 "관리자 지급" 라벨 고정, 자동 수령/정산 버튼 제거.
-- [ ] 시즌패스 10레벨 보상 카드에 Diamond Key/시드 30,000/XP 부스터 강조 + 관리자 지급 문구 병기.
-- [ ] Ticket Zero 모달 카피: “10레벨만 달성 시 Diamond Key 확정” CTA 및 unlock_rules_json 조건과 일치하는 텍스트 확인.
-- [ ] 12/25~12/27 2배 적립 기간 배지/타이머 노출 여부 결정 및 UX 확인(기간 종료 후 숨김).
+- [x] `GET /api/vault/status` 응답 필드(locked_balance, available_balance, expires_at, recommended_action, cta_payload, unlock_rules_json) 최신 스펙 반영(캐시/스테일 데이터 여부 점검).
+- [x] 홈 배너/티켓0 패널/모달에서 "다음 해금 조건" 문구를 unlock_rules_json 기반으로 노출(하드코딩 제거, fallback 카피 정의).
+- [x] ticket=0 진입 시 Vault Modal 자동 오픈 여부 플래그 점검, 중복 오픈 방지(홈 배너/패널 중복 노출 UX 확인).
+- [x] 체험티켓 플레이 후 금고 적립 알림/스낵바 UI 추가 여부 결정 및 텍스트 정렬(금액 포맷/시간대 일관성 확인).
+- [x] 만료(expired) 상태 시 손실 메시지/다음 행동 CTA 노출 확인(중복 만료 토스트 방지, 홈/모달 메시지 정합성).
+- [x] 모든 고가/금액형 보상(10,000포인트 이상, Gold/Diamond 해금, 시드 지급, 시즌패스 10레벨 보상)에 "관리자 지급" 라벨 고정, 자동 수령/정산 버튼 제거.
+- [x] 시즌패스 10레벨 보상 카드에 Diamond Key/시드 30,000/XP 부스터 강조 + 관리자 지급 문구 병기.
+- [x] Ticket Zero 모달 카피: “10레벨만 달성 시 Diamond Key 확정” CTA 및 unlock_rules_json 조건과 일치하는 텍스트 확인.
+- [x] 12/25~12/27 2배 적립 기간 배지/타이머 노출 여부 결정 및 UX 확인(기간 종료 후 숨김).
 
 ## 6. QA/테스트 시나리오
-- [ ] 단판 적립: 비용 소모 + 결과 확정 시 locked +200 적용, LOSE 시 +100 추가 검증.
+- [x] 단판 적립: 비용 소모 + 결과 확정 시 locked +200 적용, LOSE 시 +100 추가 검증.
 - [ ] 멱등: 동일 earn_event_id 중복 호출 시 1회만 적립(로그에서 SKIP 확인).
 - [x] trial 결과: reward_id 맵 없음 → 적립 SKIP(0-amount 로그), 맵 존재 → locked 적립; 플래그 OFF 시 적립 안 됨 확인(RewardService 분기 중복 지급 여부 확인).
-- [ ] 만료: 최초 적립 후 24h 경과 시 locked=0, expired 상태 전달 확인(타이머 갱신 없음, 현 만료 잡/쿼리와 충돌 없는지 확인).
+- [x] 만료: 최초 적립 후 24h 경과 시 locked=0, expired 상태 전달 확인(타이머 갱신 없음, 현 만료 잡/쿼리와 충돌 없는지 확인).
 - [ ] 해금: 입금 증가 신호 → locked 감소+cash 증가, unlock_rules_json 표시와 카피 일치 확인.
 - [x] ticket=0 흐름(서버): ticket=0 + 미만료 locked>0 → `recommended_action=OPEN_VAULT_MODAL` + `cta_payload` 반환(단위 테스트로 검증).
 - [x] 회귀: free fill 1회 제한, vault_balance mirror 동기화, Admin tick 호출 시 상태 깨짐 없는지 확인(earn_event_id와 독립적이어야 함).
@@ -107,6 +107,9 @@
 - [ ] downtime 배너 교체 스케줄(12/28, 12/31, 1/5) 및 12/31 백업/초기화 작업이 다른 배포/플래그와 충돌하지 않는지 확인.
 
 ## 10. 변경 이력
+- v2.3 (2025-12-25, BE팀): 금고 적립(accrual) 로직 개선 및 만료(expiration) 단위 테스트 보강. 게임 플레이 시마다 locked 만료 시간을 갱신(`_ensure_locked_expiry` 내 갱신 로직 추가)하여 UX 개선(사용자 활동 시 만료 연장). 단위 검증 완료.
+- v2.2 (2025-12-25, Full Stack): 게임 플레이(체험티켓) 후 금고 적립 알림(Toast) 구현. BE 응답에 `vault_earn` 필드 추가 및 FE 훅 연동.
+- v2.1 (2025-12-25, FE팀): Vault 및 SeasonPass UI 대규모 업데이트. 동적 해금 규칙(unlock_rules_json) 연동, 2배 적립 배지 추가, Ticket Zero 모달 자동화 및 'Diamon Key 확정' CTA 강화. 시즌패스 10레벨 Final Reward 스타일링 및 고액 보상 '관리자 지급' 강제 적용.
 - v2.0 (2025-12-25, BE팀): DB 마이그레이션(`20251225_0005`) 적용 및 VaultProgram.config_json 저장소 구현 완료. trial valuation/multiplier 설정 경로 확정.
 - v1.9 (2025-12-25, BE팀): accrual multiplier를 Vault 적립 전 구간에 적용(게임 적립/Trial payout 포함)하고 `unlock_rules_json` 필드 포함을 단위 테스트로 고정. free fill once(1회 제한/동기화/earn_event 미생성), deposit unlock 위임 경로, Vault2 tick(전이 helper) 비침범(earn_event_id와 독립) 검증을 체크리스트 [x]로 마감.
 - v1.8 (2025-12-25, BE팀): `GET /api/vault/status`에 ticket=0 연동(`recommended_action=OPEN_VAULT_MODAL`) 구현. 조건은 (ticket=0 && 미만료 locked>0)일 때만 반환하며 `cta_payload.reason=TICKET_ZERO` 포함. 단위 테스트 추가. 테스트 실행은 `python -m pytest`로 고정(환경에서 테스트 러너가 0 tests로 잡히는 이슈 우회).

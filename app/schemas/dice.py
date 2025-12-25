@@ -29,3 +29,4 @@ class DicePlayResponse(BaseModel):
     result: str
     game: DiceResult
     season_pass: dict | None = None
+    vault_earn: int = 0

@@ -134,8 +134,9 @@ class DiceService:
         db.commit()
         db.refresh(log_entry)
 
+        total_earn = 0
         # Vault Phase 1: idempotent game accrual (safe-guarded by feature flag).
-        self.vault_service.record_game_play_earn_event(
+        total_earn += self.vault_service.record_game_play_earn_event(
             db,
             user_id=user_id,
             game_type=FeatureType.DICE.value,
@@ -152,7 +153,7 @@ class DiceService:
         # Trial: optionally route reward into Vault instead of direct payout.
         settings = get_settings()
         if consumed_trial and bool(getattr(settings, "enable_trial_payout_to_vault", False)):
-            self.vault_service.record_trial_result_earn_event(
+            total_earn += self.vault_service.record_trial_result_earn_event(
                 db,
                 user_id=user_id,
                 game_type=FeatureType.DICE.value,
@@ -202,4 +203,5 @@ class DiceService:
                 reward_amount=reward_amount,
             ),
             season_pass=season_pass,
+            vault_earn=total_earn,
         )
