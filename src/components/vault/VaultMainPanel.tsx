@@ -227,11 +227,11 @@ const VaultMainPanel: React.FC = () => {
     const parsed = parseVaultUnlockRules(view.unlockRulesJson);
     if (parsed.length > 0) return parsed;
 
-    // Fallback hardcoded rules (Phase 1 legacy)
+    // Fallback hardcoded rules (Updated Request)
     return [
-      "대상: 신규 회원 프로모션 대상(상태가 “해금 대기”로 표시됩니다)",
-      "해금 금액: “잠긴 금고” 금액 전액 (5만원 이상 충전 시)",
-      "해금 조건: 씨씨카지노 이용 확인(충전/입금) 후 보유 머니로 합산"
+      "해금 조건: 게임 플레이를 통해 적립된 포인트 (적립형)",
+      "비고: 이용 내역이 확인되면 자동으로 금고가 해금되어 보유 머니로 전환됩니다.",
+      "문의: 해금이 지연될 경우 텔레그램 고객센터로 문의해주세요."
     ];
   }, [view.unlockRulesJson]);
 
@@ -484,8 +484,8 @@ const VaultMainPanel: React.FC = () => {
               <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4">
                 <p className="text-[16px] font-semibold text-white/80">금고 시스템 안내</p>
                 <ul className="mt-2 space-y-1 text-[16px] text-white/60">
-                  <li>- 1만원 충전 확인: 5,000원 해금</li>
-                  <li>- 5만원 충전 확인: 전액 해금</li>
+                  <li>- 게임 플레이 시 자동 적립</li>
+                  <li>- 이용 내역 확인 시 즉시 해금</li>
                   <li>- 반영이 늦으면 관리자에게 문의해주세요</li>
                 </ul>
               </div>

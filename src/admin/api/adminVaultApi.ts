@@ -1,4 +1,5 @@
 import httpClient from "./httpClient";
+import { userApi } from "../../api/httpClient";
 
 export interface VaultProgramResponse {
     key: string;
@@ -20,7 +21,8 @@ export interface VaultStatsResponse {
 }
 
 export const getVaultDefaultProgram = async (): Promise<VaultProgramResponse> => {
-    const { data } = await httpClient.get("/api/admin/vault-programs/default");
+    // Uses /api/admin prefix, so use userApi (root base)
+    const { data } = await userApi.get("/api/admin/vault-programs/default");
     return data;
 };
 
@@ -28,7 +30,7 @@ export const updateVaultUnlockRules = async (
     programKey: string,
     unlockRulesJson: any
 ): Promise<VaultProgramResponse> => {
-    const { data } = await httpClient.put(`/api/admin/vault-programs/${programKey}/unlock-rules`, {
+    const { data } = await userApi.put(`/api/admin/vault-programs/${programKey}/unlock-rules`, {
         unlock_rules_json: unlockRulesJson,
     });
     return data;
@@ -38,7 +40,7 @@ export const updateVaultUiCopy = async (
     programKey: string,
     uiCopyJson: any
 ): Promise<VaultProgramResponse> => {
-    const { data } = await httpClient.put(`/api/admin/vault-programs/${programKey}/ui-copy`, {
+    const { data } = await userApi.put(`/api/admin/vault-programs/${programKey}/ui-copy`, {
         ui_copy_json: uiCopyJson,
     });
     return data;
@@ -48,18 +50,21 @@ export const updateVaultConfig = async (
     programKey: string,
     configJson: any
 ): Promise<VaultProgramResponse> => {
-    const { data } = await httpClient.put(`/api/admin/vault-programs/${programKey}/config`, {
+    const { data } = await userApi.put(`/api/admin/vault-programs/${programKey}/config`, {
         config_json: configJson,
     });
     return data;
 };
 
 export const getVaultStats = async (): Promise<VaultStatsResponse> => {
-    const { data } = await httpClient.get("/api/admin/vault-programs/stats");
+    // Uses /api/admin prefix
+    const { data } = await userApi.get("/api/admin/vault-programs/stats");
     return data;
 };
 
 export const tickVaultTransitions = async (): Promise<{ updated: number }> => {
-    const { data } = await httpClient.post("/admin/api/vault2/tick");
+    // uses /admin/api/vault2 prefix. httpClient base is .../admin/api.
+    // So we use relative path /vault2/tick
+    const { data } = await httpClient.post("/vault2/tick");
     return data;
 };
