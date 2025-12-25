@@ -15,6 +15,7 @@
 
 ## 변경 이력
 - v2.4.1 (2025-12-25): `VAULT_ACCRUAL_MULTIPLIER_*` 환경변수(기본 OFF) 추가, `GET /api/vault/status`에 `accrual_multiplier` 노출, `unlock_rules_json`에 Gold(30/50/70)·Diamond(Key≥2+Gold≥1,000,000)·시드 이월(10~30%, 기본20) 규격 포함. `POST /api/vault/fill`/신규 주사위 LOSE 적립에 multiplier 적용.
+- v2.4.2 (2025-12-25): 운영 편집형 unlock rule 경로 추가. VaultProgram JSON(`vault_program.unlock_rules_json`)을 `/api/admin/vault-programs/{program_key}/unlock-rules`로 수정 가능하게 하고, `GET /api/vault/status`는 DB override를 기본 룰과 merge하여 우선 사용. trial 운영 설정 플래그/캡/valuation(`ENABLE_TRIAL_GRANT_AUTO`, `TRIAL_DAILY_CAP`, `TRIAL_WEEKLY_CAP`, `TIERED_GRANT_ENABLED`, `ENABLE_TRIAL_PAYOUT_TO_VAULT`, `TRIAL_REWARD_VALUATION`)을 Settings에 추가.
 
 ---
 
