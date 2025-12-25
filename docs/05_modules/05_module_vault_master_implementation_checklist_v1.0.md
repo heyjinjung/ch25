@@ -52,10 +52,10 @@
 ## 4. DB/마이그레이션
 - [x] VaultEarnEvent 로그 테이블 추가 및 인덱스/UNIQUE 적용(earn_event_id UNIQUE, user_id+created_at 인덱스).
 - [x] trial-play 식별을 위한 `trial_token_bucket` 테이블 추가(사용자/토큰별 trial-origin 잔량).
-- [ ] trial_reward_valuation 설정을 위한 KV/JSON 보관 위치 확정(환경 변수, 설정 테이블 등) 및 접근 경로 구현(운영 변경 시 핫 리로드 필요 여부 결정).
-- [ ] 기존 user 테이블 컬럼(vault_locked_balance, vault_balance, vault_locked_expires_at) 값 초기 상태 점검 및 기본값 확인(마이그레이션 시 기존 데이터 보존 여부 확인).
-- [ ] unlock_rules_json 값 저장/캐싱 위치 정의(설정 테이블 또는 admin 설정), 버전 필드 포함.
-- [ ] vault_accrual_multiplier 설정 저장소(환경/설정 테이블)와 유효 기간 필드(시작/종료 시각) 정의.
+- [x] trial_reward_valuation 설정을 위한 KV/JSON 보관 위치 확정(VaultProgram.config_json) 및 접근 경로 구현(운영 변경 시 핫 리로드 지원).
+- [x] 기존 user 테이블 컬럼(vault_locked_balance, vault_balance, vault_locked_expires_at) 값 초기 상태 점검 및 기본값 확인(마이그레이션 시 기존 데이터 보존: COALESCE/backfill 확인됨).
+- [x] unlock_rules_json 값 저장/캐싱 위치 정의(VaultProgram 테이블, admin API).
+- [x] vault_accrual_multiplier 설정 저장소(VaultProgram.config_json)와 유효 기간 필드(시작/종료 시각) 정의.
 
 ## 5. 프론트엔드 연동 체크리스트
 - [ ] `GET /api/vault/status` 응답 필드(locked_balance, available_balance, expires_at, recommended_action, cta_payload, unlock_rules_json) 최신 스펙 반영(캐시/스테일 데이터 여부 점검).
@@ -107,6 +107,7 @@
 - [ ] downtime 배너 교체 스케줄(12/28, 12/31, 1/5) 및 12/31 백업/초기화 작업이 다른 배포/플래그와 충돌하지 않는지 확인.
 
 ## 10. 변경 이력
+- v2.0 (2025-12-25, BE팀): DB 마이그레이션(`20251225_0005`) 적용 및 VaultProgram.config_json 저장소 구현 완료. trial valuation/multiplier 설정 경로 확정.
 - v1.9 (2025-12-25, BE팀): accrual multiplier를 Vault 적립 전 구간에 적용(게임 적립/Trial payout 포함)하고 `unlock_rules_json` 필드 포함을 단위 테스트로 고정. free fill once(1회 제한/동기화/earn_event 미생성), deposit unlock 위임 경로, Vault2 tick(전이 helper) 비침범(earn_event_id와 독립) 검증을 체크리스트 [x]로 마감.
 - v1.8 (2025-12-25, BE팀): `GET /api/vault/status`에 ticket=0 연동(`recommended_action=OPEN_VAULT_MODAL`) 구현. 조건은 (ticket=0 && 미만료 locked>0)일 때만 반환하며 `cta_payload.reason=TICKET_ZERO` 포함. 단위 테스트 추가. 테스트 실행은 `python -m pytest`로 고정(환경에서 테스트 러너가 0 tests로 잡히는 이슈 우회).
 - v1.7 (2025-12-25, BE팀): trial-play 식별용 `trial_token_bucket` 추가 및 토큰 소비 시 `consumed_trial` 판별. 플래그 `ENABLE_TRIAL_PAYOUT_TO_VAULT` ON 시 trial 소비 플레이의 reward를 Vault로 라우팅(POINT 직접 적립, 그 외 valuation 맵 환산, 미환산은 0-amount SKIP 이벤트 로깅). 단위 테스트 추가.

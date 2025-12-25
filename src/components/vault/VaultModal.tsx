@@ -2,15 +2,18 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Modal from "../common/Modal";
 import { getTicket0ResolutionCopy } from "../../api/uiCopyApi";
+import { parseVaultUnlockRules } from "../../utils/vaultUtils";
 
 type Props = {
   open: boolean;
   onClose: () => void;
+  ctaPayload?: Record<string, unknown> | null;
+  unlockRulesJson?: Record<string, unknown> | null;
 };
 
 const DEFAULT_COPY = {
-  title: "티켓이 0이에요",
-  body: "체험 티켓을 받거나, 외부 충전 확인 후 금고 잠금이 해금됩니다.",
+  title: "티켓이 0이에요 (모두 소진)",
+  body: "체험 티켓을 모두 사용하셨네요. 10레벨만 달성해도 Diamond Key를 확정 지급합니다!",
   primary_cta_label: "씨씨카지노 바로가기",
   secondary_cta_label: "실장 텔레 문의",
 };
@@ -18,7 +21,7 @@ const DEFAULT_COPY = {
 const PRIMARY_URL = "https://ccc-010.com";
 const SECONDARY_URL = "https://t.me/jm956";
 
-const VaultModal: React.FC<Props> = ({ open, onClose }) => {
+const VaultModal: React.FC<Props> = ({ open, onClose, ctaPayload, unlockRulesJson }) => {
   const copyQuery = useQuery({
     queryKey: ["ui-copy", "ticket0"],
     queryFn: getTicket0ResolutionCopy,
@@ -44,10 +47,28 @@ const VaultModal: React.FC<Props> = ({ open, onClose }) => {
     };
   }, [copyQuery.data]);
 
+  const rules = useMemo(() => parseVaultUnlockRules(unlockRulesJson), [unlockRulesJson]);
+  const isTicketZero = ctaPayload?.reason === "TICKET_ZERO";
+
   return (
     <Modal title={copy.title} open={open} onClose={onClose}>
       <div className="space-y-4">
-        <p className="text-slate-200/90">{copy.body}</p>
+        <p className="text-slate-200/90 whitespace-pre-wrap">{copy.body}</p>
+
+        {isTicketZero && (
+          <div className="rounded-xl bg-secondary-400/10 p-3 border border-secondary-400/20">
+            <p className="text-sm font-bold text-secondary-200 text-center">
+              🔥 10레벨 달성 시 Diamond Key 확정!
+            </p>
+          </div>
+        )}
+
+        {rules.length > 0 && (
+          <div className="rounded-xl bg-black/30 p-3 text-xs md:text-sm text-white/70 space-y-1">
+            <p className="font-bold text-white/90 mb-2">[해금 조건 안내]</p>
+            {rules.map((r, i) => <p key={i}>- {r}</p>)}
+          </div>
+        )}
 
         <div className="flex flex-wrap gap-2">
           <a

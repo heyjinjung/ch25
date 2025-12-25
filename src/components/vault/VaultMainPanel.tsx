@@ -5,6 +5,7 @@ import { getUiConfig } from "../../api/uiConfigApi";
 import VaultModal from "./VaultModal";
 import { useAuth } from "../../auth/authStore";
 import AnimatedCountdown from "../common/AnimatedCountdown";
+import { parseVaultUnlockRules } from "../../utils/vaultUtils";
 
 type RewardPreviewItem = {
   label: string;
@@ -194,6 +195,11 @@ const VaultMainPanel: React.FC = () => {
     const statusLabel = vaultBalance > 0 ? (eligible ? "해금 대기" : "잠금") : "비어있음";
     const statusTone = eligible ? "text-cc-lime" : "text-white/70";
 
+    const unlockRulesJson = data?.unlockRulesJson;
+    const accrualMultiplier = data?.accrualMultiplier ?? 1.0;
+    const recommendedAction = data?.recommendedAction;
+    const ctaPayload = data?.ctaPayload;
+
     return {
       vaultBalance,
       cashBalance,
@@ -202,8 +208,31 @@ const VaultMainPanel: React.FC = () => {
       usedAt,
       statusLabel,
       statusTone,
+      unlockRulesJson,
+      accrualMultiplier,
+      recommendedAction,
+      ctaPayload,
     };
   }, [vault.data]);
+
+  // Auto-open modal if recommended
+  useEffect(() => {
+    if (view.recommendedAction === "OPEN_VAULT_MODAL" && !vaultModalOpen) {
+      setVaultModalOpen(true);
+    }
+  }, [view.recommendedAction]);
+
+  const unlockRules = useMemo(() => {
+    const parsed = parseVaultUnlockRules(view.unlockRulesJson);
+    if (parsed.length > 0) return parsed;
+
+    // Fallback hardcoded rules (Phase 1 legacy)
+    return [
+      "대상: 신규 회원 프로모션 대상(상태가 “해금 대기”로 표시됩니다)",
+      "해금 금액: “잠긴 금고” 금액 전액 (5만원 이상 충전 시)",
+      "해금 조건: 씨씨카지노 이용 확인(충전/입금) 후 보유 머니로 합산"
+    ];
+  }, [view.unlockRulesJson]);
 
   const rewardPreview = useMemo(() => {
     const value = ui.data?.value ?? null;
@@ -217,15 +246,15 @@ const VaultMainPanel: React.FC = () => {
 
     const items: RewardPreviewItem[] | null = rawItems
       ? rawItems
-          .map((item) => {
-            if (!item || typeof item !== "object") return null;
-            const r = item as Record<string, unknown>;
-            if (typeof r.label !== "string" || !r.label) return null;
-            const amount = typeof r.amount === "number" ? r.amount : undefined;
-            const unit = typeof r.unit === "string" ? r.unit : undefined;
-            return { label: r.label, amount, unit };
-          })
-          .filter((item): item is RewardPreviewItem => item !== null)
+        .map((item) => {
+          if (!item || typeof item !== "object") return null;
+          const r = item as Record<string, unknown>;
+          if (typeof r.label !== "string" || !r.label) return null;
+          const amount = typeof r.amount === "number" ? r.amount : undefined;
+          const unit = typeof r.unit === "string" ? r.unit : undefined;
+          return { label: r.label, amount, unit };
+        })
+        .filter((item): item is RewardPreviewItem => item !== null)
       : null;
 
     const rawProgress = (v?.reward_preview_progress ?? v?.rewardPreviewProgress) as Record<string, unknown> | null;
@@ -276,6 +305,11 @@ const VaultMainPanel: React.FC = () => {
                 />
               </span>
               XMAS 이벤트 금고
+              {(view.accrualMultiplier ?? 1) > 1 && (
+                <span className="ml-2 inline-flex items-center rounded bg-red-500/20 px-1.5 py-0.5 text-[10px] font-bold text-red-400 border border-red-500/30 animate-pulse">
+                  {view.accrualMultiplier}배 적립 중
+                </span>
+              )}
             </div>
           </div>
 
@@ -290,15 +324,11 @@ const VaultMainPanel: React.FC = () => {
             <div className="mt-4 rounded-2xl border border-white/10 bg-black/25 p-4 text-white/75">
               <p className="text-[12px] font-bold uppercase tracking-[0.22em] text-white/70">금고 해금 규칙</p>
               <ul className="mt-2 space-y-1 text-[clamp(13px,2.6vw,14px)]">
-                <li>
-                  <span className="font-semibold text-white/85">대상</span>: 신규 회원 프로모션 대상(상태가 “해금 대기”로 표시됩니다)
-                </li>
-                <li>
-                  <span className="font-semibold text-white/85">해금 금액</span>: “잠긴 금고” 금액 <span className="font-semibold text-secondary-200">전액</span>
-                </li>
-                <li>
-                  <span className="font-semibold text-white/85">해금 조건</span>: 씨씨카지노 이용 확인(충전/입금) 후 보유 머니로 합산
-                </li>
+                {unlockRules.map((rule, idx) => (
+                  <li key={idx}>
+                    <span className="font-semibold text-white/85">- {rule}</span>
+                  </li>
+                ))}
               </ul>
             </div>
           </div>
@@ -587,7 +617,12 @@ const VaultMainPanel: React.FC = () => {
         </div>
       </section>
 
-      <VaultModal open={vaultModalOpen} onClose={() => setVaultModalOpen(false)} />
+      <VaultModal
+        open={vaultModalOpen}
+        onClose={() => setVaultModalOpen(false)}
+        ctaPayload={view.ctaPayload}
+        unlockRulesJson={view.unlockRulesJson}
+      />
     </section>
   );
 };

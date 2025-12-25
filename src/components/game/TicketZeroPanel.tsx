@@ -105,15 +105,15 @@ const TicketZeroPanel: React.FC<Props> = ({ tokenType, onClaimSuccess }) => {
 
     const rewardPreviewItems: RewardPreviewItem[] | null = rawItems
       ? rawItems
-          .map((item) => {
-            if (!item || typeof item !== "object") return null;
-            const r = item as Record<string, unknown>;
-            if (typeof r.label !== "string" || !r.label) return null;
-            const amount = typeof r.amount === "number" ? r.amount : undefined;
-            const unit = typeof r.unit === "string" ? r.unit : undefined;
-            return { label: r.label, amount, unit };
-          })
-          .filter((item): item is RewardPreviewItem => item !== null)
+        .map((item) => {
+          if (!item || typeof item !== "object") return null;
+          const r = item as Record<string, unknown>;
+          if (typeof r.label !== "string" || !r.label) return null;
+          const amount = typeof r.amount === "number" ? r.amount : undefined;
+          const unit = typeof r.unit === "string" ? r.unit : undefined;
+          return { label: r.label, amount, unit };
+        })
+        .filter((item): item is RewardPreviewItem => item !== null)
       : null;
 
     const rawProgress = (v?.reward_preview_progress ?? v?.rewardPreviewProgress) as Record<string, any> | null;
@@ -283,7 +283,12 @@ const TicketZeroPanel: React.FC<Props> = ({ tokenType, onClaimSuccess }) => {
         ) : null}
       </div>
 
-      <VaultModal open={vaultModalOpen} onClose={() => setVaultModalOpen(false)} />
+      <VaultModal
+        open={vaultModalOpen}
+        onClose={() => setVaultModalOpen(false)}
+        unlockRulesJson={vault.data?.unlockRulesJson}
+        ctaPayload={vault.data?.ctaPayload}
+      />
     </div>
   );
 };
