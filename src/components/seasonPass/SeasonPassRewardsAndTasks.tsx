@@ -235,10 +235,11 @@ export const SeasonPassRewardsAndTasks: React.FC = () => {
                             }}
                           >
                             {isPending ? "지급 중..." : "보상 받기"}
-                          ) : null}
-                          {(isManualAdmin || reward.auto_claim) && !reward.is_claimed ? (
-                            <p className="text-[clamp(12px,2.5vw,13px)] text-amber-200">관리자 확인 후 지급됩니다. 자동 수령/정산 없음.</p>
-                          ) : null}
+                          </button>
+                        ) : null}
+
+                        {(isManualAdmin || reward.auto_claim) && !reward.is_claimed ? (
+                          <p className="text-[clamp(12px,2.5vw,13px)] text-amber-200">관리자 확인 후 지급됩니다. 자동 수령/정산 없음.</p>
                         ) : null}
                       </div>
                     </motion.div>
