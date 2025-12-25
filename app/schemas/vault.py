@@ -32,6 +32,7 @@ class VaultStatusResponse(BaseModel):
 
     # Event flags (optional)
     accrual_multiplier: float | None = None
+    ui_copy_json: dict[str, Any] | None = None
 
 
 class VaultFillResponse(BaseModel):

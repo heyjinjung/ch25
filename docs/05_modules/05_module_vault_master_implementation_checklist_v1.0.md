@@ -90,10 +90,10 @@
 - [x] 12/25~12/27 multiplier ON/OFF 이벤트, unlock_rules_json 변경, downtime 배너 교체 로그 관측 경로 정의.
 
 ## 8. 롤백/가드레일
-- [ ] 플래그로 trial 적립 기능 즉시 중단 가능하도록 구현(OFF 시 기존 흐름만 유지).
-- [ ] VaultEarnEvent 로그가 적립 전에 생성되었다면 롤백 시 로그만 남기고 금고 잔액 조정 여부 결정.
-- [ ] unlock_rules_json/카피를 이전 하드코딩 값으로 되돌리는 절차 준비.
-- [ ] vault_accrual_multiplier를 1.0으로 되돌리는 즉시 가드 마련(플래그 OFF/기간 종료 시), 적용 이력 로그 확인.
+- [x] 플래그로 trial 적립 기능 즉시 중단 가능하도록 구현(OFF 시 기존 흐름만 유지).
+- [x] VaultEarnEvent 로그가 적립 전에 생성되었다면 롤백 시 로그만 남기고 금고 잔액 조정 여부 결정.
+- [x] unlock_rules_json/카피를 이전 하드코딩 값으로 되돌리는 절차 준비.
+- [x] vault_accrual_multiplier를 1.0으로 되돌리는 즉시 가드 마련(플래그 OFF/기간 종료 시), 적용 이력 로그 확인.
 
 ## 9. 현행 구현 충돌 방지/정합성 체크
 - [x] VaultService.get_status()가 자동 시드를 하지 않는 현행 동작 유지 확인(상태 조회 시 잔액 변동 없음).
@@ -107,6 +107,7 @@
 - [x] downtime 배너 교체 스케줄(12/28, 12/31, 1/5) 및 12/31 백업/초기화 작업이 다른 배포/플래그와 충돌하지 않는지 확인.
 
 ## 10. 변경 이력
+- v2.7 (2025-12-25, BE팀): 롤백 및 안전 장치(Safeguards) 강화. 서비스 레이어에 Kill-Switch 플래그를 완비하고, 모든 적립 로직의 트랜잭션 원자성을 재확인. 어드민 설정 오류 시 시스템 하드코딩 값으로 즉시 복구 가능한 Fallback 로직(`ui_copy_json` 포함) 및 운영 비상 대응 가이드(`docs/06_ops/vault_contingency_plan.md`) 작성 완료.
 - v2.6 (2025-12-25, BE팀): 운영 관측성(Observability) 강화. AdminAuditLog 테이블 및 AuditService 추가하여 설정 변경 이력 추적. 실시간 Discord/Slack 알림(Missing Valuation SKIP) 및 어드민 통계 API(/stats) 구현 완료.
 - v2.5 (2025-12-25, Full Stack): Vault Phase 1 전체 연동 검증 및 QA 항목 마감. 멱등(Duplicate Skip), 해금(Deposit Unlock), 고액 보상 관리자 지급 라벨, 점검 배너 스케줄링 및 백업 스크립트 정합성 확인 완료.
 - v2.4 (2025-12-25, BE팀): 금고 만료 정책을 Milestone(10,000원) 기반 Fixed Window로 정교화. 적립액이 1만 원 미만일 때는 타이머가 작동하지 않으며, 1만 원 도달 시 24시간 타이머가 고정(Fixed)됩니다. 해금 후 잔액이 1만 원 미만으로 떨어지면 타이머가 해제되어 다음 사이클을 준비합니다.

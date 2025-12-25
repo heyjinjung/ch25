@@ -63,6 +63,19 @@ def status(db: Session = Depends(get_db), user_id: int = Depends(get_current_use
         else:
             unlock_rules_json = computed
 
+    ui_copy_json = None
+    if eligible:
+        hardcoded_ui_copy = {
+            "title": "내 금고",
+            "desc": "적립된 보관금은 특정 조건 달성 시 즉시 출금 가능한 캐시로 해금됩니다.",
+        }
+        program = v2_service.get_default_program(db, ensure=True)
+        override = getattr(program, "ui_copy_json", None)
+        if isinstance(override, dict) and override:
+            ui_copy_json = _deep_merge_dict(hardcoded_ui_copy, override)
+        else:
+            ui_copy_json = hardcoded_ui_copy
+
     return VaultStatusResponse(
         eligible=eligible,
         vault_balance=user.vault_balance or 0,
@@ -77,6 +90,7 @@ def status(db: Session = Depends(get_db), user_id: int = Depends(get_current_use
         program_key=service.PROGRAM_KEY,
         unlock_rules_json=unlock_rules_json,
         accrual_multiplier=service.vault_accrual_multiplier(now) if eligible else 1.0,
+        ui_copy_json=ui_copy_json,
     )
 
 
