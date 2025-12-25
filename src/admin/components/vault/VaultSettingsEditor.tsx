@@ -57,7 +57,6 @@ const VaultSettingsEditor: React.FC<Props> = ({ program }) => {
     };
 
     const inputClass = "w-full rounded-md border border-[#333] bg-[#0A0A0A] px-3 py-2 text-sm text-gray-200 focus:border-[#91F402] focus:outline-none";
-    const labelClass = "mb-1 block text-xs font-semibold text-gray-500 uppercase tracking-wider";
 
     return (
         <div className="space-y-8">
