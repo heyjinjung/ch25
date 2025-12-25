@@ -52,6 +52,15 @@
 - **시즌 종료 후 호출**
   - 시즌 end_date+1일부터 `/api/season-pass/stamp`는 `NO_ACTIVE_SEASON`으로 응답해야 하며, 로그에도 에러 코드가 기록되는지 확인.
 
+- **시즌 브리지(12/25~12/31) 운영 체크**
+  - 스탬프 로그의 `event_type`에 KEY_DAY_1~7이 적재되는지 샘플 조회.
+  - `/api/season-pass/status` 응답의 `event_bridge.total_key_count`/`pending_reward_points`가 증가하는지 확인.
+  - 1/1 00:10 배치 후 `event_pending_points`/`event_key_count`가 0으로 초기화되었는지, 지급 메타가 원장/로그에 남는지 확인.
+
+- **금고×체험티켓 경계 주의**
+  - “trial → vault” 자동 해금 및 “금고 누적 1만원 자동 해금” 기능은 미구현 상태이므로 운영 커뮤니케이션 시 과대 안내 금지.
+  - 프론트 문구는 서버 `unlock_rules_json` 기반으로 유지해 카피 드리프트를 방지.
+
 ## 9. 테스트 케이스 연결 포인트
 - feature_schedule 미설정/중복 설정 시 `/api/today-feature`가 `feature_type=NONE` 또는 `INVALID_FEATURE_SCHEDULE`로 안전하게 응답하는지 확인.
 - 룰렛/복권의 invalid config(6칸 미만, prize weight 합 0) 요청 시 `INVALID_ROULETTE_CONFIG`/`INVALID_LOTTERY_CONFIG`가 반환되는지 검증.

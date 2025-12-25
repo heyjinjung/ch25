@@ -51,6 +51,16 @@
 }
 ```
 
+## 7. 최신 업데이트(2025-12-25)
+- 시즌 브리지: 12/25~12/31 7개 열쇠 수집 → 1/1 금고 개방(배치 지급). 손실회피/매몰비용 서사로 리텐션 유지.
+- 시즌패스 status 응답 확장: `event_bridge` 필드에 열쇠 진행도/카운트다운/예약 보상 노출.
+- 임시 필드: `user_profiles.event_key_count`, `event_pending_points`로 1/1 지급분 적립(배치 전환).
+- 금고 설계 경계: trial 보상→vault 적립, 1만 원 자동 해금은 아직 미구현(설계만 존재). `unlock_rules_json` 기반 카피 사용 권장.
+- Vault Phase 1: `vault_locked_balance`를 단일 기준으로 사용, `vault_balance`는 legacy mirror만 유지.
+- Ticket Zero UX: `/api/ui-config/{key}` 기반으로 문구/CTA를 실시간 운영(`ticket_zero` 키), token_balance=0일 때 Panel 노출.
+- 일일 스탬프 판정: 오늘 도장은 `YYYY-MM-DD` 키로 찍힌 경우만 `today.stamped=true`(다른 내부 스탬프는 미완료로 간주).
+- 타임존 주의: DB/MySQL KST 환경에서 UTC 변환 혼선 발생 사례(팀배틀 시즌 만료 오판); TZ 일원화 또는 datetime TZ 명시 필요.
+
 ## 변경 이력
 - v1.1 (2025-12-06, 시스템 설계팀)
   - max_daily=0을 “무제한”으로 명시하고 remaining=0 의미를 UI/BE 공통으로 규정

@@ -1,6 +1,11 @@
 2025-12-08: API/DB/코인 시스템/서비스/운영/체크리스트/overview/architecture 최신화 반영. 실제 코드/운영/QA 흐름과 일치하도록 문서 업데이트.
 # 프로젝트 변경 이력
 
+## 2025-12-25 (season bridge doc pass)
+- Docs: Overview/Architecture/API/DB/Ops를 시즌 브리지(7-key, 12/25~12/31→1/1 배치 지급)와 금고×체험티켓 경계(미구현 자동 해금, unlock_rules_json 카피) 기준으로 최신화.
+- DB: user 임시 컬럼(event_key_count, event_pending_points) 및 season_pass_stamp_log.event_type=KEY_DAY_1~7 기록 요구사항 문서화.
+- Ops: 1/1 배치 후 초기화/지급 검증 시나리오와 KEY_DAY_* 스탬프 로깅 체크 추가.
+
 ## 2025-12-11 (feature gate simplification & doc refresh)
 - Backend: `/api/today-feature`를 공개 엔드포인트로 전환해 JWT 없이도 호출 가능하도록 수정, JWT가 있을 때만 `user_id`를 포함하며 응답 `feature_type`을 문자열로 일관화.
 - Frontend: `FeatureType`에서 `NONE`을 제거하고 API 응답을 nullable로 정규화, `FeatureGate`/홈 카드가 null을 비활성 상태로 처리하며 폴백 데이터도 null 반환.

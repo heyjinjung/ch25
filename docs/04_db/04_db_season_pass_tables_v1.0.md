@@ -1,8 +1,8 @@
 # 레벨 테이블 설계
 
 - 문서 타입: DB
-- 버전: v1.1
-- 작성일: 2025-12-06
+- 버전: v1.2
+- 작성일: 2025-12-25
 - 작성자: 시스템 설계팀
 - 대상 독자: 백엔드 개발자, DBA, 데이터 분석가
 
@@ -109,11 +109,14 @@
 | date              | DATE     |       | Y        | 도장 일자                      |
 | stamp_count       | INT      |       | Y        | 횟수(기본 1)                   |
 | source_feature_type | VARCHAR(30) |   | Y        | 도장 발생 원인(ROULETTE 등)    |
+| event_type        | VARCHAR(30) |   | N        | KEY_DAY_1~7 등 시즌 브리지 스탬프 구분 |
 | xp_earned         | INT      |       | Y        | 이번 도장으로 적립된 XP        |
 | created_at        | DATETIME |       | Y        | 생성 시각                      |
 
 ### 7-3. 인덱스/제약사항
 - UNIQUE(user_id, season_id, date)  — 일 1회 도장 정책을 enforcing, xp_earned 필수 기록
+ - 시즌 브리지(12/25~12/31) 동안 `event_type`에 KEY_DAY_1~7을 저장해 일자별 키 획득을 식별, 1/1 배치 지급 후 조회 및 초기화 용도로 사용
+- 일일 도장 키는 `YYYY-MM-DD` 기준이며 동일 일자 중복 시 `ALREADY_STAMPED_TODAY` 처리
 
 ### 7-4. 관련 테이블
 - `user` (N:1)
@@ -143,6 +146,9 @@
 - `season_pass_config` (N:1)
 
 ## 변경 이력
+- v1.2 (2025-12-25, 시스템 설계팀)
+  - 시즌 브리지 키 적재를 위해 season_pass_stamp_log.event_type(KEY_DAY_1~7) 필드를 문서화
+  - 일일 도장 키(YYYY-MM-DD) 중복 방지 규칙과 에러를 명시
 - v1.1 (2025-12-06, 시스템 설계팀)
   - stamp_log에 xp_earned 필수 기록 및 UNIQUE(user_id, season_id, date)로 일 1회 enforcing을 재강조
   - 버전/작성일을 최신화

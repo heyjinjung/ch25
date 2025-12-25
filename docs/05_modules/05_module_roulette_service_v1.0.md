@@ -1,8 +1,8 @@
 # RouletteService 모듈 기술서
 
 - 문서 타입: 모듈
-- 버전: v1.2
-- 작성일: 2025-12-09
+- 버전: v1.3
+- 작성일: 2025-12-25
 - 작성자: 시스템 설계팀
 - 대상 독자: 백엔드 개발자
 
@@ -16,19 +16,26 @@
 ## 3. 용어 정의 (Definitions)
 - Segment: 룰렛 한 칸, 보상/확률 정보를 가진다. 한 config 당 slot_index 0~5로 고정 6개가 존재해야 한다.
 - Weight Random: segment.weight 합을 기반으로 가중치 랜덤 추출.
-- Daily Spin Limit: config.max_daily_spins로 정의된 유저 당 일일 스핀 한도. `0`은 무제한(sentinel)으로 취급하며 remaining은 0으로 응답하지만 차단하지 않는다.
+- Roulette Coin: GameWallet의 `GameTokenType.ROULETTE_COIN`. 1회 스핀 시 반드시 1장 소모한다.
+
+## 4. 책임 (Responsibilities)
+- 오늘 feature_type=ROULETTE인지, feature_config.is_enabled=1인지 검증한다. config.is_active=1인 단일 레코드가 없으면 `ROULETTE_CONFIG_MISSING`(TEST_MODE면 기본 config/segment 시드).
+- status에서 GameWallet 잔액을 조회하고, 당일 스핀 카운트(today_spins)와 segment 리스트를 반환한다. 일일 한도는 제거되어 remaining_spins는 항상 0(무제한 표기)로 응답한다.
+- play에서 slot_index 0~5 정확히 6개, weight>=0, Σweight>0 검증 후 가중치 랜덤 추첨.
+- play 실행 시 `ROULETTE_COIN` 1장을 강제 차감, RewardService 지급, RouletteLog 기록, game_play 로그 작성.
+- reward_amount>0일 때만 SeasonPassService.maybe_add_internal_win_stamp(내부 승리 50회 보상) 시도. 게임 1회당 자동 도장 부여(add_stamp)는 비활성화되어 season_pass 응답은 None.
 
 ## 5. 주요 메서드 시그니처
 
-### 5-1. get_today_config
+### 5-1. get_status
 ```python
-def get_today_config(self, db, now, user_id: int) -> dict:
-    """오늘 사용되는 roulette_config + today_spins/remaining_spins/segments를 반환한다."""
+def get_status(self, db, user_id: int, today: date) -> RouletteStatusResponse:
+  """오늘 roulette_config + today_spins + segments + 지갑 잔액을 반환한다."""
 ```
-- today_spins: `roulette_log`에서 user_id와 오늘 날짜 기준 카운트.
-- remaining_spins: max_daily_spins - today_spins (0 미만이면 0). max_daily_spins=0이면 무제한으로 간주하고 remaining은 0으로 표시한다.
-- segments: slot_index/id/label/reward_type/reward_amount 리스트. slot_index 0~5 총 6개가 아니면 비정상 설정으로 간주하고 비활성 처리 또는 에러 응답.
-- Σweight>0이 아닐 경우(모두 0) 비정상 설정으로 간주해 비활성 처리 또는 에러 응답.
+- today_spins: `roulette_log`에서 user_id와 오늘 날짜 기준 카운트(모니터링용, 제한 없음).
+- remaining_spins: 항상 0(무제한 표기, 차단 로직 없음).
+- segments: slot_index 0~5 정확히 6개, weight>=0, Σweight>0 필수. TEST_MODE에서는 미존재 시 기본 세그먼트 6개를 자동 시드.
+- token_balance: GameWallet의 ROULETTE_COIN 잔액.
 
 ### 5-2. play
 ```python
@@ -36,13 +43,12 @@ def play(self, db, user_id: int, now) -> dict:
     """1회 스핀 실행 후 결과/보상/레벨 데이터를 반환한다."""
 ```
 - 단계:
-  1) 오늘 feature_type=ROULETTE 여부, feature_config.is_enabled=1, config.is_active=1 검사. 스케줄이 0건/2건이면 `INVALID_FEATURE_SCHEDULE` 처리.
-  2) slot_index 0~5로 정확히 6개 segment 존재 여부와 Σweight>0 검증(불일치 시 에러/비활성 처리).
-  3) today_spins < max_daily_spins 확인. (max_daily_spins=0 sentinel이면 제한 미적용)
-  4) segments 중 weight 기반 랜덤 선택.
-  5) RewardService 처리 후 roulette_log + user_event_log 기록. slot_index도 로그 메타에 포함.
-  6) SeasonPassService.add_stamp() 호출 여부는 비즈니스 정책에 따라 적용.
-  7) 선택된 segment/보상/season_pass 결과 dict 반환.
+  1) 오늘 feature_type=ROULETTE 활성/스케줄 검증 후 config 로드(TEST_MODE면 기본 config/segment 생성 허용).
+  2) slot_index 0~5 정확히 6개, weight>=0, Σweight>0 검증(불일치 시 `INVALID_ROULETTE_CONFIG`).
+  3) GameWallet `ROULETTE_COIN` 1장 소비(require_and_consume_token).
+  4) weight 기반 랜덤 선택 → RewardService 지급 → roulette_log 기록, game_play 로그 작성.
+  5) reward_amount>0이면 내부 승리 50회 스탬프 추가 시도. add_stamp 자동 호출은 하지 않으므로 season_pass 블록은 기본 None.
+  6) 선택된 segment/season_pass 결과 dict 반환.
 
 ## 6. 데이터 연동
 - 테이블: `roulette_config`, `roulette_segment(slot_index 0~5)`, `roulette_log`, 공통 `user_event_log`.
@@ -51,7 +57,7 @@ def play(self, db, user_id: int, now) -> dict:
 - 설정 검증: config_id 당 roulette_segment가 정확히 6개이며 Σweight>0이어야 한다. 위반 시 상태 조회와 play 모두 비활성/에러 처리.
 
 ## 7. API 연동
-- GET `/api/roulette/status`: get_today_config 결과를 그대로 전달 (UI용 segments 포함).
+- GET `/api/roulette/status`: get_status 결과를 그대로 전달 (segments, 잔액 포함, remaining_spins=0).
 - POST `/api/roulette/play`: play 결과 반환, 레벨 블록은 add_stamp 호출 시 포함.
 
 ## 8. 예시 응답 (play)
@@ -77,10 +83,13 @@ def play(self, db, user_id: int, now) -> dict:
 ## 9. 에러 코드
 - `NO_FEATURE_TODAY`: 오늘 feature_type이 ROULETTE가 아니거나 비활성화된 경우.
 - `INVALID_FEATURE_SCHEDULE`: 날짜별 스케줄이 0개/2개 이상인 경우.
-- `INVALID_ROULETTE_CONFIG`: segment 6칸 미만/초과, Σweight<=0, config 비활성 등 설정 오류.
-- `DAILY_LIMIT_REACHED`: max_daily_spins 초과.
+- `INVALID_ROULETTE_CONFIG`: segment 6칸 미만/초과, 음수 weight, Σweight<=0, config 비활성 등 설정 오류.
+- `ROULETTE_CONFIG_MISSING`: 활성 config 없음(단, TEST_MODE는 기본 config/segment 자동 생성).
+- GameWallet 오류: 잔액 부족 등 토큰 차감 실패 시 전달되는 예외.
 
 ## 변경 이력
+- v1.3 (2025-12-25, 시스템 설계팀)
+  - GameWallet ROULETTE_COIN 소비, 일일 한도 제거(remaining=0 표기만), auto stamp 비활성, TEST_MODE 기본 config/segment 시드를 반영
 - v1.2 (2025-12-09, 시스템 설계팀)
   - max_daily_spins=0 sentinel 무제한 규칙, feature_config.is_enabled/INVALID_FEATURE_SCHEDULE 검증, 작성일 정정
 - v1.1 (2025-12-08, 시스템 설계팀)

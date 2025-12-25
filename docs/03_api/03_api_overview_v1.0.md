@@ -97,6 +97,8 @@
 }
 ```
 - 주요 에러: 401(인증 실패), 404(활성 시즌 없음)
+- 확장 필드(시즌 브리지): `event_bridge.active_keys[]`, `total_key_count`, `pending_reward_points`, `is_all_keys_collected`, `countdown_to_new_season` — 7개 열쇠 수집/1월 1일 배치 지급 티징용.
+ - 일일 스탬프 규칙: `today.stamped`는 오늘 날짜(`YYYY-MM-DD`) 키로 찍힌 스탬프가 있을 때만 true. 기타 내부 스탬프는 완료로 보지 않는다.
 
 ### 5-2. POST /api/season-pass/stamp
 - 설명: 오늘 도장을 1개 찍고 XP/레벨을 갱신한다.
@@ -134,6 +136,15 @@
 - 주요 에러: 400(이미 수령), 401(인증 실패), 404(해당 레벨 보상 없음)
 - 비고: auto_claim 레벨은 수동 클레임 불가; 진행도(current_level) 미달 시 400 반환.
   - 이미 수령 시 `REWARD_ALREADY_CLAIMED`, auto_claim 레벨 요청 시 `AUTO_CLAIM_LEVEL`.
+
+### 5-4. GET /api/vault/status (요약)
+- 설명: 금고 locked/available/만료 정보를 반환. 해금 규칙은 `unlock_rules_json`을 사용해 프론트 하드코딩을 방지.
+- 비고: trial 보상→vault 적립 및 “1만원 자동 해금”은 **현재 미구현**이며 설계만 존재. Copy는 서버 룰 기반으로 렌더링 권장.
+ - Phase 1 기준: `vault_locked_balance`를 단일 소스로 제공하고 `vault_balance`는 legacy mirror로 유지.
+
+### 5-5. GET /api/ui-config/{key} (요약)
+- 설명: 앱 UI 문구/CTA 설정을 JSON으로 조회. `ticket_zero` 키를 사용해 token 부족 시 노출되는 Panel 문구/버튼을 실시간 운영.
+- 인증: 공개(필요 시 캐시 짧게 설정), Admin 편집은 `/admin/api/ui-config/{key}` 사용.
 
 ## 7. 게임별 API (룰렛/주사위/복권/랭킹)
 각 게임 엔드포인트 공통 규칙: 오늘 `feature_type` 검증 → 유저 조건 체크 → 결과/보상 계산 → 레벨 `add_stamp` 연동(필요 시) → 로그 저장.

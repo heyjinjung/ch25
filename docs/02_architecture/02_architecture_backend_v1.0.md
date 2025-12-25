@@ -79,6 +79,17 @@ xmas-1week-event-system/
 - `/api/today-feature`는 활성 스케줄이 없으면 `feature_type=NONE` 반환하여 UI 안내.
 - 로깅: Python logging 기반, Sentry 등 APM 연동 권장.
 
+## 9. 시즌 브리지(12/25~12/31 → 1/1 배치) 연동
+- 임시 필드: `user_profiles.event_key_count`, `event_pending_points`로 열쇠 진행도/예약 보상 누적 후 1/1 배치 지급.
+- 이벤트 로그: `season_pass_stamp_log.event_type`에 KEY_DAY_1~7 매핑(`KEY_DAY_1_ROULETTE`, `KEY_DAY_2_DEPOSIT`, ... , `KEY_DAY_7_LAST_LOGIN`).
+- 배치: 1/1에 `event_key_count >= 7 AND is_blocked=0` 대상만 지급(레벨 +1, 예약 포인트 → game_wallet, reward_log 멱등 기록).
+- API: `/api/season-pass/status` 응답에 `event_bridge`(열쇠 슬롯, 카운트다운, pending 포인트) 확장.
+
+## 10. 운영/설계 주의사항 (2025-12-25 추가)
+- 타임존: DB가 KST인 상태에서 naive datetime을 UTC로 해석해 시즌 만료 오판 사례 발생. TZ 일원화(UTC) 또는 모든 datetime TZ 명시/변환을 강제.
+- Vault Phase 1: `user.vault_locked_balance` 단일 기준으로 적립/해금, `vault_balance`는 legacy mirror 용도만 유지. external_ranking은 해금 계산이 아닌 신호만 전달.
+- Ticket Zero 운영: `/api/ui-config/{key}`(`ticket_zero`)로 문구/CTA를 실시간 관리, token_balance=0일 때 Panel 노출. 캐시는 SPA shell(index.html) no-cache로 배포 설정 필요.
+
 ## 변경 이력
 - v1.1 (2025-12-06, 시스템 설계팀)
   - 비동기 원칙(AsyncSession/async def)과 JWT 필수, Python 3.11 스택을 재확인

@@ -12,7 +12,7 @@
 ### Scoring/limits (enforced by API)
 - Game play yields **10 points per play**; only `action=GAME_PLAY` uses this automatic value.
 - Per-user cap: **500 points/day** (50 plays). Excess is rejected with `DAILY_POINT_CAP_REACHED`.
-- Team selection window: join/auto-assign allowed only within **2 hours after season start**; otherwise `TEAM_SELECTION_CLOSED/TEAM_LOCKED`.
+- Team selection window: join/auto-assign allowed only within **24 hours after season start** (mystery auto-assign). 이후에는 `TEAM_SELECTION_CLOSED/TEAM_LOCKED`.
 - Usage gate: `GAME_PLAY` points require **same-day usage** recorded in external ranking data; otherwise `USAGE_REQUIRED_TODAY`.
 
 ### Example: join and leaderboard
@@ -37,6 +37,10 @@ Response:
   { "team_id": 3, "team_name": "Beta", "points": 95 }
 ]
 ```
+
+## 응답 필드 업데이트
+- Contributors: `nickname` 필드 포함 (`null` 가능) — API가 User JOIN으로 채워 반환.
+- 타임존 주의: 시즌 시작/종료 시각은 KST/UTC 혼선에 민감하므로 DB/애플리케이션 TZ를 일관되게 설정하거나 모든 datetime에 TZ를 명시해야 한다.
 
 ## Admin endpoints (`/admin/api/team-battle`)
 - `POST /seasons` — create season; body: `{ "name": "S1", "starts_at": "2025-12-01T00:00:00Z", "ends_at": "2025-12-31T23:59:59Z", "is_active": false, "rewards_schema": {"tier": "gold"} }`.
