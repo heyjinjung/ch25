@@ -1,6 +1,6 @@
 # XMAS 1Week 시스템 백엔드 아키텍처
 문서 타입: 아키텍처
-버전: v1.3
+버전: v1.4
 작성일: 2025-12-25
 작성자: 시스템 설계팀
 대상 독자: 백엔드 개발자, SRE/운영 담당자
@@ -81,6 +81,7 @@ xmas-1week-event-system/
 - DB: MySQL InnoDB, utf8mb4, 타임존 명시. 필수 테이블은 `docs/04_db/` 참조.
 - 마이그레이션: `alembic upgrade head` 후 `SELECT version_num FROM alembic_version;`가 최신(예: 20241206_0001)인지 검증.
 - 구성: `.env`에서 DATABASE_URL, JWT_SECRET, CORS_ORIGINS, REDIS_URL(optional) 설정. 관리자 UI CORS는 코드 레벨에서 `cc-jm.com` 허용 여부를 재확인.
+- 기능 플래그: `FEATURE_GATE_ENABLED` 기본 false. 운영에서는 today-feature 게이트 사용 금지, QA에서만 필요 시 활성.
 - 캐시: Redis 사용 시 idempotency key, 짧은 TTL 캐시만 허용. 장기 캐시는 DB 소스와 일관성 검증 필요.
 
 ## 8. 인프라/배포 고려사항
@@ -118,38 +119,8 @@ xmas-1week-event-system/
 - [ ] 로그(user_event_log, reward_log) 최신 3건이 저장되는지 확인.
 
 ## 변경 이력
+- v1.4 (2025-12-25, 시스템 설계팀): 중복 섹션 정리, 기능 플래그/운영 기준 보강.
 - v1.3 (2025-12-25, 시스템 설계팀): today-feature 폐기 반영, 성능/운영/QA 항목에서 관련 지표 제거.
 - v1.2 (2025-12-25, 시스템 설계팀): 관측/QA/보안 가드레일 추가, 인프라/구성 상세 보강, 시즌 브리지 절차 명확화.
 - v1.1 (2025-12-06, 시스템 설계팀): 비동기 원칙, JWT 필수, Alembic head 확인 절차 명시.
 - v1.0 (2025-12-08, 시스템 설계팀): 최초 작성(백엔드 스택, 레이아웃, 운영 기준).
-
-## 7. 인프라/배포 고려사항
-- Nginx: HTTPS 종단, `/api` 경로를 백엔드로 프록시, 정적 자산 캐시 가능.
-- Docker Compose 예시: backend, db(MySQL/PostgreSQL), (옵션) redis, nginx, frontend로 구성.
-- CI/CD: GitHub Actions 또는 GitLab CI를 사용해 lint/test → docker build → deploy 단계를 수행.
-- 마이그레이션: 배포 전 `alembic upgrade head` 적용 후 `SELECT version_num FROM alembic_version;`가 `20241206_0001`인지 확인.
-
-## 8. 운영 기준 (중단 사항 반영)
-- today-feature 라우트는 폐기(비활성/404/410). 스케줄 기반 게이트 사용 금지.
-- 장애 시 `feature_config.is_enabled=0`으로 게임/시즌 패스 중단 가능.
-- 로깅: Python logging 기반, Sentry 등 APM 연동 권장.
-
-## 9. 시즌 브리지(12/25~12/31 → 1/1 배치) 연동
-- 임시 필드: `user_profiles.event_key_count`, `event_pending_points`로 열쇠 진행도/예약 보상 누적 후 1/1 배치 지급.
-- 이벤트 로그: `season_pass_stamp_log.event_type`에 KEY_DAY_1~7 매핑(`KEY_DAY_1_ROULETTE`, `KEY_DAY_2_DEPOSIT`, ... , `KEY_DAY_7_LAST_LOGIN`).
-- 배치: 1/1에 `event_key_count >= 7 AND is_blocked=0` 대상만 지급(레벨 +1, 예약 포인트 → game_wallet, reward_log 멱등 기록).
-- API: `/api/season-pass/status` 응답에 `event_bridge`(열쇠 슬롯, 카운트다운, pending 포인트) 확장.
-
-## 10. 운영/설계 주의사항 (2025-12-25 추가)
-- 타임존: DB가 KST인 상태에서 naive datetime을 UTC로 해석해 시즌 만료 오판 사례 발생. TZ 일원화(UTC) 또는 모든 datetime TZ 명시/변환을 강제.
-- Vault Phase 1: `user.vault_locked_balance` 단일 기준으로 적립/해금, `vault_balance`는 legacy mirror 용도만 유지. external_ranking은 해금 계산이 아닌 신호만 전달.
-- Ticket Zero 운영: `/api/ui-config/{key}`(`ticket_zero`)로 문구/CTA를 실시간 관리, token_balance=0일 때 Panel 노출. 캐시는 SPA shell(index.html) no-cache로 배포 설정 필요.
-
-## 변경 이력
-- v1.1 (2025-12-06, 시스템 설계팀)
-  - 비동기 원칙(AsyncSession/async def)과 JWT 필수, Python 3.11 스택을 재확인
-  - 배포 전 Alembic head 버전 확인 절차(20241206_0001) 명시
-  - 잘못된 선두 문자 제거
-- v1.0 (2025-12-08, 시스템 설계팀)
-  - 최초 작성: 백엔드 스택, 레이아웃, 배포/운영 기준 정리
-  - Python 3.11, JWT, Uvicorn, SQLAlchemy, Alembic 스택을 명시

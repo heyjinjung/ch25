@@ -1,8 +1,8 @@
-# XMAS 1Week API 개요 및 핵심 엔드포인트
+﻿# XMAS 1Week API 개요 및 핵심 엔드포인트
 
 - 문서 타입: API
-- 버전: v1.2
-- 작성일: 2025-12-11
+- 버전: v1.3
+- 작성일: 2025-12-25
 - 작성자: 시스템 설계팀
 - 대상 독자: 백엔드/프론트엔드 개발자
 
@@ -11,7 +11,8 @@
 - 프론트엔드와의 데이터 계약을 명확히 하여 개발/QA 효율을 높인다.
 
 ## 2. 범위 (Scope)
-- `/api/today-feature`, 레벨 3종 API, 게임별 status/play/today 엔드포인트의 요청/응답/인증/에러 코드를 다룬다.
+- 시즌 패스/게임(룰렛·주사위·복권·랭킹) 핵심 엔드포인트의 요청/응답/인증/에러 코드를 요약한다.
+- `/api/today-feature`는 2025-12-25 기준 폐기(아카이브)되어 운영에서는 404/410이 정상이다.
 - Admin 전용 API, 인증/토큰 발급 로직 상세는 범위 밖이다.
 
 ## 3. 용어 정의 (Definitions)
@@ -19,90 +20,95 @@
 - Stamp: 레벨 도장 1회 기록.
 - XP: 레벨 경험치.
 
-## 4. 공통 에러 코드
-- 모든 API는 JSON 에러 응답에 `code`, `message`를 포함한다.
-- 주요 코드
-  - `NO_FEATURE_TODAY`: 오늘 스케줄에 활성 Feature가 없거나 is_enabled=0으로 비활성화된 경우.
+## 4. 공통 응답/에러 규칙
+- 에러 응답은 `error.code`, `error.message` 형태로 내려온다.
+- 에러 응답 예시:
+```json
+{
+  "error": {
+    "code": "NO_FEATURE_TODAY",
+    "message": "NO_FEATURE_TODAY"
+  }
+}
+```
+- 인증 필요 엔드포인트는 Bearer JWT 필수이며, `TEST_MODE=true`일 때만 토큰 없이 demo user로 통과된다(운영 금지).
+- 대표 코드
+  - `NO_FEATURE_TODAY`: today-feature 스케줄 없음 또는 feature_config 미존재.
+  - `FEATURE_NOT_ACTIVE`: feature gate 활성 상태에서 feature 불일치, 또는 feature_config 비활성.
   - `INVALID_FEATURE_SCHEDULE`: feature_schedule에서 같은 날짜에 2개 이상 row가 존재하는 데이터 오류.
-  - `NO_ACTIVE_SEASON`: KST 오늘 기준 활성 시즌이 없을 때.
-  - `NO_ACTIVE_SEASON_CONFLICT`: start/end 범위를 충족하는 시즌이 2개 이상인 데이터 충돌.
   - `INVALID_ROULETTE_CONFIG` / `INVALID_LOTTERY_CONFIG`: 설정 검증(6칸/가중치 합/재고 등) 실패.
-  - `DAILY_LIMIT_REACHED`: 일일 제한(max_daily_spins/plays/tickets) 초과. (max_daily*=0이면 remaining=0이어도 "무제한" 의미로 차단 없이 허용)
+  - `INVALID_CONFIG`: 기타 게임 설정 오류(구성 누락, 주사위 값 범위 오류 등).
+  - `DAILY_LIMIT_REACHED`: 일일 제한 초과(운영 정책).
   - `LOCK_NOT_ACQUIRED`: DB 락 타임아웃/데드락으로 재시도 필요.
-  - `UNAUTHORIZED`/`FORBIDDEN`: 인증 실패/권한 없음.
-  - `REWARD_ALREADY_CLAIMED` / `AUTO_CLAIM_LEVEL` / `LEVEL_NOT_REACHED`: 레벨 수동 클레임 관련 오류.
+  - `NOT_ENOUGH_TOKENS`: 게임 토큰 부족으로 play 실패.
+  - `NO_ACTIVE_SEASON` / `NO_ACTIVE_SEASON_CONFLICT`: 활성 시즌 없음/중복.
+  - `ALREADY_STAMPED_TODAY`: 일일 체크인 스탬프 중복.
+  - `REWARD_ALREADY_CLAIMED` / `AUTO_CLAIM_LEVEL` / `LEVEL_NOT_REACHED` / `LEVEL_NOT_FOUND`: 레벨 보상 관련 오류.
+  - `AUTH_REQUIRED` / `TOKEN_INVALID`: 인증 누락/토큰 무효.
+  - `VALIDATION_ERROR`: 요청 파라미터/스키마 검증 오류.
+  - `DB_SCHEMA_MISMATCH` / `DB_ERROR`: 마이그레이션 미적용 또는 DB 오류.
 
-
-## 5. 공통 API
-### 4-1. GET /api/today-feature
-- 설명: 오늘 활성화된 Feature 정보를 반환한다. 최소 페이로드(`feature_type`)만 제공하며 FE가 라우팅을 결정한다. JWT가 있으면 `user_id`를 함께 돌려준다.
-- 인증: 선택 (Bearer JWT를 주면 `user_id` 포함, 없으면 익명 응답)
+## 5. 공통/레거시 API
+### 5-1. GET /api/today-feature (폐기/레거시)
+- 설명: 오늘 활성화된 Feature 정보를 반환한다. 운영은 404/410, 개발/테스트에서만 레거시 응답을 유지한다.
+- 인증: 선택 (Bearer JWT를 주면 `user_id` 포함)
 - Method/Path: GET `/api/today-feature`
 - Response 예시:
 ```json
 {
   "feature_type": "ROULETTE" | "DICE" | "SEASON_PASS" | "LOTTERY" | "RANKING",
-  "user_id": 1234 // JWT 있을 때만
+  "user_id": 1234
 }
 ```
-- 404 시 `{ feature_type: null }` 폴백, 경고 배너만 표시
-### 4-2. 게임별 Status/Play API
-- 엔드포인트: `/roulette/status|play`, `/dice/status|play`, `/lottery/status|play`
-- Response 예시:
-```json
-{
-  "token_type": "ROULETTE_COIN" | "DICE_TOKEN" | "LOTTERY_TICKET",
-  "token_balance": 0
-  // 기타 게임별 필드
-}
-```
-- status 404/에러 시에도 홈 카드 항상 렌더, “잔액 정보를 불러오는 중/실패” 배지 표시
-- 실제 코드 기준 주요 에러코드: `NO_FEATURE_TODAY`, `LOCK_NOT_ACQUIRED`, `UNAUTHORIZED`, `DAILY_LIMIT_REACHED` 등
-- Params/Body: 없음
-- 성공 200 예시:
-```json
-{
-  "feature_type": "ROULETTE",
-  "user_id": 1
-}
-```
-- 주요 에러: 404(`NO_FEATURE_TODAY`), 409(`INVALID_FEATURE_SCHEDULE`)
-- 비고: 스케줄이 없으면 `NO_FEATURE_TODAY`, 중복 스케줄이면 `INVALID_FEATURE_SCHEDULE`를 반환한다.
-- 추가 비고: `feature_config.is_enabled=0`일 때도 `NO_FEATURE_TODAY`로 응답해 UI 차단. 익명 호출 시 `user_id` 필드는 생략된다.
+- 비고: 스케줄 없음은 `feature_type=null`로 응답(레거시 동작). FE 라우팅에 사용하지 않는다.
 
-### 4-2. GET /api/feature
-- 설명: 특정 날짜의 Feature 정보를 조회한다(관리/디버깅용).
-- 인증: 필요 여부 ✅ (관리자)
+### 5-2. GET /api/feature (관리자/디버깅)
+- 설명: 특정 날짜의 Feature 정보를 조회한다.
+- 인증: 필요 (관리자)
 - Method/Path: GET `/api/feature?date=YYYY-MM-DD`
 - Query Params: `date` (필수)
 - 성공 200 예시: today-feature와 동일 구조
 - 주요 에러: 400(형식 오류), 404(해당 날짜 스케줄 없음), 409(`INVALID_FEATURE_SCHEDULE`)
 
-## 6. 레벨 API 요약
+## 6. 시즌 패스 API 요약
 - 상세 스펙은 `docs/03_api/03_api_season_pass_v1.0.md` 참고.
 
-### 5-1. GET /api/season-pass/status
+### 6-1. GET /api/season-pass/status
 - 설명: 현재 시즌 정보, 유저 진행도(레벨/XP/도장), 오늘 도장 여부를 조회한다.
-- 인증: ✅ 필요 (Authorization: Bearer JWT)
+- 인증: 필요 (Bearer JWT)
 - Method/Path: GET `/api/season-pass/status`
 - Query Params: 없음
-- Body: 없음
 - 성공 200 예시:
 ```json
 {
-  "season": {"id": 1, "season_name": "XMAS_1WEEK_2025", "max_level": 10},
-  "progress": {"current_level": 3, "current_xp": 140, "total_stamps": 4},
-  "levels": [{"level":1,"required_xp":50},{"level":2,"required_xp":100}],
+  "season": {
+    "id": 1,
+    "season_name": "XMAS_1WEEK_2025",
+    "start_date": "2025-12-09",
+    "end_date": "2025-12-25",
+    "max_level": 10,
+    "base_xp_per_stamp": 10
+  },
+  "progress": {
+    "current_level": 3,
+    "current_xp": 140,
+    "total_stamps": 4,
+    "last_stamp_date": "2025-12-24",
+    "next_level_xp": 150
+  },
+  "levels": [
+    {"level":1,"required_xp":50,"reward_type":"POINT","reward_amount":1000,"auto_claim":1}
+  ],
   "today": {"date": "2025-12-24", "stamped": true}
 }
 ```
-- 주요 에러: 401(인증 실패), 404(활성 시즌 없음)
-- 확장 필드(시즌 브리지): `event_bridge.active_keys[]`, `total_key_count`, `pending_reward_points`, `is_all_keys_collected`, `countdown_to_new_season` — 7개 열쇠 수집/1월 1일 배치 지급 티징용.
- - 일일 스탬프 규칙: `today.stamped`는 오늘 날짜(`YYYY-MM-DD`) 키로 찍힌 스탬프가 있을 때만 true. 기타 내부 스탬프는 완료로 보지 않는다.
+- 주요 에러: 401(`AUTH_REQUIRED`/`TOKEN_INVALID`), 404(`NO_ACTIVE_SEASON`)
+- 비고: 시즌 브리지 기간에는 `event_bridge` 확장 필드가 추가될 수 있다.
+- 일일 스탬프 규칙: `today.stamped`는 오늘 날짜(`YYYY-MM-DD`) 키 스탬프가 있을 때만 true.
 
-### 5-2. POST /api/season-pass/stamp
+### 6-2. POST /api/season-pass/stamp
 - 설명: 오늘 도장을 1개 찍고 XP/레벨을 갱신한다.
-- 인증: ✅ 필요 (Authorization: Bearer JWT)
+- 인증: 필요 (Bearer JWT)
 - Method/Path: POST `/api/season-pass/stamp`
 - Body(JSON): `{ "source_feature_type": "DICE", "xp_bonus": 20 }`
 - 성공 200 예시:
@@ -115,13 +121,12 @@
   "rewards": [{"level":4,"reward_type":"POINT","reward_amount":1000}]
 }
 ```
-- 주요 에러: 400(이미 도장 찍음), 401(인증 실패), 404(`NO_ACTIVE_SEASON`), 409(`NO_ACTIVE_SEASON_CONFLICT`)
-- 비고: 하루 1회 스탬프 제한, XP=base_xp_per_stamp+xp_bonus, 다중 레벨업 시 auto_claim 레벨 보상 즉시 지급.
-  - remaining=0은 max_daily=0 sentinel로 "무제한" 의미.
+- 주요 에러: 400(`ALREADY_STAMPED_TODAY`), 401(`AUTH_REQUIRED`/`TOKEN_INVALID`), 404(`NO_ACTIVE_SEASON`), 409(`NO_ACTIVE_SEASON_CONFLICT`)
+- 비고: XP=base_xp_per_stamp+xp_bonus, auto_claim 레벨 보상 즉시 지급.
 
-### 5-3. POST /api/season-pass/claim
+### 6-3. POST /api/season-pass/claim
 - 설명: 특정 레벨의 보상을 수동 수령한다.
-- 인증: ✅ 필요 (Authorization: Bearer JWT)
+- 인증: 필요 (Bearer JWT)
 - Method/Path: POST `/api/season-pass/claim`
 - Body(JSON): `{ "level": <int> }`
 - 성공 200 예시:
@@ -133,115 +138,130 @@
   "claimed_at": "2025-12-24T12:00:00+09:00"
 }
 ```
-- 주요 에러: 400(이미 수령), 401(인증 실패), 404(해당 레벨 보상 없음)
-- 비고: auto_claim 레벨은 수동 클레임 불가; 진행도(current_level) 미달 시 400 반환.
-  - 이미 수령 시 `REWARD_ALREADY_CLAIMED`, auto_claim 레벨 요청 시 `AUTO_CLAIM_LEVEL`.
+- 주요 에러: 400(`REWARD_ALREADY_CLAIMED`, `AUTO_CLAIM_LEVEL`, `LEVEL_NOT_REACHED`), 401(`AUTH_REQUIRED`/`TOKEN_INVALID`), 404(`LEVEL_NOT_FOUND`)
+- 비고: auto_claim 레벨은 수동 클레임 불가.
 
-### 5-4. GET /api/vault/status (요약)
-- 설명: 금고 locked/available/만료 정보를 반환. 해금 규칙은 `unlock_rules_json`을 사용해 프론트 하드코딩을 방지.
-- 비고: trial 보상→vault 적립 및 “1만원 자동 해금”은 **현재 미구현**이며 설계만 존재. Copy는 서버 룰 기반으로 렌더링 권장.
- - Phase 1 기준: `vault_locked_balance`를 단일 소스로 제공하고 `vault_balance`는 legacy mirror로 유지.
+### 6-4. GET /api/vault/status (요약)
+- 설명: 금고 locked/available/만료 정보를 반환한다.
+- 비고: Phase 1 기준 `locked_balance`가 단일 기준이며 `vault_balance`는 legacy mirror.
+- 주요 필드: `eligible`, `locked_balance`, `available_balance`, `expires_at`, `vault_balance`, `cash_balance`, `vault_fill_used_at`, `unlock_rules_json`.
 
-### 5-5. GET /api/ui-config/{key} (요약)
-- 설명: 앱 UI 문구/CTA 설정을 JSON으로 조회. `ticket_zero` 키를 사용해 token 부족 시 노출되는 Panel 문구/버튼을 실시간 운영.
-- 인증: 공개(필요 시 캐시 짧게 설정), Admin 편집은 `/admin/api/ui-config/{key}` 사용.
+### 6-5. GET /api/ui-config/{key} (요약)
+- 설명: 앱 UI 문구/CTA 설정을 JSON으로 조회한다. `ticket_zero` 키로 token_balance=0 패널 문구/버튼을 운영한다.
+- 인증: 공개(필요 시 캐시 짧게 설정). Admin 편집은 `/admin/api/ui-config/{key}` 사용.
 
 ## 7. 게임별 API (룰렛/주사위/복권/랭킹)
-각 게임 엔드포인트 공통 규칙: 오늘 `feature_type` 검증 → 유저 조건 체크 → 결과/보상 계산 → 레벨 `add_stamp` 연동(필요 시) → 로그 저장.
+각 게임 엔드포인트 공통 규칙: feature config 확인 → 유저 조건 체크 → 결과/보상 계산 → 시즌 패스 스탬프/로그 기록.
 
-### 6-1. GET /api/roulette/status (예시)
+### 7-1. 게임 Status/Play 공통 규칙
+- 엔드포인트: `/api/roulette|dice|lottery/status`, `/api/roulette|dice|lottery/play`
+- 인증: 필요 (Bearer JWT, TEST_MODE 예외)
+- Status 응답: `token_type`, `token_balance` 포함(미지급 시 0).
+- Play 에러: 토큰 부족 시 400(`NOT_ENOUGH_TOKENS`).
+- max_daily_* = 0은 무제한 sentinel, remaining=0이어도 차단하지 않는다.
+
+### 7-2. GET /api/roulette/status (예시)
 - 설명: 오늘 룰렛 플레이 가능 여부, 잔여 횟수, 보상 구성을 반환한다.
-- 인증: ✅ 필요
+- 인증: 필요
 - Method/Path: GET `/api/roulette/status`
 - 성공 200 예시:
 ```json
 {
-  "playable": true,
-  "remaining": 0,
-  "slots": [
-    {"label": "POINT_100", "weight": 40},
-    {"label": "POINT_1000", "weight": 5}
-  ]
+  "config_id": 1,
+  "name": "Test Roulette",
+  "max_daily_spins": 0,
+  "today_spins": 0,
+  "remaining_spins": 0,
+  "token_type": "ROULETTE_COIN",
+  "token_balance": 3,
+  "segments": [
+    {"id": 10, "label": "100 코인", "reward_type": "POINT", "reward_amount": 100, "slot_index": 0}
+  ],
+  "feature_type": "ROULETTE"
 }
 ```
-- 비고: 현재 max_daily_spins=0이므로 remaining=0은 "무제한"을 의미한다.
- - 비고: max_daily_spins=0 sentinel 정책은 remaining=0이어도 차단하지 않는다.
-- 주요 에러: 400(`DAILY_LIMIT_REACHED`, `INVALID_ROULETTE_CONFIG`), 403(`NO_FEATURE_TODAY`), 401(`UNAUTHORIZED`)
+- 주요 에러: 400(`INVALID_ROULETTE_CONFIG`, `INVALID_CONFIG`), 401(`AUTH_REQUIRED`/`TOKEN_INVALID`), 404(`NO_FEATURE_TODAY`)
+- 비고: max_daily_spins=0이면 remaining=0이어도 무제한 의미.
 
-### 6-2. POST /api/roulette/play (예시)
+### 7-3. POST /api/roulette/play (예시)
 - 설명: 룰렛을 1회 플레이하고 결과/보상을 반환한다.
-- 인증: ✅ 필요
+- 인증: 필요
 - Method/Path: POST `/api/roulette/play`
 - 성공 200 예시:
 ```json
 {
-  "result": "POINT_1000",
-  "reward_amount": 1000,
-  "stamp_added": true
+  "result": "OK",
+  "segment": {"id": 10, "label": "100 코인", "reward_type": "POINT", "reward_amount": 100, "slot_index": 0},
+  "season_pass": null
 }
 ```
-- 주요 에러: 400(`DAILY_LIMIT_REACHED`, `INVALID_ROULETTE_CONFIG`), 403(`NO_FEATURE_TODAY`), 401(`UNAUTHORIZED`)
+- 주요 에러: 400(`NOT_ENOUGH_TOKENS`, `INVALID_ROULETTE_CONFIG`, `INVALID_CONFIG`), 401(`AUTH_REQUIRED`/`TOKEN_INVALID`), 404(`NO_FEATURE_TODAY`)
 
-### 6-3. POST /api/dice/play (예시)
+### 7-4. POST /api/dice/play (예시)
 - 설명: 유저/딜러가 각각 2개씩 주사위를 굴려 합계를 비교하고 보상을 반환한다.
-- 인증: ✅ 필요
+- 인증: 필요
 - Method/Path: POST `/api/dice/play`
 - 성공 200 예시:
 ```json
 {
+  "result": "OK",
   "game": {
     "user_dice": [4, 6],
     "dealer_dice": [3, 2],
     "user_sum": 10,
     "dealer_sum": 5,
-    "outcome": "WIN"
+    "outcome": "WIN",
+    "reward_type": "POINT",
+    "reward_amount": 10000
   },
-  "reward": {"type": "POINT", "amount": 10000},
-  "stamp_added": false
+  "season_pass": null
 }
 ```
-- 비고: max_daily_plays=0이라 remaining 표시는 0이어도 무제한으로 간주한다.
- - 비고: max_daily_plays=0 sentinel 정책은 remaining=0이어도 차단하지 않는다.
-- 주요 에러: 400(`DAILY_LIMIT_REACHED`, `INVALID_FEATURE_SCHEDULE`), 403(`NO_FEATURE_TODAY`), 401(`UNAUTHORIZED`)
+- 주요 에러: 400(`NOT_ENOUGH_TOKENS`, `INVALID_CONFIG`), 401(`AUTH_REQUIRED`/`TOKEN_INVALID`), 404(`NO_FEATURE_TODAY`)
 
-### 6-4. POST /api/lottery/play (예시)
-- 설명: 복권 즉시당첨 결과를 반환한다(관리자 편집 가능한 label/reward/weight/stock/is_active 반영).
-- 인증: ✅ 필요
+### 7-5. POST /api/lottery/play (예시)
+- 설명: 복권 즉시당첨 결과를 반환한다.
+- 인증: 필요
 - Method/Path: POST `/api/lottery/play`
 - 성공 200 예시:
 ```json
 {
+  "result": "OK",
   "prize": {
     "id": 3,
     "label": "배민 2만",
     "reward_type": "COUPON",
     "reward_amount": 20000
   },
-  "stamp_added": true
+  "season_pass": null
 }
 ```
-  - 비고: max_daily_tickets=0이라 remaining 표시는 0이어도 무제한으로 간주한다.
-  - 비고: max_daily_tickets=0 sentinel 정책은 remaining=0이어도 차단하지 않는다.
-- 주요 에러: 400(`DAILY_LIMIT_REACHED`, `INVALID_LOTTERY_CONFIG`), 403(`NO_FEATURE_TODAY`), 401(`UNAUTHORIZED`)
+- 주요 에러: 400(`NOT_ENOUGH_TOKENS`, `INVALID_LOTTERY_CONFIG`, `INVALID_CONFIG`), 401(`AUTH_REQUIRED`/`TOKEN_INVALID`), 404(`NO_FEATURE_TODAY`)
 
-### 6-5. GET /api/ranking/today (예시)
-- 설명: 당일 랭킹(관리자 입력 ranking_daily 기준)을 조회한다.
-- 인증: ✅ 필요
+### 7-6. GET /api/ranking/today (예시)
+- 설명: 당일 랭킹(외부 랭킹 포함)을 조회한다.
+- 인증: 필요
 - Method/Path: GET `/api/ranking/today`
 - 성공 200 예시:
 ```json
 {
   "date": "2025-12-26",
-  "top": [
-    {"rank":1,"display_name":"김OO","score":550000},
-    {"rank":2,"display_name":"박OO","score":420000}
+  "entries": [],
+  "my_entry": null,
+  "external_entries": [
+    {"rank": 1, "user_id": 101, "user_name": "김OO", "deposit_amount": 550000, "play_count": 12, "memo": null}
   ],
-  "me": {"rank":12,"score":180000,"is_in_top":false}
+  "my_external_entry": {"rank": 12, "user_id": 201, "user_name": "박OO", "deposit_amount": 180000, "play_count": 4, "memo": null},
+  "feature_type": "RANKING"
 }
 ```
-- 주요 에러: 403(`NO_FEATURE_TODAY`), 401(`UNAUTHORIZED`)
+- 주요 에러: 401(`AUTH_REQUIRED`/`TOKEN_INVALID`), 404(`NO_FEATURE_TODAY`)
 
 ## 변경 이력
+- v1.3 (2025-12-25, 시스템 설계팀)
+  - today-feature 폐기/레거시 안내 추가, 인증/에러 코드 표준화 반영
+  - 게임/레벨/금고/티켓 제로 응답 요약 업데이트, 토큰 부족/일일 스탬프 오류 코드 반영
+  - 응답 예시를 최신 스키마에 맞춰 정리
 - v1.2 (2025-12-11, 시스템 설계팀)
   - `/api/today-feature` 인증을 선택 사항으로 전환하고 JWT가 있을 때만 `user_id`를 포함하도록 명세 수정
 - v1.1 (2025-12-06, 시스템 설계팀)

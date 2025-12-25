@@ -1,8 +1,8 @@
 # Vault(금고) 최종 설계 — Phase 1 Reset + 기존유저 전략 + 체험티켓 보상 적립(50판 황금선)
 
 - 문서 타입: 통합(정책 + UX 흐름 + 상태머신 + BE/FE/DB 맵핑)
-- 버전: v2.2
-- 작성일: 2025-12-23
+- 버전: v2.3
+- 작성일: 2025-12-25
 - 대상 독자: 기획자, 백엔드/프론트엔드 개발자
 - 스코프: Phase 1(Reset) + Phase 2 확장 가드레일(Protect)까지
 
@@ -23,7 +23,10 @@
 - (리텐션 철학) 기존유저용 Vault: “보너스 이벤트”가 아니라 “내가 이미 벌어둔 자산이 잠겨 있다”는 Lock-in 자산
 - (핵심 추가) Phase 1 적립 단위를 게임 플레이(비용 소모 + 결과 확정) 기반으로 정의한다.
   - 50판 기준 locked 누적이 11,000~14,000원(황금선)으로 수렴하도록 단위를 설계한다.
+- (만료 규칙) 금고 누적액이 해금 임계금액(1만/2만/3만 원 등 단계별 설정) 도달 시에만 24h 만료 타이머가 시작된다. 이후 추가 적립이 있어도 타이머는 갱신되지 않는다.
+- (체험티켓) 지급/보상 적립/멱등 등 모든 체험티켓 기능은 2026-02까지 보류한다.
 - (체험티켓) 보상은 “표준화된 earn 이벤트”로만 금고에 적립한다(earn_event_id 멱등 + reward_kind 태깅 + 금액 환산 테이블 + 롤아웃 플래그).
+- (지급 경로) 해금된 금액은 **운영/관리자 수동 또는 외부에서 지급**한다(현 시점 캐시/코인 자동 지급 없음, XP/게임 티켓도 사용하지 않음).
 
 ---
 
@@ -92,7 +95,7 @@ Phase 1 단일 기준(중요)
 
 ---
 
-## 3) 현재 레포 구현 스냅샷(2025-12-23)
+## 3) 현재 레포 구현 스냅샷(2025-12-25)
 
 > 이 섹션은 Phase 1 Reset 문서의 “현재 구현”을 통합본에 요약 이관한 것이다.
 
@@ -123,7 +126,7 @@ Phase 1 단일 기준(중요)
 ### 3.3 서비스
 - `VaultService.get_status()`: status 조회로 자동 시드하지 않음
 - `VaultService.fill_free_once()`: 1회 제한 + 시드 보장 로직 포함
-- `VaultService.handle_deposit_increase_signal()`: deposit delta 기반 해금 계산/적용(locked 감소 + cash 지급)
+- `VaultService.handle_deposit_increase_signal()`: deposit delta 기반 해금 계산/적용(locked 감소, 지급은 운영/외부 수동)
 - `AdminExternalRankingService.upsert_many()`: deposit 증가 감지 → VaultService에 위임
 
 ### 3.4 프론트 UI 접점
@@ -137,9 +140,9 @@ Phase 1 단일 기준(중요)
 이 문서는 **(A) 이미 레포에 구현된 것**과 **(B) 앞으로 구현해야 하는 설계**를 함께 담는다. 혼동 방지를 위해 아래를 기준으로 해석한다.
 
 - ✅ 이미 구현됨(레포 기준)
-  - 금고: `vault_locked_balance` 단일 기준 + 24h 만료 + mirror 동기화 + free fill 1회
-  - 해금 트리거: 외부랭킹 예치(deposit) 증가 신호 → locked 감소 + `cash_balance` 지급(원장 기록)
-  - 체험티켓: ticket=0 대응용 **토큰(게임 지갑) 1장 지급**(일 1회, 멱등)
+  - 금고: `vault_locked_balance` 단일 기준 + (임계금액 도달 시) 24h 만료 + mirror 동기화 + free fill 1회
+  - 해금 트리거: 외부랭킹 예치(deposit) 증가 신호 → locked 감소, 지급은 운영/외부 수동(자동 캐시/코인 지급 없음)
+  - 체험티켓: ticket=0 대응용 **토큰(게임 지갑) 1장 지급**(일 1회, 멱등) — **2026-02까지 보류**
 
 - ❌ 아직 구현되지 않음(현재 코드에는 없음)
   - “체험티켓 결과 보상(가치)이 금고에 적립되어 누적된다” (본 문서의 설계/정책)
@@ -155,10 +158,10 @@ Phase 1 단일 기준(중요)
 ## 4) ✅ Phase 1 적립 정책(권장): “50판 황금선(11,000~14,000)”
 
 ### 4.1 적립 단위(기본)
-- 트리거: **비용 소모 + 결과 확정**(ticket/coin spend AND game result finalized)
+- 트리거: **비용 소모 + 결과 확정**(ticket spend AND game result finalized)
 - 판당 기본 적립(비용 소모 + 결과 발생 시): **200원**
 - 패배 추가 적립(lose 보정): **+100원**
-- 체험티켓(무료/프로모) 보상은 **게임 결과로 산출된 보상 금액 전액을 locked에 적립**한다(earn_amount = payout), 단 동일 이벤트 중복 적립 방지를 위해 earn_event_id 필수.
+- 체험티켓(무료/프로모) 보상 금고 적립: **2026-02까지 보류** (적립/환산/멱등 로직 미적용)
 
 권장 운영 원칙
 - 금고는 “락인 자산” 역할 고정(예측 가능한 누적/만료/해금)
@@ -180,13 +183,13 @@ Phase 1 단일 기준(중요)
 
 ```mermaid
 flowchart TD
-  A["게임 입장"] --> B["티켓/코인 소모 + 결과 확정"]
+  A["게임 입장"] --> B["티켓 소모 + 결과 확정"]
   B -->|"즉시"| C["금고(locked) 누적 카운트업\n카피: 내가 벌어둔 돈"]
   C --> D["티켓 부족/0 도달"]
   D -->|"자동"| E["Vault Modal 오픈\n금고에 12,500원 보관 중\n해결 CTA"]
 
   E -->|"A"| F["씨씨 이용하기(입금 확인)"]
-  F --> G["해금(정책: 일부/전액)\nlocked 감소 + available/cash 증가"]
+  F --> G["해금(정책: 일부/전액)\nlocked 감소 + 운영/외부 수동 지급"]
   G --> H["즉시 플레이 재개"]
 
   E -->|"B (Phase2부터)"| I["유지/보호 행동"]
@@ -210,15 +213,13 @@ stateDiagram-v2
   LOCKED --> AVAILABLE : 입금 확인(해금)\n(정책: 일부/전액)
   LOCKED --> EXPIRED : expires_at 도래\nlocked_balance = 0
 
-  AVAILABLE --> [*] : (Phase 1에서는 경제/사용 정책에 따라\n보유머니(cash)로 지급 유지 가능)
+  AVAILABLE --> [*] : (Phase 1 지급 경로는 운영/외부 수동 지급으로 확정)
 ```
 
-### 6.2 Phase 1 만료 타이머 규칙(최소/명확)
-- 첫 적립 시 expires_at 생성: `now + 24h`
-- 추가 적립이 있어도 expires_at은 **갱신하지 않음**
-  - 단순/예측 가능
-  - Phase 1 의도(“미루면 사라짐”)를 유지
-- Phase2부터 “보호/연장(PROTECT)”로만 갱신 가능
+### 6.2 Phase 1 만료 타이머 규칙(임계금액 기반)
+- 금고 누적액이 **해금 임계금액**에 도달할 때만 expires_at 생성: 예) 10,000원→ `now +24h`, 이후 20,000원/30,000원 단계로 확장 가능(설정값으로 관리).
+- 추가 적립이 있어도 동일 타이머는 **갱신하지 않음**(도달 시 한 번만 시작).
+- Phase2부터 “보호/연장(PROTECT)”로만 갱신 가능.
 
 ---
 
@@ -236,10 +237,10 @@ stateDiagram-v2
 
 | VaultEarnType | Category | Phase | 트리거 조건 | 금고 효과(단위) | 비고 |
 |---|---|---|---|---|---|
-| GAME_PLAY_SPEND_RESULT | EARN | PHASE_1 | 티켓/코인 소모 + 결과 확정 | `+200/판` | “판수=자산” 핵심 |
+| GAME_PLAY_SPEND_RESULT | EARN | PHASE_1 | 티켓 소모 + 결과 확정 | `+200/판` | “판수=자산” 핵심 |
 | GAME_LOSE_BONUS | EARN | PHASE_1 | 결과가 LOSE | `+100/패` | 운 나쁜 날 더 쌓임 |
 | TEAM_BATTLE_PLAY_SPEND_RESULT | EARN | PHASE_1 | 팀배틀 참여 + 결과 확정 | `+200/판 (+100/패)` | 단위 통일 |
-| TRIAL_TICKET_RESULT | EARN | PHASE_1 | 체험티켓 플레이 결과 확정 | `보상 금액 전액`(earn_amount = payout) | 무료/프로모 보상 그대로 적립, 중복 방지 필요 |
+| TRIAL_TICKET_RESULT | PAUSED | PHASE_1 | 체험티켓 기능 보류(2026-02까지) | `—` | 적립/환산/멱등 미적용 |
 | TICKET_SPEND_ONLY_BLOCKED | EARN | PHASE_1 | (선택) 소모만 있고 결과 취소/에러 | `+0` | 금지 권장(가치/결과 없음) |
 
 ### 7.2 Phase 2 — 유지/보호/연장(PROTECT)
@@ -259,14 +260,15 @@ stateDiagram-v2
 
 ---
 
-## 8) 체험티켓 보상 적립 충돌 방지(표준 이벤트)
+## 8) 체험티켓 보상 적립 충돌 방지(표준 이벤트) — **2026-02까지 보류**
 
-- 목적: 테이블/스키마 없이도 체험티켓 보상 적립을 안전하게 흡수(표준 이벤트 + 멱등 + 금액 환산 가드).
-- 적용 원칙: 금고 적립 입력은 **VaultEarnEvent** DTO로만 받는다. 금액 환산이 불가능한 상품은 적립하지 않고 로그만 남긴다.
+- 상태: 체험티켓 지급/보상 적립/멱등/환산 전부 일시 중단. 재개 시 본 섹션을 적용.
+- 목적(재개 시): 테이블/스키마 없이도 체험티켓 보상 적립을 안전하게 흡수(표준 이벤트 + 멱등 + 금액 환산 가드).
+- 적용 원칙(재개 시): 금고 적립 입력은 **VaultEarnEvent** DTO로만 받는다. 금액 환산이 불가능한 상품은 적립하지 않고 로그만 남긴다.
 
 ### 8.0 현재 코드 갭(왜 필요한가)
 
-현재 레포 구현은 “체험티켓=게임 지갑 토큰 지급”까지이며, **체험티켓 플레이 결과를 금고로 적립하는 연결은 아직 없다**.
+현재 레포 구현은 “체험티켓=게임 지갑 토큰 지급”까지이며, **체험티켓 플레이 결과를 금고로 적립하는 연결은 아직 없다**. (또한 2026-02까지 기능 보류 상태)
 
 - trial 지급은 `UserGameWalletLedger`로만 기록된다(토큰 잔액 관점).
 - 게임 보상 지급은 `RewardService.deliver()`가 `cash_balance`/게임토큰으로 분기한다.
@@ -275,7 +277,7 @@ stateDiagram-v2
   - (필수) earn_event_id(멱등 키) 생성/검증
   - (선택) 금액 환산 맵(미정의 보상은 SKIP)
 
-### 8.1 정책 요약 (방어책)
+### 8.1 정책 요약 (방어책, 재개 시 적용)
 - 입력 표준화: 게임 결과 → `VaultEarnEvent { earn_event_id, user_id, amount, source="TRIAL", token_type, game_type, reward_kind }`
 - 강제 멱등: `earn_event_id`는 결과 로그 ID 또는 `(game_result_id, user_id, ts)` 해시.
   - 새 테이블을 추가하지 않는다면, **기존 로그/ledger에 earn_event_id를 meta로 기록**하고 동일 키가 이미 존재하는지 조회하는 방식으로 중복을 막는다(성능 이슈가 생기면 Phase 2에서 전용 테이블/인덱스로 승격).
@@ -285,14 +287,14 @@ stateDiagram-v2
 - 분리 로깅: `source=TRIAL`, `reward_kind`, `payout_raw`(가능하면) 기록. SKIP 사유 집계.
 - 롤아웃 가드: `enable_trial_payout_to_vault` 플래그 + 화이트리스트(게임/유저 범위)로 점진 적용.
 
-### 8.2 VaultEarnEvent DTO 예시
+### 8.2 VaultEarnEvent DTO 예시 (재개 시 적용)
 ```
 {
   "earn_event_id": "roulette:result:12345",   // 멱등 키
   "user_id": 42,
   "amount": 12500,                             // 환산된 원화 기준 금액; 미환산 시 null/0으로 스킵
   "source": "TRIAL",                         // trial/ticket_zero 출처 식별
-  "token_type": "ROULETTE_COIN",             // GameTokenType
+  "token_type": "ROULETTE_TOKEN",             // GameTokenType
   "game_type": "ROULETTE",                   // 게임 분류
   "reward_kind": "CASH",                     // CASH | ITEM | TOKEN | TICKET | BUNDLE
   "payout_raw": { "reward_id": "promo_box_A", "items": [ ... ] },
@@ -300,13 +302,13 @@ stateDiagram-v2
 }
 ```
 
-### 8.3 trial_reward_valuation 샘플(설정 맵)
+### 8.3 trial_reward_valuation 샘플(설정 맵, 재개 시 적용)
 ```json
 {
   "ROULETTE": {
     "promo_box_A": 5000,
     "promo_box_B": 10000,
-    "coin_pack_small": 2000
+    "token_pack_small": 2000
   },
   "DICE": {
     "free_spin_reward": 1500
@@ -387,12 +389,12 @@ stateDiagram-v2
 | 날짜 | 테마 | 미션(트리거) | 즉시 보상 | 1/1 예약 보상 |
 |---|---|---|---|---|
 | 12/25 | 성탄의 열쇠 | 룰렛 5회 참여 | 룰렛 티켓 3개 | 신년 패스 1레벨 점프권 |
-| 12/26 | 결속의 열쇠 | 10만 원 이상 입금 | 10만 CC 코인 1개 | 신년 팀 배틀 전용 엠블럼 |
+| 12/26 | 결속의 열쇠 | 10만 원 이상 입금 | 10만 CC 1개 | 신년 팀 배틀 전용 엠블럼 |
 | 12/27 | 행운의 열쇠 | 복권 5회 참여 | 복권 티켓 3장 | 신년 잭팟 확률 +5% 부스트 |
 | 12/28 | 인내의 열쇠 | 주사위 10회 참여 | 배민 1만원권(기프티콘) | 신년용 주사위 토큰 20개 |
-| 12/29 | 전략의 열쇠 | 3종 게임 각 5회 | CC 코인 2개 | 신년 얼리버드 전용 칭호 |
+| 12/29 | 전략의 열쇠 | 3종 게임 각 5회 | CC 2개 | 신년 얼리버드 전용 칭호 |
 | 12/30 | 기다림의 열쇠 | 10만 원 이상 입금 | 팀 배틀 참여권 1장 | 신년 무료 보너스 5,000P |
-| 12/31 | 해방의 열쇠 | 23시 이후 로그인 | 룰렛 코인 10개 | 신년 금고 즉시 개방 |
+| 12/31 | 해방의 열쇠 | 23시 이후 로그인 | 룰렛 토큰 10개 | 신년 금고 즉시 개방 |
 
 ### 14.2 백엔드/DB (기술 스펙)
 
