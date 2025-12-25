@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { getVaultStatus } from "../../api/vaultApi";
 import { getUiConfig } from "../../api/uiConfigApi";
 import VaultModal from "./VaultModal";
-import { useAuth } from "../../auth/authStore";
 import AnimatedCountdown from "../common/AnimatedCountdown";
 import { parseVaultUnlockRules } from "../../utils/vaultUtils";
 
@@ -126,7 +125,6 @@ const VaultVisual: React.FC<{ stateLabel: string; eligible: boolean }> = ({ stat
 
 const VaultMainPanel: React.FC = () => {
   const [vaultModalOpen, setVaultModalOpen] = useState(false);
-  const { user } = useAuth();
 
   const vault = useQuery({
     queryKey: ["vault-status"],
@@ -197,11 +195,20 @@ const VaultMainPanel: React.FC = () => {
       : Array.isArray(v?.rewardPreviewItems)
         ? (v?.rewardPreviewItems as unknown[]) : null;
 
-    const items: RewardPreviewItem[] | null = rawItems ? rawItems.map((item) => {
-      if (!item || typeof item !== "object") return null;
-      const r = item as Record<string, unknown>;
-      return { label: r.label as string, amount: r.amount as number, unit: r.unit as string };
-    }).filter((i): i is RewardPreviewItem => i !== null) : null;
+    const items: RewardPreviewItem[] | null = rawItems
+      ? rawItems
+        .map((item) => {
+          if (!item || typeof item !== "object") return null;
+          const r = item as Record<string, unknown>;
+          if (!r.label) return null;
+          return {
+            label: String(r.label),
+            amount: typeof r.amount === "number" ? r.amount : undefined,
+            unit: typeof r.unit === "string" ? r.unit : undefined,
+          };
+        })
+        .filter((i): i is RewardPreviewItem => i !== null)
+      : null;
 
     const rawProgress = (v?.reward_preview_progress ?? v?.rewardPreviewProgress) as Record<string, unknown> | null;
     const currentPoints = (rawProgress?.current_points ?? rawProgress?.currentPoints ?? null) as number | null;

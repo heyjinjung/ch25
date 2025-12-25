@@ -12,8 +12,8 @@ type Props = {
 };
 
 const DEFAULT_COPY = {
-  title: "티켓이 0이에요 (모두 소진)",
-  body: "체험 티켓을 모두 사용하셨네요. 10레벨만 달성해도 Diamond Key를 확정 지급합니다!",
+  title: "금고 시스템 이용 안내",
+  body: "지민코드 활동을 통해 적립된 포인트는 금고에 안전하게 보관됩니다.\n씨씨카지노 이용 내역 확인 시 즉시 해금되어 보유 머니로 전환됩니다.",
   primary_cta_label: "씨씨카지노 바로가기",
   secondary_cta_label: "실장 텔레 문의",
 };
@@ -34,16 +34,12 @@ const VaultModal: React.FC<Props> = ({ open, onClose, ctaPayload, unlockRulesJso
     const data = copyQuery.data;
     if (!data) return DEFAULT_COPY;
     return {
-      title: typeof data.title === "string" && data.title ? data.title : DEFAULT_COPY.title,
-      body: typeof data.body === "string" && data.body ? data.body : DEFAULT_COPY.body,
-      primary_cta_label:
-        typeof data.primary_cta_label === "string" && data.primary_cta_label
-          ? data.primary_cta_label
-          : DEFAULT_COPY.primary_cta_label,
-      secondary_cta_label:
-        typeof data.secondary_cta_label === "string" && data.secondary_cta_label
-          ? data.secondary_cta_label
-          : DEFAULT_COPY.secondary_cta_label,
+      title: (typeof data.title === "string" && data.title) ? data.title : DEFAULT_COPY.title,
+      body: (typeof data.body === "string" && data.body) ? data.body : DEFAULT_COPY.body,
+      primary_cta_label: (typeof data.primary_cta_label === "string" && data.primary_cta_label)
+        ? data.primary_cta_label : DEFAULT_COPY.primary_cta_label,
+      secondary_cta_label: (typeof data.secondary_cta_label === "string" && data.secondary_cta_label)
+        ? data.secondary_cta_label : DEFAULT_COPY.secondary_cta_label,
     };
   }, [copyQuery.data]);
 
@@ -52,30 +48,42 @@ const VaultModal: React.FC<Props> = ({ open, onClose, ctaPayload, unlockRulesJso
 
   return (
     <Modal title={copy.title} open={open} onClose={onClose}>
-      <div className="space-y-4">
-        <p className="text-slate-200/90 whitespace-pre-wrap">{copy.body}</p>
-
-        {isTicketZero && (
-          <div className="rounded-xl bg-secondary-400/10 p-3 border border-secondary-400/20">
-            <p className="text-sm font-bold text-secondary-200 text-center">
-              🔥 10레벨 달성 시 Diamond Key 확정!
-            </p>
+      <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-4">
+          <div className="p-5 rounded-[24px] bg-white/5 border border-white/5">
+            <p className="text-white/80 text-sm leading-relaxed whitespace-pre-wrap">{copy.body}</p>
           </div>
-        )}
+
+          {isTicketZero && (
+            <div className="p-4 rounded-[20px] bg-gradient-to-r from-cc-lime/20 to-cc-lime/5 border border-cc-lime/30 flex items-center gap-4">
+              <span className="text-2xl">🔥</span>
+              <p className="text-sm font-black text-cc-lime">
+                10레벨 달성 시 Diamond Key 확정 지급!
+              </p>
+            </div>
+          )}
+        </div>
 
         {rules.length > 0 && (
-          <div className="rounded-xl bg-black/30 p-3 text-xs md:text-sm text-white/70 space-y-1">
-            <p className="font-bold text-white/90 mb-2">[해금 조건 안내]</p>
-            {rules.map((r, i) => <p key={i}>- {r}</p>)}
+          <div className="flex flex-col gap-3">
+            <h5 className="text-white/40 text-[10px] font-black uppercase tracking-[0.2em] px-1">Unlock Conditions</h5>
+            <div className="flex flex-col gap-2">
+              {rules.map((r, i) => (
+                <div key={i} className="flex gap-3 items-center p-3 rounded-xl bg-black/40 border border-white/5">
+                  <div className="h-1.5 w-1.5 rounded-full bg-cc-lime" />
+                  <p className="text-white/70 text-[13px] font-bold">{r}</p>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
-        <div className="flex flex-wrap gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
           <a
             href={PRIMARY_URL}
             target="_blank"
             rel="noreferrer"
-            className="rounded-xl border border-black/15 bg-cc-lime px-4 py-2 text-sm font-extrabold text-black"
+            className="flex items-center justify-center p-4 rounded-2xl bg-cc-lime text-black font-black text-sm hover:scale-105 transition-transform"
           >
             {copy.primary_cta_label}
           </a>
@@ -83,15 +91,11 @@ const VaultModal: React.FC<Props> = ({ open, onClose, ctaPayload, unlockRulesJso
             href={SECONDARY_URL}
             target="_blank"
             rel="noreferrer"
-            className="rounded-xl border border-white/15 bg-white/8 px-4 py-2 text-sm font-extrabold text-white/90 hover:bg-white/12"
+            className="flex items-center justify-center p-4 rounded-2xl bg-white/10 text-white font-black text-sm border border-white/10 hover:bg-white/20 transition-all"
           >
             {copy.secondary_cta_label}
           </a>
         </div>
-
-        {copyQuery.isError ? (
-          <p className="text-xs text-white/55">안내 문구를 불러오지 못해 기본 문구로 표시 중입니다.</p>
-        ) : null}
       </div>
     </Modal>
   );
