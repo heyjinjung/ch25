@@ -465,3 +465,114 @@ class VaultService:
             return 0
 
         return amount
+
+    def record_trial_result_earn_event(
+        self,
+        db: Session,
+        *,
+        user_id: int,
+        game_type: str,
+        game_log_id: int,
+        token_type: str | None,
+        reward_type: str | None,
+        reward_amount: int | None,
+        payout_raw: dict | None = None,
+        now: datetime | None = None,
+    ) -> int:
+        """Idempotently route a TRIAL play reward into Vault (Phase 1 locked).
+
+        Guarded by ENABLE_TRIAL_PAYOUT_TO_VAULT.
+        - Uses a separate earn_event_id namespace: TRIAL:{GAME}:{LOG_ID}:{REWARD_ID}
+        - Valuation:
+          - POINT: amount = reward_amount
+          - otherwise: settings.trial_reward_valuation["{REWARD_TYPE}:{REWARD_AMOUNT}"]
+        - If valuation is missing/non-monetary, records a 0-amount event as SKIP (no vault mutation).
+
+        Returns the amount actually added to locked balance (0 if skipped/duplicate/not eligible).
+        """
+
+        settings = get_settings()
+        if not bool(getattr(settings, "enable_trial_payout_to_vault", False)):
+            return 0
+
+        now_dt = now or datetime.utcnow()
+
+        # Eligibility guard (Phase 1 funnel).
+        if not self._eligible(db, user_id, now_dt):
+            return 0
+
+        rt = str(reward_type or "").upper()
+        ra = int(reward_amount or 0)
+        reward_id = f"{rt}:{ra}"
+        earn_event_id = f"TRIAL:{str(game_type).upper()}:{int(game_log_id)}:{reward_id}"
+
+        exists = db.execute(select(VaultEarnEvent.id).where(VaultEarnEvent.earn_event_id == earn_event_id)).first()
+        if exists is not None:
+            return 0
+
+        amount = 0
+        reward_kind: str | None = None
+        if rt == "POINT" and ra > 0:
+            amount = ra
+            reward_kind = "POINT"
+        else:
+            valuation = getattr(settings, "trial_reward_valuation", {}) or {}
+            try:
+                amount = int(valuation.get(reward_id, 0) or 0)
+            except Exception:
+                amount = 0
+            reward_kind = "VALUED" if amount > 0 else "SKIP_NO_VALUATION"
+
+        # Only mutate vault when amount > 0; still record a 0-amount SKIP event.
+        user = None
+        if amount > 0:
+            q = db.query(User).filter(User.id == user_id)
+            if db.bind and db.bind.dialect.name != "sqlite":
+                q = q.with_for_update()
+            user = q.one_or_none()
+            if user is None and db.bind and db.bind.dialect.name == "sqlite":
+                user = User(id=user_id, external_id=f"test-user-{user_id}")
+                db.add(user)
+                db.commit()
+                db.refresh(user)
+            if user is None:
+                return 0
+
+            self._expire_locked_if_due(user, now_dt)
+            user.vault_locked_balance = int(user.vault_locked_balance or 0) + int(amount)
+            self._ensure_locked_expiry(user, now_dt)
+            self.sync_legacy_mirror(user)
+            db.add(user)
+
+        event = VaultEarnEvent(
+            user_id=int(user_id),
+            earn_event_id=earn_event_id,
+            earn_type="TRIAL_PAYOUT",
+            amount=int(amount),
+            source=str(game_type).upper(),
+            reward_kind=reward_kind,
+            game_type=str(game_type).upper(),
+            token_type=token_type,
+            payout_raw_json={
+                **(payout_raw or {}),
+                "reward_type": reward_type,
+                "reward_amount": reward_amount,
+                "reward_id": reward_id,
+            },
+            created_at=now_dt,
+        )
+        db.add(event)
+
+        if amount > 0:
+            try:
+                Vault2Service().accrue_locked(db, user_id=int(user_id), amount=int(amount), now=now_dt, commit=False)
+            except Exception:
+                pass
+
+        try:
+            db.commit()
+        except IntegrityError:
+            db.rollback()
+            return 0
+
+        return int(amount) if amount > 0 else 0

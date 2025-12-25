@@ -149,7 +149,7 @@ class RouletteService:
             weighted_segments.extend([seg] * max(seg.weight, 0))
         chosen = random.choice(weighted_segments)
 
-        self.wallet_service.require_and_consume_token(
+        _, consumed_trial = self.wallet_service.require_and_consume_token(
             db,
             user_id,
             token_type,
@@ -185,6 +185,19 @@ class RouletteService:
             },
         )
 
+        settings = get_settings()
+        if consumed_trial and bool(getattr(settings, "enable_trial_payout_to_vault", False)):
+            self.vault_service.record_trial_result_earn_event(
+                db,
+                user_id=user_id,
+                game_type=FeatureType.ROULETTE.value,
+                game_log_id=log_entry.id,
+                token_type=token_type.value,
+                reward_type=chosen.reward_type,
+                reward_amount=chosen.reward_amount,
+                payout_raw={"segment_id": chosen.id},
+            )
+
         xp_award = self.BASE_GAME_XP
         ctx = GamePlayContext(user_id=user_id, feature_type=FeatureType.ROULETTE.value, today=today)
         log_game_play(
@@ -199,14 +212,15 @@ class RouletteService:
             },
         )
 
-        # Deliver reward according to segment definition.
-        self.reward_service.deliver(
-            db,
-            user_id=user_id,
-            reward_type=chosen.reward_type,
-            reward_amount=chosen.reward_amount,
-            meta={"reason": "roulette_spin", "segment_id": chosen.id, "game_xp": xp_award},
-        )
+        # Deliver reward according to segment definition (unless trial routing is enabled).
+        if not (consumed_trial and bool(getattr(settings, "enable_trial_payout_to_vault", False))):
+            self.reward_service.deliver(
+                db,
+                user_id=user_id,
+                reward_type=chosen.reward_type,
+                reward_amount=chosen.reward_amount,
+                meta={"reason": "roulette_spin", "segment_id": chosen.id, "game_xp": xp_award},
+            )
         if chosen.reward_amount > 0:
             self.season_pass_service.maybe_add_internal_win_stamp(db, user_id=user_id, now=today)
         season_pass = None  # 게임 1회당 자동 스탬프 발급을 중단하고, 조건 달성 시 별도 로직으로 처리

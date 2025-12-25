@@ -28,7 +28,7 @@ def upgrade() -> None:
         sa.Column("reward_kind", sa.String(length=50), nullable=True),
         sa.Column("game_type", sa.String(length=50), nullable=True),
         sa.Column("token_type", sa.String(length=50), nullable=True),
-        sa.Column("payout_raw_json", sa.JSON(), nullable=False, server_default=sa.text("'{}'")),
+        sa.Column("payout_raw_json", sa.JSON(), nullable=True),
         sa.Column("created_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
         sa.UniqueConstraint("earn_event_id", name="uq_vault_earn_event_earn_event_id"),
     )

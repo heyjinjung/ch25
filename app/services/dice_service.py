@@ -6,6 +6,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import InvalidConfigError
+from app.core.config import get_settings
 from app.models.dice import DiceConfig, DiceLog
 from app.models.feature import FeatureType
 from app.models.game_wallet import GameTokenType
@@ -106,7 +107,7 @@ class DiceService:
             reward_type = config.lose_reward_type
             reward_amount = config.lose_reward_amount
 
-        self.wallet_service.require_and_consume_token(
+        _, consumed_trial = self.wallet_service.require_and_consume_token(
             db,
             user_id,
             token_type,
@@ -148,6 +149,20 @@ class DiceService:
             },
         )
 
+        # Trial: optionally route reward into Vault instead of direct payout.
+        settings = get_settings()
+        if consumed_trial and bool(getattr(settings, "enable_trial_payout_to_vault", False)):
+            self.vault_service.record_trial_result_earn_event(
+                db,
+                user_id=user_id,
+                game_type=FeatureType.DICE.value,
+                game_log_id=log_entry.id,
+                token_type=token_type.value,
+                reward_type=reward_type,
+                reward_amount=reward_amount,
+                payout_raw={"result": outcome},
+            )
+
         xp_award = self.WIN_GAME_XP if outcome == "WIN" else self.BASE_GAME_XP
         ctx = GamePlayContext(user_id=user_id, feature_type=FeatureType.DICE.value, today=today)
         log_game_play(
@@ -162,13 +177,14 @@ class DiceService:
             },
         )
 
-        self.reward_service.deliver(
-            db,
-            user_id=user_id,
-            reward_type=reward_type,
-            reward_amount=reward_amount,
-            meta={"reason": "dice_play", "outcome": outcome, "game_xp": xp_award},
-        )
+        if not (consumed_trial and bool(getattr(settings, "enable_trial_payout_to_vault", False))):
+            self.reward_service.deliver(
+                db,
+                user_id=user_id,
+                reward_type=reward_type,
+                reward_amount=reward_amount,
+                meta={"reason": "dice_play", "outcome": outcome, "game_xp": xp_award},
+            )
         if outcome == "WIN":
             self.season_pass_service.maybe_add_internal_win_stamp(db, user_id=user_id, now=today)
         # 게임 설정 포인트를 레벨 XP 보너스로 반영

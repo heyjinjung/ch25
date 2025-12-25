@@ -129,4 +129,9 @@ class TrialGrantService:
             label=label,
             meta={"source": "ticket_zero", "date": today_kst.isoformat()},
         )
+        try:
+            self.wallet_service.mark_trial_grant(db, user_id=user_id, token_type=token_type, amount=1)
+        except Exception:
+            # Keep grant resilient; bucket is best-effort bookkeeping.
+            pass
         return 1, balance_after, label

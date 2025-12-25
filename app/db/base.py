@@ -50,4 +50,5 @@ from app.models import (  # noqa: F401
     VaultProgram,
     VaultStatus,
     VaultEarnEvent,
+    TrialTokenBucket,
 )

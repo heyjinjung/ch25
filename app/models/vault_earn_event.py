@@ -5,7 +5,7 @@ This table records accrual events that add to the Phase 1 vault locked balance.
 
 from datetime import datetime
 
-from sqlalchemy import Column, DateTime, ForeignKey, Index, Integer, String
+from sqlalchemy import JSON, Column, DateTime, ForeignKey, Index, Integer, String
 from sqlalchemy.dialects.mysql import JSON as MySQLJSON
 from sqlalchemy.orm import relationship
 
@@ -42,7 +42,7 @@ class VaultEarnEvent(Base):
     token_type = Column(String(50), nullable=True)
 
     # Optional raw payload for debugging/ops.
-    payout_raw_json = Column(MySQLJSON().with_variant(MySQLJSON, "mysql"), nullable=False, default=dict)
+    payout_raw_json = Column(JSON().with_variant(MySQLJSON, "mysql"), nullable=True, default=dict)
 
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
 
