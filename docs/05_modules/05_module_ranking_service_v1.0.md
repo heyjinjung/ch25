@@ -1,30 +1,28 @@
 # RankingService 모듈 기술서
 
 - 문서 타입: 모듈
-- 버전: v1.1
-- 작성일: 2025-12-09
+- 버전: v1.2
+- 작성일: 2025-12-25
 - 작성자: 시스템 설계팀
 - 대상 독자: 백엔드 개발자
 
 ## 1. 목적 (Purpose)
-- RANKING Day에 오늘 기준 Top N 랭킹 리스트와 내 위치/점수를 조회하는 로직을 정의한다.
+- RANKING Day에 외부 집계된 랭킹 데이터(ExternalRankingData)를 조회하고 내 위치/점수를 반환하는 로직을 정의한다.
 
 ## 2. 범위 (Scope)
 - 코드 경로: `backend/app/services/ranking_service.py`와 랭킹 전용 라우터/스키마/DB 테이블 책임을 다룬다.
-- 랭킹 데이터는 관리자가 수기로 `ranking_daily`를 채우거나 업로드하며, 본 서비스는 조회만 담당한다.
-- Admin 업로드 경로: `/admin/ranking` 화면/엔드포인트를 통해 ranking_daily CSV/수기 입력을 반영하며, 업로드 성공 후 `/api/ranking/today`가 즉시 갱신된다.
+- 랭킹 데이터 소스는 `external_ranking_data`(app.models.external_ranking.ExternalRankingData) 테이블로, 외부 파이프라인/배치가 입력한다. 본 서비스는 조회만 담당한다.
 
 ## 3. 용어 정의 (Definitions)
-- Ranking Score: `ranking_daily.score`에 저장되는 당일 점수(예: 이용액, 충전액, 미션 점수 등).
-- Precomputed Rank: 관리자가 직접 입력해 저장한 rank 값.
-- Display Name: `ranking_daily.display_name`에 저장되는 노출용 이름/가명(유저 실명/ID 노출 최소화).
-- Top N: 클라이언트가 조회할 상위 N명 목록, 기본 10명.
+- External Ranking: `external_ranking_data`에 저장된 외부 집계 값. deposit_amount/ play_count 기준으로 정렬한다.
+- Display Name: `user.nickname` → `user.external_id` 순으로 노출 이름을 결정하며, 둘 다 없으면 "닉네임 없음"으로 채운다.
+- Rank Ordering: deposit_amount DESC, play_count DESC, user_id ASC 순으로 1-based rank를 계산한다.
 
 ## 4. 책임 (Responsibilities)
 - 오늘 feature_type=RANKING인지, feature_config.is_enabled=1인지 검증 후 비활성 시 조회 차단(`NO_FEATURE_TODAY`). feature_schedule이 0건/2건이면 `INVALID_FEATURE_SCHEDULE` 처리.
-- ranking_daily에서 오늘 날짜 기준 상위 N 레코드 조회, display_name 또는 nickname 포함해 응답 구성.
-- 현재 사용자(user_id)에 해당하는 레코드 조회하여 내 rank/score/is_in_top 여부 반환(없으면 rank=None, is_in_top=False).
-- user_event_log에 조회 이벤트 기록, SeasonPassService 연동은 기본 없음(정책 시 추가 가능).
+- ExternalRankingData 전 레코드를 정렬 규칙에 따라 순회해 external_entries(ranks) 배열을 구성한다.
+- 현재 사용자(user_id)에 해당하는 entry를 찾아 my_external_entry로 반환한다. 기본 entries 필드는 비워두며, external_entries만 클라이언트에 제공한다.
+- Admin 업로드는 본 서비스 범위 밖이며, 데이터 파이프라인이 external_ranking_data를 채운다고 가정한다.
 
 ## 5. 주요 메서드 시그니처
 
@@ -35,42 +33,42 @@ def get_today_ranking(self, db, now, user_id: int, top_n: int = 10) -> dict:
 ```
 - 단계:
   1) feature_type=RANKING + feature_config.is_enabled 확인.
-  2) ranking_daily에서 date=today, rank <= top_n 조회 후 정렬.
-  3) user_id 매칭 row 조회(없으면 rank=None, score=0, is_in_top=False 처리, display_name은 None 또는 빈 문자열).
-  4) 응답 dict: {date, top: [...], me: {...}}.
+  2) ExternalRankingData 전 레코드 조회 후 deposit_amount DESC, play_count DESC, user_id ASC로 정렬.
+  3) 정렬 순서대로 rank를 부여하고, user.nickname → user.external_id → "닉네임 없음" 순으로 표시 이름 결정.
+  4) 현재 user_id 매칭 row를 my_external_entry로 반환. entries/top_n 필드는 현재 미사용이며 external_entries에 전체 목록을 담는다.
 
 ## 6. 데이터 연동
-- 테이블: `ranking_daily`, 공통 `user_event_log`.
-- ranking_daily는 관리자가 수기로 점수/순위를 입력하거나 업로드한다.
-- 필요한 경우 user 테이블에서 nickname을 조인하거나 display_name만 채운 상태로 운용한다.
+- 테이블: `external_ranking_data`, `user`(nickname/external_id 조인).
+- 정렬 기준: deposit_amount DESC, play_count DESC, user_id ASC.
+- SeasonPassService 연동 없음.
 
 ## 7. API 연동
-- GET `/api/ranking/today`: get_today_ranking 결과를 그대로 반환.
+- GET `/api/ranking/today`: external_entries, my_external_entry를 그대로 반환.
 - 다른 게임과 달리 play/status가 없으며 조회만 제공한다.
-- Admin 업로드 후 회귀 테스트: 업로드 → `/api/ranking/today` 호출 시 업데이트된 top/me가 반영되는지 확인한다.
+- Admin 업로드/파이프라인은 본 문서 범위 밖.
 
 ## 8. 예시 응답 (today)
 ```json
 {
-  "date": "2025-12-26",
-  "top": [
-    { "rank": 1, "display_name": "김OO", "score": 550000 },
-    { "rank": 2, "display_name": "박OO", "score": 420000 }
+  "date": "2025-12-25",
+  "entries": [],
+  "my_entry": null,
+  "external_entries": [
+    { "rank": 1, "user_id": 101, "user_name": "김OO", "deposit_amount": 550000, "play_count": 12, "memo": null }
   ],
-  "me": {
-    "rank": 12,
-    "score": 180000,
-    "is_in_top": false
-  }
+  "my_external_entry": { "rank": 12, "user_id": 777, "user_name": "닉네임 없음", "deposit_amount": 180000, "play_count": 3, "memo": null },
+  "feature_type": "RANKING"
 }
 ```
 
 ## 9. 에러 코드
 - `NO_FEATURE_TODAY`: 오늘 feature_type이 RANKING이 아니거나 비활성화된 경우.
 - `INVALID_FEATURE_SCHEDULE`: 날짜별 스케줄이 0개/2개 이상일 때.
-- `INVALID_RANKING_CONFIG`: ranking_daily 데이터가 비어있거나 필수 컬럼 누락 시 사용할 수 있는 보호 코드(필요 시 사용).
+- `INVALID_RANKING_CONFIG`: ExternalRankingData가 비어있거나 필수 컬럼 누락 시 보호 코드로 사용할 수 있음(현재 기본 구현은 단순 조회).
 
 ## 변경 이력
+- v1.2 (2025-12-25, 시스템 설계팀)
+  - ExternalRankingData 정렬/닉네임 조인 기반 현재 구현으로 책임/예시/에러를 갱신
 - v1.1 (2025-12-09, 시스템 설계팀)
   - feature_config.is_enabled/feature_schedule 검증을 명시하고 버전/작성일을 정정
   - ranking_daily를 관리자 입력 모델로 명확히 정의하고 display_name 필드를 예시/로직에 반영

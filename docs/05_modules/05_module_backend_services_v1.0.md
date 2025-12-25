@@ -1,8 +1,8 @@
 # Backend 모듈 기술서 (Services/Routes/Schemas)
 
 - 문서 타입: 모듈
-- 버전: v1.1
-- 작성일: 2025-12-09
+- 버전: v1.2
+- 작성일: 2025-12-25
 - 작성자: 시스템 설계팀
 - 대상 독자: 백엔드 개발자
 
@@ -43,7 +43,7 @@
   - `add_stamp(user_id, source_feature_type, xp_bonus=0) -> dict`: 도장 1개 추가 + XP/레벨업 처리, 보상 리스트 반환.
   - `get_status(user_id) -> dict`: 시즌 정보, 진행도, 오늘 도장 여부를 반환.
   - `claim_reward(user_id, level) -> dict`: 특정 레벨 보상 수령 처리.
-- 세부 로직: xp_earned 필드 기록, auto_claim 레벨 보상 자동 지급. (자세한 흐름은 전용 모듈 문서 참조)
+- 세부 로직: xp_earned 기록, auto_claim 레벨 보상 자동 지급. `today.stamped`는 오늘 날짜 키(`YYYY-MM-DD`) 스탬프가 있을 때만 true, 중복 시 `ALREADY_STAMPED_TODAY`. 시즌 브리지 기간에는 `event_bridge`(키 진행도/예약 보상) 확장 필드를 상태 응답에 포함.
 
 ### 5-2. FeatureService (`backend/app/services/feature_service.py`)
 - 책임: 오늘의 활성 Feature 조회, 특정 날짜 조회, feature_config 확인 및 캐시 연동.
@@ -53,6 +53,7 @@
   - 조회 결과가 0개이면 `feature_type=NONE`을 반환하여 프론트가 “오늘 이벤트 없음”을 안내하도록 한다.
   - 조회 결과가 2개 이상이면 데이터 오류로 간주해 `INVALID_FEATURE_SCHEDULE` 에러 코드를 발생시킨다.
   - `feature_config.is_enabled=0` 상태면 해당 feature를 비활성 처리하여 `NO_FEATURE_TODAY` 또는 403 응답으로 차단한다.
+- 타임존 주의: DB가 KST, 애플리케이션이 naive UTC로 해석하면 시즌 만료 오판 사례가 발생. TZ 일원화 또는 모든 datetime에 TZ 명시 필요.
 
 ### 5-3. RouletteService / DiceService / LotteryService / RankingService
 - 책임: 각 게임 결과 계산, 일일 한도 검증, 레벨 add_stamp 연동, 로그 기록.
@@ -64,6 +65,13 @@
 
 ### 5-5. RewardService
 - 책임: 포인트/쿠폰 등 보상 지급 로직을 통합, 게임/레벨 서비스에서 호출.
+
+### 5-6. VaultService (Phase 1)
+- 책임: `vault_locked_balance` 단일 소스를 적립/해금/만료 처리하고, legacy mirror `vault_balance` 동기화.
+- external_ranking은 입금 증가 신호만 전달하며, 해금 계산/지급은 VaultService가 수행.
+
+### 5-7. UIConfigService
+- 책임: `app_ui_config` 저장소에서 `config_key`별 JSON을 조회/편집(`/api/ui-config/{key}`, `/admin/api/ui-config/{key}`), 예: `ticket_zero` 문구/CTA.
 
 ## 6. 라우터 구성
 - `app/routes/api_router.py`: feature, season-pass, roulette, dice, lottery, ranking 라우터를 prefix/tag와 함께 등록.
@@ -77,6 +85,10 @@
 5) 결과 JSON을 Router가 응답으로 반환.
 
 ## 변경 이력
+- v1.2 (2025-12-25, 시스템 설계팀)
+  - SeasonPassService에 일일 스탬프 날짜키·중복 에러·event_bridge 응답 확장 명시
+  - VaultService Phase 1 책임, UIConfigService 역할 추가
+  - 타임존 혼선 주의 사항 추가, 버전/작성일 갱신
 - v1.1 (2025-12-09, 시스템 설계팀)
   - AsyncSession/Alembic head 확인, JWT 강제 및 max_daily=0 sentinel 무제한 규칙을 명시
   - feature_config.is_enabled=0 시 `NO_FEATURE_TODAY`, `NO_ACTIVE_SEASON_CONFLICT` 409 응답을 책임에 반영

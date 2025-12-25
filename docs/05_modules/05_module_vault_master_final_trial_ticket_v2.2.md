@@ -373,3 +373,67 @@ stateDiagram-v2
 - “판당 적립”을 어떤 게임들(룰렛/주사위/복권/팀배틀)에 동일 적용할지
 - 결과 확정 이벤트의 식별자(게임 로그 ID 등) 확보 방식
 - 해금 정책(부분/전액) 룰을 Phase 1에서 고정할지, 즉시 `unlock_rules_json`로 전환할지
+
+---
+
+## 14) 시즌 브리지 이벤트(7일 열쇠 수집 → 1/1 금고 개방) — 전사 공유안
+
+- 대상: 기획, 마케팅, 개발, 운영
+- 목적: 시즌패스 종료 → 신규 시즌 시작 사이 리텐션 유지 + “잠긴 금고” 기대감 극대화(1/1 일괄 지급)
+- 컨셉: 7개의 열쇠(12/25~12/31) 수집 → 1/1 금고 개방. 손실회피(Loss Aversion) + 매몰비용(Sunk Cost)로 중도 이탈 방지.
+
+### 14.1 7일차 미션/보상 테이블
+
+| 날짜 | 테마 | 미션(트리거) | 즉시 보상 | 1/1 예약 보상 |
+|---|---|---|---|---|
+| 12/25 | 성탄의 열쇠 | 룰렛 5회 참여 | 룰렛 티켓 3개 | 신년 패스 1레벨 점프권 |
+| 12/26 | 결속의 열쇠 | 10만 원 이상 입금 | 10만 CC 코인 1개 | 신년 팀 배틀 전용 엠블럼 |
+| 12/27 | 행운의 열쇠 | 복권 5회 참여 | 복권 티켓 3장 | 신년 잭팟 확률 +5% 부스트 |
+| 12/28 | 인내의 열쇠 | 주사위 10회 참여 | 배민 1만원권(기프티콘) | 신년용 주사위 토큰 20개 |
+| 12/29 | 전략의 열쇠 | 3종 게임 각 5회 | CC 코인 2개 | 신년 얼리버드 전용 칭호 |
+| 12/30 | 기다림의 열쇠 | 10만 원 이상 입금 | 팀 배틀 참여권 1장 | 신년 무료 보너스 5,000P |
+| 12/31 | 해방의 열쇠 | 23시 이후 로그인 | 룰렛 코인 10개 | 신년 금고 즉시 개방 |
+
+### 14.2 백엔드/DB (기술 스펙)
+
+- 이벤트 로그(Stamp) 재사용: `season_pass_stamp_log.event_type`에 아래 키워드 강제 매핑
+  - KEY_DAY_1_ROULETTE, KEY_DAY_2_DEPOSIT, KEY_DAY_3_LOTTERY, KEY_DAY_4_DICE, KEY_DAY_5_ALL_GAME, KEY_DAY_6_DEPOSIT, KEY_DAY_7_LAST_LOGIN
+- 가상 금고 Pending 필드(user_profiles 확장)
+  ```sql
+  ALTER TABLE user_profiles
+    ADD COLUMN event_pending_points INT DEFAULT 0 COMMENT '1/1 지급될 누적 포인트',
+    ADD COLUMN event_key_count INT DEFAULT 0 COMMENT '획득한 열쇠 개수 (0-7)';
+  ```
+  - 스탬프 적재 시 `event_key_count += 1`
+  - 특정 미션 성공 시 `event_pending_points`에 예약 보상 누적
+- 1/1 배치(Batch)
+  - 조건: `event_key_count >= 7 AND is_blocked = 0`
+  - 액션: `season_pass_progress.current_level += 1`, `event_pending_points` → `game_wallet` 실자산 전환, `season_pass_reward_log` 기록(멱등)
+
+### 14.3 프론트엔드 / API
+
+- `GET /api/season-pass/status` 확장 필드 제안
+  ```json
+  {
+    "event_bridge": {
+      "active_keys": [1, 2, 4],
+      "total_key_count": 3,
+      "pending_reward_points": 15000,
+      "is_all_keys_collected": false,
+      "countdown_to_new_season": "154:20:11"
+    }
+  }
+  ```
+- UI: 홈 상단 7-슬롯 열쇠 표시, 미션 완료 시 황금색 점등 + “금고 해제까지 X개 남음”. 금고 티징은 “1월 1일 GRAND OPEN” 블러 처리.
+
+### 14.4 운영/보안
+
+- 블랙리스트: `CC1222업데이트.csv` 기반 ‘개진상/차단’ 유저는 스탬프 기록은 허용하되 실물/경품 지급에서 제외.
+- 중복 방지: `(user_id, event_type, date)` Unique 제약으로 동일 미션 중복 차단.
+- LMS 마케팅: 4~5일차 미참여자에게 “누적 30,000원 금고 자산 소멸” 긴급 메시지 발송.
+
+### 14.5 팀별 액션 아이템
+
+- 마케팅: 7종 데일리 카드 이미지 + “7개의 열쇠” 공지 작성.
+- 개발: 위 DB 필드 추가, 1/1 배치 스크립트 초안, 열쇠 UI 컴포넌트/상태값 연동.
+- 운영: 4일차 배민 상품권 지급 모니터링 + 블랙리스트 필터링.
