@@ -12,6 +12,7 @@ from app.schemas.vault2 import (
     VaultProgramResponse,
     VaultProgramUiCopyUpsertRequest,
     VaultProgramUnlockRulesUpsertRequest,
+    VaultProgramConfigUpsertRequest,
 )
 from app.services.vault2_service import Vault2Service
 
@@ -29,6 +30,7 @@ def _to_response(p) -> VaultProgramResponse:
         is_active=bool(getattr(p, "is_active", True)),
         unlock_rules_json=getattr(p, "unlock_rules_json", None),
         ui_copy_json=getattr(p, "ui_copy_json", None),
+        config_json=getattr(p, "config_json", None),
     )
 
 
@@ -67,6 +69,19 @@ def upsert_ui_copy(
 ) -> VaultProgramResponse:
     try:
         program = service.update_program_ui_copy(db, program_key=program_key, ui_copy_json=payload.ui_copy_json)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    return _to_response(program)
+
+
+@router.put("/{program_key}/config", response_model=VaultProgramResponse)
+def upsert_config(
+    program_key: str,
+    payload: VaultProgramConfigUpsertRequest,
+    db: Session = Depends(get_db),
+) -> VaultProgramResponse:
+    try:
+        program = service.update_program_config(db, program_key=program_key, config_json=payload.config_json)
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
     return _to_response(program)

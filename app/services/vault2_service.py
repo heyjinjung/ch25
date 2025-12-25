@@ -81,6 +81,19 @@ class Vault2Service:
         db.refresh(program)
         return program
 
+    def update_program_config(self, db: Session, *, program_key: str, config_json: dict | None) -> VaultProgram:
+        program = self.get_program_by_key(db, program_key=program_key)
+        if program is None:
+            if program_key == self.DEFAULT_PROGRAM_KEY:
+                program = self._ensure_default_program(db)
+            else:
+                raise ValueError("PROGRAM_NOT_FOUND")
+        program.config_json = config_json
+        db.add(program)
+        db.commit()
+        db.refresh(program)
+        return program
+
     @staticmethod
     def _get_available_grace_hours(program: VaultProgram) -> int:
         rules = getattr(program, "unlock_rules_json", None)
