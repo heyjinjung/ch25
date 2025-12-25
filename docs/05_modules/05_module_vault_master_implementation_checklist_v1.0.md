@@ -40,7 +40,7 @@
 - [x] earn_event_id 생성 규칙 확정(게임 결과 ID 기반) 후 멱등 삽입/검증 구현(존재 시 SKIP, 금액 증분 없음 확인).
 - [x] VaultEarnEvent 로깅 스키마 추가: earn_event_id, earn_type, amount, source, reward_kind, game_type, token_type, payout_raw, created_at(인덱스와 UNIQUE 제약 포함).
 - [x] 적립 단위 적용: 기본 +200/판, DICE LOSE 추가 +100, amount 합산 뒤 vault_locked_balance 증가.
-- [x] 최초 적립 시 expires_at = now +24h 세팅, 이후 적립 시 갱신 금지(Phase 1 규칙 고정).
+- [x] 해금 임계금액(10,000원) 도달 시 expires_at = now +24h 세팅, 이후 적립 시 갱신 금지(Fixed Window). 해금/만료 후 다시 도달 시 신규 세팅.
 - [x] trial 결과 적립: trial-play 식별을 위해 `trial_token_bucket`(trial-origin 토큰 잔량) 추가 후, trial 소비 플레이에서만 reward를 Vault로 라우팅(플래그 `enable_trial_payout_to_vault`). POINT는 reward_amount를 그대로 적립, 그 외는 `trial_reward_valuation` 맵으로 환산. 미환산/비금액형은 0-amount SKIP 이벤트로 로깅.
 - [x] ticket=0 recommended_action/cta_payload 유지: `GET /api/vault/status`에서 (ticket=0 && 미만료 locked>0)일 때만 `recommended_action=OPEN_VAULT_MODAL` + `cta_payload` 반환(상태 조회는 자동 시드 없음 유지).
 - [x] free fill once(POST /api/vault/fill) 멱등/1회 제한 확인, locked/mirror 동기화 검증(기존 로직에 earn_event_id 연동 안 함 확인).
@@ -107,7 +107,8 @@
 - [ ] downtime 배너 교체 스케줄(12/28, 12/31, 1/5) 및 12/31 백업/초기화 작업이 다른 배포/플래그와 충돌하지 않는지 확인.
 
 ## 10. 변경 이력
-- v2.3 (2025-12-25, BE팀): 금고 적립(accrual) 로직 개선 및 만료(expiration) 단위 테스트 보강. 게임 플레이 시마다 locked 만료 시간을 갱신(`_ensure_locked_expiry` 내 갱신 로직 추가)하여 UX 개선(사용자 활동 시 만료 연장). 단위 검증 완료.
+- v2.4 (2025-12-25, BE팀): 금고 만료 정책을 Milestone(10,000원) 기반 Fixed Window로 정교화. 적립액이 1만 원 미만일 때는 타이머가 작동하지 않으며, 1만 원 도달 시 24시간 타이머가 고정(Fixed)됩니다. 해금 후 잔액이 1만 원 미만으로 떨어지면 타이머가 해제되어 다음 사이클을 준비합니다.
+- v2.3 (2025-12-25, BE팀): 금고 적립(accrual) 로직 개선 및 만료(expiration) 단위 테스트 보강. 게임 플레이 시마다 locked 만료 시간을 갱신(`_ensure_locked_expiry` 내 갱신 로직 추가)하여 UX 개선(사용자 활동 시 만료 연장). 단위 검증 완료. (v2.4에서 Fixed Window 정책으로 최종 확정 및 수정됨)
 - v2.2 (2025-12-25, Full Stack): 게임 플레이(체험티켓) 후 금고 적립 알림(Toast) 구현. BE 응답에 `vault_earn` 필드 추가 및 FE 훅 연동.
 - v2.1 (2025-12-25, FE팀): Vault 및 SeasonPass UI 대규모 업데이트. 동적 해금 규칙(unlock_rules_json) 연동, 2배 적립 배지 추가, Ticket Zero 모달 자동화 및 'Diamon Key 확정' CTA 강화. 시즌패스 10레벨 Final Reward 스타일링 및 고액 보상 '관리자 지급' 강제 적용.
 - v2.0 (2025-12-25, BE팀): DB 마이그레이션(`20251225_0005`) 적용 및 VaultProgram.config_json 저장소 구현 완료. trial valuation/multiplier 설정 경로 확정.
