@@ -126,23 +126,30 @@ class VaultService:
 
     @classmethod
     def _ensure_locked_expiry(cls, user: User, now: datetime) -> bool:
-        """Ensure `vault_locked_expires_at` is set when locked balance is positive.
+        """Ensure `vault_locked_expires_at` is set when threshold is reached.
 
-        Returns True if the user row was mutated.
+        Phase 1.2 Policy:
+        - Timer starts ONLY when balance >= 10,000 (VAULT_SEED_AMOUNT).
+        - Timer is FIXED for the duration (24h) once set.
+        - Timer clears if balance drops below threshold (e.g., after payout).
+        - Timer clears if balance is zero.
         """
         locked = int(getattr(user, "vault_locked_balance", 0) or 0)
-        if locked <= 0:
-            if getattr(user, "vault_locked_expires_at", None) is not None:
+        expires_at = getattr(user, "vault_locked_expires_at", None)
+        threshold = cls.VAULT_SEED_AMOUNT
+
+        if locked < threshold:
+            if expires_at is not None:
                 user.vault_locked_expires_at = None
                 return True
             return False
 
-        # Phase 1 Policy Restored: Do NOT extend expiration on activity.
-        # The user must unlock within the fixed 24h window from the initial lock.
-        expires_at = getattr(user, "vault_locked_expires_at", None)
+        # If we reached threshold and no timer is set (or expired), start it.
         if expires_at is None or expires_at <= now:
             user.vault_locked_expires_at = cls._compute_locked_expires_at(now)
             return True
+
+        # Timer is already active; do NOT extend (Fixed window).
         return False
 
     @classmethod

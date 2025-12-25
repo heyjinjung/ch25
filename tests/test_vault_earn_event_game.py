@@ -42,6 +42,15 @@ def test_vault_game_earn_event_idempotent_and_expires_not_refreshed(session_fact
     assert user is not None
     assert added1 == 200
     assert user.vault_locked_balance == 200
+    # Milestone not reached (200 < 10,000), so no timer yet.
+    assert user.vault_locked_expires_at is None
+
+    # Now reach the milestone (10,000)
+    user.vault_locked_balance = 10000
+    svc._ensure_locked_expiry(user, datetime.utcnow())
+    session.add(user)
+    session.commit()
+    
     expires1 = user.vault_locked_expires_at
     assert expires1 is not None
 
@@ -59,7 +68,7 @@ def test_vault_game_earn_event_idempotent_and_expires_not_refreshed(session_fact
     user2 = session.get(User, 2001)
     assert user2 is not None
     assert added_dup == 0
-    assert user2.vault_locked_balance == 200
+    assert user2.vault_locked_balance == 10000
     # Duplicate call should not refresh expiration.
     assert user2.vault_locked_expires_at == expires1
     assert session.query(VaultEarnEvent).count() == 1
@@ -80,7 +89,7 @@ def test_vault_game_earn_event_idempotent_and_expires_not_refreshed(session_fact
     user3 = session.get(User, 2001)
     assert user3 is not None
     assert added2 == 200
-    assert user3.vault_locked_balance == 400
+    assert user3.vault_locked_balance == 10200
     # Expiration should remain the same (original start time + 24h).
     assert user3.vault_locked_expires_at == expires1
     assert session.query(VaultEarnEvent).count() == 2
