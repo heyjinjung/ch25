@@ -17,7 +17,7 @@
 - [ ] ticket0 카피/CTA 운영 API(`/api/admin/ui-copy/ticket0`)에 금고 메시지 템플릿 등록(OPEN_VAULT_MODAL 시 금액/조건 변수 포함 확인).
 - [ ] Vault UI unlock rule JSON을 운영이 편집 가능하도록 설정 파일 또는 admin 입력 경로 점검(응답 스키마 버전 표기 포함).
 - [ ] 일일/주간 trial 지급 캡 설정(`trial_weekly_cap`, `daily_cap`, `tiered_grant_enabled`, `enable_trial_grant_auto`) 값 정리.
-- [ ] 12/25~12/27 Vault 적립 2배 플래그/환경변수(`vault_accrual_multiplier`, 기본 1.0) 설정 및 기간(UTC/로컬) 정의, 종료 시 자동 1.0 복귀 여부 결정.
+- [ ] 12/25~12/27 Vault 적립 2배 플래그/환경변수 설정: `VAULT_ACCRUAL_MULTIPLIER_ENABLED`, `VAULT_ACCRUAL_MULTIPLIER_VALUE`, `VAULT_ACCRUAL_MULTIPLIER_START_KST`, `VAULT_ACCRUAL_MULTIPLIER_END_KST`(기본 OFF). 기간은 KST 기준이며 종료/플래그 OFF 시 자동 1.0 복귀.
 - [ ] unlock_rules_json에 Gold 인출율(30/50/70), Diamond 해금 조건(Diamond Key ≥ 2 + Gold 누적 ≥ 1,000,000), 시드 이월 범위(10~30%, 기본 20%) 값을 운영이 수정 가능하도록 설정 저장 위치/포맷 확정.
 - [ ] downtime/배너 일정(12/28, 12/31, 1/5) 및 12/31 백업/초기화 스크립트 경로(`/root/ch25/backups/`) 확인.
 
@@ -33,7 +33,7 @@
 - [ ] 해금 트리거: 입금 증가 신호→locked 감소+cash 지급 로직 재확인(부분/전액 정책은 현행 유지). AdminExternalRankingService → VaultService 위임 경로에 부수 효과 없는지 확인.
 - [ ] Admin tick helper(`/admin/api/vault2/tick`)가 earn_event_id 멱등과 충돌하지 않는지 검사(보정 작업 시 중복 적립 방지).
 - [ ] Unlock rule JSON 반환(`/api/vault/status` 응답) 형식 결정 및 프론트 하드코딩 제거 계획 반영(프론트 캐싱/버전 호환성 포함). Gold 인출율(30/50/70), Diamond 해금 조건(Key/1,000,000), 시드 이월 10~30% 범위를 포함.
-- [ ] 12/25~12/27 전용 vault_accrual_multiplier(2.0) 적용 로직/로그 추가, 기간 종료 후 1.0 복귀 보장(플래그 OFF 시 즉시 1.0).
+- [ ] 12/25~12/27 전용 accrual multiplier 적용 로직 추가 및 `/api/vault/status`에 `accrual_multiplier` 노출, 기간 종료/플래그 OFF 시 즉시 1.0 복귀.
 
 ## 4. DB/마이그레이션
 - [ ] VaultEarnEvent 로그 테이블 또는 vault2 확장 필드에 earn_event_id/earn_type/amount/created_at 추가(인덱스: user_id, earn_event_id UNIQUE 권장).
@@ -91,6 +91,7 @@
 - [ ] downtime 배너 교체 스케줄(12/28, 12/31, 1/5) 및 12/31 백업/초기화 작업이 다른 배포/플래그와 충돌하지 않는지 확인.
 
 ## 10. 변경 이력
+- v1.3 (2025-12-25, BE팀): `VAULT_ACCRUAL_MULTIPLIER_*` 환경변수(기본 OFF) 추가, `GET /api/vault/status`에 `accrual_multiplier` 노출, `unlock_rules_json`에 Gold(30/50/70)·Diamond(Key≥2+Gold≥1,000,000)·시드 이월(10~30%, 기본20) 규격 포함. `POST /api/vault/fill`/신규 주사위 LOSE 적립에 multiplier 적용. FE `vaultApi` 타입에 `accrualMultiplier` 수용.
 - v1.2 (2025-12-25, BE팀): 12/25~27 2배 적립 플래그, unlock_rules_json(30/50/70·Key+1,000,000·시드 10~30%), 관리자 지급 라벨/티켓0 카피, downtime/백업 일정 체크 추가
 - v1.1 (2025-12-25, BE팀): 충돌 방지/정합성 체크 추가, 세부 가드 및 옵스 플래그 보강
 - v1.0 (2025-12-25, BE팀): 초기 작성

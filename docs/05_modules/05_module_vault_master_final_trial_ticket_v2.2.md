@@ -13,6 +13,9 @@
 운영 원칙
 - 앞으로 Phase 1/2 정책/상태머신/용어는 본 문서를 단일 기준(source of truth)으로 사용한다.
 
+## 변경 이력
+- v2.4.1 (2025-12-25): `VAULT_ACCRUAL_MULTIPLIER_*` 환경변수(기본 OFF) 추가, `GET /api/vault/status`에 `accrual_multiplier` 노출, `unlock_rules_json`에 Gold(30/50/70)·Diamond(Key≥2+Gold≥1,000,000)·시드 이월(10~30%, 기본20) 규격 포함. `POST /api/vault/fill`/신규 주사위 LOSE 적립에 multiplier 적용.
+
 ---
 
 ## 0) TL;DR
@@ -116,7 +119,7 @@ Phase 1 단일 기준(중요)
 - Public
   - `GET /api/vault/status`
     - `locked_balance`, `available_balance`, `expires_at`, `recommended_action`, `cta_payload`
-    - (옵션) `program_key`, `unlock_rules_json`
+    - (옵션) `program_key`, `unlock_rules_json`, `accrual_multiplier`
   - `POST /api/vault/fill` (eligible 유저 1회 무료 fill)
   - `GET /api/ui-copy/ticket0` (ticket=0 모달 운영 카피)
 
