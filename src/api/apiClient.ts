@@ -6,6 +6,23 @@ import { clearAuth, getAuthToken } from '../auth/authStore';
 // so the base URL should stop at the host.
 const envBase = (import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || '').trim();
 
+const normalizeHttps = (base: string) => {
+  if (!base) return base;
+
+  // If the site is served over HTTPS and the configured base is HTTP, upgrade to HTTPS to avoid mixed-content blocks.
+  if (typeof window !== 'undefined' && window.location.protocol === 'https:' && base.startsWith('http://')) {
+    try {
+      const url = new URL(base, window.location.origin);
+      url.protocol = 'https:';
+      return url.toString().replace(/\/+$/, '');
+    } catch (err) {
+      return `https://${base.slice('http://'.length).replace(/\/+$/, '')}`;
+    }
+  }
+
+  return base.replace(/\/+$/, '');
+};
+
 const derivedBase = (() => {
   if (typeof window === 'undefined') return '';
   const { protocol, hostname, origin } = window.location;
@@ -13,7 +30,7 @@ const derivedBase = (() => {
   return isLocalHost ? `${protocol}//${hostname}:8000` : origin;
 })();
 
-const API_URL = (envBase || derivedBase).replace(/\/+$/, '');
+const API_URL = normalizeHttps(envBase || derivedBase);
 
 const apiClient = axios.create({
   baseURL: API_URL,
