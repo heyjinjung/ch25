@@ -25,7 +25,7 @@ ENV=local
 **프론트엔드 (.env.development)**
 ```env
 VITE_ENABLE_DEMO_FALLBACK=true    # API 실패 시 mock 데이터 사용
-VITE_GATE_TODAY_FEATURE=false     # 프론트엔드 게이팅 비활성화
+# VITE_GATE_TODAY_FEATURE는 폐기된 옵션으로 사용하지 않음
 ```
 
 ---
@@ -109,7 +109,7 @@ npm run dev
 
 ### API 연결 실패
 ```
-증상: "오늘 활성화된 이벤트가 없습니다" 또는 네트워크 에러
+증상: 홈 카드가 보이지 않거나 네트워크 에러
 해결:
 1. 백엔드가 8000 포트에서 실행 중인지 확인
 2. .env의 TEST_MODE=true 확인
@@ -121,8 +121,7 @@ npm run dev
 증상: 특정 게임 페이지에서 에러
 해결:
 1. 백엔드 TEST_MODE=true 확인
-2. 프론트엔드 VITE_GATE_TODAY_FEATURE=false 확인
-3. npm run dev 재시작 (환경변수 반영)
+2. npm run dev 재시작 (환경변수 반영)
 ```
 
 ### 데이터베이스 연결 실패
@@ -161,7 +160,7 @@ npm run dev
 |------|----------|--------------|
 | TEST_MODE | `true` | `false` |
 | VITE_ENABLE_DEMO_FALLBACK | `true` | `false` |
-| VITE_GATE_TODAY_FEATURE | `false` | `true` |
+| today-feature 게이트 | 사용 안 함 | 사용 안 함 |
 | 스케줄 검증 | 우회 | 적용 |
 | 일일 제한 | 0=무제한 | 설정값 적용 |
 

@@ -18,7 +18,7 @@
 
 ## 4. 본문 (체크리스트)
 - 라우트/네비게이션
-  - [ ] `/` → today-feature → feature 페이지 리다이렉트가 구현되어 있다.
+  - [ ] `/` 진입 시 홈 카드가 항상 렌더되고 보호 라우트가 적용되어 있다(today-feature 의존성 없음).
   - [ ] User/Admin 라우트 분리 및 보호 라우트가 적용되어 있다.
 - 스택/상태
   - [ ] React 18/TS5/Vite6/Tailwind3/Query v5/Axios/RHF+Zod 버전이 적용되었다.

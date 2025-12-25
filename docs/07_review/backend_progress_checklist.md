@@ -1,7 +1,7 @@
 # Backend Progress Checklist
 - Document type: Checklist/Status
-- Version: v1.0
-- Date: 2025-12-06
+- Version: v1.1
+- Date: 2025-12-25
 - Audience: Backend/QA/PM
 
 - [x] `alembic upgrade head` executed locally (sqlite) and verified `alembic_version` = 20241206_0001`.
@@ -11,9 +11,9 @@
 - [x] Admin/runtime validations cover cross-row rules: roulette 6 slots & weight sum >0; lottery active prize weight sum >0; dice negative weight/stock blocked; dice roll range enforced in service (see tests/test_game_validations.py).
 
 ## Feature Gating / Schedule
-- [x] Today-feature gating enforced via `FeatureService` with KST normalization.
+- [x] today-feature 라우트/게이트 폐기(404/410), 관련 서비스/훅 제거.
 - [x] Admin schedule upsert uses unique date; removed obsolete `season_id`.
-- [x] API docs updated to reflect schedule rules and errors (NoFeatureToday/InvalidSchedule).
+- [x] API docs updated: today-feature 관련 규칙은 아카이브, 활성 게임/시즌 패스만 유지.
 
 - Roulette: [x] segments ordered/6-count check; [x] rewards wired to RewardService; [x] FOR UPDATE guard with lock failure handling on play.
 - Dice: [x] gameplay; [x] dice value validation (1-6 enforced); [x] rewards wired to RewardService; [x] document unlimited daily plays (max_daily=0 sentinel) and surface remaining=0 as unlimited in docs/UI.
@@ -27,7 +27,7 @@
 
 ## Auth & Security
 - [x] Auth/token issuance/verification implemented server-side.
-- [x] Dependency to inject user_id into services/endpoints (dice/roulette/lottery/ranking/season-pass/today-feature).
+- [x] Dependency to inject user_id into services/endpoints (dice/roulette/lottery/ranking/season-pass).
 - [x] CORS/settings validated for FE hosts (wildcard only in local, otherwise configured origins).
 
 ## Logging & Event Trail
@@ -36,7 +36,7 @@
 
 ## Ops & Docs
 - [x] Local/Deployment guides mention Alembic upgrade.
-- [x] Error code catalog synced with current behaviors (unlimited limits, lock failures, config errors, today-feature payload).
+- [x] Error code catalog synced with current behaviors (unlimited limits, lock failures, config errors). today-feature payload 항목은 폐기/아카이브.
 - [x] Tests: unit/integration updated for roulette/dice/lottery/season-pass/admin ranking. Added play endpoint flows (reward delivery + stock decrement + event log writes), season-pass stamp reuse/manual-claim/season boundary, admin ranking upload 성공/충돌 스냅샷까지 커버.
 
 ## Alembic Run/Verify (per env)

@@ -19,7 +19,7 @@
 
 ## 4. 본문 (테스트 범위)
 - 필수 시나리오(수동/E2E):
-  - `/` → today-feature redirect 정상 동작.
+  - 홈 진입 후 게임 카드 3종 always-on 렌더 확인( today-feature 의존성 없음).
   - 각 게임 status/play 호출 후 결과 UI 반영.
   - SeasonPass stamp/status/claim 플로우 UI 반영.
   - Admin 설정 변경(룰렛 6칸/복권 상품) → 유저 화면 반영.
@@ -29,13 +29,13 @@
 
 ## 5. 예시
 - QC 표 예시:
-  - [ ] today-feature 없음 → 공지/재시도 버튼 노출
+  - [ ] 홈 카드 always-on 렌더( today-feature 호출 없음)
   - [ ] 룰렛 스핀 후 결과 모달 노출
   - [ ] 주사위 합계 비교 결과/보상 표기
   - [ ] Admin 랭킹 입력 → /ranking에 데이터 노출
 
 ## 6. Validation / Checklist
-- [ ] 필수 시나리오(redirect, 게임 플레이, 레벨) 테스트 항목이 정의되었는가?
+- [ ] 필수 시나리오(홈 카드, 게임 플레이, 레벨) 테스트 항목이 정의되었는가?
 - [ ] 브라우저/디바이스 범위가 기록되었는가?
 - [ ] Admin→User 반영 테스트가 포함되었는가?
 - [ ] 에러/빈 상태 QC 항목이 정의되었는가?

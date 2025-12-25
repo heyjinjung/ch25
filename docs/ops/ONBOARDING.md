@@ -17,20 +17,20 @@
 - `DATABASE_URL`: `mysql+pymysql://root:root@localhost:3306/xmas_event_dev` (로컬 MySQL 기준)
 - `JWT_SECRET`, `JWT_ALGORITHM`, `JWT_EXPIRE_MINUTES`
 - `ENV=local`, `CORS_ORIGINS=["http://localhost:5173","http://localhost:3000"]`
-- `TEST_MODE=true` → today-feature 무시 + 게임 토큰 부족 시 자동 보충(QA 전용). **현장 실행 시 반드시 false.**
+- `TEST_MODE=true` → (폐기된 today-feature 게이트와 무관) 게임 토큰 부족 시 자동 보충(QA 전용). **현장 실행 시 반드시 false.**
 - `XP_FROM_GAME_REWARD=true` → 게임 보상 포인트를 레벨 XP로 반영
 - `LOG_LEVEL=DEBUG`, `TIMEZONE=Asia/Seoul`
 
 ### Frontend `.env.development` (Vite 자동 로드)
 - `VITE_API_URL=http://localhost:8000/api`
 - `VITE_ADMIN_API_URL=http://localhost:8000/admin/api`
-- `VITE_GATE_TODAY_FEATURE=false`(게이트 해제), `VITE_ENABLE_DEMO_FALLBACK=true`(API 실패 시 데모 데이터), `VITE_ENABLE_DEBUG=true`
+- `VITE_GATE_TODAY_FEATURE=false`(폐기된 게이트, 기본 false 유지), `VITE_ENABLE_DEMO_FALLBACK=true`(API 실패 시 데모 데이터), `VITE_ENABLE_DEBUG=true`
 - 관리자 로그인: ID `admin` / PW `1234` (로컬 스토리지 토큰)
 
 ### 환경 변수 한눈에
-- 현장/실서버: Backend `TEST_MODE=false`, `ENV=production`, 실 DB URL. Frontend `VITE_GATE_TODAY_FEATURE=true`(필요 시), `VITE_ENABLE_DEMO_FALLBACK=false`, `VITE_ENABLE_DEBUG=false`, `VITE_ENV=production`, API URL을 실 서버로 지정.
-- QA/개발: Backend `TEST_MODE=true`(게임 토큰 부족 자동 보충 + 게이트 무시), Frontend `VITE_GATE_TODAY_FEATURE=false`, `VITE_ENABLE_DEMO_FALLBACK=true`.
-- 테스트 모드 출처: `app/core/config.py`의 `test_mode`; 게임 토큰 소모 시 QA 편의로 자동 보충(`GameWalletService.require_and_consume_token`). 프런트 게이트는 `VITE_GATE_TODAY_FEATURE` / `VITE_ENABLE_DEMO_FALLBACK`로 별도 제어. Backend today-feature 게이트는 `FEATURE_GATE_ENABLED` (기본 false)로 다시 켤 수 있습니다.
+- 현장/실서버: Backend `TEST_MODE=false`, `ENV=production`, 실 DB URL. Frontend `VITE_GATE_TODAY_FEATURE=false`(폐기된 게이트, 항상 false), `VITE_ENABLE_DEMO_FALLBACK=false`, `VITE_ENABLE_DEBUG=false`, `VITE_ENV=production`, API URL을 실 서버로 지정.
+- QA/개발: Backend `TEST_MODE=true`(게임 토큰 부족 자동 보충), Frontend `VITE_GATE_TODAY_FEATURE=false`, `VITE_ENABLE_DEMO_FALLBACK=true`.
+- 테스트 모드 출처: `app/core/config.py`의 `test_mode`; 게임 토큰 소모 시 QA 편의로 자동 보충(`GameWalletService.require_and_consume_token`). 프런트 게이트는 `VITE_GATE_TODAY_FEATURE` / `VITE_ENABLE_DEMO_FALLBACK`로 별도 제어하지만 today-feature 게이트는 폐기되어 다시 켜지지 않음.
 
 ## 로컬 실행 (네이티브)
 1) DB 준비(택1)

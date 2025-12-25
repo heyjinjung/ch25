@@ -160,11 +160,11 @@ npm run dev
 # Root 엔드포인트
 curl http://localhost:8000/
 
-# Today Feature API
-curl http://localhost:8000/api/today-feature
-
 # Health Check
 curl http://localhost:8000/health
+
+# 시즌 패스 상태 예시
+curl http://localhost:8000/api/season-pass/status
 ```
 
 ### 2. 브라우저 테스트
@@ -191,9 +191,9 @@ MySQL 명령어:
 -- 테이블 목록 확인
 SHOW TABLES;
 
--- 특정 테이블 확인
-SELECT * FROM feature_config LIMIT 10;
-SELECT * FROM feature_schedule;
+- 특정 테이블 확인
+SELECT * FROM user_game_wallet LIMIT 10;
+SELECT * FROM season_pass_level LIMIT 10;
 
 -- 데이터베이스 종료
 EXIT;
@@ -240,17 +240,14 @@ ch25/
 
 로컬 개발 시 모든 게임에 접근할 수 있도록 TEST_MODE를 활성화할 수 있습니다.
 
-### 백엔드 (feature_schedule 검증 우회)
+### 백엔드 (스케줄 검증 우회)
 ```env
 # .env 파일에 추가
 TEST_MODE=true
 ```
 
-### 프론트엔드 (게임 카드/라우트 게이트 해제)
-```env
-# .env 파일에 추가
-VITE_GATE_TODAY_FEATURE=false
-```
+### 프론트엔드
+today-feature 게이트는 폐기되어 사용하지 않습니다. 기본값(false) 유지.
 
 > ⚠️ **주의**: TEST_MODE에서 플레이한 기록도 실제 DB에 저장됩니다. 운영 환경에서는 절대 활성화하지 마세요.
 
