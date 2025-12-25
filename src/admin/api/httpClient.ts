@@ -3,8 +3,9 @@ import axios from "axios";
 import { clearAdminToken, getAdminToken } from "../../auth/adminAuth";
 
 // Prefer explicit admin base URL; otherwise derive at runtime.
-// - localhost/127.0.0.1: talk to backend on :8000
-// - non-local host: use same-origin (expects reverse proxy)
+// Backend prefix is /api/admin (fastapi router), so defaults honor that.
+// - localhost/127.0.0.1: talk to backend on :8000/api/admin
+// - non-local host: use same-origin /api/admin via reverse proxy
 const envAdminBase = (
   import.meta.env.VITE_ADMIN_API_BASE_URL ||
   import.meta.env.VITE_ADMIN_API_URL ||
@@ -39,10 +40,10 @@ const resolvedBaseURL = (() => {
     const isLocalHost = hostname === "localhost" || hostname === "127.0.0.1";
 
     // On localhost, we need to point to the backend port (8000)
-    if (isLocalHost) return `${protocol}//${hostname}:8000/admin/api`;
+    if (isLocalHost) return `${protocol}//${hostname}:8000/api/admin`;
 
     // In production (on the server), use relative path to let NGINX handle it over HTTPS.
-    return "/admin/api";
+    return "/api/admin";
   }
 
   return "";
