@@ -1,5 +1,5 @@
 import logging
-import requests
+import httpx
 from datetime import datetime
 from app.core.config import get_settings
 
@@ -19,7 +19,7 @@ def send_ops_notification(message: str, channel: str = "general"):
             "content": f"**[CH25-OPS]** {message}\n*Time: {datetime.now().isoformat()}*",
             "username": "CH25 Vault Monitor"
         }
-        res = requests.post(webhook_url, json=payload, timeout=5)
+        res = httpx.post(webhook_url, json=payload, timeout=5.0)
         res.raise_for_status()
     except Exception as e:
         logger.error(f"Failed to send ops notification: {e}")
