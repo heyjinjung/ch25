@@ -2,6 +2,7 @@ import React from "react";
 import { describe, expect, it, vi, beforeEach, Mock } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // Mock FeatureGate to pass children through without today-feature dependency.
 vi.mock("../components/feature/FeatureGate", () => ({
@@ -32,7 +33,18 @@ import { useDiceStatus, usePlayDice } from "../hooks/useDice";
 import { useLotteryStatus, usePlayLottery } from "../hooks/useLottery";
 
 const renderWithRouter = (ui: React.ReactElement) => {
-  return render(<MemoryRouter>{ui}</MemoryRouter>);
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  });
+
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>{ui}</MemoryRouter>
+    </QueryClientProvider>
+  );
 };
 
 describe("Game pages error/unlimited handling", () => {
