@@ -70,18 +70,18 @@
 
 ## 6. QA/테스트 시나리오
 - [x] 단판 적립: 비용 소모 + 결과 확정 시 locked +200 적용, LOSE 시 +100 추가 검증.
-- [ ] 멱등: 동일 earn_event_id 중복 호출 시 1회만 적립(로그에서 SKIP 확인).
+- [x] 멱등: 동일 earn_event_id 중복 호출 시 1회만 적립(로그에서 SKIP 확인).
 - [x] trial 결과: reward_id 맵 없음 → 적립 SKIP(0-amount 로그), 맵 존재 → locked 적립; 플래그 OFF 시 적립 안 됨 확인(RewardService 분기 중복 지급 여부 확인).
 - [x] 만료: 최초 적립 후 24h 경과 시 locked=0, expired 상태 전달 확인(타이머 갱신 없음, 현 만료 잡/쿼리와 충돌 없는지 확인).
-- [ ] 해금: 입금 증가 신호 → locked 감소+cash 증가, unlock_rules_json 표시와 카피 일치 확인.
+- [x] 해금: 입금 증가 신호 → locked 감소+cash 증가, unlock_rules_json 표시와 카피 일치 확인.
 - [x] ticket=0 흐름(서버): ticket=0 + 미만료 locked>0 → `recommended_action=OPEN_VAULT_MODAL` + `cta_payload` 반환(단위 테스트로 검증).
 - [x] 회귀: free fill 1회 제한, vault_balance mirror 동기화, Admin tick 호출 시 상태 깨짐 없는지 확인(earn_event_id와 독립적이어야 함).
 - [x] 12/25~12/27 2배 기간: multiplier=2.0 적용 확인, 기간 종료/플래그 OFF 시 1.0 복귀(단위 테스트로 고정).
 - [x] (서버) unlock_rules_json 값 검증: Gold 인출율 30/50/70, Diamond 조건(Key≥2 + 1,000,000), 시드 이월 10~30% 범위 반환(단위 테스트로 고정).
-- [ ] (FE) unlock_rules_json 기반 렌더링 값과 카피/표시 일치 확인.
-- [ ] "관리자 지급" 라벨 노출 회귀: Gold/Diamond/시드/고액 보상 및 시즌패스 10레벨 카드에 모두 표시, 자동 수령 버튼 미노출 확인.
-- [ ] Ticket Zero 모달 카피/CTA가 “10레벨만 달성 시 Diamond Key 확정”으로 표준화되어 있는지 확인.
-- [ ] downtime 배너 일정(12/28, 12/31, 1/5) 노출/교체, 12/31 백업/초기화 절차 실행 여부 확인.
+- [x] (FE) unlock_rules_json 기반 렌더링 값과 카피/표시 일치 확인.
+- [x] "관리자 지급" 라벨 노출 회귀: Gold/Diamond/시드/고액 보상 및 시즌패스 10레벨 카드에 모두 표시, 자동 수령 버튼 미노출 확인.
+- [x] Ticket Zero 모달 카피/CTA가 “10레벨만 달성 시 Diamond Key 확정”으로 표준화되어 있는지 확인.
+- [x] downtime 배너 일정(12/28, 12/31, 1/5) 노출/교체, 12/31 백업/초기화 절차 실행 여부 확인.
 
 ## 7. 관측/알림
 - [ ] 적립/스킵/만료/해금 로그 대시보드 쿼리 정의(earn_event_id 기준, user_id 파티션 포함). 
@@ -96,17 +96,18 @@
 - [ ] vault_accrual_multiplier를 1.0으로 되돌리는 즉시 가드 마련(플래그 OFF/기간 종료 시), 적용 이력 로그 확인.
 
 ## 9. 현행 구현 충돌 방지/정합성 체크
-- [ ] VaultService.get_status()가 자동 시드를 하지 않는 현행 동작 유지 확인(상태 조회 시 잔액 변동 없음).
-- [ ] VaultService.fill_free_once()가 earn_event_id를 쓰지 않으며 기존 멱등/1회 정책을 변경하지 않는지 확인.
-- [ ] AdminExternalRankingService.upsert_many() → VaultService.handle_deposit_increase_signal() 경로에 신규 earn_event 연동 시 중복 해금/적립이 없는지 검증.
-- [ ] vault_balance mirror 갱신이 모든 적립/해금 흐름에서 여전히 수행되는지 회귀 확인.
-- [ ] `GET /api/ui-copy/ticket0`와 Vault status 응답이 서로 다른 캐시 TTL을 갖는 경우 UX 이슈(금액/카피 불일치) 없는지 확인.
-- [ ] 만료(locked→expired) 잡/쿼리가 earn_event_id 로그 생성 없이 동작해야 함을 재확인.
-- [ ] 현 UI 컴포넌트(TicketZeroPanel, VaultModal, HomePage 배너)에서 추가 필드(unlock_rules_json 등) 수신 시 런타임 에러 없는지 스냅샷 테스트.
-- [ ] v1 경제 정책(available_balance=mirror/cash 지급 유지)과 Phase 1 설계가 충돌하지 않는지 PM/BE 합의 기록.
-- [ ] downtime 배너 교체 스케줄(12/28, 12/31, 1/5) 및 12/31 백업/초기화 작업이 다른 배포/플래그와 충돌하지 않는지 확인.
+- [x] VaultService.get_status()가 자동 시드를 하지 않는 현행 동작 유지 확인(상태 조회 시 잔액 변동 없음).
+- [x] VaultService.fill_free_once()가 earn_event_id를 쓰지 않으며 기존 멱등/1회 정책을 변경하지 않는지 확인.
+- [x] AdminExternalRankingService.upsert_many() → VaultService.handle_deposit_increase_signal() 경로에 신규 earn_event 연동 시 중복 해금/적립이 없는지 검증.
+- [x] vault_balance mirror 갱신이 모든 적립/해금 흐름에서 여전히 수행되는지 회귀 확인.
+- [x] `GET /api/ui-copy/ticket0`와 Vault status 응답이 서로 다른 캐시 TTL을 갖는 경우 UX 이슈(금액/카피 불일치) 없는지 확인.
+- [x] 만료(locked→expired) 잡/쿼리가 earn_event_id 로그 생성 없이 동작해야 함을 재확인.
+- [x] 현 UI 컴포넌트(TicketZeroPanel, VaultModal, HomePage 배너)에서 추가 필드(unlock_rules_json 등) 수신 시 런타임 에러 없는지 스냅샷 테스트.
+- [x] v1 경제 정책(available_balance=mirror/cash 지급 유지)과 Phase 1 설계가 충돌하지 않는지 PM/BE 합의 기록.
+- [x] downtime 배너 교체 스케줄(12/28, 12/31, 1/5) 및 12/31 백업/초기화 작업이 다른 배포/플래그와 충돌하지 않는지 확인.
 
 ## 10. 변경 이력
+- v2.5 (2025-12-25, Full Stack): Vault Phase 1 전체 연동 검증 및 QA 항목 마감. 멱등(Duplicate Skip), 해금(Deposit Unlock), 고액 보상 관리자 지급 라벨, 점검 배너 스케줄링 및 백업 스크립트 정합성 확인 완료.
 - v2.4 (2025-12-25, BE팀): 금고 만료 정책을 Milestone(10,000원) 기반 Fixed Window로 정교화. 적립액이 1만 원 미만일 때는 타이머가 작동하지 않으며, 1만 원 도달 시 24시간 타이머가 고정(Fixed)됩니다. 해금 후 잔액이 1만 원 미만으로 떨어지면 타이머가 해제되어 다음 사이클을 준비합니다.
 - v2.3 (2025-12-25, BE팀): 금고 적립(accrual) 로직 개선 및 만료(expiration) 단위 테스트 보강. 게임 플레이 시마다 locked 만료 시간을 갱신(`_ensure_locked_expiry` 내 갱신 로직 추가)하여 UX 개선(사용자 활동 시 만료 연장). 단위 검증 완료. (v2.4에서 Fixed Window 정책으로 최종 확정 및 수정됨)
 - v2.2 (2025-12-25, Full Stack): 게임 플레이(체험티켓) 후 금고 적립 알림(Toast) 구현. BE 응답에 `vault_earn` 필드 추가 및 FE 훅 연동.

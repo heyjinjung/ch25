@@ -27,6 +27,7 @@ from app.models.app_ui_config import AppUiConfig
 from app.models.vault2 import VaultProgram, VaultStatus
 from app.models.vault_earn_event import VaultEarnEvent
 from app.models.trial_token_bucket import TrialTokenBucket
+from app.models.admin_audit_log import AdminAuditLog
 from app.models.survey import (
     Survey,
     SurveyQuestion,
@@ -87,4 +88,5 @@ __all__ = [
     "VaultStatus",
     "VaultEarnEvent",
     "TrialTokenBucket",
+    "AdminAuditLog",
 ]
