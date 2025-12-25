@@ -30,6 +30,9 @@ class VaultStatusResponse(BaseModel):
     program_key: str | None = None
     unlock_rules_json: dict[str, Any] | None = None
 
+    # Event flags (optional)
+    accrual_multiplier: float | None = None
+
 
 class VaultFillResponse(BaseModel):
     eligible: bool

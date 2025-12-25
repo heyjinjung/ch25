@@ -1,5 +1,7 @@
 """Vault APIs (status + free fill once)."""
 
+from datetime import datetime
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
@@ -16,7 +18,8 @@ v2_service = Vault2Service()
 
 @router.get("/status", response_model=VaultStatusResponse)
 def status(db: Session = Depends(get_db), user_id: int = Depends(get_current_user_id)) -> VaultStatusResponse:
-    eligible, user, seeded = service.get_status(db=db, user_id=user_id)
+    now = datetime.utcnow()
+    eligible, user, seeded = service.get_status(db=db, user_id=user_id, now=now)
     return VaultStatusResponse(
         eligible=eligible,
         vault_balance=user.vault_balance or 0,
@@ -29,7 +32,8 @@ def status(db: Session = Depends(get_db), user_id: int = Depends(get_current_use
         recommended_action=None,
         cta_payload=None,
         program_key=service.PROGRAM_KEY,
-        unlock_rules_json=service.phase1_unlock_rules_json() if eligible else None,
+        unlock_rules_json=service.phase1_unlock_rules_json(now=now) if eligible else None,
+        accrual_multiplier=service.vault_accrual_multiplier(now) if eligible else 1.0,
     )
 
 
