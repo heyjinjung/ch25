@@ -23,6 +23,8 @@ class VaultProgram(Base):
     expire_policy = Column(String(30), nullable=False, server_default="FIXED_24H", default="FIXED_24H")
     unlock_rules_json = Column(JSON, nullable=True)
     ui_copy_json = Column(JSON, nullable=True)
+    # Generic config storage for operational settings (trial_reward_valuation, accrual_multiplier, etc.)
+    config_json = Column(JSON, nullable=True)
     is_active = Column(Boolean, nullable=False, server_default="1", default=True)
 
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)

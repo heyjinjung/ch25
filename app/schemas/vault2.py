@@ -16,14 +16,20 @@ class VaultProgramResponse(BaseModel):
     is_active: bool | None = None
     unlock_rules_json: dict | None = None
     ui_copy_json: dict | None = None
+    config_json: dict | None = None
 
 
 class VaultProgramUnlockRulesUpsertRequest(BaseModel):
     unlock_rules_json: dict | None = None
 
 
+
 class VaultProgramUiCopyUpsertRequest(BaseModel):
     ui_copy_json: dict | None = None
+
+
+class VaultProgramConfigUpsertRequest(BaseModel):
+    config_json: dict | None = None
 
 
 class VaultTopItem(BaseModel):
