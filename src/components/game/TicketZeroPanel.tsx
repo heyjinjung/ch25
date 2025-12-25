@@ -47,6 +47,12 @@ const TicketZeroPanel: React.FC<Props> = ({ tokenType, onClaimSuccess }) => {
   const queryClient = useQueryClient();
   const [vaultModalOpen, setVaultModalOpen] = useState(false);
 
+  // Feature temporarily disabled
+  return null;
+
+  // Feature temporarily disabled
+  // return null; // Removed early return to run hooks (satisfy React rules)
+
   const ui = useQuery({
     queryKey: ["ui-config", "ticket_zero"],
     queryFn: () => getUiConfig("ticket_zero"),
@@ -61,6 +67,7 @@ const TicketZeroPanel: React.FC<Props> = ({ tokenType, onClaimSuccess }) => {
   });
 
   const config = useMemo(() => {
+    // ... (keep existing implementation) ...
     const value = ui.data?.value ?? null;
     const v = value as Record<string, any> | null;
     const title = typeof v?.title === "string" ? v.title : DEFAULT_COPY.title;
@@ -175,6 +182,9 @@ const TicketZeroPanel: React.FC<Props> = ({ tokenType, onClaimSuccess }) => {
     },
   });
 
+  // Feature temporarily disabled
+  return null;
+
   return (
     <div className="relative overflow-hidden rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-[clamp(12px,2.6vw,14px)] text-white/85">
       <div className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-cc-orange/60" />
@@ -228,7 +238,7 @@ const TicketZeroPanel: React.FC<Props> = ({ tokenType, onClaimSuccess }) => {
                 ) : null}
 
                 <div className="mt-2 max-h-[132px] space-y-2 overflow-y-auto pr-1">
-                  {config.rewardPreviewItems.map((item, idx) => (
+                  {config.rewardPreviewItems?.map((item, idx) => (
                     <div key={`${item.label}-${idx}`} className="flex items-center justify-between gap-3 border-b border-white/10 pb-2 last:border-0 last:pb-0">
                       <p className="text-sm font-semibold text-white/85">{item.label}</p>
                       {typeof item.amount === "number" ? (
