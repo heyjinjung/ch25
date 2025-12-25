@@ -212,6 +212,7 @@ const VaultMainPanel: React.FC = () => {
       accrualMultiplier,
       recommendedAction,
       ctaPayload,
+      uiCopyJson: data?.uiCopyJson,
     };
   }, [vault.data]);
 
@@ -363,7 +364,7 @@ const VaultMainPanel: React.FC = () => {
                                 aria-hidden="true"
                               />
                             </span>
-                            통합 금고 현황
+                            {(view.uiCopyJson?.title as string) || "통합 금고 현황"}
                             <span className="rounded-full border border-white/10 bg-white/10 px-2 py-0.5 text-[10px] font-extrabold text-white/70">Phase 1</span>
                           </div>
                           <p className="mt-3 text-3xl font-extrabold text-white">{formatWon(view.vaultBalance)}</p>
@@ -449,7 +450,7 @@ const VaultMainPanel: React.FC = () => {
                 </span>
                 <div>
                   <p className="text-sm font-extrabold text-white">티켓이 부족해요</p>
-                  <p className="mt-1 text-xs text-white/60">씨씨카지노 이용 확인 후 금고 해금이 진행됩니다.</p>
+                  <p className="mt-1 text-xs text-white/60">{(view.uiCopyJson?.desc as string) || "씨씨카지노 이용 확인 후 금고 해금이 진행됩니다."}</p>
                 </div>
               </div>
 
