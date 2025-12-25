@@ -15,14 +15,21 @@ const derivedAdminBase = (() => {
   if (typeof window === "undefined") return "";
   const { protocol, hostname, origin } = window.location;
   const isLocalHost = hostname === "localhost" || hostname === "127.0.0.1";
+
+  // In production, if we're on HTTPS, ensure base uses HTTPS.
+  // Using origin directly is safest as it includes the protocol used to load the page.
   const base = isLocalHost ? `${protocol}//${hostname}:8000` : origin;
   return `${base.replace(/\/+$/, "")}/admin/api`;
 })();
 
-const adminBaseURL = (envAdminBase || derivedAdminBase).replace(/\/+$/, "");
+const resolvedBaseURL = (() => {
+  if (envAdminBase) return envAdminBase.replace(/\/+$/, "");
+  if (derivedAdminBase) return derivedAdminBase;
+  return "";
+})();
 
 export const adminApi = axios.create({
-  baseURL: adminBaseURL,
+  baseURL: resolvedBaseURL,
 });
 
 adminApi.interceptors.request.use((config) => {

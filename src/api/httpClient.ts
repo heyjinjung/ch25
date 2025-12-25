@@ -15,7 +15,10 @@ const derivedBase = (() => {
   return isLocalHost ? `${protocol}//${hostname}:8000` : origin;
 })();
 
-const resolvedBaseURL = (envBase || derivedBase).replace(/\/+$/, "");
+const resolvedBaseURL = (() => {
+  if (envBase) return envBase.replace(/\/+$/, "");
+  return derivedBase;
+})();
 
 export const userApi = axios.create({
   baseURL: resolvedBaseURL,
