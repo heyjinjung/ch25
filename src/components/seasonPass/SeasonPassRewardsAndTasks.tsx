@@ -149,7 +149,8 @@ export const SeasonPassRewardsAndTasks: React.FC = () => {
                       ? "text-white"
                       : "text-white/60";
 
-                  const canClaim = reward.isUnlocked && !reward.is_claimed && !reward.auto_claim;
+                  const isManualAdmin = /CC\s*코인/i.test(reward.reward_label);
+                  const canClaim = reward.isUnlocked && !reward.is_claimed && !reward.auto_claim && !isManualAdmin;
                   const isPending = pendingClaimLevel === reward.level && claimReward.isPending;
 
                   return (
@@ -174,18 +175,15 @@ export const SeasonPassRewardsAndTasks: React.FC = () => {
                                 잠금
                               </span>
                             )}
-                            {reward.auto_claim && (
+                            {(reward.auto_claim || isManualAdmin) && (
                               <button
                                 type="button"
                                 className="rounded-full border border-white/10 bg-black/30 px-2 py-0.5 text-[clamp(11px,2.6vw,12px)] text-white/75 hover:border-white/20"
                                 onClick={() => {
-                                  addToast(
-                                    "자동지급 보상입니다. 레벨 달성 후 자동 반영돼요. 지금은 룰렛/주사위/복권으로 XP를 더 모아보세요.",
-                                    "info"
-                                  );
+                                  addToast("관리자 확인 후 지급됩니다. 자동 수령/정산 없음.", "info");
                                 }}
                               >
-                                자동지급
+                                관리자 지급
                               </button>
                             )}
                           </div>
@@ -204,6 +202,8 @@ export const SeasonPassRewardsAndTasks: React.FC = () => {
                             <span className="text-[clamp(13px,2.6vw,14px)] font-semibold" style={{ color: baseAccent }}>
                               지급완료
                             </span>
+                          ) : isManualAdmin || reward.auto_claim ? (
+                            <span className="text-[clamp(13px,2.6vw,14px)] text-amber-200">관리자 지급 예정</span>
                           ) : reward.isUnlocked ? (
                             <span className="text-[clamp(13px,2.6vw,14px)] text-white/75">획득 가능</span>
                           ) : (
@@ -235,7 +235,10 @@ export const SeasonPassRewardsAndTasks: React.FC = () => {
                             }}
                           >
                             {isPending ? "지급 중..." : "보상 받기"}
-                          </button>
+                          ) : null}
+                          {(isManualAdmin || reward.auto_claim) && !reward.is_claimed ? (
+                            <p className="text-[clamp(12px,2.5vw,13px)] text-amber-200">관리자 확인 후 지급됩니다. 자동 수령/정산 없음.</p>
+                          ) : null}
                         ) : null}
                       </div>
                     </motion.div>

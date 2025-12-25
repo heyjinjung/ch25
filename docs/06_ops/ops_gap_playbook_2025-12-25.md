@@ -25,20 +25,27 @@
 ## 2) 데이터 초기화 플랜 (시즌 종료 이후)
 보존 대상: 가입/닉네임/가입일자/최근활동일. 초기화 대상: 랭킹/플레이로그/잔여 티켓/XP/시즌패스 경험치 등.
 
-- [ ] 백업 먼저: 전체 DB 덤프 생성 후 안전한 스토리지에 보관.
-- [ ] 초기화 스크립트 작성: 보존 컬럼만 남기고 나머지 테이블 truncate/reset. (드라이런/비활성 상태에서 검증)
-- [ ] 초기화 실행 순서 정리: 백업 확인 → 초기화 스크립트 실행 → 샘플 계정으로 검증 → 서버 재가동.
+- [x] 백업 먼저: 전체 DB 덤프 생성 후 안전한 스토리지에 보관.
+- [x] 초기화 스크립트 작성: 보존 컬럼만 남기고 나머지 테이블 truncate/reset. (드라이런/비활성 상태에서 검증)
+- [x] 초기화 실행 순서 정리: 백업 확인 → 초기화 스크립트 실행 → 샘플 계정으로 검증 → 서버 재가동.
 
-### 참고 명령어 (실 DB 정보 확인 후 실행)
-- 백업:
+### 현재 DB 스펙 (12/25 기준)
+- MySQL 8.0 컨테이너 `xmas-db`, DB `xmas_event`, 사용자 `xmasuser`, 비밀번호 `2wP?+!Etm8#Qv4Mn`.
+- docker compose 위치: `/root/ch25`, 백업 보관 폴더: `/root/ch25/backups`.
+
+### 완료 내역 (12/25 실행)
+- 백업 생성: `/root/ch25/backups/backup_20251225_044008.sql` (~547K), `/root/ch25/backups/backup_20251225_044042.sql` (~95K).
+- 초기화: `ranking_daily`, `roulette_log`, `season_pass_progress` 등 시즌 데이터 테이블 truncate 후 카운트 0 확인.
+
+### 재실행용 참고 명령어 (실 DB 정보 확인 후 실행)
+- 백업(MySQL, 비밀번호 특수문자 주의 → `MYSQL_PWD` 사용):
   ```bash
-  # DB 이름/사용자/컨테이너명을 실제 값으로 치환
-  docker compose exec backend pg_dump -U $DB_USER -d $DB_NAME -Fc -f /tmp/backup_$(date +%Y%m%d).dump
-  docker compose cp backend:/tmp/backup_$(date +%Y%m%d).dump ./backups/
+  cd /root/ch25
+  docker compose exec db env MYSQL_PWD='2wP?+!Etm8#Qv4Mn' mysqldump --no-tablespaces -uxmasuser -hlocalhost -Dxmas_event > backups/backup_$(date +%Y%m%d_%H%M%S).sql
   ```
 - 특정 테이블 초기화 예시(실행 전 백업 필수):
   ```bash
-  docker compose exec backend psql -U $DB_USER -d $DB_NAME -c "TRUNCATE TABLE ranking_logs, play_logs, tickets, season_pass_progress RESTART IDENTITY;"
+  docker compose exec db env MYSQL_PWD='2wP?+!Etm8#Qv4Mn' mysql -uxmasuser -hlocalhost -Dxmas_event -e "TRUNCATE TABLE ranking_daily, roulette_log, season_pass_progress;"
   ```
   ※ 컬럼 단위 초기화가 필요하면 별도 UPDATE/DELETE 스크립트로 작성 후 검증.
 
@@ -52,9 +59,12 @@
 - "서버 점검: 1/1~1/2, 1/6~1/7 랭킹 정산 일시 중지. 12/25~12/31 체크인 3회면 1/2 이후 금고에 예약 지급(수동 지급)."
 
 ## 4) 금고 지급 경로 고지
-- [ ] FE/운영 카피에 "수동/외부 지급" 명시, 자동 지급 기대감 차단.
+- [x] FE/운영 카피에 "수동/외부 지급" 명시, 자동 지급 기대감 차단.
+  - cc 코인: 전량 관리자 확인 후 지급(프론트 자동 수령/자동 정산 경로 제거).
+  - 프론트 UI: cc 코인 자동 수령/자동 정산 노출 제거, '관리자 지급' 라벨/카피로만 표시.
+  - 자동 지급/획득 차단 대상: XP 경험치, 내부 게임 티켓(룰렛티켓/주사위티켓/복권티켓).
 - [ ] 운영 핸드북에 지급 절차(스프레드시트/외부 정산 시스템 입력 절차) 기록.
-- [ ] 해금 알림/모달에도 "수동 지급" 라벨 노출.
+- [x] 해금 알림/모달에도 "수동 지급" 라벨 노출(자동 수령/정산 문구 제거, 관리자 지급 안내만 표시).
 
 ## 5) 리소스 제약 대응 (AI 토큰 부족)
 - [ ] 먼저 문서/체크리스트 확정 → 개발/배포 작업은 토큰 확보 후 실행.
