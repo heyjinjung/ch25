@@ -1,5 +1,4 @@
-import httpClient from "./httpClient";
-import { userApi } from "../../api/httpClient";
+import httpClient, { adminApi } from "./httpClient";
 
 export interface VaultProgramResponse {
     key: string;
@@ -21,7 +20,7 @@ export interface VaultStatsResponse {
 }
 
 export const getVaultDefaultProgram = async (): Promise<VaultProgramResponse> => {
-    const { data } = await userApi.get("/api/admin/vault-programs/default");
+    const { data } = await adminApi.get("/vault-programs/default/");
     return data;
 };
 
@@ -29,7 +28,7 @@ export const updateVaultUnlockRules = async (
     programKey: string,
     unlockRulesJson: any
 ): Promise<VaultProgramResponse> => {
-    const { data } = await userApi.put(`/api/admin/vault-programs/${programKey}/unlock-rules`, {
+    const { data } = await adminApi.put(`/vault-programs/${programKey}/unlock-rules/`, {
         unlock_rules_json: unlockRulesJson,
     });
     return data;
@@ -39,7 +38,7 @@ export const updateVaultUiCopy = async (
     programKey: string,
     uiCopyJson: any
 ): Promise<VaultProgramResponse> => {
-    const { data } = await userApi.put(`/api/admin/vault-programs/${programKey}/ui-copy`, {
+    const { data } = await adminApi.put(`/vault-programs/${programKey}/ui-copy/`, {
         ui_copy_json: uiCopyJson,
     });
     return data;
@@ -49,14 +48,14 @@ export const updateVaultConfig = async (
     programKey: string,
     configJson: any
 ): Promise<VaultProgramResponse> => {
-    const { data } = await userApi.put(`/api/admin/vault-programs/${programKey}/config`, {
+    const { data } = await adminApi.put(`/vault-programs/${programKey}/config/`, {
         config_json: configJson,
     });
     return data;
 };
 
 export const getVaultStats = async (): Promise<VaultStatsResponse> => {
-    const { data } = await userApi.get("/api/admin/vault-programs/stats");
+    const { data } = await adminApi.get("/vault-programs/stats/");
     return data;
 };
 
