@@ -20,20 +20,20 @@ export interface ExternalRankingListResponse {
 }
 
 export async function fetchExternalRankingList() {
-  const { data } = await adminApi.get<ExternalRankingListResponse>("/external-ranking");
+  const { data } = await adminApi.get<ExternalRankingListResponse>("/external-ranking/");
   return data;
 }
 
 export async function upsertExternalRanking(payloads: ExternalRankingPayload[]) {
-  const { data } = await adminApi.post<ExternalRankingListResponse>("/external-ranking", payloads);
+  const { data } = await adminApi.post<ExternalRankingListResponse>("/external-ranking/", payloads);
   return data;
 }
 
 export async function updateExternalRanking(userId: number, payload: Partial<ExternalRankingPayload>) {
-  const { data } = await adminApi.put<ExternalRankingEntry>(`/external-ranking/${userId}`, payload);
+  const { data } = await adminApi.put<ExternalRankingEntry>(`/external-ranking/${userId}/`, payload);
   return data;
 }
 
 export async function deleteExternalRanking(userId: number) {
-  await adminApi.delete(`/external-ranking/${userId}`);
+  await adminApi.delete(`/external-ranking/${userId}/`);
 }
