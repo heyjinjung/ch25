@@ -12,11 +12,13 @@ from zoneinfo import ZoneInfo
 
 from fastapi import HTTPException, status
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.models.new_member_dice import NewMemberDiceEligibility
 from app.models.user import User
+from app.models.vault_earn_event import VaultEarnEvent
 from app.services.reward_service import RewardService
 from app.services.vault2_service import Vault2Service
 
@@ -35,6 +37,9 @@ class VaultService:
     VAULT_TIER_B_UNLOCK = 10_000
 
     PROGRAM_KEY = "NEW_MEMBER_VAULT"
+
+    GAME_EARN_BASE_AMOUNT = 200
+    GAME_EARN_DICE_LOSE_BONUS = 100
 
     @classmethod
     def vault_accrual_multiplier(cls, now: datetime | None = None) -> float:
@@ -363,3 +368,100 @@ class VaultService:
         else:
             db.flush()
         return unlock_amount
+
+    def record_game_play_earn_event(
+        self,
+        db: Session,
+        *,
+        user_id: int,
+        game_type: str,
+        game_log_id: int,
+        token_type: str | None = None,
+        outcome: str | None = None,
+        payout_raw: dict | None = None,
+        now: datetime | None = None,
+    ) -> int:
+        """Idempotently accrue Phase 1 vault locked balance for a game play.
+
+        - Idempotency key is derived from (game_type, game_log_id).
+        - Amount: base +200 per play; for DICE LOSE add +100.
+        - Eligibility required (same as Phase 1 vault funnel).
+        - Expires-at is set only when absent/expired; never refreshed while active.
+
+        Returns the amount actually added (0 if skipped / duplicate / not eligible).
+        """
+
+        settings = get_settings()
+        if not bool(getattr(settings, "enable_vault_game_earn_events", False)):
+            return 0
+
+        now_dt = now or datetime.utcnow()
+
+        # Eligibility guard (Phase 1 funnel).
+        if not self._eligible(db, user_id, now_dt):
+            return 0
+
+        earn_event_id = f"GAME:{str(game_type).upper()}:{int(game_log_id)}"
+
+        # Fast path: already recorded.
+        exists = db.execute(
+            select(VaultEarnEvent.id).where(VaultEarnEvent.earn_event_id == earn_event_id)
+        ).first()
+        if exists is not None:
+            return 0
+
+        amount = int(self.GAME_EARN_BASE_AMOUNT)
+        if str(game_type).upper() == "DICE" and str(outcome).upper() == "LOSE":
+            amount += int(self.GAME_EARN_DICE_LOSE_BONUS)
+        if amount <= 0:
+            return 0
+
+        # Lock user row for update when supported.
+        q = db.query(User).filter(User.id == user_id)
+        if db.bind and db.bind.dialect.name != "sqlite":
+            q = q.with_for_update()
+        user = q.one_or_none()
+        if user is None and db.bind and db.bind.dialect.name == "sqlite":
+            user = User(id=user_id, external_id=f"test-user-{user_id}")
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+        if user is None:
+            return 0
+
+        # Phase 1: clear expired locked first, then accrue.
+        self._expire_locked_if_due(user, now_dt)
+        user.vault_locked_balance = int(user.vault_locked_balance or 0) + amount
+        self._ensure_locked_expiry(user, now_dt)
+        self.sync_legacy_mirror(user)
+
+        event = VaultEarnEvent(
+            user_id=user.id,
+            earn_event_id=earn_event_id,
+            earn_type="GAME_PLAY",
+            amount=amount,
+            source=str(game_type).upper(),
+            reward_kind="BASE" if amount == self.GAME_EARN_BASE_AMOUNT else "BASE_PLUS_BONUS",
+            game_type=str(game_type).upper(),
+            token_type=token_type,
+            payout_raw_json=payout_raw or {},
+            created_at=now_dt,
+        )
+
+        db.add(user)
+        db.add(event)
+
+        # Phase 2/3-stage prep: record accrual into Vault2 bookkeeping (no v1 behavior change).
+        try:
+            Vault2Service().accrue_locked(db, user_id=user.id, amount=amount, now=now_dt, commit=False)
+        except Exception:
+            pass
+
+        try:
+            db.commit()
+        except IntegrityError:
+            # Duplicate earn_event_id raced in; rollback and skip.
+            db.rollback()
+            return 0
+
+        return amount

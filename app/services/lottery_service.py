@@ -17,6 +17,7 @@ from app.services.game_common import GamePlayContext, log_game_play
 from app.services.game_wallet_service import GameWalletService
 from app.services.reward_service import RewardService
 from app.services.season_pass_service import SeasonPassService
+from app.services.vault_service import VaultService
 
 
 class LotteryService:
@@ -29,6 +30,7 @@ class LotteryService:
         self.reward_service = RewardService()
         self.wallet_service = GameWalletService()
         self.season_pass_service = SeasonPassService()
+        self.vault_service = VaultService()
 
     def _get_today_config(self, db: Session) -> LotteryConfig:
         config = db.execute(select(LotteryConfig).where(LotteryConfig.is_active.is_(True))).scalar_one_or_none()
@@ -136,6 +138,21 @@ class LotteryService:
         db.add(log_entry)
         db.commit()
         db.refresh(log_entry)
+
+        # Vault Phase 1: idempotent game accrual (safe-guarded by feature flag).
+        self.vault_service.record_game_play_earn_event(
+            db,
+            user_id=user_id,
+            game_type=FeatureType.LOTTERY.value,
+            game_log_id=log_entry.id,
+            token_type=token_type.value,
+            outcome=None,
+            payout_raw={
+                "prize_id": chosen.id,
+                "reward_type": chosen.reward_type,
+                "reward_amount": chosen.reward_amount,
+            },
+        )
 
         xp_award = self.BASE_GAME_XP
         ctx = GamePlayContext(user_id=user_id, feature_type=FeatureType.LOTTERY.value, today=today)

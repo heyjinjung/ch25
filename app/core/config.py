@@ -131,6 +131,16 @@ class Settings(BaseSettings):
         ),
     )
 
+    # Vault earn events (game accrual)
+    # Default OFF for safe rollout (no behavior change unless explicitly enabled).
+    enable_vault_game_earn_events: bool = Field(
+        False,
+        validation_alias=AliasChoices(
+            "ENABLE_VAULT_GAME_EARN_EVENTS",
+            "enable_vault_game_earn_events",
+        ),
+    )
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

@@ -49,4 +49,5 @@ from app.models import (  # noqa: F401
     NewMemberDiceLog,
     VaultProgram,
     VaultStatus,
+    VaultEarnEvent,
 )

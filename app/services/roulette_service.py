@@ -18,6 +18,7 @@ from app.services.game_common import GamePlayContext, log_game_play
 from app.services.game_wallet_service import GameWalletService
 from app.services.reward_service import RewardService
 from app.services.season_pass_service import SeasonPassService
+from app.services.vault_service import VaultService
 
 
 class RouletteService:
@@ -30,6 +31,7 @@ class RouletteService:
         self.reward_service = RewardService()
         self.wallet_service = GameWalletService()
         self.season_pass_service = SeasonPassService()
+        self.vault_service = VaultService()
 
     def _seed_default_segments(self, db: Session, config_id: int) -> list[RouletteSegment]:
         """Ensure six default segments exist for the given config (TEST_MODE bootstrap)."""
@@ -167,6 +169,21 @@ class RouletteService:
         db.add(log_entry)
         db.commit()
         db.refresh(log_entry)
+
+        # Vault Phase 1: idempotent game accrual (safe-guarded by feature flag).
+        self.vault_service.record_game_play_earn_event(
+            db,
+            user_id=user_id,
+            game_type=FeatureType.ROULETTE.value,
+            game_log_id=log_entry.id,
+            token_type=token_type.value,
+            outcome=None,
+            payout_raw={
+                "segment_id": chosen.id,
+                "reward_type": chosen.reward_type,
+                "reward_amount": chosen.reward_amount,
+            },
+        )
 
         xp_award = self.BASE_GAME_XP
         ctx = GamePlayContext(user_id=user_id, feature_type=FeatureType.ROULETTE.value, today=today)

@@ -15,6 +15,7 @@ from app.services.game_common import GamePlayContext, log_game_play
 from app.services.game_wallet_service import GameWalletService
 from app.services.reward_service import RewardService
 from app.services.season_pass_service import SeasonPassService
+from app.services.vault_service import VaultService
 
 
 class DiceService:
@@ -28,6 +29,7 @@ class DiceService:
         self.reward_service = RewardService()
         self.wallet_service = GameWalletService()
         self.season_pass_service = SeasonPassService()
+        self.vault_service = VaultService()
 
     def _get_today_config(self, db: Session) -> DiceConfig:
         config = db.execute(select(DiceConfig).where(DiceConfig.is_active.is_(True))).scalar_one_or_none()
@@ -130,6 +132,21 @@ class DiceService:
         db.add(log_entry)
         db.commit()
         db.refresh(log_entry)
+
+        # Vault Phase 1: idempotent game accrual (safe-guarded by feature flag).
+        self.vault_service.record_game_play_earn_event(
+            db,
+            user_id=user_id,
+            game_type=FeatureType.DICE.value,
+            game_log_id=log_entry.id,
+            token_type=token_type.value,
+            outcome=outcome,
+            payout_raw={
+                "result": outcome,
+                "reward_type": reward_type,
+                "reward_amount": reward_amount,
+            },
+        )
 
         xp_award = self.WIN_GAME_XP if outcome == "WIN" else self.BASE_GAME_XP
         ctx = GamePlayContext(user_id=user_id, feature_type=FeatureType.DICE.value, today=today)

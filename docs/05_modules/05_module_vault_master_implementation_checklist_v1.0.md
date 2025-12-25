@@ -1,7 +1,7 @@
 # Vault(금고) Phase 1 구현 체크리스트
 
 - 문서 타입: 체크리스트
-- 버전: v1.5
+- 버전: v1.6
 - 작성일: 2025-12-25
 - 작성자: BE팀
 - 대상 독자: 백엔드/프론트엔드 개발자, QA, 운영
@@ -21,8 +21,14 @@
 - [x] unlock_rules_json에 Gold 인출율(30/50/70), Diamond 해금 조건(Diamond Key ≥ 2 + Gold 누적 ≥ 1,000,000), 시드 이월 범위(10~30%, 기본 20%) 값을 운영이 수정 가능하도록 설정 저장 위치/포맷 확정.
 - [x] downtime/배너 일정(12/28, 12/31, 1/5) 및 12/31 백업/초기화 스크립트 경로 확정.
 	- 배너 저장소: `ui_config` 키 `downtime_banner` (FE: 상단 배너, 활성 구간에만 노출)
-	- 운영 설정 API: `PUT /admin/api/ui-config/downtime_banner` (value 예시)
-		- `{ "enabled": true, "windows": [{"start_kst":"2025-12-28T00:00:00+09:00","end_kst":"2025-12-28T02:00:00+09:00","message":"12/28 00:00~02:00 점검 예정입니다."}] }`
+	- 운영 설정 API: `PUT /admin/api/ui-config/downtime_banner`
+		- 요청 바디는 `{ "value": ... }` 래핑이 필요함 (UiConfigUpsertRequest)
+		- 예시(시간은 운영 확정 값으로 수정):
+			- `{ "value": { "enabled": true, "windows": [
+					{"start_kst":"2025-12-28T00:00:00+09:00","end_kst":"2025-12-28T02:00:00+09:00","message":"12/28 00:00~02:00 점검 예정입니다."},
+					{"start_kst":"2025-12-31T00:00:00+09:00","end_kst":"2025-12-31T02:00:00+09:00","message":"12/31 00:00~02:00 점검 예정입니다."},
+					{"start_kst":"2026-01-05T00:00:00+09:00","end_kst":"2026-01-05T02:00:00+09:00","message":"1/5 00:00~02:00 점검 예정입니다."}
+				] } }`
 	- 확인 API: `GET /api/ui-config/downtime_banner`
 	- 백업/초기화:
 		- 백업 스크립트: `scripts/backup.sh` (기본 경로: `/root/backups/xmas-event`)
@@ -30,11 +36,11 @@
 		- 통합 실행 스크립트(백업 → 초기화): `scripts/xmas_2025_12_31_backup_and_reset.sh`
 
 ## 3. 백엔드 구현 체크리스트
-- [ ] 비용 소모 + 결과 확정 지점에 VaultEarnEvent 생성/호출 연결(게임별 결과 핸들러 기준). 기존 로그/보상 파이프라인과 중복 호출되지 않는지 확인.
-- [ ] earn_event_id 생성 규칙 확정(게임 결과 ID 기반) 후 멱등 삽입/검증 구현(존재 시 SKIP 로그 남기고 금액 증분 없음 확인).
-- [ ] VaultEarnEvent 로깅 스키마 추가: earn_event_id, earn_type, amount, source, reward_kind, game_type, token_type, payout_raw, created_at(인덱스와 UNIQUE 제약 포함) 및 기존 vault2 필드와 충돌 여부 확인.
-- [ ] 적립 단위 적용: 기본 +200/판, LOSE 추가 +100/패, amount 합산 뒤 vault_locked_balance 증가(소수점/통화 단위 변환 오류 없는지 확인).
-- [ ] 최초 적립 시 expires_at = now +24h 세팅, 이후 적립 시 갱신 금지(Phase 1 규칙 고정). 현행 24h 만료 스케줄러/크론과 충돌 여부 점검.
+- [x] 비용 소모 + 결과 확정 지점에 VaultEarnEvent 생성/호출 연결(게임별 결과 핸들러 기준). 기존 로그/보상 파이프라인과 중복 호출되지 않는지 확인.
+- [x] earn_event_id 생성 규칙 확정(게임 결과 ID 기반) 후 멱등 삽입/검증 구현(존재 시 SKIP, 금액 증분 없음 확인).
+- [x] VaultEarnEvent 로깅 스키마 추가: earn_event_id, earn_type, amount, source, reward_kind, game_type, token_type, payout_raw, created_at(인덱스와 UNIQUE 제약 포함).
+- [x] 적립 단위 적용: 기본 +200/판, DICE LOSE 추가 +100, amount 합산 뒤 vault_locked_balance 증가.
+- [x] 최초 적립 시 expires_at = now +24h 세팅, 이후 적립 시 갱신 금지(Phase 1 규칙 고정).
 - [ ] trial 결과 적립: reward_kind 금액형만 환산→적립, 미환산/비금액형은 SKIP 로그; 플래그(`enable_trial_payout_to_vault`)로 롤아웃 가드. 현 `RewardService.deliver()` 분기(게임 지갑/캐시)와 중복 지급되지 않는지 확인.
 - [ ] ticket=0 recommended_action/cta_payload 유지: VaultService.get_status()에서 OPEN_VAULT_MODAL 반환 확인(자동 시드 없음 유지).
 - [ ] free fill once(POST /api/vault/fill) 멱등/1회 제한 확인, locked/mirror 동기화 검증(기존 로직에 earn_event_id 연동 안 함 확인).
@@ -99,6 +105,7 @@
 - [ ] downtime 배너 교체 스케줄(12/28, 12/31, 1/5) 및 12/31 백업/초기화 작업이 다른 배포/플래그와 충돌하지 않는지 확인.
 
 ## 10. 변경 이력
+- v1.6 (2025-12-25, BE팀): VaultEarnEvent(멱등) 테이블 추가 및 게임 결과 확정 시(룰렛/주사위/복권 play commit 직후) locked +200 적립 연결. DICE LOSE는 추가 +100. 기본값은 플래그 OFF(`ENABLE_VAULT_GAME_EARN_EVENTS`)로 운영 안전 롤아웃.
 - v1.5 (2025-12-25, BE팀): downtime 배너를 `ui_config` 키 `downtime_banner`로 운영 가능하도록 경로 확정(프론트 상단 배너 노출). 12/31 백업(`scripts/backup.sh`) + 초기화(`scripts/reset_post_season.sql`)를 묶은 안전 실행 스크립트(`scripts/xmas_2025_12_31_backup_and_reset.sh`) 추가.
 - v1.4 (2025-12-25, BE팀): trial 설정 플래그/캡(`ENABLE_TRIAL_GRANT_AUTO`, `TRIAL_DAILY_CAP`, `TRIAL_WEEKLY_CAP`, `TIERED_GRANT_ENABLED`, `ENABLE_TRIAL_PAYOUT_TO_VAULT`, `TRIAL_REWARD_VALUATION`) 추가 및 TrialGrantService에 auto/cap 반영. VaultProgram 운영 편집 API(`/api/admin/vault-programs/*`) 추가, `GET /api/vault/status`가 DB `unlock_rules_json` 오버라이드(merge) 우선 사용.
 - v1.3 (2025-12-25, BE팀): `VAULT_ACCRUAL_MULTIPLIER_*` 환경변수(기본 OFF) 추가, `GET /api/vault/status`에 `accrual_multiplier` 노출, `unlock_rules_json`에 Gold(30/50/70)·Diamond(Key≥2+Gold≥1,000,000)·시드 이월(10~30%, 기본20) 규격 포함. `POST /api/vault/fill`/신규 주사위 LOSE 적립에 multiplier 적용. FE `vaultApi` 타입에 `accrualMultiplier` 수용.
