@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchAdminUiConfig, upsertAdminUiConfig } from "../../api/adminUiConfigApi";
 import { VaultProgramResponse, updateVaultUiCopy } from "../../api/adminVaultApi";
-import { Save, RotateCcw, Layout, MessageSquare } from "lucide-react";
+import { Save, Layout, MessageSquare } from "lucide-react";
 
 type Props = {
     program: VaultProgramResponse;
@@ -29,10 +29,10 @@ const VaultUiEditor: React.FC<Props> = ({ program }) => {
     useEffect(() => {
         if (ticketZeroData?.value) {
             const v = ticketZeroData.value as any;
-            setTzTitle(v.title || "");
-            setTzBody(v.body || "");
-            setTzPrimaryLabel(v.primaryCta?.label || v.primary_cta_label || "");
-            setTzSecondaryLabel(v.secondaryCta?.label || v.secondary_cta_label || "");
+            setTzTitle(v.title || "티켓이 0이에요 (모두 소진)");
+            setTzBody(v.body || "이렇게 주다가는 내가 망해!!!\n\n체험 티켓을 모두 사용하셨네요. 10레벨만 달성해도 Diamond Key를 확정 지급합니다!");
+            setTzPrimaryLabel(v.primaryCta?.label || v.primary_cta_label || "씨씨카지노 바로가기");
+            setTzSecondaryLabel(v.secondaryCta?.label || v.secondary_cta_label || "실장 텔레 문의");
         }
     }, [ticketZeroData]);
 
@@ -59,18 +59,23 @@ const VaultUiEditor: React.FC<Props> = ({ program }) => {
             };
 
             const tzJson = {
-                ...ticketZeroData?.value as any,
-                title: tzTitle,
-                body: tzBody,
+                ...(ticketZeroData?.value as any || {}),
+                title: tzTitle || "티켓이 0이에요 (모두 소진)",
+                body: tzBody || "이렇게 주다가는 내가 망해!!!\n\n체험 티켓을 모두 사용하셨네요. 10레벨만 달성해도 Diamond Key를 확정 지급합니다!",
+                primary_cta_label: tzPrimaryLabel || "씨씨카지노 바로가기",
+                secondary_cta_label: tzSecondaryLabel || "실장 텔레 문의",
+                primary_cta_url: (ticketZeroData?.value as any)?.primary_cta_url || "https://ccc-010.com",
+                secondary_cta_url: (ticketZeroData?.value as any)?.secondary_cta_url || "https://t.me/jm956",
+                // Keep nested version for TicketZeroPanel compatibility
                 primaryCta: {
                     ...(ticketZeroData?.value as any)?.primaryCta,
-                    label: tzPrimaryLabel,
-                    url: (ticketZeroData?.value as any)?.primaryCta?.url || "https://ccc-010.com"
+                    label: tzPrimaryLabel || "씨씨카지노 바로가기",
+                    url: (ticketZeroData?.value as any)?.primaryCta?.url || (ticketZeroData?.value as any)?.primary_cta_url || "https://ccc-010.com"
                 },
                 secondaryCta: {
                     ...(ticketZeroData?.value as any)?.secondaryCta,
-                    label: tzSecondaryLabel,
-                    url: (ticketZeroData?.value as any)?.secondaryCta?.url || "https://t.me/jm956"
+                    label: tzSecondaryLabel || "실장 텔레 문의",
+                    url: (ticketZeroData?.value as any)?.secondaryCta?.url || (ticketZeroData?.value as any)?.secondary_cta_url || "https://t.me/jm956"
                 }
             };
 

@@ -12,7 +12,7 @@ from app.services.ui_config_service import UiConfigService
 
 router = APIRouter(prefix="/api", tags=["ui-copy"])
 
-_TICKET0_KEY = "ticket0_resolution_copy"
+_TICKET0_KEY = "ticket_zero"
 
 _DEFAULT = Ticket0ResolutionCopy(
     title="티켓이 0이에요",
