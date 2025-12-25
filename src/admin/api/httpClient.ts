@@ -11,9 +11,27 @@ const envAdminBase = (
   ""
 ).trim();
 
+const normalizeHttps = (base: string) => {
+  if (!base) return base;
+
+  // If we are in the browser on HTTPS and the provided base is HTTP, upgrade to HTTPS to avoid mixed content.
+  if (typeof window !== "undefined" && window.location.protocol === "https:" && base.startsWith("http://")) {
+    try {
+      const url = new URL(base, window.location.origin);
+      url.protocol = "https:";
+      return url.toString().replace(/\/+$/, "");
+    } catch (err) {
+      // Fallback string replace if URL construction fails (e.g., invalid URL but still usable as axios base)
+      return `https://${base.slice("http://".length).replace(/\/+$/, "")}`;
+    }
+  }
+
+  return base.replace(/\/+$/, "");
+};
+
 const resolvedBaseURL = (() => {
-  // 1. If explicitly provided via env, use it.
-  if (envAdminBase) return envAdminBase.replace(/\/+$/, "");
+  // 1. If explicitly provided via env, use it (with HTTPS normalization when the page is served over TLS).
+  if (envAdminBase) return normalizeHttps(envAdminBase);
 
   // 2. In browser (production/development)
   if (typeof window !== "undefined") {
