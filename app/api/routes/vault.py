@@ -89,7 +89,7 @@ def status(db: Session = Depends(get_db), user_id: int = Depends(get_current_use
         cta_payload=cta_payload,
         program_key=service.PROGRAM_KEY,
         unlock_rules_json=unlock_rules_json,
-        accrual_multiplier=service.vault_accrual_multiplier(now) if eligible else 1.0,
+        accrual_multiplier=service.vault_accrual_multiplier(db, now) if eligible else 1.0,
         ui_copy_json=ui_copy_json,
     )
 

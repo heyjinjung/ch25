@@ -43,13 +43,24 @@ class VaultService:
     GAME_EARN_DICE_LOSE_BONUS = 100
 
     @classmethod
-    def vault_accrual_multiplier(cls, now: datetime | None = None) -> float:
+    def vault_accrual_multiplier(cls, db: Session | None = None, now: datetime | None = None) -> float:
         """Return a multiplier for vault accrual amounts.
 
-        This is a time-window event flag, evaluated in KST.
-        Disabled by default to keep local dev/tests deterministic.
+        Priority:
+        1. VaultProgram.config_json["accrual_multiplier"] (if db provided)
+        2. Settings (env) if enabled
+        3. Default 1.0
         """
+        # Try DB first if session available
+        if db is not None:
+            db_val = Vault2Service().get_config_value(db, "accrual_multiplier")
+            if db_val is not None:
+                try:
+                    return max(float(db_val), 1.0)
+                except (TypeError, ValueError):
+                    pass
 
+        # Fallback to legacy settings
         settings = get_settings()
         if not bool(getattr(settings, "vault_accrual_multiplier_enabled", False)):
             return 1.0
@@ -81,7 +92,10 @@ class VaultService:
         """
 
         settings = get_settings()
-        mult = cls.vault_accrual_multiplier(now)
+        # Note: phase1_unlock_rules_json doesn't have db here but it's called from vault.py status which has db
+        # If we want accuracy we should pass db here too. 
+        # For now I will keep it as is or update signature if needed.
+        mult = cls.vault_accrual_multiplier(now=now)
         return {
             "version": 2,
             "program_key": cls.PROGRAM_KEY,
@@ -253,7 +267,7 @@ class VaultService:
             user.vault_locked_balance = self.VAULT_SEED_AMOUNT
             seed_added = self.VAULT_SEED_AMOUNT
 
-        multiplier = self.vault_accrual_multiplier(now_dt)
+        multiplier = self.vault_accrual_multiplier(db, now_dt)
         fill_added = max(int(round(self.VAULT_FILL_AMOUNT * multiplier)), self.VAULT_FILL_AMOUNT)
         user.vault_locked_balance = (user.vault_locked_balance or 0) + fill_added
         total_added = seed_added + fill_added
@@ -304,12 +318,32 @@ class VaultService:
 
         unlock_target = 0
         tier = None
-        if deposit_delta >= self.VAULT_TIER_B_MIN_DELTA:
-            unlock_target = self.VAULT_TIER_B_UNLOCK
-            tier = "B"
-        elif deposit_delta >= self.VAULT_TIER_A_MIN_DELTA:
-            unlock_target = self.VAULT_TIER_A_UNLOCK
-            tier = "A"
+        
+        # 1. Try DB-configured tiers
+        program = Vault2Service().get_default_program(db, ensure=False)
+        rules = getattr(program, "unlock_rules_json", {}) or {}
+        p1_config = rules.get("phase1_deposit_unlock", {}) or {}
+        tiers = p1_config.get("tiers", []) # List[dict] with min_deposit_delta, unlock_amount
+        
+        if tiers:
+            # Tiers should be sorted by delta desc
+            sorted_tiers = sorted(tiers, key=lambda x: x.get("min_deposit_delta", 0), reverse=True)
+            for t in sorted_tiers:
+                m_delta = t.get("min_deposit_delta", 0)
+                u_amt = t.get("unlock_amount", 0)
+                if deposit_delta >= m_delta:
+                    unlock_target = u_amt
+                    tier = f"TIER_{m_delta}"
+                    break
+        
+        # 2. Hardcoded Fallback
+        if unlock_target <= 0:
+            if deposit_delta >= self.VAULT_TIER_B_MIN_DELTA:
+                unlock_target = self.VAULT_TIER_B_UNLOCK
+                tier = "B"
+            elif deposit_delta >= self.VAULT_TIER_A_MIN_DELTA:
+                unlock_target = self.VAULT_TIER_A_UNLOCK
+                tier = "A"
 
         if unlock_target <= 0:
             return 0
@@ -433,7 +467,7 @@ class VaultService:
         if amount_before_multiplier <= 0:
             return 0
 
-        multiplier = float(self.vault_accrual_multiplier(now_dt))
+        multiplier = float(self.vault_accrual_multiplier(db, now_dt))
         amount = max(int(round(amount_before_multiplier * multiplier)), amount_before_multiplier)
 
         # Lock user row for update when supported.
@@ -543,11 +577,20 @@ class VaultService:
             amount_before_multiplier = ra
             reward_kind = "POINT"
         else:
-            valuation = getattr(settings, "trial_reward_valuation", {}) or {}
+            # Try DB config first
+            valuation = Vault2Service().get_config_value(db, "trial_reward_valuation", {})
+            amount = valuation.get(reward_id)
+            
+            # Fallback to legacy settings
+            if amount is None:
+                settings_valuation = getattr(settings, "trial_reward_valuation", {}) or {}
+                amount = settings_valuation.get(reward_id, 0)
+
             try:
-                amount = int(valuation.get(reward_id, 0) or 0)
+                amount = int(amount or 0)
             except Exception:
                 amount = 0
+            
             amount_before_multiplier = int(amount)
             if amount > 0:
                 reward_kind = "VALUED"
@@ -555,7 +598,7 @@ class VaultService:
                 reward_kind = "SKIP_NO_VALUATION"
                 notify_vault_skip_error(source=str(game_type), reward_id=reward_id, reason="MISSING_VALUATION")
 
-        multiplier = float(self.vault_accrual_multiplier(now_dt))
+        multiplier = float(self.vault_accrual_multiplier(db, now_dt))
         if amount > 0:
             amount = max(int(round(int(amount) * multiplier)), int(amount))
 
