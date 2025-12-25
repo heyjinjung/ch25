@@ -15,6 +15,7 @@ import {
   TicketCheck,
   Trophy,
   Users,
+  HardDrive,
 } from "lucide-react";
 import { fetchDashboardMetrics, DashboardMetricsResponse } from "../api/adminDashboardApi";
 
@@ -121,6 +122,12 @@ const quickLinks = [
     description: "매칭/스코어/보상",
     to: "/admin/team-battle",
     icon: <Swords className="h-5 w-5 text-white" />,
+  },
+  {
+    title: "금고 관리",
+    description: "해금 규칙/적립 배수/지표",
+    to: "/admin/vault",
+    icon: <HardDrive className="h-5 w-5 text-white" />,
   },
 ];
 

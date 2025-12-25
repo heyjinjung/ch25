@@ -107,6 +107,7 @@
 - [x] downtime 배너 교체 스케줄(12/28, 12/31, 1/5) 및 12/31 백업/초기화 작업이 다른 배포/플래그와 충돌하지 않는지 확인.
 
 ## 10. 변경 이력
+- v2.8 (2025-12-25, Full Stack): 금고 대상자(Eligibility) 전면 확대 및 어드민 풀스택 구축. `NewMember` 타겟에서 "로그인한 모든 유저"로 적립 대상을 확장하였으며, 어드민 전용 금고 관리 페이지(지표, 규칙, 카피, 설정 JSON 에디터)를 신규 구축하여 운영 효율성을 극대화함.
 - v2.7 (2025-12-25, BE팀): 롤백 및 안전 장치(Safeguards) 강화. 서비스 레이어에 Kill-Switch 플래그를 완비하고, 모든 적립 로직의 트랜잭션 원자성을 재확인. 어드민 설정 오류 시 시스템 하드코딩 값으로 즉시 복구 가능한 Fallback 로직(`ui_copy_json` 포함) 및 운영 비상 대응 가이드(`docs/06_ops/vault_contingency_plan.md`) 작성 완료.
 - v2.6 (2025-12-25, BE팀): 운영 관측성(Observability) 강화. AdminAuditLog 테이블 및 AuditService 추가하여 설정 변경 이력 추적. 실시간 Discord/Slack 알림(Missing Valuation SKIP) 및 어드민 통계 API(/stats) 구현 완료.
 - v2.5 (2025-12-25, Full Stack): Vault Phase 1 전체 연동 검증 및 QA 항목 마감. 멱등(Duplicate Skip), 해금(Deposit Unlock), 고액 보상 관리자 지급 라벨, 점검 배너 스케줄링 및 백업 스크립트 정합성 확인 완료.

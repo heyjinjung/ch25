@@ -196,8 +196,12 @@ class VaultService:
         return user
 
     def _eligible(self, db: Session, user_id: int, now: datetime) -> bool:
-        row = db.execute(select(NewMemberDiceEligibility).where(NewMemberDiceEligibility.user_id == user_id)).scalar_one_or_none()
-        return self._is_eligible_row_active(row, now)
+        """Eligibility guard for Phase 1.
+        
+        Phase 1.2 simplification: All logged-in users are eligible for vault accrual
+        to maximize engagement and retention.
+        """
+        return True
 
     def get_status(self, db: Session, user_id: int, now: datetime | None = None) -> tuple[bool, User, bool]:
         now_dt = now or datetime.utcnow()
