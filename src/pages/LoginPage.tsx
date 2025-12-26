@@ -9,6 +9,7 @@ const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { addImageToast } = useToast();
+  void addImageToast;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [externalId, setExternalId] = useState<string>("");
