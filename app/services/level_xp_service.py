@@ -17,28 +17,16 @@ class LevelXPService:
 
     # Baseline core level table (sorted ascending)
     LEVELS: List[Dict[str, Any]] = [
-        {"level": 1, "required_xp": 0, "reward_type": "TICKET_ROULETTE", "reward_payload": {"tickets": 1}, "auto_grant": True},
+        {"level": 1, "required_xp": 20, "reward_type": "TICKET_ROULETTE", "reward_payload": {"tickets": 1}, "auto_grant": True},
         {"level": 2, "required_xp": 50, "reward_type": "TICKET_DICE", "reward_payload": {"tickets": 1}, "auto_grant": True},
-        {
-            "level": 3,
-            "required_xp": 100,
-            "reward_type": "BUNDLE",
-            "reward_payload": {"items": [{"type": "TICKET_ROULETTE", "amount": 1}, {"type": "TICKET_DICE", "amount": 1}]},
-            "auto_grant": True,
-        },
-        {"level": 4, "required_xp": 200, "reward_type": "TICKET_LOTTERY", "reward_payload": {"tickets": 1}, "auto_grant": True},
-        {"level": 5, "required_xp": 300, "reward_type": "CC_COIN", "reward_payload": {"amount": 1}, "auto_grant": False},
-        {
-            "level": 6,
-            "required_xp": 450,
-            "reward_type": "BUNDLE",
-            "reward_payload": {"items": [{"type": "TICKET_DICE", "amount": 2}, {"type": "TICKET_LOTTERY", "amount": 1}]},
-            "auto_grant": True,
-        },
-        {"level": 7, "required_xp": 600, "reward_type": "CC_COIN", "reward_payload": {"amount": 2}, "auto_grant": False},
-        {"level": 8, "required_xp": 800, "reward_type": "COUPON_BAEMIN", "reward_payload": {"amount": 10000, "currency": "KRW"}, "auto_grant": False},
-        {"level": 9, "required_xp": 1000, "reward_type": "POINT", "reward_payload": {"amount": 20000, "currency": "KRW"}, "auto_grant": False},
-        {"level": 10, "required_xp": 1300, "reward_type": "POINT", "reward_payload": {"amount": 50000, "currency": "KRW"}, "auto_grant": False},
+        {"level": 3, "required_xp": 100, "reward_type": "TICKET_MIX", "reward_payload": {"tickets": {"ROULETTE": 1, "DICE": 1}}, "auto_grant": True},
+        {"level": 4, "required_xp": 180, "reward_type": "TICKET_LOTTERY", "reward_payload": {"tickets": 1}, "auto_grant": True},
+        {"level": 5, "required_xp": 300, "reward_type": "TICKET_CC_COIN", "reward_payload": {"amount": 1}, "auto_grant": False},
+        {"level": 6, "required_xp": 450, "reward_type": "TICKET_MIX", "reward_payload": {"tickets": {"DICE": 2, "LOTTERY": 1}}, "auto_grant": False},
+        {"level": 7, "required_xp": 650, "reward_type": "TICKET_CC_COIN", "reward_payload": {"amount": 2}, "auto_grant": False},
+        {"level": 8, "required_xp": 900, "reward_type": "COUPON_COUPANG", "reward_payload": {"amount": 10000, "currency": "KRW"}, "auto_grant": False},
+        {"level": 9, "required_xp": 1200, "reward_type": "POINT_CC", "reward_payload": {"amount": 20000}, "auto_grant": False},
+        {"level": 10, "required_xp": 1600, "reward_type": "POINT_CC", "reward_payload": {"amount": 50000}, "auto_grant": False},
     ]
 
     def __init__(self) -> None:
@@ -110,30 +98,35 @@ class LevelXPService:
                 try:
                     if row["reward_type"].startswith("COUPON"):
                         self.reward_service.grant_coupon(db, user_id=user_id, coupon_type=row["reward_type"], meta=reward_meta)
+                    elif row["reward_type"] == "TICKET_MIX":
+                        payload = row.get("reward_payload") or {}
+                        tickets = payload.get("tickets") or {}
+                        ticket_map = {
+                            "ROULETTE": GameTokenType.ROULETTE_COIN,
+                            "DICE": GameTokenType.DICE_TOKEN,
+                            "LOTTERY": GameTokenType.LOTTERY_TICKET,
+                        }
+                        for key, amt in tickets.items():
+                            token_type = ticket_map.get(key)
+                            if token_type and amt > 0:
+                                self.reward_service.grant_ticket(db, user_id=user_id, token_type=token_type, amount=amt, meta=reward_meta)
                     elif row["reward_type"].startswith("TICKET"):
                         ticket_map = {
                             "TICKET_ROULETTE": GameTokenType.ROULETTE_COIN,
                             "TICKET_DICE": GameTokenType.DICE_TOKEN,
                             "TICKET_LOTTERY": GameTokenType.LOTTERY_TICKET,
+                            "TICKET_CC_COIN": GameTokenType.CC_COIN,
                         }
                         token_type = ticket_map.get(row["reward_type"])
                         payload = row.get("reward_payload") or {}
                         amount = payload.get("tickets") or payload.get("amount") or 0
                         if token_type and amount > 0:
                             self.reward_service.grant_ticket(db, user_id=user_id, token_type=token_type, amount=amount, meta=reward_meta)
-                    elif row["reward_type"] == "BUNDLE":
-                        items = (row.get("reward_payload") or {}).get("items") or []
-                        ticket_map = {
-                            "TICKET_ROULETTE": GameTokenType.ROULETTE_COIN,
-                            "TICKET_DICE": GameTokenType.DICE_TOKEN,
-                            "TICKET_LOTTERY": GameTokenType.LOTTERY_TICKET,
-                        }
-                        for item in items:
-                            token_type = ticket_map.get(item.get("type"))
-                            amount = item.get("amount") or 0
-                            if token_type and amount > 0:
-                                meta = {**reward_meta, "bundle": True, "bundle_type": item.get("type")}
-                                self.reward_service.grant_ticket(db, user_id=user_id, token_type=token_type, amount=amount, meta=meta)
+                    elif row["reward_type"].startswith("POINT"):
+                        payload = row.get("reward_payload") or {}
+                        amount = payload.get("amount") or 0
+                        if amount > 0:
+                            self.reward_service.grant_point(db, user_id=user_id, amount=amount, reason="LEVEL_REWARD", meta=reward_meta)
                 except Exception:
                     # Delivery errors should not break XP accrual; rely on logs for retries.
                     pass
