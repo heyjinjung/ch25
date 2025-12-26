@@ -1,6 +1,7 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../auth/authStore";
+import { useSeasonPassStatus } from "../../hooks/useSeasonPass";
 
 const baseAccent = "#d2fd9c";
 
@@ -135,8 +136,9 @@ const LogoutButton: React.FC = () => {
 
 const UserBadge: React.FC = () => {
   const { user } = useAuth();
+  const { data: seasonPass } = useSeasonPassStatus();
   const name = (user?.nickname || user?.external_id || "지민").toString();
-  const level = user?.level ?? 1;
+  const level = seasonPass?.current_level ?? user?.level ?? 1;
 
   return (
     <div className="rounded-full border border-white/15 bg-white/5 px-3 py-[6px] text-[12px] leading-none text-white/85">
