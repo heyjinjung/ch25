@@ -159,6 +159,7 @@ const SeasonPassPage: React.FC = () => {
 
   const data = season.data;
   const stampXp = (data as any)?.base_xp_per_stamp ?? 0;
+  void stampXp;
 
   return (
     <FeatureGate feature="SEASON_PASS">

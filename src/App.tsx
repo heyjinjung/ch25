@@ -10,6 +10,7 @@ const App: React.FC = () => {
   const isLoginRoute = location.pathname === "/login";
   const isAdminRoute = location.pathname.startsWith("/admin");
   const showDecorations = !isAdminRoute && !isLoginRoute;
+  void showDecorations;
 
   return (
     <ErrorBoundary>
