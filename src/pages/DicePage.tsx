@@ -108,12 +108,12 @@ const DicePage: React.FC = () => {
                 ⚔️
               </span>
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-400">Battle Reward</p>
+                <p className="text-sm font-bold uppercase tracking-wider text-emerald-400">전투 보상</p>
                 <div className="flex items-baseline gap-1.5">
                   <span className="text-2xl font-black text-white drop-shadow-lg">
                     <AnimatedNumber value={rewardToast.value} from={0} />
                   </span>
-                  <span className="text-xs font-bold text-white/60">{rewardToast.type}</span>
+                  <span className="text-sm font-bold text-white/60">{rewardToast.type}</span>
                 </div>
               </div>
             </div>
@@ -123,12 +123,12 @@ const DicePage: React.FC = () => {
         {/* Top Info Bar */}
         <div className="flex flex-wrap items-center justify-center gap-4">
           <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-5 py-2 backdrop-blur-md">
-            <span className="text-xs text-white/50">전투 횟수</span>
-            <span className="font-mono text-sm font-bold text-white">{remainingLabel.replace("남은 횟수: ", "")}</span>
+            <span className="text-sm text-white/50">전투 횟수</span>
+            <span className="font-mono text-base font-bold text-white">{remainingLabel.replace("남은 횟수: ", "")}</span>
           </div>
           <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-5 py-2 backdrop-blur-md">
-            <span className="text-xs text-white/50">티켓</span>
-            <span className="font-mono text-sm font-bold text-white">{tokenLabel}</span>
+            <span className="text-sm text-white/50">티켓</span>
+            <span className="font-mono text-base font-bold text-white">{tokenLabel}</span>
           </div>
         </div>
 
@@ -152,7 +152,7 @@ const DicePage: React.FC = () => {
         {/* Controls */}
         <div className="mx-auto max-w-md space-y-5">
           {!!playMutation.error && !isRolling && (
-            <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-center text-xs font-medium text-red-200">
+            <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-center text-sm font-medium text-red-200">
               {mapErrorMessage(playMutation.error)}
             </div>
           )}
@@ -174,13 +174,13 @@ const DicePage: React.FC = () => {
               {isRolling || playMutation.isPending ? (
                 <>
                   <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                  <span className="font-bold text-white">ROLLING...</span>
+                  <span className="font-bold text-white">주사위 굴리는 중...</span>
                 </>
               ) : (
                 <>
-                  <span className="text-xl">🎲</span>
-                  <span className="text-lg font-black tracking-wider text-white">
-                    {result || infoMessage ? "REMATCH" : "ROLL DICE"}
+                  <span className="text-2xl">🎲</span>
+                  <span className="text-2xl font-black tracking-wider text-white">
+                    {result || infoMessage ? "다시 대결하기" : "주사위 굴리기"}
                   </span>
                 </>
               )}
