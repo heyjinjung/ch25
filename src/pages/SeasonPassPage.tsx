@@ -226,16 +226,16 @@ const SeasonPassPage: React.FC = () => {
                 {data.levels.map((level) => {
                   const isAuto = !!level.auto_claim;
                   const rewardOverride: Record<number, string> = {
-                    1: "룰렛 티켓 1장",
-                    2: "주사위 티켓 1장",
-                    3: "룰렛 + 주사위 티켓",
-                    4: "복권 티켓 1장",
-                    5: "1 코인 (관리자)",
-                    6: "주사위 2장 + 복권 1장",
-                    7: "2 코인 (관리자)",
-                    8: "배민깁콘 1만",
-                    9: "20,000 포인트",
-                    10: "💎 다이아몬드 키 패키지",
+                    1: "🎫 룰렛 티켓 3장",
+                    2: "🎲 주사위 티켓 3장",
+                    3: "📦 올인원 티켓 번들",
+                    4: "🍀 복권 티켓 5장",
+                    5: "💣 티켓 폭탄 (룰렛10+주사위10)",
+                    6: "💰 복권 10장 세트",
+                    7: "⭐️ 1만 P + 골드 키 (관리자)",
+                    8: "30,000 포인트 (관리자)",
+                    9: "50,000 포인트 (관리자)",
+                    10: "💎 10만 P + 다이아몬드 키",
                   };
                   const displayReward = rewardOverride[level.level] ?? level.reward_label;
                   const isManualAdmin = displayReward.includes("Admin") || displayReward.includes("Coin") || displayReward.includes("Gift") || displayReward.includes("DIAMOND") || displayReward.includes("Points");
