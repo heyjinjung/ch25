@@ -161,7 +161,6 @@ const SeasonPassPage: React.FC = () => {
   const stampXp = (data as any)?.base_xp_per_stamp ?? 0;
 
   return (
-    return (
     <FeatureGate feature="SEASON_PASS">
       <div className="relative mx-auto max-w-5xl space-y-12 pb-20">
         {/* Ambient Background */}
@@ -354,7 +353,6 @@ const SeasonPassPage: React.FC = () => {
         </div>
       </div>
     </FeatureGate>
-  );
   );
 };
 
