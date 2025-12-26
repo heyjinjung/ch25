@@ -109,7 +109,7 @@ const LotteryPage: React.FC = () => {
       return (
         <div className="rounded-3xl border border-white/15 bg-white/5 p-6 text-center backdrop-blur">
           <p className="text-[clamp(16px,3.2vw,20px)] font-bold text-white">{errorMessage || "데이터를 불러올 수 없습니다."}</p>
-          <p className="mt-2 text-[clamp(12px,2.6vw,14px)] text-white/60">잠시 후 다시 시도해주세요.</p>
+          <p className="mt-2 text-sm text-white/60">잠시 후 다시 시도해주세요.</p>
         </div>
       );
     }
