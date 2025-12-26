@@ -39,11 +39,11 @@ export async function createSegmentRule(payload: CreateSegmentRulePayload) {
 }
 
 export async function updateSegmentRule(ruleId: number, payload: UpdateSegmentRulePayload) {
-  const { data } = await adminApi.put<AdminSegmentRule>(`/segment-rules/${ruleId}`, payload);
+  const { data } = await adminApi.put<AdminSegmentRule>(`/admin/api/segment-rules/${ruleId}`, payload);
   return data;
 }
 
 export async function deleteSegmentRule(ruleId: number) {
-  const { data } = await adminApi.delete<{ ok: boolean }>(`/segment-rules/${ruleId}`);
+  const { data } = await adminApi.delete<{ ok: boolean }>(`/admin/api/segment-rules/${ruleId}`);
   return data;
 }
