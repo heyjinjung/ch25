@@ -15,6 +15,7 @@ from app.models.season_pass import (
     SeasonPassRewardLog,
     SeasonPassStampLog,
 )
+from app.models.user import User
 from app.schemas.season_pass import SeasonPassStatusResponse
 from app.services.reward_service import RewardService
 
@@ -294,6 +295,13 @@ class SeasonPassService:
         db.commit()
         db.refresh(progress)
 
+        # [Level Unification] Sync season level to global user level
+        user = db.get(User, user_id)
+        if user and user.level != progress.current_level:
+            user.level = progress.current_level
+            db.add(user)
+            db.commit()
+
         leveled_up = progress.current_level > previous_level
         return {
             "added_stamp": stamp_count,
@@ -565,6 +573,13 @@ class SeasonPassService:
 
         db.commit()
         db.refresh(progress)
+
+        # [Level Unification] Sync season level to global user level
+        user = db.get(User, user_id)
+        if user and user.level != progress.current_level:
+            user.level = progress.current_level
+            db.add(user)
+            db.commit()
 
         leveled_up = progress.current_level > previous_level
         return {
