@@ -243,7 +243,6 @@ const RoulettePage: React.FC = () => {
     }
 
     return (
-    return (
       <div className="relative space-y-8">
         {/* Global Ambient Glow (은은한 배경 광원) */}
         <div className="pointer-events-none absolute -left-[20%] -top-[20%] h-[800px] w-[800px] rounded-full bg-cc-gold/5 blur-[120px] mix-blend-screen" />
