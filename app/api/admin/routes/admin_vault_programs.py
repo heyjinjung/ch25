@@ -4,6 +4,7 @@ Operational endpoints to edit Vault2 program JSON fields (unlock_rules_json/ui_c
 without redeploying.
 """
 from typing import Any
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -20,11 +21,21 @@ from app.schemas.vault2 import (
 from app.services.vault2_service import Vault2Service
 
 
-router = APIRouter(prefix="/api/admin/vault-programs", tags=["admin-vault-programs"])
+_core = APIRouter(tags=["admin-vault-programs"])
+
+# Canonical admin API base in this codebase is `/admin/api/*`.
+# Some environments/clients still call `/api/admin/*` (often rewritten by NGINX).
+# Expose both to avoid 404s.
+router = APIRouter(prefix="/admin/api/vault-programs", tags=["admin-vault-programs"])
+legacy_router = APIRouter(prefix="/api/admin/vault-programs", tags=["admin-vault-programs"])
+
+router.include_router(_core)
+legacy_router.include_router(_core)
 service = Vault2Service()
 
 
-@router.get("/stats")
+@_core.get("/stats")
+@_core.get("/stats/")
 def get_vault_stats(db: Session = Depends(get_db)) -> dict[str, Any]:
     return service.get_vault_stats(db)
 
@@ -42,13 +53,15 @@ def _to_response(p) -> VaultProgramResponse:
     )
 
 
-@router.get("/default", response_model=VaultProgramResponse)
+@_core.get("/default", response_model=VaultProgramResponse)
+@_core.get("/default/", response_model=VaultProgramResponse)
 def get_default_program(db: Session = Depends(get_db)) -> VaultProgramResponse:
     program = service.get_default_program(db, ensure=True)
     return _to_response(program)
 
 
-@router.get("/{program_key}", response_model=VaultProgramResponse)
+@_core.get("/{program_key}", response_model=VaultProgramResponse)
+@_core.get("/{program_key}/", response_model=VaultProgramResponse)
 def get_program(program_key: str, db: Session = Depends(get_db)) -> VaultProgramResponse:
     program = service.get_program_by_key(db, program_key=program_key)
     if program is None:
@@ -56,7 +69,8 @@ def get_program(program_key: str, db: Session = Depends(get_db)) -> VaultProgram
     return _to_response(program)
 
 
-@router.put("/{program_key}/unlock-rules", response_model=VaultProgramResponse)
+@_core.put("/{program_key}/unlock-rules", response_model=VaultProgramResponse)
+@_core.put("/{program_key}/unlock-rules/", response_model=VaultProgramResponse)
 def upsert_unlock_rules(
     program_key: str,
     payload: VaultProgramUnlockRulesUpsertRequest,
@@ -70,7 +84,8 @@ def upsert_unlock_rules(
     return _to_response(program)
 
 
-@router.put("/{program_key}/ui-copy", response_model=VaultProgramResponse)
+@_core.put("/{program_key}/ui-copy", response_model=VaultProgramResponse)
+@_core.put("/{program_key}/ui-copy/", response_model=VaultProgramResponse)
 def upsert_ui_copy(
     program_key: str,
     payload: VaultProgramUiCopyUpsertRequest,
@@ -84,7 +99,8 @@ def upsert_ui_copy(
     return _to_response(program)
 
 
-@router.put("/{program_key}/config", response_model=VaultProgramResponse)
+@_core.put("/{program_key}/config", response_model=VaultProgramResponse)
+@_core.put("/{program_key}/config/", response_model=VaultProgramResponse)
 def upsert_config(
     program_key: str,
     payload: VaultProgramConfigUpsertRequest,
@@ -98,7 +114,8 @@ def upsert_config(
     return _to_response(program)
 
 
-@router.post("/{program_key}/game-earn-toggle", response_model=VaultProgramResponse)
+@_core.post("/{program_key}/game-earn-toggle", response_model=VaultProgramResponse)
+@_core.post("/{program_key}/game-earn-toggle/", response_model=VaultProgramResponse)
 def toggle_game_earn(
     program_key: str,
     payload: VaultGameEarnToggleRequest,
@@ -112,7 +129,8 @@ def toggle_game_earn(
     return _to_response(program)
 
 
-@router.get("/{program_key}/eligibility/{user_id}", response_model=VaultEligibilityResponse)
+@_core.get("/{program_key}/eligibility/{user_id}", response_model=VaultEligibilityResponse)
+@_core.get("/{program_key}/eligibility/{user_id}/", response_model=VaultEligibilityResponse)
 def get_user_eligibility(
     program_key: str,
     user_id: int,
@@ -125,7 +143,8 @@ def get_user_eligibility(
     return VaultEligibilityResponse(user_id=user_id, eligible=eligible)
 
 
-@router.post("/{program_key}/eligibility/{user_id}", response_model=VaultEligibilityResponse)
+@_core.post("/{program_key}/eligibility/{user_id}", response_model=VaultEligibilityResponse)
+@_core.post("/{program_key}/eligibility/{user_id}/", response_model=VaultEligibilityResponse)
 def upsert_user_eligibility(
     program_key: str,
     user_id: int,

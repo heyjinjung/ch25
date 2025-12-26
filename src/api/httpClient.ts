@@ -25,6 +25,7 @@ const resolvedBaseURL = (() => {
 
 export const userApi = axios.create({
   baseURL: resolvedBaseURL,
+  timeout: 2500,
 });
 
 // Attach bearer token if present in storage; keeps compatibility with existing `token` key.

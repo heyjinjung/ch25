@@ -115,95 +115,79 @@ const LotteryPage: React.FC = () => {
     }
 
     return (
-      <div className="space-y-6 sm:space-y-8">
+    return (
+      <div className="relative space-y-8">
+        {/* Ambient Glow */}
+        <div className="pointer-events-none absolute -left-[10%] top-[10%] h-[600px] w-[600px] rounded-full bg-red-600/10 blur-[100px] mix-blend-screen" />
+        <div className="pointer-events-none absolute -right-[10%] -bottom-[10%] h-[500px] w-[500px] rounded-full bg-cc-gold/5 blur-[80px] mix-blend-screen" />
+
         {rewardToast && (
-          <div className="fixed bottom-6 right-6 z-30 overflow-hidden rounded-2xl border border-white/15 bg-black/75 px-4 py-3 text-white shadow-lg backdrop-blur animate-bounce-in">
-            <div className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-cc-orange/80" />
-            <div className="flex items-center pl-2">
-              <span className="font-extrabold text-cc-lime">+</span>
-              <span className="ml-1 font-extrabold text-white">
-                <AnimatedNumber value={rewardToast.value} from={0} />
+          <div className="fixed bottom-6 right-6 z-50 overflow-hidden rounded-2xl border border-white/10 bg-black/80 px-5 py-4 text-white shadow-2xl backdrop-blur-xl animate-bounce-in">
+            <div className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-red-500 to-orange-500" />
+            <div className="relative flex items-center gap-3 pl-2">
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-red-500/30 bg-red-500/10 text-xl shadow-[0_0_15px_rgba(255,0,0,0.3)]">
+                🎁
               </span>
-              <span className="ml-2 text-white/70">{rewardToast.type}</span>
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-wider text-red-400">Winning Prize</p>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-2xl font-black text-white drop-shadow-lg">
+                    <AnimatedNumber value={rewardToast.value} from={0} />
+                  </span>
+                  <span className="text-xs font-bold text-white/60">{rewardToast.type}</span>
+                </div>
+              </div>
             </div>
           </div>
         )}
 
-        <div className="flex flex-wrap items-center justify-center gap-2">
-          <span className="rounded-full border border-cc-lime/20 bg-white/8 px-3 py-1 text-[clamp(14px,2.4vw,16px)] font-bold text-white/90">
-            {remainingLabel}
-          </span>
-          <span className="rounded-full border border-cc-lime/20 bg-white/8 px-3 py-1 text-[clamp(14px,2.4vw,16px)] font-bold text-white/90">
-            {tokenLabel}
-          </span>
+        {/* Top Info Bar */}
+        <div className="flex flex-wrap items-center justify-center gap-4">
+          <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-5 py-2 backdrop-blur-md">
+            <span className="text-xs text-white/50">남은 기회</span>
+            <span className="font-mono text-sm font-bold text-white">{remainingLabel.replace("남은 횟수: ", "")}</span>
+          </div>
+          <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-5 py-2 backdrop-blur-md">
+            <span className="text-xs text-white/50">보유 티켓</span>
+            <span className="font-mono text-sm font-bold text-white">{tokenLabel}</span>
+          </div>
         </div>
 
+        {/* Main Scratch Area */}
         <div className="flex justify-center">
-          <div className="w-full max-w-[520px] rounded-3xl border border-white/15 bg-white/8 p-4 shadow-[0_14px_40px_rgba(0,0,0,0.55)] sm:p-6">
-            <LotteryCard prize={revealedPrize ?? undefined} isRevealed={isRevealed} isScratching={isScratching} onScratch={handleScratch} />
+          <div className="relative w-full max-w-[520px]">
+            {/* Holographic Border Effect */}
+            <div className="absolute -inset-[3px] rounded-[2rem] bg-gradient-to-r from-red-500 via-yellow-500 to-purple-600 opacity-30 blur-lg animate-pulse" />
+
+            <div className="relative overflow-hidden rounded-[1.8rem] border border-white/10 bg-black/40 p-1 shadow-2xl backdrop-blur-xl">
+              <LotteryCard
+                prize={revealedPrize ?? undefined}
+                isRevealed={isRevealed}
+                isScratching={isScratching}
+                onScratch={handleScratch}
+              />
+            </div>
           </div>
         </div>
 
-        <div className="rounded-3xl border border-white/15 bg-white/5 p-4 sm:p-6">
-          <h3 className="mb-3 text-center text-[clamp(12px,2.4vw,13px)] font-extrabold uppercase tracking-[0.35em] text-white/60">
-            당첨 상품 목록
-          </h3>
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {data.prizes.map((prize) => (
-              <div
-                key={prize.id}
-                className={`flex items-center gap-3 rounded-2xl border p-3 ${
-                  prize.is_active === false
-                    ? "border-white/15 bg-white/4 opacity-50"
-                    : "border-white/15 bg-white/6"
-                }`}
-              >
-                <div className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-white/6 text-[clamp(14px,3vw,16px)]">
-                  🎁
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-semibold text-white">{prize.label}</p>
-                  <p className="text-[clamp(11px,2.2vw,12px)] text-cc-lime">
-                    +{prize.reward_value} <span className="text-white/60">{prize.reward_type}</span>
-                  </p>
-                </div>
-                {prize.stock !== undefined && prize.stock !== null && (
-                  <span className="rounded-full border border-white/15 bg-white/6 px-2 py-0.5 text-[clamp(11px,2.2vw,12px)] text-white/70">
-                    {prize.stock}개
-                  </span>
-                )}
-              </div>
-            ))}
-          </div>
-          {data.prizes.length === 0 && (
-            <p className="text-center text-[clamp(12px,2.6vw,14px)] text-white/60">현재 당첨 가능 상품이 없습니다.</p>
-          )}
-        </div>
-
-        <div className="space-y-4">
+        {/* Controls */}
+        <div className="mx-auto max-w-md space-y-4">
           {playErrorMessage && (
-            <div className="rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-center text-[clamp(12px,2.6vw,14px)] text-white/80">
-              {playErrorMessage}
+            <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-center text-xs font-medium text-red-200">
+              ⚠️ {playErrorMessage}
             </div>
           )}
 
           {isOutOfTokens && (
             <TicketZeroPanel
               tokenType={data.token_type}
-              onClaimSuccess={() => {
-                queryClient.invalidateQueries({ queryKey: ["lottery-status"] });
-              }}
+              onClaimSuccess={() => queryClient.invalidateQueries({ queryKey: ["lottery-status"] })}
             />
           )}
 
           <button
             type="button"
-            disabled={
-              isScratching ||
-              playMutation.isPending ||
-              (!isUnlimited && data.remaining_plays <= 0) ||
-              isOutOfTokens
-            }
+            disabled={isScratching || playMutation.isPending || (!isUnlimited && data.remaining_plays <= 0) || isOutOfTokens}
             onClick={() => {
               if (isRevealed) {
                 tryHaptic(10);
@@ -212,39 +196,79 @@ const LotteryPage: React.FC = () => {
               }
               void handleScratch();
             }}
-            className="group relative w-full overflow-hidden rounded-2xl border border-black/15 bg-cc-lime px-6 py-4 text-[clamp(16px,3.8vw,18px)] font-extrabold text-black shadow-lg transition hover:brightness-95 active:brightness-90 disabled:cursor-not-allowed disabled:bg-cc-lime/40 disabled:text-black/45"
+            className="group relative w-full overflow-hidden rounded-2xl bg-gradient-to-r from-red-600 to-rose-600 px-6 py-4 shadow-[0_0_20px_rgba(220,38,38,0.4)] transition-all hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(220,38,38,0.5)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
           >
-            <span className="relative z-10">
+            <div className="relative z-10 flex items-center justify-center gap-2">
               {isScratching || playMutation.isPending ? (
-                <span className="flex items-center justify-center gap-2">
-                  <span className="h-5 w-5 animate-spin rounded-full border-2 border-black/60 border-t-transparent" />
-                  뽑는 중...
-                </span>
+                <>
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                  <span className="font-bold text-white">SCRATCHING...</span>
+                </>
               ) : (
-                isRevealed ? "다시 하기" : "🎫 복권 뽑기"
+                <span className="text-lg font-black tracking-wider text-white">
+                  {isRevealed ? "TRY AGAIN" : "SCRATCH NOW"}
+                </span>
               )}
-            </span>
-            <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/15 to-transparent transition-transform group-hover:translate-x-full" />
+            </div>
           </button>
 
           {revealedPrize && isRevealed && !isScratching && (
-            <div className="animate-bounce-in rounded-3xl border border-white/15 bg-white/5 p-6 text-center shadow-lg">
-              <p className="text-[clamp(12px,2.4vw,13px)] font-extrabold uppercase tracking-[0.35em] text-white/60">축하 당첨!</p>
-              <p className="mt-2 text-[clamp(20px,5vw,26px)] font-extrabold text-white">{revealedPrize.label}</p>
-              <p className="mt-2 text-[clamp(14px,3.4vw,16px)] font-bold text-cc-lime">
-                +<AnimatedNumber value={Number(revealedPrize.reward_value ?? 0)} from={0} />
-                <span className="ml-2 text-white/70">{revealedPrize.reward_type}</span>
+            <div className="mt-4 animate-bounce-in text-center">
+              <span className="inline-block rounded-full bg-white/10 px-4 py-1 text-[10px] font-bold uppercase tracking-widest text-white/60">
+                You Won
+              </span>
+              <h3 className="mt-2 text-2xl font-black text-white">
+                {revealedPrize.label}
+              </h3>
+              <p className="font-bold text-cc-lime">
+                +{Number(revealedPrize.reward_value).toLocaleString()} {revealedPrize.reward_type}
               </p>
-              {playMutation.data?.message && (
-                <p className="mt-2 text-[clamp(12px,2.6vw,14px)] text-white/70">{playMutation.data.message}</p>
-              )}
             </div>
           )}
         </div>
 
-        <div className="pt-2 text-center text-[clamp(11px,2.2vw,13px)] text-white/60">
-          복권 결과는 서버에서 결정되며, 레벨 경험치가 적립됩니다.
+        {/* Prize Gallery (Grid View) */}
+        <div className="mt-12">
+          <h3 className="mb-6 flex items-center justify-center gap-3 text-center">
+            <span className="h-[1px] w-8 bg-white/20" />
+            <span className="text-xs font-bold uppercase tracking-[0.2em] text-white/40">Prize Pool</span>
+            <span className="h-[1px] w-8 bg-white/20" />
+          </h3>
+
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            {data.prizes.map((prize) => (
+              <div
+                key={prize.id}
+                className={`group relative overflow-hidden rounded-2xl border p-4 transition-all ${prize.is_active === false
+                    ? "border-white/5 bg-white/[0.02] opacity-40 grayscale"
+                    : "border-white/10 bg-white/[0.05] hover:border-white/20 hover:bg-white/[0.08]"
+                  }`}
+              >
+                <div className="flex flex-col items-center text-center">
+                  <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-white/10 to-transparent text-2xl shadow-inner">
+                    🎁
+                  </div>
+                  <p className="line-clamp-1 text-sm font-bold text-white group-hover:text-cc-gold">{prize.label}</p>
+                  <p className="mt-1 text-xs font-medium text-cc-lime">
+                    {Number(prize.reward_value).toLocaleString()} <span className="text-white/40">{prize.reward_type}</span>
+                  </p>
+                </div>
+                {prize.stock !== undefined && prize.stock !== null && (
+                  <div className="absolute right-2 top-2 rounded-full bg-black/40 px-2 py-0.5 text-[10px] text-white/50">
+                    x{prize.stock}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {data.prizes.length === 0 && (
+            <div className="rounded-xl border border-dashed border-white/10 bg-white/5 p-8 text-center text-sm text-white/40">
+              No prizes available currently.
+            </div>
+          )}
         </div>
+
       </div>
     );
   })();

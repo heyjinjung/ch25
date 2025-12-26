@@ -1,6 +1,12 @@
 2025-12-08: API/DB/코인 시스템/서비스/운영/체크리스트/overview/architecture 최신화 반영. 실제 코드/운영/QA 흐름과 일치하도록 문서 업데이트.
 # 프로젝트 변경 이력
 
+## 2025-12-26 (tests stabilization & deprecated features cleanup)
+- Auth: 로그인 정책을 “DB에 유저가 존재할 때만 성공(자동 생성 금지)”으로 고정하고, 테스트를 해당 정책에 맞게 정리.
+- Season pass: TEST_MODE 자동 시즌 생성 제거(시즌 없으면 404/None), 레벨 1 auto-claim 보상 로그 제외로 과다 로깅 방지.
+- UI copy(ticket0): admin/public key 불일치로 운영 카피가 반영되지 않던 문제를 public read에서 신규 key 우선 조회 + 레거시 fallback으로 해결.
+- Tests: 폐기된 기능 테스트 파일 정리 후 `pytest` 전체 통과 상태 확보.
+
 ## 2025-12-25 (season bridge doc pass)
 - Docs: Overview/Architecture/API/DB/Ops를 시즌 브리지(7-key, 12/25~12/31→1/1 배치 지급)와 금고×체험티켓 경계(미구현 자동 해금, unlock_rules_json 카피) 기준으로 최신화.
 - DB: user 임시 컬럼(event_key_count, event_pending_points) 및 season_pass_stamp_log.event_type=KEY_DAY_1~7 기록 요구사항 문서화.

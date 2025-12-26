@@ -25,41 +25,6 @@ class SeasonPassService:
     def __init__(self) -> None:
         self.reward_service = RewardService()
 
-    def _ensure_default_season(self, db: Session, today: date) -> SeasonPassConfig | None:
-        """When TEST_MODE is on and no season exists, create a simple default season."""
-        from datetime import timedelta
-        from app.core.config import get_settings
-
-        settings = get_settings()
-        if not settings.test_mode:
-            return None
-
-        existing = db.execute(
-            select(SeasonPassConfig).where(
-                and_(SeasonPassConfig.start_date <= today, SeasonPassConfig.end_date >= today)
-            )
-        ).scalar_one_or_none()
-        if existing:
-            return existing
-
-        season = SeasonPassConfig(
-            season_name=f"DEFAULT-{today.isoformat()}",
-            start_date=today,
-            end_date=today + timedelta(days=6),
-            max_level=5,
-            base_xp_per_stamp=10,
-            is_active=True,
-        )
-        levels = [
-            SeasonPassLevel(level=i, required_xp=20 * i, reward_type="POINT", reward_amount=100 * i, auto_claim=True)
-            for i in range(1, 6)
-        ]
-        season.levels = levels
-        db.add(season)
-        db.commit()
-        db.refresh(season)
-        return season
-
     def get_current_season(self, db: Session, now: date | datetime) -> SeasonPassConfig | None:
         """Return the active season for the given date or None if not found."""
 
@@ -69,10 +34,6 @@ class SeasonPassService:
         )
         seasons = db.execute(stmt).scalars().all()
         if not seasons:
-            # In TEST_MODE allow auto-creation so FE can proceed locally.
-            auto_season = self._ensure_default_season(db, today)
-            if auto_season:
-                return auto_season
             return None
         if len(seasons) > 1:
             raise HTTPException(
@@ -235,7 +196,8 @@ class SeasonPassService:
             if already:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="ALREADY_STAMPED_TODAY")
         previous_level = progress.current_level
-        reward_baseline_level = previous_level if previous_level > 1 else 0
+        # Level 1 is the initial state; it should not be treated as a reward level.
+        reward_baseline_level = max(previous_level, 1)
         progress.current_xp += xp_to_add
         progress.total_stamps += stamp_count
         progress.last_stamp_date = today
@@ -535,7 +497,8 @@ class SeasonPassService:
 
         progress = self.get_or_create_progress(db, user_id=user_id, season_id=season.id)
         previous_level = progress.current_level
-        reward_baseline_level = previous_level if previous_level > 1 else 0
+        # Level 1 is the initial state; it should not be treated as a reward level.
+        reward_baseline_level = max(previous_level, 1)
         progress.current_xp += xp_amount
         db.add(progress)
 

@@ -179,257 +179,190 @@ const TeamBattlePage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 p-4 sm:p-6 rounded-3xl border border-emerald-900/30 shadow-[0_25px_80px_-40px_rgba(0,0,0,0.65)] relative overflow-hidden">
-      {/* 크리스마스 배경 장식 */}
-      <div className="absolute top-4 left-4 opacity-20 pointer-events-none">
-        <TreeIcon className="w-24 h-24" />
-      </div>
-      <div className="absolute top-8 right-8 opacity-20 pointer-events-none">
-        <StarIcon className="w-16 h-16" />
-      </div>
-      <div className="absolute bottom-20 left-8 opacity-15 pointer-events-none">
-        <GiftIcon className="w-20 h-20" />
-      </div>
-      <div className="absolute bottom-32 right-4 opacity-15 pointer-events-none">
-        <BellIcon className="w-14 h-14" />
-      </div>
+    <div className="relative space-y-8">
+      {/* Background Atmosphere: Battle Clash */}
+      <div className="pointer-events-none absolute -left-[20%] -top-[20%] h-[800px] w-[800px] rounded-full bg-blue-600/10 blur-[120px] mix-blend-screen" />
+      <div className="pointer-events-none absolute -right-[20%] top-[10%] h-[800px] w-[800px] rounded-full bg-red-600/10 blur-[120px] mix-blend-screen" />
 
-      <div className="rounded-2xl border border-emerald-700/40 bg-gradient-to-r from-red-900/80 via-emerald-800 to-red-900/80 p-6 shadow-lg relative">
-        {/* 헤더 장식 */}
-        <div className="absolute top-2 left-4 flex gap-2 text-xl opacity-80">
-          <span>🎄</span>
-          <span>⭐</span>
-          <span>🎁</span>
-        </div>
-        <div className="absolute top-2 right-4 flex gap-2 text-xl opacity-80">
-          <span>🔔</span>
-          <span>❄️</span>
-          <span>🎅</span>
-        </div>
-        
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pt-6">
-          <div className="space-y-1">
-            <p className="text-xs uppercase tracking-[0.25em] text-emerald-100">🛡️ Team Battle</p>
-            <h1 className="text-3xl font-extrabold text-white">팀배틀</h1>
+      {/* Header Section: Digital Billboard Style */}
+      <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-black/60 shadow-2xl backdrop-blur-md">
+        <div className="pointer-events-none absolute inset-0 bg-[url('/images/pattern-grid.svg')] opacity-10" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+
+        <div className="relative flex flex-col items-center justify-between gap-6 p-8 md:flex-row">
+          <div className="flex items-center gap-4">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-white/10 to-transparent shadow-inner ring-1 ring-white/10">
+              <span className="text-3xl">⚔️</span>
+            </div>
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest text-white/40">Season Event</p>
+              <h1 className="text-3xl font-black text-white italic tracking-tight">TEAM BATTLE</h1>
+              <p className="flex items-center gap-2 text-sm text-white/60">
+                <span className={`inline-block h-2 w-2 rounded-full ${joinWindow.closed ? "bg-red-500" : "bg-emerald-500 animate-pulse"}`} />
+                {joinWindow.closed ? "팀 배정 마감" : "팀 배정 진행 중"}
+              </p>
+            </div>
           </div>
-          <div className="text-right">
-            <p className="text-xs text-emerald-100/80">남은 시간</p>
-            <p className="text-xl font-bold text-white">{countdown}</p>
+
+          <div className="flex flex-col items-end gap-1">
+            <p className="text-xs font-bold uppercase tracking-widest text-white/40">Time Remaining</p>
+            <div className="font-mono text-4xl font-black text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">
+              {countdown}
+            </div>
+            <button
+              onClick={loadCore}
+              disabled={refreshing}
+              className="flex items-center gap-1.5 text-xs text-white/40 hover:text-white transition-colors"
+            >
+              <span className={`${refreshing ? "animate-spin" : ""}`}>↻</span>
+              UPDATE DATA
+            </button>
           </div>
         </div>
       </div>
 
-      <div className="flex items-center justify-between text-sm text-emerald-100/80">
-        <div className="flex gap-2 items-center">
-          <button
-            className="px-3 py-1 rounded-full border border-emerald-500/50 bg-emerald-900/40 text-emerald-100 hover:border-emerald-300 transition"
-            onClick={loadCore}
-            disabled={refreshing}
-          >
-            {refreshing ? "새로고침 중..." : "데이터 새로고침"}
-          </button>
+      {/* Rule Ticker */}
+      <div className="flex items-center gap-3 overflow-hidden rounded-full border border-white/5 bg-white/[0.02] px-4 py-2 text-xs text-white/50 backdrop-blur-sm">
+        <span className="font-bold text-cc-lime">INFO</span>
+        <div className="flex gap-4 overflow-hidden whitespace-nowrap">
+          <span>• 자동 배정 (밸런스 기준)</span>
+          <span>• 시작 후 24시간 내 배정 가능</span>
+          <span>• 게임 1회당 10점 (일일 최대 500점)</span>
+          <span>• 상위 팀 전원 보상 지급</span>
         </div>
-        {initialLoading && <span className="text-xs text-amber-200">초기 로딩 중...</span>}
       </div>
 
-      <div className="rounded-2xl border border-emerald-700/40 bg-slate-900/70 p-4 text-emerald-100 text-sm space-y-1">
-        <div className="font-semibold text-emerald-200">룰 안내 (핵심)</div>
-        <div>• 참여: 밸런스 기준 자동 배정 (직접 선택 없음)</div>
-        <div>• 팀 선택: 시작 후 24시간 내 1회</div>
-        <div>• 점수: 게임 1회당 10점 · 1인 하루 최대 500점</div>
-        <div>• 보상: 1위 쿠폰 30만 · 2위 쿠폰 20만 · 3위 쿠폰 5만 (전부 수동) · 최소 30회(300점)</div>
-      </div>
+      {/* Main Grid */}
+      <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
+        <div className="space-y-6">
+          {/* Team Select / Status Card */}
+          <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] p-6 shadow-xl backdrop-blur-md">
+            <div className="mb-6 flex items-center justify-between">
+              <h2 className="text-xl font-bold text-white">MY TEAM STATUS</h2>
+              {myTeamName && (
+                <span className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs font-bold text-white">
+                  {myTeamName}
+                </span>
+              )}
+            </div>
 
-      {joinWindow.closed && (
-        <div className="rounded-xl border border-red-600/50 bg-red-900/40 p-3 text-sm text-red-100">
-          팀 선택 창이 닫혔습니다 (시작 후 24시간). 이미 배정된 팀에서만 참여가 가능합니다.
-        </div>
-      )}
-
-      {showTopGrid && (
-        <div className="grid md:grid-cols-3 gap-4">
-          {showTeamSelectPanel && (
-            <div className="md:col-span-2 rounded-2xl border border-emerald-700/40 bg-gradient-to-br from-slate-950/80 to-emerald-950/40 p-5 shadow-lg">
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-lg font-bold text-white">팀 선택</h2>
-                <div className="text-xs font-semibold text-emerald-200">선택 창 열려 있음</div>
-              </div>
-              <div className="mb-2 text-xs text-emerald-100/80">내 팀: {myTeamName ?? "미배정"}</div>
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <button
-                    className="px-4 py-2 rounded-full bg-gradient-to-r from-emerald-500 to-cyan-400 text-slate-900 font-semibold hover:from-emerald-400 hover:to-cyan-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                    onClick={handleAutoAssign}
-                    disabled={joinBusy || refreshing || joinWindow.closed}
-                  >
-                    {joinButtonLabel}
-                  </button>
-                  <span className="text-xs text-emerald-100/80">밸런스 기준 자동 배정</span>
-                </div>
-                <div className="text-right text-xs text-amber-200">팀 선택 창: {joinWindow.label}</div>
-              </div>
-              <div className="grid sm:grid-cols-2 gap-3">
-                {teams.map((team) => (
-                  <div
-                    key={team.id}
-                    className={`rounded-xl border p-4 shadow-inner transition hover:-translate-y-0.5 hover:shadow-lg bg-slate-900/60 ${
-                      selectedTeam === team.id ? "border-emerald-400/80" : "border-emerald-800/40"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-xs text-emerald-200/70">팀</p>
-                        <p className="text-xl font-bold text-white">{team.name}</p>
-                      </div>
-                      <span className="text-[11px] text-emerald-100/70">자동 배정만 가능</span>
-                    </div>
-                    {selectedTeam === team.id && <p className="mt-1 text-xs text-emerald-300">내 팀으로 배정됨</p>}
+            {!selectedTeam ? (
+              // Join Interface (Mission Control Style)
+              <div className="flex flex-col items-center justify-center gap-6 py-8 text-center">
+                <div className="relative">
+                  <div className="absolute inset-0 animate-ping rounded-full bg-white/10 opacity-50" />
+                  <div className="relative flex h-24 w-24 items-center justify-center rounded-full border border-white/20 bg-black/50 text-4xl shadow-[0_0_30px_rgba(255,255,255,0.1)]">
+                    ❓
                   </div>
-                ))}
-                {teams.length === 0 && <p className="text-sm text-emerald-200/70">활성 팀이 없습니다.</p>}
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-2xl font-black text-white">소속된 팀이 없습니다</h3>
+                  <p className="text-sm text-white/50">시스템이 전력을 분석하여 최적의 팀으로 배정합니다.</p>
+                </div>
+                <button
+                  onClick={handleAutoAssign}
+                  disabled={joinBusy || refreshing || joinWindow.closed}
+                  className="group relative overflow-hidden rounded-xl bg-white px-8 py-4 font-bold text-black transition-transform active:scale-95 disabled:opacity-50"
+                >
+                  <span className="relative z-10 flex items-center gap-2">
+                    {joinBusy ? "ANALYZING..." : "AUTO ASSIGN TEAM"}
+                  </span>
+                  <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-gray-200 to-transparent transition-transform group-hover:translate-x-full" />
+                </button>
+                {joinWindow.closed && (
+                  <p className="text-xs font-bold text-red-400">※ 현재 팀 배정 기간이 종료되었습니다.</p>
+                )}
               </div>
-            </div>
-          )}
-
-          {showContribPanel && (
-        <div
-          className={`rounded-2xl border border-amber-600/40 bg-gradient-to-br from-slate-950/80 to-amber-950/30 p-5 shadow-lg ${
-            showTeamSelectPanel ? "" : "md:col-span-3"
-          }`}
-        >
-          <div className="flex items-center justify-between mb-2">
-            <h2 className="text-lg font-bold text-white">내 팀 기여도</h2>
-            <div className="flex items-center gap-2 text-[11px] text-amber-200">
-              {selectedTeam && <span>team #{selectedTeam}</span>}
-              <select
-                value={contribLimit}
-                onChange={(e) => {
-                  setContribLimit(Number(e.target.value));
-                  setContribOffset(0);
-                }}
-                className="rounded border border-amber-500/40 bg-slate-900/80 px-1 py-0.5 text-amber-100"
-              >
-                {[5, 10, 20, 50].map((n) => (
-                  <option key={n} value={n}>
-                    {n}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-          {selectedTeam ? (
-            contributorsLoading ? (
-              <p className="text-sm text-amber-100">기여도 불러오는 중...</p>
             ) : (
-              <ul className="space-y-2 text-sm text-amber-50">
-                {contributors.map((c) => (
-                  <li key={c.user_id} className="flex justify-between rounded-lg bg-amber-900/30 px-3 py-2 border border-amber-700/30">
-                    <div className="flex flex-col">
-                      <span className="text-amber-100">{c.nickname || "닉네임 없음"}</span>
-                      <span className="text-[11px] text-amber-200/80">#{c.user_id}</span>
-                    </div>
-                    <span className="font-semibold text-amber-200">+{c.points}</span>
-                  </li>
-                ))}
-                {contributors.length === 0 && <p className="text-amber-100">데이터 없음</p>}
-              </ul>
-            )
-          ) : (
-            <p className="text-amber-100 text-sm">팀에 합류하면 기여도가 표시됩니다.</p>
-          )}
-          {selectedTeam && (
-            <div className="mt-3 flex items-center justify-between text-[11px] text-amber-100/80">
-              <span>{contributors.length > 0 ? `${contribOffset + 1} - ${contribOffset + contributors.length} 표시` : "0 표시"}</span>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={handleContribPrev}
-                  disabled={contribOffset === 0}
-                  className="rounded border border-amber-500/40 px-2 py-1 disabled:opacity-50"
-                >
-                  이전
-                </button>
-                <button
-                  type="button"
-                  onClick={handleContribNext}
-                  disabled={contributors.length < contribLimit}
-                  className="rounded border border-amber-500/40 px-2 py-1 disabled:opacity-50"
-                >
-                  다음
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-        )}
-      </div>
-      )}
-
-      <div className="rounded-2xl border border-cyan-700/40 bg-gradient-to-br from-slate-950/80 to-cyan-900/40 p-5 shadow-lg">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-bold text-white">리더보드</h2>
-          <div className="flex items-center gap-2 text-[11px] text-cyan-100/80">
-            <span>표시</span>
-            <select
-              value={lbLimit}
-              onChange={(e) => {
-                setLbLimit(Number(e.target.value));
-                setLbOffset(0);
-              }}
-              className="rounded border border-cyan-500/40 bg-slate-900/80 px-1 py-0.5 text-xs text-cyan-100"
-            >
-              {[5, 10, 20, 50].map((n) => (
-                <option key={n} value={n}>
-                  {n}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-        <div className="divide-y divide-slate-800/60">
-          {leaderboard.map((row, idx) => (
-            <div key={row.team_id} className="flex items-center justify-between py-3">
-              <div className="flex items-center gap-3">
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-cyan-900/60 text-sm font-bold text-cyan-100">#{idx + 1}</span>
-                <div className="flex flex-col">
-                  <span className="text-sm font-semibold text-white">{row.team_name}</span>
-                  <span className="text-[11px] text-cyan-100/70">인원 {row.member_count ?? 0}명</span>
-                  {selectedTeam === row.team_id && <span className="text-[11px] text-emerald-200">내 팀</span>}
+              // Contribution Stats
+              <div className="space-y-4">
+                <div className="flex items-center justify-between text-sm text-white/60">
+                  <span>Recent Contributors</span>
+                  <div className="flex gap-2">
+                    <button onClick={handleContribPrev} disabled={contribOffset === 0} className="hover:text-white disabled:opacity-30">←</button>
+                    <button onClick={handleContribNext} disabled={contributors.length < contribLimit} className="hover:text-white disabled:opacity-30">→</button>
+                  </div>
+                </div>
+                <div className="grid gap-2">
+                  {contributorsLoading ? (
+                    <div className="py-8 text-center text-xs text-white/30">LOADING DATA...</div>
+                  ) : contributors.length > 0 ? (
+                    contributors.map((c, i) => (
+                      <div key={i} className="flex items-center justify-between rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3 hover:bg-white/[0.05]">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/5 text-xs font-bold text-white/70">
+                            {contribOffset + i + 1}
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-white">{c.nickname || "Unknown"}</p>
+                            <p className="text-[10px] text-white/40">USER ID: {c.user_id}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-mono text-lg font-bold text-cc-lime">+{c.points}</p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="py-8 text-center text-xs text-white/30">기여 내역이 없습니다.</div>
+                  )}
                 </div>
               </div>
-              <div className="text-right">
-                <p className="text-[11px] text-cyan-100/70">점수</p>
-                <p className="text-lg font-semibold text-cyan-100">{row.points}</p>
+            )}
+          </div>
+        </div>
+
+        {/* Right Column: Leaderboard */}
+        <div className="h-full">
+          <div className="sticky top-6 overflow-hidden rounded-3xl border border-white/10 bg-black/40 shadow-xl backdrop-blur-md">
+            <div className="border-b border-white/5 bg-white/[0.02] p-4">
+              <h3 className="font-bold text-white">LEADERBOARD</h3>
+            </div>
+            <div className="divide-y divide-white/5 p-2">
+              {leaderboard.map((row, idx) => (
+                <div key={row.team_id} className={`flex items-center justify-between rounded-xl p-3 ${selectedTeam === row.team_id ? "bg-white/10 ring-1 ring-white/20" : ""}`}>
+                  <div className="flex items-center gap-3">
+                    <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-black shadow-inner ${idx === 0 ? "bg-yellow-500 text-black" :
+                        idx === 1 ? "bg-gray-300 text-black" :
+                          idx === 2 ? "bg-orange-700 text-white" :
+                            "bg-white/10 text-white/50"
+                      }`}>
+                      {idx + 1}
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-white">{row.team_name}</p>
+                      <p className="text-[10px] text-white/40">{row.member_count} Members</p>
+                    </div>
+                  </div>
+                  <p className="font-mono font-bold text-white">{row.points.toLocaleString()}</p>
+                </div>
+              ))}
+              {leaderboard.length === 0 && (
+                <div className="py-8 text-center text-xs text-white/30">순위 데이터 없음</div>
+              )}
+            </div>
+
+            <div className="flex justify-center border-t border-white/5 p-2">
+              <div className="flex gap-4 text-xs text-white/40">
+                <button onClick={handleLbPrev} disabled={lbOffset === 0} className="hover:text-white disabled:opacity-30">PREV</button>
+                <span>{lbOffset + 1}-{lbOffset + leaderboard.length}</span>
+                <button onClick={handleLbNext} disabled={leaderboard.length < lbLimit} className="hover:text-white disabled:opacity-30">NEXT</button>
               </div>
             </div>
-          ))}
-          {leaderboard.length === 0 && <p className="text-sm text-cyan-100/70 py-3">아직 점수가 없습니다.</p>}
-        </div>
-        <div className="mt-3 flex items-center justify-between text-[11px] text-cyan-100/80">
-          <span>{leaderboard.length > 0 ? `${lbOffset + 1} - ${lbOffset + leaderboard.length} 표시` : "0 표시"}</span>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={handleLbPrev}
-              disabled={lbOffset === 0}
-              className="rounded border border-cyan-500/40 px-2 py-1 disabled:opacity-50"
-            >
-              이전
-            </button>
-            <button
-              type="button"
-              onClick={handleLbNext}
-              disabled={leaderboard.length < lbLimit}
-              className="rounded border border-cyan-500/40 px-2 py-1 disabled:opacity-50"
-            >
-              다음
-            </button>
           </div>
         </div>
       </div>
 
-      {message && <div className="p-3 rounded-xl border border-emerald-500/40 bg-emerald-900/40 text-emerald-100">{message}</div>}
-      {error && <div className="p-3 rounded-xl border border-red-500/40 bg-red-900/40 text-red-100">{error}</div>}
+      {message && (
+        <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 animate-bounce-in rounded-full border border-cc-lime/20 bg-black/80 px-6 py-3 text-sm font-bold text-cc-lime backdrop-blur-xl shadow-2xl">
+          ✅ {message}
+        </div>
+      )}
+      {error && (
+        <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 animate-bounce-in rounded-full border border-red-500/20 bg-black/80 px-6 py-3 text-sm font-bold text-red-400 backdrop-blur-xl shadow-2xl">
+          ⚠️ {error}
+        </div>
+      )}
     </div>
   );
 };

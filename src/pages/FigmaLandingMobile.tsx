@@ -141,7 +141,7 @@ const MobileLanding: React.FC = () => {
         </a>
 
         <section className="bg-white flex flex-col items-center gap-[24px] px-[20px] py-[20px]">
-          <h2 className="w-full text-center text-[32px] font-medium tracking-[-0.64px] text-black">진행중인 이벤트</h2>
+          <h2 className="w-full text-center text-[32px] font-medium tracking-[-0.64px] text-black">진행중인금고머니 적립이벤트</h2>
           <div className="flex flex-col gap-[20px] w-full items-center">
             <a
               href={noticeLink}
@@ -150,9 +150,9 @@ const MobileLanding: React.FC = () => {
               className="flex flex-col gap-[19px] w-full max-w-[335px] hover:opacity-90"
             >
               <div className="relative w-full overflow-hidden rounded-[10px]" style={{ aspectRatio: "285/221" }}>
-                <img src={assets.benefitImage} alt="매일 터지는 룰렛 경품추첨" className="absolute inset-0 h-full w-full object-cover" />
+                <img src={assets.benefitImage} alt="신년이벤트 내금고 열기" className="absolute inset-0 h-full w-full object-cover" />
               </div>
-              <p className="text-[20px] font-medium leading-[1.15] text-left text-black"> 매일 터지는 룰렛 경품추첨</p>
+              <p className="text-[20px] font-medium leading-[1.15] text-left text-black"> 신년이벤트 내금고 열기</p>
             </a>
           </div>
         </section>
