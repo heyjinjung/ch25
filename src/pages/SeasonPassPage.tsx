@@ -82,26 +82,26 @@ const SeasonPassPage: React.FC = () => {
 
   const cards = [
     {
-      icon: "🎄",
+      icon: "👑",
       title: "CC랭킹 TOP10",
       desc: "순위가 10위 안에 들면 스탬프 1개",
       status: external?.rank ? `현재 ${external.rank}위${top10Needed > 0 ? `, ${top10Needed}위 상승 필요` : " (완료)"}` : "랭킹 데이터 없음",
     },
     {
-      icon: "❄️",
+      icon: "📅",
       title: "CC사이트 일일이용",
       desc: "10만원 단위 플레이 시 20XP 지급",
       status: playDone ? "완료" : "미완료",
     },
     {
-      icon: "🎁",
+      icon: "💎",
       title: "CC 입금 10만원마다",
       desc: "10만원 달성할 때마다 스탬프 1개",
       status: `누적 ${formatCurrency(deposit)}원 / 다음까지 ${depositRemainder === 100_000 ? "0" : formatCurrency(depositRemainder)}원`,
     },
     {
-      icon: "⛄",
-      title: "크리스마스게임 승리 50회",
+      icon: "🎮",
+      title: "코드게임 승리 50회",
       desc: "승리 누적 50회 달성 시 스탬프 1개",
       status: internalWins.data
         ? `누적 승리 ${internalWins.data.total_wins}회 / 남은 ${internalWins.data.remaining}회`
@@ -133,7 +133,7 @@ const SeasonPassPage: React.FC = () => {
     return (
       <FeatureGate feature="SEASON_PASS">
         <section className="rounded-3xl border border-red-800/40 bg-slate-950/85 p-8 text-center">
-          <div className="mb-3 text-4xl">☃️</div>
+          <div className="mb-3 text-4xl">⚠️</div>
           <p className="text-lg font-bold text-red-100">레벨를 불러오지 못했습니다.</p>
           <p className="mt-2 text-sm text-slate-300">잠시 후 다시 시도하거나 지민이에게 문의해주세요.</p>
           <div className="mt-4 flex justify-center gap-2">
