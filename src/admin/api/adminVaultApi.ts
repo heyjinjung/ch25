@@ -2,11 +2,7 @@ import { adminApi } from "./httpClient";
 
 /**
  * Admin Vault API
- * 
- * Reconstructed based on backend routes in:
- * - app/api/admin/routes/admin_vault_programs.py
- * - app/api/admin/routes/admin_vault_ops.py
- * - app/api/admin/routes/admin_vault2.py
+ * Reconstructed based on backend routes and proper typings.
  */
 
 export interface VaultProgramResponse {
@@ -21,7 +17,11 @@ export interface VaultProgramResponse {
 }
 
 export interface VaultStatsResponse {
-    [key: string]: any;
+    today_accrual: Record<string, { count: number; total: number }>;
+    today_skips: Record<string, number>;
+    expiring_soon_24h: number;
+    today_unlock_cash: number;
+    timestamp: string;
 }
 
 export interface VaultEligibilityResponse {
