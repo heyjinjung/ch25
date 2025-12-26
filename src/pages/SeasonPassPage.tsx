@@ -120,7 +120,7 @@ const SeasonPassPage: React.FC = () => {
           <button
             type="button"
             onClick={() => navigate("/")}
-            className="mt-4 rounded-full border border-emerald-600/60 px-4 py-2 text-xs font-semibold text-emerald-100 hover:bg-emerald-900/40"
+            className="mt-4 rounded-full border border-emerald-600/60 px-4 py-2 text-sm font-semibold text-emerald-100 hover:bg-emerald-900/40"
           >
             홈으로
           </button>
