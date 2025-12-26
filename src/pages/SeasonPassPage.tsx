@@ -140,14 +140,14 @@ const SeasonPassPage: React.FC = () => {
             <button
               type="button"
               onClick={() => season.refetch()}
-              className="rounded-full border border-slate-600 px-4 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-800"
+              className="rounded-full border border-slate-600 px-4 py-2 text-base font-semibold text-slate-200 hover:bg-slate-800"
             >
               다시 시도
             </button>
             <button
               type="button"
               onClick={() => navigate("/")}
-              className="rounded-full border border-emerald-600/60 px-4 py-2 text-xs font-semibold text-emerald-100 hover:bg-emerald-900/40"
+              className="mt-4 rounded-full border border-emerald-600/60 px-4 py-2 text-base font-semibold text-emerald-100 hover:bg-emerald-900/40"
             >
               홈으로
             </button>
@@ -192,7 +192,7 @@ const SeasonPassPage: React.FC = () => {
             </div>
 
             <div className="flex flex-col gap-4 min-w-[300px]">
-              <div className="flex justify-between text-sm font-bold text-amber-200/80">
+              <div className="flex justify-between text-base font-bold text-amber-200/80">
                 <span>현재 경험치</span>
                 <span>{data.current_xp?.toLocaleString() ?? 0} / 목표</span>
               </div>
@@ -218,7 +218,7 @@ const SeasonPassPage: React.FC = () => {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold text-white">레벨별 보상 목록</h2>
-              <span className="text-sm text-white/40">총 {data.levels.length} 레벨</span>
+              <span className="text-base text-white/40">총 {data.levels.length} 레벨</span>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
@@ -264,13 +264,13 @@ const SeasonPassPage: React.FC = () => {
 
                       <div className="relative z-10 flex items-start justify-between">
                         <div>
-                          <p className={`text-sm font-bold uppercase tracking-widest ${isLevel10 ? "text-purple-300" : canClaim ? "text-amber-300" : "text-white/40"}`}>
+                          <p className={`text-base font-bold uppercase tracking-widest ${isLevel10 ? "text-purple-300" : canClaim ? "text-amber-300" : "text-white/40"}`}>
                             레벨 {level.level}
                           </p>
                           <h3 className={`mt-1 text-lg font-bold ${isLocked ? "text-white/40" : "text-white"}`}>
                             {displayReward}
                           </h3>
-                          <p className="mt-1 text-xs text-white/30">필요 경험치: {level.required_xp.toLocaleString()} XP</p>
+                          <p className="mt-1 text-sm text-white/30">필요 경험치: {level.required_xp.toLocaleString()} XP</p>
                         </div>
                         <div className={`flex h-10 w-10 items-center justify-center rounded-full border ${level.is_claimed ? "border-emerald-500 bg-emerald-500/20 text-emerald-500" :
                           canClaim ? "animate-bounce border-amber-500 bg-amber-500 text-black shadow-lg" :
@@ -300,7 +300,7 @@ const SeasonPassPage: React.FC = () => {
                                 ""}
                         </button>
                         {(isManualAdmin || isAuto) && !level.is_claimed && !isLocked && (
-                          <p className="mt-2 text-center text-xs text-amber-500/80">
+                          <p className="mt-2 text-center text-sm text-amber-500/80">
                             * 이 보상은 관리자가 직접 지급해 드립니다.
                           </p>
                         )}
@@ -321,7 +321,7 @@ const SeasonPassPage: React.FC = () => {
           >
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold text-white">일일 미션</h2>
-              <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${data.today?.stamped ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"}`}>
+              <span className={`rounded-full px-2 py-0.5 text-sm font-bold ${data.today?.stamped ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"}`}>
                 {data.today?.stamped ? "완료됨" : "진행 중"}
               </span>
             </div>
@@ -334,10 +334,10 @@ const SeasonPassPage: React.FC = () => {
                       {card.icon}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <h4 className="truncate text-sm font-bold text-white">{card.title}</h4>
-                      <p className="mt-0.5 text-xs text-white/40">{card.desc}</p>
+                      <h4 className="truncate text-base font-bold text-white">{card.title}</h4>
+                      <p className="mt-0.5 text-sm text-white/40">{card.desc}</p>
                       <div className="mt-3 flex items-center justify-between border-t border-white/5 pt-2">
-                        <p className="truncate text-xs font-medium text-cc-lime">{card.status}</p>
+                        <p className="truncate text-sm font-medium text-cc-lime">{card.status}</p>
                       </div>
                     </div>
                   </div>
@@ -346,7 +346,7 @@ const SeasonPassPage: React.FC = () => {
             </div>
 
             <div className="rounded-2xl border border-blue-500/20 bg-blue-900/10 p-4">
-              <p className="text-sm text-blue-200">
+              <p className="text-base text-blue-200">
                 💡 <b>꿀팁:</b> 모든 일일 미션을 완료하면 보너스 스탬프를 받아 레벨업이 빨라집니다.
               </p>
             </div>
