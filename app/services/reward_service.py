@@ -105,13 +105,15 @@ class RewardService:
 
         if reward_type == "POINT":
             self.grant_point(db, user_id=user_id, amount=reward_amount, reason=meta.get("reason") if meta else None)
-            # 게임 보상 XP는 고정 상수로 부여 (기본 5, 메타에 game_xp가 있으면 우선)
+            # [중앙 집중 XP 지급] 포인트 지급 시에만 게임별 XP 부여
             if xp_from_game_reward and season_pass:
                 reason = (meta or {}).get("reason") if meta else None
                 if reason in {"dice_play", "roulette_spin", "lottery_play"}:
+                    # 메타에서 넘어온 game_xp(룰렛5/주사위3 등)를 우선 사용, 없으면 기본 5
                     xp_amount = (meta or {}).get("game_xp") or 5
                     season_pass.add_bonus_xp(db, user_id=user_id, xp_amount=xp_amount)
             return
+
         if reward_type == "COUPON":
             coupon_code = meta.get("coupon_type") if meta else "GENERIC"
             self.grant_coupon(db, user_id=user_id, coupon_type=coupon_code, meta=meta)
