@@ -179,7 +179,6 @@ const TeamBattlePage: React.FC = () => {
   };
 
   return (
-    return (
     <div className="relative space-y-8">
       {/* Background Atmosphere: Battle Clash */}
       <div className="pointer-events-none absolute -left-[20%] -top-[20%] h-[800px] w-[800px] rounded-full bg-blue-600/10 blur-[120px] mix-blend-screen" />
@@ -365,7 +364,6 @@ const TeamBattlePage: React.FC = () => {
         </div>
       )}
     </div>
-  );
   );
 };
 
