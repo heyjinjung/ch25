@@ -242,6 +242,7 @@ const SeasonPassPage: React.FC = () => {
                   const canClaim = !isManualAdmin && !isAuto && level.is_unlocked && !level.is_claimed;
                   const isLevel10 = level.level === 10;
                   const isLocked = !level.is_unlocked;
+                  const isClaimed = level.is_claimed;
 
                   return (
                     <motion.div
@@ -256,7 +257,7 @@ const SeasonPassPage: React.FC = () => {
                             ? "border-amber-500/50 bg-amber-900/20 shadow-[0_0_20px_rgba(245,158,11,0.15)] hover:border-amber-400"
                             : isLocked
                               ? "border-white/5 bg-white/[0.02] opacity-60 grayscale"
-                              : "border-white/10 bg-white/[0.05]"
+                              : isClaimed ? "border-emerald-500/30 bg-emerald-950/20" : "border-white/10 bg-white/[0.05]"
                         }`}
                     >
                       {/* Unlocked Glow */}
@@ -264,7 +265,7 @@ const SeasonPassPage: React.FC = () => {
 
                       <div className="relative z-10 flex items-start justify-between">
                         <div>
-                          <p className={`text-base font-bold uppercase tracking-widest ${isLevel10 ? "text-purple-300" : canClaim ? "text-amber-300" : "text-white/40"}`}>
+                          <p className={`text-base font-bold uppercase tracking-widest ${isLevel10 ? "text-purple-300" : (canClaim || (isAuto && !isLocked)) ? "text-amber-300" : "text-white/40"}`}>
                             레벨 {level.level}
                           </p>
                           <h3 className={`mt-1 text-lg font-bold ${isLocked ? "text-white/40" : "text-white"}`}>
@@ -272,11 +273,12 @@ const SeasonPassPage: React.FC = () => {
                           </h3>
                           <p className="mt-1 text-sm text-white/30">필요 경험치: {level.required_xp.toLocaleString()} XP</p>
                         </div>
-                        <div className={`flex h-10 w-10 items-center justify-center rounded-full border ${level.is_claimed ? "border-emerald-500 bg-emerald-500/20 text-emerald-500" :
+                        <div className={`flex h-10 w-10 items-center justify-center rounded-full border ${isClaimed ? "border-emerald-500 bg-emerald-500/20 text-emerald-500" :
                           canClaim ? "animate-bounce border-amber-500 bg-amber-500 text-black shadow-lg" :
-                            "border-white/10 bg-white/5 text-white/20"
+                            !isLocked && isAuto ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-400" :
+                              "border-white/10 bg-white/5 text-white/20"
                           }`}>
-                          {level.is_claimed ? "✓" : canClaim ? "!" : "🔒"}
+                          {isClaimed ? "✓" : canClaim ? "!" : (!isLocked && isAuto) ? "✓" : "🔒"}
                         </div>
                       </div>
 
@@ -285,21 +287,24 @@ const SeasonPassPage: React.FC = () => {
                           disabled={!canClaim}
                           onClick={() => canClaim && claimMutation.mutate(level.level)}
                           className={`w-full rounded-xl py-3 text-base font-black tracking-wide transition-all
-                                                ${canClaim
-                              ? "bg-gradient-to-r from-amber-400 to-orange-500 text-black shadow-lg hover:brightness-110 active:scale-95"
-                              : level.is_claimed
-                                ? "cursor-default bg-white/5 text-white/30"
+                                                ${isClaimed
+                              ? "cursor-default bg-emerald-500/10 text-emerald-500/50"
+                              : canClaim
+                                ? "bg-gradient-to-r from-amber-400 to-orange-500 text-black shadow-lg hover:brightness-110 active:scale-95"
                                 : isManualAdmin && !isLocked
                                   ? "cursor-not-allowed border border-white/10 bg-transparent text-white/50"
-                                  : "cursor-not-allowed bg-black/20 text-transparent"
+                                  : isAuto && !isLocked
+                                    ? "bg-emerald-500/10 text-emerald-500 font-bold"
+                                    : "cursor-not-allowed bg-black/20 text-transparent"
                             }`}
                         >
-                          {level.is_claimed ? "지급 완료" :
+                          {isClaimed ? "지급 완료" :
                             canClaim ? "보상 받기" :
                               isManualAdmin && !isLocked ? "관리자 문의" :
-                                ""}
+                                isAuto && !isLocked ? "자동 지급됨" :
+                                  ""}
                         </button>
-                        {(isManualAdmin || isAuto) && !level.is_claimed && !isLocked && (
+                        {isManualAdmin && !isAuto && !isClaimed && !isLocked && (
                           <p className="mt-2 text-center text-sm text-amber-500/80">
                             * 이 보상은 관리자가 직접 지급해 드립니다.
                           </p>
