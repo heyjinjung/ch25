@@ -2,7 +2,9 @@
 from typing import List, Optional
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field, validator
+from pydantic import ConfigDict, Field, validator
+
+from app.schemas.base import KstBaseModel as BaseModel
 
 
 class AdminRouletteSegmentBase(BaseModel):

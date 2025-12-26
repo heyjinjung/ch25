@@ -14,12 +14,10 @@ const LoginPage: React.FC = () => {
   const [externalId, setExternalId] = useState<string>("");
   const [password, setPassword] = useState<string>("");
 
-  const loginToastKey = "xmas_login_toast_cycle_v1";
-
   const resolvePostLoginPath = (): string => {
     const state = location.state as { from?: { pathname?: string; search?: string; hash?: string } } | null;
     const from = state?.from;
-    if (!from?.pathname || from.pathname === "/login") return "/home";
+    if (!from?.pathname || from.pathname === "/login") return "/landing";
     return `${from.pathname ?? ""}${from.search ?? ""}${from.hash ?? ""}`;
   };
 
@@ -39,10 +37,7 @@ const LoginPage: React.FC = () => {
       });
       setAuth(response.access_token, response.user);
 
-      const prev = Number.parseInt(localStorage.getItem(loginToastKey) ?? "0", 10);
-      const src = prev % 2 === 0 ? "/ccx001.png" : "/ccx002.png";
-      localStorage.setItem(loginToastKey, String(prev + 1));
-
+      const src = "/images/1222.jpg";
       addImageToast(src, "login popup", { width: 400, height: 700 });
       navigate(resolvePostLoginPath(), { replace: true });
     } catch (err) {

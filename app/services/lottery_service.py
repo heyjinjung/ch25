@@ -7,6 +7,7 @@ from sqlalchemy import func, select
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.orm import Session
 
+from app.core.config import get_settings
 from app.core.exceptions import InvalidConfigError, LockAcquisitionError
 from app.models.feature import FeatureType
 from app.models.game_wallet import GameTokenType
@@ -17,6 +18,7 @@ from app.services.game_common import GamePlayContext, log_game_play
 from app.services.game_wallet_service import GameWalletService
 from app.services.reward_service import RewardService
 from app.services.season_pass_service import SeasonPassService
+from app.services.vault_service import VaultService
 
 
 class LotteryService:
@@ -29,6 +31,7 @@ class LotteryService:
         self.reward_service = RewardService()
         self.wallet_service = GameWalletService()
         self.season_pass_service = SeasonPassService()
+        self.vault_service = VaultService()
 
     def _get_today_config(self, db: Session) -> LotteryConfig:
         config = db.execute(select(LotteryConfig).where(LotteryConfig.is_active.is_(True))).scalar_one_or_none()
@@ -112,7 +115,7 @@ class LotteryService:
             weighted_pool.extend([prize] * max(prize.weight, 0))
         chosen = random.choice(weighted_pool)
 
-        self.wallet_service.require_and_consume_token(
+        _, consumed_trial = self.wallet_service.require_and_consume_token(
             db,
             user_id,
             token_type,
@@ -137,6 +140,35 @@ class LotteryService:
         db.commit()
         db.refresh(log_entry)
 
+        # Vault Phase 1: idempotent game accrual (safe-guarded by feature flag).
+        self.vault_service.record_game_play_earn_event(
+            db,
+            user_id=user_id,
+            game_type=FeatureType.LOTTERY.value,
+            game_log_id=log_entry.id,
+            token_type=token_type.value,
+            outcome=None,
+            payout_raw={
+                "prize_id": chosen.id,
+                "reward_type": chosen.reward_type,
+                "reward_amount": chosen.reward_amount,
+            },
+        )
+
+        # Trial: optionally route reward into Vault instead of direct payout.
+        settings = get_settings()
+        if consumed_trial and bool(getattr(settings, "enable_trial_payout_to_vault", False)):
+            self.vault_service.record_trial_result_earn_event(
+                db,
+                user_id=user_id,
+                game_type=FeatureType.LOTTERY.value,
+                game_log_id=log_entry.id,
+                token_type=token_type.value,
+                reward_type=chosen.reward_type,
+                reward_amount=chosen.reward_amount,
+                payout_raw={"prize_id": chosen.id},
+            )
+
         xp_award = self.BASE_GAME_XP
         ctx = GamePlayContext(user_id=user_id, feature_type=FeatureType.LOTTERY.value, today=today)
         log_game_play(
@@ -151,13 +183,14 @@ class LotteryService:
             },
         )
 
-        self.reward_service.deliver(
-            db,
-            user_id=user_id,
-            reward_type=chosen.reward_type,
-            reward_amount=chosen.reward_amount,
-            meta={"reason": "lottery_play", "prize_id": chosen.id, "game_xp": xp_award},
-        )
+        if not (consumed_trial and bool(getattr(settings, "enable_trial_payout_to_vault", False))):
+            self.reward_service.deliver(
+                db,
+                user_id=user_id,
+                reward_type=chosen.reward_type,
+                reward_amount=chosen.reward_amount,
+                meta={"reason": "lottery_play", "prize_id": chosen.id, "game_xp": xp_award},
+            )
         if chosen.reward_amount > 0:
             self.season_pass_service.maybe_add_internal_win_stamp(db, user_id=user_id, now=today)
         season_pass = None  # 게임 1회당 자동 스탬프 발급 제거

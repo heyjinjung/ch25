@@ -1,5 +1,5 @@
 """Pydantic schemas for dice APIs."""
-from pydantic import BaseModel
+from app.schemas.base import KstBaseModel as BaseModel
 
 from app.models.feature import FeatureType
 
@@ -29,3 +29,4 @@ class DicePlayResponse(BaseModel):
     result: str
     game: DiceResult
     season_pass: dict | None = None
+    vault_earn: int = 0

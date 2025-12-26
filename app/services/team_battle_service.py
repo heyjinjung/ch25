@@ -1,5 +1,5 @@
 """Team battle service: teams, seasons, scores, points logging."""
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta, date, timezone
 from typing import Optional, Sequence, Iterable
 import random
 from zoneinfo import ZoneInfo
@@ -11,7 +11,6 @@ from sqlalchemy.orm import Session
 from app.models.team_battle import TeamSeason, Team, TeamMember, TeamScore, TeamEventLog
 from app.models.external_ranking import ExternalRankingData
 from app.models.game_wallet import GameTokenType
-from app.services.level_xp_service import LevelXPService
 from app.core.config import get_settings
 
 
@@ -30,7 +29,7 @@ class TeamBattleService:
     def _day_bounds(self, now: datetime) -> tuple[datetime, datetime]:
         settings = get_settings()
         tz = ZoneInfo(settings.timezone)
-        utc = ZoneInfo("UTC")
+        utc = timezone.utc
 
         base = now if now.tzinfo else now.replace(tzinfo=utc)
         local = base.astimezone(tz)
@@ -43,7 +42,7 @@ class TeamBattleService:
     def _day_bounds_for_date(self, target_date: date) -> tuple[datetime, datetime]:
         settings = get_settings()
         tz = ZoneInfo(settings.timezone)
-        utc = ZoneInfo("UTC")
+        utc = timezone.utc
 
         start_local = datetime(target_date.year, target_date.month, target_date.day, tzinfo=tz)
         end_local = start_local + timedelta(days=1)
@@ -65,7 +64,7 @@ class TeamBattleService:
           and convert to UTC-naive.
         """
 
-        utc = ZoneInfo("UTC")
+        utc = timezone.utc
         tz = ZoneInfo(get_settings().timezone)
         _ = now or self._now_utc()  # kept for backward-compatible signature
 
@@ -97,7 +96,7 @@ class TeamBattleService:
 
         settings = get_settings()
         tz = ZoneInfo(settings.timezone)
-        utc = ZoneInfo("UTC")
+        utc = timezone.utc
 
         base = today if today.tzinfo else today.replace(tzinfo=utc)
         local = base.astimezone(tz)
@@ -874,3 +873,34 @@ class TeamBattleService:
             .limit(limit)
         )
         return db.execute(stmt).all()
+
+    def contributor_me(self, db: Session, team_id: int, season_id: Optional[int], user_id: int) -> tuple | None:
+        from app.models.user import User
+
+        season = db.get(TeamSeason, season_id) if season_id else self.get_active_season(db)
+        if not season:
+            return None
+
+        points_sum = func.coalesce(func.sum(TeamEventLog.delta), 0).label("points")
+        latest_event = func.max(TeamEventLog.created_at).label("latest_event_at")
+
+        stmt = (
+            select(TeamMember.user_id, User.nickname, points_sum, latest_event)
+            .join(User, User.id == TeamMember.user_id)
+            .where(
+                TeamMember.team_id == team_id,
+                TeamMember.user_id == user_id,
+                User.status == "ACTIVE",
+            )
+            .outerjoin(
+                TeamEventLog,
+                and_(
+                    TeamEventLog.team_id == TeamMember.team_id,
+                    TeamEventLog.user_id == TeamMember.user_id,
+                    TeamEventLog.season_id == season.id,
+                ),
+            )
+            .group_by(TeamMember.user_id, User.nickname)
+        )
+
+        return db.execute(stmt).first()

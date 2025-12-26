@@ -13,6 +13,8 @@ from sqlalchemy.orm import Session
 from app.models.new_member_dice import NewMemberDiceEligibility, NewMemberDiceLog
 from app.models.user import User
 from app.schemas.new_member_dice import NewMemberDicePlayResponse, NewMemberDicePlayResult, NewMemberDiceStatusResponse
+from app.services.vault_service import VaultService
+from app.services.vault2_service import Vault2Service
 
 
 class NewMemberDiceService:
@@ -82,8 +84,29 @@ class NewMemberDiceService:
 
             user = db.query(User).filter(User.id == user_id).one_or_none()
             if user is not None:
-                user.vault_balance = max(int(user.vault_balance or 0), 10_000)
+                prev_locked = int(user.vault_locked_balance or 0)
+                base_target = max(prev_locked, 10_000)
+                base_delta = max(base_target - prev_locked, 0)
+
+                multiplier = VaultService.vault_accrual_multiplier(now_dt)
+                awarded_delta = max(int(round(base_delta * multiplier)), base_delta)
+                next_locked = prev_locked + awarded_delta
+                if next_locked < base_target:
+                    next_locked = base_target
+
+                delta_added = max(next_locked - prev_locked, 0)
+
+                user.vault_locked_balance = next_locked
+                VaultService._ensure_locked_expiry(user, now_dt)
+                VaultService.sync_legacy_mirror(user)
                 db.add(user)
+
+                # Phase 2/3-stage prep: record accrual into Vault2 bookkeeping (no v1 behavior change).
+                if delta_added > 0:
+                    try:
+                        Vault2Service().accrue_locked(db, user_id=user.id, amount=delta_added, now=now_dt, commit=False)
+                    except Exception:
+                        pass
 
         log = NewMemberDiceLog(
             user_id=user_id,

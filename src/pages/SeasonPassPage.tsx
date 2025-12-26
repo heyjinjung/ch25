@@ -106,8 +106,8 @@ const SeasonPassPage: React.FC = () => {
       status: internalWins.data
         ? `누적 승리 ${internalWins.data.total_wins}회 / 남은 ${internalWins.data.remaining}회`
         : internalWins.isLoading
-        ? "집계 중..."
-        : "집계 실패",
+          ? "집계 중..."
+          : "집계 실패",
     },
   ];
 
@@ -159,17 +159,10 @@ const SeasonPassPage: React.FC = () => {
 
   const data = season.data;
   const stampXp = (data as any)?.base_xp_per_stamp ?? 0;
-  const snowPattern = {
-    backgroundImage:
-      "radial-gradient(circle at 10% 20%, rgba(255,255,255,0.05) 1px, transparent 1px)," +
-      "radial-gradient(circle at 80% 10%, rgba(255,255,255,0.06) 1px, transparent 1px)," +
-      "radial-gradient(circle at 30% 70%, rgba(255,255,255,0.05) 1px, transparent 1px)",
-    backgroundSize: "120px 120px, 160px 160px, 140px 140px",
-  } as React.CSSProperties;
 
   return (
     <FeatureGate feature="SEASON_PASS">
-      <section className="space-y-8 rounded-3xl border border-emerald-800/40 bg-slate-950/90 p-6 md:p-8" style={snowPattern}>
+      <section className="space-y-8 rounded-3xl border border-emerald-800/40 bg-slate-950/90 p-6 md:p-8">
         <motion.header
           className="space-y-3 text-center"
           initial={{ opacity: 0, y: 16 }}
@@ -232,40 +225,46 @@ const SeasonPassPage: React.FC = () => {
                 <AnimatePresence>
                   {data.levels.map((level) => {
                     const isAuto = !!level.auto_claim;
-                    const canClaim = !isAuto && level.is_unlocked && !level.is_claimed;
                     // 시즌 2차 보상 표 (10레벨)
+                    // 시즌 보상 10단계 (Diamond/Seed 포함)
                     const rewardOverride: Record<number, string> = {
                       1: "룰렛 티켓 1장",
                       2: "주사위 티켓 1장",
                       3: "룰렛 1장 + 주사위 1장",
                       4: "복권 티켓 1장",
-                      5: "CC 코인 1개",
+                      5: "CC 코인 1개 (관리자 지급)",
                       6: "주사위 2장 + 복권 1장",
-                      7: "CC 코인 2개",
+                      7: "CC 코인 2개 (관리자 지급)",
                       8: "쿠팡상품권 1만원",
                       9: "CC 포인트 2만",
-                      10: "CC 포인트 5만",
-                    };
-                    const levelIcon: Record<number, string> = {
-                      1: "🎄",
-                      2: "⭐",
-                      3: "🎄",
-                      4: "⭐",
-                      5: "🎄",
-                      6: "⭐",
-                      7: "🎄",
-                      8: "⭐",
-                      9: "🎄",
-                      10: "⭐",
+                      10: "Diamond Key 🔑 + 시드 3만 + XP 부스터",
                     };
                     const displayReward = rewardOverride[level.level] ?? level.reward_label;
+
+                    // 고가/금액형 보상 관리자 지급 강제
+                    const isManualAdmin =
+                      displayReward.includes("CC 코인") ||
+                      displayReward.includes("상품권") ||
+                      displayReward.includes("Diamond") ||
+                      displayReward.includes("시드") ||
+                      (displayReward.includes("포인트") && (displayReward.includes("만") || displayReward.includes("10,000")));
+
+                    const canClaim = !isManualAdmin && !isAuto && level.is_unlocked && !level.is_claimed;
+                    const levelIcon: Record<number, string> = {
+                      1: "🎄", 2: "⭐", 3: "🎄", 4: "⭐", 5: "🎄",
+                      6: "⭐", 7: "🎄", 8: "⭐", 9: "🎄", 10: "💎"
+                    };
+
                     const buttonLabel = level.is_claimed
                       ? "지급완료"
-                      : isAuto && level.is_unlocked
-                      ? "자동지급"
-                      : canClaim
-                      ? "지민이 요청"
-                      : "잠금";
+                      : (isManualAdmin || isAuto) && level.is_unlocked
+                        ? "관리자 지급 대기"
+                        : canClaim
+                          ? "보상 받기"
+                          : "잠금";
+
+                    const isLevel10 = level.level === 10;
+
                     return (
                       <motion.article
                         key={level.level}
@@ -274,38 +273,48 @@ const SeasonPassPage: React.FC = () => {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
                         transition={{ duration: 0.25 }}
-                        className={`rounded-xl border p-4 transition ${
-                          canClaim
-                            ? "border-amber-400 bg-slate-900"
-                            : level.is_claimed
-                            ? "border-emerald-500/60 bg-slate-900"
-                            : "border-slate-700 bg-slate-900"
-                        }`}
+                        className={`rounded-xl border p-4 transition relative overflow-hidden ${isLevel10
+                            ? "border-purple-500/70 bg-purple-900/20 shadow-[0_0_15px_rgba(168,85,247,0.15)]"
+                            : canClaim
+                              ? "border-amber-400 bg-slate-900"
+                              : level.is_claimed
+                                ? "border-emerald-500/60 bg-slate-900"
+                                : "border-slate-700 bg-slate-900"
+                          }`}
                       >
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-semibold text-slate-200">
-                      <span className="mr-2" aria-hidden>{levelIcon[level.level] ?? "🎄"}</span>
-                      레벨 {level.level}
-                    </span>
-                    <span className="text-xs text-slate-400">필요 XP {level.required_xp.toLocaleString()}</span>
-                  </div>
-                  <p className="mt-2 text-sm text-slate-100">{displayReward}</p>
-                  <button
-                    type="button"
-                    disabled={!canClaim}
-                    onClick={() => canClaim && claimMutation.mutate(level.level)}
-                    className={`mt-3 w-full rounded-full px-3 py-2 text-sm font-bold transition ${
-                      canClaim
-                        ? "bg-amber-500 text-slate-950 hover:bg-amber-400"
-                        : level.is_claimed
-                        ? "bg-emerald-800/60 text-emerald-100 cursor-not-allowed"
-                        : "bg-slate-800 text-slate-400 cursor-not-allowed"
-                    }`}
-                  >
-                    {buttonLabel}
-                  </button>
-                        {isAuto && !level.is_claimed && (
-                          <p className="mt-1 text-xs text-emerald-200">자동지급</p>
+                        {isLevel10 && (
+                          <div className="absolute top-0 right-0 px-2 py-0.5 bg-purple-600 text-[10px] font-bold text-white rounded-bl-lg">
+                            FINAL REWARD
+                          </div>
+                        )}
+
+                        <div className="flex items-center justify-between">
+                          <span className={`text-sm font-semibold ${isLevel10 ? "text-purple-200" : "text-slate-200"}`}>
+                            <span className="mr-2" aria-hidden>{levelIcon[level.level] ?? "🎄"}</span>
+                            레벨 {level.level}
+                          </span>
+                          <span className="text-xs text-slate-400">필요 XP {level.required_xp.toLocaleString()}</span>
+                        </div>
+                        <p className={`mt-2 text-sm ${isLevel10 ? "text-white font-bold" : "text-slate-100"}`}>{displayReward}</p>
+                        <button
+                          type="button"
+                          disabled={!canClaim}
+                          onClick={() => canClaim && claimMutation.mutate(level.level)}
+                          className={`mt-3 w-full rounded-full px-3 py-2 text-sm font-bold transition ${canClaim
+                              ? "bg-amber-500 text-slate-950 hover:bg-amber-400"
+                              : level.is_claimed
+                                ? "bg-emerald-800/60 text-emerald-100 cursor-not-allowed"
+                                : isLevel10 && (isManualAdmin || isAuto) && level.is_unlocked
+                                  ? "bg-purple-600/50 text-purple-100 cursor-not-allowed border border-purple-500/30"
+                                  : "bg-slate-800 text-slate-400 cursor-not-allowed"
+                            }`}
+                        >
+                          {buttonLabel}
+                        </button>
+                        {(isManualAdmin || isAuto) && !level.is_claimed && (
+                          <p className="mt-2 text-xs text-amber-200/80 bg-black/40 p-2 rounded text-center">
+                            ⚠️ 관리자가 직접 지급하는 보상입니다.<br />(자동 수령 불가 / 문의 필요)
+                          </p>
                         )}
                       </motion.article>
                     );

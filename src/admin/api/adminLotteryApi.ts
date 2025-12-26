@@ -2,6 +2,7 @@
 import { adminApi } from "./httpClient";
 
 export interface AdminLotteryPrizePayload {
+  id?: number;
   label: string;
   weight: number;
   stock?: number | null;
@@ -24,12 +25,12 @@ export interface AdminLotteryConfig extends AdminLotteryConfigPayload {
 }
 
 export async function fetchLotteryConfigs() {
-  const { data } = await adminApi.get<AdminLotteryConfig[]>("/lottery-config");
+  const { data } = await adminApi.get<AdminLotteryConfig[]>("/lottery-config/");
   return data;
 }
 
 export async function createLotteryConfig(payload: AdminLotteryConfigPayload) {
-  const { data } = await adminApi.post<AdminLotteryConfig>("/lottery-config", payload);
+  const { data } = await adminApi.post<AdminLotteryConfig>("/lottery-config/", payload);
   return data;
 }
 

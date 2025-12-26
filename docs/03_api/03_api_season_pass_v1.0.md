@@ -56,13 +56,21 @@
     {"level":1,"required_xp":50,"reward_type":"POINT","reward_amount":100,"auto_claim":1},
     {"level":2,"required_xp":100,"reward_type":"POINT","reward_amount":300,"auto_claim":0}
   ],
-  "today": {"date": "2025-12-16", "stamped": true}
+  "today": {"date": "2025-12-16", "stamped": true},
+  "event_bridge": {
+    "active_keys": [1,2,4],
+    "total_key_count": 3,
+    "pending_reward_points": 15000,
+    "is_all_keys_collected": false,
+    "countdown_to_new_season": "154:20:11"
+  }
 }
 ```
 
 **에러 코드**
 - 401: 인증 실패
 - 404: 활성 시즌 없음
+- 비고: `today.stamped`는 오늘 날짜(`YYYY-MM-DD`) 키로 찍힌 스탬프가 있을 때만 true.
 
 ## 5. POST /api/season-pass/stamp
 ### 5-1. 설명
@@ -101,7 +109,7 @@
 ```
 
 **에러 코드**
-- 400: 이미 도장 찍음 / 시즌 기간 아님 / 잘못된 source_feature_type
+- 400: 이미 도장 찍음(`ALREADY_STAMPED_TODAY`) / 시즌 기간 아님 / 잘못된 source_feature_type
 - 401: 인증 실패
 - 404: 활성 시즌 없음
 - 409: `NO_ACTIVE_SEASON_CONFLICT` (기간 겹치는 시즌 2개 이상)

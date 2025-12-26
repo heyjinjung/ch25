@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Optional
 
-from pydantic import BaseModel
+from app.schemas.base import KstBaseModel as BaseModel
 
 
 class LevelRewardLog(BaseModel):

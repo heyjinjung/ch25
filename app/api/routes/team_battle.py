@@ -1,10 +1,12 @@
 """Public/team endpoints for team battle."""
+from datetime import timezone
 from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user_id, get_db
+from app.core.config import get_settings
 from app.schemas.team_battle import (
     TeamSeasonResponse,
     TeamJoinRequest,
@@ -25,11 +27,15 @@ def get_active_season(db: Session = Depends(get_db)):
     if not season:
         return None
 
-    utc = ZoneInfo("UTC")
-    if season.starts_at and season.starts_at.tzinfo is None:
-        season.starts_at = season.starts_at.replace(tzinfo=utc)
-    if season.ends_at and season.ends_at.tzinfo is None:
-        season.ends_at = season.ends_at.replace(tzinfo=utc)
+    utc = timezone.utc
+    local_tz = ZoneInfo(get_settings().timezone)
+
+    if season.starts_at:
+        base = season.starts_at if season.starts_at.tzinfo else season.starts_at.replace(tzinfo=utc)
+        season.starts_at = base.astimezone(local_tz)
+    if season.ends_at:
+        base = season.ends_at if season.ends_at.tzinfo else season.ends_at.replace(tzinfo=utc)
+        season.ends_at = base.astimezone(local_tz)
     return season
 
 
@@ -90,6 +96,24 @@ def contributors(team_id: int, season_id: int | None = None, limit: int = 20, of
         )
         for r in rows
     ]
+
+
+@router.get("/teams/{team_id}/contributors/me", response_model=ContributorEntry | None)
+def contributor_me(
+    team_id: int,
+    season_id: int | None = None,
+    db: Session = Depends(get_db),
+    user_id: int = Depends(get_current_user_id),
+):
+    row = svc.contributor_me(db, team_id=team_id, season_id=season_id, user_id=user_id)
+    if not row:
+        return None
+    return ContributorEntry(
+        user_id=row.user_id,
+        nickname=getattr(row, "nickname", None),
+        points=row.points or 0,
+        latest_event_at=getattr(row, "latest_event_at", None),
+    )
 
 
 @router.get("/teams", response_model=list[TeamResponse])

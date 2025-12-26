@@ -24,7 +24,7 @@ export interface AdminSeasonListResponse {
 }
 
 export async function fetchSeasons(params?: { page?: number; size?: number; is_active?: boolean }) {
-  const { data } = await adminApi.get<AdminSeasonListResponse>("/seasons", { params });
+  const { data } = await adminApi.get<AdminSeasonListResponse>("/seasons/", { params });
   return data;
 }
 
@@ -34,7 +34,7 @@ export async function fetchSeason(id: number) {
 }
 
 export async function createSeason(payload: AdminSeasonPayload) {
-  const { data } = await adminApi.post<AdminSeason>("/seasons", payload);
+  const { data } = await adminApi.post<AdminSeason>("/seasons/", payload);
   return data;
 }
 

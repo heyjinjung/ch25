@@ -1,8 +1,8 @@
 # DiceService 모듈 기술서
 
 - 문서 타입: 모듈
-- 버전: v1.1
-- 작성일: 2025-12-09
+- 버전: v1.2
+- 작성일: 2025-12-25
 - 작성자: 시스템 설계팀
 - 대상 독자: 백엔드 개발자
 
@@ -87,6 +87,8 @@ def play(self, db, user_id: int, now) -> dict:
 - `DAILY_LIMIT_REACHED`: max_daily_plays 초과. (현재 max_daily_plays=0이라 발생하지 않음)
 
 ## 변경 이력
+- v1.2 (2025-12-25, 시스템 설계팀)
+  - 문서 버전/작성일 갱신(로직 변화 없음)
 - v1.1 (2025-12-09, 시스템 설계팀)
   - max_daily_plays=0 sentinel 무제한 규칙, feature_config.is_enabled/INVALID_FEATURE_SCHEDULE 검증, 버전/작성일 정정
   - 유저/딜러 각 2개 주사위 합계 비교 구조로 확정하고 dice_log 필드/응답 예시/책임을 갱신

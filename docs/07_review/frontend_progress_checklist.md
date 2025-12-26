@@ -1,7 +1,7 @@
 # Frontend Progress Checklist
 - Document type: Checklist/Status
-- Version: v1.1
-- Date: 2025-12-09
+- Version: v1.2
+- Date: 2025-12-25
 - Audience: Frontend/QA/PM
 
 ## Environment & Build
@@ -12,10 +12,10 @@
 	- Note: New migration 20251207_0002 adds feature_config columns + seeds (demo user, roulette schedule today, season pass). Pending `alembic upgrade head` on target DB; if columns already altered manually, apply on clean DB or adjust to avoid duplicate-column errors.
 
 ## Feature Gating / Routing
-- [x] today-feature 404/에러 시에도 홈 카드 always-on 렌더, status 쿼리 실패/에러 UX 반영.
-- [x] FeatureGate and today-feature handling present.
+- [x] today-feature 호출 제거(라우트/훅 삭제), 홈 카드 always-on 렌더 유지.
+- [x] FeatureGate에서 today-feature 경고/플래그 제거.
 - [x] Reflect backend change: daily limits now unlimited (max_daily=0/999999) in UI copy and status displays.
-- [x] Error states aligned to backend codes (NO_FEATURE_TODAY, INVALID_FEATURE_SCHEDULE, FEATURE_DISABLED).
+- [x] Error states aligned to backend codes (NO_FEATURE_TODAY 등 today-feature 코드는 아카이브, 사용 안 함).
 
 ## Auth & Token Handling
 - [x] 관리자 토큰 지급/차감 기능, 테스트 모드 자동 충전 정책 반영.
@@ -37,7 +37,7 @@
 ## Testing & QA
 - [ ] Update mocks/fallbacks to match current API shapes (unlimited limits, new event_log if exposed).
 	- Note: Ensure front-end mocks reflect config_json/title/page_path fields if consuming feature_config.
-- [x] Add integration tests for today-feature flow and each game page (Vitest + RTL cover roulette/dice/lottery error/unlimited states).
+- [x] Integration tests cover 홈 카드 always-on + 각 게임 페이지 (today-feature 플로우 테스트는 제거/아카이브).
 - [ ] Visual/UX checks per frontend validation checklist (docs/14_frontend_validation_checklist.md).
 
 ## Styling & Guidelines

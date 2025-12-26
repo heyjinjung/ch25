@@ -8,3 +8,6 @@ export const isFeatureGateEnabled = (import.meta.env.VITE_GATE_TODAY_FEATURE ?? 
 
 // Only gate when explicitly enabled, not in demo fallback, and not in TEST_MODE.
 export const isFeatureGateActive = isFeatureGateEnabled && !isDemoFallbackEnabled && !isTestModeEnabled;
+
+// Trial (ticket-zero) grant feature flag. Default OFF.
+export const isTrialGrantEnabled = (import.meta.env.VITE_ENABLE_TRIAL_GRANT ?? "false") === "true";

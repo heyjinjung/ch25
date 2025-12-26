@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
 import {
   AdminSeason,
   AdminSeasonListResponse,
@@ -12,8 +13,6 @@ import {
   createSeason,
   updateSeason,
 } from "../api/adminSeasonApi";
-import Button from "../../components/common/Button";
-import Modal from "../../components/common/Modal";
 
 const seasonSchema = z
   .object({
@@ -32,7 +31,7 @@ const seasonSchema = z
 type SeasonFormValues = z.infer<typeof seasonSchema>;
 
 const SeasonListPage: React.FC = () => {
-  const [page] = useState(1);
+  const [page, setPage] = useState(1);
   const [size] = useState(10);
   const [editingSeason, setEditingSeason] = useState<AdminSeason | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -91,18 +90,95 @@ const SeasonListPage: React.FC = () => {
     mutation.mutate(values);
   });
 
+  const totalPages = useMemo(() => {
+    if (!data) return 1;
+    return Math.max(1, Math.ceil(data.total / data.size));
+  }, [data]);
+
+  const startIndex = useMemo(() => {
+    if (!data || data.total === 0) return 0;
+    return (data.page - 1) * data.size + 1;
+  }, [data]);
+
+  const endIndex = useMemo(() => {
+    if (!data || data.total === 0) return 0;
+    return Math.min(data.page * data.size, data.total);
+  }, [data]);
+
+  const pageNumbers = useMemo(() => {
+    if (!data) return [1];
+    const currentPage = data.page;
+    const pages = totalPages;
+    const count = Math.min(5, pages);
+    const startPage = pages <= 5 ? 1 : Math.max(1, Math.min(currentPage - 2, pages - 4));
+    return Array.from({ length: count }, (_, i) => startPage + i);
+  }, [data, totalPages]);
+
+  const inputClass =
+    "w-full rounded-md border border-[#333333] bg-[#1A1A1A] px-3 py-2 text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]";
+  const labelClass = "text-sm font-medium text-gray-300";
+
+  const PrimaryButton = ({
+    children,
+    ...props
+  }: React.ButtonHTMLAttributes<HTMLButtonElement> & { children: React.ReactNode }) => (
+    <button
+      type="button"
+      className="inline-flex items-center rounded-md bg-[#2D6B3B] px-4 py-2 text-sm font-medium text-white hover:bg-[#91F402] hover:text-black disabled:cursor-not-allowed disabled:opacity-60"
+      {...props}
+    >
+      {children}
+    </button>
+  );
+
+  const SecondaryButton = ({
+    children,
+    ...props
+  }: React.ButtonHTMLAttributes<HTMLButtonElement> & { children: React.ReactNode }) => (
+    <button
+      type="button"
+      className="inline-flex items-center rounded-md border border-[#333333] bg-[#1A1A1A] px-4 py-2 text-sm font-medium text-gray-200 hover:bg-[#2C2C2E] disabled:cursor-not-allowed disabled:opacity-60"
+      {...props}
+    >
+      {children}
+    </button>
+  );
+
+  const ModalShell = ({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) => (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+      <div className="w-full max-w-2xl rounded-lg border border-[#333333] bg-[#111111] shadow-lg">
+        <div className="flex items-center justify-between border-b border-[#333333] px-6 py-4">
+          <h3 className="text-lg font-medium text-[#91F402]">{title}</h3>
+          <button type="button" onClick={onClose} className="rounded-md p-2 text-gray-300 hover:bg-[#1A1A1A]" aria-label="닫기">
+            <X size={18} />
+          </button>
+        </div>
+        <div className="px-6 py-5">{children}</div>
+      </div>
+    </div>
+  );
+
   return (
     <section className="space-y-6">
-      <div className="flex items-center justify-between">
+      <header className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-100">시즌 관리</h1>
-          <p className="text-sm text-slate-300">시즌 생성/수정 및 상태 확인</p>
+          <h2 className="text-2xl font-bold text-[#91F402]">시즌 설정</h2>
+          <p className="mt-1 text-sm text-gray-400">시즌 생성/수정 및 상태 확인</p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)}>새 시즌 생성</Button>
-      </div>
+        <PrimaryButton
+          onClick={() => {
+            setEditingSeason(null);
+            form.reset(defaultValues);
+            setIsModalOpen(true);
+          }}
+        >
+          <Plus size={18} className="mr-2" />
+          새 시즌 생성
+        </PrimaryButton>
+      </header>
 
       {isLoading && (
-        <div className="rounded-lg border border-emerald-700/40 bg-slate-900 p-4 text-slate-200">
+        <div className="rounded-lg border border-[#333333] bg-[#111111] p-4 text-gray-200">
           시즌 정보를 불러오는 중입니다...
         </div>
       )}
@@ -114,143 +190,179 @@ const SeasonListPage: React.FC = () => {
       )}
 
       {!isLoading && data && data.items.length === 0 && (
-        <div className="rounded-lg border border-emerald-700/40 bg-slate-900 p-4 text-slate-200">
+        <div className="rounded-lg border border-[#333333] bg-[#111111] p-4 text-gray-200">
           등록된 시즌이 없습니다. 새로운 시즌을 생성해 주세요.
         </div>
       )}
 
       {!isLoading && data && data.items.length > 0 && (
-        <div className="overflow-hidden rounded-xl border border-emerald-800/40 bg-slate-900/70 shadow-lg shadow-emerald-900/30">
-          <table className="min-w-full divide-y divide-emerald-800/60">
-            <thead className="bg-emerald-900/40 text-left text-slate-200">
-              <tr>
-                <th className="px-4 py-3 text-sm font-semibold">이름</th>
-                <th className="px-4 py-3 text-sm font-semibold">기간</th>
-                <th className="px-4 py-3 text-sm font-semibold">최대 레벨</th>
-                <th className="px-4 py-3 text-sm font-semibold">XP/스탬프</th>
-                <th className="px-4 py-3 text-sm font-semibold">활성</th>
-                <th className="px-4 py-3 text-sm font-semibold">액션</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-emerald-800/40 text-slate-100">
-              {data.items.map((season) => (
-                <tr key={season.id} className="hover:bg-emerald-900/20">
-                  <td className="px-4 py-3 text-sm font-semibold">{season.name}</td>
-                  <td className="px-4 py-3 text-sm text-slate-200">
-                    {season.start_date} ~ {season.end_date}
-                  </td>
-                  <td className="px-4 py-3 text-sm">{season.max_level}</td>
-                  <td className="px-4 py-3 text-sm">{season.base_xp_per_stamp}</td>
-                  <td className="px-4 py-3 text-sm">
-                    <span className={season.is_active ? "text-emerald-400" : "text-slate-400"}>
-                      {season.is_active ? "활성" : "비활성"}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-sm">
-                    <Button
-                      variant="secondary"
-                      onClick={() => {
-                        setEditingSeason(season);
-                        setIsModalOpen(true);
-                        form.reset({
-                          name: season.name,
-                          start_date: season.start_date,
-                          end_date: season.end_date,
-                          max_level: season.max_level,
-                          base_xp_per_stamp: season.base_xp_per_stamp,
-                          is_active: season.is_active,
-                        });
-                      }}
-                    >
-                      수정
-                    </Button>
-                  </td>
+        <div className="overflow-hidden rounded-lg border border-[#333333] bg-[#111111] shadow-md">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-[#1A1A1A] border-b border-[#333333]">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">이름</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">기간</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">최대 레벨</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">XP/스탬프</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">상태</th>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">액션</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-[#333333]">
+                {data.items.map((season, idx) => (
+                  <tr key={season.id} className={idx % 2 === 0 ? "bg-[#111111]" : "bg-[#1A1A1A]"}>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <div className="text-sm font-medium text-white">{season.name}</div>
+                      <div className="text-xs text-gray-500">ID: {season.id}</div>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-300">
+                      {season.start_date} ~ {season.end_date}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-white">{season.max_level}</td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-white">{season.base_xp_per_stamp}</td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm">
+                      <span
+                        className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${
+                          season.is_active ? "bg-[#2D6B3B] text-[#91F402]" : "bg-red-900/60 text-red-200"
+                        }`}
+                      >
+                        {season.is_active ? "활성" : "비활성"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-center">
+                      <SecondaryButton
+                        onClick={() => {
+                          setEditingSeason(season);
+                          setIsModalOpen(true);
+                          form.reset({
+                            name: season.name,
+                            start_date: season.start_date,
+                            end_date: season.end_date,
+                            max_level: season.max_level,
+                            base_xp_per_stamp: season.base_xp_per_stamp,
+                            is_active: season.is_active,
+                          });
+                        }}
+                      >
+                        수정
+                      </SecondaryButton>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {totalPages > 1 && (
+            <div className="px-4 py-3 bg-[#1A1A1A] border-t border-[#333333] sm:px-6 flex items-center justify-between">
+              <div className="hidden sm:block">
+                <p className="text-sm text-gray-400">
+                  <span className="font-medium">{startIndex}</span>-<span className="font-medium">{endIndex}</span>/<span className="font-medium">{data.total}</span>
+                </p>
+              </div>
+              <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                <button
+                  type="button"
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page <= 1}
+                  className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-[#333333] ${
+                    page <= 1 ? "bg-[#111111] text-gray-600 cursor-not-allowed" : "bg-[#1A1A1A] text-gray-300 hover:bg-[#2D6B3B]"
+                  }`}
+                >
+                  <span className="sr-only">이전</span>
+                  <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+                </button>
+
+                {pageNumbers.map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => setPage(p)}
+                    className={`relative inline-flex items-center px-4 py-2 border border-[#333333] text-sm font-medium ${
+                      page === p ? "z-10 bg-[#2D6B3B] text-[#91F402]" : "bg-[#1A1A1A] text-gray-300 hover:bg-[#2C2C2E]"
+                    }`}
+                  >
+                    {p}
+                  </button>
+                ))}
+
+                <button
+                  type="button"
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page >= totalPages}
+                  className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-[#333333] ${
+                    page >= totalPages
+                      ? "bg-[#111111] text-gray-600 cursor-not-allowed"
+                      : "bg-[#1A1A1A] text-gray-300 hover:bg-[#2D6B3B]"
+                  }`}
+                >
+                  <span className="sr-only">다음</span>
+                  <ChevronRight className="h-5 w-5" aria-hidden="true" />
+                </button>
+              </nav>
+            </div>
+          )}
         </div>
       )}
 
-      <Modal open={isModalOpen} onClose={resetAndClose} title={editingSeason ? "시즌 수정" : "새 시즌 생성"}>
-        <form className="space-y-4" onSubmit={onSubmit}>
-          <div className="space-y-1">
-            <label className="text-sm text-slate-200">이름</label>
-            <input
-              className="w-full rounded-md border border-emerald-700 bg-slate-800 px-3 py-2 text-slate-50 focus:border-emerald-400 focus:outline-none"
-              {...form.register("name")}
-              type="text"
-              placeholder="시즌 이름"
-            />
-            {form.formState.errors.name && (
-              <p className="text-sm text-red-300">{form.formState.errors.name.message}</p>
-            )}
-          </div>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div className="space-y-1">
-              <label className="text-sm text-slate-200">시작일</label>
-              <input
-                type="date"
-                className="w-full rounded-md border border-emerald-700 bg-slate-800 px-3 py-2 text-slate-50 focus:border-emerald-400 focus:outline-none"
-                {...form.register("start_date")}
-              />
-              {form.formState.errors.start_date && (
-                <p className="text-sm text-red-300">{form.formState.errors.start_date.message}</p>
-              )}
+      {isModalOpen && (
+        <ModalShell title={editingSeason ? "시즌 수정" : "새 시즌 생성"} onClose={resetAndClose}>
+          <form className="space-y-4" onSubmit={onSubmit}>
+            <div>
+              <label className={labelClass}>이름</label>
+              <input className={inputClass} {...form.register("name")} type="text" placeholder="시즌 이름" />
+              {form.formState.errors.name && <p className="mt-2 text-sm text-red-300">{form.formState.errors.name.message}</p>}
             </div>
-            <div className="space-y-1">
-              <label className="text-sm text-slate-200">종료일</label>
-              <input
-                type="date"
-                className="w-full rounded-md border border-emerald-700 bg-slate-800 px-3 py-2 text-slate-50 focus:border-emerald-400 focus:outline-none"
-                {...form.register("end_date")}
-              />
-              {form.formState.errors.end_date && (
-                <p className="text-sm text-red-300">{form.formState.errors.end_date.message}</p>
-              )}
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div>
+                <label className={labelClass}>시작일</label>
+                <input type="date" className={inputClass} {...form.register("start_date")} />
+                {form.formState.errors.start_date && <p className="mt-2 text-sm text-red-300">{form.formState.errors.start_date.message}</p>}
+              </div>
+              <div>
+                <label className={labelClass}>종료일</label>
+                <input type="date" className={inputClass} {...form.register("end_date")} />
+                {form.formState.errors.end_date && <p className="mt-2 text-sm text-red-300">{form.formState.errors.end_date.message}</p>}
+              </div>
             </div>
-          </div>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div className="space-y-1">
-              <label className="text-sm text-slate-200">최대 레벨</label>
-              <input
-                type="number"
-                className="w-full rounded-md border border-emerald-700 bg-slate-800 px-3 py-2 text-slate-50 focus:border-emerald-400 focus:outline-none"
-                {...form.register("max_level", { valueAsNumber: true })}
-              />
-              {form.formState.errors.max_level && (
-                <p className="text-sm text-red-300">{form.formState.errors.max_level.message}</p>
-              )}
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div>
+                <label className={labelClass}>최대 레벨</label>
+                <input type="number" className={inputClass} {...form.register("max_level", { valueAsNumber: true })} />
+                {form.formState.errors.max_level && <p className="mt-2 text-sm text-red-300">{form.formState.errors.max_level.message}</p>}
+              </div>
+              <div>
+                <label className={labelClass}>스탬프당 XP</label>
+                <input
+                  type="number"
+                  className={inputClass}
+                  {...form.register("base_xp_per_stamp", { valueAsNumber: true })}
+                />
+                {form.formState.errors.base_xp_per_stamp && (
+                  <p className="mt-2 text-sm text-red-300">{form.formState.errors.base_xp_per_stamp.message}</p>
+                )}
+              </div>
             </div>
-            <div className="space-y-1">
-              <label className="text-sm text-slate-200">스탬프당 XP</label>
-              <input
-                type="number"
-                className="w-full rounded-md border border-emerald-700 bg-slate-800 px-3 py-2 text-slate-50 focus:border-emerald-400 focus:outline-none"
-                {...form.register("base_xp_per_stamp", { valueAsNumber: true })}
-              />
-              {form.formState.errors.base_xp_per_stamp && (
-                <p className="text-sm text-red-300">{form.formState.errors.base_xp_per_stamp.message}</p>
-              )}
+
+            <label className="flex items-center gap-2 text-sm text-gray-200">
+              <input type="checkbox" {...form.register("is_active")} className="h-4 w-4 rounded border-[#333333] bg-[#1A1A1A]" />
+              활성화
+            </label>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <SecondaryButton onClick={resetAndClose} type="button">
+                취소
+              </SecondaryButton>
+              <PrimaryButton type="submit" disabled={mutation.isPending}>
+                {mutation.isPending ? "저장 중..." : editingSeason ? "수정" : "생성"}
+              </PrimaryButton>
             </div>
-          </div>
-          <div className="flex items-center space-x-3">
-            <input type="checkbox" className="h-4 w-4" {...form.register("is_active")} />
-            <span className="text-sm text-slate-200">활성화</span>
-          </div>
-          {form.formState.errors.is_active && (
-            <p className="text-sm text-red-300">{form.formState.errors.is_active.message as string}</p>
-          )}
-          <div className="flex justify-end space-x-2">
-            <Button variant="secondary" onClick={resetAndClose} type="button">
-              취소
-            </Button>
-            <Button type="submit" disabled={mutation.isPending}>
-              {mutation.isPending ? "저장 중..." : editingSeason ? "수정" : "생성"}
-            </Button>
-          </div>
-        </form>
-      </Modal>
+          </form>
+        </ModalShell>
+      )}
     </section>
   );
 };
