@@ -7,6 +7,14 @@ from app.models.feature import UserEventLog
 
 @pytest.mark.parametrize("user_id,external_id", [(101, "ext-101")])
 def test_token_issues_and_logs_login(client, session_factory, user_id, external_id):
+    # Arrange: user must exist in DB (no auto-create on login)
+    session = session_factory()
+    try:
+        session.add(User(id=user_id, external_id=external_id, status="ACTIVE"))
+        session.commit()
+    finally:
+        session.close()
+
     # Act: request token
     resp = client.post("/api/auth/token", json={"user_id": user_id, "external_id": external_id})
 

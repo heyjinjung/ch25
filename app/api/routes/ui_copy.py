@@ -12,7 +12,12 @@ from app.services.ui_config_service import UiConfigService
 
 router = APIRouter(prefix="/api", tags=["ui-copy"])
 
-_TICKET0_KEY = "ticket_zero"
+_TICKET0_KEYS = [
+    # New canonical key used by admin endpoint
+    "ticket0_resolution_copy",
+    # Legacy key (kept for backward compatibility)
+    "ticket_zero",
+]
 
 _DEFAULT = Ticket0ResolutionCopy(
     title="티켓이 0이에요",
@@ -49,7 +54,8 @@ def _coerce_ticket0(value: object | None) -> Ticket0ResolutionCopy:
 
 @router.get("/ui-copy/ticket0", response_model=Ticket0ResolutionCopy)
 def get_ticket0_copy(db: Session = Depends(get_db)) -> Ticket0ResolutionCopy:
-    row = UiConfigService.get(db, _TICKET0_KEY)
-    if row is None:
-        return _DEFAULT
-    return _coerce_ticket0(row.value_json)
+    for key in _TICKET0_KEYS:
+        row = UiConfigService.get(db, key)
+        if row is not None:
+            return _coerce_ticket0(row.value_json)
+    return _DEFAULT
