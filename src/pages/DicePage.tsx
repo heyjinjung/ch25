@@ -90,36 +90,70 @@ const DicePage: React.FC = () => {
     }
 
     return (
-      <div className="space-y-6 sm:space-y-8">
+    return (
+      <div className="relative space-y-8">
+        {/* Background Atmosphere for Battle (Red vs Green) */}
+        <div className="pointer-events-none absolute -left-[10%] top-[40%] h-[500px] w-[500px] rounded-full bg-emerald-500/10 blur-[120px] mix-blend-screen" />
+        <div className="pointer-events-none absolute -right-[10%] top-[20%] h-[500px] w-[500px] rounded-full bg-red-600/10 blur-[120px] mix-blend-screen" />
+
+        {/* Global Flash Effect on Win */}
+        {result === "WIN" && (
+          <div className="pointer-events-none fixed inset-0 z-50 animate-pulse bg-white/20 mix-blend-overlay duration-75" />
+        )}
+
         {rewardToast && (
-          <div className="fixed bottom-6 right-6 z-30 overflow-hidden rounded-2xl border border-white/15 bg-black/75 px-4 py-3 text-white shadow-lg backdrop-blur animate-bounce-in">
-            <div className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-cc-teal/80" />
-            <div className="flex items-center pl-2">
-              <span className="font-extrabold text-cc-lime">+</span>
-              <span className="ml-1 font-extrabold text-white">
-                <AnimatedNumber value={rewardToast.value} from={0} />
+          <div className="fixed bottom-6 right-6 z-50 overflow-hidden rounded-2xl border border-white/10 bg-black/80 px-5 py-4 text-white shadow-2xl backdrop-blur-xl animate-bounce-in">
+            <div className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-emerald-500 to-teal-500" />
+            <div className="relative flex items-center gap-3 pl-2">
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-emerald-500/30 bg-emerald-500/10 text-xl shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+                ⚔️
               </span>
-              <span className="ml-2 text-white/70">{rewardToast.type}</span>
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-400">Battle Reward</p>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-2xl font-black text-white drop-shadow-lg">
+                    <AnimatedNumber value={rewardToast.value} from={0} />
+                  </span>
+                  <span className="text-xs font-bold text-white/60">{rewardToast.type}</span>
+                </div>
+              </div>
             </div>
           </div>
         )}
 
-        <div className="flex flex-wrap items-center justify-center gap-2">
-          <span className="rounded-full border border-cc-lime/30 bg-white/12 px-3 py-1 text-[clamp(14px,2.4vw,16px)] font-bold text-white">
-            {remainingLabel}
-          </span>
-          <span className="rounded-full border border-cc-lime/30 bg-white/12 px-3 py-1 text-[clamp(14px,2.4vw,16px)] font-bold text-white/90">
-            {tokenLabel}
-          </span>
+        {/* Top Info Bar */}
+        <div className="flex flex-wrap items-center justify-center gap-4">
+          <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-5 py-2 backdrop-blur-md">
+            <span className="text-xs text-white/50">전투 횟수</span>
+            <span className="font-mono text-sm font-bold text-white">{remainingLabel.replace("남은 횟수: ", "")}</span>
+          </div>
+          <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-5 py-2 backdrop-blur-md">
+            <span className="text-xs text-white/50">티켓</span>
+            <span className="font-mono text-sm font-bold text-white">{tokenLabel}</span>
+          </div>
         </div>
 
-        <div className="rounded-3xl border border-white/15 bg-white/8 p-4 shadow-[0_14px_40px_rgba(0,0,0,0.55)] sm:p-6">
-          <DiceView userDice={userDice} dealerDice={dealerDice} result={result} isRolling={isRolling} />
+        {/* Battle Arena */}
+        <div className="relative overflow-hidden rounded-[2.5rem] border border-white/10 bg-black/40 shadow-2xl backdrop-blur-sm">
+          {/* Decorative Divider */}
+          <div className="pointer-events-none absolute left-1/2 top-0 h-full w-[1px] -translate-x-1/2 bg-gradient-to-b from-transparent via-white/10 to-transparent max-md:hidden" />
+
+          <div className="relative p-6 sm:p-10">
+            <DiceView userDice={userDice} dealerDice={dealerDice} result={result} isRolling={isRolling} />
+
+            {/* Battle VS Text (Overlay) */}
+            {!result && !isRolling && (
+              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 transform">
+                <span className="text-4xl font-black italic text-white/20">VS</span>
+              </div>
+            )}
+          </div>
         </div>
 
-        <div className="space-y-4">
+        {/* Controls */}
+        <div className="mx-auto max-w-md space-y-5">
           {!!playMutation.error && !isRolling && (
-            <div className="rounded-2xl border border-white/15 bg-white/8 px-4 py-3 text-center text-[clamp(12px,2.6vw,14px)] text-white/80">
+            <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-center text-xs font-medium text-red-200">
               {mapErrorMessage(playMutation.error)}
             </div>
           )}
@@ -127,9 +161,7 @@ const DicePage: React.FC = () => {
           {isOutOfTokens && (
             <TicketZeroPanel
               tokenType={data.token_type}
-              onClaimSuccess={() => {
-                queryClient.invalidateQueries({ queryKey: ["dice-status"] });
-              }}
+              onClaimSuccess={() => queryClient.invalidateQueries({ queryKey: ["dice-status"] })}
             />
           )}
 
@@ -137,27 +169,34 @@ const DicePage: React.FC = () => {
             type="button"
             disabled={isRolling || playMutation.isPending || (!isUnlimited && data.remaining_plays <= 0) || isOutOfTokens}
             onClick={handlePlay}
-            className="group relative w-full overflow-hidden rounded-2xl border border-black/15 bg-cc-lime px-6 py-4 text-[clamp(16px,3.8vw,18px)] font-extrabold text-black shadow-lg transition hover:brightness-95 active:brightness-90 disabled:cursor-not-allowed disabled:bg-cc-lime/40 disabled:text-black/45"
+            className="group relative w-full overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-5 shadow-[0_0_20px_rgba(5,150,105,0.4)] transition-all hover:scale-[1.02] hover:shadow-[0_0_35px_rgba(5,150,105,0.6)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
           >
-            <span className="relative z-10">
+            <div className="relative z-10 flex items-center justify-center gap-3">
               {isRolling || playMutation.isPending ? (
-                <span className="flex items-center justify-center gap-2">
-                  <span className="h-5 w-5 animate-spin rounded-full border-2 border-black/60 border-t-transparent" />
-                  주사위를 굴리는 중...
-                </span>
+                <>
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                  <span className="font-bold text-white">ROLLING...</span>
+                </>
               ) : (
-                result || infoMessage ? "다시 하기" : "🎲 주사위 던지기"
+                <>
+                  <span className="text-xl">🎲</span>
+                  <span className="text-lg font-black tracking-wider text-white">
+                    {result || infoMessage ? "REMATCH" : "ROLL DICE"}
+                  </span>
+                </>
               )}
-            </span>
-            <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/15 to-transparent transition-transform group-hover:translate-x-full" />
+            </div>
           </button>
 
-          {infoMessage && !isRolling && <p className="text-center text-[clamp(12px,2.6vw,14px)] text-white/75">{infoMessage}</p>}
+          {infoMessage && !isRolling && result && (
+            <div className={`text-center font-bold animate-fade-in-up ${result === 'WIN' ? 'text-emerald-400' : result === 'LOSE' ? 'text-red-400' : 'text-white/60'
+              }`}>
+              {result === 'WIN' ? "🏆 " : result === 'LOSE' ? "💀 " : ""}
+              {infoMessage}
+            </div>
+          )}
         </div>
 
-        <div className="pt-2 text-center text-[clamp(11px,2.2vw,13px)] text-white/60">
-          승리 시 추가 보상, 무승부는 기본 보상이 적립됩니다.
-        </div>
       </div>
     );
   })();

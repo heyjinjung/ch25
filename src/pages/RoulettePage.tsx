@@ -243,34 +243,41 @@ const RoulettePage: React.FC = () => {
     }
 
     return (
-      <div className="space-y-6 sm:space-y-8">
+    return (
+      <div className="relative space-y-8">
+        {/* Global Ambient Glow (은은한 배경 광원) */}
+        <div className="pointer-events-none absolute -left-[20%] -top-[20%] h-[800px] w-[800px] rounded-full bg-cc-gold/5 blur-[120px] mix-blend-screen" />
+        <div className="pointer-events-none absolute -right-[10%] top-[20%] h-[600px] w-[600px] rounded-full bg-cc-green/5 blur-[100px] mix-blend-screen" />
+
         {!isSpinning && rewardToast && (
-          <div className="fixed bottom-6 right-6 z-30 overflow-hidden rounded-2xl border border-white/15 bg-black/75 px-4 py-3 text-white shadow-lg backdrop-blur animate-bounce-in">
-            <div className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-cc-orange/80" />
-            <div className="flex items-center gap-2 pl-2">
-              <span className="inline-flex h-7 w-7 items-center justify-center rounded-xl border border-white/15 bg-white/10">
-                <img
-                  src="/images/coin.svg"
-                  alt=""
-                  className="h-4 w-4 invert brightness-200"
-                  loading="lazy"
-                  aria-hidden="true"
-                />
+          <div className="fixed bottom-6 right-6 z-50 overflow-hidden rounded-2xl border border-white/10 bg-black/80 px-5 py-4 text-white shadow-2xl backdrop-blur-xl animate-bounce-in">
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-cc-gold/10 to-transparent" />
+            <div className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-cc-gold to-cc-orange" />
+            <div className="relative flex items-center gap-3 pl-2">
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-cc-gold/30 bg-cc-gold/10 text-xl shadow-[0_0_15px_rgba(255,215,0,0.3)]">
+                🪙
               </span>
-              <span className="font-extrabold text-cc-lime">+</span>
-              <span className="text-[clamp(18px,4.6vw,22px)] font-extrabold leading-none text-white">
-                <AnimatedNumber value={rewardToast.value} from={0} />
-              </span>
-              <span className="text-[clamp(12px,2.6vw,13px)] font-semibold text-white/70">{rewardToast.type}</span>
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-wider text-cc-gold">Reward</p>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-2xl font-black text-white drop-shadow-lg">
+                    <AnimatedNumber value={rewardToast.value} from={0} />
+                  </span>
+                  <span className="text-xs font-bold text-white/60">{rewardToast.type}</span>
+                </div>
+              </div>
             </div>
           </div>
         )}
 
-        <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-          <div className="space-y-4">
-            <div className="relative overflow-hidden rounded-3xl border border-white/15 bg-white/5 p-4 shadow-[0_14px_40px_rgba(0,0,0,0.55)] sm:p-6">
-              <div className="pointer-events-none absolute -left-8 -top-10 h-28 w-28 rounded-full bg-cc-teal/16 blur-3xl" />
-              <div className="pointer-events-none absolute -right-12 bottom-0 h-36 w-36 rounded-full bg-white/5 blur-3xl" />
+        <div className="grid gap-8 lg:grid-cols-[1.3fr_0.9fr]">
+          {/* Left Column: Roulette Wheel */}
+          <div className="relative flex flex-col items-center justify-center">
+            {/* Wheel Container with Glassmorphism */}
+            <div className="relative w-full overflow-hidden rounded-[2.5rem] border border-white/10 bg-white/[0.02] p-6 shadow-2xl backdrop-blur-sm sm:p-10">
+              {/* Inner Glow around wheel */}
+              <div className="pointer-events-none absolute left-1/2 top-1/2 -z-10 h-[120%] w-[120%] -translate-x-1/2 -translate-y-1/2 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.03)_0%,transparent_70%)]" />
+
               <RouletteWheel
                 segments={segments}
                 isSpinning={isSpinning}
@@ -279,114 +286,112 @@ const RoulettePage: React.FC = () => {
                 onSpinEnd={handleSpinEnd}
               />
             </div>
+
             {usingFallbackSegments && (
-              <div className="rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-[clamp(11px,2.2vw,12px)] text-white/70">
-                라이브 구간 데이터를 불러오지 못해 임시 구성을 표시합니다. /api/roulette/status 응답을 확인해 주세요.
+              <div className="mt-4 flex items-center gap-2 rounded-full border border-red-500/20 bg-red-500/5 px-4 py-1.5 text-xs font-medium text-red-200">
+                <span className="block h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
+                라이브 데이터 연결 실패 (Demo Mode)
               </div>
             )}
           </div>
 
-          <div className="relative space-y-4 overflow-hidden rounded-3xl border border-white/15 bg-white/5 p-4 shadow-lg sm:p-6">
-            <div className="pointer-events-none absolute -right-12 -top-16 h-40 w-40 rounded-full bg-cc-lime/8 blur-3xl" />
-            <div className="pointer-events-none absolute inset-y-0 left-0 w-[2px] bg-gradient-to-b from-cc-orange/70 via-white/10 to-transparent" />
+          {/* Right Column: Controls & Info */}
+          <div className="flex flex-col gap-6">
+            {/* Control Panel Card */}
+            <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.02] p-8 shadow-2xl backdrop-blur-md">
+              {/* Decorative Lines */}
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+              <div className="pointer-events-none absolute bottom-0 right-0 h-[200px] w-[200px] bg-[radial-gradient(circle_at_bottom_right,rgba(255,215,0,0.05)_0%,transparent_70%)]" />
 
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-2 rounded-full border border-cc-lime/20 bg-white/8 px-3 py-1 text-[clamp(14px,2.4vw,16px)] font-extrabold text-white/90">
-                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-white/15 bg-black/25">
-                  <img
-                    src="/images/flag.svg"
-                    alt=""
-                    className="h-3.5 w-3.5 invert brightness-200"
-                    loading="lazy"
-                    aria-hidden="true"
-                  />
-                </span>
-                {remainingSpins === null ? "남은 횟수: -" : remainingSpins === 0 ? (
-                  "남은 횟수: 무제한"
-                ) : (
-                  <>
-                    남은 횟수: <AnimatedNumber value={remainingSpins} durationMs={800} />회
-                  </>
+              {/* Status Badges */}
+              <div className="mb-8 flex flex-wrap gap-3">
+                <div className="flex items-center gap-2 rounded-full border border-white/10 bg-black/40 px-4 py-2 pr-5 backdrop-blur-md">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-sm">🏁</div>
+                  <div className="flex flex-col leading-none">
+                    <span className="text-[10px] text-white/40">Remaining Spins</span>
+                    <span className="font-mono text-sm font-bold text-white">
+                      {remainingSpins === null ? "-" : remainingSpins === 0 ? "∞" : <AnimatedNumber value={remainingSpins} />}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 rounded-full border border-white/10 bg-black/40 px-4 py-2 pr-5 backdrop-blur-md">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-sm">💰</div>
+                  <div className="flex flex-col leading-none">
+                    <span className="text-[10px] text-white/40">{tokenLabel}</span>
+                    <span className="font-mono text-sm font-bold text-white">
+                      {tokenBalance !== null ? <AnimatedNumber value={tokenBalance} /> : "-"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Area */}
+              <div className="space-y-4">
+                {playErrorMessage && (
+                  <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-xs font-medium text-red-200">
+                    ⚠️ {playErrorMessage}
+                  </div>
                 )}
-              </span>
-              <span className="inline-flex items-center gap-2 rounded-full border border-cc-lime/20 bg-white/8 px-3 py-1 text-[clamp(14px,2.4vw,16px)] font-bold text-white/90">
-                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-white/15 bg-black/25">
-                  <img
-                    src="/images/wallet.svg"
-                    alt=""
-                    className="h-3.5 w-3.5 invert brightness-200"
-                    loading="lazy"
-                    aria-hidden="true"
+
+                {isOutOfTokens && (
+                  <TicketZeroPanel
+                    tokenType={data.token_type}
+                    onClaimSuccess={() => queryClient.invalidateQueries({ queryKey: ["roulette-status"] })}
                   />
-                </span>
-                {tokenLabel}
-                <span aria-hidden className="text-white/60">·</span>
-                {tokenBalance !== null ? <AnimatedNumber value={tokenBalance} durationMs={850} /> : "-"}
-              </span>
+                )}
+
+                <button
+                  type="button"
+                  disabled={playMutation.isPending || isSpinning || (!isUnlimited && data.remaining_spins <= 0) || isOutOfTokens}
+                  onClick={handlePlay}
+                  className="group relative w-full overflow-hidden rounded-2xl bg-gradient-to-b from-white to-gray-300 px-6 py-5 shadow-[0_0_20px_rgba(255,255,255,0.2)] transition-all hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
+                >
+                  <div className="relative z-10 flex items-center justify-center gap-3">
+                    {playMutation.isPending ? (
+                      <>
+                        <div className="h-5 w-5 animate-spin rounded-full border-2 border-black/30 border-t-black" />
+                        <span className="text-lg font-black text-black">SPINNING...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-xl">💎</span>
+                        <span className="text-lg font-black tracking-wide text-black opacity-90">
+                          {!isSpinning && displayedResult ? "SPIN AGAIN" : "SPIN ROULETTE"}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                </button>
+              </div>
             </div>
 
-            {playErrorMessage && (
-              <div className="relative overflow-hidden rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-[clamp(12px,2.6vw,14px)] text-white/80">
-                <div className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-cc-orange/60" />
-                <div className="pl-2">{playErrorMessage}</div>
-              </div>
-            )}
-            {isOutOfTokens && (
-              <TicketZeroPanel
-                tokenType={data.token_type}
-                onClaimSuccess={() => {
-                  queryClient.invalidateQueries({ queryKey: ["roulette-status"] });
-                }}
-              />
-            )}
-            <button
-              type="button"
-              disabled={playMutation.isPending || isSpinning || (!isUnlimited && data.remaining_spins <= 0) || isOutOfTokens}
-              onClick={handlePlay}
-              className="group relative w-full overflow-hidden rounded-2xl border border-black/15 bg-cc-lime px-6 py-4 text-[clamp(16px,3.8vw,18px)] font-extrabold text-black shadow-lg transition hover:brightness-95 active:brightness-90 disabled:cursor-not-allowed disabled:bg-cc-lime/40 disabled:text-black/45"
-            >
-              <span className="relative z-10 flex items-center justify-center gap-2">
-                {playMutation.isPending ? (
-                  <>
-                    <span className="h-5 w-5 animate-spin rounded-full border-2 border-black/60 border-t-transparent" />
-                    스핀 중...
-                  </>
-                ) : (
-                  <>
-                    <span className="inline-flex h-7 w-7 items-center justify-center rounded-xl border border-black/20 bg-black/10">
-                      <img
-                        src="/images/dia.svg"
-                        alt=""
-                        className="h-4 w-4"
-                        loading="lazy"
-                        aria-hidden="true"
-                      />
-                    </span>
-                    {!isSpinning && displayedResult ? "다시 하기" : "럭셔리 룰렛 돌리기"}
-                  </>
-                )}
-              </span>
-              <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/15 to-transparent transition-transform group-hover:translate-x-full" />
-            </button>
-
+            {/* Result Display (Below Controls) */}
             {!isSpinning && displayedResult && (
-              <div className="relative overflow-hidden rounded-2xl border border-white/15 bg-white/5 p-5 text-center shadow-lg animate-bounce-in">
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-cc-orange/70 to-transparent" />
-                <p className="text-[clamp(12px,2.6vw,13px)] font-bold uppercase tracking-[0.35em] text-white/60">결과</p>
-                <p className="mt-2 text-[clamp(20px,5vw,26px)] font-extrabold leading-tight text-white">{displayedResult.segment.label}</p>
-                {displayedResult.reward_type && displayedResult.reward_type !== "NONE" && (
-                  <p className="mt-3 text-[clamp(14px,3.4vw,16px)] font-extrabold text-cc-lime">
-                    +<AnimatedNumber value={Number(displayedResult.reward_value ?? 0)} from={0} />
-                    <span className="ml-2 text-white/70">{displayedResult.reward_type}</span>
-                  </p>
-                )}
+              <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-black/40 p-1 text-center backdrop-blur-sm animate-fade-in-up">
+                <div className="relative overflow-hidden rounded-[1.8rem] border border-white/5 bg-gradient-to-br from-white/[0.08] to-transparent px-8 py-8">
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-cc-gold/50 to-transparent" />
+
+                  <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-white/40">WINNER</p>
+                  <h3 className="mt-2 text-3xl font-black text-white drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)]">
+                    {displayedResult.segment.label}
+                  </h3>
+
+                  {displayedResult.reward_type && displayedResult.reward_type !== "NONE" && (
+                    <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-cc-gold/20 bg-cc-gold/10 px-6 py-2">
+                      <span className="text-sm font-bold text-cc-gold">
+                        +{Number(displayedResult.reward_value).toLocaleString()} {displayedResult.reward_type}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
-          </div>
-        </div>
 
-        <div className="pt-2 text-center text-[clamp(11px,2.2vw,13px)] text-white/60">
-          룰렛 결과는 서버에서 결정되며, 레벨 경험치가 적립됩니다.
+            <p className="text-center text-[10px] font-medium text-white/30">
+              * 결과는 블록체인 노드가 아닌 중앙 서버 RNG에 의해 결정됩니다.
+            </p>
+          </div>
         </div>
       </div>
     );
