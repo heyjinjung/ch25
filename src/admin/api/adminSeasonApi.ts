@@ -24,21 +24,21 @@ export interface AdminSeasonListResponse {
 }
 
 export async function fetchSeasons(params?: { page?: number; size?: number; is_active?: boolean }) {
-  const { data } = await adminApi.get<AdminSeasonListResponse>("/seasons/", { params });
+  const { data } = await adminApi.get<AdminSeasonListResponse>("/admin/api/seasons/", { params });
   return data;
 }
 
 export async function fetchSeason(id: number) {
-  const { data } = await adminApi.get<AdminSeason>(`/seasons/${id}`);
+  const { data } = await adminApi.get<AdminSeason>(`/admin/api/seasons/${id}`);
   return data;
 }
 
 export async function createSeason(payload: AdminSeasonPayload) {
-  const { data } = await adminApi.post<AdminSeason>("/seasons/", payload);
+  const { data } = await adminApi.post<AdminSeason>("/admin/api/seasons/", payload);
   return data;
 }
 
 export async function updateSeason(id: number, payload: AdminSeasonPayload) {
-  const { data } = await adminApi.put<AdminSeason>(`/seasons/${id}` , payload);
+  const { data } = await adminApi.put<AdminSeason>(`/admin/api/seasons/${id}`, payload);
   return data;
 }

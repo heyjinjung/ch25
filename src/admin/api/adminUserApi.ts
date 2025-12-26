@@ -18,20 +18,20 @@ export interface AdminUser extends AdminUserPayload {
 }
 
 export async function fetchUsers() {
-  const { data } = await adminApi.get<AdminUser[]>("/users/");
+  const { data } = await adminApi.get<AdminUser[]>("/admin/api/users/");
   return data;
 }
 
 export async function createUser(payload: AdminUserPayload) {
-  const { data } = await adminApi.post<AdminUser>("/users/", payload);
+  const { data } = await adminApi.post<AdminUser>("/admin/api/users/", payload);
   return data;
 }
 
 export async function updateUser(userId: number, payload: Partial<AdminUserPayload>) {
-  const { data } = await adminApi.put<AdminUser>(`/users/${userId}`, payload);
+  const { data } = await adminApi.put<AdminUser>(`/admin/api/users/${userId}`, payload);
   return data;
 }
 
 export async function deleteUser(userId: number) {
-  await adminApi.delete(`/users/${userId}`);
+  await adminApi.delete(`/admin/api/users/${userId}`);
 }

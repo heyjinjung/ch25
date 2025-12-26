@@ -52,31 +52,31 @@ export type AdminSurveyTrigger = {
 };
 
 export async function fetchAdminSurveys(): Promise<AdminSurveyListResponse> {
-  const res = await adminApi.get<AdminSurveyListResponse>("/surveys/");
+  const res = await adminApi.get<AdminSurveyListResponse>("/admin/api/surveys/");
   return res.data;
 }
 
 export async function fetchAdminSurveyDetail(id: number): Promise<AdminSurveyDetail> {
-  const res = await adminApi.get<AdminSurveyDetail>(`/surveys/${id}`);
+  const res = await adminApi.get<AdminSurveyDetail>(`/admin/api/surveys/${id}`);
   return res.data;
 }
 
 export async function createAdminSurvey(payload: AdminSurveyUpsertRequest): Promise<AdminSurveyDetail> {
-  const res = await adminApi.post<AdminSurveyDetail>("/surveys/", payload);
+  const res = await adminApi.post<AdminSurveyDetail>("/admin/api/surveys/", payload);
   return res.data;
 }
 
 export async function updateAdminSurvey(id: number, payload: AdminSurveyUpsertRequest): Promise<AdminSurveyDetail> {
-  const res = await adminApi.put<AdminSurveyDetail>(`/surveys/${id}`, payload);
+  const res = await adminApi.put<AdminSurveyDetail>(`/admin/api/surveys/${id}`, payload);
   return res.data;
 }
 
 export async function fetchAdminSurveyTriggers(id: number): Promise<{ items: AdminSurveyTrigger[] }> {
-  const res = await adminApi.get<{ items: AdminSurveyTrigger[] }>(`/surveys/${id}/triggers`);
+  const res = await adminApi.get<{ items: AdminSurveyTrigger[] }>(`/admin/api/surveys/${id}/triggers`);
   return res.data;
 }
 
 export async function upsertAdminSurveyTriggers(id: number, payload: Array<Omit<AdminSurveyTrigger, "id">>): Promise<{ items: AdminSurveyTrigger[] }> {
-  const res = await adminApi.put<{ items: AdminSurveyTrigger[] }>(`/surveys/${id}/triggers`, payload);
+  const res = await adminApi.put<{ items: AdminSurveyTrigger[] }>(`/admin/api/surveys/${id}/triggers`, payload);
   return res.data;
 }

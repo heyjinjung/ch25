@@ -25,16 +25,16 @@ export interface AdminLotteryConfig extends AdminLotteryConfigPayload {
 }
 
 export async function fetchLotteryConfigs() {
-  const { data } = await adminApi.get<AdminLotteryConfig[]>("/lottery-config/");
+  const { data } = await adminApi.get<AdminLotteryConfig[]>("/admin/api/lottery-config/");
   return data;
 }
 
 export async function createLotteryConfig(payload: AdminLotteryConfigPayload) {
-  const { data } = await adminApi.post<AdminLotteryConfig>("/lottery-config/", payload);
+  const { data } = await adminApi.post<AdminLotteryConfig>("/admin/api/lottery-config/", payload);
   return data;
 }
 
 export async function updateLotteryConfig(id: number, payload: AdminLotteryConfigPayload) {
-  const { data } = await adminApi.put<AdminLotteryConfig>(`/lottery-config/${id}`, payload);
+  const { data } = await adminApi.put<AdminLotteryConfig>(`/admin/api/lottery-config/${id}`, payload);
   return data;
 }

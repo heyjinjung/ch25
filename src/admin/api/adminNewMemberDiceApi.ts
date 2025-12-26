@@ -33,7 +33,7 @@ export interface AdminNewMemberDiceEligibilityUpdatePayload {
 }
 
 export async function fetchNewMemberDiceEligibility(userId?: number) {
-  const { data } = await adminApi.get<AdminNewMemberDiceEligibility[]>("/new-member-dice/eligibility/", {
+  const { data } = await adminApi.get<AdminNewMemberDiceEligibility[]>("/admin/api/new-member-dice/eligibility/", {
     params: userId ? { user_id: userId } : undefined,
   });
   return data;
@@ -41,19 +41,19 @@ export async function fetchNewMemberDiceEligibility(userId?: number) {
 
 export async function fetchNewMemberDiceEligibilityByExternalId(externalId?: string) {
   const trimmed = externalId?.trim();
-  const { data } = await adminApi.get<AdminNewMemberDiceEligibility[]>("/new-member-dice/eligibility/", {
+  const { data } = await adminApi.get<AdminNewMemberDiceEligibility[]>("/admin/api/new-member-dice/eligibility/", {
     params: trimmed ? { external_id: trimmed } : undefined,
   });
   return data;
 }
 
 export async function upsertNewMemberDiceEligibility(payload: AdminNewMemberDiceEligibilityUpsertPayload) {
-  const { data } = await adminApi.post<AdminNewMemberDiceEligibility>("/new-member-dice/eligibility/", payload);
+  const { data } = await adminApi.post<AdminNewMemberDiceEligibility>("/admin/api/new-member-dice/eligibility/", payload);
   return data;
 }
 
 export async function updateNewMemberDiceEligibility(userId: number, payload: AdminNewMemberDiceEligibilityUpdatePayload) {
-  const { data } = await adminApi.put<AdminNewMemberDiceEligibility>(`/new-member-dice/eligibility/${userId}`, payload);
+  const { data } = await adminApi.put<AdminNewMemberDiceEligibility>(`/admin/api/new-member-dice/eligibility/${userId}`, payload);
   return data;
 }
 
@@ -62,15 +62,15 @@ export async function updateNewMemberDiceEligibilityByExternalId(
   payload: AdminNewMemberDiceEligibilityUpdatePayload
 ) {
   const encoded = encodeURIComponent(externalId);
-  const { data } = await adminApi.put<AdminNewMemberDiceEligibility>(`/new-member-dice/eligibility/by-external/${encoded}`, payload);
+  const { data } = await adminApi.put<AdminNewMemberDiceEligibility>(`/admin/api/new-member-dice/eligibility/by-external/${encoded}`, payload);
   return data;
 }
 
 export async function deleteNewMemberDiceEligibility(userId: number) {
-  await adminApi.delete(`/new-member-dice/eligibility/${userId}`);
+  await adminApi.delete(`/admin/api/new-member-dice/eligibility/${userId}`);
 }
 
 export async function deleteNewMemberDiceEligibilityByExternalId(externalId: string) {
   const encoded = encodeURIComponent(externalId);
-  await adminApi.delete(`/new-member-dice/eligibility/by-external/${encoded}`);
+  await adminApi.delete(`/admin/api/new-member-dice/eligibility/by-external/${encoded}`);
 }
