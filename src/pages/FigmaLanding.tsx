@@ -94,7 +94,7 @@ const OngoingEvents: React.FC = () => (
             <img src={key === 1 ? assets.benefitImage1 : assets.benefitImage2} alt="Benefit" className="absolute inset-0 h-full w-full object-cover" />
           </div>
           <p className="text-[18px] lg:text-[20px] font-medium leading-[1.15] text-left" style={{ color: deepOlive }}>
-            {key === 1 ? "매일 터지는 룰렛 경품추첨" : "크리스마스 경품이벤트"}
+            {key === 1 ? "신년이벤트 내금고 열기" : "금고머니 적립이벤트"}
           </p>
         </a>
       ))}

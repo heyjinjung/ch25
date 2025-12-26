@@ -36,9 +36,6 @@ const LoginPage: React.FC = () => {
         password: password || undefined,
       });
       setAuth(response.access_token, response.user);
-
-      const src = "/images/1222.jpg";
-      addImageToast(src, "login popup", { width: 400, height: 700 });
       navigate(resolvePostLoginPath(), { replace: true });
     } catch (err) {
       console.error("[LoginPage] login error", err);
@@ -55,33 +52,44 @@ const LoginPage: React.FC = () => {
   }, [token, navigate, location.state]);
 
   return (
-    <div className="mx-auto mt-16 w-full max-w-md space-y-6 rounded-2xl border border-emerald-700/50 bg-slate-900/70 p-10 shadow-xl shadow-emerald-950/30">
-      <header className="space-y-2 text-center">
-        <p className="text-xs uppercase tracking-[0.25em] text-emerald-300">CC지민 XMAS Week</p>
-        <h1 className="text-2xl font-bold text-white">CC지민 로그인</h1>
-        <p className="text-sm text-slate-300">지민이 안내 ID/비밀번호만 입력하세요.</p>
+    <div className="relative mx-auto mt-24 w-full max-w-md overflow-hidden rounded-3xl border border-amber-500/30 bg-black/80 p-10 shadow-2xl backdrop-blur-xl">
+      {/* Background Glow */}
+      <div className="pointer-events-none absolute -left-20 -top-20 h-64 w-64 rounded-full bg-amber-500/10 blur-[80px]" />
+      <div className="pointer-events-none absolute -right-20 -bottom-20 h-64 w-64 rounded-full bg-amber-600/10 blur-[80px]" />
+
+      <header className="relative z-10 space-y-4 text-center">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-amber-300 to-amber-600 shadow-lg shadow-amber-500/20">
+          <span className="text-2xl">👑</span>
+        </div>
+        <div>
+          <h1 className="text-2xl font-black tracking-tight text-white">
+            CC CASINO<br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-500">VIP ACCESS</span>
+          </h1>
+          <p className="mt-2 text-sm font-medium text-amber-500/80">지민코드 전용 포인트서비스</p>
+        </div>
       </header>
 
-      {error && <p className="rounded-lg border border-rose-500/40 bg-rose-900/40 p-3 text-sm font-semibold text-rose-100">{error}</p>}
+      {error && <p className="mt-6 rounded-xl border border-rose-500/30 bg-rose-950/50 p-3 text-center text-sm font-semibold text-rose-200 shadow-inner">{error}</p>}
 
-      <div className="space-y-3">
-        <div className="space-y-1">
-          <label className="text-xs text-slate-300">지민이 안내 (필수)</label>
+      <div className="mt-8 space-y-5 relative z-10">
+        <div className="space-y-1.5">
+          <label className="ml-1 text-xs font-bold text-slate-400">ACCESS ID</label>
           <input
             value={externalId}
             onChange={(e) => setExternalId(e.target.value)}
-            className="w-full rounded-lg border border-emerald-800 bg-slate-900 px-3 py-2 text-slate-100"
-            placeholder="ID를 입력하세요"
+            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3.5 text-white placeholder-white/20 transition focus:border-amber-500/50 focus:bg-white/10 focus:outline-none focus:ring-4 focus:ring-amber-500/10"
+            placeholder="부여받은 ID 입력"
           />
         </div>
-        <div className="space-y-1">
-          <label className="text-xs text-slate-300">비밀번호</label>
+        <div className="space-y-1.5">
+          <label className="ml-1 text-xs font-bold text-slate-400">PASSWORD</label>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-lg border border-emerald-800 bg-slate-900 px-3 py-2 text-slate-100"
-            placeholder="설정된 경우만 입력"
+            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3.5 text-white placeholder-white/20 transition focus:border-amber-500/50 focus:bg-white/10 focus:outline-none focus:ring-4 focus:ring-amber-500/10"
+            placeholder="패스워드 (Optional)"
           />
         </div>
       </div>
@@ -90,10 +98,14 @@ const LoginPage: React.FC = () => {
         type="button"
         onClick={handleLogin}
         disabled={loading}
-        className="w-full rounded-lg bg-gradient-to-r from-emerald-500 to-emerald-600 px-4 py-3 text-sm font-bold text-white shadow-lg transition hover:from-emerald-400 hover:to-emerald-500 disabled:opacity-60"
+        className="mt-8 w-full rounded-xl bg-gradient-to-r from-amber-400 to-amber-600 px-4 py-4 text-sm font-black text-black shadow-lg shadow-amber-900/20 transition hover:brightness-110 active:scale-[0.98] disabled:opacity-50 disabled:grayscale"
       >
-        {loading ? "로그인중.." : "로그인"}
+        {loading ? "AUTHENTICATING..." : "ENTER CASINO"}
       </button>
+
+      <p className="mt-6 text-center text-xs text-white/20">
+        PRIVATE SYSTEM · AUTHORIZED PERSONNEL ONLY
+      </p>
     </div>
   );
 };
