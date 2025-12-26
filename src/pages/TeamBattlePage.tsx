@@ -10,6 +10,11 @@ import {
 import { TeamSeason, Team, LeaderboardEntry, ContributorEntry, TeamMembership } from "../types/teamBattle";
 import { TreeIcon, GiftIcon, StarIcon, BellIcon } from "../components/common/ChristmasDecorations";
 
+void TreeIcon;
+void GiftIcon;
+void StarIcon;
+void BellIcon;
+
 const normalizeIsoForDate = (value: string) => {
   const hasTimezone = /([zZ]|[+-]\d{2}:?\d{2})$/.test(value);
   return hasTimezone ? value : value + "Z";
@@ -32,6 +37,10 @@ const TeamBattlePage: React.FC = () => {
   const [lbOffset, setLbOffset] = useState(0);
   const [contribLimit, setContribLimit] = useState(10);
   const [contribOffset, setContribOffset] = useState(0);
+
+  void initialLoading;
+  void setLbLimit;
+  void setContribLimit;
 
   const joinWindow = useMemo(() => {
     if (!season?.starts_at) return { closed: true, label: "-" };
@@ -166,6 +175,9 @@ const TeamBattlePage: React.FC = () => {
   const showTeamSelectPanel = !joinWindow.closed && selectedTeam === null;
   const showContribPanel = selectedTeam !== null;
   const showTopGrid = showTeamSelectPanel || showContribPanel;
+
+  void joinButtonLabel;
+  void showTopGrid;
 
   const handleLbPrev = () => setLbOffset(Math.max(lbOffset - lbLimit, 0));
   const handleLbNext = () => {
