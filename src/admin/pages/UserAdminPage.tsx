@@ -466,49 +466,36 @@ const UserAdminPage: React.FC = () => {
               <thead className="sticky top-0 z-10 border-b border-[#333333] bg-[#1A1A1A]">
                 <tr>
                   <th
-                    className={`px-4 py-3 text-left text-xs font-medium uppercase tracking-wider ${
-                      sortKey === "id" ? "bg-[#2D6B3B] text-[#91F402]" : "text-gray-400"
-                    } cursor-pointer hover:bg-[#2D6B3B]`}
+                    className={`px-4 py-3 text-left text-xs font-medium uppercase tracking-wider ${sortKey === "id" ? "bg-[#2D6B3B] text-[#91F402]" : "text-gray-400"
+                      } cursor-pointer hover:bg-[#2D6B3B]`}
                     onClick={() => handleSort("id")}
                   >
                     ID{renderSortIcon("id")}
                   </th>
                   <th
-                    className={`px-4 py-3 text-left text-xs font-medium uppercase tracking-wider ${
-                      sortKey === "nickname" ? "bg-[#2D6B3B] text-[#91F402]" : "text-gray-400"
-                    } cursor-pointer hover:bg-[#2D6B3B]`}
+                    className={`px-4 py-3 text-left text-xs font-medium uppercase tracking-wider ${sortKey === "nickname" ? "bg-[#2D6B3B] text-[#91F402]" : "text-gray-400"
+                      } cursor-pointer hover:bg-[#2D6B3B]`}
                     onClick={() => handleSort("nickname")}
                   >
                     닉네임{renderSortIcon("nickname")}
                   </th>
                   <th
-                    className={`px-4 py-3 text-left text-xs font-medium uppercase tracking-wider ${
-                      sortKey === "level" ? "bg-[#2D6B3B] text-[#91F402]" : "text-gray-400"
-                    } cursor-pointer hover:bg-[#2D6B3B]`}
+                    className={`px-4 py-3 text-left text-xs font-medium uppercase tracking-wider ${sortKey === "level" ? "bg-[#2D6B3B] text-[#91F402]" : "text-gray-400"
+                      } cursor-pointer hover:bg-[#2D6B3B]`}
                     onClick={() => handleSort("level")}
                   >
-                    레벨(G){renderSortIcon("level")}
+                    레벨{renderSortIcon("level")}
                   </th>
                   <th
-                    className={`px-4 py-3 text-left text-xs font-medium uppercase tracking-wider ${
-                      sortKey === "season_level" ? "bg-[#2D6B3B] text-[#91F402]" : "text-gray-400"
-                    } cursor-pointer hover:bg-[#2D6B3B]`}
-                    onClick={() => handleSort("season_level")}
-                  >
-                    시즌Lv{renderSortIcon("season_level")}
-                  </th>
-                  <th
-                    className={`px-4 py-3 text-left text-xs font-medium uppercase tracking-wider ${
-                      sortKey === "xp" ? "bg-[#2D6B3B] text-[#91F402]" : "text-gray-400"
-                    } cursor-pointer hover:bg-[#2D6B3B]`}
+                    className={`px-4 py-3 text-left text-xs font-medium uppercase tracking-wider ${sortKey === "xp" ? "bg-[#2D6B3B] text-[#91F402]" : "text-gray-400"
+                      } cursor-pointer hover:bg-[#2D6B3B]`}
                     onClick={() => handleSort("xp")}
                   >
                     XP{renderSortIcon("xp")}
                   </th>
                   <th
-                    className={`px-4 py-3 text-left text-xs font-medium uppercase tracking-wider ${
-                      sortKey === "status" ? "bg-[#2D6B3B] text-[#91F402]" : "text-gray-400"
-                    } cursor-pointer hover:bg-[#2D6B3B]`}
+                    className={`px-4 py-3 text-left text-xs font-medium uppercase tracking-wider ${sortKey === "status" ? "bg-[#2D6B3B] text-[#91F402]" : "text-gray-400"
+                      } cursor-pointer hover:bg-[#2D6B3B]`}
                     onClick={() => handleSort("status")}
                   >
                     상태{renderSortIcon("status")}
@@ -543,20 +530,7 @@ const UserAdminPage: React.FC = () => {
                           className="w-24 rounded-md border border-[#333333] bg-[#1A1A1A] p-1.5 text-right text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
                         />
                       ) : (
-                        member.level ?? 1
-                      )}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-white">
-                      {member.isEditing ? (
-                        <input
-                          type="number"
-                          min={1}
-                          value={member.draft?.season_level ?? 1}
-                          onChange={(e) => updateDraftField(member.id, "season_level", e.target.value)}
-                          className="w-24 rounded-md border border-[#333333] bg-[#1A1A1A] p-1.5 text-right text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
-                        />
-                      ) : (
-                        member.season_level ?? 1
+                        member.season_level ?? member.level ?? 1
                       )}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-white">
@@ -662,9 +636,8 @@ const UserAdminPage: React.FC = () => {
                   type="button"
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                   disabled={safePage === 1}
-                  className={`relative inline-flex items-center rounded-l-md border border-[#333333] px-2 py-2 ${
-                    safePage === 1 ? "cursor-not-allowed bg-[#111111] text-gray-500" : "bg-[#1A1A1A] text-gray-300 hover:bg-[#2D6B3B]"
-                  }`}
+                  className={`relative inline-flex items-center rounded-l-md border border-[#333333] px-2 py-2 ${safePage === 1 ? "cursor-not-allowed bg-[#111111] text-gray-500" : "bg-[#1A1A1A] text-gray-300 hover:bg-[#2D6B3B]"
+                    }`}
                 >
                   <span className="sr-only">이전</span>
                   <ChevronLeft className="h-5 w-5" aria-hidden="true" />
@@ -678,11 +651,10 @@ const UserAdminPage: React.FC = () => {
                       key={pageNum}
                       type="button"
                       onClick={() => setCurrentPage(pageNum)}
-                      className={`relative inline-flex items-center border border-[#333333] px-4 py-2 text-sm font-medium ${
-                        safePage === pageNum
+                      className={`relative inline-flex items-center border border-[#333333] px-4 py-2 text-sm font-medium ${safePage === pageNum
                           ? "z-10 bg-[#2D6B3B] text-[#91F402]"
                           : "bg-[#1A1A1A] text-gray-300 hover:bg-[#2C2C2E]"
-                      }`}
+                        }`}
                     >
                       {pageNum}
                     </button>
@@ -693,9 +665,8 @@ const UserAdminPage: React.FC = () => {
                   type="button"
                   onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                   disabled={safePage === totalPages}
-                  className={`relative inline-flex items-center rounded-r-md border border-[#333333] px-2 py-2 ${
-                    safePage === totalPages ? "cursor-not-allowed bg-[#111111] text-gray-500" : "bg-[#1A1A1A] text-gray-300 hover:bg-[#2D6B3B]"
-                  }`}
+                  className={`relative inline-flex items-center rounded-r-md border border-[#333333] px-2 py-2 ${safePage === totalPages ? "cursor-not-allowed bg-[#111111] text-gray-500" : "bg-[#1A1A1A] text-gray-300 hover:bg-[#2D6B3B]"
+                    }`}
                 >
                   <span className="sr-only">다음</span>
                   <ChevronRight className="h-5 w-5" aria-hidden="true" />
