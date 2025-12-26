@@ -174,7 +174,7 @@ const Events: React.FC = () => (
 const OngoingEvents: React.FC = () => (
   <section className="bg-white flex flex-col items-center gap-[30px] w-full px-[20px] pt-[27px] pb-[20px] lg:px-[40px]">
     <h2 className="text-[32px] lg:text-[42px] font-medium tracking-[-0.84px]" style={{ color: deepOlive }}>
-      진행중인 이벤트
+      금고머니 적립이벤트
     </h2>
     <div className="flex w-full flex-col gap-[20px] md:flex-row md:flex-wrap md:justify-center">
       {[1, 2].map((key) => (
@@ -189,7 +189,7 @@ const OngoingEvents: React.FC = () => (
             <img src={assets.benefitImage} alt="Benefit" className="absolute inset-0 h-full w-full object-cover" />
           </div>
           <p className="text-[18px] lg:text-[20px] font-medium leading-[1.15] text-left" style={{ color: deepOlive }}>
-            매일 터지는 룰렛 경품추첨
+            신년이벤트 내금고 열기
           </p>
         </a>
       ))}

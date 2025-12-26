@@ -115,7 +115,6 @@ const LotteryPage: React.FC = () => {
     }
 
     return (
-    return (
       <div className="relative space-y-8">
         {/* Ambient Glow */}
         <div className="pointer-events-none absolute -left-[10%] top-[10%] h-[600px] w-[600px] rounded-full bg-red-600/10 blur-[100px] mix-blend-screen" />

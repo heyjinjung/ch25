@@ -35,6 +35,7 @@ service = Vault2Service()
 
 
 @_core.get("/stats")
+@_core.get("/stats/")
 def get_vault_stats(db: Session = Depends(get_db)) -> dict[str, Any]:
     return service.get_vault_stats(db)
 
@@ -53,12 +54,14 @@ def _to_response(p) -> VaultProgramResponse:
 
 
 @_core.get("/default", response_model=VaultProgramResponse)
+@_core.get("/default/", response_model=VaultProgramResponse)
 def get_default_program(db: Session = Depends(get_db)) -> VaultProgramResponse:
     program = service.get_default_program(db, ensure=True)
     return _to_response(program)
 
 
 @_core.get("/{program_key}", response_model=VaultProgramResponse)
+@_core.get("/{program_key}/", response_model=VaultProgramResponse)
 def get_program(program_key: str, db: Session = Depends(get_db)) -> VaultProgramResponse:
     program = service.get_program_by_key(db, program_key=program_key)
     if program is None:
@@ -67,6 +70,7 @@ def get_program(program_key: str, db: Session = Depends(get_db)) -> VaultProgram
 
 
 @_core.put("/{program_key}/unlock-rules", response_model=VaultProgramResponse)
+@_core.put("/{program_key}/unlock-rules/", response_model=VaultProgramResponse)
 def upsert_unlock_rules(
     program_key: str,
     payload: VaultProgramUnlockRulesUpsertRequest,
@@ -81,6 +85,7 @@ def upsert_unlock_rules(
 
 
 @_core.put("/{program_key}/ui-copy", response_model=VaultProgramResponse)
+@_core.put("/{program_key}/ui-copy/", response_model=VaultProgramResponse)
 def upsert_ui_copy(
     program_key: str,
     payload: VaultProgramUiCopyUpsertRequest,
@@ -95,6 +100,7 @@ def upsert_ui_copy(
 
 
 @_core.put("/{program_key}/config", response_model=VaultProgramResponse)
+@_core.put("/{program_key}/config/", response_model=VaultProgramResponse)
 def upsert_config(
     program_key: str,
     payload: VaultProgramConfigUpsertRequest,
@@ -109,6 +115,7 @@ def upsert_config(
 
 
 @_core.post("/{program_key}/game-earn-toggle", response_model=VaultProgramResponse)
+@_core.post("/{program_key}/game-earn-toggle/", response_model=VaultProgramResponse)
 def toggle_game_earn(
     program_key: str,
     payload: VaultGameEarnToggleRequest,
@@ -123,6 +130,7 @@ def toggle_game_earn(
 
 
 @_core.get("/{program_key}/eligibility/{user_id}", response_model=VaultEligibilityResponse)
+@_core.get("/{program_key}/eligibility/{user_id}/", response_model=VaultEligibilityResponse)
 def get_user_eligibility(
     program_key: str,
     user_id: int,
@@ -136,6 +144,7 @@ def get_user_eligibility(
 
 
 @_core.post("/{program_key}/eligibility/{user_id}", response_model=VaultEligibilityResponse)
+@_core.post("/{program_key}/eligibility/{user_id}/", response_model=VaultEligibilityResponse)
 def upsert_user_eligibility(
     program_key: str,
     user_id: int,
