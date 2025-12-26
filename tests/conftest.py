@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session, sessionmaker
 os.environ.setdefault("DATABASE_URL", "sqlite+pysqlite:///:memory:")
 os.environ.setdefault("JWT_SECRET", "test-secret")
 
-from app.api.deps import get_db, get_current_user_id
+from app.api.deps import get_db, get_current_user_id, get_current_admin_id
 from app.models.game_wallet import GameTokenType, UserGameWallet
 from app.db.base import Base
 from app.main import app
@@ -55,6 +55,7 @@ def client() -> Generator[TestClient, None, None]:
 
     app.dependency_overrides[get_db] = override_get_db
     app.dependency_overrides[get_current_user_id] = lambda: 1
+    app.dependency_overrides[get_current_admin_id] = lambda: 1
     app.state.test_session_factory = TestingSessionLocal
 
     with TestClient(app) as test_client:

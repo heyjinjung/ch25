@@ -7,6 +7,7 @@ from app.models import (  # noqa: F401
     DiceLog,
     FeatureConfig,
     FeatureSchedule,
+    AppUiConfig,
     ExternalRankingData,
     ExternalRankingRewardLog,
     GameTokenType,
@@ -46,4 +47,8 @@ from app.models import (  # noqa: F401
     SegmentRule,
     NewMemberDiceEligibility,
     NewMemberDiceLog,
+    VaultProgram,
+    VaultStatus,
+    VaultEarnEvent,
+    TrialTokenBucket,
 )

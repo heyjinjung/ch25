@@ -6,6 +6,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import InvalidConfigError
+from app.core.config import get_settings
 from app.models.dice import DiceConfig, DiceLog
 from app.models.feature import FeatureType
 from app.models.game_wallet import GameTokenType
@@ -15,6 +16,7 @@ from app.services.game_common import GamePlayContext, log_game_play
 from app.services.game_wallet_service import GameWalletService
 from app.services.reward_service import RewardService
 from app.services.season_pass_service import SeasonPassService
+from app.services.vault_service import VaultService
 
 
 class DiceService:
@@ -28,6 +30,7 @@ class DiceService:
         self.reward_service = RewardService()
         self.wallet_service = GameWalletService()
         self.season_pass_service = SeasonPassService()
+        self.vault_service = VaultService()
 
     def _get_today_config(self, db: Session) -> DiceConfig:
         config = db.execute(select(DiceConfig).where(DiceConfig.is_active.is_(True))).scalar_one_or_none()
@@ -104,7 +107,7 @@ class DiceService:
             reward_type = config.lose_reward_type
             reward_amount = config.lose_reward_amount
 
-        self.wallet_service.require_and_consume_token(
+        _, consumed_trial = self.wallet_service.require_and_consume_token(
             db,
             user_id,
             token_type,
@@ -131,6 +134,36 @@ class DiceService:
         db.commit()
         db.refresh(log_entry)
 
+        total_earn = 0
+        # Vault Phase 1: idempotent game accrual (safe-guarded by feature flag).
+        total_earn += self.vault_service.record_game_play_earn_event(
+            db,
+            user_id=user_id,
+            game_type=FeatureType.DICE.value,
+            game_log_id=log_entry.id,
+            token_type=token_type.value,
+            outcome=outcome,
+            payout_raw={
+                "result": outcome,
+                "reward_type": reward_type,
+                "reward_amount": reward_amount,
+            },
+        )
+
+        # Trial: optionally route reward into Vault instead of direct payout.
+        settings = get_settings()
+        if consumed_trial and bool(getattr(settings, "enable_trial_payout_to_vault", False)):
+            total_earn += self.vault_service.record_trial_result_earn_event(
+                db,
+                user_id=user_id,
+                game_type=FeatureType.DICE.value,
+                game_log_id=log_entry.id,
+                token_type=token_type.value,
+                reward_type=reward_type,
+                reward_amount=reward_amount,
+                payout_raw={"result": outcome},
+            )
+
         xp_award = self.WIN_GAME_XP if outcome == "WIN" else self.BASE_GAME_XP
         ctx = GamePlayContext(user_id=user_id, feature_type=FeatureType.DICE.value, today=today)
         log_game_play(
@@ -145,13 +178,14 @@ class DiceService:
             },
         )
 
-        self.reward_service.deliver(
-            db,
-            user_id=user_id,
-            reward_type=reward_type,
-            reward_amount=reward_amount,
-            meta={"reason": "dice_play", "outcome": outcome, "game_xp": xp_award},
-        )
+        if not (consumed_trial and bool(getattr(settings, "enable_trial_payout_to_vault", False))):
+            self.reward_service.deliver(
+                db,
+                user_id=user_id,
+                reward_type=reward_type,
+                reward_amount=reward_amount,
+                meta={"reason": "dice_play", "outcome": outcome, "game_xp": xp_award},
+            )
         if outcome == "WIN":
             self.season_pass_service.maybe_add_internal_win_stamp(db, user_id=user_id, now=today)
         # 게임 설정 포인트를 레벨 XP 보너스로 반영
@@ -169,4 +203,5 @@ class DiceService:
                 reward_amount=reward_amount,
             ),
             season_pass=season_pass,
+            vault_earn=total_earn,
         )

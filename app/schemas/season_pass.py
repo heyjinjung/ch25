@@ -4,7 +4,9 @@ from __future__ import annotations
 from datetime import date, datetime
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import Field
+
+from app.schemas.base import KstBaseModel as BaseModel
 
 
 class SeasonInfo(BaseModel):
@@ -25,6 +27,7 @@ class SeasonProgress(BaseModel):
     current_xp: int
     total_stamps: int
     last_stamp_date: Optional[date] = None
+    next_level_xp: int
 
 
 class SeasonLevelInfo(BaseModel):

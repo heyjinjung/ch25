@@ -35,6 +35,7 @@ interface BackendDicePlayResponse {
     readonly reward_amount: number;
   };
   readonly season_pass?: Record<string, unknown> | null;
+  readonly vault_earn?: number;
 }
 
 export interface DicePlayResponse {
@@ -45,6 +46,7 @@ export interface DicePlayResponse {
   readonly reward_type?: string;
   readonly reward_value?: number | string;
   readonly message?: string;
+  readonly vaultEarn?: number;
 }
 
 export const getDiceStatus = async (): Promise<DiceStatusResponse> => {
@@ -81,6 +83,7 @@ export const playDice = async (): Promise<DicePlayResponse> => {
       reward_type: data.game.reward_type,
       reward_value: data.game.reward_amount,
       message: data.result !== "OK" ? data.result : undefined,
+      vaultEarn: data.vault_earn,
     };
   } catch (error) {
     if (axios.isAxiosError(error)) {

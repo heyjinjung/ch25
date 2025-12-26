@@ -8,8 +8,12 @@ import {
   getMyTeam,
 } from "../api/teamBattleApi";
 import { TeamSeason, Team, LeaderboardEntry, ContributorEntry, TeamMembership } from "../types/teamBattle";
-import { isAdminAuthenticated } from "../auth/adminAuth";
 import { TreeIcon, GiftIcon, StarIcon, BellIcon } from "../components/common/ChristmasDecorations";
+
+const normalizeIsoForDate = (value: string) => {
+  const hasTimezone = /([zZ]|[+-]\d{2}:?\d{2})$/.test(value);
+  return hasTimezone ? value : value + "Z";
+};
 
 const TeamBattlePage: React.FC = () => {
   const [season, setSeason] = useState<TeamSeason | null>(null);
@@ -31,9 +35,8 @@ const TeamBattlePage: React.FC = () => {
 
   const joinWindow = useMemo(() => {
     if (!season?.starts_at) return { closed: true, label: "-" };
-    // UTC 명시 (백엔드가 Z 없이 UTC 반환하므로 보정)
-    const startStr = season.starts_at.endsWith("Z") ? season.starts_at : season.starts_at + "Z";
-    const start = new Date(startStr).getTime();
+    // Z/+09:00 모두 파싱, timezone 미표기만 UTC로 보정
+    const start = new Date(normalizeIsoForDate(season.starts_at)).getTime();
     const now = Date.now();
     if (now < start) return { closed: true, label: "시작 전" };
 
@@ -47,10 +50,8 @@ const TeamBattlePage: React.FC = () => {
 
   const countdown = useMemo(() => {
     if (!season?.ends_at) return "-";
-    // UTC 명시
-    const endStr = season.ends_at.endsWith("Z") ? season.ends_at : season.ends_at + "Z";
     const now = Date.now();
-    const end = new Date(endStr).getTime();
+    const end = new Date(normalizeIsoForDate(season.ends_at)).getTime();
     const diff = end - now;
     if (diff <= 0) return "종료";
     const hours = Math.floor(diff / (1000 * 60 * 60));
@@ -93,9 +94,8 @@ const TeamBattlePage: React.FC = () => {
       setSeason(seasonData);
       setTeams(teamList);
       setMyTeam(myTeamRes);
-      if (myTeamRes) {
-        setSelectedTeam(myTeamRes.team_id);
-      }
+      // 서버 기준 현재 소속이 없으면(selectedTeam stale 방지) 클라이언트 상태도 명시적으로 초기화
+      setSelectedTeam(myTeamRes ? myTeamRes.team_id : null);
       await loadLeaderboard(seasonData?.id);
       const targetTeamId = myTeamRes?.team_id ?? selectedTeam;
       if (targetTeamId && seasonData) {
@@ -163,9 +163,9 @@ const TeamBattlePage: React.FC = () => {
 
   const joinButtonLabel = joinWindow.closed ? "선택 마감" : joinBusy ? "배정 중..." : "미스터리 팀 배정";
   const myTeamName = useMemo(() => teams.find((t) => t.id === selectedTeam)?.name, [teams, selectedTeam]);
-  const showAdminPanel = isAdminAuthenticated();
   const showTeamSelectPanel = !joinWindow.closed && selectedTeam === null;
-  const showTopGrid = showTeamSelectPanel || showAdminPanel;
+  const showContribPanel = selectedTeam !== null;
+  const showTopGrid = showTeamSelectPanel || showContribPanel;
 
   const handleLbPrev = () => setLbOffset(Math.max(lbOffset - lbLimit, 0));
   const handleLbNext = () => {
@@ -291,7 +291,7 @@ const TeamBattlePage: React.FC = () => {
             </div>
           )}
 
-          {showAdminPanel && (
+          {showContribPanel && (
         <div
           className={`rounded-2xl border border-amber-600/40 bg-gradient-to-br from-slate-950/80 to-amber-950/30 p-5 shadow-lg ${
             showTeamSelectPanel ? "" : "md:col-span-3"

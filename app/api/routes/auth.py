@@ -44,15 +44,7 @@ def issue_token(payload: TokenRequest, request: Request, db: Session = Depends(g
     if user is None and payload.user_id is not None:
         user = db.get(User, payload.user_id)
     if user is None:
-        # external_id만 들어온 경우 자동 생성(패스워드 있으면 초기 설정)
-        if not cleaned_external:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="INVALID_CREDENTIALS")
-        user = User(external_id=cleaned_external, status="ACTIVE")
-        if payload.password:
-            from app.core.security import hash_password  # local import
-
-            user.password_hash = hash_password(payload.password)
-        db.add(user)
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="USER_NOT_FOUND")
     # Capture client IP best-effort
     client_ip = request.client.host if request.client else None
     if not client_ip:
@@ -69,8 +61,7 @@ def issue_token(payload: TokenRequest, request: Request, db: Session = Depends(g
         user.password_hash = hash_password(payload.password)
 
     try:
-        # If this is a newly-added user (external_id only flow), ensure PK is assigned
-        # before writing audit logs referencing user_id.
+        # Ensure FK values are available for audit log writes
         if user.id is None:
             db.flush()
 
@@ -91,7 +82,7 @@ def issue_token(payload: TokenRequest, request: Request, db: Session = Depends(g
         db.commit()
     except Exception:
         db.rollback()
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="USER_CREATE_FAILED")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="LOGIN_FAILED")
 
     token = create_access_token(user_id=user.id)
     return TokenResponse(

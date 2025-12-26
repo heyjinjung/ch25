@@ -13,14 +13,26 @@ export interface SeasonPassLevelDto {
   readonly auto_claim?: boolean;
 }
 
+export interface SeasonPassSeasonMeta {
+  readonly id: number;
+  readonly season_name: string;
+  readonly start_date: string;
+  readonly end_date: string;
+  readonly max_level: number;
+  readonly base_xp_per_stamp: number;
+}
+
 export interface SeasonPassStatusResponse {
   readonly current_level: number;
   readonly current_xp: number;
   readonly next_level_xp: number;
+  readonly total_stamps?: number;
+  readonly last_stamp_date?: string | null;
   readonly max_level: number;
   readonly base_xp_per_stamp?: number;
   readonly levels: SeasonPassLevelDto[];
-  readonly today?: { stamped: boolean };
+  readonly today?: { stamped: boolean; date?: string };
+  readonly season?: SeasonPassSeasonMeta;
 }
 
 export interface InternalWinStatusResponse {
@@ -53,10 +65,22 @@ export const getSeasonPassStatus = async (): Promise<SeasonPassStatusResponse> =
       current_level: raw?.progress?.current_level ?? 0,
       current_xp: currentXp,
       next_level_xp: nextLevelXp,
+      total_stamps: raw?.progress?.total_stamps,
+      last_stamp_date: raw?.progress?.last_stamp_date ?? null,
       max_level: raw?.season?.max_level ?? (levels.length > 0 ? Math.max(...levels.map((l) => l.level)) : 0),
       base_xp_per_stamp: raw?.season?.base_xp_per_stamp,
       levels,
       today: raw?.today,
+      season: raw?.season
+        ? {
+            id: raw.season.id,
+            season_name: raw.season.season_name,
+            start_date: raw.season.start_date,
+            end_date: raw.season.end_date,
+            max_level: raw.season.max_level,
+            base_xp_per_stamp: raw.season.base_xp_per_stamp,
+          }
+        : undefined,
     };
   } catch (error) {
     if (axios.isAxiosError(error)) {

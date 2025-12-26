@@ -211,3 +211,41 @@ def test_settle_rewards_with_tiebreaker(client: TestClient, session_factory) -> 
     assert resp.status_code == 200
     data = resp.json()
     assert data["rank1"]["team_id"] == t2.id
+
+
+@pytest.mark.usefixtures("seed_active_season_with_teams")
+def test_contributor_me_returns_my_points(client: TestClient, session_factory) -> None:
+    session: Session = session_factory()
+    team_id = session.query(Team.id).filter(Team.name == "Alpha").scalar()
+    season_id = session.query(TeamSeason.id).scalar()
+
+    # user_id=1 is the default authenticated user in the test client fixtures.
+    user = session.get(User, 1)
+    if not user:
+        user = User(id=1, external_id="u1", status="ACTIVE", nickname="Me")
+        session.add(user)
+        session.commit()
+    else:
+        user.nickname = user.nickname or "Me"
+        user.status = "ACTIVE"
+        session.commit()
+
+    member = session.get(TeamMember, 1)
+    if not member:
+        session.add(TeamMember(user_id=1, team_id=team_id, role="member"))
+        session.commit()
+
+    session.add_all(
+        [
+            TeamEventLog(team_id=team_id, season_id=season_id, user_id=1, action="GAME_PLAY", delta=7),
+            TeamEventLog(team_id=team_id, season_id=season_id, user_id=1, action="GAME_PLAY", delta=3),
+        ]
+    )
+    session.commit()
+    session.close()
+
+    resp = client.get(f"/api/team-battle/teams/{team_id}/contributors/me", params={"season_id": season_id})
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["user_id"] == 1
+    assert data["points"] == 10

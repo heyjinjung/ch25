@@ -57,4 +57,4 @@ ls -lh "${BACKUP_DIR}" | tail -5
 
 echo ""
 echo "Restore example:"
-echo "  gunzip -c ${DB_BACKUP_FILE} | docker compose exec -T db sh -lc 'mysql -u root -p"'$MYSQL_ROOT_PASSWORD'" "$MYSQL_DATABASE"'"
+echo "  gunzip -c ${DB_BACKUP_FILE} | docker compose exec -T db sh -lc 'mysql -u root -p"'$MYSQL_ROOT_PASSWORD'" ""$MYSQL_DATABASE""'"

@@ -2,6 +2,7 @@
 import React, { useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "../../auth/authStore";
+import HomeShortcutButton from "../common/HomeShortcutButton";
 
 interface MainLayoutProps {
   readonly children: React.ReactNode;
@@ -11,7 +12,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const location = useLocation();
   const todayLabel = useMemo(() => new Intl.DateTimeFormat("ko-KR", { dateStyle: "medium" }).format(new Date()), []);
   const { user } = useAuth();
-  const showHeader = location.pathname !== "/home";
+  const showHeader = !location.pathname.startsWith("/landing");
 
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 text-slate-100">
@@ -27,6 +28,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                 )}
               </div>
               <div className="text-center text-xs text-slate-300 sm:text-right">MERRY CC-MAS</div>
+              <div className="mt-3 flex justify-center sm:mt-0 sm:justify-end">
+                <HomeShortcutButton />
+              </div>
             </div>
           </header>
         )}

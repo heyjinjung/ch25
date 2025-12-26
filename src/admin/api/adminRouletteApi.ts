@@ -2,6 +2,7 @@
 import { adminApi } from "./httpClient";
 
 export interface AdminRouletteSegmentPayload {
+  id?: number;
   index: number;
   label: string;
   weight: number;
@@ -23,12 +24,12 @@ export interface AdminRouletteConfig extends AdminRouletteConfigPayload {
 }
 
 export async function fetchRouletteConfigs() {
-  const { data } = await adminApi.get<AdminRouletteConfig[]>("/roulette-config");
+  const { data } = await adminApi.get<AdminRouletteConfig[]>("/roulette-config/");
   return data;
 }
 
 export async function createRouletteConfig(payload: AdminRouletteConfigPayload) {
-  const { data } = await adminApi.post<AdminRouletteConfig>("/roulette-config", payload);
+  const { data } = await adminApi.post<AdminRouletteConfig>("/roulette-config/", payload);
   return data;
 }
 

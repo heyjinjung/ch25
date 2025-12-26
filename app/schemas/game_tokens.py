@@ -1,5 +1,7 @@
 """Schemas for game token grants and wallet balances."""
-from pydantic import BaseModel, Field
+from pydantic import Field
+
+from app.schemas.base import KstBaseModel as BaseModel
 
 from app.models.game_wallet import GameTokenType
 

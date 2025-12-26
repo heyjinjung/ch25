@@ -36,13 +36,15 @@ def upgrade() -> None:
     # Upsert the event season by unique name.
     op.execute(
         f"""
-        INSERT INTO team_season (name, starts_at, ends_at, is_active, rewards_schema)
+        INSERT INTO team_season (name, starts_at, ends_at, is_active, rewards_schema, created_at, updated_at)
         VALUES (
           '{SEASON_NAME}',
           '{STARTS_AT_UTC}',
           '{ENDS_AT_UTC}',
           1,
-          '{{"rank1_coupon": 30000, "rank2_points": 100, "top3_coupon": 10000}}'
+          '{{"rank1_coupon": 30000, "rank2_points": 100, "top3_coupon": 10000}}',
+          CURRENT_TIMESTAMP,
+          CURRENT_TIMESTAMP
         )
         ON DUPLICATE KEY UPDATE
           starts_at = VALUES(starts_at),

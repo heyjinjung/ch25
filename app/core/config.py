@@ -1,5 +1,8 @@
 """Application configuration settings."""
+
+from datetime import date
 from functools import lru_cache
+
 from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -46,6 +49,96 @@ class Settings(BaseSettings):
     )
     external_ranking_deposit_cooldown_minutes: int = Field(
         0, validation_alias=AliasChoices("EXTERNAL_RANKING_DEPOSIT_COOLDOWN_MINUTES", "external_ranking_deposit_cooldown_minutes")
+    )
+
+    # Vault event flags
+    # Disabled by default so local dev/tests are deterministic.
+    vault_accrual_multiplier_enabled: bool = Field(
+        False,
+        validation_alias=AliasChoices(
+            "VAULT_ACCRUAL_MULTIPLIER_ENABLED",
+            "vault_accrual_multiplier_enabled",
+        ),
+    )
+    vault_accrual_multiplier_value: float = Field(
+        2.0,
+        validation_alias=AliasChoices(
+            "VAULT_ACCRUAL_MULTIPLIER_VALUE",
+            "vault_accrual_multiplier_value",
+        ),
+    )
+    vault_accrual_multiplier_start_kst: date | None = Field(
+        None,
+        validation_alias=AliasChoices(
+            "VAULT_ACCRUAL_MULTIPLIER_START_KST",
+            "vault_accrual_multiplier_start_kst",
+        ),
+    )
+    vault_accrual_multiplier_end_kst: date | None = Field(
+        None,
+        validation_alias=AliasChoices(
+            "VAULT_ACCRUAL_MULTIPLIER_END_KST",
+            "vault_accrual_multiplier_end_kst",
+        ),
+    )
+
+    # Trial (ticket-zero) controls
+    enable_trial_grant_auto: bool = Field(
+        True,
+        validation_alias=AliasChoices(
+            "ENABLE_TRIAL_GRANT_AUTO",
+            "enable_trial_grant_auto",
+        ),
+    )
+    trial_daily_cap: int = Field(
+        1,
+        validation_alias=AliasChoices(
+            "TRIAL_DAILY_CAP",
+            "trial_daily_cap",
+        ),
+    )
+    # 0 means "no weekly cap" (keep legacy behavior unless configured).
+    trial_weekly_cap: int = Field(
+        0,
+        validation_alias=AliasChoices(
+            "TRIAL_WEEKLY_CAP",
+            "trial_weekly_cap",
+        ),
+    )
+    tiered_grant_enabled: bool = Field(
+        False,
+        validation_alias=AliasChoices(
+            "TIERED_GRANT_ENABLED",
+            "tiered_grant_enabled",
+        ),
+    )
+
+    # If enabled, trial rewards can be routed into Vault rather than direct token grants.
+    # Default OFF to avoid behavior changes.
+    enable_trial_payout_to_vault: bool = Field(
+        False,
+        validation_alias=AliasChoices(
+            "ENABLE_TRIAL_PAYOUT_TO_VAULT",
+            "enable_trial_payout_to_vault",
+        ),
+    )
+    # Optional: valuation map for trial rewards (operational tuning).
+    trial_reward_valuation: dict[str, int] = Field(
+        default_factory=dict,
+        validation_alias=AliasChoices(
+            "TRIAL_REWARD_VALUATION",
+            "trial_reward_valuation",
+        ),
+    )
+
+    # Vault earn events (game accrual)
+    # Default OFF for safe rollout (no behavior change unless explicitly enabled).
+    enable_vault_game_earn_events: bool = Field(
+        False,
+        validation_alias=AliasChoices(
+            "ENABLE_VAULT_GAME_EARN_EVENTS",
+            "enable_vault_game_earn_events",
+        ),
     )
 
     model_config = SettingsConfigDict(

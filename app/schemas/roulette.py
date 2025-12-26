@@ -1,5 +1,7 @@
 """Pydantic schemas for roulette APIs."""
-from pydantic import BaseModel, ConfigDict
+from pydantic import ConfigDict
+
+from app.schemas.base import KstBaseModel as BaseModel
 
 from app.models.feature import FeatureType
 
@@ -30,3 +32,4 @@ class RoulettePlayResponse(BaseModel):
     result: str
     segment: RouletteSegmentSchema
     season_pass: dict | None = None
+    vault_earn: int = 0

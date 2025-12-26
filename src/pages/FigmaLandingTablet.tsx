@@ -1,0 +1,348 @@
+import React from "react";
+import { Link } from "react-router-dom";
+import { useAuth } from "../auth/authStore";
+
+// Tablet-specific assets (stored under public/assets/figma)
+const assets = {
+  starDynamicPremium: "/assets/figma/star-dynamic-premium-tablet.png",
+  headerImage: "/assets/figma/header-banner-tablet.png",
+  benefitImage: "/assets/figma/benefit-card-tablet.png",
+  iconWallet: "/assets/figma/icon-wallet-tablet.png",
+  iconSecurity: "/assets/figma/icon-security-tablet.png",
+  iconGraph: "/assets/figma/icon-graph-tablet.png",
+  iconPeople: "/assets/figma/icon-people-tablet.png",
+  iconRoulette: "/assets/figma/icon-roulette-tablet.png",
+  iconLevel: "/assets/figma/icon-level-tablet.png",
+  iconLottery: "/assets/figma/icon-lottery-tablet.png",
+  vectorBar: "/assets/figma/vector-bar-tablet.png",
+  vectorStreamline: "/assets/figma/vector-streamline-tablet.png",
+  img130: "/assets/figma/label-130-tablet.png",
+  rouletteSvg: "/images/layer-1.svg", // lightning
+  levelSvg: "/images/layer-2.svg", // globe
+  lotterySvg: "/images/layer-3.svg", // shield
+  bentoEfficiency: "/images/vector111.svg",
+  bentoFastExchange: "/images/vector112.svg",
+  bentoCustomerSat: "/images/unnamed113.svg",
+};
+
+const navLinks = [
+  { label: "CC카지노", to: "https://ccc-010.com" },
+  { label: "레벨", to: "/season-pass" },
+  { label: "팀배틀", to: "/team-battle" },
+  { label: "내금고", to: "/landing" },
+];
+
+const gameLinks = ["/roulette", "/dice", "/lottery"] as const;
+const randomGameLink = gameLinks[Math.floor(Math.random() * gameLinks.length)];
+const noticeLink = "https://t.me/+LksI3XlSjLlhZmE0";
+
+const gameTiles: { title: string; to: string; icon: string; fallback: string }[] = [
+  { title: "레벨 주사위", to: "/dice", icon: assets.levelSvg, fallback: assets.iconLevel },
+  { title: "랜덤 복권", to: "/lottery", icon: assets.lotterySvg, fallback: assets.iconLottery },
+  { title: "룰렛 경품뽑기", to: "/roulette", icon: assets.rouletteSvg, fallback: assets.iconRoulette },
+];
+
+const howToIcons: { title: string; icon: string; href?: string; to?: string }[] = [
+  { title: "씨씨이용하기", icon: assets.iconWallet, href: "https://ccc-010.com" },
+  { title: "금고서비스", icon: assets.iconSecurity, to: "/vault" },
+  { title: "포인트게임하기", icon: assets.iconGraph, to: randomGameLink },
+  { title: "친구초대", icon: assets.iconPeople, href: noticeLink },
+];
+
+const bento: { title: string; description?: string; icon?: string | null; fallback?: string }[] = [
+  {
+    title: "2x",
+    description: "어디와도 비교불가한 포인트서비스",
+    icon: null,
+  },
+  {
+    title: "빠르고 신속한 고객응대 서비스",
+    description: "",
+    icon: assets.bentoEfficiency,
+    fallback: assets.vectorBar,
+  },
+  {
+    title: "안전하고 빠른 환전",
+    icon: assets.bentoFastExchange,
+    fallback: assets.vectorStreamline,
+  },
+  {
+    title: "고객만족도 1위",
+    icon: assets.bentoCustomerSat,
+    fallback: assets.img130,
+  },
+];
+
+const baseAccent = "#d2fd9c";
+const deepOlive = "#394508";
+
+const Sidebar: React.FC = () => {
+  const { user } = useAuth();
+
+  return (
+    <header className="w-full max-w-[827px] bg-black flex flex-col gap-[30px] px-[20px] py-[20px] text-white lg:px-[40px] lg:gap-[50px]">
+      <nav className="flex flex-wrap items-center justify-between gap-4 w-full">
+        <div className="flex items-center gap-5" aria-label="Company logo">
+          <div className="relative h-[27px] w-[26px] overflow-hidden rounded-[18px]" style={{ backgroundColor: baseAccent }}>
+            <img src={assets.starDynamicPremium} alt="CC Casino mark" className="absolute inset-0 h-full w-full object-cover" />
+          </div>
+          <p className="text-[16px] font-semibold tracking-[-0.32px]">CC CASINO</p>
+        </div>
+        <div className="flex items-center gap-2">
+          {user ? (
+            <div className="max-w-[240px] rounded-full border border-white/15 bg-white/5 px-3 py-[6px] text-[12px] leading-none text-white/85">
+              <span className="max-w-[160px] truncate align-middle">{user.nickname || user.external_id}</span>{" "}
+              <span className="align-middle font-semibold" style={{ color: baseAccent }}>
+                Lv.{user.level ?? 1}
+              </span>
+            </div>
+          ) : null}
+          <a
+            href="https://figma.com/sites"
+            className="shrink-0 rounded-[2px] bg-[#d2fd9c] px-[14px] py-[11px] text-[10px] text-black"
+          >
+            홈페이지 가이드
+          </a>
+        </div>
+      </nav>
+
+      <div className="flex flex-col gap-5 w-full">
+        <h1 className="text-[32px] lg:text-[42px] font-medium leading-[1.06] tracking-[-0.84px]">
+          지민코드 전용
+          <br />
+          포인트서비스
+        </h1>
+        <h2 className="text-[16px] font-normal leading-[1.09] text-[#cbcbcb]">No personal cre핵심 캐치문구</h2>
+      </div>
+
+      <div className="flex flex-col gap-5 w-full">
+        <h3 className="text-[20px] font-medium" style={{ color: baseAccent }}>
+          게임 바로가기
+        </h3>
+        <div className="grid w-full gap-[10px] grid-cols-1 sm:grid-cols-3">
+          {gameTiles.map((tile) => (
+            <Link
+              key={tile.title}
+              to={tile.to}
+              className="flex-1 h-[120px] rounded-[4px] bg-[#d2fd9c] px-[10px] py-[20px] flex flex-col items-center gap-[14px]"
+            >
+              <div className="relative h-[30px] w-[30px]">
+                <img
+                  src={tile.icon}
+                  alt={tile.title}
+                  className="absolute inset-0 h-full w-full object-contain"
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = tile.fallback;
+                  }}
+                />
+              </div>
+              <p className="text-[18px] lg:text-[20px] font-medium leading-[1.15] text-black text-center">{tile.title}</p>
+            </Link>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-[18px] items-center justify-center w-full text-[18px] lg:text-[20px] font-medium" style={{ color: baseAccent }}>
+        {navLinks.map((item) =>
+          item.to.startsWith("http") ? (
+            <a key={item.label} href={item.to} target="_blank" rel="noreferrer" className="leading-[1.15]">
+              {item.label}
+            </a>
+          ) : (
+            <Link key={item.label} to={item.to} className="leading-[1.15]">
+              {item.label}
+            </Link>
+          )
+        )}
+      </div>
+    </header>
+  );
+};
+
+const Events: React.FC = () => (
+  <a
+    href="https://ccc-010.com"
+    className="bg-white flex flex-col items-center pt-[20px] pb-0 px-[20px] w-full lg:px-[40px] lg:pt-[20px]"
+  >
+    <div className="relative w-full max-w-[740px] overflow-hidden rounded-[20px]" style={{ aspectRatio: "740/392" }}>
+      <img src={assets.headerImage} alt="이벤트 배너" className="absolute inset-0 h-full w-full object-contain" />
+    </div>
+  </a>
+);
+
+const OngoingEvents: React.FC = () => (
+  <section className="bg-white flex flex-col items-center gap-[30px] w-full px-[20px] pt-[27px] pb-[20px] lg:px-[40px]">
+    <h2 className="text-[32px] lg:text-[42px] font-medium tracking-[-0.84px]" style={{ color: deepOlive }}>
+      진행중인 이벤트
+    </h2>
+    <div className="flex w-full flex-col gap-[20px] md:flex-row md:flex-wrap md:justify-center">
+      {[1, 2].map((key) => (
+        <a
+          key={key}
+          href={noticeLink}
+          target="_blank"
+          rel="noreferrer"
+          className="flex w-full md:w-[350px] flex-col gap-[19px]"
+        >
+          <div className="relative w-full overflow-hidden rounded-[10px]" style={{ aspectRatio: "285/221" }}>
+            <img src={assets.benefitImage} alt="Benefit" className="absolute inset-0 h-full w-full object-cover" />
+          </div>
+          <p className="text-[18px] lg:text-[20px] font-medium leading-[1.15] text-left" style={{ color: deepOlive }}>
+            매일 터지는 룰렛 경품추첨
+          </p>
+        </a>
+      ))}
+    </div>
+  </section>
+);
+
+const HowToUse: React.FC = () => (
+  <section className="bg-white flex flex-col items-center gap-[30px] w-full px-[20px] pt-[20px] pb-[20px] lg:px-[40px] lg:pt-[20px]">
+    <h2 className="text-[32px] lg:text-[42px] font-medium tracking-[-0.84px] text-center" style={{ color: deepOlive }}>
+      지민이벤트 이용하는 법
+    </h2>
+    <div className="grid w-full gap-[20px] sm:grid-cols-2 lg:grid-cols-4 lg:gap-[40px]">
+      {howToIcons.map((item) => {
+        if (item.to) {
+          return (
+            <Link key={item.title} to={item.to} className="flex flex-col items-center gap-[15px] hover:opacity-90">
+              <div className="relative w-full overflow-hidden rounded-[10px]" style={{ aspectRatio: "150/115.75" }}>
+                <img src={item.icon} alt={item.title} className="absolute inset-0 h-full w-full object-cover" />
+              </div>
+              <p className="text-[18px] lg:text-[20px] font-medium leading-[1.15] text-center text-black">{item.title}</p>
+            </Link>
+          );
+        }
+
+        if (item.href) {
+          return (
+            <a
+              key={item.title}
+              href={item.href}
+              target="_blank"
+              rel="noreferrer"
+              className="flex flex-col items-center gap-[15px] hover:opacity-90"
+            >
+              <div className="relative w-full overflow-hidden rounded-[10px]" style={{ aspectRatio: "150/115.75" }}>
+                <img src={item.icon} alt={item.title} className="absolute inset-0 h-full w-full object-cover" />
+              </div>
+              <p className="text-[18px] lg:text-[20px] font-medium leading-[1.15] text-center text-black">{item.title}</p>
+            </a>
+          );
+        }
+
+        return (
+          <div key={item.title} className="flex flex-col items-center gap-[15px]">
+            <div className="relative w-full overflow-hidden rounded-[10px]" style={{ aspectRatio: "150/115.75" }}>
+              <img src={item.icon} alt={item.title} className="absolute inset-0 h-full w-full object-cover" />
+            </div>
+            <p className="text-[18px] lg:text-[20px] font-medium leading-[1.15] text-center text-black">{item.title}</p>
+          </div>
+        );
+      })}
+    </div>
+  </section>
+);
+
+const BentoGrid: React.FC = () => (
+  <section className="bg-white flex flex-col items-center justify-center gap-[30px] w-full px-[20px] pt-[20px] pb-[30px] lg:px-[40px] lg:pt-[20px]">
+    <div className="text-center w-full max-w-[500px]">
+      <h2 className="text-[32px] lg:text-[42px] font-medium tracking-[-0.84px]" style={{ color: deepOlive }}>
+        지민이와 함께하는 씨씨카지노
+      </h2>
+    </div>
+    <div className="flex flex-col gap-[20px] items-center w-full">
+      <div className="grid w-full max-w-[900px] gap-[20px] sm:grid-cols-2">
+        {bento.slice(0, 2).map((item) => (
+          <div
+            key={item.title}
+            className="flex flex-1 flex-col items-center justify-end rounded-[10.667px] px-[20.267px] py-[30px]"
+            style={{ backgroundColor: baseAccent, minHeight: 221.867 }}
+          >
+            <div className="flex flex-col items-center gap-[30px] text-center text-[#394508] w-full">
+              {item.icon ? (
+                <div className="relative" style={{ height: 98.459, width: 142.264 }}>
+                  <img
+                    src={item.icon}
+                    alt={item.title}
+                    className="h-full w-full object-contain"
+                    onError={(e) => {
+                      if (!item.fallback) return;
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = item.fallback;
+                    }}
+                  />
+                </div>
+              ) : (
+                <p className="text-[72px] lg:text-[90px] leading-[1.04] tracking-[-3.6px]">{item.title}</p>
+              )}
+              <p className="text-[16px] leading-[1.09]">
+                {item.description || item.title}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="grid w-full max-w-[900px] gap-[20px] sm:grid-cols-2">
+        {bento.slice(2).map((item) => (
+          <div
+            key={item.title}
+            className="flex flex-1 flex-col items-center justify-end rounded-[10.667px] px-[20.267px] py-[30px]"
+            style={{ backgroundColor: baseAccent, minHeight: 222 }}
+          >
+            <div className="flex flex-col items-center gap-[30px] text-center text-[#394508] w-full">
+              {item.icon && (
+                <div className="relative" style={{ height: item.title === "고객만족도 1위" ? 67.5 : 112, width: item.title === "고객만족도 1위" ? 199.281 : 124.31 }}>
+                  <img
+                    src={item.icon}
+                    alt={item.title}
+                    className="h-full w-full object-contain"
+                    onError={(e) => {
+                      if (!item.fallback) return;
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = item.fallback;
+                    }}
+                  />
+                </div>
+              )}
+              <p className="text-[16px] leading-[1.09]">{item.title}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+);
+
+const Footer: React.FC = () => (
+  <footer className="w-full max-w-[800px] bg-[#394508] px-[20px] py-[30px] text-[#d2fd9c] lg:px-[40px]">
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-[12px]">
+        <p className="text-[20px] font-medium leading-[1.15]">Contact</p>
+        <div className="flex flex-col gap-[2px] text-[20px] font-medium leading-[1.15]">
+          <a href="https://t.me/jm956" target="_blank" rel="noreferrer" className="hover:opacity-90">실장텔레그램</a>
+          <a href="https://t.me/+LksI3XlSjLlhZmE0" target="_blank" rel="noreferrer" className="hover:opacity-90">지민공지채널</a>
+          <a href="https://t.me/+IE0NYpuze_k1YWZk" target="_blank" rel="noreferrer" className="hover:opacity-90">씨씨카지노 공식채널</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+);
+
+const FigmaLandingTablet: React.FC = () => {
+  return (
+    <div className="min-h-screen bg-black flex flex-col items-center gap-8 px-[20px] py-[20px] lg:px-[32px] lg:py-[30px]">
+      <Sidebar />
+      <main className="w-full flex flex-col items-center">
+        <Events />
+        <OngoingEvents />
+        <HowToUse />
+        <BentoGrid />
+        <Footer />
+      </main>
+    </div>
+  );
+};
+
+export default FigmaLandingTablet;

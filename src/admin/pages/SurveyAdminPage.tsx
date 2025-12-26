@@ -3,6 +3,7 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Plus, X } from "lucide-react";
 import {
   AdminSurvey,
   AdminSurveyDetail,
@@ -15,8 +16,6 @@ import {
   updateAdminSurvey,
   upsertAdminSurveyTriggers,
 } from "../api/adminSurveyApi";
-import Button from "../../components/common/Button";
-import Modal from "../../components/common/Modal";
 
 const rewardPresets = [
   { label: "주사위 티켓 1장", value: { reward_type: "TICKET_DICE", amount: 1, toast_message: "주사위 티켓 지급" } },
@@ -235,75 +234,143 @@ const SurveyAdminPage: React.FC = () => {
     triggerMutation.mutate();
   });
 
-  return (
-    <section className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-100">설문 관리</h1>
-          <p className="text-sm text-slate-300">설문 생성/수정 및 트리거 관리</p>
-        </div>
-        <Button onClick={openNewModal}>새 설문 생성</Button>
-      </div>
+  const inputClass =
+    "w-full rounded-md border border-[#333333] bg-[#1A1A1A] px-3 py-2 text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]";
+  const labelClass = "text-sm font-medium text-gray-300";
 
-      {listQuery.isLoading && <p className="text-slate-300">설문을 불러오는 중...</p>}
-      {listQuery.isError && <p className="text-red-300">설문 목록을 불러오지 못했습니다.</p>}
+  const statusBadgeClass = (status: string) => {
+    switch (status) {
+      case "ACTIVE":
+        return "inline-flex items-center rounded-full border border-[#2D6B3B] bg-[#2D6B3B]/20 px-2 py-0.5 text-xs font-medium text-[#91F402]";
+      case "DRAFT":
+        return "inline-flex items-center rounded-full border border-[#333333] bg-[#1A1A1A] px-2 py-0.5 text-xs font-medium text-gray-300";
+      case "PAUSED":
+        return "inline-flex items-center rounded-full border border-[#F0AB48] bg-[#F0AB48]/10 px-2 py-0.5 text-xs font-medium text-[#F0AB48]";
+      case "ARCHIVED":
+        return "inline-flex items-center rounded-full border border-red-500/40 bg-red-950 px-2 py-0.5 text-xs font-medium text-red-200";
+      default:
+        return "inline-flex items-center rounded-full border border-[#333333] bg-[#1A1A1A] px-2 py-0.5 text-xs font-medium text-gray-300";
+    }
+  };
+
+  const PrimaryButton = ({
+    children,
+    ...props
+  }: React.ButtonHTMLAttributes<HTMLButtonElement> & { children: React.ReactNode }) => (
+    <button
+      type="button"
+      className="inline-flex items-center rounded-md bg-[#2D6B3B] px-4 py-2 text-sm font-medium text-white hover:bg-[#91F402] hover:text-black disabled:cursor-not-allowed disabled:opacity-60"
+      {...props}
+    >
+      {children}
+    </button>
+  );
+
+  const SecondaryButton = ({
+    children,
+    ...props
+  }: React.ButtonHTMLAttributes<HTMLButtonElement> & { children: React.ReactNode }) => (
+    <button
+      type="button"
+      className="inline-flex items-center rounded-md border border-[#333333] bg-[#1A1A1A] px-4 py-2 text-sm font-medium text-gray-200 hover:bg-[#2C2C2E] disabled:cursor-not-allowed disabled:opacity-60"
+      {...props}
+    >
+      {children}
+    </button>
+  );
+
+  const ModalShell = ({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) => (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+      <div className="flex w-full max-w-5xl max-h-[90vh] flex-col overflow-hidden rounded-lg border border-[#333333] bg-[#111111] shadow-lg">
+        <div className="flex items-center justify-between border-b border-[#333333] px-4 py-4 sm:px-6">
+          <h3 className="text-lg font-medium text-[#91F402]">{title}</h3>
+          <button type="button" onClick={onClose} className="rounded-md p-2 text-gray-300 hover:bg-[#1A1A1A]" aria-label="닫기">
+            <X size={18} />
+          </button>
+        </div>
+        <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-6">{children}</div>
+      </div>
+    </div>
+  );
+
+  return (
+    <section className="space-y-5">
+      <header className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="text-2xl font-bold text-[#91F402]">설문조사</h2>
+          <p className="mt-1 text-sm text-gray-400">설문 생성/수정 및 트리거 관리</p>
+        </div>
+        <PrimaryButton onClick={openNewModal}>
+          <Plus size={18} className="mr-2" />
+          새 설문 생성
+        </PrimaryButton>
+      </header>
+
+      {listQuery.isLoading && <div className="rounded-lg border border-[#333333] bg-[#111111] p-4 text-gray-200">설문을 불러오는 중...</div>}
+      {listQuery.isError && <div className="rounded-lg border border-red-500/40 bg-red-950 p-4 text-red-100">설문 목록을 불러오지 못했습니다.</div>}
 
       {listQuery.data && listQuery.data.items.length > 0 && (
-        <div className="overflow-hidden rounded-xl border border-emerald-800/40 bg-slate-900/70 shadow-lg shadow-emerald-900/30">
-          <table className="min-w-full divide-y divide-emerald-800/60">
-            <thead className="bg-emerald-900/40 text-left text-slate-200">
-              <tr>
-                <th className="px-4 py-3 text-sm font-semibold">제목</th>
-                <th className="px-4 py-3 text-sm font-semibold">채널</th>
-                <th className="px-4 py-3 text-sm font-semibold">상태</th>
-                <th className="px-4 py-3 text-sm font-semibold">질문수</th>
-                <th className="px-4 py-3 text-sm font-semibold">액션</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-emerald-800/40 text-slate-100">
-              {listQuery.data.items.map((survey) => (
-                <tr key={survey.id} className="hover:bg-emerald-900/20">
-                  <td className="px-4 py-3 text-sm font-semibold">{survey.title}</td>
-                  <td className="px-4 py-3 text-sm">{survey.channel}</td>
-                  <td className="px-4 py-3 text-sm">{survey.status}</td>
-                  <td className="px-4 py-3 text-sm">{survey.question_count}</td>
-                  <td className="px-4 py-3 text-sm space-x-2">
-                    <Button variant="secondary" onClick={() => openEditModal(survey)}>
-                      수정
-                    </Button>
-                    <Button variant="secondary" onClick={() => openTriggerModal(survey)}>
-                      트리거
-                    </Button>
-                  </td>
+        <div className="overflow-hidden rounded-lg border border-[#333333] bg-[#111111] shadow-md">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-[#1A1A1A] border-b border-[#333333]">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">제목</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">채널</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">상태</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">질문수</th>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">액션</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-[#333333]">
+                {listQuery.data.items.map((survey, idx) => (
+                  <tr key={survey.id} className={idx % 2 === 0 ? "bg-[#111111]" : "bg-[#1A1A1A]"}>
+                    <td className="px-4 py-3">
+                      <div className="text-sm font-medium text-white">{survey.title}</div>
+                      <div className="text-xs text-gray-500">ID: {survey.id}</div>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-300">{survey.channel}</td>
+                    <td className="px-4 py-3 text-sm text-gray-300">
+                      <span className={statusBadgeClass(String(survey.status))}>{survey.status}</span>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-white">{survey.question_count}</td>
+                    <td className="px-4 py-3 text-center text-sm">
+                      <div className="flex justify-center gap-2">
+                        <SecondaryButton onClick={() => openEditModal(survey)}>수정</SecondaryButton>
+                        <SecondaryButton onClick={() => openTriggerModal(survey)}>트리거</SecondaryButton>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
-      <Modal open={isModalOpen} onClose={() => setIsModalOpen(false)} title="설문 편집">
-        <form className="space-y-4" onSubmit={onSubmit}>
+      {isModalOpen && (
+        <ModalShell title="설문 편집" onClose={() => setIsModalOpen(false)}>
+          <form className="space-y-4" onSubmit={onSubmit}>
           <div className="space-y-1">
-            <label className="text-sm text-slate-200">제목</label>
+            <label className={labelClass}>제목</label>
             <input
-              className="w-full rounded-md border border-emerald-700 bg-slate-800 px-3 py-2 text-slate-50"
+              className={inputClass}
               {...form.register("title")}
             />
             {form.formState.errors.title && <p className="text-sm text-red-300">{form.formState.errors.title.message}</p>}
           </div>
           <div className="space-y-1">
-            <label className="text-sm text-slate-200">설명</label>
+            <label className={labelClass}>설명</label>
             <textarea
-              className="w-full rounded-md border border-emerald-700 bg-slate-800 px-3 py-2 text-slate-50"
+              className={inputClass}
               rows={2}
               {...form.register("description")}
             />
           </div>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             <div className="space-y-1">
-              <label className="text-sm text-slate-200">채널</label>
-              <select className="w-full rounded-md border border-emerald-700 bg-slate-800 px-3 py-2 text-slate-50" {...form.register("channel")}>
+              <label className={labelClass}>채널</label>
+              <select className={inputClass} {...form.register("channel")}>
                 <option value="GLOBAL">GLOBAL</option>
                 <option value="SEASON_PASS">SEASON_PASS</option>
                 <option value="ROULETTE">ROULETTE</option>
@@ -313,8 +380,8 @@ const SurveyAdminPage: React.FC = () => {
               </select>
             </div>
             <div className="space-y-1">
-              <label className="text-sm text-slate-200">상태</label>
-              <select className="w-full rounded-md border border-emerald-700 bg-slate-800 px-3 py-2 text-slate-50" {...form.register("status")}>
+              <label className={labelClass}>상태</label>
+              <select className={inputClass} {...form.register("status")}>
                 <option value="DRAFT">DRAFT</option>
                 <option value="ACTIVE">ACTIVE</option>
                 <option value="PAUSED">PAUSED</option>
@@ -323,13 +390,13 @@ const SurveyAdminPage: React.FC = () => {
             </div>
           </div>
           <div className="space-y-2">
-            <label className="text-sm text-slate-200">보상 설정</label>
+            <label className={labelClass}>보상 설정</label>
             <div className="flex flex-wrap gap-2">
               {rewardPresets.map((preset) => (
                 <button
                   key={preset.label}
                   type="button"
-                  className="rounded-full border border-emerald-600 px-3 py-1 text-xs font-semibold text-emerald-100 hover:bg-emerald-900/40"
+                  className="rounded-full border border-[#2D6B3B] px-3 py-1 text-xs font-semibold text-gray-200 hover:bg-[#2D6B3B] hover:text-[#91F402]"
                   onClick={() => onPresetReward(preset)}
                 >
                   {preset.label}
@@ -337,28 +404,27 @@ const SurveyAdminPage: React.FC = () => {
               ))}
               <button
                 type="button"
-                className="rounded-full border border-slate-600 px-3 py-1 text-xs font-semibold text-slate-200 hover:bg-slate-800"
+                className="rounded-full border border-[#333333] px-3 py-1 text-xs font-semibold text-gray-200 hover:bg-[#2C2C2E]"
                 onClick={() => form.setValue("reward_json_text", "{}", { shouldValidate: true, shouldDirty: true })}
               >
                 보상 없음
               </button>
             </div>
             <textarea
-              className="w-full rounded-md border border-emerald-700 bg-slate-800 px-3 py-2 text-slate-50"
+              className={inputClass}
               rows={3}
               {...form.register("reward_json_text")}
               placeholder='{"reward_type":"TICKET_DICE","amount":1,"toast_message":"주사위 티켓 지급"}'
             />
             {form.formState.errors.reward_json_text && <p className="text-sm text-red-300">{form.formState.errors.reward_json_text.message}</p>}
-            <p className="text-xs text-slate-400">버튼 클릭 시 위 입력란에 JSON이 채워집니다. 필요하면 직접 수정하세요.</p>
+            <p className="text-xs text-gray-500">버튼 클릭 시 위 입력란에 JSON이 채워집니다. 필요하면 직접 수정하세요.</p>
           </div>
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-slate-200">질문</p>
-              <Button
+              <p className="text-sm font-semibold text-gray-200">질문</p>
+              <SecondaryButton
                 type="button"
-                variant="secondary"
                 onClick={() =>
                   appendQuestion({
                     title: "새 질문",
@@ -370,24 +436,24 @@ const SurveyAdminPage: React.FC = () => {
                 }
               >
                 질문 추가
-              </Button>
+              </SecondaryButton>
             </div>
             <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
               {questionFields.map((field, idx) => (
-                <div key={field.id} className="rounded-lg border border-slate-800 bg-slate-900/50 p-3 space-y-2">
+                <div key={field.id} className="rounded-lg border border-[#333333] bg-[#0A0A0A] p-3 space-y-2">
                   <div className="flex items-center justify-between">
-                    <p className="text-sm font-semibold text-slate-100">Q{idx + 1}</p>
-                    <Button variant="secondary" type="button" onClick={() => removeQuestion(idx)}>
+                    <p className="text-sm font-semibold text-white">Q{idx + 1}</p>
+                    <SecondaryButton type="button" onClick={() => removeQuestion(idx)}>
                       제거
-                    </Button>
+                    </SecondaryButton>
                   </div>
                   <input
-                    className="w-full rounded-md border border-emerald-700 bg-slate-800 px-3 py-2 text-slate-50"
+                    className={inputClass}
                     {...form.register(`questions.${idx}.title` as const)}
                     placeholder="질문 제목"
                   />
                   <select
-                    className="w-full rounded-md border border-emerald-700 bg-slate-800 px-3 py-2 text-slate-50"
+                    className={inputClass}
                     {...form.register(`questions.${idx}.question_type` as const)}
                   >
                     <option value="SINGLE_CHOICE">SINGLE_CHOICE</option>
@@ -399,25 +465,25 @@ const SurveyAdminPage: React.FC = () => {
                   <div className="grid grid-cols-2 gap-2">
                     <input
                       type="number"
-                      className="rounded-md border border-emerald-700 bg-slate-800 px-3 py-2 text-slate-50"
+                      className={inputClass}
                       {...form.register(`questions.${idx}.order_index` as const, { valueAsNumber: true })}
                       placeholder="순서"
                     />
-                    <label className="flex items-center gap-2 text-sm text-slate-200">
+                    <label className="flex items-center gap-2 text-sm text-gray-200">
                       <input type="checkbox" {...form.register(`questions.${idx}.is_required` as const)} /> 필수
                     </label>
                   </div>
                   <textarea
-                    className="w-full rounded-md border border-emerald-700 bg-slate-800 px-3 py-2 text-slate-50"
+                    className={inputClass}
                     rows={2}
                     {...form.register(`questions.${idx}.helper_text` as const)}
                     placeholder="도움말"
                   />
                   <div className="space-y-1">
-                    <p className="text-xs text-slate-300">옵션</p>
+                    <p className="text-xs text-gray-400">옵션</p>
                     <button
                       type="button"
-                      className="rounded-full border border-emerald-600 px-2 py-1 text-[11px] text-emerald-100"
+                      className="rounded-full border border-[#333333] px-2 py-1 text-[11px] text-gray-200 hover:bg-[#2C2C2E]"
                       onClick={() =>
                         form.setValue(`questions.${idx}.options` as const, [
                           ...(form.getValues(`questions.${idx}.options` as const) ?? []),
@@ -431,7 +497,7 @@ const SurveyAdminPage: React.FC = () => {
                       {(form.watch(`questions.${idx}.options`) || []).map((opt, optIdx) => (
                         <div key={optIdx} className="grid grid-cols-2 gap-2">
                           <input
-                            className="rounded-md border border-emerald-700 bg-slate-800 px-3 py-2 text-slate-50"
+                            className={inputClass}
                             value={opt.label || ""}
                             onChange={(e) => {
                               const next = [...(form.getValues(`questions.${idx}.options`) || [])];
@@ -441,7 +507,7 @@ const SurveyAdminPage: React.FC = () => {
                             placeholder="라벨"
                           />
                           <input
-                            className="rounded-md border border-emerald-700 bg-slate-800 px-3 py-2 text-slate-50"
+                            className={inputClass}
                             value={opt.value || ""}
                             onChange={(e) => {
                               const next = [...(form.getValues(`questions.${idx}.options`) || [])];
@@ -460,23 +526,24 @@ const SurveyAdminPage: React.FC = () => {
           </div>
 
           <div className="flex justify-end gap-2">
-            <Button variant="secondary" type="button" onClick={() => setIsModalOpen(false)}>
+            <SecondaryButton type="button" onClick={() => setIsModalOpen(false)}>
               닫기
-            </Button>
-            <Button type="submit" disabled={upsertMutation.isPending}>
+            </SecondaryButton>
+            <PrimaryButton type="submit" disabled={upsertMutation.isPending}>
               {upsertMutation.isPending ? "저장 중..." : selectedId ? "수정" : "생성"}
-            </Button>
+            </PrimaryButton>
           </div>
-        </form>
-      </Modal>
+          </form>
+        </ModalShell>
+      )}
 
-      <Modal open={isTriggerModalOpen} onClose={() => setIsTriggerModalOpen(false)} title="트리거 관리">
-        <form className="space-y-3" onSubmit={onSubmitTriggers}>
+      {isTriggerModalOpen && (
+        <ModalShell title="트리거 관리" onClose={() => setIsTriggerModalOpen(false)}>
+          <form className="space-y-3" onSubmit={onSubmitTriggers}>
           <div className="flex items-center justify-between">
-            <p className="text-sm font-semibold text-slate-200">트리거</p>
-            <Button
+            <p className="text-sm font-semibold text-gray-200">트리거</p>
+            <SecondaryButton
               type="button"
-              variant="secondary"
               onClick={() =>
                 appendTrigger({
                   trigger_type: "LEVEL_UP",
@@ -489,20 +556,20 @@ const SurveyAdminPage: React.FC = () => {
               }
             >
               트리거 추가
-            </Button>
+            </SecondaryButton>
           </div>
-          {triggerFields.length === 0 && <p className="text-sm text-slate-300">등록된 트리거가 없습니다.</p>}
+          {triggerFields.length === 0 && <p className="text-sm text-gray-400">등록된 트리거가 없습니다.</p>}
           <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
             {triggerFields.map((field, idx) => (
-              <div key={field.id} className="rounded-lg border border-slate-800 bg-slate-900/50 p-3 space-y-2">
+              <div key={field.id} className="rounded-lg border border-[#333333] bg-[#0A0A0A] p-3 space-y-2">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold text-slate-100">트리거 {idx + 1}</p>
-                  <Button variant="secondary" type="button" onClick={() => removeTrigger(idx)}>
+                  <p className="text-sm font-semibold text-white">트리거 {idx + 1}</p>
+                  <SecondaryButton type="button" onClick={() => removeTrigger(idx)}>
                     제거
-                  </Button>
+                  </SecondaryButton>
                 </div>
                 <select
-                  className="w-full rounded-md border border-emerald-700 bg-slate-800 px-3 py-2 text-slate-50"
+                  className={inputClass}
                   {...triggerForm.register(`items.${idx}.trigger_type` as const)}
                 >
                   <option value="LEVEL_UP">LEVEL_UP</option>
@@ -513,28 +580,28 @@ const SurveyAdminPage: React.FC = () => {
                 <div className="grid grid-cols-2 gap-2">
                   <input
                     type="number"
-                    className="rounded-md border border-emerald-700 bg-slate-800 px-3 py-2 text-slate-50"
+                    className={inputClass}
                     {...triggerForm.register(`items.${idx}.priority` as const, { valueAsNumber: true })}
                     placeholder="priority"
                   />
                   <input
                     type="number"
-                    className="rounded-md border border-emerald-700 bg-slate-800 px-3 py-2 text-slate-50"
+                    className={inputClass}
                     {...triggerForm.register(`items.${idx}.cooldown_hours` as const, { valueAsNumber: true })}
                     placeholder="cooldown_hours"
                   />
                   <input
                     type="number"
-                    className="rounded-md border border-emerald-700 bg-slate-800 px-3 py-2 text-slate-50"
+                    className={inputClass}
                     {...triggerForm.register(`items.${idx}.max_per_user` as const, { valueAsNumber: true })}
                     placeholder="max_per_user"
                   />
-                  <label className="flex items-center gap-2 text-sm text-slate-200">
+                  <label className="flex items-center gap-2 text-sm text-gray-200">
                     <input type="checkbox" {...triggerForm.register(`items.${idx}.is_active` as const)} /> 활성
                   </label>
                 </div>
                 <textarea
-                  className="w-full rounded-md border border-emerald-700 bg-slate-800 px-3 py-2 text-slate-50"
+                  className={inputClass}
                   rows={2}
                   {...triggerForm.register(`items.${idx}.trigger_config_json` as const)}
                   placeholder='{"level_min":3}'
@@ -543,15 +610,16 @@ const SurveyAdminPage: React.FC = () => {
             ))}
           </div>
           <div className="flex justify-end gap-2">
-            <Button variant="secondary" type="button" onClick={() => setIsTriggerModalOpen(false)}>
+            <SecondaryButton type="button" onClick={() => setIsTriggerModalOpen(false)}>
               닫기
-            </Button>
-            <Button type="submit" disabled={triggerMutation.isPending}>
+            </SecondaryButton>
+            <PrimaryButton type="submit" disabled={triggerMutation.isPending}>
               {triggerMutation.isPending ? "저장 중..." : "저장"}
-            </Button>
+            </PrimaryButton>
           </div>
-        </form>
-      </Modal>
+          </form>
+        </ModalShell>
+      )}
     </section>
   );
 };

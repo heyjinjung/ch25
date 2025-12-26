@@ -1,4 +1,6 @@
 """Exception handlers that normalize API error responses."""
+import logging
+
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -39,6 +41,9 @@ DETAIL_CODE_MAP = {
 }
 
 
+logger = logging.getLogger("uvicorn.error")
+
+
 def register_exception_handlers(app: FastAPI) -> None:
     """Attach shared exception handlers to the FastAPI app."""
 
@@ -67,6 +72,13 @@ def register_exception_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(SQLAlchemyError)
     async def sqlalchemy_exception_handler(request: Request, exc: SQLAlchemyError) -> JSONResponse:
+        # Keep response generic, but log the exception for debugging.
+        logger.error(
+            "Unhandled SQLAlchemyError on %s %s",
+            request.method,
+            request.url.path,
+            exc_info=(type(exc), exc, exc.__traceback__),
+        )
         message = "DATABASE_ERROR"
         code = "DB_ERROR"
 

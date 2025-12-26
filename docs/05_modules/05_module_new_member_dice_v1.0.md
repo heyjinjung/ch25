@@ -1,54 +1,27 @@
 # 신규회원 전용 주사위 게임(판정용) — 기술/디자인 문서
 
 - 문서 타입: 기능(프론트 + 백엔드 + 운영)
-- 버전: v1.1
-- 작성일: 2025-12-16
+- 버전: v1.2
+- 작성일: 2025-12-25
 - 대상: 운영/백엔드/프론트
 
-## 0. 목적 요약(요구사항 재정의)
-신규회원 대상으로 **별도의 전용 주사위 게임 페이지**를 제공한다.
-- 메인(홈)에서 링크로 노출하지 않아도 됨(직접 URL/문자 링크로 진입).
-- 로그인은 기존 시스템(RequireAuth/기존 세션)을 그대로 사용.
-- 기존 주사위의 “굴림 애니메이션” UI는 그대로 재사용.
-- 규칙: 유저 vs 딜러가 **주사위 1개씩** 굴려 **높은 수가 이김**.
-- 승률: **딜러 95% 승 / 유저 5% 승**(즉, 유저 패배율 95%).
-- 보상은 시스템적으로 지급하지 않음.
-- 결과 문구(최소 요구):
-  - 승리 시: “선착순 이벤트 당첨”
-  - 패배 시: “다음기회에, 다른 이벤혜택은 지민이 문의”
-- 운영 흐름(캠페인 맥락):
-  1) 문자 발송(선착순)
-  2) “확정 아님, 판정 필요” 안내
-  3) 주사위 게임 1회(무료/입금 아님)
-  4) 승/패(유저 패배율 95%)
-  5) 승/패별 출구 멘트 + 이벤트 연결
+## 0. 목적 요약(구현 기준)
+신규회원 대상 단일 판정용 주사위 게임. 운영자가 eligibility에 등록한 유저만 1회 플레이 가능하며, 기본 승률은 0%(항상 패배)로 설정되어 있다. 패배 시 Vault 잠금 잔액을 최소 10,000으로 보정해 “임시 금고” 메시지를 보여준다.
+-- 메인(홈) 링크 없이 전용 라우트로만 접근.
+-- 로그인은 기존 RequireAuth/세션을 그대로 사용.
+-- UI는 기존 주사위 애니메이션(주사위 1개씩)을 재사용.
+-- WIN 시 메시지: “축하합니다! 에어드랍 이벤트 당첨 🎁” (실제 기본 승률 0%라 노출되지 않음)
+-- LOSE 시 메시지: “잭팟은 아쉽게 놓쳤지만, 신규 정착 지원금이 임시 금고에 안전하게 보관되었습니다.”
+-- win_link는 상수 `https://ccc-010.com`.
 
-## 1. 결론: 이해한 목적
-- 이 기능은 기존 ‘주사위 배틀(토큰 소비/보상 지급)’이 아니라,
-  **신규회원 대상 프로모션에서 “판정”을 위해 1회 굴리고 결과를 안내하는 별도 페이지**다.
-- “확정 아님, 판정 필요”라는 문구는 **선착순 캠페인 특성상 자동 확정이 아니라 운영 확인/후속 안내가 필요**함을 사용자에게 고지하는 목적이다.
+## 1. 결론: 구현된 목적
+- 기존 토큰 소비/보상 Dice 게임과 완전히 분리된 “신규회원 판정용” 단일 게임이다.
+- 운영자가 eligibility에 올린 유저만 접근/플레이할 수 있으며, 기본 정책은 패배(0% 승률) + Vault 잠금 잔액 보정으로 온보딩 메시지를 전달하는 것이다.
 
-## 2. 관리자 티켓 부여가 필요한가?
-현재 기존 주사위 게임은 백엔드에서 `DICE_TOKEN`을 **필수로 소모**한다(티켓/토큰 없으면 플레이 불가).
-
-따라서 선택지는 2개다:
-
-### 옵션 A(비추천): 기존 주사위 API 재사용
-- 장점: 새 백엔드 개발 최소화
-- 단점:
-  - 플레이마다 `DICE_TOKEN`을 강제 소모하므로 **운영자가 신규회원에게 주사위 티켓을 반드시 지급**해야 함.
-  - 기존 Dice는 feature schedule/활성화 조건, 보상 지급/로그/레벨 등 기존 정책이 섞여 들어갈 수 있음.
-  - 승률(유저 5%)와 “주사위 1개” 규칙도 기존 구조(현재 2개 합산)와 불일치.
-
-### 옵션 B(추천): 신규회원 전용 “판정” API/로그를 별도로 만든다
-- 장점:
-  - **무료 1회**를 서버에서 강제(티켓 지급 없이 진행 가능)
-  - 유저 5% 승률, 주사위 1개 규칙을 정확히 구현
-  - 운영 추적/감사 로그(누가 언제 했는지)를 남겨 선착순/판정 이슈 대응 가능
-- 결론(추천): **관리자 티켓 지급을 없애고**, 신규 전용 엔드포인트로 처리
-
-> 정리: “티켓”을 의미가 ‘기존 게임 토큰’이라면, 옵션 A에서는 필요하고 옵션 B에서는 불필요하다.
-> 운영 관점에서는 옵션 B가 훨씬 안전/간단하다.
+## 2. 설계 요약(구현 결과)
+- 토큰/티켓을 소모하지 않는 전용 API.
+- USER_WIN_RATE는 0.0으로 설정되어 기본적으로 패배만 발생한다(필요 시 상수 수정으로 승률 조정 가능).
+- 1회 제한은 DB unique(NewMemberDiceLog.user_id)로 강제한다.
 
 ## 3. UX/디자인 스펙(밝은 크리스마스 톤)
 ### 3.1 페이지 성격
@@ -73,7 +46,7 @@
 4) 결과 영역
 - WIN: “선착순 이벤트 당첨”
 - WIN CTA: 링크 버튼 “이벤트 확인하기” → https://ccc-010.com
-- LOSE: “다음기회에, 다른 이벤혜택은 지민이 문의”
+  - LOSE: “잭팟은 아쉽게 놓쳤지만, 신규 정착 지원금이 임시 금고에 안전하게 보관되었습니다.”
 - (선택) 하단에 “운영 확인 후 안내됩니다” 같은 보조 문구는 가능하나, 최소 요구는 위 2문구가 핵심
 
 ### 3.3 페이지 접근(메인 연결 없음)
@@ -90,14 +63,14 @@
   - `userRoll`, `dealerRoll`
   - `outcome` (WIN/LOSE)
   - `message` (출구 멘트)
-  - `winLink` (WIN일 때만 표시, https://ccc-010.com)
+  - `winLink` (응답에 항상 포함, CTA 노출 여부는 정책에 맞춰 제어)
 
-## 5. 기능 요구사항(백엔드, 옵션 B 기준)
+## 5. 기능 요구사항(백엔드, 구현 기준)
 ### 5.1 API 설계
 - `GET /api/new-member-dice/status`
-  - 응답: `eligible`, `already_played`, `played_at?`, `last_outcome?`, `win_link?`
+  - 응답: `eligible`, `already_played`, `played_at?`, `last_outcome?`, `last_user_dice?`, `last_dealer_dice?`, `win_link`
 - `POST /api/new-member-dice/play`
-  - 서버가 주사위 결과 생성 및 저장 후 반환
+  - 서버가 자격 확인 → 1회 제한 확인 → 주사위 결과 생성 및 저장 후 반환
   - 응답 예:
     ```json
     {
@@ -107,85 +80,48 @@
         "dealer_dice": [6],
         "outcome": "LOSE"
       },
-      "message": "다음기회에, 다른 이벤혜택은 지민이 문의",
+      "message": "잭팟은 아쉽게 놓쳤지만, 신규 정착 지원금이 임시 금고에 안전하게 보관되었습니다.",
       "win_link": "https://ccc-010.com"
     }
     ```
 
-#### 5.1.1 자격(eligible) 판정 규칙 — 운영자 등록 방식(확정)
-- 원칙: **운영자가 등록한 대상자만** 이 페이지에서 플레이 가능
-- 구현: `eligible`은 아래 “대상자 등록 테이블”에 현재 user_id(+campaign_key)가 존재하는지로 판정
-- 기대 UX:
-  - `eligible=false`이면: 페이지는 열리더라도 플레이 버튼 비활성 + 안내 문구(예: “대상자 확인이 필요합니다. 지민이에게 문의해주세요.”)
-  - `eligible=true`이면: 정상 진행
+#### 5.1.1 자격(eligible) 판정 규칙 — 구현
+- `new_member_dice_eligibility` row가 있고 is_eligible=true, revoked_at is null, expires_at이 now보다 미래일 때만 eligible=true.
+- 없거나 비활성/만료/회수된 경우: 403 `NEW_MEMBER_DICE_NOT_ELIGIBLE`.
+- 이미 플레이 로그가 있으면: 400 `NEW_MEMBER_DICE_ALREADY_PLAYED`.
 
-### 5.2 승률/주사위 생성 규칙(유저 승 5%)
-- 서버에서 outcome을 먼저 결정:
-  - `r < 0.05` → 유저 WIN
-  - 그 외 → 딜러 WIN
-- 동점은 허용하지 않음(요구가 “높은 수가 이기는” 구조이므로).
-- 예시 생성 로직(간단/일관성):
-  - WIN일 때: `dealer = randint(1..5)`, `user = randint(dealer+1..6)`
-  - LOSE일 때: `user = randint(1..5)`, `dealer = randint(user+1..6)`
+### 5.2 승률/주사위 생성 규칙(구현)
+- USER_WIN_RATE=0.0으로 기본 패배. 필요 시 상수 수정으로 승률 조정 가능.
+- WIN: dealer 1~(user-1), user 2~6로 강제(동점 없음), 메시지 "축하합니다! 에어드랍 이벤트 당첨 🎁" 반환.
+- LOSE: user 1~(dealer-1), dealer 2~6로 강제, 메시지 "잭팟은 아쉽게 놓쳤지만...임시 금고" 반환.
 
 ### 5.3 1회 제한(무료 1회)
-- `user_id` 기준으로 1회만 허용(캠페인이 여러 개면 `campaign_id`까지 포함)
-- `POST`가 재호출되면:
-  - 기존 결과 재반환(멱등) 또는 에러(409)
+- `user_id` 기준으로 1회만 허용. NewMemberDiceLog.user_id UNIQUE로 DB에서 강제.
+- 재호출 시 400 `NEW_MEMBER_DICE_ALREADY_PLAYED`.
 
 ### 5.4 데이터 저장(감사/운영 대응)
-권장 신규 테이블: `new_member_dice_log`
-- `id`
-- `user_id` (FK 권장)
-- `campaign_key`(nullable, 문자열)
-- `user_roll` / `dealer_roll`
-- `outcome` (WIN/LOSE)
-- `created_at`
-- (선택) `ip`, `user_agent` (부정 사용/분쟁 대응)
+- `new_member_dice_log`: user_id UNIQUE, campaign_key(optional), user_roll, dealer_roll, outcome, win_link, created_at.
+- `new_member_dice_eligibility`: user_id UNIQUE, is_eligible, campaign_key(optional), expires_at(optional), revoked_at(optional), created_by_admin_user_id(optional).
+- 로그/자격은 Alembic 마이그레이션 `20251216_0003_new_member_dice_tables`/`0022_merge...`로 추가되어 있다.
 
-> 기존 `dice_log`를 재사용하지 않는 이유: 토큰/보상/기존 정책과 분리해 운영 리스크를 낮추기 위함.
-
-#### 5.4.1 대상자(eligible) 등록 테이블(권장)
-권장 신규 테이블: `new_member_dice_eligibility`
-- `id`
-- `user_id` (FK 권장, unique)
-- `campaign_key`(nullable, 문자열. 캠페인별로 여러 번 진행 가능성을 대비하면 unique(user_id, campaign_key))
-- `created_by_admin_user_id`(nullable)
-- `created_at`
-- (선택) `expires_at`
-
-운영 프로세스:
-- 운영자가 신규회원 대상자 선정 후 eligibility에 등록
-- 문자를 통해 `/new-member/dice` 링크 배포
-
-### 5.5 “선착순”과 “확정 아님”의 기술적 처리
-- 이 페이지는 기본적으로 “판정 결과 표시”까지 제공.
-- 선착순 확정/문자 발송/혜택 지급은 별도 운영 프로세스일 수 있으므로:
-  - 기본은 `WIN`이더라도 “확정 아님(판정 필요)” 고지를 유지
-  - 필요 시 추후 확장:
-    - 남은 당첨 수량(quota) 체크
-    - `WIN`일 때만 `PENDING_REVIEW` 상태로 적재 → 운영자가 확정 처리
+### 5.5 Vault 연동(패배 시 잠금 보정)
+- LOSE 시 User.vault_locked_balance를 최소 10,000으로 보정하고, VaultService._ensure_locked_expiry + legacy mirror sync를 호출한다.
+- delta가 추가될 때 Vault2Service.accrue_locked로 회계 이중 기록을 남기며, 실패해도 게임 흐름은 계속된다.
 
 ## 6. 운영 시나리오(권장)
-- 운영자가 문자에 `/new-member/dice` 링크 제공
-- 사용자는 로그인 후 페이지에서 1회 플레이
-- 운영자는 백오피스/DB 로그에서 WIN 사용자만 추출해 “선착순 당첨 확정” 처리
+- 운영자가 eligibility에 대상자 등록 후 `/new-member/dice` 링크 제공.
+- 사용자는 로그인 후 1회 플레이(실패 시 Vault 잠금 안내 메시지 확인).
+- 운영자는 로그에서 outcome/캠페인키를 확인해 후속 온보딩을 진행.
 
 ## 7. 보안/악용 방지(최소)
-- 결과는 클라이언트 랜덤이 아닌 **서버에서 생성**
-- 1회 제한은 DB로 강제
-- 요청 빈도 제한(간단히는 라우터 레벨 throttling 또는 WAF)
+- 결과는 서버에서 생성하며 USER_WIN_RATE 상수로 제어한다.
+- 1회 제한은 DB UNIQUE로 강제.
+- eligibility 만료/회수(expires_at, revoked_at) 확인.
+- 요청 빈도 제한(라우터 throttling 또는 WAF) 권장.
 
 ## 8. 구현 체크리스트(개발)
-- 프론트
-  - 신규 페이지 컴포넌트 생성
-  - 기존 주사위 애니메이션 컴포넌트 재사용(주사위 1개 모드)
-  - 신규 API 훅/클라이언트 추가
-  - 라우트만 등록(메인 링크 없음)
-- 백엔드
-  - 신규 모델/마이그레이션
-  - 신규 라우터 + 서비스
-  - 테스트(1회 제한, 5% 승률은 통계 테스트 대신 결과 생성 규칙 단위 테스트)
+- 프론트: 주사위 1개 UI 재사용, status/play 훅, eligible/already_played 상태 처리, 결과 메시지/roll 표시, win_link CTA.
+- 백엔드: eligibility 관리(Admin 라우터 포함), Vault 잠금 보정 로직, USER_WIN_RATE 조정 가능 여부 테스트, 1회 제한/자격 예외 테스트.
 
 ## 9. 오픈 질문(결정 필요)
 1) “신규회원” 자격은 어떻게 판정할까?

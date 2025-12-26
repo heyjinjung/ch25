@@ -1,8 +1,8 @@
 # XMAS 1Week DB 설계 – 공통/레벨/게임 테이블
 
 - 문서 타입: DB
-- 버전: v1.3
-- 작성일: 2025-12-06
+- 버전: v1.5
+- 작성일: 2025-12-25
 - 작성자: 시스템 설계팀
 - 대상 독자: 백엔드 개발자, DBA, 데이터 분석가
 
@@ -46,6 +46,17 @@
 - 로그인 시: last_login_at/last_login_ip 업데이트, user_event_log에 feature_type='AUTH', event_name='AUTH_LOGIN' 기록
 - 연관: user_event_log, season_pass_progress, 각 게임 로그와 1:N
 
+#### 4-1-1. 임시 컬럼 (시즌 브리지 전용)
+- `event_key_count` TINYINT, default 0 — 12/25~12/31 동안 수집한 키(0~7) 카운트 저장
+- `event_pending_points` INT, default 0 — 1/1 일괄 지급 예정 보상 포인트 합계
+- 운영 메모: 1/1 배치로 지급 완료 후 두 컬럼을 0으로 리셋하거나 후속 시즌에서 제거 가능
+
+#### 4-1-2. Vault Phase 1 컬럼
+- `vault_locked_balance` INT, default 0 — 잠금 금액의 단일 소스
+- `vault_available_balance` INT, default 0 — 잠금 해제된 가용 금액
+- `vault_locked_expires_at` DATETIME, null — 잠금 만료 시각(24h 등 정책용)
+- `vault_balance` INT, default 0 — legacy mirror(locked와 동기화 유지, 읽기 호환용)
+
 ### 4-2. feature_schedule
 | 컬럼명 | 타입 | PK/FK | Not Null | 설명 |
 |--------|------|-------|----------|------|
@@ -86,6 +97,18 @@
 
 - 인덱스/제약: IDX user_id+created_at, event_name
 - 연관: user
+
+### 4-5. app_ui_config (UI 설정 저장소)
+| 컬럼명 | 타입 | PK/FK | Not Null | 설명 |
+|--------|------|-------|----------|------|
+| id | INT | PK | Y | 기본키 |
+| config_key | VARCHAR(100) |  | Y | 설정 키(예: ticket_zero) |
+| payload_json | JSON |  | Y | UI 표시용 JSON(문구/CTA) |
+| created_at | DATETIME |  | Y | 생성 시각 |
+| updated_at | DATETIME |  | Y | 수정 시각 |
+
+- 제약: UNIQUE(config_key)
+- 용도: `/api/ui-config/{key}`에서 조회, `/admin/api/ui-config/{key}`로 운영 편집. token_balance=0 패널(tick_zero) 등 실시간 카피 관리.
 
 ## 5. 레벨 테이블
 ### 5-1. season_pass_config
@@ -315,7 +338,11 @@
 - 운영 규칙: 관리자가 직접 입력/업로드하며 API는 조회만 수행
 
 ## 변경 이력
-- v1.3 (2025-12-06, 시스템 설계팀)
+  - 시즌 브리지 임시 컬럼(event_key_count, event_pending_points)을 user 테이블 섹션에 문서화하고 1/1 배치 초기화 메모 추가
+ v1.5 (2025-12-25, 시스템 설계팀)
+  - user 테이블에 Vault Phase 1 컬럼(vault_locked_balance, vault_available_balance, vault_locked_expires_at, vault_balance mirror) 문서화
+  - app_ui_config 테이블 추가로 ticket_zero 등 UI 설정 저장소 역할 명시
+  - 버전/작성일 갱신
   - feature_schedule UNIQUE(date) 위반 시 INVALID_FEATURE_SCHEDULE, feature_config.is_enabled=0 시 NO_FEATURE_TODAY 차단 흐름을 주석으로 명시
   - roulette/dice/lottery 일일 한도 컬럼에 0=무제한(sentinal)과 remaining=0 의미를 표기
 - v1.2 (2025-12-09, 시스템 설계팀)

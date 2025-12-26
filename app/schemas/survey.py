@@ -5,7 +5,9 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import Field
+
+from app.schemas.base import KstBaseModel as BaseModel
 
 
 class SurveyStatus(str, Enum):
