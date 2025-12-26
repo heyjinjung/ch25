@@ -6,6 +6,7 @@ import HomeShortcutButton from "../common/HomeShortcutButton";
 import { requestTrialGrant } from "../../api/trialGrantApi";
 import { useToast } from "../common/ToastProvider";
 import type { GameTokenType } from "../../types/gameTokens";
+import { isTrialGrantEnabled } from "../../config/featureFlags";
 
 const SidebarAppLayout: React.FC = () => {
   const queryClient = useQueryClient();
@@ -51,6 +52,7 @@ const SidebarAppLayout: React.FC = () => {
   });
 
   useEffect(() => {
+    if (!isTrialGrantEnabled) return;
     if (didAttemptRef.current) return;
     didAttemptRef.current = true;
 
