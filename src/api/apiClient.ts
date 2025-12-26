@@ -34,7 +34,7 @@ const API_URL = normalizeHttps(envBase || derivedBase);
 
 const apiClient = axios.create({
   baseURL: API_URL,
-  timeout: 10000,
+  timeout: 2500,
   headers: {
     'Content-Type': 'application/json',
   },
