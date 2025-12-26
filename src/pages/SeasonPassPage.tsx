@@ -161,207 +161,200 @@ const SeasonPassPage: React.FC = () => {
   const stampXp = (data as any)?.base_xp_per_stamp ?? 0;
 
   return (
+    return (
     <FeatureGate feature="SEASON_PASS">
-      <section className="space-y-8 rounded-3xl border border-emerald-800/40 bg-slate-950/90 p-6 md:p-8">
+      <div className="relative mx-auto max-w-5xl space-y-12 pb-20">
+        {/* Ambient Background */}
+        <div className="pointer-events-none absolute -left-[20%] -top-[20%] h-[600px] w-[600px] rounded-full bg-amber-500/10 blur-[100px] mix-blend-screen" />
+        <div className="pointer-events-none absolute -right-[20%] top-[20%] h-[600px] w-[600px] rounded-full bg-purple-600/10 blur-[100px] mix-blend-screen" />
+
+        {/* Header: VIP Status Card */}
         <motion.header
-          className="space-y-3 text-center"
-          initial={{ opacity: 0, y: 16 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35 }}
+          className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-white/5 to-black/80 px-8 py-10 shadow-2xl backdrop-blur-xl"
         >
-          <p className="text-xs uppercase tracking-[0.28em] text-emerald-200">Season Pass</p>
-          <h1 className="text-3xl font-bold text-white">
-            <span className="block">🎄 크리스마스</span>
-            <span className="block">레벨</span>
-          </h1>
-          <p className="text-sm text-slate-300">지민이와 함께하는 겨울 시즌 패스</p>
-          <div className="mx-auto max-w-2xl space-y-2">
-            <div className="flex flex-wrap items-center justify-center gap-2 text-xs text-slate-200">
-              <span className="rounded-full border border-emerald-600/50 px-3 py-1">스탬프당 {stampXp.toLocaleString()} XP</span>
-              <button
-                type="button"
-                onClick={() => season.refetch()}
-                className="rounded-full border border-slate-700 px-3 py-1 text-[11px] text-slate-200 hover:bg-slate-800"
-              >
-                새로고침
-              </button>
-              <button
-                type="button"
-                onClick={() => navigate("/")}
-                className="rounded-full border border-emerald-600/60 px-3 py-1 text-[11px] text-emerald-100 hover:bg-emerald-900/40"
-              >
-                홈으로
-              </button>
+          <div className="pointer-events-none absolute inset-0 bg-[url('/images/pattern-vip.svg')] opacity-5" />
+          <div className="relative z-10 flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-amber-300 to-amber-600 text-black font-black shadow-lg shadow-amber-500/20">
+                  S
+                </span>
+                <p className="text-xs font-bold uppercase tracking-[0.3em] text-amber-500">Season Pass</p>
+              </div>
+              <h1 className="text-4xl font-black text-white italic tracking-tighter">
+                VIP ACCESS <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-amber-600">LEVEL {season.data?.current_level ?? 1}</span>
+              </h1>
+              <p className="max-w-md text-sm text-white/60">
+                {seasonLevelSummary.detail}
+              </p>
             </div>
-            {seasonLevelSummary.title && (
-              <p className="text-xs font-semibold text-emerald-200">{seasonLevelSummary.title}</p>
-            )}
-            <div className="h-2 w-full rounded-full bg-slate-800">
-              <div
-                className="h-full rounded-full bg-emerald-500"
-                style={{ width: `${seasonLevelSummary.progressPct ?? 0}%` }}
-              />
+
+            <div className="flex flex-col gap-4 min-w-[300px]">
+              <div className="flex justify-between text-xs font-bold text-amber-200/80">
+                <span>CURRENT XP</span>
+                <span>{data.current_xp?.toLocaleString() ?? 0} / TARGET</span>
+              </div>
+              <div className="relative h-4 w-full overflow-hidden rounded-full bg-black/50 shadow-inner">
+                <motion.div
+                  className="absolute inset-y-0 left-0 bg-gradient-to-r from-amber-600 to-yellow-400"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${seasonLevelSummary.progressPct}%` }}
+                  transition={{ duration: 1, ease: "easeOut" }}
+                />
+                {/* Glow Effect on Bar */}
+                <div className="absolute inset-y-0 left-0 w-full opacity-50 mix-blend-overlay bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.4),transparent)] animate-shimmer" />
+              </div>
+              <div className="flex gap-2 justify-end">
+                <button onClick={() => season.refetch()} className="text-xs text-white/40 hover:text-white transition">↻ UPDATE</button>
+              </div>
             </div>
-            <p className="text-xs text-slate-300">{seasonLevelSummary.detail}</p>
           </div>
         </motion.header>
 
-        <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
-          <div className="space-y-4">
+        <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
+          {/* Main Content: Reward Showcase */}
+          <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm text-slate-200">
-                <span>현재 레벨 {season.data?.current_level ?? "-"}</span>
-                {season.data?.levels?.find((l) => l.level === season.data?.current_level)?.is_claimed ? (
-                  <span className="rounded-full border border-emerald-600/60 bg-emerald-900/30 px-2 py-0.5 text-xs text-emerald-100">
-                    보상 완료
-                  </span>
-                ) : null}
-              </div>
-              <div className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300">MAX {data.max_level}레벨</div>
+              <h2 className="text-2xl font-bold text-white">REWARDS SHOWCASE</h2>
+              <span className="text-xs text-white/40">Total {data.levels.length} Levels</span>
             </div>
-            <div className="space-y-3">
-              <h2 className="text-lg font-bold text-white">레벨 보상</h2>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <AnimatePresence>
-                  {data.levels.map((level) => {
-                    const isAuto = !!level.auto_claim;
-                    // 시즌 2차 보상 표 (10레벨)
-                    // 시즌 보상 10단계 (Diamond/Seed 포함)
-                    const rewardOverride: Record<number, string> = {
-                      1: "룰렛 티켓 1장",
-                      2: "주사위 티켓 1장",
-                      3: "룰렛 1장 + 주사위 1장",
-                      4: "복권 티켓 1장",
-                      5: "CC 코인 1개 (관리자 지급)",
-                      6: "주사위 2장 + 복권 1장",
-                      7: "CC 코인 2개 (관리자 지급)",
-                      8: "쿠팡상품권 1만원",
-                      9: "CC 포인트 2만",
-                      10: "Diamond Key 🔑 + 시드 3만 + XP 부스터",
-                    };
-                    const displayReward = rewardOverride[level.level] ?? level.reward_label;
 
-                    // 고가/금액형 보상 관리자 지급 강제
-                    const isManualAdmin =
-                      displayReward.includes("CC 코인") ||
-                      displayReward.includes("상품권") ||
-                      displayReward.includes("Diamond") ||
-                      displayReward.includes("시드") ||
-                      (displayReward.includes("포인트") && (displayReward.includes("만") || displayReward.includes("10,000")));
+            <div className="grid gap-4 sm:grid-cols-2">
+              <AnimatePresence mode="popLayout">
+                {data.levels.map((level) => {
+                  const isAuto = !!level.auto_claim;
+                  const rewardOverride: Record<number, string> = {
+                    1: "Roulette Ticket x1",
+                    2: "Dice Ticket x1",
+                    3: "Roulette + Dice",
+                    4: "Lottery Ticket x1",
+                    5: "1 CC Coin (Admin)",
+                    6: "Dice x2 + Lottery x1",
+                    7: "2 CC Coins (Admin)",
+                    8: "Gift Card 10,000₩",
+                    9: "20,000 Points",
+                    10: "💎 DIAMOND KEY PACK",
+                  };
+                  const displayReward = rewardOverride[level.level] ?? level.reward_label;
+                  const isManualAdmin = displayReward.includes("Admin") || displayReward.includes("Coin") || displayReward.includes("Gift") || displayReward.includes("DIAMOND") || displayReward.includes("Points");
+                  const canClaim = !isManualAdmin && !isAuto && level.is_unlocked && !level.is_claimed;
+                  const isLevel10 = level.level === 10;
+                  const isLocked = !level.is_unlocked;
 
-                    const canClaim = !isManualAdmin && !isAuto && level.is_unlocked && !level.is_claimed;
-                    const levelIcon: Record<number, string> = {
-                      1: "🎄", 2: "⭐", 3: "🎄", 4: "⭐", 5: "🎄",
-                      6: "⭐", 7: "🎄", 8: "⭐", 9: "🎄", 10: "💎"
-                    };
+                  return (
+                    <motion.div
+                      key={level.level}
+                      layout
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className={`group relative overflow-hidden rounded-2xl border p-5 transition-all
+                                        ${isLevel10
+                          ? "col-span-full border-purple-500/50 bg-gradient-to-br from-purple-900/40 to-black shadow-[0_0_30px_rgba(168,85,247,0.2)]"
+                          : canClaim
+                            ? "border-amber-500/50 bg-amber-900/20 shadow-[0_0_20px_rgba(245,158,11,0.15)] hover:border-amber-400"
+                            : isLocked
+                              ? "border-white/5 bg-white/[0.02] opacity-60 grayscale"
+                              : "border-white/10 bg-white/[0.05]"
+                        }`}
+                    >
+                      {/* Unlocked Glow */}
+                      {!isLocked && <div className="absolute -left-10 -top-10 h-32 w-32 rounded-full bg-white/5 blur-2xl transition group-hover:bg-white/10" />}
 
-                    const buttonLabel = level.is_claimed
-                      ? "지급완료"
-                      : (isManualAdmin || isAuto) && level.is_unlocked
-                        ? "관리자 지급 대기"
-                        : canClaim
-                          ? "보상 받기"
-                          : "잠금";
-
-                    const isLevel10 = level.level === 10;
-
-                    return (
-                      <motion.article
-                        key={level.level}
-                        layout
-                        initial={{ opacity: 0, y: 18 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.25 }}
-                        className={`rounded-xl border p-4 transition relative overflow-hidden ${isLevel10
-                            ? "border-purple-500/70 bg-purple-900/20 shadow-[0_0_15px_rgba(168,85,247,0.15)]"
-                            : canClaim
-                              ? "border-amber-400 bg-slate-900"
-                              : level.is_claimed
-                                ? "border-emerald-500/60 bg-slate-900"
-                                : "border-slate-700 bg-slate-900"
-                          }`}
-                      >
-                        {isLevel10 && (
-                          <div className="absolute top-0 right-0 px-2 py-0.5 bg-purple-600 text-[10px] font-bold text-white rounded-bl-lg">
-                            FINAL REWARD
-                          </div>
-                        )}
-
-                        <div className="flex items-center justify-between">
-                          <span className={`text-sm font-semibold ${isLevel10 ? "text-purple-200" : "text-slate-200"}`}>
-                            <span className="mr-2" aria-hidden>{levelIcon[level.level] ?? "🎄"}</span>
-                            레벨 {level.level}
-                          </span>
-                          <span className="text-xs text-slate-400">필요 XP {level.required_xp.toLocaleString()}</span>
+                      <div className="relative z-10 flex items-start justify-between">
+                        <div>
+                          <p className={`text-sm font-bold uppercase tracking-widest ${isLevel10 ? "text-purple-300" : canClaim ? "text-amber-300" : "text-white/40"}`}>
+                            Level {level.level}
+                          </p>
+                          <h3 className={`mt-1 text-lg font-bold ${isLocked ? "text-white/40" : "text-white"}`}>
+                            {displayReward}
+                          </h3>
+                          <p className="mt-1 text-xs text-white/30">Required: {level.required_xp.toLocaleString()} XP</p>
                         </div>
-                        <p className={`mt-2 text-sm ${isLevel10 ? "text-white font-bold" : "text-slate-100"}`}>{displayReward}</p>
+                        <div className={`flex h-10 w-10 items-center justify-center rounded-full border ${level.is_claimed ? "border-emerald-500 bg-emerald-500/20 text-emerald-500" :
+                            canClaim ? "animate-bounce border-amber-500 bg-amber-500 text-black shadow-lg" :
+                              "border-white/10 bg-white/5 text-white/20"
+                          }`}>
+                          {level.is_claimed ? "✓" : canClaim ? "!" : "🔒"}
+                        </div>
+                      </div>
+
+                      <div className="mt-6">
                         <button
-                          type="button"
                           disabled={!canClaim}
                           onClick={() => canClaim && claimMutation.mutate(level.level)}
-                          className={`mt-3 w-full rounded-full px-3 py-2 text-sm font-bold transition ${canClaim
-                              ? "bg-amber-500 text-slate-950 hover:bg-amber-400"
+                          className={`w-full rounded-xl py-3 text-sm font-black tracking-wide transition-all
+                                                ${canClaim
+                              ? "bg-gradient-to-r from-amber-400 to-orange-500 text-black shadow-lg hover:brightness-110 active:scale-95"
                               : level.is_claimed
-                                ? "bg-emerald-800/60 text-emerald-100 cursor-not-allowed"
-                                : isLevel10 && (isManualAdmin || isAuto) && level.is_unlocked
-                                  ? "bg-purple-600/50 text-purple-100 cursor-not-allowed border border-purple-500/30"
-                                  : "bg-slate-800 text-slate-400 cursor-not-allowed"
+                                ? "cursor-default bg-white/5 text-white/30"
+                                : isManualAdmin && !isLocked
+                                  ? "cursor-not-allowed border border-white/10 bg-transparent text-white/50"
+                                  : "cursor-not-allowed bg-black/20 text-transparent"
                             }`}
                         >
-                          {buttonLabel}
+                          {level.is_claimed ? "CLAIMED" :
+                            canClaim ? "CLAIM REWARD" :
+                              isManualAdmin && !isLocked ? "CONTACT ADMIN" :
+                                ""}
                         </button>
-                        {(isManualAdmin || isAuto) && !level.is_claimed && (
-                          <p className="mt-2 text-xs text-amber-200/80 bg-black/40 p-2 rounded text-center">
-                            ⚠️ 관리자가 직접 지급하는 보상입니다.<br />(자동 수령 불가 / 문의 필요)
+                        {(isManualAdmin || isAuto) && !level.is_claimed && !isLocked && (
+                          <p className="mt-2 text-center text-[10px] text-amber-500/80">
+                            * This reward is manually distributed by Admin.
                           </p>
                         )}
-                      </motion.article>
-                    );
-                  })}
-                </AnimatePresence>
-              </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
             </div>
           </div>
 
+          {/* Sidebar: Daily Daily Missions */}
           <motion.aside
-            className="space-y-3 rounded-2xl border border-slate-800 bg-slate-900 p-4"
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, delay: 0.05 }}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
+            className="space-y-6"
           >
             <div className="flex items-center justify-between">
-              <h2 className="text-base font-bold text-white">오늘 할 일</h2>
-              <span className="text-xs text-emerald-200">스탬프 {data.today?.stamped ? "완료" : "미완료"}</span>
+              <h2 className="text-xl font-bold text-white">DAILY MISSIONS</h2>
+              <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${data.today?.stamped ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"}`}>
+                {data.today?.stamped ? "COMPLETED" : "IN PROGRESS"}
+              </span>
             </div>
+
             <div className="space-y-3">
-              <AnimatePresence>
-                {cards.map((card) => (
-                  <motion.div
-                    key={card.title}
-                    layout
-                    initial={{ opacity: 0, x: 12 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -10 }}
-                    transition={{ duration: 0.2 }}
-                    className="rounded-xl border border-slate-800 bg-slate-900/80 p-3"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg" aria-hidden>{card.icon}</span>
-                      <div>
-                        <p className="text-sm font-semibold text-white">{card.title}</p>
-                        <p className="text-xs text-slate-400">{card.desc}</p>
+              {cards.map((card, i) => (
+                <div key={i} className="group relative overflow-hidden rounded-2xl border border-white/5 bg-white/[0.02] p-4 transition-colors hover:bg-white/[0.05]">
+                  <div className="flex gap-4">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white/5 text-lg grayscale transition group-hover:grayscale-0">
+                      {card.icon}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h4 className="truncate text-sm font-bold text-white">{card.title}</h4>
+                      <p className="mt-0.5 text-xs text-white/40">{card.desc}</p>
+                      <div className="mt-3 flex items-center justify-between border-t border-white/5 pt-2">
+                        <p className="truncate text-[10px] font-medium text-cc-lime">{card.status}</p>
                       </div>
                     </div>
-                    <p className="mt-2 text-sm text-emerald-200">{card.status}</p>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="rounded-2xl border border-blue-500/20 bg-blue-900/10 p-4">
+              <p className="text-xs text-blue-200">
+                💡 <b>Tip:</b> Completing all daily missions grants a bonus stamp, accelerating your level progress significantly.
+              </p>
             </div>
           </motion.aside>
         </div>
-      </section>
+      </div>
     </FeatureGate>
+  );
   );
 };
 

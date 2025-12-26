@@ -7,10 +7,21 @@ from app.api.deps import get_db
 from app.schemas.vault2 import VaultTimerActionRequest, VaultTimerState
 from app.services.vault_service import VaultService
 
-router = APIRouter(prefix="/api/admin/vault", tags=["admin-vault-ops"])
+
+_core = APIRouter(tags=["admin-vault-ops"])
+
+# Canonical admin API base in this codebase is `/admin/api/*`.
+# Some environments/clients still call `/api/admin/*` (often rewritten by NGINX).
+# Expose both to avoid 404s.
+router = APIRouter(prefix="/admin/api/vault", tags=["admin-vault-ops"])
+legacy_router = APIRouter(prefix="/api/admin/vault", tags=["admin-vault-ops"])
+
+router.include_router(_core)
+legacy_router.include_router(_core)
 
 
-@router.get("/{user_id}", response_model=VaultTimerState)
+@_core.get("/{user_id}", response_model=VaultTimerState)
+@_core.get("/{user_id}/", response_model=VaultTimerState)
 def get_user_vault_state(user_id: int, db: Session = Depends(get_db)) -> VaultTimerState:
     service = VaultService()
     # get_status returns (eligible, user, mutated)
@@ -24,7 +35,8 @@ def get_user_vault_state(user_id: int, db: Session = Depends(get_db)) -> VaultTi
     )
 
 
-@router.post("/{user_id}/timer", response_model=VaultTimerState)
+@_core.post("/{user_id}/timer", response_model=VaultTimerState)
+@_core.post("/{user_id}/timer/", response_model=VaultTimerState)
 def set_user_timer(user_id: int, payload: VaultTimerActionRequest, db: Session = Depends(get_db)) -> VaultTimerState:
     service = VaultService()
     user = service.admin_timer_action(db, user_id=user_id, action=payload.action)
