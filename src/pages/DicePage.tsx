@@ -108,7 +108,7 @@ const DicePage: React.FC = () => {
                 ⚔️
               </span>
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-400">Battle Reward</p>
+                <p className="text-xs font-bold uppercase tracking-wider text-emerald-400">전투 보상</p>
                 <div className="flex items-baseline gap-1.5">
                   <span className="text-2xl font-black text-white drop-shadow-lg">
                     <AnimatedNumber value={rewardToast.value} from={0} />
@@ -174,13 +174,13 @@ const DicePage: React.FC = () => {
               {isRolling || playMutation.isPending ? (
                 <>
                   <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                  <span className="font-bold text-white">ROLLING...</span>
+                  <span className="font-bold text-white">주사위 굴리는 중...</span>
                 </>
               ) : (
                 <>
-                  <span className="text-xl">🎲</span>
-                  <span className="text-lg font-black tracking-wider text-white">
-                    {result || infoMessage ? "REMATCH" : "ROLL DICE"}
+                  <span className="text-2xl">🎲</span>
+                  <span className="text-2xl font-black tracking-wider text-white">
+                    {result || infoMessage ? "다시 대결하기" : "주사위 굴리기"}
                   </span>
                 </>
               )}
