@@ -6,7 +6,16 @@ import { clearAuth, getAuthToken } from "../auth/authStore";
 // Resolution priority:
 // 1) Explicit env (VITE_API_BASE_URL or VITE_API_URL)
 // 2) Runtime-derived: localhost -> :8000, otherwise same-origin (expects reverse proxy)
-const envBase = (import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || "").trim();
+const rawEnvBase = (import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || "").trim();
+
+const normalizeUserApiBase = (base: string) => {
+  const trimmed = base.replace(/\/+$/, "");
+  // Common misconfig: base already ends with `/api` while request paths also start with `/api/*`
+  // -> results in `/api/api/*` and 404s.
+  return trimmed.replace(/\/api$/, "");
+};
+
+const envBase = normalizeUserApiBase(rawEnvBase);
 
 const resolvedBaseURL = (() => {
   if (envBase) return envBase.replace(/\/+$/, "");

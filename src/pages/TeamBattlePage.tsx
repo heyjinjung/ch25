@@ -207,9 +207,9 @@ const TeamBattlePage: React.FC = () => {
               <span className="text-3xl">⚔️</span>
             </div>
             <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-white/40">Season Event</p>
-              <h1 className="text-3xl font-black text-white italic tracking-tight">TEAM BATTLE</h1>
-              <p className="flex items-center gap-2 text-sm text-white/60">
+              <p className="text-base font-bold uppercase tracking-widest text-white/40">시즌 이벤트</p>
+              <h1 className="text-3xl font-black text-white italic tracking-tight">팀 배틀</h1>
+              <p className="flex items-center gap-2 text-base text-white/60">
                 <span className={`inline-block h-2 w-2 rounded-full ${joinWindow.closed ? "bg-red-500" : "bg-emerald-500 animate-pulse"}`} />
                 {joinWindow.closed ? "팀 배정 마감" : "팀 배정 진행 중"}
               </p>
@@ -217,25 +217,25 @@ const TeamBattlePage: React.FC = () => {
           </div>
 
           <div className="flex flex-col items-end gap-1">
-            <p className="text-xs font-bold uppercase tracking-widest text-white/40">Time Remaining</p>
+            <p className="text-base font-bold uppercase tracking-widest text-white/40">남은 시간</p>
             <div className="font-mono text-4xl font-black text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">
               {countdown}
             </div>
             <button
               onClick={loadCore}
               disabled={refreshing}
-              className="flex items-center gap-1.5 text-xs text-white/40 hover:text-white transition-colors"
+              className="flex items-center gap-1.5 text-base text-white/40 hover:text-white transition-colors"
             >
               <span className={`${refreshing ? "animate-spin" : ""}`}>↻</span>
-              UPDATE DATA
+              데이터 갱신
             </button>
           </div>
         </div>
       </div>
 
       {/* Rule Ticker */}
-      <div className="flex items-center gap-3 overflow-hidden rounded-full border border-white/5 bg-white/[0.02] px-4 py-2 text-xs text-white/50 backdrop-blur-sm">
-        <span className="font-bold text-cc-lime">INFO</span>
+      <div className="flex items-center gap-3 overflow-hidden rounded-full border border-white/5 bg-white/[0.02] px-4 py-2 text-base text-white/50 backdrop-blur-sm">
+        <span className="font-bold text-cc-lime">안내</span>
         <div className="flex gap-4 overflow-hidden whitespace-nowrap">
           <span>• 자동 배정 (밸런스 기준)</span>
           <span>• 시작 후 24시간 내 배정 가능</span>
@@ -250,9 +250,9 @@ const TeamBattlePage: React.FC = () => {
           {/* Team Select / Status Card */}
           <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] p-6 shadow-xl backdrop-blur-md">
             <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-white">MY TEAM STATUS</h2>
+              <h2 className="text-xl font-bold text-white">내 팀 현황</h2>
               {myTeamName && (
-                <span className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs font-bold text-white">
+                <span className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-sm font-bold text-white">
                   {myTeamName}
                 </span>
               )}
@@ -269,27 +269,27 @@ const TeamBattlePage: React.FC = () => {
                 </div>
                 <div className="space-y-2">
                   <h3 className="text-2xl font-black text-white">소속된 팀이 없습니다</h3>
-                  <p className="text-sm text-white/50">시스템이 전력을 분석하여 최적의 팀으로 배정합니다.</p>
+                  <p className="text-base text-white/50">시스템이 전력을 분석하여 최적의 팀으로 배정합니다.</p>
                 </div>
                 <button
                   onClick={handleAutoAssign}
                   disabled={joinBusy || refreshing || joinWindow.closed}
-                  className="group relative overflow-hidden rounded-xl bg-white px-8 py-4 font-bold text-black transition-transform active:scale-95 disabled:opacity-50"
+                  className="group relative overflow-hidden rounded-xl bg-white px-8 py-5 font-bold text-black transition-transform active:scale-95 disabled:opacity-50"
                 >
-                  <span className="relative z-10 flex items-center gap-2">
-                    {joinBusy ? "ANALYZING..." : "AUTO ASSIGN TEAM"}
+                  <span className="relative z-10 flex items-center gap-2 text-lg">
+                    {joinBusy ? "분석 중..." : "팀 자동 배정받기"}
                   </span>
                   <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-gray-200 to-transparent transition-transform group-hover:translate-x-full" />
                 </button>
                 {joinWindow.closed && (
-                  <p className="text-xs font-bold text-red-400">※ 현재 팀 배정 기간이 종료되었습니다.</p>
+                  <p className="text-sm font-bold text-red-400">※ 현재 팀 배정 기간이 종료되었습니다.</p>
                 )}
               </div>
             ) : (
               // Contribution Stats
               <div className="space-y-4">
-                <div className="flex items-center justify-between text-sm text-white/60">
-                  <span>Recent Contributors</span>
+                <div className="flex items-center justify-between text-base text-white/60">
+                  <span>최근 기여자</span>
                   <div className="flex gap-2">
                     <button onClick={handleContribPrev} disabled={contribOffset === 0} className="hover:text-white disabled:opacity-30">←</button>
                     <button onClick={handleContribNext} disabled={contributors.length < contribLimit} className="hover:text-white disabled:opacity-30">→</button>
@@ -297,17 +297,17 @@ const TeamBattlePage: React.FC = () => {
                 </div>
                 <div className="grid gap-2">
                   {contributorsLoading ? (
-                    <div className="py-8 text-center text-xs text-white/30">LOADING DATA...</div>
+                    <div className="py-8 text-center text-base text-white/30">데이터 로딩 중...</div>
                   ) : contributors.length > 0 ? (
                     contributors.map((c, i) => (
                       <div key={i} className="flex items-center justify-between rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3 hover:bg-white/[0.05]">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/5 text-xs font-bold text-white/70">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/5 text-sm font-bold text-white/70">
                             {contribOffset + i + 1}
                           </div>
                           <div>
-                            <p className="text-sm font-bold text-white">{c.nickname || "Unknown"}</p>
-                            <p className="text-[10px] text-white/40">USER ID: {c.user_id}</p>
+                            <p className="text-base font-bold text-white">{c.nickname || "Unknown"}</p>
+                            <p className="text-sm text-white/40">유저 ID: {c.user_id}</p>
                           </div>
                         </div>
                         <div className="text-right">
@@ -316,7 +316,7 @@ const TeamBattlePage: React.FC = () => {
                       </div>
                     ))
                   ) : (
-                    <div className="py-8 text-center text-xs text-white/30">기여 내역이 없습니다.</div>
+                    <div className="py-8 text-center text-sm text-white/30">기여 내역이 없습니다.</div>
                   )}
                 </div>
               </div>
@@ -328,37 +328,37 @@ const TeamBattlePage: React.FC = () => {
         <div className="h-full">
           <div className="sticky top-6 overflow-hidden rounded-3xl border border-white/10 bg-black/40 shadow-xl backdrop-blur-md">
             <div className="border-b border-white/5 bg-white/[0.02] p-4">
-              <h3 className="font-bold text-white">LEADERBOARD</h3>
+              <h3 className="font-bold text-white">팀 순위표</h3>
             </div>
             <div className="divide-y divide-white/5 p-2">
               {leaderboard.map((row, idx) => (
                 <div key={row.team_id} className={`flex items-center justify-between rounded-xl p-3 ${selectedTeam === row.team_id ? "bg-white/10 ring-1 ring-white/20" : ""}`}>
                   <div className="flex items-center gap-3">
-                    <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-black shadow-inner ${idx === 0 ? "bg-yellow-500 text-black" :
-                        idx === 1 ? "bg-gray-300 text-black" :
-                          idx === 2 ? "bg-orange-700 text-white" :
-                            "bg-white/10 text-white/50"
+                    <div className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-black shadow-inner ${idx === 0 ? "bg-yellow-500 text-black" :
+                      idx === 1 ? "bg-gray-300 text-black" :
+                        idx === 2 ? "bg-orange-700 text-white" :
+                          "bg-white/10 text-white/50"
                       }`}>
                       {idx + 1}
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-white">{row.team_name}</p>
-                      <p className="text-[10px] text-white/40">{row.member_count} Members</p>
+                      <p className="text-base font-bold text-white">{row.team_name}</p>
+                      <p className="text-sm text-white/40">{row.member_count}명</p>
                     </div>
                   </div>
                   <p className="font-mono font-bold text-white">{row.points.toLocaleString()}</p>
                 </div>
               ))}
               {leaderboard.length === 0 && (
-                <div className="py-8 text-center text-xs text-white/30">순위 데이터 없음</div>
+                <div className="py-8 text-center text-sm text-white/30">순위 데이터 없음</div>
               )}
             </div>
 
             <div className="flex justify-center border-t border-white/5 p-2">
-              <div className="flex gap-4 text-xs text-white/40">
-                <button onClick={handleLbPrev} disabled={lbOffset === 0} className="hover:text-white disabled:opacity-30">PREV</button>
+              <div className="flex gap-4 text-base text-white/40">
+                <button onClick={handleLbPrev} disabled={lbOffset === 0} className="hover:text-white disabled:opacity-30">이전</button>
                 <span>{lbOffset + 1}-{lbOffset + leaderboard.length}</span>
-                <button onClick={handleLbNext} disabled={leaderboard.length < lbLimit} className="hover:text-white disabled:opacity-30">NEXT</button>
+                <button onClick={handleLbNext} disabled={leaderboard.length < lbLimit} className="hover:text-white disabled:opacity-30">다음</button>
               </div>
             </div>
           </div>
