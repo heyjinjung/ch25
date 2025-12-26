@@ -30,20 +30,26 @@ const normalizeHttps = (base: string) => {
   return base.replace(/\/+$/, "");
 };
 
+const normalizeAdminApiBase = (base: string) => {
+  const trimmed = base.replace(/\/+$/, "");
+  // Strip both /admin/api and /api to ensure we start at the host root.
+  return trimmed.replace(/\/admin\/api$/, "").replace(/\/api$/, "");
+};
+
 const resolvedBaseURL = (() => {
-  // 1. If explicitly provided via env, use it (with HTTPS normalization when the page is served over TLS).
-  if (envAdminBase) return normalizeHttps(envAdminBase);
+  // 1. If explicitly provided via env, use it (with HTTPS normalization).
+  if (envAdminBase) return normalizeHttps(normalizeAdminApiBase(envAdminBase));
 
   // 2. In browser (production/development)
   if (typeof window !== "undefined") {
-    const { hostname, protocol } = window.location;
+    const { hostname, protocol, origin } = window.location;
     const isLocalHost = hostname === "localhost" || hostname === "127.0.0.1";
 
     // On localhost, we need to point to the backend port (8000)
-    if (isLocalHost) return `${protocol}//${hostname}:8000/admin/api`;
+    if (isLocalHost) return `${protocol}//${hostname}:8000`;
 
-    // In production (on the server), use relative path to let NGINX handle it over HTTPS.
-    return "/admin/api";
+    // In production, use the current origin.
+    return origin;
   }
 
   return "";

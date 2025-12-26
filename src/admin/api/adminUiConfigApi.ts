@@ -11,7 +11,7 @@ export type AdminUiConfigUpsertRequest = {
 };
 
 export const fetchAdminUiConfig = async (key: string): Promise<AdminUiConfigResponse> => {
-  const response = await adminApi.get<AdminUiConfigResponse>(`/ui-config/${encodeURIComponent(key)}`);
+  const response = await adminApi.get<AdminUiConfigResponse>(`/admin/api/ui-config/${encodeURIComponent(key)}`);
   return response.data;
 };
 
@@ -19,7 +19,7 @@ export const upsertAdminUiConfig = async (
   key: string,
   payload: AdminUiConfigUpsertRequest
 ): Promise<AdminUiConfigResponse> => {
-  const response = await adminApi.put<AdminUiConfigResponse>(`/ui-config/${encodeURIComponent(key)}`,
+  const response = await adminApi.put<AdminUiConfigResponse>(`/admin/api/ui-config/${encodeURIComponent(key)}`,
     payload
   );
   return response.data;

@@ -17,15 +17,15 @@ interface AdminRankingListResponse {
 }
 
 export async function fetchRankingByDate(date: string) {
-  const { data } = await adminApi.get<AdminRankingListResponse>(`/ranking/${date}`);
+  const { data } = await adminApi.get<AdminRankingListResponse>(`/admin/api/ranking/${date}`);
   return data.items ?? [];
 }
 
 export async function upsertRanking(date: string, entries: AdminRankingEntryPayload[]) {
-  const { data } = await adminApi.put<AdminRankingListResponse>(`/ranking/${date}`, entries);
+  const { data } = await adminApi.put<AdminRankingListResponse>(`/admin/api/ranking/${date}`, entries);
   return data.items ?? [];
 }
 
 export async function deleteRanking(date: string) {
-  await adminApi.delete(`/ranking/${date}`);
+  await adminApi.delete(`/admin/api/ranking/${date}`);
 }

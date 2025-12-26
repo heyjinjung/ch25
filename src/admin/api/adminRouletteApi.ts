@@ -24,20 +24,20 @@ export interface AdminRouletteConfig extends AdminRouletteConfigPayload {
 }
 
 export async function fetchRouletteConfigs() {
-  const { data } = await adminApi.get<AdminRouletteConfig[]>("/roulette-config/");
+  const { data } = await adminApi.get<AdminRouletteConfig[]>("/admin/api/roulette-config/");
   return data;
 }
 
 export async function createRouletteConfig(payload: AdminRouletteConfigPayload) {
-  const { data } = await adminApi.post<AdminRouletteConfig>("/roulette-config/", payload);
+  const { data } = await adminApi.post<AdminRouletteConfig>("/admin/api/roulette-config/", payload);
   return data;
 }
 
 export async function updateRouletteConfig(id: number, payload: AdminRouletteConfigPayload) {
-  const { data } = await adminApi.put<AdminRouletteConfig>(`/roulette-config/${id}`, payload);
+  const { data } = await adminApi.put<AdminRouletteConfig>(`/admin/api/roulette-config/${id}`, payload);
   return data;
 }
 
 export async function deleteRouletteConfig(id: number) {
-  await adminApi.delete(`/roulette-config/${id}`);
+  await adminApi.delete(`/admin/api/roulette-config/${id}`);
 }
