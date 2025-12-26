@@ -4,7 +4,14 @@ import { clearAuth, getAuthToken } from '../auth/authStore';
 
 // Backend routes already include the /api prefix where needed (e.g., /api/team-battle, /admin/api/*)
 // so the base URL should stop at the host.
-const envBase = (import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || '').trim();
+const rawEnvBase = (import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || '').trim();
+
+const normalizeUserApiBase = (base: string) => {
+  const trimmed = base.replace(/\/+$/, '');
+  return trimmed.replace(/\/api$/, '');
+};
+
+const envBase = normalizeUserApiBase(rawEnvBase);
 
 const normalizeHttps = (base: string) => {
   if (!base) return base;
