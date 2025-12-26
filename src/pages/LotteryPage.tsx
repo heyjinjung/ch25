@@ -128,7 +128,7 @@ const LotteryPage: React.FC = () => {
                 🎁
               </span>
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-wider text-red-400">Winning Prize</p>
+                <p className="text-xs font-bold uppercase tracking-wider text-red-400">당첨 경품</p>
                 <div className="flex items-baseline gap-1.5">
                   <span className="text-2xl font-black text-white drop-shadow-lg">
                     <AnimatedNumber value={rewardToast.value} from={0} />
@@ -201,11 +201,11 @@ const LotteryPage: React.FC = () => {
               {isScratching || playMutation.isPending ? (
                 <>
                   <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                  <span className="font-bold text-white">SCRATCHING...</span>
+                  <span className="font-bold text-white">확인 중...</span>
                 </>
               ) : (
-                <span className="text-lg font-black tracking-wider text-white">
-                  {isRevealed ? "TRY AGAIN" : "SCRATCH NOW"}
+                <span className="text-2xl font-black tracking-wider text-white">
+                  {isRevealed ? "다시 하기" : "복권 긁기"}
                 </span>
               )}
             </div>
@@ -213,8 +213,8 @@ const LotteryPage: React.FC = () => {
 
           {revealedPrize && isRevealed && !isScratching && (
             <div className="mt-4 animate-bounce-in text-center">
-              <span className="inline-block rounded-full bg-white/10 px-4 py-1 text-[10px] font-bold uppercase tracking-widest text-white/60">
-                You Won
+              <span className="inline-block rounded-full bg-white/10 px-4 py-1 text-xs font-bold uppercase tracking-widest text-white/60">
+                당첨 축하합니다
               </span>
               <h3 className="mt-2 text-2xl font-black text-white">
                 {revealedPrize.label}
@@ -230,7 +230,7 @@ const LotteryPage: React.FC = () => {
         <div className="mt-12">
           <h3 className="mb-6 flex items-center justify-center gap-3 text-center">
             <span className="h-[1px] w-8 bg-white/20" />
-            <span className="text-xs font-bold uppercase tracking-[0.2em] text-white/40">Prize Pool</span>
+            <span className="text-sm font-bold uppercase tracking-[0.2em] text-white/40">당첨 경품 목록</span>
             <span className="h-[1px] w-8 bg-white/20" />
           </h3>
 
@@ -239,8 +239,8 @@ const LotteryPage: React.FC = () => {
               <div
                 key={prize.id}
                 className={`group relative overflow-hidden rounded-2xl border p-4 transition-all ${prize.is_active === false
-                    ? "border-white/5 bg-white/[0.02] opacity-40 grayscale"
-                    : "border-white/10 bg-white/[0.05] hover:border-white/20 hover:bg-white/[0.08]"
+                  ? "border-white/5 bg-white/[0.02] opacity-40 grayscale"
+                  : "border-white/10 bg-white/[0.05] hover:border-white/20 hover:bg-white/[0.08]"
                   }`}
               >
                 <div className="flex flex-col items-center text-center">
@@ -263,7 +263,7 @@ const LotteryPage: React.FC = () => {
 
           {data.prizes.length === 0 && (
             <div className="rounded-xl border border-dashed border-white/10 bg-white/5 p-8 text-center text-sm text-white/40">
-              No prizes available currently.
+              현재 진행 중인 경품이 없습니다.
             </div>
           )}
         </div>
