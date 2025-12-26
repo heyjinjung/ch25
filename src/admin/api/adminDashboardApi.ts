@@ -17,7 +17,7 @@ export type DashboardMetricsResponse = {
 };
 
 export async function fetchDashboardMetrics(rangeHours = 24): Promise<DashboardMetricsResponse> {
-  const res = await adminApi.get<DashboardMetricsResponse>("/dashboard/metrics", {
+  const res = await adminApi.get<DashboardMetricsResponse>("/admin/api/dashboard/metrics", {
     params: { range_hours: rangeHours },
   });
   return res.data;
