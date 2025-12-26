@@ -90,7 +90,6 @@ const DicePage: React.FC = () => {
     }
 
     return (
-    return (
       <div className="relative space-y-8">
         {/* Background Atmosphere for Battle (Red vs Green) */}
         <div className="pointer-events-none absolute -left-[10%] top-[40%] h-[500px] w-[500px] rounded-full bg-emerald-500/10 blur-[120px] mix-blend-screen" />
