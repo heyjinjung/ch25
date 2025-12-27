@@ -175,7 +175,7 @@ const VaultMainPanel: React.FC = React.memo(() => {
     if (view.recommendedAction === "OPEN_VAULT_MODAL" && !vaultModalOpen) {
       setVaultModalOpen(true);
     }
-  }, [view.recommendedAction, vaultModalOpen]);
+  }, [view.recommendedAction]);
 
   const unlockRules = useMemo(() => {
     const parsed = parseVaultUnlockRules(view.unlockRulesJson);
