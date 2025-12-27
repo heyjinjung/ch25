@@ -1,4 +1,4 @@
-import { useMemo, useRef } from "react";
+import React, { useMemo, useRef, memo } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { ContactShadows, OrbitControls, PerspectiveCamera, Stars } from "@react-three/drei";
 import * as THREE from "three";
@@ -20,14 +20,14 @@ const pipPositions: Record<number, Array<[number, number]>> = {
   6: [[-0.35, -0.4], [0.35, -0.4], [-0.35, 0], [0.35, 0], [-0.35, 0.4], [0.35, 0.4]],
 };
 
-const Face: React.FC<{ value: number; axis: "x" | "y" | "z"; sign: -1 | 1 }> = ({ value, axis, sign }) => {
+const Face: React.FC<{ value: number; axis: "x" | "y" | "z"; sign: -1 | 1 }> = memo(({ value, axis, sign }) => {
   const positions = useMemo(() => pipPositions[value] ?? [], [value]);
   const rotation: [number, number, number] =
     axis === "z"
       ? [0, 0, sign === 1 ? 0 : Math.PI]
       : axis === "x"
-      ? [0, Math.PI / 2 * sign, 0]
-      : [Math.PI / 2 * -sign, 0, 0];
+        ? [0, Math.PI / 2 * sign, 0]
+        : [Math.PI / 2 * -sign, 0, 0];
   const translate: [number, number, number] =
     axis === "z" ? [0, 0, 0.5 * sign] : axis === "x" ? [0.5 * sign, 0, 0] : [0, 0.5 * sign, 0];
 
@@ -39,13 +39,13 @@ const Face: React.FC<{ value: number; axis: "x" | "y" | "z"; sign: -1 | 1 }> = (
       </mesh>
       {positions.map((p, idx) => (
         <mesh key={idx} position={[p[0], p[1], 0.01]}>
-          <sphereGeometry args={[0.06, 16, 16]} />
+          <sphereGeometry args={[0.06, 12, 12]} />
           <meshStandardMaterial color="#0f172a" />
         </mesh>
       ))}
     </group>
   );
-};
+});
 
 const valueRotation = (value: number): THREE.Euler => {
   switch (value) {
@@ -59,7 +59,7 @@ const valueRotation = (value: number): THREE.Euler => {
   }
 };
 
-const DiceMesh: React.FC<DiceProps> = ({ value, color = "#e2e8f0", rolling, offset = [0, 0, 0], phase = 0 }) => {
+const DiceMesh: React.FC<DiceProps> = memo(({ value, color = "#e2e8f0", rolling, offset = [0, 0, 0], phase = 0 }) => {
   const randomSeed = useMemo(() => Math.random() * Math.PI * 2, []);
   const seedRotation: [number, number, number] = [randomSeed * 0.2, randomSeed * 0.4, randomSeed * 0.1];
   const spinRef = useRef<THREE.Group>(null);
@@ -90,7 +90,7 @@ const DiceMesh: React.FC<DiceProps> = ({ value, color = "#e2e8f0", rolling, offs
   });
 
   return (
-    <group ref={spinRef} position={offset} rotation={seedRotation}>
+    <group ref={spinRef} position={offset as [number, number, number]} rotation={seedRotation}>
       <mesh castShadow receiveShadow>
         <boxGeometry args={[1, 1, 1]} />
         <meshPhysicalMaterial color={color} metalness={0.1} roughness={0.45} clearcoat={0.6} clearcoatRoughness={0.25} />
@@ -101,16 +101,9 @@ const DiceMesh: React.FC<DiceProps> = ({ value, color = "#e2e8f0", rolling, offs
       <Face value={value === 0 ? 4 : value} axis="x" sign={-1} />
       <Face value={value === 0 ? 5 : value} axis="y" sign={1} />
       <Face value={value === 0 ? 6 : value} axis="y" sign={-1} />
-      {rolling && (
-        <primitive
-          object={new THREE.AxesHelper(0.01)}
-          position={[0, 0, 0]}
-          rotation={[0, 0, 0] as [number, number, number]}
-        />
-      )}
     </group>
   );
-};
+});
 
 interface Dice3DProps {
   readonly userDice: number[];
@@ -118,20 +111,36 @@ interface Dice3DProps {
   readonly isRolling?: boolean;
 }
 
-export const Dice3D: React.FC<Dice3DProps> = ({ userDice, dealerDice, isRolling }) => {
+export const Dice3D: React.FC<Dice3DProps> = memo(({ userDice, dealerDice, isRolling }) => {
   const safeUser = userDice.length ? userDice : [1, 2];
   const safeDealer = dealerDice.length ? dealerDice : [3, 4];
 
   return (
     <div className="relative mx-auto w-full max-w-4xl overflow-hidden rounded-3xl border border-emerald-700/40 bg-slate-950/70 p-3 shadow-2xl">
-      <Canvas shadows style={{ height: "360px" }}>
+      <Canvas shadows dpr={[1, 1.5]} style={{ height: "360px" }}>
         <color attach="background" args={["#020617"]} />
         <ambientLight intensity={0.85} />
         <hemisphereLight args={["#e0f2fe", "#0b1220", 0.6]} />
-        <directionalLight position={[4, 6, 5]} intensity={1.2} castShadow shadow-mapSize-width={1024} shadow-mapSize-height={1024} />
-        <spotLight position={[0, 1.8, 7]} angle={0.65} penumbra={0.4} intensity={1.1} distance={18} castShadow color="#facc15" />
+        <directionalLight
+          position={[4, 6, 5]}
+          intensity={1.2}
+          castShadow
+          shadow-mapSize-width={512}
+          shadow-mapSize-height={512}
+        />
+        <spotLight
+          position={[0, 1.8, 7]}
+          angle={0.65}
+          penumbra={0.4}
+          intensity={1.1}
+          distance={18}
+          castShadow
+          color="#facc15"
+          shadow-mapSize-width={512}
+          shadow-mapSize-height={512}
+        />
         <pointLight position={[-3.5, -3.5, 3.5]} intensity={1.2} distance={16} decay={1.3} color="#7dd3fc" />
-        <Stars radius={20} depth={12} count={300} factor={1.5} saturation={0} fade speed={2} />
+        <Stars radius={20} depth={12} count={200} factor={1.5} saturation={0} fade speed={2} />
         <PerspectiveCamera makeDefault position={[0, -6, 4.2]} fov={52} />
         <OrbitControls enablePan={false} enableZoom={false} minPolarAngle={Math.PI / 3} maxPolarAngle={(2 * Math.PI) / 3} />
 
@@ -149,6 +158,6 @@ export const Dice3D: React.FC<Dice3DProps> = ({ userDice, dealerDice, isRolling 
       </Canvas>
     </div>
   );
-};
+});
 
 export default Dice3D;

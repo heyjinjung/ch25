@@ -12,9 +12,12 @@ const Modal: React.FC<ModalProps> = ({ title, open, onClose, children }) => {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-2 sm:p-4" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/60 p-2 pt-[calc(env(safe-area-inset-top)+0.5rem)] pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pl-[calc(env(safe-area-inset-left)+0.5rem)] pr-[calc(env(safe-area-inset-right)+0.5rem)] sm:items-center sm:p-4 sm:pt-4 sm:pb-4"
+      onClick={onClose}
+    >
       <div
-        className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl border border-emerald-800/50 bg-slate-900 p-4 sm:p-6 text-slate-100 shadow-xl shadow-emerald-900/40"
+        className="w-full max-w-lg max-h-[calc(100dvh-1rem)] overflow-y-auto rounded-2xl border border-emerald-800/50 bg-slate-900 p-4 text-slate-100 shadow-xl shadow-emerald-900/40 sm:max-h-[90vh] sm:p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-2">
