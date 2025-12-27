@@ -12,11 +12,14 @@ export interface CrmStats {
 
     // Advanced
     churn_rate: number;
-    ltv: number;
-    arpu: number;
     new_user_growth: number;
     message_open_rate: number;
     segments: Record<string, number>;
+
+    // NEW: Imported Profile Data KPIs
+    avg_active_days: number;
+    charge_risk_segments: Record<string, number>;
+    tag_counts: Record<string, number>;
 }
 
 export async function fetchCrmStats() {
