@@ -14,7 +14,7 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     external_id = Column(String(100), nullable=False, unique=True)
-    nickname = Column(String(100), nullable=True)
+    nickname = Column(String(100), nullable=True, index=True)
     password_hash = Column(String(128), nullable=True)
     level = Column(Integer, nullable=False, server_default="1", default=1)
     xp = Column(Integer, nullable=False, server_default="0", default=0)
@@ -33,7 +33,7 @@ class User(Base):
     cash_balance = Column(Integer, nullable=False, server_default="0", default=0)
     vault_fill_used_at = Column(DateTime, nullable=True)
 
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow, index=True)
     updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     admin_profile = relationship("AdminUserProfile", back_populates="user", uselist=False, cascade="all, delete-orphan")

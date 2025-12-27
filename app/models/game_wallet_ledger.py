@@ -19,6 +19,6 @@ class UserGameWalletLedger(Base):
     reason = Column(String(100), nullable=True)
     label = Column(String(255), nullable=True)
     meta_json = Column(JSON, nullable=True)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow, index=True)
 
     user = relationship("User")
