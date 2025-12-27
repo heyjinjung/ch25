@@ -183,7 +183,7 @@ const SeasonPassPage: React.FC = () => {
                 </span>
                 <p className="text-sm font-bold uppercase tracking-[0.3em] text-amber-500">시즌 패스</p>
               </div>
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white italic tracking-tight sm:tracking-tighter leading-tight break-words">
+              <h1 className="text-[1.75rem] sm:text-[2.125rem] lg:text-[2.875rem] font-black text-white italic tracking-tight sm:tracking-tighter leading-tight break-words">
                 VIP 등급 혜택{" "}
                 <span className="block sm:inline text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-amber-600">
                   레벨 {season.data?.current_level ?? 1}
