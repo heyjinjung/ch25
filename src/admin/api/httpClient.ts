@@ -55,11 +55,24 @@ const resolvedBaseURL = (() => {
   return "";
 })();
 
+const DEFAULT_TIMEOUT_MS = 15000;
+const resolvedTimeoutMs = (() => {
+  const raw = String(import.meta.env.VITE_ADMIN_API_TIMEOUT_MS ?? import.meta.env.VITE_API_TIMEOUT_MS ?? "").trim();
+  const parsed = Number.parseInt(raw, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_TIMEOUT_MS;
+})();
+
 export const adminApi = axios.create({
   baseURL: resolvedBaseURL,
+  timeout: resolvedTimeoutMs,
 });
 
 adminApi.interceptors.request.use((config) => {
+  const url = String(config.url ?? "");
+  // Do not attach Authorization to login endpoint.
+  if (url.endsWith("/api/auth/token")) {
+    return config;
+  }
   const token =
     getAdminToken() ||
     (typeof localStorage !== "undefined"
@@ -80,9 +93,22 @@ adminApi.interceptors.response.use(
 
     const status = error?.response?.status;
     if (status === 401 || status === 403) {
-      clearAdminToken();
-      if (typeof window !== "undefined" && window.location.pathname !== "/admin/login") {
-        window.location.href = "/admin/login";
+      const hadAuthHeader = Boolean(
+        error?.config?.headers?.Authorization ||
+          error?.config?.headers?.authorization ||
+          error?.config?.headers?.AUTHORIZATION
+      );
+      const currentToken =
+        getAdminToken() ||
+        (typeof localStorage !== "undefined"
+          ? localStorage.getItem("xmas_access_token") || localStorage.getItem("token")
+          : null);
+
+      if (hadAuthHeader || currentToken) {
+        clearAdminToken();
+        if (typeof window !== "undefined" && window.location.pathname !== "/admin/login") {
+          window.location.href = "/admin/login";
+        }
       }
     }
     return Promise.reject(error);

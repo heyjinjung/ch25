@@ -39,9 +39,16 @@ const derivedBase = (() => {
 
 const API_URL = normalizeHttps(envBase || derivedBase);
 
+const DEFAULT_TIMEOUT_MS = 15000;
+const resolvedTimeoutMs = (() => {
+  const raw = String(import.meta.env.VITE_API_TIMEOUT_MS ?? '').trim();
+  const parsed = Number.parseInt(raw, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_TIMEOUT_MS;
+})();
+
 const apiClient = axios.create({
   baseURL: API_URL,
-  timeout: 2500,
+  timeout: resolvedTimeoutMs,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -68,9 +75,22 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      clearAuth();
-      if (typeof window !== 'undefined') {
-        window.location.href = '/login';
+      const hadAuthHeader = Boolean(
+        error?.config?.headers?.Authorization ||
+          error?.config?.headers?.authorization ||
+          error?.config?.headers?.AUTHORIZATION
+      );
+      const currentToken =
+        getAuthToken() ||
+        (typeof localStorage !== 'undefined'
+          ? localStorage.getItem('xmas_access_token') || localStorage.getItem('token')
+          : null);
+
+      if (hadAuthHeader || currentToken) {
+        clearAuth();
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login';
+        }
       }
     }
     return Promise.reject(error);

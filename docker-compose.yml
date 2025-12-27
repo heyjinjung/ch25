@@ -82,6 +82,8 @@ services:
         # Prefer empty (so frontend derives same-origin) and rely on nginx proxy (/api, /admin/api).
         VITE_API_URL: ${VITE_API_URL:-}
         VITE_ADMIN_API_URL: ${VITE_ADMIN_API_URL:-}
+        VITE_API_TIMEOUT_MS: ${VITE_API_TIMEOUT_MS:-}
+        VITE_ADMIN_API_TIMEOUT_MS: ${VITE_ADMIN_API_TIMEOUT_MS:-}
         VITE_ENV: production
     container_name: xmas-frontend
     restart: unless-stopped
