@@ -120,26 +120,42 @@ class UserSegmentService:
 
         return segments
 
+        return {
+            "total_users": total_users,
+            "active_users": active_users,
+            "paying_users": paying_users,
+            "whale_count": whale_count,
+            "conversion_rate": conversion_rate,
+            "retention_rate": retention_rate, 
+            "empty_tank_count": empty_tank_count,
+            
+            # Advanced KPIs
+            "churn_rate": 0.0, # Placeholder, calculation below
+            "ltv": 0.0,
+            "arpu": 0.0,
+            "new_user_growth": 0.0,
+            "message_open_rate": 0.0,
+            "segments": {}
+        }
+
     @staticmethod
     def get_overall_stats(db: Session) -> Dict[str, Any]:
         """Get aggregated CRM stats for dashboard."""
         
         # 1. Total Users
         total_users = db.query(func.count(User.id)).scalar() or 0
+        now = datetime.utcnow()
         
         # 2. Active Users (Login < 7 days)
-        active_threshold = datetime.utcnow() - timedelta(days=7)
+        active_threshold = now - timedelta(days=7)
         active_users = db.query(func.count(User.id)).filter(User.last_login_at >= active_threshold).scalar() or 0
         
         # 3. Paying Users (At least one Vault Unlock)
-        # Efficient count distinct
         paying_users = db.query(func.count(func.distinct(UserCashLedger.user_id)))\
             .filter(UserCashLedger.reason == "VAULT_UNLOCK")\
             .scalar() or 0
             
         # 4. Whales (Total Earned >= Threshold)
-        # Group by user having sum(amount)
-        # This might be heavy if table is huge, but necessary for exact count.
         whale_count = db.query(VaultEarnEvent.user_id)\
             .group_by(VaultEarnEvent.user_id)\
             .having(func.sum(VaultEarnEvent.amount) >= WHALE_ACCRUAL_THRESHOLD)\
@@ -147,21 +163,71 @@ class UserSegmentService:
             
         # 5. Conversion Rate
         conversion_rate = 0.0
-        if active_users > 0:
-            conversion_rate = round((paying_users / total_users) * 100, 2) if total_users > 0 else 0
+        if total_users > 0:
+            conversion_rate = round((paying_users / total_users) * 100, 2)
             
         # 6. Retention (Simple Day 1 vs Day 7 proxy or just Active %)
-        # Let's just return Active Rate for now
         retention_rate = round((active_users / total_users) * 100, 2) if total_users > 0 else 0
         
         # 7. Empty Tank (Opportunity)
-        # Active in last 24h AND balance < 1000
-        active_24h = datetime.utcnow() - timedelta(hours=24)
+        active_24h = now - timedelta(hours=24)
         empty_tank_count = db.query(func.count(User.id))\
             .filter(
                 User.last_login_at >= active_24h,
                 (func.coalesce(User.cash_balance, 0) + func.coalesce(User.vault_balance, 0)) < EMPTY_TANK_THRESHOLD
             ).scalar() or 0
+
+        # --- Advanced KPIs ---
+        
+        # 8. Churn Rate (Inactive > 30 days)
+        inactive_threshold = now - timedelta(days=30)
+        # Users who haven't logged in for 30 days (or never)
+        churned_users = db.query(func.count(User.id)).filter(
+            (User.last_login_at < inactive_threshold) | (User.last_login_at == None)
+        ).scalar() or 0
+        churn_rate = round((churned_users / total_users) * 100, 2) if total_users > 0 else 0
+
+        # 9. LTV (Lifetime Value) Proxy: Avg VaultEarnEvent amount per user
+        total_value = db.query(func.sum(VaultEarnEvent.amount)).scalar() or 0
+        ltv = round(total_value / total_users, 2) if total_users > 0 else 0
+
+        # 10. ARPU (Avg Revenue) Proxy: Avg Balance (Cash + Vault)
+        # Usually ARPU is per Month, but here we use Snapshot Average Balance as proxy for 'User Worth'
+        total_balance_sum = db.query(
+            func.sum(func.coalesce(User.cash_balance, 0) + func.coalesce(User.vault_balance, 0))
+        ).scalar() or 0
+        arpu = round(total_balance_sum / total_users, 2) if total_users > 0 else 0
+
+        # 11. New User Growth (7 days)
+        week_ago = now - timedelta(days=7)
+        new_users_7d = db.query(func.count(User.id)).filter(User.created_at >= week_ago).scalar() or 0
+        new_user_growth = round((new_users_7d / total_users) * 100, 2) if total_users > 0 else 0
+
+        # 12. Message Open Rate
+        # Lazy import to avoid circular dependency at module level if any
+        from app.models.admin_message import AdminMessage
+        msg_stats = db.query(
+            func.sum(AdminMessage.recipient_count), 
+            func.sum(AdminMessage.read_count)
+        ).first()
+        total_sent = msg_stats[0] or 0
+        total_reads = msg_stats[1] or 0
+        message_open_rate = round((total_reads / total_sent) * 100, 2) if total_sent > 0 else 0
+
+        # 13. Segmentation (Activity Frequency)
+        daily_count = db.query(func.count(User.id)).filter(User.last_login_at >= active_24h).scalar() or 0
+        weekly_count = db.query(func.count(User.id)).filter(User.last_login_at >= active_threshold, User.last_login_at < active_24h).scalar() or 0
+        monthly_count = db.query(func.count(User.id)).filter(User.last_login_at >= inactive_threshold, User.last_login_at < active_threshold).scalar() or 0
+        dormant_count = db.query(func.count(User.id)).filter(
+            (User.last_login_at < inactive_threshold) | (User.last_login_at == None)
+        ).scalar() or 0
+        
+        segments = {
+            "DAILY": daily_count,
+            "WEEKLY": weekly_count,
+            "MONTHLY": monthly_count,
+            "DORMANT": dormant_count
+        }
 
         return {
             "total_users": total_users,
@@ -170,5 +236,11 @@ class UserSegmentService:
             "whale_count": whale_count,
             "conversion_rate": conversion_rate,
             "retention_rate": retention_rate, 
-            "empty_tank_count": empty_tank_count
+            "empty_tank_count": empty_tank_count,
+            "churn_rate": churn_rate,
+            "ltv": ltv,
+            "arpu": arpu,
+            "new_user_growth": new_user_growth,
+            "message_open_rate": message_open_rate,
+            "segments": segments
         }

@@ -65,6 +65,16 @@ class CrmStatsResponse(BaseModel):
     conversion_rate: float
     retention_rate: float
     empty_tank_count: int
+    
+    # Advanced KPIs
+    churn_rate: float
+    ltv: float
+    arpu: float
+    new_user_growth: float
+    message_open_rate: float
+    
+    # Segmentation Distribution
+    segments: dict = {} # e.g. {"DAILY": 10, "WEEKLY": 5}
 
 
 router = APIRouter(prefix="/admin/api/crm", tags=["admin-crm"])
