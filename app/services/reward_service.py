@@ -127,12 +127,12 @@ class RewardService:
                     (GameTokenType.DICE_TOKEN, 1),
                     (GameTokenType.LOTTERY_TICKET, 1),
                 ]
-            elif reward_amount == 6:  # Level 6 Bundle (Legacy support)
+            elif reward_amount == 6:  # Level 5: Mini Ticket bomb (Roulette 3 + Dice 3)
                 bundle_items = [
-                    (GameTokenType.DICE_TOKEN, 2),
-                    (GameTokenType.LOTTERY_TICKET, 1)
+                    (GameTokenType.ROULETTE_COIN, 3),
+                    (GameTokenType.DICE_TOKEN, 3),
                 ]
-            elif reward_amount == 4:  # Level 5: Mini Ticket bomb (Roulette 2 + Dice 2)
+            elif reward_amount == 4:  # Legacy/Small: Mini Ticket bomb (Roulette 2 + Dice 2)
                 bundle_items = [
                     (GameTokenType.ROULETTE_COIN, 2),
                     (GameTokenType.DICE_TOKEN, 2),

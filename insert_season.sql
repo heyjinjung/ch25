@@ -18,13 +18,13 @@ INSERT INTO season_pass_level (season_id, level, required_xp, reward_type, rewar
 SELECT id, 3, 100, 'TICKET_BUNDLE', 3, 1 FROM season_pass_config WHERE is_active = 1 AND season_name = '연말 브릿지 시즌 (12/25-1/1)' ORDER BY id DESC LIMIT 1;
 
 INSERT INTO season_pass_level (season_id, level, required_xp, reward_type, reward_amount, auto_claim) 
-SELECT id, 4, 200, 'TICKET_LOTTERY', 2, 1 FROM season_pass_config WHERE is_active = 1 AND season_name = '연말 브릿지 시즌 (12/25-1/1)' ORDER BY id DESC LIMIT 1;
+SELECT id, 4, 200, 'TICKET_LOTTERY', 3, 1 FROM season_pass_config WHERE is_active = 1 AND season_name = '연말 브릿지 시즌 (12/25-1/1)' ORDER BY id DESC LIMIT 1;
 
 INSERT INTO season_pass_level (season_id, level, required_xp, reward_type, reward_amount, auto_claim) 
-SELECT id, 5, 300, 'TICKET_BUNDLE', 4, 1 FROM season_pass_config WHERE is_active = 1 AND season_name = '연말 브릿지 시즌 (12/25-1/1)' ORDER BY id DESC LIMIT 1;
+SELECT id, 5, 300, 'TICKET_BUNDLE', 6, 1 FROM season_pass_config WHERE is_active = 1 AND season_name = '연말 브릿지 시즌 (12/25-1/1)' ORDER BY id DESC LIMIT 1;
 
 INSERT INTO season_pass_level (season_id, level, required_xp, reward_type, reward_amount, auto_claim) 
-SELECT id, 6, 450, 'TICKET_LOTTERY', 3, 1 FROM season_pass_config WHERE is_active = 1 AND season_name = '연말 브릿지 시즌 (12/25-1/1)' ORDER BY id DESC LIMIT 1;
+SELECT id, 6, 450, 'TICKET_LOTTERY', 7, 1 FROM season_pass_config WHERE is_active = 1 AND season_name = '연말 브릿지 시즌 (12/25-1/1)' ORDER BY id DESC LIMIT 1;
 
 INSERT INTO season_pass_level (season_id, level, required_xp, reward_type, reward_amount, auto_claim) 
 SELECT id, 7, 600, 'CC_POINT', 10000, 0 FROM season_pass_config WHERE is_active = 1 AND season_name = '연말 브릿지 시즌 (12/25-1/1)' ORDER BY id DESC LIMIT 1;
