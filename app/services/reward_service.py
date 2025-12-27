@@ -121,17 +121,23 @@ class RewardService:
         if reward_type == "BUNDLE":
             # BUNDLE은 여러 티켓을 한 번에 지급하는 미끼 보상입니다.
             bundle_items = []
-            if reward_amount == 3: # Level 3 Bundle
+            if reward_amount == 3:  # Level 3: All-in-one Bundle (Roulette 1 + Dice 1 + Lottery 1)
                 bundle_items = [
                     (GameTokenType.ROULETTE_COIN, 1),
-                    (GameTokenType.DICE_TOKEN, 1)
+                    (GameTokenType.DICE_TOKEN, 1),
+                    (GameTokenType.LOTTERY_TICKET, 1),
                 ]
-            elif reward_amount == 6: # Level 6 Bundle
+            elif reward_amount == 6:  # Level 6 Bundle (Legacy support)
                 bundle_items = [
                     (GameTokenType.DICE_TOKEN, 2),
                     (GameTokenType.LOTTERY_TICKET, 1)
                 ]
-            elif reward_amount == 20:  # Ticket bomb: roulette 10 + dice 10
+            elif reward_amount == 4:  # Level 5: Mini Ticket bomb (Roulette 2 + Dice 2)
+                bundle_items = [
+                    (GameTokenType.ROULETTE_COIN, 2),
+                    (GameTokenType.DICE_TOKEN, 2),
+                ]
+            elif reward_amount == 20:  # Legacy/Special: Large Ticket bomb (Roulette 10 + Dice 10)
                 bundle_items = [
                     (GameTokenType.ROULETTE_COIN, 10),
                     (GameTokenType.DICE_TOKEN, 10),
@@ -139,6 +145,11 @@ class RewardService:
             
             for token_type, amount in bundle_items:
                 self.grant_ticket(db, user_id=user_id, token_type=token_type, amount=amount, meta=meta)
+            return
+
+        if reward_type == "CC_POINT":
+            # CC 포인트는 외부 플랫폼에서 관리자가 수동으로 지급하므로 시스템 자동 지급은 건너뜁니다.
+            # 로그만 남기고 실제 포인트 지급 로직(grant_point)은 태우지 않습니다.
             return
 
         if reward_type == "COUPON":

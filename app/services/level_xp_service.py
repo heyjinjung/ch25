@@ -17,28 +17,27 @@ class LevelXPService:
 
     # Baseline core level table (sorted ascending)
     LEVELS: List[Dict[str, Any]] = [
-        {"level": 1, "required_xp": 0, "reward_type": "TICKET_ROULETTE", "reward_payload": {"tickets": 1}, "auto_grant": True},
-        {"level": 2, "required_xp": 50, "reward_type": "TICKET_DICE", "reward_payload": {"tickets": 1}, "auto_grant": True},
+        {"level": 1, "required_xp": 0, "reward_type": "TICKET_ROULETTE", "reward_payload": {"tickets": 3}, "auto_grant": True},
+        {"level": 2, "required_xp": 50, "reward_type": "TICKET_DICE", "reward_payload": {"tickets": 3}, "auto_grant": True},
         {
             "level": 3,
             "required_xp": 100,
             "reward_type": "BUNDLE",
-            "reward_payload": {"items": [{"type": "TICKET_ROULETTE", "amount": 1}, {"type": "TICKET_DICE", "amount": 1}]},
+            "reward_payload": {"items": [{"type": "TICKET_ROULETTE", "amount": 1}, {"type": "TICKET_DICE", "amount": 1}, {"type": "TICKET_LOTTERY", "amount": 1}]},
             "auto_grant": True,
         },
-        {"level": 4, "required_xp": 200, "reward_type": "TICKET_LOTTERY", "reward_payload": {"tickets": 1}, "auto_grant": True},
-        {"level": 5, "required_xp": 300, "reward_type": "CC_COIN", "reward_payload": {"amount": 1}, "auto_grant": False},
+        {"level": 4, "required_xp": 200, "reward_type": "TICKET_LOTTERY", "reward_payload": {"tickets": 2}, "auto_grant": True},
         {
-            "level": 6,
-            "required_xp": 450,
+            "level": 5,
+            "required_xp": 300,
             "reward_type": "BUNDLE",
-            "reward_payload": {"items": [{"type": "TICKET_DICE", "amount": 2}, {"type": "TICKET_LOTTERY", "amount": 1}]},
+            "reward_payload": {"items": [{"type": "TICKET_ROULETTE", "amount": 2}, {"type": "TICKET_DICE", "amount": 2}]},
             "auto_grant": True,
         },
-        {"level": 7, "required_xp": 600, "reward_type": "CC_COIN", "reward_payload": {"amount": 2}, "auto_grant": False},
-        {"level": 8, "required_xp": 800, "reward_type": "COUPON_BAEMIN", "reward_payload": {"amount": 10000, "currency": "KRW"}, "auto_grant": False},
-        {"level": 9, "required_xp": 1000, "reward_type": "POINT", "reward_payload": {"amount": 20000, "currency": "KRW"}, "auto_grant": False},
-        {"level": 10, "required_xp": 1300, "reward_type": "POINT", "reward_payload": {"amount": 50000, "currency": "KRW"}, "auto_grant": False},
+        {"level": 6, "required_xp": 450, "reward_type": "TICKET_LOTTERY", "reward_payload": {"tickets": 3}, "auto_grant": True},
+        {"level": 7, "required_xp": 600, "reward_type": "CC_POINT", "reward_payload": {"amount": 10000}, "auto_grant": False},
+        {"level": 8, "required_xp": 800, "reward_type": "CC_POINT", "reward_payload": {"amount": 30000}, "auto_grant": False},
+        {"level": 9, "required_xp": 1000, "reward_type": "CC_POINT", "reward_payload": {"amount": 50000}, "auto_grant": False},
     ]
 
     def __init__(self) -> None:
