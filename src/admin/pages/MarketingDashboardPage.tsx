@@ -8,8 +8,22 @@ import {
     Activity,
     Target,
     Send,
-    Droplets
+    Droplets,
+    DollarSign,
+    UserMinus,
+    BarChart2,
+    PieChart as PieChartIcon
 } from "lucide-react";
+import {
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    ResponsiveContainer,
+    Cell
+} from "recharts";
 import { fetchCrmStats } from "../api/adminCrmApi";
 import { useToast } from "../../components/common/ToastProvider";
 import { useNavigate } from "react-router-dom";
@@ -21,226 +35,144 @@ const MarketingDashboardPage: React.FC = () => {
     const { data: stats, isLoading } = useQuery({
         queryKey: ["admin", "crm", "stats"],
         queryFn: fetchCrmStats,
-        refetchInterval: 30000, // Refresh every 30s
+        refetchInterval: 30000,
     });
 
-    // Navigation helper to pre-fill message
-    // In a real app, we'd pass state to the route or use a context.
-    // For now, we'll just navigate to Message Center.
     const goToMessage = (targetType: string, targetValue: string) => {
-        // In future: pass params to pre-fill form
         navigate("/admin/messages");
-        addToast(`Tip: Select Target '${targetType}' and Value '${targetValue}' to blast this segment.`, "info");
+        addToast(`팁: '${targetType}' 타겟, 값 '${targetValue}' 선택됨.`, "info");
     };
+
+    // Prepare Chart Data
+    const segmentData = stats?.segments ? [
+        { name: "매일 (Daily)", value: stats.segments["DAILY"] || 0, color: "#91F402" },
+        { name: "주간 (Weekly)", value: stats.segments["WEEKLY"] || 0, color: "#3B82F6" },
+        { name: "월간 (Monthly)", value: stats.segments["MONTHLY"] || 0, color: "#A855F7" },
+        { name: "휴면 (Dormant)", value: stats.segments["DORMANT"] || 0, color: "#EF4444" },
+    ] : [];
+
+    const kpiRows = [
+        // Row 1: Basic Audience
+        [
+            { title: "전체 잠재고객", value: stats?.total_users?.toLocaleString(), icon: <Users size={20} />, color: "blue", sub: `${stats?.active_users}명 활성` },
+            { title: "전환율 (결제)", value: `${stats?.conversion_rate}%`, icon: <TrendingUp size={20} />, color: "#91F402", sub: `${stats?.paying_users}명 결제` },
+            { title: "고액 사용자 (Whale)", value: stats?.whale_count, icon: <Crown size={20} />, color: "purple", sub: "VIP 타겟" },
+            { title: "빈 탱크 (기회)", value: stats?.empty_tank_count, icon: <Droplets size={20} />, color: "red", sub: "잔액 부족" },
+        ],
+        // Row 2: Advanced Metrics
+        [
+            { title: "LTV (평균가치)", value: `₩${stats?.ltv?.toLocaleString()}`, icon: <DollarSign size={20} />, color: "yellow", sub: "User당 평균 가치" },
+            { title: "ARPU (평균보유)", value: `₩${stats?.arpu?.toLocaleString()}`, icon: <BarChart2 size={20} />, color: "cyan", sub: "User당 평균 잔액" },
+            { title: "이탈률 (Churn)", value: `${stats?.churn_rate}%`, icon: <UserMinus size={20} />, color: "orange", sub: "30일 미접속" },
+            { title: "신규 성장률", value: `${stats?.new_user_growth}%`, icon: <Activity size={20} />, color: "green", sub: "최근 7일 가입" },
+        ]
+    ];
 
     return (
         <section className="space-y-8 max-w-7xl mx-auto pb-10">
             <header className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-3xl font-bold text-white tracking-tight">Marketing Center</h2>
-                    <p className="mt-1 text-gray-400">Real-time audience insights & campaign operations</p>
+                    <h2 className="text-3xl font-bold text-white tracking-tight">마케팅 센터 (Pro)</h2>
+                    <p className="mt-1 text-gray-400">고급 KPI 분석 및 세그먼트 타겟팅</p>
                 </div>
-                <button
-                    onClick={() => navigate("/admin/messages")}
-                    className="flex items-center gap-2 rounded-lg bg-[#91F402] px-5 py-2.5 text-sm font-bold text-black hover:bg-[#a3ff12] transition-colors shadow-[0_0_15px_rgba(145,244,2,0.3)]"
-                >
-                    <Send size={18} /> New Campaign
-                </button>
+                <div className="flex gap-2">
+                    <button className="px-4 py-2 rounded-lg bg-[#333] text-white text-sm hover:bg-[#444]">
+                        기간: 전체
+                    </button>
+                    <button
+                        onClick={() => navigate("/admin/messages")}
+                        className="flex items-center gap-2 rounded-lg bg-[#91F402] px-5 py-2.5 text-sm font-bold text-black hover:bg-[#a3ff12] transition-colors"
+                    >
+                        <Send size={18} /> 새 캠페인
+                    </button>
+                </div>
             </header>
 
-            {/* KPI Grid */}
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-                {/* Total Reach */}
-                <div className="rounded-xl border border-[#333333] bg-[#111111] p-6 shadow-lg relative overflow-hidden group">
-                    <div className="absolute right-0 top-0 h-32 w-32 bg-blue-500/10 blur-3xl transition-opacity group-hover:opacity-40" />
-                    <div className="flex justify-between items-start">
-                        <div>
-                            <p className="text-sm font-medium text-gray-400">Total Audience</p>
-                            <div className="mt-2 text-3xl font-bold text-white">{isLoading ? "-" : stats?.total_users?.toLocaleString()}</div>
-                        </div>
-                        <div className="p-3 bg-blue-500/20 text-blue-400 rounded-lg"><Users size={20} /></div>
+            {/* KPI Grids */}
+            <div className="space-y-6">
+                {kpiRows.map((row, rowIdx) => (
+                    <div key={rowIdx} className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+                        {row.map((kpi, idx) => (
+                            <div key={idx} className="rounded-xl border border-[#333333] bg-[#111111] p-6 shadow-lg relative overflow-hidden group hover:border-[#555] transition-colors">
+                                <div className={`absolute right-0 top-0 h-24 w-24 bg-${kpi.color}-500/10 blur-2xl opacity-50`} />
+                                <div className="flex justify-between items-start">
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-400">{kpi.title}</p>
+                                        <h3 className="mt-2 text-2xl font-bold text-white tracking-tight">{isLoading ? "-" : kpi.value}</h3>
+                                    </div>
+                                    <div className="p-2.5 bg-[#222] text-gray-300 rounded-lg">{kpi.icon}</div>
+                                </div>
+                                <div className="mt-3 text-xs text-gray-500 font-mono">
+                                    {kpi.sub}
+                                </div>
+                            </div>
+                        ))}
                     </div>
-                    <div className="mt-4 flex items-center text-sm text-green-400 gap-1">
-                        <Activity size={14} />
-                        <span>{stats?.active_users} Active Now</span>
-                    </div>
-                </div>
-
-                {/* Paying Users (Conversion) */}
-                <div className="rounded-xl border border-[#333333] bg-[#111111] p-6 shadow-lg relative overflow-hidden group">
-                    <div className="absolute right-0 top-0 h-32 w-32 bg-[#91F402]/10 blur-3xl transition-opacity group-hover:opacity-40" />
-                    <div className="flex justify-between items-start">
-                        <div>
-                            <p className="text-sm font-medium text-gray-400">Conversion Rate</p>
-                            <div className="mt-2 text-3xl font-bold text-[#91F402]">{isLoading ? "-" : `${stats?.conversion_rate}% `}</div>
-                        </div>
-                        <div className="p-3 bg-[#91F402]/20 text-[#91F402] rounded-lg"><TrendingUp size={20} /></div>
-                    </div>
-                    <div className="mt-4 text-sm text-gray-400">
-                        {stats?.paying_users} Paying Users
-                    </div>
-                </div>
-
-                {/* Whales */}
-                <div className="rounded-xl border border-[#333333] bg-[#111111] p-6 shadow-lg relative overflow-hidden group">
-                    <div className="absolute right-0 top-0 h-32 w-32 bg-purple-500/10 blur-3xl transition-opacity group-hover:opacity-40" />
-                    <div className="flex justify-between items-start">
-                        <div>
-                            <p className="text-sm font-medium text-gray-400">Whale Count</p>
-                            <div className="mt-2 text-3xl font-bold text-purple-400">{isLoading ? "-" : stats?.whale_count}</div>
-                        </div>
-                        <div className="p-3 bg-purple-500/20 text-purple-400 rounded-lg"><Crown size={20} /></div>
-                    </div>
-                    <div className="mt-4 text-sm text-gray-400">
-                        High Value Segment
-                    </div>
-                </div>
-
-                {/* Empty Tank (Opportunity) */}
-                <div className="rounded-xl border border-[#333333] bg-[#111111] p-6 shadow-lg relative overflow-hidden group">
-                    <div className="absolute right-0 top-0 h-32 w-32 bg-red-500/10 blur-3xl transition-opacity group-hover:opacity-40" />
-                    <div className="flex justify-between items-start">
-                        <div>
-                            <p className="text-sm font-medium text-gray-400">Empty Tanks</p>
-                            <div className="mt-2 text-3xl font-bold text-red-400">{isLoading ? "-" : stats?.empty_tank_count}</div>
-                        </div>
-                        <div className="p-3 bg-red-500/20 text-red-400 rounded-lg"><Droplets size={20} /></div>
-                    </div>
-                    <div className="mt-4 text-sm text-gray-400">
-                        Needs Refill (Opportunity)
-                    </div>
-                </div>
+                ))}
             </div>
 
-            {/* Actionable Segments */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-
-                {/* Retention / Activity Panel */}
-                <div className="rounded-xl border border-[#333333] bg-[#111111] p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Chart Section */}
+                <div className="lg:col-span-2 rounded-xl border border-[#333333] bg-[#111111] p-6">
                     <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-                        <Target size={20} className="text-[#91F402]" /> Suggested Campaigns
+                        <PieChartIcon size={20} className="text-[#91F402]" /> 활동 세그먼트 분석
+                    </h3>
+                    <div className="h-[300px] w-full flex items-center justify-center">
+                        {isLoading ? (
+                            <span className="text-gray-500">Loading Chart...</span>
+                        ) : (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={segmentData} layout="vertical" margin={{ top: 5, right: 30, left: 40, bottom: 5 }}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#333" horizontal={false} />
+                                    <XAxis type="number" stroke="#666" />
+                                    <YAxis dataKey="name" type="category" stroke="#999" width={100} />
+                                    <Tooltip
+                                        contentStyle={{ backgroundColor: "#222", borderColor: "#444", color: "#fff" }}
+                                        cursor={{ fill: 'transparent' }}
+                                    />
+                                    <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+                                        {segmentData.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={entry.color} />
+                                        ))}
+                                    </Bar>
+                                </BarChart>
+                            </ResponsiveContainer>
+                        )}
+                    </div>
+                </div>
+
+                {/* Actions Panel */}
+                <div className="rounded-xl border border-[#333333] bg-[#111111] p-6 flex flex-col">
+                    <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
+                        <Target size={20} className="text-[#91F402]" /> 추천 액션
                     </h3>
 
-                    <div className="space-y-4">
-                        {/* VIP Care */}
-                        <div className="flex items-center justify-between p-4 rounded-lg bg-[#1A1A1A] border border-[#333333] hover:border-purple-500/50 transition-colors">
-                            <div className="flex items-center gap-4">
-                                <div className="h-10 w-10 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400">
-                                    <Crown size={20} />
-                                </div>
-                                <div>
-                                    <h4 className="font-bold text-white">VIP Care Package</h4>
-                                    <p className="text-sm text-gray-400">Target {stats?.whale_count || 0} Whales with a specialized bonus.</p>
-                                </div>
+                    <div className="flex-1 space-y-4">
+                        <div className="p-4 rounded-lg bg-[#1A1A1A] border border-[#333333] hover:border-purple-500/50 transition-colors cursor-pointer" onClick={() => goToMessage("SEGMENT", "WHALE")}>
+                            <div className="flex items-center gap-3 mb-2">
+                                <Crown size={18} className="text-purple-400" />
+                                <span className="font-bold text-white">VIP 감사 선물</span>
                             </div>
-                            <button
-                                onClick={() => goToMessage("SEGMENT", "WHALE")}
-                                className="px-4 py-2 rounded-md bg-purple-600/20 text-purple-400 text-sm font-bold hover:bg-purple-600 hover:text-white transition-colors"
-                            >
-                                Draft Blast
-                            </button>
+                            <p className="text-xs text-gray-400">LTV 상위 유저 {stats?.whale_count || 0}명에게 보너스 지급</p>
                         </div>
 
-                        {/* Refill */}
-                        <div className="flex items-center justify-between p-4 rounded-lg bg-[#1A1A1A] border border-[#333333] hover:border-red-500/50 transition-colors">
-                            <div className="flex items-center gap-4">
-                                <div className="h-10 w-10 rounded-full bg-red-500/20 flex items-center justify-center text-red-400">
-                                    <Zap size={20} />
-                                </div>
-                                <div>
-                                    <h4 className="font-bold text-white">Empty Tank Refill</h4>
-                                    <p className="text-sm text-gray-400">Target {stats?.empty_tank_count || 0} users with 0 balance.</p>
-                                </div>
+                        <div className="p-4 rounded-lg bg-[#1A1A1A] border border-[#333333] hover:border-red-500/50 transition-colors cursor-pointer" onClick={() => goToMessage("SEGMENT", "EMPTY_TANK")}>
+                            <div className="flex items-center gap-3 mb-2">
+                                <Zap size={18} className="text-red-400" />
+                                <span className="font-bold text-white">충전 유도 (긴급)</span>
                             </div>
-                            <button
-                                onClick={() => goToMessage("SEGMENT", "EMPTY_TANK")}
-                                className="px-4 py-2 rounded-md bg-red-600/20 text-red-400 text-sm font-bold hover:bg-red-600 hover:text-white transition-colors"
-                            >
-                                Send Offer
-                            </button>
+                            <p className="text-xs text-gray-400">잔액 부족 {stats?.empty_tank_count || 0}명에게 할인 제안</p>
                         </div>
 
-                        {/* General Newsletter */}
-                        <div className="flex items-center justify-between p-4 rounded-lg bg-[#1A1A1A] border border-[#333333] hover:border-blue-500/50 transition-colors">
-                            <div className="flex items-center gap-4">
-                                <div className="h-10 w-10 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400">
-                                    <Send size={20} />
-                                </div>
-                                <div>
-                                    <h4 className="font-bold text-white">Weekly Newsletter</h4>
-                                    <p className="text-sm text-gray-400">Broadcast updates to all {stats?.total_users || 0} users.</p>
-                                </div>
+                        <div className="p-4 rounded-lg bg-[#1A1A1A] border border-[#333333] hover:border-orange-500/50 transition-colors cursor-pointer" onClick={() => goToMessage("SEGMENT", "DORMANT")}>
+                            <div className="flex items-center gap-3 mb-2">
+                                <UserMinus size={18} className="text-orange-400" />
+                                <span className="font-bold text-white">휴면 복귀 캠페인</span>
                             </div>
-                            <button
-                                onClick={() => goToMessage("ALL", "")}
-                                className="px-4 py-2 rounded-md bg-blue-600/20 text-blue-400 text-sm font-bold hover:bg-blue-600 hover:text-white transition-colors"
-                            >
-                                Compose
-                            </button>
+                            <p className="text-xs text-gray-400">이탈 위험 {stats?.segments?.["DORMANT"] || 0}명에게 복귀 선물</p>
                         </div>
                     </div>
                 </div>
-
-                {/* Quick Insights / Visuals */}
-                <div className="rounded-xl border border-[#333333] bg-[#111111] p-6">
-                    <h3 className="text-lg font-bold text-white mb-6">Audience Health</h3>
-
-                    <div className="space-y-6">
-                        <div>
-                            <div className="flex justify-between text-sm mb-2">
-                                <span className="text-gray-400">Retention (Active / Total)</span>
-                                <span className="text-white font-bold">{stats?.retention_rate}%</span>
-                            </div>
-                            <div className="h-2 w-full bg-[#333333] rounded-full overflow-hidden">
-                                <div
-                                    className="h-full bg-gradient-to-r from-blue-500 to-cyan-400"
-                                    style={{ width: `${Math.min(stats?.retention_rate || 0, 100)}% ` }}
-                                />
-                            </div>
-                        </div>
-
-                        <div>
-                            <div className="flex justify-between text-sm mb-2">
-                                <span className="text-gray-400">Monetization (Paying / Total)</span>
-                                <span className="text-white font-bold">{stats?.conversion_rate}%</span>
-                            </div>
-                            <div className="h-2 w-full bg-[#333333] rounded-full overflow-hidden">
-                                <div
-                                    className="h-full bg-gradient-to-r from-[#91F402] to-green-600"
-                                    style={{ width: `${Math.min(stats?.conversion_rate || 0, 100)}% ` }}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="pt-4 border-t border-[#333333]">
-                            <h4 className="text-sm font-medium text-white mb-3">Segment Distribution</h4>
-                            <div className="flex gap-2">
-                                {/* Visual representation of Whale vs Others */}
-                                <div
-                                    className="h-20 rounded-lg bg-purple-500/20 border border-purple-500/50 flex flex-col items-center justify-center min-w-[80px]"
-                                    title="Whales"
-                                >
-                                    <span className="text-purple-400 font-bold">{stats?.whale_count}</span>
-                                    <span className="text-[10px] text-gray-400 uppercase">Whales</span>
-                                </div>
-                                <div
-                                    className="h-20 rounded-lg bg-red-500/20 border border-red-500/50 flex flex-col items-center justify-center min-w-[80px]"
-                                    title="Empty Tank"
-                                >
-                                    <span className="text-red-400 font-bold">{stats?.empty_tank_count}</span>
-                                    <span className="text-[10px] text-gray-400 uppercase">Empty</span>
-                                </div>
-                                <div
-                                    className="h-20 rounded-lg bg-[#333333] flex-1 flex flex-col items-center justify-center"
-                                >
-                                    <span className="text-gray-300 font-bold">{stats ? stats.total_users - stats.whale_count - stats.empty_tank_count : 0}</span>
-                                    <span className="text-[10px] text-gray-500 uppercase">Regular</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
             </div>
         </section>
     );
