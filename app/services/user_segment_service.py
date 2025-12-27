@@ -237,6 +237,49 @@ class UserSegmentService:
             "DORMANT": dormant_count
         }
 
+        # 14. NEW: Imported Profile Metrics (from AdminUserProfile)
+        # Average Active Days (from CSV imported data)
+        avg_active_days_result = db.query(func.avg(AdminUserProfile.total_active_days)).filter(
+            AdminUserProfile.total_active_days != None
+        ).scalar()
+        avg_active_days = round(float(avg_active_days_result), 1) if avg_active_days_result else 0
+
+        # 15. Charge Risk Segments (based on days_since_last_charge)
+        # Low Risk: < 7 days, Medium: 7-30 days, High: > 30 days
+        charge_low_risk = db.query(func.count(AdminUserProfile.user_id)).filter(
+            AdminUserProfile.days_since_last_charge != None,
+            AdminUserProfile.days_since_last_charge < 7
+        ).scalar() or 0
+        
+        charge_medium_risk = db.query(func.count(AdminUserProfile.user_id)).filter(
+            AdminUserProfile.days_since_last_charge != None,
+            AdminUserProfile.days_since_last_charge >= 7,
+            AdminUserProfile.days_since_last_charge < 30
+        ).scalar() or 0
+        
+        charge_high_risk = db.query(func.count(AdminUserProfile.user_id)).filter(
+            AdminUserProfile.days_since_last_charge != None,
+            AdminUserProfile.days_since_last_charge >= 30
+        ).scalar() or 0
+
+        charge_risk_segments = {
+            "LOW": charge_low_risk,      # < 7 days
+            "MEDIUM": charge_medium_risk, # 7-30 days
+            "HIGH": charge_high_risk      # > 30 days
+        }
+
+        # 16. Tag Distribution (count users per tag)
+        # Get all profiles with tags
+        profiles_with_tags = db.query(AdminUserProfile).filter(
+            AdminUserProfile.tags != None
+        ).all()
+        
+        tag_counts = {}
+        for profile in profiles_with_tags:
+            if profile.tags:
+                for tag in profile.tags:
+                    tag_counts[tag] = tag_counts.get(tag, 0) + 1
+
         return {
             "total_users": total_users,
             "active_users": active_users,
@@ -246,9 +289,12 @@ class UserSegmentService:
             "retention_rate": retention_rate, 
             "empty_tank_count": empty_tank_count,
             "churn_rate": churn_rate,
-            "ltv": ltv,
-            "arpu": arpu,
             "new_user_growth": new_user_growth,
             "message_open_rate": message_open_rate,
-            "segments": segments
+            "segments": segments,
+            # New Imported Data KPIs
+            "avg_active_days": avg_active_days,
+            "charge_risk_segments": charge_risk_segments,
+            "tag_counts": tag_counts
         }
+

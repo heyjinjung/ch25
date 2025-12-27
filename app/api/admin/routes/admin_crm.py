@@ -72,13 +72,16 @@ class CrmStatsResponse(BaseModel):
     
     # Advanced KPIs
     churn_rate: float
-    ltv: float
-    arpu: float
     new_user_growth: float
     message_open_rate: float
     
     # Segmentation Distribution
     segments: dict = {} # e.g. {"DAILY": 10, "WEEKLY": 5}
+    
+    # NEW: Imported Profile Data KPIs
+    avg_active_days: float = 0  # From CSV import
+    charge_risk_segments: dict = {}  # {"LOW": x, "MEDIUM": y, "HIGH": z}
+    tag_counts: dict = {}  # {"태그명": count}
 
 
 router = APIRouter(prefix="/admin/api/crm", tags=["admin-crm"])
