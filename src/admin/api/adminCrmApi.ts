@@ -20,6 +20,10 @@ export interface CrmStats {
     avg_active_days: number;
     charge_risk_segments: Record<string, number>;
     tag_counts: Record<string, number>;
+
+    // Financial Metrics
+    ltv?: number;  // Lifetime Value
+    arpu?: number; // Average Revenue Per User
 }
 
 export async function fetchCrmStats() {
