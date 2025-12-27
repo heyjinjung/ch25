@@ -133,3 +133,27 @@ export const tickVaultTransitions = async (): Promise<{ updated: number }> => {
     const { data } = await adminApi.post<{ updated: number }>("/admin/api/vault2/tick/");
     return data;
 };
+export const fetchVaultStatsDetails = async (type: string, limit: number = 100): Promise<{ items: any[] }> => {
+    const { data } = await adminApi.get<{ items: any[] }>("/admin/api/vault-programs/stats/details", { params: { type, limit } });
+    return data;
+};
+
+export const toggleVaultGlobalActive = async (programKey: string, isActive: boolean): Promise<VaultProgramResponse> => {
+    const { data } = await adminApi.post<VaultProgramResponse>(`/admin/api/vault-programs/${programKey}/active-toggle/`, {
+        is_active: isActive,
+    });
+    return data;
+};
+
+export const updateVaultUserBalance = async (
+    userId: number,
+    lockedDelta: number,
+    availableDelta: number,
+    reason?: string
+): Promise<void> => {
+    await adminApi.post(`/admin/api/vault-programs/balance/${userId}/`, {
+        locked_delta: lockedDelta,
+        available_delta: availableDelta,
+        reason,
+    });
+};

@@ -493,3 +493,142 @@ class Vault2Service:
             "timestamp": now_dt.isoformat()
         }
 
+
+    def get_vault_detail_stats(self, db: Session, *, type: str, limit: int = 100) -> list[dict[str, Any]]:
+        """Fetch detailed user lists for Vault Phase 1 stats."""
+        now_dt = datetime.utcnow()
+        today_start = now_dt.replace(hour=0, minute=0, second=0, microsecond=0)
+
+        results = []
+
+        if type == "expiring_soon_24h":
+            rows = (
+                db.query(User)
+                .filter(User.vault_locked_balance > 0, User.vault_locked_expires_at.between(now_dt, now_dt + timedelta(hours=24)))
+                .order_by(User.vault_locked_expires_at.asc())
+                .limit(limit)
+                .all()
+            )
+            for u in rows:
+                results.append({
+                    "user_id": u.id,
+                    "external_id": u.external_id,
+                    "nickname": u.nickname,
+                    "amount": u.vault_locked_balance,
+                    "timestamp": u.vault_locked_expires_at,
+                    "meta": {"type": "locked_balance"}
+                })
+
+        elif type == "today_unlock_cash":
+            rows = (
+                db.query(UserCashLedger, User)
+                .join(User, User.id == UserCashLedger.user_id)
+                .filter(UserCashLedger.reason == "VAULT_UNLOCK", UserCashLedger.created_at >= today_start)
+                .order_by(UserCashLedger.created_at.desc())
+                .limit(limit)
+                .all()
+            )
+            for ledger, u in rows:
+                results.append({
+                    "user_id": u.id,
+                    "external_id": u.external_id,
+                    "nickname": u.nickname,
+                    "amount": ledger.delta,
+                    "timestamp": ledger.created_at,
+                    "meta": {"reason": ledger.reason}
+                })
+
+        elif type == "today_accrual":
+            # Group by user to show top earners today
+            rows = (
+                db.query(
+                    VaultEarnEvent.user_id,
+                    func.sum(VaultEarnEvent.amount).label("total"),
+                    func.count(VaultEarnEvent.id).label("cnt"),
+                    func.max(VaultEarnEvent.created_at).label("last_at")
+                )
+                .filter(VaultEarnEvent.created_at >= today_start)
+                .group_by(VaultEarnEvent.user_id)
+                .order_by(func.sum(VaultEarnEvent.amount).desc())
+                .limit(limit)
+                .all()
+            )
+            # Need to fetch user details separately or join
+            user_ids = [r[0] for r in rows]
+            users = {u.id: u for u in db.query(User).filter(User.id.in_(user_ids)).all()} if user_ids else {}
+
+            for uid, total, cnt, last_at in rows:
+                u = users.get(uid)
+                results.append({
+                    "user_id": uid,
+                    "external_id": u.external_id if u else None,
+                    "nickname": u.nickname if u else None,
+                    "amount": int(total),
+                    "count": int(cnt),
+                    "timestamp": last_at,
+                    "meta": {"type": "accrual_sum"}
+                })
+        
+        return results
+
+    def update_balance(self, db: Session, *, user_id: int, locked_delta: int, available_delta: int, reason: str, admin_id: int = 0) -> VaultStatus:
+        """Manually adjust Vault2 balances."""
+        program = self._ensure_default_program(db)
+        status = self.get_or_create_status(db, user_id=user_id, program=program)
+        
+        new_locked = max(0, int(status.locked_amount or 0) + locked_delta)
+        new_avail = max(0, int(status.available_amount or 0) + available_delta)
+        
+        AuditService.record_admin_audit(
+            db,
+            admin_id=admin_id,
+            action="UPDATE_VAULT_BALANCE",
+            target_type="VaultStatus",
+            target_id=f"{program.key}:{user_id}",
+            before={"locked": status.locked_amount, "available": status.available_amount},
+            after={"locked": new_locked, "available": new_avail, "reason": reason},
+        )
+        
+        status.locked_amount = new_locked
+        status.available_amount = new_avail
+        
+        # Reset expires_at if locked becomes 0
+        if new_locked == 0:
+            status.expires_at = None
+        elif status.locked_amount == 0 and new_locked > 0:
+             # If going from 0 to positive, set default expiry? Or keep None?
+             # For manual adjustment, let's just keep current expires_at or set if missing.
+             if not status.expires_at:
+                  status.expires_at = self.compute_expires_at(datetime.utcnow(), int(program.duration_hours or 24))
+
+        db.add(status)
+        db.commit()
+        db.refresh(status)
+        return status
+
+    def update_program_active(self, db: Session, *, program_key: str, is_active: bool, admin_id: int = 0) -> VaultProgram:
+        program = self.get_program_by_key(db, program_key=program_key)
+        if program is None:
+            if program_key == self.DEFAULT_PROGRAM_KEY:
+                program = self._ensure_default_program(db)
+            else:
+                raise ValueError("PROGRAM_NOT_FOUND")
+        
+        before = {"is_active": program.is_active}
+        program.is_active = is_active
+        after = {"is_active": is_active}
+        
+        AuditService.record_admin_audit(
+            db,
+            admin_id=admin_id,
+            action="UPDATE_PROGRAM_ACTIVE",
+            target_type="VaultProgram",
+            target_id=program_key,
+            before=before,
+            after=after,
+        )
+        
+        db.add(program)
+        db.commit()
+        db.refresh(program)
+        return program

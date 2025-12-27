@@ -68,6 +68,7 @@ class VaultAdminStateResponse(BaseModel):
     program_key: str | None = None
 
 
+
 class VaultTopItem(BaseModel):
     user_id: int
     program_key: str
@@ -76,3 +77,27 @@ class VaultTopItem(BaseModel):
     available_amount: int = 0
     expires_at: datetime | None = None
     progress_json: dict | None = None
+
+
+class VaultBalanceUpdateRequest(BaseModel):
+    locked_delta: int = 0
+    available_delta: int = 0
+    reason: str | None = "ADMIN_MANUAL_ADJUST"
+
+
+class VaultGlobalActiveRequest(BaseModel):
+    is_active: bool
+
+
+class VaultDetailItem(BaseModel):
+    user_id: int
+    external_id: str | None = None
+    nickname: str | None = None
+    amount: int
+    count: int = 1
+    timestamp: datetime | None = None
+    meta: dict | None = None
+
+
+class VaultDetailStatsResponse(BaseModel):
+    items: list[VaultDetailItem]

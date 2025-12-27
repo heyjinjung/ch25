@@ -17,6 +17,10 @@ from app.schemas.vault2 import (
     VaultEligibilityRequest,
     VaultEligibilityResponse,
     VaultGameEarnToggleRequest,
+    VaultDetailStatsResponse,
+    VaultGlobalActiveRequest,
+    VaultBalanceUpdateRequest,
+    VaultAdminStateResponse,
 )
 from app.services.vault2_service import Vault2Service
 
@@ -35,6 +39,32 @@ service = Vault2Service()
 @_core.get("/stats/")
 def get_vault_stats(db: Session = Depends(get_db)) -> dict[str, Any]:
     return service.get_vault_stats(db)
+
+
+@_core.get("/stats/details", response_model=VaultDetailStatsResponse)
+@_core.get("/stats/details/", response_model=VaultDetailStatsResponse)
+def get_vault_stats_details(type: str, limit: int = 100, db: Session = Depends(get_db)):
+    items = service.get_vault_detail_stats(db, type=type, limit=limit)
+    return VaultDetailStatsResponse(items=items)
+
+
+@_core.post("/balance/{user_id}")
+@_core.post("/balance/{user_id}/")
+def update_user_balance(
+    user_id: int,
+    payload: VaultBalanceUpdateRequest,
+    db: Session = Depends(get_db),
+    admin_id: int = Depends(get_current_admin_id),
+):
+    service.update_balance(
+        db,
+        user_id=user_id,
+        locked_delta=payload.locked_delta,
+        available_delta=payload.available_delta,
+        reason=payload.reason or "ADMIN_MANUAL_ADJUST",
+        admin_id=admin_id,
+    )
+    return {"ok": True}
 
 
 def _to_response(p) -> VaultProgramResponse:
@@ -121,6 +151,21 @@ def toggle_game_earn(
 ) -> VaultProgramResponse:
     try:
         program = service.toggle_game_earn(db, program_key=program_key, enabled=payload.enabled, admin_id=admin_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    return _to_response(program)
+
+
+@_core.post("/{program_key}/active-toggle", response_model=VaultProgramResponse)
+@_core.post("/{program_key}/active-toggle/", response_model=VaultProgramResponse)
+def toggle_program_active(
+    program_key: str,
+    payload: VaultGlobalActiveRequest,
+    db: Session = Depends(get_db),
+    admin_id: int = Depends(get_current_admin_id),
+) -> VaultProgramResponse:
+    try:
+        program = service.update_program_active(db, program_key=program_key, is_active=payload.is_active, admin_id=admin_id)
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
     return _to_response(program)
