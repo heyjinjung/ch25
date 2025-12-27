@@ -135,8 +135,8 @@ const GameTokenLogsPage: React.FC = () => {
   // --- USER DASHBOARD RENDERER ---
   const renderUserDashboard = () => {
     const balances = walletsQuery.data || [];
-    const recentLogs = (playLogsQuery.data || []).slice(0, 10);
-    const recentLedger = (ledgerQuery.data || []).slice(0, 10);
+    const recentLogs = playLogsQuery.data || [];
+    const recentLedger = ledgerQuery.data || [];
 
     return (
       <div className="space-y-6 animate-in fade-in zoom-in-95 duration-200">
@@ -188,42 +188,76 @@ const GameTokenLogsPage: React.FC = () => {
 
         {/* Split View: Logs & Ledger */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Recent Play Logs */}
-          <div className="rounded-xl border border-[#333] bg-[#111] p-5">
-            <h4 className="flex items-center gap-2 text-lg font-bold text-white mb-4 border-b border-[#222] pb-2">
-              <History size={18} className="text-[#91F402]" /> 최근 플레이
-            </h4>
-            <div className="space-y-3">
-              {recentLogs.length === 0 && <p className="text-gray-500 text-sm text-center py-4">플레이 기록이 없습니다.</p>}
+          {/* Play Logs with Pagination */}
+          <div className="rounded-xl border border-[#333] bg-[#111] p-5 flex flex-col">
+            <div className="flex items-center justify-between mb-4 border-b border-[#222] pb-2">
+              <h4 className="flex items-center gap-2 text-lg font-bold text-white">
+                <History size={18} className="text-[#91F402]" /> 플레이 로그
+              </h4>
+              <span className="text-xs text-gray-500">페이지 {playLogPage + 1}</span>
+            </div>
+            <div className="flex-1 space-y-2 max-h-[400px] overflow-y-auto">
+              {playLogsQuery.isLoading && <div className="text-center py-4"><Loader2 className="animate-spin mx-auto text-gray-500" /></div>}
+              {recentLogs.length === 0 && !playLogsQuery.isLoading && <p className="text-gray-500 text-sm text-center py-4">플레이 기록이 없습니다.</p>}
               {recentLogs.map(log => (
-                <div key={log.id} className="flex items-center justify-between text-sm py-2 border-b border-[#222] last:border-0 hover:bg-[#1A1A1A] px-2 rounded">
-                  <div>
-                    <div className="font-semibold text-gray-200">{gameLabel(log.game)}</div>
-                    <div className="text-xs text-gray-500">{dayjs(log.created_at).format("MM-DD HH:mm:ss")}</div>
+                <div key={log.id} className="flex items-start justify-between text-sm py-2 border-b border-[#222] last:border-0 hover:bg-[#1A1A1A] px-2 rounded">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-gray-200">{gameLabel(log.game)}</span>
+                      {log.reward_label && (
+                        <span className="px-1.5 py-0.5 text-xs rounded bg-[#2D6B3B]/30 text-[#91F402] font-medium">
+                          {log.reward_label}
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-0.5">{dayjs(log.created_at).format("YYYY-MM-DD HH:mm:ss")}</div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-[#91F402] font-mono">+{log.reward_amount}</div>
+                  <div className="text-right ml-2">
+                    <div className="text-[#91F402] font-mono font-bold">+{log.reward_amount}</div>
                     <div className="text-xs text-gray-500">{log.reward_type}</div>
                   </div>
                 </div>
               ))}
             </div>
+            {/* Play Logs Pagination */}
+            <div className="flex items-center justify-between mt-4 pt-3 border-t border-[#222]">
+              <button
+                onClick={() => setPlayLogPage(p => Math.max(0, p - 1))}
+                disabled={playLogPage === 0}
+                className="px-3 py-1.5 text-xs rounded bg-[#1A1A1A] text-gray-300 hover:bg-[#333] disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                ← 이전
+              </button>
+              <span className="text-xs text-gray-500">{recentLogs.length}건 조회됨</span>
+              <button
+                onClick={() => setPlayLogPage(p => p + 1)}
+                disabled={recentLogs.length < 50}
+                className="px-3 py-1.5 text-xs rounded bg-[#1A1A1A] text-gray-300 hover:bg-[#333] disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                다음 →
+              </button>
+            </div>
           </div>
 
-          {/* Recent Ledger */}
-          <div className="rounded-xl border border-[#333] bg-[#111] p-5">
-            <h4 className="flex items-center gap-2 text-lg font-bold text-white mb-4 border-b border-[#222] pb-2">
-              <Coins size={18} className="text-[#91F402]" /> 최근 자금 흐름 (Ledger)
-            </h4>
-            <div className="space-y-3">
-              {recentLedger.length === 0 && <p className="text-gray-500 text-sm text-center py-4">기록이 없습니다.</p>}
+          {/* Ledger with Pagination */}
+          <div className="rounded-xl border border-[#333] bg-[#111] p-5 flex flex-col">
+            <div className="flex items-center justify-between mb-4 border-b border-[#222] pb-2">
+              <h4 className="flex items-center gap-2 text-lg font-bold text-white">
+                <Coins size={18} className="text-[#91F402]" /> 자금 흐름 (Ledger)
+              </h4>
+              <span className="text-xs text-gray-500">페이지 {ledgerPage + 1}</span>
+            </div>
+            <div className="flex-1 space-y-2 max-h-[400px] overflow-y-auto">
+              {ledgerQuery.isLoading && <div className="text-center py-4"><Loader2 className="animate-spin mx-auto text-gray-500" /></div>}
+              {recentLedger.length === 0 && !ledgerQuery.isLoading && <p className="text-gray-500 text-sm text-center py-4">기록이 없습니다.</p>}
               {recentLedger.map(l => (
-                <div key={l.id} className="flex items-center justify-between text-sm py-2 border-b border-[#222] last:border-0 hover:bg-[#1A1A1A] px-2 rounded">
-                  <div className="flex flex-col">
+                <div key={l.id} className="flex items-start justify-between text-sm py-2 border-b border-[#222] last:border-0 hover:bg-[#1A1A1A] px-2 rounded">
+                  <div className="flex flex-col flex-1">
                     <span className="text-gray-300 font-medium">{GAME_TOKEN_LABELS[l.token_type] || l.token_type}</span>
                     <span className="text-xs text-gray-500">{l.reason} {l.label ? `(${l.label})` : ""}</span>
+                    <span className="text-xs text-gray-600 mt-0.5">{dayjs(l.created_at).format("YYYY-MM-DD HH:mm:ss")}</span>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right ml-2">
                     <div className={`font-mono font-bold ${l.delta > 0 ? "text-[#91F402]" : "text-red-400"}`}>
                       {l.delta > 0 ? "+" : ""}{l.delta}
                     </div>
@@ -231,6 +265,24 @@ const GameTokenLogsPage: React.FC = () => {
                   </div>
                 </div>
               ))}
+            </div>
+            {/* Ledger Pagination */}
+            <div className="flex items-center justify-between mt-4 pt-3 border-t border-[#222]">
+              <button
+                onClick={() => setLedgerPage(p => Math.max(0, p - 1))}
+                disabled={ledgerPage === 0}
+                className="px-3 py-1.5 text-xs rounded bg-[#1A1A1A] text-gray-300 hover:bg-[#333] disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                ← 이전
+              </button>
+              <span className="text-xs text-gray-500">{recentLedger.length}건 조회됨</span>
+              <button
+                onClick={() => setLedgerPage(p => p + 1)}
+                disabled={recentLedger.length < 50}
+                className="px-3 py-1.5 text-xs rounded bg-[#1A1A1A] text-gray-300 hover:bg-[#333] disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                다음 →
+              </button>
             </div>
           </div>
         </div>
