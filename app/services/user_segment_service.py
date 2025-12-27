@@ -51,6 +51,14 @@ class UserSegmentService:
         if "tags" in profile_data:
             # Simple overwrite or merge logic could go here. For now, overwrite.
             profile.tags = profile_data["tags"]
+        
+        # New Metrics
+        if "total_active_days" in profile_data:
+            profile.total_active_days = profile_data["total_active_days"]
+        if "days_since_last_charge" in profile_data:
+            profile.days_since_last_charge = profile_data["days_since_last_charge"]
+        if "last_active_date_str" in profile_data:
+            profile.last_active_date_str = profile_data["last_active_date_str"]
             
         db.commit()
         db.refresh(profile)

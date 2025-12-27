@@ -31,6 +31,11 @@ class AdminUserProfile(Base):
     # Admin internal memo
     memo = Column(Text, nullable=True)
 
+    # Imported Metrics (External CSV)
+    total_active_days = Column(Integer, nullable=True)
+    days_since_last_charge = Column(Integer, nullable=True)
+    last_active_date_str = Column(String(50), nullable=True) # Keep as string to match CSV import easily
+
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 
