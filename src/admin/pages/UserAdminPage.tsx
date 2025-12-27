@@ -1,5 +1,5 @@
 // src/admin/pages/UserAdminPage.tsx
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Edit2, Plus, Save, Search, Trash2 } from "lucide-react";
 import { createUser, deleteUser, fetchUsers, updateUser, AdminUser, AdminUserPayload } from "../api/adminUserApi";
@@ -51,7 +51,8 @@ const UserAdminPage: React.FC = () => {
   const [members, setMembers] = useState<MemberRow[]>([]);
 
   const [searchInput, setSearchInput] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
+  const deferredSearchInput = useDeferredValue(searchInput);
+  const normalizedSearchTerm = useMemo(() => deferredSearchInput.trim().toLowerCase(), [deferredSearchInput]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -114,29 +115,26 @@ const UserAdminPage: React.FC = () => {
   });
 
   const handleSearch = () => {
-    setSearchTerm(searchInput.trim());
+    // Trim input once on explicit search action (Enter/click)
+    setSearchInput((prev) => prev.trim());
     setCurrentPage(1);
   };
 
   useEffect(() => {
-    const trimmed = searchInput.trim();
-    const handle = window.setTimeout(() => {
-      setSearchTerm(trimmed);
-      setCurrentPage(1);
-    }, 250);
-    return () => window.clearTimeout(handle);
-  }, [searchInput]);
+    // When the (deferred) term changes, reset to first page.
+    setCurrentPage(1);
+  }, [normalizedSearchTerm]);
 
   const filteredMembers = useMemo(() => {
-    if (!searchTerm) return members;
-    const term = searchTerm.toLowerCase();
+    if (!normalizedSearchTerm) return members;
+    const term = normalizedSearchTerm;
     return members.filter((m) => {
       const idMatch = String(m.id).includes(term);
       const nickname = (m.nickname ?? m.external_id ?? "").toLowerCase();
       const external = (m.external_id ?? "").toLowerCase();
       return idMatch || nickname.includes(term) || external.includes(term);
     });
-  }, [members, searchTerm]);
+  }, [members, normalizedSearchTerm]);
 
   const sortedMembers = useMemo(() => {
     const list = [...filteredMembers];
