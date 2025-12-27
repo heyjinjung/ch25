@@ -1,22 +1,17 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import dayjs from "dayjs";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   fetchRecentPlayLogs,
   fetchWallets,
   fetchLedger,
-  LedgerEntry,
-  PlayLogEntry,
   revokeGameTokens,
   grantGameTokens,
   RevokeGameTokensPayload,
   GrantGameTokensPayload,
-  GrantGameTokensResponse,
-  TokenBalance,
 } from "../api/adminGameTokenApi";
 import { GAME_TOKEN_LABELS, GameTokenType } from "../../types/gameTokens";
-import { REWARD_TYPES } from "../constants/rewardTypes";
-import { ArrowDown, ArrowUp, History, Coins, AlertCircle, Plus, Minus, Search, X, Loader2 } from "lucide-react";
+import { History, Coins, Plus, Minus, Search, X, Loader2 } from "lucide-react";
 import { useToast } from "../../components/common/ToastProvider";
 
 const tokenOptions: GameTokenType[] = ["ROULETTE_COIN", "DICE_TOKEN", "LOTTERY_TICKET", "CC_COIN"];
@@ -31,22 +26,8 @@ const gameLabel = (game?: string | null) => {
   return raw;
 };
 
-const rewardTypeLabel = (rewardType?: string | null) => {
-  const raw = String(rewardType ?? "").trim();
-  if (!raw) return "-";
-  const match = REWARD_TYPES.find((t) => t.value === raw);
-  return match?.label ?? raw;
-};
-
 type ActiveTab = "dashboard" | "wallets" | "playLogs" | "ledger" | "revoke";
-type SortDir = "asc" | "desc";
-type PlayLogGameFilterValue = "" | "roulette" | "dice" | "lottery" | string;
 
-const BASE_PLAY_LOG_GAME_FILTERS: Array<{ value: PlayLogGameFilterValue; label: string }> = [
-  { value: "roulette", label: "룰렛" },
-  { value: "dice", label: "주사위" },
-  { value: "lottery", label: "복권" },
-];
 
 const GameTokenLogsPage: React.FC = () => {
   const { addToast } = useToast();
@@ -59,32 +40,10 @@ const GameTokenLogsPage: React.FC = () => {
   const [externalIdFilter, setExternalIdFilter] = useState<string | undefined>();
 
   // Global Filter State (for non-dashboard tabs)
-  const [filterHasBalance, setFilterHasBalance] = useState<boolean | undefined>();
-  const [filterTokenType, setFilterTokenType] = useState<string | undefined>();
-  const [walletLimit, setWalletLimit] = useState<number>(20);
   const [walletPage, setWalletPage] = useState<number>(0);
-
-  const [walletSearch, setWalletSearch] = useState<string>("");
-  const [walletSortKey, setWalletSortKey] = useState<"external_id" | "token_type" | "balance">("balance");
-  const [walletSortDir, setWalletSortDir] = useState<SortDir>("desc");
-
-  const [playLogLimit, setPlayLogLimit] = useState<number>(50);
   const [playLogPage, setPlayLogPage] = useState<number>(0);
-  const [playLogSearch, setPlayLogSearch] = useState<string>("");
-  const [playLogGameFilter, setPlayLogGameFilter] = useState<PlayLogGameFilterValue>("");
-  const [playLogRewardTypeFilter, setPlayLogRewardTypeFilter] = useState<string>("");
-  const [playLogSortKey, setPlayLogSortKey] = useState<"created_at" | "reward_amount" | "game">("created_at");
-  const [playLogSortDir, setPlayLogSortDir] = useState<SortDir>("desc");
-
-  const [ledgerLimit, setLedgerLimit] = useState<number>(50);
   const [ledgerPage, setLedgerPage] = useState<number>(0);
-  const [ledgerSearch, setLedgerSearch] = useState<string>("");
-  const [ledgerTokenTypeFilter, setLedgerTokenTypeFilter] = useState<string>("");
-  const [ledgerDeltaFilter, setLedgerDeltaFilter] = useState<"" | "pos" | "neg">("");
-  const [ledgerSortKey, setLedgerSortKey] = useState<"created_at" | "delta" | "balance_after" | "id">("created_at");
-  const [ledgerSortDir, setLedgerSortDir] = useState<SortDir>("desc");
-  const [selectedLedgerIds, setSelectedLedgerIds] = useState<Record<number, boolean>>({});
-  const [expandedLedgerId, setExpandedLedgerId] = useState<number | null>(null);
+
 
   // Action State (Revoke/Grant)
   const [actionType, setActionType] = useState<"grant" | "revoke" | "none">("none");
@@ -96,22 +55,22 @@ const GameTokenLogsPage: React.FC = () => {
 
   // 1. Wallets
   const walletsQuery = useQuery({
-    queryKey: ["admin-wallets", externalIdFilter, walletLimit, walletPage, filterHasBalance, filterTokenType],
-    queryFn: () => fetchWallets(externalIdFilter, walletLimit, walletPage * walletLimit, filterHasBalance, filterTokenType),
+    queryKey: ["admin-wallets", externalIdFilter, walletPage],
+    queryFn: () => fetchWallets(externalIdFilter, 20, walletPage * 20),
     enabled: !!externalIdFilter || activeTab === "wallets" || activeTab === "dashboard",
   });
 
   // 2. Play Logs
   const playLogsQuery = useQuery({
-    queryKey: ["admin-play-logs", externalIdFilter, playLogLimit, playLogPage],
-    queryFn: () => fetchRecentPlayLogs(playLogLimit, externalIdFilter, playLogPage * playLogLimit),
+    queryKey: ["admin-play-logs", externalIdFilter, playLogPage],
+    queryFn: () => fetchRecentPlayLogs(50, externalIdFilter, playLogPage * 50),
     enabled: !!externalIdFilter || activeTab === "playLogs" || activeTab === "dashboard",
   });
 
   // 3. Ledger
   const ledgerQuery = useQuery({
-    queryKey: ["admin-ledger", externalIdFilter, ledgerLimit, ledgerPage],
-    queryFn: () => fetchLedger(ledgerLimit, externalIdFilter, ledgerPage * ledgerLimit),
+    queryKey: ["admin-ledger", externalIdFilter, ledgerPage],
+    queryFn: () => fetchLedger(50, externalIdFilter, ledgerPage * 50),
     enabled: !!externalIdFilter || activeTab === "ledger" || activeTab === "dashboard",
   });
 
@@ -169,25 +128,8 @@ const GameTokenLogsPage: React.FC = () => {
   };
 
   // --- HELPERS ---
-  const formatTime = (value?: string | null) => {
-    if (!value) return "-";
-    const d = dayjs(value);
-    return d.isValid() ? d.format("YYYY-MM-DD HH:mm:ss") : value;
-  };
 
-  const normalize = (value: unknown) => String(value ?? "").toLowerCase();
-  const includesAny = (hay: string, needle: string) => {
-    const n = needle.trim().toLowerCase();
-    if (!n) return true;
-    return hay.includes(n);
-  };
-  const compareStr = (a: string, b: string, dir: SortDir) => (dir === "asc" ? a.localeCompare(b) : b.localeCompare(a));
-  const compareNum = (a: number, b: number, dir: SortDir) => (dir === "asc" ? a - b : b - a);
-  const compareTime = (a: string | null | undefined, b: string | null | undefined, dir: SortDir) => {
-    const at = a ? dayjs(a).valueOf() : 0;
-    const bt = b ? dayjs(b).valueOf() : 0;
-    return compareNum(at, bt, dir);
-  };
+
 
 
   // --- USER DASHBOARD RENDERER ---
@@ -351,6 +293,9 @@ const GameTokenLogsPage: React.FC = () => {
 
   // --- FILTERED ROWS FOR LEGACY TABLES ---
   // (Keeping minimal logic to prevent errors if switching tabs manually, but could be cleaner)
+  // --- FILTERED ROWS FOR LEGACY TABLES ---
+  // (Keeping minimal logic to prevent errors if switching tabs manually, but could be cleaner)
+  /* unused
   const walletVisibleRows = useMemo(() => {
     const base = walletsQuery.data ?? [];
     const filtered = base.filter((r) => {
@@ -360,6 +305,7 @@ const GameTokenLogsPage: React.FC = () => {
     // sort ...
     return filtered; // simplified for brevity, assume backend sort is primary or client sort is fine
   }, [walletsQuery.data, walletSearch]);
+  */
 
   return (
     <section className="space-y-5">

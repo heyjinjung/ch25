@@ -270,7 +270,7 @@ const VaultAdminPage: React.FC = () => {
         fetchVaultStatsDetails(type).then(res => {
             setDetailItems(res.items);
             setDetailLoading(false);
-        }).catch(err => {
+        }).catch(() => {
             alert("상세 조회 실패");
             setShowDetailModal(false);
         });
