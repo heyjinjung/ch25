@@ -63,12 +63,6 @@ const RoulettePage: React.FC = () => {
     return data.token_balance;
   }, [data?.token_balance]);
 
-  const remainingSpins = useMemo(() => {
-    if (!data) return null;
-    if (typeof data.remaining_spins !== "number") return null;
-    return data.remaining_spins;
-  }, [data]);
-
   const tokenLabel = useMemo(() => {
     if (!data) return "-";
     const typeLabel = data.token_type ? (GAME_TOKEN_LABELS[data.token_type] ?? data.token_type) : "-";
@@ -304,16 +298,6 @@ const RoulettePage: React.FC = () => {
 
               {/* Status Badges */}
               <div className="mb-8 flex flex-wrap gap-3">
-                <div className="flex items-center gap-2 rounded-full border border-white/10 bg-black/40 px-4 py-2 pr-5 backdrop-blur-md">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-sm">🏁</div>
-                  <div className="flex flex-col leading-none">
-                    <span className="text-sm text-white/40">남은 기회</span>
-                    <span className="font-mono text-sm font-bold text-white">
-                      {remainingSpins === null ? "-" : remainingSpins === 0 ? "∞" : <AnimatedNumber value={remainingSpins} />}
-                    </span>
-                  </div>
-                </div>
-
                 <div className="flex items-center gap-2 rounded-full border border-white/10 bg-black/40 px-4 py-2 pr-5 backdrop-blur-md">
                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-sm">💰</div>
                   <div className="flex flex-col leading-none">

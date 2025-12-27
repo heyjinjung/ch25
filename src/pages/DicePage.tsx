@@ -31,11 +31,6 @@ const DicePage: React.FC = () => {
     return "주사위 전투를 진행할 수 없습니다. 잠시 후 다시 시도해주세요.";
   };
 
-  const remainingLabel = useMemo(() => {
-    if (!data) return "-";
-    return data.remaining_plays === 0 ? "남은 횟수: 무제한" : `남은 횟수: ${data.remaining_plays}회`;
-  }, [data]);
-
   const tokenLabel = useMemo(() => {
     if (!data) return "-";
     const typeLabel = data.token_type ? (GAME_TOKEN_LABELS[data.token_type] ?? data.token_type) : "-";
@@ -122,10 +117,6 @@ const DicePage: React.FC = () => {
 
         {/* Top Info Bar */}
         <div className="flex flex-wrap items-center justify-center gap-4">
-          <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-5 py-2 backdrop-blur-md">
-            <span className="text-sm text-white/50">전투 횟수</span>
-            <span className="font-mono text-base font-bold text-white">{remainingLabel.replace("남은 횟수: ", "")}</span>
-          </div>
           <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-5 py-2 backdrop-blur-md">
             <span className="text-sm text-white/50">티켓</span>
             <span className="font-mono text-base font-bold text-white">{tokenLabel}</span>
