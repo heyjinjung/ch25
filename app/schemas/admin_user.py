@@ -1,10 +1,20 @@
 """Admin user CRUD schemas."""
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 
 from pydantic import ConfigDict, Field
 
 from app.schemas.base import KstBaseModel as BaseModel
+
+
+class AdminUserProfileSchema(BaseModel):
+    real_name: Optional[str] = None
+    phone_number: Optional[str] = None
+    telegram_id: Optional[str] = None
+    tags: Optional[List[str]] = None
+    memo: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class AdminUserBase(BaseModel):
@@ -37,5 +47,8 @@ class AdminUserResponse(AdminUserBase):
     id: int
     created_at: datetime
     updated_at: datetime
+    
+    # CRM Data (Nested)
+    admin_profile: Optional[AdminUserProfileSchema] = None
 
     model_config = ConfigDict(from_attributes=True)

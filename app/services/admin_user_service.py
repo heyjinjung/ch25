@@ -2,7 +2,7 @@
 from datetime import date
 from fastapi import HTTPException, status
 from sqlalchemy import select, and_
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.core.security import hash_password
 from app.models.user import User
@@ -80,7 +80,15 @@ class AdminUserService:
 
     @staticmethod
     def list_users(db: Session) -> list[User]:
-        users = db.execute(select(User).order_by(User.id.desc())).scalars().all()
+        users = (
+            db.execute(
+                select(User)
+                .options(joinedload(User.admin_profile))
+                .order_by(User.id.desc())
+            )
+            .scalars()
+            .all()
+        )
         return [AdminUserService._enrich_user_with_xp(db, u) for u in users]
 
     @staticmethod
