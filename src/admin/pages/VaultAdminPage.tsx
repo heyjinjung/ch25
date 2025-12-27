@@ -12,10 +12,13 @@ import {
     setVaultEligibility,
     getVaultTimerState,
     postVaultTimerAction,
-    VaultTimerState
+    VaultTimerState,
+    fetchVaultStatsDetails,
+    toggleVaultGlobalActive,
+    updateVaultUserBalance
 } from "../api/adminVaultApi";
 import { fetchUsers } from "../api/adminUserApi";
-import { RefreshCcw, Save, AlertTriangle, ShieldCheck, Clock, Power, Search, Ban, User as UserIcon, Loader2 } from "lucide-react";
+import { RefreshCcw, Save, AlertTriangle, ShieldCheck, Clock, Power, Search, Ban, User as UserIcon, Loader2, X, Activity, Edit2 } from "lucide-react";
 import VaultRulesEditor from "../components/vault/VaultRulesEditor";
 import VaultUiEditor from "../components/vault/VaultUiEditor";
 import VaultSettingsEditor from "../components/vault/VaultSettingsEditor";
@@ -102,6 +105,17 @@ const VaultAdminPage: React.FC = () => {
     const [eligibilityResult, setEligibilityResult] = useState<{ user_id: number; eligible: boolean } | null>(null);
     const [timerUserId, setTimerUserId] = useState<string>("");
     const [timerState, setTimerState] = useState<VaultTimerState | null>(null);
+
+    // New state for Stats Modal
+    const [showDetailModal, setShowDetailModal] = useState(false);
+    const [detailType, setDetailType] = useState("");
+    const [detailItems, setDetailItems] = useState<any[]>([]);
+    const [detailLoading, setDetailLoading] = useState(false);
+
+    // New state for Balance Update
+    const [balanceLockedDelta, setBalanceLockedDelta] = useState("0");
+    const [balanceAvailableDelta, setBalanceAvailableDelta] = useState("0");
+    const [balanceReason, setBalanceReason] = useState("관리자 조정");
 
     const { data: program } = useQuery({
         queryKey: ["admin", "vault", "program"],
@@ -222,6 +236,46 @@ const VaultAdminPage: React.FC = () => {
         onError: (err: any) => alert(`처리 실패: ${err.message}`)
     });
 
+    // New mutations
+    const globalActiveMutation = useMutation({
+        mutationFn: async (isActive: boolean) => {
+            if (!program) throw new Error("프로그램 정보가 없습니다.");
+            return toggleVaultGlobalActive(program.key, isActive);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["admin", "vault", "program"] });
+            alert("전역 활성 상태가 변경되었습니다.");
+        },
+        onError: (err: any) => alert(`변경 실패: ${err.message}`)
+    });
+
+    const balanceMutation = useMutation({
+        mutationFn: async () => {
+            const uid = parseInt(timerUserId || "0", 10);
+            if (!uid) throw new Error("유저를 선택해주세요.");
+            await updateVaultUserBalance(uid, parseInt(balanceLockedDelta), parseInt(balanceAvailableDelta), balanceReason);
+        },
+        onSuccess: () => {
+            alert("잔액이 수정되었습니다.");
+            // Refresh timer state to see changes
+            if (timerUserId) timerLookup.mutate(parseInt(timerUserId));
+        },
+        onError: (err: any) => alert(`수정 실패: ${err.message}`)
+    });
+
+    const openDetailModal = (type: string) => {
+        setDetailType(type);
+        setShowDetailModal(true);
+        setDetailLoading(true);
+        fetchVaultStatsDetails(type).then(res => {
+            setDetailItems(res.items);
+            setDetailLoading(false);
+        }).catch(err => {
+            alert("상세 조회 실패");
+            setShowDetailModal(false);
+        });
+    };
+
     return (
         <div className="space-y-6 pb-20">
             <header className="flex items-center justify-between">
@@ -252,20 +306,29 @@ const VaultAdminPage: React.FC = () => {
 
             {/* Stats Summary */}
             <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-                <div className="rounded-lg border border-[#333] bg-[#111] p-4 text-center">
-                    <p className="text-xs text-gray-500 mb-1">오늘 총 적립</p>
+                <div
+                    onClick={() => openDetailModal("today_accrual")}
+                    className="rounded-lg border border-[#333] bg-[#111] p-4 text-center cursor-pointer hover:bg-[#1a1a1a] transition"
+                >
+                    <p className="text-xs text-gray-500 mb-1">오늘 총 적립 (상세보기)</p>
                     <p className="text-xl font-black text-white">
                         {Object.values(stats?.today_accrual || {}).reduce((a, b: any) => a + b.count, 0).toLocaleString()}건
                     </p>
                 </div>
-                <div className="rounded-lg border border-[#333] bg-[#111] p-4 text-center">
-                    <p className="text-xs text-gray-500 mb-1">오늘 해금액</p>
+                <div
+                    onClick={() => openDetailModal("today_unlock_cash")}
+                    className="rounded-lg border border-[#333] bg-[#111] p-4 text-center cursor-pointer hover:bg-[#1a1a1a] transition"
+                >
+                    <p className="text-xs text-gray-500 mb-1">오늘 해금액 (상세보기)</p>
                     <p className="text-xl font-black text-[#91F402]">
                         {stats?.today_unlock_cash.toLocaleString()}원
                     </p>
                 </div>
-                <div className="rounded-lg border border-[#333] bg-[#111] p-4 text-center">
-                    <p className="text-xs text-gray-500 mb-1">24H내 만료 예정</p>
+                <div
+                    onClick={() => openDetailModal("expiring_soon_24h")}
+                    className="rounded-lg border border-[#333] bg-[#111] p-4 text-center cursor-pointer hover:bg-[#1a1a1a] transition"
+                >
+                    <p className="text-xs text-gray-500 mb-1">24H내 만료 예정 (상세보기)</p>
                     <p className="text-xl font-black text-orange-400">
                         {stats?.expiring_soon_24h}명
                     </p>
@@ -277,6 +340,60 @@ const VaultAdminPage: React.FC = () => {
                     </p>
                 </div>
             </div>
+
+            {/* Stats Detail Modal */}
+            {showDetailModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+                    <div className="w-full max-w-3xl rounded-xl border border-[#333] bg-[#111] p-6 shadow-2xl animate-in zoom-in-50 duration-200">
+                        <div className="flex items-center justify-between mb-6 border-b border-[#333] pb-4">
+                            <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                                <Activity className="h-5 w-5 text-[#91F402]" />
+                                상세 내역 조회 ({detailType})
+                            </h3>
+                            <button onClick={() => setShowDetailModal(false)} className="text-gray-400 hover:text-white">
+                                <X className="h-6 w-6" />
+                            </button>
+                        </div>
+
+                        <div className="max-h-[60vh] overflow-y-auto">
+                            {detailLoading ? (
+                                <div className="py-20 flex justify-center"><Loader2 className="h-8 w-8 animate-spin text-[#91F402]" /></div>
+                            ) : (
+                                <table className="w-full text-left text-sm">
+                                    <thead className="sticky top-0 bg-[#111]">
+                                        <tr className="text-gray-500 border-b border-[#222]">
+                                            <th className="pb-2 px-2">User (External)</th>
+                                            <th className="pb-2 px-2 text-right">Amount</th>
+                                            <th className="pb-2 px-2 text-right">Time</th>
+                                            <th className="pb-2 px-2 text-right">Meta</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-[#222]">
+                                        {detailItems.map((item, idx) => (
+                                            <tr key={idx} className="hover:bg-white/5">
+                                                <td className="py-2 px-2">
+                                                    <div className="text-white font-bold">{item.external_id || "Unknown"}</div>
+                                                    <div className="text-xs text-gray-500">ID: {item.user_id} | {item.nickname}</div>
+                                                </td>
+                                                <td className="py-2 px-2 text-right font-mono text-[#91F402]">{item.amount.toLocaleString()}</td>
+                                                <td className="py-2 px-2 text-right text-gray-400 text-xs">
+                                                    {item.timestamp ? new Date(item.timestamp).toLocaleString() : "-"}
+                                                </td>
+                                                <td className="py-2 px-2 text-right text-xs text-gray-500">
+                                                    {JSON.stringify(item.meta || {})}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                        {detailItems.length === 0 && (
+                                            <tr><td colSpan={4} className="py-8 text-center text-gray-600">데이터가 없습니다.</td></tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <nav className="flex items-center gap-1 border-b border-[#333]">
                 {[
@@ -404,11 +521,42 @@ const VaultAdminPage: React.FC = () => {
                             <div className="rounded-xl border border-[#333] bg-[#111] p-6 flex flex-col gap-4">
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <p className="text-xs uppercase tracking-[0.2em] text-gray-500 mb-1">Game Earn</p>
+                                        <p className="text-xs uppercase tracking-[0.2em] text-gray-500 mb-1">System Control</p>
                                         <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                                            <Power className="h-4 w-4 text-[#91F402]" />
-                                            게임 적립 전역 토글
+                                            <Power className="h-4 w-4 text-red-500" />
+                                            Vault 시스템 전체 제어 (Master Switch)
                                         </h3>
+                                    </div>
+                                    <span className={`px-2 py-1 rounded text-[11px] font-black border ${program?.is_active ? "bg-[#13240f] text-[#91F402] border-[#1f3e13]" : "bg-[#2a1616] text-red-400 border-red-900/50"}`}>
+                                        {program?.is_active ? "ACTIVE" : "SHUTDOWN"}
+                                    </span>
+                                </div>
+                                <p className="text-sm text-gray-400 leading-relaxed">
+                                    시스템 전체를 닫으면 유저는 금고 페이지에 접근할 수 없습니다. 긴급 점검 시 사용하세요.
+                                </p>
+                                <button
+                                    onClick={() => {
+                                        if (confirm("정말 시스템 상태를 변경하시겠습니까? 유저 접근이 차단/허용됩니다.")) {
+                                            globalActiveMutation.mutate(!program?.is_active);
+                                        }
+                                    }}
+                                    disabled={globalActiveMutation.isPending}
+                                    className={`w-full rounded-md px-4 py-2.5 text-sm font-bold text-white transition ${program?.is_active ? "bg-red-900/50 hover:bg-red-800" : "bg-green-800 hover:bg-green-700"}`}
+                                >
+                                    {program?.is_active ? "시스템 긴급 종료 (Shutdown)" : "시스템 정상화 (Active)"}
+                                </button>
+
+                                <div className="border-t border-[#333] my-2 pt-4">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="text-xs uppercase tracking-[0.2em] text-gray-500 mb-1">Game Earn</p>
+                                            <h3 className="text-md font-bold text-white flex items-center gap-2">
+                                                게임 적립 토글
+                                            </h3>
+                                        </div>
+                                        <span className={`px-2 py-1 rounded text-[11px] font-black border ${gameEarnEnabled ? "bg-[#13240f] text-[#91F402] border-[#1f3e13]" : "bg-[#2a1616] text-red-400 border-red-900/50"}`}>
+                                            {gameEarnEnabled ? "ON" : "OFF"}
+                                        </span>
                                     </div>
                                     <span className={`px-2 py-1 rounded text-[11px] font-black border ${gameEarnEnabled ? "bg-[#13240f] text-[#91F402] border-[#1f3e13]" : "bg-[#2a1616] text-red-400 border-red-900/50"}`}>
                                         {gameEarnEnabled ? "ON" : "OFF"}
@@ -601,11 +749,58 @@ const VaultAdminPage: React.FC = () => {
                                 </button>
                             </div>
                             <p className="text-xs text-gray-500">잠금 잔액을 유지한 채 만료 시각만 설정하거나, 즉시 소멸 처리할 수 있습니다.</p>
+
+                            <div className="border-t border-[#333] pt-6 mt-2">
+                                <h3 className="text-lg font-bold text-white flex items-center gap-2 mb-4">
+                                    <Edit2 className="h-4 w-4 text-purple-400" />
+                                    Balance Adjustment (잔액 강제 수정)
+                                </h3>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div>
+                                        <label className="text-xs text-gray-500 block mb-1">Locked Delta (+/-)</label>
+                                        <input
+                                            type="number"
+                                            value={balanceLockedDelta}
+                                            onChange={e => setBalanceLockedDelta(e.target.value)}
+                                            className="w-full rounded bg-[#0A0A0A] border border-[#333] px-3 py-2 text-white font-mono"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-gray-500 block mb-1">Available Delta (+/-)</label>
+                                        <input
+                                            type="number"
+                                            value={balanceAvailableDelta}
+                                            onChange={e => setBalanceAvailableDelta(e.target.value)}
+                                            className="w-full rounded bg-[#0A0A0A] border border-[#333] px-3 py-2 text-white font-mono"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-gray-500 block mb-1">Reason</label>
+                                        <input
+                                            type="text"
+                                            value={balanceReason}
+                                            onChange={e => setBalanceReason(e.target.value)}
+                                            className="w-full rounded bg-[#0A0A0A] border border-[#333] px-3 py-2 text-white"
+                                        />
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => {
+                                        if (confirm("잔액을 강제로 수정하시겠습니까?")) {
+                                            balanceMutation.mutate();
+                                        }
+                                    }}
+                                    disabled={balanceMutation.isPending || !timerUserId}
+                                    className="mt-4 w-full rounded-md bg-purple-900/30 border border-purple-500/30 px-4 py-3 text-sm font-bold text-purple-300 hover:bg-purple-900/50 transition"
+                                >
+                                    잔액 수정 실행 (Audit 기록됨)
+                                </button>
+                            </div>
                         </div>
                     </div>
                 )}
             </div>
-        </div>
+        </div >
     );
 };
 

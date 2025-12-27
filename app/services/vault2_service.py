@@ -602,6 +602,16 @@ class Vault2Service:
                   status.expires_at = self.compute_expires_at(datetime.utcnow(), int(program.duration_hours or 24))
 
         db.add(status)
+        
+        # [PHASE 1 SYNC] Sync to User table as it's the current live source of truth
+        user = db.query(User).filter(User.id == user_id).one_or_none()
+        if user:
+            user.vault_locked_balance = new_locked
+            user.vault_available_balance = new_avail
+            user.vault_balance = new_locked + new_avail  # Mirror sum
+            user.vault_locked_expires_at = status.expires_at
+            db.add(user)
+        
         db.commit()
         db.refresh(status)
         return status
