@@ -236,7 +236,7 @@ const TeamBattlePage: React.FC = () => {
       {/* Rule Ticker */}
       <div className="flex items-center gap-3 overflow-hidden rounded-full border border-white/5 bg-white/[0.02] px-4 py-2 text-base text-white/50 backdrop-blur-sm">
         <span className="font-bold text-cc-lime">안내</span>
-        <div className="flex gap-4 overflow-hidden whitespace-nowrap">
+        <div className="flex flex-wrap gap-2 overflow-hidden whitespace-normal sm:flex-nowrap sm:gap-4 sm:whitespace-nowrap">
           <span>• 자동 배정 (밸런스 기준)</span>
           <span>• 시작 후 24시간 내 배정 가능</span>
           <span>• 게임 1회당 10점 (일일 최대 500점)</span>
