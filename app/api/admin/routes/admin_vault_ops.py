@@ -25,7 +25,25 @@ legacy_router.include_router(_core)
 def _build_admin_state(service: VaultService, db: Session, user_id: int) -> VaultAdminStateResponse:
     """Return full vault state for admin inspection."""
     now = datetime.utcnow()
-    eligible, user, _ = service.get_status(db, user_id=user_id, now=now)
+    try:
+        eligible, user, _ = service.get_status(db, user_id=user_id, now=now)
+    except HTTPException as exc:  # surface minimal state instead of hard 404
+        if exc.detail == "USER_NOT_FOUND":
+            eligible = service._eligible(db, user_id=user_id, now=now)  # internal helper is safe here
+            return VaultAdminStateResponse(
+                user_id=user_id,
+                eligible=eligible,
+                vault_balance=0,
+                locked_balance=0,
+                available_balance=0,
+                cash_balance=0,
+                expires_at=None,
+                locked_expires_at=None,
+                accrual_multiplier=service.vault_accrual_multiplier(db, now) if eligible else None,
+                program_key=service.PROGRAM_KEY,
+            )
+        raise
+
     if user is None:
         raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
 
