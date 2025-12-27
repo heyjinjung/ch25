@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import React, { useEffect, useMemo, useRef, memo } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { ContactShadows, OrbitControls, PerspectiveCamera, Stars } from "@react-three/drei";
 import * as THREE from "three";
@@ -24,7 +24,7 @@ const DEFAULT_SEGMENTS: Roulette3DSegment[] = Array.from({ length: 8 }).map((_, 
   isJackpot: idx === 0,
 }));
 
-const WheelMesh: React.FC<Omit<Roulette3DProps, "segments"> & { segments: Roulette3DSegment[] }> = ({
+const WheelMesh: React.FC<Omit<Roulette3DProps, "segments"> & { segments: Roulette3DSegment[] }> = memo(({
   segments,
   isSpinning,
   selectedIndex,
@@ -78,7 +78,7 @@ const WheelMesh: React.FC<Omit<Roulette3DProps, "segments"> & { segments: Roulet
     <group ref={groupRef} rotation={[Math.PI / 2, 0, 0.02]}> {/* slight tilt for depth */}
       {/* Wheel body */}
       <mesh receiveShadow castShadow>
-        <cylinderGeometry args={[3.2, 3.2, 0.4, Math.max(segments.length, 24)]} />
+        <cylinderGeometry args={[3.2, 3.2, 0.4, 32]} />
         <meshStandardMaterial color="#0f172a" metalness={0.15} roughness={0.85} emissive="#0a0f1a" emissiveIntensity={0.3} />
       </mesh>
 
@@ -98,33 +98,48 @@ const WheelMesh: React.FC<Omit<Roulette3DProps, "segments"> & { segments: Roulet
 
       {/* Center hub */}
       <mesh position={[0, 0, 0.25]} castShadow>
-        <cylinderGeometry args={[0.4, 0.4, 0.4, 24]} />
+        <cylinderGeometry args={[0.4, 0.4, 0.4, 16]} />
         <meshStandardMaterial color="#f8fafc" metalness={0.35} roughness={0.4} emissive="#1f2937" emissiveIntensity={0.25} />
       </mesh>
 
       {/* Pointer */}
       <mesh position={[0, 0, 1.8]} rotation={[Math.PI / 2, 0, 0]} castShadow>
-        <coneGeometry args={[0.24, 0.6, 24]} />
+        <coneGeometry args={[0.24, 0.6, 16]} />
         <meshStandardMaterial color="#facc15" emissive="#facc15" emissiveIntensity={0.4} />
       </mesh>
     </group>
   );
-};
+});
 
-export const Roulette3D: React.FC<Roulette3DProps> = (props) => {
+export const Roulette3D: React.FC<Roulette3DProps> = memo((props) => {
   const { segments } = props;
   const displaySegments = segments?.length ? segments : DEFAULT_SEGMENTS;
   return (
     <div className="relative mx-auto w-full max-w-3xl overflow-hidden rounded-3xl border border-emerald-700/40 bg-slate-950/70 p-3 shadow-2xl">
-      <Canvas shadows style={{ height: "420px" }}>
+      <Canvas shadows dpr={[1, 1.5]} style={{ height: "420px" }}>
         <color attach="background" args={["#020617"]} />
         <ambientLight intensity={0.75} />
         <hemisphereLight args={["#bfe3ff", "#0b1220", 0.45]} />
-        <directionalLight position={[4, 6, 6]} intensity={1.2} castShadow shadow-mapSize-width={1024} shadow-mapSize-height={1024} />
-        <spotLight position={[0, 0, 9]} angle={0.7} penumbra={0.35} intensity={1.1} distance={25} castShadow color="#facc15" />
+        <directionalLight
+          position={[4, 6, 6]}
+          intensity={1.2}
+          castShadow
+          shadow-mapSize-width={512}
+          shadow-mapSize-height={512}
+        />
+        <spotLight
+          position={[0, 0, 9]}
+          angle={0.7}
+          penumbra={0.35}
+          intensity={1.1}
+          distance={25}
+          castShadow
+          color="#facc15"
+          shadow-mapSize-width={512}
+          shadow-mapSize-height={512}
+        />
         <pointLight position={[3.5, -2.5, 4.8]} intensity={1.25} distance={20} decay={1.4} color="#7dd3fc" />
-        <pointLight position={[-3, 3.5, 4]} intensity={1.05} distance={18} decay={1.3} color="#f9a8d4" />
-        <Stars radius={30} depth={20} count={500} factor={2} saturation={0} fade speed={2} />
+        <Stars radius={30} depth={20} count={300} factor={2} saturation={0} fade speed={2} />
         <PerspectiveCamera makeDefault position={[0, -6.4, 4.2]} fov={50} />
         <OrbitControls enablePan={false} enableZoom={false} minPolarAngle={Math.PI / 2.4} maxPolarAngle={Math.PI / 2.4} />
         <RouletteCentralLabel labels={displaySegments.map((s) => s.label)} />
@@ -144,9 +159,9 @@ export const Roulette3D: React.FC<Roulette3DProps> = (props) => {
       )}
     </div>
   );
-};
+});
 
-const RouletteCentralLabel: React.FC<{ labels: string[] }> = ({ labels }) => {
+const RouletteCentralLabel: React.FC<{ labels: string[] }> = memo(({ labels }) => {
   const text = labels.join(" · ").slice(0, 64) || "Premium Roulette";
   const texture = useMemo(() => {
     const canvas = document.createElement("canvas");
@@ -169,10 +184,10 @@ const RouletteCentralLabel: React.FC<{ labels: string[] }> = ({ labels }) => {
 
   return (
     <mesh position={[0, 0, 0.41]} rotation={[Math.PI / 2, 0, 0]}>
-      <circleGeometry args={[1.2, 32]} />
+      <circleGeometry args={[1.2, 24]} />
       <meshStandardMaterial map={texture} metalness={0.3} roughness={0.7} />
     </mesh>
   );
-};
+});
 
 export default Roulette3D;
