@@ -219,11 +219,22 @@ const AdminDashboardPage: React.FC = () => {
         {stats.map((stat) => (
           <div
             key={stat.title}
-            className="rounded-lg border border-[#262626] bg-[#111111] p-5 shadow-md"
+            className="group/card relative rounded-lg border border-[#262626] bg-[#111111] p-5 shadow-md hover:border-[#91F402]/30 transition-colors"
           >
             <div className="flex items-start justify-between">
               <div className="space-y-1">
-                <p className="text-xs text-gray-400">{stat.title}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-xs text-gray-400">{stat.title}</p>
+                  <div className="relative group/tooltip">
+                    <span className="cursor-help text-xs text-gray-600 hover:text-gray-300">?</span>
+                    <div className="absolute left-0 top-full z-50 mt-2 hidden w-48 rounded bg-[#1A1A1A] p-2 text-[10px] text-gray-300 shadow-xl border border-[#333] group-hover/tooltip:block">
+                      {stat.title === "활성 사용자" && "오늘 로그인하거나 게임을 플레이한 유니크 사용자 수입니다."}
+                      {stat.title === "게임 참여" && "룰렛, 주사위 등 모든 게임의 총 플레이 횟수입니다."}
+                      {stat.title === "티켓 사용량" && "오늘 소모된 총 티켓 수량입니다."}
+                      {stat.title === "평균 체류 시간" && "사용자당 평균 세션 지속 시간입니다."}
+                    </div>
+                  </div>
+                </div>
                 <h3 className="text-2xl font-bold text-white">{stat.value}</h3>
                 {stat.subtitle ? <p className="text-[11px] text-gray-400">{stat.subtitle}</p> : null}
                 <p className={`text-xs ${stat.isPositive ? "text-[#91F402]" : "text-[#F97935]"}`}>

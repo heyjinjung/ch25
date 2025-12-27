@@ -14,10 +14,84 @@ import {
     postVaultTimerAction,
     VaultTimerState
 } from "../api/adminVaultApi";
-import { RefreshCcw, Save, AlertTriangle, ShieldCheck, Clock, Power, Search, Ban } from "lucide-react";
+import { fetchUsers } from "../api/adminUserApi";
+import { RefreshCcw, Save, AlertTriangle, ShieldCheck, Clock, Power, Search, Ban, User as UserIcon, Loader2 } from "lucide-react";
 import VaultRulesEditor from "../components/vault/VaultRulesEditor";
 import VaultUiEditor from "../components/vault/VaultUiEditor";
 import VaultSettingsEditor from "../components/vault/VaultSettingsEditor";
+
+const UserLookup: React.FC<{ value: string; onChange: (val: string) => void; placeholder?: string }> = ({ value, onChange, placeholder }) => {
+    const [searchTerm, setSearchTerm] = useState("");
+    const [isOpen, setIsOpen] = useState(false);
+
+    const { data: users, isLoading } = useQuery({
+        queryKey: ["admin", "users"],
+        queryFn: fetchUsers,
+        enabled: isOpen,
+        staleTime: 60000
+    });
+
+    const filtered = (users || []).filter(u => {
+        const term = searchTerm.toLowerCase();
+        return (
+            String(u.id).includes(term) ||
+            (u.external_id || "").toLowerCase().includes(term) ||
+            (u.nickname || "").toLowerCase().includes(term)
+        );
+    }).slice(0, 5);
+
+    return (
+        <div className="relative">
+            <div className="flex items-center gap-2">
+                <input
+                    type="text"
+                    value={value}
+                    onChange={(e) => onChange(e.target.value)}
+                    placeholder={placeholder || "User ID"}
+                    className="w-36 rounded-md border border-[#333] bg-[#0A0A0A] px-3 py-2 text-sm text-gray-200 focus:border-[#91F402] focus:outline-none"
+                />
+                <button
+                    onClick={() => {
+                        setIsOpen(!isOpen);
+                        if (!isOpen) setSearchTerm("");
+                    }}
+                    className="p-2 rounded bg-[#222] text-gray-400 hover:text-white"
+                    title="사용자 검색"
+                >
+                    <UserIcon size={16} />
+                </button>
+            </div>
+            {isOpen && (
+                <div className="absolute right-0 top-full z-50 mt-1 w-64 rounded-md border border-[#333] bg-[#1a1a1a] shadow-xl p-2">
+                    <input
+                        autoFocus
+                        value={searchTerm}
+                        onChange={e => setSearchTerm(e.target.value)}
+                        placeholder="ID/ExternalID/닉네임 검색"
+                        className="w-full mb-2 rounded bg-[#000] border border-[#333] px-2 py-1 text-xs text-white"
+                    />
+                    <div className="space-y-1">
+                        {isLoading && <div className="text-center py-2"><Loader2 className="animate-spin h-4 w-4 mx-auto text-gray-500" /></div>}
+                        {!isLoading && filtered.length === 0 && <div className="text-xs text-center text-gray-500 py-2">검색 결과 없음</div>}
+                        {filtered.map(u => (
+                            <button
+                                key={u.id}
+                                onClick={() => {
+                                    onChange(String(u.id));
+                                    setIsOpen(false);
+                                }}
+                                className="w-full text-left px-2 py-1.5 rounded hover:bg-[#333] text-xs"
+                            >
+                                <div className="text-[#91F402] font-bold">{u.external_id || u.nickname}</div>
+                                <div className="text-gray-500">ID: {u.id} | Lv.{u.level}</div>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
 
 const VaultAdminPage: React.FC = () => {
     const queryClient = useQueryClient();
@@ -216,8 +290,8 @@ const VaultAdminPage: React.FC = () => {
                         key={tab.id}
                         onClick={() => handleTabChange(tab.id as any)}
                         className={`px-6 py-3 text-sm font-bold transition-all relative ${activeTab === tab.id
-                                ? "text-[#91F402]"
-                                : "text-gray-500 hover:text-gray-300"
+                            ? "text-[#91F402]"
+                            : "text-gray-500 hover:text-gray-300"
                             }`}
                     >
                         {tab.label}
@@ -362,12 +436,10 @@ const VaultAdminPage: React.FC = () => {
                                         </h3>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <input
-                                            type="number"
+                                        <UserLookup
                                             value={eligibilityUserId}
-                                            onChange={e => setEligibilityUserId(e.target.value)}
-                                            placeholder="User ID"
-                                            className="w-36 rounded-md border border-[#333] bg-[#0A0A0A] px-3 py-2 text-sm text-gray-200 focus:border-[#91F402] focus:outline-none"
+                                            onChange={setEligibilityUserId}
+                                            placeholder="External ID or User ID"
                                         />
                                         <button
                                             onClick={() => {
@@ -433,12 +505,10 @@ const VaultAdminPage: React.FC = () => {
                                     </h3>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <input
-                                        type="number"
+                                    <UserLookup
                                         value={timerUserId}
-                                        onChange={e => setTimerUserId(e.target.value)}
-                                        placeholder="User ID"
-                                        className="w-36 rounded-md border border-[#333] bg-[#0A0A0A] px-3 py-2 text-sm text-gray-200 focus:border-[#91F402] focus:outline-none"
+                                        onChange={setTimerUserId}
+                                        placeholder="External ID or User ID"
                                     />
                                     <button
                                         onClick={() => {

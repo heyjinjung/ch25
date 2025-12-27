@@ -305,7 +305,7 @@ const UserAdminPage: React.FC = () => {
             <Search size={18} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
             <input
               type="text"
-              placeholder="ID, 닉네임 검색..."
+              placeholder="ID, 닉네임, External ID 검색..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               onKeyDown={(e) => {
@@ -451,6 +451,11 @@ const UserAdminPage: React.FC = () => {
                     ID{renderSortIcon("id")}
                   </th>
                   <th
+                    className={`px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400`}
+                  >
+                    External ID
+                  </th>
+                  <th
                     className={`px-4 py-3 text-left text-xs font-medium uppercase tracking-wider ${sortKey === "nickname" ? "bg-[#2D6B3B] text-[#91F402]" : "text-gray-400"
                       } cursor-pointer hover:bg-[#2D6B3B]`}
                     onClick={() => handleSort("nickname")}
@@ -486,6 +491,7 @@ const UserAdminPage: React.FC = () => {
                 {currentMembers.map((member, index) => (
                   <tr key={member.id} className={index % 2 === 0 ? "bg-[#111111]" : "bg-[#1A1A1A]"}>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-400">{member.id}</td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-white">{member.external_id || "-"}</td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       {member.isEditing ? (
                         <input
@@ -495,7 +501,7 @@ const UserAdminPage: React.FC = () => {
                           className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-1.5 text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
                         />
                       ) : (
-                        <div className="text-sm font-medium text-white">{member.nickname ?? member.external_id}</div>
+                        <div className="text-sm font-medium text-white">{member.nickname || "-"}</div>
                       )}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-white">

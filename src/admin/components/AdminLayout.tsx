@@ -6,7 +6,6 @@ import {
   ChevronDown,
   Home,
   Cog,
-  CalendarClock,
   Gift,
   Dice5,
   Percent,
@@ -14,7 +13,6 @@ import {
   Users,
   UsersRound,
   Ticket,
-  Receipt,
   BarChart3,
   UserCog,
   MessageSquare,
@@ -37,10 +35,11 @@ const navSections: NavSection[] = [
     heading: "게임 관리",
     items: [
       { label: "시즌 설정", path: "/admin/seasons", icon: <Cog size={18} /> },
-      { label: "기능 일정", path: "/admin/feature-schedule", icon: <CalendarClock size={18} /> },
+
       { label: "룰렛 설정", path: "/admin/roulette", icon: <Gift size={18} /> },
       { label: "주사위 설정", path: "/admin/dice", icon: <Dice5 size={18} /> },
       { label: "복권 설정", path: "/admin/lottery", icon: <Percent size={18} /> },
+      { label: "금고 관리", path: "/admin/vault", icon: <Gift size={18} /> },
     ],
   },
   {
@@ -54,8 +53,7 @@ const navSections: NavSection[] = [
   {
     heading: "티켓 관리",
     items: [
-      { label: "티켓 지급", path: "/admin/game-tokens", icon: <Ticket size={18} /> },
-      { label: "티켓 기록/회수", path: "/admin/game-token-logs", icon: <Receipt size={18} /> },
+      { label: "티켓 통합 관리", path: "/admin/game-tokens", icon: <Ticket size={18} /> },
     ],
   },
   {
@@ -135,10 +133,9 @@ const Sidebar: React.FC<{ mobile?: boolean; closeSidebar?: () => void }> = ({ mo
                           if (mobile) closeSidebar?.();
                         }}
                         className={({ isActive }) =>
-                          `flex items-center gap-3 rounded-md px-3 py-2 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#91F402] ${
-                            isActive
-                              ? "bg-[#2D6B3B] text-white"
-                              : "text-gray-300 hover:bg-[#1A1A1A] hover:text-white"
+                          `flex items-center gap-3 rounded-md px-3 py-2 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#91F402] ${isActive
+                            ? "bg-[#2D6B3B] text-white"
+                            : "text-gray-300 hover:bg-[#1A1A1A] hover:text-white"
                           }`
                         }
                       >
