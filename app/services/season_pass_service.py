@@ -33,7 +33,11 @@ class SeasonPassService:
 
         today = now.date() if isinstance(now, datetime) else now
         stmt = select(SeasonPassConfig).where(
-            and_(SeasonPassConfig.start_date <= today, SeasonPassConfig.end_date >= today)
+            and_(
+                SeasonPassConfig.start_date <= today, 
+                SeasonPassConfig.end_date >= today,
+                SeasonPassConfig.is_active == 1
+            )
         )
         seasons = db.execute(stmt).scalars().all()
         if not seasons:
