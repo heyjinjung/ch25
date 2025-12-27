@@ -43,7 +43,7 @@ const formatDateTime = (d: Date | null): string | null => {
   }
 };
 
-const CountdownTimer: React.FC<{ expiresAt: Date }> = ({ expiresAt }) => {
+const CountdownTimer: React.FC<{ expiresAt: Date }> = React.memo(({ expiresAt }) => {
   const [isWarning, setIsWarning] = useState(false);
 
   useEffect(() => {
@@ -76,9 +76,9 @@ const CountdownTimer: React.FC<{ expiresAt: Date }> = ({ expiresAt }) => {
       />
     </div>
   );
-};
+});
 
-const VaultVisual: React.FC<{ stateLabel: string; eligible: boolean }> = ({ stateLabel, eligible }) => {
+const VaultVisual: React.FC<{ stateLabel: string; eligible: boolean }> = React.memo(({ stateLabel, eligible }) => {
   return (
     <div className="relative aspect-square w-full max-w-[280px] mx-auto">
       {/* Glow background */}
@@ -121,9 +121,9 @@ const VaultVisual: React.FC<{ stateLabel: string; eligible: boolean }> = ({ stat
       </div>
     </div>
   );
-};
+});
 
-const VaultMainPanel: React.FC = () => {
+const VaultMainPanel: React.FC = React.memo(() => {
   const [vaultModalOpen, setVaultModalOpen] = useState(false);
 
   const vault = useQuery({
@@ -175,7 +175,7 @@ const VaultMainPanel: React.FC = () => {
     if (view.recommendedAction === "OPEN_VAULT_MODAL" && !vaultModalOpen) {
       setVaultModalOpen(true);
     }
-  }, [view.recommendedAction]);
+  }, [view.recommendedAction, vaultModalOpen]);
 
   const unlockRules = useMemo(() => {
     const parsed = parseVaultUnlockRules(view.unlockRulesJson);
@@ -415,6 +415,6 @@ const VaultMainPanel: React.FC = () => {
       />
     </section>
   );
-};
+});
 
 export default VaultMainPanel;
