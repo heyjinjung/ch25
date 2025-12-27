@@ -1,6 +1,13 @@
 2025-12-08: API/DB/코인 시스템/서비스/운영/체크리스트/overview/architecture 최신화 반영. 실제 코드/운영/QA 흐름과 일치하도록 문서 업데이트.
 # 프로젝트 변경 이력
 
+## 2025-12-27 (Admin Branding & CRM Refinement)
+- Branding: 전역 서비스명 "씨씨지민 코드지갑"으로 변경 및 UI 브랜딩 통합.
+- CRM: 회원 관리 프로필 필드 확대(실명, 연락처, 태그 등) 및 데이터 정합성 강화.
+- Ticket: 티켓 원장(Ledger) 카테고리 필터링(ADMIN, GAME, EXCHANGE) 기능 추가.
+- Message: 메시지 센터 고도화(제목 검색, 페이징) 및 백엔드 연동.
+- Marketing: 대시보드 지표 개선 및 세그먼트 상세 가시성 확보.
+
 ## 2025-12-26 (tests stabilization & deprecated features cleanup)
 - Auth: 로그인 정책을 “DB에 유저가 존재할 때만 성공(자동 생성 금지)”으로 고정하고, 테스트를 해당 정책에 맞게 정리.
 - Season pass: TEST_MODE 자동 시즌 생성 제거(시즌 없으면 404/None), 레벨 1 auto-claim 보상 로그 제외로 과다 로깅 방지.

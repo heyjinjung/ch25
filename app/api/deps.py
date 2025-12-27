@@ -63,6 +63,18 @@ def get_current_user_id(
     return user_id
 
 
+def get_current_user(
+    db: Session = Depends(get_db),
+    user_id: int = Depends(get_current_user_id),
+) -> User:
+    """Fetch the current user from the database."""
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
+
+
 def get_current_admin_id(
     db: Session = Depends(get_db),
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),

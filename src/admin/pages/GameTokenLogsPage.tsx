@@ -39,6 +39,7 @@ const GameTokenLogsPage: React.FC = () => {
   const [externalIdInput, setExternalIdInput] = useState<string>("");
   const [externalIdFilter, setExternalIdFilter] = useState<string | undefined>();
   const [gameFilter, setGameFilter] = useState<string>("all");
+  const [ledgerReasonFilter, setLedgerReasonFilter] = useState<string>("all");
 
   // Global Filter State (for non-dashboard tabs)
   const [walletPage, setWalletPage] = useState<number>(0);
@@ -203,8 +204,8 @@ const GameTokenLogsPage: React.FC = () => {
                   key={g}
                   onClick={() => { setGameFilter(g); setPlayLogPage(0); }}
                   className={`px-3 py-1 text-xs rounded-full border transition-all whitespace-nowrap ${gameFilter === g
-                      ? "bg-[#91F402] border-[#91F402] text-black font-bold"
-                      : "bg-[#1A1A1A] border-[#333] text-gray-400 hover:border-gray-500"
+                    ? "bg-[#91F402] border-[#91F402] text-black font-bold"
+                    : "bg-[#1A1A1A] border-[#333] text-gray-400 hover:border-gray-500"
                     }`}
                 >
                   {g === "all" ? "전체" : g === "roulette" ? "룰렛" : g === "dice" ? "주사위" : "복권"}
@@ -271,24 +272,67 @@ const GameTokenLogsPage: React.FC = () => {
               </h4>
               <span className="text-xs text-gray-500">페이지 {ledgerPage + 1}</span>
             </div>
+            <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-2 scrollbar-hide">
+              {[
+                { val: "all", lab: "전체" },
+                { val: "ROULETTE", lab: "룰렛" },
+                { val: "DICE", lab: "주사위" },
+                { val: "LOTTERY", lab: "복권" },
+              ].map((r) => (
+                <button
+                  key={r.val}
+                  onClick={() => { setLedgerReasonFilter(r.val); setLedgerPage(0); }}
+                  className={`px-3 py-1 text-xs rounded-full border transition-all whitespace-nowrap ${ledgerReasonFilter === r.val
+                    ? "bg-[#91F402] border-[#91F402] text-black font-bold"
+                    : "bg-[#1A1A1A] border-[#333] text-gray-400 hover:border-gray-500"
+                    }`}
+                >
+                  {r.lab}
+                </button>
+              ))}
+            </div>
             <div className="flex-1 space-y-2 max-h-[400px] overflow-y-auto">
               {ledgerQuery.isLoading && <div className="text-center py-4"><Loader2 className="animate-spin mx-auto text-gray-500" /></div>}
-              {recentLedger.length === 0 && !ledgerQuery.isLoading && <p className="text-gray-500 text-sm text-center py-4">기록이 없습니다.</p>}
-              {recentLedger.map(l => (
-                <div key={l.id} className="flex items-start justify-between text-sm py-2 border-b border-[#222] last:border-0 hover:bg-[#1A1A1A] px-2 rounded">
-                  <div className="flex flex-col flex-1">
-                    <span className="text-gray-300 font-medium">{GAME_TOKEN_LABELS[l.token_type] || l.token_type}</span>
-                    <span className="text-xs text-gray-500">{l.reason} {l.label ? `(${l.label})` : ""}</span>
-                    <span className="text-xs text-gray-600 mt-0.5">{dayjs(l.created_at).format("YYYY-MM-DD HH:mm:ss")}</span>
-                  </div>
-                  <div className="text-right ml-2">
-                    <div className={`font-mono font-bold ${l.delta > 0 ? "text-[#91F402]" : "text-red-400"}`}>
-                      {l.delta > 0 ? "+" : ""}{l.delta}
+              {(() => {
+                const filtered = recentLedger.filter(l => {
+                  if (ledgerReasonFilter === "all") return true;
+                  const target = ledgerReasonFilter.toUpperCase();
+                  const type = String(l.token_type || "").toUpperCase();
+                  const label = String(l.label || "").toUpperCase();
+                  const reason = String(l.reason || "").toUpperCase();
+
+                  if (target === "ROULETTE") {
+                    return type.includes("ROULETTE") || label.includes("ROULETTE") || reason.includes("ROULETTE");
+                  }
+                  if (target === "DICE") {
+                    return type.includes("DICE") || label.includes("DICE") || reason.includes("DICE");
+                  }
+                  if (target === "LOTTERY") {
+                    return type.includes("LOTTERY") || label.includes("LOTTERY") || reason.includes("LOTTERY");
+                  }
+                  return false;
+                });
+
+                if (filtered.length === 0 && !ledgerQuery.isLoading) {
+                  return <p className="text-gray-500 text-sm text-center py-4">기록이 없습니다.</p>;
+                }
+
+                return filtered.map(l => (
+                  <div key={l.id} className="flex items-start justify-between text-sm py-2 border-b border-[#222] last:border-0 hover:bg-[#1A1A1A] px-2 rounded">
+                    <div className="flex flex-col flex-1">
+                      <span className="text-gray-300 font-medium">{GAME_TOKEN_LABELS[l.token_type] || l.token_type}</span>
+                      <span className="text-xs text-gray-500">{l.reason} {l.label ? `(${l.label})` : ""}</span>
+                      <span className="text-xs text-gray-600 mt-0.5">{dayjs(l.created_at).format("YYYY-MM-DD HH:mm:ss")}</span>
                     </div>
-                    <div className="text-xs text-gray-600">잔액: {l.balance_after}</div>
+                    <div className="text-right ml-2">
+                      <div className={`font-mono font-bold ${l.delta > 0 ? "text-[#91F402]" : "text-red-400"}`}>
+                        {l.delta > 0 ? "+" : ""}{l.delta}
+                      </div>
+                      <div className="text-xs text-gray-600">잔액: {l.balance_after}</div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ));
+              })()}
             </div>
             {/* Ledger Pagination */}
             <div className="flex items-center justify-between mt-4 pt-3 border-t border-[#222]">

@@ -36,4 +36,10 @@ class User(Base):
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow, index=True)
     updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+    # [Retention] Ticket Zero Cooldown
+    last_free_ticket_claimed_at = Column(DateTime, nullable=True)
+
+    # [Retention] Onboarding
+    has_completed_onboarding = Column(Boolean, default=False)
+
     admin_profile = relationship("AdminUserProfile", back_populates="user", uselist=False, cascade="all, delete-orphan")

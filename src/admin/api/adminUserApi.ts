@@ -9,6 +9,7 @@ export interface AdminUserPayload {
   status?: string;
   password?: string;
   season_level?: number;
+  admin_profile?: AdminUserProfile;
 }
 
 export interface AdminUserProfile {

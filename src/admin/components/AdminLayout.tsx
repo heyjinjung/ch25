@@ -81,7 +81,7 @@ const Sidebar: React.FC<{ mobile?: boolean; closeSidebar?: () => void }> = ({ mo
     <div className="flex h-full w-64 flex-col border-r border-[#333333] bg-[#111111] text-white">
       {mobile && (
         <div className="flex items-center justify-between border-b border-[#333333] p-4">
-          <h2 className="text-xl font-bold text-[#91F402]">관리자</h2>
+          <h2 className="text-xl font-bold text-[#91F402]">씨씨지민</h2>
           <button
             type="button"
             onClick={closeSidebar}
@@ -170,7 +170,7 @@ const Header: React.FC<{ toggleSidebar: () => void }> = ({ toggleSidebar }) => {
           >
             <Menu size={24} />
           </button>
-          <h1 className="ml-2 text-xl font-semibold text-[#91F402] md:ml-0">관리자 페이지</h1>
+          <h1 className="ml-2 text-xl font-semibold text-[#91F402] md:ml-0">씨씨지민 코드지갑</h1>
         </div>
         <div className="flex items-center space-x-4">
           <button type="button" className="rounded-full p-1 text-[#91F402] hover:bg-[#2D6B3B]" aria-label="알림">

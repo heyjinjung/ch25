@@ -13,6 +13,12 @@ type MemberRow = AdminUser & {
     level: number;
     xp: number;
     status: string;
+    // Profile fields
+    real_name: string;
+    phone_number: string;
+    telegram_id: string;
+    memo: string;
+    tags: string;
   };
   passwordReset?: string;
 };
@@ -67,6 +73,11 @@ const UserAdminPage: React.FC = () => {
     xp: 0,
     status: "ACTIVE",
     password: "",
+    real_name: "",
+    phone_number: "",
+    telegram_id: "",
+    memo: "",
+    tags: "",
   });
 
   useEffect(() => {
@@ -81,6 +92,11 @@ const UserAdminPage: React.FC = () => {
           level: u.season_level ?? u.level ?? 1,
           xp: u.xp ?? 0,
           status: u.status ?? "ACTIVE",
+          real_name: u.admin_profile?.real_name ?? "",
+          phone_number: u.admin_profile?.phone_number ?? "",
+          telegram_id: u.admin_profile?.telegram_id ?? "",
+          memo: u.admin_profile?.memo ?? "",
+          tags: (u.admin_profile?.tags ?? []).join(", "),
         },
         passwordReset: "",
       }))
@@ -93,7 +109,7 @@ const UserAdminPage: React.FC = () => {
       await queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
       addToast("생성 완료", "success");
       setShowAddForm(false);
-      setNewMember({ nickname: "", level: 1, xp: 0, status: "ACTIVE", password: "" });
+      setNewMember({ nickname: "", level: 1, xp: 0, status: "ACTIVE", password: "", real_name: "", phone_number: "", telegram_id: "", memo: "", tags: "" });
     },
     onError: (err) => addToast(mapErrorDetail(err), "error"),
   });
@@ -207,10 +223,15 @@ const UserAdminPage: React.FC = () => {
             ...m,
             isEditing: true,
             draft: {
-              nickname: m.nickname ?? m.external_id,
+              nickname: m.nickname ?? m.external_id ?? "",
               level: m.season_level ?? m.level ?? 1,
               xp: m.xp ?? 0,
               status: m.status ?? "ACTIVE",
+              real_name: m.admin_profile?.real_name ?? "",
+              phone_number: m.admin_profile?.phone_number ?? "",
+              telegram_id: m.admin_profile?.telegram_id ?? "",
+              memo: m.admin_profile?.memo ?? "",
+              tags: (m.admin_profile?.tags ?? []).join(", "),
             },
           };
         }
@@ -228,6 +249,11 @@ const UserAdminPage: React.FC = () => {
           level: m.season_level ?? m.level ?? 1,
           xp: m.xp ?? 0,
           status: m.status ?? "ACTIVE",
+          real_name: m.admin_profile?.real_name ?? "",
+          phone_number: m.admin_profile?.phone_number ?? "",
+          telegram_id: m.admin_profile?.telegram_id ?? "",
+          memo: m.admin_profile?.memo ?? "",
+          tags: (m.admin_profile?.tags ?? []).join(", "),
         };
         const nextDraft = { ...base } as any;
         if (field === "level") nextDraft.level = clampNumber(value, 1, 1);
@@ -246,6 +272,13 @@ const UserAdminPage: React.FC = () => {
       season_level: row.draft.level, // Sync both for backend compatibility
       xp: row.draft.xp,
       status: row.draft.status,
+      admin_profile: {
+        real_name: row.draft.real_name,
+        phone_number: row.draft.phone_number,
+        telegram_id: row.draft.telegram_id,
+        memo: row.draft.memo,
+        tags: row.draft.tags.split(",").map((t) => t.trim()).filter((t) => t.length > 0),
+      },
     };
     updateMutation.mutate({ id: row.id, payload });
     toggleEdit(row.id, false);
@@ -292,6 +325,13 @@ const UserAdminPage: React.FC = () => {
       xp: clampNumber(newMember.xp, 0, 0),
       status: newMember.status,
       password: newMember.password ? newMember.password.trim() : undefined,
+      admin_profile: {
+        real_name: newMember.real_name,
+        phone_number: newMember.phone_number,
+        telegram_id: newMember.telegram_id,
+        memo: newMember.memo,
+        tags: newMember.tags.split(",").map((t) => t.trim()).filter((t) => t.length > 0),
+      },
     };
     createMutation.mutate(payload);
   };
@@ -420,6 +460,63 @@ const UserAdminPage: React.FC = () => {
                     className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
                   />
                 </div>
+                <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-[#333333]">
+                  <div className="space-y-1">
+                    <label htmlFor="real_name" className="text-xs font-medium text-gray-400">실명</label>
+                    <input
+                      id="real_name"
+                      type="text"
+                      value={newMember.real_name}
+                      onChange={(e) => setNewMember((p) => ({ ...p, real_name: e.target.value }))}
+                      className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-[#91F402]"
+                      placeholder="홍길동"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label htmlFor="phone_number" className="text-xs font-medium text-gray-400">연락처</label>
+                    <input
+                      id="phone_number"
+                      type="text"
+                      value={newMember.phone_number}
+                      onChange={(e) => setNewMember((p) => ({ ...p, phone_number: e.target.value }))}
+                      className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-[#91F402]"
+                      placeholder="010-0000-0000"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label htmlFor="telegram_id" className="text-xs font-medium text-gray-400">텔레그램 ID</label>
+                    <input
+                      id="telegram_id"
+                      type="text"
+                      value={newMember.telegram_id}
+                      onChange={(e) => setNewMember((p) => ({ ...p, telegram_id: e.target.value }))}
+                      className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-[#91F402]"
+                      placeholder="username"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label htmlFor="tags" className="text-xs font-medium text-gray-400">태그 (쉼표 구분)</label>
+                    <input
+                      id="tags"
+                      type="text"
+                      value={newMember.tags}
+                      onChange={(e) => setNewMember((p) => ({ ...p, tags: e.target.value }))}
+                      className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-[#91F402]"
+                      placeholder="VIP, 보너스, 신규"
+                    />
+                  </div>
+                  <div className="md:col-span-2 space-y-1">
+                    <label htmlFor="memo" className="text-xs font-medium text-gray-400">메모</label>
+                    <textarea
+                      id="memo"
+                      value={newMember.memo}
+                      onChange={(e) => setNewMember((p) => ({ ...p, memo: e.target.value }))}
+                      className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-[#91F402]"
+                      placeholder="특이사항 입력"
+                      rows={2}
+                    />
+                  </div>
+                </div>
               </div>
 
               <div className="flex justify-end gap-2">
@@ -427,7 +524,7 @@ const UserAdminPage: React.FC = () => {
                   type="button"
                   onClick={() => {
                     setShowAddForm(false);
-                    setNewMember({ nickname: "", level: 1, xp: 0, status: "ACTIVE", password: "" });
+                    setNewMember({ nickname: "", level: 1, xp: 0, status: "ACTIVE", password: "", real_name: "", phone_number: "", telegram_id: "", memo: "", tags: "" });
                   }}
                   className="rounded-md border border-[#333333] bg-[#1A1A1A] px-4 py-2 text-sm text-gray-200 hover:bg-[#2C2C2E]"
                 >
@@ -574,30 +671,82 @@ const UserAdminPage: React.FC = () => {
                         )}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-400">
-                        <div className="text-white">{member.admin_profile?.real_name || "-"}</div>
-                        <div className="text-xs text-gray-500">{member.admin_profile?.phone_number || "-"}</div>
+                        {member.isEditing ? (
+                          <div className="flex flex-col gap-1">
+                            <input
+                              type="text"
+                              value={member.draft?.real_name ?? ""}
+                              onChange={(e) => updateDraftField(member.id, "real_name", e.target.value)}
+                              placeholder="실명"
+                              className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-1 text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#2D6B3B]"
+                            />
+                            <input
+                              type="text"
+                              value={member.draft?.phone_number ?? ""}
+                              onChange={(e) => updateDraftField(member.id, "phone_number", e.target.value)}
+                              placeholder="연락처"
+                              className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-1 text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#2D6B3B]"
+                            />
+                          </div>
+                        ) : (
+                          <>
+                            <div className="text-white">{member.admin_profile?.real_name || "-"}</div>
+                            <div className="text-xs text-gray-500">{member.admin_profile?.phone_number || "-"}</div>
+                          </>
+                        )}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-400">
-                        {member.admin_profile?.telegram_id ? (
-                          <a href={`https://t.me/${member.admin_profile.telegram_id}`} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">
-                            {member.admin_profile.telegram_id}
-                          </a>
-                        ) : "-"}
-                        {member.admin_profile?.memo && (
-                          <div className="text-xs text-gray-500 truncate max-w-[100px]" title={member.admin_profile.memo}>
-                            {member.admin_profile.memo}
+                        {member.isEditing ? (
+                          <div className="flex flex-col gap-1">
+                            <input
+                              type="text"
+                              value={member.draft?.telegram_id ?? ""}
+                              onChange={(e) => updateDraftField(member.id, "telegram_id", e.target.value)}
+                              placeholder="텔레그램"
+                              className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-1 text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#2D6B3B]"
+                            />
+                            <input
+                              type="text"
+                              value={member.draft?.memo ?? ""}
+                              onChange={(e) => updateDraftField(member.id, "memo", e.target.value)}
+                              placeholder="메모"
+                              className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-1 text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#2D6B3B]"
+                            />
                           </div>
+                        ) : (
+                          <>
+                            {member.admin_profile?.telegram_id ? (
+                              <a href={`https://t.me/${member.admin_profile.telegram_id}`} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">
+                                {member.admin_profile.telegram_id}
+                              </a>
+                            ) : "-"}
+                            {member.admin_profile?.memo && (
+                              <div className="text-xs text-gray-500 truncate max-w-[100px]" title={member.admin_profile.memo}>
+                                {member.admin_profile.memo}
+                              </div>
+                            )}
+                          </>
                         )}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm">
-                        <div className="flex flex-wrap gap-1 max-w-[150px]">
-                          {member.admin_profile?.tags?.map((tag, i) => (
-                            <span key={i} className="inline-block rounded bg-[#333333] px-1.5 py-0.5 text-[10px] text-gray-300">
-                              {tag}
-                            </span>
-                          ))}
-                          {(!member.admin_profile?.tags || member.admin_profile.tags.length === 0) && "-"}
-                        </div>
+                        {member.isEditing ? (
+                          <input
+                            type="text"
+                            value={member.draft?.tags ?? ""}
+                            onChange={(e) => updateDraftField(member.id, "tags", e.target.value)}
+                            placeholder="태그1, 태그2..."
+                            className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-1.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#2D6B3B]"
+                          />
+                        ) : (
+                          <div className="flex flex-wrap gap-1 max-w-[150px]">
+                            {member.admin_profile?.tags?.map((tag, i) => (
+                              <span key={i} className="inline-block rounded bg-[#333333] px-1.5 py-0.5 text-[10px] text-gray-300">
+                                {tag}
+                              </span>
+                            ))}
+                            {(!member.admin_profile?.tags || member.admin_profile.tags.length === 0) && "-"}
+                          </div>
+                        )}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
                         <div className="flex items-center gap-2">

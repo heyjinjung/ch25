@@ -8,8 +8,11 @@ import { useToast } from "../common/ToastProvider";
 import type { GameTokenType } from "../../types/gameTokens";
 import { isTrialGrantEnabled } from "../../config/featureFlags";
 
+import InboxButton from "../common/InboxButton";
+
 const SidebarAppLayout: React.FC = memo(() => {
   const queryClient = useQueryClient();
+
   const { addToast } = useToast();
   const didAttemptRef = useRef(false);
 
@@ -78,7 +81,8 @@ const SidebarAppLayout: React.FC = memo(() => {
 
         <main className="min-w-0 flex-1 lg:h-full lg:overflow-y-auto">
           <div className="w-full p-4 md:p-8">
-            <div className="mb-4 flex justify-end">
+            <div className="mb-4 flex justify-end gap-2">
+              <InboxButton />
               <HomeShortcutButton />
             </div>
             <Outlet />

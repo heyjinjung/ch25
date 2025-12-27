@@ -175,6 +175,11 @@ class AdminUserService:
 
                 db.add(progress)
 
+        # Handle Admin Profile (CRM) update
+        if "admin_profile" in update_data and update_data["admin_profile"]:
+            from app.services.user_segment_service import UserSegmentService
+            UserSegmentService.upsert_user_profile(db, user_id, update_data["admin_profile"])
+
         db.add(user)
         db.commit()
         db.refresh(user)

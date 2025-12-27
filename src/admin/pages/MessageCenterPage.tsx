@@ -9,9 +9,12 @@ const MessageCenterPage: React.FC = () => {
     const { addToast } = useToast();
     const queryClient = useQueryClient();
 
+    const [page, setPage] = useState(0);
+    const [search, setSearch] = useState("");
+
     const { data: messages, isLoading } = useQuery({
-        queryKey: ["admin", "messages"],
-        queryFn: () => fetchMessages(0, 50),
+        queryKey: ["admin", "messages", page],
+        queryFn: () => fetchMessages(page * 50, 50),
     });
 
     const [form, setForm] = useState<SendMessagePayload>({
@@ -160,6 +163,17 @@ const MessageCenterPage: React.FC = () => {
                     <h3 className="text-lg font-medium text-white flex items-center gap-2">
                         <Clock size={18} className="text-gray-400" /> 발송 기록
                     </h3>
+                    <div className="flex items-center gap-2">
+                        <div className="relative">
+                            <input
+                                type="text"
+                                placeholder="제목 검색..."
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                className="rounded-md border border-[#333333] bg-[#0A0A0A] py-1.5 pl-3 pr-8 text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#91F402]"
+                            />
+                        </div>
+                    </div>
                 </div>
 
                 {isLoading ? (
@@ -178,7 +192,7 @@ const MessageCenterPage: React.FC = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-[#333333] text-sm text-gray-200">
-                                {messages?.map((msg) => (
+                                {messages?.filter(m => m.title.toLowerCase().includes(search.toLowerCase())).map((msg) => (
                                     <tr key={msg.id} className="hover:bg-[#1A1A1A]">
                                         <td className="px-6 py-3 text-gray-500">{msg.id}</td>
                                         <td className="px-6 py-3 font-medium text-white">{msg.title}</td>
@@ -209,6 +223,25 @@ const MessageCenterPage: React.FC = () => {
                         </table>
                     </div>
                 )}
+                <div className="border-t border-[#333333] px-6 py-4 flex items-center justify-between">
+                    <button
+                        type="button"
+                        onClick={() => setPage(p => Math.max(0, p - 1))}
+                        disabled={page === 0}
+                        className="text-xs text-gray-400 hover:text-[#91F402] disabled:opacity-30 transition-colors"
+                    >
+                        ← 이전 50건
+                    </button>
+                    <span className="text-xs text-gray-500 font-medium">페이지 {page + 1}</span>
+                    <button
+                        type="button"
+                        onClick={() => setPage(p => p + 1)}
+                        disabled={!messages || messages.length < 50}
+                        className="text-xs text-gray-400 hover:text-[#91F402] disabled:opacity-30 transition-colors"
+                    >
+                        다음 50건 →
+                    </button>
+                </div>
             </div>
         </section>
     );
