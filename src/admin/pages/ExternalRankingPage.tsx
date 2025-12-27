@@ -86,12 +86,12 @@ const ExternalRankingPage: React.FC = () => {
       prev.map((row, idx) =>
         idx === index
           ? {
-              ...row,
-              [field]:
-                field === "deposit_amount" || field === "play_count" || field === "user_id"
-                  ? Number(value)
-                  : value,
-            }
+            ...row,
+            [field]:
+              field === "deposit_amount" || field === "play_count" || field === "user_id"
+                ? Number(value)
+                : value,
+          }
           : row
       )
     );
@@ -185,7 +185,7 @@ const ExternalRankingPage: React.FC = () => {
   const pageItems = sortedVisible.slice(pageStart, pageEnd);
 
   const inputBase =
-    "w-full rounded-md border border-[#333333] bg-[#1A1A1A] px-3 py-2 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]";
+    "w-full rounded-md border border-[#333333] bg-[#0A0A0A] px-3 py-2 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:ring-1 focus:ring-[#91F402] focus:border-[#91F402] transition-colors";
 
   const PrimaryButton = ({
     children,
@@ -336,8 +336,8 @@ const ExternalRankingPage: React.FC = () => {
                     row.__isNew
                       ? "bg-[#2D6B3B]/20"
                       : viewIdx % 2 === 0
-                      ? "bg-[#111111]"
-                      : "bg-[#1A1A1A]"
+                        ? "bg-[#111111]"
+                        : "bg-[#1A1A1A]"
                   }
                 >
                   <td className="px-4 py-3">

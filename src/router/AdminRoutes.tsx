@@ -5,13 +5,12 @@ import AdminLoginPage from "../admin/pages/AdminLoginPage";
 import AdminDashboardPage from "../admin/pages/AdminDashboardPage";
 import SurveyAdminPage from "../admin/pages/SurveyAdminPage";
 import SeasonListPage from "../admin/pages/SeasonListPage";
-import FeatureSchedulePage from "../admin/pages/FeatureSchedulePage";
+
 import RouletteConfigPage from "../admin/pages/RouletteConfigPage";
 import DiceConfigPage from "../admin/pages/DiceConfigPage";
 import LotteryConfigPage from "../admin/pages/LotteryConfigPage";
 import ExternalRankingPage from "../admin/pages/ExternalRankingPage";
-import GameTokenGrantPage from "../admin/pages/GameTokenGrantPage";
-import GameTokenLogsPage from "../admin/pages/GameTokenLogsPage";
+import TicketManagerPage from "../admin/pages/TicketManagerPage";
 import UserAdminPage from "../admin/pages/UserAdminPage";
 import AdminTeamBattlePage from "../admin/pages/AdminTeamBattlePage";
 import UserSegmentsPage from "../admin/pages/UserSegmentsPage";
@@ -30,14 +29,14 @@ const AdminRoutes: React.FC = () => {
         <Route element={<AdminLayout />}>
           <Route path="" element={<AdminDashboardPage />} />
           <Route path="seasons" element={<SeasonListPage />} />
-          <Route path="feature-schedule" element={<FeatureSchedulePage />} />
+
           <Route path="surveys" element={<SurveyAdminPage />} />
           <Route path="roulette" element={<RouletteConfigPage />} />
           <Route path="dice" element={<DiceConfigPage />} />
           <Route path="lottery" element={<LotteryConfigPage />} />
           <Route path="external-ranking" element={<ExternalRankingPage />} />
-          <Route path="game-tokens" element={<GameTokenGrantPage />} />
-          <Route path="game-token-logs" element={<GameTokenLogsPage />} />
+          <Route path="game-tokens" element={<TicketManagerPage />} />
+          <Route path="game-token-logs" element={<Navigate to="/admin/game-tokens" replace />} />
           <Route path="users" element={<UserAdminPage />} />
           <Route path="user-segments" element={<UserSegmentsPage />} />
           <Route path="segment-rules" element={<SegmentRulesPage />} />
