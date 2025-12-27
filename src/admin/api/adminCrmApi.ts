@@ -26,7 +26,25 @@ export interface CrmStats {
     arpu?: number; // Average Revenue Per User
 }
 
+export interface AdminUserProfile {
+    user_id: number;
+    external_id?: string;
+    real_name?: string;
+    phone_number?: string;
+    telegram_id?: string;
+    tags: string[];
+    memo?: string;
+    computed_segments: string[];
+}
+
 export async function fetchCrmStats() {
     const { data } = await adminApi.get<CrmStats>("/admin/api/crm/stats");
+    return data;
+}
+
+export async function fetchUsersBySegment(segmentType: string) {
+    const { data } = await adminApi.get<AdminUserProfile[]>("/admin/api/crm/segment-detail", {
+        params: { segment_type: segmentType }
+    });
     return data;
 }

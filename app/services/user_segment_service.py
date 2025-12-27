@@ -14,6 +14,7 @@ from app.models.admin_user_profile import AdminUserProfile
 from app.models.vault_earn_event import VaultEarnEvent
 from app.models.vault2 import VaultStatus
 from app.models.user_cash_ledger import UserCashLedger
+from app.models.external_ranking import ExternalRankingData
 
 # Thresholds
 WHALE_ACCRUAL_THRESHOLD = 1_000_000
@@ -128,23 +129,52 @@ class UserSegmentService:
 
         return segments
 
-        return {
-            "total_users": total_users,
-            "active_users": active_users,
-            "paying_users": paying_users,
-            "whale_count": whale_count,
-            "conversion_rate": conversion_rate,
-            "retention_rate": retention_rate, 
-            "empty_tank_count": empty_tank_count,
-            
-            # Advanced KPIs
-            "churn_rate": 0.0, # Placeholder, calculation below
-            "ltv": 0.0,
-            "arpu": 0.0,
-            "new_user_growth": 0.0,
-            "message_open_rate": 0.0,
-            "segments": {}
-        }
+    @staticmethod
+    def get_users_by_segment(db: Session, segment_type: str, limit: int = 100) -> List[int]:
+        """Get user IDs belonging to a specific segment."""
+        now = datetime.utcnow()
+        active_24h = now - timedelta(hours=24)
+        active_7d = now - timedelta(days=7)
+        inactive_30d = now - timedelta(days=30)
+
+        query = db.query(User.id)
+
+        if segment_type == "TOTAL_USERS":
+            pass # No filter
+        elif segment_type == "ACTIVE_USERS":
+            query = query.filter(User.last_login_at >= active_7d)
+        elif segment_type == "PAYING_USERS" or segment_type == "CONVERTED":
+            query = query.join(ExternalRankingData, User.id == ExternalRankingData.user_id)\
+                         .filter(ExternalRankingData.deposit_amount > 0)
+        elif segment_type == "WHALE":
+            query = query.join(VaultEarnEvent, User.id == VaultEarnEvent.user_id)\
+                         .group_by(User.id)\
+                         .having(func.sum(VaultEarnEvent.amount) >= WHALE_ACCRUAL_THRESHOLD)
+        elif segment_type == "EMPTY_TANK":
+            query = query.filter(
+                User.last_login_at >= active_24h,
+                (func.coalesce(User.cash_balance, 0) + func.coalesce(User.vault_balance, 0)) < EMPTY_TANK_THRESHOLD
+            )
+        elif segment_type == "DAILY":
+            query = query.filter(User.last_login_at >= active_24h)
+        elif segment_type == "WEEKLY":
+            query = query.filter(User.last_login_at >= active_7d, User.last_login_at < active_24h)
+        elif segment_type == "MONTHLY":
+            query = query.filter(User.last_login_at >= inactive_30d, User.last_login_at < active_7d)
+        elif segment_type == "DORMANT":
+            query = query.filter((User.last_login_at < inactive_30d) | (User.last_login_at == None))
+        elif segment_type.startswith("CHARGE_"):
+            # Requires join with AdminUserProfile
+            risk = segment_type.split("_")[1]
+            query = query.join(AdminUserProfile, User.id == AdminUserProfile.user_id)
+            if risk == "LOW":
+                query = query.filter(AdminUserProfile.days_since_last_charge < 7)
+            elif risk == "MEDIUM":
+                query = query.filter(AdminUserProfile.days_since_last_charge >= 7, AdminUserProfile.days_since_last_charge < 30)
+            elif risk == "HIGH":
+                query = query.filter(AdminUserProfile.days_since_last_charge >= 30)
+        
+        return [r[0] for r in query.limit(limit).all()]
 
     @staticmethod
     def get_overall_stats(db: Session) -> Dict[str, Any]:
@@ -158,9 +188,9 @@ class UserSegmentService:
         active_threshold = now - timedelta(days=7)
         active_users = db.query(func.count(User.id)).filter(User.last_login_at >= active_threshold).scalar() or 0
         
-        # 3. Paying Users (At least one Vault Unlock)
-        paying_users = db.query(func.count(func.distinct(UserCashLedger.user_id)))\
-            .filter(UserCashLedger.reason == "VAULT_UNLOCK")\
+        # 3. Paying Users (Converted = External Ranking Data with deposit > 0)
+        paying_users = db.query(func.count(ExternalRankingData.id))\
+            .filter(ExternalRankingData.deposit_amount > 0)\
             .scalar() or 0
             
         # 4. Whales (Total Earned >= Threshold)
@@ -199,12 +229,8 @@ class UserSegmentService:
         total_value = db.query(func.sum(VaultEarnEvent.amount)).scalar() or 0
         ltv = round(total_value / total_users, 2) if total_users > 0 else 0
 
-        # 10. ARPU (Avg Revenue) Proxy: Avg Balance (Cash + Vault)
-        # Usually ARPU is per Month, but here we use Snapshot Average Balance as proxy for 'User Worth'
-        total_balance_sum = db.query(
-            func.sum(func.coalesce(User.cash_balance, 0) + func.coalesce(User.vault_balance, 0))
-        ).scalar() or 0
-        arpu = round(total_balance_sum / total_users, 2) if total_users > 0 else 0
+        # 10. ARPU (Removed as requested)
+        arpu = 0.0
 
         # 11. New User Growth (7 days)
         week_ago = now - timedelta(days=7)

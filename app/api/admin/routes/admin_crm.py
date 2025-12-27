@@ -91,6 +91,31 @@ def get_crm_stats(db: Session = Depends(get_db)):
     """Get aggregated CRM statistics."""
     return UserSegmentService.get_overall_stats(db)
 
+@router.get("/segment-detail", response_model=List[AdminUserProfileResponse])
+def get_segment_detail(segment_type: str, limit: int = 100, db: Session = Depends(get_db)):
+    """Get users in a specific segment with profile info."""
+    user_ids = UserSegmentService.get_users_by_segment(db, segment_type, limit)
+    results = []
+    for uid in user_ids:
+        profile = UserSegmentService.get_user_profile(db, uid)
+        segments = UserSegmentService.get_computed_segments(db, uid)
+        
+        # User object for external_id fallback
+        u = db.query(User).filter(User.id == uid).first()
+        
+        resp = AdminUserProfileResponse(
+            user_id=uid,
+            external_id=u.external_id if u else None,
+            real_name=profile.real_name if profile else None,
+            phone_number=profile.phone_number if profile else None,
+            telegram_id=profile.telegram_id if profile else None,
+            tags=profile.tags if profile else [],
+            memo=profile.memo if profile else None,
+            computed_segments=segments
+        )
+        results.append(resp)
+    return results
+
 @router.post("/import-profiles", response_model=ImportResult)
 async def import_profiles(
     file: UploadFile = File(...),
@@ -306,11 +331,9 @@ def fan_out_message(db: Session, message_id: int, target_type: str, target_value
             target_user_ids = [int(uid.strip()) for uid in target_value.split(",")]
             
     elif target_type == "SEGMENT":
-        # Harder: segments are computed. 
-        # Need to iterate all users or use optimized query?
-        # For now: Skip complex implementation, just handle ALL/USER.
-        # Implementation of SEGMENT targeting is heavy.
-        pass
+        if target_value:
+            # target_value should be something like "WHALE", "DORMANT", etc.
+            target_user_ids = UserSegmentService.get_users_by_segment(db, target_value, limit=10000)
     
     # 2. Insert Inbox
     inbox_items = []
