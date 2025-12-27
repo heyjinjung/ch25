@@ -38,6 +38,7 @@ const GameTokenLogsPage: React.FC = () => {
   // Search State
   const [externalIdInput, setExternalIdInput] = useState<string>("");
   const [externalIdFilter, setExternalIdFilter] = useState<string | undefined>();
+  const [gameFilter, setGameFilter] = useState<string>("all");
 
   // Global Filter State (for non-dashboard tabs)
   const [walletPage, setWalletPage] = useState<number>(0);
@@ -196,28 +197,51 @@ const GameTokenLogsPage: React.FC = () => {
               </h4>
               <span className="text-xs text-gray-500">페이지 {playLogPage + 1}</span>
             </div>
+            <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-2 scrollbar-hide">
+              {["all", "roulette", "dice", "lottery"].map((g) => (
+                <button
+                  key={g}
+                  onClick={() => { setGameFilter(g); setPlayLogPage(0); }}
+                  className={`px-3 py-1 text-xs rounded-full border transition-all whitespace-nowrap ${gameFilter === g
+                      ? "bg-[#91F402] border-[#91F402] text-black font-bold"
+                      : "bg-[#1A1A1A] border-[#333] text-gray-400 hover:border-gray-500"
+                    }`}
+                >
+                  {g === "all" ? "전체" : g === "roulette" ? "룰렛" : g === "dice" ? "주사위" : "복권"}
+                </button>
+              ))}
+            </div>
             <div className="flex-1 space-y-2 max-h-[400px] overflow-y-auto">
               {playLogsQuery.isLoading && <div className="text-center py-4"><Loader2 className="animate-spin mx-auto text-gray-500" /></div>}
-              {recentLogs.length === 0 && !playLogsQuery.isLoading && <p className="text-gray-500 text-sm text-center py-4">플레이 기록이 없습니다.</p>}
-              {recentLogs.map(log => (
-                <div key={log.id} className="flex items-start justify-between text-sm py-2 border-b border-[#222] last:border-0 hover:bg-[#1A1A1A] px-2 rounded">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-gray-200">{gameLabel(log.game)}</span>
-                      {log.reward_label && (
-                        <span className="px-1.5 py-0.5 text-xs rounded bg-[#2D6B3B]/30 text-[#91F402] font-medium">
-                          {log.reward_label}
-                        </span>
-                      )}
+              {(() => {
+                const filtered = gameFilter === "all"
+                  ? recentLogs
+                  : recentLogs.filter(l => l.game?.toLowerCase().includes(gameFilter));
+
+                if (filtered.length === 0 && !playLogsQuery.isLoading) {
+                  return <p className="text-gray-500 text-sm text-center py-4">해당하는 플레이 기록이 없습니다.</p>;
+                }
+
+                return filtered.map(log => (
+                  <div key={log.id} className="flex items-start justify-between text-sm py-2 border-b border-[#222] last:border-0 hover:bg-[#1A1A1A] px-2 rounded">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-gray-200">{gameLabel(log.game)}</span>
+                        {log.reward_label && (
+                          <span className="px-1.5 py-0.5 text-xs rounded bg-[#2D6B3B]/30 text-[#91F402] font-medium">
+                            {log.reward_label}
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-0.5">{dayjs(log.created_at).format("YYYY-MM-DD HH:mm:ss")}</div>
                     </div>
-                    <div className="text-xs text-gray-500 mt-0.5">{dayjs(log.created_at).format("YYYY-MM-DD HH:mm:ss")}</div>
+                    <div className="text-right ml-2">
+                      <div className="text-[#91F402] font-mono font-bold">+{log.reward_amount}</div>
+                      <div className="text-xs text-gray-500">{log.reward_type}</div>
+                    </div>
                   </div>
-                  <div className="text-right ml-2">
-                    <div className="text-[#91F402] font-mono font-bold">+{log.reward_amount}</div>
-                    <div className="text-xs text-gray-500">{log.reward_type}</div>
-                  </div>
-                </div>
-              ))}
+                ));
+              })()}
             </div>
             {/* Play Logs Pagination */}
             <div className="flex items-center justify-between mt-4 pt-3 border-t border-[#222]">
