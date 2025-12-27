@@ -650,8 +650,10 @@ class SeasonPassService:
         progress.current_xp += xp_amount
         db.add(progress)
 
-        # Do not mirror to global LevelXP here; external/bonus XP would double-grant game tokens
-        # via LevelXPService auto rewards, causing overpayment.
+        # [Level Unification] Trigger global level XP gain.
+        # This ensures that Seasonal XP (from deposits or games) also contributes to Global/Admin levels.
+        from app.services.level_xp_service import LevelXPService
+        LevelXPService().add_xp(db, user_id=user_id, delta=xp_amount, source="SEASON_PASS_BONUS_XP")
 
         achieved_levels = self._eligible_levels(db, season.id, progress.current_xp)
         new_levels = [level for level in achieved_levels if level.level > reward_baseline_level]

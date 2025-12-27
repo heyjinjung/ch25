@@ -118,7 +118,7 @@ class RewardService:
                 self.grant_point(db, user_id=user_id, amount=reward_amount, reason=reason)
             return
 
-        if reward_type == "BUNDLE":
+        if reward_type in {"BUNDLE", "TICKET_BUNDLE"}:
             # BUNDLE은 여러 티켓을 한 번에 지급하는 미끼 보상입니다.
             bundle_items = []
             if reward_amount == 3:  # Level 3: All-in-one Bundle (Roulette 1 + Dice 1 + Lottery 1)
@@ -159,8 +159,11 @@ class RewardService:
 
         ticket_map = {
             "TICKET_ROULETTE": GameTokenType.ROULETTE_COIN,
+            "ROULETTE_TICKET": GameTokenType.ROULETTE_COIN,
             "TICKET_DICE": GameTokenType.DICE_TOKEN,
+            "DICE_TICKET": GameTokenType.DICE_TOKEN,
             "TICKET_LOTTERY": GameTokenType.LOTTERY_TICKET,
+            "LOTTERY_TICKET": GameTokenType.LOTTERY_TICKET,
             "CC_COIN": GameTokenType.CC_COIN,
         }
         if reward_type in ticket_map:

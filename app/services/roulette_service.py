@@ -24,7 +24,7 @@ from app.services.vault_service import VaultService
 class RouletteService:
     """Encapsulates roulette game operations."""
 
-    BASE_GAME_XP = 5
+    BASE_GAME_XP = 0
 
     def __init__(self) -> None:
         self.feature_service = FeatureService()

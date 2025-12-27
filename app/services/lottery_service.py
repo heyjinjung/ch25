@@ -24,7 +24,7 @@ from app.services.vault_service import VaultService
 class LotteryService:
     """Encapsulates lottery gameplay with weighted prizes and stock handling."""
 
-    BASE_GAME_XP = 5
+    BASE_GAME_XP = 0
 
     def __init__(self) -> None:
         self.feature_service = FeatureService()
