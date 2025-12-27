@@ -10,16 +10,11 @@ from app.schemas.vault2 import VaultAdminStateResponse, VaultTimerActionRequest
 from app.services.vault_service import VaultService
 
 
-_core = APIRouter(tags=["admin-vault-ops"])
-
 # Canonical admin API base in this codebase is `/admin/api/*`.
 # Some environments/clients still call `/api/admin/*` (often rewritten by NGINX).
 # Expose both to avoid 404s.
 router = APIRouter(prefix="/admin/api/vault", tags=["admin-vault-ops"])
 legacy_router = APIRouter(prefix="/api/admin/vault", tags=["admin-vault-ops"])
-
-router.include_router(_core)
-legacy_router.include_router(_core)
 
 
 def _build_admin_state(service: VaultService, db: Session, user_id: int) -> VaultAdminStateResponse:
@@ -66,15 +61,19 @@ def _build_admin_state(service: VaultService, db: Session, user_id: int) -> Vaul
     )
 
 
-@_core.get("/{user_id}", response_model=VaultAdminStateResponse)
-@_core.get("/{user_id}/", response_model=VaultAdminStateResponse)
+@router.get("/{user_id}", response_model=VaultAdminStateResponse)
+@router.get("/{user_id}/", response_model=VaultAdminStateResponse)
+@legacy_router.get("/{user_id}", response_model=VaultAdminStateResponse)
+@legacy_router.get("/{user_id}/", response_model=VaultAdminStateResponse)
 def get_user_vault_state(user_id: int, db: Session = Depends(get_db)) -> VaultAdminStateResponse:
     service = VaultService()
     return _build_admin_state(service, db, user_id)
 
 
-@_core.post("/{user_id}/timer", response_model=VaultAdminStateResponse)
-@_core.post("/{user_id}/timer/", response_model=VaultAdminStateResponse)
+@router.post("/{user_id}/timer", response_model=VaultAdminStateResponse)
+@router.post("/{user_id}/timer/", response_model=VaultAdminStateResponse)
+@legacy_router.post("/{user_id}/timer", response_model=VaultAdminStateResponse)
+@legacy_router.post("/{user_id}/timer/", response_model=VaultAdminStateResponse)
 def set_user_timer(user_id: int, payload: VaultTimerActionRequest, db: Session = Depends(get_db)) -> VaultAdminStateResponse:
     service = VaultService()
     service.admin_timer_action(db, user_id=user_id, action=payload.action)
