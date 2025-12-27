@@ -1,9 +1,10 @@
 // src/admin/pages/UserAdminPage.tsx
 import React, { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Edit2, Plus, Save, Search, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Edit2, Plus, Save, Search, Trash2, Upload } from "lucide-react";
 import { createUser, deleteUser, fetchUsers, updateUser, AdminUser, AdminUserPayload } from "../api/adminUserApi";
 import { useToast } from "../../components/common/ToastProvider";
+import UserImportModal from "../components/UserImportModal";
 
 type MemberRow = AdminUser & {
   isEditing?: boolean;
@@ -54,6 +55,7 @@ const UserAdminPage: React.FC = () => {
   const deferredSearchInput = useDeferredValue(searchInput);
   const normalizedSearchTerm = useMemo(() => deferredSearchInput.trim().toLowerCase(), [deferredSearchInput]);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
   const [sortKey, setSortKey] = useState<SortKey>("nickname");
@@ -132,7 +134,11 @@ const UserAdminPage: React.FC = () => {
       const idMatch = String(m.id).includes(term);
       const nickname = (m.nickname ?? m.external_id ?? "").toLowerCase();
       const external = (m.external_id ?? "").toLowerCase();
-      return idMatch || nickname.includes(term) || external.includes(term);
+      // Search in CRM fields too
+      const realName = (m.admin_profile?.real_name ?? "").toLowerCase();
+      const tags = (m.admin_profile?.tags ?? []).join(" ").toLowerCase();
+
+      return idMatch || nickname.includes(term) || external.includes(term) || realName.includes(term) || tags.includes(term);
     });
   }, [members, normalizedSearchTerm]);
 
@@ -325,6 +331,14 @@ const UserAdminPage: React.FC = () => {
 
         <button
           type="button"
+          onClick={() => setShowImportModal(true)}
+          className="flex items-center justify-center rounded-md border border-[#333333] bg-[#1A1A1A] px-4 py-2 text-sm font-medium text-gray-200 hover:bg-[#2D6B3B] hover:text-white mr-2"
+        >
+          <Upload size={18} className="mr-2" />
+          일괄 등록
+        </button>
+        <button
+          type="button"
           onClick={() => setShowAddForm((p) => !p)}
           className="flex items-center justify-center rounded-md bg-[#2D6B3B] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#91F402] hover:text-black"
         >
@@ -333,334 +347,377 @@ const UserAdminPage: React.FC = () => {
         </button>
       </div>
 
-      {showAddForm && (
-        <div className="rounded-lg border border-[#333333] bg-[#111111] p-6 shadow-md">
-          <h3 className="text-lg font-medium text-[#91F402]">새 회원 추가</h3>
+      {
+        showAddForm && (
+          <div className="rounded-lg border border-[#333333] bg-[#111111] p-6 shadow-md">
+            <h3 className="text-lg font-medium text-[#91F402]">새 회원 추가</h3>
 
-          <form onSubmit={submitNewMember} className="mt-4 space-y-4">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div>
-                <label htmlFor="nickname" className="mb-1 block text-sm font-medium text-gray-300">
-                  닉네임
-                </label>
-                <input
-                  id="nickname"
-                  type="text"
-                  value={newMember.nickname}
-                  onChange={(e) => setNewMember((p) => ({ ...p, nickname: e.target.value }))}
-                  className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
-                  required
-                />
+            <form onSubmit={submitNewMember} className="mt-4 space-y-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                  <label htmlFor="nickname" className="mb-1 block text-sm font-medium text-gray-300">
+                    닉네임
+                  </label>
+                  <input
+                    id="nickname"
+                    type="text"
+                    value={newMember.nickname}
+                    onChange={(e) => setNewMember((p) => ({ ...p, nickname: e.target.value }))}
+                    className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="level" className="mb-1 block text-sm font-medium text-gray-300">
+                    레벨
+                  </label>
+                  <input
+                    id="level"
+                    type="number"
+                    min={1}
+                    value={newMember.level}
+                    onChange={(e) => setNewMember((p) => ({ ...p, level: clampNumber(e.target.value, 1, 1) }))}
+                    className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="xp" className="mb-1 block text-sm font-medium text-gray-300">
+                    XP
+                  </label>
+                  <input
+                    id="xp"
+                    type="number"
+                    min={0}
+                    value={newMember.xp}
+                    onChange={(e) => setNewMember((p) => ({ ...p, xp: clampNumber(e.target.value, 0, 0) }))}
+                    className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="status" className="mb-1 block text-sm font-medium text-gray-300">
+                    상태
+                  </label>
+                  <select
+                    id="status"
+                    value={newMember.status}
+                    onChange={(e) => setNewMember((p) => ({ ...p, status: e.target.value }))}
+                    className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
+                  >
+                    <option value="ACTIVE">ACTIVE</option>
+                    <option value="INACTIVE">INACTIVE</option>
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="password" className="mb-1 block text-sm font-medium text-gray-300">
+                    초기 비밀번호 (선택)
+                  </label>
+                  <input
+                    id="password"
+                    type="password"
+                    value={newMember.password}
+                    onChange={(e) => setNewMember((p) => ({ ...p, password: e.target.value }))}
+                    placeholder="최소 4자 이상"
+                    className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
+                  />
+                </div>
               </div>
-              <div>
-                <label htmlFor="level" className="mb-1 block text-sm font-medium text-gray-300">
-                  레벨
-                </label>
-                <input
-                  id="level"
-                  type="number"
-                  min={1}
-                  value={newMember.level}
-                  onChange={(e) => setNewMember((p) => ({ ...p, level: clampNumber(e.target.value, 1, 1) }))}
-                  className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
-                />
-              </div>
-              <div>
-                <label htmlFor="xp" className="mb-1 block text-sm font-medium text-gray-300">
-                  XP
-                </label>
-                <input
-                  id="xp"
-                  type="number"
-                  min={0}
-                  value={newMember.xp}
-                  onChange={(e) => setNewMember((p) => ({ ...p, xp: clampNumber(e.target.value, 0, 0) }))}
-                  className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
-                />
-              </div>
-              <div>
-                <label htmlFor="status" className="mb-1 block text-sm font-medium text-gray-300">
-                  상태
-                </label>
-                <select
-                  id="status"
-                  value={newMember.status}
-                  onChange={(e) => setNewMember((p) => ({ ...p, status: e.target.value }))}
-                  className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
+
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAddForm(false);
+                    setNewMember({ nickname: "", level: 1, xp: 0, status: "ACTIVE", password: "" });
+                  }}
+                  className="rounded-md border border-[#333333] bg-[#1A1A1A] px-4 py-2 text-sm text-gray-200 hover:bg-[#2C2C2E]"
                 >
-                  <option value="ACTIVE">ACTIVE</option>
-                  <option value="INACTIVE">INACTIVE</option>
-                </select>
+                  취소
+                </button>
+                <button
+                  type="submit"
+                  disabled={createMutation.isPending}
+                  className="rounded-md bg-[#2D6B3B] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#91F402] hover:text-black disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {createMutation.isPending ? "저장 중..." : "저장"}
+                </button>
               </div>
-              <div>
-                <label htmlFor="password" className="mb-1 block text-sm font-medium text-gray-300">
-                  초기 비밀번호 (선택)
-                </label>
-                <input
-                  id="password"
-                  type="password"
-                  value={newMember.password}
-                  onChange={(e) => setNewMember((p) => ({ ...p, password: e.target.value }))}
-                  placeholder="최소 4자 이상"
-                  className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setShowAddForm(false);
-                  setNewMember({ nickname: "", level: 1, xp: 0, status: "ACTIVE", password: "" });
-                }}
-                className="rounded-md border border-[#333333] bg-[#1A1A1A] px-4 py-2 text-sm text-gray-200 hover:bg-[#2C2C2E]"
-              >
-                취소
-              </button>
-              <button
-                type="submit"
-                disabled={createMutation.isPending}
-                className="rounded-md bg-[#2D6B3B] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#91F402] hover:text-black disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {createMutation.isPending ? "저장 중..." : "저장"}
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {isLoading && (
-        <div className="rounded-lg border border-[#333333] bg-[#111111] p-4 text-gray-200">불러오는 중...</div>
-      )}
-      {isError && (
-        <div className="rounded-lg border border-red-500/40 bg-red-950 p-4 text-red-100">{mapErrorDetail(error)}</div>
-      )}
-
-      {!isLoading && !isError && (
-        <div className="rounded-lg border border-[#333333] bg-[#111111] shadow-md">
-          <div className="max-h-[70vh] overflow-auto">
-            <table className="w-full min-w-[980px]">
-              <thead className="sticky top-0 z-10 border-b border-[#333333] bg-[#1A1A1A]">
-                <tr>
-                  <th
-                    className={`px-4 py-3 text-left text-xs font-medium uppercase tracking-wider ${sortKey === "id" ? "bg-[#2D6B3B] text-[#91F402]" : "text-gray-400"
-                      } cursor-pointer hover:bg-[#2D6B3B]`}
-                    onClick={() => handleSort("id")}
-                  >
-                    ID{renderSortIcon("id")}
-                  </th>
-                  <th
-                    className={`px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400`}
-                  >
-                    External ID
-                  </th>
-                  <th
-                    className={`px-4 py-3 text-left text-xs font-medium uppercase tracking-wider ${sortKey === "nickname" ? "bg-[#2D6B3B] text-[#91F402]" : "text-gray-400"
-                      } cursor-pointer hover:bg-[#2D6B3B]`}
-                    onClick={() => handleSort("nickname")}
-                  >
-                    닉네임{renderSortIcon("nickname")}
-                  </th>
-                  <th
-                    className={`px-4 py-3 text-left text-xs font-medium uppercase tracking-wider ${sortKey === "level" ? "bg-[#2D6B3B] text-[#91F402]" : "text-gray-400"
-                      } cursor-pointer hover:bg-[#2D6B3B]`}
-                    onClick={() => handleSort("level")}
-                  >
-                    레벨{renderSortIcon("level")}
-                  </th>
-                  <th
-                    className={`px-4 py-3 text-left text-xs font-medium uppercase tracking-wider ${sortKey === "xp" ? "bg-[#2D6B3B] text-[#91F402]" : "text-gray-400"
-                      } cursor-pointer hover:bg-[#2D6B3B]`}
-                    onClick={() => handleSort("xp")}
-                  >
-                    XP{renderSortIcon("xp")}
-                  </th>
-                  <th
-                    className={`px-4 py-3 text-left text-xs font-medium uppercase tracking-wider ${sortKey === "status" ? "bg-[#2D6B3B] text-[#91F402]" : "text-gray-400"
-                      } cursor-pointer hover:bg-[#2D6B3B]`}
-                    onClick={() => handleSort("status")}
-                  >
-                    상태{renderSortIcon("status")}
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">비밀번호(초기화)</th>
-                  <th className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-400">액션</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#333333]">
-                {currentMembers.map((member, index) => (
-                  <tr key={member.id} className={index % 2 === 0 ? "bg-[#111111]" : "bg-[#1A1A1A]"}>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-400">{member.id}</td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-white">{member.external_id || "-"}</td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      {member.isEditing ? (
-                        <input
-                          type="text"
-                          value={member.draft?.nickname ?? ""}
-                          onChange={(e) => updateDraftField(member.id, "nickname", e.target.value)}
-                          className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-1.5 text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
-                        />
-                      ) : (
-                        <div className="text-sm font-medium text-white">{member.nickname || "-"}</div>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-white">
-                      {member.isEditing ? (
-                        <input
-                          type="number"
-                          min={1}
-                          value={member.draft?.level ?? 1}
-                          onChange={(e) => updateDraftField(member.id, "level", e.target.value)}
-                          className="w-24 rounded-md border border-[#333333] bg-[#1A1A1A] p-1.5 text-right text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
-                        />
-                      ) : (
-                        member.season_level ?? member.level ?? 1
-                      )}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-white">
-                      {member.isEditing ? (
-                        <input
-                          type="number"
-                          min={0}
-                          value={member.draft?.xp ?? 0}
-                          onChange={(e) => updateDraftField(member.id, "xp", e.target.value)}
-                          className="w-24 rounded-md border border-[#333333] bg-[#1A1A1A] p-1.5 text-right text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
-                        />
-                      ) : (
-                        member.xp ?? 0
-                      )}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm">
-                      {member.isEditing ? (
-                        <select
-                          value={member.draft?.status ?? "ACTIVE"}
-                          onChange={(e) => updateDraftField(member.id, "status", e.target.value)}
-                          className="w-32 rounded-md border border-[#333333] bg-[#1A1A1A] p-1.5 text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
-                        >
-                          <option value="ACTIVE">ACTIVE</option>
-                          <option value="INACTIVE">INACTIVE</option>
-                          {member.status && member.status !== "ACTIVE" && member.status !== "INACTIVE" && (
-                            <option value={member.status}>{member.status}</option>
-                          )}
-                        </select>
-                      ) : (
-                        <span className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${statusBadgeClass(member.status ?? "ACTIVE")}`}>
-                          {member.status ?? "ACTIVE"}
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="password"
-                          value={member.passwordReset ?? ""}
-                          onChange={(e) => setPasswordReset(member.id, e.target.value)}
-                          placeholder="변경 시 입력"
-                          className="w-56 rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => resetPassword(member)}
-                          disabled={updateMutation.isPending}
-                          className="rounded-md border border-[#333333] bg-[#111111] px-3 py-2 text-sm text-gray-200 hover:bg-[#2C2C2E] disabled:cursor-not-allowed disabled:opacity-60"
-                        >
-                          변경
-                        </button>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-center">
-                      <div className="flex justify-center space-x-3">
-                        {member.isEditing ? (
-                          <button
-                            type="button"
-                            onClick={() => saveRow(member)}
-                            className="text-[#91F402] hover:text-white"
-                            title="저장"
-                            aria-label="저장"
-                          >
-                            <Save size={16} />
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => toggleEdit(member.id, true)}
-                            className="text-[#91F402] hover:text-white"
-                            title="수정"
-                            aria-label="수정"
-                          >
-                            <Edit2 size={16} />
-                          </button>
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => removeRow(member)}
-                          className="text-red-500 hover:text-red-300"
-                          title="삭제"
-                          aria-label="삭제"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            </form>
           </div>
+        )
+      }
 
-          {sortedMembers.length === 0 && (
-            <div className="py-8 text-center text-gray-400">검색 결과가 없습니다.</div>
-          )}
+      {
+        isLoading && (
+          <div className="rounded-lg border border-[#333333] bg-[#111111] p-4 text-gray-200">불러오는 중...</div>
+        )
+      }
+      {
+        isError && (
+          <div className="rounded-lg border border-red-500/40 bg-red-950 p-4 text-red-100">{mapErrorDetail(error)}</div>
+        )
+      }
 
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between border-t border-[#333333] bg-[#1A1A1A] px-4 py-3">
-              <p className="text-sm text-gray-400">{itemCountText}</p>
-              <nav className="relative z-0 inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
-                <button
-                  type="button"
-                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                  disabled={safePage === 1}
-                  className={`relative inline-flex items-center rounded-l-md border border-[#333333] px-2 py-2 ${safePage === 1 ? "cursor-not-allowed bg-[#111111] text-gray-500" : "bg-[#1A1A1A] text-gray-300 hover:bg-[#2D6B3B]"
-                    }`}
-                >
-                  <span className="sr-only">이전</span>
-                  <ChevronLeft className="h-5 w-5" aria-hidden="true" />
-                </button>
-
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  const startPage = Math.max(1, Math.min(safePage - 2, totalPages - 4));
-                  const pageNum = startPage + i;
-                  return (
-                    <button
-                      key={pageNum}
-                      type="button"
-                      onClick={() => setCurrentPage(pageNum)}
-                      className={`relative inline-flex items-center border border-[#333333] px-4 py-2 text-sm font-medium ${safePage === pageNum
-                        ? "z-10 bg-[#2D6B3B] text-[#91F402]"
-                        : "bg-[#1A1A1A] text-gray-300 hover:bg-[#2C2C2E]"
-                        }`}
+      {
+        !isLoading && !isError && (
+          <div className="rounded-lg border border-[#333333] bg-[#111111] shadow-md">
+            <div className="max-h-[70vh] overflow-auto">
+              <table className="w-full min-w-[980px]">
+                <thead className="sticky top-0 z-10 border-b border-[#333333] bg-[#1A1A1A]">
+                  <tr>
+                    <th
+                      className={`px-4 py-3 text-left text-xs font-medium uppercase tracking-wider ${sortKey === "id" ? "bg-[#2D6B3B] text-[#91F402]" : "text-gray-400"
+                        } cursor-pointer hover:bg-[#2D6B3B]`}
+                      onClick={() => handleSort("id")}
                     >
-                      {pageNum}
-                    </button>
-                  );
-                })}
-
-                <button
-                  type="button"
-                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                  disabled={safePage === totalPages}
-                  className={`relative inline-flex items-center rounded-r-md border border-[#333333] px-2 py-2 ${safePage === totalPages ? "cursor-not-allowed bg-[#111111] text-gray-500" : "bg-[#1A1A1A] text-gray-300 hover:bg-[#2D6B3B]"
-                    }`}
-                >
-                  <span className="sr-only">다음</span>
-                  <ChevronRight className="h-5 w-5" aria-hidden="true" />
-                </button>
-              </nav>
+                      ID{renderSortIcon("id")}
+                    </th>
+                    <th
+                      className={`px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400`}
+                    >
+                      External ID
+                    </th>
+                    <th
+                      className={`px-4 py-3 text-left text-xs font-medium uppercase tracking-wider ${sortKey === "nickname" ? "bg-[#2D6B3B] text-[#91F402]" : "text-gray-400"
+                        } cursor-pointer hover:bg-[#2D6B3B]`}
+                      onClick={() => handleSort("nickname")}
+                    >
+                      닉네임{renderSortIcon("nickname")}
+                    </th>
+                    <th
+                      className={`px-4 py-3 text-left text-xs font-medium uppercase tracking-wider ${sortKey === "level" ? "bg-[#2D6B3B] text-[#91F402]" : "text-gray-400"
+                        } cursor-pointer hover:bg-[#2D6B3B]`}
+                      onClick={() => handleSort("level")}
+                    >
+                      레벨{renderSortIcon("level")}
+                    </th>
+                    <th
+                      className={`px-4 py-3 text-left text-xs font-medium uppercase tracking-wider ${sortKey === "xp" ? "bg-[#2D6B3B] text-[#91F402]" : "text-gray-400"
+                        } cursor-pointer hover:bg-[#2D6B3B]`}
+                      onClick={() => handleSort("xp")}
+                    >
+                      XP{renderSortIcon("xp")}
+                    </th>
+                    <th
+                      className={`px-4 py-3 text-left text-xs font-medium uppercase tracking-wider ${sortKey === "status" ? "bg-[#2D6B3B] text-[#91F402]" : "text-gray-400"
+                        } cursor-pointer hover:bg-[#2D6B3B]`}
+                      onClick={() => handleSort("status")}
+                    >
+                      상태{renderSortIcon("status")}
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">실명/연락처</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">텔레그램/메모</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">태그</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">비밀번호(초기화)</th>
+                    <th className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-400">액션</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#333333]">
+                  {currentMembers.map((member, index) => (
+                    <tr key={member.id} className={index % 2 === 0 ? "bg-[#111111]" : "bg-[#1A1A1A]"}>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-400">{member.id}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-white">{member.external_id || "-"}</td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        {member.isEditing ? (
+                          <input
+                            type="text"
+                            value={member.draft?.nickname ?? ""}
+                            onChange={(e) => updateDraftField(member.id, "nickname", e.target.value)}
+                            className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-1.5 text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
+                          />
+                        ) : (
+                          <div className="text-sm font-medium text-white">{member.nickname || "-"}</div>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-white">
+                        {member.isEditing ? (
+                          <input
+                            type="number"
+                            min={1}
+                            value={member.draft?.level ?? 1}
+                            onChange={(e) => updateDraftField(member.id, "level", e.target.value)}
+                            className="w-24 rounded-md border border-[#333333] bg-[#1A1A1A] p-1.5 text-right text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
+                          />
+                        ) : (
+                          member.season_level ?? member.level ?? 1
+                        )}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-white">
+                        {member.isEditing ? (
+                          <input
+                            type="number"
+                            min={0}
+                            value={member.draft?.xp ?? 0}
+                            onChange={(e) => updateDraftField(member.id, "xp", e.target.value)}
+                            className="w-24 rounded-md border border-[#333333] bg-[#1A1A1A] p-1.5 text-right text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
+                          />
+                        ) : (
+                          member.xp ?? 0
+                        )}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm">
+                        {member.isEditing ? (
+                          <select
+                            value={member.draft?.status ?? "ACTIVE"}
+                            onChange={(e) => updateDraftField(member.id, "status", e.target.value)}
+                            className="w-32 rounded-md border border-[#333333] bg-[#1A1A1A] p-1.5 text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
+                          >
+                            <option value="ACTIVE">ACTIVE</option>
+                            <option value="INACTIVE">INACTIVE</option>
+                            {member.status && member.status !== "ACTIVE" && member.status !== "INACTIVE" && (
+                              <option value={member.status}>{member.status}</option>
+                            )}
+                          </select>
+                        ) : (
+                          <span className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${statusBadgeClass(member.status ?? "ACTIVE")}`}>
+                            {member.status ?? "ACTIVE"}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-400">
+                        <div className="text-white">{member.admin_profile?.real_name || "-"}</div>
+                        <div className="text-xs text-gray-500">{member.admin_profile?.phone_number || "-"}</div>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-400">
+                        {member.admin_profile?.telegram_id ? (
+                          <a href={`https://t.me/${member.admin_profile.telegram_id}`} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">
+                            {member.admin_profile.telegram_id}
+                          </a>
+                        ) : "-"}
+                        {member.admin_profile?.memo && (
+                          <div className="text-xs text-gray-500 truncate max-w-[100px]" title={member.admin_profile.memo}>
+                            {member.admin_profile.memo}
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm">
+                        <div className="flex flex-wrap gap-1 max-w-[150px]">
+                          {member.admin_profile?.tags?.map((tag, i) => (
+                            <span key={i} className="inline-block rounded bg-[#333333] px-1.5 py-0.5 text-[10px] text-gray-300">
+                              {tag}
+                            </span>
+                          ))}
+                          {(!member.admin_profile?.tags || member.admin_profile.tags.length === 0) && "-"}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="password"
+                            value={member.passwordReset ?? ""}
+                            onChange={(e) => setPasswordReset(member.id, e.target.value)}
+                            placeholder="변경 시 입력"
+                            className="w-56 rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => resetPassword(member)}
+                            disabled={updateMutation.isPending}
+                            className="rounded-md border border-[#333333] bg-[#111111] px-3 py-2 text-sm text-gray-200 hover:bg-[#2C2C2E] disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            변경
+                          </button>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-center">
+                        <div className="flex justify-center space-x-3">
+                          {member.isEditing ? (
+                            <button
+                              type="button"
+                              onClick={() => saveRow(member)}
+                              className="text-[#91F402] hover:text-white"
+                              title="저장"
+                              aria-label="저장"
+                            >
+                              <Save size={16} />
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => toggleEdit(member.id, true)}
+                              className="text-[#91F402] hover:text-white"
+                              title="수정"
+                              aria-label="수정"
+                            >
+                              <Edit2 size={16} />
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => removeRow(member)}
+                            className="text-red-500 hover:text-red-300"
+                            title="삭제"
+                            aria-label="삭제"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          )}
-        </div>
-      )}
-    </section>
+
+            {sortedMembers.length === 0 && (
+              <div className="py-8 text-center text-gray-400">검색 결과가 없습니다.</div>
+            )}
+
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between border-t border-[#333333] bg-[#1A1A1A] px-4 py-3">
+                <p className="text-sm text-gray-400">{itemCountText}</p>
+                <nav className="relative z-0 inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={safePage === 1}
+                    className={`relative inline-flex items-center rounded-l-md border border-[#333333] px-2 py-2 ${safePage === 1 ? "cursor-not-allowed bg-[#111111] text-gray-500" : "bg-[#1A1A1A] text-gray-300 hover:bg-[#2D6B3B]"
+                      }`}
+                  >
+                    <span className="sr-only">이전</span>
+                    <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+                  </button>
+
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    const startPage = Math.max(1, Math.min(safePage - 2, totalPages - 4));
+                    const pageNum = startPage + i;
+                    return (
+                      <button
+                        key={pageNum}
+                        type="button"
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`relative inline-flex items-center border border-[#333333] px-4 py-2 text-sm font-medium ${safePage === pageNum
+                          ? "z-10 bg-[#2D6B3B] text-[#91F402]"
+                          : "bg-[#1A1A1A] text-gray-300 hover:bg-[#2C2C2E]"
+                          }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={safePage === totalPages}
+                    className={`relative inline-flex items-center rounded-r-md border border-[#333333] px-2 py-2 ${safePage === totalPages ? "cursor-not-allowed bg-[#111111] text-gray-500" : "bg-[#1A1A1A] text-gray-300 hover:bg-[#2D6B3B]"
+                      }`}
+                  >
+                    <span className="sr-only">다음</span>
+                    <ChevronRight className="h-5 w-5" aria-hidden="true" />
+                  </button>
+                </nav>
+              </div>
+            )}
+          </div>
+        )
+      }
+
+      <UserImportModal
+        isOpen={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        onSuccess={() => queryClient.invalidateQueries({ queryKey: ["admin", "users"] })}
+      />
+    </section >
   );
 };
 

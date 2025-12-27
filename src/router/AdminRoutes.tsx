@@ -12,6 +12,8 @@ import LotteryConfigPage from "../admin/pages/LotteryConfigPage";
 import ExternalRankingPage from "../admin/pages/ExternalRankingPage";
 import TicketManagerPage from "../admin/pages/TicketManagerPage";
 import UserAdminPage from "../admin/pages/UserAdminPage";
+import MessageCenterPage from "../admin/pages/MessageCenterPage";
+import MarketingDashboardPage from "../admin/pages/MarketingDashboardPage";
 import AdminTeamBattlePage from "../admin/pages/AdminTeamBattlePage";
 import UserSegmentsPage from "../admin/pages/UserSegmentsPage";
 import SegmentRulesPage from "../admin/pages/SegmentRulesPage";
@@ -38,6 +40,8 @@ const AdminRoutes: React.FC = () => {
           <Route path="game-tokens" element={<TicketManagerPage />} />
           <Route path="game-token-logs" element={<Navigate to="/admin/game-tokens" replace />} />
           <Route path="users" element={<UserAdminPage />} />
+          <Route path="marketing" element={<MarketingDashboardPage />} />
+          <Route path="messages" element={<MessageCenterPage />} />
           <Route path="user-segments" element={<UserSegmentsPage />} />
           <Route path="segment-rules" element={<SegmentRulesPage />} />
           <Route path="team-battle" element={<AdminTeamBattlePage />} />

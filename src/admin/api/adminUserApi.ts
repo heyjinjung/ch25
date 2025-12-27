@@ -11,10 +11,26 @@ export interface AdminUserPayload {
   season_level?: number;
 }
 
+export interface AdminUserProfile {
+  real_name?: string;
+  phone_number?: string;
+  telegram_id?: string;
+  tags?: string[];
+  memo?: string;
+}
+
 export interface AdminUser extends AdminUserPayload {
   id: number;
   created_at: string;
   updated_at: string;
+  admin_profile?: AdminUserProfile;
+}
+
+export interface ImportResult {
+  total_processed: number;
+  success_count: number;
+  failed_count: number;
+  errors: string[];
 }
 
 export async function fetchUsers() {
@@ -34,4 +50,13 @@ export async function updateUser(userId: number, payload: Partial<AdminUserPaylo
 
 export async function deleteUser(userId: number) {
   await adminApi.delete(`/admin/api/users/${userId}`);
+}
+
+export async function importProfiles(file: File) {
+  const formData = new FormData();
+  formData.append("file", file);
+  const { data } = await adminApi.post<ImportResult>("/admin/api/crm/import-profiles", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return data;
 }
