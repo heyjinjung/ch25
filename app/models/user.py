@@ -33,6 +33,9 @@ class User(Base):
     cash_balance = Column(Integer, nullable=False, server_default="0", default=0)
     vault_fill_used_at = Column(DateTime, nullable=True)
 
+    # [Season] Carry-over
+    next_season_seed = Column(Integer, nullable=False, server_default="0", default=0)
+
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow, index=True)
     updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 
