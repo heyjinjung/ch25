@@ -13,6 +13,8 @@ class GameTokenType(str, Enum):
     DICE_TOKEN = "DICE_TOKEN"
     LOTTERY_TICKET = "LOTTERY_TICKET"
     CC_COIN = "CC_COIN"
+    GOLD_KEY = "GOLD_KEY"
+    DIAMOND_KEY = "DIAMOND_KEY"
 
 
 class UserGameWallet(Base):

@@ -7,19 +7,21 @@ import { formatWon } from "../utils/vaultUtils";
 
 const ROULETTE_STATUS_QUERY_KEY = ["roulette-status"] as const;
 
-export const useRouletteStatus = () => {
+
+export const useRouletteStatus = (ticketType: string = "ROULETTE_COIN") => {
   return useQuery<RouletteStatusResponse, unknown>({
-    queryKey: ROULETTE_STATUS_QUERY_KEY,
-    queryFn: getRouletteStatus,
+    queryKey: [...ROULETTE_STATUS_QUERY_KEY, ticketType],
+    queryFn: () => getRouletteStatus(ticketType),
   });
 };
 
 export const usePlayRoulette = () => {
   const queryClient = useQueryClient();
   const { addToast } = useToast();
-  return useMutation<RoulettePlayResponse, unknown>({
-    mutationFn: playRoulette,
+  return useMutation<RoulettePlayResponse, unknown, string | undefined>({
+    mutationFn: (ticketType) => playRoulette(ticketType),
     onSuccess: (data) => {
+      // Invalidate all roulette status queries regardless of type
       queryClient.invalidateQueries({ queryKey: ROULETTE_STATUS_QUERY_KEY });
       // Invalidate vault status to refresh balance immediately
       queryClient.invalidateQueries({ queryKey: ["vault-status"] });

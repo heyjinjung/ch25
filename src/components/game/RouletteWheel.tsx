@@ -6,17 +6,11 @@ interface Segment {
   readonly isJackpot?: boolean;
 }
 
-interface RouletteWheelProps {
-  readonly segments: Segment[];
-  readonly isSpinning: boolean;
-  readonly selectedIndex?: number;
-  readonly spinDurationMs?: number;
-  readonly onSpinEnd?: () => void;
-}
 
-type SegmentStyle = { fill: string; stroke: string; label: string };
 
-const SEGMENT_STYLES: SegmentStyle[] = [
+export type SegmentStyle = { fill: string; stroke: string; label: string };
+
+const DEFAULT_THEME: SegmentStyle[] = [
   { fill: "#000000", stroke: "#FFFFFF", label: "#FFFFFF" },
   { fill: "#FFFFFF", stroke: "#000000", label: "#000000" },
   { fill: "#D2FD9C", stroke: "#394508", label: "#394508" },
@@ -24,6 +18,15 @@ const SEGMENT_STYLES: SegmentStyle[] = [
   { fill: "#282D1A", stroke: "#000000", label: "#FFFFFF" },
   { fill: "#5D5D5D", stroke: "#000000", label: "#FFFFFF" },
 ];
+
+interface RouletteWheelProps {
+  readonly segments: Segment[];
+  readonly isSpinning: boolean;
+  readonly selectedIndex?: number;
+  readonly spinDurationMs?: number;
+  readonly onSpinEnd?: () => void;
+  readonly theme?: SegmentStyle[];
+}
 
 const polarToCartesian = (cx: number, cy: number, r: number, angle: number) => {
   const rad = ((angle - 90) * Math.PI) / 180;
@@ -43,6 +46,7 @@ const RouletteWheel: React.FC<RouletteWheelProps> = ({
   selectedIndex,
   spinDurationMs = 3000,
   onSpinEnd,
+  theme = DEFAULT_THEME,
 }) => {
   const [rotation, setRotation] = useState(0);
   const spinCountRef = useRef(0);
@@ -128,7 +132,7 @@ const RouletteWheel: React.FC<RouletteWheelProps> = ({
             const path = describeArc(100, 100, 90, startAngle, endAngle);
             const labelAngle = startAngle + anglePerSegment / 2;
             const labelPos = polarToCartesian(100, 100, 55, labelAngle);
-            const baseStyle = SEGMENT_STYLES[index % SEGMENT_STYLES.length];
+            const baseStyle = theme[index % theme.length];
             const style = isJackpot
               ? { fill: "#D2FD9C", stroke: "#394508", label: "#394508" }
               : baseStyle;

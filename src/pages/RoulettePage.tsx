@@ -2,13 +2,14 @@
 import RouletteWheel from "../components/game/RouletteWheel";
 import { usePlayRoulette, useRouletteStatus } from "../hooks/useRoulette";
 import FeatureGate from "../components/feature/FeatureGate";
-import { GAME_TOKEN_LABELS } from "../types/gameTokens";
+import { GAME_TOKEN_LABELS, GameTokenType } from "../types/gameTokens";
 import type { RoulettePlayResponse } from "../api/rouletteApi";
 import AnimatedNumber from "../components/common/AnimatedNumber";
 import { tryHaptic } from "../utils/haptics";
 import GamePageShell from "../components/game/GamePageShell";
 import TicketZeroPanel from "../components/game/TicketZeroPanel";
 import { useQueryClient } from "@tanstack/react-query";
+import clsx from "clsx";
 
 const FALLBACK_SEGMENTS = Array.from({ length: 12 }).map((_, idx) => ({
   label: `BONUS ${idx + 1}`,
@@ -16,8 +17,30 @@ const FALLBACK_SEGMENTS = Array.from({ length: 12 }).map((_, idx) => ({
   isJackpot: idx === 0,
 }));
 
+const TABS: { type: GameTokenType; label: string; activeColors: string; icon: string }[] = [
+  {
+    type: "ROULETTE_COIN",
+    label: "일반 룰렛",
+    activeColors: "bg-white text-black shadow-[0_0_15px_rgba(255,255,255,0.4)]",
+    icon: "🎟️"
+  },
+  {
+    type: "GOLD_KEY",
+    label: "골드 룰렛",
+    activeColors: "bg-gradient-to-br from-yellow-300 via-amber-400 to-yellow-500 text-black shadow-[0_0_20px_rgba(255,215,0,0.5)] border-amber-300",
+    icon: "🗝️"
+  },
+  {
+    type: "DIAMOND_KEY",
+    label: "다이아 룰렛",
+    activeColors: "bg-gradient-to-br from-cyan-300 via-blue-400 to-indigo-500 text-white shadow-[0_0_20px_rgba(0,191,255,0.5)] border-blue-300",
+    icon: "💎"
+  },
+];
+
 const RoulettePage: React.FC = () => {
-  const { data, isLoading, isError, error } = useRouletteStatus();
+  const [activeTab, setActiveTab] = useState<GameTokenType>("ROULETTE_COIN");
+  const { data, isLoading, isError, error } = useRouletteStatus(activeTab);
   const playMutation = usePlayRoulette();
   const queryClient = useQueryClient();
   const [selectedIndex, setSelectedIndex] = useState<number | undefined>();
@@ -65,7 +88,7 @@ const RoulettePage: React.FC = () => {
 
   const tokenLabel = useMemo(() => {
     if (!data) return "-";
-    const typeLabel = data.token_type ? (GAME_TOKEN_LABELS[data.token_type] ?? data.token_type) : "-";
+    const typeLabel = data.token_type ? (GAME_TOKEN_LABELS[data.token_type as GameTokenType] ?? data.token_type) : "-";
     return typeLabel;
   }, [data]);
 
@@ -84,7 +107,7 @@ const RoulettePage: React.FC = () => {
       const requestAt = performance.now();
       console.log("[Roulette] play start", { requestAt });
 
-      const result = await playMutation.mutateAsync();
+      const result = await playMutation.mutateAsync(activeTab);
       const resultAt = performance.now();
       console.log("[Roulette] result received", {
         label: result.segment?.label,
@@ -238,9 +261,15 @@ const RoulettePage: React.FC = () => {
 
     return (
       <div className="relative space-y-8">
-        {/* Global Ambient Glow (은은한 배경 광원) */}
-        <div className="pointer-events-none absolute -left-[20%] -top-[20%] h-[800px] w-[800px] rounded-full bg-cc-gold/5 blur-[120px] mix-blend-screen" />
-        <div className="pointer-events-none absolute -right-[10%] top-[20%] h-[600px] w-[600px] rounded-full bg-cc-green/5 blur-[100px] mix-blend-screen" />
+        {/* Global Ambient Glow (Dynamic based on Tab) */}
+        <div className={clsx(
+          "pointer-events-none absolute -left-[20%] -top-[20%] h-[800px] w-[800px] rounded-full blur-[120px] mix-blend-screen transition-colors duration-700",
+          activeTab === "GOLD_KEY" ? "bg-amber-500/10" : activeTab === "DIAMOND_KEY" ? "bg-blue-500/10" : "bg-white/5"
+        )} />
+        <div className={clsx(
+          "pointer-events-none absolute -right-[10%] top-[20%] h-[600px] w-[600px] rounded-full blur-[100px] mix-blend-screen transition-colors duration-700",
+          activeTab === "GOLD_KEY" ? "bg-yellow-500/10" : activeTab === "DIAMOND_KEY" ? "bg-cyan-500/10" : "bg-cc-green/5"
+        )} />
 
         {!isSpinning && rewardToast && (
           <div className="fixed bottom-6 right-6 z-50 overflow-hidden rounded-2xl border border-white/10 bg-black/80 px-5 py-4 text-white shadow-2xl backdrop-blur-xl animate-bounce-in">
@@ -326,21 +355,31 @@ const RoulettePage: React.FC = () => {
 
                 <button
                   type="button"
-                  disabled={playMutation.isPending || isSpinning || (!isUnlimited && data.remaining_spins <= 0) || isOutOfTokens}
+                  disabled={playMutation.isPending || isSpinning || (!isUnlimited && data?.remaining_spins <= 0) || isOutOfTokens}
                   onClick={handlePlay}
-                  className="group relative w-full overflow-hidden rounded-2xl bg-gradient-to-b from-white to-gray-300 px-6 py-5 shadow-[0_0_20px_rgba(255,255,255,0.2)] transition-all hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
+                  className={clsx(
+                    "group relative w-full overflow-hidden rounded-2xl px-6 py-5 shadow-[0_0_20px_rgba(255,255,255,0.2)] transition-all hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none",
+                    activeTab === "GOLD_KEY" ? "bg-gradient-to-b from-yellow-300 to-amber-500 text-black" :
+                      activeTab === "DIAMOND_KEY" ? "bg-gradient-to-b from-cyan-300 to-blue-600 text-white" :
+                        "bg-gradient-to-b from-white to-gray-300 text-black"
+                  )}
                 >
                   <div className="relative z-10 flex items-center justify-center gap-3">
                     {playMutation.isPending ? (
                       <>
-                        <div className="h-5 w-5 animate-spin rounded-full border-2 border-black/30 border-t-black" />
-                        <span className="text-lg font-black text-black">추첨 중...</span>
+                        <div className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                        <span className="text-lg font-black">추첨 중...</span>
                       </>
                     ) : (
                       <>
-                        <span className="text-xl">💎</span>
-                        <span className="text-lg font-black tracking-wide text-black opacity-90">
-                          {!isSpinning && displayedResult ? "다시 돌리기" : "룰렛 시작"}
+                        <span className="text-xl">
+                          {activeTab === "GOLD_KEY" ? "🗝️" : activeTab === "DIAMOND_KEY" ? "💎" : "🎰"}
+                        </span>
+                        <span className="text-lg font-black tracking-wide opacity-90">
+                          {!isSpinning && displayedResult ? "다시 돌리기" :
+                            activeTab === "GOLD_KEY" ? "골드 룰렛 돌리기" :
+                              activeTab === "DIAMOND_KEY" ? "다이아 룰렛 돌리기" :
+                                "룰렛 시작"}
                         </span>
                       </>
                     )}
@@ -379,6 +418,27 @@ const RoulettePage: React.FC = () => {
   return (
     <FeatureGate feature="ROULETTE">
       <GamePageShell title="럭셔리 CC룰렛" subtitle="Premium Prize Roulette">
+        <div className="mb-6 flex justify-center">
+          <div className="inline-flex rounded-full bg-white/5 p-1 backdrop-blur-md">
+            {TABS.map((tab) => (
+              <button
+                key={tab.type}
+                onClick={() => {
+                  if (!isSpinning) setActiveTab(tab.type);
+                }}
+                className={clsx(
+                  "group flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold transition-all duration-300",
+                  activeTab === tab.type
+                    ? tab.activeColors
+                    : "text-white/40 hover:bg-white/5 hover:text-white"
+                )}
+              >
+                <span className={clsx("text-lg transition-transform duration-300", activeTab === tab.type && "scale-110")}>{tab.icon}</span>
+                <span>{tab.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
         {content}
       </GamePageShell>
     </FeatureGate>

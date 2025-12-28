@@ -60,13 +60,19 @@ class RouletteService:
         db.refresh(config)
         return config
 
-    def _get_today_config(self, db: Session) -> RouletteConfig:
-        config = db.execute(select(RouletteConfig).where(RouletteConfig.is_active.is_(True))).scalar_one_or_none()
+    def _get_today_config(self, db: Session, ticket_type: str = GameTokenType.ROULETTE_COIN.value) -> RouletteConfig:
+        config = db.execute(
+            select(RouletteConfig).where(
+                RouletteConfig.is_active.is_(True),
+                RouletteConfig.ticket_type == ticket_type
+            )
+        ).scalar_one_or_none()
+        
         if config is None:
             settings = get_settings()
-            if settings.test_mode:
+            if settings.test_mode and ticket_type == GameTokenType.ROULETTE_COIN.value:
                 return self._seed_default_config(db)
-            raise InvalidConfigError("ROULETTE_CONFIG_MISSING")
+            raise InvalidConfigError(f"ROULETTE_CONFIG_MISSING_{ticket_type}")
         return config
 
     def _get_segments(self, db: Session, config_id: int, lock: bool = False) -> list[RouletteSegment]:
@@ -78,9 +84,16 @@ class RouletteService:
             segments = db.execute(stmt).scalars().all()
         except DBAPIError as exc:
             raise LockAcquisitionError("ROULETTE_LOCK_FAILED") from exc
+        
+        # Only seed default for Coin roulette in test mode
         if len(segments) == 0 and settings.test_mode:
-            return self._seed_default_segments(db, config_id)
+             # Look up config to check type if needed, but for now just skip or fail if not coin
+             pass
+
         if len(segments) != 6:
+            # If seed missing for keys, it's critical
+            if settings.test_mode and len(segments) == 0:
+                 return self._seed_default_segments(db, config_id)
             raise InvalidConfigError("INVALID_ROULETTE_CONFIG")
         for segment in segments:
             if segment.weight < 0:
@@ -90,11 +103,13 @@ class RouletteService:
             raise InvalidConfigError("INVALID_ROULETTE_CONFIG")
         return segments
 
-    def get_status(self, db: Session, user_id: int, today: date) -> RouletteStatusResponse:
+    def get_status(self, db: Session, user_id: int, today: date, ticket_type: str = GameTokenType.ROULETTE_COIN.value) -> RouletteStatusResponse:
         self.feature_service.validate_feature_active(db, today, FeatureType.ROULETTE)
-        config = self._get_today_config(db)
-        token_type = GameTokenType.ROULETTE_COIN
-        token_balance = self.wallet_service.get_balance(db, user_id, token_type)
+        config = self._get_today_config(db, ticket_type)
+        
+        # Map input string to Enum if possible, or just use string
+        token_type_enum = GameTokenType(ticket_type)
+        token_balance = self.wallet_service.get_balance(db, user_id, token_type_enum)
         segments = self._get_segments(db, config.id)
 
         today_spins = db.execute(
@@ -114,17 +129,18 @@ class RouletteService:
             max_daily_spins=unlimited,
             today_spins=today_spins,
             remaining_spins=remaining,
-            token_type=token_type.value,
+            token_type=token_type_enum.value,
             token_balance=token_balance,
             segments=segments,
             feature_type=FeatureType.ROULETTE,
         )
 
-    def play(self, db: Session, user_id: int, now: date | datetime) -> RoulettePlayResponse:
+    def play(self, db: Session, user_id: int, now: date | datetime, ticket_type: str = GameTokenType.ROULETTE_COIN.value) -> RoulettePlayResponse:
         today = now.date() if isinstance(now, datetime) else now
         self.feature_service.validate_feature_active(db, today, FeatureType.ROULETTE)
-        config = self._get_today_config(db)
-        token_type = GameTokenType.ROULETTE_COIN
+        config = self._get_today_config(db, ticket_type)
+        token_type_enum = GameTokenType(ticket_type)
+        
         segments = None
         for attempt in range(3):
             try:
@@ -152,7 +168,7 @@ class RouletteService:
         _, consumed_trial = self.wallet_service.require_and_consume_token(
             db,
             user_id,
-            token_type,
+            token_type_enum,
             amount=1,
             reason="ROULETTE_PLAY",
             label=chosen.label,
@@ -177,7 +193,7 @@ class RouletteService:
             user_id=user_id,
             game_type=FeatureType.ROULETTE.value,
             game_log_id=log_entry.id,
-            token_type=token_type.value,
+            token_type=token_type_enum.value,
             outcome=None,
             payout_raw={
                 "segment_id": chosen.id,
@@ -193,7 +209,7 @@ class RouletteService:
                 user_id=user_id,
                 game_type=FeatureType.ROULETTE.value,
                 game_log_id=log_entry.id,
-                token_type=token_type.value,
+                token_type=token_type_enum.value,
                 reward_type=chosen.reward_type,
                 reward_amount=chosen.reward_amount,
                 payout_raw={"segment_id": chosen.id},

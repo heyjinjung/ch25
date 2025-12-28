@@ -28,8 +28,14 @@ class RouletteStatusResponse(BaseModel):
     feature_type: FeatureType
 
 
+
+class RoulettePlayRequest(BaseModel):
+    ticket_type: str = "ROULETTE_COIN"
+
+
 class RoulettePlayResponse(BaseModel):
     result: str
     segment: RouletteSegmentSchema
     season_pass: dict | None = None
     vault_earn: int = 0
+

@@ -61,9 +61,10 @@ export interface RoulettePlayResponse {
   readonly vaultEarn?: number;
 }
 
-export const getRouletteStatus = async (): Promise<RouletteStatusResponse> => {
+export const getRouletteStatus = async (ticketType?: string): Promise<RouletteStatusResponse> => {
   try {
-    const response = await userApi.get<BackendRouletteStatusResponse>("/api/roulette/status");
+    const params = ticketType ? { ticket_type: ticketType } : undefined;
+    const response = await userApi.get<BackendRouletteStatusResponse>("/api/roulette/status", { params });
     const data = response.data;
     const segments = data.segments
       .map((segment, index) => ({
@@ -95,9 +96,10 @@ export const getRouletteStatus = async (): Promise<RouletteStatusResponse> => {
   }
 };
 
-export const playRoulette = async (): Promise<RoulettePlayResponse> => {
+export const playRoulette = async (ticketType?: string): Promise<RoulettePlayResponse> => {
   try {
-    const response = await userApi.post<BackendRoulettePlayResponse>("/api/roulette/play");
+    const payload = ticketType ? { ticket_type: ticketType } : {};
+    const response = await userApi.post<BackendRoulettePlayResponse>("/api/roulette/play", payload);
     const data = response.data;
     const mappedSegment: RouletteSegmentDto = {
       label: data.segment.label,

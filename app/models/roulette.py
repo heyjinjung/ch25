@@ -14,6 +14,7 @@ class RouletteConfig(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), nullable=False)
+    ticket_type = Column(String(50), nullable=False, default="ROULETTE_COIN", server_default="ROULETTE_COIN")
     is_active = Column(Boolean, nullable=False, default=True)
     max_daily_spins = Column(Integer, nullable=False, default=0)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
