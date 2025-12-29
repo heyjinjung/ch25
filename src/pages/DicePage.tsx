@@ -96,7 +96,7 @@ const DicePage: React.FC = () => {
         )}
 
         {rewardToast && (
-          <div className="fixed bottom-6 right-6 z-50 overflow-hidden rounded-2xl border border-white/10 bg-black/80 px-5 py-4 text-white shadow-2xl backdrop-blur-xl animate-bounce-in">
+          <div className="fixed bottom-24 right-6 z-50 overflow-hidden rounded-2xl border border-white/10 bg-black/80 px-5 py-4 text-white shadow-2xl backdrop-blur-xl animate-bounce-in">
             <div className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-emerald-500 to-teal-500" />
             <div className="relative flex items-center gap-3 pl-2">
               <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-emerald-500/30 bg-emerald-500/10 text-xl shadow-[0_0_15px_rgba(16,185,129,0.3)]">

@@ -172,7 +172,7 @@ const SeasonPassPage: React.FC = () => {
         <motion.header
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-white/5 to-black/80 px-8 py-10 shadow-2xl backdrop-blur-xl"
+          className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-white/5 to-black/80 px-4 py-8 md:px-8 md:py-10 shadow-2xl backdrop-blur-xl"
         >
           <div className="pointer-events-none absolute inset-0 bg-[url('/images/pattern-vip.svg')] opacity-5" />
           <div className="relative z-10 flex flex-col gap-8 md:flex-row md:items-center md:justify-between">

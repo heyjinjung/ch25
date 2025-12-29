@@ -15,6 +15,7 @@ import FigmaLandingMobile from "../pages/FigmaLandingMobile";
 import SeasonPassPage from "../pages/SeasonPassPage";
 import GuidePage from "../pages/GuidePage";
 import TeamBattlePage from "../pages/TeamBattlePage";
+import GameLobbyPage from "../pages/GameLobbyPage";
 import VaultPage from "../pages/VaultPage";
 import UserLayout from "../components/layout/UserLayout";
 import SidebarAppLayout from "../components/layout/SidebarAppLayout";
@@ -38,6 +39,7 @@ const UserRoutes: React.FC = () => {
           <Route path="/vault" element={<VaultPage />} />
           <Route path="/season-pass" element={<SeasonPassPage />} />
           <Route path="/team-battle" element={<TeamBattlePage />} />
+          <Route path="/games" element={<GameLobbyPage />} />
           <Route path="/roulette" element={<RoulettePage />} />
           <Route path="/dice" element={<DicePage />} />
           <Route path="/lottery" element={<LotteryPage />} />

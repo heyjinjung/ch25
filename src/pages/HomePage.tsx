@@ -10,6 +10,8 @@ import { useTodayRanking } from "../hooks/useRanking";
 import { GAME_TOKEN_LABELS } from "../types/gameTokens";
 import { getActiveSeason, getLeaderboard, getMyTeam } from "../api/teamBattleApi";
 import { getVaultStatus } from "../api/vaultApi";
+import { TelegramLinkBanner } from "../components/telegram/TelegramLinkBanner";
+import { useTelegram } from "../providers/TelegramProvider";
 
 interface GameCardProps {
   readonly title: string;
@@ -31,6 +33,7 @@ const GameCard: React.FC<GameCardProps> = ({
   state = "idle",
 }) => {
   const navigate = useNavigate();
+  const { haptic } = useTelegram();
   const hasCoins = typeof tokenBalance === "number" && tokenBalance > 0;
   const tokenLabel = tokenType ? GAME_TOKEN_LABELS[tokenType as keyof typeof GAME_TOKEN_LABELS] ?? tokenType : "미지급";
   const statusBadge =
@@ -41,6 +44,11 @@ const GameCard: React.FC<GameCardProps> = ({
         : undefined;
 
   const shouldRenderIcon = !!iconSrc;
+
+  const handleStart = () => {
+    haptic.impact('light');
+    navigate(path);
+  };
 
   return (
     <div className="rounded-2xl border border-emerald-500/25 bg-white/5 backdrop-blur-xl p-5 shadow-lg transition hover:border-emerald-300/40">
@@ -77,7 +85,7 @@ const GameCard: React.FC<GameCardProps> = ({
 
       <button
         type="button"
-        onClick={() => navigate(path)}
+        onClick={handleStart}
         disabled={!hasCoins}
         className="mt-4 w-full rounded-xl border border-emerald-500/40 bg-emerald-900/30 px-4 py-3 text-sm font-extrabold text-emerald-50 transition hover:border-emerald-300/60 hover:bg-emerald-800/35 disabled:cursor-not-allowed disabled:border-slate-700/50 disabled:bg-slate-800/60 disabled:text-slate-300"
       >
@@ -184,6 +192,7 @@ const HomePage: React.FC = () => {
 
   return (
     <section className="space-y-10">
+      <TelegramLinkBanner />
       {showVaultBanner && (
         <div className="sticky top-3 z-40">
           <div className="rounded-3xl border border-gold-500/25 bg-black/40 backdrop-blur-2xl p-4 shadow-2xl">
@@ -252,6 +261,11 @@ const HomePage: React.FC = () => {
             <p className="text-xs uppercase tracking-[0.28em] text-amber-400 font-bold">GRAND OPENING</p>
             <h2 className="text-3xl font-black text-white md:text-5xl tracking-tight">
               {displayName(user?.external_id)}님
+              {user?.telegram_username && (
+                <span className="ml-2 text-sm font-normal text-blue-300">
+                  (@{user.telegram_username})
+                </span>
+              )}
               <br className="block sm:hidden" />
               <span className="ml-2 sm:ml-0 text-transparent bg-clip-text bg-gradient-to-r from-white to-amber-200">환영합니다</span>
             </h2>

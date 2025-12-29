@@ -25,6 +25,7 @@ class AuthUser(BaseModel):
     nickname: str | None = None
     status: str | None = None
     level: int | None = None
+    telegram_id: int | None = None
 
 
 class TokenResponse(BaseModel):
@@ -93,5 +94,6 @@ def issue_token(payload: TokenRequest, request: Request, db: Session = Depends(g
             nickname=user.nickname,
             status=user.status,
             level=user.level,
+            telegram_id=user.telegram_id,
         ),
     )

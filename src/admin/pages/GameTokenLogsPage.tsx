@@ -7,14 +7,16 @@ import {
   fetchLedger,
   revokeGameTokens,
   grantGameTokens,
+  fetchWalletSummary,
   RevokeGameTokensPayload,
   GrantGameTokensPayload,
+  UserWalletSummary as SummaryEntry,
 } from "../api/adminGameTokenApi";
 import { GAME_TOKEN_LABELS, GameTokenType } from "../../types/gameTokens";
 import { History, Coins, Plus, Minus, Search, X, Loader2 } from "lucide-react";
 import { useToast } from "../../components/common/ToastProvider";
 
-const tokenOptions: GameTokenType[] = ["ROULETTE_COIN", "DICE_TOKEN", "LOTTERY_TICKET", "CC_COIN"];
+const tokenOptions: GameTokenType[] = ["ROULETTE_COIN", "DICE_TOKEN", "LOTTERY_TICKET", "CC_COIN", "GOLD_KEY", "DIAMOND_KEY"];
 
 const gameLabel = (game?: string | null) => {
   const raw = String(game ?? "").trim();
@@ -26,7 +28,7 @@ const gameLabel = (game?: string | null) => {
   return raw;
 };
 
-type ActiveTab = "dashboard" | "wallets" | "playLogs" | "ledger" | "revoke";
+type ActiveTab = "dashboard" | "wallets" | "playLogs" | "ledger" | "summary";
 
 
 const GameTokenLogsPage: React.FC = () => {
@@ -74,6 +76,13 @@ const GameTokenLogsPage: React.FC = () => {
     queryKey: ["admin-ledger", externalIdFilter, ledgerPage],
     queryFn: () => fetchLedger(50, externalIdFilter, ledgerPage * 50),
     enabled: !!externalIdFilter || activeTab === "ledger" || activeTab === "dashboard",
+  });
+
+  // 4. Wallet Summary (Global Overview)
+  const summaryQuery = useQuery({
+    queryKey: ["admin-wallets-summary"],
+    queryFn: () => fetchWalletSummary(),
+    enabled: activeTab === "summary",
   });
 
   // MUTATIONS
@@ -472,6 +481,7 @@ const GameTokenLogsPage: React.FC = () => {
               {(
                 [
                   { key: "wallets" as const, label: "전체 지갑 잔액" },
+                  { key: "summary" as const, label: "유저별 잔액 (Overview)" },
                   { key: "playLogs" as const, label: "전체 플레이 로그" },
                   { key: "ledger" as const, label: "전체 코인 원장" },
                 ]
@@ -536,11 +546,53 @@ const GameTokenLogsPage: React.FC = () => {
             </div>
           )}
 
-          {activeTab === "ledger" && (
-            <div className="rounded-lg border border-[#333] bg-[#111] shadow-md overflow-hidden">
-              <div className="p-4 border-b border-[#333]"><h3 className="font-bold text-white">전체 원장</h3></div>
-              {/* Placeholder for table */}
-              <div className="p-8 text-center text-gray-500">원장 데이터 로딩 중... (ID 검색 권장)</div>
+          {activeTab === "summary" && (
+            <div className="rounded-lg border border-[#333] bg-[#111] shadow-md overflow-hidden animate-in fade-in slide-in-from-bottom-2">
+              <div className="p-4 border-b border-[#333] flex justify-between items-center">
+                <h3 className="font-bold text-white">유저별 잔액 현황 (Overview)</h3>
+                <div className="text-sm text-gray-500">티켓을 보유한 전체 유저 수: {summaryQuery.data?.length || 0}명</div>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left">
+                  <thead className="bg-[#1A1A1A] text-gray-400 uppercase text-xs">
+                    <tr>
+                      <th className="px-4 py-3">External ID</th>
+                      <th className="px-4 py-3">보유 티켓 상세</th>
+                      <th className="px-4 py-3 text-right">관리</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#333]">
+                    {summaryQuery.data?.map((entry: SummaryEntry) => (
+                      <tr key={entry.user_id} className="hover:bg-[#1A1A1A]">
+                        <td className="px-4 py-3 text-white font-medium">{entry.external_id || entry.user_id}</td>
+                        <td className="px-4 py-3">
+                          <div className="flex flex-wrap gap-2">
+                            {Object.entries(entry.balances).map(([type, bal]) => (
+                              <span key={type} className="px-2 py-0.5 rounded-full bg-[#333] text-gray-200 text-xs">
+                                {GAME_TOKEN_LABELS[type as GameTokenType] || type}: <span className="text-[#91F402] font-bold">{bal}</span>
+                              </span>
+                            ))}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <button
+                            onClick={() => {
+                              setExternalIdInput(entry.external_id || String(entry.user_id));
+                              setExternalIdFilter(entry.external_id || String(entry.user_id));
+                              setActiveTab("dashboard");
+                            }}
+                            className="text-xs text-[#91F402] hover:underline"
+                          >
+                            상세관리
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                    {summaryQuery.isLoading && <tr><td colSpan={3} className="p-8 text-center"><Loader2 className="animate-spin mx-auto" /></td></tr>}
+                    {summaryQuery.data?.length === 0 && <tr><td colSpan={3} className="p-8 text-center text-gray-500">티켓을 보유한 사용자가 없습니다.</td></tr>}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </>

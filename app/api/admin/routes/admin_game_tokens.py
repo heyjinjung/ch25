@@ -17,6 +17,7 @@ from app.schemas.game_tokens import (
     PlayLogEntry,
     RevokeGameTokensRequest,
     TokenBalance,
+    UserWalletSummary,
 )
 from app.schemas.base import to_kst_iso
 from app.services.game_wallet_service import GameWalletService
@@ -235,3 +236,29 @@ def list_wallet_ledger(
         )
         for row in rows
     ]
+
+
+@router.get("/summary", response_model=list[UserWalletSummary])
+def get_user_wallet_summary(db: Session = Depends(get_db)):
+    """Return a summary of all users who have at least one non-zero ticket balance."""
+    # We join User and UserGameWallet, filter for balance > 0
+    rows = (
+        db.query(User.id, User.external_id, UserGameWallet.token_type, UserGameWallet.balance)
+        .join(UserGameWallet, User.id == UserGameWallet.user_id)
+        .filter(UserGameWallet.balance > 0)
+        .order_by(User.id)
+        .all()
+    )
+
+    # Group by user
+    summary_map: dict[int, UserWalletSummary] = {}
+    for user_id, external_id, token_type, balance in rows:
+        if user_id not in summary_map:
+            summary_map[user_id] = UserWalletSummary(
+                user_id=user_id,
+                external_id=external_id,
+                balances={}
+            )
+        summary_map[user_id].balances[token_type] = balance
+
+    return list(summary_map.values())

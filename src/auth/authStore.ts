@@ -7,6 +7,8 @@ export interface AuthUser {
   readonly nickname?: string;
   readonly status?: string;
   readonly level?: number;
+  readonly telegram_id?: number | null;
+  readonly telegram_username?: string | null;
 }
 
 interface AuthState {

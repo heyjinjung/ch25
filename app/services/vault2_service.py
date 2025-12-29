@@ -65,7 +65,8 @@ class Vault2Service:
             config_json=DEFAULT_CONFIG.copy(),
         )
         db.add(program)
-        db.flush()
+        db.commit()
+        db.refresh(program)
         return program
 
     def get_default_program(self, db: Session, *, ensure: bool = True) -> VaultProgram | None:

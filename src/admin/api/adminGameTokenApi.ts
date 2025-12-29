@@ -90,3 +90,14 @@ export async function fetchLedger(limit: number = 100, externalId?: string, offs
   const { data } = await adminApi.get<LedgerEntry[]>("/admin/api/game-tokens/ledger", { params });
   return data;
 }
+
+export interface UserWalletSummary {
+  user_id: number;
+  external_id?: string;
+  balances: Record<string, number>;
+}
+
+export async function fetchWalletSummary() {
+  const { data } = await adminApi.get<UserWalletSummary[]>("/admin/api/game-tokens/summary");
+  return data;
+}

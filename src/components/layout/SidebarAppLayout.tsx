@@ -3,16 +3,15 @@ import { Outlet } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import SidebarContainer, { SidebarMobileFooter } from "./SidebarContainer";
 import HomeShortcutButton from "../common/HomeShortcutButton";
+import InboxButton from "../common/InboxButton";
 import { requestTrialGrant } from "../../api/trialGrantApi";
 import { useToast } from "../common/ToastProvider";
 import type { GameTokenType } from "../../types/gameTokens";
 import { isTrialGrantEnabled } from "../../config/featureFlags";
-
-import InboxButton from "../common/InboxButton";
+import MobileBottomNav from "./MobileBottomNav";
 
 const SidebarAppLayout: React.FC = memo(() => {
   const queryClient = useQueryClient();
-
   const { addToast } = useToast();
   const didAttemptRef = useRef(false);
 
@@ -73,13 +72,14 @@ const SidebarAppLayout: React.FC = memo(() => {
   return (
     <div className="min-h-screen w-full bg-black text-white">
       <div className="flex min-h-screen w-full flex-col lg:h-[100dvh] lg:flex-row lg:overflow-hidden">
-        <aside className="w-full shrink-0 lg:h-full lg:w-[396px] lg:border-r lg:border-white/10 lg:overflow-hidden">
+        {/* Desktop Sidebar (Hidden on mobile) */}
+        <aside className="hidden shrink-0 lg:block lg:h-full lg:w-[396px] lg:border-r lg:border-white/10 lg:overflow-hidden">
           <div className="h-full w-full">
             <SidebarContainer />
           </div>
         </aside>
 
-        <main className="min-w-0 flex-1 lg:h-full lg:overflow-y-auto">
+        <main className="min-w-0 flex-1 lg:h-full lg:overflow-y-auto pb-20 lg:pb-0">
           <div className="w-full p-4 md:p-8">
             <div className="mb-4 flex justify-end gap-2">
               <InboxButton />
@@ -88,9 +88,12 @@ const SidebarAppLayout: React.FC = memo(() => {
             <Outlet />
           </div>
 
-          {/* Mobile/Tablet footer must come after main content (Figma section order). */}
-          <SidebarMobileFooter className="lg:hidden" />
+          {/* Legacy Footer: Hidden on mobile now because we use Bottom Nav */}
+          <SidebarMobileFooter className="hidden md:block lg:hidden" />
         </main>
+
+        {/* Mobile Bottom Navigation (Visible only on mobile) */}
+        <MobileBottomNav />
       </div>
     </div>
   );

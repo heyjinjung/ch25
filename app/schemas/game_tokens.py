@@ -56,3 +56,9 @@ class LedgerEntry(BaseModel):
     label: str | None = None
     meta_json: dict | None = None
     created_at: str
+
+
+class UserWalletSummary(BaseModel):
+    user_id: int
+    external_id: str | None = None
+    balances: dict[str, int]

@@ -141,6 +141,23 @@ class Settings(BaseSettings):
         ),
     )
 
+    # Telegram Bot Configuration
+    telegram_bot_token: str | None = Field(
+        None,
+        validation_alias=AliasChoices(
+            "TELEGRAM_BOT_TOKEN",
+            "telegram_bot_token",
+        ),
+    )
+
+    telegram_mini_app_url: str = Field(
+        "http://localhost:3000",
+        validation_alias=AliasChoices(
+            "TELEGRAM_MINI_APP_URL",
+            "telegram_mini_app_url",
+        ),
+    )
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

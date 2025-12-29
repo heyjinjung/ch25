@@ -1,7 +1,7 @@
 """User model definition."""
 from datetime import datetime
 
-from sqlalchemy import Boolean, Column, DateTime, Integer, String
+from sqlalchemy import BigInteger, Boolean, Column, DateTime, Integer, String
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
@@ -44,5 +44,12 @@ class User(Base):
 
     # [Retention] Onboarding
     has_completed_onboarding = Column(Boolean, default=False)
+
+    # [Telegram] Integration
+    telegram_id = Column(BigInteger, unique=True, nullable=True, index=True)
+    telegram_username = Column(String(100), nullable=True)
+    telegram_is_blocked = Column(Boolean, nullable=False, server_default="0", default=False)
+    telegram_join_count = Column(Integer, nullable=False, server_default="0", default=0)
+    first_login_at = Column(DateTime, nullable=True)
 
     admin_profile = relationship("AdminUserProfile", back_populates="user", uselist=False, cascade="all, delete-orphan")
