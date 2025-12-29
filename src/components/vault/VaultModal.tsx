@@ -66,7 +66,7 @@ const VaultModal: React.FC<Props> = ({ open, onClose, ctaPayload, unlockRulesJso
 
         {rules.length > 0 && (
           <div className="flex flex-col gap-2 sm:gap-3">
-            <h5 className="text-white/40 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] px-1">Unlock Conditions</h5>
+            <h5 className="text-white/40 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] px-1">해금 조건 안내</h5>
             <div className="flex flex-col gap-1.5 sm:gap-2">
               {rules.map((r, i) => (
                 <div key={i} className="flex gap-2 sm:gap-3 items-start p-2.5 sm:p-3 rounded-lg sm:rounded-xl bg-black/40 border border-white/5">

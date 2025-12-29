@@ -2,7 +2,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
-import { useSeasonPassStatus } from "../hooks/useSeasonPass";
 import Button from "../components/common/Button";
 import { getVaultStatus } from "../api/vaultApi";
 import { TelegramLinkBanner } from "../components/telegram/TelegramLinkBanner";
@@ -87,7 +86,6 @@ const CategoryTabs: React.FC<{ active: string; onChange: (id: string) => void }>
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
-  const season = useSeasonPassStatus();
   const [activeTab, setActiveTab] = useState("all");
 
   // Data (Simplified for layout)
@@ -100,7 +98,6 @@ const HomePage: React.FC = () => {
   const [vaultBannerOpen, setVaultBannerOpen] = useState(false);
 
   // Dynamic Level Display logic
-  const userLevel = season.data?.current_level ?? 1;
 
   const games = [
     {
@@ -148,30 +145,6 @@ const HomePage: React.FC = () => {
     <section className="space-y-6 pb-4">
       <TelegramLinkBanner />
 
-      {/* Header/Nav (Simple Top Bar) */}
-      <div className="flex items-center justify-between px-2">
-        <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-emerald-400 to-cyan-500 flex items-center justify-center font-bold text-white text-xs">
-            CC
-          </div>
-          <span className="text-xl font-black italic tracking-tighter text-white">CASINO</span>
-        </div>
-        <div className="flex gap-3">
-          {/* Assets Display */}
-          <div className="flex items-center gap-1.5 rounded-full bg-black/40 border border-white/5 px-3 py-1 backdrop-blur-md">
-            <img src="/assets/asset_coin_gold.png" alt="Coin" className="h-5 w-5 drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]" />
-            <span className="text-xs font-bold text-white">12,500</span>
-          </div>
-          <div className="flex items-center gap-1.5 rounded-full bg-black/40 border border-white/5 px-3 py-1 backdrop-blur-md">
-            <img src="/assets/asset_ticket_green.png" alt="Ticket" className="h-5 w-5 drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]" />
-            <span className="text-xs font-bold text-white">5</span>
-          </div>
-          {/* Level Badge */}
-          <div className="px-3 py-1 rounded-full bg-white/10 border border-white/10 text-xs font-bold text-emerald-400">
-            Lv.{userLevel}
-          </div>
-        </div>
-      </div>
 
       {/* Sticky Vault Banner */}
       {showVaultBanner && (
@@ -237,9 +210,6 @@ const HomePage: React.FC = () => {
         ))}
       </div>
 
-      <div className="text-center py-6">
-        <p className="text-xs text-slate-500 font-medium">© 2024 CC CASINO. All rights reserved.</p>
-      </div>
     </section>
   );
 };

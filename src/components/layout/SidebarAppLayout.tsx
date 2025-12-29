@@ -2,13 +2,12 @@ import React, { useEffect, useMemo, useRef, memo } from "react";
 import { Outlet } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import SidebarContainer, { SidebarMobileFooter } from "./SidebarContainer";
-import HomeShortcutButton from "../common/HomeShortcutButton";
-import InboxButton from "../common/InboxButton";
 import { requestTrialGrant } from "../../api/trialGrantApi";
 import { useToast } from "../common/ToastProvider";
 import type { GameTokenType } from "../../types/gameTokens";
 import { isTrialGrantEnabled } from "../../config/featureFlags";
 import MobileBottomNav from "./MobileBottomNav";
+import AppHeader from "./AppHeader";
 
 const SidebarAppLayout: React.FC = memo(() => {
   const queryClient = useQueryClient();
@@ -81,10 +80,7 @@ const SidebarAppLayout: React.FC = memo(() => {
 
         <main className="min-w-0 flex-1 lg:h-full lg:overflow-y-auto pb-20 lg:pb-0">
           <div className="w-full p-4 md:p-8">
-            <div className="mb-4 flex justify-end gap-2">
-              <InboxButton />
-              <HomeShortcutButton />
-            </div>
+            <AppHeader />
             <Outlet />
           </div>
 

@@ -1,22 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
+import clsx from "clsx";
 import { useQuery } from "@tanstack/react-query";
 import { getVaultStatus } from "../../api/vaultApi";
-import { getUiConfig } from "../../api/uiConfigApi";
 import VaultModal from "./VaultModal";
 import AnimatedCountdown from "../common/AnimatedCountdown";
 import { parseVaultUnlockRules } from "../../utils/vaultUtils";
 
-type RewardPreviewItem = {
-  label: string;
-  amount: number | undefined;
-  unit: string | undefined;
-};
-
-type RewardPreviewProgress = {
-  currentPoints: number;
-  nextPoints: number;
-  unitLabel: string;
-};
 
 const formatWon = (amount: number) => `${amount.toLocaleString("ko-KR")}원`;
 
@@ -78,46 +67,55 @@ const CountdownTimer: React.FC<{ expiresAt: Date }> = React.memo(({ expiresAt })
   );
 });
 
-const VaultVisual: React.FC<{ stateLabel: string; eligible: boolean }> = React.memo(({ stateLabel, eligible }) => {
+const VaultVisual: React.FC<{ eligible: boolean }> = React.memo(({ eligible }) => {
   return (
-    <div className="relative aspect-square w-full max-w-[280px] mx-auto">
-      {/* Glow background */}
-      <div className={`absolute inset-0 rounded-full blur-[60px] opacity-40 transition-colors duration-700 ${eligible ? 'bg-cc-lime' : 'bg-blue-500'}`} />
+    <div className="relative w-full max-w-[320px] aspect-square mx-auto flex items-center justify-center group cursor-pointer transition-transform duration-500 active:scale-95">
+      {/* Background Glows */}
+      <div className={clsx(
+        "absolute inset-0 rounded-full blur-[80px] opacity-30 transition-colors duration-1000 animate-pulse",
+        eligible ? "bg-figma-accent" : "bg-emerald-900/40"
+      )} />
+      <div className="absolute inset-4 rounded-full border border-white/5 animate-spin-slow opacity-20" />
 
-      {/* Outer ring */}
-      <div className={`absolute inset-0 rounded-full border-2 border-white/20 p-2 ${eligible ? 'animate-spin-slow' : ''}`}>
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-4 h-4 bg-white/40 rounded-full blur-sm" />
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-4 bg-white/40 rounded-full blur-sm" />
+      {/* Main Safe Box */}
+      <div className="relative z-10 w-full h-full transform transition-all duration-700">
+        <img
+          src={eligible ? "/assets/vault/vault_open.png" : "/assets/vault/vault_closed.png"}
+          className={clsx(
+            "w-full h-full object-contain filter drop-shadow-[0_20px_50px_rgba(0,0,0,0.8)] transition-all",
+            eligible && "scale-105"
+          )}
+          alt="금고 상태"
+        />
+
+        {/* Dial Overlay */}
+        {!eligible && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="relative w-[38%] aspect-square mt-[2%]">
+              <img
+                src="/assets/vault/vault_dial.jpg"
+                className="w-full h-full object-contain animate-spin-slow group-hover:rotate-180 transition-transform duration-[2s] ease-in-out"
+                style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.5))', mixBlendMode: 'screen' }}
+                alt="다이얼"
+              />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-2 h-2 rounded-full bg-figma-accent shadow-[0_0_10px_#30FF75]" />
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="absolute inset-0 bg-gradient-to-tr from-white/[0.05] to-transparent pointer-events-none rounded-3xl" />
       </div>
 
-      {/* Main vault body */}
-      <div className="absolute inset-[15px] rounded-full border border-white/10 bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-xl shadow-2xl flex items-center justify-center">
-        <div className="absolute inset-0 rounded-full overflow-hidden">
-          <div className={`absolute top-0 left-0 w-full h-full bg-gradient-to-tr from-transparent via-white/5 to-transparent ${eligible ? 'animate-pulse' : ''}`} />
+      {/* Badge Overlay */}
+      <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 z-20">
+        <div className={clsx(
+          "px-6 py-2 rounded-full border-2 font-black text-xs tracking-[0.2em] uppercase shadow-2xl backdrop-blur-xl transition-all duration-500",
+          eligible ? "bg-black border-figma-accent text-figma-accent shadow-[0_0_30px_rgba(48,255,117,0.3)] animate-bounce" : "bg-black/80 border-white/10 text-white/40"
+        )}>
+          {eligible ? "해금 완료" : "잠겨있음"}
         </div>
-
-        {/* Center icon / status */}
-        <div className="relative z-10 flex flex-col items-center">
-          <div className={`mb-2 p-4 rounded-2xl bg-black/40 border border-white/10 ${eligible ? 'shadow-[0_0_20px_rgba(210,253,156,0.3)]' : ''}`}>
-            <img
-              src={eligible ? "/images/layer-3.svg" : "/images/coin.svg"}
-              className={`h-12 w-12 ${eligible ? '' : 'grayscale opacity-50'}`}
-              alt="Vault status"
-            />
-          </div>
-          <p className={`text-sm font-black uppercase tracking-[0.3em] ${eligible ? 'text-cc-lime' : 'text-white/40'}`}>
-            {stateLabel}
-          </p>
-        </div>
-
-        {/* Mechanical details */}
-        {[...Array(8)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-1 h-3 bg-white/20 rounded-full"
-            style={{ transform: `rotate(${i * 45}deg) translateY(-90px)` }}
-          />
-        ))}
       </div>
     </div>
   );
@@ -133,11 +131,6 @@ const VaultMainPanel: React.FC = React.memo(() => {
     retry: false,
   });
 
-  const ui = useQuery({
-    queryKey: ["ui-config", "ticket_zero"],
-    queryFn: () => getUiConfig("ticket_zero"),
-    staleTime: 0,
-  });
 
   const view = useMemo(() => {
     const data = vault.data;
@@ -147,7 +140,7 @@ const VaultMainPanel: React.FC = React.memo(() => {
     const expiresAt = parseDate(data?.expiresAt ?? null);
     const usedAt = parseDate(data?.vaultFillUsedAt ?? null);
 
-    const statusLabel = vaultBalance > 0 ? (eligible ? "이용 가능" : "잠금") : "비어있음";
+    const statusLabel = vaultBalance > 0 ? (eligible ? "해금 가능" : "잠금") : "포인트 없음";
     const statusTone = eligible ? "text-cc-lime shadow-[0_0_10px_#d2fd9c44]" : "text-white/40";
 
     const unlockRulesJson = data?.unlockRulesJson;
@@ -181,227 +174,159 @@ const VaultMainPanel: React.FC = React.memo(() => {
     const parsed = parseVaultUnlockRules(view.unlockRulesJson);
     if (parsed.length > 0) return parsed;
     return [
-      "해금 조건: 게임 플레이를 통해 적립된 포인트 (적립형)",
-      "비고: 이용 내역이 확인되면 자동으로 금고가 해금되어 보유 머니로 전환됩니다.",
-      "문의: 해금이 지연될 경우 텔레그램 고객센터로 문의해주세요."
+      "게임 플레이를 통해 적립된 포인트가 안전하게 보관됩니다.",
+      "충전 및 이용 내역이 확인되면 자동으로 포인트가 해금됩니다.",
+      "해금된 포인트는 즉시 보유 머니로 전환되어 사용 가능합니다."
     ];
   }, [view.unlockRulesJson]);
 
-  const rewardPreview = useMemo(() => {
-    const value = ui.data?.value ?? null;
-    const v = value as Record<string, unknown> | null;
-    const rawItems: unknown[] | null = Array.isArray(v?.reward_preview_items)
-      ? (v?.reward_preview_items as unknown[])
-      : Array.isArray(v?.rewardPreviewItems)
-        ? (v?.rewardPreviewItems as unknown[]) : null;
-
-    const items: RewardPreviewItem[] | null = rawItems
-      ? rawItems
-        .map((item) => {
-          if (!item || typeof item !== "object") return null;
-          const r = item as Record<string, unknown>;
-          if (!r.label) return null;
-          return {
-            label: String(r.label),
-            amount: typeof r.amount === "number" ? r.amount : undefined,
-            unit: typeof r.unit === "string" ? r.unit : undefined,
-          };
-        })
-        .filter((i): i is RewardPreviewItem => i !== null)
-      : null;
-
-    const rawProgress = (v?.reward_preview_progress ?? v?.rewardPreviewProgress) as Record<string, unknown> | null;
-    const currentPoints = (rawProgress?.current_points ?? rawProgress?.currentPoints ?? null) as number | null;
-    const nextPoints = (rawProgress?.next_points ?? rawProgress?.nextPoints ?? null) as number | null;
-    const unitLabel = (rawProgress?.unit_label ?? rawProgress?.unitLabel ?? "점") as string;
-
-    const progress: RewardPreviewProgress | null = (currentPoints !== null && nextPoints !== null && nextPoints > 0) ? { currentPoints, nextPoints, unitLabel } : null;
-    const percent = progress ? Math.max(0, Math.min(100, Math.round((progress.currentPoints / progress.nextPoints) * 100))) : null;
-
-    return { items, progress, percent };
-  }, [ui.data?.value]);
 
   return (
     <section className="mx-auto w-full max-w-[1100px] flex flex-col gap-10">
-      {/* 1. Hero Header */}
-      <div className="relative w-full rounded-[40px] overflow-hidden bg-gradient-to-br from-cc-olive to-cc-moss p-8 md:p-12 lg:p-16 border border-white/5 shadow-2xl">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute -top-24 -left-24 w-96 h-96 bg-cc-lime/40 blur-[100px] rounded-full" />
-          <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-cc-lime/40 blur-[100px] rounded-full" />
+      {/* 1. High-End Hero Header */}
+      <div className="relative w-full rounded-[3rem] overflow-hidden bg-[#1a1c0e] p-8 md:p-16 border border-white/10 shadow-[0_40px_100px_-20px_rgba(0,0,0,0.9)] transition-all">
+        {/* Abstract Premium Background */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute -top-32 -left-32 w-[600px] h-[600px] bg-[#30FF75]/10 blur-[120px] rounded-full animate-pulse" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/60 to-black/90" />
         </div>
 
-        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <div className="flex flex-col gap-8">
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-3">
-                <div className="h-px w-8 bg-cc-lime/60" />
-                <span className="text-cc-lime text-sm font-black tracking-widest uppercase">Safe & Digital Vault</span>
+        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+          <div className="flex flex-col gap-10">
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-4">
+                <span className="px-5 py-2 rounded-full bg-emerald-950/80 border border-figma-accent/50 text-figma-accent text-[10px] font-black tracking-[0.2em] uppercase shadow-[0_0_20px_rgba(48,255,117,0.2)] backdrop-blur-md">
+                  보안 금고 시스템
+                </span>
+                <div className="h-px flex-1 bg-white/10" />
               </div>
-              <h1 className="text-[48px] md:text-[64px] font-black leading-none text-white tracking-tighter">
-                MY <span className="text-cc-lime">VAULT</span>
+              <h1 className="text-4xl md:text-[72px] font-black leading-[0.9] text-white tracking-tighter italic uppercase">
+                내 금고 <br />
+                <span className="text-figma-accent text-5xl md:text-[84px] not-italic">리워드 보관함</span>
               </h1>
             </div>
 
-            <div className="flex flex-wrap gap-4 items-center">
+            <div className="flex flex-wrap gap-3 items-center">
               {view.expiresAt && <CountdownTimer expiresAt={view.expiresAt} />}
-              <div className={`px-4 py-2 rounded-full border border-white/10 bg-white/5 text-sm font-black tracking-wide ${view.eligible ? 'text-cc-lime border-cc-lime/30' : 'text-white/40'}`}>
-                상태: {view.statusLabel}
-              </div>
               {view.accrualMultiplier > 1 && (
-                <div className="px-4 py-2 rounded-full bg-red-500 text-white text-sm font-black animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.5)]">
-                  HOT {view.accrualMultiplier}배 적립
+                <div className="px-5 py-2 rounded-full bg-gradient-to-r from-red-600 to-orange-500 text-white text-xs font-black animate-pulse shadow-xl flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 bg-white rounded-full animate-ping" />
+                  포인트 {view.accrualMultiplier}배 적립 중
                 </div>
               )}
             </div>
 
-            <div className="flex flex-col gap-4 max-w-md">
-              <p className="text-white/60 text-lg leading-relaxed">
-                지민코드 활동을 통해 적립된 포인트가 안전하게 보관되어 있습니다. <br />
-                <span className="text-white font-bold">이용 내역이 확인되면 즉시 해금되어 보유 머니로 전환됩니다.</span>
+            <div className="flex flex-col gap-6 max-w-md">
+              <p className="text-white/60 text-base md:text-lg leading-relaxed font-bold">
+                지민코드 활동을 통해 적립된 포인트가 <span className="text-white">안전하게 보관</span>되어 있습니다.
+                이용 내역이 확인되면 즉시 해금되어 보유 머니로 전환됩니다.
               </p>
-              <div className="flex gap-4">
+
+              <div className="flex flex-col sm:flex-row gap-4">
                 <button
                   onClick={() => setVaultModalOpen(true)}
-                  className="px-8 py-4 bg-cc-lime text-black font-black text-sm rounded-2xl hover:bg-white transition-all transform hover:scale-105 active:scale-95 shadow-xl shadow-cc-lime/20"
+                  className="group relative px-10 py-5 bg-figma-primary text-white font-black text-sm rounded-[1.5rem] transition-all overflow-hidden shadow-2xl active:scale-95"
                 >
-                  상세 정보 확인
+                  <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform" />
+                  <span className="relative z-10 flex items-center justify-center gap-2 tracking-widest uppercase">
+                    상세 정보 확인
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M9 5l7 7-7 7" /></svg>
+                  </span>
                 </button>
                 <a
                   href="https://ccc-010.com"
                   target="_blank"
-                  className="px-8 py-4 bg-white/10 text-white font-black text-sm rounded-2xl hover:bg-white/20 transition-all border border-white/10 backdrop-blur-md"
+                  className="px-10 py-5 bg-white/5 text-white/70 font-black text-sm rounded-[1.5rem] hover:bg-white/10 transition-all border border-white/10 backdrop-blur-md flex items-center justify-center gap-2 uppercase tracking-widest"
                 >
-                  CC카지노 바로가기
+                  카지노 홈으로
                 </a>
               </div>
             </div>
           </div>
 
-          <div className="flex justify-center">
-            <VaultVisual stateLabel={view.statusLabel} eligible={view.eligible} />
+          <div className="flex justify-center relative">
+            <VaultVisual eligible={view.eligible} />
           </div>
         </div>
       </div>
 
-      {/* 2. Balance Stats */}
+      {/* 2. Premium Balance Display */}
       <div className="flex justify-center">
         {/* Locked Box */}
-        <div className="relative group w-full max-w-2xl">
-          <div className="absolute inset-0 bg-cc-lime/5 blur-xl group-hover:bg-cc-lime/10 transition-colors rounded-[32px]" />
-          <div className="relative p-8 rounded-[32px] border border-white/5 bg-white/5 backdrop-blur-md overflow-hidden min-h-[180px] flex flex-col justify-between">
-            <div className="absolute -right-8 -bottom-8 w-32 h-32 opacity-10 group-hover:opacity-20 transition-opacity">
-              <img src="/images/layer-2.svg" className="h-full w-full object-contain" alt="" />
+        <div className="relative group w-full max-w-xl">
+          <div className="absolute inset-0 bg-figma-accent/10 blur-[60px] opacity-50 transition-opacity" />
+          <div className="relative p-10 rounded-[2.5rem] border border-white/20 bg-black/60 backdrop-blur-3xl overflow-hidden shadow-3xl text-center">
+            <div className="absolute top-0 right-0 p-6 opacity-5">
+              <img src="/assets/vault/vault_dial.jpg" className="w-24 h-24 animate-spin-slow" style={{ mixBlendMode: 'screen' }} alt="" />
             </div>
-            <div className="flex flex-col gap-1">
-              <p className="text-white/40 text-sm font-black tracking-widest uppercase">잠금 포인트</p>
-              <h3 className="text-cc-lime text-4xl font-black">{formatWon(view.vaultBalance)}</h3>
+            <div className="flex flex-col gap-2 relative z-10">
+              <span className="text-xs font-black text-white/30 tracking-[0.4em] uppercase">현재 보관된 리워드</span>
+              <div className="flex items-baseline justify-center gap-2">
+                <h3 className="text-white text-6xl font-black tracking-tighter">{formatWon(view.vaultBalance).replace('원', '')}</h3>
+                <span className="text-figma-accent text-2xl font-black italic">원</span>
+              </div>
             </div>
-            <p className="text-white/30 text-sm mt-4">해금 시 실시간으로 보유 머니에 합산됩니다.</p>
+            <div className="mt-8 flex items-center justify-center gap-3 relative z-10">
+              <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse shadow-[0_0_10px_rgba(249,121,53,0.8)]" />
+              <p className="text-white/50 text-xs font-bold uppercase tracking-wider">이용 확인 후 자동으로 지급됩니다</p>
+            </div>
           </div>
         </div>
       </div>
 
       {/* 3. Reward Tracking & History */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Side: Rules & History */}
-        <div className="lg:col-span-2 flex flex-col gap-6">
-          <div className="p-8 rounded-[32px] border border-white/10 bg-black/40 backdrop-blur-md">
-            <h4 className="text-white font-black text-lg mb-6 flex items-center gap-2">
-              <span className="w-1.5 h-6 bg-cc-lime rounded-full" />
-              금고 이용 규칙
+      <div className="max-w-2xl mx-auto w-full flex flex-col gap-8">
+        {/* Rules & History only */}
+        <div className="flex flex-col gap-8">
+          <div className="p-8 md:p-10 rounded-[2.5rem] border border-white/10 bg-[#111] shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-1.5 h-full bg-figma-accent" />
+            <h4 className="text-white font-black text-lg mb-8 flex items-center gap-3 uppercase">
+              이용 안내 및 조건
             </h4>
-            <div className="grid gap-4">
+            <div className="grid gap-3">
               {unlockRules.map((rule, i) => (
-                <div key={i} className="flex gap-4 items-start p-4 rounded-2xl bg-white/5 border border-white/5 group hover:bg-white/10 transition-colors">
-                  <div className="h-6 w-6 rounded-full bg-cc-lime/20 flex items-center justify-center text-cc-lime font-black text-sm shrink-0">
+                <div key={i} className="flex gap-4 items-center p-4 rounded-xl bg-white/[0.02] border border-white/5">
+                  <div className="h-6 w-6 rounded bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-figma-accent font-black text-[10px] shrink-0">
                     {i + 1}
                   </div>
-                  <p className="text-white/70 text-sm leading-relaxed">{rule}</p>
+                  <p className="text-white/60 text-sm font-medium">{rule}</p>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="p-8 rounded-[32px] border border-white/10 bg-black/40 backdrop-blur-md">
-            <h4 className="text-white font-black text-lg mb-6 flex items-center gap-2">
-              <span className="w-1.5 h-6 bg-cc-lime rounded-full" />
-              최근 활동
+          <div className="p-8 md:p-10 rounded-[2.5rem] border border-white/10 bg-[#111] shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-1.5 h-full bg-white/20" />
+            <h4 className="text-white font-black text-lg mb-8 flex items-center gap-3 uppercase">
+              최근 활동 내역
             </h4>
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-4">
               {view.eligible ? (
-                <div className="flex items-center justify-between p-4 rounded-2xl bg-cc-lime/5 border border-cc-lime/20">
-                  <div className="flex items-center gap-3">
-                    <div className="h-2 w-2 rounded-full bg-cc-lime animate-pulse" />
-                    <p className="text-white/90 text-sm font-bold">외부 이용 내역 확인 완료</p>
+                <div className="flex items-center justify-between p-5 rounded-2xl bg-figma-accent/5 border border-figma-accent/20">
+                  <div className="flex items-center gap-4">
+                    <div className="w-2.5 h-2.5 rounded-full bg-figma-accent animate-pulse shadow-[0_0_10px_#30FF75]" />
+                    <p className="text-white font-bold text-sm tracking-tight">외부 이용 확인 완료</p>
                   </div>
-                  <span className="text-sm font-black text-cc-lime uppercase tracking-widest">Active</span>
+                  <span className="text-[10px] font-black text-figma-accent uppercase tracking-widest border border-figma-accent/30 px-3 py-1 rounded-full bg-figma-accent/10">추가 적립 중</span>
                 </div>
               ) : (
-                <div className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5">
-                  <div className="flex items-center gap-3">
-                    <div className="h-2 w-2 rounded-full bg-white/20" />
-                    <p className="text-white/50 text-sm">외부 이용 내역 대기 중</p>
+                <div className="flex items-center justify-between p-5 rounded-2xl bg-white/[0.02] border border-white/5">
+                  <div className="flex items-center gap-4">
+                    <div className="w-2.5 h-2.5 rounded-full bg-white/20" />
+                    <p className="text-white/40 text-sm font-bold uppercase tracking-tight">이용 확인 대기 중</p>
                   </div>
-                  <span className="text-sm font-black text-white/20 uppercase tracking-widest">Idle</span>
+                  <span className="text-[10px] font-black text-white/20 uppercase tracking-widest border border-white/10 px-3 py-1 rounded-full">대기</span>
                 </div>
               )}
               {view.usedAt && (
-                <div className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5">
-                  <p className="text-white/70 text-sm">금고 채우기 사용</p>
-                  <p className="text-white/40 text-sm font-mono">{formatDateTime(view.usedAt)}</p>
+                <div className="flex items-center justify-between p-5 rounded-2xl bg-white/[0.02] border border-white/5">
+                  <div className="flex flex-col gap-1">
+                    <p className="text-white/60 text-xs font-black uppercase tracking-wider">포인트 전환 완료</p>
+                    <p className="text-white/30 text-[10px] font-mono">{formatDateTime(view.usedAt)}</p>
+                  </div>
+                  <div className="text-figma-accent/40 font-black text-xs uppercase tracking-tighter italic">완료</div>
                 </div>
               )}
-            </div>
-          </div>
-        </div>
-
-        {/* Right Side: Reward Preview */}
-        <div className="lg:col-span-1">
-          <div className="p-1 rounded-[34px] bg-gradient-to-b from-cc-lime/30 to-transparent">
-            <div className="p-8 rounded-[32px] bg-[#111] h-full flex flex-col gap-6">
-              <div className="flex flex-col gap-1">
-                <p className="text-cc-lime text-sm font-black tracking-widest uppercase">진행 현황</p>
-                <h4 className="text-white font-black text-lg">보상 미리보기</h4>
-              </div>
-
-              {rewardPreview.items && rewardPreview.items.length > 0 ? (
-                <div className="flex flex-col gap-6">
-                  <div className="flex flex-col gap-2">
-                    <div className="flex justify-between items-end mb-1">
-                      <span className="text-white/40 text-sm font-black uppercase tracking-widest">달성률</span>
-                      <span className="text-cc-lime text-lg font-black">{rewardPreview.percent}%</span>
-                    </div>
-                    <div className="h-3 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
-                      <div className="h-full bg-cc-lime shadow-[0_0_15px_#d2fd9c88]" style={{ width: `${rewardPreview.percent}%` }} />
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col gap-3">
-                    {rewardPreview.items.map((item, idx) => (
-                      <div key={idx} className="flex flex-col gap-2 p-4 rounded-2xl bg-white/5 border border-white/5">
-                        <p className="text-white/60 text-sm font-black uppercase tracking-tighter">{item.label}</p>
-                        <p className="text-white text-xl font-black">
-                          {item.amount?.toLocaleString()} <span className="text-sm text-white/30">{item.unit || 'PT'}</span>
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-12 gap-4 text-center">
-                  <div className="p-4 rounded-2xl bg-white/5 border border-white/5 grayscale opacity-20">
-                    <img src="/images/layer-2.svg" className="h-10 w-10" alt="" />
-                  </div>
-                  <p className="text-white/30 text-sm font-bold">표시할 보상이 없습니다.</p>
-                </div>
-              )}
-
-              <div className="mt-auto pt-6 border-t border-white/10">
-                <p className="text-sm text-white/40 leading-relaxed text-center">
-                  활동 조건 충족 시 포인트 적립과 <br />
-                  해금이 순차적으로 진행됩니다.
-                </p>
-              </div>
             </div>
           </div>
         </div>

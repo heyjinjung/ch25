@@ -1,15 +1,18 @@
 ﻿import React, { useEffect, useMemo, useRef } from "react";
-import { useNavigate } from "react-router-dom";
 import { useTodayRanking } from "../hooks/useRanking";
 import { useSeasonPassStatus, useInternalWinStatus, useClaimSeasonReward } from "../hooks/useSeasonPass";
 import FeatureGate from "../components/feature/FeatureGate";
 import { useToast } from "../components/common/ToastProvider";
-import { AnimatePresence, motion } from "framer-motion";
+import clsx from "clsx";
+
+/* Assets */
+const ICON_NODE_CURRENT = "/assets/season_pass/icon_node_current.png";
+const ICON_NODE_LOCKED = "/assets/season_pass/icon_node_locked.png";
+const ICON_NODE_CLEARED = "/assets/season_pass/icon_node_cleared.png";
 
 const formatCurrency = (value: number) => value.toLocaleString();
 
 const SeasonPassPage: React.FC = () => {
-  const navigate = useNavigate();
   const season = useSeasonPassStatus();
   const ranking = useTodayRanking();
   const internalWins = useInternalWinStatus();
@@ -43,8 +46,8 @@ const SeasonPassPage: React.FC = () => {
   const playDone = (external?.play_count ?? 0) > 0;
 
   const seasonLevelSummary = useMemo(() => {
-    if (season.isLoading) return { detail: "레벨 불러오는 중", progressPct: 0 };
-    if (season.isError || !season.data) return { detail: "레벨 정보를 불러오지 못했습니다", progressPct: 0 };
+    if (season.isPending) return { title: "LV.--", detail: "레벨 불러오는 중", progressPct: 0 };
+    if (season.isError || !season.data) return { title: "LV.ERR", detail: "데이터 로드 실패", progressPct: 0 };
     const { current_xp, current_level, max_level, levels } = season.data;
     const totalXp = Math.max(0, current_xp ?? 0);
     const maxRequired = Math.max(0, ...levels.map((l) => l.required_xp ?? 0));
@@ -52,8 +55,8 @@ const SeasonPassPage: React.FC = () => {
 
     if (isMax) {
       return {
-        title: "최대 레벨 달성",
-        detail: "축하합니다! 모든 보상을 달성했어요.",
+        title: "MAX LEVEL",
+        detail: "모든 보상 달성!",
         progressPct: 100,
       };
     }
@@ -74,295 +77,260 @@ const SeasonPassPage: React.FC = () => {
     if (remaining > 0) progressPct = Math.min(99, Math.max(0, progressPct));
 
     return {
-      title: `레벨 ${targetLevel}까지`,
-      detail: `남은 ${remaining.toLocaleString()} XP (현재 ${segmentXp.toLocaleString()} / ${segmentTotal.toLocaleString()})`,
+      title: `Lv.${targetLevel}`,
+      detail: `${remaining.toLocaleString()} XP 남음`,
       progressPct,
     };
-  }, [season.data, season.isError, season.isLoading]);
+  }, [season.data, season.isError, season.isPending]);
 
   const cards = [
     {
       icon: "👑",
-      title: "CC랭킹 TOP10",
-      desc: "순위가 10위 안에 들면 스탬프 1개",
-      status: external?.rank ? `현재 ${external.rank}위${top10Needed > 0 ? `, ${top10Needed}위 상승 필요` : " (완료)"}` : "랭킹 데이터 없음",
+      title: "랭킹 TOP10 달성",
+      desc: "순위권 진입 시 스탬프 1개",
+      status: external?.rank ? `현재 ${external.rank}위${top10Needed > 0 ? `, ${top10Needed}위 UP 필요` : " (완료)"}` : "랭킹 없음",
     },
     {
       icon: "📅",
-      title: "CC사이트 일일이용",
-      desc: "10만원 단위 플레이 시 20XP 지급",
+      title: "매일 출석 플레이",
+      desc: "10만원 플레이 시 20XP",
       status: playDone ? "완료" : "미완료",
     },
     {
       icon: "💎",
-      title: "CC 입금 10만원마다",
-      desc: "10만원 달성할 때마다 스탬프 1개",
-      status: `누적 ${formatCurrency(deposit)}원 / 다음까지 ${depositRemainder === 100_000 ? "0" : formatCurrency(depositRemainder)}원`,
+      title: "입금 미션",
+      desc: "10만원 달성마다 스탬프",
+      status: `${formatCurrency(depositRemainder)}원 남음`,
     },
     {
       icon: "🎮",
-      title: "코드게임 승리 50회",
-      desc: "승리 누적 50회 달성 시 스탬프 1개",
-      status: internalWins.data
-        ? `누적 승리 ${internalWins.data.total_wins}회 / 남은 ${internalWins.data.remaining}회`
-        : internalWins.isLoading
-          ? "집계 중..."
-          : "집계 실패",
+      title: "게임 승리 50회",
+      desc: "누적 50승 시 스탬프",
+      status: internalWins.data ? `남은 승리 ${internalWins.data.remaining}회` : "...",
     },
   ];
 
-  if (season.isLoading) {
-    return (
-      <FeatureGate feature="SEASON_PASS">
-        <section className="flex flex-col items-center justify-center rounded-3xl border border-emerald-800/30 bg-slate-950/80 p-10">
-          <div className="h-12 w-12 animate-spin rounded-full border-3 border-emerald-500/70 border-t-transparent" />
-          <p className="mt-4 text-base font-semibold text-emerald-100">레벨 불러오는 중...</p>
-          <button
-            type="button"
-            onClick={() => navigate("/")}
-            className="mt-4 rounded-full border border-emerald-600/60 px-4 py-2 text-sm font-semibold text-emerald-100 hover:bg-emerald-900/40"
-          >
-            홈으로
-          </button>
-        </section>
-      </FeatureGate>
-    );
-  }
-
-  if (season.isError || !season.data) {
-    return (
-      <FeatureGate feature="SEASON_PASS">
-        <section className="rounded-3xl border border-red-800/40 bg-slate-950/85 p-8 text-center">
-          <div className="mb-3 text-4xl">⚠️</div>
-          <p className="text-lg font-bold text-red-100">레벨를 불러오지 못했습니다.</p>
-          <p className="mt-2 text-sm text-slate-300">잠시 후 다시 시도하거나 지민이에게 문의해주세요.</p>
-          <div className="mt-4 flex justify-center gap-2">
-            <button
-              type="button"
-              onClick={() => season.refetch()}
-              className="rounded-full border border-slate-600 px-4 py-2 text-base font-semibold text-slate-200 hover:bg-slate-800"
-            >
-              다시 시도
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate("/")}
-              className="mt-4 rounded-full border border-emerald-600/60 px-4 py-2 text-base font-semibold text-emerald-100 hover:bg-emerald-900/40"
-            >
-              홈으로
-            </button>
-          </div>
-        </section>
-      </FeatureGate>
-    );
-  }
+  if (season.isPending) return <div className="p-10 text-center text-white/50">Loading Pass...</div>;
+  if (!season.data) return null;
 
   const data = season.data;
-  const stampXp = (data as any)?.base_xp_per_stamp ?? 0;
-  void stampXp;
 
   return (
     <FeatureGate feature="SEASON_PASS">
-      <div className="relative mx-auto max-w-5xl space-y-12 pb-20">
-        {/* Ambient Background */}
-        <div className="pointer-events-none absolute -left-[20%] -top-[20%] h-[600px] w-[600px] rounded-full bg-amber-500/10 blur-[100px] mix-blend-screen" />
-        <div className="pointer-events-none absolute -right-[20%] top-[20%] h-[600px] w-[600px] rounded-full bg-purple-600/10 blur-[100px] mix-blend-screen" />
+      {/* Main Container: Even more distinct Khaki/Moss tint for background */}
+      <div className="relative mx-auto max-w-lg min-h-screen bg-[#242714] pb-32 px-4 shadow-[0_0_100px_rgba(0,0,0,0.9)] border-x border-white/10">
 
-        {/* Header: VIP Status Card */}
-        <motion.header
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-white/5 to-black/80 px-4 py-8 md:px-8 md:py-10 shadow-2xl backdrop-blur-xl"
-        >
-          <div className="pointer-events-none absolute inset-0 bg-[url('/images/pattern-vip.svg')] opacity-5" />
-          <div className="relative z-10 flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-amber-300 to-amber-600 text-black font-black shadow-lg shadow-amber-500/20 text-lg">
-                  S
-                </span>
-                <p className="text-sm font-bold uppercase tracking-[0.3em] text-amber-500">시즌 패스</p>
-              </div>
-              <h1 className="text-[1.75rem] sm:text-[2.125rem] lg:text-[2.875rem] font-black text-white italic tracking-tight sm:tracking-tighter leading-tight break-words">
-                VIP 등급 혜택{" "}
-                <span className="block sm:inline text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-amber-600">
-                  레벨 {season.data?.current_level ?? 1}
-                </span>
-              </h1>
-              <p className="max-w-md text-base text-white/60">
-                {seasonLevelSummary.detail}
-              </p>
-            </div>
+        {/* --- 1. Premium Header: Darker, deeper gradient for contrast --- */}
+        <section className="relative pt-8 group">
+          <div className="absolute -inset-1 bg-gradient-to-r from-emerald-600 to-cyan-600 rounded-[2.5rem] blur-xl opacity-30"></div>
+          <div className="relative rounded-[2rem] bg-[#0A0F0B] p-8 shadow-2xl border border-white/20 overflow-hidden">
+            <div className="absolute inset-0 bg-[url('/images/pattern-vip.svg')] opacity-15 mix-blend-overlay" />
+            <div className="absolute -right-16 -top-16 w-64 h-64 bg-emerald-500/20 blur-[90px] rounded-full" />
 
-            <div className="flex flex-col gap-4 min-w-[300px]">
-              <div className="flex justify-between text-base font-bold text-amber-200/80">
-                <span>현재 경험치</span>
-                <span>{data.current_xp?.toLocaleString() ?? 0} / 목표</span>
+            <div className="relative z-10 flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="px-3 py-1.5 rounded-full bg-gold-400 text-black text-[10px] font-black tracking-[0.2em] uppercase shadow-[0_0_20px_rgba(251,191,36,0.6)]">
+                    PREMIUM PASS
+                  </span>
+                </div>
+                <h1 className="text-4xl font-black italic text-white leading-none tracking-tighter">
+                  LEVEL <span className="text-figma-accent text-5xl">{data.current_level}</span>
+                </h1>
+                <div className="flex items-center gap-2 mt-2">
+                  <div className="w-2 h-2 rounded-full bg-figma-accent animate-pulse shadow-[0_0_10px_#30FF75]" />
+                  <p className="text-white font-black uppercase tracking-wider text-xs">{seasonLevelSummary.detail}</p>
+                </div>
               </div>
-              <div className="relative h-5 w-full overflow-hidden rounded-full bg-black/50 shadow-inner">
-                <motion.div
-                  className="absolute inset-y-0 left-0 bg-gradient-to-r from-amber-600 to-yellow-400"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${seasonLevelSummary.progressPct}%` }}
-                  transition={{ duration: 1, ease: "easeOut" }}
-                />
-                {/* Glow Effect on Bar */}
-                <div className="absolute inset-y-0 left-0 w-full opacity-50 mix-blend-overlay bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.4),transparent)] animate-shimmer" />
-              </div>
-              <div className="flex gap-2 justify-end">
-                <button onClick={() => season.refetch()} className="text-sm text-white/40 hover:text-white transition">↻ 정보 갱신</button>
+
+              {/* Central Gauge */}
+              <div className="relative w-24 h-24 flex items-center justify-center">
+                <svg className="w-full h-full transform -rotate-90">
+                  <circle cx="48" cy="48" r="42" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-white/10" />
+                  <circle
+                    cx="48" cy="48" r="42"
+                    stroke="currentColor" strokeWidth="8" fill="transparent"
+                    className="text-figma-accent"
+                    strokeDasharray={263.8}
+                    strokeDashoffset={263.8 - (seasonLevelSummary.progressPct / 100) * 263.8}
+                    strokeLinecap="round"
+                    style={{ transition: 'stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1)' }}
+                  />
+                </svg>
+                <div className="absolute flex flex-col items-center">
+                  <span className="text-2xl font-black text-white">{seasonLevelSummary.progressPct}</span>
+                  <span className="text-[10px] font-extrabold text-white/50 tracking-widest uppercase">%</span>
+                </div>
               </div>
             </div>
           </div>
-        </motion.header>
+        </section>
 
-        <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
-          {/* Main Content: Reward Showcase */}
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-white">레벨별 보상 목록</h2>
-              <span className="text-base text-white/40">총 {data.levels.length} 레벨</span>
-            </div>
+        {/* --- 2. Dynamic Connected Timeline --- */}
+        <div className="grid lg:grid-cols-1 gap-12 mt-12">
+          <div className="relative pl-2">
+            <div className="space-y-0 relative z-10">
+              {data.levels.map((level, idx) => {
+                const isClaimed = level.is_claimed;
+                const isCurrent = data.current_level === level.level;
+                const isNext = data.current_level + 1 === level.level;
+                const isLockedState = isLocked(level, data.current_level);
+                const isLast = idx === data.levels.length - 1;
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <AnimatePresence mode="popLayout">
-                {data.levels.map((level) => {
-                  const isAuto = !!level.auto_claim;
-                  const rewardOverride: Record<number, string> = {
-                    1: "🎫 룰렛 티켓 3장",
-                    2: "🎲 주사위 티켓 3장",
-                    3: "📦 올인원 티켓 번들 (룰1+주1+복1)",
-                    4: "🍀 복권 티켓 3장",
-                    5: "💣 티켓 폭탄 (룰렛3+주사위3)",
-                    6: "💰 복권 7장 세트",
-                    7: "⭐️ 1만 P + 골드 키 (관리자)",
-                    8: "30,000 포인트 (관리자)",
-                    9: "50,000 포인트 (관리자)",
-                    10: "💎 10만 P + 다이아몬드 키",
-                  };
-                  const displayReward = rewardOverride[level.level] ?? level.reward_label;
-                  const isManualAdmin = displayReward.includes("Admin") || displayReward.includes("Coin") || displayReward.includes("Gift") || displayReward.includes("DIAMOND") || displayReward.includes("Points");
-                  const canClaim = !isManualAdmin && !isAuto && level.is_unlocked && !level.is_claimed;
-                  const isLevel10 = level.level === 10;
-                  const isLocked = !level.is_unlocked;
-                  const isClaimed = level.is_claimed;
-
-                  return (
-                    <motion.div
-                      key={level.level}
-                      layout
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className={`group relative overflow-hidden rounded-2xl border p-5 transition-all
-                                        ${isLevel10
-                          ? "col-span-full border-purple-500/50 bg-gradient-to-br from-purple-900/40 to-black shadow-[0_0_30px_rgba(168,85,247,0.2)]"
-                          : canClaim
-                            ? "border-amber-500/50 bg-amber-900/20 shadow-[0_0_20px_rgba(245,158,11,0.15)] hover:border-amber-400"
-                            : isLocked
-                              ? "border-white/5 bg-white/[0.02] opacity-60 grayscale"
-                              : isClaimed ? "border-emerald-500/30 bg-emerald-950/20" : "border-white/10 bg-white/[0.05]"
-                        }`}
-                    >
-                      {/* Unlocked Glow */}
-                      {!isLocked && <div className="absolute -left-10 -top-10 h-32 w-32 rounded-full bg-white/5 blur-2xl transition group-hover:bg-white/10" />}
-
-                      <div className="relative z-10 flex items-start justify-between">
-                        <div>
-                          <p className={`text-base font-bold uppercase tracking-widest ${isLevel10 ? "text-purple-300" : (canClaim || (isAuto && !isLocked)) ? "text-amber-300" : "text-white/40"}`}>
-                            레벨 {level.level}
-                          </p>
-                          <h3 className={`mt-1 text-lg font-bold ${isLocked ? "text-white/40" : "text-white"}`}>
-                            {displayReward}
-                          </h3>
-                          <p className="mt-1 text-sm text-white/30">필요 경험치: {level.required_xp.toLocaleString()} XP</p>
-                        </div>
-                        <div className={`flex h-10 w-10 items-center justify-center rounded-full border ${isClaimed ? "border-emerald-500 bg-emerald-500/20 text-emerald-500" :
-                          canClaim ? "animate-bounce border-amber-500 bg-amber-500 text-black shadow-lg" :
-                            !isLocked && isAuto ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-400" :
-                              "border-white/10 bg-white/5 text-white/20"
-                          }`}>
-                          {isClaimed ? "✓" : canClaim ? "!" : (!isLocked && isAuto) ? "✓" : "🔒"}
-                        </div>
-                      </div>
-
-                      <div className="mt-6">
-                        <button
-                          disabled={!canClaim}
-                          onClick={() => canClaim && claimMutation.mutate(level.level)}
-                          className={`w-full rounded-xl py-3 text-base font-black tracking-wide transition-all
-                                                ${isClaimed
-                              ? "cursor-default bg-emerald-500/10 text-emerald-500/50"
-                              : canClaim
-                                ? "bg-gradient-to-r from-amber-400 to-orange-500 text-black shadow-lg hover:brightness-110 active:scale-95"
-                                : isManualAdmin && !isLocked
-                                  ? "cursor-not-allowed border border-white/10 bg-transparent text-white/50"
-                                  : isAuto && !isLocked
-                                    ? "bg-emerald-500/10 text-emerald-500 font-bold"
-                                    : "cursor-not-allowed bg-black/20 text-transparent"
-                            }`}
-                        >
-                          {isClaimed ? "지급 완료" :
-                            canClaim ? "보상 받기" :
-                              isManualAdmin && !isLocked ? "관리자 문의" :
-                                isAuto && !isLocked ? "자동 지급됨" :
-                                  ""}
-                        </button>
-                        {isManualAdmin && !isAuto && !isClaimed && !isLocked && (
-                          <p className="mt-2 text-center text-sm text-amber-500/80">
-                            * 이 보상은 관리자가 직접 지급해 드립니다.
-                          </p>
+                return (
+                  <div key={level.level} className="relative flex flex-col">
+                    {/* Vertical Segment Line - Perfectly centered in 60px column (30px center) */}
+                    {!isLast && (
+                      <div className="absolute left-[28px] top-[48px] w-[4px] h-[calc(100%-48px)] z-0">
+                        <div className={clsx(
+                          "w-full h-full rounded-full transition-all duration-700",
+                          isClaimed ? "bg-[#30FF75]" :
+                            isCurrent ? "bg-gradient-to-b from-[#30FF75] to-black/30" : "bg-black/30"
+                        )} />
+                        {/* Shimmer for active path */}
+                        {isCurrent && (
+                          <div className="absolute inset-x-0 top-0 h-full bg-gradient-to-b from-white/20 to-transparent animate-shimmer opacity-30" />
                         )}
                       </div>
-                    </motion.div>
-                  );
-                })}
-              </AnimatePresence>
+                    )}
+
+                    <div className="grid grid-cols-[60px_1fr] gap-0 items-start mb-8 overflow-hidden">
+                      {/* Node Column - 60px width */}
+                      <div className="relative flex items-center justify-center h-full min-h-[120px] pt-1">
+
+                        {/* Connector Arm to Card */}
+                        <div className={clsx(
+                          "absolute left-[42px] top-[24px] h-[2px] w-[20px] z-0 transition-opacity rounded-full",
+                          (isCurrent || isClaimed) ? "bg-[#30FF75]/80 shadow-[0_0_10px_#30FF75]" : "bg-white/10"
+                        )} />
+
+                        {/* Sonar Ripple */}
+                        {(isCurrent || isNext) && (
+                          <div className="absolute top-[2px] left-1/2 -translate-x-1/2 w-11 h-11 rounded-full border border-figma-accent/30 animate-ping" />
+                        )}
+
+                        {/* Main Circle Node */}
+                        <div className={clsx(
+                          "relative w-12 h-12 rounded-full border-[3px] flex items-center justify-center transition-all z-20 shrink-0",
+                          isCurrent ? "bg-black border-figma-accent shadow-[0_0_20px_#30FF75] scale-105" :
+                            isClaimed ? "bg-black border-emerald-500" : "bg-[#111] border-white/10 opacity-80"
+                        )}>
+                          <img
+                            src={isClaimed ? ICON_NODE_CLEARED : isLockedState ? ICON_NODE_LOCKED : (isCurrent || isNext) ? ICON_NODE_CURRENT : ICON_NODE_LOCKED}
+                            alt="Status"
+                            className={clsx("w-6 h-6 object-contain transition-all duration-500", isCurrent && "animate-pulse")}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Reward Card: Robust responsive sizing */}
+                      <div className={clsx(
+                        "flex flex-col rounded-[1.75rem] p-5 border transition-all duration-700 relative overflow-hidden group/card shadow-[0_15px_40px_-5px_rgba(0,0,0,0.8)] min-w-0",
+                        isCurrent ? "bg-black border-figma-accent shadow-[0_0_40px_rgba(48,255,117,0.05)]" :
+                          isClaimed ? "bg-black/90 border-emerald-500/30 opacity-95" : "bg-black/40 border-white/5 opacity-50"
+                      )}>
+                        {/* Subtle internal shine */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/[0.03] to-transparent pointer-events-none" />
+
+                        <div className="flex justify-between items-start mb-4 gap-2">
+                          <div className="flex flex-col gap-1 min-w-0 flex-1">
+                            <span className={clsx(
+                              "text-[9px] font-black uppercase tracking-[0.2em] truncate",
+                              isCurrent ? "text-figma-accent" : "text-white/20"
+                            )}>
+                              MILESTONE {level.level}
+                            </span>
+                            <h3 className="text-xl font-black text-white leading-[1.1] tracking-tight break-keep">
+                              {level.reward_label}
+                            </h3>
+                          </div>
+                          {level.auto_claim && (
+                            <div className="flex-shrink-0 flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full mt-1">
+                              <span className="w-1 h-1 bg-emerald-400 rounded-full animate-pulse" />
+                              <span className="text-[8px] font-black text-emerald-400 tracking-tighter uppercase">AUTO</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Progress Tracker Core */}
+                        <div className="space-y-1.5 mb-5 mt-auto">
+                          <div className="flex justify-between items-end">
+                            <p className="text-[8px] font-black text-white/20 uppercase tracking-widest">EXP PROGRESS</p>
+                            <p className="text-[10px] font-black text-white/80">{level.required_xp.toLocaleString()} <span className="text-white/20">XP</span></p>
+                          </div>
+                          <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/5 relative">
+                            <div
+                              className={clsx("h-full rounded-full transition-all duration-[2s] ease-out shadow-lg", isClaimed ? "bg-emerald-500" : isCurrent ? "bg-figma-accent" : "bg-white/10")}
+                              style={{ width: isClaimed ? '100%' : isCurrent ? `${seasonLevelSummary.progressPct}%` : '0%' }}
+                            />
+                          </div>
+                        </div>
+
+                        <button
+                          disabled={!canClaim(level) || claimMutation.isPending}
+                          onClick={() => claimMutation.mutate(level.level)}
+                          className={clsx(
+                            "w-full py-3.5 rounded-xl font-black text-xs transition-all tracking-[0.05em] relative overflow-hidden active:scale-[0.98] active:brightness-90",
+                            canClaim(level) ? "bg-figma-primary text-white shadow-lg shadow-emerald-900/30" :
+                              isClaimed ? "bg-white/5 text-white/30 border border-white/5" : "bg-white/5 text-white/10 border border-transparent"
+                          )}
+                        >
+                          <span className="relative z-10 flex items-center justify-center gap-1.5 uppercase italic">
+                            {isClaimed && <svg className="w-3.5 h-3.5 text-figma-accent" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>}
+                            {isClaimed ? "COLLECTED" : canClaim(level) ? "CLAIM REWARD" : "LOCKED"}
+                          </span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
-          {/* Sidebar: Daily Daily Missions */}
-          <motion.aside
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-            className="space-y-6"
-          >
+          {/* --- 3. Mission Box: Higher Contrast --- */}
+          <section className="space-y-8 mt-12 px-2">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-white">일일 미션</h2>
-              <span className={`rounded-full px-2 py-0.5 text-sm font-bold ${data.today?.stamped ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"}`}>
-                {data.today?.stamped ? "완료됨" : "진행 중"}
-              </span>
+              <div className="flex items-center gap-4">
+                <div className="w-2 h-8 bg-figma-accent rounded-full shadow-[0_0_15px_#30FF75]" />
+                <h3 className="text-2xl font-black italic text-white tracking-tight uppercase">Daily Missions</h3>
+              </div>
+              <span className="text-[10px] font-bold text-white/30 tracking-[0.2em] uppercase">Refreshes in 4h</span>
             </div>
-
-            <div className="space-y-3">
+            <div className="grid gap-6">
               {cards.map((card, i) => (
-                <div key={i} className="group relative overflow-hidden rounded-2xl border border-white/5 bg-white/[0.02] p-4 transition-colors hover:bg-white/[0.05]">
-                  <div className="flex gap-4">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white/5 text-lg grayscale transition group-hover:grayscale-0">
-                      {card.icon}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <h4 className="truncate text-base font-bold text-white">{card.title}</h4>
-                      <p className="mt-0.5 text-sm text-white/40">{card.desc}</p>
-                      <div className="mt-3 flex items-center justify-between border-t border-white/5 pt-2">
-                        <p className="truncate text-sm font-medium text-cc-lime">{card.status}</p>
-                      </div>
-                    </div>
+                <div key={i} className="group flex items-center gap-5 bg-black/50 p-7 rounded-[2.5rem] border border-white/5 hover:border-white/20 hover:bg-black/80 transition-all shadow-2xl">
+                  <div className="w-16 h-16 rounded-3xl bg-[#111] flex items-center justify-center text-4xl border border-white/10 group-hover:scale-110 group-hover:rotate-3 transition-all shadow-inner">
+                    {card.icon}
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-lg font-black text-white tracking-wide">{card.title}</p>
+                    <p className="text-xs text-white/40 font-bold uppercase mt-1.5 tracking-wider">{card.desc}</p>
+                  </div>
+                  <div className={clsx(
+                    "text-[10px] font-black px-4 py-2 rounded-xl border transition-all uppercase tracking-widest",
+                    card.status.includes("완료") ? "text-figma-accent bg-emerald-500/10 border-emerald-500/20" : "text-white/40 bg-white/5 border-white/10"
+                  )}>
+                    {card.status}
                   </div>
                 </div>
               ))}
             </div>
-
-            <div className="rounded-2xl border border-blue-500/20 bg-blue-900/10 p-4">
-              <p className="text-base text-blue-200">
-                💡 <b>꿀팁:</b> 모든 일일 미션을 완료하면 보너스 스탬프를 받아 레벨업이 빨라집니다.
-              </p>
-            </div>
-          </motion.aside>
+          </section>
         </div>
+
       </div>
     </FeatureGate>
   );
 };
+
+// Helpers
+function isLocked(level: any, currentLevel: number) {
+  return level.level > currentLevel + 1; // Show next level as active-ish
+}
+
+function canClaim(level: any) {
+  return level.is_unlocked && !level.is_claimed && !level.auto_claim;
+}
 
 export default SeasonPassPage;
