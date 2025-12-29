@@ -179,18 +179,14 @@ const SeasonPassPage: React.FC = () => {
 
                 return (
                   <div key={level.level} className="relative flex flex-col">
-                    {/* Vertical Segment Line - Perfectly centered in 60px column (30px center) */}
+                    {/* Vertical Segment Line - Runs from circle center to next circle center */}
                     {!isLast && (
-                      <div className="absolute left-[28px] top-[48px] w-[4px] h-[calc(100%-48px)] z-0">
+                      <div className="absolute left-[28px] top-[24px] w-[4px] h-[calc(100%+16px)] z-0">
                         <div className={clsx(
                           "w-full h-full rounded-full transition-all duration-700",
                           isClaimed ? "bg-[#30FF75]" :
-                            isCurrent ? "bg-gradient-to-b from-[#30FF75] to-black/30" : "bg-black/30"
+                            isCurrent ? "bg-gradient-to-b from-[#30FF75] to-white/10" : "bg-white/10"
                         )} />
-                        {/* Shimmer for active path */}
-                        {isCurrent && (
-                          <div className="absolute inset-x-0 top-0 h-full bg-gradient-to-b from-white/20 to-transparent animate-shimmer opacity-30" />
-                        )}
                       </div>
                     )}
 
@@ -204,10 +200,7 @@ const SeasonPassPage: React.FC = () => {
                           (isCurrent || isClaimed) ? "bg-[#30FF75]/80 shadow-[0_0_10px_#30FF75]" : "bg-white/10"
                         )} />
 
-                        {/* Sonar Ripple */}
-                        {(isCurrent || isNext) && (
-                          <div className="absolute top-[2px] left-1/2 -translate-x-1/2 w-11 h-11 rounded-full border border-figma-accent/30 animate-ping" />
-                        )}
+
 
                         {/* Main Circle Node */}
                         <div className={clsx(

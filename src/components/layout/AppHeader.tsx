@@ -3,6 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useSeasonPassStatus } from "../../hooks/useSeasonPass";
 import { getVaultStatus } from "../../api/vaultApi";
 import { getLotteryStatus } from "../../api/lotteryApi";
+import { getRouletteStatus } from "../../api/rouletteApi";
+import { getDiceStatus } from "../../api/diceApi";
 
 const AppHeader: React.FC = () => {
     const season = useSeasonPassStatus();
@@ -16,10 +18,26 @@ const AppHeader: React.FC = () => {
         queryFn: getLotteryStatus,
         staleTime: 30_000,
     });
+    const roulette = useQuery({
+        queryKey: ["roulette-status"],
+        queryFn: () => getRouletteStatus(),
+        staleTime: 30_000,
+    });
+    const dice = useQuery({
+        queryKey: ["dice-status"],
+        queryFn: getDiceStatus,
+        staleTime: 30_000,
+    });
 
     const userLevel = season.data?.current_level ?? 1;
     const vaultBalance = vault.data?.vaultBalance ?? 0;
-    const ticketCount = lottery.data?.remaining_plays ?? 0;
+
+    // Aggregate all ticket counts (token_balance represents actual ticket ownership)
+    const lotteryTickets = lottery.data?.token_balance ?? 0;
+    const rouletteTickets = roulette.data?.token_balance ?? 0;
+    const diceTickets = dice.data?.token_balance ?? 0;
+
+    const totalTickets = lotteryTickets + rouletteTickets + diceTickets;
 
     return (
         <div className="flex items-center justify-between px-1 mb-6 gap-2 overflow-hidden">
@@ -36,7 +54,7 @@ const AppHeader: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-2 rounded-full bg-black/60 border border-white/10 px-4 py-1.5 backdrop-blur-md shrink-0">
                     <img src="/assets/asset_ticket_green.png" alt="Ticket" className="w-6 h-6 drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]" />
-                    <span className="text-sm font-black text-white/90">{ticketCount}</span>
+                    <span className="text-sm font-black text-white/90">{totalTickets}</span>
                 </div>
                 {/* Level Badge */}
                 <div className="px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-sm font-black text-emerald-400 shrink-0">
