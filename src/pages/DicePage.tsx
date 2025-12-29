@@ -66,12 +66,12 @@ const DicePage: React.FC = () => {
   const content = (() => {
     if (isLoading) {
       return (
-        <div className="flex flex-col items-center justify-center gap-6 py-32">
+        <div className="flex flex-col items-center justify-center gap-6 py-20">
           <div className="relative h-16 w-16">
             <div className="absolute inset-0 animate-ping rounded-full bg-figma-accent/20" />
             <div className="h-full w-full animate-spin rounded-full border-4 border-figma-accent/70 border-t-transparent" />
           </div>
-          <p className="text-lg font-black italic tracking-widest text-white/40 uppercase">Loading Battle Data...</p>
+          <p className="text-lg font-black italic tracking-widest text-white/40 uppercase">전투 데이터 불러오는 중...</p>
         </div>
       );
     }
@@ -87,12 +87,7 @@ const DicePage: React.FC = () => {
     }
 
     return (
-      <div className="relative space-y-6">
-        {/* Immersive Background Atmosphere */}
-        <div className="pointer-events-none fixed inset-0 overflow-hidden">
-          <div className="absolute -left-[20%] top-[20%] h-[800px] w-[800px] rounded-full bg-[#30FF75]/5 blur-[150px]" />
-          <div className="absolute -right-[20%] bottom-[20%] h-[800px] w-[800px] rounded-full bg-figma-accent/5 blur-[150px]" />
-        </div>
+      <div className="relative space-y-4">
 
         {/* Reward Alert */}
         {rewardToast && (
@@ -146,45 +141,34 @@ const DicePage: React.FC = () => {
             />
           )}
 
-          <div className="relative group">
-            {/* Pulsing button glow */}
-            <div className={clsx(
-              "absolute -inset-1 rounded-[2rem] bg-[#30FF75]/20 blur-xl transition-opacity duration-500",
-              (isRolling || isOutOfTokens) ? "opacity-0" : "opacity-100 animate-pulse"
-            )} />
-
-            <Button
-              type="button"
-              disabled={isRolling || playMutation.isPending || (!isUnlimited && data.remaining_plays <= 0) || isOutOfTokens}
-              onClick={handlePlay}
-              variant="figma-primary"
-              fullWidth
-              className="!rounded-[2rem] !py-6 !bg-[#30FF75] !text-black shadow-2xl relative overflow-hidden group"
-            >
-              <div className="relative z-10 flex items-center justify-center gap-4">
-                {isRolling || playMutation.isPending ? (
-                  <>
-                    <div className="h-6 w-6 animate-spin rounded-full border-4 border-black/20 border-t-black" />
-                    <span className="text-xl font-[1000] uppercase tracking-tighter">Rolling Battle...</span>
-                  </>
-                ) : (
-                  <>
-                    <span className="text-2xl">⚔️</span>
-                    <span className="text-2xl font-[1000] uppercase tracking-tighter italic">
-                      {result || infoMessage ? "Strike Again" : "Fight For Victory"}
-                    </span>
-                  </>
-                )}
-              </div>
-
-              {/* Button Shine Effect */}
-              <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/50 to-transparent skew-x-12" />
-            </Button>
-          </div>
+          <Button
+            type="button"
+            disabled={isRolling || playMutation.isPending || (!isUnlimited && data.remaining_plays <= 0) || isOutOfTokens}
+            onClick={handlePlay}
+            variant="figma-primary"
+            fullWidth
+            className="rounded-2xl"
+          >
+            <div className="flex items-center justify-center gap-3">
+              {isRolling || playMutation.isPending ? (
+                <>
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                  <span className="font-bold text-white">결과 확인 중...</span>
+                </>
+              ) : (
+                <>
+                  <span className="text-xl">🎲</span>
+                  <span className="text-lg font-black tracking-wider text-white">
+                    {result || infoMessage ? "다시 대결하기" : "주사위 굴리기"}
+                  </span>
+                </>
+              )}
+            </div>
+          </Button>
 
           {infoMessage && !isRolling && result && (
             <div className={`text-center animate-fade-in-up px-6 py-4 rounded-2xl bg-white/5 border border-white/5`}>
-              <p className="text-xs font-black uppercase text-white/30 tracking-widest mb-1">Battle Report</p>
+              <p className="text-xs font-black uppercase text-white/30 tracking-widest mb-1">전투 기록</p>
               <p className={clsx(
                 "text-lg font-black tracking-tight",
                 result === 'WIN' ? 'text-[#30FF75]' : result === 'LOSE' ? 'text-red-400' : 'text-amber-400'

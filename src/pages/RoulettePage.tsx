@@ -261,15 +261,6 @@ const RoulettePage: React.FC = () => {
 
     return (
       <div className="relative space-y-8">
-        {/* Global Ambient Glow (Dynamic based on Tab) */}
-        <div className={clsx(
-          "pointer-events-none absolute -left-[20%] -top-[20%] h-[800px] w-[800px] rounded-full blur-[120px] mix-blend-screen transition-colors duration-700",
-          activeTab === "GOLD_KEY" ? "bg-amber-500/10" : activeTab === "DIAMOND_KEY" ? "bg-blue-500/10" : "bg-white/5"
-        )} />
-        <div className={clsx(
-          "pointer-events-none absolute -right-[10%] top-[20%] h-[600px] w-[600px] rounded-full blur-[100px] mix-blend-screen transition-colors duration-700",
-          activeTab === "GOLD_KEY" ? "bg-yellow-500/10" : activeTab === "DIAMOND_KEY" ? "bg-cyan-500/10" : "bg-cc-green/5"
-        )} />
 
         {!isSpinning && rewardToast && (
           <div className="fixed bottom-6 right-6 z-50 overflow-hidden rounded-2xl border border-white/10 bg-black/80 px-5 py-4 text-white shadow-2xl backdrop-blur-xl animate-bounce-in">
@@ -295,121 +286,104 @@ const RoulettePage: React.FC = () => {
         <div className="grid gap-8 lg:grid-cols-[1.3fr_0.9fr]">
           {/* Left Column: Roulette Wheel */}
           <div className="relative flex flex-col items-center justify-center">
-            {/* Wheel Container with Glassmorphism */}
-            <div className="relative w-full overflow-hidden rounded-[2.5rem] border border-white/10 bg-white/[0.02] p-6 shadow-2xl backdrop-blur-sm sm:p-10">
-              {/* Inner Glow around wheel */}
-              <div className="pointer-events-none absolute left-1/2 top-1/2 -z-10 h-[120%] w-[120%] -translate-x-1/2 -translate-y-1/2 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.03)_0%,transparent_70%)]" />
-
-              <RouletteWheel
-                segments={segments}
-                isSpinning={isSpinning}
-                selectedIndex={selectedIndex}
-                spinDurationMs={SPIN_DURATION_MS}
-                onSpinEnd={handleSpinEnd}
-              />
-            </div>
-
-            {usingFallbackSegments && (
-              <div className="mt-4 flex items-center gap-2 rounded-full border border-red-500/20 bg-red-500/5 px-4 py-1.5 text-sm font-medium text-red-200">
-                <span className="block h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
-                라이브 데이터 연결 실패 (데모 모드)
-              </div>
-            )}
+            <RouletteWheel
+              segments={segments}
+              isSpinning={isSpinning}
+              selectedIndex={selectedIndex}
+              spinDurationMs={SPIN_DURATION_MS}
+              onSpinEnd={handleSpinEnd}
+            />
           </div>
 
-          {/* Right Column: Controls & Info */}
-          <div className="flex flex-col gap-6">
-            {/* Control Panel Card */}
-            <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.02] p-8 shadow-2xl backdrop-blur-md">
-              {/* Decorative Lines */}
-              <div className="pointer-events-none absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-              <div className="pointer-events-none absolute bottom-0 right-0 h-[200px] w-[200px] bg-[radial-gradient(circle_at_bottom_right,rgba(255,215,0,0.05)_0%,transparent_70%)]" />
+          {usingFallbackSegments && (
+            <div className="mt-4 flex items-center gap-2 rounded-full border border-red-500/20 bg-red-500/5 px-4 py-1.5 text-sm font-medium text-red-200">
+              <span className="block h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
+              라이브 데이터 연결 실패 (데모 모드)
+            </div>
+          )}
+        </div>
 
-              {/* Status Badges */}
-              <div className="mb-8 flex flex-wrap gap-3">
-                <div className="flex items-center gap-2 rounded-full border border-white/10 bg-black/40 px-4 py-2 pr-5 backdrop-blur-md">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-sm">💰</div>
-                  <div className="flex flex-col leading-none">
-                    <span className="text-sm text-white/40">{tokenLabel}</span>
-                    <span className="font-mono text-sm font-bold text-white">
-                      {tokenBalance !== null ? <AnimatedNumber value={tokenBalance} /> : "-"}
+        {/* Right Column: Controls & Info */}
+        <div className="flex flex-col gap-6">
+          {/* Control Panel Card */}
+          <div className="relative overflow-hidden rounded-[2rem] border border-white/15 bg-black/60 p-8 shadow-2xl">
+            {/* Top Accent Line */}
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-[#30FF75]/40 to-transparent" />
+
+            {/* Status Badges */}
+            <div className="mb-8 flex flex-wrap gap-3">
+              <div className="flex items-center gap-3 rounded-3xl border border-white/10 bg-black/60 px-6 py-3 shadow-xl">
+                <img src="/assets/asset_ticket_green.png" alt="Tickets" className="h-8 w-8 object-contain" />
+                <div className="flex flex-col leading-none">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-[#30FF75]/70">{tokenLabel}</span>
+                  <span className="font-mono text-lg font-bold text-white">
+                    {tokenBalance !== null ? <AnimatedNumber value={tokenBalance} /> : "-"}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Area */}
+            <div className="space-y-4">
+              {playErrorMessage && (
+                <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm font-medium text-red-200">
+                  ⚠️ {playErrorMessage}
+                </div>
+              )}
+
+              {isOutOfTokens && (
+                <TicketZeroPanel
+                  tokenType={data.token_type}
+                  onClaimSuccess={() => queryClient.invalidateQueries({ queryKey: ["roulette-status"] })}
+                />
+              )}
+
+              <button
+                type="button"
+                disabled={playMutation.isPending || isSpinning || (!isUnlimited && data?.remaining_spins <= 0) || isOutOfTokens}
+                onClick={handlePlay}
+                className="group relative w-full overflow-hidden rounded-2xl bg-gradient-to-b from-[#30FF75] to-[#20C05A] px-6 py-5 text-black shadow-[0_0_20px_rgba(48,255,117,0.3)] transition-all hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(48,255,117,0.5)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
+              >
+                <div className="relative z-10 flex items-center justify-center gap-3">
+                  {playMutation.isPending ? (
+                    <>
+                      <div className="h-5 w-5 animate-spin rounded-full border-2 border-black/30 border-t-black" />
+                      <span className="text-lg font-black">추첨 중...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-xl">🎰</span>
+                      <span className="text-lg font-black tracking-wide">
+                        {!isSpinning && displayedResult ? "다시 돌리기" : "룰렛 시작"}
+                      </span>
+                    </>
+                  )}
+                </div>
+              </button>
+            </div>
+          </div>
+
+          {/* Result Display (Below Controls) */}
+          {!isSpinning && displayedResult && (
+            <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-black/40 p-1 text-center backdrop-blur-sm animate-fade-in-up">
+              <div className="relative overflow-hidden rounded-[1.8rem] border border-white/5 bg-gradient-to-br from-white/[0.08] to-transparent px-8 py-8">
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-cc-gold/50 to-transparent" />
+
+                <p className="text-sm font-bold uppercase tracking-[0.4em] text-white/40">당첨 결과</p>
+                <h3 className="mt-2 text-3xl font-black text-white drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)]">
+                  {displayedResult.segment.label}
+                </h3>
+
+                {displayedResult.reward_type && displayedResult.reward_type !== "NONE" && (
+                  <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-cc-gold/20 bg-cc-gold/10 px-6 py-2">
+                    <span className="text-sm font-bold text-cc-gold">
+                      +{Number(displayedResult.reward_value).toLocaleString()} {displayedResult.reward_type}
                     </span>
                   </div>
-                </div>
-              </div>
-
-              {/* Action Area */}
-              <div className="space-y-4">
-                {playErrorMessage && (
-                  <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm font-medium text-red-200">
-                    ⚠️ {playErrorMessage}
-                  </div>
                 )}
-
-                {isOutOfTokens && (
-                  <TicketZeroPanel
-                    tokenType={data.token_type}
-                    onClaimSuccess={() => queryClient.invalidateQueries({ queryKey: ["roulette-status"] })}
-                  />
-                )}
-
-                <button
-                  type="button"
-                  disabled={playMutation.isPending || isSpinning || (!isUnlimited && data?.remaining_spins <= 0) || isOutOfTokens}
-                  onClick={handlePlay}
-                  className={clsx(
-                    "group relative w-full overflow-hidden rounded-2xl px-6 py-5 shadow-[0_0_20px_rgba(255,255,255,0.2)] transition-all hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none",
-                    activeTab === "GOLD_KEY" ? "bg-gradient-to-b from-yellow-300 to-amber-500 text-black" :
-                      activeTab === "DIAMOND_KEY" ? "bg-gradient-to-b from-cyan-300 to-blue-600 text-white" :
-                        "bg-gradient-to-b from-white to-gray-300 text-black"
-                  )}
-                >
-                  <div className="relative z-10 flex items-center justify-center gap-3">
-                    {playMutation.isPending ? (
-                      <>
-                        <div className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                        <span className="text-lg font-black">추첨 중...</span>
-                      </>
-                    ) : (
-                      <>
-                        <span className="text-xl">
-                          {activeTab === "GOLD_KEY" ? "🗝️" : activeTab === "DIAMOND_KEY" ? "💎" : "🎰"}
-                        </span>
-                        <span className="text-lg font-black tracking-wide opacity-90">
-                          {!isSpinning && displayedResult ? "다시 돌리기" :
-                            activeTab === "GOLD_KEY" ? "골드 룰렛 돌리기" :
-                              activeTab === "DIAMOND_KEY" ? "다이아 룰렛 돌리기" :
-                                "룰렛 시작"}
-                        </span>
-                      </>
-                    )}
-                  </div>
-                </button>
               </div>
             </div>
-
-            {/* Result Display (Below Controls) */}
-            {!isSpinning && displayedResult && (
-              <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-black/40 p-1 text-center backdrop-blur-sm animate-fade-in-up">
-                <div className="relative overflow-hidden rounded-[1.8rem] border border-white/5 bg-gradient-to-br from-white/[0.08] to-transparent px-8 py-8">
-                  <div className="pointer-events-none absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-cc-gold/50 to-transparent" />
-
-                  <p className="text-sm font-bold uppercase tracking-[0.4em] text-white/40">당첨 결과</p>
-                  <h3 className="mt-2 text-3xl font-black text-white drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)]">
-                    {displayedResult.segment.label}
-                  </h3>
-
-                  {displayedResult.reward_type && displayedResult.reward_type !== "NONE" && (
-                    <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-cc-gold/20 bg-cc-gold/10 px-6 py-2">
-                      <span className="text-sm font-bold text-cc-gold">
-                        +{Number(displayedResult.reward_value).toLocaleString()} {displayedResult.reward_type}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
+          )}
         </div>
       </div>
     );

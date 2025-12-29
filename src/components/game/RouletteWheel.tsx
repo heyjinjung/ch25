@@ -8,7 +8,17 @@ interface Segment {
   readonly isJackpot?: boolean;
 }
 
-export type SegmentStyle = { fill: string; stroke: string; label: string };
+const polarToCartesian = (cx: number, cy: number, r: number, angle: number) => {
+  const rad = ((angle - 90) * Math.PI) / 180;
+  return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+};
+
+const describeArc = (cx: number, cy: number, r: number, startAngle: number, endAngle: number) => {
+  const start = polarToCartesian(cx, cy, r, endAngle);
+  const end = polarToCartesian(cx, cy, r, startAngle);
+  const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+  return `M ${cx} ${cy} L ${start.x} ${start.y} A ${r} ${r} 0 ${largeArcFlag} 0 ${end.x} ${end.y} Z`;
+};
 
 interface RouletteWheelProps {
   readonly segments: Segment[];
@@ -16,18 +26,7 @@ interface RouletteWheelProps {
   readonly selectedIndex?: number;
   readonly spinDurationMs?: number;
   readonly onSpinEnd?: () => void;
-  readonly theme?: SegmentStyle[];
 }
-
-const TRIANGLE_IMAGES = [
-  "/assets/roulette/triangle_purple.png",
-  "/assets/roulette/triangle_orange.png",
-  "/assets/roulette/triangle_teal.png",
-  "/assets/roulette/triangle_yellow.png",
-  "/assets/roulette/triangle_red.png",
-  "/assets/roulette/triangle_blue.png",
-  "/assets/roulette/triangle_pink.png",
-];
 
 const RouletteWheel: React.FC<RouletteWheelProps> = ({
   segments,
@@ -87,19 +86,17 @@ const RouletteWheel: React.FC<RouletteWheelProps> = ({
 
   return (
     <div className="relative mx-auto flex flex-col items-center">
-      {/* Pointer */}
-      <div className="absolute -top-6 left-1/2 z-40 -translate-x-1/2 drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)]">
-        <svg width="48" height="48" viewBox="0 0 40 40" fill="none">
+      {/* Premium Pointer */}
+      <div className="absolute -top-12 left-1/2 z-40 -translate-x-1/2 drop-shadow-[0_10px_20px_rgba(0,0,0,0.6)]">
+        <svg width="60" height="60" viewBox="0 0 40 40" fill="none">
           <path d="M20 38L38 8H2L20 38Z" fill="#30FF75" />
-          <path d="M20 38L38 8H2L20 38Z" stroke="white" strokeWidth="2" strokeLinejoin="round" />
+          <path d="M20 38L38 8H2L20 38Z" stroke="white" strokeWidth="3" strokeLinejoin="round" />
+          <path d="M20 34L34 10H6L20 34Z" fill="white" fillOpacity="0.2" />
         </svg>
       </div>
 
       <RouletteFrame>
-        <div className="relative h-full w-full overflow-hidden rounded-full shadow-[inset_0_0_50px_rgba(0,0,0,1)]">
-          {/* Background Layer: Rainbow Glow */}
-          <img src="/assets/roulette/v2.png" alt="glow" className="absolute inset-0 h-full w-full object-cover opacity-30 mix-blend-screen" />
-
+        <div className="relative h-full w-full overflow-hidden rounded-full shadow-[inset_0_0_80px_rgba(0,0,0,0.9)] bg-[#000604]">
           <svg
             viewBox="0 0 200 200"
             className="h-full w-full"
@@ -109,41 +106,95 @@ const RouletteWheel: React.FC<RouletteWheelProps> = ({
               transition: `transform ${spinDurationMs}ms cubic-bezier(0.15, 0, 0.15, 1)`
             }}
           >
-            {/* Draw Segments */}
-            {segments.map((segment, index) => {
-              const imgRotation = anglePerSegment * index;
+            <defs>
+              {/* Outer Glow Ring Gradient */}
+              <linearGradient id="rainbow-border" x1="0%" y1="0%" x2="100%" y2="100%" gradientTransform="rotate(225)">
+                <stop offset="16%" stopColor="#FEDC31" />
+                <stop offset="22.46%" stopColor="#FDC347" />
+                <stop offset="35.39%" stopColor="#FC8682" />
+                <stop offset="53.35%" stopColor="#FA2CD7" />
+                <stop offset="70.59%" stopColor="#987CDB" />
+                <stop offset="87.83%" stopColor="#33D0E0" />
+              </linearGradient>
 
-              const triangleImg = TRIANGLE_IMAGES[index % TRIANGLE_IMAGES.length];
+              {/* Segment Gradients based on provided CSS */}
+              <linearGradient id="grad-pink" x1="0%" y1="0%" x2="100%" y2="0%" gradientTransform="rotate(315)">
+                <stop offset="22.59%" stopColor="#CC0A60" />
+                <stop offset="54.96%" stopColor="#E60C69" />
+                <stop offset="90.03%" stopColor="#FE0E73" />
+              </linearGradient>
+              <linearGradient id="grad-teal" x1="0%" y1="0%" x2="100%" y2="0%" gradientTransform="rotate(45)">
+                <stop offset="22.05%" stopColor="#006F67" />
+                <stop offset="26.95%" stopColor="#00756B" />
+                <stop offset="71.12%" stopColor="#00B392" />
+                <stop offset="92.15%" stopColor="#00CBA2" />
+              </linearGradient>
+              <linearGradient id="grad-red" x1="0%" y1="0%" x2="100%" y2="0%" gradientTransform="rotate(140.95)">
+                <stop offset="24.56%" stopColor="#FF260D" />
+                <stop offset="42.26%" stopColor="#FE3E0E" />
+                <stop offset="80.49%" stopColor="#FC7B10" />
+                <stop offset="95.35%" stopColor="#FC9512" />
+              </linearGradient>
+              <linearGradient id="grad-orange" x1="0%" y1="0%" x2="100%" y2="0%" gradientTransform="rotate(225)">
+                <stop offset="22.66%" stopColor="#FC9512" />
+                <stop offset="69.33%" stopColor="#FED319" />
+                <stop offset="91.3%" stopColor="#FFEB1C" />
+              </linearGradient>
+              <linearGradient id="grad-blue" x1="0%" y1="0%" x2="100%" y2="0%" gradientTransform="rotate(90)">
+                <stop offset="-0.01%" stopColor="#2FFFFF" />
+                <stop offset="26.99%" stopColor="#2AE7FF" />
+                <stop offset="82%" stopColor="#1EA9FF" />
+                <stop offset="100%" stopColor="#1A95FF" />
+              </linearGradient>
+              <linearGradient id="grad-gray" x1="0%" y1="0%" x2="100%" y2="0%" gradientTransform="rotate(90)">
+                <stop offset="2.36%" stopColor="#808080" />
+                <stop offset="52.29%" stopColor="#9D9D9D" />
+                <stop offset="100.25%" stopColor="#B5B5B5" />
+              </linearGradient>
+              <linearGradient id="grad-yellow" x1="0%" y1="100%" x2="0%" y2="0%">
+                <stop offset="3.8%" stopColor="#FE7A18" />
+                <stop offset="34.25%" stopColor="#FE9115" />
+                <stop offset="96.09%" stopColor="#FFCC0F" />
+              </linearGradient>
+              <linearGradient id="grad-purple" x1="0%" y1="100%" x2="0%" y2="0%">
+                <stop offset="1.63%" stopColor="#3D08EA" />
+                <stop offset="46.9%" stopColor="#600FF4" />
+                <stop offset="83.94%" stopColor="#7815FC" />
+              </linearGradient>
+
+            </defs>
+
+            {/* Rainbow Outer Frame */}
+            <circle cx="100" cy="100" r="98" stroke="url(#rainbow-border)" strokeWidth="1.5" fill="none" />
+
+            {/* Dark Inner Base */}
+            <circle cx="100" cy="100" r="95" fill="black" />
+
+            {/* Segments Mapping */}
+            {segments.map((segment, index) => {
+              const startAngle = anglePerSegment * index;
+              const endAngle = startAngle + anglePerSegment;
+              const path = describeArc(100, 100, 92, startAngle, endAngle);
+              const grads = ["#grad-purple", "#grad-orange", "#grad-teal", "#grad-yellow", "#grad-red", "#grad-blue", "#grad-pink", "#grad-gray"];
+              const fill = grads[index % grads.length];
 
               return (
-                <g key={`${segment.label}-${index}`} transform={`rotate(${imgRotation} 100 100)`}>
-                  {/* Triangle Image Section */}
-                  <image
-                    href={triangleImg}
-                    x="50"
-                    y="0"
-                    width="100"
-                    height="100"
-                    className="origin-bottom"
-                    style={{
-                      // clipPath could be used here for non-triangle assets, 
-                      // but if these are pre-cut triangles, we just rotate them.
-                      transform: `rotate(${anglePerSegment / 2} 100 100)`
-                    }}
-                  />
+                <g key={`seg-${index}`}>
+                  <path d={path} fill={`url(${fill})`} stroke="rgba(255,255,255,0.05)" strokeWidth="0.5" />
 
-                  {/* Label Text */}
-                  <g transform={`rotate(${anglePerSegment / 2} 100 100)`}>
+                  {/* Radial Labels */}
+                  <g transform={`rotate(${startAngle + anglePerSegment / 2} 100 100)`}>
                     <text
                       x="100"
-                      y="45"
+                      y="40"
                       fill="white"
                       fontSize="9"
-                      fontWeight="900"
+                      fontWeight="1000"
                       textAnchor="middle"
                       alignmentBaseline="middle"
-                      transform={`rotate(${90} 100 45)`}
-                      className="tracking-tighter uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,1)]"
+                      transform="rotate(90, 100, 40)"
+                      className="tracking-tighter uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
+                      style={{ filter: 'drop-shadow(0 0 1px black)' }}
                     >
                       {segment.label}
                     </text>
@@ -152,11 +203,17 @@ const RouletteWheel: React.FC<RouletteWheelProps> = ({
               );
             })}
 
-            {/* Decorative Stars */}
-            <image href="/assets/roulette/v4.png" x="80" y="80" width="40" height="40" className="animate-pulse" />
+            {/* Premium Center Hub Reconstruction */}
+            <g transform="translate(100 100)">
+              {/* Outer Decorative Ring */}
+              <circle r="25" fill="rgba(0,0,0,0.6)" stroke="white" strokeWidth="0.5" strokeDasharray="2 2" opacity="0.3" />
+              <circle r="20" fill="#000" stroke="url(#rainbow-border)" strokeWidth="2" />
+              <circle r="14" fill="none" stroke="white" strokeWidth="0.5" strokeDasharray="3 3" opacity="0.4" />
 
-            {/* Center Hub */}
-            <image href="/assets/roulette/white_hub.png" x="75" y="75" width="50" height="50" className="drop-shadow-2xl" />
+              {/* Core Hub */}
+              <circle r="8" fill="#FFF" opacity="0.1" />
+              <circle r="4" fill="#30FF75" className="animate-pulse" />
+            </g>
           </svg>
         </div>
       </RouletteFrame>

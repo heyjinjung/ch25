@@ -15,11 +15,7 @@ const DiceFace: React.FC<{ value: number; isRolling?: boolean; delay?: string }>
       isRolling && "animate-[bounce_0.5s_infinite_alternate]"
     )} style={{ animationDelay: delay }}>
 
-      {/* Glow Effect */}
-      <div className={clsx(
-        "absolute inset-0 rounded-full blur-2xl transition-opacity duration-1000",
-        isRolling ? "bg-figma-accent/20 opacity-100" : "bg-white/5 opacity-0"
-      )} />
+      {/* No soft glow for higher contrast */}
 
       <img
         src={isRolling ? "/assets/dice/dice_1.png" : `/assets/dice/dice_${value || 1}.png`}
@@ -41,16 +37,16 @@ const DiceView: React.FC<DiceViewProps> = ({ userDice, dealerDice, result, isRol
     if (!result) return { text: "전투 준비!", color: "text-white/40", bg: "bg-white/5" };
     switch (result) {
       case "WIN":
-        return { text: "VICTORY", color: "text-[#30FF75]", bg: "bg-emerald-500/10" };
+        return { text: "승리", color: "text-[#30FF75]", bg: "bg-emerald-500/10" };
       case "LOSE":
-        return { text: "DEFEAT", color: "text-red-500", bg: "bg-red-500/10" };
+        return { text: "패배", color: "text-red-500", bg: "bg-red-500/10" };
       case "DRAW":
-        return { text: "DRAW", color: "text-amber-400", bg: "bg-amber-500/10" };
+        return { text: "무승부", color: "text-amber-400", bg: "bg-amber-500/10" };
     }
   }, [result]);
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-8">
       {/* Battle Columns */}
       <div className="grid gap-8 grid-cols-1 md:grid-cols-2 relative h-full">
 
@@ -63,12 +59,12 @@ const DiceView: React.FC<DiceViewProps> = ({ userDice, dealerDice, result, isRol
 
         {/* User Side */}
         <div className={clsx(
-          "relative rounded-[2rem] border p-8 transition-all duration-700",
-          result === "WIN" ? "bg-[#30FF75]/5 border-[#30FF75]/30 shadow-[0_0_50px_rgba(48,255,117,0.1)]" : "bg-white/5 border-white/10"
+          "relative rounded-[2rem] border p-3 transition-all duration-700 shadow-2xl",
+          result === "WIN" ? "bg-[#30FF75]/10 border-[#30FF75]/40" : "bg-black/60 border-white/10"
         )}>
           <div className="flex flex-col items-center">
-            <div className="mb-6 flex items-center gap-2 px-4 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-              <span className="text-xs font-black uppercase tracking-[0.2em] text-[#30FF75]">My Squad</span>
+            <div className="mb-4 flex items-center gap-2 px-4 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+              <span className="text-xs font-black uppercase tracking-[0.2em] text-[#30FF75]">내 스쿼드</span>
             </div>
 
             <div className="flex justify-center gap-4 min-h-[96px]">
@@ -84,23 +80,23 @@ const DiceView: React.FC<DiceViewProps> = ({ userDice, dealerDice, result, isRol
               )}
             </div>
 
-            <div className="mt-8 flex flex-col items-center">
+            <div className="mt-6 flex flex-col items-center">
               <span className="text-[4rem] font-black text-white leading-none tracking-tighter">
                 {isRolling ? "?" : (userDice.length > 0 ? userSum : "-")}
               </span>
-              <span className="text-xs font-bold text-white/30 uppercase mt-2">Battle Power</span>
+              <span className="text-xs font-bold text-white/30 uppercase mt-2">전투력</span>
             </div>
           </div>
         </div>
 
         {/* Dealer Side */}
         <div className={clsx(
-          "relative rounded-[2rem] border p-8 transition-all duration-700",
-          result === "LOSE" ? "bg-red-500/5 border-red-500/30 shadow-[0_0_50px_rgba(239,68,68,0.1)]" : "bg-white/5 border-white/10"
+          "relative rounded-[2rem] border p-3 transition-all duration-700 shadow-2xl",
+          result === "LOSE" ? "bg-red-500/10 border-red-500/40" : "bg-black/60 border-white/10"
         )}>
           <div className="flex flex-col items-center">
-            <div className="mb-6 flex items-center gap-2 px-4 py-1 rounded-full bg-white/5 border border-white/10">
-              <span className="text-xs font-black uppercase tracking-[0.2em] text-white/60">Dealer</span>
+            <div className="mb-4 flex items-center gap-2 px-4 py-1 rounded-full bg-white/5 border border-white/10">
+              <span className="text-xs font-black uppercase tracking-[0.2em] text-white/60">딜러</span>
             </div>
 
             <div className="flex justify-center gap-4 min-h-[96px]">
@@ -116,24 +112,24 @@ const DiceView: React.FC<DiceViewProps> = ({ userDice, dealerDice, result, isRol
               )}
             </div>
 
-            <div className="mt-8 flex flex-col items-center">
+            <div className="mt-6 flex flex-col items-center">
               <span className="text-[4rem] font-black text-white/90 leading-none tracking-tighter">
                 {isRolling ? "?" : (dealerDice.length > 0 ? dealerSum : "-")}
               </span>
-              <span className="text-xs font-bold text-white/30 uppercase mt-2">Threat Level</span>
+              <span className="text-xs font-bold text-white/30 uppercase mt-2">위협 수준</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Result Display: Simplified and Premium */}
+      {/* Result Display: Compact and Premium */}
       <div className={clsx(
-        "rounded-[2rem] border p-6 text-center shadow-2xl transition-all duration-1000",
+        "rounded-2xl border p-4 text-center shadow-xl transition-all duration-1000",
         resultConfig.bg,
         result ? "border-current/20 scale-100 opacity-100" : "border-white/5 scale-95 opacity-50"
       )}>
         <p className={clsx(
-          "text-4xl font-[1000] tracking-[0.1em] italic uppercase drop-shadow-2xl",
+          "text-2xl font-black tracking-[0.1em] italic uppercase drop-shadow-lg",
           resultConfig.color
         )}>
           {resultConfig.text}
