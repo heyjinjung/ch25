@@ -1,6 +1,5 @@
 // src/App.tsx
 import React from "react";
-import { useLocation } from "react-router-dom";
 import AppRouter from "./router/AppRouter";
 import ToastProvider from "./components/common/ToastProvider";
 import ErrorBoundary from "./components/common/ErrorBoundary";
@@ -10,7 +9,6 @@ import { useTelegram } from "./providers/TelegramProvider";
 import { telegramApi } from "./api/telegramApi";
 
 const App: React.FC = () => {
-  const location = useLocation();
   const { initData, isReady } = useTelegram();
   const { login, token } = useAuth();
 
@@ -31,11 +29,6 @@ const App: React.FC = () => {
       performTelegramLogin();
     }
   }, [initData, isReady, token, login]);
-
-  const isLoginRoute = location.pathname === "/login";
-  const isAdminRoute = location.pathname.startsWith("/admin");
-  const showDecorations = !isAdminRoute && !isLoginRoute;
-  void showDecorations;
 
   return (
     <ErrorBoundary>

@@ -9,7 +9,7 @@ import SurveyListPage from "../pages/SurveyListPage";
 import SurveyRunnerPage from "../pages/SurveyRunnerPage";
 import LoginPage from "../pages/LoginPage";
 import NewMemberDicePage from "../pages/NewMemberDicePage";
-import FigmaLanding from "../pages/FigmaLanding";
+import HomePage from "../pages/HomePage";
 import FigmaLandingTablet from "../pages/FigmaLandingTablet";
 import FigmaLandingMobile from "../pages/FigmaLandingMobile";
 import SeasonPassPage from "../pages/SeasonPassPage";
@@ -33,7 +33,7 @@ const UserRoutes: React.FC = () => {
       {/* Primary user experience with sidebar */}
       <Route element={<SidebarAppLayout />}>
         <Route element={<RequireAuth />}>
-          <Route path="/landing" element={<FigmaLanding />} />
+          <Route path="/landing" element={<HomePage />} />
           <Route path="/landing/tablet" element={<FigmaLandingTablet />} />
           <Route path="/landing/mobile" element={<FigmaLandingMobile />} />
           <Route path="/vault" element={<VaultPage />} />

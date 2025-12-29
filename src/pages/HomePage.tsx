@@ -1,417 +1,244 @@
-﻿import React, { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+﻿import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "../auth/authStore";
-import { useRouletteStatus } from "../hooks/useRoulette";
-import { useDiceStatus } from "../hooks/useDice";
-import { useLotteryStatus } from "../hooks/useLottery";
-import { useInternalWinStatus } from "../hooks/useSeasonPass";
-import { useTodayRanking } from "../hooks/useRanking";
-import { GAME_TOKEN_LABELS } from "../types/gameTokens";
-import { getActiveSeason, getLeaderboard, getMyTeam } from "../api/teamBattleApi";
+import clsx from "clsx";
+import { useSeasonPassStatus } from "../hooks/useSeasonPass";
+import Button from "../components/common/Button";
 import { getVaultStatus } from "../api/vaultApi";
 import { TelegramLinkBanner } from "../components/telegram/TelegramLinkBanner";
-import { useTelegram } from "../providers/TelegramProvider";
+
+// --- Components ---
 
 interface GameCardProps {
-  readonly title: string;
-  readonly path: string;
-  readonly tokenType?: string;
-  readonly tokenBalance?: number | null;
-  readonly iconSrc?: string;
-  readonly iconFallbackSrc?: string;
-  readonly state?: "idle" | "loading" | "error";
+  title: string;
+  to: string;
+  gradient: string;
+  icon: string;
+  isWide?: boolean;
+  bgImage?: string;
+  badge?: string;
 }
 
-const GameCard: React.FC<GameCardProps> = ({
-  title,
-  path,
-  tokenType,
-  tokenBalance,
-  iconSrc,
-  iconFallbackSrc,
-  state = "idle",
-}) => {
-  const navigate = useNavigate();
-  const { haptic } = useTelegram();
-  const hasCoins = typeof tokenBalance === "number" && tokenBalance > 0;
-  const tokenLabel = tokenType ? GAME_TOKEN_LABELS[tokenType as keyof typeof GAME_TOKEN_LABELS] ?? tokenType : "미지급";
-  const statusBadge =
-    state === "loading"
-      ? "상태 로딩 중"
-      : state === "error"
-        ? "상태 조회 실패 - 티켓 지급 확인"
-        : undefined;
-
-  const shouldRenderIcon = !!iconSrc;
-
-  const handleStart = () => {
-    haptic.impact('light');
-    navigate(path);
-  };
-
+const GameCard: React.FC<GameCardProps> = ({ title, to, gradient, icon, isWide, bgImage, badge }) => {
   return (
-    <div className="rounded-2xl border border-emerald-500/25 bg-white/5 backdrop-blur-xl p-5 shadow-lg transition hover:border-emerald-300/40">
-      <div className="flex items-start justify-between gap-3">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            {shouldRenderIcon ? (
-              <span className="relative h-7 w-7 shrink-0">
-                <img
-                  src={iconSrc}
-                  alt={title}
-                  className="absolute inset-0 h-full w-full object-contain"
-                  onError={(e) => {
-                    if (!iconFallbackSrc) return;
-                    e.currentTarget.onerror = null;
-                    e.currentTarget.src = iconFallbackSrc;
-                  }}
-                />
-              </span>
-            ) : (
-              <span className="text-2xl">🎮</span>
-            )}
-            <h3 className="text-lg font-extrabold text-white">{title}</h3>
-          </div>
-          <p className="text-xs text-slate-300">{tokenLabel}</p>
+    <Link
+      to={to}
+      className={clsx(
+        "group relative overflow-hidden rounded-3xl border border-white/10 p-5 transition-all hover:scale-[1.02] hover:shadow-2xl active:scale-[0.98]",
+        !bgImage && gradient,
+        isWide ? "col-span-2 aspect-[2/1]" : "col-span-1 aspect-square"
+      )}
+    >
+      {bgImage && (
+        <div className="absolute inset-0 z-0">
+          <img src={bgImage} alt={title} className="h-full w-full object-cover opacity-90 transition-transform duration-700 group-hover:scale-110" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
         </div>
-        <div className="text-right">
-          <p className="text-[11px] uppercase tracking-[0.2em] text-slate-400">티켓</p>
-          <p className="text-xl font-extrabold text-emerald-200">{hasCoins ? tokenBalance : 0}</p>
+      )}
+
+      {!bgImage && (
+        <div className="absolute -right-4 -top-4 text-white/10 transition-transform duration-500 group-hover:rotate-12 group-hover:scale-110">
+          <span className="text-8xl font-black">{icon}</span>
+        </div>
+      )}
+
+      <div className="relative z-10 flex h-full flex-col justify-end">
+        {badge && (
+          <div className="absolute top-0 right-0">
+            <span className="rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-bold text-white shadow-sm">{badge}</span>
+          </div>
+        )}
+        <div className="self-end rounded-full bg-white/20 px-3 py-1 text-[10px] font-bold text-white backdrop-blur border border-white/10 shadow-lg">
+          PLAY NOW
         </div>
       </div>
+    </Link>
+  );
+};
 
-      {statusBadge && <p className="mt-3 text-xs text-amber-200">{statusBadge}</p>}
-
-      <button
-        type="button"
-        onClick={handleStart}
-        disabled={!hasCoins}
-        className="mt-4 w-full rounded-xl border border-emerald-500/40 bg-emerald-900/30 px-4 py-3 text-sm font-extrabold text-emerald-50 transition hover:border-emerald-300/60 hover:bg-emerald-800/35 disabled:cursor-not-allowed disabled:border-slate-700/50 disabled:bg-slate-800/60 disabled:text-slate-300"
-      >
-        {hasCoins ? "바로 시작하기" : "티켓이 필요해요"}
-      </button>
-      {!hasCoins && <p className="mt-2 text-xs text-slate-400">티켓 지급 문의: 지민이</p>}
+const CategoryTabs: React.FC<{ active: string; onChange: (id: string) => void }> = ({ active, onChange }) => {
+  const tabs = [
+    { id: "all", label: "ALL GAMES" },
+    { id: "hot", label: "HOT" },
+    { id: "new", label: "NEW" },
+    { id: "live", label: "LIVE" },
+  ];
+  return (
+    <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+      {tabs.map((tab) => (
+        <button
+          key={tab.id}
+          onClick={() => onChange(tab.id)}
+          className={clsx(
+            "whitespace-nowrap rounded-full px-5 py-2 text-xs font-bold transition-all",
+            active === tab.id
+              ? "bg-figma-primary text-white shadow-lg shadow-emerald-900/20"
+              : "bg-white/5 text-slate-400 hover:bg-white/10"
+          )}
+        >
+          {tab.label}
+        </button>
+      ))}
     </div>
   );
 };
 
+// --- Page ---
+
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const roulette = useRouletteStatus();
-  const dice = useDiceStatus();
-  const lottery = useLotteryStatus();
-  const ranking = useTodayRanking();
-  const internalWins = useInternalWinStatus();
+  const season = useSeasonPassStatus();
+  const [activeTab, setActiveTab] = useState("all");
+
+  // Data (Simplified for layout)
   const vault = useQuery({ queryKey: ["vault-status"], queryFn: getVaultStatus, staleTime: 30_000, retry: false });
-  const teamSeason = useQuery({ queryKey: ["team-battle-season"], queryFn: getActiveSeason });
-  const teamLeaderboard = useQuery({ queryKey: ["team-battle-leaderboard"], queryFn: () => getLeaderboard(undefined, 50, 0) });
-  const myTeam = useQuery({ queryKey: ["team-battle-me"], queryFn: getMyTeam });
 
-  const external = ranking.data?.my_external_entry;
-  const deposit = external?.deposit_amount ?? 0;
-  const depositRemainder = 100_000 - (deposit % 100_000 || 100_000);
-  const playDone = (external?.play_count ?? 0) > 0;
-
-  const gameCards: GameCardProps[] = [
-    {
-      title: "룰렛",
-      path: "/roulette",
-      tokenType: roulette.data?.token_type,
-      tokenBalance: roulette.data?.token_balance ?? null,
-      iconSrc: "/images/layer-1.svg",
-      iconFallbackSrc: "/assets/figma/icon-roulette.png",
-      state: roulette.isLoading ? "loading" : roulette.isError ? "error" : "idle",
-    },
-    {
-      title: "주사위",
-      path: "/dice",
-      tokenType: dice.data?.token_type,
-      tokenBalance: dice.data?.token_balance ?? null,
-      iconSrc: "/images/layer-2.svg",
-      iconFallbackSrc: "/assets/figma/icon-level.png",
-      state: dice.isLoading ? "loading" : dice.isError ? "error" : "idle",
-    },
-    {
-      title: "복권",
-      path: "/lottery",
-      tokenType: lottery.data?.token_type,
-      tokenBalance: lottery.data?.token_balance ?? null,
-      iconSrc: "/images/layer-3.svg",
-      iconFallbackSrc: "/assets/figma/icon-lottery.png",
-      state: lottery.isLoading ? "loading" : lottery.isError ? "error" : "idle",
-    },
-  ];
-
-  const rankingSummary = ranking.data?.external_entries ? ranking.data.external_entries.slice(0, 3) : [];
-
-  const myTeamRow = useMemo(() => {
-    if (!myTeam.data || !teamLeaderboard.data) return null;
-    return teamLeaderboard.data.find((row) => row.team_id === myTeam.data?.team_id) || null;
-  }, [myTeam.data, teamLeaderboard.data]);
-  const myTeamName = useMemo(() => myTeamRow?.team_name ?? (myTeam.data ? `team #${myTeam.data.team_id}` : "미배정"), [myTeamRow?.team_name, myTeam.data]);
-  const myTeamPoints = myTeamRow?.points ?? null;
-  const myTeamMembers = myTeamRow?.member_count ?? null;
-
-  const displayName = (entryUserName?: string) => {
-    if (entryUserName && entryUserName.trim().length > 0) return entryUserName;
-    if (user?.external_id) return user.external_id;
-    return "닉네임 없음";
-  };
-
-  const seasonState = useMemo(() => {
-    if (teamSeason.isLoading) return { label: "시즌 불러오는 중", tone: "text-slate-300" };
-    if (teamSeason.isError) return { label: "시즌 정보를 불러오지 못했습니다", tone: "text-red-300" };
-    if (!teamSeason.data) return { label: "활성 시즌 없음", tone: "text-slate-300" };
-    return { label: teamSeason.data.name, tone: "text-emerald-200" };
-  }, [teamSeason.data, teamSeason.isError, teamSeason.isLoading]);
-
-  const topTeams = useMemo(() => {
-    if (!teamLeaderboard.data) return [];
-    return teamLeaderboard.data.slice(0, 3);
-  }, [teamLeaderboard.data]);
-
-  const missionSummary = useMemo(() => {
-    const rank = external?.rank;
-    const top10 = rank ? (rank <= 10 ? "TOP10 달성" : `TOP10까지 ${rank - 10}위`) : "랭킹 없음";
-    const daily = playDone ? "오늘 이용 완료" : "오늘 이용 필요";
-    const depositNext = depositRemainder === 100_000 ? "다음 10만까지 0" : `다음 10만까지 ${depositRemainder.toLocaleString()}`;
-    const wins = internalWins.data
-      ? `승리 ${internalWins.data.total_wins} (남은 ${internalWins.data.remaining})`
-      : internalWins.isLoading
-        ? "승리 집계 중"
-        : "승리 집계 실패";
-    return { top10, daily, depositNext, wins };
-  }, [depositRemainder, external?.rank, internalWins.data, internalWins.isLoading, playDone]);
-
+  // Vault Banner Logic
   const vaultAmount = vault.data?.vaultBalance ?? 0;
   const showVaultBanner = !!vault.data?.eligible && vaultAmount > 0;
   const formatWon = (amount: number) => `${amount.toLocaleString("ko-KR")}원`;
   const [vaultBannerOpen, setVaultBannerOpen] = useState(false);
 
+  // Dynamic Level Display logic
+  const userLevel = season.data?.current_level ?? 1;
+
+  const games = [
+    {
+      title: "ROULETTE",
+      to: "/roulette",
+      gradient: "bg-gradient-to-br from-purple-600 to-indigo-600",
+      icon: "🎯",
+      bgImage: "/assets/games/thumb_roulette.png",
+      badge: "HOT"
+    },
+    {
+      title: "DICE",
+      to: "/dice",
+      gradient: "bg-gradient-to-br from-emerald-500 to-teal-600",
+      icon: "🎲",
+      bgImage: "/assets/games/thumb_dice.png",
+      badge: "2x"
+    },
+    {
+      title: "LOTTERY",
+      to: "/lottery",
+      gradient: "bg-gradient-to-br from-pink-500 to-rose-600",
+      icon: "🎫",
+      bgImage: "/assets/games/thumb_lottery.png"
+    },
+    {
+      title: "TEAM BATTLE",
+      to: "/team-battle",
+      gradient: "bg-gradient-to-br from-blue-600 to-cyan-600",
+      icon: "⚔️",
+      bgImage: "/assets/games/thumb_team_battle.png",
+      badge: "NEW"
+    },
+    {
+      title: "THE VAULT",
+      to: "/vault",
+      gradient: "bg-gradient-to-br from-amber-500 to-orange-600",
+      icon: "🔐",
+      isWide: true,
+      bgImage: "/assets/games/thumb_my_vault.png"
+    },
+  ];
+
   return (
-    <section className="space-y-10">
+    <section className="space-y-6 pb-4">
       <TelegramLinkBanner />
+
+      {/* Header/Nav (Simple Top Bar) */}
+      <div className="flex items-center justify-between px-2">
+        <div className="flex items-center gap-2">
+          <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-emerald-400 to-cyan-500 flex items-center justify-center font-bold text-white text-xs">
+            CC
+          </div>
+          <span className="text-xl font-black italic tracking-tighter text-white">CASINO</span>
+        </div>
+        <div className="flex gap-3">
+          {/* Assets Display */}
+          <div className="flex items-center gap-1.5 rounded-full bg-black/40 border border-white/5 px-3 py-1 backdrop-blur-md">
+            <img src="/assets/asset_coin_gold.png" alt="Coin" className="h-5 w-5 drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]" />
+            <span className="text-xs font-bold text-white">12,500</span>
+          </div>
+          <div className="flex items-center gap-1.5 rounded-full bg-black/40 border border-white/5 px-3 py-1 backdrop-blur-md">
+            <img src="/assets/asset_ticket_green.png" alt="Ticket" className="h-5 w-5 drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]" />
+            <span className="text-xs font-bold text-white">5</span>
+          </div>
+          {/* Level Badge */}
+          <div className="px-3 py-1 rounded-full bg-white/10 border border-white/10 text-xs font-bold text-emerald-400">
+            Lv.{userLevel}
+          </div>
+        </div>
+      </div>
+
+      {/* Sticky Vault Banner */}
       {showVaultBanner && (
-        <div className="sticky top-3 z-40">
-          <div className="rounded-3xl border border-gold-500/25 bg-black/40 backdrop-blur-2xl p-4 shadow-2xl">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-                <img
-                  src="/banner01.gif"
-                  alt="금고 배너"
-                  className="mx-auto h-auto w-full max-w-[320px] shrink-0 rounded-xl border border-white/10 object-contain sm:mx-0 sm:h-[180px] sm:w-[320px]"
-                  loading="lazy"
-                />
-                <div className="min-w-0">
-                  <p className="text-xs font-semibold uppercase tracking-[0.28em] text-amber-200">Vault</p>
-                  <p className="mt-1 text-lg font-extrabold text-white">잠긴 금고 {formatWon(vaultAmount)}</p>
-                  <p className="mt-1 text-xs text-slate-200/90">외부 충전 확인 시 금고 금액이 일부 해금되어 보유 머니에 합산됩니다.</p>
-                  <div className="mt-2">
-                    <button
-                      type="button"
-                      onClick={() => setVaultBannerOpen((v) => !v)}
-                      className="text-xs font-semibold text-slate-200/90 underline underline-offset-4 hover:text-white"
-                    >
-                      {vaultBannerOpen ? "설명 닫기" : "자세히 보기"}
-                    </button>
-                  </div>
-                </div>
+        <div className="sticky top-3 z-40 px-1">
+          <div className="rounded-2xl border border-gold-500/30 bg-black/60 backdrop-blur-md p-4 shadow-xl relative overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-r from-amber-500/10 to-transparent opacity-50" />
+            <div className="relative z-10 flex items-center justify-between">
+              <div>
+                <p className="text-[10px] uppercase font-bold text-amber-300 tracking-wider">LOCKED VAULT</p>
+                <p className="text-xl font-black text-white glow-gold">{formatWon(vaultAmount)}</p>
               </div>
-
-              <div className="flex w-full flex-col gap-2 md:w-auto md:flex-row md:items-center md:justify-end">
-                <a
-                  href="https://ccc-010.com"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex w-full items-center justify-center rounded-full border border-gold-400/35 bg-amber-900/15 px-5 py-3 text-sm font-extrabold text-amber-100 backdrop-blur hover:border-gold-300/55 md:w-auto"
-                >
-                  1만원 충전 ↗
-                </a>
-                <a
-                  href="https://ccc-010.com"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex w-full items-center justify-center rounded-full border border-gold-400/35 bg-amber-900/15 px-5 py-3 text-sm font-extrabold text-amber-100 backdrop-blur hover:border-gold-300/55 md:w-auto"
-                >
-                  5만원 충전 ↗
-                </a>
-              </div>
+              <Button variant="figma-secondary" onClick={() => setVaultBannerOpen(!vaultBannerOpen)} className="!py-1.5 !px-3 !text-xs">
+                {vaultBannerOpen ? "Close" : "Open"}
+              </Button>
             </div>
-
             {vaultBannerOpen && (
-              <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-4">
-                <p className="text-sm font-semibold text-white">어떻게 해금되나요?</p>
-                <ul className="mt-2 space-y-1 text-xs text-slate-200/90">
-                  <li>- 금고 금액은 현재 잠겨 있어요.</li>
-                  <li>- 외부 충전 확인 기준: 1만원 충전 시 5,000원 해금 / 5만원 충전 시 전액 해금</li>
-                  <li>- 충전 완료 후에도 반영이 늦으면 관리자에게 입금 확인을 요청해주세요.</li>
-                </ul>
+              <div className="relative z-10 mt-3 border-t border-white/10 pt-2 text-xs text-slate-300">
+                <p>외부 충전 시 해금됩니다.</p>
+                <div className="mt-2 flex gap-2">
+                  <a href="https://ccc-010.com" target="_blank" rel="noreferrer" className="flex-1 py-2 text-center bg-amber-500/20 rounded border border-amber-500/30 text-amber-200 hover:bg-amber-500/30">1만원</a>
+                  <a href="https://ccc-010.com" target="_blank" rel="noreferrer" className="flex-1 py-2 text-center bg-amber-500/20 rounded border border-amber-500/30 text-amber-200 hover:bg-amber-500/30">5만원</a>
+                </div>
               </div>
             )}
           </div>
         </div>
       )}
 
-      {/* Hero */}
-      <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-white/10 via-black/40 to-amber-500/10 backdrop-blur-2xl p-6 shadow-2xl">
-        <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-          <div className="space-y-3">
-            <p className="text-xs uppercase tracking-[0.28em] text-amber-400 font-bold">GRAND OPENING</p>
-            <h2 className="text-3xl font-black text-white md:text-5xl tracking-tight">
-              {displayName(user?.external_id)}님
-              {user?.telegram_username && (
-                <span className="ml-2 text-sm font-normal text-blue-300">
-                  (@{user.telegram_username})
-                </span>
-              )}
-              <br className="block sm:hidden" />
-              <span className="ml-2 sm:ml-0 text-transparent bg-clip-text bg-gradient-to-r from-white to-amber-200">환영합니다</span>
-            </h2>
-            <p className="text-sm text-slate-300">복잡한 절차 없이, VIP 권한으로 바로 시작하세요.</p>
-
-            <div className="mt-4 flex flex-wrap gap-2">
-              <span className="rounded-full border border-amber-500/40 bg-amber-900/20 px-3 py-1 text-xs text-amber-100">{missionSummary.top10}</span>
-              <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs text-white/90">{missionSummary.daily}</span>
-              <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs text-white/90">{missionSummary.depositNext}</span>
-              <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs text-white/90">{missionSummary.wins}</span>
-            </div>
+      {/* Hero Section */}
+      <div className="relative mx-1 overflow-hidden rounded-3xl bg-gradient-to-b from-emerald-900 to-black border border-white/10 shadow-2xl">
+        <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-emerald-500/20 to-transparent" />
+        <div className="relative z-10 p-6">
+          <span className="inline-block rounded-md bg-white/20 px-2 py-0.5 text-[10px] font-bold text-white mb-2 backdrop-blur-sm">
+            WELCOME PACKAGE
+          </span>
+          <h2 className="text-3xl font-black text-white leading-tight">
+            GET YOUR <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-cyan-300">BONUS NOW</span>
+          </h2>
+          <p className="mt-2 text-sm text-slate-300 max-w-[60%]">
+            Join the Team Battle and win up to 1,000,000 P prizes.
+          </p>
+          <div className="mt-4">
+            <Button variant="figma-primary" onClick={() => navigate('/team-battle')} className="!px-6 shadow-lg shadow-emerald-500/30">
+              GET BONUS
+            </Button>
           </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              type="button"
-              onClick={() => document.getElementById("home-games")?.scrollIntoView()}
-              className="rounded-full border border-emerald-300/60 bg-emerald-900/15 px-5 py-3 text-sm font-extrabold text-white backdrop-blur hover:border-emerald-200/70 hover:bg-emerald-800/20"
-            >
-              게임 시작하기
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate("/team-battle")}
-              className="rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white/90 backdrop-blur hover:border-white/25"
-            >
-              팀 배틀 참여
-            </button>
-            <a
-              href="https://ccc-010.com"
-              target="_blank"
-              rel="noreferrer"
-              className="rounded-full border border-gold-400/35 bg-amber-900/15 px-5 py-3 text-sm font-semibold text-amber-100 backdrop-blur hover:border-gold-300/55"
-            >
-              CC 사이트 ↗
-            </a>
-          </div>
+        </div>
+        <div className="absolute -bottom-4 -right-4 text-9xl opacity-10 rotate-12 select-none">
+          ♠
         </div>
       </div>
 
-      {/* Games (Primary CTA area) */}
-      <div id="home-games" className="space-y-4">
-        <div className="flex items-end justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-[0.28em] text-slate-300">Play</p>
-            <h3 className="text-2xl font-extrabold text-white">클스게임</h3>
-          </div>
-          <p className="text-xs text-slate-400">티켓이 0이면 입장이 제한됩니다.</p>
-        </div>
-        <div className="grid gap-4 lg:grid-cols-3">
-          {gameCards.map((card) => (
-            <GameCard key={card.title} {...card} />
-          ))}
-        </div>
+      {/* Tabs */}
+      <div className="px-1">
+        <CategoryTabs active={activeTab} onChange={setActiveTab} />
       </div>
 
-      {/* Team battle (compact) */}
-      <div className="rounded-3xl border border-amber-500/25 bg-gradient-to-br from-white/10 via-white/5 to-amber-500/10 backdrop-blur-2xl p-6 shadow-2xl">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="space-y-1">
-            <p className="text-xs uppercase tracking-[0.28em] text-amber-200">Team Battle</p>
-            <h3 className="text-2xl font-extrabold text-white">팀 배틀</h3>
-            <p className="text-sm text-slate-300">팀 선택 후 플레이 횟수로 경쟁합니다.</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className={`rounded-full border border-amber-400/60 bg-amber-900/25 px-3 py-1 text-xs font-semibold ${seasonState.tone}`}>
-              {seasonState.label}
-            </span>
-            <button
-              type="button"
-              onClick={() => navigate("/team-battle")}
-              className="rounded-full border border-emerald-400/70 bg-emerald-900/30 px-4 py-2 text-sm font-semibold text-emerald-100 hover:border-emerald-300/80"
-            >
-              참여하기 →
-            </button>
-          </div>
-        </div>
-
-        <div className="mt-5 grid gap-4 md:grid-cols-3">
-          <div className="rounded-2xl border border-emerald-500/20 bg-white/5 backdrop-blur-xl p-5">
-            <p className="text-xs font-semibold text-slate-300">내 팀</p>
-            <p className="mt-2 text-lg font-extrabold text-white">{myTeamName}</p>
-            <div className="mt-2 text-sm text-slate-300 space-y-1">
-              <div>점수: {myTeamPoints !== null ? `${myTeamPoints} pts` : "-"}</div>
-              <div>인원: {myTeamMembers !== null ? `${myTeamMembers}명` : "-"}</div>
-              {myTeam.isLoading && <div className="text-xs text-slate-400">불러오는 중...</div>}
-              {myTeam.isError && <div className="text-xs text-red-300">불러오기 실패</div>}
-            </div>
-          </div>
-
-          <div className="md:col-span-2 rounded-2xl border border-emerald-500/20 bg-white/5 backdrop-blur-xl p-5">
-            <div className="flex items-center justify-between">
-              <p className="text-xs font-semibold text-slate-300">상위 팀 TOP3</p>
-              {teamLeaderboard.isLoading && <span className="text-xs text-slate-400">불러오는 중...</span>}
-              {teamLeaderboard.isError && <span className="text-xs text-red-300">불러오기 실패</span>}
-            </div>
-            {topTeams.length === 0 ? (
-              !teamLeaderboard.isLoading && <p className="mt-3 text-sm text-slate-400">데이터 없음</p>
-            ) : (
-              <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                {topTeams.map((row, idx) => (
-                  <div key={row.team_id} className="rounded-xl border border-emerald-500/15 bg-white/5 backdrop-blur p-4">
-                    <p className="text-xs text-slate-300">#{idx + 1}</p>
-                    <p className="mt-1 text-sm font-bold text-white truncate">{row.team_name}</p>
-                    <p className="mt-2 text-sm font-extrabold text-emerald-200">{row.points} pts</p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+      {/* Games Grid */}
+      <div className="grid grid-cols-2 gap-3 px-1">
+        {games.map((game) => (
+          <GameCard key={game.title} {...game} />
+        ))}
       </div>
 
-      {/* Ranking (compact) */}
-      <div className="rounded-3xl border border-gold-500/25 bg-gradient-to-br from-white/10 via-white/5 to-amber-500/10 backdrop-blur-2xl p-6 shadow-2xl">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-[0.28em] text-amber-200">Ranking</p>
-            <h3 className="text-2xl font-extrabold text-white">CC 랭킹 TOP3</h3>
-          </div>
-          {external?.rank && (
-            <div className="rounded-full border border-gold-500/35 bg-amber-900/20 px-4 py-2 text-xs text-amber-100">
-              내 순위 {external.rank}위 · 입금 {deposit.toLocaleString()} · 플레이 {external.play_count}
-            </div>
-          )}
-        </div>
-
-        {rankingSummary.length === 0 ? (
-          <p className="mt-4 text-sm text-slate-400">랭킹 데이터 없음</p>
-        ) : (
-          <div className="mt-5 grid gap-3 md:grid-cols-3">
-            {rankingSummary.map((entry, idx) => {
-              const medals = ["🥇", "🥈", "🥉"];
-              return (
-                <div key={entry.user_id} className="rounded-2xl border border-gold-500/25 bg-white/5 backdrop-blur-xl p-5">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xl">{medals[idx] ?? "🏅"}</span>
-                    <p className="text-sm font-semibold text-amber-200">{entry.rank}위</p>
-                  </div>
-                  <p className="mt-2 text-lg font-extrabold text-white truncate">{displayName(entry.user_name)}</p>
-                  <p className="mt-1 text-xs text-slate-300">입금 {entry.deposit_amount.toLocaleString()} · 플레이 {entry.play_count}</p>
-                </div>
-              );
-            })}
-          </div>
-        )}
+      <div className="text-center py-6">
+        <p className="text-xs text-slate-500 font-medium">© 2024 CC CASINO. All rights reserved.</p>
       </div>
     </section>
   );

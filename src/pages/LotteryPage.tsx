@@ -8,6 +8,7 @@ import AnimatedNumber from "../components/common/AnimatedNumber";
 import { tryHaptic } from "../utils/haptics";
 import GamePageShell from "../components/game/GamePageShell";
 import TicketZeroPanel from "../components/game/TicketZeroPanel";
+import Button from "../components/common/Button";
 import { useQueryClient } from "@tanstack/react-query";
 
 interface RevealedPrize {
@@ -175,7 +176,7 @@ const LotteryPage: React.FC = () => {
             />
           )}
 
-          <button
+          <Button
             type="button"
             disabled={isScratching || playMutation.isPending || (!isUnlimited && data.remaining_plays <= 0) || isOutOfTokens}
             onClick={() => {
@@ -186,9 +187,11 @@ const LotteryPage: React.FC = () => {
               }
               void handleScratch();
             }}
-            className="group relative w-full overflow-hidden rounded-2xl bg-gradient-to-r from-red-600 to-rose-600 px-6 py-4 shadow-[0_0_20px_rgba(220,38,38,0.4)] transition-all hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(220,38,38,0.5)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
+            variant="figma-primary"
+            fullWidth
+            className="!rounded-2xl !py-4 shadow-xl"
           >
-            <div className="relative z-10 flex items-center justify-center gap-2">
+            <div className="flex items-center justify-center gap-2">
               {isScratching || playMutation.isPending ? (
                 <>
                   <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
@@ -200,7 +203,7 @@ const LotteryPage: React.FC = () => {
                 </span>
               )}
             </div>
-          </button>
+          </Button>
 
           {revealedPrize && isRevealed && !isScratching && (
             <div className="mt-4 animate-bounce-in text-center">

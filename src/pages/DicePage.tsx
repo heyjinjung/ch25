@@ -8,6 +8,7 @@ import AnimatedNumber from "../components/common/AnimatedNumber";
 import { tryHaptic } from "../utils/haptics";
 import GamePageShell from "../components/game/GamePageShell";
 import TicketZeroPanel from "../components/game/TicketZeroPanel";
+import Button from "../components/common/Button";
 import { useQueryClient } from "@tanstack/react-query";
 
 const DicePage: React.FC = () => {
@@ -155,13 +156,15 @@ const DicePage: React.FC = () => {
             />
           )}
 
-          <button
+          <Button
             type="button"
             disabled={isRolling || playMutation.isPending || (!isUnlimited && data.remaining_plays <= 0) || isOutOfTokens}
             onClick={handlePlay}
-            className="group relative w-full overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-5 shadow-[0_0_20px_rgba(5,150,105,0.4)] transition-all hover:scale-[1.02] hover:shadow-[0_0_35px_rgba(5,150,105,0.6)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
+            variant="figma-primary"
+            fullWidth
+            className="!rounded-2xl !py-4 shadow-xl"
           >
-            <div className="relative z-10 flex items-center justify-center gap-3">
+            <div className="flex items-center justify-center gap-3">
               {isRolling || playMutation.isPending ? (
                 <>
                   <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
@@ -170,13 +173,13 @@ const DicePage: React.FC = () => {
               ) : (
                 <>
                   <span className="text-2xl">🎲</span>
-                  <span className="text-2xl font-black tracking-wider text-white">
+                  <span className="text-xl font-black tracking-wider text-white">
                     {result || infoMessage ? "다시 대결하기" : "주사위 굴리기"}
                   </span>
                 </>
               )}
             </div>
-          </button>
+          </Button>
 
           {infoMessage && !isRolling && result && (
             <div className={`text-center font-bold animate-fade-in-up ${result === 'WIN' ? 'text-emerald-400' : result === 'LOSE' ? 'text-red-400' : 'text-white/60'
