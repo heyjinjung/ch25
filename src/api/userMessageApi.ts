@@ -10,10 +10,10 @@ export interface InboxMessage {
 }
 
 export const fetchMyInbox = async (): Promise<InboxMessage[]> => {
-    const response = await userApi.get(`/crm/messages/inbox`);
+    const response = await userApi.get(`/api/crm/messages/inbox`);
     return response.data;
 };
 
 export const markMessageAsRead = async (messageId: number): Promise<void> => {
-    await userApi.post(`/crm/messages/${messageId}/read`, {});
+    await userApi.post(`/api/crm/messages/${messageId}/read`, {});
 };
