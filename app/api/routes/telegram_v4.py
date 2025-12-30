@@ -7,9 +7,9 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.core import security, telegram
 from app.models.user import User
-from app.schemas.telegram import TelegramAuthRequest, TelegramAuthResponse, TelegramLinkRequest, TelegramBridgeResponse
+from app.schemas.telegram import TelegramAuthRequest, TelegramAuthResponse, TelegramLinkRequest, TelegramBridgeResponse, TelegramManualLinkRequest
 
-router = APIRouter(prefix="/api/telegram", tags=["telegram"])
+router = APIRouter(prefix="/telegram", tags=["telegram"])
 
 
 @router.post("/auth", response_model=TelegramAuthResponse)

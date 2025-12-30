@@ -47,7 +47,9 @@ async def startup_event():
     print(f"Startup: CORS origins loaded: {cors_origins}", flush=True)
 
 register_exception_handlers(app)
+from app.api.routes import telegram_v4
 app.include_router(api_router)
+app.include_router(telegram_v4.router, prefix="/api")
 
 
 @app.get("/", summary="Root ping")

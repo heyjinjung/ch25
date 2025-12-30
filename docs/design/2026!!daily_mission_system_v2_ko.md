@@ -71,60 +71,49 @@ graph TD
 
 ---
 
-## � 5. TMA 특화 기술 통합 (Tech-Max Details)
+## 🌐 5. 계정 브릿지 기술 (Account Bridge Technology)
 
-### 5.1 제로 레이턴시 UI (`CloudStorage`)
-- **기술**: `WebApp.CloudStorage` API를 사용하여 미션 대시보드의 데이터를 텔레그램 서버에 로컬 캐싱.
-- **효과**: 네트워크 지연 없이 '완료된 미션' 배지(Badge)가 즉시 로딩됨.
+기존 외부 서비스 회원들의 TMA 전환 마찰을 제로화하기 위한 듀얼 경로 브릿지를 구현합니다.
 
-### 5.2 신체적 보상 피드백 (`HapticFeedback`)
-- **기술**: 보상 등급에 따라 진동 패턴 이원화.
-    - `light` (1 다이아): 일반 미션 완료.
-    - `heavy` (Diamond Key): 고가치 미션 완료 시 '짜릿한 손맛' 부여.
+### 5.1 심리스 매직 링크 (Seamless Magic Link)
+- **기술**: JWT 기반의 1회성 토큰을 `start_param` (startapp)에 실어 전달.
+- **프로세스**: 
+    1. 외부 사이트에서 연동 버튼 클릭 시 `/api/telegram/bridge-token` 호출.
+    2. 생성된 `bind_{token}`을 포함한 봇 링크 생성.
+    3. 유저가 링크 클릭 시 TMA가 실행되며 백엔드에서 `telegram_id`와 `user_id`를 원자적으로 바인딩.
+- **효과**: 아이디/비밀번호 입력 없이 원클릭으로 기존 자산 연동.
 
-### 5.3 바이럴 콜백 엔진
-- **기술**: `WebApp.shareToStories` 실행 후 성공 콜백을 수신하여 서버에 적중 통보.
-- **로직**: 서버는 공유 미디어 상의 로고/텍스트 유효성을 (가능한 경우) 봇으로 검증.
+### 5.2 인앱 수동 연동 (In-App Manual Linking)
+- **대상**: 매직 링크 없이 봇을 직접 찾아온 기존 회원.
+- **UI**: `ManualLinkForm` (닉네임/패스워드 입력)을 랜딩 페이지 상단에 배치.
+- **로직**: 입력된 인증 정보로 기존 계정 확인 후 현재의 `telegram_id`를 즉시 맵핑.
+
+### 5.3 어드민 푸시 제어 (Admin Magic Link Generator)
+- **기능**: 운영자가 특정 우수 고객을 위해 직접 매직 링크를 생성하여 텔레그램으로 전송 가능.
+- **보안**: 어드민 생성 토큰은 24시간 유효하며, 사용 즉시 또는 기간 만료 시 자동 파기.
 
 ---
 
-## ⚡ 6. 콘텐츠 공백 해소 (Instant Play Strategy)
+## ⚡ 6. 콘텐츠 공백 해소 및 게임 밸런스 (Game Logic & Balance)
 
-### 6.1 "3초 이내의 성공" (Immediate One-Tap)
+### 6.1 주사위 게임 잔액 직결 모델 (Dice Balance Accuracy)
+- **변경 전**: 승리 시 150원 지급 (순이익 형태)
+- **변경 후**: **승리 +200원 / 패배 -50원** (현실적 밸런스)
+- **기술**: `VaultService`의 `record_game_play_earn_event`에서 감산(`negative amount`)을 허용하도록 로직 고도화.
+- **효과**: 금고 잔액이 게임 결과와 1:1로 일치하여 회계 투명성 확보.
+
+### 6.2 "3초 이내의 성공" (Immediate One-Tap)
 - **DailyInstantRewards 컴포넌트**:
     - `useMissionStore`의 `hasDailyGift` 상태를 구독하여 입장 시 자동 모달 노출.
     - `framer-motion`의 `AnimatePresence`를 사용하여 등장/퇴장 시의 시각적 긴장감 부여.
-- **성공 경험 선지급 로직**:
-    - 신규 유저 테이블 생성 시 `FIRST_LOGIN` 미션을 강제 완료 상태로 삽입.
-    - 유저가 `MissionPage` 진입 시 `is_claimed == False && is_completed == True`인 항목을 최상단에 배치하여 락인(Lock-in) 유도.
-
-### 6.2 실시간 데이터 증명 (Live Proof)
-- **WebSocket Feed 스펙**:
-    - Endpoint: `wss://api.cc-jm.com/ws/live-notif`
-    - Payload Structure:
-      ```json
-      {
-        "type": "VAULT_WITHDRAWAL_APPROVED",
-        "user_name": "Kim***",
-        "amount": 50000,
-        "timestamp": "2025-12-31T01:42:00Z"
-      }
-      ```
-- **Vault Animation 기술 상세**:
-    - **Trigger**: `useGameWallet` 훅의 `balance` 증가 이벤트 감지.
-    - **Visual**: 정해진 좌표(`GameView`)에서 금고 아이콘(`VaultHeader`)까지 수백 개의 `particle` 입자가 베지어 곡선(Bezier Curve)을 따라 이동하는 CSS Keyframe 적용.
-    - **Haptic**: 입자가 금고에 닿는 순간 `impactHeavy` 진동 동기화.
 
 ---
 
-## 🛡️ 7. 보안 및 최적화 (Security & Perf Details)
+## 🛡️ 7. 보안 및 UI 최적화 (Security & UI/UX Details)
 
-### 7.1 initData 검증 알고리즘 (HMAC-SHA256)
-- **절차**:
-    1. `TELEGRAM_BOT_TOKEN`을 키로 하여 `"WebAppData"`를 해싱하여 `SecretKey` 생성.
-    2. `hash`를 제외한 모든 필드를 알파벳순 정렬 후 `key=value` 문자열 생성.
-    3. `SecretKey`로 위 문자열을 다시 해싱하여 클라이언트의 `hash`와 대조.
-- **보안 강화**: `auth_date`가 현재 시간으로부터 24시간 이상 경과한 경우 세션 만료 처리 (Replay Attack 방지).
+### 7.1 고가시성 UI 디자인 (Premium Visibility)
+- **금고 전환 버튼**: `#FFFFFF` 폰트와 밝은 에메랄드 그라데이션(`from-emerald-600 to-figma-accent`)을 조합하여 가독성 문제 해결.
+- **모바일 헤더 최적화**: 좁은 화면에서 로그아웃 버튼의 Clipping(짤림) 방지를 위해 `flex-row` 자산 간격 및 아이콘 크기 자동 조절.
 
 ### 7.2 Strict XP Rule 및 수익 모델 보호
 - **XP 격리 설계**:
@@ -145,8 +134,12 @@ graph TD
 - [x] 미션/프로그레스 DB 마이그레이션 및 서비스 로직
 - [x] 다이아몬드 보상 연동 및 수령 트랜잭션 구현
 - [x] 오디오 안정화 및 기술적 해방 (Global Unlock)
+- [x] **심리스 계정 브릿지 (Magic Link / Manual Link) 구현**
+- [x] **주사위 게임 밸런스 수정 (+200 / -50)**
+- [x] **UI/UX 고도화 (금고 버튼 가독성, 모바일 헤더 최적화)**
+- [x] **어드민 텔레그램 관리 및 매직 링크 생성 도구**
 
-### � 다음 작업 (Immediate Actions)
+### 🚀 다음 작업 (Immediate Actions)
 1. **Phase 2.7**: 일일 환영 보상 UI (`DailyGift.tsx`) 신설.
 2. **Phase 4**: Admin 페이지 내 미션 수동 승인(`is_manual_approval`) 제어 UI 적용.
 3. **Phase 5**: 스토리 공유 성공 시 백엔드 보상 자동 지급 API 연결.
