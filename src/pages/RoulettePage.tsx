@@ -149,9 +149,12 @@ const RoulettePage: React.FC = () => {
 
     const rewardValue = result?.reward_value ? Number(result.reward_value) : 0;
     const rewardType = result?.reward_type ?? "NONE";
-    const isXpReward = rewardType.toUpperCase().includes("XP") || rewardType.includes("레벨");
 
-    if (rewardValue > 0 && rewardType !== "NONE" && !isXpReward) {
+    // Strict Whitelist
+    const ALLOWED_TYPES = ["POINT", "TICKET", "COUPON", "KEY", "TOKEN"];
+    const isAllowedReward = ALLOWED_TYPES.some(t => rewardType.toUpperCase().includes(t));
+
+    if (rewardValue > 0 && rewardType !== "NONE" && isAllowedReward) {
       setRewardToast({ value: rewardValue, type: rewardType });
       window.setTimeout(() => setRewardToast(null), 2500);
       tryHaptic([18, 50, 18]);
@@ -399,8 +402,7 @@ const RoulettePage: React.FC = () => {
 
                   {displayedResult.reward_type &&
                     displayedResult.reward_type !== "NONE" &&
-                    !displayedResult.reward_type.toUpperCase().includes("XP") &&
-                    !displayedResult.reward_type.includes("레벨") && (
+                    ["POINT", "TICKET", "COUPON", "KEY", "TOKEN"].some(t => displayedResult.reward_type!.toUpperCase().includes(t)) && (
                       <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-cc-gold/20 bg-cc-gold/10 px-6 py-2">
                         <span className="text-sm font-bold text-cc-gold">
                           +{Number(displayedResult.reward_value).toLocaleString()} {displayedResult.reward_type}

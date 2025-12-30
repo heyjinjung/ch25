@@ -32,6 +32,241 @@ type TabKey = "season" | "team" | "leaderboard" | "force";
 
 const formatDateTime = (iso?: string) => (iso ? new Date(iso).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" }) : "-");
 
+// Sub-components to isolate state and prevent lag
+const SeasonCreateModal = ({
+  busy,
+  onClose,
+  onSubmit,
+  inputClass,
+  ModalShell,
+}: {
+  busy: boolean;
+  onClose: () => void;
+  onSubmit: (data: { name: string; starts_at: string; ends_at: string; is_active: boolean }) => void;
+  inputClass: string;
+  ModalShell: any;
+}) => {
+  const [form, setForm] = useState({ name: "", starts_at: "", ends_at: "", is_active: false });
+
+  // Smart date formatter: converts "20251230" -> "2025-12-30T00:00:00+09:00"
+  const handleDateInput = (field: "starts_at" | "ends_at", value: string) => {
+    let nextVal = value;
+    // Basic YYYYMMDD detection
+    if (/^\d{8}$/.test(value)) {
+      const y = value.substring(0, 4);
+      const m = value.substring(4, 6);
+      const d = value.substring(6, 8);
+      nextVal = `${y}-${m}-${d}T00:00:00+09:00`;
+    }
+    setForm((prev) => ({ ...prev, [field]: nextVal }));
+  };
+
+  const parsePreview = (val: string) => {
+    if (!val) return "";
+    const d = new Date(val);
+    return isNaN(d.getTime()) ? "INVALID DATE" : d.toLocaleString("ko-KR", { timeZone: "Asia/Seoul" });
+  };
+
+  return (
+    <ModalShell title="시즌 생성" onClose={onClose}>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div className="md:col-span-2">
+          <label className="mb-1 block text-sm font-medium text-gray-300">시즌 이름</label>
+          <input
+            className={inputClass}
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            placeholder="시즌 이름 입력"
+          />
+        </div>
+        <div>
+          <label className="mb-1 block text-sm font-medium text-gray-300">시작 시각 (ISO)</label>
+          <input
+            className={inputClass}
+            value={form.starts_at}
+            onChange={(e) => handleDateInput("starts_at", e.target.value)}
+            placeholder="20251230 OR 2025-12-12T00:00:00+09:00"
+          />
+          {form.starts_at && <p className="mt-1 text-xs text-cc-lime">{parsePreview(form.starts_at)}</p>}
+        </div>
+        <div>
+          <label className="mb-1 block text-sm font-medium text-gray-300">종료 시각 (ISO)</label>
+          <input
+            className={inputClass}
+            value={form.ends_at}
+            onChange={(e) => handleDateInput("ends_at", e.target.value)}
+            placeholder="20260130 OR 2025-12-13T00:00:00+09:00"
+          />
+          {form.ends_at && <p className="mt-1 text-xs text-cc-lime">{parsePreview(form.ends_at)}</p>}
+        </div>
+        <div className="md:col-span-2">
+          <label className="flex items-center gap-2 text-sm text-gray-200">
+            <input
+              type="checkbox"
+              checked={form.is_active}
+              onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
+              className="h-4 w-4 rounded border-[#333333] bg-[#1A1A1A]"
+            />
+            활성화
+          </label>
+        </div>
+      </div>
+
+      <div className="mt-6 flex justify-end">
+        <button
+          type="button"
+          onClick={() => onSubmit(form)}
+          disabled={busy || !form.name || !form.starts_at || !form.ends_at}
+          className="rounded-md bg-[#2D6B3B] px-5 py-2 text-sm font-medium text-white hover:bg-[#91F402] hover:text-black disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {busy ? "생성 중..." : "시즌 생성"}
+        </button>
+      </div>
+    </ModalShell>
+  );
+};
+
+const TeamModal = ({
+  busy,
+  team,
+  allUsers,
+  onClose,
+  onSubmit,
+  inputClass,
+  ModalShell,
+}: {
+  busy: boolean;
+  team: Team | null;
+  allUsers: AdminUser[];
+  onClose: () => void;
+  onSubmit: (data: { name: string; icon: string; is_active: boolean }, leaderId?: number) => void;
+  inputClass: string;
+  ModalShell: any;
+}) => {
+  const [form, setForm] = useState({
+    name: team?.name || "",
+    icon: team?.icon || "",
+    is_active: team?.is_active ?? true,
+    leader_user_id: "",
+  });
+  const [userSearch, setUserSearch] = useState("");
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
+
+  const filteredUsers = useMemo(() => {
+    if (!userSearch) return [];
+    const q = userSearch.toLowerCase();
+    return allUsers.filter(u =>
+      (u.nickname?.toLowerCase() || "").includes(q) ||
+      u.external_id.toLowerCase().includes(q) ||
+      String(u.id).includes(q)
+    ).slice(0, 10);
+  }, [allUsers, userSearch]);
+
+  const canSubmit = Boolean(form.name.trim());
+
+  return (
+    <ModalShell title={team ? "팀 수정" : "팀 생성"} onClose={onClose}>
+      <div className="space-y-4">
+        <div>
+          <label className="mb-1 block text-sm font-medium text-gray-300">팀 이름</label>
+          <input
+            className={inputClass}
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            placeholder="팀 이름 입력"
+          />
+        </div>
+        <div>
+          <label className="mb-1 block text-sm font-medium text-gray-300">아이콘 URL (선택)</label>
+          <input
+            className={inputClass}
+            value={form.icon}
+            onChange={(e) => setForm({ ...form, icon: e.target.value })}
+            placeholder="https://example.com/icon.png"
+          />
+        </div>
+
+        {!team && (
+          <div className="relative">
+            <label className="mb-1 block text-sm font-medium text-gray-300">팀 리더 선택 (선택)</label>
+            <div className="flex gap-2">
+              <input
+                className={inputClass}
+                value={userSearch}
+                onChange={(e) => {
+                  setUserSearch(e.target.value);
+                  setShowUserDropdown(true);
+                }}
+                onFocus={() => setShowUserDropdown(true)}
+                placeholder="닉네임 또는 ID로 검색..."
+              />
+              {form.leader_user_id && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setForm({ ...form, leader_user_id: "" });
+                    setUserSearch("");
+                  }}
+                  className="rounded-md bg-red-900/40 px-3 text-xs text-red-200"
+                >
+                  취소
+                </button>
+              )}
+            </div>
+            {showUserDropdown && filteredUsers.length > 0 && (
+              <div className="absolute z-[60] mt-1 max-h-48 w-full overflow-auto rounded-md border border-[#333333] bg-[#111111] shadow-xl">
+                {filteredUsers.map(u => (
+                  <button
+                    key={u.id}
+                    type="button"
+                    className="flex w-full flex-col px-4 py-2 text-left hover:bg-[#1A1A1A]"
+                    onClick={() => {
+                      setForm({ ...form, leader_user_id: String(u.id) });
+                      setUserSearch(`${u.nickname || u.external_id} (ID: ${u.id})`);
+                      setShowUserDropdown(false);
+                    }}
+                  >
+                    <span className="text-sm text-white">{u.nickname || "(닉네임 없음)"}</span>
+                    <span className="text-xs text-gray-500">ID: {u.id} / {u.external_id}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+            {form.leader_user_id && (
+              <div className="mt-1 text-xs text-[#91F402]">선택된 리더 ID: {form.leader_user_id}</div>
+            )}
+          </div>
+        )}
+
+        {team && (
+          <div>
+            <label className="flex items-center gap-2 text-sm text-gray-200">
+              <input
+                type="checkbox"
+                checked={form.is_active}
+                onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
+                className="h-4 w-4 rounded border-[#333333] bg-[#1A1A1A]"
+              />
+              활성
+            </label>
+          </div>
+        )}
+      </div>
+
+      <div className="mt-6 flex justify-end">
+        <button
+          type="button"
+          onClick={() => onSubmit({ name: form.name, icon: form.icon, is_active: form.is_active }, form.leader_user_id ? Number(form.leader_user_id) : undefined)}
+          disabled={busy || !canSubmit}
+          className="rounded-md bg-[#2D6B3B] px-5 py-2 text-sm font-medium text-white hover:bg-[#91F402] hover:text-black disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {busy ? (team ? "저장 중..." : "생성 중...") : (team ? "저장" : "팀 생성")}
+        </button>
+      </div>
+    </ModalShell>
+  );
+};
+
 const AdminTeamBattlePage: React.FC = () => {
   const [tab, setTab] = useState<TabKey>("season");
   const [season, setSeason] = useState<TeamSeason | null>(null);
@@ -44,9 +279,7 @@ const AdminTeamBattlePage: React.FC = () => {
   const [contribOffset, setContribOffset] = useState(0);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [seasonForm, setSeasonForm] = useState({ name: "", starts_at: "", ends_at: "", is_active: false });
   const [seasonEditForm, setSeasonEditForm] = useState({ name: "", starts_at: "", ends_at: "", is_active: false });
-  const [teamForm, setTeamForm] = useState({ name: "", icon: "", leader_user_id: "" });
   const [forceJoinForm, setForceJoinForm] = useState({ user_id: "", team_id: "" });
   const [allUsers, setAllUsers] = useState<AdminUser[]>([]);
   const [userSearchQuery, setUserSearchQuery] = useState("");
@@ -65,7 +298,7 @@ const AdminTeamBattlePage: React.FC = () => {
 
   const [showSeasonModal, setShowSeasonModal] = useState(false);
   const [showTeamModal, setShowTeamModal] = useState(false);
-  const [editingTeamId, setEditingTeamId] = useState<number | null>(null);
+  const [editingTeam, setEditingTeam] = useState<Team | null>(null);
 
   const inputClass =
     "w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]";
@@ -150,23 +383,16 @@ const AdminTeamBattlePage: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedTeamForContrib, contribLimit, contribOffset, season?.id]);
 
-  const handleCreateSeason = async () => {
+  const handleCreateSeason = async (payload: { name: string; starts_at: string; ends_at: string; is_active: boolean }) => {
     setError(null);
     setMessage(null);
     setCreateSeasonBusy(true);
     try {
-      const payload = {
-        name: seasonForm.name,
-        starts_at: seasonForm.starts_at,
-        ends_at: seasonForm.ends_at,
-        is_active: seasonForm.is_active,
-      };
       const res = await createSeason(payload);
       setSeason(res);
       setSeasonEditForm({ name: res.name, starts_at: res.starts_at, ends_at: res.ends_at, is_active: res.is_active });
       setMessage("시즌 생성 완료");
       setShowSeasonModal(false);
-      setSeasonForm({ name: "", starts_at: "", ends_at: "", is_active: false });
     } catch (err) {
       console.error(err);
       setError("시즌 생성 실패");
@@ -192,13 +418,12 @@ const AdminTeamBattlePage: React.FC = () => {
     }
   };
 
-  const handleCreateTeam = async () => {
+  const handleCreateTeam = async (payload: { name: string; icon?: string | null }, leaderUserId?: number) => {
     setError(null);
     setMessage(null);
     setCreateTeamBusy(true);
     try {
-      await createTeam({ name: teamForm.name, icon: teamForm.icon || null }, teamForm.leader_user_id ? Number(teamForm.leader_user_id) : undefined);
-      setTeamForm({ name: "", icon: "", leader_user_id: "" });
+      await createTeam(payload, leaderUserId);
       await refresh();
       setMessage("팀 생성 완료");
       setShowTeamModal(false);
@@ -284,7 +509,7 @@ const AdminTeamBattlePage: React.FC = () => {
       await updateTeam(teamId, { name: edit.name, icon: edit.icon || null, is_active: edit.is_active });
       await refresh();
       setMessage("팀 수정 완료");
-      setEditingTeamId(null);
+      setEditingTeam(null);
     } catch (err) {
       console.error(err);
       setError("팀 수정 실패");
@@ -336,40 +561,13 @@ const AdminTeamBattlePage: React.FC = () => {
   };
 
   const openTeamCreate = () => {
-    setEditingTeamId(null);
-    setTeamForm({ name: "", icon: "", leader_user_id: "" });
+    setEditingTeam(null);
     setShowTeamModal(true);
   };
 
   const openTeamEdit = (team: Team) => {
-    setEditingTeamId(team.id);
-    setTeamEdits((prev) => ({
-      ...prev,
-      [team.id]: {
-        name: prev[team.id]?.name ?? team.name,
-        icon: prev[team.id]?.icon ?? team.icon ?? "",
-        is_active: prev[team.id]?.is_active ?? team.is_active,
-      },
-    }));
+    setEditingTeam(team);
     setShowTeamModal(true);
-  };
-
-  const teamModalTitle = editingTeamId ? "팀 수정" : "팀 생성";
-  const canSubmitTeamModal = useMemo(() => {
-    if (editingTeamId) {
-      const edit = teamEdits[editingTeamId];
-      return Boolean(edit?.name?.trim());
-    }
-    return Boolean(teamForm.name.trim());
-  }, [editingTeamId, teamEdits, teamForm.name]);
-
-  const submitTeamModal = async () => {
-    if (editingTeamId) {
-      await handleTeamUpdate(editingTeamId);
-      setShowTeamModal(false);
-      return;
-    }
-    await handleCreateTeam();
   };
 
   const tabs = useMemo(
@@ -588,8 +786,8 @@ const AdminTeamBattlePage: React.FC = () => {
                     }}
                     disabled={teamBusy === t.id}
                     className={`rounded-md px-4 py-2 text-sm font-medium ${(teamEdits[t.id]?.is_active ?? t.is_active)
-                        ? "bg-red-900/60 text-red-100 hover:bg-red-900"
-                        : "bg-[#2D6B3B] text-white hover:bg-[#91F402] hover:text-black"
+                      ? "bg-red-900/60 text-red-100 hover:bg-red-900"
+                      : "bg-[#2D6B3B] text-white hover:bg-[#91F402] hover:text-black"
                       } disabled:opacity-60`}
                   >
                     {teamBusy === t.id ? "처리 중..." : (teamEdits[t.id]?.is_active ?? t.is_active) ? "비활성" : "활성"}
@@ -864,141 +1062,34 @@ const AdminTeamBattlePage: React.FC = () => {
       )}
 
       {showSeasonModal && (
-        <ModalShell
-          title="시즌 생성"
-          onClose={() => {
-            setShowSeasonModal(false);
-          }}
-        >
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div className="md:col-span-2">
-              <label className="mb-1 block text-sm font-medium text-gray-300">시즌 이름</label>
-              <input className={inputClass} value={seasonForm.name} onChange={(e) => setSeasonForm({ ...seasonForm, name: e.target.value })} placeholder="시즌 이름 입력" />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-300">시작 시각 (ISO)</label>
-              <input className={inputClass} value={seasonForm.starts_at} onChange={(e) => setSeasonForm({ ...seasonForm, starts_at: e.target.value })} placeholder="2025-12-12T00:00:00+09:00" />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-300">종료 시각 (ISO)</label>
-              <input className={inputClass} value={seasonForm.ends_at} onChange={(e) => setSeasonForm({ ...seasonForm, ends_at: e.target.value })} placeholder="2025-12-13T00:00:00+09:00" />
-            </div>
-            <div className="md:col-span-2">
-              <label className="flex items-center gap-2 text-sm text-gray-200">
-                <input type="checkbox" checked={seasonForm.is_active} onChange={(e) => setSeasonForm({ ...seasonForm, is_active: e.target.checked })} className="h-4 w-4 rounded border-[#333333] bg-[#1A1A1A]" />
-                활성화
-              </label>
-            </div>
-          </div>
-
-          <div className="mt-6 flex justify-end">
-            <button
-              type="button"
-              onClick={handleCreateSeason}
-              disabled={createSeasonBusy || !seasonForm.name || !seasonForm.starts_at || !seasonForm.ends_at}
-              className="rounded-md bg-[#2D6B3B] px-5 py-2 text-sm font-medium text-white hover:bg-[#91F402] hover:text-black disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {createSeasonBusy ? "생성 중..." : "시즌 생성"}
-            </button>
-          </div>
-        </ModalShell>
+        <SeasonCreateModal
+          busy={createSeasonBusy}
+          onClose={() => setShowSeasonModal(false)}
+          onSubmit={handleCreateSeason}
+          inputClass={inputClass}
+          ModalShell={ModalShell}
+        />
       )}
 
       {showTeamModal && (
-        <ModalShell
-          title={teamModalTitle}
+        <TeamModal
+          busy={createTeamBusy || (editingTeam ? teamBusy === editingTeam.id : false)}
+          team={editingTeam}
+          allUsers={allUsers}
           onClose={() => {
             setShowTeamModal(false);
-            setEditingTeamId(null);
+            setEditingTeam(null);
           }}
-        >
-          {editingTeamId ? (
-            <div className="space-y-4">
-              <div>
-                <label className="mb-1 block text-sm font-medium text-gray-300">팀 이름</label>
-                <input
-                  className={inputClass}
-                  value={teamEdits[editingTeamId]?.name ?? ""}
-                  onChange={(e) =>
-                    setTeamEdits({
-                      ...teamEdits,
-                      [editingTeamId]: {
-                        name: e.target.value,
-                        icon: teamEdits[editingTeamId]?.icon ?? "",
-                        is_active: teamEdits[editingTeamId]?.is_active ?? true,
-                      },
-                    })
-                  }
-                  placeholder="팀 이름 입력"
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-sm font-medium text-gray-300">아이콘 URL (선택)</label>
-                <input
-                  className={inputClass}
-                  value={teamEdits[editingTeamId]?.icon ?? ""}
-                  onChange={(e) =>
-                    setTeamEdits({
-                      ...teamEdits,
-                      [editingTeamId]: {
-                        name: teamEdits[editingTeamId]?.name ?? "",
-                        icon: e.target.value,
-                        is_active: teamEdits[editingTeamId]?.is_active ?? true,
-                      },
-                    })
-                  }
-                  placeholder="https://example.com/icon.png"
-                />
-              </div>
-              <div>
-                <label className="flex items-center gap-2 text-sm text-gray-200">
-                  <input
-                    type="checkbox"
-                    checked={teamEdits[editingTeamId]?.is_active ?? true}
-                    onChange={(e) =>
-                      setTeamEdits({
-                        ...teamEdits,
-                        [editingTeamId]: {
-                          name: teamEdits[editingTeamId]?.name ?? "",
-                          icon: teamEdits[editingTeamId]?.icon ?? "",
-                          is_active: e.target.checked,
-                        },
-                      })
-                    }
-                    className="h-4 w-4 rounded border-[#333333] bg-[#1A1A1A]"
-                  />
-                  활성
-                </label>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div>
-                <label className="mb-1 block text-sm font-medium text-gray-300">팀 이름</label>
-                <input className={inputClass} value={teamForm.name} onChange={(e) => setTeamForm({ ...teamForm, name: e.target.value })} placeholder="팀 이름 입력" />
-              </div>
-              <div>
-                <label className="mb-1 block text-sm font-medium text-gray-300">아이콘 URL (선택)</label>
-                <input className={inputClass} value={teamForm.icon} onChange={(e) => setTeamForm({ ...teamForm, icon: e.target.value })} placeholder="https://example.com/icon.png" />
-              </div>
-              <div>
-                <label className="mb-1 block text-sm font-medium text-gray-300">리더 user_id (선택)</label>
-                <input className={inputClass} value={teamForm.leader_user_id} onChange={(e) => setTeamForm({ ...teamForm, leader_user_id: e.target.value })} placeholder="user_123" />
-              </div>
-            </div>
-          )}
-
-          <div className="mt-6 flex justify-end">
-            <button
-              type="button"
-              onClick={submitTeamModal}
-              disabled={createTeamBusy || teamBusy === editingTeamId || !canSubmitTeamModal}
-              className="rounded-md bg-[#2D6B3B] px-5 py-2 text-sm font-medium text-white hover:bg-[#91F402] hover:text-black disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {editingTeamId ? (teamBusy === editingTeamId ? "저장 중..." : "저장") : createTeamBusy ? "생성 중..." : "팀 생성"}
-            </button>
-          </div>
-        </ModalShell>
+          onSubmit={async (data, leaderId) => {
+            if (editingTeam) {
+              await handleTeamUpdate(editingTeam.id, data);
+            } else {
+              await handleCreateTeam(data, leaderId);
+            }
+          }}
+          inputClass={inputClass}
+          ModalShell={ModalShell}
+        />
       )}
 
       {message && <div className="rounded-lg border border-[#333333] bg-[#111111] p-4 text-sm text-gray-200">{message}</div>}

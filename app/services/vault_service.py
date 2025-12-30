@@ -579,6 +579,7 @@ class VaultService:
         reward_amount: int | None,
         payout_raw: dict | None = None,
         now: datetime | None = None,
+        force_enable: bool = False,
     ) -> int:
         """Idempotently route a TRIAL play reward into Vault (Phase 1 locked).
 
@@ -593,7 +594,7 @@ class VaultService:
         """
 
         settings = get_settings()
-        if not bool(getattr(settings, "enable_trial_payout_to_vault", False)):
+        if not force_enable and not bool(getattr(settings, "enable_trial_payout_to_vault", False)):
             return 0
 
         now_dt = now or datetime.utcnow()

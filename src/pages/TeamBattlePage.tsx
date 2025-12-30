@@ -14,6 +14,24 @@ const BG_SPLIT = "/assets/team_battle/bg_battle_split.png";
 const ICON_VS = "/assets/team_battle/icon_vs.png";
 const AVATAR_RED = "/assets/team_battle/avatar_red.png";
 const AVATAR_BLUE = "/assets/team_battle/avatar_blue.png";
+const ICON_DICE = "/assets/icon_dice_silver.png";
+const ICON_ROULETTE = "/assets/roulette/icon_slot_machine.png"; // Fixed path
+const ICON_LOTTERY = "/assets/lottery/icon_lotto_ball.png"; // Fixed path
+
+type GameOption = {
+  id: string;
+  name: string;
+  desc: string;
+  path: string;
+  icon: string;
+  points: number;
+};
+
+const BATTLE_GAMES: GameOption[] = [
+  { id: "dice", name: "Dice Battle", desc: "주사위로 승부하세요", path: "/dice", icon: ICON_DICE, points: 10 },
+  { id: "roulette", name: "Roulette", desc: "한방 승부 룰렛", path: "/roulette", icon: ICON_ROULETTE, points: 10 },
+  { id: "lottery", name: "Lottery", desc: "매일 대박 기회", path: "/lottery", icon: ICON_LOTTERY, points: 10 },
+];
 
 const TeamBattlePage: React.FC = () => {
   const seasonQuery = useActiveTeamSeason();
@@ -25,6 +43,7 @@ const TeamBattlePage: React.FC = () => {
   const myTeam = myTeamQuery.data;
   const teams = teamsQuery.data || [];
   const leaderboard = leaderboardQuery.data || [];
+  const [showGameModal, setShowGameModal] = React.useState(false);
 
   const loading = seasonQuery.isLoading || myTeamQuery.isLoading || teamsQuery.isLoading;
 
@@ -33,7 +52,8 @@ const TeamBattlePage: React.FC = () => {
     try {
       await autoAssignMutation.mutateAsync();
     } catch (err) {
-      alert("팀 배정에 실패했습니다. 이미 배정되었거나 시즌이 종료되었습니다.");
+      const msg = (err as any).response?.data?.detail || "알 수 없는 오류";
+      alert(`팀 배정 실패: ${msg}`);
     }
   };
 
@@ -135,10 +155,60 @@ const TeamBattlePage: React.FC = () => {
               <p className="text-xs text-white/40 font-bold uppercase">My Status</p>
               <p className="text-lg font-bold text-white">READY TO FIGHT</p>
             </div>
-            <Button variant="figma-secondary" className="!px-6">Play Game</Button>
+            <Button
+              variant="figma-secondary"
+              className="!px-6 shadow-[0_0_15px_rgba(255,255,255,0.2)]"
+              onClick={() => setShowGameModal(true)}
+            >
+              Play Game
+            </Button>
           </div>
         )}
       </section>
+
+      {/* --- Game Selection Modal (Battle Zone) --- */}
+      {showGameModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setShowGameModal(false)} />
+          <div className="relative w-full max-w-sm overflow-hidden rounded-2xl border border-white/10 bg-[#1a1a1a] shadow-2xl animate-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-red-900/50 to-blue-900/50 p-4 text-center border-b border-white/5">
+              <h3 className="text-lg font-black italic text-white">CHOOSE YOUR BATTLE</h3>
+              <p className="text-xs text-white/50">게임을 플레이하여 팀 점수를 획득하세요</p>
+            </div>
+
+            {/* List */}
+            <div className="p-4 space-y-3">
+              {BATTLE_GAMES.map((game) => (
+                <a
+                  key={game.id}
+                  href={game.path}
+                  className="flex items-center gap-4 rounded-xl bg-white/5 p-3 transition-colors hover:bg-white/10 active:scale-95 border border-white/5 hover:border-white/20 group"
+                >
+                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-black/50 p-2 shadow-inner group-hover:bg-black/30 transition-colors">
+                    <img src={game.icon} alt={game.name} className="h-full w-full object-contain" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-bold text-white">{game.name}</h4>
+                    <p className="text-xs text-white/40">{game.desc}</p>
+                  </div>
+                  <div className="text-right">
+                    <span className="block text-xs font-bold text-emerald-400">+{game.points} P</span>
+                    <span className="text-[10px] text-white/30">Team Score</span>
+                  </div>
+                </a>
+              ))}
+            </div>
+
+            {/* Footer */}
+            <div className="bg-black/20 p-3 text-center">
+              <button onClick={() => setShowGameModal(false)} className="text-sm font-bold text-white/40 hover:text-white transition-colors">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* --- 3. Leaderboard Preview --- */}
       <section className="mt-8 px-4">

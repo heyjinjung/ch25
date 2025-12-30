@@ -213,6 +213,44 @@ class RouletteService:
                 reward_type=chosen.reward_type,
                 reward_amount=chosen.reward_amount,
                 payout_raw={"segment_id": chosen.id},
+                force_enable=False, # Respect global setting for trial payouts
+            )
+
+
+        # Special Handling for Keys: always accrue to Vault (masquerade as POINT for vault logic)
+        # CASE A: The reward itself is a KEY (e.g. winning a key from a spin)
+        if chosen.reward_type in {"GOLD_KEY", "DIAMOND_KEY"} and chosen.reward_amount > 0:
+             total_earn += self.vault_service.record_trial_result_earn_event(
+                db,
+                user_id=user_id,
+                game_type=FeatureType.ROULETTE.value,
+                game_log_id=log_entry.id,
+                token_type=token_type_enum.value,
+                reward_type="POINT",  # Force POINT to ensure amount is used 1:1
+                reward_amount=chosen.reward_amount,
+                payout_raw={
+                    "segment_id": chosen.id,
+                    "original_reward_type": chosen.reward_type,
+                    "is_key_reward": True
+                },
+                force_enable=True, # Always accrue KEY rewards
+            )
+        # CASE B: The ticket used was a KEY, and the reward is POINT (e.g. 50,000 P)
+        elif token_type_enum in (GameTokenType.GOLD_KEY, GameTokenType.DIAMOND_KEY) and chosen.reward_type == "POINT" and chosen.reward_amount > 0:
+             total_earn += self.vault_service.record_trial_result_earn_event(
+                db,
+                user_id=user_id,
+                game_type=FeatureType.ROULETTE.value,
+                game_log_id=log_entry.id,
+                token_type=token_type_enum.value,
+                reward_type="POINT",
+                reward_amount=chosen.reward_amount,
+                payout_raw={
+                    "segment_id": chosen.id,
+                    "original_reward_type": chosen.reward_type,
+                    "is_key_spin_point": True
+                },
+                force_enable=True, # Always accrue KEY spin points
             )
 
         xp_award = self.BASE_GAME_XP
@@ -230,14 +268,23 @@ class RouletteService:
         )
 
         # Deliver reward according to segment definition (unless trial routing is enabled).
+        # Deliver reward according to segment definition (unless trial routing is enabled).
         if not (consumed_trial and bool(getattr(settings, "enable_trial_payout_to_vault", False))):
-            self.reward_service.deliver(
-                db,
-                user_id=user_id,
-                reward_type=chosen.reward_type,
-                reward_amount=chosen.reward_amount,
-                meta={"reason": "roulette_spin", "segment_id": chosen.id, "game_xp": xp_award},
-            )
+            # [KEY REWARD REDIRECTION FIX]
+            # If the user used a GOLD_KEY or DIAMOND_KEY, and won POINTs, retrieve them as Vault Cash, NOT XP.
+            if token_type_enum in (GameTokenType.GOLD_KEY, GameTokenType.DIAMOND_KEY) and chosen.reward_type == "POINT":
+                 # Already accrued to vault via the special handling block added above? 
+                 # Wait, the block above (lines 219-233) only handled chosen.reward_type IN {GOLD_KEY, DIAMOND_KEY}.
+                 # This block handles chosen.reward_type == "POINT" when ticket is Key.
+                 pass # Skip reward_service delivery for points, handled below explicitly if needed
+            else:
+                self.reward_service.deliver(
+                    db,
+                    user_id=user_id,
+                    reward_type=chosen.reward_type,
+                    reward_amount=chosen.reward_amount,
+                    meta={"reason": "roulette_spin", "segment_id": chosen.id, "game_xp": xp_award},
+                )
         if chosen.reward_amount > 0:
             self.season_pass_service.maybe_add_internal_win_stamp(db, user_id=user_id, now=today)
         season_pass = None  # 게임 1회당 자동 스탬프 발급을 중단하고, 조건 달성 시 별도 로직으로 처리

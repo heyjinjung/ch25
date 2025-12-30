@@ -54,9 +54,13 @@ const DicePage: React.FC = () => {
         setInfoMessage(response.message ?? null);
         const rewardValue = response.reward_value ? Number(response.reward_value) : 0;
         const rewardType = response.reward_type ?? "보상";
-        const isXpReward = rewardType.toUpperCase().includes("XP") || rewardType.includes("레벨");
 
-        if (response.result === "WIN" && rewardValue > 0 && !isXpReward) {
+        // Strict Whitelist for Reward Toast
+        // XP, LEVEL, EXP are explicitly excluded by omission.
+        const ALLOWED_TYPES = ["POINT", "TICKET", "COUPON", "KEY", "TOKEN"];
+        const isAllowedReward = ALLOWED_TYPES.some(t => rewardType.toUpperCase().includes(t));
+
+        if (response.result === "WIN" && rewardValue > 0 && isAllowedReward) {
           setRewardToast({ value: rewardValue, type: rewardType });
           setTimeout(() => setRewardToast(null), 3000);
         }

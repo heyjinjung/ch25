@@ -130,7 +130,7 @@ class TeamBattleService:
     def get_active_season(self, db: Session, now: datetime | None = None, ignore_dates: bool = False) -> TeamSeason | None:
         reference = now or self._now_utc()
 
-        season = db.execute(select(TeamSeason).where(TeamSeason.is_active == True)).scalar_one_or_none()  # noqa: E712
+        season = db.execute(select(TeamSeason).where(TeamSeason.is_active == True).order_by(TeamSeason.id.desc())).scalars().first()  # noqa: E712
         if not season:
             return None
 

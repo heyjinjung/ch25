@@ -12,7 +12,6 @@ type Props = {
  * Designed to be less intrusive for Korean users (20-60 male demographic).
  */
 const VaultAccrualModal: React.FC<Props> = ({ open, onClose, amount }) => {
-    console.log("[VaultAccrualModal] Rendered", { open, amount });
 
     // Auto-dismiss after 2.5 seconds
     useEffect(() => {

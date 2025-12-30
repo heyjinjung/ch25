@@ -24,7 +24,6 @@ const LotteryPage: React.FC = () => {
   const [revealedPrize, setRevealedPrize] = useState<RevealedPrize | null>(null);
   const [isScratching, setIsScratching] = useState(false);
   const [isRevealed, setIsRevealed] = useState(false);
-  const [rewardToast, setRewardToast] = useState<{ value: number; type: string; label: string } | null>(null);
   const [vaultModal, setVaultModal] = useState<{ open: boolean; amount: number }>({ open: false, amount: 0 });
 
   const mapErrorMessage = (err: unknown) => {
@@ -68,13 +67,6 @@ const LotteryPage: React.FC = () => {
         reward_type: result.prize.reward_type,
         reward_value: result.prize.reward_value,
       });
-      const rewardValue = result.prize.reward_value ? Number(result.prize.reward_value) : 0;
-      const isXpReward = result.prize.reward_type.toUpperCase().includes("XP") || result.prize.reward_type.includes("레벨");
-
-      if (rewardValue > 0 && !isXpReward) {
-        setRewardToast({ value: rewardValue, type: result.prize.reward_type, label: result.prize.label });
-        setTimeout(() => setRewardToast(null), 3000);
-      }
 
       if ((result.vaultEarn ?? 0) > 0) {
         setVaultModal({ open: true, amount: result.vaultEarn! });
@@ -223,33 +215,6 @@ const LotteryPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Reward Toast */}
-        {rewardToast && (
-          <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[100] w-[calc(100%-2rem)] max-w-sm animate-in fade-in slide-in-from-bottom-8 duration-500">
-            <div className="relative rounded-[2rem] bg-black/80 border border-figma-accent/50 p-6 backdrop-blur-2xl shadow-[0_20px_80px_-10px_rgba(48,255,117,0.4)] text-center overflow-hidden">
-              <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-figma-accent to-transparent" />
-
-              <p className="text-[10px] font-black tracking-[0.4em] uppercase text-figma-accent mb-2">
-                {rewardToast.type === 'POINT' || rewardToast.type === 'CURRENCY' || rewardToast.type === 'CASH' ? '당첨 결과 확인' : rewardToast.label}
-              </p>
-              {(rewardToast.type === 'POINT' || rewardToast.type === 'CURRENCY' || rewardToast.type === 'CASH') ? (
-                <div className="flex items-baseline justify-center gap-2 mb-1">
-                  <h3 className="text-4xl font-black text-white italic tracking-tighter">
-                    {rewardToast.value.toLocaleString()}
-                  </h3>
-                  <span className="text-lg font-black text-figma-accent italic">
-                    {rewardToast.type === 'POINT' ? 'P' : '원'}
-                  </span>
-                </div>
-              ) : (
-                <h3 className="text-3xl font-black text-white italic tracking-tighter mb-2">
-                  {rewardToast.label}
-                </h3>
-              )}
-              <p className="text-white/60 text-xs font-bold uppercase tracking-wider">포인트 보관함으로 지급되었습니다</p>
-            </div>
-          </div>
-        )}
       </GamePageShell>
 
       <VaultAccrualModal
