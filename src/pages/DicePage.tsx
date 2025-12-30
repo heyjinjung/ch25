@@ -11,9 +11,11 @@ import Button from "../components/common/Button";
 import VaultAccrualModal from "../components/vault/VaultAccrualModal";
 import { useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
+import { useSound } from "../hooks/useSound";
 
 const DicePage: React.FC = () => {
   const { data, isLoading, isError } = useDiceStatus();
+  const { playDiceShake, playDiceThrow, playToast } = useSound();
   const playMutation = usePlayDice();
   const queryClient = useQueryClient();
   const [result, setResult] = useState<"WIN" | "LOSE" | "DRAW" | null>(null);
@@ -43,11 +45,13 @@ const DicePage: React.FC = () => {
       setInfoMessage(null);
       setResult(null);
       setIsRolling(true);
+      playDiceShake(); // Sound: Start Shake
       const response = await playMutation.mutateAsync();
 
       // Artificial delay for animation feel
       setTimeout(() => {
         setIsRolling(false);
+        playDiceThrow(); // Sound: Land/Reveal
         setResult(response.result);
         setUserDice(response.user_dice);
         setDealerDice(response.dealer_dice);
@@ -56,12 +60,13 @@ const DicePage: React.FC = () => {
         const rewardType = response.reward_type ?? "보상";
 
         // Strict Whitelist for Reward Toast
-        // XP, LEVEL, EXP are explicitly excluded by omission.
-        const ALLOWED_TYPES = ["POINT", "TICKET", "COUPON", "KEY", "TOKEN"];
+        // XP, LEVEL, EXP, and POINT are explicitly excluded.
+        const ALLOWED_TYPES = ["TICKET", "COUPON", "KEY", "TOKEN"];
         const isAllowedReward = ALLOWED_TYPES.some(t => rewardType.toUpperCase().includes(t));
 
         if (response.result === "WIN" && rewardValue > 0 && isAllowedReward) {
           setRewardToast({ value: rewardValue, type: rewardType });
+          playToast(); // Sound: Victory/Reward (Message Sound)
           setTimeout(() => setRewardToast(null), 3000);
         }
 

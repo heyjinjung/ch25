@@ -9,6 +9,7 @@ import Button from "../components/common/Button";
 import VaultAccrualModal from "../components/vault/VaultAccrualModal";
 import { useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
+import { useSound } from "../hooks/useSound";
 
 interface RevealedPrize {
   id: number;
@@ -21,6 +22,7 @@ const LotteryPage: React.FC = () => {
   const { data, isLoading, isError, error } = useLotteryStatus();
   const playMutation = usePlayLottery();
   const queryClient = useQueryClient();
+  const { playLotteryScratch } = useSound();
   const [revealedPrize, setRevealedPrize] = useState<RevealedPrize | null>(null);
   const [isScratching, setIsScratching] = useState(false);
   const [isRevealed, setIsRevealed] = useState(false);
@@ -60,6 +62,7 @@ const LotteryPage: React.FC = () => {
       setIsScratching(true);
       const result = await playMutation.mutateAsync();
       setIsScratching(false);
+      playLotteryScratch(); // Sound: Reveal
       setIsRevealed(true);
       setRevealedPrize({
         id: result.prize.id,

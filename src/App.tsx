@@ -7,10 +7,19 @@ import ErrorBoundary from "./components/common/ErrorBoundary";
 import { useAuth } from "./auth/authStore";
 import { useTelegram } from "./providers/TelegramProvider";
 import { telegramApi } from "./api/telegramApi";
+import { useLocation } from "react-router-dom";
+import { useSound } from "./hooks/useSound";
 
 const App: React.FC = () => {
   const { initData, isReady } = useTelegram();
   const { login, token } = useAuth();
+  const location = useLocation();
+  const { playPageTransition } = useSound();
+
+  // Play sound on route change
+  React.useEffect(() => {
+    playPageTransition();
+  }, [location.pathname, playPageTransition]);
 
   React.useEffect(() => {
     const performTelegramLogin = async () => {

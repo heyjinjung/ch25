@@ -5,6 +5,7 @@ import clsx from "clsx";
 import Button from "../components/common/Button";
 import { getVaultStatus } from "../api/vaultApi";
 import { TelegramLinkBanner } from "../components/telegram/TelegramLinkBanner";
+import { useSound } from "../hooks/useSound";
 
 // --- Components ---
 
@@ -17,6 +18,45 @@ interface GameCardProps {
   bgImage?: string;
   badge?: string;
 }
+
+const SoundControlBanner: React.FC = () => {
+  const { isMuted, toggleMute, playClick, startMainBgm } = useSound();
+
+  const handleToggle = () => {
+    playClick();
+    if (isMuted) startMainBgm();
+    toggleMute();
+  };
+
+  return (
+    <button
+      onClick={handleToggle}
+      className="mx-1 w-full relative flex items-center justify-between gap-4 rounded-2xl border border-white/5 bg-black/40 p-4 transition-all active:scale-[0.98]"
+    >
+      <div className="flex items-center gap-4">
+        <div className={clsx("flex h-12 w-12 items-center justify-center rounded-xl border transition-colors", isMuted ? "border-white/10 bg-white/5 text-white/40" : "border-emerald-500/30 bg-emerald-500/10 text-emerald-400")}>
+          {isMuted ? (
+            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+            </svg>
+          ) : (
+            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+            </svg>
+          )}
+        </div>
+        <div className="text-left">
+          <h4 className={clsx("font-bold text-sm", isMuted ? "text-white/60" : "text-white")}>
+            {isMuted ? "사운드 음소거 됨" : "사운드 켜짐"}
+          </h4>
+          <p className="text-xs text-white/30">터치하여 설정을 변경하세요</p>
+        </div>
+      </div>
+      <div className={clsx("h-3 w-3 rounded-full shadow-[0_0_10px_currentColor]", isMuted ? "bg-gray-500 text-gray-500" : "bg-emerald-500 text-emerald-500 animate-pulse")} />
+    </button>
+  );
+};
 
 const GameCard: React.FC<GameCardProps> = ({ title, to, gradient, icon, isWide, bgImage, badge }) => {
   return (
@@ -56,6 +96,7 @@ const GameCard: React.FC<GameCardProps> = ({ title, to, gradient, icon, isWide, 
 };
 
 const CategoryTabs: React.FC<{ active: string; onChange: (id: string) => void }> = ({ active, onChange }) => {
+  const { playTabTouch } = useSound();
   const tabs = [
     { id: "all", label: "ALL GAMES" },
     { id: "hot", label: "씨씨카지노", link: "https://ccc-010.com" },
@@ -70,6 +111,7 @@ const CategoryTabs: React.FC<{ active: string; onChange: (id: string) => void }>
             href={tab.link}
             target="_blank"
             rel="noreferrer"
+            onClick={() => playTabTouch()}
             className={clsx(
               "whitespace-nowrap rounded-full px-5 py-2 text-xs font-bold transition-all",
               "bg-white/5 text-slate-400 hover:bg-white/10"
@@ -80,7 +122,10 @@ const CategoryTabs: React.FC<{ active: string; onChange: (id: string) => void }>
         ) : (
           <button
             key={tab.id}
-            onClick={() => onChange(tab.id)}
+            onClick={() => {
+              playTabTouch();
+              onChange(tab.id);
+            }}
             className={clsx(
               "whitespace-nowrap rounded-full px-5 py-2 text-xs font-bold transition-all",
               active === tab.id
@@ -100,6 +145,12 @@ const CategoryTabs: React.FC<{ active: string; onChange: (id: string) => void }>
 
 const HomePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState("all");
+  const { startMainBgm } = useSound();
+
+  // Attempt to start BGM on mount
+  React.useEffect(() => {
+    startMainBgm();
+  }, [startMainBgm]);
 
   // Data (Simplified for layout)
   const vault = useQuery({ queryKey: ["vault-status"], queryFn: getVaultStatus, staleTime: 30_000, retry: false });
@@ -246,6 +297,8 @@ const HomePage: React.FC = () => {
           </div>
         </div>
       </Link>
+
+      <SoundControlBanner />
 
     </section>
   );

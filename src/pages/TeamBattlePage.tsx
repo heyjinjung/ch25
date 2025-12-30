@@ -8,6 +8,7 @@ import {
 } from "../hooks/useTeamBattle";
 import Button from "../components/common/Button";
 import clsx from "clsx";
+import { useSound } from "../hooks/useSound";
 
 /* Assets */
 const BG_SPLIT = "/assets/team_battle/bg_battle_split.png";
@@ -46,6 +47,12 @@ const TeamBattlePage: React.FC = () => {
   const [showGameModal, setShowGameModal] = React.useState(false);
 
   const loading = seasonQuery.isLoading || myTeamQuery.isLoading || teamsQuery.isLoading;
+  const { startBattleBgm } = useSound();
+
+  // Start Battle BGM
+  React.useEffect(() => {
+    startBattleBgm();
+  }, [startBattleBgm]);
 
   // Join Team
   const handleJoin = async () => {

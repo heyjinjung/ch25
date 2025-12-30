@@ -11,6 +11,7 @@ import TicketZeroPanel from "../components/game/TicketZeroPanel";
 import VaultAccrualModal from "../components/vault/VaultAccrualModal";
 import { useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
+import { useSound } from "../hooks/useSound";
 
 const FALLBACK_SEGMENTS = Array.from({ length: 12 }).map((_, idx) => ({
   label: `BONUS ${idx + 1}`,
@@ -47,6 +48,7 @@ const RoulettePage: React.FC = () => {
   const { data, isLoading, isError, error } = useRouletteStatus(activeTab);
   const playMutation = usePlayRoulette();
   const queryClient = useQueryClient();
+  const { playRouletteSpin } = useSound();
   const [selectedIndex, setSelectedIndex] = useState<number | undefined>();
   const SPIN_DURATION_MS = 3000;
   const [isSpinning, setIsSpinning] = useState(false);
@@ -124,6 +126,7 @@ const RoulettePage: React.FC = () => {
       pendingResultRef.current = result;
       setSelectedIndex(result.selected_index);
       setIsSpinning(true);
+      playRouletteSpin(); // Sound: Spin Start
       spinStartAtRef.current = performance.now();
     } catch (e) {
       console.error("Roulette play failed", e);

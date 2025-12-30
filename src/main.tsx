@@ -6,6 +6,7 @@ import App from "./App";
 import "./index.css";
 import QueryProvider from "./providers/QueryProvider";
 import { TelegramProvider } from "./providers/TelegramProvider";
+import { SoundProvider } from "./contexts/SoundContext";
 
 const rootElement = document.getElementById("root");
 if (!rootElement) {
@@ -17,7 +18,9 @@ ReactDOM.createRoot(rootElement).render(
     <QueryProvider>
       <BrowserRouter>
         <TelegramProvider>
-          <App />
+          <SoundProvider>
+            <App />
+          </SoundProvider>
         </TelegramProvider>
       </BrowserRouter>
     </QueryProvider>
