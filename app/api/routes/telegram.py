@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.core import security, telegram
 from app.models.user import User
-from app.schemas.telegram import TelegramAuthRequest, TelegramAuthResponse, TelegramLinkRequest
+from app.schemas.telegram import TelegramAuthRequest, TelegramAuthResponse, TelegramLinkRequest, TelegramBridgeResponse
 
 router = APIRouter(prefix="/api/telegram", tags=["telegram"])
 
@@ -26,6 +26,18 @@ def telegram_auth(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     
+    # Check for start_param (Magic Link Bridge)
+    start_param = payload.start_param
+    bridge_user_id = None
+    if start_param and start_param.startswith("bind_"):
+        token = start_param.replace("bind_", "")
+        try:
+            payload_data = security.decode_access_token(token)
+            bridge_user_id = int(payload_data.get("sub"))
+        except Exception:
+            # Token invalid or expired, proceed with normal auth
+            pass
+    
     tg_user_data = data.get('user')
     if not tg_user_data:
         raise HTTPException(status_code=400, detail="User data missing in telegram initData")
@@ -37,6 +49,18 @@ def telegram_auth(
     user = db.query(User).filter(User.telegram_id == tg_id).first()
     is_new_user = False
     
+    # 1.1 Handle Bridge Binding if provided
+    if bridge_user_id:
+        target_user = db.get(User, bridge_user_id)
+        if target_user:
+            # If this TG ID was already linked to someone else, we might want to overwrite or error.
+            # Best practice: link it to the target_user.
+            target_user.telegram_id = tg_id
+            target_user.telegram_username = tg_username
+            user = target_user
+            db.commit()
+            db.refresh(user)
+
     if not user:
         # Create new user
         is_new_user = True
@@ -151,3 +175,15 @@ def telegram_link(
             "telegram_id": user.telegram_id,
         }
     )
+
+
+@router.get("/bridge-token", response_model=TelegramBridgeResponse)
+def get_bridge_token(
+    current_user_id: int = Depends(deps.get_current_user_id),
+):
+    """
+    Generate a short-lived token for linking the current account to Telegram.
+    Expires in 5 minutes.
+    """
+    token = security.create_access_token(current_user_id, expires_minutes=5)
+    return TelegramBridgeResponse(bridge_token=f"bind_{token}")

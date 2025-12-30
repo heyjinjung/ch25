@@ -1,80 +1,152 @@
-# 2026 통합 최적화 및 리텐션 강화 설계안 (v2.0)
-# (2026 Integrated Optimization & Retention Design)
+# [TDD] 2026 통합 최적화 및 리텐션 강화 기술 설계서 (v2.0)
+# (Technical Design Document: 2026 Optimization & Retention)
 
-> **상태**: 업데이트 및 통합 완료 (2025-12-31)
-> **핵심 목표**: 콘텐츠 공백(Gap) 해소, 3초 이내의 성공 경험 제공, 1:4:12 자산 사이클 고착화
-
----
-
-## ⚡ [핵심] 콘텐츠 공백 해소 전략 (Instant Action)
-유저가 진입했을 때 "준비 중"이 아닌 "지금 당장 할 것"을 제공하여 첫 3초의 이탈을 막습니다.
-
-### 1. 3초 이내의 성공 경험 (Immediate One-Tab)
-- **일일 환영 보상 (Daily Instant Gift)**: 앱 진입 즉시 버튼 한 번으로 티켓/다이아 수령.
-- **성공 경험의 선지급**: "게임 5판" 미션을 주기 전에 "입장 완료" 보상을 먼저 주어 유저에게 '진척감' 부여.
-
-### 2. "미래 정산"에서 "실시간 증명"으로 (Live Proof)
-- **금고 적립 연출**: 게임 승리 시 코인이 금고로 쏟아져 들어가는 시각적 효과 강화.
-- **실시간 잭팟 피드**: PvP 히스토리 대신 타 유저의 출금/당첨 소식을 상단 팝업으로 노출하여 '살아있는 서비스'임을 증명.
-
-### 3. 플래시 미션 (Flash Mission)
-- **타임어택**: "지금부터 15분 내에 다이스 1판 플레이 시 2배 보상"과 같은 단기 트리거.
-- **티켓 제로 구출**: 티켓이 0일 때 발동되는 '광고 시청' 또는 '초간단 미니게임' 루프.
+> **상태**: 기술 설계 고도화 완료 (2025-12-31)
+> **핵심 과제**: 콘텐츠 공백 해소, TMA 기술 최적화, 자산 그랜드 사이클 연동
 
 ---
 
-## 💎 Part 1. 운영 전략 기반 미션 확장 (Grand Cycle)
-단순 보상을 넘어 유저를 시스템에 장기적으로 묶어두는 락업(Lock-up) 장치입니다.
+## 🏗️ 1. 시스템 아키텍처 (System Architecture)
 
-### 1. 자산 그랜드 사이클 (1주:4주:12주)
-- **[연속] 브릿지 주간 생존 미션**: 12/25~12/31 매일 참여 시 1월 시드(30,000원) + Diamond Key 지급.
-- **[누적] 월간 금고 해방**: 한 달간 미션 100회 완료 시 월간 금고 인출 권한 +20% 추가 해킹(해금).
-- **[장기] Diamond Key 수집가**: 12주(분기) 내 스페셜 미션 완수 시 Grand Vault 최종 열쇠 지급.
+미션 시스템은 유저의 행동(Action)을 트리거로 하여 백엔드 엔진이 이를 처리하고, 결과를 프론트엔드와 텔레그램 메신저로 즉각 피드백하는 구조입니다.
 
-### 2. 체리피커 방어 및 진성 유저 필터링
-- **무제한 티켓 공급**: 신규/저레벨 유저(Lv.1~6)에게는 티켓 번들을 무제한 공급하여 활동성 확보.
-- **고가치 보상 잠금 (Tiered Rewards)**: Lv.7 이상의 고가치 미션은 '관리자 승인 대기' 상태를 거치도록 설계하여 부정행위 방지.
-
----
-
-## 💎 Part 2. TMA 특화 기술 통합 (Tech-Max)
-텔레그램의 네이티브 기능을 활용하여 앱의 고착성과 바이럴 동력을 확보합니다.
-
-### 1. 바이럴 소셜 엔진
-- **스토리 공유 (`shareToStories`)**: 금고 당첨 내역 자랑 시 자동 API 검증 후 즉시 보상.
-- **인라인 쿼리 초대**: 링크 복사가 아닌 연락처 리스트에서 직접 친구를 선택하는 고효율 초대 방식.
-
-### 2. 네이티브 몰입 및 성능
-- **신체적 반응 (Haptic)**: 미션 등급별 차별화된 진동 패턴 적용. (보상 수령 = 짜릿한 손맛)
-- **지능적 개입 (Nudge)**: 미션 90% 달성 시(예: 9/10판) 봇이 개인 메시지로 리마인드 발송.
-- **클라우드 캐싱 (`CloudStorage`)**: 미션 상태를 로컬에 캐싱하여 서버 통신 없는 즉각적인 UI 반응 구현.
+```mermaid
+graph TD
+    User([사용자]) -->|Action: Play/Share| FE[React Frontend]
+    FE -->|API Call| BE[FastAPI Backend]
+    subgraph "Mission Engine"
+        BE --> MS[MissionService]
+        MS --> DB[(PostgreSQL)]
+        MS --> WS[WalletService]
+    end
+    BE -->|Webhook/Notify| Bot[Telegram Bot]
+    Bot -->|Push Notification| User
+    FE -->|Native API| TMA[Telegram WebApp API]
+    TMA -->|CloudStorage/Haptic| FE
+```
 
 ---
 
+## 🗄️ 2. 데이터베이스 스키마 (Database Schema)
+
+### 2.1 Mission (미션 템플릿)
+미션의 기준 정보를 정의합니다.
+- `logic_key` (String): 행동 매칭 키 (예: `play_dice`, `share_story`)
+- `category` (Enum): `DAILY`, `WEEKLY`, `SPECIAL`
+- `target_value` (Int): 달성 목표 수치
+- `reward_type` (Enum): `DIAMOND`, `GOLD_KEY`, `TICKET_BUNDLE`
+- `xp_reward` (Int): 보너스 경험치 (기본 0, 입금 외 XP 제한 기준 준수)
+
+### 2.2 UserMissionProgress (사용자 진행 상황)
+사용자별 미션 달성 여부를 추적합니다.
+- `reset_date` (String): 초기화 주기 키 (Daily: `YYYY-MM-DD`, Weekly: `YYYY-WW`)
+- `current_value` (Int): 현재 진행 수치
+- `is_completed` (Bool): 달성 여부
+- `is_claimed` (Bool): 보상 수령 여부
+
+---
+
+## ⚙️ 3. 핵심 백엔드 로직 (Core Backend Logic)
+
+### 3.1 미션 업데이트 엔진 (`update_progress`)
+서버 내부의 다양한 액션(게임 종료, 추천인 가입 등)에서 트랜잭션 단위로 호출됩니다.
+1. `logic_key`와 현재 시간 기반의 `reset_date`를 조회.
+2. `UserMissionProgress`가 없으면 신규 생성, 있으면 기존 행 업데이트.
+3. `current_value`가 `target_value` 도달 시 `is_completed = True` 처리.
+
+### 3.2 보상 지급 시스템 (`claim_reward`)
+1. **중복 검증**: 이미 `is_claimed`가 `True`인 경우 예외 처리.
+2. **자산 지급**: `GameWalletService`를 통해 원자적(Atomic)으로 다이아몬드/키 지급.
+3. **상태 동기화**: `is_claimed` 처리 후 클라이언트 대시보드 강제 갱신 유도.
+
+---
+
+## 🌐 4. API 명세 (API Specification)
+
+| Endpoint | Method | Payload | Description |
+| :--- | :--- | :--- | :--- |
+| `/api/mission/` | GET | - | 현재 활성 미션 및 본인의 진행 상황 목록 |
+| `/api/mission/{id}/claim` | POST | - | 특정 미션 보상 수령 (자산 즉시 반영) |
+| `/api/mission/daily-gift` | POST | - | [New] 일일 즉시 환영 선물 수령 |
+
+---
+
+## � 5. TMA 특화 기술 통합 (Tech-Max Details)
+
+### 5.1 제로 레이턴시 UI (`CloudStorage`)
+- **기술**: `WebApp.CloudStorage` API를 사용하여 미션 대시보드의 데이터를 텔레그램 서버에 로컬 캐싱.
+- **효과**: 네트워크 지연 없이 '완료된 미션' 배지(Badge)가 즉시 로딩됨.
+
+### 5.2 신체적 보상 피드백 (`HapticFeedback`)
+- **기술**: 보상 등급에 따라 진동 패턴 이원화.
+    - `light` (1 다이아): 일반 미션 완료.
+    - `heavy` (Diamond Key): 고가치 미션 완료 시 '짜릿한 손맛' 부여.
+
+### 5.3 바이럴 콜백 엔진
+- **기술**: `WebApp.shareToStories` 실행 후 성공 콜백을 수신하여 서버에 적중 통보.
+- **로직**: 서버는 공유 미디어 상의 로고/텍스트 유효성을 (가능한 경우) 봇으로 검증.
+
+---
+
+## ⚡ 6. 콘텐츠 공백 해소 (Instant Play Strategy)
+
+### 6.1 "3초 이내의 성공" (Immediate One-Tap)
+- **DailyInstantRewards 컴포넌트**:
+    - `useMissionStore`의 `hasDailyGift` 상태를 구독하여 입장 시 자동 모달 노출.
+    - `framer-motion`의 `AnimatePresence`를 사용하여 등장/퇴장 시의 시각적 긴장감 부여.
+- **성공 경험 선지급 로직**:
+    - 신규 유저 테이블 생성 시 `FIRST_LOGIN` 미션을 강제 완료 상태로 삽입.
+    - 유저가 `MissionPage` 진입 시 `is_claimed == False && is_completed == True`인 항목을 최상단에 배치하여 락인(Lock-in) 유도.
+
+### 6.2 실시간 데이터 증명 (Live Proof)
+- **WebSocket Feed 스펙**:
+    - Endpoint: `wss://api.cc-jm.com/ws/live-notif`
+    - Payload Structure:
+      ```json
+      {
+        "type": "VAULT_WITHDRAWAL_APPROVED",
+        "user_name": "Kim***",
+        "amount": 50000,
+        "timestamp": "2025-12-31T01:42:00Z"
+      }
+      ```
+- **Vault Animation 기술 상세**:
+    - **Trigger**: `useGameWallet` 훅의 `balance` 증가 이벤트 감지.
+    - **Visual**: 정해진 좌표(`GameView`)에서 금고 아이콘(`VaultHeader`)까지 수백 개의 `particle` 입자가 베지어 곡선(Bezier Curve)을 따라 이동하는 CSS Keyframe 적용.
+    - **Haptic**: 입자가 금고에 닿는 순간 `impactHeavy` 진동 동기화.
+
+---
+
+## 🛡️ 7. 보안 및 최적화 (Security & Perf Details)
+
+### 7.1 initData 검증 알고리즘 (HMAC-SHA256)
+- **절차**:
+    1. `TELEGRAM_BOT_TOKEN`을 키로 하여 `"WebAppData"`를 해싱하여 `SecretKey` 생성.
+    2. `hash`를 제외한 모든 필드를 알파벳순 정렬 후 `key=value` 문자열 생성.
+    3. `SecretKey`로 위 문자열을 다시 해싱하여 클라이언트의 `hash`와 대조.
+- **보안 강화**: `auth_date`가 현재 시간으로부터 24시간 이상 경과한 경우 세션 만료 처리 (Replay Attack 방지).
+
+### 7.2 Strict XP Rule 및 수익 모델 보호
+- **XP 격리 설계**:
+    - `MissionService`의 `claim_reward` 호출 시 `xp_reward`는 항상 0을 기본값으로 전달.
+    - `SeasonPassService.add_xp`는 오직 `DepositEventHandler`와 연동된 `PaymentService`에서만 호출되도록 아키텍처적 장벽(Barrier) 구축.
+
+### 7.3 Sound Stability (AudioContext Recovery)
+- **State Listener**: `SoundContext` 내부에서 `AudioContext.onstatechange`를 모니터링.
+- **Retry Machine**: 
+    - 상태가 `suspended`인 상태에서 발생한 모든 `playSfx` 요청은 `RetryQueue` (Local Array)에 저장.
+    - 브라우저의 `click` 또는 `touchstart` 이벤트 캡처 시 `unlockAudio()`를 호출하여 컨텍스트를 `running`으로 전환하고 큐의 모든 소리를 순차 재생.
+
+---
 
 ## 📋 완료 및 향후 로드맵 (SOP 준수)
 
-### ✅ 완료 사항 (Master Checklist)
-- [x] 금고 적립 및 출금 신청 로직 (1만 한도, 당일입금 체크)
-- [x] 관리자용 출금 요청 승인 매니저 (`VaultRequestManager`)
-- [x] 다이아몬드 기반 미션 보상 및 시즌패스 위젯 연동
-- [x] 주사위 게임 컴팩트 UI 및 -50원 패널티 반영
-- [x] 사운드 안정화(Preloading, Global Unlock) 및 진단 툴 통합
-- [x] 텔레그램 `initData` 로그인 검증 및 보안 강화
+### ✅ 완료 사항
+- [x] 미션/프로그레스 DB 마이그레이션 및 서비스 로직
+- [x] 다이아몬드 보상 연동 및 수령 트랜잭션 구현
+- [x] 오디오 안정화 및 기술적 해방 (Global Unlock)
 
-### 🚀 향후 단계 (실행 로드맵)
-1. **[Phase 2.7] Instant Action (최우선)**
-    - 일일 환영 보상 UI 구현
-    - 금고 적립 애니메이션 강화
-2. **[Phase 4] Admin Control**
-    - 고가치 미션 수동 승인 필드 추가
-    - 일괄 보상 지급 기능
-3. **[Phase 5] The Nudge & Social**
-    - 봇 알림 연동 및 스토리 공유 검증 API
-    - `CloudStorage` 기반 캐싱 적용
-
----
-
-## 🛠️ 작업 프로토콜 (SOP)
-1. **로컬 우선 개발 (Local First)**: 모든 기능은 로컬 환경에서 선구현 및 검증.
-2. **서버 반영 5단계 사이클**: 정보 조회 → 현황 기록 → 계획 수립 → 실행 → 사후 기록.
+### � 다음 작업 (Immediate Actions)
+1. **Phase 2.7**: 일일 환영 보상 UI (`DailyGift.tsx`) 신설.
+2. **Phase 4**: Admin 페이지 내 미션 수동 승인(`is_manual_approval`) 제어 UI 적용.
+3. **Phase 5**: 스토리 공유 성공 시 백엔드 보상 자동 지급 API 연결.

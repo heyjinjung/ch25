@@ -14,9 +14,10 @@ export interface TelegramAuthResponse {
 }
 
 export const telegramApi = {
-    auth: async (initData: string): Promise<TelegramAuthResponse> => {
+    auth: async (initData: string, startParam?: string): Promise<TelegramAuthResponse> => {
         const response = await apiClient.post<TelegramAuthResponse>('/api/telegram/auth', {
             init_data: initData,
+            start_param: startParam,
         });
         return response.data;
     },
@@ -24,6 +25,10 @@ export const telegramApi = {
         const response = await apiClient.post<TelegramAuthResponse>('/api/telegram/link', {
             init_data: initData,
         });
+        return response.data;
+    },
+    getBridgeToken: async (): Promise<{ bridge_token: string }> => {
+        const response = await apiClient.get('/api/telegram/bridge-token');
         return response.data;
     },
 };

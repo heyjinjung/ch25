@@ -8,13 +8,15 @@ import { useAuth } from "./auth/authStore";
 import { useTelegram } from "./providers/TelegramProvider";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useSound } from "./hooks/useSound";
+import { telegramApi } from "./api/telegramApi";
 
 const App: React.FC = () => {
-  const { initData, isReady } = useTelegram();
-  const { token } = useAuth();
+  const { initData, startParam, isReady } = useTelegram();
+  const { token, login } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const { playPageTransition } = useSound();
+  const [isAuthAttempted, setIsAuthAttempted] = React.useState(false);
 
   // Play sound on route change
   React.useEffect(() => {
@@ -22,12 +24,29 @@ const App: React.FC = () => {
   }, [location.pathname, playPageTransition]);
 
   React.useEffect(() => {
-    // If we're in TMA (initData exists) but not logged in (no token),
-    // and we're NOT already on the /connect page, redirect to it.
-    if (isReady && initData && !token && location.pathname !== "/connect") {
+    // 1. Handle Magic Link Auto-Auth (One-click Bridge)
+    if (isReady && initData && !token && startParam && !isAuthAttempted) {
+      const attemptAutoAuth = async () => {
+        setIsAuthAttempted(true);
+        try {
+          console.log("[TMA] Attempting auto-binding with startParam:", startParam);
+          const response = await telegramApi.auth(initData, startParam);
+          login(response.access_token, response.user);
+          // Auto-login successful! No redirect needed.
+        } catch (err) {
+          console.error("[TMA] Auto-binding failed", err);
+          navigate("/connect", { replace: true });
+        }
+      };
+      attemptAutoAuth();
+      return;
+    }
+
+    // 2. Normal Connect Redirect (If no startParam)
+    if (isReady && initData && !token && !startParam && location.pathname !== "/connect") {
       navigate("/connect", { replace: true });
     }
-  }, [initData, isReady, token, location.pathname, navigate]);
+  }, [initData, isReady, token, startParam, location.pathname, navigate, login, isAuthAttempted]);
 
   return (
     <ErrorBoundary>

@@ -11,6 +11,7 @@ declare global {
 interface TelegramContextType {
     webApp: any;
     initData: string;
+    startParam: string;
     user: any;
     isReady: boolean;
     haptic: {
@@ -47,6 +48,7 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const value = {
         webApp,
         initData: webApp?.initData || '',
+        startParam: webApp?.initDataUnsafe?.start_param || '',
         user: webApp?.initDataUnsafe?.user || null,
         isReady,
         haptic: {

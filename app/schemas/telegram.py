@@ -5,11 +5,17 @@ from typing import Optional
 class TelegramAuthRequest(BaseModel):
     """Payload for Telegram Mini App authentication."""
     init_data: str
+    start_param: Optional[str] = None
 
 
 class TelegramLinkRequest(BaseModel):
     """Payload for linking an existing account to Telegram."""
     init_data: str
+
+
+class TelegramBridgeResponse(BaseModel):
+    """Bridge link for Telegram."""
+    bridge_token: str
 
 
 class AuthUser(BaseModel):
