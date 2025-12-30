@@ -31,3 +31,4 @@ class LotteryPlayResponse(BaseModel):
     result: str
     prize: LotteryPrizeSchema
     season_pass: dict | None = None
+    vault_earn: int = 0

@@ -1,5 +1,4 @@
-import React from "react";
-import Modal from "../common/Modal";
+import React, { useEffect } from "react";
 import AnimatedNumber from "../common/AnimatedNumber";
 
 type Props = {
@@ -8,37 +7,36 @@ type Props = {
     amount: number;
 };
 
+/**
+ * Compact, auto-dismissing vault accrual toast notification.
+ * Designed to be less intrusive for Korean users (20-60 male demographic).
+ */
 const VaultAccrualModal: React.FC<Props> = ({ open, onClose, amount }) => {
+    // Auto-dismiss after 2.5 seconds
+    useEffect(() => {
+        if (open) {
+            const timer = setTimeout(onClose, 2500);
+            return () => clearTimeout(timer);
+        }
+    }, [open, onClose]);
+
+    if (!open) return null;
+
     return (
-        <Modal title="금고 적립 완료" open={open} onClose={onClose}>
-            <div className="flex flex-col items-center gap-6 py-4 text-center">
-                <div className="relative">
-                    <div className="absolute inset-0 animate-ping rounded-full bg-figma-accent/20" />
-                    <div className="relative flex h-24 w-24 items-center justify-center rounded-full bg-black/40 border-2 border-figma-accent/30 shadow-[0_0_30px_rgba(48,255,117,0.2)]">
-                        <img src="/assets/asset_coin_gold.png" alt="Coin" className="w-16 h-16 drop-shadow-2xl" />
-                    </div>
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[100] pointer-events-none animate-in fade-in slide-in-from-top-4 duration-300">
+            <div
+                className="flex items-center gap-3 rounded-full border border-figma-accent/40 bg-black/90 px-5 py-3 shadow-[0_10px_40px_rgba(0,0,0,0.6)] backdrop-blur-xl pointer-events-auto cursor-pointer"
+                onClick={onClose}
+            >
+                <img src="/assets/asset_coin_gold.png" alt="Coin" className="w-10 h-10 drop-shadow-[0_0_8px_rgba(255,215,0,0.5)]" />
+                <div className="flex flex-col">
+                    <span className="text-[9px] font-black uppercase tracking-[0.2em] text-figma-accent">금고 적립</span>
+                    <span className="text-lg font-black text-white">
+                        +<AnimatedNumber value={amount} /> <span className="text-white/40 text-sm">원</span>
+                    </span>
                 </div>
-
-                <div className="space-y-2">
-                    <p className="text-xs font-black uppercase tracking-[0.3em] text-figma-accent">Vault Secured</p>
-                    <h3 className="text-4xl font-black text-white">
-                        +<AnimatedNumber value={amount} /> <span className="text-white/40 italic">원</span>
-                    </h3>
-                    <p className="text-sm font-bold text-white/60 leading-relaxed">
-                        축하합니다! 게임 보상이<br />
-                        금고에 안전하게 보관되었습니다.
-                    </p>
-                </div>
-
-                <button
-                    type="button"
-                    onClick={onClose}
-                    className="mt-2 w-full rounded-2xl bg-figma-primary py-4 font-black text-white shadow-lg active:scale-95 transition-transform uppercase tracking-widest italic"
-                >
-                    확인
-                </button>
             </div>
-        </Modal>
+        </div>
     );
 };
 
