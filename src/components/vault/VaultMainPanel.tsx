@@ -312,7 +312,7 @@ const VaultMainPanel: React.FC = React.memo(() => {
                 <button
                   onClick={() => handleWithdrawalClick()}
                   disabled={isWithdrawalProcessing}
-                  className="w-full py-4 rounded-xl bg-gradient-to-r from-emerald-600 to-figma-accent text-white font-black text-lg uppercase tracking-widest shadow-[0_10px_30px_rgba(48,255,117,0.3)] hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 border border-white/10"
+                  className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#00FF5F] to-[#70FF95] text-white font-black text-xl uppercase tracking-[0.2em] shadow-[0_20px_50px_rgba(0,255,95,0.4)] hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 border-2 border-white/40 backdrop-blur-sm"
                 >
                   {isWithdrawalProcessing ? (
                     <span className="animate-pulse">처리 중...</span>
