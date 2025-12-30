@@ -1,12 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import {
-  getActiveSeason,
-  getLeaderboard,
-  autoAssignTeam,
-  listTeams,
-  getMyTeam,
-} from "../api/teamBattleApi";
-import { TeamSeason, Team, LeaderboardEntry, ContributorEntry, TeamMembership } from "../types/teamBattle";
+  useActiveTeamSeason,
+  useTeamLeaderboard,
+  useMyTeam,
+  useTeamList,
+  useAutoAssignTeam,
+} from "../hooks/useTeamBattle";
 import Button from "../components/common/Button";
 import clsx from "clsx";
 
@@ -17,66 +16,30 @@ const AVATAR_RED = "/assets/team_battle/avatar_red.png";
 const AVATAR_BLUE = "/assets/team_battle/avatar_blue.png";
 
 const TeamBattlePage: React.FC = () => {
-  const [season, setSeason] = useState<TeamSeason | null>(null);
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
-  const [selectedTeam, setSelectedTeam] = useState<number | null>(null);
-  const [contributors, setContributors] = useState<ContributorEntry[]>([]);
-  const [myTeam, setMyTeam] = useState<TeamMembership | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [joining, setJoining] = useState(false);
+  const seasonQuery = useActiveTeamSeason();
+  const myTeamQuery = useMyTeam();
+  const teamsQuery = useTeamList();
+  const leaderboardQuery = useTeamLeaderboard(seasonQuery.data?.id);
+  const autoAssignMutation = useAutoAssignTeam();
 
-  // Load Data
-  const loadData = async () => {
-    try {
-      const [seasonData, teamList, myTeamRes] = await Promise.all([
-        getActiveSeason(),
-        listTeams(),
-        getMyTeam(),
-      ]);
-      setSeason(seasonData);
-      setTeams(teamList);
-      setMyTeam(myTeamRes);
+  const myTeam = myTeamQuery.data;
+  const teams = teamsQuery.data || [];
+  const leaderboard = leaderboardQuery.data || [];
 
-      if (myTeamRes) setSelectedTeam(myTeamRes.team_id);
-
-      if (seasonData) {
-        const lb = await getLeaderboard(seasonData.id, 10, 0);
-        setLeaderboard(lb);
-      }
-    } catch (err) {
-      console.error("Failed to load battle data", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { loadData(); }, []);
-
-  // Silence unused vars (for now)
-  void season;
-  void selectedTeam;
-  void contributors;
-  void setContributors;
+  const loading = seasonQuery.isLoading || myTeamQuery.isLoading || teamsQuery.isLoading;
 
   // Join Team
   const handleJoin = async () => {
-    setJoining(true);
     try {
-      const res = await autoAssignTeam();
-      setMyTeam({ team_id: res.team_id, role: res.role, joined_at: new Date().toISOString() });
-      setSelectedTeam(res.team_id);
-      loadData(); // Refresh to show correct stats
+      await autoAssignMutation.mutateAsync();
     } catch (err) {
       alert("팀 배정에 실패했습니다. 이미 배정되었거나 시즌이 종료되었습니다.");
-    } finally {
-      setJoining(false);
     }
   };
 
   // Calculate Team Scores for Gauge
-  const redScore = leaderboard.find(l => l.team_name === "Red Team")?.points || 0;
-  const blueScore = leaderboard.find(l => l.team_name === "Blue Team")?.points || 0;
+  const redScore = leaderboard.find(l => l.team_id === teams[0]?.id)?.points || 0;
+  const blueScore = leaderboard.find(l => l.team_id === teams[1]?.id)?.points || 0;
   const totalScore = redScore + blueScore || 1;
   const redPercent = Math.round((redScore / totalScore) * 100);
   const bluePercent = 100 - redPercent;
@@ -100,7 +63,7 @@ const TeamBattlePage: React.FC = () => {
                 <img src={AVATAR_RED} alt="Red Team" className="h-full w-full drop-shadow-[0_0_25px_rgba(220,38,38,0.6)]" />
                 {myTeam?.team_id === teams[0]?.id && <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-red-600 px-3 py-1 text-xs font-bold text-white shadow-lg">MY TEAM</div>}
               </div>
-              <h2 className="font-black text-2xl italic text-white drop-shadow-md">RED</h2>
+              <h2 className="font-black text-2xl italic text-white drop-shadow-md">{teams[0]?.name || "RED"}</h2>
               <p className="font-mono text-lg font-bold text-red-400">{redScore.toLocaleString()}</p>
             </div>
 
@@ -115,7 +78,7 @@ const TeamBattlePage: React.FC = () => {
                 <img src={AVATAR_BLUE} alt="Blue Team" className="h-full w-full drop-shadow-[0_0_25px_rgba(37,99,235,0.6)]" />
                 {myTeam?.team_id === teams[1]?.id && <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-blue-600 px-3 py-1 text-xs font-bold text-white shadow-lg">MY TEAM</div>}
               </div>
-              <h2 className="font-black text-2xl italic text-white drop-shadow-md">BLUE</h2>
+              <h2 className="font-black text-2xl italic text-white drop-shadow-md">{teams[1]?.name || "BLUE"}</h2>
               <p className="font-mono text-lg font-bold text-blue-400">{blueScore.toLocaleString()}</p>
             </div>
           </div>
@@ -149,15 +112,21 @@ const TeamBattlePage: React.FC = () => {
       <section className="px-4 -mt-6 relative z-30">
         {!myTeam ? (
           <div className="rounded-2xl border border-gold-500/30 bg-black/80 backdrop-blur-xl p-6 text-center shadow-xl">
+            <h2 className="text-amber-400 text-xs font-black uppercase tracking-widest mb-1">{seasonQuery.data?.name || "SEASON BATTLE"}</h2>
             <h3 className="text-xl font-bold text-white mb-2">어느 팀이 승리할까요?</h3>
             <p className="text-sm text-white/50 mb-6">팀을 배정받고 승리에 기여하세요.<br />엄청난 보상이 기다립니다.</p>
             <Button
               onClick={handleJoin}
-              disabled={joining}
+              disabled={autoAssignMutation.isPending}
               variant="figma-primary"
               className="w-full !py-4 shadow-[0_0_20px_rgba(16,185,129,0.3)]"
             >
-              {joining ? "분석 중..." : "🎲 랜덤 팀 배정받기"}
+              {autoAssignMutation.isPending ? "분석 중..." : (
+                <div className="flex items-center justify-center gap-2">
+                  <img src="/assets/icon_dice_silver.png" alt="" className="w-5 h-5 object-contain" />
+                  <span>랜덤 팀 배정받기</span>
+                </div>
+              )}
             </Button>
           </div>
         ) : (
@@ -175,27 +144,27 @@ const TeamBattlePage: React.FC = () => {
       <section className="mt-8 px-4">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-bold text-white flex items-center gap-2">
-            <span className="text-gold-400">🏆</span> Top Rankers
+            <img src="/assets/icon_trophy.png" alt="" className="w-6 h-6 object-contain" /> Top Rankers
           </h3>
         </div>
         <div className="space-y-2">
-          {/* Mock Data or Real Data */}
-          {[1, 2, 3].map((rank) => (
-            <div key={rank} className="flex items-center justify-between rounded-xl bg-white/5 px-4 py-3 border border-white/5">
+          {leaderboardQuery.data?.slice(0, 10).map((ranker, idx) => (
+            <div key={ranker.team_id} className="flex items-center justify-between rounded-xl bg-white/5 px-4 py-3 border border-white/5">
               <div className="flex items-center gap-3">
                 <div className={clsx(
                   "flex h-8 w-8 items-center justify-center rounded-full font-black text-xs",
-                  rank === 1 ? "bg-yellow-500 text-black shadow-lg shadow-yellow-500/20" :
-                    rank === 2 ? "bg-gray-300 text-black" :
+                  idx === 0 ? "bg-yellow-500 text-black shadow-lg shadow-yellow-500/20" :
+                    idx === 1 ? "bg-gray-300 text-black" :
                       "bg-orange-700 text-white"
                 )}>
-                  {rank}
+                  {idx + 1}
                 </div>
-                <span className="text-sm font-bold text-white">Player_{rank}</span>
+                <span className="text-sm font-bold text-white truncate max-w-[120px]">{ranker.team_name}</span>
               </div>
-              <span className="font-mono text-sm text-emerald-400 font-bold">12,500 P</span>
+              <span className="font-mono text-sm text-emerald-400 font-bold">{ranker.points.toLocaleString()} P</span>
             </div>
           ))}
+          {leaderboard.length === 0 && <p className="text-center text-white/30 text-sm py-4">No data available</p>}
         </div>
       </section>
     </div>

@@ -65,7 +65,7 @@ const MobileBottomNav: React.FC = memo(() => {
             )
         },
         {
-            label: "시즌패스",
+            label: "레벨",
             to: "/season-pass",
             isActive: isActive("/season-pass"),
             icon: (active: boolean) => (

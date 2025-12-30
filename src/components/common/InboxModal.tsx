@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { X, Mail, CheckCircle, Loader2 } from "lucide-react";
+import { X, CheckCircle, Loader2 } from "lucide-react";
 import dayjs from "dayjs";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchMyInbox, markMessageAsRead } from "../../api/userMessageApi";
@@ -47,7 +47,7 @@ const InboxModal: React.FC<InboxModalProps> = ({ onClose }) => {
 
                 <header className="border-b border-emerald-900/50 px-6 py-4">
                     <h2 className="flex items-center gap-2 text-xl font-bold text-emerald-100">
-                        <Mail className="text-emerald-400" />
+                        <img src="/assets/icon_alarm_normal.png" className="w-8 h-8 object-contain" alt="" />
                         메시지 보관함
                     </h2>
                 </header>
@@ -79,7 +79,7 @@ const InboxModal: React.FC<InboxModalProps> = ({ onClose }) => {
                                         <div className="flex-1 pr-4">
                                             <div className="flex items-center gap-2">
                                                 {!msg.is_read && (
-                                                    <span className="inline-block h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" />
+                                                    <img src="/assets/icon_alarm_unread.png" className="w-5 h-5 object-contain shadow-[0_0_10px_rgba(255,200,0,0.3)]" alt="Unread" />
                                                 )}
                                                 <span className={`font-semibold ${msg.is_read ? "" : "text-emerald-300"}`}>
                                                     {msg.title}

@@ -118,7 +118,7 @@ const HomePage: React.FC = () => {
       to: "/roulette",
       gradient: "bg-gradient-to-br from-purple-600 to-indigo-600",
       icon: "🎯",
-      bgImage: "/assets/games/thumb_roulette.png",
+      bgImage: "/assets/games/thumb_roulette_v2.png",
       badge: "HOT"
     },
     {
@@ -126,7 +126,7 @@ const HomePage: React.FC = () => {
       to: "/dice",
       gradient: "bg-gradient-to-br from-emerald-500 to-teal-600",
       icon: "🎲",
-      bgImage: "/assets/games/thumb_dice.png",
+      bgImage: "/assets/games/thumb_dice_v2.png",
       badge: "2x"
     },
     {
@@ -134,14 +134,14 @@ const HomePage: React.FC = () => {
       to: "/lottery",
       gradient: "bg-gradient-to-br from-pink-500 to-rose-600",
       icon: "🎫",
-      bgImage: "/assets/games/thumb_lottery.png"
+      bgImage: "/assets/games/thumb_lottery_v2.png"
     },
     {
       title: "TEAM BATTLE",
       to: "/team-battle",
       gradient: "bg-gradient-to-br from-blue-600 to-cyan-600",
       icon: "⚔️",
-      bgImage: "/assets/games/thumb_team_battle.png",
+      bgImage: "/assets/games/thumb_team_battle_v2.png",
       badge: "NEW"
     },
     {
@@ -224,6 +224,28 @@ const HomePage: React.FC = () => {
           <GameCard key={game.title} {...game} />
         ))}
       </div>
+
+      {/* Guide Banner - Premium floating style */}
+      <Link
+        to="/guide"
+        className="group mx-1 relative flex items-center gap-4 rounded-2xl bg-gradient-to-r from-slate-900/90 to-slate-800/90 border border-white/10 p-4 backdrop-blur-xl shadow-xl overflow-hidden transition-all hover:border-emerald-500/30 hover:shadow-emerald-500/10 active:scale-[0.98]"
+      >
+        <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 via-transparent to-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+        <div className="relative z-10 w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 border border-emerald-500/30 flex items-center justify-center text-2xl shrink-0">
+          <img src="/assets/icon_help.png" className="w-8 h-8 object-contain" alt="" />
+        </div>
+        <div className="relative z-10 flex-1 min-w-0">
+          <h4 className="text-white font-black text-sm tracking-tight">이용 가이드</h4>
+          <p className="text-white/40 text-xs mt-0.5 truncate">서비스 이용방법을 확인해보세요</p>
+        </div>
+        <div className="relative z-10 shrink-0">
+          <div className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-emerald-500/20 group-hover:border-emerald-500/30 transition-all">
+            <svg className="w-4 h-4 text-white/50 group-hover:text-emerald-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+        </div>
+      </Link>
 
     </section>
   );

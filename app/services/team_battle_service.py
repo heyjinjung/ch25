@@ -127,7 +127,7 @@ class TeamBattleService:
         db.refresh(season)
         return season
 
-    def get_active_season(self, db: Session, now: datetime | None = None) -> TeamSeason | None:
+    def get_active_season(self, db: Session, now: datetime | None = None, ignore_dates: bool = False) -> TeamSeason | None:
         reference = now or self._now_utc()
 
         season = db.execute(select(TeamSeason).where(TeamSeason.is_active == True)).scalar_one_or_none()  # noqa: E712
@@ -137,15 +137,15 @@ class TeamBattleService:
         start_utc = self._normalize_to_utc(season.starts_at, reference)
         end_utc = self._normalize_to_utc(season.ends_at, reference)
 
-        if start_utc <= reference <= end_utc:
+        if ignore_dates or (start_utc <= reference <= end_utc):
             season.starts_at = start_utc
             season.ends_at = end_utc
             return season
 
         return None
 
-    def _get_active_or_current(self, db: Session, now: datetime | None = None) -> TeamSeason:
-        season = self.get_active_season(db, now)
+    def _get_active_or_current(self, db: Session, now: datetime | None = None, ignore_dates: bool = False) -> TeamSeason:
+        season = self.get_active_season(db, now, ignore_dates=ignore_dates)
         if season:
             return season
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="NO_ACTIVE_TEAM_SEASON")
@@ -294,7 +294,7 @@ class TeamBattleService:
 
     def join_team(self, db: Session, team_id: int, user_id: int, role: str = "member", now: datetime | None = None, bypass_selection: bool = False) -> TeamMember:
         now = now or self._now_utc()
-        season = self._get_active_or_current(db, now)
+        season = self._get_active_or_current(db, now, ignore_dates=bypass_selection)
         if not bypass_selection:
             self._assert_selection_window_open(season, now)
 
@@ -362,7 +362,7 @@ class TeamBattleService:
         """
 
         now = now or self._now_utc()
-        season = self._get_active_or_current(db, now)
+        season = self._get_active_or_current(db, now, ignore_dates=True)
 
         # Ensure deleted/orphaned users don't occupy slots.
         self._prune_team_memberships_for_deleted_users(db, team_id=team_id)
@@ -412,7 +412,8 @@ class TeamBattleService:
 
     def auto_assign_team(self, db: Session, user_id: int, now: datetime | None = None) -> TeamMember:
         now = now or self._now_utc()
-        season = self._get_active_or_current(db, now)
+        # For auto-assign, we expect it to be active. If dates are closed, join_team will handle it via _assert_selection_window_open.
+        season = self._get_active_or_current(db, now, ignore_dates=True)
         self._assert_selection_window_open(season, now)
 
         # Ensure deleted/orphaned users don't occupy slots.
@@ -474,7 +475,7 @@ class TeamBattleService:
 
         now = now or self._now_utc()
 
-        season = db.get(TeamSeason, season_id) if season_id else self._get_active_or_current(db, now)
+        season = db.get(TeamSeason, season_id) if season_id else self._get_active_or_current(db, now, ignore_dates=True)
         if not season:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="NO_ACTIVE_TEAM_SEASON")
 

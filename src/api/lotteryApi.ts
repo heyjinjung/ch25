@@ -47,6 +47,7 @@ export interface LotteryPlayResponse {
   readonly prize: LotteryPrizeDto;
   readonly remaining_plays: number;
   readonly message?: string;
+  readonly vaultEarn?: number;
 }
 
 export const getLotteryStatus = async (): Promise<LotteryStatusResponse> => {
@@ -81,7 +82,7 @@ export const getLotteryStatus = async (): Promise<LotteryStatusResponse> => {
 
 export const playLottery = async (): Promise<LotteryPlayResponse> => {
   try {
-    const response = await userApi.post<{ result: string; prize: BackendLotteryPrizeDto }>("/api/lottery/play");
+    const response = await userApi.post<{ result: string; prize: BackendLotteryPrizeDto; vault_earn?: number }>("/api/lottery/play");
     const data = response.data;
     return {
       prize: {
@@ -94,6 +95,7 @@ export const playLottery = async (): Promise<LotteryPlayResponse> => {
       },
       remaining_plays: 0,
       message: data.result !== "OK" ? data.result : undefined,
+      vaultEarn: data.vault_earn,
     };
   } catch (error) {
     if (axios.isAxiosError(error)) {

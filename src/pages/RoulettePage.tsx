@@ -8,6 +8,7 @@ import AnimatedNumber from "../components/common/AnimatedNumber";
 import { tryHaptic } from "../utils/haptics";
 import GamePageShell from "../components/game/GamePageShell";
 import TicketZeroPanel from "../components/game/TicketZeroPanel";
+import VaultAccrualModal from "../components/vault/VaultAccrualModal";
 import { useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
 
@@ -37,7 +38,7 @@ const TABS: { type: GameTokenType; label: string; activeColors: string; icon: st
     label: "다이아\n룰렛",
     activeColors: "bg-gradient-to-br from-cyan-300 via-blue-400 to-indigo-500 text-white shadow-[0_0_20px_rgba(0,191,255,0.5)] border-blue-300",
     icon: "💎",
-    iconImg: "/assets/asset_ticket_gold.png"
+    iconImg: "/assets/asset_ticket_diamond.png"
   },
 ];
 
@@ -51,6 +52,7 @@ const RoulettePage: React.FC = () => {
   const [isSpinning, setIsSpinning] = useState(false);
   const [displayedResult, setDisplayedResult] = useState<RoulettePlayResponse | null>(null);
   const [rewardToast, setRewardToast] = useState<{ value: number; type: string } | null>(null);
+  const [vaultModal, setVaultModal] = useState<{ open: boolean; amount: number }>({ open: false, amount: 0 });
   const pendingResultRef = useRef<RoulettePlayResponse | null>(null);
   const spinStartAtRef = useRef<number | null>(null);
   const transitionEndAtRef = useRef<number | null>(null);
@@ -147,13 +149,28 @@ const RoulettePage: React.FC = () => {
 
     const rewardValue = result?.reward_value ? Number(result.reward_value) : 0;
     const rewardType = result?.reward_type ?? "NONE";
-    if (rewardValue > 0 && rewardType !== "NONE") {
+    const isXpReward = rewardType.toUpperCase().includes("XP") || rewardType.includes("레벨");
+
+    if (rewardValue > 0 && rewardType !== "NONE" && !isXpReward) {
       setRewardToast({ value: rewardValue, type: rewardType });
       window.setTimeout(() => setRewardToast(null), 2500);
       tryHaptic([18, 50, 18]);
     } else {
       tryHaptic(12);
     }
+
+    if ((result.vaultEarn ?? 0) > 0) {
+      setVaultModal({ open: true, amount: result.vaultEarn! });
+    }
+
+    // Sync all statuses
+    queryClient.invalidateQueries({ queryKey: ["lottery-status"] });
+    queryClient.invalidateQueries({ queryKey: ["roulette-status"] });
+    queryClient.invalidateQueries({ queryKey: ["dice-status"] });
+    queryClient.invalidateQueries({ queryKey: ["vault-status"] });
+    queryClient.invalidateQueries({ queryKey: ["season-pass-status"] });
+    queryClient.invalidateQueries({ queryKey: ["team-leaderboard"] });
+    queryClient.invalidateQueries({ queryKey: ["team-membership"] });
 
     const applyAt = performance.now();
     console.log("[Roulette] result applied", {
@@ -358,7 +375,7 @@ const RoulettePage: React.FC = () => {
                       </>
                     ) : (
                       <>
-                        <span className="text-xl">🎰</span>
+                        <img src="/assets/roulette/icon_slot_machine.png" className="w-8 h-8 object-contain" alt="" />
                         <span className="text-lg font-black tracking-wide">
                           {!isSpinning && displayedResult ? "다시 돌리기" : "룰렛 시작"}
                         </span>
@@ -380,13 +397,16 @@ const RoulettePage: React.FC = () => {
                     {displayedResult.segment.label}
                   </h3>
 
-                  {displayedResult.reward_type && displayedResult.reward_type !== "NONE" && (
-                    <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-cc-gold/20 bg-cc-gold/10 px-6 py-2">
-                      <span className="text-sm font-bold text-cc-gold">
-                        +{Number(displayedResult.reward_value).toLocaleString()} {displayedResult.reward_type}
-                      </span>
-                    </div>
-                  )}
+                  {displayedResult.reward_type &&
+                    displayedResult.reward_type !== "NONE" &&
+                    !displayedResult.reward_type.toUpperCase().includes("XP") &&
+                    !displayedResult.reward_type.includes("레벨") && (
+                      <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-cc-gold/20 bg-cc-gold/10 px-6 py-2">
+                        <span className="text-sm font-bold text-cc-gold">
+                          +{Number(displayedResult.reward_value).toLocaleString()} {displayedResult.reward_type}
+                        </span>
+                      </div>
+                    )}
                 </div>
               </div>
             )}
@@ -426,6 +446,12 @@ const RoulettePage: React.FC = () => {
         </div>
         {content}
       </GamePageShell>
+
+      <VaultAccrualModal
+        open={vaultModal.open}
+        onClose={() => setVaultModal((prev) => ({ ...prev, open: false }))}
+        amount={vaultModal.amount}
+      />
     </FeatureGate>
   );
 };

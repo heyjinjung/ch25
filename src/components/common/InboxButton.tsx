@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { Mail } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchMyInbox } from "../../api/userMessageApi";
 import InboxModal from "./InboxModal";
@@ -23,7 +22,11 @@ const InboxButton: React.FC = () => {
                 className="relative flex items-center justify-center rounded-lg border border-emerald-800 bg-slate-900 p-2 text-emerald-400 transition-colors hover:bg-emerald-900/40 hover:text-emerald-300"
                 title="메시지함"
             >
-                <Mail size={20} />
+                <img
+                    src={unreadCount > 0 ? "/assets/icon_alarm_unread.png" : "/assets/icon_alarm_normal.png"}
+                    className="w-7 h-7 object-contain"
+                    alt="Inbox"
+                />
                 {unreadCount > 0 && (
                     <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm">
                         {unreadCount > 9 ? "9+" : unreadCount}

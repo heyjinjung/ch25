@@ -200,12 +200,10 @@ const VaultMainPanel: React.FC = React.memo(() => {
                 </span>
                 <div className="h-px flex-1 bg-white/10" />
               </div>
-              <h1 className="text-4xl md:text-[72px] font-black leading-[0.9] text-white tracking-tighter italic uppercase">
-                내 금고 <br />
-                <span className="text-figma-accent text-5xl md:text-[84px] not-italic">
-                  <span className="hidden md:inline">머니보관함</span>
-                  <span className="md:hidden">머니<br />보관함</span>
-                </span>
+              <h1 className="text-2xl md:text-[72px] font-black leading-[1] text-white tracking-tighter italic uppercase">
+                <span className="hidden md:block">내 금고</span>
+                <span className="md:hidden inline">내 금고 </span>
+                <span className="text-figma-accent text-2xl md:text-[84px] not-italic">머니보관함</span>
               </h1>
             </div>
 
@@ -221,7 +219,7 @@ const VaultMainPanel: React.FC = React.memo(() => {
 
             <div className="flex flex-col gap-4 max-w-md">
               <p className="text-white/60 text-sm md:text-base leading-relaxed font-bold">
-                지민코드 활동을 통해 적립된 포인트가 <span className="text-white">안전하게 보관</span>되어 있습니다.
+                지민코드 적립된 포인트가 <span className="text-white">안전하게 보관</span>되어 있습니다.
                 씨씨이용시 포인트가 <span className="text-white">보유 머니로 전환</span>됩니다.
               </p>
 
@@ -265,9 +263,12 @@ const VaultMainPanel: React.FC = React.memo(() => {
             </div>
             <div className="flex flex-col gap-2 relative z-10">
               <span className="text-xs font-black text-white/30 tracking-[0.4em] uppercase">현재 보관된 리워드</span>
-              <div className="flex items-baseline justify-center gap-2">
-                <h3 className="text-white text-4xl md:text-5xl font-black tracking-tighter">{formatWon(view.vaultBalance).replace('원', '')}</h3>
-                <span className="text-figma-accent text-xl font-black italic">원</span>
+              <div className="flex items-center justify-center gap-4">
+                <img src="/assets/asset_coin_gold.png" className="w-12 h-12 drop-shadow-[0_0_15px_rgba(255,215,0,0.5)]" alt="Coin" />
+                <div className="flex items-baseline gap-2">
+                  <h3 className="text-white text-4xl md:text-5xl font-black tracking-tighter">{formatWon(view.vaultBalance).replace('원', '')}</h3>
+                  <span className="text-figma-accent text-xl font-black italic">원</span>
+                </div>
               </div>
             </div>
             <div className="mt-8 flex items-center justify-center gap-3 relative z-10">
@@ -309,7 +310,7 @@ const VaultMainPanel: React.FC = React.memo(() => {
                 <div className="flex items-center justify-between p-5 rounded-2xl bg-figma-accent/5 border border-figma-accent/20">
                   <div className="flex items-center gap-4">
                     <div className="w-2.5 h-2.5 rounded-full bg-figma-accent animate-pulse shadow-[0_0_10px_#30FF75]" />
-                    <p className="text-white font-bold text-sm tracking-tight">외부 이용 확인 완료</p>
+                    <p className="text-white font-bold text-sm tracking-tight">씨씨 이용 확인 완료</p>
                   </div>
                   <span className="text-[10px] font-black text-figma-accent uppercase tracking-widest border border-figma-accent/30 px-3 py-1 rounded-full bg-figma-accent/10">추가 적립 중</span>
                 </div>

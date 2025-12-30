@@ -1,12 +1,18 @@
+import clsx from "clsx";
+
 type Props = {
   title: string;
   subtitle?: string;
   rightSlot?: React.ReactNode;
   children: React.ReactNode;
   footerNote?: string;
+  px?: string;
+  py?: string;
 };
 
-const GamePageShell: React.FC<Props> = ({ title, subtitle, rightSlot, children, footerNote }) => {
+const GamePageShell: React.FC<Props> = ({ title, subtitle, rightSlot, children, footerNote, px = "p-4 sm:p-8", py }) => {
+  const containerPadding = py ? `${px} ${py}` : px;
+
   return (
     <div className="relative w-full text-white">
       <div className="mx-auto w-full max-w-[1040px]">
@@ -25,7 +31,7 @@ const GamePageShell: React.FC<Props> = ({ title, subtitle, rightSlot, children, 
           <div className="mx-auto mt-5 h-px w-full max-w-[720px] bg-white/10" />
         </header>
 
-        <section className="relative mt-6 overflow-hidden rounded-3xl border border-white/15 bg-black/40 p-4 sm:mt-8 sm:p-8 shadow-2xl">
+        <section className={clsx("relative mt-6 overflow-hidden rounded-3xl border border-white/15 bg-black/40 shadow-2xl", containerPadding)}>
           {children}
         </section>
 

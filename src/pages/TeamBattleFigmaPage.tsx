@@ -168,9 +168,9 @@ const TeamBattleMainPanel: React.FC<{ variant: ViewportVariant }> = ({ variant }
             style={{ borderColor: baseAccent }}
           >
             <img
-              src="/images/flag.svg"
+              src="/assets/icon_trophy.png"
               alt=""
-              className="h-[16px] w-[16px] invert brightness-200"
+              className="h-[20px] w-[20px] object-contain"
               loading="lazy"
               aria-hidden="true"
             />
@@ -189,9 +189,9 @@ const TeamBattleMainPanel: React.FC<{ variant: ViewportVariant }> = ({ variant }
               <div className="flex items-center gap-2">
                 <span className="inline-flex h-8 w-8 items-center justify-center rounded-[10px] border border-white/15 bg-black/30">
                   <img
-                    src="/images/moon.svg"
+                    src="/assets/icon_trophy.png"
                     alt=""
-                    className="h-4 w-4 invert brightness-200"
+                    className="h-5 w-5 object-contain"
                     loading="lazy"
                     aria-hidden="true"
                   />

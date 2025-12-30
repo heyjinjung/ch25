@@ -8,6 +8,7 @@ import { tryHaptic } from "../utils/haptics";
 import GamePageShell from "../components/game/GamePageShell";
 import TicketZeroPanel from "../components/game/TicketZeroPanel";
 import Button from "../components/common/Button";
+import VaultAccrualModal from "../components/vault/VaultAccrualModal";
 import { useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
 
@@ -20,6 +21,7 @@ const DicePage: React.FC = () => {
   const [dealerDice, setDealerDice] = useState<number[]>([]);
   const [infoMessage, setInfoMessage] = useState<string | null>(null);
   const [rewardToast, setRewardToast] = useState<{ value: number; type: string } | null>(null);
+  const [vaultModal, setVaultModal] = useState<{ open: boolean; amount: number }>({ open: false, amount: 0 });
   const [isRolling, setIsRolling] = useState(false);
 
   const mapErrorMessage = (err: unknown) => {
@@ -52,10 +54,25 @@ const DicePage: React.FC = () => {
         setInfoMessage(response.message ?? null);
         const rewardValue = response.reward_value ? Number(response.reward_value) : 0;
         const rewardType = response.reward_type ?? "보상";
-        if (response.result === "WIN" && rewardValue > 0) {
+        const isXpReward = rewardType.toUpperCase().includes("XP") || rewardType.includes("레벨");
+
+        if (response.result === "WIN" && rewardValue > 0 && !isXpReward) {
           setRewardToast({ value: rewardValue, type: rewardType });
           setTimeout(() => setRewardToast(null), 3000);
         }
+
+        if ((response.vaultEarn ?? 0) > 0) {
+          setVaultModal({ open: true, amount: response.vaultEarn! });
+        }
+
+        // Sync all statuses immediately after game results are shown/processed
+        queryClient.invalidateQueries({ queryKey: ["lottery-status"] });
+        queryClient.invalidateQueries({ queryKey: ["roulette-status"] });
+        queryClient.invalidateQueries({ queryKey: ["dice-status"] });
+        queryClient.invalidateQueries({ queryKey: ["vault-status"] });
+        queryClient.invalidateQueries({ queryKey: ["season-pass-status"] });
+        queryClient.invalidateQueries({ queryKey: ["team-leaderboard"] });
+        queryClient.invalidateQueries({ queryKey: ["team-membership"] });
       }, 1000);
     } catch (e) {
       setIsRolling(false);
@@ -79,7 +96,9 @@ const DicePage: React.FC = () => {
     if (isError || !data) {
       return (
         <div className="rounded-[2.5rem] border border-white/5 bg-white/5 p-12 text-center backdrop-blur-3xl">
-          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-red-500/10 text-4xl">⚠️</div>
+          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-figma-accent/10">
+            <img src="/assets/icon_help.png" className="w-12 h-12 object-contain" alt="Error" />
+          </div>
           <p className="text-2xl font-black text-white">데이터 동기화 실패</p>
           <p className="mt-2 text-white/40">통신 상태를 확인하고 다시 입장해주세요.</p>
         </div>
@@ -108,7 +127,7 @@ const DicePage: React.FC = () => {
         <div className="flex justify-center">
           <div className="group relative flex items-center gap-4 rounded-3xl border border-white/10 bg-white/5 px-8 py-2 backdrop-blur-xl transition-all hover:bg-white/10">
             <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-[#30FF75]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-            <img src="/assets/asset_ticket_green.png" alt="Tickets" className="h-7 w-7 object-contain" />
+            <img src="/assets/icon_dice_silver.png" alt="Dice" className="h-7 w-7 object-contain" />
             <div className="flex flex-col">
               <span className="text-[9px] font-black uppercase tracking-widest text-[#30FF75]/70">Available Entries</span>
               <span className="text-lg font-black text-white">
@@ -157,7 +176,7 @@ const DicePage: React.FC = () => {
                 </>
               ) : (
                 <>
-                  <span className="text-xl">🎲</span>
+                  <img src="/assets/icon_dice_silver.png" className="w-6 h-6 object-contain" alt="" />
                   <span className="text-lg font-black tracking-wider text-white">
                     {result || infoMessage ? "다시 대결하기" : "주사위 굴리기"}
                   </span>
@@ -189,6 +208,12 @@ const DicePage: React.FC = () => {
           {content}
         </div>
       </GamePageShell>
+
+      <VaultAccrualModal
+        open={vaultModal.open}
+        amount={vaultModal.amount}
+        onClose={() => setVaultModal(p => ({ ...p, open: false }))}
+      />
     </FeatureGate>
   );
 };

@@ -1,15 +1,14 @@
-// src/pages/LotteryPage.tsx
 import { useMemo, useState } from "react";
 import { usePlayLottery, useLotteryStatus } from "../hooks/useLottery";
 import FeatureGate from "../components/feature/FeatureGate";
 import LotteryCard from "../components/game/LotteryCard";
-import { GAME_TOKEN_LABELS } from "../types/gameTokens";
-import AnimatedNumber from "../components/common/AnimatedNumber";
 import { tryHaptic } from "../utils/haptics";
 import GamePageShell from "../components/game/GamePageShell";
 import TicketZeroPanel from "../components/game/TicketZeroPanel";
 import Button from "../components/common/Button";
+import VaultAccrualModal from "../components/vault/VaultAccrualModal";
 import { useQueryClient } from "@tanstack/react-query";
+import clsx from "clsx";
 
 interface RevealedPrize {
   id: number;
@@ -25,16 +24,19 @@ const LotteryPage: React.FC = () => {
   const [revealedPrize, setRevealedPrize] = useState<RevealedPrize | null>(null);
   const [isScratching, setIsScratching] = useState(false);
   const [isRevealed, setIsRevealed] = useState(false);
-  const [rewardToast, setRewardToast] = useState<{ value: number; type: string } | null>(null);
+  const [rewardToast, setRewardToast] = useState<{ value: number; type: string; label: string } | null>(null);
+  const [vaultModal, setVaultModal] = useState<{ open: boolean; amount: number }>({ open: false, amount: 0 });
 
   const mapErrorMessage = (err: unknown) => {
     const code = (err as { response?: { data?: { error?: { code?: string } } } })?.response?.data?.error?.code;
-    if (code === "NO_FEATURE_TODAY") return "오늘 설정된 이벤트가 없습니다.";
-    if (code === "INVALID_FEATURE_SCHEDULE") return "이벤트 스케줄이 잘못되었습니다. 지민이에게 문의하세요.";
-    if (code === "FEATURE_DISABLED") return "이벤트가 비활성화되었습니다.";
-    if (code === "DAILY_LIMIT_REACHED") return "오늘 참여 횟수를 모두 사용했습니다.";
-    if (code === "NOT_ENOUGH_TOKENS") return "티켓이 부족합니다. 지민이에게 충전을 요청해주세요.";
-    return "복권 정보를 불러오지 못했습니다.";
+    const messages: Record<string, string> = {
+      NO_FEATURE_TODAY: "오늘 설정된 이벤트가 없습니다.",
+      INVALID_FEATURE_SCHEDULE: "이벤트 스케줄 오류",
+      FEATURE_DISABLED: "이벤트가 비활성화되었습니다.",
+      DAILY_LIMIT_REACHED: "오늘 참여 횟수 초과",
+      NOT_ENOUGH_TOKENS: "티켓이 부족합니다.",
+    };
+    return messages[code || ""] || "복권 정보를 불러오지 못했습니다.";
   };
 
   const errorMessage = useMemo(() => {
@@ -48,21 +50,12 @@ const LotteryPage: React.FC = () => {
     [playMutation.error],
   );
 
-  const tokenLabel = useMemo(() => {
-    if (!data) return "-";
-    const typeLabel = data.token_type ? (GAME_TOKEN_LABELS[data.token_type] ?? data.token_type) : "-";
-    const balanceLabel = typeof data.token_balance === "number" ? String(data.token_balance) : "-";
-    return `${typeLabel} · ${balanceLabel}`;
-  }, [data]);
-
-  const isUnlimited = data?.remaining_plays === 0;
+  const tokenBalance = data?.token_balance ?? 0;
   const isOutOfTokens = typeof data?.token_balance === "number" && data.token_balance <= 0;
+  const canPlay = !isScratching && !playMutation.isPending && !isOutOfTokens && (data?.remaining_plays !== 0);
 
   const handleScratch = async () => {
-    if (isScratching || isRevealed) return;
-    if (!isUnlimited && data && data.remaining_plays <= 0) return;
-    if (isOutOfTokens) return;
-
+    if (isScratching || isRevealed || isOutOfTokens) return;
     try {
       tryHaptic(12);
       setIsScratching(true);
@@ -76,13 +69,27 @@ const LotteryPage: React.FC = () => {
         reward_value: result.prize.reward_value,
       });
       const rewardValue = result.prize.reward_value ? Number(result.prize.reward_value) : 0;
-      if (rewardValue > 0 && result.prize.reward_type !== "NONE") {
-        setRewardToast({ value: rewardValue, type: result.prize.reward_type });
-        setTimeout(() => setRewardToast(null), 2500);
+      const isXpReward = result.prize.reward_type.toUpperCase().includes("XP") || result.prize.reward_type.includes("레벨");
+
+      if (rewardValue > 0 && !isXpReward) {
+        setRewardToast({ value: rewardValue, type: result.prize.reward_type, label: result.prize.label });
+        setTimeout(() => setRewardToast(null), 3000);
       }
-    } catch (mutationError) {
+
+      if ((result.vaultEarn ?? 0) > 0) {
+        setVaultModal({ open: true, amount: result.vaultEarn! });
+      }
+
+      // Sync all statuses
+      queryClient.invalidateQueries({ queryKey: ["lottery-status"] });
+      queryClient.invalidateQueries({ queryKey: ["roulette-status"] });
+      queryClient.invalidateQueries({ queryKey: ["dice-status"] });
+      queryClient.invalidateQueries({ queryKey: ["vault-status"] });
+      queryClient.invalidateQueries({ queryKey: ["season-pass-status"] });
+      queryClient.invalidateQueries({ queryKey: ["team-leaderboard"] });
+      queryClient.invalidateQueries({ queryKey: ["team-membership"] });
+    } catch (e) {
       setIsScratching(false);
-      console.error("Lottery play failed", mutationError);
     }
   };
 
@@ -91,186 +98,165 @@ const LotteryPage: React.FC = () => {
     setRevealedPrize(null);
   };
 
-  const content = (() => {
-    if (isLoading) {
-      return (
-        <div className="flex flex-col items-center justify-center gap-4 py-16">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-cc-lime/70 border-t-transparent" />
-          <p className="text-[clamp(14px,3vw,18px)] font-semibold text-white/85">복권 정보를 불러오는 중...</p>
-        </div>
-      );
-    }
+  if (isLoading) return <div className="p-20 text-center text-white/40">LOADING SYSTEM...</div>;
 
-    if (isError || !data) {
-      return (
-        <div className="rounded-3xl border border-white/15 bg-white/5 p-6 text-center backdrop-blur">
-          <p className="text-[clamp(16px,3.2vw,20px)] font-bold text-white">{errorMessage || "데이터를 불러올 수 없습니다."}</p>
-          <p className="mt-2 text-sm text-white/60">잠시 후 다시 시도해주세요.</p>
-        </div>
-      );
-    }
-
+  if (isError || !data) {
     return (
-      <div className="relative space-y-8">
-        {/* Ambient Glow */}
-        <div className="pointer-events-none absolute -left-[10%] top-[10%] h-[600px] w-[600px] rounded-full bg-red-600/10 blur-[100px] mix-blend-screen" />
-        <div className="pointer-events-none absolute -right-[10%] -bottom-[10%] h-[500px] w-[500px] rounded-full bg-cc-gold/5 blur-[80px] mix-blend-screen" />
+      <GamePageShell title="지민코드 복권" subtitle="Special Game">
+        <div className="rounded-[2rem] border border-white/10 bg-black/40 p-10 text-center backdrop-blur-xl">
+          <p className="text-xl font-bold text-white">{errorMessage}</p>
+          <Button variant="figma-primary" onClick={() => window.location.reload()} className="mt-6">다시 시도</Button>
+        </div>
+      </GamePageShell>
+    );
+  }
 
-        {rewardToast && (
-          <div className="fixed bottom-6 right-6 z-50 overflow-hidden rounded-2xl border border-white/10 bg-black/80 px-5 py-4 text-white shadow-2xl backdrop-blur-xl animate-bounce-in">
-            <div className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-red-500 to-orange-500" />
-            <div className="relative flex items-center gap-3 pl-2">
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-red-500/30 bg-red-500/10 text-xl shadow-[0_0_15px_rgba(255,0,0,0.3)]">
-                🎁
-              </span>
-              <div>
-                <p className="text-sm font-bold uppercase tracking-wider text-red-400">당첨 경품</p>
-                <div className="flex items-baseline gap-1.5">
-                  <span className="text-2xl font-black text-white drop-shadow-lg">
-                    <AnimatedNumber value={rewardToast.value} from={0} />
-                  </span>
-                  <span className="text-sm font-bold text-white/60">{rewardToast.type}</span>
-                </div>
+  return (
+    <FeatureGate feature="LOTTERY">
+      <GamePageShell
+        title="지민코드 복권"
+        subtitle="Special Premium Lottery"
+        px="px-4 sm:px-8"
+        py="py-[10px]"
+      >
+
+        {/* 1. Stats Bar */}
+        <div className="flex flex-col gap-6 mb-8">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 rounded-full bg-black/60 border border-white/10 px-5 py-2 backdrop-blur-md shrink-0">
+              <img src="/assets/lottery/icon_lotto_ball.png" alt="Lotto Ball" className="w-6 h-6 object-contain" />
+              <div className="flex flex-col">
+                <span className="text-[9px] font-black text-white/40 leading-none uppercase tracking-widest">보유 로또볼</span>
+                <span className="text-sm font-black text-white leading-tight">
+                  {tokenBalance.toLocaleString()} <span className="text-[10px] opacity-40 italic">PCS</span>
+                </span>
               </div>
             </div>
-          </div>
-        )}
-
-        {/* Top Info Bar */}
-        <div className="flex flex-wrap items-center justify-center gap-4">
-          <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-5 py-2 backdrop-blur-md">
-            <span className="text-sm text-white/50">보유 티켓</span>
-            <span className="font-mono text-base font-bold text-white">{tokenLabel}</span>
+            <div className="h-px flex-1 bg-white/5" />
           </div>
         </div>
 
-        {/* Main Scratch Area */}
-        <div className="flex justify-center">
-          <div className="relative w-full max-w-[520px]">
-            {/* Holographic Border Effect */}
-            <div className="absolute -inset-[3px] rounded-[2rem] bg-gradient-to-r from-red-500 via-yellow-500 to-purple-600 opacity-30 blur-lg animate-pulse" />
+        {/* 2. Main Game Area */}
+        <div className="flex flex-col gap-6">
+          <LotteryCard
+            prize={revealedPrize ?? undefined}
+            isRevealed={isRevealed}
+            isScratching={isScratching}
+            onScratch={handleScratch}
+          />
 
-            <div className="relative overflow-hidden rounded-[1.8rem] border border-white/10 bg-black/40 p-1 shadow-2xl backdrop-blur-xl">
-              <LotteryCard
-                prize={revealedPrize ?? undefined}
-                isRevealed={isRevealed}
-                isScratching={isScratching}
-                onScratch={handleScratch}
+          <div className="max-w-sm mx-auto w-full flex flex-col gap-4">
+            {playErrorMessage && (
+              <div className="p-4 rounded-xl border border-red-500/20 bg-red-500/10 text-center text-xs font-bold text-red-400">
+                {playErrorMessage}
+              </div>
+            )}
+
+            {isOutOfTokens && (
+              <TicketZeroPanel
+                tokenType={data.token_type}
+                onClaimSuccess={() => queryClient.invalidateQueries({ queryKey: ["lottery-status"] })}
               />
-            </div>
+            )}
+
+            <Button
+              disabled={!canPlay && !isRevealed}
+              onClick={() => (isRevealed ? handleReset() : handleScratch())}
+              variant="figma-primary"
+              className="!py-5 !rounded-2xl transition-all active:scale-95 shadow-[0_20px_40px_-10px_rgba(48,255,117,0.3)] font-black text-xl italic"
+              fullWidth
+            >
+              {isRevealed ? "다음 복권 확인" : isScratching ? "결과 확인 중..." : "지금 긁기"}
+            </Button>
           </div>
         </div>
 
-        {/* Controls */}
-        <div className="mx-auto max-w-md space-y-4">
-          {playErrorMessage && (
-            <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-center text-sm font-medium text-red-200">
-              ⚠️ {playErrorMessage}
-            </div>
-          )}
+        {/* 3. Prize List */}
+        <div className="mt-12 mb-16 px-1">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-sm font-black italic text-figma-accent tracking-[0.2em] uppercase">당첨 가능 경품 리스트</h3>
+            <span className="text-[10px] font-bold text-white/20 uppercase tracking-widest">Total {data.prizes.length} Items</span>
+          </div>
 
-          {isOutOfTokens && (
-            <TicketZeroPanel
-              tokenType={data.token_type}
-              onClaimSuccess={() => queryClient.invalidateQueries({ queryKey: ["lottery-status"] })}
-            />
-          )}
-
-          <Button
-            type="button"
-            disabled={isScratching || playMutation.isPending || (!isUnlimited && data.remaining_plays <= 0) || isOutOfTokens}
-            onClick={() => {
-              if (isRevealed) {
-                tryHaptic(10);
-                handleReset();
-                return;
-              }
-              void handleScratch();
-            }}
-            variant="figma-primary"
-            fullWidth
-            className="!rounded-2xl !py-4 shadow-xl"
-          >
-            <div className="flex items-center justify-center gap-2">
-              {isScratching || playMutation.isPending ? (
-                <>
-                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                  <span className="font-bold text-white">확인 중...</span>
-                </>
-              ) : (
-                <span className="text-2xl font-black tracking-wider text-white">
-                  {isRevealed ? "다시 하기" : "복권 긁기"}
-                </span>
-              )}
-            </div>
-          </Button>
-
-          {revealedPrize && isRevealed && !isScratching && (
-            <div className="mt-4 animate-bounce-in text-center">
-              <span className="inline-block rounded-full bg-white/10 px-4 py-1 text-sm font-bold uppercase tracking-widest text-white/60">
-                당첨 축하합니다
-              </span>
-              <h3 className="mt-2 text-2xl font-black text-white">
-                {revealedPrize.label}
-              </h3>
-              <p className="font-bold text-cc-lime">
-                +{Number(revealedPrize.reward_value).toLocaleString()} {revealedPrize.reward_type}
-              </p>
-            </div>
-          )}
-        </div>
-
-        {/* Prize Gallery (Grid View) */}
-        <div className="mt-12">
-          <h3 className="mb-6 flex items-center justify-center gap-3 text-center">
-            <span className="h-[1px] w-8 bg-white/20" />
-            <span className="text-base font-bold uppercase tracking-[0.2em] text-white/40">당첨 경품 목록</span>
-            <span className="h-[1px] w-8 bg-white/20" />
-          </h3>
-
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
             {data.prizes.map((prize) => (
               <div
                 key={prize.id}
-                className={`group relative overflow-hidden rounded-2xl border p-4 transition-all ${prize.is_active === false
-                  ? "border-white/5 bg-white/[0.02] opacity-40 grayscale"
-                  : "border-white/10 bg-white/[0.05] hover:border-white/20 hover:bg-white/[0.08]"
-                  }`}
+                className={clsx(
+                  "group relative aspect-square overflow-hidden rounded-2xl border transition-all flex flex-col items-center justify-center p-3 text-center",
+                  prize.is_active === false
+                    ? "opacity-30 grayscale border-white/5 bg-transparent"
+                    : "bg-white/[0.03] border-white/10 hover:bg-figma-accent/10 hover:border-figma-accent/30"
+                )}
               >
-                <div className="flex flex-col items-center text-center">
-                  <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-white/10 to-transparent text-2xl shadow-inner">
-                    🎁
-                  </div>
-                  <p className="line-clamp-1 text-base font-bold text-white group-hover:text-cc-gold">{prize.label}</p>
-                  <p className="mt-1 text-sm font-medium text-cc-lime">
-                    {Number(prize.reward_value).toLocaleString()} <span className="text-white/40">{prize.reward_type}</span>
-                  </p>
+                {/* Background Pattern */}
+                <div className="absolute inset-0 opacity-5 group-hover:opacity-10 transition-opacity">
+                  <img src="/assets/lottery/gold_foil.jpg" className="w-full h-full object-cover" alt="" />
                 </div>
-                {prize.stock !== undefined && prize.stock !== null && (
-                  <div className="absolute right-2 top-2 rounded-full bg-black/40 px-2 py-0.5 text-sm text-white/50">
-                    x{prize.stock}
+
+                <div className="relative z-10 w-10 h-10 mb-3 group-hover:scale-110 transition-transform duration-500">
+                  <img src="/assets/lottery/icon_gift.png" className="w-full h-full object-contain filter drop-shadow-lg" alt="" />
+                </div>
+
+                <div className="relative z-10 w-full px-1">
+                  <p className="text-sm font-black text-white leading-[1.3] line-clamp-2 mb-1">{prize.label}</p>
+                  <div className="flex items-center justify-center gap-1 opacity-60">
+                    {(prize.reward_type === 'POINT' || prize.reward_type === 'CURRENCY' || prize.reward_type === 'CASH') ? (
+                      <>
+                        <span className="text-xs font-black text-white">{Number(prize.reward_value).toLocaleString()}</span>
+                        <span className="text-[8px] font-black text-white italic">{prize.reward_type === 'POINT' ? 'P' : '원'}</span>
+                      </>
+                    ) : (
+                      <span className="text-[8px] font-black text-figma-accent italic uppercase tracking-tighter">ITEM</span>
+                    )}
+                  </div>
+                </div>
+
+                {prize.stock !== null && (
+                  <div className="absolute top-2 right-2 flex items-center gap-1">
+                    <span className="w-1 h-1 rounded-full bg-figma-accent animate-pulse" />
+                    <span className="text-[8px] font-black text-white/30 uppercase tracking-widest">{prize.stock}</span>
                   </div>
                 )}
               </div>
             ))}
           </div>
-
-          {data.prizes.length === 0 && (
-            <div className="rounded-xl border border-dashed border-white/10 bg-white/5 p-8 text-center text-base text-white/40">
-              현재 진행 중인 경품이 없습니다.
-            </div>
-          )}
         </div>
 
-      </div>
-    );
-  })();
+        {/* Reward Toast */}
+        {rewardToast && (
+          <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[100] w-[calc(100%-2rem)] max-w-sm animate-in fade-in slide-in-from-bottom-8 duration-500">
+            <div className="relative rounded-[2rem] bg-black/80 border border-figma-accent/50 p-6 backdrop-blur-2xl shadow-[0_20px_80px_-10px_rgba(48,255,117,0.4)] text-center overflow-hidden">
+              <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-figma-accent to-transparent" />
 
-  return (
-    <FeatureGate feature="LOTTERY">
-      <GamePageShell title="지민코드 복권" subtitle="Special Game Lottery">
-        {content}
+              <p className="text-[10px] font-black tracking-[0.4em] uppercase text-figma-accent mb-2">
+                {rewardToast.type === 'POINT' || rewardToast.type === 'CURRENCY' || rewardToast.type === 'CASH' ? '당첨 결과 확인' : rewardToast.label}
+              </p>
+              {(rewardToast.type === 'POINT' || rewardToast.type === 'CURRENCY' || rewardToast.type === 'CASH') ? (
+                <div className="flex items-baseline justify-center gap-2 mb-1">
+                  <h3 className="text-4xl font-black text-white italic tracking-tighter">
+                    {rewardToast.value.toLocaleString()}
+                  </h3>
+                  <span className="text-lg font-black text-figma-accent italic">
+                    {rewardToast.type === 'POINT' ? 'P' : '원'}
+                  </span>
+                </div>
+              ) : (
+                <h3 className="text-3xl font-black text-white italic tracking-tighter mb-2">
+                  {rewardToast.label}
+                </h3>
+              )}
+              <p className="text-white/60 text-xs font-bold uppercase tracking-wider">포인트 보관함으로 지급되었습니다</p>
+            </div>
+          </div>
+        )}
       </GamePageShell>
+
+      <VaultAccrualModal
+        open={vaultModal.open}
+        amount={vaultModal.amount}
+        onClose={() => setVaultModal((p) => ({ ...p, open: false }))}
+      />
     </FeatureGate>
   );
 };

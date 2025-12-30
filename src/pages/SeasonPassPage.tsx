@@ -131,7 +131,7 @@ const SeasonPassPage: React.FC = () => {
               <div>
                 <div className="flex items-center gap-2 mb-3">
                   <span className="px-3 py-1.5 rounded-full bg-gold-400 text-black text-[10px] font-black tracking-[0.2em] uppercase shadow-[0_0_20px_rgba(251,191,36,0.6)]">
-                    PREMIUM PASS
+                    내 레벨 확인
                   </span>
                 </div>
                 <h1 className="text-4xl font-black italic text-white leading-none tracking-tighter">
