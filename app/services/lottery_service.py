@@ -141,7 +141,7 @@ class LotteryService:
         db.refresh(log_entry)
 
         # Vault Phase 1: idempotent game accrual (safe-guarded by feature flag).
-        vault_result = self.vault_service.record_game_play_earn_event(
+        total_earn = self.vault_service.record_game_play_earn_event(
             db,
             user_id=user_id,
             game_type=FeatureType.LOTTERY.value,
@@ -153,13 +153,12 @@ class LotteryService:
                 "reward_type": chosen.reward_type,
                 "reward_amount": chosen.reward_amount,
             },
-        )
-        total_earn = vault_result.earned if vault_result else 0
+        ) or 0
 
         # Trial: optionally route reward into Vault instead of direct payout.
         settings = get_settings()
         if consumed_trial and bool(getattr(settings, "enable_trial_payout_to_vault", False)):
-            trial_result = self.vault_service.record_trial_result_earn_event(
+            total_earn += self.vault_service.record_trial_result_earn_event(
                 db,
                 user_id=user_id,
                 game_type=FeatureType.LOTTERY.value,
@@ -168,9 +167,7 @@ class LotteryService:
                 reward_type=chosen.reward_type,
                 reward_amount=chosen.reward_amount,
                 payout_raw={"prize_id": chosen.id},
-            )
-            if trial_result:
-                total_earn += trial_result.earned
+            ) or 0
 
         xp_award = self.BASE_GAME_XP
         ctx = GamePlayContext(user_id=user_id, feature_type=FeatureType.LOTTERY.value, today=today)
