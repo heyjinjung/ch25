@@ -152,9 +152,10 @@ const UserAdminPage: React.FC = () => {
       const external = (m.external_id ?? "").toLowerCase();
       // Search in CRM fields too
       const realName = (m.admin_profile?.real_name ?? "").toLowerCase();
+      const telegramId = (m.admin_profile?.telegram_id ?? "").toLowerCase();
       const tags = (m.admin_profile?.tags ?? []).join(" ").toLowerCase();
 
-      return idMatch || nickname.includes(term) || external.includes(term) || realName.includes(term) || tags.includes(term);
+      return idMatch || nickname.includes(term) || external.includes(term) || realName.includes(term) || telegramId.includes(term) || tags.includes(term);
     });
   }, [members, normalizedSearchTerm]);
 

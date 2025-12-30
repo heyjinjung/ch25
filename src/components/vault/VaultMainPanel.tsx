@@ -312,14 +312,14 @@ const VaultMainPanel: React.FC = React.memo(() => {
                 <button
                   onClick={() => handleWithdrawalClick()}
                   disabled={isWithdrawalProcessing}
-                  className="w-full py-4 rounded-xl bg-figma-accent text-black font-black text-lg uppercase tracking-widest shadow-[0_0_20px_rgba(48,255,117,0.4)] hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2"
+                  className="w-full py-4 rounded-xl bg-gradient-to-r from-emerald-600 to-figma-accent text-white font-black text-lg uppercase tracking-widest shadow-[0_10px_30px_rgba(48,255,117,0.3)] hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 border border-white/10"
                 >
                   {isWithdrawalProcessing ? (
                     <span className="animate-pulse">처리 중...</span>
                   ) : (
                     <>
-                      <span>CC 포인트 전환 신청</span>
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                      <span className="drop-shadow-sm">CC 포인트 전환 신청</span>
+                      <svg className="w-5 h-5 drop-shadow-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                     </>
                   )}
                 </button>

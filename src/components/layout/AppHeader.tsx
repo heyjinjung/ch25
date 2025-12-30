@@ -48,32 +48,32 @@ const AppHeader: React.FC = () => {
             <div className="flex items-center gap-2 shrink-0">
                 <img src="/assets/logo_cc_v2.png" alt="CC Casino" className="h-10 w-auto object-contain drop-shadow-[0_0_15px_rgba(48,255,117,0.3)]" />
             </div>
-            <div className="flex gap-3 items-center min-w-0">
+            <div className="flex gap-1.5 md:gap-3 items-center min-w-0">
                 {/* User Nickname */}
-                <span className="hidden sm:block text-xs font-medium text-slate-400 truncate max-w-[80px]">
+                <span className="hidden lg:block text-[10px] font-medium text-slate-400 truncate max-w-[60px]">
                     {user?.nickname}
                 </span>
 
                 {/* Assets Display */}
-                <div className="flex items-center gap-2 rounded-full bg-black/60 border border-white/10 px-4 py-1.5 backdrop-blur-md shrink-0">
-                    <img src="/assets/asset_coin_gold.png" alt="Coin" className="w-6 h-6 drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]" />
-                    <span className="text-sm font-black text-white/90 uppercase tracking-tighter">
+                <div className="flex items-center gap-1.5 rounded-full bg-black/60 border border-white/10 px-2.5 py-1 backdrop-blur-md shrink-0">
+                    <img src="/assets/asset_coin_gold.png" alt="Coin" className="w-5 h-5" />
+                    <span className="text-xs font-black text-white/90 uppercase tracking-tighter">
                         {vaultBalance.toLocaleString()}
                     </span>
                 </div>
-                <div className="flex items-center gap-2 rounded-full bg-black/60 border border-white/10 px-4 py-1.5 backdrop-blur-md shrink-0">
-                    <img src="/assets/asset_ticket_green.png" alt="Ticket" className="w-6 h-6 drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]" />
-                    <span className="text-sm font-black text-white/90">{totalTickets}</span>
+                <div className="flex items-center gap-1.5 rounded-full bg-black/60 border border-white/10 px-2.5 py-1 backdrop-blur-md shrink-0">
+                    <img src="/assets/asset_ticket_green.png" alt="Ticket" className="w-5 h-5" />
+                    <span className="text-xs font-black text-white/90">{totalTickets}</span>
                 </div>
                 {/* Level Badge */}
-                <div className="px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-sm font-black text-emerald-400 shrink-0">
+                <div className="px-2 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs font-black text-emerald-400 shrink-0">
                     Lv.{userLevel}
                 </div>
-                {/* Message Inbox - Opens Modal */}
+                {/* Message Inbox */}
                 <InboxButton />
 
                 {/* Logout Button */}
-                <LogoutButton className="scale-75 origin-right" />
+                <LogoutButton className="scale-90 origin-right ml-1" />
             </div>
         </div>
     );

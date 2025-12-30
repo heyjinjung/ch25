@@ -39,8 +39,8 @@ class VaultService:
 
     PROGRAM_KEY = "NEW_MEMBER_VAULT"
 
-    GAME_EARN_BASE_AMOUNT = 200
-    GAME_EARN_DICE_LOSE_BONUS = -50
+    GAME_EARN_DICE_WIN = 200
+    GAME_EARN_DICE_LOSE = -50
 
 
     @classmethod
@@ -501,13 +501,18 @@ class VaultService:
         if exists is not None:
             return 0
 
-        base_amount = int(self.GAME_EARN_BASE_AMOUNT)
-        bonus_amount = 0
-        if str(game_type).upper() == "DICE" and str(outcome).upper() == "LOSE":
-            bonus_amount = int(self.GAME_EARN_DICE_LOSE_BONUS)
+        if str(game_type).upper() == "DICE":
+            if str(outcome).upper() == "WIN":
+                amount_before_multiplier = int(self.GAME_EARN_DICE_WIN)
+            elif str(outcome).upper() == "LOSE":
+                amount_before_multiplier = int(self.GAME_EARN_DICE_LOSE)
+            else: # DRAW or other
+                amount_before_multiplier = 0
+        else:
+            base_amount = 200 # Default for other games
+            amount_before_multiplier = base_amount
 
-        amount_before_multiplier = base_amount + bonus_amount
-        if amount_before_multiplier <= 0:
+        if amount_before_multiplier == 0:
             return 0
 
         multiplier = float(self.vault_accrual_multiplier(db, now_dt))
