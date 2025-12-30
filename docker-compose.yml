@@ -77,9 +77,13 @@ services:
       context: .
       dockerfile: Dockerfile.frontend
       args:
-        # Use relative defaults so nginx proxy handles routing in prod
+        # IMPORTANT: Do not default to http://localhost:8000 here.
+        # In production, the browser's localhost is the user's machine, not the server.
+        # Prefer empty (so frontend derives same-origin) and rely on nginx proxy (/api, /admin/api).
         VITE_API_URL: ${VITE_API_URL:-/api}
         VITE_ADMIN_API_URL: ${VITE_ADMIN_API_URL:-/admin/api}
+        VITE_API_TIMEOUT_MS: ${VITE_API_TIMEOUT_MS:-}
+        VITE_ADMIN_API_TIMEOUT_MS: ${VITE_ADMIN_API_TIMEOUT_MS:-}
         VITE_ENV: production
     container_name: xmas-frontend
     restart: unless-stopped

@@ -32,14 +32,26 @@ const resolvedBaseURL = (() => {
   return "";
 })();
 
+const DEFAULT_TIMEOUT_MS = 15000;
+const resolvedTimeoutMs = (() => {
+  const raw = String(import.meta.env.VITE_API_TIMEOUT_MS ?? "").trim();
+  const parsed = Number.parseInt(raw, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_TIMEOUT_MS;
+})();
+
 export const userApi = axios.create({
   baseURL: resolvedBaseURL,
-  timeout: 2500,
+  timeout: resolvedTimeoutMs,
 });
 
 // Attach bearer token if present in storage; keeps compatibility with existing `token` key.
 userApi.interceptors.request.use((config) => {
   const token = getAuthToken() || (typeof localStorage !== "undefined" ? localStorage.getItem("token") : null);
+  const url = String(config.url ?? "");
+  // Do not attach Authorization to login endpoint.
+  if (url.endsWith("/api/auth/token")) {
+    return config;
+  }
   if (token) {
     config.headers = config.headers ?? {};
     config.headers.Authorization = `Bearer ${token}`;
@@ -55,9 +67,20 @@ userApi.interceptors.response.use(
     // Handle 401/403 by redirecting to home or login (when login page exists)
     const status = error?.response?.status;
     if (status === 401 || status === 403) {
-      clearAuth();
-      if (typeof window !== "undefined" && window.location.pathname !== "/login") {
-        window.location.href = "/login";
+      const hadAuthHeader = Boolean(
+        error?.config?.headers?.Authorization ||
+          error?.config?.headers?.authorization ||
+          error?.config?.headers?.AUTHORIZATION
+      );
+      const currentToken =
+        getAuthToken() || (typeof localStorage !== "undefined" ? localStorage.getItem("token") : null);
+
+      // Avoid logout/redirect loops for anonymous calls (e.g., app boot before login).
+      if (hadAuthHeader || currentToken) {
+        clearAuth();
+        if (typeof window !== "undefined" && window.location.pathname !== "/login") {
+          window.location.href = "/login";
+        }
       }
     }
     return Promise.reject(error);

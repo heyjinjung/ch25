@@ -9,6 +9,7 @@ import { tryHaptic } from "../utils/haptics";
 import GamePageShell from "../components/game/GamePageShell";
 import TicketZeroPanel from "../components/game/TicketZeroPanel";
 import { useQueryClient } from "@tanstack/react-query";
+import { useSound } from "../hooks/useSound";
 
 const FALLBACK_SEGMENTS = Array.from({ length: 12 }).map((_, idx) => ({
   label: `BONUS ${idx + 1}`,
@@ -20,6 +21,7 @@ const RoulettePage: React.FC = () => {
   const { data, isLoading, isError, error } = useRouletteStatus();
   const playMutation = usePlayRoulette();
   const queryClient = useQueryClient();
+  const { playRouletteSpin, stopRouletteSpin } = useSound();
   const [selectedIndex, setSelectedIndex] = useState<number | undefined>();
   const SPIN_DURATION_MS = 3000;
   const [isSpinning, setIsSpinning] = useState(false);
@@ -117,6 +119,7 @@ const RoulettePage: React.FC = () => {
     pendingResultRef.current = null;
 
     setIsSpinning(false);
+    stopRouletteSpin(); // Stop sound at the end
     setDisplayedResult(result);
 
     const rewardValue = result?.reward_value ? Number(result.reward_value) : 0;
@@ -150,6 +153,13 @@ const RoulettePage: React.FC = () => {
       spinHapticTimeoutsRef.current = [];
     };
   }, []);
+
+  // Stop sound on unmount
+  useEffect(() => {
+    return () => {
+      stopRouletteSpin();
+    };
+  }, [stopRouletteSpin]);
 
   useEffect(() => {
     const canHaptic = (() => {

@@ -9,6 +9,7 @@ import { tryHaptic } from "../utils/haptics";
 import GamePageShell from "../components/game/GamePageShell";
 import TicketZeroPanel from "../components/game/TicketZeroPanel";
 import { useQueryClient } from "@tanstack/react-query";
+import { useSound } from "../hooks/useSound";
 
 interface RevealedPrize {
   id: number;
@@ -21,6 +22,7 @@ const LotteryPage: React.FC = () => {
   const { data, isLoading, isError, error } = useLotteryStatus();
   const playMutation = usePlayLottery();
   const queryClient = useQueryClient();
+  const { playLotteryScratch, stopLotteryScratch } = useSound();
   const [revealedPrize, setRevealedPrize] = useState<RevealedPrize | null>(null);
   const [isScratching, setIsScratching] = useState(false);
   const [isRevealed, setIsRevealed] = useState(false);
@@ -67,6 +69,7 @@ const LotteryPage: React.FC = () => {
       setIsScratching(true);
       const result = await playMutation.mutateAsync();
       setIsScratching(false);
+      playLotteryScratch(); // Sound: Reveal
       setIsRevealed(true);
       setRevealedPrize({
         id: result.prize.id,
@@ -87,6 +90,7 @@ const LotteryPage: React.FC = () => {
 
   const handleReset = () => {
     setIsRevealed(false);
+    stopLotteryScratch();
     setRevealedPrize(null);
   };
 
