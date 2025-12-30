@@ -22,7 +22,7 @@ const LotteryPage: React.FC = () => {
   const { data, isLoading, isError, error } = useLotteryStatus();
   const playMutation = usePlayLottery();
   const queryClient = useQueryClient();
-  const { playLotteryScratch } = useSound();
+  const { playLotteryScratch, stopLotteryScratch } = useSound();
   const [revealedPrize, setRevealedPrize] = useState<RevealedPrize | null>(null);
   const [isScratching, setIsScratching] = useState(false);
   const [isRevealed, setIsRevealed] = useState(false);

@@ -48,7 +48,7 @@ const RoulettePage: React.FC = () => {
   const { data, isLoading, isError, error } = useRouletteStatus(activeTab);
   const playMutation = usePlayRoulette();
   const queryClient = useQueryClient();
-  const { playRouletteSpin } = useSound();
+  const { playRouletteSpin, stopRouletteSpin } = useSound();
   const [selectedIndex, setSelectedIndex] = useState<number | undefined>();
   const SPIN_DURATION_MS = 3000;
   const [isSpinning, setIsSpinning] = useState(false);
