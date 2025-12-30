@@ -15,13 +15,13 @@ export interface TelegramAuthResponse {
 
 export const telegramApi = {
     auth: async (initData: string): Promise<TelegramAuthResponse> => {
-        const response = await apiClient.post<TelegramAuthResponse>('/api/v1/telegram/auth', {
+        const response = await apiClient.post<TelegramAuthResponse>('/api/telegram/auth', {
             init_data: initData,
         });
         return response.data;
     },
     link: async (initData: string): Promise<TelegramAuthResponse> => {
-        const response = await apiClient.post<TelegramAuthResponse>('/api/v1/telegram/auth/link', {
+        const response = await apiClient.post<TelegramAuthResponse>('/api/telegram/link', {
             init_data: initData,
         });
         return response.data;

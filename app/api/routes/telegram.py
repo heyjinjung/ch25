@@ -9,7 +9,7 @@ from app.core import security, telegram
 from app.models.user import User
 from app.schemas.telegram import TelegramAuthRequest, TelegramAuthResponse, TelegramLinkRequest
 
-router = APIRouter()
+router = APIRouter(prefix="/api/telegram", tags=["telegram"])
 
 
 @router.post("/auth", response_model=TelegramAuthResponse)
