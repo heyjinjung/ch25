@@ -14,10 +14,10 @@ if ! [ -x "$(command -v docker-compose)" ]; then
   exit 1
 fi
 
-domains=(cc-jm.com)
+domains=(xmas-event.com)
 rsa_key_size=4096
 data_path="/etc/letsencrypt"
-email="admin@cc-jm.com"
+email="admin@xmas-event.com"
 staging=0
 
 # Clean up any existing attempts if they are partial or broken
