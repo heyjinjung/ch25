@@ -148,5 +148,6 @@ def telegram_link(
             "nickname": user.nickname,
             "status": user.status,
             "level": user.level,
+            "telegram_id": user.telegram_id,
         }
     )

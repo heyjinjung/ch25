@@ -1,6 +1,12 @@
 2025-12-08: API/DB/코인 시스템/서비스/운영/체크리스트/overview/architecture 최신화 반영. 실제 코드/운영/QA 흐름과 일치하도록 문서 업데이트.
 # 프로젝트 변경 이력
 
+## 2025-12-30 (SSL/HTTPS & Telegram Integration Resolution)
+- Infrastructure: `cc-jm.com` SSL/HTTPS 보정 (Nginx SSL 블록 추가 및 Let's Encrypt 인증서 적용).
+- DB: 텔레그램 연동 대비 유저 스키마(`telegram_id`) 마이그레이션 적용 및 .env 파일 인코딩(UTF-16LE -> UTF-8) 정상화.
+- Integration: 텔레그램 봇 토큰 업데이트 및 미니 앱 로그인/연동 라우팅(prefix `/api` 통일, `/v1` 제거) 해결.
+- Frontend: `userMessageApi`, `telegramApi` 경로 리팩토링 및 배포 환경(502 Bad Gateway) 안정화.
+
 ## 2025-12-27 (Admin Branding & CRM Refinement)
 - Branding: 전역 서비스명 "씨씨지민 코드지갑"으로 변경 및 UI 브랜딩 통합.
 - CRM: 회원 관리 프로필 필드 확대(실명, 연락처, 태그 등) 및 데이터 정합성 강화.
