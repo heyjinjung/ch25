@@ -5,6 +5,7 @@ import { getVaultStatus } from "../../api/vaultApi";
 import { getLotteryStatus } from "../../api/lotteryApi";
 import { getRouletteStatus } from "../../api/rouletteApi";
 import { getDiceStatus } from "../../api/diceApi";
+import InboxButton from "../common/InboxButton";
 
 const AppHeader: React.FC = () => {
     const season = useSeasonPassStatus();
@@ -60,6 +61,8 @@ const AppHeader: React.FC = () => {
                 <div className="px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-sm font-black text-emerald-400 shrink-0">
                     Lv.{userLevel}
                 </div>
+                {/* Message Inbox - Opens Modal */}
+                <InboxButton />
             </div>
         </div>
     );

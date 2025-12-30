@@ -1,5 +1,5 @@
 ﻿import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
 import Button from "../components/common/Button";
@@ -58,25 +58,39 @@ const GameCard: React.FC<GameCardProps> = ({ title, to, gradient, icon, isWide, 
 const CategoryTabs: React.FC<{ active: string; onChange: (id: string) => void }> = ({ active, onChange }) => {
   const tabs = [
     { id: "all", label: "ALL GAMES" },
-    { id: "hot", label: "HOT" },
-    { id: "new", label: "NEW" },
-    { id: "live", label: "LIVE" },
+    { id: "hot", label: "씨씨카지노", link: "https://ccc-010.com" },
+    { id: "new", label: "씨씨 공식채널", link: "https://t.me/+IE0NYpuze_k1YWZk" },
   ];
   return (
     <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
       {tabs.map((tab) => (
-        <button
-          key={tab.id}
-          onClick={() => onChange(tab.id)}
-          className={clsx(
-            "whitespace-nowrap rounded-full px-5 py-2 text-xs font-bold transition-all",
-            active === tab.id
-              ? "bg-figma-primary text-white shadow-lg shadow-emerald-900/20"
-              : "bg-white/5 text-slate-400 hover:bg-white/10"
-          )}
-        >
-          {tab.label}
-        </button>
+        tab.link ? (
+          <a
+            key={tab.id}
+            href={tab.link}
+            target="_blank"
+            rel="noreferrer"
+            className={clsx(
+              "whitespace-nowrap rounded-full px-5 py-2 text-xs font-bold transition-all",
+              "bg-white/5 text-slate-400 hover:bg-white/10"
+            )}
+          >
+            {tab.label}
+          </a>
+        ) : (
+          <button
+            key={tab.id}
+            onClick={() => onChange(tab.id)}
+            className={clsx(
+              "whitespace-nowrap rounded-full px-5 py-2 text-xs font-bold transition-all",
+              active === tab.id
+                ? "bg-figma-primary text-white shadow-lg shadow-emerald-900/20"
+                : "bg-white/5 text-slate-400 hover:bg-white/10"
+            )}
+          >
+            {tab.label}
+          </button>
+        )
       ))}
     </div>
   );
@@ -85,7 +99,6 @@ const CategoryTabs: React.FC<{ active: string; onChange: (id: string) => void }>
 // --- Page ---
 
 const HomePage: React.FC = () => {
-  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("all");
 
   // Data (Simplified for layout)
@@ -181,16 +194,18 @@ const HomePage: React.FC = () => {
             WELCOME PACKAGE
           </span>
           <h2 className="text-3xl font-black text-white leading-tight">
-            GET YOUR <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-cyan-300">BONUS NOW</span>
+            씨씨지민코드 <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-cyan-300">포인트어플 런칭</span>
           </h2>
-          <p className="mt-2 text-sm text-slate-300 max-w-[60%]">
-            Join the Team Battle and win up to 1,000,000 P prizes.
-          </p>
           <div className="mt-4">
-            <Button variant="figma-primary" onClick={() => navigate('/team-battle')} className="!px-6 shadow-lg shadow-emerald-500/30">
-              GET BONUS
-            </Button>
+            <a
+              href="https://t.me/jm956"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-block rounded-lg px-6 py-2 text-base font-semibold transition focus:outline-none bg-figma-primary text-white font-bold shadow-[0_4px_12px_rgba(0,0,0,0.3)] shadow-lg shadow-emerald-500/30 hover:brightness-110 active:scale-95 uppercase tracking-wide"
+            >
+              문의하기
+            </a>
           </div>
         </div>
         <div className="absolute -bottom-4 -right-4 text-9xl opacity-10 rotate-12 select-none">

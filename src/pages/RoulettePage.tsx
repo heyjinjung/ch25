@@ -20,21 +20,21 @@ const FALLBACK_SEGMENTS = Array.from({ length: 12 }).map((_, idx) => ({
 const TABS: { type: GameTokenType; label: string; activeColors: string; icon: string; iconImg?: string }[] = [
   {
     type: "ROULETTE_COIN",
-    label: "일반 룰렛",
+    label: "일반\n룰렛",
     activeColors: "bg-white text-black shadow-[0_0_15px_rgba(255,255,255,0.4)]",
     icon: "🎟️",
     iconImg: "/assets/asset_ticket_green.png"
   },
   {
     type: "GOLD_KEY",
-    label: "골드 룰렛",
+    label: "골드\n룰렛",
     activeColors: "bg-gradient-to-br from-yellow-300 via-amber-400 to-yellow-500 text-black shadow-[0_0_20px_rgba(255,215,0,0.5)] border-amber-300",
     icon: "🗝️",
     iconImg: "/assets/asset_ticket_gold.png"
   },
   {
     type: "DIAMOND_KEY",
-    label: "다이아 룰렛",
+    label: "다이아\n룰렛",
     activeColors: "bg-gradient-to-br from-cyan-300 via-blue-400 to-indigo-500 text-white shadow-[0_0_20px_rgba(0,191,255,0.5)] border-blue-300",
     icon: "💎",
     iconImg: "/assets/asset_ticket_gold.png"
@@ -286,9 +286,9 @@ const RoulettePage: React.FC = () => {
           </div>
         )}
 
-        <div className="flex flex-col items-center gap-6 lg:flex-row lg:items-start lg:justify-center lg:gap-12">
+        <div className="flex flex-col items-center gap-6 lg:flex-row lg:items-center lg:justify-center lg:gap-10">
           {/* Roulette Wheel */}
-          <div className="relative flex w-full max-w-sm flex-col items-center justify-center lg:w-auto lg:flex-shrink-0">
+          <div className="relative flex w-full max-w-[360px] flex-col items-center justify-center lg:w-[360px] lg:flex-shrink-0">
             <RouletteWheel
               segments={segments}
               isSpinning={isSpinning}
@@ -304,93 +304,93 @@ const RoulettePage: React.FC = () => {
               라이브 데이터 연결 실패 (데모 모드)
             </div>
           )}
-        </div>
 
-        {/* Controls & Info */}
-        <div className="flex w-full max-w-md flex-col gap-6">
-          {/* Control Panel Card */}
-          <div className="relative overflow-hidden rounded-[2rem] border border-white/15 bg-black/60 p-8 shadow-2xl">
-            {/* Top Accent Line */}
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-[#30FF75]/40 to-transparent" />
+          {/* Controls & Info */}
+          <div className="flex w-full max-w-[360px] flex-col gap-6 lg:w-[360px]">
+            {/* Control Panel Card */}
+            <div className="relative overflow-hidden rounded-[2rem] border border-white/15 bg-black/60 p-8 shadow-2xl">
+              {/* Top Accent Line */}
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-[#30FF75]/40 to-transparent" />
 
-            {/* Status Badges */}
-            <div className="mb-6">
-              <div className="flex items-center gap-4 rounded-3xl border border-white/15 bg-black/50 px-8 py-5 shadow-xl">
-                <img
-                  src={TABS.find(t => t.type === activeTab)?.iconImg || "/assets/asset_ticket_green.png"}
-                  alt="Tickets"
-                  className="h-12 w-12 object-contain"
-                />
-                <div className="flex flex-col leading-none">
-                  <span className="text-xs font-black uppercase tracking-widest text-[#30FF75]/70">{tokenLabel}</span>
-                  <span className="font-mono text-2xl font-bold text-white">
-                    {tokenBalance !== null ? <AnimatedNumber value={tokenBalance} /> : "-"}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Action Area */}
-            <div className="space-y-4">
-              {playErrorMessage && (
-                <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm font-medium text-red-200">
-                  ⚠️ {playErrorMessage}
-                </div>
-              )}
-
-              {isOutOfTokens && (
-                <TicketZeroPanel
-                  tokenType={data.token_type}
-                  onClaimSuccess={() => queryClient.invalidateQueries({ queryKey: ["roulette-status"] })}
-                />
-              )}
-
-              <button
-                type="button"
-                disabled={playMutation.isPending || isSpinning || (!isUnlimited && data?.remaining_spins <= 0) || isOutOfTokens}
-                onClick={handlePlay}
-                className="group relative w-full overflow-hidden rounded-2xl bg-gradient-to-b from-[#30FF75] to-[#20C05A] px-6 py-5 text-black shadow-[0_0_20px_rgba(48,255,117,0.3)] transition-all hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(48,255,117,0.5)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
-              >
-                <div className="relative z-10 flex items-center justify-center gap-3">
-                  {playMutation.isPending ? (
-                    <>
-                      <div className="h-5 w-5 animate-spin rounded-full border-2 border-black/30 border-t-black" />
-                      <span className="text-lg font-black">추첨 중...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span className="text-xl">🎰</span>
-                      <span className="text-lg font-black tracking-wide">
-                        {!isSpinning && displayedResult ? "다시 돌리기" : "룰렛 시작"}
-                      </span>
-                    </>
-                  )}
-                </div>
-              </button>
-            </div>
-          </div>
-
-          {/* Result Display (Below Controls) */}
-          {!isSpinning && displayedResult && (
-            <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-black/40 p-1 text-center backdrop-blur-sm animate-fade-in-up">
-              <div className="relative overflow-hidden rounded-[1.8rem] border border-white/5 bg-gradient-to-br from-white/[0.08] to-transparent px-8 py-8">
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-cc-gold/50 to-transparent" />
-
-                <p className="text-sm font-bold uppercase tracking-[0.4em] text-white/40">당첨 결과</p>
-                <h3 className="mt-2 text-3xl font-black text-white drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)]">
-                  {displayedResult.segment.label}
-                </h3>
-
-                {displayedResult.reward_type && displayedResult.reward_type !== "NONE" && (
-                  <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-cc-gold/20 bg-cc-gold/10 px-6 py-2">
-                    <span className="text-sm font-bold text-cc-gold">
-                      +{Number(displayedResult.reward_value).toLocaleString()} {displayedResult.reward_type}
+              {/* Status Badges */}
+              <div className="mb-6">
+                <div className="flex items-center gap-4 rounded-3xl border border-white/15 bg-black/50 px-8 py-5 shadow-xl">
+                  <img
+                    src={TABS.find(t => t.type === activeTab)?.iconImg || "/assets/asset_ticket_green.png"}
+                    alt="Tickets"
+                    className="h-12 w-12 object-contain"
+                  />
+                  <div className="flex flex-col leading-none">
+                    <span className="text-xs font-black uppercase tracking-widest text-[#30FF75]/70">{tokenLabel}</span>
+                    <span className="font-mono text-2xl font-bold text-white">
+                      {tokenBalance !== null ? <AnimatedNumber value={tokenBalance} /> : "-"}
                     </span>
                   </div>
+                </div>
+              </div>
+
+              {/* Action Area */}
+              <div className="space-y-4">
+                {playErrorMessage && (
+                  <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm font-medium text-red-200">
+                    ⚠️ {playErrorMessage}
+                  </div>
                 )}
+
+                {isOutOfTokens && (
+                  <TicketZeroPanel
+                    tokenType={data.token_type}
+                    onClaimSuccess={() => queryClient.invalidateQueries({ queryKey: ["roulette-status"] })}
+                  />
+                )}
+
+                <button
+                  type="button"
+                  disabled={playMutation.isPending || isSpinning || (!isUnlimited && data?.remaining_spins <= 0) || isOutOfTokens}
+                  onClick={handlePlay}
+                  className="group relative w-full overflow-hidden rounded-2xl bg-gradient-to-b from-[#30FF75] to-[#20C05A] px-6 py-5 text-black shadow-[0_0_20px_rgba(48,255,117,0.3)] transition-all hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(48,255,117,0.5)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
+                >
+                  <div className="relative z-10 flex items-center justify-center gap-3">
+                    {playMutation.isPending ? (
+                      <>
+                        <div className="h-5 w-5 animate-spin rounded-full border-2 border-black/30 border-t-black" />
+                        <span className="text-lg font-black">추첨 중...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-xl">🎰</span>
+                        <span className="text-lg font-black tracking-wide">
+                          {!isSpinning && displayedResult ? "다시 돌리기" : "룰렛 시작"}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                </button>
               </div>
             </div>
-          )}
+
+            {/* Result Display (Below Controls) */}
+            {!isSpinning && displayedResult && (
+              <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-black/40 p-1 text-center backdrop-blur-sm animate-fade-in-up">
+                <div className="relative overflow-hidden rounded-[1.8rem] border border-white/5 bg-gradient-to-br from-white/[0.08] to-transparent px-8 py-8">
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-cc-gold/50 to-transparent" />
+
+                  <p className="text-sm font-bold uppercase tracking-[0.4em] text-white/40">당첨 결과</p>
+                  <h3 className="mt-2 text-3xl font-black text-white drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)]">
+                    {displayedResult.segment.label}
+                  </h3>
+
+                  {displayedResult.reward_type && displayedResult.reward_type !== "NONE" && (
+                    <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-cc-gold/20 bg-cc-gold/10 px-6 py-2">
+                      <span className="text-sm font-bold text-cc-gold">
+                        +{Number(displayedResult.reward_value).toLocaleString()} {displayedResult.reward_type}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -419,7 +419,7 @@ const RoulettePage: React.FC = () => {
                 ) : (
                   <span className={clsx("text-lg transition-transform duration-300", activeTab === tab.type && "scale-110")}>{tab.icon}</span>
                 )}
-                <span>{tab.label}</span>
+                <span className="whitespace-pre-line text-center text-xs leading-tight">{tab.label}</span>
               </button>
             ))}
           </div>

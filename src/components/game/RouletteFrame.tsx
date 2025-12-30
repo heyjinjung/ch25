@@ -2,7 +2,7 @@ import React from "react";
 
 const RouletteFrame: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     return (
-        <div className="relative w-full max-w-[400px] aspect-square flex items-center justify-center">
+        <div className="relative w-full max-w-[440px] aspect-square flex items-center justify-center">
             {/* Premium SVG Frame */}
             <svg
                 viewBox="0 0 861 843"
@@ -99,7 +99,7 @@ const RouletteFrame: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                 </defs>
             </svg>
             {/* Content Area (Actual Wheel) */}
-            <div className="relative z-10 w-[63%] aspect-square flex items-center justify-center -mt-[1%]">
+            <div className="relative z-10 w-[72%] aspect-square flex items-center justify-center -mt-[1%]">
                 {children}
             </div>
         </div>

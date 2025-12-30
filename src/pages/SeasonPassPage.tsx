@@ -292,19 +292,19 @@ const SeasonPassPage: React.FC = () => {
             </div>
             <div className="grid gap-6">
               {cards.map((card, i) => (
-                <div key={i} className="group flex items-center gap-5 bg-black/50 p-7 rounded-[2.5rem] border border-white/5 hover:border-white/20 hover:bg-black/80 transition-all shadow-2xl">
-                  <div className="w-16 h-16 rounded-3xl bg-[#111] flex items-center justify-center text-4xl border border-white/10 group-hover:scale-110 group-hover:rotate-3 transition-all shadow-inner">
+                <div key={i} className="group flex items-start gap-4 bg-black/50 p-4 rounded-2xl border border-white/5 hover:border-white/20 hover:bg-black/80 transition-all shadow-xl">
+                  <div className="w-12 h-12 shrink-0 rounded-xl bg-[#111] flex items-center justify-center text-2xl border border-white/10 group-hover:scale-110 transition-all shadow-inner">
                     {card.icon}
                   </div>
-                  <div className="flex-1">
-                    <p className="text-lg font-black text-white tracking-wide">{card.title}</p>
-                    <p className="text-xs text-white/40 font-bold uppercase mt-1.5 tracking-wider">{card.desc}</p>
-                  </div>
-                  <div className={clsx(
-                    "text-[10px] font-black px-4 py-2 rounded-xl border transition-all uppercase tracking-widest",
-                    card.status.includes("완료") ? "text-figma-accent bg-emerald-500/10 border-emerald-500/20" : "text-white/40 bg-white/5 border-white/10"
-                  )}>
-                    {card.status}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-black text-white tracking-wide truncate">{card.title}</p>
+                    <p className="text-[10px] text-white/40 font-bold mt-1 truncate">{card.desc}</p>
+                    <div className={clsx(
+                      "inline-flex text-[9px] font-black px-2.5 py-1 rounded-lg border uppercase tracking-wider mt-2",
+                      card.status.includes("완료") ? "text-figma-accent bg-emerald-500/10 border-emerald-500/20" : "text-white/40 bg-white/5 border-white/10"
+                    )}>
+                      {card.status}
+                    </div>
                   </div>
                 </div>
               ))}

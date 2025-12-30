@@ -86,9 +86,9 @@ const RouletteWheel: React.FC<RouletteWheelProps> = ({
 
   return (
     <div className="relative mx-auto flex flex-col items-center">
-      {/* Premium Pointer */}
-      <div className="absolute -top-8 left-1/2 z-40 -translate-x-1/2 drop-shadow-[0_8px_16px_rgba(0,0,0,0.6)]">
-        <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+      {/* Premium Pointer - positioned to overlap into wheel */}
+      <div className="absolute top-2 left-1/2 z-40 -translate-x-1/2 drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)]">
+        <svg width="36" height="36" viewBox="0 0 40 40" fill="none">
           <path d="M20 38L38 8H2L20 38Z" fill="#30FF75" />
           <path d="M20 38L38 8H2L20 38Z" stroke="white" strokeWidth="3" strokeLinejoin="round" />
           <path d="M20 34L34 10H6L20 34Z" fill="white" fillOpacity="0.2" />
@@ -165,16 +165,15 @@ const RouletteWheel: React.FC<RouletteWheelProps> = ({
             </defs>
 
             {/* Rainbow Outer Frame */}
-            <circle cx="100" cy="100" r="98" stroke="url(#rainbow-border)" strokeWidth="1.5" fill="none" />
+            <circle cx="100" cy="100" r="99" stroke="url(#rainbow-border)" strokeWidth="1" fill="none" />
 
-            {/* Dark Inner Base */}
-            <circle cx="100" cy="100" r="95" fill="black" />
+            {/* Dark Inner Base - removed to maximize segment space */}
 
             {/* Segments Mapping */}
             {segments.map((segment, index) => {
               const startAngle = anglePerSegment * index;
               const endAngle = startAngle + anglePerSegment;
-              const path = describeArc(100, 100, 92, startAngle, endAngle);
+              const path = describeArc(100, 100, 98, startAngle, endAngle);
               const grads = ["#grad-purple", "#grad-orange", "#grad-teal", "#grad-yellow", "#grad-red", "#grad-blue", "#grad-pink", "#grad-gray"];
               const fill = grads[index % grads.length];
 
@@ -186,15 +185,17 @@ const RouletteWheel: React.FC<RouletteWheelProps> = ({
                   <g transform={`rotate(${startAngle + anglePerSegment / 2} 100 100)`}>
                     <text
                       x="100"
-                      y="40"
+                      y="28"
                       fill="white"
-                      fontSize="9"
-                      fontWeight="1000"
+                      fontSize="11"
+                      fontWeight="900"
                       textAnchor="middle"
-                      alignmentBaseline="middle"
-                      transform="rotate(90, 100, 40)"
-                      className="tracking-tighter uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
-                      style={{ filter: 'drop-shadow(0 0 1px black)' }}
+                      dominantBaseline="middle"
+                      transform="rotate(90, 100, 28)"
+                      stroke="rgba(0,0,0,0.8)"
+                      strokeWidth="2.5"
+                      paintOrder="stroke fill"
+                      className="uppercase"
                     >
                       {segment.label}
                     </text>
@@ -206,13 +207,13 @@ const RouletteWheel: React.FC<RouletteWheelProps> = ({
             {/* Premium Center Hub Reconstruction */}
             <g transform="translate(100 100)">
               {/* Outer Decorative Ring */}
-              <circle r="25" fill="rgba(0,0,0,0.6)" stroke="white" strokeWidth="0.5" strokeDasharray="2 2" opacity="0.3" />
-              <circle r="20" fill="#000" stroke="url(#rainbow-border)" strokeWidth="2" />
-              <circle r="14" fill="none" stroke="white" strokeWidth="0.5" strokeDasharray="3 3" opacity="0.4" />
+              <circle r="20" fill="rgba(0,0,0,0.8)" stroke="white" strokeWidth="0.5" strokeDasharray="2 2" opacity="0.3" />
+              <circle r="16" fill="#000" stroke="url(#rainbow-border)" strokeWidth="1.5" />
+              <circle r="10" fill="none" stroke="white" strokeWidth="0.5" strokeDasharray="3 3" opacity="0.4" />
 
               {/* Core Hub */}
-              <circle r="8" fill="#FFF" opacity="0.1" />
-              <circle r="4" fill="#30FF75" className="animate-pulse" />
+              <circle r="6" fill="#FFF" opacity="0.1" />
+              <circle r="3" fill="#30FF75" className="animate-pulse" />
             </g>
           </svg>
         </div>

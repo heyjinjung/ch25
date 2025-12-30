@@ -182,17 +182,17 @@ const VaultMainPanel: React.FC = React.memo(() => {
 
 
   return (
-    <section className="mx-auto w-full max-w-[1100px] flex flex-col gap-10">
+    <section className="mx-auto w-full max-w-[1100px] flex flex-col gap-6">
       {/* 1. High-End Hero Header */}
-      <div className="relative w-full rounded-[3rem] overflow-hidden bg-[#1a1c0e] p-8 md:p-16 border border-white/10 shadow-[0_40px_100px_-20px_rgba(0,0,0,0.9)] transition-all">
+      <div className="relative w-full rounded-[2rem] overflow-hidden bg-[#1a1c0e] p-6 md:p-10 border border-white/10 shadow-[0_30px_80px_-20px_rgba(0,0,0,0.9)] transition-all">
         {/* Abstract Premium Background */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute -top-32 -left-32 w-[600px] h-[600px] bg-[#30FF75]/10 blur-[120px] rounded-full animate-pulse" />
           <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/60 to-black/90" />
         </div>
 
-        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-          <div className="flex flex-col gap-10">
+        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+          <div className="flex flex-col gap-6">
             <div className="flex flex-col gap-4">
               <div className="flex items-center gap-4">
                 <span className="px-5 py-2 rounded-full bg-emerald-950/80 border border-figma-accent/50 text-figma-accent text-[10px] font-black tracking-[0.2em] uppercase shadow-[0_0_20px_rgba(48,255,117,0.2)] backdrop-blur-md">
@@ -202,7 +202,10 @@ const VaultMainPanel: React.FC = React.memo(() => {
               </div>
               <h1 className="text-4xl md:text-[72px] font-black leading-[0.9] text-white tracking-tighter italic uppercase">
                 내 금고 <br />
-                <span className="text-figma-accent text-5xl md:text-[84px] not-italic">리워드 보관함</span>
+                <span className="text-figma-accent text-5xl md:text-[84px] not-italic">
+                  <span className="hidden md:inline">머니보관함</span>
+                  <span className="md:hidden">머니<br />보관함</span>
+                </span>
               </h1>
             </div>
 
@@ -216,29 +219,30 @@ const VaultMainPanel: React.FC = React.memo(() => {
               )}
             </div>
 
-            <div className="flex flex-col gap-6 max-w-md">
-              <p className="text-white/60 text-base md:text-lg leading-relaxed font-bold">
+            <div className="flex flex-col gap-4 max-w-md">
+              <p className="text-white/60 text-sm md:text-base leading-relaxed font-bold">
                 지민코드 활동을 통해 적립된 포인트가 <span className="text-white">안전하게 보관</span>되어 있습니다.
-                이용 내역이 확인되면 즉시 해금되어 보유 머니로 전환됩니다.
+                씨씨이용시 포인트가 <span className="text-white">보유 머니로 전환</span>됩니다.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4">
-                <button
-                  onClick={() => setVaultModalOpen(true)}
-                  className="group relative px-10 py-5 bg-figma-primary text-white font-black text-sm rounded-[1.5rem] transition-all overflow-hidden shadow-2xl active:scale-95"
+                <a
+                  href="https://t.me/jm956"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="group relative px-6 py-3 bg-figma-primary text-white font-black text-sm rounded-xl transition-all overflow-hidden shadow-xl active:scale-95"
                 >
                   <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform" />
                   <span className="relative z-10 flex items-center justify-center gap-2 tracking-widest uppercase">
                     상세 정보 확인
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M9 5l7 7-7 7" /></svg>
                   </span>
-                </button>
+                </a>
                 <a
-                  href="https://ccc-010.com"
-                  target="_blank"
-                  className="px-10 py-5 bg-white/5 text-white/70 font-black text-sm rounded-[1.5rem] hover:bg-white/10 transition-all border border-white/10 backdrop-blur-md flex items-center justify-center gap-2 uppercase tracking-widest"
+                  href="/"
+                  className="px-6 py-3 bg-white/5 text-white/70 font-black text-sm rounded-xl hover:bg-white/10 transition-all border border-white/10 backdrop-blur-md flex items-center justify-center gap-2 uppercase tracking-widest"
                 >
-                  카지노 홈으로
+                  씨씨홈으로
                 </a>
               </div>
             </div>
@@ -255,32 +259,32 @@ const VaultMainPanel: React.FC = React.memo(() => {
         {/* Locked Box */}
         <div className="relative group w-full max-w-xl">
           <div className="absolute inset-0 bg-figma-accent/10 blur-[60px] opacity-50 transition-opacity" />
-          <div className="relative p-10 rounded-[2.5rem] border border-white/20 bg-black/60 backdrop-blur-3xl overflow-hidden shadow-3xl text-center">
+          <div className="relative p-6 rounded-[2rem] border border-white/20 bg-black/60 backdrop-blur-3xl overflow-hidden shadow-2xl text-center">
             <div className="absolute top-0 right-0 p-6 opacity-5">
               <img src="/assets/vault/vault_dial.jpg" className="w-24 h-24 animate-spin-slow" style={{ mixBlendMode: 'screen' }} alt="" />
             </div>
             <div className="flex flex-col gap-2 relative z-10">
               <span className="text-xs font-black text-white/30 tracking-[0.4em] uppercase">현재 보관된 리워드</span>
               <div className="flex items-baseline justify-center gap-2">
-                <h3 className="text-white text-6xl font-black tracking-tighter">{formatWon(view.vaultBalance).replace('원', '')}</h3>
-                <span className="text-figma-accent text-2xl font-black italic">원</span>
+                <h3 className="text-white text-4xl md:text-5xl font-black tracking-tighter">{formatWon(view.vaultBalance).replace('원', '')}</h3>
+                <span className="text-figma-accent text-xl font-black italic">원</span>
               </div>
             </div>
             <div className="mt-8 flex items-center justify-center gap-3 relative z-10">
               <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse shadow-[0_0_10px_rgba(249,121,53,0.8)]" />
-              <p className="text-white/50 text-xs font-bold uppercase tracking-wider">이용 확인 후 자동으로 지급됩니다</p>
+              <p className="text-white/50 text-xs font-bold uppercase tracking-wider">이용 확인 후 지급됩니다</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* 3. Reward Tracking & History */}
-      <div className="max-w-2xl mx-auto w-full flex flex-col gap-8">
+      <div className="max-w-2xl mx-auto w-full flex flex-col gap-4">
         {/* Rules & History only */}
-        <div className="flex flex-col gap-8">
-          <div className="p-8 md:p-10 rounded-[2.5rem] border border-white/10 bg-[#111] shadow-2xl relative overflow-hidden">
+        <div className="flex flex-col gap-4">
+          <div className="p-5 md:p-6 rounded-[1.5rem] border border-emerald-500/20 bg-gradient-to-br from-emerald-950/50 to-black shadow-xl relative overflow-hidden">
             <div className="absolute top-0 left-0 w-1.5 h-full bg-figma-accent" />
-            <h4 className="text-white font-black text-lg mb-8 flex items-center gap-3 uppercase">
+            <h4 className="text-white font-black text-base mb-4 flex items-center gap-3 uppercase">
               이용 안내 및 조건
             </h4>
             <div className="grid gap-3">
@@ -295,9 +299,9 @@ const VaultMainPanel: React.FC = React.memo(() => {
             </div>
           </div>
 
-          <div className="p-8 md:p-10 rounded-[2.5rem] border border-white/10 bg-[#111] shadow-2xl relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-1.5 h-full bg-white/20" />
-            <h4 className="text-white font-black text-lg mb-8 flex items-center gap-3 uppercase">
+          <div className="p-5 md:p-6 rounded-[1.5rem] border border-amber-500/20 bg-gradient-to-br from-amber-950/30 to-black shadow-xl relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-1.5 h-full bg-amber-500/50" />
+            <h4 className="text-white font-black text-base mb-4 flex items-center gap-3 uppercase">
               최근 활동 내역
             </h4>
             <div className="flex flex-col gap-4">
