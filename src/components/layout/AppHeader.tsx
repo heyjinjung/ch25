@@ -6,8 +6,11 @@ import { getLotteryStatus } from "../../api/lotteryApi";
 import { getRouletteStatus } from "../../api/rouletteApi";
 import { getDiceStatus } from "../../api/diceApi";
 import InboxButton from "../common/InboxButton";
+import { useAuth } from "../../auth/authStore";
+import LogoutButton from "../auth/LogoutButton";
 
 const AppHeader: React.FC = () => {
+    const { user } = useAuth();
     const season = useSeasonPassStatus();
     const vault = useQuery({
         queryKey: ["vault-status"],
@@ -46,6 +49,11 @@ const AppHeader: React.FC = () => {
                 <img src="/assets/logo_cc_v2.png" alt="CC Casino" className="h-10 w-auto object-contain drop-shadow-[0_0_15px_rgba(48,255,117,0.3)]" />
             </div>
             <div className="flex gap-3 items-center min-w-0">
+                {/* User Nickname */}
+                <span className="hidden sm:block text-xs font-medium text-slate-400 truncate max-w-[80px]">
+                    {user?.nickname}
+                </span>
+
                 {/* Assets Display */}
                 <div className="flex items-center gap-2 rounded-full bg-black/60 border border-white/10 px-4 py-1.5 backdrop-blur-md shrink-0">
                     <img src="/assets/asset_coin_gold.png" alt="Coin" className="w-6 h-6 drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]" />
@@ -63,6 +71,9 @@ const AppHeader: React.FC = () => {
                 </div>
                 {/* Message Inbox - Opens Modal */}
                 <InboxButton />
+
+                {/* Logout Button */}
+                <LogoutButton className="scale-75 origin-right" />
             </div>
         </div>
     );

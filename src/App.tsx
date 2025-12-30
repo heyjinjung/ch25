@@ -6,14 +6,14 @@ import ErrorBoundary from "./components/common/ErrorBoundary";
 
 import { useAuth } from "./auth/authStore";
 import { useTelegram } from "./providers/TelegramProvider";
-import { telegramApi } from "./api/telegramApi";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useSound } from "./hooks/useSound";
 
 const App: React.FC = () => {
   const { initData, isReady } = useTelegram();
-  const { login, token } = useAuth();
+  const { token } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const { playPageTransition } = useSound();
 
   // Play sound on route change
@@ -22,22 +22,12 @@ const App: React.FC = () => {
   }, [location.pathname, playPageTransition]);
 
   React.useEffect(() => {
-    const performTelegramLogin = async () => {
-      if (initData && !token) {
-        try {
-          const response = await telegramApi.auth(initData);
-          login(response.access_token, response.user);
-          console.log("[TELEGRAM] Auto-login successful");
-        } catch (error) {
-          console.error("[TELEGRAM] Auto-login failed", error);
-        }
-      }
-    };
-
-    if (isReady) {
-      performTelegramLogin();
+    // If we're in TMA (initData exists) but not logged in (no token),
+    // and we're NOT already on the /connect page, redirect to it.
+    if (isReady && initData && !token && location.pathname !== "/connect") {
+      navigate("/connect", { replace: true });
     }
-  }, [initData, isReady, token, login]);
+  }, [initData, isReady, token, location.pathname, navigate]);
 
   return (
     <ErrorBoundary>

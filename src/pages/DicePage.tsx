@@ -1,5 +1,5 @@
 // src/pages/DicePage.tsx
-import { useState } from "react";
+import React, { useState } from "react";
 import DiceView from "../components/game/DiceView";
 import { useDiceStatus, usePlayDice } from "../hooks/useDice";
 import FeatureGate from "../components/feature/FeatureGate";
@@ -60,13 +60,12 @@ const DicePage: React.FC = () => {
         const rewardType = response.reward_type ?? "보상";
 
         // Strict Whitelist for Reward Toast
-        // XP, LEVEL, EXP, and POINT are explicitly excluded.
         const ALLOWED_TYPES = ["TICKET", "COUPON", "KEY", "TOKEN"];
         const isAllowedReward = ALLOWED_TYPES.some(t => rewardType.toUpperCase().includes(t));
 
         if (response.result === "WIN" && rewardValue > 0 && isAllowedReward) {
           setRewardToast({ value: rewardValue, type: rewardType });
-          playToast(); // Sound: Victory/Reward (Message Sound)
+          playToast(); // Sound: Victory/Reward
           setTimeout(() => setRewardToast(null), 3000);
         }
 
@@ -74,14 +73,10 @@ const DicePage: React.FC = () => {
           setVaultModal({ open: true, amount: response.vaultEarn! });
         }
 
-        // Sync all statuses immediately after game results are shown/processed
-        queryClient.invalidateQueries({ queryKey: ["lottery-status"] });
-        queryClient.invalidateQueries({ queryKey: ["roulette-status"] });
+        // Sync all statuses immediately
         queryClient.invalidateQueries({ queryKey: ["dice-status"] });
         queryClient.invalidateQueries({ queryKey: ["vault-status"] });
         queryClient.invalidateQueries({ queryKey: ["season-pass-status"] });
-        queryClient.invalidateQueries({ queryKey: ["team-leaderboard"] });
-        queryClient.invalidateQueries({ queryKey: ["team-membership"] });
       }, 1000);
     } catch (e) {
       setIsRolling(false);
@@ -115,58 +110,54 @@ const DicePage: React.FC = () => {
     }
 
     return (
-      <div className="relative space-y-4">
-
-        {/* Reward Alert */}
-        {rewardToast && (
-          <div className="fixed inset-x-0 top-24 z-[100] flex justify-center px-6 pointer-events-none">
-            <div className="flex items-center gap-5 rounded-[2rem] border border-[#30FF75]/30 bg-black/80 px-8 py-5 shadow-[0_20px_60px_rgba(0,0,0,0.8)] backdrop-blur-2xl animate-fade-in-down">
-              <img src="/assets/asset_coin_gold.png" alt="Reward" className="w-12 h-12 drop-shadow-[0_0_15px_rgba(255,215,0,0.5)]" />
-              <div className="text-left">
-                <p className="text-xs font-black uppercase tracking-[0.2em] text-[#30FF75]">Victory Reward</p>
-                <p className="text-2xl font-black text-white">
-                  +<AnimatedNumber value={rewardToast.value} from={0} /> <span className="text-white/40">{rewardToast.type}</span>
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Top Info Bar (Premium Tickets) */}
-        <div className="flex justify-center">
-          <div className="group relative flex items-center gap-4 rounded-3xl border border-white/10 bg-white/5 px-8 py-2 backdrop-blur-xl transition-all hover:bg-white/10">
-            <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-[#30FF75]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-            <img src="/assets/icon_dice_silver.png" alt="Dice" className="h-7 w-7 object-contain" />
-            <div className="flex flex-col">
-              <span className="text-[9px] font-black uppercase tracking-widest text-[#30FF75]/70">Available Entries</span>
-              <span className="text-lg font-black text-white">
-                {data.token_balance.toLocaleString()} <span className="text-white/20 ml-1">TICKETS</span>
+      <div className="relative space-y-4 max-w-lg mx-auto">
+        {/* Compressed Layout Group */}
+        <div className="flex flex-col gap-2">
+          {/* Top Ticket Info - Made smaller and integrated */}
+          <div className="flex justify-center -mb-4 z-10">
+            <div className="flex items-center gap-3 rounded-full border border-white/10 bg-black/60 px-5 py-1 backdrop-blur-md shadow-lg">
+              <img src="/assets/icon_dice_silver.png" alt="Dice" className="h-4 w-4 object-contain" />
+              <span className="text-xs font-bold text-white">
+                {data.token_balance.toLocaleString()} <span className="text-[10px] text-white/40">TICKETS</span>
               </span>
             </div>
           </div>
-        </div>
 
-        {/* Battle Arena Frame */}
-        <div className="relative overflow-hidden rounded-[2.5rem] border border-white/10 bg-black/40 p-1 shadow-2xl backdrop-blur-md">
-          {/* Glassy Inner Panel */}
-          <div className="rounded-[2.3rem] bg-gradient-to-b from-white/5 to-transparent p-4 sm:p-8">
-            <DiceView userDice={userDice} dealerDice={dealerDice} result={result} isRolling={isRolling} />
+          {/* Battle Arena - Comact Height */}
+          <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-black/40 p-1 shadow-2xl backdrop-blur-md">
+            <div className="rounded-[1.8rem] bg-gradient-to-b from-white/5 to-transparent p-4 min-h-[320px] flex flex-col justify-center">
+              <DiceView userDice={userDice} dealerDice={dealerDice} result={result} isRolling={isRolling} />
+
+              {/* Result Message Overlay */}
+              {infoMessage && !isRolling && result && (
+                <div className="mt-4 text-center animate-fade-in-up">
+                  <p className={clsx(
+                    "text-lg font-black tracking-tight drop-shadow-md",
+                    result === 'WIN' ? 'text-[#30FF75]' : result === 'LOSE' ? 'text-red-400' : 'text-amber-400'
+                  )}>
+                    {infoMessage}
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Action Controls */}
-        <div className="mx-auto max-w-md space-y-6">
+        {/* Action Button - Compact */}
+        <div className="relative z-20">
           {!!playMutation.error && !isRolling && (
-            <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-6 py-4 text-center text-sm font-bold text-red-200 backdrop-blur-md">
+            <div className="mb-2 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-2 text-center text-xs font-bold text-red-200">
               <span className="mr-2">🚨</span> {mapErrorMessage(playMutation.error)}
             </div>
           )}
 
           {isOutOfTokens && (
-            <TicketZeroPanel
-              tokenType={data.token_type}
-              onClaimSuccess={() => queryClient.invalidateQueries({ queryKey: ["dice-status"] })}
-            />
+            <div className="mb-2">
+              <TicketZeroPanel
+                tokenType={data.token_type}
+                onClaimSuccess={() => queryClient.invalidateQueries({ queryKey: ["dice-status"] })}
+              />
+            </div>
           )}
 
           <Button
@@ -175,37 +166,40 @@ const DicePage: React.FC = () => {
             onClick={handlePlay}
             variant="figma-primary"
             fullWidth
-            className="rounded-2xl"
+            className="rounded-xl py-3 transform active:scale-95 transition-transform"
           >
-            <div className="flex items-center justify-center gap-3">
+            <div className="flex items-center justify-center gap-2">
               {isRolling || playMutation.isPending ? (
                 <>
-                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                  <span className="font-bold text-white">결과 확인 중...</span>
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                  <span className="font-bold text-white text-sm">Rolling...</span>
                 </>
               ) : (
                 <>
-                  <img src="/assets/icon_dice_silver.png" className="w-6 h-6 object-contain" alt="" />
-                  <span className="text-lg font-black tracking-wider text-white">
-                    {result || infoMessage ? "다시 대결하기" : "주사위 굴리기"}
+                  <span className="text-base font-black tracking-wider text-white">
+                    {result ? "RETRY" : "ROLL DICE"}
                   </span>
                 </>
               )}
             </div>
           </Button>
-
-          {infoMessage && !isRolling && result && (
-            <div className={`text-center animate-fade-in-up px-6 py-4 rounded-2xl bg-white/5 border border-white/5`}>
-              <p className="text-xs font-black uppercase text-white/30 tracking-widest mb-1">전투 기록</p>
-              <p className={clsx(
-                "text-lg font-black tracking-tight",
-                result === 'WIN' ? 'text-[#30FF75]' : result === 'LOSE' ? 'text-red-400' : 'text-amber-400'
-              )}>
-                {infoMessage}
-              </p>
-            </div>
-          )}
         </div>
+
+        {/* Reward Alert - Adjusted Position */}
+        {rewardToast && (
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[100] w-full px-4 pointer-events-none">
+            <div className="flex flex-col items-center justify-center gap-2 rounded-[2rem] border border-[#30FF75]/30 bg-black/90 px-6 py-6 shadow-[0_0_50px_rgba(48,255,117,0.3)] backdrop-blur-3xl animate-bounce-subtle">
+              <img src="/assets/asset_coin_gold.png" alt="Reward" className="w-16 h-16 drop-shadow-[0_0_20px_rgba(255,215,0,0.6)]" />
+              <div className="text-center">
+                <p className="text-[10px] font-black uppercase tracking-widest text-[#30FF75]">YOU WON</p>
+                <p className="text-3xl font-black text-white leading-none mt-1">
+                  +{rewardToast.value}
+                </p>
+                <p className="text-xs font-bold text-white/50">{rewardToast.type}</p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   })();

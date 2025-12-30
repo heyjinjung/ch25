@@ -1,63 +1,87 @@
 // src/router/UserRoutes.tsx
-import React from "react";
+import React, { Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import RoulettePage from "../pages/RoulettePage";
-import DicePage from "../pages/DicePage";
-import LotteryPage from "../pages/LotteryPage";
-import RankingPage from "../pages/RankingPage";
-import SurveyListPage from "../pages/SurveyListPage";
-import SurveyRunnerPage from "../pages/SurveyRunnerPage";
-import LoginPage from "../pages/LoginPage";
-import NewMemberDicePage from "../pages/NewMemberDicePage";
-import HomePage from "../pages/HomePage";
-import FigmaLandingTablet from "../pages/FigmaLandingTablet";
-import FigmaLandingMobile from "../pages/FigmaLandingMobile";
-import SeasonPassPage from "../pages/SeasonPassPage";
-import GuidePage from "../pages/GuidePage";
-import TeamBattlePage from "../pages/TeamBattlePage";
-import GameLobbyPage from "../pages/GameLobbyPage";
-import VaultPage from "../pages/VaultPage";
 import UserLayout from "../components/layout/UserLayout";
 import SidebarAppLayout from "../components/layout/SidebarAppLayout";
 import RequireAuth from "../components/routing/RequireAuth";
 
+
+// Lazy load heavy pages for performance optimization
+const RoulettePage = React.lazy(() => import("../pages/RoulettePage"));
+const DicePage = React.lazy(() => import("../pages/DicePage"));
+const LotteryPage = React.lazy(() => import("../pages/LotteryPage"));
+const RankingPage = React.lazy(() => import("../pages/RankingPage"));
+const SurveyListPage = React.lazy(() => import("../pages/SurveyListPage"));
+const SurveyRunnerPage = React.lazy(() => import("../pages/SurveyRunnerPage"));
+const LoginPage = React.lazy(() => import("../pages/LoginPage"));
+const NewMemberDicePage = React.lazy(() => import("../pages/NewMemberDicePage"));
+const HomePage = React.lazy(() => import("../pages/HomePage"));
+const FigmaLandingTablet = React.lazy(() => import("../pages/FigmaLandingTablet"));
+const FigmaLandingMobile = React.lazy(() => import("../pages/FigmaLandingMobile"));
+const SeasonPassPage = React.lazy(() => import("../pages/SeasonPassPage"));
+const GuidePage = React.lazy(() => import("../pages/GuidePage"));
+const TeamBattlePage = React.lazy(() => import("../pages/TeamBattlePage"));
+const GameLobbyPage = React.lazy(() => import("../pages/GameLobbyPage"));
+const VaultPage = React.lazy(() => import("../pages/VaultPage"));
+const LinkPage = React.lazy(() => import("../pages/LinkPage"));
+const ConnectPage = React.lazy(() => import("../pages/ConnectPage"));
+const MissionPage = React.lazy(() => import("../pages/MissionPage"));
+
+// Simple loading fallback
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-screen bg-slate-900 text-white">
+    <div className="flex flex-col items-center gap-3">
+      <div className="w-8 h-8 border-4 border-indigo-500 border-t-white rounded-full animate-spin" />
+      <p className="text-sm text-slate-400 font-medium">Loading...</p>
+    </div>
+  </div>
+);
+
 const UserRoutes: React.FC = () => {
   return (
-    <Routes>
-      <Route path="/login" element={<LoginPage />} />
-      {/* Login-first flow */}
-      <Route path="/" element={<Navigate to="/login" replace />} />
-      <Route path="/tablet" element={<Navigate to="/login" replace />} />
-      <Route path="/mobile" element={<Navigate to="/login" replace />} />
+    <Suspense fallback={<PageLoader />}>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/connect" element={<ConnectPage />} />
 
-      {/* Primary user experience with sidebar */}
-      <Route element={<SidebarAppLayout />}>
-        <Route element={<RequireAuth />}>
-          <Route path="/landing" element={<HomePage />} />
-          <Route path="/landing/tablet" element={<FigmaLandingTablet />} />
-          <Route path="/landing/mobile" element={<FigmaLandingMobile />} />
-          <Route path="/vault" element={<VaultPage />} />
-          <Route path="/season-pass" element={<SeasonPassPage />} />
-          <Route path="/team-battle" element={<TeamBattlePage />} />
-          <Route path="/games" element={<GameLobbyPage />} />
-          <Route path="/roulette" element={<RoulettePage />} />
-          <Route path="/dice" element={<DicePage />} />
-          <Route path="/lottery" element={<LotteryPage />} />
-          <Route path="/guide" element={<GuidePage />} />
+        {/* Primary experience starts at landing/home */}
+        <Route path="/" element={<Navigate to="/landing" replace />} />
+        <Route path="/tablet" element={<Navigate to="/landing/tablet" replace />} />
+        <Route path="/mobile" element={<Navigate to="/landing/mobile" replace />} />
+
+        {/* Primary user experience with sidebar */}
+        <Route element={<SidebarAppLayout />}>
+          <Route element={<RequireAuth />}>
+            <Route path="/landing" element={<HomePage />} />
+            <Route path="/landing/tablet" element={<FigmaLandingTablet />} />
+            <Route path="/landing/mobile" element={<FigmaLandingMobile />} />
+            <Route path="/vault" element={<VaultPage />} />
+            <Route path="/season-pass" element={<SeasonPassPage />} />
+            <Route path="/missions" element={<MissionPage />} />
+            <Route path="/team-battle" element={<TeamBattlePage />} />
+            <Route path="/games" element={<GameLobbyPage />} />
+            <Route path="/roulette" element={<RoulettePage />} />
+            <Route path="/dice" element={<DicePage />} />
+            <Route path="/lottery" element={<LotteryPage />} />
+            <Route path="/guide" element={<GuidePage />} />
+            <Route path="/link" element={<LinkPage />} />
+          </Route>
         </Route>
-      </Route>
-      <Route element={<UserLayout />}>
-        <Route element={<RequireAuth />}>
-          <Route path="/home" element={<Navigate to="/landing" replace />} />
-          <Route path="/ranking" element={<RankingPage />} />
-          <Route path="/surveys" element={<SurveyListPage />} />
-          <Route path="/surveys/:surveyId" element={<SurveyRunnerPage />} />
-          <Route path="/new-member/dice" element={<NewMemberDicePage />} />
-          <Route path="/app" element={<Navigate to="/landing" replace />} />
+
+        <Route element={<UserLayout />}>
+          <Route element={<RequireAuth />}>
+            <Route path="/home" element={<Navigate to="/landing" replace />} />
+            <Route path="/ranking" element={<RankingPage />} />
+            <Route path="/surveys" element={<SurveyListPage />} />
+            <Route path="/surveys/:surveyId" element={<SurveyRunnerPage />} />
+            <Route path="/new-member/dice" element={<NewMemberDicePage />} />
+            <Route path="/app" element={<Navigate to="/landing" replace />} />
+          </Route>
         </Route>
-      </Route>
-      <Route path="*" element={<Navigate to="/login" replace />} />
-    </Routes>
+
+        <Route path="*" element={<Navigate to="/landing" replace />} />
+      </Routes>
+    </Suspense>
   );
 };
 

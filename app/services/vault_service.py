@@ -40,7 +40,8 @@ class VaultService:
     PROGRAM_KEY = "NEW_MEMBER_VAULT"
 
     GAME_EARN_BASE_AMOUNT = 200
-    GAME_EARN_DICE_LOSE_BONUS = 100
+    GAME_EARN_DICE_LOSE_BONUS = -50
+
 
     @classmethod
     def vault_accrual_multiplier(cls, db: Session | None = None, now: datetime | None = None) -> float:
@@ -700,3 +701,129 @@ class VaultService:
             return 0
 
         return int(amount) if amount > 0 else 0
+
+    def request_withdrawal(self, db: Session, user_id: int, amount: int) -> dict:
+        """Request a withdrawal from the user's cash balance.
+
+        Conditions:
+        1. Amount >= 10,000.
+        2. User must have a deposit record TODAY (UserActivity.last_charge_at).
+        3. Sufficient cash balance.
+        """
+        from app.models.vault_withdrawal_request import VaultWithdrawalRequest
+        from app.models.user_activity import UserActivity
+        from app.models.user_cash_ledger import UserCashLedger
+
+        # 1. Validation
+        if amount < 10_000:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="MIN_WITHDRAWAL_AMOUNT_10000")
+
+        now = datetime.utcnow()
+        today = now.date()
+
+        # 2. Check Eligibility (Same Day Deposit)
+        activity = db.query(UserActivity).filter(UserActivity.user_id == user_id).first()
+        if not activity or not activity.last_charge_at:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="NO_DEPOSIT_RECORD_TODAY")
+        
+        last_charge_date = activity.last_charge_at.date()
+        if last_charge_date != today:
+             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="DEPOSIT_REQUIRED_TODAY")
+
+        # 3. Check Balance & Deduct
+        q = db.query(User).filter(User.id == user_id)
+        if db.bind and db.bind.dialect.name != "sqlite":
+            q = q.with_for_update()
+        user = q.one_or_none()
+        
+        if not user:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="USER_NOT_FOUND")
+
+        if (user.cash_balance or 0) < amount:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="INSUFFICIENT_FUNDS")
+
+        user.cash_balance -= amount
+        
+        # Ledger
+        entry = UserCashLedger(
+            user_id=user_id,
+            delta=-amount,
+            balance_after=user.cash_balance,
+            reason="VAULT_WITHDRAWAL_REQUEST",
+            label="WITHDRAW_REQ",
+            meta_json={"requested_at": now.isoformat()}
+        )
+        db.add(entry)
+
+        # 4. Create Request
+        req = VaultWithdrawalRequest(
+            user_id=user_id,
+            amount=amount,
+            status="PENDING",
+            created_at=now
+        )
+        db.add(req)
+        
+        db.commit()
+        db.refresh(req)
+
+        return {
+            "request_id": req.id,
+            "status": req.status,
+            "amount": req.amount,
+            "created_at": req.created_at,
+            "balance_after": user.cash_balance
+        }
+
+    def process_withdrawal(self, db: Session, request_id: int, action: str, admin_id: int, memo: str | None = None) -> dict:
+        """Process a withdrawal request (APPROVE or REJECT)."""
+        from app.models.vault_withdrawal_request import VaultWithdrawalRequest
+        from app.models.user_cash_ledger import UserCashLedger
+
+        action = action.upper()
+        if action not in ("APPROVE", "REJECT"):
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="INVALID_ACTION")
+
+        req = db.query(VaultWithdrawalRequest).filter(VaultWithdrawalRequest.id == request_id).with_for_update().first()
+        if not req:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="REQUEST_NOT_FOUND")
+        
+        if req.status != "PENDING":
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="REQUEST_ALREADY_PROCESSED")
+
+        now = datetime.utcnow()
+        req.processed_at = now
+        req.processed_by = admin_id
+        req.admin_memo = memo
+
+        if action == "APPROVE":
+            req.status = "APPROVED"
+            # Money was already deducted at request time. No further balance change needed.
+        
+        elif action == "REJECT":
+            req.status = "REJECTED"
+            # Refund the amount
+            user = db.query(User).filter(User.id == req.user_id).first()
+            if user:
+                user.cash_balance = (user.cash_balance or 0) + req.amount
+                
+                # Ledger for Refund
+                entry = UserCashLedger(
+                    user_id=user.id,
+                    delta=req.amount,
+                    balance_after=user.cash_balance,
+                    reason="VAULT_WITHDRAWAL_REFUND",
+                    label="WITHDRAW_REJECT",
+                    meta_json={"request_id": req.id}
+                )
+                db.add(entry)
+                db.add(user)
+
+        db.commit()
+        db.refresh(req)
+        
+        return {
+            "request_id": req.id,
+            "status": req.status,
+            "processed_at": req.processed_at
+        }
