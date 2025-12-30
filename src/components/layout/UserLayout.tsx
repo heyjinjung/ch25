@@ -6,6 +6,7 @@ import MainLayout from "./MainLayout";
 import SeasonPassBar from "../season-pass/SeasonPassBar";
 import SurveyPromptBanner from "../survey/SurveyPromptBanner";
 import DowntimeBanner from "../common/DowntimeBanner";
+import SoundMonitor from "../common/SoundMonitor";
 
 const UserLayout: React.FC = () => {
   const location = useLocation();
@@ -23,6 +24,7 @@ const UserLayout: React.FC = () => {
         {!hideTopBars && <SeasonPassBar />}
         <Outlet />
       </div>
+      <SoundMonitor />
     </MainLayout>
   );
 };

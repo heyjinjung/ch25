@@ -1,4 +1,6 @@
-import { useMemo, useState } from "react";
+// TODO: [VERIFY] Ensure Ticket count decreases visually on play.
+// TODO: [VERIFY] Confirm winning a Prize (Point) does NOT trigger Level Up animation (Strict XP).
+import { useMemo, useState, useEffect } from "react";
 import { usePlayLottery, useLotteryStatus } from "../hooks/useLottery";
 import FeatureGate from "../components/feature/FeatureGate";
 import LotteryCard from "../components/game/LotteryCard";

@@ -1,4 +1,6 @@
-﻿import React, { useEffect, useMemo, useRef } from "react";
+﻿// TODO: [VERIFY] Ensure XP Bar DOES NOT move on Game Win/Mission Complete (Ref: L-03 Strict).
+// TODO: [VERIFY] Ensure XP Bar updates ONLY when Admin inputs Deposit Data (Ref: L-01).
+import React, { useEffect, useMemo, useRef } from "react";
 import { useTodayRanking } from "../hooks/useRanking";
 import { useSeasonPassStatus, useInternalWinStatus, useClaimSeasonReward } from "../hooks/useSeasonPass";
 import FeatureGate from "../components/feature/FeatureGate";
@@ -93,19 +95,19 @@ const SeasonPassPage: React.FC = () => {
     {
       icon: "📅",
       title: "매일 출석 플레이",
-      desc: "10만원 플레이 시 20XP",
+      desc: "게임 플레이 시 다이아 지급",
       status: playDone ? "완료" : "미완료",
     },
     {
       icon: "💎",
       title: "입금 미션",
-      desc: "10만원 달성마다 스탬프",
+      desc: "10만원 달성마다 XP 대량 지급",
       status: `${formatCurrency(depositRemainder)}원 남음`,
     },
     {
       icon: "🎮",
       title: "게임 승리 50회",
-      desc: "누적 50승 시 스탬프",
+      desc: "누적 50승 시 다이아/키 지급",
       status: internalWins.data ? `남은 승리 ${internalWins.data.remaining}회` : "...",
     },
   ];

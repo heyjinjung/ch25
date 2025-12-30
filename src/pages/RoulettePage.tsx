@@ -1,4 +1,6 @@
 ﻿import { useEffect, useMemo, useRef, useState } from "react";
+// TODO: [VERIFY] When playing with Gold/Diamond Key, ensure UI shows Vault Accrual animation, NOT XP.
+// TODO: [VERIFY] If Ticket Reward is won, ensure it flies to Wallet/Header.
 import RouletteWheel from "../components/game/RouletteWheel";
 import { usePlayRoulette, useRouletteStatus } from "../hooks/useRoulette";
 import FeatureGate from "../components/feature/FeatureGate";
