@@ -17,6 +17,7 @@ const SOUND_SOURCES = {
         TAB_TOUCH: "/assets/sounds/sfx/page_turn.mp3",
         LOTTERY_SCRATCH: "/assets/sounds/sfx/lottery_reveal.wav",
         ROULETTE_SPIN: "/assets/sounds/sfx/roulette_spin.wav",
+        ENTER_GAME: "/assets/sounds/sfx/MESSAGE-B_Accept.wav",
     },
 };
 
@@ -75,6 +76,8 @@ export const useSound = () => {
     const startMainBgm = useCallback(() => playBgm(SOUND_SOURCES.BGM.MAIN), [playBgm]);
     const startBattleBgm = useCallback(() => playBgm(SOUND_SOURCES.BGM.BATTLE), [playBgm]);
 
+    const playEnterGame = useCallback(() => playSfx(SOUND_SOURCES.SFX.ENTER_GAME, { volume: 0.6 }), [playSfx]);
+
     return {
         playClick,
         playPageTransition,
@@ -93,5 +96,6 @@ export const useSound = () => {
         isMuted,
         isReady,
         playSfx,
+        playEnterGame,
     };
 };

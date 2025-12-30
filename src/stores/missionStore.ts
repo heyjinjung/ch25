@@ -1,6 +1,5 @@
 import { create } from 'zustand';
-import axios from 'axios';
-import { getApiBaseUrl } from '../api/apiConfig';
+import apiClient from '../api/apiClient';
 
 export interface Mission {
     id: number;
@@ -43,17 +42,11 @@ export const useMissionStore = create<MissionState>((set, get) => ({
     fetchMissions: async () => {
         set({ isLoading: true, error: null });
         try {
-            const token = localStorage.getItem('token');
-            if (!token) throw new Error("No auth token");
-
-            const response = await axios.get(`${getApiBaseUrl()}/api/mission/`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-
+            const response = await apiClient.get('/api/mission/');
             const data: MissionData[] = response.data;
 
             // Check for any completed but unclaimed missions
-            const hasUnclaimed = data.some(item => item.progress.is_completed && !item.progress.is_claimed);
+            const hasUnclaimed = data.some((item: MissionData) => item.progress.is_completed && !item.progress.is_claimed);
 
             set({ missions: data, isLoading: false, hasUnclaimed });
         } catch (err: any) {
@@ -64,13 +57,10 @@ export const useMissionStore = create<MissionState>((set, get) => ({
 
     claimReward: async (missionId: number) => {
         try {
-            const token = localStorage.getItem('token');
-            await axios.post(`${getApiBaseUrl()}/api/mission/${missionId}/claim`, {}, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            await apiClient.post(`/api/mission/${missionId}/claim`, {});
 
             // Update local state to reflect claim
-            const currentMissions = get().missions.map(item => {
+            const currentMissions = get().missions.map((item: MissionData) => {
                 if (item.mission.id === missionId) {
                     return {
                         ...item,
@@ -80,7 +70,7 @@ export const useMissionStore = create<MissionState>((set, get) => ({
                 return item;
             });
 
-            const hasUnclaimed = currentMissions.some(item => item.progress.is_completed && !item.progress.is_claimed);
+            const hasUnclaimed = currentMissions.some((item: MissionData) => item.progress.is_completed && !item.progress.is_claimed);
             set({ missions: currentMissions, hasUnclaimed });
 
             return true;

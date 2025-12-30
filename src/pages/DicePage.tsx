@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import DiceView from "../components/game/DiceView";
 import { useDiceStatus, usePlayDice } from "../hooks/useDice";
 import FeatureGate from "../components/feature/FeatureGate";
-import AnimatedNumber from "../components/common/AnimatedNumber";
 import { tryHaptic } from "../utils/haptics";
 import GamePageShell from "../components/game/GamePageShell";
 import TicketZeroPanel from "../components/game/TicketZeroPanel";
