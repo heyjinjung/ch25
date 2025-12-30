@@ -87,8 +87,8 @@ const RouletteWheel: React.FC<RouletteWheelProps> = ({
   return (
     <div className="relative mx-auto flex flex-col items-center">
       {/* Premium Pointer */}
-      <div className="absolute -top-12 left-1/2 z-40 -translate-x-1/2 drop-shadow-[0_10px_20px_rgba(0,0,0,0.6)]">
-        <svg width="60" height="60" viewBox="0 0 40 40" fill="none">
+      <div className="absolute -top-8 left-1/2 z-40 -translate-x-1/2 drop-shadow-[0_8px_16px_rgba(0,0,0,0.6)]">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
           <path d="M20 38L38 8H2L20 38Z" fill="#30FF75" />
           <path d="M20 38L38 8H2L20 38Z" stroke="white" strokeWidth="3" strokeLinejoin="round" />
           <path d="M20 34L34 10H6L20 34Z" fill="white" fillOpacity="0.2" />

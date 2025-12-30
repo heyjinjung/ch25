@@ -17,24 +17,27 @@ const FALLBACK_SEGMENTS = Array.from({ length: 12 }).map((_, idx) => ({
   isJackpot: idx === 0,
 }));
 
-const TABS: { type: GameTokenType; label: string; activeColors: string; icon: string }[] = [
+const TABS: { type: GameTokenType; label: string; activeColors: string; icon: string; iconImg?: string }[] = [
   {
     type: "ROULETTE_COIN",
     label: "일반 룰렛",
     activeColors: "bg-white text-black shadow-[0_0_15px_rgba(255,255,255,0.4)]",
-    icon: "🎟️"
+    icon: "🎟️",
+    iconImg: "/assets/asset_ticket_green.png"
   },
   {
     type: "GOLD_KEY",
     label: "골드 룰렛",
     activeColors: "bg-gradient-to-br from-yellow-300 via-amber-400 to-yellow-500 text-black shadow-[0_0_20px_rgba(255,215,0,0.5)] border-amber-300",
-    icon: "🗝️"
+    icon: "🗝️",
+    iconImg: "/assets/asset_ticket_gold.png"
   },
   {
     type: "DIAMOND_KEY",
     label: "다이아 룰렛",
     activeColors: "bg-gradient-to-br from-cyan-300 via-blue-400 to-indigo-500 text-white shadow-[0_0_20px_rgba(0,191,255,0.5)] border-blue-300",
-    icon: "💎"
+    icon: "💎",
+    iconImg: "/assets/asset_ticket_gold.png"
   },
 ];
 
@@ -260,7 +263,7 @@ const RoulettePage: React.FC = () => {
     }
 
     return (
-      <div className="relative space-y-8">
+      <div className="relative mx-auto max-w-4xl space-y-6">
 
         {!isSpinning && rewardToast && (
           <div className="fixed bottom-6 right-6 z-50 overflow-hidden rounded-2xl border border-white/10 bg-black/80 px-5 py-4 text-white shadow-2xl backdrop-blur-xl animate-bounce-in">
@@ -283,9 +286,9 @@ const RoulettePage: React.FC = () => {
           </div>
         )}
 
-        <div className="grid gap-8 lg:grid-cols-[1.3fr_0.9fr]">
-          {/* Left Column: Roulette Wheel */}
-          <div className="relative flex flex-col items-center justify-center">
+        <div className="flex flex-col items-center gap-6 lg:flex-row lg:items-start lg:justify-center lg:gap-12">
+          {/* Roulette Wheel */}
+          <div className="relative flex w-full max-w-sm flex-col items-center justify-center lg:w-auto lg:flex-shrink-0">
             <RouletteWheel
               segments={segments}
               isSpinning={isSpinning}
@@ -303,20 +306,24 @@ const RoulettePage: React.FC = () => {
           )}
         </div>
 
-        {/* Right Column: Controls & Info */}
-        <div className="flex flex-col gap-6">
+        {/* Controls & Info */}
+        <div className="flex w-full max-w-md flex-col gap-6">
           {/* Control Panel Card */}
           <div className="relative overflow-hidden rounded-[2rem] border border-white/15 bg-black/60 p-8 shadow-2xl">
             {/* Top Accent Line */}
             <div className="pointer-events-none absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-[#30FF75]/40 to-transparent" />
 
             {/* Status Badges */}
-            <div className="mb-8 flex flex-wrap gap-3">
-              <div className="flex items-center gap-3 rounded-3xl border border-white/10 bg-black/60 px-6 py-3 shadow-xl">
-                <img src="/assets/asset_ticket_green.png" alt="Tickets" className="h-8 w-8 object-contain" />
+            <div className="mb-6">
+              <div className="flex items-center gap-4 rounded-3xl border border-white/15 bg-black/50 px-8 py-5 shadow-xl">
+                <img
+                  src={TABS.find(t => t.type === activeTab)?.iconImg || "/assets/asset_ticket_green.png"}
+                  alt="Tickets"
+                  className="h-12 w-12 object-contain"
+                />
                 <div className="flex flex-col leading-none">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-[#30FF75]/70">{tokenLabel}</span>
-                  <span className="font-mono text-lg font-bold text-white">
+                  <span className="text-xs font-black uppercase tracking-widest text-[#30FF75]/70">{tokenLabel}</span>
+                  <span className="font-mono text-2xl font-bold text-white">
                     {tokenBalance !== null ? <AnimatedNumber value={tokenBalance} /> : "-"}
                   </span>
                 </div>
@@ -407,7 +414,11 @@ const RoulettePage: React.FC = () => {
                     : "text-white/40 hover:bg-white/5 hover:text-white"
                 )}
               >
-                <span className={clsx("text-lg transition-transform duration-300", activeTab === tab.type && "scale-110")}>{tab.icon}</span>
+                {tab.iconImg ? (
+                  <img src={tab.iconImg} alt="" className={clsx("h-5 w-5 object-contain transition-transform duration-300", activeTab === tab.type && "scale-110")} />
+                ) : (
+                  <span className={clsx("text-lg transition-transform duration-300", activeTab === tab.type && "scale-110")}>{tab.icon}</span>
+                )}
                 <span>{tab.label}</span>
               </button>
             ))}
