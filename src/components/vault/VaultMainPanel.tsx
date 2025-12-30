@@ -1,4 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
+// TODO: [VERIFY] Ensure visual Locked Balance updates immediately after Game Win/Loss (Ref: V-01, V-04).
+// TODO: [VERIFY] Check if Pity Bonus (+300) is visually reflected on Loss.
 import clsx from "clsx";
 import { useQuery } from "@tanstack/react-query";
 import { getVaultStatus } from "../../api/vaultApi";
@@ -130,6 +132,38 @@ const VaultMainPanel: React.FC = React.memo(() => {
     staleTime: 30_000,
     retry: false,
   });
+
+  const [isWithdrawalProcessing, setIsWithdrawalProcessing] = useState(false);
+
+  const handleWithdrawalClick = async () => {
+    if (!window.confirm("현재 보관된 리워드를 전액 CC 포인트(보유머니)로 전환 신청하시겠습니까?")) return;
+
+    setIsWithdrawalProcessing(true);
+    try {
+      // Use locked_balance from query if available, otherwise fallback
+      const amount = vault.data?.lockedBalance ?? vault.data?.vaultBalance ?? 0;
+      if (amount < 10000) {
+        alert("최소 10,000원 이상부터 전환 가능합니다.");
+        return;
+      }
+
+      const { requestWithdrawal } = await import("../../api/vaultApi");
+      const res = await requestWithdrawal(amount);
+
+      if (res.success) {
+        alert(res.message);
+        // Invalidate query to refresh status (e.g., balance -> 0)
+        vault.refetch();
+      } else {
+        alert(`신청 실패: ${res.message}`);
+      }
+    } catch (e) {
+      console.error(e);
+      alert("알 수 없는 오류가 발생했습니다.");
+    } finally {
+      setIsWithdrawalProcessing(false);
+    }
+  };
 
 
   const view = useMemo(() => {
@@ -271,10 +305,36 @@ const VaultMainPanel: React.FC = React.memo(() => {
                 </div>
               </div>
             </div>
-            <div className="mt-8 flex items-center justify-center gap-3 relative z-10">
-              <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse shadow-[0_0_10px_rgba(249,121,53,0.8)]" />
-              <p className="text-white/50 text-xs font-bold uppercase tracking-wider">이용 확인 후 지급됩니다</p>
-            </div>
+
+            {/* Withdrawal Button (Only when Eligible) */}
+            {view.eligible && (
+              <div className="mt-8 relative z-10">
+                <button
+                  onClick={() => handleWithdrawalClick()}
+                  disabled={isWithdrawalProcessing}
+                  className="w-full py-4 rounded-xl bg-figma-accent text-black font-black text-lg uppercase tracking-widest shadow-[0_0_20px_rgba(48,255,117,0.4)] hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2"
+                >
+                  {isWithdrawalProcessing ? (
+                    <span className="animate-pulse">처리 중...</span>
+                  ) : (
+                    <>
+                      <span>CC 포인트 전환 신청</span>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                    </>
+                  )}
+                </button>
+                <p className="mt-2 text-white/40 text-[10px] uppercase font-bold tracking-wider">
+                  ⚠ 신청 즉시 관리자 승인 요청이 전송됩니다.
+                </p>
+              </div>
+            )}
+
+            {!view.eligible && (
+              <div className="mt-8 flex items-center justify-center gap-3 relative z-10">
+                <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse shadow-[0_0_10px_rgba(249,121,53,0.8)]" />
+                <p className="text-white/50 text-xs font-bold uppercase tracking-wider">이용 확인 후 지급됩니다</p>
+              </div>
+            )}
           </div>
         </div>
       </div>

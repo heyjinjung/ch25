@@ -22,6 +22,7 @@ import { RefreshCcw, Save, AlertTriangle, ShieldCheck, Clock, Power, Search, Ban
 import VaultRulesEditor from "../components/vault/VaultRulesEditor";
 import VaultUiEditor from "../components/vault/VaultUiEditor";
 import VaultSettingsEditor from "../components/vault/VaultSettingsEditor";
+import VaultRequestManager from "../components/vault/VaultRequestManager";
 
 const UserLookup: React.FC<{ value: string; onChange: (val: string) => void; placeholder?: string }> = ({ value, onChange, placeholder }) => {
     const [searchTerm, setSearchTerm] = useState("");
@@ -98,7 +99,7 @@ const UserLookup: React.FC<{ value: string; onChange: (val: string) => void; pla
 
 const VaultAdminPage: React.FC = () => {
     const queryClient = useQueryClient();
-    const [activeTab, setActiveTab] = useState<"stats" | "rules" | "copy" | "config" | "ops">("stats");
+    const [activeTab, setActiveTab] = useState<"stats" | "requests" | "rules" | "copy" | "config" | "ops">("stats");
     const [advancedMode, setAdvancedMode] = useState(false);
     const [gameEarnEnabled, setGameEarnEnabled] = useState<boolean>(true);
     const [eligibilityUserId, setEligibilityUserId] = useState<string>("");
@@ -398,6 +399,7 @@ const VaultAdminPage: React.FC = () => {
             <nav className="flex items-center gap-1 border-b border-[#333]">
                 {[
                     { id: "stats", label: "실시간 지표" },
+                    { id: "requests", label: "출금 요청" },
                     { id: "rules", label: "해금 규칙" },
                     { id: "copy", label: "UI 문구" },
                     { id: "config", label: "운영 파라미터" },
@@ -474,7 +476,11 @@ const VaultAdminPage: React.FC = () => {
 
                 {activeTab !== "stats" && activeTab !== "ops" && (
                     <div className="animate-in slide-in-from-bottom-2 duration-300">
-                        {advancedMode ? (
+                        {activeTab === "requests" ? (
+                            <div className="rounded-xl border border-[#333] bg-[#0f0f0f] p-8 shadow-2xl">
+                                <VaultRequestManager />
+                            </div>
+                        ) : advancedMode ? (
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between">
                                     <p className="text-sm text-gray-400">

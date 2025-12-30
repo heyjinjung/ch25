@@ -64,3 +64,14 @@ export const getVaultStatus = async (): Promise<VaultStatusResponse> => {
     accrualMultiplier: data.accrual_multiplier ?? null,
   };
 };
+// Phase 1 MVP Withdrawal Request
+export const requestWithdrawal = async (amount: number): Promise<{ success: boolean; message: string }> => {
+  try {
+    await userApi.post("/api/vault/withdraw", { amount });
+    return { success: true, message: "출금 신청이 완료되었습니다." };
+  } catch (err: any) {
+    // Handle specific errors like 'insufficient_funds', 'daily_limit', etc.
+    const msg = err.response?.data?.detail || "신청 중 오류가 발생했습니다.";
+    return { success: false, message: msg };
+  }
+};

@@ -12,6 +12,8 @@ from app.schemas.vault import VaultFillResponse, VaultStatusResponse
 from app.services.vault2_service import Vault2Service
 from app.services.vault_service import VaultService
 
+from pydantic import BaseModel
+
 router = APIRouter(prefix="/api/vault", tags=["vault"])
 service = VaultService()
 v2_service = Vault2Service()
@@ -137,3 +139,79 @@ def top(db: Session = Depends(get_db)) -> list[VaultTopItem]:
         )
         for status, program in rows
     ]
+
+
+class VaultRequestSchema(BaseModel):
+    id: int
+    user_id: int
+    amount: int
+    status: str
+    created_at: datetime
+    processed_at: datetime | None = None
+    admin_memo: str | None = None
+
+    class Config:
+        orm_mode = True
+
+@router.get("/admin/requests", response_model=list[VaultRequestSchema])
+def list_withdrawal_requests(
+    status: str = "PENDING",
+    db: Session = Depends(get_db),
+    # admin auth omitted for MVP
+):
+    from app.models.vault_withdrawal_request import VaultWithdrawalRequest
+    rows = (
+        db.query(VaultWithdrawalRequest)
+        .filter(VaultWithdrawalRequest.status == status)
+        .order_by(VaultWithdrawalRequest.created_at.desc())
+        .all()
+    )
+    return rows
+
+
+class WithdrawRequestPayload(BaseModel):
+    amount: int
+
+class WithdrawResponse(BaseModel):
+    request_id: int
+    status: str
+    amount: int
+    balance_after: int
+
+
+@router.post("/withdraw", response_model=WithdrawResponse)
+def request_withdraw(
+    payload: WithdrawRequestPayload,
+    db: Session = Depends(get_db),
+    user_id: int = Depends(get_current_user_id)
+) -> WithdrawResponse:
+    result = service.request_withdrawal(db, user_id=user_id, amount=payload.amount)
+    return WithdrawResponse(
+        request_id=result["request_id"],
+        status=result["status"],
+        amount=result["amount"],
+        balance_after=result["balance_after"]
+    )
+
+
+class AdminProcessWithdrawalPayload(BaseModel):
+    request_id: int
+    action: str  # APPROVE, REJECT
+    admin_memo: str | None = None
+
+@router.post("/admin/process")
+def admin_process_withdrawal(
+    payload: AdminProcessWithdrawalPayload,
+    db: Session = Depends(get_db),
+    # In a real app, use Depends(get_current_admin)
+    # For now, we assume the caller has admin rights or we use a header
+    admin_id: int = 1 # Temporary hardcoded admin ID for MVP
+):
+    result = service.process_withdrawal(
+        db, 
+        request_id=payload.request_id, 
+        action=payload.action, 
+        admin_id=admin_id, 
+        memo=payload.admin_memo
+    )
+    return result

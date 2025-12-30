@@ -96,6 +96,7 @@ class RewardService:
             return
         settings = get_settings()
         xp_from_game_reward = settings.xp_from_game_reward
+        print(f"DEBUG: xp_from_game_reward={xp_from_game_reward}, reward_type={reward_type}, reason={(meta or {}).get('reason')}")
         season_pass = None
         if xp_from_game_reward:
             # Lazy import to avoid circular dependency with LevelXPService
@@ -112,6 +113,7 @@ class RewardService:
                 if season_pass:
                     bonus_xp = (meta or {}).get("game_xp") or 0
                     total_xp = reward_amount + bonus_xp
+                    print(f"DEBUG: Delivering Season XP: {total_xp} (Reward: {reward_amount}, Bonus: {bonus_xp})")
                     season_pass.add_bonus_xp(db, user_id=user_id, xp_amount=total_xp)
             else:
                 # 어드민 수동 지급 등 게임 외 사유일 때만 현찰로 지급

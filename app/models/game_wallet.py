@@ -15,6 +15,8 @@ class GameTokenType(str, Enum):
     CC_COIN = "CC_COIN"
     GOLD_KEY = "GOLD_KEY"
     DIAMOND_KEY = "DIAMOND_KEY"
+    DIAMOND = "DIAMOND"  # Mission Reward Currency
+
 
 
 class UserGameWallet(Base):
