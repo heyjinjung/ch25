@@ -33,7 +33,7 @@ interface MissionState {
     claimReward: (missionId: number) => Promise<boolean>;
 }
 
-export const useMissionStore = create<MissionState>((set, get) => ({
+export const useMissionStore = create<MissionState>((set: any, get: any) => ({
     missions: [],
     isLoading: false,
     error: null,
@@ -74,7 +74,7 @@ export const useMissionStore = create<MissionState>((set, get) => ({
             set({ missions: currentMissions, hasUnclaimed });
 
             return true;
-        } catch (err) {
+        } catch (err: any) {
             console.error("[MissionStore] Claim failed", err);
             return false;
         }
