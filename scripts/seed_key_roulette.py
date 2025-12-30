@@ -1,3 +1,7 @@
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from app.db.session import SessionLocal
 from app.models.roulette import RouletteConfig, RouletteSegment
 from app.models.game_wallet import GameTokenType
