@@ -9,8 +9,15 @@ class TelegramAuthRequest(BaseModel):
 
 
 class TelegramLinkRequest(BaseModel):
-    """Payload for linking an existing account to Telegram."""
+    """Payload for linking an existing account to Telegram (inside TMA)."""
     init_data: str
+
+
+class TelegramManualLinkRequest(BaseModel):
+    """Payload for manual credential linking inside TMA."""
+    init_data: str
+    external_id: str
+    password: str
 
 
 class TelegramBridgeResponse(BaseModel):

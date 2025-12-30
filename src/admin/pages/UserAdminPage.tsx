@@ -1,8 +1,9 @@
 // src/admin/pages/UserAdminPage.tsx
 import React, { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Edit2, Plus, Save, Search, Trash2, Upload } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Edit2, Link2, Plus, Save, Search, Trash2, Upload } from "lucide-react";
 import { createUser, deleteUser, fetchUsers, updateUser, AdminUser, AdminUserPayload } from "../api/adminUserApi";
+import { telegramApi } from "../../api/telegramApi";
 import { useToast } from "../../components/common/ToastProvider";
 import UserImportModal from "../components/UserImportModal";
 
@@ -303,6 +304,21 @@ const UserAdminPage: React.FC = () => {
     const ok = window.confirm("정말 삭제하시겠습니까?");
     if (!ok) return;
     deleteMutation.mutate(row.id);
+  };
+
+  const handleCopyMagicLink = async (userId: number) => {
+    try {
+      const { bridge_token } = await telegramApi.adminGetBridgeToken(userId);
+      // Replace with your bot username
+      const botUsername = "cc_jm_2026_bot";
+      const link = `https://t.me/${botUsername}/app?startapp=${bridge_token}`;
+
+      await navigator.clipboard.writeText(link);
+      addToast("매직 링크가 클립보드에 복사되었습니다.", "success");
+    } catch (err) {
+      console.error("[Admin] Failed to generate magic link", err);
+      addToast("링크 생성 실패", "error");
+    }
   };
 
   const submitNewMember = (e: React.FormEvent) => {
@@ -791,6 +807,15 @@ const UserAdminPage: React.FC = () => {
                               <Edit2 size={16} />
                             </button>
                           )}
+                          <button
+                            type="button"
+                            onClick={() => handleCopyMagicLink(member.id)}
+                            className="text-white hover:text-[#91F402]"
+                            title="매직 링크 복사"
+                            aria-label="매직 링크 복사"
+                          >
+                            <Link2 size={16} />
+                          </button>
                           <button
                             type="button"
                             onClick={() => removeRow(member)}

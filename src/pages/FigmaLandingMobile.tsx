@@ -1,6 +1,8 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../auth/authStore";
+import { useTelegram } from "../providers/TelegramProvider";
+import ManualLinkForm from "../components/telegram/ManualLinkForm";
 
 // Mobile-specific assets stored under public/assets/figma
 const assets = {
@@ -48,6 +50,7 @@ const deepOlive = "#394508";
 
 const MobileLanding: React.FC = () => {
   const { user } = useAuth();
+  const { initData } = useTelegram();
 
   return (
     <div className="min-h-screen bg-black flex flex-col items-center gap-[16px] pb-[20px]">
@@ -131,6 +134,12 @@ const MobileLanding: React.FC = () => {
           )}
         </div>
       </header>
+
+      {initData && (
+        <section className="w-full px-[20px] animate-in fade-in slide-in-from-bottom-4 duration-1000">
+          <ManualLinkForm />
+        </section>
+      )}
 
       {/* Main content */}
       <main className="w-full max-w-[388px] flex flex-col">
