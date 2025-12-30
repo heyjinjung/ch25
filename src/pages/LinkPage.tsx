@@ -10,6 +10,7 @@ const LinkPage: React.FC = () => {
     const { login } = useAuth();
     const navigate = useNavigate();
     const { addToast } = useToast();
+    const [isLinking, setIsLinking] = useState(false);
     const [bridgeLink, setBridgeLink] = useState<string | null>(null);
 
     const handleLink = async () => {
