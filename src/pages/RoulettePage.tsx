@@ -148,6 +148,7 @@ const RoulettePage: React.FC = () => {
     pendingResultRef.current = null;
 
     setIsSpinning(false);
+    stopRouletteSpin(); // Stop sound at the end
     setDisplayedResult(result);
 
     const rewardValue = result?.reward_value ? Number(result.reward_value) : 0;
@@ -199,6 +200,13 @@ const RoulettePage: React.FC = () => {
       spinHapticTimeoutsRef.current = [];
     };
   }, []);
+
+  // Stop sound on unmount
+  useEffect(() => {
+    return () => {
+      stopRouletteSpin();
+    };
+  }, [stopRouletteSpin]);
 
   useEffect(() => {
     const canHaptic = (() => {

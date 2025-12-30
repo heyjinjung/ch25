@@ -90,6 +90,7 @@ const LotteryPage: React.FC = () => {
 
   const handleReset = () => {
     setIsRevealed(false);
+    stopLotteryScratch();
     setRevealedPrize(null);
   };
 
