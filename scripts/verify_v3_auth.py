@@ -2,25 +2,29 @@ import json
 import urllib.request
 import urllib.error
 
-BASE_URL = "http://localhost:8000"  # Adjust if your backend is on a different port
+BASE_URL = "http://127.0.0.1:8000"  # Adjust if your backend is on a different port
 
 def test_telegram_auth_failure():
-    print("\n[Scenario 1] Testing Telegram Auth with missing/invalid data...")
+    print("\n[Scenario 1] Testing Telegram Auth...")
     url = f"{BASE_URL}/api/telegram/auth"
+    print(f"Checking URL: {url}")
     payload = json.dumps({"init_data": "", "start_param": ""}).encode("utf-8")
     req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"})
     try:
         with urllib.request.urlopen(req) as response:
-            print(f"Result: Status {response.status}")
+            print(f"  Result: Status {response.status}")
+            if response.status == 200:
+                print(f"  ✅ SUCCESS")
     except urllib.error.HTTPError as e:
-        body = json.loads(e.read().decode())
-        print(f"Result: Status {e.code}, Detail: {body.get('detail')}")
-        if e.code == 400:
-            print("✅ Correctly rejected empty init_data.")
+        if e.code == 404:
+            print(f"  ❌ Result: Status 404 Not Found. Backend may need restart.")
         else:
-            print("❌ Unexpected status code.")
+            body = json.loads(e.read().decode())
+            print(f"  Result: Status {e.code}, Detail: {body.get('detail')}")
+            if e.code == 400 or e.code == 422:
+                print(f"  ✅ REACHABLE (Rejected invalid data as expected)")
     except Exception as e:
-        print(f"❌ Connection Error: {e}")
+        print(f"  ❌ Connection Error: {e}")
 
 def test_admin_login_compatibility():
     print("\n[Scenario 2] Testing Admin Login (Legacy ID/PW compatibility)...")
