@@ -501,19 +501,31 @@ class VaultService:
         if exists is not None:
             return 0
 
-        if str(game_type).upper() == "DICE":
-            if str(outcome).upper() == "WIN":
-                amount_before_multiplier = int(self.GAME_EARN_DICE_WIN)
-            elif str(outcome).upper() == "LOSE":
-                amount_before_multiplier = int(self.GAME_EARN_DICE_LOSE)
-            else: # DRAW or other
-                amount_before_multiplier = 0
-        else:
-            base_amount = 200 # Default for other games
-            amount_before_multiplier = base_amount
+        game_type_upper = str(game_type).upper()
+        outcome_upper = str(outcome).upper() if outcome else "BASE"
 
-        if amount_before_multiplier == 0:
+        # 1. Try to get specific amount from DB config
+        game_earn_config = cfg_service.get_config_value(db, "game_earn_config", {})
+        game_config = game_earn_config.get(game_type_upper, {})
+        amount_before_multiplier = game_config.get(outcome_upper)
+
+        # 2. Hardcoded Fallbacks
+        if amount_before_multiplier is None:
+            if game_type_upper == "DICE":
+                if outcome_upper == "WIN":
+                    amount_before_multiplier = int(self.GAME_EARN_DICE_WIN)
+                elif outcome_upper == "LOSE":
+                    amount_before_multiplier = int(self.GAME_EARN_DICE_LOSE)
+                else:
+                    amount_before_multiplier = 0
+            else:
+                # Default for other games (ROULETTE, LOTTERY, etc.)
+                amount_before_multiplier = 200
+
+        if int(amount_before_multiplier or 0) == 0:
             return 0
+        
+        amount_before_multiplier = int(amount_before_multiplier)
 
         multiplier = float(self.vault_accrual_multiplier(db, now_dt))
         amount = max(int(round(amount_before_multiplier * multiplier)), amount_before_multiplier)
