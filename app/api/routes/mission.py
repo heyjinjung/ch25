@@ -6,11 +6,11 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.models.user import User
 from app.services.mission_service import MissionService
+from app.schemas.mission import MissionWithProgress
 
 router = APIRouter(prefix="/api/mission", tags=["mission"])
 
-@router.get("/", response_model=List[dict]) 
-# Note: In production, better to use a Pydantic schema for response_model
+@router.get("/", response_model=List[MissionWithProgress]) 
 def read_missions(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),

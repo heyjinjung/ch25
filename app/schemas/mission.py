@@ -1,0 +1,47 @@
+from pydantic import BaseModel
+from typing import Optional
+
+class MissionSchema(BaseModel):
+    id: int
+    title: str
+    description: Optional[str] = None
+    category: str
+    logic_key: str
+    action_type: Optional[str] = None
+    target_value: int
+    reward_type: str
+    reward_amount: int
+    xp_reward: int = 0
+
+class MissionProgressSchema(BaseModel):
+    current_value: int
+    is_completed: bool
+    is_claimed: bool
+
+class MissionWithProgress(BaseModel):
+    mission: MissionSchema
+    progress: MissionProgressSchema
+
+class MissionCreate(BaseModel):
+    title: str
+    description: Optional[str] = None
+    category: str
+    logic_key: str
+    action_type: Optional[str] = None
+    target_value: int
+    reward_type: str
+    reward_amount: int
+    xp_reward: int = 0
+    is_active: bool = True
+
+class MissionUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    category: Optional[str] = None
+    logic_key: Optional[str] = None
+    action_type: Optional[str] = None
+    target_value: Optional[int] = None
+    reward_type: Optional[str] = None
+    reward_amount: Optional[int] = None
+    xp_reward: Optional[int] = None
+    is_active: Optional[bool] = None

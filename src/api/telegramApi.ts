@@ -4,6 +4,7 @@ export interface TelegramAuthResponse {
     access_token: string;
     token_type: string;
     is_new_user: boolean;
+    linked_to_existing?: boolean;
     user: {
         id: number;
         external_id: string;

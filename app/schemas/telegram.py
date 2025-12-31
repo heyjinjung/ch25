@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional
+from datetime import datetime
 
 
 class TelegramAuthRequest(BaseModel):
@@ -39,4 +40,13 @@ class TelegramAuthResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     is_new_user: bool
+    linked_to_existing: bool = False
     user: AuthUser
+
+
+class TelegramLinkTokenResponse(BaseModel):
+    """One-time Telegram deep-link payload for linking existing user -> Telegram."""
+
+    expires_at_utc: datetime
+    start_param: str
+    open_url: Optional[str] = None

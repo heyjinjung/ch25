@@ -12,6 +12,7 @@ class MissionCategory(str, Enum):
     DAILY = "DAILY"
     WEEKLY = "WEEKLY"
     SPECIAL = "SPECIAL"
+    NEW_USER = "NEW_USER"
 
 
 class MissionRewardType(str, Enum):
@@ -19,6 +20,7 @@ class MissionRewardType(str, Enum):
     GOLD_KEY = "GOLD_KEY"
     DIAMOND_KEY = "DIAMOND_KEY"
     TICKET_BUNDLE = "TICKET_BUNDLE"
+    CASH_UNLOCK = "CASH_UNLOCK" # Phase 2.0.1 New User Bonus
     NONE = "NONE"  # Pure XP mission
 
 

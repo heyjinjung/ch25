@@ -4,9 +4,10 @@ import { useAuth } from "../auth/authStore";
 import { telegramApi } from "../api/telegramApi";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../components/common/ToastProvider";
+import { getNewUserStatus } from "../api/newUserApi";
 
 const ConnectPage: React.FC = () => {
-    const { initData } = useTelegram();
+    const { initData, startParam } = useTelegram();
     const { login } = useAuth();
     const navigate = useNavigate();
     const { addToast } = useToast();
@@ -20,10 +21,17 @@ const ConnectPage: React.FC = () => {
 
         setIsConnecting(true);
         try {
-            const response = await telegramApi.auth(initData);
+            const response = await telegramApi.auth(initData, startParam || undefined);
             login(response.access_token, response.user);
             addToast("성공적으로 연결되었습니다!", "success");
-            navigate("/");
+            try {
+                const status = await getNewUserStatus();
+                navigate(status.eligible ? "/new-user/welcome" : "/landing");
+            } catch (err) {
+                // eslint-disable-next-line no-console
+                console.warn("[CONNECT] new-user status check failed; falling back to telegram is_new_user", err);
+                navigate(response.is_new_user ? "/new-user/welcome" : "/landing");
+            }
         } catch (error) {
             console.error("[CONNECT] Authentication failed", error);
             addToast("연결에 실패했습니다. 다시 시도해 주세요.", "error");

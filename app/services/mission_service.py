@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from typing import List, Optional, Tuple
 
 from sqlalchemy.orm import Session
-from sqlalchemy import and_
+from sqlalchemy import and_, or_
 
 from app.models.mission import Mission, UserMissionProgress, MissionCategory, MissionRewardType
 from app.models.user import User
@@ -15,8 +15,13 @@ class MissionService:
         self.db = db
 
     def get_reset_date_str(self, category: MissionCategory) -> str:
-        """Returns the reset key string based on category and current time."""
-        now = datetime.utcnow()
+        """Returns the reset key string based on category and current KST time."""
+        # Enforce KST (UTC+9)
+        from datetime import timezone
+        
+        kst_tz = timezone(timedelta(hours=9))
+        now = datetime.now(kst_tz)
+        
         if category == MissionCategory.DAILY:
             return now.strftime("%Y-%m-%d")
         elif category == MissionCategory.WEEKLY:
@@ -64,6 +69,7 @@ class MissionService:
                     "description": mission.description,
                     "category": mission.category,
                     "logic_key": mission.logic_key,
+                    "action_type": mission.action_type,
                     "target_value": mission.target_value,
                     "reward_type": mission.reward_type,
                     "reward_amount": mission.reward_amount,
@@ -77,17 +83,15 @@ class MissionService:
     def update_progress(self, user_id: int, action_type: str, delta: int = 1) -> List[UserMissionProgress]:
         """
         Updates progress for ALL active missions matching the action_type (e.g., 'PLAY_GAME').
+        Also falls back to logic_key for legacy support.
         Returns list of updated progress objects.
         """
         missions = self.db.query(Mission).filter(
-            Mission.action_type == action_type, 
+            or_(Mission.action_type == action_type, Mission.logic_key == action_type), 
             Mission.is_active == True
         ).all()
 
         updated_list = []
-        
-        # Also support legacy calls by checking logic_key if action_type yields nothing?
-        # For now, strict 'action_type' based logic.
         
         for mission in missions:
             reset_date = self.get_reset_date_str(mission.category)
@@ -116,6 +120,17 @@ class MissionService:
                     progress.is_completed = True
                     progress.completed_at = datetime.utcnow()
                 
+                # [Nudge] Intelligent Trigger: 1 step remaining
+                elif progress.current_value == mission.target_value - 1 and mission.target_value >= 3:
+                     # Check if user has telegram_id
+                     if progress.user and progress.user.telegram_id:
+                         from app.services.notification_service import NotificationService
+                         NotificationService().send_nudge_sync(
+                             chat_id=progress.user.telegram_id, 
+                             mission_title=mission.title, 
+                             remaining=1
+                         )
+
                 updated_list.append(progress)
             
         self.db.commit()
@@ -149,28 +164,57 @@ class MissionService:
 
         # 1. Give Rewards (Assets)
         if mission.reward_type != MissionRewardType.NONE and mission.reward_amount > 0:
-            from app.services.game_wallet_service import GameWalletService
+            # --- CASH_UNLOCK (New User Bonus) ---
+            if mission.reward_type == MissionRewardType.CASH_UNLOCK:
+                now = datetime.utcnow()
+                # 1. Check Expiry
+                if user.vault_locked_expires_at and user.vault_locked_expires_at < now:
+                     # Expired! Cannot unlock.
+                     # Still mark as claimed so they don't retry forever?
+                     # Or let them claim but get 0? 
+                     # Better to let them claim but reward is 0 with a message.
+                     # But current return signature is (bool, type, amount).
+                     pass 
+                elif user.vault_locked_balance and user.vault_locked_balance > 0:
+                     unlock_amount = min(user.vault_locked_balance, mission.reward_amount)
+                     if unlock_amount > 0:
+                         user.vault_locked_balance -= unlock_amount
+                         user.cash_balance = (user.cash_balance or 0) + unlock_amount
+                         
+                         from app.models.user_cash_ledger import UserCashLedger
+                         ledger = UserCashLedger(
+                             user_id=user.id,
+                             delta=unlock_amount,
+                             balance_after=user.cash_balance,
+                             reason="MISSION_UNLOCK",
+                             label=mission.title,
+                             meta_json={"mission_id": mission.id}
+                         )
+                         self.db.add(ledger)
             
-            token_type_map = {
-                MissionRewardType.DIAMOND: GameTokenType.DIAMOND,
-                MissionRewardType.GOLD_KEY: GameTokenType.GOLD_KEY,
-                MissionRewardType.DIAMOND_KEY: GameTokenType.DIAMOND_KEY,
-                MissionRewardType.TICKET_BUNDLE: GameTokenType.LOTTERY_TICKET, # Placeholder, usually handled by RewardService
-            }
-            
-            # Use GameWalletService for safe transactions
-            wallet_service = GameWalletService()
-            target_token = token_type_map.get(mission.reward_type)
-            
-            if target_token:
-                wallet_service.grant_tokens(
-                    self.db,
-                    user_id=user_id,
-                    token_type=target_token,
-                    amount=mission.reward_amount,
-                    reason="MISSION_REWARD",
-                    label=mission.title
-                )
+            # --- STANDARD TOKENS ---
+            else:
+                from app.services.game_wallet_service import GameWalletService
+                
+                token_type_map = {
+                    MissionRewardType.DIAMOND: GameTokenType.DIAMOND,
+                    MissionRewardType.GOLD_KEY: GameTokenType.GOLD_KEY,
+                    MissionRewardType.DIAMOND_KEY: GameTokenType.DIAMOND_KEY,
+                    MissionRewardType.TICKET_BUNDLE: GameTokenType.LOTTERY_TICKET,
+                }
+                
+                wallet_service = GameWalletService()
+                target_token = token_type_map.get(mission.reward_type)
+                
+                if target_token:
+                    wallet_service.grant_tokens(
+                        self.db,
+                        user_id=user_id,
+                        token_type=target_token,
+                        amount=mission.reward_amount,
+                        reason="MISSION_REWARD",
+                        label=mission.title
+                    )
 
         # 2. Give XP (Season Pass) - OPTIONAL based on Master Design (Unified Economy v2.1)
         # Missions primarily reward DIAMONDS. XP is reserved for Deposits.
@@ -202,6 +246,7 @@ class MissionService:
                 description="매일 접속 시 드리는 선물입니다.",
                 category=MissionCategory.DAILY,
                 logic_key="daily_gift",
+                action_type="daily_gift", # Set explicit action_type
                 target_value=1,
                 reward_type=MissionRewardType.DIAMOND,
                 reward_amount=500,
@@ -210,6 +255,11 @@ class MissionService:
             self.db.add(mission)
             self.db.commit()
             self.db.refresh(mission)
+        
+        # Ensure older seeded daily_gift has action_type if missing?
+        if not mission.action_type:
+             mission.action_type = "daily_gift"
+             self.db.commit()
 
         # 2. Update progress to 1 (since they are calling this, they are logged in)
         self.update_progress(user_id, "daily_gift", delta=1)

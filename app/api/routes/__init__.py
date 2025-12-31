@@ -23,6 +23,9 @@ from app.api.routes import (
 	trial_grant,
 	crm_inbox,
 	telegram,
+	new_user_onboarding,
+	viral,
+	admin_mission,
 )
 
 api_router = APIRouter()
@@ -45,4 +48,7 @@ api_router.include_router(ui_copy.router)
 api_router.include_router(trial_grant.router)
 api_router.include_router(crm_inbox.router)
 api_router.include_router(telegram.router)
+api_router.include_router(viral.router)
+api_router.include_router(new_user_onboarding.router)
 api_router.include_router(admin.admin_router)
+api_router.include_router(admin_mission.router)

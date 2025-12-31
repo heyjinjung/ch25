@@ -150,6 +150,30 @@ class Settings(BaseSettings):
         ),
     )
 
+    telegram_bot_username: str | None = Field(
+        None,
+        validation_alias=AliasChoices(
+            "TELEGRAM_BOT_USERNAME",
+            "telegram_bot_username",
+        ),
+    )
+
+    telegram_webapp_short_name: str | None = Field(
+        None,
+        validation_alias=AliasChoices(
+            "TELEGRAM_WEBAPP_SHORT_NAME",
+            "telegram_webapp_short_name",
+        ),
+    )
+
+    telegram_link_token_expire_minutes: int = Field(
+        10,
+        validation_alias=AliasChoices(
+            "TELEGRAM_LINK_TOKEN_EXPIRE_MINUTES",
+            "telegram_link_token_expire_minutes",
+        ),
+    )
+
     telegram_mini_app_url: str = Field(
         "http://localhost:3000",
         validation_alias=AliasChoices(

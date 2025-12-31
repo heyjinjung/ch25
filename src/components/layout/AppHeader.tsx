@@ -47,31 +47,49 @@ const AppHeader: React.FC = () => {
             <div className="flex items-center gap-2 shrink-0">
                 <img src="/assets/logo_cc_v2.png" alt="CC Casino" className="h-9 w-auto object-contain drop-shadow-[0_0_15px_rgba(48,255,117,0.3)] sm:h-10" />
             </div>
-            <div className="flex flex-wrap items-center justify-end gap-1 min-w-0 sm:flex-nowrap sm:gap-3">
-                {/* User Nickname */}
-                <span className="hidden lg:block text-[10px] font-medium text-slate-400 truncate max-w-[60px]">
-                    {user?.nickname}
-                </span>
 
-                {/* Assets Display */}
-                <div className="flex items-center gap-1 md:gap-1.5 rounded-full bg-black/60 border border-white/10 px-1 md:px-2.5 py-1 backdrop-blur-md shrink-0">
-                    <img src="/assets/asset_coin_gold.png" alt="Coin" className="w-3.5 h-3.5 md:w-5 md:h-5" />
-                    <span className="text-[9px] md:text-xs font-black text-white/90 uppercase tracking-tighter">
-                        {vaultBalance.toLocaleString()}
-                    </span>
+            {/* Right Side Group */}
+            <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
+                {/* Profile Card Container */}
+                <div className="flex items-center gap-2 bg-slate-800/60 border border-slate-700/50 rounded-2xl p-1 pr-3 shadow-sm backdrop-blur-md">
+
+                    {/* Level Badge (Left) */}
+                    <div className="flex flex-col items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-700 shadow-inner text-white shrink-0">
+                        <span className="text-[8px] font-medium opacity-80">LV</span>
+                        <span className="text-xs font-bold leading-none">{userLevel}</span>
+                    </div>
+
+                    {/* User Info & Assets */}
+                    <div className="flex flex-col gap-0.5 min-w-[80px]">
+                        <div className="text-xs font-bold text-slate-200 truncate max-w-[100px]">
+                            {user?.nickname || "Guest"}
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            {/* Vault Balance */}
+                            <div className="flex items-center gap-1">
+                                <img src="/assets/asset_coin_gold.png" alt="Coin" className="w-3 h-3" />
+                                <span className="text-[10px] font-bold text-slate-300">
+                                    {vaultBalance.toLocaleString()}
+                                </span>
+                            </div>
+
+                            {/* Separator */}
+                            <div className="w-px h-2.5 bg-slate-600/50"></div>
+
+                            {/* Tickets */}
+                            <div className="flex items-center gap-1">
+                                <img src="/assets/asset_ticket_green.png" alt="Ticket" className="w-3 h-3" />
+                                <span className="text-[10px] font-bold text-slate-300">
+                                    {totalTickets}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div className="flex items-center gap-1 md:gap-1.5 rounded-full bg-black/60 border border-white/10 px-1 md:px-2.5 py-1 backdrop-blur-md shrink-0">
-                    <img src="/assets/asset_ticket_green.png" alt="Ticket" className="w-3.5 h-3.5 md:w-5 md:h-5" />
-                    <span className="text-[9px] md:text-xs font-black text-white/90">{totalTickets}</span>
-                </div>
-                {/* Level Badge */}
-                <div className="px-1 md:px-2 py-0.5 md:py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[9px] md:text-xs font-black text-emerald-400 shrink-0">
-                    Lv.{userLevel}
-                </div>
-                {/* Message Inbox */}
+
+                {/* Inbox Button */}
                 <InboxButton />
-
-                {/* Logout Button Removed */}
             </div>
         </div>
     );

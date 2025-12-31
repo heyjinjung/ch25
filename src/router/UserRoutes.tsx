@@ -14,6 +14,7 @@ const RankingPage = React.lazy(() => import("../pages/RankingPage"));
 const SurveyListPage = React.lazy(() => import("../pages/SurveyListPage"));
 const SurveyRunnerPage = React.lazy(() => import("../pages/SurveyRunnerPage"));
 const NewMemberDicePage = React.lazy(() => import("../pages/NewMemberDicePage"));
+const ConnectPage = React.lazy(() => import("../pages/ConnectPage"));
 const HomePage = React.lazy(() => import("../pages/HomePage"));
 const FigmaLandingTablet = React.lazy(() => import("../pages/FigmaLandingTablet"));
 const FigmaLandingMobile = React.lazy(() => import("../pages/FigmaLandingMobile"));
@@ -23,6 +24,7 @@ const TeamBattlePage = React.lazy(() => import("../pages/TeamBattlePage"));
 const GameLobbyPage = React.lazy(() => import("../pages/GameLobbyPage"));
 const VaultPage = React.lazy(() => import("../pages/VaultPage"));
 const MissionPage = React.lazy(() => import("../pages/MissionPage"));
+const NewUserWelcomePage = React.lazy(() => import("../pages/NewUserWelcomePage"));
 
 // Simple loading fallback
 const PageLoader = () => (
@@ -39,7 +41,7 @@ const UserRoutes: React.FC = () => {
     <Suspense fallback={<PageLoader />}>
       <Routes>
         <Route path="/login" element={<Navigate to="/" replace />} />
-        <Route path="/connect" element={<Navigate to="/" replace />} />
+        <Route path="/connect" element={<ConnectPage />} />
 
         {/* Primary experience starts at landing/home */}
         <Route path="/" element={<Navigate to="/landing" replace />} />
@@ -52,6 +54,7 @@ const UserRoutes: React.FC = () => {
             <Route path="/landing" element={<HomePage />} />
             <Route path="/landing/tablet" element={<FigmaLandingTablet />} />
             <Route path="/landing/mobile" element={<FigmaLandingMobile />} />
+            <Route path="/new-user/welcome" element={<NewUserWelcomePage />} />
             <Route path="/vault" element={<VaultPage />} />
             <Route path="/season-pass" element={<SeasonPassPage />} />
             <Route path="/missions" element={<MissionPage />} />

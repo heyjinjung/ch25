@@ -11,6 +11,7 @@ export interface Mission {
     reward_amount: number;
     xp_reward: number;
     logic_key: string;
+    action_type?: string;
 }
 
 export interface MissionProgress {
@@ -30,7 +31,7 @@ interface MissionState {
     error: string | null;
     hasUnclaimed: boolean;
     fetchMissions: () => Promise<void>;
-    claimReward: (missionId: number) => Promise<boolean>;
+    claimReward: (missionId: number) => Promise<{ success: boolean; reward_type?: string; amount?: number; message?: string }>;
 }
 
 export const useMissionStore = create<MissionState>((set: any, get: any) => ({
@@ -57,26 +58,31 @@ export const useMissionStore = create<MissionState>((set: any, get: any) => ({
 
     claimReward: async (missionId: number) => {
         try {
-            await apiClient.post(`/api/mission/${missionId}/claim`, {});
+            const response = await apiClient.post(`/api/mission/${missionId}/claim`, {});
+            const { success, reward_type, amount } = response.data;
 
-            // Update local state to reflect claim
-            const currentMissions = get().missions.map((item: MissionData) => {
-                if (item.mission.id === missionId) {
-                    return {
-                        ...item,
-                        progress: { ...item.progress, is_claimed: true }
-                    };
-                }
-                return item;
-            });
+            if (success) {
+                // Update local state to reflect claim
+                const currentMissions = get().missions.map((item: MissionData) => {
+                    if (item.mission.id === missionId) {
+                        return {
+                            ...item,
+                            progress: { ...item.progress, is_claimed: true }
+                        };
+                    }
+                    return item;
+                });
 
-            const hasUnclaimed = currentMissions.some((item: MissionData) => item.progress.is_completed && !item.progress.is_claimed);
-            set({ missions: currentMissions, hasUnclaimed });
+                const hasUnclaimed = currentMissions.some((item: MissionData) => item.progress.is_completed && !item.progress.is_claimed);
+                set({ missions: currentMissions, hasUnclaimed });
 
-            return true;
+                return { success: true, reward_type, amount };
+            }
+            return { success: false, message: "Claim failed" };
+
         } catch (err: any) {
             console.error("[MissionStore] Claim failed", err);
-            return false;
+            return { success: false, message: err.message || "Network Error" };
         }
     }
 }));

@@ -52,4 +52,8 @@ class User(Base):
     telegram_join_count = Column(Integer, nullable=False, server_default="0", default=0)
     first_login_at = Column(DateTime, nullable=True)
 
+    # [Telegram] Link token (one-time) for attaching existing user -> telegram_id
+    telegram_link_nonce = Column(String(64), nullable=True)
+    telegram_link_nonce_expires_at = Column(DateTime, nullable=True)
+
     admin_profile = relationship("AdminUserProfile", back_populates="user", uselist=False, cascade="all, delete-orphan")
