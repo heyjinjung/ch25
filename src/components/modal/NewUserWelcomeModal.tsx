@@ -1,0 +1,179 @@
+import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { getNewUserStatus } from "../../api/newUserApi";
+import { useNavigate } from "react-router-dom";
+
+const formatSeconds = (seconds: number | null | undefined) => {
+    if (seconds == null) return "00:00:00";
+    const s = Math.max(0, Math.floor(seconds));
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const r = s % 60;
+    return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${r.toString().padStart(2, "0")}`;
+};
+
+interface NewUserWelcomeModalProps {
+    onClose: () => void;
+}
+
+const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) => {
+    const navigate = useNavigate();
+    const [dontShowAgain, setDontShowAgain] = useState(false);
+
+    const { data: status } = useQuery({
+        queryKey: ["new-user-status"],
+        queryFn: getNewUserStatus,
+        staleTime: 10_000,
+        retry: false,
+    });
+
+    const handleClose = () => {
+        if (dontShowAgain) {
+            localStorage.setItem("hideNewUserWelcome", "true");
+        }
+        onClose();
+    };
+
+    const handleStart = () => {
+        handleClose();
+        navigate("/new-user/welcome");
+    };
+
+    if (!status?.eligible) {
+        return null;
+    }
+
+    const missions = [
+        {
+            id: "play_1",
+            title: "게임 1회",
+            icon: "/assets/welcome/mission_icon_play1.png",
+            completed: status.progress.play_1,
+            reward: 2500,
+        },
+        {
+            id: "play_3",
+            title: "게임 3회",
+            icon: "/assets/welcome/mission_icon_play3.png",
+            completed: status.progress.play_3,
+            reward: 2500,
+        },
+        {
+            id: "viral",
+            title: "채널 구독",
+            icon: "/assets/welcome/mission_icon_viral.png",
+            completed: status.progress.share_or_join,
+            reward: 2500,
+        },
+        {
+            id: "attendance",
+            title: "출석 체크",
+            icon: "/assets/welcome/mission_icon_attendance.png",
+            completed: status.progress.next_day_login,
+            reward: 2500,
+        },
+    ];
+
+    const completedCount = missions.filter((m) => m.completed).length;
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
+            <div className="relative w-full max-w-md bg-gradient-to-b from-slate-900 to-black border-2 border-emerald-500/30 rounded-3xl shadow-2xl shadow-emerald-500/20 overflow-hidden animate-scaleIn">
+                {/* Close Button */}
+                <button
+                    onClick={handleClose}
+                    className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-red-500 hover:bg-red-600 transition-colors"
+                >
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+
+                {/* Header Image */}
+                <div className="relative h-32 bg-gradient-to-r from-emerald-600 to-cyan-600 flex items-center justify-center overflow-hidden">
+                    <img src="/assets/welcome/header_2026_newyear.png" alt="2026 New Year" className="h-full w-auto object-contain" />
+                </div>
+
+                {/* Content */}
+                <div className="p-6 space-y-4">
+                    {/* Title */}
+                    <div className="text-center">
+                        <h2 className="text-2xl font-black text-white mb-1">
+                            4개 미션 완료하고
+                        </h2>
+                        <p className="text-lg font-bold text-emerald-400">
+                            💎 10,000원 받기
+                        </p>
+                    </div>
+
+                    {/* Missions Grid */}
+                    <div className="grid grid-cols-4 gap-3">
+                        {missions.map((mission) => (
+                            <div key={mission.id} className="flex flex-col items-center gap-2">
+                                <div className={`relative w-full aspect-square rounded-2xl border-2 ${mission.completed ? "border-emerald-500 bg-emerald-500/10" : "border-white/20 bg-white/5"} p-2 transition-all`}>
+                                    <img
+                                        src={mission.icon}
+                                        alt={mission.title}
+                                        className={`w-full h-full object-contain ${!mission.completed && "opacity-50 grayscale"}`}
+                                    />
+                                    {mission.completed && (
+                                        <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center">
+                                            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="text-center">
+                                    <p className="text-[10px] font-bold text-white/80">{mission.title}</p>
+                                    <div className="flex items-center justify-center gap-1 mt-0.5">
+                                        <img src="/assets/icon_diamond.png" alt="" className="w-3 h-3" />
+                                        <span className="text-[10px] font-bold text-emerald-400">{mission.reward.toLocaleString()}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Progress */}
+                    <div className="text-center">
+                        <p className="text-sm font-bold text-white/70">
+                            미션 진행도: <span className="text-emerald-400">{completedCount}/4</span>
+                        </p>
+                    </div>
+
+                    {/* CTA Button */}
+                    <button
+                        onClick={handleStart}
+                        className="w-full py-4 rounded-xl bg-figma-primary text-white font-black text-lg shadow-lg shadow-emerald-500/30 hover:brightness-110 active:scale-95 transition-all uppercase tracking-wide"
+                    >
+                        시작하기
+                    </button>
+
+                    {/* Timer */}
+                    <div className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-amber-500/10 border border-amber-500/30">
+                        <svg className="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span className="text-lg font-black text-amber-400 font-mono">
+                            {formatSeconds(status.seconds_left)}
+                        </span>
+                    </div>
+
+                    {/* Don't Show Again */}
+                    <label className="flex items-center justify-center gap-2 cursor-pointer">
+                        <input
+                            type="checkbox"
+                            checked={dontShowAgain}
+                            onChange={(e) => setDontShowAgain(e.target.checked)}
+                            className="w-4 h-4 rounded border-white/20 bg-white/10 text-emerald-500 focus:ring-emerald-500"
+                        />
+                        <span className="text-xs text-white/50">다시 보지 않기</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default NewUserWelcomeModal;

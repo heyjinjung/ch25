@@ -5,6 +5,8 @@ import clsx from "clsx";
 import Button from "../components/common/Button";
 import { getVaultStatus } from "../api/vaultApi";
 import { useSound } from "../hooks/useSound";
+import { useNewUserWelcome } from "../hooks/useNewUserWelcome";
+import NewUserWelcomeModal from "../components/modal/NewUserWelcomeModal";
 
 // --- Components ---
 
@@ -18,44 +20,7 @@ interface GameCardProps {
   badge?: string;
 }
 
-const SoundControlBanner: React.FC = () => {
-  const { isMuted, toggleMute, playClick, startMainBgm } = useSound();
 
-  const handleToggle = () => {
-    playClick();
-    if (isMuted) startMainBgm();
-    toggleMute();
-  };
-
-  return (
-    <button
-      onClick={handleToggle}
-      className="mx-1 w-full relative flex items-center justify-between gap-4 rounded-2xl border border-white/5 bg-black/40 p-4 transition-all active:scale-[0.98]"
-    >
-      <div className="flex items-center gap-4">
-        <div className={clsx("flex h-12 w-12 items-center justify-center rounded-xl border transition-colors", isMuted ? "border-white/10 bg-white/5 text-white/40" : "border-emerald-500/30 bg-emerald-500/10 text-emerald-400")}>
-          {isMuted ? (
-            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
-            </svg>
-          ) : (
-            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-            </svg>
-          )}
-        </div>
-        <div className="text-left">
-          <h4 className={clsx("font-bold text-sm", isMuted ? "text-white/60" : "text-white")}>
-            {isMuted ? "사운드 음소거 됨" : "사운드 켜짐"}
-          </h4>
-          <p className="text-xs text-white/30">터치하여 설정을 변경하세요</p>
-        </div>
-      </div>
-      <div className={clsx("h-3 w-3 rounded-full shadow-[0_0_10px_currentColor]", isMuted ? "bg-gray-500 text-gray-500" : "bg-emerald-500 text-emerald-500 animate-pulse")} />
-    </button>
-  );
-};
 
 const GameCard: React.FC<GameCardProps> = ({ title, to, gradient, icon, isWide, bgImage, badge }) => {
   return (
@@ -87,7 +52,7 @@ const GameCard: React.FC<GameCardProps> = ({ title, to, gradient, icon, isWide, 
           </div>
         )}
         <div className="self-end rounded-full bg-white/20 px-3 py-1 text-[10px] font-bold text-white backdrop-blur border border-white/10 shadow-lg">
-          PLAY NOW
+          지금 플레이
         </div>
       </div>
     </Link>
@@ -97,7 +62,7 @@ const GameCard: React.FC<GameCardProps> = ({ title, to, gradient, icon, isWide, 
 const CategoryTabs: React.FC<{ active: string; onChange: (id: string) => void }> = ({ active, onChange }) => {
   const { playTabTouch } = useSound();
   const tabs = [
-    { id: "all", label: "ALL GAMES" },
+    { id: "all", label: "전체 게임" },
     { id: "hot", label: "씨씨카지노", link: "https://ccc-010.com" },
     { id: "new", label: "씨씨 공식채널", link: "https://t.me/+IE0NYpuze_k1YWZk" },
   ];
@@ -144,12 +109,7 @@ const CategoryTabs: React.FC<{ active: string; onChange: (id: string) => void }>
 
 const HomePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState("all");
-  const { startMainBgm } = useSound();
-
-  // Attempt to start BGM on mount
-  React.useEffect(() => {
-    startMainBgm();
-  }, [startMainBgm]);
+  const { showModal, closeModal } = useNewUserWelcome();
 
   // Data (Simplified for layout)
   const vault = useQuery({ queryKey: ["vault-status"], queryFn: getVaultStatus, staleTime: 30_000, retry: false });
@@ -215,11 +175,11 @@ const HomePage: React.FC = () => {
             <div className="absolute inset-0 bg-gradient-to-r from-amber-500/10 to-transparent opacity-50" />
             <div className="relative z-10 flex items-center justify-between">
               <div>
-                <p className="text-[10px] uppercase font-bold text-amber-300 tracking-wider">LOCKED VAULT</p>
+                <p className="text-[10px] uppercase font-bold text-amber-300 tracking-wider">잠긴 금고</p>
                 <p className="text-xl font-black text-white glow-gold">{formatWon(vaultAmount)}</p>
               </div>
               <Button variant="figma-secondary" onClick={() => setVaultBannerOpen(!vaultBannerOpen)} className="!py-1.5 !px-3 !text-xs">
-                {vaultBannerOpen ? "Close" : "Open"}
+                {vaultBannerOpen ? "닫기" : "열기"}
               </Button>
             </div>
             {vaultBannerOpen && (
@@ -240,7 +200,7 @@ const HomePage: React.FC = () => {
         <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-emerald-500/20 to-transparent" />
         <div className="relative z-10 p-6">
           <span className="inline-block rounded-md bg-white/20 px-2 py-0.5 text-[10px] font-bold text-white mb-2 backdrop-blur-sm">
-            WELCOME PACKAGE
+            신규 패키지
           </span>
           <h2 className="text-3xl font-black text-white leading-tight">
             씨씨지민코드 <br />
@@ -285,7 +245,7 @@ const HomePage: React.FC = () => {
         </div>
         <div className="relative z-10 flex-1 min-w-0">
           <h4 className="text-white font-black text-sm tracking-tight">이용 가이드</h4>
-          <p className="text-white/40 text-xs mt-0.5 truncate">서비스 이용방법을 확인해보세요</p>
+          <p className="text-white/50 text-xs mt-0.5 truncate">서비스 이용방법을 확인해보세요</p>
         </div>
         <div className="relative z-10 shrink-0">
           <div className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-emerald-500/20 group-hover:border-emerald-500/30 transition-all">
@@ -296,7 +256,8 @@ const HomePage: React.FC = () => {
         </div>
       </Link>
 
-      <SoundControlBanner />
+      {/* New User Welcome Modal */}
+      {showModal && <NewUserWelcomeModal onClose={closeModal} />}
 
     </section>
   );
