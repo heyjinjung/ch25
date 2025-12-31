@@ -433,8 +433,8 @@ const RoulettePage: React.FC = () => {
 
   return (
     <FeatureGate feature="ROULETTE">
-      <GamePageShell title="럭셔리 CC룰렛">
-        <div className="mb-6 flex justify-center">
+      <GamePageShell title="럭셔리 CC룰렛" px="p-2 sm:p-4">
+        <div className="mb-3 flex justify-center">
           <div className="inline-flex rounded-full bg-white/5 p-1 backdrop-blur-md">
             {TABS.map((tab) => (
               <button
@@ -443,7 +443,7 @@ const RoulettePage: React.FC = () => {
                   if (!isSpinning) setActiveTab(tab.type);
                 }}
                 className={clsx(
-                  "group flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold transition-all duration-300",
+                  "group flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold transition-all duration-300",
                   activeTab === tab.type
                     ? tab.activeColors
                     : "text-white/40 hover:bg-white/5 hover:text-white"

@@ -114,12 +114,12 @@ const LotteryPage: React.FC = () => {
       <GamePageShell
         title="지민코드 복권"
         subtitle="Special Premium Lottery"
-        px="px-4 sm:px-8"
-        py="py-[10px]"
+        px="px-3 sm:px-6"
+        py="py-1"
       >
 
         {/* 1. Stats Bar */}
-        <div className="flex flex-col gap-6 mb-8">
+        <div className="flex flex-col gap-4 mb-4">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 rounded-full bg-black/60 border border-white/10 px-5 py-2 backdrop-blur-md shrink-0">
               <img src="/assets/lottery/icon_lotto_ball.png" alt="Lotto Ball" className="w-6 h-6 object-contain" />
@@ -135,7 +135,7 @@ const LotteryPage: React.FC = () => {
         </div>
 
         {/* 2. Main Game Area */}
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-4">
           <LotteryCard
             prize={revealedPrize ?? undefined}
             isRevealed={isRevealed}
@@ -170,7 +170,7 @@ const LotteryPage: React.FC = () => {
         </div>
 
         {/* 3. Prize List */}
-        <div className="mt-12 mb-16 px-1">
+        <div className="mt-6 mb-8 px-1">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-sm font-black italic text-figma-accent tracking-[0.2em] uppercase">당첨 가능 경품 리스트</h3>
             <span className="text-[10px] font-bold text-white/20 uppercase tracking-widest">Total {data.prizes.length} Items</span>

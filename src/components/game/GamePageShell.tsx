@@ -1,7 +1,6 @@
 import clsx from "clsx";
 import React from "react";
 import { useSound } from "../../hooks/useSound";
-import { Volume2, VolumeX } from "lucide-react";
 
 type Props = {
   title: string;
@@ -16,15 +15,7 @@ type Props = {
 
 const GamePageShell: React.FC<Props> = ({ children, footerNote, px = "p-4 sm:p-8", py, disableMainBgm }) => {
   const containerPadding = py ? `${px} ${py}` : px;
-  const { isMuted, toggleMute, playClick, startMainBgm, playEnterGame } = useSound();
-
-  const handleToggleMute = () => {
-    playClick(); // Feedback even if muting (or unmuting)
-    if (isMuted && !disableMainBgm) {
-      startMainBgm(); // Ensure BGM restarts/resumes when unmuting
-    }
-    toggleMute();
-  };
+  const { startMainBgm, playEnterGame } = useSound();
 
   // Attempt to start BGM and play Enter sound on mount
   React.useEffect(() => {
@@ -39,13 +30,7 @@ const GamePageShell: React.FC<Props> = ({ children, footerNote, px = "p-4 sm:p-8
     <div className="relative w-full text-white">
       <div className="mx-auto w-full max-w-[1040px]">
         <section className={clsx("relative overflow-hidden rounded-3xl border border-white/15 bg-black/40 shadow-2xl", containerPadding)}>
-          {/* Sound Toggle Button */}
-          <button
-            onClick={handleToggleMute}
-            className="absolute top-4 right-4 z-20 rounded-full bg-white/5 p-2 text-white/50 hover:bg-white/10 hover:text-white transition-colors"
-          >
-            {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
-          </button>
+
           {children}
         </section>
 

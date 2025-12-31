@@ -186,8 +186,8 @@ const HomePage: React.FC = () => {
               <div className="relative z-10 mt-3 border-t border-white/10 pt-2 text-xs text-slate-300">
                 <p>외부 충전 시 해금됩니다.</p>
                 <div className="mt-2 flex gap-2">
-                  <a href="https://ccc-010.com" target="_blank" rel="noreferrer" className="flex-1 py-2 text-center bg-amber-500/20 rounded border border-amber-500/30 text-amber-200 hover:bg-amber-500/30">1만원</a>
-                  <a href="https://ccc-010.com" target="_blank" rel="noreferrer" className="flex-1 py-2 text-center bg-amber-500/20 rounded border border-amber-500/30 text-amber-200 hover:bg-amber-500/30">5만원</a>
+                  <a href="https://ccc-010.com" target="_blank" rel="noreferrer" className="flex-1 py-2 text-center bg-amber-500/20 rounded border border-amber-500/30 text-amber-200 hover:bg-amber-500/30"><img src="/assets/logo_cc_v2.png" alt="CC" className="inline-block w-4 h-4 mr-2 align-text-bottom" />1만원</a>
+                  <a href="https://ccc-010.com" target="_blank" rel="noreferrer" className="flex-1 py-2 text-center bg-amber-500/20 rounded border border-amber-500/30 text-amber-200 hover:bg-amber-500/30"><img src="/assets/logo_cc_v2.png" alt="CC" className="inline-block w-4 h-4 mr-2 align-text-bottom" />5만원</a>
                 </div>
               </div>
             )}
@@ -213,7 +213,7 @@ const HomePage: React.FC = () => {
               rel="noreferrer"
               className="inline-block rounded-lg px-6 py-2 text-base font-semibold transition focus:outline-none bg-figma-primary text-white font-bold shadow-[0_4px_12px_rgba(0,0,0,0.3)] shadow-lg shadow-emerald-500/30 hover:brightness-110 active:scale-95 uppercase tracking-wide"
             >
-              문의하기
+              실장 문의하기
             </a>
           </div>
         </div>

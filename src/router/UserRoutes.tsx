@@ -18,7 +18,7 @@ const ConnectPage = React.lazy(() => import("../pages/ConnectPage"));
 const HomePage = React.lazy(() => import("../pages/HomePage"));
 const FigmaLandingTablet = React.lazy(() => import("../pages/FigmaLandingTablet"));
 const FigmaLandingMobile = React.lazy(() => import("../pages/FigmaLandingMobile"));
-const SeasonPassPage = React.lazy(() => import("../pages/SeasonPassPage"));
+const LevelTowerPage = React.lazy(() => import("../pages/LevelTowerPage"));
 const GuidePage = React.lazy(() => import("../pages/GuidePage"));
 const TeamBattlePage = React.lazy(() => import("../pages/TeamBattlePage"));
 const GameLobbyPage = React.lazy(() => import("../pages/GameLobbyPage"));
@@ -56,7 +56,7 @@ const UserRoutes: React.FC = () => {
             <Route path="/landing/mobile" element={<FigmaLandingMobile />} />
             <Route path="/new-user/welcome" element={<NewUserWelcomePage />} />
             <Route path="/vault" element={<VaultPage />} />
-            <Route path="/season-pass" element={<SeasonPassPage />} />
+            <Route path="/season-pass" element={<LevelTowerPage />} />
             <Route path="/missions" element={<MissionPage />} />
             <Route path="/team-battle" element={<TeamBattlePage />} />
             <Route path="/games" element={<GameLobbyPage />} />
