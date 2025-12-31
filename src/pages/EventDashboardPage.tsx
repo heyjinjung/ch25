@@ -52,7 +52,7 @@ const EventDashboardPage: React.FC = () => {
 
                         {/* Background Image */}
                         <div className="absolute inset-0 z-0 opacity-60 group-hover:opacity-80 transition-opacity">
-                            <img src="/assets/welcome/header_2026_newyear.png" className="w-full h-full object-cover" />
+                            <img src="/assets/welcome/levelup_v2.png" className="w-full h-full object-cover" />
                             <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent" />
                         </div>
                     </Link>
@@ -80,7 +80,7 @@ const EventDashboardPage: React.FC = () => {
 
                         {/* Background Image */}
                         <div className="absolute inset-0 z-0 opacity-60 group-hover:opacity-80 transition-opacity">
-                            <img src="/assets/welcome/event_v2.png" className="w-full h-full object-cover" />
+                            <img src="/assets/welcome/mission_v2.png" className="w-full h-full object-cover" />
                             <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent" />
                         </div>
                     </Link>
