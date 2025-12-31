@@ -14,19 +14,27 @@ def seed_season_pass_20():
         # 1. Update Config to max_level 20
         config = db.query(SeasonPassConfig).first()
         if not config:
-            config = SeasonPassConfig(max_level=20, season_name="Season 1")
+            # Create a default config if none exists (fallback)
+            from datetime import date, timedelta
+            config = SeasonPassConfig(
+                season_name="Season 1",
+                start_date=date.today(),
+                end_date=date.today() + timedelta(days=90),
+                max_level=20,
+                base_xp_per_stamp=100,
+                is_active=True
+            )
             db.add(config)
+            db.commit()
+            db.refresh(config)
         else:
             config.max_level = 20
+            db.commit()
         
-        db.commit()
-        print(f"Updated SeasonPassConfig: max_level={config.max_level}")
+        season_id = config.id
+        print(f"Using Season ID: {season_id}, max_level={config.max_level}")
 
         # 2. Define Levels 1-20
-        # XP requirements (incremental)
-        # 1: 0, 2: 500, 3: 1000, 4: 2000, 5: 3500, 6: 5000, 7: 7500, 8: 10000, 9: 15000, 10: 20000
-        # 11: 30000, 12: 40000, 13: 55000, 14: 70000, 15: 90000, 16: 110000, 17: 150000, 18: 200000, 19: 250000, 20: 300000
-        
         levels_data = [
             (1, 0, "TICKET_ROULETTE", 1),
             (2, 500, "TICKET_DICE", 1),
@@ -52,17 +60,23 @@ def seed_season_pass_20():
 
         # 3. Upsert Levels
         for lv, xp, r_type, r_amount in levels_data:
-            level_obj = db.query(SeasonPassLevel).filter(SeasonPassLevel.level == lv).first()
+            level_obj = db.query(SeasonPassLevel).filter(
+                SeasonPassLevel.season_id == season_id,
+                SeasonPassLevel.level == lv
+            ).first()
+            
             if level_obj:
                 level_obj.required_xp = xp
                 level_obj.reward_type = r_type
                 level_obj.reward_amount = r_amount
             else:
                 level_obj = SeasonPassLevel(
+                    season_id=season_id,
                     level=lv,
                     required_xp=xp,
                     reward_type=r_type,
-                    reward_amount=r_amount
+                    reward_amount=r_amount,
+                    auto_claim=True
                 )
                 db.add(level_obj)
         
@@ -71,6 +85,8 @@ def seed_season_pass_20():
 
     except Exception as e:
         db.rollback()
+        import traceback
+        traceback.print_exc()
         print(f"Error seeding: {e}")
     finally:
         db.close()
