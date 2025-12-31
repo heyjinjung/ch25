@@ -6,11 +6,18 @@
 - Auth: 텔레그램 네이티브 전용 인증 시스템으로 완전 전환.
   - 외부 브라우저 접속 차단 및 프리미엄 안내 페이지(RequireAuth) 구현.
   - `/api/telegram/auth`를 통한 자동 가입/로그인 구조 단일화.
+  - **[Refactor]** 유저 식별자 정책 변경: `Nickname` > `Telegram Username` > `External ID` 순으로 우선순위 부여.
+  - **[Refactor]** 텔레그램 로그인 시 유저네임 기반 자동 계정 연동(Admin 선생성 계정 지원) 추가.
 - Admin: 텔레그램 유저 구조에 맞춘 어드민 UI 전면 개편.
   - 회원 테이블에 `Telegram ID`, `Username` 직접 노출 및 편집 기능 추가.
+  - 신규 회원 생성 시 유저네임 기반 닉네임 자동 폴백 로직 적용.
   - 매직 링크, 수동 연동, 비밀번호 초기화 등 불필요한 레거시 액션 제거.
   - 외부 PC 브라우저에서의 독립적인 어드민 접속 기능 유지 및 초기 계정 시딩(`seed_admin_v3.py`).
+- API/Routing: **[Fix]** 404 에러 해결을 위한 전역 `/api` 중복 프리픽스 제거 및 경로 표준화.
+  - 어드민 API를 `/admin/api/...`로, 유저 API를 `/api/...`로 프론트엔드 호출 규격에 맞춰 통일.
+  - Health, Dev Auth 등 누락된 프리픽스 보완.
 - Frontend: `App.tsx` 자동 인증 로직 최적화 및 고해상도 Skeleton 로딩 UI 적용.
+- Scripts: `backfill_set_nicknames_from_telegram.py` 기능 고도화(일괄 강제 업데이트 `--force` 옵션 추가).
 
 ## 2025-12-30 (SSL/HTTPS & Telegram Integration Resolution)
 - Infrastructure: `cc-jm.com` SSL/HTTPS 보정 (Nginx SSL 블록 추가 및 Let's Encrypt 인증서 적용).
