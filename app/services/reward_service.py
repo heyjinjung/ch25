@@ -134,15 +134,31 @@ class RewardService:
                     (GameTokenType.ROULETTE_COIN, 3),
                     (GameTokenType.DICE_TOKEN, 3),
                 ]
+            elif reward_amount == 7:  # Level 7: 1만 P + 골드 키 1개
+                self.grant_point(db, user_id=user_id, amount=10000, reason="LEVEL_BUNDLE_7")
+                bundle_items = [(GameTokenType.GOLD_KEY, 1)]
+            elif reward_amount == 12:  # Level 14: 스페셜 번들 (룰5+주5+복2)
+                bundle_items = [
+                    (GameTokenType.ROULETTE_COIN, 5),
+                    (GameTokenType.DICE_TOKEN, 5),
+                    (GameTokenType.LOTTERY_TICKET, 2),
+                ]
+            elif reward_amount == 15:  # Level 15: 골드 키 2개 + 10만 P
+                self.grant_point(db, user_id=user_id, amount=100000, reason="LEVEL_BUNDLE_15")
+                bundle_items = [(GameTokenType.GOLD_KEY, 2)]
+            elif reward_amount == 30:  # Level 17: 메가 티켓 번들 (룰10+주10+복10)
+                bundle_items = [
+                    (GameTokenType.ROULETTE_COIN, 10),
+                    (GameTokenType.DICE_TOKEN, 10),
+                    (GameTokenType.LOTTERY_TICKET, 10),
+                ]
+            elif reward_amount == 20:  # Level 20: 다이아몬드 키 3개 + 30만 P (관리자)
+                self.grant_point(db, user_id=user_id, amount=300000, reason="LEVEL_BUNDLE_20")
+                bundle_items = [(GameTokenType.DIAMOND_KEY, 3)]
             elif reward_amount == 4:  # Legacy/Small: Mini Ticket bomb (Roulette 2 + Dice 2)
                 bundle_items = [
                     (GameTokenType.ROULETTE_COIN, 2),
                     (GameTokenType.DICE_TOKEN, 2),
-                ]
-            elif reward_amount == 20:  # Legacy/Special: Large Ticket bomb (Roulette 10 + Dice 10)
-                bundle_items = [
-                    (GameTokenType.ROULETTE_COIN, 10),
-                    (GameTokenType.DICE_TOKEN, 10),
                 ]
             
             for token_type, amount in bundle_items:
@@ -150,8 +166,7 @@ class RewardService:
             return
 
         if reward_type == "CC_POINT":
-            # CC 포인트는 외부 플랫폼에서 관리자가 수동으로 지급하므로 시스템 자동 지급은 건너뜁니다.
-            # 로그만 남기고 실제 포인트 지급 로직(grant_point)은 태우지 않습니다.
+            # CC 포인트는 외부 플랫폼에서 관리자가 수동으로 지급하므로 시스템 자동 지급은 건너뜜
             return
 
         if reward_type == "COUPON":
