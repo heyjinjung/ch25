@@ -44,11 +44,11 @@ const AppHeader: React.FC = () => {
     const totalTickets = lotteryTickets + rouletteTickets + diceTickets;
 
     return (
-        <div className="flex items-center justify-between px-1 mb-6 gap-2 overflow-hidden">
+        <div className="flex flex-col gap-2 px-1 mb-6 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2 shrink-0">
-                <img src="/assets/logo_cc_v2.png" alt="CC Casino" className="h-10 w-auto object-contain drop-shadow-[0_0_15px_rgba(48,255,117,0.3)]" />
+                <img src="/assets/logo_cc_v2.png" alt="CC Casino" className="h-9 w-auto object-contain drop-shadow-[0_0_15px_rgba(48,255,117,0.3)] sm:h-10" />
             </div>
-            <div className="flex gap-1 md:gap-3 items-center min-w-0">
+            <div className="flex flex-wrap items-center justify-end gap-1 min-w-0 sm:flex-nowrap sm:gap-3">
                 {/* User Nickname */}
                 <span className="hidden lg:block text-[10px] font-medium text-slate-400 truncate max-w-[60px]">
                     {user?.nickname}
