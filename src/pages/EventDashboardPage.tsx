@@ -1,7 +1,7 @@
 // src/pages/EventDashboardPage.tsx
 import React from "react";
 import { Link } from "react-router-dom";
-import { Trophy, Target, ChevronRight, Sparkles, Star } from "lucide-react";
+import { Trophy, Target, Sparkles, Star } from "lucide-react";
 import { useHaptic } from "../hooks/useHaptic";
 
 const EventDashboardPage: React.FC = () => {
@@ -22,87 +22,67 @@ const EventDashboardPage: React.FC = () => {
                 {/* Page Title */}
                 <div className="mt-8 mb-8 px-1">
                     <h1 className="text-4xl font-black text-white tracking-tight flex items-center gap-3">
-                        Events <Sparkles className="text-[#91F402] w-8 h-8 animate-pulse" />
+                        이벤트 <Sparkles className="text-[#91F402] w-8 h-8 animate-pulse" />
                     </h1>
-                    <p className="text-gray-400 text-sm mt-2 font-medium">참여하고 특별한 보상을 획득하세요</p>
+                    <p className="text-gray-400 text-sm mt-2 font-medium">참여 가능한 모든 이벤트를 확인하세요</p>
                 </div>
 
                 {/* Dashboard Grid */}
                 <div className="space-y-4">
-                    {/* Level Tower Section (Placeholder) */}
+                    {/* Level Tower Section */}
                     <Link
                         to="/season-pass"
                         onClick={handleCardClick}
-                        className="group relative block w-full overflow-hidden rounded-[32px] border border-white/10 bg-gradient-to-br from-indigo-900/40 to-slate-900/40 p-1 active:scale-[0.98] transition-all"
+                        className="group relative block w-full overflow-hidden rounded-[28px] border border-white/10 bg-black active:scale-[0.98] transition-all"
                     >
-                        <div className="relative z-10 p-6 flex flex-col h-48 justify-between">
-                            <div className="flex justify-between items-start">
-                                <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center text-indigo-400 group-hover:scale-110 transition-transform duration-500">
-                                    <Trophy size={24} />
+                        <div className="relative z-10 p-6 flex flex-col h-40 justify-center">
+                            <div className="max-w-[60%]">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <div className="w-8 h-8 rounded-lg bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center text-indigo-400">
+                                        <Trophy size={16} />
+                                    </div>
+                                    <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Level Tower</span>
                                 </div>
-                                <span className="bg-indigo-500/20 text-indigo-300 text-[10px] font-black px-3 py-1 rounded-full border border-indigo-500/30">
-                                    LEVEL UP
-                                </span>
-                            </div>
-
-                            <div>
-                                <h2 className="text-2xl font-black text-white mb-1 group-hover:text-indigo-300 transition-colors">Level Tower</h2>
-                                <p className="text-gray-400 text-xs font-medium">시즌 패스를 달성하고 최종 보상을 받으세요</p>
-                            </div>
-
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-indigo-500/20 transition-all" />
-
-                            <div className="flex items-center gap-1 text-[#91F402] text-[10px] font-black uppercase tracking-widest mt-2">
-                                Check Progress <ChevronRight size={12} />
+                                <h2 className="text-xl font-black text-white mb-1 group-hover:text-indigo-300 transition-colors">레벨 타워</h2>
                             </div>
                         </div>
 
-                        {/* Image Placeholder */}
-                        <div className="absolute inset-0 z-0 opacity-20 transition-opacity group-hover:opacity-30">
-                            {/* <img src="/assets/event_level_placeholder.png" className="w-full h-full object-cover" /> */}
-                            <div className="w-full h-full bg-gradient-to-tr from-indigo-600/20 via-transparent to-purple-600/20" />
+                        {/* Background Image */}
+                        <div className="absolute inset-0 z-0 opacity-60 group-hover:opacity-80 transition-opacity">
+                            <img src="/assets/welcome/levelup_v2.png" className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent" />
                         </div>
                     </Link>
 
-                    {/* Daily Missions Section (Placeholder) */}
+                    {/* Daily Missions Section */}
                     <Link
                         to="/missions"
                         onClick={handleCardClick}
-                        className="group relative block w-full overflow-hidden rounded-[32px] border border-white/10 bg-gradient-to-br from-[#91F402]/5 to-slate-900/40 p-1 active:scale-[0.98] transition-all"
+                        className="group relative block w-full overflow-hidden rounded-[28px] border border-white/10 bg-black active:scale-[0.98] transition-all"
                     >
-                        <div className="relative z-10 p-6 flex flex-col h-48 justify-between">
-                            <div className="flex justify-between items-start">
-                                <div className="w-12 h-12 rounded-2xl bg-[#91F402]/10 border border-[#91F402]/30 flex items-center justify-center text-[#91F402] group-hover:scale-110 transition-transform duration-500">
-                                    <Target size={24} />
+                        <div className="relative z-10 p-6 flex flex-col h-40 justify-center">
+                            <div className="max-w-[60%]">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <div className="w-8 h-8 rounded-lg bg-[#91F402]/10 border border-[#91F402]/30 flex items-center justify-center text-[#91F402]">
+                                        <Target size={16} />
+                                    </div>
+                                    <span className="text-[10px] font-black text-[#91F402] uppercase tracking-widest">Daily Missions</span>
                                 </div>
-                                <span className="bg-[#91F402]/20 text-[#91F402] text-[10px] font-black px-3 py-1 rounded-full border border-[#91F402]/30">
-                                    DAILY
-                                </span>
-                            </div>
-
-                            <div>
-                                <h2 className="text-2xl font-black text-white mb-1 group-hover:text-[#91F402] transition-colors">Daily Missions</h2>
-                                <p className="text-gray-400 text-xs font-medium">매일 주어지는 미션을 완료하고 다이아몬드를 획득하세요</p>
-                            </div>
-
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-[#91F402]/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-[#91F402]/10 transition-all" />
-
-                            <div className="flex items-center gap-1 text-[#91F402] text-[10px] font-black uppercase tracking-widest mt-2">
-                                Complete Now <ChevronRight size={12} />
+                                <h2 className="text-xl font-black text-white mb-1 group-hover:text-[#91F402] transition-colors">데일리 미션</h2>
                             </div>
                         </div>
 
-                        {/* Image Placeholder */}
-                        <div className="absolute inset-0 z-0 opacity-20 transition-opacity group-hover:opacity-30">
-                            {/* <img src="/assets/event_mission_placeholder.png" className="w-full h-full object-cover" /> */}
-                            <div className="w-full h-full bg-gradient-to-br from-[#91F402]/10 via-transparent to-emerald-600/10" />
+                        {/* Background Image */}
+                        <div className="absolute inset-0 z-0 opacity-60 group-hover:opacity-80 transition-opacity">
+                            <img src="/assets/welcome/mission_v2.png" className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent" />
                         </div>
                     </Link>
 
-                    {/* Bonus Card (Future Proofing) */}
+                    {/* Bonus Card */}
                     <div className="p-6 rounded-[32px] border border-dashed border-white/10 bg-white/5 text-center">
                         <Star className="mx-auto text-gray-600 mb-2" size={24} />
-                        <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest">More Events Coming Soon</p>
+                        <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest italic">COMING SOON</p>
                     </div>
                 </div>
             </div>

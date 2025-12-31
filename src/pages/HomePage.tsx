@@ -27,30 +27,30 @@ const GameCard: React.FC<GameCardProps> = ({ title, to, gradient, icon, isWide, 
     <Link
       to={to}
       className={clsx(
-        "group relative overflow-hidden rounded-2xl border border-white/5 p-3 transition-all hover:scale-[1.02] active:scale-[0.98]",
+        "group relative overflow-hidden rounded-[24px] border border-white/10 p-4 transition-all hover:scale-[1.02] active:scale-[0.98]",
         !bgImage && gradient,
         isWide ? "col-span-2 aspect-[2/1]" : "col-span-1 aspect-square"
       )}
     >
       {bgImage && (
         <div className="absolute inset-0 z-0">
-          <img src={bgImage} alt={title} className="h-full w-full object-cover opacity-90" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+          <img src={bgImage} alt={title} className="h-full w-full object-cover opacity-90 transition-transform duration-700 group-hover:scale-110" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
         </div>
       )}
 
       <div className="relative z-10 flex h-full flex-col justify-between">
         <div className="flex justify-between items-start">
           {badge && (
-            <span className="rounded-full bg-red-500 px-1.5 py-0.5 text-[8px] font-black text-white shadow-sm">{badge}</span>
+            <span className="rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-black text-white shadow-sm ring-2 ring-black/20">{badge}</span>
           )}
-          {!bgImage && <span className="text-2xl">{icon}</span>}
+          {!bgImage && <span className="text-3xl">{icon}</span>}
         </div>
 
         <div className="mt-auto">
-          <p className="text-[10px] font-black text-white/90 truncate mb-1">{title}</p>
-          <div className="inline-block rounded-full bg-white/20 px-2 py-0.5 text-[8px] font-bold text-white backdrop-blur border border-white/10">
-            GO
+          <p className="text-sm font-black text-white tracking-tight mb-2 group-hover:text-[#91F402] transition-colors">{title}</p>
+          <div className="inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-[10px] font-black text-white backdrop-blur border border-white/10 group-hover:bg-[#91F402] group-hover:text-black transition-all">
+            지금 플레이
           </div>
         </div>
       </div>
@@ -233,8 +233,8 @@ const HomePage: React.FC = () => {
         <CategoryTabs active={activeTab} onChange={setActiveTab} />
       </div>
 
-      {/* Games Grid - 2 rows x 3 columns */}
-      <div className="grid grid-cols-3 gap-2 px-1">
+      {/* Games Grid - 3 rows x 2 columns */}
+      <div className="grid grid-cols-2 gap-3 px-1">
         {games.map((game) => (
           <GameCard key={game.title} {...game} />
         ))}
