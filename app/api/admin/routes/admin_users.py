@@ -13,9 +13,13 @@ router = APIRouter(prefix="/admin/api/users", tags=["admin-users"])
 
 @router.get("", response_model=List[AdminUserResponse])
 @router.get("/", response_model=List[AdminUserResponse])
-def list_users(db: Session = Depends(get_db)) -> List[AdminUserResponse]:
+def list_users(
+    db: Session = Depends(get_db),
+    # q param for search
+    q: str | None = None
+) -> List[AdminUserResponse]:
     # Support both /admin/api/users and /admin/api/users/ to avoid redirect-induced CORS noise
-    users = AdminUserService.list_users(db)
+    users = AdminUserService.list_users(db, q)
     return [AdminUserResponse.model_validate(u) for u in users]
 
 

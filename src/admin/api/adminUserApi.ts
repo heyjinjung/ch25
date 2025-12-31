@@ -38,8 +38,9 @@ export interface ImportResult {
   errors: string[];
 }
 
-export async function fetchUsers() {
-  const { data } = await adminApi.get<AdminUser[]>("/admin/api/users/");
+export async function fetchUsers(query?: string) {
+  const params = query ? { q: query } : undefined;
+  const { data } = await adminApi.get<AdminUser[]>("/admin/api/users/", { params });
   return data;
 }
 

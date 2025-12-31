@@ -79,16 +79,43 @@ class AdminUserService:
         return user
 
     @staticmethod
-    def list_users(db: Session) -> list[User]:
-        users = (
-            db.execute(
-                select(User)
-                .options(joinedload(User.admin_profile))
-                .order_by(User.id.desc())
-            )
-            .scalars()
-            .all()
+    def list_users(db: Session, q: str | None = None) -> list[User]:
+        stmt = (
+            select(User)
+            .options(joinedload(User.admin_profile))
+            .order_by(User.id.desc())
         )
+
+        if q and q.strip():
+            # Search Logic:
+            # 1. Exact ID (numeric)
+            # 2. Telegram Username (ILIKE) -> This is the priority requested
+            # 3. Nickname (ILIKE)
+            # 4. Real Name (ILIKE via admin_profile)
+            # 5. External ID (ILIKE)
+            # 6. Tags (ILIKE via admin_profile)
+            
+            term = f"%{q.strip()}%"
+            from sqlalchemy import or_, cast, String
+            from app.models.user_profile import UserAdminProfile
+            
+            # Note: We need to join admin_profile to search its fields
+            stmt = stmt.outerjoin(User.admin_profile)
+            
+            conditions = [
+                User.telegram_username.ilike(term),
+                User.nickname.ilike(term),
+                User.external_id.ilike(term),
+                UserAdminProfile.real_name.ilike(term),
+                UserAdminProfile.tags.ilike(term),
+            ]
+            
+            if q.strip().isdigit():
+                conditions.append(cast(User.id, String) == q.strip())
+                
+            stmt = stmt.where(or_(*conditions))
+
+        users = db.execute(stmt).scalars().all()
         return [AdminUserService._enrich_user_with_xp(db, u) for u in users]
 
     @staticmethod

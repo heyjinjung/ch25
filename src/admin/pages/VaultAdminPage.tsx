@@ -30,7 +30,7 @@ const UserLookup: React.FC<{ value: string; onChange: (val: string) => void; pla
 
     const { data: users, isLoading } = useQuery({
         queryKey: ["admin", "users"],
-        queryFn: fetchUsers,
+        queryFn: () => fetchUsers(),
         enabled: isOpen,
         staleTime: 60000
     });

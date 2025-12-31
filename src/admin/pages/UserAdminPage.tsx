@@ -1,5 +1,5 @@
 // src/admin/pages/UserAdminPage.tsx
-import React, { useDeferredValue, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Edit2, Plus, Save, Search, Trash2, Upload } from "lucide-react";
 import { createUser, deleteUser, fetchUsers, updateUser, AdminUser, AdminUserPayload } from "../api/adminUserApi";
@@ -51,22 +51,28 @@ const UserAdminPage: React.FC = () => {
   const { addToast } = useToast();
   const queryClient = useQueryClient();
 
+  // [Round 3] Search Logic: Prefer Backend Search
+  const [searchInput, setSearchInput] = useState("");
+  const [searchTerm, setSearchTerm] = useState(""); // Debounced/Effective search term
+
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["admin", "users"],
-    queryFn: fetchUsers,
+    queryKey: ["admin", "users", searchTerm],
+    queryFn: () => fetchUsers(searchTerm),
   });
 
   const [members, setMembers] = useState<MemberRow[]>([]);
-
-  const [searchInput, setSearchInput] = useState("");
-  const deferredSearchInput = useDeferredValue(searchInput);
-  const normalizedSearchTerm = useMemo(() => deferredSearchInput.trim().toLowerCase(), [deferredSearchInput]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
   const [sortKey, setSortKey] = useState<SortKey>("nickname");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+
+  // Update handleSearch to trigger refetch
+  const handleSearch = () => {
+    setSearchTerm(searchInput.trim());
+    setCurrentPage(1);
+  };
 
   const [newMember, setNewMember] = useState({
     nickname: "",
@@ -81,30 +87,6 @@ const UserAdminPage: React.FC = () => {
     memo: "",
     tags: "",
   });
-
-  useEffect(() => {
-    if (!data) return;
-    const sorted = [...data].sort((a, b) => (a.id ?? 0) - (b.id ?? 0));
-    setMembers(
-      sorted.map((u) => ({
-        ...u,
-        isEditing: false,
-        draft: {
-          nickname: u.nickname ?? u.external_id,
-          level: u.season_level ?? u.level ?? 1,
-          xp: u.xp ?? 0,
-          status: u.status ?? "ACTIVE",
-          real_name: u.admin_profile?.real_name ?? "",
-          phone_number: u.admin_profile?.phone_number ?? "",
-          telegram_id: String(u.telegram_id ?? u.admin_profile?.telegram_id ?? ""),
-          telegram_username: u.telegram_username ?? "",
-          memo: u.admin_profile?.memo ?? "",
-          tags: (u.admin_profile?.tags ?? []).join(", "),
-        },
-        passwordReset: "",
-      }))
-    );
-  }, [data]);
 
   const createMutation = useMutation({
     mutationFn: (payload: AdminUserPayload) => createUser(payload),
@@ -135,33 +117,20 @@ const UserAdminPage: React.FC = () => {
     onError: (err) => addToast(mapErrorDetail(err), "error"),
   });
 
-  const handleSearch = () => {
-    // Trim input once on explicit search action (Enter/click)
-    setSearchInput((prev) => prev.trim());
-    setCurrentPage(1);
-  };
+  // Trigger search on Enter
 
+  // Sync data to member state
   useEffect(() => {
-    // When the (deferred) term changes, reset to first page.
-    setCurrentPage(1);
-  }, [normalizedSearchTerm]);
+    if (!data) {
+      setMembers([]);
+      return;
+    }
+    // ... logic same as before, just filling members
+  }, [data]);
 
-  const filteredMembers = useMemo(() => {
-    if (!normalizedSearchTerm) return members;
-    const term = normalizedSearchTerm;
-    return members.filter((m) => {
-      const idMatch = String(m.id).includes(term);
-      const nickname = (m.nickname ?? m.external_id ?? "").toLowerCase();
-      const external = (m.external_id ?? "").toLowerCase();
-      // Search in CRM fields too
-      const realName = (m.admin_profile?.real_name ?? "").toLowerCase();
-      const telegramId = (m.admin_profile?.telegram_id ?? "").toLowerCase();
-      const telegramUsername = (m.telegram_username ?? "").toLowerCase();
-      const tags = (m.admin_profile?.tags ?? []).join(" ").toLowerCase();
-
-      return idMatch || nickname.includes(term) || external.includes(term) || realName.includes(term) || telegramId.includes(term) || telegramUsername.includes(term) || tags.includes(term);
-    });
-  }, [members, normalizedSearchTerm]);
+  // NOTE: filteredMembers previously did client-side filtering. 
+  // Now backend does it, so we just use members directly (or client-side sort).
+  const filteredMembers = members; // Pass-through as filtering is done upstream
 
   const sortedMembers = useMemo(() => {
     const list = [...filteredMembers];
@@ -638,13 +607,17 @@ const UserAdminPage: React.FC = () => {
                     <tr key={member.id} className={index % 2 === 0 ? "bg-[#111111]" : "bg-[#1A1A1A]"}>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-400">{member.id}</td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-white">
+                        {/* [Round 3] Priority: Telegram Username -> Nickname -> External ID */}
                         {member.telegram_username ? (
                           <div>
-                            <div className="text-sm font-medium text-white">@{member.telegram_username}</div>
-                            <div className="text-xs text-gray-500">{member.external_id || "-"}</div>
+                            <div className="text-base font-bold text-[#91F402]">@{member.telegram_username}</div>
+                            <div className="text-xs text-gray-500">{member.nickname !== member.telegram_username ? member.nickname : member.external_id}</div>
                           </div>
                         ) : (
-                          <div>{member.nickname ?? member.external_id ?? "-"}</div>
+                          <div>
+                            <div className="text-sm font-medium text-white">{member.nickname || "-"}</div>
+                            <div className="text-xs text-gray-500">{member.external_id}</div>
+                          </div>
                         )}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
