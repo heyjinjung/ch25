@@ -264,10 +264,18 @@ const AdminMissionPage: React.FC = () => {
                                     </div>
                                 </td>
                                 <td className="px-6 py-4 text-center">
-                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${mission.is_active ? 'bg-[#2D6B3B] text-[#91F402]' : 'bg-red-900/60 text-red-100'
-                                        }`}>
+                                    <button
+                                        onClick={() => {
+                                            updateMutation.mutate({
+                                                id: mission.id,
+                                                payload: { is_active: !mission.is_active }
+                                            });
+                                        }}
+                                        className={`px-3 py-1 rounded-full text-[10px] font-bold cursor-pointer transition-all hover:scale-105 ${mission.is_active ? 'bg-[#2D6B3B] text-[#91F402] hover:bg-red-900/60' : 'bg-red-900/60 text-red-100 hover:bg-[#2D6B3B]'
+                                            }`}
+                                    >
                                         {mission.is_active ? 'ACTIVE' : 'INACTIVE'}
-                                    </span>
+                                    </button>
                                 </td>
                                 <td className="px-6 py-4 text-right">
                                     <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
