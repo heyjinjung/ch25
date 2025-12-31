@@ -104,19 +104,19 @@ const AppHeader: React.FC = () => {
                         onClick={handleSoundToggle}
                         aria-label={isMuted ? "사운드 켜기" : "사운드 끄기"}
                         aria-pressed={!isMuted}
-                        className="w-10 h-10 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-all relative group"
+                        className="w-9 h-9 flex items-center justify-center rounded-lg border border-emerald-800 bg-slate-900 transition-colors hover:bg-emerald-900/40 relative group"
                     >
                         <img
                             src="/assets/icon_megaphone.png"
                             alt="Sound"
                             className={clsx(
-                                "w-7 h-7 object-contain transition-all duration-300",
-                                isMuted ? "opacity-30 grayscale" : "opacity-100 scale-110 drop-shadow-[0_0_8px_rgba(145,244,2,0.5)]"
+                                "w-5 h-5 object-contain transition-all duration-300",
+                                isMuted ? "opacity-30 grayscale" : "opacity-100 scale-110"
                             )}
                         />
                         {isMuted && (
                             <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="w-8 h-[2px] bg-red-500/60 rotate-45 rounded-full" />
+                                <div className="w-5 h-[2px] bg-red-500/60 rotate-45 rounded-full" />
                             </div>
                         )}
                     </button>

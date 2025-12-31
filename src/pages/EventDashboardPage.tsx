@@ -41,9 +41,12 @@ const EventDashboardPage: React.FC = () => {
                                     <div className="w-8 h-8 rounded-lg bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center text-indigo-400">
                                         <Trophy size={16} />
                                     </div>
-                                    <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Level Tower</span>
                                 </div>
                                 <h2 className="text-xl font-black text-white mb-1 group-hover:text-indigo-300 transition-colors">레벨 타워</h2>
+                                <p className="text-gray-400 text-[10px] font-medium mb-3">시즌 패스 보상을 획득하세요</p>
+                                <div className="inline-flex items-center bg-indigo-500/20 text-indigo-300 text-[10px] font-black px-3 py-1 rounded-full border border-indigo-500/30 group-hover:bg-indigo-500 group-hover:text-white transition-all">
+                                    보상 받기
+                                </div>
                             </div>
                         </div>
 
@@ -66,9 +69,12 @@ const EventDashboardPage: React.FC = () => {
                                     <div className="w-8 h-8 rounded-lg bg-[#91F402]/10 border border-[#91F402]/30 flex items-center justify-center text-[#91F402]">
                                         <Target size={16} />
                                     </div>
-                                    <span className="text-[10px] font-black text-[#91F402] uppercase tracking-widest">Daily Missions</span>
                                 </div>
                                 <h2 className="text-xl font-black text-white mb-1 group-hover:text-[#91F402] transition-colors">데일리 미션</h2>
+                                <p className="text-gray-400 text-[10px] font-medium mb-3">매일 보너스 다이아몬드 받기</p>
+                                <div className="inline-flex items-center bg-[#91F402]/20 text-[#91F402] text-[10px] font-black px-3 py-1 rounded-full border border-[#91F402]/30 group-hover:bg-[#91F402] group-hover:text-black transition-all">
+                                    미션 수행
+                                </div>
                             </div>
                         </div>
 
