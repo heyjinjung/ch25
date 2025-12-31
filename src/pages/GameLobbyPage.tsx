@@ -9,34 +9,39 @@ interface GameCardProps {
     icon: string;
     isWide?: boolean;
     bgImage?: string;
+    badge?: string;
 }
 
-const GameCard: React.FC<GameCardProps> = ({ title, to, gradient, icon, isWide, bgImage }) => {
+const GameCard: React.FC<GameCardProps> = ({ title, to, gradient, icon, isWide, bgImage, badge }) => {
     return (
         <Link
             to={to}
             className={clsx(
-                "group relative overflow-hidden rounded-3xl border border-white/10 p-5 transition-all hover:scale-[1.02] hover:shadow-2xl active:scale-[0.98]",
+                "group relative overflow-hidden rounded-[24px] border border-white/10 p-4 transition-all",
                 !bgImage && gradient,
                 isWide ? "col-span-2 aspect-[2/1]" : "col-span-1 aspect-square"
             )}
         >
             {bgImage && (
                 <div className="absolute inset-0 z-0">
-                    <img src={bgImage} alt={title} className="h-full w-full object-cover opacity-90 transition-transform duration-700 group-hover:scale-110" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                    <img src={bgImage} alt={title} className="h-full w-full object-cover opacity-90" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
                 </div>
             )}
 
-            {!bgImage && (
-                <div className="absolute -right-4 -top-4 text-white/10 transition-transform duration-500 group-hover:rotate-12 group-hover:scale-110">
-                    <span className="text-8xl font-black">{icon}</span>
+            <div className="relative z-10 flex h-full flex-col justify-between">
+                <div className="flex justify-between items-start">
+                    {badge && (
+                        <span className="absolute top-0 right-0 rounded-bl-xl bg-red-600 px-3 py-1 text-[10px] font-black text-white shadow-sm z-20">{badge}</span>
+                    )}
+                    {!bgImage && <span className="text-3xl">{icon}</span>}
                 </div>
-            )}
 
-            <div className="relative z-10 flex h-full flex-col justify-end">
-                <div className="self-end rounded-full bg-white/20 px-3 py-1 text-[10px] font-bold text-white backdrop-blur border border-white/10 shadow-lg">
-                    PLAY NOW
+                <div className="mt-auto">
+                    <p className="text-sm font-black text-white tracking-tight mb-2">{title}</p>
+                    <div className="inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-[10px] font-black text-white backdrop-blur border border-white/10">
+                        지금 플레이
+                    </div>
                 </div>
             </div>
         </Link>
@@ -52,28 +57,30 @@ const GameLobbyPage: React.FC = () => {
             to: "/roulette",
             gradient: "bg-gradient-to-br from-purple-600 to-indigo-600",
             icon: "🎯",
-            bgImage: "/assets/games/thumb_roulette.png"
+            bgImage: "/assets/games/thumb_roulette_v2.png",
+            badge: "HOT"
         },
         {
             title: "DICE",
             to: "/dice",
             gradient: "bg-gradient-to-br from-emerald-500 to-teal-600",
             icon: "🎲",
-            bgImage: "/assets/games/thumb_dice.png"
+            bgImage: "/assets/games/thumb_dice_v2.png",
         },
         {
             title: "LOTTERY",
             to: "/lottery",
             gradient: "bg-gradient-to-br from-pink-500 to-rose-600",
             icon: "🎫",
-            bgImage: "/assets/games/thumb_lottery.png"
+            bgImage: "/assets/games/thumb_lottery_v2.png"
         },
         {
             title: "TEAM BATTLE",
             to: "/team-battle",
             gradient: "bg-gradient-to-br from-blue-600 to-cyan-600",
             icon: "⚔️",
-            bgImage: "/assets/games/thumb_team_battle.png"
+            bgImage: "/assets/games/thumb_team_battle_v2.png",
+            badge: "NEW"
         },
         {
             title: "THE VAULT",
@@ -81,13 +88,13 @@ const GameLobbyPage: React.FC = () => {
             gradient: "bg-gradient-to-br from-amber-500 to-orange-600",
             icon: "🔐",
             isWide: true,
-            bgImage: "/assets/games/thumb_my_vault.png"
+            bgImage: "/assets/welcome/my_vault_v2.png"
         },
     ];
 
     return (
         <div className="space-y-4 pb-20">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3">
                 {games.map((game) => (
                     <GameCard key={game.title} {...game} />
                 ))}

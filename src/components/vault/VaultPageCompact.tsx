@@ -84,7 +84,7 @@ const VaultPageCompact: React.FC = () => {
                             ? "bg-black border-emerald-400 text-emerald-400 shadow-[0_0_15px_rgba(52,211,153,0.3)] animate-pulse"
                             : "bg-black/80 border-white/20 text-white/50"
                     )}>
-                        {view.eligible ? "해금 완료" : "잠금"}
+                        {view.eligible ? "금고해제 완료" : "잠금"}
                     </div>
                 </div>
             </div>
@@ -109,7 +109,7 @@ const VaultPageCompact: React.FC = () => {
                     "text-xs mt-2 font-medium transition-colors",
                     view.eligible ? "text-emerald-400 animate-pulse" : "text-white/50"
                 )}>
-                    {view.eligible ? "✨ 포인트 전환 가능" : "충전 시 해금됩니다"}
+                    {view.eligible ? "✨ 포인트 전환 가능" : "충전 시 금고해제됩니다"}
                 </p>
             </div>
 
@@ -120,7 +120,7 @@ const VaultPageCompact: React.FC = () => {
             >
                 <span className="flex items-center gap-2">
                     <img src="/assets/season_pass/icon_node_locked.png" alt="" className="w-5 h-5 object-contain" />
-                    해금 조건 안내
+                    금고해제 조건 안내
                 </span>
                 {detailsOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
             </button>
@@ -129,15 +129,15 @@ const VaultPageCompact: React.FC = () => {
                 <div className="w-full max-w-xs mb-4 rounded-xl border border-white/10 bg-white/5 p-4 space-y-3 animate-slide-down z-10">
                     <div className="flex items-center gap-3">
                         <span className="text-emerald-400 text-lg">✓</span>
-                        <p className="text-white/60 text-sm">외부 충전 1만원 이상 시 자동 해금</p>
+                        <p className="text-white/60 text-sm">씨씨 이용시 금고이용 가능</p>
                     </div>
                     <div className="flex items-center gap-3">
                         <span className="text-emerald-400 text-lg">✓</span>
-                        <p className="text-white/60 text-sm">게임 플레이로 포인트 적립</p>
+                        <p className="text-white/60 text-sm">게임 플레이로 금고액 적립</p>
                     </div>
                     <div className="flex items-center gap-3">
                         <span className="text-emerald-400 text-lg">✓</span>
-                        <p className="text-white/60 text-sm">해금 후 보유 머니로 자동 전환</p>
+                        <p className="text-white/60 text-sm">금고 해제후 씨씨포인트 관리자 전환</p>
                     </div>
                 </div>
             )}
