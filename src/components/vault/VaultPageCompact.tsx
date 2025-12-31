@@ -117,7 +117,7 @@ const VaultPageCompact: React.FC = () => {
                     rel="noreferrer"
                     className="block w-full py-4 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-black text-center text-base shadow-lg shadow-emerald-500/30 hover:brightness-110 active:scale-[0.98] transition-all uppercase tracking-wide"
                 >
-                    🎰 씨씨카지노 충전하기
+                    <img src="/assets/logo_cc_v2.png" alt="CC" className="inline-block w-5 h-5 mr-2 align-text-bottom" />씨씨카지노 충전하기
                 </a>
 
                 <Link
