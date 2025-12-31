@@ -151,7 +151,7 @@ class VaultRequestSchema(BaseModel):
     admin_memo: str | None = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 @router.get("/admin/requests", response_model=list[VaultRequestSchema])
 def list_withdrawal_requests(
