@@ -7,7 +7,7 @@ from app.core.config import get_settings
 from app.core.security import create_access_token
 from app.models.user import User
 
-router = APIRouter()
+router = APIRouter(prefix="/api/dev", tags=["dev"])
 
 
 @router.post("/create-test-user")

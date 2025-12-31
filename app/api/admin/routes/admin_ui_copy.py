@@ -10,7 +10,7 @@ from app.api.deps import get_db
 from app.schemas.ui_copy import Ticket0ResolutionCopy, Ticket0ResolutionCopyUpsertRequest
 from app.services.ui_config_service import UiConfigService
 
-router = APIRouter(prefix="/api/admin/ui-copy", tags=["admin-ui-copy"])
+router = APIRouter(prefix="/admin/api/ui-copy", tags=["admin-ui-copy"])
 
 _TICKET0_KEY = "ticket0_resolution_copy"
 

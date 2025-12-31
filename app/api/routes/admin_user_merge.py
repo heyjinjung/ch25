@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.models.user import User
 
-router = APIRouter(prefix="/api/admin/user", tags=["admin-user"])
+router = APIRouter(prefix="/admin/api/user", tags=["admin-user"])
 
 
 class MergeRequest(BaseModel):

@@ -47,7 +47,7 @@ async def startup_event():
     print(f"Startup: CORS origins loaded: {cors_origins}", flush=True)
 
 register_exception_handlers(app)
-app.include_router(api_router, prefix="/api")
+app.include_router(api_router)
 
 
 @app.get("/", summary="Root ping")

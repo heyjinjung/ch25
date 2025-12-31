@@ -1,7 +1,7 @@
 """Health check endpoint."""
 from fastapi import APIRouter
 
-router = APIRouter()
+router = APIRouter(prefix="/api", tags=["health"])
 
 
 @router.get("/health", summary="Health check")

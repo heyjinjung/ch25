@@ -7,7 +7,7 @@ from app.api import deps
 from app.models.mission import Mission
 from app.schemas.mission import MissionCreate, MissionUpdate, MissionSchema
 
-router = APIRouter(prefix="/api/admin/mission", tags=["admin-mission"])
+router = APIRouter(prefix="/admin/api/mission", tags=["admin-mission"])
 
 @router.post("/", response_model=MissionSchema)
 def create_mission(
