@@ -1,7 +1,6 @@
 // src/pages/EventDashboardPage.tsx
 import React from "react";
 import { Link } from "react-router-dom";
-import AppHeader from "../components/layout/AppHeader";
 import { Trophy, Target, ChevronRight, Sparkles, Star } from "lucide-react";
 import { useHaptic } from "../hooks/useHaptic";
 
@@ -19,7 +18,6 @@ const EventDashboardPage: React.FC = () => {
             <div className="absolute bottom-[20%] right-[-10%] w-80 h-80 bg-emerald-600/5 rounded-full blur-[120px] pointer-events-none" />
 
             <div className="relative z-10 p-4 pt-6 max-w-md mx-auto">
-                <AppHeader />
 
                 {/* Page Title */}
                 <div className="mt-8 mb-8 px-1">

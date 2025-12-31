@@ -4,6 +4,7 @@ import { useAuth } from "../../auth/authStore";
 import { useQuery } from "@tanstack/react-query";
 import { getVaultStatus } from "../../api/vaultApi";
 import { useSound } from "../../hooks/useSound";
+import clsx from "clsx";
 import InboxButton from "../common/InboxButton";
 
 const AppHeader: React.FC = () => {
@@ -103,17 +104,20 @@ const AppHeader: React.FC = () => {
                         onClick={handleSoundToggle}
                         aria-label={isMuted ? "사운드 켜기" : "사운드 끄기"}
                         aria-pressed={!isMuted}
-                        className="w-9 h-9 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-all"
+                        className="w-10 h-10 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-all relative group"
                     >
-                        {isMuted ? (
-                            <svg className="w-5 h-5 text-white/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
-                            </svg>
-                        ) : (
-                            <svg className="w-5 h-5 text-[#91F402]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                            </svg>
+                        <img
+                            src="/assets/icon_megaphone.png"
+                            alt="Sound"
+                            className={clsx(
+                                "w-7 h-7 object-contain transition-all duration-300",
+                                isMuted ? "opacity-30 grayscale" : "opacity-100 scale-110 drop-shadow-[0_0_8px_rgba(145,244,2,0.5)]"
+                            )}
+                        />
+                        {isMuted && (
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <div className="w-8 h-[2px] bg-red-500/60 rotate-45 rounded-full" />
+                            </div>
                         )}
                     </button>
                 </div>

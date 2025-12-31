@@ -22,6 +22,15 @@ class ApprovalStatus(str, Enum):
     REJECTED = "REJECTED"
 
 
+class MissionRewardType(str, Enum):
+    NONE = "NONE"
+    DIAMOND = "DIAMOND"
+    GOLD_KEY = "GOLD_KEY"
+    DIAMOND_KEY = "DIAMOND_KEY"
+    CASH_UNLOCK = "CASH_UNLOCK"
+    TICKET_BUNDLE = "TICKET_BUNDLE"
+
+
 class Mission(Base):
     __tablename__ = "mission"
 

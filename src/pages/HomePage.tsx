@@ -27,32 +27,31 @@ const GameCard: React.FC<GameCardProps> = ({ title, to, gradient, icon, isWide, 
     <Link
       to={to}
       className={clsx(
-        "group relative overflow-hidden rounded-3xl border border-white/10 p-5 transition-all hover:scale-[1.02] hover:shadow-2xl active:scale-[0.98]",
+        "group relative overflow-hidden rounded-2xl border border-white/5 p-3 transition-all hover:scale-[1.02] active:scale-[0.98]",
         !bgImage && gradient,
         isWide ? "col-span-2 aspect-[2/1]" : "col-span-1 aspect-square"
       )}
     >
       {bgImage && (
         <div className="absolute inset-0 z-0">
-          <img src={bgImage} alt={title} className="h-full w-full object-cover opacity-90 transition-transform duration-700 group-hover:scale-110" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+          <img src={bgImage} alt={title} className="h-full w-full object-cover opacity-90" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
         </div>
       )}
 
-      {!bgImage && (
-        <div className="absolute -right-4 -top-4 text-white/10 transition-transform duration-500 group-hover:rotate-12 group-hover:scale-110">
-          <span className="text-8xl font-black">{icon}</span>
+      <div className="relative z-10 flex h-full flex-col justify-between">
+        <div className="flex justify-between items-start">
+          {badge && (
+            <span className="rounded-full bg-red-500 px-1.5 py-0.5 text-[8px] font-black text-white shadow-sm">{badge}</span>
+          )}
+          {!bgImage && <span className="text-2xl">{icon}</span>}
         </div>
-      )}
 
-      <div className="relative z-10 flex h-full flex-col justify-end">
-        {badge && (
-          <div className="absolute top-0 right-0">
-            <span className="rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-bold text-white shadow-sm">{badge}</span>
+        <div className="mt-auto">
+          <p className="text-[10px] font-black text-white/90 truncate mb-1">{title}</p>
+          <div className="inline-block rounded-full bg-white/20 px-2 py-0.5 text-[8px] font-bold text-white backdrop-blur border border-white/10">
+            GO
           </div>
-        )}
-        <div className="self-end rounded-full bg-white/20 px-3 py-1 text-[10px] font-bold text-white backdrop-blur border border-white/10 shadow-lg">
-          지금 플레이
         </div>
       </div>
     </Link>
@@ -147,12 +146,19 @@ const HomePage: React.FC = () => {
       bgImage: "/assets/games/thumb_lottery_v2.png"
     },
     {
+      title: "TEAM BATTLE",
+      to: "/team-battle",
+      gradient: "bg-gradient-to-br from-blue-600 to-cyan-600",
+      icon: "⚔️",
+      bgImage: "/assets/games/thumb_team_battle_v2.png",
+      badge: "NEW"
+    },
+    {
       title: "EVENTS",
       to: "/events",
       gradient: "bg-gradient-to-br from-indigo-500 to-purple-600",
       icon: "🎁",
-      isWide: true,
-      bgImage: "/assets/welcome/mission_pattern.webp",
+      bgImage: "/assets/welcome/event_v2.png",
       badge: "EVENT"
     },
     {
@@ -160,8 +166,7 @@ const HomePage: React.FC = () => {
       to: "/vault",
       gradient: "bg-gradient-to-br from-amber-500 to-orange-600",
       icon: "🔐",
-      isWide: true,
-      bgImage: "/assets/games/thumb_my_vault.png"
+      bgImage: "/assets/welcome/my_vault_v2.png"
     },
   ];
 
@@ -228,8 +233,8 @@ const HomePage: React.FC = () => {
         <CategoryTabs active={activeTab} onChange={setActiveTab} />
       </div>
 
-      {/* Games Grid */}
-      <div className="grid grid-cols-2 gap-3 px-1">
+      {/* Games Grid - 2 rows x 3 columns */}
+      <div className="grid grid-cols-3 gap-2 px-1">
         {games.map((game) => (
           <GameCard key={game.title} {...game} />
         ))}

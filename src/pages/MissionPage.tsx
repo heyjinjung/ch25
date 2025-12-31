@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from "react";
 import { useMissionStore, MissionData } from "../stores/missionStore";
 import MissionCard from "../components/mission/MissionCard";
-import AppHeader from "../components/layout/AppHeader";
 import SeasonProgressWidget from "../components/season/SeasonProgressWidget";
 import { ChevronRight, Target, Trophy, Sparkles } from "lucide-react";
 import { useHaptic } from "../hooks/useHaptic";
@@ -34,7 +33,6 @@ const MissionPage: React.FC = () => {
             <div className="absolute bottom-[10%] left-[-10%] w-80 h-80 bg-emerald-600/5 rounded-full blur-[120px] pointer-events-none" />
 
             <div className="relative z-10 p-4 pt-6 max-w-md mx-auto">
-                <AppHeader />
 
                 {/* Page Title & Summary */}
                 <div className="mt-8 mb-6 px-1 flex justify-between items-end">
@@ -65,8 +63,8 @@ const MissionPage: React.FC = () => {
                                 key={tab}
                                 onClick={() => handleTabChange(tab)}
                                 className={`flex-1 py-3 rounded-xl text-xs font-black transition-all duration-300 relative overflow-hidden ${isActive
-                                        ? "text-white"
-                                        : "text-gray-500 hover:text-gray-300"
+                                    ? "text-white"
+                                    : "text-gray-500 hover:text-gray-300"
                                     }`}
                             >
                                 {isActive && (
