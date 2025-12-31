@@ -28,9 +28,14 @@ from app.api.routes import (
 	admin_mission,
 	admin_user_merge,
 	telegram_unlink,
+	dev_auth,
 )
 
 api_router = APIRouter()
+
+# Dev endpoints (only enabled in development)
+api_router.include_router(dev_auth.router, prefix="/dev", tags=["dev"])
+
 api_router.include_router(health.router, prefix="", tags=["health"])
 api_router.include_router(today_feature.router)
 api_router.include_router(auth.router)

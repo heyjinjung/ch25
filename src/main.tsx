@@ -19,7 +19,9 @@ if (import.meta.env.DEV && !window.Telegram?.WebApp?.initData) {
 
 // 1.5 Dev Auth Helper (dev mode only)
 if (import.meta.env.DEV) {
-  import("./dev-auth-helper");
+  import("./dev-auth-helper").catch(() => {
+    // Ignore errors if file doesn't exist in production
+  });
 }
 
 // 2. eruda Debug Console (via ?debug=1 query param or localStorage)
