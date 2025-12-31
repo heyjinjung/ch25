@@ -19,12 +19,13 @@ const InboxButton: React.FC = () => {
         <>
             <button
                 onClick={() => setIsOpen(true)}
-                className="relative flex items-center justify-center rounded-lg border border-emerald-800 bg-slate-900 p-2 text-emerald-400 transition-colors hover:bg-emerald-900/40 hover:text-emerald-300"
+                className="w-9 h-9 flex items-center justify-center rounded-lg border border-emerald-800 bg-slate-900 text-emerald-400 transition-colors hover:bg-emerald-900/40 hover:text-emerald-300 relative"
                 title="메시지함"
+                aria-label={unreadCount > 0 ? `메시지함 (읽지 않은 메시지 ${unreadCount}개)` : "메시지함"}
             >
                 <img
                     src={unreadCount > 0 ? "/assets/icon_alarm_unread.png" : "/assets/icon_alarm_normal.png"}
-                    className="w-7 h-7 object-contain"
+                    className="w-5 h-5 object-contain"
                     alt="Inbox"
                 />
                 {unreadCount > 0 && (

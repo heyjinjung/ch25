@@ -75,7 +75,7 @@ const AppHeader: React.FC = () => {
                         to="/vault"
                         className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 transition-all shadow-lg shadow-emerald-900/30"
                     >
-                        <span className="text-lg">🔐</span>
+                        <img src="/assets/asset_coin_gold.webp" alt="Coin" className="w-5 h-5 object-contain" />
                         <span className="text-sm font-black text-white">
                             {vaultBalance.toLocaleString()}원
                         </span>
@@ -86,7 +86,7 @@ const AppHeader: React.FC = () => {
                         to="/store"
                         className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-all"
                     >
-                        <span className="text-lg">🎫</span>
+                        <img src="/assets/asset_ticket_green.webp" alt="Ticket" className="w-5 h-5 object-contain" />
                         <span className="text-sm font-medium text-white/80">
                             {ticketCount}
                         </span>

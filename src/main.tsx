@@ -17,6 +17,11 @@ if (import.meta.env.DEV && !window.Telegram?.WebApp?.initData) {
   });
 }
 
+// 1.5 Dev Auth Helper (dev mode only)
+if (import.meta.env.DEV) {
+  import("./dev-auth-helper");
+}
+
 // 2. eruda Debug Console (via ?debug=1 query param or localStorage)
 const urlParams = new URLSearchParams(window.location.search);
 const debugMode = urlParams.get("debug") === "1" || localStorage.getItem("debug") === "1";
