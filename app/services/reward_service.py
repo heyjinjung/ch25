@@ -167,6 +167,8 @@ class RewardService:
             "TICKET_LOTTERY": GameTokenType.LOTTERY_TICKET,
             "LOTTERY_TICKET": GameTokenType.LOTTERY_TICKET,
             "CC_COIN": GameTokenType.CC_COIN,
+            "GOLD_KEY": GameTokenType.GOLD_KEY,
+            "DIAMOND_KEY": GameTokenType.DIAMOND_KEY,
         }
         if reward_type in ticket_map:
             token_type = ticket_map[reward_type]
