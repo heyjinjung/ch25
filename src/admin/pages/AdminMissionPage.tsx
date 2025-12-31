@@ -147,6 +147,7 @@ const AdminMissionPage: React.FC = () => {
                                     <option value="DAILY">일일 (Daily)</option>
                                     <option value="WEEKLY">주간 (Weekly)</option>
                                     <option value="SPECIAL">특별 (Special)</option>
+                                    <option value="NEW_USER">신규가입 (New User)</option>
                                 </select>
                             </div>
                             <div>

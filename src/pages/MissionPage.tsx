@@ -7,7 +7,7 @@ import MissionCard from "../components/mission/MissionCard";
 import { useHaptic } from "../hooks/useHaptic";
 import { MissionData, useMissionStore } from "../stores/missionStore";
 
-const TABS = ["DAILY", "WEEKLY", "SPECIAL"] as const;
+const TABS = ["DAILY", "WEEKLY", "SPECIAL", "NEW_USER"] as const;
 type MissionTab = (typeof TABS)[number];
 
 const MissionPage: React.FC = () => {
@@ -34,6 +34,8 @@ const MissionPage: React.FC = () => {
       case "WEEKLY":
         return <Trophy size={14} />;
       case "SPECIAL":
+        return <Sparkles size={14} />;
+      case "NEW_USER":
         return <Sparkles size={14} />;
       default:
         return null;

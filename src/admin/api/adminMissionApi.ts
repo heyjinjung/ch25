@@ -5,7 +5,7 @@ export interface AdminMission {
     id: number;
     title: string;
     description: string;
-    category: "DAILY" | "WEEKLY" | "SPECIAL";
+    category: "DAILY" | "WEEKLY" | "SPECIAL" | "NEW_USER";
     target_value: number;
     reward_type: string;
     reward_amount: number;
@@ -20,7 +20,7 @@ export interface AdminMission {
 export interface AdminMissionPayload {
     title: string;
     description: string;
-    category: "DAILY" | "WEEKLY" | "SPECIAL";
+    category: "DAILY" | "WEEKLY" | "SPECIAL" | "NEW_USER";
     target_value: number;
     reward_type: string;
     reward_amount: number;
