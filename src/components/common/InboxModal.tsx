@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { createPortal } from "react-dom";
 import { X, CheckCircle, Loader2 } from "lucide-react";
 import dayjs from "dayjs";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -35,8 +36,8 @@ const InboxModal: React.FC<InboxModalProps> = ({ onClose }) => {
         }
     };
 
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    return createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
             <div className="relative w-full max-w-lg max-h-[calc(100vh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-2rem)] rounded-2xl border border-emerald-800 bg-slate-900 shadow-2xl shadow-emerald-900/50 flex flex-col">
                 <button
                     onClick={onClose}
@@ -103,7 +104,8 @@ const InboxModal: React.FC<InboxModalProps> = ({ onClose }) => {
                     )}
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };
 
