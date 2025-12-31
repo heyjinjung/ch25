@@ -53,13 +53,15 @@ class MissionService:
                 progress_dict = {
                     "current_value": 0,
                     "is_completed": False,
-                    "is_claimed": False
+                    "is_claimed": False,
+                    "approval_status": "NONE"
                 }
             else:
                 progress_dict = {
                     "current_value": progress.current_value,
                     "is_completed": progress.is_completed,
-                    "is_claimed": progress.is_claimed
+                    "is_claimed": progress.is_claimed,
+                    "approval_status": progress.approval_status
                 }
 
             result.append({
@@ -73,7 +75,8 @@ class MissionService:
                     "target_value": mission.target_value,
                     "reward_type": mission.reward_type,
                     "reward_amount": mission.reward_amount,
-                    "xp_reward": mission.xp_reward
+                    "xp_reward": mission.xp_reward,
+                    "requires_approval": mission.requires_approval
                 },
                 "progress": progress_dict
             })

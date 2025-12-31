@@ -12,11 +12,13 @@ class MissionSchema(BaseModel):
     reward_type: str
     reward_amount: int
     xp_reward: int = 0
+    requires_approval: bool = False
 
 class MissionProgressSchema(BaseModel):
     current_value: int
     is_completed: bool
     is_claimed: bool
+    approval_status: str = "NONE"
 
 class MissionWithProgress(BaseModel):
     mission: MissionSchema
@@ -32,6 +34,7 @@ class MissionCreate(BaseModel):
     reward_type: str
     reward_amount: int
     xp_reward: int = 0
+    requires_approval: bool = False
     is_active: bool = True
 
 class MissionUpdate(BaseModel):
@@ -44,4 +47,5 @@ class MissionUpdate(BaseModel):
     reward_type: Optional[str] = None
     reward_amount: Optional[int] = None
     xp_reward: Optional[int] = None
+    requires_approval: Optional[bool] = None
     is_active: Optional[bool] = None

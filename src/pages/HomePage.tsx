@@ -147,12 +147,13 @@ const HomePage: React.FC = () => {
       bgImage: "/assets/games/thumb_lottery_v2.png"
     },
     {
-      title: "TEAM BATTLE",
-      to: "/team-battle",
-      gradient: "bg-gradient-to-br from-blue-600 to-cyan-600",
-      icon: "⚔️",
-      bgImage: "/assets/games/thumb_team_battle_v2.png",
-      badge: "NEW"
+      title: "EVENTS",
+      to: "/events",
+      gradient: "bg-gradient-to-br from-indigo-500 to-purple-600",
+      icon: "🎁",
+      isWide: true,
+      bgImage: "/assets/welcome/mission_pattern.webp",
+      badge: "EVENT"
     },
     {
       title: "THE VAULT",

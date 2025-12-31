@@ -15,13 +15,11 @@ class MissionCategory(str, Enum):
     NEW_USER = "NEW_USER"
 
 
-class MissionRewardType(str, Enum):
-    DIAMOND = "DIAMOND"
-    GOLD_KEY = "GOLD_KEY"
-    DIAMOND_KEY = "DIAMOND_KEY"
-    TICKET_BUNDLE = "TICKET_BUNDLE"
-    CASH_UNLOCK = "CASH_UNLOCK" # Phase 2.0.1 New User Bonus
-    NONE = "NONE"  # Pure XP mission
+class ApprovalStatus(str, Enum):
+    NONE = "NONE"
+    PENDING = "PENDING"
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
 
 
 class Mission(Base):
@@ -46,6 +44,9 @@ class Mission(Base):
     reward_amount = Column(Integer, nullable=False, default=0)
     xp_reward = Column(Integer, nullable=False, default=0)
 
+    # V6: Admin Approval
+    requires_approval = Column(Boolean, default=False)
+
     # Active period (optional)
     start_date = Column(DateTime, nullable=True)
     end_date = Column(DateTime, nullable=True)
@@ -66,6 +67,9 @@ class UserMissionProgress(Base):
     is_completed = Column(Boolean, default=False)
     is_claimed = Column(Boolean, default=False)
     
+    # V6: Admin Approval
+    approval_status = Column(SAEnum(ApprovalStatus), nullable=False, server_default="NONE", default=ApprovalStatus.NONE)
+
     # For daily/weekly resets. YYYY-MM-DD for daily, YYYY-WW for weekly.
     # Special missions can use a static value or NULL.
     reset_date = Column(String(50), nullable=False, index=True) 

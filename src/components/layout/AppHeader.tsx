@@ -73,7 +73,7 @@ const AppHeader: React.FC = () => {
                     {/* Vault */}
                     <Link
                         to="/vault"
-                        className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 transition-all shadow-lg shadow-emerald-900/30"
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 transition-all shadow-sm"
                     >
                         <img src="/assets/asset_coin_gold.webp" alt="Coin" className="w-5 h-5 object-contain" />
                         <span className="text-sm font-black text-white">
@@ -83,7 +83,7 @@ const AppHeader: React.FC = () => {
 
                     {/* Tickets */}
                     <Link
-                        to="/store"
+                        to="/games"
                         className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-all"
                     >
                         <img src="/assets/asset_ticket_green.webp" alt="Ticket" className="w-5 h-5 object-contain" />
@@ -111,7 +111,7 @@ const AppHeader: React.FC = () => {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
                             </svg>
                         ) : (
-                            <svg className="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg className="w-5 h-5 text-[#91F402]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
                             </svg>
                         )}
@@ -123,7 +123,7 @@ const AppHeader: React.FC = () => {
             <div className="sm:hidden flex items-center gap-2 px-4 pb-3">
                 <Link
                     to="/vault"
-                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 transition-all shadow-lg shadow-emerald-900/30"
+                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-emerald-600 shadow-sm"
                 >
                     <img src="/assets/asset_coin_gold.webp" alt="Coin" className="w-5 h-5 object-contain" />
                     <span className="text-sm font-black text-white">
@@ -132,8 +132,8 @@ const AppHeader: React.FC = () => {
                 </Link>
 
                 <Link
-                    to="/store"
-                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-all"
+                    to="/games"
+                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10"
                 >
                     <img src="/assets/asset_ticket_green.webp" alt="Ticket" className="w-5 h-5 object-contain" />
                     <span className="text-sm font-medium text-white/80">

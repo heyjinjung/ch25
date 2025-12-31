@@ -209,15 +209,12 @@ const DesktopSidebarContent: React.FC = memo(() => {
           </div>
         </div>
 
-        <div className="flex w-full items-center justify-center gap-[12.8px] text-[20px] font-medium" style={{ color: baseAccent }}>
+        <div className="flex w-full items-center justify-center gap-[20px] text-[20px] font-medium" style={{ color: baseAccent }}>
           <a href="https://ccc-010.com" target="_blank" rel="noreferrer" className="leading-[1.15]">
             CC카지노
           </a>
-          <Link to="/season-pass" className="leading-[1.15]">
-            레벨
-          </Link>
-          <Link to="/team-battle" className="leading-[1.15]">
-            팀배틀
+          <Link to="/events" className="leading-[1.15]">
+            이벤트
           </Link>
           <Link to="/vault" className="leading-[1.15]">
             내금고
@@ -348,15 +345,12 @@ const MobileSidebarContent: React.FC = memo(() => {
           </div>
         </div>
 
-        <div className="flex w-full items-center justify-center gap-[12.8px] text-[20px] font-medium" style={{ color: baseAccent }}>
+        <div className="flex w-full items-center justify-center gap-[12.8px] text-[18px] font-medium" style={{ color: baseAccent }}>
           <a href="https://ccc-010.com" target="_blank" rel="noreferrer" className="leading-[1.15]">
             CC 카지노
           </a>
-          <Link to="/season-pass" className="leading-[1.15]">
-            레벨확인
-          </Link>
-          <Link to="/team-battle" className="leading-[1.15]">
-            팀배틀
+          <Link to="/events" className="leading-[1.15]">
+            이벤트
           </Link>
           <Link to="/vault" className="leading-[1.15]">
             내 금고

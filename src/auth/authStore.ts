@@ -7,6 +7,7 @@ export interface AuthUser {
   readonly nickname?: string;
   readonly status?: string;
   readonly level?: number;
+  readonly diamond_key_count?: number;
   readonly telegram_id?: number | null;
   readonly telegram_username?: string | null;
 }

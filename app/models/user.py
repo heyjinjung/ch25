@@ -38,6 +38,9 @@ class User(Base):
 
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow, index=True)
     updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # V6: Diamond Keys
+    diamond_key_count = Column(Integer, nullable=False, server_default="0", default=0)
 
     # [Retention] Ticket Zero Cooldown
     last_free_ticket_claimed_at = Column(DateTime, nullable=True)

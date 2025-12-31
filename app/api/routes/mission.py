@@ -8,7 +8,8 @@ from app.models.user import User
 from app.services.mission_service import MissionService
 from app.schemas.mission import MissionWithProgress
 
-router = APIRouter(prefix="/api/mission", tags=["mission"])
+# /workspace/ch25/app/api/routes/mission.py
+router = APIRouter(prefix="/mission", tags=["mission"])
 
 @router.get("/", response_model=List[MissionWithProgress]) 
 def read_missions(

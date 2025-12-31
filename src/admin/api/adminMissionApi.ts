@@ -31,21 +31,21 @@ export interface AdminMissionPayload {
 }
 
 export async function fetchMissions() {
-    const { data } = await adminApi.get<AdminMission[]>("/admin/api/mission/");
+    const { data } = await adminApi.get<AdminMission[]>("/api/admin-mission/");
     return data;
 }
 
 export async function createMission(payload: AdminMissionPayload) {
-    const { data } = await adminApi.post<AdminMission>("/admin/api/mission/", payload);
+    const { data } = await adminApi.post<AdminMission>("/api/admin-mission/", payload);
     return data;
 }
 
 export async function updateMission(missionId: number, payload: Partial<AdminMissionPayload>) {
-    const { data } = await adminApi.put<AdminMission>(`/admin/api/mission/${missionId}`, payload);
+    const { data } = await adminApi.put<AdminMission>(`/api/admin-mission/${missionId}`, payload);
     return data;
 }
 
 export async function deleteMission(missionId: number) {
-    const { data } = await adminApi.delete<{ success: boolean; message: string }>(`/admin/api/mission/${missionId}`);
+    const { data } = await adminApi.delete<{ success: boolean; message: string }>(`/api/admin-mission/${missionId}`);
     return data;
 }

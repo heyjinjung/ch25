@@ -34,16 +34,6 @@ const MobileBottomNav: React.FC = memo(() => {
             )
         },
         {
-            label: "팀배틀",
-            to: "/team-battle",
-            isActive: isActive("/team-battle"),
-            icon: (active: boolean) => (
-                <svg xmlns="http://www.w3.org/2000/svg" className={clsx("w-6 h-6 mb-1 transition-transform", active ? "scale-110" : "opacity-60")} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={active ? 2.5 : 2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-            )
-        },
-        {
             label: "게임",
             to: "/games",
             isActive: isActive("/games") || ["/roulette", "/dice", "/lottery"].some(p => currentPath.startsWith(p)),
@@ -65,9 +55,9 @@ const MobileBottomNav: React.FC = memo(() => {
             )
         },
         {
-            label: "레벨",
-            to: "/season-pass",
-            isActive: isActive("/season-pass"),
+            label: "이벤트",
+            to: "/events",
+            isActive: isActive("/events") || isActive("/season-pass") || isActive("/missions"),
             icon: (active: boolean) => (
                 <div className="relative">
                     <svg xmlns="http://www.w3.org/2000/svg" className={clsx("w-6 h-6 mb-1 transition-transform", active ? "scale-110 text-amber-400" : "opacity-60")} fill="none" viewBox="0 0 24 24" stroke="currentColor">
