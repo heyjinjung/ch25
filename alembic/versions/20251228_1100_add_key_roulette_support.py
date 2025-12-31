@@ -8,6 +8,7 @@ Create Date: 2025-12-28 11:00:00.000000
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import mysql
+from sqlalchemy import text
 
 # revision identifiers, used by Alembic.
 revision = 'rev_key_roulette'
@@ -16,9 +17,28 @@ branch_labels = None
 depends_on = None
 
 
+def _column_exists(table: str, column: str) -> bool:
+    conn = op.get_bind()
+    return bool(
+        conn.execute(
+            text(
+                """
+                SELECT 1
+                FROM information_schema.columns
+                WHERE table_schema = DATABASE()
+                  AND table_name = :table
+                  AND column_name = :column
+                """
+            ),
+            {"table": table, "column": column},
+        ).scalar()
+    )
+
+
 def upgrade():
     # 1. Add ticket_type to roulette_config
-    op.add_column('roulette_config', sa.Column('ticket_type', sa.String(length=50), server_default='ROULETTE_COIN', nullable=False))
+    if not _column_exists('roulette_config', 'ticket_type'):
+        op.add_column('roulette_config', sa.Column('ticket_type', sa.String(length=50), server_default='ROULETTE_COIN', nullable=False))
 
     # 2. Update GameTokenType ENUM
     # MySQL requires rewriting the whole ENUM definition
