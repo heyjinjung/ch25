@@ -156,9 +156,10 @@ const UserAdminPage: React.FC = () => {
       // Search in CRM fields too
       const realName = (m.admin_profile?.real_name ?? "").toLowerCase();
       const telegramId = (m.admin_profile?.telegram_id ?? "").toLowerCase();
+      const telegramUsername = (m.telegram_username ?? "").toLowerCase();
       const tags = (m.admin_profile?.tags ?? []).join(" ").toLowerCase();
 
-      return idMatch || nickname.includes(term) || external.includes(term) || realName.includes(term) || telegramId.includes(term) || tags.includes(term);
+      return idMatch || nickname.includes(term) || external.includes(term) || realName.includes(term) || telegramId.includes(term) || telegramUsername.includes(term) || tags.includes(term);
     });
   }, [members, normalizedSearchTerm]);
 
@@ -316,7 +317,8 @@ const UserAdminPage: React.FC = () => {
 
   const submitNewMember = (e: React.FormEvent) => {
     e.preventDefault();
-    const nickname = newMember.nickname.trim();
+    const provided = (newMember.nickname ?? "").trim();
+    const nickname = provided || (newMember.telegram_username ?? "").trim();
     if (!nickname) {
       addToast("닉네임은 필수입니다.", "error");
       return;
@@ -363,7 +365,7 @@ const UserAdminPage: React.FC = () => {
             <Search size={18} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
             <input
               type="text"
-              placeholder="ID, 닉네임, External ID 검색..."
+              placeholder="ID, 닉네임, TG Username 검색..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               onKeyDown={(e) => {
@@ -635,7 +637,16 @@ const UserAdminPage: React.FC = () => {
                   {currentMembers.map((member, index) => (
                     <tr key={member.id} className={index % 2 === 0 ? "bg-[#111111]" : "bg-[#1A1A1A]"}>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-400">{member.id}</td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-white">{member.external_id || "-"}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-white">
+                        {member.telegram_username ? (
+                          <div>
+                            <div className="text-sm font-medium text-white">@{member.telegram_username}</div>
+                            <div className="text-xs text-gray-500">{member.external_id || "-"}</div>
+                          </div>
+                        ) : (
+                          <div>{member.nickname ?? member.external_id ?? "-"}</div>
+                        )}
+                      </td>
                       <td className="px-4 py-3 whitespace-nowrap">
                         {member.isEditing ? (
                           <input

@@ -161,13 +161,33 @@ def telegram_auth(
             user = target
             linked_to_existing = True
         else:
-            # Create new user for the 1/1 Re-launch
-            is_new_user = True
-            unique_suffix = uuid.uuid4().hex[:8]
-            external_id = f"tg_{tg_id}_{unique_suffix}"
+            # Create or link user for the 1/1 Re-launch
+            
+            # [Refactor] Attempt to link by telegram_username if pre-created by Admin
+            if tg_username:
+                existing_by_name = db.query(User).filter(
+                    User.telegram_username == tg_username,
+                    User.telegram_id == None
+                ).first()
+                if existing_by_name:
+                    user = existing_by_name
+                    user.telegram_id = tg_id
+                    user.first_login_at = datetime.now(timezone.utc)
+                    user.telegram_is_blocked = False
+                    user.telegram_join_count = 1
+                    db.add(user)
+                    db.commit()
+                    db.refresh(user)
+                    # Proceed as linked
+                    linked_to_existing = True
+            
+            if not linked_to_existing:
+                is_new_user = True
+                unique_suffix = uuid.uuid4().hex[:8]
+                external_id = f"tg_{tg_id}_{unique_suffix}"
 
-            user = User(
-                external_id=external_id,
+                user = User(
+                    external_id=external_id,
                 nickname=tg_username or f"tg_user_{tg_id}",
                 telegram_id=tg_id,
                 telegram_username=tg_username,

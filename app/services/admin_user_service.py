@@ -98,10 +98,19 @@ class AdminUserService:
         if db.query(User).filter(User.external_id == payload.external_id).first():
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="EXTERNAL_ID_EXISTS")
 
+        # Set nickname: prefer provided nickname; else fall back to telegram_username if present; else external_id
+        nickname = None
+        if payload.nickname and str(payload.nickname).strip():
+            nickname = str(payload.nickname).strip()
+        elif payload.telegram_username and str(payload.telegram_username).strip():
+            nickname = str(payload.telegram_username).strip()
+        else:
+            nickname = payload.external_id
+
         user = User(
             id=payload.user_id,
             external_id=payload.external_id,
-            nickname=payload.nickname,
+            nickname=nickname,
             level=payload.level,
             xp=payload.xp,
             status=payload.status,
