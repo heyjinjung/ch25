@@ -16,6 +16,7 @@ class MissionSchema(BaseModel):
     reward_amount: int
     xp_reward: int = 0
     requires_approval: bool = False
+    is_active: bool = True
 
     model_config = ConfigDict(from_attributes=True)
 
