@@ -6,7 +6,7 @@ import ErrorBoundary from "./components/common/ErrorBoundary";
 
 import { useAuth } from "./auth/authStore";
 import { useTelegram } from "./providers/TelegramProvider";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { useSound } from "./hooks/useSound";
 import { telegramApi } from "./api/telegramApi";
 
@@ -14,7 +14,6 @@ const App: React.FC = () => {
   const { initData, startParam, isReady } = useTelegram();
   const { token, login } = useAuth();
   const location = useLocation();
-  const navigate = useNavigate();
   const { playPageTransition } = useSound();
   const [isAuthAttempted, setIsAuthAttempted] = React.useState(false);
 
@@ -24,29 +23,22 @@ const App: React.FC = () => {
   }, [location.pathname, playPageTransition]);
 
   React.useEffect(() => {
-    // 1. Handle Magic Link Auto-Auth (One-click Bridge)
-    if (isReady && initData && !token && startParam && !isAuthAttempted) {
+    // Single Entry Point: Auto-Auth for all Telegram Users
+    if (isReady && initData && !token && !isAuthAttempted) {
       const attemptAutoAuth = async () => {
         setIsAuthAttempted(true);
         try {
-          console.log("[TMA] Attempting auto-binding with startParam:", startParam);
+          console.log("[TMA] Authenticating via Telegram Native Flow...");
           const response = await telegramApi.auth(initData, startParam);
           login(response.access_token, response.user);
-          // Auto-login successful! No redirect needed.
         } catch (err) {
-          console.error("[TMA] Auto-binding failed", err);
-          navigate("/connect", { replace: true });
+          console.error("[TMA] Authentication failed", err);
+          // Optional: Show a "Contact Support" or "Retry" screen if serious error
         }
       };
       attemptAutoAuth();
-      return;
     }
-
-    // 2. Normal Connect Redirect (If no startParam)
-    if (isReady && initData && !token && !startParam && location.pathname !== "/connect") {
-      navigate("/connect", { replace: true });
-    }
-  }, [initData, isReady, token, startParam, location.pathname, navigate, login, isAuthAttempted]);
+  }, [initData, isReady, token, startParam, login, isAuthAttempted]);
 
   return (
     <ErrorBoundary>

@@ -1,6 +1,17 @@
 2025-12-08: API/DB/코인 시스템/서비스/운영/체크리스트/overview/architecture 최신화 반영. 실제 코드/운영/QA 흐름과 일치하도록 문서 업데이트.
 # 프로젝트 변경 이력
 
+## 2025-12-31 (Telegram-Only V3 Ready & Admin Revamp)
+- DB: 2026 1/1 런칭 대비 전체 유저 및 게임 데이터 초기화 (`reset_db_v3.py`).
+- Auth: 텔레그램 네이티브 전용 인증 시스템으로 완전 전환.
+  - 외부 브라우저 접속 차단 및 프리미엄 안내 페이지(RequireAuth) 구현.
+  - `/api/telegram/auth`를 통한 자동 가입/로그인 구조 단일화.
+- Admin: 텔레그램 유저 구조에 맞춘 어드민 UI 전면 개편.
+  - 회원 테이블에 `Telegram ID`, `Username` 직접 노출 및 편집 기능 추가.
+  - 매직 링크, 수동 연동, 비밀번호 초기화 등 불필요한 레거시 액션 제거.
+  - 외부 PC 브라우저에서의 독립적인 어드민 접속 기능 유지 및 초기 계정 시딩(`seed_admin_v3.py`).
+- Frontend: `App.tsx` 자동 인증 로직 최적화 및 고해상도 Skeleton 로딩 UI 적용.
+
 ## 2025-12-30 (SSL/HTTPS & Telegram Integration Resolution)
 - Infrastructure: `cc-jm.com` SSL/HTTPS 보정 (Nginx SSL 블록 추가 및 Let's Encrypt 인증서 적용).
 - DB: 텔레그램 연동 대비 유저 스키마(`telegram_id`) 마이그레이션 적용 및 .env 파일 인코딩(UTF-16LE -> UTF-8) 정상화.

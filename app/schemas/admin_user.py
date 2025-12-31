@@ -42,6 +42,10 @@ class AdminUserUpdate(BaseModel):
     xp: Optional[int] = Field(None, ge=0)
     season_level: Optional[int] = Field(None, ge=1)
     
+    # Telegram Integration
+    telegram_id: Optional[int] = None
+    telegram_username: Optional[str] = None
+    
     # CRM Profile update
     admin_profile: Optional[AdminUserProfileSchema] = None
 
@@ -50,6 +54,10 @@ class AdminUserResponse(AdminUserBase):
     id: int
     created_at: datetime
     updated_at: datetime
+    
+    # Telegram Integration
+    telegram_id: Optional[int] = None
+    telegram_username: Optional[str] = None
     
     # CRM Data (Nested)
     admin_profile: Optional[AdminUserProfileSchema] = None

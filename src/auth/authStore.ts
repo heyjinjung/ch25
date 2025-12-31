@@ -21,7 +21,7 @@ type Listener = () => void;
 const ACCESS_TOKEN_KEY = "xmas_access_token";
 const ACCESS_USER_KEY = "xmas_user";
 const AUTH_VERSION_KEY = "xmas_auth_version";
-const CURRENT_AUTH_VERSION = "v2";
+const CURRENT_AUTH_VERSION = "v3";
 const LEGACY_KEYS = ["access_token", "token"];
 
 const isBrowser = typeof window !== "undefined" && typeof localStorage !== "undefined";

@@ -21,26 +21,4 @@ export const telegramApi = {
         });
         return response.data;
     },
-    link: async (initData: string): Promise<TelegramAuthResponse> => {
-        const response = await apiClient.post<TelegramAuthResponse>('/api/telegram/link', {
-            init_data: initData,
-        });
-        return response.data;
-    },
-    getBridgeToken: async (): Promise<{ bridge_token: string }> => {
-        const response = await apiClient.get('/api/telegram/bridge-token');
-        return response.data;
-    },
-    manualLink: async (initData: string, externalId: string, password: string): Promise<TelegramAuthResponse> => {
-        const response = await apiClient.post<TelegramAuthResponse>('/api/telegram/manual-link', {
-            init_data: initData,
-            external_id: externalId,
-            password: password,
-        });
-        return response.data;
-    },
-    adminGetBridgeToken: async (userId: number): Promise<{ bridge_token: string }> => {
-        const response = await apiClient.get(`/api/telegram/admin/bridge-token/${userId}`);
-        return response.data;
-    },
 };

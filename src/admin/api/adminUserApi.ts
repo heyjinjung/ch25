@@ -10,6 +10,8 @@ export interface AdminUserPayload {
   password?: string;
   season_level?: number;
   admin_profile?: AdminUserProfile;
+  telegram_id?: number | null;
+  telegram_username?: string | null;
 }
 
 export interface AdminUserProfile {
@@ -25,6 +27,8 @@ export interface AdminUser extends AdminUserPayload {
   created_at: string;
   updated_at: string;
   admin_profile?: AdminUserProfile;
+  telegram_id?: number | null;
+  telegram_username?: string | null;
 }
 
 export interface ImportResult {

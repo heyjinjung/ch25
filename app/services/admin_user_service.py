@@ -105,6 +105,8 @@ class AdminUserService:
             level=payload.level,
             xp=payload.xp,
             status=payload.status,
+            telegram_id=payload.telegram_id,
+            telegram_username=payload.telegram_username,
         )
         if payload.password:
             user.password_hash = hash_password(payload.password)
@@ -154,6 +156,10 @@ class AdminUserService:
             user.status = update_data["status"]
         if "password" in update_data and update_data["password"]:
             user.password_hash = hash_password(update_data["password"])
+        if "telegram_id" in update_data:
+            user.telegram_id = update_data["telegram_id"]
+        if "telegram_username" in update_data:
+            user.telegram_username = update_data["telegram_username"]
 
         # Handle XP/Season Level update (XP is the source of truth; level auto-derived)
         if "xp" in update_data or "season_level" in update_data:

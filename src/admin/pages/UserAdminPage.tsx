@@ -1,9 +1,8 @@
 // src/admin/pages/UserAdminPage.tsx
 import React, { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Edit2, Link2, Plus, Save, Search, Trash2, Upload } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Edit2, Plus, Save, Search, Trash2, Upload } from "lucide-react";
 import { createUser, deleteUser, fetchUsers, updateUser, AdminUser, AdminUserPayload } from "../api/adminUserApi";
-import { telegramApi } from "../../api/telegramApi";
 import { useToast } from "../../components/common/ToastProvider";
 import UserImportModal from "../components/UserImportModal";
 
@@ -18,6 +17,7 @@ type MemberRow = AdminUser & {
     real_name: string;
     phone_number: string;
     telegram_id: string;
+    telegram_username: string;
     memo: string;
     tags: string;
   };
@@ -77,6 +77,7 @@ const UserAdminPage: React.FC = () => {
     real_name: "",
     phone_number: "",
     telegram_id: "",
+    telegram_username: "",
     memo: "",
     tags: "",
   });
@@ -95,7 +96,8 @@ const UserAdminPage: React.FC = () => {
           status: u.status ?? "ACTIVE",
           real_name: u.admin_profile?.real_name ?? "",
           phone_number: u.admin_profile?.phone_number ?? "",
-          telegram_id: u.admin_profile?.telegram_id ?? "",
+          telegram_id: String(u.telegram_id ?? u.admin_profile?.telegram_id ?? ""),
+          telegram_username: u.telegram_username ?? "",
           memo: u.admin_profile?.memo ?? "",
           tags: (u.admin_profile?.tags ?? []).join(", "),
         },
@@ -110,7 +112,7 @@ const UserAdminPage: React.FC = () => {
       await queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
       addToast("생성 완료", "success");
       setShowAddForm(false);
-      setNewMember({ nickname: "", level: 1, xp: 0, status: "ACTIVE", password: "", real_name: "", phone_number: "", telegram_id: "", memo: "", tags: "" });
+      setNewMember({ nickname: "", level: 1, xp: 0, status: "ACTIVE", password: "", real_name: "", phone_number: "", telegram_id: "", telegram_username: "", memo: "", tags: "" });
     },
     onError: (err) => addToast(mapErrorDetail(err), "error"),
   });
@@ -231,7 +233,8 @@ const UserAdminPage: React.FC = () => {
               status: m.status ?? "ACTIVE",
               real_name: m.admin_profile?.real_name ?? "",
               phone_number: m.admin_profile?.phone_number ?? "",
-              telegram_id: m.admin_profile?.telegram_id ?? "",
+              telegram_id: String(m.telegram_id ?? m.admin_profile?.telegram_id ?? ""),
+              telegram_username: m.telegram_username ?? "",
               memo: m.admin_profile?.memo ?? "",
               tags: (m.admin_profile?.tags ?? []).join(", "),
             },
@@ -253,7 +256,8 @@ const UserAdminPage: React.FC = () => {
           status: m.status ?? "ACTIVE",
           real_name: m.admin_profile?.real_name ?? "",
           phone_number: m.admin_profile?.phone_number ?? "",
-          telegram_id: m.admin_profile?.telegram_id ?? "",
+          telegram_id: String(m.telegram_id ?? m.admin_profile?.telegram_id ?? ""),
+          telegram_username: m.telegram_username ?? "",
           memo: m.admin_profile?.memo ?? "",
           tags: (m.admin_profile?.tags ?? []).join(", "),
         };
@@ -274,6 +278,8 @@ const UserAdminPage: React.FC = () => {
       season_level: row.draft.level, // Sync both for backend compatibility
       xp: row.draft.xp,
       status: row.draft.status,
+      telegram_id: row.draft.telegram_id ? parseInt(row.draft.telegram_id) : null,
+      telegram_username: row.draft.telegram_username,
       admin_profile: {
         real_name: row.draft.real_name,
         phone_number: row.draft.phone_number,
@@ -306,20 +312,7 @@ const UserAdminPage: React.FC = () => {
     deleteMutation.mutate(row.id);
   };
 
-  const handleCopyMagicLink = async (userId: number) => {
-    try {
-      const { bridge_token } = await telegramApi.adminGetBridgeToken(userId);
-      // Replace with your bot username
-      const botUsername = "cc_jm_2026_bot";
-      const link = `https://t.me/${botUsername}/app?startapp=${bridge_token}`;
-
-      await navigator.clipboard.writeText(link);
-      addToast("매직 링크가 클립보드에 복사되었습니다.", "success");
-    } catch (err) {
-      console.error("[Admin] Failed to generate magic link", err);
-      addToast("링크 생성 실패", "error");
-    }
-  };
+  // handleCopyMagicLink removed (Telegram-only v3 transition)
 
   const submitNewMember = (e: React.FormEvent) => {
     e.preventDefault();
@@ -342,6 +335,8 @@ const UserAdminPage: React.FC = () => {
       xp: clampNumber(newMember.xp, 0, 0),
       status: newMember.status,
       password: newMember.password ? newMember.password.trim() : undefined,
+      telegram_id: newMember.telegram_id ? parseInt(newMember.telegram_id) : undefined,
+      telegram_username: newMember.telegram_username,
       admin_profile: {
         real_name: newMember.real_name,
         phone_number: newMember.phone_number,
@@ -501,12 +496,23 @@ const UserAdminPage: React.FC = () => {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label htmlFor="telegram_id" className="text-xs font-medium text-gray-400">텔레그램 ID</label>
+                    <label htmlFor="telegram_id" className="text-xs font-medium text-gray-400">텔레그램 ID (숫자)</label>
                     <input
                       id="telegram_id"
                       type="text"
                       value={newMember.telegram_id}
                       onChange={(e) => setNewMember((p) => ({ ...p, telegram_id: e.target.value }))}
+                      className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-[#91F402]"
+                      placeholder="12345678"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label htmlFor="telegram_username" className="text-xs font-medium text-gray-400">텔레그램 닉네임 (@제외)</label>
+                    <input
+                      id="telegram_username"
+                      type="text"
+                      value={newMember.telegram_username}
+                      onChange={(e) => setNewMember((p) => ({ ...p, telegram_username: e.target.value }))}
                       className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-[#91F402]"
                       placeholder="username"
                     />
@@ -541,7 +547,7 @@ const UserAdminPage: React.FC = () => {
                   type="button"
                   onClick={() => {
                     setShowAddForm(false);
-                    setNewMember({ nickname: "", level: 1, xp: 0, status: "ACTIVE", password: "", real_name: "", phone_number: "", telegram_id: "", memo: "", tags: "" });
+                    setNewMember({ nickname: "", level: 1, xp: 0, status: "ACTIVE", password: "", real_name: "", phone_number: "", telegram_id: "", telegram_username: "", memo: "", tags: "" });
                   }}
                   className="rounded-md border border-[#333333] bg-[#1A1A1A] px-4 py-2 text-sm text-gray-200 hover:bg-[#2C2C2E]"
                 >
@@ -619,9 +625,9 @@ const UserAdminPage: React.FC = () => {
                       상태{renderSortIcon("status")}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">실명/연락처</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">텔레그램/메모</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">태그</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">비밀번호(초기화)</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">TG ID / Username</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">메모/태그</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400 text-center">비밀번호(V2 리렉)</th>
                     <th className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-400">액션</th>
                   </tr>
                 </thead>
@@ -719,50 +725,55 @@ const UserAdminPage: React.FC = () => {
                               type="text"
                               value={member.draft?.telegram_id ?? ""}
                               onChange={(e) => updateDraftField(member.id, "telegram_id", e.target.value)}
-                              placeholder="텔레그램"
+                              placeholder="TG ID"
                               className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-1 text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#2D6B3B]"
                             />
                             <input
                               type="text"
-                              value={member.draft?.memo ?? ""}
-                              onChange={(e) => updateDraftField(member.id, "memo", e.target.value)}
-                              placeholder="메모"
+                              value={member.draft?.telegram_username ?? ""}
+                              onChange={(e) => updateDraftField(member.id, "telegram_username", e.target.value)}
+                              placeholder="TG Username"
                               className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-1 text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#2D6B3B]"
                             />
                           </div>
                         ) : (
                           <>
-                            {member.admin_profile?.telegram_id ? (
-                              <a href={`https://t.me/${member.admin_profile.telegram_id}`} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">
-                                {member.admin_profile.telegram_id}
-                              </a>
-                            ) : "-"}
-                            {member.admin_profile?.memo && (
-                              <div className="text-xs text-gray-500 truncate max-w-[100px]" title={member.admin_profile.memo}>
-                                {member.admin_profile.memo}
-                              </div>
-                            )}
+                            <div className="text-white font-mono">{member.telegram_id || "-"}</div>
+                            <div className="text-xs text-[#91F402]">@{member.telegram_username || "no_username"}</div>
                           </>
                         )}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm">
+                      <td className="px-4 py-3 text-sm text-gray-400">
                         {member.isEditing ? (
-                          <input
-                            type="text"
-                            value={member.draft?.tags ?? ""}
-                            onChange={(e) => updateDraftField(member.id, "tags", e.target.value)}
-                            placeholder="태그1, 태그2..."
-                            className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-1.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#2D6B3B]"
-                          />
-                        ) : (
-                          <div className="flex flex-wrap gap-1 max-w-[150px]">
-                            {member.admin_profile?.tags?.map((tag, i) => (
-                              <span key={i} className="inline-block rounded bg-[#333333] px-1.5 py-0.5 text-[10px] text-gray-300">
-                                {tag}
-                              </span>
-                            ))}
-                            {(!member.admin_profile?.tags || member.admin_profile.tags.length === 0) && "-"}
+                          <div className="flex flex-col gap-1">
+                            <textarea
+                              value={member.draft?.memo ?? ""}
+                              onChange={(e) => updateDraftField(member.id, "memo", e.target.value)}
+                              placeholder="메모"
+                              rows={1}
+                              className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-1 text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#2D6B3B]"
+                            />
+                            <input
+                              type="text"
+                              value={member.draft?.tags ?? ""}
+                              onChange={(e) => updateDraftField(member.id, "tags", e.target.value)}
+                              placeholder="태그 (쉼표 구분)"
+                              className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-1 text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#2D6B3B]"
+                            />
                           </div>
+                        ) : (
+                          <>
+                            <div className="text-xs text-gray-400 truncate max-w-[120px]" title={member.admin_profile?.memo}>
+                              {member.admin_profile?.memo || "-"}
+                            </div>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {member.admin_profile?.tags?.map((tag, i) => (
+                                <span key={i} className="inline-block rounded bg-[#333333] px-1.5 py-0.5 text-[10px] text-gray-300">
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
+                          </>
                         )}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
@@ -807,15 +818,6 @@ const UserAdminPage: React.FC = () => {
                               <Edit2 size={16} />
                             </button>
                           )}
-                          <button
-                            type="button"
-                            onClick={() => handleCopyMagicLink(member.id)}
-                            className="text-white hover:text-[#91F402]"
-                            title="매직 링크 복사"
-                            aria-label="매직 링크 복사"
-                          >
-                            <Link2 size={16} />
-                          </button>
                           <button
                             type="button"
                             onClick={() => removeRow(member)}

@@ -13,7 +13,6 @@ const LotteryPage = React.lazy(() => import("../pages/LotteryPage"));
 const RankingPage = React.lazy(() => import("../pages/RankingPage"));
 const SurveyListPage = React.lazy(() => import("../pages/SurveyListPage"));
 const SurveyRunnerPage = React.lazy(() => import("../pages/SurveyRunnerPage"));
-const LoginPage = React.lazy(() => import("../pages/LoginPage"));
 const NewMemberDicePage = React.lazy(() => import("../pages/NewMemberDicePage"));
 const HomePage = React.lazy(() => import("../pages/HomePage"));
 const FigmaLandingTablet = React.lazy(() => import("../pages/FigmaLandingTablet"));
@@ -23,8 +22,6 @@ const GuidePage = React.lazy(() => import("../pages/GuidePage"));
 const TeamBattlePage = React.lazy(() => import("../pages/TeamBattlePage"));
 const GameLobbyPage = React.lazy(() => import("../pages/GameLobbyPage"));
 const VaultPage = React.lazy(() => import("../pages/VaultPage"));
-const LinkPage = React.lazy(() => import("../pages/LinkPage"));
-const ConnectPage = React.lazy(() => import("../pages/ConnectPage"));
 const MissionPage = React.lazy(() => import("../pages/MissionPage"));
 
 // Simple loading fallback
@@ -41,8 +38,8 @@ const UserRoutes: React.FC = () => {
   return (
     <Suspense fallback={<PageLoader />}>
       <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/connect" element={<ConnectPage />} />
+        <Route path="/login" element={<Navigate to="/" replace />} />
+        <Route path="/connect" element={<Navigate to="/" replace />} />
 
         {/* Primary experience starts at landing/home */}
         <Route path="/" element={<Navigate to="/landing" replace />} />
@@ -64,7 +61,6 @@ const UserRoutes: React.FC = () => {
             <Route path="/dice" element={<DicePage />} />
             <Route path="/lottery" element={<LotteryPage />} />
             <Route path="/guide" element={<GuidePage />} />
-            <Route path="/link" element={<LinkPage />} />
           </Route>
         </Route>
 

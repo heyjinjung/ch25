@@ -21,7 +21,7 @@ from app.api.routes import (
 	ui_copy,
 	trial_grant,
 	crm_inbox,
-	telegram_v4,
+	telegram,
 )
 
 api_router = APIRouter()
@@ -42,5 +42,5 @@ api_router.include_router(ui_config.router)
 api_router.include_router(ui_copy.router)
 api_router.include_router(trial_grant.router)
 api_router.include_router(crm_inbox.router)
-api_router.include_router(telegram_v4.router, prefix="/api")
+api_router.include_router(telegram.router, prefix="/api")
 api_router.include_router(admin.admin_router)
