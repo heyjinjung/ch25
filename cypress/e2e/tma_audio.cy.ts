@@ -23,33 +23,14 @@ const mockTelegramWebApp = (win: Window) => {
 
 describe("TMA entry → UI action → audio call (E2E)", () => {
   beforeEach(() => {
-    cy.intercept("POST", "**/api/telegram/auth", {
-      access_token: "cypress-access-token",
-      token_type: "bearer",
-      is_new_user: false,
-      linked_to_existing: false,
-      user: { id: 1, external_id: "tg_cypress", nickname: "Cypress", status: "ACTIVE", level: 1, telegram_id: 123456789 },
-    }).as("telegramAuth");
+    cy.intercept("GET", "**/api/season-pass/status", {
+      progress: { current_level: 1, current_xp: 0, next_level_xp: 0, total_stamps: 0, last_stamp_date: null },
+      levels: [],
+      season: { id: 1, season_name: "CYPRESS", start_date: "2025-01-01", end_date: "2025-12-31", max_level: 1, base_xp_per_stamp: 0 },
+      today: { stamped: false, date: "2025-01-01" },
+    }).as("seasonPassStatus");
 
-    cy.intercept("GET", "**/api/new-user/status", {
-      eligible: false,
-      reason: "EXTERNAL_DEPOSIT_HISTORY",
-      is_new_user_window_active: true,
-      window_ends_at_utc: null,
-      seconds_left: null,
-      telegram_linked: true,
-      existing_member_by_external_deposit: true,
-      deposit_amount: 1,
-      total_play_count: 0,
-      bonus_cap: 10000,
-      progress: {
-        deposit_confirmed: true,
-        play_1: false,
-        play_3: false,
-        share_or_join: false,
-        next_day_login: false,
-      },
-    }).as("newUserStatus");
+    cy.intercept("GET", "**/api/crm/messages/inbox", []).as("inbox");
 
     cy.intercept("GET", "**/api/vault/status", {
       eligible: false,
@@ -68,23 +49,42 @@ describe("TMA entry → UI action → audio call (E2E)", () => {
       accrual_multiplier: null,
     }).as("vaultStatus");
 
+    cy.intercept("GET", "**/api/roulette/status*", { token_balance: 0 }).as("rouletteStatus");
+    cy.intercept("GET", "**/api/dice/status", { token_balance: 0 }).as("diceStatus");
+    cy.intercept("GET", "**/api/lottery/status", { token_balance: 0 }).as("lotteryStatus");
+
+    cy.intercept("POST", "**/api/trial-grant", { result: "SKIP", granted: 0, balance: 0, label: "cypress" }).as(
+      "trialGrant"
+    );
+
     // Some layouts fetch surveys; keep it deterministic.
     cy.intercept("GET", "**/api/surveys/active", { items: [] }).as("activeSurveys");
   });
 
   it("records audio events on entry and tab click", () => {
-    cy.visit("/", {
+    cy.visit("/landing", {
       onBeforeLoad(win) {
+        win.localStorage.clear();
+        win.sessionStorage.clear();
+        win.localStorage.setItem("xmas_auth_version", "v3");
+        win.localStorage.setItem("xmas_access_token", "cypress-access-token");
+        win.localStorage.setItem("token", "cypress-access-token");
+        win.localStorage.setItem(
+          "xmas_user",
+          JSON.stringify({ id: 1, external_id: "tg_cypress", nickname: "Cypress", status: "ACTIVE", level: 1 })
+        );
         win.localStorage.setItem("sound_muted", "false");
         (win as any).__e2eSoundEvents = [];
         mockTelegramWebApp(win);
       },
     });
 
-    cy.wait("@telegramAuth");
-    cy.wait("@newUserStatus");
-
-    cy.url().should("include", "/landing");
+    cy.wait("@seasonPassStatus");
+    cy.wait("@vaultStatus");
+    cy.wait("@rouletteStatus");
+    cy.wait("@diceStatus");
+    cy.wait("@lotteryStatus");
+    cy.wait("@inbox");
 
     cy.window()
       .its("__e2eSoundEvents")
@@ -104,4 +104,3 @@ describe("TMA entry → UI action → audio call (E2E)", () => {
       });
   });
 });
-

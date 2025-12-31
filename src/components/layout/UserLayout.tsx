@@ -3,7 +3,7 @@ import React from "react";
 import { Outlet } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import MainLayout from "./MainLayout";
-import SeasonPassBar from "../season-pass/SeasonPassBar";
+// SeasonPassBar import removed
 import SurveyPromptBanner from "../survey/SurveyPromptBanner";
 import DowntimeBanner from "../common/DowntimeBanner";
 import SoundMonitor from "../common/SoundMonitor";
@@ -21,7 +21,7 @@ const UserLayout: React.FC = () => {
       <div className="space-y-6">
         <DowntimeBanner />
         {!hideTopBars && <SurveyPromptBanner />}
-        {!hideTopBars && <SeasonPassBar />}
+        {/* SeasonPassBar removed per user request */}
         <Outlet />
       </div>
       <SoundMonitor />

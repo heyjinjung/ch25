@@ -109,19 +109,17 @@ const RequireAuth: React.FC = () => {
                 {/* Typography */}
                 <div className="space-y-4">
                   <h1 className="text-4xl font-black tracking-tighter text-white uppercase leading-[0.9]">
-                    Telegram<br />
+                    CC코드지갑<br />
                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#30FF75] to-[#20E065]">
-                      Native
+                      지민실장
                     </span>
                   </h1>
 
                   <div className="w-10 h-1 bg-[#30FF75]/30 mx-auto rounded-full" />
 
                   <div className="text-slate-400 font-medium leading-relaxed text-sm">
-                    <p>이 서비스는 텔레그램 미니앱<br />전용 환경에 최적화되어 있습니다.</p>
                     <p className="mt-2 text-xs text-slate-500">
-                      원활한 경험을 위해<br />
-                      <span className="text-[#30FF75] font-bold text-sm">@cc_jm_2026_bot</span><br />
+                      <span className="text-[#30FF75] font-bold text-sm">@jm956_bot</span><br />
                       을 통해 접속해주세요.
                     </p>
                   </div>
@@ -129,20 +127,13 @@ const RequireAuth: React.FC = () => {
 
                 {/* Call to Action */}
                 <a
-                  href="https://t.me/cc_jm_2026_bot"
+                  href="https://t.me/jm956_bot/ccjm"
                   target="_blank"
                   rel="noreferrer"
-                  className="group/btn relative block w-full py-4 rounded-xl bg-[#30FF75] active:scale-[0.98] transition-all duration-300 shadow-[0_0_20px_rgba(48,255,117,0.2)] hover:shadow-[0_0_30px_rgba(48,255,117,0.4)] overflow-hidden"
+                  className="group/btn relative flex items-center justify-center gap-3 w-full py-4 rounded-lg bg-figma-primary text-white font-bold shadow-[0_4px_12px_rgba(0,0,0,0.3)] hover:brightness-110 active:scale-95 uppercase tracking-wide transition-all"
                 >
-                  <span className="relative z-10 flex items-center justify-center gap-2 text-black font-black text-sm uppercase tracking-widest">
-                    <span>Enter Telegram</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 transform group-hover/btn:translate-x-1 transition-transform" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z" fillOpacity="0" />
-                      <path d="M20.5 3l-4 17-5-5-2-4 11-8z" /> {/* Simple Telegram Plane shape approximate or Arrow */}
-                      <path d="M2.00098 12.0001L21.001 2.00012L12.001 22.0001L10.001 13.0001L17.001 7.00012L7.00098 12.0001L2.00098 12.0001Z" fill="currentColor" />
-                    </svg>
-                  </span>
-                  <div className="absolute inset-0 bg-white/20 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300 ease-out" />
+                  <img src="/assets/icon_telegram_button.png" alt="" className="w-8 h-8 object-contain drop-shadow-lg" />
+                  <span className="text-sm">텔레그램 접속</span>
                 </a>
               </div>
             </div>

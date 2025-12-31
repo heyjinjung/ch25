@@ -94,7 +94,7 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
             impact('light');
             // Similar to 'Claimed' logic but for Action
             if (window.Telegram?.WebApp?.shareToStory) {
-                const appUrl = "https://t.me/cc_jm_2026_bot/app";
+                const appUrl = "https://t.me/jm956_bot/ccjm";
                 window.Telegram.WebApp.shareToStory("https://placehold.co/1080x1920/png?text=Join+Me!", {
                     text: `Join the adventure!`,
                     widget_link: { url: appUrl, name: "Play Now" }
@@ -145,7 +145,8 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
                     <h3 className="font-bold text-slate-100 text-sm truncate pr-2">{mission.title}</h3>
                     {/* Show Reward Amount + XP */}
                     <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-white bg-slate-700 px-1.5 py-0.5 rounded">
+                        <span className="flex items-center gap-1 text-xs font-bold text-white bg-slate-700 px-1.5 py-0.5 rounded">
+                            <img src="/assets/icon_diamond.png" alt="" className="w-4 h-4 object-contain" />
                             {mission.reward_amount}
                         </span>
                         {mission.xp_reward > 0 && (
@@ -172,7 +173,7 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
                         {/* Re-share button for Viral Loop */}
                         <button
                             onClick={() => {
-                                const appUrl = "https://t.me/cc_jm_2026_bot/app";
+                                const appUrl = "https://t.me/jm956_bot/ccjm";
                                 if (window.Telegram?.WebApp?.shareToStory) {
                                     window.Telegram.WebApp.shareToStory("https://placehold.co/1080x1920/png?text=I+Completed+Mission!", {
                                         text: `I just earned ${mission.reward_amount} ${mission.reward_type}!`,

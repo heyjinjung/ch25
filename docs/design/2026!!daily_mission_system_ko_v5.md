@@ -54,7 +54,7 @@
 | 항목 | 상태 | 근거(코드) | 비고 |
 | :--- | :--- | :--- | :--- |
 | **일일 환영 선물(원탭)** | 부분 구현(옵션) | `src/components/layout/SidebarAppLayout.tsx` + `src/config/featureFlags.ts`( `VITE_ENABLE_TRIAL_GRANT`) / `app/api/routes/trial_grant.py` / `app/services/trial_grant_service.py` | 기본값 OFF. “원탭 받기” UI는 별도 버튼 형태로는 없음(현재는 자동 1회 지급 흐름). |
-| **티켓 제로 구출 루프** | 미사용(비활성) | `src/components/game/TicketZeroPanel.tsx` | 컴포넌트가 `return null; // Feature temporarily disabled`로 비활성화되어 실제 UI가 노출되지 않음. |
+| **티켓 제로 구출 루프** | 미사용(비활성) | `src/components/game/TicketZeroPanel.tsx` | 컴포넌트가 `return null; // Feature temporarily disabled`로 비활성화되어 실제 UI가 노출되지 않음. <br/> 세부 기술서: [`ticket_zero_rescue_rps_bot_ko.md`](./ticket_zero_rescue_rps_bot_ko.md) |
 | **금고 적립 연출** | 부분 구현 | `src/components/vault/VaultAccrualModal.tsx` + `src/pages/RoulettePage.tsx` / `src/pages/DicePage.tsx` / `src/pages/LotteryPage.tsx` (`vaultEarn` → toast) | “코인이 금고로 쏟아져 들어가는” 물리 애니메이션/플라잉 연출은 아님(상단 토스트+카운팅). |
 | **실시간 잭팟 피드** | 미구현 | (검색 기준 관련 UI/route 없음) | “누가 방금 출금/당첨” 팝업 피드는 현재 프론트에 구현 흔적이 없음. |
 | **플래시 미션(타임어택)** | 미구현 | (검색 기준 관련 모델/스케줄/UI 없음) | 시간 제한 미션 정의/집계/노출/만료 처리 전부 TODO. |

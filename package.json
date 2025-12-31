@@ -9,7 +9,7 @@
     "lint": "eslint src --ext ts,tsx --max-warnings 0",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "cypress run"
+    "test:e2e": "node scripts/run_cypress.mjs run"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",

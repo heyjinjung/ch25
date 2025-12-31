@@ -51,6 +51,8 @@ const surveySession = {
 };
 
 const setAuthStorage = (win: Window) => {
+  win.localStorage.clear();
+  win.sessionStorage.clear();
   win.localStorage.setItem("xmas_auth_version", "v3");
   win.localStorage.setItem("xmas_access_token", "cypress-token");
   win.localStorage.setItem("token", "cypress-token");
@@ -60,6 +62,16 @@ const setAuthStorage = (win: Window) => {
 describe("Survey prompt and resume flow", () => {
   beforeEach(() => {
     cy.intercept("GET", "**/api/surveys/active", activeSurveys).as("getActiveSurveys");
+
+    // Keep layout dependencies deterministic to avoid auth store being cleared by 401 interceptors.
+    cy.intercept("GET", "**/api/season-pass/status", {
+      progress: { current_level: 1, current_xp: 0, next_level_xp: 0, total_stamps: 0, last_stamp_date: null },
+      levels: [],
+      season: { id: 1, season_name: "CYPRESS", start_date: "2025-01-01", end_date: "2025-12-31", max_level: 1, base_xp_per_stamp: 0 },
+      today: { stamped: false, date: "2025-01-01" },
+    }).as("seasonPassStatus");
+
+    cy.intercept("GET", "**/api/crm/messages/inbox", []).as("inbox");
   });
 
   it("surfaces survey list and completes without backend", () => {
@@ -77,6 +89,8 @@ describe("Survey prompt and resume flow", () => {
 
     cy.visit("/surveys", { onBeforeLoad: setAuthStorage });
     cy.wait("@getActiveSurveys");
+    cy.wait("@seasonPassStatus");
+    cy.wait("@inbox");
 
     cy.contains("Holiday Survey").should("be.visible");
 
@@ -96,4 +110,3 @@ describe("Survey prompt and resume flow", () => {
     cy.url().should("include", "/surveys");
   });
 });
-
