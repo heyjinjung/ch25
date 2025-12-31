@@ -142,6 +142,35 @@ const VaultPageCompact: React.FC = () => {
                 </div>
             )}
 
+            {/* Withdraw Request Button (Condition: Cash Balance >= 10,000) */}
+            {view.vaultBalance === 0 && (vault.data?.cashBalance ?? 0) >= 10000 && (
+                <div className="w-full max-w-xs mb-3 z-10">
+                    <button
+                        onClick={async () => {
+                            if (!window.confirm("출금을 신청하시겠습니까?")) return;
+                            tryHaptic(20);
+                            const { requestWithdrawal } = await import("../../api/vaultApi");
+                            const res = await requestWithdrawal(vault.data?.cashBalance ?? 0);
+                            if (res.success) {
+                                alert(res.message);
+                                vault.refetch();
+                            } else {
+                                alert(res.message);
+                            }
+                        }}
+                        className="w-full py-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white font-black text-center text-base shadow-lg shadow-amber-500/30 hover:brightness-110 active:scale-[0.98] transition-all uppercase tracking-wide"
+                    >
+                        <span className="flex items-center justify-center gap-2">
+                            <img src="/assets/asset_coin_gold.webp" alt="Coin" className="w-5 h-5 drop-shadow-sm" />
+                            출금 신청하기
+                        </span>
+                    </button>
+                    <p className="text-[10px] text-center text-amber-500/80 mt-1">
+                        * 보유 중인 {formatWon(vault.data?.cashBalance ?? 0)} 전액 신청됩니다.
+                    </p>
+                </div>
+            )}
+
             {/* CTA Buttons */}
             <div className="w-full max-w-xs space-y-3 mt-auto z-10">
                 <a

@@ -12,6 +12,7 @@ from app.models.season_pass import (
     SeasonPassProgress,
     SeasonPassRewardLog,
     SeasonPassStampLog,
+
 )
 from app.models.team_battle import TeamSeason, Team, TeamMember, TeamScore, TeamEventLog
 from app.models.level_xp import UserLevelProgress, UserLevelRewardLog, UserXpEventLog
@@ -26,6 +27,8 @@ from app.models.new_member_dice import NewMemberDiceEligibility, NewMemberDiceLo
 from app.models.app_ui_config import AppUiConfig
 from app.models.vault2 import VaultProgram, VaultStatus
 from app.models.vault_earn_event import VaultEarnEvent
+from app.models.vault_withdrawal_request import VaultWithdrawalRequest
+from app.models.inventory import UserInventoryItem, UserInventoryLedger
 from app.models.trial_token_bucket import TrialTokenBucket
 from app.models.telegram_link_code import TelegramLinkCode
 from app.models.mission import Mission, UserMissionProgress

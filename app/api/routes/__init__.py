@@ -29,6 +29,7 @@ from app.api.routes import (
 	admin_user_merge,
 	telegram_unlink,
 	dev_auth,
+	inventory_shop,
 )
 
 api_router = APIRouter()
@@ -62,3 +63,4 @@ api_router.include_router(admin_mission.router)
 api_router.include_router(admin_user_merge.router)
 api_router.include_router(telegram_unlink.router)
 api_router.include_router(telegram_unlink.admin_router)
+api_router.include_router(inventory_shop.router)

@@ -525,6 +525,7 @@ class Vault2Service:
                     "user_id": u.id,
                     "external_id": u.external_id,
                     "nickname": u.nickname,
+                    "telegram_username": u.telegram_username,
                     "amount": u.vault_locked_balance,
                     "timestamp": u.vault_locked_expires_at,
                     "meta": {"type": "locked_balance"}
@@ -544,6 +545,7 @@ class Vault2Service:
                     "user_id": u.id,
                     "external_id": u.external_id,
                     "nickname": u.nickname,
+                    "telegram_username": u.telegram_username,
                     "amount": ledger.delta,
                     "timestamp": ledger.created_at,
                     "meta": {"reason": ledger.reason}
@@ -574,6 +576,7 @@ class Vault2Service:
                     "user_id": uid,
                     "external_id": u.external_id if u else None,
                     "nickname": u.nickname if u else None,
+                    "telegram_username": u.telegram_username if u else None,
                     "amount": int(total),
                     "count": int(cnt),
                     "timestamp": last_at,
