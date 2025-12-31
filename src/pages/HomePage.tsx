@@ -34,7 +34,7 @@ const GameCard: React.FC<GameCardProps> = ({ title, to, gradient, icon, isWide, 
     >
       {bgImage && (
         <div className="absolute inset-0 z-0">
-          <img src={bgImage} alt={title} className="h-full w-full object-cover opacity-90 transition-transform duration-700 group-hover:scale-110" />
+          <img src={bgImage} alt={title} className="h-full w-full object-cover opacity-90" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
         </div>
       )}
@@ -48,8 +48,8 @@ const GameCard: React.FC<GameCardProps> = ({ title, to, gradient, icon, isWide, 
         </div>
 
         <div className="mt-auto">
-          <p className="text-sm font-black text-white tracking-tight mb-2 group-hover:text-[#91F402] transition-colors">{title}</p>
-          <div className="inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-[10px] font-black text-white backdrop-blur border border-white/10 group-hover:bg-[#91F402] group-hover:text-black transition-all">
+          <p className="text-sm font-black text-white tracking-tight mb-2">{title}</p>
+          <div className="inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-[10px] font-black text-white backdrop-blur border border-white/10">
             지금 플레이
           </div>
         </div>
@@ -157,8 +157,7 @@ const HomePage: React.FC = () => {
       to: "/events",
       gradient: "bg-gradient-to-br from-indigo-500 to-purple-600",
       icon: "🎁",
-      bgImage: "/assets/welcome/event_v2.png",
-      badge: "EVENT"
+      bgImage: "/assets/welcome/event_v2.png"
     },
     {
       title: "THE VAULT",

@@ -1,5 +1,8 @@
-from pydantic import BaseModel
 from typing import Optional
+
+from pydantic import ConfigDict
+
+from app.schemas.base import KstBaseModel as BaseModel
 
 class MissionSchema(BaseModel):
     id: int
@@ -13,6 +16,8 @@ class MissionSchema(BaseModel):
     reward_amount: int
     xp_reward: int = 0
     requires_approval: bool = False
+
+    model_config = ConfigDict(from_attributes=True)
 
 class MissionProgressSchema(BaseModel):
     current_value: int

@@ -22,7 +22,7 @@ def create_mission(
     if existing:
         raise HTTPException(status_code=400, detail="Logic key already exists")
         
-    mission = Mission(**payload.dict())
+    mission = Mission(**payload.model_dump())
     db.add(mission)
     db.commit()
     db.refresh(mission)
@@ -48,7 +48,7 @@ def update_mission(
     if not mission:
         raise HTTPException(status_code=404, detail="Mission not found")
         
-    update_data = payload.dict(exclude_unset=True)
+    update_data = payload.model_dump(exclude_unset=True)
     if "logic_key" in update_data:
         # Check uniqueness if changing
         if update_data["logic_key"] != mission.logic_key:
