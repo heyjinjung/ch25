@@ -104,7 +104,7 @@ const AppHeader: React.FC = () => {
                         onClick={handleSoundToggle}
                         aria-label={isMuted ? "사운드 켜기" : "사운드 끄기"}
                         aria-pressed={!isMuted}
-                        className="w-9 h-9 flex items-center justify-center rounded-lg border border-emerald-800 bg-slate-900 transition-colors hover:bg-emerald-900/40 relative group"
+                        className="w-9 h-9 flex items-center justify-center rounded-lg border border-emerald-800 bg-slate-900 transition-colors relative group"
                     >
                         <img
                             src="/assets/icon_megaphone.png"

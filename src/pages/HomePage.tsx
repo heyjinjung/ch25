@@ -27,7 +27,7 @@ const GameCard: React.FC<GameCardProps> = ({ title, to, gradient, icon, isWide, 
     <Link
       to={to}
       className={clsx(
-        "group relative overflow-hidden rounded-[24px] border border-white/10 p-4 transition-all hover:scale-[1.02] active:scale-[0.98]",
+        "group relative overflow-hidden rounded-[24px] border border-white/10 p-4 transition-all",
         !bgImage && gradient,
         isWide ? "col-span-2 aspect-[2/1]" : "col-span-1 aspect-square"
       )}
@@ -42,7 +42,7 @@ const GameCard: React.FC<GameCardProps> = ({ title, to, gradient, icon, isWide, 
       <div className="relative z-10 flex h-full flex-col justify-between">
         <div className="flex justify-between items-start">
           {badge && (
-            <span className="rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-black text-white shadow-sm ring-2 ring-black/20">{badge}</span>
+            <span className="absolute top-0 right-0 rounded-bl-xl bg-red-600 px-3 py-1 text-[10px] font-black text-white shadow-sm z-20">{badge}</span>
           )}
           {!bgImage && <span className="text-3xl">{icon}</span>}
         </div>
@@ -136,7 +136,6 @@ const HomePage: React.FC = () => {
       gradient: "bg-gradient-to-br from-emerald-500 to-teal-600",
       icon: "🎲",
       bgImage: "/assets/games/thumb_dice_v2.png",
-      badge: "2x"
     },
     {
       title: "LOTTERY",
