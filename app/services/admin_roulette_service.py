@@ -72,6 +72,7 @@ class AdminRouletteService:
         try:
             config = RouletteConfig(
                 name=data.name,
+                ticket_type=data.ticket_type,
                 is_active=data.is_active,
                 max_daily_spins=data.max_daily_spins,
             )
@@ -94,6 +95,8 @@ class AdminRouletteService:
             update_data = data.dict(exclude_unset=True)
             if "name" in update_data:
                 config.name = update_data["name"]
+            if "ticket_type" in update_data and update_data["ticket_type"] is not None:
+                config.ticket_type = update_data["ticket_type"]
             if "is_active" in update_data:
                 config.is_active = update_data["is_active"]
             if "max_daily_spins" in update_data:

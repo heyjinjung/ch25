@@ -26,6 +26,7 @@ const segmentSchema = z.object({
 const rouletteSchema = z
   .object({
     name: z.string().min(1, "이름을 입력하세요"),
+    ticket_type: z.enum(["ROULETTE_COIN", "GOLD_KEY", "DIAMOND_KEY"]).default("ROULETTE_COIN"),
     is_active: z.boolean().default(false),
     max_daily_spins: z.number().int().nonnegative("0이면 무제한"),
     segments: z.array(segmentSchema).length(6, "세그먼트는 6개가 필요합니다"),
@@ -79,6 +80,7 @@ const RouletteConfigPage: React.FC = () => {
   const initialValues = useMemo<RouletteFormValues>(
     () => ({
       name: "",
+      ticket_type: "ROULETTE_COIN",
       is_active: false,
       max_daily_spins: 0,
       segments: buildDefaultSegments(),
@@ -151,6 +153,7 @@ const RouletteConfigPage: React.FC = () => {
 
     form.reset({
       name: config.name,
+      ticket_type: config.ticket_type ?? "ROULETTE_COIN",
       is_active: config.is_active,
       max_daily_spins: config.max_daily_spins,
       segments: normalizeToSixSegments(sorted as any),
@@ -160,6 +163,7 @@ const RouletteConfigPage: React.FC = () => {
   const onSubmit = form.handleSubmit((values) => {
     const payload: AdminRouletteConfigPayload = {
       name: values.name.trim(),
+      ticket_type: values.ticket_type,
       is_active: values.is_active,
       max_daily_spins: values.max_daily_spins,
       segments: values.segments.map((seg, idx) => ({
@@ -304,6 +308,24 @@ const RouletteConfigPage: React.FC = () => {
                   />
                   {form.formState.errors.name?.message && (
                     <p className="text-sm text-red-300">{form.formState.errors.name.message}</p>
+                  )}
+                </div>
+
+                <div className="space-y-1">
+                  <label htmlFor="roulette_ticket_type" className="text-sm text-gray-200">
+                    티켓 타입
+                  </label>
+                  <select
+                    id="roulette_ticket_type"
+                    className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
+                    {...form.register("ticket_type")}
+                  >
+                    <option value="ROULETTE_COIN">ROULETTE_COIN</option>
+                    <option value="GOLD_KEY">GOLD_KEY</option>
+                    <option value="DIAMOND_KEY">DIAMOND_KEY</option>
+                  </select>
+                  {form.formState.errors.ticket_type?.message && (
+                    <p className="text-sm text-red-300">{form.formState.errors.ticket_type.message}</p>
                   )}
                 </div>
 

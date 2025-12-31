@@ -39,7 +39,7 @@
 - [x] 비용 소모 + 결과 확정 지점에 VaultEarnEvent 생성/호출 연결(게임별 결과 핸들러 기준). 기존 로그/보상 파이프라인과 중복 호출되지 않는지 확인.
 - [x] earn_event_id 생성 규칙 확정(게임 결과 ID 기반) 후 멱등 삽입/검증 구현(존재 시 SKIP, 금액 증분 없음 확인).
 - [x] VaultEarnEvent 로깅 스키마 추가: earn_event_id, earn_type, amount, source, reward_kind, game_type, token_type, payout_raw, created_at(인덱스와 UNIQUE 제약 포함).
-- [x] 적립 단위 적용: 기본 +200/판, DICE LOSE 추가 +100, amount 합산 뒤 vault_locked_balance 증가.
+- [x] 적립 단위 적용: 기본 +200/판, DICE LOSE 시 금고에서 -50 차감(Penalty).
 - [x] 해금 임계금액(10,000원) 도달 시 expires_at = now +24h 세팅, 이후 적립 시 갱신 금지(Fixed Window). 해금/만료 후 다시 도달 시 신규 세팅.
 - [x] trial 결과 적립: trial-play 식별을 위해 `trial_token_bucket`(trial-origin 토큰 잔량) 추가 후, trial 소비 플레이에서만 reward를 Vault로 라우팅(플래그 `enable_trial_payout_to_vault`). POINT는 reward_amount를 그대로 적립, 그 외는 `trial_reward_valuation` 맵으로 환산. 미환산/비금액형은 0-amount SKIP 이벤트로 로깅.
 - [x] ticket=0 recommended_action/cta_payload 유지: `GET /api/vault/status`에서 (ticket=0 && 미만료 locked>0)일 때만 `recommended_action=OPEN_VAULT_MODAL` + `cta_payload` 반환(상태 조회는 자동 시드 없음 유지).
@@ -134,7 +134,7 @@
 Phase 1에서는 더 단순히 “게임 결과 확정 시 적립” + “티켓 0이면 금고 모달 노출”로 시작합니다.
 게임할 때 자동 적립
 티켓 쓰고 게임 결과가 확정되면 금고(locked)에 쌓여요.
-한 판 기본 +200원, 지면 +100원 추가.
+한 판 기본 +200원, 주사위 게임 패배 시 금고에서 -50원 차감.
 적립액이 해금 임계금액에 딱 닿으면 24시간 타이머가 켜집니다. 단계는 1만 원 → 2만 원 → 3만 원(설정 확장 가능). 더 쌓여도 타이머는 다시 안 늘어납니다.
 티켓 0개일 때 안내
 티켓이 바닥나면 금고 모달이 자동으로 뜨고, “금고에 묶여 있는 금액”과 “얼마 더 하면 풀린다” 같은 해금 조건을 보여줍니다(unlock_rules_json 기반).

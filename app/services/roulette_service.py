@@ -194,7 +194,7 @@ class RouletteService:
             game_type=FeatureType.ROULETTE.value,
             game_log_id=log_entry.id,
             token_type=token_type_enum.value,
-            outcome=None,
+            outcome=f"SEGMENT_{chosen.id}",
             payout_raw={
                 "segment_id": chosen.id,
                 "reward_type": chosen.reward_type,

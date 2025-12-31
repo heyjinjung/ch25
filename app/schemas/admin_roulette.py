@@ -1,14 +1,24 @@
 # /workspace/ch25/app/schemas/admin_roulette.py
-from typing import List, Optional
+from __future__ import annotations
+
 from datetime import datetime
+from typing import List, Optional
 
 from pydantic import ConfigDict, Field, validator
 
+from app.models.game_wallet import GameTokenType
 from app.schemas.base import KstBaseModel as BaseModel
 
 
+ALLOWED_ROULETTE_TICKET_TYPES = {
+    GameTokenType.ROULETTE_COIN.value,
+    GameTokenType.GOLD_KEY.value,
+    GameTokenType.DIAMOND_KEY.value,
+}
+
+
 class AdminRouletteSegmentBase(BaseModel):
-    # index or slot_index 모두 받도록 from_attributes + validate_by_name
+    # Accept both `index` and `slot_index` via alias.
     index: int = Field(..., alias="slot_index")
     label: str
     weight: int
@@ -21,11 +31,17 @@ class AdminRouletteSegmentBase(BaseModel):
 
 class AdminRouletteConfigBase(BaseModel):
     name: str
+    ticket_type: str = GameTokenType.ROULETTE_COIN.value
     is_active: bool = True
     max_daily_spins: int
     segments: List[AdminRouletteSegmentBase]
 
-    # 길이 검증은 서비스에서 처리(부족분 패딩/초과분 자름)
+    @validator("ticket_type")
+    def validate_ticket_type(cls, value: str) -> str:
+        if value not in ALLOWED_ROULETTE_TICKET_TYPES:
+            raise ValueError("invalid ticket_type")
+        return value
+
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -35,9 +51,18 @@ class AdminRouletteConfigCreate(AdminRouletteConfigBase):
 
 class AdminRouletteConfigUpdate(BaseModel):
     name: Optional[str] = None
+    ticket_type: Optional[str] = None
     is_active: Optional[bool] = None
     max_daily_spins: Optional[int] = None
     segments: Optional[List[AdminRouletteSegmentBase]] = None
+
+    @validator("ticket_type")
+    def validate_ticket_type(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return value
+        if value not in ALLOWED_ROULETTE_TICKET_TYPES:
+            raise ValueError("invalid ticket_type")
+        return value
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -51,3 +76,4 @@ class AdminRouletteConfigResponse(AdminRouletteConfigBase):
     created_at: Optional[datetime]
     updated_at: Optional[datetime]
     segments: List[AdminRouletteSegmentResponse]
+

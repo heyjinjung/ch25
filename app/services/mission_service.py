@@ -165,35 +165,39 @@ class MissionService:
         if progress.is_claimed:
             return False, "Already claimed", 0
 
+        user = self.db.query(User).filter(User.id == user_id).first()
+        if not user:
+            return False, "User not found", 0
+
         # 1. Give Rewards (Assets)
         if mission.reward_type != MissionRewardType.NONE and mission.reward_amount > 0:
             # --- CASH_UNLOCK (New User Bonus) ---
             if mission.reward_type == MissionRewardType.CASH_UNLOCK:
                 now = datetime.utcnow()
-                # 1. Check Expiry
-                if user.vault_locked_expires_at and user.vault_locked_expires_at < now:
-                     # Expired! Cannot unlock.
-                     # Still mark as claimed so they don't retry forever?
-                     # Or let them claim but get 0? 
-                     # Better to let them claim but reward is 0 with a message.
-                     # But current return signature is (bool, type, amount).
-                     pass 
-                elif user.vault_locked_balance and user.vault_locked_balance > 0:
-                     unlock_amount = min(user.vault_locked_balance, mission.reward_amount)
-                     if unlock_amount > 0:
-                         user.vault_locked_balance -= unlock_amount
-                         user.cash_balance = (user.cash_balance or 0) + unlock_amount
-                         
-                         from app.models.user_cash_ledger import UserCashLedger
-                         ledger = UserCashLedger(
-                             user_id=user.id,
-                             delta=unlock_amount,
-                             balance_after=user.cash_balance,
-                             reason="MISSION_UNLOCK",
-                             label=mission.title,
-                             meta_json={"mission_id": mission.id}
-                         )
-                         self.db.add(ledger)
+                if user.vault_locked_expires_at and user.vault_locked_expires_at.replace(tzinfo=None) < now.replace(tzinfo=None):
+                    # Expired!
+                    return False, "LOCK_EXPIRED", 0
+                
+                if user.vault_locked_balance and user.vault_locked_balance > 0:
+                    unlock_amount = min(user.vault_locked_balance, mission.reward_amount)
+                    if unlock_amount > 0:
+                        user.vault_locked_balance -= unlock_amount
+                        user.cash_balance = (user.cash_balance or 0) + unlock_amount
+                        
+                        # Sync legacy mirror if exists
+                        if hasattr(user, "vault_balance"):
+                             user.vault_balance = int(user.vault_locked_balance)
+
+                        from app.models.user_cash_ledger import UserCashLedger
+                        ledger = UserCashLedger(
+                            user_id=user.id,
+                            delta=unlock_amount,
+                            balance_after=user.cash_balance,
+                            reason="MISSION_UNLOCK",
+                            label=mission.title,
+                            meta_json={"mission_id": mission.id}
+                        )
+                        self.db.add(ledger)
             
             # --- STANDARD TOKENS ---
             else:

@@ -164,8 +164,9 @@ def test_full_flow_simulation(db_session, test_user, active_season):
     assert sp_progress.current_xp == 115
     assert test_user.vault_locked_balance == 10200 # 10000 + 200
     
-    # 5. Simulate Dice LOSE (0 XP, +300 Vault)
-    # Dice Service adds 0 XP on loss now.
+    # 5. Simulate Dice LOSE (0 XP, -50 Vault deduction)
+    # Dice Service adds 0 XP on loss.
+    # Penalty now subtracts -50 from locked balance.
     vault_service.record_game_play_earn_event(
         db_session,
         user_id=test_user.id,
@@ -174,7 +175,44 @@ def test_full_flow_simulation(db_session, test_user, active_season):
         outcome="LOSE"
     )
     db_session.refresh(test_user)
-    assert test_user.vault_locked_balance == 10500 # 10200 + 300
+    assert test_user.vault_locked_balance == 10150 # 10200 - 50
+
+    # 6. Simulate Lottery Win with Configured Deduction (-1000)
+    # We mock the config in the default program
+    from app.models.vault2 import VaultProgram
+    program = db_session.execute(select(VaultProgram).where(VaultProgram.key == "NEW_MEMBER_VAULT")).scalar_one()
+    program.config_json["game_earn_config"] = {
+        "LOTTERY": {
+            "PRIZE_99": -1000
+        },
+        "ROULETTE": {
+            "SEGMENT_77": -5000
+        }
+    }
+    db_session.add(program)
+    db_session.flush()
+
+    # Trigger Lottery Win (Mock prize ID 99)
+    vault_service.record_game_play_earn_event(
+        db_session,
+        user_id=test_user.id,
+        game_type="LOTTERY",
+        game_log_id=2000,
+        outcome="PRIZE_99"
+    )
+    db_session.refresh(test_user)
+    assert test_user.vault_locked_balance == 9150 # 10150 - 1000
+
+    # 7. Simulate Roulette Win with Configured Deduction (-5000)
+    vault_service.record_game_play_earn_event(
+        db_session,
+        user_id=test_user.id,
+        game_type="ROULETTE",
+        game_log_id=3000,
+        outcome="SEGMENT_77"
+    )
+    db_session.refresh(test_user)
+    assert test_user.vault_locked_balance == 4150 # 9150 - 5000
 
     print("--- SIMULATION SUCCESSFUL ---")
     print(f"Final SP Level: {sp_progress.current_level}, XP: {sp_progress.current_xp}")

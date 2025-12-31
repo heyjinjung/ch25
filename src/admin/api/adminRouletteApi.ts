@@ -1,6 +1,8 @@
 // src/admin/api/adminRouletteApi.ts
 import { adminApi } from "./httpClient";
 
+export type RouletteTicketType = "ROULETTE_COIN" | "GOLD_KEY" | "DIAMOND_KEY";
+
 export interface AdminRouletteSegmentPayload {
   id?: number;
   index: number;
@@ -12,6 +14,7 @@ export interface AdminRouletteSegmentPayload {
 
 export interface AdminRouletteConfigPayload {
   name: string;
+  ticket_type: RouletteTicketType;
   is_active: boolean;
   max_daily_spins: number;
   segments: AdminRouletteSegmentPayload[];

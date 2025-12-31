@@ -147,7 +147,7 @@ class LotteryService:
             game_type=FeatureType.LOTTERY.value,
             game_log_id=log_entry.id,
             token_type=token_type.value,
-            outcome=None,
+            outcome=f"PRIZE_{chosen.id}",
             payout_raw={
                 "prize_id": chosen.id,
                 "reward_type": chosen.reward_type,
