@@ -4,7 +4,6 @@ import { useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
 import Button from "../components/common/Button";
 import { getVaultStatus } from "../api/vaultApi";
-import { TelegramLinkBanner } from "../components/telegram/TelegramLinkBanner";
 import { useSound } from "../hooks/useSound";
 
 // --- Components ---
@@ -207,7 +206,6 @@ const HomePage: React.FC = () => {
 
   return (
     <section className="space-y-6 pb-4">
-      <TelegramLinkBanner />
 
 
       {/* Sticky Vault Banner */}
