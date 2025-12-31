@@ -18,6 +18,7 @@ class VaultStatusResponse(BaseModel):
     expires_at: datetime | None = None
 
     cash_balance: int
+    ticket_count: int = 0
     vault_fill_used_at: datetime | None = None
 
     seeded: bool = False

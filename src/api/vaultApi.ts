@@ -16,6 +16,7 @@ interface BackendVaultStatusResponse {
   readonly unlock_rules_json?: Record<string, unknown> | null;
   readonly ui_copy_json?: Record<string, unknown> | null;
   readonly accrual_multiplier?: number | null;
+  readonly ticket_count?: number;
 }
 
 export interface VaultStatusResponse {
@@ -37,6 +38,7 @@ export interface VaultStatusResponse {
 
   // Event flags
   readonly accrualMultiplier?: number | null;
+  readonly ticketCount?: number;
 }
 
 export const getVaultStatus = async (): Promise<VaultStatusResponse> => {
@@ -62,6 +64,7 @@ export const getVaultStatus = async (): Promise<VaultStatusResponse> => {
     uiCopyJson: (data.ui_copy_json as Record<string, unknown> | null) ?? null,
 
     accrualMultiplier: data.accrual_multiplier ?? null,
+    ticketCount: data.ticket_count ?? 0,
   };
 };
 // Phase 1 MVP Withdrawal Request

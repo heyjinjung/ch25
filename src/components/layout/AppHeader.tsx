@@ -35,7 +35,7 @@ const AppHeader: React.FC = () => {
     };
 
     const vaultBalance = vault?.vaultBalance ?? 0;
-    const ticketCount = 0; // TODO: Add ticket API
+    const ticketCount = vault?.ticketCount ?? 0;
 
     return (
         <header className="sticky top-0 z-50 bg-black/90 backdrop-blur-md border-b border-white/10 shadow-lg">

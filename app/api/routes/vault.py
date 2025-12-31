@@ -40,14 +40,16 @@ def status(db: Session = Depends(get_db), user_id: int = Depends(get_current_use
     expires_at = getattr(user, "vault_locked_expires_at", None)
     locked_unexpired = locked_balance > 0 and (expires_at is None or expires_at > now)
 
+    ticket_token_types = (GameTokenType.DICE_TOKEN, GameTokenType.ROULETTE_COIN, GameTokenType.LOTTERY_TICKET)
+    wallet_rows = (
+        db.query(UserGameWallet)
+        .filter(UserGameWallet.user_id == user_id, UserGameWallet.token_type.in_(ticket_token_types))
+        .all()
+    )
+    balances = {row.token_type: int(row.balance or 0) for row in wallet_rows}
+    total_tickets = sum(balances.values())
+
     if eligible and locked_unexpired:
-        ticket_token_types = (GameTokenType.DICE_TOKEN, GameTokenType.ROULETTE_COIN, GameTokenType.LOTTERY_TICKET)
-        wallet_rows = (
-            db.query(UserGameWallet)
-            .filter(UserGameWallet.user_id == user_id, UserGameWallet.token_type.in_(ticket_token_types))
-            .all()
-        )
-        balances = {row.token_type: int(row.balance or 0) for row in wallet_rows}
         ticket_zero = all(balances.get(token_type, 0) <= 0 for token_type in ticket_token_types)
         if ticket_zero:
             recommended_action = "OPEN_VAULT_MODAL"
@@ -84,6 +86,7 @@ def status(db: Session = Depends(get_db), user_id: int = Depends(get_current_use
         locked_balance=locked_balance,
         available_balance=int(getattr(user, "vault_available_balance", 0) or 0),
         cash_balance=user.cash_balance or 0,
+        ticket_count=total_tickets,
         vault_fill_used_at=user.vault_fill_used_at,
         seeded=seeded,
         expires_at=expires_at,
