@@ -162,8 +162,8 @@ def test_link_token_flow_attaches_existing_user_and_preserves_identity(client: T
         # (Once the user has a telegram_id, the server blocks linking a different tg_id.)
         hijack_init = _build_init_data(tg_id=444_555_666, username="tg_attacker", start_param=start_param)
         hijack = client.post("/api/telegram/auth", json={"init_data": hijack_init, "start_param": start_param})
-        assert hijack.status_code == 409
-        assert hijack.json()["error"]["code"] == "TELEGRAM_ALREADY_LINKED"
+        assert hijack.status_code == 410
+        assert hijack.json()["error"]["code"] == "LINK_CODE_ALREADY_USED"
 
         # 6) Once linked, link-token issuance should be blocked.
         link_again = client.post("/api/telegram/link-token", headers=headers)

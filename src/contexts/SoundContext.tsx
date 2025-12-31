@@ -37,6 +37,17 @@ const SOUND_ASSETS = {
 
 const SoundContext = createContext<SoundContextType | null>(null);
 
+const recordE2eSoundEvent = (event: { kind: "sfx" | "bgm"; src: string; options?: unknown }) => {
+    if (typeof window === "undefined") return;
+    const win = window as any;
+    if (!win.Cypress) return;
+
+    if (!Array.isArray(win.__e2eSoundEvents)) {
+        win.__e2eSoundEvents = [];
+    }
+    win.__e2eSoundEvents.push({ ...event, ts: Date.now() });
+};
+
 export const useSoundContext = () => {
     const context = useContext(SoundContext);
     if (!context) {
@@ -98,6 +109,7 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }, []);
 
     const playSfx = useCallback((src: string, options?: { volume?: number; speed?: number }) => {
+        recordE2eSoundEvent({ kind: "sfx", src, options });
         if (isMuted) return null;
 
         // If context is suspended, queue for retry upon user interaction
@@ -176,6 +188,7 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const setSfxVolume = useCallback((vol: number) => setSfxVolumeState(vol), []);
 
     const playBgm = useCallback((src: string) => {
+        recordE2eSoundEvent({ kind: "bgm", src });
         if (currentBgmSrcRef.current === src && bgmRef.current?.playing()) return;
 
         if (bgmRef.current) {

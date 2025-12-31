@@ -26,6 +26,8 @@ from app.api.routes import (
 	new_user_onboarding,
 	viral,
 	admin_mission,
+	admin_user_merge,
+	telegram_unlink,
 )
 
 api_router = APIRouter()
@@ -52,3 +54,6 @@ api_router.include_router(viral.router)
 api_router.include_router(new_user_onboarding.router)
 api_router.include_router(admin.admin_router)
 api_router.include_router(admin_mission.router)
+api_router.include_router(admin_user_merge.router)
+api_router.include_router(telegram_unlink.router)
+api_router.include_router(telegram_unlink.admin_router)
