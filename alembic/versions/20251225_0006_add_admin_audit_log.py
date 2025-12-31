@@ -8,6 +8,7 @@ Create Date: 2025-12-25 16:30:00.000000
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import mysql
+from sqlalchemy import text
 
 # revision identifiers, used by Alembic.
 revision = '20251225_0006'
@@ -15,7 +16,27 @@ down_revision = '20251225_0005'
 branch_labels = None
 depends_on = None
 
+
+def _table_exists(table: str) -> bool:
+    conn = op.get_bind()
+    return bool(
+        conn.execute(
+            text(
+                """
+                SELECT 1
+                FROM information_schema.tables
+                WHERE table_schema = DATABASE()
+                  AND table_name = :table
+                """
+            ),
+            {"table": table},
+        ).scalar()
+    )
+
+
 def upgrade() -> None:
+    if _table_exists("admin_audit_log"):
+        return
     op.create_table('admin_audit_log',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('admin_id', sa.Integer(), nullable=False),
@@ -30,7 +51,10 @@ def upgrade() -> None:
     op.create_index(op.f('ix_admin_audit_log_admin_id'), 'admin_audit_log', ['admin_id'], unique=False)
     op.create_index(op.f('ix_admin_audit_log_id'), 'admin_audit_log', ['id'], unique=False)
 
+
 def downgrade() -> None:
-    op.drop_index(op.f('ix_admin_audit_log_id'), table_name='admin_audit_log')
-    op.drop_index(op.f('ix_admin_audit_log_admin_id'), table_name='admin_audit_log')
-    op.drop_table('admin_audit_log')
+    if _table_exists("admin_audit_log"):
+        op.drop_index(op.f('ix_admin_audit_log_id'), table_name='admin_audit_log')
+        op.drop_index(op.f('ix_admin_audit_log_admin_id'), table_name='admin_audit_log')
+        op.drop_table('admin_audit_log')
+

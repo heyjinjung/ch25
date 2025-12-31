@@ -10,6 +10,7 @@ so gameplay can accurately route trial rewards to Vault.
 
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy import text
 
 revision = "20251225_0004"
 down_revision = "20251225_0003"
@@ -17,7 +18,26 @@ branch_labels = None
 depends_on = None
 
 
+def _table_exists(table: str) -> bool:
+    conn = op.get_bind()
+    return bool(
+        conn.execute(
+            text(
+                """
+                SELECT 1
+                FROM information_schema.tables
+                WHERE table_schema = DATABASE()
+                  AND table_name = :table
+                """
+            ),
+            {"table": table},
+        ).scalar()
+    )
+
+
 def upgrade() -> None:
+    if _table_exists("trial_token_bucket"):
+        return
     op.create_table(
         "trial_token_bucket",
         sa.Column("id", sa.Integer(), primary_key=True),
@@ -31,5 +51,7 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.drop_index("ix_trial_token_bucket_user_id", table_name="trial_token_bucket")
-    op.drop_table("trial_token_bucket")
+    if _table_exists("trial_token_bucket"):
+        op.drop_index("ix_trial_token_bucket_user_id", table_name="trial_token_bucket")
+        op.drop_table("trial_token_bucket")
+
