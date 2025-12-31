@@ -35,6 +35,16 @@ DEFAULT_CONFIG = {
     "eligibility_block": [],
     # 이벤트 보너스 규칙 (예: 충전 기반 보너스) 확장용
     "charge_bonus_rules": [],
+    # 게임별/결과별 적립 설정
+    "game_earn_config": {
+        "DICE": {
+            "LOSE": -50
+        },
+        "ROULETTE": {
+            "BASE": 200,
+            "SEGMENT_5": -50
+        }
+    }
 }
 
 
