@@ -58,56 +58,72 @@ class MissionService:
                 }
 
             result.append({
-                "mission": mission,
+                "mission": {
+                    "id": mission.id,
+                    "title": mission.title,
+                    "description": mission.description,
+                    "category": mission.category,
+                    "logic_key": mission.logic_key,
+                    "target_value": mission.target_value,
+                    "reward_type": mission.reward_type,
+                    "reward_amount": mission.reward_amount,
+                    "xp_reward": mission.xp_reward
+                },
                 "progress": progress_dict
             })
         
         return result
 
-    def update_progress(self, user_id: int, logic_key: str, delta: int = 1) -> Optional[UserMissionProgress]:
+    def update_progress(self, user_id: int, action_type: str, delta: int = 1) -> List[UserMissionProgress]:
         """
-        Updates progress for a specific mission logic (e.g., 'play_dice').
-        Triggers completion if target reached.
+        Updates progress for ALL active missions matching the action_type (e.g., 'PLAY_GAME').
+        Returns list of updated progress objects.
         """
-        mission = self.db.query(Mission).filter(
-            Mission.logic_key == logic_key, 
+        missions = self.db.query(Mission).filter(
+            Mission.action_type == action_type, 
             Mission.is_active == True
-        ).first()
+        ).all()
 
-        if not mission:
-            return None
+        updated_list = []
+        
+        # Also support legacy calls by checking logic_key if action_type yields nothing?
+        # For now, strict 'action_type' based logic.
+        
+        for mission in missions:
+            reset_date = self.get_reset_date_str(mission.category)
+            
+            progress = self.db.query(UserMissionProgress).filter(
+                UserMissionProgress.user_id == user_id,
+                UserMissionProgress.mission_id == mission.id,
+                UserMissionProgress.reset_date == reset_date
+            ).first()
 
-        reset_date = self.get_reset_date_str(mission.category)
-        
-        progress = self.db.query(UserMissionProgress).filter(
-            UserMissionProgress.user_id == user_id,
-            UserMissionProgress.mission_id == mission.id,
-            UserMissionProgress.reset_date == reset_date
-        ).first()
-
-        if not progress:
-            progress = UserMissionProgress(
-                user_id=user_id,
-                mission_id=mission.id,
-                current_value=0,
-                reset_date=reset_date
-            )
-            self.db.add(progress)
-        
-        if progress.is_completed:
-            return progress
-
-        progress.current_value += delta
-        
-        # Check completion
-        if progress.current_value >= mission.target_value:
-            progress.current_value = mission.target_value
-            progress.is_completed = True
-            progress.completed_at = datetime.utcnow()
-        
+            if not progress:
+                progress = UserMissionProgress(
+                    user_id=user_id,
+                    mission_id=mission.id,
+                    current_value=0,
+                    reset_date=reset_date
+                )
+                self.db.add(progress)
+            
+            if not progress.is_completed:
+                progress.current_value += delta
+                
+                # Check completion
+                if progress.current_value >= mission.target_value:
+                    progress.current_value = mission.target_value
+                    progress.is_completed = True
+                    progress.completed_at = datetime.utcnow()
+                
+                updated_list.append(progress)
+            
         self.db.commit()
-        self.db.refresh(progress)
-        return progress
+        # Refresh all updated (optional, careful with performance if many)
+        for p in updated_list:
+            self.db.refresh(p)
+            
+        return updated_list
 
     def claim_reward(self, user_id: int, mission_id: int) -> Tuple[bool, str, int]:
         """
@@ -171,3 +187,32 @@ class MissionService:
         self.db.commit()
         
         return True, mission.reward_type, mission.reward_amount
+
+    def claim_daily_gift(self, user_id: int) -> Tuple[bool, str, int]:
+        """
+        Special logic for 'Daily Login Gift'.
+        Uses a virtual/hidden mission with logic_key='daily_gift'.
+        """
+        # 1. Fetch or create the daily_gift mission template if it doesn't exist
+        # In production, this should be seeded, but here we'll be defensive
+        mission = self.db.query(Mission).filter(Mission.logic_key == "daily_gift").first()
+        if not mission:
+            mission = Mission(
+                title="일일 출석 선물",
+                description="매일 접속 시 드리는 선물입니다.",
+                category=MissionCategory.DAILY,
+                logic_key="daily_gift",
+                target_value=1,
+                reward_type=MissionRewardType.DIAMOND,
+                reward_amount=500,
+                is_active=True
+            )
+            self.db.add(mission)
+            self.db.commit()
+            self.db.refresh(mission)
+
+        # 2. Update progress to 1 (since they are calling this, they are logged in)
+        self.update_progress(user_id, "daily_gift", delta=1)
+
+        # 3. Try to claim
+        return self.claim_reward(user_id, mission.id)

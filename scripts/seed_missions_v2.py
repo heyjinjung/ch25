@@ -18,6 +18,7 @@ def seed_missions_v2():
                 "description": "Log in to the app daily.",
                 "category": MissionCategory.DAILY,
                 "logic_key": "daily_login",
+                "action_type": "LOGIN",
                 "target_value": 1,
                 "reward_type": MissionRewardType.DIAMOND,
                 "reward_amount": 1,  # 1 Diamond
@@ -28,6 +29,7 @@ def seed_missions_v2():
                 "description": "Play Dice or Roulette 5 times.",
                 "category": MissionCategory.DAILY,
                 "logic_key": "play_any_game_5",
+                "action_type": "PLAY_GAME",
                 "target_value": 5,
                 "reward_type": MissionRewardType.DIAMOND,
                 "reward_amount": 5,  # 5 Diamonds
@@ -38,6 +40,7 @@ def seed_missions_v2():
                 "description": "Play Dice or Roulette 10 times.",
                 "category": MissionCategory.DAILY,
                 "logic_key": "play_any_game_10",
+                "action_type": "PLAY_GAME",
                 "target_value": 10,
                 "reward_type": MissionRewardType.DIAMOND,
                 "reward_amount": 10,  # 10 Diamonds
@@ -50,6 +53,7 @@ def seed_missions_v2():
                 "description": "Play 500 games in a week.",
                 "category": MissionCategory.WEEKLY,
                 "logic_key": "play_any_game_500",
+                "action_type": "PLAY_GAME",
                 "target_value": 500,
                 "reward_type": MissionRewardType.DIAMOND,
                 "reward_amount": 50,  # 50 Diamonds
@@ -62,6 +66,7 @@ def seed_missions_v2():
                 "description": "Subscribe to our official channel.",
                 "category": MissionCategory.SPECIAL,
                 "logic_key": "join_telegram_channel",
+                "action_type": "SUBSCRIBE_CHANNEL",
                 "target_value": 1,
                 "reward_type": MissionRewardType.DIAMOND,
                 "reward_amount": 5,
@@ -72,6 +77,7 @@ def seed_missions_v2():
                 "description": "Invite 5 friends to the game.",
                 "category": MissionCategory.SPECIAL,
                 "logic_key": "invite_friends_5",
+                "action_type": "INVITE_FRIEND",
                 "target_value": 5,
                 "reward_type": MissionRewardType.DIAMOND,
                 "reward_amount": 50,
@@ -90,6 +96,7 @@ def seed_missions_v2():
                 existing.reward_type = m_data["reward_type"]
                 existing.reward_amount = m_data["reward_amount"]
                 existing.xp_reward = m_data["xp_reward"]
+                existing.action_type = m_data.get("action_type")
             else:
                 print(f"Creating: {m_data['title']}")
                 new_mission = Mission(**m_data)

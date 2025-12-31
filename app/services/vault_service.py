@@ -537,6 +537,7 @@ class VaultService:
         self._ensure_locked_expiry(user, now_dt)
         self.sync_legacy_mirror(user)
 
+        bonus_amount = 0 # Phase 1: No bonus logic here yet
         reward_kind = "BASE" if bonus_amount == 0 else "BASE_PLUS_BONUS"
         event = VaultEarnEvent(
             user_id=user.id,

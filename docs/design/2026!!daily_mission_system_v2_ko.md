@@ -71,7 +71,7 @@ graph TD
 
 ---
 
-## 🌐 5. 계정 브릿지 기술 (Account Bridge Technology)
+## 🌐 5. 계정 브릿지 기술 (Account Bridge Technology) - 폐기v3파일 참고
 
 기존 외부 서비스 회원들의 TMA 전환 마찰을 제로화하기 위한 듀얼 경로 브릿지를 구현합니다.
 

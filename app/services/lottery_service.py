@@ -193,6 +193,10 @@ class LotteryService:
             )
         if chosen.reward_amount > 0:
             self.season_pass_service.maybe_add_internal_win_stamp(db, user_id=user_id, now=today)
+
+        # [Mission] Update progress
+        from app.services.mission_service import MissionService
+        MissionService(db).update_progress(user_id, "PLAY_GAME")
         season_pass = None  # 게임 1회당 자동 스탬프 발급 제거
 
         return LotteryPlayResponse(

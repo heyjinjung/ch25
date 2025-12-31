@@ -188,6 +188,10 @@ class DiceService:
             )
         if outcome == "WIN":
             self.season_pass_service.maybe_add_internal_win_stamp(db, user_id=user_id, now=today)
+        
+        # [Mission] Update progress
+        from app.services.mission_service import MissionService
+        MissionService(db).update_progress(user_id, "PLAY_GAME")
         # 게임 설정 포인트를 레벨 XP 보너스로 반영
         season_pass = None  # 게임 1회당 자동 스탬프 발급을 중단하고, 조건 달성 시 별도 로직으로 처리
 

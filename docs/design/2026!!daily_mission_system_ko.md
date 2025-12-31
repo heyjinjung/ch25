@@ -29,7 +29,7 @@
     - [x] `public` 폴더 내 이미지 최적화 (WebP 변환 완료).
     - [x] Nginx에서 Brotli/Gzip 압축 설정 강화.
 
-### 2. 로그아웃 버튼 및 플로우
+### 2. 로그아웃 버튼 및 플로우 - 텔레그램 인앱기능으로 삭제해야함 
 - **컴포넌트**: [x] CRM 프로필 또는 헤더에 `LogoutButton` 추가.
 - **TMA 전략**: [x] `initData`가 있더라도 명시적인 세션 제어를 위해 "로그인 필요" 화면과 "텔레그램으로 로그인" 버튼을 제공.
 
@@ -43,11 +43,7 @@
 - **해결 방안**: 
     - [x] 백엔드에서 `initData` 검증 강화. (`app/core/telegram.py`)
     - [x] 첫 방문 유저를 위한 "환영/연결" 단계 도입. (`ConnectPage.tsx`)
-    - [ ] "Join/Start" 확인 없이 자동 접속되는 현상 수정 (봇 멤버십 체크 연동 필요).
-
-
-
-
+   
 ---
 
 ## 💎 Part 2. 데일리 미션 및 레벨 시스템 통합 설계
@@ -109,10 +105,11 @@
  
 ### 백엔드 (Python/FastAPI)
 - [x] **Table: `mission`**: 미션 템플릿 정의 (제목, 보상 유형, 보상 수량, 목표 수치, 카테고리).
+    - **New**: `action_type` 컬럼 추가 ("PLAY_GAME", "LOGIN" 등) -> 하나의 행동으로 여러 미션 동시 달성 지원.
 - [x] **Table: `user_mission_progress`**: 개별 사용자 진행 상황 추적 (user_id, mission_id, 현재 수치, 수령 여부, 최종 업데이트 일시).
 - [x] **Service: `MissionService`**: 
     - `get_available_missions(user_id)`: 현재 사용자의 진행 상황을 포함한 미션 목록 반환.
-    - `update_progress(user_id, action_type, delta)`: 게임 서비스, 추천인 서비스 등에서 진행 상황 업데이트 트리거.
+    - `update_progress(user_id, action_type, delta)`: `action_type`에 매칭되는 **모든 활성 미션**의 진행도를 일괄 업데이트.
     - `claim_reward(user_id, mission_id)`: 조건 검증 및 보상 지급 처리.
 
 ### 프론트엔드 (React/Vite)
@@ -126,7 +123,6 @@
 ### 4. [x] UI/UX 고려사항
 - [x] '수령(Claim)' 버튼과 '시작(Start)' 버튼에 강렬하고 대비되는 색상 사용.
 - [x] 누적 작업에 대한 진행 상태 바(Progress Bar) 구현.
-- [ ] 100% 완료 시 '수령' 버튼이 흔들리는 등의 마이크로 애니메이션 추가. (Deferred)
 - [x] 보상 수령 성공 시 햅틱 피드백(`hapticFeedback`) 적용.
 
 
@@ -151,23 +147,6 @@
 
 요청하신 두 문서를 기준으로 현재 구현 상태를 정밀 대조했습니다.
 
-🔄 출금 신청 이후의 플로우 (Current Flow)
-유저 신청: /api/vault/withdraw 호출 → VaultWithdrawalRequest 생성 (상태: PENDING) → 보유 캐시 차감.
-🚨 현재 상태 (Missing Link): 관리자가 승인하는 API(approve)가 없습니다. 따라서 DB에 요청만 쌓이고, 실제 입금 처리를 확정 짓거나 거절 시 환불해주는 로직이 작동하지 않습니다.
-정상 플로우 (To-Be): 관리자 승인 API 호출 → 상태 APPROVED 변경 → 외부 뱅킹 API 연동(또는 수동 이체 확인).
-# 2026 Daily Mission System (Reference)
-✅ 2026 문서 기준 체크리스트 (Master Checklist)
-구분	항목	상태	비고
-금고 (Vault)	적립 (Win)	✅ 완료	게임 승리 시 잠금 금액 증가 정상
-금고 (Vault)	출금 신청	✅ 완료	최소금액(1만) & 당일입금 체크 로직 적용됨
-금고 (Vault)	관리자 승인	✅ 완료	관리자 페이지(VaultRequestManager) 구현 및 연동됨
-미션 (Mission)	다이아 보상	✅ 완료	XP 대신 다이아몬드 지급 (설계 변경 반영됨)
-미션 (Mission)	초기화 로직	✅ 확인	일일 데이터 베이스 초기화 및 당일 미션 수집 확인
-레벨 (Level)	입금 연동	✅ 완료	입금 시 XP 지급 정상
-최적화 (Perf)	로딩 성능	✅ 완료	Lazy Load & Gzip 적용 완료
-최적화 (UX)	주사위 UI	✅ 완료	One-screen 컴팩트 리팩토링 완료
-시스템 (Auth)	로그아웃	✅ 완료	명시적 로그아웃 및 연결 flow 구현 완료
-로직 (Logic)	주사위 패널티	✅ 완료	패배 시 -50원 미수금(차감) 반영 완료
 
 ## 💎 Part 7. 오디오 사운드 안정화 및 검증책
 
@@ -178,7 +157,6 @@
 - [x] **강력한 오디오 컨텍스트 해제(Unlock)**: 텔레그램 미니앱 진입 시 첫 사용자 터치에서 `Howler.ctx.resume()`을 강제로 호출하여 브라우저의 오디오 재생 제한을 확실히 해제.
 - [x] **메모리 관리 최적화**: 재생이 끝난 SFX는 즉시 `unload()`하여 메모리 누수 방지 및 오디오 채널 점유 최소화.
 - [x] **BGM/SFX 분리 처리**: 루핑되는 BGM은 `html5: true`를 사용하여 로딩 부하를 줄이고, 짧은 SFX는 메모리 기반으로 빠르게 재생하도록 이원화.
-
 
 
 
@@ -284,8 +262,6 @@
 2. **[Phase 4] Admin Control**: 고가치 미션 수동 승인 필드 및 일괄 지급 기능 추가.
 3. **[Phase 5] The Nudge**: 봇 알림 연동 및 스토리 공유 검증 API 구축.
 
-### 5. PvP 히스토리 구현 [이건 보류]
-- **목표**: 참고 이미지와 같이 모든 유저의 실시간 승패 내역을 보여주는 글로벌 피드 구현.
 ### 7. 자동 프로필 통합 [보류]
 - **프론트엔드**: 헤더에 유저 정보(이름, 레벨, 잔액)가 포함된 프로필 카드를 즉시 표시.
 

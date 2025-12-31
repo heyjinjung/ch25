@@ -32,6 +32,9 @@ class Mission(Base):
     
     # Logic Identifier (e.g., "play_game_5", "login_streak")
     logic_key = Column(String(100), unique=True, nullable=False, index=True)
+    
+    # Action Type (e.g., "PLAY_GAME", "LOGIN", "INVITE") - One Action maps to Multiple Missions
+    action_type = Column(String(50), nullable=True, index=True)
 
     # Goal target (e.g., 5 for "Play 5 times")
     target_value = Column(Integer, nullable=False, default=1)

@@ -7,7 +7,6 @@ import { getRouletteStatus } from "../../api/rouletteApi";
 import { getDiceStatus } from "../../api/diceApi";
 import InboxButton from "../common/InboxButton";
 import { useAuth } from "../../auth/authStore";
-import LogoutButton from "../auth/LogoutButton";
 
 const AppHeader: React.FC = () => {
     const { user } = useAuth();
@@ -72,8 +71,7 @@ const AppHeader: React.FC = () => {
                 {/* Message Inbox */}
                 <InboxButton />
 
-                {/* Logout Button */}
-                <LogoutButton className="scale-75 md:scale-90 origin-right ml-0.5" />
+                {/* Logout Button Removed */}
             </div>
         </div>
     );

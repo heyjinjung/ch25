@@ -1,7 +1,8 @@
 import React from "react";
 import { MissionData, useMissionStore } from "../../stores/missionStore";
 import { useToast } from "../common/ToastProvider";
-// import { useSound } from "../../hooks/useSound"; // Unused
+import { useHaptic } from "../../hooks/useHaptic";
+import { useSound } from "../../hooks/useSound";
 
 interface MissionCardProps {
     data: MissionData;
@@ -11,15 +12,21 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
     const { mission, progress } = data;
     const { claimReward } = useMissionStore();
     const { addToast } = useToast();
-    // const { playSfx } = useSound(); // Unused
+    const { notification, impact } = useHaptic();
+    const { playToast } = useSound();
 
     const handleClaim = async () => {
         if (!progress.is_completed || progress.is_claimed) return;
 
+        impact('medium');
+
         const success = await claimReward(mission.id);
         if (success) {
+            notification('success');
+            playToast();
             addToast(`Received ${mission.reward_amount} ${mission.reward_type}!`, "success");
         } else {
+            notification('error');
             addToast("Failed to claim reward.", "error");
         }
     };
