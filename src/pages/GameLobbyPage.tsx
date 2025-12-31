@@ -82,14 +82,7 @@ const GameLobbyPage: React.FC = () => {
             bgImage: "/assets/games/thumb_team_battle_v2.png",
             badge: "NEW"
         },
-        {
-            title: "THE VAULT",
-            to: "/vault",
-            gradient: "bg-gradient-to-br from-amber-500 to-orange-600",
-            icon: "🔐",
-            isWide: true,
-            bgImage: "/assets/welcome/my_vault_v2.png"
-        },
+
     ];
 
     return (
