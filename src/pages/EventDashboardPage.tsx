@@ -1,7 +1,7 @@
 // src/pages/EventDashboardPage.tsx
 import React from "react";
 import { Link } from "react-router-dom";
-import { Trophy, Target, Sparkles, Star } from "lucide-react";
+import { Trophy, Target, Star } from "lucide-react";
 import { useHaptic } from "../hooks/useHaptic";
 
 const EventDashboardPage: React.FC = () => {
@@ -18,15 +18,6 @@ const EventDashboardPage: React.FC = () => {
             <div className="absolute bottom-[20%] right-[-10%] w-80 h-80 bg-emerald-600/5 rounded-full blur-[120px] pointer-events-none" />
 
             <div className="relative z-10 p-4 pt-6 max-w-md mx-auto">
-
-                {/* Page Title */}
-                <div className="mt-8 mb-8 px-1">
-                    <h1 className="text-4xl font-black text-white tracking-tight flex items-center gap-3">
-                        이벤트 <Sparkles className="text-[#91F402] w-8 h-8 animate-pulse" />
-                    </h1>
-                    <p className="text-gray-400 text-sm mt-2 font-medium">참여 가능한 모든 이벤트를 확인하세요</p>
-                </div>
-
                 {/* Dashboard Grid */}
                 <div className="space-y-4">
                     {/* Level Tower Section */}
@@ -93,6 +84,7 @@ const EventDashboardPage: React.FC = () => {
                 </div>
             </div>
         </div>
+
     );
 };
 
