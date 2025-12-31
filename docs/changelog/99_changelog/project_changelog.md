@@ -1,4 +1,13 @@
 2025-12-08: API/DB/코인 시스템/서비스/운영/체크리스트/overview/architecture 최신화 반영. 실제 코드/운영/QA 흐름과 일치하도록 문서 업데이트.
+## 2026-01-01 (Vault Game Outcome Deduction & Mission API Fixes)
+- **Vault**: 주사위/복권/룰렛 게임 결과에 따른 금고 잔액 차감(Penalty) 시스템 구축.
+  - 주사위 패배 시 기본 -50원 차감 (`GAME_EARN_DICE_LOSE = -50`) 적용.
+  - 복권/룰렛의 경우 당첨 상품 ID(`PRIZE_{id}`) 및 세그먼트 ID(`SEGMENT_{id}`)를 결과(Outcome)로 보고하여 어드민에서 개별 설정 가능하도록 고도화.
+  - `Vault2Service`의 `DEFAULT_CONFIG`에 `game_earn_config` 구조를 추가하여 시스템 기본값으로 관리.
+- **Mission**: `/api/mission` 경로 정규화 및 `NEW_USER` 카테고리 전역 통합 (Admin/User/Service).
+- **Onboarding**: 레거시 onboarding 페이지(`/new-user/welcome`) 삭제 및 랜딩 페이지 내 웰컴 모달로 전환.
+- **Testing**: `test_simulation.py` 내 금고 적립/차감(Deduction) 시나리오 업데이트 및 검증 완료.
+
 # 프로젝트 변경 이력
 
 ## 2025-12-31 (Telegram-Only V3 Ready & Admin Revamp)

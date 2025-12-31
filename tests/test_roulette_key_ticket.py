@@ -17,6 +17,13 @@ def _seed_common(session: Session) -> None:
     session.add(User(id=1, external_id="tester", status="ACTIVE"))
     session.add(FeatureConfig(feature_type=FeatureType.ROULETTE, title="Roulette", page_path="/roulette", is_enabled=True))
     session.add(FeatureSchedule(date=today, feature_type=FeatureType.ROULETTE, is_active=True))
+    # Seed predictable balances used by these tests.
+    for token_type in (GameTokenType.ROULETTE_COIN, GameTokenType.GOLD_KEY):
+        existing = session.execute(
+            select(UserGameWallet).where(UserGameWallet.user_id == 1, UserGameWallet.token_type == token_type)
+        ).scalar_one_or_none()
+        if existing is None:
+            session.add(UserGameWallet(user_id=1, token_type=token_type, balance=10))
 
 
 def _wallet_balance(session: Session, token_type: GameTokenType) -> int:
@@ -93,4 +100,3 @@ def test_roulette_key_reward_grants_keys_to_wallet(client: TestClient, session_f
     after = _wallet_balance(verify, GameTokenType.GOLD_KEY)
     verify.close()
     assert after == before + 2
-
