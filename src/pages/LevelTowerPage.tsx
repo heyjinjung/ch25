@@ -218,7 +218,7 @@ const LevelTowerPage: React.FC = () => {
                 className="mt-4 w-full max-w-sm mx-auto flex items-center justify-center gap-2 py-4 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-black text-base shadow-lg shadow-emerald-500/30 hover:brightness-110 active:scale-[0.98] transition-all"
             >
                 <Gamepad2 size={20} />
-                게임하고 XP 받기
+                게임하고 금고적립
             </Link>
 
             {/* Collapsible Missions */}

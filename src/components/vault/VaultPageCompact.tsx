@@ -8,23 +8,10 @@ import { tryHaptic } from "../../utils/haptics";
 
 const formatWon = (amount: number) => `${amount.toLocaleString("ko-KR")}원`;
 
-// Floating Coin Particle Component
-const FloatingCoin: React.FC<{ delay: number; left: string }> = ({ delay, left }) => (
-    <div
-        className="absolute w-4 h-4 animate-float-up opacity-60"
-        style={{ left, animationDelay: `${delay}s`, bottom: '20%' }}
-    >
-        <img
-            src="/assets/asset_coin_gold.webp"
-            alt=""
-            className="w-full h-full object-contain"
-        />
-    </div>
-);
+// FloatingCoin: removed as per compacting/UX update — was used for decorative particles.
 
 const VaultPageCompact: React.FC = () => {
     const [detailsOpen, setDetailsOpen] = useState(false);
-    const [showParticles, setShowParticles] = useState(false);
 
     const vault = useQuery({
         queryKey: ["vault-status"],
@@ -40,13 +27,7 @@ const VaultPageCompact: React.FC = () => {
         return { vaultBalance, eligible };
     }, [vault.data]);
 
-    // Trigger particles on mount
-    useEffect(() => {
-        if (view.vaultBalance > 0) {
-            setShowParticles(true);
-            tryHaptic(15);
-        }
-    }, [view.vaultBalance]);
+    // Floating coin particles removed — no mount trigger required.
 
     const handleDetailsToggle = () => {
         tryHaptic(10);
@@ -64,16 +45,7 @@ const VaultPageCompact: React.FC = () => {
 
     return (
         <div className="flex flex-col items-center px-4 py-6 min-h-[calc(100vh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-120px)] relative overflow-hidden">
-            {/* Floating Coin Particles */}
-            {showParticles && view.vaultBalance > 0 && (
-                <div className="absolute inset-0 pointer-events-none z-0">
-                    <FloatingCoin delay={0} left="15%" />
-                    <FloatingCoin delay={1.5} left="75%" />
-                    <FloatingCoin delay={3} left="40%" />
-                    <FloatingCoin delay={4.5} left="85%" />
-                    <FloatingCoin delay={2} left="25%" />
-                </div>
-            )}
+            {/* Floating Coin Particles removed */}
 
             {/* Title Badge with Pulse */}
             <div className="mb-4 z-10">
