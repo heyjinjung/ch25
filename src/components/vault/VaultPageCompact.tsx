@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import clsx from "clsx";
 import { useQuery } from "@tanstack/react-query";
 import { getVaultStatus } from "../../api/vaultApi";
