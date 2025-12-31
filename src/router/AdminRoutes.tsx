@@ -20,6 +20,7 @@ import SegmentRulesPage from "../admin/pages/SegmentRulesPage";
 import NewMemberDiceEligibilityPage from "../admin/pages/NewMemberDiceEligibilityPage";
 import UiConfigTicketZeroPage from "../admin/pages/UiConfigTicketZeroPage";
 import VaultAdminPage from "../admin/pages/VaultAdminPage";
+import AdminMissionPage from "../admin/pages/AdminMissionPage";
 import AdminLayout from "../admin/components/AdminLayout";
 import ProtectedRoute from "../components/routing/ProtectedRoute";
 
@@ -31,6 +32,7 @@ const AdminRoutes: React.FC = () => {
         <Route element={<AdminLayout />}>
           <Route path="" element={<AdminDashboardPage />} />
           <Route path="seasons" element={<SeasonListPage />} />
+          <Route path="missions" element={<AdminMissionPage />} />
 
           <Route path="surveys" element={<SurveyAdminPage />} />
           <Route path="roulette" element={<RouletteConfigPage />} />

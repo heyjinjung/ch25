@@ -5,7 +5,7 @@ import { useToast } from "../common/ToastProvider";
 import { useHaptic } from "../../hooks/useHaptic";
 import { useSound } from "../../hooks/useSound";
 import { useQueryClient } from "@tanstack/react-query";
-import { Check, ChevronRight, Share2, Users, Bell, Star, Zap } from "lucide-react";
+import { Check, ChevronRight, Share2, Users, Bell, Star, Zap, Trophy } from "lucide-react";
 import clsx from "clsx";
 
 interface MissionCardProps {
@@ -14,7 +14,7 @@ interface MissionCardProps {
 
 const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
     const { mission, progress } = data;
-    const { claimReward, fetchMissions } = useMissionStore();
+    const { claimReward } = useMissionStore();
     const { addToast } = useToast();
     const { notification, impact } = useHaptic();
     const { playToast } = useSound();

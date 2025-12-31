@@ -20,6 +20,7 @@ import {
   Menu,
   User,
   X,
+  Target,
 } from "lucide-react";
 
 const accent = "#91F402";
@@ -36,7 +37,7 @@ const navSections: NavSection[] = [
     heading: "게임 관리",
     items: [
       { label: "시즌 설정", path: "/admin/seasons", icon: <Cog size={18} /> },
-
+      { label: "미션 관리", path: "/admin/missions", icon: <Target size={18} /> },
       { label: "룰렛 설정", path: "/admin/roulette", icon: <Gift size={18} /> },
       { label: "주사위 설정", path: "/admin/dice", icon: <Dice5 size={18} /> },
       { label: "복권 설정", path: "/admin/lottery", icon: <Percent size={18} /> },
