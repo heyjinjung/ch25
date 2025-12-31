@@ -11,10 +11,11 @@ router = APIRouter()
 
 
 @router.post("/create-test-user")
-async def create_test_user(db: Session = Depends(get_db)):
+async def create_test_user():
     """
     Create a test user for development.
     Only works in non-production environments.
+    Returns a mock token without database access.
     """
     settings = get_settings()
     
@@ -22,41 +23,21 @@ async def create_test_user(db: Session = Depends(get_db)):
     if settings.env not in ["local", "development", "dev"]:
         raise HTTPException(status_code=403, detail="Dev endpoints disabled in production")
     
-    # Check if test user already exists
-    test_user = db.query(User).filter(User.external_id == "dev_test_user").first()
-    
-    if not test_user:
-        # Create new test user
-        test_user = User(
-            external_id="dev_test_user",
-            nickname="개발 테스트 유저",
-            level=10,
-            xp=5000,
-            vault_balance=100000,
-            vault_locked_balance=50000,
-            cash_balance=25000,
-            telegram_id=999999999,
-            telegram_username="dev_tester",
-        )
-        db.add(test_user)
-        db.commit()
-        db.refresh(test_user)
-    
-    # Generate access token
-    access_token = create_access_token(subject=str(test_user.id))
+    # Generate mock access token (user_id = 1 for dev)
+    access_token = create_access_token(subject="1")
     
     return {
         "access_token": access_token,
         "token_type": "bearer",
         "user": {
-            "id": test_user.id,
-            "external_id": test_user.external_id,
-            "nickname": test_user.nickname,
-            "level": test_user.level,
-            "vault_balance": test_user.vault_balance,
-            "cash_balance": test_user.cash_balance,
+            "id": 1,
+            "external_id": "dev_test_user",
+            "nickname": "개발 테스트 유저",
+            "level": 10,
+            "vault_balance": 100000,
+            "cash_balance": 25000,
         },
-        "message": "Test user created/retrieved successfully. Use this token in Authorization header: Bearer <token>",
+        "message": "Test token created successfully. Use this token in Authorization header: Bearer <token>",
     }
 
 

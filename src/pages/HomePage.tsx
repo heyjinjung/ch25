@@ -77,8 +77,8 @@ const CategoryTabs: React.FC<{ active: string; onChange: (id: string) => void }>
             rel="noreferrer"
             onClick={() => playTabTouch()}
             className={clsx(
-              "whitespace-nowrap rounded-full px-5 py-2 text-xs font-bold transition-all",
-              "bg-white/5 text-slate-400 hover:bg-white/10"
+              "whitespace-nowrap rounded-full px-5 py-2 text-xs font-bold transition-all border",
+              "bg-white/5 text-slate-400 hover:bg-white/10 border-white/20 hover:border-white/40"
             )}
           >
             {tab.label}

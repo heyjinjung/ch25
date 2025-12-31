@@ -433,7 +433,7 @@ const RoulettePage: React.FC = () => {
 
   return (
     <FeatureGate feature="ROULETTE">
-      <GamePageShell title="럭셔리 CC룰렛" subtitle="Premium Prize Roulette">
+      <GamePageShell title="럭셔리 CC룰렛">
         <div className="mb-6 flex justify-center">
           <div className="inline-flex rounded-full bg-white/5 p-1 backdrop-blur-md">
             {TABS.map((tab) => (

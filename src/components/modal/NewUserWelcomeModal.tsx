@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getNewUserStatus } from "../../api/newUserApi";
-import { useNavigate } from "react-router-dom";
 
 const formatSeconds = (seconds: number | null | undefined) => {
     if (seconds == null) return "00:00:00";
@@ -17,7 +16,6 @@ interface NewUserWelcomeModalProps {
 }
 
 const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) => {
-    const navigate = useNavigate();
     const [dontShowAgain, setDontShowAgain] = useState(false);
 
     const { data: status } = useQuery({
@@ -32,11 +30,6 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) =>
             localStorage.setItem("hideNewUserWelcome", "true");
         }
         onClose();
-    };
-
-    const handleStart = () => {
-        handleClose();
-        navigate("/new-user/welcome");
     };
 
     if (!status?.eligible) {
@@ -144,10 +137,10 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) =>
 
                     {/* CTA Button */}
                     <button
-                        onClick={handleStart}
+                        onClick={handleClose}
                         className="w-full py-4 rounded-xl bg-figma-primary text-white font-black text-lg shadow-lg shadow-emerald-500/30 hover:brightness-110 active:scale-95 transition-all uppercase tracking-wide"
                     >
-                        시작하기
+                        확인
                     </button>
 
                     {/* Timer */}

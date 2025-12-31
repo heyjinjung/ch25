@@ -1,9 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import clsx from "clsx";
-// import FeatureGate from "../components/feature/FeatureGate";
-import GamePageShell from "../components/game/GamePageShell";
-import Button from "../components/common/Button";
 
 interface GameCardProps {
     title: string;
@@ -47,16 +44,6 @@ const GameCard: React.FC<GameCardProps> = ({ title, to, gradient, icon, isWide, 
 };
 
 
-const FigmaFilters: React.FC = () => (
-    <div className="mb-6 flex flex-wrap gap-3">
-        <Button variant="figma-primary" className="!rounded-full text-xs">
-            Get Bonus
-        </Button>
-        <Button variant="figma-secondary" className="!rounded-full text-xs">
-            All Providers
-        </Button>
-    </div>
-);
 
 const GameLobbyPage: React.FC = () => {
     const games = [
@@ -99,18 +86,13 @@ const GameLobbyPage: React.FC = () => {
     ];
 
     return (
-        <GamePageShell title="GAME HUB" subtitle="Arcade Lobby">
-            {/* Figma Header Elements */}
-            <div className="px-1">
-                <FigmaFilters />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 pb-20">
+        <div className="space-y-4 pb-20">
+            <div className="grid grid-cols-2 gap-4">
                 {games.map((game) => (
                     <GameCard key={game.title} {...game} />
                 ))}
             </div>
-        </GamePageShell>
+        </div>
     );
 };
 

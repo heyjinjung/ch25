@@ -205,7 +205,7 @@ const DicePage: React.FC = () => {
 
   return (
     <FeatureGate feature="DICE">
-      <GamePageShell title="주사위 배틀" subtitle="SQUAD BATTLE ARENA">
+      <GamePageShell title="주사위 배틀">
         <div className="max-w-5xl mx-auto">
           {content}
         </div>

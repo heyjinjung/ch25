@@ -100,7 +100,7 @@ const LotteryPage: React.FC = () => {
 
   if (isError || !data) {
     return (
-      <GamePageShell title="지민코드 복권" subtitle="Special Game">
+      <GamePageShell title="지민코드 복권">
         <div className="rounded-[2rem] border border-white/10 bg-black/40 p-10 text-center backdrop-blur-xl">
           <p className="text-xl font-bold text-white">{errorMessage}</p>
           <Button variant="figma-primary" onClick={() => window.location.reload()} className="mt-6">다시 시도</Button>
