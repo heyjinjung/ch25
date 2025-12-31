@@ -1,14 +1,30 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import clsx from "clsx";
 import { useQuery } from "@tanstack/react-query";
 import { getVaultStatus } from "../../api/vaultApi";
 import { Link } from "react-router-dom";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { tryHaptic } from "../../utils/haptics";
 
 const formatWon = (amount: number) => `${amount.toLocaleString("ko-KR")}원`;
 
+// Floating Coin Particle Component
+const FloatingCoin: React.FC<{ delay: number; left: string }> = ({ delay, left }) => (
+    <div
+        className="absolute w-4 h-4 animate-float-up opacity-60"
+        style={{ left, animationDelay: `${delay}s`, bottom: '20%' }}
+    >
+        <img
+            src="/assets/asset_coin_gold.webp"
+            alt=""
+            className="w-full h-full object-contain"
+        />
+    </div>
+);
+
 const VaultPageCompact: React.FC = () => {
     const [detailsOpen, setDetailsOpen] = useState(false);
+    const [showParticles, setShowParticles] = useState(false);
 
     const vault = useQuery({
         queryKey: ["vault-status"],
@@ -24,6 +40,19 @@ const VaultPageCompact: React.FC = () => {
         return { vaultBalance, eligible };
     }, [vault.data]);
 
+    // Trigger particles on mount
+    useEffect(() => {
+        if (view.vaultBalance > 0) {
+            setShowParticles(true);
+            tryHaptic(15);
+        }
+    }, [view.vaultBalance]);
+
+    const handleDetailsToggle = () => {
+        tryHaptic(10);
+        setDetailsOpen(!detailsOpen);
+    };
+
     if (vault.isLoading) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
@@ -34,31 +63,53 @@ const VaultPageCompact: React.FC = () => {
     }
 
     return (
-        <div className="flex flex-col items-center px-4 py-6 min-h-[calc(100vh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-120px)]">
-            {/* Title Badge */}
-            <div className="mb-4">
-                <span className="px-4 py-1.5 rounded-full bg-emerald-950/80 border border-emerald-500/30 text-emerald-400 text-[10px] font-black tracking-[0.15em] uppercase">
+        <div className="flex flex-col items-center px-4 py-6 min-h-[calc(100vh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-120px)] relative overflow-hidden">
+            {/* Floating Coin Particles */}
+            {showParticles && view.vaultBalance > 0 && (
+                <div className="absolute inset-0 pointer-events-none z-0">
+                    <FloatingCoin delay={0} left="15%" />
+                    <FloatingCoin delay={1.5} left="75%" />
+                    <FloatingCoin delay={3} left="40%" />
+                    <FloatingCoin delay={4.5} left="85%" />
+                    <FloatingCoin delay={2} left="25%" />
+                </div>
+            )}
+
+            {/* Title Badge with Pulse */}
+            <div className="mb-4 z-10">
+                <span className="px-4 py-1.5 rounded-full bg-emerald-950/80 border border-emerald-500/30 text-emerald-400 text-[10px] font-black tracking-[0.15em] uppercase animate-pulse-slow">
                     THE VAULT
                 </span>
             </div>
 
-            {/* Hero Vault Image - Compact */}
-            <div className="relative w-[55%] max-w-[180px] aspect-square mb-2">
+            {/* Hero Vault Image with Breathing Effect */}
+            <div className="relative w-[55%] max-w-[180px] aspect-square mb-2 z-10">
+                {/* Pulsing Glow Background */}
                 <div className={clsx(
-                    "absolute inset-0 rounded-full blur-[60px] opacity-40 animate-pulse",
-                    view.eligible ? "bg-emerald-500" : "bg-emerald-900/60"
+                    "absolute inset-0 rounded-full blur-[60px] animate-breathe",
+                    view.eligible ? "bg-emerald-500 opacity-50" : "bg-emerald-900/60 opacity-40"
                 )} />
+
+                {/* Rotating Ring (locked state only) */}
+                {!view.eligible && (
+                    <div className="absolute inset-[-10%] rounded-full border-2 border-dashed border-white/10 animate-spin-slow" />
+                )}
+
                 <img
                     src={view.eligible ? "/assets/vault/vault_open.png" : "/assets/vault/vault_closed.png"}
-                    className="relative z-10 w-full h-full object-contain drop-shadow-[0_15px_40px_rgba(0,0,0,0.7)]"
+                    className={clsx(
+                        "relative z-10 w-full h-full object-contain drop-shadow-[0_15px_40px_rgba(0,0,0,0.7)] transition-transform duration-500",
+                        view.eligible && "animate-bounce-subtle"
+                    )}
                     alt="금고"
                 />
+
                 {/* Status Badge */}
                 <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 z-20">
                     <div className={clsx(
-                        "px-4 py-1 rounded-full border font-black text-[10px] tracking-[0.1em] uppercase backdrop-blur-md",
+                        "px-4 py-1 rounded-full border font-black text-[10px] tracking-[0.1em] uppercase backdrop-blur-md transition-all",
                         view.eligible
-                            ? "bg-black border-emerald-400 text-emerald-400 shadow-[0_0_15px_rgba(52,211,153,0.3)]"
+                            ? "bg-black border-emerald-400 text-emerald-400 shadow-[0_0_15px_rgba(52,211,153,0.3)] animate-pulse"
                             : "bg-black/80 border-white/20 text-white/50"
                     )}>
                         {view.eligible ? "해금 완료" : "잠금"}
@@ -66,43 +117,53 @@ const VaultPageCompact: React.FC = () => {
                 </div>
             </div>
 
-            {/* Locked Amount - Hero Number */}
-            <div className="text-center mt-6 mb-4">
-                <div className="flex items-center justify-center gap-3">
+            {/* Locked Amount with Shimmer Effect */}
+            <div className="text-center mt-6 mb-4 z-10">
+                <div className="flex items-center justify-center gap-3 relative">
                     <img
                         src="/assets/asset_coin_gold.webp"
                         alt="Coin"
-                        className="w-8 h-8 drop-shadow-[0_0_10px_rgba(255,215,0,0.4)]"
+                        className="w-8 h-8 drop-shadow-[0_0_10px_rgba(255,215,0,0.4)] animate-spin-slow"
                     />
-                    <span className="text-4xl font-black text-white tracking-tight glow-gold">
-                        {formatWon(view.vaultBalance)}
-                    </span>
+                    <div className="relative overflow-hidden">
+                        <span className="text-4xl font-black text-white tracking-tight">
+                            {formatWon(view.vaultBalance)}
+                        </span>
+                        {/* Shimmer Overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
+                    </div>
                 </div>
-                <p className="text-white/50 text-xs mt-2 font-medium">
-                    {view.eligible ? "포인트 전환 가능" : "충전 시 해금됩니다"}
+                <p className={clsx(
+                    "text-xs mt-2 font-medium transition-colors",
+                    view.eligible ? "text-emerald-400 animate-pulse" : "text-white/50"
+                )}>
+                    {view.eligible ? "✨ 포인트 전환 가능" : "충전 시 해금됩니다"}
                 </p>
             </div>
 
             {/* Collapsible Details */}
             <button
-                onClick={() => setDetailsOpen(!detailsOpen)}
-                className="w-full max-w-xs flex items-center justify-between px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white/70 text-sm font-medium mb-4"
+                onClick={handleDetailsToggle}
+                className="w-full max-w-xs flex items-center justify-between px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white/70 text-sm font-medium mb-4 z-10 active:scale-[0.98] transition-transform"
             >
-                <span>📊 해금 조건 안내</span>
+                <span className="flex items-center gap-2">
+                    <img src="/assets/season_pass/icon_node_locked.png" alt="" className="w-5 h-5 object-contain" />
+                    해금 조건 안내
+                </span>
                 {detailsOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
             </button>
 
             {detailsOpen && (
-                <div className="w-full max-w-xs mb-4 rounded-xl border border-white/10 bg-white/5 p-4 space-y-2 animate-fade-in">
-                    <div className="flex items-start gap-3">
+                <div className="w-full max-w-xs mb-4 rounded-xl border border-white/10 bg-white/5 p-4 space-y-3 animate-slide-down z-10">
+                    <div className="flex items-center gap-3">
                         <span className="text-emerald-400 text-lg">✓</span>
                         <p className="text-white/60 text-sm">외부 충전 1만원 이상 시 자동 해금</p>
                     </div>
-                    <div className="flex items-start gap-3">
+                    <div className="flex items-center gap-3">
                         <span className="text-emerald-400 text-lg">✓</span>
                         <p className="text-white/60 text-sm">게임 플레이로 포인트 적립</p>
                     </div>
-                    <div className="flex items-start gap-3">
+                    <div className="flex items-center gap-3">
                         <span className="text-emerald-400 text-lg">✓</span>
                         <p className="text-white/60 text-sm">해금 후 보유 머니로 자동 전환</p>
                     </div>
@@ -110,19 +171,26 @@ const VaultPageCompact: React.FC = () => {
             )}
 
             {/* CTA Buttons */}
-            <div className="w-full max-w-xs space-y-3 mt-auto">
+            <div className="w-full max-w-xs space-y-3 mt-auto z-10">
                 <a
                     href="https://ccc-010.com"
                     target="_blank"
                     rel="noreferrer"
-                    className="block w-full py-4 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-black text-center text-base shadow-lg shadow-emerald-500/30 hover:brightness-110 active:scale-[0.98] transition-all uppercase tracking-wide"
+                    onClick={() => tryHaptic(30)}
+                    className="group block w-full py-4 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-black text-center text-base shadow-lg shadow-emerald-500/30 hover:brightness-110 active:scale-[0.98] transition-all uppercase tracking-wide relative overflow-hidden"
                 >
-                    <img src="/assets/logo_cc_v2.png" alt="CC" className="inline-block w-5 h-5 mr-2 align-text-bottom" />씨씨카지노 충전하기
+                    {/* Button Shimmer */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+                    <span className="relative z-10">
+                        <img src="/assets/logo_cc_v2.png" alt="CC" className="inline-block w-5 h-5 mr-2 align-text-bottom" />
+                        씨씨카지노 충전하기
+                    </span>
                 </a>
 
                 <Link
                     to="/home"
-                    className="block w-full py-3 rounded-xl bg-white/5 border border-white/10 text-white/70 font-semibold text-center text-sm hover:bg-white/10 transition-all"
+                    onClick={() => tryHaptic(10)}
+                    className="block w-full py-3 rounded-xl bg-white/5 border border-white/10 text-white/70 font-semibold text-center text-sm hover:bg-white/10 active:scale-[0.98] transition-all"
                 >
                     게임으로 돌아가기
                 </Link>

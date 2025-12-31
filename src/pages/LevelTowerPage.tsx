@@ -234,24 +234,17 @@ const LevelTowerPage: React.FC = () => {
                 {missionsOpen && (
                     <div className="mt-2 rounded-xl border border-white/10 bg-white/5 p-4 space-y-3 animate-fade-in">
                         <div className="flex items-center gap-3">
-                            <span className="text-xl">🎮</span>
-                            <div>
-                                <p className="text-sm font-bold text-white">게임 플레이</p>
-                                <p className="text-xs text-white/50">게임 1회당 +10 XP</p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-3">
                             <span className="text-xl">💰</span>
                             <div>
-                                <p className="text-sm font-bold text-white">외부 충전</p>
-                                <p className="text-xs text-white/50">10만원당 +500 XP</p>
+                                <p className="text-sm font-bold text-white">외부 충전 (CC 카지노)</p>
+                                <p className="text-xs text-white/50">10만원당 +20 XP</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
-                            <span className="text-xl">📅</span>
+                            <span className="text-xl">🎁</span>
                             <div>
-                                <p className="text-sm font-bold text-white">출석 체크</p>
-                                <p className="text-xs text-white/50">매일 접속 +30 XP</p>
+                                <p className="text-sm font-bold text-white">이벤트 참여</p>
+                                <p className="text-xs text-white/50">이벤트 참여로 레벨 획득</p>
                             </div>
                         </div>
                     </div>

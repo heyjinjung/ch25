@@ -124,7 +124,7 @@ const DicePage: React.FC = () => {
 
           {/* Battle Arena - Comact Height */}
           <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-black/40 p-1 shadow-2xl backdrop-blur-md">
-            <div className="rounded-[1.8rem] bg-gradient-to-b from-white/5 to-transparent p-4 min-h-[320px] flex flex-col justify-center">
+            <div className="rounded-[1.8rem] bg-gradient-to-b from-white/5 to-transparent p-3 min-h-[320px] flex flex-col justify-center">
               <DiceView userDice={userDice} dealerDice={dealerDice} result={result} isRolling={isRolling} />
 
               {/* Result Message Overlay */}
@@ -165,9 +165,9 @@ const DicePage: React.FC = () => {
             onClick={handlePlay}
             variant="figma-primary"
             fullWidth
-            className="rounded-xl py-3 transform active:scale-95 transition-transform"
+            className="rounded-xl py-[10px] transform active:scale-95 transition-transform"
           >
-            <div className="flex items-center justify-center gap-2">
+            <div className="flex items-center justify-center gap-1.5">
               {isRolling || playMutation.isPending ? (
                 <>
                   <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />

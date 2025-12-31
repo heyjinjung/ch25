@@ -319,7 +319,7 @@ const RoulettePage: React.FC = () => {
           </div>
         )}
 
-        <div className="flex flex-col items-center gap-6 lg:flex-row lg:items-center lg:justify-center lg:gap-10">
+        <div className="flex flex-col items-center gap-4 lg:flex-row lg:items-center lg:justify-center lg:gap-10">
           {/* Roulette Wheel */}
           <div className="relative flex w-full max-w-[360px] flex-col items-center justify-center lg:w-[360px] lg:flex-shrink-0">
             <RouletteWheel
@@ -339,15 +339,15 @@ const RoulettePage: React.FC = () => {
           )}
 
           {/* Controls & Info */}
-          <div className="flex w-full max-w-[360px] flex-col gap-6 lg:w-[360px]">
+          <div className="flex w-full max-w-[360px] flex-col gap-4 lg:w-[360px]">
             {/* Control Panel Card */}
-            <div className="relative overflow-hidden rounded-[2rem] border border-white/15 bg-black/60 p-8 shadow-2xl">
+            <div className="relative overflow-hidden rounded-[2rem] border border-white/15 bg-black/60 p-5 shadow-2xl">
               {/* Top Accent Line */}
               <div className="pointer-events-none absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-[#30FF75]/40 to-transparent" />
 
               {/* Status Badges */}
               <div className="mb-6">
-                <div className="flex items-center gap-4 rounded-3xl border border-white/15 bg-black/50 px-8 py-5 shadow-xl">
+                <div className="flex items-center gap-4 rounded-3xl border border-white/15 bg-black/50 px-[14px] py-[14px] shadow-xl">
                   <img
                     src={TABS.find(t => t.type === activeTab)?.iconImg || "/assets/asset_ticket_green.png"}
                     alt="Tickets"
@@ -381,7 +381,7 @@ const RoulettePage: React.FC = () => {
                   type="button"
                   disabled={playMutation.isPending || isSpinning || (!isUnlimited && data?.remaining_spins <= 0) || isOutOfTokens}
                   onClick={handlePlay}
-                  className="group relative w-full overflow-hidden rounded-2xl bg-gradient-to-b from-[#30FF75] to-[#20C05A] px-6 py-5 text-black shadow-[0_0_20px_rgba(48,255,117,0.3)] transition-all hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(48,255,117,0.5)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
+                  className="group relative w-full overflow-hidden rounded-2xl bg-gradient-to-b from-[#30FF75] to-[#20C05A] px-5 py-4 text-black shadow-[0_0_20px_rgba(48,255,117,0.3)] transition-all hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(48,255,117,0.5)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
                 >
                   <div className="relative z-10 flex items-center justify-center gap-3">
                     {playMutation.isPending ? (
