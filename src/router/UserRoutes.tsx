@@ -25,7 +25,6 @@ const GameLobbyPage = React.lazy(() => import("../pages/GameLobbyPage"));
 const VaultPage = React.lazy(() => import("../pages/VaultPage"));
 const MissionPage = React.lazy(() => import("../pages/MissionPage"));
 const EventDashboardPage = React.lazy(() => import("../pages/EventDashboardPage"));
-const NewUserWelcomePage = React.lazy(() => import("../pages/NewUserWelcomePage"));
 
 // Simple loading fallback
 const PageLoader = () => (
@@ -55,7 +54,6 @@ const UserRoutes: React.FC = () => {
             <Route path="/landing" element={<HomePage />} />
             <Route path="/landing/tablet" element={<FigmaLandingTablet />} />
             <Route path="/landing/mobile" element={<FigmaLandingMobile />} />
-            <Route path="/new-user/welcome" element={<NewUserWelcomePage />} />
             <Route path="/vault" element={<VaultPage />} />
             <Route path="/events" element={<EventDashboardPage />} />
             <Route path="/season-pass" element={<LevelTowerPage />} />

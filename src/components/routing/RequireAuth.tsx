@@ -3,7 +3,6 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../auth/authStore";
 import { useTelegram } from "../../providers/TelegramProvider";
 import { telegramApi } from "../../api/telegramApi";
-import { getNewUserStatus } from "../../api/newUserApi";
 
 const RequireAuth: React.FC = () => {
   const { token } = useAuth();
@@ -32,21 +31,7 @@ const RequireAuth: React.FC = () => {
         login(response.access_token, response.user);
 
         // "신규/기존" 판별은 Telegram 가입 여부가 아니라 외부랭킹 입금 이력(입금액/입금횟수 여부) 기준으로 처리한다.
-        try {
-          const status = await getNewUserStatus();
-          if (status.eligible) {
-            navigate("/new-user/welcome", { replace: true });
-            return;
-          }
-        } catch (err) {
-          // Fallback: keep legacy behavior if status endpoint is temporarily unavailable.
-          // eslint-disable-next-line no-console
-          console.warn("[RequireAuth] new-user status check failed; falling back to telegram is_new_user", err);
-          if (response.is_new_user) {
-            navigate("/new-user/welcome", { replace: true });
-            return;
-          }
-        }
+        // 기존에는 /new-user/welcome 으로 리다이렉트했으나, 이제는 Landing 페이지에서 모달로 처리하므로 리다이렉트를 제거한다.
 
         // If the user landed on a connect-like URL, move them to the main entry.
         if (location.pathname === "/connect" || location.pathname === "/login" || location.pathname === "/") {
