@@ -257,6 +257,9 @@ class TeamBattleService:
         db.refresh(season)
         return season
 
+    def list_seasons(self, db: Session, limit: int = 100) -> Sequence[TeamSeason]:
+        return db.execute(select(TeamSeason).order_by(TeamSeason.id.desc()).limit(limit)).scalars().all()
+
     def create_team(self, db: Session, payload: dict, leader_user_id: Optional[int] = None) -> Team:
         team = Team(**payload)
         db.add(team)

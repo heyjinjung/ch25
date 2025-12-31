@@ -32,11 +32,11 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
     if (result.success) {
       notification("success");
       playToast();
-      addToast(`ë³´ìƒ ?˜ë ¹ ?„ë£Œ: ${result.amount} ${result.reward_type}!`, "success");
+      addToast(`보상 수령 완료: ${result.amount} ${result.reward_type}!`, "success");
       queryClient.invalidateQueries({ queryKey: ["vault-status"] });
     } else {
       notification("error");
-      addToast(result.message || "ë³´ìƒ ?˜ë ¹ ?¤íŒ¨", "error");
+      addToast(result.message || "보상 수령 실패", "error");
     }
   };
 
@@ -62,6 +62,16 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
         });
       }
     }
+    if (mission.action_type === "SHARE_WALLET") {
+      if (window.Telegram?.WebApp?.switchInlineQuery) {
+        // Trigger inline query to share wallet address or referral link
+        // Current string is empty, but backend can handle "share_wallet" context if needed
+        window.Telegram.WebApp.switchInlineQuery("share_wallet", ["users", "groups"]);
+      } else {
+        addToast("텔레그램 앱에서만 가능한 기능입니다.", "error");
+      }
+      return;
+    }
   };
 
   const renderIcon = () => {
@@ -72,6 +82,7 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
       case "INVITE_FRIEND":
         return <Users className={iconClass} />;
       case "SHARE_STORY":
+      case "SHARE_WALLET": // Added
         return <Share2 className={iconClass} />;
       case "LOGIN":
         return <Star className={iconClass} />;

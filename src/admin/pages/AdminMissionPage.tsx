@@ -168,7 +168,8 @@ const AdminMissionPage: React.FC = () => {
                                 >
                                     <option value="PLAY_GAME">플레이 1회</option>
                                     <option value="LOGIN">로그인</option>
-                                    <option value="SHARE">공유</option>
+                                    <option value="SHARE">공유 (일반)</option>
+                                    <option value="SHARE_WALLET">지갑 공유 (In-App)</option>
                                     <option value="CASH_OUT">출금</option>
                                 </select>
                             </div>

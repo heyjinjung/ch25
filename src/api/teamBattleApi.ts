@@ -53,6 +53,11 @@ export const createSeason = async (payload: { name: string; starts_at: string; e
   return res.data as TeamSeason;
 };
 
+export const listSeasons = async (limit = 50): Promise<TeamSeason[]> => {
+  const res = await adminApi.get("/admin/api/team-battle/seasons", { params: { limit } });
+  return res.data as TeamSeason[];
+};
+
 export const updateSeason = async (seasonId: number, payload: Partial<{ name: string; starts_at: string; ends_at: string; is_active: boolean; rewards_schema?: Record<string, unknown> }>) => {
   const res = await adminApi.patch(`/admin/api/team-battle/seasons/${seasonId}`, payload);
   return res.data as TeamSeason;

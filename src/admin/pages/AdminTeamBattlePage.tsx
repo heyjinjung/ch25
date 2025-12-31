@@ -16,6 +16,7 @@ import {
   createTeam,
   settleSeason,
   getActiveSeason,
+  listSeasons, // NEW
   updateSeason,
   deleteSeason,
   listTeamsAdmin,
@@ -270,6 +271,7 @@ const TeamModal = ({
 const AdminTeamBattlePage: React.FC = () => {
   const [tab, setTab] = useState<TabKey>("season");
   const [season, setSeason] = useState<TeamSeason | null>(null);
+  const [allSeasons, setAllSeasons] = useState<TeamSeason[]>([]); // NEW
   const [teams, setTeams] = useState<Team[]>([]);
   const [teamEdits, setTeamEdits] = useState<Record<number, { name: string; icon: string; is_active: boolean }>>({});
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
@@ -308,8 +310,9 @@ const AdminTeamBattlePage: React.FC = () => {
     setError(null);
     setRefreshing(true);
     try {
-      const [s, t, lb, users] = await Promise.all([
+      const [s, allS, t, lb, users] = await Promise.all([
         getActiveSeason(),
+        listSeasons(50), // NEW
         listTeamsAdmin(true),
         getLeaderboard(undefined, 100, 0),
         fetchUsers(),
@@ -320,6 +323,7 @@ const AdminTeamBattlePage: React.FC = () => {
       const usersArr = Array.isArray(users) ? users : [];
 
       setSeason(s);
+      setAllSeasons(allS || []); // NEW
       setAllUsers(usersArr);
       if (s) {
         setSeasonEditForm({
@@ -721,10 +725,66 @@ const AdminTeamBattlePage: React.FC = () => {
                   </div>
                 </div>
               ) : (
-                <div>없음</div>
+                <div>(활성 시즌 없음)</div>
               )}
             </div>
           </div>
+
+          {/* New Section: History */}
+          <div className="mt-8">
+            <h4 className="text-lg font-medium text-[#91F402] mb-4">전체 시즌 목록 (최신순)</h4>
+            <div className="overflow-x-auto rounded-lg border border-[#333333]">
+              <table className="w-full text-left text-sm text-gray-400">
+                <thead className="bg-[#1A1A1A] text-gray-200">
+                  <tr>
+                    <th className="px-4 py-3">ID</th>
+                    <th className="px-4 py-3">이름</th>
+                    <th className="px-4 py-3">기간</th>
+                    <th className="px-4 py-3">상태</th>
+                    <th className="px-4 py-3 text-right">관리</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#333333]">
+                  {allSeasons.map((s) => (
+                    <tr key={s.id} className="hover:bg-[#111111]">
+                      <td className="px-4 py-3">{s.id}</td>
+                      <td className="px-4 py-3 text-white font-medium">{s.name}</td>
+                      <td className="px-4 py-3">{formatDateTime(s.starts_at)} <br /> ~ {formatDateTime(s.ends_at)}</td>
+                      <td className="px-4 py-3">
+                        {s.is_active ?
+                          <span className="text-[#91F402] font-bold">ACTIVE</span> :
+                          <span className="text-gray-600">INACTIVE</span>
+                        }
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <div className="flex justify-end gap-2">
+                          <button
+                            onClick={() => {
+                              setSeason(s);
+                              setSeasonEditForm({
+                                name: s.name,
+                                starts_at: s.starts_at,
+                                ends_at: s.ends_at,
+                                is_active: s.is_active
+                              });
+                              window.scrollTo({ top: 0, behavior: 'smooth' });
+                            }}
+                            className="text-gray-300 hover:text-white"
+                          >
+                            <Edit2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {allSeasons.length === 0 && (
+                    <tr><td colSpan={5} className="px-4 py-8 text-center">시즌 내역이 없습니다.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
         </div>
       )}
 

@@ -27,6 +27,11 @@ def create_season(payload: TeamSeasonCreate, db: Session = Depends(get_db)):
     return service.create_season(db, payload.model_dump())
 
 
+@router.get("/seasons", response_model=list[TeamSeasonResponse])
+def list_seasons(limit: int = 50, db: Session = Depends(get_db)):
+    return service.list_seasons(db, limit=limit)
+
+
 @router.patch("/seasons/{season_id}", response_model=TeamSeasonResponse)
 def update_season(season_id: int, payload: TeamSeasonUpdate, db: Session = Depends(get_db)):
     return service.update_season(db, season_id=season_id, payload=payload.model_dump())

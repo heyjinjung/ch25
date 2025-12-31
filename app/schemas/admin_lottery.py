@@ -21,7 +21,7 @@ class AdminLotteryPrizeBase(BaseModel):
 class AdminLotteryConfigBase(BaseModel):
     name: str
     is_active: bool = True
-    max_daily_plays: int = 1
+    max_daily_plays: int = Field(1, validation_alias="max_daily_tickets")
     prizes: List[AdminLotteryPrizeBase]
 
     model_config = ConfigDict(from_attributes=True, validate_by_name=True)

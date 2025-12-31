@@ -518,8 +518,17 @@ class VaultService:
                     amount_before_multiplier = int(self.GAME_EARN_DICE_LOSE)
                 else:
                     amount_before_multiplier = 0
+            elif game_type_upper == "ROULETTE":
+                # Check payout details to detect "LOSE" (꽝)
+                payout = payout_raw or {}
+                r_amount = int(payout.get("reward_amount", 0))
+                # Treat 0 reward as LOSE -> -50
+                if r_amount == 0:
+                    amount_before_multiplier = -50
+                else:
+                    amount_before_multiplier = 200
             else:
-                # Default for other games (ROULETTE, LOTTERY, etc.)
+                # Default for other games (LOTTERY, etc.)
                 amount_before_multiplier = 200
 
         if int(amount_before_multiplier or 0) == 0:
