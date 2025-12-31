@@ -127,12 +127,16 @@ class MissionService:
                 elif progress.current_value == mission.target_value - 1 and mission.target_value >= 3:
                      # Check if user has telegram_id
                      if progress.user and progress.user.telegram_id:
-                         from app.services.notification_service import NotificationService
-                         NotificationService().send_nudge_sync(
-                             chat_id=progress.user.telegram_id, 
-                             mission_title=mission.title, 
-                             remaining=1
-                         )
+                         try:
+                             from app.services.notification_service import NotificationService
+                             NotificationService().send_nudge_sync(
+                                 chat_id=progress.user.telegram_id, 
+                                 mission_title=mission.title, 
+                                 remaining=1
+                             )
+                         except Exception as e:
+                             # Fail silently for nudge; do not block game progress
+                             pass
 
                 updated_list.append(progress)
             

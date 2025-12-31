@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 class NotificationService:
     def __init__(self):
         self.settings = get_settings()
-        self.bot_token = self.settings.TELEGRAM_BOT_TOKEN
+        self.bot_token = self.settings.telegram_bot_token
         self.api_base = f"https://api.telegram.org/bot{self.bot_token}"
 
     async def send_telegram_message(self, chat_id: int, text: str):
