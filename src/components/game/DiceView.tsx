@@ -11,7 +11,7 @@ interface DiceViewProps {
 const DiceFace: React.FC<{ value: number; isRolling?: boolean; delay?: string }> = ({ value, isRolling, delay = "0s" }) => {
   return (
     <div className={clsx(
-      "relative h-24 w-24 flex items-center justify-center transition-all duration-500",
+      "relative h-[72px] w-[72px] sm:h-24 sm:w-24 flex items-center justify-center transition-all duration-500",
       isRolling && "animate-[bounce_0.5s_infinite_alternate]"
     )} style={{ animationDelay: delay }}>
 
@@ -50,10 +50,10 @@ const DiceView: React.FC<DiceViewProps> = ({ userDice, dealerDice, result, isRol
       {/* Battle Columns */}
       <div className="grid gap-8 grid-cols-1 md:grid-cols-2 relative h-full">
 
-        {/* VS Label for desktop */}
-        <div className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
-          <div className="w-16 h-16 rounded-full bg-black border border-white/10 flex items-center justify-center shadow-[0_0_30px_rgba(0,0,0,0.8)]">
-            <span className="text-2xl font-black italic text-white/20">VS</span>
+{/* VS Label (sm+ shown, compact on small screens) */}
+      <div className="hidden sm:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
+        <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-black border border-white/10 flex items-center justify-center shadow-[0_0_30px_rgba(0,0,0,0.8)]">
+          <span className="text-lg sm:text-2xl font-black italic text-white/20">VS</span>
           </div>
         </div>
 
@@ -67,21 +67,21 @@ const DiceView: React.FC<DiceViewProps> = ({ userDice, dealerDice, result, isRol
               <span className="text-xs font-black uppercase tracking-[0.2em] text-[#30FF75]">내 스쿼드</span>
             </div>
 
-            <div className="flex justify-center gap-4 min-h-[96px]">
+            <div className="flex justify-center gap-4 min-h-[80px]">
               {userDice.length > 0 || isRolling ? (
                 (isRolling ? [1, 1] : userDice).map((val, i) => (
                   <DiceFace key={i} value={val} isRolling={isRolling} delay={`${i * 0.1}s`} />
                 ))
               ) : (
                 <>
-                  <div className="h-24 w-24 rounded-[2rem] border-2 border-dashed border-white/5 bg-white/5 animate-pulse" />
-                  <div className="h-24 w-24 rounded-[2rem] border-2 border-dashed border-white/5 bg-white/5 animate-pulse" />
+                  <div className="h-[72px] w-[72px] sm:h-24 sm:w-24 rounded-[2rem] border-2 border-dashed border-white/5 bg-white/5 animate-pulse" />
+                  <div className="h-[72px] w-[72px] sm:h-24 sm:w-24 rounded-[2rem] border-2 border-dashed border-white/5 bg-white/5 animate-pulse" />
                 </>
               )}
             </div>
 
             <div className="mt-6 flex flex-col items-center">
-              <span className="text-[4rem] font-black text-white leading-none tracking-tighter">
+              <span className="text-[2.4rem] sm:text-[4rem] font-black text-white leading-none tracking-tighter">
                 {isRolling ? "?" : (userDice.length > 0 ? userSum : "-")}
               </span>
               <span className="text-xs font-bold text-white/30 uppercase mt-2">전투력</span>
@@ -99,21 +99,21 @@ const DiceView: React.FC<DiceViewProps> = ({ userDice, dealerDice, result, isRol
               <span className="text-xs font-black uppercase tracking-[0.2em] text-white/60">딜러</span>
             </div>
 
-            <div className="flex justify-center gap-4 min-h-[96px]">
+            <div className="flex justify-center gap-4 min-h-[80px]">
               {dealerDice.length > 0 || isRolling ? (
                 (isRolling ? [1, 1] : dealerDice).map((val, i) => (
                   <DiceFace key={i} value={val} isRolling={isRolling} delay={`${i * 0.15}s`} />
                 ))
               ) : (
                 <>
-                  <div className="h-24 w-24 rounded-[2rem] border-2 border-dashed border-white/5 bg-white/5 opacity-50" />
-                  <div className="h-24 w-24 rounded-[2rem] border-2 border-dashed border-white/5 bg-white/5 opacity-50" />
+                  <div className="h-[72px] w-[72px] sm:h-24 sm:w-24 rounded-[2rem] border-2 border-dashed border-white/5 bg-white/5 opacity-50" />
+                  <div className="h-[72px] w-[72px] sm:h-24 sm:w-24 rounded-[2rem] border-2 border-dashed border-white/5 bg-white/5 opacity-50" />
                 </>
               )}
             </div>
 
             <div className="mt-6 flex flex-col items-center">
-              <span className="text-[4rem] font-black text-white/90 leading-none tracking-tighter">
+              <span className="text-[2.4rem] sm:text-[4rem] font-black text-white/90 leading-none tracking-tighter">
                 {isRolling ? "?" : (dealerDice.length > 0 ? dealerSum : "-")}
               </span>
               <span className="text-xs font-bold text-white/30 uppercase mt-2">위협 수준</span>

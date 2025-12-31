@@ -23,7 +23,7 @@ const LotteryCard: React.FC<LotteryCardProps> = React.memo(({ prize, isRevealed,
   return (
     <div className="relative mx-auto w-full max-w-sm">
       {/* Premium Outer Frame */}
-      <div className="relative overflow-hidden rounded-[2.5rem] border border-white/20 bg-black/60 p-4 shadow-[0_40px_100px_-20px_rgba(0,0,0,0.8)] backdrop-blur-3xl group transition-all duration-500 hover:border-amber-500/30">
+<div className="relative overflow-hidden rounded-[2.5rem] border border-white/20 bg-black/60 p-3 shadow-[0_40px_100px_-20px_rgba(0,0,0,0.8)] backdrop-blur-3xl group transition-all duration-500 hover:border-amber-500/30">
 
         {/* Animated Background Glows */}
         <div className="pointer-events-none absolute -left-20 -top-20 h-64 w-64 rounded-full bg-amber-500/10 blur-[100px] animate-pulse" />
@@ -67,7 +67,7 @@ const LotteryCard: React.FC<LotteryCardProps> = React.memo(({ prize, isRevealed,
 
             {/* 2. REVEALED PRIZE STATE */}
             {isRevealed && prize && (
-              <div className="relative z-10 w-full h-full flex flex-col items-center justify-center p-8 text-center animate-in zoom-in-90 fade-in duration-500">
+              <div className="relative z-10 w-full h-full flex flex-col items-center justify-center p-5 text-center animate-in zoom-in-90 fade-in duration-500">
                 {/* Simplified Visual Effects */}
                 <div className="absolute inset-0 bg-gradient-to-b from-amber-500/10 via-transparent to-emerald-500/10 opacity-50" />
                 <img
@@ -77,7 +77,7 @@ const LotteryCard: React.FC<LotteryCardProps> = React.memo(({ prize, isRevealed,
                 />
 
                 <div className="relative z-20 flex flex-col items-center">
-                  <span className="inline-block px-4 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-[10px] font-black tracking-widest uppercase mb-6 shadow-[0_0_20px_rgba(48,255,117,0.2)]">
+                  <span className="inline-block px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-[10px] font-black tracking-widest uppercase mb-6 shadow-[0_0_20px_rgba(48,255,117,0.2)]">
                     축하합니다!
                   </span>
 
@@ -100,10 +100,10 @@ const LotteryCard: React.FC<LotteryCardProps> = React.memo(({ prize, isRevealed,
                       </h2>
                       {(prize.reward_type === 'POINT' || prize.reward_type === 'CURRENCY' || prize.reward_type === 'CASH') && (
                         <div className="flex items-baseline justify-center gap-1">
-                          <h3 className="text-figma-accent text-5xl font-black tracking-tighter italic">
+                          <h3 className="text-figma-accent text-3xl sm:text-5xl font-black tracking-tighter italic">
                             {Number(prize.reward_value).toLocaleString()}
                           </h3>
-                          <span className="text-figma-accent text-xl font-black italic">
+                          <span className="text-figma-accent text-lg sm:text-xl font-black italic">
                             {prize.reward_type === 'POINT' ? 'P' : '원'}
                           </span>
                         </div>
@@ -122,9 +122,9 @@ const LotteryCard: React.FC<LotteryCardProps> = React.memo(({ prize, isRevealed,
 
             {/* 3. EMPTY STATE */}
             {isRevealed && !prize && (
-              <div className="flex flex-col items-center text-center p-8 animate-in zoom-in-95">
-                <span className="text-6xl mb-4">🌪️</span>
-                <h3 className="text-white text-2xl font-black tracking-tight uppercase italic">다음에 다시!</h3>
+              <div className="flex flex-col items-center text-center p-5 animate-in zoom-in-95">
+                <span className="text-5xl mb-4">🌪️</span>
+                <h3 className="text-white text-xl sm:text-2xl font-black tracking-tight uppercase italic">다음에 다시!</h3>
                 <p className="mt-2 text-white/40 font-bold text-sm">운이 따르지 않았네요.</p>
               </div>
             )}

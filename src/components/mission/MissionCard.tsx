@@ -1,10 +1,12 @@
+// src/components/mission/MissionCard.tsx
 import React from "react";
 import { MissionData, useMissionStore } from "../../stores/missionStore";
 import { useToast } from "../common/ToastProvider";
 import { useHaptic } from "../../hooks/useHaptic";
 import { useSound } from "../../hooks/useSound";
-
 import { useQueryClient } from "@tanstack/react-query";
+import { Check, ChevronRight, Share2, Users, Bell, Star, Zap } from "lucide-react";
+import clsx from "clsx";
 
 interface MissionCardProps {
     data: MissionData;
@@ -20,225 +22,142 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
 
     const handleClaim = async () => {
         if (!progress.is_completed || progress.is_claimed) return;
-
-        impact('medium');
-
+        impact('heavy');
         const result = await claimReward(mission.id);
         if (result.success) {
             notification('success');
             playToast();
-            addToast(`Received ${result.amount} ${result.reward_type}!`, "success");
-
-            // Immediate Update
+            addToast(`보상 수령 완료: ${result.amount} ${result.reward_type}!`, "success");
             queryClient.invalidateQueries({ queryKey: ["vault-status"] });
-            // Also refresh other assets if needed
-            if (result.reward_type === 'TICKET_BUNDLE') {
-                queryClient.invalidateQueries({ queryKey: ["lottery-status"] });
-                queryClient.invalidateQueries({ queryKey: ["roulette-status"] });
-                queryClient.invalidateQueries({ queryKey: ["dice-status"] });
-            }
-
-            // Optional: Refresh missions to match server state (redundancy check)
-            // setTimeout(() => fetchMissions(), 500); 
-            // We already updated local state in store, so fetching is optional but safe.
-
         } else {
             notification('error');
-            addToast(result.message || "Failed to claim reward.", "error");
+            addToast(result.message || "보상 수령 실패", "error");
         }
     };
 
-    const handleViralAction = async () => {
-        // 1. Join Channel Verification
+    const handleAction = () => {
+        impact('medium');
         if (mission.action_type === 'JOIN_CHANNEL') {
-            impact('light');
-            try {
-                // Determine Channel Link (Hardcoded or from Env?)
-                const channelLink = "https://t.me/cc_jm_2026_official";
-
-                // First, try to verify
-                const { userApi } = await import("../../api/httpClient");
-                const res = await userApi.post('/viral/verify/channel', { mission_id: mission.id });
-
-                if (res.data && res.data.success && res.data.message === "Verified and Updated") {
-                    notification('success');
-                    addToast("Verification Successful!", "success");
-                    fetchMissions(); // Refresh to show claiming state or completed
-                } else {
-                    // If not verified, open the channel
-                    notification('warning');
-                    addToast("Please join the channel first.", "info");
-                    window.Telegram?.WebApp?.openTelegramLink?.(channelLink) || window.open(channelLink, '_blank');
-                }
-            } catch (e) {
-                console.error(e);
-                addToast("Verification Failed", "error");
-            }
-        }
-
-        // 2. Invite Friends
-        if (mission.action_type === 'INVITE_FRIEND') {
-            impact('light');
-            // Trigger Telegram Share
-            // Using switchInlineQuery is best for "Send to Chat"
-            // For now just generic
+            const channelLink = "https://t.me/cc_jm_2026_official";
+            window.Telegram?.WebApp?.openTelegramLink?.(channelLink) || window.open(channelLink, '_blank');
+        } else if (mission.action_type === 'INVITE_FRIEND') {
             if (window.Telegram?.WebApp?.switchInlineQuery) {
                 window.Telegram.WebApp.switchInlineQuery("share_ref", ["users", "groups"]);
-            } else {
-                addToast("Share feature not available", "error");
             }
-        }
-
-        // 3. Share Story (Unclaimed / Action Phase)
-        if (mission.action_type === 'SHARE_STORY') {
-            impact('light');
-            // Similar to 'Claimed' logic but for Action
+        } else if (mission.action_type === 'SHARE_STORY') {
             if (window.Telegram?.WebApp?.shareToStory) {
                 const appUrl = "https://t.me/jm956_bot/ccjm";
-                window.Telegram.WebApp.shareToStory("https://placehold.co/1080x1920/png?text=Join+Me!", {
-                    text: `Join the adventure!`,
-                    widget_link: { url: appUrl, name: "Play Now" }
+                window.Telegram.WebApp.shareToStory("https://placehold.co/1080x1920/png?text=CCJM+Mission!", {
+                    text: `CCJM에서 미션을 완료하고 보상을 받으세요!`,
+                    widget_link: { url: appUrl, name: "지금 플레이" }
                 });
-
-                // Optimistically notify backend
-                try {
-                    const { userApi } = await import("../../api/httpClient");
-                    await userApi.post('/viral/action/story', { action_type: 'SHARE_STORY' });
-                    addToast("Story Shared! Checking progress...", "success");
-                    setTimeout(() => fetchMissions(), 1000);
-                } catch (e) { console.error(e); }
-
-            } else {
-                addToast("Story sharing not supported on this device", "error");
             }
         }
     };
 
     const percent = Math.min(100, Math.round((progress.current_value / mission.target_value) * 100));
+    const isCompleted = progress.is_completed;
+    const isClaimed = progress.is_claimed;
 
-    // Display Logic for Reward Icon
-    const renderRewardIcon = () => {
-        switch (mission.reward_type) {
-            case 'DIAMOND': return <span className="text-lg">💎</span>;
-            case 'GOLD_KEY': return <span className="text-lg">🔑</span>;
-            case 'DIAMOND_KEY': return <span className="text-lg">🗝️</span>;
-            default: return <div className="w-4 h-4 rounded-full bg-yellow-400" />;
+    const renderIcon = () => {
+        const iconClass = "w-5 h-5";
+        switch (mission.action_type) {
+            case 'JOIN_CHANNEL': return <Bell className={iconClass} />;
+            case 'INVITE_FRIEND': return <Users className={iconClass} />;
+            case 'SHARE_STORY': return <Share2 className={iconClass} />;
+            case 'LOGIN': return <Star className={iconClass} />;
+            default: return <Zap className={iconClass} />;
         }
     };
 
     return (
-        <div className="bg-slate-800/80 border border-slate-700/50 rounded-xl p-4 flex items-center gap-4 relative overflow-hidden">
-            {/* Background Progress Bar */}
-            <div
-                className="absolute bottom-0 left-0 h-1 bg-indigo-500/20 transition-all duration-500"
-                style={{ width: `${percent}%` }}
-            />
-
-            {/* Icon */}
-            <div className="w-12 h-12 bg-slate-700 rounded-full flex items-center justify-center text-2xl shrink-0 border border-slate-600">
-                {renderRewardIcon()}
-            </div>
-
-            {/* Info */}
-            <div className="flex-1 min-w-0">
-                <div className="flex justify-between items-start mb-1">
-                    <h3 className="font-bold text-slate-100 text-sm truncate pr-2">{mission.title}</h3>
-                    {/* Show Reward Amount + XP */}
-                    <div className="flex items-center gap-2">
-                        <span className="flex items-center gap-1 text-xs font-bold text-white bg-slate-700 px-1.5 py-0.5 rounded">
-                            <img src="/assets/icon_diamond.png" alt="" className="w-4 h-4 object-contain" />
-                            {mission.reward_amount}
-                        </span>
-                        {mission.xp_reward > 0 && (
-                            <span className="text-xs font-bold text-amber-400">+{mission.xp_reward} XP</span>
-                        )}
-                    </div>
+        <div className={clsx(
+            "relative overflow-hidden rounded-[24px] transition-all duration-300 border backdrop-blur-md",
+            isClaimed ? "bg-white/5 border-white/5 opacity-60" :
+                isCompleted ? "bg-white/10 border-[#91F402]/30 shadow-[0_0_20px_rgba(145,244,2,0.1)]" :
+                    "bg-white/5 border-white/10 hover:border-white/20"
+        )}>
+            <div className="p-4 flex items-center gap-4">
+                {/* Visual Icon Box */}
+                <div className={clsx(
+                    "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-transform duration-500",
+                    isClaimed ? "bg-gray-800 text-gray-500" :
+                        isCompleted ? "bg-[#91F402] text-black scale-110" :
+                            "bg-indigo-600/20 text-indigo-400"
+                )}>
+                    {isClaimed ? <Check size={24} /> : renderIcon()}
                 </div>
-                <div className="flex items-center gap-2 text-xs text-slate-400 mb-2">
-                    <span>{progress.current_value}/{mission.target_value}</span>
-                    <div className="flex-1 h-1.5 bg-slate-700 rounded-full overflow-hidden">
-                        <div
-                            className="h-full bg-indigo-500 rounded-full transition-all duration-500"
-                            style={{ width: `${percent}%` }}
-                        />
-                    </div>
-                    <span>{percent}%</span>
-                </div>
-            </div>
 
-            {/* Button */}
-            <div className="shrink-0 flex items-center gap-2">
-                {progress.is_claimed ? (
-                    <>
-                        {/* Re-share button for Viral Loop */}
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <h3 className="text-sm font-black text-white truncate leading-tight mb-0.5">
+                                {mission.title}
+                            </h3>
+                            <p className="text-[10px] text-gray-500 truncate max-w-[150px]">
+                                {mission.description || "미션을 완료하고 보상을 받으세요"}
+                            </p>
+                        </div>
+                        <div className="flex flex-col items-end shrink-0 ml-2">
+                            <div className="flex items-center gap-1 bg-black/40 px-2 py-0.5 rounded-full border border-white/5">
+                                <img src="/assets/icon_diamond.png" alt="" className="w-3 h-3 object-contain" />
+                                <span className="text-xs font-black text-[#91F402]">{mission.reward_amount}</span>
+                            </div>
+                            {mission.xp_reward > 0 && (
+                                <span className="text-[10px] font-bold text-indigo-400 mt-0.5">+{mission.xp_reward} XP</span>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Progress Bar Area */}
+                    {!isClaimed && (
+                        <div className="mt-3">
+                            <div className="flex justify-between items-center mb-1">
+                                <span className="text-[10px] font-bold text-gray-400">Progress</span>
+                                <span className="text-[10px] font-black text-white">{progress.current_value} / {mission.target_value}</span>
+                            </div>
+                            <div className="h-1.5 bg-white/5 rounded-full overflow-hidden border border-white/5">
+                                <div
+                                    className={clsx(
+                                        "h-full rounded-full transition-all duration-1000 ease-out",
+                                        isCompleted ? "bg-[#91F402]" : "bg-gradient-to-r from-indigo-500 to-purple-500"
+                                    )}
+                                    style={{ width: `${percent}%` }}
+                                />
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* Dynamic Action Button */}
+                <div className="shrink-0 ml-1">
+                    {isClaimed ? (
+                        <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-600 border border-white/5">
+                            <Check size={20} />
+                        </div>
+                    ) : isCompleted ? (
                         <button
-                            onClick={() => {
-                                const appUrl = "https://t.me/jm956_bot/ccjm";
-                                if (window.Telegram?.WebApp?.shareToStory) {
-                                    window.Telegram.WebApp.shareToStory("https://placehold.co/1080x1920/png?text=I+Completed+Mission!", {
-                                        text: `I just earned ${mission.reward_amount} ${mission.reward_type}!`,
-                                        widget_link: {
-                                            url: appUrl,
-                                            name: "Play Now"
-                                        }
-                                    });
-                                }
-                            }}
-                            className="p-2 bg-pink-500/20 text-pink-400 rounded-lg hover:bg-pink-500/30 transition-colors"
-                            title="Share to Story"
+                            onClick={handleClaim}
+                            className="w-12 h-12 rounded-2xl bg-[#91F402] text-black shadow-[0_0_15px_rgba(145,244,2,0.4)] flex items-center justify-center animate-pulse hover:scale-105 active:scale-95 transition-all"
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                            </svg>
+                            <Trophy size={20} />
                         </button>
-                        <button disabled className="px-4 py-2 bg-slate-700 text-slate-500 text-xs font-bold rounded-lg cursor-not-allowed">
-                            Completed
+                    ) : (
+                        <button
+                            onClick={handleAction}
+                            className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-90"
+                        >
+                            <ChevronRight size={20} />
                         </button>
-                    </>
-                ) : progress.is_completed ? (
-                    <button
-                        onClick={handleClaim}
-                        className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white text-xs font-bold rounded-lg shadow-lg shadow-orange-500/20 animate-bounce-subtle"
-                    >
-                        Claim
-                    </button>
-                ) : (
-                    <>
-                        {/* Special Viral Actions when NOT completed */}
-                        {mission.action_type === 'JOIN_CHANNEL' && (
-                            <button
-                                onClick={handleViralAction}
-                                className="px-4 py-2 bg-[#0088cc] hover:bg-[#0077b5] text-white text-xs font-bold rounded-lg shadow-lg shadow-blue-500/20"
-                            >
-                                Check
-                            </button>
-                        )}
-                        {mission.action_type === 'INVITE_FRIEND' && (
-                            <button
-                                onClick={handleViralAction}
-                                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-lg shadow-lg"
-                            >
-                                Invite
-                            </button>
-                        )}
-                        {mission.action_type === 'SHARE_STORY' && (
-                            <button
-                                onClick={handleViralAction}
-                                className="px-4 py-2 bg-pink-600 hover:bg-pink-500 text-white text-xs font-bold rounded-lg shadow-lg"
-                            >
-                                Share
-                            </button>
-                        )}
-
-                        {/* Fallback for regular missions */}
-                        {!['JOIN_CHANNEL', 'INVITE_FRIEND', 'SHARE_STORY'].includes(mission.action_type || '') && (
-                            <button disabled className="px-4 py-2 bg-slate-700/50 text-slate-500 text-xs font-bold rounded-lg border border-slate-600">
-                                In Progress
-                            </button>
-                        )}
-                    </>
-                )}
+                    )}
+                </div>
             </div>
+
+            {/* Glowing Accent for Completed but Unclaimed */}
+            {isCompleted && !isClaimed && (
+                <div className="absolute inset-0 bg-gradient-to-r from-[#91F402]/5 to-transparent pointer-events-none animate-pulse" />
+            )}
         </div>
     );
 };

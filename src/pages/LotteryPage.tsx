@@ -119,7 +119,7 @@ const LotteryPage: React.FC = () => {
       >
 
         {/* 1. Stats Bar */}
-        <div className="flex flex-col gap-4 mb-4">
+        <div className="flex flex-col gap-3 mb-4">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 rounded-full bg-black/60 border border-white/10 px-5 py-2 backdrop-blur-md shrink-0">
               <img src="/assets/lottery/icon_lotto_ball.png" alt="Lotto Ball" className="w-6 h-6 object-contain" />
@@ -143,7 +143,7 @@ const LotteryPage: React.FC = () => {
             onScratch={handleScratch}
           />
 
-          <div className="max-w-sm mx-auto w-full flex flex-col gap-4">
+          <div className="max-w-sm mx-auto w-full flex flex-col gap-3">
             {playErrorMessage && (
               <div className="p-4 rounded-xl border border-red-500/20 bg-red-500/10 text-center text-xs font-bold text-red-400">
                 {playErrorMessage}
@@ -161,7 +161,7 @@ const LotteryPage: React.FC = () => {
               disabled={!canPlay && !isRevealed}
               onClick={() => (isRevealed ? handleReset() : handleScratch())}
               variant="figma-primary"
-              className="!py-5 !rounded-2xl transition-all active:scale-95 shadow-[0_20px_40px_-10px_rgba(48,255,117,0.3)] font-black text-xl italic"
+              className="!py-[10px] !rounded-2xl transition-all active:scale-95 shadow-[0_20px_40px_-10px_rgba(48,255,117,0.3)] font-black text-lg sm:text-xl italic"
               fullWidth
             >
               {isRevealed ? "다음 복권 확인" : isScratching ? "결과 확인 중..." : "지금 긁기"}
@@ -181,7 +181,7 @@ const LotteryPage: React.FC = () => {
               <div
                 key={prize.id}
                 className={clsx(
-                  "group relative aspect-square overflow-hidden rounded-2xl border transition-all flex flex-col items-center justify-center p-3 text-center",
+                  "group relative aspect-square overflow-hidden rounded-2xl border transition-all flex flex-col items-center justify-center p-2 text-center",
                   prize.is_active === false
                     ? "opacity-30 grayscale border-white/5 bg-transparent"
                     : "bg-white/[0.03] border-white/10 hover:bg-figma-accent/10 hover:border-figma-accent/30"
@@ -192,7 +192,7 @@ const LotteryPage: React.FC = () => {
                   <img src="/assets/lottery/gold_foil.jpg" className="w-full h-full object-cover" alt="" />
                 </div>
 
-                <div className="relative z-10 w-10 h-10 mb-3 group-hover:scale-110 transition-transform duration-500">
+                <div className="relative z-10 w-8 h-8 sm:w-10 sm:h-10 mb-3 group-hover:scale-110 transition-transform duration-500">
                   <img src="/assets/lottery/icon_gift.png" className="w-full h-full object-contain filter drop-shadow-lg" alt="" />
                 </div>
 
