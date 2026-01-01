@@ -38,15 +38,10 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) =>
         onClose();
     };
 
-    const handleMissionAction = async (missionId: string) => {
-        if (missionId === "viral") {
+    const handleMissionAction = async (missionId: number, actionType: string | null) => {
+        if (actionType === "JOIN_CHANNEL") {
             impact("medium");
-            // Find the JOIN_CHANNEL mission from regular missions if possible, 
-            // but for starter mission, we can try verifyChannelSubscription with dummy ID or 0 
-            // and the backend should handle "JOIN_CHANNEL" action_type check.
-            // Actually, backend verify_channel expects target_channel from env if mission_id is not useful.
-
-            const result = await verifyChannelSubscription(0); // Using 0 as it's a generic check
+            const result = await verifyChannelSubscription(missionId);
             if (result.success) {
                 notification("success");
                 addToast("구독 인증 완료!", "success");
@@ -64,46 +59,29 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) =>
         }
     };
 
-    if (!status?.eligible) {
+    if (!status?.eligible || !status.missions || status.missions.length === 0) {
         return null;
     }
 
-    const missions = [
-        {
-            id: "play_1",
-            title: "게임 1회",
-            icon: "/assets/welcome/icon_play1.png",
-            completed: status.progress.play_1,
-            reward: 2500,
-            hint: "게임을 1판 플레이하세요",
-        },
-        {
-            id: "play_3",
-            title: "게임 3회",
-            icon: "/assets/welcome/icon_play3.png",
-            completed: status.progress.play_3,
-            reward: 2500,
-            hint: "게임을 총 3판 플레이하세요",
-        },
-        {
-            id: "viral",
-            title: "채널 구독",
-            icon: "/assets/welcome/icon_viral.png",
-            completed: status.progress.share_or_join,
-            reward: 2500,
-            hint: "클릭하여 채널 구독 확인",
-        },
-        {
-            id: "attendance",
-            title: "출석 체크",
-            icon: "/assets/welcome/icon_attendance.png",
-            completed: status.progress.next_day_login,
-            reward: 2500,
-            hint: "내일 다시 로그인하세요",
-        },
-    ];
+    const getMissionIcon = (actionType: string | null, targetValue: number) => {
+        if (actionType === "JOIN_CHANNEL") return "/assets/welcome/icon_viral.png";
+        if (actionType === "LOGIN") return "/assets/welcome/icon_attendance.png";
+        if (actionType === "PLAY_GAME") {
+            return targetValue >= 3 ? "/assets/welcome/icon_play3.png" : "/assets/welcome/icon_play1.png";
+        }
+        return "/assets/welcome/icon_play1.png"; // Fallback
+    };
 
-    const completedCount = missions.filter((m) => m.completed).length;
+    const getMissionHint = (actionType: string | null, isCompleted: boolean) => {
+        if (isCompleted) return "완료되었습니다";
+        if (actionType === "JOIN_CHANNEL") return "클릭하여 채널 구독 확인";
+        if (actionType === "LOGIN") return "내일 다시 로그인하세요";
+        if (actionType === "PLAY_GAME") return "게임을 플레이하세요";
+        return "미션을 완료하세요";
+    };
+
+    const completedCount = status.missions.filter((m) => m.is_completed).length;
+    const totalCount = status.missions.length;
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
@@ -137,26 +115,27 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) =>
 
                     {/* Missions Grid */}
                     <div className="grid grid-cols-4 gap-3">
-                        {missions.map((mission) => (
+                        {status.missions.map((mission) => (
                             <div
                                 key={mission.id}
                                 className={`flex flex-col items-center gap-2 group cursor-pointer transition-transform active:scale-95`}
-                                onClick={() => !mission.completed && handleMissionAction(mission.id)}
+                                onClick={() => !mission.is_completed && handleMissionAction(mission.id, mission.action_type)}
                             >
-                                <div className={`relative w-full aspect-square rounded-2xl border-2 ${mission.completed ? "border-emerald-500 bg-emerald-500/10" : "border-white/20 bg-white/5 group-hover:border-white/40"} p-2 transition-all`}>
+                                <div className={`relative w-full aspect-square rounded-2xl border-2 ${mission.is_completed ? "border-emerald-500 bg-emerald-500/10" : "border-white/20 bg-white/5 group-hover:border-white/40"} p-2 transition-all`}>
                                     <img
-                                        src={mission.icon}
+                                        src={getMissionIcon(mission.action_type, mission.target_value)}
                                         alt={mission.title}
-                                        className={`w-full h-full object-contain ${!mission.completed && "opacity-50 grayscale group-hover:opacity-80 group-hover:grayscale-0"}`}
+                                        title={getMissionHint(mission.action_type, mission.is_completed)}
+                                        className={`w-full h-full object-contain ${!mission.is_completed && "opacity-50 grayscale group-hover:opacity-80 group-hover:grayscale-0"}`}
                                     />
-                                    {mission.completed && (
+                                    {mission.is_completed && (
                                         <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center">
                                             <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                                             </svg>
                                         </div>
                                     )}
-                                    {!mission.completed && mission.id === "viral" && (
+                                    {!mission.is_completed && mission.action_type === "JOIN_CHANNEL" && (
                                         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                             <div className="bg-emerald-500 text-white text-[8px] font-black px-1 rounded animate-pulse">CHECK</div>
                                         </div>
@@ -166,7 +145,7 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) =>
                                     <p className="text-[10px] font-bold text-white/80">{mission.title}</p>
                                     <div className="flex items-center justify-center gap-1 mt-0.5">
                                         <img src="/assets/logo_cc_v2.png" alt="" className="w-3.5 h-3.5 object-contain" />
-                                        <span className="text-[10px] font-bold text-emerald-400">{mission.reward.toLocaleString()}</span>
+                                        <span className="text-[10px] font-bold text-emerald-400">{mission.reward_amount.toLocaleString()}</span>
                                     </div>
                                 </div>
                             </div>
@@ -176,7 +155,7 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) =>
                     {/* Progress */}
                     <div className="text-center">
                         <p className="text-sm font-bold text-white/70">
-                            미션 진행도: <span className="text-emerald-400">{completedCount}/4</span>
+                            미션 진행도: <span className="text-emerald-400">{completedCount}/{totalCount}</span>
                         </p>
                     </div>
 

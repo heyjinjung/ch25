@@ -1,6 +1,6 @@
 import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { fetchShopProducts, purchaseProduct, ShopProduct } from '../api/inventoryApi';
+import { fetchInventory, fetchShopProducts, purchaseProduct, ShopProduct } from '../api/inventoryApi';
 import { Loader2, ShoppingBag } from 'lucide-react'; // Diamond unused?
 import { useToast } from '../components/common/ToastProvider';
 
@@ -11,6 +11,11 @@ const ShopPage: React.FC = () => {
     const { data: products, isLoading, isError } = useQuery({
         queryKey: ['shopProducts'],
         queryFn: fetchShopProducts,
+    });
+
+    const { data: inventoryData } = useQuery({
+        queryKey: ['inventory'],
+        queryFn: fetchInventory,
     });
 
     const purchaseMutation = useMutation({
@@ -63,9 +68,26 @@ const ShopPage: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {products?.map((product) => (
-                    <ProductCard key={product.sku} product={product} onBuy={() => purchaseMutation.mutate(product.sku)} isPending={purchaseMutation.isPending} />
-                ))}
+                {Array.isArray(products) && products.length > 0 ? (
+                    products.map((product) => (
+                        <ProductCard
+                            key={product.sku}
+                            product={product}
+                            diamondBalance={
+                                Array.isArray(inventoryData?.items)
+                                    ? (inventoryData.items.find((i) => i.item_type === 'DIAMOND')?.quantity ?? 0)
+                                    : 0
+                            }
+                            onBuy={() => purchaseMutation.mutate(product.sku)}
+                            isPending={purchaseMutation.isPending}
+                        />
+                    ))
+                ) : (
+                    <div className="rounded-[24px] border border-white/10 bg-white/5 p-5 text-center">
+                        <div className="text-sm font-black text-white/90">상품이 없습니다</div>
+                        <div className="mt-1 text-[11px] font-medium text-white/50">잠시 후 다시 확인해주세요.</div>
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -73,11 +95,16 @@ const ShopPage: React.FC = () => {
 
 interface ProductCardProps {
     product: ShopProduct;
+    diamondBalance: number;
     onBuy: () => void;
     isPending: boolean;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product, onBuy, isPending }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product, diamondBalance, onBuy, isPending }) => {
+    const requiresDiamond = String(product.cost?.token ?? '').toUpperCase() === 'DIAMOND';
+    const hasEnoughDiamond = !requiresDiamond || diamondBalance >= Number(product.cost?.amount ?? 0);
+    const isDisabled = isPending || !hasEnoughDiamond;
+
     return (
         <div className="bg-white/5 rounded-2xl p-4 border border-white/10 flex flex-col justify-between">
             <div>
@@ -89,11 +116,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onBuy, isPending }) 
 
             <button
                 onClick={onBuy}
-                disabled={isPending}
+                disabled={isDisabled}
                 className="w-full bg-figma-primary text-white font-black py-3 px-4 rounded-xl transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
                 {isPending ? <Loader2 className="animate-spin w-5 h-5" /> : <>
-                    <span className="text-sm">구매</span>
+                    <span className="text-sm">{hasEnoughDiamond ? '구매' : '다이아 부족'}</span>
                     <div className="flex items-center bg-black/30 px-2 py-0.5 rounded-full border border-white/10">
                         <span className="font-mono">{product.cost.amount}</span>
                         <span className="text-xs ml-1 text-white/60">{product.cost.token}</span>

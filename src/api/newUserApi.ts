@@ -13,13 +13,19 @@ export type NewUserStatusResponse = {
   readonly total_play_count: number;
 
   readonly bonus_cap: number;
-  readonly progress: {
-    readonly deposit_confirmed: boolean;
-    readonly play_1: boolean;
-    readonly play_3: boolean;
-    readonly share_or_join: boolean;
-    readonly next_day_login: boolean;
-  };
+  readonly missions: {
+    readonly id: number;
+    readonly logic_key: string;
+    readonly action_type: string | null;
+    readonly title: string;
+    readonly description: string | null;
+    readonly target_value: number;
+    readonly current_value: number;
+    readonly is_completed: boolean;
+    readonly is_claimed: boolean;
+    readonly reward_type: string;
+    readonly reward_amount: number;
+  }[];
 };
 
 export const getNewUserStatus = async (): Promise<NewUserStatusResponse> => {

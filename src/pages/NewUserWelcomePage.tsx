@@ -50,7 +50,14 @@ const NewUserWelcomePage: React.FC = () => {
     return <Navigate to="/landing" replace />;
   }
 
-  const p = status.data.progress;
+  const missions = status.data?.missions ?? [];
+  const getMissionDone = (predicate: (m: any) => boolean) => missions.some((m) => predicate(m) && Boolean(m.is_completed));
+  const play1Done = getMissionDone((m) => m.action_type === "PLAY_GAME" && Number(m.target_value) === 1);
+  const play3Done = getMissionDone((m) => m.action_type === "PLAY_GAME" && Number(m.target_value) >= 3);
+  const joinOrShareDone = getMissionDone(
+    (m) => ["JOIN_CHANNEL", "SHARE", "SHARE_STORY", "SHARE_WALLET"].includes(String(m.action_type ?? ""))
+  );
+  const nextDayLoginDone = getMissionDone((m) => m.action_type === "LOGIN");
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-6">
@@ -75,7 +82,7 @@ const NewUserWelcomePage: React.FC = () => {
 
       <div className="space-y-3">
         <Row
-          done={p.play_1}
+          done={play1Done}
           title="게임 1회 플레이"
           desc={`현재 누적 플레이 수: ${status.data.total_play_count.toLocaleString()}회`}
           action={
@@ -85,7 +92,7 @@ const NewUserWelcomePage: React.FC = () => {
           }
         />
         <Row
-          done={p.play_3}
+          done={play3Done}
           title="게임 3회 플레이"
           desc="(룰렛/주사위/복권 합산 기준)"
           action={
@@ -95,7 +102,7 @@ const NewUserWelcomePage: React.FC = () => {
           }
         />
         <Row
-          done={p.share_or_join}
+          done={joinOrShareDone}
           title="스토리 공유 또는 채널 가입"
           desc="현재는 자동 판별 연동이 필요합니다(봇/콜백)."
           action={
@@ -110,7 +117,7 @@ const NewUserWelcomePage: React.FC = () => {
           }
         />
         <Row
-          done={p.next_day_login}
+          done={nextDayLoginDone}
           title="다음날 재접속(출석)"
           desc="KST 기준 다음날 접속하면 완료로 처리됩니다."
         />

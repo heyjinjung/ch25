@@ -132,15 +132,16 @@ const AppHeader: React.FC = () => {
                         {/* Dropdown Menu */}
                         {isTicketMenuOpen && (
                             <div className="absolute top-full right-0 mt-2 w-48 rounded-xl border border-white/10 bg-black/90 p-1 backdrop-blur-xl shadow-2xl animate-fadeIn">
-                                <button
-                                    onClick={() => handleMenuNavigation("/inventory")}
+                                <Link
+                                    to="/inventory"
+                                    onClick={() => setIsTicketMenuOpen(false)}
                                     className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-bold text-white/70 hover:bg-white/5 hover:text-figma-accent transition-all"
                                 >
                                     <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/5 border border-white/5">
                                         <Package size={14} />
                                     </div>
                                     인벤토리
-                                </button>
+                                </Link>
                                 <button
                                     onClick={() => handleMenuNavigation("https://ccc-010.com", true)}
                                     className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-bold text-white/70 hover:bg-white/5 hover:text-[#FFCC00] transition-all"
@@ -216,13 +217,14 @@ const AppHeader: React.FC = () => {
                     {/* Mobile Menu */}
                     {isTicketMenuOpen && (
                         <div className="absolute top-full left-0 right-0 mt-2 z-[60] rounded-xl border border-white/10 bg-black/95 p-1 backdrop-blur-2xl shadow-2xl animate-fadeIn">
-                            <button
-                                onClick={() => handleMenuNavigation("/inventory")}
+                            <Link
+                                to="/inventory"
+                                onClick={() => setIsTicketMenuOpen(false)}
                                 className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-bold text-white/70 active:bg-white/10"
                             >
                                 <Package size={16} />
                                 인벤토리
-                            </button>
+                            </Link>
                             <button
                                 onClick={() => handleMenuNavigation("https://ccc-010.com", true)}
                                 className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-bold text-white/70 active:bg-white/10 border-t border-white/5"

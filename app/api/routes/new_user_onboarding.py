@@ -18,16 +18,24 @@ from app.api.deps import get_current_user_id, get_db
 from app.models.external_ranking import ExternalRankingData
 from app.models.user import User
 from app.models.user_activity import UserActivity
+from app.models.mission import Mission, MissionCategory, UserMissionProgress
+from app.services.mission_service import MissionService
 
 router = APIRouter(prefix="/api/new-user", tags=["new-user"])
 
 
-class NewUserProgress(BaseModel):
-    deposit_confirmed: bool
-    play_1: bool
-    play_3: bool
-    share_or_join: bool
-    next_day_login: bool
+class NewUserMissionInfo(BaseModel):
+    id: int
+    logic_key: str
+    action_type: str | None
+    title: str
+    description: str | None
+    target_value: int
+    current_value: int
+    is_completed: bool
+    is_claimed: bool
+    reward_type: str
+    reward_amount: int
 
 
 class NewUserStatusResponse(BaseModel):
@@ -43,7 +51,7 @@ class NewUserStatusResponse(BaseModel):
     total_play_count: int
 
     bonus_cap: int
-    progress: NewUserProgress
+    missions: list[NewUserMissionInfo]
 
 
 def _to_utc_naive(dt: datetime) -> datetime:
@@ -70,13 +78,7 @@ def status(db: Session = Depends(get_db), user_id: int = Depends(get_current_use
             deposit_amount=0,
             total_play_count=0,
             bonus_cap=10_000,
-            progress=NewUserProgress(
-                deposit_confirmed=False,
-                play_1=False,
-                play_3=False,
-                share_or_join=False,
-                next_day_login=False,
-            ),
+            missions=[],
         )
 
     telegram_linked = bool(getattr(user, "telegram_id", None))
@@ -92,13 +94,7 @@ def status(db: Session = Depends(get_db), user_id: int = Depends(get_current_use
             deposit_amount=0,
             total_play_count=0,
             bonus_cap=10_000,
-            progress=NewUserProgress(
-                deposit_confirmed=False,
-                play_1=False,
-                play_3=False,
-                share_or_join=False,
-                next_day_login=False,
-            ),
+            missions=[],
         )
 
     # Determine "new user" window from first_login_at (Telegram-native entry) with fallback to created_at.
@@ -108,7 +104,6 @@ def status(db: Session = Depends(get_db), user_id: int = Depends(get_current_use
     window_active = now_utc < window_ends_at
 
     # Conservative eligibility: only show the page within the 24h window.
-    # (Existing users won't be eligible even if they manually navigate here.)
     if not window_active:
         return NewUserStatusResponse(
             eligible=False,
@@ -121,13 +116,7 @@ def status(db: Session = Depends(get_db), user_id: int = Depends(get_current_use
             deposit_amount=0,
             total_play_count=0,
             bonus_cap=10_000,
-            progress=NewUserProgress(
-                deposit_confirmed=False,
-                play_1=False,
-                play_3=False,
-                share_or_join=False,
-                next_day_login=False,
-            ),
+            missions=[],
         )
 
     activity = db.query(UserActivity).filter(UserActivity.user_id == user_id).first()
@@ -135,8 +124,6 @@ def status(db: Session = Depends(get_db), user_id: int = Depends(get_current_use
 
     ext = db.query(ExternalRankingData).filter(ExternalRankingData.user_id == user_id).first()
     deposit_amount = int(getattr(ext, "deposit_amount", 0) or 0)
-    # Ops definition: existing member if they have any external deposit history.
-    # We approximate "deposit count > 0" using activity.last_charge_at when available.
     existing_member_by_external_deposit = (deposit_amount > 0) or has_charge_history
 
     total_play_count = int(
@@ -145,10 +132,32 @@ def status(db: Session = Depends(get_db), user_id: int = Depends(get_current_use
         + (getattr(activity, "lottery_plays", 0) or 0)
     )
 
-    tz_kst = ZoneInfo("Asia/Seoul")
-    created_kst_date = (created.replace(tzinfo=timezone.utc)).astimezone(tz_kst).date()
-    now_kst_date = now_utc.replace(tzinfo=timezone.utc).astimezone(tz_kst).date()
-    next_day_login = now_kst_date > created_kst_date
+    # 1. Fetch missions in NEW_USER category
+    ms = MissionService(db)
+    missions_raw = db.query(Mission).filter(Mission.category == MissionCategory.NEW_USER, Mission.is_active == True).all()
+    
+    missions_info = []
+    for m in missions_raw:
+        # For NEW_USER category, reset_date is 'STATIC'
+        progress = db.query(UserMissionProgress).filter(
+            UserMissionProgress.user_id == user_id,
+            UserMissionProgress.mission_id == m.id,
+            UserMissionProgress.reset_date == "STATIC"
+        ).first()
+        
+        missions_info.append(NewUserMissionInfo(
+            id=m.id,
+            logic_key=m.logic_key,
+            action_type=m.action_type,
+            title=m.title,
+            description=m.description,
+            target_value=m.target_value,
+            current_value=progress.current_value if progress else 0,
+            is_completed=progress.is_completed if progress else False,
+            is_claimed=progress.is_claimed if progress else False,
+            reward_type=m.reward_type,
+            reward_amount=m.reward_amount
+        ))
 
     return NewUserStatusResponse(
         eligible=(not existing_member_by_external_deposit),
@@ -161,16 +170,5 @@ def status(db: Session = Depends(get_db), user_id: int = Depends(get_current_use
         deposit_amount=deposit_amount,
         total_play_count=total_play_count,
         bonus_cap=10_000,
-        progress=NewUserProgress(
-            deposit_confirmed=(deposit_amount > 0) or has_charge_history,
-            play_1=total_play_count >= 1,
-            play_3=total_play_count >= 3,
-            # Check if user completed any JOIN_CHANNEL or SHARE missions
-            share_or_join=db.query(UserMissionProgress).join(Mission).filter(
-                UserMissionProgress.user_id == user_id,
-                Mission.action_type.in_(["JOIN_CHANNEL", "SHARE", "SHARE_STORY", "SHARE_WALLET"]),
-                UserMissionProgress.is_completed == True
-            ).first() is not None,
-            next_day_login=bool(next_day_login),
-        ),
+        missions=missions_info
     )

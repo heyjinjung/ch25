@@ -5,6 +5,8 @@ import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Edit2, Plus, Save, S
 import { createUser, deleteUser, fetchUsers, updateUser, AdminUser, AdminUserPayload } from "../api/adminUserApi";
 import { useToast } from "../../components/common/ToastProvider";
 import UserImportModal from "../components/UserImportModal";
+import { fetchUserMissions, updateUserMission, AdminUserMissionDetail, AdminUserMissionUpdatePayload } from "../api/adminUserMissionApi";
+import { Check, ClipboardList, X } from "lucide-react";
 
 type MemberRow = AdminUser & {
   isEditing?: boolean;
@@ -64,6 +66,7 @@ const UserAdminPage: React.FC = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedUserForMissions, setSelectedUserForMissions] = useState<AdminUser | null>(null);
 
   const [sortKey, setSortKey] = useState<SortKey>("nickname");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
@@ -806,6 +809,15 @@ const UserAdminPage: React.FC = () => {
                           )}
                           <button
                             type="button"
+                            onClick={() => setSelectedUserForMissions(member)}
+                            className="rounded-md p-2 text-cyan-500 hover:text-white"
+                            title="미션 관리"
+                            aria-label="미션 관리"
+                          >
+                            <ClipboardList size={16} />
+                          </button>
+                          <button
+                            type="button"
                             onClick={() => removeRow(member)}
                             className="rounded-md p-2 text-red-500 hover:text-red-300"
                             title="삭제"
@@ -820,6 +832,12 @@ const UserAdminPage: React.FC = () => {
                 </tbody>
               </table>
             </div>
+            {selectedUserForMissions && (
+              <UserMissionModal
+                user={selectedUserForMissions}
+                onClose={() => setSelectedUserForMissions(null)}
+              />
+            )}
 
             {sortedMembers.length === 0 && (
               <div className="py-8 text-center text-gray-400">검색 결과가 없습니다.</div>
@@ -881,6 +899,132 @@ const UserAdminPage: React.FC = () => {
         onSuccess={() => queryClient.invalidateQueries({ queryKey: ["admin", "users"] })}
       />
     </section >
+  );
+};
+
+// --- Sub Components ---
+
+interface UserMissionModalProps {
+  user: AdminUser;
+  onClose: () => void;
+}
+
+const UserMissionModal: React.FC<UserMissionModalProps> = ({ user, onClose }) => {
+  const queryClient = useQueryClient();
+  const { addToast } = useToast();
+
+  const { data: missions = [], isLoading, refetch } = useQuery<AdminUserMissionDetail[]>({
+    queryKey: ["admin", "user-missions", user.id],
+    queryFn: () => fetchUserMissions(user.id),
+    enabled: !!user.id,
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ missionId, payload }: { missionId: number; payload: AdminUserMissionUpdatePayload }) =>
+      updateUserMission(user.id, missionId, payload),
+    onSuccess: () => {
+      refetch();
+      addToast("상태가 업데이트되었습니다.", "success");
+      queryClient.invalidateQueries({ queryKey: ["vault-status"] }); // Invalidate vault if rewards are claimed
+    },
+    onError: (err: any) => {
+      addToast(`수정 실패: ${err.message}`, "error");
+    },
+  });
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+      <div className="w-full max-w-4xl max-h-[90vh] overflow-hidden rounded-2xl border border-[#333333] bg-[#111111] shadow-2xl flex flex-col">
+        <div className="flex items-center justify-between border-b border-[#333333] p-4 sm:p-6 bg-[#1A1A1A]">
+          <div>
+            <h3 className="text-xl font-bold text-[#91F402]">
+              User Missions: {user.nickname || user.external_id}
+            </h3>
+            <p className="text-xs text-gray-400 mt-1">ID: {user.id} / {user.external_id}</p>
+          </div>
+          <button onClick={onClose} className="rounded-lg p-2 text-gray-400 hover:bg-[#333333] hover:text-white">
+            <X size={20} />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+          {isLoading ? (
+            <div className="py-20 text-center text-gray-500 font-medium">Loading mission data...</div>
+          ) : missions.length === 0 ? (
+            <div className="py-20 text-center text-gray-500 font-medium">활성화된 미션이 없습니다.</div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {missions.map((m) => (
+                <div key={m.mission_id} className="rounded-xl border border-[#333333] bg-[#1A1A1A] p-4 flex flex-col gap-3 group hover:border-[#91F402]/30 transition-all">
+                  <div className="flex justify-between items-start">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-[10px] font-bold bg-[#333333] text-gray-400 px-1.5 py-0.5 rounded">ID: {m.mission_id}</span>
+                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${m.category === "NEW_USER" ? "bg-emerald-900 text-emerald-200" : "bg-blue-900 text-blue-200"}`}>{m.category}</span>
+                      </div>
+                      <h4 className="font-bold text-white truncate" title={m.title}>{m.title}</h4>
+                      <p className="text-[10px] text-gray-500 font-mono mt-0.5">{m.logic_key}</p>
+                    </div>
+
+                    <div className="flex flex-col items-end gap-1 shrink-0 ml-2">
+                      <span className={`text-xs font-black px-2 py-0.5 rounded-full ${m.is_completed ? "bg-[#2D6B3B] text-[#91F402]" : "bg-red-900/30 text-red-400"}`}>
+                        {m.is_completed ? "COMPLETED" : "IN-PROGRESS"}
+                      </span>
+                      <span className={`text-[10px] font-bold ${m.is_claimed ? "text-amber-500" : "text-gray-600"}`}>
+                        {m.is_claimed ? "REWARD CLAIMED" : "UNCLAIMED"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="mt-2 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-gray-400">진행도: {m.current_value} / {m.target_value}</span>
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => updateMutation.mutate({ missionId: m.mission_id, payload: { current_value: m.target_value, is_completed: true } })}
+                          className="text-[10px] font-bold bg-[#333333] hover:bg-[#2D6B3B] text-white px-2 py-1 rounded transition-colors"
+                        >
+                          강제 완료
+                        </button>
+                        <button
+                          onClick={() => updateMutation.mutate({ missionId: m.mission_id, payload: { current_value: 0, is_completed: false, is_claimed: false } })}
+                          className="text-[10px] font-bold bg-[#333333] hover:bg-red-900/50 text-white px-2 py-1 rounded transition-colors"
+                        >
+                          초기화
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => updateMutation.mutate({ missionId: m.mission_id, payload: { is_completed: !m.is_completed } })}
+                        className={`flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-all ${m.is_completed ? "bg-[#2D6B3B] text-[#91F402]" : "bg-[#333333] text-gray-400 hover:text-white"}`}
+                      >
+                        <Check size={14} />
+                        {m.is_completed ? "완료됨" : "미완료"}
+                      </button>
+                      <button
+                        onClick={() => updateMutation.mutate({ missionId: m.mission_id, payload: { is_claimed: !m.is_claimed } })}
+                        className={`flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-all ${m.is_claimed ? "bg-amber-600 text-white" : "bg-[#333333] text-gray-400 hover:text-white"}`}
+                      >
+                        <Plus size={14} />
+                        {m.is_claimed ? "지급 완료" : "수동 지급"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="p-4 sm:p-6 border-t border-[#333333] bg-[#1A1A1A] flex justify-end">
+          <button onClick={onClose} className="rounded-lg bg-[#333333] px-6 py-2 text-sm font-bold text-white hover:bg-[#444444]">
+            닫기
+          </button>
+        </div>
+      </div>
+    </div>
   );
 };
 

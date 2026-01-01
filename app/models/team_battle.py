@@ -48,7 +48,7 @@ class TeamMember(Base):
     __tablename__ = "team_member"
     __table_args__ = (Index("idx_team_member_team", "team_id"),)
 
-    user_id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), primary_key=True)
     team_id = Column(Integer, ForeignKey("team.id", ondelete="CASCADE"), nullable=False)
     role = Column(String(10), nullable=False, default="member")
     joined_at = Column(DateTime, nullable=False, default=datetime.utcnow)
