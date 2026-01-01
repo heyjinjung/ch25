@@ -213,7 +213,6 @@ class UserSegmentService:
         from sqlalchemy import func
         from app.models.vault_program import VaultEarnEvent
         from app.models.ledger import UserCashLedger
-        from app.services.user_segment_service import WHALE_ACCRUAL_THRESHOLD
         
         segments = []
         

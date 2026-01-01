@@ -81,6 +81,7 @@ const CategoryTabs: React.FC<{ active: string; onChange: (id: string) => void }>
             )}
           >
             {tab.id === 'hot' && <img src="/assets/logo_cc_v2.png" className="w-3.5 h-3.5 object-contain grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100" alt="" />}
+            {tab.id === 'new' && <img src="/assets/logo_cc_v2.png" className="w-3.5 h-3.5 object-contain grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100" alt="" />}
             {tab.label}
           </a>
         ) : (
@@ -201,7 +202,7 @@ const HomePage: React.FC = () => {
       )}
 
       {/* Hero Section */}
-      <div className="relative mx-1 overflow-hidden rounded-3xl border border-white/10 shadow-2xl aspect-[3/1]">
+      <div className="relative mx-1 overflow-hidden rounded-3xl border border-white/10 shadow-2xl aspect-[8/3]">
         <img src="/assets/hero_event_banner.png" className="absolute inset-0 w-full h-full object-cover" alt="Banner" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
 
@@ -211,9 +212,14 @@ const HomePage: React.FC = () => {
             href="https://t.me/jm956"
             target="_blank"
             rel="noreferrer"
-            className="inline-block rounded-lg px-6 py-2 text-base font-semibold transition focus:outline-none bg-figma-primary text-white font-bold shadow-[0_4px_12px_rgba(0,0,0,0.3)] shadow-lg shadow-emerald-500/40 hover:brightness-110 active:scale-95 uppercase tracking-wide"
+            className="inline-flex items-center gap-2 rounded-lg px-6 py-2 text-base font-bold transition focus:outline-none bg-figma-primary text-white shadow-[0_4px_12px_rgba(0,0,0,0.3)] shadow-emerald-500/40 hover:brightness-110 active:scale-95 tracking-wide"
           >
-            실장 문의하기
+            <img
+              src="/assets/icon_telegram_button.png"
+              className="w-5 h-5 object-contain"
+              alt=""
+            />
+            실장문의
           </a>
         </div>
       </div>

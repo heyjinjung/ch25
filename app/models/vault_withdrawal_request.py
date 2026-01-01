@@ -11,7 +11,7 @@ class VaultWithdrawalRequest(Base):
     __tablename__ = "vault_withdrawal_request"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("user.id"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True)
     
     amount = Column(Integer, nullable=False)
     status = Column(String(20), nullable=False, default="PENDING")  # PENDING, APPROVED, REJECTED, CANCELLED

@@ -14,7 +14,7 @@ class ExternalRankingData(Base):
     __table_args__ = (UniqueConstraint("user_id", name="uq_external_ranking_user"),)
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True)
     deposit_amount = Column(Integer, nullable=False, default=0)
     play_count = Column(Integer, nullable=False, default=0)
     deposit_remainder = Column(Integer, nullable=False, default=0)
@@ -34,12 +34,12 @@ class ExternalRankingRewardLog(Base):
     __tablename__ = "external_ranking_reward_log"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True)
     reward_type = Column(String(50), nullable=False)
     reward_amount = Column(Integer, nullable=False)
     reason = Column(String(100), nullable=False)
     season_name = Column(String(50), nullable=False)
-    data_id = Column(Integer, ForeignKey("external_ranking_data.id", ondelete="SET NULL"), nullable=True)
+    data_id = Column(Integer, ForeignKey("external_ranking_data.id", ondelete="CASCADE"), nullable=True)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
 
     data = relationship("ExternalRankingData", back_populates="reward_logs")

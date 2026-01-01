@@ -29,11 +29,11 @@ const EventDashboardPage: React.FC = () => {
                         {/* Background Image */}
                         <img
                             src="/assets/welcome/levelup_v2.png"
-                            className="absolute inset-0 z-0 h-full w-full object-cover object-center transition-transform duration-200 group-hover:scale-[1.02]"
+                            className="absolute inset-0 z-0 h-full w-full object-cover object-left-top transition-transform duration-200 group-hover:scale-[1.02]"
                             alt="Level Tower"
                         />
 
-                        <div className="relative z-10 flex h-44 items-end p-5">
+                        <div className="relative z-10 flex h-44 items-end justify-end p-5">
                             <div className="max-w-[85%] rounded-2xl border border-white/10 bg-black/45 p-4">
                                 <h3 className="text-lg font-black text-white">시즌 패스</h3>
                                 <div className="mt-3 inline-flex items-center justify-center rounded-full bg-indigo-500/20 px-4 py-2 text-sm font-black text-indigo-300 ring-1 ring-inset ring-indigo-500/30">
@@ -52,11 +52,11 @@ const EventDashboardPage: React.FC = () => {
                         {/* Background Image */}
                         <img
                             src="/assets/welcome/mission_v2.png"
-                            className="absolute inset-0 z-0 h-full w-full object-cover object-center transition-transform duration-200 group-hover:scale-[1.02]"
+                            className="absolute inset-0 z-0 h-full w-full object-cover object-left-top transition-transform duration-200 group-hover:scale-[1.02]"
                             alt="Daily Missions"
                         />
 
-                        <div className="relative z-10 flex h-44 items-end p-5">
+                        <div className="relative z-10 flex h-44 items-end justify-end p-5">
                             <div className="max-w-[85%] rounded-2xl border border-white/10 bg-black/45 p-4">
                                 <h3 className="text-lg font-black text-white">데일리 미션</h3>
                                 <div className="mt-3 inline-flex items-center justify-center rounded-full bg-[#91F402]/20 px-4 py-2 text-sm font-black text-[#91F402] ring-1 ring-inset ring-[#91F402]/30">

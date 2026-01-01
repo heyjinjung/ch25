@@ -35,7 +35,7 @@ class VaultStatus(Base):
     __tablename__ = "vault_status"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("user.id"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True)
     program_id = Column(Integer, ForeignKey("vault_program.id"), nullable=False, index=True)
 
     state = Column(String(20), nullable=False, server_default="LOCKED", default="LOCKED")

@@ -182,6 +182,53 @@ class Settings(BaseSettings):
         ),
     )
 
+    # Redis (Optional - for caching)
+    redis_url: str | None = Field(None, validation_alias=AliasChoices("REDIS_URL", "redis_url"))
+
+    # Telegram webhook mode (Optional)
+    telegram_use_webhook: bool = Field(
+        False,
+        validation_alias=AliasChoices(
+            "TELEGRAM_USE_WEBHOOK",
+            "telegram_use_webhook",
+        ),
+    )
+    telegram_webhook_url: str | None = Field(
+        None,
+        validation_alias=AliasChoices(
+            "TELEGRAM_WEBHOOK_URL",
+            "telegram_webhook_url",
+        ),
+    )
+    telegram_webhook_path: str = Field(
+        "/telegram/webhook",
+        validation_alias=AliasChoices(
+            "TELEGRAM_WEBHOOK_PATH",
+            "telegram_webhook_path",
+        ),
+    )
+    telegram_webhook_listen: str = Field(
+        "0.0.0.0",
+        validation_alias=AliasChoices(
+            "TELEGRAM_WEBHOOK_LISTEN",
+            "telegram_webhook_listen",
+        ),
+    )
+    telegram_webhook_port: int = Field(
+        8080,
+        validation_alias=AliasChoices(
+            "TELEGRAM_WEBHOOK_PORT",
+            "telegram_webhook_port",
+        ),
+    )
+    telegram_webhook_secret_token: str | None = Field(
+        None,
+        validation_alias=AliasChoices(
+            "TELEGRAM_WEBHOOK_SECRET_TOKEN",
+            "telegram_webhook_secret_token",
+        ),
+    )
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

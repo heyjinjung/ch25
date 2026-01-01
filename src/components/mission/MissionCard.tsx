@@ -2,7 +2,7 @@
 import React from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
-import { Bell, Check, ChevronRight, Share2, Star, Trophy, Users, Zap } from "lucide-react";
+import { Bell, Check, ChevronRight, Share2, Star, Trophy, Users } from "lucide-react";
 
 import { useHaptic } from "../../hooks/useHaptic";
 import { useSound } from "../../hooks/useSound";
@@ -130,7 +130,13 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
       case "LOGIN":
         return <Star className={iconClass} />;
       default:
-        return <Zap className={iconClass} />;
+        return (
+          <img
+            src="/assets/icon_diamond.png"
+            alt=""
+            className="h-5 w-5 object-contain"
+          />
+        );
     }
   };
 

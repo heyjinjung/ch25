@@ -1,4 +1,3 @@
-import asyncio
 import logging
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
@@ -32,40 +31,46 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=reply_markup
     )
 
-async def run_bot():
+def run_bot() -> None:
     if not settings.telegram_bot_token:
         logger.error("TELEGRAM_BOT_TOKEN not set. Bot will not start.")
         return
 
-    # Create the Application
     application = ApplicationBuilder().token(settings.telegram_bot_token).build()
-    
-    # Add handlers
     application.add_handler(CommandHandler("start", start))
-    
-    # Start the bot
+
+    use_webhook = bool(settings.telegram_use_webhook or settings.telegram_webhook_url)
+    if use_webhook:
+        if not settings.telegram_webhook_url:
+            logger.error("TELEGRAM_USE_WEBHOOK enabled but TELEGRAM_WEBHOOK_URL is missing.")
+            return
+
+        webhook_path = (settings.telegram_webhook_path or "/telegram/webhook").lstrip("/")
+        webhook_url = settings.telegram_webhook_url.rstrip("/") + "/" + webhook_path
+
+        logger.info(
+            "Starting Telegram Bot (Webhook mode) listen=%s:%s url_path=/%s webhook_url=%s",
+            settings.telegram_webhook_listen,
+            settings.telegram_webhook_port,
+            webhook_path,
+            webhook_url,
+        )
+
+        application.run_webhook(
+            listen=settings.telegram_webhook_listen,
+            port=settings.telegram_webhook_port,
+            url_path=webhook_path,
+            webhook_url=webhook_url,
+            secret_token=settings.telegram_webhook_secret_token,
+            drop_pending_updates=True,
+        )
+        return
+
     logger.info("Starting Telegram Bot (Polling mode)...")
-    
-    # Run polling in the current event loop
-    # Note: run_polling is normally a blocking call that manages its own loop.
-    # Since we want to call this from __main__ with asyncio.run, we use this carefully.
-    await application.initialize()
-    await application.start()
-    await application.updater.start_polling()
-    
-    # Keep it running until interrupted
-    try:
-        while True:
-            await asyncio.sleep(1)
-    except (KeyboardInterrupt, asyncio.CancelledError):
-        logger.info("Stopping bot...")
-    finally:
-        await application.updater.stop()
-        await application.stop()
-        await application.shutdown()
+    application.run_polling(drop_pending_updates=True)
 
 if __name__ == '__main__':
     try:
-        asyncio.run(run_bot())
+        run_bot()
     except KeyboardInterrupt:
         pass
