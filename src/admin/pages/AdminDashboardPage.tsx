@@ -7,7 +7,6 @@ import {
   CalendarRange,
   Clock3,
   Dice6,
-  LayoutDashboard,
   Shield,
   Sparkles,
   Swords,
@@ -62,12 +61,6 @@ const quickLinks = [
     description: "기간/보상/조건 구성",
     to: "/admin/seasons",
     icon: <CalendarRange className="h-5 w-5 text-white" />,
-  },
-  {
-    title: "기능 일정",
-    description: "이벤트/배포 캘린더 관리",
-    to: "/admin/feature-schedule",
-    icon: <LayoutDashboard className="h-5 w-5 text-white" />,
   },
   {
     title: "룰렛 설정",

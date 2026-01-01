@@ -35,7 +35,7 @@ const GameTokenGrantPage: React.FC = () => {
     <section className="space-y-5">
       <header>
         <h2 className="text-2xl font-bold text-[#91F402]">티켓 지급</h2>
-        <p className="mt-1 text-sm text-gray-400">id 기준으로 지급합니다.</p>
+        <p className="mt-1 text-sm text-gray-400">TG Username 또는 ID 기준으로 지급합니다.</p>
       </header>
 
       <div className="rounded-lg border border-[#333333] bg-[#111111] p-6 shadow-md">
@@ -57,8 +57,8 @@ const GameTokenGrantPage: React.FC = () => {
 
         <form className="mt-5 space-y-5" onSubmit={onSubmit}>
           <div>
-            <label className={labelClass}>external_id</label>
-            <input className={inputClass} {...form.register("external_id")} type="text" placeholder="ex: test-qa-999" />
+            <label className={labelClass}>TG Username / ID</label>
+            <input className={inputClass} {...form.register("external_id")} type="text" placeholder="예: @username 또는 test-qa-999" />
             {form.formState.errors.external_id && <p className="mt-2 text-sm text-red-300">{form.formState.errors.external_id.message}</p>}
           </div>
 

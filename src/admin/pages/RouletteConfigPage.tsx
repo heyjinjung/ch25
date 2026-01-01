@@ -76,6 +76,47 @@ const mapErrorDetail = (error: unknown): string => {
   return (error as any)?.message ?? "요청 처리 중 오류가 발생했습니다.";
 };
 
+/**
+ * Calculate probability % and rarity label for intuitive weight visualization
+ */
+const getProbabilityInfo = (weight: number, totalWeight: number) => {
+  if (totalWeight <= 0) return { percent: 0, label: "-", color: "gray" };
+
+  const percent = (weight / totalWeight) * 100;
+
+  // Rarity thresholds with Korean labels
+  let label: string;
+  let color: string;
+  let bgColor: string;
+
+  if (percent >= 30) {
+    label = "자주";
+    color = "#91F402";
+    bgColor = "bg-[#91F402]";
+  } else if (percent >= 15) {
+    label = "보통";
+    color = "#22D3EE";
+    bgColor = "bg-[#22D3EE]";
+  } else if (percent >= 5) {
+    label = "희귀";
+    color = "#F59E0B";
+    bgColor = "bg-[#F59E0B]";
+  } else if (percent >= 1) {
+    label = "매우 희귀";
+    color = "#EF4444";
+    bgColor = "bg-[#EF4444]";
+  } else {
+    label = "전설급";
+    color = "#A855F7";
+    bgColor = "bg-[#A855F7]";
+  }
+
+  // Expected hits per 100 spins
+  const expected100 = Math.round(percent);
+
+  return { percent, label, color, bgColor, expected100 };
+};
+
 const RouletteConfigPage: React.FC = () => {
   const { addToast } = useToast();
   const queryClient = useQueryClient();
@@ -232,9 +273,8 @@ const RouletteConfigPage: React.FC = () => {
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-400">{config.segments?.length ?? 0}</td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm">
                       <span
-                        className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-medium ${
-                          config.is_active ? "border-[#2D6B3B] text-[#91F402]" : "border-[#333333] text-gray-400"
-                        }`}
+                        className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-medium ${config.is_active ? "border-[#2D6B3B] text-[#91F402]" : "border-[#333333] text-gray-400"
+                          }`}
                       >
                         {config.is_active ? "활성" : "비활성"}
                       </span>
@@ -380,6 +420,7 @@ const RouletteConfigPage: React.FC = () => {
                           <th className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">번호</th>
                           <th className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">라벨</th>
                           <th className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">가중치</th>
+                          <th className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#91F402]">확률 / 희소성</th>
                           <th className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">보상 타입</th>
                           <th className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">보상 값</th>
                         </tr>
@@ -407,6 +448,39 @@ const RouletteConfigPage: React.FC = () => {
                               {form.formState.errors.segments?.[idx]?.weight?.message && (
                                 <p className="mt-1 text-xs text-red-300">{form.formState.errors.segments[idx]?.weight?.message}</p>
                               )}
+                            </td>
+                            <td className="px-3 py-2">
+                              {(() => {
+                                const totalWeight = segments.fields.reduce((sum, seg) => sum + (seg.weight || 0), 0);
+                                const info = getProbabilityInfo(field.weight || 0, totalWeight);
+                                return (
+                                  <div className="space-y-1 min-w-[120px]">
+                                    {/* Probability bar */}
+                                    <div className="relative h-2 w-full rounded-full bg-[#333333] overflow-hidden">
+                                      <div
+                                        className={`absolute left-0 top-0 h-full rounded-full ${info.bgColor || 'bg-gray-500'}`}
+                                        style={{ width: `${Math.min(info.percent, 100)}%` }}
+                                      />
+                                    </div>
+                                    {/* Percentage and rarity badge */}
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-sm font-bold" style={{ color: info.color }}>
+                                        {info.percent.toFixed(1)}%
+                                      </span>
+                                      <span
+                                        className="px-1.5 py-0.5 rounded text-[10px] font-bold"
+                                        style={{ backgroundColor: `${info.color}20`, color: info.color }}
+                                      >
+                                        {info.label}
+                                      </span>
+                                    </div>
+                                    {/* Expected hits per 100 spins */}
+                                    <span className="text-[10px] text-gray-500">
+                                      100회당 ~{info.expected100}회
+                                    </span>
+                                  </div>
+                                );
+                              })()}
                             </td>
                             <td className="px-3 py-2">
                               <select
