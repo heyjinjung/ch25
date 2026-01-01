@@ -46,12 +46,12 @@
 - 인벤 서비스(수량형 아이템 + ledger): [app/services/inventory_service.py](app/services/inventory_service.py)
   - `grant_item()` / `consume_item()` / `use_voucher()`
 - 상점 서비스(하드코딩 상품): [app/services/shop_service.py](app/services/shop_service.py)
-  - `GameWalletService.require_and_consume_token(... DIAMOND ...)`로 **지갑 DIAMOND 차감**
+  - `InventoryService.consume_item(... item_type="DIAMOND" ...)`로 **인벤 DIAMOND 차감(SoT)**
   - `InventoryService.grant_item(... VOUCHER_... ...)`로 **교환권 인벤 적립**
 
 현재 상태 요약:
 - "교환권 적립/사용"의 큰 구조는 존재하나,
-- **요구사항(다이아=인벤 SoT)**과 달리 **결제 소스가 지갑 DIAMOND**로 되어 있음.
+- 현재 구현은 **결제 소스가 인벤 DIAMOND(SoT)**로 정렬되어 있음.
 
 ### 1.2 텔레그램 인증이 유저 테스트를 막는 지점
 
@@ -153,7 +153,7 @@
 
 목표: 미션/상점 모두 DIAMOND를 인벤에서 관리.
 
-- 미션 보상 지급 경로를 인벤으로 변경(지갑 DIAMOND 사용 중지)
+- 미션 보상 지급 경로를 인벤으로 변경(지갑 DIAMOND 사용 중지) ✅
 - 상점 구매의 cost를 인벤 DIAMOND 차감으로 변경
 - API 응답/프론트 표시는 "인벤 DIAMOND"를 단일 SoT로 사용
 
@@ -265,5 +265,5 @@ SPIN#1 reward=POINT amount=20000 vault_earn=20200 locked_before=105200 locked_af
 이유: 지금은 테스트가 막혀있어서, 다이아 SoT를 옮기기 전에 E2E 루프가 먼저 돌아야 함
 체크리스트(완료 기준)
 미션 보상 다이아가 인벤으로 들어오고, 상점 결제도 인벤 다이아를 깎음
-지갑 DIAMOND 의존 제거(또는 최소화)
+지갑 DIAMOND 의존 제거(또는 최소화) ✅
 원하시면, 제가 바로 1순위(RequireAuth 플래그)를 실제 코드로 적용해서 PR-ready 상태로 만들어둘게요. 그때 플래그 이름(VITE_ALLOW_NON_TELEGRAM_LOGIN)이랑 “허용 범위(로그인 페이지만 vs 전체 앱)”만 1줄로 확정해주시면 됩니다.

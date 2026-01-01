@@ -64,7 +64,7 @@ class AdminRouletteConfigUpdate(BaseModel):
             raise ValueError("invalid ticket_type")
         return value
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, validate_by_name=True)
 
 
 class AdminRouletteSegmentResponse(AdminRouletteSegmentBase):

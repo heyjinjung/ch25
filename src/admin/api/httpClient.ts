@@ -79,8 +79,10 @@ adminApi.interceptors.request.use((config) => {
       ? localStorage.getItem("xmas_access_token") || localStorage.getItem("token")
       : null);
   if (token) {
-    config.headers = config.headers ?? {};
-    config.headers.Authorization = `Bearer ${token}`;
+    (config as any).headers = {
+      ...(config.headers || {}),
+      Authorization: `Bearer ${token}`
+    };
   }
   return config;
 });
@@ -95,8 +97,8 @@ adminApi.interceptors.response.use(
     if (status === 401 || status === 403) {
       const hadAuthHeader = Boolean(
         error?.config?.headers?.Authorization ||
-          error?.config?.headers?.authorization ||
-          error?.config?.headers?.AUTHORIZATION
+        error?.config?.headers?.authorization ||
+        error?.config?.headers?.AUTHORIZATION
       );
       const currentToken =
         getAdminToken() ||

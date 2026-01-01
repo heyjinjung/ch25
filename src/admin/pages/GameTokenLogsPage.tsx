@@ -16,7 +16,7 @@ import { GAME_TOKEN_LABELS, GameTokenType } from "../../types/gameTokens";
 import { History, Coins, Plus, Minus, Search, X, Loader2 } from "lucide-react";
 import { useToast } from "../../components/common/ToastProvider";
 
-const tokenOptions: GameTokenType[] = ["ROULETTE_COIN", "DICE_TOKEN", "LOTTERY_TICKET", "CC_COIN", "GOLD_KEY", "DIAMOND_KEY"];
+const tokenOptions: GameTokenType[] = ["ROULETTE_COIN", "DICE_TOKEN", "LOTTERY_TICKET", "GOLD_KEY", "DIAMOND_KEY"];
 
 const gameLabel = (game?: string | null) => {
   const raw = String(game ?? "").trim();
