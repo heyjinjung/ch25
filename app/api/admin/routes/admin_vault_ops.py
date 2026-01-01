@@ -58,6 +58,7 @@ def _build_admin_state(service: VaultService, db: Session, user_id: int) -> Vaul
         locked_expires_at=expires_at,
         accrual_multiplier=service.vault_accrual_multiplier(db, now) if eligible else None,
         program_key=service.PROGRAM_KEY,
+        total_charge_amount=int(getattr(user, "total_charge_amount", 0) or 0),
     )
 
 

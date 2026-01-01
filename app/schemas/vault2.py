@@ -66,6 +66,7 @@ class VaultAdminStateResponse(BaseModel):
     locked_expires_at: datetime | None = None
     accrual_multiplier: float | None = None
     program_key: str | None = None
+    total_charge_amount: int = 0
 
 
 
