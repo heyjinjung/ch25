@@ -33,6 +33,8 @@ class RevokeGameTokensRequest(BaseModel):
 class TokenBalance(BaseModel):
     user_id: int
     external_id: str | None = None
+    telegram_username: str | None = None
+    nickname: str | None = None
     token_type: GameTokenType
     balance: int
 
@@ -41,6 +43,8 @@ class PlayLogEntry(BaseModel):
     id: int
     user_id: int
     external_id: str | None = None
+    telegram_username: str | None = None
+    nickname: str | None = None
     game: str
     reward_type: str
     reward_amount: int
@@ -52,6 +56,8 @@ class LedgerEntry(BaseModel):
     id: int
     user_id: int
     external_id: str | None = None
+    telegram_username: str | None = None
+    nickname: str | None = None
     token_type: GameTokenType
     delta: int
     balance_after: int
@@ -64,4 +70,6 @@ class LedgerEntry(BaseModel):
 class UserWalletSummary(BaseModel):
     user_id: int
     external_id: str | None = None
+    telegram_username: str | None = None
+    nickname: str | None = None
     balances: dict[str, int]

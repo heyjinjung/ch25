@@ -39,6 +39,8 @@ export interface PlayLogEntry {
   id: number;
   user_id: number;
   external_id?: string;
+  nickname?: string;
+  telegram_username?: string;
   game: string;
   reward_type: string;
   reward_amount: number;
@@ -50,6 +52,8 @@ export interface LedgerEntry {
   id: number;
   user_id: number;
   external_id?: string;
+  nickname?: string;
+  telegram_username?: string;
   token_type: GameTokenType;
   delta: number;
   balance_after: number;

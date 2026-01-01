@@ -95,7 +95,7 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) =>
                             4개 미션 완료하고
                         </h2>
                         <p className="text-lg font-bold text-emerald-400">
-                            💎 10,000원 받기
+                            💰 10,000원 받기
                         </p>
                     </div>
 
@@ -120,7 +120,7 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) =>
                                 <div className="text-center">
                                     <p className="text-[10px] font-bold text-white/80">{mission.title}</p>
                                     <div className="flex items-center justify-center gap-1 mt-0.5">
-                                        <img src="/assets/icon_diamond.png" alt="" className="w-3 h-3" />
+                                        <img src="/assets/logo_cc_v2.png" alt="" className="w-3.5 h-3.5 object-contain" />
                                         <span className="text-[10px] font-bold text-emerald-400">{mission.reward.toLocaleString()}</span>
                                     </div>
                                 </div>

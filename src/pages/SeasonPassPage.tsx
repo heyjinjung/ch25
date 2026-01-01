@@ -221,7 +221,7 @@ const SeasonPassPage: React.FC = () => {
                       {/* Reward Card: Robust responsive sizing */}
                       <div className={clsx(
                         "flex flex-col rounded-[1.75rem] p-5 border transition-all duration-700 relative overflow-hidden group/card shadow-[0_15px_40px_-5px_rgba(0,0,0,0.8)] min-w-0",
-                        isCurrent ? "bg-black border-figma-accent shadow-[0_0_40px_rgba(48,255,117,0.05)]" :
+                        isCurrent ? "bg-black border-figma-accent shadow-[0_0_40px_rgba(48,255,117,0.05)] motion-reduce:animate-none animate-elevator-rise" :
                           isClaimed ? "bg-black/90 border-emerald-500/30 opacity-95" : "bg-black/40 border-white/5 opacity-50"
                       )}>
                         {/* Subtle internal shine */}
@@ -230,8 +230,8 @@ const SeasonPassPage: React.FC = () => {
                         <div className="flex justify-between items-start mb-4 gap-2">
                           <div className="flex flex-col gap-1 min-w-0 flex-1">
                             <span className={clsx(
-                              "text-[9px] font-black uppercase tracking-[0.2em] truncate",
-                              isCurrent ? "text-figma-accent" : "text-white/20"
+                              "text-[10px] font-black uppercase tracking-[0.2em] truncate",
+                              isCurrent ? "text-figma-accent" : "text-white/40"
                             )}>
                               MILESTONE {level.level}
                             </span>
@@ -250,7 +250,7 @@ const SeasonPassPage: React.FC = () => {
                         {/* Progress Tracker Core */}
                         <div className="space-y-1.5 mb-5 mt-auto">
                           <div className="flex justify-between items-end">
-                            <p className="text-[8px] font-black text-white/20 uppercase tracking-widest">EXP PROGRESS</p>
+                            <p className="text-[10px] font-black text-white/40 uppercase tracking-widest">EXP PROGRESS</p>
                             <p className="text-[10px] font-black text-white/80">{level.required_xp.toLocaleString()} <span className="text-white/20">XP</span></p>
                           </div>
                           <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/5 relative">

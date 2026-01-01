@@ -97,7 +97,7 @@ class AdminUserService:
             
             term = f"%{q.strip()}%"
             from sqlalchemy import or_, cast, String
-            from app.models.user_profile import UserAdminProfile
+            from app.models.admin_user_profile import AdminUserProfile
             
             # Note: We need to join admin_profile to search its fields
             stmt = stmt.outerjoin(User.admin_profile)
@@ -106,8 +106,8 @@ class AdminUserService:
                 User.telegram_username.ilike(term),
                 User.nickname.ilike(term),
                 User.external_id.ilike(term),
-                UserAdminProfile.real_name.ilike(term),
-                UserAdminProfile.tags.ilike(term),
+                AdminUserProfile.real_name.ilike(term),
+                AdminUserProfile.tags.ilike(term),
             ]
             
             if q.strip().isdigit():

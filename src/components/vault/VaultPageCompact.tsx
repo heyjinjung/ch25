@@ -71,10 +71,10 @@ const VaultPageCompact: React.FC = () => {
                     <div className={clsx(
                         "px-4 py-1 rounded-full border font-black text-[10px] tracking-[0.1em] uppercase backdrop-blur-md transition-all",
                         view.eligible
-                            ? "bg-black border-emerald-400 text-emerald-400 shadow-[0_0_15px_rgba(52,211,153,0.3)] animate-pulse"
+                            ? "bg-black/90 border-emerald-400 text-emerald-400 ring-2 ring-emerald-400/30 shadow-[0_0_24px_rgba(52,211,153,0.45)] animate-pulse"
                             : "bg-black/80 border-white/20 text-white/50"
                     )}>
-                        {view.eligible ? "금고해제 완료" : "잠금"}
+                        {view.eligible ? "내돈찾기" : "잠금"}
                     </div>
                 </div>
             </div>
@@ -111,16 +111,16 @@ const VaultPageCompact: React.FC = () => {
                         <div className="flex items-center gap-2">
                             <span className="text-xl">👑</span>
                             <div>
-                                <p className="text-amber-400 font-bold text-sm">VIP 금고 해금 완료</p>
-                                <p className="text-amber-200/60 text-[10px]">모든 보관금이 즉시 출금 가능해집니다.</p>
+                                <p className="text-amber-400 font-black text-base">VIP 금고 해금 완료</p>
+                                <p className="text-amber-200/70 text-xs font-bold">모든 보관금이 즉시 출금 가능해집니다.</p>
                             </div>
                         </div>
                     </div>
                 ) : (
                     <div className="w-full p-4 rounded-xl bg-white/5 border border-white/10">
                         <div className="flex justify-between items-end mb-2">
-                            <span className="text-white/80 text-xs font-semibold">VIP 금고 해금 진행도</span>
-                            <span className="text-amber-400 text-xs font-bold">
+                            <span className="text-white/90 text-sm font-black">VIP 금고 진행도</span>
+                            <span className="text-amber-400 text-sm font-black">
                                 {Math.floor(((vault.data?.totalChargeAmount ?? 0) / 100000) * 100)}%
                             </span>
                         </div>
@@ -130,7 +130,7 @@ const VaultPageCompact: React.FC = () => {
                                 style={{ width: `${Math.min(100, ((vault.data?.totalChargeAmount ?? 0) / 100000) * 100)}%` }}
                             />
                         </div>
-                        <p className="text-center text-[10px] text-white/40">
+                        <p className="text-center text-xs text-white/55 font-bold leading-relaxed">
                             총 충전 <span className="text-amber-400">{formatWon(vault.data?.totalChargeAmount ?? 0)}</span> / 100,000 달성 시 <br />
                             <span className="text-white/80">보관금 전액이 즉시 잠금 해제됩니다.</span>
                         </p>

@@ -33,7 +33,9 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
     if (result.success) {
       notification("success");
       playToast();
-      addToast(`보상 수령 완료: ${result.amount} ${result.reward_type}!`, "success");
+      const rewardTypeName = result.reward_type === "CASH_UNLOCK" ? "원" : (result.reward_type || "");
+      const amountStr = (result.amount || 0).toLocaleString();
+      addToast(`보상 수령 완료: ${amountStr}${rewardTypeName}!`, "success");
       queryClient.invalidateQueries({ queryKey: ["vault-status"] });
     } else {
       notification("error");
@@ -170,8 +172,15 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
 
             <div className="shrink-0 text-right">
               <div className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-black/30 px-2 py-0.5">
-                <img src="/assets/icon_diamond.png" alt="" className="h-3 w-3 object-contain" />
-                <span className="text-[12px] font-black text-figma-accent">{mission.reward_amount}</span>
+                <img
+                  src={mission.reward_type === "CASH_UNLOCK" ? "/assets/logo_cc_v2.png" : "/assets/icon_diamond.png"}
+                  alt=""
+                  className="h-3.5 w-3.5 object-contain"
+                />
+                <span className="text-[12px] font-black text-figma-accent">
+                  {mission.reward_amount.toLocaleString()}
+                  {mission.reward_type === "CASH_UNLOCK" && "원"}
+                </span>
               </div>
               {mission.xp_reward > 0 && (
                 <div className="mt-1 text-[10px] font-black text-white/70">+{mission.xp_reward} XP</div>

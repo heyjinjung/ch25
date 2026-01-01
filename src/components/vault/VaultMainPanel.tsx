@@ -116,9 +116,9 @@ const VaultVisual: React.FC<{ eligible: boolean }> = React.memo(({ eligible }) =
       <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 z-20">
         <div className={clsx(
           "px-6 py-2 rounded-full border-2 font-black text-xs tracking-[0.2em] uppercase shadow-2xl backdrop-blur-xl transition-all duration-500",
-          eligible ? "bg-black border-figma-accent text-figma-accent shadow-[0_0_30px_rgba(48,255,117,0.3)] animate-bounce" : "bg-black/80 border-white/10 text-white/40"
+          eligible ? "bg-figma-accent text-black border-white/50 ring-2 ring-white/15 shadow-[0_0_34px_rgba(48,255,117,0.45)] animate-pulse" : "bg-black/80 border-white/10 text-white/40"
         )}>
-          {eligible ? "해금 완료" : "잠겨있음"}
+          {eligible ? "내돈찾기" : "잠겨있음"}
         </div>
       </div>
     </div>

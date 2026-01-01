@@ -118,7 +118,7 @@ const LevelTowerPage: React.FC = () => {
             <div className="flex-1 flex flex-col justify-center">
                 <div className="relative mx-auto w-full max-w-sm">
                     {/* Tower Floors */}
-                    <div className="relative flex flex-col gap-0 border-2 border-white/10 bg-gradient-to-b from-black/40 to-black/60 rounded-2xl overflow-hidden">
+                    <div className="relative flex flex-col gap-0 border-2 border-white/15 bg-gradient-to-b from-black/30 to-black/55 rounded-2xl overflow-hidden">
                         {view.visibleFloors.map((floor) => {
                             const isCurrent = floor.level === view.currentLevel;
                             const isCompleted = floor.is_claimed || floor.level < view.currentLevel;
@@ -130,15 +130,16 @@ const LevelTowerPage: React.FC = () => {
                                     key={floor.level}
                                     className={clsx(
                                         "relative px-4 py-4 border-b border-white/10 transition-all duration-500",
-                                        isCurrent && "bg-emerald-500/10",
-                                        isCompleted && "bg-white/5 opacity-70",
-                                        isLocked && "opacity-40",
-                                        isNext && "bg-amber-500/5"
+                                        isCurrent &&
+                                            "bg-emerald-500/12 ring-2 ring-emerald-400/25 shadow-[0_12px_32px_-18px_rgba(52,211,153,0.45)] motion-reduce:animate-none animate-elevator-rise",
+                                        isCompleted && "bg-white/5 opacity-80",
+                                        isLocked && "opacity-55",
+                                        isNext && "bg-amber-500/8"
                                     )}
                                 >
                                     {/* Current Floor Glow */}
                                     {isCurrent && (
-                                        <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 via-emerald-500/20 to-emerald-500/10 animate-pulse" />
+                                        <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 via-emerald-500/22 to-emerald-500/10 animate-pulse" />
                                     )}
 
                                     <div className="relative z-10 flex items-center justify-between">
@@ -166,15 +167,15 @@ const LevelTowerPage: React.FC = () => {
                                                 <p
                                                     className={clsx(
                                                         "font-black",
-                                                        isCurrent ? "text-emerald-400 text-lg" : "text-white/70 text-sm"
+                                                        isCurrent ? "text-emerald-300 text-xl" : "text-white/80 text-base"
                                                     )}
                                                 >
                                                     Lv.{floor.level}
                                                 </p>
                                                 <p
                                                     className={clsx(
-                                                        "text-xs",
-                                                        isCurrent ? "text-white font-bold" : "text-white/50"
+                                                        "text-sm",
+                                                        isCurrent ? "text-white font-bold" : "text-white/60"
                                                     )}
                                                 >
                                                     {floor.reward_label}
@@ -219,7 +220,7 @@ const LevelTowerPage: React.FC = () => {
                     {/* Elevator Indicator */}
                     <div className="absolute -left-6 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1">
                         <div className="w-1 h-8 bg-emerald-500/30 rounded-full" />
-                        <div className="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(52,211,153,0.6)] animate-bounce" />
+                        <div className="w-3 h-3 rounded-full bg-emerald-400 shadow-[0_0_14px_rgba(52,211,153,0.75)] motion-reduce:animate-none animate-elevator-dot" />
                         <div className="w-1 h-8 bg-white/10 rounded-full" />
                     </div>
                 </div>

@@ -205,6 +205,9 @@ class UserSegmentService:
         UserSegmentService.upsert_user_profile(db, target_user.id, profile_data)
         
         return {"success": True, "user_id": target_user.id}
+
+    @staticmethod
+    def get_computed_segments(db: Session, user_id: int) -> List[str]:
         """Calculate dynamic segments for a user."""
         segments = []
         

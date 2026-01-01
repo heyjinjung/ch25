@@ -124,3 +124,51 @@ a {
 .animate-scaleIn {
   animation: scaleIn 0.3s ease-out;
 }
+
+/* Elevator-style emphasis (LevelTower / SeasonPass current card) */
+@keyframes elevator-rise {
+  0% {
+    transform: translateY(18px) scale(0.98);
+    opacity: 0.65;
+    filter: saturate(0.95);
+  }
+
+  55% {
+    transform: translateY(-6px) scale(1.012);
+    opacity: 1;
+    filter: saturate(1.08);
+  }
+
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+    filter: saturate(1);
+  }
+}
+
+.animate-elevator-rise {
+  animation: elevator-rise 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: transform, opacity, filter;
+}
+
+@keyframes elevator-dot {
+  0% {
+    transform: translateY(14px) scale(0.98);
+    opacity: 0.55;
+  }
+
+  45% {
+    transform: translateY(-14px) scale(1.02);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(14px) scale(0.98);
+    opacity: 0.55;
+  }
+}
+
+.animate-elevator-dot {
+  animation: elevator-dot 1.1s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  will-change: transform, opacity;
+}

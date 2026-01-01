@@ -125,7 +125,7 @@ const UserAdminPage: React.FC = () => {
       setMembers([]);
       return;
     }
-    // ... logic same as before, just filling members
+    setMembers(data as MemberRow[]);
   }, [data]);
 
   // NOTE: filteredMembers previously did client-side filtering. 

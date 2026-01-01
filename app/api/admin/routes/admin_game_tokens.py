@@ -114,7 +114,12 @@ def list_wallets(
     limit = min(max(limit, 1), 200)
     offset = max(offset, 0)
 
-    query = db.query(UserGameWallet, User.external_id).join(User, User.id == UserGameWallet.user_id)
+    query = db.query(
+        UserGameWallet, 
+        User.external_id,
+        User.telegram_username,
+        User.nickname
+    ).join(User, User.id == UserGameWallet.user_id)
     if user_id:
         query = query.filter(UserGameWallet.user_id == user_id)
     if external_id:
@@ -135,6 +140,8 @@ def list_wallets(
         TokenBalance(
             user_id=row.UserGameWallet.user_id,  # type: ignore[attr-defined]
             external_id=row.external_id,  # type: ignore[attr-defined]
+            telegram_username=row.telegram_username, # type: ignore[attr-defined]
+            nickname=row.nickname, # type: ignore[attr-defined]
             token_type=row.UserGameWallet.token_type,  # type: ignore[attr-defined]
             balance=row.UserGameWallet.balance,  # type: ignore[attr-defined]
         )
@@ -173,6 +180,8 @@ def list_recent_play_logs(
             RouletteLog.id.label("id"),
             RouletteLog.user_id,
             User.external_id,
+            User.telegram_username,
+            User.nickname,
             RouletteLog.reward_type,
             RouletteLog.reward_amount,
             RouletteSegment.label.label("detail"),
@@ -190,6 +199,8 @@ def list_recent_play_logs(
             DiceLog.id.label("id"),
             DiceLog.user_id,
             User.external_id,
+            User.telegram_username,
+            User.nickname,
             DiceLog.reward_type,
             DiceLog.reward_amount,
             DiceLog.result.label("detail"),
@@ -206,6 +217,8 @@ def list_recent_play_logs(
             LotteryLog.id.label("id"),
             LotteryLog.user_id,
             User.external_id,
+            User.telegram_username,
+            User.nickname,
             LotteryLog.reward_type,
             LotteryLog.reward_amount,
             LotteryPrize.label.label("detail"),
@@ -227,6 +240,8 @@ def list_recent_play_logs(
             id=row.id,
             user_id=row.user_id,
             external_id=row.external_id,
+            telegram_username=row.telegram_username,
+            nickname=row.nickname,
             game=row.game_type,
             reward_label=row.detail,
             reward_type=row.reward_type,
@@ -253,6 +268,8 @@ def list_wallet_ledger(
         db.query(
             UserGameWalletLedger,
             User.external_id,
+            User.telegram_username,
+            User.nickname
         )
         .join(User, User.id == UserGameWalletLedger.user_id)
     )
@@ -274,6 +291,8 @@ def list_wallet_ledger(
             id=row.UserGameWalletLedger.id,  # type: ignore[attr-defined]
             user_id=row.UserGameWalletLedger.user_id,  # type: ignore[attr-defined]
             external_id=row.external_id,  # type: ignore[attr-defined]
+            telegram_username=row.telegram_username, # type: ignore[attr-defined]
+            nickname=row.nickname, # type: ignore[attr-defined]
             token_type=row.UserGameWalletLedger.token_type,  # type: ignore[attr-defined]
             delta=row.UserGameWalletLedger.delta,  # type: ignore[attr-defined]
             balance_after=row.UserGameWalletLedger.balance_after,  # type: ignore[attr-defined]
@@ -291,7 +310,14 @@ def get_user_wallet_summary(db: Session = Depends(get_db)):
     """Return a summary of all users who have at least one non-zero ticket balance."""
     # We join User and UserGameWallet, filter for balance > 0
     rows = (
-        db.query(User.id, User.external_id, UserGameWallet.token_type, UserGameWallet.balance)
+        db.query(
+            User.id, 
+            User.external_id, 
+            User.telegram_username,
+            User.nickname,
+            UserGameWallet.token_type, 
+            UserGameWallet.balance
+        )
         .join(UserGameWallet, User.id == UserGameWallet.user_id)
         .filter(UserGameWallet.balance > 0)
         .order_by(User.id)
@@ -300,11 +326,13 @@ def get_user_wallet_summary(db: Session = Depends(get_db)):
 
     # Group by user
     summary_map: dict[int, UserWalletSummary] = {}
-    for user_id, external_id, token_type, balance in rows:
+    for user_id, external_id, telegram_username, nickname, token_type, balance in rows:
         if user_id not in summary_map:
             summary_map[user_id] = UserWalletSummary(
                 user_id=user_id,
                 external_id=external_id,
+                telegram_username=telegram_username,
+                nickname=nickname,
                 balances={}
             )
         summary_map[user_id].balances[token_type] = balance

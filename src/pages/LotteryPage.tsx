@@ -197,15 +197,15 @@ const LotteryPage: React.FC = () => {
                 </div>
 
                 <div className="relative z-10 w-full px-0.5">
-                  <p className="text-[10px] sm:text-xs font-black text-white leading-tight line-clamp-2 mb-0.5">{prize.label}</p>
+                  <p className="text-[12px] sm:text-base font-black text-white leading-tight line-clamp-2 mb-0.5">{prize.label}</p>
                   <div className="flex items-center justify-center gap-0.5 opacity-60">
                     {(prize.reward_type === 'POINT' || prize.reward_type === 'CURRENCY' || prize.reward_type === 'CASH') ? (
                       <>
-                        <span className="text-[9px] font-black text-white">{Number(prize.reward_value).toLocaleString()}</span>
-                        <span className="text-[7px] font-black text-white italic">{prize.reward_type === 'POINT' ? 'P' : '원'}</span>
+                        <span className="text-[11px] font-black text-white">{Number(prize.reward_value).toLocaleString()}</span>
+                        <span className="text-[9px] font-black text-white italic">{prize.reward_type === 'POINT' ? 'P' : '원'}</span>
                       </>
                     ) : (
-                      <span className="text-[7px] font-black text-figma-accent italic uppercase tracking-tighter">ITEM</span>
+                      <span className="text-[9px] font-black text-figma-accent italic uppercase tracking-tighter">ITEM</span>
                     )}
                   </div>
                 </div>
