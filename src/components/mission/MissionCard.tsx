@@ -37,6 +37,7 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
       const amountStr = (result.amount || 0).toLocaleString();
       addToast(`보상 수령 완료: ${amountStr}${rewardTypeName}!`, "success");
       queryClient.invalidateQueries({ queryKey: ["vault-status"] });
+      queryClient.invalidateQueries({ queryKey: ["inventory"] });
     } else {
       notification("error");
       addToast(result.message || "보상 수령 실패", "error");
@@ -79,25 +80,63 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
       await verify();
       return;
     }
+    if (mission.action_type === "SHARE") {
+      const appUrl = "https://t.me/jm956_bot/ccjm";
+      const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(appUrl)}&text=${encodeURIComponent("CCJM 주간 미션 참여! 여기로 들어오면 바로 시작돼요")}`;
+
+      const tg = window.Telegram?.WebApp;
+      if (tg?.openTelegramLink) {
+        tg.openTelegramLink(shareUrl);
+
+        // Record action immediately (Trust Approach)
+        await recordViralAction({ action_type: "SHARE", mission_id: mission.id });
+        const cacheKey = `mission_verified_${mission.id}`;
+        await setCloudItem(cacheKey, "VERIFIED");
+        useMissionStore.getState().fetchMissions();
+      } else {
+        addToast("텔레그램 앱에서만 가능한 기능입니다.", "error");
+      }
+      return;
+    }
     if (mission.action_type === "INVITE_FRIEND") {
       if (window.Telegram?.WebApp?.switchInlineQuery) {
         window.Telegram.WebApp.switchInlineQuery("share_ref", ["users", "groups"]);
+      } else {
+        addToast("텔레그램 앱에서만 가능한 기능입니다.", "error");
       }
       return;
     }
     if (mission.action_type === "SHARE_STORY") {
       if (window.Telegram?.WebApp?.shareToStory) {
         const appUrl = "https://t.me/jm956_bot/ccjm";
-        window.Telegram.WebApp.shareToStory("https://placehold.co/1080x1920/png?text=CCJM+Mission!", {
-          text: "CCJM에서 미션을 완료하고 보상을 받아보세요!",
-          widget_link: { url: appUrl, name: "Play now" },
-        });
+        // NOTE: Telegram story share requires Telegram app to fetch this media_url.
+        // Use our own static asset (same-origin) rather than external placeholders.
+        const storyMediaUrl = `${window.location.origin}/assets/story/ccjm_story_1080x1920.mp4`;
+        const fallbackShareUrl = `https://t.me/share/url?url=${encodeURIComponent(appUrl)}&text=${encodeURIComponent("CCJM 오픈 기념 미션! 같이 해보자")}`;
 
-        // Record action immediately (Trust Approach)
-        await recordViralAction({ action_type: "SHARE_STORY", mission_id: mission.id });
-        const cacheKey = `mission_verified_${mission.id}`;
-        await setCloudItem(cacheKey, "VERIFIED");
-        useMissionStore.getState().fetchMissions();
+        if (!window.location.origin.startsWith("https://")) {
+          addToast("스토리 공유는 https 환경에서만 안정적으로 동작합니다.", "error");
+        }
+        try {
+          window.Telegram.WebApp.shareToStory(storyMediaUrl, {
+            text: "CCJM 오픈 기념 미션! 같이 해보자",
+            widget_link: { url: appUrl, name: "CCJM 열기" },
+          });
+
+          // Record action immediately (Trust Approach)
+          await recordViralAction({ action_type: "SHARE_STORY", mission_id: mission.id });
+          const cacheKey = `mission_verified_${mission.id}`;
+          await setCloudItem(cacheKey, "VERIFIED");
+          useMissionStore.getState().fetchMissions();
+        } catch {
+          const tg = window.Telegram?.WebApp;
+          if (tg?.openTelegramLink) {
+            tg.openTelegramLink(fallbackShareUrl);
+          }
+          addToast("스토리 공유에 실패했습니다. 일반 공유로 대체합니다.", "error");
+        }
+      } else {
+        addToast("스토리 공유는 모바일 텔레그램 앱에서만 가능합니다.", "error");
       }
       return;
     }

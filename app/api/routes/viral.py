@@ -78,7 +78,7 @@ def record_action(
     These actions are recorded based on frontend triggers because server-side verification 
     from Telegram is often complex or unavailable for these specific UI events.
     """
-    allowed_actions = ["SHARE_STORY", "SHARE_WALLET"]
+    allowed_actions = ["SHARE", "SHARE_STORY", "SHARE_WALLET"]
     if payload.action_type not in allowed_actions:
         raise HTTPException(status_code=400, detail=f"Action type '{payload.action_type}' is not supported via this endpoint")
         

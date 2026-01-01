@@ -26,8 +26,13 @@ export interface ShopProduct {
 }
 
 export const fetchInventory = async (): Promise<InventoryData> => {
-    const response = await apiClient.get("/inventory");
+    const response = await apiClient.get("/api/inventory");
     const raw = response.data as Partial<InventoryData> | null | undefined;
+
+    // If the frontend router (SPA) returns HTML with 200, fail fast instead of showing an empty inventory.
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+        throw new Error("INVALID_INVENTORY_RESPONSE");
+    }
 
     const items = Array.isArray(raw?.items)
         ? raw.items.map((item) => ({
@@ -45,16 +50,16 @@ export const fetchInventory = async (): Promise<InventoryData> => {
 };
 
 export const fetchShopProducts = async (): Promise<ShopProduct[]> => {
-    const response = await apiClient.get("/shop/products");
+    const response = await apiClient.get("/api/shop/products");
     return response.data;
 };
 
 export const purchaseProduct = async (sku: string): Promise<any> => {
-    const response = await apiClient.post("/shop/purchase", { sku });
+    const response = await apiClient.post("/api/shop/purchase", { sku });
     return response.data;
 };
 
 export const useInventoryItem = async (item_type: string, amount: number = 1): Promise<any> => {
-    const response = await apiClient.post("/inventory/use", { item_type, amount });
+    const response = await apiClient.post("/api/inventory/use", { item_type, amount });
     return response.data;
 };
