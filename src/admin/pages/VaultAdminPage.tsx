@@ -689,6 +689,9 @@ const VaultAdminPage: React.FC = () => {
                                         {timerState ? (timerState.eligible ? "허용" : "차단") : "조회 전"}
                                     </p>
                                     <p className="text-[11px] text-gray-500 mt-1">Program: {timerState?.program_key || "NEW_MEMBER_VAULT"}</p>
+                                    <p className="text-[11px] text-[#91F402] mt-1 font-bold">
+                                        Total Charge: {(timerState?.total_charge_amount ?? 0).toLocaleString()}원
+                                    </p>
                                 </div>
                                 <div className="rounded-lg border border-[#222] bg-[#111] p-4">
                                     <p className="text-xs text-gray-500 mb-1">Locked Balance</p>

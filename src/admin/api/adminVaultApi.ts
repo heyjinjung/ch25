@@ -40,6 +40,7 @@ export interface VaultTimerState {
     locked_expires_at: string | null;
     accrual_multiplier?: number | null;
     program_key?: string | null;
+    total_charge_amount?: number;
 }
 
 export const getVaultDefaultProgram = async (): Promise<VaultProgramResponse> => {
