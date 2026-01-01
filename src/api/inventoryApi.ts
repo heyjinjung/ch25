@@ -27,7 +27,21 @@ export interface ShopProduct {
 
 export const fetchInventory = async (): Promise<InventoryData> => {
     const response = await apiClient.get("/inventory");
-    return response.data;
+    const raw = response.data as Partial<InventoryData> | null | undefined;
+
+    const items = Array.isArray(raw?.items)
+        ? raw.items.map((item) => ({
+            item_type: String((item as any)?.item_type ?? ""),
+            quantity: Number((item as any)?.quantity ?? 0),
+            created_at: String((item as any)?.created_at ?? ""),
+        }))
+        : [];
+
+    const wallet = raw?.wallet && typeof raw.wallet === "object" && !Array.isArray(raw.wallet)
+        ? (raw.wallet as Record<string, number>)
+        : {};
+
+    return { items, wallet };
 };
 
 export const fetchShopProducts = async (): Promise<ShopProduct[]> => {

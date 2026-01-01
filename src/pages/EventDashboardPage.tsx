@@ -24,22 +24,22 @@ const EventDashboardPage: React.FC = () => {
                     <Link
                         to="/season-pass"
                         onClick={handleCardClick}
-                        className="group relative block w-full overflow-hidden rounded-[28px] border border-white/10 bg-black active:scale-[0.98] transition-all"
+                        className="group relative block w-full overflow-hidden rounded-[28px] border border-white/10 bg-black transition active:scale-[0.98] hover:-translate-y-0.5 hover:border-white/20 hover:ring-2 hover:ring-white/10"
                     >
-                        <div className="relative z-10 p-6 flex flex-col h-40 justify-center">
-                            <div className="max-w-[60%]">
-                                {/* Title removed per user request - already in background image */}
-                                <p className="text-gray-400 text-[10px] font-medium mb-3">시즌 패스 보상을 획득하세요</p>
-                                <div className="inline-flex items-center bg-indigo-500/20 text-indigo-300 text-[10px] font-black px-3 py-1 rounded-full border border-indigo-500/30 group-hover:bg-indigo-500 group-hover:text-white transition-all">
+                        {/* Background Image */}
+                        <img
+                            src="/assets/welcome/levelup_v2.png"
+                            className="absolute inset-0 z-0 h-full w-full object-cover object-center transition-transform duration-200 group-hover:scale-[1.02]"
+                            alt="Level Tower"
+                        />
+
+                        <div className="relative z-10 flex h-44 items-end p-5">
+                            <div className="max-w-[85%] rounded-2xl border border-white/10 bg-black/45 p-4">
+                                <h3 className="text-lg font-black text-white">시즌 패스</h3>
+                                <div className="mt-3 inline-flex items-center justify-center rounded-full bg-indigo-500/20 px-4 py-2 text-sm font-black text-indigo-300 ring-1 ring-inset ring-indigo-500/30">
                                     보상 받기
                                 </div>
                             </div>
-                        </div>
-
-                        {/* Background Image */}
-                        <div className="absolute inset-0 z-0 opacity-60 group-hover:opacity-80 transition-opacity">
-                            <img src="/assets/welcome/levelup_v2.png" className="w-full h-full object-cover" alt="Level Tower" />
-                            <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent" />
                         </div>
                     </Link>
 
@@ -47,29 +47,29 @@ const EventDashboardPage: React.FC = () => {
                     <Link
                         to="/missions"
                         onClick={handleCardClick}
-                        className="group relative block w-full overflow-hidden rounded-[28px] border border-white/10 bg-black active:scale-[0.98] transition-all"
+                        className="group relative block w-full overflow-hidden rounded-[28px] border border-white/10 bg-black transition active:scale-[0.98] hover:-translate-y-0.5 hover:border-white/20 hover:ring-2 hover:ring-white/10"
                     >
-                        <div className="relative z-10 p-6 flex flex-col h-40 justify-center">
-                            <div className="max-w-[60%]">
-                                {/* Title removed per user request - already in background image */}
-                                <p className="text-gray-400 text-[10px] font-medium mb-3">매일 보너스 다이아몬드 받기</p>
-                                <div className="inline-flex items-center bg-[#91F402]/20 text-[#91F402] text-[10px] font-black px-3 py-1 rounded-full border border-[#91F402]/30 group-hover:bg-[#91F402] group-hover:text-black transition-all">
+                        {/* Background Image */}
+                        <img
+                            src="/assets/welcome/mission_v2.png"
+                            className="absolute inset-0 z-0 h-full w-full object-cover object-center transition-transform duration-200 group-hover:scale-[1.02]"
+                            alt="Daily Missions"
+                        />
+
+                        <div className="relative z-10 flex h-44 items-end p-5">
+                            <div className="max-w-[85%] rounded-2xl border border-white/10 bg-black/45 p-4">
+                                <h3 className="text-lg font-black text-white">데일리 미션</h3>
+                                <div className="mt-3 inline-flex items-center justify-center rounded-full bg-[#91F402]/20 px-4 py-2 text-sm font-black text-[#91F402] ring-1 ring-inset ring-[#91F402]/30">
                                     미션 수행
                                 </div>
                             </div>
                         </div>
-
-                        {/* Background Image */}
-                        <div className="absolute inset-0 z-0 opacity-60 group-hover:opacity-80 transition-opacity">
-                            <img src="/assets/welcome/mission_v2.png" className="w-full h-full object-cover" alt="Daily Missions" />
-                            <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent" />
-                        </div>
                     </Link>
 
                     {/* Bonus Card */}
-                    <div className="p-6 rounded-[32px] border border-dashed border-white/10 bg-white/5 text-center">
-                        <Star className="mx-auto text-gray-600 mb-2" size={24} />
-                        <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest italic">COMING SOON</p>
+                    <div className="rounded-[32px] border border-dashed border-white/10 bg-white/5 p-6 text-center">
+                        <Star className="mx-auto mb-2 text-gray-500" size={24} />
+                        <p className="text-sm font-bold text-gray-300">준비 중</p>
                     </div>
                 </div>
             </div>

@@ -59,7 +59,8 @@ const InventoryPage: React.FC = () => {
         );
     }
 
-    const { items, wallet } = data || { items: [], wallet: {} };
+    const items = Array.isArray(data?.items) ? data.items : [];
+    const wallet = data?.wallet && typeof data.wallet === "object" && !Array.isArray(data.wallet) ? data.wallet : {};
 
     return (
         <div className="mx-auto w-full max-w-lg pb-[calc(96px+env(safe-area-inset-bottom))]">
@@ -133,7 +134,7 @@ const InventoryPage: React.FC = () => {
                         </div>
                     ) : (
                         Object.entries(wallet).map(([key, value]) => (
-                            <WalletCard key={key} tokenType={key} amount={value} />
+                            <WalletCard key={key} tokenType={key} amount={Number(value ?? 0)} />
                         ))
                     )}
                 </div>
