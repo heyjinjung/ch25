@@ -83,8 +83,9 @@
 
 ### Phase 3. TMA(텔레그램 미니앱) 특화로 바이럴/마찰 제거
 1. ✅ `shareToStories`, 
-2. 😀`switchInlineQuery` [서버업로드후 가능]
-3. 😀`CloudStorage` 캐싱, 햅틱 [서버업로드후 가능]
+2. ✅`switchInlineQuery` (프론트 트리거 구현) [서버업로드후 가능]
+3. 😀`CloudStorage` 캐싱 [서버업로드후 가능]
+  ✅ 햅틱 (Haptic) 적용
 4. ✅ 봇 넛지(90% 달성 푸시) [완료]
 5. Stars 결제 루프(선택/현재미정) (1/7일 이후 개발)
 
