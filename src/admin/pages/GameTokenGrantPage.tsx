@@ -10,13 +10,13 @@ import { GAME_TOKEN_LABELS, GameTokenType } from "../../types/gameTokens";
 
 const grantSchema = z.object({
   external_id: z.string().min(1, "id를 입력하세요"),
-  token_type: z.enum(["ROULETTE_COIN", "DICE_TOKEN", "LOTTERY_TICKET", "CC_COIN", "GOLD_KEY", "DIAMOND_KEY"]),
+  token_type: z.enum(["ROULETTE_COIN", "DICE_TOKEN", "LOTTERY_TICKET", "GOLD_KEY", "DIAMOND_KEY"]),
   amount: z.number().int().positive("1 이상 입력"),
 });
 
 type GrantFormValues = z.infer<typeof grantSchema>;
 
-const tokenOptions: GameTokenType[] = ["ROULETTE_COIN", "DICE_TOKEN", "LOTTERY_TICKET", "CC_COIN", "GOLD_KEY", "DIAMOND_KEY"];
+const tokenOptions: GameTokenType[] = ["ROULETTE_COIN", "DICE_TOKEN", "LOTTERY_TICKET", "GOLD_KEY", "DIAMOND_KEY"];
 
 const GameTokenGrantPage: React.FC = () => {
   const form = useForm<GrantFormValues>({

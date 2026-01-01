@@ -7,6 +7,7 @@ from app.models.inventory import UserInventoryItem, UserInventoryLedger
 from app.models.game_wallet import GameTokenType
 from app.models.user import User
 from app.services.game_wallet_service import GameWalletService
+from app.services.idempotency_service import IdempotencyService
 
 
 class InventoryService:
@@ -103,7 +104,7 @@ class InventoryService:
         return item
 
     @staticmethod
-    def use_voucher(db: Session, user_id: int, item_type: str, amount: int) -> dict:
+    def use_voucher(db: Session, user_id: int, item_type: str, amount: int, idempotency_key: str | None = None) -> dict:
         """
         Use a voucher item to get rewards.
         This is a high-level action that consumes the item and grants rewards.
@@ -122,6 +123,19 @@ class InventoryService:
         total_reward_amount = reward["amount"] * amount
         token_type = reward["token"]
 
+        request_payload = {"item_type": item_type, "amount": amount}
+        idem_record = None
+        if idempotency_key:
+            idem_record, existing = IdempotencyService.begin(
+                db,
+                user_id=user_id,
+                scope="inventory_use",
+                idempotency_key=idempotency_key,
+                request_payload=request_payload,
+            )
+            if existing is not None:
+                return existing
+
         try:
             # Transaction bundle
             InventoryService.consume_item(
@@ -134,16 +148,21 @@ class InventoryService:
             wallet_service.grant_tokens(
                 db, user_id, token_type, total_reward_amount, reason=f"VOUCHER_USE:{item_type}", auto_commit=False
             )
-            
-            db.commit()
-            
-            return {
+
+            response = {
                 "success": True,
                 "used_item": item_type,
                 "used_amount": amount,
                 "reward_token": token_type.value,
-                "reward_amount": total_reward_amount
+                "reward_amount": total_reward_amount,
             }
+
+            if idem_record is not None:
+                IdempotencyService.complete(db, record=idem_record, response_payload=response)
+
+            db.commit()
+
+            return response
         except Exception as e:
             db.rollback()
             raise e

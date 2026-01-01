@@ -7,6 +7,7 @@ from app.api.deps import get_db
 from app.models.dice import DiceLog
 from app.models.lottery import LotteryLog, LotteryPrize
 from app.models.roulette import RouletteLog, RouletteSegment
+from app.models.game_wallet import GameTokenType
 from app.models.game_wallet import UserGameWallet
 from app.models.game_wallet_ledger import UserGameWalletLedger
 from app.models.user import User
@@ -21,36 +22,83 @@ from app.schemas.game_tokens import (
 )
 from app.schemas.base import to_kst_iso
 from app.services.game_wallet_service import GameWalletService
+from app.services.inventory_service import InventoryService
 
 router = APIRouter(prefix="/admin/api/game-tokens", tags=["admin-game-tokens"])
 wallet_service = GameWalletService()
 
 
-def _resolve_user_id(db: Session, user_id: int | None, external_id: str | None) -> int:
+def _resolve_user_id(db: Session, user_id: int | None, external_id: str | None, telegram_username: str | None = None) -> int:
     if user_id:
         return user_id
+    if telegram_username:
+        clean = telegram_username.strip().lstrip("@")
+        user = db.query(User).filter(User.telegram_username == clean).first()
+        if not user:
+            raise HTTPException(status_code=404, detail=f"USER_NOT_FOUND (Username: {clean})")
+        return user.id
     if external_id:
         user = db.query(User).filter(User.external_id == external_id).first()
         if not user:
-            raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
+            raise HTTPException(status_code=404, detail=f"USER_NOT_FOUND (External ID: {external_id})")
         return user.id
-    raise HTTPException(status_code=400, detail="USER_REQUIRED")
+    raise HTTPException(status_code=400, detail="USER_REQUIRED (ID, External ID, or Telegram Username)")
 
 
 @router.post("/grant", response_model=GrantGameTokensResponse)
 def grant_tokens(payload: GrantGameTokensRequest, db: Session = Depends(get_db)):
-    user_id = _resolve_user_id(db, payload.user_id, payload.external_id)
-    external = db.get(User, user_id).external_id
-    balance = wallet_service.grant_tokens(db, user_id, payload.token_type, payload.amount)
-    return GrantGameTokensResponse(user_id=user_id, token_type=payload.token_type, balance=balance, external_id=external)
+    user_id = _resolve_user_id(db, payload.user_id, payload.external_id, payload.telegram_username)
+    user = db.get(User, user_id)
+
+    # Phase 2 rule: DIAMOND is Inventory SoT (not wallet).
+    if payload.token_type == GameTokenType.DIAMOND:
+        item = InventoryService.grant_item(
+            db,
+            user_id=user_id,
+            item_type="DIAMOND",
+            amount=payload.amount,
+            reason="ADMIN_GRANT",
+            related_id="admin_game_tokens_grant",
+            auto_commit=True,
+        )
+        balance = int(item.quantity)
+    else:
+        balance = wallet_service.grant_tokens(db, user_id, payload.token_type, payload.amount)
+    return GrantGameTokensResponse(
+        user_id=user_id, 
+        token_type=payload.token_type, 
+        balance=balance, 
+        external_id=user.external_id,
+        telegram_username=user.telegram_username
+    )
 
 
 @router.post("/revoke", response_model=GrantGameTokensResponse)
 def revoke_tokens(payload: RevokeGameTokensRequest, db: Session = Depends(get_db)):
-    user_id = _resolve_user_id(db, payload.user_id, payload.external_id)
-    external = db.get(User, user_id).external_id
-    balance = wallet_service.revoke_tokens(db, user_id, payload.token_type, payload.amount)
-    return GrantGameTokensResponse(user_id=user_id, token_type=payload.token_type, balance=balance, external_id=external)
+    user_id = _resolve_user_id(db, payload.user_id, payload.external_id, payload.telegram_username)
+    user = db.get(User, user_id)
+
+    # Phase 2 rule: DIAMOND is Inventory SoT (not wallet).
+    if payload.token_type == GameTokenType.DIAMOND:
+        item = InventoryService.consume_item(
+            db,
+            user_id=user_id,
+            item_type="DIAMOND",
+            amount=payload.amount,
+            reason="ADMIN_REVOKE",
+            related_id="admin_game_tokens_revoke",
+            auto_commit=True,
+        )
+        balance = int(item.quantity)
+    else:
+        balance = wallet_service.revoke_tokens(db, user_id, payload.token_type, payload.amount)
+    return GrantGameTokensResponse(
+        user_id=user_id, 
+        token_type=payload.token_type, 
+        balance=balance, 
+        external_id=user.external_id,
+        telegram_username=user.telegram_username
+    )
 
 
 @router.get("/wallets", response_model=list[TokenBalance])

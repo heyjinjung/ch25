@@ -30,13 +30,13 @@ class AdminDiceConfigUpdate(BaseModel):
     is_active: Optional[bool] = None
     max_daily_plays: Optional[int] = None
     win_reward_type: Optional[str] = None
-    win_reward_value: Optional[int] = None
+    win_reward_value: Optional[int] = Field(None, alias="win_reward_amount")
     draw_reward_type: Optional[str] = None
-    draw_reward_value: Optional[int] = None
+    draw_reward_value: Optional[int] = Field(None, alias="draw_reward_amount")
     lose_reward_type: Optional[str] = None
-    lose_reward_value: Optional[int] = None
+    lose_reward_value: Optional[int] = Field(None, alias="lose_reward_amount")
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, validate_by_name=True)
 
 
 class AdminDiceConfigResponse(AdminDiceConfigBase):

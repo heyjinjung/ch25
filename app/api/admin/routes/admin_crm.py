@@ -138,103 +138,21 @@ async def import_profiles(
     
     for row in reader:
         total += 1
+    for row in reader:
+        total += 1
         try:
-            # Helper to find key case-insensitively
-            def get_val(keys, target_key):
-                # exact match
-                if target_key in keys:
-                     return row[target_key]
-                # case insensitive
-                for k in keys:
-                    if k.strip().lower() == target_key.lower():
-                        return row[k]
-                return None
-
-            keys = row.keys()
+            # Delegate processing to Service
+            result = UserSegmentService.resolve_and_sync_user_from_import(db, row, DEFAULT_IMPORT_PASSWORD)
             
-            # 1. Identify User (External ID priority)
-            ext_id = get_val(keys, "external_id") 
-            # Fallback for common Korean/BOM issues
-            if not ext_id:
-                # Try finding any key containing 'external_id'
-                for k in keys:
-                    if "external_id" in k.lower():
-                        ext_id = row[k]
-                        break
+            if result.get("success"):
+                success += 1
+            else:
+                failed += 1
+                errors.append(f"Row {total}: {result.get('error')}")
             
-            user_id_str = get_val(keys, "user_id")
-            
-            target_user = None
-            if user_id_str:
-                target_user = db.query(User).filter(User.id == int(user_id_str)).first()
-            elif ext_id:
-                target_user = db.query(User).filter(User.external_id == ext_id.strip()).first()
-            
-            if not target_user:
-                # Auto-create user if external_id is provided but user doesn't exist
-                if ext_id and ext_id.strip():
-                    clean_ext_id = ext_id.strip()
-                    # Create new user with default password
-                    target_user = User(
-                        external_id=clean_ext_id,
-                        nickname=clean_ext_id,  # Use external_id as nickname initially
-                        password_hash=hash_password(DEFAULT_IMPORT_PASSWORD),
-                        level=1,
-                        xp=0,
-                        status="active"
-                    )
-                    db.add(target_user)
-                    db.commit()
-                    db.refresh(target_user)
-                    errors.append(f"Row {total}: Created new user (ExtID: {clean_ext_id}, PW: {DEFAULT_IMPORT_PASSWORD})")
-                else:
-                    # No external_id provided - skip this row
-                    failed += 1
-                    errors.append(f"Row {total}: Skipped - No external_id provided")
-                    continue
-            
-            # 2. Extract Data
-            # Mappings for Korean headers
-            tags_raw = get_val(keys, "tags") or get_val(keys, "태그")
-            memo_raw = get_val(keys, "memo") or get_val(keys, "메모")
-            real_name_raw = get_val(keys, "real_name") or get_val(keys, "이름") or get_val(keys, "실명")
-            phone_raw = get_val(keys, "phone") or get_val(keys, "phone_number") or get_val(keys, "전화번호")
-            telegram_raw = get_val(keys, "telegram") or get_val(keys, "telegram_id") or get_val(keys, "텔레그램")
-            
-            # New Metrics
-            total_active_days_str = get_val(keys, "총 이용일수") or get_val(keys, "total_active_days")
-            days_since_charge_str = get_val(keys, "마지막 충전 후 경과일") or get_val(keys, "days_since_last_charge")
-            last_active_str = get_val(keys, "최근 이용일") or get_val(keys, "last_active_date_str")
-
-            profile_data = {
-                "external_id": ext_id.strip() if ext_id else target_user.external_id,
-                "real_name": real_name_raw,
-                "phone_number": phone_raw, # map 'phone' to 'phone_number'
-                "telegram_id": telegram_raw,
-                "memo": memo_raw
-            }
-            
-            if total_active_days_str:
-                try:
-                    profile_data["total_active_days"] = int(str(total_active_days_str).replace(",","").strip())
-                except:
-                    pass
-            
-            if days_since_charge_str:
-                try:
-                    profile_data["days_since_last_charge"] = int(str(days_since_charge_str).replace(",","").strip())
-                except:
-                    pass
-
-            if last_active_str:
-                profile_data["last_active_date_str"] = str(last_active_str).strip()
-
-            # Tags
-            if tags_raw:
-                profile_data["tags"] = [t.strip() for t in tags_raw.split(",") if t.strip()]
-            
-            UserSegmentService.upsert_user_profile(db, target_user.id, profile_data)
-            success += 1
+        except Exception as e:
+            failed += 1
+            errors.append(f"Row {total}: {str(e)}")
             
         except Exception as e:
             failed += 1

@@ -46,12 +46,22 @@ const buildDefaultSegments = (): RouletteFormValues["segments"] =>
     reward_value: 0,
   }));
 
-const normalizeToSixSegments = (segments: Array<Partial<RouletteFormValues["segments"][number]>>): RouletteFormValues["segments"] => {
+const normalizeToSixSegments = (segments: any[]): RouletteFormValues["segments"] => {
   const base = buildDefaultSegments();
-  return Array.from({ length: 6 }).map((_, idx) => ({
-    ...base[idx],
-    ...(segments[idx] ?? {}),
-  }));
+  return Array.from({ length: 6 }).map((_, idx) => {
+    const raw = segments.find((s: any) => {
+      const sidx = s.index ?? s.slot_index;
+      return sidx === idx;
+    }) ?? {};
+
+    return {
+      label: raw.label ?? base[idx].label,
+      weight: raw.weight ?? base[idx].weight,
+      reward_type: raw.reward_type ?? base[idx].reward_type,
+      // Handle both backend 'reward_amount' and frontend 'reward_value'
+      reward_value: raw.reward_value ?? raw.reward_amount ?? base[idx].reward_value,
+    };
+  });
 };
 
 const mapErrorDetail = (error: unknown): string => {
@@ -145,18 +155,14 @@ const RouletteConfigPage: React.FC = () => {
     setEditing(config);
     setIsModalOpen(true);
 
-    const sorted = [...(config.segments ?? [])].sort((a, b) => {
-      const ai = (a as any).index ?? (a as any).slot_index ?? 0;
-      const bi = (b as any).index ?? (b as any).slot_index ?? 0;
-      return ai - bi;
-    });
+    const sc = config.segments ?? [];
 
     form.reset({
       name: config.name,
       ticket_type: config.ticket_type ?? "ROULETTE_COIN",
       is_active: config.is_active,
       max_daily_spins: config.max_daily_spins,
-      segments: normalizeToSixSegments(sorted as any),
+      segments: normalizeToSixSegments(sc),
     });
   };
 

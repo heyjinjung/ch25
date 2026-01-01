@@ -63,10 +63,148 @@ class UserSegmentService:
             
         db.commit()
         db.refresh(profile)
+        db.commit()
+        db.refresh(profile)
         return profile
 
     @staticmethod
-    def get_computed_segments(db: Session, user_id: int) -> List[str]:
+    def resolve_and_sync_user_from_import(
+        db: Session, 
+        row_data: Dict[str, Any],
+        default_password: str = "1234"
+    ) -> Dict[str, Any]:
+        """
+        Process a single import row:
+        1. Resolve User (ID -> External ID -> Telegram Username)
+        2. Create User if missing (Auto-generate External ID if only Username provided)
+        3. Sync Identity (Update User.telegram_username)
+        4. Upsert Admin Profile
+        
+        Returns dict with keys: 'success' (bool), 'error' (str), 'user_id' (int)
+        """
+        from app.core.security import hash_password # Local import to avoid circular dep if any
+        
+        # Helper to find key case-insensitively
+        def get_val(keys, target_key):
+            if target_key in keys: return row_data[target_key]
+            for k in keys:
+                if k.strip().lower() == target_key.lower(): return row_data[k]
+            return None
+
+        keys = row_data.keys()
+        
+        # --- EXTRACT KEY FIELDS ---
+        user_id_str = get_val(keys, "user_id")
+        ext_id = get_val(keys, "external_id") 
+        if not ext_id:
+            for k in keys:
+                if "external_id" in k.lower():
+                    ext_id = row_data[k]
+                    break
+        
+        telegram_raw = get_val(keys, "telegram") or get_val(keys, "telegram_id") or get_val(keys, "텔레그램") or get_val(keys, "username")
+        
+        # --- 1. RESOLVE USER TARGET ---
+        target_user = None
+        
+        # A. Try User ID
+        if user_id_str and str(user_id_str).strip():
+            try:
+                target_user = db.query(User).filter(User.id == int(user_id_str)).first()
+            except:
+                pass
+        
+        # B. Try External ID
+        if not target_user and ext_id and str(ext_id).strip():
+            target_user = db.query(User).filter(User.external_id == str(ext_id).strip()).first()
+
+        # C. Try Telegram Username (Refactor: Frame Switch)
+        if not target_user and telegram_raw and str(telegram_raw).strip():
+            clean_tg = str(telegram_raw).strip().lstrip("@")
+            target_user = db.query(User).filter(User.telegram_username == clean_tg).first()
+
+        # --- 2. CREATE USER IF MISSING ---
+        if not target_user:
+            clean_ext_id = str(ext_id).strip() if ext_id else None
+            clean_tg = str(telegram_raw).strip().lstrip("@") if telegram_raw else None
+            
+            if clean_ext_id or clean_tg:
+                # Determine external_id fallback
+                # If only telegram username is known, generate a unique external_id
+                final_ext_id = clean_ext_id if clean_ext_id else f"tg_{clean_tg}_{datetime.utcnow().timestamp()}"
+                final_nickname = clean_tg if clean_tg else final_ext_id
+                
+                target_user = User(
+                    external_id=final_ext_id,
+                    nickname=final_nickname,
+                    telegram_username=clean_tg, 
+                    password_hash=hash_password(default_password),
+                    level=1, 
+                    xp=0, 
+                    status="active"
+                )
+                db.add(target_user)
+                try:
+                    db.commit()
+                    db.refresh(target_user)
+                except Exception as e:
+                    db.rollback()
+                    return {"success": False, "error": f"Create User Failed: {str(e)}"}
+            else:
+                return {"success": False, "error": "Skipped - No resolvable ID"}
+        
+        # --- 3. SYNC CORE IDENTITY ---
+        if telegram_raw and str(telegram_raw).strip():
+            clean_tg = str(telegram_raw).strip().lstrip("@")
+            if target_user.telegram_username != clean_tg:
+                target_user.telegram_username = clean_tg
+                db.add(target_user)
+                try:
+                    db.commit()
+                    db.refresh(target_user)
+                except:
+                    db.rollback() # Not critical enough to fail import? But safer to warn.
+                    # Continue anyway
+
+        # --- 4. EXTRACT PROFILE DATA ---
+        tags_raw = get_val(keys, "tags") or get_val(keys, "태그")
+        memo_raw = get_val(keys, "memo") or get_val(keys, "메모")
+        real_name_raw = get_val(keys, "real_name") or get_val(keys, "이름") or get_val(keys, "실명")
+        phone_raw = get_val(keys, "phone") or get_val(keys, "phone_number") or get_val(keys, "전화번호")
+        
+        total_active_days_str = get_val(keys, "총 이용일수") or get_val(keys, "total_active_days")
+        days_since_charge_str = get_val(keys, "마지막 충전 후 경과일") or get_val(keys, "days_since_last_charge")
+        last_active_str = get_val(keys, "최근 이용일") or get_val(keys, "last_active_date_str")
+
+        profile_data = {
+            "external_id": target_user.external_id, # Always use current user's ext ID
+            "real_name": real_name_raw,
+            "phone_number": phone_raw, 
+            "telegram_id": telegram_raw, # Store original raw input in profile
+            "memo": memo_raw
+        }
+        
+        if total_active_days_str:
+            try:
+                profile_data["total_active_days"] = int(str(total_active_days_str).replace(",","").strip())
+            except:
+                pass
+        
+        if days_since_charge_str:
+            try:
+                profile_data["days_since_last_charge"] = int(str(days_since_charge_str).replace(",","").strip())
+            except:
+                pass
+
+        if last_active_str:
+            profile_data["last_active_date_str"] = str(last_active_str).strip()
+
+        if tags_raw:
+            profile_data["tags"] = [t.strip() for t in tags_raw.split(",") if t.strip()]
+        
+        UserSegmentService.upsert_user_profile(db, target_user.id, profile_data)
+        
+        return {"success": True, "user_id": target_user.id}
         """Calculate dynamic segments for a user."""
         segments = []
         

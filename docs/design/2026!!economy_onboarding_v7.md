@@ -198,3 +198,72 @@
 - 2순위: DIAMOND를 인벤 SoT로 전환(미션/상점)
 - 3순위: 구매/사용 멱등성 + 인벤 동시성 안전 강화
 
+0) 시작 전 공통 체크(10분)
+
+목표 1개만 확정: “로컬 브라우저에서 로그인→게임/미션→상점→룰렛까지 E2E가 끊기지 않는다”
+현재 차단 지점 확인: RequireAuth가 initData 없으면 막는지 확인: RequireAuth.tsx
+백엔드 외부 로그인 엔드포인트 존재 확인: auth.py
+1) 1순위: 로컬/QA 비-텔레그램 로그인 허용(오늘 바로)
+
+해야 할 일(프론트)
+VITE_ALLOW_NON_TELEGRAM_LOGIN=true 같은 플래그를 읽어서,
+initData가 없어도 /login(또는 특정 route) 진입만큼은 허용
+Prod 빌드에서는 기본 false 유지
+체크리스트(완료 기준)
+로컬 브라우저에서 텔레그램이 아니어도 로그인 화면 접근 가능
+로그인 후 보호 라우트 진입 가능(무한 리다이렉트/텔레그램 CTA 안 뜸)
+플래그 OFF면 기존처럼 텔레그램만 허용(회귀 없음)
+관련 파일
+RequireAuth.tsx
+TelegramProvider.tsx
+2) 2순위: QA용 계정/토큰 발급 루프 확정(오늘)
+
+해야 할 일(백엔드/운영)
+/api/auth/token이 “존재하는 계정”에 대해 토큰을 발급하므로, QA 계정이 DB에 있어야 함
+최소 1개 테스트 계정(외부 로그인용)을 seed/수동 생성
+체크리스트(완료 기준)
+QA 계정으로 토큰 발급 성공
+프론트에서 토큰 저장 후 API 호출 정상(401 반복 없음)
+3) 3순위: “통화 맵” E2E 검증 시나리오(내일 전까지)
+
+시나리오 A: 바우처 기반 상점 루프(현재 구현 확인) = 완료 및 Phase 2 (다이아를 인벤토리 자산으로 완전 전환) 단계로 진입 
+(1) 다이아 확보 → (2) 상점 구매(바우처) → (3) 인벤에서 바우처 사용 → (4) 지갑에 키 증가
+체크리스트(완료 기준)
+상점 구매 1회당: 다이아 -30, 바우처 +1이 원자적으로 같이 반영
+바우처 사용 1회당: 바우처 -1, GOLD_KEY +1이 원자적으로 같이 반영
+중복 클릭 시(2번 연속 요청) 데이터가 2번 반영되는 문제 재현 여부 기록(멱등성 전 단계라 “발견”이 목적)
+
+4) 4순위: “키 룰렛 POINT → Vault 누적” 검증(내일 전까지)
+
+목표: “키 티켓으로 돌렸고 세그먼트가 POINT면 Vault locked가 증가한다”를 데이터로 확인
+체크리스트(완료 기준)
+키 티켓으로 룰렛 1회 실행
+결과가 POINT이고 amount>0인 케이스에서 vault_locked_balance가 증가
+RewardService가 POINT를 XP/현금으로 지급하지 않고 스킵되는 흐름 확인(코드상 pass):
+
+✅ 검증 결과(실측): 완료
+
+- 키 티켓(GOLD_KEY)로 룰렛 1회 실행에서 `reward=POINT`, `amount=20000` 발생
+- Vault 상태 스냅샷(before/after)에서 `locked_balance`가 **+20200** 증가 확인
+- 동일 케이스에서 RewardService 지급은 `pass`로 스킵되는 흐름 확인
+
+증거(코드)
+- 키 티켓 + POINT + reward_amount>0 → Vault 강제 적립(trial earn event, force_enable=True): [app/services/roulette_service.py](app/services/roulette_service.py#L239-L253)
+- 동일 케이스에서 RewardService 전달 스킵(`pass`): [app/services/roulette_service.py](app/services/roulette_service.py#L272-L283)
+
+증거(데이터: 샘플 출력)
+
+```text
+VAULT_BEFORE locked_balance=105200
+SPIN#1 reward=POINT amount=20000 vault_earn=20200 locked_before=105200 locked_after=125400
+```
+
+해석
+- reward POINT(20,000)이 Vault locked에 1:1이 아니라 **20,200**으로 반영됨(적립 배율/보정 포함)
+5) 5순위: “다이아=인벤 SoT 전환” 착수(유저 테스트 루프 안정화 후)
+
+이유: 지금은 테스트가 막혀있어서, 다이아 SoT를 옮기기 전에 E2E 루프가 먼저 돌아야 함
+체크리스트(완료 기준)
+미션 보상 다이아가 인벤으로 들어오고, 상점 결제도 인벤 다이아를 깎음
+지갑 DIAMOND 의존 제거(또는 최소화)
+원하시면, 제가 바로 1순위(RequireAuth 플래그)를 실제 코드로 적용해서 PR-ready 상태로 만들어둘게요. 그때 플래그 이름(VITE_ALLOW_NON_TELEGRAM_LOGIN)이랑 “허용 범위(로그인 페이지만 vs 전체 앱)”만 1줄로 확정해주시면 됩니다.

@@ -72,10 +72,9 @@ class RewardService:
             db.flush()
 
     def grant_coupon(self, db: Session, user_id: int, coupon_type: str, meta: dict[str, Any] | None = None) -> None:
-        """Grant a coupon to a user (implementation deferred)."""
-
-        # TODO: Integrate with coupon provider.
-        _ = (db, user_id, coupon_type, meta)
+        """Grant a coupon to a user (DEPRECATED/REMOVED)."""
+        # System disabled per admin request.
+        pass
 
     def grant_ticket(self, db: Session, user_id: int, token_type: GameTokenType | str, amount: int, meta: dict[str, Any] | None = None) -> None:
         """
@@ -182,7 +181,7 @@ class RewardService:
             return
 
         if reward_type == "CC_POINT":
-            # CC 포인트는 외부 플랫폼에서 관리자가 수동으로 지급하므로 시스템 자동 지급은 건너뜜
+            # [REMOVED] CC 포인트는 더 이상 지원하지 않음
             return
         
         if reward_type == "DIAMOND":
@@ -209,7 +208,7 @@ class RewardService:
             "DICE_TICKET": GameTokenType.DICE_TOKEN,
             "TICKET_LOTTERY": GameTokenType.LOTTERY_TICKET,
             "LOTTERY_TICKET": GameTokenType.LOTTERY_TICKET,
-            "CC_COIN": GameTokenType.CC_COIN,
+            # "CC_COIN": GameTokenType.CC_COIN,  # [REMOVED]
             "GOLD_KEY": GameTokenType.GOLD_KEY,
             "DIAMOND_KEY": GameTokenType.DIAMOND_KEY,
         }

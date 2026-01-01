@@ -107,7 +107,7 @@ const DiceConfigPage: React.FC = () => {
     form.reset(initialValues);
   };
 
-  const openEdit = (config: AdminDiceConfig) => {
+  const openEdit = (config: any) => {
     setEditing(config);
     setIsModalOpen(true);
     form.reset({
@@ -115,11 +115,11 @@ const DiceConfigPage: React.FC = () => {
       is_active: config.is_active,
       max_daily_plays: config.max_daily_plays,
       win_reward_type: config.win_reward_type,
-      win_reward_value: config.win_reward_value,
+      win_reward_value: config.win_reward_value ?? config.win_reward_amount ?? 0,
       draw_reward_type: config.draw_reward_type,
-      draw_reward_value: config.draw_reward_value,
+      draw_reward_value: config.draw_reward_value ?? config.draw_reward_amount ?? 0,
       lose_reward_type: config.lose_reward_type,
-      lose_reward_value: config.lose_reward_value,
+      lose_reward_value: config.lose_reward_value ?? config.lose_reward_amount ?? 0,
     });
   };
 
@@ -184,9 +184,8 @@ const DiceConfigPage: React.FC = () => {
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm">
                       <span
-                        className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-medium ${
-                          config.is_active ? "border-[#2D6B3B] text-[#91F402]" : "border-[#333333] text-gray-400"
-                        }`}
+                        className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-medium ${config.is_active ? "border-[#2D6B3B] text-[#91F402]" : "border-[#333333] text-gray-400"
+                          }`}
                       >
                         {config.is_active ? "활성" : "비활성"}
                       </span>

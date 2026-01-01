@@ -160,13 +160,14 @@ const LotteryConfigPage: React.FC = () => {
       name: config.name,
       is_active: config.is_active,
       max_daily_plays: config.max_daily_plays,
-      prizes: config.prizes.map((p) => ({
+      prizes: config.prizes.map((p: any) => ({
         id: p.id,
         label: p.label,
         weight: p.weight,
         stock: p.stock ?? null,
         reward_type: p.reward_type,
-        reward_value: p.reward_value,
+        // Handle both backend 'reward_amount' and frontend 'reward_value'
+        reward_value: p.reward_value ?? p.reward_amount ?? 0,
         is_active: p.is_active,
       })) as any,
     });
@@ -234,9 +235,8 @@ const LotteryConfigPage: React.FC = () => {
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-400">{config.prizes.length.toLocaleString()}</td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm">
                       <span
-                        className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-medium ${
-                          config.is_active ? "border-[#2D6B3B] text-[#91F402]" : "border-[#333333] text-gray-400"
-                        }`}
+                        className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-medium ${config.is_active ? "border-[#2D6B3B] text-[#91F402]" : "border-[#333333] text-gray-400"
+                          }`}
                       >
                         {config.is_active ? "활성" : "비활성"}
                       </span>

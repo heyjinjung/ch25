@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlalchemy.orm import Session
 from typing import Any
 
@@ -27,6 +27,9 @@ def get_my_inventory(
     wallet_data = {}
     if current_user.game_wallets:
         for w in current_user.game_wallets:
+            # Phase 2 rule: DIAMOND is Inventory SoT, so hide it from wallet payload.
+            if w.token_type.value == "DIAMOND":
+                continue
             wallet_data[w.token_type.value] = w.balance
 
     return {
@@ -47,6 +50,7 @@ def use_item(
     payload: dict,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
+    idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
 ) -> Any:
     """
     Use an inventory item (Voucher).
@@ -59,7 +63,8 @@ def use_item(
         raise HTTPException(status_code=400, detail="MISSING_ITEM_TYPE")
 
     # Call Service
-    result = InventoryService.use_voucher(db, current_user.id, item_type, amount)
+    idem = payload.get("idempotency_key") or idempotency_key
+    result = InventoryService.use_voucher(db, current_user.id, item_type, amount, idempotency_key=idem)
     return result
 
 
@@ -79,6 +84,7 @@ def purchase_product(
     payload: dict,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
+    idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
 ) -> Any:
     """
     Purchase a product.
@@ -88,5 +94,6 @@ def purchase_product(
     if not sku:
         raise HTTPException(status_code=400, detail="MISSING_SKU")
 
-    result = ShopService.purchase_product(db, current_user.id, sku)
+    idem = payload.get("idempotency_key") or idempotency_key
+    result = ShopService.purchase_product(db, current_user.id, sku, idempotency_key=idem)
     return result

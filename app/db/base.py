@@ -54,6 +54,7 @@ from app.models import (  # noqa: F401
     TelegramLinkCode,
     Mission,
     UserMissionProgress,
+    UserIdempotencyKey,
 )
 from app.models.admin_user_profile import AdminUserProfile
 from app.models.admin_message import AdminMessage, AdminMessageInbox

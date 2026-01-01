@@ -12,7 +12,7 @@ class GameTokenType(str, Enum):
     ROULETTE_COIN = "ROULETTE_COIN"
     DICE_TOKEN = "DICE_TOKEN"
     LOTTERY_TICKET = "LOTTERY_TICKET"
-    CC_COIN = "CC_COIN"
+    # CC_COIN = "CC_COIN"  # [DEPRECATED]
     GOLD_KEY = "GOLD_KEY"
     DIAMOND_KEY = "DIAMOND_KEY"
     DIAMOND = "DIAMOND"  # Mission Reward Currency

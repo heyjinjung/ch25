@@ -2,7 +2,7 @@
 
 export const REWARD_TYPES = [
   { value: "POINT", label: "포인트" },
-  { value: "COUPON", label: "쿠폰" },
+  // { value: "COUPON", label: "쿠폰" }, // [REMOVED]
   { value: "NONE", label: "없음" },
   { value: "GOLD_KEY", label: "골드 키" },
   { value: "DIAMOND_KEY", label: "다이아 키" },

@@ -206,6 +206,7 @@ class MissionService:
             # --- STANDARD TOKENS ---
             else:
                 from app.services.game_wallet_service import GameWalletService
+                from app.services.inventory_service import InventoryService
                 
                 token_type_map = {
                     MissionRewardType.DIAMOND: GameTokenType.DIAMOND,
@@ -218,14 +219,27 @@ class MissionService:
                 target_token = token_type_map.get(mission.reward_type)
                 
                 if target_token:
-                    wallet_service.grant_tokens(
-                        self.db,
-                        user_id=user_id,
-                        token_type=target_token,
-                        amount=mission.reward_amount,
-                        reason="MISSION_REWARD",
-                        label=mission.title
-                    )
+                    # Phase 2 rule: DIAMOND is Inventory SoT (not wallet).
+                    if target_token == GameTokenType.DIAMOND:
+                        InventoryService.grant_item(
+                            self.db,
+                            user_id=user_id,
+                            item_type="DIAMOND",
+                            amount=mission.reward_amount,
+                            reason="MISSION_REWARD",
+                            related_id=str(mission.id),
+                            auto_commit=False,
+                        )
+                    else:
+                        wallet_service.grant_tokens(
+                            self.db,
+                            user_id=user_id,
+                            token_type=target_token,
+                            amount=mission.reward_amount,
+                            reason="MISSION_REWARD",
+                            label=mission.title,
+                            auto_commit=False,
+                        )
 
         # 2. Give XP (Season Pass) - OPTIONAL based on Master Design (Unified Economy v2.1)
         # Missions primarily reward DIAMONDS. XP is reserved for Deposits.

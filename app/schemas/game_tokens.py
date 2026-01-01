@@ -9,6 +9,7 @@ from app.models.game_wallet import GameTokenType
 class GrantGameTokensRequest(BaseModel):
     user_id: int | None = Field(default=None, gt=0)
     external_id: str | None = None
+    telegram_username: str | None = None
     token_type: GameTokenType
     amount: int = Field(gt=0)
 
@@ -16,6 +17,7 @@ class GrantGameTokensRequest(BaseModel):
 class GrantGameTokensResponse(BaseModel):
     user_id: int
     external_id: str | None = None
+    telegram_username: str | None = None
     token_type: GameTokenType
     balance: int
 
@@ -23,6 +25,7 @@ class GrantGameTokensResponse(BaseModel):
 class RevokeGameTokensRequest(BaseModel):
     user_id: int | None = Field(default=None, gt=0)
     external_id: str | None = None
+    telegram_username: str | None = None
     token_type: GameTokenType
     amount: int = Field(gt=0)
 

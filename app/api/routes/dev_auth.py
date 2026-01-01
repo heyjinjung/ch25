@@ -8,6 +8,7 @@ from app.core.security import create_access_token
 from app.models.game_wallet import GameTokenType
 from app.models.user import User
 from app.services.game_wallet_service import GameWalletService
+from app.services.inventory_service import InventoryService
 
 router = APIRouter()
 
@@ -91,6 +92,28 @@ async def grant_game_tokens(payload: dict, db: Session = Depends(get_db)):
     except Exception as exc:
         raise HTTPException(status_code=400, detail="INVALID_TOKEN_TYPE") from exc
 
+    # Align with Phase 2 rules: DIAMOND is an inventory item (SoT), not a wallet token.
+    if token_type == GameTokenType.DIAMOND:
+        item = InventoryService.grant_item(
+            db,
+            user_id=int(user.id),
+            item_type="DIAMOND",
+            amount=amount,
+            reason="DEV_GRANT",
+            related_id=None,
+            auto_commit=True,
+        )
+        return {
+            "success": True,
+            "user_id": int(user.id),
+            "external_id": user.external_id,
+            "token_type": token_type.value,
+            "amount": amount,
+            "granted_to": "inventory",
+            "item_type": item.item_type,
+            "balance_after": int(item.quantity),
+        }
+
     wallet_service = GameWalletService()
     new_balance = wallet_service.grant_tokens(
         db,
@@ -105,6 +128,7 @@ async def grant_game_tokens(payload: dict, db: Session = Depends(get_db)):
         "external_id": user.external_id,
         "token_type": token_type.value,
         "amount": amount,
+        "granted_to": "wallet",
         "balance_after": int(new_balance),
     }
 

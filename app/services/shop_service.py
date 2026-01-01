@@ -5,6 +5,7 @@ from fastapi import HTTPException
 from app.models.game_wallet import GameTokenType
 from app.services.game_wallet_service import GameWalletService
 from app.services.inventory_service import InventoryService
+from app.services.idempotency_service import IdempotencyService
 from app.models.user import User
 
 
@@ -56,7 +57,7 @@ class ShopService:
         return [p.to_dict() for p in SHOP_PRODUCTS.values()]
 
     @staticmethod
-    def purchase_product(db: Session, user_id: int, sku: str) -> dict:
+    def purchase_product(db: Session, user_id: int, sku: str, idempotency_key: str | None = None) -> dict:
         """Purchase a product."""
         product = SHOP_PRODUCTS.get(sku)
         if not product:
@@ -65,6 +66,19 @@ class ShopService:
         user = db.get(User, user_id)
         if not user:
              raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
+
+        request_payload = {"sku": sku}
+        idem_record = None
+        if idempotency_key:
+            idem_record, existing = IdempotencyService.begin(
+                db,
+                user_id=user_id,
+                scope="shop_purchase",
+                idempotency_key=idempotency_key,
+                request_payload=request_payload,
+            )
+            if existing is not None:
+                return existing
 
         # Atomic Transaction
         try:
@@ -103,15 +117,20 @@ class ShopService:
                 auto_commit=False
             )
 
+            response = {
+                "success": True,
+                "sku": sku,
+                "cost": {"token": product.cost_token.value, "amount": product.cost_amount},
+                "granted": {"item_type": product.item_type, "amount": product.item_amount},
+            }
+
+            if idem_record is not None:
+                IdempotencyService.complete(db, record=idem_record, response_payload=response)
+
             db.commit()
             
         except Exception as e:
             db.rollback()
             raise e
             
-        return {
-            "success": True,
-            "sku": sku,
-            "cost": {"token": product.cost_token.value, "amount": product.cost_amount},
-            "granted": {"item_type": product.item_type, "amount": product.item_amount}
-        }
+        return response
