@@ -600,7 +600,7 @@ const UserAdminPage: React.FC = () => {
                     <th className="hidden px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400 sm:px-4 md:table-cell">실명/연락처</th>
                     <th className="hidden px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400 sm:px-4 md:table-cell">TG ID / Username</th>
                     <th className="hidden px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400 sm:px-4 lg:table-cell">메모/태그</th>
-                    <th className="hidden px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400 sm:px-4 lg:table-cell text-center">비밀번호(V2 리렉)</th>
+                    <th className="hidden px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400 sm:px-4 lg:table-cell">비밀번호(V2 리렉)</th>
                     <th className="px-3 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-400 sm:px-4">액션</th>
                   </tr>
                 </thead>
