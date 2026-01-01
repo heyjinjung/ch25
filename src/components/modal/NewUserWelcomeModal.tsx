@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getNewUserStatus } from "../../api/newUserApi";
-import { verifyChannelSubscription, recordViralAction } from "../../api/viralApi";
+import { verifyChannelSubscription } from "../../api/viralApi";
 import { useToast } from "../common/ToastProvider";
 import { useHaptic } from "../../hooks/useHaptic";
 
