@@ -209,6 +209,12 @@ class UserSegmentService:
     @staticmethod
     def get_computed_segments(db: Session, user_id: int) -> List[str]:
         """Calculate dynamic segments for a user."""
+        from datetime import datetime, timedelta
+        from sqlalchemy import func
+        from app.models.vault_program import VaultEarnEvent
+        from app.models.ledger import UserCashLedger
+        from app.services.user_segment_service import WHALE_ACCRUAL_THRESHOLD
+        
         segments = []
         
         # 1. Whale Check (Lifetime Accrual)
