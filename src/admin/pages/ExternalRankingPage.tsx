@@ -39,6 +39,7 @@ const ExternalRankingPage: React.FC = () => {
           id: item.id,
           user_id: item.user_id,
           external_id: item.external_id,
+          telegram_username: item.telegram_username,
           deposit_amount: item.deposit_amount,
           play_count: item.play_count,
           memo: item.memo ?? "",
@@ -61,6 +62,7 @@ const ExternalRankingPage: React.FC = () => {
             id: item.id,
             user_id: item.user_id,
             external_id: item.external_id,
+            telegram_username: item.telegram_username,
             deposit_amount: item.deposit_amount,
             play_count: item.play_count,
             memo: item.memo ?? "",
@@ -103,7 +105,7 @@ const ExternalRankingPage: React.FC = () => {
     setRowSearchApplied("");
     setPage(0);
     setRows((prev) => [
-      { external_id: "", deposit_amount: 0, play_count: 0, memo: "", __isNew: true },
+      { external_id: "", telegram_username: "", deposit_amount: 0, play_count: 0, memo: "", __isNew: true },
       ...prev.map((r) => ({ ...r, __isNew: false })),
     ]);
     setIsDirty(true);
@@ -121,9 +123,10 @@ const ExternalRankingPage: React.FC = () => {
 
   const saveAll = () => {
     const payloads: ExternalRankingPayload[] = rows
-      .filter((row) => !!row.external_id)
+      .filter((row) => !!row.external_id || !!row.telegram_username)
       .map((row) => ({
         external_id: row.external_id,
+        telegram_username: row.telegram_username,
         deposit_amount: row.deposit_amount ?? 0,
         play_count: row.play_count ?? 0,
         memo: row.memo,
@@ -164,7 +167,7 @@ const ExternalRankingPage: React.FC = () => {
     .map((row, index) => ({ row, index }))
     .filter(({ row }) => {
       if (!rowSearchApplied.trim()) return true;
-      const hay = normalize(`${row.external_id ?? ""} ${row.user_id ?? ""} ${row.deposit_amount ?? ""} ${row.play_count ?? ""} ${row.memo ?? ""}`);
+      const hay = normalize(`${row.external_id ?? ""} ${row.telegram_username ?? ""} ${row.user_id ?? ""} ${row.deposit_amount ?? ""} ${row.play_count ?? ""} ${row.memo ?? ""}`);
       return includesAny(hay, rowSearchApplied);
     });
 
@@ -319,11 +322,14 @@ const ExternalRankingPage: React.FC = () => {
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                   <button type="button" onClick={() => toggleSort("external_id")} className="inline-flex items-center gap-1 text-gray-400 hover:text-gray-200" title="정렬">
-                    external_id
+                    external_id (or telegram)
                     <span className={sortKey === "external_id" ? "text-[#91F402]" : "text-gray-600"}>
                       {sortKey === "external_id" ? (sortDir === "asc" ? "▲" : "▼") : "↕"}
                     </span>
                   </button>
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                  telegram_username
                 </th>
                 <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">
                   <button type="button" onClick={() => toggleSort("deposit_amount")} className="inline-flex items-center gap-1 text-gray-400 hover:text-gray-200" title="정렬">
@@ -376,6 +382,15 @@ const ExternalRankingPage: React.FC = () => {
                   </td>
                   <td className="px-4 py-3">
                     <input
+                      type="text"
+                      value={row.telegram_username ?? ""}
+                      onChange={(e) => handleChange(index, "telegram_username", e.target.value)}
+                      className={inputBase}
+                      placeholder="@username (선택)"
+                    />
+                  </td>
+                  <td className="px-4 py-3">
+                    <input
                       type="number"
                       value={row.deposit_amount}
                       onChange={(e) => handleChange(index, "deposit_amount", Number(e.target.value))}
@@ -415,14 +430,14 @@ const ExternalRankingPage: React.FC = () => {
               ))}
               {rows.length === 0 && (
                 <tr>
-                  <td className="px-4 py-10 text-center text-gray-400" colSpan={5}>
+                  <td className="px-4 py-10 text-center text-gray-400" colSpan={6}>
                     아직 입력된 데이터가 없습니다. “행 추가”로 시작하세요.
                   </td>
                 </tr>
               )}
               {rows.length > 0 && totalVisible === 0 && (
                 <tr>
-                  <td className="px-4 py-10 text-center text-gray-400" colSpan={5}>
+                  <td className="px-4 py-10 text-center text-gray-400" colSpan={6}>
                     검색 결과가 없습니다. “초기화”를 눌러 전체를 확인하세요.
                   </td>
                 </tr>

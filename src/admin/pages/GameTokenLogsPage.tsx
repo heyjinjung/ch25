@@ -149,15 +149,22 @@ const GameTokenLogsPage: React.FC = () => {
     const recentLogs = playLogsQuery.data || [];
     const recentLedger = ledgerQuery.data || [];
 
+    // Prioritize display name from search result data
+    const firstRow = balances[0] || recentLogs[0] || recentLedger[0];
+    const displayName = firstRow ? getUserDisplayName(firstRow) : externalIdFilter;
+
     return (
       <div className="space-y-6 animate-in fade-in zoom-in-95 duration-200">
         {/* Header / Actions */}
         <div className="border-l-4 border-[#91F402] bg-[#1A1A1A] p-4 flex flex-col gap-2 rounded-r-lg sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h3 className="text-xl font-bold text-white flex items-center gap-2">
-              {externalIdFilter}
+              {displayName}
               <span className="text-sm font-normal text-gray-400 opacity-75">님의 자산 현황</span>
             </h3>
+            {firstRow && firstRow.external_id && firstRow.external_id !== String(displayName).replace("@", "") && (
+              <p className="text-[10px] text-gray-500 mt-0.5">ID: {firstRow.external_id}</p>
+            )}
           </div>
           <button
             onClick={() => { setExternalIdFilter(undefined); setExternalIdInput(""); setActiveTab("wallets"); }}
@@ -545,9 +552,76 @@ const GameTokenLogsPage: React.FC = () => {
 
           {activeTab === "playLogs" && (
             <div className="rounded-lg border border-[#333] bg-[#111] shadow-md overflow-hidden">
-              <div className="p-4 border-b border-[#333]"><h3 className="font-bold text-white">전체 플레이 로그</h3></div>
-              {/* Placeholder for table */}
-              <div className="p-8 text-center text-gray-500">로그 데이터 로딩 중... (ID 검색 권장)</div>
+              <div className="p-4 border-b border-[#333] flex justify-between items-center">
+                <h3 className="font-bold text-white">전체 플레이 로그</h3>
+                <div className="text-sm text-gray-500">최근 50건</div>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left">
+                  <thead className="bg-[#1A1A1A] text-gray-400 uppercase text-xs">
+                    <tr>
+                      <th className="px-4 py-3">User</th>
+                      <th className="px-4 py-3">게임</th>
+                      <th className="px-4 py-3">보상</th>
+                      <th className="px-4 py-3 text-right">시간</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#333]">
+                    {playLogsQuery.data?.slice(0, 50).map((log) => (
+                      <tr key={log.id} className="hover:bg-[#1A1A1A]">
+                        <td className="px-4 py-3 text-white font-medium">{getUserDisplayName(log)}</td>
+                        <td className="px-4 py-3 text-gray-300">{gameLabel(log.game)}</td>
+                        <td className="px-4 py-3">
+                          <span className="text-[#91F402] font-bold">+{log.reward_amount}</span>{" "}
+                          <span className="text-xs text-gray-500">({log.reward_type})</span>
+                        </td>
+                        <td className="px-4 py-3 text-right text-gray-500 text-xs">
+                          {dayjs(log.created_at).format("MM-DD HH:mm")}
+                        </td>
+                      </tr>
+                    ))}
+                    {playLogsQuery.isLoading && <tr><td colSpan={4} className="p-8 text-center"><Loader2 className="animate-spin mx-auto" /></td></tr>}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "ledger" && (
+            <div className="rounded-lg border border-[#333] bg-[#111] shadow-md overflow-hidden">
+              <div className="p-4 border-b border-[#333] flex justify-between items-center">
+                <h3 className="font-bold text-white">전체 코인 원장</h3>
+                <div className="text-sm text-gray-500">최근 100건</div>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left">
+                  <thead className="bg-[#1A1A1A] text-gray-400 uppercase text-xs">
+                    <tr>
+                      <th className="px-4 py-3">User</th>
+                      <th className="px-4 py-3">종류</th>
+                      <th className="px-4 py-3">변동</th>
+                      <th className="px-4 py-3">사유</th>
+                      <th className="px-4 py-3 text-right">시간</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#333]">
+                    {ledgerQuery.data?.slice(0, 100).map((l) => (
+                      <tr key={l.id} className="hover:bg-[#1A1A1A]">
+                        <td className="px-4 py-3 text-white font-medium">{getUserDisplayName(l)}</td>
+                        <td className="px-4 py-3 text-gray-300">{GAME_TOKEN_LABELS[l.token_type] || l.token_type}</td>
+                        <td className={`px-4 py-3 font-bold ${l.delta > 0 ? "text-[#91F402]" : "text-red-400"}`}>
+                          {l.delta > 0 ? "+" : ""}{l.delta}
+                        </td>
+                        <td className="px-4 py-3 text-gray-500 text-xs">{l.reason}</td>
+                        <td className="px-4 py-3 text-right text-gray-500 text-xs">
+                          {dayjs(l.created_at).format("MM-DD HH:mm")}
+                        </td>
+                      </tr>
+                    ))}
+                    {ledgerQuery.isLoading && <tr><td colSpan={5} className="p-8 text-center"><Loader2 className="animate-spin mx-auto" /></td></tr>}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
 

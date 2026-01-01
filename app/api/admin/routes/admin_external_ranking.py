@@ -21,14 +21,17 @@ router = APIRouter(prefix="/admin/api/external-ranking", tags=["admin-external-r
 def list_external_ranking(db: Session = Depends(get_db)) -> ExternalRankingListResponse:
     rows = AdminExternalRankingService.list_all(db)
     user_map = {
-        row.id: row.external_id
-        for row in db.query(User.id, User.external_id).filter(User.id.in_([r.user_id for r in rows])).all()
+        row.id: {"external_id": row.external_id, "telegram_username": row.telegram_username}
+        for row in db.query(User.id, User.external_id, User.telegram_username)
+        .filter(User.id.in_([r.user_id for r in rows]))
+        .all()
     }
     items = [
         ExternalRankingEntry(
             id=row.id,
             user_id=row.user_id,
-            external_id=user_map.get(row.user_id),
+            external_id=(user_map.get(row.user_id) or {}).get("external_id"),
+            telegram_username=(user_map.get(row.user_id) or {}).get("telegram_username"),
             deposit_amount=row.deposit_amount,
             play_count=row.play_count,
             memo=row.memo,
@@ -47,14 +50,17 @@ def upsert_external_ranking(
 ) -> ExternalRankingListResponse:
     rows = AdminExternalRankingService.upsert_many(db, payloads)
     user_map = {
-        row.id: row.external_id
-        for row in db.query(User.id, User.external_id).filter(User.id.in_([r.user_id for r in rows])).all()
+        row.id: {"external_id": row.external_id, "telegram_username": row.telegram_username}
+        for row in db.query(User.id, User.external_id, User.telegram_username)
+        .filter(User.id.in_([r.user_id for r in rows]))
+        .all()
     }
     items = [
         ExternalRankingEntry(
             id=row.id,
             user_id=row.user_id,
-            external_id=user_map.get(row.user_id),
+            external_id=(user_map.get(row.user_id) or {}).get("external_id"),
+            telegram_username=(user_map.get(row.user_id) or {}).get("telegram_username"),
             deposit_amount=row.deposit_amount,
             play_count=row.play_count,
             memo=row.memo,
@@ -73,11 +79,14 @@ def update_external_ranking(
     db: Session = Depends(get_db),
 ) -> ExternalRankingEntry:
     row = AdminExternalRankingService.update(db, user_id, payload)
-    external_id = db.query(User.external_id).filter(User.id == row.user_id).scalar()
+    user = db.query(User.external_id, User.telegram_username).filter(User.id == row.user_id).first()
+    external_id = user.external_id if user else None
+    telegram_username = user.telegram_username if user else None
     return ExternalRankingEntry(
         id=row.id,
         user_id=row.user_id,
         external_id=external_id,
+        telegram_username=telegram_username,
         deposit_amount=row.deposit_amount,
         play_count=row.play_count,
         memo=row.memo,

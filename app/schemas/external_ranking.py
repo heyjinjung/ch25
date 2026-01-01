@@ -10,6 +10,7 @@ from app.schemas.base import KstBaseModel as BaseModel
 class ExternalRankingBase(BaseModel):
     user_id: int | None = None
     external_id: str | None = None
+    telegram_username: str | None = None
     deposit_amount: int = Field(0, ge=0)
     play_count: int = Field(0, ge=0)
     memo: Optional[str] = None
@@ -20,6 +21,8 @@ class ExternalRankingCreate(ExternalRankingBase):
 
 
 class ExternalRankingUpdate(BaseModel):
+    external_id: str | None = None
+    telegram_username: str | None = None
     deposit_amount: Optional[int] = Field(None, ge=0)
     play_count: Optional[int] = Field(None, ge=0)
     memo: Optional[str] = None
@@ -29,6 +32,7 @@ class ExternalRankingEntry(BaseModel):
     id: int
     user_id: int
     external_id: str | None = None
+    telegram_username: str | None = None
     deposit_amount: int
     play_count: int
     memo: Optional[str] = None

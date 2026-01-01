@@ -42,7 +42,7 @@ const GameTokenGrantPage: React.FC = () => {
         {mutation.isSuccess && mutation.data && (
           <div className="rounded-lg border border-[#2D6B3B] bg-[#0A0A0A] p-4 text-gray-200">
             <p className="text-sm font-semibold text-[#91F402]">지급 완료</p>
-            <p className="mt-1 text-sm">external_id: {mutation.data.external_id ?? mutation.data.user_id}</p>
+            <p className="mt-1 text-sm">대상: {mutation.data.telegram_username ? `@${mutation.data.telegram_username.replace(/^@/, "")}` : (mutation.data.external_id ?? mutation.data.user_id)}</p>
             <p className="mt-1 text-sm">
               {GAME_TOKEN_LABELS[mutation.data.token_type] ?? mutation.data.token_type} / 잔액 {mutation.data.balance}
             </p>

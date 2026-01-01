@@ -11,6 +11,8 @@ export interface GrantGameTokensPayload {
 export interface GrantGameTokensResponse {
   user_id: number;
   external_id?: string;
+  telegram_username?: string;
+  nickname?: string;
   token_type: GameTokenType;
   balance: number;
 }
