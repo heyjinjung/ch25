@@ -33,11 +33,13 @@ const EventDashboardPage: React.FC = () => {
                             alt="Level Tower"
                         />
 
-                        <div className="relative z-10 flex h-44 items-end justify-end p-5">
-                            <div className="max-w-[85%] rounded-2xl border border-white/10 bg-black/45 p-4">
-                                <h3 className="text-lg font-black text-white">시즌 패스</h3>
-                                <div className="mt-3 inline-flex items-center justify-center rounded-full bg-indigo-500/20 px-4 py-2 text-sm font-black text-indigo-300 ring-1 ring-inset ring-indigo-500/30">
-                                    보상 받기
+                        <div className="relative z-10 flex h-44 items-end p-4">
+                            <div className="w-full rounded-2xl border border-white/10 bg-black/45 px-4 py-3">
+                                <div className="flex items-center justify-between gap-3">
+                                    <div className="truncate text-sm font-black text-white">시즌패스</div>
+                                    <div className="shrink-0 inline-flex items-center justify-center rounded-full bg-indigo-500/20 px-4 py-2 text-sm font-black text-indigo-300 ring-1 ring-inset ring-indigo-500/30">
+                                        보상받기
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -56,11 +58,13 @@ const EventDashboardPage: React.FC = () => {
                             alt="Daily Missions"
                         />
 
-                        <div className="relative z-10 flex h-44 items-end justify-end p-5">
-                            <div className="max-w-[85%] rounded-2xl border border-white/10 bg-black/45 p-4">
-                                <h3 className="text-lg font-black text-white">데일리 미션</h3>
-                                <div className="mt-3 inline-flex items-center justify-center rounded-full bg-[#91F402]/20 px-4 py-2 text-sm font-black text-[#91F402] ring-1 ring-inset ring-[#91F402]/30">
-                                    미션 수행
+                        <div className="relative z-10 flex h-44 items-end p-4">
+                            <div className="w-full rounded-2xl border border-white/10 bg-black/45 px-4 py-3">
+                                <div className="flex items-center justify-between gap-3">
+                                    <div className="truncate text-sm font-black text-white">미션</div>
+                                    <div className="shrink-0 inline-flex items-center justify-center rounded-full bg-[#91F402]/20 px-4 py-2 text-sm font-black text-[#91F402] ring-1 ring-inset ring-[#91F402]/30">
+                                        미션수행
+                                    </div>
                                 </div>
                             </div>
                         </div>
