@@ -176,12 +176,12 @@ const LotteryPage: React.FC = () => {
             <span className="text-[10px] font-bold text-white/20 uppercase tracking-widest">Total {data.prizes.length} Items</span>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-8 gap-2">
             {data.prizes.map((prize) => (
               <div
                 key={prize.id}
                 className={clsx(
-                  "group relative aspect-square overflow-hidden rounded-2xl border transition-all flex flex-col items-center justify-center p-2 text-center",
+                  "group relative aspect-square overflow-hidden rounded-xl border transition-all flex flex-col items-center justify-center p-1.5 text-center",
                   prize.is_active === false
                     ? "opacity-30 grayscale border-white/5 bg-transparent"
                     : "bg-white/[0.03] border-white/10 hover:bg-figma-accent/10 hover:border-figma-accent/30"
@@ -192,28 +192,28 @@ const LotteryPage: React.FC = () => {
                   <img src="/assets/lottery/gold_foil.jpg" className="w-full h-full object-cover" alt="" />
                 </div>
 
-                <div className="relative z-10 w-8 h-8 sm:w-10 sm:h-10 mb-3 group-hover:scale-110 transition-transform duration-500">
-                  <img src="/assets/lottery/icon_gift.png" className="w-full h-full object-contain filter drop-shadow-lg" alt="" />
+                <div className="relative z-10 w-7 h-7 sm:w-8 sm:h-8 mb-1.5 group-hover:scale-110 transition-transform duration-500">
+                  <img src="/assets/lottery/icon_gift.png" className="w-full h-full object-contain filter drop-shadow-md" alt="" />
                 </div>
 
-                <div className="relative z-10 w-full px-1">
-                  <p className="text-sm font-black text-white leading-[1.3] line-clamp-2 mb-1">{prize.label}</p>
-                  <div className="flex items-center justify-center gap-1 opacity-60">
+                <div className="relative z-10 w-full px-0.5">
+                  <p className="text-[10px] sm:text-xs font-black text-white leading-tight line-clamp-2 mb-0.5">{prize.label}</p>
+                  <div className="flex items-center justify-center gap-0.5 opacity-60">
                     {(prize.reward_type === 'POINT' || prize.reward_type === 'CURRENCY' || prize.reward_type === 'CASH') ? (
                       <>
-                        <span className="text-xs font-black text-white">{Number(prize.reward_value).toLocaleString()}</span>
-                        <span className="text-[8px] font-black text-white italic">{prize.reward_type === 'POINT' ? 'P' : '원'}</span>
+                        <span className="text-[9px] font-black text-white">{Number(prize.reward_value).toLocaleString()}</span>
+                        <span className="text-[7px] font-black text-white italic">{prize.reward_type === 'POINT' ? 'P' : '원'}</span>
                       </>
                     ) : (
-                      <span className="text-[8px] font-black text-figma-accent italic uppercase tracking-tighter">ITEM</span>
+                      <span className="text-[7px] font-black text-figma-accent italic uppercase tracking-tighter">ITEM</span>
                     )}
                   </div>
                 </div>
 
                 {prize.stock !== null && (
-                  <div className="absolute top-2 right-2 flex items-center gap-1">
+                  <div className="absolute top-1.5 right-1.5 flex items-center gap-0.5">
                     <span className="w-1 h-1 rounded-full bg-figma-accent animate-pulse" />
-                    <span className="text-[8px] font-black text-white/30 uppercase tracking-widest">{prize.stock}</span>
+                    <span className="text-[7px] font-black text-white/30 uppercase tracking-widest">{prize.stock}</span>
                   </div>
                 )}
               </div>

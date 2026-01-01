@@ -1,15 +1,19 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useRef, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../auth/authStore";
 import { useQuery } from "@tanstack/react-query";
 import { getVaultStatus } from "../../api/vaultApi";
 import { useSound } from "../../hooks/useSound";
 import clsx from "clsx";
 import InboxButton from "../common/InboxButton";
+import { ChevronDown, Package, ExternalLink } from "lucide-react";
 
 const AppHeader: React.FC = () => {
     const { user } = useAuth();
-    const { isMuted, toggleMute, playClick } = useSound();
+    const navigate = useNavigate();
+    const { isMuted, toggleMute, playClick, playTabTouch } = useSound();
+    const [isTicketMenuOpen, setIsTicketMenuOpen] = useState(false);
+    const menuRef = useRef<HTMLDivElement>(null);
 
     const { data: vault } = useQuery({
         queryKey: ["vault-status"],
@@ -18,9 +22,34 @@ const AppHeader: React.FC = () => {
         retry: false,
     });
 
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+                setIsTicketMenuOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
     const handleSoundToggle = () => {
         playClick();
         toggleMute();
+    };
+
+    const handleTicketClick = () => {
+        playTabTouch();
+        setIsTicketMenuOpen(!isTicketMenuOpen);
+    };
+
+    const handleMenuNavigation = (to: string, isExternal = false) => {
+        playClick();
+        setIsTicketMenuOpen(false);
+        if (isExternal) {
+            window.open(to, "_blank");
+        } else {
+            navigate(to);
+        }
     };
 
     // Generate initials from username
@@ -44,14 +73,14 @@ const AppHeader: React.FC = () => {
                 {/* Left: Logo + Profile */}
                 <div className="flex items-center gap-3 min-w-0">
                     {/* Logo */}
-                    <Link to="/home" className="shrink-0">
+                    <Link to="/home" className="shrink-0 transition-transform active:scale-95">
                         <img src="/assets/logo_cc_v2.png" alt="Logo" className="w-8 h-8 object-contain" />
                     </Link>
 
                     {/* Avatar + Username + Level */}
                     <button className="flex items-center gap-2 min-w-0 hover:opacity-80 transition-opacity">
                         {/* Avatar */}
-                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center text-white font-black text-sm shrink-0 border-2 border-emerald-400/30">
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center text-white font-black text-sm shrink-0 border-2 border-emerald-400/30 shadow-lg shadow-emerald-500/20">
                             {getInitials(user?.nickname || user?.external_id)}
                         </div>
 
@@ -74,7 +103,7 @@ const AppHeader: React.FC = () => {
                     {/* Vault */}
                     <Link
                         to="/vault"
-                        className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 transition-all shadow-sm"
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 transition-all shadow-lg shadow-emerald-900/40 active:scale-95"
                     >
                         <img src="/assets/asset_coin_gold.webp" alt="Coin" className="w-5 h-5 object-contain" />
                         <span className="text-sm font-black text-white">
@@ -82,16 +111,49 @@ const AppHeader: React.FC = () => {
                         </span>
                     </Link>
 
-                    {/* Tickets */}
-                    <Link
-                        to="/games"
-                        className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-all"
-                    >
-                        <img src="/assets/asset_ticket_green.webp" alt="Ticket" className="w-5 h-5 object-contain" />
-                        <span className="text-sm font-medium text-white/80">
-                            {ticketCount}
-                        </span>
-                    </Link>
+                    {/* Tickets Button with Menu */}
+                    <div className="relative" ref={menuRef}>
+                        <button
+                            onClick={handleTicketClick}
+                            className={clsx(
+                                "flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all active:scale-95",
+                                isTicketMenuOpen
+                                    ? "bg-white/10 border-emerald-500/50 shadow-lg shadow-emerald-500/10"
+                                    : "bg-white/5 border-white/10 hover:bg-white/10"
+                            )}
+                        >
+                            <img src="/assets/asset_ticket_green.webp" alt="Ticket" className="w-5 h-5 object-contain" />
+                            <span className="text-sm font-black text-white/90">
+                                {ticketCount}
+                            </span>
+                            <ChevronDown size={14} className={clsx("text-white/30 transition-transform", isTicketMenuOpen && "rotate-180")} />
+                        </button>
+
+                        {/* Dropdown Menu */}
+                        {isTicketMenuOpen && (
+                            <div className="absolute top-full right-0 mt-2 w-48 rounded-xl border border-white/10 bg-black/90 p-1 backdrop-blur-xl shadow-2xl animate-fadeIn">
+                                <button
+                                    onClick={() => handleMenuNavigation("/inventory")}
+                                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-bold text-white/70 hover:bg-white/5 hover:text-figma-accent transition-all"
+                                >
+                                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/5 border border-white/5">
+                                        <Package size={14} />
+                                    </div>
+                                    인벤토리 이동
+                                </button>
+                                <button
+                                    onClick={() => handleMenuNavigation("https://ccc-010.com", true)}
+                                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-bold text-white/70 hover:bg-white/5 hover:text-[#FFCC00] transition-all"
+                                >
+                                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/5 border border-white/5">
+                                        <img src="/assets/logo_cc_v2.png" alt="CC" className="w-3.5 h-3.5 object-contain" />
+                                    </div>
+                                    씨씨 카지노 이동
+                                    <ExternalLink size={10} className="ml-auto opacity-30" />
+                                </button>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* Right: Inbox + Sound */}
@@ -104,7 +166,7 @@ const AppHeader: React.FC = () => {
                         onClick={handleSoundToggle}
                         aria-label={isMuted ? "사운드 켜기" : "사운드 끄기"}
                         aria-pressed={!isMuted}
-                        className="w-9 h-9 flex items-center justify-center rounded-lg border border-emerald-800 bg-slate-900 transition-colors relative group"
+                        className="w-9 h-9 flex items-center justify-center rounded-lg border border-emerald-800 bg-slate-900 transition-colors relative group shadow-lg active:scale-95"
                     >
                         <img
                             src="/assets/icon_megaphone.png"
@@ -127,7 +189,7 @@ const AppHeader: React.FC = () => {
             <div className="sm:hidden flex items-center gap-2 px-4 pb-3">
                 <Link
                     to="/vault"
-                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-emerald-600 shadow-sm"
+                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-emerald-600 shadow-lg shadow-emerald-900/40 active:scale-95"
                 >
                     <img src="/assets/asset_coin_gold.webp" alt="Coin" className="w-5 h-5 object-contain" />
                     <span className="text-sm font-black text-white">
@@ -135,15 +197,43 @@ const AppHeader: React.FC = () => {
                     </span>
                 </Link>
 
-                <Link
-                    to="/games"
-                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10"
-                >
-                    <img src="/assets/asset_ticket_green.webp" alt="Ticket" className="w-5 h-5 object-contain" />
-                    <span className="text-sm font-medium text-white/80">
-                        {ticketCount}
-                    </span>
-                </Link>
+                {/* Mobile Ticket Dropdown Container */}
+                <div className="flex-1 relative">
+                    <button
+                        onClick={handleTicketClick}
+                        className={clsx(
+                            "w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg border transition-all active:scale-95",
+                            isTicketMenuOpen ? "bg-white/10 border-emerald-500/50" : "bg-white/5 border-white/10"
+                        )}
+                    >
+                        <img src="/assets/asset_ticket_green.webp" alt="Ticket" className="w-5 h-5 object-contain" />
+                        <span className="text-sm font-black text-white/90">
+                            {ticketCount}
+                        </span>
+                        <ChevronDown size={14} className={clsx("text-white/30 transition-transform", isTicketMenuOpen && "rotate-180")} />
+                    </button>
+
+                    {/* Mobile Menu */}
+                    {isTicketMenuOpen && (
+                        <div className="absolute top-full left-0 right-0 mt-2 z-[60] rounded-xl border border-white/10 bg-black/95 p-1 backdrop-blur-2xl shadow-2xl animate-fadeIn">
+                            <button
+                                onClick={() => handleMenuNavigation("/inventory")}
+                                className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-bold text-white/70 active:bg-white/10"
+                            >
+                                <Package size={16} />
+                                인벤토리 이동
+                            </button>
+                            <button
+                                onClick={() => handleMenuNavigation("https://ccc-010.com", true)}
+                                className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-bold text-white/70 active:bg-white/10 border-t border-white/5"
+                            >
+                                <img src="/assets/logo_cc_v2.png" alt="CC" className="w-4 h-4 object-contain" />
+                                씨씨 공식홈페이지
+                                <ExternalLink size={12} className="ml-auto opacity-30" />
+                            </button>
+                        </div>
+                    )}
+                </div>
             </div>
         </header>
     );

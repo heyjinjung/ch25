@@ -38,7 +38,7 @@ const GameCard: React.FC<GameCardProps> = ({ title, to, gradient, icon, isWide, 
                 </div>
 
                 <div className="mt-auto">
-                    <p className="text-sm font-black text-white tracking-tight mb-2">{title}</p>
+                    {/* Title removed per user request */}
                     <div className="inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-[10px] font-black text-white backdrop-blur border border-white/10">
                         지금 플레이
                     </div>

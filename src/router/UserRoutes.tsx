@@ -31,10 +31,10 @@ const ShopPage = React.lazy(() => import("../pages/ShopPage"));
 
 // Simple loading fallback
 const PageLoader = () => (
-  <div className="flex items-center justify-center min-h-screen bg-slate-900 text-white">
+  <div className="flex items-center justify-center min-h-screen bg-black text-white">
     <div className="flex flex-col items-center gap-3">
-      <div className="w-8 h-8 border-4 border-indigo-500 border-t-white rounded-full animate-spin" />
-      <p className="text-sm text-slate-400 font-medium">Loading...</p>
+      <div className="w-8 h-8 border-4 border-white/10 border-t-[var(--figma-accent-green)] rounded-full animate-spin" />
+      <p className="text-sm text-white/40 font-medium">Loading...</p>
     </div>
   </div>
 );

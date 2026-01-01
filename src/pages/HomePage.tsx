@@ -48,7 +48,7 @@ const GameCard: React.FC<GameCardProps> = ({ title, to, gradient, icon, isWide, 
         </div>
 
         <div className="mt-auto">
-          <p className="text-sm font-black text-white tracking-tight mb-2">{title}</p>
+          {/* Title removed per user request */}
           <div className="inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-[10px] font-black text-white backdrop-blur border border-white/10">
             지금 플레이
           </div>
@@ -66,7 +66,7 @@ const CategoryTabs: React.FC<{ active: string; onChange: (id: string) => void }>
     { id: "new", label: "씨씨 공식채널", link: "https://t.me/+IE0NYpuze_k1YWZk" },
   ];
   return (
-    <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+    <div className="flex justify-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
       {tabs.map((tab) => (
         tab.link ? (
           <a
@@ -76,10 +76,11 @@ const CategoryTabs: React.FC<{ active: string; onChange: (id: string) => void }>
             rel="noreferrer"
             onClick={() => playTabTouch()}
             className={clsx(
-              "whitespace-nowrap rounded-full px-5 py-2 text-xs font-bold transition-all border",
+              "whitespace-nowrap rounded-full px-5 py-2 text-xs font-bold transition-all border flex items-center gap-2",
               "bg-white/5 text-slate-400 hover:bg-white/10 border-white/20 hover:border-white/40"
             )}
           >
+            {tab.id === 'hot' && <img src="/assets/logo_cc_v2.png" className="w-3.5 h-3.5 object-contain grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100" alt="" />}
             {tab.label}
           </a>
         ) : (
@@ -90,9 +91,9 @@ const CategoryTabs: React.FC<{ active: string; onChange: (id: string) => void }>
               onChange(tab.id);
             }}
             className={clsx(
-              "whitespace-nowrap rounded-full px-5 py-2 text-xs font-bold transition-all",
+              "whitespace-nowrap rounded-full px-6 py-2.5 text-xs font-black transition-all",
               active === tab.id
-                ? "bg-figma-primary text-white shadow-lg shadow-emerald-900/20"
+                ? "bg-gradient-to-r from-figma-primary to-[#70FF95] text-white shadow-[0_4px_15px_rgba(48,255,117,0.3)] scale-105"
                 : "bg-white/5 text-slate-400 hover:bg-white/10"
             )}
           >
@@ -200,29 +201,20 @@ const HomePage: React.FC = () => {
       )}
 
       {/* Hero Section */}
-      <div className="relative mx-1 overflow-hidden rounded-3xl bg-gradient-to-b from-emerald-900 to-black border border-white/10 shadow-2xl">
-        <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-emerald-500/20 to-transparent" />
-        <div className="relative z-10 p-6">
-          <span className="inline-block rounded-md bg-white/20 px-2 py-0.5 text-[10px] font-bold text-white mb-2 backdrop-blur-sm">
-            신규 패키지
-          </span>
-          <h2 className="text-3xl font-black text-white leading-tight">
-            씨씨지민코드 <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-cyan-300">포인트어플 런칭</span>
-          </h2>
-          <div className="mt-4">
-            <a
-              href="https://t.me/jm956"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-block rounded-lg px-6 py-2 text-base font-semibold transition focus:outline-none bg-figma-primary text-white font-bold shadow-[0_4px_12px_rgba(0,0,0,0.3)] shadow-lg shadow-emerald-500/30 hover:brightness-110 active:scale-95 uppercase tracking-wide"
-            >
-              실장 문의하기
-            </a>
-          </div>
-        </div>
-        <div className="absolute -bottom-4 -right-4 text-9xl opacity-10 rotate-12 select-none">
-          ♠
+      <div className="relative mx-1 overflow-hidden rounded-3xl border border-white/10 shadow-2xl aspect-[3/1]">
+        <img src="/assets/hero_event_banner.png" className="absolute inset-0 w-full h-full object-cover" alt="Banner" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
+
+        {/* Contact Manager Button - Bottom Right Alignment */}
+        <div className="absolute bottom-5 right-5 z-20">
+          <a
+            href="https://t.me/jm956"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-block rounded-lg px-6 py-2 text-base font-semibold transition focus:outline-none bg-figma-primary text-white font-bold shadow-[0_4px_12px_rgba(0,0,0,0.3)] shadow-lg shadow-emerald-500/40 hover:brightness-110 active:scale-95 uppercase tracking-wide"
+          >
+            실장 문의하기
+          </a>
         </div>
       </div>
 

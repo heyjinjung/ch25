@@ -1,7 +1,7 @@
 // src/pages/EventDashboardPage.tsx
 import React from "react";
 import { Link } from "react-router-dom";
-import { Trophy, Target, Star } from "lucide-react";
+import { Star } from "lucide-react";
 import { useHaptic } from "../hooks/useHaptic";
 
 const EventDashboardPage: React.FC = () => {
@@ -28,12 +28,7 @@ const EventDashboardPage: React.FC = () => {
                     >
                         <div className="relative z-10 p-6 flex flex-col h-40 justify-center">
                             <div className="max-w-[60%]">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <div className="w-8 h-8 rounded-lg bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center text-indigo-400">
-                                        <Trophy size={16} />
-                                    </div>
-                                </div>
-                                <h2 className="text-xl font-black text-white mb-1 group-hover:text-indigo-300 transition-colors">레벨 타워</h2>
+                                {/* Title removed per user request - already in background image */}
                                 <p className="text-gray-400 text-[10px] font-medium mb-3">시즌 패스 보상을 획득하세요</p>
                                 <div className="inline-flex items-center bg-indigo-500/20 text-indigo-300 text-[10px] font-black px-3 py-1 rounded-full border border-indigo-500/30 group-hover:bg-indigo-500 group-hover:text-white transition-all">
                                     보상 받기
@@ -43,7 +38,7 @@ const EventDashboardPage: React.FC = () => {
 
                         {/* Background Image */}
                         <div className="absolute inset-0 z-0 opacity-60 group-hover:opacity-80 transition-opacity">
-                            <img src="/assets/welcome/levelup_v2.png" className="w-full h-full object-cover" />
+                            <img src="/assets/welcome/levelup_v2.png" className="w-full h-full object-cover" alt="Level Tower" />
                             <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent" />
                         </div>
                     </Link>
@@ -56,12 +51,7 @@ const EventDashboardPage: React.FC = () => {
                     >
                         <div className="relative z-10 p-6 flex flex-col h-40 justify-center">
                             <div className="max-w-[60%]">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <div className="w-8 h-8 rounded-lg bg-[#91F402]/10 border border-[#91F402]/30 flex items-center justify-center text-[#91F402]">
-                                        <Target size={16} />
-                                    </div>
-                                </div>
-                                <h2 className="text-xl font-black text-white mb-1 group-hover:text-[#91F402] transition-colors">데일리 미션</h2>
+                                {/* Title removed per user request - already in background image */}
                                 <p className="text-gray-400 text-[10px] font-medium mb-3">매일 보너스 다이아몬드 받기</p>
                                 <div className="inline-flex items-center bg-[#91F402]/20 text-[#91F402] text-[10px] font-black px-3 py-1 rounded-full border border-[#91F402]/30 group-hover:bg-[#91F402] group-hover:text-black transition-all">
                                     미션 수행
@@ -71,7 +61,7 @@ const EventDashboardPage: React.FC = () => {
 
                         {/* Background Image */}
                         <div className="absolute inset-0 z-0 opacity-60 group-hover:opacity-80 transition-opacity">
-                            <img src="/assets/welcome/mission_v2.png" className="w-full h-full object-cover" />
+                            <img src="/assets/welcome/mission_v2.png" className="w-full h-full object-cover" alt="Daily Missions" />
                             <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent" />
                         </div>
                     </Link>
@@ -84,7 +74,6 @@ const EventDashboardPage: React.FC = () => {
                 </div>
             </div>
         </div>
-
     );
 };
 
