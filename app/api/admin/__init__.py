@@ -24,6 +24,7 @@ from app.api.admin.routes import (
     admin_vault_ops,
     admin_dashboard,
     admin_crm,
+    admin_user_missions,
 )
 
 from app.api.deps import get_current_admin_id
@@ -52,3 +53,4 @@ admin_router.include_router(admin_vault_ops.router)
 admin_router.include_router(admin_vault_ops.legacy_router)
 admin_router.include_router(admin_dashboard.router)
 admin_router.include_router(admin_crm.router)
+admin_router.include_router(admin_user_missions.router)

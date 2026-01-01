@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from datetime import datetime
 
-from app.api.deps import get_db, get_current_admin_id
+from app.api.deps import get_db
 from app.models.mission import Mission, UserMissionProgress, MissionCategory
 from app.services.mission_service import MissionService
 from pydantic import BaseModel
@@ -34,7 +34,6 @@ class AdminUserMissionDetail(BaseModel):
 def get_user_missions_progress(
     user_id: int, 
     db: Session = Depends(get_db),
-    admin_id: int = Depends(get_current_admin_id)
 ):
     """Fetch all active missions and the progress for a specific user."""
     missions = db.query(Mission).filter(Mission.is_active == True).all()
@@ -54,7 +53,7 @@ def get_user_missions_progress(
             mission_id=m.id,
             title=m.title,
             logic_key=m.logic_key,
-            category=m.category,
+            category=getattr(m.category, "value", str(m.category)),
             target_value=m.target_value,
             current_value=progress.current_value if progress else 0,
             is_completed=progress.is_completed if progress else False,
@@ -71,7 +70,6 @@ def update_user_mission_progress(
     mission_id: int, 
     payload: AdminUserMissionProgressUpdate, 
     db: Session = Depends(get_db),
-    admin_id: int = Depends(get_current_admin_id)
 ):
     """Upsert or update mission progress for a user."""
     mission = db.query(Mission).filter(Mission.id == mission_id).first()
