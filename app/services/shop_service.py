@@ -69,15 +69,28 @@ class ShopService:
         # Atomic Transaction
         try:
             # 1. Deduct verify & execute
-            # GameWalletService.require_and_consume_token checks balance and raises error if insufficient
-            GameWalletService.require_and_consume_token(
-                db, 
-                user_id, 
-                product.cost_token, 
-                product.cost_amount, 
-                reason=f"SHOP_PURCHASE:{sku}",
-                auto_commit=False
-            )
+            # Phase 2: If cost_token is DIAMOND, consume from Inventory
+            if product.cost_token == GameTokenType.DIAMOND:
+                InventoryService.consume_item(
+                    db,
+                    user_id,
+                    "DIAMOND",
+                    product.cost_amount,
+                    reason=f"SHOP_PURCHASE:{sku}",
+                    related_id=sku,
+                    auto_commit=False
+                )
+            else:
+                # Wallet Token Consumption
+                wallet_service = GameWalletService()
+                wallet_service.require_and_consume_token(
+                    db, 
+                    user_id, 
+                    product.cost_token, 
+                    product.cost_amount, 
+                    reason=f"SHOP_PURCHASE:{sku}",
+                    auto_commit=False
+                )
 
             # 2. Grant Item
             InventoryService.grant_item(

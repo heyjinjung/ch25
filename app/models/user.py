@@ -60,3 +60,5 @@ class User(Base):
     telegram_link_nonce_expires_at = Column(DateTime, nullable=True)
 
     admin_profile = relationship("AdminUserProfile", back_populates="user", uselist=False, cascade="all, delete-orphan")
+
+    game_wallets = relationship("UserGameWallet", back_populates="user", cascade="all, delete-orphan")

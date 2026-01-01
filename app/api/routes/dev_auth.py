@@ -5,17 +5,23 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_db
 from app.core.config import get_settings
 from app.core.security import create_access_token
+from app.models.game_wallet import GameTokenType
 from app.models.user import User
+from app.services.game_wallet_service import GameWalletService
 
-router = APIRouter(prefix="/api/dev", tags=["dev"])
+router = APIRouter()
+
+
+class GrantGameTokensPayload(dict):
+    pass
 
 
 @router.post("/create-test-user")
-async def create_test_user():
+async def create_test_user(db: Session = Depends(get_db)):
     """
     Create a test user for development.
     Only works in non-production environments.
-    Returns a mock token without database access.
+    Creates/updates a real DB user so the issued token is valid for API calls.
     """
     settings = get_settings()
     
@@ -23,21 +29,83 @@ async def create_test_user():
     if settings.env not in ["local", "development", "dev"]:
         raise HTTPException(status_code=403, detail="Dev endpoints disabled in production")
     
-    # Generate mock access token (user_id = 1 for dev)
-    access_token = create_access_token(subject="1")
+    external_id = "dev_test_user"
+    user = db.query(User).filter(User.external_id == external_id).one_or_none()
+    if user is None:
+        user = User(
+            external_id=external_id,
+            nickname="개발 테스트 유저",
+            level=10,
+            vault_locked_balance=100000,
+            vault_balance=100000,
+            cash_balance=25000,
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+
+    access_token = create_access_token(user_id=int(user.id))
     
     return {
         "access_token": access_token,
         "token_type": "bearer",
         "user": {
-            "id": 1,
-            "external_id": "dev_test_user",
-            "nickname": "개발 테스트 유저",
-            "level": 10,
-            "vault_balance": 100000,
-            "cash_balance": 25000,
+            "id": int(user.id),
+            "external_id": user.external_id,
+            "nickname": user.nickname,
+            "level": int(user.level),
+            "vault_balance": int(user.vault_balance),
+            "cash_balance": int(user.cash_balance),
         },
         "message": "Test token created successfully. Use this token in Authorization header: Bearer <token>",
+    }
+
+
+@router.post("/grant-game-tokens")
+async def grant_game_tokens(payload: dict, db: Session = Depends(get_db)):
+    """Dev-only: grant game wallet tokens to a user by external_id.
+
+    Payload: { "external_id": "..." (optional, default dev_test_user), "token_type": "DIAMOND", "amount": 1000 }
+    """
+    settings = get_settings()
+    if settings.env not in ["local", "development", "dev"]:
+        raise HTTPException(status_code=403, detail="Dev endpoints disabled in production")
+
+    external_id = (payload.get("external_id") or "dev_test_user").strip()
+    token_type_raw = payload.get("token_type")
+    amount = payload.get("amount")
+
+    if not external_id:
+        raise HTTPException(status_code=400, detail="MISSING_EXTERNAL_ID")
+    if not token_type_raw:
+        raise HTTPException(status_code=400, detail="MISSING_TOKEN_TYPE")
+    if not isinstance(amount, int) or amount <= 0:
+        raise HTTPException(status_code=400, detail="INVALID_AMOUNT")
+
+    user = db.query(User).filter(User.external_id == external_id).one_or_none()
+    if user is None:
+        raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
+
+    try:
+        token_type = GameTokenType(str(token_type_raw))
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail="INVALID_TOKEN_TYPE") from exc
+
+    wallet_service = GameWalletService()
+    new_balance = wallet_service.grant_tokens(
+        db,
+        user_id=int(user.id),
+        token_type=token_type,
+        amount=amount,
+        reason="DEV_GRANT",
+    )
+    return {
+        "success": True,
+        "user_id": int(user.id),
+        "external_id": user.external_id,
+        "token_type": token_type.value,
+        "amount": amount,
+        "balance_after": int(new_balance),
     }
 
 

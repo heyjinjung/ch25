@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../auth/authStore";
 import { useTelegram } from "../../providers/TelegramProvider";
 import { telegramApi } from "../../api/telegramApi";
@@ -10,6 +10,9 @@ const RequireAuth: React.FC = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
+  const allowNonTelegramLogin =
+    import.meta.env.DEV || import.meta.env.VITE_ALLOW_NON_TELEGRAM_LOGIN === "true";
 
   const didAttemptRef = useRef(false);
   const [authError, setAuthError] = useState<string | null>(null);
@@ -61,6 +64,9 @@ const RequireAuth: React.FC = () => {
 
   if (!token) {
     if (!initData) {
+      if (allowNonTelegramLogin) {
+        return <Navigate to="/login" state={{ from: location }} replace />;
+      }
       return (
         <div className="relative flex flex-col items-center justify-center min-h-screen bg-[#050505] overflow-hidden text-center p-6 selection:bg-[#30FF75] selection:text-black">
 

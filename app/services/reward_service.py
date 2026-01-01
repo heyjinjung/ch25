@@ -9,6 +9,7 @@ from app.models.game_wallet import GameTokenType
 from app.models.user import User
 from app.models.user_cash_ledger import UserCashLedger
 from app.services.game_wallet_service import GameWalletService
+from app.services.inventory_service import InventoryService
 
 
 class RewardService:
@@ -76,8 +77,23 @@ class RewardService:
         # TODO: Integrate with coupon provider.
         _ = (db, user_id, coupon_type, meta)
 
-    def grant_ticket(self, db: Session, user_id: int, token_type: GameTokenType, amount: int, meta: dict[str, Any] | None = None) -> None:
-        """Grant game tickets (roulette/dice/lottery) to the user wallet."""
+    def grant_ticket(self, db: Session, user_id: int, token_type: GameTokenType | str, amount: int, meta: dict[str, Any] | None = None) -> None:
+        """
+        Grant game tickets (roulette/dice/lottery) or DIAMOND to the user.
+        If token_type is 'DIAMOND', it is granted as an Inventory Item (Phase 2).
+        """
+
+        if token_type == "DIAMOND" or token_type == GameTokenType.DIAMOND:
+            InventoryService.grant_item(
+                db, 
+                user_id, 
+                "DIAMOND", 
+                amount, 
+                reason=(meta or {}).get("reason") or "REWARD",
+                related_id=(meta or {}).get("related_id"),
+                auto_commit=True
+            )
+            return
 
         self.wallet_service.grant_tokens(
             db,
@@ -167,6 +183,18 @@ class RewardService:
 
         if reward_type == "CC_POINT":
             # CC 포인트는 외부 플랫폼에서 관리자가 수동으로 지급하므로 시스템 자동 지급은 건너뜜
+            return
+        
+        if reward_type == "DIAMOND":
+            InventoryService.grant_item(
+                db, 
+                user_id, 
+                "DIAMOND", 
+                reward_amount, 
+                reason=(meta or {}).get("reason") or "REWARD",
+                related_id=(meta or {}).get("related_id"),
+                auto_commit=True
+            )
             return
 
         if reward_type == "COUPON":

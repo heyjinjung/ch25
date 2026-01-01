@@ -130,7 +130,8 @@ class InventoryService:
             
             # Grant Reward
             user = db.get(User, user_id)
-            GameWalletService.grant_tokens(
+            wallet_service = GameWalletService()
+            wallet_service.grant_tokens(
                 db, user_id, token_type, total_reward_amount, reason=f"VOUCHER_USE:{item_type}", auto_commit=False
             )
             

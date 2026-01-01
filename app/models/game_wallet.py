@@ -29,4 +29,4 @@ class UserGameWallet(Base):
     balance = Column(Integer, nullable=False, default=0)
     updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    user = relationship("User")
+    user = relationship("User", back_populates="game_wallets")

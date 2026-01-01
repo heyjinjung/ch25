@@ -30,6 +30,10 @@ def seed_season_pass_20():
         else:
             config.max_level = 20
             config.base_xp_per_stamp = 20
+            from datetime import date
+            # Extend if expired
+            if config.end_date < date.today():
+                config.end_date = date(2026, 12, 31)
             db.commit()
         
         season_id = config.id

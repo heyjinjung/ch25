@@ -178,23 +178,33 @@ const VaultPageCompact: React.FC = () => {
                     target="_blank"
                     rel="noreferrer"
                     onClick={() => tryHaptic(30)}
-                    className="group block w-full py-4 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-black text-center text-base shadow-lg shadow-emerald-500/30 hover:brightness-110 active:scale-[0.98] transition-all uppercase tracking-wide relative overflow-hidden"
+                    className="group block w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-black text-center text-base shadow-lg shadow-emerald-500/30 hover:brightness-110 active:scale-[0.98] transition-all uppercase tracking-wide relative overflow-hidden"
                 >
                     {/* Button Shimmer */}
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-                    <span className="relative z-10">
-                        <img src="/assets/logo_cc_v2.png" alt="CC" className="inline-block w-5 h-5 mr-2 align-text-bottom" />
+                    <span className="relative z-10 flex items-center justify-center">
+                        <img src="/assets/logo_cc_v2.png" alt="CC" className="inline-block w-5 h-5 mr-2" />
                         씨씨카지노 충전하기
                     </span>
                 </a>
 
-                <Link
-                    to="/home"
-                    onClick={() => tryHaptic(10)}
-                    className="block w-full py-3 rounded-xl bg-white/5 border border-white/10 text-white/70 font-semibold text-center text-sm hover:bg-white/10 active:scale-[0.98] transition-all"
-                >
-                    게임으로 돌아가기
-                </Link>
+                <div className="flex gap-2">
+                    <Link
+                        to="/inventory"
+                        onClick={() => tryHaptic(10)}
+                        className="flex-1 py-3 rounded-xl bg-white/5 border border-white/10 text-white/90 font-bold text-center text-sm hover:bg-white/10 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                    >
+                        {/* <Package size={16} /> Icon need import, kept simple for now */}
+                        📦 인벤토리 확인
+                    </Link>
+                    <Link
+                        to="/home"
+                        onClick={() => tryHaptic(10)}
+                        className="flex-1 py-3 rounded-xl bg-white/5 border border-white/10 text-white/70 font-semibold text-center text-sm hover:bg-white/10 active:scale-[0.98] transition-all"
+                    >
+                        게임으로
+                    </Link>
+                </div>
             </div>
         </div>
     );

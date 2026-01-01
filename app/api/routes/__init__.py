@@ -35,7 +35,7 @@ from app.api.routes import (
 api_router = APIRouter()
 
 # Dev endpoints (only enabled in development)
-api_router.include_router(dev_auth.router, prefix="/dev", tags=["dev"])
+api_router.include_router(dev_auth.router, prefix="/api/dev", tags=["dev"])
 
 api_router.include_router(health.router, prefix="", tags=["health"])
 api_router.include_router(today_feature.router)
@@ -63,4 +63,4 @@ api_router.include_router(admin_mission.router)
 api_router.include_router(admin_user_merge.router)
 api_router.include_router(telegram_unlink.router)
 api_router.include_router(telegram_unlink.admin_router)
-api_router.include_router(inventory_shop.router)
+api_router.include_router(inventory_shop.router, prefix="/api")

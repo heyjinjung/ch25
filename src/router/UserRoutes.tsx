@@ -7,6 +7,7 @@ import RequireAuth from "../components/routing/RequireAuth";
 
 
 // Lazy load heavy pages for performance optimization
+const LoginPage = React.lazy(() => import("../pages/LoginPage"));
 const RoulettePage = React.lazy(() => import("../pages/RoulettePage"));
 const DicePage = React.lazy(() => import("../pages/DicePage"));
 const LotteryPage = React.lazy(() => import("../pages/LotteryPage"));
@@ -42,7 +43,7 @@ const UserRoutes: React.FC = () => {
   return (
     <Suspense fallback={<PageLoader />}>
       <Routes>
-        <Route path="/login" element={<Navigate to="/" replace />} />
+        <Route path="/login" element={<LoginPage />} />
         <Route path="/connect" element={<ConnectPage />} />
 
         {/* Primary experience starts at landing/home */}

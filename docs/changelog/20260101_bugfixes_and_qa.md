@@ -80,4 +80,14 @@
   - `NotificationService.py` 내 변수명 수정.
   - `MissionService.py` 알림 발송 로직에 예외처리(`try-except`) 추가하여 알림 실패가 게임 진행을 막지 않도록 안전장치 마련.
 
+### 5. 502 Bad Gateway 및 인벤토리 라우팅 오류 수정 (Critical)
+- **증상**: `/api/auth/token` 502 응답 및 `/api/inventory` 등 인벤토리 관련 API 404 Not Found.
+- **원인**: 
+  - 신규 추가된 `inventory_shop` 라우터가 `/api` 프리픽스 없이 등록되어, 클라이언트(/api/inventory) 요청이 백엔드(/inventory)와 매칭되지 않음(404).
+  - 해당 모듈 로딩 및 초기화 과정의 불안정성(또는 클라이언트의 잘못된 경로 재시도 폭주)이 Nginx와의 연결 문제(502)를 유발했을 가능성.
+- **조치**: 
+  - `app/api/routes/__init__.py`에서 `inventory_shop` 라우터 등록 시 `prefix="/api"`를 명시적으로 추가하여 경로 매칭 문제 해결.
+  - Nginx 컨테이너 재시작을 통해 업스트림 연결 및 캐시 초기화 진행.
+
+
 
