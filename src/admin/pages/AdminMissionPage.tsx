@@ -92,8 +92,8 @@ const AdminMissionPage: React.FC = () => {
     if (error) return <div className="p-8 text-red-500">Error loading missions</div>;
 
     return (
-        <div className="p-6 bg-[#1C1C1E] min-h-screen text-white">
-            <div className="flex justify-between items-center mb-8">
+        <div className="p-3 bg-[#1C1C1E] min-h-screen text-white sm:p-6">
+            <div className="flex flex-col gap-3 mb-6 sm:flex-row sm:items-center sm:justify-between sm:mb-8">
                 <div>
                     <h1 className="text-2xl font-bold text-[#91F402] flex items-center gap-2">
                         🎯 미션 관리 시스템
@@ -102,7 +102,7 @@ const AdminMissionPage: React.FC = () => {
                 </div>
                 <button
                     onClick={() => { setIsAdding(true); setEditingId(null); }}
-                    className="flex items-center gap-2 bg-[#91F402] text-black px-4 py-2 rounded-lg font-bold hover:brightness-110"
+                    className="flex w-full items-center justify-center gap-2 bg-[#91F402] text-black px-4 py-2 rounded-lg font-bold hover:brightness-110 sm:w-auto"
                 >
                     <Plus size={18} /> 새 미션 추가
                 </button>
@@ -120,7 +120,7 @@ const AdminMissionPage: React.FC = () => {
                                 <X />
                             </button>
                         </div>
-                        <div className="p-6 grid grid-cols-2 gap-4">
+                        <div className="p-4 grid grid-cols-1 gap-4 sm:p-6 sm:grid-cols-2">
                             <div className="col-span-2">
                                 <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">미션 제목</label>
                                 <input
@@ -205,17 +205,17 @@ const AdminMissionPage: React.FC = () => {
                                 />
                             </div>
                         </div>
-                        <div className="p-6 border-t border-white/10 flex justify-end gap-3">
+                        <div className="p-4 border-t border-white/10 flex flex-col-reverse gap-3 sm:p-6 sm:flex-row sm:justify-end">
                             <button
                                 onClick={() => { setIsAdding(false); setEditingId(null); }}
-                                className="px-6 py-2 rounded-lg bg-gray-700 font-bold hover:bg-gray-600"
+                                className="w-full px-6 py-2 rounded-lg bg-gray-700 font-bold hover:bg-gray-600 sm:w-auto"
                             >
                                 취소
                             </button>
                             <button
                                 onClick={handleSave}
                                 disabled={createMutation.isPending || updateMutation.isPending}
-                                className="px-6 py-2 rounded-lg bg-[#91F402] text-black font-bold hover:brightness-110 disabled:opacity-50"
+                                className="w-full px-6 py-2 rounded-lg bg-[#91F402] text-black font-bold hover:brightness-110 disabled:opacity-50 sm:w-auto"
                             >
                                 {editingId ? "수정 완료" : "미션 생성"}
                             </button>
@@ -226,25 +226,26 @@ const AdminMissionPage: React.FC = () => {
 
             {/* Mission List Table */}
             <div className="bg-[#2C2C2E] rounded-2xl border border-white/10 overflow-hidden shadow-xl">
+                <div className="overflow-x-auto">
                 <table className="w-full text-left">
                     <thead>
                         <tr className="bg-black/20 text-gray-400 text-xs font-black uppercase tracking-widest border-b border-white/5">
-                            <th className="px-6 py-4">ID / Logic Key</th>
-                            <th className="px-6 py-4">제목 / 카테고리</th>
-                            <th className="px-6 py-4">조건 (Action / Target)</th>
-                            <th className="px-6 py-4">보상</th>
-                            <th className="px-6 py-4 text-center">상태</th>
-                            <th className="px-6 py-4 text-right">관리</th>
+                            <th className="px-4 py-3 sm:px-6 sm:py-4">ID / Logic Key</th>
+                            <th className="px-4 py-3 sm:px-6 sm:py-4">제목 / 카테고리</th>
+                            <th className="px-4 py-3 sm:px-6 sm:py-4">조건 (Action / Target)</th>
+                            <th className="px-4 py-3 sm:px-6 sm:py-4">보상</th>
+                            <th className="px-4 py-3 text-center sm:px-6 sm:py-4">상태</th>
+                            <th className="px-4 py-3 text-right sm:px-6 sm:py-4">관리</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5">
                         {missions?.map(mission => (
                             <tr key={mission.id} className="hover:bg-white/5 transition-colors group">
-                                <td className="px-6 py-4">
+                                <td className="px-4 py-3 sm:px-6 sm:py-4">
                                     <div className="font-bold text-white">#{mission.id}</div>
                                     <div className="text-[10px] text-gray-500 font-mono tracking-tighter">{mission.logic_key}</div>
                                 </td>
-                                <td className="px-6 py-4">
+                                <td className="px-4 py-3 sm:px-6 sm:py-4">
                                     <div className="font-bold text-white">{mission.title}</div>
                                     <div className={`inline-block text-[10px] px-1.5 rounded uppercase font-black mt-1 ${mission.category === 'DAILY' ? 'bg-blue-900/40 text-blue-400' :
                                         mission.category === 'WEEKLY' ? 'bg-purple-900/40 text-purple-400' :
@@ -253,18 +254,18 @@ const AdminMissionPage: React.FC = () => {
                                         {mission.category}
                                     </div>
                                 </td>
-                                <td className="px-6 py-4">
+                                <td className="px-4 py-3 sm:px-6 sm:py-4">
                                     <div className="text-sm font-medium">{mission.action_type}</div>
                                     <div className="text-xs text-gray-500 mt-0.5">Target: <span className="text-white">{mission.target_value}</span></div>
                                 </td>
-                                <td className="px-6 py-4">
+                                <td className="px-4 py-3 sm:px-6 sm:py-4">
                                     <div className="flex items-center gap-2">
                                         <div className="w-4 h-4 rounded-full bg-amber-400/20 flex items-center justify-center text-[10px] text-amber-400">💎</div>
                                         <span className="font-bold text-[#91F402]">{mission.reward_amount}</span>
                                         <span className="text-[10px] text-gray-500">{mission.reward_type}</span>
                                     </div>
                                 </td>
-                                <td className="px-6 py-4 text-center">
+                                <td className="px-4 py-3 text-center sm:px-6 sm:py-4">
                                     <button
                                         onClick={() => {
                                             updateMutation.mutate({
@@ -278,8 +279,8 @@ const AdminMissionPage: React.FC = () => {
                                         {mission.is_active ? 'ACTIVE' : 'INACTIVE'}
                                     </button>
                                 </td>
-                                <td className="px-6 py-4 text-right">
-                                    <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <td className="px-4 py-3 text-right sm:px-6 sm:py-4">
+                                    <div className="flex justify-end gap-2 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
                                         <button
                                             onClick={() => handleEdit(mission)}
                                             className="p-1.5 rounded-lg bg-gray-800 text-gray-400 hover:text-white"
@@ -302,6 +303,7 @@ const AdminMissionPage: React.FC = () => {
                         ))}
                     </tbody>
                 </table>
+                </div>
                 {missions?.length === 0 && (
                     <div className="p-20 text-center text-gray-500">
                         등록된 미션이 없습니다.

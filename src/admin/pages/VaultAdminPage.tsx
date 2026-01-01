@@ -279,16 +279,16 @@ const VaultAdminPage: React.FC = () => {
 
     return (
         <div className="space-y-6 pb-20">
-            <header className="flex items-center justify-between">
+            <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h2 className="text-2xl font-bold text-[#91F402]">금고(Vault) 운영 관리</h2>
                     <p className="text-sm text-gray-400">Phase 1 적립/해금 정책 및 문구 관리</p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-3">
                     {!["stats", "ops"].includes(activeTab) && (
                         <button
                             onClick={() => setAdvancedMode(!advancedMode)}
-                            className={`px-3 py-1.5 rounded text-xs font-bold transition-colors ${advancedMode ? "bg-[#91F402] text-black" : "bg-white/5 text-white/50 border border-white/10"
+                            className={`w-full px-3 py-1.5 rounded text-xs font-bold transition-colors sm:w-auto ${advancedMode ? "bg-[#91F402] text-black" : "bg-white/5 text-white/50 border border-white/10"
                                 }`}
                         >
                             {advancedMode ? "일반 모드 (Form)" : "고급 모드 (JSON)"}
@@ -297,7 +297,7 @@ const VaultAdminPage: React.FC = () => {
                     <button
                         onClick={() => tickMutation.mutate()}
                         disabled={tickMutation.isPending}
-                        className="flex items-center gap-2 rounded-md bg-amber-600 px-4 py-2 text-sm font-bold text-white hover:bg-amber-500 disabled:opacity-50"
+                        className="flex w-full items-center justify-center gap-2 rounded-md bg-amber-600 px-4 py-2 text-sm font-bold text-white hover:bg-amber-500 disabled:opacity-50 sm:w-auto"
                     >
                         <RefreshCcw className={`h-4 w-4 ${tickMutation.isPending ? "animate-spin" : ""}`} />
                         상태 강제 갱신
@@ -345,7 +345,7 @@ const VaultAdminPage: React.FC = () => {
             {/* Stats Detail Modal */}
             {showDetailModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-                    <div className="w-full max-w-3xl rounded-xl border border-[#333] bg-[#111] p-6 shadow-2xl animate-in zoom-in-50 duration-200">
+                    <div className="w-full max-w-3xl rounded-xl border border-[#333] bg-[#111] p-4 shadow-2xl animate-in zoom-in-50 duration-200 sm:p-6">
                         <div className="flex items-center justify-between mb-6 border-b border-[#333] pb-4">
                             <h3 className="text-xl font-bold text-white flex items-center gap-2">
                                 <Activity className="h-5 w-5 text-[#91F402]" />
@@ -356,7 +356,7 @@ const VaultAdminPage: React.FC = () => {
                             </button>
                         </div>
 
-                        <div className="max-h-[60vh] overflow-y-auto">
+                        <div className="max-h-[60vh] overflow-y-auto overflow-x-auto">
                             {detailLoading ? (
                                 <div className="py-20 flex justify-center"><Loader2 className="h-8 w-8 animate-spin text-[#91F402]" /></div>
                             ) : (
@@ -396,7 +396,7 @@ const VaultAdminPage: React.FC = () => {
                 </div>
             )}
 
-            <nav className="flex items-center gap-1 border-b border-[#333]">
+            <nav className="flex items-center gap-1 border-b border-[#333] overflow-x-auto whitespace-nowrap">
                 {[
                     { id: "stats", label: "실시간 지표" },
                     { id: "requests", label: "출금 요청" },
@@ -408,7 +408,7 @@ const VaultAdminPage: React.FC = () => {
                     <button
                         key={tab.id}
                         onClick={() => handleTabChange(tab.id as any)}
-                        className={`px-6 py-3 text-sm font-bold transition-all relative ${activeTab === tab.id
+                        className={`shrink-0 whitespace-nowrap px-4 py-3 text-sm font-bold transition-all relative sm:px-6 ${activeTab === tab.id
                             ? "text-[#91F402]"
                             : "text-gray-500 hover:text-gray-300"
                             }`}
@@ -424,11 +424,12 @@ const VaultAdminPage: React.FC = () => {
             <div className="min-h-[400px]">
                 {activeTab === "stats" && (
                     <div className="space-y-6 animate-in fade-in duration-300">
-                        <div className="rounded-xl border border-[#333] bg-[#111] p-6 shadow-xl">
+                        <div className="rounded-xl border border-[#333] bg-[#111] p-4 shadow-xl sm:p-6">
                             <h3 className="mb-4 font-bold text-white flex items-center gap-2">
                                 <RefreshCcw className="h-4 w-4 text-[#91F402]" />
                                 오늘 적립 상세 내역
                             </h3>
+                            <div className="overflow-x-auto">
                             <table className="w-full text-left text-sm">
                                 <thead>
                                     <tr className="text-gray-500 border-b border-[#222]">
@@ -452,6 +453,7 @@ const VaultAdminPage: React.FC = () => {
                                     )}
                                 </tbody>
                             </table>
+                            </div>
                         </div>
 
                         {Object.keys(stats?.today_skips || {}).length > 0 && (
@@ -477,19 +479,19 @@ const VaultAdminPage: React.FC = () => {
                 {activeTab !== "stats" && activeTab !== "ops" && (
                     <div className="animate-in slide-in-from-bottom-2 duration-300">
                         {activeTab === "requests" ? (
-                            <div className="rounded-xl border border-[#333] bg-[#0f0f0f] p-8 shadow-2xl">
+                            <div className="rounded-xl border border-[#333] bg-[#0f0f0f] p-4 shadow-2xl sm:p-8">
                                 <VaultRequestManager />
                             </div>
                         ) : advancedMode ? (
                             <div className="space-y-4">
-                                <div className="flex items-center justify-between">
+                                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                                     <p className="text-sm text-gray-400">
                                         JSON 형식을 지켜 입력해주세요.
                                     </p>
                                     <button
                                         onClick={() => saveJson(activeTab as any)}
                                         disabled={mutation.isPending}
-                                        className="flex items-center gap-2 rounded-md bg-[#2D6B3B] px-4 py-2 text-sm font-bold text-white hover:bg-[#91F402] hover:text-black transition"
+                                        className="flex w-full items-center justify-center gap-2 rounded-md bg-[#2D6B3B] px-4 py-2 text-sm font-bold text-white hover:bg-[#91F402] hover:text-black transition sm:w-auto"
                                     >
                                         <Save className="h-4 w-4" />
                                         JSON 직접 저장
@@ -506,7 +508,7 @@ const VaultAdminPage: React.FC = () => {
                                 />
                             </div>
                         ) : (
-                            <div className="rounded-xl border border-[#333] bg-[#0f0f0f] p-8 shadow-2xl">
+                            <div className="rounded-xl border border-[#333] bg-[#0f0f0f] p-4 shadow-2xl sm:p-8">
                                 {program ? (
                                     <>
                                         {activeTab === "rules" && <VaultRulesEditor program={program} />}
