@@ -265,6 +265,30 @@ class VaultService:
         # Keep legacy mirror consistent even if other code wrote vault_balance directly.
         # (This is a cheap assignment and helps avoid stale UI.)
         self.sync_legacy_mirror(user)
+        
+        # VIP Unlock Check (Lazy)
+        if int(getattr(user, "total_charge_amount", 0) or 0) >= 100_000:
+            locked = int(getattr(user, "vault_locked_balance", 0) or 0)
+            if locked > 0:
+                mutated = True
+                vip_unlock_amount = locked
+                user.vault_locked_balance = 0
+                self.sync_legacy_mirror(user)
+                RewardService().grant_point(
+                    db,
+                    user_id=user.id,
+                    amount=vip_unlock_amount,
+                    reason="VAULT_UNLOCK",
+                    label="VIP_UNLOCK",
+                    meta={
+                        "trigger": "VIP_LAZY_UNLOCK",
+                        "total_charge": user.total_charge_amount,
+                        "unlocked_amount": vip_unlock_amount
+                    },
+                    commit=False
+                )
+                db.add(user)
+
         if mutated:
             db.add(user)
             db.commit()
@@ -351,13 +375,62 @@ class VaultService:
             return 0
 
         # Eligibility is required for Phase 1 vault funnel.
+        # Eligibility is required for Phase 1 vault funnel.
         if not self._eligible(db, user_id, now_dt):
             return 0
 
+        # 1. Fetch User (needed for Total Charge update)
+        q = db.query(User).filter(User.id == user_id)
+        if db.bind and db.bind.dialect.name != "sqlite":
+            q = q.with_for_update()
+        user = q.one_or_none()
+        if user is None and db.bind and db.bind.dialect.name == "sqlite":
+            user = User(id=user_id, external_id=f"test-user-{user_id}")
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+
+        if user is None:
+            return 0
+
+        # 2. Sync Total Charge (Always)
+        user.total_charge_amount = int(new_amount)
+
+        # 3. VIP Check (Charge >= 100,000)
+        vip_unlock_amount = 0
+        if user.total_charge_amount >= 100_000:
+            locked = int(user.vault_locked_balance or 0)
+            if locked > 0:
+                vip_unlock_amount = locked
+                user.vault_locked_balance = 0
+                self.sync_legacy_mirror(user)
+                
+                RewardService().grant_point(
+                    db,
+                    user_id=user.id,
+                    amount=vip_unlock_amount,
+                    reason="VAULT_UNLOCK",
+                    label="VIP_UNLOCK",
+                    meta={
+                        "trigger": "VIP_TOTAL_CHARGE_REACHED",
+                        "total_charge": user.total_charge_amount,
+                        "unlocked_amount": vip_unlock_amount
+                    },
+                    commit=False
+                )
+                db.add(user)
+                
+                if commit:
+                    db.commit()
+                else:
+                    db.flush()
+                return vip_unlock_amount
+
+        # 4. Phase 1 Tier Logic
         unlock_target = 0
         tier = None
         
-        # 1. Try DB-configured tiers
+        # Try DB-configured tiers
         program = Vault2Service().get_default_program(db, ensure=False)
         rules = getattr(program, "unlock_rules_json", {}) or {}
         p1_config = rules.get("phase1_deposit_unlock", {}) or {}
@@ -374,29 +447,12 @@ class VaultService:
                     tier = f"TIER_{m_delta}"
                     break
         
-        # 2. Hardcoded Fallback (DISABLED as per user request Step 344)
-        # if unlock_target <= 0:
-        #     if deposit_delta >= self.VAULT_TIER_B_MIN_DELTA:
-        #         unlock_target = self.VAULT_TIER_B_UNLOCK
-        #         tier = "B"
-        #     elif deposit_delta >= self.VAULT_TIER_A_MIN_DELTA:
-        #         unlock_target = self.VAULT_TIER_A_UNLOCK
-        #         tier = "A"
-
         if unlock_target <= 0:
-            return 0
-
-        q = db.query(User).filter(User.id == user_id)
-        if db.bind and db.bind.dialect.name != "sqlite":
-            q = q.with_for_update()
-        user = q.one_or_none()
-        if user is None and db.bind and db.bind.dialect.name == "sqlite":
-            user = User(id=user_id, external_id=f"test-user-{user_id}")
-            db.add(user)
-            db.commit()
-            db.refresh(user)
-
-        if user is None:
+            # Save total charge update if no unlock
+            if commit:
+                db.commit()
+            else:
+                db.flush()
             return 0
 
         # Phase 1: if locked expired, do not unlock.

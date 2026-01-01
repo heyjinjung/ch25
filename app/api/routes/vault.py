@@ -96,6 +96,7 @@ def status(db: Session = Depends(get_db), user_id: int = Depends(get_current_use
         unlock_rules_json=unlock_rules_json,
         accrual_multiplier=service.vault_accrual_multiplier(db, now) if eligible else 1.0,
         ui_copy_json=ui_copy_json,
+        total_charge_amount=int(getattr(user, "total_charge_amount", 0) or 0),
     )
 
 

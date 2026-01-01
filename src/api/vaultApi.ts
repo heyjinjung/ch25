@@ -17,6 +17,7 @@ interface BackendVaultStatusResponse {
   readonly ui_copy_json?: Record<string, unknown> | null;
   readonly accrual_multiplier?: number | null;
   readonly ticket_count?: number;
+  readonly total_charge_amount?: number;
 }
 
 export interface VaultStatusResponse {
@@ -39,6 +40,7 @@ export interface VaultStatusResponse {
   // Event flags
   readonly accrualMultiplier?: number | null;
   readonly ticketCount?: number;
+  readonly totalChargeAmount?: number;
 }
 
 export const getVaultStatus = async (): Promise<VaultStatusResponse> => {
@@ -65,6 +67,7 @@ export const getVaultStatus = async (): Promise<VaultStatusResponse> => {
 
     accrualMultiplier: data.accrual_multiplier ?? null,
     ticketCount: data.ticket_count ?? 0,
+    totalChargeAmount: data.total_charge_amount ?? 0,
   };
 };
 // Phase 1 MVP Withdrawal Request

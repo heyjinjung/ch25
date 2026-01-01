@@ -22,6 +22,9 @@ class VaultStatusResponse(BaseModel):
     vault_fill_used_at: datetime | None = None
 
     seeded: bool = False
+    
+    # VIP
+    total_charge_amount: int = 0
 
     # Phase 1 UX integration (optional)
     recommended_action: str | None = None
