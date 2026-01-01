@@ -1,6 +1,9 @@
 import React, { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getNewUserStatus } from "../../api/newUserApi";
+import { verifyChannelSubscription, recordViralAction } from "../../api/viralApi";
+import { useToast } from "../common/ToastProvider";
+import { useHaptic } from "../../hooks/useHaptic";
 
 const formatSeconds = (seconds: number | null | undefined) => {
     if (seconds == null) return "00:00:00";
@@ -17,6 +20,9 @@ interface NewUserWelcomeModalProps {
 
 const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) => {
     const [dontShowAgain, setDontShowAgain] = useState(false);
+    const { addToast } = useToast();
+    const { notification, impact } = useHaptic();
+    const queryClient = useQueryClient();
 
     const { data: status } = useQuery({
         queryKey: ["new-user-status"],
@@ -32,6 +38,32 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) =>
         onClose();
     };
 
+    const handleMissionAction = async (missionId: string) => {
+        if (missionId === "viral") {
+            impact("medium");
+            // Find the JOIN_CHANNEL mission from regular missions if possible, 
+            // but for starter mission, we can try verifyChannelSubscription with dummy ID or 0 
+            // and the backend should handle "JOIN_CHANNEL" action_type check.
+            // Actually, backend verify_channel expects target_channel from env if mission_id is not useful.
+
+            const result = await verifyChannelSubscription(0); // Using 0 as it's a generic check
+            if (result.success) {
+                notification("success");
+                addToast("구독 인증 완료!", "success");
+                queryClient.invalidateQueries({ queryKey: ["new-user-status"] });
+            } else {
+                const channelLink = "https://t.me/+LksI3XlSjLlhZmE0";
+                const tg = window.Telegram?.WebApp;
+                if (tg?.openTelegramLink) {
+                    tg.openTelegramLink(channelLink);
+                } else {
+                    window.open(channelLink, "_blank");
+                }
+                addToast("채널에 입장하여 구독해 주세요.", "info");
+            }
+        }
+    };
+
     if (!status?.eligible) {
         return null;
     }
@@ -43,6 +75,7 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) =>
             icon: "/assets/welcome/icon_play1.png",
             completed: status.progress.play_1,
             reward: 2500,
+            hint: "게임을 1판 플레이하세요",
         },
         {
             id: "play_3",
@@ -50,6 +83,7 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) =>
             icon: "/assets/welcome/icon_play3.png",
             completed: status.progress.play_3,
             reward: 2500,
+            hint: "게임을 총 3판 플레이하세요",
         },
         {
             id: "viral",
@@ -57,6 +91,7 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) =>
             icon: "/assets/welcome/icon_viral.png",
             completed: status.progress.share_or_join,
             reward: 2500,
+            hint: "클릭하여 채널 구독 확인",
         },
         {
             id: "attendance",
@@ -64,6 +99,7 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) =>
             icon: "/assets/welcome/icon_attendance.png",
             completed: status.progress.next_day_login,
             reward: 2500,
+            hint: "내일 다시 로그인하세요",
         },
     ];
 
@@ -102,18 +138,27 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) =>
                     {/* Missions Grid */}
                     <div className="grid grid-cols-4 gap-3">
                         {missions.map((mission) => (
-                            <div key={mission.id} className="flex flex-col items-center gap-2">
-                                <div className={`relative w-full aspect-square rounded-2xl border-2 ${mission.completed ? "border-emerald-500 bg-emerald-500/10" : "border-white/20 bg-white/5"} p-2 transition-all`}>
+                            <div
+                                key={mission.id}
+                                className={`flex flex-col items-center gap-2 group cursor-pointer transition-transform active:scale-95`}
+                                onClick={() => !mission.completed && handleMissionAction(mission.id)}
+                            >
+                                <div className={`relative w-full aspect-square rounded-2xl border-2 ${mission.completed ? "border-emerald-500 bg-emerald-500/10" : "border-white/20 bg-white/5 group-hover:border-white/40"} p-2 transition-all`}>
                                     <img
                                         src={mission.icon}
                                         alt={mission.title}
-                                        className={`w-full h-full object-contain ${!mission.completed && "opacity-50 grayscale"}`}
+                                        className={`w-full h-full object-contain ${!mission.completed && "opacity-50 grayscale group-hover:opacity-80 group-hover:grayscale-0"}`}
                                     />
                                     {mission.completed && (
                                         <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center">
                                             <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                                             </svg>
+                                        </div>
+                                    )}
+                                    {!mission.completed && mission.id === "viral" && (
+                                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <div className="bg-emerald-500 text-white text-[8px] font-black px-1 rounded animate-pulse">CHECK</div>
                                         </div>
                                     )}
                                 </div>

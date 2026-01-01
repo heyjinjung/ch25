@@ -165,8 +165,12 @@ def status(db: Session = Depends(get_db), user_id: int = Depends(get_current_use
             deposit_confirmed=(deposit_amount > 0) or has_charge_history,
             play_1=total_play_count >= 1,
             play_3=total_play_count >= 3,
-            # Not tracked yet; reserved for Telegram callbacks / bot checks.
-            share_or_join=False,
+            # Check if user completed any JOIN_CHANNEL or SHARE missions
+            share_or_join=db.query(UserMissionProgress).join(Mission).filter(
+                UserMissionProgress.user_id == user_id,
+                Mission.action_type.in_(["JOIN_CHANNEL", "SHARE", "SHARE_STORY", "SHARE_WALLET"]),
+                UserMissionProgress.is_completed == True
+            ).first() is not None,
             next_day_login=bool(next_day_login),
         ),
     )
