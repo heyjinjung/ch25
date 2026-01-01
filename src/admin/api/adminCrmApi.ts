@@ -29,6 +29,8 @@ export interface CrmStats {
 export interface AdminUserProfile {
     user_id: number;
     external_id?: string;
+    nickname?: string;
+    telegram_username?: string;
     real_name?: string;
     phone_number?: string;
     telegram_id?: string;

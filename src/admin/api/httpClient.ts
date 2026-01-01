@@ -21,7 +21,7 @@ const normalizeHttps = (base: string) => {
       const url = new URL(base, window.location.origin);
       url.protocol = "https:";
       return url.toString().replace(/\/+$/, "");
-    } catch (err) {
+    } catch {
       // Fallback string replace if URL construction fails (e.g., invalid URL but still usable as axios base)
       return `https://${base.slice("http://".length).replace(/\/+$/, "")}`;
     }

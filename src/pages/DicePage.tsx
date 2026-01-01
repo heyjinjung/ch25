@@ -187,10 +187,10 @@ const DicePage: React.FC = () => {
         {/* Reward Alert - Adjusted Position */}
         {rewardToast && (
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[100] w-full px-4 pointer-events-none">
-            <div className="flex flex-col items-center justify-center gap-2 rounded-[2rem] border border-[#30FF75]/30 bg-black/90 px-6 py-6 shadow-[0_0_50px_rgba(48,255,117,0.3)] backdrop-blur-3xl animate-bounce-subtle">
-              <img src="/assets/asset_coin_gold.png" alt="Reward" className="w-16 h-16 drop-shadow-[0_0_20px_rgba(255,215,0,0.6)]" />
+            <div className="mx-auto flex max-w-[280px] flex-col items-center justify-center gap-2 rounded-[2rem] border border-figma-accent/30 bg-black/90 px-5 py-5 shadow-2xl backdrop-blur-3xl animate-bounce-subtle">
+              <img src="/assets/asset_coin_gold.png" alt="Reward" className="h-12 w-12 drop-shadow-lg" />
               <div className="text-center">
-                <p className="text-[10px] font-black uppercase tracking-widest text-[#30FF75]">YOU WON</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-figma-accent">YOU WON</p>
                 <p className="text-3xl font-black text-white leading-none mt-1">
                   +{rewardToast.value}
                 </p>

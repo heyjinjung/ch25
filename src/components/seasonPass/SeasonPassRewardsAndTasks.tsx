@@ -233,7 +233,7 @@ export const SeasonPassRewardsAndTasks: React.FC = () => {
                                 const res = await claimReward.mutateAsync(reward.level);
                                 const msg = res.message || `${res.level}레벨 보상 지급 완료`;
                                 addToast(msg, "success");
-                              } catch (e) {
+                              } catch {
                                 addToast("보상 지급에 실패했습니다. 잠시 후 다시 시도해 주세요.", "error");
                               } finally {
                                 setPendingClaimLevel(null);

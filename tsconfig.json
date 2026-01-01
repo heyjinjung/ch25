@@ -28,6 +28,7 @@
       "@testing-library/jest-dom"
     ],
     /* Path mapping */
+    "ignoreDeprecations": "5.0",
     "baseUrl": ".",
     "paths": {
       "@/*": [

@@ -37,7 +37,7 @@ const DiceView: React.FC<DiceViewProps> = ({ userDice, dealerDice, result, isRol
     if (!result) return { text: "전투 준비!", color: "text-white/40", bg: "bg-white/5" };
     switch (result) {
       case "WIN":
-        return { text: "승리", color: "text-[#30FF75]", bg: "bg-emerald-500/10" };
+        return { text: "승리", color: "text-figma-accent", bg: "bg-figma-accent/10" };
       case "LOSE":
         return { text: "패배", color: "text-red-500", bg: "bg-red-500/10" };
       case "DRAW":
@@ -46,9 +46,9 @@ const DiceView: React.FC<DiceViewProps> = ({ userDice, dealerDice, result, isRol
   }, [result]);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4">
       {/* Battle Columns */}
-      <div className="grid gap-8 grid-cols-1 md:grid-cols-2 relative h-full">
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 relative h-full">
 
 {/* VS Label (sm+ shown, compact on small screens) */}
       <div className="hidden sm:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
@@ -60,11 +60,11 @@ const DiceView: React.FC<DiceViewProps> = ({ userDice, dealerDice, result, isRol
         {/* User Side */}
         <div className={clsx(
           "relative rounded-[2rem] border p-3 transition-all duration-700 shadow-2xl",
-          result === "WIN" ? "bg-[#30FF75]/10 border-[#30FF75]/40" : "bg-black/60 border-white/10"
+          result === "WIN" ? "bg-figma-accent/10 border-figma-accent/40" : "bg-black/60 border-white/10"
         )}>
           <div className="flex flex-col items-center">
             <div className="mb-4 flex items-center gap-2 px-4 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-              <span className="text-xs font-black uppercase tracking-[0.2em] text-[#30FF75]">내 스쿼드</span>
+              <span className="text-xs font-black uppercase tracking-[0.2em] text-figma-accent">내 스쿼드</span>
             </div>
 
             <div className="flex justify-center gap-4 min-h-[80px]">
@@ -80,8 +80,8 @@ const DiceView: React.FC<DiceViewProps> = ({ userDice, dealerDice, result, isRol
               )}
             </div>
 
-            <div className="mt-6 flex flex-col items-center">
-              <span className="text-[2.4rem] sm:text-[4rem] font-black text-white leading-none tracking-tighter">
+            <div className="mt-4 flex flex-col items-center">
+              <span className="text-[2rem] sm:text-[3.5rem] font-black text-white leading-none tracking-tighter">
                 {isRolling ? "?" : (userDice.length > 0 ? userSum : "-")}
               </span>
               <span className="text-xs font-bold text-white/30 uppercase mt-2">전투력</span>
@@ -112,8 +112,8 @@ const DiceView: React.FC<DiceViewProps> = ({ userDice, dealerDice, result, isRol
               )}
             </div>
 
-            <div className="mt-6 flex flex-col items-center">
-              <span className="text-[2.4rem] sm:text-[4rem] font-black text-white/90 leading-none tracking-tighter">
+            <div className="mt-4 flex flex-col items-center">
+              <span className="text-[2rem] sm:text-[3.5rem] font-black text-white/90 leading-none tracking-tighter">
                 {isRolling ? "?" : (dealerDice.length > 0 ? dealerSum : "-")}
               </span>
               <span className="text-xs font-bold text-white/30 uppercase mt-2">위협 수준</span>
@@ -124,12 +124,13 @@ const DiceView: React.FC<DiceViewProps> = ({ userDice, dealerDice, result, isRol
 
       {/* Result Display: Compact and Premium */}
       <div className={clsx(
-        "rounded-2xl border p-4 text-center shadow-xl transition-all duration-1000",
+        "rounded-2xl border p-3 text-center shadow-xl transition-all duration-1000",
+        "min-h-[52px]",
         resultConfig.bg,
         result ? "border-current/20 scale-100 opacity-100" : "border-white/5 scale-95 opacity-50"
       )}>
         <p className={clsx(
-          "text-2xl font-black tracking-[0.1em] italic uppercase drop-shadow-lg",
+          "text-lg sm:text-2xl font-black tracking-[0.08em] italic uppercase drop-shadow-lg",
           resultConfig.color
         )}>
           {resultConfig.text}

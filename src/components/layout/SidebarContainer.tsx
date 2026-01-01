@@ -105,6 +105,8 @@ const Logo: React.FC = memo(() => (
   </div>
 ));
 
+Logo.displayName = "Logo";
+
 const GuideButton: React.FC = memo(() => (
   <Link
     to="/guide"
@@ -113,6 +115,8 @@ const GuideButton: React.FC = memo(() => (
     홈페이지 가이드
   </Link>
 ));
+
+GuideButton.displayName = "GuideButton";
 
 const LogoutButton: React.FC = memo(() => {
   const { logout } = useAuth();
@@ -134,6 +138,8 @@ const LogoutButton: React.FC = memo(() => {
   );
 });
 
+LogoutButton.displayName = "LogoutButton";
+
 const UserBadge: React.FC = memo(() => {
   const { user } = useAuth();
   const { data: seasonPass } = useSeasonPassStatus();
@@ -150,6 +156,8 @@ const UserBadge: React.FC = memo(() => {
     </div>
   );
 });
+
+UserBadge.displayName = "UserBadge";
 
 const DesktopSidebarContent: React.FC = memo(() => {
   return (
@@ -292,6 +300,8 @@ const DesktopSidebarContent: React.FC = memo(() => {
   );
 });
 
+DesktopSidebarContent.displayName = "DesktopSidebarContent";
+
 const MobileSidebarContent: React.FC = memo(() => {
   return (
     <div className="flex h-full w-full flex-col overflow-hidden lg:hidden">
@@ -360,6 +370,8 @@ const MobileSidebarContent: React.FC = memo(() => {
     </div>
   );
 });
+
+MobileSidebarContent.displayName = "MobileSidebarContent";
 
 export const SidebarMobileFooter: React.FC<{ className?: string }> = memo(({ className }) => {
   return (
@@ -432,6 +444,8 @@ export const SidebarMobileFooter: React.FC<{ className?: string }> = memo(({ cla
   );
 });
 
+SidebarMobileFooter.displayName = "SidebarMobileFooter";
+
 const SidebarContainer: React.FC = memo(() => {
   return (
     <header className="landing-font h-full w-full">
@@ -440,5 +454,7 @@ const SidebarContainer: React.FC = memo(() => {
     </header>
   );
 });
+
+SidebarContainer.displayName = "SidebarContainer";
 
 export default SidebarContainer;

@@ -4,6 +4,8 @@ import { adminApi } from "./httpClient";
 export interface AdminUserSegmentRow {
   readonly user_id: number;
   readonly external_id: string;
+  readonly nickname?: string;
+  readonly telegram_username?: string;
   readonly segment: string;
   readonly segment_updated_at?: string | null;
 

@@ -244,6 +244,11 @@ class TeamBattleService:
         season = db.get(TeamSeason, season_id)
         if not season:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="SEASON_NOT_FOUND")
+        
+        # Manually delete related data (bypass potential FK constraint issues in DB)
+        db.query(TeamEventLog).filter(TeamEventLog.season_id == season_id).delete(synchronize_session=False)
+        db.query(TeamScore).filter(TeamScore.season_id == season_id).delete(synchronize_session=False)
+        
         db.delete(season)
         db.commit()
 

@@ -95,4 +95,6 @@ const MobileBottomNav: React.FC = memo(() => {
     );
 });
 
+MobileBottomNav.displayName = "MobileBottomNav";
+
 export default MobileBottomNav;

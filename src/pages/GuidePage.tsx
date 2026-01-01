@@ -38,19 +38,19 @@ const IntroSection: React.FC = () => {
       <div className="mx-auto flex max-w-screen-xl flex-col items-center md:flex-row">
         <div className="mb-10 w-full md:mb-0 md:w-3/5 md:pr-10">
           <h2 className="mb-4 text-2xl font-bold leading-tight md:text-3xl lg:text-4xl">
-            게임+팀배틀+금고로
+            게임하고 보상받으세요
             <br />
-            매일 보상혜택 챙기세요
+            복잡한거 없습니다
           </h2>
           <p className="mb-6 text-lg font-medium">
-            플레이→결과확인→레벨보상으로 누적
+            티켓으로 게임 → 보상 받기
           </p>
           <div className="mb-6 flex flex-wrap gap-2">
             <span className="rounded-full bg-[#d2fd9c] px-3 py-1 text-sm font-bold text-[#394508]">결과 즉시</span>
             <span className="rounded-full bg-[#d2fd9c] px-3 py-1 text-sm font-bold text-[#394508]">레벨 보상누적</span>
             <span className="rounded-full bg-[#d2fd9c] px-3 py-1 text-sm font-bold text-[#394508]">팀배틀</span>
           </div>
-          <p className="mb-6 text-sm text-gray-300">처음이세요? '3분가이드'보고 바로 시작하세요.</p>
+          <p className="mb-6 text-sm text-gray-300">처음이세요? 1분이면 끝입니다.</p>
           <div className="flex flex-wrap gap-3">
             <Link
               to="/landing"
@@ -62,7 +62,7 @@ const IntroSection: React.FC = () => {
               href="#quick-guide"
               className="rounded-full border border-white px-6 py-3 text-base font-bold text-white transition hover:bg-white hover:bg-opacity-10"
             >
-              3분 가이드 보기
+              1분 가이드
             </a>
           </div>
         </div>
@@ -95,7 +95,7 @@ const CoreActionSection: React.FC = () => {
       <div className="mx-auto max-w-screen-xl">
         <div className="mb-8 text-center">
           <span className="text-sm font-bold uppercase tracking-wider text-[#394508]">초보자 가이드</span>
-          <h2 className="mt-1 text-2xl font-bold text-[#282d1a] md:text-3xl">딱 3단계면 됩니다</h2>
+          <h2 className="mt-1 text-2xl font-bold text-[#282d1a] md:text-3xl">이렇게 하면 됩니다</h2>
         </div>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           <div className="rounded-xl border-l-4 border-[#394508] bg-gray-50 p-6">
@@ -105,7 +105,7 @@ const CoreActionSection: React.FC = () => {
               </div>
               <h3 className="text-xl font-bold text-[#282d1a]">티켓 확인</h3>
             </div>
-            <p className="mb-4 text-gray-700">게임 플레이에 필요한 티켓을 확인하세요. 씨씨카지노를 이용하면 티켓이 발생됩니다.</p>
+            <p className="mb-4 text-gray-700">씨씨카지노 이용하면 자동으로 생성됩니다. 없으면 게임 안 됩니다.</p>
             <div className="rounded-lg border border-gray-200 bg-white p-3">
               <p className="text-sm text-gray-600">
                 <span className="font-bold text-[#394508]">TIP</span>: 각 게임화면에서 보유 티켓을 확인할 수 있어요.
@@ -119,7 +119,7 @@ const CoreActionSection: React.FC = () => {
               </div>
               <h3 className="text-xl font-bold text-[#282d1a]">게임 플레이</h3>
             </div>
-            <p className="mb-4 text-gray-700">버튼 한 번으로 바로 시작하고 결과는 즉시 확인할 수 있어요. 원하는 게임을 선택하세요.</p>
+            <p className="mb-4 text-gray-700">버튼 누르면 바로 시작. 결과도 바로 나옴.</p>
             <div className="rounded-lg border border-gray-200 bg-white p-3">
               <p className="text-sm text-gray-600">
                 <span className="font-bold text-[#394508]">TIP</span>:주사위는 레벨경험치만 쌓여요.
@@ -133,7 +133,7 @@ const CoreActionSection: React.FC = () => {
               </div>
               <h3 className="text-xl font-bold text-[#282d1a]">보상 확인</h3>
             </div>
-            <p className="mb-4 text-gray-700">게임 결과로 얻은 포인트가 레벨에 반영되고, 레벨별 특별 보상을 받을 수 있어요.</p>
+            <p className="mb-4 text-gray-700">받은 포인트는 레벨에 쌓이고, 레벨이 오르면 보상을 받습니다.</p>
             <div className="rounded-lg border border-gray-200 bg-white p-3">
               <p className="text-sm text-gray-600">
                 <span className="font-bold text-[#394508]">TIP</span>: 레벨에서 누적 레벨포인트와 보상레벨을 확인하세요.
@@ -184,8 +184,8 @@ const GamesSection: React.FC = () => {
   const games: GameCardProps[] = [
     {
       title: "룰렛",
-      description: "룰렛돌려 랜덤보상을 즉시획득",
-      beginnerTip: "매일 보상이 바뀝니다",
+      description: "돌리고 보상 받기. 꼽 나오면 금고에서 -50원",
+      beginnerTip: "꼽이 나오면 금고에서 50원 차감",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 20 20" fill="white">
           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
@@ -196,8 +196,8 @@ const GamesSection: React.FC = () => {
     },
     {
       title: "주사위 배틀",
-      description: "주사위 결과로 승/무/패 결정, 승리시 추가 20xp보상",
-      beginnerTip: "팀배틀 전에 사용, 경험치 쌓는 용도.",
+      description: "승리시 +200원, 패배시 -50원 금고 반영",
+      beginnerTip: "지면 금고에서 50원 차감",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 20 20" fill="white">
           <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
@@ -256,6 +256,80 @@ const GamesSection: React.FC = () => {
             >
               운영자에게 문의하기
             </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const NewFeaturesSection: React.FC = () => {
+  return (
+    <section id="new-features" className="bg-white px-4 py-12 md:px-8 lg:px-12">
+      <div className="mx-auto max-w-screen-xl">
+        <div className="mb-10 text-center">
+          <span className="text-sm font-bold uppercase tracking-wider text-[#394508]">새 기능</span>
+          <h2 className="mt-1 text-2xl font-bold text-[#282d1a] md:text-3xl">알아두면 좋은 것들</h2>
+        </div>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {/* 데일리 미션 */}
+          <div className="rounded-xl border border-gray-200 bg-gray-50 p-6">
+            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500 text-white">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            </div>
+            <h3 className="mb-2 text-lg font-bold text-[#282d1a]">데일리 미션</h3>
+            <p className="text-gray-600">매일 주어지는 미션. 완료하면 다이아몬드 보상.</p>
+            <p className="mt-2 text-sm font-bold text-emerald-600">→ 매일 체크하세요</p>
+          </div>
+
+          {/* 인벤토리 */}
+          <div className="rounded-xl border border-gray-200 bg-gray-50 p-6">
+            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-blue-500 text-white">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+            </div>
+            <h3 className="mb-2 text-lg font-bold text-[#282d1a]">인벤토리</h3>
+            <p className="text-gray-600">다이아, 골드키, 다이아키 보관함.</p>
+            <p className="mt-2 text-sm font-bold text-blue-600">→ 상단 티켓버튼에서 확인</p>
+          </div>
+
+          {/* 골드키/다이아키 */}
+          <div className="rounded-xl border border-gray-200 bg-gray-50 p-6">
+            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-yellow-500 text-white">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" /></svg>
+            </div>
+            <h3 className="mb-2 text-lg font-bold text-[#282d1a]">골드키 / 다이아키</h3>
+            <p className="text-gray-600">특별 보상 열 때 사용. 레벨 보상으로 획득.</p>
+            <p className="mt-2 text-sm font-bold text-yellow-600">→ 레벨 올리면 받음</p>
+          </div>
+
+          {/* 텔레그램 전용 */}
+          <div className="rounded-xl border border-gray-200 bg-gray-50 p-6">
+            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-sky-500 text-white">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path d="M11.944 0A12 12 0 1 0 24 12.056A12.014 12.014 0 0 0 11.944 0Zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635Z" /></svg>
+            </div>
+            <h3 className="mb-2 text-lg font-bold text-[#282d1a]">텔레그램 전용</h3>
+            <p className="text-gray-600">자동 로그인. 알림 받기. 빠른 접속.</p>
+            <p className="mt-2 text-sm font-bold text-sky-600">→ 텔레그램으로만 접속</p>
+          </div>
+
+          {/* 메시지 보관함 */}
+          <div className="rounded-xl border border-gray-200 bg-gray-50 p-6">
+            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-purple-500 text-white">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+            </div>
+            <h3 className="mb-2 text-lg font-bold text-[#282d1a]">메시지 보관함</h3>
+            <p className="text-gray-600">운영자 공지, 보상 알림 확인.</p>
+            <p className="mt-2 text-sm font-bold text-purple-600">→ 하단 메뉴에서 확인</p>
+          </div>
+
+          {/* 금고 차감 규칙 */}
+          <div className="rounded-xl border border-red-200 bg-red-50 p-6">
+            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-red-500 text-white">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+            </div>
+            <h3 className="mb-2 text-lg font-bold text-red-700">주의: 금고 차감</h3>
+            <p className="text-gray-600">룰렛 꽝, 주사위 패배 시 금고에서 -50원.</p>
+            <p className="mt-2 text-sm font-bold text-red-600">→ 이기면 +200원, 지면 -50원</p>
           </div>
         </div>
       </div>
@@ -329,12 +403,12 @@ const MyVaultSection: React.FC = () => {
         <div className="mb-10 w-full md:mb-0 md:w-1/2 md:pl-10">
           <span className="text-sm font-bold uppercase tracking-wider text-[#394508]">추가 동기부여</span>
           <h2 className="mt-1 mb-4 text-2xl font-bold text-[#282d1a] md:text-3xl">내 금고</h2>
-          <p className="mb-6 text-gray-700">씨씨카지노 이용시 해금됩니다.</p>
+          <p className="mb-6 text-gray-700">씨씨카지노 이용하면 금고머니가 쌓입니다. 1만원 이상이면 전환 가능.</p>
           <div className="mb-6 space-y-4">
             {[
-              "플레이와 이벤트 참여로 금고머니가 누적됩니다.",
-              "금고 화면에서 누적 상태를 한눈에 확인할 수 있어요.",
-              "해금조건이 필요한 경우, 안내에 따라 진행.",
+              "게임하면 금고에 돈이 쌓임",
+              "1만원 이상이면 전환 가능",
+              "전환 누르면 씨씨로 바로 이동",
             ].map((text) => (
               <div key={text} className="rounded-lg bg-white p-4 shadow-sm">
                 <p className="text-gray-700">
@@ -444,8 +518,8 @@ const QuickGuideSection: React.FC = () => {
       <div className="mx-auto max-w-screen-xl">
         <div className="mb-10 text-center">
           <span className="text-sm font-bold uppercase tracking-wider text-[#394508]">빠른 시작</span>
-          <h2 className="mt-1 text-2xl font-bold text-[#282d1a] md:text-3xl">3분 따라하기</h2>
-          <p className="mt-2 mx-auto max-w-2xl text-gray-600">처음 오신 분들을 위한 단계별 가이드입니다. 순서대로 따라 하시면 됩니다.</p>
+          <h2 className="mt-1 text-2xl font-bold text-[#282d1a] md:text-3xl">1분 따라하기</h2>
+          <p className="mt-2 mx-auto max-w-2xl text-gray-600">순서대로 누르면 됩니다.</p>
         </div>
 
         <div className="mx-auto max-w-3xl">
@@ -610,12 +684,13 @@ const FAQSection: React.FC = () => {
 
 const GuidePage: React.FC = () => {
   return (
-    <GamePageShell title="홈페이지 가이드" subtitle="3분 만에 시작하는 온보딩">
+    <GamePageShell title="씨씨지민 가이드" subtitle="1분만에 시작">
       <div className="flex flex-col gap-12 text-gray-800">
         <Header />
         <IntroSection />
         <CoreActionSection />
         <GamesSection />
+        <NewFeaturesSection />
         <TeamBattleSection />
         <MyVaultSection />
         <PointSystemSection />

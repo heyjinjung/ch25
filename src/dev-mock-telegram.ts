@@ -58,6 +58,7 @@ window.Telegram.WebApp = {
         disable: () => { },
         showProgress: () => { },
         hideProgress: () => { },
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         onClick: (_callback: () => void) => { console.log("[TG Mock] MainButton.onClick registered"); },
         offClick: () => { },
     },
@@ -67,6 +68,7 @@ window.Telegram.WebApp = {
         isVisible: false,
         show: () => { console.log("[TG Mock] BackButton.show()"); },
         hide: () => { console.log("[TG Mock] BackButton.hide()"); },
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         onClick: (_callback: () => void) => { console.log("[TG Mock] BackButton.onClick registered"); },
         offClick: () => { },
     },

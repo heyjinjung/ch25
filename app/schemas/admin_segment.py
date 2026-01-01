@@ -10,6 +10,8 @@ from app.schemas.base import KstBaseModel as BaseModel
 class AdminUserSegmentResponse(BaseModel):
     user_id: int
     external_id: str
+    nickname: str | None = None
+    telegram_username: str | None = None
     segment: str
     segment_updated_at: datetime | None = None
 

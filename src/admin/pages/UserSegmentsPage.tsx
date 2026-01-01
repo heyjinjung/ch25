@@ -150,7 +150,7 @@ const UserSegmentsPage: React.FC = () => {
     <section className="space-y-5">
       <header>
         <h2 className="text-2xl font-bold text-[#91F402]">사용자 분류 (세그먼트)</h2>
-        <p className="mt-1 text-sm text-gray-400">external_id로 조회 후 세그먼트를 수동 수정할 수 있습니다.</p>
+        <p className="mt-1 text-sm text-gray-400">텔레그램 유저네임 또는 ID로 조회 후 세그먼트를 수동 수정할 수 있습니다.</p>
       </header>
 
       <div className="rounded-lg border border-[#333333] bg-[#111111] p-4">
@@ -162,7 +162,7 @@ const UserSegmentsPage: React.FC = () => {
                 value={externalId}
                 onChange={(e) => setExternalId(e.target.value)}
                 className={inputBase + " max-w-sm"}
-                placeholder="external_id로 검색..."
+                placeholder="TG Username / ID로 검색..."
                 onKeyDown={(e) => {
                   if (e.key === "Enter") void handleSearch();
                 }}
@@ -208,105 +208,105 @@ const UserSegmentsPage: React.FC = () => {
         <div className="max-h-[640px] overflow-auto">
           <table className="w-full table-fixed">
             <thead className="sticky top-0 z-10 border-b border-[#333333] bg-[#1A1A1A]">
-            <tr>
-              <SortHeader label="external_id" k="external_id" className="w-[14ch] px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider" />
-              <SortHeader label="세그먼트" k="segment" />
-              <th className="w-60 px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                <div className="flex items-center gap-3">
-                  <button type="button" onClick={() => toggleSort("roulette_plays")} className="text-gray-400 hover:text-gray-200" title="룰렛 정렬">
-                    룰렛{sortKey === "roulette_plays" ? (sortDir === "asc" ? " ▲" : " ▼") : ""}
-                  </button>
-                  <button type="button" onClick={() => toggleSort("dice_plays")} className="text-gray-400 hover:text-gray-200" title="주사위 정렬">
-                    주사위{sortKey === "dice_plays" ? (sortDir === "asc" ? " ▲" : " ▼") : ""}
-                  </button>
-                  <button type="button" onClick={() => toggleSort("lottery_plays")} className="text-gray-400 hover:text-gray-200" title="복권 정렬">
-                    복권{sortKey === "lottery_plays" ? (sortDir === "asc" ? " ▲" : " ▼") : ""}
-                  </button>
-                  <button type="button" onClick={() => toggleSort("total_play_duration")} className="text-gray-400 hover:text-gray-200" title="플레이 시간 정렬">
-                    시간{sortKey === "total_play_duration" ? (sortDir === "asc" ? " ▲" : " ▼") : ""}
-                  </button>
-                </div>
-              </th>
-              <SortHeader label="마지막 충전" k="last_charge_at" className="hidden px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider xl:table-cell" />
-              <SortHeader label="세그 변경" k="segment_updated_at" className="hidden px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider 2xl:table-cell" />
-              <SortHeader label="활동 업데이트" k="activity_updated_at" className="hidden px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider 2xl:table-cell" />
-              <th className="w-28 px-4 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">작업</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[#333333]">
-            {visibleRows.length === 0 && !isLoading ? (
               <tr>
-                <td className="px-4 py-10 text-center text-gray-400" colSpan={7}>
-                  조회 결과가 없습니다.
-                </td>
+                <SortHeader label="TG Username" k="external_id" className="w-[14ch] px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider" />
+                <SortHeader label="세그먼트" k="segment" />
+                <th className="w-60 px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                  <div className="flex items-center gap-3">
+                    <button type="button" onClick={() => toggleSort("roulette_plays")} className="text-gray-400 hover:text-gray-200" title="룰렛 정렬">
+                      룰렛{sortKey === "roulette_plays" ? (sortDir === "asc" ? " ▲" : " ▼") : ""}
+                    </button>
+                    <button type="button" onClick={() => toggleSort("dice_plays")} className="text-gray-400 hover:text-gray-200" title="주사위 정렬">
+                      주사위{sortKey === "dice_plays" ? (sortDir === "asc" ? " ▲" : " ▼") : ""}
+                    </button>
+                    <button type="button" onClick={() => toggleSort("lottery_plays")} className="text-gray-400 hover:text-gray-200" title="복권 정렬">
+                      복권{sortKey === "lottery_plays" ? (sortDir === "asc" ? " ▲" : " ▼") : ""}
+                    </button>
+                    <button type="button" onClick={() => toggleSort("total_play_duration")} className="text-gray-400 hover:text-gray-200" title="플레이 시간 정렬">
+                      시간{sortKey === "total_play_duration" ? (sortDir === "asc" ? " ▲" : " ▼") : ""}
+                    </button>
+                  </div>
+                </th>
+                <SortHeader label="마지막 충전" k="last_charge_at" className="hidden px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider xl:table-cell" />
+                <SortHeader label="세그 변경" k="segment_updated_at" className="hidden px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider 2xl:table-cell" />
+                <SortHeader label="활동 업데이트" k="activity_updated_at" className="hidden px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider 2xl:table-cell" />
+                <th className="w-28 px-4 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">작업</th>
               </tr>
-            ) : (
-              visibleRows.map((row, idx) => (
-                <tr
-                  key={row.user_id}
-                  className={(idx % 2 === 0 ? "bg-[#111111]" : "bg-[#1A1A1A]") + " text-white"}
-                >
-                  <td className="px-4 py-3 align-top">
-                    <span className="block truncate" title={row.external_id}>
-                      {row.external_id}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 align-top">
-                    <div className="flex min-w-0 items-center gap-2">
-                      <input
-                        value={editSegment[row.user_id] ?? row.segment}
-                        onChange={(e) => setEditSegment((prev) => ({ ...prev, [row.user_id]: e.target.value }))}
-                        className={inputBase + " px-2 py-1 text-xs"}
-                        placeholder="예: NEW / VIP"
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") void handleSave(row);
-                        }}
-                      />
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 align-top text-xs text-gray-300">
-                    <div className="flex flex-wrap gap-2">
-                      <span className="rounded-md border border-[#333333] bg-[#111111] px-2 py-1">룰렛 {row.roulette_plays}</span>
-                      <span className="rounded-md border border-[#333333] bg-[#111111] px-2 py-1">주사위 {row.dice_plays}</span>
-                      <span className="rounded-md border border-[#333333] bg-[#111111] px-2 py-1">복권 {row.lottery_plays}</span>
-                      <span className="rounded-md border border-[#333333] bg-[#111111] px-2 py-1">t {row.total_play_duration}</span>
-                    </div>
-                  </td>
-                  <td className="hidden px-4 py-3 align-top text-xs text-gray-300 xl:table-cell">
-                    <span className="block truncate" title={formatMaybeDate(row.last_charge_at)}>
-                      {formatMaybeDate(row.last_charge_at)}
-                    </span>
-                  </td>
-                  <td className="hidden px-4 py-3 align-top text-xs text-gray-300 2xl:table-cell">
-                    <span className="block truncate" title={formatMaybeDate(row.segment_updated_at)}>
-                      {formatMaybeDate(row.segment_updated_at)}
-                    </span>
-                  </td>
-                  <td className="hidden px-4 py-3 align-top text-xs text-gray-300 2xl:table-cell">
-                    <span className="block truncate" title={formatMaybeDate(row.activity_updated_at)}>
-                      {formatMaybeDate(row.activity_updated_at)}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 align-top text-center">
-                    {(() => {
-                      const current = (editSegment[row.user_id] ?? row.segment).trim();
-                      const original = (row.segment ?? "").trim();
-                      const dirty = current !== original;
-                      const disabled = !dirty || updateMutation.isPending;
-                      return (
-                        <div className="flex flex-col items-center gap-1">
-                          <PrimaryButton onClick={() => void handleSave(row)} disabled={disabled}>
-                            {savingUserId === row.user_id ? "저장중" : "저장"}
-                          </PrimaryButton>
-                          {dirty ? <span className="text-[11px] text-[#91F402]">변경됨</span> : <span className="text-[11px] text-gray-600">-</span>}
-                        </div>
-                      );
-                    })()}
+            </thead>
+            <tbody className="divide-y divide-[#333333]">
+              {visibleRows.length === 0 && !isLoading ? (
+                <tr>
+                  <td className="px-4 py-10 text-center text-gray-400" colSpan={7}>
+                    조회 결과가 없습니다.
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
+              ) : (
+                visibleRows.map((row, idx) => (
+                  <tr
+                    key={row.user_id}
+                    className={(idx % 2 === 0 ? "bg-[#111111]" : "bg-[#1A1A1A]") + " text-white"}
+                  >
+                    <td className="px-4 py-3 align-top">
+                      <span className="block truncate" title={row.telegram_username || row.nickname || row.external_id}>
+                        {row.telegram_username || row.nickname || row.external_id}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 align-top">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <input
+                          value={editSegment[row.user_id] ?? row.segment}
+                          onChange={(e) => setEditSegment((prev) => ({ ...prev, [row.user_id]: e.target.value }))}
+                          className={inputBase + " px-2 py-1 text-xs"}
+                          placeholder="예: NEW / VIP"
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") void handleSave(row);
+                          }}
+                        />
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 align-top text-xs text-gray-300">
+                      <div className="flex flex-wrap gap-2">
+                        <span className="rounded-md border border-[#333333] bg-[#111111] px-2 py-1">룰렛 {row.roulette_plays}</span>
+                        <span className="rounded-md border border-[#333333] bg-[#111111] px-2 py-1">주사위 {row.dice_plays}</span>
+                        <span className="rounded-md border border-[#333333] bg-[#111111] px-2 py-1">복권 {row.lottery_plays}</span>
+                        <span className="rounded-md border border-[#333333] bg-[#111111] px-2 py-1">t {row.total_play_duration}</span>
+                      </div>
+                    </td>
+                    <td className="hidden px-4 py-3 align-top text-xs text-gray-300 xl:table-cell">
+                      <span className="block truncate" title={formatMaybeDate(row.last_charge_at)}>
+                        {formatMaybeDate(row.last_charge_at)}
+                      </span>
+                    </td>
+                    <td className="hidden px-4 py-3 align-top text-xs text-gray-300 2xl:table-cell">
+                      <span className="block truncate" title={formatMaybeDate(row.segment_updated_at)}>
+                        {formatMaybeDate(row.segment_updated_at)}
+                      </span>
+                    </td>
+                    <td className="hidden px-4 py-3 align-top text-xs text-gray-300 2xl:table-cell">
+                      <span className="block truncate" title={formatMaybeDate(row.activity_updated_at)}>
+                        {formatMaybeDate(row.activity_updated_at)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 align-top text-center">
+                      {(() => {
+                        const current = (editSegment[row.user_id] ?? row.segment).trim();
+                        const original = (row.segment ?? "").trim();
+                        const dirty = current !== original;
+                        const disabled = !dirty || updateMutation.isPending;
+                        return (
+                          <div className="flex flex-col items-center gap-1">
+                            <PrimaryButton onClick={() => void handleSave(row)} disabled={disabled}>
+                              {savingUserId === row.user_id ? "저장중" : "저장"}
+                            </PrimaryButton>
+                            {dirty ? <span className="text-[11px] text-[#91F402]">변경됨</span> : <span className="text-[11px] text-gray-600">-</span>}
+                          </div>
+                        );
+                      })()}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
           </table>
         </div>
       </div>

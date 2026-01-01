@@ -65,7 +65,12 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
           useMissionStore.getState().fetchMissions();
         } else {
           // If not verified, open the link so they can join
-          window.Telegram?.WebApp?.openTelegramLink?.(channelLink) || window.open(channelLink, "_blank");
+          const tg = window.Telegram?.WebApp;
+          if (tg?.openTelegramLink) {
+            tg.openTelegramLink(channelLink);
+          } else {
+            window.open(channelLink, "_blank");
+          }
         }
       };
 
@@ -135,7 +140,7 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
           ? "border-white/5 bg-white/5 opacity-60"
           : isCompleted
             ? "border-figma-accent bg-white/10 shadow-lg shadow-emerald-900/20"
-            : "border-white/10 bg-white/5 hover:border-white/20"
+            : "border-white/10 bg-white/10 hover:border-white/20"
       )}
     >
       <div className="flex items-center gap-3 p-3">
@@ -158,7 +163,7 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
               <div className="truncate text-[13px] font-black leading-snug text-white">{mission.title}</div>
-              <div className="truncate text-[11px] font-medium text-white/50">
+              <div className="truncate text-[11px] font-semibold text-white/70">
                 {mission.description || "미션을 완료하고 보상을 받으세요"}
               </div>
             </div>
@@ -169,22 +174,22 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
                 <span className="text-[12px] font-black text-figma-accent">{mission.reward_amount}</span>
               </div>
               {mission.xp_reward > 0 && (
-                <div className="mt-1 text-[10px] font-black text-white/50">+{mission.xp_reward} XP</div>
+                <div className="mt-1 text-[10px] font-black text-white/70">+{mission.xp_reward} XP</div>
               )}
             </div>
           </div>
 
           {!isClaimed && (
             <div className="mt-2">
-              <div className="flex items-center justify-between text-[10px] font-bold text-white/50">
+              <div className="flex items-center justify-between text-[10px] font-bold text-white/70">
                 <span>
                   {progress.current_value} / {mission.target_value}
                 </span>
-                <span className={clsx(isCompleted ? "text-figma-accent" : "text-white/50")}>
+                <span className={clsx(isCompleted ? "text-figma-accent" : "text-white/70")}>
                   {isCompleted ? "READY" : `${percent}%`}
                 </span>
               </div>
-              <div className="mt-1 h-1.5 overflow-hidden rounded-full border border-white/10 bg-white/5">
+              <div className="mt-1 h-1.5 overflow-hidden rounded-full border border-white/10 bg-white/10">
                 <div
                   className={clsx(
                     "h-full rounded-full transition-all duration-700 ease-out",
@@ -214,7 +219,7 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
           ) : (
             <button
               onClick={handleAction}
-              className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-white/70 transition hover:bg-white/10 active:scale-95"
+              className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/10 text-white/80 transition hover:bg-white/20 active:scale-95"
               aria-label="Mission action"
             >
               <ChevronRight className="h-5 w-5" />

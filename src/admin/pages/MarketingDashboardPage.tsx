@@ -169,7 +169,7 @@ const MarketingDashboardPage: React.FC = () => {
                                     {userList?.map((user: AdminUserProfile) => (
                                         <div key={user.user_id} className="p-4 rounded-xl border border-[#222] bg-[#1A1A1A] hover:border-[#444] transition-colors">
                                             <div className="flex justify-between items-start mb-2">
-                                                <span className="font-bold text-[#91F402]">{user.external_id || `#${user.user_id}`}</span>
+                                                <span className="font-bold text-[#91F402]">{user.telegram_username || user.nickname || user.external_id || `#${user.user_id}`}</span>
                                                 <div className="flex flex-wrap gap-1 justify-end">
                                                     {user.tags?.map(tag => (
                                                         <span key={tag} className="px-2 py-0.5 rounded-full bg-[#333] text-[10px] text-gray-300 font-medium">{tag}</span>

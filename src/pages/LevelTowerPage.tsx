@@ -16,6 +16,19 @@ const LevelTowerPage: React.FC = () => {
     const [missionsOpen, setMissionsOpen] = useState(false);
     const hasTriggeredHaptic = useRef(false);
 
+    const openExternal = (url: string) => {
+        const tg = (window as any)?.Telegram?.WebApp;
+        if (typeof tg?.openTelegramLink === "function" && url.startsWith("https://t.me")) {
+            tg.openTelegramLink(url);
+            return;
+        }
+        if (typeof tg?.openLink === "function") {
+            tg.openLink(url);
+            return;
+        }
+        window.open(url, "_blank", "noopener,noreferrer");
+    };
+
     // 페이지 진입 시 진동
     useEffect(() => {
         if (!hasTriggeredHaptic.current) {
@@ -233,20 +246,36 @@ const LevelTowerPage: React.FC = () => {
 
                 {missionsOpen && (
                     <div className="mt-2 rounded-xl border border-white/10 bg-white/5 p-4 space-y-3 animate-fade-in">
-                        <div className="flex items-center gap-3">
-                            <span className="text-xl">💰</span>
-                            <div>
-                                <p className="text-sm font-bold text-white">외부 충전 (CC 카지노)</p>
-                                <p className="text-xs text-white/50">10만원당 +20 XP</p>
+                        <button
+                            type="button"
+                            onClick={() => openExternal("https://ccc-010.com")}
+                            className="flex w-full items-center gap-3 rounded-xl p-2 text-left transition hover:bg-white/5 active:bg-white/10"
+                        >
+                            <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-black/30">
+                                <img src="/assets/logo_cc_v2.png" alt="CC" className="h-5 w-5 object-contain" />
                             </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <span className="text-xl">🎁</span>
-                            <div>
-                                <p className="text-sm font-bold text-white">이벤트 참여</p>
-                                <p className="text-xs text-white/50">이벤트 참여로 레벨 획득</p>
+                            <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2">
+                                    <p className="text-sm font-black text-white">CC이동</p>
+                                    <span className="text-[10px] font-bold text-white/30">(외부 충전)</span>
+                                </div>
+                                <p className="text-xs font-semibold text-white/60">10만원당 +20 XP</p>
                             </div>
-                        </div>
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={() => openExternal("https://t.me/+LksI3XlSjLlhZmE0")}
+                            className="flex w-full items-center gap-3 rounded-xl p-2 text-left transition hover:bg-white/5 active:bg-white/10"
+                        >
+                            <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-black/30">
+                                <span className="text-xl">🎁</span>
+                            </div>
+                            <div className="min-w-0 flex-1">
+                                <p className="text-sm font-black text-white">이벤트 참여</p>
+                                <p className="text-xs font-semibold text-white/60">지민 공지채널</p>
+                            </div>
+                        </button>
                     </div>
                 )}
             </div>

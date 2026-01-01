@@ -95,4 +95,6 @@ const SidebarAppLayout: React.FC = memo(() => {
   );
 });
 
+SidebarAppLayout.displayName = "SidebarAppLayout";
+
 export default SidebarAppLayout;

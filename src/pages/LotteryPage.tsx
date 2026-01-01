@@ -85,7 +85,7 @@ const LotteryPage: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ["season-pass-status"] });
       queryClient.invalidateQueries({ queryKey: ["team-leaderboard"] });
       queryClient.invalidateQueries({ queryKey: ["team-membership"] });
-    } catch (e) {
+    } catch {
       setIsScratching(false);
     }
   };
@@ -119,10 +119,10 @@ const LotteryPage: React.FC = () => {
       >
 
         {/* 1. Stats Bar */}
-        <div className="flex flex-col gap-3 mb-4">
+        <div className="flex flex-col gap-2 mb-3">
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 rounded-full bg-black/60 border border-white/10 px-5 py-2 backdrop-blur-md shrink-0">
-              <img src="/assets/lottery/icon_lotto_ball.png" alt="Lotto Ball" className="w-6 h-6 object-contain" />
+            <div className="flex items-center gap-2 rounded-full bg-black/60 border border-white/10 px-4 py-1.5 backdrop-blur-md shrink-0">
+              <img src="/assets/lottery/icon_lotto_ball.png" alt="Lotto Ball" className="w-5 h-5 object-contain" />
               <div className="flex flex-col">
                 <span className="text-[9px] font-black text-white/40 leading-none uppercase tracking-widest">보유 로또볼</span>
                 <span className="text-sm font-black text-white leading-tight">
@@ -135,7 +135,7 @@ const LotteryPage: React.FC = () => {
         </div>
 
         {/* 2. Main Game Area */}
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-3">
           <LotteryCard
             prize={revealedPrize ?? undefined}
             isRevealed={isRevealed}
@@ -143,7 +143,7 @@ const LotteryPage: React.FC = () => {
             onScratch={handleScratch}
           />
 
-          <div className="max-w-sm mx-auto w-full flex flex-col gap-3">
+          <div className="max-w-sm mx-auto w-full flex flex-col gap-2">
             {playErrorMessage && (
               <div className="p-4 rounded-xl border border-red-500/20 bg-red-500/10 text-center text-xs font-bold text-red-400">
                 {playErrorMessage}
@@ -161,7 +161,7 @@ const LotteryPage: React.FC = () => {
               disabled={!canPlay && !isRevealed}
               onClick={() => (isRevealed ? handleReset() : handleScratch())}
               variant="figma-primary"
-              className="!py-[10px] !rounded-2xl transition-all active:scale-95 shadow-[0_20px_40px_-10px_rgba(48,255,117,0.3)] font-black text-lg sm:text-xl italic"
+              className="!py-[10px] !rounded-2xl transition-all active:scale-95 shadow-lg shadow-emerald-900/30 font-black text-base sm:text-lg italic"
               fullWidth
             >
               {isRevealed ? "다음 복권 확인" : isScratching ? "결과 확인 중..." : "지금 긁기"}
@@ -170,13 +170,13 @@ const LotteryPage: React.FC = () => {
         </div>
 
         {/* 3. Prize List */}
-        <div className="mt-6 mb-8 px-1">
-          <div className="flex items-center justify-between mb-6">
+        <div className="mt-4 mb-6 px-1">
+          <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-black italic text-figma-accent tracking-[0.2em] uppercase">당첨 가능 경품 리스트</h3>
             <span className="text-[10px] font-bold text-white/20 uppercase tracking-widest">Total {data.prizes.length} Items</span>
           </div>
 
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-8 gap-2">
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-8 gap-1 sm:gap-2">
             {data.prizes.map((prize) => (
               <div
                 key={prize.id}

@@ -22,7 +22,7 @@ const normalizeHttps = (base: string) => {
       const url = new URL(base, window.location.origin);
       url.protocol = 'https:';
       return url.toString().replace(/\/+$/, '');
-    } catch (err) {
+    } catch {
       return `https://${base.slice('http://'.length).replace(/\/+$/, '')}`;
     }
   }

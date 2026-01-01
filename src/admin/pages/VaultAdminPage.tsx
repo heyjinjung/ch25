@@ -86,7 +86,7 @@ const UserLookup: React.FC<{ value: string; onChange: (val: string) => void; pla
                                 }}
                                 className="w-full text-left px-2 py-1.5 rounded hover:bg-[#333] text-xs"
                             >
-                                <div className="text-[#91F402] font-bold">{u.external_id || u.nickname}</div>
+                                <div className="text-[#91F402] font-bold">{u.telegram_username || u.nickname || u.external_id}</div>
                                 <div className="text-gray-500">ID: {u.id} | Lv.{u.level}</div>
                             </button>
                         ))}
@@ -174,7 +174,7 @@ const VaultAdminPage: React.FC = () => {
         try {
             const json = JSON.parse(raw);
             mutation.mutate({ type, json });
-        } catch (e) {
+        } catch {
             alert("올바른 JSON 형식이 아닙니다.");
         }
     };
@@ -373,7 +373,7 @@ const VaultAdminPage: React.FC = () => {
                                         {detailItems.map((item, idx) => (
                                             <tr key={idx} className="hover:bg-white/5">
                                                 <td className="py-2 px-2">
-                                                    <div className="text-white font-bold">{item.external_id || "Unknown"}</div>
+                                                    <div className="text-white font-bold">{item.telegram_username || item.nickname || item.external_id || "Unknown"}</div>
                                                     <div className="text-xs text-gray-500">ID: {item.user_id} | {item.nickname}</div>
                                                 </td>
                                                 <td className="py-2 px-2 text-right font-mono text-[#91F402]">{item.amount.toLocaleString()}</td>

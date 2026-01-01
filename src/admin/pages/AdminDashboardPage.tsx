@@ -142,7 +142,7 @@ const AdminDashboardPage: React.FC = () => {
     try {
       const res = await fetchDashboardMetrics(24);
       setData(res);
-    } catch (err) {
+    } catch {
       setError("지표를 불러오지 못했습니다. 다시 시도해주세요.");
     } finally {
       setLoading(false);

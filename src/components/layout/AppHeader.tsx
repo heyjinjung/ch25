@@ -139,7 +139,7 @@ const AppHeader: React.FC = () => {
                                     <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/5 border border-white/5">
                                         <Package size={14} />
                                     </div>
-                                    인벤토리 이동
+                                    인벤토리
                                 </button>
                                 <button
                                     onClick={() => handleMenuNavigation("https://ccc-010.com", true)}
@@ -148,7 +148,7 @@ const AppHeader: React.FC = () => {
                                     <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/5 border border-white/5">
                                         <img src="/assets/logo_cc_v2.png" alt="CC" className="w-3.5 h-3.5 object-contain" />
                                     </div>
-                                    씨씨 카지노 이동
+                                    씨씨이동
                                     <ExternalLink size={10} className="ml-auto opacity-30" />
                                 </button>
                             </div>
@@ -221,14 +221,14 @@ const AppHeader: React.FC = () => {
                                 className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-bold text-white/70 active:bg-white/10"
                             >
                                 <Package size={16} />
-                                인벤토리 이동
+                                인벤토리
                             </button>
                             <button
                                 onClick={() => handleMenuNavigation("https://ccc-010.com", true)}
                                 className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-bold text-white/70 active:bg-white/10 border-t border-white/5"
                             >
                                 <img src="/assets/logo_cc_v2.png" alt="CC" className="w-4 h-4 object-contain" />
-                                씨씨 공식홈페이지
+                                씨씨이동
                                 <ExternalLink size={12} className="ml-auto opacity-30" />
                             </button>
                         </div>

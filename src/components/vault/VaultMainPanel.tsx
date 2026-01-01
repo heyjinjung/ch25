@@ -69,6 +69,8 @@ const CountdownTimer: React.FC<{ expiresAt: Date }> = React.memo(({ expiresAt })
   );
 });
 
+CountdownTimer.displayName = "CountdownTimer";
+
 const VaultVisual: React.FC<{ eligible: boolean }> = React.memo(({ eligible }) => {
   return (
     <div className="relative w-full max-w-[320px] aspect-square mx-auto flex items-center justify-center group cursor-pointer transition-transform duration-500 active:scale-95">
@@ -122,6 +124,8 @@ const VaultVisual: React.FC<{ eligible: boolean }> = React.memo(({ eligible }) =
     </div>
   );
 });
+
+VaultVisual.displayName = "VaultVisual";
 
 const VaultMainPanel: React.FC = React.memo(() => {
   const [vaultModalOpen, setVaultModalOpen] = useState(false);
@@ -406,5 +410,7 @@ const VaultMainPanel: React.FC = React.memo(() => {
     </section>
   );
 });
+
+VaultMainPanel.displayName = "VaultMainPanel";
 
 export default VaultMainPanel;

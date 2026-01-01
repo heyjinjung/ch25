@@ -23,6 +23,8 @@ export async function grantGameTokens(payload: GrantGameTokensPayload) {
 export interface TokenBalance {
   user_id: number;
   external_id?: string;
+  nickname?: string;
+  telegram_username?: string;
   token_type: GameTokenType;
   balance: number;
 }
@@ -94,6 +96,8 @@ export async function fetchLedger(limit: number = 100, externalId?: string, offs
 export interface UserWalletSummary {
   user_id: number;
   external_id?: string;
+  nickname?: string;
+  telegram_username?: string;
   balances: Record<string, number>;
 }
 

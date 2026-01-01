@@ -527,7 +527,7 @@ const GameTokenLogsPage: React.FC = () => {
                   {/* Using unfiltered data directly or visible rows */}
                   {(walletsQuery.data || []).slice(0, 50).map((r, i) => (
                     <tr key={i} className="hover:bg-[#1A1A1A]">
-                      <td className="px-4 py-3 text-white font-medium">{r.external_id || r.user_id}</td>
+                      <td className="px-4 py-3 text-white font-medium">{r.telegram_username || r.nickname || r.external_id || r.user_id}</td>
                       <td className="px-4 py-3 text-gray-300">{GAME_TOKEN_LABELS[r.token_type] || r.token_type}</td>
                       <td className="px-4 py-3 text-right text-[#91F402] font-bold">{r.balance}</td>
                     </tr>
@@ -564,7 +564,7 @@ const GameTokenLogsPage: React.FC = () => {
                   <tbody className="divide-y divide-[#333]">
                     {summaryQuery.data?.map((entry: SummaryEntry) => (
                       <tr key={entry.user_id} className="hover:bg-[#1A1A1A]">
-                        <td className="px-4 py-3 text-white font-medium">{entry.external_id || entry.user_id}</td>
+                        <td className="px-4 py-3 text-white font-medium">{entry.telegram_username || entry.nickname || entry.external_id || entry.user_id}</td>
                         <td className="px-4 py-3">
                           <div className="flex flex-wrap gap-2">
                             {Object.entries(entry.balances).map(([type, bal]) => (

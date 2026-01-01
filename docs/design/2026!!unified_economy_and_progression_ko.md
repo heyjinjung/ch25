@@ -51,6 +51,10 @@
   - 룰렛 서비스에서 `outcome = f"SEGMENT_{chosen.id}"`로 전달
   - 따라서 DB에서 특정 구간만 -50로 만들려면 `SEGMENT_{해당 segment.id}`를 정확히 맞춰야 함
 
+- **⚠️ IMPORTANT (체크희망)**: 위 `game_earn_config`는 운영 중에도 어드민에서 수정 가능하도록 되어 있음
+    - 어드민 API: `PUT /admin/api/vault-programs/{program_key}/config` (레거시: `PUT /api/admin/vault-programs/{program_key}/config`)
+    - 다만 “어드민 UI에서 이 값을 실제로 편집할 수 있는 화면이 있는지”는 확인 필요(체크희망)
+
 #### 🗄️ Database (Schema)
 - [x] **Table**: `vault_balance`
     - `locked_balance`: 게임 플레이로 해금해야 할 자산.
@@ -233,11 +237,15 @@ graph TD
 
 | Reward Type | Internal Action | 비고 |
 | :--- | :--- | :--- |
-| **POINT** | `SeasonPassService.add_bonus_xp` | (Deprecated) 과거에는 XP로 변환되었으나, **현재는 무시됨**. 오직 입금만이 XP를 발생시킴. |
-| **CC_POINT** | **Manual Processing** | 외부 플랫폼 포인트. 시스템상 지급 로직은 없고 로그만 남깁니다. |
+| **POINT** | (옵션) `SeasonPassService.add_bonus_xp` | 게임 보상(`dice_play/roulette_spin/lottery_play`)의 POINT는 기본적으로 **무시됨**(설정 `xp_from_game_reward=false` 기준). 필요 시 옵션으로 XP 전환 가능. |
+| **CC_POINT** | **REMOVED (No-op)** | 폐기됨. 현재 `RewardService.deliver`에서 즉시 return (지급/적립 없음). |
 | **BUNDLE** / **TICKET_BUNDLE** | `grant_ticket` (Multiple) | 레벨업 보상 등. 룰렛 코인 + 다이스 토큰 등을 세트로 지급합니다. |
-| **COUPON** | `grant_coupon` | 외부 쿠폰 시스템 연동 (현재 Deferred). |
+| **COUPON** | **REMOVED (No-op)** | 폐기됨. `grant_coupon`은 동작하지 않음. |
 | **TICKET_ROULETTE** | `GameTokenType.ROULETTE_COIN` | 룰렛 이용권. |
 | **TICKET_DICE** | `GameTokenType.DICE_TOKEN` | 주사위 이용권. |
 | **TICKET_LOTTERY** | `GameTokenType.LOTTERY_TICKET` | 복권 이용권. |
 | **DIAMOND** | `InventoryService.grant_item(item_type="DIAMOND")` | (SoT=Inventory) 미션 보상/상점 결제에 사용. |
+
+> ✅ 체크 결과: **골드/다이아 키 룰렛**에서 세그먼트가 `reward_type="POINT"` & `reward_amount>0`이면,
+> `RewardService.deliver`가 아니라 `VaultService.record_trial_result_earn_event(..., force_enable=True)` 경로로 **금고(`user.vault_locked_balance`)에 적립**됩니다.
+> 따라서 키 룰렛의 “금고 적립용 포인트”는 `CC_POINT`가 아니라 `POINT`로 설정되어야 합니다.

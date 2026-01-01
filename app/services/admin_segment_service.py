@@ -16,6 +16,8 @@ from app.models.user_segment import UserSegment
 class AdminSegmentRow:
     user_id: int
     external_id: str
+    nickname: str | None
+    telegram_username: str | None
     segment: str
     segment_updated_at: datetime | None
 
@@ -55,6 +57,8 @@ class AdminSegmentService:
                 AdminSegmentRow(
                     user_id=user.id,
                     external_id=user.external_id,
+                    nickname=user.nickname,
+                    telegram_username=user.telegram_username,
                     segment=segment_value,
                     segment_updated_at=getattr(seg, "updated_at", None) if seg else None,
                     roulette_plays=getattr(act, "roulette_plays", 0) if act else 0,
@@ -101,6 +105,8 @@ class AdminSegmentService:
         return AdminSegmentRow(
             user_id=user.id,
             external_id=user.external_id,
+            nickname=user.nickname,
+            telegram_username=user.telegram_username,
             segment=seg.segment,
             segment_updated_at=seg.updated_at,
             roulette_plays=getattr(act, "roulette_plays", 0) if act else 0,
