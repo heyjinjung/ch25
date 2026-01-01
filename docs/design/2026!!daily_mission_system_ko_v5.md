@@ -84,10 +84,10 @@
 ### Phase 3. TMA(텔레그램 미니앱) 특화로 바이럴/마찰 제거
 1. ✅ `shareToStories`, 
 2. ✅`switchInlineQuery` (프론트 트리거 구현) [서버업로드후 가능]
-3. 😀`CloudStorage` 캐싱 [서버업로드후 가능]
-  ✅ 햅틱 (Haptic) 적용
-4. ✅ 봇 넛지(90% 달성 푸시) [완료]
-5. Stars 결제 루프(선택/현재미정) (1/7일 이후 개발)
+3. ✅`CloudStorage` 캐싱 [서버업로드후 가능]
+4. ✅ 햅틱 (Haptic) 적용
+5. ✅ 봇 넛지(90% 달성 푸시) [완료]
+6. Stars 결제 루프(선택/현재미정) (1/7일 이후 개발)
 
 ## 6) Phase 3 — TMA(텔레그램 미니앱) 특화: Tech-Max
 
@@ -305,7 +305,7 @@
 - `public` 이미지 최적화(WebP 변환)
 - Nginx Brotli/Gzip 압축 설정 강화
 
-#### 텔레그램 보안 및 자동 로그인(긴급)
+✅#### 텔레그램 보안 및 자동 로그인(긴급)
 - 백엔드에서 `initData` 검증 강화(`app/core/telegram.py`)
 - 첫 방문 유저를 위한 “환영/연결” 단계 도입(`ConnectPage.tsx`)
 - “Join/Start” 확인 없이 자동 접속되는 현상 수정(봇 멤버십 체크 연동 필요)

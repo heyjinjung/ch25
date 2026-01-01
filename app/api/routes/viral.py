@@ -31,9 +31,9 @@ def verify_channel(
     """
     # 1. Determine Channel ID
     settings = get_settings()
-    # Default to official channel if not checking specific one
-    # If not set in env, use specific one for now
-    target_channel = payload.channel_username or getattr(settings, "TELEGRAM_CHANNEL_USERNAME", "@cc_jm_2026_official")
+    # Use the group or channel configured in env (e.g. "@channel_username" or "-10012345678")
+    # Default to the one provided by user (needs to be numeric or username)
+    target_channel = payload.channel_username or getattr(settings, "TELEGRAM_CHANNEL_USERNAME", "-1002344795213") # Example ID for private groups
     
     # 2. Check Membership
     if not current_user.telegram_id:
@@ -67,22 +67,23 @@ def verify_channel(
         return {"success": True, "message": "Verified (Already completed or no active mission)"}
 
 
-@router.post("/action/story", summary="Trigger Story Share Action")
-def action_story(
+@router.post("/action", summary="Record Viral Action (Trust-based)")
+def record_action(
     payload: ActionRequest,
     current_user: User = Depends(deps.get_current_user),
     db: Session = Depends(deps.get_db)
 ):
     """
-    Records a 'Story Share' action. 
-    Telegram API does not support server-side verification of stories easily.
-    We trust the frontend's interaction (User clicked 'Share to Story').
+    Records a viral action (Story Share, Wallet Share, etc.). 
+    These actions are recorded based on frontend triggers because server-side verification 
+    from Telegram is often complex or unavailable for these specific UI events.
     """
-    if payload.action_type != "SHARE_STORY":
-        raise HTTPException(status_code=400, detail="Invalid action type")
+    allowed_actions = ["SHARE_STORY", "SHARE_WALLET"]
+    if payload.action_type not in allowed_actions:
+        raise HTTPException(status_code=400, detail=f"Action type '{payload.action_type}' is not supported via this endpoint")
         
     ms = MissionService(db)
-    updated = ms.update_progress(current_user.id, "SHARE_STORY", 1)
+    updated = ms.update_progress(current_user.id, payload.action_type, 1)
     
     return {
         "success": True, 

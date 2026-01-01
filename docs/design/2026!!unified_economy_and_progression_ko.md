@@ -16,7 +16,7 @@
 | **금고 (Vault)** | **자산 (Asset)**. | **외부 플랫폼 출금**. 관리자 수동 확인 후 지급되는 '실제 가치'. | `VaultService` |
 | **티켓 (Ticket)** | **연료 (Fuel)**. | **입장권/소모품**. 게임 플레이를 위해 반드시 필요한 자원. | `GameWalletService` |
 | **시즌 레벨 (Season Level)** | **장기 목표 (Long-term)**. | **시즌 롱텀 리텐션**. 유저가 시즌 내내 달성해야 할 성취 목표. | `SeasonPassService` |
-| **다이아몬드 (Diamond)** | **단기 보상 (Short-term)**. | **데일리/위클리 리텐션**. 매일 접속하고 플레이하게 만드는 즉각적인 유인책. | `GameWalletService` (Type: `DIAMOND`) |
+| **다이아몬드 (Diamond)** | **단기 보상 (Short-term)**. | **데일리/위클리 리텐션**. 매일 접속하고 플레이하게 만드는 즉각적인 유인책. | `InventoryService` (Item: `DIAMOND`) |
 
 ---
 
@@ -26,12 +26,30 @@
 *목적: 외부 랭킹(입금)에 대한 실질적 보상. 게임 수익이 적립되고 출금 가능한 자산.*
 
 #### 🛠️ Backend (Logic)
-- [x] **Service**: `app/services/vault2_service.py`
-    - `handle_game_win(user_id, amount)`: 게임 승리 시 배당금 적립.
-    - `request_withdrawal(user_id)`: 출금 요청 생성.
-- [x] **Event Handling**: `app/services/game_common.py`
-    - `log_game_result()`: 게임 완료 시 Vault Service 호출 트리거.
-    - [x] **Verified**: 게임 패배 시에도 Vault Accrual (Pity Bonus) 작동 확인 (V-04).
+- [x] **Service (Phase 1 SoT)**: `app/services/vault_service.py`
+    - **SoT**: `user.vault_locked_balance` (모든 게임 적립/차감은 여기로 반영)
+    - `record_game_play_earn_event(...)`: 게임 결과 기반으로 금고 적립/패널티를 **멱등하게** 기록
+    - `Vault2Service`는 Phase 2/3 준비용(bookkeeping)으로 일부 이벤트를 추가 기록하지만, Phase 1 동작의 SoT는 아님
+- [x] **Game Flow 연결**:
+    - `DiceService.play` / `RouletteService.play`에서 `VaultService.record_game_play_earn_event(...)`를 직접 호출
+    - 공통 로그는 `app/services/game_common.py`의 `log_game_play(...)`가 담당
+    - [x] **Verified**: 게임 결과에 따라 Vault 적립(+200) 또는 패널티(-50) 적용 확인 (V-04).
+
+#### 🎮 게임별 적립/패널티 컨피그 (정확한 값/로직)
+
+- **적용 위치(SoT)**: `user.vault_locked_balance` (레거시 미러: `user.vault_balance`)
+- **멱등성(Idempotency)**: `VaultEarnEvent.earn_event_id = GAME:{GAME_TYPE}:{game_log_id}` (중복 호출 시 0 반환)
+- **우선순위**: DB `VaultProgram.config_json["game_earn_config"]` 값 우선 → 없으면 하드코딩 fallback
+- **Multiplier 규칙**: `vault_accrual_multiplier >= 1.0`만 허용하며, 음수(-50)에는 더 크게 적용되지 않도록 `max(multiplied, original)`로 캡
+
+| 게임 | 입력 outcome | DB 컨피그 키(우선) | fallback 판정 | 최종 금고 반영 |
+| --- | --- | --- | --- | --- |
+| **DICE** | `WIN`/`DRAW`/`LOSE` | `game_earn_config.DICE.WIN|DRAW|LOSE` | WIN=+200, LOSE=-50, DRAW=0 | `vault_locked_balance += amount` |
+| **ROULETTE** | `SEGMENT_{RouletteSegment.id}` | `game_earn_config.ROULETTE.SEGMENT_{id}` | `payout_raw.reward_amount == 0`이면 -50, 아니면 +200 | `vault_locked_balance += amount` |
+
+- **주의(룰렛 SEGMENT 키)**: outcome은 `slot_index`가 아니라 `RouletteSegment.id`(DB PK) 기반으로 만들어짐
+  - 룰렛 서비스에서 `outcome = f"SEGMENT_{chosen.id}"`로 전달
+  - 따라서 DB에서 특정 구간만 -50로 만들려면 `SEGMENT_{해당 segment.id}`를 정확히 맞춰야 함
 
 #### 🗄️ Database (Schema)
 - [x] **Table**: `vault_balance`
@@ -42,7 +60,6 @@
 
 #### 🔌 API (Endpoints)
 - `GET /api/vault/status`: 내 금고 잔액 및 해금 현황 조회.
-- `POST /api/vault/withdraw`: 출금 신청.
 - `POST /api/vault/withdraw`: 출금 신청.
 - (Admin) `POST /api/admin/vault/approve`: 출금 승인.
 - [x] **Verified**: 입금 당일 출금 조건, 최소 금액, 승인/거절 로직 검증 완료 (V-02, V-03).
@@ -64,7 +81,6 @@
     - `check_balance(user_id, token_type)`: 입장 가능 여부 확인.
     - `consume(user_id, token_type, amount)`: 게임 시작 시 차감.
 - [x] **Reward Service Integration**: `app/services/reward_service.py`
-- [x] **Reward Service Integration**: `app/services/reward_service.py`
     - `grant_ticket()`: `BUNDLE`이나 `TICKET_BUNDLE` 보상 타입을 통한 일괄 지급 로직.
     - [x] **Verified**: Bundle (All-in-one) 지급 및 게임 내 Ticket 보상 즉시 지급 확인 (T-04, T-05).
 - [x] **Model**: `app/models/game_wallet.py`
@@ -81,7 +97,7 @@
 
 #### 📺 Frontend (UI)
 - [x] **Hooks**: `src/hooks/useUser.ts` (유저 정보 내 지갑 상태 포함).
-- [ ] **Components**:
+- [x] **Components**:
     - `src/components/layout/AppHeader.tsx`: 상단 바에 티켓 잔액 표시.
     - `src/components/common/InboxButton.tsx`: 티켓 선물 알림.
 
@@ -144,23 +160,35 @@
 - [x] **Service**: `app/services/mission_service.py`
     - `check_progress()`: 미션 조건 달성 확인.
     - `claim_reward()`: 보상(다이아몬드) 지급.
-- [x] **Model Update**: `app/models/game_wallet.py`에 `DIAMOND` 토큰 타입 추가 완료.
+- [x] **Reward Delivery**: `app/services/reward_service.py`
+    - `reward_type == "DIAMOND"`는 **지갑이 아니라 인벤토리 아이템**(`item_type="DIAMOND"`)로 지급됨.
 
 #### 🗄️ Database (Schema)
 - [x] **Table**: `mission`
     - `reward_type`: `DIAMOND`로 설정.
 - [x] **Table**: `user_mission_progress`: 진행 상황 및 수령 여부.
-- [x] **Table**: `user_game_wallet`: `DIAMOND` 잔액 관리.
+- [x] **Table**: `user_inventory_item`: `DIAMOND` 잔액(수량) 관리 (SoT).
+- [x] **Table**: `user_inventory_ledger`: 다이아 지급/소비 로그.
 - [x] **Verified**: 미션 완료 시 Diamond 지급 로직 (D-01).
 
+> 참고: `GameTokenType.DIAMOND` enum은 남아있지만, **SoT는 인벤토리**입니다.
+
 #### 🔌 API (Endpoints)
-- `GET /api/mission/list`: 데일리/위클리 미션 목록.
-- `POST /api/mission/claim`: 미션 완료 보상(다이아) 수령.
+- `GET /api/mission/`: 데일리/위클리/특별 미션 + 진행도 조회.
+- `POST /api/mission/{mission_id}/claim`: 미션 보상 수령.
+- `POST /api/mission/daily-gift`: 일일 환영 선물(원탭) 수령.
 
 #### 📺 Frontend (UI)
 - [x] **Page**: `src/pages/MissionPage.tsx`: 미션 목록 및 수령 UI.
 - [x] **Card**: `src/components/mission/MissionCard.tsx`: 다이아몬드 아이콘 표시.
 - [x] **Store**: `src/stores/missionStore.ts`: 미션 상태 관리.
+
+#### 🧾 Shop / Voucher (연계)
+- [x] **Shop Purchase**: `app/services/shop_service.py`
+    - DIAMOND는 **인벤토리에서 차감**되어 상품을 구매.
+    - 구매 결과로 **바우처(예: `VOUCHER_DIAMOND_KEY_1`)가 인벤토리에 지급**됨.
+- [x] **Voucher Use**: `app/services/inventory_service.py`
+    - 바우처 사용 시 **지갑(GameWallet)**에 키(`DIAMOND_KEY`/`GOLD_KEY`)가 지급됨.
 
 ---
 
@@ -183,13 +211,15 @@ graph TD
     end
 
     subgraph "Engagement Loop (Daily Retention)"
-        Mission[Mission: Login/Play] --"Complete"--> Diamond[💎 Diamond]
-        Diamond --"Shop Purchase"--> TicketFromShop[Ticket Bundle]
+        Mission[Mission: Login/Play] --"Complete"--> Diamond[💎 Diamond (Inventory)]
+        Diamond --"Shop Purchase"--> Voucher[🎟️ Voucher (Inventory)]
+        Voucher --"Use"--> Key[🔑 Key (Wallet)]
     end
 
     subgraph "Core Loop (Gameplay)"
-        TicketFromLevel & TicketFromShop --> Ticket[🎫 Tickets (Fuel)]
+        TicketFromLevel --> Ticket[🎫 Tickets (Fuel)]
         Ticket --"Consume"--> Game[Game Play: Dice/Roulette]
+        Key --> Game
         Game --"Win"--> Vault[💰 Vault (Asset)]
         Vault --"Request"--> Admin
         Admin --"Payout"--> Cash[Real Cash USDT]
@@ -210,4 +240,4 @@ graph TD
 | **TICKET_ROULETTE** | `GameTokenType.ROULETTE_COIN` | 룰렛 이용권. |
 | **TICKET_DICE** | `GameTokenType.DICE_TOKEN` | 주사위 이용권. |
 | **TICKET_LOTTERY** | `GameTokenType.LOTTERY_TICKET` | 복권 이용권. |
-| **DIAMOND** | `GameTokenType.DIAMOND` | (New) 미션 보상 전용 재화. |
+| **DIAMOND** | `InventoryService.grant_item(item_type="DIAMOND")` | (SoT=Inventory) 미션 보상/상점 결제에 사용. |

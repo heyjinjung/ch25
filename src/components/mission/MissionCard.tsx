@@ -6,7 +6,8 @@ import { Bell, Check, ChevronRight, Share2, Star, Trophy, Users, Zap } from "luc
 
 import { useHaptic } from "../../hooks/useHaptic";
 import { useSound } from "../../hooks/useSound";
-import { MissionData, useMissionStore } from "../../stores/missionStore";
+import { useMissionStore, MissionData } from "../../stores/missionStore";
+import { recordViralAction, getCloudItem, setCloudItem, verifyChannelSubscription } from "../../api/viralApi";
 import { useToast } from "../common/ToastProvider";
 
 interface MissionCardProps {
@@ -40,11 +41,35 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
     }
   };
 
-  const handleAction = () => {
+  const handleAction = async () => {
     impact("medium");
     if (mission.action_type === "JOIN_CHANNEL") {
-      const channelLink = "https://t.me/cc_jm_2026_official";
-      window.Telegram?.WebApp?.openTelegramLink?.(channelLink) || window.open(channelLink, "_blank");
+      // Cloud Caching Check
+      const cacheKey = `mission_verified_${mission.id}`;
+      const cachedStatus = await getCloudItem(cacheKey);
+
+      if (cachedStatus === "VERIFIED") {
+        addToast("이미 인증된 미션입니다.", "success");
+        return;
+      }
+
+      const channelLink = "https://t.me/+LksI3XlSjLlhZmE0";
+
+      // Verification logic
+      const verify = async () => {
+        const result = await verifyChannelSubscription(mission.id);
+        if (result.success) {
+          notification("success");
+          addToast("구독 인증 완료!", "success");
+          await setCloudItem(cacheKey, "VERIFIED");
+          useMissionStore.getState().fetchMissions();
+        } else {
+          // If not verified, open the link so they can join
+          window.Telegram?.WebApp?.openTelegramLink?.(channelLink) || window.open(channelLink, "_blank");
+        }
+      };
+
+      await verify();
       return;
     }
     if (mission.action_type === "INVITE_FRIEND") {
@@ -60,13 +85,24 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
           text: "CCJM에서 미션을 완료하고 보상을 받아보세요!",
           widget_link: { url: appUrl, name: "Play now" },
         });
+
+        // Record action immediately (Trust Approach)
+        await recordViralAction({ action_type: "SHARE_STORY", mission_id: mission.id });
+        const cacheKey = `mission_verified_${mission.id}`;
+        await setCloudItem(cacheKey, "VERIFIED");
+        useMissionStore.getState().fetchMissions();
       }
+      return;
     }
     if (mission.action_type === "SHARE_WALLET") {
       if (window.Telegram?.WebApp?.switchInlineQuery) {
-        // Trigger inline query to share wallet address or referral link
-        // Current string is empty, but backend can handle "share_wallet" context if needed
         window.Telegram.WebApp.switchInlineQuery("share_wallet", ["users", "groups"]);
+
+        // Record action immediately (Trust Approach)
+        await recordViralAction({ action_type: "SHARE_WALLET", mission_id: mission.id });
+        const cacheKey = `mission_verified_${mission.id}`;
+        await setCloudItem(cacheKey, "VERIFIED");
+        useMissionStore.getState().fetchMissions();
       } else {
         addToast("텔레그램 앱에서만 가능한 기능입니다.", "error");
       }

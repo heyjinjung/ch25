@@ -526,7 +526,10 @@ class VaultService:
         """Idempotently accrue Phase 1 vault locked balance for a game play.
 
         - Idempotency key is derived from (game_type, game_log_id).
-        - Amount: base +200 per play; for DICE LOSE add +100.
+                - Amount: determined by VaultProgram.config_json["game_earn_config"] (DB) first.
+                    Fallbacks:
+                    - DICE: WIN=+200, LOSE=-50 (DRAW=0)
+                    - ROULETTE: reward_amount==0 => -50 else +200
         - Eligibility required (same as Phase 1 vault funnel).
         - Expires-at is set only when absent/expired; never refreshed while active.
 
@@ -569,9 +572,9 @@ class VaultService:
         if amount_before_multiplier is None:
             if game_type_upper == "DICE":
                 if outcome_upper == "WIN":
-                    amount_before_multiplier = int(self.GAME_EARN_DICE_WIN)
+                    amount_before_multiplier = 200
                 elif outcome_upper == "LOSE":
-                    amount_before_multiplier = int(self.GAME_EARN_DICE_LOSE)
+                    amount_before_multiplier = -50
                 else:
                     amount_before_multiplier = 0
             elif game_type_upper == "ROULETTE":
