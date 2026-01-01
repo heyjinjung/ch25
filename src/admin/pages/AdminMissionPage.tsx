@@ -168,7 +168,9 @@ const AdminMissionPage: React.FC = () => {
                                 >
                                     <option value="PLAY_GAME">플레이 1회</option>
                                     <option value="LOGIN">로그인</option>
+                                    <option value="JOIN_CHANNEL">채널 구독</option>
                                     <option value="SHARE">공유 (일반)</option>
+                                    <option value="SHARE_STORY">스토리 공유</option>
                                     <option value="SHARE_WALLET">지갑 공유 (In-App)</option>
                                     <option value="CASH_OUT">출금</option>
                                 </select>
@@ -227,82 +229,82 @@ const AdminMissionPage: React.FC = () => {
             {/* Mission List Table */}
             <div className="bg-[#2C2C2E] rounded-2xl border border-white/10 overflow-hidden shadow-xl">
                 <div className="overflow-x-auto">
-                <table className="w-full text-left">
-                    <thead>
-                        <tr className="bg-black/20 text-gray-400 text-xs font-black uppercase tracking-widest border-b border-white/5">
-                            <th className="px-4 py-3 sm:px-6 sm:py-4">ID / Logic Key</th>
-                            <th className="px-4 py-3 sm:px-6 sm:py-4">제목 / 카테고리</th>
-                            <th className="px-4 py-3 sm:px-6 sm:py-4">조건 (Action / Target)</th>
-                            <th className="px-4 py-3 sm:px-6 sm:py-4">보상</th>
-                            <th className="px-4 py-3 text-center sm:px-6 sm:py-4">상태</th>
-                            <th className="px-4 py-3 text-right sm:px-6 sm:py-4">관리</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-white/5">
-                        {missions?.map(mission => (
-                            <tr key={mission.id} className="hover:bg-white/5 transition-colors group">
-                                <td className="px-4 py-3 sm:px-6 sm:py-4">
-                                    <div className="font-bold text-white">#{mission.id}</div>
-                                    <div className="text-[10px] text-gray-500 font-mono tracking-tighter">{mission.logic_key}</div>
-                                </td>
-                                <td className="px-4 py-3 sm:px-6 sm:py-4">
-                                    <div className="font-bold text-white">{mission.title}</div>
-                                    <div className={`inline-block text-[10px] px-1.5 rounded uppercase font-black mt-1 ${mission.category === 'DAILY' ? 'bg-blue-900/40 text-blue-400' :
-                                        mission.category === 'WEEKLY' ? 'bg-purple-900/40 text-purple-400' :
-                                            'bg-amber-900/40 text-amber-400'
-                                        }`}>
-                                        {mission.category}
-                                    </div>
-                                </td>
-                                <td className="px-4 py-3 sm:px-6 sm:py-4">
-                                    <div className="text-sm font-medium">{mission.action_type}</div>
-                                    <div className="text-xs text-gray-500 mt-0.5">Target: <span className="text-white">{mission.target_value}</span></div>
-                                </td>
-                                <td className="px-4 py-3 sm:px-6 sm:py-4">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-4 h-4 rounded-full bg-amber-400/20 flex items-center justify-center text-[10px] text-amber-400">💎</div>
-                                        <span className="font-bold text-[#91F402]">{mission.reward_amount}</span>
-                                        <span className="text-[10px] text-gray-500">{mission.reward_type}</span>
-                                    </div>
-                                </td>
-                                <td className="px-4 py-3 text-center sm:px-6 sm:py-4">
-                                    <button
-                                        onClick={() => {
-                                            updateMutation.mutate({
-                                                id: mission.id,
-                                                payload: { is_active: !mission.is_active }
-                                            });
-                                        }}
-                                        className={`px-3 py-1 rounded-full text-[10px] font-bold cursor-pointer transition-all hover:scale-105 ${mission.is_active ? 'bg-[#2D6B3B] text-[#91F402] hover:bg-red-900/60' : 'bg-red-900/60 text-red-100 hover:bg-[#2D6B3B]'
-                                            }`}
-                                    >
-                                        {mission.is_active ? 'ACTIVE' : 'INACTIVE'}
-                                    </button>
-                                </td>
-                                <td className="px-4 py-3 text-right sm:px-6 sm:py-4">
-                                    <div className="flex justify-end gap-2 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
-                                        <button
-                                            onClick={() => handleEdit(mission)}
-                                            className="p-1.5 rounded-lg bg-gray-800 text-gray-400 hover:text-white"
-                                        >
-                                            <Edit2 size={16} />
-                                        </button>
+                    <table className="w-full text-left">
+                        <thead>
+                            <tr className="bg-black/20 text-gray-400 text-xs font-black uppercase tracking-widest border-b border-white/5">
+                                <th className="px-4 py-3 sm:px-6 sm:py-4">ID / Logic Key</th>
+                                <th className="px-4 py-3 sm:px-6 sm:py-4">제목 / 카테고리</th>
+                                <th className="px-4 py-3 sm:px-6 sm:py-4">조건 (Action / Target)</th>
+                                <th className="px-4 py-3 sm:px-6 sm:py-4">보상</th>
+                                <th className="px-4 py-3 text-center sm:px-6 sm:py-4">상태</th>
+                                <th className="px-4 py-3 text-right sm:px-6 sm:py-4">관리</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-white/5">
+                            {missions?.map(mission => (
+                                <tr key={mission.id} className="hover:bg-white/5 transition-colors group">
+                                    <td className="px-4 py-3 sm:px-6 sm:py-4">
+                                        <div className="font-bold text-white">#{mission.id}</div>
+                                        <div className="text-[10px] text-gray-500 font-mono tracking-tighter">{mission.logic_key}</div>
+                                    </td>
+                                    <td className="px-4 py-3 sm:px-6 sm:py-4">
+                                        <div className="font-bold text-white">{mission.title}</div>
+                                        <div className={`inline-block text-[10px] px-1.5 rounded uppercase font-black mt-1 ${mission.category === 'DAILY' ? 'bg-blue-900/40 text-blue-400' :
+                                            mission.category === 'WEEKLY' ? 'bg-purple-900/40 text-purple-400' :
+                                                'bg-amber-900/40 text-amber-400'
+                                            }`}>
+                                            {mission.category}
+                                        </div>
+                                    </td>
+                                    <td className="px-4 py-3 sm:px-6 sm:py-4">
+                                        <div className="text-sm font-medium">{mission.action_type}</div>
+                                        <div className="text-xs text-gray-500 mt-0.5">Target: <span className="text-white">{mission.target_value}</span></div>
+                                    </td>
+                                    <td className="px-4 py-3 sm:px-6 sm:py-4">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-4 h-4 rounded-full bg-amber-400/20 flex items-center justify-center text-[10px] text-amber-400">💎</div>
+                                            <span className="font-bold text-[#91F402]">{mission.reward_amount}</span>
+                                            <span className="text-[10px] text-gray-500">{mission.reward_type}</span>
+                                        </div>
+                                    </td>
+                                    <td className="px-4 py-3 text-center sm:px-6 sm:py-4">
                                         <button
                                             onClick={() => {
-                                                if (confirm("정말 이 미션을 비활성화하시겠습니까?")) {
-                                                    deleteMutation.mutate(mission.id);
-                                                }
+                                                updateMutation.mutate({
+                                                    id: mission.id,
+                                                    payload: { is_active: !mission.is_active }
+                                                });
                                             }}
-                                            className="p-1.5 rounded-lg bg-gray-800 text-red-400 hover:bg-red-900/40"
+                                            className={`px-3 py-1 rounded-full text-[10px] font-bold cursor-pointer transition-all hover:scale-105 ${mission.is_active ? 'bg-[#2D6B3B] text-[#91F402] hover:bg-red-900/60' : 'bg-red-900/60 text-red-100 hover:bg-[#2D6B3B]'
+                                                }`}
                                         >
-                                            <Trash2 size={16} />
+                                            {mission.is_active ? 'ACTIVE' : 'INACTIVE'}
                                         </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+                                    </td>
+                                    <td className="px-4 py-3 text-right sm:px-6 sm:py-4">
+                                        <div className="flex justify-end gap-2 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
+                                            <button
+                                                onClick={() => handleEdit(mission)}
+                                                className="p-1.5 rounded-lg bg-gray-800 text-gray-400 hover:text-white"
+                                            >
+                                                <Edit2 size={16} />
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    if (confirm("정말 이 미션을 비활성화하시겠습니까?")) {
+                                                        deleteMutation.mutate(mission.id);
+                                                    }
+                                                }}
+                                                className="p-1.5 rounded-lg bg-gray-800 text-red-400 hover:bg-red-900/40"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
                 {missions?.length === 0 && (
                     <div className="p-20 text-center text-gray-500">

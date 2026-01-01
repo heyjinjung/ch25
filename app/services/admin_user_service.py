@@ -94,6 +94,7 @@ class AdminUserService:
             # 4. Real Name (ILIKE via admin_profile)
             # 5. External ID (ILIKE)
             # 6. Tags (ILIKE via admin_profile)
+            # 7. Telegram ID (exact match; numeric)
             
             term = f"%{q.strip()}%"
             from sqlalchemy import or_, cast, String
@@ -112,6 +113,11 @@ class AdminUserService:
             
             if q.strip().isdigit():
                 conditions.append(cast(User.id, String) == q.strip())
+                # Allow searching by raw Telegram numeric ID copied from Telegram UI.
+                # This is an exact match (not ILIKE) to avoid partial collisions.
+                conditions.append(cast(User.telegram_id, String) == q.strip())
+                # Some ops flows store telegram_id under admin_profile as string.
+                conditions.append(cast(AdminUserProfile.telegram_id, String) == q.strip())
                 
             stmt = stmt.where(or_(*conditions))
 

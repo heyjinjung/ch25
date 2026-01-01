@@ -322,12 +322,14 @@ class SeasonPassService:
         db.commit()
         db.refresh(progress)
 
-        # [Level Unification] Sync season level to global user level
+        # [Level Unification] Sync season level and XP to user table
         user = db.get(User, user_id)
-        if user and user.level != progress.current_level:
-            user.level = progress.current_level
-            db.add(user)
-            db.commit()
+        if user:
+            if user.level != progress.current_level or user.xp != progress.current_xp:
+                user.level = progress.current_level
+                user.xp = progress.current_xp
+                db.add(user)
+                db.commit()
 
         leveled_up = progress.current_level > previous_level
         return {
@@ -661,11 +663,6 @@ class SeasonPassService:
         progress.current_xp += xp_amount
         db.add(progress)
 
-        # [Level Unification] Trigger global level XP gain.
-        # This ensures that Seasonal XP (from deposits or games) also contributes to Global/Admin levels.
-        from app.services.level_xp_service import LevelXPService
-        LevelXPService().add_xp(db, user_id=user_id, delta=xp_amount, source="SEASON_PASS_BONUS_XP")
-
         achieved_levels = self._eligible_levels(db, season.id, progress.current_xp)
         new_levels = [level for level in achieved_levels if level.level > reward_baseline_level]
         rewards: list[dict] = []
@@ -727,12 +724,14 @@ class SeasonPassService:
         db.commit()
         db.refresh(progress)
 
-        # [Level Unification] Sync season level to global user level
+        # [Level Unification] Sync season level and XP to user table
         user = db.get(User, user_id)
-        if user and user.level != progress.current_level:
-            user.level = progress.current_level
-            db.add(user)
-            db.commit()
+        if user:
+            if user.level != progress.current_level or user.xp != progress.current_xp:
+                user.level = progress.current_level
+                user.xp = progress.current_xp
+                db.add(user)
+                db.commit()
 
         leveled_up = progress.current_level > previous_level
         return {
