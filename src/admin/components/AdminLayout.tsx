@@ -1,5 +1,5 @@
 // src/admin/components/AdminLayout.tsx
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import {
   Bell,
@@ -161,7 +161,7 @@ const Sidebar: React.FC<{ mobile?: boolean; closeSidebar?: () => void }> = ({ mo
 const Header: React.FC<{ toggleSidebar: () => void }> = ({ toggleSidebar }) => {
   return (
     <header className="border-b border-[#333333] bg-[#111111] shadow-sm">
-      <div className="flex items-center justify-between px-4 py-3">
+      <div className="flex items-center justify-between px-3 py-2 sm:px-4 sm:py-3">
         <div className="flex items-center">
           <button
             type="button"
@@ -171,7 +171,7 @@ const Header: React.FC<{ toggleSidebar: () => void }> = ({ toggleSidebar }) => {
           >
             <Menu size={24} />
           </button>
-          <h1 className="ml-2 text-xl font-semibold text-[#91F402] md:ml-0">씨씨지민 코드지갑</h1>
+          <h1 className="ml-2 text-base font-semibold text-[#91F402] sm:text-xl md:ml-0">씨씨지민 코드지갑</h1>
         </div>
         <div className="flex items-center space-x-4">
           <button type="button" className="rounded-full p-1 text-[#91F402] hover:bg-[#2D6B3B]" aria-label="알림">
@@ -189,6 +189,15 @@ const Header: React.FC<{ toggleSidebar: () => void }> = ({ toggleSidebar }) => {
 const AdminLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const toggleSidebar = () => setSidebarOpen((p) => !p);
+
+  useEffect(() => {
+    if (!sidebarOpen) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [sidebarOpen]);
 
   const mobileSidebar = useMemo(() => {
     if (!sidebarOpen) return null;
@@ -212,7 +221,7 @@ const AdminLayout: React.FC = () => {
 
       <div className="flex flex-1 flex-col overflow-hidden">
         <Header toggleSidebar={toggleSidebar} />
-        <main className="flex-1 overflow-y-auto border-t border-[#222222] bg-[#0A0A0A] p-4 text-white md:p-6">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden border-t border-[#222222] bg-[#0A0A0A] p-3 text-white sm:p-4 md:p-6">
           <Outlet />
         </main>
       </div>

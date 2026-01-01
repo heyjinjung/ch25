@@ -1,14 +1,15 @@
 # /workspace/ch25/app/services/admin_season_service.py
 from datetime import date
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 
 from fastapi import HTTPException, status
 from sqlalchemy import and_, func, select
 from sqlalchemy.orm import Session
 
-from app.models.season_pass import SeasonPassConfig
+from app.models.season_pass import SeasonPassConfig, SeasonPassLevel
 from app.schemas.admin_season import (
     AdminSeasonCreate,
+    AdminSeasonLevelCreate,
     AdminSeasonListResponse,
     AdminSeasonResponse,
     AdminSeasonUpdate,
@@ -108,3 +109,61 @@ class AdminSeasonService:
         db.commit()
         db.refresh(season)
         return season
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # SeasonPassLevel methods: XP requirements and rewards per level
+    # ─────────────────────────────────────────────────────────────────────────
+
+    @staticmethod
+    def list_levels(db: Session, season_id: int) -> List[SeasonPassLevel]:
+        """List all levels for a season, ordered by level number."""
+        AdminSeasonService.get_season(db, season_id)  # Ensure season exists
+        return (
+            db.query(SeasonPassLevel)
+            .filter(SeasonPassLevel.season_id == season_id)
+            .order_by(SeasonPassLevel.level)
+            .all()
+        )
+
+    @staticmethod
+    def bulk_upsert_levels(
+        db: Session, season_id: int, levels: List[AdminSeasonLevelCreate]
+    ) -> List[SeasonPassLevel]:
+        """Bulk upsert levels for a season (create or update by level number)."""
+        AdminSeasonService.get_season(db, season_id)  # Ensure season exists
+
+        # Get existing levels for this season
+        existing = {
+            lv.level: lv
+            for lv in db.query(SeasonPassLevel)
+            .filter(SeasonPassLevel.season_id == season_id)
+            .all()
+        }
+
+        result: List[SeasonPassLevel] = []
+        for level_data in levels:
+            if level_data.level in existing:
+                # Update existing level
+                lv = existing[level_data.level]
+                lv.required_xp = level_data.required_xp
+                lv.reward_type = level_data.reward_type
+                lv.reward_amount = level_data.reward_amount
+                lv.auto_claim = level_data.auto_claim
+            else:
+                # Create new level
+                lv = SeasonPassLevel(
+                    season_id=season_id,
+                    level=level_data.level,
+                    required_xp=level_data.required_xp,
+                    reward_type=level_data.reward_type,
+                    reward_amount=level_data.reward_amount,
+                    auto_claim=level_data.auto_claim,
+                )
+                db.add(lv)
+            result.append(lv)
+
+        db.commit()
+        for lv in result:
+            db.refresh(lv)
+
+        return sorted(result, key=lambda x: x.level)

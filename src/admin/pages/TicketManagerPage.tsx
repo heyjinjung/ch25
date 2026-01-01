@@ -17,12 +17,12 @@ const TicketManagerPage: React.FC = () => {
                 </div>
             </header>
 
-            <div className="border-b border-[#333333]">
-                <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+            <div className="border-b border-[#333333] overflow-x-auto">
+                <nav className="-mb-px flex min-w-max flex-nowrap gap-6 px-1" aria-label="Tabs">
                     <button
                         onClick={() => setActiveTab("grant")}
                         className={`
-              group inline-flex items-center border-b-2 py-4 px-1 text-sm font-medium transition-colors
+              group inline-flex items-center border-b-2 py-3 px-1 text-xs font-medium transition-colors whitespace-nowrap sm:py-4 sm:text-sm
               ${activeTab === "grant"
                                 ? "border-[#91F402] text-[#91F402]"
                                 : "border-transparent text-gray-400 hover:border-gray-300 hover:text-gray-300"
@@ -40,7 +40,7 @@ const TicketManagerPage: React.FC = () => {
                     <button
                         onClick={() => setActiveTab("logs")}
                         className={`
-              group inline-flex items-center border-b-2 py-4 px-1 text-sm font-medium transition-colors
+              group inline-flex items-center border-b-2 py-3 px-1 text-xs font-medium transition-colors whitespace-nowrap sm:py-4 sm:text-sm
               ${activeTab === "logs"
                                 ? "border-[#91F402] text-[#91F402]"
                                 : "border-transparent text-gray-400 hover:border-gray-300 hover:text-gray-300"

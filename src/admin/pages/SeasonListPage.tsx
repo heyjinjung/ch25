@@ -4,15 +4,19 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Layers, Plus, Save, X } from "lucide-react";
 import {
   AdminSeason,
+  AdminSeasonLevel,
   AdminSeasonListResponse,
   AdminSeasonPayload,
   fetchSeasons,
+  fetchSeasonLevels,
   createSeason,
   updateSeason,
+  upsertSeasonLevels,
 } from "../api/adminSeasonApi";
+import { REWARD_TYPES } from "../constants/rewardTypes";
 
 const seasonSchema = z
   .object({
@@ -35,6 +39,11 @@ const SeasonListPage: React.FC = () => {
   const [size] = useState(10);
   const [editingSeason, setEditingSeason] = useState<AdminSeason | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [levelEditingSeason, setLevelEditingSeason] = useState<AdminSeason | null>(null);
+  const [levels, setLevels] = useState<AdminSeasonLevel[]>([]);
+  const [isLevelModalOpen, setIsLevelModalOpen] = useState(false);
+  const [isLevelLoading, setIsLevelLoading] = useState(false);
+  const [isSavingLevels, setIsSavingLevels] = useState(false);
   const queryClient = useQueryClient();
 
   const { data, isLoading, isError, error } = useQuery<AdminSeasonListResponse>({
@@ -47,21 +56,21 @@ const SeasonListPage: React.FC = () => {
     () =>
       editingSeason
         ? {
-            name: editingSeason.name,
-            start_date: editingSeason.start_date,
-            end_date: editingSeason.end_date,
-            max_level: editingSeason.max_level,
-            base_xp_per_stamp: editingSeason.base_xp_per_stamp,
-            is_active: editingSeason.is_active,
-          }
+          name: editingSeason.name,
+          start_date: editingSeason.start_date,
+          end_date: editingSeason.end_date,
+          max_level: editingSeason.max_level,
+          base_xp_per_stamp: editingSeason.base_xp_per_stamp,
+          is_active: editingSeason.is_active,
+        }
         : {
-            name: "",
-            start_date: "",
-            end_date: "",
-            max_level: 30,
-            base_xp_per_stamp: 10,
-            is_active: true,
-          },
+          name: "",
+          start_date: "",
+          end_date: "",
+          max_level: 30,
+          base_xp_per_stamp: 10,
+          is_active: true,
+        },
     [editingSeason]
   );
 
@@ -223,30 +232,66 @@ const SeasonListPage: React.FC = () => {
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-white">{season.base_xp_per_stamp}</td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm">
                       <span
-                        className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${
-                          season.is_active ? "bg-[#2D6B3B] text-[#91F402]" : "bg-red-900/60 text-red-200"
-                        }`}
+                        className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${season.is_active ? "bg-[#2D6B3B] text-[#91F402]" : "bg-red-900/60 text-red-200"
+                          }`}
                       >
                         {season.is_active ? "활성" : "비활성"}
                       </span>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-center">
-                      <SecondaryButton
-                        onClick={() => {
-                          setEditingSeason(season);
-                          setIsModalOpen(true);
-                          form.reset({
-                            name: season.name,
-                            start_date: season.start_date,
-                            end_date: season.end_date,
-                            max_level: season.max_level,
-                            base_xp_per_stamp: season.base_xp_per_stamp,
-                            is_active: season.is_active,
-                          });
-                        }}
-                      >
-                        수정
-                      </SecondaryButton>
+                      <div className="flex items-center justify-center gap-2">
+                        <SecondaryButton
+                          onClick={() => {
+                            setEditingSeason(season);
+                            setIsModalOpen(true);
+                            form.reset({
+                              name: season.name,
+                              start_date: season.start_date,
+                              end_date: season.end_date,
+                              max_level: season.max_level,
+                              base_xp_per_stamp: season.base_xp_per_stamp,
+                              is_active: season.is_active,
+                            });
+                          }}
+                        >
+                          수정
+                        </SecondaryButton>
+                        <SecondaryButton
+                          onClick={async () => {
+                            setLevelEditingSeason(season);
+                            setIsLevelLoading(true);
+                            setIsLevelModalOpen(true);
+                            try {
+                              const data = await fetchSeasonLevels(season.id);
+                              // Fill in missing levels up to max_level
+                              const existingLevels = data.levels || [];
+                              const fullLevels: AdminSeasonLevel[] = [];
+                              for (let i = 1; i <= season.max_level; i++) {
+                                const existing = existingLevels.find(l => l.level === i);
+                                if (existing) {
+                                  fullLevels.push(existing);
+                                } else {
+                                  fullLevels.push({
+                                    level: i,
+                                    required_xp: i * 100,
+                                    reward_type: "TICKET_BUNDLE",
+                                    reward_amount: 1,
+                                    auto_claim: true,
+                                  });
+                                }
+                              }
+                              setLevels(fullLevels);
+                            } catch {
+                              setLevels([]);
+                            } finally {
+                              setIsLevelLoading(false);
+                            }
+                          }}
+                        >
+                          <Layers size={14} className="mr-1" />
+                          레벨
+                        </SecondaryButton>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -266,9 +311,8 @@ const SeasonListPage: React.FC = () => {
                   type="button"
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page <= 1}
-                  className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-[#333333] ${
-                    page <= 1 ? "bg-[#111111] text-gray-600 cursor-not-allowed" : "bg-[#1A1A1A] text-gray-300 hover:bg-[#2D6B3B]"
-                  }`}
+                  className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-[#333333] ${page <= 1 ? "bg-[#111111] text-gray-600 cursor-not-allowed" : "bg-[#1A1A1A] text-gray-300 hover:bg-[#2D6B3B]"
+                    }`}
                 >
                   <span className="sr-only">이전</span>
                   <ChevronLeft className="h-5 w-5" aria-hidden="true" />
@@ -279,9 +323,8 @@ const SeasonListPage: React.FC = () => {
                     key={p}
                     type="button"
                     onClick={() => setPage(p)}
-                    className={`relative inline-flex items-center px-4 py-2 border border-[#333333] text-sm font-medium ${
-                      page === p ? "z-10 bg-[#2D6B3B] text-[#91F402]" : "bg-[#1A1A1A] text-gray-300 hover:bg-[#2C2C2E]"
-                    }`}
+                    className={`relative inline-flex items-center px-4 py-2 border border-[#333333] text-sm font-medium ${page === p ? "z-10 bg-[#2D6B3B] text-[#91F402]" : "bg-[#1A1A1A] text-gray-300 hover:bg-[#2C2C2E]"
+                      }`}
                   >
                     {p}
                   </button>
@@ -291,11 +334,10 @@ const SeasonListPage: React.FC = () => {
                   type="button"
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={page >= totalPages}
-                  className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-[#333333] ${
-                    page >= totalPages
-                      ? "bg-[#111111] text-gray-600 cursor-not-allowed"
-                      : "bg-[#1A1A1A] text-gray-300 hover:bg-[#2D6B3B]"
-                  }`}
+                  className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-[#333333] ${page >= totalPages
+                    ? "bg-[#111111] text-gray-600 cursor-not-allowed"
+                    : "bg-[#1A1A1A] text-gray-300 hover:bg-[#2D6B3B]"
+                    }`}
                 >
                   <span className="sr-only">다음</span>
                   <ChevronRight className="h-5 w-5" aria-hidden="true" />
@@ -361,6 +403,128 @@ const SeasonListPage: React.FC = () => {
               </PrimaryButton>
             </div>
           </form>
+        </ModalShell>
+      )}
+
+      {/* Level Editor Modal - Mobile Optimized */}
+      {isLevelModalOpen && levelEditingSeason && (
+        <ModalShell
+          title={`${levelEditingSeason.name} - 레벨 설정`}
+          onClose={() => {
+            setIsLevelModalOpen(false);
+            setLevelEditingSeason(null);
+            setLevels([]);
+          }}
+        >
+          {isLevelLoading ? (
+            <div className="text-center py-8 text-gray-400">레벨 정보를 불러오는 중...</div>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-sm text-gray-400">
+                  총 {levels.length}개 레벨 (1~{levelEditingSeason.max_level})
+                </p>
+                <PrimaryButton
+                  disabled={isSavingLevels}
+                  onClick={async () => {
+                    setIsSavingLevels(true);
+                    try {
+                      await upsertSeasonLevels(levelEditingSeason.id, levels);
+                      setIsLevelModalOpen(false);
+                      setLevelEditingSeason(null);
+                      setLevels([]);
+                    } catch (e) {
+                      console.error(e);
+                    } finally {
+                      setIsSavingLevels(false);
+                    }
+                  }}
+                >
+                  <Save size={16} className="mr-2" />
+                  {isSavingLevels ? "저장 중..." : "전체 저장"}
+                </PrimaryButton>
+              </div>
+
+              {/* Mobile-friendly card layout */}
+              <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
+                {levels.map((lv, idx) => (
+                  <div
+                    key={lv.level}
+                    className="rounded-lg border border-[#333333] bg-[#1A1A1A] p-4"
+                  >
+                    <div className="flex items-center gap-3 mb-3">
+                      <span className="flex items-center justify-center w-10 h-10 rounded-full bg-[#2D6B3B] text-[#91F402] font-bold text-lg">
+                        {lv.level}
+                      </span>
+                      <div className="flex-1">
+                        <span className="text-xs text-gray-400">레벨 {lv.level}</span>
+                      </div>
+                      <label className="flex items-center gap-2 text-xs text-gray-300">
+                        <input
+                          type="checkbox"
+                          checked={lv.auto_claim}
+                          onChange={(e) => {
+                            const newLevels = [...levels];
+                            newLevels[idx] = { ...lv, auto_claim: e.target.checked };
+                            setLevels(newLevels);
+                          }}
+                          className="h-4 w-4 rounded border-[#333333] bg-[#111111]"
+                        />
+                        자동
+                      </label>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="space-y-1">
+                        <label className="text-[10px] text-gray-500">필요 XP</label>
+                        <input
+                          type="number"
+                          value={lv.required_xp}
+                          onChange={(e) => {
+                            const newLevels = [...levels];
+                            newLevels[idx] = { ...lv, required_xp: Number(e.target.value) || 0 };
+                            setLevels(newLevels);
+                          }}
+                          className="w-full rounded border border-[#333333] bg-[#111111] px-2 py-1.5 text-sm text-white"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] text-gray-500">보상 타입</label>
+                        <select
+                          value={lv.reward_type}
+                          onChange={(e) => {
+                            const newLevels = [...levels];
+                            newLevels[idx] = { ...lv, reward_type: e.target.value };
+                            setLevels(newLevels);
+                          }}
+                          className="w-full rounded border border-[#333333] bg-[#111111] px-2 py-1.5 text-sm text-white"
+                        >
+                          {REWARD_TYPES.map((rt) => (
+                            <option key={rt.value} value={rt.value}>
+                              {rt.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] text-gray-500">수량</label>
+                        <input
+                          type="number"
+                          value={lv.reward_amount}
+                          onChange={(e) => {
+                            const newLevels = [...levels];
+                            newLevels[idx] = { ...lv, reward_amount: Number(e.target.value) || 0 };
+                            setLevels(newLevels);
+                          }}
+                          className="w-full rounded border border-[#333333] bg-[#111111] px-2 py-1.5 text-sm text-white"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </ModalShell>
       )}
     </section>

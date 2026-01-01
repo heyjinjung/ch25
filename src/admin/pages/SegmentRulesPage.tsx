@@ -31,11 +31,17 @@ const SegmentRulesPage: React.FC = () => {
 
   const PrimaryButton = ({
     children,
+    className,
     ...props
   }: React.ButtonHTMLAttributes<HTMLButtonElement> & { children: React.ReactNode }) => (
     <button
       type="button"
-      className="inline-flex items-center rounded-md bg-[#2D6B3B] px-4 py-2 text-sm font-medium text-white hover:bg-[#91F402] hover:text-black disabled:cursor-not-allowed disabled:opacity-60"
+      className={[
+        "inline-flex items-center rounded-md bg-[#2D6B3B] px-4 py-2 text-sm font-medium text-white hover:bg-[#91F402] hover:text-black disabled:cursor-not-allowed disabled:opacity-60",
+        className,
+      ]
+        .filter(Boolean)
+        .join(" ")}
       {...props}
     >
       {children}
@@ -44,11 +50,17 @@ const SegmentRulesPage: React.FC = () => {
 
   const DangerButton = ({
     children,
+    className,
     ...props
   }: React.ButtonHTMLAttributes<HTMLButtonElement> & { children: React.ReactNode }) => (
     <button
       type="button"
-      className="inline-flex items-center rounded-md border border-red-500/50 bg-red-950 px-4 py-2 text-sm font-medium text-red-100 hover:bg-red-900 disabled:cursor-not-allowed disabled:opacity-60"
+      className={[
+        "inline-flex items-center rounded-md border border-red-500/50 bg-red-950 px-4 py-2 text-sm font-medium text-red-100 hover:bg-red-900 disabled:cursor-not-allowed disabled:opacity-60",
+        className,
+      ]
+        .filter(Boolean)
+        .join(" ")}
       {...props}
     >
       {children}
@@ -301,13 +313,18 @@ const SegmentRulesPage: React.FC = () => {
                       />
                     </td>
                     <td className="px-4 py-3 align-top">
-                      <div className="flex gap-2">
-                        <PrimaryButton onClick={() => void onSave(r)} disabled={updateMutation.isPending}>
+                      <div className="flex flex-col gap-2 sm:flex-row">
+                        <PrimaryButton
+                          onClick={() => void onSave(r)}
+                          disabled={updateMutation.isPending}
+                          className="w-full justify-center sm:w-auto"
+                        >
                           저장
                         </PrimaryButton>
                         <DangerButton
                           onClick={() => void deleteMutation.mutateAsync(r.id)}
                           disabled={deleteMutation.isPending}
+                          className="w-full justify-center sm:w-auto"
                         >
                           삭제
                         </DangerButton>

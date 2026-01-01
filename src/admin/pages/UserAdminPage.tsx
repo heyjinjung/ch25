@@ -352,22 +352,24 @@ const UserAdminPage: React.FC = () => {
           </button>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setShowImportModal(true)}
-          className="flex items-center justify-center rounded-md border border-[#333333] bg-[#1A1A1A] px-4 py-2 text-sm font-medium text-gray-200 hover:bg-[#2D6B3B] hover:text-white mr-2"
-        >
-          <Upload size={18} className="mr-2" />
-          일괄 등록
-        </button>
-        <button
-          type="button"
-          onClick={() => setShowAddForm((p) => !p)}
-          className="flex items-center justify-center rounded-md bg-[#2D6B3B] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#91F402] hover:text-black"
-        >
-          <Plus size={18} className="mr-2" />
-          행 추가
-        </button>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
+          <button
+            type="button"
+            onClick={() => setShowImportModal(true)}
+            className="flex w-full items-center justify-center rounded-md border border-[#333333] bg-[#1A1A1A] px-4 py-2 text-sm font-medium text-gray-200 hover:bg-[#2D6B3B] hover:text-white sm:w-auto"
+          >
+            <Upload size={18} className="mr-2" />
+            일괄 등록
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowAddForm((p) => !p)}
+            className="flex w-full items-center justify-center rounded-md bg-[#2D6B3B] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#91F402] hover:text-black sm:w-auto"
+          >
+            <Plus size={18} className="mr-2" />
+            행 추가
+          </button>
+        </div>
       </div>
 
       {
@@ -551,62 +553,62 @@ const UserAdminPage: React.FC = () => {
       {
         !isLoading && !isError && (
           <div className="rounded-lg border border-[#333333] bg-[#111111] shadow-md">
-            <div className="max-h-[70vh] overflow-auto">
-              <table className="w-full min-w-[980px]">
+            <div className="max-h-[70vh] overflow-x-auto overflow-y-auto">
+              <table className="w-full min-w-[620px] md:min-w-[980px]">
                 <thead className="sticky top-0 z-10 border-b border-[#333333] bg-[#1A1A1A]">
                   <tr>
                     <th
-                      className={`px-4 py-3 text-left text-xs font-medium uppercase tracking-wider ${sortKey === "id" ? "bg-[#2D6B3B] text-[#91F402]" : "text-gray-400"
+                      className={`px-3 py-3 text-left text-xs font-medium uppercase tracking-wider sm:px-4 ${sortKey === "id" ? "bg-[#2D6B3B] text-[#91F402]" : "text-gray-400"
                         } cursor-pointer hover:bg-[#2D6B3B]`}
                       onClick={() => handleSort("id")}
                     >
                       ID{renderSortIcon("id")}
                     </th>
                     <th
-                      className={`px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400`}
+                      className={`px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400 sm:px-4`}
                     >
                       External ID
                     </th>
                     <th
-                      className={`px-4 py-3 text-left text-xs font-medium uppercase tracking-wider ${sortKey === "nickname" ? "bg-[#2D6B3B] text-[#91F402]" : "text-gray-400"
+                      className={`hidden px-3 py-3 text-left text-xs font-medium uppercase tracking-wider sm:px-4 md:table-cell ${sortKey === "nickname" ? "bg-[#2D6B3B] text-[#91F402]" : "text-gray-400"
                         } cursor-pointer hover:bg-[#2D6B3B]`}
                       onClick={() => handleSort("nickname")}
                     >
                       닉네임{renderSortIcon("nickname")}
                     </th>
                     <th
-                      className={`px-4 py-3 text-left text-xs font-medium uppercase tracking-wider ${sortKey === "level" ? "bg-[#2D6B3B] text-[#91F402]" : "text-gray-400"
+                      className={`px-3 py-3 text-left text-xs font-medium uppercase tracking-wider sm:px-4 ${sortKey === "level" ? "bg-[#2D6B3B] text-[#91F402]" : "text-gray-400"
                         } cursor-pointer hover:bg-[#2D6B3B]`}
                       onClick={() => handleSort("level")}
                     >
                       레벨{renderSortIcon("level")}
                     </th>
                     <th
-                      className={`px-4 py-3 text-left text-xs font-medium uppercase tracking-wider ${sortKey === "xp" ? "bg-[#2D6B3B] text-[#91F402]" : "text-gray-400"
+                      className={`px-3 py-3 text-left text-xs font-medium uppercase tracking-wider sm:px-4 ${sortKey === "xp" ? "bg-[#2D6B3B] text-[#91F402]" : "text-gray-400"
                         } cursor-pointer hover:bg-[#2D6B3B]`}
                       onClick={() => handleSort("xp")}
                     >
                       XP{renderSortIcon("xp")}
                     </th>
                     <th
-                      className={`px-4 py-3 text-left text-xs font-medium uppercase tracking-wider ${sortKey === "status" ? "bg-[#2D6B3B] text-[#91F402]" : "text-gray-400"
+                      className={`px-3 py-3 text-left text-xs font-medium uppercase tracking-wider sm:px-4 ${sortKey === "status" ? "bg-[#2D6B3B] text-[#91F402]" : "text-gray-400"
                         } cursor-pointer hover:bg-[#2D6B3B]`}
                       onClick={() => handleSort("status")}
                     >
                       상태{renderSortIcon("status")}
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">실명/연락처</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">TG ID / Username</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">메모/태그</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400 text-center">비밀번호(V2 리렉)</th>
-                    <th className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-400">액션</th>
+                    <th className="hidden px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400 sm:px-4 md:table-cell">실명/연락처</th>
+                    <th className="hidden px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400 sm:px-4 md:table-cell">TG ID / Username</th>
+                    <th className="hidden px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400 sm:px-4 lg:table-cell">메모/태그</th>
+                    <th className="hidden px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400 sm:px-4 lg:table-cell text-center">비밀번호(V2 리렉)</th>
+                    <th className="px-3 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-400 sm:px-4">액션</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#333333]">
                   {currentMembers.map((member, index) => (
                     <tr key={member.id} className={index % 2 === 0 ? "bg-[#111111]" : "bg-[#1A1A1A]"}>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-400">{member.id}</td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-white">
+                      <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-400 sm:px-4">{member.id}</td>
+                      <td className="px-3 py-3 whitespace-nowrap text-sm text-white sm:px-4">
                         {/* [Round 3] Priority: Telegram Username -> Nickname -> External ID */}
                         {member.telegram_username ? (
                           <div>
@@ -620,7 +622,7 @@ const UserAdminPage: React.FC = () => {
                           </div>
                         )}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap">
+                      <td className="hidden px-3 py-3 whitespace-nowrap sm:px-4 md:table-cell">
                         {member.isEditing ? (
                           <input
                             type="text"
@@ -632,7 +634,7 @@ const UserAdminPage: React.FC = () => {
                           <div className="text-sm font-medium text-white">{member.nickname || "-"}</div>
                         )}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-white">
+                      <td className="px-3 py-3 whitespace-nowrap text-sm text-white sm:px-4">
                         {member.isEditing ? (
                           <input
                             type="number"
@@ -645,7 +647,7 @@ const UserAdminPage: React.FC = () => {
                           member.season_level ?? member.level ?? 1
                         )}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-white">
+                      <td className="px-3 py-3 whitespace-nowrap text-sm text-white sm:px-4">
                         {member.isEditing ? (
                           <input
                             type="number"
@@ -658,7 +660,7 @@ const UserAdminPage: React.FC = () => {
                           member.xp ?? 0
                         )}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm">
+                      <td className="px-3 py-3 whitespace-nowrap text-sm sm:px-4">
                         {member.isEditing ? (
                           <select
                             value={member.draft?.status ?? "ACTIVE"}
@@ -677,7 +679,7 @@ const UserAdminPage: React.FC = () => {
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-400">
+                      <td className="hidden px-3 py-3 whitespace-nowrap text-sm text-gray-400 sm:px-4 md:table-cell">
                         {member.isEditing ? (
                           <div className="flex flex-col gap-1">
                             <input
@@ -702,7 +704,7 @@ const UserAdminPage: React.FC = () => {
                           </>
                         )}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-400">
+                      <td className="hidden px-3 py-3 whitespace-nowrap text-sm text-gray-400 sm:px-4 md:table-cell">
                         {member.isEditing ? (
                           <div className="flex flex-col gap-1">
                             <input
@@ -727,7 +729,7 @@ const UserAdminPage: React.FC = () => {
                           </>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-400">
+                      <td className="hidden px-3 py-3 text-sm text-gray-400 sm:px-4 lg:table-cell">
                         {member.isEditing ? (
                           <div className="flex flex-col gap-1">
                             <textarea
@@ -760,7 +762,7 @@ const UserAdminPage: React.FC = () => {
                           </>
                         )}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap">
+                      <td className="hidden px-3 py-3 whitespace-nowrap sm:px-4 lg:table-cell">
                         <div className="flex items-center gap-2">
                           <input
                             type="password"
@@ -779,13 +781,13 @@ const UserAdminPage: React.FC = () => {
                           </button>
                         </div>
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-center">
-                        <div className="flex justify-center space-x-3">
+                      <td className="px-3 py-3 whitespace-nowrap text-center sm:px-4">
+                        <div className="flex justify-center gap-1 sm:gap-3">
                           {member.isEditing ? (
                             <button
                               type="button"
                               onClick={() => saveRow(member)}
-                              className="text-[#91F402] hover:text-white"
+                              className="rounded-md p-2 text-[#91F402] hover:text-white"
                               title="저장"
                               aria-label="저장"
                             >
@@ -795,7 +797,7 @@ const UserAdminPage: React.FC = () => {
                             <button
                               type="button"
                               onClick={() => toggleEdit(member.id, true)}
-                              className="text-[#91F402] hover:text-white"
+                              className="rounded-md p-2 text-[#91F402] hover:text-white"
                               title="수정"
                               aria-label="수정"
                             >
@@ -805,7 +807,7 @@ const UserAdminPage: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => removeRow(member)}
-                            className="text-red-500 hover:text-red-300"
+                            className="rounded-md p-2 text-red-500 hover:text-red-300"
                             title="삭제"
                             aria-label="삭제"
                           >
@@ -824,8 +826,8 @@ const UserAdminPage: React.FC = () => {
             )}
 
             {totalPages > 1 && (
-              <div className="flex items-center justify-between border-t border-[#333333] bg-[#1A1A1A] px-4 py-3">
-                <p className="text-sm text-gray-400">{itemCountText}</p>
+              <div className="flex flex-col gap-2 border-t border-[#333333] bg-[#1A1A1A] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-xs text-gray-400 sm:text-sm">{itemCountText}</p>
                 <nav className="relative z-0 inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
                   <button
                     type="button"
@@ -846,7 +848,7 @@ const UserAdminPage: React.FC = () => {
                         key={pageNum}
                         type="button"
                         onClick={() => setCurrentPage(pageNum)}
-                        className={`relative inline-flex items-center border border-[#333333] px-4 py-2 text-sm font-medium ${safePage === pageNum
+                        className={`relative inline-flex items-center border border-[#333333] px-3 py-2 text-sm font-medium sm:px-4 ${safePage === pageNum
                           ? "z-10 bg-[#2D6B3B] text-[#91F402]"
                           : "bg-[#1A1A1A] text-gray-300 hover:bg-[#2C2C2E]"
                           }`}

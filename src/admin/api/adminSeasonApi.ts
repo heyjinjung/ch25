@@ -42,3 +42,39 @@ export async function updateSeason(id: number, payload: AdminSeasonPayload) {
   const { data } = await adminApi.put<AdminSeason>(`/admin/api/seasons/${id}`, payload);
   return data;
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Season Level API (XP requirements and rewards per level)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface AdminSeasonLevel {
+  id?: number;
+  season_id?: number;
+  level: number;
+  required_xp: number;
+  reward_type: string;
+  reward_amount: number;
+  auto_claim: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface AdminSeasonLevelListResponse {
+  season_id: number;
+  levels: AdminSeasonLevel[];
+}
+
+export async function fetchSeasonLevels(seasonId: number) {
+  const { data } = await adminApi.get<AdminSeasonLevelListResponse>(
+    `/admin/api/seasons/${seasonId}/levels`
+  );
+  return data;
+}
+
+export async function upsertSeasonLevels(seasonId: number, levels: AdminSeasonLevel[]) {
+  const { data } = await adminApi.put<AdminSeasonLevelListResponse>(
+    `/admin/api/seasons/${seasonId}/levels`,
+    levels
+  );
+  return data;
+}

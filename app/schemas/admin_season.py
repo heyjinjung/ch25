@@ -53,3 +53,44 @@ class AdminSeasonListResponse(BaseModel):
     size: int
 
     model_config = ConfigDict(from_attributes=True)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SeasonPassLevel schemas (for XP requirements and rewards per level)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class AdminSeasonLevelBase(BaseModel):
+    level: int = Field(..., ge=1)
+    required_xp: int = Field(..., ge=0)
+    reward_type: str = Field(..., min_length=1)
+    reward_amount: int = Field(..., ge=0)
+    auto_claim: bool = True
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class AdminSeasonLevelCreate(AdminSeasonLevelBase):
+    pass
+
+
+class AdminSeasonLevelUpdate(BaseModel):
+    required_xp: Optional[int] = Field(None, ge=0)
+    reward_type: Optional[str] = Field(None, min_length=1)
+    reward_amount: Optional[int] = Field(None, ge=0)
+    auto_claim: Optional[bool] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class AdminSeasonLevelResponse(AdminSeasonLevelBase):
+    id: int
+    season_id: int
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]
+
+
+class AdminSeasonLevelListResponse(BaseModel):
+    season_id: int
+    levels: List[AdminSeasonLevelResponse]
+    
+    model_config = ConfigDict(from_attributes=True)

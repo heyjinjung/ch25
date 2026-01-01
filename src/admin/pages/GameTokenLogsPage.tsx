@@ -152,14 +152,17 @@ const GameTokenLogsPage: React.FC = () => {
     return (
       <div className="space-y-6 animate-in fade-in zoom-in-95 duration-200">
         {/* Header / Actions */}
-        <div className="border-l-4 border-[#91F402] bg-[#1A1A1A] p-4 flex justify-between items-center rounded-r-lg">
+        <div className="border-l-4 border-[#91F402] bg-[#1A1A1A] p-4 flex flex-col gap-2 rounded-r-lg sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h3 className="text-xl font-bold text-white flex items-center gap-2">
               {externalIdFilter}
               <span className="text-sm font-normal text-gray-400 opacity-75">님의 자산 현황</span>
             </h3>
           </div>
-          <button onClick={() => { setExternalIdFilter(undefined); setExternalIdInput(""); setActiveTab("wallets"); }} className="text-sm text-gray-500 hover:text-white underline">
+          <button
+            onClick={() => { setExternalIdFilter(undefined); setExternalIdInput(""); setActiveTab("wallets"); }}
+            className="self-start text-sm text-gray-500 hover:text-white underline sm:self-auto"
+          >
             필터 해제 (전체 목록)
           </button>
         </div>
@@ -169,12 +172,12 @@ const GameTokenLogsPage: React.FC = () => {
           {tokenOptions.map(t => {
             const bal = balances.find(b => b.token_type === t)?.balance || 0;
             return (
-              <div key={t} className="relative overflow-hidden rounded-xl border border-[#333] bg-[#111] p-5 shadow-lg group hover:border-[#444] transition-all">
+              <div key={t} className="relative overflow-hidden rounded-xl border border-[#333] bg-[#111] p-4 shadow-lg group hover:border-[#444] transition-all sm:p-5">
                 <div className="flex justify-between items-start mb-2">
                   <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">{GAME_TOKEN_LABELS[t]}</span>
                   <Coins className="text-[#333] group-hover:text-[#91F402] transition-colors" size={20} />
                 </div>
-                <div className="text-3xl font-bold text-white mb-4">{bal.toLocaleString()}</div>
+                <div className="text-2xl font-bold text-white mb-4 sm:text-3xl">{bal.toLocaleString()}</div>
 
                 <div className="flex gap-2">
                   <button
@@ -200,7 +203,7 @@ const GameTokenLogsPage: React.FC = () => {
         {/* Split View: Logs & Ledger */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Play Logs with Pagination */}
-          <div className="rounded-xl border border-[#333] bg-[#111] p-5 flex flex-col">
+          <div className="rounded-xl border border-[#333] bg-[#111] p-4 flex flex-col sm:p-5">
             <div className="flex items-center justify-between mb-4 border-b border-[#222] pb-2">
               <h4 className="flex items-center gap-2 text-lg font-bold text-white">
                 <History size={18} className="text-[#91F402]" /> 플레이 로그
@@ -274,7 +277,7 @@ const GameTokenLogsPage: React.FC = () => {
           </div>
 
           {/* Ledger with Pagination */}
-          <div className="rounded-xl border border-[#333] bg-[#111] p-5 flex flex-col">
+          <div className="rounded-xl border border-[#333] bg-[#111] p-4 flex flex-col sm:p-5">
             <div className="flex items-center justify-between mb-4 border-b border-[#222] pb-2">
               <h4 className="flex items-center gap-2 text-lg font-bold text-white">
                 <Coins size={18} className="text-[#91F402]" /> 자금 흐름 (Ledger)
@@ -448,7 +451,7 @@ const GameTokenLogsPage: React.FC = () => {
       {/* Search Bar - Always Visible */}
       <div className="rounded-lg border border-[#333333] bg-[#111111] p-4">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-center gap-2 w-full max-w-xl">
+          <div className="flex w-full max-w-xl flex-col gap-2 sm:flex-row sm:items-center">
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
               <input
@@ -461,7 +464,7 @@ const GameTokenLogsPage: React.FC = () => {
             </div>
             <button
               onClick={handleSearch}
-              className="whitespace-nowrap rounded-md bg-[#2D6B3B] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#91F402] hover:text-black transition-colors"
+              className="w-full whitespace-nowrap rounded-md bg-[#2D6B3B] px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#91F402] hover:text-black sm:w-auto"
             >
               조회
             </button>
@@ -477,7 +480,7 @@ const GameTokenLogsPage: React.FC = () => {
         <>
           {/* Global Tabs */}
           <div className="rounded-lg border border-[#333333] bg-[#111111] p-2">
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-nowrap gap-2 overflow-x-auto whitespace-nowrap pb-1 scrollbar-hide">
               {(
                 [
                   { key: "wallets" as const, label: "전체 지갑 잔액" },
@@ -492,8 +495,8 @@ const GameTokenLogsPage: React.FC = () => {
                   onClick={() => setActiveTab(t.key)}
                   className={
                     activeTab === t.key
-                      ? "rounded-md bg-[#2D6B3B] px-4 py-2 text-sm font-medium text-[#91F402]"
-                      : "rounded-md bg-[#1A1A1A] px-4 py-2 text-sm font-medium text-gray-300 hover:bg-[#2C2C2E]"
+                      ? "shrink-0 rounded-md bg-[#2D6B3B] px-3 py-2 text-xs font-medium text-[#91F402] sm:px-4 sm:text-sm"
+                      : "shrink-0 rounded-md bg-[#1A1A1A] px-3 py-2 text-xs font-medium text-gray-300 hover:bg-[#2C2C2E] sm:px-4 sm:text-sm"
                   }
                 >
                   {t.label}
@@ -515,26 +518,28 @@ const GameTokenLogsPage: React.FC = () => {
                 <h3 className="font-bold text-white">전체 지갑 잔액</h3>
                 <div className="text-sm text-gray-500">전체 조회 모드입니다. 상세 제어는 ID를 검색하세요.</div>
               </div>
-              <table className="w-full text-sm text-left">
-                <thead className="bg-[#1A1A1A] text-gray-400 uppercase text-xs">
-                  <tr>
-                    <th className="px-4 py-3">External ID</th>
-                    <th className="px-4 py-3">토큰</th>
-                    <th className="px-4 py-3 text-right">잔액</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#333]">
-                  {/* Using unfiltered data directly or visible rows */}
-                  {(walletsQuery.data || []).slice(0, 50).map((r, i) => (
-                    <tr key={i} className="hover:bg-[#1A1A1A]">
-                      <td className="px-4 py-3 text-white font-medium">{r.telegram_username || r.nickname || r.external_id || r.user_id}</td>
-                      <td className="px-4 py-3 text-gray-300">{GAME_TOKEN_LABELS[r.token_type] || r.token_type}</td>
-                      <td className="px-4 py-3 text-right text-[#91F402] font-bold">{r.balance}</td>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left">
+                  <thead className="bg-[#1A1A1A] text-gray-400 uppercase text-xs">
+                    <tr>
+                      <th className="px-4 py-3">External ID</th>
+                      <th className="px-4 py-3">토큰</th>
+                      <th className="px-4 py-3 text-right">잔액</th>
                     </tr>
-                  ))}
-                  {walletsQuery.isLoading && <tr><td colSpan={3} className="p-8 text-center"><Loader2 className="animate-spin mx-auto" /></td></tr>}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-[#333]">
+                    {/* Using unfiltered data directly or visible rows */}
+                    {(walletsQuery.data || []).slice(0, 50).map((r, i) => (
+                      <tr key={i} className="hover:bg-[#1A1A1A]">
+                        <td className="px-4 py-3 text-white font-medium">{r.telegram_username || r.nickname || r.external_id || r.user_id}</td>
+                        <td className="px-4 py-3 text-gray-300">{GAME_TOKEN_LABELS[r.token_type] || r.token_type}</td>
+                        <td className="px-4 py-3 text-right text-[#91F402] font-bold">{r.balance}</td>
+                      </tr>
+                    ))}
+                    {walletsQuery.isLoading && <tr><td colSpan={3} className="p-8 text-center"><Loader2 className="animate-spin mx-auto" /></td></tr>}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
 

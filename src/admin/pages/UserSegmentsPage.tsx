@@ -34,11 +34,17 @@ const UserSegmentsPage: React.FC = () => {
 
   const PrimaryButton = ({
     children,
+    className,
     ...props
   }: React.ButtonHTMLAttributes<HTMLButtonElement> & { children: React.ReactNode }) => (
     <button
       type="button"
-      className="inline-flex items-center rounded-md bg-[#2D6B3B] px-4 py-2 text-sm font-medium text-white hover:bg-[#91F402] hover:text-black disabled:cursor-not-allowed disabled:opacity-60"
+      className={[
+        "inline-flex items-center rounded-md bg-[#2D6B3B] px-4 py-2 text-sm font-medium text-white hover:bg-[#91F402] hover:text-black disabled:cursor-not-allowed disabled:opacity-60",
+        className,
+      ]
+        .filter(Boolean)
+        .join(" ")}
       {...props}
     >
       {children}
@@ -47,11 +53,17 @@ const UserSegmentsPage: React.FC = () => {
 
   const SecondaryButton = ({
     children,
+    className,
     ...props
   }: React.ButtonHTMLAttributes<HTMLButtonElement> & { children: React.ReactNode }) => (
     <button
       type="button"
-      className="inline-flex items-center rounded-md border border-[#333333] bg-[#1A1A1A] px-4 py-2 text-sm font-medium text-gray-200 hover:bg-[#2C2C2E] disabled:cursor-not-allowed disabled:opacity-60"
+      className={[
+        "inline-flex items-center rounded-md border border-[#333333] bg-[#1A1A1A] px-4 py-2 text-sm font-medium text-gray-200 hover:bg-[#2C2C2E] disabled:cursor-not-allowed disabled:opacity-60",
+        className,
+      ]
+        .filter(Boolean)
+        .join(" ")}
       {...props}
     >
       {children}
@@ -154,14 +166,14 @@ const UserSegmentsPage: React.FC = () => {
       </header>
 
       <div className="rounded-lg border border-[#333333] bg-[#111111] p-4">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div className="flex flex-wrap items-end gap-2">
-            <div className="flex flex-col">
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
+          <div className="flex w-full flex-wrap items-end gap-2 sm:w-auto">
+            <div className="flex w-full flex-col sm:w-auto">
               <label className="text-xs text-gray-400">external_id</label>
               <input
                 value={externalId}
                 onChange={(e) => setExternalId(e.target.value)}
-                className={inputBase + " max-w-sm"}
+                className={inputBase + " max-w-none sm:max-w-sm"}
                 placeholder="TG Username / ID로 검색..."
                 onKeyDown={(e) => {
                   if (e.key === "Enter") void handleSearch();
@@ -169,8 +181,8 @@ const UserSegmentsPage: React.FC = () => {
               />
             </div>
           </div>
-          <div className="flex gap-2">
-            <SecondaryButton onClick={handleSearch} disabled={isLoading}>
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+            <SecondaryButton onClick={handleSearch} disabled={isLoading} className="w-full justify-center sm:w-auto">
               검색 적용
             </SecondaryButton>
             <SecondaryButton
@@ -178,6 +190,7 @@ const UserSegmentsPage: React.FC = () => {
                 setExternalId("");
                 void refetch();
               }}
+              className="w-full justify-center sm:w-auto"
             >
               초기화
             </SecondaryButton>

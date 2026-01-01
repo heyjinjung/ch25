@@ -189,11 +189,17 @@ const ExternalRankingPage: React.FC = () => {
 
   const PrimaryButton = ({
     children,
+    className,
     ...props
   }: React.ButtonHTMLAttributes<HTMLButtonElement> & { children: React.ReactNode }) => (
     <button
       type="button"
-      className="inline-flex items-center rounded-md bg-[#2D6B3B] px-4 py-2 text-sm font-medium text-white hover:bg-[#91F402] hover:text-black disabled:cursor-not-allowed disabled:opacity-60"
+      className={[
+        "inline-flex items-center rounded-md bg-[#2D6B3B] px-4 py-2 text-sm font-medium text-white hover:bg-[#91F402] hover:text-black disabled:cursor-not-allowed disabled:opacity-60",
+        className,
+      ]
+        .filter(Boolean)
+        .join(" ")}
       {...props}
     >
       {children}
@@ -202,11 +208,17 @@ const ExternalRankingPage: React.FC = () => {
 
   const SecondaryButton = ({
     children,
+    className,
     ...props
   }: React.ButtonHTMLAttributes<HTMLButtonElement> & { children: React.ReactNode }) => (
     <button
       type="button"
-      className="inline-flex items-center rounded-md border border-[#333333] bg-[#1A1A1A] px-4 py-2 text-sm font-medium text-gray-200 hover:bg-[#2C2C2E] disabled:cursor-not-allowed disabled:opacity-60"
+      className={[
+        "inline-flex items-center rounded-md border border-[#333333] bg-[#1A1A1A] px-4 py-2 text-sm font-medium text-gray-200 hover:bg-[#2C2C2E] disabled:cursor-not-allowed disabled:opacity-60",
+        className,
+      ]
+        .filter(Boolean)
+        .join(" ")}
       {...props}
     >
       {children}
@@ -215,17 +227,21 @@ const ExternalRankingPage: React.FC = () => {
 
   return (
     <section className="space-y-5">
-      <header className="flex flex-wrap items-start justify-between gap-3">
+      <header className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold text-[#91F402]">랭킹 입력</h2>
           <p className="mt-1 text-sm text-gray-400">타 플랫폼 입금/게임횟수를 수기로 적어 랭킹에 반영합니다. 숫자는 0 이상으로 입력하세요.</p>
         </div>
-        <div className="flex gap-2">
-          <SecondaryButton onClick={addRow}>
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+          <SecondaryButton onClick={addRow} className="w-full justify-center sm:w-auto">
             <Plus size={18} className="mr-2" />
             행 추가
           </SecondaryButton>
-          <PrimaryButton onClick={saveAll} disabled={upsertMutation.isPending || !isDirty}>
+          <PrimaryButton
+            onClick={saveAll}
+            disabled={upsertMutation.isPending || !isDirty}
+            className="w-full justify-center sm:w-auto"
+          >
             {upsertMutation.isPending ? "저장 중..." : "전체 저장"}
           </PrimaryButton>
         </div>
@@ -249,29 +265,37 @@ const ExternalRankingPage: React.FC = () => {
       </div>
 
       <div className="rounded-lg border border-[#333333] bg-[#0A0A0A] p-3">
-        <div className="flex flex-wrap items-end gap-2">
-          <div className="flex flex-col">
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end">
+          <div className="flex w-full flex-col sm:w-auto">
             <label className="text-xs text-gray-400">행 검색(적용형)</label>
             <input
               value={rowSearchInput}
               onChange={(e) => setRowSearchInput(e.target.value)}
-              className={inputBase + " w-72"}
+              className={inputBase + " sm:w-72"}
               placeholder="external_id / memo / user_id"
               onKeyDown={(e) => {
                 if (e.key === "Enter") applyRowSearch();
               }}
             />
           </div>
-          <SecondaryButton onClick={applyRowSearch}>검색 적용</SecondaryButton>
-          <SecondaryButton onClick={clearRowSearch} disabled={!rowSearchInput && !rowSearchApplied}>
-            초기화
-          </SecondaryButton>
+          <div className="flex w-full gap-2 sm:w-auto">
+            <SecondaryButton onClick={applyRowSearch} className="w-full justify-center sm:w-auto">
+              검색 적용
+            </SecondaryButton>
+            <SecondaryButton
+              onClick={clearRowSearch}
+              disabled={!rowSearchInput && !rowSearchApplied}
+              className="w-full justify-center sm:w-auto"
+            >
+              초기화
+            </SecondaryButton>
+          </div>
 
-          <div className="ml-auto flex flex-wrap items-end gap-2">
-            <div className="flex flex-col">
+          <div className="flex w-full flex-wrap items-end gap-2 sm:ml-auto sm:w-auto">
+            <div className="flex w-full flex-col sm:w-auto">
               <label className="text-xs text-gray-400">페이지 크기</label>
               <select
-                className={inputBase + " w-32"}
+                className={inputBase + " sm:w-32"}
                 value={pageSize}
                 onChange={(e) => {
                   setPageSize(Number(e.target.value));

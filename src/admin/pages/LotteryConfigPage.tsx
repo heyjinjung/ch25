@@ -78,6 +78,45 @@ const mapErrorDetail = (error: unknown): string => {
   return (error as any)?.message ?? "요청 처리 중 오류가 발생했습니다.";
 };
 
+/**
+ * Calculate probability % and rarity label for intuitive weight visualization
+ */
+const getProbabilityInfo = (weight: number, totalWeight: number) => {
+  if (totalWeight <= 0) return { percent: 0, label: "-", color: "gray", bgColor: "", expected100: 0 };
+
+  const percent = (weight / totalWeight) * 100;
+
+  let label: string;
+  let color: string;
+  let bgColor: string;
+
+  if (percent >= 30) {
+    label = "자주";
+    color = "#91F402";
+    bgColor = "bg-[#91F402]";
+  } else if (percent >= 15) {
+    label = "보통";
+    color = "#22D3EE";
+    bgColor = "bg-[#22D3EE]";
+  } else if (percent >= 5) {
+    label = "희귀";
+    color = "#F59E0B";
+    bgColor = "bg-[#F59E0B]";
+  } else if (percent >= 1) {
+    label = "매우 희귀";
+    color = "#EF4444";
+    bgColor = "bg-[#EF4444]";
+  } else {
+    label = "전설급";
+    color = "#A855F7";
+    bgColor = "bg-[#A855F7]";
+  }
+
+  const expected100 = Math.round(percent);
+
+  return { percent, label, color, bgColor, expected100 };
+};
+
 const LotteryConfigPage: React.FC = () => {
   const { addToast } = useToast();
   const queryClient = useQueryClient();
@@ -348,6 +387,7 @@ const LotteryConfigPage: React.FC = () => {
                       <tr>
                         <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-400">상품명</th>
                         <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-400">가중치</th>
+                        <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-[#91F402]">확률 / 희소성</th>
                         <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-400">재고</th>
                         <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-400">보상 타입</th>
                         <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-400">보상 값</th>
@@ -371,6 +411,34 @@ const LotteryConfigPage: React.FC = () => {
                               className="w-full rounded-md border border-[#333333] bg-[#111111] px-2 py-1 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
                               {...form.register(`prizes.${idx}.weight`, { valueAsNumber: true })}
                             />
+                          </td>
+                          <td className="px-3 py-2">
+                            {(() => {
+                              const totalWeight = prizes.fields.reduce((sum, p) => sum + (p.weight || 0), 0);
+                              const info = getProbabilityInfo(field.weight || 0, totalWeight);
+                              return (
+                                <div className="space-y-1 min-w-[100px]">
+                                  <div className="relative h-2 w-full rounded-full bg-[#333333] overflow-hidden">
+                                    <div
+                                      className={`absolute left-0 top-0 h-full rounded-full ${info.bgColor || 'bg-gray-500'}`}
+                                      style={{ width: `${Math.min(info.percent, 100)}%` }}
+                                    />
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-xs font-bold" style={{ color: info.color }}>
+                                      {info.percent.toFixed(1)}%
+                                    </span>
+                                    <span
+                                      className="px-1 py-0.5 rounded text-[9px] font-bold"
+                                      style={{ backgroundColor: `${info.color}20`, color: info.color }}
+                                    >
+                                      {info.label}
+                                    </span>
+                                  </div>
+                                  <span className="text-[9px] text-gray-500">100회당 ~{info.expected100}회</span>
+                                </div>
+                              );
+                            })()}
                           </td>
                           <td className="px-3 py-2">
                             <input
