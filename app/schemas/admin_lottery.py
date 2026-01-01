@@ -34,7 +34,7 @@ class AdminLotteryConfigCreate(AdminLotteryConfigBase):
 class AdminLotteryConfigUpdate(BaseModel):
     name: Optional[str] = None
     is_active: Optional[bool] = None
-    max_daily_plays: Optional[int] = None
+    max_daily_plays: Optional[int] = Field(None, validation_alias="max_daily_tickets")
     prizes: Optional[List[AdminLotteryPrizeBase]] = None
 
     model_config = ConfigDict(from_attributes=True, validate_by_name=True)

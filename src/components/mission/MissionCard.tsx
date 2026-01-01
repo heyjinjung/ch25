@@ -57,7 +57,7 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
       if (window.Telegram?.WebApp?.shareToStory) {
         const appUrl = "https://t.me/jm956_bot/ccjm";
         window.Telegram.WebApp.shareToStory("https://placehold.co/1080x1920/png?text=CCJM+Mission!", {
-          text: `CCJM?ì„œ ë¯¸ì…˜???„ë£Œ?˜ê³  ë³´ìƒ??ë°›ìœ¼?¸ìš”!`,
+          text: "CCJM에서 미션을 완료하고 보상을 받아보세요!",
           widget_link: { url: appUrl, name: "Play now" },
         });
       }
