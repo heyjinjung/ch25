@@ -139,6 +139,14 @@ const GameTokenLogsPage: React.FC = () => {
   };
 
   // --- HELPERS ---
+  const getUserDisplayName = (row: any) => {
+    if (row.telegram_username) {
+      const username = String(row.telegram_username);
+      const clean = username.startsWith("@") ? username : `@${username}`;
+      return clean;
+    }
+    return row.nickname || row.external_id || String(row.user_id || "Unknown");
+  };
 
 
 
