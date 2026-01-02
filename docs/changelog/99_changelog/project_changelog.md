@@ -27,6 +27,9 @@
 - **Routing**: 운영에서 Telegram initData 없는 경우 `/login`으로 새는 경로를 줄이도록 `RequireAuth` 동작 조정.
 - **Testing**: `pytest -q` 91 passed.
 
+## 2026-01-02 (Ops: Launch promo plan 1/2~1/6)
+- **Ops**: 배포 직후 유저 유치/홍보 운영 플랜(일자별 실행 + 카피 + KPI) 문서 추가.
+
 
 # 프로젝트 변경 이력
 

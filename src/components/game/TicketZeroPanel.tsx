@@ -47,12 +47,6 @@ const TicketZeroPanel: React.FC<Props> = ({ tokenType, onClaimSuccess }) => {
   const queryClient = useQueryClient();
   const [vaultModalOpen, setVaultModalOpen] = useState(false);
 
-  // Feature temporarily disabled
-  return null;
-
-  // Feature temporarily disabled
-  // return null; // Removed early return to run hooks (satisfy React rules)
-
   const ui = useQuery({
     queryKey: ["ui-config", "ticket_zero"],
     queryFn: () => getUiConfig("ticket_zero"),
@@ -181,9 +175,6 @@ const TicketZeroPanel: React.FC<Props> = ({ tokenType, onClaimSuccess }) => {
       addToast("지급에 실패했어요. 잠시 후 다시 시도해주세요.", "error");
     },
   });
-
-  // Feature temporarily disabled
-  return null;
 
   return (
     <div className="relative overflow-hidden rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-[clamp(12px,2.6vw,14px)] text-white/85">

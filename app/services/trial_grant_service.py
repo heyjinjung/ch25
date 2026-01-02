@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import random
 from datetime import datetime, time, timedelta, timezone
 from zoneinfo import ZoneInfo
 
@@ -55,6 +56,34 @@ class TrialGrantService:
         ).scalar_one()
         return int(total or 0)
 
+    def _has_any_trial_grant(self, db: Session, *, user_id: int, token_type: GameTokenType) -> bool:
+        row = db.execute(
+            select(UserGameWalletLedger.id).where(
+                UserGameWalletLedger.user_id == user_id,
+                UserGameWalletLedger.token_type == token_type,
+                UserGameWalletLedger.delta > 0,
+                UserGameWalletLedger.reason == "TRIAL_GRANT",
+            )
+        ).first()
+        return row is not None
+
+    def _should_grant_after_first(self, db: Session, *, user_id: int, token_type: GameTokenType) -> bool:
+        """Return True if we should proceed with a trial grant for non-first-time users.
+
+        Default is always-true (legacy behavior). Can be tuned via env vars:
+        - TRIAL_GRANT_PROB_AFTER_FIRST: float in [0, 1]
+        - TRIAL_GRANT_FIRST_TIME_GUARANTEE: bool
+        """
+
+        has_any = self._has_any_trial_grant(db, user_id=user_id, token_type=token_type)
+        if not has_any and bool(getattr(self.settings, "trial_grant_first_time_guarantee", True)):
+            return True
+
+        raw_prob = getattr(self.settings, "trial_grant_prob_after_first", 1.0)
+        prob = 1.0 if raw_prob is None else float(raw_prob)
+        prob = max(0.0, min(1.0, prob))
+        return random.random() < prob
+
     def grant_daily_if_empty(self, db: Session, user_id: int, token_type: GameTokenType) -> tuple[int, int, str | None]:
         """Grant 1 token if balance is 0 and not already granted today.
 
@@ -103,6 +132,11 @@ class TrialGrantService:
             end_utc=end_utc,
         )
         if granted_today >= daily_cap:
+            balance_now = self.wallet_service.get_balance(db, user_id, token_type)
+            return 0, balance_now, None
+
+        # Funnel-split policy: first-ever grant is guaranteed; subsequent grants can be probabilistic.
+        if not self._should_grant_after_first(db, user_id=user_id, token_type=token_type):
             balance_now = self.wallet_service.get_balance(db, user_id, token_type)
             return 0, balance_now, None
 

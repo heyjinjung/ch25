@@ -38,6 +38,17 @@ const InventoryPage: React.FC = () => {
         setActiveTab(tab);
     };
 
+    const items = Array.isArray(data?.items) ? data.items : [];
+    const wallet = data?.wallet && typeof data.wallet === "object" && !Array.isArray(data.wallet) ? data.wallet : {};
+
+    const diamondBalance = useMemo(() => {
+        const diamond = items.find((item) => item.item_type === 'DIAMOND');
+        return Number(diamond?.quantity ?? 0);
+    }, [items]);
+
+    const goldVoucherCost = 30;
+    const diamondShortage = Math.max(0, goldVoucherCost - diamondBalance);
+
     if (isLoading) {
         return (
             <div className="mx-auto w-full max-w-lg py-16 flex flex-col items-center justify-center">
@@ -60,17 +71,6 @@ const InventoryPage: React.FC = () => {
             </div>
         );
     }
-
-    const items = Array.isArray(data?.items) ? data.items : [];
-    const wallet = data?.wallet && typeof data.wallet === "object" && !Array.isArray(data.wallet) ? data.wallet : {};
-
-    const diamondBalance = useMemo(() => {
-        const diamond = items.find((item) => item.item_type === 'DIAMOND');
-        return Number(diamond?.quantity ?? 0);
-    }, [items]);
-
-    const goldVoucherCost = 30;
-    const diamondShortage = Math.max(0, goldVoucherCost - diamondBalance);
 
     return (
         <div className="mx-auto w-full max-w-lg pb-[calc(96px+env(safe-area-inset-bottom))]">

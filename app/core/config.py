@@ -105,6 +105,24 @@ class Settings(BaseSettings):
             "trial_weekly_cap",
         ),
     )
+
+    # Optional: probabilistic trial grants after the first-ever grant (funnel split).
+    # 1.0 keeps legacy behavior (always grant when eligible).
+    trial_grant_prob_after_first: float = Field(
+        1.0,
+        validation_alias=AliasChoices(
+            "TRIAL_GRANT_PROB_AFTER_FIRST",
+            "trial_grant_prob_after_first",
+        ),
+    )
+    # If True, the first-ever trial grant is always granted even when prob_after_first is low.
+    trial_grant_first_time_guarantee: bool = Field(
+        True,
+        validation_alias=AliasChoices(
+            "TRIAL_GRANT_FIRST_TIME_GUARANTEE",
+            "trial_grant_first_time_guarantee",
+        ),
+    )
     tiered_grant_enabled: bool = Field(
         False,
         validation_alias=AliasChoices(
