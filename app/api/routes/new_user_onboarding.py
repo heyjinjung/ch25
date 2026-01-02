@@ -82,42 +82,12 @@ def status(db: Session = Depends(get_db), user_id: int = Depends(get_current_use
         )
 
     telegram_linked = bool(getattr(user, "telegram_id", None))
-    if not telegram_linked:
-        return NewUserStatusResponse(
-            eligible=False,
-            reason="TELEGRAM_NOT_LINKED",
-            is_new_user_window_active=False,
-            window_ends_at_utc=None,
-            seconds_left=None,
-            telegram_linked=False,
-            existing_member_by_external_deposit=False,
-            deposit_amount=0,
-            total_play_count=0,
-            bonus_cap=10_000,
-            missions=[],
-        )
 
     # Determine "new user" window from first_login_at (Telegram-native entry) with fallback to created_at.
     created = _to_utc_naive(getattr(user, "first_login_at", None) or getattr(user, "created_at", now_utc))
     window_ends_at = created + timedelta(hours=24)
     seconds_left = max(int((window_ends_at - now_utc).total_seconds()), 0)
     window_active = now_utc < window_ends_at
-
-    # Conservative eligibility: only show the page within the 24h window.
-    if not window_active:
-        return NewUserStatusResponse(
-            eligible=False,
-            reason="NEW_USER_WINDOW_EXPIRED",
-            is_new_user_window_active=False,
-            window_ends_at_utc=window_ends_at,
-            seconds_left=0,
-            telegram_linked=True,
-            existing_member_by_external_deposit=False,
-            deposit_amount=0,
-            total_play_count=0,
-            bonus_cap=10_000,
-            missions=[],
-        )
 
     activity = db.query(UserActivity).filter(UserActivity.user_id == user_id).first()
     has_charge_history = bool(getattr(activity, "last_charge_at", None))
@@ -159,16 +129,19 @@ def status(db: Session = Depends(get_db), user_id: int = Depends(get_current_use
             reward_amount=m.reward_amount
         ))
 
+    # B) 정책: 이제 eligible은 "대상자 필터링"이 아니라, status가 정상 제공되는지에 대한 필드로만 유지한다.
+    # - 모든 로그인 유저에게 웰컴 미션을 노출하고
+    # - 4개 미션 완료 전까지 계속 뜨는 UX는 프론트에서 missions 진행도로 제어한다.
     return NewUserStatusResponse(
-        eligible=(not existing_member_by_external_deposit),
+        eligible=True,
         reason=None if not existing_member_by_external_deposit else "EXTERNAL_DEPOSIT_HISTORY",
-        is_new_user_window_active=True,
+        is_new_user_window_active=window_active,
         window_ends_at_utc=window_ends_at,
         seconds_left=seconds_left,
-        telegram_linked=True,
+        telegram_linked=telegram_linked,
         existing_member_by_external_deposit=existing_member_by_external_deposit,
         deposit_amount=deposit_amount,
         total_play_count=total_play_count,
         bonus_cap=10_000,
-        missions=missions_info
+        missions=missions_info,
     )

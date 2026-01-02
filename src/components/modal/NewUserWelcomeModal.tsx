@@ -20,7 +20,6 @@ interface NewUserWelcomeModalProps {
 }
 
 const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) => {
-    const [dontShowAgain, setDontShowAgain] = useState(false);
     const [isVerifying, setIsVerifying] = useState(false);
     const { addToast } = useToast();
     const { notification, impact } = useHaptic();
@@ -47,9 +46,6 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) =>
     const activeData = status || lastDataRef.current;
 
     const handleClose = () => {
-        if (dontShowAgain) {
-            localStorage.setItem("hideNewUserWelcome", "true");
-        }
         onClose();
     };
 
@@ -93,10 +89,17 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) =>
         }
     };
 
-    // If no data and no previous data, or ineligible (and not just refetching)
-    if (!activeData || (!activeData.eligible && !isFetching)) {
-        if (activeData && !activeData.eligible && !isFetching) {
-            console.log("[NewUserWelcomeModal] Not showing because eligible=false. Reason:", activeData.reason);
+    // Show a loading shell instead of silently disappearing.
+    if (!activeData) {
+        if (isFetching) {
+            return (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                    <div className="w-full max-w-md rounded-3xl border border-white/10 bg-black/60 p-8 text-center text-white/70">
+                        <div className="mx-auto mb-4 h-10 w-10 rounded-full border-2 border-white/10 border-t-figma-accent animate-spin" />
+                        웰컴 미션을 불러오는 중...
+                    </div>
+                </div>
+            );
         }
         return null;
     }
@@ -104,7 +107,31 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) =>
     const { missions, seconds_left } = activeData;
 
     if (!missions || missions.length === 0) {
-        return null;
+        // Missions not configured yet; keep UX visible so 운영에서 문제를 인지할 수 있게 한다.
+        return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                <div className="relative w-full max-w-md bg-gradient-to-b from-slate-900 to-black border-2 border-emerald-500/30 rounded-3xl shadow-2xl shadow-emerald-500/20 overflow-hidden">
+                    <button
+                        onClick={handleClose}
+                        className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-red-500 hover:bg-red-600 transition-colors"
+                    >
+                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                    <div className="p-8 text-center">
+                        <h2 className="text-xl font-black text-white">웰컴 미션 준비중</h2>
+                        <p className="mt-2 text-sm text-white/60">현재 NEW_USER 미션이 활성화되어 있지 않습니다.</p>
+                        <button
+                            onClick={handleClose}
+                            className="mt-6 w-full py-4 rounded-xl bg-figma-primary text-white font-black text-lg shadow-lg shadow-emerald-500/30 hover:brightness-110 active:scale-95 transition-all uppercase tracking-wide"
+                        >
+                            확인
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
     }
 
     const getMissionIcon = (actionType: string | null, targetValue: number) => {
@@ -126,6 +153,14 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) =>
 
     const completedCount = missions.filter((m: any) => m.is_completed).length;
     const totalCount = missions.length;
+
+    // Requirement: keep showing until 4 missions are completed.
+    // If 4+ missions exist, require completion of the first 4 by order.
+    const requiredMissions = missions.slice(0, 4);
+    const requiredCompletedCount = requiredMissions.filter((m: any) => m.is_completed).length;
+    if (requiredMissions.length > 0 && requiredCompletedCount >= requiredMissions.length) {
+        return null;
+    }
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
@@ -226,16 +261,6 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) =>
                         </span>
                     </div>
 
-                    {/* Don't Show Again */}
-                    <label className="flex items-center justify-center gap-2 cursor-pointer">
-                        <input
-                            type="checkbox"
-                            checked={dontShowAgain}
-                            onChange={(e) => setDontShowAgain(e.target.checked)}
-                            className="w-4 h-4 rounded border-white/20 bg-white/10 text-emerald-500 focus:ring-emerald-500"
-                        />
-                        <span className="text-xs text-white/50">다시 보지 않기</span>
-                    </label>
                 </div>
             </div>
         </div>

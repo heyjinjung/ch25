@@ -94,6 +94,23 @@
 - [ ] 헬스 체크: `curl http://127.0.0.1:8000/` (서버 내부)
 - [ ] nginx 프록시 체크: `curl https://yourdomain.com/health`
 
+### 7.1) 빌드 시간 단축 팁
+
+전체 빌드(`--build`)는 약 5-7분 소요됩니다. 변경된 서비스만 빌드하면 시간을 크게 단축할 수 있습니다:
+
+```bash
+# 프론트엔드만 변경된 경우 (UI/CSS/TSX 변경)
+docker compose up -d --build frontend && docker compose restart nginx
+
+# 백엔드만 변경된 경우 (Python 코드/API 변경)
+docker compose up -d --build backend && docker compose exec backend alembic upgrade head && docker compose restart nginx
+
+# 전체 빌드 필요 시 (requirements.txt, 다중 서비스 변경)
+docker compose up -d --build
+```
+
+> 💡 변경된 파일 확인: `git diff --name-only HEAD~1` 명령으로 어떤 서비스가 변경되었는지 확인 가능.
+
 ## 9) 운영 서버 상세 (Reference)
 
 | 항목 | 상세 내용 |
@@ -178,3 +195,22 @@ Nginx는 서비스의 관문으로, 백엔드나 프론트엔드가 정상이어
 - `.env`/시크릿(토큰/비밀번호/JWT)은 Git에 커밋하지 않는 것을 권장합니다.
 - 이미 커밋/공유된 시크릿이 있다면 **즉시 회전(rotating)** 하세요.
 - 운영에서 `TEST_MODE=true`는 인증/토큰/게임 토큰 소비 동작에 영향을 줄 수 있으므로 금지 권장.
+
+1ab131a37a6599a1a6978e7db2a42704f22f50d9
+18dfc668f33643f1a24a625a586c7d26e062668e
+ccb4486ec16707543c3303759541f2e82a89ae95
+f4a5088fd944fc3c4bb5a9bf1b2b3ceb08ff4f72
+331d1bbd6c6167264965b24c4c8a2620976abf49
+
+지금 로컬에는 2개의 깃 계정이 있어 
+혜진정 / 마마1281
+
+현재 IDE에서 마음대로 깃커밋이 진행되면서
+브랜치가 꼬이고 있고
+이걸 마마1281에서 최신화 된 내용을 최종적으로 혜진이 계정에 피알 발행하는걸로 - 로컬은 기준이 성립
+즉 현재 로컬은 마마1281의 최신화된 커밋을 기준으로 하지만, 오리지날일 혜진정 계정의 커밋은 최신화 되지 않은 상태를 피알로 보완하는거야 
+그리고 SSH 서버는 마마1281의 최신화된 커밋을 서버 빌드 하는 걸로 기준 정립이야
+
+현재 서버 빌드도 몇차례 꼬이면서 오류가 지속되고 있고
+마이그레이션과 동기화 웹 훅 등 요소 신경써야하며
+서버의 안전한 건강확보도 중요해 

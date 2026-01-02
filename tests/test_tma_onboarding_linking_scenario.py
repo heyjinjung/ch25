@@ -158,13 +158,14 @@ def test_link_token_flow_attaches_existing_user_and_preserves_identity(client: T
         assert refreshed.telegram_link_nonce is None
         assert refreshed.telegram_link_nonce_expires_at is None
 
-        # 4) New-user status must be NOT eligible for users with external deposit history
+        # 4) Policy B: status endpoint is available to all logged-in users.
+        # Deposit history is still surfaced for observability, but no longer gates eligibility.
         status_resp = client.get("/api/new-user/status", headers={"Authorization": f"Bearer {tg_body['access_token']}"})
         assert status_resp.status_code == 200
         status_body = status_resp.json()
         assert status_body["telegram_linked"] is True
         assert status_body["existing_member_by_external_deposit"] is True
-        assert status_body["eligible"] is False
+        assert status_body["eligible"] is True
         assert status_body["reason"] == "EXTERNAL_DEPOSIT_HISTORY"
 
         # 5) Token cannot be used to bind a DIFFERENT Telegram account after linkage.

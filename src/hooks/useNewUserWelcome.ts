@@ -4,19 +4,14 @@ export const useNewUserWelcome = () => {
     const [showModal, setShowModal] = useState(false);
 
     useEffect(() => {
-        // Check if user has dismissed the modal
-        const hideWelcome = localStorage.getItem("hideNewUserWelcome");
+        // Policy B: show to all users; keep showing until missions are completed (modal self-hides when done).
+        console.log("[useNewUserWelcome] Starting timer...");
+        const timer = setTimeout(() => {
+            console.log("[useNewUserWelcome] Showing Modal now.");
+            setShowModal(true);
+        }, 1000); // 1 second delay
 
-        // Show modal after a short delay if not dismissed
-        if (!hideWelcome) {
-            console.log("[useNewUserWelcome] Modal eligible, starting timer...");
-            const timer = setTimeout(() => {
-                console.log("[useNewUserWelcome] Showing Modal now.");
-                setShowModal(true);
-            }, 1000); // 1 second delay
-
-            return () => clearTimeout(timer);
-        }
+        return () => clearTimeout(timer);
     }, []);
 
     const closeModal = () => {

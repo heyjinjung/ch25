@@ -12,7 +12,7 @@ const RequireAuth: React.FC = () => {
   const location = useLocation();
 
   const allowNonTelegramLogin =
-    import.meta.env.DEV || import.meta.env.VITE_ALLOW_NON_TELEGRAM_LOGIN === "true";
+    import.meta.env.DEV;
 
   const didAttemptRef = useRef(false);
   const [authError, setAuthError] = useState<string | null>(null);

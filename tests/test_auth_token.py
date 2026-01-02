@@ -30,6 +30,7 @@ def test_token_issues_and_logs_login(client, session_factory, user_id, external_
         user = session.get(User, user_id)
         assert user is not None
         assert user.external_id == external_id
+        assert user.first_login_at is not None
         assert user.last_login_at is not None
         assert user.last_login_ip
         # last_login_at should be recent (within 5 minutes)
