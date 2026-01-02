@@ -17,7 +17,11 @@ class VaultStatusResponse(BaseModel):
     available_balance: int = 0
     expires_at: datetime | None = None
 
-    cash_balance: int
+    # Single-SoT rollout explicit amounts
+    vault_amount_total: int = 0
+    vault_amount_reserved: int = 0
+    vault_amount_available: int = 0
+
     ticket_count: int = 0
     vault_fill_used_at: datetime | None = None
 

@@ -1,4 +1,5 @@
 """Reward service for coupons, points, and game tickets."""
+from datetime import datetime
 from typing import Any
 
 from sqlalchemy.orm import Session
@@ -71,6 +72,43 @@ class RewardService:
         else:
             db.flush()
 
+    def _grant_vault_locked(
+        self,
+        db: Session,
+        user_id: int,
+        amount: int,
+        reason: str | None = None,
+        label: str | None = None,
+        meta: dict[str, Any] | None = None,
+        commit: bool = True,
+    ) -> None:
+        if amount == 0:
+            return
+        if amount < 0:
+            raise InvalidConfigError("INVALID_POINT_AMOUNT")
+
+        # Local import to avoid circular dependencies.
+        from app.services.vault_service import VaultService  # pylint: disable=import-outside-toplevel
+
+        q = db.query(User).filter(User.id == user_id)
+        if db.bind and db.bind.dialect.name != "sqlite":
+            q = q.with_for_update()
+        user = q.one_or_none()
+        if user is None:
+            raise InvalidConfigError("USER_NOT_FOUND")
+
+        now = datetime.utcnow()
+        user.vault_locked_balance = (user.vault_locked_balance or 0) + amount
+        VaultService._ensure_locked_expiry(user, now)
+        VaultService.sync_legacy_mirror(user)
+        db.add(user)
+
+        if commit:
+            db.commit()
+            db.refresh(user)
+        else:
+            db.flush()
+
     def grant_coupon(self, db: Session, user_id: int, coupon_type: str, meta: dict[str, Any] | None = None) -> None:
         """Grant a coupon to a user (DEPRECATED/REMOVED)."""
         # System disabled per admin request.
@@ -122,6 +160,8 @@ class RewardService:
         if reward_type == "POINT":
             reason = (meta or {}).get("reason") if meta else None
             is_game_reward = reason in {"dice_play", "roulette_spin", "lottery_play"}
+            source = (meta or {}).get("source")
+            is_season_pass_reward = isinstance(source, str) and source.startswith("SEASON_PASS")
 
             # SOT: POINT는 '캐시'가 아니며, 게임 보상 POINT를 재화로 쌓지 않습니다.
             # 옵션: XP_FROM_GAME_REWARD=true인 경우에만 '게임 보상' POINT를 시즌 XP로 전환.
@@ -134,7 +174,10 @@ class RewardService:
                 return
 
             # 게임 외 사유(어드민 수동 지급 등)만 cash_balance(=포인트/코인성 잔고)로 적립
-            self.grant_point(db, user_id=user_id, amount=reward_amount, reason=reason)
+            if is_season_pass_reward:
+                self._grant_vault_locked(db, user_id=user_id, amount=reward_amount, reason=reason, meta=meta)
+            else:
+                self.grant_point(db, user_id=user_id, amount=reward_amount, reason=reason)
             return
 
             if is_game_reward and season_pass:
@@ -159,7 +202,12 @@ class RewardService:
                     (GameTokenType.DICE_TOKEN, 3),
                 ]
             elif reward_amount == 7:  # Level 7: 1만 P + 골드 키 1개
-                self.grant_point(db, user_id=user_id, amount=10000, reason="LEVEL_BUNDLE_7")
+                source = (meta or {}).get("source")
+                is_season_pass_reward = isinstance(source, str) and source.startswith("SEASON_PASS")
+                if is_season_pass_reward:
+                    self._grant_vault_locked(db, user_id=user_id, amount=10000, reason="LEVEL_BUNDLE_7", meta=meta)
+                else:
+                    self.grant_point(db, user_id=user_id, amount=10000, reason="LEVEL_BUNDLE_7")
                 bundle_items = [(GameTokenType.GOLD_KEY, 1)]
             elif reward_amount == 12:  # Level 14: 스페셜 번들 (룰5+주5+복2)
                 bundle_items = [
@@ -168,7 +216,12 @@ class RewardService:
                     (GameTokenType.LOTTERY_TICKET, 2),
                 ]
             elif reward_amount == 15:  # Level 15: 골드 키 2개 + 10만 P
-                self.grant_point(db, user_id=user_id, amount=100000, reason="LEVEL_BUNDLE_15")
+                source = (meta or {}).get("source")
+                is_season_pass_reward = isinstance(source, str) and source.startswith("SEASON_PASS")
+                if is_season_pass_reward:
+                    self._grant_vault_locked(db, user_id=user_id, amount=100000, reason="LEVEL_BUNDLE_15", meta=meta)
+                else:
+                    self.grant_point(db, user_id=user_id, amount=100000, reason="LEVEL_BUNDLE_15")
                 bundle_items = [(GameTokenType.GOLD_KEY, 2)]
             elif reward_amount == 30:  # Level 17: 메가 티켓 번들 (룰10+주10+복10)
                 bundle_items = [
@@ -177,7 +230,12 @@ class RewardService:
                     (GameTokenType.LOTTERY_TICKET, 10),
                 ]
             elif reward_amount == 20:  # Level 20: 다이아몬드 키 3개 + 30만 P (관리자)
-                self.grant_point(db, user_id=user_id, amount=300000, reason="LEVEL_BUNDLE_20")
+                source = (meta or {}).get("source")
+                is_season_pass_reward = isinstance(source, str) and source.startswith("SEASON_PASS")
+                if is_season_pass_reward:
+                    self._grant_vault_locked(db, user_id=user_id, amount=300000, reason="LEVEL_BUNDLE_20", meta=meta)
+                else:
+                    self.grant_point(db, user_id=user_id, amount=300000, reason="LEVEL_BUNDLE_20")
                 bundle_items = [(GameTokenType.DIAMOND_KEY, 3)]
             elif reward_amount == 4:  # Legacy/Small: Mini Ticket bomb (Roulette 2 + Dice 2)
                 bundle_items = [

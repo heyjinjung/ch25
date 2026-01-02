@@ -11,7 +11,7 @@ from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 from fastapi import HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -265,30 +265,10 @@ class VaultService:
         # Keep legacy mirror consistent even if other code wrote vault_balance directly.
         # (This is a cheap assignment and helps avoid stale UI.)
         self.sync_legacy_mirror(user)
-        
-        # VIP Unlock Check (Lazy)
-        if int(getattr(user, "total_charge_amount", 0) or 0) >= 100_000:
-            locked = int(getattr(user, "vault_locked_balance", 0) or 0)
-            if locked > 0:
-                mutated = True
-                vip_unlock_amount = locked
-                user.vault_locked_balance = 0
-                self.sync_legacy_mirror(user)
-                RewardService().grant_point(
-                    db,
-                    user_id=user.id,
-                    amount=vip_unlock_amount,
-                    reason="VAULT_UNLOCK",
-                    label="VIP_UNLOCK",
-                    meta={
-                        "trigger": "VIP_LAZY_UNLOCK",
-                        "total_charge": user.total_charge_amount,
-                        "unlocked_amount": vip_unlock_amount
-                    },
-                    commit=False
-                )
-                db.add(user)
 
+        # VIP Unlock Check (Lazy)
+        # NOTE: In single-SoT rollout, do NOT migrate locked → cash_balance on status fetch.
+        # VIP behavior should be expressed as eligibility/withdraw rules, not as a balance transfer.
         if mutated:
             db.add(user)
             db.commit()
@@ -298,6 +278,23 @@ class VaultService:
         # Do not auto-seed on status fetch. The initial seed is granted on actual funnel events
         # (e.g., 신규회원 주사위 LOSE 시 보관, 또는 무료 fill 사용 시).
         return eligible, user, False
+
+    def get_withdrawal_reserved_amount(self, db: Session, user_id: int) -> int:
+        from app.models.vault_withdrawal_request import VaultWithdrawalRequest
+
+        q = (
+            db.query(func.coalesce(func.sum(VaultWithdrawalRequest.amount), 0))
+            .filter(VaultWithdrawalRequest.user_id == user_id, VaultWithdrawalRequest.status == "PENDING")
+        )
+        val = q.scalar() or 0
+        return int(val)
+
+    def get_vault_amounts(self, db: Session, user_id: int) -> tuple[int, int, int]:
+        user = self._get_or_create_user(db, user_id)
+        total = int(getattr(user, "vault_locked_balance", 0) or 0)
+        reserved = self.get_withdrawal_reserved_amount(db=db, user_id=user_id)
+        available = max(total - reserved, 0)
+        return total, reserved, available
 
     def fill_free_once(self, db: Session, user_id: int, now: datetime | None = None) -> tuple[bool, User, int, datetime]:
         now_dt = now or datetime.utcnow()
@@ -363,7 +360,7 @@ class VaultService:
     ) -> int:
         """Process external ranking "deposit increased" signal.
 
-        Returns unlock_amount (cash granted) for observability.
+        Returns unlock_amount (legacy: cash granted) for observability.
 
         Phase 1 responsibility split:
         - External ranking service detects delta and calls this.
@@ -396,120 +393,17 @@ class VaultService:
         # 2. Sync Total Charge (Always)
         user.total_charge_amount = int(new_amount)
 
-        # 3. VIP Check (Charge >= 100,000)
-        vip_unlock_amount = 0
-        if user.total_charge_amount >= 100_000:
-            locked = int(user.vault_locked_balance or 0)
-            if locked > 0:
-                vip_unlock_amount = locked
-                user.vault_locked_balance = 0
-                self.sync_legacy_mirror(user)
-                
-                RewardService().grant_point(
-                    db,
-                    user_id=user.id,
-                    amount=vip_unlock_amount,
-                    reason="VAULT_UNLOCK",
-                    label="VIP_UNLOCK",
-                    meta={
-                        "trigger": "VIP_TOTAL_CHARGE_REACHED",
-                        "total_charge": user.total_charge_amount,
-                        "unlocked_amount": vip_unlock_amount
-                    },
-                    commit=False
-                )
-                db.add(user)
-                
-                if commit:
-                    db.commit()
-                else:
-                    db.flush()
-                return vip_unlock_amount
+        # Phase 3 (Single-SoT rollout): stop writing cash_balance from "unlock" flows.
+        # The legacy behavior migrated locked -> cash via RewardService.grant_point().
+        # For now, deposit signals only update total_charge_amount; unlock semantics will be
+        # redefined via eligibility/withdraw rules rather than balance transfers.
 
-        # 4. Phase 1 Tier Logic
-        unlock_target = 0
-        tier = None
-        
-        # Try DB-configured tiers
-        program = Vault2Service().get_default_program(db, ensure=False)
-        rules = getattr(program, "unlock_rules_json", {}) or {}
-        p1_config = rules.get("phase1_deposit_unlock", {}) or {}
-        tiers = p1_config.get("tiers", []) # List[dict] with min_deposit_delta, unlock_amount
-        
-        if tiers:
-            # Tiers should be sorted by delta desc
-            sorted_tiers = sorted(tiers, key=lambda x: x.get("min_deposit_delta", 0), reverse=True)
-            for t in sorted_tiers:
-                m_delta = t.get("min_deposit_delta", 0)
-                u_amt = t.get("unlock_amount", 0)
-                if deposit_delta >= m_delta:
-                    unlock_target = u_amt
-                    tier = f"TIER_{m_delta}"
-                    break
-        
-        if unlock_target <= 0:
-            # Save total charge update if no unlock
-            if commit:
-                db.commit()
-            else:
-                db.flush()
-            return 0
-
-        # Phase 1: if locked expired, do not unlock.
-        self._expire_locked_if_due(user, now_dt)
-        locked = int(user.vault_locked_balance or 0)
-        if locked <= 0:
-            return 0
-
-        unlock_amount = min(locked, unlock_target)
-        user.vault_locked_balance = max(locked - unlock_amount, 0)
-        self._ensure_locked_expiry(user, now_dt)
-        self.sync_legacy_mirror(user)
         db.add(user)
-
-        RewardService().grant_point(
-            db,
-            user_id=user.id,
-            amount=unlock_amount,
-            reason="VAULT_UNLOCK",
-            label="VAULT_UNLOCK",
-            meta={
-                "trigger": "EXTERNAL_RANKING_DEPOSIT_INCREASE",
-                "tier": tier,
-                "unlock_target": unlock_target,
-                "unlock_amount": unlock_amount,
-                "external_ranking_deposit_prev": prev_amount,
-                "external_ranking_deposit_new": new_amount,
-                "external_ranking_deposit_delta": deposit_delta,
-            },
-            commit=False,
-        )
-
-        # Phase 2/3-stage prep: record unlock event into Vault2 status (bookkeeping only).
-        try:
-            Vault2Service().record_unlock_event(
-                db,
-                user_id=user.id,
-                unlock_amount=unlock_amount,
-                trigger="EXTERNAL_RANKING_DEPOSIT_INCREASE",
-                meta={
-                    "tier": tier,
-                    "unlock_target": unlock_target,
-                    "external_ranking_deposit_prev": prev_amount,
-                    "external_ranking_deposit_new": new_amount,
-                    "external_ranking_deposit_delta": deposit_delta,
-                },
-                now=now_dt,
-                commit=False,
-            )
-        except Exception:
-            pass
-
         if commit:
             db.commit()
         else:
             db.flush()
-        return unlock_amount
+        return 0
 
     def record_game_play_earn_event(
         self,
@@ -796,16 +690,20 @@ class VaultService:
         return int(amount) if amount > 0 else 0
 
     def request_withdrawal(self, db: Session, user_id: int, amount: int) -> dict:
-        """Request a withdrawal from the user's cash balance.
+        """Request a withdrawal.
+
+        Single-SoT rules:
+        - total: user.vault_locked_balance
+        - reserved: sum(PENDING withdrawal requests)
+        - available: total - reserved
 
         Conditions:
         1. Amount >= 10,000.
         2. User must have a deposit record TODAY (UserActivity.last_charge_at).
-        3. Sufficient cash balance.
+        3. Sufficient available amount.
         """
         from app.models.vault_withdrawal_request import VaultWithdrawalRequest
         from app.models.user_activity import UserActivity
-        from app.models.user_cash_ledger import UserCashLedger
 
         # 1. Validation
         if amount < 10_000:
@@ -823,32 +721,20 @@ class VaultService:
         if last_charge_date != today:
              raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="DEPOSIT_REQUIRED_TODAY")
 
-        # 3. Check Balance & Deduct
+        # 3. Check Available & Create Request (no balance deduction at request time)
         q = db.query(User).filter(User.id == user_id)
         if db.bind and db.bind.dialect.name != "sqlite":
             q = q.with_for_update()
         user = q.one_or_none()
-        
         if not user:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="USER_NOT_FOUND")
 
-        if (user.cash_balance or 0) < amount:
+        reserved_before = self.get_withdrawal_reserved_amount(db=db, user_id=user_id)
+        total = int(getattr(user, "vault_locked_balance", 0) or 0)
+        available_before = max(total - reserved_before, 0)
+        if available_before < amount:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="INSUFFICIENT_FUNDS")
 
-        user.cash_balance -= amount
-        
-        # Ledger
-        entry = UserCashLedger(
-            user_id=user_id,
-            delta=-amount,
-            balance_after=user.cash_balance,
-            reason="VAULT_WITHDRAWAL_REQUEST",
-            label="WITHDRAW_REQ",
-            meta_json={"requested_at": now.isoformat()}
-        )
-        db.add(entry)
-
-        # 4. Create Request
         req = VaultWithdrawalRequest(
             user_id=user_id,
             amount=amount,
@@ -856,22 +742,24 @@ class VaultService:
             created_at=now
         )
         db.add(req)
-        
+
         db.commit()
         db.refresh(req)
+
+        reserved_after = reserved_before + amount
+        available_after = max(total - reserved_after, 0)
 
         return {
             "request_id": req.id,
             "status": req.status,
             "amount": req.amount,
             "created_at": req.created_at,
-            "balance_after": user.cash_balance
+            "balance_after": available_after,
         }
 
     def process_withdrawal(self, db: Session, request_id: int, action: str, admin_id: int, memo: str | None = None) -> dict:
         """Process a withdrawal request (APPROVE or REJECT)."""
         from app.models.vault_withdrawal_request import VaultWithdrawalRequest
-        from app.models.user_cash_ledger import UserCashLedger
 
         action = action.upper()
         if action not in ("APPROVE", "REJECT"):
@@ -891,26 +779,25 @@ class VaultService:
 
         if action == "APPROVE":
             req.status = "APPROVED"
-            # Money was already deducted at request time. No further balance change needed.
+            # Deduct from single SoT at approval time.
+            q = db.query(User).filter(User.id == req.user_id)
+            if db.bind and db.bind.dialect.name != "sqlite":
+                q = q.with_for_update()
+            user = q.one_or_none()
+            if not user:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="USER_NOT_FOUND")
+
+            total = int(getattr(user, "vault_locked_balance", 0) or 0)
+            if total < int(req.amount):
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="INSUFFICIENT_FUNDS")
+
+            user.vault_locked_balance = total - int(req.amount)
+            self.sync_legacy_mirror(user)
+            db.add(user)
         
         elif action == "REJECT":
             req.status = "REJECTED"
-            # Refund the amount
-            user = db.query(User).filter(User.id == req.user_id).first()
-            if user:
-                user.cash_balance = (user.cash_balance or 0) + req.amount
-                
-                # Ledger for Refund
-                entry = UserCashLedger(
-                    user_id=user.id,
-                    delta=req.amount,
-                    balance_after=user.cash_balance,
-                    reason="VAULT_WITHDRAWAL_REFUND",
-                    label="WITHDRAW_REJECT",
-                    meta_json={"request_id": req.id}
-                )
-                db.add(entry)
-                db.add(user)
+            # No refund needed (nothing deducted at request time).
 
         db.commit()
         db.refresh(req)

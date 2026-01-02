@@ -181,27 +181,27 @@ class MissionService:
                 if user.vault_locked_expires_at and user.vault_locked_expires_at.replace(tzinfo=None) < now.replace(tzinfo=None):
                     # Expired!
                     return False, "LOCK_EXPIRED", 0
-                
-                if user.vault_locked_balance and user.vault_locked_balance > 0:
-                    unlock_amount = min(user.vault_locked_balance, mission.reward_amount)
-                    if unlock_amount > 0:
-                        user.vault_locked_balance -= unlock_amount
-                        user.cash_balance = (user.cash_balance or 0) + unlock_amount
-                        
-                        # Sync legacy mirror if exists
-                        if hasattr(user, "vault_balance"):
-                             user.vault_balance = int(user.vault_locked_balance)
 
-                        from app.models.user_cash_ledger import UserCashLedger
-                        ledger = UserCashLedger(
-                            user_id=user.id,
-                            delta=unlock_amount,
-                            balance_after=user.cash_balance,
-                            reason="MISSION_UNLOCK",
-                            label=mission.title,
-                            meta_json={"mission_id": mission.id}
-                        )
-                        self.db.add(ledger)
+                # Single-SoT rollout: do NOT migrate locked -> cash_balance.
+                # Keep this reward as an observability/bookkeeping event only.
+                unlock_amount = 0
+                if user.vault_locked_balance and user.vault_locked_balance > 0:
+                    unlock_amount = min(int(user.vault_locked_balance), int(mission.reward_amount))
+                    if unlock_amount > 0:
+                        try:
+                            from app.services.vault2_service import Vault2Service
+
+                            Vault2Service().record_unlock_event(
+                                self.db,
+                                user_id=user.id,
+                                unlock_amount=unlock_amount,
+                                trigger="MISSION_CASH_UNLOCK",
+                                meta={"mission_id": mission.id, "mission_title": mission.title},
+                                now=now,
+                                commit=False,
+                            )
+                        except Exception:
+                            pass
             
             # --- STANDARD TOKENS ---
             else:

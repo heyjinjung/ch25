@@ -6,7 +6,9 @@ interface BackendVaultStatusResponse {
   readonly vault_balance: number;
   readonly locked_balance?: number;
   readonly available_balance?: number;
-  readonly cash_balance: number;
+  readonly vault_amount_total?: number;
+  readonly vault_amount_reserved?: number;
+  readonly vault_amount_available?: number;
   readonly vault_fill_used_at?: string | null;
   readonly seeded?: boolean;
   readonly expires_at?: string | null;
@@ -25,7 +27,9 @@ export interface VaultStatusResponse {
   readonly vaultBalance: number;
   readonly lockedBalance?: number;
   readonly availableBalance?: number;
-  readonly cashBalance: number;
+  readonly vaultAmountTotal?: number;
+  readonly vaultAmountReserved?: number;
+  readonly vaultAmountAvailable?: number;
   readonly vaultFillUsedAt?: string | null;
   readonly seeded?: boolean;
   readonly expiresAt?: string | null;
@@ -46,15 +50,18 @@ export interface VaultStatusResponse {
 export const getVaultStatus = async (): Promise<VaultStatusResponse> => {
   const response = await userApi.get<BackendVaultStatusResponse>("/api/vault/status");
   const data = response.data;
-  const locked = data.locked_balance ?? data.vault_balance ?? 0;
-  const available = data.available_balance ?? 0;
+  const locked = data.vault_amount_total ?? data.locked_balance ?? data.vault_balance ?? 0;
+  const available = data.vault_amount_available ?? data.available_balance ?? 0;
+  const reserved = data.vault_amount_reserved ?? Math.max(locked - available, 0);
   return {
     eligible: data.eligible,
     // Keep legacy name but prefer source-of-truth locked balance when available
     vaultBalance: locked,
     lockedBalance: data.locked_balance ?? undefined,
     availableBalance: available,
-    cashBalance: data.cash_balance ?? 0,
+    vaultAmountTotal: locked,
+    vaultAmountReserved: reserved,
+    vaultAmountAvailable: available,
     vaultFillUsedAt: data.vault_fill_used_at ?? null,
     seeded: data.seeded ?? false,
     expiresAt: data.expires_at ?? null,

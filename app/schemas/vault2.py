@@ -61,7 +61,6 @@ class VaultAdminStateResponse(BaseModel):
     vault_balance: int
     locked_balance: int
     available_balance: int
-    cash_balance: int
     expires_at: datetime | None = None
     locked_expires_at: datetime | None = None
     accrual_multiplier: float | None = None

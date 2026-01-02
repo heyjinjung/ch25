@@ -13,6 +13,13 @@
 - **Onboarding**: 레거시 onboarding 페이지(`/new-user/welcome`) 삭제 및 랜딩 페이지 내 웰컴 모달로 전환.
 - **Testing**: `test_simulation.py` 내 금고 적립/차감(Deduction) 시나리오 업데이트 및 검증 완료.
 
+## 2026-01-02 (Vault Single-SoT Phase 3: Stop cash_balance writes)
+- **Vault**: 단일 SoT(`vault_locked_balance`) 기준으로 cash_balance 신규 write 차단을 확장.
+  - 미션 `CASH_UNLOCK`: locked→cash 전환 제거, Vault2에 unlock 이벤트만 기록(관측/마이그레이션 준비용)
+  - 입금/조건 해금(`VAULT_UNLOCK`): `handle_deposit_increase_signal()`에서 RewardService를 통한 cash 지급 중단
+- **Migration**: 옵션 B(cash→locked 일괄 이관) 실행용 스크립트 추가 (`scripts/migrate_cash_balance_to_vault_locked.py`).
+- Docs: 단계별 계획 문서(v1.3) 및 개발 로그 업데이트.
+
 
 # 프로젝트 변경 이력
 

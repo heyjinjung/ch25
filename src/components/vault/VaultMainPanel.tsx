@@ -140,14 +140,14 @@ const VaultMainPanel: React.FC = React.memo(() => {
   const [isWithdrawalProcessing, setIsWithdrawalProcessing] = useState(false);
 
   const handleWithdrawalClick = async () => {
-    if (!window.confirm("현재 보관된 리워드를 전액 CC 포인트(보유머니)로 전환 신청하시겠습니까?")) return;
+    if (!window.confirm("현재 출금 가능한 금액을 출금 신청하시겠습니까?")) return;
 
     setIsWithdrawalProcessing(true);
     try {
       // Use locked_balance from query if available, otherwise fallback
-      const amount = vault.data?.lockedBalance ?? vault.data?.vaultBalance ?? 0;
+      const amount = vault.data?.vaultAmountAvailable ?? vault.data?.availableBalance ?? 0;
       if (amount < 10000) {
-        alert("최소 10,000원 이상부터 전환 가능합니다.");
+        alert("최소 10,000원 이상부터 출금 신청 가능합니다.");
         return;
       }
 
@@ -173,7 +173,7 @@ const VaultMainPanel: React.FC = React.memo(() => {
   const view = useMemo(() => {
     const data = vault.data;
     const vaultBalance = data?.vaultBalance ?? 0;
-    const cashBalance = data?.cashBalance ?? 0;
+    const availableBalance = data?.vaultAmountAvailable ?? data?.availableBalance ?? 0;
     const eligible = !!data?.eligible;
     const expiresAt = parseDate(data?.expiresAt ?? null);
     const usedAt = parseDate(data?.vaultFillUsedAt ?? null);
@@ -188,7 +188,7 @@ const VaultMainPanel: React.FC = React.memo(() => {
 
     return {
       vaultBalance,
-      cashBalance,
+      availableBalance,
       eligible,
       expiresAt,
       usedAt,
@@ -213,8 +213,8 @@ const VaultMainPanel: React.FC = React.memo(() => {
     if (parsed.length > 0) return parsed;
     return [
       "게임 플레이를 통해 적립된 포인트가 안전하게 보관됩니다.",
-      "충전 및 이용 내역이 확인되면 자동으로 포인트가 해금됩니다.",
-      "해금된 포인트는 즉시 보유 머니로 전환되어 사용 가능합니다."
+      "조건이 충족되면 출금 신청 가능한 금액으로 반영됩니다.",
+      "출금 신청 시 진행 상태에 따라 출금 가능 금액이 변동될 수 있습니다."
     ];
   }, [view.unlockRulesJson]);
 

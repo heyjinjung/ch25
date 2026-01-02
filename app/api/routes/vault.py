@@ -37,6 +37,8 @@ def status(db: Session = Depends(get_db), user_id: int = Depends(get_current_use
     recommended_action = None
     cta_payload = None
     locked_balance = int(getattr(user, "vault_locked_balance", 0) or 0)
+    reserved_amount = service.get_withdrawal_reserved_amount(db=db, user_id=user_id)
+    available_amount = max(locked_balance - reserved_amount, 0)
     expires_at = getattr(user, "vault_locked_expires_at", None)
     locked_unexpired = locked_balance > 0 and (expires_at is None or expires_at > now)
 
@@ -71,7 +73,7 @@ def status(db: Session = Depends(get_db), user_id: int = Depends(get_current_use
     if eligible:
         hardcoded_ui_copy = {
             "title": "내 금고",
-            "desc": "적립된 보관금은 특정 조건 달성 시 즉시 출금 가능한 캐시로 해금됩니다.",
+            "desc": "적립된 보관금은 조건 달성 시 즉시 출금 신청 가능한 금액으로 반영됩니다.",
         }
         program = v2_service.get_default_program(db, ensure=True)
         override = getattr(program, "ui_copy_json", None)
@@ -84,8 +86,10 @@ def status(db: Session = Depends(get_db), user_id: int = Depends(get_current_use
         eligible=eligible,
         vault_balance=user.vault_balance or 0,
         locked_balance=locked_balance,
-        available_balance=int(getattr(user, "vault_available_balance", 0) or 0),
-        cash_balance=user.cash_balance or 0,
+        available_balance=available_amount,
+        vault_amount_total=locked_balance,
+        vault_amount_reserved=reserved_amount,
+        vault_amount_available=available_amount,
         ticket_count=total_tickets,
         vault_fill_used_at=user.vault_fill_used_at,
         seeded=seeded,

@@ -31,7 +31,6 @@ def _build_admin_state(service: VaultService, db: Session, user_id: int) -> Vaul
                 vault_balance=0,
                 locked_balance=0,
                 available_balance=0,
-                cash_balance=0,
                 expires_at=None,
                 locked_expires_at=None,
                 accrual_multiplier=service.vault_accrual_multiplier(db, now) if eligible else None,
@@ -43,8 +42,8 @@ def _build_admin_state(service: VaultService, db: Session, user_id: int) -> Vaul
         raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
 
     locked_balance = int(getattr(user, "vault_locked_balance", 0) or 0)
-    available_balance = int(getattr(user, "vault_available_balance", 0) or 0)
-    cash_balance = int(getattr(user, "cash_balance", 0) or 0)
+    reserved_amount = service.get_withdrawal_reserved_amount(db=db, user_id=user_id)
+    available_balance = max(locked_balance - reserved_amount, 0)
     expires_at = getattr(user, "vault_locked_expires_at", None)
 
     return VaultAdminStateResponse(
@@ -53,7 +52,6 @@ def _build_admin_state(service: VaultService, db: Session, user_id: int) -> Vaul
         vault_balance=int(getattr(user, "vault_balance", 0) or 0),
         locked_balance=locked_balance,
         available_balance=available_balance,
-        cash_balance=cash_balance,
         expires_at=expires_at,
         locked_expires_at=expires_at,
         accrual_multiplier=service.vault_accrual_multiplier(db, now) if eligible else None,
