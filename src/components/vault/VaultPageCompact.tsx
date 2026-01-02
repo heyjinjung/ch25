@@ -210,8 +210,8 @@ const VaultPageCompact: React.FC = () => {
                         onClick={() => tryHaptic(10)}
                         className="flex-1 py-3 rounded-xl bg-white/5 border border-white/10 text-white/90 font-bold text-center text-sm hover:bg-white/10 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
                     >
-                        {/* <Package size={16} /> Icon need import, kept simple for now */}
-                        📦 인벤토리 확인
+                        <img src="/assets/icon_inventory_wallet.png" className="w-4 h-4 object-contain" alt="" />
+                        인벤토리 확인
                     </Link>
                     <Link
                         to="/home"

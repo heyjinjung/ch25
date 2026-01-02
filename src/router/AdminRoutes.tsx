@@ -21,6 +21,8 @@ import NewMemberDiceEligibilityPage from "../admin/pages/NewMemberDiceEligibilit
 import UiConfigTicketZeroPage from "../admin/pages/UiConfigTicketZeroPage";
 import VaultAdminPage from "../admin/pages/VaultAdminPage";
 import AdminMissionPage from "../admin/pages/AdminMissionPage";
+import AdminShopPage from "../admin/pages/AdminShopPage";
+import AdminEconomyStatsPage from "../admin/pages/AdminEconomyStatsPage";
 import AdminLayout from "../admin/components/AdminLayout";
 import ProtectedRoute from "../components/routing/ProtectedRoute";
 
@@ -50,6 +52,8 @@ const AdminRoutes: React.FC = () => {
           <Route path="new-member-dice" element={<NewMemberDiceEligibilityPage />} />
           <Route path="ui-config" element={<UiConfigTicketZeroPage />} />
           <Route path="vault" element={<VaultAdminPage />} />
+          <Route path="shop" element={<AdminShopPage />} />
+          <Route path="economy" element={<AdminEconomyStatsPage />} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/admin" replace />} />

@@ -76,7 +76,7 @@ def list_products(
     """
     List all available shop products.
     """
-    return ShopService.list_products()
+    return ShopService.list_products(db)
 
 
 @router.post("/shop/purchase", response_model=dict)

@@ -6,7 +6,8 @@ import { createUser, deleteUser, fetchUsers, updateUser, AdminUser, AdminUserPay
 import { useToast } from "../../components/common/ToastProvider";
 import UserImportModal from "../components/UserImportModal";
 import { fetchUserMissions, updateUserMission, AdminUserMissionDetail, AdminUserMissionUpdatePayload } from "../api/adminUserMissionApi";
-import { Check, ClipboardList, X } from "lucide-react";
+import { Check, ClipboardList, Package, X } from "lucide-react";
+import UserInventoryModal from "../components/UserInventoryModal";
 
 type MemberRow = AdminUser & {
   isEditing?: boolean;
@@ -67,6 +68,7 @@ const UserAdminPage: React.FC = () => {
   const [showImportModal, setShowImportModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedUserForMissions, setSelectedUserForMissions] = useState<AdminUser | null>(null);
+  const [selectedUserForInventory, setSelectedUserForInventory] = useState<AdminUser | null>(null);
 
   const [sortKey, setSortKey] = useState<SortKey>("nickname");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
@@ -818,6 +820,15 @@ const UserAdminPage: React.FC = () => {
                           </button>
                           <button
                             type="button"
+                            onClick={() => setSelectedUserForInventory(member)}
+                            className="rounded-md p-2 text-[#91F402] hover:text-white"
+                            title="인벤 CS"
+                            aria-label="인벤 CS"
+                          >
+                            <Package size={16} />
+                          </button>
+                          <button
+                            type="button"
                             onClick={() => removeRow(member)}
                             className="rounded-md p-2 text-red-500 hover:text-red-300"
                             title="삭제"
@@ -836,6 +847,13 @@ const UserAdminPage: React.FC = () => {
               <UserMissionModal
                 user={selectedUserForMissions}
                 onClose={() => setSelectedUserForMissions(null)}
+              />
+            )}
+
+            {selectedUserForInventory && (
+              <UserInventoryModal
+                user={selectedUserForInventory}
+                onClose={() => setSelectedUserForInventory(null)}
               />
             )}
 

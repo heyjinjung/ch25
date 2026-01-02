@@ -94,7 +94,7 @@ def test_bait_and_trap_logic(session_factory):
         db.flush()
 
         db.refresh(user)
-        progress = db.query(SeasonPassProgress).filter_by(user_id=user.id, season_id=season_id=season.id).one()
+        progress = db.query(SeasonPassProgress).filter_by(user_id=user.id, season_id=season.id).one()
         assert progress.current_level >= 9
         
         reward_log = db.query(SeasonPassRewardLog).filter_by(user_id=user.id, level=9).one_or_none()

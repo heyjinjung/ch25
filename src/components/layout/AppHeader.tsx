@@ -6,7 +6,7 @@ import { getVaultStatus } from "../../api/vaultApi";
 import { useSound } from "../../hooks/useSound";
 import clsx from "clsx";
 import InboxButton from "../common/InboxButton";
-import { ChevronDown, Package, ExternalLink } from "lucide-react";
+import { ChevronDown, ExternalLink } from "lucide-react";
 
 const AppHeader: React.FC = () => {
     const { user } = useAuth();
@@ -139,8 +139,8 @@ const AppHeader: React.FC = () => {
                                     onClick={() => setIsTicketMenuOpen(false)}
                                     className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-bold text-white/70 hover:bg-white/5 hover:text-figma-accent transition-all"
                                 >
-                                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/5 border border-white/5">
-                                        <Package size={14} />
+                                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/5 border border-white/5 overflow-hidden p-0.5">
+                                        <img src="/assets/icon_inventory_wallet.png" alt="" className="w-full h-full object-contain" />
                                     </div>
                                     인벤토리
                                 </Link>
@@ -224,7 +224,9 @@ const AppHeader: React.FC = () => {
                                 onClick={() => setIsTicketMenuOpen(false)}
                                 className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-bold text-white/70 active:bg-white/10"
                             >
-                                <Package size={16} />
+                                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/5 border border-white/5 overflow-hidden p-0.5">
+                                    <img src="/assets/icon_inventory_wallet.png" alt="" className="w-full h-full object-contain" />
+                                </div>
                                 인벤토리
                             </Link>
                             <button

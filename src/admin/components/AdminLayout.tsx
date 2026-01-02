@@ -21,6 +21,8 @@ import {
   User,
   X,
   Target,
+  ShoppingCart,
+  LineChart,
 } from "lucide-react";
 
 const accent = "#91F402";
@@ -42,6 +44,7 @@ const navSections: NavSection[] = [
       { label: "주사위 설정", path: "/admin/dice", icon: <Dice5 size={18} /> },
       { label: "복권 설정", path: "/admin/lottery", icon: <Percent size={18} /> },
       { label: "금고 관리", path: "/admin/vault", icon: <Gift size={18} /> },
+      { label: "상점 관리", path: "/admin/shop", icon: <ShoppingCart size={18} /> },
     ],
   },
   {
@@ -64,6 +67,7 @@ const navSections: NavSection[] = [
     heading: "데이터 관리",
     items: [
       { label: "랭킹 입력", path: "/admin/external-ranking", icon: <BarChart3 size={18} /> },
+      { label: "경제 지표", path: "/admin/economy", icon: <LineChart size={18} /> },
       { label: "사용자 분류", path: "/admin/user-segments", icon: <UserCog size={18} /> },
       { label: "설문조사", path: "/admin/surveys", icon: <MessageSquare size={18} /> },
       { label: "UI 문구/CTA", path: "/admin/ui-config", icon: <Cog size={18} /> },

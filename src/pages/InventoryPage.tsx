@@ -76,8 +76,8 @@ const InventoryPage: React.FC = () => {
         <div className="mx-auto w-full max-w-lg pb-[calc(96px+env(safe-area-inset-bottom))]">
             {/* Title */}
             <div className="mb-4 flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-white/5 border border-white/10">
-                    <Package className="w-6 h-6 text-figma-accent" />
+                <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center p-1.5 overflow-hidden">
+                    <img src="/assets/icon_inventory_wallet.png" alt="Inventory" className="w-full h-full object-contain" />
                 </div>
                 <div>
                     <h1 className="text-xl font-black text-white">인벤토리</h1>
@@ -205,7 +205,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, onUse, isPending }) => {
         "DIAMOND": {
             title: "다이아몬드",
             desc: "프리미엄 재화",
-            icon: <div className="w-4 h-4 rotate-45 rounded-[2px] bg-figma-accent/10 border border-figma-accent" />
+            icon: <img src="/assets/icon_diamond.png" className="w-8 h-8 object-contain" alt="" />
         }
     };
 

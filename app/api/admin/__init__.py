@@ -25,6 +25,9 @@ from app.api.admin.routes import (
     admin_dashboard,
     admin_crm,
     admin_user_missions,
+    admin_shop,
+    admin_inventory,
+    admin_economy_stats,
 )
 
 from app.api.deps import get_current_admin_id
@@ -46,6 +49,7 @@ admin_router.include_router(admin_segment_rules.router)
 admin_router.include_router(admin_new_member_dice.router)
 admin_router.include_router(admin_ui_config.router)
 admin_router.include_router(admin_ui_copy.router)
+admin_router.include_router(admin_ui_copy.legacy_router)
 admin_router.include_router(admin_vault2.router)
 admin_router.include_router(admin_vault_programs.router)
 admin_router.include_router(admin_vault_programs.legacy_router)
@@ -54,3 +58,6 @@ admin_router.include_router(admin_vault_ops.legacy_router)
 admin_router.include_router(admin_dashboard.router)
 admin_router.include_router(admin_crm.router)
 admin_router.include_router(admin_user_missions.router)
+admin_router.include_router(admin_shop.router)
+admin_router.include_router(admin_inventory.router)
+admin_router.include_router(admin_economy_stats.router)

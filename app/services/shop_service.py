@@ -6,17 +6,29 @@ from app.models.game_wallet import GameTokenType
 from app.services.game_wallet_service import GameWalletService
 from app.services.inventory_service import InventoryService
 from app.services.idempotency_service import IdempotencyService
+from app.services.ui_config_service import UiConfigService
 from app.models.user import User
 
 
 class ShopProduct:
-    def __init__(self, sku: str, title: str, cost_token: GameTokenType, cost_amount: int, item_type: str, item_amount: int):
+    def __init__(
+        self,
+        sku: str,
+        title: str,
+        cost_token: GameTokenType,
+        cost_amount: int,
+        item_type: str,
+        item_amount: int,
+        *,
+        is_active: bool = True,
+    ):
         self.sku = sku
         self.title = title
         self.cost_token = cost_token
         self.cost_amount = cost_amount
         self.item_type = item_type
         self.item_amount = item_amount
+        self.is_active = is_active
 
     def to_dict(self):
         return {
@@ -24,6 +36,7 @@ class ShopProduct:
             "title": self.title,
             "cost": {"token": self.cost_token.value, "amount": self.cost_amount},
             "grant": {"item_type": self.item_type, "amount": self.item_amount},
+            "is_active": bool(self.is_active),
         }
 
 
@@ -51,17 +64,80 @@ SHOP_PRODUCTS = {
 class ShopService:
     """Provides methods to manage shop and purchases."""
 
+    UI_CONFIG_KEY = "shop_products"
+
     @staticmethod
-    def list_products() -> list[dict]:
+    def _load_product_overrides(db: Session) -> dict[str, dict]:
+        row = UiConfigService.get(db, ShopService.UI_CONFIG_KEY)
+        value = row.value_json if row and isinstance(row.value_json, dict) else {}
+        products = value.get("products") if isinstance(value, dict) else None
+        if not isinstance(products, dict):
+            return {}
+        # Expected shape: { "products": { "SKU": {"title": str?, "cost_amount": int?, "is_active": bool?} } }
+        overrides: dict[str, dict] = {}
+        for sku, patch in products.items():
+            if not isinstance(sku, str) or not isinstance(patch, dict):
+                continue
+            overrides[sku] = patch
+        return overrides
+
+    @staticmethod
+    def _apply_overrides(product: ShopProduct, patch: dict) -> None:
+        if not isinstance(patch, dict):
+            return
+        title = patch.get("title")
+        if isinstance(title, str) and title.strip():
+            product.title = title.strip()
+
+        cost_amount = patch.get("cost_amount")
+        if isinstance(cost_amount, int) and cost_amount > 0:
+            product.cost_amount = cost_amount
+
+        is_active = patch.get("is_active")
+        if isinstance(is_active, bool):
+            product.is_active = is_active
+
+    @staticmethod
+    def list_products(db: Session) -> list[dict]:
         """List all available products."""
-        return [p.to_dict() for p in SHOP_PRODUCTS.values()]
+        overrides = ShopService._load_product_overrides(db)
+        products: list[dict] = []
+        for sku, base in SHOP_PRODUCTS.items():
+            p = ShopProduct(
+                base.sku,
+                base.title,
+                base.cost_token,
+                base.cost_amount,
+                base.item_type,
+                base.item_amount,
+                is_active=getattr(base, "is_active", True),
+            )
+            ShopService._apply_overrides(p, overrides.get(sku, {}))
+            products.append(p.to_dict())
+        return products
 
     @staticmethod
     def purchase_product(db: Session, user_id: int, sku: str, idempotency_key: str | None = None) -> dict:
         """Purchase a product."""
-        product = SHOP_PRODUCTS.get(sku)
-        if not product:
+        base = SHOP_PRODUCTS.get(sku)
+        if not base:
             raise HTTPException(status_code=404, detail="PRODUCT_NOT_FOUND")
+
+        # Apply runtime overrides (title/cost/is_active) from UI config.
+        product = ShopProduct(
+            base.sku,
+            base.title,
+            base.cost_token,
+            base.cost_amount,
+            base.item_type,
+            base.item_amount,
+            is_active=getattr(base, "is_active", True),
+        )
+        overrides = ShopService._load_product_overrides(db)
+        ShopService._apply_overrides(product, overrides.get(sku, {}))
+
+        if not product.is_active:
+            raise HTTPException(status_code=400, detail="PRODUCT_INACTIVE")
 
         user = db.get(User, user_id)
         if not user:

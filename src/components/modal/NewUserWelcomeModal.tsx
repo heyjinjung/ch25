@@ -39,6 +39,7 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) =>
 
     useEffect(() => {
         if (status) {
+            console.log("[NewUserWelcomeModal] Status Data:", status);
             lastDataRef.current = status;
         }
     }, [status]);
@@ -94,6 +95,9 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) =>
 
     // If no data and no previous data, or ineligible (and not just refetching)
     if (!activeData || (!activeData.eligible && !isFetching)) {
+        if (activeData && !activeData.eligible && !isFetching) {
+            console.log("[NewUserWelcomeModal] Not showing because eligible=false. Reason:", activeData.reason);
+        }
         return null;
     }
 

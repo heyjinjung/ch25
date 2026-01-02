@@ -9,7 +9,9 @@ export const useNewUserWelcome = () => {
 
         // Show modal after a short delay if not dismissed
         if (!hideWelcome) {
+            console.log("[useNewUserWelcome] Modal eligible, starting timer...");
             const timer = setTimeout(() => {
+                console.log("[useNewUserWelcome] Showing Modal now.");
                 setShowModal(true);
             }, 1000); // 1 second delay
 
