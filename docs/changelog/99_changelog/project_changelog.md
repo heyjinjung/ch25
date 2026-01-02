@@ -20,6 +20,13 @@
 - **Migration**: 옵션 B(cash→locked 일괄 이관) 실행용 스크립트 추가 (`scripts/migrate_cash_balance_to_vault_locked.py`).
 - Docs: 단계별 계획 문서(v1.3) 및 개발 로그 업데이트.
 
+## 2026-01-02 (Welcome Modal Policy B: Show to all users until 4 missions completed)
+- **Auth**: `/api/auth/token`에서 첫 로그인 시 `first_login_at` 세팅(온보딩 24h window 기준 안정화).
+- **Onboarding**: `/api/new-user/status`의 `eligible` 대상자 게이트 제거(전 유저 status/미션 제공).
+- **Frontend**: 웰컴 모달은 `eligible`이 아니라 “첫 4개 미션 완료” 기준으로만 자동 종료, 영구 숨김(localStorage) 제거.
+- **Routing**: 운영에서 Telegram initData 없는 경우 `/login`으로 새는 경로를 줄이도록 `RequireAuth` 동작 조정.
+- **Testing**: `pytest -q` 91 passed.
+
 
 # 프로젝트 변경 이력
 

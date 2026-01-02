@@ -23,3 +23,25 @@ Vault 금액이 `vault_locked_balance`(잠금)와 `cash_balance`(출금 가능)�
 	- 결정: **옵션 B 선택**(cash→locked 일괄 이관)
 	- 이관 스크립트: `scripts/migrate_cash_balance_to_vault_locked.py` (dry-run / apply)
 - unlock UX/규칙 정의: 어떤 조건에서 available을 제한/허용할지(eligibility / deposit-today 등) 명확화
+
+## 운영 실행 가이드(옵션 B: cash→locked 일괄 이관)
+### 실행 전 체크
+- DB 백업(필수): 운영 DB dump/스냅샷 확보
+- 실행 대상 DB 확인(필수): `DATABASE_URL`이 운영을 가리키는지 확인
+- 사전 점검(권장): dry-run 결과(현금 잔액 합/대상자 수)를 기록
+
+### 실행 순서(권장)
+1) dry-run
+	- `python scripts/migrate_cash_balance_to_vault_locked.py --dry-run`
+2) apply
+	- `python scripts/migrate_cash_balance_to_vault_locked.py --apply`
+3) dry-run 재확인(0으로 수렴)
+	- `python scripts/migrate_cash_balance_to_vault_locked.py --dry-run`
+
+### 스크립트 동작 요약
+- `user.cash_balance`를 `user.vault_locked_balance`로 합산하고 `cash_balance=0`
+- 레거시 미러 필드 `user.vault_balance`도 동일 값으로 동기화
+- `vault_locked_expires_at`은 건드리지 않음(만료 의미 변경 방지)
+
+## 검증
+- 백엔드 자동 테스트: `pytest -q` 전체 통과(91 passed)

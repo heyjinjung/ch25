@@ -39,7 +39,7 @@ const VaultPageCompact: React.FC = () => {
 
             {/* Title Badge with Pulse */}
             <div className="mb-4 z-10">
-                <span className="px-4 py-1.5 rounded-full bg-emerald-950/80 border border-emerald-500/30 text-emerald-400 text-[10px] font-black tracking-[0.15em] uppercase animate-pulse-slow">
+                <span className="px-4 py-1.5 rounded-full bg-emerald-950/90 border border-emerald-600/25 text-emerald-500/80 text-[10px] font-black tracking-[0.15em] uppercase">
                     THE VAULT
                 </span>
             </div>
@@ -48,8 +48,8 @@ const VaultPageCompact: React.FC = () => {
             <div className="relative w-[55%] max-w-[180px] aspect-square mb-2 z-10">
                 {/* Pulsing Glow Background */}
                 <div className={clsx(
-                    "absolute inset-0 rounded-full blur-[60px] animate-breathe",
-                    view.eligible ? "bg-emerald-500 opacity-50" : "bg-emerald-900/60 opacity-40"
+                    "absolute inset-0 rounded-full blur-[60px]",
+                    view.eligible ? "bg-emerald-600/40" : "bg-emerald-900/30"
                 )} />
 
                 {/* Rotating Ring (locked state only) */}
@@ -71,8 +71,8 @@ const VaultPageCompact: React.FC = () => {
                     <div className={clsx(
                         "px-4 py-1 rounded-full border font-black text-[10px] tracking-[0.1em] uppercase backdrop-blur-md transition-all",
                         view.eligible
-                            ? "bg-black/90 border-emerald-400 text-emerald-400 ring-2 ring-emerald-400/30 shadow-[0_0_24px_rgba(52,211,153,0.45)] animate-pulse"
-                            : "bg-black/80 border-white/20 text-white/50"
+                            ? "bg-black/90 border-emerald-500/60 text-emerald-400/90 ring-1 ring-emerald-500/20 shadow-[0_0_16px_rgba(52,211,153,0.25)]"
+                            : "bg-black/80 border-white/15 text-white/45"
                     )}>
                         {view.eligible ? "내돈찾기" : "잠금"}
                     </div>
@@ -97,7 +97,7 @@ const VaultPageCompact: React.FC = () => {
                 </div>
                 <p className={clsx(
                     "text-xs mt-2 font-medium transition-colors",
-                    view.eligible ? "text-emerald-400 animate-pulse" : "text-white/50"
+                    view.eligible ? "text-emerald-500/80" : "text-white/45"
                 )}>
                     {view.eligible ? "✨ 포인트 전환 가능" : "충전 시 금고해제됩니다"}
                 </p>
