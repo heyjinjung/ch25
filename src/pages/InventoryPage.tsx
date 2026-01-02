@@ -254,14 +254,28 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, onUse, isPending }) => {
 };
 
 const WalletCard: React.FC<{ tokenType: string; amount: number }> = ({ tokenType, amount }) => {
+    const WALLET_INFO: Record<string, { title: string; icon: string }> = {
+        "ROULETTE_COIN": { title: "룰렛 티켓", icon: "/assets/asset_ticket_green.png" },
+        "DICE_TOKEN": { title: "주사위 티켓", icon: "/assets/icon_dice_silver.png" },
+        "LOTTERY_TICKET": { title: "복권", icon: "/assets/lottery/icon_lotto_ball.png" },
+        "GOLD_KEY": { title: "골드 키", icon: "/assets/asset_ticket_gold.png" },
+        "DIAMOND_KEY": { title: "다이아몬드 키", icon: "/assets/asset_ticket_diamond.png" }
+    };
+
+    const info = WALLET_INFO[tokenType] || { title: tokenType, icon: "" };
+
     return (
         <div className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-2xl">
             <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-black/30 border border-white/10 flex items-center justify-center text-gold-400">
-                    <Coins size={18} />
+                <div className="w-10 h-10 rounded-full bg-black/30 border border-white/10 flex items-center justify-center p-2">
+                    {info.icon ? (
+                        <img src={info.icon} alt={info.title} className="w-full h-full object-contain" />
+                    ) : (
+                        <Coins size={18} className="text-gold-400" />
+                    )}
                 </div>
                 <div>
-                    <span className="text-xs font-bold text-white/60 block mb-0.5 tracking-wider">{tokenType}</span>
+                    <span className="text-xs font-bold text-white/60 block mb-0.5 tracking-wider">{info.title}</span>
                     <span className="text-lg font-black text-white tracking-tight">{amount.toLocaleString()}</span>
                 </div>
             </div>

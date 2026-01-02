@@ -461,6 +461,8 @@ class UserSegmentService:
             "retention_rate": retention_rate, 
             "empty_tank_count": empty_tank_count,
             "churn_rate": churn_rate,
+            "ltv": ltv,
+            "arpu": arpu,
             "new_user_growth": new_user_growth,
             "message_open_rate": message_open_rate,
             "segments": segments,

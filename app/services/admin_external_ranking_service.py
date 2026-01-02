@@ -14,6 +14,7 @@ from app.models.user import User
 from app.models.new_member_dice import NewMemberDiceEligibility
 from app.services.vault_service import VaultService
 from app.services.season_pass_service import SeasonPassService
+from app.services.level_xp_service import LevelXPService
 from app.core.config import get_settings
 
 
@@ -87,12 +88,13 @@ class AdminExternalRankingService:
     def upsert_many(db: Session, data: Iterable[ExternalRankingCreate]) -> list[ExternalRankingData]:
         season_pass = SeasonPassService()
         vault_service = VaultService()
+        level_xp = LevelXPService()
         settings = get_settings()
         today = date.today()
         now = datetime.utcnow()
-        step_amount = AdminExternalRankingService.STEP_AMOUNT
-        xp_per_step = AdminExternalRankingService.XP_PER_STEP
-        max_steps_per_day = AdminExternalRankingService.MAX_STEPS_PER_DAY
+        step_amount = int(getattr(settings, "external_ranking_deposit_step_amount", AdminExternalRankingService.STEP_AMOUNT))
+        xp_per_step = int(getattr(settings, "external_ranking_deposit_xp_per_step", AdminExternalRankingService.XP_PER_STEP))
+        max_steps_per_day = int(getattr(settings, "external_ranking_deposit_max_steps_per_day", AdminExternalRankingService.MAX_STEPS_PER_DAY))
         cooldown_minutes = max(settings.external_ranking_deposit_cooldown_minutes, 0)
 
         existing_by_user = {row.user_id: row for row in db.execute(select(ExternalRankingData)).scalars().all()}
@@ -255,6 +257,14 @@ class AdminExternalRankingService:
             if deposit_steps > 0 and xp_per_step > 0:
                 xp_to_add = deposit_steps * xp_per_step
                 season_pass.add_bonus_xp(db, user_id=row.user_id, xp_amount=xp_to_add, now=today)
+                # Global progression rewards (non-seasonal) are also accrued from external deposits.
+                level_xp.add_xp(
+                    db,
+                    user_id=row.user_id,
+                    delta=xp_to_add,
+                    source="EXTERNAL_RANKING_DEPOSIT",
+                    meta={"deposit_steps": int(deposit_steps), "xp_per_step": int(xp_per_step), "deposit_delta": int(deposit_delta)},
+                )
 
             row.deposit_remainder = remainder
 

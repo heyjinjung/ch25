@@ -34,9 +34,9 @@ class SeasonPassService:
         today = now.date() if isinstance(now, datetime) else now
         stmt = select(SeasonPassConfig).where(
             and_(
-                SeasonPassConfig.start_date <= today, 
+                SeasonPassConfig.start_date <= today,
                 SeasonPassConfig.end_date >= today,
-                SeasonPassConfig.is_active == 1
+                SeasonPassConfig.is_active.is_(True),
             )
         )
         seasons = db.execute(stmt).scalars().all()
@@ -594,27 +594,6 @@ class SeasonPassService:
         if not level_row or not level_row.auto_claim:
             return
 
-        existing_log = db.execute(
-            select(SeasonPassRewardLog).where(
-                SeasonPassRewardLog.user_id == progress.user_id,
-                SeasonPassRewardLog.season_id == progress.season_id,
-                SeasonPassRewardLog.level == 1,
-            )
-        ).scalar_one_or_none()
-
-        if existing_log:
-            return
-
-        reward_log = SeasonPassRewardLog(
-            user_id=progress.user_id,
-            season_id=progress.season_id,
-            progress_id=progress.id,
-            level=1,
-            reward_type=level_row.reward_type,
-            reward_amount=level_row.reward_amount,
-            claimed_at=datetime.utcnow(),
-        )
-        db.add(reward_log)
         reward_meta = {
             "season_id": progress.season_id,
             "level": 1,
@@ -634,7 +613,6 @@ class SeasonPassService:
                 "Season pass init auto-claim failed", extra={"user_id": progress.user_id, "season_id": progress.season_id, "level": 1}, exc_info=True
             )
         db.commit()
-        db.refresh(reward_log)
 
     def add_bonus_xp(
         self,

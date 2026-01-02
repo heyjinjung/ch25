@@ -122,18 +122,27 @@ class RewardService:
         if reward_type == "POINT":
             reason = (meta or {}).get("reason") if meta else None
             is_game_reward = reason in {"dice_play", "roulette_spin", "lottery_play"}
-            
+
+            # SOT: POINT는 '캐시'가 아니며, 게임 보상 POINT를 재화로 쌓지 않습니다.
+            # 옵션: XP_FROM_GAME_REWARD=true인 경우에만 '게임 보상' POINT를 시즌 XP로 전환.
             if is_game_reward:
-                # [설계 원칙] 게임 포인트는 재화가 아니라 XP입니다.
                 if season_pass:
                     bonus_xp = (meta or {}).get("game_xp") or 0
-                    total_xp = reward_amount + bonus_xp
+                    total_xp = int(reward_amount) + int(bonus_xp)
                     print(f"DEBUG: Delivering Season XP: {total_xp} (Reward: {reward_amount}, Bonus: {bonus_xp})")
                     season_pass.add_bonus_xp(db, user_id=user_id, xp_amount=total_xp)
-            else:
-                # 어드민 수동 지급 등 게임 외 사유일 때만 현찰로 지급
-                self.grant_point(db, user_id=user_id, amount=reward_amount, reason=reason)
+                return
+
+            # 게임 외 사유(어드민 수동 지급 등)만 cash_balance(=포인트/코인성 잔고)로 적립
+            self.grant_point(db, user_id=user_id, amount=reward_amount, reason=reason)
             return
+
+            if is_game_reward and season_pass:
+                bonus_xp = (meta or {}).get("game_xp") or 0
+                total_xp = int(reward_amount) + int(bonus_xp)
+                print(f"DEBUG: Delivering Season XP: {total_xp} (Reward: {reward_amount}, Bonus: {bonus_xp})")
+                season_pass.add_bonus_xp(db, user_id=user_id, xp_amount=total_xp)
+                return
 
         if reward_type in {"BUNDLE", "TICKET_BUNDLE"}:
             # BUNDLE은 여러 티켓을 한 번에 지급하는 미끼 보상입니다.

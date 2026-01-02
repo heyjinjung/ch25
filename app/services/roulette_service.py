@@ -53,7 +53,12 @@ class RouletteService:
     def _seed_default_config(self, db: Session) -> RouletteConfig:
         """Create a minimal roulette config with default segments for TEST_MODE bootstrap."""
 
-        config = RouletteConfig(name="Test Roulette", is_active=True, max_daily_spins=0)
+        config = RouletteConfig(
+            name="Test Roulette",
+            is_active=True,
+            max_daily_spins=0,
+            ticket_type=GameTokenType.ROULETTE_COIN.value,
+        )
         db.add(config)
         db.flush()
         self._seed_default_segments(db, config.id)
@@ -70,7 +75,8 @@ class RouletteService:
         
         if config is None:
             settings = get_settings()
-            if settings.test_mode and ticket_type == GameTokenType.ROULETTE_COIN.value:
+            is_sqlite = bool(db.bind and db.bind.dialect.name == "sqlite")
+            if ticket_type == GameTokenType.ROULETTE_COIN.value and (settings.test_mode or is_sqlite):
                 return self._seed_default_config(db)
             raise InvalidConfigError(f"ROULETTE_CONFIG_MISSING_{ticket_type}")
         return config

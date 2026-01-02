@@ -89,3 +89,12 @@ def record_action(
         "success": True, 
         "updated_count": len(updated)
     }
+
+
+@router.post("/action/story", summary="Record Viral Story Action (Legacy Path)")
+def record_story_action(
+    payload: ActionRequest,
+    current_user: User = Depends(deps.get_current_user),
+    db: Session = Depends(deps.get_db),
+):
+    return record_action(payload=payload, current_user=current_user, db=db)

@@ -1,7 +1,6 @@
 // src/pages/EventDashboardPage.tsx
 import React from "react";
 import { Link } from "react-router-dom";
-import { Star } from "lucide-react";
 import { useHaptic } from "../hooks/useHaptic";
 
 const EventDashboardPage: React.FC = () => {
@@ -70,11 +69,6 @@ const EventDashboardPage: React.FC = () => {
                         </div>
                     </Link>
 
-                    {/* Bonus Card */}
-                    <div className="rounded-[32px] border border-dashed border-white/10 bg-white/5 p-6 text-center">
-                        <Star className="mx-auto mb-2 text-gray-500" size={24} />
-                        <p className="text-sm font-bold text-gray-300">준비 중</p>
-                    </div>
                 </div>
             </div>
         </div>

@@ -3,6 +3,9 @@ from datetime import date
 from sqlalchemy import select
 from app.models.user import User
 from app.models.game_wallet import GameTokenType, UserGameWallet
+from app.models.feature import FeatureConfig, FeatureType
+from app.models.dice import DiceConfig
+from app.models.lottery import LotteryConfig, LotteryPrize
 from app.services.roulette_service import RouletteService
 from app.services.dice_service import DiceService
 from app.services.lottery_service import LotteryService
@@ -38,12 +41,81 @@ def ensure_balance(db_session, user_id, token_type, amount):
         wallet.balance = amount
     db_session.commit()
 
+
+def ensure_feature_config(db_session, feature_type: FeatureType, title: str, page_path: str):
+    existing = db_session.execute(
+        select(FeatureConfig).where(FeatureConfig.feature_type == feature_type)
+    ).scalar_one_or_none()
+    if existing is None:
+        db_session.add(
+            FeatureConfig(
+                feature_type=feature_type,
+                title=title,
+                page_path=page_path,
+                is_enabled=True,
+                config_json={},
+            )
+        )
+        db_session.commit()
+
+
+def ensure_dice_config(db_session):
+    existing = db_session.execute(select(DiceConfig).where(DiceConfig.is_active.is_(True))).scalar_one_or_none()
+    if existing is None:
+        db_session.add(
+            DiceConfig(
+                name="Test Dice",
+                is_active=True,
+                max_daily_plays=0,
+                win_reward_type="NONE",
+                win_reward_amount=0,
+                draw_reward_type="NONE",
+                draw_reward_amount=0,
+                lose_reward_type="NONE",
+                lose_reward_amount=0,
+            )
+        )
+        db_session.commit()
+
+
+def ensure_lottery_config(db_session):
+    existing = db_session.execute(select(LotteryConfig).where(LotteryConfig.is_active.is_(True))).scalar_one_or_none()
+    if existing is None:
+        config = LotteryConfig(
+            name="Test Lottery",
+            is_active=True,
+            max_daily_tickets=0,
+        )
+        db_session.add(config)
+        db_session.flush()
+        db_session.add(
+            LotteryPrize(
+                config_id=config.id,
+                label="Test Prize",
+                reward_type="NONE",
+                reward_amount=0,
+                weight=1,
+                stock=None,
+                is_active=True,
+            )
+        )
+        db_session.commit()
+
 def test_game_settings_and_play(db_session, test_user):
     """
     Verifies that Roulette, Dice, and Lottery services are configured correctly 
     and can handle a play request (checking reward logic).
     """
     today = date.today()
+
+    # FeatureService.validate_feature_active()는 FeatureConfig가 없으면 404를 내므로 테스트에서 기본 시드
+    ensure_feature_config(db_session, FeatureType.ROULETTE, "Roulette", "/roulette")
+    ensure_feature_config(db_session, FeatureType.DICE, "Dice", "/dice")
+    ensure_feature_config(db_session, FeatureType.LOTTERY, "Lottery", "/lottery")
+    # DiceService는 DiceConfig가 없으면 500(DICE_CONFIG_MISSING)
+    ensure_dice_config(db_session)
+    # LotteryService는 LotteryConfig/Prize가 없으면 500(LOTTERY_CONFIG_MISSING)
+    ensure_lottery_config(db_session)
     
     # 1. Roulette Test
     print("\n[TEST] Testing Roulette...")

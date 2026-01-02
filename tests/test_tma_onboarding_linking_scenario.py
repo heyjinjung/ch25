@@ -32,6 +32,7 @@ from app.core.security import decode_access_token
 from app.main import app
 from app.models.external_ranking import ExternalRankingData
 from app.models.game_wallet import GameTokenType, UserGameWallet
+from app.models.inventory import UserInventoryItem
 from app.models.mission import Mission, MissionCategory, MissionRewardType
 from app.models.user import User
 
@@ -98,6 +99,14 @@ def _use_bearer_auth_overrides():
 
 
 def _get_wallet_balance(db: Session, *, user_id: int, token_type: GameTokenType) -> int:
+    if token_type == GameTokenType.DIAMOND:
+        row = (
+            db.query(UserInventoryItem)
+            .filter(UserInventoryItem.user_id == user_id, UserInventoryItem.item_type == "DIAMOND")
+            .one_or_none()
+        )
+        return int(row.quantity) if row else 0
+
     wallet = (
         db.query(UserGameWallet)
         .filter(UserGameWallet.user_id == user_id, UserGameWallet.token_type == token_type)

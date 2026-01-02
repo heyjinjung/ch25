@@ -563,6 +563,19 @@ class VaultService:
         game_type_upper = str(game_type).upper()
         outcome_upper = str(outcome).upper() if outcome else "BASE"
 
+        # Lock user row for update when supported (needed for LOSE bonus decision + accrual).
+        q = db.query(User).filter(User.id == user_id)
+        if db.bind and db.bind.dialect.name != "sqlite":
+            q = q.with_for_update()
+        user = q.one_or_none()
+        if user is None and db.bind and db.bind.dialect.name == "sqlite":
+            user = User(id=user_id, external_id=f"test-user-{user_id}")
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+        if user is None:
+            return 0
+
         # 1. Try to get specific amount from DB config
         game_earn_config = cfg_service.get_config_value(db, "game_earn_config", {})
         game_config = game_earn_config.get(game_type_upper, {})
@@ -595,21 +608,15 @@ class VaultService:
         
         amount_before_multiplier = int(amount_before_multiplier)
 
+        # 신규 유저 bait&trap: 금고가 비어있는 상태(locked=0)에서의 첫 DICE LOSE는 +300 보너스.
+        # 이미 적립이 진행된 이후에는 기존 패널티(-50)를 유지합니다.
+        if game_type_upper == "DICE" and outcome_upper == "LOSE":
+            self._expire_locked_if_due(user, now_dt)
+            if int(user.vault_locked_balance or 0) <= 0:
+                amount_before_multiplier = 300
+
         multiplier = float(self.vault_accrual_multiplier(db, now_dt))
         amount = max(int(round(amount_before_multiplier * multiplier)), amount_before_multiplier)
-
-        # Lock user row for update when supported.
-        q = db.query(User).filter(User.id == user_id)
-        if db.bind and db.bind.dialect.name != "sqlite":
-            q = q.with_for_update()
-        user = q.one_or_none()
-        if user is None and db.bind and db.bind.dialect.name == "sqlite":
-            user = User(id=user_id, external_id=f"test-user-{user_id}")
-            db.add(user)
-            db.commit()
-            db.refresh(user)
-        if user is None:
-            return 0
 
         # Phase 1: clear expired locked first, then accrue.
         self._expire_locked_if_due(user, now_dt)

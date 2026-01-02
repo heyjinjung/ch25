@@ -25,11 +25,12 @@ def test_bait_and_trap_logic(session_factory):
         db.flush()
 
         # 3. Setup: Create active season and levels
+        today = date.today()
         season = SeasonPassConfig(
             id=3,
             season_name="Bait & Trap Season",
-            start_date=date(2025, 12, 1),
-            end_date=date(2025, 12, 31),
+            start_date=today,
+            end_date=today,
             max_level=10,
             base_xp_per_stamp=50,
             is_active=True
