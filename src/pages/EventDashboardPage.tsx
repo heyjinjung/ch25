@@ -16,7 +16,7 @@ const EventDashboardPage: React.FC = () => {
             <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-purple-600/10 to-transparent pointer-events-none" />
             <div className="absolute bottom-[20%] right-[-10%] w-80 h-80 bg-emerald-600/5 rounded-full blur-[120px] pointer-events-none" />
 
-            <div className="relative z-10 p-4 pt-6 max-w-md mx-auto flex-1 flex flex-col justify-start">
+            <div className="relative z-10 px-4 pt-2 pb-24 w-full">
                 {/* Dashboard Grid */}
                 <div className="space-y-4">
                     {/* Level Tower Section */}

@@ -13,13 +13,9 @@ const InventoryPage: React.FC = () => {
     const { addToast } = useToast();
     const navigate = useNavigate();
 
-    const { data, isLoading, isError, refetch } = useQuery({
+    const { data, isLoading, isError } = useQuery({
         queryKey: ['inventory'],
         queryFn: fetchInventory,
-        retry: 3,
-        retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 5000),
-        staleTime: 30_000,
-        refetchOnMount: true,
     });
 
     const useMutationAction = useMutation({
@@ -58,17 +54,8 @@ const InventoryPage: React.FC = () => {
                     <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-2xl bg-black/30 ring-1 ring-white/10">
                         <Package className="h-5 w-5 text-white/40" />
                     </div>
-                    <div className="text-sm font-black text-white/90">연결 실패</div>
+                    <div className="text-sm font-black text-white/90">Failed to load</div>
                     <div className="mt-1 text-[11px] font-medium text-white/50">인벤토리 정보를 불러오지 못했습니다.</div>
-                    <button
-                        onClick={() => {
-                            tryHaptic(10);
-                            refetch();
-                        }}
-                        className="mt-4 px-6 py-2.5 bg-figma-primary text-white text-sm font-bold rounded-xl active:scale-[0.98] transition-all"
-                    >
-                        다시 시도
-                    </button>
                 </div>
             </div>
         );
