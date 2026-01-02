@@ -32,8 +32,10 @@ def verify_channel(
     # 1. Determine Channel ID
     settings = get_settings()
     # Use the group or channel configured in env (e.g. "@channel_username" or "-10012345678")
-    # Default to the one provided by user (needs to be numeric or username)
-    target_channel = payload.channel_username or getattr(settings, "TELEGRAM_CHANNEL_USERNAME", "-1002344795213") # Example ID for private groups
+    target_channel = payload.channel_username or getattr(settings, "telegram_channel_username", None)
+
+    if not target_channel:
+        raise HTTPException(status_code=500, detail="TELEGRAM_CHANNEL_USERNAME is not configured")
     
     # 2. Check Membership
     if not current_user.telegram_id:

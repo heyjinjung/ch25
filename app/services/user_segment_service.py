@@ -211,8 +211,6 @@ class UserSegmentService:
         """Calculate dynamic segments for a user."""
         from datetime import datetime, timedelta
         from sqlalchemy import func
-        from app.models.vault_program import VaultEarnEvent
-        from app.models.ledger import UserCashLedger
         
         segments = []
         

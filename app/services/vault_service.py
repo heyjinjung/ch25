@@ -134,7 +134,7 @@ class VaultService:
         user.vault_balance = int(user.vault_locked_balance or 0)
 
     @classmethod
-    def _compute_locked_expires_at(cls, now: datetime) -> datetime:
+    def _compute_locked_expires_at(cls, now: datetime) -> datetime | None:
         return now + timedelta(hours=cls.VAULT_LOCKED_DURATION_HOURS)
 
     @classmethod
@@ -607,6 +607,12 @@ class VaultService:
             amount = ra
             amount_before_multiplier = ra
             reward_kind = "POINT"
+        elif not rt or rt in {"NONE", "NO_REWARD"} or ra <= 0:
+            # Expected "no payout" outcomes (e.g., roulette blanks) should be silent.
+            # Still record a 0-amount TRIAL_PAYOUT event for idempotency/audit.
+            amount = 0
+            amount_before_multiplier = 0
+            reward_kind = "SKIP_NO_REWARD"
         else:
             # Try DB config first
             valuation = Vault2Service().get_config_value(db, "trial_reward_valuation", {})

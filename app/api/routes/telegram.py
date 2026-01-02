@@ -203,7 +203,8 @@ def telegram_auth(
                 # --- NEW USER BONUS LOGIC (Phase 2.0.1) ---
                 # Grant 10,000 KRW Locked Balance (No Deposit Required Exception)
                 user.vault_locked_balance = 10000
-                user.vault_locked_expires_at = datetime.now(timezone.utc) + timedelta(hours=24)
+                from app.services.vault_service import VaultService
+                user.vault_locked_expires_at = VaultService._compute_locked_expires_at(datetime.now(timezone.utc))
                 db.add(user)
                 # ------------------------------------------
 

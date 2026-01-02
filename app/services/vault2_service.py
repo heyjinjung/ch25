@@ -52,8 +52,17 @@ class Vault2Service:
     DEFAULT_PROGRAM_KEY = "NEW_MEMBER_VAULT"
     DEFAULT_PROGRAM_NAME = "신규 정착 금고"
 
-    def compute_expires_at(self, locked_at: datetime, duration_hours: int) -> datetime:
+    def compute_expires_at(self, locked_at: datetime, duration_hours: int) -> datetime | None:
+        if duration_hours <= 0:
+            return None
         return locked_at + timedelta(hours=duration_hours)
+
+    @staticmethod
+    def _is_expiry_enabled(program: VaultProgram) -> bool:
+        policy = (program.expire_policy or "").upper()
+        if policy in {"NONE", "OFF", "DISABLED", "NO_EXPIRY"}:
+            return False
+        return int(program.duration_hours or 0) > 0
 
     def _ensure_default_program(self, db: Session) -> VaultProgram:
         program = db.query(VaultProgram).filter(VaultProgram.key == self.DEFAULT_PROGRAM_KEY).one_or_none()
@@ -315,7 +324,10 @@ class Vault2Service:
         status.state = "LOCKED"
         if status.locked_at is None:
             status.locked_at = now_dt
-        status.expires_at = self.compute_expires_at(status.locked_at, int(program.duration_hours or 24))
+        if self._is_expiry_enabled(program):
+            status.expires_at = self.compute_expires_at(status.locked_at, int(program.duration_hours or 24))
+        else:
+            status.expires_at = None
         self._append_event(
             status,
             {
@@ -390,6 +402,12 @@ class Vault2Service:
             .all()
         )
         for status, program in locked_rows:
+            if not self._is_expiry_enabled(program):
+                if status.expires_at is not None:
+                    status.expires_at = None
+                    db.add(status)
+                    updated += 1
+                continue
             locked_amt = int(status.locked_amount or 0)
             if locked_amt > 0:
                 status.available_amount = int(getattr(status, "available_amount", 0) or 0) + locked_amt
@@ -609,7 +627,7 @@ class Vault2Service:
         # Reset expires_at if locked becomes 0
         if new_locked == 0:
             status.expires_at = None
-        elif status.locked_amount == 0 and new_locked > 0:
+        elif status.locked_amount == 0 and new_locked > 0 and self._is_expiry_enabled(program):
              # If going from 0 to positive, set default expiry? Or keep None?
              # For manual adjustment, let's just keep current expires_at or set if missing.
              if not status.expires_at:

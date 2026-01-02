@@ -151,3 +151,43 @@ def test_trial_reward_routed_to_vault_applies_multiplier(session_factory, monkey
 
     ev = session.query(VaultEarnEvent).filter(VaultEarnEvent.earn_event_id.like("TRIAL:DICE:900:%")).one()
     assert ev.amount == 1554
+
+
+def test_trial_reward_none_is_silent_skip(session_factory, monkeypatch) -> None:
+    monkeypatch.setenv("ENABLE_TRIAL_PAYOUT_TO_VAULT", "true")
+    monkeypatch.setenv("TRIAL_REWARD_VALUATION", '{"ITEM:1": 777}')
+    get_settings.cache_clear()
+
+    session: Session = session_factory()
+    session.add(User(id=1, external_id="tester", status="ACTIVE", cash_balance=0, vault_locked_balance=0, vault_balance=0))
+    session.add(NewMemberDiceEligibility(user_id=1, is_eligible=True, campaign_key="test"))
+    session.commit()
+
+    # Spy on ops notification; NONE:0 should not be treated as a valuation error.
+    calls: list[tuple[str, str, str]] = []
+
+    def _spy_notify(*, source: str, reward_id: str, reason: str) -> None:
+        calls.append((source, reward_id, reason))
+
+    import app.services.vault_service as vault_service_module
+
+    monkeypatch.setattr(vault_service_module, "notify_vault_skip_error", _spy_notify)
+
+    vault = VaultService()
+    added = vault.record_trial_result_earn_event(
+        session,
+        user_id=1,
+        game_type="ROULETTE",
+        game_log_id=123,
+        token_type="ROULETTE_COIN",
+        reward_type="NONE",
+        reward_amount=0,
+        payout_raw={"case": "blank"},
+    )
+    assert added == 0
+    assert calls == []
+
+    events = session.query(VaultEarnEvent).filter(VaultEarnEvent.earn_event_id.like("TRIAL:ROULETTE:123:%")).all()
+    assert len(events) == 1
+    assert events[0].amount == 0
+    assert events[0].reward_kind == "SKIP_NO_REWARD"

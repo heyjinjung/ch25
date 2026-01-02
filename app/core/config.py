@@ -200,6 +200,14 @@ class Settings(BaseSettings):
         ),
     )
 
+    telegram_channel_username: str | None = Field(
+        None,
+        validation_alias=AliasChoices(
+            "TELEGRAM_CHANNEL_USERNAME",
+            "telegram_channel_username",
+        ),
+    )
+
     # Redis (Optional - for caching)
     redis_url: str | None = Field(None, validation_alias=AliasChoices("REDIS_URL", "redis_url"))
 

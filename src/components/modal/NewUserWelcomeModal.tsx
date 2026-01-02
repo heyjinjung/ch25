@@ -21,6 +21,9 @@ interface NewUserWelcomeModalProps {
 
 const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) => {
     const [isVerifying, setIsVerifying] = useState(false);
+    const [pendingJoinChannelMissionId, setPendingJoinChannelMissionId] = useState<number | null>(null);
+    const pendingJoinRetriesRef = useRef(0);
+    const pendingJoinLastAttemptAtRef = useRef<number>(0);
     const { addToast } = useToast();
     const { notification, impact } = useHaptic();
     const queryClient = useQueryClient();
@@ -44,6 +47,64 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) =>
     }, [status]);
 
     const activeData = status || lastDataRef.current;
+
+    const tryVerifyPendingJoinChannel = async () => {
+        if (pendingJoinChannelMissionId == null) return;
+        if (isVerifying) return;
+
+        const now = Date.now();
+        // Avoid spamming when Telegram toggles focus multiple times.
+        if (now - pendingJoinLastAttemptAtRef.current < 1200) return;
+        pendingJoinLastAttemptAtRef.current = now;
+
+        // Fail-safe: don't retry forever.
+        if (pendingJoinRetriesRef.current >= 5) {
+            setPendingJoinChannelMissionId(null);
+            pendingJoinRetriesRef.current = 0;
+            return;
+        }
+        pendingJoinRetriesRef.current += 1;
+
+        setIsVerifying(true);
+        try {
+            const result = await verifyChannelSubscription(pendingJoinChannelMissionId);
+            if (result?.success) {
+                notification("success");
+                addToast("구독 인증 완료!", "success");
+                setPendingJoinChannelMissionId(null);
+                pendingJoinRetriesRef.current = 0;
+                await queryClient.invalidateQueries({ queryKey: ["new-user-status"] });
+            }
+        } catch (error) {
+            console.error("[NewUserWelcomeModal] Pending channel verify failed:", error);
+        } finally {
+            setIsVerifying(false);
+        }
+    };
+
+    useEffect(() => {
+        if (pendingJoinChannelMissionId == null) return;
+
+        const onVisibilityOrFocus = () => {
+            if (document.visibilityState === "visible") {
+                void tryVerifyPendingJoinChannel();
+            }
+        };
+
+        window.addEventListener("focus", onVisibilityOrFocus);
+        document.addEventListener("visibilitychange", onVisibilityOrFocus);
+
+        // Also try once shortly after setting pending state.
+        const t = window.setTimeout(() => {
+            void tryVerifyPendingJoinChannel();
+        }, 800);
+
+        return () => {
+            window.removeEventListener("focus", onVisibilityOrFocus);
+            document.removeEventListener("visibilitychange", onVisibilityOrFocus);
+            window.clearTimeout(t);
+        };
+    }, [pendingJoinChannelMissionId]);
 
     const handleClose = () => {
         onClose();
@@ -71,7 +132,9 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) =>
                     } else {
                         window.open(channelLink, "_blank");
                     }
-                    addToast("채널에 입장하여 구독해 주세요.", "info");
+                    setPendingJoinChannelMissionId(missionId);
+                    pendingJoinRetriesRef.current = 0;
+                    addToast("채널 구독 후 앱으로 돌아오면 자동으로 확인합니다.", "info");
                 }
             } else if (actionType === "PLAY_GAME") {
                 addToast("게임을 플레이하여 미션을 완료하세요!", "info");
