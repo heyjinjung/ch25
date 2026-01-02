@@ -75,7 +75,7 @@ const MobileBottomNav: React.FC = memo(() => {
     ];
 
     return (
-        <nav className="fixed bottom-0 left-0 right-0 h-[64px] pb-[env(safe-area-inset-bottom)] z-[9999] bg-black/80 backdrop-blur-xl border-t border-white/5 lg:hidden">
+        <nav className="fixed bottom-0 left-0 right-0 h-[calc(64px+env(safe-area-inset-bottom))] pb-[env(safe-area-inset-bottom)] z-[9999] bg-black/80 backdrop-blur-xl border-t border-white/5 lg:hidden">
             <div className="flex h-full w-full items-center justify-around px-1 max-w-lg mx-auto">
                 {navItems.map((item) => (
                     <Link

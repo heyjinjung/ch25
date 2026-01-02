@@ -43,6 +43,12 @@ body {
   background: radial-gradient(circle at 50% 10%, #2a2a2a 0%, #151515 50%, #050505 100%);
   color: white;
   min-height: 100vh;
+  min-height: 100dvh;
+}
+
+#root {
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 a {

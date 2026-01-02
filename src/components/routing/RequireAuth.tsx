@@ -53,7 +53,7 @@ const RequireAuth: React.FC = () => {
 
   if (!isReady) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-black">
+      <div className="flex items-center justify-center min-h-[100dvh] bg-black">
         <div className="relative">
           <div className="w-12 h-12 border-2 border-figma-accent/20 border-t-figma-accent rounded-full animate-spin" />
           <div className="absolute inset-0 blur-lg bg-figma-accent/20 animate-pulse" />
@@ -68,7 +68,7 @@ const RequireAuth: React.FC = () => {
         return <Navigate to="/login" state={{ from: location }} replace />;
       }
       return (
-        <div className="relative flex flex-col items-center justify-center min-h-screen bg-[#050505] overflow-hidden text-center p-6 selection:bg-[#30FF75] selection:text-black">
+        <div className="relative flex flex-col items-center justify-center min-h-[100dvh] bg-[#050505] overflow-hidden text-center p-6 selection:bg-[#30FF75] selection:text-black">
 
           {/* Background Effects */}
           <div className="absolute top-0 left-0 w-full h-full opacity-40 pointer-events-none">
@@ -140,7 +140,7 @@ const RequireAuth: React.FC = () => {
 
     // Authenticating state (Telegram initData exists)
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-black">
+      <div className="flex flex-col items-center justify-center min-h-[100dvh] bg-black">
         <div className="space-y-6 flex flex-col items-center">
           <div className="relative">
             <div className="w-16 h-16 border-4 border-figma-accent/10 border-t-figma-accent rounded-full animate-spin" />
