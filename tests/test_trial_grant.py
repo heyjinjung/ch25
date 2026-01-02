@@ -6,6 +6,7 @@ from app.core.config import get_settings
 from app.api.deps import get_db
 from app.models.game_wallet import GameTokenType, UserGameWallet
 from app.models.game_wallet_ledger import UserGameWalletLedger
+from app.services.trial_grant_service import TrialGrantService
 
 
 def test_trial_grant_grants_once_per_day_when_empty(client, session_factory):
@@ -146,3 +147,92 @@ def test_trial_grant_first_time_still_grants_even_when_prob_zero(client, session
     assert data["result"] == "OK"
     assert data["granted"] == 1
     assert data["balance"] == 1
+
+
+def test_trial_grant_does_not_grant_premium_keys(client, session_factory):
+    db = session_factory()
+
+    # Ensure premium key wallets exist and are empty.
+    for token_type in (GameTokenType.GOLD_KEY, GameTokenType.DIAMOND_KEY):
+        wallet = (
+            db.query(UserGameWallet)
+            .filter(UserGameWallet.user_id == 1, UserGameWallet.token_type == token_type)
+            .one_or_none()
+        )
+        if wallet is None:
+            wallet = UserGameWallet(user_id=1, token_type=token_type, balance=0)
+        else:
+            wallet.balance = 0
+        db.add(wallet)
+    db.commit()
+
+    for token_type in ("GOLD_KEY", "DIAMOND_KEY"):
+        resp = client.post("/api/trial-grant", json={"token_type": token_type})
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["result"] == "SKIP"
+        assert data["granted"] == 0
+        assert data["balance"] == 0
+
+
+def test_trial_grant_daily_total_cap_blocks_additional_token_types(session_factory, monkeypatch):
+    # Even if the allowed token list expands in the future, daily total trial grants must be capped.
+    monkeypatch.setenv("ENABLE_TRIAL_GRANT_AUTO", "true")
+    get_settings.cache_clear()
+
+    db = session_factory()
+    svc = TrialGrantService()
+
+    # Simulate a future scenario where GOLD_KEY could be (incorrectly) added to the allowed set.
+    svc._allowed_trial_token_types = {
+        GameTokenType.ROULETTE_COIN,
+        GameTokenType.DICE_TOKEN,
+        GameTokenType.LOTTERY_TICKET,
+        GameTokenType.GOLD_KEY,
+    }
+    svc._daily_total_cap = 3
+
+    # Ensure wallets exist and are empty.
+    for token_type in (
+        GameTokenType.ROULETTE_COIN,
+        GameTokenType.DICE_TOKEN,
+        GameTokenType.LOTTERY_TICKET,
+        GameTokenType.GOLD_KEY,
+    ):
+        wallet = (
+            db.query(UserGameWallet)
+            .filter(UserGameWallet.user_id == 1, UserGameWallet.token_type == token_type)
+            .one_or_none()
+        )
+        if wallet is None:
+            wallet = UserGameWallet(user_id=1, token_type=token_type, balance=0)
+        else:
+            wallet.balance = 0
+        db.add(wallet)
+    db.commit()
+
+    # Insert 3 trial grants for today (KST) across the 3 ticket types.
+    today_kst = datetime.now(ZoneInfo("Asia/Seoul")).date()
+    start_utc, _ = svc._kst_day_bounds_utc(today_kst)
+    created_at = start_utc + timedelta(hours=1)
+
+    for t in (GameTokenType.ROULETTE_COIN, GameTokenType.DICE_TOKEN, GameTokenType.LOTTERY_TICKET):
+        db.add(
+            UserGameWalletLedger(
+                user_id=1,
+                token_type=t,
+                delta=1,
+                balance_after=1,
+                reason="TRIAL_GRANT",
+                label=f"TRIAL_{t.value}_{today_kst.isoformat()}",
+                meta_json={"source": "ticket_zero", "date": today_kst.isoformat()},
+                created_at=created_at,
+            )
+        )
+    db.commit()
+
+    # Now a 4th trial grant attempt (for a different token type) must be blocked by the global cap.
+    granted, balance, label = svc.grant_daily_if_empty(db, user_id=1, token_type=GameTokenType.GOLD_KEY)
+    assert granted == 0
+    assert balance == 0
+    assert label is None

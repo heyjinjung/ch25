@@ -20,6 +20,18 @@ class TrialGrantService:
         self.wallet_service = GameWalletService()
         self.settings = get_settings()
 
+        # TRIAL_GRANT is meant to prevent "ticket-zero" lockout only.
+        # Premium keys must never be auto-granted via trial.
+        self._allowed_trial_token_types: set[GameTokenType] = {
+            GameTokenType.ROULETTE_COIN,
+            GameTokenType.DICE_TOKEN,
+            GameTokenType.LOTTERY_TICKET,
+        }
+
+        # Per-user daily total cap across all trial-grantable token types.
+        # (Even if more token types become trial-grantable later, keep a strict global limit.)
+        self._daily_total_cap: int = 3
+
     @staticmethod
     def _kst_day_bounds_utc(day_kst) -> tuple[datetime, datetime]:
         tz_kst = ZoneInfo("Asia/Seoul")
@@ -48,6 +60,27 @@ class TrialGrantService:
             select(func.coalesce(func.sum(UserGameWalletLedger.delta), 0)).where(
                 UserGameWalletLedger.user_id == user_id,
                 UserGameWalletLedger.token_type == token_type,
+                UserGameWalletLedger.delta > 0,
+                UserGameWalletLedger.reason == "TRIAL_GRANT",
+                UserGameWalletLedger.created_at >= start_utc,
+                UserGameWalletLedger.created_at < end_utc,
+            )
+        ).scalar_one()
+        return int(total or 0)
+
+    def _sum_total_grants_in_window(
+        self,
+        db: Session,
+        *,
+        user_id: int,
+        token_types: set[GameTokenType],
+        start_utc: datetime,
+        end_utc: datetime,
+    ) -> int:
+        total = db.execute(
+            select(func.coalesce(func.sum(UserGameWalletLedger.delta), 0)).where(
+                UserGameWalletLedger.user_id == user_id,
+                UserGameWalletLedger.token_type.in_(token_types),
                 UserGameWalletLedger.delta > 0,
                 UserGameWalletLedger.reason == "TRIAL_GRANT",
                 UserGameWalletLedger.created_at >= start_utc,
@@ -90,6 +123,11 @@ class TrialGrantService:
         Returns: (granted_amount, balance_after, grant_label)
         """
 
+        # Hard safety gate: do not trial-grant anything except the 3 ticket token types.
+        if token_type not in self._allowed_trial_token_types:
+            balance_now = self.wallet_service.get_balance(db, user_id, token_type)
+            return 0, balance_now, None
+
         if not bool(getattr(self.settings, "enable_trial_grant_auto", True)):
             balance_now = self.wallet_service.get_balance(db, user_id, token_type)
             return 0, balance_now, None
@@ -99,6 +137,21 @@ class TrialGrantService:
             return 0, balance, None
 
         today_kst = datetime.now(ZoneInfo("Asia/Seoul")).date()
+
+        # Global daily total cap across all trial-grantable token types.
+        # Note: We count successful TRIAL_GRANT ledger entries (delta > 0).
+        start_utc, end_utc = self._kst_day_bounds_utc(today_kst)
+        if self._daily_total_cap > 0:
+            granted_total_today = self._sum_total_grants_in_window(
+                db,
+                user_id=user_id,
+                token_types=self._allowed_trial_token_types,
+                start_utc=start_utc,
+                end_utc=end_utc,
+            )
+            if granted_total_today >= self._daily_total_cap:
+                balance_now = self.wallet_service.get_balance(db, user_id, token_type)
+                return 0, balance_now, None
 
         # Weekly cap (0 = unlimited)
         weekly_cap = int(getattr(self.settings, "trial_weekly_cap", 0) or 0)
@@ -123,7 +176,7 @@ class TrialGrantService:
             balance_now = self.wallet_service.get_balance(db, user_id, token_type)
             return 0, balance_now, None
 
-        start_utc, end_utc = self._kst_day_bounds_utc(today_kst)
+        # Per-token daily cap and idempotency checks.
         granted_today = self._sum_grants_in_window(
             db,
             user_id=user_id,

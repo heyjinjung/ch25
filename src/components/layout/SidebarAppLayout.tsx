@@ -4,7 +4,6 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import SidebarContainer, { SidebarMobileFooter } from "./SidebarContainer";
 import { requestTrialGrant } from "../../api/trialGrantApi";
 import { useToast } from "../common/ToastProvider";
-import type { GameTokenType } from "../../types/gameTokens";
 import { isTrialGrantEnabled } from "../../config/featureFlags";
 import MobileBottomNav from "./MobileBottomNav";
 import AppHeader from "./AppHeader";
@@ -32,7 +31,7 @@ const SidebarAppLayout: React.FC = memo(() => {
   const autoGrantKey = useMemo(() => `auto-trial-grant:${kstDayKey}:v1`, [kstDayKey]);
 
   const autoGrantMutation = useMutation({
-    mutationFn: () => requestTrialGrant({ token_type: "ROULETTE_COIN" as GameTokenType }),
+    mutationFn: () => requestTrialGrant({ token_type: "ROULETTE_COIN" }),
     onSuccess: (data) => {
       try {
         if (typeof window !== "undefined" && window.localStorage) {

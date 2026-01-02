@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { GameTokenType } from "../../types/gameTokens";
 import { getUiConfig } from "../../api/uiConfigApi";
-import { requestTrialGrant } from "../../api/trialGrantApi";
+import { isTrialGrantAllowedTokenType, requestTrialGrant } from "../../api/trialGrantApi";
 import { useToast } from "../common/ToastProvider";
 import { getVaultStatus } from "../../api/vaultApi";
 import VaultModal from "../vault/VaultModal";
@@ -46,6 +46,7 @@ const TicketZeroPanel: React.FC<Props> = ({ tokenType, onClaimSuccess }) => {
   const { addToast } = useToast();
   const queryClient = useQueryClient();
   const [vaultModalOpen, setVaultModalOpen] = useState(false);
+  const canRequestTrialGrant = useMemo(() => isTrialGrantAllowedTokenType(tokenType), [tokenType]);
 
   const ui = useQuery({
     queryKey: ["ui-config", "ticket_zero"],
@@ -160,7 +161,12 @@ const TicketZeroPanel: React.FC<Props> = ({ tokenType, onClaimSuccess }) => {
   }, [config.rewardPreviewProgress]);
 
   const claimMutation = useMutation({
-    mutationFn: () => requestTrialGrant({ token_type: tokenType }),
+    mutationFn: () => {
+      if (!isTrialGrantAllowedTokenType(tokenType)) {
+        return Promise.reject(new Error("NOT_TRIAL_GRANTABLE_TOKEN_TYPE"));
+      }
+      return requestTrialGrant({ token_type: tokenType });
+    },
     onSuccess: (data) => {
       if (data.result === "OK") {
         addToast("체험 티켓 1장 지급 완료", "success");
@@ -171,7 +177,12 @@ const TicketZeroPanel: React.FC<Props> = ({ tokenType, onClaimSuccess }) => {
       addToast("오늘은 이미 지급받았어요", "info");
       onClaimSuccess?.();
     },
-    onError: () => {
+    onError: (err) => {
+      const message = err instanceof Error ? err.message : "";
+      if (message === "NOT_TRIAL_GRANTABLE_TOKEN_TYPE") {
+        addToast("이 티켓은 체험 지급 대상이 아니에요.", "info");
+        return;
+      }
       addToast("지급에 실패했어요. 잠시 후 다시 시도해주세요.", "error");
     },
   });
@@ -250,6 +261,10 @@ const TicketZeroPanel: React.FC<Props> = ({ tokenType, onClaimSuccess }) => {
             type="button"
             disabled={claimMutation.isPending}
             onClick={() => {
+              if (!canRequestTrialGrant) {
+                addToast("이 티켓은 체험 지급 대상이 아니에요.", "info");
+                return;
+              }
               claimMutation.mutate();
             }}
             className="rounded-xl border border-black/15 bg-cc-lime px-4 py-2 text-sm font-extrabold text-black disabled:cursor-not-allowed disabled:bg-cc-lime/40 disabled:text-black/45"
