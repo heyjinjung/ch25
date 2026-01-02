@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchInventory, useInventoryItem, InventoryItem } from '../api/inventoryApi';
-import { Loader2, Package, Coins, Ticket } from 'lucide-react';
+import { Loader2, Package, Coins } from 'lucide-react';
 import { useToast } from '../components/common/ToastProvider';
 import { clsx } from 'clsx';
 import { tryHaptic } from '../utils/haptics';
@@ -195,12 +195,12 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, onUse, isPending }) => {
         "VOUCHER_GOLD_KEY_1": {
             title: "골드키 교환권",
             desc: "골드키 1개로 즉시 교환",
-            icon: <Ticket className="w-5 h-5 text-gold-400" />
+            icon: <img src="/assets/asset_ticket_gold.png" className="w-8 h-8 object-contain" alt="" />
         },
         "VOUCHER_DIAMOND_KEY_1": {
             title: "다이아키 교환권",
             desc: "다이아키 1개로 즉시 교환",
-            icon: <Ticket className="w-5 h-5 text-figma-accent" />
+            icon: <img src="/assets/asset_ticket_diamond.png" className="w-8 h-8 object-contain" alt="" />
         },
         "DIAMOND": {
             title: "다이아몬드",
