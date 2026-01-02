@@ -94,6 +94,56 @@
 - [ ] 헬스 체크: `curl http://127.0.0.1:8000/` (서버 내부)
 - [ ] nginx 프록시 체크: `curl https://yourdomain.com/health`
 
+### 7.2) 서버 표준 스타트 런북
+
+**목표**: 공간 확보 → 코드 동기화 → 빌드/기동 → 마이그레이션 → 시드 → 헬스체크
+
+```bash
+# 1) 접속 + 위치
+ssh root@149.28.135.147
+cd /root/ch25
+
+# 2) 상태 확인
+df -h
+docker system df
+docker compose ps
+git status -sb
+
+# 3) 공간 확보 (볼륨 유지)
+docker compose down || true
+docker builder prune -af || true
+docker system prune -af || true
+
+# 4) 코드 동기화 (기준 리모트)
+git fetch dev-fork
+git reset --hard dev-fork/temp-merge2
+git status -sb
+
+# 5) 환경 파일 확인
+ls -la .env
+# 필요 시: cp .env.production .env
+
+# 6) 빌드/기동
+docker compose up -d --build
+docker compose ps
+
+# 7) 마이그레이션
+docker compose exec backend alembic upgrade head
+
+# 8) NEW_USER 미션 시드 (필요 시)
+docker compose exec backend python scripts/seed_new_user_missions.py
+
+# 9) 최종 헬스체크
+docker compose ps
+curl -sS http://127.0.0.1:8000/ | head
+curl -k -sS https://yourdomain.com/health | head
+```
+
+**주의**
+- `docker system prune -af`는 이미지 전부 삭제 → 재빌드 필수.
+- 볼륨 삭제 금지: `docker volume prune` 금지.
+- 빌드 오류가 반복되면 `.env` 인코딩(UTF-8)과 `docker-compose.yml`의 `environment` 우선순위 확인.
+
 ### 7.1) 빌드 시간 단축 팁
 
 전체 빌드(`--build`)는 약 5-7분 소요됩니다. 변경된 서비스만 빌드하면 시간을 크게 단축할 수 있습니다:
