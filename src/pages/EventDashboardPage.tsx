@@ -11,12 +11,12 @@ const EventDashboardPage: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#0A0A0A] pb-24 relative overflow-hidden">
+        <div className="min-h-[calc(100vh-80px)] bg-[#0A0A0A] relative overflow-hidden flex flex-col">
             {/* Background Effects */}
             <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-purple-600/10 to-transparent pointer-events-none" />
             <div className="absolute bottom-[20%] right-[-10%] w-80 h-80 bg-emerald-600/5 rounded-full blur-[120px] pointer-events-none" />
 
-            <div className="relative z-10 p-4 pt-6 max-w-md mx-auto">
+            <div className="relative z-10 p-4 pt-6 max-w-md mx-auto flex-1 flex flex-col justify-start">
                 {/* Dashboard Grid */}
                 <div className="space-y-4">
                     {/* Level Tower Section */}

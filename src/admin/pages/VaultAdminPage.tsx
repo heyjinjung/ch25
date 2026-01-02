@@ -704,8 +704,8 @@ const VaultAdminPage: React.FC = () => {
                                     <p className="text-2xl font-black text-white">{(timerState?.available_balance ?? 0).toLocaleString()}원</p>
                                 </div>
                                 <div className="rounded-lg border border-[#222] bg-[#111] p-4">
-                                    <p className="text-xs text-gray-500 mb-1">Cash Balance</p>
-                                    <p className="text-2xl font-black text-white">{(timerState?.cash_balance ?? 0).toLocaleString()}원</p>
+                                    <p className="text-xs text-gray-500 mb-1">Reserved Balance</p>
+                                    <p className="text-2xl font-black text-white">{Math.max((timerState?.locked_balance ?? 0) - (timerState?.available_balance ?? 0), 0).toLocaleString()}원</p>
                                 </div>
                             </div>
 

@@ -243,9 +243,11 @@ To-Be(권장):
 - 배포 순서(서버 먼저, 프론트 나중)로 호환성을 보장해야 한다.
 
 ## 9. Open Questions(결정 필요)
-- Q1. 기존 `cash_balance`를 어떻게 처리할지(옵션 A vs B)
-- Q2. ‘해금’의 의미를 어떤 UX로 보여줄지(총액은 같고 available만 바뀌는 것이 사용자에게 납득되는지)
-- Q3. 시즌패스 “포인트” 보상을 금고 적립으로 볼지, 아니면 티켓/아이템으로만 유지할지
+- Q1. 기존 `cash_balance` 처리: **폐지(Phase 4 옵션 B 이관 후 0으로 수렴 + API/FE에서 제거)**
+- Q2. ‘해금’ UX: 유저의 핵심 니즈는 “빨리 출금”이므로, 화면/문구는 **`출금 가능(available)`을 중심으로 단순화**한다.
+  - 총액(`vault_amount_total`)은 누적 표시 용도로만 두고,
+  - CTA/검증/신청 금액은 `vault_amount_available`만 사용한다.
+- Q3. 시즌패스 “포인트” 보상: **금고 적립(= `vault_locked_balance` SoT)으로 넣는다.**
 
 ## 10. 변경 이력
 - v1.3 (2026-01-02, BE팀): Phase 3 잔여 항목 반영(미션 CASH_UNLOCK/입금 unlock의 cash_balance write 차단)

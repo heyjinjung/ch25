@@ -37,8 +37,6 @@ def test_vault_status_includes_amount_fields(client: TestClient, session_factory
     assert body["vault_amount_reserved"] == 0
     assert body["vault_amount_available"] == 30_000
 
-    # Compatibility: cash_balance is exposed as available during rollout
-    assert body["cash_balance"] == 30_000
     assert body["available_balance"] == 30_000
 
 

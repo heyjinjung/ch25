@@ -86,7 +86,7 @@ const GameLobbyPage: React.FC = () => {
     ];
 
     return (
-        <div className="space-y-4 pb-20">
+        <div className="min-h-[calc(100vh-160px)] flex flex-col justify-start pb-8">
             <div className="grid grid-cols-2 gap-3">
                 {games.map((game) => (
                     <GameCard key={game.title} {...game} />
