@@ -1,0 +1,16 @@
+services:
+  # Local nginx: no SSL/certbot volumes (Windows-friendly)
+  nginx:
+    ports: !override
+      - "8080:80"
+    volumes: !override
+      - ./nginx/nginx.local.conf:/etc/nginx/nginx.conf:ro
+      - ./logs/nginx:/var/log/nginx
+
+  # Prevent certbot from starting in local runs (enable explicitly with --profile server)
+  certbot:
+    profiles: ["server"]
+
+  # Prevent telegram bot from starting by default (requires TELEGRAM_BOT_TOKEN)
+  telegram_bot:
+    profiles: ["telegram"]

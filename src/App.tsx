@@ -18,7 +18,7 @@ const App: React.FC = () => {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen">
+      <div className="min-h-[100dvh]">
         <ToastProvider>
           <AppRouter />
         </ToastProvider>

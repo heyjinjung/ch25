@@ -1,15 +1,17 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchInventory, useInventoryItem, InventoryItem } from '../api/inventoryApi';
 import { Loader2, Package, Coins, Ticket } from 'lucide-react';
 import { useToast } from '../components/common/ToastProvider';
 import { clsx } from 'clsx';
 import { tryHaptic } from '../utils/haptics';
+import { useNavigate } from 'react-router-dom';
 
 const InventoryPage: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'items' | 'wallet'>('items');
     const queryClient = useQueryClient();
     const { addToast } = useToast();
+    const navigate = useNavigate();
 
     const { data, isLoading, isError } = useQuery({
         queryKey: ['inventory'],
@@ -62,6 +64,14 @@ const InventoryPage: React.FC = () => {
     const items = Array.isArray(data?.items) ? data.items : [];
     const wallet = data?.wallet && typeof data.wallet === "object" && !Array.isArray(data.wallet) ? data.wallet : {};
 
+    const diamondBalance = useMemo(() => {
+        const diamond = items.find((item) => item.item_type === 'DIAMOND');
+        return Number(diamond?.quantity ?? 0);
+    }, [items]);
+
+    const goldVoucherCost = 30;
+    const diamondShortage = Math.max(0, goldVoucherCost - diamondBalance);
+
     return (
         <div className="mx-auto w-full max-w-lg pb-[calc(96px+env(safe-area-inset-bottom))]">
             {/* Title */}
@@ -72,6 +82,34 @@ const InventoryPage: React.FC = () => {
                 <div>
                     <h1 className="text-xl font-black text-white">인벤토리</h1>
                     <p className="text-[11px] text-white/40 tracking-wide">MY INVENTORY</p>
+                </div>
+            </div>
+
+            {/* Diamond -> Shop CTA (minimal flow guide) */}
+            <div className="mb-6 rounded-[24px] border border-white/10 bg-white/5 p-5">
+                <div className="flex items-start justify-between gap-4">
+                    <div>
+                        <div className="text-xs font-bold text-white/60 tracking-wider">DIAMOND</div>
+                        <div className="mt-1 text-2xl font-black text-white tracking-tight">{diamondBalance.toLocaleString()}</div>
+                        <div className="mt-2 text-[11px] font-medium text-white/50">
+                            {diamondShortage > 0
+                                ? `골드키 교환권 구매까지 다이아 ${diamondShortage.toLocaleString()}개 남았어요. (필요 ${goldVoucherCost})`
+                                : `지금 바로 골드키 교환권을 구매할 수 있어요. (필요 ${goldVoucherCost})`}
+                        </div>
+                        <div className="mt-1 text-[11px] font-medium text-white/40">
+                            상점에서 교환권을 구매한 뒤, 인벤토리에서 “사용하기”를 누르면 키가 지급돼요.
+                        </div>
+                    </div>
+
+                    <button
+                        onClick={() => {
+                            tryHaptic(10);
+                            navigate('/shop');
+                        }}
+                        className="shrink-0 bg-figma-primary text-white text-[12px] font-black px-4 py-2.5 rounded-xl transition-all active:scale-[0.98]"
+                    >
+                        교환권 구매하러 가기
+                    </button>
                 </div>
             </div>
 
@@ -157,17 +195,17 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, onUse, isPending }) => {
         "VOUCHER_GOLD_KEY_1": {
             title: "골드키 교환권",
             desc: "골드키 1개로 즉시 교환",
-            icon: <Ticket className="w-5 h-5 text-amber-300" />
+            icon: <Ticket className="w-5 h-5 text-gold-400" />
         },
         "VOUCHER_DIAMOND_KEY_1": {
             title: "다이아키 교환권",
             desc: "다이아키 1개로 즉시 교환",
-            icon: <Ticket className="w-5 h-5 text-cyan-300" />
+            icon: <Ticket className="w-5 h-5 text-figma-accent" />
         },
         "DIAMOND": {
             title: "다이아몬드",
             desc: "프리미엄 재화",
-            icon: <div className="w-4 h-4 bg-cyan-400 rotate-45 rounded-[2px]" />
+            icon: <div className="w-4 h-4 rotate-45 rounded-[2px] bg-figma-accent/10 border border-figma-accent" />
         }
     };
 
@@ -175,7 +213,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, onUse, isPending }) => {
     const info = INFO[item.item_type] || {
         title: item.item_type,
         desc: "일반 아이템",
-        icon: <Package className="w-5 h-5 text-gray-400" />
+        icon: <Package className="w-5 h-5 text-white/40" />
     };
 
     return (
@@ -186,7 +224,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, onUse, isPending }) => {
                         {info.icon}
                     </div>
                     <div>
-                        <h3 className="font-bold text-base text-gray-100">{info.title}</h3>
+                        <h3 className="font-bold text-base text-white">{info.title}</h3>
                         <p className="text-xs text-white/40 mt-0.5">{info.desc}</p>
                     </div>
                 </div>

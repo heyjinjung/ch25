@@ -13,7 +13,8 @@ const AppHeader: React.FC = () => {
     const navigate = useNavigate();
     const { isMuted, toggleMute, playClick, playTabTouch } = useSound();
     const [isTicketMenuOpen, setIsTicketMenuOpen] = useState(false);
-    const menuRef = useRef<HTMLDivElement>(null);
+    const desktopMenuRef = useRef<HTMLDivElement>(null);
+    const mobileMenuRef = useRef<HTMLDivElement>(null);
 
     const { data: vault } = useQuery({
         queryKey: ["vault-status"],
@@ -24,9 +25,10 @@ const AppHeader: React.FC = () => {
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
-            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-                setIsTicketMenuOpen(false);
-            }
+            const target = event.target as Node;
+            const isInsideDesktop = !!desktopMenuRef.current?.contains(target);
+            const isInsideMobile = !!mobileMenuRef.current?.contains(target);
+            if (!isInsideDesktop && !isInsideMobile) setIsTicketMenuOpen(false);
         };
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -112,7 +114,7 @@ const AppHeader: React.FC = () => {
                     </Link>
 
                     {/* Tickets Button with Menu */}
-                    <div className="relative" ref={menuRef}>
+                    <div className="relative" ref={desktopMenuRef}>
                         <button
                             onClick={handleTicketClick}
                             className={clsx(
@@ -199,7 +201,7 @@ const AppHeader: React.FC = () => {
                 </Link>
 
                 {/* Mobile Ticket Dropdown Container */}
-                <div className="flex-1 relative">
+                <div className="flex-1 relative" ref={mobileMenuRef}>
                     <button
                         onClick={handleTicketClick}
                         className={clsx(

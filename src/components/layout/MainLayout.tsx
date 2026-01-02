@@ -8,7 +8,7 @@ interface MainLayoutProps {
 
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   return (
-    <div className="flex min-h-screen flex-col bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 text-slate-100">
+    <div className="flex min-h-[100dvh] flex-col bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 text-slate-100">
       <AppHeader />
       <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-4 py-6 sm:px-6 lg:px-8">
         {/* Header removed per user request */}

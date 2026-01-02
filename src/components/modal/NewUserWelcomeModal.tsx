@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { getNewUserStatus } from "../../api/newUserApi";
 import { verifyChannelSubscription } from "../../api/viralApi";
 import { useToast } from "../common/ToastProvider";
@@ -20,16 +21,29 @@ interface NewUserWelcomeModalProps {
 
 const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) => {
     const [dontShowAgain, setDontShowAgain] = useState(false);
+    const [isVerifying, setIsVerifying] = useState(false);
     const { addToast } = useToast();
     const { notification, impact } = useHaptic();
     const queryClient = useQueryClient();
+    const navigate = useNavigate();
 
-    const { data: status } = useQuery({
+    // Store previous data to prevent modal flicker/disappearance during refetch
+    const lastDataRef = useRef<any>(null);
+
+    const { data: status, isFetching } = useQuery({
         queryKey: ["new-user-status"],
         queryFn: getNewUserStatus,
         staleTime: 10_000,
         retry: false,
     });
+
+    useEffect(() => {
+        if (status) {
+            lastDataRef.current = status;
+        }
+    }, [status]);
+
+    const activeData = status || lastDataRef.current;
 
     const handleClose = () => {
         if (dontShowAgain) {
@@ -39,27 +53,53 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) =>
     };
 
     const handleMissionAction = async (missionId: number, actionType: string | null) => {
-        if (actionType === "JOIN_CHANNEL") {
-            impact("medium");
-            const result = await verifyChannelSubscription(missionId);
-            if (result.success) {
-                notification("success");
-                addToast("구독 인증 완료!", "success");
-                queryClient.invalidateQueries({ queryKey: ["new-user-status"] });
-            } else {
-                const channelLink = "https://t.me/+LksI3XlSjLlhZmE0";
-                const tg = window.Telegram?.WebApp;
-                if (tg?.openTelegramLink) {
-                    tg.openTelegramLink(channelLink);
+        if (isVerifying) return;
+
+        impact("medium");
+
+        try {
+            if (actionType === "JOIN_CHANNEL") {
+                setIsVerifying(true);
+                const result = await verifyChannelSubscription(missionId);
+                if (result.success) {
+                    notification("success");
+                    addToast("구독 인증 완료!", "success");
+                    await queryClient.invalidateQueries({ queryKey: ["new-user-status"] });
                 } else {
-                    window.open(channelLink, "_blank");
+                    // 씨씨지민 또는 씨씨공식 채널 링크 (기존 코드 유지)
+                    const channelLink = "https://t.me/+LksI3XlSjLlhZmE0";
+                    const tg = window.Telegram?.WebApp;
+                    if (tg?.openTelegramLink) {
+                        tg.openTelegramLink(channelLink);
+                    } else {
+                        window.open(channelLink, "_blank");
+                    }
+                    addToast("채널에 입장하여 구독해 주세요.", "info");
                 }
-                addToast("채널에 입장하여 구독해 주세요.", "info");
+            } else if (actionType === "PLAY_GAME") {
+                addToast("게임을 플레이하여 미션을 완료하세요!", "info");
+                handleClose();
+                navigate("/games");
+            } else if (actionType === "LOGIN") {
+                addToast("내일 다시 접속하면 자동으로 완료됩니다.", "info");
             }
+        } catch (error) {
+            console.error("[NewUserWelcomeModal] Mission action failed:", error);
+            notification("error");
+            addToast("오류가 발생했습니다. 잠시 후 다시 시도해주세요.", "error");
+        } finally {
+            setIsVerifying(false);
         }
     };
 
-    if (!status?.eligible || !status.missions || status.missions.length === 0) {
+    // If no data and no previous data, or ineligible (and not just refetching)
+    if (!activeData || (!activeData.eligible && !isFetching)) {
+        return null;
+    }
+
+    const { missions, seconds_left } = activeData;
+
+    if (!missions || missions.length === 0) {
         return null;
     }
 
@@ -80,8 +120,8 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) =>
         return "미션을 완료하세요";
     };
 
-    const completedCount = status.missions.filter((m) => m.is_completed).length;
-    const totalCount = status.missions.length;
+    const completedCount = missions.filter((m: any) => m.is_completed).length;
+    const totalCount = missions.length;
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
@@ -115,10 +155,10 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) =>
 
                     {/* Missions Grid */}
                     <div className="grid grid-cols-4 gap-3">
-                        {status.missions.map((mission) => (
+                        {missions.map((mission: any) => (
                             <div
                                 key={mission.id}
-                                className={`flex flex-col items-center gap-2 group cursor-pointer transition-transform active:scale-95`}
+                                className={`flex flex-col items-center gap-2 group cursor-pointer transition-transform active:scale-95 ${isVerifying ? "pointer-events-none opacity-80" : ""}`}
                                 onClick={() => !mission.is_completed && handleMissionAction(mission.id, mission.action_type)}
                             >
                                 <div className={`relative w-full aspect-square rounded-2xl border-2 ${mission.is_completed ? "border-emerald-500 bg-emerald-500/10" : "border-white/20 bg-white/5 group-hover:border-white/40"} p-2 transition-all`}>
@@ -140,9 +180,14 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) =>
                                             <div className="bg-emerald-500 text-white text-[8px] font-black px-1 rounded animate-pulse">CHECK</div>
                                         </div>
                                     )}
+                                    {isVerifying && mission.action_type === "JOIN_CHANNEL" && (
+                                        <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-2xl">
+                                            <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+                                        </div>
+                                    )}
                                 </div>
-                                <div className="text-center">
-                                    <p className="text-[10px] font-bold text-white/80">{mission.title}</p>
+                                <div className="text-center text-balance overflow-hidden w-full">
+                                    <p className="text-[9px] font-bold text-white/80 truncate">{mission.title}</p>
                                     <div className="flex items-center justify-center gap-1 mt-0.5">
                                         <img src="/assets/logo_cc_v2.png" alt="" className="w-3.5 h-3.5 object-contain" />
                                         <span className="text-[10px] font-bold text-emerald-400">{mission.reward_amount.toLocaleString()}</span>
@@ -173,7 +218,7 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) =>
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         <span className="text-lg font-black text-amber-400 font-mono">
-                            {formatSeconds(status.seconds_left)}
+                            {formatSeconds(seconds_left)}
                         </span>
                     </div>
 

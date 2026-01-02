@@ -69,8 +69,8 @@ const SidebarAppLayout: React.FC = memo(() => {
   }, [autoGrantKey, autoGrantMutation]);
 
   return (
-    <div className="min-h-screen w-full bg-black text-white">
-      <div className="flex min-h-screen w-full flex-col lg:h-[100dvh] lg:flex-row lg:overflow-hidden">
+    <div className="min-h-[100dvh] w-full bg-black text-white">
+      <div className="flex min-h-[100dvh] w-full flex-col lg:h-[100dvh] lg:flex-row lg:overflow-hidden">
         {/* Desktop Sidebar (Hidden on mobile) */}
         <aside className="hidden shrink-0 lg:block lg:h-full lg:w-[396px] lg:border-r lg:border-white/10 lg:overflow-hidden">
           <div className="h-full w-full">
