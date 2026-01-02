@@ -239,8 +239,10 @@ class AdminUserService:
         if not user:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="USER_NOT_FOUND")
 
-        # `team_member.user_id` is not a FK, so deleting a user can leave orphaned
-        # memberships that still occupy team slots / appear in counts.
+        # Note: Most related tables use ON DELETE CASCADE at the DB level.
+        # We perform an explicit cleanup for TeamMember just in case,
+        # as orphaned memberships can cause logical issues in team counts.
         db.query(TeamMember).filter(TeamMember.user_id == user_id).delete(synchronize_session=False)
+
         db.delete(user)
         db.commit()
