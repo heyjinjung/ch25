@@ -143,51 +143,53 @@ const VaultPageCompact: React.FC = () => {
                 {(() => {
                     const availableAmount = vault.data?.vaultAmountAvailable ?? vault.data?.availableBalance ?? 0;
                     return (
-                <div className="flex justify-between items-center text-sm mb-2 px-1">
-                    <span className="text-white/60">출금 가능 금액</span>
-                    <span className="font-bold text-amber-400">{formatWon(availableAmount)}</span>
-                </div>
+                        <>
+                            <div className="flex justify-between items-center text-sm mb-2 px-1">
+                                <span className="text-white/60">출금 가능 금액</span>
+                                <span className="font-bold text-amber-400">{formatWon(availableAmount)}</span>
+                            </div>
 
-                {/* Withdraw Button: Always show if balance > 0, disable if < 10000 */}
-                {availableAmount > 0 && (
-                    <div className="w-full">
-                        <button
-                            disabled={availableAmount < 10000}
-                            onClick={async () => {
-                                if (availableAmount < 10000) return;
-                                if (!window.confirm("출금을 신청하시겠습니까?")) return;
-                                tryHaptic(20);
-                                const { requestWithdrawal } = await import("../../api/vaultApi");
-                                const res = await requestWithdrawal(availableAmount);
-                                if (res.success) {
-                                    alert(res.message);
-                                    vault.refetch();
-                                } else {
-                                    alert(res.message);
-                                }
-                            }}
-                            className={clsx(
-                                "w-full py-4 rounded-xl font-black text-center text-base uppercase tracking-wide transition-all flex items-center justify-center gap-2",
-                                availableAmount >= 10000
-                                    ? "bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-lg shadow-amber-500/30 hover:brightness-110 active:scale-[0.98]"
-                                    : "bg-gray-800 border border-white/10 text-white/30 cursor-not-allowed"
+                            {/* Withdraw Button: Always show if balance > 0, disable if < 10000 */}
+                            {availableAmount > 0 && (
+                                <div className="w-full">
+                                    <button
+                                        disabled={availableAmount < 10000}
+                                        onClick={async () => {
+                                            if (availableAmount < 10000) return;
+                                            if (!window.confirm("출금을 신청하시겠습니까?")) return;
+                                            tryHaptic(20);
+                                            const { requestWithdrawal } = await import("../../api/vaultApi");
+                                            const res = await requestWithdrawal(availableAmount);
+                                            if (res.success) {
+                                                alert(res.message);
+                                                vault.refetch();
+                                            } else {
+                                                alert(res.message);
+                                            }
+                                        }}
+                                        className={clsx(
+                                            "w-full py-4 rounded-xl font-black text-center text-base uppercase tracking-wide transition-all flex items-center justify-center gap-2",
+                                            availableAmount >= 10000
+                                                ? "bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-lg shadow-amber-500/30 hover:brightness-110 active:scale-[0.98]"
+                                                : "bg-gray-800 border border-white/10 text-white/30 cursor-not-allowed"
+                                        )}
+                                    >
+                                        <img src={availableAmount >= 10000 ? "/assets/asset_coin_gold.webp" : "/assets/asset_coin_gray.webp"} alt="Coin" className="w-5 h-5 drop-shadow-sm" />
+                                        출금 신청하기
+                                    </button>
+                                    {availableAmount < 10000 && (
+                                        <p className="text-[10px] text-center text-red-400/80 mt-1">
+                                            * 최소 10,000원부터 출금 가능합니다.
+                                        </p>
+                                    )}
+                                    {availableAmount >= 10000 && (
+                                        <p className="text-[10px] text-center text-amber-500/80 mt-1">
+                                            * 보유 중인 전액 신청됩니다.
+                                        </p>
+                                    )}
+                                </div>
                             )}
-                        >
-                            <img src={availableAmount >= 10000 ? "/assets/asset_coin_gold.webp" : "/assets/asset_coin_gray.webp"} alt="Coin" className="w-5 h-5 drop-shadow-sm" />
-                            출금 신청하기
-                        </button>
-                        {availableAmount < 10000 && (
-                            <p className="text-[10px] text-center text-red-400/80 mt-1">
-                                * 최소 10,000원부터 출금 가능합니다.
-                            </p>
-                        )}
-                        {availableAmount >= 10000 && (
-                            <p className="text-[10px] text-center text-amber-500/80 mt-1">
-                                * 보유 중인 전액 신청됩니다.
-                            </p>
-                        )}
-                    </div>
-                )}
+                        </>
                     );
                 })()}
             </div>

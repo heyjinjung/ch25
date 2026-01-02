@@ -1,7 +1,7 @@
 # 금고(Vault) 단일 SoT 일원화 해결 계획
 
 문서 타입: 설계 / 가이드 / 체크리스트
-버전: v1.3
+버전: v1.4
 작성일: 2026-01-02
 작성자: BE팀(초안, Copilot)
 대상 독자: BE 개발자, FE 개발자, PO, QA
@@ -74,7 +74,7 @@
   - `vault_amount_total` (== `vault_locked_balance`)
   - `vault_amount_reserved` (== PENDING 합)
   - `vault_amount_available` (= total - reserved)
-  - (레거시) `cash_balance`는 0 또는 deprecated 필드로 유지(단계적으로 제거)
+  - (레거시) `available_balance`는 `vault_amount_available`의 alias로 유지 가능
 
 ## 3. 백엔드 변경 계획
 
@@ -174,7 +174,7 @@ To-Be(권장):
 
 ### Phase 1 — 백엔드: 신규 API 필드 제공(호환)
 - [x] `/api/vault/status`에 `vault_amount_total/reserved/available` 추가
-  - 호환: `available_balance`/`cash_balance`는 `vault_amount_available`을 반환(레거시 alias)
+  - 호환: `available_balance`는 `vault_amount_available`을 반환(레거시 alias)
 - [x] 출금 요청 생성 로직을 available 기반으로 변경(요청 시 금액 차감 없음)
   - 승인(APPROVE): `vault_locked_balance -= amount`
   - 반려(REJECT): 금액 변동 없음(예약 해제)
@@ -215,9 +215,27 @@ To-Be(권장):
     - `python scripts/migrate_cash_balance_to_vault_locked.py --apply`
   - 이관 이후 신규 로직이 단일 SoT로만 움직이는지 검증
 
+운영 실행 런북(권장 절차):
+1) 사전 준비
+  - (필수) DB 백업/스냅샷 확보(롤백은 백업 복구가 가장 안전).
+  - (권장) 이관 실행 전후로 “cash_balance 비제로 유저 수/합계”를 기록해 CS/회계 대응에 사용.
+2) Dry-run으로 영향 범위 확인
+  - `python scripts/migrate_cash_balance_to_vault_locked.py --dry-run`
+  - 출력 예: `non_zero_users`, `sum_cash_balance`
+3) 실제 이관 1회 실행
+  - `python scripts/migrate_cash_balance_to_vault_locked.py --apply`
+  - 동작: `vault_locked_balance += cash_balance`, `cash_balance = 0`, (레거시 mirror) `vault_balance` 동기화
+4) 사후 검증
+  - `python scripts/migrate_cash_balance_to_vault_locked.py --dry-run` 재실행 → `non_zero_users == 0` 확인
+  - 샘플 유저(10명)에서 status 확인: `vault_amount_total/available/reserved`가 기대대로 나오는지 확인
+5) 재실행 안전성
+  - 스크립트는 `cash_balance != 0`인 유저만 업데이트하므로, 재실행 시 추가 변화가 발생하지 않음(0을 더하는 형태).
+6) 문제 발생 시 롤백
+  - 백업 복구가 1순위(부분 롤백 SQL은 회계/추적 리스크가 커서 비권장).
+
 ### Phase 5 — 레거시 제거
-- API 응답에서 `cash_balance` 제거(또는 deprecated 표기)
-- 사용하지 않는 UI 문구/코드 제거
+- [x] API 응답에서 `cash_balance` 제거
+- [x] 사용하지 않는 UI 문구/코드 제거
 
 ## 7. 테스트/QA 계획
 
@@ -250,6 +268,7 @@ To-Be(권장):
 - Q3. 시즌패스 “포인트” 보상: **금고 적립(= `vault_locked_balance` SoT)으로 넣는다.**
 
 ## 10. 변경 이력
+- v1.4 (2026-01-02, BE팀): Phase 5 반영(STATUS/Admin/FE에서 cash_balance 제거) + Phase 4 운영 실행 런북 추가
 - v1.3 (2026-01-02, BE팀): Phase 3 잔여 항목 반영(미션 CASH_UNLOCK/입금 unlock의 cash_balance write 차단)
 - v1.2 (2026-01-02, BE팀): Phase 3 일부 진행 반영(시즌패스 포인트 vault 라우팅 + VIP lazy unlock cash write 제거)
 - v1.1 (2026-01-02, BE팀): Phase 1~2 체크리스트 반영(Reserved 기반 출금 + 프론트 available 기준 전환)
