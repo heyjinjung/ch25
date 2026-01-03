@@ -15,6 +15,8 @@ from app.models.vault_earn_event import VaultEarnEvent
 from app.models.vault2 import VaultStatus
 from app.models.user_cash_ledger import UserCashLedger
 from app.models.external_ranking import ExternalRankingData
+from app.models.roulette import RouletteLog
+from app.models.dice import DiceLog
 
 # Thresholds
 WHALE_ACCRUAL_THRESHOLD = 1_000_000
@@ -450,6 +452,23 @@ class UserSegmentService:
                 for tag in profile.tags:
                     tag_counts[tag] = tag_counts.get(tag, 0) + 1
 
+        # 17. NEW: Game & Vault KPIs (2026-01-03)
+        roulette_spins = db.query(func.count(RouletteLog.id)).scalar() or 0
+        dice_rolls = db.query(func.count(DiceLog.id)).scalar() or 0
+        
+        avg_vault_result = db.query(func.avg(User.vault_locked_balance)).filter(
+            User.vault_locked_balance > 0
+        ).scalar()
+        avg_vault_balance = round(float(avg_vault_result), 0) if avg_vault_result else 0.0
+
+        # 18. NEW: Financial KPIs (2026-01-03)
+        financial_stats = db.query(
+            func.sum(ExternalRankingData.deposit_amount),
+            func.sum(ExternalRankingData.play_count)
+        ).first()
+        total_deposit_amount = int(financial_stats[0] or 0)
+        total_play_count = int(financial_stats[1] or 0)
+
         return {
             "total_users": total_users,
             "active_users": active_users,
@@ -467,6 +486,13 @@ class UserSegmentService:
             # New Imported Data KPIs
             "avg_active_days": avg_active_days,
             "charge_risk_segments": charge_risk_segments,
-            "tag_counts": tag_counts
+            "tag_counts": tag_counts,
+            # New Game/Vault KPIs
+            "roulette_spins": roulette_spins,
+            "dice_rolls": dice_rolls,
+            "avg_vault_balance": avg_vault_balance,
+            # New Financial KPIs
+            "total_deposit_amount": total_deposit_amount,
+            "total_play_count": total_play_count
         }
 

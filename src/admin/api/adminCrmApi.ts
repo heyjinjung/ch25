@@ -21,6 +21,15 @@ export interface CrmStats {
     charge_risk_segments: Record<string, number>;
     tag_counts: Record<string, number>;
 
+    // NEW: Game & Vault KPIs (2026-01-03)
+    roulette_spins: number;
+    dice_rolls: number;
+    avg_vault_balance: number;
+
+    // NEW: Financial KPIs (2026-01-03)
+    total_deposit_amount: number;
+    total_play_count: number;
+
     // Financial Metrics
     ltv?: number;  // Lifetime Value
     arpu?: number; // Average Revenue Per User

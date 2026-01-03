@@ -42,6 +42,13 @@ class ImportResult(BaseModel):
     success_count: int
     failed_count: int
     errors: List[str]
+    charge_risk_segments: dict = {}  # {"LOW": x, "MEDIUM": y, "HIGH": z}
+    tag_counts: dict = {}  # {"태그명": count}
+
+    # NEW: Retention & Game Stats (2026-01-03)
+    roulette_spins: int = 0
+    dice_rolls: int = 0
+    avg_vault_balance: float = 0.0
 
 class MessageCreate(BaseModel):
     title: str
@@ -87,14 +94,14 @@ class CrmStatsResponse(BaseModel):
     segments: dict = {} # e.g. {"DAILY": 10, "WEEKLY": 5}
     
     # NEW: Imported Profile Data KPIs
-    avg_active_days: float = 0  # From CSV import
-    charge_risk_segments: dict = {}  # {"LOW": x, "MEDIUM": y, "HIGH": z}
-    tag_counts: dict = {}  # {"태그명": count}
+    avg_active_days: float = 0
+    charge_risk_segments: dict = {}
+    tag_counts: dict = {}
 
-
-router = APIRouter(prefix="/admin/api/crm", tags=["admin-crm"])
-
-@router.get("/stats", response_model=CrmStatsResponse)
+    # NEW: Game & Vault KPIs (2026-01-03)
+    roulette_spins: int = 0
+    dice_rolls: int = 0
+    avg_vault_balance: float = 0.0
 def get_crm_stats(db: Session = Depends(get_db)):
     """Get aggregated CRM statistics."""
     return UserSegmentService.get_overall_stats(db)

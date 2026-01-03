@@ -13,7 +13,10 @@ import {
     UserMinus,
     X,
     Loader2,
-    ExternalLink
+    ExternalLink,
+    Dices,
+    Disc,
+    Lock
 } from "lucide-react";
 import { fetchCrmStats, fetchUsersBySegment, AdminUserProfile } from "../api/adminCrmApi";
 import { useToast } from "../../components/common/ToastProvider";
@@ -62,6 +65,17 @@ const MarketingDashboardPage: React.FC = () => {
             { title: "이탈률 (Churn)", value: `${stats?.churn_rate}%`, icon: <UserMinus size={20} />, color: "orange", sub: "30일 미접속", segment: "DORMANT" },
             { title: "신규 성장률", value: `${stats?.new_user_growth}%`, icon: <Activity size={20} />, color: "green", sub: "최근 7일 가입", segment: "TOTAL_USERS" },
             { title: "평균 활동일수", value: `${stats?.avg_active_days}일`, icon: <BarChart2 size={20} />, color: "indigo", sub: "전체 인입 기간 중", segment: "TOTAL_USERS" },
+        ],
+        // Row 3: Game & Economy (New)
+        [
+            { title: "룰렛 플레이", value: stats?.roulette_spins?.toLocaleString(), icon: <Disc size={20} />, color: "pink", sub: "전체 스핀 횟수", segment: "TOTAL_USERS" },
+            { title: "주사위 플레이", value: stats?.dice_rolls?.toLocaleString(), icon: <Dices size={20} />, color: "cyan", sub: "전체 롤링 횟수", segment: "TOTAL_USERS" },
+            { title: "평균 금고 잔액", value: `₩${stats?.avg_vault_balance?.toLocaleString()}`, icon: <Lock size={20} />, color: "yellow", sub: "유저당 평균 잠금액", segment: "PAYING_USERS" },
+        ],
+        // Row 4: Financial Strength (New)
+        [
+            { title: "총 외부 입금액", value: `₩${stats?.total_deposit_amount?.toLocaleString()}`, icon: <Crown size={20} />, color: "purple", sub: "External Ranking Total", segment: "PAYING_USERS" },
+            { title: "외부 연동 플레이", value: stats?.total_play_count?.toLocaleString(), icon: <Activity size={20} />, color: "green", sub: "API Play Count", segment: "TOTAL_USERS" },
         ]
     ];
 
