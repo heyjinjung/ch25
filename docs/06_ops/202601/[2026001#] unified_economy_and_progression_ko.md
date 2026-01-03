@@ -1,7 +1,5 @@
 # 통합 경제 및 성장 시스템 설계 (Unified Economy & Progression System Design)
 
-> **Verification Report**: [Checklist Result](file:///c:/Users/JAVIS/.gemini/antigravity/brain/37116fed-604f-4988-8864-fc71e551cde7/verification_report.md)
-
 ## 1. 개요 (Overview)
 이 문서는 **4대 경제 축**인 **금고(Vault)**, **티켓(Ticket)**, **시즌 레벨(Level)**, **다이아몬드(Diamond)**의 아키텍처와 구현 현황을 총괄하는 **Master Reference**입니다.
 각 재화는 서로 다른 **리텐션 주기(Retention Cycle)**를 담당하며 유기적으로 작동합니다.
@@ -14,19 +12,6 @@
 | 구분 (Pillar) | 정의 (Definition) | 역할 및 목적 (Role & Purpose) | 관리 주체/서비스 |
 | :--- | :--- | :--- | :--- |
 | **금고 (Vault)** | **자산 (Asset)**. | **외부 플랫폼 출금**. 관리자 수동 확인 후 지급되는 '실제 가치'. | `VaultService` |
-말씀하신 “부족한 것”을 코드/문서 팩트 기준으로 답하려면, 실제 문서들(특히 통합 경제 v6, 경제 온보딩 v7, 데일리 미션 v5, ops apply guide)을 먼저 훑어 핵심 규칙/레버/리스크/미구현 항목을 대조해야 해요. 지금부터 해당 문서 파일을 찾아 주요 섹션을 읽고, “이미 된 것 vs 앞으로 해야 할 것(체크리스트)”로 정리해드릴게요.
-
-파일명이 특수문자/공백 포함이라 정확 매칭이 안 됐어요. 지금은 202601 아래를 기준으로 실제 파일명을 찾아서 그 경로로 읽어보겠습니다.
-
-이제 핵심 5개 문서의 앞부분/목차/규칙 섹션부터 읽고, “규칙/레버/리스크/미구현”을 코드 상태와 대조해 체크리스트로 정리하겠습니다.
-
-문서 기준으로 “미구현/리스크” 후보가 몇 개 명확히 보이는데, 실제 코드에 있는지(예: Idempotency-Key, 티켓제로 패널 비활성, 미션/금고 어드민 UI)만 빠르게 검색해서 “이미 된 것 vs 해야 할 것”을 확정하겠습니다.
-
-지금 “멘탈모델/큰 축”은 문서와 코드가 꽤 잘 맞물려 있어요. 부족한 건 기능이 아니라 운영이 실제로 굴러가게 만드는 ‘레버·가드레일·측정·테스트 루프’ 쪽이 큽니다.
-
-지금 부족한 것(우선순위 순)
-
-Ticket Zero 전환 트리거가 사실상 꺼져 있음: 문서에서 핵심 전환 레버로 쓰는데(docs/06_ops/202601/[2026001#]%20ops_onboarding
 | **티켓 (Ticket)** | **연료 (Fuel)**. | **입장권/소모품**. 게임 플레이를 위해 반드시 필요한 자원. | `GameWalletService` |
 | **시즌 레벨 (Season Level)** | **장기 목표 (Long-term)**. | **시즌 롱텀 리텐션**. 유저가 시즌 내내 달성해야 할 성취 목표. | `SeasonPassService` |
 | **다이아몬드 (Diamond)** | **단기 보상 (Short-term)**. | **데일리/위클리 리텐션**. 매일 접속하고 플레이하게 만드는 즉각적인 유인책. | `InventoryService` (Item: `DIAMOND`) |
@@ -101,7 +86,16 @@ Ticket Zero 전환 트리거가 사실상 꺼져 있음: 문서에서 핵심 전
     - `grant_ticket()`: `BUNDLE`이나 `TICKET_BUNDLE` 보상 타입을 통한 일괄 지급 로직.
     - [x] **Verified**: Bundle (All-in-one) 지급 및 게임 내 Ticket 보상 즉시 지급 확인 (T-04, T-05).
 - [x] **Model**: `app/models/game_wallet.py`
-    - Enum: `ROULETTE_COIN`, `DICE_TOKEN`, `LOTTERY_TICKET`.
+        - Enum: `ROULETTE_COIN`, `DICE_TOKEN`, `LOTTERY_TICKET`, `GOLD_KEY`, `DIAMOND_KEY`, `DIAMOND`.
+        - 참고: `DIAMOND`는 enum에 존재하지만, 미션 보상의 SoT는 인벤토리(`user_inventory_item`)입니다.
+
+#### 🎟️ Trial Grant (Ticket-Zero Mitigation)
+- **목적**: 특정 게임 티켓이 0장일 때(=ticket zero) 유저 경험 보호를 위해 제한적으로 “체험 티켓”을 지급합니다.
+- **서버 정책(필수 방어)**: `TRIAL_GRANT`는 아래 3종 티켓만 대상입니다.
+    - `ROULETTE_COIN`, `DICE_TOKEN`, `LOTTERY_TICKET`
+    - `GOLD_KEY` / `DIAMOND_KEY`는 **체험 지급 대상이 아니며**, 요청되어도 지급하지 않습니다.
+- **일일 총 한도**: 유저 1인당 **하루 총 3장**(위 3종 합산)까지 체험 지급 허용.
+- **프론트 정책(추가 방어)**: 클라이언트는 trial-grant 요청 타입/런타임 가드로 3종 티켓 외 요청을 차단합니다.
 
 #### 🗄️ Database (Schema)
 - [x] **Table**: `user_game_wallet`

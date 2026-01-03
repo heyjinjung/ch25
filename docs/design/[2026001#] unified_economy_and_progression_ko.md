@@ -1,7 +1,5 @@
 # 통합 경제 및 성장 시스템 설계 (Unified Economy & Progression System Design)
 
-> **Verification Report**: [Checklist Result](file:///c:/Users/JAVIS/.gemini/antigravity/brain/37116fed-604f-4988-8864-fc71e551cde7/verification_report.md)
-
 ## 1. 개요 (Overview)
 이 문서는 **4대 경제 축**인 **금고(Vault)**, **티켓(Ticket)**, **시즌 레벨(Level)**, **다이아몬드(Diamond)**의 아키텍처와 구현 현황을 총괄하는 **Master Reference**입니다.
 각 재화는 서로 다른 **리텐션 주기(Retention Cycle)**를 담당하며 유기적으로 작동합니다.
@@ -88,7 +86,20 @@
     - `grant_ticket()`: `BUNDLE`이나 `TICKET_BUNDLE` 보상 타입을 통한 일괄 지급 로직.
     - [x] **Verified**: Bundle (All-in-one) 지급 및 게임 내 Ticket 보상 즉시 지급 확인 (T-04, T-05).
 - [x] **Model**: `app/models/game_wallet.py`
-    - Enum: `ROULETTE_COIN`, `DICE_TOKEN`, `LOTTERY_TICKET`.
+        - Enum: `ROULETTE_COIN`, `DICE_TOKEN`, `LOTTERY_TICKET`, `GOLD_KEY`, `DIAMOND_KEY`, `DIAMOND`.
+        - 참고: `DIAMOND`는 enum에 존재하지만, 미션 보상의 SoT는 인벤토리(`user_inventory_item`)입니다.
+
+#### 🎟️ Trial Grant (Ticket-Zero Mitigation)
+- **목적**: 특정 게임 티켓이 0장일 때(=ticket zero) 유저 경험 보호를 위해 제한적으로 “체험 티켓”을 지급합니다.
+- **서버 정책(필수 방어)**: `TRIAL_GRANT`는 아래 3종 티켓만 대상입니다.
+    - `ROULETTE_COIN`, `DICE_TOKEN`, `LOTTERY_TICKET`
+    - `GOLD_KEY` / `DIAMOND_KEY`는 **체험 지급 대상이 아니며**, 요청되어도 지급하지 않습니다.
+- **일일 총 한도**: 유저 1인당 **하루 총 3장**(위 3종 합산)까지 체험 지급 허용.
+- **추가 한도/레버(서버 env)**:
+    - `TRIAL_DAILY_CAP`(기본 1): 토큰별 1일 지급 상한
+    - `TRIAL_WEEKLY_CAP`(기본 0): 토큰별 주간 상한(0=무제한)
+    - `TRIAL_GRANT_FIRST_TIME_GUARANTEE`, `TRIAL_GRANT_PROB_AFTER_FIRST`
+- **프론트 정책(추가 방어)**: 클라이언트는 trial-grant 요청 타입/런타임 가드로 3종 티켓 외 요청을 차단합니다.
 
 #### 🗄️ Database (Schema)
 - [x] **Table**: `user_game_wallet`

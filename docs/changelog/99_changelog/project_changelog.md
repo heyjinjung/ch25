@@ -1,4 +1,14 @@
 2025-12-08: API/DB/코인 시스템/서비스/운영/체크리스트/overview/architecture 최신화 반영. 실제 코드/운영/QA 흐름과 일치하도록 문서 업데이트.
+
+## 2026-01-03 (Admin External Ranking: 문자열 식별자 CRUD 지원)
+- **Admin API**: 숫자 `user_id` 대신 문자열 식별자로 수정/삭제 가능한 별도 엔드포인트 추가.
+  - `PUT /admin/api/external-ranking/by-identifier/{identifier}`
+  - `DELETE /admin/api/external-ranking/by-identifier/{identifier}`
+- **Resolver**: `{identifier}`는 단일 문자열로 받아 `external_id` → `telegram_username(@ 허용, 대소문자 무시)` → `nickname(대소문자 무시)` 순으로 매칭.
+  - nickname 중복 등으로 2명 이상 매칭되면 **409(ambiguous)** 로 실패(오작동 방지).
+- **Compatibility**: 기존 `PUT/DELETE /admin/api/external-ranking/{user_id}` 엔드포인트는 그대로 유지.
+- **Testing**: 서비스 레벨 + API 레벨 회귀 테스트 추가.
+
 ## 2026-01-01 (Vault Game Outcome Deduction & Mission API Fixes & Admin Stabilization)
 - **Admin**: **[Critical Fix]** 팀 배틀 관리 페이지 500 에러 및 수정/삭제 불가 현상 해결.
   - 원인: 서버 DB `team` 테이블에 `icon`, `is_active`, `created_at`, `updated_at` 컬럼 누락.

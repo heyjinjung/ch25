@@ -95,6 +95,37 @@ def update_external_ranking(
     )
 
 
+@router.put("/by-identifier/{identifier}", response_model=ExternalRankingEntry)
+def update_external_ranking_by_identifier(
+    identifier: str,
+    payload: ExternalRankingUpdate,
+    db: Session = Depends(get_db),
+) -> ExternalRankingEntry:
+    # Accept external_id / telegram_username / nickname in a single string.
+    resolved_user_id = AdminExternalRankingService._resolve_user_id(db, None, identifier, identifier)
+    row = AdminExternalRankingService.update(db, resolved_user_id, payload)
+    user = db.query(User.external_id, User.telegram_username).filter(User.id == row.user_id).first()
+    external_id = user.external_id if user else None
+    telegram_username = user.telegram_username if user else None
+    return ExternalRankingEntry(
+        id=row.id,
+        user_id=row.user_id,
+        external_id=external_id,
+        telegram_username=telegram_username,
+        deposit_amount=row.deposit_amount,
+        play_count=row.play_count,
+        memo=row.memo,
+        created_at=row.created_at,
+        updated_at=row.updated_at,
+    )
+
+
 @router.delete("/{user_id}", status_code=204)
 def delete_external_ranking(user_id: int, db: Session = Depends(get_db)) -> None:
     AdminExternalRankingService.delete(db, user_id)
+
+
+@router.delete("/by-identifier/{identifier}", status_code=204)
+def delete_external_ranking_by_identifier(identifier: str, db: Session = Depends(get_db)) -> None:
+    resolved_user_id = AdminExternalRankingService._resolve_user_id(db, None, identifier, identifier)
+    AdminExternalRankingService.delete(db, resolved_user_id)

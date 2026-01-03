@@ -127,6 +127,12 @@
    ( `VITE_ENABLE_TRIAL_GRANT`) / `app/api/routes/trial_grant.py` / `app/services/trial_grant_service.py` 
   기본값 OFF. “원탭 받기” UI는 별도 버튼 형태로는 없음(현재는 자동 1회 지급 흐름). 
 
+  **TRIAL_GRANT 정책(서버/프론트 공통 방어, 2026-01 반영)**
+  - 대상 토큰은 `ROULETTE_COIN` / `DICE_TOKEN` / `LOTTERY_TICKET` **3종만** (키는 대상 아님)
+  - `GOLD_KEY` / `DIAMOND_KEY`는 trial-grant로 **지급되지 않음**(요청되어도 서버에서 차단)
+  - 유저 1인당 **하루 총 3장(3종 합산)** 상한
+  - 추가 레버(서버 env): `ENABLE_TRIAL_GRANT_AUTO`, `TRIAL_DAILY_CAP`(토큰별), `TRIAL_WEEKLY_CAP`(토큰별), `TRIAL_GRANT_*`(확률/첫회 보장)
+
 <기존유저용>
 현재 시스템이 '완성형'을 지향하다 보니, 유저가 진입했을 때 
 **"지금 바로 할 수 있는 것"**이 부족하다는 문제를 해결합니다.
@@ -167,6 +173,8 @@
 😀**티켓 제로 구출**: 티켓이 0일 때 즉시 발동되는 ‘광고 시청’ 또는 ‘초간단 미니게임’ 루프.
 | **티켓 제로 구출 루프** | 미사용(비활성) | `src/components/game/TicketZeroPanel.tsx` 
 | 컴포넌트가 `return null; // Feature temporarily disabled`로 비활성화되어 실제 UI가 노출되지 않음.
+
+> 참고: Ticket Zero UI가 재활성화되더라도, trial-grant는 **티켓 3종만** 대상으로 하며(키 제외), 일일 총 3장 상한이 적용됩니다.
 
 😀### 2.3 플래시 미션 (Flash Mission)
 - **타임어택**: “지금부터 15분 내에 다이스 1판 플레이 시 2배 보상”과 같은 단기 트리거.

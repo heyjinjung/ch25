@@ -27,6 +27,20 @@ class AdminExternalRankingService:
 
 
     @staticmethod
+    def _try_resolve_unique_user_id(
+        db: Session,
+        where_clause,
+        *,
+        ambiguous_detail: str,
+    ) -> int | None:
+        ids = db.execute(select(User.id).where(where_clause).limit(2)).scalars().all()
+        if not ids:
+            return None
+        if len(ids) > 1:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=ambiguous_detail)
+        return int(ids[0])
+
+    @staticmethod
     def _resolve_user_id(
         db: Session,
         payload_user_id: int | None,
@@ -36,23 +50,55 @@ class AdminExternalRankingService:
         if payload_user_id:
             return payload_user_id
 
+        candidates: list[str] = []
         if external_id:
-            user = db.query(User).filter(User.external_id == external_id).first()
-            if not user:
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="USER_NOT_FOUND (External ID)")
-            return user.id
-
+            candidates.append(external_id)
         if telegram_username:
-            clean = telegram_username.strip().lstrip("@").strip()
-            if clean:
-                user = db.query(User).filter(User.telegram_username == clean).first()
-                if not user:
-                    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="USER_NOT_FOUND (Telegram Username)")
-                return user.id
+            candidates.append(telegram_username)
+
+        for raw in candidates:
+            key = str(raw or "").strip()
+            if not key:
+                continue
+
+            # 1) External ID (case-insensitive exact)
+            user_id = AdminExternalRankingService._try_resolve_unique_user_id(
+                db,
+                func.lower(User.external_id) == key.lower(),
+                ambiguous_detail="USER_AMBIGUOUS (External ID)",
+            )
+            if user_id is not None:
+                return user_id
+
+            # 2) Telegram username (case-insensitive exact, leading '@' allowed)
+            clean_tg = key.lstrip("@").strip()
+            if clean_tg:
+                user_id = AdminExternalRankingService._try_resolve_unique_user_id(
+                    db,
+                    func.lower(User.telegram_username) == clean_tg.lower(),
+                    ambiguous_detail="USER_AMBIGUOUS (Telegram Username)",
+                )
+                if user_id is not None:
+                    return user_id
+
+            # 3) Internal nickname (case-insensitive exact)
+            user_id = AdminExternalRankingService._try_resolve_unique_user_id(
+                db,
+                func.lower(User.nickname) == key.lower(),
+                ambiguous_detail="USER_AMBIGUOUS (Nickname)",
+            )
+            if user_id is not None:
+                return user_id
+
+        if candidates:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="USER_NOT_FOUND (External ID, Telegram Username, or Nickname)",
+            )
 
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="USER_REQUIRED (ID, External ID, or Telegram Username)",
+            detail="USER_REQUIRED (ID, External ID, Telegram Username, or Nickname)",
         )
 
     @staticmethod
@@ -308,14 +354,13 @@ class AdminExternalRankingService:
     def update(db: Session, user_id: int, payload: ExternalRankingUpdate) -> ExternalRankingData:
         row = AdminExternalRankingService.get_by_user(db, user_id)
         data = payload.model_dump(exclude_unset=True)
-        if "external_id" in data:
+        if ("external_id" in data) or ("telegram_username" in data):
             row.user_id = AdminExternalRankingService._resolve_user_id(
                 db,
                 None,
                 data.get("external_id"),
                 data.get("telegram_username"),
             )
-        if "telegram_username" in data:
             AdminExternalRankingService._merge_user_telegram_username(db, row.user_id, data.get("telegram_username"))
         for key, value in data.items():
             if key == "external_id":
