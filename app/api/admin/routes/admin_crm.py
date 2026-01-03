@@ -104,6 +104,8 @@ class CrmStatsResponse(BaseModel):
     roulette_spins: int = 0
     dice_rolls: int = 0
     avg_vault_balance: float = 0.0
+
+@router.get("/stats", response_model=CrmStatsResponse)
 def get_crm_stats(db: Session = Depends(get_db)):
     """Get aggregated CRM statistics."""
     return UserSegmentService.get_overall_stats(db)
