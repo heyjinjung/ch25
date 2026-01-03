@@ -20,11 +20,11 @@ const diceSchema = z.object({
   is_active: z.boolean().default(false),
   max_daily_plays: z.number().int().nonnegative("0이면 무제한"),
   win_reward_type: z.string().min(1, "승리 보상 타입을 선택하세요"),
-  win_reward_value: z.number().int().nonnegative("승리 보상 값은 0 이상"),
+  win_reward_value: z.number().int("승리 보상 값은 정수여야 합니다."),
   draw_reward_type: z.string().min(1, "무승부 보상 타입을 선택하세요"),
-  draw_reward_value: z.number().int().nonnegative("무승부 보상 값은 0 이상"),
+  draw_reward_value: z.number().int("무승부 보상 값은 정수여야 합니다."),
   lose_reward_type: z.string().min(1, "패배 보상 타입을 선택하세요"),
-  lose_reward_value: z.number().int().nonnegative("패배 보상 값은 0 이상"),
+  lose_reward_value: z.number().int("패배 보상 값은 정수여야 합니다."),
 });
 
 type DiceFormValues = z.infer<typeof diceSchema>;
@@ -57,11 +57,11 @@ const DiceConfigPage: React.FC = () => {
       name: "",
       is_active: false,
       max_daily_plays: 0,
-      win_reward_type: "POINT",
+      win_reward_type: "NONE",
       win_reward_value: 0,
-      draw_reward_type: "POINT",
+      draw_reward_type: "NONE",
       draw_reward_value: 0,
-      lose_reward_type: "POINT",
+      lose_reward_type: "NONE",
       lose_reward_value: 0,
     }),
     []
@@ -143,7 +143,7 @@ const DiceConfigPage: React.FC = () => {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold text-[#91F402]">주사위 설정</h2>
-          <p className="mt-1 text-sm text-gray-400">일일 제한과 승/무/패 보상을 관리합니다.</p>
+          <p className="mt-1 text-sm text-gray-400">승/무/패별 금액은 금고 적립/차감(음수=차감)에 사용됩니다. 지급 보상 타입은 혼동 방지를 위해 보통 NONE을 권장합니다.</p>
         </div>
         <button
           type="button"
@@ -276,6 +276,7 @@ const DiceConfigPage: React.FC = () => {
                     <div className="mt-3 space-y-3">
                       <div className="space-y-1">
                         <label className="text-xs text-gray-300">보상 타입</label>
+                        <p className="text-[11px] text-gray-500">유저에게 지급될 보상 타입(권장: NONE)</p>
                         <select
                           className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
                           {...form.register(`${group.key}_reward_type`)}
@@ -288,7 +289,8 @@ const DiceConfigPage: React.FC = () => {
                         </select>
                       </div>
                       <div className="space-y-1">
-                        <label className="text-xs text-gray-300">보상 값</label>
+                        <label className="text-xs text-gray-300">금액</label>
+                        <p className="text-[11px] text-gray-500">금고 적립/차감 금액(음수 입력 시 차감)</p>
                         <input
                           type="number"
                           className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"

@@ -35,7 +35,7 @@ def test_vault_game_earn_event_idempotent_and_expires_not_refreshed(session_fact
         game_log_id=100,
         token_type="DICE_TOKEN",
         outcome="WIN",
-        payout_raw={"result": "WIN"},
+        payout_raw={"result": "WIN", "reward_amount": 200},
     )
     session.expire_all()
     user = session.get(User, 2001)
@@ -62,7 +62,7 @@ def test_vault_game_earn_event_idempotent_and_expires_not_refreshed(session_fact
         game_log_id=100,
         token_type="DICE_TOKEN",
         outcome="WIN",
-        payout_raw={"result": "WIN"},
+        payout_raw={"result": "WIN", "reward_amount": 200},
     )
     session.expire_all()
     user2 = session.get(User, 2001)
@@ -82,7 +82,7 @@ def test_vault_game_earn_event_idempotent_and_expires_not_refreshed(session_fact
         game_log_id=101,
         token_type="DICE_TOKEN",
         outcome="WIN",
-        payout_raw={"result": "WIN"},
+        payout_raw={"result": "WIN", "reward_amount": 200},
         now=datetime.utcnow() + timedelta(seconds=10) # Simulate time passing
     )
     session.expire_all()
@@ -95,11 +95,11 @@ def test_vault_game_earn_event_idempotent_and_expires_not_refreshed(session_fact
     assert session.query(VaultEarnEvent).count() == 2
 
 
-def test_vault_game_earn_event_lose_bonus(session_factory) -> None:
+def test_vault_game_earn_event_dice_lose_uses_payout_reward_amount(session_factory) -> None:
     _enable_game_earn_events()
 
     session: Session = session_factory()
-    session.add(User(id=1, external_id="tester", status="ACTIVE", cash_balance=0, vault_locked_balance=0, vault_balance=0))
+    session.add(User(id=1, external_id="tester", status="ACTIVE", cash_balance=0, vault_locked_balance=1000, vault_balance=0))
     session.add(NewMemberDiceEligibility(user_id=1, is_eligible=True, campaign_key="test"))
     session.commit()
 
@@ -111,13 +111,38 @@ def test_vault_game_earn_event_lose_bonus(session_factory) -> None:
         game_log_id=200,
         token_type="DICE_TOKEN",
         outcome="LOSE",
-        payout_raw={"result": "LOSE"},
+        payout_raw={"result": "LOSE", "reward_amount": -50},
     )
     session.expire_all()
     user = session.get(User, 1)
     assert user is not None
-    assert added == 300
-    assert user.vault_locked_balance == 300
+    assert added == -50
+    assert user.vault_locked_balance == 950
+
+
+def test_vault_game_earn_event_dice_uses_payout_reward_amount(session_factory) -> None:
+    _enable_game_earn_events()
+
+    session: Session = session_factory()
+    session.add(User(id=11, external_id="tester", status="ACTIVE", cash_balance=0, vault_locked_balance=1000, vault_balance=0))
+    session.add(NewMemberDiceEligibility(user_id=11, is_eligible=True, campaign_key="test"))
+    session.commit()
+
+    svc = VaultService()
+    added = svc.record_game_play_earn_event(
+        session,
+        user_id=11,
+        game_type="DICE",
+        game_log_id=201,
+        token_type="DICE_TOKEN",
+        outcome="WIN",
+        payout_raw={"result": "WIN", "reward_amount": 123},
+    )
+    session.expire_all()
+    user = session.get(User, 11)
+    assert user is not None
+    assert added == 123
+    assert user.vault_locked_balance == 1123
 
 
 def test_vault_game_earn_event_applies_multiplier_when_enabled(session_factory, monkeypatch) -> None:

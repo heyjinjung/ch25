@@ -478,12 +478,18 @@ class VaultService:
         # 2. Hardcoded Fallbacks
         if amount_before_multiplier is None:
             if game_type_upper == "DICE":
-                if outcome_upper == "WIN":
-                    amount_before_multiplier = 200
-                elif outcome_upper == "LOSE":
-                    amount_before_multiplier = -50
+                # Prefer payout-reported reward_amount (wired from DiceConfig via DiceService)
+                # so admin-configured win/draw/lose amounts drive Vault accruals.
+                payout = payout_raw or {}
+                if payout.get("reward_amount") is not None:
+                    amount_before_multiplier = int(payout.get("reward_amount") or 0)
                 else:
-                    amount_before_multiplier = 0
+                    if outcome_upper == "WIN":
+                        amount_before_multiplier = 200
+                    elif outcome_upper == "LOSE":
+                        amount_before_multiplier = -50
+                    else:
+                        amount_before_multiplier = 0
             elif game_type_upper == "ROULETTE":
                 # Check payout details to detect "LOSE" (꽝)
                 payout = payout_raw or {}
@@ -501,13 +507,6 @@ class VaultService:
             return 0
         
         amount_before_multiplier = int(amount_before_multiplier)
-
-        # 신규 유저 bait&trap: 금고가 비어있는 상태(locked=0)에서의 첫 DICE LOSE는 +300 보너스.
-        # 이미 적립이 진행된 이후에는 기존 패널티(-50)를 유지합니다.
-        if game_type_upper == "DICE" and outcome_upper == "LOSE":
-            self._expire_locked_if_due(user, now_dt)
-            if int(user.vault_locked_balance or 0) <= 0:
-                amount_before_multiplier = 300
 
         multiplier = float(self.vault_accrual_multiplier(db, now_dt))
         amount = max(int(round(amount_before_multiplier * multiplier)), amount_before_multiplier)
