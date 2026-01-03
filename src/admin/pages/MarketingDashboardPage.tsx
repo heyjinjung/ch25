@@ -26,6 +26,21 @@ const MarketingDashboardPage: React.FC = () => {
     const { addToast } = useToast();
     const navigate = useNavigate();
 
+    const formatNumber = (value?: number | null) => {
+        if (value === null || value === undefined) return "-";
+        return value.toLocaleString();
+    };
+
+    const formatWon = (value?: number | null) => {
+        if (value === null || value === undefined) return "-";
+        return `₩${value.toLocaleString()}`;
+    };
+
+    const formatPercent = (value?: number | null) => {
+        if (value === null || value === undefined) return "-";
+        return `${value}%`;
+    };
+
     // Modal State
     const [selectedKpi, setSelectedKpi] = useState<{ title: string; segment: string } | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -55,27 +70,27 @@ const MarketingDashboardPage: React.FC = () => {
     const kpiRows = [
         // Row 1: Basic Audience
         [
-            { title: "전체 잠재고객", value: stats?.total_users?.toLocaleString(), icon: <Users size={20} />, color: "blue", sub: `${stats?.active_users}명 활성`, segment: "TOTAL_USERS" },
-            { title: "전환율 (결제)", value: `${stats?.conversion_rate}%`, icon: <TrendingUp size={20} />, color: "#91F402", sub: `${stats?.paying_users}명 연동됨`, segment: "PAYING_USERS" },
-            { title: "고액 사용자 (Whale)", value: stats?.whale_count, icon: <Crown size={20} />, color: "purple", sub: "VIP 타겟", segment: "WHALE" },
-            { title: "빈 탱크 (기회)", value: stats?.empty_tank_count, icon: <Droplets size={20} />, color: "red", sub: "잔액 부족", segment: "EMPTY_TANK" },
+            { title: "전체 잠재고객", value: formatNumber(stats?.total_users), icon: <Users size={20} />, color: "blue", sub: stats ? `${formatNumber(stats.active_users)}명 활성` : "-", segment: "TOTAL_USERS" },
+            { title: "전환율 (결제)", value: formatPercent(stats?.conversion_rate), icon: <TrendingUp size={20} />, color: "#91F402", sub: stats ? `${formatNumber(stats.paying_users)}명 연동됨` : "-", segment: "PAYING_USERS" },
+            { title: "고액 사용자 (Whale)", value: formatNumber(stats?.whale_count), icon: <Crown size={20} />, color: "purple", sub: "VIP 타겟", segment: "WHALE" },
+            { title: "빈 탱크 (기회)", value: formatNumber(stats?.empty_tank_count), icon: <Droplets size={20} />, color: "red", sub: "잔액 부족", segment: "EMPTY_TANK" },
         ],
         // Row 2: Advanced Metrics
         [
-            { title: "이탈률 (Churn)", value: `${stats?.churn_rate}%`, icon: <UserMinus size={20} />, color: "orange", sub: "30일 미접속", segment: "DORMANT" },
-            { title: "신규 성장률", value: `${stats?.new_user_growth}%`, icon: <Activity size={20} />, color: "green", sub: "최근 7일 가입", segment: "TOTAL_USERS" },
-            { title: "평균 활동일수", value: `${stats?.avg_active_days}일`, icon: <BarChart2 size={20} />, color: "indigo", sub: "전체 인입 기간 중", segment: "TOTAL_USERS" },
+            { title: "이탈률 (Churn)", value: formatPercent(stats?.churn_rate), icon: <UserMinus size={20} />, color: "orange", sub: "30일 미접속", segment: "DORMANT" },
+            { title: "신규 성장률", value: formatPercent(stats?.new_user_growth), icon: <Activity size={20} />, color: "green", sub: "최근 7일 가입", segment: "TOTAL_USERS" },
+            { title: "평균 활동일수", value: stats ? `${stats.avg_active_days}일` : "-", icon: <BarChart2 size={20} />, color: "indigo", sub: "전체 인입 기간 중", segment: "TOTAL_USERS" },
         ],
         // Row 3: Game & Economy (New)
         [
-            { title: "룰렛 플레이", value: stats?.roulette_spins?.toLocaleString(), icon: <Disc size={20} />, color: "pink", sub: "전체 스핀 횟수", segment: "TOTAL_USERS" },
-            { title: "주사위 플레이", value: stats?.dice_rolls?.toLocaleString(), icon: <Dices size={20} />, color: "cyan", sub: "전체 롤링 횟수", segment: "TOTAL_USERS" },
-            { title: "평균 금고 잔액", value: `₩${stats?.avg_vault_balance?.toLocaleString()}`, icon: <Lock size={20} />, color: "yellow", sub: "유저당 평균 잠금액", segment: "PAYING_USERS" },
+            { title: "룰렛 플레이", value: formatNumber(stats?.roulette_spins), icon: <Disc size={20} />, color: "pink", sub: "전체 스핀 횟수", segment: "TOTAL_USERS" },
+            { title: "주사위 플레이", value: formatNumber(stats?.dice_rolls), icon: <Dices size={20} />, color: "cyan", sub: "전체 롤링 횟수", segment: "TOTAL_USERS" },
+            { title: "평균 금고 잔액", value: formatWon(stats?.avg_vault_balance), icon: <Lock size={20} />, color: "yellow", sub: "유저당 평균 잠금액", segment: "PAYING_USERS" },
         ],
         // Row 4: Financial Strength (New)
         [
-            { title: "총 외부 입금액", value: `₩${stats?.total_deposit_amount?.toLocaleString()}`, icon: <Crown size={20} />, color: "purple", sub: "External Ranking Total", segment: "PAYING_USERS" },
-            { title: "외부 연동 플레이", value: stats?.total_play_count?.toLocaleString(), icon: <Activity size={20} />, color: "green", sub: "API Play Count", segment: "TOTAL_USERS" },
+            { title: "총 외부 입금액", value: formatWon(stats?.total_deposit_amount), icon: <Crown size={20} />, color: "purple", sub: "External Ranking Total", segment: "PAYING_USERS" },
+            { title: "외부 연동 플레이", value: formatNumber(stats?.total_play_count), icon: <Activity size={20} />, color: "green", sub: "API Play Count", segment: "TOTAL_USERS" },
         ]
     ];
 
