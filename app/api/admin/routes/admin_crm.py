@@ -24,7 +24,7 @@ from app.core.security import hash_password
 # Default password for auto-created users via CSV import
 DEFAULT_IMPORT_PASSWORD = "1234"
 
-router = APIRouter()
+router = APIRouter(prefix="/admin/api/crm", tags=["admin-crm"])
 
 class AdminUserProfileResponse(BaseModel):
     user_id: int
