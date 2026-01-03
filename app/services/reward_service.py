@@ -268,6 +268,25 @@ class RewardService:
             self.grant_coupon(db, user_id=user_id, coupon_type=coupon_code, meta=meta)
             return
 
+        if reward_type == "GIFTICON_BAEMIN":
+            # Store gifticon rewards as inventory items (pending fulfillment) instead of issuing immediately.
+            # Supported denominations are intentionally limited for ops simplicity.
+            allowed = {5000, 10000, 20000}
+            if int(reward_amount) not in allowed:
+                raise InvalidConfigError("INVALID_GIFTICON_AMOUNT")
+
+            item_type = f"BAEMIN_GIFTICON_{int(reward_amount)}"
+            InventoryService.grant_item(
+                db,
+                user_id,
+                item_type,
+                1,
+                reason=(meta or {}).get("reason") or "GIFTICON_REWARD",
+                related_id=(meta or {}).get("related_id") or (f"prize:{(meta or {}).get('prize_id')}" if meta else None),
+                auto_commit=True,
+            )
+            return
+
         ticket_map = {
             "TICKET_ROULETTE": GameTokenType.ROULETTE_COIN,
             "ROULETTE_TICKET": GameTokenType.ROULETTE_COIN,

@@ -10,6 +10,8 @@ from app.schemas.admin_lottery import AdminLotteryConfigCreate, AdminLotteryConf
 class AdminLotteryService:
     """Admin CRUD operations for lottery configurations and prizes."""
 
+    _ALLOWED_BAEMIN_GIFTICON_AMOUNTS = {5000, 10000, 20000}
+
     @staticmethod
     def list_configs(db: Session):
         return db.query(LotteryConfig).all()
@@ -41,6 +43,9 @@ class AdminLotteryService:
             if prize.label in seen_labels:
                 raise InvalidConfigError("DUPLICATE_PRIZE_LABEL")
             seen_labels.add(prize.label)
+
+            if prize.reward_type == "GIFTICON_BAEMIN" and prize.reward_value not in AdminLotteryService._ALLOWED_BAEMIN_GIFTICON_AMOUNTS:
+                raise InvalidConfigError("INVALID_GIFTICON_AMOUNT")
 
             total_weight += prize.weight
             if prize.is_active and prize.weight > 0:

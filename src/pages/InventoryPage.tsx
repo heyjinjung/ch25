@@ -202,12 +202,29 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, onUse, isPending }) => {
             desc: "다이아키 1개로 즉시 교환",
             icon: <img src="/assets/asset_ticket_diamond.png" className="w-8 h-8 object-contain" alt="" />
         },
+        "BAEMIN_GIFTICON_5000": {
+            title: "배민 기프티콘 5,000원",
+            desc: "지급 대기(관리자 수기 지급)",
+            icon: <img src="/assets/lottery/icon_gift.png" className="w-8 h-8 object-contain" alt="" />
+        },
+        "BAEMIN_GIFTICON_10000": {
+            title: "배민 기프티콘 10,000원",
+            desc: "지급 대기(관리자 수기 지급)",
+            icon: <img src="/assets/lottery/icon_gift.png" className="w-8 h-8 object-contain" alt="" />
+        },
+        "BAEMIN_GIFTICON_20000": {
+            title: "배민 기프티콘 20,000원",
+            desc: "지급 대기(관리자 수기 지급)",
+            icon: <img src="/assets/lottery/icon_gift.png" className="w-8 h-8 object-contain" alt="" />
+        },
         "DIAMOND": {
             title: "다이아몬드",
             desc: "프리미엄 재화",
             icon: <img src="/assets/icon_diamond.png" className="w-8 h-8 object-contain" alt="" />
         }
     };
+
+    const isPendingFulfillment = item.item_type.startsWith("BAEMIN_GIFTICON_");
 
     // Fallback info
     const info = INFO[item.item_type] || {
@@ -236,13 +253,13 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, onUse, isPending }) => {
                     <button
                         onClick={(e) => {
                             e.stopPropagation();
-                            if (item.item_type === "DIAMOND") return; // 다이아몬드는 사용 불가
+                            if (item.item_type === "DIAMOND" || isPendingFulfillment) return; // 사용 불가
                             onUse();
                         }}
-                        disabled={item.quantity <= 0 || isPending || item.item_type === "DIAMOND"}
+                        disabled={item.quantity <= 0 || isPending || item.item_type === "DIAMOND" || isPendingFulfillment}
                         className="bg-white/10 hover:bg-white/20 disabled:bg-black/20 disabled:text-white/20 disabled:cursor-not-allowed text-white text-[11px] font-bold px-3 py-1.5 rounded-lg border border-white/5 transition-colors"
                     >
-                        {item.item_type === "DIAMOND" ? "보유중" : (isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : "사용하기")}
+                        {item.item_type === "DIAMOND" ? "보유중" : (isPendingFulfillment ? "지급대기" : (isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : "사용하기"))}
                     </button>
                 </div>
             </div>

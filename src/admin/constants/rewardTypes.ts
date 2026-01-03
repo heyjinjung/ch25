@@ -3,6 +3,7 @@
 export const REWARD_TYPES = [
   { value: "POINT", label: "포인트" },
   // { value: "COUPON", label: "쿠폰" }, // [REMOVED]
+  { value: "GIFTICON_BAEMIN", label: "배민 기프티콘(지급대기)" },
   { value: "NONE", label: "없음" },
   { value: "GOLD_KEY", label: "골드 키" },
   { value: "DIAMOND_KEY", label: "다이아 키" },
