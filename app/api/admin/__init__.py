@@ -3,6 +3,7 @@
 from fastapi import APIRouter, Depends
 
 from app.api.admin.routes import (
+    admin_audit,
     admin_dice,
     admin_game_tokens,
     admin_feature_schedule,
@@ -33,6 +34,7 @@ from app.api.admin.routes import (
 from app.api.deps import get_current_admin_id
 
 admin_router = APIRouter(dependencies=[Depends(get_current_admin_id)])
+admin_router.include_router(admin_audit.router)
 admin_router.include_router(admin_seasons.router)
 admin_router.include_router(admin_feature_schedule.router)
 admin_router.include_router(admin_roulette.router)

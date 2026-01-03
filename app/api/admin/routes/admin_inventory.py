@@ -11,6 +11,7 @@ from app.api.deps import get_db, get_current_admin_id
 from app.models.inventory import UserInventoryItem, UserInventoryLedger
 from app.models.user import User
 from app.services.inventory_service import InventoryService
+from app.services.audit_service import AuditService
 from app.services.admin_user_identity_service import resolve_user_id_by_identifier
 from app.services.admin_user_identity_service import build_admin_user_summary
 
@@ -131,6 +132,14 @@ def adjust_user_inventory(
     reason = "ADMIN_ADJUST" if not clean_note else f"ADMIN_ADJUST:{clean_note[:70]}"
     related_id = f"admin:{admin_id}"
 
+    before_item = db.scalar(
+        select(UserInventoryItem).where(
+            UserInventoryItem.user_id == user_id,
+            UserInventoryItem.item_type == item_type.strip(),
+        )
+    )
+    before_qty = int(getattr(before_item, "quantity", 0) or 0)
+
     if delta > 0:
         item = InventoryService.grant_item(
             db,
@@ -139,7 +148,7 @@ def adjust_user_inventory(
             amount=delta,
             reason=reason,
             related_id=related_id,
-            auto_commit=True,
+            auto_commit=False,
         )
     else:
         item = InventoryService.consume_item(
@@ -149,8 +158,31 @@ def adjust_user_inventory(
             amount=abs(delta),
             reason=reason,
             related_id=related_id,
-            auto_commit=True,
+            auto_commit=False,
         )
+
+    AuditService.record_admin_audit(
+        db,
+        admin_id=admin_id,
+        action="INVENTORY_ADMIN_ADJUST",
+        target_type="User",
+        target_id=str(user_id),
+        before={
+            "item_type": item_type.strip(),
+            "quantity": before_qty,
+        },
+        after={
+            "item_type": item.item_type,
+            "delta": int(delta),
+            "quantity": int(item.quantity),
+            "reason": reason,
+            "note": clean_note,
+            "related_id": related_id,
+        },
+    )
+
+    db.commit()
+    db.refresh(item)
 
     return {
         "success": True,

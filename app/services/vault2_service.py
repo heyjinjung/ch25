@@ -659,6 +659,80 @@ class Vault2Service:
         db.refresh(status)
         return status
 
+    def set_balance(
+        self,
+        db: Session,
+        *,
+        user_id: int,
+        locked_amount: int | None,
+        available_amount: int | None,
+        reason: str,
+        admin_id: int = 0,
+    ) -> VaultStatus:
+        """Set Vault2 balances to absolute amounts.
+
+        This is safer for ops than delta-based adjustments because it is idempotent
+        (reapplying the same target values is a no-op).
+        """
+
+        program = self._ensure_default_program(db)
+
+        # Lock status row when supported to avoid races.
+        q = db.query(VaultStatus).filter(VaultStatus.user_id == user_id, VaultStatus.program_id == program.id)
+        if db.bind and db.bind.dialect.name != "sqlite":
+            q = q.with_for_update()
+        status = q.one_or_none()
+        if status is None:
+            status = self.get_or_create_status(db, user_id=user_id, program=program)
+
+        now_dt = datetime.utcnow()
+        prev_locked = int(status.locked_amount or 0)
+        prev_available = int(getattr(status, "available_amount", 0) or 0)
+        prev_expires_at = getattr(status, "expires_at", None)
+
+        next_locked = prev_locked if locked_amount is None else max(0, int(locked_amount))
+        next_available = prev_available if available_amount is None else max(0, int(available_amount))
+
+        AuditService.record_admin_audit(
+            db,
+            admin_id=admin_id,
+            action="SET_VAULT_BALANCE",
+            target_type="VaultStatus",
+            target_id=f"{program.key}:{user_id}",
+            before={"locked": prev_locked, "available": prev_available},
+            after={"locked": next_locked, "available": next_available, "reason": reason},
+        )
+
+        status.locked_amount = int(next_locked)
+        status.available_amount = int(next_available)
+
+        # Maintain expiry semantics for manual adjustments.
+        if next_locked == 0:
+            status.expires_at = None
+        else:
+            if prev_locked == 0 and next_locked > 0 and status.locked_at is None:
+                status.locked_at = now_dt
+
+            if self._is_expiry_enabled(program):
+                if prev_expires_at is None or prev_expires_at <= now_dt:
+                    status.locked_at = now_dt
+                    status.expires_at = self.compute_expires_at(now_dt, int(program.duration_hours or 24))
+
+        db.add(status)
+
+        # [PHASE 1 SYNC] Sync to User table as it's the current live source of truth
+        user = db.query(User).filter(User.id == user_id).one_or_none()
+        if user:
+            user.vault_locked_balance = int(next_locked)
+            user.vault_available_balance = int(next_available)
+            user.vault_balance = int(next_locked) + int(next_available)
+            user.vault_locked_expires_at = status.expires_at
+            db.add(user)
+
+        db.commit()
+        db.refresh(status)
+        return status
+
     def update_program_active(self, db: Session, *, program_key: str, is_active: bool, admin_id: int = 0) -> VaultProgram:
         program = self.get_program_by_key(db, program_key=program_key)
         if program is None:

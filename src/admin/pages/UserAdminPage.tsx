@@ -6,9 +6,10 @@ import { createUser, deleteUser, fetchUsers, updateUser, AdminUser, AdminUserPay
 import { useToast } from "../../components/common/ToastProvider";
 import UserImportModal from "../components/UserImportModal";
 import { fetchUserMissions, updateUserMission, AdminUserMissionDetail, AdminUserMissionUpdatePayload } from "../api/adminUserMissionApi";
-import { Check, ClipboardList, History, Package, Ticket, X } from "lucide-react";
+import { Check, ClipboardList, History, Package, Shield, Ticket, X } from "lucide-react";
 import UserInventoryModal from "../components/UserInventoryModal";
 import UserGameTokenModal from "../components/UserGameTokenModal";
+import UserAuditLogModal from "../components/UserAuditLogModal";
 
 type MemberRow = AdminUser & {
   isEditing?: boolean;
@@ -71,6 +72,7 @@ const UserAdminPage: React.FC = () => {
   const [selectedUserForMissions, setSelectedUserForMissions] = useState<AdminUser | null>(null);
   const [selectedUserForInventory, setSelectedUserForInventory] = useState<AdminUser | null>(null);
   const [selectedUserForGameTokens, setSelectedUserForGameTokens] = useState<{ user: AdminUser; tab: "wallets" | "ledger" } | null>(null);
+  const [selectedUserForAuditLogs, setSelectedUserForAuditLogs] = useState<AdminUser | null>(null);
 
   const [sortKey, setSortKey] = useState<SortKey>("nickname");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
@@ -851,6 +853,16 @@ const UserAdminPage: React.FC = () => {
                           >
                             <History size={16} />
                           </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setSelectedUserForAuditLogs(member)}
+                            className="rounded-md p-2 text-sky-300 hover:text-white"
+                            title="운영/감사 로그"
+                            aria-label="운영/감사 로그"
+                          >
+                            <Shield size={16} />
+                          </button>
                           <button
                             type="button"
                             onClick={() => removeRow(member)}
@@ -886,6 +898,13 @@ const UserAdminPage: React.FC = () => {
                 user={selectedUserForGameTokens.user}
                 defaultTab={selectedUserForGameTokens.tab}
                 onClose={() => setSelectedUserForGameTokens(null)}
+              />
+            )}
+
+            {selectedUserForAuditLogs && (
+              <UserAuditLogModal
+                user={selectedUserForAuditLogs}
+                onClose={() => setSelectedUserForAuditLogs(null)}
               />
             )}
 

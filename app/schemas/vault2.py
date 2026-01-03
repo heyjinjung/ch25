@@ -85,6 +85,12 @@ class VaultBalanceUpdateRequest(BaseModel):
     reason: str | None = "ADMIN_MANUAL_ADJUST"
 
 
+class VaultBalanceSetRequest(BaseModel):
+    locked_amount: int | None = None
+    available_amount: int | None = None
+    reason: str | None = "ADMIN_MANUAL_ADJUST"
+
+
 class VaultGlobalActiveRequest(BaseModel):
     is_active: bool
 

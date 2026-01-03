@@ -4,6 +4,7 @@ from datetime import datetime
 
 from fastapi.testclient import TestClient
 
+from app.models.admin_audit_log import AdminAuditLog
 from app.models.user import User
 from app.models.user_activity import UserActivity
 
@@ -66,6 +67,15 @@ def test_withdraw_approve_deducts_total_and_clears_reserved(client: TestClient, 
     proc = client.post("/api/vault/admin/process", json={"request_id": request_id, "action": "APPROVE"})
     assert proc.status_code == 200
 
+    db = session_factory()
+    logs = (
+        db.query(AdminAuditLog)
+        .filter(AdminAuditLog.target_type == "User", AdminAuditLog.target_id == "1")
+        .order_by(AdminAuditLog.id.desc())
+        .all()
+    )
+    assert any(l.action == "VAULT_WITHDRAWAL_APPROVE" for l in logs)
+
     status_res = client.get("/api/vault/status")
     body = status_res.json()
 
@@ -83,6 +93,15 @@ def test_withdraw_reject_keeps_total_and_clears_reserved(client: TestClient, ses
 
     proc = client.post("/api/vault/admin/process", json={"request_id": request_id, "action": "REJECT"})
     assert proc.status_code == 200
+
+    db = session_factory()
+    logs = (
+        db.query(AdminAuditLog)
+        .filter(AdminAuditLog.target_type == "User", AdminAuditLog.target_id == "1")
+        .order_by(AdminAuditLog.id.desc())
+        .all()
+    )
+    assert any(l.action == "VAULT_WITHDRAWAL_REJECT" for l in logs)
 
     status_res = client.get("/api/vault/status")
     body = status_res.json()
@@ -102,6 +121,15 @@ def test_admin_can_reduce_pending_withdraw_amount_updates_reserved(client: TestC
     # Reduce from 20,000 -> 10,000
     adj = client.post("/api/vault/admin/adjust-amount", json={"request_id": request_id, "new_amount": 10_000})
     assert adj.status_code == 200
+
+    db = session_factory()
+    logs = (
+        db.query(AdminAuditLog)
+        .filter(AdminAuditLog.target_type == "User", AdminAuditLog.target_id == "1")
+        .order_by(AdminAuditLog.id.desc())
+        .all()
+    )
+    assert any(l.action == "VAULT_WITHDRAWAL_ADJUST_AMOUNT" for l in logs)
 
     status_res = client.get("/api/vault/status")
     assert status_res.status_code == 200
@@ -135,6 +163,15 @@ def test_admin_can_cancel_pending_withdraw_request_clears_reserved(client: TestC
 
     cancel = client.post("/api/vault/admin/cancel", json={"request_id": request_id})
     assert cancel.status_code == 200
+
+    db = session_factory()
+    logs = (
+        db.query(AdminAuditLog)
+        .filter(AdminAuditLog.target_type == "User", AdminAuditLog.target_id == "1")
+        .order_by(AdminAuditLog.id.desc())
+        .all()
+    )
+    assert any(l.action == "VAULT_WITHDRAWAL_CANCEL" for l in logs)
 
     status_res = client.get("/api/vault/status")
     assert status_res.status_code == 200

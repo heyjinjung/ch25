@@ -766,6 +766,7 @@ class VaultService:
     def process_withdrawal(self, db: Session, request_id: int, action: str, admin_id: int, memo: str | None = None) -> dict:
         """Process a withdrawal request (APPROVE or REJECT)."""
         from app.models.vault_withdrawal_request import VaultWithdrawalRequest
+        from app.services.audit_service import AuditService
 
         action = action.upper()
         if action not in ("APPROVE", "REJECT"):
@@ -778,10 +779,23 @@ class VaultService:
         if req.status != "PENDING":
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="REQUEST_ALREADY_PROCESSED")
 
+        before_req = {
+            "id": req.id,
+            "user_id": req.user_id,
+            "amount": int(req.amount or 0),
+            "status": req.status,
+            "processed_at": req.processed_at,
+            "processed_by": req.processed_by,
+            "admin_memo": req.admin_memo,
+        }
+
         now = datetime.utcnow()
         req.processed_at = now
         req.processed_by = admin_id
         req.admin_memo = memo
+
+        user_before = None
+        user_after = None
 
         if action == "APPROVE":
             req.status = "APPROVED"
@@ -797,13 +811,49 @@ class VaultService:
             if total < int(req.amount):
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="INSUFFICIENT_FUNDS")
 
+            user_before = {
+                "user_id": user.id,
+                "vault_locked_balance": total,
+            }
+
             user.vault_locked_balance = total - int(req.amount)
             self.sync_legacy_mirror(user)
             db.add(user)
+
+            user_after = {
+                "user_id": user.id,
+                "vault_locked_balance": int(getattr(user, "vault_locked_balance", 0) or 0),
+            }
         
         elif action == "REJECT":
             req.status = "REJECTED"
             # No refund needed (nothing deducted at request time).
+
+        after_req = {
+            "id": req.id,
+            "user_id": req.user_id,
+            "amount": int(req.amount or 0),
+            "status": req.status,
+            "processed_at": req.processed_at,
+            "processed_by": req.processed_by,
+            "admin_memo": req.admin_memo,
+        }
+
+        AuditService.record_admin_audit(
+            db,
+            admin_id=admin_id,
+            action=f"VAULT_WITHDRAWAL_{action}",
+            target_type="User",
+            target_id=str(req.user_id),
+            before={
+                "request": before_req,
+                "user": user_before,
+            },
+            after={
+                "request": after_req,
+                "user": user_after,
+            },
+        )
 
         db.commit()
         db.refresh(req)
@@ -835,6 +885,7 @@ class VaultService:
         - If increasing, ensure sufficient available amount considering other pending requests.
         """
         from app.models.vault_withdrawal_request import VaultWithdrawalRequest
+        from app.services.audit_service import AuditService
 
         try:
             new_amount_i = int(new_amount)
@@ -856,12 +907,38 @@ class VaultService:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="REQUEST_ALREADY_PROCESSED")
 
         old_amount = int(req.amount or 0)
+        before_req = {
+            "id": req.id,
+            "user_id": req.user_id,
+            "amount": old_amount,
+            "status": req.status,
+            "processed_at": req.processed_at,
+            "processed_by": req.processed_by,
+            "admin_memo": req.admin_memo,
+        }
         if new_amount_i == old_amount:
             # Still allow updating memo for audit clarity.
             if memo is not None:
                 req.admin_memo = memo
                 req.processed_by = admin_id
                 db.add(req)
+
+                AuditService.record_admin_audit(
+                    db,
+                    admin_id=admin_id,
+                    action="VAULT_WITHDRAWAL_ADJUST_AMOUNT",
+                    target_type="User",
+                    target_id=str(req.user_id),
+                    before={"request": before_req},
+                    after={
+                        "request": {
+                            **before_req,
+                            "admin_memo": req.admin_memo,
+                            "processed_by": req.processed_by,
+                        }
+                    },
+                )
+
                 db.commit()
                 db.refresh(req)
             return {"request_id": req.id, "status": req.status, "amount": int(req.amount)}
@@ -895,6 +972,27 @@ class VaultService:
         if memo is not None:
             req.admin_memo = memo
         db.add(req)
+
+        after_req = {
+            "id": req.id,
+            "user_id": req.user_id,
+            "amount": int(req.amount or 0),
+            "status": req.status,
+            "processed_at": req.processed_at,
+            "processed_by": req.processed_by,
+            "admin_memo": req.admin_memo,
+        }
+
+        AuditService.record_admin_audit(
+            db,
+            admin_id=admin_id,
+            action="VAULT_WITHDRAWAL_ADJUST_AMOUNT",
+            target_type="User",
+            target_id=str(req.user_id),
+            before={"request": before_req},
+            after={"request": after_req},
+        )
+
         db.commit()
         db.refresh(req)
         return {"request_id": req.id, "status": req.status, "amount": int(req.amount)}
@@ -917,6 +1015,7 @@ class VaultService:
         - Cancelling clears reservation because reserved is sum(PENDING) only.
         """
         from app.models.vault_withdrawal_request import VaultWithdrawalRequest
+        from app.services.audit_service import AuditService
 
         req = (
             db.query(VaultWithdrawalRequest)
@@ -929,6 +1028,16 @@ class VaultService:
         if req.status != "PENDING":
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="REQUEST_ALREADY_PROCESSED")
 
+        before_req = {
+            "id": req.id,
+            "user_id": req.user_id,
+            "amount": int(req.amount or 0),
+            "status": req.status,
+            "processed_at": req.processed_at,
+            "processed_by": req.processed_by,
+            "admin_memo": req.admin_memo,
+        }
+
         now = datetime.utcnow()
         req.status = "CANCELLED"
         req.processed_at = now
@@ -937,6 +1046,27 @@ class VaultService:
             req.admin_memo = memo
 
         db.add(req)
+
+        after_req = {
+            "id": req.id,
+            "user_id": req.user_id,
+            "amount": int(req.amount or 0),
+            "status": req.status,
+            "processed_at": req.processed_at,
+            "processed_by": req.processed_by,
+            "admin_memo": req.admin_memo,
+        }
+
+        AuditService.record_admin_audit(
+            db,
+            admin_id=admin_id,
+            action="VAULT_WITHDRAWAL_CANCEL",
+            target_type="User",
+            target_id=str(req.user_id),
+            before={"request": before_req},
+            after={"request": after_req},
+        )
+
         db.commit()
         db.refresh(req)
         return {"request_id": req.id, "status": req.status, "processed_at": req.processed_at}

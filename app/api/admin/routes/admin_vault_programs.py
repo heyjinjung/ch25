@@ -20,6 +20,7 @@ from app.schemas.vault2 import (
     VaultDetailStatsResponse,
     VaultGlobalActiveRequest,
     VaultBalanceUpdateRequest,
+    VaultBalanceSetRequest,
     VaultAdminStateResponse,
 )
 from app.services.vault2_service import Vault2Service
@@ -68,6 +69,25 @@ def update_user_balance(
     return {"ok": True}
 
 
+@_core.post("/balance-set/{user_id}")
+@_core.post("/balance-set/{user_id}/")
+def set_user_balance(
+    user_id: int,
+    payload: VaultBalanceSetRequest,
+    db: Session = Depends(get_db),
+    admin_id: int = Depends(get_current_admin_id),
+):
+    service.set_balance(
+        db,
+        user_id=user_id,
+        locked_amount=payload.locked_amount,
+        available_amount=payload.available_amount,
+        reason=payload.reason or "ADMIN_MANUAL_ADJUST",
+        admin_id=admin_id,
+    )
+    return {"ok": True}
+
+
 @_core.post("/balance/by-identifier/{identifier}")
 @_core.post("/balance/by-identifier/{identifier}/")
 def update_user_balance_by_identifier(
@@ -82,6 +102,26 @@ def update_user_balance_by_identifier(
         user_id=user_id,
         locked_delta=payload.locked_delta,
         available_delta=payload.available_delta,
+        reason=payload.reason or "ADMIN_MANUAL_ADJUST",
+        admin_id=admin_id,
+    )
+    return {"ok": True}
+
+
+@_core.post("/balance-set/by-identifier/{identifier}")
+@_core.post("/balance-set/by-identifier/{identifier}/")
+def set_user_balance_by_identifier(
+    identifier: str,
+    payload: VaultBalanceSetRequest,
+    db: Session = Depends(get_db),
+    admin_id: int = Depends(get_current_admin_id),
+):
+    user_id = resolve_user_id_by_identifier(db, identifier)
+    service.set_balance(
+        db,
+        user_id=user_id,
+        locked_amount=payload.locked_amount,
+        available_amount=payload.available_amount,
         reason=payload.reason or "ADMIN_MANUAL_ADJUST",
         admin_id=admin_id,
     )

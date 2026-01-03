@@ -15,7 +15,7 @@ import {
     VaultTimerState,
     fetchVaultStatsDetails,
     toggleVaultGlobalActive,
-    updateVaultUserBalance
+    setVaultUserBalance
 } from "../api/adminVaultApi";
 import { fetchUsers } from "../api/adminUserApi";
 import { RefreshCcw, Save, AlertTriangle, ShieldCheck, Clock, Power, Search, Ban, User as UserIcon, Loader2, X, Activity, Edit2 } from "lucide-react";
@@ -113,9 +113,9 @@ const VaultAdminPage: React.FC = () => {
     const [detailItems, setDetailItems] = useState<any[]>([]);
     const [detailLoading, setDetailLoading] = useState(false);
 
-    // New state for Balance Update
-    const [balanceLockedDelta, setBalanceLockedDelta] = useState("0");
-    const [balanceAvailableDelta, setBalanceAvailableDelta] = useState("0");
+    // New state for Balance Update (absolute set)
+    const [balanceLockedAmount, setBalanceLockedAmount] = useState<string>("");
+    const [balanceAvailableAmount, setBalanceAvailableAmount] = useState<string>("");
     const [balanceReason, setBalanceReason] = useState("관리자 조정");
 
     const { data: program } = useQuery({
@@ -254,7 +254,22 @@ const VaultAdminPage: React.FC = () => {
         mutationFn: async () => {
             const uid = parseInt(timerUserId || "0", 10);
             if (!uid) throw new Error("유저를 선택해주세요.");
-            await updateVaultUserBalance(uid, parseInt(balanceLockedDelta), parseInt(balanceAvailableDelta), balanceReason);
+
+            const lockedAmount = balanceLockedAmount.trim() === "" ? null : parseInt(balanceLockedAmount, 10);
+            const availableAmount = balanceAvailableAmount.trim() === "" ? null : parseInt(balanceAvailableAmount, 10);
+
+            if (lockedAmount !== null && (!Number.isFinite(lockedAmount) || lockedAmount < 0)) {
+                throw new Error("Locked Amount는 0 이상의 정수여야 합니다.");
+            }
+            if (availableAmount !== null && (!Number.isFinite(availableAmount) || availableAmount < 0)) {
+                throw new Error("Available Amount는 0 이상의 정수여야 합니다.");
+            }
+
+            if (lockedAmount === null && availableAmount === null) {
+                throw new Error("Locked/Available 중 하나 이상 입력해주세요.");
+            }
+
+            await setVaultUserBalance(uid, lockedAmount, availableAmount, balanceReason);
         },
         onSuccess: () => {
             alert("잔액이 수정되었습니다.");
@@ -768,20 +783,20 @@ const VaultAdminPage: React.FC = () => {
                                 </h3>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     <div>
-                                        <label className="text-xs text-gray-500 block mb-1">Locked Delta (+/-)</label>
+                                        <label className="text-xs text-gray-500 block mb-1">Locked Amount (set)</label>
                                         <input
                                             type="number"
-                                            value={balanceLockedDelta}
-                                            onChange={e => setBalanceLockedDelta(e.target.value)}
+                                            value={balanceLockedAmount}
+                                            onChange={e => setBalanceLockedAmount(e.target.value)}
                                             className="w-full rounded bg-[#0A0A0A] border border-[#333] px-3 py-2 text-white font-mono"
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-xs text-gray-500 block mb-1">Available Delta (+/-)</label>
+                                        <label className="text-xs text-gray-500 block mb-1">Available Amount (set)</label>
                                         <input
                                             type="number"
-                                            value={balanceAvailableDelta}
-                                            onChange={e => setBalanceAvailableDelta(e.target.value)}
+                                            value={balanceAvailableAmount}
+                                            onChange={e => setBalanceAvailableAmount(e.target.value)}
                                             className="w-full rounded bg-[#0A0A0A] border border-[#333] px-3 py-2 text-white font-mono"
                                         />
                                     </div>

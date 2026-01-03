@@ -157,3 +157,16 @@ export const updateVaultUserBalance = async (
         reason,
     });
 };
+
+export const setVaultUserBalance = async (
+    userId: number,
+    lockedAmount: number | null,
+    availableAmount: number | null,
+    reason?: string,
+): Promise<void> => {
+    await adminApi.post(`/admin/api/vault-programs/balance-set/${userId}/`, {
+        locked_amount: lockedAmount,
+        available_amount: availableAmount,
+        reason,
+    });
+};
