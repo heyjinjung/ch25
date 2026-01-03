@@ -68,7 +68,7 @@ const DicePage: React.FC = () => {
           setTimeout(() => setRewardToast(null), 3000);
         }
 
-        if ((response.vaultEarn ?? 0) > 0) {
+        if ((response.vaultEarn ?? 0) !== 0) {
           setVaultModal({ open: true, amount: response.vaultEarn! });
         }
 
