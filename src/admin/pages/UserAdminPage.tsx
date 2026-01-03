@@ -6,8 +6,9 @@ import { createUser, deleteUser, fetchUsers, updateUser, AdminUser, AdminUserPay
 import { useToast } from "../../components/common/ToastProvider";
 import UserImportModal from "../components/UserImportModal";
 import { fetchUserMissions, updateUserMission, AdminUserMissionDetail, AdminUserMissionUpdatePayload } from "../api/adminUserMissionApi";
-import { Check, ClipboardList, Package, X } from "lucide-react";
+import { Check, ClipboardList, History, Package, Ticket, X } from "lucide-react";
 import UserInventoryModal from "../components/UserInventoryModal";
+import UserGameTokenModal from "../components/UserGameTokenModal";
 
 type MemberRow = AdminUser & {
   isEditing?: boolean;
@@ -69,6 +70,7 @@ const UserAdminPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedUserForMissions, setSelectedUserForMissions] = useState<AdminUser | null>(null);
   const [selectedUserForInventory, setSelectedUserForInventory] = useState<AdminUser | null>(null);
+  const [selectedUserForGameTokens, setSelectedUserForGameTokens] = useState<{ user: AdminUser; tab: "wallets" | "ledger" } | null>(null);
 
   const [sortKey, setSortKey] = useState<SortKey>("nickname");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
@@ -829,6 +831,26 @@ const UserAdminPage: React.FC = () => {
                           >
                             <Package size={16} />
                           </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setSelectedUserForGameTokens({ user: member, tab: "wallets" })}
+                            className="rounded-md p-2 text-amber-500 hover:text-white"
+                            title="잔액 티켓"
+                            aria-label="잔액 티켓"
+                          >
+                            <Ticket size={16} />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setSelectedUserForGameTokens({ user: member, tab: "ledger" })}
+                            className="rounded-md p-2 text-gray-300 hover:text-white"
+                            title="잔액 로그"
+                            aria-label="잔액 로그"
+                          >
+                            <History size={16} />
+                          </button>
                           <button
                             type="button"
                             onClick={() => removeRow(member)}
@@ -856,6 +878,14 @@ const UserAdminPage: React.FC = () => {
               <UserInventoryModal
                 user={selectedUserForInventory}
                 onClose={() => setSelectedUserForInventory(null)}
+              />
+            )}
+
+            {selectedUserForGameTokens && (
+              <UserGameTokenModal
+                user={selectedUserForGameTokens.user}
+                defaultTab={selectedUserForGameTokens.tab}
+                onClose={() => setSelectedUserForGameTokens(null)}
               />
             )}
 

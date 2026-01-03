@@ -9,6 +9,24 @@
 - **Compatibility**: 기존 `PUT/DELETE /admin/api/external-ranking/{user_id}` 엔드포인트는 그대로 유지.
 - **Testing**: 서비스 레벨 + API 레벨 회귀 테스트 추가.
 
+## 2026-01-03 (Vault: 티켓제로 모달 문구/해금조건 UI 정리)
+- **Frontend**: Ticket Zero 강조 배너(🔥) 제거 및 "해금 조건 안내"(unlock rules) 섹션 UI 전체 제거.
+- **Backend**: `/api/ui-copy/ticket0` 및 admin upsert 응답에서 기존 저장 카피의 "10레벨" 문구를 "20레벨"로 자동 교정(레거시 호환).
+- **Admin UI**: Ticket Zero 기본 문구를 최신 기준(20레벨)으로 정리.
+
+## 2026-01-03 (Vault Ops: 출금요청 금액조정/취소 + 만료/정합성 안정화 + 회원관리 잔액/로그 조회)
+- **Problem**: 출금(전환) 요청 처리 중 "요청 금액을 잘라서 수정"이 불가능해 운영이 수동 잔액 조정으로 우회.
+  - 부작용: 잔액 수동 조정 시 만료(expires_at) 처리가 꼬여 만료되어야 할 잔액에 계속 적립이 붙는 현상 발생.
+- **Backend Fix (Vault2)**: 관리자 수동 잔액 조정 경로에서 locked/expires_at/locked_at 갱신 규칙을 재정리하여 만료 누락/초기화 케이스를 방지.
+- **Backend Feature (Vault)**: PENDING 출금요청에 대해 운영이 직접 **금액 조정** 및 **취소(CANCELLED)** 할 수 있는 admin 엔드포인트 추가.
+  - `POST /api/vault/admin/adjust-amount` (PENDING만 허용, 최소금액/가용잔액 검증)
+  - `POST /api/vault/admin/cancel` (PENDING만 허용, 예약금(reserved) 해제)
+- **Admin UI (Vault)**: 출금요청 관리 테이블에서 승인/거절 외에 **금액조정/취소 버튼**을 추가하고, 관리자 메모를 함께 남길 수 있도록 개선.
+  - CANCELLED 탭/뱃지 표시 지원 포함.
+- **Admin UI (User Management)**: 회원관리 목록에서 기존 미션/인벤 아이콘과 동일한 UX로, 유저별 **잔액 티켓(지갑)** 및 **잔액 로그(ledger)** 를 확인할 수 있는 조회 모달을 추가.
+  - 기존 `/admin/api/game-tokens/wallets`, `/admin/api/game-tokens/ledger` 구현을 user_id 기반 조회로 재사용.
+- **Validation**: `npm run build` 및 `pytest -q` 전체 통과.
+
 ## 2026-01-01 (Vault Game Outcome Deduction & Mission API Fixes & Admin Stabilization)
 - **Admin**: **[Critical Fix]** 팀 배틀 관리 페이지 500 에러 및 수정/삭제 불가 현상 해결.
   - 원인: 서버 DB `team` 테이블에 `icon`, `is_active`, `created_at`, `updated_at` 컬럼 누락.

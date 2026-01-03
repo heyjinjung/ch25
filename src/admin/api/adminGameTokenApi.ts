@@ -89,6 +89,12 @@ export async function fetchWallets(
   return data;
 }
 
+export async function fetchWalletsByUserId(userId: number, limit: number = 50, offset: number = 0) {
+  const params: Record<string, any> = { user_id: userId, limit, offset };
+  const { data } = await adminApi.get<TokenBalance[]>("/admin/api/game-tokens/wallets", { params });
+  return data;
+}
+
 export async function revokeGameTokens(payload: RevokeGameTokensPayload) {
   const normalizedPayload = {
     ...payload,
@@ -108,6 +114,12 @@ export async function fetchRecentPlayLogs(limit: number = 50, externalId?: strin
 export async function fetchLedger(limit: number = 100, externalId?: string, offset: number = 0) {
   const params: Record<string, any> = { limit, offset };
   if (externalId) params.external_id = externalId;
+  const { data } = await adminApi.get<LedgerEntry[]>("/admin/api/game-tokens/ledger", { params });
+  return data;
+}
+
+export async function fetchLedgerByUserId(userId: number, limit: number = 100, offset: number = 0) {
+  const params: Record<string, any> = { user_id: userId, limit, offset };
   const { data } = await adminApi.get<LedgerEntry[]>("/admin/api/game-tokens/ledger", { params });
   return data;
 }

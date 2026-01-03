@@ -607,9 +607,13 @@ class Vault2Service:
         """Manually adjust Vault2 balances."""
         program = self._ensure_default_program(db)
         status = self.get_or_create_status(db, user_id=user_id, program=program)
-        
-        new_locked = max(0, int(status.locked_amount or 0) + locked_delta)
-        new_avail = max(0, int(status.available_amount or 0) + available_delta)
+
+        now_dt = datetime.utcnow()
+        prev_locked = int(status.locked_amount or 0)
+        prev_expires_at = getattr(status, "expires_at", None)
+
+        new_locked = max(0, prev_locked + int(locked_delta))
+        new_avail = max(0, int(status.available_amount or 0) + int(available_delta))
         
         AuditService.record_admin_audit(
             db,
@@ -623,15 +627,22 @@ class Vault2Service:
         
         status.locked_amount = new_locked
         status.available_amount = new_avail
-        
-        # Reset expires_at if locked becomes 0
+
+        # Maintain expiry semantics for manual adjustments.
+        # - If locked becomes 0, clear expiry.
+        # - If locked goes from 0 -> positive, ensure locked_at is set.
+        # - Only (re)start expiry when missing/expired; do not extend an active timer.
         if new_locked == 0:
             status.expires_at = None
-        elif status.locked_amount == 0 and new_locked > 0 and self._is_expiry_enabled(program):
-             # If going from 0 to positive, set default expiry? Or keep None?
-             # For manual adjustment, let's just keep current expires_at or set if missing.
-             if not status.expires_at:
-                  status.expires_at = self.compute_expires_at(datetime.utcnow(), int(program.duration_hours or 24))
+        else:
+            if prev_locked == 0 and new_locked > 0 and status.locked_at is None:
+                status.locked_at = now_dt
+
+            if self._is_expiry_enabled(program):
+                if prev_expires_at is None or prev_expires_at <= now_dt:
+                    # restart from now to avoid carrying a stale/None expiry
+                    status.locked_at = now_dt
+                    status.expires_at = self.compute_expires_at(now_dt, int(program.duration_hours or 24))
 
         db.add(status)
         

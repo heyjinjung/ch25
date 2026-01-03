@@ -223,3 +223,47 @@ def admin_process_withdrawal(
         memo=payload.admin_memo
     )
     return result
+
+
+class AdminAdjustWithdrawalAmountPayload(BaseModel):
+    request_id: int
+    new_amount: int
+    admin_memo: str | None = None
+
+
+@router.post("/admin/adjust-amount")
+def admin_adjust_withdrawal_amount(
+    payload: AdminAdjustWithdrawalAmountPayload,
+    db: Session = Depends(get_db),
+    # In a real app, use Depends(get_current_admin)
+    admin_id: int = 1,
+):
+    result = service.admin_adjust_withdrawal_amount(
+        db,
+        request_id=payload.request_id,
+        new_amount=payload.new_amount,
+        admin_id=admin_id,
+        memo=payload.admin_memo,
+    )
+    return result
+
+
+class AdminCancelWithdrawalPayload(BaseModel):
+    request_id: int
+    admin_memo: str | None = None
+
+
+@router.post("/admin/cancel")
+def admin_cancel_withdrawal_request(
+    payload: AdminCancelWithdrawalPayload,
+    db: Session = Depends(get_db),
+    # In a real app, use Depends(get_current_admin)
+    admin_id: int = 1,
+):
+    result = service.admin_cancel_withdrawal_request(
+        db,
+        request_id=payload.request_id,
+        admin_id=admin_id,
+        memo=payload.admin_memo,
+    )
+    return result

@@ -90,3 +90,70 @@ def test_withdraw_reject_keeps_total_and_clears_reserved(client: TestClient, ses
     assert body["vault_amount_total"] == 30_000
     assert body["vault_amount_reserved"] == 0
     assert body["vault_amount_available"] == 30_000
+
+
+def test_admin_can_reduce_pending_withdraw_amount_updates_reserved(client: TestClient, session_factory):
+    db = session_factory()
+    _seed_user_and_activity(db, user_id=1, locked_balance=30_000)
+
+    req = client.post("/api/vault/withdraw", json={"amount": 20_000}).json()
+    request_id = req["request_id"]
+
+    # Reduce from 20,000 -> 10,000
+    adj = client.post("/api/vault/admin/adjust-amount", json={"request_id": request_id, "new_amount": 10_000})
+    assert adj.status_code == 200
+
+    status_res = client.get("/api/vault/status")
+    assert status_res.status_code == 200
+    body = status_res.json()
+
+    assert body["vault_amount_total"] == 30_000
+    assert body["vault_amount_reserved"] == 10_000
+    assert body["vault_amount_available"] == 20_000
+
+
+def test_admin_cannot_adjust_non_pending_withdraw_request(client: TestClient, session_factory):
+    db = session_factory()
+    _seed_user_and_activity(db, user_id=1, locked_balance=30_000)
+
+    req = client.post("/api/vault/withdraw", json={"amount": 10_000}).json()
+    request_id = req["request_id"]
+
+    proc = client.post("/api/vault/admin/process", json={"request_id": request_id, "action": "REJECT"})
+    assert proc.status_code == 200
+
+    adj = client.post("/api/vault/admin/adjust-amount", json={"request_id": request_id, "new_amount": 10_000})
+    assert adj.status_code == 400
+
+
+def test_admin_can_cancel_pending_withdraw_request_clears_reserved(client: TestClient, session_factory):
+    db = session_factory()
+    _seed_user_and_activity(db, user_id=1, locked_balance=30_000)
+
+    req = client.post("/api/vault/withdraw", json={"amount": 10_000}).json()
+    request_id = req["request_id"]
+
+    cancel = client.post("/api/vault/admin/cancel", json={"request_id": request_id})
+    assert cancel.status_code == 200
+
+    status_res = client.get("/api/vault/status")
+    assert status_res.status_code == 200
+    body = status_res.json()
+
+    assert body["vault_amount_total"] == 30_000
+    assert body["vault_amount_reserved"] == 0
+    assert body["vault_amount_available"] == 30_000
+
+
+def test_admin_cannot_cancel_non_pending_withdraw_request(client: TestClient, session_factory):
+    db = session_factory()
+    _seed_user_and_activity(db, user_id=1, locked_balance=30_000)
+
+    req = client.post("/api/vault/withdraw", json={"amount": 10_000}).json()
+    request_id = req["request_id"]
+
+    proc = client.post("/api/vault/admin/process", json={"request_id": request_id, "action": "APPROVE"})
+    assert proc.status_code == 200
+
+    cancel = client.post("/api/vault/admin/cancel", json={"request_id": request_id})
+    assert cancel.status_code == 400

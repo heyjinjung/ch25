@@ -813,3 +813,130 @@ class VaultService:
             "status": req.status,
             "processed_at": req.processed_at
         }
+
+    def admin_adjust_withdrawal_amount(
+        self,
+        db: Session,
+        *,
+        request_id: int,
+        new_amount: int,
+        admin_id: int,
+        memo: str | None = None,
+    ) -> dict:
+        """Admin: adjust amount of a PENDING withdrawal request.
+
+        Why:
+        - Users may request a withdrawal amount then ask ops to reduce it.
+        - Without this, ops often manually adjusts balances, which can desync expiry/reserved logic.
+
+        Rules:
+        - Only PENDING requests can be adjusted.
+        - new_amount must respect minimum withdrawal amount.
+        - If increasing, ensure sufficient available amount considering other pending requests.
+        """
+        from app.models.vault_withdrawal_request import VaultWithdrawalRequest
+
+        try:
+            new_amount_i = int(new_amount)
+        except (TypeError, ValueError):
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="INVALID_AMOUNT")
+
+        if new_amount_i < 10_000:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="MIN_WITHDRAWAL_AMOUNT_10000")
+
+        req = (
+            db.query(VaultWithdrawalRequest)
+            .filter(VaultWithdrawalRequest.id == request_id)
+            .with_for_update()
+            .first()
+        )
+        if not req:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="REQUEST_NOT_FOUND")
+        if req.status != "PENDING":
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="REQUEST_ALREADY_PROCESSED")
+
+        old_amount = int(req.amount or 0)
+        if new_amount_i == old_amount:
+            # Still allow updating memo for audit clarity.
+            if memo is not None:
+                req.admin_memo = memo
+                req.processed_by = admin_id
+                db.add(req)
+                db.commit()
+                db.refresh(req)
+            return {"request_id": req.id, "status": req.status, "amount": int(req.amount)}
+
+        # On increase: validate against available funds excluding this request.
+        if new_amount_i > old_amount:
+            q = db.query(User).filter(User.id == req.user_id)
+            if db.bind and db.bind.dialect.name != "sqlite":
+                q = q.with_for_update()
+            user = q.one_or_none()
+            if not user:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="USER_NOT_FOUND")
+
+            reserved_other = int(
+                db.query(func.coalesce(func.sum(VaultWithdrawalRequest.amount), 0))
+                .filter(
+                    VaultWithdrawalRequest.user_id == req.user_id,
+                    VaultWithdrawalRequest.status == "PENDING",
+                    VaultWithdrawalRequest.id != req.id,
+                )
+                .scalar()
+                or 0
+            )
+            total = int(getattr(user, "vault_locked_balance", 0) or 0)
+            available_for_this = max(total - reserved_other, 0)
+            if available_for_this < new_amount_i:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="INSUFFICIENT_FUNDS")
+
+        req.amount = new_amount_i
+        req.processed_by = admin_id
+        if memo is not None:
+            req.admin_memo = memo
+        db.add(req)
+        db.commit()
+        db.refresh(req)
+        return {"request_id": req.id, "status": req.status, "amount": int(req.amount)}
+
+    def admin_cancel_withdrawal_request(
+        self,
+        db: Session,
+        *,
+        request_id: int,
+        admin_id: int,
+        memo: str | None = None,
+    ) -> dict:
+        """Admin: cancel a PENDING withdrawal request.
+
+        This is operationally useful when the user's locked balance expired (total becomes 0)
+        and the pending request blocks available balance via reservation.
+
+        Rules:
+        - Only PENDING requests can be cancelled.
+        - Cancelling clears reservation because reserved is sum(PENDING) only.
+        """
+        from app.models.vault_withdrawal_request import VaultWithdrawalRequest
+
+        req = (
+            db.query(VaultWithdrawalRequest)
+            .filter(VaultWithdrawalRequest.id == request_id)
+            .with_for_update()
+            .first()
+        )
+        if not req:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="REQUEST_NOT_FOUND")
+        if req.status != "PENDING":
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="REQUEST_ALREADY_PROCESSED")
+
+        now = datetime.utcnow()
+        req.status = "CANCELLED"
+        req.processed_at = now
+        req.processed_by = admin_id
+        if memo is not None:
+            req.admin_memo = memo
+
+        db.add(req)
+        db.commit()
+        db.refresh(req)
+        return {"request_id": req.id, "status": req.status, "processed_at": req.processed_at}
