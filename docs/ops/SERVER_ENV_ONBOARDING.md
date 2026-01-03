@@ -151,7 +151,7 @@ curl -k -sS https://yourdomain.com/health | head
 
 ```bash
 # 프론트엔드만 변경된 경우 (UI/CSS/TSX 변경)
-docker compose up -d --build frontend && docker compose restart nginx
+docker compose up -d --build frontend && 594fb4cbc3efccc6f381435cec27482a5d886330
 
 # 백엔드만 변경된 경우 (Python 코드/API 변경)
 docker compose up -d --build backend && docker compose exec backend alembic upgrade head && docker compose restart nginx

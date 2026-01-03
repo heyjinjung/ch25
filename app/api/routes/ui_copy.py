@@ -33,6 +33,8 @@ def _coerce_ticket0(value: object | None) -> Ticket0ResolutionCopy:
 
     title = value.get("title") if isinstance(value.get("title"), str) else _DEFAULT.title
     body = value.get("body") if isinstance(value.get("body"), str) else _DEFAULT.body
+    # Backward-compatible copy fix: older configs mention 10레벨, now should be 20레벨.
+    body = body.replace("10레벨", "20레벨")
     primary = (
         value.get("primary_cta_label")
         if isinstance(value.get("primary_cta_label"), str)

@@ -30,7 +30,7 @@ const VaultUiEditor: React.FC<Props> = ({ program }) => {
         if (ticketZeroData?.value) {
             const v = ticketZeroData.value as any;
             setTzTitle(v.title || "티켓이 0이에요 (모두 소진)");
-            setTzBody(v.body || "이렇게 주다가는 내가 망해!!!\n\n체험 티켓을 모두 사용하셨네요. 10레벨만 달성해도 Diamond Key를 확정 지급합니다!");
+            setTzBody(v.body || "이렇게 주다가는 내가 망해!!!\n\n체험 티켓을 모두 사용하셨네요. 20레벨만 달성해도 Diamond Key를 확정 지급합니다!");
             setTzPrimaryLabel(v.primaryCta?.label || v.primary_cta_label || "씨씨카지노 바로가기");
             setTzSecondaryLabel(v.secondaryCta?.label || v.secondary_cta_label || "실장 텔레 문의");
         }
@@ -61,7 +61,7 @@ const VaultUiEditor: React.FC<Props> = ({ program }) => {
             const tzJson = {
                 ...(ticketZeroData?.value as any || {}),
                 title: tzTitle || "티켓이 0이에요 (모두 소진)",
-                body: tzBody || "이렇게 주다가는 내가 망해!!!\n\n체험 티켓을 모두 사용하셨네요. 10레벨만 달성해도 Diamond Key를 확정 지급합니다!",
+                body: tzBody || "이렇게 주다가는 내가 망해!!!\n\n체험 티켓을 모두 사용하셨네요. 20레벨만 달성해도 Diamond Key를 확정 지급합니다!",
                 primary_cta_label: tzPrimaryLabel || "씨씨카지노 바로가기",
                 secondary_cta_label: tzSecondaryLabel || "실장 텔레 문의",
                 primary_cta_url: (ticketZeroData?.value as any)?.primary_cta_url || "https://ccc-010.com",
@@ -220,6 +220,6 @@ const VaultUiEditor: React.FC<Props> = ({ program }) => {
     );
 };
 
-const DEFAULT_TZ_BODY = "체험 티켓을 모두 사용하셨네요. 10레벨만 달성해도 Diamond Key를 확정 지급합니다!";
+const DEFAULT_TZ_BODY = "체험 티켓을 모두 사용하셨네요. 20레벨만 달성해도 Diamond Key를 확정 지급합니다!";
 
 export default VaultUiEditor;

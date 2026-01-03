@@ -23,9 +23,10 @@ _TICKET0_KEY = "ticket0_resolution_copy"
 def upsert_ticket0_copy(payload: Ticket0ResolutionCopyUpsertRequest, db: Session = Depends(get_db)) -> Ticket0ResolutionCopy:
     row = UiConfigService.upsert(db, _TICKET0_KEY, payload.model_dump())
     value = row.value_json or {}
+    body = str(value.get("body", "")).replace("10레벨", "20레벨")
     return Ticket0ResolutionCopy(
         title=str(value.get("title", "")),
-        body=str(value.get("body", "")),
+        body=body,
         primary_cta_label=str(value.get("primary_cta_label", "")),
         secondary_cta_label=str(value.get("secondary_cta_label", "")),
     )
