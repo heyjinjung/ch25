@@ -6,34 +6,26 @@ import { useHaptic } from "../hooks/useHaptic";
 const EventDashboardPage: React.FC = () => {
   const { impact } = useHaptic();
   const cardClass =
-    "group relative block w-full overflow-hidden rounded-[32px] border border-white/10 bg-black transition active:scale-[0.98] hover:-translate-y-0.5 hover:border-white/20 hover:ring-2 hover:ring-white/10";
+    "group relative block w-full overflow-hidden rounded-[2rem] border border-white/10 bg-black transition-all duration-300 active:scale-[0.98] hover:-translate-y-1 hover:border-figma-accent/30 hover:shadow-[0_0_30px_rgba(48,255,117,0.1)]";
   const cardImageClass =
-    "absolute inset-0 z-0 h-full w-full object-cover object-left-top transition-transform duration-200 group-hover:scale-[1.02]";
+    "absolute inset-0 z-0 h-full w-full object-cover object-left-top transition-transform duration-500 group-hover:scale-[1.03]";
   const cardContentClass =
     "relative z-10 flex h-56 items-end p-5";
   const cardPanelClass =
-    "w-full rounded-2xl border border-white/10 bg-black/45 px-4 py-4";
+    "w-full rounded-2xl border border-white/10 bg-black/60 backdrop-blur-sm px-4 py-4 shadow-lg";
 
   const handleCardClick = () => {
     impact("medium");
   };
 
   return (
-    <div className="min-h-[calc(100vh-80px)] bg-[#0A0A0A] relative overflow-hidden flex flex-col">
-      {/* Background Effects */}
-      <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-purple-600/10 to-transparent pointer-events-none" />
-      <div className="absolute bottom-[20%] right-[-10%] w-80 h-80 bg-emerald-600/5 rounded-full blur-[120px] pointer-events-none" />
+    <div className="min-h-[calc(100vh-80px)] bg-[#242714] relative overflow-hidden flex flex-col">
+      {/* Background Effects - Matching SeasonPass style */}
+      <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-emerald-600/10 to-transparent pointer-events-none" />
+      <div className="absolute top-[-20%] right-[-10%] w-80 h-80 bg-emerald-500/10 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-[20%] left-[-10%] w-64 h-64 bg-[#30FF75]/5 rounded-full blur-[120px] pointer-events-none" />
 
-      <div className="relative z-10 w-full px-5 pt-8 pb-10 max-w-xl mx-auto flex-1 flex flex-col justify-start">
-        {/* Header */}
-        <div className="mb-6">
-          <p className="text-xs font-black uppercase tracking-[0.3em] text-white/40">Events</p>
-          <h1 className="mt-2 text-2xl font-black text-white">이벤트 대시보드</h1>
-          <p className="mt-2 text-sm text-white/50">
-            시즌과 미션 핵심 흐름을 한 곳에서 바로 이동할 수 있습니다.
-          </p>
-        </div>
-
+      <div className="relative z-10 w-full px-5 pt-4 pb-8 max-w-xl mx-auto flex-1 flex flex-col">
         {/* Dashboard Grid */}
         <div className="space-y-6">
           {/* Level Tower Section */}
@@ -52,8 +44,11 @@ const EventDashboardPage: React.FC = () => {
             <div className={cardContentClass}>
               <div className={cardPanelClass}>
                 <div className="flex items-center justify-between gap-3">
-                  <div className="truncate text-base font-black text-white">시즌패스</div>
-                  <div className="shrink-0 inline-flex items-center justify-center rounded-full bg-indigo-500/20 px-4 py-2 text-sm font-black text-indigo-300 ring-1 ring-inset ring-indigo-500/30">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-figma-accent animate-pulse shadow-[0_0_8px_#30FF75]" />
+                    <div className="truncate text-base font-black text-white tracking-wide">시즌패스</div>
+                  </div>
+                  <div className="shrink-0 inline-flex items-center justify-center rounded-xl bg-figma-accent/10 px-4 py-2.5 text-sm font-black text-figma-accent ring-1 ring-inset ring-figma-accent/30 shadow-[0_0_15px_rgba(48,255,117,0.15)]">
                     보상 받기
                   </div>
                 </div>
@@ -77,8 +72,11 @@ const EventDashboardPage: React.FC = () => {
             <div className={cardContentClass}>
               <div className={cardPanelClass}>
                 <div className="flex items-center justify-between gap-3">
-                  <div className="truncate text-base font-black text-white">미션</div>
-                  <div className="shrink-0 inline-flex items-center justify-center rounded-full bg-[#91F402]/20 px-4 py-2 text-sm font-black text-[#91F402] ring-1 ring-inset ring-[#91F402]/30">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]" />
+                    <div className="truncate text-base font-black text-white tracking-wide">미션</div>
+                  </div>
+                  <div className="shrink-0 inline-flex items-center justify-center rounded-xl bg-emerald-500/15 px-4 py-2.5 text-sm font-black text-emerald-400 ring-1 ring-inset ring-emerald-500/30 shadow-[0_0_15px_rgba(52,211,153,0.15)]">
                     미션 진행
                   </div>
                 </div>

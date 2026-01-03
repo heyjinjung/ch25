@@ -5,6 +5,7 @@ from typing import Optional
 from pydantic import ConfigDict, Field
 
 from app.schemas.base import KstBaseModel as BaseModel
+from app.schemas.admin_user_summary import AdminUserSummary
 
 
 class ExternalRankingBase(BaseModel):
@@ -33,6 +34,7 @@ class ExternalRankingEntry(BaseModel):
     user_id: int
     external_id: str | None = None
     telegram_username: str | None = None
+    user: AdminUserSummary | None = None
     deposit_amount: int
     play_count: int
     memo: Optional[str] = None

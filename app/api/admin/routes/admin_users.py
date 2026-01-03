@@ -2,11 +2,14 @@
 from typing import List
 
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.api.deps import get_db
+from app.models.user import User
 from app.schemas.admin_user import AdminUserCreate, AdminUserResponse, AdminUserUpdate
+from app.schemas.admin_user_summary import AdminUserResolveResponse
 from app.services.admin_user_service import AdminUserService
+from app.services.admin_user_identity_service import build_admin_user_summary, resolve_user_summary
 
 router = APIRouter(prefix="/admin/api/users", tags=["admin-users"])
 
@@ -20,7 +23,16 @@ def list_users(
 ) -> List[AdminUserResponse]:
     # Support both /admin/api/users and /admin/api/users/ to avoid redirect-induced CORS noise
     users = AdminUserService.list_users(db, q)
-    return [AdminUserResponse.model_validate(u) for u in users]
+    return [
+        AdminUserResponse.model_validate(u).model_copy(update={"summary": build_admin_user_summary(u)})
+        for u in users
+    ]
+
+
+@router.get("/resolve", response_model=AdminUserResolveResponse)
+def resolve_user(identifier: str, db: Session = Depends(get_db)) -> AdminUserResolveResponse:
+    summary = resolve_user_summary(db, identifier)
+    return AdminUserResolveResponse(identifier=identifier, user=summary)
 
 
 @router.post("", response_model=AdminUserResponse, status_code=201)
@@ -28,15 +40,30 @@ def list_users(
 def create_user(payload: AdminUserCreate, db: Session = Depends(get_db)) -> AdminUserResponse:
     # Accept both trailing and non-trailing slash
     user = AdminUserService.create_user(db, payload)
-    return AdminUserResponse.model_validate(user)
+    user_full = (
+        db.query(User)
+        .options(joinedload(User.admin_profile))
+        .filter(User.id == user.id)
+        .first()
+    )
+    user_full = user_full or user
+    return AdminUserResponse.model_validate(user_full).model_copy(update={"summary": build_admin_user_summary(user_full)})
 
 
 @router.put("/{user_id}", response_model=AdminUserResponse)
 def update_user(user_id: int, payload: AdminUserUpdate, db: Session = Depends(get_db)) -> AdminUserResponse:
     user = AdminUserService.update_user(db, user_id, payload)
-    return AdminUserResponse.model_validate(user)
+    user_full = (
+        db.query(User)
+        .options(joinedload(User.admin_profile))
+        .filter(User.id == user.id)
+        .first()
+    )
+    user_full = user_full or user
+    return AdminUserResponse.model_validate(user_full).model_copy(update={"summary": build_admin_user_summary(user_full)})
 
 
 @router.delete("/{user_id}", status_code=204)
 def delete_user(user_id: int, db: Session = Depends(get_db)) -> None:
     AdminUserService.delete_user(db, user_id)
+

@@ -37,6 +37,7 @@ class AdminSegmentService:
     def list_segments(
         db: Session,
         *,
+        user_id: int | None = None,
         external_id: str | None = None,
         limit: int = 200,
     ) -> list[AdminSegmentRow]:
@@ -46,7 +47,9 @@ class AdminSegmentService:
             .outerjoin(UserSegment, UserSegment.user_id == User.id)
             .outerjoin(UserActivity, UserActivity.user_id == User.id)
         )
-        if cleaned_external:
+        if user_id is not None:
+            q = q.filter(User.id == user_id)
+        elif cleaned_external:
             q = q.filter(User.external_id == cleaned_external)
 
         rows = q.order_by(User.id.desc()).limit(limit).all()

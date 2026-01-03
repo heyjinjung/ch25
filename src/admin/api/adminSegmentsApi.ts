@@ -20,7 +20,7 @@ export interface AdminUserSegmentRow {
   readonly activity_updated_at?: string | null;
 }
 
-export async function fetchUserSegments(params?: { external_id?: string; limit?: number }) {
+export async function fetchUserSegments(params?: { identifier?: string; external_id?: string; limit?: number }) {
   const { data } = await adminApi.get<AdminUserSegmentRow[]>("/admin/api/segments/", {
     params,
   });

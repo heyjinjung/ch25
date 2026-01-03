@@ -6,6 +6,7 @@ from datetime import datetime
 from app.api.deps import get_db
 from app.models.mission import Mission, UserMissionProgress, MissionCategory
 from app.services.mission_service import MissionService
+from app.services.admin_user_identity_service import resolve_user_id_by_identifier
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/admin/api/user-missions", tags=["admin-user-missions"])
@@ -64,6 +65,16 @@ def get_user_missions_progress(
     
     return results
 
+
+@router.get("/by-identifier/{identifier}", response_model=List[AdminUserMissionDetail])
+@router.get("/by-identifier/{identifier}/", response_model=List[AdminUserMissionDetail])
+def get_user_missions_progress_by_identifier(
+    identifier: str,
+    db: Session = Depends(get_db),
+):
+    user_id = resolve_user_id_by_identifier(db, identifier)
+    return get_user_missions_progress(user_id=user_id, db=db)
+
 @router.put("/{user_id}/{mission_id}")
 def update_user_mission_progress(
     user_id: int, 
@@ -107,3 +118,15 @@ def update_user_mission_progress(
         
     db.commit()
     return {"success": True}
+
+
+@router.put("/by-identifier/{identifier}/{mission_id}")
+@router.put("/by-identifier/{identifier}/{mission_id}/")
+def update_user_mission_progress_by_identifier(
+    identifier: str,
+    mission_id: int,
+    payload: AdminUserMissionProgressUpdate,
+    db: Session = Depends(get_db),
+):
+    user_id = resolve_user_id_by_identifier(db, identifier)
+    return update_user_mission_progress(user_id=user_id, mission_id=mission_id, payload=payload, db=db)

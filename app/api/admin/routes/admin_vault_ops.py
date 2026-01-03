@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_db
 from app.schemas.vault2 import VaultAdminStateResponse, VaultTimerActionRequest
 from app.services.vault_service import VaultService
+from app.services.admin_user_identity_service import resolve_user_id_by_identifier
 
 
 # Canonical admin API base in this codebase is `/admin/api/*`.
@@ -69,11 +70,36 @@ def get_user_vault_state(user_id: int, db: Session = Depends(get_db)) -> VaultAd
     return _build_admin_state(service, db, user_id)
 
 
+@router.get("/by-identifier/{identifier}", response_model=VaultAdminStateResponse)
+@router.get("/by-identifier/{identifier}/", response_model=VaultAdminStateResponse)
+@legacy_router.get("/by-identifier/{identifier}", response_model=VaultAdminStateResponse)
+@legacy_router.get("/by-identifier/{identifier}/", response_model=VaultAdminStateResponse)
+def get_user_vault_state_by_identifier(identifier: str, db: Session = Depends(get_db)) -> VaultAdminStateResponse:
+    user_id = resolve_user_id_by_identifier(db, identifier)
+    service = VaultService()
+    return _build_admin_state(service, db, user_id)
+
+
 @router.post("/{user_id}/timer", response_model=VaultAdminStateResponse)
 @router.post("/{user_id}/timer/", response_model=VaultAdminStateResponse)
 @legacy_router.post("/{user_id}/timer", response_model=VaultAdminStateResponse)
 @legacy_router.post("/{user_id}/timer/", response_model=VaultAdminStateResponse)
 def set_user_timer(user_id: int, payload: VaultTimerActionRequest, db: Session = Depends(get_db)) -> VaultAdminStateResponse:
+    service = VaultService()
+    service.admin_timer_action(db, user_id=user_id, action=payload.action)
+    return _build_admin_state(service, db, user_id)
+
+
+@router.post("/by-identifier/{identifier}/timer", response_model=VaultAdminStateResponse)
+@router.post("/by-identifier/{identifier}/timer/", response_model=VaultAdminStateResponse)
+@legacy_router.post("/by-identifier/{identifier}/timer", response_model=VaultAdminStateResponse)
+@legacy_router.post("/by-identifier/{identifier}/timer/", response_model=VaultAdminStateResponse)
+def set_user_timer_by_identifier(
+    identifier: str,
+    payload: VaultTimerActionRequest,
+    db: Session = Depends(get_db),
+) -> VaultAdminStateResponse:
+    user_id = resolve_user_id_by_identifier(db, identifier)
     service = VaultService()
     service.admin_timer_action(db, user_id=user_id, action=payload.action)
     return _build_admin_state(service, db, user_id)

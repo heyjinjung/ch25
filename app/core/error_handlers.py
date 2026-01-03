@@ -51,7 +51,10 @@ def register_exception_handlers(app: FastAPI) -> None:
         message = exc.detail if hasattr(exc, "detail") else str(exc)
         code = DETAIL_CODE_MAP.get(message, ERROR_MAP.get(exc.__class__, "UNKNOWN_ERROR"))
         status_code = getattr(exc, "status_code", 400)
-        return JSONResponse(status_code=status_code, content={"error": {"code": code, "message": message}})
+        return JSONResponse(
+            status_code=status_code,
+            content={"detail": message, "error": {"code": code, "message": message}},
+        )
 
     # Register the same handler for each custom exception type
     for exc_cls in ERROR_MAP.keys():
@@ -61,13 +64,16 @@ def register_exception_handlers(app: FastAPI) -> None:
     async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
         detail = exc.detail or "HTTP_ERROR"
         code = DETAIL_CODE_MAP.get(detail, detail if isinstance(detail, str) else "HTTP_ERROR")
-        return JSONResponse(status_code=exc.status_code, content={"error": {"code": code, "message": detail}})
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={"detail": detail, "error": {"code": code, "message": detail}},
+        )
 
     @app.exception_handler(RequestValidationError)
     async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
         return JSONResponse(
             status_code=HTTP_422_UNPROCESSABLE_ENTITY,
-            content={"error": {"code": "VALIDATION_ERROR", "message": exc.errors()}},
+            content={"detail": exc.errors(), "error": {"code": "VALIDATION_ERROR", "message": exc.errors()}},
         )
 
     @app.exception_handler(SQLAlchemyError)

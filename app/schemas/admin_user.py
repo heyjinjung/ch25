@@ -21,15 +21,18 @@ class AdminUserBase(BaseModel):
     external_id: str = Field(..., min_length=1, max_length=100)
     nickname: Optional[str] = Field(None, max_length=100)
     level: int = Field(1, ge=1)
-    xp: int = Field(0, ge=0)
     status: str = Field("ACTIVE", max_length=20)
-    xp: Optional[int] = Field(0, ge=0)
+    xp: int = Field(0, ge=0)
     season_level: Optional[int] = Field(1, ge=1)
 
 
 class AdminUserCreate(AdminUserBase):
     password: Optional[str] = Field(None, min_length=4)
     user_id: Optional[int] = None
+
+    # Telegram Integration
+    telegram_id: Optional[int] = None
+    telegram_username: Optional[str] = None
 
 
 class AdminUserUpdate(BaseModel):
@@ -62,4 +65,10 @@ class AdminUserResponse(AdminUserBase):
     # CRM Data (Nested)
     admin_profile: Optional[AdminUserProfileSchema] = None
 
+    # Standard user summary (computed)
+    summary: Optional["AdminUserSummary"] = None
+
     model_config = ConfigDict(from_attributes=True)
+
+
+from app.schemas.admin_user_summary import AdminUserSummary  # noqa: E402

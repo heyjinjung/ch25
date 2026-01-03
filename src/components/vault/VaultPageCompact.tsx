@@ -174,7 +174,7 @@ const VaultPageCompact: React.FC = () => {
                                                 : "bg-gray-800 border border-white/10 text-white/30 cursor-not-allowed"
                                         )}
                                     >
-                                        <img src={availableAmount >= 10000 ? "/assets/asset_coin_gold.webp" : "/assets/asset_coin_gray.webp"} alt="Coin" className="w-5 h-5 drop-shadow-sm" />
+                                        <img src="/assets/asset_coin_gold.png" alt="Coin" className={clsx("w-5 h-5 drop-shadow-sm", availableAmount < 10000 && "grayscale opacity-50")} />
                                         출금 신청하기
                                     </button>
                                     {availableAmount < 10000 && (

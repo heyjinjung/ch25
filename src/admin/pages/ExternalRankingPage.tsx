@@ -8,11 +8,35 @@ import {
   fetchExternalRankingList,
   upsertExternalRanking,
 } from "../api/adminExternalRankingApi";
+import { resolveAdminUser } from "../api/adminUserApi";
 
 type EditableRow = ExternalRankingPayload & { id?: number; __isNew?: boolean };
 
 type SortDir = "asc" | "desc";
-type SortKey = "external_id" | "deposit_amount" | "play_count" | "memo";
+type SortKey = "identifier" | "deposit_amount" | "play_count" | "memo";
+
+type ResolveRowStatus =
+  | { state: "idle" }
+  | { state: "loading" }
+  | {
+      state: "ok";
+      user: {
+        id: number;
+        external_id?: string | null;
+        nickname?: string | null;
+        tg_id?: number | null;
+        tg_username?: string | null;
+        real_name?: string | null;
+        phone_number?: string | null;
+      };
+    }
+  | { state: "error"; message: string };
+
+const formatTgUsername = (username?: string | null) => {
+  const u = String(username ?? "").trim();
+  if (!u) return "-";
+  return u.startsWith("@") ? u : `@${u}`;
+};
 
 const ExternalRankingPage: React.FC = () => {
   const queryClient = useQueryClient();
@@ -29,7 +53,9 @@ const ExternalRankingPage: React.FC = () => {
   const [page, setPage] = useState<number>(0);
   const [isDirty, setIsDirty] = useState<boolean>(false);
 
-  const [sortKey, setSortKey] = useState<SortKey>("external_id");
+  const [resolveStatusByIndex, setResolveStatusByIndex] = useState<Record<number, ResolveRowStatus>>({});
+
+  const [sortKey, setSortKey] = useState<SortKey>("identifier");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
 
   useEffect(() => {
@@ -38,8 +64,8 @@ const ExternalRankingPage: React.FC = () => {
         data.items.map((item) => ({
           id: item.id,
           user_id: item.user_id,
-          external_id: item.external_id,
-          telegram_username: item.telegram_username,
+          external_id: item.telegram_username ?? item.external_id,
+          telegram_username: "",
           deposit_amount: item.deposit_amount,
           play_count: item.play_count,
           memo: item.memo ?? "",
@@ -48,6 +74,7 @@ const ExternalRankingPage: React.FC = () => {
       );
       setIsDirty(false);
       setPage(0);
+      setResolveStatusByIndex({});
     }
   }, [data]);
 
@@ -61,8 +88,8 @@ const ExternalRankingPage: React.FC = () => {
           res.items.map((item) => ({
             id: item.id,
             user_id: item.user_id,
-            external_id: item.external_id,
-            telegram_username: item.telegram_username,
+            external_id: item.telegram_username ?? item.external_id,
+            telegram_username: "",
             deposit_amount: item.deposit_amount,
             play_count: item.play_count,
             memo: item.memo ?? "",
@@ -98,6 +125,9 @@ const ExternalRankingPage: React.FC = () => {
       )
     );
     setIsDirty(true);
+    if (field === "external_id") {
+      setResolveStatusByIndex((prev) => ({ ...prev, [index]: { state: "idle" } }));
+    }
   };
 
   const addRow = () => {
@@ -109,6 +139,7 @@ const ExternalRankingPage: React.FC = () => {
       ...prev.map((r) => ({ ...r, __isNew: false })),
     ]);
     setIsDirty(true);
+    setResolveStatusByIndex((prev) => ({ ...prev, 0: { state: "idle" } }));
     setTimeout(() => newRowInputRef.current?.focus(), 0);
   };
 
@@ -121,12 +152,62 @@ const ExternalRankingPage: React.FC = () => {
     setIsDirty(true);
   };
 
-  const saveAll = () => {
+  const resolveOne = async (index: number) => {
+    const identifier = String(rows[index]?.external_id ?? "").trim();
+    if (!identifier) {
+      setResolveStatusByIndex((prev) => ({ ...prev, [index]: { state: "idle" } }));
+      return true;
+    }
+
+    setResolveStatusByIndex((prev) => ({ ...prev, [index]: { state: "loading" } }));
+    try {
+      const res = await resolveAdminUser(identifier);
+      setResolveStatusByIndex((prev) => ({
+        ...prev,
+        [index]: {
+          state: "ok",
+          user: {
+            id: res.user.id,
+            external_id: res.user.external_id,
+            nickname: res.user.nickname,
+            tg_id: res.user.tg_id,
+            tg_username: res.user.tg_username,
+            real_name: res.user.real_name,
+            phone_number: res.user.phone_number,
+          },
+        },
+      }));
+      return true;
+    } catch (err: any) {
+      const msg = err?.response?.data?.detail || err?.message || "resolve 실패";
+      setResolveStatusByIndex((prev) => ({ ...prev, [index]: { state: "error", message: String(msg) } }));
+      return false;
+    }
+  };
+
+  const resolveAllBeforeSave = async () => {
+    const indices = rows
+      .map((r, idx) => ({ r, idx }))
+      .filter(({ r }) => String(r.external_id ?? "").trim().length > 0)
+      .map(({ idx }) => idx);
+
+    // Avoid calling resolve repeatedly when nothing changed since last verify.
+    if (!isDirty && indices.every((i) => resolveStatusByIndex[i]?.state === "ok")) return true;
+
+    const results = await Promise.all(indices.map((i) => resolveOne(i)));
+    const ok = results.every(Boolean);
+    return ok;
+  };
+
+  const saveAll = async () => {
+    const ok = await resolveAllBeforeSave();
+    if (!ok) return;
+
     const payloads: ExternalRankingPayload[] = rows
-      .filter((row) => !!row.external_id || !!row.telegram_username)
+      .filter((row) => !!String(row.external_id ?? "").trim())
       .map((row) => ({
-        external_id: row.external_id,
-        telegram_username: row.telegram_username,
+        // Unified identifier input; backend resolver handles @username/tg_*/nickname/external_id.
+        external_id: String(row.external_id ?? "").trim(),
         deposit_amount: row.deposit_amount ?? 0,
         play_count: row.play_count ?? 0,
         memo: row.memo,
@@ -157,7 +238,7 @@ const ExternalRankingPage: React.FC = () => {
   const toggleSort = (k: SortKey) => {
     if (sortKey !== k) {
       setSortKey(k);
-      setSortDir(k === "external_id" || k === "memo" ? "asc" : "desc");
+      setSortDir(k === "identifier" || k === "memo" ? "asc" : "desc");
       return;
     }
     setSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -275,7 +356,7 @@ const ExternalRankingPage: React.FC = () => {
               value={rowSearchInput}
               onChange={(e) => setRowSearchInput(e.target.value)}
               className={inputBase + " sm:w-72"}
-              placeholder="external_id / memo / user_id"
+              placeholder="identifier / memo / user_id"
               onKeyDown={(e) => {
                 if (e.key === "Enter") applyRowSearch();
               }}
@@ -321,16 +402,16 @@ const ExternalRankingPage: React.FC = () => {
             <thead className="sticky top-0 z-10 border-b border-[#333333] bg-[#1A1A1A]">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                  <button type="button" onClick={() => toggleSort("external_id")} className="inline-flex items-center gap-1 text-gray-400 hover:text-gray-200" title="정렬">
-                    external_id (or telegram)
-                    <span className={sortKey === "external_id" ? "text-[#91F402]" : "text-gray-600"}>
-                      {sortKey === "external_id" ? (sortDir === "asc" ? "▲" : "▼") : "↕"}
+                  <button type="button" onClick={() => toggleSort("identifier")} className="inline-flex items-center gap-1 text-gray-400 hover:text-gray-200" title="정렬">
+                    identifier
+                    <span className={sortKey === "identifier" ? "text-[#91F402]" : "text-gray-600"}>
+                      {sortKey === "identifier" ? (sortDir === "asc" ? "▲" : "▼") : "↕"}
                     </span>
                   </button>
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                  telegram_username
-                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">TG ID / Username</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">실명/연락처</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">닉네임</th>
                 <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">
                   <button type="button" onClick={() => toggleSort("deposit_amount")} className="inline-flex items-center gap-1 text-gray-400 hover:text-gray-200" title="정렬">
                     입금액
@@ -376,18 +457,66 @@ const ExternalRankingPage: React.FC = () => {
                       value={row.external_id ?? ""}
                       onChange={(e) => handleChange(index, "external_id", e.target.value)}
                       className={inputBase}
-                      placeholder="external_id"
+                      placeholder="@username / tg_833... / 닉네임 / external_id"
                       ref={row.__isNew ? newRowInputRef : null}
                     />
+
+                    {String(row.external_id ?? "").trim() && (
+                      <div className="mt-2">
+                        {resolveStatusByIndex[index]?.state === "loading" ? (
+                          <div className="text-[11px] text-gray-500">사용자 확인 중...</div>
+                        ) : resolveStatusByIndex[index]?.state === "ok" ? (
+                          <div className="text-[11px] text-[#91F402]">사용자 확인됨</div>
+                        ) : resolveStatusByIndex[index]?.state === "error" ? (
+                          <div className="text-[11px] text-red-300">{resolveStatusByIndex[index].message}</div>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => resolveOne(index)}
+                              className="rounded-md border border-[#333333] bg-[#1A1A1A] px-2 py-1 text-[11px] text-gray-200 hover:bg-[#2C2C2E]"
+                            >
+                              사용자 확인
+                            </button>
+                            <span className="text-[11px] text-gray-500">저장 전 확인 권장</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </td>
                   <td className="px-4 py-3">
-                    <input
-                      type="text"
-                      value={row.telegram_username ?? ""}
-                      onChange={(e) => handleChange(index, "telegram_username", e.target.value)}
-                      className={inputBase}
-                      placeholder="@username (선택)"
-                    />
+                    {resolveStatusByIndex[index]?.state === "loading" ? (
+                      <div className="text-xs text-gray-500">...</div>
+                    ) : resolveStatusByIndex[index]?.state === "ok" ? (
+                      <>
+                        <div className="text-sm text-white font-mono">{resolveStatusByIndex[index].user.tg_id ?? "-"}</div>
+                        <div className="text-xs text-[#91F402]">{formatTgUsername(resolveStatusByIndex[index].user.tg_username)}</div>
+                      </>
+                    ) : (
+                      <div className="text-xs text-gray-500">-</div>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    {resolveStatusByIndex[index]?.state === "loading" ? (
+                      <div className="text-xs text-gray-500">...</div>
+                    ) : resolveStatusByIndex[index]?.state === "ok" ? (
+                      <div className="text-xs text-gray-200">
+                        {[resolveStatusByIndex[index].user.real_name, resolveStatusByIndex[index].user.phone_number]
+                          .filter(Boolean)
+                          .join(" / ") || "-"}
+                      </div>
+                    ) : (
+                      <div className="text-xs text-gray-500">-</div>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    {resolveStatusByIndex[index]?.state === "loading" ? (
+                      <div className="text-xs text-gray-500">...</div>
+                    ) : resolveStatusByIndex[index]?.state === "ok" ? (
+                      <div className="text-sm text-white font-medium">{resolveStatusByIndex[index].user.nickname ?? "-"}</div>
+                    ) : (
+                      <div className="text-xs text-gray-500">-</div>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <input
@@ -430,14 +559,14 @@ const ExternalRankingPage: React.FC = () => {
               ))}
               {rows.length === 0 && (
                 <tr>
-                  <td className="px-4 py-10 text-center text-gray-400" colSpan={6}>
+                  <td className="px-4 py-10 text-center text-gray-400" colSpan={8}>
                     아직 입력된 데이터가 없습니다. “행 추가”로 시작하세요.
                   </td>
                 </tr>
               )}
               {rows.length > 0 && totalVisible === 0 && (
                 <tr>
-                  <td className="px-4 py-10 text-center text-gray-400" colSpan={6}>
+                  <td className="px-4 py-10 text-center text-gray-400" colSpan={8}>
                     검색 결과가 없습니다. “초기화”를 눌러 전체를 확인하세요.
                   </td>
                 </tr>

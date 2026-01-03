@@ -3,7 +3,10 @@ import { adminApi } from "./httpClient";
 import { GameTokenType } from "../../types/gameTokens";
 
 export interface GrantGameTokensPayload {
-  external_id: string;
+  /** New standardized identifier field (tg id/username/nickname/external id). */
+  user_identifier?: string;
+  /** Backward-compat: legacy field name used by older UI. */
+  external_id?: string;
   token_type: GameTokenType;
   amount: number;
 }
@@ -18,7 +21,12 @@ export interface GrantGameTokensResponse {
 }
 
 export async function grantGameTokens(payload: GrantGameTokensPayload) {
-  const { data } = await adminApi.post<GrantGameTokensResponse>("/admin/api/game-tokens/grant", payload);
+  // Backend supports both `user_identifier` and legacy `external_id`.
+  const normalizedPayload = {
+    ...payload,
+    user_identifier: payload.user_identifier ?? payload.external_id,
+  };
+  const { data } = await adminApi.post<GrantGameTokensResponse>("/admin/api/game-tokens/grant", normalizedPayload);
   return data;
 }
 
@@ -32,7 +40,8 @@ export interface TokenBalance {
 }
 
 export interface RevokeGameTokensPayload {
-  external_id: string;
+  user_identifier?: string;
+  external_id?: string;
   token_type: GameTokenType;
   amount: number;
 }
@@ -81,7 +90,11 @@ export async function fetchWallets(
 }
 
 export async function revokeGameTokens(payload: RevokeGameTokensPayload) {
-  const { data } = await adminApi.post<GrantGameTokensResponse>("/admin/api/game-tokens/revoke", payload);
+  const normalizedPayload = {
+    ...payload,
+    user_identifier: payload.user_identifier ?? payload.external_id,
+  };
+  const { data } = await adminApi.post<GrantGameTokensResponse>("/admin/api/game-tokens/revoke", normalizedPayload);
   return data;
 }
 

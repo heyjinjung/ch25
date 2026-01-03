@@ -23,6 +23,7 @@ from app.schemas.vault2 import (
     VaultAdminStateResponse,
 )
 from app.services.vault2_service import Vault2Service
+from app.services.admin_user_identity_service import resolve_user_id_by_identifier
 
 
 _core = APIRouter(tags=["admin-vault-programs"])
@@ -56,6 +57,26 @@ def update_user_balance(
     db: Session = Depends(get_db),
     admin_id: int = Depends(get_current_admin_id),
 ):
+    service.update_balance(
+        db,
+        user_id=user_id,
+        locked_delta=payload.locked_delta,
+        available_delta=payload.available_delta,
+        reason=payload.reason or "ADMIN_MANUAL_ADJUST",
+        admin_id=admin_id,
+    )
+    return {"ok": True}
+
+
+@_core.post("/balance/by-identifier/{identifier}")
+@_core.post("/balance/by-identifier/{identifier}/")
+def update_user_balance_by_identifier(
+    identifier: str,
+    payload: VaultBalanceUpdateRequest,
+    db: Session = Depends(get_db),
+    admin_id: int = Depends(get_current_admin_id),
+):
+    user_id = resolve_user_id_by_identifier(db, identifier)
     service.update_balance(
         db,
         user_id=user_id,
@@ -185,6 +206,17 @@ def get_user_eligibility(
     return VaultEligibilityResponse(user_id=user_id, eligible=eligible)
 
 
+@_core.get("/{program_key}/eligibility/by-identifier/{identifier}", response_model=VaultEligibilityResponse)
+@_core.get("/{program_key}/eligibility/by-identifier/{identifier}/", response_model=VaultEligibilityResponse)
+def get_user_eligibility_by_identifier(
+    program_key: str,
+    identifier: str,
+    db: Session = Depends(get_db),
+) -> VaultEligibilityResponse:
+    user_id = resolve_user_id_by_identifier(db, identifier)
+    return get_user_eligibility(program_key=program_key, user_id=user_id, db=db)
+
+
 @_core.post("/{program_key}/eligibility/{user_id}", response_model=VaultEligibilityResponse)
 @_core.post("/{program_key}/eligibility/{user_id}/", response_model=VaultEligibilityResponse)
 def upsert_user_eligibility(
@@ -200,6 +232,19 @@ def upsert_user_eligibility(
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
     return VaultEligibilityResponse(user_id=user_id, eligible=eligible)
+
+
+@_core.post("/{program_key}/eligibility/by-identifier/{identifier}", response_model=VaultEligibilityResponse)
+@_core.post("/{program_key}/eligibility/by-identifier/{identifier}/", response_model=VaultEligibilityResponse)
+def upsert_user_eligibility_by_identifier(
+    program_key: str,
+    identifier: str,
+    payload: VaultEligibilityRequest,
+    db: Session = Depends(get_db),
+    admin_id: int = Depends(get_current_admin_id),
+) -> VaultEligibilityResponse:
+    user_id = resolve_user_id_by_identifier(db, identifier)
+    return upsert_user_eligibility(program_key=program_key, user_id=user_id, payload=payload, db=db, admin_id=admin_id)
 
 
 # NOTE: include_router must happen after _core routes are defined.

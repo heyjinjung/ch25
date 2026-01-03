@@ -26,7 +26,7 @@ import {
   getLeaderboard,
   getContributors,
 } from "../../api/teamBattleApi";
-import { fetchUsers, AdminUser } from "../api/adminUserApi";
+import { fetchUsers, resolveAdminUser, type AdminUser, type AdminUserSummary } from "../api/adminUserApi";
 import { Team, TeamSeason, LeaderboardEntry, ContributorEntry } from "../../types/teamBattle";
 
 type TabKey = "season" | "team" | "leaderboard" | "force";
@@ -148,22 +148,65 @@ const TeamModal = ({
     name: team?.name || "",
     icon: team?.icon || "",
     is_active: team?.is_active ?? true,
-    leader_user_id: "",
   });
-  const [userSearch, setUserSearch] = useState("");
+  const [leaderIdentifier, setLeaderIdentifier] = useState("");
   const [showUserDropdown, setShowUserDropdown] = useState(false);
 
-  const filteredUsers = useMemo(() => {
-    if (!userSearch) return [];
-    const q = userSearch.toLowerCase();
-    return allUsers.filter(u =>
-      (u.nickname?.toLowerCase() || "").includes(q) ||
-      u.external_id.toLowerCase().includes(q) ||
-      String(u.id).includes(q)
-    ).slice(0, 10);
-  }, [allUsers, userSearch]);
+  const [leaderResolvedUser, setLeaderResolvedUser] = useState<AdminUserSummary | null>(null);
+  const [leaderResolvedIdentifier, setLeaderResolvedIdentifier] = useState<string | null>(null);
+  const [leaderResolveError, setLeaderResolveError] = useState<string | null>(null);
+  const [leaderResolveBusy, setLeaderResolveBusy] = useState(false);
 
-  const canSubmit = Boolean(form.name.trim());
+  const trimmedLeaderIdentifier = useMemo(() => leaderIdentifier.trim(), [leaderIdentifier]);
+
+  const filteredUsers = useMemo(() => {
+    if (!trimmedLeaderIdentifier) return [];
+    const q = trimmedLeaderIdentifier.toLowerCase();
+    return allUsers
+      .filter(
+        (u) =>
+          (u.nickname?.toLowerCase() || "").includes(q) ||
+          u.external_id.toLowerCase().includes(q) ||
+          String(u.id).includes(trimmedLeaderIdentifier)
+      )
+      .slice(0, 10);
+  }, [allUsers, trimmedLeaderIdentifier]);
+
+  const canSubmit = useMemo(() => {
+    if (!form.name.trim()) return false;
+    if (!trimmedLeaderIdentifier) return true;
+    return Boolean(leaderResolvedUser && leaderResolvedIdentifier === trimmedLeaderIdentifier);
+  }, [form.name, leaderResolvedIdentifier, leaderResolvedUser, trimmedLeaderIdentifier]);
+
+  const resolveLeader = async () => {
+    const ident = trimmedLeaderIdentifier;
+    if (!ident) {
+      setLeaderResolveError("identifier를 입력하세요.");
+      setLeaderResolvedUser(null);
+      setLeaderResolvedIdentifier(null);
+      return;
+    }
+    setLeaderResolveBusy(true);
+    setLeaderResolveError(null);
+    setLeaderResolvedUser(null);
+    setLeaderResolvedIdentifier(null);
+    try {
+      const res = await resolveAdminUser(ident);
+      setLeaderResolvedUser(res.user);
+      setLeaderResolvedIdentifier(ident);
+    } catch (err: any) {
+      const detail = err?.response?.data?.detail;
+      if (detail === "USER_NOT_FOUND") {
+        setLeaderResolveError("사용자를 찾을 수 없습니다.");
+      } else if (detail === "AMBIGUOUS_IDENTIFIER") {
+        setLeaderResolveError("중복 매칭(409): identifier가 모호합니다.");
+      } else {
+        setLeaderResolveError("사용자 확인 실패");
+      }
+    } finally {
+      setLeaderResolveBusy(false);
+    }
+  };
 
   return (
     <ModalShell title={team ? "팀 수정" : "팀 생성"} onClose={onClose}>
@@ -193,20 +236,28 @@ const TeamModal = ({
             <div className="flex gap-2">
               <input
                 className={inputClass}
-                value={userSearch}
+                value={leaderIdentifier}
                 onChange={(e) => {
-                  setUserSearch(e.target.value);
+                  setLeaderIdentifier(e.target.value);
+                  setLeaderResolvedUser(null);
+                  setLeaderResolvedIdentifier(null);
+                  setLeaderResolveError(null);
                   setShowUserDropdown(true);
                 }}
                 onFocus={() => setShowUserDropdown(true)}
-                placeholder="닉네임 또는 ID로 검색..."
+                placeholder="TG ID / @username / 닉네임 / external_id ..."
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") void resolveLeader();
+                }}
               />
-              {form.leader_user_id && (
+              {trimmedLeaderIdentifier && (
                 <button
                   type="button"
                   onClick={() => {
-                    setForm({ ...form, leader_user_id: "" });
-                    setUserSearch("");
+                    setLeaderIdentifier("");
+                    setLeaderResolvedUser(null);
+                    setLeaderResolvedIdentifier(null);
+                    setLeaderResolveError(null);
                   }}
                   className="rounded-md bg-red-900/40 px-3 text-xs text-red-200"
                 >
@@ -214,6 +265,43 @@ const TeamModal = ({
                 </button>
               )}
             </div>
+
+            <div className="mt-2 flex justify-end">
+              <button
+                type="button"
+                onClick={() => void resolveLeader()}
+                disabled={leaderResolveBusy || !trimmedLeaderIdentifier}
+                className="rounded-md border border-[#333333] bg-[#1A1A1A] px-4 py-2 text-sm font-medium text-gray-200 hover:bg-[#2C2C2E] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {leaderResolveBusy ? "확인 중..." : "사용자 확인"}
+              </button>
+            </div>
+
+            {(leaderResolvedUser || leaderResolveError) && (
+              <div className="mt-2 rounded-md border border-[#333333] bg-[#111111] p-3 text-sm">
+                {leaderResolveError ? (
+                  <div className="text-red-200">{leaderResolveError}</div>
+                ) : (
+                  <div className="text-gray-200">
+                    <div className="font-medium text-white">리더 확인됨</div>
+                    <div className="mt-1 text-xs text-gray-400">ID: {leaderResolvedUser?.id}</div>
+                    {leaderResolvedUser?.nickname && (
+                      <div className="text-xs text-gray-400">Nickname: {leaderResolvedUser.nickname}</div>
+                    )}
+                    {leaderResolvedUser?.tg_username && (
+                      <div className="text-xs text-gray-400">TG: @{leaderResolvedUser.tg_username}</div>
+                    )}
+                    {leaderResolvedUser?.tg_id && (
+                      <div className="text-xs text-gray-400">TG ID: {leaderResolvedUser.tg_id}</div>
+                    )}
+                    {leaderResolvedUser?.external_id && (
+                      <div className="text-xs text-gray-400">external_id: {leaderResolvedUser.external_id}</div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
             {showUserDropdown && filteredUsers.length > 0 && (
               <div className="absolute z-[60] mt-1 max-h-48 w-full overflow-auto rounded-md border border-[#333333] bg-[#111111] shadow-xl">
                 {filteredUsers.map(u => (
@@ -222,8 +310,10 @@ const TeamModal = ({
                     type="button"
                     className="flex w-full flex-col px-4 py-2 text-left hover:bg-[#1A1A1A]"
                     onClick={() => {
-                      setForm({ ...form, leader_user_id: String(u.id) });
-                      setUserSearch(`${u.nickname || u.external_id} (ID: ${u.id})`);
+                      setLeaderIdentifier(String(u.id));
+                      setLeaderResolvedUser(null);
+                      setLeaderResolvedIdentifier(null);
+                      setLeaderResolveError(null);
                       setShowUserDropdown(false);
                     }}
                   >
@@ -233,8 +323,8 @@ const TeamModal = ({
                 ))}
               </div>
             )}
-            {form.leader_user_id && (
-              <div className="mt-1 text-xs text-[#91F402]">선택된 리더 ID: {form.leader_user_id}</div>
+            {leaderResolvedUser && leaderResolvedIdentifier === trimmedLeaderIdentifier && (
+              <div className="mt-1 text-xs text-[#91F402]">선택된 리더 ID: {leaderResolvedUser.id}</div>
             )}
           </div>
         )}
@@ -257,7 +347,12 @@ const TeamModal = ({
       <div className="mt-6 flex justify-end">
         <button
           type="button"
-          onClick={() => onSubmit({ name: form.name, icon: form.icon, is_active: form.is_active }, form.leader_user_id ? Number(form.leader_user_id) : undefined)}
+          onClick={() =>
+            onSubmit(
+              { name: form.name, icon: form.icon, is_active: form.is_active },
+              leaderResolvedUser && leaderResolvedIdentifier === trimmedLeaderIdentifier ? Number(leaderResolvedUser.id) : undefined
+            )
+          }
           disabled={busy || !canSubmit}
           className="rounded-md bg-[#2D6B3B] px-5 py-2 text-sm font-medium text-white hover:bg-[#91F402] hover:text-black disabled:cursor-not-allowed disabled:opacity-60"
         >
@@ -282,9 +377,12 @@ const AdminTeamBattlePage: React.FC = () => {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [seasonEditForm, setSeasonEditForm] = useState({ name: "", starts_at: "", ends_at: "", is_active: false });
-  const [forceJoinForm, setForceJoinForm] = useState({ user_id: "", team_id: "" });
+  const [forceJoinForm, setForceJoinForm] = useState({ identifier: "", team_id: "" });
+  const [forceJoinResolvedUser, setForceJoinResolvedUser] = useState<AdminUserSummary | null>(null);
+  const [forceJoinResolvedIdentifier, setForceJoinResolvedIdentifier] = useState<string | null>(null);
+  const [forceJoinResolveError, setForceJoinResolveError] = useState<string | null>(null);
+  const [forceJoinResolveBusy, setForceJoinResolveBusy] = useState(false);
   const [allUsers, setAllUsers] = useState<AdminUser[]>([]);
-  const [userSearchQuery, setUserSearchQuery] = useState("");
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [createSeasonBusy, setCreateSeasonBusy] = useState(false);
@@ -305,6 +403,12 @@ const AdminTeamBattlePage: React.FC = () => {
   const inputClass =
     "w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]";
   const cardClass = "rounded-lg border border-[#333333] bg-[#111111] p-6 shadow-md";
+
+  const usersById = useMemo(() => {
+    const map = new Map<number, AdminUser>();
+    for (const u of allUsers) map.set(u.id, u);
+    return map;
+  }, [allUsers]);
 
   const refresh = async () => {
     setError(null);
@@ -538,17 +642,54 @@ const AdminTeamBattlePage: React.FC = () => {
     }
   };
 
+  const handleResolveForceJoinUser = async () => {
+    const ident = (forceJoinForm.identifier || "").trim();
+    if (!ident) {
+      setForceJoinResolveError("identifier를 입력하세요.");
+      setForceJoinResolvedUser(null);
+      setForceJoinResolvedIdentifier(null);
+      return;
+    }
+    setForceJoinResolveBusy(true);
+    setForceJoinResolveError(null);
+    setForceJoinResolvedUser(null);
+    setForceJoinResolvedIdentifier(null);
+    try {
+      const res = await resolveAdminUser(ident);
+      setForceJoinResolvedUser(res.user);
+      setForceJoinResolvedIdentifier(ident);
+    } catch (err: any) {
+      const detail = err?.response?.data?.detail;
+      if (detail === "USER_NOT_FOUND") {
+        setForceJoinResolveError("사용자를 찾을 수 없습니다.");
+      } else if (detail === "AMBIGUOUS_IDENTIFIER") {
+        setForceJoinResolveError("중복 매칭(409): identifier가 모호합니다.");
+      } else {
+        setForceJoinResolveError("사용자 확인 실패");
+      }
+    } finally {
+      setForceJoinResolveBusy(false);
+    }
+  };
+
   const handleForceJoin = async () => {
-    if (!forceJoinForm.user_id || !forceJoinForm.team_id) return;
+    const ident = (forceJoinForm.identifier || "").trim();
+    if (!ident || !forceJoinForm.team_id) return;
+    if (!forceJoinResolvedUser || forceJoinResolvedIdentifier !== ident) {
+      setError("강제 배정 전에 '사용자 확인'을 먼저 진행하세요.");
+      return;
+    }
     setError(null);
     setMessage(null);
     setForceJoinBusy(true);
     try {
-      await forceJoinTeam({ user_id: Number(forceJoinForm.user_id), team_id: Number(forceJoinForm.team_id) });
+      await forceJoinTeam({ user_id: Number(forceJoinResolvedUser.id), team_id: Number(forceJoinForm.team_id) });
       setMessage("강제 배정 완료");
       // 성공 시 폼 초기화
-      setForceJoinForm({ user_id: "", team_id: "" });
-      setUserSearchQuery("");
+      setForceJoinForm({ identifier: "", team_id: "" });
+      setForceJoinResolvedUser(null);
+      setForceJoinResolvedIdentifier(null);
+      setForceJoinResolveError(null);
     } catch (err) {
       console.error(err);
       const detail = (err as any)?.response?.data?.detail;
@@ -990,7 +1131,9 @@ const AdminTeamBattlePage: React.FC = () => {
                 <thead className="sticky top-0 z-10 border-b border-[#333333] bg-[#1A1A1A]">
                   <tr>
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">순위</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">닉네임 / USER_ID</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">TG ID / Username</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">실명/연락처</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">닉네임</th>
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">점수</th>
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">최근 적립</th>
                   </tr>
@@ -998,7 +1141,7 @@ const AdminTeamBattlePage: React.FC = () => {
                 <tbody className="divide-y divide-[#333333]">
                   {contributors.length === 0 && (
                     <tr>
-                      <td colSpan={4} className="px-4 py-6 text-center text-sm text-gray-400">
+                      <td colSpan={6} className="px-4 py-6 text-center text-sm text-gray-400">
                         기여도 데이터가 없습니다.
                       </td>
                     </tr>
@@ -1006,9 +1149,31 @@ const AdminTeamBattlePage: React.FC = () => {
                   {contributors.map((c, idx) => (
                     <tr key={`${c.user_id}-${idx}`} className={idx % 2 === 0 ? "bg-[#111111]" : "bg-[#1A1A1A]"}>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-400">{contribOffset + idx + 1}</td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        {(() => {
+                          const u = usersById.get(c.user_id);
+                          const tgId = u?.telegram_id ? String(u.telegram_id) : "-";
+                          const rawU = String(u?.telegram_username ?? "").trim();
+                          const tgUsername = rawU ? (rawU.startsWith("@") ? rawU : `@${rawU}`) : "-";
+                          return (
+                            <>
+                              <div className="text-white font-mono text-sm">{tgId}</div>
+                              <div className="text-xs text-[#91F402]">{tgUsername}</div>
+                            </>
+                          );
+                        })()}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <div className="text-sm text-gray-400">-</div>
+                      </td>
                       <td className="px-4 py-3">
                         <div className="text-sm font-medium text-white">{c.nickname || "닉네임 없음"}</div>
                         <div className="text-xs text-gray-500">user_{c.user_id}</div>
+                        {(() => {
+                          const u = usersById.get(c.user_id);
+                          if (!u?.external_id) return null;
+                          return <div className="mt-1 text-xs text-gray-500">external_id: {u.external_id}</div>;
+                        })()}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-white">{c.points.toLocaleString()}</td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-400">{c.latest_event_at ? formatDateTime(c.latest_event_at) : "-"}</td>
@@ -1049,23 +1214,67 @@ const AdminTeamBattlePage: React.FC = () => {
 
           <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="relative">
-              <label className="mb-1 block text-sm font-medium text-gray-300">사용자 검색</label>
+              <label className="mb-1 block text-sm font-medium text-gray-300">identifier</label>
               <input
                 className={inputClass}
-                placeholder="닉네임으로 검색..."
-                value={userSearchQuery}
+                placeholder="TG ID / @username / 닉네임 / external_id ..."
+                value={forceJoinForm.identifier}
                 onChange={(e) => {
-                  setUserSearchQuery(e.target.value);
+                  setForceJoinForm({ ...forceJoinForm, identifier: e.target.value });
+                  setForceJoinResolvedUser(null);
+                  setForceJoinResolvedIdentifier(null);
+                  setForceJoinResolveError(null);
                   setShowUserDropdown(true);
                 }}
                 onFocus={() => setShowUserDropdown(true)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") void handleResolveForceJoinUser();
+                }}
               />
-              {showUserDropdown && userSearchQuery && (
+
+              <div className="mt-2 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => void handleResolveForceJoinUser()}
+                  disabled={forceJoinResolveBusy || !(forceJoinForm.identifier || "").trim()}
+                  className="rounded-md border border-[#333333] bg-[#1A1A1A] px-4 py-2 text-sm font-medium text-gray-200 hover:bg-[#2C2C2E] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {forceJoinResolveBusy ? "확인 중..." : "사용자 확인"}
+                </button>
+              </div>
+
+              {(forceJoinResolvedUser || forceJoinResolveError) && (
+                <div className="mt-2 rounded-md border border-[#333333] bg-[#111111] p-3 text-sm">
+                  {forceJoinResolveError ? (
+                    <div className="text-red-200">{forceJoinResolveError}</div>
+                  ) : (
+                    <div className="text-gray-200">
+                      <div className="font-medium text-white">사용자 확인됨</div>
+                      <div className="mt-1 text-xs text-gray-400">ID: {forceJoinResolvedUser?.id}</div>
+                      {forceJoinResolvedUser?.nickname && (
+                        <div className="text-xs text-gray-400">Nickname: {forceJoinResolvedUser.nickname}</div>
+                      )}
+                      {forceJoinResolvedUser?.tg_username && (
+                        <div className="text-xs text-gray-400">TG: @{forceJoinResolvedUser.tg_username}</div>
+                      )}
+                      {forceJoinResolvedUser?.tg_id && (
+                        <div className="text-xs text-gray-400">TG ID: {forceJoinResolvedUser.tg_id}</div>
+                      )}
+                      {forceJoinResolvedUser?.external_id && (
+                        <div className="text-xs text-gray-400">external_id: {forceJoinResolvedUser.external_id}</div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {showUserDropdown && (forceJoinForm.identifier || "").trim() && (
                 <div className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-lg border border-[#333333] bg-[#111111] shadow-lg">
                   {allUsers
                     .filter((u) =>
-                      (u.nickname?.toLowerCase() || "").includes(userSearchQuery.toLowerCase()) ||
-                      u.external_id.toLowerCase().includes(userSearchQuery.toLowerCase())
+                      (u.nickname?.toLowerCase() || "").includes((forceJoinForm.identifier || "").toLowerCase()) ||
+                      u.external_id.toLowerCase().includes((forceJoinForm.identifier || "").toLowerCase()) ||
+                      String(u.id).includes(forceJoinForm.identifier)
                     )
                     .slice(0, 20)
                     .map((u) => (
@@ -1074,8 +1283,10 @@ const AdminTeamBattlePage: React.FC = () => {
                         key={u.id}
                         className="flex w-full items-center justify-between border-b border-[#333333] px-3 py-2 text-left text-sm text-gray-200 hover:bg-[#1A1A1A]"
                         onClick={() => {
-                          setForceJoinForm({ ...forceJoinForm, user_id: String(u.id) });
-                          setUserSearchQuery(`${u.nickname || u.external_id} (ID: ${u.id})`);
+                          setForceJoinForm({ ...forceJoinForm, identifier: String(u.id) });
+                          setForceJoinResolvedUser(null);
+                          setForceJoinResolvedIdentifier(null);
+                          setForceJoinResolveError(null);
                           setShowUserDropdown(false);
                         }}
                       >
@@ -1084,12 +1295,13 @@ const AdminTeamBattlePage: React.FC = () => {
                       </button>
                     ))}
                   {allUsers.filter((u) =>
-                    (u.nickname?.toLowerCase() || "").includes(userSearchQuery.toLowerCase()) ||
-                    u.external_id.toLowerCase().includes(userSearchQuery.toLowerCase())
+                    (u.nickname?.toLowerCase() || "").includes((forceJoinForm.identifier || "").toLowerCase()) ||
+                    u.external_id.toLowerCase().includes((forceJoinForm.identifier || "").toLowerCase()) ||
+                    String(u.id).includes(forceJoinForm.identifier)
                   ).length === 0 && <div className="px-3 py-2 text-sm text-gray-400">검색 결과 없음</div>}
                 </div>
               )}
-              {forceJoinForm.user_id && <div className="mt-1 text-xs text-gray-400">선택된 user_id: {forceJoinForm.user_id}</div>}
+              {forceJoinForm.identifier && <div className="mt-1 text-xs text-gray-400">입력된 identifier: {forceJoinForm.identifier}</div>}
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium text-gray-300">팀 선택</label>
@@ -1112,7 +1324,13 @@ const AdminTeamBattlePage: React.FC = () => {
             <button
               type="button"
               onClick={handleForceJoin}
-              disabled={forceJoinBusy || !forceJoinForm.user_id || !forceJoinForm.team_id}
+              disabled={
+                forceJoinBusy ||
+                !(forceJoinForm.identifier || "").trim() ||
+                !forceJoinForm.team_id ||
+                !forceJoinResolvedUser ||
+                forceJoinResolvedIdentifier !== (forceJoinForm.identifier || "").trim()
+              }
               className="rounded-md bg-[#2D6B3B] px-5 py-2 text-sm font-medium text-white hover:bg-[#91F402] hover:text-black disabled:cursor-not-allowed disabled:opacity-60"
             >
               {forceJoinBusy ? "배정 중..." : "강제 배정"}

@@ -2,12 +2,14 @@
 from pydantic import Field
 
 from app.schemas.base import KstBaseModel as BaseModel
+from app.schemas.admin_user_summary import AdminUserSummary
 
 from app.models.game_wallet import GameTokenType
 
 
 class GrantGameTokensRequest(BaseModel):
     user_id: int | None = Field(default=None, gt=0)
+    user_identifier: str | None = None
     external_id: str | None = None
     telegram_username: str | None = None
     token_type: GameTokenType
@@ -18,12 +20,15 @@ class GrantGameTokensResponse(BaseModel):
     user_id: int
     external_id: str | None = None
     telegram_username: str | None = None
+    nickname: str | None = None
+    user: AdminUserSummary | None = None
     token_type: GameTokenType
     balance: int
 
 
 class RevokeGameTokensRequest(BaseModel):
     user_id: int | None = Field(default=None, gt=0)
+    user_identifier: str | None = None
     external_id: str | None = None
     telegram_username: str | None = None
     token_type: GameTokenType
@@ -35,6 +40,7 @@ class TokenBalance(BaseModel):
     external_id: str | None = None
     telegram_username: str | None = None
     nickname: str | None = None
+    user: AdminUserSummary | None = None
     token_type: GameTokenType
     balance: int
 
@@ -45,6 +51,7 @@ class PlayLogEntry(BaseModel):
     external_id: str | None = None
     telegram_username: str | None = None
     nickname: str | None = None
+    user: AdminUserSummary | None = None
     game: str
     reward_type: str
     reward_amount: int
@@ -58,6 +65,7 @@ class LedgerEntry(BaseModel):
     external_id: str | None = None
     telegram_username: str | None = None
     nickname: str | None = None
+    user: AdminUserSummary | None = None
     token_type: GameTokenType
     delta: int
     balance_after: int
@@ -72,4 +80,5 @@ class UserWalletSummary(BaseModel):
     external_id: str | None = None
     telegram_username: str | None = None
     nickname: str | None = None
+    user: AdminUserSummary | None = None
     balances: dict[str, int]

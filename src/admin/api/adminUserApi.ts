@@ -1,6 +1,8 @@
 // src/admin/api/adminUserApi.ts
 import { adminApi } from "./httpClient";
 
+import type { AdminUserResolveResponse } from "../types/adminUserSummary";
+
 export interface AdminUserPayload {
   external_id: string;
   nickname?: string;
@@ -66,3 +68,12 @@ export async function importProfiles(file: File) {
   });
   return data;
 }
+
+export async function resolveAdminUser(identifier: string) {
+  const { data } = await adminApi.get<AdminUserResolveResponse>("/admin/api/users/resolve", {
+    params: { identifier },
+  });
+  return data;
+}
+
+export type { AdminUserSummary, AdminUserResolveResponse } from "../types/adminUserSummary";

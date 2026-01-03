@@ -15,6 +15,13 @@ class AdminUserService:
     """Provide create/read/update/delete operations for users."""
 
     @staticmethod
+    def _clean_telegram_username(value: str | None) -> str | None:
+        if value is None:
+            return None
+        cleaned = str(value).strip().lstrip("@").strip()
+        return cleaned or None
+
+    @staticmethod
     def _get_active_season(db: Session, today: date) -> SeasonPassConfig | None:
         return db.execute(
             select(SeasonPassConfig).where(
@@ -136,9 +143,11 @@ class AdminUserService:
         if payload.nickname and str(payload.nickname).strip():
             nickname = str(payload.nickname).strip()
         elif payload.telegram_username and str(payload.telegram_username).strip():
-            nickname = str(payload.telegram_username).strip()
+            nickname = AdminUserService._clean_telegram_username(payload.telegram_username) or str(payload.telegram_username).strip()
         else:
             nickname = payload.external_id
+
+        telegram_username = AdminUserService._clean_telegram_username(getattr(payload, "telegram_username", None))
 
         user = User(
             id=payload.user_id,
@@ -147,8 +156,8 @@ class AdminUserService:
             level=payload.level,
             xp=payload.xp,
             status=payload.status,
-            telegram_id=payload.telegram_id,
-            telegram_username=payload.telegram_username,
+            telegram_id=getattr(payload, "telegram_id", None),
+            telegram_username=telegram_username,
         )
         if payload.password:
             user.password_hash = hash_password(payload.password)
@@ -201,7 +210,25 @@ class AdminUserService:
         if "telegram_id" in update_data:
             user.telegram_id = update_data["telegram_id"]
         if "telegram_username" in update_data:
-            user.telegram_username = update_data["telegram_username"]
+            user.telegram_username = AdminUserService._clean_telegram_username(update_data["telegram_username"])
+
+        # Keep legacy admin_profile.telegram_id (string) aligned when we can.
+        # Source of truth is user.telegram_id.
+        if "admin_profile" in update_data and update_data["admin_profile"]:
+            prof = update_data["admin_profile"]
+            # If profile telegram_id is given and user.telegram_id was not explicitly updated,
+            # try to sync user.telegram_id from it (numeric only).
+            if "telegram_id" in prof and "telegram_id" not in update_data:
+                raw = prof.get("telegram_id")
+                raw_s = str(raw).strip() if raw is not None else ""
+                if raw_s.isdigit():
+                    user.telegram_id = int(raw_s)
+
+            # If user.telegram_id was updated, mirror it into profile.telegram_id.
+            if "telegram_id" in update_data:
+                prof["telegram_id"] = str(user.telegram_id) if user.telegram_id is not None else None
+        elif "telegram_id" in update_data and user.admin_profile is not None:
+            user.admin_profile.telegram_id = str(user.telegram_id) if user.telegram_id is not None else None
 
         # Handle XP/Season Level update (XP is the source of truth; level auto-derived)
         if "xp" in update_data or "season_level" in update_data:

@@ -1,15 +1,17 @@
 // src/admin/pages/GameTokenGrantPage.tsx
 import React from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { RotateCcw, Send } from "lucide-react";
 import { grantGameTokens } from "../api/adminGameTokenApi";
+import type { AdminUserSummary } from "../api/adminUserApi";
+import UserIdentifierResolveConfirm from "../components/UserIdentifierResolveConfirm";
 import { GAME_TOKEN_LABELS, GameTokenType } from "../../types/gameTokens";
 
 const grantSchema = z.object({
-  external_id: z.string().min(1, "id를 입력하세요"),
+  user_identifier: z.string().min(1, "id를 입력하세요"),
   token_type: z.enum(["ROULETTE_COIN", "DICE_TOKEN", "LOTTERY_TICKET", "GOLD_KEY", "DIAMOND_KEY"]),
   amount: z.number().int().positive("1 이상 입력"),
 });
@@ -21,8 +23,10 @@ const tokenOptions: GameTokenType[] = ["ROULETTE_COIN", "DICE_TOKEN", "LOTTERY_T
 const GameTokenGrantPage: React.FC = () => {
   const form = useForm<GrantFormValues>({
     resolver: zodResolver(grantSchema),
-    defaultValues: { external_id: "", token_type: "ROULETTE_COIN", amount: 10 },
+    defaultValues: { user_identifier: "", token_type: "ROULETTE_COIN", amount: 10 },
   });
+
+  const [confirmedUser, setConfirmedUser] = React.useState<AdminUserSummary | null>(null);
 
   const mutation = useMutation({ mutationFn: grantGameTokens });
   const onSubmit = form.handleSubmit((values) => mutation.mutate(values));
@@ -35,10 +39,11 @@ const GameTokenGrantPage: React.FC = () => {
     <section className="space-y-5">
       <header>
         <h2 className="text-2xl font-bold text-[#91F402]">티켓 지급</h2>
-        <p className="mt-1 text-sm text-gray-400">TG Username 또는 ID 기준으로 지급합니다.</p>
+        <p className="mt-1 text-sm text-gray-400">TG Username / ID / 닉네임 기준으로 지급합니다.</p>
       </header>
 
       <div className="rounded-lg border border-[#333333] bg-[#111111] p-6 shadow-md">
+
         {mutation.isSuccess && mutation.data && (
           <div className="rounded-lg border border-[#2D6B3B] bg-[#0A0A0A] p-4 text-gray-200">
             <p className="text-sm font-semibold text-[#91F402]">지급 완료</p>
@@ -57,9 +62,27 @@ const GameTokenGrantPage: React.FC = () => {
 
         <form className="mt-5 space-y-5" onSubmit={onSubmit}>
           <div>
-            <label className={labelClass}>TG Username / ID</label>
-            <input className={inputClass} {...form.register("external_id")} type="text" placeholder="예: @username 또는 test-qa-999" />
-            {form.formState.errors.external_id && <p className="mt-2 text-sm text-red-300">{form.formState.errors.external_id.message}</p>}
+            <Controller
+              control={form.control}
+              name="user_identifier"
+              render={({ field }) => (
+                <UserIdentifierResolveConfirm
+                  label="TG Username / ID"
+                  value={String(field.value ?? "")}
+                  onChange={(v) => {
+                    field.onChange(v);
+                    setConfirmedUser(null);
+                  }}
+                  onCleared={() => setConfirmedUser(null)}
+                  onConfirmed={({ identifier, user }) => {
+                    field.onChange(identifier);
+                    setConfirmedUser(user);
+                  }}
+                  placeholder="예: @username / tg_833... / 닉네임 / external_id"
+                />
+              )}
+            />
+            {form.formState.errors.user_identifier && <p className="mt-2 text-sm text-red-300">{form.formState.errors.user_identifier.message}</p>}
           </div>
 
           <div>
@@ -82,7 +105,10 @@ const GameTokenGrantPage: React.FC = () => {
           <div className="flex items-center justify-between gap-3">
             <button
               type="button"
-              onClick={() => form.reset({ external_id: "", token_type: "ROULETTE_COIN", amount: 10 })}
+              onClick={() => {
+                form.reset({ user_identifier: "", token_type: "ROULETTE_COIN", amount: 10 });
+                setConfirmedUser(null);
+              }}
               disabled={mutation.isPending}
               className="inline-flex items-center rounded-md border border-[#333333] bg-[#1A1A1A] px-4 py-2 text-sm font-medium text-gray-200 hover:bg-[#2C2C2E] disabled:cursor-not-allowed disabled:opacity-60"
             >
@@ -92,11 +118,11 @@ const GameTokenGrantPage: React.FC = () => {
 
             <button
               type="submit"
-              disabled={mutation.isPending}
+              disabled={mutation.isPending || !confirmedUser}
               className="inline-flex items-center rounded-md bg-[#2D6B3B] px-5 py-2 text-sm font-medium text-white hover:bg-[#91F402] hover:text-black disabled:cursor-not-allowed disabled:opacity-60"
             >
               <Send size={16} className="mr-2" />
-              {mutation.isPending ? "지급 중..." : "티켓 지급"}
+              {mutation.isPending ? "지급 중..." : confirmedUser ? "티켓 지급" : "사용자 확정 필요"}
             </button>
           </div>
         </form>

@@ -5,13 +5,16 @@ import io
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, BackgroundTasks
+from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db, get_current_admin_id
 from app.services.user_segment_service import UserSegmentService
+from app.services.admin_user_identity_service import resolve_user_id_by_identifier
 from app.models.user import User
 from app.models.admin_message import AdminMessage, AdminMessageInbox
 from app.models.admin_user_profile import AdminUserProfile
+from app.db.session import SessionLocal
 
 # Schemas (inline for now, or move to app/schemas/admin_crm.py)
 from pydantic import BaseModel
@@ -206,6 +209,18 @@ def send_message(
     admin_id: int = Depends(get_current_admin_id)
 ):
     """Send admin message (Async fan-out)."""
+    if payload.target_type != "ALL" and not (payload.target_value and payload.target_value.strip()):
+        raise HTTPException(status_code=400, detail="TARGET_VALUE_REQUIRED")
+
+    resolved_user_ids: Optional[List[int]] = None
+    if payload.target_type == "USER":
+        identifiers = [v.strip() for v in (payload.target_value or "").split(",") if v.strip()]
+        if not identifiers:
+            raise HTTPException(status_code=400, detail="IDENTIFIER_REQUIRED")
+        resolved_user_ids = []
+        for identifier in identifiers:
+            resolved_user_ids.append(resolve_user_id_by_identifier(db, identifier))
+
     # Create record
     msg = AdminMessage(
         sender_admin_id=admin_id,
@@ -220,7 +235,13 @@ def send_message(
     db.refresh(msg)
     
     # Fan-out logic (naive sync for now, or background task)
-    background_tasks.add_task(fan_out_message, db, msg.id, payload.target_type, payload.target_value)
+    background_tasks.add_task(
+        fan_out_message,
+        msg.id,
+        payload.target_type,
+        payload.target_value,
+        resolved_user_ids,
+    )
     
     return msg
 
@@ -270,42 +291,59 @@ def update_message(
 
 
 # Helper for fan-out
-def fan_out_message(db: Session, message_id: int, target_type: str, target_value: Optional[str]):
-    # Re-acquire session if needed (BackgroundTasks creates new thread/context usually, but safer to use fresh session or careful scoping)
-    # Using the passed session might be risky if request closes. Better to create new session or rely on dependency injection if possible.
-    # For now, simplistic query.
-    
-    # Actually, background_tasks with session is tricky in FastAPI. 
-    # Let's assume we do it synchronously for prototype or refactor.
-    # For prototype, let's just query ID list.
-    
-    # 1. Select Users
-    target_user_ids = []
-    
-    if target_type == "ALL":
-        target_user_ids = [u.id for u in db.query(User.id).all()]
-        
-    elif target_type == "USER":
-        if target_value:
-            target_user_ids = [int(uid.strip()) for uid in target_value.split(",")]
-            
-    elif target_type == "SEGMENT":
-        if target_value:
-            # target_value should be something like "WHALE", "DORMANT", etc.
-            target_user_ids = UserSegmentService.get_users_by_segment(db, target_value, limit=10000)
-    
-    # 2. Insert Inbox
-    inbox_items = []
-    for uid in target_user_ids:
-        inbox_items.append(AdminMessageInbox(
-            user_id=uid,
-            message_id=message_id
-        ))
-    
-    if inbox_items:
-        db.bulk_save_objects(inbox_items)
-        # Update Stats
-        msg = db.query(AdminMessage).filter(AdminMessage.id == message_id).first()
-        if msg:
-            msg.recipient_count = len(inbox_items)
-        db.commit()
+def fan_out_message(
+    message_id: int,
+    target_type: str,
+    target_value: Optional[str],
+    resolved_user_ids: Optional[List[int]] = None,
+):
+    db = SessionLocal()
+    try:
+        # 1. Select Users
+        target_user_ids: List[int] = []
+
+        if target_type == "ALL":
+            target_user_ids = db.execute(select(User.id)).scalars().all()
+
+        elif target_type == "USER":
+            if resolved_user_ids is not None:
+                target_user_ids = resolved_user_ids
+            elif target_value:
+                identifiers = [v.strip() for v in target_value.split(",") if v.strip()]
+                for identifier in identifiers:
+                    target_user_ids.append(resolve_user_id_by_identifier(db, identifier))
+
+        elif target_type == "SEGMENT":
+            if target_value:
+                # target_value should be something like "WHALE", "DORMANT", etc.
+                target_user_ids = UserSegmentService.get_users_by_segment(db, target_value, limit=10000)
+
+        elif target_type == "TAG":
+            if target_value:
+                tags = [t.strip() for t in target_value.split(",") if t.strip()]
+                if tags:
+                    tag_filters = [AdminUserProfile.tags.contains([tag]) for tag in tags]
+                    target_user_ids = db.execute(
+                        select(AdminUserProfile.user_id).where(
+                            AdminUserProfile.tags.isnot(None),
+                            or_(*tag_filters),
+                        )
+                    ).scalars().all()
+
+        # 2. Insert Inbox
+        inbox_items = []
+        for uid in set(target_user_ids):
+            inbox_items.append(AdminMessageInbox(
+                user_id=uid,
+                message_id=message_id
+            ))
+
+        if inbox_items:
+            db.bulk_save_objects(inbox_items)
+            # Update Stats
+            msg = db.query(AdminMessage).filter(AdminMessage.id == message_id).first()
+            if msg:
+                msg.recipient_count = len(inbox_items)
+            db.commit()
+    finally:
+        db.close()

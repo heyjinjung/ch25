@@ -19,6 +19,7 @@ export type AdminInventoryLedgerEntry = {
 export type AdminInventoryUserSummary = {
   id: number;
   external_id: string | null;
+  telegram_id?: number | null;
   telegram_username: string | null;
   nickname: string | null;
 };
@@ -36,10 +37,31 @@ export async function fetchAdminUserInventory(userId: number, limit = 50): Promi
   return data;
 }
 
+
+export async function fetchAdminUserInventoryByIdentifier(identifier: string, limit = 50): Promise<AdminUserInventoryResponse> {
+  const { data } = await adminApi.get<AdminUserInventoryResponse>(
+    `/admin/api/inventory/users/by-identifier/${encodeURIComponent(identifier)}`,
+    {
+      params: { limit },
+    }
+  );
+  return data;
+}
 export async function adjustAdminUserInventory(
   userId: number,
   payload: { item_type: string; delta: number; note?: string }
 ): Promise<{ success: boolean; user_id: number; item_type: string; quantity: number }> {
   const { data } = await adminApi.post(`/admin/api/inventory/users/${userId}/adjust`, payload);
+  return data;
+}
+
+export async function adjustAdminUserInventoryByIdentifier(
+  identifier: string,
+  payload: { item_type: string; delta: number; note?: string }
+): Promise<{ success: boolean; user_id: number; item_type: string; quantity: number }> {
+  const { data } = await adminApi.post(
+    `/admin/api/inventory/users/by-identifier/${encodeURIComponent(identifier)}/adjust`,
+    payload
+  );
   return data;
 }

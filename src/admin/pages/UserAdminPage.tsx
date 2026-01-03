@@ -617,7 +617,7 @@ const UserAdminPage: React.FC = () => {
                         {/* [Round 3] Priority: Telegram Username -> Nickname -> External ID */}
                         {member.telegram_username ? (
                           <div>
-                            <div className="text-base font-bold text-[#91F402]">@{member.telegram_username}</div>
+                            <div className="text-base font-bold text-[#91F402]">@{String(member.telegram_username).replace(/^@/, "")}</div>
                             <div className="text-xs text-gray-500">{member.nickname !== member.telegram_username ? member.nickname : member.external_id}</div>
                           </div>
                         ) : (
@@ -730,7 +730,9 @@ const UserAdminPage: React.FC = () => {
                         ) : (
                           <>
                             <div className="text-white font-mono">{member.telegram_id || "-"}</div>
-                            <div className="text-xs text-[#91F402]">@{member.telegram_username || "no_username"}</div>
+                            <div className="text-xs text-[#91F402]">
+                              {member.telegram_username ? `@${String(member.telegram_username).replace(/^@/, "")}` : "-"}
+                            </div>
                           </>
                         )}
                       </td>

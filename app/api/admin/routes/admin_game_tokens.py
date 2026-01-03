@@ -1,7 +1,7 @@
 """Admin endpoints for granting game tokens."""
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import desc, literal, literal_column
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.api.deps import get_db
 from app.models.dice import DiceLog
@@ -23,31 +23,35 @@ from app.schemas.game_tokens import (
 from app.schemas.base import to_kst_iso
 from app.services.game_wallet_service import GameWalletService
 from app.services.inventory_service import InventoryService
+from app.services.admin_user_identity_service import resolve_user_id_by_identifier
+from app.services.admin_user_identity_service import build_admin_user_summary
 
 router = APIRouter(prefix="/admin/api/game-tokens", tags=["admin-game-tokens"])
 wallet_service = GameWalletService()
 
 
-def _resolve_user_id(db: Session, user_id: int | None, external_id: str | None, telegram_username: str | None = None) -> int:
-    if user_id:
-        return user_id
-    if telegram_username:
-        clean = telegram_username.strip().lstrip("@")
-        user = db.query(User).filter(User.telegram_username == clean).first()
-        if not user:
-            raise HTTPException(status_code=404, detail=f"USER_NOT_FOUND (Username: {clean})")
-        return user.id
-    if external_id:
-        user = db.query(User).filter(User.external_id == external_id).first()
-        if not user:
-            raise HTTPException(status_code=404, detail=f"USER_NOT_FOUND (External ID: {external_id})")
-        return user.id
-    raise HTTPException(status_code=400, detail="USER_REQUIRED (ID, External ID, or Telegram Username)")
+def _resolve_user_id(db: Session, payload) -> int:
+    # Backward compatible resolution:
+    # - user_id (explicit)
+    # - user_identifier (preferred)
+    # - telegram_username (legacy)
+    # - external_id (legacy; also accepts @username / tg_... patterns)
+    if getattr(payload, "user_id", None):
+        return int(payload.user_id)
+
+    identifier = (
+        getattr(payload, "user_identifier", None)
+        or getattr(payload, "telegram_username", None)
+        or getattr(payload, "external_id", None)
+    )
+    if identifier and str(identifier).strip():
+        return resolve_user_id_by_identifier(db, str(identifier))
+    raise HTTPException(status_code=400, detail="USER_REQUIRED")
 
 
 @router.post("/grant", response_model=GrantGameTokensResponse)
 def grant_tokens(payload: GrantGameTokensRequest, db: Session = Depends(get_db)):
-    user_id = _resolve_user_id(db, payload.user_id, payload.external_id, payload.telegram_username)
+    user_id = _resolve_user_id(db, payload)
     user = db.get(User, user_id)
 
     # Phase 2 rule: DIAMOND is Inventory SoT (not wallet).
@@ -64,18 +68,21 @@ def grant_tokens(payload: GrantGameTokensRequest, db: Session = Depends(get_db))
         balance = int(item.quantity)
     else:
         balance = wallet_service.grant_tokens(db, user_id, payload.token_type, payload.amount)
+    summary = build_admin_user_summary(user) if user else None
     return GrantGameTokensResponse(
         user_id=user_id, 
         token_type=payload.token_type, 
         balance=balance, 
-        external_id=user.external_id,
-        telegram_username=user.telegram_username
+        external_id=user.external_id if user else None,
+        telegram_username=user.telegram_username if user else None,
+        nickname=user.nickname if user else None,
+        user=summary,
     )
 
 
 @router.post("/revoke", response_model=GrantGameTokensResponse)
 def revoke_tokens(payload: RevokeGameTokensRequest, db: Session = Depends(get_db)):
-    user_id = _resolve_user_id(db, payload.user_id, payload.external_id, payload.telegram_username)
+    user_id = _resolve_user_id(db, payload)
     user = db.get(User, user_id)
 
     # Phase 2 rule: DIAMOND is Inventory SoT (not wallet).
@@ -92,12 +99,15 @@ def revoke_tokens(payload: RevokeGameTokensRequest, db: Session = Depends(get_db
         balance = int(item.quantity)
     else:
         balance = wallet_service.revoke_tokens(db, user_id, payload.token_type, payload.amount)
+    summary = build_admin_user_summary(user) if user else None
     return GrantGameTokensResponse(
         user_id=user_id, 
         token_type=payload.token_type, 
         balance=balance, 
-        external_id=user.external_id,
-        telegram_username=user.telegram_username
+        external_id=user.external_id if user else None,
+        telegram_username=user.telegram_username if user else None,
+        nickname=user.nickname if user else None,
+        user=summary,
     )
 
 
@@ -114,12 +124,11 @@ def list_wallets(
     limit = min(max(limit, 1), 200)
     offset = max(offset, 0)
 
-    query = db.query(
-        UserGameWallet, 
-        User.external_id,
-        User.telegram_username,
-        User.nickname
-    ).join(User, User.id == UserGameWallet.user_id)
+    query = (
+        db.query(UserGameWallet, User)
+        .join(User, User.id == UserGameWallet.user_id)
+        .options(joinedload(User.admin_profile))
+    )
     if user_id:
         query = query.filter(UserGameWallet.user_id == user_id)
     if external_id:
@@ -138,14 +147,15 @@ def list_wallets(
     )
     return [
         TokenBalance(
-            user_id=row.UserGameWallet.user_id,  # type: ignore[attr-defined]
-            external_id=row.external_id,  # type: ignore[attr-defined]
-            telegram_username=row.telegram_username, # type: ignore[attr-defined]
-            nickname=row.nickname, # type: ignore[attr-defined]
-            token_type=row.UserGameWallet.token_type,  # type: ignore[attr-defined]
-            balance=row.UserGameWallet.balance,  # type: ignore[attr-defined]
+            user_id=wallet.user_id,
+            external_id=user.external_id,
+            telegram_username=user.telegram_username,
+            nickname=user.nickname,
+            user=build_admin_user_summary(user),
+            token_type=wallet.token_type,
+            balance=wallet.balance,
         )
-        for row in rows
+        for (wallet, user) in rows
     ]
 
 
@@ -235,6 +245,17 @@ def list_recent_play_logs(
 
     rows = union_q.offset(offset).limit(limit).all()
 
+    user_ids = sorted({int(r.user_id) for r in rows if getattr(r, "user_id", None) is not None})
+    users = (
+        db.query(User)
+        .options(joinedload(User.admin_profile))
+        .filter(User.id.in_(user_ids))
+        .all()
+        if user_ids
+        else []
+    )
+    user_summary_by_id = {u.id: build_admin_user_summary(u) for u in users}
+
     return [
         PlayLogEntry(
             id=row.id,
@@ -242,6 +263,7 @@ def list_recent_play_logs(
             external_id=row.external_id,
             telegram_username=row.telegram_username,
             nickname=row.nickname,
+            user=user_summary_by_id.get(int(row.user_id)),
             game=row.game_type,
             reward_label=row.detail,
             reward_type=row.reward_type,
@@ -265,13 +287,9 @@ def list_wallet_ledger(
     limit = min(max(limit, 1), 500)
     offset = max(offset, 0)
     query = (
-        db.query(
-            UserGameWalletLedger,
-            User.external_id,
-            User.telegram_username,
-            User.nickname
-        )
+        db.query(UserGameWalletLedger, User)
         .join(User, User.id == UserGameWalletLedger.user_id)
+        .options(joinedload(User.admin_profile))
     )
     if user_id:
         query = query.filter(UserGameWalletLedger.user_id == user_id)
@@ -288,20 +306,21 @@ def list_wallet_ledger(
     )
     return [
         LedgerEntry(
-            id=row.UserGameWalletLedger.id,  # type: ignore[attr-defined]
-            user_id=row.UserGameWalletLedger.user_id,  # type: ignore[attr-defined]
-            external_id=row.external_id,  # type: ignore[attr-defined]
-            telegram_username=row.telegram_username, # type: ignore[attr-defined]
-            nickname=row.nickname, # type: ignore[attr-defined]
-            token_type=row.UserGameWalletLedger.token_type,  # type: ignore[attr-defined]
-            delta=row.UserGameWalletLedger.delta,  # type: ignore[attr-defined]
-            balance_after=row.UserGameWalletLedger.balance_after,  # type: ignore[attr-defined]
-            reason=row.UserGameWalletLedger.reason,  # type: ignore[attr-defined]
-            label=row.UserGameWalletLedger.label,  # type: ignore[attr-defined]
-            meta_json=row.UserGameWalletLedger.meta_json,  # type: ignore[attr-defined]
-            created_at=to_kst_iso(row.UserGameWalletLedger.created_at),  # type: ignore[attr-defined]
+            id=ledger.id,
+            user_id=ledger.user_id,
+            external_id=user.external_id,
+            telegram_username=user.telegram_username,
+            nickname=user.nickname,
+            user=build_admin_user_summary(user),
+            token_type=ledger.token_type,
+            delta=ledger.delta,
+            balance_after=ledger.balance_after,
+            reason=ledger.reason,
+            label=ledger.label,
+            meta_json=ledger.meta_json,
+            created_at=to_kst_iso(ledger.created_at),
         )
-        for row in rows
+        for (ledger, user) in rows
     ]
 
 
@@ -333,8 +352,22 @@ def get_user_wallet_summary(db: Session = Depends(get_db)):
                 external_id=external_id,
                 telegram_username=telegram_username,
                 nickname=nickname,
-                balances={}
+                balances={},
+                user=None,
             )
         summary_map[user_id].balances[token_type] = balance
+
+    user_ids = list(summary_map.keys())
+    users = (
+        db.query(User)
+        .options(joinedload(User.admin_profile))
+        .filter(User.id.in_(user_ids))
+        .all()
+        if user_ids
+        else []
+    )
+    user_summary_by_id = {u.id: build_admin_user_summary(u) for u in users}
+    for uid, entry in summary_map.items():
+        entry.user = user_summary_by_id.get(uid)
 
     return list(summary_map.values())

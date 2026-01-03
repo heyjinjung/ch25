@@ -2,11 +2,18 @@ import React, { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { X, Plus, Minus, RotateCcw } from "lucide-react";
 import { useToast } from "../../components/common/ToastProvider";
-import { adjustAdminUserInventory, fetchAdminUserInventory } from "../api/adminInventoryApi";
+import UserIdentifierResolveConfirm from "./UserIdentifierResolveConfirm";
+import {
+  adjustAdminUserInventory,
+  adjustAdminUserInventoryByIdentifier,
+  fetchAdminUserInventory,
+  fetchAdminUserInventoryByIdentifier,
+} from "../api/adminInventoryApi";
 
 type AdminUser = {
   id: number;
   external_id?: string | null;
+  telegram_id?: number | null;
   telegram_username?: string | null;
   nickname?: string | null;
 };
@@ -20,21 +27,34 @@ const UserInventoryModal: React.FC<Props> = ({ user, onClose }) => {
   const { addToast } = useToast();
   const queryClient = useQueryClient();
 
+  const deriveDefaultIdentifier = () => {
+    if (user.telegram_username) {
+      const u = String(user.telegram_username).trim();
+      if (!u) return "";
+      return u.startsWith("@") ? u : `@${u}`;
+    }
+    if (user.external_id) return String(user.external_id);
+    return String(user.id);
+  };
+
+  const [identifierInput, setIdentifierInput] = useState<string>(deriveDefaultIdentifier());
+  const [identifierApplied, setIdentifierApplied] = useState<string>(deriveDefaultIdentifier());
+
   const [itemType, setItemType] = useState("DIAMOND");
   const [delta, setDelta] = useState(1);
   const [note, setNote] = useState("");
 
   const invQuery = useQuery({
-    queryKey: ["admin", "inventory", user.id],
-    queryFn: () => fetchAdminUserInventory(user.id, 80),
-    enabled: !!user.id,
+    queryKey: ["admin", "inventory", identifierApplied || user.id],
+    queryFn: () => (identifierApplied ? fetchAdminUserInventoryByIdentifier(identifierApplied, 80) : fetchAdminUserInventory(user.id, 80)),
+    enabled: !!user.id || !!identifierApplied,
   });
 
   const adjustMutation = useMutation({
     mutationFn: (payload: { item_type: string; delta: number; note?: string }) =>
-      adjustAdminUserInventory(user.id, payload),
+      identifierApplied ? adjustAdminUserInventoryByIdentifier(identifierApplied, payload) : adjustAdminUserInventory(user.id, payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "inventory", user.id] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "inventory", identifierApplied || user.id] });
       addToast("인벤토리가 반영되었습니다.", "success");
     },
     onError: (err: any) => {
@@ -51,17 +71,38 @@ const UserInventoryModal: React.FC<Props> = ({ user, onClose }) => {
     return Array.from(set.values()).sort();
   }, [items]);
 
+  const headerUser = invQuery.data?.user ?? {
+    id: user.id,
+    external_id: user.external_id ?? null,
+    telegram_id: user.telegram_id ?? null,
+    telegram_username: user.telegram_username ?? null,
+    nickname: user.nickname ?? null,
+  };
+
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
       <div className="w-full max-w-5xl max-h-[90vh] overflow-hidden rounded-2xl border border-[#333333] bg-[#111111] shadow-2xl flex flex-col">
         <div className="flex items-center justify-between border-b border-[#333333] p-4 sm:p-6 bg-[#1A1A1A]">
           <div>
-            <h3 className="text-xl font-bold text-[#91F402]">User Inventory: {user.nickname || user.external_id}</h3>
-            <p className="text-xs text-gray-400 mt-1">ID: {user.id}</p>
+            <h3 className="text-xl font-bold text-[#91F402]">User Inventory: {headerUser.nickname || headerUser.external_id || String(headerUser.id)}</h3>
+            <p className="text-xs text-gray-400 mt-1">ID: {headerUser.id}{headerUser.telegram_username ? ` · TG: @${String(headerUser.telegram_username).replace(/^@/, "")}` : headerUser.telegram_id ? ` · TG ID: ${headerUser.telegram_id}` : ""}</p>
           </div>
           <button onClick={onClose} className="rounded-lg p-2 text-gray-400 hover:bg-[#333333] hover:text-white">
             <X size={20} />
           </button>
+        </div>
+
+        <div className="border-b border-[#222222] bg-[#0B0B0B] p-4 sm:p-6">
+          <UserIdentifierResolveConfirm
+            label="Identifier로 바로 조회"
+            value={identifierInput}
+            onChange={setIdentifierInput}
+            placeholder="예: @username / tg_833... / 닉네임 / external_id / 숫자"
+            confirmLabel="조회"
+            disabled={invQuery.isFetching}
+            onCleared={() => setIdentifierApplied("")}
+            onConfirmed={({ identifier }) => setIdentifierApplied(identifier)}
+          />
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-2 gap-4">

@@ -11,6 +11,8 @@ from app.api.deps import get_db, get_current_admin_id
 from app.models.inventory import UserInventoryItem, UserInventoryLedger
 from app.models.user import User
 from app.services.inventory_service import InventoryService
+from app.services.admin_user_identity_service import resolve_user_id_by_identifier
+from app.services.admin_user_identity_service import build_admin_user_summary
 
 router = APIRouter(prefix="/admin/api/inventory", tags=["admin-inventory"])
 
@@ -34,9 +36,11 @@ def get_user_inventory(user_id: int, limit: int = 50, db: Session = Depends(get_
     )
 
     return {
+        "user_summary": build_admin_user_summary(user),
         "user": {
             "id": user.id,
             "external_id": user.external_id,
+            "telegram_id": user.telegram_id,
             "telegram_username": user.telegram_username,
             "nickname": user.nickname,
         },
@@ -61,6 +65,12 @@ def get_user_inventory(user_id: int, limit: int = 50, db: Session = Depends(get_
             for l in ledger
         ],
     }
+
+
+@router.get("/users/by-identifier/{identifier}")
+def get_user_inventory_by_identifier(identifier: str, limit: int = 50, db: Session = Depends(get_db)):
+    user_id = resolve_user_id_by_identifier(db, identifier)
+    return get_user_inventory(user_id=user_id, limit=limit, db=db)
 
 
 @router.get("/users/{user_id}/ledger")
@@ -148,3 +158,15 @@ def adjust_user_inventory(
         "item_type": item.item_type,
         "quantity": int(item.quantity),
     }
+
+
+@router.post("/users/by-identifier/{identifier}/adjust")
+def adjust_user_inventory_by_identifier(
+    identifier: str,
+    payload: dict,
+    db: Session = Depends(get_db),
+    admin_id: int = Depends(get_current_admin_id),
+):
+    user_id = resolve_user_id_by_identifier(db, identifier)
+    return adjust_user_inventory(user_id=user_id, payload=payload, db=db, admin_id=admin_id)
+

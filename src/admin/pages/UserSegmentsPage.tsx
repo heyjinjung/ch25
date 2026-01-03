@@ -2,6 +2,22 @@
 import React, { useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { fetchUserSegments, upsertUserSegment, type AdminUserSegmentRow } from "../api/adminSegmentsApi";
+import { resolveAdminUser, type AdminUserResolveResponse } from "../api/adminUserApi";
+
+const parseTgIdFromExternalId = (externalId?: string | null): number | null => {
+  const s = String(externalId ?? "").trim();
+  if (!s) return null;
+  const m = /^tg_(\d+)_/i.exec(s);
+  if (!m) return null;
+  const n = Number(m[1]);
+  return Number.isFinite(n) ? n : null;
+};
+
+const formatTgUsername = (username?: string | null) => {
+  const u = String(username ?? "").trim();
+  if (!u) return "-";
+  return u.startsWith("@") ? u : `@${u}`;
+};
 
 const formatMaybeDate = (value?: string | null) => {
   if (!value) return "-";
@@ -11,8 +27,10 @@ const formatMaybeDate = (value?: string | null) => {
 };
 
 const UserSegmentsPage: React.FC = () => {
-  const [externalId, setExternalId] = useState<string>("");
-  const trimmed = useMemo(() => externalId.trim(), [externalId]);
+  const [identifier, setIdentifier] = useState<string>("");
+  const trimmed = useMemo(() => identifier.trim(), [identifier]);
+  const [resolved, setResolved] = useState<AdminUserResolveResponse | null>(null);
+  const [resolveError, setResolveError] = useState<string | null>(null);
 
   type SortDir = "asc" | "desc";
   type SortKey =
@@ -70,13 +88,13 @@ const UserSegmentsPage: React.FC = () => {
     </button>
   );
 
-  const queryKey = useMemo(() => ["admin", "segments", { external_id: trimmed || undefined }] as const, [trimmed]);
+  const queryKey = useMemo(() => ["admin", "segments", { identifier: trimmed || undefined }] as const, [trimmed]);
 
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey,
-    // NOTE: Backend caps limit to 500. When searching by external_id we keep it small,
+    // NOTE: Backend caps limit to 500. When searching by identifier we keep it small,
     // otherwise we fetch the maximum to approximate "전체" 조회 without pagination UI.
-    queryFn: () => fetchUserSegments(trimmed ? { external_id: trimmed, limit: 50 } : { limit: 500 }),
+    queryFn: () => fetchUserSegments(trimmed ? { identifier: trimmed, limit: 50 } : { limit: 500 }),
   });
 
   const [editSegment, setEditSegment] = useState<Record<number, string>>({});
@@ -86,6 +104,35 @@ const UserSegmentsPage: React.FC = () => {
     mutationFn: (payload: { user_id: number; segment: string }) => upsertUserSegment(payload),
     onSuccess: async () => {
       await refetch();
+    },
+  });
+
+  const resolveMutation = useMutation({
+    mutationFn: async () => {
+      const value = trimmed;
+      if (!value) throw new Error("IDENTIFIER_REQUIRED");
+      return resolveAdminUser(value);
+    },
+    onSuccess: (res) => {
+      setResolved(res);
+      setResolveError(null);
+    },
+    onError: (err: any) => {
+      setResolved(null);
+      const detail = err?.response?.data?.detail;
+      if (detail === "USER_NOT_FOUND") {
+        setResolveError("사용자를 찾을 수 없습니다.");
+        return;
+      }
+      if (detail === "AMBIGUOUS_IDENTIFIER") {
+        setResolveError("중복 매칭(409): identifier가 모호합니다.");
+        return;
+      }
+      if ((err as Error)?.message === "IDENTIFIER_REQUIRED") {
+        setResolveError("identifier를 입력하세요.");
+        return;
+      }
+      setResolveError("사용자 확인 실패");
     },
   });
 
@@ -162,19 +209,23 @@ const UserSegmentsPage: React.FC = () => {
     <section className="space-y-5">
       <header>
         <h2 className="text-2xl font-bold text-[#91F402]">사용자 분류 (세그먼트)</h2>
-        <p className="mt-1 text-sm text-gray-400">텔레그램 유저네임 또는 ID로 조회 후 세그먼트를 수동 수정할 수 있습니다.</p>
+        <p className="mt-1 text-sm text-gray-400">identifier로 조회 후 세그먼트를 수동 수정할 수 있습니다.</p>
       </header>
 
       <div className="rounded-lg border border-[#333333] bg-[#111111] p-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
           <div className="flex w-full flex-wrap items-end gap-2 sm:w-auto">
             <div className="flex w-full flex-col sm:w-auto">
-              <label className="text-xs text-gray-400">external_id</label>
+              <label className="text-xs text-gray-400">identifier</label>
               <input
-                value={externalId}
-                onChange={(e) => setExternalId(e.target.value)}
+                value={identifier}
+                onChange={(e) => {
+                  setIdentifier(e.target.value);
+                  setResolved(null);
+                  setResolveError(null);
+                }}
                 className={inputBase + " max-w-none sm:max-w-sm"}
-                placeholder="TG Username / ID로 검색..."
+                placeholder="TG ID / @username / 닉네임 / external_id ..."
                 onKeyDown={(e) => {
                   if (e.key === "Enter") void handleSearch();
                 }}
@@ -182,12 +233,21 @@ const UserSegmentsPage: React.FC = () => {
             </div>
           </div>
           <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+            <SecondaryButton
+              onClick={() => void resolveMutation.mutateAsync()}
+              disabled={resolveMutation.isPending || !trimmed}
+              className="w-full justify-center sm:w-auto"
+            >
+              {resolveMutation.isPending ? "확인 중..." : "사용자 확인"}
+            </SecondaryButton>
             <SecondaryButton onClick={handleSearch} disabled={isLoading} className="w-full justify-center sm:w-auto">
               검색 적용
             </SecondaryButton>
             <SecondaryButton
               onClick={() => {
-                setExternalId("");
+                setIdentifier("");
+                setResolved(null);
+                setResolveError(null);
                 void refetch();
               }}
               className="w-full justify-center sm:w-auto"
@@ -196,6 +256,23 @@ const UserSegmentsPage: React.FC = () => {
             </SecondaryButton>
           </div>
         </div>
+
+        {(resolved || resolveError) && (
+          <div className="mt-3 rounded-lg border border-[#333333] bg-[#111111] p-3 text-sm">
+            {resolveError ? (
+              <div className="text-red-200">{resolveError}</div>
+            ) : (
+              <div className="text-gray-200">
+                <div className="font-medium text-white">사용자 확인됨</div>
+                <div className="mt-1 text-xs text-gray-400">ID: {resolved?.user.id}</div>
+                {resolved?.user.nickname && <div className="text-xs text-gray-400">Nickname: {resolved.user.nickname}</div>}
+                {resolved?.user.tg_username && <div className="text-xs text-gray-400">TG: @{resolved.user.tg_username}</div>}
+                {resolved?.user.tg_id && <div className="text-xs text-gray-400">TG ID: {resolved.user.tg_id}</div>}
+                {resolved?.user.external_id && <div className="text-xs text-gray-400">external_id: {resolved.user.external_id}</div>}
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500">
           <div>
@@ -222,7 +299,10 @@ const UserSegmentsPage: React.FC = () => {
           <table className="w-full table-fixed">
             <thead className="sticky top-0 z-10 border-b border-[#333333] bg-[#1A1A1A]">
               <tr>
-                <SortHeader label="TG Username" k="external_id" className="w-[14ch] px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider" />
+                <SortHeader label="Identifier" k="external_id" className="w-[18ch] px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider" />
+                <th className="w-[18ch] px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">TG ID / Username</th>
+                <th className="w-[18ch] px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">실명/연락처</th>
+                <th className="w-[18ch] px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">닉네임</th>
                 <SortHeader label="세그먼트" k="segment" />
                 <th className="w-60 px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                   <div className="flex items-center gap-3">
@@ -249,7 +329,7 @@ const UserSegmentsPage: React.FC = () => {
             <tbody className="divide-y divide-[#333333]">
               {visibleRows.length === 0 && !isLoading ? (
                 <tr>
-                  <td className="px-4 py-10 text-center text-gray-400" colSpan={7}>
+                  <td className="px-4 py-10 text-center text-gray-400" colSpan={10}>
                     조회 결과가 없습니다.
                   </td>
                 </tr>
@@ -261,8 +341,18 @@ const UserSegmentsPage: React.FC = () => {
                   >
                     <td className="px-4 py-3 align-top">
                       <span className="block truncate" title={row.telegram_username || row.nickname || row.external_id}>
-                        {row.telegram_username || row.nickname || row.external_id}
+                        {row.external_id}
                       </span>
+                    </td>
+                    <td className="px-4 py-3 align-top">
+                      <div className="text-white font-mono text-sm">{parseTgIdFromExternalId(row.external_id) ?? "-"}</div>
+                      <div className="text-xs text-[#91F402]">{formatTgUsername(row.telegram_username)}</div>
+                    </td>
+                    <td className="px-4 py-3 align-top">
+                      <div className="text-sm text-gray-400">-</div>
+                    </td>
+                    <td className="px-4 py-3 align-top">
+                      <div className="text-sm font-medium text-white">{row.nickname || "-"}</div>
                     </td>
                     <td className="px-4 py-3 align-top">
                       <div className="flex min-w-0 items-center gap-2">
