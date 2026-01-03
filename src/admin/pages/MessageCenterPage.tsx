@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { Send, Clock, Users, Tag, Target } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { fetchMessages, sendMessage, SendMessagePayload } from "../api/adminMessageApi";
+import { fetchMessages, sendMessage, SendMessagePayload, updateMessage } from "../api/adminMessageApi";
 import { useToast } from "../../components/common/ToastProvider";
 
 const MessageCenterPage: React.FC = () => {
@@ -25,6 +25,8 @@ const MessageCenterPage: React.FC = () => {
         channels: ["INBOX"],
     });
 
+    const [editingMessageId, setEditingMessageId] = useState<number | null>(null);
+
     const sendMutation = useMutation({
         mutationFn: (payload: SendMessagePayload) => sendMessage(payload),
         onSuccess: () => {
@@ -43,13 +45,60 @@ const MessageCenterPage: React.FC = () => {
         },
     });
 
+    const updateMutation = useMutation({
+        mutationFn: ({ messageId, payload }: { messageId: number; payload: { title: string; content: string } }) =>
+            updateMessage(messageId, payload),
+        onSuccess: () => {
+            addToast("메시지가 수정되었습니다.", "success");
+            setEditingMessageId(null);
+            setForm({
+                title: "",
+                content: "",
+                target_type: "ALL",
+                target_value: "",
+                channels: ["INBOX"],
+            });
+            queryClient.invalidateQueries({ queryKey: ["admin", "messages"] });
+        },
+        onError: (err: any) => {
+            addToast(err.response?.data?.detail || "수정 실패", "error");
+        },
+    });
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!form.title || !form.content) {
             addToast("제목과 내용은 필수입니다.", "error");
             return;
         }
+        if (editingMessageId) {
+            updateMutation.mutate({ messageId: editingMessageId, payload: { title: form.title, content: form.content } });
+            return;
+        }
         sendMutation.mutate(form);
+    };
+
+    const beginEdit = (msg: any) => {
+        setEditingMessageId(msg.id);
+        setForm({
+            title: msg.title,
+            content: msg.content,
+            target_type: msg.target_type,
+            target_value: msg.target_value || "",
+            channels: msg.channels || ["INBOX"],
+        });
+        addToast("편집 모드로 전환되었습니다.", "info");
+    };
+
+    const cancelEdit = () => {
+        setEditingMessageId(null);
+        setForm({
+            title: "",
+            content: "",
+            target_type: "ALL",
+            target_value: "",
+            channels: ["INBOX"],
+        });
     };
 
     return (
@@ -64,7 +113,7 @@ const MessageCenterPage: React.FC = () => {
             {/* Compose Config */}
             <div className="rounded-lg border border-[#333333] bg-[#111111] p-6 shadow-md">
                 <h3 className="text-lg font-medium text-white mb-4 flex items-center gap-2">
-                    <Send size={18} className="text-[#91F402]" /> 새 메시지 작성
+                    <Send size={18} className="text-[#91F402]" /> {editingMessageId ? `메시지 편집 (ID: ${editingMessageId})` : "새 메시지 작성"}
                 </h3>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -75,6 +124,7 @@ const MessageCenterPage: React.FC = () => {
                             <select
                                 value={form.target_type}
                                 onChange={(e) => setForm(p => ({ ...p, target_type: e.target.value as any }))}
+                                disabled={!!editingMessageId}
                                 className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
                             >
                                 <option value="ALL">전체 사용자 (All Users)</option>
@@ -98,6 +148,7 @@ const MessageCenterPage: React.FC = () => {
                                     className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
                                     placeholder="대상 값 입력"
                                     required
+                                    disabled={!!editingMessageId}
                                 />
                             </div>
                         )}
@@ -146,12 +197,23 @@ const MessageCenterPage: React.FC = () => {
                     </div>
 
                     <div className="flex justify-end pt-2">
+                        {editingMessageId && (
+                            <button
+                                type="button"
+                                onClick={cancelEdit}
+                                className="mr-3 flex items-center gap-2 rounded-md border border-[#333333] bg-[#1A1A1A] px-6 py-2.5 text-sm font-bold text-gray-200 transition-colors hover:bg-[#2C2C2E]"
+                            >
+                                편집 취소
+                            </button>
+                        )}
                         <button
                             type="submit"
-                            disabled={sendMutation.isPending}
+                            disabled={sendMutation.isPending || updateMutation.isPending}
                             className="flex items-center gap-2 rounded-md bg-[#2D6B3B] px-6 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#91F402] hover:text-black disabled:cursor-not-allowed disabled:opacity-60"
                         >
-                            {sendMutation.isPending ? "발송 중..." : <><Send size={16} /> 메시지 발송</>}
+                            {editingMessageId
+                                ? (updateMutation.isPending ? "수정 중..." : <>수정 저장</>)
+                                : (sendMutation.isPending ? "발송 중..." : <><Send size={16} /> 메시지 발송</>)}
                         </button>
                     </div>
                 </form>
@@ -189,6 +251,7 @@ const MessageCenterPage: React.FC = () => {
                                     <th className="px-6 py-3 font-medium text-center">수신자 수</th>
                                     <th className="px-6 py-3 font-medium text-center">읽음 수</th>
                                     <th className="px-6 py-3 font-medium text-right">일시</th>
+                                    <th className="px-6 py-3 font-medium text-right">액션</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-[#333333] text-sm text-gray-200">
@@ -210,11 +273,20 @@ const MessageCenterPage: React.FC = () => {
                                         <td className="px-6 py-3 text-right text-gray-500">
                                             {new Date(msg.created_at).toLocaleString()}
                                         </td>
+                                        <td className="px-6 py-3 text-right">
+                                            <button
+                                                type="button"
+                                                onClick={() => beginEdit(msg)}
+                                                className="text-xs text-gray-300 hover:text-[#91F402] transition-colors"
+                                            >
+                                                편집
+                                            </button>
+                                        </td>
                                     </tr>
                                 ))}
                                 {(!messages || messages.length === 0) && (
                                     <tr>
-                                        <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                                        <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
                                             발송 기록이 없습니다.
                                         </td>
                                     </tr>

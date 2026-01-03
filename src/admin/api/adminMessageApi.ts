@@ -22,6 +22,11 @@ export interface SendMessagePayload {
     channels?: string[];
 }
 
+export interface UpdateMessagePayload {
+    title?: string;
+    content?: string;
+}
+
 export async function fetchMessages(skip: number = 0, limit: number = 50) {
     const { data } = await adminApi.get<AdminMessage[]>(`/admin/api/crm/messages?skip=${skip}&limit=${limit}`);
     return data;
@@ -29,5 +34,10 @@ export async function fetchMessages(skip: number = 0, limit: number = 50) {
 
 export async function sendMessage(payload: SendMessagePayload) {
     const { data } = await adminApi.post<AdminMessage>("/admin/api/crm/messages", payload);
+    return data;
+}
+
+export async function updateMessage(messageId: number, payload: UpdateMessagePayload) {
+    const { data } = await adminApi.put<AdminMessage>(`/admin/api/crm/messages/${messageId}`, payload);
     return data;
 }

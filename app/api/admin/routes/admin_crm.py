@@ -61,6 +61,11 @@ class MessageResponse(BaseModel):
     class Config:
         from_attributes = True
 
+
+class MessageUpdate(BaseModel):
+    title: Optional[str] = None
+    content: Optional[str] = None
+
 class CrmStatsResponse(BaseModel):
     total_users: int
     active_users: int
@@ -226,6 +231,42 @@ def list_messages(
     db: Session = Depends(get_db)
 ):
     return db.query(AdminMessage).order_by(AdminMessage.created_at.desc()).offset(skip).limit(limit).all()
+
+
+@router.put("/messages/{message_id}", response_model=MessageResponse)
+def update_message(
+    message_id: int,
+    payload: MessageUpdate,
+    db: Session = Depends(get_db),
+    admin_id: int = Depends(get_current_admin_id),
+):
+    """Edit an already-sent message.
+
+    Note: This updates the message template/history row. User inbox pulls title/content
+    from the message row, so edits will be reflected to users on next inbox fetch.
+    """
+    _ = admin_id
+    msg = db.query(AdminMessage).filter(AdminMessage.id == message_id).first()
+    if not msg:
+        raise HTTPException(status_code=404, detail="MESSAGE_NOT_FOUND")
+
+    data = payload.model_dump(exclude_unset=True)
+    if "title" in data and data["title"] is not None:
+        title = str(data["title"]).strip()
+        if not title:
+            raise HTTPException(status_code=400, detail="TITLE_REQUIRED")
+        msg.title = title
+
+    if "content" in data and data["content"] is not None:
+        content = str(data["content"]).strip()
+        if not content:
+            raise HTTPException(status_code=400, detail="CONTENT_REQUIRED")
+        msg.content = content
+
+    db.add(msg)
+    db.commit()
+    db.refresh(msg)
+    return msg
 
 
 # Helper for fan-out
