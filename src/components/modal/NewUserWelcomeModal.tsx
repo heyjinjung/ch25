@@ -231,8 +231,9 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) =>
     }
 
     const getMissionIcon = (actionType: string | null, targetValue: number) => {
-        if (actionType === "JOIN_CHANNEL") return "/assets/welcome/mission_icon_viral.webp";
-        if (actionType === "SHARE_WALLET") return "/assets/figma/icon-people.webp";
+        // Use the "채널구독" icon for both incomplete/complete states
+        if (actionType === "JOIN_CHANNEL") return "/assets/welcome/mission_icon_viral.png";
+        if (actionType === "SHARE_WALLET") return "/assets/welcome/mission_icon_viral.png";
         if (actionType === "LOGIN") return "/assets/welcome/icon_attendance.png";
         if (actionType === "PLAY_GAME") {
             return targetValue >= 3 ? "/assets/welcome/icon_play3.png" : "/assets/welcome/icon_play1.png";
@@ -303,7 +304,12 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) =>
                                         src={getMissionIcon(mission.action_type, mission.target_value)}
                                         alt={mission.title}
                                         title={getMissionHint(mission.action_type, mission.is_completed)}
-                                        className={`w-full h-full object-contain ${!mission.is_completed && "opacity-50 grayscale group-hover:opacity-80 group-hover:grayscale-0"}`}
+                                        className={
+                                            "w-full h-full object-contain " +
+                                            (!mission.is_completed && mission.action_type !== "JOIN_CHANNEL"
+                                                ? "opacity-50 grayscale group-hover:opacity-80 group-hover:grayscale-0"
+                                                : "")
+                                        }
                                     />
                                     {mission.is_completed && (
                                         <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center">
