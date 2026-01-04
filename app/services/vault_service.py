@@ -53,7 +53,8 @@ class VaultService:
     @classmethod
     def _operational_date_kst(cls, now: datetime) -> datetime.date:
         settings = get_settings()
-        reset_hour = int(getattr(settings, "streak_day_reset_hour_kst", 9) or 9)
+        reset_hour_raw = getattr(settings, "streak_day_reset_hour_kst", 9)
+        reset_hour = 9 if reset_hour_raw is None else int(reset_hour_raw)
         tz = ZoneInfo(getattr(settings, "timezone", "Asia/Seoul"))
 
         now_utc = cls._to_utc(now)

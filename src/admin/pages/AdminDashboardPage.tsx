@@ -274,7 +274,7 @@ const AdminDashboardPage: React.FC = () => {
           <div className="space-y-1">
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#91F402]">streak</p>
             <h2 className="text-lg font-bold text-white">스트릭 관측성 (최근 7일, KST)</h2>
-            <p className="text-xs text-gray-400">promote/reset, 티켓 지급, 금고 배율 적용/제외 사유</p>
+            <p className="text-xs text-gray-400">승급/리셋, 보너스 지급, 금고 배율 적용/제외 사유 (이벤트 운영용)</p>
           </div>
           <button
             type="button"
@@ -300,17 +300,42 @@ const AdminDashboardPage: React.FC = () => {
           </div>
         ) : null}
 
-        <div className="mt-4 overflow-x-auto">
+        <div className="mt-4 space-y-2">
+          <div className="rounded border border-[#262626] bg-[#0F0F0F] p-3 text-xs text-gray-300">
+            <div className="flex flex-wrap gap-x-6 gap-y-1">
+              <span>
+                <span className="text-gray-400">표 시간대:</span> {streakData?.timezone ?? "Asia/Seoul"}
+              </span>
+              <span>
+                <span className="text-gray-400">집계 기준:</span> {streakData?.calendar_bucket ?? "KST calendar day"}
+              </span>
+              <span>
+                <span className="text-gray-400">스트릭 증가 트리거:</span> {streakData?.streak_trigger ?? "PLAY_GAME"}
+              </span>
+              <span>
+                <span className="text-gray-400">운영일 리셋:</span> 매일 {String(streakData?.operational_reset_hour_kst ?? 9).padStart(2, "0")}:00 KST
+              </span>
+            </div>
+            {streakData?.notes?.length ? (
+              <ul className="mt-2 list-disc pl-4 text-[11px] text-gray-400">
+                {streakData.notes.slice(0, 4).map((note) => (
+                  <li key={note}>{note}</li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
+
+          <div className="overflow-x-auto">
           <table className="min-w-[980px] w-full text-left text-sm">
             <thead>
               <tr className="border-b border-[#262626] text-xs text-gray-400">
                 <th className="py-2 pr-3">날짜(KST)</th>
-                <th className="py-2 pr-3">promote</th>
-                <th className="py-2 pr-3">reset</th>
+                <th className="py-2 pr-3">승급</th>
+                <th className="py-2 pr-3">리셋</th>
                 <th className="py-2 pr-3">Day4~5 티켓 지급</th>
-                <th className="py-2 pr-3">vault bonus applied(로그)</th>
-                <th className="py-2 pr-3">vault base plays</th>
-                <th className="py-2 pr-3">vault bonus applied(earn)</th>
+                <th className="py-2 pr-3">금고 보너스 적용(로그)</th>
+                <th className="py-2 pr-3">금고 기본플레이(200)</th>
+                <th className="py-2 pr-3">금고 보너스 적용(정산)</th>
                 <th className="py-2 pr-3">제외: 주사위 모드</th>
                 <th className="py-2">제외: 티켓 타입</th>
               </tr>
@@ -338,6 +363,7 @@ const AdminDashboardPage: React.FC = () => {
               ) : null}
             </tbody>
           </table>
+          </div>
         </div>
       </div>
 

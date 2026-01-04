@@ -48,6 +48,11 @@ def test_admin_dashboard_streak_metrics_aggregates_user_event_log(client, sessio
     payload = resp.json()
 
     assert payload["days"] == 2
+    assert isinstance(payload.get("timezone"), str)
+    assert isinstance(payload.get("calendar_bucket"), str)
+    assert isinstance(payload.get("operational_reset_hour_kst"), int)
+    assert payload.get("streak_trigger") in ("PLAY_GAME", None)
+    assert isinstance(payload.get("notes"), list)
     assert isinstance(payload.get("items"), list)
     assert len(payload["items"]) == 2
 

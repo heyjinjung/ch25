@@ -23,6 +23,7 @@ from app.schemas.admin_dashboard import (
     EventsStatusResponse
 )
 from app.schemas.admin_streak_metrics import StreakDailyMetric, StreakMetricsResponse
+from app.core.config import get_settings
 from app.services.admin_dashboard_service import AdminDashboardService
 
 # Note: Admin routers use full path prefixes (include_router is prefix-less).
@@ -222,6 +223,11 @@ def get_streak_metrics(
 ) -> StreakMetricsResponse:
     now = datetime.utcnow()
 
+    settings = get_settings()
+    tz_name = getattr(settings, "timezone", "Asia/Seoul") or "Asia/Seoul"
+    reset_hour_raw = getattr(settings, "streak_day_reset_hour_kst", 9)
+    reset_hour = 9 if reset_hour_raw is None else int(reset_hour_raw)
+
     # KST bucketing: created_at (UTC) shifted by +9h, then DATE().
     # This is distinct from the streak operational-day (09:00 reset) concept.
     kst_offset = timedelta(hours=9)
@@ -385,7 +391,24 @@ def get_streak_metrics(
             )
         )
 
-    return StreakMetricsResponse(days=int(days), generated_at=now, items=items)
+    notes: list[str] = [
+        "이 표는 KST 달력일(날짜) 기준으로 집계됩니다.",
+        f"스트릭(play_streak) 증가는 현재 '{'PLAY_GAME'}' 액션(게임 플레이)에서만 발생합니다.",
+        f"운영일(스트릭 연속성) 리셋 기준은 KST {reset_hour:02d}:00 입니다(STREAK_DAY_RESET_HOUR_KST).",
+    ]
+    if reset_hour != 0:
+        notes.append("자정(00:00) 리셋 이벤트를 원하면 STREAK_DAY_RESET_HOUR_KST=0 으로 설정해야 합니다.")
+
+    return StreakMetricsResponse(
+        days=int(days),
+        generated_at=now,
+        timezone=tz_name,
+        calendar_bucket="KST calendar day (DATE(created_at + 9h))",
+        operational_reset_hour_kst=reset_hour,
+        streak_trigger="PLAY_GAME",
+        notes=notes,
+        items=items,
+    )
 
 # --- New Operations Dashboard Endpoints ---
 

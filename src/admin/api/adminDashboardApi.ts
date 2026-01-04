@@ -32,6 +32,11 @@ export type StreakDailyMetric = {
 export type StreakMetricsResponse = {
   days: number;
   generated_at: string;
+  timezone: string;
+  calendar_bucket: string;
+  operational_reset_hour_kst: number;
+  streak_trigger: string;
+  notes: string[];
   items: StreakDailyMetric[];
 };
 

@@ -24,4 +24,9 @@ class StreakDailyMetric(BaseModel):
 class StreakMetricsResponse(BaseModel):
     days: int = Field(..., ge=1, le=31)
     generated_at: datetime
+    timezone: str = "Asia/Seoul"
+    calendar_bucket: str = "KST calendar day (DATE(created_at + 9h))"
+    operational_reset_hour_kst: int = 9
+    streak_trigger: str = "PLAY_GAME"
+    notes: list[str] = []
     items: list[StreakDailyMetric]
