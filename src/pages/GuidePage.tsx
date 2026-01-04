@@ -38,17 +38,17 @@ const IntroSection: React.FC = () => {
       <div className="mx-auto flex max-w-screen-xl flex-col items-center md:flex-row">
         <div className="mb-10 w-full md:mb-0 md:w-3/5 md:pr-10">
           <h2 className="mb-4 text-2xl font-bold leading-tight md:text-3xl lg:text-4xl">
-            게임하고 보상받으세요
+            씨씨에 입금(충전)하고
             <br />
-            복잡한거 없습니다
+            이 앱에서 보상 받으세요
           </h2>
           <p className="mb-6 text-lg font-medium">
-            티켓으로 게임 → 보상 받기
+            1) 씨씨 충전(입금) → 2) 티켓/레벨 생성 → 3) 게임/미션 → 4) 금고/보상 확인
           </p>
           <div className="mb-6 flex flex-wrap gap-2">
             <span className="rounded-full bg-[#d2fd9c] px-3 py-1 text-sm font-bold text-[#394508]">결과 즉시</span>
-            <span className="rounded-full bg-[#d2fd9c] px-3 py-1 text-sm font-bold text-[#394508]">레벨 보상누적</span>
-            <span className="rounded-full bg-[#d2fd9c] px-3 py-1 text-sm font-bold text-[#394508]">팀배틀</span>
+            <span className="rounded-full bg-[#d2fd9c] px-3 py-1 text-sm font-bold text-[#394508]">입금 기반 누적</span>
+            <span className="rounded-full bg-[#d2fd9c] px-3 py-1 text-sm font-bold text-[#394508]">1분 따라하기</span>
           </div>
           <p className="mb-6 text-sm text-gray-300">처음이세요? 1분이면 끝입니다.</p>
           <div className="flex flex-wrap gap-3">
@@ -103,12 +103,12 @@ const CoreActionSection: React.FC = () => {
               <div className="mr-3 flex h-10 w-10 items-center justify-center rounded-full bg-black text-xl font-bold text-[rgb(104,255,132)]">
                 1
               </div>
-              <h3 className="text-xl font-bold text-[#282d1a]">티켓 확인</h3>
+              <h3 className="text-xl font-bold text-[#282d1a]">씨씨 입금(충전)</h3>
             </div>
-            <p className="mb-4 text-gray-700">씨씨카지노 이용하면 자동으로 생성됩니다. 없으면 게임 안 됩니다.</p>
+            <p className="mb-4 text-gray-700">이 앱의 핵심 목표는 “씨씨 입금(충전)”입니다. 충전/이용 내역이 있어야 티켓/레벨이 제대로 연결됩니다.</p>
             <div className="rounded-lg border border-gray-200 bg-white p-3">
               <p className="text-sm text-gray-600">
-                <span className="font-bold text-[#394508]">TIP</span>: 각 게임화면에서 보유 티켓을 확인할 수 있어요.
+                <span className="font-bold text-[#394508]">TIP</span>: 금고 화면에 있는 “씨씨카지노 충전하기” 버튼을 이용하면 편합니다.
               </p>
             </div>
           </div>
@@ -117,12 +117,12 @@ const CoreActionSection: React.FC = () => {
               <div className="mr-3 flex h-10 w-10 items-center justify-center rounded-full bg-black text-xl font-bold text-[rgb(82,255,133)]">
                 2
               </div>
-              <h3 className="text-xl font-bold text-[#282d1a]">게임 플레이</h3>
+              <h3 className="text-xl font-bold text-[#282d1a]">티켓 확인/체험</h3>
             </div>
-            <p className="mb-4 text-gray-700">버튼 누르면 바로 시작. 결과도 바로 나옴.</p>
+            <p className="mb-4 text-gray-700">티켓이 있어야 게임이 됩니다. 티켓이 0장이면 체험 티켓(TRIAL_TOKEN)으로 먼저 맛볼 수 있어요.</p>
             <div className="rounded-lg border border-gray-200 bg-white p-3">
               <p className="text-sm text-gray-600">
-                <span className="font-bold text-[#394508]">TIP</span>:주사위는 레벨경험치만 쌓여요.
+                <span className="font-bold text-[#394508]">TIP</span>: 티켓 0이면 “체험 티켓 3장 받기” 안내가 뜰 수 있어요.
               </p>
             </div>
           </div>
@@ -131,12 +131,12 @@ const CoreActionSection: React.FC = () => {
               <div className="mr-3 flex h-10 w-10 items-center justify-center rounded-full bg-black text-xl font-bold text-[rgb(82,255,133)]">
                 3
               </div>
-              <h3 className="text-xl font-bold text-[#282d1a]">보상 확인</h3>
+              <h3 className="text-xl font-bold text-[#282d1a]">게임/미션 → 보상</h3>
             </div>
-            <p className="mb-4 text-gray-700">받은 포인트는 레벨에 쌓이고, 레벨이 오르면 보상을 받습니다.</p>
+            <p className="mb-4 text-gray-700">게임/미션을 하면 다이아가 쌓이고, 상점에서 교환권을 사서 인벤토리에서 사용하면 티켓/키를 만들 수 있어요.</p>
             <div className="rounded-lg border border-gray-200 bg-white p-3">
               <p className="text-sm text-gray-600">
-                <span className="font-bold text-[#394508]">TIP</span>: 레벨에서 누적 레벨포인트와 보상레벨을 확인하세요.
+                <span className="font-bold text-[#394508]">TIP</span>: 레벨/금고에서 “오늘 누적이 반영됐는지” 확인해보세요.
               </p>
             </div>
           </div>
@@ -240,13 +240,13 @@ const GamesSection: React.FC = () => {
 
         <div className="mt-10 rounded-xl border border-[#d2fd9c] bg-[#f3f7eb] p-6 shadow-sm">
           <h3 className="mb-3 text-lg font-bold text-[#394508]">티켓이 없으면 어떻게 하나요?</h3>
-          <p className="mb-4 text-gray-800">씨씨사이트에서 서비스를 이용하면 티켓을 획득할 수 있습니다.</p>
+          <p className="mb-4 text-gray-800">씨씨에 입금(충전) 후 이용하면 티켓/레벨이 연결됩니다. 티켓이 0장이라면 체험 티켓으로 먼저 시작할 수도 있어요.</p>
           <div className="flex flex-wrap gap-3">
             <a
               href="#point-system"
               className="rounded-full bg-[#394508] px-4 py-2 text-sm font-bold text-white transition hover:bg-opacity-90 focus:ring-2 focus:ring-[#394508] focus:ring-offset-2"
             >
-              티켓 안내 보기
+              입금/티켓 흐름 보기
             </a>
             <a
               href="https://t.me/jm956"
@@ -288,8 +288,28 @@ const NewFeaturesSection: React.FC = () => {
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
             </div>
             <h3 className="mb-2 text-lg font-bold text-[#282d1a]">인벤토리</h3>
-            <p className="text-gray-600">다이아, 골드키, 다이아키 보관함.</p>
+            <p className="text-gray-600">다이아/교환권(바우처)/키를 확인하는 보관함.</p>
             <p className="mt-2 text-sm font-bold text-blue-600">→ 상단 티켓버튼에서 확인</p>
+          </div>
+
+          {/* 상점/교환권 */}
+          <div className="rounded-xl border border-gray-200 bg-gray-50 p-6">
+            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-indigo-500 text-white">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.6 8h13.2L17 13M7 13h10M9 21a1 1 0 100-2 1 1 0 000 2zm10 0a1 1 0 100-2 1 1 0 000 2z" /></svg>
+            </div>
+            <h3 className="mb-2 text-lg font-bold text-[#282d1a]">상점 / 교환권</h3>
+            <p className="text-gray-600">다이아로 교환권을 구매 → 인벤토리에서 사용하면 티켓/키가 지급돼요.</p>
+            <p className="mt-2 text-sm font-bold text-indigo-600">→ 다이아 모아서 교환</p>
+          </div>
+
+          {/* 체험 티켓 */}
+          <div className="rounded-xl border border-gray-200 bg-gray-50 p-6">
+            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-teal-500 text-white">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            </div>
+            <h3 className="mb-2 text-lg font-bold text-[#282d1a]">체험 티켓</h3>
+            <p className="text-gray-600">티켓이 0장일 때 TRIAL_TOKEN 3장을 받아 [체험] 탭에서 다이아를 모을 수 있어요.</p>
+            <p className="mt-2 text-sm font-bold text-teal-600">→ 맛보기/연습용</p>
           </div>
 
           {/* 골드키/다이아키 */}
@@ -403,12 +423,12 @@ const MyVaultSection: React.FC = () => {
         <div className="mb-10 w-full md:mb-0 md:w-1/2 md:pl-10">
           <span className="text-sm font-bold uppercase tracking-wider text-[#394508]">추가 동기부여</span>
           <h2 className="mt-1 mb-4 text-2xl font-bold text-[#282d1a] md:text-3xl">내 금고</h2>
-          <p className="mb-6 text-gray-700">씨씨카지노 이용하면 금고머니가 쌓입니다. 1만원 이상이면 전환 가능.</p>
+          <p className="mb-6 text-gray-700">씨씨에 입금(충전)하고 이용하면 누적이 연결됩니다. 금고에서 상태를 확인하고, 필요하면 씨씨로 이동할 수 있어요.</p>
           <div className="mb-6 space-y-4">
             {[
-              "게임하면 금고에 돈이 쌓임",
-              "1만원 이상이면 전환 가능",
-              "전환 누르면 씨씨로 바로 이동",
+              "씨씨 입금(충전) → 이 앱 누적/레벨 연결",
+              "게임 결과에 따라 금고가 변동될 수 있음",
+              "금고에서 ‘씨씨카지노 충전하기’로 이동 가능",
             ].map((text) => (
               <div key={text} className="rounded-lg bg-white p-4 shadow-sm">
                 <p className="text-gray-700">
@@ -418,7 +438,7 @@ const MyVaultSection: React.FC = () => {
             ))}
           </div>
           <Link to="/vault" className="rounded-full bg-[#282d1a] px-6 py-3 text-lg font-bold text-white transition hover:bg-opacity-90">
-            예시 내금고 확인
+            내 금고/충전 안내 보기
           </Link>
         </div>
         <div className="flex w-full justify-center md:w-1/2">
@@ -448,7 +468,7 @@ const MyVaultSection: React.FC = () => {
                 rel="noreferrer"
                 className="w-full rounded-xl bg-[#394508] py-3 text-center font-bold text-white transition hover:bg-opacity-90 focus:ring-2 focus:ring-[#394508] focus:ring-offset-2"
               >
-                씨씨로 전환하기
+                씨씨카지노 충전하기
               </a>
             </div>
             <motion.div
@@ -475,16 +495,16 @@ const PointSystemSection: React.FC = () => {
         </div>
 
         <div className="mb-10 grid grid-cols-1 gap-6 md:grid-cols-3">
-          {["씨씨카지노이용", "포인트 적립", "레벨상승 & 보상"].map((title, index) => (
+          {["씨씨 입금(충전)", "티켓/레벨 연결", "게임/미션 & 보상"].map((title, index) => (
             <div key={title} className="rounded-xl bg-[rgb(0,0,0)] bg-opacity-10 p-6 text-center">
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#d2fd9c] text-2xl font-bold text-[#394508]">
                 {index + 1}
               </div>
               <h3 className="mb-2 text-xl font-bold">{title}</h3>
               <p className="text-gray-300">
-                {index === 0 && "씨씨카지노를 이용하면 이용 금액에 따라 자동으로 포인트가 적립됩니다."}
-                {index === 1 && "이벤트 시스템에서 레벨포인트가 적립되며, 게임 플레이로 추가 레벨포인트를 획득할 수 있습니다."}
-                {index === 2 && "쌓인 레벨포인트는 레벨(시즌패스) 진행에 사용되며, 레벨이 오르면 특별 보상을 받을 수 있습니다."}
+                {index === 0 && "씨씨에 입금(충전)하고 이용하면 이 앱의 누적/레벨이 연결됩니다."}
+                {index === 1 && "연결된 상태에서 티켓/레벨/보상 흐름이 자동으로 따라옵니다."}
+                {index === 2 && "게임/미션으로 다이아를 모아 상점/인벤토리에서 교환권을 사용하고, 레벨/금고를 확인하세요."}
               </p>
             </div>
           ))}
@@ -551,9 +571,9 @@ const QuickGuideSection: React.FC = () => {
 const StepContent: React.FC<{ step: number }> = ({ step }) => {
   const data = {
     1: {
-      title: "로그인 후 티켓 확인",
-      desc: "각 게임은 티켓이 필요할 수 있어요. 화면 상단/게임 정보에서 잔여 티켓을 확인하세요.",
-      tip: "티켓이 없을 경우, 씨씨카지노 이용 시 자동으로 티켓이 지급됩니다.",
+      title: "씨씨카지노 입금(충전)하기",
+      desc: "이 앱의 1순위 목표는 ‘씨씨 입금(충전)’입니다. 입금/이용 내역이 있어야 누적/레벨/티켓 연결이 안정적입니다.",
+      tip: "금고 페이지에서 ‘씨씨카지노 충전하기’를 누르면 이동할 수 있어요.",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
           <path
@@ -565,9 +585,9 @@ const StepContent: React.FC<{ step: number }> = ({ step }) => {
       ),
     },
     2: {
-      title: "게임 1판 플레이",
-      desc: "버튼 한 번이면 바로 시작됩니다. 결과는 즉시 표시돼요.",
-      tip: "룰렛, 주사위, 복권 중 아무 게임이나 선택하세요.",
+      title: "티켓 확인(없으면 체험 티켓)",
+      desc: "게임에는 티켓이 필요합니다. 티켓이 0장이면 체험 티켓(TRIAL_TOKEN)으로 먼저 시작할 수 있어요.",
+      tip: "티켓 0이면 ‘체험 티켓 3장 받기’ 안내가 뜰 수 있어요.",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
@@ -575,9 +595,9 @@ const StepContent: React.FC<{ step: number }> = ({ step }) => {
       ),
     },
     3: {
-      title: "결과 확인 후 '다시 하기'로 빠르게 반복",
-      desc: "결과를 봤다면 같은 자리에서 바로 '다시 하기'로 다음 판을 진행하세요.",
-      tip: "빠르게 플레이할수록 더 많은 레벨포인트를 모을 수 있습니다.",
+      title: "체험(또는 일반) 게임 1판 플레이",
+      desc: "버튼 한 번이면 바로 시작됩니다. 결과는 즉시 표시돼요.",
+      tip: "체험은 룰렛의 [체험] 탭에서 TRIAL_TOKEN으로 플레이할 수 있어요.",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
           <path
@@ -589,9 +609,9 @@ const StepContent: React.FC<{ step: number }> = ({ step }) => {
       ),
     },
     4: {
-      title: "레벨포인트/레벨 보상 확인",
-      desc: "플레이로 쌓인 레벨포인트가 레벨 진행에 반영되고, 레벨 보상을 받을 수 있어요.",
-      tip: "레벨에서 레벨포인트와 레벨을 확인하세요.",
+      title: "미션 → 다이아 → 상점 → 교환권",
+      desc: "미션을 하면 다이아를 얻습니다. 다이아로 상점에서 교환권을 사고, 인벤토리에서 사용하면 티켓/키가 생겨요.",
+      tip: "다이아(미션) → 교환권(상점) → 사용(인벤토리) 순서로 기억하세요.",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
           <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
@@ -604,9 +624,9 @@ const StepContent: React.FC<{ step: number }> = ({ step }) => {
       ),
     },
     5: {
-      title: "팀배틀 참여 & 누적 상태 확인",
-      desc: "팀배틀에 참여하고 내 금고에서 누적 상태를 한눈에 확인하세요.",
-      tip: "우리 팀이 지고 있다면 지금 참여로 반전을 만들수 있습니다.",
+      title: "레벨/금고에서 누적 확인",
+      desc: "레벨과 금고에서 오늘 누적이 잘 반영되는지 확인하세요.",
+      tip: "누적이 이상하면 운영자에게 화면 캡처로 문의해 주세요.",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
           <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
@@ -636,8 +656,16 @@ const FAQSection: React.FC = () => {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const faqs = [
     {
+      question: "씨씨 입금(충전)은 어디서 하나요?",
+      answer: "금고 페이지에서 ‘씨씨카지노 충전하기’ 버튼을 누르면 씨씨 사이트로 이동할 수 있습니다. 충전 후 다시 이 앱으로 돌아오면 연결이 반영됩니다.",
+    },
+    {
       question: "적립된 레벨포인트는 어떻게 확인하나요?",
       answer: "레벨버튼에서 적립된 레벨포인트와 남은 보상을 확인할 수 있습니다. 레벨별 적립률과 다음 레벨까지 필요한 포인트도 확인 가능합니다.",
+    },
+    {
+      question: "티켓이 0장인데 게임을 못 해요.",
+      answer: "티켓이 0장이면 ‘체험 티켓(TRIAL_TOKEN)’을 받을 수 있는 안내가 뜰 수 있습니다. 체험 티켓으로 [체험] 탭을 먼저 플레이하고, 미션/상점/인벤토리로 이어가 보세요.",
     },
     {
       question: "팀 배틀전은 어떻게 참여하나요?",

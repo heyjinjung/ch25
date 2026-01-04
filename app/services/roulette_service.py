@@ -75,22 +75,39 @@ class RouletteService:
         )
         db.add(config)
         db.flush()
-        
-        # Seed segments: Reward DIAMOND only
+
+        self._seed_trial_segments(db, config.id)
+        db.refresh(config)
+        return config
+
+    def _seed_trial_segments(self, db: Session, config_id: int) -> list[RouletteSegment]:
+        """Ensure six TRIAL segments exist for the given config.
+
+        Trial roulette is a fixed product surface (not tuned via admin), so it's safe to
+        auto-repair missing/invalid segments in production to prevent 500s.
+        """
+
         segments = [
             {"slot_index": 0, "label": "1 다이아", "reward_type": "DIAMOND", "reward_amount": 1, "weight": 30},
             {"slot_index": 1, "label": "꽝", "reward_type": "NONE", "reward_amount": 0, "weight": 50},
             {"slot_index": 2, "label": "2 다이아", "reward_type": "DIAMOND", "reward_amount": 2, "weight": 15},
             {"slot_index": 3, "label": "꽝", "reward_type": "NONE", "reward_amount": 0, "weight": 4},
             {"slot_index": 4, "label": "5 다이아", "reward_type": "DIAMOND", "reward_amount": 5, "weight": 1},
-            {"slot_index": 5, "label": "꽝", "reward_type": "NONE", "reward_amount": 0, "weight": 0}, 
+            {"slot_index": 5, "label": "꽝", "reward_type": "NONE", "reward_amount": 0, "weight": 0},
         ]
-        # Note: 6 segments required by FE usually.
-        
-        db.add_all([RouletteSegment(config_id=config.id, **s) for s in segments])
+
+        db.query(RouletteSegment).filter(RouletteSegment.config_id == config_id).delete()
+        db.add_all([RouletteSegment(config_id=config_id, **segment) for segment in segments])
         db.commit()
-        db.refresh(config)
-        return config
+        return (
+            db.execute(
+                select(RouletteSegment)
+                .where(RouletteSegment.config_id == config_id)
+                .order_by(RouletteSegment.slot_index)
+            )
+            .scalars()
+            .all()
+        )
 
     def _get_today_config(self, db: Session, ticket_type: str = GameTokenType.ROULETTE_COIN.value) -> RouletteConfig:
         config = db.execute(
@@ -120,16 +137,19 @@ class RouletteService:
             segments = db.execute(stmt).scalars().all()
         except DBAPIError as exc:
             raise LockAcquisitionError("ROULETTE_LOCK_FAILED") from exc
-        
-        # Only seed default for Coin roulette in test mode
-        if len(segments) == 0 and settings.test_mode:
-             # Look up config to check type if needed, but for now just skip or fail if not coin
-             pass
+
+        config = db.get(RouletteConfig, config_id)
+        ticket_type = getattr(config, "ticket_type", None)
+
+        # Auto-repair TRIAL roulette segments (production-safe fixed config).
+        if ticket_type == GameTokenType.TRIAL_TOKEN.value and len(segments) != 6:
+            return self._seed_trial_segments(db, config_id)
+
+        # Only seed default for Coin roulette in test mode/local sqlite bootstrap.
+        if ticket_type == GameTokenType.ROULETTE_COIN.value and len(segments) == 0 and settings.test_mode:
+            return self._seed_default_segments(db, config_id)
 
         if len(segments) != 6:
-            # If seed missing for keys, it's critical
-            if settings.test_mode and len(segments) == 0:
-                 return self._seed_default_segments(db, config_id)
             raise InvalidConfigError("INVALID_ROULETTE_CONFIG")
         for segment in segments:
             if segment.weight < 0:
