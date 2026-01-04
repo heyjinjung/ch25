@@ -43,6 +43,45 @@ class DiceService:
         if any(v < 1 or v > 6 for v in values):
             raise InvalidConfigError("INVALID_DICE_RESULT")
 
+    def _is_event_active(self, db: Session, user_id: int, today_plays: int) -> bool:
+        """Check if Dice Event is active for the user."""
+        from app.services.vault2_service import Vault2Service
+        vault2_service = Vault2Service()
+        
+        # 1. Check Config
+        game_earn_config = vault2_service.get_config_value(db, "game_earn_config", {})
+        dice_event_probs = vault2_service.get_config_value(db, "probability", {}).get("DICE")
+        is_active = bool(dice_event_probs and game_earn_config.get("DICE"))
+        
+        if not is_active:
+            return False
+
+        # 2. Check Config File Active Flag (if strictly required, but 'probability' existence implies active in current logic)
+        # Note: Admin UI sets 'is_active' boolean at root of DiceEventParams? 
+        # Actually in AdminDiceApi we have structure. 
+        # But Vault2Service.get_config_value retrieves parts of config_json.
+        # Let's assume presence of valid probability config implies active as per previous logic.
+        
+        # 3. Eligibility (Blacklist)
+        eligibility = vault2_service.get_config_value(db, "eligibility", {})
+        from app.models.admin_user_profile import AdminUserProfile
+        profile = db.query(AdminUserProfile).filter(AdminUserProfile.user_id == user_id).first()
+        if profile and profile.tags:
+            blocklist = set(eligibility.get("tags", {}).get("blocklist", []))
+            user_tags = set(profile.tags)
+            if not user_tags.isdisjoint(blocklist):
+                return False
+
+        # 4. Caps (Daily Plays)
+        event_caps = vault2_service.get_config_value(db, "caps", {}).get("DICE")
+        if event_caps:
+            daily_plays_cap = event_caps.get("daily_plays")
+            if daily_plays_cap is not None:
+                if today_plays >= int(daily_plays_cap):
+                    return False
+        
+        return True
+
     def get_status(self, db: Session, user_id: int, today: date) -> DiceStatusResponse:
         self.feature_service.validate_feature_active(db, today, FeatureType.DICE)
         config = self._get_today_config(db)
@@ -56,6 +95,10 @@ class DiceService:
                 func.date(DiceLog.created_at) == today,
             )
         ).scalar_one()
+        
+        # Check Event Status
+        event_active = self._is_event_active(db, user_id, today_plays)
+
         # Daily cap removed: use 0 to denote unlimited.
         unlimited = 0
         remaining = 0
@@ -69,6 +112,7 @@ class DiceService:
             token_type=token_type.value,
             token_balance=token_balance,
             feature_type=FeatureType.DICE,
+            event_active=event_active,
         )
 
     def play(self, db: Session, user_id: int, now: date | datetime) -> DicePlayResponse:
@@ -85,27 +129,98 @@ class DiceService:
             )
         ).scalar_one()
 
-        user_dice = [random.randint(1, 6), random.randint(1, 6)]
-        dealer_dice = [random.randint(1, 6), random.randint(1, 6)]
-        user_sum = sum(user_dice)
-        dealer_sum = sum(dealer_dice)
+        # --- Event Mode Checking ---
+        is_event_active = self._is_event_active(db, user_id, today_plays)
+        
+        print(f"DEBUG: is_event_active post-cap={is_event_active}")
+
+        # 3. Decision Logic
+        outcome = "LOSE" 
+        reward_type = config.lose_reward_type
+        reward_amount = config.lose_reward_amount
+        mode = "NORMAL"
+
+        if is_event_active:
+            mode = "EVENT"
+            # Event Mode: Weighted RNG
+            p_win = dice_event_probs.get("p_win", 0.35)
+            p_draw = dice_event_probs.get("p_draw", 0.10)
+            p_lose = dice_event_probs.get("p_lose", 0.55)
+            
+            # Normalize just in case
+            total_p = p_win + p_draw + p_lose
+            if total_p <= 0:
+                 # Fallback to normal if config error
+                 mode = "NORMAL"
+            else:
+                 outcomes = ["WIN", "DRAW", "LOSE"]
+                 weights = [p_win, p_draw, p_lose]
+                 outcome = random.choices(outcomes, weights=weights, k=1)[0]
+                 
+                 # Set Rewards from Event Config
+                 event_rewards = game_earn_config.get("DICE", {})
+                 event_reward_amount = event_rewards.get(outcome)
+                 if event_reward_amount is not None:
+                     # For dice service response, we still report what the DiceConfig says for "visual" consistency?
+                     # OR do we override the returned reward amount too?
+                     # The Build Spec says: "VaultService... uses payout_raw.reward_amount... DiceService reports result+reward_amount"
+                     # So we should probably override the reward_amount here for the API response too.
+                     reward_amount = int(event_reward_amount)
+                     reward_type = "NONE" # Usually event mode rewards are Vault accruals only
+                 
+        if mode == "NORMAL":
+             # Standard Pure RNG
+             user_dice = [random.randint(1, 6), random.randint(1, 6)]
+             dealer_dice = [random.randint(1, 6), random.randint(1, 6)]
+             user_sum = sum(user_dice)
+             dealer_sum = sum(dealer_dice)
+             
+             if user_sum > dealer_sum:
+                 outcome = "WIN"
+                 reward_type = config.win_reward_type
+                 reward_amount = config.win_reward_amount
+             elif user_sum == dealer_sum:
+                 outcome = "DRAW"
+                 reward_type = config.draw_reward_type
+                 reward_amount = config.draw_reward_amount
+             else:
+                 outcome = "LOSE"
+                 reward_type = config.lose_reward_type
+                 reward_amount = config.lose_reward_amount
+
+        else:
+             # Event Mode: Generate Dice to match Outcome
+             if outcome == "WIN":
+                 # Generate until User > Dealer
+                 # Optimization: Generate Dealer first (low), then User (high)
+                 while True:
+                     d1, d2 = random.randint(1, 6), random.randint(1, 6)
+                     u1, u2 = random.randint(1, 6), random.randint(1, 6)
+                     if (u1+u2) > (d1+d2):
+                         user_dice, dealer_dice = [u1, u2], [d1, d2]
+                         break
+             elif outcome == "DRAW":
+                  while True:
+                     d1, d2 = random.randint(1, 6), random.randint(1, 6)
+                     u1, u2 = random.randint(1, 6), random.randint(1, 6)
+                     if (u1+u2) == (d1+d2):
+                         user_dice, dealer_dice = [u1, u2], [d1, d2]
+                         break
+             else: # LOSE
+                  while True:
+                     d1, d2 = random.randint(1, 6), random.randint(1, 6)
+                     u1, u2 = random.randint(1, 6), random.randint(1, 6)
+                     if (u1+u2) < (d1+d2):
+                         user_dice, dealer_dice = [u1, u2], [d1, d2]
+                         break
+             
+             user_sum = sum(user_dice)
+             dealer_sum = sum(dealer_dice)
+
 
         # Guardrails: enforce dice value range in case of RNG/provider change.
         self._validate_dice_values(user_dice)
         self._validate_dice_values(dealer_dice)
-
-        if user_sum > dealer_sum:
-            outcome = "WIN"
-            reward_type = config.win_reward_type
-            reward_amount = config.win_reward_amount
-        elif user_sum == dealer_sum:
-            outcome = "DRAW"
-            reward_type = config.draw_reward_type
-            reward_amount = config.draw_reward_amount
-        else:
-            outcome = "LOSE"
-            reward_type = config.lose_reward_type
-            reward_amount = config.lose_reward_amount
 
         _, consumed_trial = self.wallet_service.require_and_consume_token(
             db,
@@ -114,7 +229,7 @@ class DiceService:
             amount=1,
             reason="DICE_PLAY",
             label=f"{config.name} - {outcome}",
-            meta={"result": outcome},
+            meta={"result": outcome, "mode": mode},
         )
 
         log_entry = DiceLog(
@@ -134,6 +249,11 @@ class DiceService:
         db.commit()
         db.refresh(log_entry)
 
+        # [Mission] Update progress (includes streak sync). Do this before Vault accrual so
+        # streak-based vault bonuses apply immediately on the same play.
+        from app.services.mission_service import MissionService
+        MissionService(db).update_progress(user_id, "PLAY_GAME")
+
         total_earn = 0
         # Vault Phase 1: idempotent game accrual (safe-guarded by feature flag).
         total_earn += self.vault_service.record_game_play_earn_event(
@@ -147,6 +267,7 @@ class DiceService:
                 "result": outcome,
                 "reward_type": reward_type,
                 "reward_amount": reward_amount,
+                "mode": mode,
             },
         )
 
@@ -175,6 +296,7 @@ class DiceService:
                 "reward_amount": reward_amount,
                 "reward_label": f"{config.name} - {outcome}",
                 "xp_from_reward": xp_award,
+                "mode": mode,
             },
         )
 
@@ -188,10 +310,7 @@ class DiceService:
             )
         if outcome == "WIN":
             self.season_pass_service.maybe_add_internal_win_stamp(db, user_id=user_id, now=today)
-        
-        # [Mission] Update progress
-        from app.services.mission_service import MissionService
-        MissionService(db).update_progress(user_id, "PLAY_GAME")
+
         # 게임 설정 포인트를 레벨 XP 보너스로 반영
         season_pass = None  # 게임 1회당 자동 스탬프 발급을 중단하고, 조건 달성 시 별도 로직으로 처리
 

@@ -1,7 +1,7 @@
 """User model definition."""
 from datetime import datetime
 
-from sqlalchemy import BigInteger, Boolean, Column, DateTime, Integer, String
+from sqlalchemy import BigInteger, Boolean, Column, Date, DateTime, Integer, String
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
@@ -47,6 +47,14 @@ class User(Base):
 
     # [Retention] Ticket Zero Cooldown
     last_free_ticket_claimed_at = Column(DateTime, nullable=True)
+
+    # [Retention] Play streak
+    play_streak = Column(Integer, nullable=False, server_default="0", default=0)
+    last_play_date = Column(Date, nullable=True)
+
+    # [Retention] Streak vault bonus window (per operational day)
+    streak_vault_bonus_date = Column(Date, nullable=True)
+    streak_vault_bonus_started_at = Column(DateTime, nullable=True)
 
     # [Retention] Onboarding
     has_completed_onboarding = Column(Boolean, default=False)

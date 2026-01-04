@@ -43,3 +43,11 @@ class AdminDiceConfigResponse(AdminDiceConfigBase):
     id: int
     created_at: Optional[datetime]
     updated_at: Optional[datetime]
+
+
+class DiceEventParams(BaseModel):
+    is_active: bool
+    probability: dict[str, float]
+    rewards: dict[str, int]
+    caps: dict[str, int]
+    eligibility: dict

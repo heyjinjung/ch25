@@ -1,8 +1,8 @@
-from datetime import datetime
+from datetime import datetime, time
 from enum import Enum
 from typing import Optional
 
-from sqlalchemy import Boolean, Column, DateTime, Enum as SAEnum, ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy import Boolean, Column, DateTime, Enum as SAEnum, ForeignKey, Integer, String, Text, UniqueConstraint, Time
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
@@ -62,6 +62,9 @@ class Mission(Base):
     # Active period (optional)
     start_date = Column(DateTime, nullable=True)
     end_date = Column(DateTime, nullable=True)
+    start_time = Column(Time, nullable=True)
+    end_time = Column(Time, nullable=True)
+    auto_claim = Column(Boolean, default=False)
     is_active = Column(Boolean, default=True)
 
     created_at = Column(DateTime, default=datetime.utcnow)

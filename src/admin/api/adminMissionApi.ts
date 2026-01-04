@@ -12,6 +12,9 @@ export interface AdminMission {
     xp_reward: number;
     logic_key: string;
     action_type: string;
+    start_time?: string | null;
+    end_time?: string | null;
+    auto_claim?: boolean;
     is_active: boolean;
     created_at: string;
     updated_at: string;
@@ -27,6 +30,9 @@ export interface AdminMissionPayload {
     xp_reward: number;
     logic_key: string;
     action_type: string;
+    start_time?: string | null;
+    end_time?: string | null;
+    auto_claim?: boolean;
     is_active?: boolean;
 }
 

@@ -72,3 +72,80 @@ class AdminDiceService:
         db.commit()
         db.refresh(config)
         return config
+
+    @staticmethod
+    def get_event_params(db: Session):
+        from app.services.vault2_service import Vault2Service
+        vault_service = Vault2Service()
+        
+        game_earn_config = vault_service.get_config_value(db, "game_earn_config", {})
+        dice_rewards = game_earn_config.get("DICE", {})
+        
+        probs = vault_service.get_config_value(db, "probability", {}).get("DICE", {})
+        caps = vault_service.get_config_value(db, "caps", {}).get("DICE", {})
+        eligibility = vault_service.get_config_value(db, "eligibility", {})
+        
+        # Determine active state: must have both config and probability set
+        is_active = bool(dice_rewards and probs)
+        
+        from app.schemas.admin_dice import DiceEventParams
+        return DiceEventParams(
+            is_active=is_active,
+            probability=probs or {"p_win": 0.35, "p_draw": 0.10, "p_lose": 0.55},
+            rewards=dice_rewards or {"WIN": 1400, "DRAW": -800, "LOSE": -1100},
+            caps=caps or {"daily_gain": 20000, "daily_plays": 30},
+            eligibility=eligibility or {"tags": {"blocklist": ["Blacklist"]}}
+        )
+
+    @staticmethod
+    def update_event_params(db: Session, params: "DiceEventParams", admin_id: int = 0):
+        from app.services.vault2_service import Vault2Service
+        vault_service = Vault2Service()
+        program = vault_service.get_default_program(db, ensure=True)
+        
+        # Read-Modify-Write
+        # Note: We use Vault2Service logic which handles default config merging
+        cfg = vault_service.DEFAULT_CONFIG.copy()
+        if isinstance(program.config_json, dict):
+            cfg.update(program.config_json)
+        
+        # Update Keys
+        if "game_earn_config" not in cfg: cfg["game_earn_config"] = {}
+        if "probability" not in cfg: cfg["probability"] = {}
+        if "caps" not in cfg: cfg["caps"] = {}
+        
+        if params.is_active:
+             cfg["game_earn_config"]["DICE"] = params.rewards
+             cfg["probability"]["DICE"] = params.probability
+        else:
+             # Deactivate by removing/clearing?
+             # Or just allow keeping config but rely on is_active flag passed in?
+             # DiceService checks: `bool(dice_event_probs and game_earn_config.get("DICE"))`
+             # If we want to "deactivate", we can clear them OR set a flag.
+             # But the schema says is_active is part of params.
+             # If user sets is_active=False, we should probably Clear them or have a separate flag.
+             # Plan says: "config_json.probability 비움 + game_earn_config 비움 → 기본 모드 복귀"
+             cfg["game_earn_config"].pop("DICE", None)
+             cfg["probability"].pop("DICE", None)
+
+        cfg["caps"]["DICE"] = params.caps
+        cfg["eligibility"] = params.eligibility # Global or Dice specific? Checks in DiceService use global eligibility.
+        
+        # Save
+        program.config_json = cfg
+        
+        from app.models.admin_audit_log import AdminAuditLog
+        from app.services.audit_service import AuditService
+        AuditService.record_admin_audit(
+            db, 
+            admin_id=admin_id, 
+            action="UPDATE_DICE_EVENT_PARAMS", 
+            target_type="VaultProgram", 
+            target_id=program.key,
+            after={"config_json": cfg}
+        )
+        
+        db.add(program)
+        db.commit()
+        db.refresh(program)
+        return params

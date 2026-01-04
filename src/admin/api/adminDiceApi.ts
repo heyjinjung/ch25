@@ -33,3 +33,44 @@ export async function updateDiceConfig(id: number, payload: AdminDiceConfigPaylo
   const { data } = await adminApi.put<AdminDiceConfig>(`/admin/api/dice-config/${id}`, payload);
   return data;
 }
+
+// --- Event Params ---
+
+export interface DiceEventParams {
+  is_active: boolean;
+  probability: {
+    DICE?: {
+      p_win: number;
+      p_draw: number;
+      p_lose: number;
+    };
+  } | null;
+  game_earn_config: {
+    DICE?: {
+      WIN: number;
+      DRAW: number;
+      LOSE: number;
+    };
+  } | null;
+  caps: {
+    DICE?: {
+      daily_gain?: number;
+      daily_plays?: number;
+    };
+  } | null;
+  eligibility: {
+    tags?: {
+      blocklist?: string[];
+    };
+  } | null;
+}
+
+export async function getEventParams() {
+  const { data } = await adminApi.get<DiceEventParams>("/admin/api/dice-config/event-params");
+  return data;
+}
+
+export async function updateEventParams(payload: DiceEventParams) {
+  const { data } = await adminApi.put<DiceEventParams>("/admin/api/dice-config/event-params", payload);
+  return data;
+}

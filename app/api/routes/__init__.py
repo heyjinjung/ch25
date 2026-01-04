@@ -30,12 +30,16 @@ from app.api.routes import (
 	telegram_unlink,
 	dev_auth,
 	inventory_shop,
+	metrics,
 )
 
 api_router = APIRouter()
 
 # Dev endpoints (only enabled in development)
 api_router.include_router(dev_auth.router, prefix="/api/dev", tags=["dev"])
+
+# Metrics endpoint
+api_router.include_router(metrics.router, tags=["metrics"])
 
 api_router.include_router(health.router, prefix="", tags=["health"])
 api_router.include_router(today_feature.router)

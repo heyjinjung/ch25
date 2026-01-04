@@ -16,6 +16,9 @@ class MissionSchema(BaseModel):
     reward_amount: int
     xp_reward: int = 0
     requires_approval: bool = False
+    start_time: Optional[str] = None
+    end_time: Optional[str] = None
+    auto_claim: bool = False
     is_active: bool = True
 
     model_config = ConfigDict(from_attributes=True)
@@ -30,6 +33,19 @@ class MissionWithProgress(BaseModel):
     mission: MissionSchema
     progress: MissionProgressSchema
 
+
+class StreakInfoSchema(BaseModel):
+    streak_days: int
+    current_multiplier: float
+    is_hot: bool
+    is_legend: bool
+    next_milestone: int
+
+
+class MissionListResponse(BaseModel):
+    missions: list[MissionWithProgress]
+    streak_info: StreakInfoSchema
+
 class MissionCreate(BaseModel):
     title: str
     description: Optional[str] = None
@@ -41,6 +57,9 @@ class MissionCreate(BaseModel):
     reward_amount: int
     xp_reward: int = 0
     requires_approval: bool = False
+    start_time: Optional[str] = None
+    end_time: Optional[str] = None
+    auto_claim: bool = False
     is_active: bool = True
 
 class MissionUpdate(BaseModel):
@@ -54,4 +73,7 @@ class MissionUpdate(BaseModel):
     reward_amount: Optional[int] = None
     xp_reward: Optional[int] = None
     requires_approval: Optional[bool] = None
+    start_time: Optional[str] = None
+    end_time: Optional[str] = None
+    auto_claim: Optional[bool] = None
     is_active: Optional[bool] = None

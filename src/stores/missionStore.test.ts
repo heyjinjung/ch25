@@ -11,7 +11,7 @@ vi.mock('../api/apiClient', () => ({
 
 describe('MissionStore', () => {
     beforeEach(() => {
-        useMissionStore.setState({ missions: [], isLoading: false, error: null, hasUnclaimed: false });
+        useMissionStore.setState({ missions: [], isLoading: false, error: null, hasUnclaimed: false, streakInfo: null });
         vi.clearAllMocks();
     });
 
@@ -30,6 +30,11 @@ describe('MissionStore', () => {
 
         expect(result.success).toBe(true);
         expect(result.amount).toBe(100);
+        expect(apiClient.post).toHaveBeenCalledWith(
+            '/api/mission/1/claim',
+            {},
+            expect.objectContaining({ headers: expect.objectContaining({ "X-Idempotency-Key": expect.any(String) }) })
+        );
         expect(useMissionStore.getState().missions[0].progress.is_claimed).toBe(true);
     });
 
@@ -47,5 +52,24 @@ describe('MissionStore', () => {
         expect(result.success).toBe(false);
         expect(result.message).toBe("Network Error");
         expect(useMissionStore.getState().missions[0].progress.is_claimed).toBe(false);
+    });
+
+    test('fetchMissions accepts object payload with streak_info', async () => {
+        (apiClient.get as any).mockResolvedValue({
+            data: {
+                missions: [
+                    {
+                        mission: { id: 1, reward_amount: 10, reward_type: 'DIAMOND', target_value: 1, category: 'DAILY', logic_key: 'k' },
+                        progress: { current_value: 0, is_completed: false, is_claimed: false }
+                    }
+                ],
+                streak_info: { streak_days: 3, current_multiplier: 1.2, is_hot: true, is_legend: false, next_milestone: 4 }
+            }
+        });
+
+        await useMissionStore.getState().fetchMissions();
+
+        expect(useMissionStore.getState().missions).toHaveLength(1);
+        expect(useMissionStore.getState().streakInfo?.streak_days).toBe(3);
     });
 });

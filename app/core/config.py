@@ -36,6 +36,124 @@ class Settings(BaseSettings):
     feature_gate_enabled: bool = Field(
         False, validation_alias=AliasChoices("FEATURE_GATE_ENABLED", "feature_gate_enabled")
     )
+    golden_hour_enabled: bool = Field(
+        False,
+        validation_alias=AliasChoices(
+            "GOLDEN_HOUR_ENABLED",
+            "golden_hour_enabled",
+        ),
+    )
+    golden_hour_claim_rate_rps: int = Field(
+        10,
+        validation_alias=AliasChoices(
+            "GOLDEN_HOUR_CLAIM_RATE_RPS",
+            "golden_hour_claim_rate_rps",
+        ),
+    )
+    golden_hour_claim_rate_burst: int = Field(
+        20,
+        validation_alias=AliasChoices(
+            "GOLDEN_HOUR_CLAIM_RATE_BURST",
+            "golden_hour_claim_rate_burst",
+        ),
+    )
+    golden_hour_idempotency_ttl_sec: int = Field(
+        600,
+        validation_alias=AliasChoices(
+            "GOLDEN_HOUR_IDEMPOTENCY_TTL_SEC",
+            "golden_hour_idempotency_ttl_sec",
+        ),
+    )
+
+    # Streak multiplier event (mission reward multiplier based on play streak)
+    streak_multiplier_enabled: bool = Field(
+        False,
+        validation_alias=AliasChoices(
+            "STREAK_MULTIPLIER_ENABLED",
+            "streak_multiplier_enabled",
+        ),
+    )
+    streak_day_reset_hour_kst: int = Field(
+        9,
+        validation_alias=AliasChoices(
+            "STREAK_DAY_RESET_HOUR_KST",
+            "streak_day_reset_hour_kst",
+        ),
+    )
+    streak_hot_threshold_days: int = Field(
+        3,
+        validation_alias=AliasChoices(
+            "STREAK_HOT_THRESHOLD_DAYS",
+            "streak_hot_threshold_days",
+        ),
+    )
+    streak_legend_threshold_days: int = Field(
+        7,
+        validation_alias=AliasChoices(
+            "STREAK_LEGEND_THRESHOLD_DAYS",
+            "streak_legend_threshold_days",
+        ),
+    )
+    streak_hot_multiplier: float = Field(
+        1.2,
+        validation_alias=AliasChoices(
+            "STREAK_HOT_MULTIPLIER",
+            "streak_hot_multiplier",
+        ),
+    )
+    streak_legend_multiplier: float = Field(
+        1.5,
+        validation_alias=AliasChoices(
+            "STREAK_LEGEND_MULTIPLIER",
+            "streak_legend_multiplier",
+        ),
+    )
+
+    # Streak vault bonus (vault accrual multiplier based on play streak)
+    # Default OFF for safe rollout.
+    streak_vault_bonus_enabled: bool = Field(
+        False,
+        validation_alias=AliasChoices(
+            "STREAK_VAULT_BONUS_ENABLED",
+            "streak_vault_bonus_enabled",
+        ),
+    )
+
+    # Streak ticket bonus (Day4~5 ticket grants based on play streak)
+    # Default OFF for safe rollout.
+    streak_ticket_bonus_enabled: bool = Field(
+        False,
+        validation_alias=AliasChoices(
+            "STREAK_TICKET_BONUS_ENABLED",
+            "streak_ticket_bonus_enabled",
+        ),
+    )
+
+    # Time sync / NTP sanity
+    ntp_allowed_drift_ms: int = Field(
+        1000,
+        validation_alias=AliasChoices(
+            "NTP_ALLOWED_DRIFT_MS",
+            "ntp_allowed_drift_ms",
+        ),
+    )
+    ntp_check_timeout: float = Field(
+        1.5,
+        validation_alias=AliasChoices(
+            "NTP_CHECK_TIMEOUT",
+            "ntp_check_timeout",
+        ),
+    )
+    ntp_providers: list[str] = Field(
+        default_factory=lambda: [
+            "https://worldtimeapi.org/api/timezone/Asia/Seoul",
+            "https://timeapi.io/api/Time/current/zone?timeZone=Asia/Seoul",
+        ],
+        validation_alias=AliasChoices(
+            "NTP_PROVIDERS",
+            "ntp_providers",
+        ),
+    )
 
     # External ranking anti-abuse (deposit -> XP)
     external_ranking_deposit_step_amount: int = Field(

@@ -14,6 +14,7 @@ interface BackendDiceStatusResponse {
   readonly token_type: GameTokenType;
   readonly token_balance: number;
   readonly feature_type: string;
+  readonly event_active?: boolean;
 }
 
 export interface DiceStatusResponse {
@@ -21,6 +22,7 @@ export interface DiceStatusResponse {
   readonly remaining_plays: number;
   readonly token_type: GameTokenType;
   readonly token_balance: number;
+  readonly event_active?: boolean;
 }
 
 interface BackendDicePlayResponse {
@@ -58,6 +60,7 @@ export const getDiceStatus = async (): Promise<DiceStatusResponse> => {
       remaining_plays: data.remaining_plays,
       token_type: data.token_type,
       token_balance: data.token_balance,
+      event_active: data.event_active,
     };
   } catch (error) {
     if (axios.isAxiosError(error)) {

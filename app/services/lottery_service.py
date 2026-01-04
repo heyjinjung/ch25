@@ -140,6 +140,11 @@ class LotteryService:
         db.commit()
         db.refresh(log_entry)
 
+        # [Mission] Update progress (includes streak sync). Do this before Vault accrual so
+        # streak-based vault bonuses apply immediately on the same play.
+        from app.services.mission_service import MissionService
+        MissionService(db).update_progress(user_id, "PLAY_GAME")
+
         # Vault Phase 1: idempotent game accrual (safe-guarded by feature flag).
         total_earn = self.vault_service.record_game_play_earn_event(
             db,
@@ -193,10 +198,6 @@ class LotteryService:
             )
         if chosen.reward_amount > 0:
             self.season_pass_service.maybe_add_internal_win_stamp(db, user_id=user_id, now=today)
-
-        # [Mission] Update progress
-        from app.services.mission_service import MissionService
-        MissionService(db).update_progress(user_id, "PLAY_GAME")
         season_pass = None  # 게임 1회당 자동 스탬프 발급 제거
 
         return LotteryPlayResponse(

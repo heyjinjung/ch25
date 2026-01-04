@@ -11,6 +11,7 @@ import VaultAccrualModal from "../components/vault/VaultAccrualModal";
 import { useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
 import { useSound } from "../hooks/useSound";
+import DiceEventBanner from "../components/game/DiceEventBanner";
 
 const DicePage: React.FC = () => {
   const { data, isLoading, isError } = useDiceStatus();
@@ -112,6 +113,9 @@ const DicePage: React.FC = () => {
       <div className="relative space-y-4 max-w-lg mx-auto">
         {/* Compressed Layout Group */}
         <div className="flex flex-col gap-2">
+          {/* Event Banner */}
+          <DiceEventBanner active={!!data?.event_active} />
+
           {/* Top Ticket Info - Made smaller and integrated */}
           <div className="flex justify-center -mb-4 z-10">
             <div className="flex items-center gap-3 rounded-full border border-white/10 bg-black/60 px-5 py-1 backdrop-blur-md shadow-lg">

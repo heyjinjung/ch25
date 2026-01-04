@@ -43,3 +43,19 @@ def activate_config(config_id: int, db: Session = Depends(get_db)):
 def deactivate_config(config_id: int, db: Session = Depends(get_db)):
     config = AdminDiceService.toggle_active(db, config_id, False)
     return AdminDiceConfigResponse.from_orm(config)
+
+
+from app.schemas.admin_dice import DiceEventParams
+from app.api.deps import get_current_admin_id
+
+@router.get("/event-params", response_model=DiceEventParams)
+def get_event_params(db: Session = Depends(get_db)):
+    return AdminDiceService.get_event_params(db)
+
+@router.put("/event-params", response_model=DiceEventParams)
+def update_event_params(
+    params: DiceEventParams, 
+    db: Session = Depends(get_db),
+    admin_id: int = Depends(get_current_admin_id)
+):
+    return AdminDiceService.update_event_params(db, params, admin_id)

@@ -2,7 +2,7 @@
 import React from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
-import { Bell, Check, ChevronRight, Share2, Star, Trophy, Users } from "lucide-react";
+import { Bell, Check, ChevronRight, Share2, Star, Trophy, Users, Clock3 } from "lucide-react";
 
 import { useHaptic } from "../../hooks/useHaptic";
 import { useSound } from "../../hooks/useSound";
@@ -22,6 +22,10 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
   const { playToast } = useSound();
   const queryClient = useQueryClient();
   const [isVerifying, setIsVerifying] = React.useState(false);
+
+  const timeWindow = mission.start_time && mission.end_time
+    ? `${mission.start_time.slice(0, 5)} ~ ${mission.end_time.slice(0, 5)}`
+    : null;
 
   const isCompleted = progress.is_completed;
   const isClaimed = progress.is_claimed;
@@ -227,6 +231,20 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
               <div className="truncate text-[11px] font-semibold text-white/70">
                 {mission.description || "미션을 완료하고 보상을 받으세요"}
               </div>
+              {(timeWindow || mission.auto_claim) && (
+                <div className="mt-1 flex flex-wrap gap-2 text-[10px] font-bold text-white/70">
+                  {timeWindow && (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2 py-0.5">
+                      <Clock3 className="h-3 w-3" /> {timeWindow}
+                    </span>
+                  )}
+                  {mission.auto_claim && (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-figma-accent">
+                      Auto-Claim
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="shrink-0 text-right">

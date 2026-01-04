@@ -13,6 +13,7 @@ class DiceStatusResponse(BaseModel):
     token_type: str
     token_balance: int
     feature_type: FeatureType
+    event_active: bool = False
 
 
 class DiceResult(BaseModel):

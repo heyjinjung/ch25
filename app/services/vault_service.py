@@ -16,6 +16,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
+from app.models.game_wallet import GameTokenType
 from app.models.user import User
 from app.models.vault_earn_event import VaultEarnEvent
 from app.core.notifications import notify_vault_skip_error
@@ -40,6 +41,79 @@ class VaultService:
 
     GAME_EARN_DICE_WIN = 200
     GAME_EARN_DICE_LOSE = -50
+
+
+    @staticmethod
+    def _to_utc(now: datetime) -> datetime:
+        if now.tzinfo is None:
+            return now.replace(tzinfo=timezone.utc)
+        return now.astimezone(timezone.utc)
+
+    @classmethod
+    def _operational_date_kst(cls, now: datetime) -> datetime.date:
+        settings = get_settings()
+        reset_hour = int(getattr(settings, "streak_day_reset_hour_kst", 9) or 9)
+        tz = ZoneInfo(getattr(settings, "timezone", "Asia/Seoul"))
+
+        now_utc = cls._to_utc(now)
+        now_kst = now_utc.astimezone(tz)
+        if now_kst.hour < reset_hour:
+            return now_kst.date() - timedelta(days=1)
+        return now_kst.date()
+
+    @staticmethod
+    def _streak_vault_schedule(streak_days: int) -> tuple[float, int | None]:
+        """Return (multiplier, duration_hours).
+
+        duration_hours is None for "all day" (no time limit) or when no bonus.
+        """
+        if streak_days == 2:
+            return 1.2, 1
+        if streak_days == 3:
+            return 1.2, 4
+        if streak_days == 6:
+            return 1.5, 1
+        if streak_days >= 7:
+            return 2.0, None
+        return 1.0, None
+
+    def _streak_vault_bonus_multiplier(
+        self,
+        *,
+        user: User,
+        now: datetime,
+        eligible: bool,
+    ) -> float:
+        settings = get_settings()
+        if not bool(getattr(settings, "streak_vault_bonus_enabled", False)):
+            return 1.0
+        if not eligible:
+            return 1.0
+
+        streak_days = int(getattr(user, "play_streak", 0) or 0)
+        multiplier, duration_hours = self._streak_vault_schedule(streak_days)
+        if multiplier <= 1.0:
+            return 1.0
+
+        if duration_hours is None:
+            return float(multiplier)
+
+        now_utc = self._to_utc(now)
+        op_date = self._operational_date_kst(now_utc)
+
+        start_date = getattr(user, "streak_vault_bonus_date", None)
+        start_at = getattr(user, "streak_vault_bonus_started_at", None)
+        if start_date != op_date or start_at is None:
+            user.streak_vault_bonus_date = op_date
+            # Store naive UTC timestamp for compatibility with legacy datetime columns.
+            user.streak_vault_bonus_started_at = now_utc.replace(tzinfo=None)
+            return float(multiplier)
+
+        start_utc = start_at.replace(tzinfo=timezone.utc)
+        if now_utc <= start_utc + timedelta(hours=int(duration_hours)):
+            return float(multiplier)
+
+        return 1.0
 
 
     @classmethod
@@ -497,8 +571,65 @@ class VaultService:
         
         amount_before_multiplier = int(amount_before_multiplier)
 
-        multiplier = float(self.vault_accrual_multiplier(db, now_dt))
-        amount = max(int(round(amount_before_multiplier * multiplier)), amount_before_multiplier)
+        base_multiplier = float(self.vault_accrual_multiplier(db, now_dt))
+
+        # Streak vault bonus: applies ONLY to the base +200 accrual amount and only for base game modes.
+        eligible_for_streak_bonus = False
+        if game_type_upper == "DICE":
+            mode = str((payout_raw or {}).get("mode") or "NORMAL").upper()
+            eligible_for_streak_bonus = (
+                token_type == GameTokenType.DICE_TOKEN.value
+                and mode == "NORMAL"
+            )
+        elif game_type_upper == "ROULETTE":
+            eligible_for_streak_bonus = token_type == GameTokenType.ROULETTE_COIN.value
+        elif game_type_upper == "LOTTERY":
+            eligible_for_streak_bonus = token_type == GameTokenType.LOTTERY_TICKET.value
+
+        streak_multiplier = 1.0
+        if amount_before_multiplier == 200 and amount_before_multiplier > 0:
+            streak_multiplier = float(
+                self._streak_vault_bonus_multiplier(user=user, now=now_dt, eligible=eligible_for_streak_bonus)
+            )
+
+        total_multiplier = float(base_multiplier) * float(streak_multiplier)
+        amount = max(int(round(amount_before_multiplier * total_multiplier)), amount_before_multiplier)
+
+        # --- Caps Check (Phase 1 for Event) ---
+        # If event mode (or generally configured), check caps.
+        # We check "daily_gain" cap if defined in VaultProgram.
+        
+        caps = cfg_service.get_config_value(db, "caps", {}).get(game_type_upper)
+        if caps and isinstance(caps, dict):
+            daily_gain_cap = caps.get("daily_gain")
+            if daily_gain_cap is not None:
+                daily_gain_cap = int(daily_gain_cap)
+                # Calculate today's net gain so far
+                today_start = datetime(now_dt.year, now_dt.month, now_dt.day)
+                
+                # Sum amounts from VaultEarnEvent for today
+                current_daily_gain = db.execute(
+                    select(func.coalesce(func.sum(VaultEarnEvent.amount), 0)).where(
+                        VaultEarnEvent.user_id == user_id,
+                        VaultEarnEvent.created_at >= today_start,
+                        VaultEarnEvent.game_type == game_type_upper
+                    )
+                ).scalar() or 0
+                
+                # Check if adding 'amount' exceeds cap
+                # Note: amount can be negative (LOSE). Caps usually limit positive gain?
+                # The requirement says "1일 최대 순증 +20,000".
+                # If amount is positive, we clamp it. If negative, we let it pass (it reduces gain).
+                
+                if amount > 0:
+                    potential_total = current_daily_gain + amount
+                    if potential_total > daily_gain_cap:
+                        # Clamp amount
+                        allowed = max(0, daily_gain_cap - current_daily_gain)
+                        if allowed < amount:
+                            # Log clamping if significant?
+                            pass
+                        amount = allowed
 
         # Phase 1: clear expired locked first, then accrue.
         self._expire_locked_if_due(user, now_dt)
@@ -519,7 +650,9 @@ class VaultService:
             token_type=token_type,
             payout_raw_json={
                 **(payout_raw or {}),
-                "vault_accrual_multiplier": multiplier,
+                "vault_accrual_multiplier": base_multiplier,
+                "streak_vault_bonus_multiplier": streak_multiplier,
+                "vault_total_multiplier": total_multiplier,
                 "amount_before_multiplier": int(amount_before_multiplier),
             },
             created_at=now_dt,

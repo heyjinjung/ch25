@@ -2,6 +2,8 @@ from sqlalchemy.orm import Session
 import httpx
 import logging
 from app.core.config import get_settings
+from app.services.time_sync_service import TimeSyncService
+from app.core.metrics import notification_sent_total
 
 logger = logging.getLogger(__name__)
 
@@ -16,6 +18,14 @@ class NotificationService:
             logger.warning("Bot token or Chat ID missing. Skipping notification.")
             return
 
+        ok, drift_ms, provider, error = TimeSyncService(self.settings).check_clock_sync()
+        if not ok:
+            logger.error(
+                "NTP preflight failed; skip telegram send",
+                extra={"drift_ms": drift_ms, "provider": provider, "error": error},
+            )
+            return
+
         try:
             async with httpx.AsyncClient() as client:
                 payload = {
@@ -26,8 +36,12 @@ class NotificationService:
                 response = await client.post(f"{self.api_base}/sendMessage", json=payload)
                 if response.status_code != 200:
                     logger.error(f"Failed to send Telegram message: {response.text}")
+                    notification_sent_total.labels(channel="telegram", result="fail").inc()
+                else:
+                    notification_sent_total.labels(channel="telegram", result="success").inc()
         except Exception as e:
             logger.error(f"Error sending Telegram message: {e}")
+            notification_sent_total.labels(channel="telegram", result="fail").inc()
 
     def send_nudge_sync(self, chat_id: int, mission_title: str, remaining: int):
         """
@@ -35,6 +49,14 @@ class NotificationService:
         For simplicity/compatibility with synchronous MissionService, we might use httpx.post directly (sync).
         """
         if not self.bot_token or not chat_id:
+            return
+
+        ok, drift_ms, provider, error = TimeSyncService(self.settings).check_clock_sync()
+        if not ok:
+            logger.error(
+                "NTP preflight failed; skip nudge",
+                extra={"drift_ms": drift_ms, "provider": provider, "error": error},
+            )
             return
 
         import threading

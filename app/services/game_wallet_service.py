@@ -9,7 +9,7 @@ from app.models.trial_token_bucket import TrialTokenBucket
 
 
 class GameWalletService:
-    def _get_or_create_wallet(self, db: Session, user_id: int, token_type: GameTokenType) -> UserGameWallet:
+    def _get_or_create_wallet(self, db: Session, user_id: int, token_type: GameTokenType, *, auto_commit: bool = True) -> UserGameWallet:
         wallet = (
             db.query(UserGameWallet)
             .filter(UserGameWallet.user_id == user_id, UserGameWallet.token_type == token_type)
@@ -18,8 +18,11 @@ class GameWalletService:
         if wallet is None:
             wallet = UserGameWallet(user_id=user_id, token_type=token_type, balance=0)
             db.add(wallet)
-            db.commit()
-            db.refresh(wallet)
+            if auto_commit:
+                db.commit()
+                db.refresh(wallet)
+            else:
+                db.flush()
         return wallet
 
     def _log_ledger(self, db: Session, user_id: int, token_type: GameTokenType, delta: int, balance_after: int, reason: str | None = None, label: str | None = None, meta: dict | None = None, auto_commit: bool = True) -> None:
@@ -37,7 +40,7 @@ class GameWalletService:
             db.commit()
 
     def get_balance(self, db: Session, user_id: int, token_type: GameTokenType) -> int:
-        wallet = self._get_or_create_wallet(db, user_id, token_type)
+        wallet = self._get_or_create_wallet(db, user_id, token_type, auto_commit=True)
         return wallet.balance
 
     def _get_or_create_trial_bucket(self, db: Session, user_id: int, token_type: GameTokenType) -> TrialTokenBucket:
@@ -74,7 +77,7 @@ class GameWalletService:
             raise InvalidConfigError("INVALID_TOKEN_AMOUNT")
 
         settings = get_settings()
-        wallet = self._get_or_create_wallet(db, user_id, token_type)
+        wallet = self._get_or_create_wallet(db, user_id, token_type, auto_commit=auto_commit)
 
         # In test mode, auto-top-up to avoid blocking tests/demos.
         if settings.test_mode and wallet.balance < amount:
@@ -119,7 +122,7 @@ class GameWalletService:
     def grant_tokens(self, db: Session, user_id: int, token_type: GameTokenType, amount: int, reason: str | None = None, label: str | None = None, meta: dict | None = None, auto_commit: bool = True) -> int:
         if amount <= 0:
             raise InvalidConfigError("INVALID_TOKEN_AMOUNT")
-        wallet = self._get_or_create_wallet(db, user_id, token_type)
+        wallet = self._get_or_create_wallet(db, user_id, token_type, auto_commit=auto_commit)
         wallet.balance += amount
         db.add(wallet)
         if auto_commit:
@@ -132,7 +135,7 @@ class GameWalletService:
         """Admin-only token revocation; prevents negative balance."""
         if amount <= 0:
             raise InvalidConfigError("INVALID_TOKEN_AMOUNT")
-        wallet = self._get_or_create_wallet(db, user_id, token_type)
+        wallet = self._get_or_create_wallet(db, user_id, token_type, auto_commit=auto_commit)
         if wallet.balance < amount:
             raise NotEnoughTokensError("NOT_ENOUGH_TOKENS")
         wallet.balance -= amount

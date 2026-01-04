@@ -5,6 +5,12 @@ import { Edit2, Plus, Trash2, X } from "lucide-react";
 import { fetchMissions, createMission, updateMission, deleteMission, AdminMission, AdminMissionPayload } from "../api/adminMissionApi";
 import { useToast } from "../../components/common/ToastProvider";
 
+const toTimeInputValue = (value?: string | null) => {
+    if (!value) return "";
+    // API returns HH:MM or HH:MM:SS; HTML time input expects HH:MM.
+    return value.slice(0, 5);
+};
+
 const AdminMissionPage: React.FC = () => {
     const { addToast } = useToast();
     const queryClient = useQueryClient();
@@ -51,7 +57,7 @@ const AdminMissionPage: React.FC = () => {
         }
     });
 
-    const [form, setForm] = useState<AdminMissionPayload>({
+    const emptyForm: AdminMissionPayload = {
         title: "",
         description: "",
         category: "DAILY",
@@ -61,8 +67,13 @@ const AdminMissionPage: React.FC = () => {
         xp_reward: 0,
         logic_key: "",
         action_type: "PLAY_GAME",
+        start_time: "",
+        end_time: "",
+        auto_claim: false,
         is_active: true
-    });
+    };
+
+    const [form, setForm] = useState<AdminMissionPayload>(emptyForm);
 
     const handleEdit = (mission: AdminMission) => {
         setEditingId(mission.id);
@@ -76,15 +87,24 @@ const AdminMissionPage: React.FC = () => {
             xp_reward: mission.xp_reward,
             logic_key: mission.logic_key,
             action_type: mission.action_type,
+            start_time: toTimeInputValue(mission.start_time),
+            end_time: toTimeInputValue(mission.end_time),
+            auto_claim: mission.auto_claim ?? false,
             is_active: mission.is_active
         });
     };
 
     const handleSave = () => {
+        const payload = {
+            ...form,
+            start_time: form.start_time ? form.start_time : null,
+            end_time: form.end_time ? form.end_time : null,
+            auto_claim: Boolean(form.auto_claim)
+        };
         if (editingId) {
-            updateMutation.mutate({ id: editingId, payload: form });
+            updateMutation.mutate({ id: editingId, payload });
         } else {
-            createMutation.mutate(form);
+            createMutation.mutate(payload as AdminMissionPayload);
         }
     };
 
@@ -102,7 +122,7 @@ const AdminMissionPage: React.FC = () => {
 
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
                 <button
-                    onClick={() => { setIsAdding(true); setEditingId(null); }}
+                    onClick={() => { setIsAdding(true); setEditingId(null); setForm(emptyForm); }}
                     className="flex w-full items-center justify-center rounded-md bg-[#2D6B3B] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#91F402] hover:text-black sm:w-auto"
                 >
                     <Plus size={18} className="mr-2" /> 새 미션 추가
@@ -177,6 +197,24 @@ const AdminMissionPage: React.FC = () => {
                                 </select>
                             </div>
                             <div>
+                                <label className="block text-xs font-medium text-gray-400 mb-1 uppercase">시작 시간 (HH:MM)</label>
+                                <input
+                                    type="time"
+                                    className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
+                                    value={form.start_time || ""}
+                                    onChange={e => setForm({ ...form, start_time: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-gray-400 mb-1 uppercase">종료 시간 (HH:MM)</label>
+                                <input
+                                    type="time"
+                                    className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
+                                    value={form.end_time || ""}
+                                    onChange={e => setForm({ ...form, end_time: e.target.value })}
+                                />
+                            </div>
+                            <div>
                                 <label className="block text-xs font-medium text-gray-400 mb-1 uppercase">목표 수치</label>
                                 <input
                                     type="number"
@@ -207,6 +245,16 @@ const AdminMissionPage: React.FC = () => {
                                     onChange={e => setForm({ ...form, reward_amount: parseInt(e.target.value) })}
                                 />
                             </div>
+                            <div className="col-span-2 flex items-center gap-3 rounded-md border border-[#333333] bg-[#1A1A1A] px-3 py-2">
+                                <input
+                                    id="auto_claim"
+                                    type="checkbox"
+                                    className="h-4 w-4 accent-[#2D6B3B]"
+                                    checked={Boolean(form.auto_claim)}
+                                    onChange={e => setForm({ ...form, auto_claim: e.target.checked })}
+                                />
+                                <label htmlFor="auto_claim" className="text-sm text-gray-200">조건 달성 시 자동 수령</label>
+                            </div>
                         </div>
                         <div className="p-6 border-t border-[#333333] flex justify-end gap-3">
                             <button
@@ -236,6 +284,7 @@ const AdminMissionPage: React.FC = () => {
                                 <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-gray-400">ID / Logic Key</th>
                                 <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-gray-400">제목 / 카테고리</th>
                                 <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-gray-400">조건 (Action / Target)</th>
+                                <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-gray-400">시간 / 자동</th>
                                 <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-gray-400">보상</th>
                                 <th className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-400">상태</th>
                                 <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-400">관리</th>
@@ -260,6 +309,14 @@ const AdminMissionPage: React.FC = () => {
                                     <td className="px-4 py-3">
                                         <div className="text-sm text-gray-300">{mission.action_type}</div>
                                         <div className="text-xs text-gray-500">Target: <span className="text-white">{mission.target_value}</span></div>
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <div className="text-sm text-white">{mission.start_time && mission.end_time ? `${mission.start_time.slice(0,5)} ~ ${mission.end_time.slice(0,5)}` : "-"}</div>
+                                        {mission.auto_claim && (
+                                            <div className="mt-1 inline-flex rounded-full bg-emerald-900/40 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#91F402]">
+                                                Auto-Claim
+                                            </div>
+                                        )}
                                     </td>
                                     <td className="px-4 py-3">
                                         <div className="flex items-center gap-2">
