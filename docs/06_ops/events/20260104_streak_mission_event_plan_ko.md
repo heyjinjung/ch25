@@ -29,8 +29,9 @@ stateDiagram-v2
 
 ### 2.2 운영 사이클 (Operational Lifecycle)
 1.  **스트릭 정산**: 유저가 게임(Dice/Roulette/Lottery) 1회 완료 시 즉시 스트릭 정산 로직 실행.
-2.  **보너스 활성화**: 3일/7일 달성 시점부터 즉시 모든 미션 보상에 배율 적용.
-3.  **유지 독려**: 미접속 유저에게 리셋 방지 넛지(Telegram Push) 발송.
+2.  **보너스 활성화**: (플래그 ON 시) 스트릭 구간에 따라 **금고 기본 적립(+200)**에 시간제 배율 적용.
+3.  **Day4~5 티켓 지급**: (플래그 ON 시) 운영일(09:00 KST) 첫 플레이 1회에 한해 티켓 지급(멱등).
+4.  **유지 독려**: 미접속 유저에게 리셋 방지 넛지(Telegram Push) 발송.
 
 ---
 
@@ -91,11 +92,16 @@ def sync_play_streak(self, user: User, now_kst: datetime):
     - 기본값 OFF (안전 롤아웃)
     - 로컬/테스트에서만 켜고 싶으면 `.env` 또는 실행 환경변수에 설정
     - 운영에서는 배포 환경변수(또는 컨테이너 env)로 주입
+- 금고 적립(기본 200원) 시간제 배율 활성화: `STREAK_VAULT_BONUS_ENABLED=true`
+    - 기본값 OFF (안전 롤아웃)
+    - 배율 적용은 “기본 게임 금고 적립(+200)”에만 한정
+    - 제외: 다이스 `mode != NORMAL`, 룰렛 `GOLD_KEY`/`DIAMOND_KEY`/`TRIAL_TOKEN`
 
 **적용 제외(중요)**
 - 다이스 고액(병렬 개발), 골드룰렛, 다이아룰렛, 체험 룰렛에는 적용하지 않음
     - 구현 기준(현 코드): `ROULETTE`에서 `GOLD_KEY`/`DIAMOND_KEY`/`TRIAL_TOKEN` 사용 시 제외
     - `DICE`는 `mode != NORMAL` 인 경우 제외
+        - 주사위 피크타임 이벤트는 `mode="EVENT"`로 내려가므로 스트릭 금고 배율 대상이 아님
 
 ### 3.3 기술적 예외 처리 (Edge Case Handling)
 1.  **KST 00:00:00 수렴 문제 (Boundary Clock)**:
@@ -173,7 +179,7 @@ CREATE INDEX `idx_user_streak` ON `user` (`play_streak`, `last_play_date`);
 | **정상** | 매일 1회 이상 게임 플레이 | `play_streak`가 매일 1씩 증가 | P0 |
 | **초기화** | 이틀 이상 간격을 두고 플레이 | `play_streak`가 1로 강제 리셋 | P0 |
 | **경계** | 2일 달성 후 3일차 플레이 시점 | 등급이 `NORMAL`에서 `HOT`으로 즉시 변경 | P0 |
-| **배율** | 스트릭 보너스 수량 검증 | 보상 10개 x 1.2배 = 12개 정상 지급 확인 | P1 |
+| **배율** | 금고 기본 적립(+200) 배율 검증 | 배율 창에서 +200이 1.2x/1.5x/2.0x로 적립되는지 확인 | P1 |
 | **시간** | 23:59 vs 00:01 플레이 | 서버 시각(KST) 기준 날짜 구분 정확성 검증 | P1 |
 | **예외** | 다중 지갑/멀티 로그인 | Row Lock에 의한 데이터 레이스 방지 여부 | P1 |
 
@@ -203,15 +209,24 @@ CREATE INDEX `idx_user_streak` ON `user` (`play_streak`, `last_play_date`);
 - [x] Backend 설정: 스트릭 활성화/리셋 시각(기본 KST 09:00)/HOT·LEGEND 임계치/배율 값 구성
 - [x] Backend 로직: 운영일(09:00 KST 기준) 기반 스트릭 정산 및 동시성 제어(비관적 락)
 - [x] Backend 보상(롤백): 미션 클레임 보상은 기본값으로 유지(스트릭 배율 미적용)
+- [x] Backend 보상(구현): 금고 기본 적립(+200) 시간제 배율 (플래그 `STREAK_VAULT_BONUS_ENABLED`)
+- [x] Backend 보상(구현): Day4~5 운영일 첫 플레이 1회 티켓 지급 (플래그 `STREAK_TICKET_BONUS_ENABLED`)
+- [x] 트랜잭션 안전성: `auto_commit=False` 흐름에서 지갑 생성 시 내부 `commit()` 제거(플러시 기반)
 - [x] Backend API: `GET /api/mission/` 응답에 `streak_info` 포함
 - [x] Frontend: `GET /api/mission/` 응답(legacy 배열/신규 객체) 모두 파싱 + `streakInfo` 상태 저장
-- [x] 테스트: pytest(골든아워 + 스트릭) 및 vitest(MissionStore) 통과
+- [x] 테스트: pytest(스트릭 금고 배율/Day4~5 티켓) 및 vitest(MissionStore) 통과
 
 ### 10.2 남은 작업
-- [ ] 보상안 재설계: 스트릭 보상은 “시간제 버프/티켓 지급/금고 누적(업그레이드율) 가중” 중 택1~혼합으로 확정
-- [ ] Game API: Dice/Roulette/Lottery 플레이 결과에 `new_streak_count` 포함(문서의 Data Flow와 일치)
+- [ ] Game API: `POST /api/dice/play`, `POST /api/roulette/play`, `POST /api/lottery/play` 응답에 `new_streak_count`(또는 `streak_info`) 포함
+    - 목적: 게임 1회 플레이 직후 프론트가 스트릭 상태를 즉시 갱신(추가 `GET /api/mission/` 호출 없이도 동기화)
+    - 구현 방향(권장): 게임 서비스(`DiceService`/`RouletteService`/`LotteryService`)가 내부에서 `MissionService.sync_play_streak(...)` 결과를 받아 응답 DTO에 포함
 - [ ] 운영: 리셋 방지 넛지(Telegram Push) 발송 로직/스케줄링
-- [ ] 관측성: `streak.promote`/`streak.reset`/`bonus.claim` 이벤트 로깅 및 대시보드 구현
+    - 대상(예): `last_play_date`가 “어제(운영일 기준)”인 유저 중, 오늘 아직 첫 플레이가 없는 유저
+    - 스케줄(예): 매일 KST 08:30~09:00 사이 1회(리셋 직전), 유저당 1일 1회 제한
+    - 안전장치(예): 수신 동의/차단 반영, 실패 재시도/레이트리밋, 발송 로그 적재
+- [ ] 관측성: 스트릭/보너스 관련 이벤트 로깅 및 대시보드 구현
+    - 이벤트(예): `streak.promote`, `streak.reset`, `streak.ticket_bonus_grant`, `streak.vault_bonus_applied`
+    - 대시보드(예): 일별 promote/reset 추이, Day4~5 티켓 지급 수/비용, 금고 배율 적용 플레이 수, 제외 사유(모드/티켓타입) 비율
 
 ---
 

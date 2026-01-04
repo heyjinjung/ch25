@@ -43,3 +43,15 @@
 - Confirmed backward compatibility for existing Season Pass reward logs (no duplicate payouts after config changes).
 - Background tasks and Nginx proxy status verified after backend restart.
 
+## 6. Streak Event: Vault Multiplier + Day4~5 Tickets
+- **Objective**: Apply streak incentives without changing mission claim payouts.
+- **Feature Flags**:
+  - `STREAK_VAULT_BONUS_ENABLED` (default OFF): Enables time-window multipliers on *base vault accrual (+200)* only.
+  - `STREAK_TICKET_BONUS_ENABLED` (default OFF): Grants Day4~5 tickets once per operational day (09:00 KST) on first play.
+- **Backend Changes**:
+  - Implemented Day4~5 ticket grants: `LOTTERY_TICKET` x1 + `ROULETTE_COIN` x2 (idempotent per operational day).
+  - Ensured atomicity: removed internal `commit()` side-effects when `auto_commit=False` in wallet creation (uses flush instead).
+  - Enforced exclusions: vault streak bonus applies only to eligible base games (e.g., Dice `mode==NORMAL`, excludes high-tier roulette keys / trial token).
+- **Verification**:
+  - Pytest added/updated for Day4/Day5 grant, idempotency, and Day6 no-grant; vault bonus regression covered.
+

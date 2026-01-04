@@ -142,6 +142,12 @@ class DiceService:
 
         if is_event_active:
             mode = "EVENT"
+            # Reload config for event logic
+            from app.services.vault2_service import Vault2Service
+            vault2_service = Vault2Service()
+            dice_event_probs = vault2_service.get_config_value(db, "probability", {}).get("DICE", {})
+            game_earn_config = vault2_service.get_config_value(db, "game_earn_config", {})
+
             # Event Mode: Weighted RNG
             p_win = dice_event_probs.get("p_win", 0.35)
             p_draw = dice_event_probs.get("p_draw", 0.10)

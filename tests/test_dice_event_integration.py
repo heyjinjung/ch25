@@ -97,7 +97,9 @@ def test_dice_play_event_mode_win(client: TestClient, session_factory):
         assert log.reward_amount == 7777
         
         # VaultEarnEvent check 
-        earn = session.execute(select(VaultEarnEvent).where(VaultEarnEvent.game_log_id==log.id)).scalar_one()
+        # earn_event_id = "GAME:DICE:{log.id}" as per VaultService logic
+        expected_earn_id = f"GAME:DICE:{log.id}"
+        earn = session.execute(select(VaultEarnEvent).where(VaultEarnEvent.earn_event_id==expected_earn_id)).scalar_one()
         assert earn.amount == 7777
         session.close()
 

@@ -160,6 +160,10 @@
 시스템 레버: 시즌패스/스탬프 로그(이미 있음) + 미션 누적 
 *   **기술 상세 설계**: [20260104_streak_mission_event_plan_ko.md](file:///c:/Users/task2/git/ch25/docs/06_ops/events/20260104_streak_mission_event_plan_ko.md)
 
+운영 메모(구현 반영): Day4~5는 운영일(09:00 KST) 첫 플레이 1회에 한해 `LOTTERY_TICKET` 1장 + `ROULETTE_COIN` 2장 지급. 활성화는 `STREAK_TICKET_BONUS_ENABLED=true`.
+
+운영 메모(구현 반영): 금고 적립(기본 +200원) 시간제 배율 보너스는 `STREAK_VAULT_BONUS_ENABLED=true`로 활성화(기본 OFF).
+
 
 
 ### 4) 선택형 보상 이벤트 (택1)
