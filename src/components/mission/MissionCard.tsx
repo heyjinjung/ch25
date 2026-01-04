@@ -95,16 +95,20 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
       }
       if (mission.action_type === "SHARE") {
         const appUrl = "https://t.me/jm956_bot/ccjm";
-        const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(appUrl)}&text=${encodeURIComponent("CCJM 주간 미션 참여! 여기로 들어오면 바로 시작돼요")}`;
+        const shareText = "CCJM 주간 미션 참여! 여기로 들어오면 바로 시작돼요";
+        const shareUrl = `https://t.me/share/url?${new URLSearchParams({ url: appUrl, text: shareText }).toString()}`;
 
         const tg = window.Telegram?.WebApp;
+        let opened = false;
         if (typeof tg?.openTelegramLink === "function") {
-          try { tg.openTelegramLink(shareUrl); } catch { /* ignore */ }
+          try { tg.openTelegramLink(shareUrl); opened = true; } catch { /* ignore */ }
         }
-        if (typeof tg?.openLink === "function") {
-          try { tg.openLink(shareUrl); } catch { /* ignore */ }
+        if (!opened && typeof tg?.openLink === "function") {
+          try { tg.openLink(shareUrl); opened = true; } catch { /* ignore */ }
         }
-        window.open(shareUrl, "_blank", "noopener,noreferrer");
+        if (!opened) {
+          window.open(shareUrl, "_blank", "noopener,noreferrer");
+        }
 
         // Record action immediately (Trust Approach)
         await recordViralAction({ action_type: "SHARE", mission_id: mission.id });
@@ -125,7 +129,8 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
         if (window.Telegram?.WebApp?.shareToStory) {
           const appUrl = "https://t.me/jm956_bot/ccjm";
           const storyMediaUrl = `${window.location.origin}/assets/story/ccjm_story_1080x1920.mp4`;
-          const fallbackShareUrl = `https://t.me/share/url?url=${encodeURIComponent(appUrl)}&text=${encodeURIComponent("CCJM 오픈 기념 미션! 같이 해보자")}`;
+          const fallbackShareText = "CCJM 오픈 기념 미션! 같이 해보자";
+          const fallbackShareUrl = `https://t.me/share/url?${new URLSearchParams({ url: appUrl, text: fallbackShareText }).toString()}`;
 
           if (!window.location.origin.startsWith("https://")) {
             addToast("스토리 공유는 https 환경에서만 안정적으로 동작합니다.", "error");
@@ -143,8 +148,15 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
             useMissionStore.getState().fetchMissions();
           } catch {
             const tg = window.Telegram?.WebApp;
-            if (tg?.openTelegramLink) {
-              tg.openTelegramLink(fallbackShareUrl);
+            let opened = false;
+            if (typeof tg?.openTelegramLink === "function") {
+              try { tg.openTelegramLink(fallbackShareUrl); opened = true; } catch { /* ignore */ }
+            }
+            if (!opened && typeof tg?.openLink === "function") {
+              try { tg.openLink(fallbackShareUrl); opened = true; } catch { /* ignore */ }
+            }
+            if (!opened) {
+              window.open(fallbackShareUrl, "_blank", "noopener,noreferrer");
             }
             addToast("스토리 공유에 실패했습니다. 일반 공유로 대체합니다.", "error");
           }
@@ -155,16 +167,20 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
       }
       if (mission.action_type === "SHARE_WALLET") {
         const appUrl = "https://t.me/jm956_bot/ccjm";
-        const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(appUrl)}&text=${encodeURIComponent("내 지갑 💎 CCJM에서 함께 확인해봐!")}`;
+        const shareText = "내 지갑 💎 CCJM에서 함께 확인해봐!";
+        const shareUrl = `https://t.me/share/url?${new URLSearchParams({ url: appUrl, text: shareText }).toString()}`;
 
         const tg = window.Telegram?.WebApp;
+        let opened = false;
         if (typeof tg?.openTelegramLink === "function") {
-          try { tg.openTelegramLink(shareUrl); } catch { /* ignore */ }
+          try { tg.openTelegramLink(shareUrl); opened = true; } catch { /* ignore */ }
         }
-        if (typeof tg?.openLink === "function") {
-          try { tg.openLink(shareUrl); } catch { /* ignore */ }
+        if (!opened && typeof tg?.openLink === "function") {
+          try { tg.openLink(shareUrl); opened = true; } catch { /* ignore */ }
         }
-        window.open(shareUrl, "_blank", "noopener,noreferrer");
+        if (!opened) {
+          window.open(shareUrl, "_blank", "noopener,noreferrer");
+        }
 
         // Record action immediately (Trust Approach)
         await recordViralAction({ action_type: "SHARE_WALLET", mission_id: mission.id });

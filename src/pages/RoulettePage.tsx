@@ -444,8 +444,8 @@ const RoulettePage: React.FC = () => {
   return (
     <FeatureGate feature="ROULETTE">
       <GamePageShell title="럭셔리 CC룰렛" px="p-2 sm:p-4">
-        <div className="mb-3 w-full overflow-x-auto">
-          <div className="mx-auto inline-flex min-w-max rounded-full bg-white/5 p-1 backdrop-blur-md">
+        <div className="mb-2 flex justify-center">
+          <div className="inline-flex flex-wrap justify-center gap-2 rounded-2xl bg-white/5 p-2 backdrop-blur-md">
             {TABS.map((tab) => (
               <button
                 key={tab.type}
@@ -453,21 +453,32 @@ const RoulettePage: React.FC = () => {
                   if (!isSpinning) setActiveTab(tab.type);
                 }}
                 className={clsx(
-                  "group flex-none flex items-center gap-2 rounded-full px-3 py-2 text-sm font-bold transition-all duration-300 sm:px-4",
+                  "group flex items-center justify-center rounded-xl px-3 py-2 text-sm font-bold transition-all duration-300",
                   activeTab === tab.type
                     ? tab.activeColors
                     : "text-white/40 hover:bg-white/5 hover:text-white"
                 )}
+                aria-label={tab.label.replace("\n", " ")}
+                title={tab.label.replace("\n", " ")}
               >
                 {tab.iconImg ? (
-                  <img src={tab.iconImg} alt="" className={clsx("h-5 w-5 object-contain transition-transform duration-300", activeTab === tab.type && "scale-110")} />
+                  <img
+                    src={tab.iconImg}
+                    alt=""
+                    className={clsx(
+                      "h-6 w-6 object-contain transition-transform duration-300",
+                      activeTab === tab.type && "scale-110"
+                    )}
+                  />
                 ) : (
                   <span className={clsx("text-lg transition-transform duration-300", activeTab === tab.type && "scale-110")}>{tab.icon}</span>
                 )}
-                <span className="min-w-[3.25rem] whitespace-pre text-center text-xs leading-tight">{tab.label}</span>
               </button>
             ))}
           </div>
+        </div>
+        <div className="mb-3 text-center text-sm font-black text-white/80">
+          {TABS.find((t) => t.type === activeTab)?.label.replace("\n", " ")}
         </div>
         {content}
       </GamePageShell>

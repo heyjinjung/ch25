@@ -90,25 +90,31 @@ const NewUserWelcomePage: React.FC = () => {
   const handleShareWallet = async (missionId: number) => {
     try {
       const appUrl = "https://t.me/jm956_bot/ccjm";
-      const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(appUrl)}&text=${encodeURIComponent("내 지갑 💎 CCJM에서 함께 확인해봐!")}`;
+      const shareText = "내 지갑 💎 CCJM에서 함께 확인해봐!";
+      const shareUrl = `https://t.me/share/url?${new URLSearchParams({ url: appUrl, text: shareText }).toString()}`;
 
       const tg = window.Telegram?.WebApp;
+      let opened = false;
       if (typeof tg?.openTelegramLink === "function") {
         try {
           tg.openTelegramLink(shareUrl);
+          opened = true;
         } catch {
           // Fall through
         }
       }
-      if (typeof tg?.openLink === "function") {
+      if (!opened && typeof tg?.openLink === "function") {
         try {
           tg.openLink(shareUrl);
+          opened = true;
         } catch {
           // Fall through
         }
       }
       // Last resort (browser / restricted webview)
-      window.open(shareUrl, "_blank", "noopener,noreferrer");
+      if (!opened) {
+        window.open(shareUrl, "_blank", "noopener,noreferrer");
+      }
 
       await recordViralAction({ action_type: "SHARE_WALLET", mission_id: missionId });
       const cacheKey = `mission_verified_${missionId}`;
