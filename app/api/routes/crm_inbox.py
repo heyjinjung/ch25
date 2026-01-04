@@ -38,7 +38,8 @@ def get_my_inbox(
     ).join(
         AdminMessageInbox, AdminMessage.id == AdminMessageInbox.message_id
     ).filter(
-        AdminMessageInbox.user_id == current_user.id
+        AdminMessageInbox.user_id == current_user.id,
+        AdminMessage.is_deleted == False  # noqa: E712
     ).order_by(
         AdminMessage.created_at.desc()
     ).all()

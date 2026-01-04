@@ -1,8 +1,8 @@
 
 import React, { useState } from "react";
-import { Send, Clock, Users, Tag, Target } from "lucide-react";
+import { Send, Clock, Users, Tag, Target, Trash2 } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { fetchMessages, sendMessage, SendMessagePayload, updateMessage } from "../api/adminMessageApi";
+import { fetchMessages, sendMessage, SendMessagePayload, updateMessage, deleteMessage } from "../api/adminMessageApi";
 import { useToast } from "../../components/common/ToastProvider";
 
 const MessageCenterPage: React.FC = () => {
@@ -65,6 +65,17 @@ const MessageCenterPage: React.FC = () => {
         },
     });
 
+    const deleteMutation = useMutation({
+        mutationFn: (messageId: number) => deleteMessage(messageId),
+        onSuccess: () => {
+            addToast("메시지가 회수(삭제)되었습니다.", "success");
+            queryClient.invalidateQueries({ queryKey: ["admin", "messages"] });
+        },
+        onError: (err: any) => {
+            addToast(err.response?.data?.detail || "회수 실패", "error");
+        },
+    });
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!form.title || !form.content) {
@@ -88,6 +99,12 @@ const MessageCenterPage: React.FC = () => {
             channels: msg.channels || ["INBOX"],
         });
         addToast("편집 모드로 전환되었습니다.", "info");
+    };
+
+    const handleDelete = (id: number) => {
+        if (window.confirm("정말로 이 메시지를 회수하시겠습니까?\n이미 발송된 메시지라도 사용자의 수신함에서 사라지게 됩니다.")) {
+            deleteMutation.mutate(id);
+        }
     };
 
     const cancelEdit = () => {
@@ -280,6 +297,14 @@ const MessageCenterPage: React.FC = () => {
                                                 className="text-xs text-gray-300 hover:text-[#91F402] transition-colors"
                                             >
                                                 편집
+                                            </button>
+                                            <span className="text-[#333333]">|</span>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleDelete(msg.id)}
+                                                className="text-xs text-red-400 hover:text-red-300 transition-colors flex items-center gap-1"
+                                            >
+                                                <Trash2 size={12} /> 회수
                                             </button>
                                         </td>
                                     </tr>

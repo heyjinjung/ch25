@@ -41,3 +41,8 @@ export async function updateMessage(messageId: number, payload: UpdateMessagePay
     const { data } = await adminApi.put<AdminMessage>(`/admin/api/crm/messages/${messageId}`, payload);
     return data;
 }
+
+export async function deleteMessage(messageId: number) {
+    const { data } = await adminApi.delete<{ status: string; message_id: number }>(`/admin/api/crm/messages/${messageId}`);
+    return data;
+}

@@ -7,8 +7,14 @@ import MissionCard from "../components/mission/MissionCard";
 import { useHaptic } from "../hooks/useHaptic";
 import { MissionData, useMissionStore } from "../stores/missionStore";
 
-const TABS = ["DAILY", "WEEKLY", "SPECIAL", "NEW_USER"] as const;
+const TABS = ["DAILY", "WEEKLY", "NEW_USER"] as const;
 type MissionTab = (typeof TABS)[number];
+
+const TAB_LABELS: Record<MissionTab, string> = {
+  DAILY: "일일 미션",
+  WEEKLY: "주간 미션",
+  NEW_USER: "신규 유저",
+};
 
 const MissionPage: React.FC = () => {
   const { missions, fetchMissions, isLoading } = useMissionStore();
@@ -33,8 +39,6 @@ const MissionPage: React.FC = () => {
         return <Target size={14} />;
       case "WEEKLY":
         return <Trophy size={14} />;
-      case "SPECIAL":
-        return <Sparkles size={14} />;
       case "NEW_USER":
         return <Sparkles size={14} />;
       default:
@@ -65,7 +69,7 @@ const MissionPage: React.FC = () => {
               >
                 <span className="inline-flex items-center justify-center gap-1.5">
                   {tabIcon(tab)}
-                  {tab.charAt(0) + tab.slice(1).toLowerCase()}
+                  {TAB_LABELS[tab]}
                   {hasClaimable && <span className="h-1.5 w-1.5 rounded-full bg-[var(--figma-accent-green)]" />}
                 </span>
               </button>

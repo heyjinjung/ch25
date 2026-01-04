@@ -261,7 +261,7 @@ const TicketZeroPanel: React.FC<Props> = ({ tokenType, onClaimSuccess }) => {
           </div>
         )}
 
-        <div className="mt-3 flex flex-wrap gap-2">
+        <div className="mt-3 grid grid-cols-1 gap-2">
           <button
             type="button"
             disabled={claimMutation.isPending}
@@ -272,7 +272,7 @@ const TicketZeroPanel: React.FC<Props> = ({ tokenType, onClaimSuccess }) => {
               }
               claimMutation.mutate();
             }}
-            className="rounded-xl border border-black/15 bg-cc-lime px-4 py-2 text-sm font-extrabold text-black disabled:cursor-not-allowed disabled:bg-cc-lime/40 disabled:text-black/45"
+            className="h-10 w-full rounded-xl border border-black/15 bg-cc-lime px-3 text-sm font-extrabold text-black disabled:cursor-not-allowed disabled:bg-cc-lime/40 disabled:text-black/45"
           >
             {claimMutation.isPending ? "지급 중..." : "체험 티켓 3장 받기"}
           </button>
@@ -281,7 +281,7 @@ const TicketZeroPanel: React.FC<Props> = ({ tokenType, onClaimSuccess }) => {
               href={config.primaryCta.url}
               target="_blank"
               rel="noreferrer"
-              className="rounded-xl border border-white/15 bg-white/8 px-4 py-2 text-sm font-extrabold text-white/90 hover:bg-white/12"
+              className="flex h-10 w-full items-center justify-center rounded-xl border border-white/15 bg-white/8 px-3 text-sm font-extrabold text-white/90 hover:bg-white/12"
             >
               {config.primaryCta.label}
             </a>
@@ -292,7 +292,7 @@ const TicketZeroPanel: React.FC<Props> = ({ tokenType, onClaimSuccess }) => {
               href={config.secondaryCta.url}
               target="_blank"
               rel="noreferrer"
-              className="rounded-xl border border-white/15 bg-white/6 px-4 py-2 text-sm font-bold text-white/80 hover:bg-white/10"
+              className="flex h-10 w-full items-center justify-center rounded-xl border border-white/15 bg-white/6 px-3 text-sm font-extrabold text-white/80 hover:bg-white/10"
             >
               {config.secondaryCta.label}
             </a>

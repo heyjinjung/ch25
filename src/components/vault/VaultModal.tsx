@@ -55,7 +55,7 @@ const VaultModal: React.FC<Props> = ({ open, onClose }) => {
             href={PRIMARY_URL}
             target="_blank"
             rel="noreferrer"
-            className="flex items-center justify-center p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-cc-lime text-black font-black text-xs sm:text-sm hover:scale-105 active:scale-95 transition-transform"
+            className="flex h-11 items-center justify-center rounded-xl sm:rounded-2xl bg-cc-lime px-4 text-black font-black text-xs sm:text-sm"
           >
             {copy.primary_cta_label}
           </a>
@@ -63,7 +63,7 @@ const VaultModal: React.FC<Props> = ({ open, onClose }) => {
             href={SECONDARY_URL}
             target="_blank"
             rel="noreferrer"
-            className="flex items-center justify-center p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white/10 text-white font-black text-xs sm:text-sm border border-white/10 hover:bg-white/20 active:scale-95 transition-all"
+            className="flex h-11 items-center justify-center rounded-xl sm:rounded-2xl bg-white/10 px-4 text-white font-black text-xs sm:text-sm border border-white/10 hover:bg-white/20"
           >
             {copy.secondary_cta_label}
           </a>

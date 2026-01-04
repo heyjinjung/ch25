@@ -5,7 +5,7 @@ export interface Mission {
     id: number;
     title: string;
     description?: string;
-    category: 'DAILY' | 'WEEKLY' | 'SPECIAL';
+    category: 'DAILY' | 'WEEKLY' | 'NEW_USER';
     target_value: number;
     reward_type: string;
     reward_amount: number;

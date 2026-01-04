@@ -19,7 +19,7 @@ const EventDashboardPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[calc(100vh-80px)] bg-[#242714] relative overflow-hidden flex flex-col">
+    <div className="min-h-[calc(100vh-80px)] bg-black relative overflow-hidden flex flex-col">
       {/* Background Effects - Matching SeasonPass style */}
       <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-emerald-600/10 to-transparent pointer-events-none" />
       <div className="absolute top-[-20%] right-[-10%] w-80 h-80 bg-emerald-500/10 rounded-full blur-[100px] pointer-events-none" />

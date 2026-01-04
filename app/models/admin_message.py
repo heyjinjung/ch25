@@ -21,6 +21,7 @@ class AdminMessage(Base):
 
     title = Column(String(255), nullable=False)
     content = Column(Text, nullable=False)
+    is_deleted = Column(Boolean, default=False, nullable=False)
 
     # Targeting meta info (for history display)
     # e.g. type="ALL", type="SEGMENT", value="WHALE"

@@ -301,14 +301,43 @@ def update_message(
     return msg
 
 
+@router.delete("/messages/{message_id}")
+def delete_message(
+    message_id: int,
+    db: Session = Depends(get_db),
+    admin_id: int = Depends(get_current_admin_id),
+):
+    """Callback (Delete) an already-sent message for ALL users.
+    
+    Sets is_deleted=True, so it disappears from user inboxes.
+    Admin history still shows it (with deleted status).
+    """
+    _ = admin_id
+    msg = db.query(AdminMessage).filter(AdminMessage.id == message_id).first()
+    if not msg:
+        raise HTTPException(status_code=404, detail="MESSAGE_NOT_FOUND")
+
+    msg.is_deleted = True
+    db.commit()
+    
+    return {"status": "ok", "message_id": message_id}
+
+
 # Helper for fan-out
 def fan_out_message(
     message_id: int,
     target_type: str,
     target_value: Optional[str],
     resolved_user_ids: Optional[List[int]] = None,
+    db: Session = None,
 ):
-    db = SessionLocal()
+    # If db is provided (e.g. from test or existing session), use it.
+    # Otherwise create a new one.
+    local_db_created = False
+    if db is None:
+        db = SessionLocal()
+        local_db_created = True
+        
     try:
         # 1. Select Users
         target_user_ids: List[int] = []
@@ -357,4 +386,5 @@ def fan_out_message(
                 msg.recipient_count = len(inbox_items)
             db.commit()
     finally:
-        db.close()
+        if local_db_created:
+            db.close()
