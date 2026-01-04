@@ -1,7 +1,7 @@
 // src/admin/api/adminRouletteApi.ts
 import { adminApi } from "./httpClient";
 
-export type RouletteTicketType = "ROULETTE_COIN" | "GOLD_KEY" | "DIAMOND_KEY";
+export type RouletteTicketType = "ROULETTE_COIN" | "TRIAL_TOKEN" | "GOLD_KEY" | "DIAMOND_KEY";
 
 export interface AdminRouletteSegmentPayload {
   id?: number;

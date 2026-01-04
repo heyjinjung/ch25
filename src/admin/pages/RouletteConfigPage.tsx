@@ -26,7 +26,7 @@ const segmentSchema = z.object({
 const rouletteSchema = z
   .object({
     name: z.string().min(1, "이름을 입력하세요"),
-    ticket_type: z.enum(["ROULETTE_COIN", "GOLD_KEY", "DIAMOND_KEY"]).default("ROULETTE_COIN"),
+    ticket_type: z.enum(["ROULETTE_COIN", "TRIAL_TOKEN", "GOLD_KEY", "DIAMOND_KEY"]).default("ROULETTE_COIN"),
     is_active: z.boolean().default(false),
     max_daily_spins: z.number().int().nonnegative("0이면 무제한"),
     segments: z.array(segmentSchema).length(6, "세그먼트는 6개가 필요합니다"),
@@ -367,6 +367,7 @@ const RouletteConfigPage: React.FC = () => {
                     {...form.register("ticket_type")}
                   >
                     <option value="ROULETTE_COIN">ROULETTE_COIN</option>
+                    <option value="TRIAL_TOKEN">TRIAL_TOKEN</option>
                     <option value="GOLD_KEY">GOLD_KEY</option>
                     <option value="DIAMOND_KEY">DIAMOND_KEY</option>
                   </select>

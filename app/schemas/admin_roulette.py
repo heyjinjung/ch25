@@ -12,6 +12,7 @@ from app.schemas.base import KstBaseModel as BaseModel
 
 ALLOWED_ROULETTE_TICKET_TYPES = {
     GameTokenType.ROULETTE_COIN.value,
+    GameTokenType.TRIAL_TOKEN.value,
     GameTokenType.GOLD_KEY.value,
     GameTokenType.DIAMOND_KEY.value,
 }

@@ -55,3 +55,29 @@ def test_admin_roulette_update_replaces_segments(client: TestClient, session_fac
         for s in data["segments"]
     }
     assert indexes == set(range(6))
+
+
+def test_admin_roulette_create_accepts_trial_token(client: TestClient) -> None:
+    payload = {
+        "name": "TRIAL_CFG",
+        "ticket_type": "TRIAL_TOKEN",
+        "is_active": True,
+        "max_daily_spins": 0,
+        "segments": [
+            {
+                "index": i,
+                "label": f"T{i}",
+                "weight": 1,
+                "reward_type": "DIAMOND",
+                "reward_value": 1,
+                "is_jackpot": False,
+            }
+            for i in range(6)
+        ],
+    }
+
+    resp = client.post("/admin/api/roulette-config/", json=payload)
+    assert resp.status_code == 201, resp.text
+    data = resp.json()
+    assert data["ticket_type"] == "TRIAL_TOKEN"
+    assert len(data["segments"]) == 6
