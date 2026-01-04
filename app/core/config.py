@@ -129,6 +129,16 @@ class Settings(BaseSettings):
         ),
     )
 
+    # Streak milestone rewards (Day3/Day7 auto grants based on play streak)
+    # Default OFF for safe rollout.
+    streak_milestone_rewards_enabled: bool = Field(
+        False,
+        validation_alias=AliasChoices(
+            "STREAK_MILESTONE_REWARDS_ENABLED",
+            "streak_milestone_rewards_enabled",
+        ),
+    )
+
     # Time sync / NTP sanity
     ntp_allowed_drift_ms: int = Field(
         1000,

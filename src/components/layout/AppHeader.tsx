@@ -7,6 +7,8 @@ import { useSound } from "../../hooks/useSound";
 import clsx from "clsx";
 import InboxButton from "../common/InboxButton";
 import { ChevronDown } from "lucide-react";
+import GoldenHourTimer from "./GoldenHourTimer";
+import GoldenHourPopup from "../events/GoldenHourPopup";
 
 const AppHeader: React.FC = () => {
     const { user } = useAuth();
@@ -15,6 +17,7 @@ const AppHeader: React.FC = () => {
     const [isTicketMenuOpen, setIsTicketMenuOpen] = useState(false);
     const desktopMenuRef = useRef<HTMLDivElement>(null);
     const mobileMenuRef = useRef<HTMLDivElement>(null);
+    const [isGoldenHourModalOpen, setIsGoldenHourModalOpen] = useState(false);
 
     const { data: vault } = useQuery({
         queryKey: ["vault-status"],
@@ -33,6 +36,20 @@ const AppHeader: React.FC = () => {
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
+
+    const isGoldenHourActive = vault?.is_golden_hour_active ?? false;
+    const ghMultiplier = vault?.golden_hour_multiplier ?? 2.0;
+    const ghRemainingSeconds = vault?.golden_hour_remaining_seconds ?? 0;
+
+    useEffect(() => {
+        if (isGoldenHourActive) {
+            const hasSeen = sessionStorage.getItem("gh_popup_seen");
+            if (!hasSeen) {
+                setIsGoldenHourModalOpen(true);
+                sessionStorage.setItem("gh_popup_seen", "true");
+            }
+        }
+    }, [isGoldenHourActive]);
 
     const handleSoundToggle = () => {
         playClick();
@@ -160,6 +177,12 @@ const AppHeader: React.FC = () => {
 
                 {/* Right: Inbox + Sound */}
                 <div className="flex items-center gap-2 shrink-0">
+                    {/* Golden Hour Timer */}
+                    <GoldenHourTimer
+                        remainingSeconds={ghRemainingSeconds}
+                        multiplier={ghMultiplier}
+                    />
+
                     {/* Inbox */}
                     <InboxButton />
 
@@ -241,6 +264,13 @@ const AppHeader: React.FC = () => {
                     )}
                 </div>
             </div>
+            {/* Golden Hour Popup */}
+            <GoldenHourPopup
+                isOpen={isGoldenHourModalOpen}
+                onClose={() => setIsGoldenHourModalOpen(false)}
+                multiplier={ghMultiplier}
+                remainingSeconds={ghRemainingSeconds}
+            />
         </header>
     );
 };

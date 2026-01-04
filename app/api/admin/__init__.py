@@ -28,6 +28,7 @@ from app.api.admin.routes import (
     admin_shop,
     admin_inventory,
     admin_economy_stats,
+    admin_streak_rewards,
 )
 
 from app.api.deps import get_current_admin_id
@@ -61,3 +62,4 @@ admin_router.include_router(admin_user_missions.router)
 admin_router.include_router(admin_shop.router)
 admin_router.include_router(admin_inventory.router)
 admin_router.include_router(admin_economy_stats.router)
+admin_router.include_router(admin_streak_rewards.router)

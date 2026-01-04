@@ -27,6 +27,9 @@ def test_vault_game_earn_event_idempotent_and_expires_not_refreshed(session_fact
 
     svc = VaultService()
 
+    # Use a specific time outside Golden Hour (e.g., 10:00 KST)
+    test_now = datetime(2026, 1, 4, 1, 0, 0) # 10:00 KST
+
     added1 = svc.record_game_play_earn_event(
         session,
         user_id=2001,
@@ -35,6 +38,7 @@ def test_vault_game_earn_event_idempotent_and_expires_not_refreshed(session_fact
         token_type="DICE_TOKEN",
         outcome="WIN",
         payout_raw={"result": "WIN", "reward_amount": 200},
+        now=test_now,
     )
     session.expire_all()
     user = session.get(User, 2001)
@@ -46,7 +50,7 @@ def test_vault_game_earn_event_idempotent_and_expires_not_refreshed(session_fact
 
     # Now reach the milestone (10,000)
     user.vault_locked_balance = 10000
-    svc._ensure_locked_expiry(user, datetime.utcnow())
+    svc._ensure_locked_expiry(user, test_now)
     session.add(user)
     session.commit()
     
@@ -62,6 +66,7 @@ def test_vault_game_earn_event_idempotent_and_expires_not_refreshed(session_fact
         token_type="DICE_TOKEN",
         outcome="WIN",
         payout_raw={"result": "WIN", "reward_amount": 200},
+        now=test_now + timedelta(seconds=5),
     )
     session.expire_all()
     user2 = session.get(User, 2001)
@@ -82,7 +87,7 @@ def test_vault_game_earn_event_idempotent_and_expires_not_refreshed(session_fact
         token_type="DICE_TOKEN",
         outcome="WIN",
         payout_raw={"result": "WIN", "reward_amount": 200},
-        now=datetime.utcnow() + timedelta(seconds=10) # Simulate time passing
+        now=test_now + timedelta(seconds=10) # Simulate time passing
     )
     session.expire_all()
     user3 = session.get(User, 2001)
@@ -94,15 +99,23 @@ def test_vault_game_earn_event_idempotent_and_expires_not_refreshed(session_fact
     assert session.query(VaultEarnEvent).count() == 2
 
 
-def test_vault_game_earn_event_dice_lose_uses_payout_reward_amount(session_factory) -> None:
-    _enable_game_earn_events()
+def test_vault_game_earn_event_dice_lose_Golden_Hour_doubles_negative(session_factory, monkeypatch) -> None:
+    monkeypatch.setenv("ENABLE_VAULT_GAME_EARN_EVENTS", "true")
+    # For simplicity in test, use env settings to simulate 2.0x boost
+    monkeypatch.setenv("VAULT_ACCRUAL_MULTIPLIER_ENABLED", "true")
+    monkeypatch.setenv("VAULT_ACCRUAL_MULTIPLIER_VALUE", "2.0")
+    monkeypatch.setenv("VAULT_ACCRUAL_MULTIPLIER_START_KST", "2026-01-01")
+    monkeypatch.setenv("VAULT_ACCRUAL_MULTIPLIER_END_KST", "2026-12-31")
+    get_settings.cache_clear()
 
     session: Session = session_factory()
     session.add(User(id=1, external_id="tester", status="ACTIVE", cash_balance=0, vault_locked_balance=1000, vault_balance=0))
-
     session.commit()
 
     svc = VaultService()
+    # 2026-01-04 22:00:00 KST (within Golden Hour window 21:30-22:30)
+    test_now = datetime(2026, 1, 4, 13, 0, 0, tzinfo=timezone.utc)
+    
     added = svc.record_game_play_earn_event(
         session,
         user_id=1,
@@ -111,12 +124,14 @@ def test_vault_game_earn_event_dice_lose_uses_payout_reward_amount(session_facto
         token_type="DICE_TOKEN",
         outcome="LOSE",
         payout_raw={"result": "LOSE", "reward_amount": -50},
+        now=test_now,
     )
     session.expire_all()
     user = session.get(User, 1)
     assert user is not None
-    assert added == -50
-    assert user.vault_locked_balance == 950
+    # -50 * 2.0 = -100
+    assert added == -100
+    assert user.vault_locked_balance == 900
 
 
 def test_vault_game_earn_event_dice_uses_payout_reward_amount(session_factory) -> None:
@@ -128,6 +143,7 @@ def test_vault_game_earn_event_dice_uses_payout_reward_amount(session_factory) -
     session.commit()
 
     svc = VaultService()
+    test_now = datetime(2026, 1, 4, 1, 0, 0)
     added = svc.record_game_play_earn_event(
         session,
         user_id=11,
@@ -136,6 +152,7 @@ def test_vault_game_earn_event_dice_uses_payout_reward_amount(session_factory) -
         token_type="DICE_TOKEN",
         outcome="WIN",
         payout_raw={"result": "WIN", "reward_amount": 123},
+        now=test_now,
     )
     session.expire_all()
     user = session.get(User, 11)
@@ -157,7 +174,7 @@ def test_vault_game_earn_event_applies_multiplier_when_enabled(session_factory, 
 
     session.commit()
 
-    now = datetime(2025, 12, 25, 0, 0, 0, tzinfo=timezone.utc)
+    now = datetime(2025, 12, 25, 0, 0, 0)
     svc = VaultService()
     added = svc.record_game_play_earn_event(
         session,

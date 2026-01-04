@@ -20,6 +20,9 @@ interface BackendVaultStatusResponse {
   readonly accrual_multiplier?: number | null;
   readonly ticket_count?: number;
   readonly total_charge_amount?: number;
+  readonly is_golden_hour_active?: boolean;
+  readonly golden_hour_multiplier?: number;
+  readonly golden_hour_remaining_seconds?: number;
 }
 
 export interface VaultStatusResponse {
@@ -45,6 +48,10 @@ export interface VaultStatusResponse {
   readonly accrualMultiplier?: number | null;
   readonly ticketCount?: number;
   readonly totalChargeAmount?: number;
+
+  readonly is_golden_hour_active?: boolean;
+  readonly golden_hour_multiplier?: number;
+  readonly golden_hour_remaining_seconds?: number;
 }
 
 export const getVaultStatus = async (): Promise<VaultStatusResponse> => {
@@ -75,6 +82,10 @@ export const getVaultStatus = async (): Promise<VaultStatusResponse> => {
     accrualMultiplier: data.accrual_multiplier ?? null,
     ticketCount: data.ticket_count ?? 0,
     totalChargeAmount: data.total_charge_amount ?? 0,
+
+    is_golden_hour_active: data.is_golden_hour_active ?? false,
+    golden_hour_multiplier: data.golden_hour_multiplier ?? 1.0,
+    golden_hour_remaining_seconds: data.golden_hour_remaining_seconds ?? 0,
   };
 };
 // Phase 1 MVP Withdrawal Request

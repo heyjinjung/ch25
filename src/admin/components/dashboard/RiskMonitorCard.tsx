@@ -17,7 +17,7 @@ export const RiskMonitorCard: React.FC<Props> = ({ riskCount, streakRiskCount })
         try {
             const res = await nudgeRiskGroup();
             setNudged(res.nudged_count);
-        } catch (e) {
+        } catch {
             alert("넛지 발송에 실패했습니다");
         } finally {
             setLoading(false);

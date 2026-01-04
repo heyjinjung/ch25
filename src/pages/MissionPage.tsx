@@ -25,6 +25,16 @@ const MissionPage: React.FC = () => {
     fetchMissions();
   }, [fetchMissions]);
 
+  // Set default tab to NEW_USER if there are incomplete missions there
+  useEffect(() => {
+    if (missions.length > 0) {
+      const hasNewUserMissions = missions.some(m => m.mission.category === "NEW_USER" && !m.progress.is_claimed);
+      if (hasNewUserMissions) {
+        setActiveTab("NEW_USER");
+      }
+    }
+  }, [missions]);
+
   const handleTabChange = (tab: MissionTab) => {
     impact("light");
     setActiveTab(tab);

@@ -42,6 +42,11 @@ class VaultStatusResponse(BaseModel):
     accrual_multiplier: float | None = None
     ui_copy_json: dict[str, Any] | None = None
 
+    # Golden Hour
+    is_golden_hour_active: bool = False
+    golden_hour_remaining_seconds: int = 0
+    golden_hour_multiplier: float = 1.0
+
 
 class VaultFillResponse(BaseModel):
     eligible: bool

@@ -3,7 +3,10 @@ from datetime import datetime, time
 import pytest
 
 from app.core.config import get_settings
+from app.models.feature import UserEventLog
+from app.models.game_wallet import GameTokenType, UserGameWallet
 from app.models.mission import Mission, MissionCategory, MissionRewardType
+from app.models.inventory import UserInventoryItem
 from app.models.user import User
 from app.services.mission_service import MissionService
 
@@ -35,6 +38,15 @@ def _seed_play_game_mission(db, logic_key: str):
     db.commit()
     db.refresh(mission)
     return mission
+
+
+@pytest.fixture()
+def _streak_milestone_rewards_enabled():
+    settings = get_settings()
+    prev = getattr(settings, "streak_milestone_rewards_enabled", False)
+    settings.streak_milestone_rewards_enabled = True
+    yield
+    settings.streak_milestone_rewards_enabled = prev
 
 
 @pytest.fixture()
@@ -120,3 +132,56 @@ def test_spec_login_only_does_not_increment_streak(session_factory, monkeypatch,
 
     user = db.query(User).filter(User.id == 1).first()
     assert user.play_streak == 0
+
+
+def test_streak_milestone_rewards_day3_and_day7(session_factory, monkeypatch, _midnight_reset_hour, _streak_milestone_rewards_enabled):
+    db = session_factory()
+    _seed_user(db)
+    _seed_play_game_mission(db, "streak_spec_rewards")
+
+    ms = MissionService(db)
+
+    # Play 7 consecutive operational days.
+    for i in range(7):
+        day = 4 + i
+        monkeypatch.setattr(MissionService, "_now_tz", lambda self, d=day: datetime(2026, 1, d, 12, 0, 0))
+        ms.update_progress(user_id=1, action_type="PLAY_GAME", delta=1)
+
+    # Day3 milestone is reached on Jan 6.
+    day3_event = "streak.reward_grant.3.2026-01-06"
+    assert (
+        db.query(UserEventLog)
+        .filter(UserEventLog.user_id == 1, UserEventLog.event_name == day3_event)
+        .one_or_none()
+        is not None
+    )
+
+    # Verify tickets were granted (bundle: 1 roulette coin + 1 dice token + 1 lottery ticket)
+    def _balance(token: GameTokenType) -> int:
+        row = (
+            db.query(UserGameWallet)
+            .filter(UserGameWallet.user_id == 1, UserGameWallet.token_type == token)
+            .one_or_none()
+        )
+        return int(row.balance) if row is not None else 0
+
+    assert _balance(GameTokenType.ROULETTE_COIN) >= 1
+    assert _balance(GameTokenType.DICE_TOKEN) >= 1
+    assert _balance(GameTokenType.LOTTERY_TICKET) >= 1
+
+    # Day7 milestone is reached on Jan 10.
+    day7_event = "streak.reward_grant.7.2026-01-10"
+    assert (
+        db.query(UserEventLog)
+        .filter(UserEventLog.user_id == 1, UserEventLog.event_name == day7_event)
+        .one_or_none()
+        is not None
+    )
+
+    diamond_item = (
+        db.query(UserInventoryItem)
+        .filter(UserInventoryItem.user_id == 1, UserInventoryItem.item_type == "DIAMOND")
+        .one_or_none()
+    )
+    assert diamond_item is not None
+    assert int(diamond_item.quantity) >= 1

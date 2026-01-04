@@ -117,7 +117,214 @@ class MissionService:
 
         # Day4~5 streak ticket bonus: grant once on the first play of the operational day.
         self._maybe_grant_streak_day_tickets(user=user, play_day=play_day)
+
+        # Day3/Day7 streak milestone rewards (auto grants).
+        self._maybe_grant_streak_milestone_rewards(
+            user=user,
+            play_day=play_day,
+            prev_streak_days=prev_streak_days,
+            new_streak_days=new_streak_days,
+        )
         return user
+
+    def _maybe_grant_streak_milestone_rewards(
+        self,
+        *,
+        user: User,
+        play_day: date,
+        prev_streak_days: int,
+        new_streak_days: int,
+    ) -> None:
+        if not bool(getattr(self.settings, "streak_milestone_rewards_enabled", False)):
+            return
+
+        def _load_admin_rules() -> list[tuple[int, list[dict]]] | None:
+            try:
+                from app.services.ui_config_service import UiConfigService
+
+                row = UiConfigService.get(self.db, "streak_reward_rules")
+                value = row.value_json if row is not None else None
+                if not isinstance(value, dict):
+                    return None
+                raw_rules = value.get("rules")
+                if not isinstance(raw_rules, list):
+                    return None
+
+                parsed: list[tuple[int, list[dict]]] = []
+                for raw_rule in raw_rules:
+                    if not isinstance(raw_rule, dict):
+                        continue
+                    try:
+                        day = int(raw_rule.get("day"))
+                    except Exception:
+                        continue
+                    if day <= 0:
+                        continue
+                    if raw_rule.get("enabled") is False:
+                        continue
+
+                    raw_grants = raw_rule.get("grants")
+                    if not isinstance(raw_grants, list):
+                        continue
+
+                    grants: list[dict] = []
+                    for raw_grant in raw_grants:
+                        if not isinstance(raw_grant, dict):
+                            continue
+                        kind = raw_grant.get("kind")
+                        try:
+                            amount = int(raw_grant.get("amount"))
+                        except Exception:
+                            continue
+                        if amount <= 0:
+                            continue
+
+                        if kind == "WALLET":
+                            token_val = raw_grant.get("token_type")
+                            try:
+                                token_type = token_val if isinstance(token_val, GameTokenType) else GameTokenType(str(token_val))
+                            except Exception:
+                                continue
+                            grants.append({"kind": "WALLET", "token_type": token_type, "amount": amount})
+                            continue
+
+                        if kind == "INVENTORY":
+                            item_type = str(raw_grant.get("item_type") or "").strip()
+                            if not item_type:
+                                continue
+                            grants.append({"kind": "INVENTORY", "item_type": item_type, "amount": amount})
+                            continue
+
+                    if grants:
+                        parsed.append((day, grants))
+
+                if not parsed:
+                    return None
+                parsed.sort(key=lambda x: x[0])
+                return parsed
+            except Exception:
+                return None
+
+        # Default spec (fixed):
+        # - Day3: 1 roulette coin + 1 dice token + 1 lottery ticket
+        # - Day7: DIAMOND 1
+        milestones: list[tuple[int, list[dict]]] = _load_admin_rules() or [
+            (
+                3,
+                [
+                    {"kind": "WALLET", "token_type": GameTokenType.ROULETTE_COIN, "amount": 1},
+                    {"kind": "WALLET", "token_type": GameTokenType.DICE_TOKEN, "amount": 1},
+                    {"kind": "WALLET", "token_type": GameTokenType.LOTTERY_TICKET, "amount": 1},
+                ],
+            ),
+            (
+                7,
+                [
+                    {"kind": "INVENTORY", "item_type": "DIAMOND", "amount": 1},
+                ],
+            ),
+        ]
+
+        from app.services.game_wallet_service import GameWalletService
+        from app.services.inventory_service import InventoryService
+
+        wallet_service = GameWalletService()
+
+        for milestone_days, grants in milestones:
+            if not (prev_streak_days < milestone_days <= new_streak_days):
+                continue
+
+            # Idempotency: avoid double-grant if the request retries.
+            # We scope it to (milestone_days, play_day) so rewards can be re-earned after resets.
+            event_name = f"streak.reward_grant.{milestone_days}.{play_day.isoformat()}"
+            existing = (
+                self.db.query(UserEventLog)
+                .filter(
+                    UserEventLog.user_id == int(user.id),
+                    UserEventLog.feature_type == "STREAK",
+                    UserEventLog.event_name == event_name,
+                )
+                .one_or_none()
+            )
+            if existing is not None:
+                # Optional: log skip (duplicate request / already granted) once per day+milestone.
+                skip_event_name = f"streak.reward_skip.{milestone_days}.{play_day.isoformat()}"
+                skip_existing = (
+                    self.db.query(UserEventLog)
+                    .filter(
+                        UserEventLog.user_id == int(user.id),
+                        UserEventLog.feature_type == "STREAK",
+                        UserEventLog.event_name == skip_event_name,
+                    )
+                    .one_or_none()
+                )
+                if skip_existing is None:
+                    self.db.add(
+                        UserEventLog(
+                            user_id=int(user.id),
+                            feature_type="STREAK",
+                            event_name=skip_event_name,
+                            meta_json={
+                                "reason": "STREAK_MILESTONE_REWARD_DUPLICATE",
+                                "milestone_days": milestone_days,
+                                "play_day": play_day.isoformat(),
+                                "grant_event_name": event_name,
+                            },
+                        )
+                    )
+                continue
+
+            meta = {
+                "reason": "STREAK_MILESTONE_REWARD",
+                "milestone_days": milestone_days,
+                "streak_days": new_streak_days,
+                "play_day": play_day.isoformat(),
+            }
+
+            granted_payload: list[dict] = []
+            for grant in grants:
+                if grant["kind"] == "WALLET":
+                    token_type: GameTokenType = grant["token_type"]
+                    amount = int(grant["amount"])
+                    wallet_service.grant_tokens(
+                        self.db,
+                        user_id=int(user.id),
+                        token_type=token_type,
+                        amount=amount,
+                        reason="STREAK_MILESTONE_REWARD",
+                        label=f"STREAK_DAY_{milestone_days}_MILESTONE_REWARD",
+                        meta=meta,
+                        auto_commit=False,
+                    )
+                    granted_payload.append({"token_type": token_type.value, "amount": amount})
+                    continue
+
+                if grant["kind"] == "INVENTORY":
+                    item_type = str(grant["item_type"])
+                    amount = int(grant["amount"])
+                    InventoryService.grant_item(
+                        self.db,
+                        user_id=int(user.id),
+                        item_type=item_type,
+                        amount=amount,
+                        reason="STREAK_MILESTONE_REWARD",
+                        related_id=f"streak:{milestone_days}:{play_day.isoformat()}",
+                        auto_commit=False,
+                    )
+                    granted_payload.append({"item_type": item_type, "amount": amount})
+                    continue
+
+            self.db.add(
+                UserEventLog(
+                    user_id=int(user.id),
+                    feature_type="STREAK",
+                    event_name=event_name,
+                    meta_json={
+                        **meta,
+                        "grants": granted_payload,
+                    },
+                )
+            )
 
     def _maybe_grant_streak_day_tickets(self, *, user: User, play_day: date) -> None:
         if not bool(getattr(self.settings, "streak_ticket_bonus_enabled", False)):

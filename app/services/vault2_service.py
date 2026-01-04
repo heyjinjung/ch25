@@ -44,6 +44,15 @@ DEFAULT_CONFIG = {
             "BASE": 200,
             "SEGMENT_5": -50
         }
+    },
+    # 골든아워 설정 (매일 21:30 ~ 22:30 KST)
+    "golden_hour_config": {
+        "enabled": True,
+        "start_time_kst": "21:30:00",
+        "end_time_kst": "22:30:00",
+        "multiplier": 2.0,
+        "manual_override": "AUTO",  # AUTO | FORCE_ON | FORCE_OFF
+        "base_amount_gate": 200,    # 이 금액인 경우에만 배수 적용
     }
 }
 

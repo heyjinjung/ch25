@@ -23,6 +23,7 @@ import AdminMissionPage from "../admin/pages/AdminMissionPage";
 import AdminShopPage from "../admin/pages/AdminShopPage";
 import AdminEconomyStatsPage from "../admin/pages/AdminEconomyStatsPage";
 import { AdminOpsDashboard } from "../admin/pages/AdminOpsDashboard";
+import StreakRewardsAdminPage from "../admin/pages/StreakRewardsAdminPage";
 import AdminLayout from "../admin/components/AdminLayout";
 import ProtectedRoute from "../components/routing/ProtectedRoute";
 
@@ -54,6 +55,7 @@ const AdminRoutes: React.FC = () => {
           <Route path="shop" element={<AdminShopPage />} />
           <Route path="economy" element={<AdminEconomyStatsPage />} />
           <Route path="ops" element={<AdminOpsDashboard />} />
+          <Route path="streak-rewards" element={<StreakRewardsAdminPage />} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/admin" replace />} />

@@ -123,11 +123,38 @@ class VaultService:
         """Return a multiplier for vault accrual amounts.
 
         Priority:
-        1. VaultProgram.config_json["accrual_multiplier"] (if db provided)
-        2. Settings (env) if enabled
-        3. Default 1.0
+        1. Golden Hour (Peak Time) boost (if enabled and within window)
+        2. VaultProgram.config_json["accrual_multiplier"] (if db provided)
+        3. Settings (env) if enabled
+        4. Default 1.0
         """
-        # Try DB first if session available
+        now_dt = now or datetime.utcnow()
+        if now_dt.tzinfo is None:
+            now_dt = now_dt.replace(tzinfo=timezone.utc)
+
+        # 1. Golden Hour Check
+        if db is not None:
+            v2 = Vault2Service()
+            gh_cfg = v2.get_config_value(db, "golden_hour_config", {})
+            if gh_cfg and gh_cfg.get("enabled"):
+                override = gh_cfg.get("manual_override", "AUTO")
+                if override == "FORCE_ON":
+                    return float(gh_cfg.get("multiplier", 2.0))
+                if override == "FORCE_OFF":
+                    pass # Continue to other multipliers
+                else:
+                    # AUTO: Check KST window
+                    settings = get_settings()
+                    tz = ZoneInfo(getattr(settings, "timezone", "Asia/Seoul"))
+                    now_kst = now_dt.astimezone(tz)
+                    current_time_str = now_kst.strftime("%H:%M:%S")
+                    
+                    start = gh_cfg.get("start_time_kst", "21:30:00")
+                    end = gh_cfg.get("end_time_kst", "22:30:00")
+                    if start <= current_time_str <= end:
+                        return float(gh_cfg.get("multiplier", 2.0))
+
+        # 2. Try DB first if session available
         if db is not None:
             db_val = Vault2Service().get_config_value(db, "accrual_multiplier")
             if db_val is not None:
@@ -136,7 +163,7 @@ class VaultService:
                 except (TypeError, ValueError):
                     pass
 
-        # Fallback to legacy settings
+        # 3. Fallback to legacy settings
         settings = get_settings()
         if not bool(getattr(settings, "vault_accrual_multiplier_enabled", False)):
             return 1.0
@@ -149,9 +176,6 @@ class VaultService:
         raw_value = float(getattr(settings, "vault_accrual_multiplier_value", 1.0) or 1.0)
         value = max(raw_value, 1.0)
 
-        now_dt = now or datetime.utcnow()
-        if now_dt.tzinfo is None:
-            now_dt = now_dt.replace(tzinfo=timezone.utc)
         tz = ZoneInfo(getattr(settings, "timezone", "Asia/Seoul"))
         today_kst = now_dt.astimezone(tz).date()
 
@@ -595,7 +619,43 @@ class VaultService:
             )
 
         total_multiplier = float(base_multiplier) * float(streak_multiplier)
-        amount = max(int(round(amount_before_multiplier * total_multiplier)), amount_before_multiplier)
+
+        # Golden Hour specific: Apply a 200 KRW (Win) / -50 KRW (Loss) gate for the Golden Hour multiplier boost.
+        # This ensures the 2.0x boost ONLY applies to base game results as per Slot Plan.
+        v2_service = Vault2Service()
+        gh_cfg = v2_service.get_config_value(db, "golden_hour_config", {})
+        is_gh_active_now = False
+
+        if gh_cfg and gh_cfg.get("enabled"):
+            override = gh_cfg.get("manual_override", "AUTO")
+            if override == "FORCE_ON":
+                is_gh_active_now = True
+            elif override == "AUTO":
+                settings = get_settings()
+                tz = ZoneInfo(getattr(settings, "timezone", "Asia/Seoul"))
+                now_kst = now_dt.astimezone(tz)
+                current_time_str = now_kst.strftime("%H:%M:%S")
+                start = gh_cfg.get("start_time_kst", "21:30:00")
+                end = gh_cfg.get("end_time_kst", "22:30:00")
+                if start <= current_time_str <= end:
+                    is_gh_active_now = True
+
+        # If Golden Hour is active, we only apply its component (base_multiplier > 1.0)
+        # if the amount matches the expected gates.
+        if is_gh_active_now and total_multiplier > 1.0:
+            allowed_amounts = [200, -50]
+            if amount_before_multiplier not in allowed_amounts:
+                # Revert to a non-GH multiplier
+                total_multiplier = 1.0
+
+        # Calculate amount with multiplier.
+        if amount_before_multiplier > 0:
+            # Positive accrual: ensure at least base amount
+            amount = max(int(round(amount_before_multiplier * total_multiplier)), amount_before_multiplier)
+        else:
+            # Negative accrual (Loss): ensure it becomes more negative (doubled penalty)
+            # e.g., -50 * 2.0 = -100. min(-100, -50) = -100.
+            amount = min(int(round(amount_before_multiplier * total_multiplier)), amount_before_multiplier)
 
         # --- Caps Check (Phase 1 for Event) ---
         # If event mode (or generally configured), check caps.

@@ -82,7 +82,7 @@ def status(db: Session = Depends(get_db), user_id: int = Depends(get_current_use
         else:
             ui_copy_json = hardcoded_ui_copy
 
-    return VaultStatusResponse(
+    res = VaultStatusResponse(
         eligible=eligible,
         vault_balance=user.vault_balance or 0,
         locked_balance=locked_balance,
@@ -102,6 +102,44 @@ def status(db: Session = Depends(get_db), user_id: int = Depends(get_current_use
         ui_copy_json=ui_copy_json,
         total_charge_amount=int(getattr(user, "total_charge_amount", 0) or 0),
     )
+
+    # Golden Hour Status Injection
+    gh_cfg = v2_service.get_config_value(db, "golden_hour_config", {})
+    if gh_cfg and gh_cfg.get("enabled"):
+        override = gh_cfg.get("manual_override", "AUTO")
+        active = False
+        if override == "FORCE_ON":
+            active = True
+        elif override == "FORCE_OFF":
+            active = False
+        else:
+            from zoneinfo import ZoneInfo
+            from app.core.config import get_settings
+            from datetime import timedelta
+            settings = get_settings()
+            tz = ZoneInfo(getattr(settings, "timezone", "Asia/Seoul"))
+            now_kst = now.astimezone(tz)
+            current_time_str = now_kst.strftime("%H:%M:%S")
+            start_str = gh_cfg.get("start_time_kst", "21:30:00")
+            end_str = gh_cfg.get("end_time_kst", "22:30:00")
+            
+            if start_str <= current_time_str <= end_str:
+                active = True
+                # Calculate remaining seconds
+                try:
+                    end_h, end_m, end_s = map(int, end_str.split(":"))
+                    end_dt = now_kst.replace(hour=end_h, minute=end_m, second=end_s, microsecond=0)
+                    if end_dt < now_kst:
+                        end_dt += timedelta(days=1)
+                    rem = int((end_dt - now_kst).total_seconds())
+                    res.golden_hour_remaining_seconds = max(0, rem)
+                except Exception:
+                    pass
+        
+        res.is_golden_hour_active = active
+        res.golden_hour_multiplier = float(gh_cfg.get("multiplier", 2.0)) if active else 1.0
+    
+    return res
 
 
 @router.post("/fill", response_model=VaultFillResponse)

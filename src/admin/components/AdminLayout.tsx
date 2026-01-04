@@ -39,6 +39,7 @@ const navSections: NavSection[] = [
     items: [
       { label: "시즌 설정", path: "/admin/seasons", icon: <Cog size={18} /> },
       { label: "미션 관리", path: "/admin/missions", icon: <Target size={18} /> },
+      { label: "스트릭 보상 운영", path: "/admin/streak-rewards", icon: <Gift size={18} /> },
       { label: "룰렛 설정", path: "/admin/roulette", icon: <Gift size={18} /> },
       { label: "주사위 설정", path: "/admin/dice", icon: <Dice5 size={18} /> },
       { label: "복권 설정", path: "/admin/lottery", icon: <Percent size={18} /> },

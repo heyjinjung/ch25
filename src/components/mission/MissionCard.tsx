@@ -152,8 +152,12 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
         return;
       }
       if (mission.action_type === "SHARE_WALLET") {
-        if (window.Telegram?.WebApp?.switchInlineQuery) {
-          window.Telegram.WebApp.switchInlineQuery("share_wallet", ["users", "groups"]);
+        const appUrl = "https://t.me/jm956_bot/ccjm";
+        const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(appUrl)}&text=${encodeURIComponent("내 지갑 💎 CCJM에서 함께 확인해봐!")}`;
+
+        const tg = window.Telegram?.WebApp;
+        if (tg?.openTelegramLink) {
+          tg.openTelegramLink(shareUrl);
 
           // Record action immediately (Trust Approach)
           await recordViralAction({ action_type: "SHARE_WALLET", mission_id: mission.id });
@@ -186,6 +190,8 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
         return <Share2 className={iconClass} />;
       case "LOGIN":
         return <Star className={iconClass} />;
+      case "PLAY_GAME":
+        return <Trophy className={iconClass} />;
       default:
         return (
           <img

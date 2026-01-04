@@ -18,7 +18,8 @@ import {
     setVaultUserBalance
 } from "../api/adminVaultApi";
 import { fetchUsers } from "../api/adminUserApi";
-import { RefreshCcw, Save, AlertTriangle, ShieldCheck, Clock, Power, Search, Ban, User as UserIcon, Loader2, X, Activity, Edit2 } from "lucide-react";
+import { RefreshCcw, Save, AlertTriangle, ShieldCheck, Clock, Power, Search, Ban, User as UserIcon, Loader2, X, Activity, Edit2, Zap } from "lucide-react";
+import clsx from "clsx";
 import VaultRulesEditor from "../components/vault/VaultRulesEditor";
 import VaultUiEditor from "../components/vault/VaultUiEditor";
 import VaultSettingsEditor from "../components/vault/VaultSettingsEditor";
@@ -445,29 +446,29 @@ const VaultAdminPage: React.FC = () => {
                                 오늘 적립 상세 내역
                             </h3>
                             <div className="overflow-x-auto">
-                            <table className="w-full text-left text-sm">
-                                <thead>
-                                    <tr className="text-gray-500 border-b border-[#222]">
-                                        <th className="pb-3 px-4">적립 사유</th>
-                                        <th className="pb-3 px-4 text-right">트랜잭션</th>
-                                        <th className="pb-3 px-4 text-right">누적 금액</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-[#222]">
-                                    {Object.entries(stats?.today_accrual || {}).map(([type, s]: [string, any]) => (
-                                        <tr key={type} className="group hover:bg-white/5 transition-colors">
-                                            <td className="py-4 px-4 font-medium text-gray-300">{type}</td>
-                                            <td className="py-4 px-4 text-right text-white font-bold">{s.count.toLocaleString()}건</td>
-                                            <td className="py-4 px-4 text-right text-[#91F402] font-black">{s.total.toLocaleString()}원</td>
+                                <table className="w-full text-left text-sm">
+                                    <thead>
+                                        <tr className="text-gray-500 border-b border-[#222]">
+                                            <th className="pb-3 px-4">적립 사유</th>
+                                            <th className="pb-3 px-4 text-right">트랜잭션</th>
+                                            <th className="pb-3 px-4 text-right">누적 금액</th>
                                         </tr>
-                                    ))}
-                                    {Object.keys(stats?.today_accrual || {}).length === 0 && (
-                                        <tr>
-                                            <td colSpan={3} className="py-12 text-center text-gray-600">오늘 발생한 적립 내역이 없습니다.</td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody className="divide-y divide-[#222]">
+                                        {Object.entries(stats?.today_accrual || {}).map(([type, s]: [string, any]) => (
+                                            <tr key={type} className="group hover:bg-white/5 transition-colors">
+                                                <td className="py-4 px-4 font-medium text-gray-300">{type}</td>
+                                                <td className="py-4 px-4 text-right text-white font-bold">{s.count.toLocaleString()}건</td>
+                                                <td className="py-4 px-4 text-right text-[#91F402] font-black">{s.total.toLocaleString()}원</td>
+                                            </tr>
+                                        ))}
+                                        {Object.keys(stats?.today_accrual || {}).length === 0 && (
+                                            <tr>
+                                                <td colSpan={3} className="py-12 text-center text-gray-600">오늘 발생한 적립 내역이 없습니다.</td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
 
@@ -663,6 +664,103 @@ const VaultAdminPage: React.FC = () => {
                                     </div>
                                 </div>
                                 <p className="text-xs text-gray-500">설정은 VaultProgram config의 allow/block 리스트를 즉시 갱신합니다.</p>
+                            </div>
+
+                            {/* Golden Hour Status Board */}
+                            <div className="lg:col-span-3 rounded-xl border border-emerald-900/30 bg-emerald-950/5 p-6 space-y-6">
+                                <div className="flex items-center justify-between gap-3 flex-wrap">
+                                    <div>
+                                        <p className="text-xs uppercase tracking-[0.2em] text-emerald-500 mb-1">Peak Time Event</p>
+                                        <h3 className="text-xl font-black text-white flex items-center gap-2">
+                                            <Zap className="h-5 w-5 text-emerald-400" />
+                                            🌙 골든 아워 상태 보드 (Golden Hour)
+                                        </h3>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className={clsx(
+                                            "px-3 py-1 rounded-full text-xs font-black border animate-pulse",
+                                            program?.config_json?.golden_hour_config?.manual_override === "FORCE_ON" ||
+                                                (program?.config_json?.golden_hour_config?.manual_override === "AUTO" &&
+                                                    new Date().getHours() === 21 && new Date().getMinutes() >= 30) // Simplified client check
+                                                ? "bg-emerald-500 text-black border-emerald-400"
+                                                : "bg-white/5 text-white/30 border-white/10"
+                                        )}>
+                                            {program?.config_json?.golden_hour_config?.manual_override === "FORCE_ON" ? "FORCE ON" :
+                                                program?.config_json?.golden_hour_config?.manual_override === "FORCE_OFF" ? "FORCE OFF" : "AUTO (21:30~22:30)"}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    {/* Multiplier Setting */}
+                                    <div className="space-y-3">
+                                        <label className="text-sm font-bold text-gray-400">적립 배수 설정</label>
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                type="number"
+                                                step="0.1"
+                                                value={program?.config_json?.golden_hour_config?.multiplier || 2.0}
+                                                onChange={(e) => {
+                                                    const val = parseFloat(e.target.value);
+                                                    if (!program) return;
+                                                    const newCfg = { ...program.config_json };
+                                                    newCfg.golden_hour_config = { ...newCfg.golden_hour_config, multiplier: val };
+                                                    mutation.mutate({ type: "config", json: newCfg });
+                                                }}
+                                                className="w-24 rounded bg-black border border-white/10 px-3 py-2 text-white font-black"
+                                            />
+                                            <span className="text-emerald-400 font-bold">x Boost</span>
+                                        </div>
+                                        <p className="text-[11px] text-white/30 italic">
+                                            기본 2.0배, 필요 시 조절 가능
+                                        </p>
+                                    </div>
+
+                                    {/* Manual Override */}
+                                    <div className="space-y-3">
+                                        <label className="text-sm font-bold text-gray-400">수동 제어 (Override)</label>
+                                        <div className="flex flex-wrap gap-2">
+                                            {["AUTO", "FORCE_ON", "FORCE_OFF"].map(mode => (
+                                                <button
+                                                    key={mode}
+                                                    onClick={() => {
+                                                        if (!program) return;
+                                                        const newCfg = { ...program.config_json };
+                                                        newCfg.golden_hour_config = { ...newCfg.golden_hour_config, manual_override: mode };
+                                                        mutation.mutate({ type: "config", json: newCfg });
+                                                    }}
+                                                    className={clsx(
+                                                        "px-3 py-1.5 rounded text-[11px] font-bold transition-all",
+                                                        program?.config_json?.golden_hour_config?.manual_override === mode
+                                                            ? "bg-emerald-500 text-black"
+                                                            : "bg-white/5 text-white/50 hover:bg-white/10"
+                                                    )}
+                                                >
+                                                    {mode}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Quick Actions */}
+                                    <div className="space-y-3">
+                                        <label className="text-sm font-bold text-gray-400">운영 도구</label>
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={() => openDetailModal("today_accrual")}
+                                                className="flex-1 px-3 py-1.5 rounded bg-white/5 text-white/50 text-[11px] font-bold hover:bg-white/10"
+                                            >
+                                                참여 로그 확인
+                                            </button>
+                                            <button
+                                                onClick={() => alert("골든 티켓 당첨자 추첨 로직은 운영 정책에 따라 추후 수동으로 진행됩니다.")}
+                                                className="flex-1 px-3 py-1.5 rounded bg-amber-500/20 text-amber-500 text-[11px] font-bold hover:bg-amber-500/30 border border-amber-500/20"
+                                            >
+                                                티켓 추첨 (준비중)
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
