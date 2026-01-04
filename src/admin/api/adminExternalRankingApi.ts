@@ -14,6 +14,15 @@ export interface ExternalRankingEntry extends ExternalRankingPayload {
   id: number;
   created_at: string;
   updated_at: string;
+  user?: {
+    id: number;
+    external_id?: string | null;
+    nickname?: string | null;
+    tg_id?: number | null;
+    tg_username?: string | null;
+    real_name?: string | null;
+    phone_number?: string | null;
+  } | null;
 }
 
 export interface ExternalRankingListResponse {
@@ -31,10 +40,12 @@ export async function upsertExternalRanking(payloads: ExternalRankingPayload[]) 
 }
 
 export async function updateExternalRanking(userId: number, payload: Partial<ExternalRankingPayload>) {
-  const { data } = await adminApi.put<ExternalRankingEntry>(`/admin/api/external-ranking/${userId}/`, payload);
+  // Backend route is `PUT /admin/api/external-ranking/{user_id}` (no trailing slash).
+  const { data } = await adminApi.put<ExternalRankingEntry>(`/admin/api/external-ranking/${userId}`, payload);
   return data;
 }
 
 export async function deleteExternalRanking(userId: number) {
-  await adminApi.delete(`/admin/api/external-ranking/${userId}/`);
+  // Backend route is `DELETE /admin/api/external-ranking/{user_id}` (no trailing slash).
+  await adminApi.delete(`/admin/api/external-ranking/${userId}`);
 }

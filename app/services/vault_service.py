@@ -694,6 +694,92 @@ class VaultService:
 
         return int(amount) if amount > 0 else 0
 
+    def accrue_mission_reward(
+        self,
+        db: Session,
+        *,
+        user_id: int,
+        mission_id: int,
+        mission_title: str,
+        amount: int,
+        now: datetime | None = None,
+    ) -> int:
+        """
+        Accrue mission reward into Vault (Phase 1 locked).
+        Replaces legacy 'Unlock' behavior for CASH_UNLOCK rewards.
+        """
+        if amount <= 0:
+            return 0
+
+        now_dt = now or datetime.utcnow()
+        
+        # Eligibility guard (Phase 1 funnel matches Game Earn).
+        # We generally want welcome missions to work for everyone who sees them, 
+        # but consistency with Vault funnel is safer.
+        if not self._eligible(db, user_id, now_dt):
+            return 0
+
+        earn_event_id = f"MISSION:{mission_id}"
+        
+        # Idempotency check
+        exists = db.execute(
+            select(VaultEarnEvent.id).where(VaultEarnEvent.earn_event_id == earn_event_id)
+        ).first()
+        if exists:
+            return 0
+
+        # Lock User
+        q = db.query(User).filter(User.id == user_id)
+        if db.bind and db.bind.dialect.name != "sqlite":
+            q = q.with_for_update()
+        user = q.one_or_none()
+        
+        if not user:
+             # Implicitly created if strictly needed, but Missions imply user exists.
+             return 0
+
+        # Accrue
+        # Missions do NOT use the 'accrual_multiplier' logic usually (fixed reward), 
+        # but let's stick to the requested fixed amount.
+        
+        self._expire_locked_if_due(user, now_dt)
+        user.vault_locked_balance = int(user.vault_locked_balance or 0) + int(amount)
+        self._ensure_locked_expiry(user, now_dt)
+        self.sync_legacy_mirror(user)
+        
+        # Record Event
+        event = VaultEarnEvent(
+            user_id=user.id,
+            earn_event_id=earn_event_id,
+            earn_type="MISSION_REWARD",
+            amount=int(amount),
+            source="MISSION",
+            reward_kind="FIXED_CASH",
+            payout_raw_json={
+                "mission_id": mission_id,
+                "mission_title": mission_title,
+            },
+            created_at=now_dt,
+        )
+        
+        db.add(user)
+        db.add(event)
+        
+        # Vault2 Sync
+        try:
+            Vault2Service().accrue_locked(db, user_id=user.id, amount=int(amount), now=now_dt, commit=False)
+        except Exception:
+            pass
+            
+        try:
+            db.commit()
+            db.refresh(user)
+        except IntegrityError:
+            db.rollback()
+            return 0
+            
+        return int(amount)
+
     def request_withdrawal(self, db: Session, user_id: int, amount: int) -> dict:
         """Request a withdrawal.
 

@@ -1,5 +1,15 @@
 2025-12-08: API/DB/코인 시스템/서비스/운영/체크리스트/overview/architecture 최신화 반영. 실제 코드/운영/QA 흐름과 일치하도록 문서 업데이트.
 
+## 2026-01-04 (New User Welcome Mission UI/Logic Fixes)
+- **Frontend (UI/UX)**:
+  - **Game Play Missions**: "게임 1회/3회 플레이" 미션 완료 시 **[보상 받기]** 버튼이 노출되도록 개선 (기존: 체크 표시는 뜨나 보상 수령 불가).
+  - **Channel Join**: 단순 링크 이동을 **[채널 입장/확인]** 버튼으로 변경하고, 클릭 시 텔레그램 채널 오픈 및 2초 후 자동 검증/완료 처리 로직 추가.
+  - **Toast**: 미션 완료/보상 수령 시 성공 메시지를 명확한 "Success Modal" 또는 "Toast"로 피드백.
+- **Backend (Logic)**:
+  - **Day 2 Login Check**: 로그인(`issue_token`) 시 KST 기준 날짜 변경 감지 및 `MissionService.update_progress("LOGIN")` 자동 호출 로직 안정화.
+  - **Migration**: 기존 가입자 중 2일차 요건을 충족한 유저들에게 소급 적용을 위한 마이그레이션 스크립트(`migrate_day2_login.py`) 실행 완료.
+- **Validation**: Frontend 빌드 정상 완료, 신규 가입 시나리오 검증(가입 → 2일차 로그인 → 모달/보상).
+
 ## 2026-01-03 (Admin External Ranking: 문자열 식별자 CRUD 지원)
 - **Admin API**: 숫자 `user_id` 대신 문자열 식별자로 수정/삭제 가능한 별도 엔드포인트 추가.
   - `PUT /admin/api/external-ranking/by-identifier/{identifier}`

@@ -10,7 +10,7 @@ import {
 } from "../api/adminExternalRankingApi";
 import { resolveAdminUser } from "../api/adminUserApi";
 
-type EditableRow = ExternalRankingPayload & { id?: number; __isNew?: boolean };
+type EditableRow = ExternalRankingPayload & { id?: number; __isNew?: boolean; __key: string };
 
 type SortDir = "asc" | "desc";
 type SortKey = "identifier" | "deposit_amount" | "play_count" | "memo";
@@ -38,6 +38,8 @@ const formatTgUsername = (username?: string | null) => {
   return u.startsWith("@") ? u : `@${u}`;
 };
 
+const newRowKey = () => `new:${Date.now()}:${Math.random().toString(16).slice(2)}`;
+
 const ExternalRankingPage: React.FC = () => {
   const queryClient = useQueryClient();
   const { data, isLoading, isError, error } = useQuery({
@@ -53,28 +55,50 @@ const ExternalRankingPage: React.FC = () => {
   const [page, setPage] = useState<number>(0);
   const [isDirty, setIsDirty] = useState<boolean>(false);
 
-  const [resolveStatusByIndex, setResolveStatusByIndex] = useState<Record<number, ResolveRowStatus>>({});
+  const [resolveStatusByKey, setResolveStatusByKey] = useState<Record<string, ResolveRowStatus>>({});
 
   const [sortKey, setSortKey] = useState<SortKey>("identifier");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
 
   useEffect(() => {
     if (data?.items) {
-      setRows(
-        data.items.map((item) => ({
-          id: item.id,
-          user_id: item.user_id,
-          external_id: item.telegram_username ?? item.external_id,
-          telegram_username: "",
-          deposit_amount: item.deposit_amount,
-          play_count: item.play_count,
-          memo: item.memo ?? "",
-          __isNew: false,
-        }))
-      );
+      const mappedRows: EditableRow[] = data.items.map((item) => ({
+        __key: `id:${item.id}`,
+        id: item.id,
+        user_id: item.user_id,
+        // Input field is a unified identifier string.
+        external_id: item.telegram_username ?? item.external_id ?? "",
+        telegram_username: item.telegram_username ?? "",
+        deposit_amount: item.deposit_amount,
+        play_count: item.play_count,
+        memo: item.memo ?? "",
+        __isNew: false,
+      }));
+      setRows(mappedRows);
       setIsDirty(false);
       setPage(0);
-      setResolveStatusByIndex({});
+      const initialResolve: Record<string, ResolveRowStatus> = {};
+      for (let i = 0; i < data.items.length; i++) {
+        const item = data.items[i];
+        const key = `id:${item.id}`;
+        if (item.user) {
+          initialResolve[key] = {
+            state: "ok",
+            user: {
+              id: item.user.id,
+              external_id: item.user.external_id,
+              nickname: item.user.nickname,
+              tg_id: item.user.tg_id,
+              tg_username: item.user.tg_username,
+              real_name: item.user.real_name,
+              phone_number: item.user.phone_number,
+            },
+          };
+        } else {
+          initialResolve[key] = { state: "idle" };
+        }
+      }
+      setResolveStatusByKey(initialResolve);
     }
   }, [data]);
 
@@ -84,17 +108,39 @@ const ExternalRankingPage: React.FC = () => {
       // 즉시 UI에 반영 후 서버 데이터도 새로고침
       if (res?.items) {
         queryClient.setQueryData(["admin", "external-ranking"], res);
-        setRows(
-          res.items.map((item) => ({
-            id: item.id,
-            user_id: item.user_id,
-            external_id: item.telegram_username ?? item.external_id,
-            telegram_username: "",
-            deposit_amount: item.deposit_amount,
-            play_count: item.play_count,
-            memo: item.memo ?? "",
-          }))
-        );
+        const mappedRows: EditableRow[] = res.items.map((item) => ({
+          __key: `id:${item.id}`,
+          id: item.id,
+          user_id: item.user_id,
+          external_id: item.telegram_username ?? item.external_id ?? "",
+          telegram_username: item.telegram_username ?? "",
+          deposit_amount: item.deposit_amount,
+          play_count: item.play_count,
+          memo: item.memo ?? "",
+          __isNew: false,
+        }));
+        setRows(mappedRows);
+        const nextResolve: Record<string, ResolveRowStatus> = {};
+        for (const item of res.items) {
+          const key = `id:${item.id}`;
+          if (item.user) {
+            nextResolve[key] = {
+              state: "ok",
+              user: {
+                id: item.user.id,
+                external_id: item.user.external_id,
+                nickname: item.user.nickname,
+                tg_id: item.user.tg_id,
+                tg_username: item.user.tg_username,
+                real_name: item.user.real_name,
+                phone_number: item.user.phone_number,
+              },
+            };
+          } else {
+            nextResolve[key] = { state: "idle" };
+          }
+        }
+        setResolveStatusByKey(nextResolve);
       }
       queryClient.invalidateQueries({ queryKey: ["admin", "external-ranking"] });
       setIsDirty(false);
@@ -126,7 +172,8 @@ const ExternalRankingPage: React.FC = () => {
     );
     setIsDirty(true);
     if (field === "external_id") {
-      setResolveStatusByIndex((prev) => ({ ...prev, [index]: { state: "idle" } }));
+      const key = rows[index]?.__key;
+      if (key) setResolveStatusByKey((prev) => ({ ...prev, [key]: { state: "idle" } }));
     }
   };
 
@@ -134,12 +181,13 @@ const ExternalRankingPage: React.FC = () => {
     setRowSearchInput("");
     setRowSearchApplied("");
     setPage(0);
+    const key = newRowKey();
     setRows((prev) => [
-      { external_id: "", telegram_username: "", deposit_amount: 0, play_count: 0, memo: "", __isNew: true },
+      { __key: key, external_id: "", telegram_username: "", deposit_amount: 0, play_count: 0, memo: "", __isNew: true },
       ...prev.map((r) => ({ ...r, __isNew: false })),
     ]);
     setIsDirty(true);
-    setResolveStatusByIndex((prev) => ({ ...prev, 0: { state: "idle" } }));
+    setResolveStatusByKey((prev) => ({ ...prev, [key]: { state: "idle" } }));
     setTimeout(() => newRowInputRef.current?.focus(), 0);
   };
 
@@ -148,23 +196,33 @@ const ExternalRankingPage: React.FC = () => {
     if (target?.user_id) {
       deleteMutation.mutate(target.user_id);
     }
+    const key = target?.__key;
     setRows((prev) => prev.filter((_, idx) => idx !== index));
     setIsDirty(true);
+    if (key) {
+      setResolveStatusByKey((prev) => {
+        const copy = { ...prev };
+        delete copy[key];
+        return copy;
+      });
+    }
   };
 
   const resolveOne = async (index: number) => {
     const identifier = String(rows[index]?.external_id ?? "").trim();
+    const key = rows[index]?.__key;
     if (!identifier) {
-      setResolveStatusByIndex((prev) => ({ ...prev, [index]: { state: "idle" } }));
+      if (key) setResolveStatusByKey((prev) => ({ ...prev, [key]: { state: "idle" } }));
       return true;
     }
 
-    setResolveStatusByIndex((prev) => ({ ...prev, [index]: { state: "loading" } }));
+    if (key) setResolveStatusByKey((prev) => ({ ...prev, [key]: { state: "loading" } }));
     try {
       const res = await resolveAdminUser(identifier);
-      setResolveStatusByIndex((prev) => ({
-        ...prev,
-        [index]: {
+      if (key) {
+        setResolveStatusByKey((prev) => ({
+          ...prev,
+          [key]: {
           state: "ok",
           user: {
             id: res.user.id,
@@ -176,11 +234,12 @@ const ExternalRankingPage: React.FC = () => {
             phone_number: res.user.phone_number,
           },
         },
-      }));
+        }));
+      }
       return true;
     } catch (err: any) {
       const msg = err?.response?.data?.detail || err?.message || "resolve 실패";
-      setResolveStatusByIndex((prev) => ({ ...prev, [index]: { state: "error", message: String(msg) } }));
+      if (key) setResolveStatusByKey((prev) => ({ ...prev, [key]: { state: "error", message: String(msg) } }));
       return false;
     }
   };
@@ -192,7 +251,7 @@ const ExternalRankingPage: React.FC = () => {
       .map(({ idx }) => idx);
 
     // Avoid calling resolve repeatedly when nothing changed since last verify.
-    if (!isDirty && indices.every((i) => resolveStatusByIndex[i]?.state === "ok")) return true;
+    if (!isDirty && indices.every((i) => resolveStatusByKey[rows[i].__key]?.state === "ok")) return true;
 
     const results = await Promise.all(indices.map((i) => resolveOne(i)));
     const ok = results.every(Boolean);
@@ -440,17 +499,19 @@ const ExternalRankingPage: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#333333]">
-              {pageItems.map(({ row, index }, viewIdx) => (
-                <tr
-                  key={index}
-                  className={
-                    row.__isNew
-                      ? "bg-[#2D6B3B]/20"
-                      : viewIdx % 2 === 0
-                        ? "bg-[#111111]"
-                        : "bg-[#1A1A1A]"
-                  }
-                >
+              {pageItems.map(({ row, index }, viewIdx) => {
+                const status = resolveStatusByKey[row.__key];
+                return (
+                  <tr
+                    key={row.__key}
+                    className={
+                      row.__isNew
+                        ? "bg-[#2D6B3B]/20"
+                        : viewIdx % 2 === 0
+                          ? "bg-[#111111]"
+                          : "bg-[#1A1A1A]"
+                    }
+                  >
                   <td className="px-4 py-3">
                     <input
                       type="text"
@@ -463,12 +524,12 @@ const ExternalRankingPage: React.FC = () => {
 
                     {String(row.external_id ?? "").trim() && (
                       <div className="mt-2">
-                        {resolveStatusByIndex[index]?.state === "loading" ? (
+                        {status?.state === "loading" ? (
                           <div className="text-[11px] text-gray-500">사용자 확인 중...</div>
-                        ) : resolveStatusByIndex[index]?.state === "ok" ? (
+                        ) : status?.state === "ok" ? (
                           <div className="text-[11px] text-[#91F402]">사용자 확인됨</div>
-                        ) : resolveStatusByIndex[index]?.state === "error" ? (
-                          <div className="text-[11px] text-red-300">{resolveStatusByIndex[index].message}</div>
+                        ) : status?.state === "error" ? (
+                          <div className="text-[11px] text-red-300">{status.message}</div>
                         ) : (
                           <div className="flex items-center gap-2">
                             <button
@@ -485,23 +546,23 @@ const ExternalRankingPage: React.FC = () => {
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    {resolveStatusByIndex[index]?.state === "loading" ? (
+                    {status?.state === "loading" ? (
                       <div className="text-xs text-gray-500">...</div>
-                    ) : resolveStatusByIndex[index]?.state === "ok" ? (
+                    ) : status?.state === "ok" ? (
                       <>
-                        <div className="text-sm text-white font-mono">{resolveStatusByIndex[index].user.tg_id ?? "-"}</div>
-                        <div className="text-xs text-[#91F402]">{formatTgUsername(resolveStatusByIndex[index].user.tg_username)}</div>
+                        <div className="text-sm text-white font-mono">{status.user.tg_id ?? "-"}</div>
+                        <div className="text-xs text-[#91F402]">{formatTgUsername(status.user.tg_username)}</div>
                       </>
                     ) : (
                       <div className="text-xs text-gray-500">-</div>
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    {resolveStatusByIndex[index]?.state === "loading" ? (
+                    {status?.state === "loading" ? (
                       <div className="text-xs text-gray-500">...</div>
-                    ) : resolveStatusByIndex[index]?.state === "ok" ? (
+                    ) : status?.state === "ok" ? (
                       <div className="text-xs text-gray-200">
-                        {[resolveStatusByIndex[index].user.real_name, resolveStatusByIndex[index].user.phone_number]
+                        {[status.user.real_name, status.user.phone_number]
                           .filter(Boolean)
                           .join(" / ") || "-"}
                       </div>
@@ -510,10 +571,10 @@ const ExternalRankingPage: React.FC = () => {
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    {resolveStatusByIndex[index]?.state === "loading" ? (
+                    {status?.state === "loading" ? (
                       <div className="text-xs text-gray-500">...</div>
-                    ) : resolveStatusByIndex[index]?.state === "ok" ? (
-                      <div className="text-sm text-white font-medium">{resolveStatusByIndex[index].user.nickname ?? "-"}</div>
+                    ) : status?.state === "ok" ? (
+                      <div className="text-sm text-white font-medium">{status.user.nickname ?? "-"}</div>
                     ) : (
                       <div className="text-xs text-gray-500">-</div>
                     )}
@@ -556,7 +617,8 @@ const ExternalRankingPage: React.FC = () => {
                     </button>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
               {rows.length === 0 && (
                 <tr>
                   <td className="px-4 py-10 text-center text-gray-400" colSpan={8}>

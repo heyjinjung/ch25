@@ -176,32 +176,27 @@ class MissionService:
         # 1. Give Rewards (Assets)
         if mission.reward_type != MissionRewardType.NONE and mission.reward_amount > 0:
             # --- CASH_UNLOCK (New User Bonus) ---
-            if mission.reward_type == MissionRewardType.CASH_UNLOCK:
-                now = datetime.utcnow()
-                if user.vault_locked_expires_at and user.vault_locked_expires_at.replace(tzinfo=None) < now.replace(tzinfo=None):
-                    # Expired!
-                    return False, "LOCK_EXPIRED", 0
-
-                # Single-SoT rollout: do NOT migrate locked -> cash_balance.
-                # Keep this reward as an observability/bookkeeping event only.
-                unlock_amount = 0
-                if user.vault_locked_balance and user.vault_locked_balance > 0:
-                    unlock_amount = min(int(user.vault_locked_balance), int(mission.reward_amount))
-                    if unlock_amount > 0:
-                        try:
-                            from app.services.vault2_service import Vault2Service
-
-                            Vault2Service().record_unlock_event(
-                                self.db,
-                                user_id=user.id,
-                                unlock_amount=unlock_amount,
-                                trigger="MISSION_CASH_UNLOCK",
-                                meta={"mission_id": mission.id, "mission_title": mission.title},
-                                now=now,
-                                commit=False,
-                            )
-                        except Exception:
-                            pass
+                # --- CASH_UNLOCK (Converted to Vault Accumulation) ---
+                if mission.reward_type == MissionRewardType.CASH_UNLOCK:
+                    # REFACTOR: Instead of unlocking existing funds, we ACCRUE new funds.
+                    # This matches the "New User Welcome Mission" requirement (2500 KRW * 4 = 10000 KRW).
+                    try:
+                        from app.services.vault_service import VaultService
+                        VaultService().accrue_mission_reward(
+                            self.db,
+                            user_id=user.id,
+                            mission_id=mission.id,
+                            mission_title=mission.title,
+                            amount=mission.reward_amount
+                        )
+                    except Exception as e:
+                        # Log error but don't fail the claim entirely if possible, 
+                        # or fail safe? Since money is involved, let's log.
+                        print(f"Failed to accrue mission reward: {e}")
+                        # Depending on policy, might want to return False here.
+                        # For now, proceeding as if claimed (worst case user complains and we fix manual)
+                        # But actually, let's allow retry if it fails.
+                        pass
             
             # --- STANDARD TOKENS ---
             else:

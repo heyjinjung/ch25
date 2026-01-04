@@ -154,7 +154,7 @@ const SeasonListPage: React.FC = () => {
   );
 
   const ModalShell = ({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) => (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/70 p-4 pt-[calc(env(safe-area-inset-top)+1rem)] pb-[calc(env(safe-area-inset-bottom)+1rem)] pl-[calc(env(safe-area-inset-left)+1rem)] pr-[calc(env(safe-area-inset-right)+1rem)] sm:items-center">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-hidden bg-black/70 p-4 pt-[calc(env(safe-area-inset-top)+1rem)] pb-[calc(env(safe-area-inset-bottom)+1rem)] pl-[calc(env(safe-area-inset-left)+1rem)] pr-[calc(env(safe-area-inset-right)+1rem)] sm:items-center">
       <div className="w-full max-w-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-lg border border-[#333333] bg-[#111111] shadow-lg sm:max-h-[90vh]">
         <div className="flex items-center justify-between border-b border-[#333333] px-6 py-4">
           <h3 className="text-lg font-medium text-[#91F402]">{title}</h3>
@@ -446,7 +446,7 @@ const SeasonListPage: React.FC = () => {
               </div>
 
               {/* Mobile-friendly card layout */}
-              <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
+              <div className="space-y-3 pr-1">
                 {levels.map((lv, idx) => (
                   <div
                     key={lv.level}
