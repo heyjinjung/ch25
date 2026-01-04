@@ -47,21 +47,21 @@ class DiceService:
         """Check if Dice Event is active for the user."""
         from app.services.vault2_service import Vault2Service
         vault2_service = Vault2Service()
-        
+
         # 1. Check Config
         game_earn_config = vault2_service.get_config_value(db, "game_earn_config", {})
         dice_event_probs = vault2_service.get_config_value(db, "probability", {}).get("DICE")
         is_active = bool(dice_event_probs and game_earn_config.get("DICE"))
-        
+
         if not is_active:
             return False
 
         # 2. Check Config File Active Flag (if strictly required, but 'probability' existence implies active in current logic)
-        # Note: Admin UI sets 'is_active' boolean at root of DiceEventParams? 
-        # Actually in AdminDiceApi we have structure. 
+        # Note: Admin UI sets 'is_active' boolean at root of DiceEventParams?
+        # Actually in AdminDiceApi we have structure.
         # But Vault2Service.get_config_value retrieves parts of config_json.
         # Let's assume presence of valid probability config implies active as per previous logic.
-        
+
         # 3. Eligibility (Blacklist)
         eligibility = vault2_service.get_config_value(db, "eligibility", {})
         from app.models.admin_user_profile import AdminUserProfile
@@ -79,7 +79,7 @@ class DiceService:
             if daily_plays_cap is not None:
                 if today_plays >= int(daily_plays_cap):
                     return False
-        
+
         return True
 
     def get_status(self, db: Session, user_id: int, today: date) -> DiceStatusResponse:
@@ -95,7 +95,7 @@ class DiceService:
                 func.date(DiceLog.created_at) == today,
             )
         ).scalar_one()
-        
+
         # Check Event Status
         event_active = self._is_event_active(db, user_id, today_plays)
 
@@ -131,11 +131,11 @@ class DiceService:
 
         # --- Event Mode Checking ---
         is_event_active = self._is_event_active(db, user_id, today_plays)
-        
+
         print(f"DEBUG: is_event_active post-cap={is_event_active}")
 
         # 3. Decision Logic
-        outcome = "LOSE" 
+        outcome = "LOSE"
         reward_type = config.lose_reward_type
         reward_amount = config.lose_reward_amount
         mode = "NORMAL"
@@ -152,7 +152,7 @@ class DiceService:
             p_win = dice_event_probs.get("p_win", 0.35)
             p_draw = dice_event_probs.get("p_draw", 0.10)
             p_lose = dice_event_probs.get("p_lose", 0.55)
-            
+
             # Normalize just in case
             total_p = p_win + p_draw + p_lose
             if total_p <= 0:
@@ -162,7 +162,7 @@ class DiceService:
                  outcomes = ["WIN", "DRAW", "LOSE"]
                  weights = [p_win, p_draw, p_lose]
                  outcome = random.choices(outcomes, weights=weights, k=1)[0]
-                 
+
                  # Set Rewards from Event Config
                  event_rewards = game_earn_config.get("DICE", {})
                  event_reward_amount = event_rewards.get(outcome)
@@ -173,14 +173,14 @@ class DiceService:
                      # So we should probably override the reward_amount here for the API response too.
                      reward_amount = int(event_reward_amount)
                      reward_type = "NONE" # Usually event mode rewards are Vault accruals only
-                 
+
         if mode == "NORMAL":
              # Standard Pure RNG
              user_dice = [random.randint(1, 6), random.randint(1, 6)]
              dealer_dice = [random.randint(1, 6), random.randint(1, 6)]
              user_sum = sum(user_dice)
              dealer_sum = sum(dealer_dice)
-             
+
              if user_sum > dealer_sum:
                  outcome = "WIN"
                  reward_type = config.win_reward_type
@@ -219,7 +219,7 @@ class DiceService:
                      if (u1+u2) < (d1+d2):
                          user_dice, dealer_dice = [u1, u2], [d1, d2]
                          break
-             
+
              user_sum = sum(user_dice)
              dealer_sum = sum(dealer_dice)
 
@@ -258,7 +258,9 @@ class DiceService:
         # [Mission] Update progress (includes streak sync). Do this before Vault accrual so
         # streak-based vault bonuses apply immediately on the same play.
         from app.services.mission_service import MissionService
-        MissionService(db).update_progress(user_id, "PLAY_GAME")
+        mission_service = MissionService(db)
+        mission_service.update_progress(user_id, "PLAY_GAME")
+        streak_info = mission_service.get_streak_info(user_id)
 
         total_earn = 0
         # Vault Phase 1: idempotent game accrual (safe-guarded by feature flag).
@@ -333,4 +335,5 @@ class DiceService:
             ),
             season_pass=season_pass,
             vault_earn=total_earn,
+            streak_info=streak_info,
         )

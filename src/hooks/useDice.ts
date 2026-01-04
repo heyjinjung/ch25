@@ -2,6 +2,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { DicePlayResponse, DiceStatusResponse, getDiceStatus, playDice } from "../api/diceApi";
 import { recordActivity } from "../api/activityApi";
+import { useMissionStore } from "../stores/missionStore";
 
 const DICE_STATUS_QUERY_KEY = ["dice-status"] as const;
 
@@ -20,6 +21,10 @@ export const usePlayDice = () => {
       queryClient.invalidateQueries({ queryKey: DICE_STATUS_QUERY_KEY });
       // Invalidate vault status to refresh balance immediately
       queryClient.invalidateQueries({ queryKey: ["vault-status"] });
+
+      if (data.streakInfo) {
+        useMissionStore.getState().setStreakInfo(data.streakInfo);
+      }
 
       recordActivity({ event_type: "DICE_PLAY" }).catch(() => undefined);
 

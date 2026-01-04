@@ -116,7 +116,7 @@ class RouletteService:
                 RouletteConfig.ticket_type == ticket_type
             ).order_by(RouletteConfig.id.desc())
         ).scalars().first()
-        
+
         if config is None:
             settings = get_settings()
             is_sqlite = bool(db.bind and db.bind.dialect.name == "sqlite")
@@ -162,7 +162,7 @@ class RouletteService:
     def get_status(self, db: Session, user_id: int, today: date, ticket_type: str = GameTokenType.ROULETTE_COIN.value) -> RouletteStatusResponse:
         self.feature_service.validate_feature_active(db, today, FeatureType.ROULETTE)
         config = self._get_today_config(db, ticket_type)
-        
+
         # Map input string to Enum if possible, or just use string
         token_type_enum = GameTokenType(ticket_type)
         token_balance = self.wallet_service.get_balance(db, user_id, token_type_enum)
@@ -196,7 +196,7 @@ class RouletteService:
         self.feature_service.validate_feature_active(db, today, FeatureType.ROULETTE)
         config = self._get_today_config(db, ticket_type)
         token_type_enum = GameTokenType(ticket_type)
-        
+
         segments = None
         for attempt in range(3):
             try:
@@ -245,7 +245,9 @@ class RouletteService:
         # [Mission] Update progress (includes streak sync). Do this before Vault accrual so
         # streak-based vault bonuses apply immediately on the same play.
         from app.services.mission_service import MissionService
-        MissionService(db).update_progress(user_id, "PLAY_GAME")
+        mission_service = MissionService(db)
+        mission_service.update_progress(user_id, "PLAY_GAME")
+        streak_info = mission_service.get_streak_info(user_id)
 
         total_earn = 0
         # Vault Phase 1: idempotent game accrual (safe-guarded by feature flag).
@@ -334,7 +336,7 @@ class RouletteService:
             # [KEY REWARD REDIRECTION FIX]
             # If the user used a GOLD_KEY or DIAMOND_KEY, and won POINTs, retrieve them as Vault Cash, NOT XP.
             if token_type_enum in (GameTokenType.GOLD_KEY, GameTokenType.DIAMOND_KEY) and chosen.reward_type == "POINT":
-                 # Already accrued to vault via the special handling block added above? 
+                 # Already accrued to vault via the special handling block added above?
                  # Wait, the block above (lines 219-233) only handled chosen.reward_type IN {GOLD_KEY, DIAMOND_KEY}.
                  # This block handles chosen.reward_type == "POINT" when ticket is Key.
                  pass # Skip reward_service delivery for points, handled below explicitly if needed
@@ -355,4 +357,5 @@ class RouletteService:
             segment=chosen,
             season_pass=season_pass,
             vault_earn=total_earn,
+            streak_info=streak_info,
         )

@@ -9,6 +9,7 @@ from app.models.mission import Mission, UserMissionProgress, MissionCategory, Mi
 from app.models.user import User
 from app.models.season_pass import SeasonPassProgress
 from app.models.game_wallet import UserGameWallet, GameTokenType
+from app.models.feature import UserEventLog
 from app.core.config import get_settings
 from zoneinfo import ZoneInfo
 
@@ -53,10 +54,63 @@ class MissionService:
         if user.last_play_date == play_day:
             return user
 
+        prev_streak_days = int(getattr(user, "play_streak", 0) or 0)
+        prev_last_play_date = getattr(user, "last_play_date", None)
+
+        hot_threshold = int(getattr(self.settings, "streak_hot_threshold_days", 3) or 3)
+        legend_threshold = int(getattr(self.settings, "streak_legend_threshold_days", 7) or 7)
+
         if user.last_play_date == play_day - timedelta(days=1):
             user.play_streak = int(user.play_streak or 0) + 1
         else:
             user.play_streak = 1
+
+            # Observability: streak reset occurs when the user breaks continuity (excluding first-ever play).
+            if prev_last_play_date is not None:
+                self.db.add(
+                    UserEventLog(
+                        user_id=int(user.id),
+                        feature_type="STREAK",
+                        event_name="streak.reset",
+                        meta_json={
+                            "prev_streak_days": prev_streak_days,
+                            "prev_last_play_date": prev_last_play_date.isoformat() if prev_last_play_date else None,
+                            "play_day": play_day.isoformat(),
+                        },
+                    )
+                )
+
+        new_streak_days = int(getattr(user, "play_streak", 0) or 0)
+
+        # Observability: promotions when crossing milestones.
+        if prev_streak_days < hot_threshold <= new_streak_days:
+            self.db.add(
+                UserEventLog(
+                    user_id=int(user.id),
+                    feature_type="STREAK",
+                    event_name="streak.promote",
+                    meta_json={
+                        "milestone": "HOT",
+                        "from_days": prev_streak_days,
+                        "to_days": new_streak_days,
+                        "play_day": play_day.isoformat(),
+                    },
+                )
+            )
+        if prev_streak_days < legend_threshold <= new_streak_days:
+            self.db.add(
+                UserEventLog(
+                    user_id=int(user.id),
+                    feature_type="STREAK",
+                    event_name="streak.promote",
+                    meta_json={
+                        "milestone": "LEGEND",
+                        "from_days": prev_streak_days,
+                        "to_days": new_streak_days,
+                        "play_day": play_day.isoformat(),
+                    },
+                )
+            )
         user.last_play_date = play_day
         self.db.add(user)
 
@@ -103,6 +157,23 @@ class MissionService:
             label=f"STREAK_DAY_{streak_days}_TICKET_BONUS",
             meta=meta,
             auto_commit=False,
+        )
+
+        # Observability: ticket bonus grant event
+        self.db.add(
+            UserEventLog(
+                user_id=int(user.id),
+                feature_type="STREAK",
+                event_name="streak.ticket_bonus_grant",
+                meta_json={
+                    "streak_days": streak_days,
+                    "play_day": play_day.isoformat(),
+                    "grants": [
+                        {"token_type": GameTokenType.LOTTERY_TICKET.value, "amount": 1},
+                        {"token_type": GameTokenType.ROULETTE_COIN.value, "amount": 2},
+                    ],
+                },
+            )
         )
 
     def get_streak_info(self, user_id: int) -> dict:
@@ -194,10 +265,10 @@ class MissionService:
         """Returns the reset key string based on category and current KST time."""
         # Enforce KST (UTC+9)
         from datetime import timezone
-        
+
         kst_tz = timezone(timedelta(hours=9))
         now = datetime.now(kst_tz)
-        
+
         if category == MissionCategory.DAILY:
             return now.strftime("%Y-%m-%d")
         elif category == MissionCategory.WEEKLY:
@@ -223,7 +294,7 @@ class MissionService:
                 # Hide out-of-window missions from list
                 continue
             reset_date = self.get_reset_date_str(mission.category)
-            
+
             progress = self.db.query(UserMissionProgress).filter(
                 UserMissionProgress.user_id == user_id,
                 UserMissionProgress.mission_id == mission.id,
@@ -266,7 +337,7 @@ class MissionService:
                 },
                 "progress": progress_dict
             })
-        
+
         return result
 
     def update_progress(self, user_id: int, action_type: str, delta: int = 1) -> List[UserMissionProgress]:
@@ -276,12 +347,12 @@ class MissionService:
         Returns list of updated progress objects.
         """
         missions = self.db.query(Mission).filter(
-            or_(Mission.action_type == action_type, Mission.logic_key == action_type), 
+            or_(Mission.action_type == action_type, Mission.logic_key == action_type),
             Mission.is_active == True
         ).all()
 
         updated_list = []
-        
+
         now_tz = self._now_tz()
 
         # Play streak sync is tied to actual game play actions.
@@ -298,7 +369,7 @@ class MissionService:
             if not self._within_time_window(mission, now_tz):
                 continue
             reset_date = self.get_reset_date_str(mission.category)
-            
+
             progress = self.db.query(UserMissionProgress).filter(
                 UserMissionProgress.user_id == user_id,
                 UserMissionProgress.mission_id == mission.id,
@@ -313,10 +384,10 @@ class MissionService:
                     reset_date=reset_date
                 )
                 self.db.add(progress)
-            
+
             if not progress.is_completed:
                 progress.current_value += delta
-                
+
                 # Check completion
                 if progress.current_value >= mission.target_value:
                     progress.current_value = mission.target_value
@@ -330,7 +401,7 @@ class MissionService:
                         except Exception:
                             # Do not block progress commit
                             pass
-                
+
                 # [Nudge] Intelligent Trigger: 1 step remaining
                 elif progress.current_value == mission.target_value - 1 and mission.target_value >= 3:
                      # Check if user has telegram_id
@@ -338,8 +409,8 @@ class MissionService:
                          try:
                              from app.services.notification_service import NotificationService
                              NotificationService().send_nudge_sync(
-                                 chat_id=progress.user.telegram_id, 
-                                 mission_title=mission.title, 
+                                 chat_id=progress.user.telegram_id,
+                                 mission_title=mission.title,
                                  remaining=1
                              )
                          except Exception as e:
@@ -347,12 +418,12 @@ class MissionService:
                              pass
 
                 updated_list.append(progress)
-            
+
         self.db.commit()
         # Refresh all updated (optional, careful with performance if many)
         for p in updated_list:
             self.db.refresh(p)
-            
+
         return updated_list
 
     def claim_reward(self, user_id: int, mission_id: int) -> Tuple[bool, str, int]:
@@ -380,7 +451,7 @@ class MissionService:
 
         if not progress or not progress.is_completed:
             return False, "Mission not completed", 0
-        
+
         if progress.is_claimed:
             return False, "Already claimed", 0
 
@@ -410,29 +481,29 @@ class MissionService:
                         amount=reward_amount
                     )
                 except Exception as e:
-                    # Log error but don't fail the claim entirely if possible, 
+                    # Log error but don't fail the claim entirely if possible,
                     # or fail safe? Since money is involved, let's log.
                     print(f"Failed to accrue mission reward: {e}")
                     # Depending on policy, might want to return False here.
                     # For now, proceeding as if claimed (worst case user complains and we fix manual)
                     # But actually, let's allow retry if it fails.
                     pass
-            
+
             # --- STANDARD TOKENS ---
             else:
                 from app.services.game_wallet_service import GameWalletService
                 from app.services.inventory_service import InventoryService
-                
+
                 token_type_map = {
                     MissionRewardType.DIAMOND: GameTokenType.DIAMOND,
                     MissionRewardType.GOLD_KEY: GameTokenType.GOLD_KEY,
                     MissionRewardType.DIAMOND_KEY: GameTokenType.DIAMOND_KEY,
                     MissionRewardType.TICKET_BUNDLE: GameTokenType.LOTTERY_TICKET,
                 }
-                
+
                 wallet_service = GameWalletService()
                 target_token = token_type_map.get(mission.reward_type)
-                
+
                 if target_token:
                     # Phase 2 rule: DIAMOND is Inventory SoT (not wallet).
                     if target_token == GameTokenType.DIAMOND:
@@ -462,14 +533,14 @@ class MissionService:
         if xp_reward > 0:
             from app.services.season_pass_service import SeasonPassService
             SeasonPassService().add_bonus_xp(
-                self.db, 
-                user_id=user_id, 
+                self.db,
+                user_id=user_id,
                 xp_amount=xp_reward
             )
 
         progress.is_claimed = True
         self.db.commit()
-        
+
         return True, mission.reward_type, reward_amount
 
     def claim_daily_gift(self, user_id: int) -> Tuple[bool, str, int]:
@@ -495,7 +566,7 @@ class MissionService:
             self.db.add(mission)
             self.db.commit()
             self.db.refresh(mission)
-        
+
         # Ensure older seeded daily_gift has action_type if missing?
         if not mission.action_type:
              mission.action_type = "daily_gift"

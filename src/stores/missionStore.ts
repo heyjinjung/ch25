@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import apiClient from '../api/apiClient';
+import type { StreakInfo } from '../types/streak';
 
 const generateIdempotencyKey = (missionId: number) => {
     if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -38,14 +39,6 @@ export interface MissionData {
     progress: MissionProgress;
 }
 
-export interface StreakInfo {
-    streak_days: number;
-    current_multiplier: number;
-    is_hot: boolean;
-    is_legend: boolean;
-    next_milestone: number;
-}
-
 interface MissionState {
     missions: MissionData[];
     isLoading: boolean;
@@ -53,6 +46,7 @@ interface MissionState {
     hasUnclaimed: boolean;
     streakInfo: StreakInfo | null;
     fetchMissions: () => Promise<void>;
+    setStreakInfo: (streakInfo: StreakInfo | null) => void;
     claimReward: (missionId: number) => Promise<{ success: boolean; reward_type?: string; amount?: number; message?: string }>;
 }
 
@@ -62,6 +56,10 @@ export const useMissionStore = create<MissionState>((set: any, get: any) => ({
     error: null,
     hasUnclaimed: false,
     streakInfo: null,
+
+    setStreakInfo: (streakInfo) => {
+        set({ streakInfo });
+    },
 
     fetchMissions: async () => {
         set({ isLoading: true, error: null });

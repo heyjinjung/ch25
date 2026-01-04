@@ -4,6 +4,7 @@ import { GameTokenType } from "../types/gameTokens";
 import { isDemoFallbackEnabled } from "../config/featureFlags";
 import { getFallbackDiceStatus, playFallbackDice } from "./fallbackData";
 import userApi from "./httpClient";
+import type { StreakInfo } from "../types/streak";
 
 interface BackendDiceStatusResponse {
   readonly config_id: number;
@@ -38,6 +39,7 @@ interface BackendDicePlayResponse {
   };
   readonly season_pass?: Record<string, unknown> | null;
   readonly vault_earn?: number;
+  readonly streak_info?: StreakInfo | null;
 }
 
 export interface DicePlayResponse {
@@ -49,6 +51,7 @@ export interface DicePlayResponse {
   readonly reward_value?: number | string;
   readonly message?: string;
   readonly vaultEarn?: number;
+  readonly streakInfo?: StreakInfo | null;
 }
 
 export const getDiceStatus = async (): Promise<DiceStatusResponse> => {
@@ -87,6 +90,7 @@ export const playDice = async (): Promise<DicePlayResponse> => {
       reward_value: data.game.reward_amount,
       message: data.result !== "OK" ? data.result : undefined,
       vaultEarn: data.vault_earn,
+      streakInfo: data.streak_info ?? null,
     };
   } catch (error) {
     if (axios.isAxiosError(error)) {

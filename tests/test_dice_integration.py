@@ -50,3 +50,5 @@ def test_dice_play_returns_result(client: TestClient) -> None:
     data = response.json()
     assert data["result"] == "OK"
     assert "game" in data
+    assert "streak_info" in data
+    assert isinstance(data["streak_info"]["streak_days"], int)

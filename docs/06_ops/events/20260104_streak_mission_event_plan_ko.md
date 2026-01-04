@@ -21,7 +21,7 @@ stateDiagram-v2
     HOT --> HOT: 3~6일 연속 플레이 유지
     HOT --> LEGEND: 7일 연속 플레이 달성
     LEGEND --> LEGEND: 7일 이상 플레이 유지
-    
+
     NORMAL --> NORMAL: 미참여 (Streak 0)
     HOT --> NORMAL: 미참여 (Streak Reset)
     LEGEND --> NORMAL: 미참여 (Streak Reset)
@@ -45,7 +45,7 @@ stateDiagram-v2
 def sync_play_streak(self, user: User, now_kst: datetime):
     today = now_kst.date()
     yesterday = today - timedelta(days=1)
-    
+
 
     # 2. Row-level Lock 획득 (SELECT ... FOR UPDATE)
     user = db.query(User).filter(User.id == user_id).with_for_update().one()
@@ -54,7 +54,7 @@ def sync_play_streak(self, user: User, now_kst: datetime):
     if user.last_play_date == today:
         # 오늘 이미 기록됨: 중복 갱신 방지
         return
-        
+
     if user.last_play_date == yesterday:
         # 연속 접속 성공: 스트릭 증가
         user.play_streak += 1
@@ -119,13 +119,13 @@ sequenceDiagram
     participant G as Game API (Dice/Roulette)
     participant M as Mission Service (Backend)
     participant DB as Database
-    
+
     U->>G: 게임 플레이 실행
     G->>M: 활동 기록 (update_progress('PLAY_GAME'))
     M->>M: 스트릭 판정 (sync_play_streak)
     M->>DB: User Streak/Date 업데이트 (Row Level Lock)
     G-->>U: 결과 반환 (new_streak_count 포함)
-    
+
     Note over U, M: 이후 미션 조회 시 상향된 보상 데이터 수신
 ```
 
@@ -163,7 +163,7 @@ class StreakInfo(BaseModel):
 연속 플레이 로그는 `user` 테이블의 핵심 프로필 영역에서 관리하여 조회 성능을 확보합니다.
 
 ```sql
-ALTER TABLE `user` 
+ALTER TABLE `user`
 ADD COLUMN `play_streak` INT NOT NULL DEFAULT 0,
 ADD COLUMN `last_play_date` DATE NULL;
 
@@ -188,7 +188,7 @@ CREATE INDEX `idx_user_streak` ON `user` (`play_streak`, `last_play_date`);
 ## 8. 보안 및 기술적 안전장치 (Security & Stability)
 
 1.  **동시성 제어**: `sync_play_streak` 수행 시 해당 유저 Row에 대한 비관적 락(`FOR UPDATE`)을 적용하여 중복 카운팅 방지.
-2.  **어뷰징 차단**: 
+2.  **어뷰징 차단**:
     *   프론트엔드 시스템 시각을 무시하고 서버 시간(KST)만 사용.
     *   1일 1회 이상 플레이 여부만 판정하되, 매크로 방지를 위한 `PLAY_GAME` 유효성 검증 로직 연동.
 3.  **데이터 무결성**: 스트릭 갱신 실패 시 게임 결과 트랜잭션 전체 롤백 처리.
@@ -217,17 +217,17 @@ CREATE INDEX `idx_user_streak` ON `user` (`play_streak`, `last_play_date`);
 - [x] 테스트: pytest(스트릭 금고 배율/Day4~5 티켓) 및 vitest(MissionStore) 통과
 
 ### 10.2 남은 작업
-- [ ] Game API: `POST /api/dice/play`, `POST /api/roulette/play`, `POST /api/lottery/play` 응답에 `new_streak_count`(또는 `streak_info`) 포함
+- [x] Game API: `POST /api/dice/play`, `POST /api/roulette/play`, `POST /api/lottery/play` 응답에 `streak_info` 포함
     - 목적: 게임 1회 플레이 직후 프론트가 스트릭 상태를 즉시 갱신(추가 `GET /api/mission/` 호출 없이도 동기화)
-    - 구현 방향(권장): 게임 서비스(`DiceService`/`RouletteService`/`LotteryService`)가 내부에서 `MissionService.sync_play_streak(...)` 결과를 받아 응답 DTO에 포함
+    - 구현 내용: 게임 서비스에서 스트릭 정산 후 `streak_info`를 응답 DTO에 포함하고, 프론트는 play 응답의 `streak_info`로 `missionStore.streakInfo`를 즉시 갱신
 - [ ] 운영: 리셋 방지 넛지(Telegram Push) 발송 로직/스케줄링
     - 대상(예): `last_play_date`가 “어제(운영일 기준)”인 유저 중, 오늘 아직 첫 플레이가 없는 유저
     - 스케줄(예): 매일 KST 08:30~09:00 사이 1회(리셋 직전), 유저당 1일 1회 제한
     - 안전장치(예): 수신 동의/차단 반영, 실패 재시도/레이트리밋, 발송 로그 적재
-- [ ] 관측성: 스트릭/보너스 관련 이벤트 로깅 및 대시보드 구현
+
     - 이벤트(예): `streak.promote`, `streak.reset`, `streak.ticket_bonus_grant`, `streak.vault_bonus_applied`
     - 대시보드(예): 일별 promote/reset 추이, Day4~5 티켓 지급 수/비용, 금고 배율 적용 플레이 수, 제외 사유(모드/티켓타입) 비율
-
+- [x] 관측성: 스트릭/보너스 관련 이벤트 로깅 및 대시보드 구현
 ---
 
 ## 11. 운영 모니터링 대시보드 (Operational Monitoring Dashboard Sketch)

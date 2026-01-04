@@ -1,9 +1,11 @@
 """Pydantic schemas for lottery APIs."""
 from pydantic import ConfigDict
+from typing import Optional
 
 from app.schemas.base import KstBaseModel as BaseModel
 
 from app.models.feature import FeatureType
+from app.schemas.mission import StreakInfoSchema
 
 
 class LotteryPrizeSchema(BaseModel):
@@ -32,3 +34,4 @@ class LotteryPlayResponse(BaseModel):
     prize: LotteryPrizeSchema
     season_pass: dict | None = None
     vault_earn: int = 0
+    streak_info: Optional[StreakInfoSchema] = None

@@ -143,7 +143,9 @@ class LotteryService:
         # [Mission] Update progress (includes streak sync). Do this before Vault accrual so
         # streak-based vault bonuses apply immediately on the same play.
         from app.services.mission_service import MissionService
-        MissionService(db).update_progress(user_id, "PLAY_GAME")
+        mission_service = MissionService(db)
+        mission_service.update_progress(user_id, "PLAY_GAME")
+        streak_info = mission_service.get_streak_info(user_id)
 
         # Vault Phase 1: idempotent game accrual (safe-guarded by feature flag).
         total_earn = self.vault_service.record_game_play_earn_event(
@@ -205,4 +207,5 @@ class LotteryService:
             prize=LotteryPrizeSchema.from_orm(chosen),
             season_pass=season_pass,
             vault_earn=total_earn,
+            streak_info=streak_info,
         )

@@ -50,3 +50,5 @@ def test_lottery_play_returns_prize(client: TestClient) -> None:
     data = resp.json()
     assert data["result"] == "OK"
     assert data["prize"]["reward_type"] == "POINT"
+    assert "streak_info" in data
+    assert isinstance(data["streak_info"]["streak_days"], int)

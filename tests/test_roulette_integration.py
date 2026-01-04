@@ -50,3 +50,5 @@ def test_roulette_play_returns_segment(client: TestClient) -> None:
     data = resp.json()
     assert data["result"] == "OK"
     assert data["segment"]["reward_type"] == "POINT"
+    assert "streak_info" in data
+    assert isinstance(data["streak_info"]["streak_days"], int)

@@ -247,7 +247,10 @@ def test_new_user_without_external_deposit_is_eligible_for_welcome(client: TestC
 
         claim = client.post(
             f"/api/mission/{mission.id}/claim",
-            headers={"Authorization": f"Bearer {body['access_token']}"},
+            headers={
+                "Authorization": f"Bearer {body['access_token']}",
+                "X-Idempotency-Key": "tma-onboarding-share-story-claim",
+            },
         )
         assert claim.status_code == 200
         claim_body = claim.json()

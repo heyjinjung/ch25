@@ -44,6 +44,8 @@ def test_roulette_play_logs_and_rewards(client: TestClient, session_factory) -> 
     data = resp.json()
     assert data["result"] == "OK"
     assert data["segment"]["reward_type"] == "POINT"
+    assert "streak_info" in data
+    assert isinstance(data["streak_info"]["streak_days"], int)
 
     verify: Session = session_factory()
     assert verify.query(RouletteLog).count() == 1
@@ -73,6 +75,8 @@ def test_dice_play_logs_and_rewards(client: TestClient, session_factory) -> None
     data = resp.json()
     assert data["result"] == "OK"
     assert data["game"]["reward_type"] in {"POINT", "NONE"}
+    assert "streak_info" in data
+    assert isinstance(data["streak_info"]["streak_days"], int)
 
     verify: Session = session_factory()
     assert verify.query(DiceLog).count() == 1
@@ -105,6 +109,8 @@ def test_lottery_play_decrements_stock_and_logs(client: TestClient, session_fact
     data = resp.json()
     assert data["result"] == "OK"
     assert data["prize"]["reward_type"] == "POINT"
+    assert "streak_info" in data
+    assert isinstance(data["streak_info"]["streak_days"], int)
 
     verify: Session = session_factory()
     prize = verify.query(LotteryPrize).first()

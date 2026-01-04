@@ -4,6 +4,7 @@ import { GameTokenType } from "../types/gameTokens";
 import { isDemoFallbackEnabled } from "../config/featureFlags";
 import { getFallbackRouletteStatus, playFallbackRoulette } from "./fallbackData";
 import userApi from "./httpClient";
+import type { StreakInfo } from "../types/streak";
 
 interface BackendRouletteSegmentDto {
   readonly id: number;
@@ -49,6 +50,7 @@ interface BackendRoulettePlayResponse {
   readonly segment: BackendRouletteSegmentDto;
   readonly season_pass?: Record<string, unknown> | null;
   readonly vault_earn?: number;
+  readonly streak_info?: StreakInfo | null;
 }
 
 export interface RoulettePlayResponse {
@@ -59,6 +61,7 @@ export interface RoulettePlayResponse {
   readonly reward_value?: number | string;
   readonly message?: string;
   readonly vaultEarn?: number;
+  readonly streakInfo?: StreakInfo | null;
 }
 
 export const getRouletteStatus = async (ticketType?: string): Promise<RouletteStatusResponse> => {
@@ -119,6 +122,7 @@ export const playRoulette = async (ticketType?: string): Promise<RoulettePlayRes
       reward_value: mappedSegment.reward_amount,
       message: data.result !== "OK" ? data.result : undefined,
       vaultEarn: data.vault_earn,
+      streakInfo: data.streak_info ?? null,
     };
   } catch (error) {
     if (axios.isAxiosError(error)) {

@@ -19,6 +19,7 @@ from app.core.config import get_settings
 from app.models.game_wallet import GameTokenType
 from app.models.user import User
 from app.models.vault_earn_event import VaultEarnEvent
+from app.models.feature import UserEventLog
 from app.core.notifications import notify_vault_skip_error
 from app.services.reward_service import RewardService
 from app.services.vault2_service import Vault2Service
@@ -167,7 +168,7 @@ class VaultService:
 
         settings = get_settings()
         # Note: phase1_unlock_rules_json doesn't have db here but it's called from vault.py status which has db
-        # If we want accuracy we should pass db here too. 
+        # If we want accuracy we should pass db here too.
         # For now I will keep it as is or update signature if needed.
         mult = cls.vault_accrual_multiplier(now=now)
         return {
@@ -568,7 +569,7 @@ class VaultService:
 
         if int(amount_before_multiplier or 0) == 0:
             return 0
-        
+
         amount_before_multiplier = int(amount_before_multiplier)
 
         base_multiplier = float(self.vault_accrual_multiplier(db, now_dt))
@@ -598,7 +599,7 @@ class VaultService:
         # --- Caps Check (Phase 1 for Event) ---
         # If event mode (or generally configured), check caps.
         # We check "daily_gain" cap if defined in VaultProgram.
-        
+
         caps = cfg_service.get_config_value(db, "caps", {}).get(game_type_upper)
         if caps and isinstance(caps, dict):
             daily_gain_cap = caps.get("daily_gain")
@@ -606,7 +607,7 @@ class VaultService:
                 daily_gain_cap = int(daily_gain_cap)
                 # Calculate today's net gain so far
                 today_start = datetime(now_dt.year, now_dt.month, now_dt.day)
-                
+
                 # Sum amounts from VaultEarnEvent for today
                 current_daily_gain = db.execute(
                     select(func.coalesce(func.sum(VaultEarnEvent.amount), 0)).where(
@@ -615,12 +616,12 @@ class VaultService:
                         VaultEarnEvent.game_type == game_type_upper
                     )
                 ).scalar() or 0
-                
+
                 # Check if adding 'amount' exceeds cap
                 # Note: amount can be negative (LOSE). Caps usually limit positive gain?
                 # The requirement says "1일 최대 순증 +20,000".
                 # If amount is positive, we clamp it. If negative, we let it pass (it reduces gain).
-                
+
                 if amount > 0:
                     potential_total = current_daily_gain + amount
                     if potential_total > daily_gain_cap:
@@ -660,6 +661,33 @@ class VaultService:
 
         db.add(user)
         db.add(event)
+
+        # Observability: streak vault bonus application
+        if eligible_for_streak_bonus and amount_before_multiplier == 200 and float(streak_multiplier) > 1.0:
+            try:
+                meta = {
+                    "game_type": game_type_upper,
+                    "token_type": token_type,
+                    "streak_days": int(getattr(user, "play_streak", 0) or 0),
+                    "streak_multiplier": float(streak_multiplier),
+                    "base_multiplier": float(base_multiplier),
+                    "total_multiplier": float(total_multiplier),
+                    "amount_before_multiplier": int(amount_before_multiplier),
+                    "amount": int(amount),
+                }
+                if game_type_upper == "DICE":
+                    meta["mode"] = str((payout_raw or {}).get("mode") or "NORMAL").upper()
+                db.add(
+                    UserEventLog(
+                        user_id=int(user.id),
+                        feature_type="STREAK",
+                        event_name="streak.vault_bonus_applied",
+                        meta_json=meta,
+                    )
+                )
+            except Exception:
+                # Do not block vault accrual for observability logging.
+                pass
 
         # Phase 2/3-stage prep: record accrual into Vault2 bookkeeping (no v1 behavior change).
         try:
@@ -738,7 +766,7 @@ class VaultService:
             # Try DB config first
             valuation = Vault2Service().get_config_value(db, "trial_reward_valuation", {})
             amount = valuation.get(reward_id)
-            
+
             # Fallback to legacy settings
             if amount is None:
                 settings_valuation = getattr(settings, "trial_reward_valuation", {}) or {}
@@ -748,7 +776,7 @@ class VaultService:
                 amount = int(amount or 0)
             except Exception:
                 amount = 0
-            
+
             amount_before_multiplier = int(amount)
             if amount > 0:
                 reward_kind = "VALUED"
@@ -834,15 +862,15 @@ class VaultService:
             return 0
 
         now_dt = now or datetime.utcnow()
-        
+
         # Eligibility guard (Phase 1 funnel matches Game Earn).
-        # We generally want welcome missions to work for everyone who sees them, 
+        # We generally want welcome missions to work for everyone who sees them,
         # but consistency with Vault funnel is safer.
         if not self._eligible(db, user_id, now_dt):
             return 0
 
         earn_event_id = f"MISSION:{mission_id}"
-        
+
         # Idempotency check
         exists = db.execute(
             select(VaultEarnEvent.id).where(VaultEarnEvent.earn_event_id == earn_event_id)
@@ -855,20 +883,20 @@ class VaultService:
         if db.bind and db.bind.dialect.name != "sqlite":
             q = q.with_for_update()
         user = q.one_or_none()
-        
+
         if not user:
              # Implicitly created if strictly needed, but Missions imply user exists.
              return 0
 
         # Accrue
-        # Missions do NOT use the 'accrual_multiplier' logic usually (fixed reward), 
+        # Missions do NOT use the 'accrual_multiplier' logic usually (fixed reward),
         # but let's stick to the requested fixed amount.
-        
+
         self._expire_locked_if_due(user, now_dt)
         user.vault_locked_balance = int(user.vault_locked_balance or 0) + int(amount)
         self._ensure_locked_expiry(user, now_dt)
         self.sync_legacy_mirror(user)
-        
+
         # Record Event
         event = VaultEarnEvent(
             user_id=user.id,
@@ -883,23 +911,23 @@ class VaultService:
             },
             created_at=now_dt,
         )
-        
+
         db.add(user)
         db.add(event)
-        
+
         # Vault2 Sync
         try:
             Vault2Service().accrue_locked(db, user_id=user.id, amount=int(amount), now=now_dt, commit=False)
         except Exception:
             pass
-            
+
         try:
             db.commit()
             db.refresh(user)
         except IntegrityError:
             db.rollback()
             return 0
-            
+
         return int(amount)
 
     def request_withdrawal(self, db: Session, user_id: int, amount: int) -> dict:
@@ -929,7 +957,7 @@ class VaultService:
         activity = db.query(UserActivity).filter(UserActivity.user_id == user_id).first()
         if not activity or not activity.last_charge_at:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="NO_DEPOSIT_RECORD_TODAY")
-        
+
         last_charge_date = activity.last_charge_at.date()
         if last_charge_date != today:
              raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="DEPOSIT_REQUIRED_TODAY")
@@ -982,7 +1010,7 @@ class VaultService:
         req = db.query(VaultWithdrawalRequest).filter(VaultWithdrawalRequest.id == request_id).with_for_update().first()
         if not req:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="REQUEST_NOT_FOUND")
-        
+
         if req.status != "PENDING":
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="REQUEST_ALREADY_PROCESSED")
 
@@ -1031,7 +1059,7 @@ class VaultService:
                 "user_id": user.id,
                 "vault_locked_balance": int(getattr(user, "vault_locked_balance", 0) or 0),
             }
-        
+
         elif action == "REJECT":
             req.status = "REJECTED"
             # No refund needed (nothing deducted at request time).
@@ -1064,7 +1092,7 @@ class VaultService:
 
         db.commit()
         db.refresh(req)
-        
+
         return {
             "request_id": req.id,
             "status": req.status,

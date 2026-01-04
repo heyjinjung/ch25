@@ -16,7 +16,12 @@ import {
   Users,
   HardDrive,
 } from "lucide-react";
-import { fetchDashboardMetrics, DashboardMetricsResponse } from "../api/adminDashboardApi";
+import {
+  fetchDashboardMetrics,
+  fetchStreakMetrics,
+  DashboardMetricsResponse,
+  StreakMetricsResponse,
+} from "../api/adminDashboardApi";
 
 const baseAccent = "#91F402";
 
@@ -126,19 +131,36 @@ const quickLinks = [
 
 const AdminDashboardPage: React.FC = () => {
   const [data, setData] = useState<DashboardMetricsResponse | null>(null);
+  const [streakData, setStreakData] = useState<StreakMetricsResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [streakError, setStreakError] = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true);
     setError(null);
+    setStreakError(null);
     try {
-      const res = await fetchDashboardMetrics(24);
+      const [res, streakRes] = await Promise.all([
+        fetchDashboardMetrics(24),
+        fetchStreakMetrics(7),
+      ]);
       setData(res);
+      setStreakData(streakRes);
     } catch {
       setError("지표를 불러오지 못했습니다. 다시 시도해주세요.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadStreakOnly = async () => {
+    setStreakError(null);
+    try {
+      const streakRes = await fetchStreakMetrics(7);
+      setStreakData(streakRes);
+    } catch {
+      setStreakError("스트릭 지표를 불러오지 못했습니다. 다시 시도해주세요.");
     }
   };
 
@@ -245,6 +267,78 @@ const AdminDashboardPage: React.FC = () => {
             <p className="text-sm text-gray-400">지표 로딩 중...</p>
           </div>
         )}
+      </div>
+
+      <div className="rounded-lg border border-[#262626] bg-[#111111] p-5 shadow-md">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="space-y-1">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#91F402]">streak</p>
+            <h2 className="text-lg font-bold text-white">스트릭 관측성 (최근 7일, KST)</h2>
+            <p className="text-xs text-gray-400">promote/reset, 티켓 지급, 금고 배율 적용/제외 사유</p>
+          </div>
+          <button
+            type="button"
+            onClick={loadStreakOnly}
+            className="rounded border border-[#333] px-3 py-1 text-sm text-gray-200 hover:bg-[#171717]"
+          >
+            새로고침
+          </button>
+        </div>
+
+        {streakError ? (
+          <div className="mt-4 rounded-lg border border-[#3A1F1F] bg-[#1A0D0D] p-4 text-sm text-red-200">
+            <div className="flex items-center justify-between">
+              <span>{streakError}</span>
+              <button
+                type="button"
+                onClick={loadStreakOnly}
+                className="rounded border border-red-300 px-3 py-1 text-red-100 hover:bg-red-800/40"
+              >
+                다시 불러오기
+              </button>
+            </div>
+          </div>
+        ) : null}
+
+        <div className="mt-4 overflow-x-auto">
+          <table className="min-w-[980px] w-full text-left text-sm">
+            <thead>
+              <tr className="border-b border-[#262626] text-xs text-gray-400">
+                <th className="py-2 pr-3">날짜(KST)</th>
+                <th className="py-2 pr-3">promote</th>
+                <th className="py-2 pr-3">reset</th>
+                <th className="py-2 pr-3">Day4~5 티켓 지급</th>
+                <th className="py-2 pr-3">vault bonus applied(로그)</th>
+                <th className="py-2 pr-3">vault base plays</th>
+                <th className="py-2 pr-3">vault bonus applied(earn)</th>
+                <th className="py-2 pr-3">제외: 주사위 모드</th>
+                <th className="py-2">제외: 티켓 타입</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(streakData?.items || []).map((row) => (
+                <tr key={row.day} className="border-b border-[#1F1F1F] text-gray-200">
+                  <td className="py-2 pr-3 text-gray-300">{row.day}</td>
+                  <td className="py-2 pr-3">{formatNumber(row.promote)}</td>
+                  <td className="py-2 pr-3">{formatNumber(row.reset)}</td>
+                  <td className="py-2 pr-3">{formatNumber(row.ticket_bonus_grant)}</td>
+                  <td className="py-2 pr-3">{formatNumber(row.vault_bonus_applied)}</td>
+                  <td className="py-2 pr-3">{formatNumber(row.vault_base_plays)}</td>
+                  <td className="py-2 pr-3">{formatNumber(row.vault_bonus_applied_via_earn_event)}</td>
+                  <td className="py-2 pr-3">{formatNumber(row.excluded_by_dice_mode)}</td>
+                  <td className="py-2">{formatNumber(row.excluded_by_token_type)}</td>
+                </tr>
+              ))}
+              {!streakData?.items?.length ? (
+                <tr>
+                  <td colSpan={9} className="py-6 text-center text-sm text-gray-400">
+                    {loading ? "스트릭 지표 로딩 중..." : "표시할 데이터가 없습니다."}
+                  </td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">

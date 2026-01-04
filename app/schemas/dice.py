@@ -1,7 +1,10 @@
 """Pydantic schemas for dice APIs."""
+from typing import Optional
+
 from app.schemas.base import KstBaseModel as BaseModel
 
 from app.models.feature import FeatureType
+from app.schemas.mission import StreakInfoSchema
 
 
 class DiceStatusResponse(BaseModel):
@@ -31,3 +34,4 @@ class DicePlayResponse(BaseModel):
     game: DiceResult
     season_pass: dict | None = None
     vault_earn: int = 0
+    streak_info: Optional[StreakInfoSchema] = None

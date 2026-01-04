@@ -4,6 +4,7 @@ import { GameTokenType } from "../types/gameTokens";
 import { isDemoFallbackEnabled } from "../config/featureFlags";
 import { getFallbackLotteryStatus, playFallbackLottery } from "./fallbackData";
 import userApi from "./httpClient";
+import type { StreakInfo } from "../types/streak";
 
 interface BackendLotteryPrizeDto {
   readonly id: number;
@@ -48,6 +49,7 @@ export interface LotteryPlayResponse {
   readonly remaining_plays: number;
   readonly message?: string;
   readonly vaultEarn?: number;
+  readonly streakInfo?: StreakInfo | null;
 }
 
 export const getLotteryStatus = async (): Promise<LotteryStatusResponse> => {
@@ -82,7 +84,7 @@ export const getLotteryStatus = async (): Promise<LotteryStatusResponse> => {
 
 export const playLottery = async (): Promise<LotteryPlayResponse> => {
   try {
-    const response = await userApi.post<{ result: string; prize: BackendLotteryPrizeDto; vault_earn?: number }>("/api/lottery/play");
+    const response = await userApi.post<{ result: string; prize: BackendLotteryPrizeDto; vault_earn?: number; streak_info?: StreakInfo | null }>("/api/lottery/play");
     const data = response.data;
     return {
       prize: {
@@ -96,6 +98,7 @@ export const playLottery = async (): Promise<LotteryPlayResponse> => {
       remaining_plays: 0,
       message: data.result !== "OK" ? data.result : undefined,
       vaultEarn: data.vault_earn,
+      streakInfo: data.streak_info ?? null,
     };
   } catch (error) {
     if (axios.isAxiosError(error)) {

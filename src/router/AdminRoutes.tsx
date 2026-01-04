@@ -22,6 +22,7 @@ import VaultAdminPage from "../admin/pages/VaultAdminPage";
 import AdminMissionPage from "../admin/pages/AdminMissionPage";
 import AdminShopPage from "../admin/pages/AdminShopPage";
 import AdminEconomyStatsPage from "../admin/pages/AdminEconomyStatsPage";
+import { AdminOpsDashboard } from "../admin/pages/AdminOpsDashboard";
 import AdminLayout from "../admin/components/AdminLayout";
 import ProtectedRoute from "../components/routing/ProtectedRoute";
 
@@ -52,6 +53,7 @@ const AdminRoutes: React.FC = () => {
           <Route path="vault" element={<VaultAdminPage />} />
           <Route path="shop" element={<AdminShopPage />} />
           <Route path="economy" element={<AdminEconomyStatsPage />} />
+          <Route path="ops" element={<AdminOpsDashboard />} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/admin" replace />} />
