@@ -65,7 +65,7 @@ const InventoryPage: React.FC = () => {
                     <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-2xl bg-black/30 ring-1 ring-white/10">
                         <Package className="h-5 w-5 text-white/40" />
                     </div>
-                    <div className="text-sm font-black text-white/90">Failed to load</div>
+                    <div className="text-sm font-black text-white/90">데이터 로딩 실패</div>
                     <div className="mt-1 text-[11px] font-medium text-white/50">인벤토리 정보를 불러오지 못했습니다.</div>
                 </div>
             </div>
@@ -138,7 +138,7 @@ const InventoryPage: React.FC = () => {
                         )}
                         onClick={() => handleTabChange('wallet')}
                     >
-                        재화 지갑
+                        티켓 지갑
                     </button>
                 </div>
             </div>
@@ -201,6 +201,16 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, onUse, isPending }) => {
             title: "다이아키 교환권",
             desc: "다이아키 1개로 즉시 교환",
             icon: <img src="/assets/asset_ticket_diamond.png" className="w-8 h-8 object-contain" alt="" />
+        },
+        "VOUCHER_DICE_TOKEN_1": {
+            title: "주사위 티켓 교환권",
+            desc: "주사위 티켓 1개로 즉시 교환",
+            icon: <img src="/assets/icon_dice_silver.png" className="w-8 h-8 object-contain" alt="" />
+        },
+        "VOUCHER_ROULETTE_COIN_1": {
+            title: "일반 룰렛 티켓 교환권",
+            desc: "일반 룰렛 티켓 1개로 즉시 교환",
+            icon: <img src="/assets/asset_ticket_green.png" className="w-8 h-8 object-contain" alt="" />
         },
         "BAEMIN_GIFTICON_5000": {
             title: "배민 기프티콘 5,000원",
@@ -274,7 +284,7 @@ const WalletCard: React.FC<{ tokenType: string; amount: number }> = ({ tokenType
     const WALLET_INFO: Record<string, { title: string; icon: string }> = {
         "ROULETTE_COIN": { title: "룰렛 티켓", icon: "/assets/asset_ticket_green.png" },
         "DICE_TOKEN": { title: "주사위 티켓", icon: "/assets/icon_dice_silver.png" },
-        "LOTTERY_TICKET": { title: "복권", icon: "/assets/lottery/icon_lotto_ball.png" },
+        "LOTTERY_TICKET": { title: "복권 티켓", icon: "/assets/lottery/icon_lotto_ball.png" },
         "GOLD_KEY": { title: "골드 키", icon: "/assets/asset_ticket_gold.png" },
         "DIAMOND_KEY": { title: "다이아몬드 키", icon: "/assets/asset_ticket_diamond.png" }
     };

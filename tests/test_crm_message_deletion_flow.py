@@ -65,14 +65,14 @@ def test_crm_message_deletion_flow(client, session_factory):
     ).first()
     assert inbox_item_after is None, "Message should NOT be visible after recall"
     
-    # 6. Verify Admin List (Should still exist but marked deleted)
+    # 6. Verify Admin List (Policy: recalled messages are hidden from list)
     # API: GET /admin/api/crm/messages
     list_resp = client.get("/admin/api/crm/messages")
     assert list_resp.status_code == 200
     msgs = list_resp.json()
     target_msg = next((m for m in msgs if m["id"] == msg_id), None)
-    
-    assert target_msg is not None, "Message should still be in admin history"
+
+    assert target_msg is None, "Recalled message should be hidden from admin list"
     # Note: We didn't expose is_deleted in MessageResponse yet, checking DB
     
     db_msg = db.query(AdminMessage).filter(AdminMessage.id == msg_id).first()

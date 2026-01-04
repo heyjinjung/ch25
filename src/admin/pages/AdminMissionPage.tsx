@@ -92,55 +92,56 @@ const AdminMissionPage: React.FC = () => {
     if (error) return <div className="p-8 text-red-500">Error loading missions</div>;
 
     return (
-        <div className="p-3 bg-[#1C1C1E] min-h-screen text-white sm:p-6">
-            <div className="flex flex-col gap-3 mb-6 sm:flex-row sm:items-center sm:justify-between sm:mb-8">
-                <div>
-                    <h1 className="text-2xl font-bold text-[#91F402] flex items-center gap-2">
-                        🎯 미션 관리 시스템
-                    </h1>
-                    <p className="text-gray-400 text-sm mt-1">사용자 데일리/주간/특별 미션 설정 및 관리</p>
-                </div>
+        <section className="space-y-5">
+            <header>
+                <h2 className="text-2xl font-bold text-[#91F402]">미션 관리 시스템</h2>
+                <p className="mt-1 text-sm text-gray-400">
+                    사용자 데일리/주간/특별 미션 설정 및 관리
+                </p>
+            </header>
+
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
                 <button
                     onClick={() => { setIsAdding(true); setEditingId(null); }}
-                    className="flex w-full items-center justify-center gap-2 bg-[#91F402] text-black px-4 py-2 rounded-lg font-bold hover:brightness-110 sm:w-auto"
+                    className="flex w-full items-center justify-center rounded-md bg-[#2D6B3B] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#91F402] hover:text-black sm:w-auto"
                 >
-                    <Plus size={18} /> 새 미션 추가
+                    <Plus size={18} className="mr-2" /> 새 미션 추가
                 </button>
             </div>
 
             {/* Form Overlay */}
             {(isAdding || editingId) && (
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-[#2C2C2E] rounded-2xl w-full max-w-2xl border border-white/10 shadow-2xl">
-                        <div className="flex justify-between items-center p-6 border-b border-white/10">
-                            <h2 className="text-xl font-bold">
+                    <div className="bg-[#111111] rounded-lg w-full max-w-2xl border border-[#333333] shadow-2xl">
+                        <div className="flex justify-between items-center p-6 border-b border-[#333333]">
+                            <h2 className="text-xl font-bold text-[#91F402]">
                                 {editingId ? "미션 수정" : "새 미션 추가"}
                             </h2>
                             <button onClick={() => { setIsAdding(false); setEditingId(null); }} className="text-gray-400 hover:text-white">
-                                <X />
+                                <X size={24} />
                             </button>
                         </div>
-                        <div className="p-4 grid grid-cols-1 gap-4 sm:p-6 sm:grid-cols-2">
+                        <div className="p-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
                             <div className="col-span-2">
-                                <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">미션 제목</label>
+                                <label className="block text-xs font-medium text-gray-400 mb-1 uppercase">미션 제목</label>
                                 <input
-                                    className="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-2 focus:border-[#91F402] outline-none"
+                                    className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
                                     value={form.title}
                                     onChange={e => setForm({ ...form, title: e.target.value })}
                                 />
                             </div>
                             <div className="col-span-2">
-                                <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">설명</label>
+                                <label className="block text-xs font-medium text-gray-400 mb-1 uppercase">설명</label>
                                 <textarea
-                                    className="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-2 focus:border-[#91F402] outline-none h-20"
+                                    className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B] h-20"
                                     value={form.description}
                                     onChange={e => setForm({ ...form, description: e.target.value })}
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">카테고리</label>
+                                <label className="block text-xs font-medium text-gray-400 mb-1 uppercase">카테고리</label>
                                 <select
-                                    className="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-2 outline-none"
+                                    className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
                                     value={form.category}
                                     onChange={e => setForm({ ...form, category: e.target.value as any })}
                                 >
@@ -151,18 +152,18 @@ const AdminMissionPage: React.FC = () => {
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Logic Key (고유)</label>
+                                <label className="block text-xs font-medium text-gray-400 mb-1 uppercase">Logic Key (고유)</label>
                                 <input
-                                    className="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-2 outline-none"
+                                    className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
                                     value={form.logic_key}
                                     placeholder="e.g. daily_login_v1"
                                     onChange={e => setForm({ ...form, logic_key: e.target.value })}
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Action Type</label>
+                                <label className="block text-xs font-medium text-gray-400 mb-1 uppercase">Action Type</label>
                                 <select
-                                    className="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-2 outline-none"
+                                    className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
                                     value={form.action_type}
                                     onChange={e => setForm({ ...form, action_type: e.target.value })}
                                 >
@@ -176,18 +177,18 @@ const AdminMissionPage: React.FC = () => {
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">목표 수치</label>
+                                <label className="block text-xs font-medium text-gray-400 mb-1 uppercase">목표 수치</label>
                                 <input
                                     type="number"
-                                    className="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-2 outline-none"
+                                    className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
                                     value={form.target_value}
                                     onChange={e => setForm({ ...form, target_value: parseInt(e.target.value) })}
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">보상 유형</label>
+                                <label className="block text-xs font-medium text-gray-400 mb-1 uppercase">보상 유형</label>
                                 <select
-                                    className="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-2 outline-none"
+                                    className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
                                     value={form.reward_type}
                                     onChange={e => setForm({ ...form, reward_type: e.target.value })}
                                 >
@@ -198,26 +199,26 @@ const AdminMissionPage: React.FC = () => {
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">보상 수량</label>
+                                <label className="block text-xs font-medium text-gray-400 mb-1 uppercase">보상 수량</label>
                                 <input
                                     type="number"
-                                    className="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-2 outline-none"
+                                    className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
                                     value={form.reward_amount}
                                     onChange={e => setForm({ ...form, reward_amount: parseInt(e.target.value) })}
                                 />
                             </div>
                         </div>
-                        <div className="p-4 border-t border-white/10 flex flex-col-reverse gap-3 sm:p-6 sm:flex-row sm:justify-end">
+                        <div className="p-6 border-t border-[#333333] flex justify-end gap-3">
                             <button
                                 onClick={() => { setIsAdding(false); setEditingId(null); }}
-                                className="w-full px-6 py-2 rounded-lg bg-gray-700 font-bold hover:bg-gray-600 sm:w-auto"
+                                className="rounded-md border border-[#333333] bg-[#1A1A1A] px-4 py-2 text-sm text-gray-200 hover:bg-[#2C2C2E]"
                             >
                                 취소
                             </button>
                             <button
                                 onClick={handleSave}
                                 disabled={createMutation.isPending || updateMutation.isPending}
-                                className="w-full px-6 py-2 rounded-lg bg-[#91F402] text-black font-bold hover:brightness-110 disabled:opacity-50 sm:w-auto"
+                                className="rounded-md bg-[#2D6B3B] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#91F402] hover:text-black disabled:opacity-60"
                             >
                                 {editingId ? "수정 완료" : "미션 생성"}
                             </button>
@@ -227,47 +228,47 @@ const AdminMissionPage: React.FC = () => {
             )}
 
             {/* Mission List Table */}
-            <div className="bg-[#2C2C2E] rounded-2xl border border-white/10 overflow-hidden shadow-xl">
+            <div className="rounded-lg border border-[#333333] bg-[#111111] shadow-md">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
-                        <thead>
-                            <tr className="bg-black/20 text-gray-400 text-xs font-black uppercase tracking-widest border-b border-white/5">
-                                <th className="px-4 py-3 sm:px-6 sm:py-4">ID / Logic Key</th>
-                                <th className="px-4 py-3 sm:px-6 sm:py-4">제목 / 카테고리</th>
-                                <th className="px-4 py-3 sm:px-6 sm:py-4">조건 (Action / Target)</th>
-                                <th className="px-4 py-3 sm:px-6 sm:py-4">보상</th>
-                                <th className="px-4 py-3 text-center sm:px-6 sm:py-4">상태</th>
-                                <th className="px-4 py-3 text-right sm:px-6 sm:py-4">관리</th>
+                        <thead className="border-b border-[#333333] bg-[#1A1A1A]">
+                            <tr>
+                                <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-gray-400">ID / Logic Key</th>
+                                <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-gray-400">제목 / 카테고리</th>
+                                <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-gray-400">조건 (Action / Target)</th>
+                                <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-gray-400">보상</th>
+                                <th className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-400">상태</th>
+                                <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-400">관리</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-white/5">
-                            {missions?.map(mission => (
-                                <tr key={mission.id} className="hover:bg-white/5 transition-colors group">
-                                    <td className="px-4 py-3 sm:px-6 sm:py-4">
-                                        <div className="font-bold text-white">#{mission.id}</div>
-                                        <div className="text-[10px] text-gray-500 font-mono tracking-tighter">{mission.logic_key}</div>
+                        <tbody className="divide-y divide-[#333333]">
+                            {missions?.map((mission, index) => (
+                                <tr key={mission.id} className={index % 2 === 0 ? "bg-[#111111]" : "bg-[#1A1A1A]"}>
+                                    <td className="px-4 py-3">
+                                        <div className="text-sm font-medium text-white">#{mission.id}</div>
+                                        <div className="text-xs text-gray-500 font-mono">{mission.logic_key}</div>
                                     </td>
-                                    <td className="px-4 py-3 sm:px-6 sm:py-4">
-                                        <div className="font-bold text-white">{mission.title}</div>
-                                        <div className={`inline-block text-[10px] px-1.5 rounded uppercase font-black mt-1 ${mission.category === 'DAILY' ? 'bg-blue-900/40 text-blue-400' :
+                                    <td className="px-4 py-3">
+                                        <div className="text-sm font-medium text-white">{mission.title}</div>
+                                        <div className={`mt-1 inline-flex rounded px-1.5 py-0.5 text-[10px] uppercase font-bold ${mission.category === 'DAILY' ? 'bg-blue-900/40 text-blue-400' :
                                             mission.category === 'WEEKLY' ? 'bg-purple-900/40 text-purple-400' :
                                                 'bg-amber-900/40 text-amber-400'
                                             }`}>
                                             {mission.category}
                                         </div>
                                     </td>
-                                    <td className="px-4 py-3 sm:px-6 sm:py-4">
-                                        <div className="text-sm font-medium">{mission.action_type}</div>
-                                        <div className="text-xs text-gray-500 mt-0.5">Target: <span className="text-white">{mission.target_value}</span></div>
+                                    <td className="px-4 py-3">
+                                        <div className="text-sm text-gray-300">{mission.action_type}</div>
+                                        <div className="text-xs text-gray-500">Target: <span className="text-white">{mission.target_value}</span></div>
                                     </td>
-                                    <td className="px-4 py-3 sm:px-6 sm:py-4">
+                                    <td className="px-4 py-3">
                                         <div className="flex items-center gap-2">
                                             <div className="w-4 h-4 rounded-full bg-amber-400/20 flex items-center justify-center text-[10px] text-amber-400">💎</div>
-                                            <span className="font-bold text-[#91F402]">{mission.reward_amount}</span>
-                                            <span className="text-[10px] text-gray-500">{mission.reward_type}</span>
+                                            <span className="text-sm font-bold text-[#91F402]">{mission.reward_amount}</span>
+                                            <span className="text-xs text-gray-500">{mission.reward_type}</span>
                                         </div>
                                     </td>
-                                    <td className="px-4 py-3 text-center sm:px-6 sm:py-4">
+                                    <td className="px-4 py-3 text-center">
                                         <button
                                             onClick={() => {
                                                 updateMutation.mutate({
@@ -275,17 +276,19 @@ const AdminMissionPage: React.FC = () => {
                                                     payload: { is_active: !mission.is_active }
                                                 });
                                             }}
-                                            className={`px-3 py-1 rounded-full text-[10px] font-bold cursor-pointer transition-all hover:scale-105 ${mission.is_active ? 'bg-[#2D6B3B] text-[#91F402] hover:bg-red-900/60' : 'bg-red-900/60 text-red-100 hover:bg-[#2D6B3B]'
+                                            className={`rounded-full px-2.5 py-1 text-[10px] font-bold transition-all ${mission.is_active
+                                                ? 'bg-[#2D6B3B] text-[#91F402] hover:bg-red-900/60 hover:text-red-200'
+                                                : 'bg-red-900/60 text-red-200 hover:bg-[#2D6B3B] hover:text-[#91F402]'
                                                 }`}
                                         >
                                             {mission.is_active ? 'ACTIVE' : 'INACTIVE'}
                                         </button>
                                     </td>
-                                    <td className="px-4 py-3 text-right sm:px-6 sm:py-4">
-                                        <div className="flex justify-end gap-2 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
+                                    <td className="px-4 py-3 text-right">
+                                        <div className="flex justify-end gap-2">
                                             <button
                                                 onClick={() => handleEdit(mission)}
-                                                className="p-1.5 rounded-lg bg-gray-800 text-gray-400 hover:text-white"
+                                                className="rounded p-1.5 text-gray-400 hover:bg-[#2D6B3B] hover:text-white"
                                             >
                                                 <Edit2 size={16} />
                                             </button>
@@ -295,7 +298,7 @@ const AdminMissionPage: React.FC = () => {
                                                         deleteMutation.mutate(mission.id);
                                                     }
                                                 }}
-                                                className="p-1.5 rounded-lg bg-gray-800 text-red-400 hover:bg-red-900/40"
+                                                className="rounded p-1.5 text-gray-400 hover:bg-red-900/60 hover:text-red-200"
                                             >
                                                 <Trash2 size={16} />
                                             </button>
@@ -307,12 +310,12 @@ const AdminMissionPage: React.FC = () => {
                     </table>
                 </div>
                 {missions?.length === 0 && (
-                    <div className="p-20 text-center text-gray-500">
+                    <div className="p-8 text-center text-gray-500">
                         등록된 미션이 없습니다.
                     </div>
                 )}
             </div>
-        </div>
+        </section>
     );
 };
 

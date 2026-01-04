@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
 import type { GameTokenType } from "../../types/gameTokens";
 import { getUiConfig } from "../../api/uiConfigApi";
 import { isTrialGrantAllowedTokenType, requestTrialGrant } from "../../api/trialGrantApi";
@@ -179,7 +180,12 @@ const TicketZeroPanel: React.FC<Props> = ({ tokenType, onClaimSuccess }) => {
         // Let's modify the Parent (RoulettePage) to pass a "onSwitchTab"
         return;
       }
-      addToast("오늘은 이미 지급받았어요", "info");
+      if (data.balance > 0) {
+        addToast("이미 체험 티켓이 남아있어요. 먼저 사용해주세요.", "info");
+        onClaimSuccess?.();
+        return;
+      }
+      addToast("이미 오늘 체험 티켓을 수령했어요.", "info");
       onClaimSuccess?.();
     },
     onError: (err) => {
@@ -188,7 +194,25 @@ const TicketZeroPanel: React.FC<Props> = ({ tokenType, onClaimSuccess }) => {
         addToast("이 티켓은 체험 지급 대상이 아니에요.", "info");
         return;
       }
-      addToast("지급에 실패했어요. 잠시 후 다시 시도해주세요.", "error");
+
+      if (axios.isAxiosError(err)) {
+        const status = err.response?.status;
+        const detail = (err.response?.data as any)?.detail;
+        const detailText = typeof detail === "string" ? detail : "";
+
+        // 백엔드가 '이미 수령'을 4xx로 보내는 케이스가 생겨도 UX가 일관되게 동작하도록 방어.
+        if (status === 409 || /already|이미\s*수령|이미\s*지급/i.test(detailText)) {
+          addToast("이미 오늘 체험 티켓을 수령했어요.", "info");
+          return;
+        }
+
+        if (status === 401 || status === 403) {
+          addToast("로그인이 필요해요.", "info");
+          return;
+        }
+      }
+
+      addToast("체험 티켓 지급 중 오류가 발생했어요. 잠시 후 다시 시도해주세요.", "error");
     },
   });
 
@@ -261,7 +285,7 @@ const TicketZeroPanel: React.FC<Props> = ({ tokenType, onClaimSuccess }) => {
           </div>
         )}
 
-        <div className="mt-3 grid grid-cols-1 gap-2">
+        <div className="mt-3 grid grid-cols-3 gap-2">
           <button
             type="button"
             disabled={claimMutation.isPending}
@@ -272,31 +296,26 @@ const TicketZeroPanel: React.FC<Props> = ({ tokenType, onClaimSuccess }) => {
               }
               claimMutation.mutate();
             }}
-            className="h-10 w-full rounded-xl border border-black/15 bg-cc-lime px-3 text-sm font-extrabold text-black disabled:cursor-not-allowed disabled:bg-cc-lime/40 disabled:text-black/45"
+            className="h-9 w-full rounded-lg border border-black/15 bg-cc-lime px-2 text-xs font-extrabold text-black disabled:cursor-not-allowed disabled:bg-cc-lime/40 disabled:text-black/45"
           >
-            {claimMutation.isPending ? "지급 중..." : "체험 티켓 3장 받기"}
+            체험
           </button>
-          {config.primaryCta.url ? (
-            <a
-              href={config.primaryCta.url}
-              target="_blank"
-              rel="noreferrer"
-              className="flex h-10 w-full items-center justify-center rounded-xl border border-white/15 bg-white/8 px-3 text-sm font-extrabold text-white/90 hover:bg-white/12"
-            >
-              {config.primaryCta.label}
-            </a>
-          ) : null}
-
-          {config.secondaryCta.url ? (
-            <a
-              href={config.secondaryCta.url}
-              target="_blank"
-              rel="noreferrer"
-              className="flex h-10 w-full items-center justify-center rounded-xl border border-white/15 bg-white/6 px-3 text-sm font-extrabold text-white/80 hover:bg-white/10"
-            >
-              {config.secondaryCta.label}
-            </a>
-          ) : null}
+          <a
+            href={config.primaryCta.url}
+            target="_blank"
+            rel="noreferrer"
+            className="flex h-9 w-full items-center justify-center rounded-lg border border-white/15 bg-white/8 px-2 text-xs font-extrabold text-white/90 hover:bg-white/12"
+          >
+            씨씨
+          </a>
+          <a
+            href={config.secondaryCta.url}
+            target="_blank"
+            rel="noreferrer"
+            className="flex h-9 w-full items-center justify-center rounded-lg border border-white/15 bg-white/6 px-2 text-xs font-extrabold text-white/80 hover:bg-white/10"
+          >
+            실장
+          </a>
         </div>
 
         {config.note ? (

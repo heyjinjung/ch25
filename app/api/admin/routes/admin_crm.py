@@ -262,7 +262,14 @@ def list_messages(
     limit: int = 50, 
     db: Session = Depends(get_db)
 ):
-    return db.query(AdminMessage).order_by(AdminMessage.created_at.desc()).offset(skip).limit(limit).all()
+    return (
+        db.query(AdminMessage)
+        .filter(AdminMessage.is_deleted == False)
+        .order_by(AdminMessage.created_at.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
 
 
 @router.put("/messages/{message_id}", response_model=MessageResponse)

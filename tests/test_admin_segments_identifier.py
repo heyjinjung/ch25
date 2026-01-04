@@ -71,4 +71,7 @@ def test_admin_segments_includes_recommendation_from_rules(client: TestClient, d
     assert body[0]["user_id"] == user.id
     assert body[0]["recommended_segment"] == "VIP"
     assert body[0]["recommended_rule_name"] == "VIP_RULE_TEST"
-    assert body[0]["recommended_reason"] == "입금 2,000 / 최근활동 정보없음"
+    assert (
+        body[0]["recommended_reason"]
+        == "입금 2,000 / 최근활동 정보없음 / 최근충전 정보없음 / 룰렛 0 / 주사위 0 / 복권 0 / 액션: VIP 케어(전용 혜택/우선 지원/맞춤 이벤트)"
+    )

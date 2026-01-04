@@ -141,7 +141,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, diamondBalance, onBu
                                 product.sku.includes('DIAMOND') ? "/assets/asset_ticket_diamond.png" :
                                     product.sku.includes('GOLD') ? "/assets/asset_ticket_gold.png" :
                                         product.sku.includes('COIN') ? "/assets/asset_ticket_green.png" :
-                                            "/assets/icon_ticket.png"
+                                            product.sku.includes('DICE') ? "/assets/icon_dice_silver.png" :
+                                                "/assets/icon_ticket.png"
                             }
                             alt=""
                             className="w-7 h-7 object-contain"

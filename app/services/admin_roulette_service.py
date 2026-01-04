@@ -2,6 +2,7 @@
 from fastapi import HTTPException, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
+from types import SimpleNamespace
 
 from app.core.exceptions import InvalidConfigError
 from app.models.roulette import RouletteConfig, RouletteSegment
@@ -28,8 +29,9 @@ class AdminRouletteService:
         raw_segments = list(segments_data)
         if len(raw_segments) < 6:
             for i in range(len(raw_segments), 6):
+                # If caller provided no segments (or fewer than 6), pad with safe placeholders.
                 raw_segments.append(
-                    type(raw_segments[0])(
+                    SimpleNamespace(
                         slot_index=i,
                         label=f"빈 슬롯 {i+1}",
                         weight=1,
@@ -92,7 +94,7 @@ class AdminRouletteService:
     def update_config(db: Session, config_id: int, data: AdminRouletteConfigUpdate) -> RouletteConfig:
         config = AdminRouletteService.get_config(db, config_id)
         try:
-            update_data = data.dict(exclude_unset=True)
+            update_data = data.model_dump(exclude_unset=True)
             if "name" in update_data:
                 config.name = update_data["name"]
             if "ticket_type" in update_data and update_data["ticket_type"] is not None:

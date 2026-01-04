@@ -34,7 +34,7 @@ class AdminRouletteConfigBase(BaseModel):
     ticket_type: str = GameTokenType.ROULETTE_COIN.value
     is_active: bool = True
     max_daily_spins: int
-    segments: List[AdminRouletteSegmentBase]
+    segments: List[AdminRouletteSegmentBase] = Field(default_factory=list)
 
     @validator("ticket_type")
     def validate_ticket_type(cls, value: str) -> str:

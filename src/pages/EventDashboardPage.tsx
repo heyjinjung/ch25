@@ -20,10 +20,7 @@ const EventDashboardPage: React.FC = () => {
 
   return (
     <div className="min-h-[calc(100vh-80px)] bg-black relative overflow-hidden flex flex-col">
-      {/* Background Effects - Matching SeasonPass style */}
-      <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-emerald-600/10 to-transparent pointer-events-none" />
-      <div className="absolute top-[-20%] right-[-10%] w-80 h-80 bg-emerald-500/10 rounded-full blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-[20%] left-[-10%] w-64 h-64 bg-[#30FF75]/5 rounded-full blur-[120px] pointer-events-none" />
+      {/* Background Effects Removed per user request */}
 
       <div className="relative z-10 w-full px-5 pt-4 pb-8 max-w-xl mx-auto flex-1 flex flex-col">
         {/* Dashboard Grid */}

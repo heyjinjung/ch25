@@ -97,8 +97,8 @@ class RouletteService:
             select(RouletteConfig).where(
                 RouletteConfig.is_active.is_(True),
                 RouletteConfig.ticket_type == ticket_type
-            )
-        ).scalar_one_or_none()
+            ).order_by(RouletteConfig.id.desc())
+        ).scalars().first()
         
         if config is None:
             settings = get_settings()

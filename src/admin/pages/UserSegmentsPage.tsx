@@ -26,6 +26,21 @@ const formatMaybeDate = (value?: string | null) => {
   return d.toLocaleString();
 };
 
+const SEGMENT_LABEL_KO: Record<string, string> = {
+  NEW: "신규",
+  ACTIVE: "활성",
+  AT_RISK: "이탈위험",
+  DORMANT: "휴면",
+  VIP: "VIP",
+};
+
+const formatSegmentDisplay = (segment?: string | null) => {
+  const code = String(segment ?? "").trim();
+  if (!code) return "-";
+  const label = SEGMENT_LABEL_KO[code] ?? code;
+  return label === code ? code : `${label} (${code})`;
+};
+
 const UserSegmentsPage: React.FC = () => {
   const [identifier, setIdentifier] = useState<string>("");
   const trimmed = useMemo(() => identifier.trim(), [identifier]);
@@ -373,7 +388,7 @@ const UserSegmentsPage: React.FC = () => {
                           value={editSegment[row.user_id] ?? row.segment}
                           onChange={(e) => setEditSegment((prev) => ({ ...prev, [row.user_id]: e.target.value }))}
                           className={inputBase + " px-2 py-1 text-xs"}
-                          placeholder="예: NEW / VIP"
+                          placeholder="예: NEW(신규) / ACTIVE(활성) / AT_RISK(이탈위험) / DORMANT(휴면) / VIP"
                           onKeyDown={(e) => {
                             if (e.key === "Enter") void handleSave(row);
                           }}
@@ -388,7 +403,7 @@ const UserSegmentsPage: React.FC = () => {
                         return (
                           <div className="flex flex-col gap-1">
                             <div className="text-gray-200" title={row.recommended_rule_name ?? undefined}>
-                              {rec ? rec : "-"}
+                              {rec ? formatSegmentDisplay(rec) : "-"}
                             </div>
                             {row.recommended_rule_name ? <div className="text-[11px] text-gray-500">{row.recommended_rule_name}</div> : null}
                             {row.recommended_reason ? <div className="text-[11px] text-gray-500">{row.recommended_reason}</div> : null}

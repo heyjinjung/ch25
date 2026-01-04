@@ -65,11 +65,37 @@ def _recommend_segment(rules: list[SegmentRule], ctx: SegmentContext) -> tuple[s
 
 def _format_recommendation_reason(ctx: SegmentContext) -> str:
     deposit = f"{ctx.deposit_amount:,}"
-    if ctx.days_since_last_active is None:
-        last_active = "최근활동 정보없음"
-    else:
-        last_active = f"최근활동 {ctx.days_since_last_active}일 전"
-    return f"입금 {deposit} / {last_active}"
+
+    def fmt_days(label: str, value: int | None) -> str:
+        if value is None:
+            return f"{label} 정보없음"
+        return f"{label} {value}일 전"
+
+    last_active = fmt_days("최근활동", ctx.days_since_last_active)
+    last_charge = fmt_days("최근충전", ctx.days_since_last_charge)
+    plays = f"룰렛 {ctx.roulette_plays} / 주사위 {ctx.dice_plays} / 복권 {ctx.lottery_plays}"
+    return f"입금 {deposit} / {last_active} / {last_charge} / {plays}"
+
+
+def _segment_playbook(segment: str, ctx: SegmentContext) -> str:
+    s = (segment or "").strip().upper()
+    if s == "NEW":
+        # Early stage: show path-to-value and first conversion.
+        return "액션: 온보딩/첫 미션/첫 충전 유도(가벼운 혜택)"
+    if s == "ACTIVE":
+        return "액션: 데일리 리텐션(미션·연속출석) + 게임 루프 강화"
+    if s == "AT_RISK":
+        # Trigger stronger reactivation if no recent charge.
+        if ctx.days_since_last_charge is None or ctx.days_since_last_charge >= 3:
+            return "액션: 이탈방지 리마인드 + 복귀 혜택(기간/조건 명확)"
+        return "액션: 복귀 리마인드(가벼운 혜택)"
+    if s == "DORMANT":
+        return "액션: 윈백(강한 혜택) + 1회성 목표 제시(미션/쿠폰)"
+    if s == "VIP":
+        if ctx.days_since_last_active is not None and ctx.days_since_last_active >= 7:
+            return "액션: VIP 휴면 케어(개별 연락/맞춤 혜택/복귀 플랜)"
+        return "액션: VIP 케어(전용 혜택/우선 지원/맞춤 이벤트)"
+    return "액션: 운영 정책에 맞춰 조정"
 
 
 class AdminSegmentService:
@@ -139,7 +165,9 @@ class AdminSegmentService:
                     activity_updated_at=getattr(act, "updated_at", None) if act else None,
                     recommended_segment=rec[0] if rec else None,
                     recommended_rule_name=rec[1] if rec else None,
-                    recommended_reason=_format_recommendation_reason(ctx) if rec else None,
+                    recommended_reason=(
+                        f"{_format_recommendation_reason(ctx)} / {_segment_playbook(rec[0], ctx)}" if rec else None
+                    ),
                 )
             )
         return result
@@ -213,5 +241,5 @@ class AdminSegmentService:
             activity_updated_at=getattr(act, "updated_at", None) if act else None,
             recommended_segment=rec[0] if rec else None,
             recommended_rule_name=rec[1] if rec else None,
-            recommended_reason=_format_recommendation_reason(ctx) if rec else None,
+            recommended_reason=(f"{_format_recommendation_reason(ctx)} / {_segment_playbook(rec[0], ctx)}" if rec else None),
         )
