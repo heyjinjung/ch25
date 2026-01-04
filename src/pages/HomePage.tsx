@@ -7,6 +7,8 @@ import { getVaultStatus } from "../api/vaultApi";
 import { useSound } from "../hooks/useSound";
 import { useNewUserWelcome } from "../hooks/useNewUserWelcome";
 import NewUserWelcomeModal from "../components/modal/NewUserWelcomeModal";
+import { useMissionStore } from "../stores/missionStore";
+import { useToast } from "../components/common/ToastProvider";
 
 // --- Components ---
 
@@ -111,6 +113,23 @@ const CategoryTabs: React.FC<{ active: string; onChange: (id: string) => void }>
 const HomePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState("all");
   const { showModal, closeModal } = useNewUserWelcome();
+  const { missions, fetchMissions } = useMissionStore();
+  const { addToast } = useToast();
+  const hasAnnouncedGift = React.useRef(false);
+
+  React.useEffect(() => {
+    fetchMissions();
+  }, [fetchMissions]);
+
+  React.useEffect(() => {
+    if (missions.length > 0 && !hasAnnouncedGift.current) {
+      const dailyGift = missions.find(m => m.mission.logic_key === "daily_login_gift");
+      if (dailyGift && dailyGift.progress.is_completed && !dailyGift.progress.is_claimed) {
+        addToast("🎁 오늘의 선물 도착! 미션 탭에서 확인하세요.", "success");
+        hasAnnouncedGift.current = true;
+      }
+    }
+  }, [missions, addToast]);
 
   // Data (Simplified for layout)
   const vault = useQuery({ queryKey: ["vault-status"], queryFn: getVaultStatus, staleTime: 30_000, retry: false });

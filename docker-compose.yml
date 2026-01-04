@@ -135,7 +135,7 @@ services:
       context: .
       dockerfile: Dockerfile.backend
     container_name: xmas-telegram-bot
-    restart: unless-stopped
+    restart: on-failure
     command: python -m app.bot.main
     env_file:
       - .env

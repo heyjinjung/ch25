@@ -40,8 +40,28 @@ const MissionPage: React.FC = () => {
     setActiveTab(tab);
   };
 
-  const filteredMissions: MissionData[] = missions.filter((item) => item.mission.category === activeTab);
-  const unclaimedCount = missions.filter((m) => m.progress.is_completed && !m.progress.is_claimed).length;
+
+  const filteredMissions: MissionData[] = missions
+    .filter((item) => item.mission.category === activeTab)
+    .sort((a, b) => {
+      // 1. Sort by completed but unclaimed (priority 1)
+      const aClaimable = a.progress.is_completed && !a.progress.is_claimed;
+      const bClaimable = b.progress.is_completed && !b.progress.is_claimed;
+      if (aClaimable && !bClaimable) return -1;
+      if (!aClaimable && bClaimable) return 1;
+
+      // 2. Sort by specific logic_key (Daily Gift always at top if it's DAILY tab)
+      if (activeTab === "DAILY") {
+        if (a.mission.logic_key === "daily_login_gift") return -1;
+        if (b.mission.logic_key === "daily_login_gift") return 1;
+      }
+
+      // 3. Sort by claimed status (claimed at the bottom)
+      if (a.progress.is_claimed && !b.progress.is_claimed) return 1;
+      if (!a.progress.is_claimed && b.progress.is_claimed) return -1;
+
+      return 0;
+    });
 
   const tabIcon = (tab: MissionTab) => {
     switch (tab) {
@@ -63,9 +83,6 @@ const MissionPage: React.FC = () => {
         <div className="flex flex-1 items-center gap-1 rounded-2xl border border-white/10 bg-white/10 p-1">
           {TABS.map((tab) => {
             const isActive = activeTab === tab;
-            const hasClaimable = missions.some(
-              (m) => m.mission.category === tab && m.progress.is_completed && !m.progress.is_claimed
-            );
 
             return (
               <button
@@ -80,18 +97,13 @@ const MissionPage: React.FC = () => {
                 <span className="inline-flex items-center justify-center gap-1.5">
                   {tabIcon(tab)}
                   {TAB_LABELS[tab]}
-                  {hasClaimable && <span className="h-1.5 w-1.5 rounded-full bg-[var(--figma-accent-green)]" />}
                 </span>
               </button>
             );
           })}
         </div>
 
-        {unclaimedCount > 0 && (
-          <div className="shrink-0 rounded-full border border-figma-accent bg-figma-accent/10 px-3 py-2 text-[10px] font-black text-figma-accent">
-            {unclaimedCount} CLAIM
-          </div>
-        )}
+        {/* unclaimedCount badge removed per user request */}
       </div>
 
       {/* Mission List */}

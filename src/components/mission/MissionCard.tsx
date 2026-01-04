@@ -2,7 +2,7 @@
 import React from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
-import { Bell, Check, ChevronRight, Share2, Star, Trophy, Users, Clock3 } from "lucide-react";
+import { Bell, Check, ChevronRight, Share2, Star, Trophy, Users, Clock3, Gift } from "lucide-react";
 
 import { useHaptic } from "../../hooks/useHaptic";
 import { useSound } from "../../hooks/useSound";
@@ -24,7 +24,7 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
   const [isVerifying, setIsVerifying] = React.useState(false);
 
   const timeWindow = mission.start_time && mission.end_time
-    ? `${mission.start_time.slice(0, 5)} ~ ${mission.end_time.slice(0, 5)}`
+    ? `${mission.start_time.slice(0, 5)} ~${mission.end_time.slice(0, 5)} `
     : null;
 
   const isCompleted = progress.is_completed;
@@ -41,7 +41,7 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
         playToast();
         const rewardTypeName = result.reward_type === "CASH_UNLOCK" ? "원" : (result.reward_type || "");
         const amountStr = (result.amount || 0).toLocaleString();
-        addToast(`보상 수령 완료: ${amountStr}${rewardTypeName}!`, "success");
+        addToast(`보상 수령 완료: ${amountStr}${rewardTypeName} !`, "success");
         queryClient.invalidateQueries({ queryKey: ["vault-status"] });
         queryClient.invalidateQueries({ queryKey: ["inventory"] });
       } else {
@@ -63,7 +63,7 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
       if (mission.action_type === "JOIN_CHANNEL") {
         setIsVerifying(true);
         // Cloud Caching Check
-        const cacheKey = `mission_verified_${mission.id}`;
+        const cacheKey = `mission_verified_${mission.id} `;
         const cachedStatus = await getCloudItem(cacheKey);
 
         if (cachedStatus === "VERIFIED") {
@@ -180,6 +180,9 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
 
   const renderIcon = () => {
     const iconClass = "h-5 w-5";
+    if (data.mission.logic_key === "daily_login_gift") {
+      return <Gift className="h-5 w-5 text-amber-400" />;
+    }
     switch (mission.action_type) {
       case "JOIN_CHANNEL":
         return <Bell className={iconClass} />;
@@ -207,11 +210,13 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
     <div
       className={clsx(
         "relative overflow-hidden rounded-[24px] border backdrop-blur-md transition-all",
-        isClaimed
-          ? "border-white/5 bg-white/5 opacity-60"
-          : isCompleted
-            ? "border-figma-accent bg-white/10 shadow-lg shadow-emerald-900/20"
-            : "border-white/10 bg-white/10 hover:border-white/20"
+        data.mission.logic_key === "daily_login_gift"
+          ? "bg-gradient-to-br from-amber-500/10 via-black to-black shadow-[inset_0_0_20px_rgba(245,158,11,0.05)]"
+          : isClaimed
+            ? "border-white/5 bg-white/5 opacity-60"
+            : isCompleted
+              ? "border-figma-accent bg-white/10 shadow-lg shadow-emerald-900/20"
+              : "border-white/10 bg-white/10 hover:border-white/20"
       )}
     >
       <div className="flex items-center gap-3 p-3">

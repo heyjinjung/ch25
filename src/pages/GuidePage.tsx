@@ -103,9 +103,11 @@ const CoreActionSection: React.FC = () => {
               <div className="mr-3 flex h-10 w-10 items-center justify-center rounded-full bg-black text-xl font-bold text-[rgb(104,255,132)]">
                 1
               </div>
-              <h3 className="text-xl font-bold text-[#282d1a]">씨씨 입금(충전)</h3>
+              <h3 className="text-xl font-bold text-[#282d1a]">씨씨 이용 내역 연동(선택)</h3>
             </div>
-            <p className="mb-4 text-gray-700">이 앱의 핵심 목표는 “씨씨 입금(충전)”입니다. 충전/이용 내역이 있어야 티켓/레벨이 제대로 연결됩니다.</p>
+            <p className="mb-4 text-gray-700">
+              씨씨에서 이용한 기록이 있으면, 앱의 누적/레벨/티켓 반영이 더 정확해집니다. 처음에는 체험 티켓으로도 바로 시작할 수 있어요.
+            </p>
             <div className="rounded-lg border border-gray-200 bg-white p-3">
               <p className="text-sm text-gray-600">
                 <span className="font-bold text-[#394508]">TIP</span>: 금고 화면에 있는 “씨씨카지노 충전하기” 버튼을 이용하면 편합니다.
@@ -240,13 +242,15 @@ const GamesSection: React.FC = () => {
 
         <div className="mt-10 rounded-xl border border-[#d2fd9c] bg-[#f3f7eb] p-6 shadow-sm">
           <h3 className="mb-3 text-lg font-bold text-[#394508]">티켓이 없으면 어떻게 하나요?</h3>
-          <p className="mb-4 text-gray-800">씨씨에 입금(충전) 후 이용하면 티켓/레벨이 연결됩니다. 티켓이 0장이라면 체험 티켓으로 먼저 시작할 수도 있어요.</p>
+          <p className="mb-4 text-gray-800">
+            씨씨에서 이용한 기록이 있으면 누적/레벨/티켓 반영이 더 안정적입니다. 티켓이 0장이라면 체험 티켓으로 먼저 시작할 수도 있어요.
+          </p>
           <div className="flex flex-wrap gap-3">
             <a
               href="#point-system"
               className="rounded-full bg-[#394508] px-4 py-2 text-sm font-bold text-white transition hover:bg-opacity-90 focus:ring-2 focus:ring-[#394508] focus:ring-offset-2"
             >
-              입금/티켓 흐름 보기
+              연동/티켓 흐름 보기
             </a>
             <a
               href="https://t.me/jm956"
@@ -423,10 +427,10 @@ const MyVaultSection: React.FC = () => {
         <div className="mb-10 w-full md:mb-0 md:w-1/2 md:pl-10">
           <span className="text-sm font-bold uppercase tracking-wider text-[#394508]">추가 동기부여</span>
           <h2 className="mt-1 mb-4 text-2xl font-bold text-[#282d1a] md:text-3xl">내 금고</h2>
-          <p className="mb-6 text-gray-700">씨씨에 입금(충전)하고 이용하면 누적이 연결됩니다. 금고에서 상태를 확인하고, 필요하면 씨씨로 이동할 수 있어요.</p>
+          <p className="mb-6 text-gray-700">씨씨에서 이용한 기록이 있으면 누적이 더 정확히 반영될 수 있어요. 금고에서 상태를 확인하고, 필요하면 씨씨로 이동할 수 있어요.</p>
           <div className="mb-6 space-y-4">
             {[
-              "씨씨 입금(충전) → 이 앱 누적/레벨 연결",
+              "씨씨 이용 내역 연동(선택) → 이 앱 누적/레벨 반영",
               "게임 결과에 따라 금고가 변동될 수 있음",
               "금고에서 ‘씨씨카지노 충전하기’로 이동 가능",
             ].map((text) => (
@@ -495,15 +499,15 @@ const PointSystemSection: React.FC = () => {
         </div>
 
         <div className="mb-10 grid grid-cols-1 gap-6 md:grid-cols-3">
-          {["씨씨 입금(충전)", "티켓/레벨 연결", "게임/미션 & 보상"].map((title, index) => (
+          {["씨씨 이용 내역 연동", "티켓/레벨 반영", "게임/미션 & 보상"].map((title, index) => (
             <div key={title} className="rounded-xl bg-[rgb(0,0,0)] bg-opacity-10 p-6 text-center">
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#d2fd9c] text-2xl font-bold text-[#394508]">
                 {index + 1}
               </div>
               <h3 className="mb-2 text-xl font-bold">{title}</h3>
               <p className="text-gray-300">
-                {index === 0 && "씨씨에 입금(충전)하고 이용하면 이 앱의 누적/레벨이 연결됩니다."}
-                {index === 1 && "연결된 상태에서 티켓/레벨/보상 흐름이 자동으로 따라옵니다."}
+                {index === 0 && "씨씨에서 이용한 기록이 있으면 이 앱의 누적/레벨 반영이 더 정확해집니다."}
+                {index === 1 && "누적/레벨이 반영되면 티켓/보상 흐름을 더 쉽게 이해하고 따라갈 수 있어요."}
                 {index === 2 && "게임/미션으로 다이아를 모아 상점/인벤토리에서 교환권을 사용하고, 레벨/금고를 확인하세요."}
               </p>
             </div>
@@ -515,7 +519,7 @@ const PointSystemSection: React.FC = () => {
           <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
             <div className="rounded-lg bg-[rgb(5,39,16)] bg-opacity-10 p-4">
               <h4 className="mb-2 font-bold text-[#d2fd9c]">레벨포인트란?</h4>
-              <p className="text-sm text-gray-300">레벨 진행도에 반영되는 값입니다. 게임 플레이와 씨씨사이트 이용으로 쌓입니다.</p>
+              <p className="text-sm text-gray-300">레벨 진행도에 반영되는 값입니다. 게임 플레이와(필요 시) 씨씨사이트 이용 기록에 따라 반영될 수 있어요.</p>
             </div>
             <div className="rounded-lg bg-[rgb(5,39,16)] bg-opacity-10 p-4">
               <h4 className="mb-2 font-bold text-[#d2fd9c]">레벨 보상이란?</h4>
@@ -571,8 +575,8 @@ const QuickGuideSection: React.FC = () => {
 const StepContent: React.FC<{ step: number }> = ({ step }) => {
   const data = {
     1: {
-      title: "씨씨카지노 입금(충전)하기",
-      desc: "이 앱의 1순위 목표는 ‘씨씨 입금(충전)’입니다. 입금/이용 내역이 있어야 누적/레벨/티켓 연결이 안정적입니다.",
+      title: "씨씨카지노 이용(선택)",
+      desc: "씨씨에서 이용한 기록이 있으면 누적/레벨/티켓 반영이 더 안정적입니다. 다만 필수는 아니며, 처음에는 체험 티켓으로도 시작할 수 있어요.",
       tip: "금고 페이지에서 ‘씨씨카지노 충전하기’를 누르면 이동할 수 있어요.",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -656,8 +660,8 @@ const FAQSection: React.FC = () => {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const faqs = [
     {
-      question: "씨씨 입금(충전)은 어디서 하나요?",
-      answer: "금고 페이지에서 ‘씨씨카지노 충전하기’ 버튼을 누르면 씨씨 사이트로 이동할 수 있습니다. 충전 후 다시 이 앱으로 돌아오면 연결이 반영됩니다.",
+      question: "씨씨 연동(이용 기록 반영)은 어디서 하나요?",
+      answer: "금고 페이지에서 ‘씨씨카지노 충전하기’ 버튼을 누르면 씨씨 사이트로 이동할 수 있습니다. 이용 후 다시 이 앱으로 돌아오면 반영될 수 있어요.",
     },
     {
       question: "적립된 레벨포인트는 어떻게 확인하나요?",

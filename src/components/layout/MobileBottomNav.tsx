@@ -1,16 +1,20 @@
 import React, { memo, useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useSeasonPassStatus } from "../../hooks/useSeasonPass";
+import { useMissionStore } from "../../stores/missionStore";
 import clsx from "clsx";
 
 const MobileBottomNav: React.FC = memo(() => {
     const location = useLocation();
     const { data: seasonData } = useSeasonPassStatus();
+    const { hasUnclaimed: missionsUnclaimed } = useMissionStore();
 
-    const hasUnclaimed = useMemo(() => {
+    const hasUnclaimedSeason = useMemo(() => {
         if (!seasonData?.levels) return false;
         return seasonData.levels.some((l) => l.is_unlocked && !l.is_claimed);
     }, [seasonData]);
+
+    const globalHasUnclaimed = missionsUnclaimed || hasUnclaimedSeason;
 
     const currentPath = location.pathname;
 
@@ -63,7 +67,7 @@ const MobileBottomNav: React.FC = memo(() => {
                     <svg xmlns="http://www.w3.org/2000/svg" className={clsx("w-6 h-6 mb-1 transition-transform", active ? "scale-110 text-amber-400" : "opacity-60")} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={active ? 2.5 : 2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                     </svg>
-                    {hasUnclaimed && (
+                    {globalHasUnclaimed && (
                         <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>

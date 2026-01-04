@@ -2,9 +2,19 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { useHaptic } from "../hooks/useHaptic";
+import { useMissionStore } from "../stores/missionStore";
+import { useSeasonPassStatus } from "../hooks/useSeasonPass";
+import { AlertCircle } from "lucide-react";
 
 const EventDashboardPage: React.FC = () => {
   const { impact } = useHaptic();
+  const { hasUnclaimed: missionsUnclaimed } = useMissionStore();
+  const { data: seasonData } = useSeasonPassStatus();
+
+  const seasonUnclaimed = React.useMemo(() => {
+    if (!seasonData?.levels) return false;
+    return seasonData.levels.some((l) => l.is_unlocked && !l.is_claimed);
+  }, [seasonData]);
   const cardClass =
     "group relative block w-full overflow-hidden rounded-[2rem] border border-white/10 bg-black transition-all duration-300 active:scale-[0.98] hover:-translate-y-1 hover:border-figma-accent/30 hover:shadow-[0_0_30px_rgba(48,255,117,0.1)]";
   const cardImageClass =
@@ -44,6 +54,7 @@ const EventDashboardPage: React.FC = () => {
                   <div className="flex items-center gap-3">
                     <div className="w-2 h-2 rounded-full bg-figma-accent animate-pulse shadow-[0_0_8px_#30FF75]" />
                     <div className="truncate text-base font-black text-white tracking-wide">시즌패스</div>
+                    {seasonUnclaimed && <AlertCircle className="w-4 h-4 text-red-500 animate-pulse" />}
                   </div>
                   <div className="shrink-0 inline-flex items-center justify-center rounded-xl bg-figma-accent/10 px-4 py-2.5 text-sm font-black text-figma-accent ring-1 ring-inset ring-figma-accent/30 shadow-[0_0_15px_rgba(48,255,117,0.15)]">
                     보상 받기
@@ -72,6 +83,7 @@ const EventDashboardPage: React.FC = () => {
                   <div className="flex items-center gap-3">
                     <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]" />
                     <div className="truncate text-base font-black text-white tracking-wide">미션</div>
+                    {missionsUnclaimed && <AlertCircle className="w-4 h-4 text-red-500 animate-pulse" />}
                   </div>
                   <div className="shrink-0 inline-flex items-center justify-center rounded-xl bg-emerald-500/15 px-4 py-2.5 text-sm font-black text-emerald-400 ring-1 ring-inset ring-emerald-500/30 shadow-[0_0_15px_rgba(52,211,153,0.15)]">
                     미션 진행

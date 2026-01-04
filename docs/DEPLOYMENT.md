@@ -282,18 +282,28 @@ sudo docker-compose ps
 # - xmas-backend
 # - xmas-frontend
 # - xmas-nginx
+# - (옵션) xmas-telegram-bot: TELEGRAM_BOT_TOKEN 설정 시에만 Up
 ```
 
 ### 5.2 엔드포인트 테스트
 
 ```bash
 # 로컬에서 테스트
-curl -k https://yourdomain.com/health
-# 응답: healthy
+curl -k https://yourdomain.com/api/health
+# 응답 예: {"status":"ok"}
 
 # API 테스트
 curl -k https://yourdomain.com/api/
 # 응답: {"message": "XMAS 1Week backend running"}
+
+# Admin API 테스트 (토큰 없으면 401이 정상)
+curl -k -i https://yourdomain.com/admin/api/streak-rewards/daily-counts?day=2026-01-04
+# 응답 예: HTTP/1.1 401 Unauthorized
+
+# DB 마이그레이션 정합성(권장)
+sudo docker-compose exec backend alembic current
+sudo docker-compose exec backend alembic heads
+# current와 heads가 동일하면 OK
 
 ```
 
