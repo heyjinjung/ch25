@@ -114,6 +114,8 @@ class InventoryService:
         REWARD_MAP = {
             "VOUCHER_GOLD_KEY_1": {"token": GameTokenType.GOLD_KEY, "amount": 1},
             "VOUCHER_DIAMOND_KEY_1": {"token": GameTokenType.DIAMOND_KEY, "amount": 1},
+            "VOUCHER_ROULETTE_COIN_1": {"token": GameTokenType.ROULETTE_COIN, "amount": 1},
+            "VOUCHER_DICE_TOKEN_1": {"token": GameTokenType.DICE_TOKEN, "amount": 1},
         }
 
         reward = REWARD_MAP.get(item_type)

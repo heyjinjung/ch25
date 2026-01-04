@@ -84,6 +84,7 @@ export default {
         'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
         'shake': 'shake 0.5s ease-in-out',
         'bounce-in': 'bounce-in 0.5s ease-out',
+        'float': 'float 3s ease-in-out infinite',
       },
       keyframes: {
         'pulse-glow': {
@@ -100,6 +101,10 @@ export default {
           '50%': { transform: 'scale(1.05)' },
           '70%': { transform: 'scale(0.9)' },
           '100%': { transform: 'scale(1)', opacity: '1' },
+        },
+        'float': {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-10px)' },
         },
       },
     },

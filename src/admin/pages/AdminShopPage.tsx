@@ -149,7 +149,90 @@ const AdminShopPage: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {effectiveProducts.map((p) => {
+              {/* Group 1: Premium Keys & Others */}
+              {effectiveProducts.filter(p => !p.sku.startsWith("PROD_TICKET_")).map((p) => {
+                const r = rows.get(p.sku);
+                if (!r) return null;
+                return (
+                  <tr key={p.sku} className="border-t border-[#222222]">
+                    <td className="px-4 py-3 font-mono text-xs text-gray-400">{p.sku}</td>
+                    <td className="px-4 py-3">
+                      <input
+                        className="w-full rounded-md border border-[#333333] bg-[#0B0B0B] px-3 py-2 text-sm text-white"
+                        value={r.title}
+                        onChange={(e) =>
+                          setRows((prev) => {
+                            const next = new Map(prev);
+                            next.set(p.sku, { ...r, title: e.target.value });
+                            return next;
+                          })
+                        }
+                      />
+                    </td>
+                    <td className="px-4 py-3">
+                      <input
+                        type="number"
+                        min={1}
+                        className="w-40 rounded-md border border-[#333333] bg-[#0B0B0B] px-3 py-2 text-sm text-white"
+                        value={r.cost_amount}
+                        onChange={(e) => {
+                          const v = Number(e.target.value);
+                          setRows((prev) => {
+                            const next = new Map(prev);
+                            next.set(p.sku, { ...r, cost_amount: Number.isFinite(v) ? v : r.cost_amount });
+                            return next;
+                          });
+                        }}
+                      />
+                    </td>
+                    <td className="px-4 py-3 text-xs text-gray-300">
+                      <span className="font-mono">{p.grant.item_type}</span> x{p.grant.amount}
+                    </td>
+                    <td className="px-4 py-3">
+                      <label className="flex items-center gap-2 text-sm">
+                        <input
+                          type="checkbox"
+                          checked={r.is_active}
+                          onChange={(e) =>
+                            setRows((prev) => {
+                              const next = new Map(prev);
+                              next.set(p.sku, { ...r, is_active: e.target.checked });
+                              return next;
+                            })
+                          }
+                        />
+                        <span className={r.is_active ? "text-[#91F402]" : "text-gray-500"}>
+                          {r.is_active ? "ON" : "OFF"}
+                        </span>
+                      </label>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className="mt-8 mb-4">
+        <h2 className="text-xl font-bold text-[#91F402]">🎟️ 티켓 교환소 (체험 보상)</h2>
+        <p className="text-gray-400 text-sm mt-1">다이아로 구매 가능한 일반 게임 티켓 상품입니다.</p>
+      </div>
+
+      <div className="rounded-2xl border border-[#333333] bg-[#111111] overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-[#1A1A1A] text-gray-300">
+              <tr>
+                <th className="px-4 py-3 text-left">SKU</th>
+                <th className="px-4 py-3 text-left">상품명</th>
+                <th className="px-4 py-3 text-left">가격(DIAMOND)</th>
+                <th className="px-4 py-3 text-left">지급</th>
+                <th className="px-4 py-3 text-left">활성</th>
+              </tr>
+            </thead>
+            <tbody>
+              {effectiveProducts.filter(p => p.sku.startsWith("PROD_TICKET_")).map((p) => {
                 const r = rows.get(p.sku);
                 if (!r) return null;
                 return (

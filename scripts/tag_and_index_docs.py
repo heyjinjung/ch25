@@ -1,6 +1,12 @@
 import os
 import shutil
 
+
+def _encode_markdown_link_target(path: str) -> str:
+    # Markdown link destination에서 공백은 URL을 끊고, '#'는 fragment로 해석되어
+    # 파일명이 깨질 수 있으므로 최소 인코딩을 적용한다.
+    return path.replace("#", "%23").replace(" ", "%20")
+
 # List of files provided by user (relative to git root c:\Users\task2\git\ch25)
 files_to_process = [
     r"docs\06_ops\202601\[2026001#] 현재앱리텐션요소종합 분석.md",
@@ -100,10 +106,12 @@ for info in renamed_files_info:
     # Grouping logic simple
     folder = os.path.dirname(info['path'])
     if folder != current_category:
-        content += f"\n### 📁 {folder}\n"
+        folder_display = folder if folder else "(docs root)"
+        content += f"\n### 📁 {folder_display}\n"
         current_category = folder
     
-    content += f"- [{info['name']}]({info['path']})\n"
+    link_target = _encode_markdown_link_target(info['path'])
+    content += f"- [{info['name']}]({link_target})\n"
 
 try:
     with open(index_file_path, "w", encoding="utf-8") as f:

@@ -25,6 +25,27 @@ vi.mock("../hooks/useLottery", () => ({
   usePlayLottery: vi.fn(),
 }));
 
+// Sound hooks mock: game pages use useSound(), but tests don't mount SoundProvider.
+vi.mock("../hooks/useSound", () => ({
+  useSound: () => ({
+    playRouletteSpin: vi.fn(),
+    stopRouletteSpin: vi.fn(),
+    playDiceShake: vi.fn(),
+    playDiceThrow: vi.fn(),
+    playToast: vi.fn(),
+    playLotteryScratch: vi.fn(),
+    stopLotteryScratch: vi.fn(),
+    playEnterGame: vi.fn(),
+    playSfx: vi.fn(),
+    startMainBgm: vi.fn(),
+    startBattleBgm: vi.fn(),
+    stopBgm: vi.fn(),
+    toggleMute: vi.fn(),
+    isMuted: false,
+    isReady: true,
+  }),
+}));
+
 import RoulettePage from "../pages/RoulettePage";
 import DicePage from "../pages/DicePage";
 import LotteryPage from "../pages/LotteryPage";
@@ -54,7 +75,7 @@ describe("Game pages error/unlimited handling", () => {
 
   it("Roulette shows unlimited when remaining_spins=0 and stays enabled", async () => {
     (useRouletteStatus as unknown as Mock).mockReturnValue({
-      data: { remaining_spins: 0, segments: [], feature_type: "ROULETTE" },
+      data: { remaining_spins: 0, token_balance: 10, token_type: "ROULETTE_COIN", segments: [], feature_type: "ROULETTE" },
       isLoading: false,
       isError: false,
       error: null,
@@ -68,8 +89,7 @@ describe("Game pages error/unlimited handling", () => {
 
     renderWithRouter(<RoulettePage />);
 
-    expect(screen.getByText(/남은 횟수: 무제한/)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /룰렛 돌리기/ })).not.toBeDisabled();
+    expect(screen.getByRole("button", { name: /룰렛 시작/i })).not.toBeDisabled();
   });
 
   it("Roulette maps NO_FEATURE_TODAY error to friendly message", () => {
@@ -92,7 +112,7 @@ describe("Game pages error/unlimited handling", () => {
 
   it("Dice shows unlimited when remaining_plays=0 and maps INVALID_FEATURE_SCHEDULE", () => {
     (useDiceStatus as unknown as Mock).mockReturnValue({
-      data: { remaining_plays: 0, feature_type: "DICE" },
+      data: { remaining_plays: 0, token_balance: 10, token_type: "DICE_TOKEN", feature_type: "DICE" },
       isLoading: false,
       isError: false,
       error: null,
@@ -105,14 +125,13 @@ describe("Game pages error/unlimited handling", () => {
     });
 
     renderWithRouter(<DicePage />);
-    expect(screen.getByText(/남은 횟수: 무제한/)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /주사위 던지기/ })).not.toBeDisabled();
+    expect(screen.getByRole("button", { name: /ROLL DICE/i })).not.toBeDisabled();
     expect(screen.getByText(/이벤트 스케줄이 잘못되었습니다/)).toBeInTheDocument();
   });
 
   it("Lottery shows unlimited when remaining_plays=0 and maps FEATURE_DISABLED", () => {
     (useLotteryStatus as unknown as Mock).mockReturnValue({
-      data: { remaining_plays: 0, prizes: [], feature_type: "LOTTERY" },
+      data: { remaining_plays: 0, token_balance: 10, token_type: "LOTTERY_TICKET", prizes: [], feature_type: "LOTTERY" },
       isLoading: false,
       isError: false,
       error: null,
@@ -125,8 +144,7 @@ describe("Game pages error/unlimited handling", () => {
     });
 
     renderWithRouter(<LotteryPage />);
-    expect(screen.getByText(/남은 횟수: 무제한/)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /복권 뽑기/ })).not.toBeDisabled();
+    expect(screen.getByRole("button", { name: /지금 긁기/ })).not.toBeDisabled();
     expect(screen.getByText(/이벤트가 비활성화되었습니다/)).toBeInTheDocument();
   });
 });

@@ -11,6 +11,7 @@ from app.db.base_class import Base
 class GameTokenType(str, Enum):
     ROULETTE_COIN = "ROULETTE_COIN"
     DICE_TOKEN = "DICE_TOKEN"
+    TRIAL_TOKEN = "TRIAL_TOKEN"
     LOTTERY_TICKET = "LOTTERY_TICKET"
     # CC_COIN = "CC_COIN"  # [DEPRECATED]
     GOLD_KEY = "GOLD_KEY"

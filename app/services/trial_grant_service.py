@@ -26,6 +26,7 @@ class TrialGrantService:
             GameTokenType.ROULETTE_COIN,
             GameTokenType.DICE_TOKEN,
             GameTokenType.LOTTERY_TICKET,
+            GameTokenType.TRIAL_TOKEN,
         }
 
         # Per-user daily total cap across all trial-grantable token types.
@@ -136,6 +137,21 @@ class TrialGrantService:
         if balance > 0:
             return 0, balance, None
 
+        # [TRIAL TOKEN STRATEGY]
+        # Redirect all real-ticket grants to TRIAL_TOKEN (Amount: 3)
+        grant_token_type = token_type
+        grant_amount = 1
+        
+        if token_type in {GameTokenType.ROULETTE_COIN, GameTokenType.DICE_TOKEN, GameTokenType.LOTTERY_TICKET}:
+            grant_token_type = GameTokenType.TRIAL_TOKEN
+            grant_amount = 3
+            
+            # Additional Check: If user already has TRIAL tokens, don't grant more.
+            # Force them to consume existing trial tokens first.
+            trial_balance = self.wallet_service.get_balance(db, user_id, grant_token_type)
+            if trial_balance > 0:
+                 return 0, trial_balance, None
+
         today_kst = datetime.now(ZoneInfo("Asia/Seoul")).date()
 
         # Global daily total cap across all trial-grantable token types.
@@ -162,7 +178,7 @@ class TrialGrantService:
             granted_this_week = self._sum_grants_in_window(
                 db,
                 user_id=user_id,
-                token_type=token_type,
+                token_type=grant_token_type,
                 start_utc=start_utc,
                 end_utc=now_utc,
             )
@@ -180,7 +196,7 @@ class TrialGrantService:
         granted_today = self._sum_grants_in_window(
             db,
             user_id=user_id,
-            token_type=token_type,
+            token_type=grant_token_type,
             start_utc=start_utc,
             end_utc=end_utc,
         )
@@ -189,36 +205,36 @@ class TrialGrantService:
             return 0, balance_now, None
 
         # Funnel-split policy: first-ever grant is guaranteed; subsequent grants can be probabilistic.
-        if not self._should_grant_after_first(db, user_id=user_id, token_type=token_type):
-            balance_now = self.wallet_service.get_balance(db, user_id, token_type)
+        if not self._should_grant_after_first(db, user_id=user_id, token_type=grant_token_type):
+            balance_now = self.wallet_service.get_balance(db, user_id, grant_token_type)
             return 0, balance_now, None
 
-        label = f"TRIAL_{token_type.value}_{today_kst.isoformat()}"
+        label = f"TRIAL_{grant_token_type.value}_{today_kst.isoformat()}"
 
         already = db.execute(
             select(UserGameWalletLedger.id).where(
                 UserGameWalletLedger.user_id == user_id,
-                UserGameWalletLedger.token_type == token_type,
+                UserGameWalletLedger.token_type == grant_token_type,
                 UserGameWalletLedger.delta > 0,
                 UserGameWalletLedger.label == label,
             )
         ).first()
         if already is not None:
-            balance_now = self.wallet_service.get_balance(db, user_id, token_type)
+            balance_now = self.wallet_service.get_balance(db, user_id, grant_token_type)
             return 0, balance_now, label
 
         balance_after = self.wallet_service.grant_tokens(
             db,
             user_id=user_id,
-            token_type=token_type,
-            amount=1,
+            token_type=grant_token_type,
+            amount=grant_amount,
             reason="TRIAL_GRANT",
             label=label,
-            meta={"source": "ticket_zero", "date": today_kst.isoformat()},
+            meta={"source": "ticket_zero", "date": today_kst.isoformat(), "requested_token": token_type.value},
         )
         try:
-            self.wallet_service.mark_trial_grant(db, user_id=user_id, token_type=token_type, amount=1)
+            self.wallet_service.mark_trial_grant(db, user_id=user_id, token_type=grant_token_type, amount=grant_amount)
         except Exception:
             # Keep grant resilient; bucket is best-effort bookkeeping.
             pass
-        return 1, balance_after, label
+        return grant_amount, balance_after, label

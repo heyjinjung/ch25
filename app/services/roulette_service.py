@@ -65,6 +65,33 @@ class RouletteService:
         db.refresh(config)
         return config
 
+    def _seed_trial_config(self, db: Session) -> RouletteConfig:
+        """Create TRIAL roulette config."""
+        config = RouletteConfig(
+            name="체험 룰렛 (Practice)",
+            is_active=True,
+            max_daily_spins=0,
+            ticket_type=GameTokenType.TRIAL_TOKEN.value,
+        )
+        db.add(config)
+        db.flush()
+        
+        # Seed segments: Reward DIAMOND only
+        segments = [
+            {"slot_index": 0, "label": "1 다이아", "reward_type": "DIAMOND", "reward_amount": 1, "weight": 30},
+            {"slot_index": 1, "label": "꽝", "reward_type": "NONE", "reward_amount": 0, "weight": 50},
+            {"slot_index": 2, "label": "2 다이아", "reward_type": "DIAMOND", "reward_amount": 2, "weight": 15},
+            {"slot_index": 3, "label": "꽝", "reward_type": "NONE", "reward_amount": 0, "weight": 4},
+            {"slot_index": 4, "label": "5 다이아", "reward_type": "DIAMOND", "reward_amount": 5, "weight": 1},
+            {"slot_index": 5, "label": "꽝", "reward_type": "NONE", "reward_amount": 0, "weight": 0}, 
+        ]
+        # Note: 6 segments required by FE usually.
+        
+        db.add_all([RouletteSegment(config_id=config.id, **s) for s in segments])
+        db.commit()
+        db.refresh(config)
+        return config
+
     def _get_today_config(self, db: Session, ticket_type: str = GameTokenType.ROULETTE_COIN.value) -> RouletteConfig:
         config = db.execute(
             select(RouletteConfig).where(
@@ -78,6 +105,9 @@ class RouletteService:
             is_sqlite = bool(db.bind and db.bind.dialect.name == "sqlite")
             if ticket_type == GameTokenType.ROULETTE_COIN.value and (settings.test_mode or is_sqlite):
                 return self._seed_default_config(db)
+            if ticket_type == GameTokenType.TRIAL_TOKEN.value:
+                # Auto-seed trial config if missing
+                return self._seed_trial_config(db)
             raise InvalidConfigError(f"ROULETTE_CONFIG_MISSING_{ticket_type}")
         return config
 

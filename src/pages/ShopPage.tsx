@@ -116,8 +116,12 @@ interface ProductCardProps {
 const ITEM_NAMES: Record<string, string> = {
     'VOUCHER_GOLD_KEY_1': '골드키 교환권',
     'VOUCHER_DIAMOND_KEY_1': '다이아키 교환권',
+    'VOUCHER_ROULETTE_COIN_1': '코인 교환권',
+    'VOUCHER_DICE_TOKEN_1': '주사위 교환권',
     'GOLD_KEY': '골드 키',
     'DIAMOND_KEY': '다이아몬드 키',
+    'ROULETTE_COIN': '룰렛 티켓',
+    'DICE_TOKEN': '주사위 티켓',
 };
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, diamondBalance, onBuy, isPending }) => {
@@ -132,7 +136,16 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, diamondBalance, onBu
                 {/* Left: Product Info */}
                 <div className="flex items-center gap-3 min-w-0">
                     <div className="w-12 h-12 rounded-xl bg-black/40 border border-white/10 flex items-center justify-center shrink-0">
-                        <img src="/assets/asset_ticket_gold.png" alt="" className="w-7 h-7 object-contain" />
+                        <img
+                            src={
+                                product.sku.includes('DIAMOND') ? "/assets/asset_ticket_diamond.png" :
+                                    product.sku.includes('GOLD') ? "/assets/asset_ticket_gold.png" :
+                                        product.sku.includes('COIN') ? "/assets/asset_ticket_green.png" :
+                                            "/assets/icon_ticket.png"
+                            }
+                            alt=""
+                            className="w-7 h-7 object-contain"
+                        />
                     </div>
                     <div className="min-w-0">
                         <h3 className="text-base font-black text-white truncate">{product.title}</h3>

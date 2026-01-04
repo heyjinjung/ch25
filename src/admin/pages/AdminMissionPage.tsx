@@ -44,10 +44,10 @@ const AdminMissionPage: React.FC = () => {
         mutationFn: deleteMission,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["admin", "missions"] });
-            addToast("미션이 비활성화되었습니다.", "success");
+            addToast("미션이 영구 삭제되었습니다.", "success");
         },
         onError: (err: any) => {
-            addToast(`비활성화 실패: ${err.response?.data?.detail || err.message}`, "error");
+            addToast(`삭제 실패: ${err.response?.data?.detail || err.message}`, "error");
         }
     });
 
@@ -291,7 +291,7 @@ const AdminMissionPage: React.FC = () => {
                                             </button>
                                             <button
                                                 onClick={() => {
-                                                    if (confirm("정말 이 미션을 비활성화하시겠습니까?")) {
+                                                    if (confirm("정말 이 미션을 영구 삭제하시겠습니까? (복구 불가)")) {
                                                         deleteMutation.mutate(mission.id);
                                                     }
                                                 }}

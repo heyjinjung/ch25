@@ -45,10 +45,10 @@ const VaultPageCompact: React.FC = () => {
             </div>
 
             {/* Hero Vault Image with Breathing Effect */}
-            <div className="relative w-[55%] max-w-[180px] aspect-square mb-2 z-10">
+            <div className="relative w-[55%] max-w-[180px] aspect-square mb-2 z-10 animate-float">
                 {/* Pulsing Glow Background */}
                 <div className={clsx(
-                    "absolute inset-0 rounded-full blur-[60px]",
+                    "absolute inset-0 rounded-full blur-[60px] animate-pulse",
                     view.eligible ? "bg-emerald-600/40" : "bg-emerald-900/30"
                 )} />
 
@@ -223,8 +223,9 @@ const VaultPageCompact: React.FC = () => {
                     <Link
                         to="/home"
                         onClick={() => tryHaptic(10)}
-                        className="flex-1 py-3 rounded-xl bg-white/5 border border-white/10 text-white/70 font-semibold text-center text-sm hover:bg-white/10 active:scale-[0.98] transition-all"
+                        className="flex-1 py-3 rounded-xl bg-white/5 border border-white/10 text-white/70 font-semibold text-center text-sm hover:bg-white/10 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
                     >
+                        <img src="/assets/roulette/icon_slot_machine.png" className="w-5 h-5 object-contain opacity-70" alt="" />
                         게임으로
                     </Link>
                 </div>

@@ -18,6 +18,59 @@ import {
 } from "../api/adminSeasonApi";
 import { REWARD_TYPES } from "../constants/rewardTypes";
 
+const PrimaryButton = ({
+  children,
+  ...props
+}: React.ButtonHTMLAttributes<HTMLButtonElement> & { children: React.ReactNode }) => (
+  <button
+    type="button"
+    className="inline-flex items-center rounded-md bg-[#2D6B3B] px-4 py-2 text-sm font-medium text-white hover:bg-[#91F402] hover:text-black disabled:cursor-not-allowed disabled:opacity-60"
+    {...props}
+  >
+    {children}
+  </button>
+);
+
+const SecondaryButton = ({
+  children,
+  ...props
+}: React.ButtonHTMLAttributes<HTMLButtonElement> & { children: React.ReactNode }) => (
+  <button
+    type="button"
+    className="inline-flex items-center rounded-md border border-[#333333] bg-[#1A1A1A] px-4 py-2 text-sm font-medium text-gray-200 hover:bg-[#2C2C2E] disabled:cursor-not-allowed disabled:opacity-60"
+    {...props}
+  >
+    {children}
+  </button>
+);
+
+const ModalShell = ({
+  title,
+  onClose,
+  children,
+}: {
+  title: string;
+  onClose: () => void;
+  children: React.ReactNode;
+}) => (
+  <div className="fixed inset-0 z-50 flex items-start justify-center overflow-hidden bg-black/70 p-4 pt-[calc(env(safe-area-inset-top)+1rem)] pb-[calc(env(safe-area-inset-bottom)+1rem)] pl-[calc(env(safe-area-inset-left)+1rem)] pr-[calc(env(safe-area-inset-right)+1rem)] sm:items-center">
+    <div className="w-full max-w-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-lg border border-[#333333] bg-[#111111] shadow-lg sm:max-h-[90vh]">
+      <div className="flex items-center justify-between border-b border-[#333333] px-6 py-4">
+        <h3 className="text-lg font-medium text-[#91F402]">{title}</h3>
+        <button
+          type="button"
+          onClick={onClose}
+          className="rounded-md p-2 text-gray-300 hover:bg-[#1A1A1A]"
+          aria-label="닫기"
+        >
+          <X size={18} />
+        </button>
+      </div>
+      <div className="px-6 py-5">{children}</div>
+    </div>
+  </div>
+);
+
 const seasonSchema = z
   .object({
     name: z.string().min(1, "이름은 필수입니다"),
@@ -126,46 +179,6 @@ const SeasonListPage: React.FC = () => {
   const inputClass =
     "w-full rounded-md border border-[#333333] bg-[#1A1A1A] px-3 py-2 text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]";
   const labelClass = "text-sm font-medium text-gray-300";
-
-  const PrimaryButton = ({
-    children,
-    ...props
-  }: React.ButtonHTMLAttributes<HTMLButtonElement> & { children: React.ReactNode }) => (
-    <button
-      type="button"
-      className="inline-flex items-center rounded-md bg-[#2D6B3B] px-4 py-2 text-sm font-medium text-white hover:bg-[#91F402] hover:text-black disabled:cursor-not-allowed disabled:opacity-60"
-      {...props}
-    >
-      {children}
-    </button>
-  );
-
-  const SecondaryButton = ({
-    children,
-    ...props
-  }: React.ButtonHTMLAttributes<HTMLButtonElement> & { children: React.ReactNode }) => (
-    <button
-      type="button"
-      className="inline-flex items-center rounded-md border border-[#333333] bg-[#1A1A1A] px-4 py-2 text-sm font-medium text-gray-200 hover:bg-[#2C2C2E] disabled:cursor-not-allowed disabled:opacity-60"
-      {...props}
-    >
-      {children}
-    </button>
-  );
-
-  const ModalShell = ({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) => (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-hidden bg-black/70 p-4 pt-[calc(env(safe-area-inset-top)+1rem)] pb-[calc(env(safe-area-inset-bottom)+1rem)] pl-[calc(env(safe-area-inset-left)+1rem)] pr-[calc(env(safe-area-inset-right)+1rem)] sm:items-center">
-      <div className="w-full max-w-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-lg border border-[#333333] bg-[#111111] shadow-lg sm:max-h-[90vh]">
-        <div className="flex items-center justify-between border-b border-[#333333] px-6 py-4">
-          <h3 className="text-lg font-medium text-[#91F402]">{title}</h3>
-          <button type="button" onClick={onClose} className="rounded-md p-2 text-gray-300 hover:bg-[#1A1A1A]" aria-label="닫기">
-            <X size={18} />
-          </button>
-        </div>
-        <div className="px-6 py-5">{children}</div>
-      </div>
-    </div>
-  );
 
   return (
     <section className="space-y-6">

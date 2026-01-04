@@ -58,6 +58,22 @@ SHOP_PRODUCTS = {
         "VOUCHER_DIAMOND_KEY_1", 
         1
     ),
+    "PROD_TICKET_COIN_1": ShopProduct(
+        "PROD_TICKET_COIN_1",
+        "코인 교환권",
+        GameTokenType.DIAMOND,
+        1,
+        "VOUCHER_ROULETTE_COIN_1",
+        1
+    ),
+    "PROD_TICKET_DICE_1": ShopProduct(
+        "PROD_TICKET_DICE_1",
+        "주사위 교환권",
+        GameTokenType.DIAMOND,
+        2,
+        "VOUCHER_DICE_TOKEN_1",
+        1
+    ),
 }
 
 

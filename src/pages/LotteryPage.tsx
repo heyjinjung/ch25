@@ -55,7 +55,12 @@ const LotteryPage: React.FC = () => {
 
   const tokenBalance = data?.token_balance ?? 0;
   const isOutOfTokens = typeof data?.token_balance === "number" && data.token_balance <= 0;
-  const canPlay = !isScratching && !playMutation.isPending && !isOutOfTokens && (data?.remaining_plays !== 0);
+  const isUnlimited = data?.remaining_plays === 0;
+  const canPlay =
+    !isScratching &&
+    !playMutation.isPending &&
+    !isOutOfTokens &&
+    (isUnlimited || (data?.remaining_plays ?? 0) > 0);
 
   const handleScratch = async () => {
     if (isScratching || isRevealed || isOutOfTokens) return;

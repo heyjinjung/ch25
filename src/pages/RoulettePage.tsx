@@ -43,6 +43,13 @@ const TABS: { type: GameTokenType; label: string; activeColors: string; icon: st
     icon: "💎",
     iconImg: "/assets/asset_ticket_diamond.png"
   },
+  {
+    type: "TRIAL_TOKEN",
+    label: "체험\n룰렛",
+    activeColors: "bg-gradient-to-br from-gray-400 to-gray-600 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)] border-gray-400",
+    icon: "🧪",
+    iconImg: "/assets/asset_ticket_trial.png" // Placeholder or reuse existing
+  },
 ];
 
 const RoulettePage: React.FC = () => {
@@ -373,7 +380,10 @@ const RoulettePage: React.FC = () => {
                 {isOutOfTokens && (
                   <TicketZeroPanel
                     tokenType={data.token_type}
-                    onClaimSuccess={() => queryClient.invalidateQueries({ queryKey: ["roulette-status"] })}
+                    onClaimSuccess={() => {
+                      queryClient.invalidateQueries({ queryKey: ["roulette-status"] });
+                      setActiveTab("TRIAL_TOKEN");
+                    }}
                   />
                 )}
 

@@ -11,16 +11,18 @@ from app.services.trial_grant_service import TrialGrantService
 
 def test_trial_grant_grants_once_per_day_when_empty(client, session_factory):
     db = session_factory()
-    wallet = (
-        db.query(UserGameWallet)
-        .filter(UserGameWallet.user_id == 1, UserGameWallet.token_type == GameTokenType.DICE_TOKEN)
-        .one_or_none()
-    )
-    if wallet is None:
-        wallet = UserGameWallet(user_id=1, token_type=GameTokenType.DICE_TOKEN, balance=0)
-    else:
-        wallet.balance = 0
-    db.add(wallet)
+    # Reset both the requested token wallet and the unified TRIAL_TOKEN wallet.
+    for token_type in (GameTokenType.DICE_TOKEN, GameTokenType.TRIAL_TOKEN):
+        wallet = (
+            db.query(UserGameWallet)
+            .filter(UserGameWallet.user_id == 1, UserGameWallet.token_type == token_type)
+            .one_or_none()
+        )
+        if wallet is None:
+            wallet = UserGameWallet(user_id=1, token_type=token_type, balance=0)
+        else:
+            wallet.balance = 0
+        db.add(wallet)
     db.commit()
 
     payload = {"token_type": "DICE_TOKEN"}
@@ -28,8 +30,9 @@ def test_trial_grant_grants_once_per_day_when_empty(client, session_factory):
     assert first.status_code == 200
     data1 = first.json()
     assert data1["result"] == "OK"
-    assert data1["granted"] == 1
-    assert data1["balance"] == 1
+    # DICE_TOKEN requests are redirected to TRIAL_TOKEN grants (amount: 3).
+    assert data1["granted"] == 3
+    assert data1["balance"] == 3
     assert isinstance(data1.get("label"), str)
 
     second = client.post("/api/trial-grant", json=payload)
@@ -37,7 +40,7 @@ def test_trial_grant_grants_once_per_day_when_empty(client, session_factory):
     data2 = second.json()
     assert data2["result"] == "SKIP"
     assert data2["granted"] == 0
-    assert data2["balance"] >= 1
+    assert data2["balance"] >= 3
 
 
 def test_trial_grant_skips_when_balance_positive(client):
@@ -58,17 +61,18 @@ def test_trial_grant_prob_after_first_can_skip_non_first_time_user(client, sessi
 
     db = session_factory()
 
-    # Ensure wallet is empty.
-    wallet = (
-        db.query(UserGameWallet)
-        .filter(UserGameWallet.user_id == 1, UserGameWallet.token_type == GameTokenType.DICE_TOKEN)
-        .one_or_none()
-    )
-    if wallet is None:
-        wallet = UserGameWallet(user_id=1, token_type=GameTokenType.DICE_TOKEN, balance=0)
-    else:
-        wallet.balance = 0
-    db.add(wallet)
+    # Ensure both the requested token wallet and TRIAL_TOKEN wallet are empty.
+    for token_type in (GameTokenType.DICE_TOKEN, GameTokenType.TRIAL_TOKEN):
+        wallet = (
+            db.query(UserGameWallet)
+            .filter(UserGameWallet.user_id == 1, UserGameWallet.token_type == token_type)
+            .one_or_none()
+        )
+        if wallet is None:
+            wallet = UserGameWallet(user_id=1, token_type=token_type, balance=0)
+        else:
+            wallet.balance = 0
+        db.add(wallet)
     db.commit()
 
     # Insert a historical trial grant ledger (yesterday KST) to make this user "non-first-time".
@@ -77,11 +81,11 @@ def test_trial_grant_prob_after_first_can_skip_non_first_time_user(client, sessi
     db.add(
         UserGameWalletLedger(
             user_id=1,
-            token_type=GameTokenType.DICE_TOKEN,
-            delta=1,
-            balance_after=1,
+            token_type=GameTokenType.TRIAL_TOKEN,
+            delta=3,
+            balance_after=3,
             reason="TRIAL_GRANT",
-            label="TRIAL_DICE_TOKEN_2000-01-01",
+            label="TRIAL_TRIAL_TOKEN_2000-01-01",
             meta_json={"source": "ticket_zero"},
             created_at=yesterday_utc_naive,
         )
@@ -93,7 +97,7 @@ def test_trial_grant_prob_after_first_can_skip_non_first_time_user(client, sessi
         db.query(UserGameWalletLedger)
         .filter(
             UserGameWalletLedger.user_id == 1,
-            UserGameWalletLedger.token_type == GameTokenType.DICE_TOKEN,
+            UserGameWalletLedger.token_type == GameTokenType.TRIAL_TOKEN,
             UserGameWalletLedger.delta > 0,
             UserGameWalletLedger.reason == "TRIAL_GRANT",
         )
@@ -128,16 +132,18 @@ def test_trial_grant_first_time_still_grants_even_when_prob_zero(client, session
 
     db = session_factory()
 
-    wallet = (
-        db.query(UserGameWallet)
-        .filter(UserGameWallet.user_id == 1, UserGameWallet.token_type == GameTokenType.DICE_TOKEN)
-        .one_or_none()
-    )
-    if wallet is None:
-        wallet = UserGameWallet(user_id=1, token_type=GameTokenType.DICE_TOKEN, balance=0)
-    else:
-        wallet.balance = 0
-    db.add(wallet)
+    # Ensure both the requested token wallet and TRIAL_TOKEN wallet are empty.
+    for token_type in (GameTokenType.DICE_TOKEN, GameTokenType.TRIAL_TOKEN):
+        wallet = (
+            db.query(UserGameWallet)
+            .filter(UserGameWallet.user_id == 1, UserGameWallet.token_type == token_type)
+            .one_or_none()
+        )
+        if wallet is None:
+            wallet = UserGameWallet(user_id=1, token_type=token_type, balance=0)
+        else:
+            wallet.balance = 0
+        db.add(wallet)
     db.commit()
 
     payload = {"token_type": "DICE_TOKEN"}
@@ -145,8 +151,8 @@ def test_trial_grant_first_time_still_grants_even_when_prob_zero(client, session
     assert resp.status_code == 200
     data = resp.json()
     assert data["result"] == "OK"
-    assert data["granted"] == 1
-    assert data["balance"] == 1
+    assert data["granted"] == 3
+    assert data["balance"] == 3
 
 
 def test_trial_grant_does_not_grant_premium_keys(client, session_factory):

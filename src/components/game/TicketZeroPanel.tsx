@@ -13,8 +13,8 @@ type Props = {
 };
 
 const DEFAULT_COPY = {
-  title: "티켓이 잠깐 부족해요",
-  body: "지금 이용하면 바로 이어서 플레이 가능합니다.",
+  title: "체험판: 다이아 채굴 기회!",
+  body: "체험 티켓으로 다이아를 모아 코인으로 교환하세요.",
   primaryCta: {
     label: "씨씨카지노 바로가기",
     url: "https://ccc-010.com",
@@ -169,9 +169,14 @@ const TicketZeroPanel: React.FC<Props> = ({ tokenType, onClaimSuccess }) => {
     },
     onSuccess: (data) => {
       if (data.result === "OK") {
-        addToast("체험 티켓 1장 지급 완료", "success");
+        addToast("체험 티켓 3장 지급 완료! 체험 탭으로 이동합니다.", "success");
         onClaimSuccess?.();
         queryClient.invalidateQueries({ queryKey: ["ui-config", "ticket_zero"] });
+        // Auto-switch via URL param or local state if parent controller provided callback. 
+        // For now, simpler: we assume the parent re-renders or user sees the new tab.
+        // Actually, let's be smarter: dispatch a custom event or use the callback to switch tabs.
+        // But TicketZeroPanel props are generic. The user mentioned "User gets annoyed".
+        // Let's modify the Parent (RoulettePage) to pass a "onSwitchTab"
         return;
       }
       addToast("오늘은 이미 지급받았어요", "info");
@@ -269,7 +274,7 @@ const TicketZeroPanel: React.FC<Props> = ({ tokenType, onClaimSuccess }) => {
             }}
             className="rounded-xl border border-black/15 bg-cc-lime px-4 py-2 text-sm font-extrabold text-black disabled:cursor-not-allowed disabled:bg-cc-lime/40 disabled:text-black/45"
           >
-            {claimMutation.isPending ? "지급 중..." : "체험 티켓 1장 받기"}
+            {claimMutation.isPending ? "지급 중..." : "체험 티켓 3장 받기"}
           </button>
           {config.primaryCta.url ? (
             <a

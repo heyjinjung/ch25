@@ -64,18 +64,19 @@ def update_mission(
     db.refresh(mission)
     return mission
 
+
+
 @router.delete("/{mission_id}")
 def delete_mission(
     mission_id: int,
     db: Session = Depends(deps.get_db),
     admin_id: int = Depends(deps.get_current_admin_id),
 ) -> Any:
-    """Soft delete a mission (set active=False)."""
+    """Hard delete a mission (removes from DB)."""
     mission = db.query(Mission).filter(Mission.id == mission_id).first()
     if not mission:
         raise HTTPException(status_code=404, detail="Mission not found")
         
-    mission.is_active = False
-    db.add(mission)
+    db.delete(mission)
     db.commit()
-    return {"success": True, "message": "Mission deactivated"}
+    return {"success": True, "message": "Mission deleted"}
