@@ -11,7 +11,7 @@
 ## 2. 세부 유저 플로우 (Detailed User Flow)
 
 ### 2.1 스트릭 상태 전이 (State Machine)
-유저의 스트릭 등급은 매일 KST 09:00(운영 기준 시각)을 기점으로 전이됩니다.
+유저의 스트릭 등급은 매일 **KST 00:00**(리셋 기준)을 기점으로 전이됩니다.
 
 ```mermaid
 stateDiagram-v2
@@ -29,8 +29,8 @@ stateDiagram-v2
 
 ### 2.2 운영 사이클 (Operational Lifecycle)
 1.  **스트릭 정산**: 유저가 게임(Dice/Roulette/Lottery) 1회 완료 시 즉시 스트릭 정산 로직 실행.
-2.  **보너스 활성화**: (플래그 ON 시) 스트릭 구간에 따라 **금고 기본 적립(+200)**에 시간제 배율 적용.
-3.  **Day4~5 티켓 지급**: (플래그 ON 시) 운영일(09:00 KST) 첫 플레이 1회에 한해 티켓 지급(멱등).
+2.  **보너스 활성화(옵션)**: (플래그 ON 시) 스트릭 구간에 따라 **금고 기본 적립(+200)**에 시간제 배율 적용.
+3.  **마일스톤 자동지급(운영 기본)**: 운영일(KST 00:00 기준) 첫 유효 플레이 이후, 스트릭 마일스톤(Day3/Day7 등)에 도달하면 보상 자동지급(멱등).
 4.  **유지 독려**: 미접속 유저에게 리셋 방지 넛지(Telegram Push) 발송.
 
 ---
@@ -74,18 +74,19 @@ def sync_play_streak(self, user: User, now_kst: datetime):
 **적용 규칙**
 - 배율은 **유저의 “해당 운영일 첫 플레이(Eligible Base Game)” 시점부터** 시작합니다.
     - 예: 2일차는 첫 플레이 시점부터 1시간 동안 1.2x
-- “운영일”은 KST 09:00 리셋 기준(기존 스트릭 판정과 동일)
+- “운영일”은 **KST 00:00 리셋 기준**(스트릭 판정과 동일)
 - 배율 적용 대상은 “기본 게임 금고 적립(+200)”에 한정
 
-**일차별 스케줄(초안)**
+**일차별 스케줄(옵션/초안)**
 - 1일차: 1.0x
 - 2일차: 1.2x (첫 플레이부터 1시간)
 - 3일차: 1.2x (첫 플레이부터 4시간)
-- 4~5일차: 티켓 지급 (운영일 첫 플레이 1회만)
-    - 복권티켓(LOTTERY_TICKET): 1장
-    - 룰렛티켓(ROULETTE_COIN): 2장
 - 6일차: 1.5x (첫 플레이부터 1시간)
 - 7일차+: 2.0x (올데이)
+
+**마일스톤 자동지급(운영 기본, 구현 SoT)**
+- 기본 자동지급(디폴트): **Day3 / Day7**
+- 보상 규칙은 어드민에서 Day별로 편집 가능하며, 지급은 멱등(중복 스킵 로그 포함)
 
 **운영 토글(Feature Flag)**
 - Day4~5 티켓 지급 활성화: `STREAK_TICKET_BONUS_ENABLED=true`
@@ -206,15 +207,21 @@ CREATE INDEX `idx_user_streak` ON `user` (`play_streak`, `last_play_date`);
 
 ### 10.1 완료
 - [x] DB: `user.play_streak`, `user.last_play_date` 컬럼 및 인덱스 추가(Alembic migration 포함)
-- [x] Backend 설정: 스트릭 활성화/리셋 시각(기본 KST 09:00)/HOT·LEGEND 임계치/배율 값 구성
-- [x] Backend 로직: 운영일(09:00 KST 기준) 기반 스트릭 정산 및 동시성 제어(비관적 락)
+- [x] Backend 설정: 스트릭 활성화/리셋 시각(기본 KST 00:00, `STREAK_DAY_RESET_HOUR_KST=0`)/HOT·LEGEND 임계치/배율 값 구성
+- [x] Backend 로직: 운영일(KST 00:00 기본, `STREAK_DAY_RESET_HOUR_KST` 적용) 기반 스트릭 정산 및 동시성 제어(비관적 락)
 - [x] Backend 보상(롤백): 미션 클레임 보상은 기본값으로 유지(스트릭 배율 미적용)
 - [x] Backend 보상(구현): 금고 기본 적립(+200) 시간제 배율 (플래그 `STREAK_VAULT_BONUS_ENABLED`)
-- [x] Backend 보상(구현): Day4~5 운영일 첫 플레이 1회 티켓 지급 (플래그 `STREAK_TICKET_BONUS_ENABLED`)
+- [x] Backend 보상(구현): Day3/Day7 마일스톤 보상 자동지급(멱등) + 어드민 운영툴(규칙 CRUD/지급 로그 조회)
 - [x] 트랜잭션 안전성: `auto_commit=False` 흐름에서 지갑 생성 시 내부 `commit()` 제거(플러시 기반)
 - [x] Backend API: `GET /api/mission/` 응답에 `streak_info` 포함
 - [x] Frontend: `GET /api/mission/` 응답(legacy 배열/신규 객체) 모두 파싱 + `streakInfo` 상태 저장
 - [x] 테스트: pytest(스트릭 금고 배율/Day4~5 티켓) 및 vitest(MissionStore) 통과
+
+#### 운영 증빙(SoT)
+- 운영 화면: `/admin/streak-rewards` (스트릭 보상 운영)
+- 규칙 저장: `app_ui_config` key=`streak_reward_rules`
+- 지급(grant): `UserEventLog`에 `streak.reward_grant.{day}.{YYYY-MM-DD}`
+- 중복 스킵(skip): `UserEventLog`에 `streak.reward_skip.{day}.{YYYY-MM-DD}`
 
 ### 10.2 남은 작업
 - [x] Game API: `POST /api/dice/play`, `POST /api/roulette/play`, `POST /api/lottery/play` 응답에 `streak_info` 포함
@@ -222,7 +229,7 @@ CREATE INDEX `idx_user_streak` ON `user` (`play_streak`, `last_play_date`);
     - 구현 내용: 게임 서비스에서 스트릭 정산 후 `streak_info`를 응답 DTO에 포함하고, 프론트는 play 응답의 `streak_info`로 `missionStore.streakInfo`를 즉시 갱신
 - [ ] 운영: 리셋 방지 넛지(Telegram Push) 발송 로직/스케줄링
     - 대상(예): `last_play_date`가 “어제(운영일 기준)”인 유저 중, 오늘 아직 첫 플레이가 없는 유저
-    - 스케줄(예): 매일 KST 08:30~09:00 사이 1회(리셋 직전), 유저당 1일 1회 제한
+    - 스케줄(예): 매일 KST 23:30~00:00 사이 1회(리셋 직전), 유저당 1일 1회 제한
     - 안전장치(예): 수신 동의/차단 반영, 실패 재시도/레이트리밋, 발송 로그 적재
 
     - 이벤트(예): `streak.promote`, `streak.reset`, `streak.ticket_bonus_grant`, `streak.vault_bonus_applied`

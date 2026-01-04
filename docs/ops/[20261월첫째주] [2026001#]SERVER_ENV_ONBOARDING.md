@@ -72,9 +72,14 @@
 
 로컬(Windows)에서는 위 절대경로 마운트가 깨질 수 있으므로, 로컬에서는 **SSL 없는 nginx 설정/compose 오버레이**를 사용하는 것이 안전합니다.
 
+- 로컬 권장 기동(예):
+  - `docker compose -f docker-compose.yml -f docker-compose.local.yml up -d --build`
+
 ## 6) Telegram Bot 관련 (옵션)
 
 텔레그램 봇은 `TELEGRAM_BOT_TOKEN`이 없으면 실행되지 않습니다.
+
+- 참고(운영 안전장치): 토큰이 비어있으면 프로세스가 정상 종료하도록 되어 있을 수 있으며, 이 경우 compose의 재시작 정책에 따라 "무한 재시작"이 발생하지 않도록 설정하는 것을 권장합니다.
 
 - 필수
   - `TELEGRAM_BOT_TOKEN=...`
@@ -92,7 +97,7 @@
 - [ ] `docker compose up -d --build`
 - [ ] `docker compose exec backend alembic upgrade head`
 - [ ] 헬스 체크: `curl http://127.0.0.1:8000/` (서버 내부)
-- [ ] nginx 프록시 체크: `curl https://yourdomain.com/health`
+- [ ] nginx 프록시 체크: `curl -k https://yourdomain.com/api/health`
 
 ### 7.2) 서버 표준 스타트 런북
 
@@ -151,7 +156,7 @@ curl -k -sS https://yourdomain.com/health | head
 
 ```bash
 # 프론트엔드만 변경된 경우 (UI/CSS/TSX 변경)
-docker compose up -d --build frontend && 594fb4cbc3efccc6f381435cec27482a5d886330
+docker compose up -d --build frontend
 
 # 백엔드만 변경된 경우 (Python 코드/API 변경)
 docker compose up -d --build backend && docker compose exec backend alembic upgrade head && docker compose restart nginx

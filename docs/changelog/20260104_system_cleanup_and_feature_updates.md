@@ -47,7 +47,7 @@
 - **Objective**: Apply streak incentives without changing mission claim payouts.
 - **Feature Flags**:
   - `STREAK_VAULT_BONUS_ENABLED` (default OFF): Enables time-window multipliers on *base vault accrual (+200)* only.
-  - `STREAK_TICKET_BONUS_ENABLED` (default OFF): Grants Day4~5 tickets once per operational day (09:00 KST) on first play.
+  - `STREAK_TICKET_BONUS_ENABLED` (default OFF): Grants Day4~5 tickets once per operational day (KST 00:00 default; follows `STREAK_DAY_RESET_HOUR_KST`) on first play.
 - **Backend Changes**:
   - Implemented Day4~5 ticket grants: `LOTTERY_TICKET` x1 + `ROULETTE_COIN` x2 (idempotent per operational day).
   - Ensured atomicity: removed internal `commit()` side-effects when `auto_commit=False` in wallet creation (uses flush instead).
