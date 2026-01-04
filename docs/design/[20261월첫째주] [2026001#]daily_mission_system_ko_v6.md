@@ -21,7 +21,8 @@
 - **성공 경험 선지급**: 복잡한 게임 미션 이전에 “입장 완료” 보상을 먼저 주어 유저에게 ‘진척감’ 부여.
    **일일 환영 선물(원탭)** | 부분 구현(옵션) 
   `src/components/layout/SidebarAppLayout.tsx` + `src/config/featureFlags.ts`
-   ( `VITE_ENABLE_TRIAL_GRANT`) / `app/api/routes/trial_grant.py` / `app/services/trial_grant_service.py` 
+    ( `VITE_ENABLE_TRIAL_GRANT`) / `app/api/routes/trial_grant.py` / `app/services/trial_grant_service.py`
+    (주의: trial-grant는 실전 티켓을 직접 주지 않고, 조건 충족 시 `TRIAL_TOKEN`을 지급하도록 리다이렉트됨)
   기본값 OFF. “원탭 받기” UI는 별도 버튼 형태로는 없음(현재는 자동 1회 지급 흐름). 
 
 <기존유저용>
@@ -70,7 +71,8 @@
 - **[장기] Diamond Key 수집가**: 분기별 스페셜 미션 완수 시 Grand Vault 최종 열쇠 지급.
 
 ### 5.2 체리피커 방어 및 진성 유저 필터링
-- **무제한 티켓 공급**: 신규/저레벨 유저(Lv.1~6)에게는 티켓 번들을 무제한 공급하여 활동성 확보.
+- **실전 티켓 무제한 공급 금지**: 작업장/악용 리스크가 커서, 신규/저레벨이라도 실전 티켓을 무제한으로 직접 공급하지 않는다.
+    - 대신 Ticket Zero 구간은 `trial-grant` → `TRIAL_TOKEN` 지급 + 다이아 채굴/교환 루프로 우회 경로 제공(별도 문서: 통합 경제/성장 SoT 참고)
 - **고가치 보상 잠금(Tiered Rewards)**: Lv.7 이상의 고가치 미션은 ‘관리자 승인 대기’ 상태를 거치도록 설계하여 수동 검토 및 부정행위 방지.
 ### 보류 항목(원문 유지)
 - PvP 히스토리 구현: 글로벌 실시간 승패 피드(참고 이미지 기반)

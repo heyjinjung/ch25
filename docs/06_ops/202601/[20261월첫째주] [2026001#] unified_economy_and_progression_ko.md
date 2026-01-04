@@ -89,7 +89,6 @@
         - Enum: `ROULETTE_COIN`, `DICE_TOKEN`, `LOTTERY_TICKET`, `GOLD_KEY`, `DIAMOND_KEY`, `DIAMOND`.
         - 참고: `DIAMOND`는 enum에 존재하지만, 미션 보상의 SoT는 인벤토리(`user_inventory_item`)입니다.
 
-#### 🎟️ Trial Grant (Ticket-Zero Mitigation)
 #### 🎟️ Trial Grant (Ticket-Zero Mitigation) - **[NEW] Trial Token Strategy**
 - **변경 배경**: 무료 티켓(`ROULETTE_COIN` 등) 지급 시 작업장/악용 유저가 즉시 현금성 게임에 진입하는 리스크 차단.
 - **핵심 변경**: Ticket Zero 발생 시 **`TRIAL_TOKEN`**(체험 토큰)을 지급합니다.
@@ -103,6 +102,20 @@
 - **운영 효과**: 
     - 현금성 게임 진입 전 "다이아 채굴" 단계를 강제하여 악용 효율을 급감시킴.
     - 유저에게는 "다이아 획득"이라는 긍정적 보상을 제공하여 무력감 해소.
+
+#### ✅ Implementation & Verification (2026-01-04)
+- **Backend**:
+    - `GameTokenType.TRIAL_TOKEN` 추가 및 `RouletteService` 체험판 Config(Diamonds Only) 시딩 완료.
+    - `ShopService`에 다이아 교환 상품(`PROD_TICKET_COIN_1`, `PROD_TICKET_DICE_1`) 추가 완료.
+    - `TrialGrantService`: Ticket Zero 요청 시 `TRIAL_TOKEN` 3장 지급 로직으로 변경 및 검증 완료.
+- **Frontend**:
+    - `TicketZeroPanel`: "체험 티켓 3장 지급" 및 "다이아 채굴" 안내 문구 반영.
+    - `RoulettePage`: [체험] 탭 추가 및 체험판 Config 연동 확인.
+- **Verification Log**:
+    - `script/verify_trial_economy.py` 실행 결과:
+        - Config Seeding: OK (Diamond 1~5 rewards)
+        - Shop Products: OK (1 Diamond -> 1 Coin)
+        - Grant Redirect: OK (Requested Coin -> Received 3 Trial Tokens)
 
 #### 🗄️ Database (Schema)
 - [x] **Table**: `user_game_wallet`

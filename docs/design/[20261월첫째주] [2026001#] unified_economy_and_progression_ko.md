@@ -89,17 +89,20 @@
         - Enum: `ROULETTE_COIN`, `DICE_TOKEN`, `LOTTERY_TICKET`, `GOLD_KEY`, `DIAMOND_KEY`, `DIAMOND`.
         - 참고: `DIAMOND`는 enum에 존재하지만, 미션 보상의 SoT는 인벤토리(`user_inventory_item`)입니다.
 
-#### 🎟️ Trial Grant (Ticket-Zero Mitigation)
-- **목적**: 특정 게임 티켓이 0장일 때(=ticket zero) 유저 경험 보호를 위해 제한적으로 “체험 티켓”을 지급합니다.
-- **서버 정책(필수 방어)**: `TRIAL_GRANT`는 아래 3종 티켓만 대상입니다.
-    - `ROULETTE_COIN`, `DICE_TOKEN`, `LOTTERY_TICKET`
-    - `GOLD_KEY` / `DIAMOND_KEY`는 **체험 지급 대상이 아니며**, 요청되어도 지급하지 않습니다.
-- **일일 총 한도**: 유저 1인당 **하루 총 3장**(위 3종 합산)까지 체험 지급 허용.
-- **추가 한도/레버(서버 env)**:
-    - `TRIAL_DAILY_CAP`(기본 1): 토큰별 1일 지급 상한
-    - `TRIAL_WEEKLY_CAP`(기본 0): 토큰별 주간 상한(0=무제한)
-    - `TRIAL_GRANT_FIRST_TIME_GUARANTEE`, `TRIAL_GRANT_PROB_AFTER_FIRST`
-- **프론트 정책(추가 방어)**: 클라이언트는 trial-grant 요청 타입/런타임 가드로 3종 티켓 외 요청을 차단합니다.
+#### 🎟️ Trial Grant (Ticket-Zero Mitigation) - TRIAL_TOKEN 전략 (2026-01-04)
+- **SoT 우선순위**: 운영/구현 기준의 최신본은 `docs/06_ops/202601/...unified_economy_and_progression_ko.md`를 우선합니다.
+- **변경 배경**: 무료 티켓(`ROULETTE_COIN` 등) 지급 시 작업장/악용 유저가 즉시 현금성 게임에 진입하는 리스크 차단.
+- **핵심 변경**: Ticket Zero 발생 시 **`TRIAL_TOKEN`**(체험 토큰) 지급으로 우회 경로를 제공합니다.
+    - 기존: 실전 티켓 직접 지급(중단)
+    - 신규: `TRIAL_TOKEN` 3장 지급
+- **체험 루프 (Resurrection Loop)**:
+    1. `TRIAL_TOKEN`으로 **체험 룰렛(Practice Mode)** 플레이
+    2. 승리 시 **`DIAMOND`**(다이아) 획득(확률)
+    3. 상점에서 다이아로 **일반 게임 연료**(`ROULETTE_COIN` / `DICE_TOKEN`) 교환권 구매
+    4. 교환권 사용 후 실전 게임 진입 → 금고(`Vault`) 적립
+- **운영 효과**:
+    - 현금성 게임 진입 전 “채굴 단계”를 강제하여 악용 효율 급감
+    - 유저 무력감을 “획득 루프”로 완화
 
 #### 🗄️ Database (Schema)
 - [x] **Table**: `user_game_wallet`
