@@ -17,7 +17,6 @@ from app.api.admin.routes import (
     admin_survey,
     admin_segments,
     admin_segment_rules,
-    admin_new_member_dice,
     admin_ui_config,
     admin_ui_copy,
     admin_vault2,
@@ -48,7 +47,6 @@ admin_router.include_router(admin_team_battle.router)
 admin_router.include_router(admin_survey.router)
 admin_router.include_router(admin_segments.router)
 admin_router.include_router(admin_segment_rules.router)
-admin_router.include_router(admin_new_member_dice.router)
 admin_router.include_router(admin_ui_config.router)
 admin_router.include_router(admin_ui_copy.router)
 admin_router.include_router(admin_ui_copy.legacy_router)

@@ -10,6 +10,8 @@ type Props = {
 const VaultSettingsEditor: React.FC<Props> = ({ program }) => {
     const queryClient = useQueryClient();
 
+    const trialPayoutEnabled = Boolean(program.enable_trial_payout_to_vault);
+
     // 1. Multiplier
     const [multiplier, setMultiplier] = useState<number>(program.config_json?.accrual_multiplier || 1.0);
 
@@ -226,60 +228,62 @@ const VaultSettingsEditor: React.FC<Props> = ({ program }) => {
                 </div>
             </div>
 
-            <div className="rounded-xl border border-[#333] bg-[#111] overflow-hidden">
-                <div className="p-4 border-b border-[#222] bg-[#1a1a1a] flex items-center justify-between">
-                    <h4 className="text-sm font-bold text-white">체험 플레이 보상 가치 설정 (Valuation)</h4>
-                    <button
-                        onClick={addValuation}
-                        className="p-1.5 rounded-md hover:bg-[#333] text-[#91F402] transition-colors"
-                    >
-                        <Plus className="h-4 w-4" />
-                    </button>
-                </div>
-                <div className="max-h-[500px] overflow-y-auto">
-                    <table className="w-full text-left text-sm">
-                        <thead className="bg-[#0a0a0a] text-gray-500 sticky top-0 uppercase text-[10px] tracking-widest">
-                            <tr>
-                                <th className="px-6 py-3">Reward ID</th>
-                                <th className="px-6 py-3">Valuation (KRW)</th>
-                                <th className="px-6 py-3"></th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-[#222]">
-                            {valuations.map((v, i) => (
-                                <tr key={i}>
-                                    <td className="px-6 py-3">
-                                        <input
-                                            className={inputClass}
-                                            value={v.rewardId}
-                                            onChange={e => updateValuation(i, "rewardId", e.target.value)}
-                                            placeholder="예: POINT:1000"
-                                        />
-                                    </td>
-                                    <td className="px-6 py-3">
-                                        <input
-                                            type="number"
-                                            className={inputClass}
-                                            value={v.amount}
-                                            onChange={e => updateValuation(i, "amount", parseInt(e.target.value) || 0)}
-                                        />
-                                    </td>
-                                    <td className="px-6 py-3 text-right">
-                                        <button onClick={() => removeValuation(i)} className="p-2 text-gray-600 hover:text-red-500">
-                                            <Trash2 className="h-4 w-4" />
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                            {valuations.length === 0 && (
+            {trialPayoutEnabled && (
+                <div className="rounded-xl border border-[#333] bg-[#111] overflow-hidden">
+                    <div className="p-4 border-b border-[#222] bg-[#1a1a1a] flex items-center justify-between">
+                        <h4 className="text-sm font-bold text-white">체험 플레이 보상 가치 설정 (Valuation)</h4>
+                        <button
+                            onClick={addValuation}
+                            className="p-1.5 rounded-md hover:bg-[#333] text-[#91F402] transition-colors"
+                        >
+                            <Plus className="h-4 w-4" />
+                        </button>
+                    </div>
+                    <div className="max-h-[500px] overflow-y-auto">
+                        <table className="w-full text-left text-sm">
+                            <thead className="bg-[#0a0a0a] text-gray-500 sticky top-0 uppercase text-[10px] tracking-widest">
                                 <tr>
-                                    <td colSpan={3} className="px-6 py-12 text-center text-gray-600 italic">설정된 가치 데이터가 없습니다.</td>
+                                    <th className="px-6 py-3">Reward ID</th>
+                                    <th className="px-6 py-3">Valuation (KRW)</th>
+                                    <th className="px-6 py-3"></th>
                                 </tr>
-                            )}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody className="divide-y divide-[#222]">
+                                {valuations.map((v, i) => (
+                                    <tr key={i}>
+                                        <td className="px-6 py-3">
+                                            <input
+                                                className={inputClass}
+                                                value={v.rewardId}
+                                                onChange={e => updateValuation(i, "rewardId", e.target.value)}
+                                                placeholder="예: POINT:1000"
+                                            />
+                                        </td>
+                                        <td className="px-6 py-3">
+                                            <input
+                                                type="number"
+                                                className={inputClass}
+                                                value={v.amount}
+                                                onChange={e => updateValuation(i, "amount", parseInt(e.target.value) || 0)}
+                                            />
+                                        </td>
+                                        <td className="px-6 py-3 text-right">
+                                            <button onClick={() => removeValuation(i)} className="p-2 text-gray-600 hover:text-red-500">
+                                                <Trash2 className="h-4 w-4" />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                                {valuations.length === 0 && (
+                                    <tr>
+                                        <td colSpan={3} className="px-6 py-12 text-center text-gray-600 italic">설정된 가치 데이터가 없습니다.</td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 };

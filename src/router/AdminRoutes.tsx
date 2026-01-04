@@ -17,7 +17,6 @@ import MarketingDashboardPage from "../admin/pages/MarketingDashboardPage";
 import AdminTeamBattlePage from "../admin/pages/AdminTeamBattlePage";
 import UserSegmentsPage from "../admin/pages/UserSegmentsPage";
 import SegmentRulesPage from "../admin/pages/SegmentRulesPage";
-import NewMemberDiceEligibilityPage from "../admin/pages/NewMemberDiceEligibilityPage";
 import UiConfigTicketZeroPage from "../admin/pages/UiConfigTicketZeroPage";
 import VaultAdminPage from "../admin/pages/VaultAdminPage";
 import AdminMissionPage from "../admin/pages/AdminMissionPage";
@@ -49,7 +48,6 @@ const AdminRoutes: React.FC = () => {
           <Route path="user-segments" element={<UserSegmentsPage />} />
           <Route path="segment-rules" element={<SegmentRulesPage />} />
           <Route path="team-battle" element={<AdminTeamBattlePage />} />
-          <Route path="new-member-dice" element={<NewMemberDiceEligibilityPage />} />
           <Route path="ui-config" element={<UiConfigTicketZeroPage />} />
           <Route path="vault" element={<VaultAdminPage />} />
           <Route path="shop" element={<AdminShopPage />} />

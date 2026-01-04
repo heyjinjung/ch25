@@ -6,7 +6,6 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
-from app.models.new_member_dice import NewMemberDiceEligibility
 from app.models.user import User
 from app.models.vault_earn_event import VaultEarnEvent
 from app.services.vault_service import VaultService
@@ -23,7 +22,7 @@ def test_vault_game_earn_event_idempotent_and_expires_not_refreshed(session_fact
     session: Session = session_factory()
     user = User(id=2001, external_id="tester", status="ACTIVE", cash_balance=0, vault_locked_balance=0, vault_balance=0)
     session.add(user)
-    session.add(NewMemberDiceEligibility(user_id=user.id, is_eligible=True, campaign_key="test"))
+
     session.commit()
 
     svc = VaultService()
@@ -100,7 +99,7 @@ def test_vault_game_earn_event_dice_lose_uses_payout_reward_amount(session_facto
 
     session: Session = session_factory()
     session.add(User(id=1, external_id="tester", status="ACTIVE", cash_balance=0, vault_locked_balance=1000, vault_balance=0))
-    session.add(NewMemberDiceEligibility(user_id=1, is_eligible=True, campaign_key="test"))
+
     session.commit()
 
     svc = VaultService()
@@ -125,7 +124,7 @@ def test_vault_game_earn_event_dice_uses_payout_reward_amount(session_factory) -
 
     session: Session = session_factory()
     session.add(User(id=11, external_id="tester", status="ACTIVE", cash_balance=0, vault_locked_balance=1000, vault_balance=0))
-    session.add(NewMemberDiceEligibility(user_id=11, is_eligible=True, campaign_key="test"))
+
     session.commit()
 
     svc = VaultService()
@@ -155,7 +154,7 @@ def test_vault_game_earn_event_applies_multiplier_when_enabled(session_factory, 
 
     session: Session = session_factory()
     session.add(User(id=1, external_id="tester", status="ACTIVE", cash_balance=0, vault_locked_balance=0, vault_balance=0))
-    session.add(NewMemberDiceEligibility(user_id=1, is_eligible=True, campaign_key="test"))
+
     session.commit()
 
     now = datetime(2025, 12, 25, 0, 0, 0, tzinfo=timezone.utc)

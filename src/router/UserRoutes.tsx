@@ -14,7 +14,6 @@ const LotteryPage = React.lazy(() => import("../pages/LotteryPage"));
 const RankingPage = React.lazy(() => import("../pages/RankingPage"));
 const SurveyListPage = React.lazy(() => import("../pages/SurveyListPage"));
 const SurveyRunnerPage = React.lazy(() => import("../pages/SurveyRunnerPage"));
-const NewMemberDicePage = React.lazy(() => import("../pages/NewMemberDicePage"));
 const ConnectPage = React.lazy(() => import("../pages/ConnectPage"));
 const HomePage = React.lazy(() => import("../pages/HomePage"));
 const FigmaLandingTablet = React.lazy(() => import("../pages/FigmaLandingTablet"));
@@ -79,7 +78,6 @@ const UserRoutes: React.FC = () => {
             <Route path="/ranking" element={<RankingPage />} />
             <Route path="/surveys" element={<SurveyListPage />} />
             <Route path="/surveys/:surveyId" element={<SurveyRunnerPage />} />
-            <Route path="/new-member/dice" element={<NewMemberDicePage />} />
             <Route path="/app" element={<Navigate to="/landing" replace />} />
           </Route>
         </Route>

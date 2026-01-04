@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db, get_current_admin_id
+from app.core.config import get_settings
 from app.schemas.vault2 import (
     VaultProgramResponse,
     VaultProgramUiCopyUpsertRequest,
@@ -129,12 +130,14 @@ def set_user_balance_by_identifier(
 
 
 def _to_response(p) -> VaultProgramResponse:
+    settings = get_settings()
     return VaultProgramResponse(
         key=p.key,
         name=p.name,
         duration_hours=int(p.duration_hours),
         expire_policy=getattr(p, "expire_policy", None),
         is_active=bool(getattr(p, "is_active", True)),
+        enable_trial_payout_to_vault=bool(getattr(settings, "enable_trial_payout_to_vault", False)),
         unlock_rules_json=getattr(p, "unlock_rules_json", None),
         ui_copy_json=getattr(p, "ui_copy_json", None),
         config_json=getattr(p, "config_json", None),

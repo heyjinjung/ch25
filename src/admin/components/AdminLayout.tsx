@@ -9,7 +9,6 @@ import {
   Gift,
   Dice5,
   Percent,
-  UserPlus,
   Users,
   UsersRound,
   Ticket,
@@ -50,7 +49,6 @@ const navSections: NavSection[] = [
   {
     heading: "회원 관리",
     items: [
-      { label: "신규회원 판정", path: "/admin/new-member-dice", icon: <UserPlus size={18} /> },
       { label: "마케팅 센터", path: "/admin/marketing", icon: <TrendingUp size={18} /> },
       { label: "회원 관리", path: "/admin/users", icon: <Users size={18} /> },
       { label: "메시지 발송", path: "/admin/messages", icon: <MessageSquare size={18} /> },

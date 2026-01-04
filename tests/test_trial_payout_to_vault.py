@@ -7,7 +7,6 @@ from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.models.game_wallet import GameTokenType, UserGameWallet
-from app.models.new_member_dice import NewMemberDiceEligibility
 from app.models.trial_token_bucket import TrialTokenBucket
 from app.models.user import User
 from app.models.vault_earn_event import VaultEarnEvent
@@ -68,7 +67,7 @@ def test_trial_reward_routed_to_vault_with_skip_logging(session_factory) -> None
 
     session: Session = session_factory()
     session.add(User(id=1, external_id="tester", status="ACTIVE", cash_balance=0, vault_locked_balance=0, vault_balance=0))
-    session.add(NewMemberDiceEligibility(user_id=1, is_eligible=True, campaign_key="test"))
+
     session.commit()
 
     vault = VaultService()
@@ -126,7 +125,7 @@ def test_trial_reward_routed_to_vault_applies_multiplier(session_factory, monkey
 
     session: Session = session_factory()
     session.add(User(id=1, external_id="tester", status="ACTIVE", cash_balance=0, vault_locked_balance=0, vault_balance=0))
-    session.add(NewMemberDiceEligibility(user_id=1, is_eligible=True, campaign_key="test"))
+
     session.commit()
 
     vault = VaultService()
@@ -160,7 +159,7 @@ def test_trial_reward_none_is_silent_skip(session_factory, monkeypatch) -> None:
 
     session: Session = session_factory()
     session.add(User(id=1, external_id="tester", status="ACTIVE", cash_balance=0, vault_locked_balance=0, vault_balance=0))
-    session.add(NewMemberDiceEligibility(user_id=1, is_eligible=True, campaign_key="test"))
+
     session.commit()
 
     # Spy on ops notification; NONE:0 should not be treated as a valuation error.

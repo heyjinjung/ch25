@@ -11,7 +11,6 @@ from app.models.user_activity import UserActivity
 from app.models.season_pass import SeasonPassStampLog
 from app.schemas.external_ranking import ExternalRankingCreate, ExternalRankingUpdate
 from app.models.user import User
-from app.models.new_member_dice import NewMemberDiceEligibility
 from app.services.vault_service import VaultService
 from app.services.season_pass_service import SeasonPassService
 from app.services.level_xp_service import LevelXPService
@@ -218,16 +217,8 @@ class AdminExternalRankingService:
                 deposit_delta = new_amount - prev_amount
 
                 # Vault unlock hook (v1.0): deposit increase acts as "verification charge" trigger.
-                eligibility = db.execute(
-                    select(NewMemberDiceEligibility).where(NewMemberDiceEligibility.user_id == row.user_id)
-                ).scalar_one_or_none()
-                eligible_new_user = (
-                    eligibility is not None
-                    and bool(eligibility.is_eligible)
-                    and eligibility.revoked_at is None
-                    and (eligibility.expires_at is None or eligibility.expires_at > now)
-                )
-                if eligible_new_user:
+                # Modified: All deposit increases trigger signal without NewMemberDiceEligibility check.
+                if True:
                     vault_service.handle_deposit_increase_signal(
                         db,
                         user_id=row.user_id,

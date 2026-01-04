@@ -14,6 +14,8 @@ class VaultProgramResponse(BaseModel):
     duration_hours: int
     expire_policy: str | None = None
     is_active: bool | None = None
+    # Global rollout flag (settings) that controls whether trial rewards are routed into Vault.
+    enable_trial_payout_to_vault: bool | None = None
     unlock_rules_json: dict | None = None
     ui_copy_json: dict | None = None
     config_json: dict | None = None

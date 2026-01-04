@@ -11,6 +11,7 @@ export interface VaultProgramResponse {
     duration_hours: number;
     expire_policy: string | null;
     is_active: boolean;
+    enable_trial_payout_to_vault?: boolean | null;
     unlock_rules_json: any;
     ui_copy_json: any;
     config_json: any;

@@ -16,7 +16,6 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
-from app.models.new_member_dice import NewMemberDiceEligibility
 from app.models.user import User
 from app.models.vault_earn_event import VaultEarnEvent
 from app.core.notifications import notify_vault_skip_error
@@ -212,17 +211,7 @@ class VaultService:
         db.refresh(user)
         return user
 
-    @staticmethod
-    def _is_eligible_row_active(row: NewMemberDiceEligibility | None, now: datetime) -> bool:
-        if row is None:
-            return False
-        if not row.is_eligible:
-            return False
-        if row.revoked_at is not None:
-            return False
-        if row.expires_at is not None and row.expires_at <= now:
-            return False
-        return True
+
 
     def _get_or_create_user(self, db: Session, user_id: int) -> User:
         user = db.query(User).filter(User.id == user_id).one_or_none()

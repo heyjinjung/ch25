@@ -5,7 +5,6 @@ from datetime import datetime, timedelta
 from fastapi.testclient import TestClient
 
 from app.models.game_wallet import GameTokenType, UserGameWallet
-from app.models.new_member_dice import NewMemberDiceEligibility
 from app.models.user import User
 
 
@@ -28,15 +27,7 @@ def _set_ticket_balances(db, *, dice: int, roulette: int, lottery: int) -> None:
     db.commit()
 
 
-def _ensure_eligible(db) -> None:
-    row = db.query(NewMemberDiceEligibility).filter(NewMemberDiceEligibility.user_id == 1).one_or_none()
-    if row is None:
-        row = NewMemberDiceEligibility(user_id=1, is_eligible=True)
-    row.is_eligible = True
-    row.revoked_at = None
-    row.expires_at = datetime.utcnow() + timedelta(days=1)
-    db.add(row)
-    db.commit()
+
 
 
 def _set_locked(db, *, locked_balance: int, expires_at: datetime | None) -> None:
@@ -53,7 +44,7 @@ def _set_locked(db, *, locked_balance: int, expires_at: datetime | None) -> None
 
 def test_recommended_action_open_vault_modal_when_ticket0_and_unexpired_locked(client: TestClient, session_factory):
     db = session_factory()
-    _ensure_eligible(db)
+
     _set_ticket_balances(db, dice=0, roulette=0, lottery=0)
     _set_locked(db, locked_balance=12_500, expires_at=datetime.utcnow() + timedelta(hours=1))
 
@@ -66,7 +57,7 @@ def test_recommended_action_open_vault_modal_when_ticket0_and_unexpired_locked(c
 
 def test_recommended_action_none_when_has_ticket(client: TestClient, session_factory):
     db = session_factory()
-    _ensure_eligible(db)
+
     _set_ticket_balances(db, dice=1, roulette=0, lottery=0)
     _set_locked(db, locked_balance=12_500, expires_at=datetime.utcnow() + timedelta(hours=1))
 
@@ -79,7 +70,7 @@ def test_recommended_action_none_when_has_ticket(client: TestClient, session_fac
 
 def test_recommended_action_none_when_locked_zero(client: TestClient, session_factory):
     db = session_factory()
-    _ensure_eligible(db)
+
     _set_ticket_balances(db, dice=0, roulette=0, lottery=0)
     _set_locked(db, locked_balance=0, expires_at=None)
 
@@ -92,7 +83,7 @@ def test_recommended_action_none_when_locked_zero(client: TestClient, session_fa
 
 def test_recommended_action_none_when_locked_expired(client: TestClient, session_factory):
     db = session_factory()
-    _ensure_eligible(db)
+
     _set_ticket_balances(db, dice=0, roulette=0, lottery=0)
     _set_locked(db, locked_balance=12_500, expires_at=datetime.utcnow() - timedelta(seconds=1))
 

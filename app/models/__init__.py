@@ -23,7 +23,6 @@ from app.models.user_activity import UserActivity
 from app.models.user_activity_event import UserActivityEvent
 from app.models.user_segment import UserSegment
 from app.models.segment_rule import SegmentRule
-from app.models.new_member_dice import NewMemberDiceEligibility, NewMemberDiceLog
 from app.models.app_ui_config import AppUiConfig
 from app.models.vault2 import VaultProgram, VaultStatus
 from app.models.vault_earn_event import VaultEarnEvent
@@ -89,8 +88,6 @@ __all__ = [
     "UserActivityEvent",
     "UserSegment",
     "SegmentRule",
-    "NewMemberDiceEligibility",
-    "NewMemberDiceLog",
     "AppUiConfig",
     "VaultProgram",
     "VaultStatus",

@@ -471,7 +471,7 @@ const VaultAdminPage: React.FC = () => {
                             </div>
                         </div>
 
-                        {Object.keys(stats?.today_skips || {}).length > 0 && (
+                        {program?.enable_trial_payout_to_vault && Object.keys(stats?.today_skips || {}).length > 0 && (
                             <div className="rounded-xl border border-red-900/30 bg-red-950/10 p-6">
                                 <div className="flex items-center gap-2 text-red-500 mb-4">
                                     <AlertTriangle className="h-5 w-5" />
