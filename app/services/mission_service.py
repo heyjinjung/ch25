@@ -161,7 +161,7 @@ class MissionService:
             UserMissionProgress.user_id == user_id,
             UserMissionProgress.mission_id == mission_id,
             UserMissionProgress.reset_date == reset_date
-        ).first()
+        ).with_for_update().first()
 
         if not progress or not progress.is_completed:
             return False, "Mission not completed", 0

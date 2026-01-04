@@ -2,6 +2,11 @@ import React, { useMemo } from "react";
 import { Navigate, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { getNewUserStatus } from "../api/newUserApi";
+import Modal from "../components/common/Modal";
+import { useMissionStore } from "../stores/missionStore";
+import { Trophy } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useToast } from "../components/common/ToastProvider";
 
 const formatSeconds = (seconds: number | null | undefined) => {
   if (seconds == null) return "-";
@@ -34,6 +39,48 @@ const NewUserWelcomePage: React.FC = () => {
     staleTime: 10_000,
     retry: false,
   });
+
+  const { claimReward } = useMissionStore();
+  const queryClient = useQueryClient();
+  const { addToast } = useToast();
+  const [showSuccessModal, setShowSuccessModal] = React.useState(false);
+  const [targetMissionId, setTargetMissionId] = React.useState<number | null>(null);
+
+  // Check for completed but unclaimed LOGIN mission
+  React.useEffect(() => {
+    if (!status.data?.missions) return;
+
+    // Find Day 2 Login mission (Action: LOGIN, Target: 2 usually, or just finding the login mission)
+    // Based on logic, we want the one that is COMPLETED but NOT CLAIMED.
+    const loginMission = status.data.missions.find(
+      (m) => m.action_type === "LOGIN" && m.is_completed && !m.is_claimed
+    );
+
+    if (loginMission) {
+      setTargetMissionId(loginMission.id);
+      setShowSuccessModal(true);
+    }
+  }, [status.data?.missions]);
+
+  const handleClaimReward = async () => {
+    if (!targetMissionId) return;
+
+    try {
+      const result = await claimReward(targetMissionId);
+      if (result.success) {
+        addToast("보상이 지급되었습니다!", "success");
+        setShowSuccessModal(false);
+        // Refresh status to update UI (remove checkmark, show claimed state if supported, or just hide modal)
+        queryClient.invalidateQueries({ queryKey: ["new-user-status"] });
+        // Also refresh global mission store if needed
+        useMissionStore.getState().fetchMissions();
+      } else {
+        addToast(result.message || "보상 수령 실패", "error");
+      }
+    } catch (e) {
+      addToast("오류가 발생했습니다.", "error");
+    }
+  };
 
   const secondsLeft = status.data?.seconds_left ?? null;
   const windowLabel = useMemo(() => formatSeconds(secondsLeft), [secondsLeft]);
@@ -146,6 +193,31 @@ const NewUserWelcomePage: React.FC = () => {
           </Link>
         </div>
       </div>
+
+      <Modal
+        title="2일차 출석 완료!"
+        open={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+      >
+        <div className="flex flex-col items-center justify-center py-4 text-center">
+          <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/10 ring-4 ring-emerald-500/20">
+            <Trophy className="h-10 w-10 text-emerald-400" />
+          </div>
+          <p className="whitespace-pre-wrap text-lg font-bold text-white">
+            축하합니다!{"\n"}2일차 접속 미션을 달성했습니다.
+          </p>
+          <p className="mt-2 text-sm text-white/60">
+            지금 바로 보상을 수령하세요!
+          </p>
+
+          <button
+            onClick={handleClaimReward}
+            className="mt-6 w-full rounded-xl bg-emerald-500 py-3.5 text-sm font-bold text-white shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-400 active:scale-95"
+          >
+            보상 받기
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 };

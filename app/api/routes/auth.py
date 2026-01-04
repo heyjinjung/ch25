@@ -8,7 +8,11 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_db
 from app.core.security import create_access_token, verify_password
 from app.models.user import User
-from app.models.feature import UserEventLog
+from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
+
+from app.services.mission_service import MissionService
+from app.models.mission import MissionCategory
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -71,6 +75,34 @@ def issue_token(payload: TokenRequest, request: Request, db: Session = Depends(g
         # Only set it when this is the user's first recorded login (avoid reclassifying existing users).
         if user.first_login_at is None and user.last_login_at is None:
             user.first_login_at = datetime.utcnow()
+        # [Mission] Check Day 2+ Login
+        # Logic: If last_login_at was on a Previous Day (KST), increment 'LOGIN' mission.
+        kst = ZoneInfo("Asia/Seoul")
+        now_kst = datetime.now(kst)
+        today_kst_date = now_kst.date()
+        
+        should_increment_login = False
+        
+        if user.last_login_at:
+            # Convert last_login_at (UTC) to KST
+            last_login_utc = user.last_login_at.replace(tzinfo=timezone.utc)
+            last_login_kst = last_login_utc.astimezone(kst)
+            if last_login_kst.date() < today_kst_date:
+                should_increment_login = True
+        else:
+            # First login ever? usually first_login_at handles this, but for mission logic,
+            # if they never logged in, this is the first one.
+            # But usually Day 1 is 1/2.
+            # If we want to capture Day 1, we should also increment.
+            # Let's assume ANY login on a new day counts.
+            should_increment_login = True
+
+        if should_increment_login:
+            try:
+                MissionService(db).update_progress(user.id, "LOGIN", delta=1)
+            except Exception:
+                pass # Do not block login
+        
         user.last_login_at = datetime.utcnow()
         user.last_login_ip = client_ip
 
