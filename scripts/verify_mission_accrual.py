@@ -18,7 +18,24 @@ def verify_mission_accrual():
     print(">>> Starting Mission Vault Accrual Verification")
     
     settings = get_settings()
-    engine = create_engine(settings.database_url)
+    # Hardcode local DB URL for script execution outside of Docker network
+    db_url = settings.database_url
+    print(f"Original DB URL: {db_url}")
+    
+    # Replace host 'db' with '127.0.0.1:3307' (common docker-compose pattern)
+    if "@db" in db_url:
+        db_url = db_url.replace("@db", "@127.0.0.1:3307")
+        # Handle potential port if it was @db:3306
+        db_url = db_url.replace(":3306/", "/") 
+        print(f"Patched DB URL: {db_url}")
+    elif "localhost" not in db_url and "127.0.0.1" not in db_url:
+        # Fallback: just try to force localhost if it looks like a remote/container string
+        print("Warning: DB URL might not be local. Attempting to force localhost:3307...")
+        # valid assumption for this specific user env
+        db_url = "mysql+pymysql://user:password@127.0.0.1:3307/app_db" 
+        print(f"Forced DB URL: {db_url}")
+    
+    engine = create_engine(db_url)
     SessionLocal = sessionmaker(bind=engine)
     db = SessionLocal()
     
@@ -29,7 +46,7 @@ def verify_mission_accrual():
     db.execute(text("DELETE FROM user WHERE id = :uid"), {"uid": user_id})
     db.commit()
     
-    user = User(id=user_id, username="mission_tester", vault_locked_balance=0)
+    user = User(id=user_id, nickname="mission_tester", external_id="tester_123", vault_locked_balance=0)
     db.add(user)
     db.commit()
     

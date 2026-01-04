@@ -166,9 +166,10 @@ const UserSegmentsPage: React.FC = () => {
     await refetch();
   };
 
-  const handleSave = async (row: AdminUserSegmentRow) => {
-    const next = (editSegment[row.user_id] ?? row.segment).trim();
+  const saveSegment = async (row: AdminUserSegmentRow, segment: string) => {
+    const next = segment.trim();
     if (!next) return;
+
     setSavingUserId(row.user_id);
     try {
       await updateMutation.mutateAsync({ user_id: row.user_id, segment: next });
@@ -180,6 +181,17 @@ const UserSegmentsPage: React.FC = () => {
     } finally {
       setSavingUserId(null);
     }
+  };
+
+  const handleSave = async (row: AdminUserSegmentRow) => {
+    const next = (editSegment[row.user_id] ?? row.segment).trim();
+    await saveSegment(row, next);
+  };
+
+  const handleApplyRecommendation = async (row: AdminUserSegmentRow) => {
+    const rec = (row.recommended_segment ?? "").trim();
+    if (!rec) return;
+    await saveSegment(row, rec);
   };
 
   const toggleSort = (nextKey: SortKey) => {
@@ -304,6 +316,7 @@ const UserSegmentsPage: React.FC = () => {
                 <th className="w-[18ch] px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">실명/연락처</th>
                 <th className="w-[18ch] px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">닉네임</th>
                 <SortHeader label="세그먼트" k="segment" />
+                <th className="w-44 px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">추천</th>
                 <th className="w-60 px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                   <div className="flex items-center gap-3">
                     <button type="button" onClick={() => toggleSort("roulette_plays")} className="text-gray-400 hover:text-gray-200" title="룰렛 정렬">
@@ -329,7 +342,7 @@ const UserSegmentsPage: React.FC = () => {
             <tbody className="divide-y divide-[#333333]">
               {visibleRows.length === 0 && !isLoading ? (
                 <tr>
-                  <td className="px-4 py-10 text-center text-gray-400" colSpan={10}>
+                  <td className="px-4 py-10 text-center text-gray-400" colSpan={11}>
                     조회 결과가 없습니다.
                   </td>
                 </tr>
@@ -366,6 +379,25 @@ const UserSegmentsPage: React.FC = () => {
                           }}
                         />
                       </div>
+                    </td>
+                    <td className="px-4 py-3 align-top text-xs">
+                      {(() => {
+                        const rec = (row.recommended_segment ?? "").trim();
+                        const current = (row.segment ?? "").trim();
+                        const canApply = !!rec && rec !== current && !updateMutation.isPending;
+                        return (
+                          <div className="flex flex-col gap-1">
+                            <div className="text-gray-200" title={row.recommended_rule_name ?? undefined}>
+                              {rec ? rec : "-"}
+                            </div>
+                            {row.recommended_rule_name ? <div className="text-[11px] text-gray-500">{row.recommended_rule_name}</div> : null}
+                            {row.recommended_reason ? <div className="text-[11px] text-gray-500">{row.recommended_reason}</div> : null}
+                            <SecondaryButton onClick={() => void handleApplyRecommendation(row)} disabled={!canApply}>
+                              적용
+                            </SecondaryButton>
+                          </div>
+                        );
+                      })()}
                     </td>
                     <td className="px-4 py-3 align-top text-xs text-gray-300">
                       <div className="flex flex-wrap gap-2">

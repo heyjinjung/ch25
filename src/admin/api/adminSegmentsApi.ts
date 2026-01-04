@@ -9,6 +9,10 @@ export interface AdminUserSegmentRow {
   readonly segment: string;
   readonly segment_updated_at?: string | null;
 
+  readonly recommended_segment?: string | null;
+  readonly recommended_rule_name?: string | null;
+  readonly recommended_reason?: string | null;
+
   readonly roulette_plays: number;
   readonly dice_plays: number;
   readonly lottery_plays: number;
@@ -28,6 +32,6 @@ export async function fetchUserSegments(params?: { identifier?: string; external
 }
 
 export async function upsertUserSegment(payload: { user_id?: number; external_id?: string; segment: string }) {
-  const { data } = await adminApi.post<AdminUserSegmentRow>("/admin/api/segments/", payload);
+  const { data } = await adminApi.put<AdminUserSegmentRow>("/admin/api/segments/", payload);
   return data;
 }

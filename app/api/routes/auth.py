@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
 from app.core.security import create_access_token, verify_password
+from app.models.feature import UserEventLog
 from app.models.user import User
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo

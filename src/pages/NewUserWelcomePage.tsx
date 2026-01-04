@@ -137,7 +137,7 @@ const NewUserWelcomePage: React.FC = () => {
       } else {
         addToast(result.message || "보상 수령 실패", "error");
       }
-    } catch (e) {
+    } catch {
       addToast("오류가 발생했습니다.", "error");
     } finally {
       setProcessingId(null);
@@ -174,7 +174,7 @@ const NewUserWelcomePage: React.FC = () => {
         await api.post("/viral/verify/channel", { mission_id: missionId });
         addToast("채널 가입이 확인되었습니다! 보상을 수령하세요.", "success");
         queryClient.invalidateQueries({ queryKey: ["new-user-status"] });
-      } catch (err) {
+      } catch {
         // Fallback or specific error?
         // If verify fails, maybe they didn't join or bot isn't admin.
         // For UX safety in this "Welcome" phase, we might soft-allow or show error.
@@ -311,7 +311,7 @@ const NewUserWelcomePage: React.FC = () => {
       <div className="mt-6 rounded-3xl border border-white/10 bg-black/40 p-5 text-sm text-white/65 backdrop-blur">
         <p className="font-bold text-white">입금은 필수 조건</p>
         <p className="mt-1">
-          해금(locked → cash) 규칙은 운영안 확정 후 적용됩니다.
+          미션 보상은 금고에 즉시 적립됩니다.
         </p>
         <div className="mt-3 flex gap-2">
           <a

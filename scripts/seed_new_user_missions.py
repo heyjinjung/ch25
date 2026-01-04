@@ -11,7 +11,14 @@ from app.models.mission import Mission
 
 def seed_new_user_missions():
     settings = get_settings()
-    engine = create_engine(settings.database_url)
+    
+    # Patch DB URL for local execution
+    db_url = settings.database_url
+    if "@db" in db_url:
+        db_url = db_url.replace("@db", "@127.0.0.1:3307")
+        db_url = db_url.replace(":3306/", "/")
+    
+    engine = create_engine(db_url)
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     db = SessionLocal()
 

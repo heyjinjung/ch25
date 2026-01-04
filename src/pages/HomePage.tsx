@@ -190,7 +190,7 @@ const HomePage: React.FC = () => {
             </div>
             {vaultBannerOpen && (
               <div className="relative z-10 mt-3 border-t border-white/10 pt-2 text-xs text-slate-300">
-                <p>외부 충전 시 해금됩니다.</p>
+
                 <div className="mt-2 flex gap-2">
                   <a href="https://ccc-010.com" target="_blank" rel="noreferrer" className="flex-1 py-2 text-center bg-amber-500/20 rounded border border-amber-500/30 text-amber-200 hover:bg-amber-500/30"><img src="/assets/logo_cc_v2.png" alt="CC" className="inline-block w-4 h-4 mr-2 align-text-bottom" />1만원</a>
                   <a href="https://ccc-010.com" target="_blank" rel="noreferrer" className="flex-1 py-2 text-center bg-amber-500/20 rounded border border-amber-500/30 text-amber-200 hover:bg-amber-500/30"><img src="/assets/logo_cc_v2.png" alt="CC" className="inline-block w-4 h-4 mr-2 align-text-bottom" />5만원</a>

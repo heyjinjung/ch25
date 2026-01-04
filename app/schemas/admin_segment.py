@@ -25,6 +25,10 @@ class AdminUserSegmentResponse(BaseModel):
     last_bonus_used_at: datetime | None = None
     activity_updated_at: datetime | None = None
 
+    recommended_segment: str | None = None
+    recommended_rule_name: str | None = None
+    recommended_reason: str | None = None
+
     model_config = ConfigDict(from_attributes=True)
 
 

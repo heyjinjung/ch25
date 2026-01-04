@@ -6,7 +6,7 @@ import { getVaultStatus } from "../../api/vaultApi";
 import { useSound } from "../../hooks/useSound";
 import clsx from "clsx";
 import InboxButton from "../common/InboxButton";
-import { ChevronDown, ExternalLink } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 
 const AppHeader: React.FC = () => {
     const { user } = useAuth();
@@ -152,7 +152,6 @@ const AppHeader: React.FC = () => {
                                         <img src="/assets/logo_cc_v2.png" alt="CC" className="w-3.5 h-3.5 object-contain" />
                                     </div>
                                     씨씨이동
-                                    <ExternalLink size={10} className="ml-auto opacity-30" />
                                 </button>
                             </div>
                         )}
@@ -233,9 +232,10 @@ const AppHeader: React.FC = () => {
                                 onClick={() => handleMenuNavigation("https://ccc-010.com", true)}
                                 className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-bold text-white/70 active:bg-white/10 border-t border-white/5"
                             >
-                                <img src="/assets/logo_cc_v2.png" alt="CC" className="w-4 h-4 object-contain" />
+                                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/5 border border-white/5 overflow-hidden p-0.5">
+                                    <img src="/assets/logo_cc_v2.png" alt="CC" className="w-full h-full object-contain" />
+                                </div>
                                 씨씨이동
-                                <ExternalLink size={12} className="ml-auto opacity-30" />
                             </button>
                         </div>
                     )}

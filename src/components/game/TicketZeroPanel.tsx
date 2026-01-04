@@ -211,7 +211,7 @@ const TicketZeroPanel: React.FC<Props> = ({ tokenType, onClaimSuccess }) => {
               <p className="text-sm font-extrabold text-cc-lime">{formatWon(vault.data?.vaultBalance ?? 0)}</p>
             </div>
             <p className="mt-1 text-[clamp(11px,2.2vw,12px)] text-white/60">
-              씨씨카지노 이용 확인 시 잠금 금액이 해금됩니다.
+              씨씨카지노 이용 확인 시 잠금 금액이 풀립니다!
             </p>
 
             {config.rewardPreviewItems?.length ? (
