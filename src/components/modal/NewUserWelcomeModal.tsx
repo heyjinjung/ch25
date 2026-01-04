@@ -130,7 +130,12 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) =>
                     if (tg?.openTelegramLink) {
                         tg.openTelegramLink(channelLink);
                     } else {
-                        window.open(channelLink, "_blank");
+                        // If openTelegramLink doesn't exist, try openLink, then window.open
+                        if (tg?.openLink) {
+                            tg.openLink(channelLink);
+                        } else {
+                            window.open(channelLink, "_blank");
+                        }
                     }
                     setPendingJoinChannelMissionId(missionId);
                     pendingJoinRetriesRef.current = 0;

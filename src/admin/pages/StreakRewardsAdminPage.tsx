@@ -141,13 +141,28 @@ const StreakRewardsAdminPage: React.FC = () => {
   const [filterDay, setFilterDay] = useState<string>(todayStr);
   const [limit, setLimit] = useState<number>(50);
   const [searchEnabled, setSearchEnabled] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
+
+  const parsedUserId = useMemo(() => {
+    const raw = userId.trim();
+    if (!raw) return undefined;
+    if (!/^\d+$/.test(raw)) return null;
+    const n = Number(raw);
+    if (!Number.isFinite(n) || n <= 0) return null;
+    return n;
+  }, [userId]);
+
+  const trimmedExternalId = useMemo(() => {
+    const raw = externalId.trim();
+    return raw ? raw : undefined;
+  }, [externalId]);
 
   const userEventsQuery = useQuery({
     queryKey: ["admin", "streak-rewards", "user-events", userId, externalId, filterDay, limit],
     queryFn: () =>
       fetchStreakRewardUserEvents({
-        user_id: userId.trim() ? Number(userId) : undefined,
-        external_id: externalId.trim() ? externalId.trim() : undefined,
+        user_id: typeof parsedUserId === "number" ? parsedUserId : undefined,
+        external_id: trimmedExternalId,
         day: filterDay || undefined,
         limit,
       }),
@@ -329,6 +344,20 @@ const StreakRewardsAdminPage: React.FC = () => {
             type="button"
             className={buttonPrimary}
             onClick={() => {
+              const hasAnyIdentifier = Boolean(userId.trim()) || Boolean(externalId.trim());
+              if (!hasAnyIdentifier) {
+                setSearchError("유저 ID 또는 외부 ID 중 하나는 반드시 입력해야 합니다.");
+                setSearchEnabled(false);
+                return;
+              }
+
+              if (parsedUserId === null) {
+                setSearchError("유저 ID는 1 이상의 숫자여야 합니다.");
+                setSearchEnabled(false);
+                return;
+              }
+
+              setSearchError(null);
               setSearchEnabled(true);
               queryClient.invalidateQueries({
                 queryKey: ["admin", "streak-rewards", "user-events", userId, externalId, filterDay, limit],
@@ -341,6 +370,7 @@ const StreakRewardsAdminPage: React.FC = () => {
             type="button"
             className={buttonSecondary}
             onClick={() => {
+              setSearchError(null);
               setSearchEnabled(false);
               queryClient.removeQueries({ queryKey: ["admin", "streak-rewards", "user-events"] });
             }}
@@ -349,10 +379,12 @@ const StreakRewardsAdminPage: React.FC = () => {
           </button>
         </div>
 
+        {searchError ? <div className="mt-3 text-sm text-red-200">{searchError}</div> : null}
+
         {userEventsQuery.isFetching && <div className="mt-4 text-gray-200">조회 중...</div>}
         {userEventsQuery.isError && (
           <div className="mt-4 rounded border border-red-500/40 bg-red-950 p-3 text-red-100">
-            조회 실패: {(userEventsQuery.error as Error).message}
+            조회 실패: {(userEventsQuery.error as any)?.response?.data?.detail || (userEventsQuery.error as Error).message}
           </div>
         )}
 

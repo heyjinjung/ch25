@@ -135,9 +135,6 @@ class MissionService:
         prev_streak_days: int,
         new_streak_days: int,
     ) -> None:
-        if not bool(getattr(self.settings, "streak_milestone_rewards_enabled", False)):
-            return
-
         def _load_admin_rules() -> list[tuple[int, list[dict]]] | None:
             try:
                 from app.services.ui_config_service import UiConfigService
@@ -205,10 +202,19 @@ class MissionService:
             except Exception:
                 return None
 
+        env_enabled = bool(getattr(self.settings, "streak_milestone_rewards_enabled", False))
+        admin_rules = _load_admin_rules()
+
+        # Safe rollout behavior:
+        # - If env flag is ON: grant using admin rules if present, otherwise fall back to defaults.
+        # - If env flag is OFF: only grant when valid admin rules are configured.
+        if not env_enabled and not admin_rules:
+            return
+
         # Default spec (fixed):
         # - Day3: 1 roulette coin + 1 dice token + 1 lottery ticket
         # - Day7: DIAMOND 1
-        milestones: list[tuple[int, list[dict]]] = _load_admin_rules() or [
+        milestones: list[tuple[int, list[dict]]] = admin_rules or [
             (
                 3,
                 [

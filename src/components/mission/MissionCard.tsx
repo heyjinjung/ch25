@@ -101,11 +101,23 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
         const tg = window.Telegram?.WebApp;
         let opened = false;
         if (typeof tg?.openTelegramLink === "function") {
-          try { tg.openTelegramLink(shareUrl); opened = true; } catch { /* ignore */ }
+          try {
+            tg.openTelegramLink(shareUrl);
+            opened = true;
+          } catch {
+            // ignore
+          }
         }
+
         if (!opened && typeof tg?.openLink === "function") {
-          try { tg.openLink(shareUrl); opened = true; } catch { /* ignore */ }
+          try {
+            tg.openLink(shareUrl);
+            opened = true;
+          } catch {
+            // ignore
+          }
         }
+
         if (!opened) {
           window.open(shareUrl, "_blank", "noopener,noreferrer");
         }
@@ -150,10 +162,16 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
             const tg = window.Telegram?.WebApp;
             let opened = false;
             if (typeof tg?.openTelegramLink === "function") {
-              try { tg.openTelegramLink(fallbackShareUrl); opened = true; } catch { /* ignore */ }
+              try {
+                tg.openTelegramLink(fallbackShareUrl);
+                opened = true;
+              } catch { /* ignore */ }
             }
             if (!opened && typeof tg?.openLink === "function") {
-              try { tg.openLink(fallbackShareUrl); opened = true; } catch { /* ignore */ }
+              try {
+                tg.openLink(fallbackShareUrl);
+                opened = true;
+              } catch { /* ignore */ }
             }
             if (!opened) {
               window.open(fallbackShareUrl, "_blank", "noopener,noreferrer");
@@ -173,11 +191,23 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
         const tg = window.Telegram?.WebApp;
         let opened = false;
         if (typeof tg?.openTelegramLink === "function") {
-          try { tg.openTelegramLink(shareUrl); opened = true; } catch { /* ignore */ }
+          try {
+            tg.openTelegramLink(shareUrl);
+            opened = true;
+          } catch {
+            // ignore
+          }
         }
+
         if (!opened && typeof tg?.openLink === "function") {
-          try { tg.openLink(shareUrl); opened = true; } catch { /* ignore */ }
+          try {
+            tg.openLink(shareUrl);
+            opened = true;
+          } catch {
+            // ignore
+          }
         }
+
         if (!opened) {
           window.open(shareUrl, "_blank", "noopener,noreferrer");
         }
