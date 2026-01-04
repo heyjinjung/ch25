@@ -1,5 +1,5 @@
 import React from "react";
-import { X, CheckCircle2, Lock, Gift, Star } from "lucide-react";
+import { X, CheckCircle2, Lock, Star } from "lucide-react";
 import clsx from "clsx";
 import Button from "../common/Button";
 import { tryHaptic } from "../../utils/haptics";
@@ -27,24 +27,39 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
     // We expect rules for 1-7 days. If not provided, we won't show the full grid properly.
     const sortedRules = [...rules].sort((a, b) => a.day - b.day);
 
-    const getRewardIcon = (grants: Reward[]) => {
-        if (grants.length > 1) return <Gift className="w-8 h-8 text-amber-400" />;
+    const getKoreanRewardName = (g: Reward) => {
+        if (g.item_type === "DIAMOND" || g.token_type === "DIAMOND") return "다이아";
+        if (g.token_type === "ROULETTE_COIN") return "룰렛 코인";
+        if (g.token_type === "DICE_TOKEN") return "주사위 토큰";
+        if (g.token_type === "LOTTERY_TICKET") return "복권 티켓";
+        if (g.token_type === "GOLD_KEY") return "골드 키";
+        if (g.token_type === "DIAMOND_KEY") return "다이아 키";
+        if (g.token_type === "TRIAL_TOKEN") return "체험 티켓";
+        return g.item_type || g.token_type || "보상";
+    };
+
+    const getRewardIcon = (grants: Reward[]): React.ReactNode => {
+        if (grants.length > 1) {
+            return <img src="/assets/lottery/icon_gift.png" alt="선물" className="h-8 w-8 object-contain" />;
+        }
         const g = grants[0];
         if (!g) return <Star className="w-8 h-8 text-gray-400" />;
 
-        // Simple mapping for demonstration
-        if (g.token_type === "ROULETTE_COIN") return "🎯";
-        if (g.token_type === "DICE_TOKEN") return "🎲";
-        if (g.token_type === "LOTTERY_TICKET") return "🎫";
-        if (g.item_type === "DIAMOND" || g.token_type === "DIAMOND") return "💎";
-        return <Gift className="w-8 h-8 text-amber-400" />;
+        if (g.token_type === "ROULETTE_COIN") return <span className="text-2xl">🎯</span>;
+        if (g.token_type === "DICE_TOKEN") return <span className="text-2xl">🎲</span>;
+        if (g.token_type === "LOTTERY_TICKET") return <span className="text-2xl">🎫</span>;
+        if (g.item_type === "DIAMOND" || g.token_type === "DIAMOND") {
+            return <img src="/assets/icon_diamond.png" alt="다이아" className="h-8 w-8 object-contain" />;
+        }
+        return <img src="/assets/lottery/icon_gift.png" alt="선물" className="h-8 w-8 object-contain" />;
     };
 
     const getRewardLabel = (grants: Reward[]) => {
         if (grants.length === 0) return "없음";
         if (grants.length > 1) return `총 ${grants.length}개`;
         const g = grants[0];
-        return `${g.amount}${g.token_type === "ROULETTE_COIN" ? "코인" : g.token_type === "DICE_TOKEN" ? "티켓" : g.item_type || g.token_type}`;
+        const name = getKoreanRewardName(g);
+        return `${g.amount} ${name}`;
     };
 
     return (
@@ -64,12 +79,10 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
                     </button>
 
                     <header className="text-center mb-8">
-                        <h2 className="text-2xl font-black text-white glow-green mb-1 uppercase italic tracking-tighter">
-                            Daily Attendance
+                        <h2 className="text-2xl font-black text-white glow-green mb-1 tracking-tight">
+                            연속 출석 보상
                         </h2>
-                        <p className="text-sm font-bold text-white/40">
-                            매일 접속하고 특별한 선물을 받으세요!
-                        </p>
+                        <p className="text-sm font-bold text-white/40">매일 접속하고 보상을 받아보세요.</p>
                     </header>
 
                     {/* 7-Day Grid */}
@@ -98,15 +111,15 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
                                         "text-[10px] font-black mb-1",
                                         isToday ? "text-white" : "text-white/40"
                                     )}>
-                                        DAY {day}
+                                        {day}일차
                                     </span>
 
                                     <div className="text-xl mb-1">
                                         {rule ? (
-                                            typeof getRewardIcon(rule.grants) === 'string' ?
-                                                <span>{getRewardIcon(rule.grants)}</span> :
-                                                getRewardIcon(rule.grants)
-                                        ) : '🎁'}
+                                            getRewardIcon(rule.grants)
+                                        ) : (
+                                            <img src="/assets/lottery/icon_gift.png" alt="선물" className="h-8 w-8 object-contain" />
+                                        )}
                                     </div>
 
                                     <span className={clsx(
@@ -139,8 +152,8 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
                                 <p className="text-xl font-black text-white">🔥 {currentStreak}일 연속!</p>
                             </div>
                             <div className="text-right">
-                                <p className="text-[10px] font-black text-white/40 uppercase tracking-widest">다음 보상</p>
-                                <p className="text-sm font-bold text-figma-accent">Day {currentStreak + 1}</p>
+                                <p className="text-[10px] font-black text-white/40 tracking-widest">다음 보상</p>
+                                <p className="text-sm font-bold text-figma-accent">{currentStreak + 1}일차</p>
                             </div>
                         </div>
 
@@ -154,9 +167,7 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
                         </Button>
                     </div>
 
-                    <p className="mt-6 text-[10px] font-black text-white/20 uppercase tracking-[0.2em]">
-                        Streak Rewards System v1.0
-                    </p>
+                    <p className="mt-6 text-[10px] font-black text-white/20 tracking-[0.2em]">출석 보상 v1.0</p>
                 </div>
             </div>
         </div>

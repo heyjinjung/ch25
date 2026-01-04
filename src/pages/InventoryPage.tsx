@@ -286,7 +286,8 @@ const WalletCard: React.FC<{ tokenType: string; amount: number }> = ({ tokenType
         "DICE_TOKEN": { title: "주사위 티켓", icon: "/assets/icon_dice_silver.png" },
         "LOTTERY_TICKET": { title: "복권 티켓", icon: "/assets/lottery/icon_lotto_ball.png" },
         "GOLD_KEY": { title: "골드 키", icon: "/assets/asset_ticket_gold.png" },
-        "DIAMOND_KEY": { title: "다이아몬드 키", icon: "/assets/asset_ticket_diamond.png" }
+        "DIAMOND_KEY": { title: "다이아몬드 키", icon: "/assets/asset_ticket_diamond.png" },
+        "TRIAL_TOKEN": { title: "체험 티켓", icon: "/assets/asset_ticket_trial.png" }
     };
 
     const info = WALLET_INFO[tokenType] || { title: tokenType, icon: "" };
