@@ -34,8 +34,8 @@ class MissionService:
 
     def _operational_play_date(self, now_tz: datetime) -> date:
         """Return the operational play date (KST day with reset at configured hour)."""
-        reset_hour_raw = getattr(self.settings, "streak_day_reset_hour_kst", 9)
-        reset_hour = 9 if reset_hour_raw is None else int(reset_hour_raw)
+        reset_hour_raw = getattr(self.settings, "streak_day_reset_hour_kst", 0)
+        reset_hour = 0 if reset_hour_raw is None else int(reset_hour_raw)
         today = now_tz.date()
         if now_tz.hour < reset_hour:
             return today - timedelta(days=1)

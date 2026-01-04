@@ -116,8 +116,8 @@ interface ProductCardProps {
 const ITEM_NAMES: Record<string, string> = {
     'VOUCHER_GOLD_KEY_1': '골드키 교환권',
     'VOUCHER_DIAMOND_KEY_1': '다이아키 교환권',
-    'VOUCHER_ROULETTE_COIN_1': '코인 교환권',
-    'VOUCHER_DICE_TOKEN_1': '주사위 교환권',
+    'VOUCHER_ROULETTE_COIN_1': '룰렛 티켓',
+    'VOUCHER_DICE_TOKEN_1': '주사위 티켓',
     'GOLD_KEY': '골드 키',
     'DIAMOND_KEY': '다이아몬드 키',
     'ROULETTE_COIN': '룰렛 티켓',

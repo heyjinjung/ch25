@@ -203,12 +203,12 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, onUse, isPending }) => {
             icon: <img src="/assets/asset_ticket_diamond.png" className="w-8 h-8 object-contain" alt="" />
         },
         "VOUCHER_DICE_TOKEN_1": {
-            title: "주사위 티켓 교환권",
+            title: "주사위 티켓",
             desc: "주사위 티켓 1개로 즉시 교환",
             icon: <img src="/assets/icon_dice_silver.png" className="w-8 h-8 object-contain" alt="" />
         },
         "VOUCHER_ROULETTE_COIN_1": {
-            title: "일반 룰렛 티켓 교환권",
+            title: "룰렛 티켓",
             desc: "일반 룰렛 티켓 1개로 즉시 교환",
             icon: <img src="/assets/asset_ticket_green.png" className="w-8 h-8 object-contain" alt="" />
         },

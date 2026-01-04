@@ -29,8 +29,9 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
 
     const getKoreanRewardName = (g: Reward) => {
         if (g.item_type === "DIAMOND" || g.token_type === "DIAMOND") return "다이아";
-        if (g.token_type === "ROULETTE_COIN") return "룰렛 코인";
-        if (g.token_type === "DICE_TOKEN") return "주사위 토큰";
+        if (g.item_type === "PACKAGE" || g.token_type === "PACKAGE") return "패키지";
+        if (g.token_type === "ROULETTE_COIN") return "룰렛 티켓";
+        if (g.token_type === "DICE_TOKEN") return "주사위 티켓";
         if (g.token_type === "LOTTERY_TICKET") return "복권 티켓";
         if (g.token_type === "GOLD_KEY") return "골드 키";
         if (g.token_type === "DIAMOND_KEY") return "다이아 키";
@@ -38,25 +39,39 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
         return g.item_type || g.token_type || "보상";
     };
 
-    const getRewardIcon = (grants: Reward[]): React.ReactNode => {
+    const getRewardIcon = (
+        grants: Reward[],
+        opts?: {
+            isLastDay?: boolean;
+            emphasize?: boolean;
+        }
+    ): React.ReactNode => {
+        const isLastDay = opts?.isLastDay === true;
+        const emphasize = opts?.emphasize === true;
+        const sizeClass = isLastDay ? "h-12 w-12" : "h-9 w-9";
+        const pulseClass = emphasize ? "animate-pulse" : "";
+
         if (grants.length > 1) {
-            return <img src="/assets/lottery/icon_gift.png" alt="선물" className="h-8 w-8 object-contain" />;
+            return <img src="/assets/lottery/icon_gift.png" alt="패키지" className={`${sizeClass} ${pulseClass} object-contain`} />;
         }
         const g = grants[0];
-        if (!g) return <Star className="w-8 h-8 text-gray-400" />;
+        if (!g) return <Star className={`${isLastDay ? "w-12 h-12" : "w-9 h-9"} text-gray-400 ${pulseClass}`} />;
 
-        if (g.token_type === "ROULETTE_COIN") return <span className="text-2xl">🎯</span>;
-        if (g.token_type === "DICE_TOKEN") return <span className="text-2xl">🎲</span>;
-        if (g.token_type === "LOTTERY_TICKET") return <span className="text-2xl">🎫</span>;
+        if (g.token_type === "ROULETTE_COIN") return <span className={`${isLastDay ? "text-4xl" : "text-3xl"} ${pulseClass}`}>🎯</span>;
+        if (g.token_type === "DICE_TOKEN") return <span className={`${isLastDay ? "text-4xl" : "text-3xl"} ${pulseClass}`}>🎲</span>;
+        if (g.token_type === "LOTTERY_TICKET") return <span className={`${isLastDay ? "text-4xl" : "text-3xl"} ${pulseClass}`}>🎫</span>;
         if (g.item_type === "DIAMOND" || g.token_type === "DIAMOND") {
-            return <img src="/assets/icon_diamond.png" alt="다이아" className="h-8 w-8 object-contain" />;
+            return <img src="/assets/icon_diamond.png" alt="다이아" className={`${sizeClass} ${pulseClass} object-contain`} />;
         }
-        return <img src="/assets/lottery/icon_gift.png" alt="선물" className="h-8 w-8 object-contain" />;
+        if (g.item_type === "PACKAGE" || g.token_type === "PACKAGE") {
+            return <img src="/assets/lottery/icon_gift.png" alt="패키지" className={`${sizeClass} ${pulseClass} object-contain`} />;
+        }
+        return <img src="/assets/lottery/icon_gift.png" alt="선물" className={`${sizeClass} ${pulseClass} object-contain`} />;
     };
 
     const getRewardLabel = (grants: Reward[]) => {
         if (grants.length === 0) return "없음";
-        if (grants.length > 1) return `총 ${grants.length}개`;
+        if (grants.length > 1) return "패키지";
         const g = grants[0];
         const name = getKoreanRewardName(g);
         return `${g.amount} ${name}`;
@@ -78,11 +93,18 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
                         <X className="w-5 h-5 text-white/40" />
                     </button>
 
-                    <header className="text-center mb-8">
-                        <h2 className="text-2xl font-black text-white glow-green mb-1 tracking-tight">
-                            연속 출석 보상
+                    <header className="text-center mb-6">
+                        <h2 className="text-2xl font-black text-white glow-green mb-3 tracking-tight">
+                            연속 플레이 기록
                         </h2>
-                        <p className="text-sm font-bold text-white/40">매일 접속하고 보상을 받아보세요.</p>
+                        <div className="text-xs font-medium text-white/70 space-y-1.5 bg-white/5 rounded-xl p-4 mx-2 text-left">
+                            <p>• 하루에 한 번만 <span className="text-emerald-400 font-bold">플레이</span>하면 ‘연속 기록’이 1씩 올라가요.</p>
+                            <p>• 단순 접속이 아니라 <span className="text-emerald-400 font-bold">매일 게임을 플레이</span>해야 기록이 유지돼요.</p>
+                            <p className="text-white/40 pt-1.5 border-t border-white/10 mt-1.5">• 기준 시간: 매일 00:00</p>
+                        </div>
+                        <div className="mt-3 text-[11px] text-amber-400/90 font-bold animate-pulse">
+                            [보상 안내] 오픈 기념 보상은 즉시 공개 예정이에요!
+                        </div>
                     </header>
 
                     {/* 7-Day Grid */}
@@ -95,35 +117,46 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
                             const isFuture = currentStreak < day;
 
                             const isLastDay = day === 7;
+                            const emphasize = isLastDay || isToday;
 
                             return (
                                 <div
                                     key={day}
                                     className={clsx(
                                         "relative flex flex-col items-center justify-center aspect-square rounded-2xl border transition-all duration-300",
-                                        isLastDay ? "col-span-2 aspect-auto py-3" : "col-span-1",
+                                        isLastDay ? "col-span-2 aspect-auto py-4" : "col-span-1",
                                         isPast ? "bg-emerald-500/10 border-emerald-500/30" :
                                             isToday ? "bg-figma-primary border-figma-primary shadow-[0_0_20px_rgba(48,255,117,0.3)] scale-105" :
                                                 "bg-white/5 border-white/10"
                                     )}
                                 >
+                                    {isLastDay ? (
+                                        <span className="absolute left-2 top-2 rounded-lg bg-white/10 px-2 py-1 text-[10px] font-black text-figma-accent">
+                                            최종 보상
+                                        </span>
+                                    ) : null}
+
                                     <span className={clsx(
-                                        "text-[10px] font-black mb-1",
+                                        isLastDay ? "text-xs font-black mb-1" : "text-[10px] font-black mb-1",
                                         isToday ? "text-white" : "text-white/40"
                                     )}>
                                         {day}일차
                                     </span>
 
-                                    <div className="text-xl mb-1">
+                                    <div className={clsx("mb-1 flex items-center justify-center", emphasize ? "drop-shadow" : "") }>
                                         {rule ? (
-                                            getRewardIcon(rule.grants)
+                                            getRewardIcon(rule.grants, { isLastDay, emphasize: isLastDay })
                                         ) : (
-                                            <img src="/assets/lottery/icon_gift.png" alt="선물" className="h-8 w-8 object-contain" />
+                                            <img
+                                                src="/assets/lottery/icon_gift.png"
+                                                alt="선물"
+                                                className={clsx(isLastDay ? "h-12 w-12" : "h-9 w-9", "object-contain", isLastDay ? "animate-pulse" : "")}
+                                            />
                                         )}
                                     </div>
 
                                     <span className={clsx(
-                                        "text-[8px] font-bold truncate max-w-full px-1",
+                                        isLastDay ? "text-[10px] font-black truncate max-w-full px-2" : "text-[8px] font-bold truncate max-w-full px-1",
                                         isToday ? "text-white" : "text-white/30"
                                     )}>
                                         {rule ? getRewardLabel(rule.grants) : '-'}

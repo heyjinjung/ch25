@@ -6,6 +6,7 @@ const EventRemoteControl: React.FC = () => {
     const [program, setProgram] = useState<VaultProgramResponse | null>(null);
     const [loading, setLoading] = useState(true);
     const [updating, setUpdating] = useState(false);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     useEffect(() => {
         fetchConfig();
@@ -14,10 +15,13 @@ const EventRemoteControl: React.FC = () => {
     const fetchConfig = async () => {
         try {
             setLoading(true);
+            setErrorMessage(null);
             const data = await getVaultDefaultProgram();
             setProgram(data);
         } catch (err) {
             console.error("Failed to fetch vault config", err);
+            const detail = (err as any)?.response?.data?.detail;
+            setErrorMessage(detail ? String(detail) : "설정을 불러오지 못했습니다.");
         } finally {
             setLoading(false);
         }
@@ -27,12 +31,15 @@ const EventRemoteControl: React.FC = () => {
         if (!program) return;
         try {
             setUpdating(true);
-            const newConfig = { ...program.config_json, [key]: value };
+            setErrorMessage(null);
+            const baseConfig = (program.config_json && typeof program.config_json === "object") ? program.config_json : {};
+            const newConfig = { ...baseConfig, [key]: value };
             const updated = await updateVaultConfig(program.key, newConfig);
             setProgram(updated);
         } catch (err) {
             console.error("Update failed", err);
-            alert("업데이트에 실패했습니다.");
+            const detail = (err as any)?.response?.data?.detail;
+            setErrorMessage(detail ? String(detail) : "업데이트에 실패했습니다.");
         } finally {
             setUpdating(false);
         }
@@ -86,6 +93,12 @@ const EventRemoteControl: React.FC = () => {
                         ))}
                     </div>
                 </section>
+
+                {errorMessage ? (
+                    <div className="rounded-xl border border-red-500/30 bg-red-950/40 p-3 text-xs font-bold text-red-100">
+                        {errorMessage}
+                    </div>
+                ) : null}
 
                 {/* Global Modal Trigger */}
                 <section>
