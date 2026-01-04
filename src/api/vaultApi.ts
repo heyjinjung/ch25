@@ -23,6 +23,7 @@ interface BackendVaultStatusResponse {
   readonly is_golden_hour_active?: boolean;
   readonly golden_hour_multiplier?: number;
   readonly golden_hour_remaining_seconds?: number;
+  readonly show_modal_override?: string | null;
 }
 
 export interface VaultStatusResponse {
@@ -52,6 +53,7 @@ export interface VaultStatusResponse {
   readonly is_golden_hour_active?: boolean;
   readonly golden_hour_multiplier?: number;
   readonly golden_hour_remaining_seconds?: number;
+  readonly showModalOverride?: string | null;
 }
 
 export const getVaultStatus = async (): Promise<VaultStatusResponse> => {
@@ -86,6 +88,7 @@ export const getVaultStatus = async (): Promise<VaultStatusResponse> => {
     is_golden_hour_active: data.is_golden_hour_active ?? false,
     golden_hour_multiplier: data.golden_hour_multiplier ?? 1.0,
     golden_hour_remaining_seconds: data.golden_hour_remaining_seconds ?? 0,
+    showModalOverride: data.show_modal_override ?? null,
   };
 };
 // Phase 1 MVP Withdrawal Request

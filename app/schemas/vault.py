@@ -47,6 +47,9 @@ class VaultStatusResponse(BaseModel):
     golden_hour_remaining_seconds: int = 0
     golden_hour_multiplier: float = 1.0
 
+    # Global Modal Overrides (Admin controlled)
+    show_modal_override: str | None = None
+
 
 class VaultFillResponse(BaseModel):
     eligible: bool

@@ -138,6 +138,9 @@ def status(db: Session = Depends(get_db), user_id: int = Depends(get_current_use
         
         res.is_golden_hour_active = active
         res.golden_hour_multiplier = float(gh_cfg.get("multiplier", 2.0)) if active else 1.0
+        
+        # Inject Global Modal Overrides
+        res.show_modal_override = v2_service.get_config_value(db, "show_modal_override")
     
     return res
 

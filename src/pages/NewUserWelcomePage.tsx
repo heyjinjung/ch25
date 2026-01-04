@@ -4,10 +4,10 @@ import { useQuery } from "@tanstack/react-query";
 import { getNewUserStatus } from "../api/newUserApi";
 import Modal from "../components/common/Modal";
 import { useMissionStore } from "../stores/missionStore";
-import { Trophy, CheckCircle2 } from "lucide-react";
+import { Trophy, CheckCircle2, Share2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "../components/common/ToastProvider";
-import api from "../api/apiClient";
+import { recordViralAction, setCloudItem, verifyChannelSubscription } from "../api/viralApi";
 
 const formatSeconds = (seconds: number | null | undefined) => {
   if (seconds == null) return "-";
@@ -86,6 +86,39 @@ const NewUserWelcomePage: React.FC = () => {
 
   // For Join Channel manual check
   const [isVerifyingChannel, setIsVerifyingChannel] = useState(false);
+
+  const handleShareWallet = async (missionId: number) => {
+    try {
+      const appUrl = "https://t.me/jm956_bot/ccjm";
+      const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(appUrl)}&text=${encodeURIComponent("내 지갑 💎 CCJM에서 함께 확인해봐!")}`;
+
+      const tg = window.Telegram?.WebApp;
+      if (typeof tg?.openTelegramLink === "function") {
+        try {
+          tg.openTelegramLink(shareUrl);
+        } catch {
+          // Fall through
+        }
+      }
+      if (typeof tg?.openLink === "function") {
+        try {
+          tg.openLink(shareUrl);
+        } catch {
+          // Fall through
+        }
+      }
+      // Last resort (browser / restricted webview)
+      window.open(shareUrl, "_blank", "noopener,noreferrer");
+
+      await recordViralAction({ action_type: "SHARE_WALLET", mission_id: missionId });
+      const cacheKey = `mission_verified_${missionId}`;
+      await setCloudItem(cacheKey, "VERIFIED");
+      queryClient.invalidateQueries({ queryKey: ["new-user-status"] });
+      useMissionStore.getState().fetchMissions();
+    } catch {
+      addToast("공유 처리 중 오류가 발생했습니다.", "error");
+    }
+  };
 
   // --------------------------------------------------------------------------------
   // [Logic] Auto-trigger modal ONLY for Login mission upon first load/detection
@@ -171,7 +204,7 @@ const NewUserWelcomePage: React.FC = () => {
       // Call verify endpoint (Using generic action endpoint if specific one not ready, or viral endpoint)
       // Check viral.py: POST /api/viral/verify/channel
       try {
-        await api.post("/viral/verify/channel", { mission_id: missionId });
+        await verifyChannelSubscription(missionId);
         addToast("채널 가입이 확인되었습니다! 보상을 수령하세요.", "success");
         queryClient.invalidateQueries({ queryKey: ["new-user-status"] });
       } catch {
@@ -213,7 +246,7 @@ const NewUserWelcomePage: React.FC = () => {
 
   const mPlay1 = findMission((m) => m.action_type === "PLAY_GAME" && Number(m.target_value) === 1);
   const mPlay3 = findMission((m) => m.action_type === "PLAY_GAME" && Number(m.target_value) >= 3);
-  const mJoin = findMission((m) => ["JOIN_CHANNEL", "SHARE", "SHARE_STORY"].includes(m.action_type));
+  const mCommunity = findMission((m) => ["SHARE_WALLET", "JOIN_CHANNEL", "SHARE", "SHARE_STORY"].includes(m.action_type));
   // Note: Backend might map "JOIN_CHANNEL" action to a mission. 
 
   const mLogin = findMission((m) => m.action_type === "LOGIN");
@@ -274,23 +307,37 @@ const NewUserWelcomePage: React.FC = () => {
           />
         )}
 
-        {/* 3. JOIN CHANNEL */}
-        {mJoin && (
+        {/* 3. COMMUNITY */}
+        {mCommunity && (
           <Row
-            done={!!mJoin.is_completed}
-            claimed={!!mJoin.is_claimed}
-            title="미션 알림 채널 입장"
-            desc="입장 버튼을 누르고 잠시 후 확인됩니다."
-            onClaim={() => handleClaim(mJoin.id, mJoin.title)}
-            isClaiming={processingId === mJoin.id}
+            done={!!mCommunity.is_completed}
+            claimed={!!mCommunity.is_claimed}
+            title={mCommunity.title || "커뮤니티 함께하기"}
+            desc={
+              mCommunity.action_type === "SHARE_WALLET"
+                ? "내 지갑을 친구에게 공유하면 완료됩니다."
+                : "입장 버튼을 누르고 잠시 후 확인됩니다."
+            }
+            onClaim={() => handleClaim(mCommunity.id, mCommunity.title)}
+            isClaiming={processingId === mCommunity.id}
             action={
-              <button
-                className="rounded-xl border border-white/10 bg-emerald-500/10 px-3 py-2 text-xs font-bold text-emerald-400 hover:bg-emerald-500/20"
-                onClick={() => handleVerifyChannel(mJoin.id)}
-                disabled={isVerifyingChannel}
-              >
-                {isVerifyingChannel ? "확인 중..." : "채널 입장/확인"}
-              </button>
+              mCommunity.action_type === "SHARE_WALLET" ? (
+                <button
+                  className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-emerald-500/10 px-3 py-2 text-xs font-bold text-emerald-400 hover:bg-emerald-500/20"
+                  onClick={() => handleShareWallet(mCommunity.id)}
+                >
+                  <Share2 className="h-4 w-4" />
+                  친구 공유
+                </button>
+              ) : (
+                <button
+                  className="rounded-xl border border-white/10 bg-emerald-500/10 px-3 py-2 text-xs font-bold text-emerald-400 hover:bg-emerald-500/20"
+                  onClick={() => handleVerifyChannel(mCommunity.id)}
+                  disabled={isVerifyingChannel}
+                >
+                  {isVerifyingChannel ? "확인 중..." : "채널 입장/확인"}
+                </button>
+              )
             }
           />
         )}

@@ -53,5 +53,28 @@
   - Ensured atomicity: removed internal `commit()` side-effects when `auto_commit=False` in wallet creation (uses flush instead).
   - Enforced exclusions: vault streak bonus applies only to eligible base games (e.g., Dice `mode==NORMAL`, excludes high-tier roulette keys / trial token).
 - **Verification**:
-  - Pytest added/updated for Day4/Day5 grant, idempotency, and Day6 no-grant; vault bonus regression covered.
+- Pytest added/updated for Day4/Day5 grant, idempotency, and Day6 no-grant; vault bonus regression covered.
+
+## 7. Daily Gift Mission & UI Visibility Optimization
+- **Goal**: Standardize the 10 Diamond login reward and improve user awareness using multiple notification channels.
+- **Backend (Seeding)**:
+  - Created `scripts/seed_daily_gift_mission.py` to seed the `daily_login_gift` mission.
+  - Set as `DAILY` category, `LOGIN` action type, awarding 10 `DIAMOND`.
+- **Frontend (Mission Management)**:
+  - **Sorting**: Implemented custom sorting in `MissionPage.tsx` to prioritize unclaimed missions and pin `Daily Gift` to the top of the Daily tab.
+  - **Styling**: Added a gold gradient background and `Gift` icon to the `MissionCard.tsx` specifically for the daily gift.
+  - **UI Cleanup**: Removed redundant "CLAIM" count badges and green dots from mission category tabs for a cleaner look.
+- **Notification System**:
+  - **HomePage**: "Today's Gift Arrived" toast notification triggered once per session if the award is unclaimed.
+  - **MobileBottomNav**: Added a red ping/alert indicator to the "이벤트" tab.
+  - **EventDashboard**: Integrated red exclamation marks (!) next to "Mission" and "Season Pass" headings.
+
+## 8. Vault & Golden Hour Logic Refinements
+- **Goal**: Fix negative value doubling and implement multiplier "gates" for the Golden Hour event.
+- **Backend (VaultService)**:
+  - Fixed logic to ensure negative accruals (losses) are correctly doubled during Golden Hour (e.g., -50 becomes -100).
+  - Implemented a +200 KRW (Win) / -50 KRW (Loss) gate for the multiplier application.
+- **Verification**:
+  - Added regression tests in `tests/test_vault_earn_event_game.py` covering win/loss doubling and gate checks.
+  - Validated that non-golden-hour accruals remain unaffected.
 

@@ -6,6 +6,7 @@ import {
   type StreakRewardUserEvent,
 } from "../api/adminStreakRewardsApi";
 import { fetchAdminUiConfig, upsertAdminUiConfig } from "../api/adminUiConfigApi";
+import EventRemoteControl from "../components/events/EventRemoteControl";
 
 const CONFIG_KEY = "streak_reward_rules";
 
@@ -20,19 +21,20 @@ type WalletTokenType =
 
 type GrantRow =
   | {
-      kind: "WALLET";
-      token_type: WalletTokenType;
-      amount: number;
-    }
+    kind: "WALLET";
+    token_type: WalletTokenType;
+    amount: number;
+  }
   | {
-      kind: "INVENTORY";
-      item_type: string;
-      amount: number;
-    };
+    kind: "INVENTORY";
+    item_type: string;
+    amount: number;
+  };
 
 type RuleRow = {
   day: number;
   enabled: boolean;
+  pinned?: boolean;
   grants: GrantRow[];
 };
 
@@ -40,6 +42,7 @@ const defaultRules = (): RuleRow[] => [
   {
     day: 3,
     enabled: true,
+    pinned: true,
     grants: [
       { kind: "WALLET", token_type: "ROULETTE_COIN", amount: 1 },
       { kind: "WALLET", token_type: "DICE_TOKEN", amount: 1 },
@@ -49,9 +52,19 @@ const defaultRules = (): RuleRow[] => [
   {
     day: 7,
     enabled: true,
+    pinned: true,
     grants: [{ kind: "INVENTORY", item_type: "DIAMOND", amount: 1 }],
   },
 ];
+
+const sortRules = (rows: RuleRow[]) => {
+  return [...rows].sort((a, b) => {
+    const ap = a.pinned ? 1 : 0;
+    const bp = b.pinned ? 1 : 0;
+    if (ap !== bp) return bp - ap; // pinned first
+    return a.day - b.day;
+  });
+};
 
 const coerceRules = (value: any): RuleRow[] => {
   const rawRules = value?.rules;
@@ -63,6 +76,7 @@ const coerceRules = (value: any): RuleRow[] => {
     const day = Number(raw.day);
     if (!Number.isFinite(day) || day <= 0) continue;
     const enabled = raw.enabled === false ? false : true;
+    const pinned = raw.pinned === true;
     const rawGrants = Array.isArray(raw.grants) ? raw.grants : [];
     const grants: GrantRow[] = [];
     for (const g of rawGrants) {
@@ -84,11 +98,11 @@ const coerceRules = (value: any): RuleRow[] => {
         continue;
       }
     }
-    rows.push({ day, enabled, grants });
+    rows.push({ day, enabled, pinned, grants });
   }
 
-  rows.sort((a, b) => a.day - b.day);
-  return rows.length ? rows : defaultRules();
+  const sorted = sortRules(rows);
+  return sorted.length ? sorted : defaultRules();
 };
 
 const inputClass =
@@ -152,7 +166,7 @@ const StreakRewardsAdminPage: React.FC = () => {
 
   React.useEffect(() => {
     if (!configQuery.data) return;
-    setRules(initialRules);
+    setRules(sortRules(initialRules));
   }, [configQuery.data, initialRules]);
 
   const saveRules = useMutation({
@@ -169,13 +183,13 @@ const StreakRewardsAdminPage: React.FC = () => {
         "DIAMOND",
       ]);
 
-      const payloadRules: Array<{ day: number; enabled: boolean; grants: any[] }> = [];
+      const payloadRules: Array<{ day: number; enabled: boolean; pinned?: boolean; grants: any[] }> = [];
       for (const row of rules) {
         const d = Number(row.day);
         if (!Number.isFinite(d) || d <= 0) continue;
 
         if (!Array.isArray(row.grants) || row.grants.length === 0) {
-          payloadRules.push({ day: d, enabled: !!row.enabled, grants: [] });
+          payloadRules.push({ day: d, enabled: !!row.enabled, pinned: row.pinned === true, grants: [] });
           continue;
         }
 
@@ -205,7 +219,7 @@ const StreakRewardsAdminPage: React.FC = () => {
           throw new Error(`Day ${d}: 알 수 없는 grant.kind`);
         }
 
-        payloadRules.push({ day: d, enabled: !!row.enabled, grants: grantsPayload });
+        payloadRules.push({ day: d, enabled: !!row.enabled, pinned: row.pinned === true, grants: grantsPayload });
       }
 
       const value = { version: 1, rules: payloadRules };
@@ -244,6 +258,8 @@ const StreakRewardsAdminPage: React.FC = () => {
           </p>
         </div>
       </header>
+
+      <EventRemoteControl />
 
       <section className={panelClass}>
         <h2 className="text-lg font-medium text-white">금일 지급 현황</h2>
@@ -286,11 +302,11 @@ const StreakRewardsAdminPage: React.FC = () => {
         <h2 className="text-lg font-medium text-white">유저별 지급 로그 조회</h2>
         <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-4">
           <div>
-            <label className="text-sm text-gray-300">user_id</label>
+            <label className="text-sm text-gray-300">유저 ID</label>
             <input className={inputClass} value={userId} onChange={(e) => setUserId(e.target.value)} placeholder="예: 123" />
           </div>
           <div>
-            <label className="text-sm text-gray-300">external_id</label>
+            <label className="text-sm text-gray-300">외부 ID</label>
             <input className={inputClass} value={externalId} onChange={(e) => setExternalId(e.target.value)} placeholder="예: admin / telegram_..." />
           </div>
           <div>
@@ -298,7 +314,7 @@ const StreakRewardsAdminPage: React.FC = () => {
             <input type="date" className={inputClass} value={filterDay} onChange={(e) => setFilterDay(e.target.value)} />
           </div>
           <div>
-            <label className="text-sm text-gray-300">limit</label>
+            <label className="text-sm text-gray-300">최대 조회 개수</label>
             <input
               className={inputClass}
               value={String(limit)}
@@ -392,7 +408,7 @@ const StreakRewardsAdminPage: React.FC = () => {
           <p className="text-xs text-gray-500">키: {CONFIG_KEY} · 최근 저장: {updatedAt}</p>
         </div>
         <p className="mt-2 text-sm text-gray-400">
-          보상은 JSON으로 저장됩니다. 각 day에 대해 grants는 JSON 배열이며, 예: {"{"} kind: "WALLET", token_type: "ROULETTE_COIN", amount: 1 {"}"}
+          보상은 JSON으로 저장됩니다. 각 Day에 대해 grants는 JSON 배열이며, 예: {"{"} kind: "WALLET", token_type: "ROULETTE_COIN", amount: 1 {"}"}
         </p>
 
         {configQuery.isLoading && <div className="mt-4 text-gray-200">불러오는 중...</div>}
@@ -408,13 +424,13 @@ const StreakRewardsAdminPage: React.FC = () => {
               <button type="button" className={buttonSecondary} onClick={() => setRules(defaultRules())}>
                 기본값(3/7)로 초기화
               </button>
-              <button type="button" className={buttonSecondary} onClick={() => setRules(initialRules)}>
+              <button type="button" className={buttonSecondary} onClick={() => setRules(sortRules(initialRules))}>
                 현재 저장값으로 되돌리기
               </button>
               <button
                 type="button"
                 className={buttonSecondary}
-                onClick={() => setRules((prev) => [...prev, { day: 1, enabled: true, grants: [] }])}
+                onClick={() => setRules((prev) => sortRules([...prev, { day: 1, enabled: true, pinned: false, grants: [] }]))}
               >
                 행 추가
               </button>
@@ -424,9 +440,10 @@ const StreakRewardsAdminPage: React.FC = () => {
               <table className="w-full text-left text-sm">
                 <thead className="border-b border-[#333333] text-gray-400">
                   <tr>
-                    <th className="px-4 py-3">Day</th>
-                    <th className="px-4 py-3">Enabled</th>
-                    <th className="px-4 py-3">Grants</th>
+                    <th className="px-4 py-3">일차(Day)</th>
+                    <th className="px-4 py-3">핀</th>
+                    <th className="px-4 py-3">활성</th>
+                    <th className="px-4 py-3">보상</th>
                     <th className="px-4 py-3"></th>
                   </tr>
                 </thead>
@@ -440,7 +457,7 @@ const StreakRewardsAdminPage: React.FC = () => {
                           value={String(row.day)}
                           onChange={(e) => {
                             const next = Number(e.target.value) || 0;
-                            setRules((prev) => prev.map((r, i) => (i === idx ? { ...r, day: next } : r)));
+                            setRules((prev) => sortRules(prev.map((r, i) => (i === idx ? { ...r, day: next } : r))));
                           }}
                         />
                       </td>
@@ -448,9 +465,19 @@ const StreakRewardsAdminPage: React.FC = () => {
                         <label className="inline-flex items-center gap-2 text-gray-200">
                           <input
                             type="checkbox"
+                            checked={row.pinned === true}
+                            onChange={(e) => setRules((prev) => sortRules(prev.map((r, i) => (i === idx ? { ...r, pinned: e.target.checked } : r))))}
+                          />
+                          고정
+                        </label>
+                      </td>
+                      <td className="px-4 py-3">
+                        <label className="inline-flex items-center gap-2 text-gray-200">
+                          <input
+                            type="checkbox"
                             checked={row.enabled}
                             onChange={(e) =>
-                              setRules((prev) => prev.map((r, i) => (i === idx ? { ...r, enabled: e.target.checked } : r)))
+                              setRules((prev) => sortRules(prev.map((r, i) => (i === idx ? { ...r, enabled: e.target.checked } : r))))
                             }
                           />
                           활성
@@ -485,8 +512,8 @@ const StreakRewardsAdminPage: React.FC = () => {
                                     );
                                   }}
                                 >
-                                  <option value="WALLET">WALLET</option>
-                                  <option value="INVENTORY">INVENTORY</option>
+                                  <option value="WALLET">지갑(WALLET)</option>
+                                  <option value="INVENTORY">인벤토리(INVENTORY)</option>
                                 </select>
                               </div>
 
@@ -553,7 +580,7 @@ const StreakRewardsAdminPage: React.FC = () => {
                                       })
                                     );
                                   }}
-                                  placeholder="amount"
+                                  placeholder="수량"
                                 />
                               </div>
 
@@ -592,7 +619,7 @@ const StreakRewardsAdminPage: React.FC = () => {
                                 );
                               }}
                             >
-                              + WALLET
+                              + 지갑 보상
                             </button>
                             <button
                               type="button"
@@ -606,7 +633,7 @@ const StreakRewardsAdminPage: React.FC = () => {
                                 );
                               }}
                             >
-                              + INVENTORY
+                              + 인벤토리 보상
                             </button>
                           </div>
 
@@ -622,7 +649,7 @@ const StreakRewardsAdminPage: React.FC = () => {
                         <button
                           type="button"
                           className={buttonSecondary}
-                          onClick={() => setRules((prev) => prev.filter((_, i) => i !== idx))}
+                          onClick={() => setRules((prev) => sortRules(prev.filter((_, i) => i !== idx)))}
                         >
                           삭제
                         </button>

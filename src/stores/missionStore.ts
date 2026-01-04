@@ -45,7 +45,9 @@ interface MissionState {
     error: string | null;
     hasUnclaimed: boolean;
     streakInfo: StreakInfo | null;
+    streakRules: any[] | null;
     fetchMissions: () => Promise<void>;
+    fetchStreakRules: () => Promise<void>;
     setStreakInfo: (streakInfo: StreakInfo | null) => void;
     claimReward: (missionId: number) => Promise<{ success: boolean; reward_type?: string; amount?: number; message?: string }>;
 }
@@ -56,9 +58,21 @@ export const useMissionStore = create<MissionState>((set: any, get: any) => ({
     error: null,
     hasUnclaimed: false,
     streakInfo: null,
+    streakRules: null,
 
     setStreakInfo: (streakInfo) => {
         set({ streakInfo });
+    },
+
+    fetchStreakRules: async () => {
+        try {
+            const response = await apiClient.get('/api/admin/ui-config/streak_reward_rules');
+            if (response.data?.value?.rules) {
+                set({ streakRules: response.data.value.rules });
+            }
+        } catch (err) {
+            console.error("[MissionStore] Fetch streak rules failed", err);
+        }
     },
 
     fetchMissions: async () => {

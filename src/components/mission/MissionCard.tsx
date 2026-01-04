@@ -98,17 +98,19 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
         const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(appUrl)}&text=${encodeURIComponent("CCJM 주간 미션 참여! 여기로 들어오면 바로 시작돼요")}`;
 
         const tg = window.Telegram?.WebApp;
-        if (tg?.openTelegramLink) {
-          tg.openTelegramLink(shareUrl);
-
-          // Record action immediately (Trust Approach)
-          await recordViralAction({ action_type: "SHARE", mission_id: mission.id });
-          const cacheKey = `mission_verified_${mission.id}`;
-          await setCloudItem(cacheKey, "VERIFIED");
-          useMissionStore.getState().fetchMissions();
-        } else {
-          addToast("텔레그램 앱에서만 가능한 기능입니다.", "error");
+        if (typeof tg?.openTelegramLink === "function") {
+          try { tg.openTelegramLink(shareUrl); } catch { /* ignore */ }
         }
+        if (typeof tg?.openLink === "function") {
+          try { tg.openLink(shareUrl); } catch { /* ignore */ }
+        }
+        window.open(shareUrl, "_blank", "noopener,noreferrer");
+
+        // Record action immediately (Trust Approach)
+        await recordViralAction({ action_type: "SHARE", mission_id: mission.id });
+        const cacheKey = `mission_verified_${mission.id}`;
+        await setCloudItem(cacheKey, "VERIFIED");
+        useMissionStore.getState().fetchMissions();
         return;
       }
       if (mission.action_type === "INVITE_FRIEND") {
@@ -156,17 +158,19 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
         const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(appUrl)}&text=${encodeURIComponent("내 지갑 💎 CCJM에서 함께 확인해봐!")}`;
 
         const tg = window.Telegram?.WebApp;
-        if (tg?.openTelegramLink) {
-          tg.openTelegramLink(shareUrl);
-
-          // Record action immediately (Trust Approach)
-          await recordViralAction({ action_type: "SHARE_WALLET", mission_id: mission.id });
-          const cacheKey = `mission_verified_${mission.id}`;
-          await setCloudItem(cacheKey, "VERIFIED");
-          useMissionStore.getState().fetchMissions();
-        } else {
-          addToast("텔레그램 앱에서만 가능한 기능입니다.", "error");
+        if (typeof tg?.openTelegramLink === "function") {
+          try { tg.openTelegramLink(shareUrl); } catch { /* ignore */ }
         }
+        if (typeof tg?.openLink === "function") {
+          try { tg.openLink(shareUrl); } catch { /* ignore */ }
+        }
+        window.open(shareUrl, "_blank", "noopener,noreferrer");
+
+        // Record action immediately (Trust Approach)
+        await recordViralAction({ action_type: "SHARE_WALLET", mission_id: mission.id });
+        const cacheKey = `mission_verified_${mission.id}`;
+        await setCloudItem(cacheKey, "VERIFIED");
+        useMissionStore.getState().fetchMissions();
         return;
       }
     } catch (error) {

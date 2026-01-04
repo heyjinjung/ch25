@@ -1,108 +1,64 @@
-import React, { useEffect, useState } from "react";
-import { X, Zap, Trophy, Timer } from "lucide-react";
-import clsx from "clsx";
+import React from "react";
+import { Zap, X } from "lucide-react";
+import Button from "../common/Button";
+import { tryHaptic } from "../../utils/haptics";
 
 interface GoldenHourPopupProps {
-    isOpen: boolean;
     onClose: () => void;
     multiplier: number;
-    remainingSeconds: number;
 }
 
-const GoldenHourPopup: React.FC<GoldenHourPopupProps> = ({
-    isOpen,
-    onClose,
-    multiplier,
-    remainingSeconds,
-}) => {
-    const [shouldRender, setShouldRender] = useState(isOpen);
-
-    useEffect(() => {
-        if (isOpen) {
-            setShouldRender(true);
-        }
-    }, [isOpen]);
-
-    if (!shouldRender) return null;
-
+const GoldenHourPopup: React.FC<GoldenHourPopupProps> = ({ onClose, multiplier }) => {
     return (
-        <div
-            className={clsx(
-                "fixed inset-0 z-[100] flex items-center justify-center px-6 transition-all duration-500",
-                isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
-            )}
-            onTransitionEnd={() => !isOpen && setShouldRender(false)}
-        >
-            {/* Backdrop */}
-            <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={onClose} />
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center px-4 bg-black/80 backdrop-blur-md animate-fade-in">
+            <div className="relative w-full max-w-sm rounded-[2.5rem] border border-amber-500/30 bg-[#0A0A0A] p-1 shadow-[0_0_50px_rgba(245,158,11,0.2)] overflow-hidden animate-zoom-in">
 
-            {/* Content Card */}
-            <div className="relative w-full max-w-sm rounded-[2rem] border border-emerald-500/30 bg-slate-900 shadow-2xl shadow-emerald-500/20 overflow-hidden animate-in fade-in zoom-in duration-300">
-                {/* Glow Effect */}
-                <div className="absolute -top-24 -left-24 w-48 h-48 bg-emerald-500/20 blur-[80px] rounded-full" />
-                <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-emerald-500/20 blur-[80px] rounded-full" />
-
-                {/* Close Button */}
-                <button
-                    onClick={onClose}
-                    className="absolute top-4 right-4 p-2 rounded-full bg-white/5 border border-white/10 text-white/40 hover:text-white transition-colors z-10"
-                >
-                    <X size={20} />
-                </button>
-
-                {/* Header Section */}
-                <div className="relative pt-12 pb-8 px-6 flex flex-col items-center text-center">
-                    <div className="mb-6 relative">
-                        <div className="absolute inset-0 bg-emerald-500 blur-2xl opacity-20 animate-pulse" />
-                        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-400 to-cyan-500 flex items-center justify-center p-0.5 shadow-lg shadow-emerald-500/20">
-                            <div className="w-full h-full rounded-[14px] bg-slate-900 flex items-center justify-center">
-                                <Zap className="w-10 h-10 text-emerald-400 animate-bounce" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <h2 className="text-2xl font-black text-white mb-2 tracking-tight">
-                        🌙 골든 아워 시작!
-                    </h2>
-                    <p className="text-emerald-400 font-bold mb-4">
-                        GOLDEN HOUR ACTIVE
-                    </p>
-
-                    <div className="w-full space-y-3">
-                        {/* Multiplier Badge */}
-                        <div className="flex items-center justify-between p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
-                            <div className="flex items-center gap-3">
-                                <div className="p-2 rounded-lg bg-emerald-500/20">
-                                    <Trophy size={18} className="text-emerald-400" />
-                                </div>
-                                <span className="text-sm font-bold text-white/70">금고적립 혜택</span>
-                            </div>
-                            <span className="text-xl font-black text-emerald-400">{multiplier.toFixed(1)}x Boost</span>
-                        </div>
-
-                        {/* Note */}
-                        <p className="text-[11px] text-white/40 leading-relaxed px-2">
-                            * 기본게임 금고적립 조건이 200원인 게임들만 <br />
-                            자동으로 {multiplier.toFixed(1)}배 적립이 적용됩니다.
-                        </p>
-                    </div>
+                {/* Animated Background Rays */}
+                <div className="absolute inset-0 opacity-20 pointer-events-none">
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200%] h-[200%] bg-[conic-gradient(from_0deg,transparent,rgba(245,158,11,0.3),transparent)] animate-spin-slow" />
                 </div>
 
-                {/* Action Section */}
-                <div className="px-6 pb-8 space-y-3">
+                <div className="relative rounded-[2.3rem] bg-gradient-to-b from-amber-500/10 to-transparent p-8 flex flex-col items-center text-center">
+
                     <button
-                        onClick={onClose}
-                        className="w-full h-14 rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-black text-lg shadow-lg shadow-emerald-500/30 active:scale-[0.98] transition-all"
+                        onClick={() => { tryHaptic(10); onClose(); }}
+                        className="absolute top-6 right-6 p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors"
                     >
-                        지금 바로 플레이
+                        <X className="w-5 h-5 text-white/40" />
                     </button>
 
-                    <div className="flex items-center justify-center gap-2 text-white/30">
-                        <Timer size={14} />
-                        <span className="text-xs font-bold uppercase tracking-wider">
-                            {remainingSeconds > 0 ? "종료까지 1시간 미만" : "곧 종료됩니다"}
-                        </span>
+                    {/* Icon Section */}
+                    <div className="relative mb-6">
+                        <div className="absolute inset-0 blur-2xl bg-amber-500/40 animate-pulse" />
+                        <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-amber-600 shadow-lg shadow-amber-500/50">
+                            <Zap className="h-10 w-10 text-white fill-white" />
+                        </div>
                     </div>
+
+                    <h2 className="text-3xl font-black italic tracking-tighter text-white uppercase drop-shadow-lg mb-2">
+                        Golden Hour
+                    </h2>
+                    <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-amber-500/20 border border-amber-500/40 mb-6">
+                        <span className="text-sm font-black text-amber-400 animate-pulse">LIVE NOW</span>
+                    </div>
+
+                    <p className="text-lg font-bold text-white/90 leading-tight mb-8">
+                        지금부터 1시간 동안<br />
+                        <span className="text-amber-400 text-2xl font-black">금고 적립 {multiplier}배</span> 보너스!
+                    </p>
+
+                    <Button
+                        variant="figma-primary"
+                        fullWidth
+                        className="rounded-2xl py-4 bg-gradient-to-r from-amber-400 to-amber-600 border-none shadow-amber-500/30"
+                        onClick={() => { tryHaptic(30); onClose(); }}
+                    >
+                        적립하러 가기
+                    </Button>
+
+                    <p className="mt-4 text-[10px] font-bold text-white/30 uppercase tracking-widest">
+                        Limited Time Only
+                    </p>
                 </div>
             </div>
         </div>

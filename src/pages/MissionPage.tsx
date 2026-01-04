@@ -17,7 +17,7 @@ const TAB_LABELS: Record<MissionTab, string> = {
 };
 
 const MissionPage: React.FC = () => {
-  const { missions, fetchMissions, isLoading } = useMissionStore();
+  const { missions, fetchMissions, isLoading, streakInfo } = useMissionStore();
   const [activeTab, setActiveTab] = useState<MissionTab>("DAILY");
   const { impact } = useHaptic();
 
@@ -78,6 +78,31 @@ const MissionPage: React.FC = () => {
 
   return (
     <div className="mx-auto w-full max-w-lg pb-24">
+      {/* Streak Summary Header */}
+      {streakInfo && (
+        <div className="mb-4 rounded-3xl bg-gradient-to-br from-amber-500/10 to-transparent border border-amber-500/20 p-5 shadow-lg relative overflow-hidden group">
+          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+            <Trophy className="w-16 h-16 text-amber-500" />
+          </div>
+          <div className="relative z-10 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-black text-amber-400 uppercase tracking-widest mb-1">Attendance Streak</p>
+              <h3 className="text-2xl font-black text-white glow-gold">🔥 {streakInfo.streak_days}일 연속</h3>
+            </div>
+            <div className="text-right">
+              <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">다음 목표</p>
+              <p className="text-sm font-bold text-amber-400">Day {streakInfo.streak_days + 1}</p>
+            </div>
+          </div>
+          <div className="mt-4 h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-amber-600 to-amber-400 transition-all duration-1000"
+              style={{ width: `${Math.min(100, (streakInfo.streak_days / 7) * 100)}%` }}
+            />
+          </div>
+        </div>
+      )}
+
       {/* Compact Tabs (Telegram in-app friendly) */}
       <div className="mb-3 flex items-center justify-between gap-2">
         <div className="flex flex-1 items-center gap-1 rounded-2xl border border-white/10 bg-white/10 p-1">

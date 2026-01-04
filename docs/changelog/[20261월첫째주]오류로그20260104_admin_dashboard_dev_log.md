@@ -41,3 +41,40 @@ Use this reference to identify potential conflicts or files to check if errors o
 ## 3. Recovery & Integrity Check
 *   Ensure `app/api/admin/routes/admin_dashboard.py` has **both** `MetricValue`/`get_dashboard_metrics` AND new `get_daily_overview`.
 *   Ensure `src/admin/api/adminDashboardApi.ts` has compatible types for both systems.
+
+---
+
+## 4. Additional Work (Same Session)
+
+This section records additional changes completed in the same work session (beyond the Ops Dashboard scope).
+
+### 4.1 Admin - Streak Rewards (운영툴)
+*   **Modified**: `src/admin/pages/StreakRewardsAdminPage.tsx`
+    *   UI 한글화(헤더/라벨/액션) 적용.
+    *   규칙에 `pinned`(핀 고정) 필드 추가 및 **핀 우선 -> day 오름차순** 정렬 적용.
+    *   저장/복원 payload에 `pinned` 포함(설정 저장소: `app_ui_config`의 `streak_reward_rules`).
+
+### 4.2 User-Facing Guide Copy
+*   **Modified**: `src/pages/GuidePage.tsx`
+    *   "입금(충전) 강요"로 읽히는 카피 제거 및 표현 순화.
+    *   연동/반영은 선택이며 체험 티켓으로도 시작 가능하도록 안내 강화.
+
+### 4.3 Docs (SoT 정합성)
+*   **Modified**: `docs/[20261월첫째주]_핵심문서_인덱스.md`
+    *   72시간 슬롯 운영 플랜 링크 포함 및 최신화 포인트 반영.
+*   **Modified**: `docs/06_ops/events/20260104_streak_mission_event_plan_ko.md`
+    *   스트릭/운영일 리셋 기준을 KST 00:00으로 통일.
+*   **Modified**: `docs/ops/[20261월첫째주] [2026001#]SERVER_ENV_ONBOARDING.md`
+*   **Modified**: `docs/DEPLOYMENT.md`
+    *   `/api/health` 스모크, admin API 무토큰 401 정상, alembic current/heads 정합성 체크 등 운영 체크 강화.
+*   **Modified**: `docs/06_ops/events/20260104_event_plan_evaluation_ko.md`
+*   **Modified**: `docs/changelog/20260104_system_cleanup_and_feature_updates.md`
+
+### 4.4 Runtime Stability (Docker/Nginx/Bot)
+*   **Modified**: `docker-compose.yml`
+    *   `telegram_bot` 재시작 정책을 토큰 미설정 환경에서 과도한 재시작을 피하도록 조정.
+*   **Modified**: `nginx/nginx.conf`
+    *   Docker DNS resolver 및 webhook 프록시 관련 런타임 안정성 개선.
+
+### Known Environment Blockers (not code)
+*   로컬에서 nginx SSL 인증서 파일(`nginx/ssl/fullchain.pem`, `nginx/ssl/privkey.pem`)이 없으면 nginx 기동이 실패할 수 있음.

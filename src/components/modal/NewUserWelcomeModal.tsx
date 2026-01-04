@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { getNewUserStatus } from "../../api/newUserApi";
-import { verifyChannelSubscription } from "../../api/viralApi";
+import { getCloudItem, recordViralAction, setCloudItem, verifyChannelSubscription } from "../../api/viralApi";
 import { useToast } from "../common/ToastProvider";
 import { useHaptic } from "../../hooks/useHaptic";
 
@@ -136,6 +136,39 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) =>
                     pendingJoinRetriesRef.current = 0;
                     addToast("채널 구독 후 앱으로 돌아오면 자동으로 확인합니다.", "info");
                 }
+            } else if (actionType === "SHARE_WALLET") {
+                const cacheKey = `mission_verified_${missionId}`;
+                const cachedStatus = await getCloudItem(cacheKey);
+                if (cachedStatus === "VERIFIED") {
+                    addToast("이미 처리된 공유 미션입니다.", "success");
+                    return;
+                }
+
+                const appUrl = "https://t.me/jm956_bot/ccjm";
+                const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(appUrl)}&text=${encodeURIComponent("내 지갑 💎 CCJM에서 함께 확인해봐!")}`;
+                const tg = window.Telegram?.WebApp;
+
+                if (typeof tg?.openTelegramLink === "function") {
+                    try {
+                        tg.openTelegramLink(shareUrl);
+                    } catch {
+                        // fall through
+                    }
+                }
+                if (typeof tg?.openLink === "function") {
+                    try {
+                        tg.openLink(shareUrl);
+                    } catch {
+                        // fall through
+                    }
+                }
+                window.open(shareUrl, "_blank", "noopener,noreferrer");
+
+                await recordViralAction({ action_type: "SHARE_WALLET", mission_id: missionId });
+                await setCloudItem(cacheKey, "VERIFIED");
+                notification("success");
+                addToast("공유가 기록되었습니다! 보상을 수령하세요.", "success");
+                await queryClient.invalidateQueries({ queryKey: ["new-user-status"] });
             } else if (actionType === "PLAY_GAME") {
                 addToast("게임을 플레이하여 미션을 완료하세요!", "info");
                 handleClose();
@@ -198,7 +231,8 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) =>
     }
 
     const getMissionIcon = (actionType: string | null, targetValue: number) => {
-        if (actionType === "JOIN_CHANNEL") return "/assets/welcome/icon_viral.png";
+        if (actionType === "JOIN_CHANNEL") return "/assets/welcome/mission_icon_viral.webp";
+        if (actionType === "SHARE_WALLET") return "/assets/figma/icon-people.webp";
         if (actionType === "LOGIN") return "/assets/welcome/icon_attendance.png";
         if (actionType === "PLAY_GAME") {
             return targetValue >= 3 ? "/assets/welcome/icon_play3.png" : "/assets/welcome/icon_play1.png";
@@ -209,6 +243,7 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) =>
     const getMissionHint = (actionType: string | null, isCompleted: boolean) => {
         if (isCompleted) return "완료되었습니다";
         if (actionType === "JOIN_CHANNEL") return "클릭하여 채널 구독 확인";
+        if (actionType === "SHARE_WALLET") return "클릭하여 지갑 공유";
         if (actionType === "LOGIN") return "내일 다시 로그인하세요";
         if (actionType === "PLAY_GAME") return "게임을 플레이하세요";
         return "미션을 완료하세요";

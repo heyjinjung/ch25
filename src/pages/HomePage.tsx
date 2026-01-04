@@ -9,6 +9,8 @@ import { useNewUserWelcome } from "../hooks/useNewUserWelcome";
 import NewUserWelcomeModal from "../components/modal/NewUserWelcomeModal";
 import { useMissionStore } from "../stores/missionStore";
 import { useToast } from "../components/common/ToastProvider";
+import AttendanceStreakModal from "../components/modal/AttendanceStreakModal";
+import { tryHaptic } from "../utils/haptics";
 
 // --- Components ---
 
@@ -113,13 +115,31 @@ const CategoryTabs: React.FC<{ active: string; onChange: (id: string) => void }>
 const HomePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState("all");
   const { showModal, closeModal } = useNewUserWelcome();
-  const { missions, fetchMissions } = useMissionStore();
+  const { missions, fetchMissions, streakInfo, streakRules, fetchStreakRules } = useMissionStore();
   const { addToast } = useToast();
   const hasAnnouncedGift = React.useRef(false);
+  const [showStreakModal, setShowStreakModal] = useState(false);
+  const hasCheckedStreak = React.useRef(false);
 
   React.useEffect(() => {
     fetchMissions();
-  }, [fetchMissions]);
+    fetchStreakRules();
+  }, [fetchMissions, fetchStreakRules]);
+
+  // Sequential Modal Logic:
+  // If showModal (Welcome) is false AND we haven't checked streak this session AND we have streakInfo
+  React.useEffect(() => {
+    if (!showModal && !hasCheckedStreak.current && streakInfo) {
+      // Show streak modal if play_streak > 0 (or simply show it anyway for attendance board)
+      // For MVP, we show it once per session after welcome modal is closed.
+      const hasSeenStreakThisSession = sessionStorage.getItem("streak_modal_seen");
+      if (!hasSeenStreakThisSession) {
+        setShowStreakModal(true);
+        sessionStorage.setItem("streak_modal_seen", "true");
+      }
+      hasCheckedStreak.current = true;
+    }
+  }, [showModal, streakInfo]);
 
   React.useEffect(() => {
     if (missions.length > 0 && !hasAnnouncedGift.current) {
@@ -226,7 +246,15 @@ const HomePage: React.FC = () => {
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
 
         {/* Contact Manager Button - Bottom Right Alignment */}
-        <div className="absolute bottom-5 right-5 z-20">
+        <div className="absolute bottom-5 right-5 z-20 flex flex-col items-end gap-2">
+          {streakInfo && streakInfo.streak_days > 0 && (
+            <div
+              onClick={() => { tryHaptic(10); setShowStreakModal(true); }}
+              className="flex items-center gap-2 rounded-full px-4 py-1.5 bg-black/60 border border-amber-500/30 backdrop-blur-md shadow-lg animate-bounce-subtle cursor-pointer transition-transform active:scale-95"
+            >
+              <span className="text-xs font-black text-amber-400">🔥 {streakInfo.streak_days}일 연속</span>
+            </div>
+          )}
           <a
             href="https://t.me/jm956"
             target="_blank"
@@ -279,6 +307,15 @@ const HomePage: React.FC = () => {
 
       {/* New User Welcome Modal */}
       {showModal && <NewUserWelcomeModal onClose={closeModal} />}
+
+      {/* Attendance Streak Modal */}
+      {showStreakModal && streakInfo && streakRules && (
+        <AttendanceStreakModal
+          onClose={() => setShowStreakModal(false)}
+          currentStreak={streakInfo.streak_days}
+          rules={streakRules}
+        />
+      )}
 
     </section>
   );

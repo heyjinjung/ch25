@@ -9,6 +9,8 @@ import InboxButton from "../common/InboxButton";
 import { ChevronDown } from "lucide-react";
 import GoldenHourTimer from "./GoldenHourTimer";
 import GoldenHourPopup from "../events/GoldenHourPopup";
+import AttendanceStreakModal from "../modal/AttendanceStreakModal";
+import { useMissionStore } from "../../stores/missionStore";
 
 const AppHeader: React.FC = () => {
     const { user } = useAuth();
@@ -18,6 +20,8 @@ const AppHeader: React.FC = () => {
     const desktopMenuRef = useRef<HTMLDivElement>(null);
     const mobileMenuRef = useRef<HTMLDivElement>(null);
     const [isGoldenHourModalOpen, setIsGoldenHourModalOpen] = useState(false);
+    const [isForcedStreakModalOpen, setIsForcedStreakModalOpen] = useState(false);
+    const { streakInfo, streakRules, fetchStreakRules } = useMissionStore();
 
     const { data: vault } = useQuery({
         queryKey: ["vault-status"],
@@ -50,6 +54,25 @@ const AppHeader: React.FC = () => {
             }
         }
     }, [isGoldenHourActive]);
+
+    // Admin Forced Modal Logic
+    const showModalOverride = vault?.showModalOverride;
+    useEffect(() => {
+        if (showModalOverride === "STREAK_ATTENDANCE") {
+            const hasSeenForced = sessionStorage.getItem(`forced_modal_${showModalOverride}`);
+            if (!hasSeenForced) {
+                fetchStreakRules();
+                setIsForcedStreakModalOpen(true);
+                sessionStorage.setItem(`forced_modal_${showModalOverride}`, "true");
+            }
+        } else if (showModalOverride === "GOLDEN_HOUR") {
+            const hasSeenForced = sessionStorage.getItem(`forced_modal_${showModalOverride}`);
+            if (!hasSeenForced) {
+                setIsGoldenHourModalOpen(true);
+                sessionStorage.setItem(`forced_modal_${showModalOverride}`, "true");
+            }
+        }
+    }, [showModalOverride, fetchStreakRules]);
 
     const handleSoundToggle = () => {
         playClick();
@@ -265,12 +288,21 @@ const AppHeader: React.FC = () => {
                 </div>
             </div>
             {/* Golden Hour Popup */}
-            <GoldenHourPopup
-                isOpen={isGoldenHourModalOpen}
-                onClose={() => setIsGoldenHourModalOpen(false)}
-                multiplier={ghMultiplier}
-                remainingSeconds={ghRemainingSeconds}
-            />
+            {isGoldenHourModalOpen && (
+                <GoldenHourPopup
+                    onClose={() => setIsGoldenHourModalOpen(false)}
+                    multiplier={ghMultiplier}
+                />
+            )}
+
+            {/* Attendance Streak Modal (Admin Forced) */}
+            {isForcedStreakModalOpen && streakInfo && streakRules && (
+                <AttendanceStreakModal
+                    onClose={() => setIsForcedStreakModalOpen(false)}
+                    currentStreak={streakInfo.streak_days}
+                    rules={streakRules}
+                />
+            )}
         </header>
     );
 };
