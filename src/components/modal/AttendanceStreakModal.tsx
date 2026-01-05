@@ -212,14 +212,19 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
                         </div>
 
                         <Button
-                            variant="figma-primary"
+                            variant={isClaimable ? "figma-primary" : "figma-secondary"}
                             fullWidth
-                            className="rounded-2xl py-3.5 shadow-emerald-500/30 text-base"
+                            className="rounded-2xl py-3.5 text-base"
                             onClick={handleAction}
-                            disabled={isClaiming}
+                            disabled={isClaiming || !isClaimable} // Disable if not claimable (already claimed)
                         >
-                            {isClaiming ? "처리 중..." : (isClaimable ? "🎁 보상 받기" : "확인")}
+                            {isClaiming ? "처리 중..." : (isClaimable ? "🎁 보상 받기" : "수령 완료")}
                         </Button>
+                        {!isClaimable && (
+                            <button onClick={onClose} className="w-full py-2 text-xs font-medium text-white/40 hover:text-white transition-colors">
+                                닫기
+                            </button>
+                        )}
                     </div>
 
                     <p className="mt-4 text-[9px] font-black text-white/20 tracking-[0.2em]">출석 보상 v1.0</p>
