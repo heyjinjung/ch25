@@ -40,6 +40,7 @@ class StreakInfoSchema(BaseModel):
     is_hot: bool
     is_legend: bool
     next_milestone: int
+    claimable_day: Optional[int] = None
 
 
 class MissionListResponse(BaseModel):

@@ -43,8 +43,11 @@ class DiceService:
         if any(v < 1 or v > 6 for v in values):
             raise InvalidConfigError("INVALID_DICE_RESULT")
 
-    def _is_event_active(self, db: Session, user_id: int, today_plays: int) -> bool:
-        """Check if Dice Event is active for the user."""
+    def _is_event_active(self, db: Session, user_id: int, today_plays: int) -> tuple[bool, str | None]:
+        """Check if Dice Event is active for the user.
+        
+        Returns: (is_active, ineligible_reason)
+        """
         from app.services.vault2_service import Vault2Service
         vault2_service = Vault2Service()
 
@@ -54,7 +57,7 @@ class DiceService:
         is_active = bool(dice_event_probs and game_earn_config.get("DICE"))
 
         if not is_active:
-            return False
+            return False, "EVENT_DISABLED"
 
         # 2. Check Config File Active Flag (if strictly required, but 'probability' existence implies active in current logic)
         # Note: Admin UI sets 'is_active' boolean at root of DiceEventParams?
@@ -70,7 +73,7 @@ class DiceService:
             blocklist = set(eligibility.get("tags", {}).get("blocklist", []))
             user_tags = set(profile.tags)
             if not user_tags.isdisjoint(blocklist):
-                return False
+                return False, "BLOCKLISTED"
 
         # 4. Caps (Daily Plays)
         event_caps = vault2_service.get_config_value(db, "caps", {}).get("DICE")
@@ -78,9 +81,32 @@ class DiceService:
             daily_plays_cap = event_caps.get("daily_plays")
             if daily_plays_cap is not None:
                 if today_plays >= int(daily_plays_cap):
-                    return False
+                    return False, "CAP_REACHED"
 
-        return True
+        # 5. Stake Check (Must have locked balance > 0 to participate in "Risk" event)
+        # Using User.vault_locked_balance as Phase 1 SoT
+        from app.models.user import User
+        user_balance = db.execute(select(User.vault_locked_balance).where(User.id == user_id)).scalar_one_or_none() or 0
+        if user_balance <= 0:
+            return False, "NO_STAKE"
+
+        # 6. Deposit Check (High Roller Only: >= 300,000 KRW daily deposit)
+        # This prevents free-users from farming the high-EV event.
+        from app.models.external_ranking import ExternalRankingData
+        
+        # Check Today's Deposit (daily_base_deposit is reset daily in AdminExternalRankingService)
+        # However, to be safe, we should check if 'last_daily_reset' is effectively today, 
+        # or rely on the fact that ops updates this table daily.
+        # Assuming accurate daily ops sync:
+        daily_deposit = db.execute(
+            select(ExternalRankingData.daily_base_deposit)
+            .where(ExternalRankingData.user_id == user_id)
+        ).scalar_one_or_none() or 0
+        
+        if daily_deposit < 300000:
+            return False, "LOW_DEPOSIT"
+
+        return True, None
 
     def get_status(self, db: Session, user_id: int, today: date) -> DiceStatusResponse:
         self.feature_service.validate_feature_active(db, today, FeatureType.DICE)
@@ -97,7 +123,25 @@ class DiceService:
         ).scalar_one()
 
         # Check Event Status
-        event_active = self._is_event_active(db, user_id, today_plays)
+        event_active, event_ineligible_reason = self._is_event_active(db, user_id, today_plays)
+        
+        event_plays_done = None
+        event_plays_max = None
+        
+        if event_active:
+             from app.services.vault2_service import Vault2Service
+             v2 = Vault2Service()
+             
+             # Get Cap
+             event_caps = v2.get_config_value(db, "caps", {}).get("DICE", {})
+             event_plays_max = int(event_caps.get("daily_plays", 30))
+             
+             # Get Progress
+             program = v2.get_default_program(db)
+             if program:
+                 v_status = v2.get_or_create_status(db, user_id=user_id, program=program)
+                 payload = v_status.progress_json or {}
+                 event_plays_done = int(payload.get("plays_done", 0))
 
         # Daily cap removed: use 0 to denote unlimited.
         unlimited = 0
@@ -113,6 +157,9 @@ class DiceService:
             token_balance=token_balance,
             feature_type=FeatureType.DICE,
             event_active=event_active,
+            event_plays_done=event_plays_done,
+            event_plays_max=event_plays_max,
+            event_ineligible_reason=event_ineligible_reason,
         )
 
     def play(self, db: Session, user_id: int, now: date | datetime) -> DicePlayResponse:
@@ -130,7 +177,7 @@ class DiceService:
         ).scalar_one()
 
         # --- Event Mode Checking ---
-        is_event_active = self._is_event_active(db, user_id, today_plays)
+        is_event_active, _ = self._is_event_active(db, user_id, today_plays)
 
         print(f"DEBUG: is_event_active post-cap={is_event_active}")
 
@@ -139,6 +186,8 @@ class DiceService:
         reward_type = config.lose_reward_type
         reward_amount = config.lose_reward_amount
         mode = "NORMAL"
+        event_seeded = False
+        event_seed_amount = 0
 
         if is_event_active:
             mode = "EVENT"
@@ -167,10 +216,6 @@ class DiceService:
                  event_rewards = game_earn_config.get("DICE", {})
                  event_reward_amount = event_rewards.get(outcome)
                  if event_reward_amount is not None:
-                     # For dice service response, we still report what the DiceConfig says for "visual" consistency?
-                     # OR do we override the returned reward amount too?
-                     # The Build Spec says: "VaultService... uses payout_raw.reward_amount... DiceService reports result+reward_amount"
-                     # So we should probably override the reward_amount here for the API response too.
                      reward_amount = int(event_reward_amount)
                      reward_type = "NONE" # Usually event mode rewards are Vault accruals only
 
@@ -197,8 +242,6 @@ class DiceService:
         else:
              # Event Mode: Generate Dice to match Outcome
              if outcome == "WIN":
-                 # Generate until User > Dealer
-                 # Optimization: Generate Dealer first (low), then User (high)
                  while True:
                      d1, d2 = random.randint(1, 6), random.randint(1, 6)
                      u1, u2 = random.randint(1, 6), random.randint(1, 6)
@@ -237,6 +280,45 @@ class DiceService:
             label=f"{config.name} - {outcome}",
             meta={"result": outcome, "mode": mode},
         )
+
+        # [Event Mode] Update Progress (plays_done)
+        if mode == "EVENT" and not consumed_trial:
+            from app.services.vault2_service import Vault2Service
+            v2 = Vault2Service()
+            program = v2.get_default_program(db)
+            status = v2.get_or_create_status(db, user_id=user_id, program=program)
+            
+            payload = dict(status.progress_json or {})
+            current = int(payload.get("plays_done", 0)) + 1
+            payload["plays_done"] = current
+            
+            # Ensure plays_required default exists
+            if "plays_required" not in payload:
+                payload["plays_required"] = 30
+                
+            status.progress_json = payload
+            db.add(status)
+            
+            # [Event Mode] Seed 20,000 Points on First Play
+            # Logic: If current (plays_done) became 1, it implies this is the first play.
+            # Also double check via 'seeded' flag to be safe.
+            if current == 1 and not payload.get("seeded_20k"):
+                self.vault_service.record_game_play_earn_event(
+                    db,
+                    user_id=user_id,
+                    game_type="DICE_EVENT_SEED",
+                    game_log_id=0, # System grant
+                    token_type="POINT",
+                    outcome="SEED",
+                    payout_raw={"amount": 20000, "reason": "DICE_EVENT_FIRST_PLAY"}
+                )
+                payload["seeded_20k"] = True
+                status.progress_json = payload # Update again
+                db.add(status)
+                event_seeded = True
+                event_seed_amount = 20000
+            
+            # Flush handled by upcoming commit
 
         log_entry = DiceLog(
             user_id=user_id,
@@ -336,4 +418,6 @@ class DiceService:
             season_pass=season_pass,
             vault_earn=total_earn,
             streak_info=streak_info,
+            event_seeded=event_seeded,
+            event_seed_amount=event_seed_amount,
         )

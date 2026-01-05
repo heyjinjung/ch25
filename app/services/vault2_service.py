@@ -36,10 +36,20 @@ DEFAULT_CONFIG = {
     "eligibility_block": [],
     # 이벤트 보너스 규칙 (예: 충전 기반 보너스) 확장용
     "charge_bonus_rules": [],
+    # [EVENT] 확률 설정 (Dice Event)
+    "probability": {
+        "DICE": {"p_win": 0.35, "p_draw": 0.10, "p_lose": 0.55}
+    },
+    # [EVENT] 상한 설정 (Dice Event)
+    "caps": {
+        "DICE": {"daily_gain": 20000, "daily_plays": 30}
+    },
     # 게임별/결과별 적립 설정
     "game_earn_config": {
         "DICE": {
-            "LOSE": -50
+            "WIN": 1400,
+            "DRAW": -800,
+            "LOSE": -1100
         },
         "ROULETTE": {
             "BASE": 200,

@@ -266,7 +266,13 @@ class RouletteService:
         )
 
         settings = get_settings()
-        if consumed_trial and bool(getattr(settings, "enable_trial_payout_to_vault", False)):
+        trial_payout_enabled = bool(getattr(settings, "enable_trial_payout_to_vault", False))
+        reward_type_upper = str(getattr(chosen, "reward_type", "") or "").upper()
+
+        # Trial payout-to-vault is an optional/legacy path. Even when enabled, we must not
+        # suppress inventory-type rewards (e.g., TRIAL roulette DIAMOND). Only route
+        # non-inventory rewards into Vault.
+        if consumed_trial and trial_payout_enabled and reward_type_upper not in {"DIAMOND"}:
             total_earn += self.vault_service.record_trial_result_earn_event(
                 db,
                 user_id=user_id,
@@ -276,7 +282,7 @@ class RouletteService:
                 reward_type=chosen.reward_type,
                 reward_amount=chosen.reward_amount,
                 payout_raw={"segment_id": chosen.id},
-                force_enable=False, # Respect global setting for trial payouts
+                force_enable=False,  # Respect global setting for trial payouts
             )
 
 
@@ -332,7 +338,8 @@ class RouletteService:
 
         # Deliver reward according to segment definition (unless trial routing is enabled).
         # Deliver reward according to segment definition (unless trial routing is enabled).
-        if not (consumed_trial and bool(getattr(settings, "enable_trial_payout_to_vault", False))):
+        skip_direct_delivery = consumed_trial and trial_payout_enabled and reward_type_upper not in {"DIAMOND"}
+        if not skip_direct_delivery:
             # [KEY REWARD REDIRECTION FIX]
             # If the user used a GOLD_KEY or DIAMOND_KEY, and won POINTs, retrieve them as Vault Cash, NOT XP.
             if token_type_enum in (GameTokenType.GOLD_KEY, GameTokenType.DIAMOND_KEY) and chosen.reward_type == "POINT":

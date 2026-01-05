@@ -17,6 +17,9 @@ class DiceStatusResponse(BaseModel):
     token_balance: int
     feature_type: FeatureType
     event_active: bool = False
+    event_plays_done: Optional[int] = None
+    event_plays_max: Optional[int] = None
+    event_ineligible_reason: Optional[str] = None  # "NO_STAKE", "LOW_DEPOSIT", "CAP_REACHED", etc.
 
 
 class DiceResult(BaseModel):
@@ -35,3 +38,6 @@ class DicePlayResponse(BaseModel):
     season_pass: dict | None = None
     vault_earn: int = 0
     streak_info: Optional[StreakInfoSchema] = None
+    event_seeded: bool = False  # True if 20k seed was granted on this play
+    event_seed_amount: int = 0
+

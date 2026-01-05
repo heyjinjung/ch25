@@ -126,11 +126,22 @@ def _restore_streak_rules(db, original_value_json: dict[str, Any] | None) -> Non
 
 def main() -> int:
     parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--user-id",
+        type=int,
+        default=None,
+        help="Use an existing user id (no create/delete). Default: create a temporary user.",
+    )
     parser.add_argument("--day", type=int, default=1, help="Target streak day to become claimable and claim")
     parser.add_argument(
         "--no-set-rule",
         action="store_true",
         help="Do not override streak_reward_rules; use existing config as-is",
+    )
+    parser.add_argument(
+        "--set-rule",
+        action="store_true",
+        help="Force override streak_reward_rules temporarily (use with --user-id only if you really want to).",
     )
     parser.add_argument("--keep", action="store_true", help="Keep created user and config changes")
 
@@ -143,37 +154,51 @@ def main() -> int:
 
     db = SessionLocal()
     user: User | None = None
+    created_user = False
     original_rules: dict[str, Any] | None = None
 
     try:
-        # 1) Create test user
-        external_id = f"debug_streak_{uuid4().hex[:10]}"
-        user = User(external_id=external_id, nickname="debug_streak")
-        db.add(user)
-        db.commit()
-        db.refresh(user)
-
-        print(f"[USER] created id={user.id} external_id={user.external_id}")
+        # 1) Select user
+        if args.user_id is not None:
+            user = db.query(User).filter(User.id == int(args.user_id)).one_or_none()
+            if user is None:
+                raise SystemExit(f"USER_NOT_FOUND: {args.user_id}")
+            print(f"[USER] using existing id={user.id} external_id={user.external_id}")
+        else:
+            external_id = f"debug_streak_{uuid4().hex[:10]}"
+            user = User(external_id=external_id, nickname="debug_streak")
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+            created_user = True
+            print(f"[USER] created id={user.id} external_id={user.external_id}")
 
         # 2) Optionally set deterministic streak rules
         grants = _default_grants_for_day(target_day)
-        if not args.no_set_rule:
+        # Safety: when using an existing user, do NOT override rules unless explicitly requested.
+        should_override_rules = (not args.no_set_rule) and (args.user_id is None or bool(args.set_rule))
+        if should_override_rules:
             original_rules = _set_temp_streak_rules(db, day=target_day, grants=grants)
             print(f"[UI_CONFIG] set temporary streak_reward_rules for day={target_day}")
         else:
             print("[UI_CONFIG] using existing streak_reward_rules (no override)")
 
-        # 3) Build consecutive streak days, ending today
-        base_now = datetime.now(tz).replace(hour=12, minute=0, second=0, microsecond=0)
-        start_now = base_now - timedelta(days=(target_day - 1))
-
         svc = MissionService(db)
-        for i in range(target_day):
-            now_tz = start_now + timedelta(days=i)
-            svc.sync_play_streak(user_id=int(user.id), now_tz=now_tz)
-            db.flush()
 
-        db.commit()
+        # 3) Build consecutive streak days only for the temp user.
+        # For existing users, we avoid mutating streak state in this script.
+        if created_user:
+            base_now = datetime.now(tz).replace(hour=12, minute=0, second=0, microsecond=0)
+            start_now = base_now - timedelta(days=(target_day - 1))
+
+            for i in range(target_day):
+                now_tz = start_now + timedelta(days=i)
+                svc.sync_play_streak(user_id=int(user.id), now_tz=now_tz)
+                db.flush()
+
+            db.commit()
+        else:
+            print("[STREAK] existing user mode: no simulated streak updates")
 
         # 4) Verify claimable
         streak_info = svc.get_streak_info(user_id=int(user.id))
@@ -194,7 +219,7 @@ def main() -> int:
         return 0
 
     finally:
-        if args.keep:
+        if args.keep and created_user:
             print("\n[KEEP] --keep specified; skipping cleanup")
             try:
                 db.close()
@@ -204,7 +229,7 @@ def main() -> int:
 
         # Best-effort restore config
         try:
-            if not args.no_set_rule:
+            if should_override_rules:
                 _restore_streak_rules(db, original_rules)
                 print("\n[CLEANUP] restored streak_reward_rules")
         except Exception as e:
@@ -212,7 +237,7 @@ def main() -> int:
 
         # Delete created user
         try:
-            if user is not None:
+            if created_user and user is not None:
                 user_id = int(user.id)
                 db.query(User).filter(User.id == user_id).delete()
                 db.commit()

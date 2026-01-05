@@ -43,6 +43,7 @@
 | 게임 | 입력 outcome | DB 컨피그 키(우선) | fallback 판정 | 최종 금고 반영 |
 | --- | --- | --- | --- | --- |
 | **DICE** | `WIN`/`DRAW`/`LOSE` | `game_earn_config.DICE.WIN|DRAW|LOSE` | WIN=+200, LOSE=-50, DRAW=0 | `vault_locked_balance += amount` |
+| **DICE (Event)** | `WIN`/`DRAW`/`LOSE` | `game_earn_config.DICE` (Event Settings) | WIN=+1400, DRAW=-800, LOSE=-1100 | **Stake Check**: `vault_locked_balance > 0` required. Updates `progress_json`. |
 | **ROULETTE** | `SEGMENT_{RouletteSegment.id}` | `game_earn_config.ROULETTE.SEGMENT_{id}` | `payout_raw.reward_amount == 0`이면 -50, 아니면 +200 | `vault_locked_balance += amount` |
 
 - **주의(룰렛 SEGMENT 키)**: outcome은 `slot_index`가 아니라 `RouletteSegment.id`(DB PK) 기반으로 만들어짐

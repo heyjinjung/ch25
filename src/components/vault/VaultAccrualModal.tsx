@@ -5,13 +5,14 @@ type Props = {
     open: boolean;
     onClose: () => void;
     amount: number;
+    title?: string;
 };
 
 /**
  * Compact, auto-dismissing vault accrual toast notification.
  * Designed to be less intrusive for Korean users (20-60 male demographic).
  */
-const VaultAccrualModal: React.FC<Props> = ({ open, onClose, amount }) => {
+const VaultAccrualModal: React.FC<Props> = ({ open, onClose, amount, title }) => {
 
     const isDebit = amount < 0;
     const displayAmount = Math.abs(amount);
@@ -34,7 +35,7 @@ const VaultAccrualModal: React.FC<Props> = ({ open, onClose, amount }) => {
             >
                 <img src="/assets/asset_coin_gold.png" alt="Coin" className="w-10 h-10 drop-shadow-[0_0_8px_rgba(255,215,0,0.5)]" />
                 <div className="flex flex-col">
-                    <span className="text-[9px] font-black uppercase tracking-[0.2em] text-figma-accent">{isDebit ? "금고 차감" : "금고 적립"}</span>
+                    <span className="text-[9px] font-black uppercase tracking-[0.2em] text-figma-accent">{title || (isDebit ? "금고 차감" : "금고 적립")}</span>
                     <span className="text-lg font-black text-white">
                         {isDebit ? "-" : "+"}<AnimatedNumber value={displayAmount} /> <span className="text-white/40 text-sm">원</span>
                     </span>

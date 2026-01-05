@@ -16,6 +16,9 @@ interface BackendDiceStatusResponse {
   readonly token_balance: number;
   readonly feature_type: string;
   readonly event_active?: boolean;
+  readonly event_plays_done?: number;
+  readonly event_plays_max?: number;
+  readonly event_ineligible_reason?: string;
 }
 
 export interface DiceStatusResponse {
@@ -24,6 +27,9 @@ export interface DiceStatusResponse {
   readonly token_type: GameTokenType;
   readonly token_balance: number;
   readonly event_active?: boolean;
+  readonly event_plays_done?: number;
+  readonly event_plays_max?: number;
+  readonly event_ineligible_reason?: string;
 }
 
 interface BackendDicePlayResponse {
@@ -40,6 +46,8 @@ interface BackendDicePlayResponse {
   readonly season_pass?: Record<string, unknown> | null;
   readonly vault_earn?: number;
   readonly streak_info?: StreakInfo | null;
+  readonly event_seeded?: boolean;
+  readonly event_seed_amount?: number;
 }
 
 export interface DicePlayResponse {
@@ -52,6 +60,8 @@ export interface DicePlayResponse {
   readonly message?: string;
   readonly vaultEarn?: number;
   readonly streakInfo?: StreakInfo | null;
+  readonly eventSeeded?: boolean;
+  readonly eventSeedAmount?: number;
 }
 
 export const getDiceStatus = async (): Promise<DiceStatusResponse> => {
@@ -64,6 +74,9 @@ export const getDiceStatus = async (): Promise<DiceStatusResponse> => {
       token_type: data.token_type,
       token_balance: data.token_balance,
       event_active: data.event_active,
+      event_plays_done: data.event_plays_done,
+      event_plays_max: data.event_plays_max,
+      event_ineligible_reason: data.event_ineligible_reason,
     };
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -91,6 +104,8 @@ export const playDice = async (): Promise<DicePlayResponse> => {
       message: data.result !== "OK" ? data.result : undefined,
       vaultEarn: data.vault_earn,
       streakInfo: data.streak_info ?? null,
+      eventSeeded: data.event_seeded,
+      eventSeedAmount: data.event_seed_amount,
     };
   } catch (error) {
     if (axios.isAxiosError(error)) {

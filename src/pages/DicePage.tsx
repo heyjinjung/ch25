@@ -23,7 +23,7 @@ const DicePage: React.FC = () => {
   const [dealerDice, setDealerDice] = useState<number[]>([]);
   const [infoMessage, setInfoMessage] = useState<string | null>(null);
   const [rewardToast, setRewardToast] = useState<{ value: number; type: string } | null>(null);
-  const [vaultModal, setVaultModal] = useState<{ open: boolean; amount: number }>({ open: false, amount: 0 });
+  const [vaultModal, setVaultModal] = useState<{ open: boolean; amount: number; title?: string }>({ open: false, amount: 0 });
   const [isRolling, setIsRolling] = useState(false);
 
   const mapErrorMessage = (err: unknown) => {
@@ -69,7 +69,15 @@ const DicePage: React.FC = () => {
           setTimeout(() => setRewardToast(null), 3000);
         }
 
-        if ((response.vaultEarn ?? 0) !== 0) {
+        if (response.eventSeeded && response.eventSeedAmount) {
+          setVaultModal({ open: true, amount: response.eventSeedAmount, title: "이벤트 첫 참여 시드 보너스" });
+          // If we also earned from the play, show it after the seed (simple queue)
+          if ((response.vaultEarn ?? 0) !== 0) {
+            setTimeout(() => {
+              setVaultModal({ open: true, amount: response.vaultEarn!, title: "이벤트 게임 적립" });
+            }, 3000);
+          }
+        } else if ((response.vaultEarn ?? 0) !== 0) {
           setVaultModal({ open: true, amount: response.vaultEarn! });
         }
 
@@ -114,7 +122,12 @@ const DicePage: React.FC = () => {
         {/* Compressed Layout Group */}
         <div className="flex flex-col gap-2">
           {/* Event Banner */}
-          <DiceEventBanner active={!!data?.event_active} />
+          <DiceEventBanner
+            active={!!data?.event_active}
+            progress={data?.event_plays_done}
+            max={data?.event_plays_max}
+            ineligibleReason={data?.event_ineligible_reason}
+          />
 
           {/* Top Ticket Info - Made smaller and integrated */}
           <div className="flex justify-center -mb-4 z-10">
@@ -218,6 +231,7 @@ const DicePage: React.FC = () => {
       <VaultAccrualModal
         open={vaultModal.open}
         amount={vaultModal.amount}
+        title={vaultModal.title}
         onClose={() => setVaultModal(p => ({ ...p, open: false }))}
       />
     </FeatureGate>

@@ -13,14 +13,25 @@ from app.models.user import User
 from app.models.mission import Mission
 from app.models.game_wallet import UserGameWallet
 from app.services.admin_user_service import AdminUserService
+from app.schemas.admin_user import AdminUserCreate
 from app.services.mission_service import MissionService
 from app.services.season_pass_service import SeasonPassService
-from app.services.user_service import UserService
 
 def run_verification():
     print("=== POST-DEPLOYMENT VERIFICATION START ===")
     
     settings = get_settings()
+    # Patch for local verification if running outside container
+    if "@db:" in settings.database_url:
+        print("[SETUP] Patching DB URL for local host execution (db -> localhost:3307)")
+        settings.database_url = settings.database_url.replace("@db:", "@localhost:3307/").replace(":3306", "")
+        # Handle double port issue if 3306 was in url
+        # If original was ...@db:3306/xmas... -> ...@localhost:3307/xmas...
+        # If original was ...@db/xmas... -> ...@localhost:3307//xmas... (slight risk)
+        # Let's use a regex or simpler replace
+        import re
+        settings.database_url = re.sub(r'@db(:3306)?', '@localhost:3307', settings.database_url)
+        
     db = sessionmaker(bind=create_engine(settings.database_url))()
     
     # 1. PURGE TEST (Clean up previous verifications)
@@ -37,10 +48,10 @@ def run_verification():
 
     # 2. CREATE NEW USER
     print("[USER] Creating new user for verification...")
-    user_service = UserService()
     # Mock ext_id
     ext_id = f"test_verify_{int(datetime.datetime.now().timestamp())}"
-    user = user_service.create_user(db, external_id=ext_id, nickname=purge_target_nick)
+    payload = AdminUserCreate(external_id=ext_id, nickname=purge_target_nick)
+    user = AdminUserService.create_user(db, payload=payload)
     print(f"[USER] Created User ID: {user.id}")
 
     # 3. VERIFY LEVEL 1 TICKET GRANT (Duplication Check)
@@ -70,12 +81,12 @@ def run_verification():
 
     # 4. VERIFY MISSIONS
     print("[MISSION] Checking Mission List...")
-    mission_service = MissionService()
-    missions = mission_service.get_missions(db, user_id=user.id)
+    mission_service = MissionService(db)
+    missions = mission_service.get_user_missions(user_id=user.id)
     
     # Categorize
-    new_user = [m for m in missions if m["category"] == "NEW_USER"]
-    daily = [m for m in missions if m["category"] == "DAILY"]
+    new_user = [m for m in missions if m["mission"]["category"] == "NEW_USER"]
+    daily = [m for m in missions if m["mission"]["category"] == "DAILY"]
     
     print(f"[MISSION] New User Missions: {len(new_user)} (Expect 4)")
     print(f"[MISSION] Daily Missions: {len(daily)}")
