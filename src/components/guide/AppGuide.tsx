@@ -334,7 +334,6 @@ const AppGuide: React.FC = () => {
       continuous
       showSkipButton
       showProgress
-      shouldScrollToFirstStep={false}
       scrollToFirstStep={false}
       disableScrollParentFix
       disableOverlayClose
