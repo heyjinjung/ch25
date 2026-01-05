@@ -43,7 +43,7 @@ const EventDashboardPage: React.FC = () => {
           >
             {/* Background Image */}
             <img
-              src="/assets/welcome/levelup_v2.png"
+              src="/assets/welcome/levelup_v3.png"
               className={cardImageClass}
               alt="Level Tower"
             />
@@ -72,7 +72,7 @@ const EventDashboardPage: React.FC = () => {
           >
             {/* Background Image */}
             <img
-              src="/assets/welcome/mission_v2.png"
+              src="/assets/welcome/mission_v3.png"
               className={cardImageClass}
               alt="Daily Missions"
             />

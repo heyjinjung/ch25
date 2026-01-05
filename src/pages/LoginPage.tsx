@@ -15,6 +15,10 @@ const LoginPage: React.FC = () => {
   const [externalId, setExternalId] = useState<string>("");
   const [password, setPassword] = useState<string>("");
 
+  const allowLegacyLogin = import.meta.env.DEV;
+  const tg = (window as any).Telegram?.WebApp;
+  const isTelegramWebView = Boolean(tg && tg.initData);
+
   const resolvePostLoginPath = (): string => {
     const state = location.state as { from?: { pathname?: string; search?: string; hash?: string } } | null;
     const from = state?.from;
@@ -51,6 +55,76 @@ const LoginPage: React.FC = () => {
       navigate(resolvePostLoginPath(), { replace: true });
     }
   }, [token, navigate, location.state]);
+
+  // Production UX: avoid showing legacy VIP login form to users.
+  // If auth failed / initData is missing, guide them back to Telegram entry.
+  if (!allowLegacyLogin) {
+    return (
+      <div className="relative flex flex-col items-center justify-center min-h-[100dvh] bg-[#050505] overflow-hidden text-center p-6 selection:bg-[#30FF75] selection:text-black">
+        <div className="absolute top-0 left-0 w-full h-full opacity-40 pointer-events-none">
+          <div className="absolute top-[20%] left-[20%] w-[500px] h-[500px] bg-[#30FF75]/10 rounded-full blur-[120px]" />
+          <div className="absolute bottom-[20%] right-[20%] w-[400px] h-[400px] bg-purple-500/10 rounded-full blur-[100px]" />
+        </div>
+
+        <div className="relative z-10 w-full max-w-sm mx-auto">
+          <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#30FF75]/50 to-transparent opacity-50" />
+
+            <div className="space-y-6">
+              <div className="flex justify-center">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-[#30FF75] blur-2xl opacity-20 rounded-full" />
+                  <img
+                    src="/assets/logo_cc_v2.png"
+                    alt="Logo"
+                    className="w-20 h-auto relative z-10 drop-shadow-[0_0_15px_rgba(48,255,117,0.4)]"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <h1 className="text-2xl font-black tracking-tight text-white">
+                  텔레그램 인증이 필요해요
+                </h1>
+                <p className="text-sm font-medium text-white/65 leading-relaxed">
+                  {isTelegramWebView
+                    ? "텔레그램 세션 확인에 실패했어요. 잠시 후 다시 시도하거나, 봇에서 다시 열어주세요."
+                    : "현재 화면은 텔레그램 앱에서 열어야 이용할 수 있어요. 아래 버튼으로 다시 접속해주세요."}
+                </p>
+                <p className="text-xs text-white/45">
+                  접속 경로: <span className="text-[#30FF75] font-bold">@jm956_bot</span>
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <a
+                  href="https://t.me/jm956_bot/ccjm"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center justify-center gap-3 w-full py-4 rounded-xl bg-figma-primary text-white font-black shadow-[0_6px_18px_rgba(0,0,0,0.35)] hover:brightness-110 active:scale-[0.98] transition"
+                >
+                  <img src="/assets/icon_telegram_button.png" alt="" className="w-8 h-8 object-contain" />
+                  텔레그램으로 열기
+                </a>
+
+                <button
+                  type="button"
+                  onClick={() => window.location.reload()}
+                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-4 text-sm font-black text-white/80 hover:bg-white/10"
+                >
+                  다시 시도
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6 text-center text-xs text-white/20">
+            문제가 계속되면 텔레그램에서 다시 접속해주세요.
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative mx-auto mt-24 w-full max-w-md overflow-hidden rounded-3xl border border-amber-500/30 bg-black/80 p-10 shadow-2xl backdrop-blur-xl">
