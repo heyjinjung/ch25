@@ -109,35 +109,44 @@ class AdminDiceService:
         vault_service = Vault2Service()
         program = vault_service.get_default_program(db, ensure=True)
         
-        # Read-Modify-Write
-        # Note: We use Vault2Service logic which handles default config merging
-        cfg = DEFAULT_CONFIG.copy()
-        if isinstance(program.config_json, dict):
-            cfg.update(program.config_json)
+        # 1. Start with the effective config (DB + defaults)
+        existing_cfg = program.config_json if isinstance(program.config_json, dict) else {}
+        cfg = vault_service._build_effective_config(existing_cfg)
         
-        # Update Keys
-        if "game_earn_config" not in cfg: cfg["game_earn_config"] = {}
-        if "probability" not in cfg: cfg["probability"] = {}
-        if "caps" not in cfg: cfg["caps"] = {}
+        # 2. Extract updates from params
+        updates = {}
         
         if params.is_active:
-             # Add or update DICE configs
-             if params.game_earn_config and "DICE" in params.game_earn_config:
-                 cfg["game_earn_config"]["DICE"] = params.game_earn_config["DICE"]
-             if params.probability and "DICE" in params.probability:
-                 cfg["probability"]["DICE"] = params.probability["DICE"]
+            # Add or update DICE configs
+            if params.game_earn_config and "DICE" in params.game_earn_config:
+                if "game_earn_config" not in updates: updates["game_earn_config"] = {}
+                updates["game_earn_config"]["DICE"] = params.game_earn_config["DICE"]
+            
+            if params.probability and "DICE" in params.probability:
+                if "probability" not in updates: updates["probability"] = {}
+                updates["probability"]["DICE"] = params.probability["DICE"]
+            
+            if params.caps and "DICE" in params.caps:
+                if "caps" not in updates: updates["caps"] = {}
+                updates["caps"]["DICE"] = params.caps["DICE"]
         else:
-             # Deactivate by removing DICE configs
-             cfg["game_earn_config"].pop("DICE", None)
-             cfg["probability"].pop("DICE", None)
-
-        if params.caps and "DICE" in params.caps:
-            cfg["caps"]["DICE"] = params.caps["DICE"]
+            # Deactivate: We could just stop here, but for now we follow old logic of removing from DB
+            # BUT we should only remove them if we are SURE we want to.
+            # Actually, to prevent the "always fixed" issue, let's KEEP them but maybe use a separate flag?
+            # For now, let's stick to the current DiceService logic but use a more careful removal.
+            if "game_earn_config" in cfg and "DICE" in cfg["game_earn_config"]:
+                del cfg["game_earn_config"]["DICE"]
+            if "probability" in cfg and "DICE" in cfg["probability"]:
+                del cfg["probability"]["DICE"]
         
         if params.eligibility is not None:
-            cfg["eligibility"] = params.eligibility
+            updates["eligibility"] = params.eligibility
+            
+        # 3. Deep Merge updates into cfg
+        if updates:
+            cfg = vault_service._deep_merge_dict(cfg, updates)
         
-        # Save
+        # 4. Save
         program.config_json = cfg
         
         from app.models.admin_audit_log import AdminAuditLog
