@@ -70,7 +70,7 @@ const ShopPage: React.FC = () => {
             {/* Header */}
             <div className="mb-5 flex items-center gap-3" data-tour="shop-link">
                 <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 flex items-center justify-center">
-                    <ShoppingBag className="w-5 h-5 text-emerald-400/80" />
+                    <img src="/assets/icons/icon_cart.svg" alt="" className="w-5 h-5 object-contain" />
                 </div>
                 <div>
                     <h1 className="text-xl font-black text-white">상점</h1>

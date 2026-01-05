@@ -116,6 +116,9 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
                     </button>
 
                     <header className="text-center mb-5 mt-2 w-full">
+                        <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-2xl bg-white/5 border border-white/10">
+                            <img src="/assets/icons/icon_fire.svg" alt="" className="h-5 w-5 object-contain" />
+                        </div>
                         <h2 className="text-2xl font-black text-white glow-green mb-3 tracking-tight">
                             {isZeroStreak ? "🎮 게임 시작 후 보상 시작!" : (isClaimable ? "🎁 보상 수령 대기" : "연속 플레이 기록")}
                         </h2>

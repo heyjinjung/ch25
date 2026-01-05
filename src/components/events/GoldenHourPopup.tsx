@@ -35,7 +35,8 @@ const GoldenHourPopup: React.FC<GoldenHourPopupProps> = ({ onClose, multiplier }
                         </div>
                     </div>
 
-                    <h2 className="text-2xl font-black italic tracking-tighter text-white uppercase drop-shadow-lg mb-1">
+                    <h2 className="text-2xl font-black italic tracking-tighter text-white uppercase drop-shadow-lg mb-1 inline-flex items-center justify-center gap-2">
+                        <img src="/assets/icons/icon_clock.svg" alt="" className="h-5 w-5 object-contain" />
                         Golden Hour
                     </h2>
                     <div className="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 mb-5">

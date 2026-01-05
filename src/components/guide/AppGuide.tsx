@@ -101,7 +101,7 @@ const guideSteps: Step[] = [
     target: '[data-tour="inventory-shop-btn"]',
     content: (
       <div className="text-left">
-        <div className="text-xl font-black mb-2">🛒 교환권 구매하러 가기</div>
+        <div className="text-xl font-black mb-2">🛒 상점 가기</div>
         <div className="text-base leading-relaxed">
           <strong>여기를 눌러 상점으로 이동</strong>하세요.<br /><br />
           <span className="text-emerald-400 font-bold">다이아 → 상점에서 교환권 구매 → 인벤토리에서 사용 → 티켓!</span>
