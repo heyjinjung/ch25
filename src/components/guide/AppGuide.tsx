@@ -288,15 +288,18 @@ const AppGuide: React.FC = () => {
   }, [stepIndex, isGuideRunning, navigate, location.pathname]);
 
   // 금고 → 인벤토리 버튼 스텝에서 CTA가 바로 보이도록 스크롤 보정 (텔레그램 인앱 대응)
+  // 스텝 4~6 인벤토리 페이지 타겟도 동일하게 대기
   useEffect(() => {
     if (!isGuideRunning) return;
-    if (stepIndex === 3) {
-      const selector = guideSteps[3]?.target;
+
+    // 스텝 3: 금고 인벤토리 버튼 / 스텝 4~6: 인벤토리 페이지 요소들
+    if (stepIndex >= 3 && stepIndex <= 6) {
+      const selector = guideSteps[stepIndex]?.target;
       if (typeof selector !== "string") return;
 
       let cancelled = false;
       (async () => {
-        // 실제 버튼이 렌더될 때까지 최대 2초 대기
+        // 실제 타겟이 렌더될 때까지 최대 2초 대기
         const el = await waitForVisibleTarget(selector, 2000, 100);
         if (cancelled) return;
         if (el) {
