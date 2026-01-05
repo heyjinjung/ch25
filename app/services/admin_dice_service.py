@@ -75,11 +75,11 @@ class AdminDiceService:
 
     @staticmethod
     def get_event_params(db: Session):
-        from app.services.vault2_service import Vault2Service
+        from app.services.vault2_service import Vault2Service, DEFAULT_CONFIG
         vault_service = Vault2Service()
         
-        game_earn_config = vault_service.get_config_value(db, "game_earn_config", {})
-        dice_rewards = game_earn_config.get("DICE", {})
+        game_earn_config_val = vault_service.get_config_value(db, "game_earn_config", {})
+        dice_rewards = game_earn_config_val.get("DICE", {})
         
         probs = vault_service.get_config_value(db, "probability", {}).get("DICE", {})
         caps = vault_service.get_config_value(db, "caps", {}).get("DICE", {})
@@ -89,23 +89,29 @@ class AdminDiceService:
         is_active = bool(dice_rewards and probs)
         
         from app.schemas.admin_dice import DiceEventParams
+        
+        # Fallback to DEFAULT_CONFIG instead of hardcoded strings
+        def_dice_prob = DEFAULT_CONFIG["probability"]["DICE"]
+        def_dice_rewards = DEFAULT_CONFIG["game_earn_config"]["DICE"]
+        def_dice_caps = DEFAULT_CONFIG["caps"]["DICE"]
+
         return DiceEventParams(
             is_active=is_active,
-            probability={"DICE": probs} if probs else {"DICE": {"p_win": 0.35, "p_draw": 0.10, "p_lose": 0.55}},
-            game_earn_config={"DICE": dice_rewards} if dice_rewards else {"DICE": {"WIN": 1400, "DRAW": -800, "LOSE": -1100}},
-            caps={"DICE": caps} if caps else {"DICE": {"daily_gain": 20000, "daily_plays": 30}},
-            eligibility=eligibility or {"tags": {"blocklist": ["Blacklist"]}}
+            probability={"DICE": probs} if probs else {"DICE": def_dice_prob},
+            game_earn_config={"DICE": dice_rewards} if dice_rewards else {"DICE": def_dice_rewards},
+            caps={"DICE": caps} if caps else {"DICE": def_dice_caps},
+            eligibility=eligibility or (DEFAULT_CONFIG["eligibility"] if "eligibility" in DEFAULT_CONFIG else {"tags": {"blocklist": ["Blacklist"]}})
         )
 
     @staticmethod
     def update_event_params(db: Session, params: "DiceEventParams", admin_id: int = 0):
-        from app.services.vault2_service import Vault2Service
+        from app.services.vault2_service import Vault2Service, DEFAULT_CONFIG
         vault_service = Vault2Service()
         program = vault_service.get_default_program(db, ensure=True)
         
         # Read-Modify-Write
         # Note: We use Vault2Service logic which handles default config merging
-        cfg = vault_service.DEFAULT_CONFIG.copy()
+        cfg = DEFAULT_CONFIG.copy()
         if isinstance(program.config_json, dict):
             cfg.update(program.config_json)
         

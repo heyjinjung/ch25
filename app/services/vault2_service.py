@@ -47,9 +47,9 @@ DEFAULT_CONFIG = {
     # 게임별/결과별 적립 설정
     "game_earn_config": {
         "DICE": {
-            "WIN": 1400,
-            "DRAW": -800,
-            "LOSE": -1100
+            "WIN": 200,
+            "DRAW": 0,
+            "LOSE": -50
         },
         "ROULETTE": {
             "BASE": 200,

@@ -732,7 +732,8 @@ class MissionService:
 
         return True, mission.reward_type, reward_amount
 
-    def ensure_login_progress(self, user_id: int):
+    
+def ensure_login_progress(self, user_id: int):
         """
         Ensures the user has the correct login mission progress.
         Typically called on login or user creation.
@@ -792,7 +793,6 @@ class MissionService:
                 self.update_progress(user_id, "LOGIN", delta=1)
 
         self.db.commit()
-
     def claim_daily_gift(self, user_id: int) -> Tuple[bool, str, int]:
         """
         Special logic for 'Daily Login Gift'.

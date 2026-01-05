@@ -50,10 +50,10 @@ const DiceView: React.FC<DiceViewProps> = ({ userDice, dealerDice, result, isRol
       {/* Battle Columns */}
       <div className="grid gap-4 grid-cols-1 md:grid-cols-2 relative h-full">
 
-{/* VS Label (sm+ shown, compact on small screens) */}
-      <div className="hidden sm:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
-        <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-black border border-white/10 flex items-center justify-center shadow-[0_0_30px_rgba(0,0,0,0.8)]">
-          <span className="text-lg sm:text-2xl font-black italic text-white/20">VS</span>
+        {/* VS Label (sm+ shown, compact on small screens) */}
+        <div className="hidden sm:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
+          <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-black border border-white/10 flex items-center justify-center shadow-[0_0_30px_rgba(0,0,0,0.8)]">
+            <span className="text-lg sm:text-2xl font-black italic text-white/20">VS</span>
           </div>
         </div>
 
