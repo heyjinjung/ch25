@@ -65,3 +65,44 @@
 *   **Issue 422 Error on `/admin/api/dice-config/event-params`**:
     *   **Cause**: Route definition order collision. Static route `event-params` was being captured by dynamic route `/{config_id}`.
     *   **Fix**: Moved static routes above dynamic path parameter routes in `app/api/admin/routes/admin_dice.py`.
+
+## 4. Account Reset / Admin Purge (Hard Delete)
+
+### Hard Purge API (Server-side)
+*   **Goal**: Admin deletion leaves residues → provide a true “reset” that removes all user-linked data.
+*   **API**: `POST /admin/api/users/{user_id}/purge` → **204 No Content**
+*   **Backend Changes**:
+    *   **File**: `app/services/admin_user_service.py`
+        *   Implemented `purge_user(...)` to defensively delete dependent rows across related tables, then delete the user.
+        *   Records admin audit log entry (e.g., `PURGE_USER`).
+    *   **File**: `app/api/admin/routes/admin_users.py`
+        *   Added/validated purge endpoint with admin auth.
+*   **Security**: Admin-only via Bearer JWT (admin router dependency).
+*   **Operational Note**: Gatekeeping by environment variables was removed to keep purge available (still requires admin auth).
+
+### Admin UI: One-click PURGE
+*   **Goal**: Avoid manual curl/CLI calls; allow ops to purge from admin screen.
+*   **Frontend Changes**:
+    *   **File**: `src/admin/api/adminUserApi.ts`
+        *   Added `purgeUser(userId)` calling `/admin/api/users/{id}/purge`.
+    *   **File**: `src/admin/pages/UserAdminPage.tsx`
+        *   Added `PURGE` action button with confirm prompt.
+        *   Uses react-query mutation; on success invalidates user list query and shows toast.
+
+## 5. Telegram Unlink Workflow Bugfix
+*   **Issue**: Unlink approval could fail due to `telegram_id` type mismatch (string vs number).
+*   **Fix**: Normalize/compare IDs consistently in unlink approval logic; added regression coverage.
+
+## 6. New User Day2 “2일차 출석 체크” Trigger Fix
+*   **Issue**: Only calling `/api/new-user/status` did not advance LOGIN mission on KST day rollover; `last_login_at` not updated.
+*   **Fix**:
+    *   When KST date changes, `LOGIN` mission progresses and `last_login_at` updates even via status check.
+    *   Set initial `last_login_at` on Telegram new user creation.
+*   **Tests**: Added in-memory SQLite regression tests; updated related streak tests to match Phase 2 (manual claim) spec.
+
+## 7. Current Incident / Next Debug Step
+*   **Symptom**: 500 error observed (likely backend logic/DB issue). Needs server logs.
+*   **Next**:
+    1. Check backend container/app logs around the request time.
+    2. Confirm DB constraints / FK deletes / missing tables/migrations on the deployed environment.
+    3. Verify whether frontend is calling the correct backend base URL and that the backend image includes the purge route.
