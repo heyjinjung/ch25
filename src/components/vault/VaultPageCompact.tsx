@@ -29,6 +29,8 @@ const VaultPageCompact: React.FC = () => {
             <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
                 <div className="h-10 w-10 animate-spin rounded-full border-4 border-emerald-500/70 border-t-transparent" />
                 <p className="text-white/60 text-sm">금고 정보 로딩 중...</p>
+                {/* Joyride 타겟 프리홀더 (로딩 중에도 크래시 방지) */}
+                <div className="sr-only" data-tour="vault-inventory-btn" aria-hidden />
             </div>
         );
     }

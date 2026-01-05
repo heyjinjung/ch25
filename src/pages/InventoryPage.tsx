@@ -54,6 +54,10 @@ const InventoryPage: React.FC = () => {
             <div className="mx-auto w-full max-w-lg py-16 flex flex-col items-center justify-center">
                 <Loader2 className="w-10 h-10 animate-spin text-figma-accent" />
                 <p className="mt-4 text-white/50 text-sm font-medium">인벤토리 불러오는 중...</p>
+                {/* Joyride 타겟 프리홀더 (로딩 중에도 크래시 방지) */}
+                <div className="sr-only" data-tour="inventory-items-tab" />
+                <div className="sr-only" data-tour="inventory-wallet-tab" />
+                <div className="sr-only" data-tour="inventory-shop-btn" />
             </div>
         );
     }
