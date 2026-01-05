@@ -3,10 +3,25 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
-from app.schemas.admin_dice import AdminDiceConfigCreate, AdminDiceConfigResponse, AdminDiceConfigUpdate
+
+from app.schemas.admin_dice import AdminDiceConfigCreate, AdminDiceConfigResponse, AdminDiceConfigUpdate, DiceEventParams
 from app.services.admin_dice_service import AdminDiceService
+from app.api.deps import get_db, get_current_admin_id
 
 router = APIRouter(prefix="/admin/api/dice-config", tags=["admin-dice"])
+
+
+@router.get("/event-params", response_model=DiceEventParams)
+def get_event_params(db: Session = Depends(get_db)):
+    return AdminDiceService.get_event_params(db)
+
+@router.put("/event-params", response_model=DiceEventParams)
+def update_event_params(
+    params: DiceEventParams, 
+    db: Session = Depends(get_db),
+    admin_id: int = Depends(get_current_admin_id)
+):
+    return AdminDiceService.update_event_params(db, params, admin_id)
 
 
 @router.get("/", response_model=list[AdminDiceConfigResponse])
@@ -43,19 +58,3 @@ def activate_config(config_id: int, db: Session = Depends(get_db)):
 def deactivate_config(config_id: int, db: Session = Depends(get_db)):
     config = AdminDiceService.toggle_active(db, config_id, False)
     return AdminDiceConfigResponse.from_orm(config)
-
-
-from app.schemas.admin_dice import DiceEventParams
-from app.api.deps import get_current_admin_id
-
-@router.get("/event-params", response_model=DiceEventParams)
-def get_event_params(db: Session = Depends(get_db)):
-    return AdminDiceService.get_event_params(db)
-
-@router.put("/event-params", response_model=DiceEventParams)
-def update_event_params(
-    params: DiceEventParams, 
-    db: Session = Depends(get_db),
-    admin_id: int = Depends(get_current_admin_id)
-):
-    return AdminDiceService.update_event_params(db, params, admin_id)

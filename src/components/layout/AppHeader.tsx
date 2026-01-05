@@ -121,6 +121,7 @@ const AppHeader: React.FC = () => {
     const ticketCount = vault?.ticketCount ?? 0;
 
     return (
+        <>
         <header className="sticky top-0 z-50 bg-black/90 backdrop-blur-md border-b border-white/10 shadow-lg">
             <div className="flex items-center justify-between px-4 py-3 max-w-7xl mx-auto gap-4">
 
@@ -299,25 +300,26 @@ const AppHeader: React.FC = () => {
                     )}
                 </div>
             </div>
-            {/* Golden Hour Popup */}
-            {isGoldenHourModalOpen && (
-                <GoldenHourPopup
-                    onClose={() => setIsGoldenHourModalOpen(false)}
-                    multiplier={ghMultiplier}
-                />
-            )}
-
-            {/* Attendance Streak Modal (Admin Forced or Manual) */}
-            {isStreakModalOpen && streakInfo && streakRules && (
-                <AttendanceStreakModal
-                    onClose={() => setStreakModalOpen(false)}
-                    onClaim={claimStreakReward}
-                    currentStreak={streakInfo.streak_days}
-                    claimableDay={streakInfo.claimable_day}
-                    rules={streakRules}
-                />
-            )}
         </header>
+        {/* Golden Hour Popup */}
+        {isGoldenHourModalOpen && (
+            <GoldenHourPopup
+                onClose={() => setIsGoldenHourModalOpen(false)}
+                multiplier={ghMultiplier}
+            />
+        )}
+
+        {/* Attendance Streak Modal (Admin Forced or Manual) */}
+        {isStreakModalOpen && streakInfo && streakRules && (
+            <AttendanceStreakModal
+                onClose={() => setStreakModalOpen(false)}
+                onClaim={claimStreakReward}
+                currentStreak={streakInfo.streak_days}
+                claimableDay={streakInfo.claimable_day}
+                rules={streakRules}
+            />
+        )}
+        </>
     );
 };
 

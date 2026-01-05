@@ -104,7 +104,7 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
                 {/* Glow Background */}
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-1/2 bg-gradient-to-b from-figma-primary/20 to-transparent blur-3xl pointer-events-none" />
 
-                <div className="relative flex-1 overflow-y-auto rounded-[2.3rem] bg-gradient-to-b from-white/5 to-transparent p-5 flex flex-col items-center custom-scrollbar">
+                <div className="relative flex-1 overflow-y-auto rounded-2xl bg-gradient-to-b from-white/5 to-transparent p-5 flex flex-col items-center custom-scrollbar">
 
                     <button
                         onClick={() => { tryHaptic(10); onClose(); }}
