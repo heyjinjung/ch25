@@ -446,3 +446,13 @@ def nudge_risk_group(
     service = AdminDashboardService()
     count = service.nudge_risk_group(db)
     return {"status": "success", "nudged_count": count}
+
+
+@router.get("/details")
+def get_dashboard_details(
+    metric_key: str,
+    db: Session = Depends(get_db),
+) -> list[dict[str, Any]]:
+    """Get detailed list for a specific metric."""
+    service = AdminDashboardService()
+    return service.get_metric_details(db, metric_key)

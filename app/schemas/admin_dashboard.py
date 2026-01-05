@@ -63,6 +63,7 @@ class ComprehensiveOverviewResponse(BaseModel):
     # Activity
     today_active_users: int
     today_game_plays: int
+    today_ticket_usage: int
     
     # Streak
     streak_counts: Dict[str, int]

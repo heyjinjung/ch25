@@ -90,11 +90,29 @@ export interface ComprehensiveOverviewResponse {
   total_inventory_liability: number;
   today_active_users: number;
   today_game_plays: number;
+  today_ticket_usage: number;
+
+  // Streak
   streak_counts: Record<string, number>;
+}
+
+export interface MetricDetailItem {
+  id: number;
+  label: string;
+  sub_label: string;
+  value: string;
+  tags: string[];
 }
 
 export const fetchComprehensiveOverview = async (): Promise<ComprehensiveOverviewResponse> => {
   const response = await httpClient.get<ComprehensiveOverviewResponse>("/admin/api/dashboard/comprehensive");
+  return response.data;
+};
+
+export const fetchMetricDetails = async (metricKey: string): Promise<MetricDetailItem[]> => {
+  const response = await httpClient.get<MetricDetailItem[]>("/admin/api/dashboard/details", {
+    params: { metric_key: metricKey }
+  });
   return response.data;
 };
 

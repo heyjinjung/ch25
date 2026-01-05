@@ -14,6 +14,8 @@ import {
 import {
     fetchComprehensiveOverview,
     ComprehensiveOverviewResponse,
+    MetricDetailItem,
+    fetchMetricDetails
 } from "../api/adminDashboardApi";
 
 const baseAccent = "#91F402";
@@ -28,41 +30,47 @@ const formatKRW = (value: number | null | undefined) => {
     return `₩${value.toLocaleString()}`;
 };
 
-const MetricDetailedInfo: Record<string, { description: string; details?: (data: ComprehensiveOverviewResponse) => string[] }> = {
-    "금일 접속자": {
-        description: "오늘 00:00 KST 이후 로그인 이력이 있거나 게임을 플레이한 유니크 사용자(External ID 기준) 수입니다.",
-    },
-    "금일 게임 플레이": {
-        description: "오늘 발생한 주사위, 룰렛, 복권 게임의 총 플레이 횟수 합계입니다.",
-    },
+// Mapping of title to backend key + description
+const MetricConfig: Record<string, { key: string; description: string }> = {
     "이탈 위험": {
-        description: "어제(D-1) 활동 기록이 있으나, 오늘(D-Day) 현재까지 접속하지 않은 사용자 수입니다.",
-        details: (_) => [
-            "오늘 미접속 잔존 유저",
-            "푸시 알림(Nudge) 주요 타겟 대상"
-        ]
+        key: "churn_risk",
+        description: "어제(D-1) 활동 기록이 있으나, 오늘(D-Day) 현재까지 접속하지 않은 사용자 상세 목록입니다."
     },
-    "웰컴 리텐션 (D-2)": {
-        description: "2일 전(D-2) 가입한 신규 유저 중, 어제(D-1) 접속한 유저의 비율입니다. 초기 유저 안착률을 판단하는 핵심 지표입니다.",
+    "금일 접속자": {
+        key: "today_active",
+        description: "오늘 접속한 유니크 사용자(최근 50명) 목록입니다."
     },
     "금일 입금 총액": {
-        description: "오늘 00:00 KST 이후 발생한 코인 충전(CHARGE) 및 입금(DEPOSIT) 누적 총액입니다.",
-        details: (data) => [
-            `총 건수: ${formatNumber(data.today_deposit_count)}건`,
-            `평균 입금액: ${data.today_deposit_count > 0 ? formatKRW(Math.floor(data.today_deposit_sum / data.today_deposit_count)) : "0"}`
-        ]
+        key: "today_deposit",
+        description: "오늘 발생한 입금/충전 거래 내역(최근 50건)입니다."
+    },
+    "웰컴 리텐션 (D-2)": {
+        key: "welcome_retention",
+        description: "2일 전 가입한 신규 유저들의 현재 안착 상태입니다."
+    },
+    "금일 게임 플레이": {
+        key: "today_game_plays",
+        description: "오늘 발생한 게임 플레이 실시간 내역입니다."
     },
     "외부 랭킹 입금액": {
-        description: "외부 랭킹 시스템(Leaderboard)에 집계된 시즌 누적 입금액 데이터입니다.",
+        key: "external_ranking_deposit",
+        description: "외부 랭킹 시스템 집계 기준 상위 입금 유저입니다."
     },
     "외부 랭킹 플레이 수": {
-        description: "외부 랭킹 시스템(Leaderboard)에 집계된 시즌 누적 게임 플레이 횟수입니다.",
+        key: "external_ranking_play_count",
+        description: "외부 랭킹 시스템 집계 기준 상위 플레이 유저입니다."
     },
     "전체 금고 보유액": {
-        description: "전체 유저의 금고(Vault)에 보관된 포인트 총액입니다. 잠금(Locked) 잔액과 해금(Available) 잔액의 합계입니다.",
+        key: "total_vault_balance",
+        description: "금고(Vault) 보유액 상위 유저 목록입니다."
     },
     "인벤토리 자산": {
-        description: "유저 인벤토리에 보관된 주요 아이템(티켓 등)의 수량 합계입니다.",
+        key: "total_inventory_liability",
+        description: "아이템 최다 보유 유저(수량 기준) 목록입니다."
+    },
+    "티켓 사용량": {
+        key: "today_ticket_usage",
+        description: "오늘 소모된 총 티켓(룰렛,주사위,복권) 수량 상세 내역입니다."
     },
 };
 
@@ -71,48 +79,89 @@ const MetricDetailModal: React.FC<{
     onClose: () => void;
     title: string;
     value: string | number;
-    data: ComprehensiveOverviewResponse | null;
-}> = ({ isOpen, onClose, title, value, data }) => {
-    if (!isOpen || !data) return null;
+}> = ({ isOpen, onClose, title, value }) => {
+    const [details, setDetails] = useState<MetricDetailItem[]>([]);
+    const [loading, setLoading] = useState(false);
+    const config = MetricConfig[title] || MetricConfig[title.split(" (")[0]];
 
-    // Clean title to match keys (remove parens if match failing, though direct match preferred)
-    // Our keys match the titles passed in MetricCard props.
-    const info = MetricDetailedInfo[title] || MetricDetailedInfo[title.split(" (")[0]] || { description: "상세 설명이 없습니다." };
-    const details = info.details ? info.details(data) : [];
+    // Fallback description if config missing
+    const description = config?.description || "상세 데이터가 지원되지 않는 지표입니다.";
+
+    useEffect(() => {
+        if (isOpen && config?.key) {
+            setLoading(true);
+            fetchMetricDetails(config.key)
+                .then(setDetails)
+                .catch(() => setDetails([]))
+                .finally(() => setLoading(false));
+        } else {
+            setDetails([]);
+        }
+    }, [isOpen, config]);
+
+    if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className="w-full max-w-md rounded-lg border border-[#262626] bg-[#111111] p-6 shadow-2xl animate-in fade-in zoom-in duration-200">
-                <div className="mb-4 flex items-center justify-between">
-                    <h3 className="text-xl font-bold text-white">{title}</h3>
-                    <button onClick={onClose} className="text-gray-400 hover:text-white text-lg font-bold px-2">✕</button>
-                </div>
-
-                <div className="mb-6 text-center">
-                    <span className="block text-sm text-gray-400 mb-1">Current Value</span>
-                    <span className="text-4xl font-bold text-[#91F402]">{value}</span>
-                </div>
-
-                <div className="mb-6 rounded bg-[#1A1A1A] p-4">
-                    <h4 className="mb-2 text-sm font-semibold text-white">지표 설명</h4>
-                    <p className="text-sm text-gray-300 leading-relaxed">{info.description}</p>
-                </div>
-
-                {details.length > 0 && (
-                    <div className="rounded bg-[#1A1A1A] p-4">
-                        <h4 className="mb-2 text-sm font-semibold text-white">세부 데이터</h4>
-                        <ul className="list-disc pl-4 text-sm text-gray-300 space-y-1">
-                            {details.map((item, idx) => (
-                                <li key={idx}>{item}</li>
-                            ))}
-                        </ul>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
+            <div className="w-full max-w-2xl rounded-xl border border-[#333] bg-[#111111] shadow-2xl flex flex-col max-h-[80vh]">
+                <div className="flex items-center justify-between p-6 border-b border-[#262626]">
+                    <div>
+                        <div className="flex items-center gap-2">
+                            <h3 className="text-xl font-bold text-white">{title}</h3>
+                            <span className="text-lg text-[#91F402] font-mono">({value})</span>
+                        </div>
+                        <p className="text-sm text-gray-400 mt-1">{description}</p>
                     </div>
-                )}
+                    <button onClick={onClose} className="text-gray-400 hover:text-white p-2">✕</button>
+                </div>
 
-                <div className="mt-6 flex justify-end">
+                <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
+                    {!config ? (
+                        <div className="text-center py-10 text-gray-500">
+                            이 지표는 상세 데이터 조회를 지원하지 않습니다.
+                        </div>
+                    ) : loading ? (
+                        <div className="text-center py-10 text-[#91F402] animate-pulse">
+                            데이터를 불러오는 중입니다...
+                        </div>
+                    ) : details.length === 0 ? (
+                        <div className="text-center py-10 text-gray-500">
+                            데이터가 없습니다.
+                        </div>
+                    ) : (
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="border-b border-[#333] text-xs uppercase text-gray-400">
+                                    <th className="py-3 px-2">Label</th>
+                                    <th className="py-3 px-2">Info</th>
+                                    <th className="py-3 px-2 text-right">Value</th>
+                                    <th className="py-3 px-2 text-right">Tag</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-[#222]">
+                                {details.map((item) => (
+                                    <tr key={item.id} className="hover:bg-[#1A1A1A] transition-colors">
+                                        <td className="py-3 px-2 font-medium text-white">{item.label}</td>
+                                        <td className="py-3 px-2 text-sm text-gray-400">{item.sub_label}</td>
+                                        <td className="py-3 px-2 text-right font-medium text-[#91F402]">{item.value}</td>
+                                        <td className="py-3 px-2 text-right">
+                                            {item.tags.map(tag => (
+                                                <span key={tag} className="inline-block text-[10px] bg-[#262626] border border-[#333] text-gray-300 px-1.5 py-0.5 rounded ml-1">
+                                                    {tag}
+                                                </span>
+                                            ))}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
+                </div>
+
+                <div className="p-4 border-t border-[#262626] flex justify-end bg-[#0F0F0F] rounded-b-xl">
                     <button
                         onClick={onClose}
-                        className="rounded bg-[#262626] px-4 py-2 text-sm text-white hover:bg-[#333] transition-colors"
+                        className="rounded-lg bg-[#262626] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#333] transition-colors"
                     >
                         닫기
                     </button>
@@ -243,6 +292,12 @@ const DailyOpsSummary: React.FC = () => {
                     onClick={() => handleCardClick("금일 게임 플레이", formatNumber(data?.today_game_plays))}
                 />
                 <MetricCard
+                    title="티켓 사용량"
+                    value={formatNumber(data?.today_ticket_usage)}
+                    icon={<Trophy className="h-4 w-4" style={{ color: baseAccent }} />}
+                    onClick={() => handleCardClick("티켓 사용량", formatNumber(data?.today_ticket_usage))}
+                />
+                <MetricCard
                     title="이탈 위험"
                     subtitle="어제 활동, 오늘 미접속"
                     value={formatNumber(data?.churn_risk_count)}
@@ -332,7 +387,6 @@ const DailyOpsSummary: React.FC = () => {
                 onClose={closeModal}
                 title={selectedMetric?.title ?? ""}
                 value={selectedMetric?.value ?? ""}
-                data={data}
             />
         </div>
     );

@@ -3,6 +3,7 @@ from datetime import datetime, time
 import pytest
 
 from app.core.config import get_settings
+from app.models.app_ui_config import AppUiConfig
 from app.models.feature import UserEventLog
 from app.models.game_wallet import GameTokenType, UserGameWallet
 from app.models.mission import Mission, MissionCategory, MissionRewardType
@@ -139,6 +140,32 @@ def test_streak_milestone_rewards_day3_and_day7(session_factory, monkeypatch, _m
     _seed_user(db)
     _seed_play_game_mission(db, "streak_spec_rewards")
 
+    # Phase 2: milestone rewards are claimed manually based on UI config rules.
+    db.add(
+        AppUiConfig(
+            key="streak_reward_rules",
+            value_json={
+                "rules": [
+                    {
+                        "day": 3,
+                        "enabled": True,
+                        "grants": [
+                            {"kind": "WALLET", "token_type": "ROULETTE_COIN", "amount": 1},
+                            {"kind": "WALLET", "token_type": "DICE_TOKEN", "amount": 1},
+                            {"kind": "WALLET", "token_type": "LOTTERY_TICKET", "amount": 1},
+                        ],
+                    },
+                    {
+                        "day": 7,
+                        "enabled": True,
+                        "grants": [{"kind": "INVENTORY", "item_type": "DIAMOND", "amount": 1}],
+                    },
+                ]
+            },
+        )
+    )
+    db.commit()
+
     ms = MissionService(db)
 
     # Play 7 consecutive operational days.
@@ -146,6 +173,16 @@ def test_streak_milestone_rewards_day3_and_day7(session_factory, monkeypatch, _m
         day = 4 + i
         monkeypatch.setattr(MissionService, "_now_tz", lambda self, d=day: datetime(2026, 1, d, 12, 0, 0))
         ms.update_progress(user_id=1, action_type="PLAY_GAME", delta=1)
+
+    # Phase 2: claim rewards after reaching milestones.
+    # With rules [3,7], first claim should grant day7, second should grant day3.
+    claim7 = ms.claim_streak_reward(user_id=1)
+    assert claim7.get("success") is True
+    assert int(claim7.get("day")) == 7
+
+    claim3 = ms.claim_streak_reward(user_id=1)
+    assert claim3.get("success") is True
+    assert int(claim3.get("day")) == 3
 
     # Day3 milestone is reached on Jan 6.
     day3_event = "streak.reward_grant.3.2026-01-06"

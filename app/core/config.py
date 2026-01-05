@@ -139,6 +139,16 @@ class Settings(BaseSettings):
         ),
     )
 
+    # Admin-only destructive operations (dangerous).
+    # Keep disabled by default; enable explicitly in controlled environments.
+    allow_admin_user_purge: bool = Field(
+        False,
+        validation_alias=AliasChoices(
+            "ALLOW_ADMIN_USER_PURGE",
+            "allow_admin_user_purge",
+        ),
+    )
+
     # Time sync / NTP sanity
     ntp_allowed_drift_ms: int = Field(
         1000,

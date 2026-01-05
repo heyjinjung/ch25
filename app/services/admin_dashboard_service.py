@@ -126,6 +126,23 @@ class AdminDashboardService:
         lottery_plays = db.query(func.count(LotteryLog.id)).filter(LotteryLog.created_at >= today_start_utc).scalar() or 0
         today_game_plays = dice_plays + roulette_plays + lottery_plays
 
+        # Ticket Usage Today
+        from app.models.game_wallet_ledger import UserGameWalletLedger
+        from app.models.game_wallet import GameTokenType
+        
+        _ALLOWED_TOKENS = (
+            GameTokenType.ROULETTE_COIN,
+            GameTokenType.DICE_TOKEN,
+            GameTokenType.LOTTERY_TICKET,
+        )
+
+        today_ticket_usage = db.query(func.coalesce(func.sum(UserGameWalletLedger.delta), 0)).filter(
+            UserGameWalletLedger.created_at >= today_start_utc,
+            UserGameWalletLedger.token_type.in_(_ALLOWED_TOKENS),
+            UserGameWalletLedger.delta < 0
+        ).scalar() or 0
+        today_ticket_usage = int(abs(today_ticket_usage))
+
         # 6. Streak Counts
         streak_case = case(
             (User.play_streak >= 7, "LEGEND"),
@@ -149,6 +166,7 @@ class AdminDashboardService:
             "total_inventory_liability": total_inventory_liability,
             "today_active_users": today_active_users,
             "today_game_plays": today_game_plays,
+            "today_ticket_usage": today_ticket_usage,
             "streak_counts": streak_counts
         }
 
@@ -243,3 +261,232 @@ class AdminDashboardService:
         count = len(target_users)
         # ... Send logic ...
         return count
+
+    def get_metric_details(self, db: Session, metric_key: str):
+        """
+        Return detailed list data for a specific metric.
+        Format: [{"id": 1, "label": "Main Text", "sub_label": "Sub Text", "value": "Value", "tags": ["TAG"]}]
+        """
+        kst_now = self._get_kst_now()
+        yesterday_start, yesterday_end = self._get_yesterday_kst_range(kst_now)
+        today_start_utc = self._get_today_kst_start_in_utc(kst_now)
+        
+        results = []
+
+        if metric_key == "churn_risk":
+            # Users active yesterday but not today
+            users = db.query(User).filter(
+                User.last_login_at >= yesterday_start,
+                User.last_login_at <= yesterday_end,
+                or_(User.last_login_at < today_start_utc, User.last_login_at == None)
+            ).all()
+            
+            for u in users:
+                streak_tag = "LEGEND" if u.play_streak >= 7 else "HOT" if u.play_streak >= 3 else "NORMAL"
+                results.append({
+                    "id": u.id,
+                    "label": u.nickname or f"User {u.id}",
+                    "sub_label": f"Last Login: {u.last_login_at.strftime('%m-%d %H:%M') if u.last_login_at else 'Unknown'}",
+                    "value": f"Streak: {u.play_streak}",
+                    "tags": [streak_tag]
+                })
+
+        elif metric_key == "today_active":
+            # Users active today (Limit 50)
+            users = db.query(User).filter(
+                User.last_login_at >= today_start_utc
+            ).order_by(User.last_login_at.desc()).limit(50).all()
+
+            for u in users:
+                results.append({
+                    "id": u.id,
+                    "label": u.nickname or f"User {u.id}",
+                    "sub_label": f"Lv.{u.level}",
+                    "value": u.last_login_at.strftime('%H:%M:%S'),
+                    "tags": ["ONLINE"]
+                })
+
+        elif metric_key == "today_deposit":
+            # Deposits today
+            txs = db.query(UserCashLedger, User).join(User).filter(
+                UserCashLedger.created_at >= today_start_utc,
+                UserCashLedger.delta > 0,
+                or_(UserCashLedger.reason == "CHARGE", UserCashLedger.reason == "DEPOSIT")
+            ).order_by(UserCashLedger.created_at.desc()).limit(50).all()
+
+            for tx, u in txs:
+                results.append({
+                    "id": tx.id,
+                    "label": u.nickname or f"User {u.id}",
+                    "sub_label": tx.reason,
+                    "value": f"+{tx.delta:,} KRW",
+                    "tags": [tx.reason]
+                })
+
+        elif metric_key == "welcome_retention":
+            # New Users D-2
+            d2_date = kst_now.date() - timedelta(days=2)
+            d2_start = datetime.combine(d2_date, time.min) - timedelta(hours=9)
+            d2_end = datetime.combine(d2_date, time.max) - timedelta(hours=9)
+
+            users = db.query(User).filter(
+                User.created_at >= d2_start,
+                User.created_at <= d2_end
+            ).all()
+
+            for u in users:
+                # Check if retained (Active Yesterday)
+                retained = False
+                if u.last_login_at and yesterday_start <= u.last_login_at <= yesterday_end:
+                    retained = True
+                
+                results.append({
+                    "id": u.id,
+                    "label": u.nickname or f"User {u.id}",
+                    "sub_label": f"Joined: {u.created_at.strftime('%m-%d %H:%M')}",
+                    "value": "Retained" if retained else "Lost",
+                    "tags": ["RETAINED" if retained else "LOST"]
+                })
+        
+        elif metric_key == "today_game_plays":
+            # Recent Game Plays (Limit 50)
+            # Combine reports from DiceLog, RouletteLog, LotteryLog
+            # For simplicity, just showing DiceLog for now or union if possible.
+            # Implementing simple Union for recent activity across all is complex in ORM without proper polymorphism.
+            # We will show Dice Logs (most frequent) + Roulette Logs.
+            
+            # Dice
+            dice_logs = db.query(DiceLog, User).join(User).filter(
+                DiceLog.created_at >= today_start_utc
+            ).order_by(DiceLog.created_at.desc()).limit(30).all()
+            
+            # Roulette
+            roul_logs = db.query(RouletteLog, User).join(User).filter(
+                RouletteLog.created_at >= today_start_utc
+            ).order_by(RouletteLog.created_at.desc()).limit(20).all()
+
+            # Merge and Sort
+            combined = []
+            for log, u in dice_logs:
+                combined.append({
+                    "obj": log, "user": u, "type": "DICE", "time": log.created_at
+                })
+            for log, u in roul_logs:
+                combined.append({
+                    "obj": log, "user": u, "type": "ROULETTE", "time": log.created_at
+                })
+            
+            combined.sort(key=lambda x: x["time"], reverse=True)
+
+            for item in combined:
+                u = item["user"]
+                log = item["obj"]
+                
+                val_str = ""
+                if item["type"] == "DICE":
+                    # DiceLog: result (WIN/LOSE), user_sum vs dealer_sum
+                    val_str = f"{log.result} ({log.reward_amount:,} KRW)"
+                elif item["type"] == "ROULETTE":
+                    # RouletteLog: multiplier
+                    mult = getattr(log, 'multiplier', 0)
+                    val_str = f"x{mult} ({getattr(log, 'payout_amount', 0):,} KRW)"
+                else:
+                    val_str = "Played"
+
+                results.append({
+                    "id": log.id, # Potentially collision if IDs overlap, but fine for display list
+                    "label": u.nickname or f"User {u.id}",
+                    "sub_label": log.created_at.strftime('%H:%M:%S'),
+                    "value": val_str,
+                    "tags": [item["type"]]
+                })
+
+        elif metric_key == "external_ranking_deposit":
+            from app.models.external_ranking import ExternalRankingData
+            ranks = db.query(ExternalRankingData, User).join(User).order_by(
+                ExternalRankingData.deposit_amount.desc()
+            ).limit(50).all()
+
+            for r, u in ranks:
+                results.append({
+                    "id": u.id,
+                    "label": u.nickname or f"User {u.id}",
+                    "sub_label": f"Updated: {r.updated_at.strftime('%m-%d')}",
+                    "value": f"{r.deposit_amount:,} KRW",
+                    "tags": ["RANKED"]
+                })
+
+        elif metric_key == "external_ranking_play_count":
+            from app.models.external_ranking import ExternalRankingData
+            ranks = db.query(ExternalRankingData, User).join(User).order_by(
+                ExternalRankingData.play_count.desc()
+            ).limit(50).all()
+
+            for r, u in ranks:
+                results.append({
+                    "id": u.id,
+                    "label": u.nickname or f"User {u.id}",
+                    "sub_label": f"Updated: {r.updated_at.strftime('%m-%d')}",
+                    "value": f"{r.play_count:,} Plays",
+                    "tags": ["RANKED"]
+                })
+        
+        elif metric_key == "total_vault_balance":
+            users = db.query(User).filter(
+                (User.vault_locked_balance + User.vault_available_balance) > 0
+            ).order_by(
+                (User.vault_locked_balance + User.vault_available_balance).desc()
+            ).limit(50).all()
+
+            for u in users:
+                total = u.vault_locked_balance + u.vault_available_balance
+                results.append({
+                    "id": u.id,
+                    "label": u.nickname or f"User {u.id}",
+                    "sub_label": f"Locked: {u.vault_locked_balance:,}",
+                    "value": f"{total:,} KRW",
+                    "tags": ["VAULT"]
+                })
+
+        elif metric_key == "total_inventory_liability":
+            from app.models.inventory import UserInventoryItem
+            # Top holders of items
+            items = db.query(UserInventoryItem, User).join(User).order_by(
+                UserInventoryItem.quantity.desc()
+            ).limit(50).all()
+
+            for inv, u in items:
+                results.append({
+                    "id": inv.id,
+                    "label": u.nickname or f"User {u.id}",
+                    "sub_label": inv.item_type,
+                    "value": f"Qty: {inv.quantity}",
+                    "tags": ["ITEM"]
+                })
+        
+        elif metric_key == "today_ticket_usage":
+            from app.models.game_wallet_ledger import UserGameWalletLedger
+            from app.models.game_wallet import GameTokenType
+            _ALLOWED_TOKENS = (
+                GameTokenType.ROULETTE_COIN,
+                GameTokenType.DICE_TOKEN,
+                GameTokenType.LOTTERY_TICKET,
+            )
+
+            # Top consumers today
+            usage_logs = db.query(UserGameWalletLedger, User).join(User).filter(
+                UserGameWalletLedger.created_at >= today_start_utc,
+                UserGameWalletLedger.token_type.in_(_ALLOWED_TOKENS),
+                UserGameWalletLedger.delta < 0
+            ).order_by(UserGameWalletLedger.created_at.desc()).limit(50).all()
+
+            for log, u in usage_logs:
+                results.append({
+                    "id": log.id,
+                    "label": u.nickname or f"User {u.id}",
+                    "sub_label": log.token_type.replace("_", " "),
+                    "value": f"{abs(log.delta)} USED",
+                    "tags": [log.reason or "USE"]
+                })
+
+        return results

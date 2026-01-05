@@ -1,10 +1,11 @@
 """Admin user CRUD endpoints."""
 from typing import List
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload
 
-from app.api.deps import get_db
+from app.api.deps import get_current_admin_id, get_db
+from app.core.config import get_settings
 from app.models.user import User
 from app.schemas.admin_user import AdminUserCreate, AdminUserResponse, AdminUserUpdate
 from app.schemas.admin_user_summary import AdminUserResolveResponse
@@ -66,4 +67,21 @@ def update_user(user_id: int, payload: AdminUserUpdate, db: Session = Depends(ge
 @router.delete("/{user_id}", status_code=204)
 def delete_user(user_id: int, db: Session = Depends(get_db)) -> None:
     AdminUserService.delete_user(db, user_id)
+
+
+@router.post("/{user_id}/purge", status_code=204)
+def purge_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+    admin_id: int = Depends(get_current_admin_id),
+) -> None:
+    """Hard purge a user and all related records for test resets.
+
+    This is a destructive operation and is disabled by default.
+    Enable explicitly with ALLOW_ADMIN_USER_PURGE=true.
+    """
+    settings = get_settings()
+    if not bool(getattr(settings, "allow_admin_user_purge", False)):
+        raise HTTPException(status_code=403, detail="ADMIN_USER_PURGE_DISABLED")
+    AdminUserService.purge_user(db, user_id=user_id, admin_id=admin_id)
 
