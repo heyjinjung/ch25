@@ -77,11 +77,7 @@ def purge_user(
 ) -> None:
     """Hard purge a user and all related records for test resets.
 
-    This is a destructive operation and is disabled by default.
-    Enable explicitly with ALLOW_ADMIN_USER_PURGE=true.
+    NOTE: This is a destructive operation.
     """
-    settings = get_settings()
-    if not bool(getattr(settings, "allow_admin_user_purge", False)):
-        raise HTTPException(status_code=403, detail="ADMIN_USER_PURGE_DISABLED")
     AdminUserService.purge_user(db, user_id=user_id, admin_id=admin_id)
 
