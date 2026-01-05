@@ -1,5 +1,5 @@
 // src/components/guide/AppGuide.tsx
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import Joyride, { CallBackProps, STATUS, ACTIONS, Step, Styles, TooltipRenderProps } from "react-joyride";
 import { useGuide } from "../../contexts/GuideContext";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -58,8 +58,8 @@ const guideSteps: Step[] = [
       <div className="text-left">
         <div className="text-xl font-black mb-2">📦 금고 → 인벤토리</div>
         <div className="text-base leading-relaxed">
-          금고 화면 하단에 <strong>인벤토리</strong> 버튼이 있어요.<br /><br />
-          여기서 <strong>보유 아이템</strong>과 <strong>티켓</strong>을 확인할 수 있어요!
+          <strong>여기를 눌러 인벤토리로 이동</strong>하세요.<br /><br />
+          금고 화면 맨 아래에 있는 버튼입니다.
         </div>
       </div>
     ),
@@ -73,8 +73,8 @@ const guideSteps: Step[] = [
       <div className="text-left">
         <div className="text-xl font-black mb-2">🎒 보유 아이템</div>
         <div className="text-base leading-relaxed">
-          <strong>교환권, 다이아</strong> 등 보유 아이템이 여기 있어요.<br /><br />
-          <span className="text-amber-400 font-bold">💡 교환권을 "사용하기" 누르면 티켓이 돼요!</span>
+          <strong>보유 아이템 탭을 눌러</strong> 교환권/다이아를 확인하세요.<br /><br />
+          <span className="text-amber-400 font-bold">💡 교환권은 "사용하기" 누르면 티켓으로 바뀝니다.</span>
         </div>
       </div>
     ),
@@ -88,9 +88,8 @@ const guideSteps: Step[] = [
       <div className="text-left">
         <div className="text-xl font-black mb-2">🎫 티켓 지갑</div>
         <div className="text-base leading-relaxed">
-          <strong>게임에 쓸 티켓</strong>이 여기 보여요.<br /><br />
-          룰렛 티켓, 주사위 티켓, 복권 티켓 등<br />
-          <span className="text-emerald-400">보유 티켓 수량을 확인하세요!</span>
+          <strong>티켓 지갑 탭을 눌러</strong> 게임 티켓 수량을 확인하세요.<br /><br />
+          룰렛/주사위/복권 티켓이 모두 여기 표시됩니다.
         </div>
       </div>
     ),
@@ -102,9 +101,9 @@ const guideSteps: Step[] = [
     target: '[data-tour="inventory-shop-btn"]',
     content: (
       <div className="text-left">
-        <div className="text-xl font-black mb-2">🛒 상점 가기</div>
+        <div className="text-xl font-black mb-2">🛒 교환권 구매하러 가기</div>
         <div className="text-base leading-relaxed">
-          <strong>다이아</strong>로 교환권을 사려면 여기를 누르세요!<br /><br />
+          <strong>여기를 눌러 상점으로 이동</strong>하세요.<br /><br />
           <span className="text-emerald-400 font-bold">다이아 → 상점에서 교환권 구매 → 인벤토리에서 사용 → 티켓!</span>
         </div>
       </div>
@@ -129,6 +128,38 @@ const guideSteps: Step[] = [
     disableBeacon: true,
   },
 ];
+
+const scrollToSelector = (selector: string, behavior: ScrollBehavior = "smooth") => {
+  const el = document.querySelector(selector) as HTMLElement | null;
+  if (!el) return false;
+  el.scrollIntoView({ behavior, block: "center" });
+  return true;
+};
+
+// 타겟이 실제로 화면에 보일 때까지 폴링 (sr-only 제외)
+const waitForVisibleTarget = (
+  selector: string,
+  maxWait = 2000,
+  interval = 100
+): Promise<HTMLElement | null> => {
+  return new Promise((resolve) => {
+    const start = Date.now();
+    const check = () => {
+      const el = document.querySelector(selector) as HTMLElement | null;
+      // sr-only 클래스가 없고 offsetParent가 있으면 화면에 보이는 것
+      if (el && !el.classList.contains("sr-only") && el.offsetParent !== null) {
+        resolve(el);
+        return;
+      }
+      if (Date.now() - start < maxWait) {
+        setTimeout(check, interval);
+      } else {
+        resolve(null);
+      }
+    };
+    check();
+  });
+};
 
 // 시니어 친화적 스타일 (큰 글씨, 높은 대비, 넓은 버튼)
 const joyrideStyles: Partial<Styles> = {
@@ -234,6 +265,7 @@ const AppGuide: React.FC = () => {
   const { isGuideRunning, stepIndex, stopGuide, setStepIndex, markGuideSeen } = useGuide();
   const navigate = useNavigate();
   const location = useLocation();
+  const errorRetryRef = useRef<Set<number>>(new Set());
 
   // 스텝별 페이지 이동 로직
   useEffect(() => {
@@ -255,12 +287,53 @@ const AppGuide: React.FC = () => {
     // 스텝 7: 이벤트 (하단 네비, 어느 페이지든 OK)
   }, [stepIndex, isGuideRunning, navigate, location.pathname]);
 
+  // 금고 → 인벤토리 버튼 스텝에서 CTA가 바로 보이도록 스크롤 보정 (텔레그램 인앱 대응)
+  useEffect(() => {
+    if (!isGuideRunning) return;
+    if (stepIndex === 3) {
+      const selector = guideSteps[3]?.target;
+      if (typeof selector !== "string") return;
+
+      let cancelled = false;
+      (async () => {
+        // 실제 버튼이 렌더될 때까지 최대 2초 대기
+        const el = await waitForVisibleTarget(selector, 2000, 100);
+        if (cancelled) return;
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      })();
+
+      return () => { cancelled = true; };
+    }
+  }, [isGuideRunning, stepIndex]);
+
   const handleCallback = useCallback(
     (data: CallBackProps) => {
       const { status, action, index, type } = data;
 
+      // 타겟을 못 찾으면 한 번 더 스크롤 후 재시도, 그다음에만 패스
+      if (type === "error:target_not_found") {
+        const selector = guideSteps[index]?.target;
+        const alreadyRetried = errorRetryRef.current.has(index);
+
+        if (!alreadyRetried) {
+          errorRetryRef.current.add(index);
+          if (typeof selector === "string") {
+            window.setTimeout(() => scrollToSelector(selector, "auto"), 50);
+          }
+          window.setTimeout(() => setStepIndex(index), 120);
+          return;
+        }
+
+        const nextIndex = Math.min(index + 1, guideSteps.length - 1);
+        setStepIndex(nextIndex);
+        return;
+      }
+
       // 완료 또는 스킵
       if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
+        errorRetryRef.current.clear();
         stopGuide();
         markGuideSeen();
         return;
