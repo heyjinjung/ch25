@@ -38,8 +38,16 @@ def submit_unlink_request(
     
     Used when a user encounters 409 TELEGRAM_ALREADY_LINKED error.
     """
+    # Normalize telegram_id to int for DB lookup (User.telegram_id is numeric)
+    try:
+        telegram_id_int = int(payload.telegram_id)
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=400, detail="INVALID_TELEGRAM_ID")
+
+    telegram_id_norm = str(telegram_id_int)
+
     # Find who currently owns this telegram_id
-    current_owner = db.query(User).filter(User.telegram_id == payload.telegram_id).first()
+    current_owner = db.query(User).filter(User.telegram_id == telegram_id_int).first()
     
     if not current_owner:
         raise HTTPException(status_code=400, detail="TELEGRAM_ID_NOT_LINKED_TO_ANY_ACCOUNT")
@@ -49,7 +57,7 @@ def submit_unlink_request(
     
     # Check for existing pending request
     existing = db.query(TelegramUnlinkRequest).filter(
-        TelegramUnlinkRequest.telegram_id == payload.telegram_id,
+        TelegramUnlinkRequest.telegram_id == telegram_id_norm,
         TelegramUnlinkRequest.requester_user_id == user_id,
         TelegramUnlinkRequest.status == "PENDING"
     ).first()
@@ -58,7 +66,7 @@ def submit_unlink_request(
         raise HTTPException(status_code=409, detail="PENDING_REQUEST_EXISTS")
     
     request = TelegramUnlinkRequest(
-        telegram_id=payload.telegram_id,
+        telegram_id=telegram_id_norm,
         current_user_id=current_owner.id,
         requester_user_id=user_id,
         reason=payload.reason,
@@ -165,9 +173,17 @@ def process_unlink_request(
         # Unlink the telegram_id from current owner
         if req.current_user_id:
             current_owner = db.query(User).filter(User.id == req.current_user_id).first()
-            if current_owner and current_owner.telegram_id == req.telegram_id:
-                current_owner.telegram_id = None
-                current_owner.telegram_username = None
+            if current_owner and current_owner.telegram_id is not None:
+                # Compare robustly across possible types (int in User, str in request)
+                matches = False
+                try:
+                    matches = int(current_owner.telegram_id) == int(req.telegram_id)
+                except (TypeError, ValueError):
+                    matches = str(current_owner.telegram_id) == str(req.telegram_id)
+
+                if matches:
+                    current_owner.telegram_id = None
+                    current_owner.telegram_username = None
         
         # Optionally: Link to requester automatically?
         # For safety, we just unlink. Requester can now link via normal flow.

@@ -98,8 +98,8 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
     const isClaimable = !!claimableDay;
 
     return (
-        <div className="fixed inset-0 z-[10001] flex items-center justify-center px-4 bg-black/85 backdrop-blur-xl animate-fade-in">
-            <div className="relative w-full max-w-md max-h-[85vh] flex flex-col rounded-[2.5rem] border border-white/10 bg-[#0A0A0A] p-1 shadow-2xl animate-zoom-in">
+        <div className="fixed inset-0 z-[10001] flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-fade-in">
+            <div className="relative w-full max-w-md max-h-[90vh] flex flex-col rounded-3xl border border-white/10 bg-[#0A0A0A] p-1 shadow-2xl animate-zoom-in">
 
                 {/* Glow Background */}
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-1/2 bg-gradient-to-b from-figma-primary/20 to-transparent blur-3xl pointer-events-none" />
