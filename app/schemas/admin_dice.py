@@ -47,7 +47,8 @@ class AdminDiceConfigResponse(AdminDiceConfigBase):
 
 class DiceEventParams(BaseModel):
     is_active: bool
-    probability: dict[str, float]
-    rewards: dict[str, int]
-    caps: dict[str, int]
-    eligibility: dict
+    probability: Optional[dict[str, Optional[dict[str, float]]]] = None
+    game_earn_config: Optional[dict[str, Optional[dict[str, int]]]] = None
+    caps: Optional[dict[str, Optional[dict[str, int]]]] = None
+    eligibility: Optional[dict] = None
+

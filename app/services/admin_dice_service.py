@@ -91,9 +91,9 @@ class AdminDiceService:
         from app.schemas.admin_dice import DiceEventParams
         return DiceEventParams(
             is_active=is_active,
-            probability=probs or {"p_win": 0.35, "p_draw": 0.10, "p_lose": 0.55},
-            rewards=dice_rewards or {"WIN": 1400, "DRAW": -800, "LOSE": -1100},
-            caps=caps or {"daily_gain": 20000, "daily_plays": 30},
+            probability={"DICE": probs} if probs else {"DICE": {"p_win": 0.35, "p_draw": 0.10, "p_lose": 0.55}},
+            game_earn_config={"DICE": dice_rewards} if dice_rewards else {"DICE": {"WIN": 1400, "DRAW": -800, "LOSE": -1100}},
+            caps={"DICE": caps} if caps else {"DICE": {"daily_gain": 20000, "daily_plays": 30}},
             eligibility=eligibility or {"tags": {"blocklist": ["Blacklist"]}}
         )
 
@@ -115,21 +115,21 @@ class AdminDiceService:
         if "caps" not in cfg: cfg["caps"] = {}
         
         if params.is_active:
-             cfg["game_earn_config"]["DICE"] = params.rewards
-             cfg["probability"]["DICE"] = params.probability
+             # Add or update DICE configs
+             if params.game_earn_config and "DICE" in params.game_earn_config:
+                 cfg["game_earn_config"]["DICE"] = params.game_earn_config["DICE"]
+             if params.probability and "DICE" in params.probability:
+                 cfg["probability"]["DICE"] = params.probability["DICE"]
         else:
-             # Deactivate by removing/clearing?
-             # Or just allow keeping config but rely on is_active flag passed in?
-             # DiceService checks: `bool(dice_event_probs and game_earn_config.get("DICE"))`
-             # If we want to "deactivate", we can clear them OR set a flag.
-             # But the schema says is_active is part of params.
-             # If user sets is_active=False, we should probably Clear them or have a separate flag.
-             # Plan says: "config_json.probability 비움 + game_earn_config 비움 → 기본 모드 복귀"
+             # Deactivate by removing DICE configs
              cfg["game_earn_config"].pop("DICE", None)
              cfg["probability"].pop("DICE", None)
 
-        cfg["caps"]["DICE"] = params.caps
-        cfg["eligibility"] = params.eligibility # Global or Dice specific? Checks in DiceService use global eligibility.
+        if params.caps and "DICE" in params.caps:
+            cfg["caps"]["DICE"] = params.caps["DICE"]
+        
+        if params.eligibility is not None:
+            cfg["eligibility"] = params.eligibility
         
         # Save
         program.config_json = cfg
