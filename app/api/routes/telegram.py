@@ -102,6 +102,9 @@ def telegram_auth(
     
     tg_id = tg_user_data.get('id')
     tg_username = tg_user_data.get('username')
+    tg_first_name = tg_user_data.get('first_name') or ""
+    tg_last_name = tg_user_data.get('last_name') or ""
+    tg_full_name = f"{tg_first_name} {tg_last_name}".strip()
     start_param = (payload.start_param or data.get("start_param") or "").strip()
     
     # 1. Find user by telegram_id
@@ -148,6 +151,21 @@ def telegram_auth(
             target.telegram_username = tg_username
             target.telegram_is_blocked = False
             target.telegram_join_count = int(getattr(target, "telegram_join_count", 0) or 0) + 1
+            
+            # Update PII/Contact Info from Telegram
+            if tg_full_name:
+                # If current nickname is still the default tg_user_... or tg_id, update it to the real name
+                if not target.nickname or target.nickname.startswith("tg_user_") or target.nickname == str(target.telegram_id):
+                     target.nickname = tg_full_name
+                
+                # Always sync to AdminUserProfile for CRM
+                from app.models.admin_user_profile import AdminUserProfile
+                profile = db.query(AdminUserProfile).filter(AdminUserProfile.user_id == target.id).first()
+                if not profile:
+                    profile = AdminUserProfile(user_id=target.id, external_id=target.external_id)
+                    db.add(profile)
+                profile.real_name = tg_full_name
+
             if not target.first_login_at:
                 target.first_login_at = now
 
@@ -188,7 +206,7 @@ def telegram_auth(
 
                 user = User(
                     external_id=external_id,
-                    nickname=tg_username or f"tg_user_{tg_id}",
+                    nickname=tg_full_name or tg_username or f"tg_user_{tg_id}",
                     telegram_id=tg_id,
                     telegram_username=tg_username,
                     first_login_at=datetime.now(timezone.utc),
@@ -197,6 +215,16 @@ def telegram_auth(
                     telegram_join_count=1
                 )
                 db.add(user)
+                db.flush() # Get user.id
+
+                # Create CRM Profile
+                from app.models.admin_user_profile import AdminUserProfile
+                profile = AdminUserProfile(
+                    user_id=user.id,
+                    external_id=user.external_id,
+                    real_name=tg_full_name
+                )
+                db.add(profile)
                 try:
                     db.commit()
                     db.refresh(user)
@@ -242,6 +270,18 @@ def telegram_auth(
                 user.telegram_is_blocked = False
                 user.telegram_join_count = int(getattr(user, "telegram_join_count", 0) or 0) + 1
                 user.last_login_at = datetime.now(timezone.utc)
+                
+                # Sync PII/Contact Info
+                if tg_full_name:
+                    if not user.nickname or user.nickname.startswith("tg_user_") or user.nickname == str(user.telegram_id):
+                        user.nickname = tg_full_name
+                    
+                    from app.models.admin_user_profile import AdminUserProfile
+                    profile = db.query(AdminUserProfile).filter(AdminUserProfile.user_id == user.id).first()
+                    if not profile:
+                        profile = AdminUserProfile(user_id=user.id, external_id=user.external_id)
+                        db.add(profile)
+                    profile.real_name = tg_full_name
                 
                 try:
                     db.commit()

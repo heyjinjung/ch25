@@ -392,6 +392,36 @@ def fan_out_message(
             if msg:
                 msg.recipient_count = len(inbox_items)
             db.commit()
+
+        # 3. Telegram Fan-out (if channel selected)
+        msg_ref = db.query(AdminMessage).filter(AdminMessage.id == message_id).first()
+        if msg_ref and "TELEGRAM" in (msg_ref.channels or []):
+            from app.services.notification_service import NotificationService
+            import asyncio
+            
+            notifier = NotificationService()
+            user_tg_ids = db.execute(
+                select(User.telegram_id).where(User.id.in_(target_user_ids), User.telegram_id.isnot(None))
+            ).scalars().all()
+            
+            async def _send_batch():
+                # Note: Simple serial send for now to respect TG limits
+                for tid in set(user_tg_ids):
+                    await notifier.send_telegram_message(
+                        chat_id=int(tid),
+                        text=f"<b>[공지] {msg_ref.title}</b>\n\n{msg_ref.content}"
+                    )
+            
+            try:
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    asyncio.create_task(_send_batch())
+                else:
+                    loop.run_until_complete(_send_batch())
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).error(f"Telegram fan-out failed: {e}")
+
     finally:
         if local_db_created:
             db.close()

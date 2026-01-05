@@ -171,17 +171,36 @@ const MessageCenterPage: React.FC = () => {
                         )}
                     </div>
 
-                    {/* Channels - Hardcoded to INBOX for now */}
                     <div>
                         <label className="block text-sm font-medium text-gray-300 mb-1">발송 채널</label>
                         <div className="flex gap-4">
                             <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
-                                <input type="checkbox" checked readOnly className="rounded border-gray-600 bg-[#1A1A1A] text-[#91F402] focus:ring-[#2D6B3B]" />
+                                <input
+                                    type="checkbox"
+                                    checked={form.channels?.includes("INBOX")}
+                                    onChange={(e) => {
+                                        const next = e.target.checked
+                                            ? [...(form.channels || []), "INBOX"]
+                                            : (form.channels || []).filter(c => c !== "INBOX");
+                                        setForm(p => ({ ...p, channels: next }));
+                                    }}
+                                    className="rounded border-gray-600 bg-[#1A1A1A] text-[#91F402] focus:ring-[#2D6B3B]"
+                                />
                                 <span>In-App Inbox</span>
                             </label>
-                            <label className="flex items-center gap-2 text-sm text-gray-500 cursor-not-allowed">
-                                <input type="checkbox" disabled className="rounded border-gray-600 bg-[#1A1A1A]" />
-                                <span>Telegram (준비중)</span>
+                            <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={form.channels?.includes("TELEGRAM")}
+                                    onChange={(e) => {
+                                        const next = e.target.checked
+                                            ? [...(form.channels || []), "TELEGRAM"]
+                                            : (form.channels || []).filter(c => c !== "TELEGRAM");
+                                        setForm(p => ({ ...p, channels: next }));
+                                    }}
+                                    className="rounded border-gray-600 bg-[#1A1A1A] text-[#24A1DE] focus:ring-[#24A1DE]"
+                                />
+                                <span className="text-[#24A1DE]">Telegram (Direct)</span>
                             </label>
                         </div>
                     </div>
