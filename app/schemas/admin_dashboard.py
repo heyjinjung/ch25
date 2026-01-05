@@ -42,3 +42,27 @@ class EventsStatusResponse(BaseModel):
     streak_counts: Dict[str, int]  # {"NORMAL": 100, "HOT": 20, "LEGEND": 5}
     golden_hour_peak: int
     is_golden_hour_active: bool
+
+
+class ComprehensiveOverviewResponse(BaseModel):
+    """Daily comprehensive operational metrics."""
+    # Retention
+    welcome_retention_rate: float
+    churn_risk_count: int  # Active yesterday, missed today
+    
+    # Financials
+    external_ranking_deposit: int
+    external_ranking_play_count: int
+    today_deposit_sum: int
+    today_deposit_count: int
+    
+    # Liabilities
+    total_vault_balance: int
+    total_inventory_liability: int
+    
+    # Activity
+    today_active_users: int
+    today_game_plays: int
+    
+    # Streak
+    streak_counts: Dict[str, int]

@@ -79,6 +79,25 @@ export interface EventsStatusResponse {
   is_golden_hour_active: boolean;
 }
 
+export interface ComprehensiveOverviewResponse {
+  welcome_retention_rate: number;
+  churn_risk_count: number;
+  external_ranking_deposit: number;
+  external_ranking_play_count: number;
+  today_deposit_sum: number;
+  today_deposit_count: number;
+  total_vault_balance: number;
+  total_inventory_liability: number;
+  today_active_users: number;
+  today_game_plays: number;
+  streak_counts: Record<string, number>;
+}
+
+export const fetchComprehensiveOverview = async (): Promise<ComprehensiveOverviewResponse> => {
+  const response = await httpClient.get<ComprehensiveOverviewResponse>("/admin/api/dashboard/comprehensive");
+  return response.data;
+};
+
 export const getDailyOverview = async (): Promise<DailyOverviewResponse> => {
   const response = await httpClient.get("/admin/api/dashboard/daily-overview");
   return response.data;

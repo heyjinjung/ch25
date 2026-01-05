@@ -98,12 +98,9 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
                             연속 플레이 기록
                         </h2>
                         <div className="text-xs font-medium text-white/70 space-y-1.5 bg-white/5 rounded-xl p-3 text-left border border-white/5">
-                            <p>• 하루에 한 번만 <span className="text-emerald-400 font-bold">플레이</span>하면 ‘연속 기록’이 1씩 올라가요.</p>
-                            <p>• 단순 접속이 아니라 <span className="text-emerald-400 font-bold">매일 게임을 플레이</span>해야 기록이 유지돼요.</p>
+                            <p>• 하루 한 번 <span className="text-emerald-400 font-bold">플레이</span> - ‘연속 기록’</p>
+                            <p>• <span className="text-emerald-400 font-bold">매일 게임 플레이</span>시 기록이 유지</p>
                             <p className="text-white/40 pt-1.5 border-t border-white/10 mt-1.5">• 기준 시간: 매일 00:00</p>
-                        </div>
-                        <div className="mt-2 text-[10px] text-amber-400/90 font-bold animate-pulse">
-                            [보상 안내] 오픈 기념 보상은 즉시 공개 예정이에요!
                         </div>
                     </header>
 

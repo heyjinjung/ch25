@@ -20,7 +20,8 @@ from app.schemas.admin_dashboard import (
     DashboardMetricsResponse,
     MetricValue,
     DailyOverviewResponse,
-    EventsStatusResponse
+    EventsStatusResponse,
+    ComprehensiveOverviewResponse,
 )
 from app.schemas.admin_streak_metrics import StreakDailyMetric, StreakMetricsResponse
 from app.core.config import get_settings
@@ -427,6 +428,15 @@ def get_events_status(
     """Live event monitoring."""
     service = AdminDashboardService()
     return service.get_event_status(db)
+
+@router.get("/comprehensive", response_model=ComprehensiveOverviewResponse)
+def get_comprehensive_overview(
+    db: Session = Depends(get_db),
+):
+    """Daily comprehensive operational metrics."""
+    service = AdminDashboardService()
+    return service.get_daily_overview(db)
+
 
 @router.post("/notifications/nudge")
 def nudge_risk_group(

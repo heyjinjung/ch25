@@ -18,10 +18,9 @@ import {
 } from "lucide-react";
 import {
   fetchDashboardMetrics,
-  fetchStreakMetrics,
   DashboardMetricsResponse,
-  StreakMetricsResponse,
 } from "../api/adminDashboardApi";
+import DailyOpsSummary from "../components/DailyOpsSummary";
 
 const baseAccent = "#91F402";
 
@@ -129,38 +128,22 @@ const quickLinks = [
   },
 ];
 
+
 const AdminDashboardPage: React.FC = () => {
   const [data, setData] = useState<DashboardMetricsResponse | null>(null);
-  const [streakData, setStreakData] = useState<StreakMetricsResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [streakError, setStreakError] = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true);
     setError(null);
-    setStreakError(null);
     try {
-      const [res, streakRes] = await Promise.all([
-        fetchDashboardMetrics(24),
-        fetchStreakMetrics(7),
-      ]);
+      const res = await fetchDashboardMetrics(24);
       setData(res);
-      setStreakData(streakRes);
     } catch {
       setError("지표를 불러오지 못했습니다. 다시 시도해주세요.");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const loadStreakOnly = async () => {
-    setStreakError(null);
-    try {
-      const streakRes = await fetchStreakMetrics(7);
-      setStreakData(streakRes);
-    } catch {
-      setStreakError("스트릭 지표를 불러오지 못했습니다. 다시 시도해주세요.");
     }
   };
 
@@ -269,103 +252,8 @@ const AdminDashboardPage: React.FC = () => {
         )}
       </div>
 
-      <div className="rounded-lg border border-[#262626] bg-[#111111] p-5 shadow-md">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="space-y-1">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#91F402]">streak</p>
-            <h2 className="text-lg font-bold text-white">스트릭 관측성 (최근 7일, KST)</h2>
-            <p className="text-xs text-gray-400">승급/리셋, 보너스 지급, 금고 배율 적용/제외 사유 (이벤트 운영용)</p>
-          </div>
-          <button
-            type="button"
-            onClick={loadStreakOnly}
-            className="rounded border border-[#333] px-3 py-1 text-sm text-gray-200 hover:bg-[#171717]"
-          >
-            새로고침
-          </button>
-        </div>
-
-        {streakError ? (
-          <div className="mt-4 rounded-lg border border-[#3A1F1F] bg-[#1A0D0D] p-4 text-sm text-red-200">
-            <div className="flex items-center justify-between">
-              <span>{streakError}</span>
-              <button
-                type="button"
-                onClick={loadStreakOnly}
-                className="rounded border border-red-300 px-3 py-1 text-red-100 hover:bg-red-800/40"
-              >
-                다시 불러오기
-              </button>
-            </div>
-          </div>
-        ) : null}
-
-        <div className="mt-4 space-y-2">
-          <div className="rounded border border-[#262626] bg-[#0F0F0F] p-3 text-xs text-gray-300">
-            <div className="flex flex-wrap gap-x-6 gap-y-1">
-              <span>
-                <span className="text-gray-400">표 시간대:</span> {streakData?.timezone ?? "Asia/Seoul"}
-              </span>
-              <span>
-                <span className="text-gray-400">집계 기준:</span> {streakData?.calendar_bucket ?? "KST calendar day"}
-              </span>
-              <span>
-                <span className="text-gray-400">스트릭 증가 트리거:</span> {streakData?.streak_trigger ?? "PLAY_GAME"}
-              </span>
-              <span>
-                <span className="text-gray-400">운영일 리셋:</span> 매일 {String(streakData?.operational_reset_hour_kst ?? 9).padStart(2, "0")}:00 KST
-              </span>
-            </div>
-            {streakData?.notes?.length ? (
-              <ul className="mt-2 list-disc pl-4 text-[11px] text-gray-400">
-                {streakData.notes.slice(0, 4).map((note) => (
-                  <li key={note}>{note}</li>
-                ))}
-              </ul>
-            ) : null}
-          </div>
-
-          <div className="overflow-x-auto">
-          <table className="min-w-[980px] w-full text-left text-sm">
-            <thead>
-              <tr className="border-b border-[#262626] text-xs text-gray-400">
-                <th className="py-2 pr-3">날짜(KST)</th>
-                <th className="py-2 pr-3">승급</th>
-                <th className="py-2 pr-3">리셋</th>
-                <th className="py-2 pr-3">Day4~5 티켓 지급</th>
-                <th className="py-2 pr-3">금고 보너스 적용(로그)</th>
-                <th className="py-2 pr-3">금고 기본플레이(200)</th>
-                <th className="py-2 pr-3">금고 보너스 적용(정산)</th>
-                <th className="py-2 pr-3">제외: 주사위 모드</th>
-                <th className="py-2">제외: 티켓 타입</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(streakData?.items || []).map((row) => (
-                <tr key={row.day} className="border-b border-[#1F1F1F] text-gray-200">
-                  <td className="py-2 pr-3 text-gray-300">{row.day}</td>
-                  <td className="py-2 pr-3">{formatNumber(row.promote)}</td>
-                  <td className="py-2 pr-3">{formatNumber(row.reset)}</td>
-                  <td className="py-2 pr-3">{formatNumber(row.ticket_bonus_grant)}</td>
-                  <td className="py-2 pr-3">{formatNumber(row.vault_bonus_applied)}</td>
-                  <td className="py-2 pr-3">{formatNumber(row.vault_base_plays)}</td>
-                  <td className="py-2 pr-3">{formatNumber(row.vault_bonus_applied_via_earn_event)}</td>
-                  <td className="py-2 pr-3">{formatNumber(row.excluded_by_dice_mode)}</td>
-                  <td className="py-2">{formatNumber(row.excluded_by_token_type)}</td>
-                </tr>
-              ))}
-              {!streakData?.items?.length ? (
-                <tr>
-                  <td colSpan={9} className="py-6 text-center text-sm text-gray-400">
-                    {loading ? "스트릭 지표 로딩 중..." : "표시할 데이터가 없습니다."}
-                  </td>
-                </tr>
-              ) : null}
-            </tbody>
-          </table>
-          </div>
-        </div>
-      </div>
+      {/* Daily Operation Summary */}
+      <DailyOpsSummary />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
         {quickLinks.map((link) => (

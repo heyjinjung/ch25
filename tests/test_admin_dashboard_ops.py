@@ -25,18 +25,23 @@ def test_daily_overview_structure(db: Session, dashboard_service: AdminDashboard
 
     result = dashboard_service.get_daily_overview(db)
 
-    assert "risk_count" in result
-    assert "streak_risk_count" in result
-    assert "mission_percent" in result
-    assert "vault_payout_ratio" in result
-    assert "total_vault_paid" in result
-    assert "total_deposit_estimated" in result
+    # New comprehensive structure keys
+    assert "welcome_retention_rate" in result
+    assert "churn_risk_count" in result
+    assert "external_ranking_deposit" in result
+    assert "external_ranking_play_count" in result
+    assert "today_deposit_sum" in result
+    assert "today_deposit_count" in result
+    assert "total_vault_balance" in result
+    assert "total_inventory_liability" in result
+    assert "today_active_users" in result
+    assert "today_game_plays" in result
+    assert "streak_counts" in result
 
     # Check types
-    assert isinstance(result["risk_count"], int)
-    assert isinstance(result["streak_risk_count"], int)
-    assert isinstance(result["mission_percent"], float)
-    assert result["vault_payout_ratio"] is None or isinstance(result["vault_payout_ratio"], float)
+    assert isinstance(result["welcome_retention_rate"], float)
+    assert isinstance(result["churn_risk_count"], int)
+    assert isinstance(result["streak_counts"], dict)
 
 def test_event_status_structure(db: Session, dashboard_service: AdminDashboardService):
     """Test that get_event_status returns the expected structure."""
@@ -66,23 +71,17 @@ def test_event_status_structure(db: Session, dashboard_service: AdminDashboardSe
 
 def test_risk_logic_mock(db: Session, dashboard_service: AdminDashboardService):
     """Simple logic test with seeded data."""
-    # 1. Create a user who logged in yesterday but not today (Risk)
-    # Mock "Now" as header or assume system time.
-    # Since service uses datetime.utcnow(), we must align with that.
-    # Service uses +9h for KST.
-
-    # Let's just create a user and verifying query executes without error.
+    # Create a user and verify query runs without error.
     user = User(external_id="dashboard_test_user", play_streak=5)
     db.add(user)
     db.commit()
 
-    # We won't rigorously test the datetime interactions here as mocking datetime
-    # inside the service is harder without patching.
-    # Main goal is confirming SQL generation works.
     result = dashboard_service.get_daily_overview(db)
-    assert result["risk_count"] >= 0
+    # New key name
+    assert result["churn_risk_count"] >= 0
 
 def test_nudge_risk_group(db: Session, dashboard_service: AdminDashboardService):
     count = dashboard_service.nudge_risk_group(db)
     assert isinstance(count, int)
     assert count >= 0
+

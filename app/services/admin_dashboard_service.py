@@ -44,76 +44,112 @@ class AdminDashboardService:
         today_start_utc = self._get_today_kst_start_in_utc(kst_now)
 
         # 1. Retention Risk (Active Yesterday AND Not Active Today)
-        # Using last_login_at
-        risk_count = db.query(User).filter(
-            User.last_login_at >= yesterday_start,
-            User.last_login_at <= yesterday_end,
-            User.last_login_at < today_start_utc  # Should be redundant if login updates timestamp, but safe check
-        ).filter(
-            or_(User.last_login_at < today_start_utc, User.last_login_at == None)
-        ).count()
-
-        # Actually, simpler logic: Users who logged in yesterday, but have NOT logged in since Today 00:00 KST
-        # Query: Last login between [YesterdayStart, YesterdayEnd]
-        # (If they logged in today, last_login_at would be > TodayStart)
-        risk_query = db.query(func.count(User.id)).filter(
+        risk_count = db.query(func.count(User.id)).filter(
             User.last_login_at >= yesterday_start,
             User.last_login_at <= yesterday_end
-        )
-        risk_count = risk_query.scalar() or 0
+        ).scalar() or 0
+        
+        churn_risk_count = 0
+        if risk_count > 0:
+             # Of those who were active yesterday, how many have NOT logged in since Today 00:00 KST?
+             # Logic: logged in yesterday AND (last_login < today_start OR last_login is None)
+             churn_risk_count = db.query(func.count(User.id)).filter(
+                User.last_login_at >= yesterday_start,
+                User.last_login_at <= yesterday_end,
+                or_(User.last_login_at < today_start_utc, User.last_login_at == None)
+             ).scalar() or 0
 
-        # 2. Streak Risk (Streak >= 3 AND Not Active Today)
-        # last_login_at < TodayStartUTC AND play_streak >= 3
-        # Note: play_streak resets if they miss a day, but we want to catch them BEFORE reset logic runs (usually daily job).
-        # Assuming streak hasn't reset yet or we are looking for those at risk.
-        streak_risk_count = db.query(func.count(User.id)).filter(
-            User.play_streak >= 3,
-            User.last_login_at < today_start_utc
+        # 2. Welcome Mission Retention (D-2 Joined -> Active D-1 (Yesterday))
+        d2_date = kst_now.date() - timedelta(days=2)
+        d2_start = datetime.combine(d2_date, time.min) - timedelta(hours=9)
+        d2_end = datetime.combine(d2_date, time.max) - timedelta(hours=9)
+
+        joined_d2 = db.query(func.count(User.id)).filter(
+            User.created_at >= d2_start,
+            User.created_at <= d2_end
         ).scalar() or 0
 
-        # 3. Settlement
-        # Mission Percent (Yesterday) -> Avg completion of Daily Missions
-        # Join UserMissionProgress where reset_date = Yesterday (KST Date string)
-        yesterday_str = (kst_now.date() - timedelta(days=1)).strftime("%Y-%m-%d")
+        retained_d1 = 0
+        if joined_d2 > 0:
+            retained_d1 = db.query(func.count(distinct(User.id))).filter(
+                User.created_at >= d2_start,
+                User.created_at <= d2_end,
+                User.last_login_at >= yesterday_start, # Login Yesterday (D+1)
+                User.last_login_at <= yesterday_end
+            ).scalar() or 0
 
-        # Count total assigned daily missions vs completed
-        mission_stats = db.query(
-            func.count(UserMissionProgress.id).label("total"),
-            func.sum(case((UserMissionProgress.is_completed == True, 1), else_=0)).label("completed")
-        ).join(Mission).filter(
-            Mission.category == "DAILY",
-            UserMissionProgress.reset_date == yesterday_str
+        welcome_retention_rate = (retained_d1 / joined_d2 * 100) if joined_d2 > 0 else 0.0
+
+        # 3. External Ranking / Financials
+        from app.models.external_ranking import ExternalRankingData
+        ext_rank_stats = db.query(
+            func.sum(ExternalRankingData.deposit_amount),
+            func.sum(ExternalRankingData.play_count)
         ).first()
+        external_ranking_deposit = int(ext_rank_stats[0] or 0)
+        external_ranking_play_count = int(ext_rank_stats[1] or 0)
 
-        total_m = mission_stats.total or 0
-        completed_m = mission_stats.completed or 0
-        mission_percent = (completed_m / total_m * 100) if total_m > 0 else 0.0
-
-        # Vault Payout Ratio
-        # Payout: VaultEarnEvent amount > 0 within Yesterday UTC range
-        vault_paid = db.query(func.sum(VaultEarnEvent.amount)).filter(
-            VaultEarnEvent.created_at >= yesterday_start,
-            VaultEarnEvent.created_at <= yesterday_end,
-            VaultEarnEvent.amount > 0
-        ).scalar() or 0
-
-        # Deposit: UserCashLedger delta > 0, reason='CHARGE' (Hypothetical)
-        # If 'CHARGE' isn't exact, this will be 0. We'll use a loose filter or assume explicit reason.
-        # Based on search, we need to verify. For now, use 'CHARGE'.
-        total_deposit = db.query(func.sum(UserCashLedger.delta)).filter(
-            UserCashLedger.created_at >= yesterday_start,
-            UserCashLedger.created_at <= yesterday_end,
+        # Today's Deposits (KST 00:00 ~ Now)
+        deposit_stats = db.query(
+            func.sum(UserCashLedger.delta),
+            func.count(UserCashLedger.id)
+        ).filter(
+            UserCashLedger.created_at >= today_start_utc,
             UserCashLedger.delta > 0,
             or_(UserCashLedger.reason == "CHARGE", UserCashLedger.reason == "DEPOSIT")
+        ).first()
+        today_deposit_sum = int(deposit_stats[0] or 0)
+        today_deposit_count = int(deposit_stats[1] or 0)
+
+        # 4. Liabilities (Vault + Inventory)
+        vault_stats = db.query(
+            func.sum(User.vault_locked_balance + User.vault_available_balance)
+        ).scalar() or 0
+        total_vault_balance = int(vault_stats)
+        
+        # Inventory Liability (Simplified: Just count of valuable items for now, or 0 if complexity high)
+        # Assuming minimal implementation for speed check:
+        # Just distinct count of items or sum of quantity? Sum of quantity seems safest proxy.
+        from app.models.inventory import UserInventoryItem
+        inventory_count = db.query(func.sum(UserInventoryItem.quantity)).scalar() or 0
+        total_inventory_liability = int(inventory_count)
+
+        # 5. Activity (Today)
+        # Active Users Today
+        today_active_users = db.query(func.count(User.id)).filter(
+            User.last_login_at >= today_start_utc
         ).scalar() or 0
 
+        # Game Plays Today (Dice + Roulette + Lottery)
+        dice_plays = db.query(func.count(DiceLog.id)).filter(DiceLog.created_at >= today_start_utc).scalar() or 0
+        roulette_plays = db.query(func.count(RouletteLog.id)).filter(RouletteLog.created_at >= today_start_utc).scalar() or 0
+        lottery_plays = db.query(func.count(LotteryLog.id)).filter(LotteryLog.created_at >= today_start_utc).scalar() or 0
+        today_game_plays = dice_plays + roulette_plays + lottery_plays
+
+        # 6. Streak Counts
+        streak_case = case(
+            (User.play_streak >= 7, "LEGEND"),
+            (User.play_streak >= 3, "HOT"),
+            else_="NORMAL"
+        )
+        streak_query = db.query(streak_case, func.count(User.id)).group_by(streak_case).all()
+        streak_counts = {"NORMAL": 0, "HOT": 0, "LEGEND": 0}
+        for label, count in streak_query:
+            if label in streak_counts:
+                streak_counts[label] = count
+
         return {
-            "risk_count": risk_count,
-            "streak_risk_count": streak_risk_count,
-            "mission_percent": float(mission_percent),
-            "vault_payout_ratio": (float(vault_paid) / float(total_deposit) * 100) if total_deposit > 0 else None,
-            "total_vault_paid": int(vault_paid),
-            "total_deposit_estimated": int(total_deposit)
+            "welcome_retention_rate": float(welcome_retention_rate),
+            "churn_risk_count": churn_risk_count,
+            "external_ranking_deposit": external_ranking_deposit,
+            "external_ranking_play_count": external_ranking_play_count,
+            "today_deposit_sum": today_deposit_sum,
+            "today_deposit_count": today_deposit_count,
+            "total_vault_balance": total_vault_balance,
+            "total_inventory_liability": total_inventory_liability,
+            "today_active_users": today_active_users,
+            "today_game_plays": today_game_plays,
+            "streak_counts": streak_counts
         }
 
     def get_event_status(self, db: Session):
