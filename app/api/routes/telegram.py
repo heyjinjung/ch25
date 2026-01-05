@@ -221,7 +221,7 @@ def telegram_auth(
                     
                     # New users always trigger LOGIN mission
                     from app.services.mission_service import MissionService
-                    MissionService(db).update_progress(user.id, "LOGIN", delta=1)
+                    MissionService(db).ensure_login_progress(user.id)
 
                     db.commit()
                 except Exception as e:
@@ -234,22 +234,7 @@ def telegram_auth(
                 # [Mission Trigger] Check before updating last_login_at
                 try:
                     from app.services.mission_service import MissionService
-                    from zoneinfo import ZoneInfo
-                    kst = ZoneInfo("Asia/Seoul")
-                    now_kst = datetime.now(kst)
-                    today_kst_date = now_kst.date()
-                    should_increment = False
-                    
-                    if user.last_login_at:
-                        last_login_utc = user.last_login_at.replace(tzinfo=timezone.utc)
-                        last_login_kst = last_login_utc.astimezone(kst)
-                        if last_login_kst.date() < today_kst_date:
-                            should_increment = True
-                    else:
-                        should_increment = True
-                    
-                    if should_increment:
-                        MissionService(db).update_progress(user.id, "LOGIN", delta=1)
+                    MissionService(db).ensure_login_progress(user.id)
                 except Exception:
                     pass
 
