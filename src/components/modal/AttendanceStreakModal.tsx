@@ -212,7 +212,7 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
                                 <p className="text-[10px] font-black text-white/40 tracking-widest">
                                     {isZeroStreak ? "첫 보상" : "다음 보상"}
                                 </p>
-                                <p className="text-sm font-bold text-figma-accent">1일차</p>
+                                <p className="text-sm font-bold text-figma-accent">{isZeroStreak ? "1일차" : `${currentStreak + 1}일차`}</p>
                             </div>
                         </div>
 
