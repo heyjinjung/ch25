@@ -31,6 +31,7 @@ const MobileBottomNav: React.FC = memo(() => {
             label: "홈",
             to: "/",
             isActive: isActive("/"),
+            dataTour: "nav-home",
             icon: (active: boolean) => (
                 <svg xmlns="http://www.w3.org/2000/svg" className={clsx("w-6 h-6 mb-1 transition-transform", active ? "scale-110" : "opacity-60")} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={active ? 2.5 : 2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -41,6 +42,7 @@ const MobileBottomNav: React.FC = memo(() => {
             label: "게임",
             to: "/games",
             isActive: isActive("/games") || ["/roulette", "/dice", "/lottery"].some(p => currentPath.startsWith(p)),
+            dataTour: "nav-games",
             icon: (active: boolean) => (
                 <svg xmlns="http://www.w3.org/2000/svg" className={clsx("w-6 h-6 mb-1 transition-transform", active ? "scale-110" : "opacity-60")} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={active ? 2.5 : 2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
@@ -52,6 +54,7 @@ const MobileBottomNav: React.FC = memo(() => {
             label: "금고",
             to: "/vault",
             isActive: isActive("/vault"),
+            dataTour: "nav-vault",
             icon: (active: boolean) => (
                 <svg xmlns="http://www.w3.org/2000/svg" className={clsx("w-6 h-6 mb-1 transition-transform", active ? "scale-110" : "opacity-60")} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={active ? 2.5 : 2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -62,6 +65,7 @@ const MobileBottomNav: React.FC = memo(() => {
             label: "이벤트",
             to: "/events",
             isActive: isActive("/events") || isActive("/season-pass") || isActive("/missions"),
+            dataTour: "nav-events",
             icon: (active: boolean) => (
                 <div className="relative">
                     <svg xmlns="http://www.w3.org/2000/svg" className={clsx("w-6 h-6 mb-1 transition-transform", active ? "scale-110 text-amber-400" : "opacity-60")} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -85,6 +89,7 @@ const MobileBottomNav: React.FC = memo(() => {
                     <Link
                         key={item.label}
                         to={item.to}
+                        data-tour={item.dataTour}
                         className={clsx(
                             "flex flex-1 flex-col items-center justify-center h-full tap-highlight-transparent transition-all active:scale-95",
                             item.isActive ? "text-[var(--figma-accent-green)] drop-shadow-[0_0_8px_rgba(48,255,117,0.5)] font-bold" : "text-white/40 hover:text-white/70"

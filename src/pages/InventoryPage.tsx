@@ -75,7 +75,7 @@ const InventoryPage: React.FC = () => {
     return (
         <div className="mx-auto w-full max-w-lg pb-[calc(96px+env(safe-area-inset-bottom))]">
             {/* Title */}
-            <div className="mb-4 flex items-center gap-3">
+            <div className="mb-4 flex items-center gap-3" data-tour="inventory-link">
                 <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center p-1.5 overflow-hidden">
                     <img src="/assets/icon_inventory_wallet.png" alt="Inventory" className="w-full h-full object-contain" />
                 </div>
@@ -106,6 +106,7 @@ const InventoryPage: React.FC = () => {
                             tryHaptic(10);
                             navigate('/shop');
                         }}
+                        data-tour="inventory-shop-btn"
                         className="shrink-0 bg-figma-primary text-white text-[12px] font-black px-4 py-2.5 rounded-xl transition-all active:scale-[0.98]"
                     >
                         교환권 구매하러 가기
@@ -114,9 +115,10 @@ const InventoryPage: React.FC = () => {
             </div>
 
             {/* Tabs */}
-            <div className="mb-6">
+            <div className="mb-6" data-tour="inventory-tabs">
                 <div className="flex p-1 bg-white/5 rounded-2xl border border-white/10">
                     <button
+                        data-tour="inventory-items-tab"
                         className={clsx(
                             "flex-1 py-3 text-sm font-black rounded-xl transition-all",
                             "active:scale-[0.98]",
@@ -129,6 +131,7 @@ const InventoryPage: React.FC = () => {
                         보유 아이템
                     </button>
                     <button
+                        data-tour="inventory-wallet-tab"
                         className={clsx(
                             "flex-1 py-3 text-sm font-black rounded-xl transition-all",
                             "active:scale-[0.98]",

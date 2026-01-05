@@ -68,7 +68,7 @@ const ShopPage: React.FC = () => {
     return (
         <div className="mx-auto w-full max-w-lg pb-[calc(96px+env(safe-area-inset-bottom))]">
             {/* Header */}
-            <div className="mb-5 flex items-center gap-3">
+            <div className="mb-5 flex items-center gap-3" data-tour="shop-link">
                 <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 flex items-center justify-center">
                     <ShoppingBag className="w-5 h-5 text-emerald-400/80" />
                 </div>

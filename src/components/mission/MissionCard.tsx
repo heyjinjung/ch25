@@ -357,6 +357,7 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
           ) : isCompleted ? (
             <button
               onClick={handleClaim}
+              data-tour="mission-claim"
               className="flex h-10 w-10 items-center justify-center rounded-2xl bg-figma-primary text-white shadow-lg shadow-emerald-900/30 transition active:scale-95"
               aria-label="Claim mission reward"
             >

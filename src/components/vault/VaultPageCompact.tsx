@@ -215,6 +215,7 @@ const VaultPageCompact: React.FC = () => {
                     <Link
                         to="/inventory"
                         onClick={() => tryHaptic(10)}
+                        data-tour="vault-inventory-btn"
                         className="flex-1 py-3 rounded-xl bg-white/10 border border-white/20 text-white font-bold text-center text-sm shadow-lg shadow-black/20 hover:bg-white/15 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
                     >
                         <img src="/assets/icon_inventory_wallet.png" className="w-5 h-5 object-contain" alt="" />
