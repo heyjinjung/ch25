@@ -60,6 +60,10 @@ export async function deleteUser(userId: number) {
   await adminApi.delete(`/admin/api/users/${userId}`);
 }
 
+export async function purgeUser(userId: number) {
+  await adminApi.post(`/admin/api/users/${userId}/purge`);
+}
+
 export async function importProfiles(file: File) {
   const formData = new FormData();
   formData.append("file", file);

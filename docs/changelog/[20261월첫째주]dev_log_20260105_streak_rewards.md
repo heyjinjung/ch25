@@ -41,3 +41,27 @@
 *   **Status**: PASSED
 *   **Frontend**: `npm run build` (TypeScript + Vite) -> **Success (0 Errors)**
 *   **Backend**: Python Compile Check -> **Success (0 Errors)**
+
+## 3. UI/UX & Admin Dashboard Refactor
+### Admin Dashboard Layout Optimization
+*   **Goal**: Integrate "Game Participation" and "Ticket Usage" metrics into the "Daily Ops Summary" section for consistency.
+*   **Backend (`app/services/admin_dashboard_service.py`)**:
+    *   Added `today_ticket_usage` calculation to `get_daily_overview`.
+    *   Added detail view handler support for `today_ticket_usage`.
+*   **Frontend (`src/admin/pages/AdminDashboardPage.tsx`)**:
+    *   Removed redundant top-level metric cards.
+    *   Cleaned up unused state and API calls (removed `fetchDashboardMetrics`).
+*   **Frontend (`src/admin/components/DailyOpsSummary.tsx`)**:
+    *   Added "Ticket Usage" card and detail modal integration.
+
+### UI Viewport Optimization (Telegram WebApp)
+*   **Issue**: Modals (Golden Hour, Streak Reward) were cut off at the top in mobile viewports.
+*   **Fix**:
+    *   **Common**: Applied `fixed inset-0 p-4` layout with `items-center justify-center` to enforce safe areas.
+    *   **Golden Hour Popup (`src/components/events/GoldenHourPopup.tsx`)**: Reduced vertical padding and icon size; unified border radius (`rounded-3xl`).
+    *   **Streak Modal (`src/components/modal/AttendanceStreakModal.tsx`)**: Unified layout style, consistent border radius (`rounded-3xl` outer, `rounded-2xl` inner).
+
+### API Route Fixes
+*   **Issue 422 Error on `/admin/api/dice-config/event-params`**:
+    *   **Cause**: Route definition order collision. Static route `event-params` was being captured by dynamic route `/{config_id}`.
+    *   **Fix**: Moved static routes above dynamic path parameter routes in `app/api/admin/routes/admin_dice.py`.

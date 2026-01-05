@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Edit2, Plus, Save, Search, Trash2, Upload } from "lucide-react";
-import { createUser, deleteUser, fetchUsers, updateUser, AdminUser, AdminUserPayload } from "../api/adminUserApi";
+import { createUser, deleteUser, fetchUsers, purgeUser, updateUser, AdminUser, AdminUserPayload } from "../api/adminUserApi";
 import { useToast } from "../../components/common/ToastProvider";
 import UserImportModal from "../components/UserImportModal";
 import { fetchUserMissions, updateUserMission, AdminUserMissionDetail, AdminUserMissionUpdatePayload } from "../api/adminUserMissionApi";
@@ -122,6 +122,15 @@ const UserAdminPage: React.FC = () => {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
       addToast("삭제 완료", "success");
+    },
+    onError: (err) => addToast(mapErrorDetail(err), "error"),
+  });
+
+  const purgeMutation = useMutation({
+    mutationFn: (id: number) => purgeUser(id),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
+      addToast("하드 퍼지 완료", "success");
     },
     onError: (err) => addToast(mapErrorDetail(err), "error"),
   });
@@ -289,6 +298,14 @@ const UserAdminPage: React.FC = () => {
     const ok = window.confirm("정말 삭제하시겠습니까?");
     if (!ok) return;
     deleteMutation.mutate(row.id);
+  };
+
+  const purgeRow = (row: MemberRow) => {
+    const ok = window.confirm(
+      "[하드 퍼지] 유저 및 관련 기록(텔레그램/로그/이벤트 등)을 가능한 범위에서 전부 삭제합니다. 되돌릴 수 없습니다. 진행할까요?"
+    );
+    if (!ok) return;
+    purgeMutation.mutate(row.id);
   };
 
   // handleCopyMagicLink removed (Telegram-only v3 transition)
@@ -862,6 +879,15 @@ const UserAdminPage: React.FC = () => {
                             aria-label="운영/감사 로그"
                           >
                             <Shield size={16} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => purgeRow(member)}
+                            className="rounded-md border border-red-900/60 px-2 py-1 text-xs font-bold text-red-300 hover:bg-red-900/30 hover:text-red-200"
+                            title="하드 퍼지(완전 초기화)"
+                            aria-label="하드 퍼지(완전 초기화)"
+                          >
+                            PURGE
                           </button>
                           <button
                             type="button"
