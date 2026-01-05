@@ -55,6 +55,14 @@ interface MissionState {
     claimStreakReward: () => Promise<boolean>;
 }
 
+const mergeStreakInfo = (current: StreakInfo | null, incoming: StreakInfo | null): StreakInfo | null => {
+    if (!incoming) return current;
+
+    // Preserve existing claimable_day when backend omits it
+    const claimable_day = incoming.claimable_day ?? current?.claimable_day ?? null;
+    return { ...incoming, claimable_day };
+};
+
 export const useMissionStore = create<MissionState>((set: any, get: any) => ({
     missions: [],
     isLoading: false,
@@ -65,7 +73,7 @@ export const useMissionStore = create<MissionState>((set: any, get: any) => ({
     isStreakModalOpen: false,
 
     setStreakInfo: (streakInfo) => {
-        set({ streakInfo });
+        set({ streakInfo: mergeStreakInfo(get().streakInfo, streakInfo) });
     },
 
     setStreakModalOpen: (isOpen) => {
@@ -96,6 +104,7 @@ export const useMissionStore = create<MissionState>((set: any, get: any) => ({
             if (!newStreakInfo && get().streakInfo) {
                 newStreakInfo = get().streakInfo;
             }
+            newStreakInfo = mergeStreakInfo(get().streakInfo, newStreakInfo);
 
             // Check for any completed but unclaimed missions
             const hasUnclaimed = data.some((item: MissionData) => item.progress.is_completed && !item.progress.is_claimed);
@@ -145,8 +154,8 @@ export const useMissionStore = create<MissionState>((set: any, get: any) => ({
         try {
             const response = await apiClient.post('/api/mission/streak/claim');
             if (response.data.success && response.data.streak_info) {
-                // Update streakInfo
-                set({ streakInfo: response.data.streak_info });
+                // Update streakInfo (preserve claimable_day if missing)
+                set({ streakInfo: mergeStreakInfo(get().streakInfo, response.data.streak_info) });
                 return true;
             }
             return false;

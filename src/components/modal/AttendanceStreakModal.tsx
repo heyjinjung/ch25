@@ -239,7 +239,11 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
                                     onClick={handleAction}
                                     disabled={isClaiming || !isClaimable}
                                 >
-                                    {isClaiming ? "처리 중..." : (isClaimable ? "🎁 보상 받기" : "수령 완료")}
+                                    {isClaiming
+                                        ? "처리 중..."
+                                        : isClaimable
+                                            ? "🎁 보상 받기"
+                                            : "다음 보상 대기"}
                                 </Button>
                                 {!isClaimable && (
                                     <button onClick={onClose} className="w-full py-2 text-xs font-medium text-white/40 hover:text-white transition-colors">

@@ -29,7 +29,7 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
 
   const isCompleted = progress.is_completed;
   const isClaimed = progress.is_claimed;
-  const isDailyGift = mission.logic_key === "daily_login_gift" || mission.logic_key === "daily_gift";
+  const isDailyGift = mission.logic_key === "daily_login_gift"; // SoT: daily_login_gift only
   const percent = Math.min(100, Math.round((progress.current_value / Math.max(1, mission.target_value)) * 100));
 
   const handleClaim = async () => {
