@@ -201,12 +201,9 @@ def telegram_auth(
                     db.commit()
                     db.refresh(user)
 
-                    # --- NEW USER BONUS LOGIC (Phase 2.0.1) ---
-                    user.vault_locked_balance = 10000
-                    from app.services.vault_service import VaultService
-                    user.vault_locked_expires_at = VaultService._compute_locked_expires_at(datetime.now(timezone.utc))
-                    db.add(user)
-                    # ------------------------------------------
+                    # --- NEW USER BONUS LOGIC REMOVED ---
+                    # user.vault_locked_balance = 10000 
+                    # ------------------------------------
 
                     # --- REFERRAL LOGIC START ---
                     if start_param and start_param.startswith("ref_"):

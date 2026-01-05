@@ -52,8 +52,8 @@ const MissionPage: React.FC = () => {
 
       // 2. Sort by specific logic_key (Daily Gift always at top if it's DAILY tab)
       if (activeTab === "DAILY") {
-        if (a.mission.logic_key === "daily_login_gift") return -1;
-        if (b.mission.logic_key === "daily_login_gift") return 1;
+        if (a.mission.logic_key === "daily_login_gift" || a.mission.logic_key === "daily_gift") return -1;
+        if (b.mission.logic_key === "daily_login_gift" || b.mission.logic_key === "daily_gift") return 1;
       }
 
       // 3. Sort by claimed status (claimed at the bottom)

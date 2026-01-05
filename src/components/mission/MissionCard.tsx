@@ -29,6 +29,7 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
 
   const isCompleted = progress.is_completed;
   const isClaimed = progress.is_claimed;
+  const isDailyGift = mission.logic_key === "daily_login_gift" || mission.logic_key === "daily_gift";
   const percent = Math.min(100, Math.round((progress.current_value / Math.max(1, mission.target_value)) * 100));
 
   const handleClaim = async () => {
@@ -230,7 +231,7 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
 
   const renderIcon = () => {
     const iconClass = "h-5 w-5";
-    if (data.mission.logic_key === "daily_login_gift") {
+    if (isDailyGift) {
       return <Gift className="h-5 w-5 text-amber-400" />;
     }
     switch (mission.action_type) {
@@ -260,8 +261,13 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
     <div
       className={clsx(
         "relative overflow-hidden rounded-[24px] border backdrop-blur-md transition-all",
-        data.mission.logic_key === "daily_login_gift"
-          ? "bg-gradient-to-br from-amber-500/10 via-black to-black shadow-[inset_0_0_20px_rgba(245,158,11,0.05)]"
+        isDailyGift
+          ? clsx(
+            "border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-black to-black shadow-[inset_0_0_20px_rgba(245,158,11,0.05)]",
+            // If the toast says the gift arrived, this is the state users expect to see clearly.
+            isCompleted && !isClaimed && "border-figma-accent shadow-lg shadow-emerald-900/20",
+            isClaimed && "border-white/5 bg-white/5 opacity-60"
+          )
           : isClaimed
             ? "border-white/5 bg-white/5 opacity-60"
             : isCompleted

@@ -155,19 +155,30 @@ class MissionService:
         streak_days = int(user.play_streak or 0)
         
         # Load rules (duplicated logic, should refactor but keeping independent for now)
+        # Phase 2 default (documented): milestone rewards are Day3 / Day7 unless overridden via UI config.
         from app.services.ui_config_service import UiConfigService
         row = UiConfigService.get(self.db, "streak_reward_rules")
-        if not row:
-             # Default milestones: 1-7 (Daily rewards)
-             milestones = [1, 2, 3, 4, 5, 6, 7]
-        else:
-             # Parse days from rules
-             try:
-                 value = row.value_json
-                 rules = value.get("rules", [])
-                 milestones = [int(r["day"]) for r in rules if r.get("enabled", True)]
-             except:
-                 milestones = [3, 7]
+        milestones: list[int] = []
+
+        if row and row.value_json:
+            try:
+                value = row.value_json
+                rules = value.get("rules", []) if isinstance(value, dict) else []
+                if isinstance(rules, list):
+                    for r in rules:
+                        if not isinstance(r, dict):
+                            continue
+                        if not r.get("enabled", True):
+                            continue
+                        day = r.get("day")
+                        if day is None:
+                            continue
+                        milestones.append(int(day))
+            except Exception:
+                milestones = []
+
+        if not milestones:
+            milestones = [3, 7]
         
         # Check active status
         # If I have streak 5, I might have missed claiming day 3?
@@ -652,23 +663,20 @@ class MissionService:
             if mission.reward_type == MissionRewardType.CASH_UNLOCK:
                 # REFACTOR: Instead of unlocking existing funds, we ACCRUE new funds.
                 # This matches the "New User Welcome Mission" requirement (2500 KRW * 4 = 10000 KRW).
-                try:
                     from app.services.vault_service import VaultService
-                    VaultService().accrue_mission_reward(
+                    # Do not commit inside accrue_mission_reward if possible, or handle session state carefully.
+                    # Current VaultService writes directly. 
+                    # We strictly raise error if it returns 0 or fails, 
+                    # necessitating a rollback of the claim status.
+                    accrued = VaultService().accrue_mission_reward(
                         self.db,
                         user_id=user.id,
                         mission_id=mission.id,
                         mission_title=mission.title,
                         amount=reward_amount
                     )
-                except Exception as e:
-                    # Log error but don't fail the claim entirely if possible,
-                    # or fail safe? Since money is involved, let's log.
-                    print(f"Failed to accrue mission reward: {e}")
-                    # Depending on policy, might want to return False here.
-                    # For now, proceeding as if claimed (worst case user complains and we fix manual)
-                    # But actually, let's allow retry if it fails.
-                    pass
+                    if accrued == 0:
+                        raise Exception("Vault accrual returned 0 (ineligible or error)")
 
             # --- STANDARD TOKENS ---
             else:

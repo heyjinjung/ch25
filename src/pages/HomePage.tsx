@@ -115,7 +115,7 @@ const CategoryTabs: React.FC<{ active: string; onChange: (id: string) => void }>
 const HomePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState("all");
   const { showModal, closeModal } = useNewUserWelcome();
-  const { missions, fetchMissions, streakInfo, streakRules, fetchStreakRules } = useMissionStore();
+  const { missions, fetchMissions, streakInfo, streakRules, fetchStreakRules, claimStreakReward } = useMissionStore();
   const { addToast } = useToast();
   const hasAnnouncedGift = React.useRef(false);
   const [showStreakModal, setShowStreakModal] = useState(false);
@@ -312,7 +312,9 @@ const HomePage: React.FC = () => {
       {showStreakModal && streakInfo && streakRules && (
         <AttendanceStreakModal
           onClose={() => setShowStreakModal(false)}
+          onClaim={claimStreakReward}
           currentStreak={streakInfo.streak_days}
+          claimableDay={streakInfo.claimable_day}
           rules={streakRules}
         />
       )}

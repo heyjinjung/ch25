@@ -222,3 +222,62 @@ def test_streak_milestone_rewards_day3_and_day7(session_factory, monkeypatch, _m
     )
     assert diamond_item is not None
     assert int(diamond_item.quantity) >= 1
+
+
+def test_streak_claimable_day1_when_rule_enabled(session_factory, monkeypatch, _midnight_reset_hour, _streak_milestone_rewards_enabled):
+    db = session_factory()
+    _seed_user(db)
+    _seed_play_game_mission(db, "streak_spec_day1")
+
+    # Enable Day1 rule via UI config (matches Admin UI structure: {version, rules}).
+    db.add(
+        AppUiConfig(
+            key="streak_reward_rules",
+            value_json={
+                "version": 1,
+                "rules": [
+                    {
+                        "day": 1,
+                        "enabled": True,
+                        "grants": [{"kind": "WALLET", "token_type": "LOTTERY_TICKET", "amount": 1}],
+                    }
+                ],
+            },
+        )
+    )
+    db.commit()
+
+    ms = MissionService(db)
+
+    # First play on the day should set streak=1 and expose claimable_day=1.
+    monkeypatch.setattr(MissionService, "_now_tz", lambda self: datetime(2026, 1, 5, 12, 0, 0))
+    ms.update_progress(user_id=1, action_type="PLAY_GAME", delta=1)
+
+    streak_info = ms.get_streak_info(user_id=1)
+    assert int(streak_info.get("streak_days")) == 1
+    assert int(streak_info.get("claimable_day")) == 1
+
+    claim1 = ms.claim_streak_reward(user_id=1)
+    assert claim1.get("success") is True
+    assert int(claim1.get("day")) == 1
+
+    # Second claim on same day should fail (idempotent via event log).
+    claim_again = ms.claim_streak_reward(user_id=1)
+    assert claim_again.get("success") is False
+
+    day1_event = "streak.reward_grant.1.2026-01-05"
+    assert (
+        db.query(UserEventLog)
+        .filter(UserEventLog.user_id == 1, UserEventLog.event_name == day1_event)
+        .one_or_none()
+        is not None
+    )
+
+    # Verify the wallet grant was applied.
+    row = (
+        db.query(UserGameWallet)
+        .filter(UserGameWallet.user_id == 1, UserGameWallet.token_type == GameTokenType.LOTTERY_TICKET)
+        .one_or_none()
+    )
+    assert row is not None
+    assert int(row.balance) >= 1

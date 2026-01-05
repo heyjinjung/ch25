@@ -50,8 +50,19 @@ def get_streak_rules(
     if row and row.value_json:
         return row.value_json.get("rules", [])
     
-    # Fallback default rules
-    return []
+    # Fallback default rules (Phase 2 documented defaults)
+    return [
+        {
+            "day": 3,
+            "enabled": True,
+            "grants": [
+                {"kind": "WALLET", "token_type": "ROULETTE_COIN", "amount": 1},
+                {"kind": "WALLET", "token_type": "DICE_TOKEN", "amount": 1},
+                {"kind": "WALLET", "token_type": "LOTTERY_TICKET", "amount": 1},
+            ],
+        },
+        {"day": 7, "enabled": True, "grants": [{"kind": "INVENTORY", "item_type": "DIAMOND", "amount": 1}]},
+    ]
 
 @router.get("/", response_model=MissionListResponse)
 def read_missions(

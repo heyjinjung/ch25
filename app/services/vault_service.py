@@ -950,11 +950,13 @@ class VaultService:
              return 0
 
         # Accrue
-        # Missions do NOT use the 'accrual_multiplier' logic usually (fixed reward),
-        # but let's stick to the requested fixed amount.
-
+        print(f"[VaultService] Previous Balance: {user.vault_locked_balance}, Adding: {amount}")
         self._expire_locked_if_due(user, now_dt)
+        print(f"[VaultService] Post-Expire Balance: {user.vault_locked_balance}")
+        
         user.vault_locked_balance = int(user.vault_locked_balance or 0) + int(amount)
+        print(f"[VaultService] New Balance: {user.vault_locked_balance}")
+        
         self._ensure_locked_expiry(user, now_dt)
         self.sync_legacy_mirror(user)
 
@@ -985,6 +987,7 @@ class VaultService:
         try:
             db.commit()
             db.refresh(user)
+            print(f"[VaultService] Post-Commit Balance: {user.vault_locked_balance}")
         except IntegrityError:
             db.rollback()
             return 0
