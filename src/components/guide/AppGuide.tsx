@@ -1,5 +1,5 @@
 // src/components/guide/AppGuide.tsx
-import React, { useCallback, useEffect, useRef } from "react";
+import React, { useCallback, useEffect } from "react";
 import Joyride, { CallBackProps, STATUS, ACTIONS, Step, Styles, TooltipRenderProps } from "react-joyride";
 import { useGuide } from "../../contexts/GuideContext";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -234,34 +234,6 @@ const AppGuide: React.FC = () => {
   const { isGuideRunning, stepIndex, stopGuide, setStepIndex, markGuideSeen } = useGuide();
   const navigate = useNavigate();
   const location = useLocation();
-  const pendingTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-  const waitForTarget = useCallback((selector: string | HTMLElement | null | undefined, attempts = 10, delay = 120): Promise<boolean> => {
-    return new Promise((resolve) => {
-      const attempt = (left: number) => {
-        // Joyride는 target이 없을 때 null.nodeName 접근으로 크래시할 수 있으므로 렌더 완료까지 기다린다.
-        const target = typeof selector === "string" ? document.querySelector(selector) : selector;
-        if (target) {
-          resolve(true);
-          return;
-        }
-        if (left <= 0) {
-          resolve(false);
-          return;
-        }
-        requestAnimationFrame(() => {
-          pendingTimerRef.current = setTimeout(() => attempt(left - 1), delay);
-        });
-      };
-      attempt(attempts);
-    });
-  }, []);
-
-  useEffect(() => () => {
-    if (pendingTimerRef.current) {
-      clearTimeout(pendingTimerRef.current);
-    }
-  }, []);
 
   // 스텝별 페이지 이동 로직
   useEffect(() => {
@@ -303,25 +275,13 @@ const AppGuide: React.FC = () => {
       // 스텝 변경
       if (type === "step:after") {
         if (action === ACTIONS.NEXT) {
-          const nextIndex = index + 1;
-          const nextStep = guideSteps[nextIndex];
-          if (nextStep?.target) {
-            waitForTarget(nextStep.target).then((found) => {
-              if (!found) {
-                // 타겟이 끝내 안 보이면 현재 스텝 유지하여 크래시 방지
-                return;
-              }
-              setStepIndex(nextIndex);
-            });
-          } else {
-            setStepIndex(nextIndex);
-          }
+          setStepIndex(index + 1);
         } else if (action === ACTIONS.PREV) {
           setStepIndex(index - 1);
         }
       }
     },
-    [stopGuide, markGuideSeen, setStepIndex, waitForTarget]
+    [stopGuide, markGuideSeen, setStepIndex]
   );
 
   if (!isGuideRunning) return null;
