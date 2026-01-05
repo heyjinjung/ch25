@@ -261,18 +261,11 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
     <div
       className={clsx(
         "relative overflow-hidden rounded-[24px] border backdrop-blur-md transition-all",
-        isDailyGift
-          ? clsx(
-            "border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-black to-black shadow-[inset_0_0_20px_rgba(245,158,11,0.05)]",
-            // If the toast says the gift arrived, this is the state users expect to see clearly.
-            isCompleted && !isClaimed && "border-figma-accent shadow-lg shadow-emerald-900/20",
-            isClaimed && "border-white/5 bg-white/5 opacity-60"
-          )
-          : isClaimed
-            ? "border-white/5 bg-white/5 opacity-60"
-            : isCompleted
-              ? "border-figma-accent bg-white/10 shadow-lg shadow-emerald-900/20"
-              : "border-white/10 bg-white/10 hover:border-white/20"
+        isClaimed
+          ? "border-white/5 bg-white/5 opacity-60"
+          : isCompleted
+            ? "border-figma-accent bg-white/10 shadow-lg shadow-emerald-900/20"
+            : "border-white/10 bg-white/10 hover:border-white/20"
       )}
     >
       <div className="flex items-center gap-3 p-3">
