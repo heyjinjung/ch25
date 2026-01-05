@@ -101,4 +101,7 @@ __all__ = [
     "AdminMessage",
     "AdminMessageInbox",
     "AdminAuditLog",
+    "VaultWithdrawalRequest",
+    "UserInventoryItem",
+    "UserInventoryLedger",
 ]
