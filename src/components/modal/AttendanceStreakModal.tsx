@@ -19,11 +19,15 @@ interface Rule {
 
 interface AttendanceStreakModalProps {
     onClose: () => void;
+    onClaim?: () => Promise<boolean>;
     currentStreak: number;
+    claimableDay?: number | null;
     rules: Rule[];
 }
 
-const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, currentStreak, rules }) => {
+const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, onClaim, currentStreak, claimableDay, rules }) => {
+    const [isClaiming, setIsClaiming] = React.useState(false);
+
     // We expect rules for 1-7 days. If not provided, we won't show the full grid properly.
     const sortedRules = [...rules].sort((a, b) => a.day - b.day);
 
@@ -77,6 +81,22 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
         return `${g.amount} ${name}`;
     };
 
+    const handleAction = async () => {
+        tryHaptic(30);
+        if (claimableDay && onClaim) {
+            setIsClaiming(true);
+            const success = await onClaim();
+            setIsClaiming(false);
+            if (success) {
+                onClose();
+            }
+        } else {
+            onClose();
+        }
+    };
+
+    const isClaimable = !!claimableDay;
+
     return (
         <div className="fixed inset-0 z-[10001] flex items-center justify-center px-4 bg-black/85 backdrop-blur-xl animate-fade-in">
             <div className="relative w-full max-w-md max-h-[85vh] flex flex-col rounded-[2.5rem] border border-white/10 bg-[#0A0A0A] p-1 shadow-2xl animate-zoom-in">
@@ -89,13 +109,14 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
                     <button
                         onClick={() => { tryHaptic(10); onClose(); }}
                         className="absolute top-4 right-4 z-10 p-2 rounded-full bg-black/20 hover:bg-white/10 border border-white/5 transition-colors"
+                        disabled={isClaiming}
                     >
                         <X className="w-5 h-5 text-white/60" />
                     </button>
 
                     <header className="text-center mb-5 mt-2 w-full">
                         <h2 className="text-2xl font-black text-white glow-green mb-3 tracking-tight">
-                            연속 플레이 기록
+                            {isClaimable ? "🎁 보상 수령 대기" : "연속 플레이 기록"}
                         </h2>
                         <div className="text-xs font-medium text-white/70 space-y-1.5 bg-white/5 rounded-xl p-3 text-left border border-white/5">
                             <p>• 하루 한 번 <span className="text-emerald-400 font-bold">플레이</span> - ‘연속 기록’</p>
@@ -113,8 +134,11 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
                             const isPast = currentStreak > day;
                             const isFuture = currentStreak < day;
 
+                            // Highlight the day being claimed
+                            const isClaimTarget = day === claimableDay;
+
                             const isLastDay = day === 7;
-                            const emphasize = isLastDay || isToday;
+                            const emphasize = isLastDay || isToday || isClaimTarget;
 
                             return (
                                 <div
@@ -123,7 +147,7 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
                                         "relative flex flex-col items-center justify-center aspect-square rounded-2xl border transition-all duration-300",
                                         isLastDay ? "col-span-2 aspect-auto py-2" : "col-span-1",
                                         isPast ? "bg-emerald-500/10 border-emerald-500/30" :
-                                            isToday ? "bg-figma-primary border-figma-primary shadow-[0_0_20px_rgba(48,255,117,0.3)] scale-105 z-10" :
+                                            (isToday || isClaimTarget) ? "bg-figma-primary border-figma-primary shadow-[0_0_20px_rgba(48,255,117,0.3)] scale-105 z-10" :
                                                 "bg-white/5 border-white/10"
                                     )}
                                 >
@@ -135,7 +159,7 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
 
                                     <span className={clsx(
                                         isLastDay ? "text-xs font-black mb-1" : "text-[10px] font-black mb-0.5",
-                                        isToday ? "text-white" : "text-white/40"
+                                        (isToday || isClaimTarget) ? "text-white" : "text-white/40"
                                     )}>
                                         {day}일차
                                     </span>
@@ -154,7 +178,7 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
 
                                     <span className={clsx(
                                         isLastDay ? "text-[10px] font-black truncate max-w-full px-2" : "text-[8px] font-bold truncate max-w-full px-1",
-                                        isToday ? "text-white" : "text-white/30"
+                                        (isToday || isClaimTarget) ? "text-white" : "text-white/30"
                                     )}>
                                         {rule ? getRewardLabel(rule.grants) : '-'}
                                     </span>
@@ -191,9 +215,10 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
                             variant="figma-primary"
                             fullWidth
                             className="rounded-2xl py-3.5 shadow-emerald-500/30 text-base"
-                            onClick={() => { tryHaptic(30); onClose(); }}
+                            onClick={handleAction}
+                            disabled={isClaiming}
                         >
-                            확인
+                            {isClaiming ? "처리 중..." : (isClaimable ? "🎁 보상 받기" : "확인")}
                         </Button>
                     </div>
 

@@ -50,6 +50,7 @@ interface MissionState {
     fetchStreakRules: () => Promise<void>;
     setStreakInfo: (streakInfo: StreakInfo | null) => void;
     claimReward: (missionId: number) => Promise<{ success: boolean; reward_type?: string; amount?: number; message?: string }>;
+    claimStreakReward: () => Promise<boolean>;
 }
 
 export const useMissionStore = create<MissionState>((set: any, get: any) => ({
@@ -81,12 +82,18 @@ export const useMissionStore = create<MissionState>((set: any, get: any) => ({
             const response = await apiClient.get('/api/mission/');
             const raw = response.data;
             const data: MissionData[] = Array.isArray(raw) ? raw : (raw?.missions ?? []);
-            const streakInfo: StreakInfo | null = Array.isArray(raw) ? null : (raw?.streak_info ?? null);
+
+            // [Defensive] Preserve existing streakInfo if API returns distinct format or missing info
+            // This prevents modal flicker/closing if mission reload happens without streak data.
+            let newStreakInfo: StreakInfo | null = Array.isArray(raw) ? null : (raw?.streak_info ?? null);
+            if (!newStreakInfo && get().streakInfo) {
+                newStreakInfo = get().streakInfo;
+            }
 
             // Check for any completed but unclaimed missions
             const hasUnclaimed = data.some((item: MissionData) => item.progress.is_completed && !item.progress.is_claimed);
 
-            set({ missions: data, streakInfo, isLoading: false, hasUnclaimed });
+            set({ missions: data, streakInfo: newStreakInfo, isLoading: false, hasUnclaimed });
         } catch (err: any) {
             console.error("[MissionStore] Fetch failed", err);
             set({ error: err.message, isLoading: false });
@@ -124,6 +131,21 @@ export const useMissionStore = create<MissionState>((set: any, get: any) => ({
         } catch (err: any) {
             console.error("[MissionStore] Claim failed", err);
             return { success: false, message: err.message || "Network Error" };
+        }
+    },
+
+    claimStreakReward: async () => {
+        try {
+            const response = await apiClient.post('/api/mission/streak/claim');
+            if (response.data.success && response.data.streak_info) {
+                // Update streakInfo
+                set({ streakInfo: response.data.streak_info });
+                return true;
+            }
+            return false;
+        } catch (err: any) {
+            console.error("[MissionStore] Streak Claim failed", err);
+            return false;
         }
     }
 }));

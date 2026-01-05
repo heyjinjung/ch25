@@ -4,4 +4,5 @@ export interface StreakInfo {
   is_hot: boolean;
   is_legend: boolean;
   next_milestone: number;
+  claimable_day?: number | null;
 }

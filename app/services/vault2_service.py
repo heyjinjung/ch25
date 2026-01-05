@@ -11,6 +11,7 @@ NOTE: To keep incremental rollout safe, nothing calls these mutating helpers by 
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+from copy import deepcopy
 from typing import Any
 
 from sqlalchemy.orm import Session
@@ -58,6 +59,28 @@ DEFAULT_CONFIG = {
 
 
 class Vault2Service:
+    @staticmethod
+    def _deep_merge_dict(base: dict, override: dict) -> dict:
+        """Deep-merge two dicts (override wins).
+
+        - Preserves nested dict keys from base when override is partial.
+        - Keeps unknown keys from override.
+        """
+        out = dict(base)
+        for key, value in override.items():
+            if isinstance(value, dict) and isinstance(out.get(key), dict):
+                out[key] = Vault2Service._deep_merge_dict(out[key], value)
+            else:
+                out[key] = value
+        return out
+
+    @classmethod
+    def _build_effective_config(cls, raw_config: dict | None) -> dict:
+        base = deepcopy(DEFAULT_CONFIG)
+        if isinstance(raw_config, dict) and raw_config:
+            return cls._deep_merge_dict(base, raw_config)
+        return base
+
     DEFAULT_PROGRAM_KEY = "NEW_MEMBER_VAULT"
     DEFAULT_PROGRAM_NAME = "신규 정착 금고"
 
@@ -105,9 +128,11 @@ class Vault2Service:
     def get_config_value(self, db: Session, key: str, default: Any = None) -> Any:
         """Helper to get value from the default program's config_json."""
         program = self.get_default_program(db, ensure=False)
-        if program and isinstance(program.config_json, dict):
-            return program.config_json.get(key, default)
-        return default
+        if program is None:
+            return default
+
+        cfg = self._build_effective_config(getattr(program, "config_json", None))
+        return cfg.get(key, default)
 
     def update_config_value(self, db: Session, *, program_key: str, key: str, value: Any, admin_id: int = 0) -> VaultProgram:
         program = self.get_program_by_key(db, program_key=program_key)
@@ -117,9 +142,7 @@ class Vault2Service:
             else:
                 raise ValueError("PROGRAM_NOT_FOUND")
 
-        cfg = DEFAULT_CONFIG.copy()
-        if isinstance(program.config_json, dict):
-            cfg.update(program.config_json)
+        cfg = self._build_effective_config(getattr(program, "config_json", None))
         before = {"config_json": program.config_json}
         cfg[key] = value
         program.config_json = cfg
@@ -151,9 +174,7 @@ class Vault2Service:
             else:
                 raise ValueError("PROGRAM_NOT_FOUND")
 
-        cfg = DEFAULT_CONFIG.copy()
-        if isinstance(program.config_json, dict):
-            cfg.update(program.config_json)
+        cfg = self._build_effective_config(getattr(program, "config_json", None))
 
         allow = set(cfg.get("eligibility_allow") or [])
         block = set(cfg.get("eligibility_block") or [])
@@ -196,9 +217,7 @@ class Vault2Service:
             else:
                 raise ValueError("PROGRAM_NOT_FOUND")
 
-        cfg = DEFAULT_CONFIG.copy()
-        if isinstance(program.config_json, dict):
-            cfg.update(program.config_json)
+        cfg = self._build_effective_config(getattr(program, "config_json", None))
         mode = (cfg.get("eligibility_mode") or "all").lower()
         allow = set(cfg.get("eligibility_allow") or [])
         block = set(cfg.get("eligibility_block") or [])
@@ -262,8 +281,23 @@ class Vault2Service:
                 raise ValueError("PROGRAM_NOT_FOUND")
         
         before = {"config_json": program.config_json}
-        program.config_json = config_json
-        after = {"config_json": config_json}
+
+        # Treat incoming config as a patch: preserve existing keys and fill missing defaults.
+        # This prevents partial updates from accidentally dropping nested keys like
+        # golden_hour_config.enabled, which would disable Golden Hour injection.
+        if config_json is None:
+            program.config_json = None
+            after = {"config_json": None}
+        else:
+            existing = getattr(program, "config_json", None) if isinstance(getattr(program, "config_json", None), dict) else None
+            merged = self._build_effective_config(existing)
+            if isinstance(config_json, dict) and config_json:
+                merged = self._deep_merge_dict(merged, config_json)
+            else:
+                # empty dict -> keep defaults + existing
+                merged = merged
+            program.config_json = merged
+            after = {"config_json": program.config_json}
         
         AuditService.record_admin_audit(db, admin_id=admin_id, action="UPDATE_CONFIG", target_type="VaultProgram", target_id=program_key, before=before, after=after)
         

@@ -41,9 +41,13 @@ def _seed_play_game_mission(db, logic_key: str, reward_amount: int = 10):
 def _enable_streak_multiplier_flag():
     settings = get_settings()
     prev = settings.streak_multiplier_enabled
+    prev_reset = settings.streak_day_reset_hour_kst
     settings.streak_multiplier_enabled = True
+    # These tests assume an operational day boundary at 09:00 KST.
+    settings.streak_day_reset_hour_kst = 9
     yield
     settings.streak_multiplier_enabled = prev
+    settings.streak_day_reset_hour_kst = prev_reset
 
 
 def test_play_streak_increments_consecutive_operational_days(session_factory, monkeypatch):

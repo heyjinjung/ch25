@@ -16,6 +16,27 @@ from app.utils.rate_limit import rate_limiter
 # /workspace/ch25/app/api/routes/mission.py
 router = APIRouter(prefix="/api/mission", tags=["mission"])
 
+@router.post("/streak/claim")
+def claim_streak_reward(
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user),
+) -> Any:
+    """
+    Claim a pending streak milestone reward.
+    """
+    service = MissionService(db)
+    result = service.claim_streak_reward(current_user.id)
+    if not result.get("success"):
+        raise HTTPException(status_code=400, detail=result.get("message"))
+    
+    # Refresh mission/streak info to return latest state
+    streak_info = service.get_streak_info(current_user.id)
+    return {
+        "success": True, 
+        "streak_info": streak_info,
+        "grants": result.get("grants")
+    }
+
 @router.get("/", response_model=MissionListResponse)
 def read_missions(
     db: Session = Depends(deps.get_db),

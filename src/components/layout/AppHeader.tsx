@@ -21,7 +21,7 @@ const AppHeader: React.FC = () => {
     const mobileMenuRef = useRef<HTMLDivElement>(null);
     const [isGoldenHourModalOpen, setIsGoldenHourModalOpen] = useState(false);
     const [isForcedStreakModalOpen, setIsForcedStreakModalOpen] = useState(false);
-    const { streakInfo, streakRules, fetchStreakRules } = useMissionStore();
+    const { streakInfo, streakRules, fetchStreakRules, claimStreakReward } = useMissionStore();
 
     const { data: vault } = useQuery({
         queryKey: ["vault-status"],
@@ -58,21 +58,33 @@ const AppHeader: React.FC = () => {
     // Admin Forced Modal Logic
     const showModalOverride = vault?.showModalOverride;
     useEffect(() => {
+        // Trigger modal if Admin Override OR Claimable Reward exists
+        const hasClaimable = !!streakInfo?.claimable_day;
+
         if (showModalOverride === "STREAK_ATTENDANCE") {
-            const hasSeenForced = sessionStorage.getItem(`forced_modal_${showModalOverride}`);
-            if (!hasSeenForced) {
+            const key = `forced_modal_${showModalOverride}`;
+            if (!sessionStorage.getItem(key)) {
                 fetchStreakRules();
                 setIsForcedStreakModalOpen(true);
-                sessionStorage.setItem(`forced_modal_${showModalOverride}`, "true");
+                sessionStorage.setItem(key, "true");
             }
         } else if (showModalOverride === "GOLDEN_HOUR") {
-            const hasSeenForced = sessionStorage.getItem(`forced_modal_${showModalOverride}`);
-            if (!hasSeenForced) {
+            const key = `forced_modal_${showModalOverride}`;
+            if (!sessionStorage.getItem(key)) {
                 setIsGoldenHourModalOpen(true);
-                sessionStorage.setItem(`forced_modal_${showModalOverride}`, "true");
+                sessionStorage.setItem(key, "true");
             }
         }
-    }, [showModalOverride, fetchStreakRules]);
+
+        if (hasClaimable) {
+            const key = `streak_claim_shown_${streakInfo?.claimable_day}`;
+            if (!sessionStorage.getItem(key)) {
+                if (!streakRules) fetchStreakRules();
+                setIsForcedStreakModalOpen(true);
+                sessionStorage.setItem(key, "true");
+            }
+        }
+    }, [showModalOverride, fetchStreakRules, streakInfo?.claimable_day, streakRules]);
 
     const handleSoundToggle = () => {
         playClick();
@@ -299,7 +311,9 @@ const AppHeader: React.FC = () => {
             {isForcedStreakModalOpen && streakInfo && streakRules && (
                 <AttendanceStreakModal
                     onClose={() => setIsForcedStreakModalOpen(false)}
+                    onClaim={claimStreakReward}
                     currentStreak={streakInfo.streak_days}
+                    claimableDay={streakInfo.claimable_day}
                     rules={streakRules}
                 />
             )}
