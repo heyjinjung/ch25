@@ -1,5 +1,5 @@
 // src/components/guide/AppGuide.tsx
-import React, { useCallback, useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import Joyride, { CallBackProps, STATUS, ACTIONS, Step, Styles, TooltipRenderProps } from "react-joyride";
 import { useGuide } from "../../contexts/GuideContext";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -266,6 +266,7 @@ const AppGuide: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const errorRetryRef = useRef<Set<number>>(new Set());
+  const [isTargetReady, setIsTargetReady] = useState(true);
 
   // 스텝별 페이지 이동 로직
   useEffect(() => {
@@ -287,27 +288,36 @@ const AppGuide: React.FC = () => {
     // 스텝 7: 이벤트 (하단 네비, 어느 페이지든 OK)
   }, [stepIndex, isGuideRunning, navigate, location.pathname]);
 
-  // 금고 → 인벤토리 버튼 스텝에서 CTA가 바로 보이도록 스크롤 보정 (텔레그램 인앱 대응)
-  // 스텝 4~6 인벤토리 페이지 타겟도 동일하게 대기
+  // 페이지 이동이 필요한 스텝에서 타겟이 준비될 때까지 Joyride 일시 정지
   useEffect(() => {
     if (!isGuideRunning) return;
 
-    // 스텝 3: 금고 인벤토리 버튼 / 스텝 4~6: 인벤토리 페이지 요소들
+    // 스텝 3~6: 페이지 이동 후 타겟 대기 필요
     if (stepIndex >= 3 && stepIndex <= 6) {
       const selector = guideSteps[stepIndex]?.target;
       if (typeof selector !== "string") return;
 
+      // 일단 Joyride 멈춤
+      setIsTargetReady(false);
+
       let cancelled = false;
       (async () => {
-        // 실제 타겟이 렌더될 때까지 최대 2초 대기
-        const el = await waitForVisibleTarget(selector, 2000, 100);
+        // 실제 타겟이 렌더될 때까지 최대 3초 대기
+        const el = await waitForVisibleTarget(selector, 3000, 100);
         if (cancelled) return;
         if (el) {
           el.scrollIntoView({ behavior: "smooth", block: "center" });
+          // 스크롤 완료 후 약간 대기
+          await new Promise(r => setTimeout(r, 300));
+        }
+        if (!cancelled) {
+          setIsTargetReady(true);
         }
       })();
 
       return () => { cancelled = true; };
+    } else {
+      setIsTargetReady(true);
     }
   }, [isGuideRunning, stepIndex]);
 
@@ -366,7 +376,7 @@ const AppGuide: React.FC = () => {
     <Joyride
       steps={guideSteps}
       stepIndex={stepIndex}
-      run={isGuideRunning}
+      run={isGuideRunning && isTargetReady}
       continuous
       showSkipButton
       showProgress
