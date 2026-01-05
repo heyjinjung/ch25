@@ -386,15 +386,19 @@ class AdminUserService:
         # Telegram unlink requests can reference users by several columns (SET NULL FK),
         # but we delete them to fully reset Telegram flows.
         if TelegramUnlinkRequest is not None:
-            db.query(TelegramUnlinkRequest).filter(
-                (TelegramUnlinkRequest.current_user_id == user_id)
-                | (TelegramUnlinkRequest.requester_user_id == user_id)
-                | (TelegramUnlinkRequest.processed_by == user_id)
-            ).delete(synchronize_session=False)
-            if user.telegram_id is not None:
+            from sqlalchemy import inspect
+
+            inspector = inspect(db.bind)
+            if inspector.has_table(TelegramUnlinkRequest.__tablename__):
                 db.query(TelegramUnlinkRequest).filter(
-                    TelegramUnlinkRequest.telegram_id == str(int(user.telegram_id))
+                    (TelegramUnlinkRequest.current_user_id == user_id)
+                    | (TelegramUnlinkRequest.requester_user_id == user_id)
+                    | (TelegramUnlinkRequest.processed_by == user_id)
                 ).delete(synchronize_session=False)
+                if user.telegram_id is not None:
+                    db.query(TelegramUnlinkRequest).filter(
+                        TelegramUnlinkRequest.telegram_id == str(int(user.telegram_id))
+                    ).delete(synchronize_session=False)
 
         # Profile row might exist even if user deletion is blocked in some DBs.
         db.query(AdminUserProfile).filter(AdminUserProfile.user_id == user_id).delete(synchronize_session=False)

@@ -1,4 +1,4 @@
-# Admin Operations Dashboard Development Log (2026-01-04)
+﻿# Admin Operations Dashboard Development Log (2026-01-04)
 
 This document tracks the files created and modified during the implementation of the "Operations Dashboard" (Daily Overview & Events Status).
 Use this reference to identify potential conflicts or files to check if errors occur.
@@ -78,3 +78,58 @@ This section records additional changes completed in the same work session (beyo
 
 ### Known Environment Blockers (not code)
 *   로컬에서 nginx SSL 인증서 파일(`nginx/ssl/fullchain.pem`, `nginx/ssl/privkey.pem`)이 없으면 nginx 기동이 실패할 수 있음.
+
+---
+
+## 5. New User Reward Verification & Fixes (2026-01-05)
+
+### 5.1 Issue Summary
+*   **Initial 10k Bonus**: New users were starting with 10k KRW (from old Telegram specific hardcoded logic). -> Fixed to start with 0.
+*   **Mission Accrual Failure**: Mission rewards (e.g., 2,500 KRW) were marked as "Claimed" but balance remained 0 (Silent Failure).
+*   **Day 2 Login Mission**: Users logging in on the second day weren't triggering the mission completion due to missing foreground re-auth.
+
+### 5.2 Key Fixes
+1.  **Backend Logic (`VaultService`)**:
+    *   **Removed Eligibility Check**: Welcome missions should bypass strict Vault eligibility rules (Phase 1 legacy).
+    *   **Fixed Global Lock Bug**: Updated `earn_event_id` from `MISSION:{id}` to `MISSION:{user_id}:{id}`. Previously, *any* user claiming a mission would lock *all* users from claiming it.
+2.  **Mission Logic (`MissionService`)**:
+    *   **Daily Gift Fix**: Updated fallback logic to respect Admin-configured `daily_login_gift` logic key.
+3.  **Frontend Logic (`RequireAuth.tsx`)**:
+    *   **Foreground Re-Auth**: Added `visibilitychange` listener. When the app returns from background (Resumed), it triggers a silent `telegramApi.auth()` call. This ensures the server captures the "Login" event for date-based missions (Day 2 check).
+4.  **UI Improvement**:
+    *   **Streak Modal**: Added "수령 완료 (Claimed)" state to the button instead of hiding it or showing an active button incorrectly.
+
+### 5.3 🚀 Efficient Testing Methodology (Recommended)
+Instead of full deployments or local setups, we used **Ephemeral Server-Side Scripting** to verify logic in real-time.
+
+**Command Pattern:**
+```bash
+docker compose exec -T backend python3 -c '
+import sys, os; sys.path.append(os.getcwd())
+from sqlalchemy import create_engine; from sqlalchemy.orm import sessionmaker
+from app.core.config import get_settings
+from app.models.user import User; from app.services.mission_service import MissionService
+
+# 1. Setup DB Session & Temporary User
+db = sessionmaker(bind=create_engine(get_settings().database_url))()
+u = User(external_id="test_ephemeral", nickname="Tester", telegram_id="99999")
+db.add(u); db.commit(); db.refresh(u)
+
+try:
+    # 2. Execute Logic Directly
+    ms = MissionService(db)
+    # ... call methods to test ...
+    print("SUCCESS: Logic verified.")
+except Exception as e:
+    print(f"FAIL: {e}")
+finally:
+    # 3. Cleanup
+    db.delete(u); db.commit()
+'
+```
+
+**Benefits:**
+*   **Speed**: No build/deploy cycle required. Logic changes are verified instantly after file edit.
+*   **Accuracy**: Runs in the exact same environment (Docker container, DB connection) as production code.
+*   **Safety**: Test users are created and deleted within the script transaction.
+*   **Focus**: Isolates logic flaws (e.g., return 0, exceptions) that might be swallowed by API error handlers.
