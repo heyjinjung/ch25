@@ -77,3 +77,32 @@
 - 가이드/런북/체크리스트/운영: `docs/06_ops/` 또는 상위 루트 `docs/`
 - 변경로그: `docs/08_changelog/`
 - 아카이브: 폐기/구버전은 `docs/archive/YYYYMM/`에 이동 후 최신본 링크를 남김
+
+## Operating Mode (MANDATORY)
+- Always follow: **PLAN → PATCH → VERIFY → SHIP**
+- Never jump to code changes before PLAN is written and accepted.
+
+### PLAN output format (must follow)
+A) Triage Summary (facts only, 3–6 lines)
+B) Root Cause Hypotheses TOP3 (ranked)
+   - Why plausible
+   - How to confirm (1 minimal check each)
+C) Fix Plan
+   - Allowed Files (full paths, max 12)
+   - Out of Scope (explicit)
+   - Minimal patch strategy (no refactor)
+   - Verify Checklist (backend + frontend + DB as applicable)
+D) If missing info: ask ONCE with a short list of required artifacts.
+
+### PATCH rules
+- Change ONLY Allowed Files.
+- Do NOT overwrite whole files; read first then minimal diff patch.
+- If a new needed change is outside scope: STOP and propose a follow-up ticket.
+
+### VERIFY rules
+- Provide a step-by-step checklist that a human can execute.
+- Prefer existing scripts/tests (pytest target, debug scripts) when relevant.
+
+### SHIP rules
+- Summarize: changed files + behavior change + risk + rollback
+- If behavior changed, update docs/changelog and docs index references.
