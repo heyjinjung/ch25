@@ -930,7 +930,7 @@ class VaultService:
     # if not self._eligible(db, user_id, now_dt):
     #    return 0
 
-        earn_event_id = f"MISSION:{mission_id}"
+        earn_event_id = f"MISSION:{user_id}:{mission_id}"
 
         # Idempotency check
         exists = db.execute(
