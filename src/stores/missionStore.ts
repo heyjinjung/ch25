@@ -46,9 +46,11 @@ interface MissionState {
     hasUnclaimed: boolean;
     streakInfo: StreakInfo | null;
     streakRules: any[] | null;
+    isStreakModalOpen: boolean;
     fetchMissions: () => Promise<void>;
     fetchStreakRules: () => Promise<void>;
     setStreakInfo: (streakInfo: StreakInfo | null) => void;
+    setStreakModalOpen: (isOpen: boolean) => void;
     claimReward: (missionId: number) => Promise<{ success: boolean; reward_type?: string; amount?: number; message?: string }>;
     claimStreakReward: () => Promise<boolean>;
 }
@@ -60,16 +62,21 @@ export const useMissionStore = create<MissionState>((set: any, get: any) => ({
     hasUnclaimed: false,
     streakInfo: null,
     streakRules: null,
+    isStreakModalOpen: false,
 
     setStreakInfo: (streakInfo) => {
         set({ streakInfo });
     },
 
+    setStreakModalOpen: (isOpen) => {
+        set({ isStreakModalOpen: isOpen });
+    },
+
     fetchStreakRules: async () => {
         try {
-            const response = await apiClient.get('/api/admin/ui-config/streak_reward_rules');
-            if (response.data?.value?.rules) {
-                set({ streakRules: response.data.value.rules });
+            const response = await apiClient.get('/api/mission/streak/rules');
+            if (Array.isArray(response.data)) {
+                set({ streakRules: response.data });
             }
         } catch (err) {
             console.error("[MissionStore] Fetch streak rules failed", err);

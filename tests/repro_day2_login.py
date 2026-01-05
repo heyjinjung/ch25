@@ -1,23 +1,23 @@
 
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
-from app.main import app
-from app.api.deps import get_db
+from typing import Callable
+
+import pytest
+
 from app.models.user import User
 from app.models.mission import Mission, MissionCategory, MissionRewardType, UserMissionProgress
-from app.core.security import create_access_token
 from app.services.mission_service import MissionService
 
-def test_day2_login_mission_update():
+def test_day2_login_mission_update(client: TestClient, session_factory: Callable[[], Session]):
     # Setup
-    client = TestClient(app)
     
     # 1. Create a test user
     # We need to manually insert user to control state
     # But usually we use dependency override or just assume DB is clean or use a fresh user email
     
-    # Using a helper to get DB session
-    db = next(get_db())
+    # Use the test DB session factory from tests/conftest.py so tables exist.
+    db = session_factory()
     
     # Create unique user
     import uuid
@@ -53,19 +53,23 @@ def test_day2_login_mission_update():
     
     # 4. Check Progress
     # Expectation: Progress should be 1 (if logic was present)
-    progress = db.query(UserMissionProgress).filter(
-        UserMissionProgress.user_id == user.id,
-        UserMissionProgress.mission_id == mission.id
-    ).first()
+    progress = (
+        db.query(UserMissionProgress)
+        .filter(UserMissionProgress.user_id == user.id, UserMissionProgress.mission_id == mission.id)
+        .first()
+    )
     
     print(f"Progress after login: {progress.current_value if progress else 'None'}")
     
-    if not progress:
-        print("FAIL: No progress record created.")
-    elif progress.current_value == 0:
-        print("FAIL: Progress created but value is 0.")
-    else:
-        print(f"SUCCESS: Progress value is {progress.current_value}")
+    try:
+        if not progress:
+            print("FAIL: No progress record created.")
+        elif progress.current_value == 0:
+            print("FAIL: Progress created but value is 0.")
+        else:
+            print(f"SUCCESS: Progress value is {progress.current_value}")
+    finally:
+        db.close()
 
 if __name__ == "__main__":
     try:

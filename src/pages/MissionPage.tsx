@@ -1,7 +1,7 @@
 // src/pages/MissionPage.tsx
 import React, { useEffect, useState } from "react";
 import clsx from "clsx";
-import { Sparkles, Target, Trophy } from "lucide-react";
+import { ChevronRight, Sparkles, Target, Trophy } from "lucide-react";
 
 import MissionCard from "../components/mission/MissionCard";
 import { useHaptic } from "../hooks/useHaptic";
@@ -79,14 +79,24 @@ const MissionPage: React.FC = () => {
   return (
     <div className="mx-auto w-full max-w-lg pb-24">
       {/* Streak Summary Header */}
+      {/* Streak Summary Header - Now Clickable */}
       {streakInfo && (
-        <div className="mb-4 rounded-3xl bg-gradient-to-br from-amber-500/10 to-transparent border border-amber-500/20 p-5 shadow-lg relative overflow-hidden group">
+        <button
+          onClick={() => {
+            impact("light");
+            useMissionStore.getState().fetchStreakRules(); // Ensure rules are loaded
+            useMissionStore.getState().setStreakModalOpen(true);
+          }}
+          className="w-full mb-4 rounded-3xl bg-gradient-to-br from-amber-500/10 to-transparent border border-amber-500/20 p-5 shadow-lg relative overflow-hidden group text-left transition-transform active:scale-[0.98]"
+        >
           <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
             <Trophy className="w-16 h-16 text-amber-500" />
           </div>
           <div className="relative z-10 flex items-center justify-between">
             <div>
-              <p className="text-[10px] font-black text-amber-400 uppercase tracking-widest mb-1">Attendance Streak</p>
+              <p className="text-[10px] font-black text-amber-400 uppercase tracking-widest mb-1 flex items-center gap-1">
+                Attendance Streak <ChevronRight size={10} />
+              </p>
               <h3 className="text-2xl font-black text-white glow-gold">🔥 {streakInfo.streak_days}일 연속</h3>
             </div>
             <div className="text-right">
@@ -100,7 +110,7 @@ const MissionPage: React.FC = () => {
               style={{ width: `${Math.min(100, (streakInfo.streak_days / 7) * 100)}%` }}
             />
           </div>
-        </div>
+        </button>
       )}
 
       {/* Compact Tabs (Telegram in-app friendly) */}

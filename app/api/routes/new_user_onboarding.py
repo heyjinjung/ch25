@@ -83,6 +83,29 @@ def status(db: Session = Depends(get_db), user_id: int = Depends(get_current_use
 
     telegram_linked = bool(getattr(user, "telegram_id", None))
 
+    # [Mission Trigger] Day 2+ login should progress even if the user only hits /api/new-user/status.
+    # Logic: if last_login_at was on a previous KST day, increment LOGIN once and update last_login_at.
+    try:
+        kst = ZoneInfo("Asia/Seoul")
+        today_kst_date = datetime.now(kst).date()
+
+        should_increment = False
+        if user.last_login_at:
+            last_login_utc = user.last_login_at.replace(tzinfo=timezone.utc)
+            last_login_kst = last_login_utc.astimezone(kst)
+            if last_login_kst.date() < today_kst_date:
+                should_increment = True
+        else:
+            should_increment = True
+
+        if should_increment:
+            # Set last_login_at first so downstream endpoints don't double-increment on the same day.
+            user.last_login_at = datetime.now(timezone.utc)
+            db.add(user)
+            MissionService(db).update_progress(user_id, "LOGIN", delta=1)
+    except Exception:
+        db.rollback()
+
     # Determine "new user" window from first_login_at (Telegram-native entry) with fallback to created_at.
     created = _to_utc_naive(getattr(user, "first_login_at", None) or getattr(user, "created_at", now_utc))
     window_ends_at = created + timedelta(hours=24)

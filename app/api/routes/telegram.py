@@ -192,6 +192,7 @@ def telegram_auth(
                     telegram_id=tg_id,
                     telegram_username=tg_username,
                     first_login_at=datetime.now(timezone.utc),
+                    last_login_at=datetime.now(timezone.utc),
                     telegram_is_blocked=False,
                     telegram_join_count=1
                 )

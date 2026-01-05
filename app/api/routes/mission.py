@@ -37,6 +37,22 @@ def claim_streak_reward(
         "grants": result.get("grants")
     }
 
+@router.get("/streak/rules")
+def get_streak_rules(
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user), # Require auth for consistency
+) -> Any:
+    """
+    Get streak reward rules for the UI.
+    """
+    from app.services.ui_config_service import UiConfigService
+    row = UiConfigService.get(db, "streak_reward_rules")
+    if row and row.value_json:
+        return row.value_json.get("rules", [])
+    
+    # Fallback default rules
+    return []
+
 @router.get("/", response_model=MissionListResponse)
 def read_missions(
     db: Session = Depends(deps.get_db),

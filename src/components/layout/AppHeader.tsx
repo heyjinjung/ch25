@@ -20,8 +20,8 @@ const AppHeader: React.FC = () => {
     const desktopMenuRef = useRef<HTMLDivElement>(null);
     const mobileMenuRef = useRef<HTMLDivElement>(null);
     const [isGoldenHourModalOpen, setIsGoldenHourModalOpen] = useState(false);
-    const [isForcedStreakModalOpen, setIsForcedStreakModalOpen] = useState(false);
-    const { streakInfo, streakRules, fetchStreakRules, claimStreakReward } = useMissionStore();
+    // Removed local isForcedStreakModalOpen in favor of store state
+    const { streakInfo, streakRules, fetchStreakRules, claimStreakReward, isStreakModalOpen, setStreakModalOpen } = useMissionStore();
 
     const { data: vault } = useQuery({
         queryKey: ["vault-status"],
@@ -65,7 +65,7 @@ const AppHeader: React.FC = () => {
             const key = `forced_modal_${showModalOverride}`;
             if (!sessionStorage.getItem(key)) {
                 fetchStreakRules();
-                setIsForcedStreakModalOpen(true);
+                setStreakModalOpen(true);
                 sessionStorage.setItem(key, "true");
             }
         } else if (showModalOverride === "GOLDEN_HOUR") {
@@ -80,7 +80,7 @@ const AppHeader: React.FC = () => {
             const key = `streak_claim_shown_${streakInfo?.claimable_day}`;
             if (!sessionStorage.getItem(key)) {
                 if (!streakRules) fetchStreakRules();
-                setIsForcedStreakModalOpen(true);
+                setStreakModalOpen(true);
                 sessionStorage.setItem(key, "true");
             }
         }
@@ -307,10 +307,10 @@ const AppHeader: React.FC = () => {
                 />
             )}
 
-            {/* Attendance Streak Modal (Admin Forced) */}
-            {isForcedStreakModalOpen && streakInfo && streakRules && (
+            {/* Attendance Streak Modal (Admin Forced or Manual) */}
+            {isStreakModalOpen && streakInfo && streakRules && (
                 <AttendanceStreakModal
-                    onClose={() => setIsForcedStreakModalOpen(false)}
+                    onClose={() => setStreakModalOpen(false)}
                     onClaim={claimStreakReward}
                     currentStreak={streakInfo.streak_days}
                     claimableDay={streakInfo.claimable_day}

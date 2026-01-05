@@ -158,8 +158,8 @@ class MissionService:
         from app.services.ui_config_service import UiConfigService
         row = UiConfigService.get(self.db, "streak_reward_rules")
         if not row:
-             # Default milestones: 3, 7
-             milestones = [3, 7]
+             # Default milestones: 1-7 (Daily rewards)
+             milestones = [1, 2, 3, 4, 5, 6, 7]
         else:
              # Parse days from rules
              try:
