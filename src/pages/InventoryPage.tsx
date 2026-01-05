@@ -113,7 +113,7 @@ const InventoryPage: React.FC = () => {
                         data-tour="inventory-shop-btn"
                         className="shrink-0 bg-figma-primary text-white text-[12px] font-black px-4 py-2.5 rounded-xl transition-all active:scale-[0.98] inline-flex items-center gap-2"
                     >
-                        <img src="/assets/icons/icon_cart.svg" alt="" className="w-4 h-4 object-contain" />
+                        <img src="/assets/icons/icon_cart.webp" alt="" className="w-4 h-4 object-contain" />
                         상점 가기
                     </button>
                 </div>

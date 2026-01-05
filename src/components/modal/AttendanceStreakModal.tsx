@@ -105,32 +105,41 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
                 {/* Glow Background */}
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-1/2 bg-gradient-to-b from-figma-primary/20 to-transparent blur-3xl pointer-events-none" />
 
-                <div className="relative flex-1 overflow-y-auto rounded-2xl bg-gradient-to-b from-white/5 to-transparent p-5 flex flex-col items-center custom-scrollbar">
+                <div className="relative flex-1 overflow-y-auto rounded-2xl bg-gradient-to-b from-white/5 to-transparent flex flex-col items-center custom-scrollbar">
+                    {/* Header Banner */}
+                    <div className="relative w-full overflow-hidden rounded-2xl border border-white/10 bg-black/40">
+                        <img
+                            src="/assets/welcome/header_2026_newyear.webp"
+                            alt=""
+                            className="w-full h-28 object-cover"
+                        />
 
-                    <button
-                        onClick={() => { tryHaptic(10); onClose(); }}
-                        className="absolute top-4 right-4 z-10 p-2 rounded-full bg-black/20 hover:bg-white/10 border border-white/5 transition-colors"
-                        disabled={isClaiming}
-                    >
-                        <X className="w-5 h-5 text-white/60" />
-                    </button>
+                        <button
+                            onClick={() => { tryHaptic(10); onClose(); }}
+                            className="absolute top-3 right-3 z-10 p-2 rounded-full bg-black/30 hover:bg-white/10 border border-white/10 transition-colors"
+                            disabled={isClaiming}
+                        >
+                            <X className="w-5 h-5 text-white/80" />
+                        </button>
+                    </div>
 
-                    <header className="text-center mb-5 mt-2 w-full">
-                        <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-2xl bg-white/5 border border-white/10">
-                            <img src="/assets/icons/icon_fire.svg" alt="" className="h-5 w-5 object-contain" />
-                        </div>
-                        <h2 className="text-2xl font-black text-white glow-green mb-3 tracking-tight">
-                            {isZeroStreak ? "🎮 게임 시작 후 보상 시작!" : (isClaimable ? "🎁 보상 수령 대기" : "연속 플레이 기록")}
-                        </h2>
-                        <div className="text-xs font-medium text-white/70 space-y-1.5 bg-white/5 rounded-xl p-3 text-left border border-white/5">
-                            <p>• 하루 한 번 <span className="text-emerald-400 font-bold">플레이</span> - ‘연속 기록’</p>
-                            <p>• <span className="text-emerald-400 font-bold">매일 게임 플레이</span>시 기록이 유지</p>
-                            <p className="text-white/40 pt-1.5 border-t border-white/10 mt-1.5">• 기준 시간: 매일 00:00</p>
-                        </div>
-                    </header>
+                    <div className="w-full p-5 flex flex-col items-center">
+                        <header className="text-center mb-5 mt-2 w-full">
+                            <div className="mx-auto -mt-10 mb-2 flex h-14 w-14 items-center justify-center rounded-2xl bg-black/60 border border-white/10 shadow-lg">
+                                <img src="/assets/icons/icon_fire.webp" alt="" className="h-10 w-10 object-contain" />
+                            </div>
+                            <h2 className="text-2xl font-black text-white glow-green mb-3 tracking-tight">
+                                {isZeroStreak ? "🎮 게임 시작 후 보상 시작!" : (isClaimable ? "🎁 보상 수령 대기" : "연속 플레이 기록")}
+                            </h2>
+                            <div className="text-xs font-medium text-white/70 space-y-1.5 bg-white/5 rounded-xl p-3 text-left border border-white/5">
+                                <p>• 하루 한 번 <span className="text-emerald-400 font-bold">플레이</span> - ‘연속 기록’</p>
+                                <p>• <span className="text-emerald-400 font-bold">매일 게임 플레이</span>시 기록이 유지</p>
+                                <p className="text-white/40 pt-1.5 border-t border-white/10 mt-1.5">• 기준 시간: 매일 00:00</p>
+                            </div>
+                        </header>
 
-                    {/* 7-Day Grid */}
-                    <div className="grid grid-cols-4 gap-2 w-full mb-6">
+                        {/* 7-Day Grid */}
+                        <div className="grid grid-cols-4 gap-2 w-full mb-6">
                         {Array.from({ length: 7 }).map((_, i) => {
                             const day = i + 1;
                             const rule = sortedRules.find(r => r.day === day);
@@ -155,6 +164,14 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
                                                 "bg-white/5 border-white/10"
                                     )}
                                 >
+                                    {isLastDay ? (
+                                        <img
+                                            src="/assets/modals/7days.webp"
+                                            alt=""
+                                            className="absolute inset-0 w-full h-full object-cover opacity-30 pointer-events-none"
+                                        />
+                                    ) : null}
+
                                     {isLastDay ? (
                                         <span className="absolute left-2 top-2 rounded-lg bg-white/10 px-2 py-0.5 text-[9px] font-black text-figma-accent">
                                             최종 보상
@@ -201,9 +218,9 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
                                 </div>
                             );
                         })}
-                    </div>
+                        </div>
 
-                    <div className="w-full space-y-3 mt-auto">
+                        <div className="w-full space-y-3 mt-auto">
                         <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
                             <div>
                                 <p className="text-[10px] font-black text-white/40 uppercase tracking-widest">나의 현재 기록</p>
@@ -255,9 +272,10 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
                                 )}
                             </>
                         )}
-                    </div>
+                        </div>
 
-                    <p className="mt-4 text-[9px] font-black text-white/20 tracking-[0.2em]">출석 보상 v1.0</p>
+                        <p className="mt-4 text-[9px] font-black text-white/20 tracking-[0.2em]">출석 보상 v1.0</p>
+                    </div>
                 </div>
             </div>
         </div>

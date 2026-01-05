@@ -1,5 +1,5 @@
 import React from "react";
-import { Zap, X } from "lucide-react";
+import { X } from "lucide-react";
 import Button from "../common/Button";
 import { tryHaptic } from "../../utils/haptics";
 
@@ -20,6 +20,15 @@ const GoldenHourPopup: React.FC<GoldenHourPopupProps> = ({ onClose, multiplier }
 
                 <div className="relative rounded-[1.3rem] bg-gradient-to-b from-amber-500/10 to-transparent p-6 flex flex-col items-center text-center">
 
+                    {/* Header Banner */}
+                    <div className="w-full overflow-hidden rounded-2xl border border-white/10 bg-black/40 mb-5">
+                        <img
+                            src="/assets/welcome/header_2026_newyear.webp"
+                            alt=""
+                            className="w-full h-20 object-cover"
+                        />
+                    </div>
+
                     <button
                         onClick={() => { tryHaptic(10); onClose(); }}
                         className="absolute top-4 right-4 p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors"
@@ -31,12 +40,12 @@ const GoldenHourPopup: React.FC<GoldenHourPopupProps> = ({ onClose, multiplier }
                     <div className="relative mb-6">
                         <div className="absolute inset-0 blur-2xl bg-amber-500/40 animate-pulse" />
                         <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-amber-600 shadow-lg shadow-amber-500/50">
-                            <Zap className="h-8 w-8 text-white fill-white" />
+                            <img src="/assets/icons/icon_clock.webp" alt="" className="h-10 w-10 object-contain" />
                         </div>
                     </div>
 
                     <h2 className="text-2xl font-black italic tracking-tighter text-white uppercase drop-shadow-lg mb-1 inline-flex items-center justify-center gap-2">
-                        <img src="/assets/icons/icon_clock.svg" alt="" className="h-5 w-5 object-contain" />
+                        <img src="/assets/icons/icon_clock.webp" alt="" className="h-6 w-6 object-contain" />
                         Golden Hour
                     </h2>
                     <div className="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 mb-5">
