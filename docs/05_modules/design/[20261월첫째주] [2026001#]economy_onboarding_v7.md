@@ -95,7 +95,8 @@
   - `ROULETTE_COIN`, `DICE_TOKEN`, `LOTTERY_TICKET` 등
 - **Key(고가 입장권/전환 재화)**: 지갑 SoT (`user_game_wallet`)
   - `GOLD_KEY`, `DIAMOND_KEY`
-  - 참고: Ticket Zero 대응(`TRIAL_GRANT`)은 **티켓 3종만** 대상이며, 키는 trial-grant로 지급되지 않음(일일 총 3장 상한 적용).
+  - 참고: Ticket Zero 대응(`TRIAL_GRANT`)은 키를 지급하지 않으며(요청되어도 서버에서 차단),
+    `ROULETTE_COIN`/`DICE_TOKEN`/`LOTTERY_TICKET` 요청은 **실전 티켓 대신 `TRIAL_TOKEN` 3장 지급으로 리다이렉트**된다.
 - **Diamond(상점 결제 재화)**: (v7 목표) 인벤토리 SoT (`user_inventory_item`)
   - item_type 예: `DIAMOND` 또는 `CURRENCY_DIAMOND`(명칭은 구현 시 확정)
 - **Voucher(교환권 아이템)**: 인벤토리 SoT (`user_inventory_item`)

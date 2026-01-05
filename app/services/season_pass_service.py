@@ -582,37 +582,14 @@ class SeasonPassService:
         return granted
 
     def _auto_claim_initial_level(self, db: Session, progress: SeasonPassProgress) -> None:
-        """Auto-claim level 1 reward on first season-pass creation (if configured as auto_claim)."""
-
-        level_row = db.execute(
-            select(SeasonPassLevel).where(
-                SeasonPassLevel.season_id == progress.season_id,
-                SeasonPassLevel.level == 1,
-            )
-        ).scalar_one_or_none()
-
-        if not level_row or not level_row.auto_claim:
-            return
-
-        reward_meta = {
-            "season_id": progress.season_id,
-            "level": 1,
-            "source": "SEASON_PASS_AUTO_CLAIM_INIT",
-        }
-        try:
-            self.reward_service.deliver(
-                db,
-                user_id=progress.user_id,
-                reward_type=level_row.reward_type,
-                reward_amount=level_row.reward_amount,
-                meta=reward_meta,
-            )
-        except Exception:
-            # Do not block creation on delivery failure; rely on logs for retry.
-            self.logger.warning(
-                "Season pass init auto-claim failed", extra={"user_id": progress.user_id, "season_id": progress.season_id, "level": 1}, exc_info=True
-            )
-        db.commit()
+        """Auto-claim level 1 reward on first season-pass creation (if configured as auto_claim).
+        
+        [DISABLED] This was causing duplicate Level 1 grants because:
+        1. This function grants Level 1 on progress creation
+        2. _recover_missing_auto_claims grants Level 1 again when get_status is called
+        The normal flow already handles Level 1 correctly.
+        """
+        return  # Disabled to prevent duplicate grants
 
     def add_bonus_xp(
         self,
