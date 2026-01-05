@@ -14,7 +14,7 @@ from app.models.season_pass import SeasonPassProgress
 def test_xp_grant():
     db = sessionmaker(bind=create_engine(get_settings().database_url))()
     # Test on a specific user (or create a temp one, but let's use 67 for continuity)
-    user_id = 67
+    user_id = 100003
     user = db.query(User).filter(User.id == user_id).first()
     
     if not user:
