@@ -319,7 +319,10 @@ class AdminUserService:
             UserMissionProgress,
             VaultEarnEvent,
             VaultWithdrawalRequest,
+            VaultStatus,
         )
+        from app.models.level_xp import UserLevelProgress, UserLevelRewardLog, UserXpEventLog
+        from app.models.user_segment import UserSegment
         from app.models.dice import DiceLog
         from app.models.roulette import RouletteLog
         from app.models.lottery import LotteryLog
@@ -340,12 +343,26 @@ class AdminUserService:
         db.query(UserInventoryLedger).filter(UserInventoryLedger.user_id == user_id).delete(synchronize_session=False)
         db.query(UserInventoryItem).filter(UserInventoryItem.user_id == user_id).delete(synchronize_session=False)
 
+        # Level/XP system
+        db.query(UserLevelRewardLog).filter(UserLevelRewardLog.user_id == user_id).delete(synchronize_session=False)
+        db.query(UserXpEventLog).filter(UserXpEventLog.user_id == user_id).delete(synchronize_session=False)
+        db.query(UserLevelProgress).filter(UserLevelProgress.user_id == user_id).delete(synchronize_session=False)
+
+        # Segmentation
+        db.query(UserSegment).filter(UserSegment.user_id == user_id).delete(synchronize_session=False)
+
+        # Level/XP system
+        db.query(UserLevelRewardLog).filter(UserLevelRewardLog.user_id == user_id).delete(synchronize_session=False)
+        db.query(UserXpEventLog).filter(UserXpEventLog.user_id == user_id).delete(synchronize_session=False)
+        db.query(UserLevelProgress).filter(UserLevelProgress.user_id == user_id).delete(synchronize_session=False)
+
         db.query(DiceLog).filter(DiceLog.user_id == user_id).delete(synchronize_session=False)
         db.query(RouletteLog).filter(RouletteLog.user_id == user_id).delete(synchronize_session=False)
         db.query(LotteryLog).filter(LotteryLog.user_id == user_id).delete(synchronize_session=False)
 
         db.query(VaultEarnEvent).filter(VaultEarnEvent.user_id == user_id).delete(synchronize_session=False)
         db.query(VaultWithdrawalRequest).filter(VaultWithdrawalRequest.user_id == user_id).delete(synchronize_session=False)
+        db.query(VaultStatus).filter(VaultStatus.user_id == user_id).delete(synchronize_session=False)
 
         db.query(UserActivityEvent).filter(UserActivityEvent.user_id == user_id).delete(synchronize_session=False)
         db.query(UserActivity).filter(UserActivity.user_id == user_id).delete(synchronize_session=False)
