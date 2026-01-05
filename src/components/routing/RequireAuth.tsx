@@ -51,6 +51,28 @@ const RequireAuth: React.FC = () => {
       });
   }, [initData, isReady, location.pathname, login, navigate, startParam, token]);
 
+  // --- Auto Re-auth on Visibility Change (Fix for Day 2 login mission) ---
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible" && initData && !isAuthenticating) {
+        // App returned to foreground.
+        // We trigger a silent auth refresh to ensure server captures "login" event for daily missions.
+        console.log("[RequireAuth] App visible > Triggering silent re-auth for daily check.");
+
+        telegramApi.auth(initData, startParam || undefined)
+          .then((response) => {
+            // Update local token/user if changed
+            login(response.access_token, response.user);
+            console.log("[RequireAuth] Silent re-auth success.");
+          })
+          .catch(e => console.warn("[RequireAuth] Silent re-auth failed", e));
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [initData, isAuthenticating, login, startParam]);
+
   if (!isReady) {
     return (
       <div className="flex items-center justify-center min-h-[100dvh] bg-black">
