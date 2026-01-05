@@ -24,6 +24,33 @@ def read_missions(
     """
     Get all daily missions and current user progress.
     """
+    # [Lazy Daily Check] For users with persistent sessions who don't hit /auth/token
+    try:
+        from app.services.mission_service import MissionService
+        from zoneinfo import ZoneInfo
+        from datetime import datetime, timezone
+        kst = ZoneInfo("Asia/Seoul")
+        now_kst = datetime.now(kst)
+        today_kst_date = now_kst.date()
+        should_update = False
+
+        if current_user.last_login_at:
+            last_login_utc = current_user.last_login_at.replace(tzinfo=timezone.utc)
+            last_login_kst = last_login_utc.astimezone(kst)
+            if last_login_kst.date() < today_kst_date:
+                should_update = True
+        else:
+            should_update = True
+        
+        if should_update:
+            MissionService(db).update_progress(current_user.id, "LOGIN", delta=1)
+            current_user.last_login_at = datetime.now(timezone.utc)
+            db.commit()
+    except Exception:
+        # Don't block mission loading if check fails
+        db.rollback()
+        pass
+
     service = MissionService(db)
     missions = service.get_user_missions(current_user.id)
     streak_info = service.get_streak_info(current_user.id)

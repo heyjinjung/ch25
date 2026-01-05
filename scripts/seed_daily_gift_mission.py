@@ -4,8 +4,16 @@ from app.db.session import SessionLocal
 from app.models.mission import Mission, MissionCategory, MissionRewardType
 from app.models.game_wallet import GameTokenType
 
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
 def seed_daily_gift():
-    db: Session = SessionLocal()
+    # Use local connection for verification script
+    SQLALCHEMY_DATABASE_URL = "mysql+pymysql://xmasuser:2026@127.0.0.1:3307/xmas_event"
+    engine = create_engine(SQLALCHEMY_DATABASE_URL)
+    SessionLocalOverride = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    db: Session = SessionLocalOverride()
+
     try:
         # Check if mission already exists by logic_key
         logic_key = "daily_login_gift"

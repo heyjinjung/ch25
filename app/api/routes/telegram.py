@@ -188,60 +188,84 @@ def telegram_auth(
 
                 user = User(
                     external_id=external_id,
-                nickname=tg_username or f"tg_user_{tg_id}",
-                telegram_id=tg_id,
-                telegram_username=tg_username,
-                first_login_at=datetime.now(timezone.utc),
-                telegram_is_blocked=False,
-                telegram_join_count=1
-            )
-            db.add(user)
-            try:
-                db.commit()
-                db.refresh(user)
-
-                # --- NEW USER BONUS LOGIC (Phase 2.0.1) ---
-                # Grant 10,000 KRW Locked Balance (No Deposit Required Exception)
-                user.vault_locked_balance = 10000
-                from app.services.vault_service import VaultService
-                user.vault_locked_expires_at = VaultService._compute_locked_expires_at(datetime.now(timezone.utc))
+                    nickname=tg_username or f"tg_user_{tg_id}",
+                    telegram_id=tg_id,
+                    telegram_username=tg_username,
+                    first_login_at=datetime.now(timezone.utc),
+                    telegram_is_blocked=False,
+                    telegram_join_count=1
+                )
                 db.add(user)
-                # ------------------------------------------
+                try:
+                    db.commit()
+                    db.refresh(user)
 
-                # --- REFERRAL LOGIC START ---
-                if start_param and start_param.startswith("ref_"):
-                    # Format: ref_{referrer_user_id}
-                    try:
-                        referrer_id_str = start_param.split("_")[1]
-                        referrer_id = int(referrer_id_str)
-                        referrer = db.get(User, referrer_id)
-                        if referrer and referrer.id != user.id:
-                            # 1. Log referral (Optional: Create Referral model)
-                            # For now, just trigger mission
-                            from app.services.mission_service import MissionService
-                            ms = MissionService(db)
-                            # Trigger "INVITE_FRIEND" action for the REFERRER
-                            ms.update_progress(referrer.id, "INVITE_FRIEND", 1)
-                            # Optionally give referrer a nudge?
-                    except (IndexError, ValueError):
-                        pass # Invalid ref code, ignore
-                # --- REFERRAL LOGIC END ---
+                    # --- NEW USER BONUS LOGIC (Phase 2.0.1) ---
+                    user.vault_locked_balance = 10000
+                    from app.services.vault_service import VaultService
+                    user.vault_locked_expires_at = VaultService._compute_locked_expires_at(datetime.now(timezone.utc))
+                    db.add(user)
+                    # ------------------------------------------
 
-            except Exception as e:
-                db.rollback()
-                raise HTTPException(status_code=500, detail=f"Failed to create telegram user: {str(e)}")
-    else:
-        # Update existing user session
-        user.telegram_username = tg_username
-        user.telegram_is_blocked = False
-        user.telegram_join_count += 1
-        user.last_login_at = datetime.now(timezone.utc)
-        try:
-            db.commit()
-            db.refresh(user)
-        except Exception as e:
-            db.rollback()
-            raise HTTPException(status_code=500, detail=f"Failed to update telegram user: {str(e)}")
+                    # --- REFERRAL LOGIC START ---
+                    if start_param and start_param.startswith("ref_"):
+                        try:
+                            referrer_id_str = start_param.split("_")[1]
+                            referrer_id = int(referrer_id_str)
+                            referrer = db.get(User, referrer_id)
+                            if referrer and referrer.id != user.id:
+                                from app.services.mission_service import MissionService
+                                ms = MissionService(db)
+                                ms.update_progress(referrer.id, "INVITE_FRIEND", 1)
+                        except (IndexError, ValueError):
+                            pass
+                    # --- REFERRAL LOGIC END ---
+                    
+                    # New users always trigger LOGIN mission
+                    from app.services.mission_service import MissionService
+                    MissionService(db).update_progress(user.id, "LOGIN", delta=1)
+
+                    db.commit()
+                except Exception as e:
+                    db.rollback()
+                    raise HTTPException(status_code=500, detail=f"Failed to create telegram user: {str(e)}")
+            
+            else:
+                # Update existing user session
+                
+                # [Mission Trigger] Check before updating last_login_at
+                try:
+                    from app.services.mission_service import MissionService
+                    from zoneinfo import ZoneInfo
+                    kst = ZoneInfo("Asia/Seoul")
+                    now_kst = datetime.now(kst)
+                    today_kst_date = now_kst.date()
+                    should_increment = False
+                    
+                    if user.last_login_at:
+                        last_login_utc = user.last_login_at.replace(tzinfo=timezone.utc)
+                        last_login_kst = last_login_utc.astimezone(kst)
+                        if last_login_kst.date() < today_kst_date:
+                            should_increment = True
+                    else:
+                        should_increment = True
+                    
+                    if should_increment:
+                        MissionService(db).update_progress(user.id, "LOGIN", delta=1)
+                except Exception:
+                    pass
+
+                user.telegram_username = tg_username
+                user.telegram_is_blocked = False
+                user.telegram_join_count = int(getattr(user, "telegram_join_count", 0) or 0) + 1
+                user.last_login_at = datetime.now(timezone.utc)
+                
+                try:
+                    db.commit()
+                    db.refresh(user)
+                except Exception as e:
+                    db.rollback()
+                    raise HTTPException(status_code=500, detail=f"Failed to update telegram user: {str(e)}")
 
     # 2. Issue JWT
     token = security.create_access_token(user.id)
