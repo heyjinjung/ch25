@@ -27,6 +27,7 @@ interface AttendanceStreakModalProps {
 
 const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, onClaim, currentStreak, claimableDay, rules }) => {
     const [isClaiming, setIsClaiming] = React.useState(false);
+    const isZeroStreak = currentStreak === 0;
 
     // We expect rules for 1-7 days. If not provided, we won't show the full grid properly.
     const sortedRules = [...rules].sort((a, b) => a.day - b.day);
@@ -116,7 +117,7 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
 
                     <header className="text-center mb-5 mt-2 w-full">
                         <h2 className="text-2xl font-black text-white glow-green mb-3 tracking-tight">
-                            {isClaimable ? "🎁 보상 수령 대기" : "연속 플레이 기록"}
+                            {isZeroStreak ? "🎮 게임 시작 후 보상 시작!" : (isClaimable ? "🎁 보상 수령 대기" : "연속 플레이 기록")}
                         </h2>
                         <div className="text-xs font-medium text-white/70 space-y-1.5 bg-white/5 rounded-xl p-3 text-left border border-white/5">
                             <p>• 하루 한 번 <span className="text-emerald-400 font-bold">플레이</span> - ‘연속 기록’</p>
@@ -203,27 +204,49 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
                         <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
                             <div>
                                 <p className="text-[10px] font-black text-white/40 uppercase tracking-widest">나의 현재 기록</p>
-                                <p className="text-xl font-black text-white">🔥 {currentStreak}일 연속!</p>
+                                <p className="text-xl font-black text-white">
+                                    {isZeroStreak ? "⏳ 게임 플레이 대기" : `🔥 ${currentStreak}일 연속!`}
+                                </p>
                             </div>
                             <div className="text-right">
-                                <p className="text-[10px] font-black text-white/40 tracking-widest">다음 보상</p>
-                                <p className="text-sm font-bold text-figma-accent">{currentStreak + 1}일차</p>
+                                <p className="text-[10px] font-black text-white/40 tracking-widest">
+                                    {isZeroStreak ? "첫 보상" : "다음 보상"}
+                                </p>
+                                <p className="text-sm font-bold text-figma-accent">1일차</p>
                             </div>
                         </div>
 
-                        <Button
-                            variant={isClaimable ? "figma-primary" : "figma-secondary"}
-                            fullWidth
-                            className="rounded-2xl py-3.5 text-base"
-                            onClick={handleAction}
-                            disabled={isClaiming || !isClaimable} // Disable if not claimable (already claimed)
-                        >
-                            {isClaiming ? "처리 중..." : (isClaimable ? "🎁 보상 받기" : "수령 완료")}
-                        </Button>
-                        {!isClaimable && (
-                            <button onClick={onClose} className="w-full py-2 text-xs font-medium text-white/40 hover:text-white transition-colors">
-                                닫기
-                            </button>
+                        {isZeroStreak ? (
+                            <>
+                                <p className="text-center text-xs text-white/60 py-2">
+                                    게임을 플레이하면 <span className="text-figma-accent font-bold">1일차 보상</span>을 받을 수 있어요!
+                                </p>
+                                <Button
+                                    variant="figma-secondary"
+                                    fullWidth
+                                    className="rounded-2xl py-3.5 text-base"
+                                    onClick={onClose}
+                                >
+                                    게임 하러 가기 🎮
+                                </Button>
+                            </>
+                        ) : (
+                            <>
+                                <Button
+                                    variant={isClaimable ? "figma-primary" : "figma-secondary"}
+                                    fullWidth
+                                    className="rounded-2xl py-3.5 text-base"
+                                    onClick={handleAction}
+                                    disabled={isClaiming || !isClaimable}
+                                >
+                                    {isClaiming ? "처리 중..." : (isClaimable ? "🎁 보상 받기" : "수령 완료")}
+                                </Button>
+                                {!isClaimable && (
+                                    <button onClick={onClose} className="w-full py-2 text-xs font-medium text-white/40 hover:text-white transition-colors">
+                                        닫기
+                                    </button>
+                                )}
+                            </>
                         )}
                     </div>
 

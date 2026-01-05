@@ -106,3 +106,16 @@
     1. Check backend container/app logs around the request time.
     2. Confirm DB constraints / FK deletes / missing tables/migrations on the deployed environment.
     3. Verify whether frontend is calling the correct backend base URL and that the backend image includes the purge route.
+
+## 8. Admin PURGE Hardened (2026-01-05 PM)
+*   **Issue**: PURGE 500 on deployed DB because `telegram_unlink_request` table is missing.
+*   **Fix**: In `app/services/admin_user_service.py`, wrap unlink cleanup with `inspect(...).has_table(...)` so absence of the table no longer breaks purge.
+*   **Broader Cleanup Coverage (added earlier today)**: Also purge `UserLevelRewardLog`, `UserXpEventLog`, `UserLevelProgress`, `UserSegment`, `VaultStatus` to avoid FK leftovers.
+*   **Status**: Deployed (`docker compose up -d --build backend` done). Re-test `POST /admin/api/users/{id}/purge` on prod DB.
+
+## 9. Ops Debug Scripts (E2E reward checks)
+*   **Daily Gift**: `scripts/debug_daily_login_gift.py` — creates temp user, advances LOGIN, claims, and diffs inventory.
+*   **Streak Reward**: `scripts/debug_streak_reward_claim.py` — builds streak days, checks `claimable_day`, claims, verifies wallet/inventory, idempotency. Use `--no-set-rule` to honor live admin streak rules.
+*   **Run examples**:
+    * `docker compose exec -T backend python scripts/debug_daily_login_gift.py`
+    * `docker compose exec -T backend python scripts/debug_streak_reward_claim.py --no-set-rule --day 1` (repeat for 1~7)
