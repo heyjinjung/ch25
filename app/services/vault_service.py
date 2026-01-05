@@ -924,11 +924,11 @@ class VaultService:
 
         now_dt = now or datetime.utcnow()
 
-        # Eligibility guard (Phase 1 funnel matches Game Earn).
-        # We generally want welcome missions to work for everyone who sees them,
-        # but consistency with Vault funnel is safer.
-        if not self._eligible(db, user_id, now_dt):
-            return 0
+    # Eligibility guard REMOVED for Mission Rewards.
+    # Missions are explicit rewards that should always be granted if completed.
+    # (Phase 1 funnel restriction removed for this flow)
+    # if not self._eligible(db, user_id, now_dt):
+    #    return 0
 
         earn_event_id = f"MISSION:{mission_id}"
 

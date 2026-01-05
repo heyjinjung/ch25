@@ -735,34 +735,35 @@ class MissionService:
     def claim_daily_gift(self, user_id: int) -> Tuple[bool, str, int]:
         """
         Special logic for 'Daily Login Gift'.
-        Uses a virtual/hidden mission with logic_key='daily_gift'.
+        Prioritizes 'daily_login_gift' (Admin set), falls back to 'daily_gift' (Legacy code).
         """
-        # 1. Fetch or create the daily_gift mission template if it doesn't exist
-        # In production, this should be seeded, but here we'll be defensive
-        mission = self.db.query(Mission).filter(Mission.logic_key == "daily_gift").first()
+        # 1. Try to find the Admin-configured mission first
+        mission = self.db.query(Mission).filter(Mission.logic_key == "daily_login_gift").first()
+        
+        # 2. If not found, look for legacy code-defined mission
+        if not mission:
+             mission = self.db.query(Mission).filter(Mission.logic_key == "daily_gift").first()
+
+        # 3. If neither exists, create legacy default (Safety fallback)
         if not mission:
             mission = Mission(
                 title="일일 출석 선물",
                 description="매일 접속 시 드리는 선물입니다.",
                 category=MissionCategory.DAILY,
-                logic_key="daily_gift",
-                action_type="daily_gift", # Set explicit action_type
+                logic_key="daily_login_gift", # Create with the new standard key
+                action_type="LOGIN", # Standard action
                 target_value=1,
                 reward_type=MissionRewardType.DIAMOND,
-                reward_amount=500,
+                reward_amount=1, # Default to 1 based on screenshot
                 is_active=True
             )
             self.db.add(mission)
             self.db.commit()
             self.db.refresh(mission)
 
-        # Ensure older seeded daily_gift has action_type if missing?
-        if not mission.action_type:
-             mission.action_type = "daily_gift"
-             self.db.commit()
-
         # 2. Update progress to 1 (since they are calling this, they are logged in)
-        self.update_progress(user_id, "daily_gift", delta=1)
+        # Fix: Ensure we update progress using the ACTUAL logic_key found
+        self.update_progress(user_id, mission.logic_key, delta=1)
 
         # 3. Try to claim
         return self.claim_reward(user_id, mission.id)
