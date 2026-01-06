@@ -5,16 +5,15 @@ import { useGuide } from "../../contexts/GuideContext";
 import { useNavigate, useLocation } from "react-router-dom";
 
 // 시니어 친화적 큰 글씨, 명확한 한글 안내
-// 전체 플로우: 홈 → 게임 → 금고 → 금고의 인벤토리 버튼 → 인벤토리 보유/지갑 탭 → 상점 → 이벤트
+// 전체 플로우(최신): 홈 → 게임 → 금고 → (금고 하단) 보상함 버튼 → 보상함 → 상점 → 이벤트/미션
 const guideSteps: Step[] = [
   {
     target: '[data-tour="nav-home"]',
     content: (
       <div className="text-left">
-        <div className="text-xl font-black mb-2">🏠 홈 화면</div>
-        <div className="text-base leading-relaxed">
-          여기는 <strong>홈</strong>입니다.<br />
-          게임 목록과 주요 기능을 볼 수 있어요.
+        <div className="text-lg font-black mb-2">🏠 홈</div>
+        <div className="text-sm leading-snug break-keep">
+          여기는 <strong>홈</strong>입니다. 게임 목록과 주요 기능을 볼 수 있어요.
         </div>
       </div>
     ),
@@ -25,11 +24,10 @@ const guideSteps: Step[] = [
     target: '[data-tour="nav-games"]',
     content: (
       <div className="text-left">
-        <div className="text-xl font-black mb-2">🎮 게임</div>
-        <div className="text-base leading-relaxed">
-          <strong>룰렛, 주사위, 복권</strong> 게임을 하려면<br />
-          여기를 누르세요!<br /><br />
-          <span className="text-amber-400">💡 티켓이 있어야 게임을 할 수 있어요</span>
+        <div className="text-lg font-black mb-2">🎮 게임</div>
+        <div className="text-sm leading-snug break-keep">
+          <strong>룰렛, 주사위, 복권</strong> 게임을 하려면 여기를 누르세요.
+          <div className="mt-2 text-amber-400">💡 티켓이 있어야 게임을 할 수 있어요.</div>
         </div>
       </div>
     ),
@@ -40,71 +38,69 @@ const guideSteps: Step[] = [
     target: '[data-tour="nav-vault"]',
     content: (
       <div className="text-left">
-        <div className="text-xl font-black mb-2">🔐 금고</div>
-        <div className="text-base leading-relaxed">
-          <strong>내 보상 금액</strong>을 확인하려면<br />
-          여기를 눌러 금고로 가세요.<br /><br />
-          <span className="text-emerald-400">✨ 게임에서 얻은 보상이 여기에 쌓여요!</span>
+        <div className="text-lg font-black mb-2">🔐 금고</div>
+        <div className="text-sm leading-snug break-keep">
+          <strong>내 보상 금액</strong>을 확인하려면 여기를 눌러 금고로 가세요.
+          <div className="mt-2 text-emerald-400">✨ 게임에서 얻은 보상이 여기에 쌓여요.</div>
         </div>
       </div>
     ),
     placement: "top",
     disableBeacon: true,
   },
-  // 금고 페이지 내 인벤토리 버튼
+  // 금고 페이지 내 보상함 버튼
   {
     target: '[data-tour="vault-inventory-btn"]',
     content: (
       <div className="text-left">
-        <div className="text-xl font-black mb-2">📦 금고 → 인벤토리</div>
-        <div className="text-base leading-relaxed">
-          <strong>여기를 눌러 인벤토리로 이동</strong>하세요.<br /><br />
-          금고 화면 맨 아래에 있는 버튼입니다.
+        <div className="text-lg font-black mb-2">📦 금고 → 보상함</div>
+        <div className="text-sm leading-snug break-keep">
+          <strong>여기를 눌러 보상함으로 이동</strong>해요.
+          <div className="mt-2">금고 화면 맨 아래에 있는 버튼입니다.</div>
         </div>
       </div>
     ),
     placement: "top",
     disableBeacon: true,
   },
-  // 인벤토리 - 보유 아이템 탭
+  // 보상함 헤더
+  {
+    target: '[data-tour="inventory-link"]',
+    content: (
+      <div className="text-left">
+        <div className="text-lg font-black mb-2">🎁 보상함</div>
+        <div className="text-sm leading-snug break-keep">
+          여기서 <strong>보유 아이템(교환권/기프티콘)</strong>과 <strong>티켓 지갑</strong>을 한 번에 확인할 수 있어요.
+        </div>
+      </div>
+    ),
+    placement: "bottom",
+    disableBeacon: true,
+  },
+  // 보상함(아이템/티켓) 안내
   {
     target: '[data-tour="inventory-items-tab"]',
     content: (
       <div className="text-left">
-        <div className="text-xl font-black mb-2">🎒 보유 아이템</div>
-        <div className="text-base leading-relaxed">
-          <strong>보유 아이템 탭을 눌러</strong> 교환권/다이아를 확인하세요.<br /><br />
-          <span className="text-amber-400 font-bold">💡 교환권은 "사용하기" 누르면 티켓으로 바뀝니다.</span>
+        <div className="text-lg font-black mb-2">🎒 보유 아이템 / 🎫 티켓 지갑</div>
+        <div className="text-sm leading-snug break-keep">
+          위쪽은 <strong>교환권/기프티콘(지급대기)</strong>, 아래쪽은 <strong>티켓 지갑</strong>이에요.
+          <div className="mt-2 text-amber-400 font-bold">💡 티켓/키는 상점에서 사면 바로 지갑에 들어와요.</div>
         </div>
       </div>
     ),
     placement: "bottom",
     disableBeacon: true,
   },
-  // 인벤토리 - 티켓 지갑 탭
+  // 상점 페이지
   {
-    target: '[data-tour="inventory-wallet-tab"]',
+    target: '[data-tour="shop-link"]',
     content: (
       <div className="text-left">
-        <div className="text-xl font-black mb-2">🎫 티켓 지갑</div>
-        <div className="text-base leading-relaxed">
-          <strong>티켓 지갑 탭을 눌러</strong> 게임 티켓 수량을 확인하세요.<br /><br />
-          룰렛/주사위/복권 티켓이 모두 여기 표시됩니다.
-        </div>
-      </div>
-    ),
-    placement: "bottom",
-    disableBeacon: true,
-  },
-  // 인벤토리 → 상점 버튼
-  {
-    target: '[data-tour="inventory-shop-btn"]',
-    content: (
-      <div className="text-left">
-        <div className="text-xl font-black mb-2">🛒 상점 가기</div>
-        <div className="text-base leading-relaxed">
-          <strong>여기를 눌러 상점으로 이동</strong>하세요.<br /><br />
-          <span className="text-emerald-400 font-bold">다이아 → 상점에서 교환권 구매 → 인벤토리에서 사용 → 티켓!</span>
+        <div className="text-lg font-black mb-2">🛒 상점</div>
+        <div className="text-sm leading-snug break-keep">
+          <strong>다이아로 티켓/키</strong>를 살 수 있어요.
+          <div className="mt-2 text-white/70">기프티콘은 지급대기 후 관리자 승인 처리</div>
         </div>
       </div>
     ),
@@ -116,11 +112,13 @@ const guideSteps: Step[] = [
     target: '[data-tour="nav-events"]',
     content: (
       <div className="text-left">
-        <div className="text-xl font-black mb-2">⭐ 이벤트/미션</div>
-        <div className="text-base leading-relaxed">
-          <strong>일일 미션</strong>과 <strong>출석 보상</strong>을<br />
-          여기서 확인하고 받을 수 있어요!<br /><br />
-          <span className="text-red-400 font-bold">🎁 매일 보상을 놓치지 마세요!</span>
+        <div className="text-lg font-black mb-2">⭐ 이벤트 / 미션</div>
+        <div className="text-sm leading-snug break-keep">
+          <strong>일일 미션</strong>과 <strong>출석 보상</strong>을 여기서 확인하고 받을 수 있어요.
+          <div className="mt-2 text-white/70">
+            완료된 미션은 <span className="text-amber-300 font-black">트로피(받기)</span> 버튼을 누르면 보상이 들어옵니다.
+          </div>
+          <div className="mt-2 text-red-400 font-bold">🎁 매일 보상을 놓치지 마세요.</div>
         </div>
       </div>
     ),
@@ -172,19 +170,19 @@ const joyrideStyles: Partial<Styles> = {
     zIndex: 10000,
   },
   tooltip: {
-    borderRadius: 20,
-    padding: 24,
-    fontSize: 16,
+    borderRadius: 18,
+    padding: 18,
+    fontSize: 14,
   },
   tooltipContent: {
-    padding: "16px 8px",
+    padding: "12px 6px",
   },
   buttonNext: {
     backgroundColor: "#22c55e",
     color: "#000",
     fontWeight: 900,
-    fontSize: 16,
-    padding: "14px 28px",
+    fontSize: 15,
+    padding: "12px 22px",
     borderRadius: 12,
   },
   buttonBack: {
@@ -219,7 +217,7 @@ const CustomTooltip: React.FC<TooltipRenderProps> = ({
   return (
     <div
       {...tooltipProps}
-      className="bg-[#1a1a1a] border border-white/20 rounded-3xl p-6 max-w-sm shadow-2xl"
+      className="bg-[#1a1a1a] border border-white/20 rounded-3xl p-5 max-w-[300px] shadow-2xl break-keep whitespace-normal"
     >
       {/* Step indicator */}
       <div className="flex items-center justify-between mb-4">
@@ -244,7 +242,7 @@ const CustomTooltip: React.FC<TooltipRenderProps> = ({
         {index > 0 && (
           <button
             {...backProps}
-            className="text-white/60 hover:text-white text-base font-bold px-4 py-3 transition-colors"
+            className="text-white/60 hover:text-white text-sm font-bold px-3 py-2 transition-colors"
           >
             ← 이전
           </button>
@@ -252,7 +250,7 @@ const CustomTooltip: React.FC<TooltipRenderProps> = ({
         <div className="flex-1" />
         <button
           {...primaryProps}
-          className="bg-emerald-500 hover:bg-emerald-400 text-black text-lg font-black px-8 py-4 rounded-2xl transition-all active:scale-95 shadow-lg shadow-emerald-900/30"
+          className="bg-emerald-500 hover:bg-emerald-400 text-black text-base font-black px-6 py-3 rounded-2xl transition-all active:scale-95 shadow-lg shadow-emerald-900/30"
         >
           {continuous && index < size - 1 ? "다음 →" : "완료! ✓"}
         </button>
@@ -279,10 +277,16 @@ const AppGuide: React.FC = () => {
         navigate("/vault");
       }
     }
-    // 스텝 4~6: 인벤토리 페이지 → /inventory로 이동
-    if (stepIndex >= 4 && stepIndex <= 6) {
-      if (!location.pathname.startsWith("/inventory")) {
-        navigate("/inventory");
+    // 스텝 4~5: 보상함 페이지 → /rewards로 이동
+    if (stepIndex >= 4 && stepIndex <= 5) {
+      if (!location.pathname.startsWith("/rewards")) {
+        navigate("/rewards");
+      }
+    }
+    // 스텝 6: 상점 페이지 → /shop로 이동
+    if (stepIndex === 6) {
+      if (!location.pathname.startsWith("/shop")) {
+        navigate("/shop");
       }
     }
     // 스텝 7: 이벤트 (하단 네비, 어느 페이지든 OK)

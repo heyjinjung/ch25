@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import {
     Users,
     TrendingDown,
-    Wallet,
+
     Activity,
     Flame,
     Trophy,
@@ -313,14 +313,7 @@ const DailyOpsSummary: React.FC = () => {
                 />
 
                 {/* Financials */}
-                <MetricCard
-                    title="금일 입금 총액"
-                    value={formatKRW(data?.today_deposit_sum)}
-                    icon={<Wallet className="h-4 w-4" style={{ color: "#FFD700" }} />}
-                    subtitle={`${formatNumber(data?.today_deposit_count)}건`}
-                    color="bg-[#2A2A1F]"
-                    onClick={() => handleCardClick("금일 입금 총액", formatKRW(data?.today_deposit_sum))}
-                />
+
                 <MetricCard
                     title="외부 랭킹 입금액"
                     value={formatKRW(data?.external_ranking_deposit)}
@@ -348,7 +341,7 @@ const DailyOpsSummary: React.FC = () => {
                     title="인벤토리 자산"
                     value={formatNumber(data?.total_inventory_liability)}
                     icon={<Package className="h-4 w-4" style={{ color: "#A0D8EF" }} />}
-                    subtitle="아이템 수량 합계"
+                    subtitle="보유 아이템 총 수량"
                     color="bg-[#1F2A3A]"
                     onClick={() => handleCardClick("인벤토리 자산", formatNumber(data?.total_inventory_liability))}
                 />
