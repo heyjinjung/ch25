@@ -9,6 +9,7 @@ import { useSound } from "../../hooks/useSound";
 import { useMissionStore, MissionData } from "../../stores/missionStore";
 import { recordViralAction, getCloudItem, setCloudItem, verifyChannelSubscription } from "../../api/viralApi";
 import { useToast } from "../common/ToastProvider";
+import { formatRewardLine, isGifticonRewardType } from "../../utils/rewardLabel";
 
 interface MissionCardProps {
   data: MissionData;
@@ -40,9 +41,10 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
       if (result.success) {
         notification("success");
         playToast();
-        const rewardTypeName = result.reward_type === "CASH_UNLOCK" ? "원" : (result.reward_type || "");
-        const amountStr = (result.amount || 0).toLocaleString();
-        addToast(`보상 수령 완료: ${amountStr}${rewardTypeName} !`, "success");
+        const normalizedRewardType = result.reward_type === "CASH_UNLOCK" ? "POINT" : (result.reward_type || "");
+        const rewardLine = formatRewardLine(normalizedRewardType, result.amount ?? 0);
+        const hint = rewardLine?.fulfillmentHint ? ` (${rewardLine.fulfillmentHint})` : "";
+        addToast(`보상 수령 완료: ${rewardLine?.text ?? "보상"}${hint}`, "success");
         queryClient.invalidateQueries({ queryKey: ["vault-status"] });
         queryClient.invalidateQueries({ queryKey: ["inventory"] });
       } else {
@@ -55,6 +57,22 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
       addToast("오류가 발생했습니다. 잠시 후 다시 시도해주세요.", "error");
     }
   };
+
+  const normalizedMissionRewardType = mission.reward_type === "CASH_UNLOCK" ? "POINT" : mission.reward_type;
+  const rewardLine = formatRewardLine(normalizedMissionRewardType, mission.reward_amount);
+
+  const rewardIconSrc = (() => {
+    const upper = String(normalizedMissionRewardType || "").toUpperCase();
+
+    if (isGifticonRewardType(normalizedMissionRewardType)) return "/assets/lottery/icon_gift.png";
+    if (upper === "POINT" || upper === "CC_POINT") return "/assets/asset_coin_gold.webp";
+    if (upper === "GAME_XP") return "/assets/icons/icon_fire.webp";
+
+    const tickets = new Set(["TICKET_ROULETTE", "ROULETTE_TICKET", "TICKET_DICE", "DICE_TICKET", "TICKET_LOTTERY", "LOTTERY_TICKET"]);
+    if (tickets.has(upper)) return "/assets/asset_ticket_green.webp";
+
+    return "/assets/icon_diamond.png";
+  })();
 
   const handleAction = async () => {
     if (isVerifying) return;
@@ -310,17 +328,19 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
             <div className="shrink-0 text-right">
               <div className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-black/30 px-2 py-0.5">
                 <img
-                  src={mission.reward_type === "CASH_UNLOCK" ? "/assets/logo_cc_v2.png" : "/assets/icon_diamond.png"}
+                  src={rewardIconSrc}
                   alt=""
                   className="h-3.5 w-3.5 object-contain"
                 />
                 <span className="text-[12px] font-black text-figma-accent">
-                  {mission.reward_amount.toLocaleString()}
-                  {mission.reward_type === "CASH_UNLOCK" && "원"}
+                  {rewardLine?.text ?? mission.reward_amount.toLocaleString()}
                 </span>
               </div>
+              {rewardLine?.fulfillmentHint && (
+                <div className="mt-1 text-[10px] font-black text-white/50">{rewardLine.fulfillmentHint}</div>
+              )}
               {mission.xp_reward > 0 && (
-                <div className="mt-1 text-[10px] font-black text-white/70">+{mission.xp_reward} XP</div>
+                <div className="mt-1 text-[10px] font-black text-white/70">시즌 XP +{mission.xp_reward}</div>
               )}
             </div>
           </div>

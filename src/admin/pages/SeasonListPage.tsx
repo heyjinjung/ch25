@@ -17,6 +17,7 @@ import {
   upsertSeasonLevels,
 } from "../api/adminSeasonApi";
 import { REWARD_TYPES } from "../constants/rewardTypes";
+import type { AdminRewardType } from "../types/adminReward";
 
 const PrimaryButton = ({
   children,
@@ -507,7 +508,7 @@ const SeasonListPage: React.FC = () => {
                           value={lv.reward_type}
                           onChange={(e) => {
                             const newLevels = [...levels];
-                            newLevels[idx] = { ...lv, reward_type: e.target.value };
+                            newLevels[idx] = { ...lv, reward_type: e.target.value as AdminRewardType };
                             setLevels(newLevels);
                           }}
                           className="w-full rounded border border-[#333333] bg-[#111111] px-2 py-1.5 text-sm text-white"

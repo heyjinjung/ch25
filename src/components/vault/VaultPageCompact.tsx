@@ -101,7 +101,7 @@ const VaultPageCompact: React.FC = () => {
                     "text-xs mt-2 font-medium transition-colors",
                     view.eligible ? "text-emerald-500/80" : "text-white/45"
                 )}>
-                    {view.eligible ? "✨ 포인트 전환 가능" : "충전 시 금고해제됩니다"}
+                    {view.eligible ? "✨ 출금 신청 가능" : "조건 충족 시 해금됩니다"}
                 </p>
             </div>
 

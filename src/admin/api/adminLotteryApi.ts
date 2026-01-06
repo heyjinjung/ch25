@@ -1,12 +1,13 @@
 // src/admin/api/adminLotteryApi.ts
 import { adminApi } from "./httpClient";
+import type { AdminRewardType } from "../types/adminReward";
 
 export interface AdminLotteryPrizePayload {
   id?: number;
   label: string;
   weight: number;
   stock?: number | null;
-  reward_type: string;
+  reward_type: AdminRewardType;
   reward_value: number;
   is_active: boolean;
 }

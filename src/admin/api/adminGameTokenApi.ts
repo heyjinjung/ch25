@@ -1,6 +1,7 @@
 // src/admin/api/adminGameTokenApi.ts
 import { adminApi } from "./httpClient";
 import { GameTokenType } from "../../types/gameTokens";
+import type { AdminRewardType } from "../types/adminReward";
 
 export interface GrantGameTokensPayload {
   /** New standardized identifier field (tg id/username/nickname/external id). */
@@ -53,7 +54,7 @@ export interface PlayLogEntry {
   nickname?: string;
   telegram_username?: string;
   game: string;
-  reward_type: string;
+  reward_type: AdminRewardType;
   reward_amount: number;
   reward_label?: string | null;
   created_at: string;

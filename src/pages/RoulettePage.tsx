@@ -14,6 +14,7 @@ import VaultAccrualModal from "../components/vault/VaultAccrualModal";
 import { useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
 import { useSound } from "../hooks/useSound";
+import { formatRewardLine, isGifticonRewardType, parseGifticonRewardType } from "../utils/rewardLabel";
 
 const FALLBACK_SEGMENTS = Array.from({ length: 12 }).map((_, idx) => ({
   label: `BONUS ${idx + 1}`,
@@ -164,11 +165,15 @@ const RoulettePage: React.FC = () => {
     const rewardType = result?.reward_type ?? "NONE";
 
     // Strict Whitelist
-    const ALLOWED_TYPES = ["POINT", "TICKET", "COUPON", "KEY", "TOKEN"];
-    const isAllowedReward = ALLOWED_TYPES.some(t => rewardType.toUpperCase().includes(t));
+    const ALLOWED_TYPES = ["POINT", "CC_POINT", "TICKET", "COUPON", "KEY", "TOKEN", "GAME_XP", "GIFTICON"];
+    const upperRewardType = rewardType.toUpperCase();
+    const isAllowedReward = ALLOWED_TYPES.some((t) => upperRewardType.includes(t));
+    const isGifticonReward = isGifticonRewardType(rewardType);
+    const gifticonMeta = isGifticonReward ? parseGifticonRewardType(rewardType) : null;
+    const toastValue = rewardValue > 0 ? rewardValue : (gifticonMeta?.faceValue ?? 0);
 
-    if (rewardValue > 0 && rewardType !== "NONE" && isAllowedReward) {
-      setRewardToast({ value: rewardValue, type: rewardType });
+    if (rewardType !== "NONE" && isAllowedReward && (rewardValue > 0 || isGifticonReward)) {
+      setRewardToast({ value: toastValue, type: rewardType });
       window.setTimeout(() => setRewardToast(null), 2500);
       tryHaptic([18, 50, 18]);
     } else {
@@ -319,7 +324,19 @@ const RoulettePage: React.FC = () => {
                   <span className="text-2xl font-black text-white drop-shadow-lg">
                     <AnimatedNumber value={rewardToast.value} from={0} />
                   </span>
-                  <span className="text-sm font-bold text-white/60">{rewardToast.type}</span>
+                  <span className="text-sm font-bold text-white/60">
+                    {(() => {
+                      const upper = rewardToast.type.toUpperCase();
+                      const normalized = upper.includes("GAME_XP") ? "GAME_XP" : upper.includes("POINT") ? "POINT" : rewardToast.type;
+                      if (upper.includes("GAME_XP")) return "시즌 XP";
+                      if (upper.includes("POINT")) return "금고 적립";
+                      if (upper.includes("GIFTICON")) return "기프티콘";
+                      return formatRewardLine(normalized, 0)?.text ?? rewardToast.type;
+                    })()}
+                  </span>
+                  {rewardToast.type.toUpperCase().includes("GIFTICON") && (
+                    <span className="text-xs font-bold text-white/40">(지급대기/보상함)</span>
+                  )}
                 </div>
               </div>
             </div>
@@ -423,15 +440,34 @@ const RoulettePage: React.FC = () => {
                     {displayedResult.segment.label}
                   </h3>
 
-                  {displayedResult.reward_type &&
-                    displayedResult.reward_type !== "NONE" &&
-                    ["POINT", "TICKET", "COUPON", "KEY", "TOKEN"].some(t => displayedResult.reward_type!.toUpperCase().includes(t)) && (
-                      <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-cc-gold/20 bg-cc-gold/10 px-6 py-2">
-                        <span className="text-sm font-bold text-cc-gold">
-                          +{Number(displayedResult.reward_value).toLocaleString()} {displayedResult.reward_type}
-                        </span>
+                  {(() => {
+                    const rawType = displayedResult.reward_type ?? "NONE";
+                    const upper = rawType.toUpperCase();
+                    if (upper === "NONE") return null;
+
+                    const rawValue = Number(displayedResult.reward_value ?? 0);
+                    const normalizedType = upper.includes("GAME_XP") ? "GAME_XP" : upper.includes("POINT") ? "POINT" : rawType;
+                    const rewardLine = formatRewardLine(normalizedType, rawValue);
+                    if (!rewardLine) return null;
+
+                    const isPoint = normalizedType.toUpperCase().includes("POINT");
+                    const isXP = normalizedType.toUpperCase().includes("GAME_XP");
+                    const isGifticon = isGifticonRewardType(normalizedType);
+                    const isTicket = normalizedType.toUpperCase().includes("TICKET");
+
+                    const icon = isPoint ? "🪙" : isXP ? "⚡" : isTicket ? "🎟️" : "🎁";
+                    const colorClass = isPoint ? "text-cc-gold" : isXP ? "text-blue-400" : isGifticon ? "text-pink-400" : "text-green-400";
+
+                    return (
+                      <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-6 py-2">
+                        <span className="text-lg">{icon}</span>
+                        <span className={clsx("text-sm font-bold", colorClass)}>{rewardLine.text}</span>
+                        {rewardLine.fulfillmentHint && (
+                          <span className="text-xs text-white/50 ml-1">({rewardLine.fulfillmentHint})</span>
+                        )}
                       </div>
-                    )}
+                    );
+                  })()}
                 </div>
               </div>
             )}

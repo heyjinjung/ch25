@@ -1,15 +1,16 @@
 // src/admin/api/adminDiceApi.ts
 import { adminApi } from "./httpClient";
+import type { AdminRewardType } from "../types/adminReward";
 
 export interface AdminDiceConfigPayload {
   name: string;
   is_active: boolean;
   max_daily_plays: number;
-  win_reward_type: string;
+  win_reward_type: AdminRewardType;
   win_reward_value: number;
-  lose_reward_type: string;
+  lose_reward_type: AdminRewardType;
   lose_reward_value: number;
-  draw_reward_type: string;
+  draw_reward_type: AdminRewardType;
   draw_reward_value: number;
 }
 

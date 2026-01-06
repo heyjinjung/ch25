@@ -11,8 +11,16 @@ const SeasonProgressWidget: React.FC = () => {
         );
     }
 
-    const { current_xp: currentXp, next_level_xp: nextLevelXp, current_level: currentLevel } = data;
-    const percent = Math.min(100, Math.max(0, (currentXp / nextLevelXp) * 100));
+    const {
+        current_xp: currentXp = 0,
+        next_level_xp: nextLevelXp = 1,
+        current_level: currentLevel = 0,
+        max_level: maxLevel = 0,
+    } = data;
+
+    const atMaxLevel = maxLevel > 0 && currentLevel >= maxLevel;
+    const safeNext = Math.max(1, nextLevelXp);
+    const percent = atMaxLevel ? 100 : Math.min(100, Math.max(0, (currentXp / safeNext) * 100));
 
     return (
         <div className="relative w-full overflow-hidden rounded-[20px] bg-gradient-to-r from-indigo-900 to-slate-900 border border-indigo-500/30 shadow-lg mb-6">
@@ -32,14 +40,16 @@ const SeasonProgressWidget: React.FC = () => {
                     <div className="flex justify-between items-end mb-2">
                         <div>
                             <h3 className="text-white font-bold text-lg leading-none mb-1">Season Pass</h3>
-                            <p className="text-indigo-200 text-xs font-medium">Keep growing to unlock rewards</p>
+                            <p className="text-indigo-200 text-xs font-medium">
+                                {atMaxLevel ? "최대 레벨 달성" : "Keep growing to unlock rewards"}
+                            </p>
                         </div>
                         <div className="text-right">
                             <span className="text-white font-black text-lg">
                                 <AnimatedNumber value={currentXp} />
                             </span>
                             <span className="text-white/40 font-bold text-xs mx-1">/</span>
-                            <span className="text-white/60 font-bold text-xs">{nextLevelXp} XP</span>
+                            <span className="text-white/60 font-bold text-xs">{safeNext} XP</span>
                         </div>
                     </div>
 

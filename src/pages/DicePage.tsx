@@ -12,6 +12,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
 import { useSound } from "../hooks/useSound";
 import DiceEventBanner from "../components/game/DiceEventBanner";
+import { formatRewardLine, isGifticonRewardType } from "../utils/rewardLabel";
 
 const DicePage: React.FC = () => {
   const { data, isLoading, isError } = useDiceStatus();
@@ -60,7 +61,7 @@ const DicePage: React.FC = () => {
         const rewardType = response.reward_type ?? "보상";
 
         // Strict Whitelist for Reward Toast
-        const ALLOWED_TYPES = ["TICKET", "COUPON", "KEY", "TOKEN"];
+        const ALLOWED_TYPES = ["TICKET", "COUPON", "KEY", "TOKEN", "GAME_XP"];
         const isAllowedReward = ALLOWED_TYPES.some(t => rewardType.toUpperCase().includes(t));
 
         if (response.result === "WIN" && rewardValue > 0 && isAllowedReward) {
@@ -205,13 +206,27 @@ const DicePage: React.FC = () => {
         {rewardToast && (
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[100] w-full px-4 pointer-events-none">
             <div className="mx-auto flex max-w-[280px] flex-col items-center justify-center gap-2 rounded-[2rem] border border-figma-accent/30 bg-black/90 px-5 py-5 shadow-2xl backdrop-blur-3xl animate-bounce-subtle">
-              <img src="/assets/asset_coin_gold.png" alt="Reward" className="h-12 w-12 drop-shadow-lg" />
+              <img
+                src={rewardToast.type.includes("GAME_XP") ? "/assets/icon_flash.png" :
+                  rewardToast.type.includes("TICKET") ? "/assets/asset_ticket_green.png" :
+                    "/assets/asset_coin_gold.png"}
+                alt="Reward"
+                className="h-12 w-12 drop-shadow-lg object-contain"
+              />
               <div className="text-center">
                 <p className="text-[10px] font-black uppercase tracking-widest text-figma-accent">YOU WON</p>
                 <p className="text-3xl font-black text-white leading-none mt-1">
                   +{rewardToast.value}
                 </p>
-                <p className="text-xs font-bold text-white/50">{rewardToast.type}</p>
+                <p className="text-xs font-bold text-white/50">
+                  {(() => {
+                    const upper = rewardToast.type.toUpperCase();
+                    const normalized = upper.includes("GAME_XP") ? "GAME_XP" : rewardToast.type;
+                    const label = formatRewardLine(normalized, 0)?.text ?? rewardToast.type;
+                    const hint = isGifticonRewardType(normalized) ? "지급대기/보상함" : undefined;
+                    return hint ? `${label} (${hint})` : label;
+                  })()}
+                </p>
               </div>
             </div>
           </div>

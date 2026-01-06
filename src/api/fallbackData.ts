@@ -17,12 +17,12 @@ export const getFallbackRouletteStatus = () => ({
   token_type: "ROULETTE_COIN" as const,
   token_balance: 10,
   segments: [
-    { label: "100 coin", weight: 30, reward_type: "POINT", reward_amount: 100, slot_index: 0 },
-    { label: "200 coin", weight: 25, reward_type: "POINT", reward_amount: 200, slot_index: 1 },
-    { label: "500 coin", weight: 15, reward_type: "POINT", reward_amount: 500, slot_index: 2 },
-    { label: "Token x1", weight: 10, reward_type: "TOKEN", reward_amount: 1, slot_index: 3 },
-    { label: "²Î", weight: 15, reward_type: "NONE", reward_amount: 0, slot_index: 4 },
-    { label: "JACKPOT", weight: 5, isJackpot: true, reward_type: "POINT", reward_amount: 10000, slot_index: 5 },
+    { label: "ê¸ˆê³  ì ë¦½ 100ì›", weight: 30, reward_type: "POINT", reward_amount: 100, slot_index: 0 },
+    { label: "ê¸ˆê³  ì ë¦½ 200ì›", weight: 25, reward_type: "POINT", reward_amount: 200, slot_index: 1 },
+    { label: "ê¸ˆê³  ì ë¦½ 500ì›", weight: 15, reward_type: "POINT", reward_amount: 500, slot_index: 2 },
+    { label: "í† í° 1ê°œ", weight: 10, reward_type: "TOKEN", reward_amount: 1, slot_index: 3 },
+    { label: "ê½", weight: 15, reward_type: "NONE", reward_amount: 0, slot_index: 4 },
+    { label: "ìž­íŒŸ", weight: 5, isJackpot: true, reward_type: "POINT", reward_amount: 10000, slot_index: 5 },
   ],
 });
 
@@ -45,7 +45,7 @@ export const playFallbackRoulette = () => {
     remaining_spins: 0,
     reward_type: segment.reward_type,
     reward_value: segment.reward_amount,
-    message: "µ¥¸ð ¸ðµå °á°úÀÔ´Ï´Ù",
+    message: "ë°ëª¨ ë°ì´í„°ìž…ë‹ˆë‹¤.",
   };
 };
 
@@ -67,14 +67,15 @@ export const playFallbackDice = () => {
   let result: "WIN" | "LOSE" | "DRAW" = "DRAW";
   if (userTotal > dealerTotal) result = "WIN";
   else if (userTotal < dealerTotal) result = "LOSE";
+
+  const vaultEarn = result === "WIN" ? 200 : result === "LOSE" ? 50 : 100;
   return {
     user_dice: userDice,
     dealer_dice: dealerDice,
     result,
     remaining_plays: diceState.remainingPlays,
-    reward_type: result === "WIN" ? "POINT" : undefined,
-    reward_value: result === "WIN" ? 200 : undefined,
-    message: result === "WIN" ? "½Â¸®!" : result === "LOSE" ? "ÆÐ¹è" : "¹«½ÂºÎ",
+    vaultEarn,
+    message: result === "WIN" ? "ìŠ¹ë¦¬!" : result === "LOSE" ? "íŒ¨ë°°" : "ë¬´ìŠ¹ë¶€",
   };
 };
 
@@ -82,11 +83,11 @@ const lotteryState = {
   remainingPlays: 0,
   tokenBalance: 10,
   prizes: [
-    { id: 1, label: "ÇÇ±Ô¾î", reward_type: "ITEM", reward_value: 1, stock: null, is_active: true, weight: 5 },
-    { id: 2, label: "1,000 coin", reward_type: "POINT", reward_value: 1000, stock: null, is_active: true, weight: 30 },
-    { id: 3, label: "Token x50", reward_type: "TOKEN", reward_value: 50, stock: 10, is_active: true, weight: 15 },
-    { id: 4, label: "ÄíÆù 20,000", reward_type: "COUPON", reward_value: 20000, stock: 3, is_active: true, weight: 2 },
-    { id: 5, label: "²Î", reward_type: "NONE", reward_value: 0, stock: null, is_active: true, weight: 48 },
+    { id: 1, label: "ë‹¤ì´ì•„", reward_type: "DIAMOND", reward_value: 1, stock: null, is_active: true, weight: 5 },
+    { id: 2, label: "ê¸ˆê³  ì ë¦½ 1,000ì›", reward_type: "POINT", reward_value: 1000, stock: null, is_active: true, weight: 30 },
+    { id: 3, label: "í† í° 50ê°œ", reward_type: "TOKEN", reward_value: 50, stock: 10, is_active: true, weight: 15 },
+    { id: 4, label: "ì¿ í° 20,000ì›", reward_type: "COUPON", reward_value: 20000, stock: 3, is_active: true, weight: 2 },
+    { id: 5, label: "ê½", reward_type: "NONE", reward_value: 0, stock: null, is_active: true, weight: 48 },
   ],
 };
 
@@ -116,7 +117,7 @@ export const playFallbackLottery = () => {
   return {
     prize: selectedPrize,
     remaining_plays: lotteryState.remainingPlays,
-    message: selectedPrize.reward_type === "NONE" ? "²Î!" : `${selectedPrize.label} ´çÃ·!`,
+    message: selectedPrize.reward_type === "NONE" ? "ê½!" : `${selectedPrize.label} ë‹¹ì²¨!`,
   };
 };
 
@@ -131,7 +132,7 @@ const rankingEntries = Array.from({ length: 10 }, (_, index) => ({
 export const getFallbackRanking = (topN: number) => ({
   date: new Date().toISOString().slice(0, 10),
   entries: rankingEntries.slice(0, topN).map((entry) => ({ ...entry })),
-  my_entry: { rank: 23, user_name: "³ª(DEMO)", score: 512 },
+  my_entry: { rank: 23, user_name: "ï¿½ï¿½(DEMO)", score: 512 },
   external_entries: [],
   my_external_entry: undefined,
 });
@@ -156,11 +157,11 @@ const seasonPassState: {
   next_level_xp: 200,
   max_level: 10,
   levels: [
-    { level: 1, required_xp: 0, reward_label: "¹è°æ", is_claimed: true, is_unlocked: true },
+    { level: 1, required_xp: 0, reward_label: "ï¿½ï¿½ï¿½", is_claimed: true, is_unlocked: true },
     { level: 2, required_xp: 80, reward_label: "300 coin", is_claimed: true, is_unlocked: true },
-    { level: 3, required_xp: 150, reward_label: "ÀÌ¸ðÁö", is_claimed: false, is_unlocked: true },
-    { level: 4, required_xp: 220, reward_label: "²Ù¹Ì±â", is_claimed: false, is_unlocked: false },
-    { level: 5, required_xp: 300, reward_label: "ÇÁ¸®¹Ì¾ö Æ¼ÄÏ", is_claimed: false, is_unlocked: false },
+    { level: 3, required_xp: 150, reward_label: "ï¿½Ì¸ï¿½ï¿½ï¿½", is_claimed: false, is_unlocked: true },
+    { level: 4, required_xp: 220, reward_label: "ï¿½Ù¹Ì±ï¿½", is_claimed: false, is_unlocked: false },
+    { level: 5, required_xp: 300, reward_label: "ï¿½ï¿½ï¿½ï¿½ï¿½Ì¾ï¿½ Æ¼ï¿½ï¿½", is_claimed: false, is_unlocked: false },
   ],
 };
 
@@ -175,14 +176,14 @@ export const getFallbackSeasonPassStatus = () => ({
 export const claimFallbackSeasonReward = (level: number) => {
   const target = seasonPassState.levels.find((lvl) => lvl.level === level);
   if (!target) {
-    return { level, reward_label: "¾ø´Â º¸»ó", message: "µ¥¸ð ¸ðµå: Á¸ÀçÇÏÁö ¾Ê´Â ·¹º§" };
+    return { level, reward_label: "ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½", message: "ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ê´ï¿½ ï¿½ï¿½ï¿½ï¿½" };
   }
   if (!target.is_unlocked) {
-    return { level, reward_label: target.reward_label, message: "µ¥¸ð ¸ðµå: ¾ÆÁ÷ Àá±Ý ÇØÁ¦µÇÁö ¾ÊÀ½" };
+    return { level, reward_label: target.reward_label, message: "ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½: ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½" };
   }
   if (target.is_claimed) {
-    return { level, reward_label: target.reward_label, message: "µ¥¸ð ¸ðµå: ÀÌ¹Ì ¼ö·É" };
+    return { level, reward_label: target.reward_label, message: "ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½: ï¿½Ì¹ï¿½ ï¿½ï¿½ï¿½ï¿½" };
   }
   target.is_claimed = true;
-  return { level: target.level, reward_label: target.reward_label, message: "µ¥¸ð ¸ðµå: º¸»ó ¼ö·É" };
+  return { level: target.level, reward_label: target.reward_label, message: "ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½: ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½" };
 };

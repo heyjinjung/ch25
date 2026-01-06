@@ -1,6 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useActiveSurveys } from "../hooks/useSurvey";
+import { formatRewardLine } from "../utils/rewardLabel";
 
 const SurveyListPage: React.FC = () => {
   const { data, isLoading, isError, refetch } = useActiveSurveys();
@@ -51,7 +52,9 @@ const SurveyListPage: React.FC = () => {
         <div className="grid gap-3 sm:grid-cols-2">
           {data.map((survey) => {
             const reward = survey.reward_json;
-            const rewardLabel = reward?.reward_type || reward?.token_type;
+            const rewardType = reward?.reward_type || reward?.token_type;
+            const rewardAmount = reward?.amount ?? 0;
+            const rewardLine = formatRewardLine(rewardType, rewardAmount);
             return (
             <article
               key={survey.id}
@@ -60,9 +63,12 @@ const SurveyListPage: React.FC = () => {
               <p className="text-xs uppercase tracking-[0.18em] text-emerald-200">{survey.channel}</p>
               <h2 className="mt-1 text-lg font-semibold text-white">{survey.title}</h2>
               {survey.description && <p className="mt-2 text-sm text-slate-300">{survey.description}</p>}
-              {reward?.amount ? (
+              {rewardLine ? (
                 <p className="mt-2 text-xs text-emerald-200">
-                  보상: {reward.amount} {rewardLabel}
+                  보상: {rewardLine.text}
+                  {rewardLine.fulfillmentHint ? (
+                    <span className="ml-2 text-xs text-slate-400">({rewardLine.fulfillmentHint})</span>
+                  ) : null}
                 </p>
               ) : null}
               <button

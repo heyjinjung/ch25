@@ -28,6 +28,7 @@ def seed_daily_gift():
             existing.target_value = 1
             existing.reward_type = MissionRewardType.DIAMOND
             existing.reward_amount = 10
+            existing.xp_reward = 20
             existing.is_active = True
         else:
             print(f"Creating new mission: {logic_key}")
@@ -40,6 +41,7 @@ def seed_daily_gift():
                 target_value=1,
                 reward_type=MissionRewardType.DIAMOND,
                 reward_amount=10,
+                xp_reward=20,
                 is_active=True
             )
             db.add(new_mission)

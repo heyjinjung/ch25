@@ -2,10 +2,10 @@
 
 export const REWARD_TYPES = [
   { value: "POINT", label: "금고 적립(POINT)" },
-  { value: "GAME_XP", label: "게임 경험치(XP)" },
+  { value: "GAME_XP", label: "시즌 XP(GAME_XP)" },
   // { value: "COUPON", label: "쿠폰" }, // [REMOVED]
-  { value: "GIFTICON_BAEMIN", label: "배민 기프티콘(지급대기)" },
-  { value: "CC_COIN_GIFTICON", label: "씨씨코인 기프티콘(지급대기)" },
+  { value: "GIFTICON_BAEMIN", label: "배민 기프티콘" },
+  { value: "CC_COIN_GIFTICON", label: "씨씨코인 기프티콘" },
   { value: "NONE", label: "없음" },
   { value: "DIAMOND", label: "다이아" },
   { value: "GOLD_KEY", label: "골드 키" },
@@ -16,4 +16,3 @@ export const REWARD_TYPES = [
 ] as const;
 
 export type RewardType = typeof REWARD_TYPES[number]["value"];
-

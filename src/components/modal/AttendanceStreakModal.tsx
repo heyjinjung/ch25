@@ -159,6 +159,7 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
                             <div className="text-xs font-medium text-white/70 space-y-1.5 bg-white/5 rounded-xl p-3 text-left border border-white/5">
                                 <p>• 하루 한 번 <span className="text-emerald-400 font-bold">플레이</span> - ‘연속 기록’</p>
                                 <p>• <span className="text-emerald-400 font-bold">매일 게임 플레이</span>시 기록이 유지</p>
+                                <p>• 보상은 해당 일차 달성 후 <span className="text-emerald-400 font-bold">수동으로 받기</span></p>
                                 <p className="text-white/40 pt-1.5 border-t border-white/10 mt-1.5">• 기준 시간: 매일 00:00</p>
                             </div>
                         </header>

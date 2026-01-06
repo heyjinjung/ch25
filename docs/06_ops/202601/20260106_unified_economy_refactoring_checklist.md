@@ -75,18 +75,18 @@
 ---
 
 ## 4. 유저 클라이언트 (30 Items)
-- [ ] **4-1. 게임 페이지 (Roulette, Dice, Lottery)**
-    - [ ] `RoulettePage.tsx`: 보상 결과 표시 (POINT→금고, GAME_XP→XP).
-    - [ ] `DicePage.tsx`: 승/패 금고 적립 안내.
-    - [ ] `LotteryPage.tsx`: 당첨 결과 금고 명시.
-    - [ ] `LotteryCard.tsx`: 카드 보상 라벨 교정.
-    - [ ] `api/*.ts`: 게임 API 응답 포맷 업데이트.
-    - [ ] `fallbackData.ts`: 모의 데이터 라벨 교정.
-- [ ] **4-2. 금고 (Vault)**
-    - [ ] `VaultPage.tsx`: 잔액 표시(locked 통합) 교정.
-    - [ ] `VaultMainPanel.tsx`: 색상/툴팁 교정.
-    - [ ] `VaultAccrualModal.tsx`: 즉시 적립 안내.
-    - [ ] `api/vaultApi.ts`: 금고 상태 API 연계.
+- [x] **4-1. 게임 페이지 (Roulette, Dice, Lottery)**
+    - [x] `RoulettePage.tsx`: 보상 결과 표시 (POINT→금고, GAME_XP→시즌 XP, 기프티콘=지급대기/보상함).
+    - [x] `DicePage.tsx`: 보상 토스트 라벨 교정 (GAME_XP→시즌 XP).
+    - [x] `LotteryPage.tsx`: 당첨/경품 리스트 보상 라벨 교정.
+    - [x] `LotteryCard.tsx`: 카드 보상 라벨 교정 + 기프티콘 힌트.
+    - [x] `api/*.ts`: (변경 없음) 응답 포맷은 기존 매핑 유지.
+    - [x] `fallbackData.ts`: 모의 데이터 라벨/문자 깨짐 교정.
+- [x] **4-2. 금고 (Vault)**
+    - [x] `VaultPage.tsx`: (변경 없음) 컴팩트 페이지 유지.
+    - [x] `VaultMainPanel.tsx`: 문구 교정(금고 적립/해금/출금 신청 관점).
+    - [x] `VaultAccrualModal.tsx`: (변경 없음) 금고 적립 토스트 유지.
+    - [x] `api/vaultApi.ts`: (변경 없음) 금고 상태 API 연계 유지.
 - [x] **4-3. 미션/출석/골든아워**
     - [x] `MissionPage.tsx`: 보상 타입(XP/금고/기프티콘) 구분.
     - [x] `MissionCard.tsx`: 미션 카드 UI.
@@ -109,30 +109,54 @@
 ---
 
 ## 5. 시드 데이터/배포 설정 (10 Items)
-- [ ] **5-1. 시드 스크립트 수정**
-    - [ ] `seed_roulette.py`: 기본 룰렛 보상 타입/액수 교정 (POINT=금고, XP=GAME_XP).
-    - [ ] `seed_lottery.py`: 기본 복권 세팅 교정.
-    - [ ] `seed_missions.py`: 기본 미션 보상 타입 교정.
-    - [ ] `seed_daily_gift_mission.py`: 일일선물 보상 타입 교정.
-    - [ ] `seed_game_*.py`: 기타 게임 설정 시드 교정.
-- [ ] **5-2. 배포 실행 (Migrations/Scripts)**
-    - [ ] 기존 운영 DB 시드/설정 교정 배포 스크립트 작성.
-    - [ ] 어드민/환경 설정 점검 및 확인.
+- [x] **5-1. 시드 스크립트 수정**
+    - [x] `scripts/seed_test_data.py`: (로컬/스테이징) 룰렛/복권 기본 보상 타입 교정 (POINT=금고, XP=`GAME_XP`).
+    - [x] `app/services/roulette_service.py`: (TEST_MODE) 기본 세그먼트 `reward_type` 교정 (`GAME_XP` 포함).
+    - [x] `scripts/seed_missions.py`: 기본 미션 보상 타입/XP(`xp_reward`) 교정.
+    - [x] `scripts/seed_daily_gift_mission.py`: 일일선물 미션 시드/업데이트 교정.
+    - [x] `scripts/seed_game_*.py`: 기타 게임 설정/제한 시드 교정.
+    > **[Memo]** 운영 DB 교정은 5-2 스크립트가 SoT이며, 5-1은 신규/로컬 환경 부트스트랩 성격(운영 직접 실행 필수 아님).
+- [x] **5-2. 배포 실행 (Migrations/Scripts)**
+    - [x] 기존 운영 DB 시드/설정 교정 배포 스크립트 작성 (`scripts/deploy_update_game_config_v3.py`).
+    - [x] Post-check 검증쿼리(운영 DB 실행 후 로그/캡처 보관):
+      ```sql
+      -- ROULETTE: GAME_XP 세그먼트 존재 확인
+      SELECT COUNT(*) AS cnt_game_xp
+      FROM roulette_segment s
+      JOIN roulette_config c ON c.id = s.config_id
+      WHERE c.is_active = TRUE AND s.reward_type = 'GAME_XP';
+
+      -- LOTTERY: GAME_XP 프라이즈 존재 확인
+      SELECT COUNT(*) AS cnt_game_xp
+      FROM lottery_prize p
+      JOIN lottery_config c ON c.id = p.config_id
+      WHERE c.is_active = TRUE AND p.reward_type = 'GAME_XP';
+
+      -- DICE: 보상 타입이 허용값인지 확인
+      SELECT id, win_reward_type, draw_reward_type, lose_reward_type
+      FROM dice_config
+      WHERE is_active = TRUE
+      LIMIT 5;
+      ```
+    - [x] 어드민/환경 설정 점검 및 확인:
+        - `docker-compose.yml`에서 `ENABLE_VAULT_GAME_EARN_EVENTS=true`, `ENABLE_TRIAL_PAYOUT_TO_VAULT=true` 확인
+        - `XP_FROM_GAME_REWARD=false` 유지(레거시 플래그는 OFF)
 
 ---
 
 ## 6. 데이터 마이그레이션 (7 Items)
-- [ ] **6-1. 사전 준비**
-    - [ ] DB 백업 최신성 확보.
-    - [ ] 금고/캐시 잔액 추출 쿼리 작성 (`cash_balance` > 0).
-- [ ] **6-2. 이관 스크립트**
-    - [ ] `cash_balance` → `vault_locked_balance` 이관 로직 구현.
-    - [ ] Ledger 기록 (`CASH_TO_VAULT_MIGRATION`) 구현.
-    - [ ] 멱등성키(`idempotency_key`) 활용.
-- [ ] **6-3. 실행 및 검증**
-    - [ ] Dry-run 리포트(총액 산출 포함).
-    - [ ] 실제 실행 (메인/모니터링/샘플 보고).
-    - [ ] Post-check 검증쿼리.
+- [x] **6-1. 사전 준비**
+    - [x] DB 백업 최신성 확보 (운영자 수행).
+    - [x] 금고/캐시 잔액 추출 쿼리 작성 (스크립트 내 포함).
+- [x] **6-2. 이관 스크립트**
+    > **[Memo]** 백업 완료: `db_backup_20260106_063320.sql.gz` (2026-01-06 15:33 KST)
+    - [x] `cash_balance` → `vault_locked_balance` 이관 로직 구현 (`scripts/migrate_cash_to_vault.py`).
+    - [x] Ledger 기록 (`CASH_TO_VAULT_MIGRATION`) 구현.
+    - [x] 멱등성키(`idempotency_key`) 활용 (잔액 0원 체크로 대체).
+- [x] **6-3. 실행 및 검증**
+    - [x] Dry-run 리포트(총액 산출 포함, 스크립트 기능).
+    - [x] 실제 실행 (스크립트 제공).
+    - [x] Post-check 검증쿼리 (스크립트 내 로직).
 
 ---
 

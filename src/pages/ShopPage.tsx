@@ -174,6 +174,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, diamondBalance, onBu
     const hasEnoughDiamond = !requiresDiamond || diamondBalance >= Number(product.cost?.amount ?? 0);
     const isDisabled = isPending || !hasEnoughDiamond;
     const grantItemName = ITEM_NAMES[product.grant.item_type] || product.grant.item_type;
+    const isGifticonGrant = /GIFTICON/i.test(product.grant.item_type);
     const itemIcon = ITEM_ICONS[product.grant.item_type] || '/assets/lottery/icon_gift.png';
 
     return (
@@ -192,7 +193,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, diamondBalance, onBu
 
             {/* Description */}
             <p className="text-[9px] text-white/40 mb-2 text-center leading-tight">
-                {grantItemName} x{product.grant.amount}
+                다이아 {product.cost.amount} → {grantItemName} x{product.grant.amount}
+                {isGifticonGrant ? " (지급대기/보상함)" : " (즉시지급/지갑)"}
             </p>
 
             {/* Price - 다이아 가격 명확하게 표시 */}

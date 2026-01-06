@@ -113,12 +113,12 @@ def seed_roulette(db):
         print(f"  ✓ Using roulette_config id={cfg_id}")
 
     segments = [
-        (0, "100 코인", "POINT", 100, 30, False),
-        (1, "200 코인", "POINT", 200, 25, False),
-        (2, "500 코인", "POINT", 500, 15, False),
+        (0, "100 P", "POINT", 100, 30, False),
+        (1, "200 P", "POINT", 200, 25, False),
+        (2, "500 P", "POINT", 500, 15, False),
         (3, "꽝", "NONE", 0, 17, False),
-        (4, "1,000 코인", "POINT", 1000, 8, True),
-        (5, "10,000 잭팟", "POINT", 10000, 5, True),
+        (4, "200 XP", "GAME_XP", 200, 8, True),
+        (5, "잭팟 1만P", "POINT", 10000, 5, True),
     ]
 
     db.execute(text("DELETE FROM roulette_segment WHERE config_id = :cfg"), {"cfg": cfg_id})
@@ -164,11 +164,11 @@ def seed_lottery(db):
         print(f"  ✓ Using lottery_config id={cfg_id}")
 
     prizes = [
-        ("소형 선물", "POINT", 50, 100, 30, True),
-        ("중형 선물", "POINT", 200, 50, 25, True),
-        ("대형 선물", "POINT", 500, 20, 15, True),
-        ("특별 선물", "POINT", 1000, 10, 10, True),
-        ("잭팟", "POINT", 5000, None, 5, True),
+        ("50 P", "POINT", 50, 100, 30, True),
+        ("100 XP", "GAME_XP", 100, 50, 25, True),
+        ("500 P", "POINT", 500, 20, 15, True),
+        ("1,000 P", "POINT", 1000, 10, 10, True),
+        ("잭팟 1만P", "POINT", 10000, None, 5, True),
         ("꽝", "NONE", 0, None, 15, True),
     ]
 

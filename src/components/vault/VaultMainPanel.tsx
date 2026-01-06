@@ -178,7 +178,7 @@ const VaultMainPanel: React.FC = React.memo(() => {
     const expiresAt = parseDate(data?.expiresAt ?? null);
     const usedAt = parseDate(data?.vaultFillUsedAt ?? null);
 
-    const statusLabel = vaultBalance > 0 ? (eligible ? "해금 가능" : "잠금") : "포인트 없음";
+    const statusLabel = vaultBalance > 0 ? (eligible ? "해금 가능" : "잠금") : "적립 없음";
     const statusTone = eligible ? "text-cc-lime shadow-[0_0_10px_#d2fd9c44]" : "text-white/40";
 
     const unlockRulesJson = data?.unlockRulesJson;
@@ -212,7 +212,7 @@ const VaultMainPanel: React.FC = React.memo(() => {
     const parsed = parseVaultUnlockRules(view.unlockRulesJson);
     if (parsed.length > 0) return parsed;
     return [
-      "게임 플레이를 통해 적립된 포인트가 안전하게 보관됩니다.",
+      "게임/이벤트로 적립된 금액이 금고에 안전하게 보관됩니다.",
       "조건이 충족되면 출금 신청 가능한 금액으로 반영됩니다.",
       "출금 신청 시 진행 상태에 따라 출금 가능 금액이 변동될 수 있습니다."
     ];
@@ -250,15 +250,15 @@ const VaultMainPanel: React.FC = React.memo(() => {
               {view.accrualMultiplier > 1 && (
                 <div className="px-5 py-2 rounded-full bg-gradient-to-r from-red-600 to-orange-500 text-white text-xs font-black animate-pulse shadow-xl flex items-center gap-2">
                   <span className="w-1.5 h-1.5 bg-white rounded-full animate-ping" />
-                  포인트 {view.accrualMultiplier}배 적립 중
+                  금고 적립 {view.accrualMultiplier}배 진행 중
                 </div>
               )}
             </div>
 
             <div className="flex flex-col gap-4 max-w-md">
               <p className="text-white/60 text-sm md:text-base leading-relaxed font-bold">
-                지민코드 적립된 포인트가 <span className="text-white">안전하게 보관</span>되어 있습니다.
-                씨씨이용시 포인트가 <span className="text-white">보유 머니로 전환</span>됩니다.
+                게임/이벤트로 적립된 금액이 <span className="text-white">금고에 안전하게 보관</span>됩니다.
+                조건이 충족되면 <span className="text-white">출금 신청 가능한 금액으로 반영</span>됩니다.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4">
@@ -322,7 +322,7 @@ const VaultMainPanel: React.FC = React.memo(() => {
                     <span className="animate-pulse">처리 중...</span>
                   ) : (
                     <>
-                      <span className="drop-shadow-sm">CC 포인트 전환 신청</span>
+                      <span className="drop-shadow-sm">출금 신청</span>
                       <svg className="w-5 h-5 drop-shadow-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                     </>
                   )}
@@ -336,7 +336,7 @@ const VaultMainPanel: React.FC = React.memo(() => {
             {!view.eligible && (
               <div className="mt-8 flex items-center justify-center gap-3 relative z-10">
                 <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse shadow-[0_0_10px_rgba(249,121,53,0.8)]" />
-                <p className="text-white/50 text-xs font-bold uppercase tracking-wider">이용 확인 후 지급됩니다</p>
+                <p className="text-white/50 text-xs font-bold uppercase tracking-wider">조건 충족 후 출금 신청 가능합니다</p>
               </div>
             )}
           </div>
@@ -390,7 +390,7 @@ const VaultMainPanel: React.FC = React.memo(() => {
               {view.usedAt && (
                 <div className="flex items-center justify-between p-5 rounded-2xl bg-white/[0.02] border border-white/5">
                   <div className="flex flex-col gap-1">
-                    <p className="text-white/60 text-xs font-black uppercase tracking-wider">포인트 전환 완료</p>
+                    <p className="text-white/60 text-xs font-black uppercase tracking-wider">해금 반영 완료</p>
                     <p className="text-white/30 text-[10px] font-mono">{formatDateTime(view.usedAt)}</p>
                   </div>
                   <div className="text-figma-accent/40 font-black text-xs uppercase tracking-tighter italic">완료</div>

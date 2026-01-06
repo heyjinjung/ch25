@@ -43,7 +43,7 @@ const GoldenHourTimer: React.FC<GoldenHourTimerProps> = ({
 
             <div className="flex items-center gap-1.5 border-l border-white/10 pl-2">
                 <span className="text-[10px] font-black text-emerald-400 uppercase tracking-tighter">
-                    {multiplier}x BOOST
+                    {multiplier}x 금고
                 </span>
                 <div className="flex items-center gap-1 text-white font-mono text-xs tabular-nums">
                     <Timer size={12} className="text-white/40" />

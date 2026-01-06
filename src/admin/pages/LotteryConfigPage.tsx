@@ -203,7 +203,7 @@ const LotteryConfigPage: React.FC = () => {
         id: p.id,
         label: p.label,
         weight: p.weight,
-        stock: p.stock ?? null,
+        stock: normalizeStock(p.stock),
         reward_type: p.reward_type,
         // Handle both backend 'reward_amount' and frontend 'reward_value'
         reward_value: p.reward_value ?? p.reward_amount ?? 0,
@@ -440,14 +440,15 @@ const LotteryConfigPage: React.FC = () => {
                               );
                             })()}
                           </td>
-                          <td className="px-3 py-2">
-                            <input
-                              type="number"
-                              placeholder="빈칸=무제한"
-                              className="w-full rounded-md border border-[#333333] bg-[#111111] px-2 py-1 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
-                              {...form.register(`prizes.${idx}.stock` as any, { valueAsNumber: true })}
-                            />
-                          </td>
+                        <td className="px-3 py-2">
+                          <input
+                            type="number"
+                            placeholder="빈칸=무제한"
+                            className="w-full rounded-md border border-[#333333] bg-[#111111] px-2 py-1 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
+                            {...form.register(`prizes.${idx}.stock` as any, { valueAsNumber: true })}
+                          />
+                          <p className="mt-1 text-[11px] text-gray-500">기프티콘 재고가 없으면 빈칸으로 두세요(무제한). 숫자를 넣으면 해당 수량만큼 차감됩니다.</p>
+                        </td>
                           <td className="px-3 py-2">
                             <select
                               className="w-full rounded-md border border-[#333333] bg-[#111111] px-2 py-1 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"

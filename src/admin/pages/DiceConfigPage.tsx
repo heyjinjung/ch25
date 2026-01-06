@@ -15,6 +15,7 @@ import {
 import DiceEventConfig from "../components/DiceEventConfig";
 import { REWARD_TYPES } from "../constants/rewardTypes";
 import { useToast } from "../../components/common/ToastProvider";
+import type { AdminRewardType } from "../types/adminReward";
 
 const diceSchema = z.object({
   name: z.string().min(1, "이름을 입력하세요"),
@@ -129,11 +130,11 @@ const DiceConfigPage: React.FC = () => {
       name: values.name.trim(),
       is_active: values.is_active,
       max_daily_plays: values.max_daily_plays,
-      win_reward_type: values.win_reward_type,
+      win_reward_type: values.win_reward_type as AdminRewardType,
       win_reward_value: values.win_reward_value,
-      draw_reward_type: values.draw_reward_type,
+      draw_reward_type: values.draw_reward_type as AdminRewardType,
       draw_reward_value: values.draw_reward_value,
-      lose_reward_type: values.lose_reward_type,
+      lose_reward_type: values.lose_reward_type as AdminRewardType,
       lose_reward_value: values.lose_reward_value,
     };
     mutation.mutate(payload);

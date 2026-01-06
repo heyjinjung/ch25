@@ -17,8 +17,25 @@ import type { AdminUserSummary } from "../types/adminUserSummary";
 import { GAME_TOKEN_LABELS, GameTokenType } from "../../types/gameTokens";
 import { History, Coins, Plus, Minus, X, Loader2 } from "lucide-react";
 import { useToast } from "../../components/common/ToastProvider";
+import { REWARD_TYPES } from "../constants/rewardTypes";
+import { formatRewardLine, isGifticonRewardType } from "../../utils/rewardLabel";
 
 const tokenOptions: GameTokenType[] = ["ROULETTE_COIN", "DICE_TOKEN", "LOTTERY_TICKET", "GOLD_KEY", "DIAMOND_KEY"];
+
+const rewardTypeLabelMap = REWARD_TYPES.reduce<Record<string, string>>((acc, cur) => {
+  acc[cur.value] = cur.label;
+  return acc;
+}, {});
+
+const formatRewardTypeLabel = (value?: string | null) => {
+  const key = String(value ?? "").trim();
+  if (!key) return "-";
+  // Prefer unified display for gifticons (dynamic brand/amount) and other types.
+  if (isGifticonRewardType(key)) {
+    return formatRewardLine(key, 0)?.text ?? key;
+  }
+  return rewardTypeLabelMap[key] ?? (formatRewardLine(key, 0)?.text ?? key);
+};
 
 const gameLabel = (game?: string | null) => {
   const raw = String(game ?? "").trim();
@@ -278,7 +295,7 @@ const GameTokenLogsPage: React.FC = () => {
                     </div>
                     <div className="text-right ml-2">
                       <div className="text-[#91F402] font-mono font-bold">+{log.reward_amount}</div>
-                      <div className="text-xs text-gray-500">{log.reward_type}</div>
+                      <div className="text-xs text-gray-500">{formatRewardTypeLabel(log.reward_type)}</div>
                     </div>
                   </div>
                 ));
@@ -638,7 +655,7 @@ const GameTokenLogsPage: React.FC = () => {
                         <td className="px-4 py-3 text-gray-300">{gameLabel(log.game)}</td>
                         <td className="px-4 py-3">
                           <span className="text-[#91F402] font-bold">+{log.reward_amount}</span>{" "}
-                          <span className="text-xs text-gray-500">({log.reward_type})</span>
+                          <span className="text-xs text-gray-500">({formatRewardTypeLabel(log.reward_type)})</span>
                         </td>
                         <td className="px-4 py-3 text-right text-gray-500 text-xs">
                           {dayjs(log.created_at).format("MM-DD HH:mm")}

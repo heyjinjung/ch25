@@ -1,5 +1,6 @@
 ﻿import React from "react";
 import clsx from "clsx";
+import { formatRewardLine, isGifticonRewardType } from "../../utils/rewardLabel";
 
 interface Prize {
   readonly id: number;
@@ -82,7 +83,7 @@ const LotteryCard: React.FC<LotteryCardProps> = React.memo(({ prize, isRevealed,
                   </span>
 
                   {/* Result Logic Fix */}
-                  {prize.reward_type === 'NONE' || (Number(prize.reward_value) === 0 && prize.reward_type === 'POINT') ? (
+                  {prize.reward_type === 'NONE' || (Number(prize.reward_value) === 0 && prize.reward_type.includes('POINT')) ? (
                     <>
                       <span className="text-6xl mb-4">💨</span>
                       <h2 className="text-white text-2xl font-black tracking-tight uppercase italic">{prize.label}</h2>
@@ -92,22 +93,44 @@ const LotteryCard: React.FC<LotteryCardProps> = React.memo(({ prize, isRevealed,
                     <div className="flex flex-col items-center">
                       <h2 className={clsx(
                         "text-white font-black tracking-tight uppercase mb-2",
-                        (prize.reward_type === 'POINT' || prize.reward_type === 'CURRENCY' || prize.reward_type === 'CASH')
+                        (prize.reward_type.includes('POINT') || prize.reward_type.includes('GAME_XP'))
                           ? "text-2xl"
-                          : "text-3xl italic"
+                          : "text-2xl sm:text-3xl italic"
                       )}>
                         {prize.label}
                       </h2>
-                      {(prize.reward_type === 'POINT' || prize.reward_type === 'CURRENCY' || prize.reward_type === 'CASH') && (
-                        <div className="flex items-baseline justify-center gap-1">
-                          <h3 className="text-figma-accent text-3xl sm:text-4xl font-black tracking-tighter italic">
-                            {Number(prize.reward_value).toLocaleString()}
-                          </h3>
-                          <span className="text-figma-accent text-lg sm:text-xl font-black italic">
-                            {prize.reward_type === 'POINT' ? 'P' : '원'}
-                          </span>
-                        </div>
-                      )}
+
+                      {/* Reward Value Display */}
+                      {(() => {
+                        const rawType = prize.reward_type;
+                        const upper = rawType.toUpperCase();
+                        const val = Number(prize.reward_value);
+
+                        const normalizedType =
+                          upper.includes("POINT") || upper === "CASH" || upper === "CURRENCY" || upper === "CASH_UNLOCK"
+                            ? "POINT"
+                            : upper.includes("GAME_XP")
+                              ? "GAME_XP"
+                              : rawType;
+
+                        const rewardLine = formatRewardLine(normalizedType, val);
+                        if (!rewardLine) return null;
+
+                        const isXP = normalizedType.toUpperCase().includes("GAME_XP");
+                        const isGifticon = isGifticonRewardType(normalizedType);
+                        const colorClass = isXP ? "text-blue-400" : isGifticon ? "text-pink-400" : "text-figma-accent";
+
+                        return (
+                          <div className="flex flex-col items-center">
+                            <div className={clsx("text-2xl sm:text-3xl font-black tracking-tight", colorClass)}>
+                              {rewardLine.text}
+                            </div>
+                            {rewardLine.fulfillmentHint && (
+                              <div className="mt-1 text-[10px] font-black text-white/40">({rewardLine.fulfillmentHint})</div>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
                   )}
 

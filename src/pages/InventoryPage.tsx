@@ -169,6 +169,40 @@ interface ItemCardProps {
 }
 
 const ItemCard: React.FC<ItemCardProps> = ({ item, onUse, isPending }) => {
+    const GIFTICON_BRAND_LABEL: Record<string, string> = {
+        CC_COIN: "씨씨코인",
+        BAEMIN: "배민",
+        STARBUCKS: "스타벅스",
+        CU: "CU",
+        GS25: "GS25",
+        COMPOSE_AMERICANO: "컴포즈 아이스 아메리카노",
+    };
+
+    const getGifticonInfo = (itemType: string) => {
+        if (!/GIFTICON/i.test(itemType)) return null;
+
+        const amountMatch = itemType.match(/^(.+)_GIFTICON_(\d+)$/i);
+        const plainMatch = itemType.match(/^(.+)_GIFTICON$/i);
+
+        const brandCodeRaw = (amountMatch?.[1] ?? plainMatch?.[1] ?? "").toUpperCase();
+        const amount = amountMatch ? Number(amountMatch[2]) : null;
+
+        const brandLabel = GIFTICON_BRAND_LABEL[brandCodeRaw] ?? "기프티콘";
+        const title = amount
+            ? `${brandLabel} 기프티콘 ${amount.toLocaleString()}원`
+            : `${brandLabel} 기프티콘`;
+
+        const desc = brandCodeRaw === "CC_COIN"
+            ? "지급 대기(관리자 승인 후 외부플랫폼 처리)"
+            : "지급 대기(관리자 수기 지급)";
+
+        return {
+            title,
+            desc,
+            icon: <img src="/assets/lottery/icon_gift.png" className="w-8 h-8 object-contain" alt="" />,
+        };
+    };
+
     // Mapping for user-friendly display
     const INFO: Record<string, { title: string; desc: string; icon: React.ReactNode }> = {
         "VOUCHER_GOLD_KEY_1": {
@@ -217,7 +251,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, onUse, isPending }) => {
             icon: <img src="/assets/lottery/icon_gift.png" className="w-8 h-8 object-contain" alt="" />
         },
         "CC_COIN_GIFTICON": {
-            title: "씨씨코인깁콘",
+            title: "씨씨코인 기프티콘",
             desc: "지급 대기(관리자 승인 후 외부플랫폼 처리)",
             icon: <img src="/assets/lottery/icon_gift.png" className="w-8 h-8 object-contain" alt="" />
         },
@@ -228,13 +262,11 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, onUse, isPending }) => {
         }
     };
 
-    const isPendingFulfillment =
-        item.item_type.startsWith("BAEMIN_GIFTICON_")
-        || item.item_type.startsWith("COMPOSE_AMERICANO_GIFTICON_")
-        || item.item_type === "CC_COIN_GIFTICON";
+    const gifticonInfo = getGifticonInfo(item.item_type);
+    const isPendingFulfillment = Boolean(gifticonInfo);
 
     // Fallback info
-    const info = INFO[item.item_type] || {
+    const info = INFO[item.item_type] || gifticonInfo || {
         title: item.item_type,
         desc: "일반 아이템",
         icon: <Package className="w-5 h-5 text-white/40" />

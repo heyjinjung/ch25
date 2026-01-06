@@ -63,6 +63,17 @@ def seed_missions():
             "reward_type": MissionRewardType.DIAMOND,
             "reward_amount": 30,
             "xp_reward": 50,
+        },
+        {
+            "title": "💰 금고 적립 체험",
+            "description": "접속만 해도 1,000 P (금고) 적립!",
+            "category": MissionCategory.SPECIAL,
+            "logic_key": "special_vault_test",
+            "action_type": "LOGIN",
+            "target_value": 1,
+            "reward_type": MissionRewardType.CASH_UNLOCK,
+            "reward_amount": 1000,
+            "xp_reward": 50,
         }
     ]
 

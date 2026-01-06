@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useCompleteSurvey, useSaveSurveyAnswers, useSurveySession } from "../hooks/useSurvey";
 import { SurveyAnswerPayload, SurveyQuestion } from "../api/surveyApi";
+import { formatRewardLine } from "../utils/rewardLabel";
 
 const renderQuestion = (
   q: SurveyQuestion,
@@ -116,12 +117,25 @@ const SurveyRunnerPage: React.FC = () => {
     );
   }
 
+  const reward = data.survey.reward_json;
+  const rewardType = reward?.reward_type || reward?.token_type;
+  const rewardAmount = reward?.amount ?? 0;
+  const rewardLine = formatRewardLine(rewardType, rewardAmount);
+
   return (
     <section className="space-y-6 rounded-2xl border border-emerald-800/40 bg-slate-950/80 p-6">
       <header className="space-y-1">
         <p className="text-xs uppercase tracking-[0.25em] text-emerald-200">Survey</p>
         <h1 className="text-2xl font-bold text-white">{data.survey.title}</h1>
         {data.survey.description && <p className="text-sm text-slate-300">{data.survey.description}</p>}
+        {rewardLine ? (
+          <p className="text-sm text-emerald-200">
+            보상: {rewardLine.text}
+            {rewardLine.fulfillmentHint ? (
+              <span className="ml-2 text-xs text-slate-400">({rewardLine.fulfillmentHint})</span>
+            ) : null}
+          </p>
+        ) : null}
       </header>
 
       <div className="space-y-4">

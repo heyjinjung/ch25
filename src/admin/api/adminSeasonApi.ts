@@ -1,5 +1,6 @@
 // src/admin/api/adminSeasonApi.ts
 import { adminApi } from "./httpClient";
+import type { AdminRewardType } from "../types/adminReward";
 
 export interface AdminSeasonPayload {
   name: string;
@@ -52,7 +53,7 @@ export interface AdminSeasonLevel {
   season_id?: number;
   level: number;
   required_xp: number;
-  reward_type: string;
+  reward_type: AdminRewardType;
   reward_amount: number;
   auto_claim: boolean;
   created_at?: string;

@@ -57,6 +57,10 @@ const GoldenHourPopup: React.FC<GoldenHourPopupProps> = ({ onClose, multiplier }
                         <span className="text-amber-400 text-xl font-black">금고 적립 {multiplier}배</span> 보너스!
                     </p>
 
+                    <p className="-mt-4 mb-6 text-[11px] font-bold text-white/50">
+                        배율은 <span className="text-amber-300">금고 적립(POINT/CC_POINT)</span>에만 적용됩니다.
+                    </p>
+
                     <Button
                         variant="figma-primary"
                         fullWidth

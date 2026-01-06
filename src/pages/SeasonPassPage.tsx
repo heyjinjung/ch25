@@ -13,6 +13,27 @@ const ICON_NODE_LOCKED = "/assets/season_pass/icon_node_locked.png";
 const ICON_NODE_CLEARED = "/assets/season_pass/icon_node_cleared.png";
 
 const formatCurrency = (value: number) => value.toLocaleString();
+const rewardTypeLabelMap: Record<string, string> = {
+  POINT: "금고 적립",
+  CC_POINT: "금고 적립",
+  GAME_XP: "시즌 XP",
+  XP: "시즌 XP",
+  GIFTICON_BAEMIN: "배민 기프티콘",
+  CC_COIN_GIFTICON: "씨씨코인 기프티콘",
+  DIAMOND: "다이아",
+  GOLD_KEY: "골드 키",
+  DIAMOND_KEY: "다이아 키",
+  TICKET_ROULETTE: "룰렛 티켓",
+  TICKET_DICE: "주사위 티켓",
+  TICKET_LOTTERY: "복권 티켓",
+};
+
+const formatRewardChip = (rewardType?: string | null, rewardAmount?: number | null) => {
+  const typeLabel = rewardType ? rewardTypeLabelMap[String(rewardType).toUpperCase()] ?? rewardType : null;
+  if (!typeLabel) return null;
+  const amountLabel = typeof rewardAmount === "number" && !Number.isNaN(rewardAmount) ? rewardAmount.toLocaleString() : null;
+  return amountLabel ? `${typeLabel} ${amountLabel}` : typeLabel;
+};
 
 const SeasonPassPage: React.FC = () => {
   const season = useSeasonPassStatus();
@@ -178,6 +199,8 @@ const SeasonPassPage: React.FC = () => {
                 const isNext = data.current_level + 1 === level.level;
                 const isLockedState = isLocked(level, data.current_level);
                 const isLast = idx === data.levels.length - 1;
+                const requiredXp = level.required_xp ?? 0;
+                const rewardChip = formatRewardChip(level.reward_type as any, (level as any).reward_amount);
 
                 return (
                   <div key={level.level} className="relative flex flex-col">
@@ -245,13 +268,18 @@ const SeasonPassPage: React.FC = () => {
                               <span className="text-[8px] font-black text-emerald-400 tracking-tighter uppercase">AUTO</span>
                             </div>
                           )}
+                          {rewardChip && (
+                            <div className="flex-shrink-0 flex items-center gap-1 bg-white/5 border border-white/10 px-2 py-0.5 rounded-full mt-1 text-[10px] font-semibold text-white/80">
+                              {rewardChip}
+                            </div>
+                          )}
                         </div>
 
                         {/* Progress Tracker Core */}
                         <div className="space-y-1.5 mb-5 mt-auto">
                           <div className="flex justify-between items-end">
                             <p className="text-[10px] font-black text-white/40 uppercase tracking-widest">EXP PROGRESS</p>
-                            <p className="text-[10px] font-black text-white/80">{level.required_xp.toLocaleString()} <span className="text-white/20">XP</span></p>
+                            <p className="text-[10px] font-black text-white/80">{requiredXp.toLocaleString()} <span className="text-white/20">XP</span></p>
                           </div>
                           <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/5 relative">
                             <div

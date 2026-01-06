@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Edit2, Plus, Trash2, X } from "lucide-react";
 import { fetchMissions, createMission, updateMission, deleteMission, AdminMission, AdminMissionPayload } from "../api/adminMissionApi";
 import { useToast } from "../../components/common/ToastProvider";
+import type { AdminRewardType } from "../types/adminReward";
 
 const toTimeInputValue = (value?: string | null) => {
     if (!value) return "";
@@ -228,7 +229,7 @@ const AdminMissionPage: React.FC = () => {
                                 <select
                                     className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
                                     value={form.reward_type}
-                                    onChange={e => setForm({ ...form, reward_type: e.target.value })}
+                                    onChange={e => setForm({ ...form, reward_type: e.target.value as AdminRewardType })}
                                 >
                                     <option value="DIAMOND">다이아몬드</option>
                                     <option value="TICKET_ROULETTE">룰렛 티켓</option>

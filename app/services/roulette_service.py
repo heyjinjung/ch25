@@ -37,12 +37,12 @@ class RouletteService:
         """Ensure six default segments exist for the given config (TEST_MODE bootstrap)."""
 
         default_segments = [
-            {"slot_index": 0, "label": "100 코인", "reward_type": "POINT", "reward_amount": 100, "weight": 30},
-            {"slot_index": 1, "label": "200 코인", "reward_type": "POINT", "reward_amount": 200, "weight": 25},
-            {"slot_index": 2, "label": "500 코인", "reward_type": "POINT", "reward_amount": 500, "weight": 20},
+            {"slot_index": 0, "label": "100 P", "reward_type": "POINT", "reward_amount": 100, "weight": 30},
+            {"slot_index": 1, "label": "200 P", "reward_type": "POINT", "reward_amount": 200, "weight": 25},
+            {"slot_index": 2, "label": "500 P", "reward_type": "POINT", "reward_amount": 500, "weight": 20},
             {"slot_index": 3, "label": "꽝", "reward_type": "NONE", "reward_amount": 0, "weight": 15},
-            {"slot_index": 4, "label": "1,000 코인", "reward_type": "POINT", "reward_amount": 1000, "weight": 8},
-            {"slot_index": 5, "label": "잭팟 10,000", "reward_type": "POINT", "reward_amount": 10000, "weight": 2, "is_jackpot": True},
+            {"slot_index": 4, "label": "200 XP", "reward_type": "GAME_XP", "reward_amount": 200, "weight": 8},
+            {"slot_index": 5, "label": "잭팟 1만P", "reward_type": "POINT", "reward_amount": 10000, "weight": 2, "is_jackpot": True},
         ]
 
         db.query(RouletteSegment).filter(RouletteSegment.config_id == config_id).delete()

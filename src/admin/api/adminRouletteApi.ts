@@ -1,5 +1,6 @@
 // src/admin/api/adminRouletteApi.ts
 import { adminApi } from "./httpClient";
+import type { AdminRewardType } from "../types/adminReward";
 
 export type RouletteTicketType = "ROULETTE_COIN" | "TRIAL_TOKEN" | "GOLD_KEY" | "DIAMOND_KEY";
 
@@ -8,7 +9,7 @@ export interface AdminRouletteSegmentPayload {
   index: number;
   label: string;
   weight: number;
-  reward_type: string;
+  reward_type: AdminRewardType;
   reward_value: number;
 }
 

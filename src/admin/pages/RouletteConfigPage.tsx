@@ -15,6 +15,7 @@ import {
 } from "../api/adminRouletteApi";
 import { REWARD_TYPES } from "../constants/rewardTypes";
 import { useToast } from "../../components/common/ToastProvider";
+import type { AdminRewardType } from "../types/adminReward";
 
 const gifticonBrands = [
   { value: "CC_COIN", label: "씨씨코인" },
@@ -235,7 +236,7 @@ const RouletteConfigPage: React.FC = () => {
         index: idx,
         label: seg.label.trim(),
         weight: seg.weight,
-        reward_type: seg.reward_type,
+        reward_type: seg.reward_type as AdminRewardType,
         reward_value: seg.reward_value,
       })),
     };

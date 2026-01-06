@@ -1,5 +1,6 @@
 // src/admin/api/adminMissionApi.ts
 import { adminApi } from "./httpClient";
+import type { AdminRewardType } from "../types/adminReward";
 
 export interface AdminMission {
     id: number;
@@ -7,7 +8,7 @@ export interface AdminMission {
     description: string;
     category: "DAILY" | "WEEKLY" | "SPECIAL" | "NEW_USER";
     target_value: number;
-    reward_type: string;
+    reward_type: AdminRewardType;
     reward_amount: number;
     xp_reward: number;
     logic_key: string;
@@ -25,7 +26,7 @@ export interface AdminMissionPayload {
     description: string;
     category: "DAILY" | "WEEKLY" | "SPECIAL" | "NEW_USER";
     target_value: number;
-    reward_type: string;
+    reward_type: AdminRewardType;
     reward_amount: number;
     xp_reward: number;
     logic_key: string;
