@@ -195,6 +195,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, diamondBalance, onBu
                 {grantItemName} x{product.grant.amount}
             </p>
 
+            {/* Price - 다이아 가격 명확하게 표시 */}
+            <div className="flex items-center justify-center gap-1 mb-2 py-1.5 px-2 bg-black/30 rounded-lg border border-amber-400/20">
+                <img src="/assets/icon_diamond.png" alt="다이아" className="w-4 h-4" />
+                <span className="text-base font-black text-amber-400">{product.cost.amount}</span>
+            </div>
+
             {/* Buy Button */}
             <button
                 onClick={() => { tryHaptic(10); onBuy(); }}
@@ -204,10 +210,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, diamondBalance, onBu
                 {isPending ? (
                     <Loader2 className="animate-spin w-3.5 h-3.5" />
                 ) : (
-                    <>
-                        <img src="/assets/icon_diamond.png" alt="" className="w-3.5 h-3.5" />
-                        <span>{hasEnoughDiamond ? product.cost.amount : '부족'}</span>
-                    </>
+                    hasEnoughDiamond ? "구매하기" : "다이아 부족"
                 )}
             </button>
         </div>
