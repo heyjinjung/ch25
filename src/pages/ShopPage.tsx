@@ -5,6 +5,7 @@ import { Loader2, ShoppingBag } from 'lucide-react';
 import { useToast } from '../components/common/ToastProvider';
 import { tryHaptic } from '../utils/haptics';
 import { useNavigate } from 'react-router-dom';
+import Button from '../components/common/Button';
 
 const ShopPage: React.FC = () => {
     const queryClient = useQueryClient();
@@ -51,38 +52,39 @@ const ShopPage: React.FC = () => {
 
     if (isError) {
         return (
-            <div className="mx-auto w-full max-w-lg pb-[calc(96px+env(safe-area-inset-bottom))]">
+            <div className="mx-auto w-full max-w-lg pt-1.5 pb-[calc(96px+env(safe-area-inset-bottom))]">
                 <div className="rounded-[24px] border border-white/10 bg-white/5 p-6 text-center">
                     <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-black/40 ring-1 ring-white/10">
                         <ShoppingBag className="h-6 w-6 text-white/40" />
                     </div>
                     <div className="text-sm font-black text-white/90">연결 실패</div>
                     <div className="mt-1 text-[11px] font-medium text-white/50">상점 정보를 불러오지 못했습니다.</div>
-                    <button
+                    <Button
                         onClick={() => { tryHaptic(10); refetch(); }}
-                        className="mt-4 px-6 py-2.5 bg-emerald-600/80 hover:bg-emerald-600 text-white text-sm font-bold rounded-xl active:scale-[0.98] transition-all"
+                        variant="figma-primary"
+                        className="mt-4 !px-6 !py-2.5 !text-sm"
                     >
                         다시 시도
-                    </button>
+                    </Button>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="mx-auto w-full max-w-lg pb-[calc(96px+env(safe-area-inset-bottom))]">
+        <div className="mx-auto w-full max-w-lg pt-1.5 pb-[calc(96px+env(safe-area-inset-bottom))]">
             {/* Header */}
-            <div className="mb-5 flex items-center gap-3" data-tour="shop-link">
-                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 flex items-center justify-center">
-                    <img src="/assets/icons/icon_cart.webp" alt="" className="w-5 h-5 object-contain" />
+            <div className="mb-4 flex items-center gap-3" data-tour="shop-link">
+                <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center p-1.5 overflow-hidden">
+                    <img src="/assets/icons/icon_cart.webp" alt="Shop" className="w-full h-full object-contain" />
                 </div>
                 <div>
                     <h1 className="text-xl font-black text-white">상점</h1>
-                    <p className="text-[10px] text-white/35 tracking-widest font-medium">PREMIUM SHOP</p>
+                    <p className="text-[11px] text-white/40 tracking-wide">PREMIUM SHOP</p>
                 </div>
             </div>
 
-            {/* Tabs (route) */}
+            {/* Tabs */}
             <div className="mb-6">
                 <div className="flex p-1 bg-white/5 rounded-2xl border border-white/10">
                     <button
@@ -105,8 +107,8 @@ const ShopPage: React.FC = () => {
                 </div>
             </div>
 
-            {/* Products Grid */}
-            <div className="space-y-3">
+            {/* Products Grid - 2 columns */}
+            <div className="grid grid-cols-2 gap-2.5">
                 {Array.isArray(products) && products.length > 0 ? (
                     products.map((product) => (
                         <ProductCard
@@ -122,7 +124,7 @@ const ShopPage: React.FC = () => {
                         />
                     ))
                 ) : (
-                    <div className="rounded-2xl border border-white/10 bg-white/5 p-8 text-center">
+                    <div className="col-span-2 rounded-2xl border border-white/10 bg-white/5 p-8 text-center">
                         <div className="text-sm font-bold text-white/70">상품 준비 중</div>
                         <div className="mt-1 text-[11px] font-medium text-white/40">곧 새로운 상품이 등록됩니다.</div>
                     </div>
@@ -141,16 +143,30 @@ interface ProductCardProps {
 
 // 아이템 타입 한글화 매핑
 const ITEM_NAMES: Record<string, string> = {
-    'VOUCHER_GOLD_KEY_1': '골드키 교환권',
-    'VOUCHER_DIAMOND_KEY_1': '다이아키 교환권',
-    'VOUCHER_ROULETTE_COIN_1': '룰렛 티켓',
-    'VOUCHER_DICE_TOKEN_1': '주사위 티켓',
-    'VOUCHER_LOTTERY_TICKET_1': '복권 티켓',
-    'GOLD_KEY': '골드 키',
-    'DIAMOND_KEY': '다이아몬드 키',
-    'ROULETTE_COIN': '룰렛 티켓',
-    'DICE_TOKEN': '주사위 티켓',
-    'LOTTERY_TICKET': '복권 티켓',
+    'VOUCHER_GOLD_KEY_1': '골드키',
+    'VOUCHER_DIAMOND_KEY_1': '다이아키',
+    'VOUCHER_ROULETTE_COIN_1': '룰렛',
+    'VOUCHER_DICE_TOKEN_1': '주사위',
+    'VOUCHER_LOTTERY_TICKET_1': '복권',
+    'GOLD_KEY': '골드키',
+    'DIAMOND_KEY': '다이아키',
+    'ROULETTE_COIN': '룰렛',
+    'DICE_TOKEN': '주사위',
+    'LOTTERY_TICKET': '복권',
+};
+
+// 아이콘 매핑 (복권 티켓 아이콘 수정)
+const ITEM_ICONS: Record<string, string> = {
+    'VOUCHER_GOLD_KEY_1': '/assets/asset_ticket_gold.png',
+    'VOUCHER_DIAMOND_KEY_1': '/assets/asset_ticket_diamond.png',
+    'VOUCHER_ROULETTE_COIN_1': '/assets/asset_ticket_green.png',
+    'VOUCHER_DICE_TOKEN_1': '/assets/icon_dice_silver.png',
+    'VOUCHER_LOTTERY_TICKET_1': '/assets/lottery/icon_lotto_ball.webp',
+    'GOLD_KEY': '/assets/asset_ticket_gold.png',
+    'DIAMOND_KEY': '/assets/asset_ticket_diamond.png',
+    'ROULETTE_COIN': '/assets/asset_ticket_green.png',
+    'DICE_TOKEN': '/assets/icon_dice_silver.png',
+    'LOTTERY_TICKET': '/assets/lottery/icon_lotto_ball.webp',
 };
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, diamondBalance, onBuy, isPending }) => {
@@ -158,55 +174,44 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, diamondBalance, onBu
     const hasEnoughDiamond = !requiresDiamond || diamondBalance >= Number(product.cost?.amount ?? 0);
     const isDisabled = isPending || !hasEnoughDiamond;
     const grantItemName = ITEM_NAMES[product.grant.item_type] || product.grant.item_type;
+    const itemIcon = ITEM_ICONS[product.grant.item_type] || '/assets/lottery/icon_gift.png';
 
     return (
-        <div className="group relative overflow-hidden bg-gradient-to-br from-white/[0.06] to-white/[0.02] rounded-2xl p-4 border border-white/10 transition-all hover:border-white/15">
-            <div className="flex items-center justify-between gap-4">
-                {/* Left: Product Info */}
-                <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-12 h-12 rounded-xl bg-black/40 border border-white/10 flex items-center justify-center shrink-0">
-                        <img
-                            src={
-                                product.sku.includes('DIAMOND') ? "/assets/asset_ticket_diamond.png" :
-                                    product.sku.includes('GOLD') ? "/assets/asset_ticket_gold.png" :
-                                        product.sku.includes('COIN') ? "/assets/asset_ticket_green.png" :
-                                            product.sku.includes('DICE') ? "/assets/icon_dice_silver.png" :
-                                                "/assets/icon_ticket.png"
-                            }
-                            alt=""
-                            className="w-7 h-7 object-contain"
-                        />
-                    </div>
-                    <div className="min-w-0">
-                        <h3 className="text-base font-black text-white truncate">{product.title}</h3>
-                        <p className="text-[11px] text-white/45 mt-0.5">
-                            <span className="text-emerald-400/70">{grantItemName}</span> x{product.grant.amount} 지급
-                        </p>
-                    </div>
-                </div>
-
-                {/* Right: Buy Button */}
-                <button
-                    onClick={() => { tryHaptic(10); onBuy(); }}
-                    disabled={isDisabled}
-                    className="shrink-0 bg-emerald-600/80 hover:bg-emerald-600 disabled:bg-white/10 text-white font-bold py-2.5 px-4 rounded-xl transition-all active:scale-[0.97] flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                    {isPending ? (
-                        <Loader2 className="animate-spin w-4 h-4" />
-                    ) : (
-                        <>
-                            <img src="/assets/icon_diamond.png" alt="" className="w-4 h-4" />
-                            <span className="text-sm">{hasEnoughDiamond ? product.cost.amount : '부족'}</span>
-                        </>
-                    )}
-                </button>
+        <div className="group flex flex-col bg-white/5 border border-white/10 rounded-xl p-3 transition-all hover:bg-white/[0.07] hover:border-white/15">
+            {/* Icon */}
+            <div className="w-full aspect-square rounded-xl bg-black/30 border border-white/10 flex items-center justify-center p-3 mb-2">
+                <img
+                    src={itemIcon}
+                    alt={grantItemName}
+                    className="w-full h-full object-contain"
+                />
             </div>
 
-            {/* Background Glow */}
-            <div className="absolute -right-6 -bottom-6 w-20 h-20 bg-gradient-to-br from-emerald-500/10 to-transparent blur-2xl rounded-full pointer-events-none group-hover:from-emerald-500/15 transition-all" />
+            {/* Title */}
+            <h3 className="text-xs font-black text-white mb-0.5 truncate text-center">{product.title}</h3>
+
+            {/* Description */}
+            <p className="text-[9px] text-white/40 mb-2 text-center leading-tight">
+                {grantItemName} x{product.grant.amount}
+            </p>
+
+            {/* Buy Button */}
+            <button
+                onClick={() => { tryHaptic(10); onBuy(); }}
+                disabled={isDisabled}
+                className="w-full py-2 rounded-lg bg-emerald-600/80 hover:bg-emerald-600 disabled:bg-white/10 disabled:text-white/30 text-white font-bold text-xs transition-all active:scale-[0.97] flex items-center justify-center gap-1.5 disabled:cursor-not-allowed"
+            >
+                {isPending ? (
+                    <Loader2 className="animate-spin w-3.5 h-3.5" />
+                ) : (
+                    <>
+                        <img src="/assets/icon_diamond.png" alt="" className="w-3.5 h-3.5" />
+                        <span>{hasEnoughDiamond ? product.cost.amount : '부족'}</span>
+                    </>
+                )}
+            </button>
         </div>
     );
 };
 
 export default ShopPage;
-

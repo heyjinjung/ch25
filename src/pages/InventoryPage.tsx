@@ -143,7 +143,7 @@ const InventoryPage: React.FC = () => {
                         <h2 className="text-[14px] font-black text-white/90">티켓 지갑</h2>
                         <div className="text-[10px] font-medium text-white/35">WALLET</div>
                     </div>
-                    <div className="grid grid-cols-1 gap-3">
+                    <div className="grid grid-cols-2 gap-2.5">
                         {Object.entries(wallet).length === 0 ? (
                             <div className="rounded-[24px] border border-white/10 bg-white/5 p-5 text-center text-white/50 text-sm font-medium">
                                 지갑 정보가 없습니다.
@@ -194,7 +194,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, onUse, isPending }) => {
         "VOUCHER_LOTTERY_TICKET_1": {
             title: "복권 티켓",
             desc: "복권 티켓 1개로 즉시 교환",
-            icon: <img src="/assets/icon_ticket.png" className="w-8 h-8 object-contain" alt="" />
+            icon: <img src="/assets/lottery/icon_lotto_ball.webp" className="w-8 h-8 object-contain" alt="" />
         },
         "BAEMIN_GIFTICON_5000": {
             title: "배민 기프티콘 5,000원",
@@ -281,7 +281,7 @@ const WalletCard: React.FC<{ tokenType: string; amount: number }> = ({ tokenType
     const WALLET_INFO: Record<string, { title: string; icon: string }> = {
         "ROULETTE_COIN": { title: "룰렛 티켓", icon: "/assets/asset_ticket_green.png" },
         "DICE_TOKEN": { title: "주사위 티켓", icon: "/assets/icon_dice_silver.png" },
-        "LOTTERY_TICKET": { title: "복권 티켓", icon: "/assets/lottery/icon_lotto_ball.png" },
+        "LOTTERY_TICKET": { title: "복권 티켓", icon: "/assets/lottery/icon_lotto_ball.webp" },
         "GOLD_KEY": { title: "골드 키", icon: "/assets/asset_ticket_gold.png" },
         "DIAMOND_KEY": { title: "다이아몬드 키", icon: "/assets/asset_ticket_diamond.png" },
         "TRIAL_TOKEN": { title: "체험 티켓", icon: "/assets/asset_ticket_trial.png" }
@@ -290,20 +290,16 @@ const WalletCard: React.FC<{ tokenType: string; amount: number }> = ({ tokenType
     const info = WALLET_INFO[tokenType] || { title: tokenType, icon: "" };
 
     return (
-        <div className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-2xl">
-            <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-black/30 border border-white/10 flex items-center justify-center p-2">
-                    {info.icon ? (
-                        <img src={info.icon} alt={info.title} className="w-full h-full object-contain" />
-                    ) : (
-                        <Coins size={18} className="text-gold-400" />
-                    )}
-                </div>
-                <div>
-                    <span className="text-xs font-bold text-white/60 block mb-0.5 tracking-wider">{info.title}</span>
-                    <span className="text-lg font-black text-white tracking-tight">{amount.toLocaleString()}</span>
-                </div>
+        <div className="flex flex-col items-center p-3 bg-white/5 border border-white/10 rounded-xl transition-all hover:bg-white/[0.07]">
+            <div className="w-11 h-11 rounded-xl bg-black/30 border border-white/10 flex items-center justify-center p-2 mb-2">
+                {info.icon ? (
+                    <img src={info.icon} alt={info.title} className="w-full h-full object-contain" />
+                ) : (
+                    <Coins size={20} className="text-gold-400" />
+                )}
             </div>
+            <span className="text-[10px] font-bold text-white/50 mb-1 text-center leading-tight">{info.title}</span>
+            <span className="text-base font-black text-white tracking-tight">{amount.toLocaleString()}</span>
         </div>
     );
 };

@@ -32,7 +32,7 @@ const EventDashboardPage: React.FC = () => {
     <div className="min-h-[calc(100vh-80px)] bg-black relative overflow-hidden flex flex-col">
       {/* Background Effects Removed per user request */}
 
-      <div className="relative z-10 w-full px-5 pt-4 pb-8 max-w-xl mx-auto flex-1 flex flex-col">
+      <div className="relative z-10 w-full px-2 pt-4 pb-8 max-w-xl mx-auto flex-1 flex flex-col">
         {/* Dashboard Grid */}
         <div className="space-y-6">
           {/* Level Tower Section */}
