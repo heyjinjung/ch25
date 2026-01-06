@@ -66,7 +66,24 @@ const UserInventoryModal: React.FC<Props> = ({ user, onClose }) => {
   const ledger = invQuery.data?.ledger ?? [];
 
   const knownItemTypes = useMemo(() => {
-    const set = new Set<string>(["DIAMOND", "VOUCHER_GOLD_KEY_1", "VOUCHER_DIAMOND_KEY_1"]);
+    const set = new Set<string>([
+      // Basic currency
+      "DIAMOND",
+      // Keys (direct use)
+      "GOLD_KEY",
+      "DIAMOND_KEY",
+      // Tickets (direct use)
+      "TICKET_ROULETTE",
+      "TICKET_DICE",
+      "TICKET_LOTTERY",
+      // Vouchers (exchange items)
+      "VOUCHER_GOLD_KEY_1",
+      "VOUCHER_DIAMOND_KEY_1",
+      "VOUCHER_ROULETTE_COIN_1",
+      // Gifticons
+      "CC_COIN_GIFTICON",
+      "GIFTICON_BAEMIN",
+    ]);
     for (const it of items) set.add(it.item_type);
     return Array.from(set.values()).sort();
   }, [items]);

@@ -119,24 +119,24 @@
 - [x] **5-2. 배포 실행 (Migrations/Scripts)**
     - [x] 기존 운영 DB 시드/설정 교정 배포 스크립트 작성 (`scripts/deploy_update_game_config_v3.py`).
     - [x] Post-check 검증쿼리(운영 DB 실행 후 로그/캡처 보관):
-      > **[Memo]** 실행 완료. 룰렛/복권에 `GAME_XP`, `POINT` 정상 반영 확인.
+      > **[Memo]** 2026-01-06 실행 완료. 룰렛/복권에 `GAME_XP`, `POINT` 정상 반영 확인.
     - [x] 어드민/환경 설정 점검 및 확인:
-        - `docker-compose.yml`에서 `ENABLE_VAULT_GAME_EARN_EVENTS=true`, `ENABLE_TRIAL_PAYOUT_TO_VAULT=true` 확인 (완료)
-        - `XP_FROM_GAME_REWARD=false` 유지 (완료)
+        - `docker-compose.yml`에서 `ENABLE_VAULT_GAME_EARN_EVENTS=true`, `ENABLE_TRIAL_PAYOUT_TO_VAULT=true` 확인 (2026-01-06 완료)
+        - `XP_FROM_GAME_REWARD=false` 유지 (2026-01-06 완료)
 
 ---
 
 ## 6. 데이터 마이그레이션 (7 Items)
-- [] **6-1. 사전 준비**
-    - [] DB 백업 최신성 확보 (운영자 수행).
-    - [] 금고/캐시 잔액 추출 쿼리 작성 (스크립트 내 포함).
+- [x] **6-1. 사전 준비**
+    - [x] DB 백업 최신성 확보 (운영자 수행).
+    - [x] 금고/캐시 잔액 추출 쿼리 작성 (스크립트 내 포함).
 - [x] **6-2. 이관 스크립트**
     > **[Memo]** 백업 완료: `db_backup_20260106_063320.sql.gz` (2026-01-06 15:33 KST)
     - [x] `cash_balance` → `vault_locked_balance` 이관 로직 구현 (`scripts/migrate_cash_to_vault.py`).
     - [x] Ledger 기록 (`CASH_TO_VAULT_MIGRATION`) 구현.
     - [x] 멱등성키(`idempotency_key`) 활용 (잔액 0원 체크로 대체).
 - [x] **6-3. 실행 및 검증**
-    - [x] Dry-run 리포트 (대상 0명 확인 - 이미 금고 잔액 79,900원 존재).
+    - [x] Dry-run 리포트 (2026-01-06: 대상 0명, 이미 금고 잔액 79,900원 존재).
     - [x] 실제 실행 (대상 없으므로 패스).
     - [x] Post-check 검증쿼리 (Cash 잔액 0원 확인 완료).
 
@@ -147,10 +147,10 @@
     - [x] `RewardService` 분기 처리 테스트 (POINT→금고, XP→시즌XP 확인 완료).
     - [x] `VaultService` 즉시 적립 테스트 (락업 기간 없이 즉시 Locked로 적립 확인).
 - [x] **7-2. Integration Test**
-    - [x] 룰렛/주사위/복권 플레이 시 금고/XP/기프티콘 정상 적립 확인 (스크립트 및 수동 플레이).
+    - [x] 룰렛/주사위/복권 플레이 시 금고/XP/기프티콘 정상 적립 확인 (로컬 검증 스크립트 8/8 통과).
     - [x] 골든아워 배율이 금고 적립에만 적용되는지 확인.
     - [x] 키 룰렛 POINT 변환 경로 확인.
-- [ ] **7-3. E2E Test**
+    > **[Memo]** 2026-01-06: `scripts/verify_reward_logic_local.py` 실행, 모든 시나리오 통과 (꽝 -50원, POINT 정확 적립, XP/티켓 +200원)
 - [ ] **7-3. E2E Test**
     - [ ] 어드민 설정 변경 후 게임 플레이 → 보상 적립 로그 확인 시나리오.
     - [ ] 기프티콘 보상 설정 후 미션 클레임 + 인벤토리 적립 시나리오.
@@ -168,5 +168,24 @@
     - [ ] 게임/미션/시즌패스 보상 렌더링 UX 확인.
 
 ---
-**전체 체크 수**: 100개  
-**업데이트**: 2026-01-06
+
+## 9. 버그 수정 및 추가 개선사항 (2026-01-06)
+- [x] **9-1. 게임 서비스 버그 수정**
+    - [x] `RouletteService.play`: `NameError: xp_award not defined` 수정
+    - [x] `LotteryService.play`: XP award 계산 로직 추가 (`GAME_XP` 타입 처리)
+    - [x] `RouletteService`, `LotteryService`: `payout_raw`에 정확한 `reward_amount` 전달
+- [x] **9-2. VaultService 보상 계산 로직 수정**
+    - [x] POINT/CC_POINT: 당첨 금액 그대로 적립
+    - [x] 꽝 (amount=0): -50원 패널티
+    - [x] 기타 (XP, 티켓 등): +200원 기본 적립
+    - [x] ROULETTE 및 LOTTERY 모두 적용
+- [x] **9-3. 룰렛 페이지 UX 개선**
+    - [x] 중복 결과 모달 제거 (하단 패널 삭제, 상단 토스트만 유지)
+    - [x] 하단 "룰렛 시작" 버튼 제거
+    - [x] 룰렛 휠 클릭으로 바로 돌리기 활성화
+    - [x] 사용하지 않는 `displayedResult` state 정리
+
+---
+**전체 체크 수**: 100개 + 추가 12개  
+**업데이트**: 2026-01-06  
+**상태**: 로컬 검증 완료, 서버 배포 대기
