@@ -279,7 +279,7 @@ class RouletteService:
             payout_raw={
                 "segment_id": chosen.id,
                 "reward_type": chosen.reward_type,
-                "reward_amount": point_reward_amount if chosen.reward_type in {"POINT", "CC_POINT"} else 0,
+                "reward_amount": chosen.reward_amount,
             },
         )
 

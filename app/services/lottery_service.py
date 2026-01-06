@@ -164,7 +164,7 @@ class LotteryService:
             payout_raw={
                 "prize_id": chosen.id,
                 "reward_type": chosen.reward_type,
-                "reward_amount": point_reward_amount if point_reward_amount > 0 else 0, # Pass only if valid point reward
+                "reward_amount": chosen.reward_amount,
             },
         ) or 0
 
