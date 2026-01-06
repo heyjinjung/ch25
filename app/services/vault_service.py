@@ -554,17 +554,34 @@ class VaultService:
                     else:
                         amount_before_multiplier = 0
             elif game_type_upper == "ROULETTE":
-                # Check payout details to detect "LOSE" (꽝)
+                # Check payout details to detect "LOSE" (꽝) or Specific Reward
                 payout = payout_raw or {}
                 r_amount = int(payout.get("reward_amount", 0))
-                # Treat 0 reward as LOSE -> -50
-                if r_amount == 0:
+                r_type = str(payout.get("reward_type", "NONE"))
+                
+                if r_type in ("POINT", "CC_POINT") and r_amount > 0:
+                    # Point win: accrual = reward amount
+                    amount_before_multiplier = r_amount
+                elif r_amount == 0:
+                    # Lose/Zero: penalty -50
                     amount_before_multiplier = -50
                 else:
+                    # Other reward (XP, Ticket, etc): base bonus 200
                     amount_before_multiplier = 200
             else:
                 # Default for other games (LOTTERY, etc.)
-                amount_before_multiplier = 200
+                payout = payout_raw or {}
+                r_amount = int(payout.get("reward_amount", 0))
+                r_type = str(payout.get("reward_type", "NONE"))
+                
+                if r_type in ("POINT", "CC_POINT") and r_amount > 0:
+                    amount_before_multiplier = r_amount
+                elif r_amount == 0:
+                     # Lose/Zero: penalty -50 (Consistent with Roulette/Dice lose logic)
+                    amount_before_multiplier = -50
+                else:
+                    # Other reward: base bonus 200
+                    amount_before_multiplier = 200
 
         if int(amount_before_multiplier or 0) == 0:
             return 0
