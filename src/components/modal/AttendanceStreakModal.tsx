@@ -1,5 +1,5 @@
 import React from "react";
-import { X, CheckCircle2, Lock, Star } from "lucide-react";
+import { X, CheckCircle2, Star } from "lucide-react";
 import clsx from "clsx";
 import Button from "../common/Button";
 import { tryHaptic } from "../../utils/haptics";
@@ -53,14 +53,14 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
     ): React.ReactNode => {
         const isLastDay = opts?.isLastDay === true;
         const emphasize = opts?.emphasize === true;
-        const sizeClass = isLastDay ? "h-12 w-12" : "h-9 w-9";
+        const sizeClass = isLastDay ? "h-16 w-16" : "h-9 w-9";
         const pulseClass = emphasize ? "animate-pulse" : "";
 
         if (grants.length > 1) {
             return <img src="/assets/lottery/icon_gift.png" alt="패키지" className={`${sizeClass} ${pulseClass} object-contain`} />;
         }
         const g = grants[0];
-        if (!g) return <Star className={`${isLastDay ? "w-12 h-12" : "w-9 h-9"} text-gray-400 ${pulseClass}`} />;
+        if (!g) return <Star className={`${isLastDay ? "w-16 h-16" : "w-9 h-9"} text-gray-400 ${pulseClass}`} />;
 
         if (g.token_type === "ROULETTE_COIN") return <span className={`${isLastDay ? "text-4xl" : "text-3xl"} ${pulseClass}`}>🎯</span>;
         if (g.token_type === "DICE_TOKEN") return <span className={`${isLastDay ? "text-4xl" : "text-3xl"} ${pulseClass}`}>🎲</span>;
@@ -165,141 +165,138 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
 
                         {/* 7-Day Grid */}
                         <div className="grid grid-cols-4 gap-2 w-full mb-6">
-                        {Array.from({ length: 7 }).map((_, i) => {
-                            const day = i + 1;
-                            const rule = sortedRules.find(r => r.day === day);
-                            const isToday = currentStreak === day;
-                            const isPast = currentStreak > day;
-                            const isFuture = currentStreak < day;
+                            {Array.from({ length: 7 }).map((_, i) => {
+                                const day = i + 1;
+                                const rule = sortedRules.find(r => r.day === day);
+                                const isToday = currentStreak === day;
+                                const isPast = currentStreak > day;
 
-                            // Highlight the day being claimed
-                            const isClaimTarget = day === claimableDay;
 
-                            const isLastDay = day === 7;
-                            const emphasize = isLastDay || isToday || isClaimTarget;
+                                // Highlight the day being claimed
+                                const isClaimTarget = day === claimableDay;
 
-                            return (
-                                <div
-                                    key={day}
-                                    className={clsx(
-                                        "relative flex flex-col items-center justify-center aspect-square rounded-2xl border transition-all duration-300",
-                                        isLastDay ? "col-span-2 aspect-auto py-2" : "col-span-1",
-                                        isPast ? "bg-emerald-500/10 border-emerald-500/30" :
-                                            (isToday || isClaimTarget) ? "bg-figma-primary border-figma-primary shadow-[0_0_20px_rgba(48,255,117,0.3)] scale-105 z-10" :
-                                                "bg-white/5 border-white/10"
-                                    )}
-                                >
-                                    {isLastDay ? (
-                                        <img
-                                            src="/assets/modals/7days.webp"
-                                            alt=""
-                                            className="absolute inset-0 w-full h-full object-cover opacity-30 pointer-events-none"
-                                        />
-                                    ) : null}
+                                const isLastDay = day === 7;
+                                const emphasize = isLastDay || isToday || isClaimTarget;
 
-                                    {isLastDay ? (
-                                        <span className="absolute left-2 top-2 rounded-lg bg-white/10 px-2 py-0.5 text-[9px] font-black text-figma-accent">
-                                            최종 보상
-                                        </span>
-                                    ) : null}
-
-                                    <span className={clsx(
-                                        isLastDay ? "text-xs font-black mb-1" : "text-[10px] font-black mb-0.5",
-                                        (isToday || isClaimTarget) ? "text-white" : "text-white/40"
-                                    )}>
-                                        {day}일차
-                                    </span>
-
-                                    <div className={clsx("mb-1 flex items-center justify-center", emphasize ? "drop-shadow" : "")}>
-                                        {rule ? (
-                                            getRewardIcon(rule.grants, { isLastDay, emphasize: isLastDay })
-                                        ) : (
-                                            <img
-                                                src="/assets/lottery/icon_gift.png"
-                                                alt="선물"
-                                                className={clsx(isLastDay ? "h-10 w-10" : "h-8 w-8", "object-contain", isLastDay ? "animate-pulse" : "")}
-                                            />
+                                return (
+                                    <div
+                                        key={day}
+                                        className={clsx(
+                                            "relative flex flex-col items-center justify-center aspect-square rounded-2xl border transition-all duration-300",
+                                            isLastDay ? "col-span-2 aspect-auto py-3" : "col-span-1",
+                                            isPast ? "bg-emerald-500/10 border-emerald-500/30" :
+                                                (isToday || isClaimTarget) ? "bg-figma-primary border-figma-primary shadow-[0_0_20px_rgba(48,255,117,0.3)] scale-105 z-10" :
+                                                    isLastDay ? "bg-gradient-to-br from-amber-500/20 via-yellow-500/10 to-orange-500/20 border-amber-400/40 shadow-[0_0_30px_rgba(251,191,36,0.3),inset_0_1px_0_rgba(255,255,255,0.1)] backdrop-blur-xl" :
+                                                        "bg-white/5 border-white/10"
                                         )}
+                                    >
+                                        {/* 7일차 전용 배경 글로우 */}
+                                        {isLastDay && (
+                                            <>
+                                                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-amber-500/10 to-transparent blur-lg" />
+                                                <div className="absolute -inset-[1px] rounded-2xl bg-gradient-to-br from-amber-400/20 via-transparent to-orange-400/20 -z-10" />
+                                            </>
+                                        )}
+
+                                        {isLastDay ? (
+                                            <span className="absolute left-2 top-2 rounded-lg bg-white/10 px-2 py-0.5 text-[9px] font-black text-figma-accent">
+                                                최종 보상
+                                            </span>
+                                        ) : null}
+
+                                        <span className={clsx(
+                                            isLastDay ? "text-xs font-black mb-1" : "text-[10px] font-black mb-0.5",
+                                            (isToday || isClaimTarget) ? "text-white" : "text-white/40"
+                                        )}>
+                                            {day}일차
+                                        </span>
+
+                                        <div className={clsx("mb-1 flex items-center justify-center", emphasize ? "drop-shadow" : "")}>
+                                            {rule ? (
+                                                getRewardIcon(rule.grants, { isLastDay, emphasize: isLastDay })
+                                            ) : (
+                                                <img
+                                                    src="/assets/lottery/icon_gift.png"
+                                                    alt="선물"
+                                                    className={clsx(isLastDay ? "h-10 w-10" : "h-8 w-8", "object-contain", isLastDay ? "animate-pulse" : "")}
+                                                />
+                                            )}
+                                        </div>
+
+                                        <span className={clsx(
+                                            isLastDay ? "text-[10px] font-black truncate max-w-full px-2" : "text-[8px] font-bold truncate max-w-full px-1",
+                                            (isToday || isClaimTarget) ? "text-white" : "text-white/30"
+                                        )}>
+                                            {getRewardLabel(day, rule?.grants)}
+                                        </span>
+
+                                        {/* Status Overlay */}
+                                        {isPast && (
+                                            <div className="absolute inset-x-0 bottom-1 flex justify-center">
+                                                <CheckCircle2 className="w-3 h-3 text-emerald-400 fill-emerald-900" />
+                                            </div>
+                                        )}
+
                                     </div>
-
-                                    <span className={clsx(
-                                        isLastDay ? "text-[10px] font-black truncate max-w-full px-2" : "text-[8px] font-bold truncate max-w-full px-1",
-                                        (isToday || isClaimTarget) ? "text-white" : "text-white/30"
-                                    )}>
-                                        {getRewardLabel(day, rule?.grants)}
-                                    </span>
-
-                                    {/* Status Overlay */}
-                                    {isPast && (
-                                        <div className="absolute inset-x-0 bottom-1 flex justify-center">
-                                            <CheckCircle2 className="w-3 h-3 text-emerald-400 fill-emerald-900" />
-                                        </div>
-                                    )}
-                                    {isFuture && (
-                                        <div className="absolute top-1 right-1">
-                                            <Lock className="w-2.5 h-2.5 text-white/20" />
-                                        </div>
-                                    )}
-                                </div>
-                            );
-                        })}
+                                );
+                            })}
                         </div>
 
                         <div className="w-full space-y-3 mt-auto">
-                        <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
-                            <div>
-                                <p className="text-[10px] font-black text-white/40 uppercase tracking-widest">나의 현재 기록</p>
-                                <p className="text-xl font-black text-white">
-                                    {isZeroStreak ? "⏳ 게임 플레이 대기" : `🔥 ${currentStreak}일 연속!`}
-                                </p>
+                            <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
+                                <div>
+                                    <p className="text-[10px] font-black text-white/40 uppercase tracking-widest">나의 현재 기록</p>
+                                    <p className="text-xl font-black text-white">
+                                        {isZeroStreak ? "⏳ 게임 플레이 대기" : `🔥 ${currentStreak}일 연속!`}
+                                    </p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-[10px] font-black text-white/40 tracking-widest">
+                                        {isZeroStreak ? "첫 보상" : "다음 보상"}
+                                    </p>
+                                    <p className="text-sm font-bold text-figma-accent">{isZeroStreak ? "1일차" : `${currentStreak + 1}일차`}</p>
+                                </div>
                             </div>
-                            <div className="text-right">
-                                <p className="text-[10px] font-black text-white/40 tracking-widest">
-                                    {isZeroStreak ? "첫 보상" : "다음 보상"}
-                                </p>
-                                <p className="text-sm font-bold text-figma-accent">{isZeroStreak ? "1일차" : `${currentStreak + 1}일차`}</p>
-                            </div>
+
+                            {isZeroStreak ? (
+                                <>
+                                    <p className="text-center text-xs text-white/60 py-2">
+                                        게임을 플레이하면 <span className="text-figma-accent font-bold">1일차 보상</span>을 받을 수 있어요!
+                                    </p>
+                                    <Button
+                                        variant="figma-secondary"
+                                        fullWidth
+                                        className="rounded-2xl py-3.5 text-base"
+                                        onClick={onClose}
+                                    >
+                                        게임 하러 가기 🎮
+                                    </Button>
+                                </>
+                            ) : (
+                                <>
+                                    <Button
+                                        variant={isClaimable ? "figma-primary" : "figma-secondary"}
+                                        fullWidth
+                                        className="rounded-2xl py-3.5 text-base"
+                                        onClick={handleAction}
+                                        disabled={isClaiming || !isClaimable}
+                                    >
+                                        {isClaiming
+                                            ? "처리 중..."
+                                            : isClaimable
+                                                ? "🎁 보상 받기"
+                                                : "다음 보상 대기"}
+                                    </Button>
+                                    {!isClaimable && (
+                                        <button onClick={onClose} className="w-full py-2 text-xs font-medium text-white/40 hover:text-white transition-colors">
+                                            닫기
+                                        </button>
+                                    )}
+                                </>
+                            )}
                         </div>
 
-                        {isZeroStreak ? (
-                            <>
-                                <p className="text-center text-xs text-white/60 py-2">
-                                    게임을 플레이하면 <span className="text-figma-accent font-bold">1일차 보상</span>을 받을 수 있어요!
-                                </p>
-                                <Button
-                                    variant="figma-secondary"
-                                    fullWidth
-                                    className="rounded-2xl py-3.5 text-base"
-                                    onClick={onClose}
-                                >
-                                    게임 하러 가기 🎮
-                                </Button>
-                            </>
-                        ) : (
-                            <>
-                                <Button
-                                    variant={isClaimable ? "figma-primary" : "figma-secondary"}
-                                    fullWidth
-                                    className="rounded-2xl py-3.5 text-base"
-                                    onClick={handleAction}
-                                    disabled={isClaiming || !isClaimable}
-                                >
-                                    {isClaiming
-                                        ? "처리 중..."
-                                        : isClaimable
-                                            ? "🎁 보상 받기"
-                                            : "다음 보상 대기"}
-                                </Button>
-                                {!isClaimable && (
-                                    <button onClick={onClose} className="w-full py-2 text-xs font-medium text-white/40 hover:text-white transition-colors">
-                                        닫기
-                                    </button>
-                                )}
-                            </>
-                        )}
-                        </div>
 
-                        <p className="mt-4 text-[9px] font-black text-white/20 tracking-[0.2em]">출석 보상 v1.0</p>
                     </div>
                 </div>
             </div>

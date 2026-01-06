@@ -63,20 +63,6 @@ const guideSteps: Step[] = [
     placement: "top",
     disableBeacon: true,
   },
-  // 보상함 헤더
-  {
-    target: '[data-tour="inventory-link"]',
-    content: (
-      <div className="text-left">
-        <div className="text-lg font-black mb-2">🎁 보상함</div>
-        <div className="text-sm leading-snug break-keep">
-          여기서 <strong>보유 아이템(교환권/기프티콘)</strong>과 <strong>티켓 지갑</strong>을 한 번에 확인할 수 있어요.
-        </div>
-      </div>
-    ),
-    placement: "bottom",
-    disableBeacon: true,
-  },
   // 보상함(아이템/티켓) 안내
   {
     target: '[data-tour="inventory-items-tab"]',
@@ -84,8 +70,8 @@ const guideSteps: Step[] = [
       <div className="text-left">
         <div className="text-lg font-black mb-2">🎒 보유 아이템 / 🎫 티켓 지갑</div>
         <div className="text-sm leading-snug break-keep">
-          위쪽은 <strong>교환권/기프티콘(지급대기)</strong>, 아래쪽은 <strong>티켓 지갑</strong>이에요.
-          <div className="mt-2 text-amber-400 font-bold">💡 티켓/키는 상점에서 사면 바로 지갑에 들어와요.</div>
+          <strong>보유함</strong>에서 교환권/기프티콘을 확인하고, <strong>지갑</strong>에서 티켓 수량을 확인해요.
+          <div className="mt-2 text-amber-400 font-bold">💡 상점에서 구매하면 바로 지갑에 들어옵니다.</div>
         </div>
       </div>
     ),
@@ -277,27 +263,27 @@ const AppGuide: React.FC = () => {
         navigate("/vault");
       }
     }
-    // 스텝 4~5: 보상함 페이지 → /rewards로 이동
-    if (stepIndex >= 4 && stepIndex <= 5) {
+    // 스텝 4: 보상함 페이지 → /rewards로 이동
+    if (stepIndex === 4) {
       if (!location.pathname.startsWith("/rewards")) {
         navigate("/rewards");
       }
     }
-    // 스텝 6: 상점 페이지 → /shop로 이동
-    if (stepIndex === 6) {
+    // 스텝 5: 상점 페이지 → /shop로 이동
+    if (stepIndex === 5) {
       if (!location.pathname.startsWith("/shop")) {
         navigate("/shop");
       }
     }
-    // 스텝 7: 이벤트 (하단 네비, 어느 페이지든 OK)
+    // 스텝 6: 이벤트 (하단 네비, 어느 페이지든 OK)
   }, [stepIndex, isGuideRunning, navigate, location.pathname]);
 
   // 페이지 이동이 필요한 스텝에서 타겟이 준비될 때까지 Joyride 일시 정지
   useEffect(() => {
     if (!isGuideRunning) return;
 
-    // 스텝 3~6: 페이지 이동 후 타겟 대기 필요
-    if (stepIndex >= 3 && stepIndex <= 6) {
+    // 스텝 3~5: 페이지 이동 후 타겟 대기 필요
+    if (stepIndex >= 3 && stepIndex <= 5) {
       const selector = guideSteps[stepIndex]?.target;
       if (typeof selector !== "string") return;
 

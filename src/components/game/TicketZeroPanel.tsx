@@ -20,7 +20,7 @@ const TicketZeroPanel: React.FC<TicketZeroPanelProps> = ({ tokenType }) => {
   const title = value.title || `${tokenType}가 부족해요`;
   const body = value.body || "이용해 주셔서 감사합니다. 지금 이용하시면 바로 이어서 플레이 가능합니다.";
 
-  const primaryLabel = value.primaryCta?.label || value.primary_cta_label || "씨씨카지노 바로가기";
+  const primaryLabel = value.primaryCta?.label || value.primary_cta_label || "씨씨 홈";
   const primaryUrl = value.primaryCta?.url || value.primary_cta_url || "https://ccc-010.com";
 
   const secondaryLabel = value.secondaryCta?.label || value.secondary_cta_label || "실장 텔레 문의";
