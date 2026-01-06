@@ -51,6 +51,11 @@ const GameCard: React.FC<GameCardProps> = ({ title, to, gradient, icon, isWide, 
 
 
 const GameLobbyPage: React.FC = () => {
+    // Scroll to top on mount to fix refresh issue
+    React.useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
+
     const games = [
         {
             title: "ROULETTE",
@@ -86,13 +91,14 @@ const GameLobbyPage: React.FC = () => {
     ];
 
     return (
-        <div className="min-h-[calc(100vh-160px)] flex flex-col justify-start pb-8">
-            <div className="grid grid-cols-2 gap-3">
+        <section className="space-y-6 pb-4">
+            {/* Games Grid - 2 columns */}
+            <div className="grid grid-cols-2 gap-3 px-1">
                 {games.map((game) => (
                     <GameCard key={game.title} {...game} />
                 ))}
             </div>
-        </div>
+        </section>
     );
 };
 

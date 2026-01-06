@@ -62,7 +62,7 @@ const InventoryPage: React.FC = () => {
     }
 
     return (
-        <div className="mx-auto w-full max-w-lg pb-[calc(96px+env(safe-area-inset-bottom))]">
+        <div className="mx-auto w-full max-w-lg pt-1.5 pb-[calc(96px+env(safe-area-inset-bottom))]">
             {/* Title */}
             <div className="mb-4 flex items-center gap-3" data-tour="inventory-link">
                 <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center p-1.5 overflow-hidden">
@@ -140,7 +140,7 @@ const InventoryPage: React.FC = () => {
 
                 <div>
                     <div className="mb-3 flex items-baseline justify-between">
-                        <h2 className="text-sm font-black text-white/90">티켓 지갑</h2>
+                        <h2 className="text-[14px] font-black text-white/90">티켓 지갑</h2>
                         <div className="text-[10px] font-medium text-white/35">WALLET</div>
                     </div>
                     <div className="grid grid-cols-1 gap-3">

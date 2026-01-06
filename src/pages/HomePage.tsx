@@ -80,8 +80,9 @@ const CategoryTabs: React.FC<{ active: string; onChange: (id: string) => void }>
             rel="noreferrer"
             onClick={() => playTabTouch()}
             className={clsx(
-              "whitespace-nowrap rounded-full px-5 py-2 text-xs font-bold transition-all border flex items-center gap-2",
-              "bg-white/5 text-slate-400 hover:bg-white/10 border-white/20 hover:border-white/40"
+              "group whitespace-nowrap rounded-full px-5 py-2 text-xs font-bold transition-all border flex items-center gap-2",
+              "bg-white/5 text-slate-400 border-white/20",
+              "hover:bg-gradient-to-r hover:from-figma-primary hover:to-[#70FF95] hover:text-white hover:shadow-[0_4px_15px_rgba(48,255,117,0.3)] hover:scale-105 hover:border-transparent"
             )}
           >
             {tab.id === 'hot' && <img src="/assets/logo_cc_v2.png" className="w-3.5 h-3.5 object-contain grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100" alt="" />}

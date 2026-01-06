@@ -19,7 +19,7 @@ const Button: React.FC<ButtonProps> = ({ children, className = "", variant = "pr
   return (
     <button
       type="button"
-      className={`rounded-lg px-4 py-2 text-base font-semibold transition focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-slate-900 disabled:cursor-not-allowed disabled:opacity-60 ${variantClasses[variant]} ${fullWidth ? "w-full" : ""} ${className}`}
+      className={`rounded-lg px-4 py-2 text-base font-semibold transition focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-slate-900 disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-[#94A3B8] disabled:shadow-none ${variantClasses[variant]} ${fullWidth ? "w-full" : ""} ${className}`}
       {...rest}
     >
       {children}

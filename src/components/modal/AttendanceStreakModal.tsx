@@ -74,12 +74,37 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
         return <img src="/assets/lottery/icon_gift.png" alt="선물" className={`${sizeClass} ${pulseClass} object-contain`} />;
     };
 
-    const getRewardLabel = (grants: Reward[]) => {
-        if (grants.length === 0) return "없음";
+    const getRewardLabel = (day: number, grants?: Reward[]) => {
+        // 요구사항: 보상명 표기는 일차별로 고정 (띄어쓰기 없이)
+        // 1일차 룰렛1개
+        // 2일차 주사위1개
+        // 3일차 패키지
+        // 4일차 다이아N개 (기본 1)
+        // 5일차 패키지
+        // 6일차 다이아N개 (기본 2)
+        // 7일차 다이아N개 (기본 5, 수량은 어드민 룰 우선)
+
+        if (day === 1) return "룰렛1개";
+        if (day === 2) return "주사위1개";
+        if (day === 3) return "패키지";
+        if (day === 5) return "패키지";
+
+        const defaultDiamondAmountByDay: Record<number, number> = { 4: 1, 6: 2, 7: 5 };
+        const defaultDiamondAmount = defaultDiamondAmountByDay[day] ?? 1;
+
+        const diamondGrant = grants?.find(
+            (g) => g?.item_type === "DIAMOND" || g?.token_type === "DIAMOND"
+        );
+        const diamondAmount = typeof diamondGrant?.amount === "number" ? diamondGrant.amount : defaultDiamondAmount;
+
+        if (day === 4 || day === 6 || day === 7) return `다이아${diamondAmount}개`;
+
+        // Fallback (shouldn't happen for 1~7 days)
+        if (!grants || grants.length === 0) return "-";
         if (grants.length > 1) return "패키지";
         const g = grants[0];
-        const name = getKoreanRewardName(g);
-        return `${g.amount} ${name}`;
+        const name = (getKoreanRewardName(g) || "").replace(/\s+/g, "");
+        return `${name}${g.amount}개`;
     };
 
     const handleAction = async () => {
@@ -201,7 +226,7 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
                                         isLastDay ? "text-[10px] font-black truncate max-w-full px-2" : "text-[8px] font-bold truncate max-w-full px-1",
                                         (isToday || isClaimTarget) ? "text-white" : "text-white/30"
                                     )}>
-                                        {rule ? getRewardLabel(rule.grants) : '-'}
+                                        {getRewardLabel(day, rule?.grants)}
                                     </span>
 
                                     {/* Status Overlay */}
