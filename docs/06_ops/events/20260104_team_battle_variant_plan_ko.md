@@ -188,4 +188,43 @@ def check_all_daily_completed(self, user_id: int) -> bool:
 | `TEAM_BATTLE_ALL_CLEAR_BONUS` | `50` | 일일 미션 올클리어 보너스 점수 |
 
 ---
-**기획 기술 검토**: 본 기획은 기존 `user`, `mission`, `team_battle` 모델 간의 약한 결합(Loose Coupling)을 활용하되, `auth`와 `mission`이 `team_battle`의 점수 생성을 위임받는 구조로 설계되었습니다. 이는 추가 테이블 없이도 강력한 리텐션 동기를 유발할 수 있는 기술 효율적인 방식입니다.
+
+## 8. 구현 진행도 체크리스트 (Implementation Progress)
+
+### 8.1 완료 (Completed)
+- [x] **DB Schema**: `user.login_streak`, `user.last_streak_updated_at` 컬럼 및 인덱스 추가.
+- [x] **Backend Logic**:
+    - [x] `AuthService`: 로그인 시점 `login_streak` 계산 및 업데이트 로직 구현.
+    - [x] `MissionService`: 일일 미션 올클리어(`All-Clear`) 시 팀 배틀 보너스(50점) 지급 로직 구현.
+    - [x] `TeamBattleService`: 보너스(`STREAK_BONUS`, `MISSION_ALL_CLEAR`) 지급 액션 처리 및 로그 적재.
+    - [x] **Streak Bonus**: 3일/7일 연속 접속 시 보너스 점수 자동 지급 확인.
+- [x] **Admin Feature**:
+    - [x] `UserAdminPage`: 유저 관리 테이블에 `Streak` 컬럼 추가(View/Sort) 및 수정 모달에서 수동 보정 기능 구현.
+    - [x] `AdminUserApi`: 사용자 업데이트 API(`PATCH`)에 `login_streak` 필드 처리 추가.
+- [x] **API Response**: `POST /api/auth/token` 응답에 `login_streak` 포함하여 프론트엔드 연동 준비 완료.
+- [x] **Testing**: `tests/verify_grinder_rule.py` 테스트 슈트 통과 (로그인 스트릭, 미션 올클리어, 게임플레이 상한).
+
+### 8.2 진행 예정 상세 계획 (Upcoming & Detailed Plan)
+
+#### [A] Frontend UI: 스트릭 시각화 (Streak Visualization) (D+1)
+*   **목표**: 유저가 자신의 연속 접속 상태를 직관적으로 인지하고 끊기지 않도록 유도.
+*   **구현 위치**:
+    *   **헤더(AppHeader)**: 모바일 뷰에서 우측 상단 또는 프로필 이미지 옆에 소형 `🔥 {N}` 배지 노출.
+    *   **사이드바/메뉴(SidebarAppLayout)**: 유저 프로필 카드 영역에 불꽃 아이콘과 함께 "접속 스트릭: {N}일" 표기.
+*   **컴포넌트 명세**:
+    *   `StreakBadge.tsx`: `useAuth()` 훅을 통해 `user.login_streak` 값을 구독.
+    *   **인터랙션**: 클릭 시 간단한 툴팁("매일 접속하여 보너스를 받으세요!") 또는 기존 `AttendanceStreakModal`(접속 유도용)을 띄워 시너지 효과.
+*   **데이터 연동**:
+    *   `src/auth/authStore.ts`의 `user.login_streak` 값 활용 (이미 구현됨).
+
+#### [B] Admin Dashboard: 활동 랭킹 및 로그 (Activity Intelligence) (D+2)
+*   **목표**: 팀 배틀 승패에 기여하는 '숨은 주역(Grinder)'들을 발굴하고 어뷰징을 감시.
+*   **활동 랭킹 탭 (Grinder Ranking Tab)**:
+    *   `AdminTeamBattlePage.tsx` 내 신규 탭 추가.
+    *   **API**: `GET /admin/api/team-battle/stats/ranking?season_id={id}&sort=points`
+    *   **테이블 컬럼**: 순위, 유저명, 총 기여 포인트, 플레이 횟수(Game), 올클리어 횟수(Mission), 최근 활동 시간.
+*   **상세 활동 로그 뷰어 (Activity Log Modal)**:
+    *   랭킹/멤버 리스트에서 유저 클릭 시 모달 오픈.
+    *   **API**: `GET /admin/api/team-battle/logs?user_id={id}&season_id={id}`
+    *   **필터링**: 전체 / 게임플레이 / 미션 / 보너스 / 어드민조정.
+    *   **시각화**: 타임라인(Timeline) 형태로 하루 동안의 활동 밀집도 표현.
