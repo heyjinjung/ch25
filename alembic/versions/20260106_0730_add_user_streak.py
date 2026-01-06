@@ -1,7 +1,7 @@
 """add user streak
 
 Revision ID: 20260106_0730_add_user_streak
-Revises: 20260104_2300_add_trial_season_and_schedule
+Revises: f5a1c0d2e9b4
 Create Date: 2026-01-06 07:30:00.000000
 
 """
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = '20260106_0730_add_user_streak'
-down_revision = '20260104_2300_add_trial_season_and_schedule'
+down_revision = 'f5a1c0d2e9b4'
 branch_labels = None
 depends_on = None
 
