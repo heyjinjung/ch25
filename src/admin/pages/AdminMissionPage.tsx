@@ -5,6 +5,7 @@ import { Edit2, Plus, Trash2, X } from "lucide-react";
 import { fetchMissions, createMission, updateMission, deleteMission, AdminMission, AdminMissionPayload } from "../api/adminMissionApi";
 import { useToast } from "../../components/common/ToastProvider";
 import type { AdminRewardType } from "../types/adminReward";
+import { REWARD_TYPES } from "../constants/rewardTypes";
 
 const toTimeInputValue = (value?: string | null) => {
     if (!value) return "";
@@ -231,10 +232,9 @@ const AdminMissionPage: React.FC = () => {
                                     value={form.reward_type}
                                     onChange={e => setForm({ ...form, reward_type: e.target.value as AdminRewardType })}
                                 >
-                                    <option value="DIAMOND">다이아몬드</option>
-                                    <option value="TICKET_ROULETTE">룰렛 티켓</option>
-                                    <option value="TICKET_DICE">다이스 티켓</option>
-                                    <option value="TICKET_LOTTERY">로또 티켓</option>
+                                    {REWARD_TYPES.map(rt => (
+                                        <option key={rt.value} value={rt.value}>{rt.label}</option>
+                                    ))}
                                 </select>
                             </div>
                             <div>
@@ -312,7 +312,7 @@ const AdminMissionPage: React.FC = () => {
                                         <div className="text-xs text-gray-500">Target: <span className="text-white">{mission.target_value}</span></div>
                                     </td>
                                     <td className="px-4 py-3">
-                                        <div className="text-sm text-white">{mission.start_time && mission.end_time ? `${mission.start_time.slice(0,5)} ~ ${mission.end_time.slice(0,5)}` : "-"}</div>
+                                        <div className="text-sm text-white">{mission.start_time && mission.end_time ? `${mission.start_time.slice(0, 5)} ~ ${mission.end_time.slice(0, 5)}` : "-"}</div>
                                         {mission.auto_claim && (
                                             <div className="mt-1 inline-flex rounded-full bg-emerald-900/40 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#91F402]">
                                                 Auto-Claim
@@ -321,9 +321,26 @@ const AdminMissionPage: React.FC = () => {
                                     </td>
                                     <td className="px-4 py-3">
                                         <div className="flex items-center gap-2">
-                                            <div className="w-4 h-4 rounded-full bg-amber-400/20 flex items-center justify-center text-[10px] text-amber-400">💎</div>
-                                            <span className="text-sm font-bold text-[#91F402]">{mission.reward_amount}</span>
-                                            <span className="text-xs text-gray-500">{mission.reward_type}</span>
+                                            {/* Icon Logic based on reward type */}
+                                            <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${mission.reward_type === 'POINT' ? 'bg-[#91F402]/20 text-[#91F402]' :
+                                                mission.reward_type === 'GAME_XP' ? 'bg-purple-500/20 text-purple-400' :
+                                                    mission.reward_type === 'DIAMOND' ? 'bg-amber-400/20 text-amber-400' :
+                                                        'bg-gray-700 text-gray-400'
+                                                }`}>
+                                                {mission.reward_type === 'POINT' ? 'P' :
+                                                    mission.reward_type === 'GAME_XP' ? 'XP' :
+                                                        mission.reward_type === 'DIAMOND' ? '💎' : '🎁'}
+                                            </div>
+                                            <span className={`text-sm font-bold ${mission.reward_type === 'POINT' ? 'text-[#91F402]' :
+                                                mission.reward_type === 'GAME_XP' ? 'text-purple-400' :
+                                                    'text-gray-200'
+                                                }`}>
+                                                {mission.reward_amount > 0 ? mission.reward_amount.toLocaleString() : mission.xp_reward > 0 ? mission.xp_reward.toLocaleString() : 0}
+                                            </span>
+                                            <span className="text-xs text-gray-500">
+                                                {REWARD_TYPES.find(r => r.value === mission.reward_type)?.label || mission.reward_type}
+                                                {mission.xp_reward > 0 && mission.reward_type !== 'GAME_XP' && ` (+${mission.xp_reward} XP)`}
+                                            </span>
                                         </div>
                                     </td>
                                     <td className="px-4 py-3 text-center">

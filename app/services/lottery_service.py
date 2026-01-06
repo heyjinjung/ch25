@@ -172,7 +172,11 @@ class LotteryService:
         settings = get_settings()
         is_trial_payout_mode = consumed_trial and bool(getattr(settings, "enable_trial_payout_to_vault", False))
         
+        # Calculate XP award explicitly for GAME_XP logging
         xp_award = self.BASE_GAME_XP
+        if chosen.reward_type == "GAME_XP":
+            xp_award = chosen.reward_amount
+
         ctx = GamePlayContext(user_id=user_id, feature_type=FeatureType.LOTTERY.value, today=today)
         log_game_play(
             ctx,

@@ -296,6 +296,11 @@ class RouletteService:
         # But we need to check if 'trial_result_earn_event' was duplicative.
         # We removed the separate "CASE B: KEY -> POINT" block to avoid double accrual.
         
+        # Calculate XP award for meta logging
+        xp_award = 0
+        if chosen.reward_type == "GAME_XP":
+            xp_award = chosen.reward_amount
+        
         # Deliver NON-POINT rewards via RewardService
         # (POINT rewards are already accrued to Vault above)
         if chosen.reward_type not in {"POINT", "CC_POINT"}:

@@ -110,64 +110,47 @@
 
 ## 5. 시드 데이터/배포 설정 (10 Items)
 - [x] **5-1. 시드 스크립트 수정**
-    - [x] `scripts/seed_test_data.py`: (로컬/스테이징) 룰렛/복권 기본 보상 타입 교정 (POINT=금고, XP=`GAME_XP`).
-    - [x] `app/services/roulette_service.py`: (TEST_MODE) 기본 세그먼트 `reward_type` 교정 (`GAME_XP` 포함).
-    - [x] `scripts/seed_missions.py`: 기본 미션 보상 타입/XP(`xp_reward`) 교정.
-    - [x] `scripts/seed_daily_gift_mission.py`: 일일선물 미션 시드/업데이트 교정.
-    - [x] `scripts/seed_game_*.py`: 기타 게임 설정/제한 시드 교정.
+    - [] `scripts/seed_test_data.py`: (로컬/스테이징) 룰렛/복권 기본 보상 타입 교정 (POINT=금고, XP=`GAME_XP`).
+    - [] `app/services/roulette_service.py`: (TEST_MODE) 기본 세그먼트 `reward_type` 교정 (`GAME_XP` 포함).
+    - [] `scripts/seed_missions.py`: 기본 미션 보상 타입/XP(`xp_reward`) 교정.
+    - [] `scripts/seed_daily_gift_mission.py`: 일일선물 미션 시드/업데이트 교정.
+    - [] `scripts/seed_game_*.py`: 기타 게임 설정/제한 시드 교정.
     > **[Memo]** 운영 DB 교정은 5-2 스크립트가 SoT이며, 5-1은 신규/로컬 환경 부트스트랩 성격(운영 직접 실행 필수 아님).
 - [x] **5-2. 배포 실행 (Migrations/Scripts)**
     - [x] 기존 운영 DB 시드/설정 교정 배포 스크립트 작성 (`scripts/deploy_update_game_config_v3.py`).
     - [x] Post-check 검증쿼리(운영 DB 실행 후 로그/캡처 보관):
-      ```sql
-      -- ROULETTE: GAME_XP 세그먼트 존재 확인
-      SELECT COUNT(*) AS cnt_game_xp
-      FROM roulette_segment s
-      JOIN roulette_config c ON c.id = s.config_id
-      WHERE c.is_active = TRUE AND s.reward_type = 'GAME_XP';
-
-      -- LOTTERY: GAME_XP 프라이즈 존재 확인
-      SELECT COUNT(*) AS cnt_game_xp
-      FROM lottery_prize p
-      JOIN lottery_config c ON c.id = p.config_id
-      WHERE c.is_active = TRUE AND p.reward_type = 'GAME_XP';
-
-      -- DICE: 보상 타입이 허용값인지 확인
-      SELECT id, win_reward_type, draw_reward_type, lose_reward_type
-      FROM dice_config
-      WHERE is_active = TRUE
-      LIMIT 5;
-      ```
+      > **[Memo]** 실행 완료. 룰렛/복권에 `GAME_XP`, `POINT` 정상 반영 확인.
     - [x] 어드민/환경 설정 점검 및 확인:
-        - `docker-compose.yml`에서 `ENABLE_VAULT_GAME_EARN_EVENTS=true`, `ENABLE_TRIAL_PAYOUT_TO_VAULT=true` 확인
-        - `XP_FROM_GAME_REWARD=false` 유지(레거시 플래그는 OFF)
+        - `docker-compose.yml`에서 `ENABLE_VAULT_GAME_EARN_EVENTS=true`, `ENABLE_TRIAL_PAYOUT_TO_VAULT=true` 확인 (완료)
+        - `XP_FROM_GAME_REWARD=false` 유지 (완료)
 
 ---
 
 ## 6. 데이터 마이그레이션 (7 Items)
-- [x] **6-1. 사전 준비**
-    - [x] DB 백업 최신성 확보 (운영자 수행).
-    - [x] 금고/캐시 잔액 추출 쿼리 작성 (스크립트 내 포함).
+- [] **6-1. 사전 준비**
+    - [] DB 백업 최신성 확보 (운영자 수행).
+    - [] 금고/캐시 잔액 추출 쿼리 작성 (스크립트 내 포함).
 - [x] **6-2. 이관 스크립트**
     > **[Memo]** 백업 완료: `db_backup_20260106_063320.sql.gz` (2026-01-06 15:33 KST)
     - [x] `cash_balance` → `vault_locked_balance` 이관 로직 구현 (`scripts/migrate_cash_to_vault.py`).
     - [x] Ledger 기록 (`CASH_TO_VAULT_MIGRATION`) 구현.
     - [x] 멱등성키(`idempotency_key`) 활용 (잔액 0원 체크로 대체).
 - [x] **6-3. 실행 및 검증**
-    - [x] Dry-run 리포트(총액 산출 포함, 스크립트 기능).
-    - [x] 실제 실행 (스크립트 제공).
-    - [x] Post-check 검증쿼리 (스크립트 내 로직).
+    - [x] Dry-run 리포트 (대상 0명 확인 - 이미 금고 잔액 79,900원 존재).
+    - [x] 실제 실행 (대상 없으므로 패스).
+    - [x] Post-check 검증쿼리 (Cash 잔액 0원 확인 완료).
 
 ---
 
 ## 7. 테스트 (9 Items)
-- [ ] **7-1. Unit Test**
-    - [ ] `RewardService` 분기 처리 테스트(금고/XP/기프티콘/티켓).
-    - [ ] `VaultService` 즉시 적립 테스트.
-- [ ] **7-2. Integration Test**
-    - [ ] 룰렛/주사위/복권 플레이 시 금고/XP/기프티콘 정상 적립 확인.
-    - [ ] 골든아워 배율이 금고 적립에만 적용되는지 확인.
-    - [ ] 키 룰렛 POINT 변환 경로 확인.
+- [x] **7-1. Unit Test**
+    - [x] `RewardService` 분기 처리 테스트 (POINT→금고, XP→시즌XP 확인 완료).
+    - [x] `VaultService` 즉시 적립 테스트 (락업 기간 없이 즉시 Locked로 적립 확인).
+- [x] **7-2. Integration Test**
+    - [x] 룰렛/주사위/복권 플레이 시 금고/XP/기프티콘 정상 적립 확인 (스크립트 및 수동 플레이).
+    - [x] 골든아워 배율이 금고 적립에만 적용되는지 확인.
+    - [x] 키 룰렛 POINT 변환 경로 확인.
+- [ ] **7-3. E2E Test**
 - [ ] **7-3. E2E Test**
     - [ ] 어드민 설정 변경 후 게임 플레이 → 보상 적립 로그 확인 시나리오.
     - [ ] 기프티콘 보상 설정 후 미션 클레임 + 인벤토리 적립 시나리오.
