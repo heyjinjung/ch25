@@ -104,6 +104,10 @@ class CrmStatsResponse(BaseModel):
     roulette_spins: int = 0
     dice_rolls: int = 0
     avg_vault_balance: float = 0.0
+    
+    # NEW: Financial KPIs (2026-01-03)
+    total_deposit_amount: int = 0
+    total_play_count: int = 0
 
 @router.get("/stats", response_model=CrmStatsResponse)
 def get_crm_stats(db: Session = Depends(get_db)):

@@ -48,9 +48,13 @@ class User(Base):
     # [Retention] Ticket Zero Cooldown
     last_free_ticket_claimed_at = Column(DateTime, nullable=True)
 
-    # [Retention] Play streak
+    # [Retention] Play streak (Game Play)
     play_streak = Column(Integer, nullable=False, server_default="0", default=0)
     last_play_date = Column(Date, nullable=True)
+
+    # [Retention] Login Streak (App Open) - Grinder Rule
+    login_streak = Column(Integer, nullable=False, server_default="0", default=0)
+    last_streak_updated_at = Column(DateTime, nullable=True)
 
     # [Retention] Streak vault bonus window (per operational day)
     streak_vault_bonus_date = Column(Date, nullable=True)

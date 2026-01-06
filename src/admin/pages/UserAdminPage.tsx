@@ -25,13 +25,14 @@ type MemberRow = AdminUser & {
     telegram_username: string;
     memo: string;
     tags: string;
+    login_streak: number;
   };
   passwordReset?: string;
 };
 
 const ITEMS_PER_PAGE = 10;
 
-type SortKey = "id" | "nickname" | "level" | "xp" | "status";
+type SortKey = "id" | "nickname" | "level" | "xp" | "status" | "login_streak";
 type SortDirection = "asc" | "desc";
 
 const mapErrorDetail = (error: unknown): string => {
@@ -168,6 +169,7 @@ const UserAdminPage: React.FC = () => {
       if (sortKey === "status") return compareText(String(a.status ?? ""), String(b.status ?? ""));
       if (sortKey === "level") return compareNumber(a.season_level ?? a.level ?? 1, b.season_level ?? b.level ?? 1);
       if (sortKey === "xp") return compareNumber(a.xp ?? 0, b.xp ?? 0);
+      if (sortKey === "login_streak") return compareNumber(a.login_streak ?? 0, b.login_streak ?? 0);
       return 0;
     });
     return list;
@@ -225,6 +227,7 @@ const UserAdminPage: React.FC = () => {
               telegram_username: m.telegram_username ?? "",
               memo: m.admin_profile?.memo ?? "",
               tags: (m.admin_profile?.tags ?? []).join(", "),
+              login_streak: m.login_streak ?? 0,
             },
           };
         }
@@ -252,6 +255,7 @@ const UserAdminPage: React.FC = () => {
         const nextDraft = { ...base } as any;
         if (field === "level") nextDraft.level = clampNumber(value, 1, 1);
         else if (field === "xp") nextDraft.xp = clampNumber(value, 0, 0);
+        else if (field === "login_streak") nextDraft.login_streak = clampNumber(value, 0, 0);
         else nextDraft[field] = String(value);
         return { ...m, draft: nextDraft };
       })
@@ -265,6 +269,7 @@ const UserAdminPage: React.FC = () => {
       level: row.draft.level,
       season_level: row.draft.level, // Sync both for backend compatibility
       xp: row.draft.xp,
+      login_streak: row.draft.login_streak,
       status: row.draft.status,
       telegram_id: row.draft.telegram_id ? parseInt(row.draft.telegram_id) : null,
       telegram_username: row.draft.telegram_username,
@@ -617,6 +622,13 @@ const UserAdminPage: React.FC = () => {
                       XP{renderSortIcon("xp")}
                     </th>
                     <th
+                      className={`px-3 py-3 text-left text-xs font-medium uppercase tracking-wider sm:px-4 ${sortKey === "login_streak" ? "bg-[#2D6B3B] text-[#91F402]" : "text-gray-400"
+                        } cursor-pointer hover:bg-[#2D6B3B]`}
+                      onClick={() => handleSort("login_streak")}
+                    >
+                      Streak{renderSortIcon("login_streak")}
+                    </th>
+                    <th
                       className={`px-3 py-3 text-left text-xs font-medium uppercase tracking-wider sm:px-4 ${sortKey === "status" ? "bg-[#2D6B3B] text-[#91F402]" : "text-gray-400"
                         } cursor-pointer hover:bg-[#2D6B3B]`}
                       onClick={() => handleSort("status")}
@@ -684,6 +696,21 @@ const UserAdminPage: React.FC = () => {
                           />
                         ) : (
                           member.xp ?? 0
+                        )}
+                      </td>
+                      <td className="px-3 py-3 whitespace-nowrap text-sm text-white sm:px-4">
+                        {member.isEditing ? (
+                          <input
+                            type="number"
+                            min={0}
+                            value={member.draft?.login_streak ?? 0}
+                            onChange={(e) => updateDraftField(member.id, "login_streak", e.target.value)}
+                            className="w-16 rounded-md border border-[#333333] bg-[#1A1A1A] p-1.5 text-right text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
+                          />
+                        ) : (
+                          <span className={`${(member.login_streak || 0) >= 3 ? "text-[#91F402] font-bold" : "text-gray-400"}`}>
+                            {member.login_streak ?? 0}
+                          </span>
                         )}
                       </td>
                       <td className="px-3 py-3 whitespace-nowrap text-sm sm:px-4">

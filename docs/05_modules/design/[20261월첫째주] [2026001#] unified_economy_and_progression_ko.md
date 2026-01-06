@@ -252,7 +252,7 @@ graph TD
 | Reward Type | Internal Action | 비고 |
 | :--- | :--- | :--- |
 | **POINT** | (옵션) `SeasonPassService.add_bonus_xp` | 게임 보상(`dice_play/roulette_spin/lottery_play`)의 POINT는 기본적으로 **무시됨**(설정 `xp_from_game_reward=false` 기준). 필요 시 옵션으로 XP 전환 가능. |
-| **CC_POINT** | **REMOVED (No-op)** | 폐기됨. 현재 `RewardService.deliver`에서 즉시 return (지급/적립 없음). |
+| **CC_POINT** | `vault_locked_balance` 즉시 적립 | 외부 플랫폼 포인트성 보상. 즉시 지급 대신 금고(locked)로 적립되며 운영/정산 플로우에 맞춰 처리. |
 | **BUNDLE** / **TICKET_BUNDLE** | `grant_ticket` (Multiple) | 레벨업 보상 등. 룰렛 코인 + 다이스 토큰 등을 세트로 지급합니다. |
 | **COUPON** | **REMOVED (No-op)** | 폐기됨. `grant_coupon`은 동작하지 않음. |
 | **TICKET_ROULETTE** | `GameTokenType.ROULETTE_COIN` | 룰렛 이용권. |

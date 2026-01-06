@@ -24,9 +24,10 @@ if (import.meta.env.DEV) {
   });
 }
 
-// 2. eruda Debug Console (via ?debug=1 query param or localStorage)
+// 2. eruda Debug Console (via ?debug=1 query param, localStorage, or Telegram start_param)
 const urlParams = new URLSearchParams(window.location.search);
-const debugMode = urlParams.get("debug") === "1" || localStorage.getItem("debug") === "1";
+const tgStartParam = window.Telegram?.WebApp?.initDataUnsafe?.start_param;
+const debugMode = urlParams.get("debug") === "1" || localStorage.getItem("debug") === "1" || tgStartParam === "debug";
 if (debugMode) {
   const script = document.createElement("script");
   script.src = "https://cdn.jsdelivr.net/npm/eruda";

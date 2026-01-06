@@ -26,6 +26,19 @@ export const GuideProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
   });
 
+  // Cloud Sync: Load initial state
+  React.useEffect(() => {
+    const tg = window.Telegram?.WebApp;
+    if (tg?.CloudStorage) {
+      tg.CloudStorage.getItem("guide_seen", (err: any, value: string | null) => {
+        if (!err && value === "1") {
+          setHasSeenGuide(true);
+          try { localStorage.setItem(GUIDE_SEEN_KEY, "1"); } catch { }
+        }
+      });
+    }
+  }, []);
+
   const startGuide = useCallback(() => {
     setStepIndex(0);
     setIsGuideRunning(true);
@@ -40,6 +53,8 @@ export const GuideProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     try {
       localStorage.setItem(GUIDE_SEEN_KEY, "1");
       setHasSeenGuide(true);
+      // Cloud Sync
+      window.Telegram?.WebApp?.CloudStorage?.setItem("guide_seen", "1");
     } catch {
       // ignore
     }

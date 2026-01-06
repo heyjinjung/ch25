@@ -399,6 +399,13 @@ class Settings(BaseSettings):
         extra="ignore",  # Ignore extra fields not defined in the model
     )
 
+    # Team Battle Grinder Rule
+    team_battle_points_per_play: int = Field(1, validation_alias=AliasChoices("TEAM_BATTLE_POINTS_PER_PLAY", "team_battle_points_per_play"))
+    team_battle_daily_play_cap: int = Field(100, validation_alias=AliasChoices("TEAM_BATTLE_DAILY_PLAY_CAP", "team_battle_daily_play_cap"))
+    team_battle_streak_3d_bonus: int = Field(10, validation_alias=AliasChoices("TEAM_BATTLE_STREAK_3D_BONUS", "team_battle_streak_3d_bonus"))
+    team_battle_streak_7d_bonus: int = Field(30, validation_alias=AliasChoices("TEAM_BATTLE_STREAK_7D_BONUS", "team_battle_streak_7d_bonus"))
+    team_battle_all_clear_bonus: int = Field(50, validation_alias=AliasChoices("TEAM_BATTLE_ALL_CLEAR_BONUS", "team_battle_all_clear_bonus"))
+
 
 @lru_cache
 def get_settings() -> Settings:

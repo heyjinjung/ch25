@@ -212,6 +212,10 @@ class AdminUserService:
             user.telegram_id = update_data["telegram_id"]
         if "telegram_username" in update_data:
             user.telegram_username = AdminUserService._clean_telegram_username(update_data["telegram_username"])
+        if "login_streak" in update_data:
+            user.login_streak = update_data["login_streak"]
+        if "last_streak_updated_at" in update_data:
+            user.last_streak_updated_at = update_data["last_streak_updated_at"]
 
         # Keep legacy admin_profile.telegram_id (string) aligned when we can.
         # Source of truth is user.telegram_id.

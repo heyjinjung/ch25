@@ -31,6 +31,7 @@ class AuthUser(BaseModel):
     status: str | None = None
     level: int | None = None
     telegram_id: int | None = None
+    login_streak: int = 0
 
 
 class TokenResponse(BaseModel):
@@ -81,7 +82,58 @@ def issue_token(payload: TokenRequest, request: Request, db: Session = Depends(g
         except Exception:
             pass # Do not block login
 
-        
+        # [Grinder Rule] Streak Logic
+        try:
+            from app.services.team_battle_service import TeamBattleService
+            from app.core.config import get_settings
+            
+            kst = ZoneInfo(get_settings().timezone)
+            now_kst = datetime.now(kst)
+            today_kst = now_kst.date()
+            
+            last_streak_date = None
+            if user.last_streak_updated_at:
+                # Ensure UTC awareness for correct conversion
+                base_time = user.last_streak_updated_at
+                if base_time.tzinfo is None:
+                    base_time = base_time.replace(tzinfo=timezone.utc)
+                last_streak_date = base_time.astimezone(kst).date()
+            
+            # Update streak if it's a new day
+            if last_streak_date != today_kst:
+                if last_streak_date == today_kst - timedelta(days=1):
+                    user.login_streak += 1
+                else:
+                    user.login_streak = 1  # Reset to 1 (Day 1)
+                
+                user.last_streak_updated_at = datetime.utcnow()
+                
+                # Check for Streak Bonus (3 days, 7 days)
+                settings = get_settings()
+                bonus_points = 0
+                if user.login_streak == 3:
+                     bonus_points = settings.team_battle_streak_3d_bonus
+                elif user.login_streak == 7:
+                     bonus_points = settings.team_battle_streak_7d_bonus
+                
+                if bonus_points > 0:
+                     svc = TeamBattleService()
+                     member = svc.get_membership(db, user.id)
+                     if member:
+                         svc.add_points(
+                             db, 
+                             team_id=member.team_id, 
+                             delta=bonus_points, 
+                             action="STREAK_BONUS", 
+                             user_id=user.id, 
+                             season_id=None, 
+                             meta={"streak": user.login_streak},
+                             enforce_usage=False
+                         )
+        except Exception as e:
+            # Prevent login failure due to streak system errors
+            print(f"Streak update failed: {e}")
+
         user.last_login_at = datetime.utcnow()
         user.last_login_ip = client_ip
 
@@ -110,5 +162,6 @@ def issue_token(payload: TokenRequest, request: Request, db: Session = Depends(g
             status=user.status,
             level=user.level,
             telegram_id=user.telegram_id,
+            login_streak=user.login_streak,
         ),
     )

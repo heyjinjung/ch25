@@ -14,6 +14,8 @@ export interface AdminUserPayload {
   admin_profile?: AdminUserProfile;
   telegram_id?: number | null;
   telegram_username?: string | null;
+  login_streak?: number;
+  last_streak_updated_at?: string;
 }
 
 export interface AdminUserProfile {
@@ -31,6 +33,8 @@ export interface AdminUser extends AdminUserPayload {
   admin_profile?: AdminUserProfile;
   telegram_id?: number | null;
   telegram_username?: string | null;
+  login_streak?: number;
+  last_streak_updated_at?: string;
 }
 
 export interface ImportResult {

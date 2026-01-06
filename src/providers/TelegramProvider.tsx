@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 declare global {
     interface Window {
@@ -22,6 +23,45 @@ interface TelegramContextType {
 }
 
 const TelegramContext = createContext<TelegramContextType | null>(null);
+
+const TelegramNavigationHandler = () => {
+    const navigate = useNavigate();
+    const location = useLocation();
+    const { webApp } = useTelegram();
+
+    useEffect(() => {
+        if (!webApp) return;
+
+        // 1. BackButton Logic
+        const handleBack = () => {
+            console.log('[Telegram] BackButton clicked');
+            navigate(-1);
+        };
+
+        webApp.BackButton.onClick(handleBack);
+
+        // 2. MainButton Logic - Force Hide as per requirements
+        webApp.MainButton.hide();
+
+        return () => {
+            webApp.BackButton.offClick(handleBack);
+        };
+    }, [webApp, navigate]);
+
+    useEffect(() => {
+        if (!webApp) return;
+
+        // Show BackButton if not on home/root
+        const isRoot = location.pathname === '/' || location.pathname === '/home';
+        if (isRoot) {
+            webApp.BackButton.hide();
+        } else {
+            webApp.BackButton.show();
+        }
+    }, [webApp, location]);
+
+    return null;
+};
 
 export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [isReady, setIsReady] = useState(false);
@@ -66,6 +106,7 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     return (
         <TelegramContext.Provider value={value}>
+            <TelegramNavigationHandler />
             {children}
         </TelegramContext.Provider>
     );

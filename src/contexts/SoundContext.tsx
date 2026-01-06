@@ -56,6 +56,8 @@ export const useSoundContext = () => {
     return context;
 };
 
+
+
 interface RetryItem {
     src: string;
     options?: { volume?: number; speed?: number };
@@ -70,6 +72,38 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     });
     const [bgmVolume, setBgmVolumeState] = useState(0.5);
     const [sfxVolume, setSfxVolumeState] = useState(0.5);
+
+    // Cloud Sync: Load initial state
+    useEffect(() => {
+        const tg = window.Telegram?.WebApp;
+        if (tg?.CloudStorage) {
+            tg.CloudStorage.getItem("sound_muted", (err: any, value: string | null) => {
+                if (!err && value !== null) {
+                    const cloudMuted = value === "true";
+                    setIsMuted(prev => {
+                        if (prev !== cloudMuted) {
+                            console.log("[SOUND] Synced mute state from CloudStorage:", cloudMuted);
+                            return cloudMuted;
+                        }
+                        return prev;
+                    });
+                }
+            });
+            tg.CloudStorage.getItem("bgm_volume", (err: any, value: string | null) => {
+                if (!err && value !== null) {
+                    const vol = parseFloat(value);
+                    if (!isNaN(vol)) setBgmVolumeState(vol);
+                }
+            });
+            tg.CloudStorage.getItem("sfx_volume", (err: any, value: string | null) => {
+                if (!err && value !== null) {
+                    const vol = parseFloat(value);
+                    if (!isNaN(vol)) setSfxVolumeState(vol);
+                }
+            });
+        }
+    }, []);
+
     const [isReady, setIsReady] = useState(false);
     const [retryQueue, setRetryQueue] = useState<RetryItem[]>([]);
     const [lastError, setLastError] = useState<string | null>(null);
@@ -178,14 +212,22 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     useEffect(() => {
         Howler.mute(isMuted);
         localStorage.setItem("sound_muted", JSON.stringify(isMuted));
+        // Cloud Sync
+        window.Telegram?.WebApp?.CloudStorage?.setItem("sound_muted", JSON.stringify(isMuted));
     }, [isMuted]);
 
     const toggleMute = useCallback(() => setIsMuted(prev => !prev), []);
     const setBgmVolume = useCallback((vol: number) => {
         setBgmVolumeState(vol);
         if (bgmRef.current) bgmRef.current.volume(vol);
+        // Cloud Sync
+        window.Telegram?.WebApp?.CloudStorage?.setItem("bgm_volume", String(vol));
     }, []);
-    const setSfxVolume = useCallback((vol: number) => setSfxVolumeState(vol), []);
+    const setSfxVolume = useCallback((vol: number) => {
+        setSfxVolumeState(vol);
+        // Cloud Sync
+        window.Telegram?.WebApp?.CloudStorage?.setItem("sfx_volume", String(vol));
+    }, []);
 
     const playBgm = useCallback((src: string) => {
         recordE2eSoundEvent({ kind: "bgm", src });

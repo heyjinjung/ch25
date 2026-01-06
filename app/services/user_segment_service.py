@@ -414,7 +414,22 @@ class UserSegmentService:
         avg_active_days_result = db.query(func.avg(AdminUserProfile.total_active_days)).filter(
             AdminUserProfile.total_active_days != None
         ).scalar()
-        avg_active_days = round(float(avg_active_days_result), 1) if avg_active_days_result else 0
+        
+        avg_active_days = 0
+        if avg_active_days_result:
+            avg_active_days = round(float(avg_active_days_result), 1)
+        else:
+            # Fallback: Avg Tenure (Days since created_at)
+            # MySQL: DATEDIFF(NOW(), created_at)
+            # SQLite: julian day diff? kept simple for now
+            try:
+                # Attempt MySQL syntax first
+                avg_tenure = db.query(func.avg(func.datediff(func.now(), User.created_at))).scalar()
+                if avg_tenure:
+                    avg_active_days = round(float(avg_tenure), 1)
+            except:
+                # Fallback for SQLite or other DBs if datediff fails
+                pass
 
         # 15. Charge Risk Segments (based on days_since_last_charge)
         # Low Risk: < 7 days, Medium: 7-30 days, High: > 30 days

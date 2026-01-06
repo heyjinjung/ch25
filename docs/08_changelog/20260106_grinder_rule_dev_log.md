@@ -69,3 +69,27 @@
     *   '활동 대장(Grinder Ranking)' 탭 추가.
 3.  **배포**:
     *   프로덕션 DB 마이그레이션 및 앱 배포.
+
+---
+
+## 5. 추가 구현: 웹앱 인프라 및 UX 개선 (WebApp Infrastructure & UX Logic)
+사용자 편의성 및 디바이스 간 경험 일관성을 위한 텔레그램 웹앱(TWA) 연동 기능을 추가 구현하였습니다.
+
+### 5.1 클라우드 저장소 동기화 (CloudStorage Sync)
+*   **목적**: 로컬 스토리지(`localStorage`)에만 저장되던 사용자 설정을 텔레그램 클라우드에 백업하여, 기기 변경이나 앱 재설치 시에도 설정이 유지되도록 함.
+*   **구현 내용**:
+    *   `SoundContext.tsx`: 배경음/효과음 볼륨 및 음소거 여부를 `WebApp.CloudStorage`와 양방향 동기화.
+    *   `GuideContext.tsx`: 신규 유저 가이드(튜토리얼) 완료 여부를 클라우드에 저장.
+
+### 5.2 내비게이션 및 UI 최적화 (Navigation & UI)
+*   **BackButton 연동**:
+    *   `TelegramProvider.tsx`에서 텔레그램 네이티브 뒤로가기 버튼(`WebApp.BackButton`) 이벤트를 수신.
+    *   `react-router-dom`의 `navigate(-1)`과 연결하여 물리적 뒤로가기 경험 제공.
+    *   Root 경로(`/`, `/home`)에서는 숨기고, 하위 페이지 진입 시 자동으로 노출되도록 동적 제어.
+*   **MainButton 제어**:
+    *   현재 가상 포인트 경제 시스템 단계에서는 결제 프로세스가 없으므로 하단 메인 버튼(`WebApp.MainButton`)을 전역 비활성(Hide) 처리.
+
+### 5.3 개발자 도구 확장 (Developer Tools)
+*   **인앱 디버깅 (Eruda)**:
+    *   기존 URL 쿼리 파라미터 방식 외에, 텔레그램 실행 링크 파라미터(`startapp=debug`) 감지 로직 추가.
+    *   모바일 환경에서 `https://t.me/.../app?startapp=debug` 형태로 진입 시 즉시 개발자 콘솔 활성화 가능.

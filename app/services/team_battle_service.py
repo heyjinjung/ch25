@@ -15,11 +15,17 @@ from app.core.config import get_settings
 
 
 class TeamBattleService:
-    POINTS_PER_PLAY = 10
-    DAILY_POINT_CAP = 500  # 50 plays per day
+    @property
+    def POINTS_PER_PLAY(self) -> int:
+        return get_settings().team_battle_points_per_play
+
+    @property
+    def DAILY_POINT_CAP(self) -> int:
+        return get_settings().team_battle_daily_play_cap
+
     TEAM_SELECTION_WINDOW_HOURS = 24
     TEAM_MAX_MEMBERS = 7
-    MIN_PLAYS_FOR_REWARD = 30
+    MIN_POINTS_FOR_REWARD = 300  # Fixed 300 points as per Grinder Rule
     DEFAULT_WEIGHT_DEPOSIT = 0.6
     DEFAULT_WEIGHT_PLAY = 0.4
 
@@ -578,7 +584,7 @@ class TeamBattleService:
             team_contrib = contrib_map.setdefault(row.team_id, {})
             team_contrib[row.user_id] = row.points
 
-        min_points = self.MIN_PLAYS_FOR_REWARD * self.POINTS_PER_PLAY
+        min_points = self.MIN_POINTS_FOR_REWARD
 
         def eligible_users_for_team(team_id: int) -> list[dict]:
             users: list[dict] = []
