@@ -16,6 +16,24 @@ import {
 import { REWARD_TYPES } from "../constants/rewardTypes";
 import { useToast } from "../../components/common/ToastProvider";
 
+const gifticonBrands = [
+  { value: "CC_COIN", label: "씨씨코인" },
+  { value: "BAEMIN", label: "배민" },
+  { value: "STARBUCKS", label: "스타벅스" },
+  { value: "CU", label: "CU" },
+  { value: "GS25", label: "GS25" },
+  { value: "CUSTOM", label: "직접입력" },
+] as const;
+
+const isGifticonType = (value?: string | null) => Boolean(value && value.toUpperCase().includes("GIFTICON"));
+const getGifticonBrand = (value?: string | null) => {
+  if (!isGifticonType(value)) return "";
+  const raw = String(value ?? "");
+  const brand = raw.replace(/_GIFTICON.*/i, "");
+  return brand || "";
+};
+const buildGifticonType = (brand: string) => `${brand}_GIFTICON`;
+
 const segmentSchema = z.object({
   label: z.string().min(1, "라벨을 입력하세요"),
   weight: z.number().int().nonnegative("가중치는 0 이상"),
@@ -483,17 +501,60 @@ const RouletteConfigPage: React.FC = () => {
                                 );
                               })()}
                             </td>
-                            <td className="px-3 py-2">
-                              <select
-                                className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
-                                {...form.register(`segments.${idx}.reward_type`)}
-                              >
-                                {REWARD_TYPES.map((rt) => (
-                                  <option key={rt.value} value={rt.value}>
-                                    {rt.label}
-                                  </option>
-                                ))}
-                              </select>
+                            <td className="px-3 py-2 space-y-2">
+                              {(() => {
+                                const rewardType = form.watch(`segments.${idx}.reward_type`);
+                                const isGifticon = isGifticonType(rewardType);
+                                const brand = getGifticonBrand(rewardType);
+                                const customBrand = brand && !gifticonBrands.some((b) => b.value === brand) ? brand : "";
+                                return (
+                                  <>
+                                    <select
+                                      className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
+                                      value={rewardType}
+                                      onChange={(e) => form.setValue(`segments.${idx}.reward_type`, e.target.value)}
+                                    >
+                                      {REWARD_TYPES.map((rt) => (
+                                        <option key={rt.value} value={rt.value}>
+                                          {rt.label}
+                                        </option>
+                                      ))}
+                                    </select>
+
+                                    {isGifticon && (
+                                      <div className="space-y-2 rounded-md border border-[#333333] bg-[#181818] p-2">
+                                        <div className="flex gap-2">
+                                          <select
+                                            className="flex-1 rounded-md border border-[#333333] bg-[#111111] p-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
+                                            value={gifticonBrands.some((b) => b.value === brand) ? brand : "CUSTOM"}
+                                            onChange={(e) => {
+                                              const next = e.target.value;
+                                              if (next === "CUSTOM") return;
+                                              form.setValue(`segments.${idx}.reward_type`, buildGifticonType(next));
+                                            }}
+                                          >
+                                            {gifticonBrands.map((b) => (
+                                              <option key={b.value} value={b.value}>
+                                                {b.label}
+                                              </option>
+                                            ))}
+                                          </select>
+                                          {gifticonBrands.some((b) => b.value === brand) ? null : (
+                                            <input
+                                              type="text"
+                                              value={customBrand}
+                                              onChange={(e) => form.setValue(`segments.${idx}.reward_type`, buildGifticonType(e.target.value.trim() || "CUSTOM"))}
+                                              className="flex-1 rounded-md border border-[#333333] bg-[#111111] p-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
+                                              placeholder="브랜드 직접 입력"
+                                            />
+                                          )}
+                                        </div>
+                                        <p className="text-[11px] text-gray-500">브랜드/금액 자유 입력. 저장 시 item_type = {brand || "브랜드"}_GIFTICON_금액</p>
+                                      </div>
+                                    )}
+                                  </>
+                                );
+                              })()}
                             </td>
                             <td className="px-3 py-2">
                               <input

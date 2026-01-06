@@ -51,3 +51,30 @@ def test_deliver_point_routes_to_grant_point(session_factory):
 
     ledgers = db.query(UserCashLedger).filter(UserCashLedger.user_id == user.id).all()
     assert len(ledgers) == 0
+
+
+def test_deliver_point_season_pass_routes_to_vault_locked(session_factory):
+    os.environ["XP_FROM_GAME_REWARD"] = "false"
+    get_settings.cache_clear()
+
+    db = session_factory()
+    user = User(external_id="u3")
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    svc = RewardService()
+    svc.deliver(
+        db,
+        user_id=user.id,
+        reward_type="POINT",
+        reward_amount=50,
+        meta={"source": "SEASON_PASS_TEST", "reason": "SEASON_PASS_REWARD"},
+    )
+
+    updated = db.query(User).filter(User.id == user.id).one()
+    assert updated.vault_locked_balance == 50
+    assert updated.cash_balance == 0
+
+    ledgers = db.query(UserCashLedger).filter(UserCashLedger.user_id == user.id).all()
+    assert len(ledgers) == 0

@@ -347,14 +347,29 @@ class Vault2Service:
         if row is not None:
             return row
 
+        # [PHASE 1 SYNC] Sync initial state from User table (Legacy/V1 Source)
+        # Admins might interact with users who only have User-table balances.
+        from app.models.user import User
+        user = db.query(User).filter(User.id == user_id).one_or_none()
+        
+        initial_locked = int(getattr(user, "vault_locked_balance", 0) or 0) if user else 0
+        initial_available = int(getattr(user, "vault_available_balance", 0) or 0) if user else 0
+        initial_expires_at = getattr(user, "vault_locked_expires_at", None)
+
+        # Infer locked_at if meaningful
+        now_dt = datetime.utcnow()
+        initial_locked_at = None
+        if initial_locked > 0:
+            initial_locked_at = now_dt 
+
         row = VaultStatus(
             user_id=user_id,
             program_id=program.id,
             state="LOCKED",
-            locked_amount=0,
-            available_amount=0,
-            locked_at=None,
-            expires_at=None,
+            locked_amount=initial_locked,
+            available_amount=initial_available,
+            locked_at=initial_locked_at,
+            expires_at=initial_expires_at,
             progress_json=None,
         )
         db.add(row)
@@ -677,6 +692,23 @@ class Vault2Service:
             before={"locked": status.locked_amount, "available": status.available_amount},
             after={"locked": new_locked, "available": new_avail, "reason": reason},
         )
+
+        # Log to UserCashLedger for visibility (Unified Economy)
+        if locked_delta != 0:
+            from app.models.user_cash_ledger import UserCashLedger
+            ledger = UserCashLedger(
+                user_id=user_id,
+                delta=int(locked_delta),
+                balance_after=new_locked,
+                reason=reason or "ADMIN_ADJUST",
+                label="Admin Manual Adjust (Vault)",
+                meta_json={
+                    "asset_type": "VAULT",
+                    "admin_id": admin_id,
+                    "action": "update_balance"
+                }
+            )
+            db.add(ledger)
         
         status.locked_amount = new_locked
         status.available_amount = new_avail
@@ -755,6 +787,24 @@ class Vault2Service:
             before={"locked": prev_locked, "available": prev_available},
             after={"locked": next_locked, "available": next_available, "reason": reason},
         )
+
+        # Log to UserCashLedger if locked balance changed
+        locked_delta = next_locked - prev_locked
+        if locked_delta != 0:
+            from app.models.user_cash_ledger import UserCashLedger
+            ledger = UserCashLedger(
+                user_id=user_id,
+                delta=int(locked_delta),
+                balance_after=next_locked,
+                reason=reason or "ADMIN_SET_BALANCE",
+                label="Admin Set Balance (Vault)",
+                meta_json={
+                    "asset_type": "VAULT",
+                    "admin_id": admin_id,
+                    "action": "set_balance"
+                }
+            )
+            db.add(ledger)
 
         status.locked_amount = int(next_locked)
         status.available_amount = int(next_available)

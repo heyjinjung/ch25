@@ -345,7 +345,16 @@ class DiceService:
         streak_info = mission_service.get_streak_info(user_id)
 
         total_earn = 0
-        # Vault Phase 1: idempotent game accrual (safe-guarded by feature flag).
+        point_reward_amount = 0
+        if reward_type in {"POINT", "CC_POINT"} and reward_amount:
+            point_reward_amount = int(reward_amount)
+
+        # [REFACTORED V3] Unified Vault Accrual
+        # Point rewards are merged into vault accrual.
+        # If outcome is WIN/LOSE, VaultService calculates base amount, 
+        # BUT if we pass explicit reward_amount in payout_raw, it prioritizes it (if configured).
+        # We must ensure VaultService uses this amount if it's a monetary reward.
+        
         total_earn += self.vault_service.record_game_play_earn_event(
             db,
             user_id=user_id,
@@ -356,24 +365,14 @@ class DiceService:
             payout_raw={
                 "result": outcome,
                 "reward_type": reward_type,
-                "reward_amount": reward_amount,
+                "reward_amount": point_reward_amount if point_reward_amount > 0 else 0, # Pass only if valid point reward
                 "mode": mode,
             },
         )
 
-        # Trial: optionally route reward into Vault instead of direct payout.
+        # Trial Payout Logic (Legacy) -> Only for NON-POINT rewards
         settings = get_settings()
-        if consumed_trial and bool(getattr(settings, "enable_trial_payout_to_vault", False)):
-            total_earn += self.vault_service.record_trial_result_earn_event(
-                db,
-                user_id=user_id,
-                game_type=FeatureType.DICE.value,
-                game_log_id=log_entry.id,
-                token_type=token_type.value,
-                reward_type=reward_type,
-                reward_amount=reward_amount,
-                payout_raw={"result": outcome},
-            )
+        is_trial_payout_mode = consumed_trial and bool(getattr(settings, "enable_trial_payout_to_vault", False))
 
         xp_award = self.WIN_GAME_XP if outcome == "WIN" else self.BASE_GAME_XP
         ctx = GamePlayContext(user_id=user_id, feature_type=FeatureType.DICE.value, today=today)
@@ -389,9 +388,21 @@ class DiceService:
                 "mode": mode,
             },
         )
-
-        if not (consumed_trial and bool(getattr(settings, "enable_trial_payout_to_vault", False))):
-            self.reward_service.deliver(
+        
+        # Deliver NON-POINT rewards via RewardService
+        # (POINT rewards are already accrued to Vault above)
+        should_deliver = True
+        if reward_type in {"POINT", "CC_POINT"}:
+            should_deliver = False
+        
+        # Also respect trial policy for non-point items? 
+        # Actually trial policy says "route to vault". But if it's not point, it can't go to vault.
+        # So it must be delivered normally (e.g. Diamond).
+        # EXCEPT if trial mode suppresses non-vault rewards? 
+        # Let's keep it simple: If point, it's done. If not point, deliver it.
+        
+        if should_deliver:
+             self.reward_service.deliver(
                 db,
                 user_id=user_id,
                 reward_type=reward_type,

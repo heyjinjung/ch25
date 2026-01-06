@@ -250,7 +250,25 @@ class RouletteService:
         streak_info = mission_service.get_streak_info(user_id)
 
         total_earn = 0
-        # Vault Phase 1: idempotent game accrual (safe-guarded by feature flag).
+        # [REFACTORED V3] Unified Vault Accrual Strategy
+        # 1. Base Accrual: Fixed small amount (+200/-50) for playing.
+        # 2. Winning Reward: Huge points (e.g. 1000, 10000, 50000).
+        # Policy: If Reward is POINT, it SUPERSEDES the base accrual (or base is implicitly part of it).
+        # We invoke vault_service exactly once per play to ensuring atomicity.
+        
+        vault_accrual_amount = 0
+        point_reward_amount = 0
+        
+        if chosen.reward_type in {"POINT", "CC_POINT"}:
+            point_reward_amount = int(chosen.reward_amount)
+        
+        # Determine the effective vault accrual for this spin.
+        # If the user won POINTs, that amount IS the accrual.
+        # If the user hit NONE/Other, we rely on VaultService's default logic (-50 for loss, +200 default).
+        
+        # However, VaultService.record_game_play_earn_event logic currently looks at 'payout_raw.reward_amount'.
+        # If reward_amount is present, it uses that. If 0, it treats as LOSE (-50).
+        
         total_earn += self.vault_service.record_game_play_earn_event(
             db,
             user_id=user_id,
@@ -261,100 +279,37 @@ class RouletteService:
             payout_raw={
                 "segment_id": chosen.id,
                 "reward_type": chosen.reward_type,
-                "reward_amount": chosen.reward_amount,
+                "reward_amount": point_reward_amount if chosen.reward_type in {"POINT", "CC_POINT"} else 0,
             },
         )
 
         settings = get_settings()
         trial_payout_enabled = bool(getattr(settings, "enable_trial_payout_to_vault", False))
-        reward_type_upper = str(getattr(chosen, "reward_type", "") or "").upper()
-
-        # Trial payout-to-vault is an optional/legacy path. Even when enabled, we must not
-        # suppress inventory-type rewards (e.g., TRIAL roulette DIAMOND). Only route
-        # non-inventory rewards into Vault.
-        if consumed_trial and trial_payout_enabled and reward_type_upper not in {"DIAMOND"}:
-            total_earn += self.vault_service.record_trial_result_earn_event(
+        
+        # Trial/Key Special Routing (Legacy cleanup: ensure no double counting)
+        # The block above handles standard POINT accrual.
+        # Trial enabled logic is handled via vault_service internal checks or skipped if not needed.
+        
+        # [KEY REWARD SPECIAL HANDLING]
+        # If KEY spin resulted in POINT, logic above (record_game_play_earn_event) should have captured it 
+        # because point_reward_amount would be > 0.
+        # But we need to check if 'trial_result_earn_event' was duplicative.
+        # We removed the separate "CASE B: KEY -> POINT" block to avoid double accrual.
+        
+        # Deliver NON-POINT rewards via RewardService
+        # (POINT rewards are already accrued to Vault above)
+        if chosen.reward_type not in {"POINT", "CC_POINT"}:
+             # For Trial tokens, we might skip delivery if trial_payout_to_vault is ON and it was a monetary reward?
+             # But here we only enter if NOT point. So Diamond/Ticket/Coupon/Gifticon.
+             # These should always be delivered.
+             
+            self.reward_service.deliver(
                 db,
                 user_id=user_id,
-                game_type=FeatureType.ROULETTE.value,
-                game_log_id=log_entry.id,
-                token_type=token_type_enum.value,
                 reward_type=chosen.reward_type,
                 reward_amount=chosen.reward_amount,
-                payout_raw={"segment_id": chosen.id},
-                force_enable=False,  # Respect global setting for trial payouts
+                meta={"reason": "roulette_spin", "segment_id": chosen.id, "game_xp": xp_award},
             )
-
-
-        # Special Handling for Keys: always accrue to Vault (masquerade as POINT for vault logic)
-        # CASE A: The reward itself is a KEY (e.g. winning a key from a spin)
-        if chosen.reward_type in {"GOLD_KEY", "DIAMOND_KEY"} and chosen.reward_amount > 0:
-             total_earn += self.vault_service.record_trial_result_earn_event(
-                db,
-                user_id=user_id,
-                game_type=FeatureType.ROULETTE.value,
-                game_log_id=log_entry.id,
-                token_type=token_type_enum.value,
-                reward_type="POINT",  # Force POINT to ensure amount is used 1:1
-                reward_amount=chosen.reward_amount,
-                payout_raw={
-                    "segment_id": chosen.id,
-                    "original_reward_type": chosen.reward_type,
-                    "is_key_reward": True
-                },
-                force_enable=True, # Always accrue KEY rewards
-            )
-        # CASE B: The ticket used was a KEY, and the reward is POINT (e.g. 50,000 P)
-        elif token_type_enum in (GameTokenType.GOLD_KEY, GameTokenType.DIAMOND_KEY) and chosen.reward_type == "POINT" and chosen.reward_amount > 0:
-             total_earn += self.vault_service.record_trial_result_earn_event(
-                db,
-                user_id=user_id,
-                game_type=FeatureType.ROULETTE.value,
-                game_log_id=log_entry.id,
-                token_type=token_type_enum.value,
-                reward_type="POINT",
-                reward_amount=chosen.reward_amount,
-                payout_raw={
-                    "segment_id": chosen.id,
-                    "original_reward_type": chosen.reward_type,
-                    "is_key_spin_point": True
-                },
-                force_enable=True, # Always accrue KEY spin points
-            )
-
-        xp_award = self.BASE_GAME_XP
-        ctx = GamePlayContext(user_id=user_id, feature_type=FeatureType.ROULETTE.value, today=today)
-        log_game_play(
-            ctx,
-            db,
-            {
-                "segment_id": chosen.id,
-                "reward_type": chosen.reward_type,
-                "reward_amount": chosen.reward_amount,
-                "label": chosen.label,
-                "xp_from_reward": xp_award,
-            },
-        )
-
-        # Deliver reward according to segment definition (unless trial routing is enabled).
-        # Deliver reward according to segment definition (unless trial routing is enabled).
-        skip_direct_delivery = consumed_trial and trial_payout_enabled and reward_type_upper not in {"DIAMOND"}
-        if not skip_direct_delivery:
-            # [KEY REWARD REDIRECTION FIX]
-            # If the user used a GOLD_KEY or DIAMOND_KEY, and won POINTs, retrieve them as Vault Cash, NOT XP.
-            if token_type_enum in (GameTokenType.GOLD_KEY, GameTokenType.DIAMOND_KEY) and chosen.reward_type == "POINT":
-                 # Already accrued to vault via the special handling block added above?
-                 # Wait, the block above (lines 219-233) only handled chosen.reward_type IN {GOLD_KEY, DIAMOND_KEY}.
-                 # This block handles chosen.reward_type == "POINT" when ticket is Key.
-                 pass # Skip reward_service delivery for points, handled below explicitly if needed
-            else:
-                self.reward_service.deliver(
-                    db,
-                    user_id=user_id,
-                    reward_type=chosen.reward_type,
-                    reward_amount=chosen.reward_amount,
-                    meta={"reason": "roulette_spin", "segment_id": chosen.id, "game_xp": xp_award},
-                )
         if chosen.reward_amount > 0:
             self.season_pass_service.maybe_add_internal_win_stamp(db, user_id=user_id, now=today)
         season_pass = None  # 게임 1회당 자동 스탬프 발급을 중단하고, 조건 달성 시 별도 로직으로 처리

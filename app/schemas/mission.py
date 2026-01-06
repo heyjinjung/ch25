@@ -12,7 +12,7 @@ class MissionSchema(BaseModel):
     logic_key: str
     action_type: Optional[str] = None
     target_value: int
-    reward_type: str
+    reward_type: str  # POINT=금고 적립, GAME_XP=시즌 경험치 등
     reward_amount: int
     xp_reward: int = 0
     requires_approval: bool = False
@@ -54,7 +54,7 @@ class MissionCreate(BaseModel):
     logic_key: str
     action_type: Optional[str] = None
     target_value: int
-    reward_type: str
+    reward_type: str  # POINT=금고 적립, GAME_XP=시즌 경험치 등
     reward_amount: int
     xp_reward: int = 0
     requires_approval: bool = False
@@ -70,7 +70,7 @@ class MissionUpdate(BaseModel):
     logic_key: Optional[str] = None
     action_type: Optional[str] = None
     target_value: Optional[int] = None
-    reward_type: Optional[str] = None
+    reward_type: Optional[str] = None  # POINT=금고 적립, GAME_XP=시즌 경험치 등
     reward_amount: Optional[int] = None
     xp_reward: Optional[int] = None
     requires_approval: Optional[bool] = None

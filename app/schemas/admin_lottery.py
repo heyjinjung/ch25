@@ -11,7 +11,10 @@ class AdminLotteryPrizeBase(BaseModel):
     label: str
     weight: int
     stock: Optional[int] = None
-    reward_type: str
+    reward_type: str = Field(
+        ...,
+        description="보상 타입 (POINT=금고 적립, GAME_XP=시즌 경험치, 티켓/키/기프트콘 등 포함)",
+    )
     reward_value: int = Field(..., alias="reward_amount")
     is_active: bool = True
 

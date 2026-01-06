@@ -11,11 +11,20 @@ class AdminDiceConfigBase(BaseModel):
     name: str
     is_active: bool = True
     max_daily_plays: int
-    win_reward_type: str
+    win_reward_type: str = Field(
+        ...,
+        description="보상 타입 (POINT=금고 적립, GAME_XP=시즌 경험치 등)",
+    )
     win_reward_value: int = Field(..., alias="win_reward_amount")
-    draw_reward_type: str
+    draw_reward_type: str = Field(
+        ...,
+        description="보상 타입 (POINT=금고 적립, GAME_XP=시즌 경험치 등)",
+    )
     draw_reward_value: int = Field(..., alias="draw_reward_amount")
-    lose_reward_type: str
+    lose_reward_type: str = Field(
+        ...,
+        description="보상 타입 (POINT=금고 적립, GAME_XP=시즌 경험치 등)",
+    )
     lose_reward_value: int = Field(..., alias="lose_reward_amount")
 
     model_config = ConfigDict(from_attributes=True, validate_by_name=True)

@@ -238,50 +238,24 @@ class VaultService:
 
     @classmethod
     def _ensure_locked_expiry(cls, user: User, now: datetime) -> bool:
-        """Ensure `vault_locked_expires_at` is set when threshold is reached.
-
-        Phase 1.2 Policy:
-        - Timer starts ONLY when balance >= 10,000 (VAULT_SEED_AMOUNT).
-        - Timer is FIXED for the duration (24h) once set.
-        - Timer clears if balance drops below threshold (e.g., after payout).
-        - Timer clears if balance is zero.
+        """[DEPRECATED] Ensure `vault_locked_expires_at` is set when threshold is reached.
+        
+        Phase 3 Override: 
+        Vault expiration Logic is PERMANENTLY DISABLED. 
+        Points accumulate as an asset and do not expire.
         """
-        locked = int(getattr(user, "vault_locked_balance", 0) or 0)
-        expires_at = getattr(user, "vault_locked_expires_at", None)
-        threshold = cls.VAULT_SEED_AMOUNT
-
-        if locked < threshold:
-            if expires_at is not None:
-                user.vault_locked_expires_at = None
-                return True
-            return False
-
-        # If we reached threshold and no timer is set (or expired), start it.
-        if expires_at is None or expires_at <= now:
-            user.vault_locked_expires_at = cls._compute_locked_expires_at(now)
-            return True
-
-        # Timer is already active; do NOT extend (Fixed window).
+        # DISABLED
         return False
 
     @classmethod
     def _expire_locked_if_due(cls, user: User, now: datetime) -> bool:
-        """Expire locked balance when `vault_locked_expires_at` is due.
-
-        Phase 1: expiration applies only to locked balance.
-        Returns True if the user row was mutated.
+        """[DEPRECATED] Expire locked balance when `vault_locked_expires_at` is due.
+        
+        Phase 3 Override:
+        Vault expiration Logic is PERMANENTLY DISABLED.
         """
-        expires_at = getattr(user, "vault_locked_expires_at", None)
-        locked = int(getattr(user, "vault_locked_balance", 0) or 0)
-        if expires_at is None or locked <= 0:
-            return False
-        if expires_at > now:
-            return False
-
-        user.vault_locked_balance = 0
-        user.vault_locked_expires_at = None
-        cls.sync_legacy_mirror(user)
-        return True
+        # DISABLED
+        return False
 
     # Admin-only helpers for timer control
     @classmethod
@@ -693,10 +667,15 @@ class VaultService:
                             pass
                         amount = allowed
 
-        # Phase 1: clear expired locked first, then accrue.
-        self._expire_locked_if_due(user, now_dt)
+        # [REFACTORED] Vault Expiry Logic Disabled (Phase 3 Unified Economy)
+        # All points are accrued immediately and serve as a persistent asset.
+        
+        # Phase 1: clear expired locked first.
+        # self._expire_locked_if_due(user, now_dt)  <-- DISABLED
+        
         user.vault_locked_balance = int(user.vault_locked_balance or 0) + int(amount)
-        self._ensure_locked_expiry(user, now_dt)
+        
+        # self._ensure_locked_expiry(user, now_dt)  <-- DISABLED
         self.sync_legacy_mirror(user)
 
         bonus_amount = 0 # Phase 1: No bonus logic here yet
@@ -719,9 +698,28 @@ class VaultService:
             },
             created_at=now_dt,
         )
+        
+        # [NEW] Ledger Entry for Vault Accrual
+        # To maintain a trusted transaction history for all vault changes.
+        from app.models.user_cash_ledger import UserCashLedger  # pylint: disable=import-outside-toplevel
+        ledger_entry = UserCashLedger(
+            user_id=user.id,
+            delta=int(amount),
+            balance_after=user.vault_locked_balance,
+            reason="VAULT_ACCRUAL",
+            label=f"GAME:{str(game_type).upper()}",
+            meta_json={
+                "asset_type": "VAULT",
+                "earn_event_id": earn_event_id,
+                "game_log_id": game_log_id,
+                "game_type": str(game_type).upper()
+            },
+            created_at=now_dt
+        )
 
         db.add(user)
         db.add(event)
+        db.add(ledger_entry)
 
         # Observability: streak vault bonus application
         if eligible_for_streak_bonus and amount_before_multiplier == 200 and float(streak_multiplier) > 1.0:

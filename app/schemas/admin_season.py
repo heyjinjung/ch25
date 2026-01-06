@@ -62,7 +62,11 @@ class AdminSeasonListResponse(BaseModel):
 class AdminSeasonLevelBase(BaseModel):
     level: int = Field(..., ge=1)
     required_xp: int = Field(..., ge=0)
-    reward_type: str = Field(..., min_length=1)
+    reward_type: str = Field(
+        ...,
+        min_length=1,
+        description="보상 타입 (POINT=금고 적립, GAME_XP=시즌 경험치, 티켓/키/기프트콘 등)",
+    )
     reward_amount: int = Field(..., ge=0)
     auto_claim: bool = True
 

@@ -597,6 +597,7 @@ class SeasonPassService:
         user_id: int,
         xp_amount: int,
         now: date | datetime | None = None,
+        commit: bool = True,
     ) -> dict:
         """Add raw XP without stamping (used for game 보상 포인트 → XP)."""
 
@@ -658,6 +659,7 @@ class SeasonPassService:
                         reward_type=level.reward_type,
                         reward_amount=level.reward_amount,
                         meta=reward_meta,
+                        commit=commit # Propagate commit flag
                     )
                 except Exception:
                     # Reward delivery failure should not block XP flow; rely on logs for retry.
@@ -676,9 +678,6 @@ class SeasonPassService:
         if achieved_levels:
             progress.current_level = max(progress.current_level, max(level.level for level in achieved_levels))
 
-        db.commit()
-        db.refresh(progress)
-
         # [Level Unification] Sync season level and XP to user table
         user = db.get(User, user_id)
         if user:
@@ -686,7 +685,14 @@ class SeasonPassService:
                 user.level = progress.current_level
                 user.xp = progress.current_xp
                 db.add(user)
-                db.commit()
+
+        if commit:
+            db.commit()
+            db.refresh(progress)
+            if user:
+                db.refresh(user)
+        else:
+            db.flush()
 
         leveled_up = progress.current_level > previous_level
         return {

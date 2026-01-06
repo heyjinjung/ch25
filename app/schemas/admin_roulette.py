@@ -23,7 +23,10 @@ class AdminRouletteSegmentBase(BaseModel):
     index: int = Field(..., alias="slot_index")
     label: str
     weight: int
-    reward_type: str
+    reward_type: str = Field(
+        ...,
+        description="보상 타입 (POINT=금고 적립, GAME_XP=시즌 경험치, 티켓/키/기프트콘 등 포함)",
+    )
     reward_value: int = Field(..., alias="reward_amount")
     is_jackpot: bool = False
 

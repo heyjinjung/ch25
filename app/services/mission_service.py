@@ -651,81 +651,58 @@ class MissionService:
         if not user:
             return False, "User not found", 0
 
-        # Reward amounts are currently not modified by play streak.
-        # (Streak-based reward shaping is being redesigned.)
-        reward_amount = mission.reward_amount
-        xp_reward = mission.xp_reward
+        # [REFACTORED V3] Unified Reward Delivery via RewardService
+        # All rewards (including XP) are routed through RewardService.deliver with commit=False.
+        
+        target_reward_type = None
+        target_amount = mission.reward_amount
+        
+        # 1. Map MissionRewardType to RewardService Types
+        if mission.reward_type == MissionRewardType.CASH_UNLOCK:
+             target_reward_type = "POINT" # Vault Accrual
+        elif mission.reward_type == MissionRewardType.DIAMOND:
+             target_reward_type = "DIAMOND"
+        elif mission.reward_type == MissionRewardType.GOLD_KEY:
+             target_reward_type = "GOLD_KEY"
+        elif mission.reward_type == MissionRewardType.DIAMOND_KEY:
+             target_reward_type = "DIAMOND_KEY"
+        elif mission.reward_type == MissionRewardType.TICKET_BUNDLE:
+             # Legacy mapping: TICKET_BUNDLE -> LOTTERY_TICKET per original logic
+             target_reward_type = "LOTTERY_TICKET"
+        elif mission.reward_type == MissionRewardType.TICKET_ROULETTE:
+             target_reward_type = "ROULETTE_COIN"
+        elif mission.reward_type == MissionRewardType.TICKET_DICE:
+             target_reward_type = "DICE_TOKEN"
+        elif mission.reward_type == MissionRewardType.TICKET_LOTTERY:
+             target_reward_type = "LOTTERY_TICKET"
+             
+        # 2. Deliver Main Asset Reward
+        if target_reward_type and target_amount > 0:
+             from app.services.reward_service import RewardService
+             RewardService().deliver(
+                  self.db,
+                  user_id=user_id,
+                  reward_type=target_reward_type,
+                  reward_amount=target_amount,
+                  meta={
+                      "reason": "MISSION_REWARD",
+                      "mission_id": mission_id,
+                      "mission_title": mission.title
+                  },
+                  commit=False
+             )
 
-        # 1. Give Rewards (Assets)
-        if mission.reward_type != MissionRewardType.NONE and reward_amount > 0:
-            # --- CASH_UNLOCK (New User Bonus) ---
-                # --- CASH_UNLOCK (Converted to Vault Accumulation) ---
-            if mission.reward_type == MissionRewardType.CASH_UNLOCK:
-                # REFACTOR: Instead of unlocking existing funds, we ACCRUE new funds.
-                # This matches the "New User Welcome Mission" requirement (2500 KRW * 4 = 10000 KRW).
-                    from app.services.vault_service import VaultService
-                    # Do not commit inside accrue_mission_reward if possible, or handle session state carefully.
-                    # Current VaultService writes directly. 
-                    # We strictly raise error if it returns 0 or fails, 
-                    # necessitating a rollback of the claim status.
-                    accrued = VaultService().accrue_mission_reward(
-                        self.db,
-                        user_id=user.id,
-                        mission_id=mission.id,
-                        mission_title=mission.title,
-                        amount=reward_amount
-                    )
-                    if accrued == 0:
-                        raise Exception("Vault accrual returned 0 (ineligible or error)")
-
-            # --- STANDARD TOKENS ---
-            else:
-                from app.services.game_wallet_service import GameWalletService
-                from app.services.inventory_service import InventoryService
-
-                token_type_map = {
-                    MissionRewardType.DIAMOND: GameTokenType.DIAMOND,
-                    MissionRewardType.GOLD_KEY: GameTokenType.GOLD_KEY,
-                    MissionRewardType.DIAMOND_KEY: GameTokenType.DIAMOND_KEY,
-                    MissionRewardType.TICKET_BUNDLE: GameTokenType.LOTTERY_TICKET,
-                }
-
-                wallet_service = GameWalletService()
-                target_token = token_type_map.get(mission.reward_type)
-
-                if target_token:
-                    # Phase 2 rule: DIAMOND is Inventory SoT (not wallet).
-                    if target_token == GameTokenType.DIAMOND:
-                        InventoryService.grant_item(
-                            self.db,
-                            user_id=user_id,
-                            item_type="DIAMOND",
-                            amount=reward_amount,
-                            reason="MISSION_REWARD",
-                            related_id=str(mission.id),
-                            auto_commit=False,
-                        )
-                    else:
-                        wallet_service.grant_tokens(
-                            self.db,
-                            user_id=user_id,
-                            token_type=target_token,
-                            amount=reward_amount,
-                            reason="MISSION_REWARD",
-                            label=mission.title,
-                            auto_commit=False,
-                        )
-
-        # 2. Give XP (Season Pass) - OPTIONAL based on Master Design (Unified Economy v2.1)
-        # Missions primarily reward DIAMONDS. XP is reserved for Deposits.
-        # This logic is kept for "Special" missions if needed, but should default to 0.
-        if xp_reward > 0:
-            from app.services.season_pass_service import SeasonPassService
-            SeasonPassService().add_bonus_xp(
-                self.db,
-                user_id=user_id,
-                xp_amount=xp_reward
-            )
+        # 3. Deliver XP Reward (if any)
+        if mission.xp_reward > 0:
+             from app.services.reward_service import RewardService
+             RewardService().deliver(
+                  self.db,
+                  user_id=user_id,
+                  reward_type="GAME_XP",
+                  reward_amount=mission.xp_reward,
+                  meta={"reason": "MISSION_REWARD_XP", "mission_id": mission_id},
+                  commit=False
+             )
 
         progress.is_claimed = True
         self.db.commit()

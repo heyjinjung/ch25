@@ -53,7 +53,7 @@ class PlayLogEntry(BaseModel):
     nickname: str | None = None
     user: AdminUserSummary | None = None
     game: str
-    reward_type: str
+    reward_type: str  # POINT=금고 적립, GAME_XP=시즌 경험치 등
     reward_amount: int
     created_at: str
     reward_label: str | None = None

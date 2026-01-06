@@ -1,9 +1,11 @@
 // src/admin/constants/rewardTypes.ts
 
 export const REWARD_TYPES = [
-  { value: "POINT", label: "포인트" },
+  { value: "POINT", label: "금고 적립(POINT)" },
+  { value: "GAME_XP", label: "게임 경험치(XP)" },
   // { value: "COUPON", label: "쿠폰" }, // [REMOVED]
   { value: "GIFTICON_BAEMIN", label: "배민 기프티콘(지급대기)" },
+  { value: "CC_COIN_GIFTICON", label: "씨씨코인 기프티콘(지급대기)" },
   { value: "NONE", label: "없음" },
   { value: "DIAMOND", label: "다이아" },
   { value: "GOLD_KEY", label: "골드 키" },
