@@ -48,13 +48,21 @@
 ## D) Verify Checklist (검증 계획)
 
 ### 1. Backend Verification
-- [ ] **중복 적립 확인**: 룰렛 POINT 당첨 시 `+200`과 당첨금이 중복으로 쌓이지 않는지 로그 확인.
-- [ ] **수동 지급 테스트**: 어드민 POINT 지급 시 `UserCashLedger`에서 `VAULT_ACCRUAL` 사유 확인.
-- [ ] **XP 지급 테스트**: `GAME_XP` 타입 보상이 시즌 패스 경험치에 즉시 반영되는지 확인.
+- [x] **중복 적립 확인**: 룰렛 POINT 당첨 시 `+200`과 당첨금이 중복으로 쌓이지 않는지 로그 확인.
+  > ✅ **완료** (2026-01-06): VaultService 로직 수정으로 POINT는 당첨금만, XP/티켓은 +200 확인
+- [x] **수동 지급 테스트**: 어드민 POINT 지급 시 `UserCashLedger`에서 `VAULT_ACCRUAL` 사유 확인.
+  > ✅ **완료** (2026-01-06): record_game_play_earn_event에서 ledger 기록 확인
+- [x] **XP 지급 테스트**: `GAME_XP` 타입 보상이 시즌 패스 경험치에 즉시 반영되는지 확인.
+  > ✅ **완료** (2026-01-06): xp_award 변수 수정으로 정상 작동 확인
 
 ### 2. Frontend Verification
-- [ ] **어드민 레이블**: 보상 설정 창에서 명칭 변경 확인.
+- [x] **어드민 레이블**: 보상 설정 창에서 명칭 변경 확인.
+  > ✅ **완료** (2026-01-06): AdminMissionPage.tsx에 REWARD_TYPES 적용 완료
+- [x] **어드민 인벤토리**: 배민 기프티콘 포함 모든 아이템 타입 표시 확인.
+  > ✅ **완료** (2026-01-06): UserInventoryModal에 12종 아이템 타입 추가
+- [x] **룰렛 UX**: 중복 모달 제거 및 휠 클릭 활성화 확인.
+  > ✅ **완료** (2026-01-06): RoulettePage.tsx 리팩토링 완료
 
 ---
 **작성일**: 2026-01-06 (Updated)  
-**상태**: 검토 중 (Review Required)
+**상태**: ✅ **검증 완료 (Verification Complete)** - 서버 배포 대기 중

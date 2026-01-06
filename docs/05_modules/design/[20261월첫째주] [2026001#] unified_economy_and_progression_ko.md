@@ -73,6 +73,8 @@
     - `src/components/vault/VaultAccrualModal.tsx`: 게임 승리 시 팝업.
 - [x] **API Client**: `src/api/vaultApi.ts`
 
+> ✅ **2026-01-06 업데이트**: VaultService 보상 계산 로직 수정 완료 (POINT/XP/기타 보상 분기 로직 적용)
+
 ---
 
 ### B. 티켓 (Ticket) - The Fuel
@@ -200,6 +202,8 @@
 - [x] **Page**: `src/pages/MissionPage.tsx`: 미션 목록 및 수령 UI.
 - [x] **Card**: `src/components/mission/MissionCard.tsx`: 다이아몬드 아이콘 표시.
 - [x] **Store**: `src/stores/missionStore.ts`: 미션 상태 관리.
+- [x] **Admin Page**: `src/admin/pages/AdminMissionPage.tsx`: 어드민 미션 관리
+  > ✅ **2026-01-06 업데이트**: REWARD_TYPES 상수 적용, 보상 타입 드롭다운 및 테이블 표시 개선 (POINT, GAME_XP, 기프티콘 지원)
 
 #### 🧾 Shop / Voucher (연계)
 - [x] **Shop Purchase**: `app/services/shop_service.py`
@@ -207,6 +211,8 @@
     - 구매 결과로 **바우처(예: `VOUCHER_DIAMOND_KEY_1`)가 인벤토리에 지급**됨.
 - [x] **Voucher Use**: `app/services/inventory_service.py`
     - 바우처 사용 시 **지갑(GameWallet)**에 키(`DIAMOND_KEY`/`GOLD_KEY`)가 지급됨.
+- [x] **Admin Inventory**: `src/admin/components/UserInventoryModal.tsx`
+  > ✅ **2026-01-06 업데이트**: 전체 아이템 타입 12종 추가 (GIFTICON_BAEMIN, CC_COIN_GIFTICON, Keys, Tickets, Vouchers)
 
 ---
 
