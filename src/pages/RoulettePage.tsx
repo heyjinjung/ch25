@@ -62,7 +62,6 @@ const RoulettePage: React.FC = () => {
   const [selectedIndex, setSelectedIndex] = useState<number | undefined>();
   const SPIN_DURATION_MS = 3000;
   const [isSpinning, setIsSpinning] = useState(false);
-  const [displayedResult, setDisplayedResult] = useState<RoulettePlayResponse | null>(null);
   const [rewardToast, setRewardToast] = useState<{ value: number; type: string } | null>(null);
   const [vaultModal, setVaultModal] = useState<{ open: boolean; amount: number }>({ open: false, amount: 0 });
   const pendingResultRef = useRef<RoulettePlayResponse | null>(null);
@@ -118,7 +117,6 @@ const RoulettePage: React.FC = () => {
 
       pendingResultRef.current = null;
       setSelectedIndex(undefined);
-      setDisplayedResult(null);
       setRewardToast(null);
 
       const requestAt = performance.now();
@@ -159,7 +157,6 @@ const RoulettePage: React.FC = () => {
 
     setIsSpinning(false);
     stopRouletteSpin(); // Stop sound at the end
-    setDisplayedResult(result);
 
     const rewardValue = result?.reward_value ? Number(result.reward_value) : 0;
     const rewardType = result?.reward_type ?? "NONE";
@@ -345,7 +342,14 @@ const RoulettePage: React.FC = () => {
 
         <div className="flex flex-col items-center gap-4 lg:flex-row lg:items-center lg:justify-center lg:gap-10">
           {/* Roulette Wheel */}
-          <div className="relative flex w-full max-w-[360px] flex-col items-center justify-center lg:w-[360px] lg:flex-shrink-0">
+          <div
+            className="relative flex w-full max-w-[360px] flex-col items-center justify-center lg:w-[360px] lg:flex-shrink-0 cursor-pointer"
+            onClick={() => {
+              if (!playMutation.isPending && !isSpinning && (isUnlimited || (data?.remaining_spins ?? 0) > 0) && !isOutOfTokens) {
+                handlePlay();
+              }
+            }}
+          >
             <RouletteWheel
               segments={segments}
               isSpinning={isSpinning}
@@ -403,74 +407,8 @@ const RoulettePage: React.FC = () => {
                     }}
                   />
                 )}
-
-                <button
-                  type="button"
-                  disabled={playMutation.isPending || isSpinning || (!isUnlimited && data?.remaining_spins <= 0) || isOutOfTokens}
-                  onClick={handlePlay}
-                  className="group relative w-full overflow-hidden rounded-2xl bg-gradient-to-b from-[#30FF75] to-[#20C05A] px-5 py-4 text-black shadow-[0_0_20px_rgba(48,255,117,0.3)] transition-all hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(48,255,117,0.5)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
-                >
-                  <div className="relative z-10 flex items-center justify-center gap-3">
-                    {playMutation.isPending ? (
-                      <>
-                        <div className="h-5 w-5 animate-spin rounded-full border-2 border-black/30 border-t-black" />
-                        <span className="text-lg font-black">추첨 중...</span>
-                      </>
-                    ) : (
-                      <>
-                        <img src="/assets/roulette/icon_slot_machine.png" className="w-8 h-8 object-contain" alt="" />
-                        <span className="text-lg font-black tracking-wide">
-                          {!isSpinning && displayedResult ? "다시 돌리기" : "룰렛 시작"}
-                        </span>
-                      </>
-                    )}
-                  </div>
-                </button>
               </div>
             </div>
-
-            {/* Result Display (Below Controls) */}
-            {!isSpinning && displayedResult && (
-              <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-black/40 p-1 text-center backdrop-blur-sm animate-fade-in-up">
-                <div className="relative overflow-hidden rounded-[1.8rem] border border-white/5 bg-gradient-to-br from-white/[0.08] to-transparent px-8 py-8">
-                  <div className="pointer-events-none absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-cc-gold/50 to-transparent" />
-
-                  <p className="text-sm font-bold uppercase tracking-[0.4em] text-white/40">당첨 결과</p>
-                  <h3 className="mt-2 text-3xl font-black text-white drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)]">
-                    {displayedResult.segment.label}
-                  </h3>
-
-                  {(() => {
-                    const rawType = displayedResult.reward_type ?? "NONE";
-                    const upper = rawType.toUpperCase();
-                    if (upper === "NONE") return null;
-
-                    const rawValue = Number(displayedResult.reward_value ?? 0);
-                    const normalizedType = upper.includes("GAME_XP") ? "GAME_XP" : upper.includes("POINT") ? "POINT" : rawType;
-                    const rewardLine = formatRewardLine(normalizedType, rawValue);
-                    if (!rewardLine) return null;
-
-                    const isPoint = normalizedType.toUpperCase().includes("POINT");
-                    const isXP = normalizedType.toUpperCase().includes("GAME_XP");
-                    const isGifticon = isGifticonRewardType(normalizedType);
-                    const isTicket = normalizedType.toUpperCase().includes("TICKET");
-
-                    const icon = isPoint ? "🪙" : isXP ? "⚡" : isTicket ? "🎟️" : "🎁";
-                    const colorClass = isPoint ? "text-cc-gold" : isXP ? "text-blue-400" : isGifticon ? "text-pink-400" : "text-green-400";
-
-                    return (
-                      <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-6 py-2">
-                        <span className="text-lg">{icon}</span>
-                        <span className={clsx("text-sm font-bold", colorClass)}>{rewardLine.text}</span>
-                        {rewardLine.fulfillmentHint && (
-                          <span className="text-xs text-white/50 ml-1">({rewardLine.fulfillmentHint})</span>
-                        )}
-                      </div>
-                    );
-                  })()}
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>
