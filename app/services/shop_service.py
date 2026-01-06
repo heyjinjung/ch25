@@ -60,7 +60,7 @@ SHOP_PRODUCTS = {
     ),
     "PROD_TICKET_COIN_1": ShopProduct(
         "PROD_TICKET_COIN_1",
-        "코인 교환권",
+        "룰렛 티켓 교환권",
         GameTokenType.DIAMOND,
         1,
         "VOUCHER_ROULETTE_COIN_1",
@@ -68,11 +68,19 @@ SHOP_PRODUCTS = {
     ),
     "PROD_TICKET_DICE_1": ShopProduct(
         "PROD_TICKET_DICE_1",
-        "주사위 교환권",
+        "주사위 티켓 교환권",
         GameTokenType.DIAMOND,
         2,
         "VOUCHER_DICE_TOKEN_1",
         1
+    ),
+    "PROD_TICKET_LOTTERY_1": ShopProduct(
+        "PROD_TICKET_LOTTERY_1",
+        "복권 티켓 교환권",
+        GameTokenType.DIAMOND,
+        10,
+        "VOUCHER_LOTTERY_TICKET_1",
+        1,
     ),
 }
 
@@ -209,12 +217,43 @@ class ShopService:
                 auto_commit=False
             )
 
+            # 3. Auto-fulfill certain vouchers immediately (voucher -> wallet token)
+            auto_fulfill_vouchers = {
+                "VOUCHER_GOLD_KEY_1",
+                "VOUCHER_DIAMOND_KEY_1",
+                "VOUCHER_ROULETTE_COIN_1",
+                "VOUCHER_DICE_TOKEN_1",
+                "VOUCHER_LOTTERY_TICKET_1",
+            }
+
+            reward_token = None
+            reward_amount = None
+            if product.item_type in auto_fulfill_vouchers:
+                use_result = InventoryService.use_voucher(
+                    db,
+                    user_id,
+                    product.item_type,
+                    product.item_amount,
+                    idempotency_key=None,
+                    auto_commit=False,
+                )
+                reward_token = use_result.get("reward_token")
+                reward_amount = use_result.get("reward_amount")
+
             response = {
                 "success": True,
                 "sku": sku,
                 "cost": {"token": product.cost_token.value, "amount": product.cost_amount},
-                "granted": {"item_type": product.item_type, "amount": product.item_amount},
+                "granted": {
+                    "item_type": reward_token or product.item_type,
+                    "amount": reward_amount if reward_amount is not None else product.item_amount,
+                },
+                "auto_fulfilled": bool(reward_token),
             }
+
+            if reward_token is not None:
+                response["reward_token"] = reward_token
+                response["reward_amount"] = reward_amount
 
             if idem_record is not None:
                 IdempotencyService.complete(db, record=idem_record, response_payload=response)

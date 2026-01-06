@@ -10,6 +10,7 @@ export interface AuthUser {
   readonly diamond_key_count?: number;
   readonly telegram_id?: number | null;
   readonly telegram_username?: string | null;
+  readonly login_streak?: number;
 }
 
 interface AuthState {

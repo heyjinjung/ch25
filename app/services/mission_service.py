@@ -730,6 +730,12 @@ class MissionService:
         progress.is_claimed = True
         self.db.commit()
 
+        # [Grinder Rule] Check All Clear
+        try:
+            self.check_all_daily_completed(user_id)
+        except Exception:
+            pass
+
         return True, mission.reward_type, reward_amount
 
     
@@ -830,5 +836,69 @@ class MissionService:
 
         # 3. Try to claim
         return self.claim_reward(user_id, mission.id)
+
+    def check_all_daily_completed(self, user_id: int) -> bool:
+        """Grinder Rule: Check if all daily missions are completed and grant team battle bonus."""
+        from app.services.team_battle_service import TeamBattleService
+        from app.models.mission import Mission, UserMissionProgress as UserMission, MissionCategory
+        from app.models.team_battle import TeamEventLog
+        from sqlalchemy import select
+
+        now_kst = self._now_tz()
+        today = self._operational_play_date(now_kst)
+        
+        tsvc = TeamBattleService()
+        # Use TeamBattleService's day definition for consistency
+        start, end = tsvc._day_bounds_for_date(today)
+        
+        # 1. Check if already rewarded today
+        existing_log = self.db.execute(
+            select(TeamEventLog).where(
+                TeamEventLog.user_id == user_id,
+                TeamEventLog.action == "MISSION_ALL_CLEAR",
+                TeamEventLog.created_at >= start,
+                TeamEventLog.created_at < end
+            )
+        ).scalar_one_or_none()
+        
+        if existing_log:
+            return True
+            
+        # 2. Count Active Daily Missions
+        total_daily = self.db.query(Mission).filter(
+            Mission.category == MissionCategory.DAILY,
+            Mission.is_active == True
+        ).count()
+        
+        if total_daily == 0:
+            return False
+            
+        # 3. Count Completed (reset_date must match today, or is_completed=True)
+        # However, UserMission reset_date is critical.
+        completed_daily = self.db.query(UserMission).join(Mission).filter(
+            UserMission.user_id == user_id,
+            Mission.category == MissionCategory.DAILY,
+            Mission.is_active == True,
+            UserMission.is_completed == True,
+            UserMission.reset_date == today.isoformat()
+        ).count()
+        
+        if completed_daily >= total_daily:
+            # Grant Reward
+            member = tsvc.get_membership(self.db, user_id)
+            if member:
+                points = self.settings.team_battle_all_clear_bonus
+                tsvc.add_points(
+                    self.db,
+                    team_id=member.team_id,
+                    delta=points,
+                    action="MISSION_ALL_CLEAR",
+                    user_id=user_id,
+                    season_id=None,
+                    meta={"date": today.isoformat()},
+                    enforce_usage=False
+                )
+            return True
+        return False
 
 

@@ -57,6 +57,7 @@ const UserRoutes: React.FC = () => {
             <Route path="/landing/tablet" element={<FigmaLandingTablet />} />
             <Route path="/landing/mobile" element={<FigmaLandingMobile />} />
             <Route path="/vault" element={<VaultPage />} />
+            <Route path="/rewards" element={<InventoryPage />} />
             <Route path="/events" element={<EventDashboardPage />} />
             <Route path="/season-pass" element={<LevelTowerPage />} />
             <Route path="/missions" element={<MissionPage />} />
@@ -67,7 +68,7 @@ const UserRoutes: React.FC = () => {
             <Route path="/lottery" element={<LotteryPage />} />
             <Route path="/lottery" element={<LotteryPage />} />
             <Route path="/guide" element={<GuidePage />} />
-            <Route path="/inventory" element={<InventoryPage />} />
+            <Route path="/inventory" element={<Navigate to="/rewards" replace />} />
             <Route path="/shop" element={<ShopPage />} />
           </Route>
         </Route>

@@ -248,7 +248,18 @@ class RewardService:
             return
 
         if reward_type == "CC_POINT":
-            # [REMOVED] CC 포인트는 더 이상 지원하지 않음
+            # CC 포인트(외부 플랫폼용)는 즉시 지급 대신 Vault locked balance로 적립한다.
+            reason = (meta or {}).get("reason") if meta else None
+            label = (meta or {}).get("label") if meta else None
+            self._grant_vault_locked(
+                db,
+                user_id=user_id,
+                amount=reward_amount,
+                reason=reason or "CC_POINT",
+                label=label,
+                meta=meta,
+                commit=True,
+            )
             return
         
         if reward_type == "DIAMOND":
@@ -282,6 +293,37 @@ class RewardService:
                 item_type,
                 1,
                 reason=(meta or {}).get("reason") or "GIFTICON_REWARD",
+                related_id=(meta or {}).get("related_id") or (f"prize:{(meta or {}).get('prize_id')}" if meta else None),
+                auto_commit=True,
+            )
+            return
+
+        if reward_type == "GIFTICON_COMPOSE":
+            # Compose gifticon rewards as pending inventory items.
+            allowed = {3000}
+            if int(reward_amount) not in allowed:
+                raise InvalidConfigError("INVALID_GIFTICON_AMOUNT")
+
+            item_type = f"COMPOSE_AMERICANO_GIFTICON_{int(reward_amount)}"
+            InventoryService.grant_item(
+                db,
+                user_id,
+                item_type,
+                1,
+                reason=(meta or {}).get("reason") or "GIFTICON_REWARD",
+                related_id=(meta or {}).get("related_id") or (f"prize:{(meta or {}).get('prize_id')}" if meta else None),
+                auto_commit=True,
+            )
+            return
+
+        if reward_type in {"CC_COIN", "CC_COIN_GIFTICON"}:
+            # CC 코인은 사용자에게 즉시 재화로 지급하지 않고, '씨씨코인깁콘' 지급대기 아이템으로 남긴다.
+            InventoryService.grant_item(
+                db,
+                user_id,
+                "CC_COIN_GIFTICON",
+                1,
+                reason=(meta or {}).get("reason") or "CC_COIN_GIFTICON",
                 related_id=(meta or {}).get("related_id") or (f"prize:{(meta or {}).get('prize_id')}" if meta else None),
                 auto_commit=True,
             )

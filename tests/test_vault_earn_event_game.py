@@ -134,7 +134,7 @@ def test_vault_game_earn_event_dice_lose_Golden_Hour_doubles_negative(session_fa
     assert user.vault_locked_balance == 900
 
 
-def test_vault_game_earn_event_dice_uses_payout_reward_amount(session_factory) -> None:
+def test_vault_game_earn_event_dice_prefers_db_config_over_payout(session_factory) -> None:
     _enable_game_earn_events()
 
     session: Session = session_factory()
@@ -157,8 +157,9 @@ def test_vault_game_earn_event_dice_uses_payout_reward_amount(session_factory) -
     session.expire_all()
     user = session.get(User, 11)
     assert user is not None
-    assert added == 123
-    assert user.vault_locked_balance == 1123
+    # Policy: DB game_earn_config takes precedence; payout_raw is a fallback.
+    assert added == 200
+    assert user.vault_locked_balance == 1200
 
 
 def test_vault_game_earn_event_applies_multiplier_when_enabled(session_factory, monkeypatch) -> None:

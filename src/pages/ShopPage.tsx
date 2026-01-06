@@ -4,10 +4,12 @@ import { fetchInventory, fetchShopProducts, purchaseProduct, ShopProduct } from 
 import { Loader2, ShoppingBag } from 'lucide-react';
 import { useToast } from '../components/common/ToastProvider';
 import { tryHaptic } from '../utils/haptics';
+import { useNavigate } from 'react-router-dom';
 
 const ShopPage: React.FC = () => {
     const queryClient = useQueryClient();
     const { addToast } = useToast();
+    const navigate = useNavigate();
 
     const { data: products, isLoading, isError, refetch } = useQuery({
         queryKey: ['shopProducts'],
@@ -25,7 +27,9 @@ const ShopPage: React.FC = () => {
         mutationFn: (sku: string) => purchaseProduct(sku),
         onSuccess: (data) => {
             tryHaptic(20);
-            addToast(`구매 완료: ${data.granted.item_type} x${data.granted.amount}`, "success");
+            const token = data?.reward_token ?? data?.granted?.item_type;
+            const amount = data?.reward_amount ?? data?.granted?.amount;
+            addToast(`구매 완료: ${token} x${amount} 지급됨`, "success");
             queryClient.invalidateQueries({ queryKey: ['inventory'] });
             queryClient.invalidateQueries({ queryKey: ['vault-status'] });
         },
@@ -78,6 +82,29 @@ const ShopPage: React.FC = () => {
                 </div>
             </div>
 
+            {/* Tabs (route) */}
+            <div className="mb-6">
+                <div className="flex p-1 bg-white/5 rounded-2xl border border-white/10">
+                    <button
+                        type="button"
+                        onClick={() => {
+                            tryHaptic(10);
+                            navigate('/rewards');
+                        }}
+                        className="flex-1 py-3 text-sm font-black rounded-xl transition-all text-white/60 hover:text-white hover:bg-white/5 active:scale-[0.98]"
+                    >
+                        보유함
+                    </button>
+                    <button
+                        type="button"
+                        disabled
+                        className="flex-1 py-3 text-sm font-black rounded-xl transition-all bg-figma-primary text-white shadow-lg shadow-emerald-900/20"
+                    >
+                        상점
+                    </button>
+                </div>
+            </div>
+
             {/* Products Grid */}
             <div className="space-y-3">
                 {Array.isArray(products) && products.length > 0 ? (
@@ -118,10 +145,12 @@ const ITEM_NAMES: Record<string, string> = {
     'VOUCHER_DIAMOND_KEY_1': '다이아키 교환권',
     'VOUCHER_ROULETTE_COIN_1': '룰렛 티켓',
     'VOUCHER_DICE_TOKEN_1': '주사위 티켓',
+    'VOUCHER_LOTTERY_TICKET_1': '복권 티켓',
     'GOLD_KEY': '골드 키',
     'DIAMOND_KEY': '다이아몬드 키',
     'ROULETTE_COIN': '룰렛 티켓',
     'DICE_TOKEN': '주사위 티켓',
+    'LOTTERY_TICKET': '복권 티켓',
 };
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, diamondBalance, onBuy, isPending }) => {

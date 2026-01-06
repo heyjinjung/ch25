@@ -52,6 +52,10 @@ class AdminUserUpdate(BaseModel):
     # CRM Profile update
     admin_profile: Optional[AdminUserProfileSchema] = None
 
+    # Grinder Rule Streak
+    login_streak: Optional[int] = None
+    last_streak_updated_at: Optional[datetime] = None
+
 
 class AdminUserResponse(AdminUserBase):
     id: int
@@ -64,6 +68,10 @@ class AdminUserResponse(AdminUserBase):
     
     # CRM Data (Nested)
     admin_profile: Optional[AdminUserProfileSchema] = None
+
+    # Grinder Rule Streak
+    login_streak: int = 0
+    last_streak_updated_at: Optional[datetime] = None
 
     # Standard user summary (computed)
     summary: Optional["AdminUserSummary"] = None

@@ -104,7 +104,15 @@ class InventoryService:
         return item
 
     @staticmethod
-    def use_voucher(db: Session, user_id: int, item_type: str, amount: int, idempotency_key: str | None = None) -> dict:
+    def use_voucher(
+        db: Session,
+        user_id: int,
+        item_type: str,
+        amount: int,
+        idempotency_key: str | None = None,
+        *,
+        auto_commit: bool = True,
+    ) -> dict:
         """
         Use a voucher item to get rewards.
         This is a high-level action that consumes the item and grants rewards.
@@ -116,6 +124,7 @@ class InventoryService:
             "VOUCHER_DIAMOND_KEY_1": {"token": GameTokenType.DIAMOND_KEY, "amount": 1},
             "VOUCHER_ROULETTE_COIN_1": {"token": GameTokenType.ROULETTE_COIN, "amount": 1},
             "VOUCHER_DICE_TOKEN_1": {"token": GameTokenType.DICE_TOKEN, "amount": 1},
+            "VOUCHER_LOTTERY_TICKET_1": {"token": GameTokenType.LOTTERY_TICKET, "amount": 1},
         }
 
         reward = REWARD_MAP.get(item_type)
@@ -127,7 +136,7 @@ class InventoryService:
 
         request_payload = {"item_type": item_type, "amount": amount}
         idem_record = None
-        if idempotency_key:
+        if auto_commit and idempotency_key:
             idem_record, existing = IdempotencyService.begin(
                 db,
                 user_id=user_id,
@@ -138,20 +147,17 @@ class InventoryService:
             if existing is not None:
                 return existing
 
-        try:
-            # Transaction bundle
+        def _apply_use_voucher() -> dict:
             InventoryService.consume_item(
                 db, user_id, item_type, amount, reason="USE_VOUCHER", auto_commit=False
             )
-            
-            # Grant Reward
-            user = db.get(User, user_id)
+
             wallet_service = GameWalletService()
             wallet_service.grant_tokens(
                 db, user_id, token_type, total_reward_amount, reason=f"VOUCHER_USE:{item_type}", auto_commit=False
             )
 
-            response = {
+            return {
                 "success": True,
                 "used_item": item_type,
                 "used_amount": amount,
@@ -159,11 +165,14 @@ class InventoryService:
                 "reward_amount": total_reward_amount,
             }
 
+        if not auto_commit:
+            return _apply_use_voucher()
+
+        try:
+            response = _apply_use_voucher()
             if idem_record is not None:
                 IdempotencyService.complete(db, record=idem_record, response_payload=response)
-
             db.commit()
-
             return response
         except Exception as e:
             db.rollback()
