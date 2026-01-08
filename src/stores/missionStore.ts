@@ -146,7 +146,31 @@ export const useMissionStore = create<MissionState>((set: any, get: any) => ({
 
         } catch (err: any) {
             console.error("[MissionStore] Claim failed", err);
-            return { success: false, message: err.message || "Network Error" };
+
+            let message = err.message || "Network Error";
+
+            // Extract specific backend error message
+            if (err.response?.data?.detail) {
+                message = err.response.data.detail;
+            }
+
+            // Handle "Already claimed" gracefully
+            if (message === "Already claimed") {
+                // Update local state to reflect it's actually claimed
+                const currentMissions = get().missions.map((item: MissionData) => {
+                    if (item.mission.id === missionId) {
+                        return {
+                            ...item,
+                            progress: { ...item.progress, is_claimed: true }
+                        };
+                    }
+                    return item;
+                });
+                set({ missions: currentMissions });
+                return { success: true, message: "이미 수령한 보상입니다." };
+            }
+
+            return { success: false, message: message };
         }
     },
 
