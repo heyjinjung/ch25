@@ -61,7 +61,9 @@ class RedisRateLimiter(BaseRateLimiter):
             res = self._script(keys=[key], args=[self.window_ms, burst])
             return bool(res)
         except Exception:
-            return False
+            # [SAFETY] Fail open: If Redis fails, allow the request to proceed.
+            # Logging the error would be good here if a logger were available.
+            return True
 
 
 def _build_rate_limiter() -> BaseRateLimiter:

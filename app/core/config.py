@@ -44,14 +44,14 @@ class Settings(BaseSettings):
         ),
     )
     golden_hour_claim_rate_rps: int = Field(
-        10,
+        1000,
         validation_alias=AliasChoices(
             "GOLDEN_HOUR_CLAIM_RATE_RPS",
             "golden_hour_claim_rate_rps",
         ),
     )
     golden_hour_claim_rate_burst: int = Field(
-        20,
+        2000,
         validation_alias=AliasChoices(
             "GOLDEN_HOUR_CLAIM_RATE_BURST",
             "golden_hour_claim_rate_burst",
