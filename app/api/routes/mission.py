@@ -122,7 +122,8 @@ def claim_mission_reward(
 
     # Rate limit (per user + client host)
     rl_key = f"mission-claim:{current_user.id}:{request.client.host if request.client else 'unknown'}"
-    print(f"[DEBUG] RateLimit Key: {rl_key} | Host: {request.client.host if request.client else 'None'}", flush=True) # VERIFICATION LOG
+    burst_val = settings.golden_hour_claim_rate_burst
+    print(f"[DEBUG] RateLimit Key: {rl_key} | Host: {request.client.host if request.client else 'None'} | Type: {type(rate_limiter)} | Burst: {burst_val}", flush=True) # VERIFICATION LOG
     
     if not rate_limiter.allow(rl_key, settings.golden_hour_claim_rate_rps, settings.golden_hour_claim_rate_burst):
         status_label = "rate_limit"
