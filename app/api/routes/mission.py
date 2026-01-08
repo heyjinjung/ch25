@@ -121,12 +121,14 @@ def claim_mission_reward(
     settings = get_settings()
 
     # Rate limit (per user + client host)
+    # [HOTFIX 2026-01-08] Disabled due to Nginx proxy IP causing global rate limit shared by all users.
     rl_key = f"mission-claim:{current_user.id}:{request.client.host if request.client else 'unknown'}"
-    if not rate_limiter.allow(rl_key, settings.golden_hour_claim_rate_rps, settings.golden_hour_claim_rate_burst):
-        status_label = "rate_limit"
-        http_status = 429
-        mission_claim_result_total.labels(status=status_label, http_status=str(http_status)).inc()
-        raise HTTPException(status_code=429, detail="Rate limit exceeded")
+    print(f"[DEBUG] RateLimit Key: {rl_key} | Host: {request.client.host if request.client else 'None'}", flush=True) # VERIFICATION LOG
+    # if not rate_limiter.allow(rl_key, settings.golden_hour_claim_rate_rps, settings.golden_hour_claim_rate_burst):
+    #     status_label = "rate_limit"
+    #     http_status = 429
+    #     mission_claim_result_total.labels(status=status_label, http_status=str(http_status)).inc()
+    #     raise HTTPException(status_code=429, detail="Rate limit exceeded")
 
     # Idempotency guard (required)
     if not idempotency_key:

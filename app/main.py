@@ -64,6 +64,10 @@ if "*" in cors_origins:
 
 print(f"Loading CORS origins: {cors_origins}", flush=True)
 
+# [INFRA FIX] Trust X-Forwarded-For headers from Nginx (Docker internal IP)
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
