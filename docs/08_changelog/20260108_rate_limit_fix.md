@@ -27,9 +27,31 @@ services:
       GOLDEN_HOUR_CLAIM_RATE_BURST: "2000"
 ```
 
-### ✅ 결과
-- 설정 변경 후 백엔드 재시작 (`docker compose restart backend`)
-- 미션 수령 시 429 에러 없이 정상 처리됨을 확인.
+### 🚨 추가 이슈 발생 (Production)
+- **증상**: 로컬 픽스 적용 후에도 운영 서버(cc-jm.com)에서 `429 Too Many Requests` 및 `409 Conflict` 오류 지속.
+- **심층 원인**: 
+    1. **Rate Limit (429)**: 운영 환경은 Nginx 프록시 뒤에 Docker 컨테이너가 위치함. 백엔드가 `X-Forwarded-For` 헤더를 신뢰하도록 설정되지 않아, 모든 요청의 클라이언트 IP가 Nginx 내부 IP로 인식됨. 결과적으로 **모든 유저가 하나의 Rate Limit(20 RPS)을 공유**하는 치명적 병목 발생.
+    2. **Idempotency Conflict (409)**: 429 에러 해결 과정에서 클라이언트(브라우저)가 이전에 생성한 `Idempotency Key`를 재사용하여 재요청을 보냄. 백엔드는 이를 중복 요청으로 판단하여 거부.
+
+### 🛠️ 최종 해결 방안 (Infrastructure Fix)
+
+#### 1. ProxyHeadersMiddleware 적용 (Root Cause Fix)
+백엔드(`main.py`)에 `ProxyHeadersMiddleware`를 추가하여 Nginx가 전달하는 `X-Forwarded-For` 헤더를 신뢰하도록 설정. 이를 통해 백엔드가 실제 클라이언트 IP를 식별할 수 있게 됨.
+
+**변경 파일**: `app/main.py`
+```python
+# [INFRA FIX] Trust X-Forwarded-For headers from Nginx (Docker internal IP)
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
+```
+
+#### 2. 보안 기능 재활성화
+일시적으로 비활성화(Hotfix)했던 Rate Limit 및 Idempotency Check 기능을 다시 활성화함. (인프라 수정으로 인해 이제 정상 작동함)
+
+### ✅ 최종 결과
+- 백엔드 재시작 후 실제 클라이언트 IP가 로그에 정상적으로 기록됨.
+- Rate Limit이 유저별로 정상 적용되어 429 에러 해소.
+- 409 에러는 유저 측 새로고침(새 키 생성) 안내 및 기능 정상화로 해결.
 
 ---
 **작성일**: 2026-01-08  
