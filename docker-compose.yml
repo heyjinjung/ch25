@@ -58,6 +58,9 @@ services:
       ENABLE_TRIAL_PAYOUT_TO_VAULT: ${ENABLE_TRIAL_PAYOUT_TO_VAULT:-true}
       STREAK_MILESTONE_REWARDS_ENABLED: ${STREAK_MILESTONE_REWARDS_ENABLED:-true}
       XP_FROM_GAME_REWARD: "false"
+      # Rate Limiting (높은 값으로 설정하여 로컬 테스트 방해 방지)
+      GOLDEN_HOUR_CLAIM_RATE_RPS: "1000"
+      GOLDEN_HOUR_CLAIM_RATE_BURST: "2000"
     depends_on:
       db:
         condition: service_healthy
