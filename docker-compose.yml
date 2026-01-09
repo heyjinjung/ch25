@@ -74,12 +74,10 @@ services:
       - ./logs:/app/logs
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8000/" ]
-      interval: 30s
-      timeout: 5s
-      retries: 3
 
   # Frontend
   frontend:
+    image: ghcr.io/heyjinjung/xmas-frontend:latest
     build:
       context: .
       dockerfile: Dockerfile.frontend
