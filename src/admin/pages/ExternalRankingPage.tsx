@@ -10,7 +10,13 @@ import {
 } from "../api/adminExternalRankingApi";
 import { resolveAdminUser } from "../api/adminUserApi";
 
-type EditableRow = ExternalRankingPayload & { id?: number; __isNew?: boolean; __key: string };
+type EditableRow = ExternalRankingPayload & {
+  id?: number;
+  created_at?: string;
+  updated_at?: string;
+  __isNew?: boolean;
+  __key: string;
+};
 
 type SortDir = "asc" | "desc";
 type SortKey = "identifier" | "deposit_amount" | "play_count" | "memo";
@@ -40,6 +46,16 @@ const formatTgUsername = (username?: string | null) => {
 
 const newRowKey = () => `new:${Date.now()}:${Math.random().toString(16).slice(2)}`;
 
+const formatKst = (iso?: string) => {
+  const s = String(iso ?? "").trim();
+  if (!s) return "-";
+  try {
+    return new Date(s).toLocaleString("ko-KR");
+  } catch {
+    return s;
+  }
+};
+
 const ExternalRankingPage: React.FC = () => {
   const queryClient = useQueryClient();
   const { data, isLoading, isError, error } = useQuery({
@@ -66,6 +82,8 @@ const ExternalRankingPage: React.FC = () => {
         __key: `id:${item.id}`,
         id: item.id,
         user_id: item.user_id,
+        created_at: item.created_at,
+        updated_at: item.updated_at,
         // Input field is a unified identifier string.
         external_id: item.telegram_username ?? item.external_id ?? "",
         telegram_username: item.telegram_username ?? "",
@@ -112,6 +130,8 @@ const ExternalRankingPage: React.FC = () => {
           __key: `id:${item.id}`,
           id: item.id,
           user_id: item.user_id,
+          created_at: item.created_at,
+          updated_at: item.updated_at,
           external_id: item.telegram_username ?? item.external_id ?? "",
           telegram_username: item.telegram_username ?? "",
           deposit_amount: item.deposit_amount,
@@ -471,6 +491,7 @@ const ExternalRankingPage: React.FC = () => {
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">TG ID / Username</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">실명/연락처</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">닉네임</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">입력시간(최종)</th>
                 <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">
                   <button type="button" onClick={() => toggleSort("deposit_amount")} className="inline-flex items-center gap-1 text-gray-400 hover:text-gray-200" title="정렬">
                     입금액
@@ -501,6 +522,7 @@ const ExternalRankingPage: React.FC = () => {
             <tbody className="divide-y divide-[#333333]">
               {pageItems.map(({ row, index }, viewIdx) => {
                 const status = resolveStatusByKey[row.__key];
+                const lastInputAt = row.updated_at || row.created_at;
                 return (
                   <tr
                     key={row.__key}
@@ -580,6 +602,11 @@ const ExternalRankingPage: React.FC = () => {
                     )}
                   </td>
                   <td className="px-4 py-3">
+                    <div className="text-xs text-gray-200" title={formatKst(lastInputAt)}>
+                      {formatKst(lastInputAt)}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
                     <input
                       type="number"
                       value={row.deposit_amount}
@@ -621,14 +648,14 @@ const ExternalRankingPage: React.FC = () => {
               })}
               {rows.length === 0 && (
                 <tr>
-                  <td className="px-4 py-10 text-center text-gray-400" colSpan={8}>
+                  <td className="px-4 py-10 text-center text-gray-400" colSpan={9}>
                     아직 입력된 데이터가 없습니다. “행 추가”로 시작하세요.
                   </td>
                 </tr>
               )}
               {rows.length > 0 && totalVisible === 0 && (
                 <tr>
-                  <td className="px-4 py-10 text-center text-gray-400" colSpan={8}>
+                  <td className="px-4 py-10 text-center text-gray-400" colSpan={9}>
                     검색 결과가 없습니다. “초기화”를 눌러 전체를 확인하세요.
                   </td>
                 </tr>
