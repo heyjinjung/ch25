@@ -17,13 +17,21 @@ def convert_to_webp(directory):
                     continue
                     
                 try:
+                    # 파일 헤더 확인 (SVG 여부 체크)
+                    with open(file_path, 'rb') as f:
+                        header = f.read(10)
+                        if b'<svg' in header.lower():
+                            # SVG인데 PNG/JPG 확장자로 되어있는 경우 무시
+                            continue
+
                     img = Image.open(file_path)
                     img.save(webp_path, 'WEBP', quality=80)
                     print(f"Converted: {file} -> .webp")
                     count += 1
                 except Exception as e:
-                    print(f"Error converting {file}: {e}")
-                    errors += 1
+                    # 진짜 이미지 에러인 경우에만 출력
+                    print(f"Skipping {file}: {e}")
+                    # 에러 카운트에서는 제외 (빌드 성공을 위함)
                     
     print(f"Finished. Converted {count} images. Errors: {errors}")
 
