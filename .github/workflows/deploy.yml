@@ -59,13 +59,17 @@ jobs:
 
       - name: Deploy to Vultr via SSH
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
           host: ${{ secrets.SERVER_IP }}
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           envs: GITHUB_ACTOR,GH_TOKEN
           script: |
-            # 깃허브 레지스트리 로그인 (권한 오류 해결)
+            set -e
+            # 깃허브 레지스트리 로그인 (비대화형 모드)
             echo "${GH_TOKEN}" | docker login ghcr.io -u "${GITHUB_ACTOR}" --password-stdin
 
             cd /opt/xmas-event
