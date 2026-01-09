@@ -42,6 +42,7 @@ services:
 
   # Backend API
   backend:
+    image: ghcr.io/heyjinjung/xmas-backend:latest
     build:
       context: .
       dockerfile: Dockerfile.backend
@@ -136,6 +137,7 @@ services:
 
   # Telegram Bot
   telegram_bot:
+    image: ghcr.io/heyjinjung/xmas-backend:latest
     build:
       context: .
       dockerfile: Dockerfile.backend

@@ -63,7 +63,11 @@ jobs:
           host: ${{ secrets.SERVER_IP }}
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          envs: GITHUB_ACTOR,GH_TOKEN
           script: |
+            # 깃허브 레지스트리 로그인 (권한 오류 해결)
+            echo "${GH_TOKEN}" | docker login ghcr.io -u "${GITHUB_ACTOR}" --password-stdin
+
             cd /opt/xmas-event
             # .env 파일이 없을 경우 필수 변수들을 포함하여 생성
             if [ ! -f .env ]; then
