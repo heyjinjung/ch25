@@ -65,9 +65,15 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /opt/xmas-event
+            # .env 파일이 없을 경우 필수 변수들을 포함하여 생성
             if [ ! -f .env ]; then
-              echo "DATABASE_URL=mysql+pymysql://xmasuser:xmaspass@db:3306/xmas_event" > .env
+              echo "MYSQL_ROOT_PASSWORD=2026" > .env
+              echo "MYSQL_DATABASE=xmas_event" >> .env
+              echo "MYSQL_USER=xmasuser" >> .env
+              echo "MYSQL_PASSWORD=2026" >> .env
+              echo "DATABASE_URL=mysql+pymysql://xmasuser:2026@db:3306/xmas_event" >> .env
               echo "REDIS_URL=redis://redis:6379/0" >> .env
+              echo "TZ=Asia/Seoul" >> .env
             fi
             docker compose pull
             docker compose up -d --remove-orphans
