@@ -159,7 +159,7 @@ const VaultMainPanel: React.FC = React.memo(() => {
         // Invalidate query to refresh status (e.g., balance -> 0)
         vault.refetch();
       } else {
-        alert(`신청 실패: ${res.message}`);
+        alert(res.message);
       }
     } catch (e) {
       console.error(e);

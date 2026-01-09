@@ -713,7 +713,7 @@ class MissionService:
         except Exception:
             pass
 
-        return True, mission.reward_type, reward_amount
+        return True, mission.reward_type, target_amount
 
     
     def ensure_login_progress(self, user_id: int):

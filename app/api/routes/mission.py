@@ -147,7 +147,15 @@ def claim_mission_reward(
 
     service = MissionService(db)
     try:
-        success, reward_type, amount = service.claim_reward(current_user.id, mission_id)
+        # [DEBUG] Catch 500 errors to inspect cause
+        try:
+            success, reward_type, amount = service.claim_reward(current_user.id, mission_id)
+        except Exception as e:
+            import traceback
+            print(f"[ERROR] Mission Claim Failed (ID: {mission_id}) - User: {current_user.id}", flush=True)
+            traceback.print_exc()
+            raise e
+
         if not success:
             status_label = (reward_type or "bad_request").lower().replace(" ", "_")[:32]
             http_status = 400
