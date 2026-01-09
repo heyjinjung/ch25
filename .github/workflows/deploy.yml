@@ -1,72 +1,74 @@
 name: XMAS Event Fast Deployment
 
 on:
-    push:
-        branches: [main, temp-merge2] # main 및 현재 작업 브랜치에서 실행
+  push:
+    branches: [main, temp-merge2]
 
 jobs:
-    build-and-push:
-        runs-on: ubuntu-latest
-        permissions:
-            contents: read
-            packages: write
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
 
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v4
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-            - name: Log in to GitHub Container Registry
-              uses: docker/login-action@v3
-              with:
-                  registry: ghcr.io
-                  username: ${{ github.actor }}
-                  password: ${{ secrets.GH_TOKEN }}
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GH_TOKEN }}
 
-            - name: Build and push Backend Image
-              uses: docker/build-push-action@v5
-              with:
-                  context: .
-                  file: Dockerfile.backend
-                  push: true
-                  tags: ghcr.io/${{ github.repository_owner }}/xmas-backend:latest
+      - name: Build and push Backend Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.backend
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/xmas-backend:latest
 
-            - name: Build and push Frontend Image
-              uses: docker/build-push-action@v5
-              with:
-                  context: .
-                  file: Dockerfile.frontend
-                  push: true
-                  tags: ghcr.io/${{ github.repository_owner }}/xmas-frontend:latest
+      - name: Build and push Frontend Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.frontend
+          push: true
+          build-args: |
+            VITE_API_URL=${{ vars.VITE_API_URL }}
+            VITE_ADMIN_API_URL=${{ vars.VITE_ADMIN_API_URL }}
+          tags: ghcr.io/${{ github.repository_owner }}/xmas-frontend:latest
 
-    deploy:
-        needs: build-and-push
-        runs-on: ubuntu-latest
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v4
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-            - name: Copy config files via SCP
-              uses: appleboy/scp-action@v0.1.7
-              with:
-                  host: ${{ secrets.SERVER_IP }}
-                  username: root
-                  key: ${{ secrets.SSH_PRIVATE_KEY }}
-                  source: "docker-compose.yml,nginx/*,scripts/init.sql"
-                  target: "/opt/xmas-event"
+      - name: Copy config files via SCP
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "docker-compose.yml,nginx/*,scripts/init.sql"
+          target: "/opt/xmas-event"
 
-            - name: Deploy to Vultr via SSH
-              uses: appleboy/ssh-action@v1.0.3
-              with:
-                  host: ${{ secrets.SERVER_IP }}
-                  username: root
-                  key: ${{ secrets.SSH_PRIVATE_KEY }}
-                  script: |
-                      cd /opt/xmas-event
-                      # .env 파일이 없을 경우 최소한만 생성 (현장 수정 필요)
-                      if [ ! -f .env ]; then
-                        echo "DATABASE_URL=mysql+pymysql://xmasuser:xmaspass@db:3306/xmas_event" > .env
-                        echo "REDIS_URL=redis://redis:6379/0" >> .env
-                      fi
-                      docker compose pull
-                      docker compose up -d --remove-orphans
-                      docker image prune -f
+      - name: Deploy to Vultr via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /opt/xmas-event
+            if [ ! -f .env ]; then
+              echo "DATABASE_URL=mysql+pymysql://xmasuser:xmaspass@db:3306/xmas_event" > .env
+              echo "REDIS_URL=redis://redis:6379/0" >> .env
+            fi
+            docker compose pull
+            docker compose up -d --remove-orphans
+            docker image prune -f
