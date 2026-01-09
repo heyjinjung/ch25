@@ -27,35 +27,6 @@
 - Keep cash->locked SoT: new rewards should credit inventory/locked vault, not cash_balance.
 - Admin files: avoid overwrite accidents (e.g., dashboard routes); append/patch only.
 
-
-## Operating Mode (MANDATORY)
-- Always follow: **PLAN → PATCH → VERIFY → SHIP**
-- Never jump to code changes before PLAN is written and accepted.
-
-### PLAN output format (must follow)
-A) Triage Summary (facts only, 3–6 lines)
-B) Root Cause Hypotheses TOP3 (ranked)
-   - Why plausible
-   - How to confirm (1 minimal check each)
-C) Fix Plan
-   - Allowed Files (full paths, max 12)
-   - Out of Scope (explicit)
-   - Minimal patch strategy (no refactor)
-   - Verify Checklist (backend + frontend + DB as applicable)
-D) If missing info: ask ONCE with a short list of required artifacts.
-
-### PATCH rules
-- Change ONLY Allowed Files.
-- Do NOT overwrite whole files; read first then minimal diff patch.
-- If a new needed change is outside scope: STOP and propose a follow-up ticket.
-
-### VERIFY rules
-- Provide a step-by-step checklist that a human can execute.
-- Prefer existing scripts/tests (pytest target, debug scripts) when relevant.
-
-### SHIP rules
-- Summarize: changed files + behavior change + risk + rollback
-- If behavior changed, update docs/changelog and docs index references.
-
-## Ask first when missing context
-- If behavior is unclear, ask once for: API/DB sample, failing log/stack, or exact user flow. Keep scope small and list allowed files before editing.
+## Working mode (delegated)
+- Response format + operating workflow (**PLAN → PATCH → VERIFY → SHIP**) is defined in `.github/instructions/rule2026.instructions.md`.
+- Keep this file focused on **project shape, SoT rules, and key file paths**.
