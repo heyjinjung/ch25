@@ -42,6 +42,18 @@ jobs:
         needs: build-and-push
         runs-on: ubuntu-latest
         steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Copy config files via SCP
+              uses: appleboy/scp-action@v0.1.7
+              with:
+                  host: ${{ secrets.SERVER_IP }}
+                  username: root
+                  key: ${{ secrets.SSH_PRIVATE_KEY }}
+                  source: "docker-compose.yml,nginx/*,scripts/init.sql"
+                  target: "/opt/xmas-event"
+
             - name: Deploy to Vultr via SSH
               uses: appleboy/ssh-action@v1.0.3
               with:
@@ -49,10 +61,12 @@ jobs:
                   username: root
                   key: ${{ secrets.SSH_PRIVATE_KEY }}
                   script: |
-                      mkdir -p /opt/xmas-event
                       cd /opt/xmas-event
-                      # 여기에 docker-compose.yml 파일이 있어야 pull이 가능합니다.
-                      # 초기에는 수동 또는 git pull로 파일을 가져와야 할 수 있습니다.
-                      docker compose pull || echo "No docker-compose.yml found yet."
-                      docker compose up -d --remove-orphans || echo "Deployment wait for config files."
+                      # .env 파일이 없을 경우 최소한만 생성 (현장 수정 필요)
+                      if [ ! -f .env ]; then
+                        echo "DATABASE_URL=mysql+pymysql://xmasuser:xmaspass@db:3306/xmas_event" > .env
+                        echo "REDIS_URL=redis://redis:6379/0" >> .env
+                      fi
+                      docker compose pull
+                      docker compose up -d --remove-orphans
                       docker image prune -f
