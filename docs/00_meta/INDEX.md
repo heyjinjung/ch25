@@ -20,11 +20,16 @@
 - 모듈/기획: `docs/05_modules/`
   - 디자인(기획/UX): `docs/05_modules/design/`
   - 제품 스펙: `docs/05_modules/product/`
+    - [NEW] 리텐션 핵심 기능 명세: `docs/05_modules/product/01_retention_feature_specs_v1.0.md`
 - 운영/런북: `docs/06_ops/`
   - 운영 문서: `docs/06_ops/ops/`
   - 어드민 운영: `docs/06_ops/admin/`
   - 배포/인프라: `docs/06_ops/deployment/`
+    - [NEW] Vultr 서울 서버 설정 가이드: `docs/06_ops/deployment/01_vultr_seoul_setup_guide_v1.0.md`
+    - [NEW] 서버 초기화 자동화 런북: `docs/06_ops/deployment/02_vultr_ubuntu_init_script_v1.0.md`
+    - [NEW] 고속 빌드 및 배포 가이드: `docs/06_ops/deployment/03_fast_deployment_guide_v1.0.md`
   - 이벤트/캠페인: `docs/06_ops/events/`
+    - [NEW] 통합 리텐션 전략 보고서: `docs/06_ops/events/01_retention_strategy_integrated_v1.1.md`
   - 감사/점검: `docs/06_ops/audit/`
 - 리뷰/검증: `docs/07_review/`
 - 변경로그: `docs/08_changelog/`
