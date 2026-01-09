@@ -30,6 +30,10 @@
 - **개선**: `docker compose pull` (30초) + `up -d` (30초)
 - **최종 효과**: 전체 배포 시간 **1분 이내** 단축.
 
+
+
+
+
 ## 4. 실행 런북 (Step-by-Step)
 
 ### 단계 1: GitHub 리포지토리 환경 설정 (Secrets)
@@ -37,6 +41,22 @@ GitHub 리포지토리의 **[Settings] -> [Secrets and variables] -> [Actions]**
 1.  **`GH_TOKEN`**: GitHub Personal Access Token (Classic 권한: `write:packages`).
 2.  **`SERVER_IP`**: Vultr 서버의 공인 IP 주소.
 3.  **`SSH_PRIVATE_KEY`**: 사용자의 컴퓨터에 생성한 SSH 키 중 **비공개키(`id_ed25519`)**의 전체 내용.
+
+
+
+
+GitHub Actions 빌드 상태 확인 및 서버 초기화 안내 중
+
+🎊 나이스 샷! 이제 피날레를 완성할 시간입니다.
+비밀값 등록과 Push까지 완벽하게 마치셨습니다. 이제 마지막으로 서버를 '준비 상태'로 만들기 위해 딱 한 단계만 남았습니다.
+
+🚀 마지막 단계: 서버 초기화 명령어 실행
+서버에 접속(SSH)하신 상태에서 아래 명령어를 복사해서 붙여넣으세요. 이 명령어가 서버의 보안을 높이고 Docker 배포 통로를 뚫어줍니다.
+
+bash
+curl -sSL https://raw.githubusercontent.com/heyjinjung/ch25/main/scripts/server_init.sh | sudo bash
+
+
 
 ### 단계 2: CI/CD 워크플로우 파일 작성
 `.github/workflows/deploy.yml` 파일을 생성합니다. (아래 5번 섹션 참고)
