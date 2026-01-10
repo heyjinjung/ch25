@@ -1,6 +1,6 @@
 """Add external ranking daily deposit delta table.
 
-Revision ID: 20260110_1200_add_external_ranking_daily_deposit_delta
+Revision ID: 20260110_1200_ext_rank_delta
 Revises: 20260106_0730_add_user_streak
 Create Date: 2026-01-10 12:00:00.000000
 
@@ -12,7 +12,7 @@ from sqlalchemy import text
 
 
 # revision identifiers, used by Alembic.
-revision = "20260110_1200_add_external_ranking_daily_deposit_delta"
+revision = "20260110_1200_ext_rank_delta"
 down_revision = "20260106_0730_add_user_streak"
 branch_labels = None
 depends_on = None
