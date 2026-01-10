@@ -16,7 +16,7 @@ from app.api.routes import (
 	today_feature,
 	team_battle,
 	survey,
-	survey,
+	viral,
 	vault,
 	ui_config,
 	ui_copy,
@@ -52,7 +52,6 @@ api_router.include_router(lottery.router)
 api_router.include_router(mission.router)
 api_router.include_router(ranking.router)
 api_router.include_router(team_battle.router)
-api_router.include_router(survey.router)
 api_router.include_router(survey.router)
 api_router.include_router(vault.router)
 api_router.include_router(ui_config.router)
