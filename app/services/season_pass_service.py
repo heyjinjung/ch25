@@ -123,34 +123,13 @@ class SeasonPassService:
         max_required = max((lvl.required_xp for lvl in levels), default=0)
         next_level_req = next((lvl.required_xp for lvl in levels if lvl.required_xp > progress.current_xp), max_required)
 
-        reward_labels = {
-            1: "룰렛 티켓 1장",
-            2: "주사위 티켓 1장",
-            3: "올인원 티켓 번들 (룰1+주1+복1)",
-            4: "복권 티켓 1장",
-            5: "티켓 폭탄 (룰3+주3)",
-            6: "5,000 포인트",
-            7: "1만 P + 골드 키 1개",
-            8: "10,000 포인트",
-            9: "룰렛 티켓 3장",
-            10: "골드 키 1개",
-            11: "복권 티켓 5장",
-            12: "50,000 포인트",
-            13: "주사위 티켓 10장",
-            14: "스페셜 번들 (룰5+주5+복2)",
-            15: "10만 P + 골드 키 2개",
-            16: "룰렛 티켓 10장",
-            17: "메가 티켓 번들 (룰10+주10+복10)",
-            18: "200,000 포인트",
-            19: "골드 키 3개",
-            20: "30만 P + 다이아몬드 키 3개",
-        }
+
 
         level_payload = []
         for level in levels:
             is_unlocked = progress.current_xp >= level.required_xp
             is_claimed = level.level in claimed_levels
-            reward_label = reward_labels.get(level.level, f"{level.reward_type} {level.reward_amount}")
+            reward_label = self._get_reward_label(level.reward_type, level.reward_amount)
             level_payload.append(
                 {
                     "level": level.level,
@@ -701,3 +680,29 @@ class SeasonPassService:
             "current_level": progress.current_level,
             "rewards": rewards,
         }
+
+    def _get_reward_label(self, r_type: str, amount: int) -> str:
+        """Generate human-readable label for rewards."""
+        formatted_amt = f"{amount:,}"
+        if r_type == "POINT":
+            return f"{formatted_amt} 포인트"
+        elif r_type == "GAME_XP":
+            return f"{formatted_amt} XP"
+        elif r_type == "TICKET_ROULETTE":
+            return f"룰렛 티켓 {formatted_amt}장"
+        elif r_type == "TICKET_DICE":
+            return f"주사위 티켓 {formatted_amt}장"
+        elif r_type == "TICKET_LOTTERY":
+            return f"복권 티켓 {formatted_amt}장"
+        elif r_type == "KEY_GOLD":
+            return f"골드 키 {formatted_amt}개"
+        elif r_type == "KEY_DIAMOND":
+            return f"다이아몬드 키 {formatted_amt}개"
+        elif r_type == "TICKET_BUNDLE":
+            # Bundles might have specific names based on amount if needed, 
+            # but usually it's just "Ticket Bundle"
+            if amount == 1:
+                return "올인원 티켓 번들"
+            return f"티켓 번들 {formatted_amt}개"
+        
+        return f"{r_type} {formatted_amt}"
