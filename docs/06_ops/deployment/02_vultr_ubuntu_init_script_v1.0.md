@@ -39,5 +39,37 @@ curl -sSL https://raw.githubusercontent.com/[REPO]/main/scripts/server_init.sh |
 - **Swap 확인**: `free -h` 명령어로 Swap 4G 확보 여부 확인.
 - **네트워크 확인**: `sysctl net.ipv4.tcp_congestion_control` 결과값이 `bbr`인지 확인.
 
+---
+
+## 📋 적용 결과 (2026-01-09)
+
+### ✅ 신규 서버 구축 완료
+- **서버 IP**: 158.247.222.179 (Seoul)
+- **초기화 상태**: 모든 단계 성공
+- **컨테이너 배포**: 6개 서비스 정상 실행
+
+### 🔄 후속 작업 안내
+
+본 스크립트 실행 후 아래 작업을 순차적으로 진행하세요:
+
+#### 1단계: GitHub Secrets 등록
+- `GH_TOKEN`: Personal Access Token
+- `SERVER_IP`: 158.247.222.179
+- `SSH_PRIVATE_KEY`: 비공개 키 전체 내용
+- `JWT_SECRET`, `TELEGRAM_BOT_TOKEN` 등
+
+#### 2단계: 자동 배포 실행
+```bash
+git push  # main 브랜치에 푸시하면 자동 배포 시작
+```
+
+#### 3단계: 프로덕션 전환 (선택)
+전환 가이드는 [신규 서버 전환 완료 가이드](../../../.gemini/antigravity/brain/8ebc65a0-d5a8-4b99-81ea-2c6c81af5671/next_steps_server_migration.md)를 참조하세요.
+
+> [!NOTE]
+> 프로덕션 전환 시 SSL 인증서 발급, 도메인 DNS 변경, 이전 서버 종료 등 약 30분~1시간의 추가 작업이 필요합니다.
+
+---
+
 ## 5. 변경 이력
 - v1.0 (2026-01-09, Antigravity): Ubuntu 24.04 전용 초기화 런북 최초 작성
