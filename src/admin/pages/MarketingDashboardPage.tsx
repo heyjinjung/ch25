@@ -16,9 +16,15 @@ import {
     ExternalLink,
     Dices,
     Disc,
-    Lock
+    Lock,
+    TrendingDown,
+    Gamepad2,
+    Trophy,
+    ArrowUpRight,
+    Package
 } from "lucide-react";
 import { fetchCrmStats, fetchUsersBySegment, AdminUserProfile } from "../api/adminCrmApi";
+import { fetchComprehensiveOverview } from "../api/adminDashboardApi";
 import { useToast } from "../../components/common/ToastProvider";
 import { useNavigate } from "react-router-dom";
 
@@ -48,6 +54,12 @@ const MarketingDashboardPage: React.FC = () => {
     const { data: stats, isLoading } = useQuery({
         queryKey: ["admin", "crm", "stats"],
         queryFn: fetchCrmStats,
+        refetchInterval: 60000,
+    });
+
+    const { data: ops, isLoading: opsLoading } = useQuery({
+        queryKey: ["admin", "dashboard", "comprehensive"],
+        queryFn: fetchComprehensiveOverview,
         refetchInterval: 60000,
     });
 
@@ -117,6 +129,114 @@ const MarketingDashboardPage: React.FC = () => {
                     </button>
                 </div>
             </header>
+
+            {/* Ops Summary (same metrics as main dashboard) */}
+            <div className="rounded-xl border border-[#333333] bg-[#111111] p-6">
+                <div className="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 className="text-lg font-bold text-white">일일 운영 요약</h3>
+                        <p className="text-sm text-gray-400">운영 대시보드 핵심 지표 (자동 새로고침)</p>
+                    </div>
+                    <button
+                        onClick={() => navigate("/admin/ops")}
+                        className="rounded-lg border border-[#333333] px-4 py-2 text-sm font-bold text-gray-200 hover:bg-[#171717] transition-colors"
+                    >
+                        운영 대시보드로
+                    </button>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+                    <div className="rounded-xl border border-[#262626] bg-[#111111] p-5">
+                        <p className="text-sm font-medium text-gray-400">금일 접속자</p>
+                        <h3 className="mt-2 text-2xl font-bold text-white tracking-tight">
+                            {opsLoading ? "-" : formatNumber(ops?.today_active_users)}
+                        </h3>
+                        <div className="mt-3 text-xs text-gray-500 font-mono flex justify-between items-center">
+                            <span>Today Active Users</span>
+                            <Users size={14} />
+                        </div>
+                    </div>
+
+                    <div className="rounded-xl border border-[#262626] bg-[#111111] p-5">
+                        <p className="text-sm font-medium text-gray-400">금일 게임 플레이</p>
+                        <h3 className="mt-2 text-2xl font-bold text-white tracking-tight">
+                            {opsLoading ? "-" : formatNumber(ops?.today_game_plays)}
+                        </h3>
+                        <div className="mt-3 text-xs text-gray-500 font-mono flex justify-between items-center">
+                            <span>Today Plays</span>
+                            <Gamepad2 size={14} />
+                        </div>
+                    </div>
+
+                    <div className="rounded-xl border border-[#262626] bg-[#111111] p-5">
+                        <p className="text-sm font-medium text-gray-400">티켓 사용량</p>
+                        <h3 className="mt-2 text-2xl font-bold text-white tracking-tight">
+                            {opsLoading ? "-" : formatNumber(ops?.today_ticket_usage)}
+                        </h3>
+                        <div className="mt-3 text-xs text-gray-500 font-mono flex justify-between items-center">
+                            <span>Tickets Used</span>
+                            <Trophy size={14} />
+                        </div>
+                    </div>
+
+                    <div className="rounded-xl border border-[#262626] bg-[#111111] p-5">
+                        <p className="text-sm font-medium text-gray-400">이탈 위험</p>
+                        <h3 className="mt-2 text-2xl font-bold text-white tracking-tight">
+                            {opsLoading ? "-" : formatNumber(ops?.churn_risk_count)}
+                        </h3>
+                        <div className="mt-3 text-xs text-gray-500 font-mono flex justify-between items-center">
+                            <span>어제 활동, 오늘 미접속</span>
+                            <TrendingDown size={14} />
+                        </div>
+                    </div>
+                </div>
+
+                <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+                    <div className="rounded-xl border border-[#262626] bg-[#111111] p-5">
+                        <p className="text-sm font-medium text-gray-400">웰컴 리텐션 (D-2)</p>
+                        <h3 className="mt-2 text-2xl font-bold text-white tracking-tight">
+                            {opsLoading ? "-" : `${(ops?.welcome_retention_rate ?? 0).toFixed(1)}%`}
+                        </h3>
+                        <div className="mt-3 text-xs text-gray-500 font-mono flex justify-between items-center">
+                            <span>D-2 Retention</span>
+                            <ArrowUpRight size={14} />
+                        </div>
+                    </div>
+
+                    <div className="rounded-xl border border-[#262626] bg-[#111111] p-5">
+                        <p className="text-sm font-medium text-gray-400">외부 랭킹 입금액</p>
+                        <h3 className="mt-2 text-2xl font-bold text-white tracking-tight">
+                            {opsLoading ? "-" : formatWon(ops?.external_ranking_deposit)}
+                        </h3>
+                        <div className="mt-3 text-xs text-gray-500 font-mono flex justify-between items-center">
+                            <span>External Ranking</span>
+                            <Crown size={14} />
+                        </div>
+                    </div>
+
+                    <div className="rounded-xl border border-[#262626] bg-[#111111] p-5">
+                        <p className="text-sm font-medium text-gray-400">전체 금고 보유액</p>
+                        <h3 className="mt-2 text-2xl font-bold text-white tracking-tight">
+                            {opsLoading ? "-" : formatWon(ops?.total_vault_balance)}
+                        </h3>
+                        <div className="mt-3 text-xs text-gray-500 font-mono flex justify-between items-center">
+                            <span>(잠금 + 해금)</span>
+                            <Lock size={14} />
+                        </div>
+                    </div>
+
+                    <div className="rounded-xl border border-[#262626] bg-[#111111] p-5">
+                        <p className="text-sm font-medium text-gray-400">인벤토리 자산</p>
+                        <h3 className="mt-2 text-2xl font-bold text-white tracking-tight">
+                            {opsLoading ? "-" : formatNumber(ops?.total_inventory_liability)}
+                        </h3>
+                        <div className="mt-3 text-xs text-gray-500 font-mono flex justify-between items-center">
+                            <span>보유 아이템 총 수량</span>
+                            <Package size={14} />
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             {/* KPI Grids */}
             <div className="space-y-6">
