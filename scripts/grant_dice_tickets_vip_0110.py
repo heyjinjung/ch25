@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
-"""
-VIP 유저 주사위 티켓 일괄 지급 스크립트 (2026-01-10)
-타겟: 활성 VIP 11명
+"""VIP 유저 주사위 티켓 일괄 지급 스크립트 (2026-01-10)
+
+요청사항:
+- CSV/운영 리스트에 있는 닉네임(사이트 닉네임 포함)으로만 매칭
+- 서버 DB에 존재하는 유저만 지급
+- 동명이인(복수 매칭) 발생 시 오지급 방지를 위해 스킵
+
 보상: DICE_TOKEN 5장
 """
 import sys
@@ -10,26 +14,28 @@ from pathlib import Path
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from sqlalchemy import or_, func
+from sqlalchemy import func
 from app.db.session import SessionLocal
 from app.models.user import User
 from app.models.game_wallet import GameTokenType
 from app.services.game_wallet_service import GameWalletService
 
 
-# 지급 대상 유저 리스트 (닉네임 / external_id)
-TARGET_USERS = [
-    {"nickname": "김현규", "external_id": "기프트"},
-    {"nickname": "송윤서", "external_id": "아사카"},
-    {"nickname": "박관종", "external_id": "정우성"},
-    {"nickname": "이용운", "external_id": "성민이"},
-    {"nickname": "현민수", "external_id": "민똘이"},
-    {"nickname": "임준범", "external_id": None},
-    {"nickname": "박서준", "external_id": None},
-    {"nickname": "커피사랑", "external_id": None},
-    {"nickname": "최기창", "external_id": None},
-    {"nickname": "오동수", "external_id": "동추"},
-    {"nickname": "최재훈", "external_id": "persipic"},
+# 지급 대상 닉네임 별칭 리스트
+# - "닉네임(사이트)"가 있는 경우: 그 값을 우선 사용
+# - 없는 경우: 운영 리스트의 한글 닉네임을 사용
+# - 최재훈은 요청에 따라 제외
+DEFAULT_TARGET_NICKNAME_ALIASES = [
+    ["기프트", "김현규"],
+    ["아사카", "송윤서"],
+    ["정우성", "박관종"],
+    ["성민이", "이용운"],
+    ["민똘이", "현민수"],
+    ["임준범"],
+    ["박서준"],
+    ["커피사랑"],
+    ["최기창"],
+    ["동추", "오동수"],
 ]
 
 GRANT_AMOUNT = 5
@@ -37,26 +43,61 @@ TOKEN_TYPE = GameTokenType.DICE_TOKEN
 REASON = "VIP_GRATITUDE_0110"
 
 
-def find_user(db: SessionLocal, nickname: str, external_id: str | None) -> User | None:
-    """닉네임 또는 external_id로 유저 검색 (대소문자 무시)"""
-    
-    conditions = []
-    
-    # 닉네임 검색 (대소문자 무시)
-    if nickname:
-        conditions.append(func.lower(User.nickname) == nickname.lower())
-    
-    # External ID 검색 (대소문자 무시)
-    if external_id:
-        conditions.append(func.lower(User.external_id) == external_id.lower())
-    
-    if not conditions:
-        return None
-    
-    return db.query(User).filter(or_(*conditions)).first()
+def _find_unique_user_by_nickname_aliases(db: SessionLocal, aliases: list[str]) -> tuple[User | None, str | None]:
+    """별칭(닉네임 후보들)로 유저를 유일하게 찾는다.
+
+    Returns:
+        (user, err)
+        - user: 유저를 유일하게 찾으면 User
+        - err: 미발견/중복 등으로 확정 불가하면 에러 문자열
+    """
+
+    clean_aliases = [a.strip() for a in aliases if (a or "").strip()]
+    if not clean_aliases:
+        return None, "NO_ALIASES"
+
+    matches: list[User] = []
+    for alias in clean_aliases:
+        rows = (
+            db.query(User)
+            .filter(func.lower(User.nickname) == alias.lower())
+            .limit(3)
+            .all()
+        )
+        for row in rows:
+            if all(row.id != existing.id for existing in matches):
+                matches.append(row)
+
+    if not matches:
+        return None, "NOT_FOUND"
+    if len(matches) > 1:
+        ids = ",".join(str(u.id) for u in matches)
+        return None, f"AMBIGUOUS_MULTIPLE_USERS(ids={ids})"
+    return matches[0], None
 
 
-def main(dry_run: bool = True):
+def _parse_nickname_alias_groups(raw: str | None) -> list[list[str]]:
+        """CLI에서 전달받은 별칭 그룹을 파싱.
+
+        형식:
+            - 그룹은 ';'로 구분
+            - 그룹 내 별칭은 ','로 구분
+
+        예:
+            "기프트,김현규;아사카,송윤서;커피사랑"
+        """
+
+        if not raw:
+                return []
+        groups: list[list[str]] = []
+        for group in raw.split(";"):
+                aliases = [x.strip() for x in group.split(",") if x.strip()]
+                if aliases:
+                        groups.append(aliases)
+        return groups
+
+
+def main(dry_run: bool = True, nickname_alias_groups: list[list[str]] | None = None):
     """메인 실행 함수"""
     
     db = SessionLocal()
@@ -65,7 +106,8 @@ def main(dry_run: bool = True):
     print("=" * 80)
     print(f"🎁 VIP 유저 주사위 티켓 일괄 지급 (2026-01-10)")
     print(f"📦 지급 내용: {TOKEN_TYPE.value} x {GRANT_AMOUNT}장")
-    print(f"🎯 대상 인원: {len(TARGET_USERS)}명")
+    targets = nickname_alias_groups or DEFAULT_TARGET_NICKNAME_ALIASES
+    print(f"🎯 대상 인원(별칭 그룹): {len(targets)}개")
     print(f"⚙️  모드: {'DRY RUN (시뮬레이션)' if dry_run else '🔥 EXECUTE (실제 지급)'}")
     print("=" * 80)
     print()
@@ -78,25 +120,16 @@ def main(dry_run: bool = True):
     try:
         # 1단계: 유저 검색
         print("📋 [1단계] 유저 검색 중...\n")
-        for idx, target in enumerate(TARGET_USERS, 1):
-            nickname = target["nickname"]
-            external_id = target["external_id"]
-            
-            user = find_user(db, nickname, external_id)
-            
+        for idx, aliases in enumerate(targets, 1):
+            user, err = _find_unique_user_by_nickname_aliases(db, aliases)
+
+            label = "/".join(aliases)
             if user:
-                found_users.append({
-                    "user": user,
-                    "nickname": nickname,
-                    "external_id": external_id
-                })
-                print(f"✅ [{idx:2d}] {nickname:10s} (DB: {user.nickname:10s}, ID: {user.id:3d}) - 발견")
+                found_users.append({"user": user, "aliases": aliases})
+                print(f"✅ [{idx:2d}] {label:20s} (DB: {user.nickname:12s}, ID: {user.id:3d}) - 발견")
             else:
-                not_found.append({
-                    "nickname": nickname,
-                    "external_id": external_id
-                })
-                print(f"❌ [{idx:2d}] {nickname:10s} (사이트: {external_id or 'N/A':10s}) - 미발견")
+                not_found.append({"aliases": aliases, "error": err})
+                print(f"❌ [{idx:2d}] {label:20s} - 미확정({err})")
         
         print(f"\n✅ 발견: {len(found_users)}명")
         print(f"❌ 미발견: {len(not_found)}명\n")
@@ -111,7 +144,6 @@ def main(dry_run: bool = True):
         
         for item in found_users:
             user = item["user"]
-            nickname = item["nickname"]
             
             try:
                 if not dry_run:
@@ -145,7 +177,8 @@ def main(dry_run: bool = True):
         if not_found:
             print("\n⚠️  미발견 유저 리스트:")
             for item in not_found:
-                print(f"   - {item['nickname']} (사이트: {item['external_id'] or 'N/A'})")
+                label = "/".join(item["aliases"])
+                print(f"   - {label} (사유: {item['error']})")
         
         if failed:
             print("\n❌ 실패 유저 리스트:")
@@ -177,7 +210,18 @@ if __name__ == "__main__":
         action="store_true",
         help="실제 지급 실행 (기본값: dry-run)"
     )
+
+    parser.add_argument(
+        "--nickname-alias-groups",
+        type=str,
+        default=None,
+        help=(
+            "별칭 그룹을 직접 지정합니다. 그룹은 ';'로, 그룹 내 별칭은 ','로 구분합니다. "
+            "예: '기프트,김현규;아사카,송윤서;커피사랑'"
+        ),
+    )
     
     args = parser.parse_args()
     
-    main(dry_run=not args.execute)
+    groups = _parse_nickname_alias_groups(args.nickname_alias_groups)
+    main(dry_run=not args.execute, nickname_alias_groups=groups or None)
