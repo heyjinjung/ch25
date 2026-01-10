@@ -136,48 +136,85 @@ jobs:
 
 ---
 
-## 📊 배포 진행 상황 (2026-01-09 기준)
+## 📊 배포 진행 상황 (2026-01-10 기준)
+
+### ✅ 운영 서버 정보
+
+| 항목 | 값 |
+|------|-----|
+| **Location** | Singapore |
+| **IP Address** | `149.28.135.147` |
+| **Domain** | `cc-jm.com` |
+| **vCPU** | 2 vCPUs |
+| **RAM** | 4096 MB (4GB) |
+| **Storage** | 50 GB NVMe |
+| **OS** | Ubuntu 22.04 x64 |
+| **Label** | ccjm |
+
+> [!NOTE]
+> 2026-01-10: 서버 Reinstall 후 스펙 업그레이드 완료. 신규 서버(158.247.222.179)는 폐기 예정.
 
 ### ✅ 완료된 작업
 
 #### 1. 인프라 준비
-- [x] Vultr 서버 생성 (Seoul, IP: 158.247.222.179)
+- [x] Vultr 서버 (Singapore, IP: 149.28.135.147)
 - [x] SSH 키 설정 및 서버 초기화 완료
-- [x] Docker, UFW, Swap, BBR 설정 완료
+- [x] Docker 28.2.2, Docker Compose 2.37.1 설치 완료
 
 #### 2. CI/CD 파이프라인
 - [x] GitHub Actions 워크플로우 구축
 - [x] GHCR 이미지 자동 빌드
 - [x] GitHub Secrets 기반 환경 변수 자동 주입
-- [x] SSH 자동 배포 완료
+- [ ] SSH 자동 배포 (Secrets 업데이트 후 재배포 필요)
 
-#### 3. 애플리케이션 배포
-- [x] 6개 컨테이너 정상 실행 (db, redis, backend, frontend, nginx, telegram-bot)
-- [x] 백엔드 API 정상 작동 (`http://158.247.222.179:8000`)
-- [x] 프론트엔드 로드 성공 (`http://158.247.222.179`)
+#### 3. GitHub Secrets 설정 (필수)
+https://github.com/heyjinjung/ch25/settings/secrets/actions
 
-docker compose down
-### ⏳ 남은 작업 (2026-01-10 최신)
+| Secret | 값 |
+|--------|-----|
+| `SERVER_IP` | `149.28.135.147` |
+| `SSH_PRIVATE_KEY` | 로컬 `~/.ssh/id_ed25519_vultr` 내용 |
 
-> [!IMPORTANT]
-> 현재 DNS와 웹훅이 모두 **구서버(149.28.135.147)** 를 가리킴. 신규 서버(158.247.222.179)는 HTTP 테스트용으로만 구동 중.
+### ⏳ 남은 작업 (2026-01-10)
 
-#### 즉시 수행 순서 (다운타임 최소)
-1) **nginx HTTPS 설정 복원(브랜치: temp-merge2)**
+#### 즉시 수행 순서
+1) **GitHub Secrets 업데이트** (SERVER_IP, SSH_PRIVATE_KEY)
+
+2) **Push하여 자동 배포 트리거**
 ```bash
-git switch temp-merge2
-git checkout origin/main -- nginx/nginx.conf
-git commit -m "restore: Nginx HTTPS 설정 복원" nginx/nginx.conf
+git commit --allow-empty -m "deploy: trigger CI/CD to restored server"
 git push origin temp-merge2
 ```
 
-2) **신규 서버에서 인증서 발급 & nginx 재시작**
+3) **인증서 발급 & nginx 재시작**
 ```bash
 docker compose run --rm certbot certonly \
   --webroot --webroot-path=/var/www/certbot \
   --email your-email@example.com --agree-tos \
   -d cc-jm.com -d www.cc-jm.com
 docker restart xmas-nginx
+```
+
+4) **DB 백업 복원** (로컬에서 서버로)
+```bash
+# 로컬에서 백업 파일 전송
+scp backups/server_dump.sql root@149.28.135.147:/tmp/
+
+# 서버에서 복원
+docker exec -i xmas-db mysql -u root -p2026 xmas_event < /tmp/server_dump.sql
+```
+
+5) **헬스/봇 점검**
+- 백엔드 헬스: `curl -f http://localhost:8000/health`
+- 프론트 로드: `https://cc-jm.com` 열고 콘솔 에러 없는지 확인
+- 봇 로그: `docker logs xmas-telegram-bot --tail 50` 에러 없음 확인
+
+### ⚠️ 체크리스트
+- [x] DNS: `cc-jm.com` → `149.28.135.147` (이미 연결됨)
+- [ ] HTTPS: 자물쇠 표시, certbot 발급 성공
+- [ ] DB: 백업 복원 완료
+- [ ] 텔레그램: 웹훅 정상, 로그 에러 없음
+- [ ] 기능: 로그인/미션/게임 등 핵심 플로우 스팟 테스트
 ```
 
 3) **DB 마이그레이션** (적용 전 backup 권장)
