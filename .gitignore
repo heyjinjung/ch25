@@ -148,6 +148,17 @@ lerna-debug.log*
 logs
 *.log
 
+# Database dumps / backups (never commit)
+backups/*.sql
+backups/**/*.sql
+backup_*.sql
+server_backup_*.sql
+server_dump*.sql
+remote_dump*.sql
+local_backup_*.sql
+xmas_dump_*.sql
+db_dump.sql
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
