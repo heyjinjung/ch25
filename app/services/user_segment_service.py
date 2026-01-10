@@ -15,6 +15,7 @@ from app.models.vault_earn_event import VaultEarnEvent
 from app.models.vault2 import VaultStatus
 from app.models.user_cash_ledger import UserCashLedger
 from app.models.external_ranking import ExternalRankingData
+from app.models.external_ranking_daily_deposit_delta import ExternalRankingDailyDepositDelta
 from app.models.roulette import RouletteLog
 from app.models.dice import DiceLog
 
@@ -484,6 +485,28 @@ class UserSegmentService:
         total_deposit_amount = int(financial_stats[0] or 0)
         total_play_count = int(financial_stats[1] or 0)
 
+        # 18.1 운영형 외부 입금액 (KST 오늘/최근 7일 델타)
+        try:
+            from zoneinfo import ZoneInfo
+
+            kst_today = datetime.now(ZoneInfo("Asia/Seoul")).date()
+        except Exception:
+            kst_today = datetime.utcnow().date()
+
+        last7_start = kst_today - timedelta(days=6)
+        today_deposit_amount = int(
+            db.query(func.sum(ExternalRankingDailyDepositDelta.deposit_delta))
+            .filter(ExternalRankingDailyDepositDelta.kst_date == kst_today)
+            .scalar()
+            or 0
+        )
+        last7d_deposit_amount = int(
+            db.query(func.sum(ExternalRankingDailyDepositDelta.deposit_delta))
+            .filter(ExternalRankingDailyDepositDelta.kst_date >= last7_start)
+            .scalar()
+            or 0
+        )
+
         return {
             "total_users": total_users,
             "active_users": active_users,
@@ -508,6 +531,8 @@ class UserSegmentService:
             "avg_vault_balance": avg_vault_balance,
             # New Financial KPIs
             "total_deposit_amount": total_deposit_amount,
+            "today_deposit_amount": today_deposit_amount,
+            "last7d_deposit_amount": last7d_deposit_amount,
             "total_play_count": total_play_count
         }
 
