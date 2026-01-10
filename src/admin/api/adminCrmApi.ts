@@ -28,6 +28,8 @@ export interface CrmStats {
 
     // NEW: Financial KPIs (2026-01-03)
     total_deposit_amount: number;
+    today_deposit_amount: number;
+    last7d_deposit_amount: number;
     total_play_count: number;
 
     // Financial Metrics

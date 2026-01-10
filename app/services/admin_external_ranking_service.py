@@ -7,6 +7,7 @@ from sqlalchemy import delete, select, func
 from sqlalchemy.orm import Session
 
 from app.models.external_ranking import ExternalRankingData
+from app.models.external_ranking_daily_deposit_delta import ExternalRankingDailyDepositDelta
 from app.models.user_activity import UserActivity
 from app.models.season_pass import SeasonPassStampLog
 from app.schemas.external_ranking import ExternalRankingCreate, ExternalRankingUpdate
@@ -23,6 +24,16 @@ class AdminExternalRankingService:
     STEP_AMOUNT = 100_000
     XP_PER_STEP = 20
     MAX_STEPS_PER_DAY = 50
+
+
+    @staticmethod
+    def _kst_today() -> date:
+        try:
+            from zoneinfo import ZoneInfo
+
+            return datetime.now(ZoneInfo("Asia/Seoul")).date()
+        except Exception:
+            return datetime.utcnow().date()
 
 
     @staticmethod
@@ -135,7 +146,7 @@ class AdminExternalRankingService:
         vault_service = VaultService()
         level_xp = LevelXPService()
         settings = get_settings()
-        today = date.today()
+        today = AdminExternalRankingService._kst_today()
         now = datetime.utcnow()
         step_amount = int(getattr(settings, "external_ranking_deposit_step_amount", AdminExternalRankingService.STEP_AMOUNT))
         xp_per_step = int(getattr(settings, "external_ranking_deposit_xp_per_step", AdminExternalRankingService.XP_PER_STEP))
@@ -203,6 +214,7 @@ class AdminExternalRankingService:
 
         # Personalization hook: if deposit_amount increased (vs pre-update snapshot), treat as "charge" update.
         # We don't have per-transaction charge logs in this codebase; the best available timestamp is row.updated_at.
+        deposit_delta_by_user: dict[int, int] = {}
         for row in results:
             snap = prev_snapshot.get(row.user_id, {"deposit_amount": 0})
             prev_amount = int(snap.get("deposit_amount") or 0)
@@ -215,6 +227,7 @@ class AdminExternalRankingService:
                 activity.last_charge_at = row.updated_at
 
                 deposit_delta = new_amount - prev_amount
+                deposit_delta_by_user[row.user_id] = deposit_delta_by_user.get(row.user_id, 0) + int(deposit_delta)
 
                 # Vault unlock hook (v1.0): deposit increase acts as "verification charge" trigger.
                 # Modified: All deposit increases trigger signal without NewMemberDiceEligibility check.
@@ -227,6 +240,34 @@ class AdminExternalRankingService:
                         new_amount=new_amount,
                         now=now,
                         commit=False,
+                    )
+
+        # Record daily deposit deltas for operational KPIs (KST calendar date)
+        if deposit_delta_by_user:
+            kst_date = today
+            existing = {
+                r.user_id: r
+                for r in db.execute(
+                    select(ExternalRankingDailyDepositDelta).where(
+                        ExternalRankingDailyDepositDelta.kst_date == kst_date,
+                        ExternalRankingDailyDepositDelta.user_id.in_(list(deposit_delta_by_user.keys())),
+                    )
+                )
+                .scalars()
+                .all()
+            }
+            for user_id, delta in deposit_delta_by_user.items():
+                row = existing.get(user_id)
+                if row:
+                    row.deposit_delta = int(row.deposit_delta or 0) + int(delta)
+                    db.add(row)
+                else:
+                    db.add(
+                        ExternalRankingDailyDepositDelta(
+                            user_id=int(user_id),
+                            kst_date=kst_date,
+                            deposit_delta=int(delta),
+                        )
                     )
         db.commit()
 

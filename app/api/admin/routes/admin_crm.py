@@ -107,6 +107,8 @@ class CrmStatsResponse(BaseModel):
     
     # NEW: Financial KPIs (2026-01-03)
     total_deposit_amount: int = 0
+    today_deposit_amount: int = 0
+    last7d_deposit_amount: int = 0
     total_play_count: int = 0
 
 @router.get("/stats", response_model=CrmStatsResponse)

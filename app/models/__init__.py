@@ -4,6 +4,7 @@ from app.models.feature import FeatureConfig, FeatureSchedule, FeatureType, User
 from app.models.game_wallet import GameTokenType, UserGameWallet
 from app.models.lottery import LotteryConfig, LotteryLog, LotteryPrize
 from app.models.external_ranking import ExternalRankingData, ExternalRankingRewardLog
+from app.models.external_ranking_daily_deposit_delta import ExternalRankingDailyDepositDelta
 from app.models.ranking import RankingDaily
 from app.models.roulette import RouletteConfig, RouletteLog, RouletteSegment
 from app.models.season_pass import (
@@ -73,6 +74,7 @@ __all__ = [
     "LotteryPrize",
     "ExternalRankingData",
     "ExternalRankingRewardLog",
+    "ExternalRankingDailyDepositDelta",
     "RankingDaily",
     "UserGameWallet",
     "GameTokenType",
@@ -104,4 +106,5 @@ __all__ = [
     "VaultWithdrawalRequest",
     "UserInventoryItem",
     "UserInventoryLedger",
+    "ExternalRankingDailyDepositDelta",
 ]

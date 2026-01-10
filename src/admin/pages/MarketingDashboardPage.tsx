@@ -89,7 +89,14 @@ const MarketingDashboardPage: React.FC = () => {
         ],
         // Row 4: Financial Strength (New)
         [
-            { title: "총 외부 입금액", value: formatWon(stats?.total_deposit_amount), icon: <Crown size={20} />, color: "purple", sub: "External Ranking Total", segment: "PAYING_USERS" },
+            {
+                title: "외부 입금액 (오늘)",
+                value: formatWon(stats?.today_deposit_amount),
+                icon: <Crown size={20} />,
+                color: "purple",
+                sub: stats ? `최근 7일 ${formatWon(stats.last7d_deposit_amount)}` : "-",
+                segment: "PAYING_USERS",
+            },
             { title: "외부 연동 플레이", value: formatNumber(stats?.total_play_count), icon: <Activity size={20} />, color: "green", sub: "API Play Count", segment: "TOTAL_USERS" },
         ]
     ];

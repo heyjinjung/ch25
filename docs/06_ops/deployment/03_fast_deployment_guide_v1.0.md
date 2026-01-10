@@ -156,79 +156,58 @@ jobs:
 - [x] 백엔드 API 정상 작동 (`http://158.247.222.179:8000`)
 - [x] 프론트엔드 로드 성공 (`http://158.247.222.179`)
 
-### ⏳ 남은 작업 (다음 세션)
+docker compose down
+### ⏳ 남은 작업 (2026-01-10 최신)
 
 > [!IMPORTANT]
-> 현재 신규 서버는 HTTP만 작동합니다. 프로덕션 전환을 위해서는 약 30분~1시간의 추가 작업이 필요합니다.
+> 현재 DNS와 웹훅이 모두 **구서버(149.28.135.147)** 를 가리킴. 신규 서버(158.247.222.179)는 HTTP 테스트용으로만 구동 중.
 
-#### STEP 1: Nginx HTTPS 설정 복원
+#### 즉시 수행 순서 (다운타임 최소)
+1) **nginx HTTPS 설정 복원(브랜치: temp-merge2)**
 ```bash
-# 로컬에서
-git checkout main -- nginx/nginx.conf
-git commit -m "restore: Nginx HTTPS 설정 복원"
-git push
+git switch temp-merge2
+git checkout origin/main -- nginx/nginx.conf
+git commit -m "restore: Nginx HTTPS 설정 복원" nginx/nginx.conf
+git push origin temp-merge2
 ```
 
-#### STEP 2: 도메인 DNS 변경
-- `cc-jm.com` A 레코드를 `158.247.222.179`로 변경
-- DNS 전파 확인 (`nslookup cc-jm.com`)
-
-#### STEP 3: SSL 인증서 발급
+2) **신규 서버에서 인증서 발급 & nginx 재시작**
 ```bash
-# 신규 서버에서
 docker compose run --rm certbot certonly \
   --webroot --webroot-path=/var/www/certbot \
   --email your-email@example.com --agree-tos \
   -d cc-jm.com -d www.cc-jm.com
-
 docker restart xmas-nginx
 ```
 
-#### STEP 4: 데이터베이스 마이그레이션
+3) **DB 마이그레이션** (적용 전 backup 권장)
 ```bash
 docker exec xmas-backend alembic upgrade head
+docker exec xmas-backend alembic current   # head 확인
 ```
 
-#### STEP 5: 이전 서버 종료
-```bash
-ssh root@149.28.135.147
-cd /root/ch25
-docker compose down
-```
+4) **헬스/봇 점검 (신규 서버)**
+- 백엔드 헬스: `curl -f http://localhost:8000/health`
+- 프론트 로드: 브라우저로 `http://158.247.222.179` 열고 콘솔 에러 없는지 확인
+- 텔레그램 웹훅: `curl https://api.telegram.org/bot$TOKEN/getWebhookInfo` → `ip_address`가 `158.247.222.179`, `last_error_*` 없음
+- 봇 로그: `docker logs xmas-telegram-bot --tail 50` 에러 없음 확인
 
-### ⚠️ 전환 전 주의사항
+5) **DNS 전환**
+- A 레코드 `cc-jm.com`, `www.cc-jm.com` → `158.247.222.179`
+- 전파 확인: `nslookup cc-jm.com` 결과가 신규 IP로 나올 때까지 대기
 
-- **현재 상태**: 이전 서버(149.28.135.147)가 프로덕션 운영 중
-- **신규 서버**: HTTP 테스트용 대기 중 (텔레그램 봇 비활성)
-- **도메인**: `cc-jm.com`은 아직 이전 서버를 가리킴
-- **전환 방식**: 위 5단계를 한 번에 진행 권장
+6) **최종 검증 후 공지 및 구서버 종료**
+- 10~15분 모니터링(프론트/백엔드/봇 응답, 핵심 플로우 스팟 테스트) 후 이상 없을 때 “무중단 전환 및 HTTPS 복원 완료” 공지
+- 구서버 종료: `ssh root@149.28.135.147 && cd /root/ch25 && docker compose down`
+
+### ⚠️ 체크리스트
+- DNS: `cc-jm.com` → `158.247.222.179`
+- HTTPS: 자물쇠 표시, certbot 발급 성공
+- DB: `alembic current` == head
+- 텔레그램: 웹훅 `ip_address=158.247.222.179`, `last_error` 없음, 로그 에러 없음
+- 기능: 로그인/미션/게임 등 경제 변동 없는 경로 최소 스팟 테스트
 
 ---
 
 ## 8. 변경 이력
 - v1.0 (2026-01-09, Antigravity): 고속 배포 전략 수립 및 비용 분석 추가
-
-상태 진단
-
-서비스는 여전히 기존 서버(149.28.135.147)에서 운영 중.
-신규 서버는 HTTP만 열려 있고 봇 비활성 상태. 도메인 cc-jm.com도 기존 서버를 가리킴.
-전환 시나리오는 5단계를 한 번에 진행해야 다운타임·혼선을 줄일 수 있음.
-권장 작업 순서(중단 없이 진행)
-
-HTTPS 설정 복원: nginx.conf 복원 → git push.
-신규 서버에서 인증서 발급: docker compose run --rm certbot ... → docker restart xmas-nginx.
-DB 마이그레이션: docker exec xmas-backend alembic upgrade head.
-기능 확인: 신규 서버에서 백엔드 헬스체크, 프론트 페이지 로드, 텔레그램 봇 동작(필요 시 env 확인 후 활성화).
-DNS 스위치: cc-jm.com A 레코드→158.247.222.179 변경 후 전파 확인.
-최종 확인 후 이전 서버 종료: docker compose down on 149.28.135.147.
-커뮤니케이션(유저 실망도 낮추기)
-
-전환 완료 후 공지 추천: “무중단 전환 및 HTTPS 복원 완료” 같이 안정화 후 안내.
-전환 중에는 조용히 진행하고, 문제 없을 때만 완료 공지. 필요하면 10~15분 모니터링 후 안내.
-체크리스트
-
-신규 서버: 프론트/백엔드/봇 각각 응답 정상?
-HTTPS: 인증서 발급 성공, 브라우저 잠금표시 OK?
-DNS: nslookup cc-jm.com 결과 신규 IP?
-데이터: 전환 후 핵심 기능(로그인/결제/미션/게임) 스팟 테스트.
-이 순서로 한 번에 진행하면 다운타임·사용자 혼란을 최소화할 수 있습니다.

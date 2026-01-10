@@ -22,3 +22,7 @@ def test_user_segment_service_get_overall_stats(session_factory):
     assert "new_user_growth" in stats
     assert "segments" in stats
     assert isinstance(stats["segments"], dict)
+
+    # Operational deposit deltas (KST)
+    assert "today_deposit_amount" in stats
+    assert "last7d_deposit_amount" in stats
