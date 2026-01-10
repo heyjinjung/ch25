@@ -133,7 +133,102 @@ jobs:
 > - **Public 레포지토리**라면 모든 기능이 무제한 무료입니다.
 > - **Private 레포지토리**라도 매일 수십 번 배포하는 것이 아니라면 무료 범위(2,000분)를 넘기기 매우 어렵습니다.
 
+
+---
+
+## 📊 배포 진행 상황 (2026-01-09 기준)
+
+### ✅ 완료된 작업
+
+#### 1. 인프라 준비
+- [x] Vultr 서버 생성 (Seoul, IP: 158.247.222.179)
+- [x] SSH 키 설정 및 서버 초기화 완료
+- [x] Docker, UFW, Swap, BBR 설정 완료
+
+#### 2. CI/CD 파이프라인
+- [x] GitHub Actions 워크플로우 구축
+- [x] GHCR 이미지 자동 빌드
+- [x] GitHub Secrets 기반 환경 변수 자동 주입
+- [x] SSH 자동 배포 완료
+
+#### 3. 애플리케이션 배포
+- [x] 6개 컨테이너 정상 실행 (db, redis, backend, frontend, nginx, telegram-bot)
+- [x] 백엔드 API 정상 작동 (`http://158.247.222.179:8000`)
+- [x] 프론트엔드 로드 성공 (`http://158.247.222.179`)
+
+### ⏳ 남은 작업 (다음 세션)
+
+> [!IMPORTANT]
+> 현재 신규 서버는 HTTP만 작동합니다. 프로덕션 전환을 위해서는 약 30분~1시간의 추가 작업이 필요합니다.
+
+#### STEP 1: Nginx HTTPS 설정 복원
+```bash
+# 로컬에서
+git checkout main -- nginx/nginx.conf
+git commit -m "restore: Nginx HTTPS 설정 복원"
+git push
+```
+
+#### STEP 2: 도메인 DNS 변경
+- `cc-jm.com` A 레코드를 `158.247.222.179`로 변경
+- DNS 전파 확인 (`nslookup cc-jm.com`)
+
+#### STEP 3: SSL 인증서 발급
+```bash
+# 신규 서버에서
+docker compose run --rm certbot certonly \
+  --webroot --webroot-path=/var/www/certbot \
+  --email your-email@example.com --agree-tos \
+  -d cc-jm.com -d www.cc-jm.com
+
+docker restart xmas-nginx
+```
+
+#### STEP 4: 데이터베이스 마이그레이션
+```bash
+docker exec xmas-backend alembic upgrade head
+```
+
+#### STEP 5: 이전 서버 종료
+```bash
+ssh root@149.28.135.147
+cd /root/ch25
+docker compose down
+```
+
+### ⚠️ 전환 전 주의사항
+
+- **현재 상태**: 이전 서버(149.28.135.147)가 프로덕션 운영 중
+- **신규 서버**: HTTP 테스트용 대기 중 (텔레그램 봇 비활성)
+- **도메인**: `cc-jm.com`은 아직 이전 서버를 가리킴
+- **전환 방식**: 위 5단계를 한 번에 진행 권장
+
 ---
 
 ## 8. 변경 이력
 - v1.0 (2026-01-09, Antigravity): 고속 배포 전략 수립 및 비용 분석 추가
+
+상태 진단
+
+서비스는 여전히 기존 서버(149.28.135.147)에서 운영 중.
+신규 서버는 HTTP만 열려 있고 봇 비활성 상태. 도메인 cc-jm.com도 기존 서버를 가리킴.
+전환 시나리오는 5단계를 한 번에 진행해야 다운타임·혼선을 줄일 수 있음.
+권장 작업 순서(중단 없이 진행)
+
+HTTPS 설정 복원: nginx.conf 복원 → git push.
+신규 서버에서 인증서 발급: docker compose run --rm certbot ... → docker restart xmas-nginx.
+DB 마이그레이션: docker exec xmas-backend alembic upgrade head.
+기능 확인: 신규 서버에서 백엔드 헬스체크, 프론트 페이지 로드, 텔레그램 봇 동작(필요 시 env 확인 후 활성화).
+DNS 스위치: cc-jm.com A 레코드→158.247.222.179 변경 후 전파 확인.
+최종 확인 후 이전 서버 종료: docker compose down on 149.28.135.147.
+커뮤니케이션(유저 실망도 낮추기)
+
+전환 완료 후 공지 추천: “무중단 전환 및 HTTPS 복원 완료” 같이 안정화 후 안내.
+전환 중에는 조용히 진행하고, 문제 없을 때만 완료 공지. 필요하면 10~15분 모니터링 후 안내.
+체크리스트
+
+신규 서버: 프론트/백엔드/봇 각각 응답 정상?
+HTTPS: 인증서 발급 성공, 브라우저 잠금표시 OK?
+DNS: nslookup cc-jm.com 결과 신규 IP?
+데이터: 전환 후 핵심 기능(로그인/결제/미션/게임) 스팟 테스트.
+이 순서로 한 번에 진행하면 다운타임·사용자 혼란을 최소화할 수 있습니다.
