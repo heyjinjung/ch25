@@ -26,7 +26,7 @@
 [docker-compose.yml](../../docker-compose.yml)의 `backend`/`telegram_bot` 서비스는 `env_file: .env`를 읽지만, 동시에 `environment:`로 일부 값을 **강제로 덮어씁니다**.
 
 - `backend.environment.DATABASE_URL` → `.env`의 `DATABASE_URL`보다 **우선**
-- `backend.environment.XP_FROM_GAME_REWARD` → 현재 compose에 기본값이 들어가 있으면 `.env` 값이 무시될 수 있음
+- `backend.environment.XP_FROM_GAME_REWARD` → (Deprecated) 과거 호환/디버그용 플래그. compose에 기본값이 있으면 `.env`가 무시될 수 있으니 잔존 여부를 점검.
 
 운영에서 이 값을 바꿔야 한다면:
 - (1) `.env`만 바꾸는 것으로 해결되지 않을 수 있고,

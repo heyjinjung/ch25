@@ -1,7 +1,10 @@
 # 2026 인벤토리(아이템) + 교환권(바우처) 시스템 설계서 (Frontend UI 포함)
 
 ## 0) 배경 / 문제
-- 미션에서 지급되는 `DIAMOND`(다이아)를 “상점 구매”나 “회원 인벤토리”에서 확인/사용해야 하는데, 현재 시스템은 **토큰 지갑(`user_game_wallet`)만 존재**하고 “아이템 인벤토리”가 없다.
+- 미션에서 지급되는 `DIAMOND`(다이아)를 “상점 구매”나 “회원 인벤토리”에서 확인/사용해야 한다.
+- 현행 경제 SoT 기준:
+  - **DIAMOND는 Inventory SoT** (`user_inventory_item`/`user_inventory_ledger`)
+  - 티켓/키 등 “월렛형 토큰”은 `user_game_wallet`/`user_game_wallet_ledger`
 - 요구사항: **다이아 30개로 ‘골드키 교환권’을 구매**, *다이아 50개로 ‘다이아몬드키 교환권’을 구매*, 교환권은 **인벤토리에 쌓아두었다가 나중에 사용**(= 실제 `GOLD_KEY` 지급)할 수 있어야 한다. 즉 다이아, 골드키, 다이아몬드 키는 보관이 되어야함 
   - 참고: Ticket Zero 대응(`TRIAL_GRANT`)은 **티켓 3종만** 대상이며, 키(`GOLD_KEY`/`DIAMOND_KEY`)는 체험 지급 대상이 아닙니다.
 
@@ -21,15 +24,15 @@
 - 복잡한 쿠폰/시리얼 코드(외부 쿠폰은 기존 `COUPON` 경로로 별도)
 
 ## 2) 용어 정의
-- **Wallet(지갑)**: `user_game_wallet` 기반, 수량형 토큰(티켓/키/다이아 등) 잔액.
-- **Inventory(인벤토리)**: “아이템(교환권)” 보유 수량을 저장하는 새 테이블.
+- **Wallet(지갑)**: `user_game_wallet` 기반, 수량형 토큰(티켓/키 등) 잔액.
+- **Inventory(인벤토리)**: `user_inventory_item` 기반, 인벤토리형 재화/아이템(DIAMOND/교환권/기프티콘 등) 보유 수량.
 - **Voucher(교환권/바우처)**: 인벤토리에 쌓이는 아이템. 사용 시 정해진 보상을 지급한다.
 
 ## 3) 데이터 모델(Backend/DB)
 
 ### 3.1 기존 재사용: `user_game_wallet`
 - `token_type`: `DIAMOND`, `GOLD_KEY`, `DIAMOND_KEY`, `ROULETTE_COIN` 등
-- 미션 보상 다이아는 이미 `DIAMOND` 토큰으로 지급됨 → 인벤토리(voucher)와 분리 유지?? 아니 이게 미션보상 다이아가 인벤토리 안으로 들어가야함
+- 현행 SoT 기준으로 **DIAMOND는 Wallet이 아니라 Inventory(`item_type="DIAMOND"`)** 로 관리한다.
 
 ### 3.2 신규: `user_inventory_item` (스택형 아이템 인벤토리)
 **목적**: 유저별 `item_type` 수량을 저장.
@@ -83,9 +86,9 @@
 ### 4.1 상점 구매: 다이아 → 교환권 적립
 1. 클라이언트가 상품 구매 요청
 2. 서버가 트랜잭션으로:
-   - `DIAMOND` 30 차감 (잔액 부족 시 실패)
+  - `DIAMOND` 30 차감(인벤토리 SoT, 잔액 부족 시 실패)
    - `user_inventory_item(VOUCHER_GOLD_KEY_1).quantity += 1`
-   - wallet/item 각각 ledger 기록
+  - inventory ledger 기록(필요 시 wallet ledger는 월렛형 지급/소비에만)
 
 중복 방지:
 - `Idempotency-Key` 헤더(또는 payload 필드) 지원
@@ -107,11 +110,11 @@ Response (예시):
 ```json
 {
   "wallet": {
-    "DIAMOND": 120,
     "GOLD_KEY": 3,
     "DIAMOND_KEY": 0
   },
   "items": [
+    { "item_type": "DIAMOND", "quantity": 120 },
     { "item_type": "VOUCHER_GOLD_KEY_1", "quantity": 2 }
   ]
 }

@@ -1,5 +1,10 @@
 # 신규회원 금고 퍼널 계획서 v1.0 (Lose 제거 버전)
 
+> ⚠️ **레거시 문서(과거 설계)**
+> - 이 문서는 2025-12-17 당시 가정(예: `vault_balance`/`cash_balance` 도입)을 포함합니다.
+> - **현행 Vault SoT는 `user.vault_locked_balance` + `vault_earn_event`** 이며, `cash_balance` 신규 write는 금지(레거시/마이그레이션 목적 외 사용 금지)입니다.
+> - 신규 구현/운영 기준은 최신 경제 SoT 문서 및 감사 플랜(ops audit)을 우선합니다.
+
 - 문서 타입: 기획/개발 공용 퍼널 계획서
 - 버전: v1.0
 - 작성일: 2025-12-17
@@ -80,14 +85,18 @@
 
 ---
 
-## 3) 데이터/DB 설계(확정: cash_balance + 원장 도입)
+## 3) 데이터/DB 설계(레거시 가정: cash_balance + 원장 도입)
 
 ### 3.1 DB 변경
-- `user` 테이블에 `vault_balance INT NOT NULL DEFAULT 0` 추가
+- (레거시 가정) `user` 테이블에 `vault_balance INT NOT NULL DEFAULT 0` 추가
 - 목적: 실제 cash/지갑과 분리된 ‘임시 금고 잔액’을 저장
 
-- `user` 테이블에 `cash_balance INT NOT NULL DEFAULT 0` 추가
+> 참고(현행): 운영/경제 SoT 기준에서 금고 정본은 `vault_locked_balance`이며 `vault_balance`는 레거시/미러로만 관측합니다.
+
+- (레거시 가정) `user` 테이블에 `cash_balance INT NOT NULL DEFAULT 0` 추가
 - 목적: 해금된 금액을 **실제 보유 머니(현금성 잔액)** 로 합산하기 위한 기준 컬럼
+
+> 참고(현행): `cash_balance`는 신규 지급/차감 write 금지(레거시/마이그레이션/운영툴 목적 외 사용 금지).
 
 - 신규 테이블 `user_cash_ledger` 추가(원장)
   - 목적: “언제/왜/얼마가 적립/차감됐는지” 감사/운영 확인
