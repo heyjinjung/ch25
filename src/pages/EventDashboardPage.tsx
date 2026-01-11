@@ -1,10 +1,10 @@
-// src/pages/EventDashboardPage.tsx
 import React from "react";
 import { Link } from "react-router-dom";
 import { useHaptic } from "../hooks/useHaptic";
 import { useMissionStore } from "../stores/missionStore";
 import { useSeasonPassStatus } from "../hooks/useSeasonPass";
 import { AlertCircle } from "lucide-react";
+import SurveyPromptBanner from "../components/survey/SurveyPromptBanner";
 
 const EventDashboardPage: React.FC = () => {
   const { impact } = useHaptic();
@@ -35,6 +35,9 @@ const EventDashboardPage: React.FC = () => {
       <div className="relative z-10 w-full px-2 pt-4 pb-8 max-w-xl mx-auto flex-1 flex flex-col">
         {/* Dashboard Grid */}
         <div className="space-y-6">
+          {/* Survey Banner */}
+          <SurveyPromptBanner />
+
           {/* Level Tower Section */}
           <Link
             to="/season-pass"

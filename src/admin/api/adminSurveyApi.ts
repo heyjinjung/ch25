@@ -51,6 +51,23 @@ export type AdminSurveyTrigger = {
   is_active: boolean;
 };
 
+export type AdminSurveyStats = {
+  total_completed: number;
+};
+
+export type AdminSurveyResponseItem = {
+  response_id: number;
+  user_id: number;
+  username: string | null;
+  telegram_id: number | null;
+  completed_at: string;
+  answers: Array<{ question_id: number; answer_text: string | null }>;
+};
+
+export type AdminSurveyResponseList = {
+  items: AdminSurveyResponseItem[];
+};
+
 export async function fetchAdminSurveys(): Promise<AdminSurveyListResponse> {
   const res = await adminApi.get<AdminSurveyListResponse>("/admin/api/surveys/");
   return res.data;
@@ -78,5 +95,14 @@ export async function fetchAdminSurveyTriggers(id: number): Promise<{ items: Adm
 
 export async function upsertAdminSurveyTriggers(id: number, payload: Array<Omit<AdminSurveyTrigger, "id">>): Promise<{ items: AdminSurveyTrigger[] }> {
   const res = await adminApi.put<{ items: AdminSurveyTrigger[] }>(`/admin/api/surveys/${id}/triggers`, payload);
+  return res.data;
+}
+export async function fetchAdminSurveyStats(id: number): Promise<AdminSurveyStats> {
+  const res = await adminApi.get<AdminSurveyStats>(`/admin/api/surveys/${id}/stats`);
+  return res.data;
+}
+
+export async function fetchAdminSurveyResponses(id: number): Promise<AdminSurveyResponseList> {
+  const res = await adminApi.get<AdminSurveyResponseList>(`/admin/api/surveys/${id}/responses`);
   return res.data;
 }

@@ -17,6 +17,8 @@ from app.schemas.survey import (
     SurveyTriggerUpsertRequest,
     SurveyUpsertRequest,
 )
+from app.models.user import User
+from app.models.survey import SurveyResponse, SurveyResponseAnswer, SurveyResponseStatus
 
 router = APIRouter(prefix="/admin/api/surveys", tags=["admin-surveys"])
 
@@ -224,3 +226,67 @@ def upsert_triggers(
     db.commit()
     db.refresh(survey)
     return list_triggers(survey_id=survey_id, db=db, _=0)
+
+@router.get("/{survey_id}/stats", summary="Get survey statistics")
+def get_survey_stats(
+    survey_id: int,
+    db: Session = Depends(get_db),
+    _: int = Depends(get_current_admin_id),
+):
+    survey = db.get(Survey, survey_id)
+    if not survey:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="SURVEY_NOT_FOUND")
+
+    # Count total responses
+    total_count = db.scalar(
+        select(func.count(SurveyResponse.id)).where(
+            SurveyResponse.survey_id == survey_id,
+            SurveyResponse.status == SurveyResponseStatus.COMPLETED
+        )
+    )
+
+    return {"total_completed": total_count}
+
+
+@router.get("/{survey_id}/responses", summary="List survey responses with answers")
+def list_survey_responses(
+    survey_id: int,
+    limit: int = 100,
+    offset: int = 0,
+    db: Session = Depends(get_db),
+    _: int = Depends(get_current_admin_id),
+):
+    # Fetch responses with user info
+    stmt = (
+        select(SurveyResponse, User.nickname, User.telegram_id)
+        .join(User, SurveyResponse.user_id == User.id)
+        .where(
+            SurveyResponse.survey_id == survey_id,
+            SurveyResponse.status == SurveyResponseStatus.COMPLETED
+        )
+        .order_by(SurveyResponse.updated_at.desc())
+        .limit(limit)
+        .offset(offset)
+    )
+    rows = db.execute(stmt).all()
+
+    results = []
+    for resp, nickname, tg_id in rows:
+        # Fetch answers for each response
+        # Optimization: Could use eager loading or a single huge query, but for admin view standard N+1 is acceptable with small limits
+        answers_stmt = select(SurveyResponseAnswer).where(SurveyResponseAnswer.response_id == resp.id)
+        answers = db.scalars(answers_stmt).all()
+        
+        results.append({
+            "response_id": resp.id,
+            "user_id": resp.user_id,
+            "username": nickname,  # Keep key as username for frontend compatibility or change to nickname
+            "telegram_id": tg_id,
+            "completed_at": resp.updated_at,
+            "answers": [
+                {"question_id": a.question_id, "answer_text": a.answer_text}
+                for a in answers
+            ]
+        })
+    
+    return {"items": results}
