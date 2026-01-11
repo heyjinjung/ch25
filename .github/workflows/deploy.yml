@@ -71,6 +71,7 @@ jobs:
           host: ${{ secrets.SERVER_IP }}
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          timeout: "30m"
           envs: GITHUB_ACTOR,GH_TOKEN,JWT_SECRET,TELEGRAM_BOT_TOKEN,SECRET_KEY,TELEGRAM_BOT_USERNAME,TELEGRAM_CHANNEL_USERNAME
           script: |
             set -e

@@ -67,6 +67,8 @@ yarn-debug.log*
 *.bak
 *.backup
 *.sql.gz
+*.tar.gz
+*.sql
 
 # OS 관련
 Thumbs.db
