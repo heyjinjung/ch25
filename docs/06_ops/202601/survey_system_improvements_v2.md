@@ -240,3 +240,25 @@ backend 로직 검증을 위해 `tests/test_survey_admin_stats.py`를 신규 생
 ---
 > **Note**: 본 문서는 기획 승인 후 구현이 완료된 상태입니다.
 
+
+---
+
+## 9. 출시 후 보완 사항 (Post-Release Refinements 2026-01-11)
+
+초기 배포 후 발견된 이슈 해결 및 시스템 안정성 강화를 위해 추가 적용된 사항입니다.
+
+### 9.1 설문 참여 프로세스 안정화
+- **중복 참여 원천 차단**
+    - **Frontend**: API에서 `is_completed` 필드를 수신, 이벤트 모달 목록 필터링 적용 (`SurveyPromptBanner.tsx`).
+    - **UX**: 설문 상세 페이지(`SurveyRunnerPage.tsx`)에 진입하더라도, 이미 완료된 상태라면 "이미 참여한 설문입니다" 안내 화면 표시 및 수정/제출 차단.
+- **안내 메시지 개선**
+    - `useToast`를 도입하여 오류 상황(필수 미입력, 중복 제출 등)에 대해 직관적인 피드백 제공.
+
+### 9.2 CI/CD 및 인프라 최적화
+- **배포 타임아웃 해결** (`Run Command Timeout`)
+    - 원인: Vultr 서버의 네트워크 속도 저하로 Docker Image Pull 시간이 10분 초과.
+    - 조치: GitHub Actions (`deploy.yml`)의 SSH 타임아웃을 **30분**으로 증설.
+- **빌드 속도 개선**
+    - `.dockerignore`에 `*.tar.gz`, `*.sql` 등 대용량 파일 제외 처리. 불필요한 빌드 컨텍스트 전송 방지.
+- **Dependency Sync**
+    - `requirements.txt` 내 `prometheus-client` 버전을 최신(`0.23.1`)으로 동기화하여 캐시 불일치 해소.
