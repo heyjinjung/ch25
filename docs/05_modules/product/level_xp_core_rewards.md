@@ -40,11 +40,10 @@
   - [app/services/season_pass_service.py](../app/services/season_pass_service.py) `maybe_add_internal_win_stamp()` / `get_internal_win_progress()`
   - 호출: [app/services/dice_service.py](../app/services/dice_service.py), [app/services/roulette_service.py](../app/services/roulette_service.py), [app/services/lottery_service.py](../app/services/lottery_service.py)
 
-### 2.4 (옵션) 게임 보상 포인트  시즌패스 보너스 XP
-- 조건: `XP_FROM_GAME_REWARD=true`일 때만 동작
-- 조건: reward_type이 `POINT`이고, meta.reason이 `dice_play|roulette_spin|lottery_play`인 경우
-- XP량: `meta.game_xp` 우선, 없으면 5
-- 근거 구현: [app/services/reward_service.py](../app/services/reward_service.py)
+### 2.4 (Deprecated) 게임 보상 포인트 → 시즌패스 보너스 XP
+- 과거 호환/디버그 목적의 전환 경로로, 신규 설계 기준에서는 사용을 지양한다.
+- 현행 SoT에서는 `reward_type=GAME_XP`만 XP로 반영하고, `POINT`는 Vault/현금성(금고)과 혼동되지 않게 분리한다.
+- (참고 구현) [app/services/reward_service.py](../app/services/reward_service.py)
 
 ### 2.5 스탬프 API(직접 호출)
 - `POST /api/season-pass/stamp`는 `base_xp_per_stamp * stamp_count + xp_bonus`만큼 XP를 추가하고, 레벨업/보상까지 처리

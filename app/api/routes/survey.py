@@ -40,16 +40,17 @@ def list_active_surveys(db: Session = Depends(get_db), user_id: int = Depends(ge
         # If latest is PENDING/IN_PROGRESS -> pending_response_id
         
         # Group by survey_id in python (or relying on order by desc to see latest first)
-        seen_surveys = set()
+        seen_pending = set()
         for resp in db.execute(stmt).scalars().all():
-            if resp.survey_id in seen_surveys:
-                continue
-            seen_surveys.add(resp.survey_id)
-            
+            # Check ALL responses for COMPLETED status
             if resp.status == SurveyResponseStatus.COMPLETED:
                 completed_map[resp.survey_id] = True
-            elif resp.status in [SurveyResponseStatus.PENDING, SurveyResponseStatus.IN_PROGRESS]:
-                response_map[resp.survey_id] = resp.id
+            
+            # Map the latest PENDING/IN_PROGRESS response (first one encountered due to desc sort)
+            if resp.survey_id not in seen_pending:
+                if resp.status in [SurveyResponseStatus.PENDING, SurveyResponseStatus.IN_PROGRESS]:
+                    response_map[resp.survey_id] = resp.id
+                    seen_pending.add(resp.survey_id)
 
     items = []
     for s in surveys:

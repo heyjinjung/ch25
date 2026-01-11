@@ -12,7 +12,7 @@
 | 자산 | SoT | 세부 원칙 |
 | :--- | :--- | :--- |
 | **금고 자산 (Vault)** | `user.vault_locked_balance` (+ `vault_earn_event` 로그) | 모든 포인트/현금성 지급 **단일 SoT**. 만료/락 없음. 환전 승인만 필요. |
-| **게임 XP (신설)** | `user_level_progress.current_xp`, 로그=`user_xp_event_log` | 보상 타입 `GAME_XP`만이 XP를 증가시킴. **"POINT"와 절대 혼동 금지**. |
+| **게임 XP/레벨 (시즌패스)** | `season_pass_progress.current_xp/current_level` (+ `season_pass_stamp_log`/`season_pass_reward_log`) | 보상 타입 `GAME_XP`만이 XP를 증가시킴. **"POINT"와 절대 혼동 금지**. (`user_level_progress`는 레거시/Deprecated) |
 | **티켓** | `user_game_wallet` | `ROULETTE_COIN`, `DICE_TOKEN`, `LOTTERY_TICKET`, `GOLD_KEY`, `DIAMOND_KEY` |
 | **다이아몬드** | `user_inventory_item` (`item_type="DIAMOND"`) | 상점→티켓 구매용. 다른 재화로 변환 금지. |
 | **배민 기프티콘** | `user_inventory_item` (`BAEMIN_GIFTICON_{5000/10000/20000}`) | 지급대기/보상함 |
@@ -40,7 +40,7 @@
 
 | 서비스 | 수정 사항 |
 | :--- | :--- |
-| **RewardService** | `POINT`/`CC_POINT` → `_grant_vault_locked`; `GAME_XP` 신설 분기; `grant_point(cash_balance)` 제거; `xp_from_game_reward` 플래그 제거/무시 |
+| **RewardService** | `POINT`/`CC_POINT` → `_grant_vault_locked`; `GAME_XP` 신설 분기; `cash_balance` 신규 지급 금지(레거시/디버그 목적 외 사용 금지); `xp_from_game_reward` 플래그는 Deprecated(실사용 제거) |
 | **VaultService** | 만료/락 로직 호출 경로 제거(즉시 적립만). `earn_event_id` 멱등 유지. |
 | **SeasonPassService** | XP는 `GAME_XP`만 처리 (legacy XP 타입도 `GAME_XP`로 매핑) |
 
@@ -76,7 +76,7 @@
 
 | 도메인 | SoT | 로그 테이블 | 비고 |
 | :--- | :--- | :--- | :--- |
-| **XP** | `user_level_progress` | `user_xp_event_log` | 모든 XP 변화는 여기 기록 |
+| **XP/레벨(시즌패스)** | `season_pass_progress` | `season_pass_stamp_log`, `season_pass_reward_log` | 운영/표시는 시즌패스 단일 기준. (`user_level_progress`/`user_xp_event_log`는 레거시/보정용으로만 관측) |
 | **금고** | `user.vault_locked_balance` | `vault_earn_event` | 게임/미션/이벤트/수동 지급 모두 멱등키 필요 |
 | **인벤토리** | `user_inventory_item` | `user_inventory_ledger` | 기프티콘/다이아/바우처 등 대기형 보상 |
 
@@ -182,7 +182,7 @@ idempotency_key = f"MIGRATION:{user_id}:{timestamp}"
 
 | 항목 | 변경 내용 |
 | :--- | :--- |
-| **완전 삭제** | 코드/설정 모두 제거. 게임 보상 XP는 `reward_type=GAME_XP`만 허용 |
+| **Deprecated(실사용 제거)** | 실동작에서 사용하지 않음. 게임 보상 XP는 `reward_type=GAME_XP`만 허용 (환경변수/설정 키는 호환 목적으로 잔존할 수 있음) |
 | **기존 POINT→XP 전환 로직** | 삭제. `POINT`는 **금고 적립으로 통일** |
 | **영향 범위** | RewardService, VaultService, SeasonPassService 내 해당 플래그 참조 코드 |
 

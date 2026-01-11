@@ -105,14 +105,15 @@
 - **Vault Locked Balance(잠금 금고)**: 사용자 자산(현금성) SoT (`user.vault_locked_balance`)
   - 이벤트 로그: `vault_earn_event` (idempotent)
 - **Cash Balance(현금/포인트 잔액)**: `user.cash_balance` + `UserCashLedger`
-  - RewardService의 `grant_point()`는 cash_balance를 올림(게임 외 지급 등)
+  - **주의(레거시)**: 운영/경제 SoT 기준으로 `POINT/CC_POINT` 신규 지급은 `vault_locked_balance`로만 가야 한다.
+  - `grant_point()`/`cash_balance`는 레거시/운영툴/디버그 목적 외 신규 사용 금지(드리프트/회귀 위험).
 
 ### 2.2 “POINT”가 헷갈리는 이유 (명확히 분리)
 
 - A) 게임 세그먼트의 `reward_type="POINT"`
   - RewardService.deliver()에서 meta.reason이 `roulette_spin/dice_play/lottery_play`이면 **"게임 보상"**으로 취급
-  - 설정 `xp_from_game_reward`가 켜진 경우에만 시즌 XP로 변환될 수 있음
-  - 설정이 꺼져 있으면(= v5/v6의 Strict Rule 권장) **아무것도 지급하지 않을 수 있음**
+  - (Deprecated) 과거에는 `xp_from_game_reward` 같은 암시적 전환이 있었으나, 현재 기준은 **`reward_type=GAME_XP`만 XP**로 반영
+  - 결론적으로 `POINT`는 “금고 적립”과 분리된 용어이며, 신규 설계에서는 **현금성 지급=금고**, **XP=GAME_XP**로 단순화
 
 - B) Vault 적립(잠금 금고)
   - 룰렛/주사위 플레이마다 `record_game_play_earn_event()`로 locked가 변함(플래그/eligible 조건)

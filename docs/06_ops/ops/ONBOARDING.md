@@ -18,7 +18,7 @@
 - `JWT_SECRET`, `JWT_ALGORITHM`, `JWT_EXPIRE_MINUTES`
 - `ENV=local`, `CORS_ORIGINS=["http://localhost:5173","http://localhost:3000"]`
 - `TEST_MODE=true` → (폐기된 today-feature 게이트와 무관) 게임 토큰 부족 시 자동 보충(QA 전용). **현장 실행 시 반드시 false.**
-- `XP_FROM_GAME_REWARD=true` → 게임 보상 포인트를 레벨 XP로 반영
+- `XP_FROM_GAME_REWARD` → (Deprecated) 과거 호환/디버그용 플래그. 현행 SoT에서는 `reward_type=GAME_XP`만 XP로 반영하며 POINT/Vault와 혼용 금지.
 - `LOG_LEVEL=DEBUG`, `TIMEZONE=Asia/Seoul`
 
 ### Frontend `.env.development` (Vite 자동 로드)
