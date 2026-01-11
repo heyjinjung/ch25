@@ -24,6 +24,7 @@ service = SurveyService()
 def list_active_surveys(db: Session = Depends(get_db), user_id: int = Depends(get_current_user_id)) -> SurveyListResponse:
     surveys = service.get_active_surveys(db=db, user_id=user_id)
     response_map: dict[int, int | None] = {}
+    completed_map: dict[int, bool] = {}
     if surveys:
         survey_ids = [s.id for s in surveys]
         stmt = (
@@ -31,12 +32,24 @@ def list_active_surveys(db: Session = Depends(get_db), user_id: int = Depends(ge
             .where(
                 SurveyResponse.survey_id.in_(survey_ids),
                 SurveyResponse.user_id == user_id,
-                SurveyResponse.status.in_([SurveyResponseStatus.PENDING, SurveyResponseStatus.IN_PROGRESS]),
             )
             .order_by(SurveyResponse.id.desc())
         )
+        # Fetch all responses for these surveys (could be multiple per survey if allowed, usually latest matters)
+        # Logic: If ANY response is COMPLETED -> is_completed=True
+        # If latest is PENDING/IN_PROGRESS -> pending_response_id
+        
+        # Group by survey_id in python (or relying on order by desc to see latest first)
+        seen_surveys = set()
         for resp in db.execute(stmt).scalars().all():
-            response_map[resp.survey_id] = resp.id
+            if resp.survey_id in seen_surveys:
+                continue
+            seen_surveys.add(resp.survey_id)
+            
+            if resp.status == SurveyResponseStatus.COMPLETED:
+                completed_map[resp.survey_id] = True
+            elif resp.status in [SurveyResponseStatus.PENDING, SurveyResponseStatus.IN_PROGRESS]:
+                response_map[resp.survey_id] = resp.id
 
     items = []
     for s in surveys:
@@ -49,6 +62,7 @@ def list_active_surveys(db: Session = Depends(get_db), user_id: int = Depends(ge
                 "status": s.status,
                 "reward_json": s.reward_json,
                 "pending_response_id": response_map.get(s.id),
+                "is_completed": completed_map.get(s.id, False),
             }
         )
     return SurveyListResponse(items=items)

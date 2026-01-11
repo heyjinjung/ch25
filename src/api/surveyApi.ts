@@ -15,6 +15,7 @@ export type SurveySummary = {
   status: string;
   reward_json?: SurveyRewardMeta | null;
   pending_response_id?: number | null;
+  is_completed?: boolean;
 };
 
 export type SurveyOption = {

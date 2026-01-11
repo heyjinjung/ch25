@@ -13,7 +13,12 @@ const SurveyPromptBanner: React.FC = () => {
   // Find the most relevant survey (pending first, then any active)
   const primary = useMemo(() => {
     if (surveys.length === 0) return null;
-    return surveys.find((s) => s.pending_response_id) || surveys[0];
+
+    // Filter out completed surveys so they don't show in modal
+    const incomplete = surveys.filter(s => !s.is_completed);
+    if (incomplete.length === 0) return null;
+
+    return incomplete.find((s) => s.pending_response_id) || incomplete[0];
   }, [surveys]);
 
   useEffect(() => {

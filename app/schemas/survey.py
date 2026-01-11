@@ -42,6 +42,7 @@ class SurveySummary(BaseModel):
     status: SurveyStatus
     reward_json: dict[str, Any] | None = None
     pending_response_id: int | None = Field(default=None, description="Existing response id if in-progress")
+    is_completed: bool = Field(default=False, description="Whether the current user completed this survey")
 
 
 class SurveyOptionSchema(BaseModel):
