@@ -1,73 +1,92 @@
-import React, { useEffect, useMemo, useRef } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useActiveSurveys } from "../../hooks/useSurvey";
-import { useToast } from "../common/ToastProvider";
+import { X } from "lucide-react";
 
 const SurveyPromptBanner: React.FC = () => {
   const { data, isLoading } = useActiveSurveys();
-  const { addToast } = useToast();
   const navigate = useNavigate();
+  const [isVisible, setIsVisible] = useState(false);
 
-  const pending = useMemo(() => {
-    if (!data || data.length === 0) return null;
-    return data.find((s) => s.pending_response_id) ?? null;
-  }, [data]);
+  const surveys = data || [];
 
-  const pendingKey = useMemo(() => {
-    if (!pending) return null;
-    return `survey:resume:${pending.id}:${pending.pending_response_id}`;
-  }, [pending]);
-
-  const lastToastKeyRef = useRef<string | null>(null);
+  // Find the most relevant survey (pending first, then any active)
+  const primary = useMemo(() => {
+    if (surveys.length === 0) return null;
+    return surveys.find((s) => s.pending_response_id) || surveys[0];
+  }, [surveys]);
 
   useEffect(() => {
-    if (!pending || !pendingKey) return;
+    if (!primary) return;
 
-    const storageKey = "survey_resume_toast_key_v1";
-    let stored: string | null = null;
-    try {
-      stored = sessionStorage.getItem(storageKey);
-    } catch {
-      stored = null;
+    // Check if user dismissed this survey in this session
+    const storageKey = `survey_dismissed_session_${primary.id}`;
+    const dismissed = sessionStorage.getItem(storageKey);
+
+    if (!dismissed) {
+      // Small delay for better UX
+      const timer = setTimeout(() => setIsVisible(true), 500);
+      return () => clearTimeout(timer);
     }
+  }, [primary]);
 
-    if (stored === pendingKey || lastToastKeyRef.current === pendingKey) return;
+  const handleDismiss = () => {
+    if (!primary) return;
+    setIsVisible(false);
+    sessionStorage.setItem(`survey_dismissed_session_${primary.id}`, "true");
+  };
 
-    addToast(`${pending.title} 설문을 이어서 진행하세요`, "info");
-    lastToastKeyRef.current = pendingKey;
-    try {
-      sessionStorage.setItem(storageKey, pendingKey);
-    } catch {
-      // ignore
-    }
-  }, [pending, pendingKey, addToast]);
+  const handleParticipate = () => {
+    if (!primary) return;
+    setIsVisible(false);
+    navigate(`/surveys/${primary.id}`);
+  };
 
-  if (isLoading || !data || data.length === 0) return null;
+  if (isLoading || !primary || !isVisible) return null;
 
-  const primary = data[0];
   return (
-    <div className="rounded-xl border border-amber-500/50 bg-amber-500/10 px-4 py-3 shadow-md shadow-amber-900/30">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-amber-200">Survey</p>
-          <p className="text-sm font-semibold text-amber-50">{primary.title}</p>
-          {primary.description && <p className="text-xs text-amber-100/90">{primary.description}</p>}
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4 backdrop-blur-sm animate-in fade-in duration-300">
+      <div className="relative w-full max-w-sm overflow-hidden rounded-2xl border border-[#91F402]/30 bg-[#111111] p-0 shadow-2xl shadow-[#91F402]/10 zoom-in-95 duration-300">
+
+        {/* Header Image or Gradient */}
+        <div className="relative h-32 w-full bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A]">
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-4xl">📝</div>
+          </div>
+          <button
+            onClick={handleDismiss}
+            className="absolute right-3 top-3 rounded-full bg-black/40 p-1 text-gray-400 hover:text-white backdrop-blur-md"
+          >
+            <X size={20} />
+          </button>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => navigate(`/surveys/${primary.id}`)}
-            className="rounded-full bg-amber-400 px-3 py-2 text-xs font-bold text-slate-950 hover:bg-amber-300"
-          >
-            참여하기
-          </button>
-          <button
-            type="button"
-            onClick={() => navigate("/surveys")}
-            className="rounded-full border border-amber-300 px-3 py-2 text-xs font-semibold text-amber-100 hover:bg-amber-400/20"
-          >
-            목록 보기
-          </button>
+
+        <div className="p-5 text-center">
+          <h3 className="mb-2 text-xl font-bold text-white">
+            {primary.title}
+          </h3>
+          <p className="mb-6 text-sm text-gray-400 leading-relaxed">
+            {primary.description || "잠깐! 설문에 참여하고 보상을 받아가세요."}
+            <br />
+            <span className="text-[#91F402] text-xs mt-1 block">
+              (소요시간: 약 1분)
+            </span>
+          </p>
+
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={handleParticipate}
+              className="w-full rounded-xl bg-[#91F402] py-3.5 text-sm font-bold text-black hover:bg-[#7ED302] active:scale-[0.98] transition-all"
+            >
+              지금 참여하기
+            </button>
+            <button
+              onClick={handleDismiss}
+              className="w-full rounded-xl bg-[#1A1A1A] py-3.5 text-sm font-medium text-gray-400 hover:bg-[#222222] hover:text-white transition-all"
+            >
+              다음에 하기
+            </button>
+          </div>
         </div>
       </div>
     </div>

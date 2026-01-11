@@ -15,7 +15,13 @@ import {
   fetchAdminSurveyTriggers,
   updateAdminSurvey,
   upsertAdminSurveyTriggers,
+  fetchAdminSurveyStats,
+  fetchAdminSurveyResponses,
+  AdminSurveyStats,
+  AdminSurveyResponseItem,
 } from "../api/adminSurveyApi";
+
+import { REWARD_TYPES } from "../constants/rewardTypes";
 
 const rewardPresets = [
   { label: "주사위 티켓 1장", value: { reward_type: "TICKET_DICE", amount: 1, toast_message: "주사위 티켓 지급" } },
@@ -24,6 +30,13 @@ const rewardPresets = [
 ];
 
 type RewardPreset = (typeof rewardPresets)[number];
+
+// ... existing code ...
+
+
+
+// ... render logic ...
+
 
 const questionSchema = z.object({
   title: z.string().min(1, "질문 제목은 필수입니다"),
@@ -54,6 +67,8 @@ const surveySchema = z.object({
   start_at: z.string().optional().nullable(),
   end_at: z.string().optional().nullable(),
   questions: z.array(questionSchema),
+  reward_type_field: z.string().optional(),
+  reward_amount_field: z.union([z.string(), z.number()]).optional(),
 });
 
 type SurveyFormValues = z.infer<typeof surveySchema>;
@@ -69,10 +84,19 @@ type TriggerFormValues = {
   }>;
 };
 
+
+
+// ... existing types ...
+
 const SurveyAdminPage: React.FC = () => {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isTriggerModalOpen, setIsTriggerModalOpen] = useState(false);
+  const [isResponseModalOpen, setIsResponseModalOpen] = useState(false);
+
+  // Local state for UI toggle (Simple vs Advanced JSON)
+  const [useRawJson, setUseRawJson] = useState(false);
+
   const queryClient = useQueryClient();
 
   const listQuery = useQuery<{ items: AdminSurvey[] }>({
@@ -92,6 +116,18 @@ const SurveyAdminPage: React.FC = () => {
     enabled: selectedId !== null && isTriggerModalOpen,
   });
 
+  const statsQuery = useQuery<AdminSurveyStats>({
+    queryKey: ["admin", "surveys", selectedId, "stats"],
+    queryFn: () => fetchAdminSurveyStats(selectedId as number),
+    enabled: selectedId !== null && isModalOpen,
+  });
+
+  const responseQuery = useQuery<{ items: AdminSurveyResponseItem[] }>({
+    queryKey: ["admin", "surveys", selectedId, "responses"],
+    queryFn: () => fetchAdminSurveyResponses(selectedId as number),
+    enabled: selectedId !== null && isResponseModalOpen,
+  });
+
   const form = useForm<SurveyFormValues>({
     resolver: zodResolver(surveySchema),
     defaultValues: {
@@ -105,9 +141,50 @@ const SurveyAdminPage: React.FC = () => {
       start_at: "",
       end_at: "",
       questions: [],
+      reward_type_field: "TICKET_DICE",
+      reward_amount_field: 1,
     },
     mode: "onChange",
   });
+
+  // Watch payload fields for auto-generation
+  const rewardType = form.watch("reward_type_field");
+  const rewardAmount = form.watch("reward_amount_field");
+
+  // Effect to update JSON string when simplified fields change
+  React.useEffect(() => {
+    if (useRawJson) return; // Don't overwrite if in raw mode
+
+    if (rewardType && rewardType !== "NONE") {
+      const selected = REWARD_TYPES.find(r => r.value === rewardType);
+      const label = selected?.label || rewardType;
+      const amt = Number(rewardAmount) || 0;
+
+      let payload: any = {
+        reward_type: rewardType,
+        amount: amt,
+        toast_message: `${label} 지급 완료`
+      };
+
+      // SOT Specific mapping
+      if (rewardType === "DICE_TOKEN") {
+        payload = { token_type: "DICE_TOKEN", amount: amt, toast_message: `주사위 토큰 ${amt}개 지급` };
+      } else if (rewardType === "TICKET_DICE") {
+        payload = { reward_type: "TICKET_DICE", amount: amt, toast_message: `주사위 티켓 ${amt}장 지급` };
+      } else if (rewardType === "POINT") {
+        payload = { reward_type: "POINT", amount: amt, toast_message: `${amt} 포인트 지급` };
+      }
+
+      // Only update if different to avoid loops (though stringify helps)
+      const currentJson = form.getValues("reward_json_text");
+      const newJson = JSON.stringify(payload, null, 2);
+      if (currentJson !== newJson) {
+        form.setValue("reward_json_text", newJson, { shouldDirty: true });
+      }
+    } else if (rewardType === "NONE") {
+      form.setValue("reward_json_text", "{}", { shouldDirty: true });
+    }
+  }, [rewardType, rewardAmount, useRawJson, form]);
 
   const { fields: questionFields, append: appendQuestion, remove: removeQuestion } = useFieldArray({
     control: form.control,
@@ -153,7 +230,7 @@ const SurveyAdminPage: React.FC = () => {
       setIsTriggerModalOpen(false);
     },
   });
-  
+
   const onPresetReward = (preset: RewardPreset) => {
     form.setValue("reward_json_text", JSON.stringify(preset.value, null, 2));
   };
@@ -350,189 +427,234 @@ const SurveyAdminPage: React.FC = () => {
 
       {isModalOpen && (
         <ModalShell title="설문 편집" onClose={() => setIsModalOpen(false)}>
+          <div className="mb-4 flex items-center justify-between rounded-lg border border-[#333333] bg-[#0A0A0A] p-3">
+            <div className="flex items-center gap-4">
+              <div>
+                <p className="text-xs text-gray-400">참여 인원</p>
+                <p className="text-lg font-bold text-[#91F402]">{statsQuery.data?.total_completed ?? 0}명</p>
+              </div>
+            </div>
+            <SecondaryButton onClick={() => setIsResponseModalOpen(true)}>
+              응답 보기
+            </SecondaryButton>
+          </div>
           <form className="space-y-4" onSubmit={onSubmit}>
-          <div className="space-y-1">
-            <label className={labelClass}>제목</label>
-            <input
-              className={inputClass}
-              {...form.register("title")}
-            />
-            {form.formState.errors.title && <p className="text-sm text-red-300">{form.formState.errors.title.message}</p>}
-          </div>
-          <div className="space-y-1">
-            <label className={labelClass}>설명</label>
-            <textarea
-              className={inputClass}
-              rows={2}
-              {...form.register("description")}
-            />
-          </div>
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             <div className="space-y-1">
-              <label className={labelClass}>채널</label>
-              <select className={inputClass} {...form.register("channel")}>
-                <option value="GLOBAL">GLOBAL</option>
-                <option value="SEASON_PASS">SEASON_PASS</option>
-                <option value="ROULETTE">ROULETTE</option>
-                <option value="DICE">DICE</option>
-                <option value="LOTTERY">LOTTERY</option>
-                <option value="TEAM_BATTLE">TEAM_BATTLE</option>
-              </select>
+              <label className={labelClass}>제목</label>
+              <input
+                className={inputClass}
+                {...form.register("title")}
+              />
+              {form.formState.errors.title && <p className="text-sm text-red-300">{form.formState.errors.title.message}</p>}
             </div>
             <div className="space-y-1">
-              <label className={labelClass}>상태</label>
-              <select className={inputClass} {...form.register("status")}>
-                <option value="DRAFT">DRAFT</option>
-                <option value="ACTIVE">ACTIVE</option>
-                <option value="PAUSED">PAUSED</option>
-                <option value="ARCHIVED">ARCHIVED</option>
-              </select>
+              <label className={labelClass}>설명</label>
+              <textarea
+                className={inputClass}
+                rows={2}
+                {...form.register("description")}
+              />
             </div>
-          </div>
-          <div className="space-y-2">
-            <label className={labelClass}>보상 설정</label>
-            <div className="flex flex-wrap gap-2">
-              {rewardPresets.map((preset) => (
-                <button
-                  key={preset.label}
-                  type="button"
-                  className="rounded-full border border-[#2D6B3B] px-3 py-1 text-xs font-semibold text-gray-200 hover:bg-[#2D6B3B] hover:text-[#91F402]"
-                  onClick={() => onPresetReward(preset)}
-                >
-                  {preset.label}
-                </button>
-              ))}
-              <button
-                type="button"
-                className="rounded-full border border-[#333333] px-3 py-1 text-xs font-semibold text-gray-200 hover:bg-[#2C2C2E]"
-                onClick={() => form.setValue("reward_json_text", "{}", { shouldValidate: true, shouldDirty: true })}
-              >
-                보상 없음
-              </button>
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              <div className="space-y-1">
+                <label className={labelClass}>채널</label>
+                <select className={inputClass} {...form.register("channel")}>
+                  <option value="GLOBAL">GLOBAL</option>
+                  <option value="SEASON_PASS">SEASON_PASS</option>
+                  <option value="ROULETTE">ROULETTE</option>
+                  <option value="DICE">DICE</option>
+                  <option value="LOTTERY">LOTTERY</option>
+                  <option value="TEAM_BATTLE">TEAM_BATTLE</option>
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className={labelClass}>상태</label>
+                <select className={inputClass} {...form.register("status")}>
+                  <option value="DRAFT">DRAFT</option>
+                  <option value="ACTIVE">ACTIVE</option>
+                  <option value="PAUSED">PAUSED</option>
+                  <option value="ARCHIVED">ARCHIVED</option>
+                </select>
+              </div>
             </div>
-            <textarea
-              className={inputClass}
-              rows={3}
-              {...form.register("reward_json_text")}
-              placeholder='{"reward_type":"TICKET_DICE","amount":1,"toast_message":"주사위 티켓 지급"}'
-            />
-            {form.formState.errors.reward_json_text && <p className="text-sm text-red-300">{form.formState.errors.reward_json_text.message}</p>}
-            <p className="text-xs text-gray-500">버튼 클릭 시 위 입력란에 JSON이 채워집니다. 필요하면 직접 수정하세요.</p>
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-gray-200">질문</p>
-              <SecondaryButton
-                type="button"
-                onClick={() =>
-                  appendQuestion({
-                    title: "새 질문",
-                    question_type: "SINGLE_CHOICE",
-                    order_index: questionFields.length,
-                    is_required: true,
-                    options: [],
-                  })
-                }
-              >
-                질문 추가
-              </SecondaryButton>
-            </div>
-            <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
-              {questionFields.map((field, idx) => (
-                <div key={field.id} className="rounded-lg border border-[#333333] bg-[#0A0A0A] p-3 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-semibold text-white">Q{idx + 1}</p>
-                    <SecondaryButton type="button" onClick={() => removeQuestion(idx)}>
-                      제거
-                    </SecondaryButton>
-                  </div>
-                  <input
-                    className={inputClass}
-                    {...form.register(`questions.${idx}.title` as const)}
-                    placeholder="질문 제목"
-                  />
-                  <select
-                    className={inputClass}
-                    {...form.register(`questions.${idx}.question_type` as const)}
-                  >
-                    <option value="SINGLE_CHOICE">SINGLE_CHOICE</option>
-                    <option value="MULTI_CHOICE">MULTI_CHOICE</option>
-                    <option value="LIKERT">LIKERT</option>
-                    <option value="TEXT">TEXT</option>
-                    <option value="NUMBER">NUMBER</option>
-                  </select>
-                  <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className={labelClass}>보상 설정</label>
+                <div className="flex items-center gap-2">
+                  <label className="text-xs text-gray-400 flex items-center gap-1 cursor-pointer">
                     <input
-                      type="number"
-                      className={inputClass}
-                      {...form.register(`questions.${idx}.order_index` as const, { valueAsNumber: true })}
-                      placeholder="순서"
+                      type="checkbox"
+                      checked={useRawJson}
+                      onChange={(e) => setUseRawJson(e.target.checked)}
+                      className="rounded border-gray-600 bg-[#1A1A1A]"
                     />
-                    <label className="flex items-center gap-2 text-sm text-gray-200">
-                      <input type="checkbox" {...form.register(`questions.${idx}.is_required` as const)} /> 필수
-                    </label>
+                    고급 설정(JSON 직접 편집)
+                  </label>
+                </div>
+              </div>
+
+              {!useRawJson ? (
+                <div className="rounded-md border border-[#333333] bg-[#0A0A0A] p-3 space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-xs text-gray-400">보상 종류</label>
+                      <select className={inputClass} {...form.register("reward_type_field")}>
+                        {REWARD_TYPES.map((t) => (
+                          <option key={t.value} value={t.value}>{t.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs text-gray-400">수량</label>
+                      <input
+                        type="number"
+                        className={inputClass}
+                        {...form.register("reward_amount_field", { valueAsNumber: false })} // Handled as string/union in zod
+                      />
+                    </div>
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    * 선택 시 자동 생성: {JSON.stringify({ reward_type: rewardType, amount: rewardAmount })}
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <div className="flex flex-wrap gap-2">
+                    {rewardPresets.map((preset) => (
+                      <button
+                        key={preset.label}
+                        type="button"
+                        className="rounded-full border border-[#2D6B3B] px-3 py-1 text-xs font-semibold text-gray-200 hover:bg-[#2D6B3B] hover:text-[#91F402]"
+                        onClick={() => onPresetReward(preset)}
+                      >
+                        {preset.label}
+                      </button>
+                    ))}
                   </div>
                   <textarea
                     className={inputClass}
-                    rows={2}
-                    {...form.register(`questions.${idx}.helper_text` as const)}
-                    placeholder="도움말"
+                    rows={3}
+                    {...form.register("reward_json_text")}
+                    placeholder='{"reward_type":"TICKET_DICE","amount":1,"toast_message":"주사위 티켓 지급"}'
                   />
-                  <div className="space-y-1">
-                    <p className="text-xs text-gray-400">옵션</p>
-                    <button
-                      type="button"
-                      className="rounded-full border border-[#333333] px-2 py-1 text-[11px] text-gray-200 hover:bg-[#2C2C2E]"
-                      onClick={() =>
-                        form.setValue(`questions.${idx}.options` as const, [
-                          ...(form.getValues(`questions.${idx}.options` as const) ?? []),
-                          { label: "옵션", value: "value" },
-                        ])
-                      }
+                  {form.formState.errors.reward_json_text && <p className="text-sm text-red-300">{form.formState.errors.reward_json_text.message}</p>}
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-semibold text-gray-200">질문</p>
+                <SecondaryButton
+                  type="button"
+                  onClick={() =>
+                    appendQuestion({
+                      title: "새 질문",
+                      question_type: "SINGLE_CHOICE",
+                      order_index: questionFields.length,
+                      is_required: true,
+                      options: [],
+                    })
+                  }
+                >
+                  질문 추가
+                </SecondaryButton>
+              </div>
+              <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
+                {questionFields.map((field, idx) => (
+                  <div key={field.id} className="rounded-lg border border-[#333333] bg-[#0A0A0A] p-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-semibold text-white">Q{idx + 1}</p>
+                      <SecondaryButton type="button" onClick={() => removeQuestion(idx)}>
+                        제거
+                      </SecondaryButton>
+                    </div>
+                    <input
+                      className={inputClass}
+                      {...form.register(`questions.${idx}.title` as const)}
+                      placeholder="질문 제목"
+                    />
+                    <select
+                      className={inputClass}
+                      {...form.register(`questions.${idx}.question_type` as const)}
                     >
-                      옵션 추가
-                    </button>
-                    <div className="space-y-2">
-                      {(form.watch(`questions.${idx}.options`) || []).map((opt, optIdx) => (
-                        <div key={optIdx} className="grid grid-cols-2 gap-2">
-                          <input
-                            className={inputClass}
-                            value={opt.label || ""}
-                            onChange={(e) => {
-                              const next = [...(form.getValues(`questions.${idx}.options`) || [])];
-                              next[optIdx] = { ...next[optIdx], label: e.target.value };
-                              form.setValue(`questions.${idx}.options`, next);
-                            }}
-                            placeholder="라벨"
-                          />
-                          <input
-                            className={inputClass}
-                            value={opt.value || ""}
-                            onChange={(e) => {
-                              const next = [...(form.getValues(`questions.${idx}.options`) || [])];
-                              next[optIdx] = { ...next[optIdx], value: e.target.value };
-                              form.setValue(`questions.${idx}.options`, next);
-                            }}
-                            placeholder="값"
-                          />
-                        </div>
-                      ))}
+                      <option value="SINGLE_CHOICE">SINGLE_CHOICE</option>
+                      <option value="MULTI_CHOICE">MULTI_CHOICE</option>
+                      <option value="LIKERT">LIKERT</option>
+                      <option value="TEXT">TEXT</option>
+                      <option value="NUMBER">NUMBER</option>
+                    </select>
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        type="number"
+                        className={inputClass}
+                        {...form.register(`questions.${idx}.order_index` as const, { valueAsNumber: true })}
+                        placeholder="순서"
+                      />
+                      <label className="flex items-center gap-2 text-sm text-gray-200">
+                        <input type="checkbox" {...form.register(`questions.${idx}.is_required` as const)} /> 필수
+                      </label>
+                    </div>
+                    <textarea
+                      className={inputClass}
+                      rows={2}
+                      {...form.register(`questions.${idx}.helper_text` as const)}
+                      placeholder="도움말"
+                    />
+                    <div className="space-y-1">
+                      <p className="text-xs text-gray-400">옵션</p>
+                      <button
+                        type="button"
+                        className="rounded-full border border-[#333333] px-2 py-1 text-[11px] text-gray-200 hover:bg-[#2C2C2E]"
+                        onClick={() =>
+                          form.setValue(`questions.${idx}.options` as const, [
+                            ...(form.getValues(`questions.${idx}.options` as const) ?? []),
+                            { label: "옵션", value: "value" },
+                          ])
+                        }
+                      >
+                        옵션 추가
+                      </button>
+                      <div className="space-y-2">
+                        {(form.watch(`questions.${idx}.options`) || []).map((opt, optIdx) => (
+                          <div key={optIdx} className="grid grid-cols-2 gap-2">
+                            <input
+                              className={inputClass}
+                              value={opt.label || ""}
+                              onChange={(e) => {
+                                const next = [...(form.getValues(`questions.${idx}.options`) || [])];
+                                next[optIdx] = { ...next[optIdx], label: e.target.value };
+                                form.setValue(`questions.${idx}.options`, next);
+                              }}
+                              placeholder="라벨"
+                            />
+                            <input
+                              className={inputClass}
+                              value={opt.value || ""}
+                              onChange={(e) => {
+                                const next = [...(form.getValues(`questions.${idx}.options`) || [])];
+                                next[optIdx] = { ...next[optIdx], value: e.target.value };
+                                form.setValue(`questions.${idx}.options`, next);
+                              }}
+                              placeholder="값"
+                            />
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
 
-          <div className="flex justify-end gap-2">
-            <SecondaryButton type="button" onClick={() => setIsModalOpen(false)}>
-              닫기
-            </SecondaryButton>
-            <PrimaryButton type="submit" disabled={upsertMutation.isPending}>
-              {upsertMutation.isPending ? "저장 중..." : selectedId ? "수정" : "생성"}
-            </PrimaryButton>
-          </div>
+            <div className="flex justify-end gap-2">
+              <SecondaryButton type="button" onClick={() => setIsModalOpen(false)}>
+                닫기
+              </SecondaryButton>
+              <PrimaryButton type="submit" disabled={upsertMutation.isPending}>
+                {upsertMutation.isPending ? "저장 중..." : selectedId ? "수정" : "생성"}
+              </PrimaryButton>
+            </div>
           </form>
         </ModalShell>
       )}
@@ -540,84 +662,121 @@ const SurveyAdminPage: React.FC = () => {
       {isTriggerModalOpen && (
         <ModalShell title="트리거 관리" onClose={() => setIsTriggerModalOpen(false)}>
           <form className="space-y-3" onSubmit={onSubmitTriggers}>
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-semibold text-gray-200">트리거</p>
-            <SecondaryButton
-              type="button"
-              onClick={() =>
-                appendTrigger({
-                  trigger_type: "LEVEL_UP",
-                  trigger_config_json: {},
-                  priority: 100,
-                  cooldown_hours: 24,
-                  max_per_user: 1,
-                  is_active: true,
-                })
-              }
-            >
-              트리거 추가
-            </SecondaryButton>
-          </div>
-          {triggerFields.length === 0 && <p className="text-sm text-gray-400">등록된 트리거가 없습니다.</p>}
-          <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
-            {triggerFields.map((field, idx) => (
-              <div key={field.id} className="rounded-lg border border-[#333333] bg-[#0A0A0A] p-3 space-y-2">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold text-white">트리거 {idx + 1}</p>
-                  <SecondaryButton type="button" onClick={() => removeTrigger(idx)}>
-                    제거
-                  </SecondaryButton>
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold text-gray-200">트리거</p>
+              <SecondaryButton
+                type="button"
+                onClick={() =>
+                  appendTrigger({
+                    trigger_type: "LEVEL_UP",
+                    trigger_config_json: {},
+                    priority: 100,
+                    cooldown_hours: 24,
+                    max_per_user: 1,
+                    is_active: true,
+                  })
+                }
+              >
+                트리거 추가
+              </SecondaryButton>
+            </div>
+            {triggerFields.length === 0 && <p className="text-sm text-gray-400">등록된 트리거가 없습니다.</p>}
+            <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
+              {triggerFields.map((field, idx) => (
+                <div key={field.id} className="rounded-lg border border-[#333333] bg-[#0A0A0A] p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-semibold text-white">트리거 {idx + 1}</p>
+                    <SecondaryButton type="button" onClick={() => removeTrigger(idx)}>
+                      제거
+                    </SecondaryButton>
+                  </div>
+                  <select
+                    className={inputClass}
+                    {...triggerForm.register(`items.${idx}.trigger_type` as const)}
+                  >
+                    <option value="LEVEL_UP">LEVEL_UP</option>
+                    <option value="INACTIVE_DAYS">INACTIVE_DAYS</option>
+                    <option value="GAME_RESULT">GAME_RESULT</option>
+                    <option value="MANUAL_PUSH">MANUAL_PUSH</option>
+                  </select>
+                  <div className="grid grid-cols-2 gap-2">
+                    <input
+                      type="number"
+                      className={inputClass}
+                      {...triggerForm.register(`items.${idx}.priority` as const, { valueAsNumber: true })}
+                      placeholder="priority"
+                    />
+                    <input
+                      type="number"
+                      className={inputClass}
+                      {...triggerForm.register(`items.${idx}.cooldown_hours` as const, { valueAsNumber: true })}
+                      placeholder="cooldown_hours"
+                    />
+                    <input
+                      type="number"
+                      className={inputClass}
+                      {...triggerForm.register(`items.${idx}.max_per_user` as const, { valueAsNumber: true })}
+                      placeholder="max_per_user"
+                    />
+                    <label className="flex items-center gap-2 text-sm text-gray-200">
+                      <input type="checkbox" {...triggerForm.register(`items.${idx}.is_active` as const)} /> 활성
+                    </label>
+                  </div>
+                  <textarea
+                    className={inputClass}
+                    rows={2}
+                    {...triggerForm.register(`items.${idx}.trigger_config_json` as const)}
+                    placeholder='{"level_min":3}'
+                  />
                 </div>
-                <select
-                  className={inputClass}
-                  {...triggerForm.register(`items.${idx}.trigger_type` as const)}
-                >
-                  <option value="LEVEL_UP">LEVEL_UP</option>
-                  <option value="INACTIVE_DAYS">INACTIVE_DAYS</option>
-                  <option value="GAME_RESULT">GAME_RESULT</option>
-                  <option value="MANUAL_PUSH">MANUAL_PUSH</option>
-                </select>
-                <div className="grid grid-cols-2 gap-2">
-                  <input
-                    type="number"
-                    className={inputClass}
-                    {...triggerForm.register(`items.${idx}.priority` as const, { valueAsNumber: true })}
-                    placeholder="priority"
-                  />
-                  <input
-                    type="number"
-                    className={inputClass}
-                    {...triggerForm.register(`items.${idx}.cooldown_hours` as const, { valueAsNumber: true })}
-                    placeholder="cooldown_hours"
-                  />
-                  <input
-                    type="number"
-                    className={inputClass}
-                    {...triggerForm.register(`items.${idx}.max_per_user` as const, { valueAsNumber: true })}
-                    placeholder="max_per_user"
-                  />
-                  <label className="flex items-center gap-2 text-sm text-gray-200">
-                    <input type="checkbox" {...triggerForm.register(`items.${idx}.is_active` as const)} /> 활성
-                  </label>
-                </div>
-                <textarea
-                  className={inputClass}
-                  rows={2}
-                  {...triggerForm.register(`items.${idx}.trigger_config_json` as const)}
-                  placeholder='{"level_min":3}'
-                />
-              </div>
-            ))}
-          </div>
-          <div className="flex justify-end gap-2">
-            <SecondaryButton type="button" onClick={() => setIsTriggerModalOpen(false)}>
-              닫기
-            </SecondaryButton>
-            <PrimaryButton type="submit" disabled={triggerMutation.isPending}>
-              {triggerMutation.isPending ? "저장 중..." : "저장"}
-            </PrimaryButton>
-          </div>
+              ))}
+            </div>
+            <div className="flex justify-end gap-2">
+              <SecondaryButton type="button" onClick={() => setIsTriggerModalOpen(false)}>
+                닫기
+              </SecondaryButton>
+              <PrimaryButton type="submit" disabled={triggerMutation.isPending}>
+                {triggerMutation.isPending ? "저장 중..." : "저장"}
+              </PrimaryButton>
+            </div>
           </form>
+        </ModalShell>
+      )}
+
+      {isResponseModalOpen && (
+        <ModalShell title="설문 응답 목록" onClose={() => setIsResponseModalOpen(false)}>
+          {responseQuery.isLoading && <p className="text-gray-400">로딩 중...</p>}
+          {!responseQuery.isLoading && (!responseQuery.data || responseQuery.data.items.length === 0) && (
+            <p className="text-gray-400">아직 응답이 없습니다.</p>
+          )}
+          {responseQuery.data && responseQuery.data.items.length > 0 && (
+            <div className="space-y-4">
+              {responseQuery.data.items.map((resp) => (
+                <div key={resp.response_id} className="rounded-lg border border-[#333333] bg-[#0A0A0A] p-3 text-sm text-gray-200">
+                  <div className="flex justify-between mb-2 pb-2 border-b border-[#333333]">
+                    <div>
+                      <span className="font-bold text-white">{resp.username || "익명"}</span>
+                      <span className="text-xs text-gray-500 ml-2">ID: {resp.user_id}</span>
+                    </div>
+                    <div className="text-xs text-gray-400">
+                      {new Date(resp.completed_at).toLocaleString()}
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    {resp.answers.map((ans, i) => (
+                      <div key={i} className="flex gap-2">
+                        <span className="text-gray-500 w-6">Q{i + 1}.</span>
+                        <span>{ans.answer_text}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="flex justify-end mt-4">
+            <SecondaryButton onClick={() => setIsResponseModalOpen(false)}>닫기</SecondaryButton>
+          </div>
         </ModalShell>
       )}
     </section>
