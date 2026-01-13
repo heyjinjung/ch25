@@ -37,8 +37,8 @@ jobs:
           file: ./Dockerfile.frontend
           push: true
           build-args: |
-            VITE_API_URL=${{ vars.VITE_API_URL }}
-            VITE_ADMIN_API_URL=${{ vars.VITE_ADMIN_API_URL }}
+            VITE_API_URL=/api
+            VITE_ADMIN_API_URL=/admin/api
           tags: ghcr.io/${{ github.repository_owner }}/xmas-frontend:latest
 
   deploy:
@@ -61,6 +61,7 @@ jobs:
         uses: appleboy/ssh-action@v1.0.3
         env:
           GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_SHA: ${{ github.sha }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
@@ -72,13 +73,21 @@ jobs:
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           timeout: "30m"
-          envs: GITHUB_ACTOR,GH_TOKEN,JWT_SECRET,TELEGRAM_BOT_TOKEN,SECRET_KEY,TELEGRAM_BOT_USERNAME,TELEGRAM_CHANNEL_USERNAME
+          envs: GITHUB_ACTOR,GITHUB_SHA,GH_TOKEN,JWT_SECRET,TELEGRAM_BOT_TOKEN,SECRET_KEY,TELEGRAM_BOT_USERNAME,TELEGRAM_CHANNEL_USERNAME
           script: |
             set -e
             # 깃허브 레지스트리 로그인
             echo "${GH_TOKEN}" | docker login ghcr.io -u "${GITHUB_ACTOR}" --password-stdin
 
             cd /opt/xmas-event
+
+            # Preflight: .env 존재 여부 기록(민감정보 출력 금지)
+            if [ -f .env ]; then
+              echo "[PRECHECK] .env exists"
+              cp -f .env ".env.bak_${GITHUB_SHA}" || true
+            else
+              echo "[PRECHECK] .env missing"
+            fi
 
             # .env 파일 완전 자동 생성 (GitHub Secrets 기반)
             cat > .env << 'ENVEOF'
@@ -99,6 +108,97 @@ jobs:
             echo "TELEGRAM_WEBHOOK_URL=https://cc-jm.com" >> .env
             echo "ENVIRONMENT=production" >> .env
 
+            # Gate(3.10): 운영 배포 전 DB 덤프/스냅샷
+            mkdir -p backups/db
+            export DEPLOY_SHA="${GITHUB_SHA}"
+            export DUMP_BASENAME="backups/db/xmas_event_${DEPLOY_SHA}_$(date +%Y%m%d_%H%M%S).sql"
+
+            # DB가 떠있지 않으면 최소 기동
+            docker compose up -d db
+
+            # DB readiness (최대 60초)
+            i=0
+            until docker compose exec -T db sh -lc 'mysqladmin ping -uroot -p"$MYSQL_ROOT_PASSWORD" --silent' >/dev/null 2>&1; do
+              i=$((i+1))
+              if [ "$i" -ge 30 ]; then
+                echo "[DUMP] DB not ready (timeout)" >&2
+                exit 1
+              fi
+              sleep 2
+            done
+
+            echo "[DUMP] Creating dump: ${DUMP_BASENAME}"
+            docker compose exec -T db sh -lc 'mysqldump -uroot -p"$MYSQL_ROOT_PASSWORD" --single-transaction --routines --triggers "$MYSQL_DATABASE"' > "${DUMP_BASENAME}"
+
+            if [ ! -s "${DUMP_BASENAME}" ]; then
+              echo "[DUMP] Dump file is empty (0 bytes)" >&2
+              ls -lh "${DUMP_BASENAME}" || true
+              exit 1
+            fi
+
+            if command -v gzip >/dev/null 2>&1; then
+              gzip -f "${DUMP_BASENAME}"
+              export DUMP_PATH="${DUMP_BASENAME}.gz"
+            else
+              export DUMP_PATH="${DUMP_BASENAME}"
+            fi
+
+            ls -lh "${DUMP_PATH}"
+            if command -v sha256sum >/dev/null 2>&1; then
+              sha256sum "${DUMP_PATH}" | tee -a backups/db/SHA256SUMS.txt
+            else
+              echo "[DUMP] sha256sum not found; skipped" >&2
+            fi
+
             docker compose pull
             docker compose up -d --remove-orphans
-            docker image prune -f
+
+            # Gate(3.5/3.8): 마이그레이션
+            if ! docker compose exec -T backend alembic upgrade head; then
+              echo "[MIGRATION] alembic upgrade head failed; retry once" >&2
+              sleep 5
+              docker compose exec -T backend alembic upgrade head
+            fi
+            docker compose exec -T backend alembic current
+            docker compose exec -T backend alembic heads
+
+            # Gate(3.6): 헬스 체크
+            j=0
+            until curl -fsS http://127.0.0.1/health >/dev/null 2>&1; do
+              j=$((j+1))
+              if [ "$j" -ge 15 ]; then
+                echo "[HEALTH] /health failed" >&2
+                exit 1
+              fi
+              sleep 2
+            done
+
+            k=0
+            until curl -fsS http://127.0.0.1/api/health >/dev/null 2>&1; do
+              k=$((k+1))
+              if [ "$k" -ge 15 ]; then
+                echo "[HEALTH] /api/health failed" >&2
+                docker compose logs --tail=200 backend || true
+                exit 1
+              fi
+              sleep 2
+            done
+
+            # Gate(3.9 최소 자동화): /admin/api가 HTML로 빠지지 않는지 확인
+            ADMIN_URL="http://127.0.0.1/admin/api/ui-config/streak_reward_rules"
+            ADMIN_CODE=$(curl -sS -D /tmp/admin_headers.txt -o /tmp/admin_body.txt -w "%{http_code}" "$ADMIN_URL" || true)
+            if [ "$ADMIN_CODE" != "200" ]; then
+              echo "[ADMIN] Smoke failed: HTTP ${ADMIN_CODE}" >&2
+              head -n 30 /tmp/admin_body.txt || true
+              exit 1
+            fi
+            if ! grep -i '^content-type:.*application/json' /tmp/admin_headers.txt >/dev/null 2>&1; then
+              echo "[ADMIN] Smoke failed: non-JSON response" >&2
+              head -n 30 /tmp/admin_headers.txt || true
+              head -n 30 /tmp/admin_body.txt || true
+              exit 1
+            fi
+
+            # 배포 기록(5.6)
+            echo "${GITHUB_SHA}" > DEPLOYED_SHA
+            echo "[OK] DEPLOYED_SHA=$(cat DEPLOYED_SHA)"

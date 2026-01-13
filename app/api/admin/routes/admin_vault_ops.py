@@ -5,10 +5,12 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db
-from app.schemas.vault2 import VaultAdminStateResponse, VaultTimerActionRequest
+from app.api.deps import get_db, get_current_admin_id
+from app.schemas.vault2 import VaultAdminStateResponse, VaultTimerActionRequest, VaultBalanceSetRequest
 from app.services.vault_service import VaultService
 from app.services.admin_user_identity_service import resolve_user_id_by_identifier
+from app.models.user import User
+from app.models.user_cash_ledger import UserCashLedger
 
 
 # Canonical admin API base in this codebase is `/admin/api/*`.
@@ -102,4 +104,62 @@ def set_user_timer_by_identifier(
     user_id = resolve_user_id_by_identifier(db, identifier)
     service = VaultService()
     service.admin_timer_action(db, user_id=user_id, action=payload.action)
+    return _build_admin_state(service, db, user_id)
+
+
+@router.post("/{user_id}/balance", response_model=VaultAdminStateResponse)
+@legacy_router.post("/{user_id}/balance", response_model=VaultAdminStateResponse)
+def set_user_balance(
+    user_id: int, 
+    payload: VaultBalanceSetRequest, 
+    db: Session = Depends(get_db),
+    admin_id: int = Depends(get_current_admin_id),
+) -> VaultAdminStateResponse:
+    """Set User Vault/Cash Balance Arbitrarily."""
+    service = VaultService()
+    
+    # Lock User
+    user = db.query(User).filter(User.id == user_id).with_for_update().first()
+    if not user:
+        raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
+
+    reason = payload.reason or "ADMIN_MANUAL_ADJUST"
+    
+    # 1. Update Locked (Vault)
+    if payload.locked_amount is not None:
+        old_locked = int(user.vault_locked_balance or 0)
+        user.vault_locked_balance = payload.locked_amount
+        # Sync mirror immediately
+        service.sync_legacy_mirror(user)
+        
+        # Log Ledger if changed
+        if old_locked != payload.locked_amount:
+            # We use UserCashLedger for tracking important money flows, usually for Cash.
+            # But for Vault Admin edits, it's good to record it too.
+            # Use specific type? Or just generic message.
+            ledger = UserCashLedger(
+                user_id=user.id,
+                delta=(payload.locked_amount - old_locked),
+                balance_after=payload.locked_amount,
+                reason="VAULT_ADMIN_ADJUST",
+                label=f"Admin {admin_id}: Vault Locked {old_locked} -> {payload.locked_amount}"
+            )
+            db.add(ledger)
+
+    # 2. Update Cash (Available) - Optional but requested "balances" usually implies this
+    if payload.available_amount is not None:
+        old_cash = int(user.cash_balance or 0)
+        user.cash_balance = payload.available_amount
+        
+        if old_cash != payload.available_amount:
+             ledger = UserCashLedger(
+                user_id=user.id,
+                delta=(payload.available_amount - old_cash),
+                balance_after=payload.available_amount,
+                reason="CASH_ADMIN_ADJUST",
+                label=f"Admin {admin_id}: Cash Balance {old_cash} -> {payload.available_amount}"
+            )
+             db.add(ledger)
+
+    db.commit()
     return _build_admin_state(service, db, user_id)

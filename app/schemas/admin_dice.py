@@ -27,7 +27,7 @@ class AdminDiceConfigBase(BaseModel):
     )
     lose_reward_value: int = Field(..., alias="lose_reward_amount")
 
-    model_config = ConfigDict(from_attributes=True, validate_by_name=True)
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
 
 class AdminDiceConfigCreate(AdminDiceConfigBase):
@@ -45,7 +45,7 @@ class AdminDiceConfigUpdate(BaseModel):
     lose_reward_type: Optional[str] = None
     lose_reward_value: Optional[int] = Field(None, alias="lose_reward_amount")
 
-    model_config = ConfigDict(from_attributes=True, validate_by_name=True)
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
 
 class AdminDiceConfigResponse(AdminDiceConfigBase):

@@ -63,6 +63,45 @@ def get_current_user_id(
     return user_id
 
 
+def get_current_admin_info(
+    db: Session = Depends(get_db),
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+) -> tuple[int, str]:
+    """Return (admin_id, role) with JWT claim preferred, Admin 프로필 보조.
+
+    - JWT `role` 또는 `roles[0]`가 있으면 우선 사용.
+    - 없으면 AdminUserProfile.tags 내 `ROLE_*` 첫 값을 사용.
+    - 모두 없으면 ADMIN 기본값.
+    """
+
+    settings = get_settings()
+    admin_id = get_current_user_id(db=db, credentials=credentials)
+
+    if credentials is None or not credentials.credentials:
+        return admin_id, "ADMIN"
+
+    payload = decode_access_token(credentials.credentials)
+    role = payload.get("role")
+    roles = payload.get("roles")
+    if isinstance(roles, list) and roles:
+        role = roles[0]
+    if isinstance(role, list) and role:
+        role = role[0]
+
+    role_str = str(role).upper() if role else None
+
+    if not role_str:
+        from app.models.admin_user_profile import AdminUserProfile
+
+        profile = db.query(AdminUserProfile).filter(AdminUserProfile.user_id == admin_id).first()
+        if profile and isinstance(profile.tags, list):
+            tag_role = next((t for t in profile.tags if isinstance(t, str) and t.upper().startswith("ROLE_")), None)
+            if tag_role:
+                role_str = tag_role.replace("ROLE_", "", 1).upper()
+
+    return admin_id, (role_str or "ADMIN")
+
+
 def get_current_user(
     db: Session = Depends(get_db),
     user_id: int = Depends(get_current_user_id),

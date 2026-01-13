@@ -34,6 +34,15 @@ class VaultProgramConfigUpsertRequest(BaseModel):
     config_json: dict | None = None
 
 
+class VaultGoldenHourUpdateRequest(BaseModel):
+    enabled: bool | None = None
+    manual_override: str | None = None  # AUTO | FORCE_ON | FORCE_OFF
+    multiplier: float | None = None
+    start_time_kst: str | None = None
+    end_time_kst: str | None = None
+    base_amount_gate: int | None = None
+
+
 class VaultEligibilityRequest(BaseModel):
     eligible: bool
 

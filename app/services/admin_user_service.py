@@ -95,39 +95,72 @@ class AdminUserService:
         )
 
         if q and q.strip():
-            # Search Logic:
-            # 1. Exact ID (numeric)
-            # 2. Telegram Username (ILIKE) -> This is the priority requested
-            # 3. Nickname (ILIKE)
-            # 4. Real Name (ILIKE via admin_profile)
-            # 5. External ID (ILIKE)
-            # 6. Tags (ILIKE via admin_profile)
-            # 7. Telegram ID (exact match; numeric)
+            # Search Logic with Prefixes
+            raw_q = q.strip()
             
-            term = f"%{q.strip()}%"
             from sqlalchemy import or_, cast, String
             from app.models.admin_user_profile import AdminUserProfile
             
-            # Note: We need to join admin_profile to search its fields
             stmt = stmt.outerjoin(User.admin_profile)
             
-            conditions = [
-                User.telegram_username.ilike(term),
-                User.nickname.ilike(term),
-                User.external_id.ilike(term),
-                AdminUserProfile.real_name.ilike(term),
-                AdminUserProfile.tags.ilike(term),
-            ]
-            
-            if q.strip().isdigit():
-                conditions.append(cast(User.id, String) == q.strip())
-                # Allow searching by raw Telegram numeric ID copied from Telegram UI.
-                # This is an exact match (not ILIKE) to avoid partial collisions.
-                conditions.append(cast(User.telegram_id, String) == q.strip())
-                # Some ops flows store telegram_id under admin_profile as string.
-                conditions.append(cast(AdminUserProfile.telegram_id, String) == q.strip())
+            if ":" in raw_q:
+                prefix, val = raw_q.split(":", 1)
+                prefix = prefix.lower().strip()
+                val = val.strip()
+                vterm = f"%{val}%"
                 
-            stmt = stmt.where(or_(*conditions))
+                if prefix == "id" and val.isdigit():
+                    stmt = stmt.where(cast(User.id, String) == val)
+                elif prefix == "nick":
+                    stmt = stmt.where(User.nickname.ilike(vterm))
+                elif prefix in ("tg", "tgid") and val.isdigit():
+                    stmt = stmt.where(or_(
+                        cast(User.telegram_id, String) == val,
+                        cast(AdminUserProfile.telegram_id, String) == val
+                    ))
+                elif prefix == "tg" and not val.isdigit():
+                    # Handle @username or raw username
+                    val_clean = val.lstrip("@")
+                    stmt = stmt.where(User.telegram_username.ilike(f"%{val_clean}%"))
+                elif prefix == "code":
+                    stmt = stmt.where(User.external_id.ilike(vterm))
+                elif prefix == "real":
+                    stmt = stmt.where(AdminUserProfile.real_name.ilike(vterm))
+                elif prefix == "phone":
+                    stmt = stmt.where(AdminUserProfile.phone_number.ilike(vterm))
+                elif prefix == "tag":
+                    stmt = stmt.where(AdminUserProfile.tags.ilike(vterm))
+                elif prefix == "memo":
+                    stmt = stmt.where(AdminUserProfile.memo.ilike(vterm))
+                else:
+                    # Fallback to general search if prefix unknown
+                    term = f"%{raw_q}%"
+                    conditions = [
+                        User.telegram_username.ilike(term),
+                        User.nickname.ilike(term),
+                        User.external_id.ilike(term),
+                        AdminUserProfile.real_name.ilike(term),
+                        AdminUserProfile.tags.ilike(term),
+                    ]
+                    if raw_q.isdigit():
+                        conditions.append(cast(User.id, String) == raw_q)
+                    stmt = stmt.where(or_(*conditions))
+            else:
+                # General search (original behavior)
+                term = f"%{raw_q}%"
+                conditions = [
+                    User.telegram_username.ilike(term),
+                    User.nickname.ilike(term),
+                    User.external_id.ilike(term),
+                    AdminUserProfile.real_name.ilike(term),
+                    AdminUserProfile.tags.ilike(term),
+                ]
+                if raw_q.isdigit():
+                    conditions.append(cast(User.id, String) == raw_q)
+                    conditions.append(cast(User.telegram_id, String) == raw_q)
+                    conditions.append(cast(AdminUserProfile.telegram_id, String) == raw_q)
+                    
+                stmt = stmt.where(or_(*conditions))
 
         users = db.execute(stmt).scalars().all()
         return [AdminUserService._enrich_user_with_xp(db, u) for u in users]
@@ -198,8 +231,25 @@ class AdminUserService:
             ):
                 raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="EXTERNAL_ID_EXISTS")
             user.external_id = update_data["external_id"]
-        if "nickname" in update_data:
+
+        # Detection for history (UX-004)
+        from app.models.user_history import UserIdentityHistory
+        history_items = []
+        
+        if "nickname" in update_data and user.nickname != update_data["nickname"]:
+            history_items.append(UserIdentityHistory(user_id=user_id, field_name="nickname", old_value=user.nickname, new_value=update_data["nickname"]))
             user.nickname = update_data["nickname"]
+            
+        if "telegram_id" in update_data and user.telegram_id != update_data["telegram_id"]:
+            history_items.append(UserIdentityHistory(user_id=user_id, field_name="telegram_id", old_value=str(user.telegram_id) if user.telegram_id is not None else None, new_value=str(update_data["telegram_id"]) if update_data["telegram_id"] is not None else None))
+            user.telegram_id = update_data["telegram_id"]
+            
+        if "telegram_username" in update_data:
+            cleaned_tg = AdminUserService._clean_telegram_username(update_data["telegram_username"])
+            if user.telegram_username != cleaned_tg:
+                history_items.append(UserIdentityHistory(user_id=user_id, field_name="telegram_username", old_value=user.telegram_username, new_value=cleaned_tg))
+                user.telegram_username = cleaned_tg
+
         if "level" in update_data:
             user.level = update_data["level"]
         if "xp" in update_data:
@@ -208,30 +258,40 @@ class AdminUserService:
             user.status = update_data["status"]
         if "password" in update_data and update_data["password"]:
             user.password_hash = hash_password(update_data["password"])
-        if "telegram_id" in update_data:
-            user.telegram_id = update_data["telegram_id"]
-        if "telegram_username" in update_data:
-            user.telegram_username = AdminUserService._clean_telegram_username(update_data["telegram_username"])
         if "login_streak" in update_data:
             user.login_streak = update_data["login_streak"]
         if "last_streak_updated_at" in update_data:
             user.last_streak_updated_at = update_data["last_streak_updated_at"]
 
-        # Keep legacy admin_profile.telegram_id (string) aligned when we can.
-        # Source of truth is user.telegram_id.
+        # Handle Admin Profile (CRM) update
         if "admin_profile" in update_data and update_data["admin_profile"]:
-            prof = update_data["admin_profile"]
+            from app.services.user_segment_service import UserSegmentService
+            prof_data = update_data["admin_profile"]
+            
+            # Record Real Name change if present
+            if "real_name" in prof_data:
+                old_rn = user.admin_profile.real_name if user.admin_profile else None
+                if old_rn != prof_data["real_name"]:
+                    history_items.append(UserIdentityHistory(user_id=user_id, field_name="real_name", old_value=old_rn, new_value=prof_data["real_name"]))
+            
+            # Keep legacy admin_profile.telegram_id (string) aligned when we can.
+            # Source of truth is user.telegram_id.
             # If profile telegram_id is given and user.telegram_id was not explicitly updated,
             # try to sync user.telegram_id from it (numeric only).
-            if "telegram_id" in prof and "telegram_id" not in update_data:
-                raw = prof.get("telegram_id")
+            if "telegram_id" in prof_data and "telegram_id" not in update_data:
+                raw = prof_data.get("telegram_id")
                 raw_s = str(raw).strip() if raw is not None else ""
                 if raw_s.isdigit():
-                    user.telegram_id = int(raw_s)
+                    new_tg_id = int(raw_s)
+                    if user.telegram_id != new_tg_id:
+                        history_items.append(UserIdentityHistory(user_id=user_id, field_name="telegram_id", old_value=str(user.telegram_id) if user.telegram_id is not None else None, new_value=str(new_tg_id)))
+                        user.telegram_id = new_tg_id
 
             # If user.telegram_id was updated, mirror it into profile.telegram_id.
             if "telegram_id" in update_data:
-                prof["telegram_id"] = str(user.telegram_id) if user.telegram_id is not None else None
+                prof_data["telegram_id"] = str(user.telegram_id) if user.telegram_id is not None else None
+            
+            UserSegmentService.upsert_user_profile(db, user_id, prof_data)
         elif "telegram_id" in update_data and user.admin_profile is not None:
             user.admin_profile.telegram_id = str(user.telegram_id) if user.telegram_id is not None else None
 
@@ -255,10 +315,12 @@ class AdminUserService:
 
                 db.add(progress)
 
-        # Handle Admin Profile (CRM) update
         if "admin_profile" in update_data and update_data["admin_profile"]:
             from app.services.user_segment_service import UserSegmentService
             UserSegmentService.upsert_user_profile(db, user_id, update_data["admin_profile"])
+
+        for item in history_items:
+            db.add(item)
 
         db.add(user)
         db.commit()
@@ -385,7 +447,7 @@ class AdminUserService:
         db.query(AdminMessageInbox).filter(AdminMessageInbox.user_id == user_id).delete(synchronize_session=False)
 
         db.query(UserIdempotencyKey).filter(UserIdempotencyKey.user_id == user_id).delete(synchronize_session=False)
-        db.query(TelegramLinkCode).filter(TelegramLinkCode.user_id == user_id).delete(synchronize_session=False)
+        db.query(TelegramLinkCode).filter(TelegramLinkCode.user_id == int(user_id)).delete(synchronize_session=False)
 
         # Telegram unlink requests can reference users by several columns (SET NULL FK),
         # but we delete them to fully reset Telegram flows.
@@ -409,6 +471,12 @@ class AdminUserService:
 
         # Finally, delete the user.
         db.delete(user)
+
+        # Safety net (sqlite FK/cascade quirks): ensure link-codes are gone.
+        db.query(TelegramLinkCode).filter(TelegramLinkCode.user_id == int(user_id)).delete(synchronize_session=False)
+
+        # Safety net: ensure game wallet ledgers are gone.
+        db.query(UserGameWalletLedger).filter(UserGameWalletLedger.user_id == int(user_id)).delete(synchronize_session=False)
 
         AuditService.record_admin_audit(
             db,

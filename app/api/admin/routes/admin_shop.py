@@ -8,7 +8,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db, get_current_admin_id
-from app.schemas.ui_config import UiConfigResponse, UiConfigUpsertRequest
+from app.schemas.ui_config import UiConfigResponse
+from app.schemas.shop_overrides import ShopOverridesPayload
 from app.services.shop_service import SHOP_PRODUCTS, ShopService
 from app.services.ui_config_service import UiConfigService
 
@@ -30,37 +31,74 @@ def get_overrides(db: Session = Depends(get_db)):
 
 @router.put("/products/overrides", response_model=UiConfigResponse)
 def upsert_overrides(
-    payload: UiConfigUpsertRequest,
+    payload: ShopOverridesPayload,
     db: Session = Depends(get_db),
     admin_id: int = Depends(get_current_admin_id),
 ):
-    value = payload.value
-    if value is not None and not isinstance(value, dict):
-        raise HTTPException(status_code=400, detail="INVALID_VALUE")
+    """
+    Update shop product overrides with Pydantic-validated payload.
 
-    # Validate known shape to avoid bricking the shop.
-    products = (value or {}).get("products") if isinstance(value, dict) else None
-    if products is not None and not isinstance(products, dict):
-        raise HTTPException(status_code=400, detail="INVALID_PRODUCTS")
+    Expected body:
+    {
+        "products": {
+            "PROD_GOLD_KEY_1": { "title": "...", "cost_amount": 50, "is_active": true }
+        }
+    }
+    """
+    # Validate SKUs
+    # - Builtin SKU: patch allowed (partial)
+    # - Custom SKU (not in SHOP_PRODUCTS): requires full definition
+    if payload.products:
+        for sku, patch in payload.products.items():
+            if sku in SHOP_PRODUCTS:
+                continue
 
-    if isinstance(products, dict):
-        for sku, patch in products.items():
-            if sku not in SHOP_PRODUCTS:
-                raise HTTPException(status_code=400, detail=f"UNKNOWN_SKU:{sku}")
-            if not isinstance(patch, dict):
-                raise HTTPException(status_code=400, detail=f"INVALID_PATCH:{sku}")
+            missing = []
+            if not getattr(patch, "title", None):
+                missing.append("title")
+            if getattr(patch, "cost_token", None) is None:
+                missing.append("cost_token")
+            if getattr(patch, "cost_amount", None) is None:
+                missing.append("cost_amount")
+            if not getattr(patch, "item_type", None):
+                missing.append("item_type")
+            if getattr(patch, "item_amount", None) is None:
+                missing.append("item_amount")
 
-            title = patch.get("title")
-            if title is not None and (not isinstance(title, str) or not title.strip()):
-                raise HTTPException(status_code=400, detail=f"INVALID_TITLE:{sku}")
+            if missing:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"MISSING_FIELDS_FOR_NEW_SKU:{sku}:{','.join(missing)}",
+                )
 
-            cost_amount = patch.get("cost_amount")
-            if cost_amount is not None and (not isinstance(cost_amount, int) or cost_amount <= 0):
-                raise HTTPException(status_code=400, detail=f"INVALID_COST_AMOUNT:{sku}")
+    # Serialize Pydantic models to dict for storage
+    updates = {}
+    if payload.products:
+        updates = {
+            sku: patch.model_dump(exclude_none=True)
+            for sku, patch in payload.products.items()
+        }
 
-            is_active = patch.get("is_active")
-            if is_active is not None and not isinstance(is_active, bool):
-                raise HTTPException(status_code=400, detail=f"INVALID_IS_ACTIVE:{sku}")
+    # Fetch existing config to merge
+    existing_row = UiConfigService.get(db, ShopService.UI_CONFIG_KEY)
+    current_value = existing_row.value_json if existing_row else {}
+    current_products = current_value.get("products", {})
 
-    row = UiConfigService.upsert(db, ShopService.UI_CONFIG_KEY, value or {}, admin_id=admin_id)
+    # Merge updates into current products
+    # This ensures we don't wipe out other SKUs if we send a partial update
+    merged_products = {**current_products, **updates}
+
+    # Apply deletions only for custom products.
+    # Builtin products should be disabled via is_active=false (soft-delete).
+    if payload.deleted_skus:
+        for sku in payload.deleted_skus:
+            if not isinstance(sku, str):
+                continue
+            if sku in SHOP_PRODUCTS:
+                continue
+            merged_products.pop(sku, None)
+
+    value_to_store = {"products": merged_products}
+
+    row = UiConfigService.upsert(db, ShopService.UI_CONFIG_KEY, value_to_store, admin_id=admin_id)
     return UiConfigResponse(key=row.key, value=row.value_json, updated_at=row.updated_at)

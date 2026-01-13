@@ -349,6 +349,23 @@ class Settings(BaseSettings):
     # Redis (Optional - for caching)
     redis_url: str | None = Field(None, validation_alias=AliasChoices("REDIS_URL", "redis_url"))
 
+    # Ops Outbox Worker
+    ops_outbox_max_retries: int = Field(
+        5,
+        validation_alias=AliasChoices("OPS_OUTBOX_MAX_RETRIES", "ops_outbox_max_retries"),
+    )
+    ops_outbox_backoff_base_seconds: float = Field(
+        1.0,
+        validation_alias=AliasChoices(
+            "OPS_OUTBOX_BACKOFF_BASE_SECONDS",
+            "ops_outbox_backoff_base_seconds",
+        ),
+    )
+    ops_outbox_dlq_key: str = Field(
+        "ops:outbox:dlq",
+        validation_alias=AliasChoices("OPS_OUTBOX_DLQ_KEY", "ops_outbox_dlq_key"),
+    )
+
     # Telegram webhook mode (Optional)
     telegram_use_webhook: bool = Field(
         False,
@@ -400,8 +417,8 @@ class Settings(BaseSettings):
     )
 
     # Team Battle Grinder Rule
-    team_battle_points_per_play: int = Field(1, validation_alias=AliasChoices("TEAM_BATTLE_POINTS_PER_PLAY", "team_battle_points_per_play"))
-    team_battle_daily_play_cap: int = Field(100, validation_alias=AliasChoices("TEAM_BATTLE_DAILY_PLAY_CAP", "team_battle_daily_play_cap"))
+    team_battle_points_per_play: int = Field(10, validation_alias=AliasChoices("TEAM_BATTLE_POINTS_PER_PLAY", "team_battle_points_per_play"))
+    team_battle_daily_play_cap: int = Field(500, validation_alias=AliasChoices("TEAM_BATTLE_DAILY_PLAY_CAP", "team_battle_daily_play_cap"))
     team_battle_streak_3d_bonus: int = Field(10, validation_alias=AliasChoices("TEAM_BATTLE_STREAK_3D_BONUS", "team_battle_streak_3d_bonus"))
     team_battle_streak_7d_bonus: int = Field(30, validation_alias=AliasChoices("TEAM_BATTLE_STREAK_7D_BONUS", "team_battle_streak_7d_bonus"))
     team_battle_all_clear_bonus: int = Field(50, validation_alias=AliasChoices("TEAM_BATTLE_ALL_CLEAR_BONUS", "team_battle_all_clear_bonus"))

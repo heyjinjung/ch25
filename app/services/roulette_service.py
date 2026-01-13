@@ -319,6 +319,20 @@ class RouletteService:
             self.season_pass_service.maybe_add_internal_win_stamp(db, user_id=user_id, now=today)
         season_pass = None  # 게임 1회당 자동 스탬프 발급을 중단하고, 조건 달성 시 별도 로직으로 처리
 
+        # Record unified game log for mission/event tracking (adds UserEventLog)
+        ctx = GamePlayContext(user_id=user_id, feature_type=FeatureType.ROULETTE.value, today=today)
+        log_game_play(
+            ctx,
+            db,
+            {
+                "segment_id": chosen.id,
+                "reward_type": chosen.reward_type,
+                "reward_amount": chosen.reward_amount,
+                "reward_label": chosen.label,
+                "xp_from_reward": xp_award,
+            },
+        )
+
         return RoulettePlayResponse(
             result="OK",
             segment=chosen,

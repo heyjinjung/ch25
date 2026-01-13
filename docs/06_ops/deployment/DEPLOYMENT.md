@@ -490,6 +490,7 @@ sudo docker-compose restart
 - **Vultr 문서**: https://www.vultr.com/docs/
 - **Docker 문서**: https://docs.docker.com/
 - **Let's Encrypt**: https://letsencrypt.org/docs/
+- **서버 배포 예상 오류 리스트(Preflight)**: [DEPLOYMENT_EXPECTED_ERRORS.md](./DEPLOYMENT_EXPECTED_ERRORS.md)
 
 ### 모니터링 도구 (선택사항)
 - **Portainer**: Docker 관리 UI

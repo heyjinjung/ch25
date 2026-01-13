@@ -36,6 +36,8 @@ from app.models.mission import Mission, UserMissionProgress
 from app.models.admin_user_profile import AdminUserProfile
 from app.models.admin_message import AdminMessage, AdminMessageInbox
 from app.models.admin_audit_log import AdminAuditLog
+from app.models.ops_log import OpsDailyLog, OpsLogEntry
+from app.models.ops_plan import OpsCampaign, OpsPlan, OpsPlanTask
 from app.models.survey import (
     Survey,
     SurveyQuestion,
@@ -103,6 +105,11 @@ __all__ = [
     "AdminMessage",
     "AdminMessageInbox",
     "AdminAuditLog",
+    "OpsDailyLog",
+    "OpsLogEntry",
+    "OpsCampaign",
+    "OpsPlan",
+    "OpsPlanTask",
     "VaultWithdrawalRequest",
     "UserInventoryItem",
     "UserInventoryLedger",

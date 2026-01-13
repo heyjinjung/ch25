@@ -62,53 +62,53 @@ const UserAuditLogModal: React.FC<Props> = ({ user, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-      <div className="w-full max-w-4xl max-h-[90vh] overflow-hidden rounded-2xl border border-[#333333] bg-[#111111] shadow-2xl flex flex-col">
-        <div className="flex items-center justify-between border-b border-[#333333] p-4 sm:p-6 bg-[#1A1A1A]">
+      <div className="w-full max-w-4xl max-h-[90vh] overflow-hidden admin-card flex flex-col">
+        <div className="flex items-center justify-between border-b border-admin-border p-4 sm:p-6 bg-admin-sidebar/80">
           <div>
-            <h3 className="text-xl font-bold text-[#91F402] flex items-center gap-2">
-              <Shield size={18} /> 운영/감사 로그: {headerName}
+            <h3 className="text-admin-subtitle text-admin-text-primary flex items-center gap-2">
+              <Shield size={18} className="text-admin-brand" /> 운영/감사 로그: {headerName}
             </h3>
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="mt-1 text-admin-meta text-admin-text-secondary">
               ID: {user.id}
               {user.telegram_username ? ` · TG: @${String(user.telegram_username).replace(/^@/, "")}` : user.telegram_id ? ` · TG ID: ${user.telegram_id}` : ""}
               {user.external_id ? ` · external_id: ${user.external_id}` : ""}
             </p>
           </div>
-          <button onClick={onClose} className="rounded-lg p-2 text-gray-400 hover:bg-[#333333] hover:text-white">
+          <button onClick={onClose} aria-label="닫기" className="btn-admin-ghost rounded-full p-2">
             <X size={20} />
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6">
-          <div className="rounded-2xl border border-[#333333] bg-[#0B0B0B] overflow-hidden">
-            <div className="px-4 py-3 border-b border-[#222222]">
-              <div className="text-sm font-bold text-[#91F402]">최근 운영 조치</div>
-              <div className="text-[11px] text-gray-600 mt-1">vault/inventory 등 고위험 액션 위주로 기록됩니다.</div>
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 custom-scrollbar">
+          <div className="admin-card overflow-hidden">
+            <div className="px-4 py-3 border-b border-admin-border">
+              <div className="text-admin-body font-bold text-admin-text-primary">최근 운영 조치</div>
+              <div className="mt-1 text-admin-meta text-admin-text-secondary">vault/inventory 등 고위험 액션 위주로 기록됩니다.</div>
             </div>
 
             {logsQuery.isLoading ? (
-              <div className="py-12 text-center text-gray-500">Loading…</div>
+              <div className="py-12 text-center text-admin-text-secondary">Loading...</div>
             ) : (logsQuery.data ?? []).length === 0 ? (
-              <div className="py-12 text-center text-gray-500">로그가 없습니다.</div>
+              <div className="py-12 text-center text-admin-text-secondary">로그가 없습니다.</div>
             ) : (
-              <table className="w-full text-left text-sm">
-                <thead className="bg-[#111111] text-gray-400">
+              <table className="admin-table">
+                <thead className="bg-admin-sidebar/60">
                   <tr>
-                    <th className="py-3 px-4">시간</th>
-                    <th className="py-3 px-4">action</th>
-                    <th className="py-3 px-4">요약</th>
-                    <th className="py-3 px-4 text-right">admin</th>
+                    <th className="admin-th">시간</th>
+                    <th className="admin-th">action</th>
+                    <th className="admin-th">요약</th>
+                    <th className="admin-th text-right">admin</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#222]">
+                <tbody>
                   {(logsQuery.data ?? []).slice(0, 80).map((e) => (
-                    <tr key={e.id} className="hover:bg-[#111111]">
-                      <td className="py-3 px-4 text-xs text-gray-500 whitespace-nowrap">{formatKst(e.created_at)}</td>
-                      <td className="py-3 px-4 text-xs text-gray-300 font-mono">{e.action}</td>
-                      <td className="py-3 px-4 text-gray-200 truncate max-w-[440px]" title={summarize(e)}>
+                    <tr key={e.id} className="admin-tr">
+                      <td className="admin-td text-xs text-admin-text-secondary whitespace-nowrap">{formatKst(e.created_at)}</td>
+                      <td className="admin-td text-xs font-mono text-admin-text-primary">{e.action}</td>
+                      <td className="admin-td truncate max-w-[440px]" title={summarize(e)}>
                         {summarize(e)}
                       </td>
-                      <td className="py-3 px-4 text-right text-xs text-gray-500">#{e.admin_id}</td>
+                      <td className="admin-td text-right text-xs text-admin-text-secondary">#{e.admin_id}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -116,13 +116,13 @@ const UserAuditLogModal: React.FC<Props> = ({ user, onClose }) => {
             )}
 
             {logsQuery.error && (
-              <div className="p-4 text-xs text-red-300">조회 실패: {(logsQuery.error as any)?.message ?? "unknown"}</div>
+              <div className="p-4 text-xs text-admin-danger">조회 실패: {(logsQuery.error as any)?.message ?? "unknown"}</div>
             )}
           </div>
         </div>
 
-        <div className="p-4 sm:p-6 border-t border-[#333333] bg-[#1A1A1A] flex justify-end">
-          <button onClick={onClose} className="rounded-lg bg-[#333333] px-6 py-2 text-sm font-bold text-white hover:bg-[#444444]">
+        <div className="p-4 sm:p-6 border-t border-admin-border bg-admin-sidebar/80 flex justify-end">
+          <button onClick={onClose} className="btn-admin-secondary">
             닫기
           </button>
         </div>

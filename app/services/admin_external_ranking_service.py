@@ -1,5 +1,6 @@
 """Admin CRUD for external ranking data and season-pass hooks."""
 from datetime import date, datetime, timedelta
+import logging
 from typing import Iterable
 
 from fastapi import HTTPException, status
@@ -16,6 +17,9 @@ from app.services.vault_service import VaultService
 from app.services.season_pass_service import SeasonPassService
 from app.services.level_xp_service import LevelXPService
 from app.core.config import get_settings
+
+
+logger = logging.getLogger(__name__)
 
 
 class AdminExternalRankingService:
@@ -220,13 +224,20 @@ class AdminExternalRankingService:
             prev_amount = int(snap.get("deposit_amount") or 0)
             new_amount = int(row.deposit_amount or 0)
             if new_amount > prev_amount:
+                deposit_delta = new_amount - prev_amount
+                logger.info(
+                    "external_ranking deposit increased: user_id=%s prev=%s new=%s delta=%s",
+                    row.user_id,
+                    prev_amount,
+                    new_amount,
+                    deposit_delta,
+                )
                 activity = db.query(UserActivity).filter(UserActivity.user_id == row.user_id).first()
                 if not activity:
                     activity = UserActivity(user_id=row.user_id)
                     db.add(activity)
                 activity.last_charge_at = row.updated_at
 
-                deposit_delta = new_amount - prev_amount
                 deposit_delta_by_user[row.user_id] = deposit_delta_by_user.get(row.user_id, 0) + int(deposit_delta)
 
                 # Vault unlock hook (v1.0): deposit increase acts as "verification charge" trigger.
@@ -240,6 +251,13 @@ class AdminExternalRankingService:
                         new_amount=new_amount,
                         now=now,
                         commit=False,
+                    )
+                    logger.info(
+                        "external_ranking -> vault signal dispatched: user_id=%s prev=%s new=%s delta=%s",
+                        row.user_id,
+                        prev_amount,
+                        new_amount,
+                        deposit_delta,
                     )
 
         # Record daily deposit deltas for operational KPIs (KST calendar date)

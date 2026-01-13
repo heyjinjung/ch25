@@ -435,7 +435,7 @@ def get_comprehensive_overview(
 ):
     """Daily comprehensive operational metrics."""
     service = AdminDashboardService()
-    return service.get_daily_overview(db)
+    return service.get_comprehensive_overview(db)
 
 
 @router.post("/notifications/nudge")

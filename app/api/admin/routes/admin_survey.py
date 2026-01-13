@@ -280,11 +280,16 @@ def list_survey_responses(
         results.append({
             "response_id": resp.id,
             "user_id": resp.user_id,
-            "username": nickname,  # Keep key as username for frontend compatibility or change to nickname
+            "username": nickname,
             "telegram_id": tg_id,
             "completed_at": resp.updated_at,
             "answers": [
-                {"question_id": a.question_id, "answer_text": a.answer_text}
+                {
+                    "question_id": a.question_id,
+                    "answer_text": a.answer_text,
+                    "option_id": a.option_id,
+                    "option_label": a.option.label if a.option else None
+                }
                 for a in answers
             ]
         })

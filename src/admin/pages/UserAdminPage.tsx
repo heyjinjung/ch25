@@ -1,12 +1,12 @@
 // src/admin/pages/UserAdminPage.tsx
 import React, { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Edit2, Plus, Save, Search, Trash2, Upload } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Edit2, Plus, Save, Search, Trash2, Upload, Skull } from "lucide-react";
 import { createUser, deleteUser, fetchUsers, purgeUser, updateUser, AdminUser, AdminUserPayload } from "../api/adminUserApi";
 import { useToast } from "../../components/common/ToastProvider";
 import UserImportModal from "../components/UserImportModal";
 import { fetchUserMissions, updateUserMission, AdminUserMissionDetail, AdminUserMissionUpdatePayload } from "../api/adminUserMissionApi";
-import { Check, ClipboardList, History, Package, Shield, Ticket, X } from "lucide-react";
+import { Check, ClipboardList, History, Package, Ticket, X } from "lucide-react";
 import UserInventoryModal from "../components/UserInventoryModal";
 import UserGameTokenModal from "../components/UserGameTokenModal";
 import UserAuditLogModal from "../components/UserAuditLogModal";
@@ -30,7 +30,7 @@ type MemberRow = AdminUser & {
   passwordReset?: string;
 };
 
-const ITEMS_PER_PAGE = 10;
+
 
 type SortKey = "id" | "nickname" | "level" | "xp" | "status" | "login_streak";
 type SortDirection = "asc" | "desc";
@@ -45,12 +45,6 @@ const clampNumber = (value: unknown, fallback: number, minValue: number) => {
   const num = typeof value === "number" ? value : Number(value);
   if (!Number.isFinite(num)) return fallback;
   return Math.max(minValue, Math.floor(num));
-};
-
-const statusBadgeClass = (status: string) => {
-  if (status === "ACTIVE") return "bg-[#2D6B3B] text-[#91F402]";
-  if (status === "INACTIVE") return "bg-red-900/60 text-red-200";
-  return "bg-[#2C2C2E] text-gray-200";
 };
 
 const UserAdminPage: React.FC = () => {
@@ -76,6 +70,7 @@ const UserAdminPage: React.FC = () => {
   const [selectedUserForAuditLogs, setSelectedUserForAuditLogs] = useState<AdminUser | null>(null);
 
   const [sortKey, setSortKey] = useState<SortKey>("nickname");
+  const [itemsPerPage, setItemsPerPage] = useState(20);
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
 
   // Update handleSearch to trigger refetch
@@ -196,17 +191,17 @@ const UserAdminPage: React.FC = () => {
     );
   };
 
-  const totalPages = Math.max(1, Math.ceil(sortedMembers.length / ITEMS_PER_PAGE));
+  const totalPages = Math.max(1, Math.ceil(sortedMembers.length / itemsPerPage));
   const safePage = Math.min(currentPage, totalPages);
-  const startIndex = (safePage - 1) * ITEMS_PER_PAGE;
-  const currentMembers = sortedMembers.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  const startIndex = (safePage - 1) * itemsPerPage;
+  const currentMembers = sortedMembers.slice(startIndex, startIndex + itemsPerPage);
 
   const itemCountText = useMemo(() => {
     if (sortedMembers.length === 0) return "0개 항목 표시";
     const from = startIndex + 1;
-    const to = Math.min(startIndex + ITEMS_PER_PAGE, sortedMembers.length);
+    const to = Math.min(startIndex + itemsPerPage, sortedMembers.length);
     return `${from}-${to}/${sortedMembers.length}개 항목 표시`;
-  }, [sortedMembers.length, startIndex]);
+  }, [sortedMembers.length, startIndex, itemsPerPage]);
 
   const toggleEdit = (id: number, next: boolean) => {
     setMembers((prev) =>
@@ -351,67 +346,64 @@ const UserAdminPage: React.FC = () => {
   };
 
   return (
-    <section className="space-y-5">
-      <header>
-        <h2 className="text-2xl font-bold text-[#91F402]">회원 관리 (생성/수정/삭제)</h2>
-        <p className="mt-1 text-sm text-gray-400">
-          외부 링크로 아이디/비밀번호를 전달해 접속시키는 시크릿 운영 모드입니다. 비밀번호는 최소 4자 이상 입력하세요.
-        </p>
-      </header>
+    <div className="flex flex-col h-full bg-zinc-950 text-zinc-100">
+      {/* Top Bar */}
+      <div className="flex-none p-4 border-b border-zinc-800 bg-zinc-900/50 backdrop-blur-sm space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <h2 className="text-xl font-bold tracking-tight text-white">회원 관리 (User Admin)</h2>
+            <span className="px-2 py-0.5 rounded-full bg-zinc-800 text-[10px] text-zinc-400 font-mono">
+              Total {data?.length ?? 0}
+            </span>
+          </div>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex w-full max-w-lg items-center gap-2">
-          <div className="relative w-full">
-            <Search size={18} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowImportModal(true)}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-300 border border-zinc-700 transition-all"
+            >
+              <Upload size={14} />
+              일괄 등록
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowAddForm((p) => !p)}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-admin-brand hover:brightness-110 text-xs font-bold text-white shadow-lg shadow-admin-brand/20 transition-all"
+            >
+              <Plus size={14} />
+              회원 추가
+            </button>
+          </div>
+        </div>
+
+        {/* Search Bar */}
+        <div className="w-full max-w-xl">
+          <div className="relative group">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 group-focus-within:text-admin-brand transition-colors" />
             <input
               type="text"
-              placeholder="ID, 닉네임, TG Username 검색..."
+              placeholder="ID, 닉네임, TG Username, 실명 검색..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleSearch();
               }}
-              className="w-full rounded-md border border-[#333333] bg-[#111111] py-2 pl-10 pr-3 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
+              className="w-full h-10 bg-zinc-900/50 border border-zinc-800 rounded-xl pl-10 pr-4 text-sm text-zinc-200 outline-none focus:border-admin-brand/50 focus:bg-zinc-900 transition-all"
             />
           </div>
-          <button
-            type="button"
-            onClick={handleSearch}
-            className="rounded-md border border-[#333333] bg-[#1A1A1A] px-4 py-2 text-sm text-gray-200 hover:bg-[#2D6B3B]"
-          >
-            검색
-          </button>
-        </div>
-
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
-          <button
-            type="button"
-            onClick={() => setShowImportModal(true)}
-            className="flex w-full items-center justify-center rounded-md border border-[#333333] bg-[#1A1A1A] px-4 py-2 text-sm font-medium text-gray-200 hover:bg-[#2D6B3B] hover:text-white sm:w-auto"
-          >
-            <Upload size={18} className="mr-2" />
-            일괄 등록
-          </button>
-          <button
-            type="button"
-            onClick={() => setShowAddForm((p) => !p)}
-            className="flex w-full items-center justify-center rounded-md bg-[#2D6B3B] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#91F402] hover:text-black sm:w-auto"
-          >
-            <Plus size={18} className="mr-2" />
-            행 추가
-          </button>
         </div>
       </div>
 
       {
         showAddForm && (
-          <div className="rounded-lg border border-[#333333] bg-[#111111] p-6 shadow-md">
-            <h3 className="text-lg font-medium text-[#91F402]">새 회원 추가</h3>
+          <div className="admin-card p-6">
+            <h3 className="text-admin-subtitle text-admin-text-primary">새 회원 추가</h3>
 
             <form onSubmit={submitNewMember} className="mt-4 space-y-4">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
-                  <label htmlFor="nickname" className="mb-1 block text-sm font-medium text-gray-300">
+                  <label htmlFor="nickname" className="admin-label">
                     닉네임
                   </label>
                   <input
@@ -419,12 +411,12 @@ const UserAdminPage: React.FC = () => {
                     type="text"
                     value={newMember.nickname}
                     onChange={(e) => setNewMember((p) => ({ ...p, nickname: e.target.value }))}
-                    className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
+                    className="admin-input w-full"
                     required
                   />
                 </div>
                 <div>
-                  <label htmlFor="level" className="mb-1 block text-sm font-medium text-gray-300">
+                  <label htmlFor="level" className="admin-label">
                     레벨
                   </label>
                   <input
@@ -437,7 +429,7 @@ const UserAdminPage: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label htmlFor="xp" className="mb-1 block text-sm font-medium text-gray-300">
+                  <label htmlFor="xp" className="admin-label">
                     XP
                   </label>
                   <input
@@ -450,7 +442,7 @@ const UserAdminPage: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label htmlFor="status" className="mb-1 block text-sm font-medium text-gray-300">
+                  <label htmlFor="status" className="admin-label">
                     상태
                   </label>
                   <select
@@ -464,7 +456,7 @@ const UserAdminPage: React.FC = () => {
                   </select>
                 </div>
                 <div>
-                  <label htmlFor="password" className="mb-1 block text-sm font-medium text-gray-300">
+                  <label htmlFor="password" className="admin-label">
                     초기 비밀번호 (선택)
                   </label>
                   <input
@@ -476,48 +468,48 @@ const UserAdminPage: React.FC = () => {
                     className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
                   />
                 </div>
-                <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-[#333333]">
+                <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-admin-border">
                   <div className="space-y-1">
-                    <label htmlFor="real_name" className="text-xs font-medium text-gray-400">실명</label>
+                    <label htmlFor="real_name" className="admin-label">실명</label>
                     <input
                       id="real_name"
                       type="text"
                       value={newMember.real_name}
                       onChange={(e) => setNewMember((p) => ({ ...p, real_name: e.target.value }))}
-                      className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-[#91F402]"
+                      className="admin-input w-full"
                       placeholder="홍길동"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label htmlFor="phone_number" className="text-xs font-medium text-gray-400">연락처</label>
+                    <label htmlFor="phone_number" className="admin-label">연락처</label>
                     <input
                       id="phone_number"
                       type="text"
                       value={newMember.phone_number}
                       onChange={(e) => setNewMember((p) => ({ ...p, phone_number: e.target.value }))}
-                      className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-[#91F402]"
+                      className="admin-input w-full"
                       placeholder="010-0000-0000"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label htmlFor="telegram_id" className="text-xs font-medium text-gray-400">텔레그램 ID (숫자)</label>
+                    <label htmlFor="telegram_id" className="admin-label">텔레그램 ID (숫자)</label>
                     <input
                       id="telegram_id"
                       type="text"
                       value={newMember.telegram_id}
                       onChange={(e) => setNewMember((p) => ({ ...p, telegram_id: e.target.value }))}
-                      className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-[#91F402]"
+                      className="admin-input w-full"
                       placeholder="12345678"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label htmlFor="telegram_username" className="text-xs font-medium text-gray-400">텔레그램 닉네임 (@제외)</label>
+                    <label htmlFor="telegram_username" className="admin-label">텔레그램 닉네임 (@제외)</label>
                     <input
                       id="telegram_username"
                       type="text"
                       value={newMember.telegram_username}
                       onChange={(e) => setNewMember((p) => ({ ...p, telegram_username: e.target.value }))}
-                      className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-[#91F402]"
+                      className="admin-input w-full"
                       placeholder="username"
                     />
                   </div>
@@ -583,75 +575,69 @@ const UserAdminPage: React.FC = () => {
 
       {
         !isLoading && !isError && (
-          <div className="rounded-lg border border-[#333333] bg-[#111111] shadow-md">
-            <div className="max-h-[70vh] overflow-x-auto overflow-y-auto">
-              <table className="w-full min-w-[620px] md:min-w-[980px]">
-                <thead className="sticky top-0 z-10 border-b border-[#333333] bg-[#1A1A1A]">
+          <div className="flex-1 overflow-hidden relative flex flex-col">
+            <div className="flex-1 overflow-auto custom-scrollbar">
+              <table className="w-full text-left border-collapse">
+                <thead className="sticky top-0 z-10 bg-zinc-900 border-b border-zinc-800">
                   <tr>
                     <th
-                      className={`px-3 py-3 text-left text-xs font-medium uppercase tracking-wider sm:px-4 ${sortKey === "id" ? "bg-[#2D6B3B] text-[#91F402]" : "text-gray-400"
-                        } cursor-pointer hover:bg-[#2D6B3B]`}
+                      className={`px-4 py-3 text-left text-sm font-bold uppercase tracking-wider ${sortKey === "id" ? "text-white" : "text-zinc-400 hover:text-zinc-300"
+                        } cursor-pointer transition-colors`}
                       onClick={() => handleSort("id")}
                     >
-                      ID{renderSortIcon("id")}
+                      <div className="flex items-center gap-1">ID{renderSortIcon("id")}</div>
                     </th>
                     <th
-                      className={`px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400 sm:px-4`}
+                      className={`px-4 py-3 text-left text-sm font-bold uppercase tracking-wider text-zinc-400`}
                     >
                       External ID
                     </th>
                     <th
-                      className={`hidden px-3 py-3 text-left text-xs font-medium uppercase tracking-wider sm:px-4 md:table-cell ${sortKey === "nickname" ? "bg-[#2D6B3B] text-[#91F402]" : "text-gray-400"
-                        } cursor-pointer hover:bg-[#2D6B3B]`}
+                      className={`hidden md:table-cell px-4 py-3 text-left text-sm font-bold uppercase tracking-wider ${sortKey === "nickname" ? "text-white" : "text-zinc-400 hover:text-zinc-300"
+                        } cursor-pointer transition-colors`}
                       onClick={() => handleSort("nickname")}
                     >
-                      닉네임{renderSortIcon("nickname")}
+                      <div className="flex items-center gap-1">닉네임{renderSortIcon("nickname")}</div>
                     </th>
                     <th
-                      className={`px-3 py-3 text-left text-xs font-medium uppercase tracking-wider sm:px-4 ${sortKey === "level" ? "bg-[#2D6B3B] text-[#91F402]" : "text-gray-400"
-                        } cursor-pointer hover:bg-[#2D6B3B]`}
+                      className={`px-4 py-3 text-left text-sm font-bold uppercase tracking-wider ${sortKey === "level" ? "text-white" : "text-zinc-400 hover:text-zinc-300"
+                        } cursor-pointer transition-colors`}
                       onClick={() => handleSort("level")}
                     >
-                      레벨{renderSortIcon("level")}
+                      <div className="flex items-center gap-1">레벨{renderSortIcon("level")}</div>
                     </th>
                     <th
-                      className={`px-3 py-3 text-left text-xs font-medium uppercase tracking-wider sm:px-4 ${sortKey === "xp" ? "bg-[#2D6B3B] text-[#91F402]" : "text-gray-400"
-                        } cursor-pointer hover:bg-[#2D6B3B]`}
+                      className={`px-4 py-3 text-left text-sm font-bold uppercase tracking-wider ${sortKey === "xp" ? "text-white" : "text-zinc-400 hover:text-zinc-300"
+                        } cursor-pointer transition-colors`}
                       onClick={() => handleSort("xp")}
                     >
-                      XP{renderSortIcon("xp")}
+                      <div className="flex items-center gap-1">XP{renderSortIcon("xp")}</div>
                     </th>
                     <th
-                      className={`px-3 py-3 text-left text-xs font-medium uppercase tracking-wider sm:px-4 ${sortKey === "login_streak" ? "bg-[#2D6B3B] text-[#91F402]" : "text-gray-400"
-                        } cursor-pointer hover:bg-[#2D6B3B]`}
+                      className={`px-4 py-3 text-left text-sm font-bold uppercase tracking-wider ${sortKey === "login_streak" ? "text-white" : "text-zinc-400 hover:text-zinc-300"
+                        } cursor-pointer transition-colors`}
                       onClick={() => handleSort("login_streak")}
                     >
-                      Streak{renderSortIcon("login_streak")}
+                      <div className="flex items-center gap-1">Streak{renderSortIcon("login_streak")}</div>
                     </th>
-                    <th
-                      className={`px-3 py-3 text-left text-xs font-medium uppercase tracking-wider sm:px-4 ${sortKey === "status" ? "bg-[#2D6B3B] text-[#91F402]" : "text-gray-400"
-                        } cursor-pointer hover:bg-[#2D6B3B]`}
-                      onClick={() => handleSort("status")}
-                    >
-                      상태{renderSortIcon("status")}
-                    </th>
-                    <th className="hidden px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400 sm:px-4 md:table-cell">실명/연락처</th>
-                    <th className="hidden px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400 sm:px-4 md:table-cell">TG ID / Username</th>
-                    <th className="hidden px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400 sm:px-4 lg:table-cell">메모/태그</th>
-                    <th className="hidden px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400 sm:px-4 lg:table-cell">비밀번호(V2 리렉)</th>
-                    <th className="px-3 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-400 sm:px-4">액션</th>
+
+                    <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-bold uppercase tracking-wider text-zinc-400">실명/연락처</th>
+                    <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-bold uppercase tracking-wider text-zinc-400">TG ID / Username</th>
+                    <th className="hidden lg:table-cell px-4 py-3 text-left text-sm font-bold uppercase tracking-wider text-zinc-400">메모/태그</th>
+                    <th className="hidden lg:table-cell px-4 py-3 text-left text-sm font-bold uppercase tracking-wider text-zinc-400">비밀번호(V2 리렉)</th>
+                    <th className="px-4 py-3 text-center text-sm font-bold uppercase tracking-wider text-zinc-400">액션</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#333333]">
-                  {currentMembers.map((member, index) => (
-                    <tr key={member.id} className={index % 2 === 0 ? "bg-[#111111]" : "bg-[#1A1A1A]"}>
-                      <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-400 sm:px-4">{member.id}</td>
+                <tbody className="divide-y divide-zinc-800">
+                  {currentMembers.map((member) => (
+                    <tr key={member.id} className="group hover:bg-white/5 transition-colors">
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-zinc-500 font-mono">{member.id}</td>
                       <td className="px-3 py-3 whitespace-nowrap text-sm text-white sm:px-4">
                         {/* [Round 3] Priority: Telegram Username -> Nickname -> External ID */}
                         {member.telegram_username ? (
                           <div>
-                            <div className="text-base font-bold text-[#91F402]">@{String(member.telegram_username).replace(/^@/, "")}</div>
-                            <div className="text-xs text-gray-500">{member.nickname !== member.telegram_username ? member.nickname : member.external_id}</div>
+                            <div className="text-base font-bold text-admin-brand">@{String(member.telegram_username).replace(/^@/, "")}</div>
+                            <div className="text-xs text-zinc-500">{member.nickname !== member.telegram_username ? member.nickname : member.external_id}</div>
                           </div>
                         ) : (
                           <div>
@@ -666,10 +652,11 @@ const UserAdminPage: React.FC = () => {
                             type="text"
                             value={member.draft?.nickname ?? ""}
                             onChange={(e) => updateDraftField(member.id, "nickname", e.target.value)}
-                            className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-1.5 text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
+                            className="w-full h-8 bg-zinc-900 border border-zinc-700 rounded-md px-2 text-sm text-zinc-200 outline-none focus:border-admin-brand"
+                            placeholder="닉네임"
                           />
                         ) : (
-                          <div className="text-sm font-medium text-white">{member.nickname || "-"}</div>
+                          <div className="text-sm font-medium text-zinc-200">{member.nickname || "-"}</div>
                         )}
                       </td>
                       <td className="px-3 py-3 whitespace-nowrap text-sm text-white sm:px-4">
@@ -679,7 +666,9 @@ const UserAdminPage: React.FC = () => {
                             min={1}
                             value={member.draft?.level ?? 1}
                             onChange={(e) => updateDraftField(member.id, "level", e.target.value)}
-                            className="w-24 rounded-md border border-[#333333] bg-[#1A1A1A] p-1.5 text-right text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
+                            className="admin-input w-24 h-9 text-right"
+                            title="레벨"
+                            aria-label="레벨"
                           />
                         ) : (
                           member.season_level ?? member.level ?? 1
@@ -692,7 +681,9 @@ const UserAdminPage: React.FC = () => {
                             min={0}
                             value={member.draft?.xp ?? 0}
                             onChange={(e) => updateDraftField(member.id, "xp", e.target.value)}
-                            className="w-24 rounded-md border border-[#333333] bg-[#1A1A1A] p-1.5 text-right text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
+                            className="admin-input w-24 h-9 text-right"
+                            title="XP"
+                            aria-label="XP"
                           />
                         ) : (
                           member.xp ?? 0
@@ -705,33 +696,17 @@ const UserAdminPage: React.FC = () => {
                             min={0}
                             value={member.draft?.login_streak ?? 0}
                             onChange={(e) => updateDraftField(member.id, "login_streak", e.target.value)}
-                            className="w-16 rounded-md border border-[#333333] bg-[#1A1A1A] p-1.5 text-right text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
+                            className="admin-input w-16 h-9 text-right"
+                            title="Streak"
+                            aria-label="Streak"
                           />
                         ) : (
-                          <span className={`${(member.login_streak || 0) >= 3 ? "text-[#91F402] font-bold" : "text-gray-400"}`}>
+                          <span className={`${(member.login_streak || 0) >= 3 ? "text-admin-brand font-bold" : "text-gray-400"}`}>
                             {member.login_streak ?? 0}
                           </span>
                         )}
                       </td>
-                      <td className="px-3 py-3 whitespace-nowrap text-sm sm:px-4">
-                        {member.isEditing ? (
-                          <select
-                            value={member.draft?.status ?? "ACTIVE"}
-                            onChange={(e) => updateDraftField(member.id, "status", e.target.value)}
-                            className="w-32 rounded-md border border-[#333333] bg-[#1A1A1A] p-1.5 text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
-                          >
-                            <option value="ACTIVE">ACTIVE</option>
-                            <option value="INACTIVE">INACTIVE</option>
-                            {member.status && member.status !== "ACTIVE" && member.status !== "INACTIVE" && (
-                              <option value={member.status}>{member.status}</option>
-                            )}
-                          </select>
-                        ) : (
-                          <span className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${statusBadgeClass(member.status ?? "ACTIVE")}`}>
-                            {member.status ?? "ACTIVE"}
-                          </span>
-                        )}
-                      </td>
+
                       <td className="hidden px-3 py-3 whitespace-nowrap text-sm text-gray-400 sm:px-4 md:table-cell">
                         {member.isEditing ? (
                           <div className="flex flex-col gap-1">
@@ -777,8 +752,8 @@ const UserAdminPage: React.FC = () => {
                           </div>
                         ) : (
                           <>
-                            <div className="text-white font-mono">{member.telegram_id || "-"}</div>
-                            <div className="text-xs text-[#91F402]">
+                            <div className="text-zinc-200 font-mono">{member.telegram_id || "-"}</div>
+                            <div className="text-xs text-admin-brand">
                               {member.telegram_username ? `@${String(member.telegram_username).replace(/^@/, "")}` : "-"}
                             </div>
                           </>
@@ -824,7 +799,7 @@ const UserAdminPage: React.FC = () => {
                             value={member.passwordReset ?? ""}
                             onChange={(e) => setPasswordReset(member.id, e.target.value)}
                             placeholder="변경 시 입력"
-                            className="w-56 rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
+                            className="w-32 rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
                           />
                           <button
                             type="button"
@@ -842,7 +817,7 @@ const UserAdminPage: React.FC = () => {
                             <button
                               type="button"
                               onClick={() => saveRow(member)}
-                              className="rounded-md p-2 text-[#91F402] hover:text-white"
+                              className="rounded-md p-2 text-admin-brand hover:text-white"
                               title="저장"
                               aria-label="저장"
                             >
@@ -852,11 +827,10 @@ const UserAdminPage: React.FC = () => {
                             <button
                               type="button"
                               onClick={() => toggleEdit(member.id, true)}
-                              className="rounded-md p-2 text-[#91F402] hover:text-white"
+                              className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
                               title="수정"
-                              aria-label="수정"
                             >
-                              <Edit2 size={16} />
+                              <Edit2 size={14} />
                             </button>
                           )}
                           <button
@@ -871,7 +845,7 @@ const UserAdminPage: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => setSelectedUserForInventory(member)}
-                            className="rounded-md p-2 text-[#91F402] hover:text-white"
+                            className="rounded-md p-2 text-admin-brand hover:text-white"
                             title="인벤 CS"
                             aria-label="인벤 CS"
                           >
@@ -898,23 +872,15 @@ const UserAdminPage: React.FC = () => {
                             <History size={16} />
                           </button>
 
-                          <button
-                            type="button"
-                            onClick={() => setSelectedUserForAuditLogs(member)}
-                            className="rounded-md p-2 text-sky-300 hover:text-white"
-                            title="운영/감사 로그"
-                            aria-label="운영/감사 로그"
-                          >
-                            <Shield size={16} />
-                          </button>
+
                           <button
                             type="button"
                             onClick={() => purgeRow(member)}
-                            className="rounded-md border border-red-900/60 px-2 py-1 text-xs font-bold text-red-300 hover:bg-red-900/30 hover:text-red-200"
+                            className="rounded-md p-2 text-red-500 hover:text-red-300 hover:bg-red-900/30"
                             title="하드 퍼지(완전 초기화)"
                             aria-label="하드 퍼지(완전 초기화)"
                           >
-                            PURGE
+                            <Skull size={16} />
                           </button>
                           <button
                             type="button"
@@ -941,22 +907,25 @@ const UserAdminPage: React.FC = () => {
 
             {selectedUserForInventory && (
               <UserInventoryModal
-                user={selectedUserForInventory}
+                memberId={selectedUserForInventory!.id}
+                nickname={selectedUserForInventory!.nickname ?? selectedUserForInventory!.external_id ?? String(selectedUserForInventory!.id)}
+                isOpen={true}
                 onClose={() => setSelectedUserForInventory(null)}
               />
             )}
 
             {selectedUserForGameTokens && (
               <UserGameTokenModal
-                user={selectedUserForGameTokens.user}
-                defaultTab={selectedUserForGameTokens.tab}
+                memberId={selectedUserForGameTokens!.user.id}
+                nickname={selectedUserForGameTokens!.user.nickname ?? selectedUserForGameTokens!.user.external_id ?? String(selectedUserForGameTokens!.user.id)}
+                isOpen={true}
                 onClose={() => setSelectedUserForGameTokens(null)}
               />
             )}
 
             {selectedUserForAuditLogs && (
               <UserAuditLogModal
-                user={selectedUserForAuditLogs}
+                user={selectedUserForAuditLogs!}
                 onClose={() => setSelectedUserForAuditLogs(null)}
               />
             )}
@@ -965,9 +934,23 @@ const UserAdminPage: React.FC = () => {
               <div className="py-8 text-center text-gray-400">검색 결과가 없습니다.</div>
             )}
 
-            {totalPages > 1 && (
+            {totalPages > 0 && (
               <div className="flex flex-col gap-2 border-t border-[#333333] bg-[#1A1A1A] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-xs text-gray-400 sm:text-sm">{itemCountText}</p>
+                <div className="flex items-center gap-4">
+                  <p className="text-xs text-gray-400 sm:text-sm">{itemCountText}</p>
+                  <select
+                    value={itemsPerPage}
+                    onChange={(e) => {
+                      setItemsPerPage(Number(e.target.value));
+                      setCurrentPage(1);
+                    }}
+                    className="h-8 rounded-md border border-[#333333] bg-[#111111] px-2 text-xs text-gray-300 focus:border-admin-brand outline-none"
+                  >
+                    <option value={20}>20개씩</option>
+                    <option value={50}>50개씩</option>
+                    <option value={100}>100개씩</option>
+                  </select>
+                </div>
                 <nav className="relative z-0 inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
                   <button
                     type="button"
@@ -989,7 +972,7 @@ const UserAdminPage: React.FC = () => {
                         type="button"
                         onClick={() => setCurrentPage(pageNum)}
                         className={`relative inline-flex items-center border border-[#333333] px-3 py-2 text-sm font-medium sm:px-4 ${safePage === pageNum
-                          ? "z-10 bg-[#2D6B3B] text-[#91F402]"
+                          ? "z-10 bg-[#2D6B3B] text-admin-brand"
                           : "bg-[#1A1A1A] text-gray-300 hover:bg-[#2C2C2E]"
                           }`}
                       >
@@ -1018,9 +1001,8 @@ const UserAdminPage: React.FC = () => {
       <UserImportModal
         isOpen={showImportModal}
         onClose={() => setShowImportModal(false)}
-        onSuccess={() => queryClient.invalidateQueries({ queryKey: ["admin", "users"] })}
       />
-    </section >
+    </div>
   );
 };
 
@@ -1059,12 +1041,17 @@ const UserMissionModal: React.FC<UserMissionModalProps> = ({ user, onClose }) =>
       <div className="w-full max-w-4xl max-h-[90vh] overflow-hidden rounded-2xl border border-[#333333] bg-[#111111] shadow-2xl flex flex-col">
         <div className="flex items-center justify-between border-b border-[#333333] p-4 sm:p-6 bg-[#1A1A1A]">
           <div>
-            <h3 className="text-xl font-bold text-[#91F402]">
+            <h3 className="text-xl font-bold text-admin-brand">
               User Missions: {user.nickname || user.external_id}
             </h3>
             <p className="text-xs text-gray-400 mt-1">ID: {user.id} / {user.external_id}</p>
           </div>
-          <button onClick={onClose} className="rounded-lg p-2 text-gray-400 hover:bg-[#333333] hover:text-white">
+          <button
+            onClick={onClose}
+            className="rounded-lg p-2 text-admin-text-secondary hover:bg-admin-hover hover:text-admin-text-primary"
+            title="닫기"
+            aria-label="닫기"
+          >
             <X size={20} />
           </button>
         </div>
@@ -1089,7 +1076,7 @@ const UserMissionModal: React.FC<UserMissionModalProps> = ({ user, onClose }) =>
                     </div>
 
                     <div className="flex flex-col items-end gap-1 shrink-0 ml-2">
-                      <span className={`text-xs font-black px-2 py-0.5 rounded-full ${m.is_completed ? "bg-[#2D6B3B] text-[#91F402]" : "bg-red-900/30 text-red-400"}`}>
+                      <span className={`text-xs font-black px-2 py-0.5 rounded-full ${m.is_completed ? "bg-[#2D6B3B] text-admin-brand" : "bg-red-900/30 text-red-400"}`}>
                         {m.is_completed ? "COMPLETED" : "IN-PROGRESS"}
                       </span>
                       <span className={`text-[10px] font-bold ${m.is_claimed ? "text-amber-500" : "text-gray-600"}`}>
@@ -1120,7 +1107,7 @@ const UserMissionModal: React.FC<UserMissionModalProps> = ({ user, onClose }) =>
                     <div className="grid grid-cols-2 gap-2">
                       <button
                         onClick={() => updateMutation.mutate({ missionId: m.mission_id, payload: { is_completed: !m.is_completed } })}
-                        className={`flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-all ${m.is_completed ? "bg-[#2D6B3B] text-[#91F402]" : "bg-[#333333] text-gray-400 hover:text-white"}`}
+                        className={`flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-all ${m.is_completed ? "bg-[#2D6B3B] text-admin-brand" : "bg-[#333333] text-gray-400 hover:text-white"}`}
                       >
                         <Check size={14} />
                         {m.is_completed ? "완료됨" : "미완료"}

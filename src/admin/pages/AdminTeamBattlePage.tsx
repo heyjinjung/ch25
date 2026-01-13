@@ -1,1377 +1,218 @@
-import React, { useEffect, useMemo, useState } from "react";
+// src/admin/pages/AdminTeamBattlePage.tsx
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
-  ChevronLeft,
-  ChevronRight,
-  Edit2,
-  Plus,
-  RefreshCw,
-  Trash2,
+  Swords,
+  Activity,
+  Calendar,
   Trophy,
-  Users,
-  X,
+  Search,
+  Settings2,
+  ChevronRight,
+  TrendingUp,
+  Shield,
+  Zap,
+  RefreshCw,
+  Plus,
+  MoreVertical
 } from "lucide-react";
-import {
-  createSeason,
-  setSeasonActive,
-  createTeam,
-  settleSeason,
-  getActiveSeason,
-  listSeasons, // NEW
-  updateSeason,
-  deleteSeason,
-  listTeamsAdmin,
-  updateTeam,
-  deleteTeam,
-  forceJoinTeam,
-  getLeaderboard,
-  getContributors,
-} from "../../api/teamBattleApi";
-import { fetchUsers, resolveAdminUser, type AdminUser, type AdminUserSummary } from "../api/adminUserApi";
-import { Team, TeamSeason, LeaderboardEntry, ContributorEntry } from "../../types/teamBattle";
-
-type TabKey = "season" | "team" | "leaderboard" | "force";
-
-const formatDateTime = (iso?: string) => (iso ? new Date(iso).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" }) : "-");
-
-// Sub-components to isolate state and prevent lag
-const SeasonCreateModal = ({
-  busy,
-  onClose,
-  onSubmit,
-  inputClass,
-  ModalShell,
-}: {
-  busy: boolean;
-  onClose: () => void;
-  onSubmit: (data: { name: string; starts_at: string; ends_at: string; is_active: boolean }) => void;
-  inputClass: string;
-  ModalShell: any;
-}) => {
-  const [form, setForm] = useState({ name: "", starts_at: "", ends_at: "", is_active: false });
-
-  // Smart date formatter: converts "20251230" -> "2025-12-30T00:00:00+09:00"
-  const handleDateInput = (field: "starts_at" | "ends_at", value: string) => {
-    let nextVal = value;
-    // Basic YYYYMMDD detection
-    if (/^\d{8}$/.test(value)) {
-      const y = value.substring(0, 4);
-      const m = value.substring(4, 6);
-      const d = value.substring(6, 8);
-      nextVal = `${y}-${m}-${d}T00:00:00+09:00`;
-    }
-    setForm((prev) => ({ ...prev, [field]: nextVal }));
-  };
-
-  const parsePreview = (val: string) => {
-    if (!val) return "";
-    const d = new Date(val);
-    return isNaN(d.getTime()) ? "INVALID DATE" : d.toLocaleString("ko-KR", { timeZone: "Asia/Seoul" });
-  };
-
-  return (
-    <ModalShell title="시즌 생성" onClose={onClose}>
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div className="md:col-span-2">
-          <label className="mb-1 block text-sm font-medium text-gray-300">시즌 이름</label>
-          <input
-            className={inputClass}
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-            placeholder="시즌 이름 입력"
-          />
-        </div>
-        <div>
-          <label className="mb-1 block text-sm font-medium text-gray-300">시작 시각 (ISO)</label>
-          <input
-            className={inputClass}
-            value={form.starts_at}
-            onChange={(e) => handleDateInput("starts_at", e.target.value)}
-            placeholder="20251230 OR 2025-12-12T00:00:00+09:00"
-          />
-          {form.starts_at && <p className="mt-1 text-xs text-cc-lime">{parsePreview(form.starts_at)}</p>}
-        </div>
-        <div>
-          <label className="mb-1 block text-sm font-medium text-gray-300">종료 시각 (ISO)</label>
-          <input
-            className={inputClass}
-            value={form.ends_at}
-            onChange={(e) => handleDateInput("ends_at", e.target.value)}
-            placeholder="20260130 OR 2025-12-13T00:00:00+09:00"
-          />
-          {form.ends_at && <p className="mt-1 text-xs text-cc-lime">{parsePreview(form.ends_at)}</p>}
-        </div>
-        <div className="md:col-span-2">
-          <label className="flex items-center gap-2 text-sm text-gray-200">
-            <input
-              type="checkbox"
-              checked={form.is_active}
-              onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
-              className="h-4 w-4 rounded border-[#333333] bg-[#1A1A1A]"
-            />
-            활성화
-          </label>
-        </div>
-      </div>
-
-      <div className="mt-6 flex justify-end">
-        <button
-          type="button"
-          onClick={() => onSubmit(form)}
-          disabled={busy || !form.name || !form.starts_at || !form.ends_at}
-          className="rounded-md bg-[#2D6B3B] px-5 py-2 text-sm font-medium text-white hover:bg-[#91F402] hover:text-black disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {busy ? "생성 중..." : "시즌 생성"}
-        </button>
-      </div>
-    </ModalShell>
-  );
-};
-
-const TeamModal = ({
-  busy,
-  team,
-  allUsers,
-  onClose,
-  onSubmit,
-  inputClass,
-  ModalShell,
-}: {
-  busy: boolean;
-  team: Team | null;
-  allUsers: AdminUser[];
-  onClose: () => void;
-  onSubmit: (data: { name: string; icon: string; is_active: boolean }, leaderId?: number) => void;
-  inputClass: string;
-  ModalShell: any;
-}) => {
-  const [form, setForm] = useState({
-    name: team?.name || "",
-    icon: team?.icon || "",
-    is_active: team?.is_active ?? true,
-  });
-  const [leaderIdentifier, setLeaderIdentifier] = useState("");
-  const [showUserDropdown, setShowUserDropdown] = useState(false);
-
-  const [leaderResolvedUser, setLeaderResolvedUser] = useState<AdminUserSummary | null>(null);
-  const [leaderResolvedIdentifier, setLeaderResolvedIdentifier] = useState<string | null>(null);
-  const [leaderResolveError, setLeaderResolveError] = useState<string | null>(null);
-  const [leaderResolveBusy, setLeaderResolveBusy] = useState(false);
-
-  const trimmedLeaderIdentifier = useMemo(() => leaderIdentifier.trim(), [leaderIdentifier]);
-
-  const filteredUsers = useMemo(() => {
-    if (!trimmedLeaderIdentifier) return [];
-    const q = trimmedLeaderIdentifier.toLowerCase();
-    return allUsers
-      .filter(
-        (u) =>
-          (u.nickname?.toLowerCase() || "").includes(q) ||
-          u.external_id.toLowerCase().includes(q) ||
-          String(u.id).includes(trimmedLeaderIdentifier)
-      )
-      .slice(0, 10);
-  }, [allUsers, trimmedLeaderIdentifier]);
-
-  const canSubmit = useMemo(() => {
-    if (!form.name.trim()) return false;
-    if (!trimmedLeaderIdentifier) return true;
-    return Boolean(leaderResolvedUser && leaderResolvedIdentifier === trimmedLeaderIdentifier);
-  }, [form.name, leaderResolvedIdentifier, leaderResolvedUser, trimmedLeaderIdentifier]);
-
-  const resolveLeader = async () => {
-    const ident = trimmedLeaderIdentifier;
-    if (!ident) {
-      setLeaderResolveError("identifier를 입력하세요.");
-      setLeaderResolvedUser(null);
-      setLeaderResolvedIdentifier(null);
-      return;
-    }
-    setLeaderResolveBusy(true);
-    setLeaderResolveError(null);
-    setLeaderResolvedUser(null);
-    setLeaderResolvedIdentifier(null);
-    try {
-      const res = await resolveAdminUser(ident);
-      setLeaderResolvedUser(res.user);
-      setLeaderResolvedIdentifier(ident);
-    } catch (err: any) {
-      const detail = err?.response?.data?.detail;
-      if (detail === "USER_NOT_FOUND") {
-        setLeaderResolveError("사용자를 찾을 수 없습니다.");
-      } else if (detail === "AMBIGUOUS_IDENTIFIER") {
-        setLeaderResolveError("중복 매칭(409): identifier가 모호합니다.");
-      } else {
-        setLeaderResolveError("사용자 확인 실패");
-      }
-    } finally {
-      setLeaderResolveBusy(false);
-    }
-  };
-
-  return (
-    <ModalShell title={team ? "팀 수정" : "팀 생성"} onClose={onClose}>
-      <div className="space-y-4">
-        <div>
-          <label className="mb-1 block text-sm font-medium text-gray-300">팀 이름</label>
-          <input
-            className={inputClass}
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-            placeholder="팀 이름 입력"
-          />
-        </div>
-        <div>
-          <label className="mb-1 block text-sm font-medium text-gray-300">아이콘 URL (선택)</label>
-          <input
-            className={inputClass}
-            value={form.icon}
-            onChange={(e) => setForm({ ...form, icon: e.target.value })}
-            placeholder="https://example.com/icon.png"
-          />
-        </div>
-
-        {!team && (
-          <div className="relative">
-            <label className="mb-1 block text-sm font-medium text-gray-300">팀 리더 선택 (선택)</label>
-            <div className="flex gap-2">
-              <input
-                className={inputClass}
-                value={leaderIdentifier}
-                onChange={(e) => {
-                  setLeaderIdentifier(e.target.value);
-                  setLeaderResolvedUser(null);
-                  setLeaderResolvedIdentifier(null);
-                  setLeaderResolveError(null);
-                  setShowUserDropdown(true);
-                }}
-                onFocus={() => setShowUserDropdown(true)}
-                placeholder="TG ID / @username / 닉네임 / external_id ..."
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") void resolveLeader();
-                }}
-              />
-              {trimmedLeaderIdentifier && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setLeaderIdentifier("");
-                    setLeaderResolvedUser(null);
-                    setLeaderResolvedIdentifier(null);
-                    setLeaderResolveError(null);
-                  }}
-                  className="rounded-md bg-red-900/40 px-3 text-xs text-red-200"
-                >
-                  취소
-                </button>
-              )}
-            </div>
-
-            <div className="mt-2 flex justify-end">
-              <button
-                type="button"
-                onClick={() => void resolveLeader()}
-                disabled={leaderResolveBusy || !trimmedLeaderIdentifier}
-                className="rounded-md border border-[#333333] bg-[#1A1A1A] px-4 py-2 text-sm font-medium text-gray-200 hover:bg-[#2C2C2E] disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {leaderResolveBusy ? "확인 중..." : "사용자 확인"}
-              </button>
-            </div>
-
-            {(leaderResolvedUser || leaderResolveError) && (
-              <div className="mt-2 rounded-md border border-[#333333] bg-[#111111] p-3 text-sm">
-                {leaderResolveError ? (
-                  <div className="text-red-200">{leaderResolveError}</div>
-                ) : (
-                  <div className="text-gray-200">
-                    <div className="font-medium text-white">리더 확인됨</div>
-                    <div className="mt-1 text-xs text-gray-400">ID: {leaderResolvedUser?.id}</div>
-                    {leaderResolvedUser?.nickname && (
-                      <div className="text-xs text-gray-400">Nickname: {leaderResolvedUser.nickname}</div>
-                    )}
-                    {leaderResolvedUser?.tg_username && (
-                      <div className="text-xs text-gray-400">TG: @{leaderResolvedUser.tg_username}</div>
-                    )}
-                    {leaderResolvedUser?.tg_id && (
-                      <div className="text-xs text-gray-400">TG ID: {leaderResolvedUser.tg_id}</div>
-                    )}
-                    {leaderResolvedUser?.external_id && (
-                      <div className="text-xs text-gray-400">external_id: {leaderResolvedUser.external_id}</div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {showUserDropdown && filteredUsers.length > 0 && (
-              <div className="absolute z-[60] mt-1 max-h-48 w-full overflow-auto rounded-md border border-[#333333] bg-[#111111] shadow-xl">
-                {filteredUsers.map(u => (
-                  <button
-                    key={u.id}
-                    type="button"
-                    className="flex w-full flex-col px-4 py-2 text-left hover:bg-[#1A1A1A]"
-                    onClick={() => {
-                      setLeaderIdentifier(String(u.id));
-                      setLeaderResolvedUser(null);
-                      setLeaderResolvedIdentifier(null);
-                      setLeaderResolveError(null);
-                      setShowUserDropdown(false);
-                    }}
-                  >
-                    <span className="text-sm text-white">{u.nickname || "(닉네임 없음)"}</span>
-                    <span className="text-xs text-gray-500">ID: {u.id} / {u.external_id}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-            {leaderResolvedUser && leaderResolvedIdentifier === trimmedLeaderIdentifier && (
-              <div className="mt-1 text-xs text-[#91F402]">선택된 리더 ID: {leaderResolvedUser.id}</div>
-            )}
-          </div>
-        )}
-
-        {team && (
-          <div>
-            <label className="flex items-center gap-2 text-sm text-gray-200">
-              <input
-                type="checkbox"
-                checked={form.is_active}
-                onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
-                className="h-4 w-4 rounded border-[#333333] bg-[#1A1A1A]"
-              />
-              활성
-            </label>
-          </div>
-        )}
-      </div>
-
-      <div className="mt-6 flex justify-end">
-        <button
-          type="button"
-          onClick={() =>
-            onSubmit(
-              { name: form.name, icon: form.icon, is_active: form.is_active },
-              leaderResolvedUser && leaderResolvedIdentifier === trimmedLeaderIdentifier ? Number(leaderResolvedUser.id) : undefined
-            )
-          }
-          disabled={busy || !canSubmit}
-          className="rounded-md bg-[#2D6B3B] px-5 py-2 text-sm font-medium text-white hover:bg-[#91F402] hover:text-black disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {busy ? (team ? "저장 중..." : "생성 중...") : (team ? "저장" : "팀 생성")}
-        </button>
-      </div>
-    </ModalShell>
-  );
-};
+import { fetchTeamSeasons, fetchTeams } from "../api/adminTeamApi";
 
 const AdminTeamBattlePage: React.FC = () => {
-  const [tab, setTab] = useState<TabKey>("season");
-  const [season, setSeason] = useState<TeamSeason | null>(null);
-  const [allSeasons, setAllSeasons] = useState<TeamSeason[]>([]); // NEW
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [teamEdits, setTeamEdits] = useState<Record<number, { name: string; icon: string; is_active: boolean }>>({});
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
-  const [contributors, setContributors] = useState<ContributorEntry[]>([]);
-  const [selectedTeamForContrib, setSelectedTeamForContrib] = useState<number | "" | null>(null);
-  const [contribLimit, setContribLimit] = useState(20);
-  const [contribOffset, setContribOffset] = useState(0);
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [seasonEditForm, setSeasonEditForm] = useState({ name: "", starts_at: "", ends_at: "", is_active: false });
-  const [forceJoinForm, setForceJoinForm] = useState({ identifier: "", team_id: "" });
-  const [forceJoinResolvedUser, setForceJoinResolvedUser] = useState<AdminUserSummary | null>(null);
-  const [forceJoinResolvedIdentifier, setForceJoinResolvedIdentifier] = useState<string | null>(null);
-  const [forceJoinResolveError, setForceJoinResolveError] = useState<string | null>(null);
-  const [forceJoinResolveBusy, setForceJoinResolveBusy] = useState(false);
-  const [allUsers, setAllUsers] = useState<AdminUser[]>([]);
-  const [showUserDropdown, setShowUserDropdown] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
-  const [createSeasonBusy, setCreateSeasonBusy] = useState(false);
-  const [activateBusy, setActivateBusy] = useState(false);
-  const [createTeamBusy, setCreateTeamBusy] = useState(false);
-  const [settleBusy, setSettleBusy] = useState(false);
-  const [updateSeasonBusy, setUpdateSeasonBusy] = useState(false);
-  const [deleteSeasonBusy, setDeleteSeasonBusy] = useState(false);
-  const [teamBusy, setTeamBusy] = useState<number | null>(null);
-  const [teamDeleteBusy, setTeamDeleteBusy] = useState<number | null>(null);
-  const [forceJoinBusy, setForceJoinBusy] = useState(false);
-  const [contributorsBusy, setContributorsBusy] = useState(false);
+  const [selectedSeasonId, setSelectedSeasonId] = useState<number | null>(null);
 
-  const [showSeasonModal, setShowSeasonModal] = useState(false);
-  const [showTeamModal, setShowTeamModal] = useState(false);
-  const [editingTeam, setEditingTeam] = useState<Team | null>(null);
+  // Queries
+  const { data: seasonsData, isLoading: seasonsLoading } = useQuery({
+    queryKey: ["admin", "team", "seasons"],
+    queryFn: () => fetchTeamSeasons({ size: 10 }),
+  });
 
-  const inputClass =
-    "w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]";
-  const cardClass = "rounded-lg border border-[#333333] bg-[#111111] p-6 shadow-md";
+  const { data: teamsData, isLoading: teamsLoading } = useQuery({
+    queryKey: ["admin", "team", "teams", selectedSeasonId],
+    queryFn: () => fetchTeams({ season_id: selectedSeasonId || undefined, size: 20 }),
+    enabled: true,
+  });
 
-  const usersById = useMemo(() => {
-    const map = new Map<number, AdminUser>();
-    for (const u of allUsers) map.set(u.id, u);
-    return map;
-  }, [allUsers]);
+  const activeSeason = seasonsData?.items?.find(s => s.is_active);
 
-  const refresh = async () => {
-    setError(null);
-    setRefreshing(true);
-    try {
-      const [s, allS, t, lb, users] = await Promise.all([
-        getActiveSeason(),
-        listSeasons(50), // NEW
-        listTeamsAdmin(true),
-        getLeaderboard(undefined, 100, 0),
-        fetchUsers(),
-      ]);
-
-      const tArr = Array.isArray(t) ? t : [];
-      const lbArr = Array.isArray(lb) ? lb : [];
-      const usersArr = Array.isArray(users) ? users : [];
-
-      setSeason(s);
-      setAllSeasons(allS || []); // NEW
-      setAllUsers(usersArr);
-      if (s) {
-        setSeasonEditForm({
-          name: s.name,
-          starts_at: s.starts_at,
-          ends_at: s.ends_at,
-          is_active: s.is_active,
-        });
-      }
-      setTeams(tArr);
-      setLeaderboard(lbArr);
-
-      if (lbArr.length > 0 && selectedTeamForContrib === null) {
-        setSelectedTeamForContrib(lbArr[0].team_id);
-      }
-
-      const mapped = tArr.reduce<Record<number, { name: string; icon: string; is_active: boolean }>>((acc, team) => {
-        acc[team.id] = { name: team.name, icon: team.icon || "", is_active: team.is_active };
-        return acc;
-      }, {});
-      setTeamEdits(mapped);
-    } catch (err) {
-      console.error(err);
-      setError("데이터를 불러오지 못했습니다.");
-    } finally {
-      setRefreshing(false);
-    }
-  };
-
-  useEffect(() => {
-    refresh();
-  }, []);
-
-  useEffect(() => {
-    // 탭 전환 시 메시지/에러는 유지하지 않고 정리
-    setMessage(null);
-    setError(null);
-  }, [tab]);
-
-  const loadContributors = async (teamId: number | "" | null, seasonId?: number) => {
-    if (!teamId || !seasonId) {
-      setContributors([]);
-      return;
-    }
-    setContributorsBusy(true);
-    try {
-      const data = await getContributors(teamId as number, seasonId, contribLimit, contribOffset);
-      setContributors(data);
-    } catch (err) {
-      console.error(err);
-      setError("기여도 목록을 불러오지 못했습니다.");
-    } finally {
-      setContributorsBusy(false);
-    }
-  };
-
-  useEffect(() => {
-    if (season) {
-      loadContributors(selectedTeamForContrib, season.id);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedTeamForContrib, contribLimit, contribOffset, season?.id]);
-
-  const handleCreateSeason = async (payload: { name: string; starts_at: string; ends_at: string; is_active: boolean }) => {
-    setError(null);
-    setMessage(null);
-    setCreateSeasonBusy(true);
-    try {
-      const res = await createSeason(payload);
-      setSeason(res);
-      setSeasonEditForm({ name: res.name, starts_at: res.starts_at, ends_at: res.ends_at, is_active: res.is_active });
-      setMessage("시즌 생성 완료");
-      setShowSeasonModal(false);
-    } catch (err) {
-      console.error(err);
-      setError("시즌 생성 실패");
-    } finally {
-      setCreateSeasonBusy(false);
-    }
-  };
-
-  const handleActivate = async () => {
-    if (!season) return;
-    setError(null);
-    setMessage(null);
-    setActivateBusy(true);
-    try {
-      const res = await setSeasonActive(season.id, true);
-      setSeason(res);
-      setMessage("시즌 활성화 완료");
-    } catch (err) {
-      console.error(err);
-      setError("시즌 활성화 실패");
-    } finally {
-      setActivateBusy(false);
-    }
-  };
-
-  const handleCreateTeam = async (payload: { name: string; icon?: string | null }, leaderUserId?: number) => {
-    setError(null);
-    setMessage(null);
-    setCreateTeamBusy(true);
-    try {
-      await createTeam(payload, leaderUserId);
-      await refresh();
-      setMessage("팀 생성 완료");
-      setShowTeamModal(false);
-    } catch (err) {
-      console.error(err);
-      setError("팀 생성 실패");
-    } finally {
-      setCreateTeamBusy(false);
-    }
-  };
-
-  const handleSettle = async () => {
-    if (!season) return;
-    if (!leaderboard.length) {
-      setError("정산할 점수가 없습니다. 리더보드가 비어있습니다.");
-      return;
-    }
-    setError(null);
-    setMessage(null);
-    setSettleBusy(true);
-    try {
-      await settleSeason(season.id);
-      setMessage("정산 완료 (우승팀 CC 코인 지급)");
-    } catch (err) {
-      console.error(err);
-      setError("정산 실패");
-    } finally {
-      setSettleBusy(false);
-    }
-  };
-
-  const handleUpdateSeason = async () => {
-    if (!season) return;
-    setError(null);
-    setMessage(null);
-    setUpdateSeasonBusy(true);
-    try {
-      const res = await updateSeason(season.id, seasonEditForm);
-      setSeason(res);
-      setMessage("시즌 수정 완료");
-    } catch (err) {
-      console.error(err);
-      setError("시즌 수정 실패");
-    } finally {
-      setUpdateSeasonBusy(false);
-    }
-  };
-
-  const handleContribPrev = () => {
-    setContribOffset(Math.max(contribOffset - contribLimit, 0));
-  };
-
-  const handleContribNext = () => {
-    if (contributors.length < contribLimit) return;
-    setContribOffset(contribOffset + contribLimit);
-  };
-
-  const handleDeleteSeason = async () => {
-    if (!season) return;
-    setError(null);
-    setMessage(null);
-    setDeleteSeasonBusy(true);
-    try {
-      await deleteSeason(season.id);
-      setSeason(null);
-      setMessage("시즌 삭제 완료");
-    } catch (err) {
-      console.error(err);
-      setError("시즌 삭제 실패");
-    } finally {
-      setDeleteSeasonBusy(false);
-    }
-  };
-
-  const handleTeamUpdate = async (teamId: number, overrides?: Partial<{ name: string; icon: string; is_active: boolean }>) => {
-    const base = teamEdits[teamId];
-    const edit = base ? { ...base, ...overrides } : undefined;
-    if (!edit) return;
-    setError(null);
-    setMessage(null);
-    setTeamBusy(teamId);
-    try {
-      await updateTeam(teamId, { name: edit.name, icon: edit.icon || null, is_active: edit.is_active });
-      await refresh();
-      setMessage("팀 수정 완료");
-      setEditingTeam(null);
-    } catch (err) {
-      console.error(err);
-      setError("팀 수정 실패");
-    } finally {
-      setTeamBusy(null);
-    }
-  };
-
-  const handleTeamDelete = async (teamId: number) => {
-    setError(null);
-    setMessage(null);
-    setTeamDeleteBusy(teamId);
-    try {
-      await deleteTeam(teamId);
-      await refresh();
-      setMessage("팀 삭제 완료");
-    } catch (err) {
-      console.error(err);
-      setError("팀 삭제 실패");
-    } finally {
-      setTeamDeleteBusy(null);
-    }
-  };
-
-  const handleResolveForceJoinUser = async () => {
-    const ident = (forceJoinForm.identifier || "").trim();
-    if (!ident) {
-      setForceJoinResolveError("identifier를 입력하세요.");
-      setForceJoinResolvedUser(null);
-      setForceJoinResolvedIdentifier(null);
-      return;
-    }
-    setForceJoinResolveBusy(true);
-    setForceJoinResolveError(null);
-    setForceJoinResolvedUser(null);
-    setForceJoinResolvedIdentifier(null);
-    try {
-      const res = await resolveAdminUser(ident);
-      setForceJoinResolvedUser(res.user);
-      setForceJoinResolvedIdentifier(ident);
-    } catch (err: any) {
-      const detail = err?.response?.data?.detail;
-      if (detail === "USER_NOT_FOUND") {
-        setForceJoinResolveError("사용자를 찾을 수 없습니다.");
-      } else if (detail === "AMBIGUOUS_IDENTIFIER") {
-        setForceJoinResolveError("중복 매칭(409): identifier가 모호합니다.");
-      } else {
-        setForceJoinResolveError("사용자 확인 실패");
-      }
-    } finally {
-      setForceJoinResolveBusy(false);
-    }
-  };
-
-  const handleForceJoin = async () => {
-    const ident = (forceJoinForm.identifier || "").trim();
-    if (!ident || !forceJoinForm.team_id) return;
-    if (!forceJoinResolvedUser || forceJoinResolvedIdentifier !== ident) {
-      setError("강제 배정 전에 '사용자 확인'을 먼저 진행하세요.");
-      return;
-    }
-    setError(null);
-    setMessage(null);
-    setForceJoinBusy(true);
-    try {
-      await forceJoinTeam({ user_id: Number(forceJoinResolvedUser.id), team_id: Number(forceJoinForm.team_id) });
-      setMessage("강제 배정 완료");
-      // 성공 시 폼 초기화
-      setForceJoinForm({ identifier: "", team_id: "" });
-      setForceJoinResolvedUser(null);
-      setForceJoinResolvedIdentifier(null);
-      setForceJoinResolveError(null);
-    } catch (err) {
-      console.error(err);
-      const detail = (err as any)?.response?.data?.detail;
-      if (detail === "ALREADY_IN_TEAM") {
-        setError("이미 팀에 속한 사용자입니다. 이동하려면 먼저 기존 팀에서 제거하세요.");
-      } else if (detail === "TEAM_NOT_FOUND") {
-        setError("팀을 찾을 수 없습니다.");
-      } else {
-        setError("강제 배정 실패");
-      }
-    } finally {
-      setForceJoinBusy(false);
-    }
-  };
-
-  const openTeamCreate = () => {
-    setEditingTeam(null);
-    setShowTeamModal(true);
-  };
-
-  const openTeamEdit = (team: Team) => {
-    setEditingTeam(team);
-    setShowTeamModal(true);
-  };
-
-  const tabs = useMemo(
-    () =>
-      [
-        { key: "season" as const, label: "시즌 관리" },
-        { key: "team" as const, label: "팀 관리" },
-        { key: "leaderboard" as const, label: "리더보드" },
-        { key: "force" as const, label: "강제 팀 배정" },
-      ],
-    []
-  );
-
-  const ModalShell = ({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) => (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/70 p-4 pt-[calc(env(safe-area-inset-top)+1rem)] pb-[calc(env(safe-area-inset-bottom)+1rem)] pl-[calc(env(safe-area-inset-left)+1rem)] pr-[calc(env(safe-area-inset-right)+1rem)] sm:items-center">
-      <div className="w-full max-w-3xl max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-lg border border-[#333333] bg-[#111111] shadow-lg">
-        <div className="flex items-center justify-between border-b border-[#333333] px-6 py-4">
-          <h3 className="text-lg font-medium text-[#91F402]">{title}</h3>
-          <button type="button" onClick={onClose} className="rounded-md p-2 text-gray-300 hover:bg-[#1A1A1A]" aria-label="닫기">
-            <X size={18} />
-          </button>
-        </div>
-        <div className="px-6 py-5">{children}</div>
-      </div>
+  if (seasonsLoading) return (
+    <div className="flex flex-col items-center justify-center py-20 gap-4">
+      <RefreshCw className="h-8 w-8 text-admin-brand animate-spin" />
+      <span className="text-admin-meta text-admin-text-secondary">팀 배틀 엔진 동기화 중...</span>
     </div>
   );
 
   return (
-    <section className="space-y-5">
-      <header>
-        <h2 className="text-2xl font-bold text-[#91F402]">팀 배틀 관리</h2>
-        <p className="mt-1 text-sm text-gray-400">팀 배틀 시즌과 팀, 점수, 멤버를 관리합니다. 팀은 2개 구성을 권장합니다.</p>
+    <section className="admin-page-container space-y-10 pb-20">
+      <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-bold text-admin-text-base tracking-tight uppercase">
+            팀 배틀 통합 통제소 <span className="text-admin-brand/40">Team Battle</span>
+          </h1>
+          <p className="text-admin-body text-admin-text-secondary font-medium">실시간 매칭 시즌 및 팀별 스코어 가중치를 정밀 통제합니다.</p>
+        </div>
+        <div className="flex gap-3">
+          <button className="btn-admin-secondary flex items-center gap-2 px-5 py-2.5 h-auto">
+            <Calendar className="h-4 w-4" /> 신규 시즌 예약
+          </button>
+          <button className="btn-admin-primary flex items-center gap-2 px-5 py-2.5 h-auto shadow-admin-glow">
+            <Plus className="h-4 w-4" /> 팀 추가 등록
+          </button>
+        </div>
       </header>
 
-      <div className="border-b border-[#333333]">
-        <nav className="flex gap-2" aria-label="팀배틀 탭">
-          {tabs.map((t) => (
-            <button
-              key={t.key}
-              type="button"
-              onClick={() => setTab(t.key)}
-              className={`rounded-t-md px-4 py-2 text-sm font-medium ${tab === t.key ? "bg-[#2D6B3B] text-[#91F402]" : "text-gray-300 hover:bg-[#1A1A1A]"
-                }`}
-            >
-              {t.label}
-            </button>
-          ))}
-        </nav>
+      {/* Real-time Status Widgets */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="admin-card-premium p-6 flex flex-col justify-between h-32 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
+            <Activity className="h-16 w-16 text-admin-brand" />
+          </div>
+          <p className="text-[10px] font-black text-admin-text-muted uppercase tracking-widest">실시간 운영 상태</p>
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-admin-accent animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
+            <span className="text-2xl font-black text-admin-text-primary">ACTIVE</span>
+          </div>
+        </div>
+
+        <div className="admin-card-premium p-6 flex flex-col justify-between h-32">
+          <p className="text-[10px] font-black text-admin-text-muted uppercase tracking-widest">현재 활성 시즌</p>
+          <div>
+            <p className="text-lg font-black text-admin-brand line-clamp-1">{activeSeason?.name || "시즌 없음"}</p>
+            <p className="text-xs text-admin-text-secondary mt-1">{activeSeason ? `~${activeSeason.end_date.split('T')[0]}` : "비시즌 기간"}</p>
+          </div>
+        </div>
+
+        <div className="admin-card-premium p-6 flex flex-col justify-between h-32">
+          <p className="text-[10px] font-black text-admin-text-muted uppercase tracking-widest">총 참여 팀</p>
+          <div className="flex items-end justify-between">
+            <p className="text-3xl font-black text-admin-text-primary">{teamsData?.total || 0}</p>
+            <Zap className="h-5 w-5 text-admin-warning mb-1" />
+          </div>
+        </div>
+
+        <div className="admin-card-premium p-6 flex flex-col justify-between h-32 border-l-4 border-admin-accent">
+          <p className="text-[10px] font-black text-admin-text-muted uppercase tracking-widest">최고 누적 스코어</p>
+          <div className="flex items-end justify-between">
+            <p className="text-3xl font-black text-admin-accent tabular-nums">1.2M</p>
+            <Trophy className="h-5 w-5 text-admin-accent mb-1" />
+          </div>
+        </div>
       </div>
 
-      {tab === "season" && (
-        <div className={cardClass}>
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-medium text-[#91F402]">시즌 관리</h3>
-              <p className="mt-1 text-sm text-gray-400">모든 시각은 Asia/Seoul 기준입니다.</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setShowSeasonModal(true)}
-              className="flex items-center rounded-md bg-[#2D6B3B] px-4 py-2 text-sm font-medium text-white hover:bg-[#91F402] hover:text-black"
-            >
-              <Plus size={18} className="mr-2" />
-              시즌 생성
-            </button>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Left Column: Seasons List */}
+        <div className="lg:col-span-1 space-y-6">
+          <div className="flex items-center justify-between pl-1">
+            <h2 className="text-admin-meta font-black text-admin-text-secondary uppercase tracking-widest flex items-center gap-2">
+              <Calendar className="h-3.5 w-3.5" /> 배틀 시즌 전적
+            </h2>
           </div>
-
-          <div className="mt-6 rounded-lg border border-[#333333] bg-[#0A0A0A] p-6">
-            <div className="flex items-center justify-between">
-              <h4 className="text-lg font-medium text-[#91F402]">활성 시즌</h4>
+          <div className="space-y-3">
+            {seasonsData?.items?.map((season) => (
               <button
-                type="button"
-                onClick={refresh}
-                disabled={refreshing}
-                className="rounded-md p-2 text-gray-300 hover:bg-[#1A1A1A] disabled:cursor-not-allowed disabled:opacity-60"
-                aria-label="새로고침"
-                title="새로고침"
+                key={season.id}
+                onClick={() => setSelectedSeasonId(season.id)}
+                className={`w-full admin-card-premium p-4 text-left transition-all border-l-2 ${selectedSeasonId === season.id
+                  ? "border-admin-brand bg-admin-brand/5 shadow-admin-glow translate-x-1"
+                  : "border-transparent opacity-70 hover:opacity-100"
+                  }`}
               >
-                <RefreshCw size={18} className={refreshing ? "animate-spin" : ""} />
-              </button>
-            </div>
-            <div className="mt-8 flex min-h-24 items-center justify-center text-sm text-gray-400">
-              {season ? (
-                <div className="w-full space-y-3">
-                  <div className="text-white">
-                    <span className="font-semibold">{season.name}</span>
-                    <span className="ml-2 text-gray-400">
-                      {formatDateTime(season.starts_at)} ~ {formatDateTime(season.ends_at)}
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      onClick={handleActivate}
-                      disabled={!season || activateBusy}
-                      className="rounded-md bg-[#2D6B3B] px-4 py-2 text-sm font-medium text-white hover:bg-[#91F402] hover:text-black disabled:opacity-60"
-                    >
-                      {activateBusy ? "활성화 중..." : "활성화"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleSettle}
-                      disabled={!season || settleBusy}
-                      className="rounded-md border border-[#333333] bg-[#1A1A1A] px-4 py-2 text-sm text-gray-200 hover:bg-[#2C2C2E] disabled:opacity-60"
-                    >
-                      {settleBusy ? "정산 중..." : "정산"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleUpdateSeason}
-                      disabled={!season || updateSeasonBusy}
-                      className="rounded-md border border-[#333333] bg-[#1A1A1A] px-4 py-2 text-sm text-gray-200 hover:bg-[#2C2C2E] disabled:opacity-60"
-                    >
-                      {updateSeasonBusy ? "수정 중..." : "수정"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleDeleteSeason}
-                      disabled={!season || deleteSeasonBusy}
-                      className="rounded-md border border-red-500/40 bg-red-950 px-4 py-2 text-sm text-red-100 hover:bg-red-900/60 disabled:opacity-60"
-                    >
-                      {deleteSeasonBusy ? "삭제 중..." : "삭제"}
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <div>
-                      <label className="mb-1 block text-sm font-medium text-gray-300">시즌 이름</label>
-                      <input className={inputClass} value={seasonEditForm.name} onChange={(e) => setSeasonEditForm({ ...seasonEditForm, name: e.target.value })} />
-                    </div>
-                    <div>
-                      <label className="mb-1 block text-sm font-medium text-gray-300">활성화</label>
-                      <label className="flex items-center gap-2 text-sm text-gray-200">
-                        <input
-                          type="checkbox"
-                          checked={seasonEditForm.is_active}
-                          onChange={(e) => setSeasonEditForm({ ...seasonEditForm, is_active: e.target.checked })}
-                          className="h-4 w-4 rounded border-[#333333] bg-[#1A1A1A]"
-                        />
-                        활성
-                      </label>
-                    </div>
-                    <div>
-                      <label className="mb-1 block text-sm font-medium text-gray-300">시작 시각 (ISO)</label>
-                      <input className={inputClass} value={seasonEditForm.starts_at} onChange={(e) => setSeasonEditForm({ ...seasonEditForm, starts_at: e.target.value })} />
-                    </div>
-                    <div>
-                      <label className="mb-1 block text-sm font-medium text-gray-300">종료 시각 (ISO)</label>
-                      <input className={inputClass} value={seasonEditForm.ends_at} onChange={(e) => setSeasonEditForm({ ...seasonEditForm, ends_at: e.target.value })} />
-                    </div>
-                  </div>
+                <div className="flex justify-between items-start mb-2">
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-black ${season.is_active ? "bg-admin-accent/20 text-admin-accent" : "bg-admin-sidebar text-admin-text-muted"
+                    }`}>
+                    {season.status}
+                  </span>
+                  <span className="text-[10px] text-admin-text-muted tabular-nums">{season.start_date.split('T')[0]}</span>
                 </div>
-              ) : (
-                <div>(활성 시즌 없음)</div>
-              )}
-            </div>
-          </div>
-
-          {/* New Section: History */}
-          <div className="mt-8">
-            <h4 className="text-lg font-medium text-[#91F402] mb-4">전체 시즌 목록 (최신순)</h4>
-            <div className="overflow-x-auto rounded-lg border border-[#333333]">
-              <table className="w-full text-left text-sm text-gray-400">
-                <thead className="bg-[#1A1A1A] text-gray-200">
-                  <tr>
-                    <th className="px-4 py-3">ID</th>
-                    <th className="px-4 py-3">이름</th>
-                    <th className="px-4 py-3">기간</th>
-                    <th className="px-4 py-3">상태</th>
-                    <th className="px-4 py-3 text-right">관리</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#333333]">
-                  {allSeasons.map((s) => (
-                    <tr key={s.id} className="hover:bg-[#111111]">
-                      <td className="px-4 py-3">{s.id}</td>
-                      <td className="px-4 py-3 text-white font-medium">{s.name}</td>
-                      <td className="px-4 py-3">{formatDateTime(s.starts_at)} <br /> ~ {formatDateTime(s.ends_at)}</td>
-                      <td className="px-4 py-3">
-                        {s.is_active ?
-                          <span className="text-[#91F402] font-bold">ACTIVE</span> :
-                          <span className="text-gray-600">INACTIVE</span>
-                        }
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <div className="flex justify-end gap-2">
-                          <button
-                            onClick={() => {
-                              setSeason(s);
-                              setSeasonEditForm({
-                                name: s.name,
-                                starts_at: s.starts_at,
-                                ends_at: s.ends_at,
-                                is_active: s.is_active
-                              });
-                              window.scrollTo({ top: 0, behavior: 'smooth' });
-                            }}
-                            className="text-gray-300 hover:text-white"
-                          >
-                            <Edit2 size={16} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                  {allSeasons.length === 0 && (
-                    <tr><td colSpan={5} className="px-4 py-8 text-center">시즌 내역이 없습니다.</td></tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-        </div>
-      )}
-
-      {tab === "team" && (
-        <div className={cardClass}>
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-medium text-[#91F402]">팀 관리 (2팀 구성 권장)</h3>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={refresh}
-                disabled={refreshing}
-                className="rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-gray-200 hover:bg-[#2C2C2E] disabled:opacity-60"
-                aria-label="새로고침"
-                title="새로고침"
-              >
-                <RefreshCw size={18} className={refreshing ? "animate-spin" : ""} />
-              </button>
-              <button
-                type="button"
-                onClick={openTeamCreate}
-                className="flex items-center rounded-md bg-[#2D6B3B] px-4 py-2 text-sm font-medium text-white hover:bg-[#91F402] hover:text-black"
-              >
-                <Plus size={18} className="mr-2" />
-                팀 생성
-              </button>
-            </div>
-          </div>
-
-          <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-3">
-            {teams.map((t) => (
-              <div key={t.id} className="rounded-lg border border-[#333333] bg-[#0A0A0A] p-5 shadow-sm">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <span className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${t.is_active ? "bg-[#2D6B3B] text-[#91F402]" : "bg-red-900/60 text-red-200"}`}>
-                      {t.is_active ? "활성" : "비활성"}
-                    </span>
-                    <div className="mt-3 text-sm text-gray-400">ID: {t.id}</div>
-                    <div className="mt-2 text-2xl font-bold text-white">{t.name}</div>
-                    <div className="mt-2 text-sm text-gray-400">{t.icon ? t.icon : "아이콘 URL 없음"}</div>
-                  </div>
+                <p className="text-sm font-bold text-admin-text-primary line-clamp-1">{season.name}</p>
+                <div className="flex justify-between items-center mt-3 text-[10px] text-admin-text-secondary">
+                  <div className="flex items-center gap-1"><Shield className="h-3 w-3" /> 2 Teams</div>
+                  <ChevronRight className={`h-3 w-3 transition-transform ${selectedSeasonId === season.id ? "translate-x-1 text-admin-brand" : "text-admin-text-muted"}`} />
                 </div>
-
-                <div className="mt-5 flex items-center justify-between">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const current = teamEdits[t.id]?.is_active ?? t.is_active;
-                      const next = !current;
-                      setTeamEdits({
-                        ...teamEdits,
-                        [t.id]: {
-                          name: teamEdits[t.id]?.name ?? t.name,
-                          icon: teamEdits[t.id]?.icon ?? t.icon ?? "",
-                          is_active: next,
-                        },
-                      });
-                      handleTeamUpdate(t.id, { is_active: next });
-                    }}
-                    disabled={teamBusy === t.id}
-                    className={`rounded-md px-4 py-2 text-sm font-medium ${(teamEdits[t.id]?.is_active ?? t.is_active)
-                      ? "bg-red-900/60 text-red-100 hover:bg-red-900"
-                      : "bg-[#2D6B3B] text-white hover:bg-[#91F402] hover:text-black"
-                      } disabled:opacity-60`}
-                  >
-                    {teamBusy === t.id ? "처리 중..." : (teamEdits[t.id]?.is_active ?? t.is_active) ? "비활성" : "활성"}
-                  </button>
-
-                  <div className="flex items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => openTeamEdit(t)}
-                      className="text-[#91F402] hover:text-white"
-                      title="수정"
-                      aria-label="수정"
-                    >
-                      <Edit2 size={16} />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleTeamDelete(t.id)}
-                      disabled={teamDeleteBusy === t.id}
-                      className="text-red-500 hover:text-red-300 disabled:opacity-60"
-                      title="삭제"
-                      aria-label="삭제"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </div>
-              </div>
+              </button>
             ))}
-            {teams.length === 0 && <div className="text-sm text-gray-400">팀이 없습니다.</div>}
           </div>
         </div>
-      )}
 
-      {tab === "leaderboard" && (
-        <div className="grid gap-5 lg:grid-cols-2">
-          <div className={cardClass}>
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-medium text-[#91F402]">리더보드</h3>
-              <button
-                type="button"
-                onClick={refresh}
-                disabled={refreshing}
-                className="rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-gray-200 hover:bg-[#2C2C2E] disabled:opacity-60"
-                aria-label="새로고침"
-                title="새로고침"
-              >
-                <RefreshCw size={18} className={refreshing ? "animate-spin" : ""} />
-              </button>
-            </div>
-
-            <div className="mt-4 space-y-3">
-              {leaderboard.length === 0 && <div className="text-sm text-gray-400">점수가 없습니다.</div>}
-              {leaderboard.map((row, idx) => (
-                <div
-                  key={row.team_id}
-                  className={`flex items-center justify-between rounded-lg border border-[#333333] px-5 py-4 ${idx === 0 ? "bg-[#2D6B3B] text-white" : "bg-[#0A0A0A] text-white"
-                    }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="text-lg font-bold">{idx + 1}</div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <Trophy size={16} className={idx === 0 ? "text-[#91F402]" : "text-gray-400"} />
-                        <span className="font-semibold">{row.team_name}</span>
-                      </div>
-                      <div className={`mt-1 flex items-center gap-2 text-sm ${idx === 0 ? "text-white/80" : "text-gray-400"}`}>
-                        <Users size={16} />
-                        {row.member_count ?? 0}명 참여
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-xl font-bold">{row.points.toLocaleString()}</div>
-                    <div className={`mt-1 text-xs ${idx === 0 ? "text-white/80" : "text-gray-400"}`}>
-                      {row.latest_event_at ? formatDateTime(row.latest_event_at) : "-"}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className={cardClass}>
-            <h3 className="text-lg font-medium text-[#91F402]">팀별 기여도</h3>
-
-            <div className="mt-4">
-              <label className="mb-1 block text-sm font-medium text-gray-300">팀 선택</label>
-              <select
-                value={selectedTeamForContrib ?? ""}
-                onChange={(e) => {
-                  setContribOffset(0);
-                  setSelectedTeamForContrib(e.target.value === "" ? null : Number(e.target.value));
-                }}
-                className="w-full rounded-md border border-[#2D6B3B] bg-[#1A1A1A] p-3 text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
-              >
-                <option value="">팀 선택</option>
-                {teams.map((team) => (
-                  <option key={team.id} value={team.id}>
-                    {team.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="mt-4 flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <select
-                  value={contribLimit}
-                  onChange={(e) => {
-                    setContribOffset(0);
-                    setContribLimit(Number(e.target.value));
-                  }}
-                  className="rounded-md border border-[#333333] bg-[#1A1A1A] px-3 py-2 text-sm text-white"
-                >
-                  {[10, 20, 50, 100].map((n) => (
-                    <option key={n} value={n}>
-                      {n}개씩
-                    </option>
-                  ))}
-                </select>
-                <div className="text-sm text-gray-400">총 {contributors.length}명</div>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  if (season) loadContributors(selectedTeamForContrib, season.id);
-                }}
-                disabled={contributorsBusy}
-                className="rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-gray-200 hover:bg-[#2C2C2E] disabled:opacity-60"
-                aria-label="새로고침"
-                title="새로고침"
-              >
-                <RefreshCw size={18} className={contributorsBusy ? "animate-spin" : ""} />
-              </button>
-            </div>
-
-            <div className="mt-4 max-h-[420px] overflow-auto rounded-lg border border-[#333333] bg-[#0A0A0A]">
-              <table className="w-full">
-                <thead className="sticky top-0 z-10 border-b border-[#333333] bg-[#1A1A1A]">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">순위</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">TG ID / Username</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">실명/연락처</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">닉네임</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">점수</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">최근 적립</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#333333]">
-                  {contributors.length === 0 && (
-                    <tr>
-                      <td colSpan={6} className="px-4 py-6 text-center text-sm text-gray-400">
-                        기여도 데이터가 없습니다.
-                      </td>
-                    </tr>
-                  )}
-                  {contributors.map((c, idx) => (
-                    <tr key={`${c.user_id}-${idx}`} className={idx % 2 === 0 ? "bg-[#111111]" : "bg-[#1A1A1A]"}>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-400">{contribOffset + idx + 1}</td>
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        {(() => {
-                          const u = usersById.get(c.user_id);
-                          const tgId = u?.telegram_id ? String(u.telegram_id) : "-";
-                          const rawU = String(u?.telegram_username ?? "").trim();
-                          const tgUsername = rawU ? (rawU.startsWith("@") ? rawU : `@${rawU}`) : "-";
-                          return (
-                            <>
-                              <div className="text-white font-mono text-sm">{tgId}</div>
-                              <div className="text-xs text-[#91F402]">{tgUsername}</div>
-                            </>
-                          );
-                        })()}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <div className="text-sm text-gray-400">-</div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="text-sm font-medium text-white">{c.nickname || "닉네임 없음"}</div>
-                        <div className="text-xs text-gray-500">user_{c.user_id}</div>
-                        {(() => {
-                          const u = usersById.get(c.user_id);
-                          if (!u?.external_id) return null;
-                          return <div className="mt-1 text-xs text-gray-500">external_id: {u.external_id}</div>;
-                        })()}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-white">{c.points.toLocaleString()}</td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-400">{c.latest_event_at ? formatDateTime(c.latest_event_at) : "-"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            <div className="mt-4 flex items-center justify-between">
-              <div className="text-sm text-gray-400">
-                표시: {contributors.length ? `${contribOffset + 1} - ${contribOffset + contributors.length}` : "0"}
-              </div>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={handleContribPrev}
-                  className="rounded-md border border-[#333333] bg-[#1A1A1A] px-3 py-2 text-sm text-gray-200 hover:bg-[#2C2C2E]"
-                >
-                  <ChevronLeft size={18} />
-                </button>
-                <button
-                  type="button"
-                  onClick={handleContribNext}
-                  className="rounded-md border border-[#333333] bg-[#1A1A1A] px-3 py-2 text-sm text-gray-200 hover:bg-[#2C2C2E]"
-                >
-                  <ChevronRight size={18} />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {tab === "force" && (
-        <div className={cardClass}>
-          <h3 className="text-lg font-medium text-[#91F402]">강제 팀 배정</h3>
-
-          <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div className="relative">
-              <label className="mb-1 block text-sm font-medium text-gray-300">identifier</label>
+        {/* Right Column: Teams Grid & Matching Control */}
+        <div className="lg:col-span-2 space-y-6">
+          <div className="flex items-center justify-between pl-1">
+            <h2 className="text-admin-meta font-black text-admin-text-secondary uppercase tracking-widest flex items-center gap-2">
+              <Shield className="h-3.5 w-3.5" /> 소속 팀 및 실시간 스코어링
+            </h2>
+            <div className="flex items-center gap-2">
+              <Search className="h-4 w-4 text-admin-text-muted" />
               <input
-                className={inputClass}
-                placeholder="TG ID / @username / 닉네임 / external_id ..."
-                value={forceJoinForm.identifier}
-                onChange={(e) => {
-                  setForceJoinForm({ ...forceJoinForm, identifier: e.target.value });
-                  setForceJoinResolvedUser(null);
-                  setForceJoinResolvedIdentifier(null);
-                  setForceJoinResolveError(null);
-                  setShowUserDropdown(true);
-                }}
-                onFocus={() => setShowUserDropdown(true)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") void handleResolveForceJoinUser();
-                }}
+                type="text"
+                placeholder="팀 검색..."
+                className="bg-transparent border-none outline-none text-xs text-admin-text-primary w-32"
               />
+            </div>
+          </div>
 
-              <div className="mt-2 flex justify-end">
-                <button
-                  type="button"
-                  onClick={() => void handleResolveForceJoinUser()}
-                  disabled={forceJoinResolveBusy || !(forceJoinForm.identifier || "").trim()}
-                  className="rounded-md border border-[#333333] bg-[#1A1A1A] px-4 py-2 text-sm font-medium text-gray-200 hover:bg-[#2C2C2E] disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {forceJoinResolveBusy ? "확인 중..." : "사용자 확인"}
-                </button>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {teamsLoading ? (
+              <div className="col-span-2 py-10 text-center">
+                <RefreshCw className="h-6 w-6 text-admin-brand animate-spin mx-auto mb-2" />
+                <p className="text-xs text-admin-text-secondary">데이터 검색 중...</p>
               </div>
-
-              {(forceJoinResolvedUser || forceJoinResolveError) && (
-                <div className="mt-2 rounded-md border border-[#333333] bg-[#111111] p-3 text-sm">
-                  {forceJoinResolveError ? (
-                    <div className="text-red-200">{forceJoinResolveError}</div>
-                  ) : (
-                    <div className="text-gray-200">
-                      <div className="font-medium text-white">사용자 확인됨</div>
-                      <div className="mt-1 text-xs text-gray-400">ID: {forceJoinResolvedUser?.id}</div>
-                      {forceJoinResolvedUser?.nickname && (
-                        <div className="text-xs text-gray-400">Nickname: {forceJoinResolvedUser.nickname}</div>
-                      )}
-                      {forceJoinResolvedUser?.tg_username && (
-                        <div className="text-xs text-gray-400">TG: @{forceJoinResolvedUser.tg_username}</div>
-                      )}
-                      {forceJoinResolvedUser?.tg_id && (
-                        <div className="text-xs text-gray-400">TG ID: {forceJoinResolvedUser.tg_id}</div>
-                      )}
-                      {forceJoinResolvedUser?.external_id && (
-                        <div className="text-xs text-gray-400">external_id: {forceJoinResolvedUser.external_id}</div>
-                      )}
+            ) : teamsData?.items?.length === 0 ? (
+              <div className="col-span-2 py-20 admin-card-premium border-dashed flex flex-col items-center justify-center gap-4">
+                <Shield className="h-10 w-10 text-admin-text-muted opacity-20" />
+                <p className="text-admin-meta text-admin-text-muted font-bold">선택된 시즌에 등록된 팀이 없습니다.</p>
+              </div>
+            ) : (
+              teamsData?.items?.map((team) => (
+                <div key={team.id} className="admin-card-premium p-5 group hover:shadow-admin-glow transition-all">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-lg" style={{ backgroundColor: team.color }}>
+                        <Swords className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <h3 className="text-admin-body font-black text-admin-text-primary">{team.name}</h3>
+                        <p className="text-[10px] text-admin-text-muted uppercase font-bold tracking-tighter">Team Identifier: #{team.id}</p>
+                      </div>
                     </div>
-                  )}
-                </div>
-              )}
+                    <button
+                      type="button"
+                      className="p-2 rounded-lg hover:bg-admin-hover text-admin-text-muted hover:text-admin-brand transition-colors"
+                      aria-label="팀 메뉴"
+                      title="팀 메뉴"
+                    >
+                      <MoreVertical className="h-4 w-4" />
+                    </button>
+                  </div>
 
-              {showUserDropdown && (forceJoinForm.identifier || "").trim() && (
-                <div className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-lg border border-[#333333] bg-[#111111] shadow-lg">
-                  {allUsers
-                    .filter((u) =>
-                      (u.nickname?.toLowerCase() || "").includes((forceJoinForm.identifier || "").toLowerCase()) ||
-                      u.external_id.toLowerCase().includes((forceJoinForm.identifier || "").toLowerCase()) ||
-                      String(u.id).includes(forceJoinForm.identifier)
-                    )
-                    .slice(0, 20)
-                    .map((u) => (
+                  <div className="space-y-4">
+                    <div className="bg-admin-sidebar/50 p-3 rounded-xl border border-admin-border">
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-[10px] font-black text-admin-text-secondary">CURRENT SCORE</span>
+                        <TrendingUp className="h-3 w-3 text-admin-accent" />
+                      </div>
+                      <p className="text-xl font-black text-admin-accent tabular-nums">482,920</p>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <button className="flex-1 btn-admin-secondary text-[11px] py-2 h-auto font-black hover:bg-admin-brand/10 hover:text-admin-brand hover:border-admin-brand/30">
+                        포인트 수동 조정
+                      </button>
                       <button
                         type="button"
-                        key={u.id}
-                        className="flex w-full items-center justify-between border-b border-[#333333] px-3 py-2 text-left text-sm text-gray-200 hover:bg-[#1A1A1A]"
-                        onClick={() => {
-                          setForceJoinForm({ ...forceJoinForm, identifier: String(u.id) });
-                          setForceJoinResolvedUser(null);
-                          setForceJoinResolvedIdentifier(null);
-                          setForceJoinResolveError(null);
-                          setShowUserDropdown(false);
-                        }}
+                        className="btn-admin-secondary p-2 h-auto"
+                        aria-label="팀 설정"
+                        title="팀 설정"
                       >
-                        <span className="font-medium text-white">{u.nickname || "(닉네임 없음)"}</span>
-                        <span className="text-xs text-gray-500">ID: {u.id} / {u.external_id}</span>
+                        <Settings2 className="h-4 w-4" />
                       </button>
-                    ))}
-                  {allUsers.filter((u) =>
-                    (u.nickname?.toLowerCase() || "").includes((forceJoinForm.identifier || "").toLowerCase()) ||
-                    u.external_id.toLowerCase().includes((forceJoinForm.identifier || "").toLowerCase()) ||
-                    String(u.id).includes(forceJoinForm.identifier)
-                  ).length === 0 && <div className="px-3 py-2 text-sm text-gray-400">검색 결과 없음</div>}
+                    </div>
+                  </div>
                 </div>
-              )}
-              {forceJoinForm.identifier && <div className="mt-1 text-xs text-gray-400">입력된 identifier: {forceJoinForm.identifier}</div>}
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-300">팀 선택</label>
-              <select
-                className={inputClass}
-                value={forceJoinForm.team_id}
-                onChange={(e) => setForceJoinForm({ ...forceJoinForm, team_id: e.target.value })}
-              >
-                <option value="">팀 선택...</option>
-                {teams.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.name} (ID: {t.id})
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="mt-4 flex justify-end">
-            <button
-              type="button"
-              onClick={handleForceJoin}
-              disabled={
-                forceJoinBusy ||
-                !(forceJoinForm.identifier || "").trim() ||
-                !forceJoinForm.team_id ||
-                !forceJoinResolvedUser ||
-                forceJoinResolvedIdentifier !== (forceJoinForm.identifier || "").trim()
-              }
-              className="rounded-md bg-[#2D6B3B] px-5 py-2 text-sm font-medium text-white hover:bg-[#91F402] hover:text-black disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {forceJoinBusy ? "배정 중..." : "강제 배정"}
-            </button>
+              ))
+            )}
           </div>
         </div>
-      )}
-
-      {showSeasonModal && (
-        <SeasonCreateModal
-          busy={createSeasonBusy}
-          onClose={() => setShowSeasonModal(false)}
-          onSubmit={handleCreateSeason}
-          inputClass={inputClass}
-          ModalShell={ModalShell}
-        />
-      )}
-
-      {showTeamModal && (
-        <TeamModal
-          busy={createTeamBusy || (editingTeam ? teamBusy === editingTeam.id : false)}
-          team={editingTeam}
-          allUsers={allUsers}
-          onClose={() => {
-            setShowTeamModal(false);
-            setEditingTeam(null);
-          }}
-          onSubmit={async (data, leaderId) => {
-            if (editingTeam) {
-              await handleTeamUpdate(editingTeam.id, data);
-            } else {
-              await handleCreateTeam(data, leaderId);
-            }
-          }}
-          inputClass={inputClass}
-          ModalShell={ModalShell}
-        />
-      )}
-
-      {message && <div className="rounded-lg border border-[#333333] bg-[#111111] p-4 text-sm text-gray-200">{message}</div>}
-      {error && <div className="rounded-lg border border-red-500/40 bg-red-950 p-4 text-sm text-red-100">{error}</div>}
+      </div>
     </section>
   );
 };

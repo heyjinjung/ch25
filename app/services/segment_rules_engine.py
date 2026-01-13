@@ -46,10 +46,19 @@ class SegmentContext:
     lottery_plays: int
     total_play_duration: int
 
+    # Additional metrics (expanded)
+    level: int = 1
+    xp: int = 0
+    cash_balance: float = 0.0
+    vault_balance: float = 0.0
+    login_streak: int = 0
+
 
 def _coerce_number(value: Any) -> float | None:
     if value is None:
         return None
+    if isinstance(value, bool):
+        return 1.0 if value else 0.0
     if isinstance(value, (int, float)):
         return float(value)
     if isinstance(value, str) and value.strip() != "":

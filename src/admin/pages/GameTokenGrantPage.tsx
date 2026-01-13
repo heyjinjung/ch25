@@ -4,128 +4,227 @@ import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { RotateCcw, Send } from "lucide-react";
-import { grantGameTokens } from "../api/adminGameTokenApi";
-import type { AdminUserSummary } from "../api/adminUserApi";
-import UserIdentifierResolveConfirm from "../components/UserIdentifierResolveConfirm";
-import { GAME_TOKEN_LABELS, GameTokenType } from "../../types/gameTokens";
+import { Send, CheckCircle2, AlertCircle, Coins, User, Hash, RefreshCw } from "lucide-react";
+import { grantGameTokens, GrantGameTokensPayload } from "../api/adminGameTokenApi";
+import { GameTokenType } from "../../types/gameTokens";
+
+const tokenOptions: { value: GameTokenType; label: string; icon: string }[] = [
+  { value: "ROULETTE_COIN", label: "룰렛 코인", icon: "🎰" },
+  { value: "DICE_TOKEN", label: "주사위 토큰", icon: "🎲" },
+  { value: "LOTTERY_TICKET", label: "복권 티켓", icon: "🎫" },
+  { value: "GOLD_KEY", label: "골드 키", icon: "🔑" },
+  { value: "DIAMOND_KEY", label: "다이아몬드 키", icon: "💎" },
+];
 
 const grantSchema = z.object({
-  user_identifier: z.string().min(1, "id를 입력하세요"),
-  token_type: z.enum(["ROULETTE_COIN", "DICE_TOKEN", "LOTTERY_TICKET", "GOLD_KEY", "DIAMOND_KEY"]),
-  amount: z.number().int().positive("1 이상 입력"),
+  user_identifier: z.string().min(1, "사용자 식별자를 입력해주세요"),
+  token_type: z.enum(["ROULETTE_COIN", "DICE_TOKEN", "LOTTERY_TICKET", "GOLD_KEY", "DIAMOND_KEY"] as const),
+  amount: z.number().int().positive("양수를 입력해주세요"),
 });
 
-type GrantFormValues = z.infer<typeof grantSchema>;
-
-const tokenOptions: GameTokenType[] = ["ROULETTE_COIN", "DICE_TOKEN", "LOTTERY_TICKET", "GOLD_KEY", "DIAMOND_KEY"];
+type GrantFormData = z.infer<typeof grantSchema>;
 
 const GameTokenGrantPage: React.FC = () => {
-  const form = useForm<GrantFormValues>({
+  const { control, handleSubmit, reset, formState: { errors } } = useForm<GrantFormData>({
     resolver: zodResolver(grantSchema),
-    defaultValues: { user_identifier: "", token_type: "ROULETTE_COIN", amount: 10 },
+    defaultValues: {
+      user_identifier: "",
+      token_type: "ROULETTE_COIN",
+      amount: 0,
+    },
   });
 
-  const [confirmedUser, setConfirmedUser] = React.useState<AdminUserSummary | null>(null);
+  const mutation = useMutation({
+    mutationFn: (payload: GrantGameTokensPayload) => grantGameTokens(payload),
+    onSuccess: () => {
+      setTimeout(() => reset(), 2000);
+    },
+  });
 
-  const mutation = useMutation({ mutationFn: grantGameTokens });
-  const onSubmit = form.handleSubmit((values) => mutation.mutate(values));
-
-  const inputClass =
-    "w-full rounded-md border border-[#333333] bg-[#1A1A1A] px-4 py-3 text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]";
-  const labelClass = "mb-2 block text-sm font-medium text-gray-300";
+  const onSubmit = (data: GrantFormData) => {
+    const payload: GrantGameTokensPayload = {
+      user_identifier: data.user_identifier,
+      token_type: data.token_type,
+      amount: data.amount,
+    };
+    mutation.mutate(payload);
+  };
 
   return (
-    <section className="space-y-5">
-      <header>
-        <h2 className="text-2xl font-bold text-[#91F402]">티켓 지급</h2>
-        <p className="mt-1 text-sm text-gray-400">TG Username / ID / 닉네임 기준으로 지급합니다.</p>
+    <section className="admin-page-container space-y-10 pb-20">
+      <header className="flex flex-col gap-4">
+        <div className="flex items-center gap-2 text-admin-accent">
+          <Coins className="h-5 w-5" />
+          <span className="text-admin-meta font-black uppercase tracking-[0.2em]">Token Asset Control</span>
+        </div>
+        <h1 className="text-admin-title text-admin-text-primary">토큰 자산 지급 통제소</h1>
+        <p className="text-admin-body text-admin-text-secondary font-medium">
+          게임 토큰을 회원에게 직접 지급하고 실시간으로 잔액을 확인합니다.
+        </p>
       </header>
 
-      <div className="rounded-lg border border-[#333333] bg-[#111111] p-6 shadow-md">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Main Form Area */}
+        <div className="lg:col-span-2">
+          <form onSubmit={handleSubmit(onSubmit)} className="admin-card-premium p-8 space-y-8">
+            <div className="border-b border-admin-border pb-6">
+              <h2 className="text-admin-subtitle font-black text-admin-text-primary flex items-center gap-2">
+                <Send className="h-5 w-5 text-admin-brand" />
+                토큰 지급 폼
+              </h2>
+              <p className="text-xs text-admin-text-secondary mt-1">모든 필드를 정확히 입력한 후 지급을 실행하세요.</p>
+            </div>
 
-        {mutation.isSuccess && mutation.data && (
-          <div className="rounded-lg border border-[#2D6B3B] bg-[#0A0A0A] p-4 text-gray-200">
-            <p className="text-sm font-semibold text-[#91F402]">지급 완료</p>
-            <p className="mt-1 text-sm">대상: {mutation.data.telegram_username ? `@${mutation.data.telegram_username.replace(/^@/, "")}` : (mutation.data.external_id ?? mutation.data.user_id)}</p>
-            <p className="mt-1 text-sm">
-              {GAME_TOKEN_LABELS[mutation.data.token_type] ?? mutation.data.token_type} / 잔액 {mutation.data.balance}
-            </p>
-          </div>
-        )}
-
-        {mutation.isError && (
-          <div className="rounded-lg border border-red-500/40 bg-red-950 p-4 text-red-100">
-            {(mutation.error as Error).message || "지급에 실패했습니다."}
-          </div>
-        )}
-
-        <form className="mt-5 space-y-5" onSubmit={onSubmit}>
-          <div>
-            <Controller
-              control={form.control}
-              name="user_identifier"
-              render={({ field }) => (
-                <UserIdentifierResolveConfirm
-                  label="TG Username / ID"
-                  value={String(field.value ?? "")}
-                  onChange={(v) => {
-                    field.onChange(v);
-                    setConfirmedUser(null);
-                  }}
-                  onCleared={() => setConfirmedUser(null)}
-                  onConfirmed={({ identifier, user }) => {
-                    field.onChange(identifier);
-                    setConfirmedUser(user);
-                  }}
-                  placeholder="예: @username / tg_833... / 닉네임 / external_id"
-                />
+            {/* User Identifier */}
+            <div className="space-y-3">
+              <label className="text-admin-meta font-black text-admin-text-secondary uppercase tracking-widest pl-1 flex items-center gap-2">
+                <User className="h-3.5 w-3.5" /> 사용자 식별자
+              </label>
+              <Controller
+                name="user_identifier"
+                control={control}
+                render={({ field }) => (
+                  <input
+                    {...field}
+                    type="text"
+                    placeholder="Telegram ID / Username / Nickname / External ID"
+                    className="admin-input w-full h-11"
+                  />
+                )}
+              />
+              {errors.user_identifier && (
+                <p className="text-xs text-admin-danger flex items-center gap-1 pl-1">
+                  <AlertCircle className="h-3 w-3" /> {errors.user_identifier.message}
+                </p>
               )}
-            />
-            {form.formState.errors.user_identifier && <p className="mt-2 text-sm text-red-300">{form.formState.errors.user_identifier.message}</p>}
-          </div>
+            </div>
 
-          <div>
-            <label className={labelClass}>토큰 종류</label>
-            <select className={inputClass} {...form.register("token_type")}>
-              {tokenOptions.map((t) => (
-                <option key={t} value={t}>
-                  {GAME_TOKEN_LABELS[t]}
-                </option>
-              ))}
-            </select>
-          </div>
+            {/* Token Type */}
+            <div className="space-y-3">
+              <label className="text-admin-meta font-black text-admin-text-secondary uppercase tracking-widest pl-1">토큰 타입</label>
+              <Controller
+                name="token_type"
+                control={control}
+                render={({ field }) => (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {tokenOptions.map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => field.onChange(option.value)}
+                        className={`p-4 rounded-xl border-2 transition-all ${field.value === option.value
+                          ? "border-admin-brand bg-admin-brand/10 shadow-admin-glow"
+                          : "border-admin-border bg-admin-sidebar/30 hover:border-admin-border/50"
+                          }`}
+                      >
+                        <div className="text-2xl mb-1">{option.icon}</div>
+                        <p className={`text-xs font-black ${field.value === option.value ? "text-admin-brand" : "text-admin-text-secondary"}`}>
+                          {option.label}
+                        </p>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              />
+            </div>
 
-          <div>
-            <label className={labelClass}>금액</label>
-            <input type="number" className={inputClass} {...form.register("amount", { valueAsNumber: true })} />
-            {form.formState.errors.amount && <p className="mt-2 text-sm text-red-300">{form.formState.errors.amount.message}</p>}
-          </div>
+            {/* Amount */}
+            <div className="space-y-3">
+              <label className="text-admin-meta font-black text-admin-text-secondary uppercase tracking-widest pl-1 flex items-center gap-2">
+                <Hash className="h-3.5 w-3.5" /> 지급량
+              </label>
+              <Controller
+                name="amount"
+                control={control}
+                render={({ field }) => (
+                  <input
+                    {...field}
+                    type="number"
+                    onChange={(e) => field.onChange(Number(e.target.value))}
+                    placeholder="0"
+                    className="admin-input w-full h-11 text-2xl font-black tabular-nums"
+                  />
+                )}
+              />
+              {errors.amount && (
+                <p className="text-xs text-admin-danger flex items-center gap-1 pl-1">
+                  <AlertCircle className="h-3 w-3" /> {errors.amount.message}
+                </p>
+              )}
+            </div>
 
-          <div className="flex items-center justify-between gap-3">
-            <button
-              type="button"
-              onClick={() => {
-                form.reset({ user_identifier: "", token_type: "ROULETTE_COIN", amount: 10 });
-                setConfirmedUser(null);
-              }}
-              disabled={mutation.isPending}
-              className="inline-flex items-center rounded-md border border-[#333333] bg-[#1A1A1A] px-4 py-2 text-sm font-medium text-gray-200 hover:bg-[#2C2C2E] disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              <RotateCcw size={16} className="mr-2" />
-              초기화
-            </button>
-
+            {/* Submit Button */}
             <button
               type="submit"
-              disabled={mutation.isPending || !confirmedUser}
-              className="inline-flex items-center rounded-md bg-[#2D6B3B] px-5 py-2 text-sm font-medium text-white hover:bg-[#91F402] hover:text-black disabled:cursor-not-allowed disabled:opacity-60"
+              disabled={mutation.isPending}
+              className="w-full btn-admin-primary h-12 flex items-center justify-center gap-2 text-base font-black shadow-admin-glow disabled:opacity-50"
             >
-              <Send size={16} className="mr-2" />
-              {mutation.isPending ? "지급 중..." : confirmedUser ? "티켓 지급" : "사용자 확정 필요"}
+              {mutation.isPending ? (
+                <>
+                  <RefreshCw className="h-5 w-5 animate-spin" /> 처리 중...
+                </>
+              ) : (
+                <>
+                  <Send className="h-5 w-5" /> 토큰 지급 실행
+                </>
+              )}
             </button>
+          </form>
+        </div>
+
+        {/* Sidebar: Status & Result */}
+        <div className="lg:col-span-1 space-y-6">
+          {/* Success State */}
+          {mutation.isSuccess && mutation.data && (
+            <div className="admin-card-premium p-6 border-l-4 border-admin-accent animate-in slide-in-from-right-4">
+              <div className="flex items-center gap-2 text-admin-accent mb-4">
+                <CheckCircle2 className="h-5 w-5" />
+                <h3 className="text-admin-subtitle font-black">지급 완료</h3>
+              </div>
+              <div className="space-y-3">
+                <div className="flex justify-between text-xs">
+                  <span className="text-admin-text-secondary font-bold">User ID</span>
+                  <span className="text-admin-text-primary font-black tabular-nums">{mutation.data.user_id}</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-admin-text-secondary font-bold">Nickname</span>
+                  <span className="text-admin-text-primary font-black">{mutation.data.nickname || "-"}</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-admin-text-secondary font-bold">Token Type</span>
+                  <span className="text-admin-brand font-black">{mutation.data.token_type}</span>
+                </div>
+                <div className="p-3 rounded-lg bg-admin-accent/10 border border-admin-accent/20">
+                  <p className="text-[10px] text-admin-text-secondary font-black uppercase mb-1">현재 잔액</p>
+                  <p className="text-2xl font-black text-admin-accent tabular-nums">{mutation.data.balance.toLocaleString()}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Error State */}
+          {mutation.isError && (
+            <div className="admin-card-premium p-6 border-l-4 border-admin-danger">
+              <div className="flex items-center gap-2 text-admin-danger mb-2">
+                <AlertCircle className="h-5 w-5" />
+                <h3 className="text-admin-subtitle font-black">지급 실패</h3>
+              </div>
+              <p className="text-xs text-admin-text-secondary">
+                {mutation.error instanceof Error ? mutation.error.message : "알 수 없는 오류가 발생했습니다."}
+              </p>
+            </div>
+          )}
+
+          {/* Quick Info */}
+          <div className="admin-card-premium p-6">
+            <h4 className="text-admin-meta font-black text-admin-text-secondary uppercase tracking-widest mb-4">지급 가이드</h4>
+            <div className="space-y-3 text-xs text-admin-text-secondary leading-relaxed">
+              <p>• 사용자 식별자는 Telegram ID, Username, Nickname 또는 External ID를 입력할 수 있습니다.</p>
+              <p>• 지급 후 즉시 해당 회원의 토큰 잔액이 업데이트됩니다.</p>
+              <p>• 모든 토큰 지급 기록은 Ledger에 자동으로 기록됩니다.</p>
+            </div>
           </div>
-        </form>
+        </div>
       </div>
     </section>
   );

@@ -15,6 +15,7 @@ from app.schemas.vault2 import (
     VaultProgramUiCopyUpsertRequest,
     VaultProgramUnlockRulesUpsertRequest,
     VaultProgramConfigUpsertRequest,
+    VaultGoldenHourUpdateRequest,
     VaultEligibilityRequest,
     VaultEligibilityResponse,
     VaultGameEarnToggleRequest,
@@ -200,6 +201,43 @@ def upsert_config(
 ) -> VaultProgramResponse:
     try:
         program = service.update_program_config(db, program_key=program_key, config_json=payload.config_json, admin_id=admin_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    return _to_response(program)
+
+
+@_core.post("/{program_key}/golden-hour", response_model=VaultProgramResponse)
+@_core.post("/{program_key}/golden-hour/", response_model=VaultProgramResponse)
+def update_golden_hour_config(
+    program_key: str,
+    payload: VaultGoldenHourUpdateRequest,
+    db: Session = Depends(get_db),
+    admin_id: int = Depends(get_current_admin_id),
+) -> VaultProgramResponse:
+    patch: dict[str, Any] = {"golden_hour_config": {}}
+
+    if payload.enabled is not None:
+        patch["golden_hour_config"]["enabled"] = bool(payload.enabled)
+    if payload.manual_override is not None:
+        patch["golden_hour_config"]["manual_override"] = payload.manual_override
+    if payload.multiplier is not None:
+        patch["golden_hour_config"]["multiplier"] = float(payload.multiplier)
+    if payload.start_time_kst is not None:
+        patch["golden_hour_config"]["start_time_kst"] = payload.start_time_kst
+    if payload.end_time_kst is not None:
+        patch["golden_hour_config"]["end_time_kst"] = payload.end_time_kst
+    if payload.base_amount_gate is not None:
+        patch["golden_hour_config"]["base_amount_gate"] = int(payload.base_amount_gate)
+
+    # Empty body is a no-op, but keep endpoint safe.
+    if not patch["golden_hour_config"]:
+        program = service.get_program_by_key(db, program_key=program_key)
+        if program is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="PROGRAM_NOT_FOUND")
+        return _to_response(program)
+
+    try:
+        program = service.update_program_config(db, program_key=program_key, config_json=patch, admin_id=admin_id)
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
     return _to_response(program)

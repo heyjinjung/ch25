@@ -117,10 +117,12 @@ const DiceEventConfig: React.FC = () => {
     if (isError) return <div className="text-red-400">Failed to load event config.</div>;
 
     return (
-        <div className="rounded-lg border border-[#333333] bg-[#111111] p-6 shadow-md">
-            <div className="mb-4">
-                <h3 className="text-lg font-bold text-[#91F402]">피크 타임 이벤트 설정</h3>
-                <p className="text-sm text-gray-400">특정 시간대에 적용되는 이벤트 확률 및 보상 설정입니다.</p>
+        <div className="admin-card p-6">
+            <div className="mb-6">
+                <h3 className="text-admin-subtitle text-admin-text-primary">주사위 이벤트 설정</h3>
+                <p className="mt-1 text-admin-meta text-admin-text-secondary">
+                    이벤트 확률/보상/제한 조건을 관리합니다. (보상은 금고 잠금 잔고에 반영)
+                </p>
             </div>
 
             <form onSubmit={onSubmit} className="space-y-6">
@@ -128,41 +130,43 @@ const DiceEventConfig: React.FC = () => {
                     <input
                         type="checkbox"
                         id="event_active"
-                        className="h-5 w-5 rounded border-gray-600 bg-[#1A1A1A] text-[#91F402] focus:ring-[#2D6B3B]"
+                        className="h-5 w-5 rounded border border-admin-border bg-admin-sidebar/50 text-admin-accent focus:ring-2 focus:ring-admin-brand/40"
                         {...form.register("is_active")}
                     />
-                    <label htmlFor="event_active" className="text-white font-medium">이벤트 활성화</label>
+                    <label htmlFor="event_active" className="text-admin-body font-bold text-admin-text-primary">
+                        이벤트 활성화
+                    </label>
                 </div>
 
                 {/* Probabilities */}
                 <div className="space-y-2">
-                    <h4 className="text-sm font-semibold text-gray-300">확률 (0.0 ~ 1.0)</h4>
+                    <h4 className="text-admin-body font-bold text-admin-text-primary">확률 (0.0 ~ 1.0)</h4>
                     <div className="grid grid-cols-3 gap-4">
                         <div>
-                            <label className="block text-xs text-gray-500">승리 (Win)</label>
+                            <label className="admin-label">승리 (Win)</label>
                             <input
                                 type="number"
                                 step="0.0001"
-                                className="w-full rounded border border-[#333333] bg-[#1A1A1A] p-2 text-white"
+                                className="admin-input w-full"
                                 {...form.register("p_win", { valueAsNumber: true })}
                             />
-                            <p className="text-xs text-red-400">{form.formState.errors.p_win?.message}</p>
+                            <p className="mt-1 text-admin-meta text-admin-danger">{form.formState.errors.p_win?.message}</p>
                         </div>
                         <div>
-                            <label className="block text-xs text-gray-500">무승부 (Draw)</label>
+                            <label className="admin-label">무승부 (Draw)</label>
                             <input
                                 type="number"
                                 step="0.0001"
-                                className="w-full rounded border border-[#333333] bg-[#1A1A1A] p-2 text-white"
+                                className="admin-input w-full"
                                 {...form.register("p_draw", { valueAsNumber: true })}
                             />
                         </div>
                         <div>
-                            <label className="block text-xs text-gray-500">패배 (Lose)</label>
+                            <label className="admin-label">패배 (Lose)</label>
                             <input
                                 type="number"
                                 step="0.0001"
-                                className="w-full rounded border border-[#333333] bg-[#1A1A1A] p-2 text-white"
+                                className="admin-input w-full"
                                 {...form.register("p_lose", { valueAsNumber: true })}
                             />
                         </div>
@@ -171,29 +175,29 @@ const DiceEventConfig: React.FC = () => {
 
                 {/* Rewards */}
                 <div className="space-y-2">
-                    <h4 className="text-sm font-semibold text-gray-300">보상 (금고 포인트)</h4>
+                    <h4 className="text-admin-body font-bold text-admin-text-primary">보상 (금고 잠금)</h4>
                     <div className="grid grid-cols-3 gap-4">
                         <div>
-                            <label className="block text-xs text-gray-500">승리 보상</label>
+                            <label className="admin-label">승리 보상</label>
                             <input
                                 type="number"
-                                className="w-full rounded border border-[#333333] bg-[#1A1A1A] p-2 text-white"
+                                className="admin-input w-full"
                                 {...form.register("win_reward", { valueAsNumber: true })}
                             />
                         </div>
                         <div>
-                            <label className="block text-xs text-gray-500">무승부 보상</label>
+                            <label className="admin-label">무승부 보상</label>
                             <input
                                 type="number"
-                                className="w-full rounded border border-[#333333] bg-[#1A1A1A] p-2 text-white"
+                                className="admin-input w-full"
                                 {...form.register("draw_reward", { valueAsNumber: true })}
                             />
                         </div>
                         <div>
-                            <label className="block text-xs text-gray-500">패배 보상 (차감)</label>
+                            <label className="admin-label">패배 보상 (차감)</label>
                             <input
                                 type="number"
-                                className="w-full rounded border border-[#333333] bg-[#1A1A1A] p-2 text-white"
+                                className="admin-input w-full"
                                 {...form.register("lose_reward", { valueAsNumber: true })}
                             />
                         </div>
@@ -202,31 +206,31 @@ const DiceEventConfig: React.FC = () => {
 
                 {/* Caps & Eligibility */}
                 <div className="space-y-2">
-                    <h4 className="text-sm font-semibold text-gray-300">제한 및 조건</h4>
+                    <h4 className="text-admin-body font-bold text-admin-text-primary">제한/조건</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-xs text-gray-500">일일 최대 획득 상한 (포인트)</label>
+                            <label className="admin-label">일일 최대 획득 제한 (코인)</label>
                             <input
                                 type="number"
-                                className="w-full rounded border border-[#333333] bg-[#1A1A1A] p-2 text-white"
+                                className="admin-input w-full"
                                 {...form.register("daily_gain", { valueAsNumber: true })}
                                 placeholder="예: 50000"
                             />
                         </div>
                         <div>
-                            <label className="block text-xs text-gray-500">일일 최대 플레이 횟수</label>
+                            <label className="admin-label">일일 최대 플레이 횟수</label>
                             <input
                                 type="number"
-                                className="w-full rounded border border-[#333333] bg-[#1A1A1A] p-2 text-white"
+                                className="admin-input w-full"
                                 {...form.register("daily_plays", { valueAsNumber: true })}
                                 placeholder="예: 30"
                             />
                         </div>
                         <div className="md:col-span-2">
-                            <label className="block text-xs text-gray-500">차단 태그 (콤마로 구분)</label>
+                            <label className="admin-label">차단 태그 (콤마로 구분)</label>
                             <input
                                 type="text"
-                                className="w-full rounded border border-[#333333] bg-[#1A1A1A] p-2 text-white"
+                                className="admin-input w-full"
                                 {...form.register("blocklist")}
                                 placeholder="예: BLACKLIST, ABUSER"
                             />
@@ -238,7 +242,7 @@ const DiceEventConfig: React.FC = () => {
                     <button
                         type="submit"
                         disabled={mutation.isPending}
-                        className="rounded bg-[#2D6B3B] px-6 py-2 font-bold text-white hover:bg-[#91F402] hover:text-black disabled:opacity-50"
+                        className="btn-admin-primary disabled:opacity-50"
                     >
                         {mutation.isPending ? "저장 중..." : "설정 저장"}
                     </button>

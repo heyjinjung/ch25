@@ -1,10 +1,26 @@
-﻿// src/admin/pages/RouletteConfigPage.tsx
 import React, { useEffect, useMemo, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Edit, Plus, Trash2, X } from "lucide-react";
+import {
+  Edit,
+  Plus,
+  Trash2,
+  X,
+  Dices,
+  RefreshCw,
+  ChevronRight,
+  CircleDot,
+  LayoutGrid,
+  Calendar,
+  Users,
+  Zap,
+  AlertCircle,
+  Info,
+  Settings2,
+  ArrowRight,
+} from "lucide-react";
 import {
   AdminRouletteConfig,
   AdminRouletteConfigPayload,
@@ -23,7 +39,7 @@ const gifticonBrands = [
   { value: "STARBUCKS", label: "스타벅스" },
   { value: "CU", label: "CU" },
   { value: "GS25", label: "GS25" },
-  { value: "CUSTOM", label: "직접입력" },
+  { value: "CUSTOM", label: "직접 입력" },
 ] as const;
 
 const isGifticonType = (value?: string | null) => Boolean(value && value.toUpperCase().includes("GIFTICON"));
@@ -51,7 +67,7 @@ const rouletteSchema = z
     segments: z.array(segmentSchema).length(6, "세그먼트는 6개가 필요합니다"),
   })
   .refine((value) => value.segments.reduce((sum, seg) => sum + seg.weight, 0) > 0, {
-    message: "가중치 합이 0보다 커야 합니다",
+    message: "가중치 합은 0보다 커야 합니다",
     path: ["segments"],
   });
 
@@ -59,7 +75,7 @@ type RouletteFormValues = z.infer<typeof rouletteSchema>;
 
 const buildDefaultSegments = (): RouletteFormValues["segments"] =>
   Array.from({ length: 6 }).map((_, idx) => ({
-    label: `슬롯 ${idx + 1}`,
+    label: `Slot ${idx + 1}`,
     weight: 1,
     reward_type: "POINT",
     reward_value: 0,
@@ -77,7 +93,6 @@ const normalizeToSixSegments = (segments: any[]): RouletteFormValues["segments"]
       label: raw.label ?? base[idx].label,
       weight: raw.weight ?? base[idx].weight,
       reward_type: raw.reward_type ?? base[idx].reward_type,
-      // Handle both backend 'reward_amount' and frontend 'reward_value'
       reward_value: raw.reward_value ?? raw.reward_amount ?? base[idx].reward_value,
     };
   });
@@ -95,45 +110,44 @@ const mapErrorDetail = (error: unknown): string => {
   return (error as any)?.message ?? "요청 처리 중 오류가 발생했습니다.";
 };
 
-/**
- * Calculate probability % and rarity label for intuitive weight visualization
- */
 const getProbabilityInfo = (weight: number, totalWeight: number) => {
-  if (totalWeight <= 0) return { percent: 0, label: "-", color: "gray" };
+  if (totalWeight <= 0) return { percent: 0, label: "-", textClass: "text-zinc-500", badgeClass: "bg-zinc-800/50 text-zinc-500 border-zinc-700/50", barClass: "bg-zinc-800", expected100: 0 };
 
   const percent = (weight / totalWeight) * 100;
-
-  // Rarity thresholds with Korean labels
   let label: string;
-  let color: string;
-  let bgColor: string;
+  let textClass: string;
+  let badgeClass: string;
+  let barClass: string;
 
   if (percent >= 30) {
-    label = "자주";
-    color = "#91F402";
-    bgColor = "bg-[#91F402]";
+    label = "COMMON";
+    textClass = "text-zinc-400";
+    badgeClass = "bg-zinc-800/50 text-zinc-400 border-zinc-700/50";
+    barClass = "bg-zinc-700";
   } else if (percent >= 15) {
-    label = "보통";
-    color = "#22D3EE";
-    bgColor = "bg-[#22D3EE]";
+    label = "RARE";
+    textClass = "text-blue-400";
+    badgeClass = "bg-blue-500/10 text-blue-400 border-blue-500/20";
+    barClass = "bg-blue-500/50";
   } else if (percent >= 5) {
-    label = "희귀";
-    color = "#F59E0B";
-    bgColor = "bg-[#F59E0B]";
+    label = "EPIC";
+    textClass = "text-purple-400";
+    badgeClass = "bg-purple-500/10 text-purple-400 border-purple-500/20";
+    barClass = "bg-purple-500/50";
   } else if (percent >= 1) {
-    label = "매우 희귀";
-    color = "#EF4444";
-    bgColor = "bg-[#EF4444]";
+    label = "MYSTIC";
+    textClass = "text-amber-400";
+    badgeClass = "bg-amber-500/10 text-amber-400 border-amber-500/20";
+    barClass = "bg-amber-500/50";
   } else {
-    label = "전설급";
-    color = "#A855F7";
-    bgColor = "bg-[#A855F7]";
+    label = "LEGEND";
+    textClass = "text-admin-brand";
+    badgeClass = "bg-admin-brand/10 text-admin-brand border-admin-brand/20";
+    barClass = "bg-admin-brand/50";
   }
 
-  // Expected hits per 100 spins
   const expected100 = Math.round(percent);
-
-  return { percent, label, color, bgColor, expected100 };
+  return { percent, label, textClass, badgeClass, barClass, expected100 };
 };
 
 const RouletteConfigPage: React.FC = () => {
@@ -146,6 +160,8 @@ const RouletteConfigPage: React.FC = () => {
     queryKey: ["admin", "roulette"],
     queryFn: fetchRouletteConfigs,
   });
+
+  const activeCount = useMemo(() => (data ?? []).filter(c => c.is_active).length, [data]);
 
   const initialValues = useMemo<RouletteFormValues>(
     () => ({
@@ -178,7 +194,6 @@ const RouletteConfigPage: React.FC = () => {
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isModalOpen]);
 
   const mutation = useMutation({
@@ -189,9 +204,7 @@ const RouletteConfigPage: React.FC = () => {
       addToast("저장 완료", "success");
       closeModal();
     },
-    onError: (err) => {
-      addToast(mapErrorDetail(err), "error");
-    },
+    onError: (err) => addToast(mapErrorDetail(err), "error"),
   });
 
   const deleteMutation = useMutation({
@@ -200,9 +213,7 @@ const RouletteConfigPage: React.FC = () => {
       await queryClient.invalidateQueries({ queryKey: ["admin", "roulette"] });
       addToast("삭제 완료", "success");
     },
-    onError: (err) => {
-      addToast(mapErrorDetail(err), "error");
-    },
+    onError: (err) => addToast(mapErrorDetail(err), "error"),
   });
 
   const openCreate = () => {
@@ -214,15 +225,12 @@ const RouletteConfigPage: React.FC = () => {
   const openEdit = (config: AdminRouletteConfig) => {
     setEditing(config);
     setIsModalOpen(true);
-
-    const sc = config.segments ?? [];
-
     form.reset({
       name: config.name,
       ticket_type: config.ticket_type ?? "ROULETTE_COIN",
       is_active: config.is_active,
       max_daily_spins: config.max_daily_spins,
-      segments: normalizeToSixSegments(sc),
+      segments: normalizeToSixSegments(config.segments ?? []),
     });
   };
 
@@ -240,362 +248,415 @@ const RouletteConfigPage: React.FC = () => {
         reward_value: seg.reward_value,
       })),
     };
-
     mutation.mutate(payload);
   });
 
+  const totalWeightWatch = form.watch("segments")?.reduce((sum, s) => sum + (Number(s.weight) || 0), 0) || 0;
+
   return (
-    <section className="space-y-5">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-[#91F402]">룰렛 설정</h2>
-          <p className="mt-1 text-sm text-gray-400">세그먼트/가중치/보상을 관리합니다.</p>
+    <div className="p-6 space-y-6 max-w-[1600px] mx-auto">
+      {/* Header Area */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2 text-zinc-500 text-xs font-medium">
+            <span>시스템 관리</span>
+            <ChevronRight size={12} />
+            <span className="text-zinc-300">룰렛 설정</span>
+          </div>
+          <h1 className="text-2xl font-black text-white flex items-center gap-3 tracking-tight">
+            <Dices className="text-admin-brand" size={28} />
+            룰렛 환경 설정
+          </h1>
         </div>
-        <button
-          type="button"
-          onClick={openCreate}
-          className="flex items-center rounded-md bg-[#2D6B3B] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#91F402] hover:text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-[#91F402]"
-        >
-          <Plus size={18} className="mr-2" />
-          새 항목 추가
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => queryClient.invalidateQueries({ queryKey: ["admin", "roulette"] })}
+            className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl border border-zinc-700 transition-all text-sm font-bold"
+          >
+            <RefreshCw size={16} />
+            새로고침
+          </button>
+          <button
+            onClick={openCreate}
+            className="flex items-center gap-2 px-4 py-2 bg-admin-brand hover:brightness-110 text-black rounded-xl transition-all text-sm font-black shadow-lg shadow-admin-brand/20"
+          >
+            <Plus size={16} />
+            새 룰렛 추가
+          </button>
+        </div>
       </div>
 
-      {isLoading && (
-        <div className="rounded-lg border border-[#333333] bg-[#111111] p-4 text-gray-200">불러오는 중...</div>
-      )}
-
-      {isError && (
-        <div className="rounded-lg border border-red-500/40 bg-red-950 p-4 text-red-100">{mapErrorDetail(error)}</div>
-      )}
-
-      {!isLoading && !isError && (
-        <div className="rounded-lg border border-[#333333] bg-[#111111] shadow-md">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="border-b border-[#333333] bg-[#1A1A1A]">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">이름</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">일일 제한</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">세그먼트</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">상태</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#91F402]">기능</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#333333]">
-                {(data ?? []).map((config) => (
-                  <tr key={config.id} className="hover:bg-[#1A1A1A]">
-                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-white">{config.name}</td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-400">
-                      {config.max_daily_spins === 0 ? "무제한" : config.max_daily_spins.toLocaleString()}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-400">{config.segments?.length ?? 0}</td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm">
-                      <span
-                        className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-medium ${config.is_active ? "border-[#2D6B3B] text-[#91F402]" : "border-[#333333] text-gray-400"
-                          }`}
-                      >
-                        {config.is_active ? "활성" : "비활성"}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium">
-                      <div className="flex items-center space-x-2">
-                        <button
-                          type="button"
-                          onClick={() => openEdit(config)}
-                          className="text-[#91F402] hover:text-white"
-                          title="수정"
-                          aria-label="룰렛 설정 수정"
-                        >
-                          <Edit size={18} />
-                        </button>
-                        <button
-                          type="button"
-                          disabled={deleteMutation.isPending}
-                          onClick={() => {
-                            if (!window.confirm("이 설정을 삭제할까요?")) return;
-                            deleteMutation.mutate(config.id);
-                          }}
-                          className="text-red-500 hover:text-red-300 disabled:opacity-60"
-                          title="삭제"
-                          aria-label="룰렛 설정 삭제"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      {/* KPI Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="admin-card p-4 relative overflow-hidden group">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Total Configs</p>
+              <h3 className="text-2xl font-black text-white mt-1 tabular-nums">{data?.length || 0}</h3>
+            </div>
+            <div className="p-2 bg-zinc-800 text-zinc-400 rounded-lg group-hover:scale-110 transition-transform">
+              <LayoutGrid size={20} />
+            </div>
           </div>
+          <div className="mt-4 flex items-center gap-2 text-[10px] text-zinc-500 font-medium font-mono">
+            <Calendar size={12} />
+            <span>CONFIG REPO</span>
+          </div>
+        </div>
+        <div className="admin-card p-4 relative overflow-hidden group">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Active Now</p>
+              <h3 className="text-2xl font-black text-emerald-400 mt-1 tabular-nums">{activeCount}</h3>
+            </div>
+            <div className="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg group-hover:scale-110 transition-transform shadow-[0_0_15px_-3px_rgba(16,185,129,0.3)]">
+              <Zap size={20} />
+            </div>
+          </div>
+        </div>
+        <div className="admin-card p-4 relative overflow-hidden group">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Avg Segments</p>
+              <h3 className="text-2xl font-black text-white mt-1 tabular-nums">6.0</h3>
+            </div>
+            <div className="p-2 bg-zinc-800 text-zinc-400 rounded-lg group-hover:scale-110 transition-transform">
+              <CircleDot size={20} />
+            </div>
+          </div>
+        </div>
+        <div className="admin-card p-4 relative overflow-hidden group">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Total Participants</p>
+              <h3 className="text-2xl font-black text-white mt-1 tabular-nums">-</h3>
+            </div>
+            <div className="p-2 bg-zinc-800 text-zinc-400 rounded-lg group-hover:scale-110 transition-transform">
+              <Users size={20} />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      {isLoading ? (
+        <div className="admin-card p-12 flex flex-col items-center justify-center space-y-3">
+          <RefreshCw className="animate-spin text-zinc-600" size={32} />
+          <p className="text-sm font-medium text-zinc-500">데이터를 불러오는 중입니다...</p>
+        </div>
+      ) : isError ? (
+        <div className="bg-rose-500/10 border border-rose-500/20 rounded-2xl p-6 flex items-center gap-4">
+          <AlertCircle className="text-rose-400" size={24} />
+          <div>
+            <p className="text-sm font-bold text-rose-400">데이터 로드 실패</p>
+            <p className="text-xs text-rose-400/80 mt-0.5">{mapErrorDetail(error)}</p>
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4">
+          {(data ?? []).map((config) => (
+            <div key={config.id} className={`admin-card p-5 border-l-4 transition-all hover:bg-zinc-800/30 ${config.is_active ? 'border-l-admin-brand' : 'border-l-zinc-800 opacity-60'}`}>
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                <div className="flex items-start gap-5">
+                  <div className={`p-3 rounded-2xl ${config.is_active ? 'bg-admin-brand/10 text-admin-brand shadow-[0_0_20px_-5px_rgba(99,102,241,0.3)]' : 'bg-zinc-800 text-zinc-500'}`}>
+                    <Dices size={24} />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-lg font-black text-white tracking-tight">{config.name}</h3>
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-tight border ${config.is_active ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-zinc-800 text-zinc-500 border-zinc-700'}`}>
+                        {config.is_active ? 'ACTIVE' : 'INACTIVE'}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2">
+                      <div className="flex items-center gap-1.5 text-xs text-zinc-400">
+                        <Zap size={14} className="text-admin-brand" />
+                        <span className="font-mono text-zinc-300">{config.ticket_type}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs text-zinc-400 border-l border-zinc-800 pl-4">
+                        <CircleDot size={14} className="text-zinc-500" />
+                        <span>{config.segments?.length || 0} Slots</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs text-zinc-400 border-l border-zinc-800 pl-4">
+                        <Calendar size={14} className="text-zinc-500" />
+                        <span>Limit: {config.max_daily_spins === 0 ? "Unlimited" : config.max_daily_spins.toLocaleString()}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 self-end lg:self-center">
+                  <button
+                    onClick={() => openEdit(config)}
+                    className="h-10 px-4 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl border border-zinc-700 flex items-center gap-2 transition-all text-sm font-bold"
+                  >
+                    <Edit size={16} />
+                    수정
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (!window.confirm("이 설정을 삭제할까요?")) return;
+                      deleteMutation.mutate(config.id);
+                    }}
+                    disabled={deleteMutation.isPending}
+                    className="h-10 w-10 flex items-center justify-center bg-zinc-800 hover:bg-rose-500/10 text-zinc-500 hover:text-rose-400 rounded-xl border border-zinc-700 hover:border-rose-500/30 transition-all disabled:opacity-50"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
 
           {(data ?? []).length === 0 && (
-            <div className="py-8 text-center text-gray-400">데이터가 없습니다. 새 항목을 추가해보세요.</div>
+            <div className="admin-card p-20 flex flex-col items-center justify-center text-center space-y-4">
+              <div className="p-4 bg-zinc-900 rounded-full text-zinc-700 border border-zinc-800">
+                <Plus size={40} />
+              </div>
+              <div className="space-y-1">
+                <p className="text-lg font-bold text-white">등록된 룰렛이 없습니다</p>
+                <p className="text-sm text-zinc-500">새로운 룰렛 설정을 추가하여 운영을 시작하세요.</p>
+              </div>
+              <button
+                onClick={openCreate}
+                className="px-6 py-2.5 bg-admin-brand text-black rounded-xl text-sm font-black mt-4"
+              >
+                첫 번째 룰렛 추가
+              </button>
+            </div>
           )}
         </div>
       )}
 
+      {/* Redesigned Modal */}
       {isModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black bg-opacity-70 p-4 pt-[calc(env(safe-area-inset-top)+1rem)] pb-[calc(env(safe-area-inset-bottom)+1rem)] pl-[calc(env(safe-area-inset-left)+1rem)] pr-[calc(env(safe-area-inset-right)+1rem)] sm:items-center"
-          role="dialog"
-          aria-modal="true"
-          onMouseDown={(e) => {
-            if (e.target === e.currentTarget) closeModal();
-          }}
-        >
-          <div className="w-full max-w-3xl max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-lg border border-[#333333] bg-[#111111] shadow-xl sm:max-h-[90vh]">
-            <div className="flex items-center justify-between border-b border-[#333333] bg-[#2D6B3B] p-4 sm:p-6">
-              <h3 className="text-xl font-bold text-white">{editing ? "룰렛 설정 수정" : "룰렛 설정 추가"}</h3>
-              <button
-                type="button"
-                onClick={closeModal}
-                className="text-white hover:text-[#91F402]"
-                aria-label="닫기"
-              >
-                <X size={24} />
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 mb-safe">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={closeModal} />
+          <div className="relative w-full max-w-5xl bg-zinc-900 rounded-[32px] border border-zinc-800 shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
+            {/* Modal Header */}
+            <div className="p-6 border-b border-zinc-800 flex items-center justify-between bg-zinc-900/50">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-admin-brand/10 text-admin-brand rounded-2xl">
+                  <Settings2 size={24} />
+                </div>
+                <div className="space-y-0.5">
+                  <h3 className="text-xl font-black text-white tracking-tight">
+                    {editing ? "룰렛 설정 수정" : "새 룰렛 설정 추가"}
+                  </h3>
+                  <p className="text-xs text-zinc-500 font-medium">Rule ID: {editing?.id || 'NEW'}</p>
+                </div>
+              </div>
+              <button onClick={closeModal} className="h-10 w-10 flex items-center justify-center rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-400 transition-colors">
+                <X size={20} />
               </button>
             </div>
 
-            <form onSubmit={onSubmit} className="space-y-5 bg-[#0A0A0A] p-4 sm:p-6">
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div className="space-y-1">
-                  <label htmlFor="roulette_name" className="text-sm text-gray-200">
-                    이름
-                  </label>
-                  <input
-                    id="roulette_name"
-                    type="text"
-                    className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
-                    placeholder="룰렛 이름"
-                    {...form.register("name")}
-                  />
-                  {form.formState.errors.name?.message && (
-                    <p className="text-sm text-red-300">{form.formState.errors.name.message}</p>
-                  )}
-                </div>
-
-                <div className="space-y-1">
-                  <label htmlFor="roulette_ticket_type" className="text-sm text-gray-200">
-                    티켓 타입
-                  </label>
-                  <select
-                    id="roulette_ticket_type"
-                    className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
-                    {...form.register("ticket_type")}
-                  >
-                    <option value="ROULETTE_COIN">ROULETTE_COIN</option>
-                    <option value="TRIAL_TOKEN">TRIAL_TOKEN</option>
-                    <option value="GOLD_KEY">GOLD_KEY</option>
-                    <option value="DIAMOND_KEY">DIAMOND_KEY</option>
-                  </select>
-                  {form.formState.errors.ticket_type?.message && (
-                    <p className="text-sm text-red-300">{form.formState.errors.ticket_type.message}</p>
-                  )}
-                </div>
-
-                <div className="space-y-1">
-                  <label htmlFor="roulette_max" className="text-sm text-gray-200">
-                    일일 최대 스핀 (0=무제한)
-                  </label>
-                  <input
-                    id="roulette_max"
-                    type="number"
-                    className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
-                    {...form.register("max_daily_spins", { valueAsNumber: true })}
-                  />
-                  {form.formState.errors.max_daily_spins?.message && (
-                    <p className="text-sm text-red-300">{form.formState.errors.max_daily_spins.message}</p>
-                  )}
-                </div>
-              </div>
-
-              <label className="flex items-center gap-2 text-sm text-gray-200">
-                <input
-                  type="checkbox"
-                  className="h-4 w-4 rounded border-[#333333] bg-[#1A1A1A] text-[#91F402] focus:ring-[#2D6B3B]"
-                  {...form.register("is_active")}
-                />
-                활성
-              </label>
-
-              <div className="space-y-2">
-                <div className="flex items-end justify-between gap-3">
-                  <div>
-                    <h4 className="text-sm font-semibold text-[#91F402]">세그먼트 (6개 고정)</h4>
-                    <p className="mt-1 text-xs text-gray-400">가중치 합이 0보다 커야 합니다.</p>
+            {/* Modal Content */}
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
+              <form id="roulette-form" onSubmit={onSubmit} className="space-y-8">
+                {/* Basic Info Section */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 text-admin-brand">
+                    <Info size={16} />
+                    <h4 className="text-sm font-black uppercase tracking-widest">기본 정보 (Basic Information)</h4>
                   </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-zinc-500 uppercase ml-1">룰렛 관리자 명칭</label>
+                      <input
+                        type="text"
+                        className="w-full h-12 bg-zinc-800/50 border border-zinc-700 rounded-xl px-4 text-sm text-white focus:border-admin-brand outline-none transition-colors"
+                        placeholder="예: 기간한정 다이아 룰렛"
+                        {...form.register("name")}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-zinc-500 uppercase ml-1">소모 티켓 타입</label>
+                      <select
+                        className="w-full h-12 bg-zinc-800/50 border border-zinc-700 rounded-xl px-4 text-sm text-white focus:border-admin-brand outline-none transition-colors appearance-none"
+                        {...form.register("ticket_type")}
+                      >
+                        <option value="ROULETTE_COIN">코인 (ROULETTE_COIN)</option>
+                        <option value="TRIAL_TOKEN">체험권 (TRIAL_TOKEN)</option>
+                        <option value="GOLD_KEY">골드키 (GOLD_KEY)</option>
+                        <option value="DIAMOND_KEY">다이아키 (DIAMOND_KEY)</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-zinc-500 uppercase ml-1">일일 스핀 제한 (0=무제한)</label>
+                      <input
+                        type="number"
+                        className="w-full h-12 bg-zinc-800/50 border border-zinc-700 rounded-xl px-4 text-sm text-white font-mono focus:border-admin-brand outline-none transition-colors"
+                        {...form.register("max_daily_spins", { valueAsNumber: true })}
+                      />
+                    </div>
+                  </div>
+                  <label className="flex items-center gap-3 p-3 bg-zinc-800/30 rounded-xl border border-zinc-800 cursor-pointer group w-fit pr-6">
+                    <div className={`w-10 h-6 rounded-full relative transition-colors ${form.watch("is_active") ? 'bg-admin-brand' : 'bg-zinc-700'}`}>
+                      <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${form.watch("is_active") ? 'left-5' : 'left-1'}`} />
+                    </div>
+                    <input type="checkbox" className="hidden" {...form.register("is_active")} />
+                    <span className={`text-sm font-bold ${form.watch("is_active") ? 'text-white' : 'text-zinc-500'}`}>
+                      시스템 활성화 여부
+                    </span>
+                  </label>
                 </div>
 
-                {form.formState.errors.segments?.message && (
-                  <p className="text-sm text-red-300">{form.formState.errors.segments.message as string}</p>
-                )}
+                {/* Segment Section */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-admin-brand">
+                      <LayoutGrid size={16} />
+                      <h4 className="text-sm font-black uppercase tracking-widest">세그먼트 설정 (Slots & Probability)</h4>
+                    </div>
+                    <div className="text-[11px] font-black text-zinc-500 flex items-center gap-4">
+                      <span>TOTAL WEIGHT: <span className="text-white font-mono">{totalWeightWatch}</span></span>
+                      <span>CHECK: <span className={totalWeightWatch > 0 ? 'text-emerald-400' : 'text-rose-400'}>{totalWeightWatch > 0 ? 'VALID' : 'INVALID'}</span></span>
+                    </div>
+                  </div>
 
-                <div className="rounded-lg border border-[#333333] bg-[#111111]">
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead className="sticky top-0 z-10 bg-[#151515]">
-                        <tr>
-                          <th className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">번호</th>
-                          <th className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">라벨</th>
-                          <th className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">가중치</th>
-                          <th className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#91F402]">확률 / 희소성</th>
-                          <th className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">보상 타입</th>
-                          <th className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">보상 값</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-[#333333]">
-                        {segments.fields.map((field, idx) => (
-                          <tr key={field.id} className="align-top hover:bg-[#1A1A1A]">
-                            <td className="px-3 py-3 text-sm text-gray-400">{idx + 1}</td>
-                            <td className="px-3 py-2">
+                  <div className="space-y-3">
+                    {segments.fields.map((field, idx) => (
+                      <div key={field.id} className="admin-card p-4 bg-zinc-800/20 border border-zinc-800/50 hover:border-zinc-700 transition-colors">
+                        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
+                          {/* Slot Info */}
+                          <div className="xl:col-span-3 space-y-3">
+                            <div className="flex items-center gap-2">
+                              <div className="w-6 h-6 rounded bg-zinc-800 text-[10px] font-black flex items-center justify-center text-zinc-500">#{idx + 1}</div>
                               <input
-                                type="text"
-                                className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
+                                placeholder="표시 라벨"
+                                className="flex-1 bg-transparent border-b border-zinc-800 focus:border-admin-brand text-sm font-bold text-white py-1 outline-none"
                                 {...form.register(`segments.${idx}.label`)}
                               />
-                              {form.formState.errors.segments?.[idx]?.label?.message && (
-                                <p className="mt-1 text-xs text-red-300">{form.formState.errors.segments[idx]?.label?.message}</p>
-                              )}
-                            </td>
-                            <td className="px-3 py-2">
+                            </div>
+                            <div className="space-y-1.5 pt-1">
+                              <div className="flex justify-between items-center text-[10px] font-black">
+                                <span className="text-zinc-500">WEIGHT</span>
+                                <span className="text-white font-mono">{field.weight || 0}</span>
+                              </div>
                               <input
-                                type="number"
-                                className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
+                                type="range"
+                                min="0"
+                                max="1000"
+                                step="1"
+                                className="w-full accent-admin-brand"
                                 {...form.register(`segments.${idx}.weight`, { valueAsNumber: true })}
                               />
-                              {form.formState.errors.segments?.[idx]?.weight?.message && (
-                                <p className="mt-1 text-xs text-red-300">{form.formState.errors.segments[idx]?.weight?.message}</p>
-                              )}
-                            </td>
-                            <td className="px-3 py-2">
-                              {(() => {
-                                const totalWeight = segments.fields.reduce((sum, seg) => sum + (seg.weight || 0), 0);
-                                const info = getProbabilityInfo(field.weight || 0, totalWeight);
-                                return (
-                                  <div className="space-y-1 min-w-[120px]">
-                                    {/* Probability bar */}
-                                    <div className="relative h-2 w-full rounded-full bg-[#333333] overflow-hidden">
-                                      <div
-                                        className={`absolute left-0 top-0 h-full rounded-full ${info.bgColor || 'bg-gray-500'}`}
-                                        style={{ width: `${Math.min(info.percent, 100)}%` }}
-                                      />
-                                    </div>
-                                    {/* Percentage and rarity badge */}
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-sm font-bold" style={{ color: info.color }}>
-                                        {info.percent.toFixed(1)}%
-                                      </span>
-                                      <span
-                                        className="px-1.5 py-0.5 rounded text-[10px] font-bold"
-                                        style={{ backgroundColor: `${info.color}20`, color: info.color }}
-                                      >
-                                        {info.label}
-                                      </span>
-                                    </div>
-                                    {/* Expected hits per 100 spins */}
-                                    <span className="text-[10px] text-gray-500">
-                                      100회당 ~{info.expected100}회
-                                    </span>
-                                  </div>
-                                );
-                              })()}
-                            </td>
-                            <td className="px-3 py-2 space-y-2">
-                              {(() => {
-                                const rewardType = form.watch(`segments.${idx}.reward_type`);
-                                const isGifticon = isGifticonType(rewardType);
-                                const brand = getGifticonBrand(rewardType);
-                                const customBrand = brand && !gifticonBrands.some((b) => b.value === brand) ? brand : "";
-                                return (
-                                  <>
-                                    <select
-                                      className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
-                                      value={rewardType}
-                                      onChange={(e) => form.setValue(`segments.${idx}.reward_type`, e.target.value)}
-                                    >
-                                      {REWARD_TYPES.map((rt) => (
-                                        <option key={rt.value} value={rt.value}>
-                                          {rt.label}
-                                        </option>
-                                      ))}
-                                    </select>
+                            </div>
+                          </div>
 
-                                    {isGifticon && (
-                                      <div className="space-y-2 rounded-md border border-[#333333] bg-[#181818] p-2">
-                                        <div className="flex gap-2">
-                                          <select
-                                            className="flex-1 rounded-md border border-[#333333] bg-[#111111] p-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
-                                            value={gifticonBrands.some((b) => b.value === brand) ? brand : "CUSTOM"}
-                                            onChange={(e) => {
-                                              const next = e.target.value;
-                                              if (next === "CUSTOM") return;
-                                              form.setValue(`segments.${idx}.reward_type`, buildGifticonType(next));
-                                            }}
-                                          >
-                                            {gifticonBrands.map((b) => (
-                                              <option key={b.value} value={b.value}>
-                                                {b.label}
-                                              </option>
-                                            ))}
-                                          </select>
-                                          {gifticonBrands.some((b) => b.value === brand) ? null : (
-                                            <input
-                                              type="text"
-                                              value={customBrand}
-                                              onChange={(e) => form.setValue(`segments.${idx}.reward_type`, buildGifticonType(e.target.value.trim() || "CUSTOM"))}
-                                              className="flex-1 rounded-md border border-[#333333] bg-[#111111] p-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
-                                              placeholder="브랜드 직접 입력"
-                                            />
-                                          )}
-                                        </div>
-                                        <p className="text-[11px] text-gray-500">브랜드/금액 자유 입력. 저장 시 item_type = {brand || "브랜드"}_GIFTICON_금액</p>
-                                      </div>
-                                    )}
-                                  </>
-                                );
-                              })()}
-                            </td>
-                            <td className="px-3 py-2">
+                          {/* Probability Visualizer */}
+                          <div className="xl:col-span-3 flex flex-col justify-center gap-2">
+                            {(() => {
+                              const info = getProbabilityInfo(field.weight || 0, totalWeightWatch);
+                              return (
+                                <>
+                                  <div className="flex items-center justify-between">
+                                    <span className={`text-[10px] font-black py-0.5 px-2 rounded-md border ${info.badgeClass}`}>{info.label}</span>
+                                    <span className={`text-xl font-black tabular-nums ${info.textClass}`}>{info.percent.toFixed(2)}%</span>
+                                  </div>
+                                  <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
+                                    <div className={`h-full transition-all duration-500 ${info.barClass}`} style={{ width: `${Math.min(info.percent, 100)}%` }} />
+                                  </div>
+                                  <div className="flex justify-between items-center text-[10px] text-zinc-500 font-medium">
+                                    <span>1,000회 당 약 {((field.weight || 0) / (totalWeightWatch || 1) * 1000).toFixed(0)}회</span>
+                                    <span>EX-100: {info.expected100} hits</span>
+                                  </div>
+                                </>
+                              );
+                            })()}
+                          </div>
+
+                          {/* Reward Config */}
+                          <div className="xl:col-span-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-black text-zinc-500 uppercase">보상 타입 (Type)</label>
+                              <div className="relative">
+                                <select
+                                  className="w-full h-10 bg-zinc-900 border border-zinc-800 rounded-xl px-3 text-xs text-white focus:border-admin-brand outline-none appearance-none"
+                                  {...form.register(`segments.${idx}.reward_type`)}
+                                >
+                                  {REWARD_TYPES.map((rt) => (
+                                    <option key={rt.value} value={rt.value}>{rt.label}</option>
+                                  ))}
+                                </select>
+                                <div className="absolute right-3 top-3 pointer-events-none text-zinc-500">
+                                  <ArrowRight size={14} />
+                                </div>
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-black text-zinc-500 uppercase">지급 수량 (Amount)</label>
                               <input
                                 type="number"
-                                className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
+                                className="w-full h-10 bg-zinc-900 border border-zinc-800 rounded-xl px-4 text-xs text-white font-mono focus:border-admin-brand outline-none"
                                 {...form.register(`segments.${idx}.reward_value`, { valueAsNumber: true })}
                               />
-                              {form.formState.errors.segments?.[idx]?.reward_value?.message && (
-                                <p className="mt-1 text-xs text-red-300">{form.formState.errors.segments[idx]?.reward_value?.message}</p>
-                              )}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                            </div>
+
+                            {/* Gifticon Special Config */}
+                            {isGifticonType(form.watch(`segments.${idx}.reward_type`)) && (
+                              <div className="md:col-span-2 p-3 bg-zinc-900/50 rounded-xl border border-zinc-800/50 flex flex-col md:flex-row gap-4 items-center">
+                                <div className="flex-1 flex gap-2 w-full">
+                                  <select
+                                    className="flex-1 h-9 bg-zinc-900 border border-zinc-800 rounded-lg px-2 text-[11px] text-white outline-none"
+                                    value={gifticonBrands.some(b => b.value === getGifticonBrand(form.watch(`segments.${idx}.reward_type`))) ? getGifticonBrand(form.watch(`segments.${idx}.reward_type`)) : "CUSTOM"}
+                                    onChange={(e) => {
+                                      if (e.target.value === "CUSTOM") return;
+                                      form.setValue(`segments.${idx}.reward_type`, buildGifticonType(e.target.value));
+                                    }}
+                                  >
+                                    {gifticonBrands.map(b => (
+                                      <option key={b.value} value={b.value}>{b.label}</option>
+                                    ))}
+                                  </select>
+                                  {!gifticonBrands.some(b => b.value === getGifticonBrand(form.watch(`segments.${idx}.reward_type`))) || getGifticonBrand(form.watch(`segments.${idx}.reward_type`)) === "CUSTOM" ? (
+                                    <input
+                                      className="flex-1 h-9 bg-zinc-900 border border-zinc-800 rounded-lg px-2 text-[11px] text-white outline-none"
+                                      placeholder="브랜드 직접 입력"
+                                      defaultValue={getGifticonBrand(form.watch(`segments.${idx}.reward_type`))}
+                                      onBlur={(e) => form.setValue(`segments.${idx}.reward_type`, buildGifticonType(e.target.value.trim() || "CUSTOM"))}
+                                    />
+                                  ) : null}
+                                </div>
+                                <div className="text-[10px] text-zinc-600 font-medium whitespace-nowrap">
+                                  Result: <span className="text-zinc-400 font-mono">{form.watch(`segments.${idx}.reward_type`)}</span>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              </div>
+              </form>
+            </div>
 
-              <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
-                <button
-                  type="button"
-                  onClick={closeModal}
-                  className="rounded-md border border-[#333333] bg-[#111111] px-4 py-2 text-sm text-gray-200 hover:bg-[#1A1A1A]"
-                >
-                  취소
-                </button>
-                <button
-                  type="submit"
-                  disabled={mutation.isPending}
-                  className="rounded-md bg-[#2D6B3B] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#91F402] hover:text-black disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {mutation.isPending ? "저장 중..." : "저장"}
-                </button>
+            {/* Modal Footer */}
+            <div className="p-6 border-t border-zinc-800 bg-zinc-900/50 flex flex-col sm:flex-row gap-3 justify-end items-center">
+              <div className="flex-1 text-xs text-zinc-500 hidden sm:block">
+                <span className="font-bold text-zinc-400">NOTE:</span> 변경된 설정은 저장 즉시 시스템에 반영됩니다.
               </div>
-            </form>
+              <button
+                onClick={closeModal}
+                className="w-full sm:w-auto px-6 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 rounded-xl text-sm font-black transition-all"
+              >
+                취소
+              </button>
+              <button
+                form="roulette-form"
+                type="submit"
+                disabled={mutation.isPending}
+                className="w-full sm:w-auto px-10 py-2.5 bg-admin-brand hover:brightness-110 text-black rounded-xl text-sm font-black transition-all shadow-lg shadow-admin-brand/20 disabled:opacity-50"
+              >
+                {mutation.isPending ? "저장 중..." : "설정 저장 (Save Config)"}
+              </button>
+            </div>
           </div>
         </div>
       )}
-    </section>
+    </div>
   );
 };
 

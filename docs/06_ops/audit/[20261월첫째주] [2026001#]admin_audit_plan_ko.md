@@ -29,8 +29,6 @@
     - [5-2) 근본 가드레일(운영 사고 방지)](#audit-step-5-guards)
     - [5-3) 최소 검증 시나리오(운영+유저)](#audit-step-5-verify)
   - [★ 핵심 검증: 전역 동기화 및 기능 정합성](#global-sync-verify)
-- [실행 방법론](#execution-strategy)
-- [실행 일정](#execution-schedule)
 - [부록: 감사 보고서 템플릿(초안)](#report-template)
 - [개선 트랙: 어드민 UI/UX 구조 개선안](#improvement-track)
   - [1. 현황: 페이지/기능 인벤토리 (As-Is)](#improvement-as-is)
@@ -290,7 +288,7 @@
 
 | 재화/자산 | SoT(Write 대상) | 로그/원장(근거) | 대표 `reward_type` | 조작 경로(어드민/유저) | 리스크/감사 포인트 |
 |---|---|---|---|---|---|
-| 금고 포인트(현금성) | `user.vault_locked_balance` | `vault_earn_event` (`app/models/vault_earn_event.py`) | `POINT`, `CC_POINT` | 유저: Dice/Roulette/Lottery play + 미션/이벤트 claim(간접). 어드민: 금고 운영 라우트(4단계와 연동) | 게임 play 적립/패널티는 `VaultService.record_game_play_earn_event()` 기준(기본 **+200 / -50**, 멱등키 `GAME:{TYPE}:{log_id}`). Golden Hour(기본 **2.0x**, 21:30~22:30 KST, 수동 오버라이드 가능) 적용 시 +400/-100처럼 증폭될 수 있으나 **기본 금액(200/-50) 게이트에만 적용**됨. `cash_balance` 신규 write 금지 |
+| 금고 포인트(현금성) | `user.vault_locked_balance` | `vault_earn_event` (`app/models/vault_earn_event.py`) | `POINT`, `CC_POINT` | 유저: Dice/Roulette/Lottery play + 미션/이벤트 claim(간접). 어드민: 금고 운영 라우트(4단계와 연동) | 게임 play 적립/패널티는 `VaultService.record_game_play_earn_event()` 기준. **[전역동기화-Phase 6 완료]** 보상 Gate(기본 200/-50)는 하드코딩이 아니라 `game_earn_config`(Admin Dice/Roulette 설정)를 실시간 참조하도록 개선됨. (예: 어드민에서 승리 보상 300으로 변경 시 Gate도 300으로 자동 변경 -> Golden Hour 2배 시 600 지급). Golden Hour 배수(기본 2.0x, 21:30~22:30 KST)는 이 "설정된 Gate" 금액에만 적용됨. `cash_balance` 신규 write 금지 |
 | 게임 XP/레벨(시즌패스) | `season_pass_progress` | `season_pass_stamp_log`, `season_pass_reward_log` | `GAME_XP` | 유저: 게임/미션 결과 반영. 어드민: 설정 화면의 보상 타입 | POINT와 혼동 시 “레벨업/포인트” UX가 깨짐(표준 라벨/테스트 필요) |
 | 티켓/키(월렛형) | `user_game_wallet` | `user_game_wallet_ledger` | `ROULETTE_COIN`, `DICE_TOKEN`, `LOTTERY_TICKET`, `GOLD_KEY`, `DIAMOND_KEY`, `TRIAL_TOKEN` | 어드민: 토큰 지급/회수(`admin_game_tokens`). 유저: 각 게임 play 시 `require_and_consume_token` 소비 | 음수/0 처리, 소비 실패 시 UX(티켓 0 패널) 및 재시도 시 멱등성(중복 소비) |
 | DIAMOND(인벤토리형) | `user_inventory_item` (`item_type="DIAMOND"`) | `user_inventory_ledger` | `DIAMOND` | 어드민: 토큰지급 화면에서 DIAMOND 지급/회수는 Inventory로 라우팅(`admin_game_tokens`). 유저: TRIAL 룰렛 등 보상 | DIAMOND를 Wallet로 취급하면 SoT 붕괴(지갑/상점/교환 루프 깨짐) |
@@ -617,7 +615,7 @@
   1. (준비) VaultProgram 설정에서 Golden Hour를 활성화하고 `manual_override=FORCE_ON`, `multiplier=2.0`로 강제
   2. (유저) `/api/vault/status` 재조회: `is_golden_hour_active=true`, `golden_hour_multiplier=2.0` 확인
   3. (유저) `/api/dice/play` 3회(또는 이벤트 모드 고정)로 아래 3가지 케이스를 각각 1회씩 발생시켜 검증
-     - **기본 지급(+200)**: 골든아워 게이트 대상 → VaultEarnEvent.amount가 **+400**(2.0x)인지
+     - **기본 지급(+200 or Config Value)**: 골든아워 게이트 대상 (어드민 설정값 300 등 동적 반영 확인) → VaultEarnEvent.amount가 **2.0x**인지
      - **기본 차감(-50)**: 골든아워 게이트 대상 → VaultEarnEvent.amount가 **-100**(2.0x)인지
      - **비게이트 보상(예: +7777)**: 게이트 제외 대상 → VaultEarnEvent.amount가 **+7777 그대로**인지
   4. (DB SoT) 각 플레이마다 아래가 동시에 성립

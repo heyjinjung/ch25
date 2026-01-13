@@ -7,6 +7,7 @@ Design:
 - For per-user history, we standardize to `target_type="User"` and `target_id=str(user_id)`.
 """
 
+from datetime import datetime
 from fastapi import APIRouter, Depends
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
@@ -33,6 +34,8 @@ def list_audit_logs(
     action: str | None = None,
     target_type: str | None = None,
     target_id: str | None = None,
+    start_date: datetime | None = None,
+    end_date: datetime | None = None,
     db: Session = Depends(get_db),
     _: int = Depends(get_current_admin_id),
 ):
@@ -48,6 +51,10 @@ def list_audit_logs(
         q = q.filter(AdminAuditLog.target_type == target_type)
     if target_id:
         q = q.filter(AdminAuditLog.target_id == target_id)
+    if start_date:
+        q = q.filter(AdminAuditLog.created_at >= start_date)
+    if end_date:
+        q = q.filter(AdminAuditLog.created_at <= end_date)
 
     rows = q.order_by(desc(AdminAuditLog.id)).offset(offset).limit(limit).all()
 
@@ -58,7 +65,7 @@ def list_audit_logs(
             "action": r.action,
             "target_type": r.target_type,
             "target_id": r.target_id,
-            "before": r.before_json,
+           "before": r.before_json,
             "after": r.after_json,
             "created_at": r.created_at,
         }

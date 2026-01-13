@@ -1,0 +1,11 @@
+services:
+  backend:
+    environment:
+      # TEST_MODE: allow anonymous access (no JWT) for e2e.
+      TEST_MODE: "true"
+
+  frontend:
+    build:
+      args:
+        # Frontend test mode: bypass ProtectedRoute + keep same-origin /admin/api via nginx.
+        VITE_TEST_MODE: "true"

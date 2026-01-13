@@ -106,6 +106,50 @@ class ShopService:
         return overrides
 
     @staticmethod
+    def _parse_cost_token(raw) -> GameTokenType | None:
+        if isinstance(raw, GameTokenType):
+            return raw
+        if isinstance(raw, str):
+            try:
+                return GameTokenType(raw)
+            except ValueError:
+                return None
+        return None
+
+    @staticmethod
+    def _build_custom_product(sku: str, patch: dict) -> ShopProduct | None:
+        if not isinstance(patch, dict):
+            return None
+
+        title = patch.get("title")
+        cost_token = ShopService._parse_cost_token(patch.get("cost_token"))
+        cost_amount = patch.get("cost_amount")
+        item_type = patch.get("item_type")
+        item_amount = patch.get("item_amount")
+        is_active = patch.get("is_active")
+
+        if not isinstance(title, str) or not title.strip():
+            return None
+        if cost_token is None:
+            return None
+        if not isinstance(cost_amount, int) or cost_amount <= 0:
+            return None
+        if not isinstance(item_type, str) or not item_type.strip():
+            return None
+        if not isinstance(item_amount, int) or item_amount <= 0:
+            return None
+
+        return ShopProduct(
+            sku,
+            title.strip(),
+            cost_token,
+            cost_amount,
+            item_type.strip(),
+            item_amount,
+            is_active=bool(is_active) if isinstance(is_active, bool) else True,
+        )
+
+    @staticmethod
     def _apply_overrides(product: ShopProduct, patch: dict) -> None:
         if not isinstance(patch, dict):
             return
@@ -113,9 +157,21 @@ class ShopService:
         if isinstance(title, str) and title.strip():
             product.title = title.strip()
 
+        cost_token = ShopService._parse_cost_token(patch.get("cost_token"))
+        if cost_token is not None:
+            product.cost_token = cost_token
+
         cost_amount = patch.get("cost_amount")
         if isinstance(cost_amount, int) and cost_amount > 0:
             product.cost_amount = cost_amount
+
+        item_type = patch.get("item_type")
+        if isinstance(item_type, str) and item_type.strip():
+            product.item_type = item_type.strip()
+
+        item_amount = patch.get("item_amount")
+        if isinstance(item_amount, int) and item_amount > 0:
+            product.item_amount = item_amount
 
         is_active = patch.get("is_active")
         if isinstance(is_active, bool):
@@ -137,28 +193,46 @@ class ShopService:
                 is_active=getattr(base, "is_active", True),
             )
             ShopService._apply_overrides(p, overrides.get(sku, {}))
-            products.append(p.to_dict())
+            d = p.to_dict()
+            d["source"] = "builtin"
+            products.append(d)
+
+        # Custom products defined in UI config
+        for sku, patch in overrides.items():
+            if sku in SHOP_PRODUCTS:
+                continue
+            custom = ShopService._build_custom_product(sku, patch)
+            if custom is None:
+                continue
+            d = custom.to_dict()
+            d["source"] = "custom"
+            products.append(d)
+
+        products.sort(key=lambda x: str(x.get("sku", "")))
         return products
 
     @staticmethod
     def purchase_product(db: Session, user_id: int, sku: str, idempotency_key: str | None = None) -> dict:
         """Purchase a product."""
-        base = SHOP_PRODUCTS.get(sku)
-        if not base:
-            raise HTTPException(status_code=404, detail="PRODUCT_NOT_FOUND")
-
-        # Apply runtime overrides (title/cost/is_active) from UI config.
-        product = ShopProduct(
-            base.sku,
-            base.title,
-            base.cost_token,
-            base.cost_amount,
-            base.item_type,
-            base.item_amount,
-            is_active=getattr(base, "is_active", True),
-        )
         overrides = ShopService._load_product_overrides(db)
-        ShopService._apply_overrides(product, overrides.get(sku, {}))
+
+        base = SHOP_PRODUCTS.get(sku)
+        if base:
+            product = ShopProduct(
+                base.sku,
+                base.title,
+                base.cost_token,
+                base.cost_amount,
+                base.item_type,
+                base.item_amount,
+                is_active=getattr(base, "is_active", True),
+            )
+            ShopService._apply_overrides(product, overrides.get(sku, {}))
+        else:
+            custom = ShopService._build_custom_product(sku, overrides.get(sku, {}))
+            if custom is None:
+                raise HTTPException(status_code=404, detail="PRODUCT_NOT_FOUND")
+            product = custom
 
         if not product.is_active:
             raise HTTPException(status_code=400, detail="PRODUCT_INACTIVE")

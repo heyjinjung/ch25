@@ -20,8 +20,10 @@ const VaultPageCompact: React.FC = () => {
     const view = useMemo(() => {
         const data = vault.data;
         const vaultBalance = data?.vaultBalance ?? 0;
+        const availableAmount = data?.vaultAmountAvailable ?? data?.availableBalance ?? 0;
+        const reservedAmount = data?.vaultAmountReserved ?? Math.max(vaultBalance - availableAmount, 0);
         const eligible = !!data?.eligible;
-        return { vaultBalance, eligible };
+        return { vaultBalance, availableAmount, reservedAmount, eligible };
     }, [vault.data]);
 
     if (vault.isLoading) {
@@ -101,7 +103,7 @@ const VaultPageCompact: React.FC = () => {
                     "text-xs mt-2 font-medium transition-colors",
                     view.eligible ? "text-emerald-500/80" : "text-white/45"
                 )}>
-                    {view.eligible ? "✨ 출금 신청 가능" : "조건 충족 시 해금됩니다"}
+                    {view.eligible ? "출금 가능 금액 기준으로 신청됩니다" : "조건 충족 시 해금됩니다"}
                 </p>
             </div>
 
@@ -143,25 +145,29 @@ const VaultPageCompact: React.FC = () => {
             {/* Cash Balance & Withdraw Section */}
             <div className="w-full max-w-xs mb-4">
                 {(() => {
-                    const availableAmount = vault.data?.vaultAmountAvailable ?? vault.data?.availableBalance ?? 0;
                     return (
                         <>
                             <div className="flex justify-between items-center text-sm mb-2 px-1">
                                 <span className="text-white/60">출금 가능 금액</span>
-                                <span className="font-bold text-amber-400">{formatWon(availableAmount)}</span>
+                                <span className="font-bold text-amber-400">{formatWon(view.availableAmount)}</span>
+                            </div>
+
+                            <div className="flex justify-between items-center text-xs mb-3 px-1">
+                                <span className="text-white/40">예약됨(처리 중)</span>
+                                <span className="font-bold text-white/60">{formatWon(view.reservedAmount)}</span>
                             </div>
 
                             {/* Withdraw Button: Always show if balance > 0, disable if < 10000 */}
-                            {availableAmount > 0 && (
+                            {view.availableAmount > 0 && (
                                 <div className="w-full">
                                     <button
-                                        disabled={availableAmount < 10000}
+                                        disabled={view.availableAmount < 10000}
                                         onClick={async () => {
-                                            if (availableAmount < 10000) return;
+                                            if (view.availableAmount < 10000) return;
                                             if (!window.confirm("출금을 신청하시겠습니까?")) return;
                                             tryHaptic(20);
                                             const { requestWithdrawal } = await import("../../api/vaultApi");
-                                            const res = await requestWithdrawal(availableAmount);
+                                            const res = await requestWithdrawal(view.availableAmount);
                                             if (res.success) {
                                                 alert(res.message);
                                                 vault.refetch();
@@ -171,20 +177,20 @@ const VaultPageCompact: React.FC = () => {
                                         }}
                                         className={clsx(
                                             "w-full py-4 rounded-xl font-black text-center text-base uppercase tracking-wide transition-all flex items-center justify-center gap-2",
-                                            availableAmount >= 10000
+                                            view.availableAmount >= 10000
                                                 ? "bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-lg shadow-amber-500/30 hover:brightness-110 active:scale-[0.98]"
                                                 : "bg-gray-800 border border-white/10 text-white/30 cursor-not-allowed"
                                         )}
                                     >
-                                        <img src="/assets/asset_coin_gold.png" alt="Coin" className={clsx("w-5 h-5 drop-shadow-sm", availableAmount < 10000 && "grayscale opacity-50")} />
+                                        <img src="/assets/asset_coin_gold.png" alt="Coin" className={clsx("w-5 h-5 drop-shadow-sm", view.availableAmount < 10000 && "grayscale opacity-50")} />
                                         출금 신청하기
                                     </button>
-                                    {availableAmount < 10000 && (
+                                    {view.availableAmount < 10000 && (
                                         <p className="text-[10px] text-center text-red-400/80 mt-1">
                                             * 최소 10,000원부터 출금 가능합니다.
                                         </p>
                                     )}
-                                    {availableAmount >= 10000 && (
+                                    {view.availableAmount >= 10000 && (
                                         <p className="text-[10px] text-center text-amber-500/80 mt-1">
                                             * 보유 중인 전액 신청됩니다.
                                         </p>
@@ -201,7 +207,7 @@ const VaultPageCompact: React.FC = () => {
                 <a
                     href="https://ccc-010.com"
                     target="_blank"
-                    rel="noreferrer"
+                    rel="noreferrer noopener"
                     onClick={() => tryHaptic(30)}
                     className="group block w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-black text-center text-base shadow-lg shadow-emerald-500/30 hover:brightness-110 active:scale-[0.98] transition-all uppercase tracking-wide relative overflow-hidden"
                 >

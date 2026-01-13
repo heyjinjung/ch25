@@ -587,7 +587,8 @@ class MissionService:
                     progress.completed_at = datetime.utcnow()
 
                     # Auto-claim flow for eligible missions
-                    if mission.auto_claim:
+                    # [Security] Do not auto-claim if manual approval is required.
+                    if mission.auto_claim and not mission.requires_approval:
                         try:
                             self.claim_reward(user_id, mission.id)
                         except Exception:
@@ -643,6 +644,12 @@ class MissionService:
 
         if not progress or not progress.is_completed:
             return False, "Mission not completed", 0
+
+        # [Security] Approval Check
+        if mission.requires_approval:
+            # Assuming 'APPROVED' is the string value for MissionApprovalStatus.APPROVED
+            if str(progress.approval_status) != "APPROVED":
+                 return False, "Approval Pending", 0
 
         if progress.is_claimed:
             return False, "Already claimed", 0

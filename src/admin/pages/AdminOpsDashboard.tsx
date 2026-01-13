@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { DailyOverviewResponse, EventsStatusResponse, getDailyOverview, getEventsStatus } from '../api/adminDashboardApi';
-import { RiskMonitorCard } from '../components/dashboard/RiskMonitorCard';
+import RiskMonitorCard from '../components/dashboard/RiskMonitorCard';
 import { SettlementCard } from '../components/dashboard/SettlementCard';
 import { EventsStatusBoard } from '../components/dashboard/EventsStatusBoard';
 
@@ -30,40 +30,40 @@ export const AdminOpsDashboard: React.FC = () => {
     }, []);
 
     if (loading || !dailyData || !eventsData) {
-        return <div className="p-10 text-center text-gray-500">Loading Operations Dashboard...</div>;
+        return <div className="admin-page-container text-center text-admin-text-secondary">운영 대시보드를 불러오는 중...</div>;
     }
 
     return (
-        <div className="p-6 space-y-6">
+        <div className="admin-page-container">
             <div>
-                <h1 className="text-2xl font-bold text-white">Operations Dashboard (Daily Routine)</h1>
-                <p className="text-gray-400 text-sm mt-1">Monitor traffic, risk, and revenue for the First 2 Weeks Plan.</p>
+                <h1 className="text-admin-title text-admin-text-primary">운영 대시보드</h1>
+                <p className="text-admin-body text-admin-text-secondary mt-1">트래픽/리스크/정산 지표를 한 화면에서 점검합니다.</p>
             </div>
 
             {/* Tabs */}
-            <div className="border-b border-[#333333]">
+            <div className="border-b border-admin-border">
                 <nav className="-mb-px flex space-x-8" aria-label="Tabs">
                     <button
                         onClick={() => setActiveTab('daily')}
                         className={`
                             whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium transition-colors
                             ${activeTab === 'daily'
-                                ? 'border-[#91F402] text-[#91F402]'
-                                : 'border-transparent text-gray-400 hover:border-gray-500 hover:text-gray-300'}
+                                ? 'border-admin-brand text-admin-brand'
+                                : 'border-transparent text-admin-text-secondary hover:border-admin-border hover:text-admin-text-primary'}
                         `}
                     >
-                        Daily Overview (09:00)
+                        데일리 점검 (09:00)
                     </button>
                     <button
                         onClick={() => setActiveTab('events')}
                         className={`
                             whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium transition-colors
                             ${activeTab === 'events'
-                                ? 'border-[#91F402] text-[#91F402]'
-                                : 'border-transparent text-gray-400 hover:border-gray-500 hover:text-gray-300'}
+                                ? 'border-admin-brand text-admin-brand'
+                                : 'border-transparent text-admin-text-secondary hover:border-admin-border hover:text-admin-text-primary'}
                         `}
                     >
-                        Events Status (Real-time)
+                        이벤트 현황 (실시간)
                     </button>
                 </nav>
             </div>
@@ -71,11 +71,10 @@ export const AdminOpsDashboard: React.FC = () => {
             {/* Tab Panels */}
             {activeTab === 'daily' && (
                 <div className="animate-fadeIn">
-                    <h2 className="text-lg font-semibold text-gray-200 mb-4">Retention Risk & Settlement</h2>
+                    <h2 className="text-admin-subtitle text-admin-text-primary mb-4">리텐션 리스크 & 정산</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <RiskMonitorCard
                             riskCount={dailyData.risk_count}
-                            streakRiskCount={dailyData.streak_risk_count}
                         />
                         <SettlementCard
                             missionPercent={dailyData.mission_percent}
@@ -89,7 +88,7 @@ export const AdminOpsDashboard: React.FC = () => {
 
             {activeTab === 'events' && (
                 <div className="animate-fadeIn">
-                    <h2 className="text-lg font-semibold text-gray-200">Events Status Board</h2>
+                    <h2 className="text-admin-subtitle text-admin-text-primary">이벤트 현황 보드</h2>
                     <EventsStatusBoard
                         welcomeMetrics={eventsData.welcome_metrics}
                         streakCounts={eventsData.streak_counts}

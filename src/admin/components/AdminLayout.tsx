@@ -1,231 +1,258 @@
-// src/admin/components/AdminLayout.tsx
-import React, { useEffect, useMemo, useState } from "react";
-import { NavLink, Outlet } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, Outlet, useLocation } from "react-router-dom";
 import {
-  Bell,
-  ChevronDown,
-  Home,
-  Cog,
-  Gift,
-  Dice5,
-  Percent,
+  LayoutDashboard,
   Users,
-  UsersRound,
+  Vault,
+  Store,
   Ticket,
-  BarChart3,
-  UserCog,
-  MessageSquare,
-  TrendingUp,
-  Menu,
-  User,
-  X,
+  Trophy,
+  ClipboardCheck,
+  Send,
+  CircleDot,
+  Dice6,
   Target,
-  ShoppingCart,
-  LineChart,
+  Filter,
+  FileQuestion,
+  Flame,
+  Swords,
+  Settings,
+  ShieldCheck,
+  Menu,
+  ChevronRight,
+  ChevronDown,
+  Bell
 } from "lucide-react";
 
-const accent = "#91F402";
+interface NavItem {
+  label: string;
+  path: string;
+  icon: React.ReactNode;
+}
 
-type NavItem = { label: string; path: string; icon: React.ReactNode };
-type NavSection = { heading: string; items: NavItem[] };
+interface NavSection {
+  heading: string;
+  items: NavItem[];
+  collapsible?: boolean;
+}
 
 const navSections: NavSection[] = [
   {
     heading: "대시보드",
-    items: [{ label: "대시보드", path: "/admin", icon: <Home size={18} /> }],
-  },
-  {
-    heading: "게임 관리",
     items: [
-      { label: "시즌 설정", path: "/admin/seasons", icon: <Cog size={18} /> },
-      { label: "미션 관리", path: "/admin/missions", icon: <Target size={18} /> },
-      { label: "스트릭 보상 운영", path: "/admin/streak-rewards", icon: <Gift size={18} /> },
-      { label: "룰렛 설정", path: "/admin/roulette", icon: <Gift size={18} /> },
-      { label: "주사위 설정", path: "/admin/dice", icon: <Dice5 size={18} /> },
-      { label: "복권 설정", path: "/admin/lottery", icon: <Percent size={18} /> },
-      { label: "금고 관리", path: "/admin/vault", icon: <Gift size={18} /> },
-      { label: "상점 관리", path: "/admin/shop", icon: <ShoppingCart size={18} /> },
+      { label: "운영 대시보드", path: "/admin", icon: <LayoutDashboard size={18} /> },
+      { label: "마케팅 센터", path: "/admin/marketing", icon: <Target size={18} /> },
+      { label: "운영계획(플레이북)", path: "/admin/ops", icon: <ShieldCheck size={18} /> },
     ],
   },
   {
-    heading: "회원 관리",
+    heading: "관리 및 운영",
     items: [
-      { label: "마케팅 센터", path: "/admin/marketing", icon: <TrendingUp size={18} /> },
+      { label: "금고 통합 관리", path: "/admin/vault", icon: <Vault size={18} /> },
       { label: "회원 관리", path: "/admin/users", icon: <Users size={18} /> },
-      { label: "메시지 발송", path: "/admin/messages", icon: <MessageSquare size={18} /> },
-      { label: "팀 배틀 관리", path: "/admin/team-battle", icon: <UsersRound size={18} /> },
+      { label: "티켓/토큰 관리", path: "/admin/game-tokens", icon: <Ticket size={18} /> },
+      { label: "미션 관리", path: "/admin/missions", icon: <ClipboardCheck size={18} /> },
+      { label: "시즌 패스", path: "/admin/seasons", icon: <Trophy size={18} /> },
+      { label: "상점 레버", path: "/admin/shop", icon: <Store size={18} /> },
+      { label: "세그먼트", path: "/admin/user-segments", icon: <Filter size={18} /> },
+      { label: "설문조사", path: "/admin/surveys", icon: <FileQuestion size={18} /> },
+      { label: "외부 랭킹 입력", path: "/admin/external-ranking", icon: <Trophy size={18} /> },
     ],
   },
   {
-    heading: "티켓 관리",
+    heading: "설정 및 시스템",
+    collapsible: true, // Keep less frequently used items collapsible
     items: [
-      { label: "티켓 통합 관리", path: "/admin/game-tokens", icon: <Ticket size={18} /> },
-    ],
-  },
-  {
-    heading: "데이터 관리",
-    items: [
-      { label: "랭킹 입력", path: "/admin/external-ranking", icon: <BarChart3 size={18} /> },
-      { label: "경제 지표", path: "/admin/economy", icon: <LineChart size={18} /> },
-      { label: "사용자 분류", path: "/admin/user-segments", icon: <UserCog size={18} /> },
-      { label: "설문조사", path: "/admin/surveys", icon: <MessageSquare size={18} /> },
-      { label: "UI 문구/CTA", path: "/admin/ui-config", icon: <Cog size={18} /> },
+      { label: "메시지 발송", path: "/admin/messages", icon: <Send size={18} /> },
+      { label: "팀 배틀", path: "/admin/team-battle", icon: <Swords size={18} /> },
+      { label: "스트릭 보상", path: "/admin/streak-rewards", icon: <Flame size={18} /> },
+      { label: "룰렛 설정", path: "/admin/roulette", icon: <CircleDot size={18} /> },
+      { label: "주사위 설정", path: "/admin/dice", icon: <Dice6 size={18} /> },
+      { label: "복권 설정", path: "/admin/lottery", icon: <Ticket size={18} /> },
+      { label: "UI 설정", path: "/admin/ui-config", icon: <Settings size={18} /> },
     ],
   },
 ];
 
-const Sidebar: React.FC<{ mobile?: boolean; closeSidebar?: () => void }> = ({ mobile, closeSidebar }) => {
-  const [openSections, setOpenSections] = useState<Record<string, boolean>>(() => {
-    const initial: Record<string, boolean> = {};
-    for (const section of navSections) initial[section.heading] = true;
-    return initial;
-  });
+const AdminLayout: React.FC = () => {
+  const [isSidebarOpen, setSidebarOpen] = useState(false);
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+  const location = useLocation();
+
+  const navTestId = (path: string) => {
+    const trimmed = path.startsWith("/admin") ? path.slice("/admin".length) : path;
+    const slug = trimmed.replace(/^\//, "");
+    return `admin-nav:${slug || "dashboard"}`;
+  };
+
+  const toggleSidebar = () => setSidebarOpen(!isSidebarOpen);
+  const toggleSection = (heading: string) => {
+    setCollapsedSections(prev => ({ ...prev, [heading]: !prev[heading] }));
+  };
+
+  const isPathActive = (path: string) => {
+    if (path === "/admin") return location.pathname === "/admin";
+    return location.pathname.startsWith(path);
+  };
 
   return (
-    <div className="flex h-full w-64 flex-col border-r border-[#333333] bg-[#111111] text-white">
-      {mobile && (
-        <div className="flex items-center justify-between border-b border-[#333333] p-4">
-          <h2 className="text-xl font-bold text-[#91F402]">씨씨지민</h2>
-          <button
-            type="button"
-            onClick={closeSidebar}
-            className="rounded-md p-1 text-white hover:bg-[#2D6B3B]"
-            aria-label="사이드바 닫기"
-          >
-            <X size={20} />
-          </button>
-        </div>
+    <div className="flex min-h-screen bg-admin-bg font-sans text-admin-text-primary selection:bg-admin-brand/30">
+      {/* Mobile Sidebar Overlay */}
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
+          onClick={toggleSidebar}
+        />
       )}
 
-      <div className="flex items-center space-x-3 border-b border-[#333333] p-4">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#2D6B3B]">
-          <span className="font-bold text-[#91F402]">관</span>
+      {/* Sidebar */}
+      <aside className={`
+        fixed inset-y-0 left-0 z-50 w-64 transform bg-admin-sidebar border-r border-admin-border transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0
+        ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}
+      `}>
+        <div className="flex h-full flex-col">
+          {/* Logo Section */}
+          <div className="flex h-16 items-center px-6 border-b border-admin-border">
+            <div className="h-7 w-7 rounded-lg bg-admin-brand shadow-admin-glow flex items-center justify-center">
+              <span className="text-white font-black text-lg">C</span>
+            </div>
+            <span className="ml-2.5 text-lg font-black tracking-tighter text-admin-brand">
+              CH25 ADMIN
+            </span>
+          </div>
+
+          {/* Navigation */}
+          <nav className="flex-1 overflow-y-auto custom-scrollbar px-3 py-4">
+            {navSections.map((section, idx) => {
+              const isCollapsed = collapsedSections[section.heading];
+              const hasActiveItem = section.items.some(item => isPathActive(item.path));
+
+              return (
+                <div key={idx} className="mb-4">
+                  {section.collapsible ? (
+                    <button
+                      type="button"
+                      onClick={() => toggleSection(section.heading)}
+                      className="w-full px-3 mb-2 flex items-center justify-between text-[11px] font-bold text-admin-text-muted uppercase tracking-wider hover:text-admin-text-secondary transition-colors"
+                      aria-label={`${section.heading} 메뉴 ${isCollapsed ? '펼치기' : '접기'}`}
+                    >
+                      <span className="flex items-center gap-1.5">
+                        {hasActiveItem && <span className="w-1 h-1 rounded-full bg-admin-brand" />}
+                        {section.heading}
+                      </span>
+                      <ChevronDown size={12} className={`transition-transform ${isCollapsed ? '-rotate-90' : ''}`} />
+                    </button>
+                  ) : (
+                    <h3 className="px-3 mb-2 text-[11px] font-bold text-admin-text-muted uppercase tracking-wider flex items-center gap-1.5">
+                      {hasActiveItem && <span className="w-1 h-1 rounded-full bg-admin-brand" />}
+                      {section.heading}
+                    </h3>
+                  )}
+
+                  {(!section.collapsible || !isCollapsed) && (
+                    <div className="space-y-0.5">
+                      {section.items.map((item) => {
+                        const isActive = isPathActive(item.path);
+                        return (
+                          <Link
+                            key={item.path}
+                            to={item.path}
+                            onClick={() => setSidebarOpen(false)}
+                            data-testid={navTestId(item.path)}
+                            className={`
+                              group relative flex items-center px-3 py-2.5 rounded-lg transition-all duration-200
+                              ${isActive
+                                ? "bg-admin-brand/10 text-admin-brand"
+                                : "text-admin-text-secondary hover:bg-admin-hover hover:text-admin-text-primary"}
+                            `}
+                          >
+                            {/* Left Accent Bar */}
+                            {isActive && (
+                              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-admin-brand" />
+                            )}
+                            <span className={`transition-colors duration-200 ${isActive ? "text-admin-brand" : "text-admin-text-muted group-hover:text-admin-brand"}`}>
+                              {item.icon}
+                            </span>
+                            <span className="ml-2.5 font-medium text-[13px]">
+                              {item.label}
+                            </span>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </nav>
+
+          {/* Bottom Profile - Simplified */}
+          <div className="p-3 border-t border-admin-border">
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-admin-bg/50">
+              <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-admin-brand to-admin-accent p-[2px]">
+                <div className="h-full w-full rounded-full bg-admin-sidebar flex items-center justify-center text-[10px] font-bold">
+                  ADM
+                </div>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-bold text-admin-text-primary truncate">MASTER ADMIN</p>
+                <div className="flex items-center text-[10px] text-admin-accent">
+                  <span className="h-1.5 w-1.5 rounded-full bg-admin-accent mr-1 animate-pulse" />
+                  ONLINE
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div>
-          <h3 className="font-medium text-[#91F402]">관리자 메뉴</h3>
-          <p className="text-xs text-gray-400">운영자용</p>
-        </div>
-      </div>
+      </aside>
 
-      <nav className="flex-1 overflow-y-auto py-4">
-        <ul className="space-y-4 px-2">
-          {navSections.map((section) => {
-            const isOpen = openSections[section.heading] ?? true;
-            return (
-              <li key={section.heading} className="space-y-1">
-                <button
-                  type="button"
-                  onClick={() => setOpenSections((prev) => ({ ...prev, [section.heading]: !isOpen }))}
-                  className="flex w-full items-center justify-between rounded-md px-2 py-2 text-left text-xs font-semibold uppercase tracking-wide text-[#91F402] hover:bg-[#1A1A1A]"
-                >
-                  <span className="flex items-center gap-2">
-                    <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: accent }} />
-                    {section.heading}
-                  </span>
-                  <ChevronDown
-                    size={16}
-                    className={`text-[#91F402] transition-transform ${isOpen ? "rotate-0" : "-rotate-90"}`}
-                    aria-hidden
-                  />
-                </button>
-
-                {isOpen && (
-                  <div className="space-y-1">
-                    {section.items.map((item) => (
-                      <NavLink
-                        key={item.path}
-                        to={item.path}
-                        end
-                        onClick={() => {
-                          if (mobile) closeSidebar?.();
-                        }}
-                        className={({ isActive }) =>
-                          `flex items-center gap-3 rounded-md px-3 py-2 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#91F402] ${isActive
-                            ? "bg-[#2D6B3B] text-white"
-                            : "text-gray-300 hover:bg-[#1A1A1A] hover:text-white"
-                          }`
-                        }
-                      >
-                        <span className="text-[#91F402]">{item.icon}</span>
-                        <span className="text-sm">{item.label}</span>
-                      </NavLink>
-                    ))}
-                  </div>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
-    </div>
-  );
-};
-
-const Header: React.FC<{ toggleSidebar: () => void }> = ({ toggleSidebar }) => {
-  return (
-    <header className="border-b border-[#333333] bg-[#111111] shadow-sm">
-      <div className="flex items-center justify-between px-3 py-2 sm:px-4 sm:py-3">
-        <div className="flex items-center">
+      {/* Main Content Area */}
+      <div className="flex flex-1 flex-col overflow-hidden">
+        {/* Top Header */}
+        <header className="h-20 flex items-center justify-between px-8 bg-admin-bg/50 backdrop-blur-md border-b border-admin-border z-30">
           <button
             type="button"
+            className="lg:hidden p-2 text-admin-text-secondary hover:bg-admin-hover rounded-lg transition-colors"
             onClick={toggleSidebar}
-            className="rounded-md p-2 text-white hover:bg-[#2D6B3B] md:hidden"
             aria-label="사이드바 열기"
+            title="사이드바 열기"
           >
             <Menu size={24} />
           </button>
-          <h1 className="ml-2 text-base font-semibold text-[#91F402] sm:text-xl md:ml-0">씨씨지민 코드지갑</h1>
-        </div>
-        <div className="flex items-center space-x-4">
-          <button type="button" className="rounded-full p-1 text-[#91F402] hover:bg-[#2D6B3B]" aria-label="알림">
-            <Bell size={20} />
-          </button>
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#2D6B3B] text-[#91F402]" aria-label="사용자">
-            <User size={18} />
+
+          <div className="hidden lg:flex items-center text-admin-meta space-x-2 text-admin-text-muted">
+            <span>Admin</span>
+            <ChevronRight size={14} />
+            <span className="text-admin-text-primary font-semibold capitalize">
+              {location.pathname.split("/").pop() || "Dashboard"}
+            </span>
           </div>
-        </div>
-      </div>
-    </header>
-  );
-};
 
-const AdminLayout: React.FC = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const toggleSidebar = () => setSidebarOpen((p) => !p);
+          <div className="flex items-center space-x-4">
+            <button
+              type="button"
+              aria-label="알림"
+              title="알림"
+              className="p-2.5 text-admin-text-secondary hover:bg-admin-hover hover:text-admin-brand rounded-full transition-all relative"
+            >
+              <Bell size={20} />
+              <div className="absolute top-2 right-2 w-2 h-2 bg-admin-danger rounded-full border-2 border-admin-bg" />
+            </button>
+            <div className="h-8 w-px bg-admin-border mx-2" />
+            <div className="flex items-center gap-3 pl-2">
+              <div className="text-right hidden sm:block">
+                <p className="text-admin-meta font-bold">CC Jimin</p>
+                <p className="text-[10px] text-admin-text-muted">Director of Ops</p>
+              </div>
+            </div>
+          </div>
+        </header>
 
-  useEffect(() => {
-    if (!sidebarOpen) return;
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prevOverflow;
-    };
-  }, [sidebarOpen]);
-
-  const mobileSidebar = useMemo(() => {
-    if (!sidebarOpen) return null;
-    return (
-      <div className="fixed inset-0 z-40 md:hidden">
-        <div className="fixed inset-0 bg-black bg-opacity-70" onClick={toggleSidebar} />
-        <div className="fixed inset-y-0 left-0 w-64">
-          <Sidebar mobile closeSidebar={toggleSidebar} />
-        </div>
-      </div>
-    );
-  }, [sidebarOpen]);
-
-  return (
-    <div className="flex h-full min-h-screen bg-[#0A0A0A] font-['Noto_Sans_KR'] text-white">
-      <div className="hidden md:block">
-        <Sidebar />
-      </div>
-
-      {mobileSidebar}
-
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <Header toggleSidebar={toggleSidebar} />
-        <main className="flex-1 overflow-y-auto overflow-x-hidden border-t border-[#222222] bg-[#0A0A0A] p-3 text-white sm:p-4 md:p-6">
-          <Outlet />
+        {/* Dynamic Page Content */}
+        <main className="flex-1 overflow-y-auto custom-scrollbar bg-admin-bg">
+          <div className="admin-page-container">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

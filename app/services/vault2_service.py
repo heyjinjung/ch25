@@ -231,6 +231,15 @@ class Vault2Service:
         mode = (cfg.get("eligibility_mode") or "all").lower()
         allow = set(cfg.get("eligibility_allow") or [])
         block = set(cfg.get("eligibility_block") or [])
+        
+        # Segment-based override (if configured)
+        segment_allow = cfg.get("eligibility_segment_allow")
+        if segment_allow:
+            from app.models.user_segment import UserSegment
+            user_seg = db.query(UserSegment).filter(UserSegment.user_id == user_id).first()
+            user_segment_val = user_seg.segment if user_seg else "NEW"
+            if user_segment_val != segment_allow:
+                return False
 
         if mode == "allowlist":
             return user_id in allow
@@ -582,11 +591,33 @@ class Vault2Service:
             .scalar()
         ) or 0
 
+        # 5. Total Vault Balances (Locked, Available, Reserved)
+        from app.models.external_ranking import ExternalRankingData
+        from app.models.vault_withdrawal_request import VaultWithdrawalRequest
+
+        total_assets = db.query(func.sum(ExternalRankingData.deposit_amount)).scalar() or 0
+        
+        # Breakdown of Vault states
+        total_locked = db.query(func.sum(User.vault_locked_balance)).scalar() or 0
+        total_available = db.query(func.sum(User.vault_available_balance)).scalar() or 0
+        
+        # Reserved: Sum of pending withdrawal requests
+        total_reserved = db.query(func.sum(VaultWithdrawalRequest.amount))\
+            .filter(VaultWithdrawalRequest.status == "PENDING")\
+            .scalar() or 0
+            
+        total_liabilities = total_locked + total_available + total_reserved
+
         return {
             "today_accrual": accrual_summary,
             "today_skips": skip_summary,
             "expiring_soon_24h": expiring_soon_count,
             "today_unlock_cash": int(unlocked_cash_today),
+            "total_assets": int(total_assets),
+            "total_liabilities": int(total_liabilities),
+            "total_locked": int(total_locked),
+            "total_available": int(total_available),
+            "total_reserved": int(total_reserved),
             "timestamp": now_dt.isoformat()
         }
 
@@ -736,7 +767,8 @@ class Vault2Service:
         if user:
             user.vault_locked_balance = new_locked
             user.vault_available_balance = new_avail
-            user.vault_balance = new_locked + new_avail  # Mirror sum
+            # Legacy mirror: keep consistent with Phase 1 SoT (locked only).
+            user.vault_balance = int(new_locked)
             user.vault_locked_expires_at = status.expires_at
             db.add(user)
         
@@ -828,7 +860,8 @@ class Vault2Service:
         if user:
             user.vault_locked_balance = int(next_locked)
             user.vault_available_balance = int(next_available)
-            user.vault_balance = int(next_locked) + int(next_available)
+            # Legacy mirror: keep consistent with Phase 1 SoT (locked only).
+            user.vault_balance = int(next_locked)
             user.vault_locked_expires_at = status.expires_at
             db.add(user)
 

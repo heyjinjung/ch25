@@ -54,6 +54,8 @@ services:
       DATABASE_URL: mysql+pymysql://${MYSQL_USER:-xmasuser}:${MYSQL_PASSWORD:-xmaspass}@db:3306/${MYSQL_DATABASE:-xmas_event}
       REDIS_URL: redis://redis:6379/0
       TZ: Asia/Seoul
+      TEAM_BATTLE_POINTS_PER_PLAY: ${TEAM_BATTLE_POINTS_PER_PLAY:-10}
+      TEAM_BATTLE_DAILY_PLAY_CAP: ${TEAM_BATTLE_DAILY_PLAY_CAP:-500}
       # Unified Economy / Vault accrual flags (production defaults; override via .env if needed)
       ENABLE_VAULT_GAME_EARN_EVENTS: ${ENABLE_VAULT_GAME_EARN_EVENTS:-true}
       ENABLE_TRIAL_PAYOUT_TO_VAULT: ${ENABLE_TRIAL_PAYOUT_TO_VAULT:-true}
@@ -150,6 +152,8 @@ services:
       DATABASE_URL: mysql+pymysql://${MYSQL_USER:-xmasuser}:${MYSQL_PASSWORD:-xmaspass}@db:3306/${MYSQL_DATABASE:-xmas_event}
       REDIS_URL: redis://redis:6379/0
       TZ: Asia/Seoul
+      TEAM_BATTLE_POINTS_PER_PLAY: ${TEAM_BATTLE_POINTS_PER_PLAY:-10}
+      TEAM_BATTLE_DAILY_PLAY_CAP: ${TEAM_BATTLE_DAILY_PLAY_CAP:-500}
       # Keep bot behavior consistent with backend in production
       ENABLE_VAULT_GAME_EARN_EVENTS: ${ENABLE_VAULT_GAME_EARN_EVENTS:-true}
       ENABLE_TRIAL_PAYOUT_TO_VAULT: ${ENABLE_TRIAL_PAYOUT_TO_VAULT:-true}

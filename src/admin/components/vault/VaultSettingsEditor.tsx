@@ -97,22 +97,22 @@ const VaultSettingsEditor: React.FC<Props> = ({ program }) => {
         mutation.mutate(json);
     };
 
-    const inputClass = "w-full rounded-md border border-[#333] bg-[#0A0A0A] px-3 py-2 text-sm text-gray-200 focus:border-[#91F402] focus:outline-none";
+    const inputClass = "admin-input w-full";
 
     return (
         <div className="space-y-8">
             <div className="flex items-center justify-between">
                 <div>
-                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                        <Zap className="h-5 w-5 text-yellow-400" />
+                    <h3 className="text-admin-subtitle text-admin-text-primary flex items-center gap-2">
+                        <Zap className="h-5 w-5 text-admin-warning" />
                         금고 운영 파라미터
                     </h3>
-                    <p className="text-sm text-gray-400">적립 배수, 게임별 적립액, 체험 플레이 보상 가치를 설정합니다.</p>
+                    <p className="text-admin-body text-admin-text-secondary">적립 배수, 게임 적립금, 체험 티켓 보상 가치를 설정합니다.</p>
                 </div>
                 <button
                     onClick={saveConfig}
                     disabled={mutation.isPending}
-                    className="flex items-center gap-2 rounded-md bg-[#2D6B3B] px-6 py-2.5 text-sm font-bold text-white hover:bg-[#91F402] hover:text-black transition-all shadow-lg active:scale-95"
+                    className="btn-admin-primary"
                 >
                     <Save className="h-4 w-4" />
                     설정 저장
@@ -121,10 +121,10 @@ const VaultSettingsEditor: React.FC<Props> = ({ program }) => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-6">
-                    <div className="rounded-xl border border-[#333] bg-[#111] p-6">
+                    <div className="admin-card p-6">
                         <div className="flex items-center justify-between mb-4">
-                            <h4 className="text-sm font-bold text-white">이벤트 적립 배수 (Multiplier)</h4>
-                            <span className="px-2 py-0.5 rounded bg-yellow-400/10 text-yellow-400 text-[10px] font-bold uppercase tracking-widest border border-yellow-400/20">Active Policy</span>
+                            <h4 className="text-admin-body font-bold text-admin-text-primary">이벤트 적립 배수 (Multiplier)</h4>
+                            <span className="px-2 py-0.5 rounded-admin-lg bg-admin-hover text-admin-warning text-[10px] font-bold uppercase tracking-widest border border-admin-border">Active Policy</span>
                         </div>
                         <div className="space-y-4">
                             <div className="flex items-center gap-4">
@@ -135,83 +135,97 @@ const VaultSettingsEditor: React.FC<Props> = ({ program }) => {
                                         className={inputClass}
                                         value={multiplier}
                                         onChange={e => setMultiplier(parseFloat(e.target.value) || 1.0)}
+                                        aria-label="적립 배수"
+                                        title="적립 배수"
                                     />
                                 </div>
-                                <div className="text-2xl font-black text-white">x</div>
+                                <div className="text-2xl font-black text-admin-text-primary">x</div>
                             </div>
-                            <p className="text-xs text-gray-500 leading-relaxed">
-                                모든 금고 적립(게임 플레이/체험) 시 적용되는 전역 배수입니다.
-                                기본값은 1.0이며, 이벤트 기간 동안만 상향 조정을 권장합니다.
+                            <p className="text-admin-meta text-admin-text-secondary leading-relaxed">
+                                모든 금고 적립(게임/티켓/체험)에 적용되는 전역 배수입니다. 기본값은 1.0이며, 이벤트 기간에만 조정하는 것을 권장합니다.
                             </p>
                         </div>
                     </div>
 
-                    <div className="rounded-xl border border-[#333] bg-[#111] p-6">
-                        <h4 className="text-sm font-bold text-white flex items-center gap-2 mb-4">
-                            <HelpCircle className="h-4 w-4 text-blue-400" />
+                    <div className="admin-card p-6">
+                        <h4 className="text-admin-body font-bold text-admin-text-primary flex items-center gap-2 mb-4">
+                            <HelpCircle className="h-4 w-4 text-admin-brand" />
                             운영 설정 가이드
                         </h4>
-                        <div className="space-y-3 text-xs text-gray-400 leading-relaxed">
-                            <p>• <b>게임 적립액:</b> 게임 종류(ROULETTE, DICE)와 결과(WIN, LOSE, SEGMENT_N)별로 금고에 쌓일 기본 포인트를 설정합니다.</p>
-                            <p>• <b>RewardID 형식:</b> <code>[Type]:[Amount]</code> (예: <code>POINT:1000</code>). 체험 플레이 결과 매칭 시 적립됩니다.</p>
-                            <p>• <b>누락 시:</b> 해당 보상은 금고 적립에서 스킵됩니다 (Discord 알림 발송).</p>
+                        <div className="space-y-3 text-admin-meta text-admin-text-secondary leading-relaxed">
+                            <p>• <b>게임 적립금</b>: 게임 종류(ROULETTE, DICE)와 결과(WIN, LOSE, SEGMENT_N)별로 금고에 반영되는 기본 금액을 설정합니다.</p>
+                            <p>• <b>RewardID 형식</b>: <code>[Type]:[Amount]</code> (예: <code>POINT:1000</code>). 체험 티켓 결과 매칭에 사용됩니다.</p>
+                            <p>• <b>누락 시</b>: 해당 보상이 금고 적립에서 스킵될 수 있습니다.</p>
                         </div>
                     </div>
                 </div>
 
                 {/* Game Earn Config Section */}
-                <div className="rounded-xl border border-[#333] bg-[#111] overflow-hidden">
-                    <div className="p-4 border-b border-[#222] bg-[#1a1a1a] flex items-center justify-between">
-                        <h4 className="text-sm font-bold text-white">게임 플레이 적립 설정 (Game Earn)</h4>
+                <div className="admin-card overflow-hidden">
+                    <div className="p-4 border-b border-admin-border bg-admin-sidebar/80 flex items-center justify-between">
+                        <h4 className="text-admin-body font-bold text-admin-text-primary">게임 적립 설정 (Game Earn)</h4>
                         <button
                             onClick={addGameEarn}
-                            className="p-1.5 rounded-md hover:bg-[#333] text-[#91F402] transition-colors"
+                            className="btn-admin-ghost p-2"
+                            aria-label="게임 적립 항목 추가"
+                            title="게임 적립 항목 추가"
                         >
                             <Plus className="h-4 w-4" />
                         </button>
                     </div>
-                    <div className="max-h-[300px] overflow-y-auto">
-                        <table className="w-full text-left text-sm">
-                            <thead className="bg-[#0a0a0a] text-gray-500 sticky top-0 uppercase text-[10px] tracking-widest">
+                    <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
+                        <table className="admin-table">
+                            <thead className="bg-admin-sidebar/60 sticky top-0">
                                 <tr>
-                                    <th className="px-4 py-2">Game</th>
-                                    <th className="px-4 py-2">Outcome</th>
-                                    <th className="px-4 py-2">Amount</th>
-                                    <th className="px-4 py-2"></th>
+                                    <th className="admin-th">Game</th>
+                                    <th className="admin-th">Outcome</th>
+                                    <th className="admin-th">Amount</th>
+                                    <th className="admin-th"></th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-[#222]">
+                            <tbody>
                                 {gameEarn.map((g, i) => (
                                     <tr key={i}>
-                                        <td className="px-4 py-2">
+                                        <td className="admin-td">
                                             <select
                                                 className={inputClass}
                                                 value={g.game}
                                                 onChange={e => updateGameEarn(i, "game", e.target.value)}
+                                                aria-label={`게임 종류 ${i + 1}`}
+                                                title="게임 종류"
                                             >
                                                 <option value="ROULETTE">ROULETTE</option>
                                                 <option value="DICE">DICE</option>
                                                 <option value="LOTTERY">LOTTERY</option>
                                             </select>
                                         </td>
-                                        <td className="px-4 py-2">
+                                        <td className="admin-td">
                                             <input
                                                 className={inputClass}
                                                 value={g.outcome}
                                                 onChange={e => updateGameEarn(i, "outcome", e.target.value)}
                                                 placeholder="WIN, LOSE, SEGMENT_0..."
+                                                aria-label={`결과(outcome) ${i + 1}`}
+                                                title="Outcome"
                                             />
                                         </td>
-                                        <td className="px-4 py-2">
+                                        <td className="admin-td">
                                             <input
                                                 type="number"
                                                 className={inputClass}
                                                 value={g.amount}
                                                 onChange={e => updateGameEarn(i, "amount", parseInt(e.target.value) || 0)}
+                                                aria-label={`금액(amount) ${i + 1}`}
+                                                title="Amount"
                                             />
                                         </td>
-                                        <td className="px-4 py-2 text-right">
-                                            <button onClick={() => removeGameEarn(i)} className="p-2 text-gray-600 hover:text-red-500">
+                                        <td className="admin-td text-right">
+                                            <button
+                                                onClick={() => removeGameEarn(i)}
+                                                className="btn-admin-ghost p-2 text-admin-danger"
+                                                aria-label={`게임 적립 항목 삭제 ${i + 1}`}
+                                                title="삭제"
+                                            >
                                                 <Trash2 className="h-4 w-4" />
                                             </button>
                                         </td>
@@ -219,7 +233,7 @@ const VaultSettingsEditor: React.FC<Props> = ({ program }) => {
                                 ))}
                                 {gameEarn.length === 0 && (
                                     <tr>
-                                        <td colSpan={4} className="px-6 py-8 text-center text-gray-600 italic">설정된 게임 적립 데이터가 없습니다.</td>
+                                        <td colSpan={4} className="px-6 py-8 text-center text-admin-text-secondary italic">설정된 게임 적립 항목이 없습니다.</td>
                                     </tr>
                                 )}
                             </tbody>
@@ -229,46 +243,57 @@ const VaultSettingsEditor: React.FC<Props> = ({ program }) => {
             </div>
 
             {trialPayoutEnabled && (
-                <div className="rounded-xl border border-[#333] bg-[#111] overflow-hidden">
-                    <div className="p-4 border-b border-[#222] bg-[#1a1a1a] flex items-center justify-between">
-                        <h4 className="text-sm font-bold text-white">체험 플레이 보상 가치 설정 (Valuation)</h4>
+                <div className="admin-card overflow-hidden">
+                    <div className="p-4 border-b border-admin-border bg-admin-sidebar/80 flex items-center justify-between">
+                        <h4 className="text-admin-body font-bold text-admin-text-primary">체험 티켓 보상 가치 설정 (Valuation)</h4>
                         <button
                             onClick={addValuation}
-                            className="p-1.5 rounded-md hover:bg-[#333] text-[#91F402] transition-colors"
+                            className="btn-admin-ghost p-2"
+                            aria-label="Valuation 항목 추가"
+                            title="Valuation 항목 추가"
                         >
                             <Plus className="h-4 w-4" />
                         </button>
                     </div>
-                    <div className="max-h-[500px] overflow-y-auto">
-                        <table className="w-full text-left text-sm">
-                            <thead className="bg-[#0a0a0a] text-gray-500 sticky top-0 uppercase text-[10px] tracking-widest">
+                    <div className="max-h-[500px] overflow-y-auto custom-scrollbar">
+                        <table className="admin-table">
+                            <thead className="bg-admin-sidebar/60 sticky top-0">
                                 <tr>
-                                    <th className="px-6 py-3">Reward ID</th>
-                                    <th className="px-6 py-3">Valuation (KRW)</th>
-                                    <th className="px-6 py-3"></th>
+                                    <th className="admin-th">Reward ID</th>
+                                    <th className="admin-th">Valuation (KRW)</th>
+                                    <th className="admin-th"></th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-[#222]">
+                            <tbody>
                                 {valuations.map((v, i) => (
                                     <tr key={i}>
-                                        <td className="px-6 py-3">
+                                        <td className="admin-td">
                                             <input
                                                 className={inputClass}
                                                 value={v.rewardId}
                                                 onChange={e => updateValuation(i, "rewardId", e.target.value)}
                                                 placeholder="예: POINT:1000"
+                                                aria-label={`Reward ID ${i + 1}`}
+                                                title="Reward ID"
                                             />
                                         </td>
-                                        <td className="px-6 py-3">
+                                        <td className="admin-td">
                                             <input
                                                 type="number"
                                                 className={inputClass}
                                                 value={v.amount}
                                                 onChange={e => updateValuation(i, "amount", parseInt(e.target.value) || 0)}
+                                                aria-label={`Valuation 금액 ${i + 1}`}
+                                                title="Valuation"
                                             />
                                         </td>
-                                        <td className="px-6 py-3 text-right">
-                                            <button onClick={() => removeValuation(i)} className="p-2 text-gray-600 hover:text-red-500">
+                                        <td className="admin-td text-right">
+                                            <button
+                                                onClick={() => removeValuation(i)}
+                                                className="btn-admin-ghost p-2 text-admin-danger"
+                                                aria-label={`Valuation 항목 삭제 ${i + 1}`}
+                                                title="삭제"
+                                            >
                                                 <Trash2 className="h-4 w-4" />
                                             </button>
                                         </td>
@@ -276,7 +301,7 @@ const VaultSettingsEditor: React.FC<Props> = ({ program }) => {
                                 ))}
                                 {valuations.length === 0 && (
                                     <tr>
-                                        <td colSpan={3} className="px-6 py-12 text-center text-gray-600 italic">설정된 가치 데이터가 없습니다.</td>
+                                        <td colSpan={3} className="px-6 py-12 text-center text-admin-text-secondary italic">설정된 가치 항목이 없습니다.</td>
                                     </tr>
                                 )}
                             </tbody>

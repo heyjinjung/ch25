@@ -99,24 +99,11 @@ class RewardService:
 
         now = datetime.utcnow()
         user.vault_locked_balance = (user.vault_locked_balance or 0) + amount
-        
-        # [REFACTORED] Vault Expiry Logic Disabled (Phase 3)
-        # VaultService._ensure_locked_expiry(user, now)  <-- DISABLED 
+
+        # Vault Expiry Logic: controlled by VaultService; RewardService does not manage it.
         VaultService.sync_legacy_mirror(user)
-        
-        # [NEW] Ledger Entry for Vault Grant (Reward)
-        entry = UserCashLedger(
-            user_id=user_id,
-            delta=amount,
-            balance_after=user.vault_locked_balance,
-            reason=reason or "VAULT_GRANT",
-            label=label,
-            meta_json={**(meta or {}), "asset_type": "VAULT"},
-            created_at=now
-        )
-        
+
         db.add(user)
-        db.add(entry)
 
         if commit:
             db.commit()
@@ -181,22 +168,68 @@ class RewardService:
                 SeasonPassService().add_bonus_xp(db, user_id=user_id, xp_amount=xp_amount, commit=commit)
             return
 
-        # 2) POINT / CC_POINT: Vault Locked Balance (Direct Accrual)
-        # - 기존 xp_from_game_reward 플래그 제거 (게임 XP는 반드시 GAME_XP 타입으로만 지급)
-        # - cash_balance 지급 로직 제거 -> 무조건 _grant_vault_locked
-        if reward_type in {"POINT", "CC_POINT"}:
+        # 2) POINT: context-aware routing
+        # Policy (tests + docs):
+        # - Game POINT (e.g., reason=dice_play): do NOT write cash_balance; optionally convert to XP when xp_from_game_reward=True
+        # - Season pass POINT: accrue to vault_locked_balance
+        if reward_type == "POINT":
+            settings = get_settings()
             reason = (meta or {}).get("reason") if meta else None
+            source = (meta or {}).get("source") if meta else None
             label = (meta or {}).get("label") if meta else None
-            
-            # NOTE: 키 룰렛 등에서 강제로 POINT로 들어오는 경우도 여기서 금고로 통합됨.
+
+            is_game_point = str(reason or "").lower() == "dice_play" or (meta or {}).get("game_xp") is not None
+            if is_game_point:
+                if bool(getattr(settings, "xp_from_game_reward", False)):
+                    from app.services.season_pass_service import SeasonPassService  # pylint: disable=import-outside-toplevel
+
+                    bonus = int((meta or {}).get("game_xp") or 0)
+                    SeasonPassService().add_bonus_xp(
+                        db,
+                        user_id=user_id,
+                        xp_amount=int(reward_amount) + bonus,
+                        commit=commit,
+                    )
+                # When not converting to XP, game POINT is a no-op (no cash/vault writes).
+                return
+
+            is_season_pass_point = "SEASON_PASS" in str(source or "").upper() or "SEASON_PASS" in str(reason or "").upper()
+            if is_season_pass_point:
+                self._grant_vault_locked(
+                    db,
+                    user_id=user_id,
+                    amount=reward_amount,
+                    reason=reason or "SEASON_PASS_POINT",
+                    label=label,
+                    meta=meta,
+                    commit=commit,
+                )
+                return
+
+            # Default POINT routing: vault_locked_balance (Single-SoT)
             self._grant_vault_locked(
-                db, 
-                user_id=user_id, 
-                amount=reward_amount, 
-                reason=reason or f"REWARD_{reward_type}", 
+                db,
+                user_id=user_id,
+                amount=reward_amount,
+                reason=reason or "POINT",
                 label=label,
                 meta=meta,
-                commit=commit
+                commit=commit,
+            )
+            return
+
+        # 2b) CC_POINT: always vault_locked_balance (Single-SoT)
+        if reward_type == "CC_POINT":
+            reason = (meta or {}).get("reason") if meta else None
+            label = (meta or {}).get("label") if meta else None
+            self._grant_vault_locked(
+                db,
+                user_id=user_id,
+                amount=reward_amount,
+                reason=reason or "CC_POINT",
+                label=label,
+                meta=meta,
+                commit=commit,
             )
             return
 

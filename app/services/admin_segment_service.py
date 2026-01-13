@@ -145,6 +145,11 @@ class AdminSegmentService:
                 dice_plays=getattr(act, "dice_plays", 0) if act else 0,
                 lottery_plays=getattr(act, "lottery_plays", 0) if act else 0,
                 total_play_duration=getattr(act, "total_play_duration", 0) if act else 0,
+                level=user.level or 1,
+                xp=user.xp or 0,
+                cash_balance=float(user.cash_balance or 0),
+                vault_balance=float(user.vault_balance or 0),
+                login_streak=user.login_streak or 0,
             )
             rec = _recommend_segment(enabled_rules, ctx)
             result.append(
@@ -222,6 +227,11 @@ class AdminSegmentService:
             dice_plays=getattr(act, "dice_plays", 0) if act else 0,
             lottery_plays=getattr(act, "lottery_plays", 0) if act else 0,
             total_play_duration=getattr(act, "total_play_duration", 0) if act else 0,
+            level=user.level or 1,
+            xp=user.xp or 0,
+            cash_balance=float(user.cash_balance or 0),
+            vault_balance=float(user.vault_balance or 0),
+            login_streak=user.login_streak or 0,
         )
         rec = _recommend_segment(enabled_rules, ctx)
         return AdminSegmentRow(

@@ -1,6 +1,6 @@
 // src/admin/pages/ExternalRankingPage.tsx
 import React, { useEffect, useRef, useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Save, Search, RefreshCw, Trash2, ChevronLeft, ChevronRight, Hash, X } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   deleteExternalRanking,
@@ -9,6 +9,7 @@ import {
   upsertExternalRanking,
 } from "../api/adminExternalRankingApi";
 import { resolveAdminUser } from "../api/adminUserApi";
+import { formatKstDateTime } from "../../utils/kstTime";
 
 type EditableRow = ExternalRankingPayload & {
   id?: number;
@@ -25,17 +26,17 @@ type ResolveRowStatus =
   | { state: "idle" }
   | { state: "loading" }
   | {
-      state: "ok";
-      user: {
-        id: number;
-        external_id?: string | null;
-        nickname?: string | null;
-        tg_id?: number | null;
-        tg_username?: string | null;
-        real_name?: string | null;
-        phone_number?: string | null;
-      };
-    }
+    state: "ok";
+    user: {
+      id: number;
+      external_id?: string | null;
+      nickname?: string | null;
+      tg_id?: number | null;
+      tg_username?: string | null;
+      real_name?: string | null;
+      phone_number?: string | null;
+    };
+  }
   | { state: "error"; message: string };
 
 const formatTgUsername = (username?: string | null) => {
@@ -46,15 +47,7 @@ const formatTgUsername = (username?: string | null) => {
 
 const newRowKey = () => `new:${Date.now()}:${Math.random().toString(16).slice(2)}`;
 
-const formatKst = (iso?: string) => {
-  const s = String(iso ?? "").trim();
-  if (!s) return "-";
-  try {
-    return new Date(s).toLocaleString("ko-KR");
-  } catch {
-    return s;
-  }
-};
+const formatKst = (iso?: string) => formatKstDateTime(iso);
 
 const ExternalRankingPage: React.FC = () => {
   const queryClient = useQueryClient();
@@ -123,7 +116,7 @@ const ExternalRankingPage: React.FC = () => {
   const upsertMutation = useMutation({
     mutationFn: (payloads: ExternalRankingPayload[]) => upsertExternalRanking(payloads),
     onSuccess: (res) => {
-      // 즉시 UI에 반영 후 서버 데이터도 새로고침
+      // 즉시 UI??반영 ???�버 ?�이?�도 ?�로고침
       if (res?.items) {
         queryClient.setQueryData(["admin", "external-ranking"], res);
         const mappedRows: EditableRow[] = res.items.map((item) => ({
@@ -170,7 +163,7 @@ const ExternalRankingPage: React.FC = () => {
   const deleteMutation = useMutation({
     mutationFn: (userId: number) => deleteExternalRanking(userId),
     onSuccess: (_res, userId) => {
-      // 삭제 직후 목록에서 제거하고 서버 데이터도 새로고침
+      // ??�� 직후 목록?�서 ?�거?�고 ?�버 ?�이?�도 ?�로고침
       setRows((prev) => prev.filter((row) => row.user_id !== userId));
       queryClient.invalidateQueries({ queryKey: ["admin", "external-ranking"] });
     },
@@ -243,22 +236,22 @@ const ExternalRankingPage: React.FC = () => {
         setResolveStatusByKey((prev) => ({
           ...prev,
           [key]: {
-          state: "ok",
-          user: {
-            id: res.user.id,
-            external_id: res.user.external_id,
-            nickname: res.user.nickname,
-            tg_id: res.user.tg_id,
-            tg_username: res.user.tg_username,
-            real_name: res.user.real_name,
-            phone_number: res.user.phone_number,
+            state: "ok",
+            user: {
+              id: res.user.id,
+              external_id: res.user.external_id,
+              nickname: res.user.nickname,
+              tg_id: res.user.tg_id,
+              tg_username: res.user.tg_username,
+              real_name: res.user.real_name,
+              phone_number: res.user.phone_number,
+            },
           },
-        },
         }));
       }
       return true;
     } catch (err: any) {
-      const msg = err?.response?.data?.detail || err?.message || "resolve 실패";
+      const msg = err?.response?.data?.detail || err?.message || "매칭 실패";
       if (key) setResolveStatusByKey((prev) => ({ ...prev, [key]: { state: "error", message: String(msg) } }));
       return false;
     }
@@ -347,316 +340,277 @@ const ExternalRankingPage: React.FC = () => {
   const pageEnd = Math.min(pageStart + pageSize, totalVisible);
   const pageItems = sortedVisible.slice(pageStart, pageEnd);
 
-  const inputBase =
-    "w-full rounded-md border border-[#333333] bg-[#0A0A0A] px-3 py-2 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:ring-1 focus:ring-[#91F402] focus:border-[#91F402] transition-colors";
-
-  const PrimaryButton = ({
-    children,
-    className,
-    ...props
-  }: React.ButtonHTMLAttributes<HTMLButtonElement> & { children: React.ReactNode }) => (
-    <button
-      type="button"
-      className={[
-        "inline-flex items-center rounded-md bg-[#2D6B3B] px-4 py-2 text-sm font-medium text-white hover:bg-[#91F402] hover:text-black disabled:cursor-not-allowed disabled:opacity-60",
-        className,
-      ]
-        .filter(Boolean)
-        .join(" ")}
-      {...props}
-    >
-      {children}
-    </button>
-  );
-
-  const SecondaryButton = ({
-    children,
-    className,
-    ...props
-  }: React.ButtonHTMLAttributes<HTMLButtonElement> & { children: React.ReactNode }) => (
-    <button
-      type="button"
-      className={[
-        "inline-flex items-center rounded-md border border-[#333333] bg-[#1A1A1A] px-4 py-2 text-sm font-medium text-gray-200 hover:bg-[#2C2C2E] disabled:cursor-not-allowed disabled:opacity-60",
-        className,
-      ]
-        .filter(Boolean)
-        .join(" ")}
-      {...props}
-    >
-      {children}
-    </button>
-  );
 
   return (
-    <section className="space-y-5">
-      <header className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-[#91F402]">랭킹 입력</h2>
-          <p className="mt-1 text-sm text-gray-400">타 플랫폼 입금/게임횟수를 수기로 적어 랭킹에 반영합니다. 숫자는 0 이상으로 입력하세요.</p>
+    <section className="admin-page-container space-y-10 pb-20">
+      <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between mb-8">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-bold text-admin-text-base tracking-tight uppercase">
+            외부 랭킹 관리 <span className="text-admin-brand/40">External Ranking</span>
+          </h1>
         </div>
-        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
-          <SecondaryButton onClick={addRow} className="w-full justify-center sm:w-auto">
-            <Plus size={18} className="mr-2" />
-            행 추가
-          </SecondaryButton>
-          <PrimaryButton
+        <div className="flex items-center gap-3">
+          <button
+            onClick={addRow}
+            className="btn-admin-secondary flex items-center gap-2 px-5 py-2.5 h-auto text-sm"
+          >
+            <Plus className="h-4 w-4" /> 행 추가
+          </button>
+          <button
             onClick={saveAll}
             disabled={upsertMutation.isPending || !isDirty}
-            className="w-full justify-center sm:w-auto"
+            className="btn-admin-primary flex items-center gap-2 px-6 py-2.5 h-auto text-sm shadow-lg shadow-admin-brand/20 disabled:opacity-50"
           >
-            {upsertMutation.isPending ? "저장 중..." : "전체 저장"}
-          </PrimaryButton>
+            <Save className="h-4 w-4" />
+            {upsertMutation.isPending ? "저장 중..." : "전체 저장 (Save All)"}
+          </button>
         </div>
       </header>
 
       {isLoading && (
-        <div className="rounded-lg border border-[#333333] bg-[#111111] p-4 text-gray-200">불러오는 중...</div>
+        <div className="admin-card p-4 text-admin-body text-admin-text-secondary">불러오는 중...</div>
       )}
       {isError && (
-        <div className="rounded-lg border border-red-500/40 bg-red-950 p-4 text-red-100">불러오기 실패: {(error as Error).message}</div>
+        <div className="admin-card p-4 text-admin-body text-red-200">불러오기 실패: {(error as Error).message}</div>
       )}
 
-      <div className="rounded-lg border border-[#333333] bg-[#111111] px-4 py-3 text-sm text-gray-300">
-        총 <span className="font-medium text-white">{rows.length}</span>행
-        {rowSearchApplied ? (
-          <span className="ml-2 text-gray-500">(검색 적용: {totalVisible}행)</span>
-        ) : (
-          <span className="ml-2 text-gray-500">(입력 후 전체 저장을 누르세요)</span>
-        )}
-        <span className="ml-3 text-xs text-gray-500">변경사항: {isDirty ? "있음" : "없음"}</span>
-      </div>
-
-      <div className="rounded-lg border border-[#333333] bg-[#0A0A0A] p-3">
-        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end">
-          <div className="flex w-full flex-col sm:w-auto">
-            <label className="text-xs text-gray-400">행 검색(적용형)</label>
+      {/* Transparent Search & Controls */}
+      <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between px-2">
+        <div className="flex-1 max-w-xl">
+          <label className="text-xs font-black text-zinc-500 uppercase tracking-widest mb-3 block ml-1">매칭 데이터 검색 (Search)</label>
+          <div className="relative group">
+            <Search className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 group-focus-within:text-admin-brand transition-colors" />
             <input
               value={rowSearchInput}
               onChange={(e) => setRowSearchInput(e.target.value)}
-              className={inputBase + " sm:w-72"}
-              placeholder="identifier / memo / user_id"
+              className="w-full bg-transparent border-b border-zinc-800 py-2.5 pl-8 text-sm text-zinc-200 focus:outline-none focus:border-admin-brand transition-colors placeholder:text-zinc-600 font-medium"
+              placeholder="식별자 / 메모 / User ID 검색..."
               onKeyDown={(e) => {
                 if (e.key === "Enter") applyRowSearch();
               }}
             />
+            {rowSearchInput && (
+              <button
+                onClick={clearRowSearch}
+                className="absolute right-0 top-1/2 -translate-y-1/2 p-1.5 text-zinc-600 hover:text-zinc-300 transition-colors"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
           </div>
-          <div className="flex w-full gap-2 sm:w-auto">
-            <SecondaryButton onClick={applyRowSearch} className="w-full justify-center sm:w-auto">
-              검색 적용
-            </SecondaryButton>
-            <SecondaryButton
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={applyRowSearch}
+            className="px-5 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-lg text-xs font-black uppercase tracking-widest transition-all active:scale-95"
+          >
+            검색 적용 (Search)
+          </button>
+          {rowSearchApplied && (
+            <button
               onClick={clearRowSearch}
-              disabled={!rowSearchInput && !rowSearchApplied}
-              className="w-full justify-center sm:w-auto"
+              className="px-4 py-2 text-zinc-500 hover:text-zinc-300 text-xs font-bold transition-colors"
             >
               초기화
-            </SecondaryButton>
-          </div>
+            </button>
+          )}
+        </div>
 
-          <div className="flex w-full flex-wrap items-end gap-2 sm:ml-auto sm:w-auto">
-            <div className="flex w-full flex-col sm:w-auto">
-              <label className="text-xs text-gray-400">페이지 크기</label>
-              <select
-                className={inputBase + " sm:w-32"}
-                value={pageSize}
-                onChange={(e) => {
-                  setPageSize(Number(e.target.value));
-                  setPage(0);
-                }}
-              >
-                <option value={20}>20</option>
-                <option value={50}>50</option>
-                <option value={100}>100</option>
-              </select>
-            </div>
-            <div className="text-xs text-gray-500">{totalVisible === 0 ? "0" : pageStart + 1}-{pageEnd} / {totalVisible}</div>
+        <div className="hidden lg:flex items-center gap-6 ml-auto">
+          <div className="flex items-center gap-3">
+            <span className="text-xs uppercase text-zinc-500 font-black tracking-widest">ROWS</span>
+            <select
+              className="bg-zinc-900 border border-zinc-800 rounded-lg pr-8 pl-3 py-1.5 text-xs font-bold text-zinc-300 focus:border-admin-brand outline-none appearance-none cursor-pointer"
+              value={pageSize}
+              onChange={(e) => {
+                setPageSize(Number(e.target.value));
+                setPage(0);
+              }}
+            >
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+          </div>
+          <div className="h-8 w-px bg-zinc-800" />
+          <div className="text-right">
+            <p className="text-[10px] font-black text-zinc-600 uppercase tracking-tighter mb-0.5">Showing Results</p>
+            <p className="text-xs font-black font-mono text-zinc-400">
+              {totalVisible === 0 ? "0" : pageStart + 1}-{pageEnd} <span className="text-zinc-600">/</span> {totalVisible}
+            </p>
           </div>
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-[#333333] bg-[#111111] shadow-md">
-        <div className="max-h-[600px] overflow-auto">
-          <table className="w-full">
-            <thead className="sticky top-0 z-10 border-b border-[#333333] bg-[#1A1A1A]">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                  <button type="button" onClick={() => toggleSort("identifier")} className="inline-flex items-center gap-1 text-gray-400 hover:text-gray-200" title="정렬">
-                    identifier
-                    <span className={sortKey === "identifier" ? "text-[#91F402]" : "text-gray-600"}>
-                      {sortKey === "identifier" ? (sortDir === "asc" ? "▲" : "▼") : "↕"}
-                    </span>
+      <div className="admin-card-premium overflow-hidden mt-6">
+        <div className="overflow-x-auto custom-scrollbar max-h-[700px]">
+          <table className="admin-table sticky-header">
+            <thead>
+              <tr className="bg-zinc-900 border-b border-zinc-800">
+                <th className="px-4 py-3 text-left text-sm font-bold text-zinc-500 uppercase tracking-widest w-[240px]">
+                  <button type="button" onClick={() => toggleSort("identifier")} className="flex items-center gap-2 group hover:text-zinc-300 transition-colors">
+                    <Hash className="h-4 w-4" />
+                    <span>식별자 (Identifier)</span>
                   </button>
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">TG ID / Username</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">실명/연락처</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">닉네임</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">입력시간(최종)</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">
-                  <button type="button" onClick={() => toggleSort("deposit_amount")} className="inline-flex items-center gap-1 text-gray-400 hover:text-gray-200" title="정렬">
-                    입금액
-                    <span className={sortKey === "deposit_amount" ? "text-[#91F402]" : "text-gray-600"}>
-                      {sortKey === "deposit_amount" ? (sortDir === "asc" ? "▲" : "▼") : "↕"}
-                    </span>
-                  </button>
-                </th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">
-                  <button type="button" onClick={() => toggleSort("play_count")} className="inline-flex items-center gap-1 text-gray-400 hover:text-gray-200" title="정렬">
-                    게임횟수
-                    <span className={sortKey === "play_count" ? "text-[#91F402]" : "text-gray-600"}>
-                      {sortKey === "play_count" ? (sortDir === "asc" ? "▲" : "▼") : "↕"}
-                    </span>
-                  </button>
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                  <button type="button" onClick={() => toggleSort("memo")} className="inline-flex items-center gap-1 text-gray-400 hover:text-gray-200" title="정렬">
-                    메모
-                    <span className={sortKey === "memo" ? "text-[#91F402]" : "text-gray-600"}>
-                      {sortKey === "memo" ? (sortDir === "asc" ? "▲" : "▼") : "↕"}
-                    </span>
-                  </button>
-                </th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">액션</th>
+                <th className="px-4 py-3 text-left text-sm font-bold text-zinc-500 uppercase tracking-widest">텔레그램 정보 (TG Info)</th>
+                <th className="px-4 py-3 text-left text-sm font-bold text-zinc-500 uppercase tracking-widest">프로필 (Profile)</th>
+                <th className="px-4 py-3 text-left text-sm font-bold text-zinc-500 uppercase tracking-widest font-black text-admin-brand">매칭유저 (Matched)</th>
+                <th className="px-4 py-3 text-left text-sm font-bold text-zinc-500 uppercase tracking-widest">최종 동기화 (Sync)</th>
+                <th className="px-4 py-3 text-right text-sm font-bold text-zinc-500 uppercase tracking-widest cursor-pointer hover:text-zinc-300" onClick={() => toggleSort("deposit_amount")}>입금액 (Deposit)</th>
+                <th className="px-4 py-3 text-right text-sm font-bold text-zinc-500 uppercase tracking-widest cursor-pointer hover:text-zinc-300" onClick={() => toggleSort("play_count")}>플레이 (Plays)</th>
+                <th className="px-4 py-3 text-left text-sm font-bold text-zinc-500 uppercase tracking-widest">메모 (Memo)</th>
+                <th className="px-4 py-3 text-center text-sm font-bold text-zinc-500 uppercase tracking-widest">관리 (Action)</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#333333]">
-              {pageItems.map(({ row, index }, viewIdx) => {
+            <tbody className="divide-y divide-admin-border/30">
+              {pageItems.map(({ row, index }) => {
                 const status = resolveStatusByKey[row.__key];
                 const lastInputAt = row.updated_at || row.created_at;
                 return (
                   <tr
                     key={row.__key}
-                    className={
-                      row.__isNew
-                        ? "bg-[#2D6B3B]/20"
-                        : viewIdx % 2 === 0
-                          ? "bg-[#111111]"
-                          : "bg-[#1A1A1A]"
-                    }
+                    className={`
+                      group hover:bg-white/[0.04] transition-colors border-b border-zinc-800/10
+                      ${row.__isNew ? "bg-admin-brand/5 hover:bg-admin-brand/10" : ""}
+                    `}
                   >
-                  <td className="px-4 py-3">
-                    <input
-                      type="text"
-                      value={row.external_id ?? ""}
-                      onChange={(e) => handleChange(index, "external_id", e.target.value)}
-                      className={inputBase}
-                      placeholder="@username / tg_833... / 닉네임 / external_id"
-                      ref={row.__isNew ? newRowInputRef : null}
-                    />
-
-                    {String(row.external_id ?? "").trim() && (
-                      <div className="mt-2">
-                        {status?.state === "loading" ? (
-                          <div className="text-[11px] text-gray-500">사용자 확인 중...</div>
-                        ) : status?.state === "ok" ? (
-                          <div className="text-[11px] text-[#91F402]">사용자 확인됨</div>
-                        ) : status?.state === "error" ? (
-                          <div className="text-[11px] text-red-300">{status.message}</div>
-                        ) : (
-                          <div className="flex items-center gap-2">
-                            <button
-                              type="button"
-                              onClick={() => resolveOne(index)}
-                              className="rounded-md border border-[#333333] bg-[#1A1A1A] px-2 py-1 text-[11px] text-gray-200 hover:bg-[#2C2C2E]"
-                            >
-                              사용자 확인
-                            </button>
-                            <span className="text-[11px] text-gray-500">저장 전 확인 권장</span>
-                          </div>
-                        )}
+                    <td className="px-4 py-3 min-w-[240px]">
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 space-y-1">
+                          <input
+                            type="text"
+                            value={row.external_id ?? ""}
+                            onChange={(e) => handleChange(index, "external_id", e.target.value)}
+                            className="w-full bg-transparent border-none p-0 text-sm font-mono text-zinc-200 focus:ring-0 placeholder:text-zinc-700"
+                            placeholder="@ID / 닉네임"
+                            ref={row.__isNew ? newRowInputRef : null}
+                          />
+                          {String(row.external_id ?? "").trim() && (
+                            <div className="flex items-center gap-2 h-5">
+                              {status?.state === "loading" ? (
+                                <RefreshCw className="h-3 w-3 text-admin-brand animate-spin" />
+                              ) : status?.state === "ok" ? (
+                                <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase text-emerald-400 bg-emerald-500/10 px-1.5 py-px rounded border border-emerald-500/20">
+                                  VERIFIED
+                                </span>
+                              ) : status?.state === "error" ? (
+                                <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase text-rose-400 bg-rose-500/10 px-1.5 py-px rounded border border-rose-500/20">
+                                  NOT FOUND
+                                </span>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => resolveOne(index)}
+                                  className="text-[9px] font-bold uppercase text-zinc-500 hover:text-admin-brand underline decoration-zinc-700 underline-offset-2 transition-colors"
+                                >
+                                  Verify Identity
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    {status?.state === "loading" ? (
-                      <div className="text-xs text-gray-500">...</div>
-                    ) : status?.state === "ok" ? (
-                      <>
-                        <div className="text-sm text-white font-mono">{status.user.tg_id ?? "-"}</div>
-                        <div className="text-xs text-[#91F402]">{formatTgUsername(status.user.tg_username)}</div>
-                      </>
-                    ) : (
-                      <div className="text-xs text-gray-500">-</div>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    {status?.state === "loading" ? (
-                      <div className="text-xs text-gray-500">...</div>
-                    ) : status?.state === "ok" ? (
-                      <div className="text-xs text-gray-200">
-                        {[status.user.real_name, status.user.phone_number]
-                          .filter(Boolean)
-                          .join(" / ") || "-"}
-                      </div>
-                    ) : (
-                      <div className="text-xs text-gray-500">-</div>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    {status?.state === "loading" ? (
-                      <div className="text-xs text-gray-500">...</div>
-                    ) : status?.state === "ok" ? (
-                      <div className="text-sm text-white font-medium">{status.user.nickname ?? "-"}</div>
-                    ) : (
-                      <div className="text-xs text-gray-500">-</div>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="text-xs text-gray-200" title={formatKst(lastInputAt)}>
-                      {formatKst(lastInputAt)}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <input
-                      type="number"
-                      value={row.deposit_amount}
-                      onChange={(e) => handleChange(index, "deposit_amount", Number(e.target.value))}
-                      className={inputBase + " text-right"}
-                      min={0}
-                    />
-                  </td>
-                  <td className="px-4 py-3">
-                    <input
-                      type="number"
-                      value={row.play_count}
-                      onChange={(e) => handleChange(index, "play_count", Number(e.target.value))}
-                      className={inputBase + " text-right"}
-                      min={0}
-                    />
-                  </td>
-                  <td className="px-4 py-3">
-                    <input
-                      type="text"
-                      value={row.memo ?? ""}
-                      onChange={(e) => handleChange(index, "memo", e.target.value)}
-                      className={inputBase}
-                      placeholder="예: 5만원 입금"
-                    />
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <button
-                      type="button"
-                      onClick={() => removeRow(index)}
-                      disabled={deleteMutation.isPending}
-                      className="rounded-md border border-[#333333] bg-[#1A1A1A] px-3 py-2 text-sm font-medium text-gray-200 hover:bg-red-950 hover:text-red-200 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      삭제
-                    </button>
-                  </td>
-                </tr>
+                    </td>
+                    <td className="px-4 py-3">
+                      {status?.state === "ok" ? (
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-xs font-mono font-bold text-zinc-300">{status.user.tg_id ?? "-"}</span>
+                          <span className="text-[11px] text-zinc-500 font-bold">{formatTgUsername(status.user.tg_username)}</span>
+                        </div>
+                      ) : (
+                        <span className="text-zinc-700 text-xs font-bold">-</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      {status?.state === "ok" ? (
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-xs text-zinc-300 font-black">
+                            {status.user.real_name || "-"}
+                          </span>
+                          <span className="text-[11px] text-zinc-600 font-mono font-bold tracking-tighter">
+                            {status.user.phone_number || "-"}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-zinc-700 text-xs font-black">-</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      {status?.state === "ok" ? (
+                        <span className="text-sm font-black text-admin-brand uppercase tracking-tight">{status.user.nickname ?? "-"}</span>
+                      ) : (
+                        <span className="text-zinc-700 text-xs font-black">-</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="text-xs text-zinc-500 font-mono font-medium">
+                        {formatKst(lastInputAt)?.split(" ")[0] || "-"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right relative group/cell">
+                      <span className={`text-sm font-black font-mono tracking-tight tabular-nums ${row.deposit_amount ? "text-emerald-400" : "text-zinc-700"}`}>
+                        {row.deposit_amount ? row.deposit_amount.toLocaleString() : "0"}
+                      </span>
+                      {/* Hidden input for editing logic if we want to support inline edit later, currently Read-Only as per design doc */}
+                      {/* If editing IS required, we should use a modal or a toggle. For now, assuming direct Input -> Text change based on "Read-Only Data Display" requirement. 
+                            However, the logic requires 'handleChange'. Let's keep a tiny hidden input or just render text?
+                            Wait, if it's read-only, how do we INPUT data for new rows?
+                            Ah, for NEW rows we need inputs. For existing rows, maybe read-only? 
+                            The requirement said "Convert... to read-only text". 
+                            Let's interpret this as: Display as text, but click-to-edit OR just keep as input but style as text?
+                            "Deposit/Plays 값을 입력창에서 순수 텍스트(Text)로 변경" implies strict read-only look.
+                            But this table IS the input form. 
+                            Let's style the INPUT to look like text (transparent, no border) but keep functionality. */}
+                      <input
+                        type="number"
+                        value={row.deposit_amount}
+                        onChange={(e) => handleChange(index, "deposit_amount", Number(e.target.value))}
+                        className="w-full bg-transparent text-right text-xs text-transparent focus:text-white absolute inset-0 opacity-0 focus:opacity-100 cursor-pointer"
+                        placeholder="0"
+                        min={0}
+                      />
+                      {/* Re-thinking: The user wants to "remove clutter". A transparent input on top of text is a good pattern. */}
+                    </td>
+                    <td className="px-4 py-3 text-right relative group/cell">
+                      <span className={`text-sm font-black font-mono tracking-tight tabular-nums ${row.play_count ? "text-zinc-300" : "text-zinc-700"}`}>
+                        {row.play_count ? row.play_count.toLocaleString() : "0"}
+                      </span>
+                      <input
+                        type="number"
+                        value={row.play_count}
+                        onChange={(e) => handleChange(index, "play_count", Number(e.target.value))}
+                        className="w-full bg-transparent text-right text-xs text-transparent focus:text-white absolute inset-0 opacity-0 focus:opacity-100 cursor-pointer"
+                        placeholder="0"
+                        min={0}
+                      />
+                    </td>
+                    <td className="px-4 py-3">
+                      <input
+                        type="text"
+                        value={row.memo ?? ""}
+                        onChange={(e) => handleChange(index, "memo", e.target.value)}
+                        className="w-full bg-transparent text-sm text-zinc-400 placeholder:text-zinc-800 focus:text-white focus:outline-none"
+                        placeholder="..."
+                      />
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <button
+                        onClick={() => removeRow(index)}
+                        className="p-2 text-zinc-600 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all active:scale-90"
+                        title="삭제"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </td>
+                  </tr>
                 );
               })}
               {rows.length === 0 && (
                 <tr>
-                  <td className="px-4 py-10 text-center text-gray-400" colSpan={9}>
-                    아직 입력된 데이터가 없습니다. “행 추가”로 시작하세요.
-                  </td>
-                </tr>
-              )}
-              {rows.length > 0 && totalVisible === 0 && (
-                <tr>
-                  <td className="px-4 py-10 text-center text-gray-400" colSpan={9}>
-                    검색 결과가 없습니다. “초기화”를 눌러 전체를 확인하세요.
+                  <td className="px-4 py-10 text-center text-admin-text-muted text-sm italic" colSpan={9}>
+                    데이터가 존재하지 않습니다. 행을 추가하여 입력을 시작하세요.
                   </td>
                 </tr>
               )}
@@ -665,28 +619,57 @@ const ExternalRankingPage: React.FC = () => {
         </div>
       </div>
 
-      {rows.length > 0 && (
-        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[#333333] bg-[#0A0A0A] p-3">
-          <div className="text-xs text-gray-500">페이지 {safePage + 1} / {totalPages}</div>
-          <div className="flex flex-wrap items-center gap-2">
-            <SecondaryButton
-              onClick={() => setPage((p) => Math.max(0, p - 1))}
-              disabled={safePage <= 0}
-            >
-              이전
-            </SecondaryButton>
-            <SecondaryButton
-              onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-              disabled={safePage >= totalPages - 1}
-            >
-              다음
-            </SecondaryButton>
-            <PrimaryButton onClick={saveAll} disabled={upsertMutation.isPending || !isDirty}>
-              {upsertMutation.isPending ? "저장 중..." : "전체 저장"}
-            </PrimaryButton>
+      <div className="flex flex-col md:flex-row items-center justify-between gap-6 mt-12 px-2 bg-admin-sidebar/20 p-6 rounded-2xl border border-white/5">
+        <div className="flex items-center gap-4">
+          <button
+            type="button"
+            onClick={() => setPage((p) => Math.max(0, p - 1))}
+            disabled={safePage <= 0}
+            className="p-2.5 rounded-xl border border-admin-border text-admin-text-secondary hover:bg-admin-sidebar hover:text-white disabled:opacity-20 transition-all active:scale-95"
+            aria-label="이전 페이지"
+            title="이전 페이지"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <div className="flex items-center gap-2">
+            {[...Array(totalPages)].map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setPage(i)}
+                className={`w-9 h-9 rounded-xl text-xs font-black transition-all active:scale-90 ${safePage === i ? "bg-admin-brand text-white shadow-lg shadow-admin-brand/20" : "text-zinc-500 hover:bg-white/5 hover:text-zinc-300"
+                  }`}
+              >
+                {i + 1}
+              </button>
+            ))}
           </div>
+          <button
+            type="button"
+            onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+            disabled={safePage >= totalPages - 1}
+            className="p-2.5 rounded-xl border border-admin-border text-admin-text-secondary hover:bg-admin-sidebar hover:text-white disabled:opacity-20 transition-all active:scale-95"
+            aria-label="다음 페이지"
+            title="다음 페이지"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
         </div>
-      )}
+
+        <div className="flex items-center gap-4">
+          <div className="flex flex-col items-end mr-2">
+            <span className="text-[10px] text-zinc-600 font-black uppercase tracking-widest">PUBLISH DATA</span>
+            <span className="text-xs text-zinc-500 font-medium">변경된 모든 데이터를 서버에 동기화합니다.</span>
+          </div>
+          <button
+            onClick={saveAll}
+            disabled={upsertMutation.isPending || !isDirty}
+            className="btn-admin-primary px-10 py-3 rounded-xl text-sm font-black shadow-lg shadow-admin-brand/20 active:scale-95 transition-all flex items-center gap-2"
+          >
+            {upsertMutation.isPending ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+            {upsertMutation.isPending ? "동기화 중..." : "전체 저장 (Save All)"}
+          </button>
+        </div>
+      </div>
     </section>
   );
 };

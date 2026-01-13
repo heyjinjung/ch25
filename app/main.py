@@ -8,6 +8,7 @@ from starlette.types import ASGIApp
 from app.api.routes import api_router
 from app.core.config import get_settings
 from app.core.error_handlers import register_exception_handlers
+from app.workers.ops_outbox_worker import run_ops_outbox_worker
 
 settings = get_settings()
 
@@ -79,9 +80,36 @@ app.add_middleware(
 # Compat path aliases should run before routing.
 app.add_middleware(LegacyAdminPathAliasMiddleware)
 
+_outbox_task = None
+_outbox_stop = None
+
 @app.on_event("startup")
 async def startup_event():
     print(f"Startup: CORS origins loaded: {cors_origins}", flush=True)
+    global _outbox_task, _outbox_stop
+    import asyncio
+
+    _outbox_stop = asyncio.Event()
+    _outbox_task = asyncio.create_task(run_ops_outbox_worker(stop_event=_outbox_stop))
+    app.state.ops_outbox_task = _outbox_task
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    global _outbox_task, _outbox_stop
+    import asyncio
+    if _outbox_stop is not None:
+        _outbox_stop.set()
+    if _outbox_task is not None:
+        _outbox_task.cancel()
+        try:
+            await _outbox_task
+        except asyncio.CancelledError:
+            pass
+        except Exception:
+            pass
+    _outbox_task = None
+    _outbox_stop = None
 
 register_exception_handlers(app)
 app.include_router(api_router)
