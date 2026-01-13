@@ -9,7 +9,6 @@ import {
   upsertExternalRanking,
 } from "../api/adminExternalRankingApi";
 import { resolveAdminUser } from "../api/adminUserApi";
-import { formatKstDateTime } from "../../utils/kstTime";
 
 type EditableRow = ExternalRankingPayload & {
   id?: number;
@@ -47,7 +46,29 @@ const formatTgUsername = (username?: string | null) => {
 
 const newRowKey = () => `new:${Date.now()}:${Math.random().toString(16).slice(2)}`;
 
-const formatKst = (iso?: string) => formatKstDateTime(iso);
+const formatKstCompact = (value?: string) => {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).formatToParts(date);
+
+  const get = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)?.value ?? "";
+  const hh = get("hour");
+  const mm = get("minute");
+
+  if (!hh || !mm) return "-";
+  return `${hh}:${mm}`;
+};
 
 const ExternalRankingPage: React.FC = () => {
   const queryClient = useQueryClient();
@@ -393,6 +414,8 @@ const ExternalRankingPage: React.FC = () => {
               <button
                 onClick={clearRowSearch}
                 className="absolute right-0 top-1/2 -translate-y-1/2 p-1.5 text-zinc-600 hover:text-zinc-300 transition-colors"
+                aria-label="검색어 지우기"
+                title="검색어 지우기"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -456,7 +479,7 @@ const ExternalRankingPage: React.FC = () => {
                 </th>
                 <th className="px-4 py-3.5 text-left text-sm font-bold text-zinc-400 uppercase tracking-widest">텔레그램 정보 (TG Info)</th>
                 <th className="px-4 py-3.5 text-left text-sm font-bold text-zinc-400 uppercase tracking-widest">프로필 (Profile)</th>
-                <th className="px-4 py-3.5 text-left text-sm font-bold text-zinc-400 uppercase tracking-widest font-black text-admin-brand">매칭유저 (Matched)</th>
+                <th className="px-4 py-3.5 text-left text-sm font-black text-zinc-400 uppercase tracking-widest text-admin-brand">매칭유저 (Matched)</th>
                 <th className="px-4 py-3.5 text-left text-sm font-bold text-zinc-400 uppercase tracking-widest">최종 동기화 (Sync)</th>
                 <th className="px-4 py-3.5 text-right text-sm font-bold text-zinc-400 uppercase tracking-widest cursor-pointer hover:text-zinc-200" onClick={() => toggleSort("deposit_amount")}>입금액 (Deposit)</th>
                 <th className="px-4 py-3.5 text-right text-sm font-bold text-zinc-400 uppercase tracking-widest cursor-pointer hover:text-zinc-200" onClick={() => toggleSort("play_count")}>플레이 (Plays)</th>
@@ -544,8 +567,8 @@ const ExternalRankingPage: React.FC = () => {
                       )}
                     </td>
                     <td className="px-4 py-3.5">
-                      <span className="text-sm text-zinc-400 font-mono font-medium">
-                        {formatKst(lastInputAt)?.split(" ")[0] || "-"}
+                      <span className="text-sm text-zinc-400 font-mono font-medium whitespace-nowrap tabular-nums">
+                        {formatKstCompact(lastInputAt)}
                       </span>
                     </td>
                     <td className="px-4 py-3.5 text-right relative group/cell">

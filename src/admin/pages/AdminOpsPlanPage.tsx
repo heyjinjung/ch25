@@ -45,6 +45,8 @@ type LocalTaskDraft = {
   title: string;
 };
 
+type InventoryGrantAllItem = { item_type: string; amount: number };
+
 const AdminOpsPlanPage: React.FC = () => {
   const todayKst = useMemo(() => getKstDateKey(new Date()), []);
 
@@ -241,6 +243,62 @@ const AdminOpsPlanPage: React.FC = () => {
 
     const payload = (existingPayload ?? {}) as Record<string, unknown>;
     updateTask.mutate({ taskId, patch: { payload_json: { ...payload, experiment: nextExperiment } } });
+  };
+
+  const isInventoryGrantAllTask = (payloadJson: Record<string, unknown> | null | undefined): boolean => {
+    const kind = (payloadJson ?? {}).kind;
+    return String(kind ?? "") === "INVENTORY_GRANT_ALL";
+  };
+
+  const getInventoryGrantAllDraft = (payloadJson: Record<string, unknown> | null | undefined) => {
+    const payload = (payloadJson ?? {}) as Record<string, unknown>;
+    const reason = String(payload.reason ?? "OPS_PLAN_GRANT_ALL");
+    const rawItems = Array.isArray(payload.items) ? payload.items : [];
+    const items: InventoryGrantAllItem[] = rawItems
+      .map((it) => {
+        const row = (it ?? {}) as Record<string, unknown>;
+        return {
+          item_type: String(row.item_type ?? ""),
+          amount: Number(row.amount ?? 0),
+        };
+      })
+      .filter((it) => it.item_type.trim().length > 0 || Number.isFinite(it.amount));
+
+    return { reason, items: items.length ? items : [{ item_type: "DIAMOND", amount: 1 }] };
+  };
+
+  const saveInventoryGrantAllPayload = (taskId: number, existingPayload: Record<string, unknown> | null | undefined, draft: { reason: string; items: InventoryGrantAllItem[] }) => {
+    const cleanedItems = (draft.items ?? [])
+      .map((it) => ({
+        item_type: String(it.item_type ?? "").trim(),
+        amount: Number(it.amount ?? 0),
+      }))
+      .filter((it) => it.item_type && Number.isFinite(it.amount) && it.amount > 0);
+
+    if (cleanedItems.length === 0) {
+      addToast("지급 아이템이 비어있습니다. item_type과 amount(양수)를 입력해 주세요.", "error");
+      return;
+    }
+
+    const reason = String(draft.reason ?? "OPS_PLAN_GRANT_ALL").trim() || "OPS_PLAN_GRANT_ALL";
+    const base = (existingPayload ?? {}) as Record<string, unknown>;
+    const nextPayload: Record<string, unknown> = {
+      ...base,
+      kind: "INVENTORY_GRANT_ALL",
+      reason,
+      items: cleanedItems,
+    };
+    updateTask.mutate({ taskId, patch: { payload_json: nextPayload } });
+  };
+
+  const confirmExecuteInventoryGrantAll = (taskId: number, payloadJson: Record<string, unknown> | null | undefined): boolean => {
+    const draft = getInventoryGrantAllDraft(payloadJson);
+    const lines = draft.items
+      .map((it) => `- ${it.item_type} x${it.amount}`)
+      .join("\n");
+    return window.confirm(
+      `⚠️ 전체 유저(상태 무관)에게 아이템을 지급합니다.\n\nTask ID: ${taskId}\nReason: ${draft.reason}\n\n지급 목록:\n${lines}\n\n실행 후 되돌릴 수 없습니다. 진행할까요?`,
+    );
   };
 
   const onAddPresetToggle = async (mode: "FORCE_ON" | "FORCE_OFF" | "MULTIPLIER_SET") => {
@@ -642,6 +700,120 @@ const AdminOpsPlanPage: React.FC = () => {
                           }}
                         />
 
+                        {(() => {
+                          if (!isInventoryGrantAllTask(t.payload_json as Record<string, unknown> | null | undefined)) return null;
+                          const payload = (t.payload_json ?? {}) as Record<string, unknown>;
+                          const draft = getInventoryGrantAllDraft(payload);
+
+                          return (
+                            <div className="mt-3 rounded-lg border border-admin-danger/40 bg-admin-danger/5 p-3">
+                              <div className="text-xs font-bold text-admin-danger">전체 유저 아이템 지급 (전원)</div>
+                              <div className="mt-2 grid grid-cols-12 gap-2">
+                                <div className="col-span-12 md:col-span-6">
+                                  <label htmlFor={`ops-grantall-reason-${t.id}`} className="block text-[11px] font-bold text-admin-text-muted">
+                                    reason(ledger)
+                                  </label>
+                                  <input
+                                    id={`ops-grantall-reason-${t.id}`}
+                                    className="mt-1 w-full rounded-lg border border-admin-border bg-admin-bg px-3 py-2 text-xs"
+                                    defaultValue={draft.reason}
+                                    placeholder="예: OPS_PLAN_GRANT_ALL"
+                                    onBlur={(e) => {
+                                      const nextReason = e.target.value;
+                                      const latest = getInventoryGrantAllDraft(payload);
+                                      saveInventoryGrantAllPayload(t.id, payload, { ...latest, reason: nextReason });
+                                    }}
+                                  />
+                                </div>
+                                <div className="col-span-12 md:col-span-6 flex items-end justify-end">
+                                  <button
+                                    type="button"
+                                    className="rounded-lg bg-admin-brand px-3 py-2 text-xs font-bold text-white disabled:opacity-50"
+                                    onClick={() => saveInventoryGrantAllPayload(t.id, payload, draft)}
+                                    disabled={updateTask.isPending}
+                                    aria-label="전원 지급 payload 저장"
+                                    title="저장"
+                                  >
+                                    저장
+                                  </button>
+                                </div>
+                              </div>
+
+                              <div className="mt-3 space-y-2">
+                                {(draft.items ?? []).map((it, idx) => (
+                                  <div key={`${t.id}-grantall-${idx}`} className="grid grid-cols-12 gap-2">
+                                    <div className="col-span-12 md:col-span-8">
+                                      <label htmlFor={`ops-grantall-item-${t.id}-${idx}`} className="block text-[11px] font-bold text-admin-text-muted">
+                                        item_type
+                                      </label>
+                                      <input
+                                        id={`ops-grantall-item-${t.id}-${idx}`}
+                                        className="mt-1 w-full rounded-lg border border-admin-border bg-admin-bg px-3 py-2 text-xs font-mono"
+                                        defaultValue={it.item_type}
+                                        placeholder='예: DIAMOND, VOUCHER_LOTTERY_TICKET_1'
+                                        onBlur={(e) => {
+                                          const nextItems = [...draft.items];
+                                          nextItems[idx] = { ...nextItems[idx], item_type: e.target.value };
+                                          saveInventoryGrantAllPayload(t.id, payload, { ...draft, items: nextItems });
+                                        }}
+                                      />
+                                    </div>
+                                    <div className="col-span-12 md:col-span-3">
+                                      <label htmlFor={`ops-grantall-amount-${t.id}-${idx}`} className="block text-[11px] font-bold text-admin-text-muted">
+                                        amount
+                                      </label>
+                                      <input
+                                        id={`ops-grantall-amount-${t.id}-${idx}`}
+                                        className="mt-1 w-full rounded-lg border border-admin-border bg-admin-bg px-3 py-2 text-xs"
+                                        defaultValue={String(it.amount)}
+                                        inputMode="numeric"
+                                        onBlur={(e) => {
+                                          const nextItems = [...draft.items];
+                                          nextItems[idx] = { ...nextItems[idx], amount: Number(e.target.value) };
+                                          saveInventoryGrantAllPayload(t.id, payload, { ...draft, items: nextItems });
+                                        }}
+                                      />
+                                    </div>
+                                    <div className="col-span-12 md:col-span-1 flex items-end">
+                                      <button
+                                        type="button"
+                                        className="w-full rounded-lg border border-admin-danger/40 bg-admin-danger/10 px-3 py-2 text-xs font-bold text-admin-danger hover:bg-admin-danger/15"
+                                        onClick={() => {
+                                          const nextItems = draft.items.filter((_, i) => i !== idx);
+                                          saveInventoryGrantAllPayload(t.id, payload, { ...draft, items: nextItems });
+                                        }}
+                                        aria-label="아이템 줄 삭제"
+                                        title="삭제"
+                                      >
+                                        삭제
+                                      </button>
+                                    </div>
+                                  </div>
+                                ))}
+
+                                <div className="flex justify-end">
+                                  <button
+                                    type="button"
+                                    className="rounded-lg border border-admin-border bg-admin-bg px-3 py-2 text-xs font-bold text-admin-text-secondary hover:bg-admin-bg/70"
+                                    onClick={() => {
+                                      const nextItems = [...draft.items, { item_type: "", amount: 1 }];
+                                      saveInventoryGrantAllPayload(t.id, payload, { ...draft, items: nextItems });
+                                    }}
+                                    aria-label="아이템 줄 추가"
+                                    title="추가"
+                                  >
+                                    아이템 추가
+                                  </button>
+                                </div>
+                              </div>
+
+                              <div className="mt-2 text-[11px] text-admin-text-muted">
+                                실행 시: 전원(상태 무관) 지급 · 중복 실행 방지(재실행 409)
+                              </div>
+                            </div>
+                          );
+                        })()}
+
                         {t.type === "TOGGLE" && (
                           <div className="mt-3 rounded-lg border border-admin-border bg-admin-bg/40 p-3">
                             <div className="text-xs font-bold text-admin-text-muted">TOGGLE 프리셋 (골든아워)</div>
@@ -978,7 +1150,14 @@ const AdminOpsPlanPage: React.FC = () => {
                           <button
                             type="button"
                             className="rounded-lg border border-admin-border bg-admin-bg px-3 py-2 text-xs font-bold text-admin-text-secondary hover:bg-admin-bg/70 disabled:opacity-50"
-                            onClick={() => executeTask?.mutate({ taskId: t.id, status: "DONE" })}
+                            onClick={() => {
+                              const payload = (t.payload_json ?? {}) as Record<string, unknown>;
+                              if (isInventoryGrantAllTask(payload)) {
+                                const ok = confirmExecuteInventoryGrantAll(t.id, payload);
+                                if (!ok) return;
+                              }
+                              executeTask?.mutate({ taskId: t.id, status: "DONE" });
+                            }}
                             disabled={!planId || executeTask.isPending}
                             aria-label="Task 실행(완료 처리)"
                             title="실행"
