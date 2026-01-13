@@ -35,7 +35,10 @@ API가 비즈니스 로직을 정상적으로 처리하는지 확인합니다.
 | 검증 항목 | 확인 방법 | 기대 결과 | 상태 |
 | :--- | :--- | :--- | :--- |
 | **IP 접속** | 브라우저에서 `http://158.247.222.179` 접속 | 화면 로드 성공 | [ ] |
+| **도메인 HTTPS 접속** | 브라우저에서 `https://cc-jm.com/` 접속 | TLS 경고/끊김 없이 페이지 로드 | [ ] |
+| **HTTPS 헬스체크** | `curl -vk https://cc-jm.com/health` | 200 OK 또는 최소한 TLS handshake 성공(서버 응답 수신) | [ ] |
 | **API 통신** | 개발자 도구(F12) -> Network 탭 | `/api/` 요청이 200 OK로 완료됨 | [ ] |
+| **Admin API 라우팅(HTML 방지)** | `curl -i http://127.0.0.1/admin/api/ui-config/streak_reward_rules` | `Content-Type: application/json` + (200 또는 401 AUTH_REQUIRED) | [ ] |
 | **환경변수 주입** | 브라우저 콘솔에서 `window.__ENV__` 확인 | 서버 IP나 도메인 주소가 주입됨 | [ ] |
 
 ---

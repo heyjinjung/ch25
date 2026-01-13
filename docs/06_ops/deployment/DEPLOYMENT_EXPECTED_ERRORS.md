@@ -359,6 +359,42 @@
   - 설정 구조 변경이 있었으면 배포 전에 `/opt/xmas-event/nginx` 정리(삭제/정합성 확인)
   - nginx 재기동 후 `/health`, `/api/health`로 스모크 체크(3.6)
 
+### 2.19 (배포 성공 후) `/health`는 301인데 `https://cc-jm.com`이 `ERR_CONNECTION_CLOSED` (TLS handshake fail)
+- 증상(징후)
+  - 브라우저: `ERR_CONNECTION_CLOSED` / "연결이 예기치 않게 종료"
+  - HTTP(80): `http://cc-jm.com/health` 는 `301 Location: https://...` 까지는 정상
+  - HTTPS(443): `curl -vk https://cc-jm.com/health` 가 핸드셰이크 단계에서 종료(응답 헤더/바디 없이 끊김)
+- 원인
+  - `nginx/nginx.conf`에서 80→https 리다이렉트만 있고 443 SSL server block이 비활성/오구성
+  - 인증서 파일 경로/권한/볼륨 마운트 불일치로 TLS 초기화가 실패
+  - (드물게) 443 리스닝은 되지만 실제 TLS 처리를 하지 못하는 상태
+- 확인(명령/로그)
+  - 클라이언트에서:
+    - `curl -v http://cc-jm.com/health`
+    - `curl -vk https://cc-jm.com/health`
+  - 서버에서(필수):
+    - `cd /opt/xmas-event; docker compose exec -T nginx nginx -T | sed -n '1,220p'`
+    - `cd /opt/xmas-event; docker compose logs --tail=200 nginx`
+  - 인증서 존재 확인:
+    - `ls -al /etc/letsencrypt/live/cc-jm.com || true`
+- 1차 대응
+  - nginx 설정에서 **443 SSL server block 활성화** 및 인증서 경로/마운트 정합성 확보
+  - 설정 반영 후: `docker compose restart nginx`
+  - 단기 우회(권장 아님): 80 리다이렉트를 임시로 끄고 HTTP로만 점검(서비스 오픈 전까지)
+
+### 2.20 (CI 게이트) Admin smoke 체크가 401(AUTH_REQUIRED)을 실패로 처리
+- 증상(징후)
+  - 배포/헬스는 통과했는데 CI가 Admin smoke 단계에서 `HTTP 401`로 실패
+  - 응답 바디에 `{"detail":"AUTH_REQUIRED"}` 또는 유사 JSON이 표시
+- 원인
+  - `/admin/api/...` 엔드포인트는 운영 정책상 인증이 필요할 수 있으며, 스모크 목적은 "HTML(index.html)로 빠지는 사고"를 잡는 것
+- 확인(명령/로그)
+  - `curl -i http://127.0.0.1/admin/api/ui-config/streak_reward_rules`
+  - 기대: `Content-Type: application/json` + (200 또는 401)
+- 1차 대응
+  - 스모크 게이트는 `200(JSON)` 또는 `401(JSON, AUTH_REQUIRED)`를 정상으로 허용
+  - 대신 `text/html` 응답이면 프록시/라우팅 문제로 실패 처리(즉시 점검)
+
 ### 2.19 프론트 정적 자산 캐시로 “배포했는데 화면이 깨짐/구버전 JS 로드”
 - 증상(징후)
   - 특정 브라우저에서만 어드민 UI가 깨짐(흰 화면/콘솔 에러)
