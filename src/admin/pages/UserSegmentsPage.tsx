@@ -1,464 +1,334 @@
 // src/admin/pages/UserSegmentsPage.tsx
-import React, { useMemo, useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { fetchUserSegments, upsertUserSegment, type AdminUserSegmentRow } from "../api/adminSegmentsApi";
-import { resolveAdminUser, type AdminUserResolveResponse } from "../api/adminUserApi";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  Users,
+  Search,
+  RefreshCw,
+  Edit3,
+  CheckCircle2,
+  AlertCircle,
+  TrendingUp,
+  Clock,
+  Gamepad2,
+  ChevronUp,
+  ChevronDown
+} from "lucide-react";
+import {
+  fetchUserSegments,
+  upsertUserSegment,
+  AdminUserSegmentRow
+} from "../api/adminSegmentsApi";
 
-const parseTgIdFromExternalId = (externalId?: string | null): number | null => {
-  const s = String(externalId ?? "").trim();
-  if (!s) return null;
-  const m = /^tg_(\d+)_/i.exec(s);
-  if (!m) return null;
-  const n = Number(m[1]);
-  return Number.isFinite(n) ? n : null;
-};
-
-const formatTgUsername = (username?: string | null) => {
-  const u = String(username ?? "").trim();
-  if (!u) return "-";
-  return u.startsWith("@") ? u : `@${u}`;
-};
-
-const formatMaybeDate = (value?: string | null) => {
-  if (!value) return "-";
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return value;
-  return d.toLocaleString();
-};
-
-const SEGMENT_LABEL_KO: Record<string, string> = {
-  NEW: "신규",
-  ACTIVE: "활성",
-  AT_RISK: "이탈위험",
-  DORMANT: "휴면",
-  VIP: "VIP",
-};
-
-const formatSegmentDisplay = (segment?: string | null) => {
-  const code = String(segment ?? "").trim();
-  if (!code) return "-";
-  const label = SEGMENT_LABEL_KO[code] ?? code;
-  return label === code ? code : `${label} (${code})`;
-};
+type SortKey = "user_id" | "nickname" | "segment" | "recommended_segment" | "total_plays" | "last_login_at";
 
 const UserSegmentsPage: React.FC = () => {
-  const [identifier, setIdentifier] = useState<string>("");
-  const trimmed = useMemo(() => identifier.trim(), [identifier]);
-  const [resolved, setResolved] = useState<AdminUserResolveResponse | null>(null);
-  const [resolveError, setResolveError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [editingUserId, setEditingUserId] = useState<number | null>(null);
+  const [newSegment, setNewSegment] = useState("");
+  const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: "asc" | "desc" } | null>(null);
+  const [selectedSegment, setSelectedSegment] = useState<string | null>(null);
 
-  type SortDir = "asc" | "desc";
-  type SortKey =
-    | "external_id"
-    | "segment"
-    | "roulette_plays"
-    | "dice_plays"
-    | "lottery_plays"
-    | "total_play_duration"
-    | "last_charge_at"
-    | "segment_updated_at"
-    | "activity_updated_at";
-
-  const [sortKey, setSortKey] = useState<SortKey>("activity_updated_at");
-  const [sortDir, setSortDir] = useState<SortDir>("desc");
-
-  const inputBase =
-    "w-full rounded-md border border-[#333333] bg-[#1A1A1A] px-3 py-2 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]";
-
-  const PrimaryButton = ({
-    children,
-    className,
-    ...props
-  }: React.ButtonHTMLAttributes<HTMLButtonElement> & { children: React.ReactNode }) => (
-    <button
-      type="button"
-      className={[
-        "inline-flex items-center rounded-md bg-[#2D6B3B] px-4 py-2 text-sm font-medium text-white hover:bg-[#91F402] hover:text-black disabled:cursor-not-allowed disabled:opacity-60",
-        className,
-      ]
-        .filter(Boolean)
-        .join(" ")}
-      {...props}
-    >
-      {children}
-    </button>
-  );
-
-  const SecondaryButton = ({
-    children,
-    className,
-    ...props
-  }: React.ButtonHTMLAttributes<HTMLButtonElement> & { children: React.ReactNode }) => (
-    <button
-      type="button"
-      className={[
-        "inline-flex items-center rounded-md border border-[#333333] bg-[#1A1A1A] px-4 py-2 text-sm font-medium text-gray-200 hover:bg-[#2C2C2E] disabled:cursor-not-allowed disabled:opacity-60",
-        className,
-      ]
-        .filter(Boolean)
-        .join(" ")}
-      {...props}
-    >
-      {children}
-    </button>
-  );
-
-  const queryKey = useMemo(() => ["admin", "segments", { identifier: trimmed || undefined }] as const, [trimmed]);
-
-  const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey,
-    // NOTE: Backend caps limit to 500. When searching by identifier we keep it small,
-    // otherwise we fetch the maximum to approximate "전체" 조회 without pagination UI.
-    queryFn: () => fetchUserSegments(trimmed ? { identifier: trimmed, limit: 50 } : { limit: 500 }),
+  const { data: segments, isLoading } = useQuery({
+    queryKey: ["admin", "segments", searchTerm],
+    queryFn: () => fetchUserSegments(searchTerm ? { identifier: searchTerm } : undefined),
   });
 
-  const [editSegment, setEditSegment] = useState<Record<number, string>>({});
-  const [savingUserId, setSavingUserId] = useState<number | null>(null);
+  const sortedSegments = segments ? [...segments].sort((a, b) => {
+    if (!sortConfig) return 0;
+    const { key, direction } = sortConfig;
+
+    let aValue: any;
+    let bValue: any;
+
+    switch (key) {
+      case "total_plays":
+        aValue = a.roulette_plays + a.dice_plays + a.lottery_plays;
+        bValue = b.roulette_plays + b.dice_plays + b.lottery_plays;
+        break;
+      case "nickname":
+        aValue = (a.nickname || "").toLowerCase();
+        bValue = (b.nickname || "").toLowerCase();
+        break;
+      default:
+        aValue = a[key as keyof AdminUserSegmentRow];
+        bValue = b[key as keyof AdminUserSegmentRow];
+    }
+
+    if (aValue === bValue) return 0;
+    if (aValue === null || aValue === undefined) return 1;
+    if (bValue === null || bValue === undefined) return -1;
+
+    const result = aValue < bValue ? -1 : 1;
+    return direction === "asc" ? result : -result;
+  }) : [];
+
+  const filteredSegments = selectedSegment
+    ? sortedSegments.filter(s => s.segment === selectedSegment)
+    : sortedSegments;
+
+  const handleSort = (key: SortKey) => {
+    setSortConfig((prev) => {
+      if (prev?.key === key) {
+        if (prev.direction === "asc") return { key, direction: "desc" };
+        return null;
+      }
+      return { key, direction: "asc" };
+    });
+  };
+
+  const getSortIcon = (key: SortKey) => {
+    if (sortConfig?.key !== key) return <RefreshCw className="h-3 w-3 opacity-0 group-hover:opacity-30" />;
+    return sortConfig.direction === "asc" ? <ChevronUp className="h-3 w-3 text-admin-brand" /> : <ChevronDown className="h-3 w-3 text-admin-brand" />;
+  };
 
   const updateMutation = useMutation({
     mutationFn: (payload: { user_id: number; segment: string }) => upsertUserSegment(payload),
-    onSuccess: async () => {
-      await refetch();
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "segments"] });
+      setEditingUserId(null);
+      setNewSegment("");
     },
   });
 
-  const resolveMutation = useMutation({
-    mutationFn: async () => {
-      const value = trimmed;
-      if (!value) throw new Error("IDENTIFIER_REQUIRED");
-      return resolveAdminUser(value);
-    },
-    onSuccess: (res) => {
-      setResolved(res);
-      setResolveError(null);
-    },
-    onError: (err: any) => {
-      setResolved(null);
-      const detail = err?.response?.data?.detail;
-      if (detail === "USER_NOT_FOUND") {
-        setResolveError("사용자를 찾을 수 없습니다.");
-        return;
-      }
-      if (detail === "AMBIGUOUS_IDENTIFIER") {
-        setResolveError("중복 매칭(409): identifier가 모호합니다.");
-        return;
-      }
-      if ((err as Error)?.message === "IDENTIFIER_REQUIRED") {
-        setResolveError("identifier를 입력하세요.");
-        return;
-      }
-      setResolveError("사용자 확인 실패");
-    },
-  });
-
-  const rows: AdminUserSegmentRow[] = data ?? [];
-
-  const compareStr = (a: string, b: string, dir: SortDir) => (dir === "asc" ? a.localeCompare(b) : b.localeCompare(a));
-  const compareNum = (a: number, b: number, dir: SortDir) => (dir === "asc" ? a - b : b - a);
-  const compareDate = (a: string | null | undefined, b: string | null | undefined, dir: SortDir) => {
-    const at = a ? new Date(a).getTime() : 0;
-    const bt = b ? new Date(b).getTime() : 0;
-    return compareNum(Number.isFinite(at) ? at : 0, Number.isFinite(bt) ? bt : 0, dir);
-  };
-
-  const visibleRows = useMemo(() => {
-    const base = rows;
-    const sorted = [...base].sort((a, b) => {
-      if (sortKey === "roulette_plays") return compareNum(a.roulette_plays ?? 0, b.roulette_plays ?? 0, sortDir);
-      if (sortKey === "dice_plays") return compareNum(a.dice_plays ?? 0, b.dice_plays ?? 0, sortDir);
-      if (sortKey === "lottery_plays") return compareNum(a.lottery_plays ?? 0, b.lottery_plays ?? 0, sortDir);
-      if (sortKey === "total_play_duration") return compareNum(a.total_play_duration ?? 0, b.total_play_duration ?? 0, sortDir);
-      if (sortKey === "last_charge_at") return compareDate(a.last_charge_at, b.last_charge_at, sortDir);
-      if (sortKey === "segment_updated_at") return compareDate(a.segment_updated_at, b.segment_updated_at, sortDir);
-      if (sortKey === "activity_updated_at") return compareDate(a.activity_updated_at, b.activity_updated_at, sortDir);
-      if (sortKey === "segment") return compareStr((a.segment ?? "").trim(), (b.segment ?? "").trim(), sortDir);
-      return compareStr((a.external_id ?? "").trim(), (b.external_id ?? "").trim(), sortDir);
-    });
-    return sorted;
-  }, [rows, sortKey, sortDir]);
-
-  const handleSearch = async () => {
-    await refetch();
-  };
-
-  const saveSegment = async (row: AdminUserSegmentRow, segment: string) => {
-    const next = segment.trim();
-    if (!next) return;
-
-    setSavingUserId(row.user_id);
-    try {
-      await updateMutation.mutateAsync({ user_id: row.user_id, segment: next });
-      setEditSegment((prev) => {
-        const cp = { ...prev };
-        delete cp[row.user_id];
-        return cp;
-      });
-    } finally {
-      setSavingUserId(null);
+  const handleUpdate = (userId: number) => {
+    if (newSegment.trim()) {
+      updateMutation.mutate({ user_id: userId, segment: newSegment });
     }
   };
 
-  const handleSave = async (row: AdminUserSegmentRow) => {
-    const next = (editSegment[row.user_id] ?? row.segment).trim();
-    await saveSegment(row, next);
+  const getSegmentBadge = (segment: string) => {
+    const colors: Record<string, string> = {
+      VIP: "ring-1 ring-inset ring-amber-500/30 text-amber-500 bg-amber-500/5",
+      WHALE: "ring-1 ring-inset ring-purple-500/30 text-purple-400 bg-purple-500/5",
+      ACTIVE: "ring-1 ring-inset ring-emerald-500/30 text-emerald-400 bg-emerald-500/5",
+      INACTIVE: "ring-1 ring-inset ring-zinc-700/30 text-zinc-500 bg-zinc-500/5",
+      CHURN: "ring-1 ring-inset ring-rose-500/30 text-rose-500 bg-rose-500/5",
+    };
+    return colors[segment] || "ring-1 ring-inset ring-zinc-700/30 text-zinc-500 bg-zinc-500/5";
   };
-
-  const handleApplyRecommendation = async (row: AdminUserSegmentRow) => {
-    const rec = (row.recommended_segment ?? "").trim();
-    if (!rec) return;
-    await saveSegment(row, rec);
-  };
-
-  const toggleSort = (nextKey: SortKey) => {
-    if (sortKey !== nextKey) {
-      setSortKey(nextKey);
-      setSortDir("asc");
-      return;
-    }
-    setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-  };
-
-  const SortHeader = ({ label, k, className }: { label: string; k: SortKey; className?: string }) => (
-    <th className={className ?? "px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider"}>
-      <button
-        type="button"
-        onClick={() => toggleSort(k)}
-        className="inline-flex items-center gap-1 text-gray-400 hover:text-gray-200"
-        title="정렬"
-      >
-        <span>{label}</span>
-        <span className={sortKey === k ? "text-[#91F402]" : "text-gray-600"}>{sortKey === k ? (sortDir === "asc" ? "▲" : "▼") : "↕"}</span>
-      </button>
-    </th>
-  );
 
   return (
-    <section className="space-y-5">
-      <header>
-        <h2 className="text-2xl font-bold text-[#91F402]">사용자 분류 (세그먼트)</h2>
-        <p className="mt-1 text-sm text-gray-400">identifier로 조회 후 세그먼트를 수동 수정할 수 있습니다.</p>
+    <section className="admin-page-container space-y-10 pb-20">
+      <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="space-y-1">
+
+          <h1 className="text-admin-title text-admin-text-primary">세그먼트 관리</h1>
+        </div>
+        <button
+          onClick={() => queryClient.invalidateQueries({ queryKey: ["admin", "segments"] })}
+          disabled={isLoading}
+          className="btn-admin-secondary flex items-center gap-2 px-5 py-2.5 h-auto disabled:opacity-50"
+        >
+          <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} /> 새로고침
+        </button>
       </header>
 
-      <div className="rounded-lg border border-[#333333] bg-[#111111] p-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
-          <div className="flex w-full flex-wrap items-end gap-2 sm:w-auto">
-            <div className="flex w-full flex-col sm:w-auto">
-              <label className="text-xs text-gray-400">identifier</label>
-              <input
-                value={identifier}
-                onChange={(e) => {
-                  setIdentifier(e.target.value);
-                  setResolved(null);
-                  setResolveError(null);
-                }}
-                className={inputBase + " max-w-none sm:max-w-sm"}
-                placeholder="TG ID / @username / 닉네임 / external_id ..."
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") void handleSearch();
-                }}
-              />
-            </div>
-          </div>
-          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
-            <SecondaryButton
-              onClick={() => void resolveMutation.mutateAsync()}
-              disabled={resolveMutation.isPending || !trimmed}
-              className="w-full justify-center sm:w-auto"
-            >
-              {resolveMutation.isPending ? "확인 중..." : "사용자 확인"}
-            </SecondaryButton>
-            <SecondaryButton onClick={handleSearch} disabled={isLoading} className="w-full justify-center sm:w-auto">
-              검색 적용
-            </SecondaryButton>
-            <SecondaryButton
-              onClick={() => {
-                setIdentifier("");
-                setResolved(null);
-                setResolveError(null);
-                void refetch();
-              }}
-              className="w-full justify-center sm:w-auto"
-            >
-              초기화
-            </SecondaryButton>
-          </div>
+      {/* Search Bar */}
+      <div className="admin-card-premium p-6 flex items-center gap-4">
+        <Search className="h-5 w-5 text-admin-brand" />
+        <div className="flex-1">
+          <label className="text-admin-meta font-black text-admin-text-secondary uppercase tracking-widest block mb-2">회원 검색</label>
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="External ID / Telegram Username / Nickname..."
+            className="admin-input h-11 w-full"
+          />
         </div>
-
-        {(resolved || resolveError) && (
-          <div className="mt-3 rounded-lg border border-[#333333] bg-[#111111] p-3 text-sm">
-            {resolveError ? (
-              <div className="text-red-200">{resolveError}</div>
-            ) : (
-              <div className="text-gray-200">
-                <div className="font-medium text-white">사용자 확인됨</div>
-                <div className="mt-1 text-xs text-gray-400">ID: {resolved?.user.id}</div>
-                {resolved?.user.nickname && <div className="text-xs text-gray-400">Nickname: {resolved.user.nickname}</div>}
-                {resolved?.user.tg_username && <div className="text-xs text-gray-400">TG: @{resolved.user.tg_username}</div>}
-                {resolved?.user.tg_id && <div className="text-xs text-gray-400">TG ID: {resolved.user.tg_id}</div>}
-                {resolved?.user.external_id && <div className="text-xs text-gray-400">external_id: {resolved.user.external_id}</div>}
-              </div>
-            )}
-          </div>
-        )}
-
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500">
-          <div>
-            결과: <span className="font-medium text-gray-200">{rows.length}</span>
-            <span className="ml-2 text-gray-600">(필터 없음 조회는 최대 500)</span>
-          </div>
-          <div>
-            정렬: <span className="text-gray-300">{sortKey}</span> <span className="text-gray-600">{sortDir}</span>
-          </div>
-        </div>
-
-        {isLoading && (
-          <div className="mt-3 rounded-lg border border-[#333333] bg-[#111111] p-3 text-gray-200">불러오는 중...</div>
-        )}
-        {isError && (
-          <div className="mt-3 rounded-lg border border-red-700/40 bg-red-950 p-3 text-red-100">
-            불러오기 실패: {(error as any)?.message ?? "요청에 실패했습니다."}
-          </div>
-        )}
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-[#333333] bg-[#111111] shadow-md">
-        <div className="max-h-[640px] overflow-auto">
-          <table className="w-full table-fixed">
-            <thead className="sticky top-0 z-10 border-b border-[#333333] bg-[#1A1A1A]">
-              <tr>
-                <SortHeader label="Identifier" k="external_id" className="w-[18ch] px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider" />
-                <th className="w-[18ch] px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">TG ID / Username</th>
-                <th className="w-[18ch] px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">실명/연락처</th>
-                <th className="w-[18ch] px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">닉네임</th>
-                <SortHeader label="세그먼트" k="segment" />
-                <th className="w-44 px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">추천</th>
-                <th className="w-60 px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                  <div className="flex items-center gap-3">
-                    <button type="button" onClick={() => toggleSort("roulette_plays")} className="text-gray-400 hover:text-gray-200" title="룰렛 정렬">
-                      룰렛{sortKey === "roulette_plays" ? (sortDir === "asc" ? " ▲" : " ▼") : ""}
-                    </button>
-                    <button type="button" onClick={() => toggleSort("dice_plays")} className="text-gray-400 hover:text-gray-200" title="주사위 정렬">
-                      주사위{sortKey === "dice_plays" ? (sortDir === "asc" ? " ▲" : " ▼") : ""}
-                    </button>
-                    <button type="button" onClick={() => toggleSort("lottery_plays")} className="text-gray-400 hover:text-gray-200" title="복권 정렬">
-                      복권{sortKey === "lottery_plays" ? (sortDir === "asc" ? " ▲" : " ▼") : ""}
-                    </button>
-                    <button type="button" onClick={() => toggleSort("total_play_duration")} className="text-gray-400 hover:text-gray-200" title="플레이 시간 정렬">
-                      시간{sortKey === "total_play_duration" ? (sortDir === "asc" ? " ▲" : " ▼") : ""}
-                    </button>
-                  </div>
-                </th>
-                <SortHeader label="마지막 충전" k="last_charge_at" className="hidden px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider xl:table-cell" />
-                <SortHeader label="세그 변경" k="segment_updated_at" className="hidden px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider 2xl:table-cell" />
-                <SortHeader label="활동 업데이트" k="activity_updated_at" className="hidden px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider 2xl:table-cell" />
-                <th className="w-28 px-4 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">작업</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#333333]">
-              {visibleRows.length === 0 && !isLoading ? (
+      {/* Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div
+          onClick={() => setSelectedSegment(null)}
+          className={`admin-card-premium p-6 flex flex-col justify-between h-32 cursor-pointer transition-all hover:bg-zinc-800/50 ${selectedSegment === null ? "ring-2 ring-admin-brand bg-zinc-800/30" : ""}`}
+        >
+          <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">총 회원 수</p>
+          <div className="flex items-end justify-between">
+            <p className="text-3xl font-black text-white">{segments?.length || 0}</p>
+            <Users className="h-5 w-5 text-zinc-500 mb-1" />
+          </div>
+        </div>
+        <div
+          onClick={() => setSelectedSegment("VIP")}
+          className={`admin-card-premium p-6 flex flex-col justify-between h-32 cursor-pointer transition-all hover:bg-zinc-800/50 ${selectedSegment === "VIP" ? "ring-2 ring-amber-500 bg-amber-500/5" : ""}`}
+        >
+          <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">VIP 회원</p>
+          <div className="flex items-end justify-between">
+            <p className="text-3xl font-black text-amber-500">{segments?.filter(s => s.segment === "VIP").length || 0}</p>
+            <TrendingUp className="h-5 w-5 text-amber-500 mb-1" />
+          </div>
+        </div>
+        <div
+          onClick={() => setSelectedSegment("ACTIVE")}
+          className={`admin-card-premium p-6 flex flex-col justify-between h-32 cursor-pointer transition-all hover:bg-zinc-800/50 ${selectedSegment === "ACTIVE" ? "ring-2 ring-emerald-500 bg-emerald-500/5" : ""}`}
+        >
+          <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">활성 회원</p>
+          <div className="flex items-end justify-between">
+            <p className="text-3xl font-black text-emerald-400">{segments?.filter(s => s.segment === "ACTIVE").length || 0}</p>
+            <CheckCircle2 className="h-5 w-5 text-emerald-400 mb-1" />
+          </div>
+        </div>
+        <div
+          onClick={() => setSelectedSegment("CHURN")}
+          className={`admin-card-premium p-6 flex flex-col justify-between h-32 cursor-pointer transition-all hover:bg-zinc-800/50 border-l-4 border-rose-500 ${selectedSegment === "CHURN" ? "ring-2 ring-rose-500 bg-rose-500/5" : ""}`}
+        >
+          <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">이탈 회원</p>
+          <div className="flex items-end justify-between">
+            <p className="text-3xl font-black text-rose-500">{segments?.filter(s => s.segment === "CHURN").length || 0}</p>
+            <AlertCircle className="h-5 w-5 text-rose-500 mb-1" />
+          </div>
+        </div>
+      </div>
+
+      {/* Segments Table */}
+      <div className="admin-card-premium overflow-hidden">
+        {isLoading ? (
+          <div className="py-20 flex flex-col items-center justify-center gap-4">
+            <RefreshCw className="h-8 w-8 text-admin-brand animate-spin" />
+            <p className="text-admin-meta text-admin-text-secondary">데이터 로딩 중...</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto custom-scrollbar">
+            <table className="w-full text-left border-collapse">
+              <thead className="sticky top-0 z-10 bg-zinc-900 border-b border-zinc-800">
                 <tr>
-                  <td className="px-4 py-10 text-center text-gray-400" colSpan={11}>
-                    조회 결과가 없습니다.
-                  </td>
+                  <th className="px-4 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider cursor-pointer group hover:text-zinc-300" onClick={() => handleSort("user_id")}>
+                    <div className="flex items-center gap-1">
+                      User ID {getSortIcon("user_id")}
+                    </div>
+                  </th>
+                  <th className="px-4 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider cursor-pointer group hover:text-zinc-300" onClick={() => handleSort("nickname")}>
+                    <div className="flex items-center gap-1">
+                      식별자 {getSortIcon("nickname")}
+                    </div>
+                  </th>
+                  <th className="px-4 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider cursor-pointer group hover:text-zinc-300" onClick={() => handleSort("segment")}>
+                    <div className="flex items-center gap-1">
+                      현재 세그먼트 {getSortIcon("segment")}
+                    </div>
+                  </th>
+                  <th className="px-4 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider cursor-pointer group hover:text-zinc-300" onClick={() => handleSort("recommended_segment")}>
+                    <div className="flex items-center gap-1">
+                      추천 세그먼트 {getSortIcon("recommended_segment")}
+                    </div>
+                  </th>
+                  <th className="px-4 py-3.5 text-right cursor-pointer group" onClick={() => handleSort("total_plays")}>
+                    <div className="flex items-center justify-end gap-1">
+                      게임 플레이 {getSortIcon("total_plays")}
+                    </div>
+                  </th>
+                  <th className="px-4 py-3.5 text-right cursor-pointer group" onClick={() => handleSort("last_login_at")}>
+                    <div className="flex items-center justify-end gap-1">
+                      최근 활동 {getSortIcon("last_login_at")}
+                    </div>
+                  </th>
+                  <th className="px-4 py-3.5 text-center">액션</th>
                 </tr>
-              ) : (
-                visibleRows.map((row, idx) => (
-                  <tr
-                    key={row.user_id}
-                    className={(idx % 2 === 0 ? "bg-[#111111]" : "bg-[#1A1A1A]") + " text-white"}
-                  >
-                    <td className="px-4 py-3 align-top">
-                      <span className="block truncate" title={row.telegram_username || row.nickname || row.external_id}>
-                        {row.external_id}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 align-top">
-                      <div className="text-white font-mono text-sm">{parseTgIdFromExternalId(row.external_id) ?? "-"}</div>
-                      <div className="text-xs text-[#91F402]">{formatTgUsername(row.telegram_username)}</div>
-                    </td>
-                    <td className="px-4 py-3 align-top">
-                      <div className="text-sm text-gray-400">-</div>
-                    </td>
-                    <td className="px-4 py-3 align-top">
-                      <div className="text-sm font-medium text-white">{row.nickname || "-"}</div>
-                    </td>
-                    <td className="px-4 py-3 align-top">
-                      <div className="flex min-w-0 items-center gap-2">
-                        <input
-                          value={editSegment[row.user_id] ?? row.segment}
-                          onChange={(e) => setEditSegment((prev) => ({ ...prev, [row.user_id]: e.target.value }))}
-                          className={inputBase + " px-2 py-1 text-xs"}
-                          placeholder="예: NEW(신규) / ACTIVE(활성) / AT_RISK(이탈위험) / DORMANT(휴면) / VIP"
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") void handleSave(row);
-                          }}
-                        />
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 align-top text-xs">
-                      {(() => {
-                        const rec = (row.recommended_segment ?? "").trim();
-                        const current = (row.segment ?? "").trim();
-                        const canApply = !!rec && rec !== current && !updateMutation.isPending;
-                        return (
-                          <div className="flex flex-col gap-1">
-                            <div className="text-gray-200" title={row.recommended_rule_name ?? undefined}>
-                              {rec ? formatSegmentDisplay(rec) : "-"}
-                            </div>
-                            {row.recommended_rule_name ? <div className="text-[11px] text-gray-500">{row.recommended_rule_name}</div> : null}
-                            {row.recommended_reason ? <div className="text-[11px] text-gray-500">{row.recommended_reason}</div> : null}
-                            <SecondaryButton onClick={() => void handleApplyRecommendation(row)} disabled={!canApply}>
-                              적용
-                            </SecondaryButton>
-                          </div>
-                        );
-                      })()}
-                    </td>
-                    <td className="px-4 py-3 align-top text-xs text-gray-300">
-                      <div className="flex flex-wrap gap-2">
-                        <span className="rounded-md border border-[#333333] bg-[#111111] px-2 py-1">룰렛 {row.roulette_plays}</span>
-                        <span className="rounded-md border border-[#333333] bg-[#111111] px-2 py-1">주사위 {row.dice_plays}</span>
-                        <span className="rounded-md border border-[#333333] bg-[#111111] px-2 py-1">복권 {row.lottery_plays}</span>
-                        <span className="rounded-md border border-[#333333] bg-[#111111] px-2 py-1">t {row.total_play_duration}</span>
-                      </div>
-                    </td>
-                    <td className="hidden px-4 py-3 align-top text-xs text-gray-300 xl:table-cell">
-                      <span className="block truncate" title={formatMaybeDate(row.last_charge_at)}>
-                        {formatMaybeDate(row.last_charge_at)}
-                      </span>
-                    </td>
-                    <td className="hidden px-4 py-3 align-top text-xs text-gray-300 2xl:table-cell">
-                      <span className="block truncate" title={formatMaybeDate(row.segment_updated_at)}>
-                        {formatMaybeDate(row.segment_updated_at)}
-                      </span>
-                    </td>
-                    <td className="hidden px-4 py-3 align-top text-xs text-gray-300 2xl:table-cell">
-                      <span className="block truncate" title={formatMaybeDate(row.activity_updated_at)}>
-                        {formatMaybeDate(row.activity_updated_at)}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 align-top text-center">
-                      {(() => {
-                        const current = (editSegment[row.user_id] ?? row.segment).trim();
-                        const original = (row.segment ?? "").trim();
-                        const dirty = current !== original;
-                        const disabled = !dirty || updateMutation.isPending;
-                        return (
-                          <div className="flex flex-col items-center gap-1">
-                            <PrimaryButton onClick={() => void handleSave(row)} disabled={disabled}>
-                              {savingUserId === row.user_id ? "저장중" : "저장"}
-                            </PrimaryButton>
-                            {dirty ? <span className="text-[11px] text-[#91F402]">변경됨</span> : <span className="text-[11px] text-gray-600">-</span>}
-                          </div>
-                        );
-                      })()}
+              </thead>
+              <tbody>
+                {filteredSegments.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="px-4 py-10 text-center text-admin-text-muted text-sm">
+                      조회된 회원이 없습니다.
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                ) : (
+                  filteredSegments.map((seg: AdminUserSegmentRow) => (
+                    <tr key={seg.user_id} className="admin-td group">
+                      <td className="px-4 py-4 font-mono text-admin-text-primary">{seg.user_id}</td>
+                      <td className="px-4 py-4">
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-admin-text-primary font-bold text-xs">{seg.nickname || "-"}</span>
+                          <span className="text-admin-text-muted text-[10px]">@{seg.telegram_username || seg.external_id}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4">
+                        {editingUserId === seg.user_id ? (
+                          <input
+                            type="text"
+                            value={newSegment}
+                            onChange={(e) => setNewSegment(e.target.value)}
+                            placeholder="새 세그먼트"
+                            className="admin-input h-9 w-32 text-xs"
+                            autoFocus
+                          />
+                        ) : (
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${getSegmentBadge(seg.segment)}`}>
+                            {seg.segment}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-4">
+                        {seg.recommended_segment ? (
+                          <div className="flex flex-col gap-0.5">
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase w-fit ${getSegmentBadge(seg.recommended_segment)}`}>
+                              {seg.recommended_segment}
+                            </span>
+                            <span className="text-[10px] text-admin-text-muted">{seg.recommended_rule_name}</span>
+                          </div>
+                        ) : (
+                          <span className="text-admin-text-muted text-xs">-</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <Gamepad2 className="h-3 w-3 text-admin-brand" />
+                          <span className="text-admin-text-primary font-black tabular-nums text-sm">
+                            {seg.roulette_plays + seg.dice_plays + seg.lottery_plays}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <Clock className="h-3 w-3 text-admin-text-muted" />
+                          <span className="text-admin-text-secondary text-xs tabular-nums">
+                            {seg.last_login_at ? new Date(seg.last_login_at).toLocaleDateString() : "-"}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 text-center">
+                        {editingUserId === seg.user_id ? (
+                          <div className="flex items-center justify-center gap-2">
+                            <button
+                              onClick={() => handleUpdate(seg.user_id)}
+                              disabled={updateMutation.isPending}
+                              className="p-2 rounded-lg hover:bg-admin-accent/10 text-admin-accent transition-colors disabled:opacity-50"
+                            >
+                              <CheckCircle2 className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => {
+                                setEditingUserId(null);
+                                setNewSegment("");
+                              }}
+                              className="p-2 rounded-lg hover:bg-admin-danger/10 text-admin-danger transition-colors"
+                            >
+                              <AlertCircle className="h-4 w-4" />
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              setEditingUserId(seg.user_id);
+                              setNewSegment(seg.segment);
+                            }}
+                            className="p-2 rounded-lg hover:bg-admin-brand/10 text-admin-brand transition-colors"
+                          >
+                            <Edit3 className="h-4 w-4" />
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </section>
   );

@@ -29,9 +29,11 @@ router = APIRouter(prefix="/admin/api/crm", tags=["admin-crm"])
 class AdminUserProfileResponse(BaseModel):
     user_id: int
     external_id: Optional[str]
+    nickname: Optional[str]
     real_name: Optional[str]
     phone_number: Optional[str]
     telegram_id: Optional[str]
+    telegram_username: Optional[str]
     tags: Optional[List[str]] = []
     memo: Optional[str]
     computed_segments: List[str] = []
@@ -128,12 +130,20 @@ def get_segment_detail(segment_type: str, limit: int = 100, db: Session = Depend
         # User object for external_id fallback
         u = db.query(User).filter(User.id == uid).first()
         
+        telegram_id_value = None
+        if profile and profile.telegram_id:
+            telegram_id_value = str(profile.telegram_id)
+        elif u and u.telegram_id is not None:
+            telegram_id_value = str(u.telegram_id)
+
         resp = AdminUserProfileResponse(
             user_id=uid,
             external_id=u.external_id if u else None,
+            nickname=u.nickname if u else None,
             real_name=profile.real_name if profile else None,
             phone_number=profile.phone_number if profile else None,
-            telegram_id=profile.telegram_id if profile else None,
+            telegram_id=telegram_id_value,
+            telegram_username=u.telegram_username if u else None,
             tags=profile.tags if profile else [],
             memo=profile.memo if profile else None,
             computed_segments=segments
@@ -156,15 +166,15 @@ async def import_profiles(
     decoded = content.decode("utf-8-sig") # Handle BOM
     reader = csv.DictReader(io.StringIO(decoded))
     
-    total = 0
     success = 0
     failed = 0
     errors = []
     
-    for row in reader:
-        total += 1
-    for row in reader:
-        total += 1
+    # Fix: Convert reader to list to avoid iterator exhaustion
+    rows = list(reader)
+    total = len(rows)
+    
+    for i, row in enumerate(rows):
         try:
             # Delegate processing to Service
             result = UserSegmentService.resolve_and_sync_user_from_import(db, row, DEFAULT_IMPORT_PASSWORD)

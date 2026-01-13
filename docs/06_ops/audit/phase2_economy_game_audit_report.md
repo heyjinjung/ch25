@@ -2,7 +2,7 @@
 
 **감사 일시**: 2026-01-11 23:18 KST  
 **감사 범위**: Vault, Cash, Game Tokens, Economy 관련 모델, 라우트, 서비스  
-**상태**: ⚠️ **Review Needed - Complex SoT Structure**
+**상태**: ⚠️ **Partial Verified** (OP 미검증 / 언락·만료 정책 비활성 확인)
 
 ---
 
@@ -12,6 +12,7 @@
 - **Game Token**: 7종 토큰 타입 (`ROULETTE_COIN`, `DICE_TOKEN`, `TRIAL_TOKEN`, `LOTTERY_TICKET`, `GOLD_KEY`, `DIAMOND_KEY`, `DIAMOND`)
 - **Ledger 패턴**: 모든 재화 변동은 Ledger 테이블에 `delta/balance_after` 기록 (audit trail 확보)
 - **이중 라우터**: `admin_vault_ops.py`에서 `/admin/api/vault/*`와 `/api/admin/vault/*` 동시 노출 (NGINX 호환)
+- **검증 현황**: OP-001~006, US-001/003, INT-001~003 자동 테스트 통과; US-002는 언락→cash 비활성, US-004는 만료 비활성(정책 상태)
 
 ---
 
@@ -26,6 +27,8 @@
 | **Cash (현금)** | `user` | `cash_balance` | `user_cash_ledger` | 출금 가능 잔액 |
 | **Game Token** | `user_game_wallet` | `balance` | `user_game_wallet_ledger` | 7종 토큰 |
 | **Vault 2.0** | `vault_status` | `locked_amount` | - | 프로그램별 상태 |
+| **기프트콘/바우처** | `user_inventory_ledger` | (ledger 합산) | `user_inventory_ledger` | 시즌/프로모션 지급·사용 |
+| **Season Pass 보상(별도 감사 예정)** | (추가 정의 예정) | - | - | Game Token 7종 외 별도 스펙 수립 필요 |
 
 ### B. SoT 계층 구조
 
@@ -57,6 +60,8 @@
 | Game Token 7종 | Season Pass 보상 (별도 감사) |
 | Accrual/Unlock 이벤트 | 마케팅 바우처 (admin_shop 별도) |
 
+**주의(⚠️) 표시는 무시 대상이 아님**: 해당 항목은 “미사용/검증 필요” 상태를 뜻하며, 후속 단계에서 활성화 또는 폐기 여부를 결정해야 함.
+
 ---
 
 ## 2-1) 페이지/엔드포인트/테이블 매핑
@@ -81,13 +86,13 @@
 | --- | --- | --- |
 | `/api/admin/vault/*` | `/admin/api/vault/*` | 동일 핸들러 |
 
-### C. Frontend 페이지 (예상)
+### C. Frontend 페이지 (실제 확인)
 
-| 페이지 | 주요 API | 표시 데이터 |
-| --- | --- | --- |
-| 회원 상세 > 금고 | `/admin/api/vault/{id}` | locked_balance, expires_at |
-| 회원 상세 > 토큰 | `/admin/api/game-tokens?user_id=` | 토큰별 잔액 |
-| 경제 대시보드 | `/admin/api/economy/stats` | 매출/바우처 통계 |
+| 페이지/경로 | 주요 API | 표시 데이터 | 근거 파일 |
+| --- | --- | --- | --- |
+| 금고 운영 관리 `/admin/vault` | `/admin/api/vault/{id}`, `/admin/api/vault/{id}/timer`, `/admin/api/vault-programs/*` | locked/available/reserved, 타이머, 프로그램 설정 | [src/admin/pages/VaultAdminPage.tsx](src/admin/pages/VaultAdminPage.tsx) |
+| 티켓 통합 관리 `/admin/game-tokens` | `/admin/api/game-tokens/grant`, `/admin/api/game-tokens/revoke`, `/admin/api/game-tokens/ledger`, `/admin/api/game-tokens/play-logs`, `/admin/api/game-tokens/wallets` | 토큰별 잔액, 부여/회수, 플레이/레저 로그 | [src/admin/pages/TicketManagerPage.tsx](src/admin/pages/TicketManagerPage.tsx) + [src/admin/api/adminGameTokenApi.ts](src/admin/api/adminGameTokenApi.ts) |
+| 경제 지표 `/admin/economy` | `/admin/api/economy/stats` | 상점 구매 집계, 바우처 사용, idempotency 상태 | [src/admin/pages/AdminEconomyStatsPage.tsx](src/admin/pages/AdminEconomyStatsPage.tsx) + [src/admin/api/adminEconomyApi.ts](src/admin/api/adminEconomyApi.ts) |
 
 ---
 
@@ -99,7 +104,7 @@
 | --- | --- | --- | --- | --- |
 | 잠금 잔액 | `user.vault_locked_balance` | Integer | ✅ **SoT** | 게임 적립분 |
 | 레거시 잔액 | `user.vault_balance` | Integer | ❌ 미러 | Phase 1 주석 명시 |
-| 가용 잔액 | `user.vault_available_balance` | Integer | ⚠️ Phase 2 | 미사용 |
+| 가용 잔액 | `user.vault_available_balance` | Integer | ⚠️ Phase 2 | 미사용(무시 금지, 활성/폐기 결정 필요) |
 | 만료일시 | `user.vault_locked_expires_at` | DateTime | ✅ | 24H 만료 기준 |
 | 누적 충전 | `user.total_charge_amount` | Integer | ✅ | VIP 조건 |
 
@@ -148,7 +153,15 @@
 | `user_game_wallet` | `(user_id, token_type)` | 잔액 저장 |
 | `user_game_wallet_ledger` | - | 변동 로그 |
 
-### D. Vault 2.0 (프로그램별 상태)
+### D. 기프트콘/바우처 재화 (신규 반영)
+
+| 필드/개념 | 테이블.컬럼 | SoT 여부 | 비고 |
+| --- | --- | --- | --- |
+| 기프트콘/바우처 수량 | `user_inventory_ledger` (ledger 합산) | ✅ Ledger 기반 SoT | 지급/사용 모두 ledger 기록 필요 |
+| 사용 사유 | `reason` (e.g., `USE_VOUCHER`) | ✅ | AdminEconomyStatsPage에서 집계 |
+| 지급 사유 | `reason` (e.g., `SHOP_PURCHASE:<sku>`) | ✅ | 스토어/프로모션 지급 시 사용 |
+
+### E. Vault 2.0 (프로그램별 상태)
 
 | 테이블 | 용도 | 상태 |
 | --- | --- | --- |
@@ -171,35 +184,40 @@
 
 | ID | 시나리오 | 기대 동작 | 체크 |
 | --- | --- | --- | --- |
-| OP-001 | 유저 Vault 상태 조회 | `/admin/api/vault/{id}` → locked_balance, expires_at 표시 | ☐ |
-| OP-002 | 타이머 리셋 | `/admin/api/vault/{id}/timer` → 만료 연장 | ☐ |
-| OP-003 | 토큰 수동 지급 | `grant_tokens` → 잔액 증가 + Ledger 기록 | ☐ |
-| OP-004 | 토큰 회수 | `revoke_tokens` → 잔액 감소 + Ledger 기록 | ☐ |
-| OP-005 | 식별자 기반 조회 | `by-identifier/{nickname}` → 유저 Vault 반환 | ☐ |
-| OP-006 | Vault2 상태 전이 | `tick_vault2_transitions` → LOCKED→AVAILABLE 전이 | ☐ |
+| OP-001 | 유저 Vault 상태 조회 | `/admin/api/vault/{id}` → locked_balance, expires_at 표시 | ☑ (자동 테스트 통과) |
+| OP-002 | 타이머 리셋 | `/admin/api/vault/{id}/timer` → 만료 연장 | ☑ (자동 테스트 통과) |
+| OP-003 | 토큰 수동 지급 | `grant_tokens` → 잔액 증가 + Ledger 기록 | ☑ (자동 테스트 통과) |
+| OP-004 | 토큰 회수 | `revoke_tokens` → 잔액 감소 + Ledger 기록 | ☑ (자동 테스트 통과) |
+| OP-005 | 식별자 기반 조회 | `by-identifier/{nickname}` → 유저 Vault 반환 | ☑ (자동 테스트 통과) |
+| OP-006 | Vault2 상태 전이 | `tick_vault2_transitions` → LOCKED→AVAILABLE 전이 | ☑ (자동 테스트 통과) |
+※ OP-001~006: 자동 테스트로 검증 완료 (관리자 인증 불필요 엔드포인트 기준).
 
 ### B. 유저 시나리오 (영향 검증)
 
 | ID | 시나리오 | 검증 포인트 | 체크 |
 | --- | --- | --- | --- |
-| US-001 | 게임 플레이 후 적립 | `vault_locked_balance` 증가, `vault_earn_event` 기록 | ☐ |
-| US-002 | Vault 언락 | `cash_balance` 증가, `vault_locked_balance` 감소 | ☐ |
-| US-003 | 토큰 소비 | 게임 플레이 시 토큰 차감 + Ledger | ☐ |
-| US-004 | 만료 처리 | 24H 후 `vault_locked_balance` → 0 (정책 확인) | ☐ |
+| US-001 | 게임 플레이 후 적립 | `vault_locked_balance` 증가, `vault_earn_event` 기록 | ☑ (자동 테스트 통과) |
+| US-002 | Vault 언락 | `cash_balance` 증가, `vault_locked_balance` 감소 | ☒ (언락→cash 비활성) |
+| US-003 | 토큰 소비 | 게임 플레이 시 토큰 차감 + Ledger | ☑ (자동 테스트 통과) |
+| US-004 | 만료 처리 | 24H 후 `vault_locked_balance` → 0 (정책 확인) | ⚠️ (만료 로직 비활성) |
+※ US-001/003 자동 테스트 통과, US-002는 현행 정책상 언락→cash 미지원, US-004는 만료 로직 비활성로 유지.
 
 ### C. 데이터 정합성 검증
 
 | ID | 검증 항목 | SQL 예시 | 체크 |
 | --- | --- | --- | --- |
-| INT-001 | Wallet 잔액 = Ledger 합산 | `SUM(delta) = balance` | ☐ |
-| INT-002 | Vault 잔액 = Earn 합산 | `SUM(amount) = locked_balance` (조건: 미만료) | ☐ |
-| INT-003 | Cash 잔액 = Ledger 합산 | `SUM(delta) = cash_balance` | ☐ |
+| INT-001 | Wallet 잔액 = Ledger 합산 | `SUM(delta) = balance` | ☑ (자동 테스트 통과) |
+| INT-002 | Vault 잔액 = Earn 합산 | `SUM(amount) = locked_balance` (조건: 미만료) | ☑ (자동 테스트 통과) |
+| INT-003 | Cash 잔액 = Ledger 합산 | `SUM(delta) = cash_balance` | ☑ (자동 테스트 통과) |
+※ INT-001~003 자동 테스트 통과.
 
 ---
 
 ## 3. 발견 이슈
 
 ### 🟡 MEDIUM-001: vault_balance 레거시 미러
+
+**상태**: ✅ 코드 반영 완료 (vault2_service에서 locked-only 미러, 테스트 통과)
 
 **현황**: `User.vault_balance`가 `vault_locked_balance`의 미러로 존재
 
@@ -209,6 +227,8 @@
 
 ### 🟡 MEDIUM-002: Vault2 Phase 2 스캐폴드
 
+**상태**: ⏳ 미해결(계획 필요)
+
 **현황**: `vault_status`, `vault_program` 테이블이 존재하나 미사용 ("not yet wired into gameplay")
 
 **리스크**: 향후 마이그레이션 시 데이터 정합성 이슈 가능
@@ -216,6 +236,8 @@
 **권장**: 활성화 전 마이그레이션 계획 문서화
 
 ### 🟢 LOW-001: 이중 라우터 노출
+
+**상태**: ⏳ 미해결(정책 검토 필요)
 
 **현황**: `/admin/api/vault/*`와 `/api/admin/vault/*` 동시 노출
 
@@ -227,9 +249,9 @@
 
 | 우선순위 | ID | 조치 내용 | 예상 작업량 |
 | --- | --- | --- | --- |
-| 🟡 1 | MEDIUM-001 | vault_balance 폐기 또는 동기화 | 2시간 |
-| 🟡 2 | MEDIUM-002 | Vault2 활성화 계획 문서화 | 1시간 |
-| 🟢 3 | LOW-001 | 레거시 라우터 폐기 일정 협의 | 30분 |
+| ✅ 1 | MEDIUM-001 | vault_balance 폐기 또는 동기화 | 완료 |
+| 🟡 2 | MEDIUM-002 | Vault2 활성화 계획 문서화 | 1시간 (미해결) |
+| 🟢 3 | LOW-001 | 레거시 라우터 폐기 일정 협의 | 30분 (미해결) |
 
 ---
 
@@ -398,6 +420,8 @@ if action == "APPROVE":
 
 ### 🔴 CRITICAL-003: 출금 잔액 반영 타이밍
 
+**상태**: ✅ 완료 (UI 분리/테스트 통과)
+
 **현황**: 출금 요청 시 잔액 차감 없이 PENDING 상태로만 예약
 
 **문제점**:
@@ -413,6 +437,8 @@ if action == "APPROVE":
 
 ### 🟠 HIGH-003: External Ranking → Vault 연결 문서화 부재
 
+**상태**: ♻️ 부분완료 (ER-LOG-001~003 검증 완료, ⚠️ ER-LOG-004 미실행)
+
 **현황**: deposit_amount 증가 시 VaultService를 호출하는 트리거가 어디서 발생하는지 명확하지 않음
 
 **리스크**: 입금이 인식되지 않아 VIP unlock이 안 되는 상황 발생 가능
@@ -425,11 +451,11 @@ if action == "APPROVE":
 
 | 우선순위 | ID | 조치 내용 | 예상 작업량 |
 | --- | --- | --- | --- |
-| 🔴 1 | CRITICAL-003 | 출금 예약액 UI 분리 표시 | 2시간 |
-| 🟠 2 | HIGH-003 | External Ranking 입금 흐름 문서화 | 1시간 |
-| 🟡 3 | MEDIUM-001 | vault_balance 폐기 또는 동기화 | 2시간 |
-| 🟡 4 | MEDIUM-002 | Vault2 활성화 계획 문서화 | 1시간 |
-| 🟢 5 | LOW-001 | 레거시 라우터 폐기 일정 협의 | 30분 |
+| 🔴 1 | CRITICAL-003 | 출금 예약액 UI 분리 표시 | ✅ 완료 |
+| 🟠 2 | HIGH-003 | External Ranking 입금 흐름 문서화/로그 | ✅ 로그 추가·ER-LOG-001~003 검증 완료, ⚠️ ER-LOG-004 미실행 |
+| 🟡 3 | MEDIUM-001 | vault_balance 폐기 또는 동기화 | ✅ 미러 정책 통일 완료 |
+| 🟡 4 | MEDIUM-002 | Vault2 활성화 계획 문서화 | ⏳ 미해결 |
+| 🟢 5 | LOW-001 | 레거시 라우터 폐기 일정 협의 | ⏳ 미해결 |
 
 ---
 
@@ -439,21 +465,104 @@ if action == "APPROVE":
 
 | ID | 시나리오 | 기대 동작 | 체크 |
 | --- | --- | --- | --- |
-| WD-001 | 10,000 출금 요청 | PENDING 생성, reserved += 10000 | ☐ |
-| WD-002 | 당일 미입금 시 출금 | `DEPOSIT_REQUIRED_TODAY` 오류 | ☐ |
-| WD-003 | APPROVE 처리 | vault_locked_balance -= amount | ☐ |
-| WD-004 | REJECT 처리 | 잔액 변화 없음, reserved 해제 | ☐ |
-| WD-005 | 잔액 부족 시 APPROVE | `INSUFFICIENT_FUNDS` 오류 | ☐ |
+| WD-001 | 10,000 출금 요청 | PENDING 생성, reserved += 10000 | ☑ (테스트 통과) |
+| WD-002 | 당일 미입금 시 출금 | `DEPOSIT_REQUIRED_TODAY` 오류 | ☑ (테스트 통과) |
+| WD-003 | APPROVE 처리 | vault_locked_balance -= amount | ☑ (테스트 통과) |
+| WD-004 | REJECT 처리 | 잔액 변화 없음, reserved 해제 | ☑ (테스트 통과) |
+| WD-005 | 잔액 부족 시 APPROVE | `INSUFFICIENT_FUNDS` 오류 | ☑ (테스트 통과) |
 
 ### E. External Ranking 시나리오
 
 | ID | 시나리오 | 기대 동작 | 체크 |
 | --- | --- | --- | --- |
-| ER-001 | 입금액 업데이트 | deposit_amount 증가 + total_charge_amount 갱신 | ☐ |
-| ER-002 | 일별 델타 기록 | kst_date별 deposit_delta 저장 | ☐ |
-| ER-003 | 식별자 기반 업데이트 | external_id/nickname/username으로 조회 후 업데이트 | ☐ |
+| ER-001 | 입금액 업데이트 | deposit_amount 증가 + total_charge_amount 갱신 | ☑ (테스트 통과) |
+| ER-002 | 일별 델타 기록 | kst_date별 deposit_delta 저장 | ☑ (테스트 통과) |
+| ER-003 | 식별자 기반 업데이트 | external_id/nickname/username으로 조회 후 업데이트 | ☑ (테스트 통과) |
+
+### F. External Ranking → Vault 관측(로그) 시나리오 (HIGH-003)
+
+| ID | 시나리오 | 기대 동작(관측 포인트) | 체크 |
+| --- | --- | --- | --- |
+| ER-LOG-001 | 입금 증가 발생 | 서버 로그에 `external_ranking deposit increased`가 남고 `user_id/prev/new/delta`가 포함 | ☑ (로그 캡처) |
+| ER-LOG-002 | Vault 시그널 디스패치 | 서버 로그에 `external_ranking -> vault signal dispatched`가 남음 | ☑ (로그 캡처) |
+| ER-LOG-003 | Vault 시그널 적용 | 서버 로그에 `vault deposit signal applied`가 남고 `total_charge_amount=new`가 포함 | ☑ (로그 캡처) |
+| ER-LOG-004 | 예외 케이스(eligibility false 등) | 서버 로그에 `vault deposit signal ignored (...)`가 남아 원인 추적 가능 | ☐ (미실행) |
+※ 로그 캡처: 인메모리 DB 시나리오 실행 후 INFO 로그 확인 (ER-LOG-001~003 통과, ER-LOG-004는 예외 케이스 미실행)
+
+### G. vault_balance 미러 정합성 시나리오 (MEDIUM-001)
+
+| ID | 시나리오 | 기대 동작 | 체크 |
+| --- | --- | --- | --- |
+| VB-001 | Vault2에서 balance set(관리자 절대값 세팅) | `user.vault_balance == user.vault_locked_balance`로 유지(레거시 미러는 locked만 반영) | ☑ (테스트 통과) |
+| VB-002 | Vault2에서 balance update(관리자 증감/조정) | `user.vault_balance`가 `locked+available`로 변하지 않고 locked 미러로 유지 | ☑ (테스트 통과) |
+| VB-003 | v1 `/api/vault/status` 조회 | 응답의 `vault_amount_total(locked)`와 레거시 `vault_balance`가 의미 충돌 없이 운영 가능(레거시 미러는 locked 기준) | ☑ (테스트 통과) |
+
+### H. 섹션별 통합 테스트 커버리지 (신규)
+
+| 감사 섹션 | 커버 테스트 | 목적 |
+| --- | --- | --- |
+| Vault 상태/식별자 조회 | `tests/test_phase2_audit_coverage.py::test_admin_vault_state_by_id_and_identifier` | admin vault 조회/식별자 경로 응답 구조 검증 |
+| Game Tokens 관리자 흐름 | `tests/test_phase2_audit_coverage.py::test_admin_game_tokens_grant_revoke_and_ledger` | grant/revoke + ledger 노출 검증 |
+| Economy Stats | `tests/test_phase2_audit_coverage.py::test_admin_economy_stats_from_inventory_and_idempotency` | inventory ledger + idempotency 집계 응답 검증 |
+| External Ranking ↔ Vault | `tests/test_external_ranking_charge_hook.py`, `tests/test_external_ranking_deposit_steps.py` | 입금 증가/단계 기반 훅 처리 검증 |
+| Withdraw 예약/가용 | `tests/test_vault_withdraw_reserved_flow.py` | PENDING→APPROVE/REJECT 흐름 + reserved 계산 검증 |
+| Vault2 Scaffold | `tests/test_vault2_scaffold.py` | scaffold 테이블 상태 보존 검증 |
+| Vault 추천액션 | `tests/test_vault_status_recommended_action.py` | 추천 액션 응답 검증 |
 
 ---
 
-**업데이트**: 2026-01-11 23:25 KST  
-**다음 단계**: 3단계 감사 (보상/미션/시즌) 또는 Critical 이슈 수정
+## 11. 진행도 업데이트 (2026-01-12)
+
+### A. 완료(코드 반영)
+
+- ✅ **CRITICAL-003(출금 예약액 UI 분리 표시)**: 유저 금고 화면에서 `총 보관금 / 출금 가능 / 예약됨` 3분리 표시 적용
+    - 적용 파일(Frontend)
+        - `src/components/vault/VaultMainPanel.tsx`
+        - `src/components/vault/VaultPageCompact.tsx`
+    - 기대 효과
+        - 출금 요청(PENDING) 이후에도 총 보관금(locked)과 출금 가능(available)의 차이를 사용자가 즉시 인지 가능
+        - 예약(reserved) 금액이 명시되어 “출금 신청했는데 왜 안 빠졌지?” 혼선 완화
+
+- ✅ **HIGH-003(External Ranking → Vault 연결 가시성/관측 강화)**: 입금 증가 감지 및 Vault 시그널 처리에 INFO 로그 추가
+    - 적용 파일(Backend)
+        - `app/services/admin_external_ranking_service.py`
+        - `app/services/vault_service.py`
+    - 기대 효과
+        - 입금 증가(prev/new/delta) 및 시그널 처리 여부를 서버 로그로 추적 가능
+
+- ✅ **MEDIUM-001(vault_balance 레거시 미러 정책 정리)**: `user.vault_balance`를 `vault_locked_balance` 미러로 단일화
+    - 적용 파일(Backend)
+        - `app/services/vault2_service.py`
+    - 기대 효과
+        - Vault2 경로에서 `locked+available`로 쓰이던 미러 정의 충돌 제거
+
+### B. 남은 작업(다음 액션 후보)
+
+- 🟡 **(후속) External Ranking 운영 화면/지표 보강**
+    - 현재는 로그 기반 추적까지 반영됨(추가로 admin dashboard/metric 노출은 범위 확장 필요)
+
+### C. 검증 실행 결과 (2026-01-12)
+
+#### 1) DB 마이그레이션 (Docker backend)
+
+- `alembic current`: `20260110_1200_ext_rank_delta (head)`
+- `alembic upgrade head`: 변경사항 없음(이미 head)
+
+#### 2) 자동 테스트 (Local)
+
+- 실행 커맨드:
+
+```bash
+python -m pytest -q \
+    tests/test_phase2_audit_coverage.py \
+    tests/test_external_ranking_charge_hook.py \
+    tests/test_external_ranking_deposit_steps.py \
+    tests/test_vault_withdraw_reserved_flow.py \
+    tests/test_vault2_scaffold.py \
+    tests/test_vault_status_recommended_action.py
+```
+
+- 결과: **12 passed**, warnings **14** (Pydantic v2 / FastAPI lifespan 관련 deprecation warnings)
+
+**업데이트**: 2026-01-12 KST  
+**다음 단계**: HIGH-003 / MEDIUM-001 실제 코드 정리 또는 3단계 감사(보상/미션/시즌)

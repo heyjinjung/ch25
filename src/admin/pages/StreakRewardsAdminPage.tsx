@@ -3,10 +3,28 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   fetchStreakRewardDailyCounts,
   fetchStreakRewardUserEvents,
-  type StreakRewardUserEvent,
 } from "../api/adminStreakRewardsApi";
 import { fetchAdminUiConfig, upsertAdminUiConfig } from "../api/adminUiConfigApi";
 import EventRemoteControl from "../components/events/EventRemoteControl";
+import {
+  Flame,
+  RefreshCw,
+  Search,
+  Trash2,
+  Plus,
+  ChevronRight,
+  CheckCircle2,
+  SkipForward,
+  Calendar,
+  Settings2,
+  History,
+  Save,
+  LayoutGrid,
+  Wallet,
+  Package,
+  AlertCircle,
+  Info,
+} from "lucide-react";
 
 const CONFIG_KEY = "streak_reward_rules";
 
@@ -61,7 +79,7 @@ const sortRules = (rows: RuleRow[]) => {
   return [...rows].sort((a, b) => {
     const ap = a.pinned ? 1 : 0;
     const bp = b.pinned ? 1 : 0;
-    if (ap !== bp) return bp - ap; // pinned first
+    if (ap !== bp) return bp - ap;
     return a.day - b.day;
   });
 };
@@ -69,7 +87,6 @@ const sortRules = (rows: RuleRow[]) => {
 const coerceRules = (value: any): RuleRow[] => {
   const rawRules = value?.rules;
   if (!Array.isArray(rawRules)) return defaultRules();
-
   const rows: RuleRow[] = [];
   for (const raw of rawRules) {
     if (!raw || typeof raw !== "object") continue;
@@ -84,624 +101,464 @@ const coerceRules = (value: any): RuleRow[] => {
       const kind = g.kind;
       const amount = Number(g.amount);
       if (!Number.isFinite(amount) || amount <= 0) continue;
-
       if (kind === "WALLET") {
         const tokenType = String((g as any).token_type ?? "").trim() as WalletTokenType;
         if (!tokenType) continue;
         grants.push({ kind: "WALLET", token_type: tokenType, amount: Math.floor(amount) });
-        continue;
-      }
-      if (kind === "INVENTORY") {
+      } else if (kind === "INVENTORY") {
         const itemType = String((g as any).item_type ?? "").trim();
         if (!itemType) continue;
         grants.push({ kind: "INVENTORY", item_type: itemType, amount: Math.floor(amount) });
-        continue;
       }
     }
     rows.push({ day, enabled, pinned, grants });
   }
-
   const sorted = sortRules(rows);
   return sorted.length ? sorted : defaultRules();
 };
 
-const inputClass =
-  "w-full rounded-md border border-[#333333] bg-[#1A1A1A] px-3 py-2 text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]";
-
-const buttonPrimary =
-  "inline-flex items-center rounded-md bg-[#2D6B3B] px-4 py-2 text-sm font-medium text-white hover:bg-[#91F402] hover:text-black disabled:cursor-not-allowed disabled:opacity-60";
-
-const buttonSecondary =
-  "inline-flex items-center rounded-md border border-[#333333] bg-[#1A1A1A] px-4 py-2 text-sm font-medium text-gray-200 hover:bg-[#2C2C2E] disabled:cursor-not-allowed disabled:opacity-60";
-
-const panelClass = "rounded-lg border border-[#333333] bg-[#111111] p-6";
-
-const formatKst = (iso: string) => {
-  try {
-    return new Date(iso).toLocaleString("ko-KR");
-  } catch {
-    return iso;
-  }
+const formatKSTTimeCompact = (iso: string) => {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return new Intl.DateTimeFormat("ko-KR", {
+    timeZone: "Asia/Seoul",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).format(d).replace(/\. /g, "/").replace(/\.$/, "");
 };
 
 const StreakRewardsAdminPage: React.FC = () => {
   const queryClient = useQueryClient();
   const todayStr = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
-  // --- Daily counts ---
+  // --- State ---
   const [day, setDay] = useState(todayStr);
+  const [userId, setUserId] = useState<string>("");
+  const [filterDay, setFilterDay] = useState<string>(todayStr);
+  const [limit, setLimit] = useState<number>(50);
+  const [searchEnabled, setSearchEnabled] = useState(false);
+
+  // --- Queries ---
   const dailyQuery = useQuery({
     queryKey: ["admin", "streak-rewards", "daily", day],
     queryFn: () => fetchStreakRewardDailyCounts(day),
   });
-
-  // --- User events search ---
-  const [userId, setUserId] = useState<string>("");
-  const [externalId, setExternalId] = useState<string>("");
-  const [filterDay, setFilterDay] = useState<string>(todayStr);
-  const [limit, setLimit] = useState<number>(50);
-  const [searchEnabled, setSearchEnabled] = useState(false);
-  const [searchError, setSearchError] = useState<string | null>(null);
 
   const parsedUserId = useMemo(() => {
     const raw = userId.trim();
     if (!raw) return undefined;
     if (!/^\d+$/.test(raw)) return null;
     const n = Number(raw);
-    if (!Number.isFinite(n) || n <= 0) return null;
-    return n;
+    return Number.isFinite(n) && n > 0 ? n : null;
   }, [userId]);
 
-  const trimmedExternalId = useMemo(() => {
-    const raw = externalId.trim();
-    return raw ? raw : undefined;
-  }, [externalId]);
-
   const userEventsQuery = useQuery({
-    queryKey: ["admin", "streak-rewards", "user-events", userId, externalId, filterDay, limit],
-    queryFn: () =>
-      fetchStreakRewardUserEvents({
-        user_id: typeof parsedUserId === "number" ? parsedUserId : undefined,
-        external_id: trimmedExternalId,
-        day: filterDay || undefined,
-        limit,
-      }),
+    queryKey: ["admin", "streak-rewards", "user-events", userId, filterDay, limit],
+    queryFn: () => fetchStreakRewardUserEvents({
+      user_id: typeof parsedUserId === "number" ? parsedUserId : undefined,
+      day: filterDay || undefined,
+      limit,
+    }),
     enabled: searchEnabled,
   });
 
-  // --- Reward rules (config) ---
   const configQuery = useQuery({
     queryKey: ["admin", "ui-config", CONFIG_KEY],
     queryFn: () => fetchAdminUiConfig(CONFIG_KEY),
   });
 
   const initialRules = useMemo(() => coerceRules(configQuery.data?.value ?? null), [configQuery.data?.value]);
-  const [rules, setRules] = useState<RuleRow[]>(defaultRules);
-  const [rulesError, setRulesError] = useState<string | null>(null);
+  const [rules, setRules] = useState<RuleRow[]>([]);
 
   React.useEffect(() => {
-    if (!configQuery.data) return;
-    setRules(sortRules(initialRules));
+    if (configQuery.data) {
+      setRules(sortRules(initialRules));
+    }
   }, [configQuery.data, initialRules]);
 
   const saveRules = useMutation({
     mutationFn: async () => {
-      setRulesError(null);
-
-      const allowedWalletTokens: Set<string> = new Set([
-        "ROULETTE_COIN",
-        "DICE_TOKEN",
-        "LOTTERY_TICKET",
-        "TRIAL_TOKEN",
-        "GOLD_KEY",
-        "DIAMOND_KEY",
-        "DIAMOND",
-      ]);
-
-      const payloadRules: Array<{ day: number; enabled: boolean; pinned?: boolean; grants: any[] }> = [];
-      for (const row of rules) {
-        const d = Number(row.day);
-        if (!Number.isFinite(d) || d <= 0) continue;
-
-        if (!Array.isArray(row.grants) || row.grants.length === 0) {
-          payloadRules.push({ day: d, enabled: !!row.enabled, pinned: row.pinned === true, grants: [] });
-          continue;
-        }
-
-        const grantsPayload: any[] = [];
-        for (const g of row.grants) {
-          const amount = Number((g as any).amount);
-          if (!Number.isFinite(amount) || amount <= 0) {
-            throw new Error(`Day ${d}: amount는 1 이상의 숫자여야 합니다`);
-          }
-
-          if (g.kind === "WALLET") {
-            const tokenType = String((g as any).token_type ?? "").trim();
-            if (!allowedWalletTokens.has(tokenType)) {
-              throw new Error(`Day ${d}: 알 수 없는 token_type (${tokenType})`);
-            }
-            grantsPayload.push({ kind: "WALLET", token_type: tokenType, amount: Math.floor(amount) });
-            continue;
-          }
-          if (g.kind === "INVENTORY") {
-            const itemType = String((g as any).item_type ?? "").trim();
-            if (!itemType) {
-              throw new Error(`Day ${d}: item_type은 비어있을 수 없습니다`);
-            }
-            grantsPayload.push({ kind: "INVENTORY", item_type: itemType, amount: Math.floor(amount) });
-            continue;
-          }
-          throw new Error(`Day ${d}: 알 수 없는 grant.kind`);
-        }
-
-        payloadRules.push({ day: d, enabled: !!row.enabled, pinned: row.pinned === true, grants: grantsPayload });
-      }
-
-      const value = { version: 1, rules: payloadRules };
+      const value = { version: 1, rules };
       return upsertAdminUiConfig(CONFIG_KEY, { value });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "ui-config", CONFIG_KEY] });
     },
-    onError: (err: any) => {
-      setRulesError(err?.message ?? "저장 실패");
-    },
   });
 
-  const updatedAt = configQuery.data?.updated_at ? formatKst(configQuery.data.updated_at) : "-";
-
-  const renderEventNameBadge = (name: string) => {
-    const isGrant = name.startsWith("streak.reward_grant");
-    const isSkip = name.startsWith("streak.reward_skip");
-    const cls = isGrant
-      ? "bg-green-900/30 text-green-200 border-green-500/30"
-      : isSkip
-        ? "bg-yellow-900/30 text-yellow-200 border-yellow-500/30"
-        : "bg-slate-900/30 text-slate-200 border-slate-500/30";
-    return <span className={`inline-flex rounded border px-2 py-0.5 text-xs ${cls}`}>{name}</span>;
+  const handleRefreshAll = () => {
+    queryClient.invalidateQueries({ queryKey: ["admin", "streak-rewards"] });
+    queryClient.invalidateQueries({ queryKey: ["admin", "ui-config", CONFIG_KEY] });
   };
 
-  const events: StreakRewardUserEvent[] = userEventsQuery.data?.items ?? [];
+  const renderEventBadge = (name: string) => {
+    const isGrant = name.includes("grant");
+    const isSkip = name.includes("skip");
+    return (
+      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-tight border ${isGrant ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : isSkip ? "bg-amber-500/10 text-amber-400 border-amber-500/20" : "bg-zinc-800 text-zinc-400 border-zinc-700"}`}>
+        {name.replace("streak.", "")}
+      </span>
+    );
+  };
 
   return (
-    <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-semibold text-[#91F402]">스트릭 자동지급 운영</h1>
-          <p className="mt-1 text-sm text-gray-400">
-            Day3/Day7 자동지급 건수 및 유저별 지급/스킵 로그 조회, 보상 규칙 편집
-          </p>
+    <div className="p-6 space-y-6 max-w-[1600px] mx-auto">
+      {/* Header Area */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2 text-zinc-500 text-xs font-medium">
+            <span>시스템 관리</span>
+            <ChevronRight size={12} />
+            <span className="text-zinc-300">스트릭 보상</span>
+          </div>
+          <h1 className="text-2xl font-black text-white flex items-center gap-3 tracking-tight">
+            <Flame className="text-admin-brand" size={28} />
+            스트릭 보상 관리
+          </h1>
         </div>
-      </header>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleRefreshAll}
+            className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl border border-zinc-700 transition-all text-sm font-bold"
+          >
+            <RefreshCw size={16} />
+            전체 새로고침
+          </button>
+          <button
+            disabled={saveRules.isPending}
+            onClick={() => saveRules.mutate()}
+            className="flex items-center gap-2 px-4 py-2 bg-admin-brand hover:brightness-110 text-black rounded-xl transition-all text-sm font-black shadow-lg shadow-admin-brand/20 disabled:opacity-50"
+          >
+            <Save size={16} />
+            {saveRules.isPending ? "저장 중..." : "설정 저장"}
+          </button>
+        </div>
+      </div>
 
       <EventRemoteControl />
 
-      <section className={panelClass}>
-        <h2 className="text-lg font-medium text-white">금일 지급 현황</h2>
-        <div className="mt-4 flex flex-wrap items-center gap-3">
-          <label className="text-sm text-gray-300">날짜</label>
-          <input type="date" className={inputClass} style={{ maxWidth: 220 }} value={day} onChange={(e) => setDay(e.target.value)} />
-          <button
-            type="button"
-            className={buttonSecondary}
-            onClick={() => queryClient.invalidateQueries({ queryKey: ["admin", "streak-rewards", "daily", day] })}
-          >
-            새로고침
-          </button>
+      {/* Dashboard Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="admin-card p-4 relative overflow-hidden group">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Day 3 Grants</p>
+              <h3 className="text-2xl font-black text-white mt-1 tabular-nums">{dailyQuery.data?.grant_day3 || 0}</h3>
+            </div>
+            <div className="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg group-hover:scale-110 transition-transform">
+              <CheckCircle2 size={20} />
+            </div>
+          </div>
+          <div className="mt-4 flex items-center gap-2 text-[10px] text-zinc-500 font-medium">
+            <Calendar size={12} />
+            <span>{day} 기준</span>
+          </div>
+        </div>
+        <div className="admin-card p-4 relative overflow-hidden group">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Day 3 Skips</p>
+              <h3 className="text-2xl font-black text-white mt-1 tabular-nums">{dailyQuery.data?.skip_day3 || 0}</h3>
+            </div>
+            <div className="p-2 bg-amber-500/10 text-amber-400 rounded-lg group-hover:scale-110 transition-transform">
+              <SkipForward size={20} />
+            </div>
+          </div>
+        </div>
+        <div className="admin-card p-4 relative overflow-hidden group">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Day 7 Grants</p>
+              <h3 className="text-2xl font-black text-white mt-1 tabular-nums">{dailyQuery.data?.grant_day7 || 0}</h3>
+            </div>
+            <div className="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg group-hover:scale-110 transition-transform">
+              <CheckCircle2 size={20} />
+            </div>
+          </div>
+        </div>
+        <div className="admin-card p-4 relative overflow-hidden group">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Day 7 Skips</p>
+              <h3 className="text-2xl font-black text-white mt-1 tabular-nums">{dailyQuery.data?.skip_day7 || 0}</h3>
+            </div>
+            <div className="p-2 bg-amber-500/10 text-amber-400 rounded-lg group-hover:scale-110 transition-transform">
+              <SkipForward size={20} />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        {/* Left Column: Rules Editor */}
+        <div className="xl:col-span-2 space-y-4">
+          <div className="flex items-center justify-between px-2">
+            <h2 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
+              <Settings2 className="h-4 w-4 text-admin-brand" />
+              보상 규칙 (Rewards Rules)
+            </h2>
+            <button
+              onClick={() => setRules(sortRules([...rules, { day: 1, enabled: true, grants: [] }]))}
+              className="text-[11px] font-black bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-3 py-1.5 rounded-lg border border-zinc-700 flex items-center gap-1.5 transition-all"
+            >
+              <Plus size={14} />
+              Day 추가
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3">
+            {rules.map((rule, idx) => (
+              <div key={`${rule.day}-${idx}`} className={`admin-card p-4 border-l-4 transition-all ${rule.enabled ? 'border-l-admin-brand' : 'border-l-zinc-700 opacity-60'}`}>
+                <div className="flex flex-col md:flex-row gap-4">
+                  {/* Day Input */}
+                  <div className="w-full md:w-32 space-y-2">
+                    <label className="text-[10px] font-bold text-zinc-500 uppercase">Day</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        value={rule.day}
+                        onChange={(e) => {
+                          const next = Number(e.target.value) || 0;
+                          setRules(prev => prev.map((r, i) => i === idx ? { ...r, day: next } : r));
+                        }}
+                        className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white font-mono focus:border-admin-brand outline-none transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Grants Editor */}
+                  <div className="flex-1 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <p className="text-[10px] font-bold text-zinc-500 uppercase">지급 보상 (Grants)</p>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setRules(prev => prev.map((r, i) => i === idx ? { ...r, grants: [...r.grants, { kind: "WALLET", token_type: "ROULETTE_COIN", amount: 1 }] } : r))}
+                          className="text-[10px] font-bold text-emerald-400 hover:bg-emerald-500/10 px-2 py-1 rounded transition-colors flex items-center gap-1"
+                        >
+                          <Wallet size={12} />
+                          지갑+
+                        </button>
+                        <button
+                          onClick={() => setRules(prev => prev.map((r, i) => i === idx ? { ...r, grants: [...r.grants, { kind: "INVENTORY", item_type: "DIAMOND", amount: 1 }] } : r))}
+                          className="text-[10px] font-bold text-blue-400 hover:bg-blue-500/10 px-2 py-1 rounded transition-colors flex items-center gap-1"
+                        >
+                          <Package size={12} />
+                          인벤+
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      {rule.grants.length === 0 && (
+                        <div className="text-xs text-zinc-600 italic py-2 border border-dashed border-zinc-800 rounded-lg text-center">
+                          지정된 보상이 없습니다.
+                        </div>
+                      )}
+                      {rule.grants.map((g, gIdx) => (
+                        <div key={gIdx} className="flex flex-wrap items-center gap-2 bg-zinc-900/50 p-2 rounded-lg border border-zinc-800 group/grant">
+                          <div className="flex-1 flex items-center gap-2 min-w-[200px]">
+                            {g.kind === "WALLET" ? (
+                              <select
+                                value={g.token_type}
+                                onChange={(e) => {
+                                  const next = e.target.value as WalletTokenType;
+                                  setRules(prev => prev.map((r, i) => i === idx ? { ...r, grants: r.grants.map((gg, ii) => ii === gIdx ? { ...gg, token_type: next } as GrantRow : gg) } : r));
+                                }}
+                                className="flex-1 bg-zinc-900 border border-zinc-800 rounded px-2 py-1 text-xs text-emerald-400 font-bold focus:border-emerald-500 outline-none"
+                              >
+                                <option value="ROULETTE_COIN">🪙 Roulette Coin</option>
+                                <option value="DICE_TOKEN">🎲 Dice Token</option>
+                                <option value="LOTTERY_TICKET">🎟️ Lottery Ticket</option>
+                                <option value="GOLD_KEY">🔑 Gold Key</option>
+                                <option value="DIAMOND_KEY">💎 Diamond Key</option>
+                                <option value="DIAMOND">💠 Diamond</option>
+                              </select>
+                            ) : (
+                              <input
+                                value={(g as any).item_type}
+                                onChange={(e) => {
+                                  setRules(prev => prev.map((r, i) => i === idx ? { ...r, grants: r.grants.map((gg, ii) => ii === gIdx ? { ...gg, item_type: e.target.value } as GrantRow : gg) } : r));
+                                }}
+                                className="flex-1 bg-zinc-900 border border-zinc-800 rounded px-2 py-1 text-xs text-blue-400 font-bold focus:border-blue-500 outline-none"
+                                placeholder="아이템 코드 입력"
+                              />
+                            )}
+                            <input
+                              type="number"
+                              value={g.amount}
+                              onChange={(e) => {
+                                const amt = Number(e.target.value) || 0;
+                                setRules(prev => prev.map((r, i) => i === idx ? { ...r, grants: r.grants.map((gg, ii) => ii === gIdx ? { ...gg, amount: amt } as GrantRow : gg) } : r));
+                              }}
+                              className="w-16 bg-zinc-900 border border-zinc-800 rounded px-2 py-1 text-xs text-white text-right font-mono outline-none"
+                            />
+                          </div>
+                          <button
+                            onClick={() => setRules(prev => prev.map((r, i) => i === idx ? { ...r, grants: r.grants.filter((_, ii) => ii !== gIdx) } : r))}
+                            className="p-1 hover:text-rose-400 text-zinc-600 transition-colors opacity-0 group-hover/grant:opacity-100"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="w-full md:w-24 flex md:flex-col justify-between items-end gap-2 text-[10px] font-bold">
+                    <label className="flex items-center gap-2 cursor-pointer group">
+                      <span className={rule.enabled ? 'text-emerald-400' : 'text-zinc-500'}>{rule.enabled ? '활성' : '비활성'}</span>
+                      <input
+                        type="checkbox"
+                        checked={rule.enabled}
+                        onChange={(e) => setRules(prev => prev.map((r, i) => i === idx ? { ...r, enabled: e.target.checked } : r))}
+                        className="w-4 h-4 rounded border-zinc-700 bg-zinc-800 text-admin-brand focus:ring-offset-0 focus:ring-0"
+                      />
+                    </label>
+                    <button
+                      onClick={() => setRules(prev => prev.filter((_, i) => i !== idx))}
+                      className="p-2 text-zinc-500 hover:text-rose-400 transition-colors"
+                      title="삭제"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {dailyQuery.isLoading && <div className="mt-4 text-gray-200">불러오는 중...</div>}
-        {dailyQuery.isError && (
-          <div className="mt-4 rounded border border-red-500/40 bg-red-950 p-3 text-red-100">
-            불러오기 실패: {(dailyQuery.error as Error).message}
-          </div>
-        )}
-
-        {dailyQuery.data && (
-          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="rounded-lg border border-[#333333] bg-[#0A0A0A] p-4">
-              <p className="text-xs text-gray-500">Day3 지급</p>
-              <p className="mt-1 text-3xl font-bold text-white">{dailyQuery.data.grant_day3}</p>
-              <p className="mt-2 text-xs text-gray-400">중복 스킵: {dailyQuery.data.skip_day3}</p>
+        {/* Right Column: Search & Logs */}
+        <div className="space-y-4">
+          <div className="admin-card p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
+                <Search className="h-4 w-4 text-admin-brand" />
+                이벤트 로그 조회 (Logs)
+              </h2>
+              <Info size={14} className="text-zinc-600" />
             </div>
-            <div className="rounded-lg border border-[#333333] bg-[#0A0A0A] p-4">
-              <p className="text-xs text-gray-500">Day7 지급</p>
-              <p className="mt-1 text-3xl font-bold text-white">{dailyQuery.data.grant_day7}</p>
-              <p className="mt-2 text-xs text-gray-400">중복 스킵: {dailyQuery.data.skip_day7}</p>
+
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-zinc-500 uppercase">사용자 ID</label>
+                  <input
+                    value={userId}
+                    onChange={(e) => setUserId(e.target.value)}
+                    placeholder="UID"
+                    className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:border-admin-brand outline-none transition-colors"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-zinc-500 uppercase">최대 결과</label>
+                  <input
+                    type="number"
+                    value={limit}
+                    onChange={(e) => setLimit(Number(e.target.value) || 50)}
+                    className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white font-mono focus:border-admin-brand outline-none transition-colors"
+                  />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-zinc-500 uppercase">조회 대상 날짜</label>
+                <input
+                  type="date"
+                  value={filterDay}
+                  onChange={(e) => setFilterDay(e.target.value)}
+                  className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-300 focus:border-admin-brand outline-none transition-colors"
+                />
+              </div>
+
+              <button
+                onClick={() => {
+                  if (!userId.trim()) return;
+                  setSearchEnabled(true);
+                  userEventsQuery.refetch();
+                }}
+                className="w-full py-2.5 bg-zinc-100 hover:bg-white text-black rounded-xl text-sm font-black transition-all flex items-center justify-center gap-2 mt-2"
+              >
+                <Search size={16} />
+                이벤트 조회
+              </button>
             </div>
           </div>
-        )}
-      </section>
 
-      <section className={panelClass}>
-        <h2 className="text-lg font-medium text-white">유저별 지급 로그 조회</h2>
-        <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-4">
-          <div>
-            <label className="text-sm text-gray-300">유저 ID</label>
-            <input className={inputClass} value={userId} onChange={(e) => setUserId(e.target.value)} placeholder="예: 123" />
-          </div>
-          <div>
-            <label className="text-sm text-gray-300">외부 ID</label>
-            <input className={inputClass} value={externalId} onChange={(e) => setExternalId(e.target.value)} placeholder="예: admin / telegram_..." />
-          </div>
-          <div>
-            <label className="text-sm text-gray-300">날짜(옵션)</label>
-            <input type="date" className={inputClass} value={filterDay} onChange={(e) => setFilterDay(e.target.value)} />
-          </div>
-          <div>
-            <label className="text-sm text-gray-300">최대 조회 개수</label>
+          {/* Quick Daily Search Card */}
+          <div className="admin-card p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
+                <LayoutGrid className="h-4 w-4 text-admin-brand" />
+                금일 현황 날짜 변경
+              </h2>
+            </div>
             <input
-              className={inputClass}
-              value={String(limit)}
-              onChange={(e) => setLimit(Number(e.target.value) || 50)}
-              placeholder="50"
+              type="date"
+              value={day}
+              onChange={(e) => setDay(e.target.value)}
+              className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-300 focus:border-admin-brand outline-none transition-colors"
             />
           </div>
-        </div>
 
-        <div className="mt-4 flex flex-wrap gap-3">
-          <button
-            type="button"
-            className={buttonPrimary}
-            onClick={() => {
-              const hasAnyIdentifier = Boolean(userId.trim()) || Boolean(externalId.trim());
-              if (!hasAnyIdentifier) {
-                setSearchError("유저 ID 또는 외부 ID 중 하나는 반드시 입력해야 합니다.");
-                setSearchEnabled(false);
-                return;
-              }
-
-              if (parsedUserId === null) {
-                setSearchError("유저 ID는 1 이상의 숫자여야 합니다.");
-                setSearchEnabled(false);
-                return;
-              }
-
-              setSearchError(null);
-              setSearchEnabled(true);
-              queryClient.invalidateQueries({
-                queryKey: ["admin", "streak-rewards", "user-events", userId, externalId, filterDay, limit],
-              });
-            }}
-          >
-            조회
-          </button>
-          <button
-            type="button"
-            className={buttonSecondary}
-            onClick={() => {
-              setSearchError(null);
-              setSearchEnabled(false);
-              queryClient.removeQueries({ queryKey: ["admin", "streak-rewards", "user-events"] });
-            }}
-          >
-            결과 지우기
-          </button>
-        </div>
-
-        {searchError ? <div className="mt-3 text-sm text-red-200">{searchError}</div> : null}
-
-        {userEventsQuery.isFetching && <div className="mt-4 text-gray-200">조회 중...</div>}
-        {userEventsQuery.isError && (
-          <div className="mt-4 rounded border border-red-500/40 bg-red-950 p-3 text-red-100">
-            조회 실패: {(userEventsQuery.error as any)?.response?.data?.detail || (userEventsQuery.error as Error).message}
-          </div>
-        )}
-
-        {userEventsQuery.data && (
-          <div className="mt-4 space-y-3">
-            <div className="text-sm text-gray-300">
-              대상 유저: <span className="text-white">{userEventsQuery.data.user.id}</span> · external_id: {" "}
-              <span className="text-white">{userEventsQuery.data.user.external_id}</span>
-              {userEventsQuery.data.user.nickname ? (
-                <>
-                  {" "}· 닉네임: <span className="text-white">{userEventsQuery.data.user.nickname}</span>
-                </>
-              ) : null}
+          {/* Real-time Status Alert */}
+          <div className="bg-admin-brand/5 border border-admin-brand/20 rounded-2xl p-4 flex gap-3">
+            <AlertCircle className="text-admin-brand shrink-0" size={20} />
+            <div className="space-y-1">
+              <p className="text-xs font-bold text-admin-brand">주의 사항</p>
+              <p className="text-[10px] text-zinc-400 leading-relaxed">보상 규칙 변경시 저장 버튼을 반드시 눌러주세요. 이미 지급된 스트릭 보상은 회수되지 않으며 익일 자정(00:00)부터 새 규칙이 적용됩니다.</p>
             </div>
+          </div>
+        </div>
+      </div>
 
-            <div className="overflow-x-auto rounded-lg border border-[#333333] bg-[#0A0A0A]">
-              <table className="w-full text-left text-sm">
-                <thead className="border-b border-[#333333] text-gray-400">
-                  <tr>
-                    <th className="px-4 py-3">시간(KST)</th>
-                    <th className="px-4 py-3">이벤트</th>
-                    <th className="px-4 py-3">메타</th>
+      {/* Logs Results Table */}
+      {searchEnabled && (
+        <div className="admin-card overflow-hidden">
+          <div className="p-4 border-b border-zinc-800 flex items-center justify-between bg-zinc-900/50">
+            <h2 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
+              <History className="h-4 w-4 text-emerald-400" />
+              최근 발생 이벤트 (Recent User Events)
+            </h2>
+            <span className="text-[10px] font-bold text-zinc-500 uppercase">UID: {userEventsQuery.data?.user.id || '-'}</span>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-zinc-800">
+              <thead className="bg-zinc-900">
+                <tr>
+                  <th className="px-4 py-3 text-left text-[10px] font-bold text-zinc-500 uppercase tracking-widest">일시 (KST)</th>
+                  <th className="px-4 py-3 text-left text-[10px] font-bold text-zinc-500 uppercase tracking-widest">이벤트명</th>
+                  <th className="px-4 py-3 text-left text-[10px] font-bold text-zinc-500 uppercase tracking-widest">메타 데이터</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-800/50">
+                {userEventsQuery.data?.items.map((ev) => (
+                  <tr key={ev.id} className="hover:bg-white/5 transition-colors">
+                    <td className="px-4 py-3 text-[10px] text-zinc-400 font-mono whitespace-nowrap tabular-nums">{formatKSTTimeCompact(ev.created_at)}</td>
+                    <td className="px-4 py-3">{renderEventBadge(ev.event_name)}</td>
+                    <td className="px-4 py-3">
+                      <div className="max-w-[400px] overflow-hidden">
+                        <code className="text-[10px] text-zinc-500 block truncate hover:text-zinc-300 cursor-help" title={JSON.stringify(ev.meta_json)}>
+                          {JSON.stringify(ev.meta_json)}
+                        </code>
+                      </div>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {events.length === 0 ? (
-                    <tr>
-                      <td className="px-4 py-4 text-gray-500" colSpan={3}>
-                        로그가 없습니다.
-                      </td>
-                    </tr>
-                  ) : (
-                    events.map((ev) => (
-                      <tr key={ev.id} className="border-b border-[#222222] last:border-0">
-                        <td className="px-4 py-3 text-gray-200">{formatKst(ev.created_at)}</td>
-                        <td className="px-4 py-3">{renderEventNameBadge(ev.event_name)}</td>
-                        <td className="px-4 py-3 text-xs text-gray-400">
-                          <pre className="whitespace-pre-wrap">{JSON.stringify(ev.meta_json, null, 2)}</pre>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-      </section>
-
-      <section className={panelClass}>
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="text-lg font-medium text-white">스트릭 보상 규칙 편집 (Day별)</h2>
-          <p className="text-xs text-gray-500">키: {CONFIG_KEY} · 최근 저장: {updatedAt}</p>
-        </div>
-        <p className="mt-2 text-sm text-gray-400">
-          보상은 JSON으로 저장됩니다. 각 Day에 대해 grants는 JSON 배열이며, 예: {"{"} kind: "WALLET", token_type: "ROULETTE_COIN", amount: 1 {"}"}
-        </p>
-
-        {configQuery.isLoading && <div className="mt-4 text-gray-200">불러오는 중...</div>}
-        {configQuery.isError && (
-          <div className="mt-4 rounded border border-red-500/40 bg-red-950 p-3 text-red-100">
-            불러오기 실패: {(configQuery.error as Error).message}
-          </div>
-        )}
-
-        {!configQuery.isLoading && !configQuery.isError && (
-          <>
-            <div className="mt-4 flex flex-wrap gap-3">
-              <button type="button" className={buttonSecondary} onClick={() => setRules(defaultRules())}>
-                기본값(3/7)로 초기화
-              </button>
-              <button type="button" className={buttonSecondary} onClick={() => setRules(sortRules(initialRules))}>
-                현재 저장값으로 되돌리기
-              </button>
-              <button
-                type="button"
-                className={buttonSecondary}
-                onClick={() => setRules((prev) => sortRules([...prev, { day: 1, enabled: true, pinned: false, grants: [] }]))}
-              >
-                행 추가
-              </button>
-            </div>
-
-            <div className="mt-4 overflow-x-auto rounded-lg border border-[#333333] bg-[#0A0A0A]">
-              <table className="w-full text-left text-sm">
-                <thead className="border-b border-[#333333] text-gray-400">
+                ))}
+                {userEventsQuery.data?.items.length === 0 && (
                   <tr>
-                    <th className="px-4 py-3">일차(Day)</th>
-                    <th className="px-4 py-3">핀</th>
-                    <th className="px-4 py-3">활성</th>
-                    <th className="px-4 py-3">보상</th>
-                    <th className="px-4 py-3"></th>
+                    <td colSpan={3} className="px-4 py-8 text-center text-xs text-zinc-600">조회된 이벤트가 없습니다.</td>
                   </tr>
-                </thead>
-                <tbody>
-                  {rules.map((row, idx) => (
-                    <tr key={`${row.day}-${idx}`} className="border-b border-[#222222] align-top last:border-0">
-                      <td className="px-4 py-3">
-                        <input
-                          className={inputClass}
-                          style={{ width: 96 }}
-                          value={String(row.day)}
-                          onChange={(e) => {
-                            const next = Number(e.target.value) || 0;
-                            setRules((prev) => sortRules(prev.map((r, i) => (i === idx ? { ...r, day: next } : r))));
-                          }}
-                        />
-                      </td>
-                      <td className="px-4 py-3">
-                        <label className="inline-flex items-center gap-2 text-gray-200">
-                          <input
-                            type="checkbox"
-                            checked={row.pinned === true}
-                            onChange={(e) => setRules((prev) => sortRules(prev.map((r, i) => (i === idx ? { ...r, pinned: e.target.checked } : r))))}
-                          />
-                          고정
-                        </label>
-                      </td>
-                      <td className="px-4 py-3">
-                        <label className="inline-flex items-center gap-2 text-gray-200">
-                          <input
-                            type="checkbox"
-                            checked={row.enabled}
-                            onChange={(e) =>
-                              setRules((prev) => sortRules(prev.map((r, i) => (i === idx ? { ...r, enabled: e.target.checked } : r))))
-                            }
-                          />
-                          활성
-                        </label>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="space-y-2">
-                          {row.grants.length === 0 ? (
-                            <div className="text-xs text-gray-500">보상 없음</div>
-                          ) : null}
-
-                          {row.grants.map((g, gIdx) => (
-                            <div key={`${idx}-${gIdx}`} className="grid grid-cols-1 gap-2 md:grid-cols-12">
-                              <div className="md:col-span-3">
-                                <select
-                                  className={inputClass}
-                                  value={g.kind}
-                                  onChange={(e) => {
-                                    const nextKind = e.target.value as "WALLET" | "INVENTORY";
-                                    setRules((prev) =>
-                                      prev.map((r, i) => {
-                                        if (i !== idx) return r;
-                                        const nextGrants = r.grants.map((gg, ii) => {
-                                          if (ii !== gIdx) return gg;
-                                          if (nextKind === "WALLET") {
-                                            return { kind: "WALLET", token_type: "ROULETTE_COIN", amount: 1 } as GrantRow;
-                                          }
-                                          return { kind: "INVENTORY", item_type: "DIAMOND", amount: 1 } as GrantRow;
-                                        });
-                                        return { ...r, grants: nextGrants };
-                                      })
-                                    );
-                                  }}
-                                >
-                                  <option value="WALLET">지갑(WALLET)</option>
-                                  <option value="INVENTORY">인벤토리(INVENTORY)</option>
-                                </select>
-                              </div>
-
-                              <div className="md:col-span-5">
-                                {g.kind === "WALLET" ? (
-                                  <select
-                                    className={inputClass}
-                                    value={(g as any).token_type}
-                                    onChange={(e) => {
-                                      const nextToken = e.target.value as WalletTokenType;
-                                      setRules((prev) =>
-                                        prev.map((r, i) => {
-                                          if (i !== idx) return r;
-                                          const nextGrants = r.grants.map((gg, ii) =>
-                                            ii === gIdx ? ({ ...gg, token_type: nextToken } as GrantRow) : gg
-                                          );
-                                          return { ...r, grants: nextGrants };
-                                        })
-                                      );
-                                    }}
-                                  >
-                                    <option value="ROULETTE_COIN">ROULETTE_COIN</option>
-                                    <option value="DICE_TOKEN">DICE_TOKEN</option>
-                                    <option value="LOTTERY_TICKET">LOTTERY_TICKET</option>
-                                    <option value="TRIAL_TOKEN">TRIAL_TOKEN</option>
-                                    <option value="GOLD_KEY">GOLD_KEY</option>
-                                    <option value="DIAMOND_KEY">DIAMOND_KEY</option>
-                                    <option value="DIAMOND">DIAMOND</option>
-                                  </select>
-                                ) : (
-                                  <input
-                                    className={inputClass}
-                                    value={(g as any).item_type}
-                                    onChange={(e) => {
-                                      const nextItem = e.target.value;
-                                      setRules((prev) =>
-                                        prev.map((r, i) => {
-                                          if (i !== idx) return r;
-                                          const nextGrants = r.grants.map((gg, ii) =>
-                                            ii === gIdx ? ({ ...gg, item_type: nextItem } as GrantRow) : gg
-                                          );
-                                          return { ...r, grants: nextGrants };
-                                        })
-                                      );
-                                    }}
-                                    placeholder="예: DIAMOND"
-                                  />
-                                )}
-                              </div>
-
-                              <div className="md:col-span-2">
-                                <input
-                                  className={inputClass}
-                                  value={String((g as any).amount ?? 1)}
-                                  onChange={(e) => {
-                                    const nextAmount = Number(e.target.value) || 0;
-                                    setRules((prev) =>
-                                      prev.map((r, i) => {
-                                        if (i !== idx) return r;
-                                        const nextGrants = r.grants.map((gg, ii) =>
-                                          ii === gIdx ? ({ ...gg, amount: nextAmount } as GrantRow) : gg
-                                        );
-                                        return { ...r, grants: nextGrants };
-                                      })
-                                    );
-                                  }}
-                                  placeholder="수량"
-                                />
-                              </div>
-
-                              <div className="md:col-span-2">
-                                <button
-                                  type="button"
-                                  className={buttonSecondary}
-                                  onClick={() => {
-                                    setRules((prev) =>
-                                      prev.map((r, i) => {
-                                        if (i !== idx) return r;
-                                        return { ...r, grants: r.grants.filter((_, ii) => ii !== gIdx) };
-                                      })
-                                    );
-                                  }}
-                                >
-                                  제거
-                                </button>
-                              </div>
-                            </div>
-                          ))}
-
-                          <div className="flex flex-wrap gap-2">
-                            <button
-                              type="button"
-                              className={buttonSecondary}
-                              onClick={() => {
-                                setRules((prev) =>
-                                  prev.map((r, i) => {
-                                    if (i !== idx) return r;
-                                    return {
-                                      ...r,
-                                      grants: [...r.grants, { kind: "WALLET", token_type: "ROULETTE_COIN", amount: 1 }],
-                                    };
-                                  })
-                                );
-                              }}
-                            >
-                              + 지갑 보상
-                            </button>
-                            <button
-                              type="button"
-                              className={buttonSecondary}
-                              onClick={() => {
-                                setRules((prev) =>
-                                  prev.map((r, i) => {
-                                    if (i !== idx) return r;
-                                    return { ...r, grants: [...r.grants, { kind: "INVENTORY", item_type: "DIAMOND", amount: 1 }] };
-                                  })
-                                );
-                              }}
-                            >
-                              + 인벤토리 보상
-                            </button>
-                          </div>
-
-                          <details className="mt-2">
-                            <summary className="cursor-pointer text-xs text-gray-400">JSON 미리보기</summary>
-                            <pre className="mt-2 whitespace-pre-wrap text-xs text-gray-400">
-                              {JSON.stringify(row.grants, null, 2)}
-                            </pre>
-                          </details>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <button
-                          type="button"
-                          className={buttonSecondary}
-                          onClick={() => setRules((prev) => sortRules(prev.filter((_, i) => i !== idx)))}
-                        >
-                          삭제
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            <div className="mt-4 flex flex-wrap items-center gap-3">
-              <button type="button" className={buttonPrimary} disabled={saveRules.isPending} onClick={() => saveRules.mutate()}>
-                {saveRules.isPending ? "저장 중..." : "저장"}
-              </button>
-              {rulesError ? <span className="text-sm text-red-200">{rulesError}</span> : null}
-              {saveRules.isSuccess ? <span className="text-sm text-gray-200">저장 완료</span> : null}
-            </div>
-          </>
-        )}
-      </section>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,20 +1,166 @@
 import React, { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Save, RefreshCw } from "lucide-react";
+import { Save, RefreshCw, Package, Ticket, Gift, Check, X, Plus, Trash2, Search, Edit2 } from "lucide-react";
 import { useToast } from "../../components/common/ToastProvider";
-import {
-  AdminShopProduct,
-  fetchAdminShopOverrides,
-  fetchAdminShopProducts,
-  ShopProductsOverrides,
-  upsertAdminShopOverrides,
-} from "../api/adminShopApi";
+import { fetchAdminShopOverrides, fetchAdminShopProducts, ShopProductsOverrides, upsertAdminShopOverrides, AdminShopProduct } from "../api/adminShopApi";
 import { fetchEconomyStats } from "../api/adminEconomyApi";
+import { fetchRewardTypes } from "../api/adminRewardTypesApi";
+
+// ============================================================
+// 한글 라벨 상수 (하드코딩 제거)
+// ============================================================
+const LABELS = {
+  currency: "다이아",
+  active: "활성",
+  inactive: "비활성",
+  loading: "상점 설정을 불러오는 중...",
+  error: "상점 상품을 불러오지 못했습니다.",
+  noData: "데이터 없음",
+  save: "전체 저장",
+  refresh: "새로고침",
+  priceHeader: "가격 (다이아)",
+  grantHeader: "지급",
+  statusHeader: "상태",
+  productName: "상품명",
+} as const;
+
+// ============================================================
+// DB 값 → 한글 매핑 (item_type, reason, scope 등)
+// ============================================================
+const ITEM_TYPE_LABELS: Record<string, string> = {
+  // Fallbacks for types not in the standard Reward API
+  TICKET_FREE: "무료 티켓",
+  TICKET_PREMIUM: "프리미엄 티켓",
+  PREMIUM_KEY: "프리미엄 키",
+  VOUCHER: "바우처",
+  GIFTCON: "기프티콘",
+  GIFTICON: "기프티콘",
+};
+
+const COST_TOKEN_LABELS: Record<string, string> = {
+  DIAMOND: "다이아",
+  ROULETTE_COIN: "룰렛 코인",
+  DICE_TOKEN: "주사위 토큰",
+  LOTTERY_TICKET: "복권 티켓",
+  TRIAL_TOKEN: "체험 토큰",
+  GOLD_KEY: "골드 키",
+  DIAMOND_KEY: "다이아 키",
+};
+
+const toSelectOptions = (m: Record<string, string>) =>
+  Object.entries(m)
+    .map(([value, label]) => ({ value, label }))
+    .sort((a, b) => a.label.localeCompare(b.label, "ko"));
+
+const COST_TOKEN_OPTIONS = toSelectOptions(COST_TOKEN_LABELS);
+const AMOUNT_OPTIONS = [1, 2, 3, 5, 10, 20, 50, 100];
+
+const GIFTICON_BRAND_LABELS: Record<string, string> = {
+  BAEMIN: "배민",
+  CC_COIN: "씨씨코인",
+};
+
+const formatGifticonItemType = (itemType: string): string | null => {
+  const withAmount = itemType.match(/^(.+)_GIFTICON_(\d+)$/);
+  if (withAmount) {
+    const rawBrand = withAmount[1];
+    const amount = Number(withAmount[2]);
+    const brand = GIFTICON_BRAND_LABELS[rawBrand] ?? rawBrand;
+    const amountLabel = Number.isFinite(amount) ? `${amount.toLocaleString()}원` : withAmount[2];
+    return `${brand} 기프티콘 ${amountLabel}`;
+  }
+
+  const withoutAmount = itemType.match(/^(.+)_GIFTICON$/);
+  if (withoutAmount) {
+    const rawBrand = withoutAmount[1];
+    const brand = GIFTICON_BRAND_LABELS[rawBrand] ?? rawBrand;
+    return `${brand} 기프티콘`;
+  }
+
+  return null;
+};
+
+const SKU_TOKEN_LABELS: Record<string, string> = {
+  PROD: "상품",
+  SHOP: "상점",
+  TICKET: "티켓",
+  FREE: "무료",
+  PREMIUM: "프리미엄",
+  KEY: "키",
+  DIAMOND: "다이아",
+  GOLD: "골드",
+  ROULETTE: "룰렛",
+  DICE: "주사위",
+  LOTTERY: "복권",
+  VOUCHER: "바우처",
+  GIFTICON: "기프티콘",
+};
+
+const formatSkuLabel = (sku: string): string => {
+  const tokens = sku
+    .split(/[_-]/g)
+    .filter(Boolean)
+    .map((t) => SKU_TOKEN_LABELS[t] ?? t);
+  const joined = tokens.join(" ").trim();
+  return joined || sku;
+};
+
+// reason 패턴 → 한글 라벨
+const formatReason = (reason: string, skuTitleMap?: Record<string, string>): string => {
+  if (reason.startsWith("SHOP_PURCHASE:")) {
+    const sku = reason.replace("SHOP_PURCHASE:", "");
+    const title = skuTitleMap?.[sku];
+    if (title) return `상점 구매: ${title}`;
+    return `상점 구매: ${formatSkuLabel(sku)}`;
+  }
+  if (reason.startsWith("ADMIN_GRANT")) return "관리자 지급";
+  if (reason.startsWith("ADMIN_REVOKE")) return "관리자 회수";
+  if (reason.startsWith("GAME_REWARD")) return "게임 보상";
+  if (reason.startsWith("MISSION_REWARD")) return "미션 보상";
+  if (reason.startsWith("USE_VOUCHER")) return "바우처 사용";
+  if (reason.startsWith("STREAK_REWARD")) return "연속 출석 보상";
+  return reason; // 매핑 없으면 원본
+};
+
+// scope → 한글 라벨
+const SCOPE_LABELS: Record<string, string> = {
+  shop_purchase: "상점 구매",
+  game_play: "게임 플레이",
+  mission_claim: "미션 보상 수령",
+  streak_claim: "연속 출석 수령",
+  vault_unlock: "금고 해제",
+  admin_grant: "관리자 지급",
+};
+
+const formatScope = (scope: string): string => SCOPE_LABELS[scope] ?? scope;
+
+// item_type → 한글 라벨
+const formatItemType = (itemType: string, rewardMap?: Record<string, string>): string => {
+  if (!itemType) return itemType;
+  return formatGifticonItemType(itemType) ?? rewardMap?.[itemType] ?? ITEM_TYPE_LABELS[itemType] ?? itemType;
+};
+
+// item_type 기반 동적 그룹핑 설정 (하드코딩 PROD_TICKET_ 제거)
+const GROUP_CONFIG: Record<string, { label: string; description: string; icon: React.ReactNode }> = {
+  TICKET: { label: "티켓 상품", description: "게임 참여용 티켓 상품입니다.", icon: <Ticket size={18} className="text-admin-brand" /> },
+  KEY: { label: "프리미엄 키", description: "특별 콘텐츠 해금용 키 상품입니다.", icon: <Gift size={18} className="text-admin-accent" /> },
+  DEFAULT: { label: "기타 상품", description: "일반 상품입니다.", icon: <Package size={18} className="text-admin-text-secondary" /> },
+};
+
+// item_type에서 그룹 키 추출 (동적 매핑)
+const getGroupKey = (itemType: string): string => {
+  if (itemType.includes("TICKET")) return "TICKET";
+  if (itemType.includes("KEY")) return "KEY";
+  return "DEFAULT";
+};
 
 type RowState = {
   sku: string;
   title: string;
+  cost_token: string;
   cost_amount: number;
+  item_type: string;
+  item_amount: number;
   is_active: boolean;
 };
 
@@ -25,17 +171,45 @@ const AdminShopPage: React.FC = () => {
   const productsQuery = useQuery({
     queryKey: ["admin", "shop", "products"],
     queryFn: fetchAdminShopProducts,
+    staleTime: 5 * 60 * 1000,
   });
 
   const overridesQuery = useQuery({
     queryKey: ["admin", "shop", "overrides"],
     queryFn: fetchAdminShopOverrides,
+    staleTime: 5 * 60 * 1000,
   });
 
   const statsQuery = useQuery({
     queryKey: ["admin", "economy", "stats"],
     queryFn: fetchEconomyStats,
+    staleTime: 60 * 1000,
   });
+
+  const rewardTypesQuery = useQuery({
+    queryKey: ["admin", "reward-types"],
+    queryFn: fetchRewardTypes,
+    staleTime: 30 * 60 * 1000,
+  });
+
+  const rewardTypeOptions = useMemo(() => {
+    const list = rewardTypesQuery.data ?? [];
+    const fromApi = list.map(rt => ({ value: rt.key, label: rt.display_name }));
+    const fromFallbacks = Object.entries(ITEM_TYPE_LABELS).map(([value, label]) => ({ value, label }));
+    const combined = [...fromApi, ...fromFallbacks];
+
+    // Sort and Deduplicate
+    return combined
+      .filter((item, index, self) => index === self.findIndex(t => t.value === item.value))
+      .sort((a, b) => a.label.localeCompare(b.label, "ko"));
+  }, [rewardTypesQuery.data]);
+
+  const rewardTypeMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    rewardTypesQuery.data?.forEach(rt => { map[rt.key] = rt.display_name; });
+    Object.entries(ITEM_TYPE_LABELS).forEach(([k, v]) => { if (!map[k]) map[k] = v; });
+    return map;
+  }, [rewardTypesQuery.data]);
 
   const initialRows = useMemo(() => {
     const products = productsQuery.data ?? [];
@@ -45,7 +219,10 @@ const AdminShopPage: React.FC = () => {
         {
           sku: p.sku,
           title: p.title,
+          cost_token: String(p.cost?.token ?? "DIAMOND"),
           cost_amount: Number(p.cost?.amount ?? 0),
+          item_type: String(p.grant?.item_type ?? ""),
+          item_amount: Number(p.grant?.amount ?? 0),
           is_active: p.is_active !== false,
         },
       ])
@@ -53,9 +230,14 @@ const AdminShopPage: React.FC = () => {
   }, [productsQuery.data]);
 
   const [rows, setRows] = useState<Map<string, RowState>>(new Map());
+  const [deletedSkus, setDeletedSkus] = useState<Set<string>>(new Set());
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [editingSku, setEditingSku] = useState<string | null>(null);
+  const [isAddingNew, setIsAddingNew] = useState<boolean>(false);
 
   React.useEffect(() => {
     setRows(new Map(initialRows));
+    setDeletedSkus(new Set());
   }, [initialRows]);
 
   const saveMutation = useMutation({
@@ -63,14 +245,44 @@ const AdminShopPage: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "shop", "products"] });
       queryClient.invalidateQueries({ queryKey: ["admin", "shop", "overrides"] });
+      setDeletedSkus(new Set());
       addToast("상점 설정이 저장되었습니다.", "success");
     },
-    onError: (err: any) => {
+    onError: (err: Error & { response?: { data?: { detail?: string } } }) => {
       addToast(`저장 실패: ${err.response?.data?.detail || err.message}`, "error");
     },
   });
 
-  const effectiveProducts: AdminShopProduct[] = productsQuery.data ?? [];
+  const effectiveProducts: AdminShopProduct[] = useMemo(() => {
+    const fromServer = (productsQuery.data ?? []).filter((p) => !deletedSkus.has(p.sku));
+    const known = new Set(fromServer.map((p) => p.sku));
+
+    const drafts: AdminShopProduct[] = [];
+    for (const [sku, r] of rows.entries()) {
+      if (known.has(sku)) continue;
+      if (deletedSkus.has(sku)) continue;
+      drafts.push({
+        sku,
+        title: r.title,
+        cost: { token: r.cost_token, amount: r.cost_amount },
+        grant: { item_type: r.item_type, amount: r.item_amount },
+        is_active: r.is_active,
+        source: "custom",
+      });
+    }
+
+    return [...fromServer, ...drafts];
+  }, [productsQuery.data, rows, deletedSkus]);
+
+  const skuTitleMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const p of effectiveProducts) {
+      const sku = p.sku;
+      const title = rows.get(sku)?.title ?? p.title;
+      if (title) map[sku] = title;
+    }
+    return map;
+  }, [effectiveProducts, rows]);
 
   const changedCount = useMemo(() => {
     let count = 0;
@@ -78,268 +290,578 @@ const AdminShopPage: React.FC = () => {
       const r = rows.get(p.sku);
       if (!r) continue;
       const baseTitle = p.title;
+      const baseToken = String(p.cost?.token ?? "DIAMOND");
       const baseCost = Number(p.cost?.amount ?? 0);
+      const baseItemType = String(p.grant?.item_type ?? "");
+      const baseItemAmount = Number(p.grant?.amount ?? 0);
       const baseActive = p.is_active !== false;
-      if (r.title !== baseTitle || r.cost_amount !== baseCost || r.is_active !== baseActive) count += 1;
+      if (
+        r.title !== baseTitle ||
+        r.cost_token !== baseToken ||
+        r.cost_amount !== baseCost ||
+        r.item_type !== baseItemType ||
+        r.item_amount !== baseItemAmount ||
+        r.is_active !== baseActive
+      )
+        count += 1;
     }
     return count;
   }, [effectiveProducts, rows]);
 
   const buildOverrides = (): ShopProductsOverrides => {
-    const products: Record<string, any> = {};
+    const products: Record<
+      string,
+      { title: string; cost_token: string; cost_amount: number; item_type: string; item_amount: number; is_active: boolean }
+    > = {};
     for (const p of effectiveProducts) {
       const r = rows.get(p.sku);
       if (!r) continue;
       products[p.sku] = {
         title: r.title,
+        cost_token: r.cost_token,
         cost_amount: r.cost_amount,
+        item_type: r.item_type,
+        item_amount: r.item_amount,
         is_active: r.is_active,
       };
     }
-    return { products };
+    return { products, deleted_skus: Array.from(deletedSkus) };
   };
 
   const handleSaveAll = () => {
     saveMutation.mutate(buildOverrides());
   };
 
-  const isLoading = productsQuery.isLoading || overridesQuery.isLoading;
-  if (isLoading) return <div className="p-8 text-white">Loading shop settings...</div>;
-  if (productsQuery.error) return <div className="p-8 text-red-500">Error loading shop products</div>;
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ["admin", "shop", "products"] });
+    queryClient.invalidateQueries({ queryKey: ["admin", "economy", "stats"] });
+  };
+
+  const handleEditProduct = (sku: string) => {
+    setEditingSku(sku);
+  };
+
+  const filteredProducts = useMemo(() => {
+    const all = effectiveProducts;
+    if (!searchTerm.trim()) return all;
+    const lower = searchTerm.toLowerCase();
+    return all.filter(p =>
+      p.sku.toLowerCase().includes(lower) ||
+      p.title.toLowerCase().includes(lower) ||
+      (rows.get(p.sku)?.title.toLowerCase().includes(lower))
+    );
+  }, [effectiveProducts, searchTerm, rows]);
+
+  // item_type 기반 동적 그룹핑 (하드코딩 제거)
+  const groupedProducts = useMemo(() => {
+    const groups: Record<string, AdminShopProduct[]> = {};
+    for (const p of filteredProducts) {
+      const groupKey = getGroupKey(p.grant?.item_type ?? "");
+      if (!groups[groupKey]) groups[groupKey] = [];
+      groups[groupKey].push(p);
+    }
+    return groups;
+  }, [filteredProducts]);
+
+  // 테이블 행 렌더링 함수 (요약 뷰)
+  const renderProductRow = (p: AdminShopProduct) => {
+    const r = rows.get(p.sku);
+    if (!r) return null;
+
+    const isChanged = (() => {
+      const baseTitle = p.title;
+      const baseToken = String(p.cost?.token ?? "DIAMOND");
+      const baseCost = Number(p.cost?.amount ?? 0);
+      const baseItemType = String(p.grant?.item_type ?? "");
+      const baseItemAmount = Number(p.grant?.amount ?? 0);
+      const baseActive = p.is_active !== false;
+      return (
+        r.title !== baseTitle ||
+        r.cost_token !== baseToken ||
+        r.cost_amount !== baseCost ||
+        r.item_type !== baseItemType ||
+        r.item_amount !== baseItemAmount ||
+        r.is_active !== baseActive
+      );
+    })();
+
+    const canDelete = p.source === "custom";
+
+    return (
+      <tr key={p.sku} className={`admin-tr group transition-all hover:bg-white/5 ${isChanged ? "bg-admin-brand/5 border-l-2 border-l-admin-brand" : ""}`}>
+        <td className="admin-td py-4">
+          <div className="flex flex-col gap-0.5">
+            <span className="text-sm font-bold text-admin-text-primary">{r.title}</span>
+            <span className="text-[11px] text-admin-text-muted font-mono tracking-tighter uppercase">{p.sku}</span>
+          </div>
+        </td>
+        <td className="admin-td py-4">
+          <div className="flex items-center gap-1.5">
+            <span className="text-sm font-black text-admin-brand">
+              {r.cost_amount.toLocaleString()}
+            </span>
+            <span className="text-xs font-bold text-admin-text-secondary">
+              {rewardTypeMap[r.cost_token] || r.cost_token}
+            </span>
+          </div>
+        </td>
+        <td className="admin-td py-4">
+          <div className="flex items-center gap-2">
+            <Gift size={14} className="text-admin-brand/60" />
+            <span className="text-sm font-bold text-zinc-200">
+              {formatItemType(r.item_type, rewardTypeMap)}
+            </span>
+            <span className="text-xs font-black text-admin-brand bg-admin-brand/10 px-1.5 py-0.5 rounded">
+              {r.item_amount.toLocaleString()}
+            </span>
+          </div>
+        </td>
+        <td className="admin-td py-4">
+          <div className={`
+            inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-black uppercase tracking-wider
+            ${r.is_active ? "bg-admin-accent/10 text-admin-accent border border-admin-accent/20" : "bg-admin-danger/10 text-admin-danger border border-admin-danger/20"}
+          `}>
+            <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${r.is_active ? "bg-admin-accent" : "bg-admin-danger"}`} />
+            {r.is_active ? "ACTIVE" : "INACTIVE"}
+          </div>
+        </td>
+        <td className="admin-td text-right">
+          <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button
+              type="button"
+              onClick={() => handleEditProduct(p.sku)}
+              className="p-2 rounded-lg bg-admin-sidebar hover:bg-admin-hover text-admin-text-secondary hover:text-admin-brand transition-colors"
+              title="편집"
+            >
+              <Edit2 size={16} />
+            </button>
+            {canDelete && (
+              <button
+                type="button"
+                onClick={() => {
+                  setRows((prev) => {
+                    const next = new Map(prev);
+                    next.delete(p.sku);
+                    return next;
+                  });
+                  setDeletedSkus((prev) => {
+                    const next = new Set(prev);
+                    next.add(p.sku);
+                    return next;
+                  });
+                  addToast("삭제 예약됨: 저장 시 반영됩니다.", "success");
+                }}
+                className="p-2 rounded-lg bg-admin-sidebar hover:bg-admin-danger/10 text-admin-text-secondary hover:text-admin-danger transition-colors"
+                title="삭제"
+              >
+                <Trash2 size={16} />
+              </button>
+            )}
+          </div>
+        </td>
+      </tr>
+    );
+  };
+
+  // ============================================================
+  // 모달 컴포넌트 (상품 추가/수정용)
+  // ============================================================
+  const ProductFormModal = ({ sku, onClose }: { sku?: string; onClose: () => void }) => {
+    const isEdit = !!sku;
+    const initialData = sku ? rows.get(sku) : null;
+
+    const [formSku, setFormSku] = useState(sku || "");
+    const [formTitle, setFormTitle] = useState(initialData?.title || "");
+    const [formCostToken, setFormCostToken] = useState(initialData?.cost_token || "DIAMOND");
+    const [formCostAmount, setFormCostAmount] = useState(initialData?.cost_amount || 1);
+    const [formItemType, setFormItemType] = useState(initialData?.item_type || "");
+    const [formItemAmount, setFormItemAmount] = useState(initialData?.item_amount || 1);
+    const [formIsActive, setFormIsActive] = useState(initialData?.is_active ?? true);
+
+    const [itemTypeMode, setItemTypeMode] = useState<"select" | "custom">(
+      sku && !rewardTypeOptions.some(o => o.value === initialData?.item_type) ? "custom" : "select"
+    );
+    const [costAmountMode, setCostAmountMode] = useState<"select" | "custom">(
+      initialData?.cost_amount && !AMOUNT_OPTIONS.includes(initialData?.cost_amount) ? "custom" : "select"
+    );
+    const [itemAmountMode, setItemAmountMode] = useState<"select" | "custom">(
+      initialData?.item_amount && !AMOUNT_OPTIONS.includes(initialData?.item_amount) ? "custom" : "select"
+    );
+
+    const handleSubmit = () => {
+      const trimmedSku = formSku.trim();
+      const trimmedTitle = formTitle.trim();
+      if (!trimmedSku) { addToast("상품코드를 입력하세요.", "error"); return; }
+      if (!trimmedTitle) { addToast("상품명을 입력하세요.", "error"); return; }
+      if (!formItemType) { addToast("지급 아이템을 선택하세요.", "error"); return; }
+
+      if (!isEdit && rows.has(trimmedSku)) {
+        addToast("이미 존재하는 SKU입니다.", "error");
+        return;
+      }
+
+      setRows(prev => {
+        const next = new Map(prev);
+        next.set(trimmedSku, {
+          sku: trimmedSku,
+          title: trimmedTitle,
+          cost_token: formCostToken,
+          cost_amount: formCostAmount,
+          item_type: formItemType,
+          item_amount: formItemAmount,
+          is_active: formIsActive,
+        });
+        return next;
+      });
+
+      addToast(isEdit ? "수정되었습니다." : "추가되었습니다.", "success");
+      onClose();
+    };
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+        <div className="bg-[#1e1e24] w-full max-w-lg rounded-2xl border border-white/5 shadow-[0_32px_64px_-12px_rgba(0,0,0,0.6)] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+          <div className="flex items-center justify-between p-6 border-b border-white/5 bg-white/5">
+            <div className="space-y-1">
+              <h2 className="text-xl font-bold text-white">
+                {isEdit ? "상품 수정" : "새 상품 추가"}
+              </h2>
+              <p className="text-xs text-zinc-500 uppercase font-black tracking-widest">
+                {isEdit ? "Update Product Details" : "Create New Item"}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-2 hover:bg-white/10 rounded-full transition-all text-zinc-500 hover:text-white"
+              aria-label="닫기"
+              title="닫기"
+            >
+              <X size={20} />
+            </button>
+          </div>
+
+          <div className="p-8 space-y-6 max-h-[75vh] overflow-y-auto custom-scrollbar">
+            {/* 상품 코드 */}
+            <div className="space-y-2">
+              <label className="block text-xs font-black text-zinc-500 uppercase tracking-wider ml-1">상품코드 (SKU)</label>
+              <input
+                className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-admin-brand/50 transition-all disabled:opacity-50 font-mono"
+                value={formSku}
+                onChange={e => !isEdit && setFormSku(e.target.value)}
+                disabled={isEdit}
+                placeholder="PROD_DIAMOND_10"
+              />
+            </div>
+
+            {/* 상품명 */}
+            <div className="space-y-2">
+              <label className="block text-xs font-black text-zinc-500 uppercase tracking-wider ml-1">상품명 (Title)</label>
+              <input
+                className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-admin-brand/50 transition-all"
+                value={formTitle}
+                onChange={e => setFormTitle(e.target.value)}
+                placeholder="예: 다이아 10개 상품"
+              />
+            </div>
+
+            {/* 가격 설정 */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="block text-xs font-black text-zinc-500 uppercase tracking-wider ml-1">결제 토큰</label>
+                <select
+                  className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-admin-brand/50 transition-all appearance-none"
+                  value={formCostToken}
+                  onChange={e => setFormCostToken(e.target.value)}
+                >
+                  {COST_TOKEN_OPTIONS.map(o => <option key={o.value} value={o.value} className="bg-zinc-900">{o.label}</option>)}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="block text-xs font-black text-zinc-500 uppercase tracking-wider ml-1">가격 (Amount)</label>
+                <div className="flex flex-col gap-2">
+                  <select
+                    className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-admin-brand/50 transition-all appearance-none"
+                    value={costAmountMode === "custom" ? "__CUSTOM__" : formCostAmount}
+                    onChange={e => {
+                      if (e.target.value === "__CUSTOM__") setCostAmountMode("custom");
+                      else { setCostAmountMode("select"); setFormCostAmount(Number(e.target.value)); }
+                    }}
+                  >
+                    {AMOUNT_OPTIONS.map(n => <option key={n} value={n} className="bg-zinc-900">{n.toLocaleString()}</option>)}
+                    <option value="__CUSTOM__" className="bg-zinc-900">직접 입력</option>
+                  </select>
+                  {costAmountMode === "custom" && (
+                    <input
+                      type="number"
+                      className="w-full bg-black/20 border border-admin-brand/30 rounded-xl px-4 py-2 text-sm text-white animate-in slide-in-from-top-1 duration-200"
+                      value={formCostAmount}
+                      onChange={e => setFormCostAmount(Number(e.target.value))}
+                    />
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* 지급 아이템 설정 */}
+            <div className="p-6 bg-admin-brand/5 rounded-2xl border border-admin-brand/10 space-y-4">
+              <div className="flex items-center gap-2 text-admin-brand mb-2">
+                <Gift size={14} className="animate-bounce" />
+                <span className="text-xs font-black uppercase tracking-widest">지급 보상 (Reward)</span>
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-[10px] font-black text-admin-brand/60 uppercase tracking-wider">아이템 종류</label>
+                <select
+                  className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-admin-brand/50 transition-all appearance-none"
+                  value={itemTypeMode === "custom" ? "__CUSTOM__" : formItemType}
+                  onChange={e => {
+                    if (e.target.value === "__CUSTOM__") setItemTypeMode("custom");
+                    else { setItemTypeMode("select"); setFormItemType(e.target.value); }
+                  }}
+                >
+                  <option value="" className="bg-zinc-900">선택하세요</option>
+                  {rewardTypeOptions.map(o => <option key={o.value} value={o.value} className="bg-zinc-900">{o.label}</option>)}
+                  <option value="__CUSTOM__" className="bg-zinc-900">직접 입력</option>
+                </select>
+                {itemTypeMode === "custom" && (
+                  <input
+                    className="w-full bg-black/20 border border-admin-brand/30 rounded-xl px-4 py-2 text-sm text-white mt-2"
+                    value={formItemType}
+                    onChange={e => setFormItemType(e.target.value)}
+                  />
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-[10px] font-black text-admin-brand/60 uppercase tracking-wider">수량 (Quantity)</label>
+                <div className="flex flex-col gap-2">
+                  <select
+                    className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-admin-brand/50 transition-all appearance-none"
+                    value={itemAmountMode === "custom" ? "__CUSTOM__" : formItemAmount}
+                    onChange={e => {
+                      if (e.target.value === "__CUSTOM__") setItemAmountMode("custom");
+                      else { setItemAmountMode("select"); setFormItemAmount(Number(e.target.value)); }
+                    }}
+                  >
+                    {AMOUNT_OPTIONS.map(n => <option key={n} value={n} className="bg-zinc-900">{n}</option>)}
+                    <option value="__CUSTOM__" className="bg-zinc-900">직접 입력</option>
+                  </select>
+                  {itemAmountMode === "custom" && (
+                    <input
+                      type="number"
+                      className="w-full bg-black/20 border border-admin-brand/30 rounded-xl px-4 py-2 text-sm text-white"
+                      value={formItemAmount}
+                      onChange={e => setFormItemAmount(Number(e.target.value))}
+                    />
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* 활성 상태 */}
+            <div className="flex items-center justify-between p-5 bg-white/5 rounded-2xl border border-white/5">
+              <div className="flex flex-col gap-0.5">
+                <span className="text-sm font-bold text-white">판매 활성화</span>
+                <span className="text-[10px] text-zinc-500 uppercase font-black tracking-wider">ACTIVE STATUS</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setFormIsActive(v => !v)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 ${formIsActive ? 'bg-admin-brand' : 'bg-zinc-700'}`}
+              >
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition duration-300 ${formIsActive ? 'translate-x-6' : 'translate-x-1'}`} />
+              </button>
+            </div>
+          </div>
+
+          <div className="p-6 bg-white/5 border-t border-white/5 flex gap-4">
+            <button
+              onClick={onClose}
+              className="flex-1 h-12 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-sm font-bold text-white transition-all uppercase tracking-widest"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSubmit}
+              className="flex-1 h-12 rounded-xl bg-admin-brand hover:brightness-110 text-sm font-bold text-white transition-all shadow-lg shadow-admin-brand/20 uppercase tracking-widest flex items-center justify-center gap-2"
+            >
+              <Check size={18} /> {isEdit ? "Update" : "Create"}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+
+  // 로딩/에러 상태
+  const isLoading = productsQuery.isLoading || overridesQuery.isLoading || rewardTypesQuery.isLoading;
+  if (isLoading) {
+    return <div className="admin-page-container text-admin-text-secondary">{LABELS.loading}</div>;
+  }
+  if (productsQuery.error) {
+    return <div className="admin-page-container text-admin-danger">{LABELS.error}</div>;
+  }
 
   return (
-    <div className="text-white">
-      <div className="flex flex-col gap-3 mb-6 sm:flex-row sm:items-center sm:justify-between sm:mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-[#91F402]">🛒 상점 레버</h1>
-          <p className="text-gray-400 text-sm mt-1">가격/활성화/타이틀을 배포 없이 조절합니다(UI Config 기반).</p>
+    <div className="admin-page-container">
+      {/* 헤더 섹션 */}
+      <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between mb-8">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-bold text-admin-text-base tracking-tight uppercase">
+            상점 관리 <span className="text-admin-brand/40">Shop Admin</span>
+          </h1>
         </div>
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              queryClient.invalidateQueries({ queryKey: ["admin", "shop", "products"] });
-              queryClient.invalidateQueries({ queryKey: ["admin", "economy", "stats"] });
-            }}
-            className="flex items-center gap-2 bg-[#2C2C2E] text-white px-4 py-2 rounded-lg font-bold hover:brightness-110"
-          >
-            <RefreshCw size={18} /> 새로고침
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-admin-text-muted" size={14} />
+            <input
+              className="admin-input pl-10 w-64 h-10 text-sm"
+              placeholder="상품명 또는 SKU 검색"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <button type="button" onClick={() => setIsAddingNew(true)} className="btn-admin-secondary h-10 px-4 flex items-center gap-2">
+            <Plus size={14} /> 상품 추가
+          </button>
+          <button type="button" onClick={handleRefresh} className="btn-admin-secondary h-10 px-4 flex items-center gap-2">
+            <RefreshCw size={14} /> {LABELS.refresh}
           </button>
           <button
             type="button"
             onClick={handleSaveAll}
-            disabled={saveMutation.isPending}
-            className="flex items-center gap-2 bg-[#91F402] text-black px-4 py-2 rounded-lg font-bold hover:brightness-110 disabled:opacity-60"
+            disabled={saveMutation.isPending || changedCount === 0}
+            className="btn-admin-primary h-10 px-4 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Save size={18} /> 전체 저장{changedCount ? ` (${changedCount})` : ""}
+            <Save size={14} /> {LABELS.save}
+            {changedCount > 0 ? ` (${changedCount})` : ""}
           </button>
         </div>
-      </div>
+      </header>
 
-      <div className="rounded-2xl border border-[#333333] bg-[#111111] overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-[#1A1A1A] text-gray-300">
-              <tr>
-                <th className="px-4 py-3 text-left">SKU</th>
-                <th className="px-4 py-3 text-left">상품명</th>
-                <th className="px-4 py-3 text-left">가격(DIAMOND)</th>
-                <th className="px-4 py-3 text-left">지급</th>
-                <th className="px-4 py-3 text-left">활성</th>
-              </tr>
-            </thead>
-            <tbody>
-              {/* Group 1: Premium Keys & Others */}
-              {effectiveProducts.filter(p => !p.sku.startsWith("PROD_TICKET_")).map((p) => {
-                const r = rows.get(p.sku);
-                if (!r) return null;
-                return (
-                  <tr key={p.sku} className="border-t border-[#222222]">
-                    <td className="px-4 py-3 font-mono text-xs text-gray-400">{p.sku}</td>
-                    <td className="px-4 py-3">
-                      <input
-                        className="w-full rounded-md border border-[#333333] bg-[#0B0B0B] px-3 py-2 text-sm text-white"
-                        value={r.title}
-                        onChange={(e) =>
-                          setRows((prev) => {
-                            const next = new Map(prev);
-                            next.set(p.sku, { ...r, title: e.target.value });
-                            return next;
-                          })
-                        }
-                      />
-                    </td>
-                    <td className="px-4 py-3">
-                      <input
-                        type="number"
-                        min={1}
-                        className="w-40 rounded-md border border-[#333333] bg-[#0B0B0B] px-3 py-2 text-sm text-white"
-                        value={r.cost_amount}
-                        onChange={(e) => {
-                          const v = Number(e.target.value);
-                          setRows((prev) => {
-                            const next = new Map(prev);
-                            next.set(p.sku, { ...r, cost_amount: Number.isFinite(v) ? v : r.cost_amount });
-                            return next;
-                          });
-                        }}
-                      />
-                    </td>
-                    <td className="px-4 py-3 text-xs text-gray-300">
-                      <span className="font-mono">{p.grant.item_type}</span> x{p.grant.amount}
-                    </td>
-                    <td className="px-4 py-3">
-                      <label className="flex items-center gap-2 text-sm">
-                        <input
-                          type="checkbox"
-                          checked={r.is_active}
-                          onChange={(e) =>
-                            setRows((prev) => {
-                              const next = new Map(prev);
-                              next.set(p.sku, { ...r, is_active: e.target.checked });
-                              return next;
-                            })
-                          }
-                        />
-                        <span className={r.is_active ? "text-[#91F402]" : "text-gray-500"}>
-                          {r.is_active ? "ON" : "OFF"}
-                        </span>
-                      </label>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      {/* 기존 상단 Add Form 제거됨 (모달로 대체 예정) */}
 
-      <div className="mt-8 mb-4">
-        <h2 className="text-xl font-bold text-[#91F402]">🎟️ 티켓 교환소 (체험 보상)</h2>
-        <p className="text-gray-400 text-sm mt-1">다이아로 구매 가능한 일반 게임 티켓 상품입니다.</p>
-      </div>
-
-      <div className="rounded-2xl border border-[#333333] bg-[#111111] overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-[#1A1A1A] text-gray-300">
-              <tr>
-                <th className="px-4 py-3 text-left">SKU</th>
-                <th className="px-4 py-3 text-left">상품명</th>
-                <th className="px-4 py-3 text-left">가격(DIAMOND)</th>
-                <th className="px-4 py-3 text-left">지급</th>
-                <th className="px-4 py-3 text-left">활성</th>
-              </tr>
-            </thead>
-            <tbody>
-              {effectiveProducts.filter(p => p.sku.startsWith("PROD_TICKET_")).map((p) => {
-                const r = rows.get(p.sku);
-                if (!r) return null;
-                return (
-                  <tr key={p.sku} className="border-t border-[#222222]">
-                    <td className="px-4 py-3 font-mono text-xs text-gray-400">{p.sku}</td>
-                    <td className="px-4 py-3">
-                      <input
-                        className="w-full rounded-md border border-[#333333] bg-[#0B0B0B] px-3 py-2 text-sm text-white"
-                        value={r.title}
-                        onChange={(e) =>
-                          setRows((prev) => {
-                            const next = new Map(prev);
-                            next.set(p.sku, { ...r, title: e.target.value });
-                            return next;
-                          })
-                        }
-                      />
-                    </td>
-                    <td className="px-4 py-3">
-                      <input
-                        type="number"
-                        min={1}
-                        className="w-40 rounded-md border border-[#333333] bg-[#0B0B0B] px-3 py-2 text-sm text-white"
-                        value={r.cost_amount}
-                        onChange={(e) => {
-                          const v = Number(e.target.value);
-                          setRows((prev) => {
-                            const next = new Map(prev);
-                            next.set(p.sku, { ...r, cost_amount: Number.isFinite(v) ? v : r.cost_amount });
-                            return next;
-                          });
-                        }}
-                      />
-                    </td>
-                    <td className="px-4 py-3 text-xs text-gray-300">
-                      <span className="font-mono">{p.grant.item_type}</span> x{p.grant.amount}
-                    </td>
-                    <td className="px-4 py-3">
-                      <label className="flex items-center gap-2 text-sm">
-                        <input
-                          type="checkbox"
-                          checked={r.is_active}
-                          onChange={(e) =>
-                            setRows((prev) => {
-                              const next = new Map(prev);
-                              next.set(p.sku, { ...r, is_active: e.target.checked });
-                              return next;
-                            })
-                          }
-                        />
-                        <span className={r.is_active ? "text-[#91F402]" : "text-gray-500"}>
-                          {r.is_active ? "ON" : "OFF"}
-                        </span>
-                      </label>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="rounded-2xl border border-[#333333] bg-[#111111] p-4">
-          <div className="text-sm font-bold text-[#91F402] mb-2">최근 구매(ledger 기반)</div>
-          <div className="space-y-2">
-            {(statsQuery.data?.shop_purchases ?? []).slice(0, 8).map((r) => (
-              <div key={r.reason} className="flex justify-between text-xs text-gray-300">
-                <span className="font-mono truncate" title={r.reason}>{r.reason}</span>
-                <span className="text-gray-400">{r.count}</span>
+      {/* 동적 그룹별 테이블 (item_type 기반) */}
+      {Object.entries(groupedProducts).map(([groupKey, products]) => {
+        const config = GROUP_CONFIG[groupKey] ?? GROUP_CONFIG.DEFAULT;
+        return (
+          <section key={groupKey} className="space-y-3">
+            <div className="flex items-center gap-2">
+              {config.icon}
+              <div>
+                <h2 className="text-lg font-semibold text-admin-text-primary">{config.label}</h2>
+                <p className="text-sm text-admin-text-secondary">{config.description}</p>
               </div>
-            ))}
-            {!statsQuery.data && <div className="text-xs text-gray-500">Loading…</div>}
+              <span className="ml-auto px-2 py-0.5 rounded-full text-xs font-medium bg-admin-sidebar text-admin-text-muted">
+                {products.length}개
+              </span>
+            </div>
+
+            <div className="admin-card overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th className="admin-th w-[300px] text-sm font-bold text-zinc-500 uppercase tracking-wider">상품 정보 (Product Info)</th>
+                      <th className="admin-th w-[140px] text-sm font-bold text-zinc-500 uppercase tracking-wider">가격 (Price)</th>
+                      <th className="admin-th w-[200px] text-sm font-bold text-zinc-500 uppercase tracking-wider">지급 내용 (Grants)</th>
+                      <th className="admin-th w-[120px] text-sm font-bold text-zinc-500 uppercase tracking-wider">상태 (Status)</th>
+                      <th className="admin-th w-[100px] text-sm font-bold text-zinc-500 uppercase tracking-wider text-right">관리 (Actions)</th>
+                    </tr>
+                  </thead>
+                  <tbody>{products.map(renderProductRow)}</tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+        );
+      })}
+
+      {/* 통계 카드 섹션 */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="admin-card p-5">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-admin-text-primary">최근 구매 (원장 기반)</h3>
+            {statsQuery.isLoading && <RefreshCw size={14} className="animate-spin text-admin-text-muted" />}
+          </div>
+          <div className="space-y-2">
+            {statsQuery.isLoading ? (
+              <div className="text-sm text-admin-text-muted">{LABELS.loading}</div>
+            ) : statsQuery.error ? (
+              <div className="text-sm text-admin-danger">불러오기 실패</div>
+            ) : (statsQuery.data?.shop_purchases ?? []).length === 0 ? (
+              <div className="text-sm text-admin-text-muted">{LABELS.noData}</div>
+            ) : (
+              (statsQuery.data?.shop_purchases ?? []).slice(0, 6).map((r) => (
+                <div key={r.reason} className="flex justify-between items-center text-sm">
+                  <span className="text-admin-text-secondary truncate max-w-[160px]" title={r.reason}>
+                    {formatReason(r.reason, skuTitleMap)}
+                  </span>
+                  <span className="text-admin-text-primary font-medium">{r.count}건</span>
+                </div>
+              ))
+            )}
           </div>
         </div>
 
-        <div className="rounded-2xl border border-[#333333] bg-[#111111] p-4">
-          <div className="text-sm font-bold text-[#91F402] mb-2">바우처 사용</div>
+        <div className="admin-card p-5">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-admin-text-primary">바우처 사용</h3>
+            {statsQuery.isLoading && <RefreshCw size={14} className="animate-spin text-admin-text-muted" />}
+          </div>
           <div className="space-y-2">
-            {(statsQuery.data?.voucher_uses ?? []).slice(0, 8).map((r) => (
-              <div key={r.item_type} className="flex justify-between text-xs text-gray-300">
-                <span className="font-mono truncate" title={r.item_type}>{r.item_type}</span>
-                <span className="text-gray-400">{r.count}</span>
-              </div>
-            ))}
-            {!statsQuery.data && <div className="text-xs text-gray-500">Loading…</div>}
+            {statsQuery.isLoading ? (
+              <div className="text-sm text-admin-text-muted">{LABELS.loading}</div>
+            ) : statsQuery.error ? (
+              <div className="text-sm text-admin-danger">불러오기 실패</div>
+            ) : (statsQuery.data?.voucher_uses ?? []).length === 0 ? (
+              <div className="text-sm text-admin-text-muted">{LABELS.noData}</div>
+            ) : (
+              (statsQuery.data?.voucher_uses ?? []).slice(0, 6).map((r) => (
+                <div key={r.item_type} className="flex justify-between items-center text-sm">
+                  <span className="text-admin-text-secondary truncate max-w-[160px]" title={r.item_type}>
+                    {formatItemType(r.item_type, rewardTypeMap)}
+                  </span>
+                  <span className="text-admin-text-primary font-medium">{r.count}건</span>
+                </div>
+              ))
+            )}
           </div>
         </div>
 
-        <div className="rounded-2xl border border-[#333333] bg-[#111111] p-4">
-          <div className="text-sm font-bold text-[#91F402] mb-2">Idempotency(작업 안정성)</div>
+        <div className="admin-card p-5">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-admin-text-primary">멱등성 상태</h3>
+            {statsQuery.isLoading && <RefreshCw size={14} className="animate-spin text-admin-text-muted" />}
+          </div>
           <div className="space-y-2">
-            {(statsQuery.data?.idempotency ?? []).slice(0, 8).map((r) => (
-              <div key={r.scope} className="flex justify-between text-xs text-gray-300">
-                <span className="font-mono truncate" title={r.scope}>{r.scope}</span>
-                <span className="text-gray-400">{r.completed}/{r.count}</span>
-              </div>
-            ))}
-            {!statsQuery.data && <div className="text-xs text-gray-500">Loading…</div>}
+            {statsQuery.isLoading ? (
+              <div className="text-sm text-admin-text-muted">{LABELS.loading}</div>
+            ) : statsQuery.error ? (
+              <div className="text-sm text-admin-danger">불러오기 실패</div>
+            ) : (statsQuery.data?.idempotency ?? []).length === 0 ? (
+              <div className="text-sm text-admin-text-muted">{LABELS.noData}</div>
+            ) : (
+              (statsQuery.data?.idempotency ?? []).slice(0, 6).map((r) => (
+                <div key={r.scope} className="flex justify-between items-center text-sm">
+                  <span className="text-admin-text-secondary truncate max-w-[120px]" title={r.scope}>
+                    {formatScope(r.scope)}
+                  </span>
+                  <span className="text-admin-text-primary font-medium">
+                    {r.completed}/{r.count}
+                  </span>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
 
-      <div className="mt-4 text-xs text-gray-500">
-        저장 데이터는 UI config key <span className="font-mono">shop_products</span>에 저장됩니다.
-      </div>
+      {/* 상품 추가/수정 모달 */}
+      {isAddingNew && <ProductFormModal onClose={() => setIsAddingNew(false)} />}
+      {editingSku && <ProductFormModal sku={editingSku} onClose={() => setEditingSku(null)} />}
     </div>
   );
 };

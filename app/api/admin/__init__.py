@@ -29,6 +29,10 @@ from app.api.admin.routes import (
     admin_inventory,
     admin_economy_stats,
     admin_streak_rewards,
+    admin_ops_log,
+    admin_ops_plan,
+    admin_reward_types,
+    admin_vault_requests,
 )
 
 from app.api.deps import get_current_admin_id
@@ -63,3 +67,7 @@ admin_router.include_router(admin_shop.router)
 admin_router.include_router(admin_inventory.router)
 admin_router.include_router(admin_economy_stats.router)
 admin_router.include_router(admin_streak_rewards.router)
+admin_router.include_router(admin_ops_log.router)
+admin_router.include_router(admin_ops_plan.router)
+admin_router.include_router(admin_vault_requests.router)
+admin_router.include_router(admin_reward_types.router)

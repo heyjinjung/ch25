@@ -6,6 +6,7 @@ export type AdminShopProduct = {
   cost: { token: string; amount: number };
   grant: { item_type: string; amount: number };
   is_active?: boolean;
+  source?: "builtin" | "custom";
 };
 
 export type ShopProductsOverrides = {
@@ -13,10 +14,14 @@ export type ShopProductsOverrides = {
     string,
     {
       title?: string;
+      cost_token?: string;
       cost_amount?: number;
+      item_type?: string;
+      item_amount?: number;
       is_active?: boolean;
     }
   >;
+  deleted_skus?: string[];
 };
 
 export type AdminUiConfigResponse = {
@@ -36,6 +41,6 @@ export async function fetchAdminShopOverrides(): Promise<AdminUiConfigResponse> 
 }
 
 export async function upsertAdminShopOverrides(value: ShopProductsOverrides): Promise<AdminUiConfigResponse> {
-  const { data } = await adminApi.put<AdminUiConfigResponse>("/admin/api/shop/products/overrides", { value });
+  const { data } = await adminApi.put<AdminUiConfigResponse>("/admin/api/shop/products/overrides", value);
   return data;
 }

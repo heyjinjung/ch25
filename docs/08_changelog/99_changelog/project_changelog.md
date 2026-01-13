@@ -1,3 +1,5 @@
+2026-01-13: 운영 안정화 최종보고 — 배포 preflight 문서 강화, Docker/Nginx 프록시 표준화(/api·/admin/api), 운영 DB 덤프 로컬 동기화(sha256/마이그레이션/헬스체크), Ops Log/Plan + Audit + Cypress(E2E) 정리.
+
 2025-12-08: API/DB/코인 시스템/서비스/운영/체크리스트/overview/architecture 최신화 반영. 실제 코드/운영/QA 흐름과 일치하도록 문서 업데이트.
 
 ## 2026-01-04 (System Cleanup, UI Standardization & Feature Refining)

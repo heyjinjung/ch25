@@ -7,11 +7,11 @@ export interface AdminDiceConfigPayload {
   is_active: boolean;
   max_daily_plays: number;
   win_reward_type: AdminRewardType;
-  win_reward_value: number;
+  win_reward_amount: number;
   lose_reward_type: AdminRewardType;
-  lose_reward_value: number;
+  lose_reward_amount: number;
   draw_reward_type: AdminRewardType;
-  draw_reward_value: number;
+  draw_reward_amount: number;
 }
 
 export interface AdminDiceConfig extends AdminDiceConfigPayload {

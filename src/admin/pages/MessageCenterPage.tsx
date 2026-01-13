@@ -1,362 +1,445 @@
-
-import React, { useState } from "react";
-import { Send, Clock, Users, Tag, Target, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { Controller, useForm, useWatch } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { fetchMessages, sendMessage, SendMessagePayload, updateMessage, deleteMessage } from "../api/adminMessageApi";
-import { useToast } from "../../components/common/ToastProvider";
+import { formatKstDateTime } from "../../utils/kstTime";
+import {
+    Send,
+    Users,
+    Tag,
+    User,
+    Trash2,
+    RefreshCw,
+    CheckCircle2,
+    AlertCircle,
+    Clock,
+    Edit3
+} from "lucide-react";
+import {
+    fetchMessages,
+    sendMessage,
+    SendMessagePayload,
+    deleteMessage,
+    AdminMessage,
+    updateMessage,
+    UpdateMessagePayload
+} from "../api/adminMessageApi";
+
+const messageSchema = z.object({
+    title: z.string().min(1, "제목을 입력해주세요"),
+    content: z.string().min(1, "내용을 입력해주세요"),
+    target_type: z.enum(["ALL", "SEGMENT", "TAG", "USER"] as const),
+    target_value: z.string().optional(),
+    channels: z.array(z.string()).optional(),
+});
+
+type MessageFormData = z.infer<typeof messageSchema>;
 
 const MessageCenterPage: React.FC = () => {
-    const { addToast } = useToast();
     const queryClient = useQueryClient();
+    const page = 0;
+    const [editingMessage, setEditingMessage] = useState<AdminMessage | null>(null);
 
-    const [page, setPage] = useState(0);
-    const [search, setSearch] = useState("");
+    const { control, handleSubmit, reset, setValue, formState: { errors } } = useForm<MessageFormData>({
+        resolver: zodResolver(messageSchema),
+        defaultValues: {
+            title: "",
+            content: "",
+            target_type: "ALL",
+            target_value: "",
+            channels: ["telegram"],
+        },
+    });
+
+    const watchedTargetType = useWatch({
+        control,
+        name: "target_type",
+    });
 
     const { data: messages, isLoading } = useQuery({
         queryKey: ["admin", "messages", page],
         queryFn: () => fetchMessages(page * 50, 50),
     });
 
-    const [form, setForm] = useState<SendMessagePayload>({
-        title: "",
-        content: "",
-        target_type: "ALL",
-        target_value: "",
-        channels: ["INBOX"],
-    });
-
-    const [editingMessageId, setEditingMessageId] = useState<number | null>(null);
-
     const sendMutation = useMutation({
         mutationFn: (payload: SendMessagePayload) => sendMessage(payload),
         onSuccess: () => {
-            addToast("메시지가 발송되었습니다.", "success");
-            setForm({
-                title: "",
-                content: "",
-                target_type: "ALL",
-                target_value: "",
-                channels: ["INBOX"],
-            });
             queryClient.invalidateQueries({ queryKey: ["admin", "messages"] });
-        },
-        onError: (err: any) => {
-            addToast(err.response?.data?.detail || "발송 실패", "error");
+            reset();
         },
     });
 
     const updateMutation = useMutation({
-        mutationFn: ({ messageId, payload }: { messageId: number; payload: { title: string; content: string } }) =>
-            updateMessage(messageId, payload),
+        mutationFn: (vars: { id: number; payload: UpdateMessagePayload }) => updateMessage(vars.id, vars.payload),
         onSuccess: () => {
-            addToast("메시지가 수정되었습니다.", "success");
-            setEditingMessageId(null);
-            setForm({
-                title: "",
-                content: "",
-                target_type: "ALL",
-                target_value: "",
-                channels: ["INBOX"],
-            });
             queryClient.invalidateQueries({ queryKey: ["admin", "messages"] });
-        },
-        onError: (err: any) => {
-            addToast(err.response?.data?.detail || "수정 실패", "error");
+            handleCancelEdit();
         },
     });
 
     const deleteMutation = useMutation({
         mutationFn: (messageId: number) => deleteMessage(messageId),
         onSuccess: () => {
-            addToast("메시지가 회수(삭제)되었습니다.", "success");
             queryClient.invalidateQueries({ queryKey: ["admin", "messages"] });
-        },
-        onError: (err: any) => {
-            addToast(err.response?.data?.detail || "회수 실패", "error");
         },
     });
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!form.title || !form.content) {
-            addToast("제목과 내용은 필수입니다.", "error");
-            return;
-        }
-        if (editingMessageId) {
-            updateMutation.mutate({ messageId: editingMessageId, payload: { title: form.title, content: form.content } });
-            return;
-        }
-        sendMutation.mutate(form);
+    const handleEdit = (msg: AdminMessage) => {
+        setEditingMessage(msg);
+        setValue("title", msg.title);
+        setValue("content", msg.content);
+        setValue("target_type", msg.target_type);
+        setValue("target_value", msg.target_value || "");
     };
 
-    const beginEdit = (msg: any) => {
-        setEditingMessageId(msg.id);
-        setForm({
-            title: msg.title,
-            content: msg.content,
-            target_type: msg.target_type,
-            target_value: msg.target_value || "",
-            channels: msg.channels || ["INBOX"],
-        });
-        addToast("편집 모드로 전환되었습니다.", "info");
+    const handleCancelEdit = () => {
+        setEditingMessage(null);
+        reset();
     };
 
-    const handleDelete = (id: number) => {
-        if (window.confirm("정말로 이 메시지를 회수하시겠습니까?\n이미 발송된 메시지라도 사용자의 수신함에서 사라지게 됩니다.")) {
-            deleteMutation.mutate(id);
+    const onSubmit = (data: MessageFormData) => {
+        if (editingMessage) {
+            updateMutation.mutate({
+                id: editingMessage.id,
+                payload: {
+                    title: data.title,
+                    content: data.content
+                }
+            });
+        } else {
+            const payload: SendMessagePayload = {
+                title: data.title,
+                content: data.content,
+                target_type: data.target_type,
+                target_value: data.target_value || undefined,
+                channels: data.channels,
+            };
+            sendMutation.mutate(payload);
         }
-    };
-
-    const cancelEdit = () => {
-        setEditingMessageId(null);
-        setForm({
-            title: "",
-            content: "",
-            target_type: "ALL",
-            target_value: "",
-            channels: ["INBOX"],
-        });
     };
 
     return (
-        <section className="space-y-6 max-w-6xl mx-auto">
-            <header>
-                <h2 className="text-2xl font-bold text-[#91F402]">메시지 센터</h2>
-                <p className="mt-1 text-sm text-gray-400">
-                    사용자에게 인앱 메시지 및 알림을 발송합니다.
+        <section className="admin-page-container space-y-10 pb-20">
+            <header className="flex flex-col gap-4">
+                <div className="space-y-1">
+                    <h1 className="text-3xl font-bold text-admin-text-base tracking-tight uppercase">
+                        메시지 센터 <span className="text-admin-brand/40">Messages</span>
+                    </h1>
+                </div>
+                <p className="text-admin-body text-admin-text-secondary font-medium">
+                    회원에게 메시지를 전송하고 전송 내역을 실시간으로 조회합니다.
                 </p>
             </header>
 
-            {/* Compose Config */}
-            <div className="rounded-lg border border-[#333333] bg-[#111111] p-6 shadow-md">
-                <h3 className="text-lg font-medium text-white mb-4 flex items-center gap-2">
-                    <Send size={18} className="text-[#91F402]" /> {editingMessageId ? `메시지 편집 (ID: ${editingMessageId})` : "새 메시지 작성"}
-                </h3>
-
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    {/* Configuring Target */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-1">수신 대상 (Target)</label>
-                            <select
-                                value={form.target_type}
-                                onChange={(e) => setForm(p => ({ ...p, target_type: e.target.value as any }))}
-                                disabled={!!editingMessageId}
-                                className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
-                            >
-                                <option value="ALL">전체 사용자 (All Users)</option>
-                                <option value="SEGMENT">세그먼트 (Segment)</option>
-                                <option value="TAG">태그 (Tag)</option>
-                                <option value="USER">특정 사용자 (User IDs)</option>
-                            </select>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Main Form Area */}
+                <div className="lg:col-span-2 space-y-8">
+                    <form onSubmit={handleSubmit(onSubmit)} className="admin-card-premium p-8 space-y-8">
+                        <div className="border-b border-admin-border pb-6">
+                            <h2 className="text-admin-subtitle font-black text-admin-text-primary flex items-center gap-2">
+                                {editingMessage ? (
+                                    <>
+                                        <Edit3 className="h-5 w-5 text-admin-brand" />
+                                        메시지 내역 수정
+                                    </>
+                                ) : (
+                                    <>
+                                        <Send className="h-5 w-5 text-admin-brand" />
+                                        메시지 전송 폼
+                                    </>
+                                )}
+                            </h2>
+                            <p className="text-xs text-admin-text-secondary mt-1">
+                                {editingMessage ? "이미 발송된 메시지의 내용을 수정합니다. 유저 인박스에도 즉시 반영됩니다." : "발송 대상과 내용을 정확히 입력한 후 전송하세요."}
+                            </p>
                         </div>
 
-                        {form.target_type !== "ALL" && (
-                            <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-1">
-                                    {form.target_type === "SEGMENT" && "세그먼트 이름 (예: WHALE)"}
-                                    {form.target_type === "TAG" && "태그 이름 (예: VIP)"}
-                                    {form.target_type === "USER" && "User IDs (콤마 구분)"}
-                                </label>
-                                <input
-                                    type="text"
-                                    value={form.target_value}
-                                    onChange={(e) => setForm(p => ({ ...p, target_value: e.target.value }))}
-                                    className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
-                                    placeholder="대상 값 입력"
-                                    required
-                                    disabled={!!editingMessageId}
+                        {/* Title */}
+                        <div className="space-y-3">
+                            <label className="text-admin-meta font-black text-admin-text-secondary uppercase tracking-widest pl-1">메시지 제목</label>
+                            <Controller
+                                name="title"
+                                control={control}
+                                render={({ field }) => (
+                                    <input
+                                        {...field}
+                                        type="text"
+                                        placeholder="메시지 제목을 입력하세요"
+                                        className="admin-input w-full h-11"
+                                    />
+                                )}
+                            />
+                            {errors.title && (
+                                <p className="text-xs text-admin-danger flex items-center gap-1 pl-1">
+                                    <AlertCircle className="h-3 w-3" /> {errors.title.message}
+                                </p>
+                            )}
+                        </div>
+
+                        {/* Content */}
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                                <label className="text-admin-meta font-black text-admin-text-secondary uppercase tracking-widest pl-1">메시지 내용</label>
+                                <Controller
+                                    name="content"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <span className={`text-[10px] font-bold ${field.value.length > 500 ? "text-admin-danger" : "text-admin-text-muted"}`}>
+                                            {field.value.length} / 1000자
+                                        </span>
+                                    )}
                                 />
                             </div>
-                        )}
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-1">발송 채널</label>
-                        <div className="flex gap-4">
-                            <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    checked={form.channels?.includes("INBOX")}
-                                    onChange={(e) => {
-                                        const next = e.target.checked
-                                            ? [...(form.channels || []), "INBOX"]
-                                            : (form.channels || []).filter(c => c !== "INBOX");
-                                        setForm(p => ({ ...p, channels: next }));
-                                    }}
-                                    className="rounded border-gray-600 bg-[#1A1A1A] text-[#91F402] focus:ring-[#2D6B3B]"
-                                />
-                                <span>In-App Inbox</span>
-                            </label>
-                            <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    checked={form.channels?.includes("TELEGRAM")}
-                                    onChange={(e) => {
-                                        const next = e.target.checked
-                                            ? [...(form.channels || []), "TELEGRAM"]
-                                            : (form.channels || []).filter(c => c !== "TELEGRAM");
-                                        setForm(p => ({ ...p, channels: next }));
-                                    }}
-                                    className="rounded border-gray-600 bg-[#1A1A1A] text-[#24A1DE] focus:ring-[#24A1DE]"
-                                />
-                                <span className="text-[#24A1DE]">Telegram (Direct)</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <hr className="border-[#333333]" />
-
-                    {/* Content */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-1">제목</label>
-                        <input
-                            type="text"
-                            value={form.title}
-                            onChange={(e) => setForm(p => ({ ...p, title: e.target.value }))}
-                            className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
-                            placeholder="메시지 제목..."
-                            required
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-1">내용</label>
-                        <textarea
-                            value={form.content}
-                            onChange={(e) => setForm(p => ({ ...p, content: e.target.value }))}
-                            rows={4}
-                            className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
-                            placeholder="메시지 내용..."
-                            required
-                        />
-                    </div>
-
-                    <div className="flex justify-end pt-2">
-                        {editingMessageId && (
-                            <button
-                                type="button"
-                                onClick={cancelEdit}
-                                className="mr-3 flex items-center gap-2 rounded-md border border-[#333333] bg-[#1A1A1A] px-6 py-2.5 text-sm font-bold text-gray-200 transition-colors hover:bg-[#2C2C2E]"
-                            >
-                                편집 취소
-                            </button>
-                        )}
-                        <button
-                            type="submit"
-                            disabled={sendMutation.isPending || updateMutation.isPending}
-                            className="flex items-center gap-2 rounded-md bg-[#2D6B3B] px-6 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#91F402] hover:text-black disabled:cursor-not-allowed disabled:opacity-60"
-                        >
-                            {editingMessageId
-                                ? (updateMutation.isPending ? "수정 중..." : <>수정 저장</>)
-                                : (sendMutation.isPending ? "발송 중..." : <><Send size={16} /> 메시지 발송</>)}
-                        </button>
-                    </div>
-                </form>
-            </div>
-
-            {/* History */}
-            <div className="rounded-lg border border-[#333333] bg-[#111111] shadow-md">
-                <div className="border-b border-[#333333] px-6 py-4 flex items-center justify-between">
-                    <h3 className="text-lg font-medium text-white flex items-center gap-2">
-                        <Clock size={18} className="text-gray-400" /> 발송 기록
-                    </h3>
-                    <div className="flex items-center gap-2">
-                        <div className="relative">
-                            <input
-                                type="text"
-                                placeholder="제목 검색..."
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                className="rounded-md border border-[#333333] bg-[#0A0A0A] py-1.5 pl-3 pr-8 text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#91F402]"
+                            <Controller
+                                name="content"
+                                control={control}
+                                render={({ field }) => (
+                                    <textarea
+                                        {...field}
+                                        placeholder="메시지 내용을 입력하세요 (최대 1000자)"
+                                        className="admin-textarea w-full resize-none custom-scrollbar"
+                                    />
+                                )}
                             />
+                            {errors.content && (
+                                <p className="text-xs text-admin-danger flex items-center gap-1 pl-1">
+                                    <AlertCircle className="h-3 w-3" /> {errors.content.message}
+                                </p>
+                            )}
+                        </div>
+
+                        {/* Target Type */}
+                        <div
+                            className={`space-y-3 ${editingMessage ? "opacity-80 pointer-events-none" : ""}`}
+                            title={editingMessage ? "수정 시 발송 대상 변경은 불가능합니다." : ""}
+                        >
+                            <label className="text-admin-meta font-black text-admin-text-secondary uppercase tracking-widest pl-1">발송 대상</label>
+                            <Controller
+                                name="target_type"
+                                control={control}
+                                render={({ field }) => (
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                        {[
+                                            { value: "ALL" as const, label: "전체", icon: Users },
+                                            { value: "SEGMENT" as const, label: "세그먼트", icon: Users },
+                                            { value: "TAG" as const, label: "태그", icon: Tag },
+                                            { value: "USER" as const, label: "개별", icon: User },
+                                        ].map((option) => {
+                                            const Icon = option.icon;
+                                            return (
+                                                <button
+                                                    key={option.value}
+                                                    type="button"
+                                                    disabled={!!editingMessage}
+                                                    onClick={() => {
+                                                        field.onChange(option.value);
+                                                        if (option.value === "ALL") {
+                                                            setValue("target_value", "");
+                                                        }
+                                                    }}
+                                                    className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${field.value === option.value
+                                                        ? "border-admin-brand bg-admin-brand/10 shadow-admin-glow"
+                                                        : "border-admin-border bg-admin-sidebar/30 hover:border-admin-border/50"
+                                                        }`}
+                                                >
+                                                    <Icon className={`h-5 w-5 ${field.value === option.value ? "text-admin-brand" : "text-admin-text-secondary"}`} />
+                                                    <p className={`text-xs font-black ${field.value === option.value ? "text-admin-brand" : "text-admin-text-secondary"}`}>
+                                                        {option.label}
+                                                    </p>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            />
+                        </div>
+
+                        {/* Target Value (Conditional) */}
+                        <div className={`${editingMessage ? "opacity-80 pointer-events-none" : ""}`}>
+                            <Controller
+                                name="target_value"
+                                control={control}
+                                render={({ field }) => (
+                                    <div className="space-y-3">
+                                        <label className="text-admin-meta font-black text-admin-text-secondary uppercase tracking-widest pl-1">
+                                            대상 식별자 {editingMessage ? "(변경 불가)" : ""}
+                                        </label>
+                                        <input
+                                            {...field}
+                                            type="text"
+                                            readOnly={!!editingMessage}
+                                            disabled={watchedTargetType === "ALL"}
+                                            placeholder={
+                                                watchedTargetType === "ALL"
+                                                    ? "전체 발송은 대상 식별자가 필요 없습니다."
+                                                    : "세그먼트명, 태그명, 또는 사용자 ID"
+                                            }
+                                            className={`admin-input w-full h-11 ${(!!editingMessage || watchedTargetType === "ALL")
+                                                ? "bg-admin-sidebar/50"
+                                                : ""
+                                                }`}
+                                        />
+                                    </div>
+                                )}
+                            />
+                        </div>
+
+                        {/* Submit Button */}
+                        <div className="flex gap-4">
+                            {editingMessage && (
+                                <button
+                                    type="button"
+                                    onClick={handleCancelEdit}
+                                    className="flex-1 btn-admin-secondary h-12 flex items-center justify-center gap-2 text-base font-black"
+                                >
+                                    취소
+                                </button>
+                            )}
+                            <button
+                                type="submit"
+                                disabled={sendMutation.isPending || updateMutation.isPending}
+                                className={`flex-[2] btn-admin-primary h-12 flex items-center justify-center gap-2 text-base font-black shadow-admin-glow disabled:opacity-50 ${editingMessage ? "bg-admin-brand" : ""}`}
+                            >
+                                {(sendMutation.isPending || updateMutation.isPending) ? (
+                                    <>
+                                        <RefreshCw className="h-5 w-5 animate-spin" /> {editingMessage ? "수정 중..." : "전송 중..."}
+                                    </>
+                                ) : (
+                                    <>
+                                        {editingMessage ? <Edit3 className="h-5 w-5" /> : <Send className="h-5 w-5" />}
+                                        {editingMessage ? "수정 사항 적용" : "메시지 전송"}
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                {/* Sidebar: Status */}
+                <div className="lg:col-span-1 space-y-6">
+                    {sendMutation.isSuccess && (
+                        <div className="admin-card-premium p-6 border-l-4 border-admin-accent animate-in slide-in-from-right-4">
+                            <div className="flex items-center gap-2 text-admin-accent mb-2">
+                                <CheckCircle2 className="h-5 w-5" />
+                                <h3 className="text-admin-subtitle font-black">전송 완료</h3>
+                            </div>
+                            <p className="text-xs text-admin-text-secondary">메시지가 성공적으로 발송되었습니다.</p>
+                        </div>
+                    )}
+
+                    {sendMutation.isError && (
+                        <div className="admin-card-premium p-6 border-l-4 border-admin-danger">
+                            <div className="flex items-center gap-2 text-admin-danger mb-2">
+                                <AlertCircle className="h-5 w-5" />
+                                <h3 className="text-admin-subtitle font-black">전송 실패</h3>
+                            </div>
+                            <p className="text-xs text-admin-text-secondary">
+                                {sendMutation.error instanceof Error ? sendMutation.error.message : "알 수 없는 오류가 발생했습니다."}
+                            </p>
+                        </div>
+                    )}
+
+                    <div className="admin-card-premium p-6">
+                        <h4 className="text-admin-meta font-black text-admin-text-secondary uppercase tracking-widest mb-4">전송 가이드</h4>
+                        <div className="space-y-3 text-xs text-admin-text-secondary leading-relaxed">
+                            <p>• 전체 발송 시 모든 활성 회원에게 메시지가 전송됩니다.</p>
+                            <p>• 세그먼트/태그 발송 시 해당 그룹의 회원만 수신합니다.</p>
+                            <p>• 개별 발송 시 사용자 ID를 정확히 입력해주세요.</p>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                {isLoading ? (
-                    <div className="p-8 text-center text-gray-400">로딩 중...</div>
-                ) : (
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
-                            <thead className="bg-[#1A1A1A] text-left text-xs uppercase text-gray-400">
-                                <tr>
-                                    <th className="px-6 py-3 font-medium">ID</th>
-                                    <th className="px-6 py-3 font-medium">제목</th>
-                                    <th className="px-6 py-3 font-medium">대상</th>
-                                    <th className="px-6 py-3 font-medium text-center">수신자 수</th>
-                                    <th className="px-6 py-3 font-medium text-center">읽음 수</th>
-                                    <th className="px-6 py-3 font-medium text-right">일시</th>
-                                    <th className="px-6 py-3 font-medium text-right">액션</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-[#333333] text-sm text-gray-200">
-                                {messages?.filter(m => m.title.toLowerCase().includes(search.toLowerCase())).map((msg) => (
-                                    <tr key={msg.id} className="hover:bg-[#1A1A1A]">
-                                        <td className="px-6 py-3 text-gray-500">{msg.id}</td>
-                                        <td className="px-6 py-3 font-medium text-white">{msg.title}</td>
-                                        <td className="px-6 py-3">
-                                            <span className="inline-flex items-center gap-1 rounded bg-[#333333] px-2 py-0.5 text-xs text-gray-300">
-                                                {msg.target_type === "ALL" && <Users size={10} />}
-                                                {msg.target_type === "SEGMENT" && <Target size={10} />}
-                                                {msg.target_type === "TAG" && <Tag size={10} />}
-                                                {msg.target_type}
-                                                {msg.target_value && `: ${msg.target_value}`}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-3 text-center">{msg.recipient_count}</td>
-                                        <td className="px-6 py-3 text-center text-gray-400">{msg.read_count}</td>
-                                        <td className="px-6 py-3 text-right text-gray-500">
-                                            {new Date(msg.created_at).toLocaleString()}
-                                        </td>
-                                        <td className="px-6 py-3 text-right">
-                                            <button
-                                                type="button"
-                                                onClick={() => beginEdit(msg)}
-                                                className="text-xs text-gray-300 hover:text-[#91F402] transition-colors"
-                                            >
-                                                편집
-                                            </button>
-                                            <span className="text-[#333333]">|</span>
-                                            <button
-                                                type="button"
-                                                onClick={() => handleDelete(msg.id)}
-                                                className="text-xs text-red-400 hover:text-red-300 transition-colors flex items-center gap-1"
-                                            >
-                                                <Trash2 size={12} /> 회수
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                                {(!messages || messages.length === 0) && (
-                                    <tr>
-                                        <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
-                                            발송 기록이 없습니다.
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
-                <div className="border-t border-[#333333] px-6 py-4 flex items-center justify-between">
+            {/* Message History */}
+            <div className="space-y-6">
+                <div className="flex items-center justify-between pl-1">
+                    <h2 className="text-admin-subtitle font-black text-admin-text-primary flex items-center gap-2">
+                        <Clock className="h-5 w-5 text-admin-brand" /> 메시지 전송 내역
+                    </h2>
                     <button
-                        type="button"
-                        onClick={() => setPage(p => Math.max(0, p - 1))}
-                        disabled={page === 0}
-                        className="text-xs text-gray-400 hover:text-[#91F402] disabled:opacity-30 transition-colors"
+                        onClick={() => queryClient.invalidateQueries({ queryKey: ["admin", "messages"] })}
+                        className="btn-admin-secondary flex items-center gap-2 px-4 py-2 h-auto"
                     >
-                        ← 이전 50건
+                        <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} /> 새로고침
                     </button>
-                    <span className="text-xs text-gray-500 font-medium">페이지 {page + 1}</span>
-                    <button
-                        type="button"
-                        onClick={() => setPage(p => p + 1)}
-                        disabled={!messages || messages.length < 50}
-                        className="text-xs text-gray-400 hover:text-[#91F402] disabled:opacity-30 transition-colors"
-                    >
-                        다음 50건 →
-                    </button>
+                </div>
+
+                <div className="admin-card-premium overflow-hidden">
+                    {isLoading ? (
+                        <div className="py-20 flex flex-col items-center justify-center gap-4">
+                            <RefreshCw className="h-8 w-8 text-admin-brand animate-spin" />
+                            <p className="text-admin-meta text-admin-text-secondary">데이터 로딩 중...</p>
+                        </div>
+                    ) : (
+                        <div className="overflow-x-auto custom-scrollbar">
+                            <table className="admin-table">
+                                <thead>
+                                    <tr className="admin-th">
+                                        <th className="px-4 py-3.5 text-left">ID</th>
+                                        <th className="px-4 py-3.5 text-left">제목</th>
+                                        <th className="px-4 py-3.5 text-left">발송 대상</th>
+                                        <th className="px-4 py-3.5 text-right">대상 수</th>
+                                        <th className="px-4 py-3.5 text-right">읽음 수</th>
+                                        <th className="px-4 py-3.5 text-right">발송 시각</th>
+                                        <th className="px-4 py-3.5 text-center">액션</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {messages?.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={7} className="px-4 py-10 text-center text-admin-text-muted text-sm">
+                                                조회된 메시지가 없습니다.
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        messages?.map((msg: AdminMessage) => (
+                                            <tr key={msg.id} className="admin-td group">
+                                                <td className="px-4 py-4 font-mono text-admin-text-primary text-sm">{msg.id}</td>
+                                                <td className="px-4 py-4">
+                                                    <p className="text-admin-text-primary font-bold text-xs line-clamp-1">{msg.title}</p>
+                                                    <p className="text-admin-text-muted text-[10px] line-clamp-1 mt-0.5">{msg.content}</p>
+                                                </td>
+                                                <td className="px-4 py-4">
+                                                    <span className="px-2 py-0.5 rounded-full bg-admin-brand/10 text-admin-brand text-[10px] font-black uppercase">
+                                                        {msg.target_type}
+                                                    </span>
+                                                </td>
+                                                <td className="px-4 py-4 text-right text-admin-text-primary font-black tabular-nums">{msg.recipient_count}</td>
+                                                <td className="px-4 py-4 text-right text-admin-accent font-black tabular-nums">{msg.read_count}</td>
+                                                <td className="px-4 py-4 text-right text-admin-text-secondary text-xs tabular-nums">
+                                                    {formatKstDateTime(msg.created_at)}
+                                                </td>
+                                                <td className="px-4 py-4 text-center">
+                                                    <div className="flex items-center justify-center gap-2">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleEdit(msg)}
+                                                            aria-label={`메시지 수정 (ID: ${msg.id})`}
+                                                            title={`메시지 수정 (ID: ${msg.id})`}
+                                                            className="p-2 rounded-lg hover:bg-admin-brand/10 text-admin-brand transition-colors"
+                                                        >
+                                                            <Edit3 className="h-4 w-4" />
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => { if (confirm("정말 삭제하시겠습니까? (유저 함함에서도 사라집니다)")) deleteMutation.mutate(msg.id); }}
+                                                            disabled={deleteMutation.isPending}
+                                                            aria-label={`메시지 삭제 (ID: ${msg.id})`}
+                                                            title={`메시지 삭제 (ID: ${msg.id})`}
+                                                            className="p-2 rounded-lg hover:bg-admin-danger/10 text-admin-danger transition-colors disabled:opacity-50"
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
                 </div>
             </div>
         </section>

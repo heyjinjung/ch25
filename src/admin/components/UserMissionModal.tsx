@@ -156,6 +156,9 @@ const UserMissionModal: React.FC<UserMissionModalProps> = ({ user, onClose }) =>
                           type="number"
                           value={m.current_value}
                           onChange={(e) => setRow(m.mission_id, { current_value: Number(e.target.value) })}
+                          aria-label={`${m.title} 현재값`}
+                          title={`${m.title} 현재값`}
+                          placeholder="현재값"
                           className="w-24 rounded-md border border-[#333333] bg-[#0B0B0B] p-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
                         />
                       </td>
@@ -164,6 +167,8 @@ const UserMissionModal: React.FC<UserMissionModalProps> = ({ user, onClose }) =>
                           type="checkbox"
                           checked={asBool(m.is_completed)}
                           onChange={(e) => setRow(m.mission_id, { is_completed: e.target.checked })}
+                          aria-label={`${m.title} 완료 여부`}
+                          title={`${m.title} 완료 여부`}
                           className="h-4 w-4 accent-[#91F402]"
                         />
                       </td>
@@ -172,6 +177,8 @@ const UserMissionModal: React.FC<UserMissionModalProps> = ({ user, onClose }) =>
                           type="checkbox"
                           checked={asBool(m.is_claimed)}
                           onChange={(e) => setRow(m.mission_id, { is_claimed: e.target.checked })}
+                          aria-label={`${m.title} 클레임 여부`}
+                          title={`${m.title} 클레임 여부`}
                           className="h-4 w-4 accent-[#91F402]"
                         />
                       </td>
@@ -179,6 +186,8 @@ const UserMissionModal: React.FC<UserMissionModalProps> = ({ user, onClose }) =>
                         <select
                           value={String(m.approval_status ?? "NONE")}
                           onChange={(e) => setRow(m.mission_id, { approval_status: e.target.value })}
+                          aria-label={`${m.title} 승인 상태`}
+                          title={`${m.title} 승인 상태`}
                           className="rounded-md border border-[#333333] bg-[#0B0B0B] p-2 text-sm text-white"
                         >
                           <option value="NONE">NONE</option>

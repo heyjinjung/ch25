@@ -9,6 +9,8 @@ from app.core.config import get_settings
 from app.models.user import User
 from app.schemas.admin_user import AdminUserCreate, AdminUserResponse, AdminUserUpdate
 from app.schemas.admin_user_summary import AdminUserResolveResponse
+from app.schemas.user_history import UserIdentityHistoryResponse
+from app.models.user_history import UserIdentityHistory
 from app.services.admin_user_service import AdminUserService
 from app.services.admin_user_identity_service import build_admin_user_summary, resolve_user_summary
 
@@ -80,4 +82,13 @@ def purge_user(
     NOTE: This is a destructive operation.
     """
     AdminUserService.purge_user(db, user_id=user_id, admin_id=admin_id)
+
+
+@router.get("/{user_id}/identity-history", response_model=List[UserIdentityHistoryResponse])
+def get_identity_history(
+    user_id: int,
+    db: Session = Depends(get_db),
+) -> List[UserIdentityHistoryResponse]:
+    history = db.query(UserIdentityHistory).filter(UserIdentityHistory.user_id == user_id).order_by(UserIdentityHistory.created_at.desc()).all()
+    return [UserIdentityHistoryResponse.model_validate(h) for h in history]
 

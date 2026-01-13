@@ -1,143 +1,210 @@
+import React, { useState, useRef } from "react";
+import {
+    Upload,
+    FileText,
+    CheckCircle2,
+    X,
+    Loader2,
+    Info
+} from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import React, { useState } from "react";
-import { Upload, X, AlertTriangle } from "lucide-react";
-import { importProfiles, ImportResult } from "../api/adminUserApi";
-import { useToast } from "../../components/common/ToastProvider";
+import { adminApi } from "../api/httpClient";
 
 interface UserImportModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSuccess: () => void;
 }
 
-const UserImportModal: React.FC<UserImportModalProps> = ({ isOpen, onClose, onSuccess }) => {
-    const { addToast } = useToast();
+const UserImportModal: React.FC<UserImportModalProps> = ({ isOpen, onClose }) => {
+    const queryClient = useQueryClient();
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const [file, setFile] = useState<File | null>(null);
-    const [isUploading, setIsUploading] = useState(false);
-    const [result, setResult] = useState<ImportResult | null>(null);
+    const [importResult, setImportResult] = useState<any>(null);
+
+    const importMutation = useMutation({
+        mutationFn: async (file: File) => {
+            const formData = new FormData();
+            formData.append("file", file);
+            const { data } = await adminApi.post("/admin/api/crm/import-profiles", formData, {
+                headers: { "Content-Type": "multipart/form-data" },
+            });
+            return data;
+        },
+        onSuccess: (data) => {
+            setImportResult(data);
+            queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+        },
+        onError: (err: any) => {
+            alert(`임포트 실패: ${err.message}`);
+        }
+    });
 
     if (!isOpen) return null;
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             setFile(e.target.files[0]);
-            setResult(null); // Reset previous result
+            setImportResult(null);
         }
     };
 
-    const handleUpload = async () => {
-        if (!file) {
-            addToast("파일을 선택해주세요.", "error");
-            return;
-        }
-
-        setIsUploading(true);
-        try {
-            const res = await importProfiles(file);
-            setResult(res);
-            addToast(`처리 완료: ${res.success_count}건 성공`, "success");
-            // Don't close immediately so user can see result
-            if (res.success_count > 0) {
-                onSuccess(); // Refresh parent list
-            }
-        } catch (err: any) {
-            addToast(err.response?.data?.detail || "업로드 중 오류가 발생했습니다.", "error");
-        } finally {
-            setIsUploading(false);
-        }
+    const resetState = () => {
+        setFile(null);
+        setImportResult(null);
+        if (fileInputRef.current) fileInputRef.current.value = "";
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-            <div className="w-full max-w-lg rounded-lg border border-[#333333] bg-[#111111] shadow-xl">
-                <header className="flex items-center justify-between border-b border-[#333333] px-6 py-4">
-                    <h3 className="text-lg font-bold text-white">사용자 프로필 일괄 등록 (CSV)</h3>
-                    <button onClick={onClose} className="text-gray-400 hover:text-white">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+            <div className="admin-card w-full max-w-xl flex flex-col shadow-admin-glow border-admin-brand/20">
+
+                {/* Header */}
+                <div className="p-6 border-b border-admin-border flex items-center justify-between bg-admin-sidebar/50">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2.5 rounded-xl bg-admin-brand/20 text-admin-brand">
+                            <Upload size={24} />
+                        </div>
+                        <div>
+                            <h2 className="text-admin-subtitle text-admin-text-primary">회원 데이터 일괄 임포트</h2>
+                            <p className="text-admin-meta text-admin-text-muted">CSV 파일을 통한 외부 회원 시스템 연동</p>
+                        </div>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => { resetState(); onClose(); }}
+                        className="p-2 text-admin-text-muted hover:text-admin-text-primary hover:bg-admin-hover rounded-lg transition-colors"
+                        aria-label="닫기"
+                        title="닫기"
+                    >
                         <X size={20} />
                     </button>
-                </header>
+                </div>
 
-                <div className="p-6 space-y-4">
-                    <div className="rounded-md bg-[#1A1A1A] p-4 text-sm text-gray-300">
-                        <p className="font-semibold text-white mb-1">CSV 파일 형식 안내</p>
-                        <p className="opacity-80">헤더 필수: <code className="text-[#91F402]">external_id</code> 또는 <code className="text-[#91F402]">user_id</code></p>
-                        <p className="opacity-80 mt-1">
-                            가능한 컬럼: <br />
-                            <code className="text-xs bg-black/30 px-1 py-0.5 rounded">real_name</code>,
-                            <code className="text-xs bg-black/30 px-1 py-0.5 rounded">phone</code>,
-                            <code className="text-xs bg-black/30 px-1 py-0.5 rounded">telegram</code>,
-                            <code className="text-xs bg-black/30 px-1 py-0.5 rounded">tags (콤마구분)</code>,
-                            <code className="text-xs bg-black/30 px-1 py-0.5 rounded">memo</code>
-                        </p>
-                    </div>
-
-                    <div className="space-y-2">
-                        <label className="block text-sm font-medium text-white">파일 선택</label>
-                        <input
-                            type="file"
-                            accept=".csv"
-                            onChange={handleFileChange}
-                            disabled={isUploading}
-                            className="block w-full text-sm text-gray-400
-                 file:mr-4 file:py-2 file:px-4
-                 file:rounded-md file:border-0
-                 file:text-sm file:font-semibold
-                 file:bg-[#2D6B3B] file:text-white
-                 hover:file:bg-[#91F402] hover:file:text-black
-                 cursor-pointer"
-                        />
-                    </div>
-
-                    {result && (
-                        <div className="mt-4 rounded-md border border-[#333333] bg-[#000000] p-4 text-sm">
-                            <div className="grid grid-cols-3 gap-2 text-center mb-3">
-                                <div className="bg-[#1A1A1A] py-2 rounded">
-                                    <div className="text-gray-400 text-xs">전체</div>
-                                    <div className="text-lg font-bold text-white">{result.total_processed}</div>
+                {/* Content Area */}
+                <div className="p-8 space-y-8 overflow-y-auto custom-scrollbar">
+                    {!importResult ? (
+                        <>
+                            {/* File Drop Zone */}
+                            <div
+                                onClick={() => fileInputRef.current?.click()}
+                                className={`
+                  relative border-2 border-dashed rounded-2xl p-10 flex flex-col items-center justify-center cursor-pointer transition-all
+                  ${file ? "border-admin-brand bg-admin-brand/5" : "border-admin-border hover:border-admin-brand/40 hover:bg-admin-hover"}
+                `}
+                            >
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    onChange={handleFileChange}
+                                    accept=".csv"
+                                    className="hidden"
+                                    aria-label="CSV 파일 선택"
+                                    title="CSV 파일 선택"
+                                />
+                                <div className={`p-4 rounded-full mb-4 ${file ? "bg-admin-brand text-white" : "bg-admin-sidebar text-admin-text-muted"}`}>
+                                    <FileText size={32} />
                                 </div>
-                                <div className="bg-[#1A1A1A] py-2 rounded border border-green-900/30">
-                                    <div className="text-gray-400 text-xs">성공</div>
-                                    <div className="text-lg font-bold text-[#91F402]">{result.success_count}</div>
+                                {file ? (
+                                    <div className="text-center">
+                                        <p className="text-admin-body font-bold text-admin-text-primary">{file.name}</p>
+                                        <p className="text-admin-meta text-admin-brand">파일이 선택되었습니다. 임포트 버튼을 누르세요.</p>
+                                    </div>
+                                ) : (
+                                    <div className="text-center">
+                                        <p className="text-admin-body font-bold text-admin-text-secondary">CSV 파일을 여기에 드래그하거나 클릭하세요.</p>
+                                        <p className="text-admin-meta text-admin-text-muted mt-1">최대 용량 10MB / UTF-8 인코딩 권장</p>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Guide Box */}
+                            <div className="p-5 rounded-xl bg-admin-sidebar/40 border border-admin-border space-y-3">
+                                <div className="flex items-center gap-2 text-admin-meta font-bold text-admin-text-primary">
+                                    <Info size={16} className="text-admin-brand" />
+                                    CSV 헤더 가이드 (필수/선택)
                                 </div>
-                                <div className="bg-[#1A1A1A] py-2 rounded border border-red-900/30">
-                                    <div className="text-gray-400 text-xs">실패</div>
-                                    <div className="text-lg font-bold text-red-400">{result.failed_count}</div>
+                                <div className="flex flex-wrap gap-2">
+                                    <span className="px-2 py-1 rounded bg-admin-brand/20 text-[11px] text-admin-brand border border-admin-brand/30">external_id (필수)</span>
+                                    <span className="px-2 py-1 rounded bg-admin-sidebar text-[11px] text-admin-text-secondary border border-admin-border">real_name</span>
+                                    <span className="px-2 py-1 rounded bg-admin-sidebar text-[11px] text-admin-text-secondary border border-admin-border">phone</span>
+                                    <span className="px-2 py-1 rounded bg-admin-sidebar text-[11px] text-admin-text-secondary border border-admin-border">telegram</span>
+                                    <span className="px-2 py-1 rounded bg-admin-sidebar text-[11px] text-admin-text-secondary border border-admin-border">tags</span>
+                                    <span className="px-2 py-1 rounded bg-admin-sidebar text-[11px] text-admin-text-secondary border border-admin-border">memo</span>
+                                </div>
+                            </div>
+                        </>
+                    ) : (
+                        /* Result View */
+                        <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-300">
+                            <div className="p-6 rounded-2xl bg-admin-sidebar/50 border border-admin-border flex items-center gap-6">
+                                <div className="flex-1 text-center">
+                                    <p className="text-admin-meta text-admin-text-muted uppercase font-bold mb-1">총 처리</p>
+                                    <p className="text-admin-title text-admin-text-primary">{importResult.total_processed}</p>
+                                </div>
+                                <div className="w-px h-12 bg-admin-border" />
+                                <div className="flex-1 text-center">
+                                    <p className="text-admin-meta text-admin-accent uppercase font-bold mb-1">성공</p>
+                                    <p className="text-admin-title text-admin-accent">{importResult.success_count}</p>
+                                </div>
+                                <div className="w-px h-12 bg-admin-border" />
+                                <div className="flex-1 text-center">
+                                    <p className="text-admin-meta text-admin-danger uppercase font-bold mb-1">실패</p>
+                                    <p className="text-admin-title text-admin-danger">{importResult.failed_count}</p>
                                 </div>
                             </div>
 
-                            {result.errors && result.errors.length > 0 && (
-                                <div className="max-h-32 overflow-y-auto space-y-1 text-xs text-red-300">
-                                    {result.errors.map((err, i) => (
-                                        <div key={i} className="flex items-start gap-1">
-                                            <AlertTriangle size={12} className="mt-0.5 shrink-0" />
-                                            <span>{err}</span>
-                                        </div>
-                                    ))}
+                            {importResult.errors?.length > 0 && (
+                                <div className="space-y-2">
+                                    <p className="text-admin-meta font-bold text-admin-danger">발생한 오류 목록 (최근 10건)</p>
+                                    <div className="p-4 rounded-xl bg-admin-danger/5 border border-admin-danger/10 space-y-1 max-h-40 overflow-y-auto custom-scrollbar">
+                                        {importResult.errors.map((err: string, idx: number) => (
+                                            <p key={idx} className="text-admin-meta text-admin-danger leading-tight flex gap-2">
+                                                <span className="opacity-50">쨌</span> {err}
+                                            </p>
+                                        ))}
+                                    </div>
                                 </div>
                             )}
+
+                            <div className="flex flex-col items-center justify-center py-4">
+                                <div className="w-16 h-16 rounded-full bg-admin-accent/20 text-admin-accent flex items-center justify-center mb-4">
+                                    <CheckCircle2 size={32} />
+                                </div>
+                                <h3 className="text-admin-subtitle text-admin-text-primary">가져오기 완료</h3>
+                                <p className="text-admin-meta text-admin-text-muted mt-1 text-center">
+                                    데이터 연동이 성공적으로 마무리되었습니다.<br />목록에서 확인해 주세요.
+                                </p>
+                            </div>
                         </div>
                     )}
                 </div>
 
-                <footer className="flex justify-end gap-2 border-t border-[#333333] px-6 py-4">
+                {/* Footer Actions */}
+                <div className="p-6 border-t border-admin-border bg-admin-sidebar/50 flex justify-end gap-3">
                     <button
-                        onClick={onClose}
-                        className="rounded-md border border-[#333333] px-4 py-2 text-sm text-gray-300 hover:bg-[#1A1A1A]"
+                        onClick={() => { resetState(); onClose(); }}
+                        className="btn-admin-secondary text-admin-meta px-4 border-none"
                     >
-                        닫기
+                        {importResult ? "확인 및 닫기" : "취소"}
                     </button>
-                    <button
-                        onClick={handleUpload}
-                        disabled={!file || isUploading}
-                        className="flex items-center gap-2 rounded-md bg-[#2D6B3B] px-4 py-2 text-sm font-bold text-white hover:bg-[#91F402] hover:text-black disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        {isUploading ? "업로드 중..." : (
-                            <>
-                                <Upload size={16} /> 업로드
-                            </>
-                        )}
-                    </button>
-                </footer>
+                    {!importResult && file && (
+                        <button
+                            onClick={() => importMutation.mutate(file)}
+                            disabled={importMutation.isPending}
+                            className="btn-admin-primary min-w-[140px]"
+                        >
+                            {importMutation.isPending ? (
+                                <Loader2 size={18} className="animate-spin" />
+                            ) : (
+                                <>
+                                    <Upload size={18} />
+                                    데이터 임포트 시작
+                                </>
+                            )}
+                        </button>
+                    )}
+                </div>
             </div>
         </div>
     );

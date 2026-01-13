@@ -174,6 +174,7 @@ const VaultMainPanel: React.FC = React.memo(() => {
     const data = vault.data;
     const vaultBalance = data?.vaultBalance ?? 0;
     const availableBalance = data?.vaultAmountAvailable ?? data?.availableBalance ?? 0;
+    const reservedBalance = data?.vaultAmountReserved ?? Math.max(vaultBalance - availableBalance, 0);
     const eligible = !!data?.eligible;
     const expiresAt = parseDate(data?.expiresAt ?? null);
     const usedAt = parseDate(data?.vaultFillUsedAt ?? null);
@@ -189,6 +190,7 @@ const VaultMainPanel: React.FC = React.memo(() => {
     return {
       vaultBalance,
       availableBalance,
+      reservedBalance,
       eligible,
       expiresAt,
       usedAt,
@@ -265,7 +267,7 @@ const VaultMainPanel: React.FC = React.memo(() => {
                 <a
                   href="https://t.me/jm956"
                   target="_blank"
-                  rel="noreferrer"
+                  rel="noreferrer noopener"
                   className="group relative px-6 py-3 bg-figma-primary text-white font-black text-sm rounded-xl transition-all overflow-hidden shadow-xl active:scale-95"
                 >
                   <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform" />
@@ -310,12 +312,35 @@ const VaultMainPanel: React.FC = React.memo(() => {
               </div>
             </div>
 
+            <div className="mt-5 relative z-10">
+              <div className="grid grid-cols-3 gap-2">
+                <div className="rounded-xl bg-white/[0.03] border border-white/10 p-3">
+                  <div className="text-[10px] font-black text-white/35 uppercase tracking-widest">총 보관금</div>
+                  <div className="mt-1 text-sm font-black text-white">{formatWon(view.vaultBalance)}</div>
+                </div>
+                <div className="rounded-xl bg-figma-accent/5 border border-figma-accent/20 p-3">
+                  <div className="text-[10px] font-black text-figma-accent/70 uppercase tracking-widest">출금 가능</div>
+                  <div className="mt-1 text-sm font-black text-figma-accent">{formatWon(view.availableBalance)}</div>
+                </div>
+                <div className="rounded-xl bg-amber-500/5 border border-amber-500/20 p-3">
+                  <div className="text-[10px] font-black text-amber-300/70 uppercase tracking-widest">예약됨</div>
+                  <div className="mt-1 text-sm font-black text-amber-200">{formatWon(view.reservedBalance)}</div>
+                </div>
+              </div>
+
+              {view.reservedBalance > 0 && (
+                <p className="mt-2 text-white/40 text-[10px] uppercase font-bold tracking-wider">
+                  출금 신청 처리 중인 금액(예약됨)이 있어 출금 가능 금액이 줄어들 수 있습니다.
+                </p>
+              )}
+            </div>
+
             {/* Withdrawal Button (Only when Eligible) */}
             {view.eligible && (
               <div className="mt-8 relative z-10">
                 <button
                   onClick={() => handleWithdrawalClick()}
-                  disabled={isWithdrawalProcessing}
+                  disabled={isWithdrawalProcessing || view.availableBalance < 10000}
                   className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#00FF5F] to-[#70FF95] text-white font-black text-xl uppercase tracking-[0.2em] shadow-[0_20px_50px_rgba(0,255,95,0.4)] hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 border-2 border-white/40 backdrop-blur-sm"
                 >
                   {isWithdrawalProcessing ? (
@@ -328,8 +353,14 @@ const VaultMainPanel: React.FC = React.memo(() => {
                   )}
                 </button>
                 <p className="mt-2 text-white/40 text-[10px] uppercase font-bold tracking-wider">
-                  ⚠ 신청 즉시 관리자 승인 요청이 전송됩니다.
+                  신청 즉시 관리자 승인 요청이 전송됩니다. (기준: 출금 가능 금액)
                 </p>
+
+                {view.availableBalance > 0 && view.availableBalance < 10000 && (
+                  <p className="mt-1 text-red-400/70 text-[10px] uppercase font-bold tracking-wider">
+                    최소 10,000원부터 출금 신청 가능합니다.
+                  </p>
+                )}
               </div>
             )}
 

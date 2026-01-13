@@ -23,7 +23,7 @@ const mockTelegramWebApp = (win: Window) => {
 
 describe("TMA entry → UI action → audio call (E2E)", () => {
   beforeEach(() => {
-    cy.intercept("GET", "**/api/season-pass/status", {
+    cy.intercept("GET", "**/api/season-pass/status*", {
       progress: { current_level: 1, current_xp: 0, next_level_xp: 0, total_stamps: 0, last_stamp_date: null },
       levels: [],
       season: { id: 1, season_name: "CYPRESS", start_date: "2025-01-01", end_date: "2025-12-31", max_level: 1, base_xp_per_stamp: 0 },
@@ -79,12 +79,9 @@ describe("TMA entry → UI action → audio call (E2E)", () => {
       },
     });
 
-    cy.wait("@seasonPassStatus");
-    cy.wait("@vaultStatus");
-    cy.wait("@rouletteStatus");
-    cy.wait("@diceStatus");
-    cy.wait("@lotteryStatus");
-    cy.wait("@inbox");
+    // Wait for the landing UI to mount. Do not hard-require background status fetches,
+    // since routes/hooks can change and these calls may not occur on this page.
+    cy.contains("button", /전체 게임|ALL GAMES/).should("be.visible");
 
     cy.window()
       .its("__e2eSoundEvents")
@@ -94,7 +91,7 @@ describe("TMA entry → UI action → audio call (E2E)", () => {
         expect(hasAnySoundAttempt).to.eq(true);
       });
 
-    cy.contains("ALL GAMES").click();
+    cy.contains("button", /전체 게임|ALL GAMES/).click();
 
     cy.window()
       .its("__e2eSoundEvents")

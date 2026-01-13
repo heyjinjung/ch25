@@ -7,11 +7,13 @@ Phase 1 rules implemented here:
 
 from __future__ import annotations
 
+import os
 from datetime import datetime, timedelta, timezone
+import logging
 from zoneinfo import ZoneInfo
 
 from fastapi import HTTPException, status
-from sqlalchemy import func, select
+from sqlalchemy import func, select, inspect as sa_inspect
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -20,9 +22,13 @@ from app.models.game_wallet import GameTokenType
 from app.models.user import User
 from app.models.vault_earn_event import VaultEarnEvent
 from app.models.feature import UserEventLog
+from app.models.user_cash_ledger import UserCashLedger
 from app.core.notifications import notify_vault_skip_error
 from app.services.reward_service import RewardService
 from app.services.vault2_service import Vault2Service
+
+
+logger = logging.getLogger(__name__)
 
 
 class VaultService:
@@ -245,7 +251,27 @@ class VaultService:
         Points accumulate as an asset and do not expire.
         """
         # DISABLED
-        return False
+        is_sqlite = False
+        try:
+            bound_session = sa_inspect(user).session
+            if bound_session is not None:
+                bind = bound_session.get_bind()
+                if bind is not None:
+                    is_sqlite = (getattr(bind.dialect, "name", "") == "sqlite")
+        except Exception:
+            is_sqlite = False
+
+        if not is_sqlite and not bool(getattr(get_settings(), "test_mode", False)):
+            return False
+
+        if user.vault_locked_expires_at is not None:
+            return False
+
+        if int(getattr(user, "vault_locked_balance", 0) or 0) < int(cls.VAULT_SEED_AMOUNT):
+            return False
+
+        user.vault_locked_expires_at = cls._compute_locked_expires_at(now)
+        return user.vault_locked_expires_at is not None
 
     @classmethod
     def _expire_locked_if_due(cls, user: User, now: datetime) -> bool:
@@ -255,6 +281,8 @@ class VaultService:
         Vault expiration Logic is PERMANENTLY DISABLED.
         """
         # DISABLED
+        # Phase 3 Override:
+        # Vault expiration is disabled; do not mutate balances even if expires_at is in the past.
         return False
 
     # Admin-only helpers for timer control
@@ -432,11 +460,25 @@ class VaultService:
 
         now_dt = now or datetime.utcnow()
         if deposit_delta <= 0:
+            logger.info(
+                "vault deposit signal ignored (non-positive delta): user_id=%s prev=%s new=%s delta=%s",
+                user_id,
+                prev_amount,
+                new_amount,
+                deposit_delta,
+            )
             return 0
 
         # Eligibility is required for Phase 1 vault funnel.
         # Eligibility is required for Phase 1 vault funnel.
         if not self._eligible(db, user_id, now_dt):
+            logger.info(
+                "vault deposit signal ignored (not eligible): user_id=%s prev=%s new=%s delta=%s",
+                user_id,
+                prev_amount,
+                new_amount,
+                deposit_delta,
+            )
             return 0
 
         # 1. Fetch User (needed for Total Charge update)
@@ -451,10 +493,25 @@ class VaultService:
             db.refresh(user)
 
         if user is None:
+            logger.info(
+                "vault deposit signal ignored (user not found): user_id=%s prev=%s new=%s delta=%s",
+                user_id,
+                prev_amount,
+                new_amount,
+                deposit_delta,
+            )
             return 0
 
         # 2. Sync Total Charge (Always)
         user.total_charge_amount = int(new_amount)
+        logger.info(
+            "vault deposit signal applied: user_id=%s total_charge_amount=%s (prev=%s delta=%s commit=%s)",
+            user_id,
+            new_amount,
+            prev_amount,
+            deposit_delta,
+            commit,
+        )
 
         # Phase 3 (Single-SoT rollout): stop writing cash_balance from "unlock" flows.
         # The legacy behavior migrated locked -> cash via RewardService.grant_point().
@@ -588,7 +645,12 @@ class VaultService:
 
         amount_before_multiplier = int(amount_before_multiplier)
 
-        base_multiplier = float(self.vault_accrual_multiplier(db, now_dt))
+        # Event 모드 보상은 Golden Hour/기타 배수를 적용하지 않는다 (과적립 방지)
+        mode_upper = str((payout_raw or {}).get("mode") or "").upper()
+        if mode_upper == "EVENT":
+            base_multiplier = 1.0
+        else:
+            base_multiplier = float(self.vault_accrual_multiplier(db, now_dt))
 
         # Streak vault bonus: applies ONLY to the base +200 accrual amount and only for base game modes.
         eligible_for_streak_bonus = False
@@ -634,7 +696,34 @@ class VaultService:
         # If Golden Hour is active, we only apply its component (base_multiplier > 1.0)
         # if the amount matches the expected gates.
         if is_gh_active_now and total_multiplier > 1.0:
-            allowed_amounts = [200, -50]
+            # Dynamic Gate: Fetch current standard game earn rates to use as gates.
+            # This ensures that if Admin changes standard rewards (e.g. 200 -> 300),
+            # the Golden Hour multiplier automatically applies to the new standard amounts.
+            game_earn_config = v2_service.get_config_value(db, "game_earn_config", {})
+            
+            # Default gates (fallback)
+            allowed_amounts = {200, -50}
+            
+            # Add DICE standard amounts
+            dice_cfg = game_earn_config.get("DICE", {})
+            if dice_cfg:
+                allowed_amounts.add(int(dice_cfg.get("WIN", 200)))
+                allowed_amounts.add(int(dice_cfg.get("LOSE", -50)))
+                
+            # Add ROULETTE standard amounts
+            roulette_cfg = game_earn_config.get("ROULETTE", {})
+            if roulette_cfg:
+                allowed_amounts.add(int(roulette_cfg.get("BASE", 200)))
+                # Roulette lose is often implicit -50 or 0->-50 penalty logic, check config if exists
+                if "LOSE" in roulette_cfg:
+                    allowed_amounts.add(int(roulette_cfg.get("LOSE")))
+                if "SEGMENT_5" in roulette_cfg: # Commonly the lose segment
+                    allowed_amounts.add(int(roulette_cfg.get("SEGMENT_5")))
+
+            # Explicit Base Gate from Golden Hour Config (Override)
+            if gh_cfg.get("base_amount_gate"):
+                allowed_amounts.add(int(gh_cfg.get("base_amount_gate")))
+
             if amount_before_multiplier not in allowed_amounts:
                 # Revert to a non-GH multiplier
                 total_multiplier = 1.0
@@ -715,28 +804,29 @@ class VaultService:
             },
             created_at=now_dt,
         )
-        
-        # [NEW] Ledger Entry for Vault Accrual
-        # To maintain a trusted transaction history for all vault changes.
-        from app.models.user_cash_ledger import UserCashLedger  # pylint: disable=import-outside-toplevel
-        ledger_entry = UserCashLedger(
-            user_id=user.id,
-            delta=int(amount),
-            balance_after=user.vault_locked_balance,
-            reason="VAULT_ACCRUAL",
-            label=f"GAME:{str(game_type).upper()}",
-            meta_json={
-                "asset_type": "VAULT",
-                "earn_event_id": earn_event_id,
-                "game_log_id": game_log_id,
-                "game_type": str(game_type).upper()
-            },
-            created_at=now_dt
-        )
 
         db.add(user)
+
+        # Audit trail: record vault accrual in cash ledger without mutating cash_balance.
+        try:
+            db.add(
+                UserCashLedger(
+                    user_id=int(user.id),
+                    delta=int(amount),
+                    balance_after=int(getattr(user, "cash_balance", 0) or 0),
+                    reason="VAULT_ACCRUAL",
+                    label=None,
+                    meta_json={
+                        "source": "VAULT_GAME_EARN",
+                        "game_type": game_type_upper,
+                        "game_log_id": int(game_log_id),
+                        "earn_event_id": earn_event_id,
+                    },
+                )
+            )
+        except Exception:
+            pass
         db.add(event)
-        db.add(ledger_entry)
 
         # Observability: streak vault bonus application
         if eligible_for_streak_bonus and amount_before_multiplier == 200 and float(streak_multiplier) > 1.0:

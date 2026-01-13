@@ -18,6 +18,8 @@ from app.models.external_ranking import ExternalRankingData
 from app.models.external_ranking_daily_deposit_delta import ExternalRankingDailyDepositDelta
 from app.models.roulette import RouletteLog
 from app.models.dice import DiceLog
+from app.models.segment_rule import SegmentRule
+from app.services.segment_rules_engine import SegmentContext, matches_condition
 
 # Thresholds
 WHALE_ACCRUAL_THRESHOLD = 1_000_000
@@ -66,8 +68,6 @@ class UserSegmentService:
             
         db.commit()
         db.refresh(profile)
-        db.commit()
-        db.refresh(profile)
         return profile
 
     @staticmethod
@@ -106,6 +106,8 @@ class UserSegmentService:
                     break
         
         telegram_raw = get_val(keys, "telegram") or get_val(keys, "telegram_id") or get_val(keys, "텔레그램") or get_val(keys, "username")
+        
+        was_created = False
         
         # --- 1. RESOLVE USER TARGET ---
         target_user = None
@@ -150,6 +152,7 @@ class UserSegmentService:
                 try:
                     db.commit()
                     db.refresh(target_user)
+                    was_created = True
                 except Exception as e:
                     db.rollback()
                     return {"success": False, "error": f"Create User Failed: {str(e)}"}
@@ -165,9 +168,9 @@ class UserSegmentService:
                 try:
                     db.commit()
                     db.refresh(target_user)
-                except:
-                    db.rollback() # Not critical enough to fail import? But safer to warn.
-                    # Continue anyway
+                except Exception as e:
+                    db.rollback() 
+                    print(f"WARN: Failed to sync telegram_username for user {target_user.id}: {e}")
 
         # --- 4. EXTRACT PROFILE DATA ---
         tags_raw = get_val(keys, "tags") or get_val(keys, "태그")
@@ -179,12 +182,24 @@ class UserSegmentService:
         days_since_charge_str = get_val(keys, "마지막 충전 후 경과일") or get_val(keys, "days_since_last_charge")
         last_active_str = get_val(keys, "최근 이용일") or get_val(keys, "last_active_date_str")
 
+        # Process Tags
+        tags_list = []
+        if tags_raw:
+             tags_list = [t.strip() for t in str(tags_raw).split(",") if t.strip()]
+        
+        # [Audit] Add CSV_IMPORT tag for new users
+        # print(f"DEBUG: resolving tags. was_created={was_created}, user={target_user.id}")
+        if was_created:
+            if "CSV_IMPORT" not in tags_list:
+                tags_list.append("CSV_IMPORT")
+
         profile_data = {
             "external_id": target_user.external_id, # Always use current user's ext ID
             "real_name": real_name_raw,
             "phone_number": phone_raw, 
             "telegram_id": telegram_raw, # Store original raw input in profile
-            "memo": memo_raw
+            "memo": memo_raw,
+            "tags": tags_list
         }
         
         if total_active_days_str:
@@ -202,8 +217,9 @@ class UserSegmentService:
         if last_active_str:
             profile_data["last_active_date_str"] = str(last_active_str).strip()
 
-        if tags_raw:
-            profile_data["tags"] = [t.strip() for t in tags_raw.split(",") if t.strip()]
+        # REMOVED: Redundant tags overwrite that wiped CSV_IMPORT
+        # if tags_raw:
+        #    profile_data["tags"] = [t.strip() for t in tags_raw.split(",") if t.strip()]
         
         UserSegmentService.upsert_user_profile(db, target_user.id, profile_data)
         
@@ -211,79 +227,97 @@ class UserSegmentService:
 
     @staticmethod
     def get_computed_segments(db: Session, user_id: int) -> List[str]:
-        """Calculate dynamic segments for a user."""
-        from datetime import datetime, timedelta
-        from sqlalchemy import func
+        """Calculate dynamic segments for a user using database-driven rules."""
+        from app.services.admin_segment_rule_service import AdminSegmentRuleService
         
-        segments = []
-        
-        # 1. Whale Check (Lifetime Accrual)
-        total_accrued = db.query(func.sum(VaultEarnEvent.amount))\
-            .filter(VaultEarnEvent.user_id == user_id)\
-            .scalar() or 0
-        
-        if total_accrued >= WHALE_ACCRUAL_THRESHOLD:
-            segments.append("WHALE")
+        # 1. Fetch enabled rules ordered by priority
+        rules = AdminSegmentRuleService.list_enabled_rules(db)
+        if not rules:
+            return []
 
-        # 2. Cash-Outer Check (Withdrawal Freq/Amt)
-        # Check last 30 days
-        thirty_days_ago = datetime.utcnow() - timedelta(days=30)
-        
-        # Count unlocks (using VAULT_UNLOCK reason in ledger as proxy for "Cash Out intention")
-        # Or better: check VaultStatus events if available, but Ledger is safer for historical data?
-        # Actually, Ledger reason="VAULT_UNLOCK" is good.
-        
-        unlock_stats = db.query(
-            func.count(UserCashLedger.id),
-            func.sum(UserCashLedger.delta)
-        ).filter(
-            UserCashLedger.user_id == user_id,
-            UserCashLedger.reason == "VAULT_UNLOCK",
-            UserCashLedger.created_at >= thirty_days_ago
-        ).first()
-        
-        unlock_count = unlock_stats[0] or 0
-        unlock_amount = unlock_stats[1] or 0 # delta is positive for unlock? 
-        # Wait, unlock adds to cash, so delta is positive.
-        
-        if unlock_count >= CASHOUT_FREQ_THRESHOLD or unlock_amount >= CASHOUT_AMOUNT_THRESHOLD:
-            segments.append("CASH_OUTER")
+        # 2. Collect user metrics once
+        ctx = UserSegmentService._build_segment_context(db, user_id)
+        if not ctx:
+            return []
 
-        # 3. Paying User (Total Vault Unlock > 0)
-        # Lifetime check
-        lifetime_unlock = db.query(func.sum(UserCashLedger.delta))\
-            .filter(
-                UserCashLedger.user_id == user_id,
-                UserCashLedger.reason == "VAULT_UNLOCK"
-            ).scalar() or 0
-            
-        if lifetime_unlock > 0:
-            segments.append("PAYING_USER")
-        else:
-            # Check for Potential Purchaser
-            # Active (login < 3 days) + No Unlock
-            user = db.query(User).filter(User.id == user_id).first()
-            if user and user.last_login_at and user.last_login_at > (datetime.utcnow() - timedelta(days=3)):
-                segments.append("POTENTIAL_PURCHASER")
+        segments = set()
+        for rule in rules:
+            try:
+                if matches_condition(rule.condition_json, ctx):
+                    segments.add(rule.segment)
+            except Exception:
+                # Specific rule error shouldn't block entire calculation
+                continue
+        
+        return list(segments)
 
-        # 4. Empty Tank (Opportunity)
-        # Active < 24h + Balance < 1000
+    @staticmethod
+    def _build_segment_context(db: Session, user_id: int) -> Optional[SegmentContext]:
+        """Collect all base metrics for a user and build a SegmentContext."""
+        from app.models.user_activity import UserActivity
+        from app.services.admin_segment_service import _days_since, _max_dt
+        
         user = db.query(User).filter(User.id == user_id).first()
-        if user and user.last_login_at and user.last_login_at > (datetime.utcnow() - timedelta(hours=24)):
-            total_balance = (user.cash_balance or 0) + (user.vault_balance or 0) # Simplification
-            if total_balance < EMPTY_TANK_THRESHOLD:
-                segments.append("EMPTY_TANK")
+        if not user:
+            return None
 
-        return segments
+        now = datetime.utcnow()
+        act = db.query(UserActivity).filter(UserActivity.user_id == user_id).first()
+        ext = db.query(ExternalRankingData).filter(ExternalRankingData.user_id == user_id).first()
+        profile = db.query(AdminUserProfile).filter(AdminUserProfile.user_id == user_id).first()
+
+        last_login_at = getattr(act, "last_login_at", None) if act else user.last_login_at
+        last_charge_at = getattr(act, "last_charge_at", None) if act else None
+        last_play_at = getattr(act, "last_play_at", None) if act else None
+        last_active_at = _max_dt(last_login_at, last_charge_at, last_play_at)
+
+        return SegmentContext(
+            last_login_at=last_login_at,
+            last_charge_at=last_charge_at,
+            last_play_at=last_play_at,
+            last_active_at=last_active_at,
+            days_since_last_login=_days_since(now, last_login_at),
+            days_since_last_charge=_days_since(now, last_charge_at),
+            days_since_last_play=_days_since(now, last_play_at),
+            days_since_last_active=_days_since(now, last_active_at),
+            deposit_amount=getattr(ext, "deposit_amount", 0) if ext else 0,
+            roulette_plays=getattr(act, "roulette_plays", 0) if act else 0,
+            dice_plays=getattr(act, "dice_plays", 0) if act else 0,
+            lottery_plays=getattr(act, "lottery_plays", 0) if act else 0,
+            total_play_duration=getattr(act, "total_play_duration", 0) if act else 0,
+            # Expanded metrics
+            level=user.level or 1,
+            xp=user.xp or 0,
+            cash_balance=float(user.cash_balance or 0),
+            vault_balance=float(user.vault_balance or 0),
+            login_streak=user.login_streak or 0,
+        )
 
     @staticmethod
     def get_users_by_segment(db: Session, segment_type: str, limit: int = 100) -> List[int]:
-        """Get user IDs belonging to a specific segment."""
+        """Get user IDs belonging to a specific segment.
+        
+        Prioritizes the persistent UserSegment table for standard 5-tier segments.
+        Falls back to dynamic calculation for special/operational filters.
+        """
         now = datetime.utcnow()
         active_24h = now - timedelta(hours=24)
         active_7d = now - timedelta(days=7)
         inactive_30d = now - timedelta(days=30)
 
+        # 1. Standard 5-tier segments (Source of Truth: UserSegment table)
+        # Standard Segments: VIP, ACTIVE, AT_RISK, DORMANT, NEW
+        standard_segments = ["VIP", "ACTIVE", "AT_RISK", "DORMANT", "NEW"]
+        
+        if segment_type in standard_segments:
+            return [
+                r[0] for r in db.query(UserSegment.user_id)
+                .filter(UserSegment.segment == segment_type)
+                .limit(limit)
+                .all()
+            ]
+
+        # 2. Dynamic / Operational / Special Filters
         query = db.query(User.id)
 
         if segment_type == "TOTAL_USERS":
@@ -294,6 +328,7 @@ class UserSegmentService:
             query = query.join(ExternalRankingData, User.id == ExternalRankingData.user_id)\
                          .filter(ExternalRankingData.deposit_amount > 0)
         elif segment_type == "WHALE":
+            # NOTE: WHALE is a dynamic filter. Persistent VIPs might be different.
             query = query.join(VaultEarnEvent, User.id == VaultEarnEvent.user_id)\
                          .group_by(User.id)\
                          .having(func.sum(VaultEarnEvent.amount) >= WHALE_ACCRUAL_THRESHOLD)
@@ -302,16 +337,7 @@ class UserSegmentService:
                 User.last_login_at >= active_24h,
                 (func.coalesce(User.cash_balance, 0) + func.coalesce(User.vault_balance, 0)) < EMPTY_TANK_THRESHOLD
             )
-        elif segment_type == "DAILY":
-            query = query.filter(User.last_login_at >= active_24h)
-        elif segment_type == "WEEKLY":
-            query = query.filter(User.last_login_at >= active_7d, User.last_login_at < active_24h)
-        elif segment_type == "MONTHLY":
-            query = query.filter(User.last_login_at >= inactive_30d, User.last_login_at < active_7d)
-        elif segment_type == "DORMANT":
-            query = query.filter((User.last_login_at < inactive_30d) | (User.last_login_at == None))
         elif segment_type.startswith("CHARGE_"):
-            # Requires join with AdminUserProfile
             risk = segment_type.split("_")[1]
             query = query.join(AdminUserProfile, User.id == AdminUserProfile.user_id)
             if risk == "LOW":

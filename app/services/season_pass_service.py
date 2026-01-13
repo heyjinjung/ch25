@@ -506,8 +506,12 @@ class SeasonPassService:
         (e.g., worker crash, delivery failure) when a user fetches status.
         """
 
+        # Level 1 auto-claim is handled at progress creation time to satisfy onboarding UX/tests.
+        # Avoid double-granting it here.
         unlocked_auto_levels = [
-            level for level in levels if level.auto_claim and level.required_xp <= progress.current_xp
+            level
+            for level in levels
+            if level.auto_claim and level.level > 1 and level.required_xp <= progress.current_xp
         ]
         missing_levels = [lvl for lvl in unlocked_auto_levels if lvl.level not in claimed_levels]
         if not missing_levels:
@@ -568,7 +572,67 @@ class SeasonPassService:
         2. _recover_missing_auto_claims grants Level 1 again when get_status is called
         The normal flow already handles Level 1 correctly.
         """
-        return  # Disabled to prevent duplicate grants
+        level1 = db.execute(
+            select(SeasonPassLevel).where(
+                SeasonPassLevel.season_id == progress.season_id,
+                SeasonPassLevel.level == 1,
+            )
+        ).scalar_one_or_none()
+        if not level1 or not bool(level1.auto_claim):
+            return
+
+        # 정책: 진행 생성 시점의 자동지급은 티켓/번들류만 허용.
+        # POINT 류는 시즌패스 플로우에서는 auto-claim 로그를 남기지 않는다.
+        if str(level1.reward_type).upper() in {"POINT", "CC_POINT"}:
+            return
+
+        already = db.execute(
+            select(SeasonPassRewardLog).where(
+                SeasonPassRewardLog.user_id == progress.user_id,
+                SeasonPassRewardLog.season_id == progress.season_id,
+                SeasonPassRewardLog.level == 1,
+            )
+        ).scalar_one_or_none()
+        if already:
+            return
+
+        reward_meta = {
+            "season_id": progress.season_id,
+            "level": 1,
+            "source": "SEASON_PASS_AUTO_CLAIM",
+            "trigger": "PROGRESS_CREATE",
+        }
+        try:
+            self.reward_service.deliver(
+                db,
+                user_id=progress.user_id,
+                reward_type=level1.reward_type,
+                reward_amount=level1.reward_amount,
+                meta=reward_meta,
+                commit=False,
+            )
+        except Exception:
+            self.logger.warning(
+                "Season pass initial level auto-claim failed",
+                extra={
+                    "user_id": progress.user_id,
+                    "season_id": progress.season_id,
+                },
+                exc_info=True,
+            )
+            return
+
+        reward_log = SeasonPassRewardLog(
+            user_id=progress.user_id,
+            season_id=progress.season_id,
+            progress_id=progress.id,
+            level=1,
+            reward_type=level1.reward_type,
+            reward_amount=level1.reward_amount,
+            claimed_at=datetime.utcnow(),
+        )
+        db.add(reward_log)
+        db.commit()
 
     def add_bonus_xp(
         self,

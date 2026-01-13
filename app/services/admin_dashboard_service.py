@@ -38,7 +38,7 @@ class AdminDashboardService:
         start_kst = datetime.combine(today_kst, time.min)
         return start_kst - timedelta(hours=9)
 
-    def get_daily_overview(self, db: Session):
+    def get_comprehensive_overview(self, db: Session):
         kst_now = self._get_kst_now()
         yesterday_start, yesterday_end = self._get_yesterday_kst_range(kst_now)
         today_start_utc = self._get_today_kst_start_in_utc(kst_now)
@@ -155,6 +155,16 @@ class AdminDashboardService:
             if label in streak_counts:
                 streak_counts[label] = count
 
+        # 7. Pending Actions
+        from app.models.vault_withdrawal_request import VaultWithdrawalRequest
+        pending_vault_requests_count = db.query(func.count(VaultWithdrawalRequest.id)).filter(
+            VaultWithdrawalRequest.status == "PENDING"
+        ).scalar() or 0
+        
+        pending_mission_approvals_count = db.query(func.count(UserMissionProgress.id)).filter(
+            UserMissionProgress.approval_status == "WAITING"
+        ).scalar() or 0
+
         return {
             "welcome_retention_rate": float(welcome_retention_rate),
             "churn_risk_count": churn_risk_count,
@@ -167,7 +177,97 @@ class AdminDashboardService:
             "today_active_users": today_active_users,
             "today_game_plays": today_game_plays,
             "today_ticket_usage": today_ticket_usage,
-            "streak_counts": streak_counts
+            "streak_counts": streak_counts,
+            "pending_vault_requests_count": pending_vault_requests_count,
+            "pending_mission_approvals_count": pending_mission_approvals_count
+        }
+
+    def get_daily_overview(self, db: Session):
+        """Daily routine check: risk & settlement (yesterday, KST)."""
+        kst_now = self._get_kst_now()
+        yesterday_start, yesterday_end = self._get_yesterday_kst_range(kst_now)
+        today_start_utc = self._get_today_kst_start_in_utc(kst_now)
+
+        # Active yesterday, not today
+        risk_count = (
+            db.query(func.count(User.id))
+            .filter(
+                User.last_login_at >= yesterday_start,
+                User.last_login_at <= yesterday_end,
+                User.last_login_at < today_start_utc,
+            )
+            .scalar()
+            or 0
+        )
+
+        # Streak >= 3, active yesterday, missed today
+        streak_risk_count = (
+            db.query(func.count(User.id))
+            .filter(
+                User.play_streak >= 3,
+                User.last_login_at >= yesterday_start,
+                User.last_login_at <= yesterday_end,
+                User.last_login_at < today_start_utc,
+            )
+            .scalar()
+            or 0
+        )
+
+        # Avg completion % yesterday (DAILY missions)
+        yesterday_kst_date = (kst_now.date() - timedelta(days=1)).isoformat()
+        mission_total, mission_completed = (
+            db.query(
+                func.count(UserMissionProgress.id),
+                func.sum(case((UserMissionProgress.is_completed == True, 1), else_=0)),
+            )
+            .join(Mission, Mission.id == UserMissionProgress.mission_id)
+            .filter(
+                UserMissionProgress.reset_date == yesterday_kst_date,
+                Mission.category == "DAILY",
+            )
+            .first()
+            or (0, 0)
+        )
+        mission_total = int(mission_total or 0)
+        mission_completed = int(mission_completed or 0)
+        mission_percent = (mission_completed / mission_total * 100.0) if mission_total > 0 else 0.0
+
+        # Settlement: yesterday deposits vs vault payouts (earn events)
+        deposit_sum = (
+            db.query(func.coalesce(func.sum(UserCashLedger.delta), 0))
+            .filter(
+                UserCashLedger.created_at >= yesterday_start,
+                UserCashLedger.created_at <= yesterday_end,
+                UserCashLedger.delta > 0,
+                or_(UserCashLedger.reason == "CHARGE", UserCashLedger.reason == "DEPOSIT"),
+            )
+            .scalar()
+            or 0
+        )
+        total_deposit_estimated = int(deposit_sum)
+
+        total_vault_paid = (
+            db.query(func.coalesce(func.sum(VaultEarnEvent.amount), 0))
+            .filter(
+                VaultEarnEvent.created_at >= yesterday_start,
+                VaultEarnEvent.created_at <= yesterday_end,
+            )
+            .scalar()
+            or 0
+        )
+        total_vault_paid = int(total_vault_paid)
+
+        vault_payout_ratio = None
+        if total_deposit_estimated > 0:
+            vault_payout_ratio = (total_vault_paid / total_deposit_estimated) * 100.0
+
+        return {
+            "risk_count": int(risk_count),
+            "streak_risk_count": int(streak_risk_count),
+            "mission_percent": float(mission_percent),
+            "vault_payout_ratio": float(vault_payout_ratio) if vault_payout_ratio is not None else None,
+            "total_vault_paid": int(total_vault_paid),
+            "total_deposit_estimated": int(total_deposit_estimated),
         }
 
     def get_event_status(self, db: Session):
@@ -290,6 +390,32 @@ class AdminDashboardService:
                     "value": f"Streak: {u.play_streak}",
                     "tags": [streak_tag]
                 })
+
+        elif metric_key == "streak_risk":
+            # Users with play_streak >= 3 who have not logged in today (KST 00:00)
+            users = (
+                db.query(User)
+                .filter(
+                    User.play_streak >= 3,
+                    or_(User.last_login_at < today_start_utc, User.last_login_at == None),
+                )
+                .order_by(User.play_streak.desc())
+                .limit(50)
+                .all()
+            )
+
+            for u in users:
+                tag = "LEGEND" if u.play_streak >= 7 else "HOT"
+                last_login = u.last_login_at.strftime('%m-%d %H:%M') if u.last_login_at else "알 수 없음"
+                results.append(
+                    {
+                        "id": u.id,
+                        "label": u.nickname or f"User {u.id}",
+                        "sub_label": f"마지막 접속: {last_login}",
+                        "value": f"스트릭: {u.play_streak}",
+                        "tags": [tag],
+                    }
+                )
 
         elif metric_key == "today_active":
             # Users active today (Limit 50)

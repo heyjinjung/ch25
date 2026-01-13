@@ -6,42 +6,276 @@
 @tailwind utilities;
 
 :root {
-  font-family: "Noto Sans KR", "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: "Noto Sans KR", system-ui, sans-serif;
   color-scheme: dark;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 
-  /* Figma Extracted Colors */
-  --figma-green-grad-start: #6CB424;
-  --figma-green-grad-end: #1E5528;
-  --figma-bg-dark: #0F0E0E;
-  --figma-accent-green: #30FF75;
-  --figma-dark-green-solid: #07310D;
+  /* Premium Eye-Comfort Dark Theme (Soft Obsidian) */
+  --admin-bg: #121214;
+  /* Softer than pitch black */
+  --admin-sidebar: #18181b;
+  /* Zinc-900: Distinct but soft */
+  --admin-card: rgba(39, 39, 42, 0.6);
+  /* Zinc-800 with transparency */
+  --admin-border: rgba(255, 255, 255, 0.06);
+  /* Subtle borders */
+  --admin-hover: rgba(255, 255, 255, 0.04);
+
+  /* Pastel/Soft Accents for reduced glare */
+  --admin-brand: #818cf8;
+  /* Indigo-400 (Softer than 500) */
+  --admin-accent: #34d399;
+  /* Emerald-400 (Softer than 500) */
+  --admin-warning: #fbbf24;
+  /* Amber-400 */
+  --admin-danger: #f87171;
+  /* Red-400 */
+
+  /* Reduced Contrast Typography */
+  --admin-text-primary: #e4e4e7;
+  /* Zinc-200 (vs #fafafa) */
+  --admin-text-secondary: #a1a1aa;
+  /* Zinc-400 */
+  --admin-text-muted: #71717a;
+  /* Zinc-500 */
 }
 
-.bg-figma-primary {
-  background: linear-gradient(180deg, var(--figma-green-grad-start) 0%, #37723E 51%, var(--figma-green-grad-end) 100%);
+@layer components {
+  .admin-page-container {
+    @apply max-w-[1600px] mx-auto px-8 py-10 space-y-8;
+  }
+
+  .admin-card-premium {
+    @apply bg-admin-card backdrop-blur-xl border border-admin-border rounded-admin-xl shadow-admin-card transition-all duration-300;
+  }
+
+  .admin-card {
+    @apply bg-admin-card backdrop-blur-xl border border-admin-border rounded-admin-xl shadow-admin-card transition-all duration-300;
+  }
+
+  .admin-table {
+    @apply w-full border-collapse text-left text-admin-body;
+  }
+
+  /* ISFJ Safety & Monitor Utilities */
+  .admin-safety-zone {
+    @apply bg-[#1e1e24] border border-white/5 rounded-admin-xl p-6 transition-colors duration-300;
+  }
+
+  .admin-status-bar {
+    @apply h-10 w-full bg-indigo-500/10 border-b border-indigo-500/20 flex items-center px-4 text-xs font-medium text-indigo-200 tracking-wide;
+  }
+
+  .admin-th {
+    @apply px-4 py-3.5 bg-admin-sidebar text-admin-meta text-admin-text-secondary uppercase tracking-wider border-b border-admin-border font-bold;
+  }
+
+  .admin-td {
+    @apply px-4 py-4 border-b border-admin-border text-admin-text-primary transition-colors;
+  }
+
+  .admin-tr {
+    @apply hover:bg-admin-hover transition-colors duration-200 relative;
+  }
+
+  /* Premium Button System */
+  .btn-admin-primary {
+    @apply bg-admin-brand text-white px-4 py-1.5 rounded-lg text-sm font-bold transition-all duration-200 active:scale-[0.98] hover:brightness-110 shadow-admin-glow flex items-center justify-center gap-2;
+  }
+
+  .btn-admin-secondary {
+    @apply bg-admin-sidebar border border-admin-border text-admin-text-primary px-4 py-1.5 rounded-lg text-sm font-bold transition-all duration-200 active:scale-[0.98] hover:bg-admin-hover flex items-center justify-center gap-2;
+  }
+
+  .btn-admin-ghost {
+    @apply text-admin-text-secondary px-4 py-2 rounded-admin-lg transition-all duration-200 hover:bg-admin-hover hover:text-admin-text-primary flex items-center justify-center gap-2;
+  }
+
+  /* Premium Form Controls */
+  .admin-input {
+    @apply h-11 bg-admin-sidebar border border-admin-border rounded-admin-lg px-4 text-admin-text-primary transition-all focus:outline-none focus:ring-2 focus:ring-admin-brand placeholder:text-admin-text-muted;
+  }
+
+  .admin-textarea {
+    @apply min-h-[200px] py-4 bg-admin-sidebar border border-admin-border rounded-admin-lg px-4 text-admin-text-primary transition-all focus:outline-none focus:ring-2 focus:ring-admin-brand placeholder:text-admin-text-muted;
+  }
+
+  .admin-label {
+    @apply text-admin-meta text-admin-text-secondary uppercase mb-2 block font-bold tracking-widest;
+  }
+
+  .admin-progress {
+    width: 100%;
+    height: 0.25rem;
+    border-radius: 9999px;
+    overflow: hidden;
+    appearance: none;
+  }
+
+  .admin-progress::-webkit-progress-bar {
+    background-color: var(--admin-sidebar);
+    border-radius: 9999px;
+  }
+
+  /* Roulette probability UI (no inline styles) */
+  .roulette-prob-bar {
+    width: 100%;
+    height: 0.5rem;
+    border-radius: 9999px;
+    overflow: hidden;
+    background-color: #333333;
+    appearance: none;
+  }
+
+  .roulette-prob-bar::-webkit-progress-bar {
+    background-color: #333333;
+    border-radius: 9999px;
+  }
+
+  .roulette-prob-bar::-webkit-progress-value {
+    border-radius: 9999px;
+  }
+
+  .roulette-prob-bar::-moz-progress-bar {
+    border-radius: 9999px;
+  }
+
+  .roulette-prob-bar--common::-webkit-progress-value {
+    background-color: #91F402;
+  }
+
+  .roulette-prob-bar--common::-moz-progress-bar {
+    background-color: #91F402;
+  }
+
+  .roulette-prob-text--common {
+    color: #91F402;
+  }
+
+  .roulette-prob-badge--common {
+    background-color: rgba(145, 244, 2, 0.125);
+    color: #91F402;
+  }
+
+  .roulette-prob-bar--uncommon::-webkit-progress-value {
+    background-color: #22D3EE;
+  }
+
+  .roulette-prob-bar--uncommon::-moz-progress-bar {
+    background-color: #22D3EE;
+  }
+
+  .roulette-prob-text--uncommon {
+    color: #22D3EE;
+  }
+
+  .roulette-prob-badge--uncommon {
+    background-color: rgba(34, 211, 238, 0.125);
+    color: #22D3EE;
+  }
+
+  .roulette-prob-bar--rare::-webkit-progress-value {
+    background-color: #F59E0B;
+  }
+
+  .roulette-prob-bar--rare::-moz-progress-bar {
+    background-color: #F59E0B;
+  }
+
+  .roulette-prob-text--rare {
+    color: #F59E0B;
+  }
+
+  .roulette-prob-badge--rare {
+    background-color: rgba(245, 158, 11, 0.125);
+    color: #F59E0B;
+  }
+
+  .roulette-prob-bar--epic::-webkit-progress-value {
+    background-color: #EF4444;
+  }
+
+  .roulette-prob-bar--epic::-moz-progress-bar {
+    background-color: #EF4444;
+  }
+
+  .roulette-prob-text--epic {
+    color: #EF4444;
+  }
+
+  .roulette-prob-badge--epic {
+    background-color: rgba(239, 68, 68, 0.125);
+    color: #EF4444;
+  }
+
+  .roulette-prob-bar--legendary::-webkit-progress-value {
+    background-color: #A855F7;
+  }
+
+  .roulette-prob-bar--legendary::-moz-progress-bar {
+    background-color: #A855F7;
+  }
+
+  .roulette-prob-text--legendary {
+    color: #A855F7;
+  }
+
+  .roulette-prob-badge--legendary {
+    background-color: rgba(168, 85, 247, 0.125);
+    color: #A855F7;
+  }
+
+  .admin-progress.admin-progress-accent::-webkit-progress-value {
+    background-color: rgba(16, 185, 129, 0.5);
+    border-radius: 9999px;
+  }
+
+  .admin-progress.admin-progress-muted::-webkit-progress-value {
+    background-color: rgba(82, 82, 91, 0.5);
+    border-radius: 9999px;
+  }
+
+  .admin-progress.admin-progress-danger::-webkit-progress-value {
+    background-color: rgba(244, 63, 94, 0.5);
+    border-radius: 9999px;
+  }
+
+  .admin-progress.admin-progress-accent::-moz-progress-bar {
+    background-color: rgba(16, 185, 129, 0.5);
+    border-radius: 9999px;
+  }
+
+  .admin-progress.admin-progress-muted::-moz-progress-bar {
+    background-color: rgba(82, 82, 91, 0.5);
+    border-radius: 9999px;
+  }
+
+  .admin-progress.admin-progress-danger::-moz-progress-bar {
+    background-color: rgba(244, 63, 94, 0.5);
+    border-radius: 9999px;
+  }
 }
 
-.text-figma-accent {
-  color: var(--figma-accent-green);
+/* Custom Premium Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
 }
 
-.border-figma-accent {
-  border-color: var(--figma-accent-green);
+.custom-scrollbar::-webkit-scrollbar-track {
+  @apply bg-transparent;
 }
 
-.bg-figma-accent\/10 {
-  background-color: rgba(48, 255, 117, 0.1);
-}
-
-.landing-font {
-  font-family: "Noto Sans KR", "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  @apply bg-white/10 rounded-full hover:bg-white/20 transition-colors;
 }
 
 body {
   margin: 0;
   background-color: var(--figma-bg-dark);
-  background: radial-gradient(circle at 50% 10%, #2a2a2a 0%, #151515 50%, #050505 100%);
-  color: white;
+  background: radial-gradient(circle at 50% 0%, #111115 0%, #050505 100%);
+  color: #e4e4e7;
   min-height: 100vh;
   min-height: 100dvh;
 }

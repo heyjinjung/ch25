@@ -204,6 +204,7 @@ UPDATE feature_config SET is_enabled=0 WHERE feature_type='ROULETTE';
 
 ## 13. 참고
 - 전체 상세 가이드: [DEPLOYMENT.md](./DEPLOYMENT.md).
+- 배포 예상 오류 리스트(Preflight): [DEPLOYMENT_EXPECTED_ERRORS.md](./DEPLOYMENT_EXPECTED_ERRORS.md).
 
 ## 14. 변경 이력
 - v1.1 (2025-12-25, 시스템 설계팀): 문서 규칙 적용, 목적/범위/체크리스트 정비.

@@ -57,6 +57,32 @@ export default {
           900: '#fafafa',
         },
 
+        // Admin Premium System (Obsidian + Indigo)
+        admin: {
+          bg: 'var(--admin-bg)',
+          sidebar: 'var(--admin-sidebar)',
+          card: 'var(--admin-card)',
+          border: 'var(--admin-border)',
+          hover: 'var(--admin-hover)',
+
+          brand: 'var(--admin-brand)',
+          accent: 'var(--admin-accent)',
+          warning: 'var(--admin-warning)',
+          danger: 'var(--admin-danger)',
+
+          'text-primary': 'var(--admin-text-primary)',
+          'text-secondary': 'var(--admin-text-secondary)',
+          'text-muted': 'var(--admin-text-muted)',
+
+          // Backward-compatible aliases used across admin UI
+          'text-base': 'var(--admin-text-primary)',
+          muted: 'var(--admin-text-muted)',
+          success: 'var(--admin-accent)',
+          info: 'var(--admin-brand)',
+          input: 'var(--admin-sidebar)',
+          'element-hover': 'var(--admin-hover)',
+        },
+
         // CC palette (from design SVG)
         cc: {
           lime: '#D2FD9C',
@@ -77,6 +103,24 @@ export default {
       },
       fontFamily: {
         sans: ['"Noto Sans KR"', 'Inter', 'system-ui', 'sans-serif'],
+      },
+      fontSize: {
+        // Admin Typography Scale (SoT)
+        'admin-title': ['1.875rem', { lineHeight: '2.25rem' }], // 30px
+        'admin-subtitle': ['1.25rem', { lineHeight: '1.75rem' }], // 20px
+        'admin-body': ['1rem', { lineHeight: '1.5rem' }], // 16px
+        'admin-meta': ['0.875rem', { lineHeight: '1.25rem' }], // 14px
+        'admin-mono': ['0.9375rem', { lineHeight: '1.25rem' }], // 15px
+      },
+      borderRadius: {
+        // Admin Radius Standard (SoT)
+        'admin-lg': '0.5rem', // 8px
+        'admin-xl': '0.75rem', // 12px
+      },
+      boxShadow: {
+        // Admin Depth (SoT)
+        'admin-card': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+        'admin-glow': '0 0 0 1px rgba(99, 102, 241, 0.15), 0 0 28px rgba(99, 102, 241, 0.22)',
       },
       animation: {
         'spin-slow': 'spin 3s linear infinite',

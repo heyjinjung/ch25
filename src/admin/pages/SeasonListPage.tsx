@@ -4,7 +4,8 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight, Layers, Plus, Save, X } from "lucide-react";
+import { AlertCircle, ChevronLeft, ChevronRight, Layers, Plus, Save, X, RefreshCw, Check } from "lucide-react";
+import { useToast } from "../../components/common/ToastProvider";
 import {
   AdminSeason,
   AdminSeasonLevel,
@@ -19,31 +20,18 @@ import {
 import { REWARD_TYPES } from "../constants/rewardTypes";
 import type { AdminRewardType } from "../types/adminReward";
 
-const PrimaryButton = ({
-  children,
-  ...props
-}: React.ButtonHTMLAttributes<HTMLButtonElement> & { children: React.ReactNode }) => (
-  <button
-    type="button"
-    className="inline-flex items-center rounded-md bg-[#2D6B3B] px-4 py-2 text-sm font-medium text-white hover:bg-[#91F402] hover:text-black disabled:cursor-not-allowed disabled:opacity-60"
-    {...props}
-  >
-    {children}
-  </button>
-);
+const getSeasonProgress = (startDate: string, endDate: string) => {
+  const start = new Date(startDate).getTime();
+  const end = new Date(endDate).getTime();
+  const now = new Date().getTime();
 
-const SecondaryButton = ({
-  children,
-  ...props
-}: React.ButtonHTMLAttributes<HTMLButtonElement> & { children: React.ReactNode }) => (
-  <button
-    type="button"
-    className="inline-flex items-center rounded-md border border-[#333333] bg-[#1A1A1A] px-4 py-2 text-sm font-medium text-gray-200 hover:bg-[#2C2C2E] disabled:cursor-not-allowed disabled:opacity-60"
-    {...props}
-  >
-    {children}
-  </button>
-);
+  if (end <= start) return 0;
+  if (now < start) return 0;
+  if (now > end) return 100;
+  return Math.max(0, Math.min(100, ((now - start) / (end - start)) * 100));
+};
+
+
 
 const ModalShell = ({
   title,
@@ -54,20 +42,20 @@ const ModalShell = ({
   onClose: () => void;
   children: React.ReactNode;
 }) => (
-  <div className="fixed inset-0 z-50 flex items-start justify-center overflow-hidden bg-black/70 p-4 pt-[calc(env(safe-area-inset-top)+1rem)] pb-[calc(env(safe-area-inset-bottom)+1rem)] pl-[calc(env(safe-area-inset-left)+1rem)] pr-[calc(env(safe-area-inset-right)+1rem)] sm:items-center">
-    <div className="w-full max-w-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-lg border border-[#333333] bg-[#111111] shadow-lg sm:max-h-[90vh]">
-      <div className="flex items-center justify-between border-b border-[#333333] px-6 py-4">
-        <h3 className="text-lg font-medium text-[#91F402]">{title}</h3>
+  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
+    <div className="w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col bg-[#18181b] rounded-2xl shadow-2xl border border-white/10 animate-in zoom-in-95 duration-200">
+      <div className="flex items-center justify-between border-b border-white/5 px-6 py-5 bg-[#18181b]/95 backdrop-blur">
+        <h3 className="text-lg font-bold text-white tracking-tight">{title}</h3>
         <button
           type="button"
           onClick={onClose}
-          className="rounded-md p-2 text-gray-300 hover:bg-[#1A1A1A]"
+          className="p-2 rounded-lg hover:bg-white/5 text-zinc-400 hover:text-white transition-colors"
           aria-label="닫기"
         >
           <X size={18} />
         </button>
       </div>
-      <div className="px-6 py-5">{children}</div>
+      <div className="flex-1 overflow-y-auto custom-scrollbar p-6">{children}</div>
     </div>
   </div>
 );
@@ -89,6 +77,7 @@ const seasonSchema = z
 type SeasonFormValues = z.infer<typeof seasonSchema>;
 
 const SeasonListPage: React.FC = () => {
+  const { addToast } = useToast();
   const [page, setPage] = useState(1);
   const [size] = useState(10);
   const [editingSeason, setEditingSeason] = useState<AdminSeason | null>(null);
@@ -158,272 +147,279 @@ const SeasonListPage: React.FC = () => {
     return Math.max(1, Math.ceil(data.total / data.size));
   }, [data]);
 
-  const startIndex = useMemo(() => {
-    if (!data || data.total === 0) return 0;
-    return (data.page - 1) * data.size + 1;
-  }, [data]);
 
-  const endIndex = useMemo(() => {
-    if (!data || data.total === 0) return 0;
-    return Math.min(data.page * data.size, data.total);
-  }, [data]);
 
-  const pageNumbers = useMemo(() => {
-    if (!data) return [1];
-    const currentPage = data.page;
-    const pages = totalPages;
-    const count = Math.min(5, pages);
-    const startPage = pages <= 5 ? 1 : Math.max(1, Math.min(currentPage - 2, pages - 4));
-    return Array.from({ length: count }, (_, i) => startPage + i);
-  }, [data, totalPages]);
-
-  const inputClass =
-    "w-full rounded-md border border-[#333333] bg-[#1A1A1A] px-3 py-2 text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]";
-  const labelClass = "text-sm font-medium text-gray-300";
+  const inputClass = "w-full h-10 bg-zinc-900 border border-zinc-800 rounded px-3 text-sm text-zinc-200 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all placeholder:text-zinc-600";
+  const labelClass = "text-xs font-semibold text-zinc-400 mb-1.5 block";
+  const checkboxClass = "w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-0";
 
   return (
-    <section className="space-y-6">
-      <header className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h2 className="text-2xl font-bold text-[#91F402]">시즌 설정</h2>
-          <p className="mt-1 text-sm text-gray-400">시즌 생성/수정 및 상태 확인</p>
-        </div>
-        <PrimaryButton
-          onClick={() => {
-            setEditingSeason(null);
-            form.reset(defaultValues);
-            setIsModalOpen(true);
-          }}
-        >
-          <Plus size={18} className="mr-2" />
-          새 시즌 생성
-        </PrimaryButton>
-      </header>
+    <section className="bg-[#09090b] min-h-screen pb-20">
 
-      {isLoading && (
-        <div className="rounded-lg border border-[#333333] bg-[#111111] p-4 text-gray-200">
-          시즌 정보를 불러오는 중입니다...
-        </div>
-      )}
 
-      {isError && (
-        <div className="rounded-lg border border-red-500/40 bg-red-950 p-4 text-red-100">
-          시즌 목록을 불러오지 못했습니다: {(error as Error).message}
-        </div>
-      )}
 
-      {!isLoading && data && data.items.length === 0 && (
-        <div className="rounded-lg border border-[#333333] bg-[#111111] p-4 text-gray-200">
-          등록된 시즌이 없습니다. 새로운 시즌을 생성해 주세요.
-        </div>
-      )}
-
-      {!isLoading && data && data.items.length > 0 && (
-        <div className="overflow-hidden rounded-lg border border-[#333333] bg-[#111111] shadow-md">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-[#1A1A1A] border-b border-[#333333]">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">이름</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">기간</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">최대 레벨</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">XP/스탬프</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">상태</th>
-                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">액션</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#333333]">
-                {data.items.map((season, idx) => (
-                  <tr key={season.id} className={idx % 2 === 0 ? "bg-[#111111]" : "bg-[#1A1A1A]"}>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <div className="text-sm font-medium text-white">{season.name}</div>
-                      <div className="text-xs text-gray-500">ID: {season.id}</div>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-300">
-                      {season.start_date} ~ {season.end_date}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-white">{season.max_level}</td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-white">{season.base_xp_per_stamp}</td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm">
-                      <span
-                        className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${season.is_active ? "bg-[#2D6B3B] text-[#91F402]" : "bg-red-900/60 text-red-200"
-                          }`}
-                      >
-                        {season.is_active ? "활성" : "비활성"}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-center">
-                      <div className="flex items-center justify-center gap-2">
-                        <SecondaryButton
-                          onClick={() => {
-                            setEditingSeason(season);
-                            setIsModalOpen(true);
-                            form.reset({
-                              name: season.name,
-                              start_date: season.start_date,
-                              end_date: season.end_date,
-                              max_level: season.max_level,
-                              base_xp_per_stamp: season.base_xp_per_stamp,
-                              is_active: season.is_active,
-                            });
-                          }}
-                        >
-                          수정
-                        </SecondaryButton>
-                        <SecondaryButton
-                          onClick={async () => {
-                            setLevelEditingSeason(season);
-                            setIsLevelLoading(true);
-                            setIsLevelModalOpen(true);
-                            try {
-                              const data = await fetchSeasonLevels(season.id);
-                              // Fill in missing levels up to max_level
-                              const existingLevels = data.levels || [];
-                              const fullLevels: AdminSeasonLevel[] = [];
-                              for (let i = 1; i <= season.max_level; i++) {
-                                const existing = existingLevels.find(l => l.level === i);
-                                if (existing) {
-                                  fullLevels.push(existing);
-                                } else {
-                                  fullLevels.push({
-                                    level: i,
-                                    required_xp: i * 100,
-                                    reward_type: "TICKET_BUNDLE",
-                                    reward_amount: 1,
-                                    auto_claim: true,
-                                  });
-                                }
-                              }
-                              setLevels(fullLevels);
-                            } catch {
-                              setLevels([]);
-                            } finally {
-                              setIsLevelLoading(false);
-                            }
-                          }}
-                        >
-                          <Layers size={14} className="mr-1" />
-                          레벨
-                        </SecondaryButton>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      <div className="px-8 max-w-[1600px] mx-auto">
+        <header className="flex flex-wrap items-center justify-between gap-4 mb-8">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-white">시즌 관리 (Season Ops)</h1>
           </div>
+          <button
+            onClick={() => {
+              setEditingSeason(null);
+              form.reset(defaultValues);
+              setIsModalOpen(true);
+            }}
+            className="flex items-center gap-2 px-6 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold shadow-lg shadow-indigo-500/20 active:scale-95 transition-all"
+          >
+            <Plus size={16} />
+            새 시즌 생성
+          </button>
+        </header>
 
-          {totalPages > 1 && (
-            <div className="px-4 py-3 bg-[#1A1A1A] border-t border-[#333333] sm:px-6 flex items-center justify-between">
-              <div className="hidden sm:block">
-                <p className="text-sm text-gray-400">
-                  <span className="font-medium">{startIndex}</span>-<span className="font-medium">{endIndex}</span>/<span className="font-medium">{data.total}</span>
-                </p>
-              </div>
-              <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                <button
-                  type="button"
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={page <= 1}
-                  className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-[#333333] ${page <= 1 ? "bg-[#111111] text-gray-600 cursor-not-allowed" : "bg-[#1A1A1A] text-gray-300 hover:bg-[#2D6B3B]"
-                    }`}
-                >
-                  <span className="sr-only">이전</span>
-                  <ChevronLeft className="h-5 w-5" aria-hidden="true" />
-                </button>
+        {isLoading && (
+          <div className="h-64 flex items-center justify-center gap-3 text-zinc-500 bg-[#18181b] rounded-2xl border border-white/5">
+            <RefreshCw className="animate-spin h-5 w-5" />
+            <span className="text-sm font-medium">데이터 로드 중...</span>
+          </div>
+        )}
 
-                {pageNumbers.map((p) => (
+        {isError && (
+          <div className="h-64 flex items-center justify-center gap-3 text-rose-400 bg-[#18181b] rounded-2xl border border-rose-500/20">
+            <AlertCircle size={20} />
+            <span className="text-sm font-bold">데이터 로드 실패: {(error as Error).message}</span>
+          </div>
+        )}
+
+        {!isLoading && data && data.items.length === 0 && (
+          <div className="h-64 flex flex-col items-center justify-center gap-4 text-zinc-500 bg-[#18181b] rounded-2xl border border-white/5 border-dashed">
+            <div className="w-12 h-12 bg-zinc-900 rounded-full flex items-center justify-center text-zinc-600">
+              <Layers size={24} />
+            </div>
+            <p className="text-sm font-medium">등록된 시즌이 없습니다.</p>
+          </div>
+        )}
+
+        {!isLoading && data && data.items.length > 0 && (
+          <div className="bg-[#18181b] rounded-2xl border border-white/5 overflow-hidden shadow-2xl">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-zinc-900/50 border-b border-white/5">
+                    <th className="pl-6 pr-4 py-3 text-sm font-bold text-zinc-500 uppercase tracking-wider">시즌 명 (ID)</th>
+                    <th className="px-4 py-3 text-sm font-bold text-zinc-500 uppercase tracking-wider">운영 기간 (Time Gauge)</th>
+                    <th className="px-4 py-3 text-sm font-bold text-zinc-500 uppercase tracking-wider">최대 LV</th>
+                    <th className="px-4 py-3 text-sm font-bold text-zinc-500 uppercase tracking-wider">XP Rate</th>
+                    <th className="px-4 py-3 text-sm font-bold text-zinc-500 uppercase tracking-wider">상태</th>
+                    <th className="px-4 py-3 text-sm font-bold text-zinc-500 uppercase tracking-wider text-center">액션</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {data.items.map((season) => (
+                    <tr key={season.id} className="group hover:bg-white/[0.02] transition-colors h-14">
+                      <td className="pl-6 pr-4 py-2">
+                        <div className="flex flex-col">
+                          <span className="text-sm font-bold text-zinc-200">{season.name}</span>
+                          <span className="text-xs text-zinc-600 font-mono tracking-tighter">ID: {season.id}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-2">
+                        <div className="flex flex-col gap-1.5 w-full max-w-[200px]">
+                          <span className="text-sm text-zinc-400 font-mono tracking-tight font-bold">
+                            {season.start_date} ~ {season.end_date}
+                          </span>
+                          <div className="h-2 w-full bg-zinc-800 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full ${season.is_active ? 'bg-indigo-500' : 'bg-zinc-600'}`}
+                              style={{ width: `${getSeasonProgress(season.start_date, season.end_date)}%` }}
+                            />
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-2 text-sm">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-sm font-bold text-zinc-300 font-mono tabular-nums">{season.max_level}</span>
+                          <span className="text-xs text-zinc-600 font-bold uppercase">LV</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-2 text-sm">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-sm font-bold text-zinc-300 font-mono tabular-nums">{season.base_xp_per_stamp}</span>
+                          <span className="text-xs text-zinc-600 font-bold uppercase">XP</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-2">
+                        {season.is_active ? (
+                          <span className="inline-flex items-center px-2 py-1 rounded text-xs font-black bg-emerald-500/10 text-emerald-400 ring-1 ring-inset ring-emerald-500/20 uppercase tracking-widest">
+                            ACTIVE
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-black bg-zinc-800 text-zinc-500 ring-1 ring-inset ring-white/10 uppercase tracking-widest">
+                            INACTIVE
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-2 text-center">
+                        <div className="flex items-center justify-center gap-2 opacity-50 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => {
+                              setEditingSeason(season);
+                              setIsModalOpen(true);
+                              form.reset({
+                                name: season.name,
+                                start_date: season.start_date,
+                                end_date: season.end_date,
+                                max_level: season.max_level,
+                                base_xp_per_stamp: season.base_xp_per_stamp,
+                                is_active: season.is_active,
+                              });
+                            }}
+                            className="p-1.5 rounded hover:bg-white/10 text-zinc-400 hover:text-white transition-colors"
+                            title="설정 수정"
+                          >
+                            <Check className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={async () => {
+                              setLevelEditingSeason(season);
+                              setIsLevelLoading(true);
+                              setIsLevelModalOpen(true);
+                              try {
+                                const data = await fetchSeasonLevels(season.id);
+                                const existingLevels = data.levels || [];
+                                const fullLevels: AdminSeasonLevel[] = [];
+                                for (let i = 1; i <= season.max_level; i++) {
+                                  const existing = existingLevels.find(l => l.level === i);
+                                  if (existing) {
+                                    fullLevels.push(existing);
+                                  } else {
+                                    fullLevels.push({
+                                      level: i,
+                                      required_xp: i * 100,
+                                      reward_type: "TICKET_BUNDLE",
+                                      reward_amount: 1,
+                                      auto_claim: true,
+                                    });
+                                  }
+                                }
+                                setLevels(fullLevels);
+                              } catch {
+                                addToast("레벨 정보를 불러오지 못했습니다.", "error");
+                                setIsLevelModalOpen(false);
+                              } finally {
+                                setIsLevelLoading(false);
+                              }
+                            }}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-indigo-500/10 border border-indigo-500/20 text-xs font-black text-indigo-400 hover:bg-indigo-500 hover:text-white transition-all shadow-lg shadow-indigo-500/10"
+                          >
+                            <Layers className="h-3.5 w-3.5" />
+                            LEVEL CONFIG
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {totalPages > 1 && (
+              <div className="px-6 py-3 border-t border-white/5 flex items-center justify-between bg-zinc-900/30">
+                <div className="text-xs text-zinc-500 font-black uppercase tracking-widest">
+                  Page <span className="text-zinc-300">{page}</span> of {totalPages}
+                </div>
+                <div className="flex gap-1">
                   <button
-                    key={p}
-                    type="button"
-                    onClick={() => setPage(p)}
-                    className={`relative inline-flex items-center px-4 py-2 border border-[#333333] text-sm font-medium ${page === p ? "z-10 bg-[#2D6B3B] text-[#91F402]" : "bg-[#1A1A1A] text-gray-300 hover:bg-[#2C2C2E]"
-                      }`}
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page <= 1}
+                    className="p-1.5 rounded border border-white/10 bg-zinc-800 text-zinc-400 hover:text-white disabled:opacity-30 transition-colors"
                   >
-                    {p}
+                    <ChevronLeft className="h-3.5 w-3.5" />
                   </button>
-                ))}
+                  <button
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={page >= totalPages}
+                    className="p-1.5 rounded border border-white/10 bg-zinc-800 text-zinc-400 hover:text-white disabled:opacity-30 transition-colors"
+                  >
+                    <ChevronRight className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
-                <button
-                  type="button"
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  disabled={page >= totalPages}
-                  className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-[#333333] ${page >= totalPages
-                    ? "bg-[#111111] text-gray-600 cursor-not-allowed"
-                    : "bg-[#1A1A1A] text-gray-300 hover:bg-[#2D6B3B]"
-                    }`}
-                >
-                  <span className="sr-only">다음</span>
-                  <ChevronRight className="h-5 w-5" aria-hidden="true" />
-                </button>
-              </nav>
-            </div>
-          )}
-        </div>
-      )}
-
+      {/* Main Season Modal */}
       {isModalOpen && (
-        <ModalShell title={editingSeason ? "시즌 수정" : "새 시즌 생성"} onClose={resetAndClose}>
-          <form className="space-y-4" onSubmit={onSubmit}>
-            <div>
-              <label className={labelClass}>이름</label>
-              <input className={inputClass} {...form.register("name")} type="text" placeholder="시즌 이름" />
-              {form.formState.errors.name && <p className="mt-2 text-sm text-red-300">{form.formState.errors.name.message}</p>}
+        <ModalShell title={editingSeason ? "시즌 기본 설정 수정" : "새 시즌 생성"} onClose={resetAndClose}>
+          <form className="space-y-6 p-2" onSubmit={onSubmit}>
+
+            {/* Safety Zone - Form Area */}
+            <div className="bg-[#1e1e24] p-6 rounded-xl border border-white/5 space-y-6">
+              <div>
+                <label className={labelClass}>시즌 명칭 <span className="text-rose-500">*</span></label>
+                <input className={inputClass} {...form.register("name")} type="text" placeholder="예: Season 5 Alpha" />
+                {form.formState.errors.name && <p className="mt-1 text-xs text-rose-400">{form.formState.errors.name.message}</p>}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className={labelClass}>시작 일자</label>
+                  <input type="date" className={inputClass} {...form.register("start_date")} />
+                </div>
+                <div>
+                  <label className={labelClass}>종료 일자</label>
+                  <input type="date" className={inputClass} {...form.register("end_date")} />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className={labelClass}>최대 레벨 (Max Level)</label>
+                  <input type="number" className={inputClass} {...form.register("max_level", { valueAsNumber: true })} />
+                </div>
+                <div>
+                  <label className={labelClass}>스탬프당 획득 XP</label>
+                  <input type="number" className={inputClass} {...form.register("base_xp_per_stamp", { valueAsNumber: true })} />
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <label className="flex items-center gap-3 cursor-pointer group p-3 rounded-lg border border-white/5 bg-zinc-900/50 hover:bg-zinc-900 transition-colors">
+                  <input type="checkbox" {...form.register("is_active")} className={checkboxClass} />
+                  <div className="flex flex-col">
+                    <span className="text-sm font-bold text-zinc-200">시즌 활성화 (Active)</span>
+                    <span className="text-xs text-zinc-500 mt-0.5">활성화 시 즉시 사용자에게 노출됩니다.</span>
+                  </div>
+                </label>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div>
-                <label className={labelClass}>시작일</label>
-                <input type="date" className={inputClass} {...form.register("start_date")} />
-                {form.formState.errors.start_date && <p className="mt-2 text-sm text-red-300">{form.formState.errors.start_date.message}</p>}
-              </div>
-              <div>
-                <label className={labelClass}>종료일</label>
-                <input type="date" className={inputClass} {...form.register("end_date")} />
-                {form.formState.errors.end_date && <p className="mt-2 text-sm text-red-300">{form.formState.errors.end_date.message}</p>}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div>
-                <label className={labelClass}>최대 레벨</label>
-                <input type="number" className={inputClass} {...form.register("max_level", { valueAsNumber: true })} />
-                {form.formState.errors.max_level && <p className="mt-2 text-sm text-red-300">{form.formState.errors.max_level.message}</p>}
-              </div>
-              <div>
-                <label className={labelClass}>스탬프당 XP</label>
-                <input
-                  type="number"
-                  className={inputClass}
-                  {...form.register("base_xp_per_stamp", { valueAsNumber: true })}
-                />
-                {form.formState.errors.base_xp_per_stamp && (
-                  <p className="mt-2 text-sm text-red-300">{form.formState.errors.base_xp_per_stamp.message}</p>
-                )}
-              </div>
-            </div>
-
-            <label className="flex items-center gap-2 text-sm text-gray-200">
-              <input type="checkbox" {...form.register("is_active")} className="h-4 w-4 rounded border-[#333333] bg-[#1A1A1A]" />
-              활성화
-            </label>
-
-            <div className="flex justify-end gap-2 pt-2">
-              <SecondaryButton onClick={resetAndClose} type="button">
+            <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
+              <button
+                onClick={resetAndClose}
+                type="button"
+                className="px-5 py-2.5 rounded-lg text-sm font-bold text-zinc-400 hover:text-white hover:bg-white/5 transition-colors"
+              >
                 취소
-              </SecondaryButton>
-              <PrimaryButton type="submit" disabled={mutation.isPending}>
-                {mutation.isPending ? "저장 중..." : editingSeason ? "수정" : "생성"}
-              </PrimaryButton>
+              </button>
+              <button
+                type="submit"
+                disabled={mutation.isPending}
+                className="px-6 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold flex items-center gap-2 shadow-lg shadow-indigo-500/20 active:scale-95 transition-all disabled:opacity-50"
+              >
+                {mutation.isPending ? <RefreshCw className="animate-spin h-4 w-4" /> : <Save className="h-4 w-4" />}
+                {editingSeason ? "변경사항 저장" : "시즌 생성"}
+              </button>
             </div>
           </form>
         </ModalShell>
       )}
 
-      {/* Level Editor Modal - Mobile Optimized */}
+      {/* Level Editor Modal */}
       {isLevelModalOpen && levelEditingSeason && (
         <ModalShell
-          title={`${levelEditingSeason.name} - 레벨 설정`}
+          title={`${levelEditingSeason.name} — 레벨 리워드 설정`}
           onClose={() => {
             setIsLevelModalOpen(false);
             setLevelEditingSeason(null);
@@ -431,14 +427,23 @@ const SeasonListPage: React.FC = () => {
           }}
         >
           {isLevelLoading ? (
-            <div className="text-center py-8 text-gray-400">레벨 정보를 불러오는 중...</div>
+            <div className="h-40 flex items-center justify-center gap-3 text-zinc-500">
+              <RefreshCw className="animate-spin h-5 w-5" />
+              <span className="text-sm">레벨 구성을 불러오는 중...</span>
+            </div>
           ) : (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-sm text-gray-400">
-                  총 {levels.length}개 레벨 (1~{levelEditingSeason.max_level})
-                </p>
-                <PrimaryButton
+            <div className="space-y-6">
+
+              {/* Header Stats */}
+              <div className="flex items-center justify-between bg-indigo-500/10 p-5 rounded-xl border border-indigo-500/20">
+                <div className="flex flex-col">
+                  <span className="text-xs font-black text-indigo-400 uppercase tracking-widest">설정 대상 (Configuration Target)</span>
+                  <div className="flex items-baseline gap-2 mt-1">
+                    <span className="text-2xl font-black text-white">{levels.length}</span>
+                    <span className="text-sm text-indigo-200/60 font-medium">개 레벨 (Levels)</span>
+                  </div>
+                </div>
+                <button
                   disabled={isSavingLevels}
                   onClick={async () => {
                     setIsSavingLevels(true);
@@ -453,27 +458,41 @@ const SeasonListPage: React.FC = () => {
                       setIsSavingLevels(false);
                     }
                   }}
+                  className="px-6 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold shadow-lg shadow-indigo-500/20 flex items-center gap-2"
                 >
-                  <Save size={16} className="mr-2" />
-                  {isSavingLevels ? "저장 중..." : "전체 저장"}
-                </PrimaryButton>
+                  {isSavingLevels ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
+                  <span>전체 레벨 저장</span>
+                </button>
               </div>
 
-              {/* Mobile-friendly card layout */}
-              <div className="space-y-3 pr-1">
+              {/* Levels Grid - Compact */}
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {levels.map((lv, idx) => (
                   <div
                     key={lv.level}
-                    className="rounded-lg border border-[#333333] bg-[#1A1A1A] p-4"
+                    className="bg-[#1e1e24] p-4 rounded-xl border border-zinc-800 hover:border-indigo-500/50 transition-all group relative overflow-hidden"
                   >
-                    <div className="flex items-center gap-3 mb-3">
-                      <span className="flex items-center justify-center w-10 h-10 rounded-full bg-[#2D6B3B] text-[#91F402] font-bold text-lg">
-                        {lv.level}
-                      </span>
-                      <div className="flex-1">
-                        <span className="text-xs text-gray-400">레벨 {lv.level}</span>
+                    {/* Progress Bar Background */}
+                    <div className="absolute top-0 left-0 h-1 bg-zinc-800 w-full">
+                      <div
+                        className="h-full bg-indigo-500 transition-all"
+                        style={{ width: `${(lv.level / (levelEditingSeason?.max_level || 1)) * 100}%` }}
+                      />
+                    </div>
+
+                    <div className="flex items-start justify-between mb-4 mt-2">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded bg-zinc-900 flex items-center justify-center border border-zinc-700 text-sm font-black text-white font-mono">
+                          {lv.level}
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-[11px] font-black text-zinc-500 uppercase tracking-wider">레벨 보상 (Level Reward)</span>
+                          <span className="text-sm text-indigo-400 font-black">
+                            {REWARD_TYPES.find(r => r.value === lv.reward_type)?.label || lv.reward_type}
+                          </span>
+                        </div>
                       </div>
-                      <label className="flex items-center gap-2 text-xs text-gray-300">
+                      <label className="cursor-pointer">
                         <input
                           type="checkbox"
                           checked={lv.auto_claim}
@@ -482,15 +501,16 @@ const SeasonListPage: React.FC = () => {
                             newLevels[idx] = { ...lv, auto_claim: e.target.checked };
                             setLevels(newLevels);
                           }}
-                          className="h-4 w-4 rounded border-[#333333] bg-[#111111]"
+                          className={checkboxClass}
                         />
-                        자동
                       </label>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-2">
-                      <div className="space-y-1">
-                        <label className="text-[10px] text-gray-500">필요 XP</label>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-[11px] font-black text-zinc-500 uppercase tracking-widest block mb-1.5 ml-0.5">
+                          필요 XP (Required XP)
+                        </label>
                         <input
                           type="number"
                           value={lv.required_xp}
@@ -499,41 +519,40 @@ const SeasonListPage: React.FC = () => {
                             newLevels[idx] = { ...lv, required_xp: Number(e.target.value) || 0 };
                             setLevels(newLevels);
                           }}
-                          className="w-full rounded border border-[#333333] bg-[#111111] px-2 py-1.5 text-sm text-white"
+                          className="w-full h-8 bg-zinc-900 border border-zinc-800 rounded px-2 text-xs font-mono text-zinc-300 focus:border-indigo-500/50"
                         />
                       </div>
-                      <div className="space-y-1">
-                        <label className="text-[10px] text-gray-500">보상 타입</label>
-                        <select
-                          value={lv.reward_type}
-                          onChange={(e) => {
-                            const newLevels = [...levels];
-                            newLevels[idx] = { ...lv, reward_type: e.target.value as AdminRewardType };
-                            setLevels(newLevels);
-                          }}
-                          className="w-full rounded border border-[#333333] bg-[#111111] px-2 py-1.5 text-sm text-white"
-                        >
-                          {REWARD_TYPES.map((rt) => (
-                            <option key={rt.value} value={rt.value}>
-                              {rt.label}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-[10px] text-gray-500">수량</label>
-                        <input
-                          type="number"
-                          value={lv.reward_amount}
-                          onChange={(e) => {
-                            const newLevels = [...levels];
-                            newLevels[idx] = { ...lv, reward_amount: Number(e.target.value) || 0 };
-                            setLevels(newLevels);
-                          }}
-                          className="w-full rounded border border-[#333333] bg-[#111111] px-2 py-1.5 text-sm text-white"
-                        />
+                      <div className="grid grid-cols-3 gap-2">
+                        <div className="col-span-2">
+                          <label className="text-[11px] font-black text-zinc-500 uppercase tracking-widest block mb-1.5 ml-0.5">종류 (Type)</label>
+                          <select
+                            value={lv.reward_type}
+                            onChange={(e) => {
+                              const newLevels = [...levels];
+                              newLevels[idx] = { ...lv, reward_type: e.target.value as AdminRewardType };
+                              setLevels(newLevels);
+                            }}
+                            className="w-full h-8 bg-zinc-900 border border-zinc-800 rounded px-2 text-xs text-zinc-300 focus:border-indigo-500/50 appearance-none"
+                          >
+                            {REWARD_TYPES.map(rt => <option key={rt.value} value={rt.value}>{rt.label}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-[11px] font-black text-zinc-500 uppercase tracking-widest block mb-1.5 ml-0.5">수량 (Amt)</label>
+                          <input
+                            type="number"
+                            value={lv.reward_amount}
+                            onChange={(e) => {
+                              const newLevels = [...levels];
+                              newLevels[idx] = { ...lv, reward_amount: Number(e.target.value) || 0 };
+                              setLevels(newLevels);
+                            }}
+                            className="w-full h-8 bg-zinc-900 border border-zinc-800 rounded px-2 text-xs font-mono text-emerald-400 font-bold focus:border-indigo-500/50 text-center"
+                          />
+                        </div>
                       </div>
                     </div>
+
                   </div>
                 ))}
               </div>

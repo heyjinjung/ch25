@@ -67,3 +67,7 @@ class ComprehensiveOverviewResponse(BaseModel):
     
     # Streak
     streak_counts: Dict[str, int]
+
+    # Pending Actions
+    pending_vault_requests_count: int
+    pending_mission_approvals_count: int

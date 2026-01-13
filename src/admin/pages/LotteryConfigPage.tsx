@@ -1,17 +1,12 @@
-﻿// src/admin/pages/LotteryConfigPage.tsx
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  Trophy, AlertCircle, RefreshCw, LayoutGrid, BarChart3, Edit3, Gamepad2, ChevronRight, Settings2, Save, Info, CheckCircle2, ShieldAlert, Plus, Trash2, X, History, Package
+} from "lucide-react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Edit, Plus, Trash2, X } from "lucide-react";
-import {
-  AdminLotteryConfig,
-  AdminLotteryConfigPayload,
-  createLotteryConfig,
-  fetchLotteryConfigs,
-  updateLotteryConfig,
-} from "../api/adminLotteryApi";
+import { AdminLotteryConfig, AdminLotteryConfigPayload, createLotteryConfig, fetchLotteryConfigs, updateLotteryConfig } from "../api/adminLotteryApi";
 import { REWARD_TYPES } from "../constants/rewardTypes";
 import { useToast } from "../../components/common/ToastProvider";
 
@@ -28,11 +23,12 @@ const normalizeStock = (value: unknown): number | null => {
 };
 
 const prizeSchema = z.object({
+  id: z.number().optional(),
   label: z.string().min(1, "상품명을 입력하세요"),
-  weight: z.number().int().nonnegative("가중치는 0 이상"),
-  stock: z.preprocess(normalizeStock, z.number().int().nonnegative("재고는 0 이상").nullable()),
+  weight: z.number().int().nonnegative("가중치는 0 이상이어야 합니다"),
+  stock: z.preprocess(normalizeStock, z.number().int().nonnegative("재고는 0 이상이어야 합니다").nullable()),
   reward_type: z.string().min(1, "보상 타입을 선택하세요"),
-  reward_value: z.number().int().nonnegative("보상 값은 0 이상"),
+  reward_value: z.number().int().nonnegative("보상 값은 0 이상이어야 합니다"),
   is_active: z.boolean().default(true),
 });
 
@@ -40,14 +36,14 @@ const lotterySchema = z
   .object({
     name: z.string().min(1, "이름을 입력하세요"),
     is_active: z.boolean().default(false),
-    max_daily_plays: z.number().int().nonnegative("0이면 무제한"),
-    prizes: z.array(prizeSchema).min(1, "상품을 1개 이상 추가하세요"),
+    max_daily_plays: z.number().int().nonnegative("0이면 무제한입니다"),
+    prizes: z.array(prizeSchema).min(1, "상품은 1개 이상 추가하세요"),
   })
   .refine((value) => {
     const labels = value.prizes.map((p) => p.label.trim());
     return new Set(labels).size === labels.length;
   }, {
-    message: "상품명은 중복될 수 없습니다",
+    message: "상품명이 중복될 수 없습니다",
     path: ["prizes"],
   })
   .refine((value) => value.prizes.some((p) => p.is_active && p.weight > 0), {
@@ -55,7 +51,7 @@ const lotterySchema = z
     path: ["prizes"],
   })
   .refine((value) => value.prizes.reduce((sum, p) => sum + p.weight, 0) > 0, {
-    message: "전체 가중치 합이 0보다 커야 합니다",
+    message: "전체 가중치 합은 0보다 커야 합니다",
     path: ["prizes"],
   });
 
@@ -67,10 +63,10 @@ const mapErrorDetail = (error: unknown): string => {
     const map: Record<string, string> = {
       LOTTERY_CONFIG_NOT_FOUND: "복권 설정을 찾을 수 없습니다.",
       INVALID_LOTTERY_WEIGHT: "가중치는 0 이상이어야 합니다.",
-      INVALID_LOTTERY_STOCK: "재고는 0 이상 또는 비워두세요.",
+      INVALID_LOTTERY_STOCK: "재고는 0 이상 또는 빈칸(무제한)입니다.",
       DUPLICATE_PRIZE_LABEL: "상품명이 중복되었습니다.",
       NO_ACTIVE_PRIZE: "활성 상품(가중치>0)이 1개 이상 필요합니다.",
-      ZERO_TOTAL_WEIGHT: "전체 가중치 합이 0보다 커야 합니다.",
+      ZERO_TOTAL_WEIGHT: "전체 가중치 합은 0보다 커야 합니다.",
       INVALID_LOTTERY_CONFIG: "복권 설정 값이 올바르지 않습니다.",
     };
     return map[detail] ?? detail;
@@ -78,43 +74,55 @@ const mapErrorDetail = (error: unknown): string => {
   return (error as any)?.message ?? "요청 처리 중 오류가 발생했습니다.";
 };
 
-/**
- * Calculate probability % and rarity label for intuitive weight visualization
- */
 const getProbabilityInfo = (weight: number, totalWeight: number) => {
-  if (totalWeight <= 0) return { percent: 0, label: "-", color: "gray", bgColor: "", expected100: 0 };
+  if (totalWeight <= 0) {
+    return {
+      percent: 0,
+      label: "N/A",
+      textClass: "text-zinc-500",
+      barClass: "bg-zinc-800",
+      chipClass: "bg-zinc-800 text-zinc-500",
+      expected100: 0,
+    };
+  }
 
   const percent = (weight / totalWeight) * 100;
 
   let label: string;
-  let color: string;
-  let bgColor: string;
+  let textClass: string;
+  let barClass: string;
+  let chipClass: string;
 
   if (percent >= 30) {
     label = "자주";
-    color = "#91F402";
-    bgColor = "bg-[#91F402]";
+    textClass = "text-emerald-400";
+    barClass = "bg-emerald-500";
+    chipClass = "bg-emerald-500/10 text-emerald-400";
   } else if (percent >= 15) {
     label = "보통";
-    color = "#22D3EE";
-    bgColor = "bg-[#22D3EE]";
+    textClass = "text-admin-brand";
+    barClass = "bg-admin-brand";
+    chipClass = "bg-admin-brand/10 text-admin-brand";
   } else if (percent >= 5) {
     label = "희귀";
-    color = "#F59E0B";
-    bgColor = "bg-[#F59E0B]";
+    textClass = "text-amber-400";
+    barClass = "bg-amber-500";
+    chipClass = "bg-amber-500/10 text-amber-400";
   } else if (percent >= 1) {
     label = "매우 희귀";
-    color = "#EF4444";
-    bgColor = "bg-[#EF4444]";
+    textClass = "text-rose-400";
+    barClass = "bg-rose-500";
+    chipClass = "bg-rose-500/10 text-rose-400";
   } else {
-    label = "전설급";
-    color = "#A855F7";
-    bgColor = "bg-[#A855F7]";
+    label = "전설";
+    textClass = "text-admin-brand";
+    barClass = "bg-admin-brand";
+    chipClass = "bg-admin-brand/20 text-admin-brand shadow-[0_0_10px_rgba(99,102,241,0.3)]";
   }
 
   const expected100 = Math.round(percent);
 
-  return { percent, label, color, bgColor, expected100 };
+  return { percent, label, textClass, barClass, chipClass, expected100 };
 };
 
 const LotteryConfigPage: React.FC = () => {
@@ -123,7 +131,7 @@ const LotteryConfigPage: React.FC = () => {
   const [editing, setEditing] = useState<AdminLotteryConfig | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const { data, isLoading, isError, error } = useQuery({
+  const { data: configs, isLoading } = useQuery({
     queryKey: ["admin", "lottery"],
     queryFn: fetchLotteryConfigs,
   });
@@ -152,7 +160,7 @@ const LotteryConfigPage: React.FC = () => {
     defaultValues: initialValues,
   });
 
-  const prizes = useFieldArray({
+  const prizesField = useFieldArray({
     control: form.control,
     name: "prizes",
   });
@@ -170,7 +178,6 @@ const LotteryConfigPage: React.FC = () => {
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isModalOpen]);
 
   const mutation = useMutation({
@@ -205,11 +212,14 @@ const LotteryConfigPage: React.FC = () => {
         weight: p.weight,
         stock: normalizeStock(p.stock),
         reward_type: p.reward_type,
-        // Handle both backend 'reward_amount' and frontend 'reward_value'
         reward_value: p.reward_value ?? p.reward_amount ?? 0,
         is_active: p.is_active,
       })) as any,
     });
+  };
+
+  const handleRefreshAll = () => {
+    queryClient.invalidateQueries({ queryKey: ["admin", "lottery"] });
   };
 
   const onSubmit = form.handleSubmit((values) => {
@@ -226,294 +236,433 @@ const LotteryConfigPage: React.FC = () => {
     mutation.mutate(payload);
   });
 
+  const stats = useMemo(() => {
+    const list = configs ?? [];
+    const activeCount = list.filter(c => c.is_active).length;
+    const totalPrizes = list.reduce((sum, c) => sum + c.prizes.length, 0);
+    const lowStockAlerts = list.flatMap(c => (c.prizes ?? [])).filter(item => item.stock !== null && item.stock !== undefined && item.stock <= 10).length;
+    return { activeCount, totalPrizes, lowStockAlerts };
+  }, [configs]);
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-32 gap-4">
+        <RefreshCw className="h-10 w-10 text-admin-brand animate-spin" />
+        <span className="text-sm font-bold text-zinc-500 uppercase tracking-widest">복권 시스템 데이터 동기화 중...</span>
+      </div>
+    );
+  }
+
   return (
-    <section className="space-y-5">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-[#91F402]">복권 설정</h2>
-          <p className="mt-1 text-sm text-gray-400">상품/가중치/재고를 설정하고, 활성 상품(가중치&gt;0)을 최소 1개 유지하세요.</p>
+    <div className="p-6 space-y-6 max-w-[1600px] mx-auto animate-in fade-in duration-500">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2 text-zinc-500 text-xs font-medium">
+            <span>시스템 관리</span>
+            <ChevronRight size={12} />
+            <span className="text-zinc-300">복권 설정</span>
+          </div>
+          <h1 className="text-2xl font-black text-white flex items-center gap-3 tracking-tight">
+            <Trophy className="text-admin-brand" size={28} />
+            복권 운영 커맨드 센터
+          </h1>
         </div>
-        <button
-          type="button"
-          onClick={openCreate}
-          className="flex items-center rounded-md bg-[#2D6B3B] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#91F402] hover:text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-[#91F402]"
-        >
-          <Plus size={18} className="mr-2" />
-          새 항목 추가
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleRefreshAll}
+            className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl border border-zinc-700 transition-all text-sm font-bold"
+          >
+            <RefreshCw size={16} />
+            데이터 새로고침
+          </button>
+          <button
+            onClick={openCreate}
+            className="flex items-center gap-2 px-4 py-2 bg-admin-brand hover:brightness-110 text-black rounded-xl transition-all text-sm font-black shadow-lg shadow-admin-brand/20"
+          >
+            <Plus size={16} />
+            새 설정 추가
+          </button>
+        </div>
       </div>
 
-      {isLoading && (
-        <div className="rounded-lg border border-[#333333] bg-[#111111] p-4 text-gray-200">불러오는 중...</div>
-      )}
-
-      {isError && (
-        <div className="rounded-lg border border-red-500/40 bg-red-950 p-4 text-red-100">{mapErrorDetail(error)}</div>
-      )}
-
-      {!isLoading && !isError && (
-        <div className="rounded-lg border border-[#333333] bg-[#111111] shadow-md">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="border-b border-[#333333] bg-[#1A1A1A]">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">이름</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">일일 제한</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">상품 수</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">상태</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#91F402]">기능</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#333333]">
-                {(data ?? []).map((config) => (
-                  <tr key={config.id} className="hover:bg-[#1A1A1A]">
-                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-white">{config.name}</td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-400">
-                      {config.max_daily_plays === 0 ? "무제한" : config.max_daily_plays.toLocaleString()}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-400">{config.prizes.length.toLocaleString()}</td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm">
-                      <span
-                        className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-medium ${config.is_active ? "border-[#2D6B3B] text-[#91F402]" : "border-[#333333] text-gray-400"
-                          }`}
-                      >
-                        {config.is_active ? "활성" : "비활성"}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium">
-                      <button
-                        type="button"
-                        onClick={() => openEdit(config)}
-                        className="text-[#91F402] hover:text-white"
-                        title="수정"
-                        aria-label="복권 설정 수정"
-                      >
-                        <Edit size={18} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="admin-card p-4 relative overflow-hidden group">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Active Engines</p>
+              <h3 className="text-2xl font-black text-white mt-1 tabular-nums">
+                {stats.activeCount} / {configs?.length || 0}
+              </h3>
+            </div>
+            <div className="p-2 bg-admin-brand/10 text-admin-brand rounded-lg group-hover:scale-110 transition-transform">
+              <Gamepad2 size={20} />
+            </div>
           </div>
+          <div className="mt-4 flex items-center gap-2 text-[10px] text-zinc-500 font-medium">
+            <CheckCircle2 size={12} className="text-emerald-500" />
+            <span>OPERATIONAL</span>
+          </div>
+        </div>
 
-          {(data ?? []).length === 0 && (
-            <div className="py-8 text-center text-gray-400">데이터가 없습니다. 새 항목을 추가해보세요.</div>
+        <div className="admin-card p-4 relative overflow-hidden group">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Total Prizes</p>
+              <h3 className="text-2xl font-black text-white mt-1 tabular-nums">{stats.totalPrizes.toLocaleString()}</h3>
+            </div>
+            <div className="p-2 bg-zinc-800 text-zinc-400 rounded-lg group-hover:scale-110 transition-transform">
+              <Package size={20} />
+            </div>
+          </div>
+          <div className="mt-4 flex items-center gap-2 text-[10px] text-zinc-500 font-medium">
+            <Info size={12} />
+            <span>Across all configs</span>
+          </div>
+        </div>
+
+        <div className="admin-card p-4 relative overflow-hidden group border-admin-danger/20">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Low Stock Alerts</p>
+              <h3 className={`text-2xl font-black mt-1 tabular-nums ${stats.lowStockAlerts > 0 ? "text-rose-400" : "text-white"}`}>
+                {stats.lowStockAlerts}
+              </h3>
+            </div>
+            <div className={`p-2 rounded-lg group-hover:scale-110 transition-transform ${stats.lowStockAlerts > 0 ? "bg-rose-500/10 text-rose-400" : "bg-zinc-800 text-zinc-400"}`}>
+              <ShieldAlert size={20} />
+            </div>
+          </div>
+          <div className="mt-4 flex items-center gap-2 text-[10px] text-zinc-500 font-medium">
+            <div className={`w-2 h-2 rounded-full ${stats.lowStockAlerts > 0 ? "bg-rose-500 animate-pulse" : "bg-emerald-500"}`} />
+            <span>{stats.lowStockAlerts > 0 ? "REPLENISHMENT REQUIRED" : "STABLE INVENTORY"}</span>
+          </div>
+        </div>
+
+        <div className="admin-card p-4 relative overflow-hidden group">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Global Status</p>
+              <h3 className="text-2xl font-black text-emerald-400 mt-1 uppercase tracking-tight">Healthy</h3>
+            </div>
+            <div className="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg group-hover:scale-110 transition-transform shadow-[0_0_15px_-3px_rgba(16,185,129,0.3)]">
+              <BarChart3 size={20} />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 px-2">
+          <LayoutGrid className="h-4 w-4 text-admin-brand" />
+          <h2 className="text-sm font-black text-white uppercase tracking-wider">복권 운영 설정 목록 (Lottery Fleet)</h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {(configs ?? []).map((config) => (
+            <div
+              key={config.id}
+              className={`admin-card overflow-hidden border-t-4 transition-all hover:scale-[1.01] duration-300 ${config.is_active ? 'border-t-admin-brand shadow-admin-glow' : 'border-t-zinc-800 opacity-60'}`}
+            >
+              <div className="p-6 space-y-6">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className={`p-3 rounded-2xl ${config.is_active ? 'bg-admin-brand/10 text-admin-brand' : 'bg-zinc-800 text-zinc-500'}`}>
+                      <Trophy size={24} />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-black text-white tracking-tight">{config.name}</h3>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-tight border ${config.is_active ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-zinc-800 text-zinc-500 border-zinc-700'}`}>
+                          {config.is_active ? 'ACTIVE' : 'STANDBY'}
+                        </span>
+                        <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest border border-zinc-800 px-2 py-0.5 rounded">
+                          {config.max_daily_plays === 0 ? 'Unlimited' : `Limit: ${config.max_daily_plays}`}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => openEdit(config)}
+                    className="p-2 text-zinc-500 hover:text-admin-brand hover:bg-admin-brand/10 rounded-lg transition-all"
+                    title="설정 편집"
+                  >
+                    <Edit3 size={20} />
+                  </button>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between text-[10px] font-black text-zinc-500 uppercase tracking-widest px-1">
+                    <span>Main Prizes</span>
+                    <span>{config.prizes.length} Items</span>
+                  </div>
+                  <div className="space-y-2">
+                    {config.prizes.slice(0, 3).map((prize, idx) => {
+                      const totalWeight = config.prizes.reduce((sum, p) => sum + p.weight, 0);
+                      const info = getProbabilityInfo(prize.weight, totalWeight);
+                      return (
+                        <div key={idx} className="p-3 rounded-xl bg-zinc-900/50 border border-zinc-800/50 flex items-center justify-between group">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-1.5 h-1.5 rounded-full ${info.barClass}`} />
+                            <span className="text-xs font-bold text-zinc-300">{prize.label}</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className={`text-[10px] font-black px-2 py-0.5 rounded ${info.chipClass}`}>
+                              {info.percent.toFixed(1)}%
+                            </span>
+                            <span className="text-[10px] font-mono text-zinc-500">
+                              Stock: {(prize.stock === null || prize.stock === undefined) ? '∞' : prize.stock.toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {config.prizes.length > 3 && (
+                      <p className="text-center text-[10px] text-zinc-600 font-bold uppercase tracking-widest pt-1">
+                        + {config.prizes.length - 3} more prizes
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-2">
+                  <div className="flex items-center gap-1.5 text-[10px] text-zinc-500 font-bold">
+                    <History size={12} />
+                    <span>Last updated: {new Date(config.updated_at).toLocaleDateString()}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {(configs ?? []).length === 0 && (
+            <div className="md:col-span-2 py-24 flex flex-col items-center justify-center border-2 border-dashed border-zinc-800 rounded-[32px] opacity-40 grayscale hover:grayscale-0 transition-all">
+              <Trophy size={48} className="text-zinc-600 mb-4" />
+              <p className="text-sm font-bold text-zinc-500">운영 중인 복권 설정이 없습니다.</p>
+              <p className="text-[10px] text-zinc-600 mt-1 uppercase tracking-widest">새 설정을 추가하여 엔진을 가동하세요.</p>
+            </div>
           )}
         </div>
-      )}
+      </div>
 
       {isModalOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black bg-opacity-70 p-4 pt-[calc(env(safe-area-inset-top)+1rem)] pb-[calc(env(safe-area-inset-bottom)+1rem)] pl-[calc(env(safe-area-inset-left)+1rem)] pr-[calc(env(safe-area-inset-right)+1rem)] sm:items-center"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-300"
           role="dialog"
           aria-modal="true"
           onMouseDown={(e) => {
             if (e.target === e.currentTarget) closeModal();
           }}
         >
-          <div className="w-full max-w-5xl max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-lg border border-[#333333] bg-[#111111] shadow-xl sm:max-h-[90vh]">
-            <div className="flex items-center justify-between border-b border-[#333333] bg-[#2D6B3B] p-4 sm:p-6">
-              <h3 className="text-xl font-bold text-white">{editing ? "복권 설정 수정" : "복권 설정 추가"}</h3>
-              <button type="button" onClick={closeModal} className="text-white hover:text-[#91F402]" aria-label="닫기">
-                <X size={24} />
+          <div className="admin-card w-full max-w-6xl max-h-[90dvh] flex flex-col shadow-admin-glow border-admin-brand/30 overflow-hidden">
+            <div className="flex items-center justify-between border-b border-zinc-800 bg-zinc-900/50 p-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-admin-brand/20 text-admin-brand">
+                  <Settings2 size={24} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-white tracking-tight">
+                    {editing ? "복권 엔진 메커니즘 수정" : "신규 복권 메커니즘 구축"}
+                  </h3>
+                  <p className="text-xs text-zinc-500 font-medium">{editing ? editing.name : "데이터베이스에 동기화될 새로운 구성을 입력하세요"}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={closeModal}
+                className="p-2 text-zinc-500 hover:text-white hover:bg-zinc-800 rounded-lg transition-all"
+              >
+                <X size={20} />
               </button>
             </div>
 
-            <form onSubmit={onSubmit} className="space-y-5 bg-[#0A0A0A] p-4 sm:p-6">
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div className="space-y-1">
-                  <label htmlFor="lottery_name" className="text-sm text-gray-200">이름</label>
+            <form onSubmit={onSubmit} className="flex-1 overflow-y-auto custom-scrollbar p-8 space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">엔진 고유 식별 명칭</label>
                   <input
-                    id="lottery_name"
                     type="text"
-                    className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
+                    className="w-full h-12 bg-zinc-900/80 border border-zinc-800 rounded-xl px-4 text-sm text-white focus:border-admin-brand focus:ring-1 focus:ring-admin-brand/20 outline-none transition-all"
+                    placeholder="예: 2024 신년 특별 복권"
                     {...form.register("name")}
                   />
-                  {form.formState.errors.name?.message && <p className="text-sm text-red-300">{form.formState.errors.name.message}</p>}
+                  {form.formState.errors.name?.message && <p className="text-[10px] text-rose-500 font-bold mt-1 ml-1">{form.formState.errors.name.message}</p>}
                 </div>
-                <div className="space-y-1">
-                  <label htmlFor="lottery_max" className="text-sm text-gray-200">일일 최대 플레이 (0=무제한)</label>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">일일 총 참여 제한 (0=무제한)</label>
                   <input
-                    id="lottery_max"
                     type="number"
-                    className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
+                    className="w-full h-12 bg-zinc-900/80 border border-zinc-800 rounded-xl px-4 text-sm text-white font-mono focus:border-admin-brand outline-none transition-all"
                     {...form.register("max_daily_plays", { valueAsNumber: true })}
                   />
-                  {form.formState.errors.max_daily_plays?.message && (
-                    <p className="text-sm text-red-300">{form.formState.errors.max_daily_plays.message}</p>
-                  )}
                 </div>
               </div>
 
-              <label className="flex items-center gap-2 text-sm text-gray-200">
-                <input
-                  type="checkbox"
-                  className="h-4 w-4 rounded border-[#333333] bg-[#1A1A1A] text-[#91F402] focus:ring-[#2D6B3B]"
-                  {...form.register("is_active")}
-                />
-                활성
-              </label>
+              <div className="flex items-center gap-3 p-4 rounded-2xl bg-zinc-900/40 border border-zinc-800">
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="sr-only peer"
+                    {...form.register("is_active")}
+                  />
+                  <div className="w-11 h-6 bg-zinc-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-zinc-400 after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-admin-brand peer-checked:after:bg-white"></div>
+                </label>
+                <span className="text-xs font-bold text-zinc-300">엔진 즉시 활성화 (Operation Status: Live)</span>
+              </div>
 
-              <div className="space-y-3 rounded-lg border border-[#333333] bg-[#111111] p-4">
+              <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-sm font-semibold text-[#91F402]">상품 목록</h4>
+                  <div className="flex items-center gap-2">
+                    <Package className="text-admin-brand" size={18} />
+                    <h4 className="text-sm font-black text-white uppercase tracking-widest">배출 상품 풀 구성 (Prize Pool)</h4>
+                  </div>
                   <button
                     type="button"
                     onClick={() =>
-                      prizes.append({
+                      prizesField.append({
                         label: "",
-                        weight: 0,
+                        weight: 10,
                         stock: null,
                         reward_type: "POINT",
                         reward_value: 0,
                         is_active: true,
                       } as any)
                     }
-                    className="flex items-center rounded-md bg-[#2D6B3B] px-3 py-2 text-sm text-white hover:bg-[#91F402] hover:text-black"
+                    className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-admin-brand rounded-xl border border-admin-brand/30 transition-all text-[10px] font-black uppercase tracking-widest"
                   >
-                    <Plus size={16} className="mr-2" />
-                    행 추가
+                    <Plus size={14} />
+                    상품 슬롯 추가
                   </button>
                 </div>
 
                 {form.formState.errors.prizes?.message && (
-                  <p className="text-sm text-red-300">{form.formState.errors.prizes.message as string}</p>
+                  <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center gap-3 text-rose-500">
+                    <AlertCircle size={16} />
+                    <p className="text-[10px] font-bold">{form.formState.errors.prizes.message as string}</p>
+                  </div>
                 )}
 
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="border-b border-[#333333] bg-[#1A1A1A]">
-                      <tr>
-                        <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-400">상품명</th>
-                        <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-400">가중치</th>
-                        <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-[#91F402]">확률 / 희소성</th>
-                        <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-400">재고</th>
-                        <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-400">보상 타입</th>
-                        <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-400">보상 값</th>
-                        <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-400">활성</th>
-                        <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-[#91F402]">삭제</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#333333]">
-                      {prizes.fields.map((field, idx) => (
-                        <tr key={field.id} className="hover:bg-[#1A1A1A]">
-                          <td className="px-3 py-2">
+                <div className="space-y-3">
+                  {prizesField.fields.map((field, idx) => {
+                    const totalWeight = prizesField.fields.reduce((sum, _, i) => sum + (Number(form.watch(`prizes.${i}.weight`)) || 0), 0);
+                    const currentWeight = Number(form.watch(`prizes.${idx}.weight`)) || 0;
+                    const info = getProbabilityInfo(currentWeight, totalWeight);
+
+                    return (
+                      <div key={field.id} className="admin-card bg-zinc-900/20 border-zinc-800/80 p-5 space-y-4 hover:border-zinc-700 transition-all group">
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-end">
+                          <div className="lg:col-span-3 space-y-1.5">
+                            <label className="text-[10px] font-black text-zinc-500 uppercase ml-1">상품명</label>
                             <input
                               type="text"
-                              className="w-full rounded-md border border-[#333333] bg-[#111111] px-2 py-1 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
+                              className="w-full h-11 bg-zinc-900 border border-zinc-800 rounded-xl px-4 text-sm text-white focus:border-admin-brand outline-none"
                               {...form.register(`prizes.${idx}.label`)}
                             />
-                          </td>
-                          <td className="px-3 py-2">
+                          </div>
+
+                          <div className="lg:col-span-2 space-y-1.5">
+                            <label className="text-[10px] font-black text-zinc-500 uppercase ml-1">가중치</label>
                             <input
                               type="number"
-                              className="w-full rounded-md border border-[#333333] bg-[#111111] px-2 py-1 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
+                              className="w-full h-11 bg-zinc-900 border border-zinc-800 rounded-xl px-4 text-sm text-white font-mono focus:border-admin-brand outline-none"
                               {...form.register(`prizes.${idx}.weight`, { valueAsNumber: true })}
                             />
-                          </td>
-                          <td className="px-3 py-2">
-                            {(() => {
-                              const totalWeight = prizes.fields.reduce((sum, p) => sum + (p.weight || 0), 0);
-                              const info = getProbabilityInfo(field.weight || 0, totalWeight);
-                              return (
-                                <div className="space-y-1 min-w-[100px]">
-                                  <div className="relative h-2 w-full rounded-full bg-[#333333] overflow-hidden">
-                                    <div
-                                      className={`absolute left-0 top-0 h-full rounded-full ${info.bgColor || 'bg-gray-500'}`}
-                                      style={{ width: `${Math.min(info.percent, 100)}%` }}
-                                    />
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <span className="text-xs font-bold" style={{ color: info.color }}>
-                                      {info.percent.toFixed(1)}%
-                                    </span>
-                                    <span
-                                      className="px-1 py-0.5 rounded text-[9px] font-bold"
-                                      style={{ backgroundColor: `${info.color}20`, color: info.color }}
-                                    >
-                                      {info.label}
-                                    </span>
-                                  </div>
-                                  <span className="text-[9px] text-gray-500">100회당 ~{info.expected100}회</span>
-                                </div>
-                              );
-                            })()}
-                          </td>
-                        <td className="px-3 py-2">
-                          <input
-                            type="number"
-                            placeholder="빈칸=무제한"
-                            className="w-full rounded-md border border-[#333333] bg-[#111111] px-2 py-1 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
-                            {...form.register(`prizes.${idx}.stock` as any, { valueAsNumber: true })}
-                          />
-                          <p className="mt-1 text-[11px] text-gray-500">기프티콘 재고가 없으면 빈칸으로 두세요(무제한). 숫자를 넣으면 해당 수량만큼 차감됩니다.</p>
-                        </td>
-                          <td className="px-3 py-2">
-                            <select
-                              className="w-full rounded-md border border-[#333333] bg-[#111111] px-2 py-1 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
-                              {...form.register(`prizes.${idx}.reward_type`)}
-                            >
-                              {REWARD_TYPES.map((rt) => (
-                                <option key={rt.value} value={rt.value}>
-                                  {rt.label}
-                                </option>
-                              ))}
-                            </select>
-                          </td>
-                          <td className="px-3 py-2">
+                          </div>
+
+                          <div className="lg:col-span-2 space-y-2">
+                            <div className="flex items-center justify-between mb-1 px-1">
+                              <span className={`text-[10px] font-black ${info.textClass}`}>{info.percent.toFixed(2)}%</span>
+                              <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${info.chipClass}`}>{info.label}</span>
+                            </div>
+                            <div className="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                              <div
+                                className={`h-full transition-all duration-500 ${info.barClass}`}
+                                style={{ width: `${Math.min(info.percent, 100)}%` }}
+                              />
+                            </div>
+                            <p className="text-[9px] text-zinc-600 font-medium text-center italic mt-1">~{info.expected100} hits / 100 trials</p>
+                          </div>
+
+                          <div className="lg:col-span-2 space-y-1.5">
+                            <label className="text-[10px] font-black text-zinc-500 uppercase ml-1">재고 (Empty=∞)</label>
                             <input
                               type="number"
-                              className="w-full rounded-md border border-[#333333] bg-[#111111] px-2 py-1 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
-                              {...form.register(`prizes.${idx}.reward_value`, { valueAsNumber: true })}
+                              className="w-full h-11 bg-zinc-900 border border-zinc-800 rounded-xl px-4 text-sm text-white font-mono focus:border-admin-brand outline-none"
+                              {...form.register(`prizes.${idx}.stock` as any, { valueAsNumber: true })}
                             />
-                          </td>
-                          <td className="px-3 py-2">
-                            <input
-                              type="checkbox"
-                              className="h-4 w-4 rounded border-[#333333] bg-[#111111] text-[#91F402] focus:ring-[#2D6B3B]"
-                              {...form.register(`prizes.${idx}.is_active`)}
-                            />
-                          </td>
-                          <td className="px-3 py-2">
+                          </div>
+
+                          <div className="lg:col-span-2 flex items-center gap-2">
+                            <div className="flex-1 space-y-1.5">
+                              <label className="text-[10px] font-black text-zinc-500 uppercase ml-1">보상 설정</label>
+                              <div className="flex gap-2">
+                                <select
+                                  className="flex-1 h-11 bg-zinc-900 border border-zinc-800 rounded-xl px-3 text-xs text-white focus:border-admin-brand outline-none"
+                                  {...form.register(`prizes.${idx}.reward_type`)}
+                                >
+                                  {REWARD_TYPES.map((rt) => (
+                                    <option key={rt.value} value={rt.value}>
+                                      {rt.label}
+                                    </option>
+                                  ))}
+                                </select>
+                                <input
+                                  type="number"
+                                  placeholder="Amt"
+                                  className="w-20 h-11 bg-zinc-900 border border-zinc-800 rounded-xl px-3 text-xs text-white font-mono focus:border-admin-brand outline-none"
+                                  {...form.register(`prizes.${idx}.reward_value`, { valueAsNumber: true })}
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="lg:col-span-1 flex items-center justify-end gap-4 pb-2">
+                            <div className="flex flex-col items-center gap-1">
+                              <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-tighter">Status</span>
+                              <input
+                                type="checkbox"
+                                className="h-4 w-4 rounded border-zinc-800 bg-zinc-900 text-admin-brand focus:ring-admin-brand/20"
+                                {...form.register(`prizes.${idx}.is_active`)}
+                              />
+                            </div>
                             <button
                               type="button"
-                              onClick={() => prizes.remove(idx)}
-                              className="text-red-400 hover:text-red-200"
-                              aria-label="상품 삭제"
+                              onClick={() => prizesField.remove(idx)}
+                              className="p-2 text-zinc-600 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-all"
                               title="삭제"
                             >
                               <Trash2 size={18} />
                             </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
-
-              <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
-                <button
-                  type="button"
-                  onClick={closeModal}
-                  className="rounded-md border border-[#333333] bg-[#111111] px-4 py-2 text-sm text-gray-200 hover:bg-[#1A1A1A]"
-                >
-                  취소
-                </button>
-                <button
-                  type="submit"
-                  disabled={mutation.isPending}
-                  className="rounded-md bg-[#2D6B3B] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#91F402] hover:text-black disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {mutation.isPending ? "저장 중..." : "저장"}
-                </button>
-              </div>
             </form>
+
+            <div className="p-8 border-t border-zinc-800 bg-zinc-900/50 flex justify-end gap-4">
+              <button
+                type="button"
+                onClick={closeModal}
+                className="px-6 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl text-sm font-bold transition-all"
+              >
+                취소
+              </button>
+              <button
+                type="submit"
+                onClick={onSubmit}
+                disabled={mutation.isPending}
+                className="px-8 py-2.5 bg-admin-brand hover:brightness-110 text-black rounded-xl text-sm font-black shadow-lg shadow-admin-brand/20 transition-all flex items-center gap-2 disabled:opacity-50"
+              >
+                {mutation.isPending ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
+                {editing ? "시스템 구성 업데이트" : "시스템 구성 즉시 배포"}
+              </button>
+            </div>
           </div>
         </div>
       )}
-    </section>
+    </div>
   );
 };
 

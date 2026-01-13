@@ -1,182 +1,236 @@
-import React, { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { History, Ticket, X } from "lucide-react";
-import { GAME_TOKEN_LABELS, type GameTokenType } from "../../types/gameTokens";
+import React, { useState } from "react";
 import {
-  fetchLedgerByUserId,
-  fetchWalletsByUserId,
-  type LedgerEntry,
-  type TokenBalance,
-} from "../api/adminGameTokenApi";
+  Coins,
+  History,
+  Plus,
+  Minus,
+  AlertCircle,
+  X,
+  Loader2,
+  CheckCircle2
+} from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
-type AdminUser = {
-  id: number;
-  external_id?: string | null;
-  telegram_id?: number | null;
-  telegram_username?: string | null;
-  nickname?: string | null;
-};
+import { adminApi } from "../api/httpClient";
 
-type Props = {
-  user: AdminUser;
-  defaultTab?: "wallets" | "ledger";
+interface UserGameTokenModalProps {
+  memberId: number | string;
+  isOpen: boolean;
   onClose: () => void;
-};
+  nickname?: string;
+}
 
-const tokenOptions: GameTokenType[] = ["ROULETTE_COIN", "DICE_TOKEN", "LOTTERY_TICKET", "GOLD_KEY", "DIAMOND_KEY"];
+const UserGameTokenModal: React.FC<UserGameTokenModalProps> = ({ memberId, isOpen, onClose, nickname }) => {
+  const queryClient = useQueryClient();
+  const [tokenType, setTokenType] = useState("GOLD_KEY");
+  const [amount, setAmount] = useState<number>(0);
+  const [reason, setReason] = useState("");
+  const [activeTab, setActiveTab] = useState<"grant" | "history">("grant");
 
-const formatKst = (iso: string) => {
-  try {
-    return new Date(iso).toLocaleString();
-  } catch {
-    return iso;
-  }
-};
-
-const UserGameTokenModal: React.FC<Props> = ({ user, defaultTab = "wallets", onClose }) => {
-  const [activeTab, setActiveTab] = useState<"wallets" | "ledger">(defaultTab);
-
-  const walletsQuery = useQuery<TokenBalance[]>({
-    queryKey: ["admin", "game-tokens", "wallets", user.id],
-    queryFn: () => fetchWalletsByUserId(user.id, 50, 0),
-    enabled: !!user.id,
+  // Fetch Token Ledger (History)
+  const ledgerQuery = useQuery({
+    queryKey: ["user-token-ledger", memberId],
+    queryFn: async () => {
+      const { data } = await adminApi.get(`/admin/api/game-tokens/ledger?user_id=${memberId}`);
+      return data;
+    },
+    enabled: isOpen && activeTab === "history",
   });
 
-  const ledgerQuery = useQuery<LedgerEntry[]>({
-    queryKey: ["admin", "game-tokens", "ledger", user.id],
-    queryFn: () => fetchLedgerByUserId(user.id, 60, 0),
-    enabled: !!user.id,
+  // Grant Mutation
+  const grantMutation = useMutation({
+    mutationFn: async (vars: { type: string; amt: number; rsn: string }) => {
+      const { data } = await adminApi.post("/admin/api/game-tokens/grant", {
+        user_id: memberId,
+        token_type: vars.type,
+        amount: vars.amt,
+        reason: vars.rsn || "ADMIN_GRANT"
+      });
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["user-token-ledger", memberId] });
+      alert("토큰 지급이 완료되었습니다.");
+      setAmount(0);
+      setReason("");
+    },
+    onError: (err: any) => {
+      alert(`지급 실패: ${err.message}`);
+    }
   });
 
-  const walletByType = useMemo(() => {
-    const map = new Map<string, TokenBalance>();
-    for (const w of walletsQuery.data ?? []) map.set(w.token_type, w);
-    return map;
-  }, [walletsQuery.data]);
-
-  const headerName = user.nickname || user.external_id || (user.telegram_username ? `@${String(user.telegram_username).replace(/^@/, "")}` : String(user.id));
+  if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-      <div className="w-full max-w-4xl max-h-[90vh] overflow-hidden rounded-2xl border border-[#333333] bg-[#111111] shadow-2xl flex flex-col">
-        <div className="flex items-center justify-between border-b border-[#333333] p-4 sm:p-6 bg-[#1A1A1A]">
-          <div>
-            <h3 className="text-xl font-bold text-[#91F402]">잔액/로그: {headerName}</h3>
-            <p className="text-xs text-gray-400 mt-1">
-              ID: {user.id}
-              {user.telegram_username ? ` · TG: @${String(user.telegram_username).replace(/^@/, "")}` : user.telegram_id ? ` · TG ID: ${user.telegram_id}` : ""}
-              {user.external_id ? ` · external_id: ${user.external_id}` : ""}
-            </p>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="admin-card w-full max-w-2xl max-h-[90vh] flex flex-col shadow-admin-glow border-admin-brand/20">
+
+        {/* Header */}
+        <div className="p-6 border-b border-admin-border flex items-center justify-between bg-admin-sidebar/50">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-admin-brand/20 text-admin-brand">
+              <Coins size={24} />
+            </div>
+            <div>
+              <h2 className="text-admin-subtitle text-admin-text-primary">게임 코드/토큰 제어</h2>
+              <p className="text-admin-meta text-admin-text-muted">{nickname || memberId} 회원 자산 관리</p>
+            </div>
           </div>
-          <button onClick={onClose} className="rounded-lg p-2 text-gray-400 hover:bg-[#333333] hover:text-white">
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="닫기"
+            title="닫기"
+            className="p-2 text-admin-text-muted hover:text-admin-text-primary hover:bg-admin-hover rounded-lg transition-colors"
+          >
             <X size={20} />
           </button>
         </div>
 
-        <div className="border-b border-[#333333] bg-[#0B0B0B] px-4 py-3 sm:px-6 flex items-center justify-between">
-          <div className="flex bg-[#111] rounded-lg p-1 border border-[#333]">
-            <button
-              type="button"
-              onClick={() => setActiveTab("wallets")}
-              className={`px-4 py-1.5 text-xs font-bold rounded flex items-center gap-2 ${activeTab === "wallets" ? "bg-[#333] text-white" : "text-gray-500 hover:text-gray-300"}`}
-            >
-              <Ticket size={14} /> 잔액 티켓
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab("ledger")}
-              className={`px-4 py-1.5 text-xs font-bold rounded flex items-center gap-2 ${activeTab === "ledger" ? "bg-[#333] text-white" : "text-gray-500 hover:text-gray-300"}`}
-            >
-              <History size={14} /> 잔액 로그
-            </button>
-          </div>
-          <div className="text-[11px] text-gray-600">
-            {activeTab === "wallets" ? "지갑 잔액" : "최근 원장(ledger)"}
-          </div>
+        {/* Tab Navigation */}
+        <div className="flex px-6 pt-4 border-b border-admin-border bg-admin-sidebar/30">
+          <button
+            onClick={() => setActiveTab("grant")}
+            className={`px-4 py-2 text-admin-meta font-bold border-b-2 transition-all ${activeTab === "grant" ? "border-admin-brand text-admin-brand" : "border-transparent text-admin-text-muted hover:text-admin-text-secondary"}`}
+          >
+            지급/회수
+          </button>
+          <button
+            onClick={() => setActiveTab("history")}
+            className={`px-4 py-2 text-admin-meta font-bold border-b-2 transition-all ${activeTab === "history" ? "border-admin-brand text-admin-brand" : "border-transparent text-admin-text-muted hover:text-admin-text-secondary"}`}
+          >
+            변경 이력
+          </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6">
-          {activeTab === "wallets" && (
-            <div className="rounded-2xl border border-[#333333] bg-[#0B0B0B] overflow-hidden">
-              <div className="px-4 py-3 border-b border-[#222222]">
-                <div className="text-sm font-bold text-[#91F402]">현재 잔액</div>
+        {/* Content Area */}
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
+          {activeTab === "grant" ? (
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label htmlFor={`user-game-token-type-${memberId}`} className="admin-label">토큰 유형</label>
+                  <select
+                    id={`user-game-token-type-${memberId}`}
+                    value={tokenType}
+                    onChange={(e) => setTokenType(e.target.value)}
+                    aria-label="토큰 유형"
+                    title="토큰 유형"
+                    className="w-full h-11 bg-admin-sidebar/50 border border-admin-border rounded-admin-lg px-4 text-admin-text-primary focus:ring-2 focus:ring-admin-brand/40 outline-none appearance-none"
+                  >
+                    <option value="GOLD_KEY">GOLD_KEY (황금 열쇠)</option>
+                    <option value="DIAMOND">DIAMOND (재화)</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="admin-label">수량</label>
+                  <input
+                    type="number"
+                    value={amount}
+                    onChange={(e) => setAmount(Number(e.target.value))}
+                    className="admin-input w-full"
+                    placeholder="지급할 수량"
+                  />
+                </div>
               </div>
-              {walletsQuery.isLoading ? (
-                <div className="py-12 text-center text-gray-500">Loading…</div>
-              ) : (
-                <table className="w-full text-left text-sm">
-                  <thead className="bg-[#111111] text-gray-400">
-                    <tr>
-                      <th className="py-3 px-4">종류</th>
-                      <th className="py-3 px-4">token_type</th>
-                      <th className="py-3 px-4 text-right">잔액</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#222]">
-                    {tokenOptions.map((t) => {
-                      const w = walletByType.get(t);
-                      const bal = w?.balance ?? 0;
-                      return (
-                        <tr key={t} className="hover:bg-[#111111]">
-                          <td className="py-3 px-4 font-bold text-white">{GAME_TOKEN_LABELS[t] ?? t}</td>
-                          <td className="py-3 px-4 text-xs text-gray-400 font-mono">{t}</td>
-                          <td className={`py-3 px-4 text-right font-bold ${bal > 0 ? "text-[#91F402]" : "text-gray-500"}`}>{bal.toLocaleString()}</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              )}
-              {walletsQuery.error && (
-                <div className="p-4 text-xs text-red-300">조회 실패: {(walletsQuery.error as any)?.message ?? "unknown"}</div>
-              )}
-            </div>
-          )}
 
-          {activeTab === "ledger" && (
-            <div className="rounded-2xl border border-[#333333] bg-[#0B0B0B] overflow-hidden">
-              <div className="px-4 py-3 border-b border-[#222222]">
-                <div className="text-sm font-bold text-[#91F402]">최근 잔액 로그</div>
+              <div className="space-y-2">
+                <label className="admin-label">지급 사유</label>
+                <textarea
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  className="w-full h-24 bg-admin-sidebar/50 border border-admin-border rounded-admin-lg p-4 text-admin-text-primary focus:ring-2 focus:ring-admin-brand/40 outline-none resize-none placeholder:text-admin-text-muted"
+                  placeholder="지급 사유를 입력하세요 (예: 이벤트 보상, 버그 보상 등)"
+                />
               </div>
+
+              <div className="p-4 rounded-xl bg-admin-brand/5 border border-admin-brand/10 flex items-start gap-3">
+                <AlertCircle size={18} className="text-admin-brand mt-0.5" />
+                <p className="text-admin-meta text-admin-text-secondary leading-relaxed">
+                  토큰을 지급하면 즉시 회원의 지갑/인벤토리에 반영되며, 운영 트랜잭션 전적에 영구히 기록됩니다. 신중하게 작업해 주세요.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
               {ledgerQuery.isLoading ? (
-                <div className="py-12 text-center text-gray-500">Loading…</div>
-              ) : (ledgerQuery.data ?? []).length === 0 ? (
-                <div className="py-12 text-center text-gray-500">로그가 없습니다.</div>
+                <div className="flex flex-col items-center justify-center py-20 text-admin-text-muted gap-3">
+                  <Loader2 size={32} className="animate-spin text-admin-brand" />
+                  <p className="text-admin-meta">이력을 불러오는 중입니다...</p>
+                </div>
+              ) : ledgerQuery.data?.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 text-admin-text-muted border-2 border-dashed border-admin-border rounded-2xl">
+                  <History size={40} className="mb-3 opacity-20" />
+                  <p className="text-admin-meta">변경 이력이 없습니다.</p>
+                </div>
               ) : (
-                <div className="divide-y divide-[#222]">
-                  {(ledgerQuery.data ?? []).slice(0, 60).map((l) => {
-                    const delta = Number(l.delta || 0);
-                    const deltaText = `${delta > 0 ? "+" : ""}${delta.toLocaleString()}`;
-                    return (
-                      <div key={l.id} className="p-4 hover:bg-[#111111]">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <div className="text-xs text-gray-400 font-mono">#{l.id} · {GAME_TOKEN_LABELS[l.token_type as GameTokenType] ?? l.token_type}</div>
-                            <div className="text-sm font-bold text-white mt-0.5">
-                              <span className={delta >= 0 ? "text-emerald-400" : "text-red-400"}>{deltaText}</span>
-                              <span className="text-gray-500"> → </span>
-                              <span className="text-white">{Number(l.balance_after || 0).toLocaleString()}</span>
-                            </div>
-                            <div className="text-[11px] text-gray-500 mt-1">{l.reason || "-"}{l.label ? ` · ${l.label}` : ""}</div>
+                <div className="space-y-3">
+                  {ledgerQuery.data?.map((log: any) => (
+                    <div key={log.id} className="p-4 rounded-xl bg-admin-sidebar/40 border border-admin-border flex items-center justify-between hover:bg-admin-hover transition-colors">
+                      <div className="flex items-center gap-4">
+                        <div className={`p-2 rounded-lg ${log.delta > 0 ? "bg-admin-accent/10 text-admin-accent" : "bg-admin-danger/10 text-admin-danger"}`}>
+                          {log.delta > 0 ? <Plus size={16} /> : <Minus size={16} />}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-admin-body font-bold text-admin-text-primary">{log.token_type}</span>
+                            <span className={`text-admin-body font-black ${log.delta > 0 ? "text-admin-accent" : "text-admin-danger"}`}>
+                              {log.delta > 0 ? `+${log.delta}` : log.delta}
+                            </span>
                           </div>
-                          <div className="text-[11px] text-gray-600 shrink-0">{formatKst(l.created_at)}</div>
+                          <p className="text-admin-meta text-admin-text-muted leading-tight mt-0.5">
+                            {log.reason || "사유 미입력"} {log.label ? `쨌 ${log.label}` : ""}
+                          </p>
                         </div>
                       </div>
-                    );
-                  })}
+                      <div className="text-right">
+                        <p className="text-admin-meta text-admin-text-primary mb-1">잔액: {log.balance_after}</p>
+                        <p className="text-[11px] text-admin-text-muted font-mono">
+                          {new Date(log.created_at).toLocaleString("ko-KR", {
+                            year: "numeric",
+                            month: "2-digit",
+                            day: "2-digit",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            hour12: false,
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              )}
-              {ledgerQuery.error && (
-                <div className="p-4 text-xs text-red-300">조회 실패: {(ledgerQuery.error as any)?.message ?? "unknown"}</div>
               )}
             </div>
           )}
         </div>
 
-        <div className="p-4 sm:p-6 border-t border-[#333333] bg-[#1A1A1A] flex justify-end">
-          <button onClick={onClose} className="rounded-lg bg-[#333333] px-6 py-2 text-sm font-bold text-white hover:bg-[#444444]">
+        {/* Footer Actions */}
+        <div className="p-6 border-t border-admin-border bg-admin-sidebar/50 flex justify-end gap-3">
+          <button
+            onClick={onClose}
+            className="btn-admin-secondary text-admin-meta px-4 border-none"
+          >
             닫기
           </button>
+          {activeTab === "grant" && (
+            <button
+              onClick={() => {
+                if (amount === 0) return alert("수량을 입력하세요.");
+                grantMutation.mutate({ type: tokenType, amt: amount, rsn: reason });
+              }}
+              disabled={grantMutation.isPending}
+              className="btn-admin-primary min-w-[120px]"
+            >
+              {grantMutation.isPending ? (
+                <Loader2 size={18} className="animate-spin" />
+              ) : (
+                <>
+                  <CheckCircle2 size={18} />
+                  지급 확정
+                </>
+              )}
+            </button>
+          )}
         </div>
       </div>
     </div>

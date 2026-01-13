@@ -130,3 +130,73 @@ def update_user_mission_progress_by_identifier(
 ):
     user_id = resolve_user_id_by_identifier(db, identifier)
     return update_user_mission_progress(user_id=user_id, mission_id=mission_id, payload=payload, db=db)
+
+
+class AdminMissionApprovalDetail(BaseModel):
+    id: int
+    user_id: int
+    nickname: Optional[str]
+    telegram_id: Optional[str]
+    mission_id: int
+    mission_title: str
+    current_value: int
+    target_value: int
+    completed_at: Optional[datetime]
+    approval_status: str
+
+
+@router.get("/approvals/queue", response_model=List[AdminMissionApprovalDetail])
+def get_mission_approval_queue(db: Session = Depends(get_db)):
+    """Fetch all mission progress records that are waiting for approval."""
+    from app.models.user import User
+    
+    rows = db.query(
+        UserMissionProgress.id,
+        UserMissionProgress.user_id,
+        User.nickname,
+        User.telegram_id,
+        UserMissionProgress.mission_id,
+        Mission.title,
+        UserMissionProgress.current_value,
+        Mission.target_value,
+        UserMissionProgress.completed_at,
+        UserMissionProgress.approval_status
+    ).join(User, User.id == UserMissionProgress.user_id) \
+     .join(Mission, Mission.id == UserMissionProgress.mission_id) \
+     .filter(UserMissionProgress.approval_status == "PENDING") \
+     .order_by(UserMissionProgress.completed_at.asc()) \
+     .all()
+     
+    return [
+        AdminMissionApprovalDetail(
+            id=r[0],
+            user_id=r[1],
+            nickname=r[2],
+            telegram_id=str(r[3]) if r[3] else None,
+            mission_id=r[4],
+            mission_title=r[5],
+            current_value=r[6],
+            target_value=r[7],
+            completed_at=r[8],
+            approval_status=str(r[9]) if hasattr(r[9], "value") else str(r[9])
+        ) for r in rows
+    ]
+
+
+class BatchApprovalRequest(BaseModel):
+    ids: List[int]
+    status: str # APPROVED | REJECTED
+
+
+@router.post("/approvals/batch")
+def batch_update_mission_status(payload: BatchApprovalRequest, db: Session = Depends(get_db)):
+    """Approve or reject a batch of mission progress records."""
+    if payload.status not in ["APPROVED", "REJECTED"]:
+        raise HTTPException(status_code=400, detail="Invalid status")
+        
+    db.query(UserMissionProgress).filter(
+        UserMissionProgress.id.in_(payload.ids)
+    ).update({"approval_status": payload.status}, synchronize_session=False)
+    
+    db.commit()
+    return {"success": True, "count": len(payload.ids)}

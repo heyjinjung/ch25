@@ -114,7 +114,7 @@ const SurveyRunnerPage: React.FC = () => {
       const answers = Object.values(mergedAnswers);
       await saveMutation.mutateAsync({ answers, last_question_id: answers.at(-1)?.question_id });
       addToast("임시 저장되었습니다.", "success");
-    } catch (e) {
+    } catch {
       addToast("저장에 실패했습니다.", "error");
     }
   };

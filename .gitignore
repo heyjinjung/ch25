@@ -152,6 +152,7 @@ logs
 backups/*.sql
 backups/**/*.sql
 backup_*.sql
+backup_*.sql.gz
 server_backup_*.sql
 server_dump*.sql
 remote_dump*.sql
@@ -159,11 +160,20 @@ local_backup_*.sql
 xmas_dump_*.sql
 db_dump.sql
 
+# Compressed DB dumps / backups (never commit)
+*.sql.gz
+backups/**/*.sql.gz
+
+# Remote prod dumps (never commit)
+backups/remote_prod/
+backups/remote_prod/**
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
 .idea
 .DS_Store
+.hintrc
 *.suo
 *.ntvs*
 *.njsproj
@@ -198,6 +208,9 @@ dist-ssr
 
 # Output of 'npm pack'
 *.tgz
+
+# Local scratch/temporary
+tmp/
 
 # Yarn Integrity file
 .yarn-integrity
