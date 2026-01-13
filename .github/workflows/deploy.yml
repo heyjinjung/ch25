@@ -153,6 +153,10 @@ jobs:
             docker compose pull
             docker compose up -d --remove-orphans
 
+            # Fast fix for transient 502: nginx가 backend 재생성 직후 upstream을 못 잡는 케이스가 있어 1회 재시작
+            docker compose restart nginx || true
+            sleep 2
+
             # Gate(3.5/3.8): 마이그레이션
             if ! docker compose exec -T backend alembic upgrade head; then
               echo "[MIGRATION] alembic upgrade head failed; retry once" >&2
