@@ -59,6 +59,8 @@ from app.models import (  # noqa: F401
     OpsCampaign,
     OpsPlan,
     OpsPlanTask,
+    OpsTargetList,
+    OpsTargetMember,
 )
 from app.models.admin_user_profile import AdminUserProfile
 from app.models.admin_message import AdminMessage, AdminMessageInbox

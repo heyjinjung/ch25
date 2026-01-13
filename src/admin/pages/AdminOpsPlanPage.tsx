@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Plus, RefreshCw, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import axios from "axios";
 
 import {
   useCreateOpsCampaign,
@@ -46,6 +47,37 @@ type LocalTaskDraft = {
 };
 
 type InventoryGrantAllItem = { item_type: string; amount: number };
+
+function getAdminApiErrorMessage(error: unknown): string {
+  if (axios.isAxiosError(error)) {
+    const data = error.response?.data as any;
+    const detail = data?.detail;
+    if (typeof detail === "string" && detail.trim()) return detail;
+    if (Array.isArray(detail)) {
+      const msg = detail
+        .map((d) => (typeof d?.msg === "string" ? d.msg : typeof d === "string" ? d : ""))
+        .filter(Boolean)
+        .join(" / ");
+      if (msg) return msg;
+    }
+  }
+  return error instanceof Error ? error.message : "요청에 실패했습니다.";
+}
+
+function humanizeOpsPlanError(message: string): string {
+  const m = String(message ?? "");
+  if (!m) return "요청에 실패했습니다.";
+
+  const map: Record<string, string> = {
+    OPS_TASK_ALREADY_EXECUTED: "이미 실행된 Task입니다.",
+    OPS_GRANT_ALL_ITEMS_REQUIRED: "지급 아이템 목록(items)이 필요합니다.",
+    OPS_GRANT_ALL_ITEMS_INVALID: "지급 아이템 목록(items)이 올바르지 않습니다.",
+  };
+
+  // FastAPI HTTPException string can look like "422: CODE".
+  const code = m.replace(/^\s*\d+\s*:\s*/, "").trim();
+  return map[code] ?? map[m.trim()] ?? m;
+}
 
 const AdminOpsPlanPage: React.FC = () => {
   const todayKst = useMemo(() => getKstDateKey(new Date()), []);
@@ -1156,7 +1188,12 @@ const AdminOpsPlanPage: React.FC = () => {
                                 const ok = confirmExecuteInventoryGrantAll(t.id, payload);
                                 if (!ok) return;
                               }
-                              executeTask?.mutate({ taskId: t.id, status: "DONE" });
+                              executeTask
+                                ?.mutateAsync({ taskId: t.id, status: "DONE" })
+                                .then(() => addToast("실행 완료", "success"))
+                                .catch((err) => {
+                                  addToast(humanizeOpsPlanError(getAdminApiErrorMessage(err)), "error");
+                                });
                             }}
                             disabled={!planId || executeTask.isPending}
                             aria-label="Task 실행(완료 처리)"

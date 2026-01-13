@@ -31,6 +31,7 @@ from app.api.admin.routes import (
     admin_streak_rewards,
     admin_ops_log,
     admin_ops_plan,
+    admin_ops_target,
     admin_reward_types,
     admin_vault_requests,
 )
@@ -69,5 +70,6 @@ admin_router.include_router(admin_economy_stats.router)
 admin_router.include_router(admin_streak_rewards.router)
 admin_router.include_router(admin_ops_log.router)
 admin_router.include_router(admin_ops_plan.router)
+admin_router.include_router(admin_ops_target.router)
 admin_router.include_router(admin_vault_requests.router)
 admin_router.include_router(admin_reward_types.router)
