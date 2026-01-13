@@ -6,6 +6,24 @@
 
 ---
 
+## 0. 최신 스냅샷 (2026-01-13)
+
+> 이 문서는 과거 상태(HTTPS 미적용 등) 내용이 일부 포함되어 있습니다.
+> 운영 기준 최신 현황/조치 결과는 아래 스냅샷을 우선합니다.
+
+- 도메인: `cc-jm.com` → `149.28.135.147` (A 레코드)
+- 배포 방식: GitHub Actions CI → 서버(`/opt/xmas-event`)에서 `docker compose pull/up` 수행
+- 서비스 헬스:
+   - `http://127.0.0.1/health` 200
+   - `http://127.0.0.1/api/health` 200
+   - `https://cc-jm.com/health` 200
+- HTTPS(443): nginx에서 SSL 서버블록 활성화 + `/etc/letsencrypt/live/cc-jm.com` 인증서 마운트로 정상 동작
+- CI 게이트:
+   - 배포 직후 일시 502는 nginx 1회 restart로 흡수
+   - `/admin/api/...` 스모크는 `401 + JSON(AUTH_REQUIRED)`도 정상으로 허용(HTML이면 실패)
+
+---
+
 ## 1. 현재 적용된 설정 (Applied Configurations)
 
 ### 1.1 도메인 및 CORS 설정
@@ -24,9 +42,15 @@
 **주의**: 본 프로젝트는 1주일 단기 이벤트이므로 편의성을 위해 일부 보안 설정을 유보했으나, 공격 위험이 감지되거나 운영 기간이 연장될 경우 아래 설정을 즉시 적용해야 합니다.
 
 ### 2.1 HTTPS (자물쇠) 적용
-현재 `http://cc-jm.com`으로 접속되며 "주의 요함"이 표시됩니다.
-- **적용 방법**: `certbot`을 이용해 무료 SSL 인증서 발급 필요.
-- **참고 문서**: `docs/SECURITY_GUIDE.md`의 "1. HTTPS 설정" 섹션 참고.
+현재 운영은 `https://cc-jm.com`이 정상 동작합니다.
+
+- 빠른 검증:
+   - `curl -vk https://cc-jm.com/health`
+   - 서버 내부: `curl -sk https://127.0.0.1/health`
+- 인증서 경로(서버): `/etc/letsencrypt/live/cc-jm.com/`
+- 갱신(자동): `certbot` 컨테이너가 `certbot renew` 주기 실행
+
+> 참고: HTTPS가 다시 `ERR_CONNECTION_CLOSED`로 끊기면, 우선 nginx 443 SSL 서버블록/인증서 마운트 정합성을 점검하세요.
 
 ### 2.2 데이터베이스 보안 강화 (SSH 터널링)
 현재 VPN 사용으로 인해 접속 IP가 유동적이므로, 특정 IP 차단 방식보다는 **SSH 터널링** 방식이 적합합니다.
