@@ -58,7 +58,7 @@ class MessageCreate(BaseModel):
     title: str
     content: str
     target_type: str # ALL, SEGMENT, TAG, USER
-    target_value: Optional[str]
+    target_value: Optional[str] = None
     channels: List[str] = ["INBOX"]
 
 class MessageResponse(BaseModel):

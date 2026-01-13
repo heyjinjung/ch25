@@ -130,3 +130,45 @@ export const nudgeRiskGroup = async (): Promise<{ status: string; nudged_count: 
   const response = await httpClient.post("/admin/api/dashboard/notifications/nudge");
   return response.data;
 };
+
+// --- Crisis Signals (11 Scenarios) ---
+
+export interface CrisisSignal {
+  id: string; // e.g. "SCENARIO_01"
+  name: string; // e.g. "불운한 뉴비"
+  count: number;
+  level: "HIGH" | "MEDIUM" | "LOW" | "SPECIAL";
+}
+
+export interface CrisisSignalsResponse {
+  timestamp: string;
+  signals: CrisisSignal[];
+}
+
+export const fetchCrisisSignals = async (): Promise<CrisisSignalsResponse> => {
+  const response = await httpClient.get<CrisisSignalsResponse>("/admin/api/ops/dashboard/crisis-signals");
+  return response.data;
+};
+
+export interface OpsTargetImportRequest {
+  scenario_id: string;
+  options?: Record<string, unknown>;
+}
+
+export interface OpsTargetImportResponse {
+  target_list_id: number;
+  count: number;
+  message: string;
+}
+
+export const importTargetFromScenario = async (
+  planId: number,
+  payload: OpsTargetImportRequest
+): Promise<OpsTargetImportResponse> => {
+  const response = await httpClient.post<OpsTargetImportResponse>(
+    `/admin/api/ops/plans/${planId}/import-target`,
+    payload
+  );
+  return response.data;
+};
+

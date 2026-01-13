@@ -27,6 +27,8 @@ import { fetchCrmStats, fetchUsersBySegment, AdminUserProfile } from "../api/adm
 import { fetchComprehensiveOverview, fetchMetricDetails, MetricDetailItem } from "../api/adminDashboardApi";
 import { useToast } from "../../components/common/ToastProvider";
 import { useNavigate } from "react-router-dom";
+import CrisisRadar from "../components/CrisisRadar";
+import { CrisisSignal } from "../api/adminDashboardApi";
 
 const MarketingDashboardPage: React.FC = () => {
     const { addToast } = useToast();
@@ -222,6 +224,16 @@ const MarketingDashboardPage: React.FC = () => {
                     </button>
                 </div>
             </header>
+
+            {/* Crisis Radar Section - 11 Scenarios */}
+            <div className="admin-card p-6">
+                <CrisisRadar
+                    onScenarioClick={(scenario: CrisisSignal) => {
+                        addToast(`${scenario.name} 시나리오 선택됨 (${scenario.count}명)`, "info");
+                        // TODO: Open import modal
+                    }}
+                />
+            </div>
 
             {/* Ops Summary Section */}
             <div className="admin-card p-6">

@@ -63,11 +63,18 @@ const formatKstCompact = (value?: string) => {
   }).formatToParts(date);
 
   const get = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)?.value ?? "";
+  const m = get("month");
+  const d = get("day");
   const hh = get("hour");
   const mm = get("minute");
 
-  if (!hh || !mm) return "-";
-  return `${hh}:${mm}`;
+  if (!m || !d || !hh || !mm) return "-";
+
+  const month = Number(m);
+  const day = Number(d);
+  if (!Number.isFinite(month) || !Number.isFinite(day)) return "-";
+
+  return `${month}월${day}일${hh}시${mm}분까지`;
 };
 
 const ExternalRankingPage: React.FC = () => {
