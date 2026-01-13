@@ -196,37 +196,37 @@ const UserSegmentsPage: React.FC = () => {
             <table className="w-full text-left border-collapse">
               <thead className="sticky top-0 z-10 bg-zinc-900 border-b border-zinc-800">
                 <tr>
-                  <th className="px-4 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider cursor-pointer group hover:text-zinc-300" onClick={() => handleSort("user_id")}>
+                  <th className="px-4 py-3 text-sm font-bold text-zinc-400 uppercase tracking-wider cursor-pointer group hover:text-zinc-200" onClick={() => handleSort("user_id")}>
                     <div className="flex items-center gap-1">
                       User ID {getSortIcon("user_id")}
                     </div>
                   </th>
-                  <th className="px-4 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider cursor-pointer group hover:text-zinc-300" onClick={() => handleSort("nickname")}>
+                  <th className="px-4 py-3 text-sm font-bold text-zinc-400 uppercase tracking-wider cursor-pointer group hover:text-zinc-200" onClick={() => handleSort("nickname")}>
                     <div className="flex items-center gap-1">
                       식별자 {getSortIcon("nickname")}
                     </div>
                   </th>
-                  <th className="px-4 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider cursor-pointer group hover:text-zinc-300" onClick={() => handleSort("segment")}>
+                  <th className="px-4 py-3 text-sm font-bold text-zinc-400 uppercase tracking-wider cursor-pointer group hover:text-zinc-200" onClick={() => handleSort("segment")}>
                     <div className="flex items-center gap-1">
                       현재 세그먼트 {getSortIcon("segment")}
                     </div>
                   </th>
-                  <th className="px-4 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider cursor-pointer group hover:text-zinc-300" onClick={() => handleSort("recommended_segment")}>
+                  <th className="px-4 py-3 text-sm font-bold text-zinc-400 uppercase tracking-wider cursor-pointer group hover:text-zinc-200" onClick={() => handleSort("recommended_segment")}>
                     <div className="flex items-center gap-1">
                       추천 세그먼트 {getSortIcon("recommended_segment")}
                     </div>
                   </th>
-                  <th className="px-4 py-3.5 text-right cursor-pointer group" onClick={() => handleSort("total_plays")}>
+                  <th className="px-4 py-3.5 text-right text-sm font-bold text-zinc-400 cursor-pointer group hover:text-zinc-200" onClick={() => handleSort("total_plays")}>
                     <div className="flex items-center justify-end gap-1">
                       게임 플레이 {getSortIcon("total_plays")}
                     </div>
                   </th>
-                  <th className="px-4 py-3.5 text-right cursor-pointer group" onClick={() => handleSort("last_login_at")}>
+                  <th className="px-4 py-3.5 text-right text-sm font-bold text-zinc-400 cursor-pointer group hover:text-zinc-200" onClick={() => handleSort("last_login_at")}>
                     <div className="flex items-center justify-end gap-1">
                       최근 활동 {getSortIcon("last_login_at")}
                     </div>
                   </th>
-                  <th className="px-4 py-3.5 text-center">액션</th>
+                  <th className="px-4 py-3.5 text-center text-sm font-bold text-zinc-400">액션</th>
                 </tr>
               </thead>
               <tbody>
@@ -239,11 +239,11 @@ const UserSegmentsPage: React.FC = () => {
                 ) : (
                   filteredSegments.map((seg: AdminUserSegmentRow) => (
                     <tr key={seg.user_id} className="admin-td group">
-                      <td className="px-4 py-4 font-mono text-admin-text-primary">{seg.user_id}</td>
+                      <td className="px-4 py-4 font-mono text-sm text-admin-text-primary">{seg.user_id}</td>
                       <td className="px-4 py-4">
-                        <div className="flex flex-col gap-0.5">
-                          <span className="text-admin-text-primary font-bold text-xs">{seg.nickname || "-"}</span>
-                          <span className="text-admin-text-muted text-[10px]">@{seg.telegram_username || seg.external_id}</span>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-admin-text-primary font-bold text-base">{seg.nickname || "-"}</span>
+                          <span className="text-zinc-400 text-sm">@{seg.telegram_username || seg.external_id}</span>
                         </div>
                       </td>
                       <td className="px-4 py-4">
@@ -257,7 +257,7 @@ const UserSegmentsPage: React.FC = () => {
                             autoFocus
                           />
                         ) : (
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${getSegmentBadge(seg.segment)}`}>
+                          <span className={`px-2 py-0.5 rounded-full text-sm font-bold uppercase ${getSegmentBadge(seg.segment)}`}>
                             {seg.segment}
                           </span>
                         )}
@@ -265,13 +265,13 @@ const UserSegmentsPage: React.FC = () => {
                       <td className="px-4 py-4">
                         {seg.recommended_segment ? (
                           <div className="flex flex-col gap-0.5">
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase w-fit ${getSegmentBadge(seg.recommended_segment)}`}>
+                            <span className={`px-2 py-0.5 rounded-full text-sm font-bold uppercase w-fit ${getSegmentBadge(seg.recommended_segment)}`}>
                               {seg.recommended_segment}
                             </span>
-                            <span className="text-[10px] text-admin-text-muted">{seg.recommended_rule_name}</span>
+                            <span className="text-sm text-zinc-400">{seg.recommended_rule_name}</span>
                           </div>
                         ) : (
-                          <span className="text-admin-text-muted text-xs">-</span>
+                          <span className="text-zinc-500 text-sm">-</span>
                         )}
                       </td>
                       <td className="px-4 py-4 text-right">
@@ -284,8 +284,8 @@ const UserSegmentsPage: React.FC = () => {
                       </td>
                       <td className="px-4 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <Clock className="h-3 w-3 text-admin-text-muted" />
-                          <span className="text-admin-text-secondary text-xs tabular-nums">
+                          <Clock className="h-4 w-4 text-zinc-400" />
+                          <span className="text-zinc-300 text-sm tabular-nums">
                             {seg.last_login_at ? new Date(seg.last_login_at).toLocaleDateString() : "-"}
                           </span>
                         </div>

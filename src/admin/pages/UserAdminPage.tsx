@@ -1,5 +1,6 @@
 // src/admin/pages/UserAdminPage.tsx
 import React, { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Edit2, Plus, Save, Search, Trash2, Upload, Skull } from "lucide-react";
 import { createUser, deleteUser, fetchUsers, purgeUser, updateUser, AdminUser, AdminUserPayload } from "../api/adminUserApi";
@@ -51,9 +52,12 @@ const UserAdminPage: React.FC = () => {
   const { addToast } = useToast();
   const queryClient = useQueryClient();
 
+  const [searchParams] = useSearchParams();
+  const initialSearch = searchParams.get("search") || "";
+
   // [Round 3] Search Logic: Prefer Backend Search
-  const [searchInput, setSearchInput] = useState("");
-  const [searchTerm, setSearchTerm] = useState(""); // Debounced/Effective search term
+  const [searchInput, setSearchInput] = useState(initialSearch);
+  const [searchTerm, setSearchTerm] = useState(initialSearch); // Debounced/Effective search term
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["admin", "users", searchTerm],

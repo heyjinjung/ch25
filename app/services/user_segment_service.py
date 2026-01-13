@@ -306,8 +306,8 @@ class UserSegmentService:
         inactive_30d = now - timedelta(days=30)
 
         # 1. Standard 5-tier segments (Source of Truth: UserSegment table)
-        # Standard Segments: VIP, ACTIVE, AT_RISK, DORMANT, NEW
-        standard_segments = ["VIP", "ACTIVE", "AT_RISK", "DORMANT", "NEW"]
+        # Standard Segments: VIP, ACTIVE, AT_RISK, NEW (DORMANT moved to dynamic)
+        standard_segments = ["VIP", "ACTIVE", "AT_RISK", "NEW"]
         
         if segment_type in standard_segments:
             return [
@@ -346,6 +346,12 @@ class UserSegmentService:
                 query = query.filter(AdminUserProfile.days_since_last_charge >= 7, AdminUserProfile.days_since_last_charge < 30)
             elif risk == "HIGH":
                 query = query.filter(AdminUserProfile.days_since_last_charge >= 30)
+        
+        elif segment_type == "DORMANT":
+             # Users inactive for > 30 days (or never logged in)
+             query = query.filter(
+                (User.last_login_at < inactive_30d) | (User.last_login_at == None)
+             )
         
         return [r[0] for r in query.limit(limit).all()]
 

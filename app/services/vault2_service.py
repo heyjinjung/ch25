@@ -627,6 +627,12 @@ class Vault2Service:
         now_dt = datetime.utcnow()
         today_start = now_dt.replace(hour=0, minute=0, second=0, microsecond=0)
 
+        # Backward/Frontend compatibility:
+        # - Admin UI uses short keys like accrual/liabilities/withdrawal.
+        # - Service historically used today_accrual/today_unlock_cash/expiring_soon_24h.
+        if type == "accrual":
+            type = "today_accrual"
+
         results = []
 
         if type == "expiring_soon_24h":
@@ -698,6 +704,60 @@ class Vault2Service:
                     "count": int(cnt),
                     "timestamp": last_at,
                     "meta": {"type": "accrual_sum"}
+                })
+
+        elif type == "liabilities":
+            # Per-user liabilities = locked + available (excluding reserved withdrawal amounts).
+            rows = (
+                db.query(
+                    User.id,
+                    User.external_id,
+                    User.nickname,
+                    User.telegram_username,
+                    User.vault_locked_balance,
+                    User.vault_available_balance,
+                    User.vault_locked_expires_at,
+                )
+                .order_by((User.vault_locked_balance + User.vault_available_balance).desc(), User.id.asc())
+                .limit(limit)
+                .all()
+            )
+            for (uid, external_id, nickname, telegram_username, locked, available, locked_expires_at) in rows:
+                locked_amt = int(locked or 0)
+                available_amt = int(available or 0)
+                total_amt = locked_amt + available_amt
+                results.append({
+                    "user_id": uid,
+                    "external_id": external_id,
+                    "nickname": nickname,
+                    "telegram_username": telegram_username,
+                    "amount": total_amt,
+                    "count": 1,
+                    "timestamp": locked_expires_at,
+                    "meta": {"locked": locked_amt, "available": available_amt, "type": "liabilities"},
+                })
+
+        elif type == "withdrawal":
+            from app.models.vault_withdrawal_request import VaultWithdrawalRequest
+
+            rows = (
+                db.query(VaultWithdrawalRequest, User)
+                .join(User, User.id == VaultWithdrawalRequest.user_id)
+                .filter(VaultWithdrawalRequest.status == "PENDING")
+                .order_by(VaultWithdrawalRequest.created_at.desc())
+                .limit(limit)
+                .all()
+            )
+            for req, u in rows:
+                results.append({
+                    "user_id": u.id,
+                    "external_id": u.external_id,
+                    "nickname": u.nickname,
+                    "telegram_username": u.telegram_username,
+                    "amount": int(getattr(req, "amount", 0) or 0),
+                    "count": 1,
+                    "timestamp": getattr(req, "created_at", None),
+                    "meta": {"status": getattr(req, "status", None), "request_id": getattr(req, "id", None)},
                 })
         
         return results

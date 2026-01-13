@@ -22,7 +22,6 @@ import {
   LayoutGrid,
   Wallet,
   Package,
-  AlertCircle,
   Info,
 } from "lucide-react";
 
@@ -316,7 +315,7 @@ const StreakRewardsAdminPage: React.FC = () => {
                 <div className="flex flex-col md:flex-row gap-4">
                   {/* Day Input */}
                   <div className="w-full md:w-32 space-y-2">
-                    <label className="text-[10px] font-bold text-zinc-500 uppercase">Day</label>
+                    <label className="text-sm font-semibold text-zinc-300">Day</label>
                     <div className="flex items-center gap-2">
                       <input
                         type="number"
@@ -333,18 +332,18 @@ const StreakRewardsAdminPage: React.FC = () => {
                   {/* Grants Editor */}
                   <div className="flex-1 space-y-3">
                     <div className="flex items-center justify-between">
-                      <p className="text-[10px] font-bold text-zinc-500 uppercase">지급 보상 (Grants)</p>
+                      <p className="text-sm font-semibold text-zinc-300">지급 보상 (Grants)</p>
                       <div className="flex gap-2">
                         <button
                           onClick={() => setRules(prev => prev.map((r, i) => i === idx ? { ...r, grants: [...r.grants, { kind: "WALLET", token_type: "ROULETTE_COIN", amount: 1 }] } : r))}
-                          className="text-[10px] font-bold text-emerald-400 hover:bg-emerald-500/10 px-2 py-1 rounded transition-colors flex items-center gap-1"
+                          className="text-sm font-bold text-emerald-400 hover:bg-emerald-500/10 px-2 py-1 rounded transition-colors flex items-center gap-1"
                         >
                           <Wallet size={12} />
                           지갑+
                         </button>
                         <button
                           onClick={() => setRules(prev => prev.map((r, i) => i === idx ? { ...r, grants: [...r.grants, { kind: "INVENTORY", item_type: "DIAMOND", amount: 1 }] } : r))}
-                          className="text-[10px] font-bold text-blue-400 hover:bg-blue-500/10 px-2 py-1 rounded transition-colors flex items-center gap-1"
+                          className="text-sm font-bold text-blue-400 hover:bg-blue-500/10 px-2 py-1 rounded transition-colors flex items-center gap-1"
                         >
                           <Package size={12} />
                           인벤+
@@ -368,7 +367,7 @@ const StreakRewardsAdminPage: React.FC = () => {
                                   const next = e.target.value as WalletTokenType;
                                   setRules(prev => prev.map((r, i) => i === idx ? { ...r, grants: r.grants.map((gg, ii) => ii === gIdx ? { ...gg, token_type: next } as GrantRow : gg) } : r));
                                 }}
-                                className="flex-1 bg-zinc-900 border border-zinc-800 rounded px-2 py-1 text-xs text-emerald-400 font-bold focus:border-emerald-500 outline-none"
+                                className="flex-1 bg-zinc-900 border border-zinc-800 rounded px-2 py-1 text-sm text-emerald-400 font-bold focus:border-emerald-500 outline-none"
                               >
                                 <option value="ROULETTE_COIN">🪙 Roulette Coin</option>
                                 <option value="DICE_TOKEN">🎲 Dice Token</option>
@@ -383,7 +382,7 @@ const StreakRewardsAdminPage: React.FC = () => {
                                 onChange={(e) => {
                                   setRules(prev => prev.map((r, i) => i === idx ? { ...r, grants: r.grants.map((gg, ii) => ii === gIdx ? { ...gg, item_type: e.target.value } as GrantRow : gg) } : r));
                                 }}
-                                className="flex-1 bg-zinc-900 border border-zinc-800 rounded px-2 py-1 text-xs text-blue-400 font-bold focus:border-blue-500 outline-none"
+                                className="flex-1 bg-zinc-900 border border-zinc-800 rounded px-2 py-1 text-sm text-blue-400 font-bold focus:border-blue-500 outline-none"
                                 placeholder="아이템 코드 입력"
                               />
                             )}
@@ -394,12 +393,15 @@ const StreakRewardsAdminPage: React.FC = () => {
                                 const amt = Number(e.target.value) || 0;
                                 setRules(prev => prev.map((r, i) => i === idx ? { ...r, grants: r.grants.map((gg, ii) => ii === gIdx ? { ...gg, amount: amt } as GrantRow : gg) } : r));
                               }}
-                              className="w-16 bg-zinc-900 border border-zinc-800 rounded px-2 py-1 text-xs text-white text-right font-mono outline-none"
+                              className="w-16 bg-zinc-900 border border-zinc-800 rounded px-2 py-1 text-sm text-white text-right font-mono outline-none"
                             />
                           </div>
                           <button
+                            type="button"
                             onClick={() => setRules(prev => prev.map((r, i) => i === idx ? { ...r, grants: r.grants.filter((_, ii) => ii !== gIdx) } : r))}
                             className="p-1 hover:text-rose-400 text-zinc-600 transition-colors opacity-0 group-hover/grant:opacity-100"
+                            aria-label="보상 삭제"
+                            title="삭제"
                           >
                             <Trash2 size={14} />
                           </button>
@@ -409,7 +411,7 @@ const StreakRewardsAdminPage: React.FC = () => {
                   </div>
 
                   {/* Actions */}
-                  <div className="w-full md:w-24 flex md:flex-col justify-between items-end gap-2 text-[10px] font-bold">
+                  <div className="w-full md:w-24 flex md:flex-col justify-between items-end gap-2 text-sm font-bold">
                     <label className="flex items-center gap-2 cursor-pointer group">
                       <span className={rule.enabled ? 'text-emerald-400' : 'text-zinc-500'}>{rule.enabled ? '활성' : '비활성'}</span>
                       <input
@@ -503,15 +505,6 @@ const StreakRewardsAdminPage: React.FC = () => {
               onChange={(e) => setDay(e.target.value)}
               className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-300 focus:border-admin-brand outline-none transition-colors"
             />
-          </div>
-
-          {/* Real-time Status Alert */}
-          <div className="bg-admin-brand/5 border border-admin-brand/20 rounded-2xl p-4 flex gap-3">
-            <AlertCircle className="text-admin-brand shrink-0" size={20} />
-            <div className="space-y-1">
-              <p className="text-xs font-bold text-admin-brand">주의 사항</p>
-              <p className="text-[10px] text-zinc-400 leading-relaxed">보상 규칙 변경시 저장 버튼을 반드시 눌러주세요. 이미 지급된 스트릭 보상은 회수되지 않으며 익일 자정(00:00)부터 새 규칙이 적용됩니다.</p>
-            </div>
           </div>
         </div>
       </div>

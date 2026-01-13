@@ -1,4 +1,16 @@
-2026-01-13: 운영 안정화 최종보고 — 배포 preflight 문서 강화, Docker/Nginx 프록시 표준화(/api·/admin/api), 운영 DB 덤프 로컬 동기화(sha256/마이그레이션/헬스체크), Ops Log/Plan + Audit + Cypress(E2E) 정리.
+
+
+2026-01-13: 운영 안정화 최종보고 — 배포 preflight 문서 강화, Docker/Nginx 프록시 표준화(/api·/admin/api), 운영 DB 덤프 로컬 동기화(sha256/마이그레이션/헬스체크), CI 기반 자동 배포 게이트 안정화(502 흡수/401 정상 판정), HTTPS(443) 복구, admin 유저 수정 500(user_identity_history 누락) 대응, Ops Log/Plan + Audit + Cypress(E2E) 정리.
+
+## 2026-01-13 (Admin Dashboard & Playbook Implementation)
+- **Admin Dashboard**:
+  - **Drill-down Modal**: 메인 대시보드 4대 지표(활성, 입금, 이탈, 플레이) 클릭 시 실시간 상세 내역 조회 기능 추가.
+  - **UX**: 카드 Hover 효과 및 [회원 관리] 페이지 검색 연동(활성/이탈 클릭 시 자동 이동).
+- **Event Playbook**:
+  - **Full Digitalization**: 리텐션 전략의 모든 28개 액션(Daily/Week1/Week2/Scenario)을 `opsPlaybookCatalog`에 100% 이식 완료.
+  - **Ops Page**: 어드민 운영 계획 페이지에서 모든 시나리오별 JSON 페이로드 생성 확인.
+- **Marketing Dashboard**:
+  - **Fix**: 이탈률(Churn) 카드와 상세 리스트 간 데이터 불일치(0명 표시) 해결. `DORMANT` 세그먼트 동적 계산 로직 적용.
 
 2025-12-08: API/DB/코인 시스템/서비스/운영/체크리스트/overview/architecture 최신화 반영. 실제 코드/운영/QA 흐름과 일치하도록 문서 업데이트.
 
