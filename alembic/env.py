@@ -1,9 +1,10 @@
 from logging.config import fileConfig
 import os
 import sys
+import logging
 
 from alembic import context
-from sqlalchemy import engine_from_config, pool, create_engine
+from sqlalchemy import engine_from_config, pool, create_engine, text
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -24,6 +25,64 @@ safe_url = settings.database_url.replace("%", "%%")
 config.set_main_option("sqlalchemy.url", safe_url)
 
 target_metadata = Base.metadata
+
+logger = logging.getLogger(__name__)
+
+
+def _ensure_alembic_version_num_length(connection, min_len: int = 64) -> None:
+    """Ensure `alembic_version.version_num` can hold our revision IDs.
+
+    Some older schemas created `version_num` with a short VARCHAR length.
+    This preflight prevents `Data too long for column 'version_num'` during upgrade.
+    """
+    try:
+        dialect = connection.dialect.name
+        if dialect != "mysql":
+            return
+
+        exists = connection.execute(
+            text(
+                """
+                SELECT 1
+                FROM information_schema.tables
+                WHERE table_schema = DATABASE()
+                  AND table_name = 'alembic_version'
+                LIMIT 1
+                """
+            )
+        ).scalar()
+        if not exists:
+            return
+
+        current_len = connection.execute(
+            text(
+                """
+                SELECT CHARACTER_MAXIMUM_LENGTH
+                FROM information_schema.columns
+                WHERE table_schema = DATABASE()
+                  AND table_name = 'alembic_version'
+                  AND column_name = 'version_num'
+                LIMIT 1
+                """
+            )
+        ).scalar()
+
+        if current_len is None or int(current_len) >= int(min_len):
+            return
+
+        connection.execute(
+            text(
+                f"ALTER TABLE alembic_version MODIFY COLUMN version_num VARCHAR({int(min_len)}) NOT NULL"
+            )
+        )
+        logger.info(
+            "Expanded alembic_version.version_num from %s to VARCHAR(%s)",
+            current_len,
+            min_len,
+        )
+    except Exception:
+        # Never block deployments due to a best-effort preflight.
+        logger.exception("Preflight failed while checking alembic_version.version_num length")
 
 
 def run_migrations_offline() -> None:
@@ -60,6 +119,7 @@ def run_migrations_online() -> None:
     connectable = create_engine(settings.database_url, poolclass=pool.NullPool)
 
     with connectable.connect() as connection:
+        _ensure_alembic_version_num_length(connection)
         context.configure(
             connection=connection,
             target_metadata=target_metadata,
