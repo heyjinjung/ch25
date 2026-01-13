@@ -98,6 +98,25 @@ const MarketingDashboardPage: React.FC = () => {
         setIsOpsModalOpen(true);
     };
 
+    const normalizeMetricValue = (raw: string | number | null | undefined) => {
+        if (raw === null || raw === undefined) return 0;
+        if (typeof raw === "number") return Number.isFinite(raw) ? raw : 0;
+        const normalized = String(raw).replace(/,/g, "").trim();
+        const n = Number(normalized);
+        return Number.isFinite(n) ? n : 0;
+    };
+
+    const displayedOpsDetails = React.useMemo(() => {
+        const items = (opsDetails as MetricDetailItem[] | undefined) ?? [];
+        const metricKey = selectedOpsMetric?.metricKey;
+        if (metricKey !== "total_inventory_liability") return items;
+        return items
+            .map((it) => ({ it, n: normalizeMetricValue(it.value) }))
+            .filter(({ n }) => n !== 0)
+            .sort((a, b) => b.n - a.n)
+            .map(({ it }) => it);
+    }, [opsDetails, selectedOpsMetric?.metricKey]);
+
     const kpis: Array<{ title: string; value: string; icon: React.ReactNode; sub: string; segment: string }> = [
         {
             title: "전체 고객",
@@ -347,7 +366,7 @@ const MarketingDashboardPage: React.FC = () => {
                             <div>
                                 <h3 className="text-admin-subtitle text-admin-text-primary">{selectedOpsMetric?.title} 세부내역</h3>
                                 <p className="text-admin-body text-admin-text-secondary">
-                                    {(opsDetails?.length ?? 0)}건
+                                    {(displayedOpsDetails?.length ?? 0)}건
                                 </p>
                             </div>
                             <button
@@ -376,7 +395,7 @@ const MarketingDashboardPage: React.FC = () => {
                                 </div>
                             ) : (
                                 <div className="space-y-3">
-                                    {(opsDetails as MetricDetailItem[] | undefined)?.map((item) => (
+                                    {displayedOpsDetails?.map((item) => (
                                         <div
                                             key={`${item.id}:${item.label}`}
                                             className="p-4 rounded-xl border border-admin-border bg-admin-sidebar/30 hover:bg-admin-hover transition-colors"
@@ -402,7 +421,7 @@ const MarketingDashboardPage: React.FC = () => {
                                             </div>
                                         </div>
                                     ))}
-                                    {(opsDetails?.length ?? 0) === 0 && (
+                                    {(displayedOpsDetails?.length ?? 0) === 0 && (
                                         <div className="text-center py-10 text-gray-600">세부내역이 없습니다.</div>
                                     )}
                                 </div>

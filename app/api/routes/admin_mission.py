@@ -2,6 +2,7 @@ from typing import Any, List
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from datetime import datetime
 
 from app.api import deps
 from app.models.mission import Mission
@@ -9,6 +10,22 @@ from app.schemas.mission import MissionCreate, MissionUpdate, MissionSchema
 
 # /workspace/ch25/app/api/routes/admin_mission.py
 router = APIRouter(prefix="/api/admin-mission", tags=["admin-mission"])
+
+
+def _parse_time_optional(value: Any):
+    if value is None:
+        return None
+    if isinstance(value, str):
+        raw = value.strip()
+        if not raw:
+            return None
+        for fmt in ("%H:%M:%S", "%H:%M"):
+            try:
+                return datetime.strptime(raw, fmt).time()
+            except ValueError:
+                continue
+        raise HTTPException(status_code=422, detail="INVALID_TIME_FORMAT")
+    return value
 
 @router.post("/", response_model=MissionSchema)
 def create_mission(
@@ -22,7 +39,10 @@ def create_mission(
     if existing:
         raise HTTPException(status_code=400, detail="Logic key already exists")
         
-    mission = Mission(**payload.model_dump())
+    mission_data = payload.model_dump()
+    mission_data["start_time"] = _parse_time_optional(mission_data.get("start_time"))
+    mission_data["end_time"] = _parse_time_optional(mission_data.get("end_time"))
+    mission = Mission(**mission_data)
     db.add(mission)
     db.commit()
     db.refresh(mission)
@@ -49,6 +69,10 @@ def update_mission(
         raise HTTPException(status_code=404, detail="Mission not found")
         
     update_data = payload.model_dump(exclude_unset=True)
+    if "start_time" in update_data:
+        update_data["start_time"] = _parse_time_optional(update_data.get("start_time"))
+    if "end_time" in update_data:
+        update_data["end_time"] = _parse_time_optional(update_data.get("end_time"))
     if "logic_key" in update_data:
         # Check uniqueness if changing
         if update_data["logic_key"] != mission.logic_key:

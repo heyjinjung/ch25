@@ -20,7 +20,7 @@ type EditableRow = ExternalRankingPayload & {
 };
 
 type SortDir = "asc" | "desc";
-type SortKey = "identifier" | "deposit_amount" | "play_count" | "memo";
+type SortKey = "identifier" | "deposit_amount" | "play_count";
 
 type ResolveRowStatus =
   | { state: "idle" }
@@ -310,7 +310,7 @@ const ExternalRankingPage: React.FC = () => {
   const toggleSort = (k: SortKey) => {
     if (sortKey !== k) {
       setSortKey(k);
-      setSortDir(k === "identifier" || k === "memo" ? "asc" : "desc");
+      setSortDir(k === "identifier" ? "asc" : "desc");
       return;
     }
     setSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -320,7 +320,7 @@ const ExternalRankingPage: React.FC = () => {
     .map((row, index) => ({ row, index }))
     .filter(({ row }) => {
       if (!rowSearchApplied.trim()) return true;
-      const hay = normalize(`${row.external_id ?? ""} ${row.telegram_username ?? ""} ${row.user_id ?? ""} ${row.deposit_amount ?? ""} ${row.play_count ?? ""} ${row.memo ?? ""}`);
+      const hay = normalize(`${row.external_id ?? ""} ${row.telegram_username ?? ""} ${row.user_id ?? ""} ${row.deposit_amount ?? ""} ${row.play_count ?? ""}`);
       return includesAny(hay, rowSearchApplied);
     });
 
@@ -329,7 +329,7 @@ const ExternalRankingPage: React.FC = () => {
 
     if (sortKey === "deposit_amount") return compareNum(a.row.deposit_amount ?? 0, b.row.deposit_amount ?? 0, sortDir);
     if (sortKey === "play_count") return compareNum(a.row.play_count ?? 0, b.row.play_count ?? 0, sortDir);
-    if (sortKey === "memo") return compareStr(String(a.row.memo ?? ""), String(b.row.memo ?? ""), sortDir);
+
     return compareStr(String(a.row.external_id ?? ""), String(b.row.external_id ?? ""), sortDir);
   });
 
@@ -384,7 +384,7 @@ const ExternalRankingPage: React.FC = () => {
               value={rowSearchInput}
               onChange={(e) => setRowSearchInput(e.target.value)}
               className="w-full bg-transparent border-b border-zinc-800 py-2.5 pl-8 text-sm text-zinc-200 focus:outline-none focus:border-admin-brand transition-colors placeholder:text-zinc-600 font-medium"
-              placeholder="식별자 / 메모 / User ID 검색..."
+              placeholder="식별자 / User ID 검색..."
               onKeyDown={(e) => {
                 if (e.key === "Enter") applyRowSearch();
               }}
@@ -448,20 +448,19 @@ const ExternalRankingPage: React.FC = () => {
           <table className="admin-table sticky-header">
             <thead>
               <tr className="bg-zinc-900 border-b border-zinc-800">
-                <th className="px-4 py-3 text-left text-sm font-bold text-zinc-500 uppercase tracking-widest w-[240px]">
-                  <button type="button" onClick={() => toggleSort("identifier")} className="flex items-center gap-2 group hover:text-zinc-300 transition-colors">
+                <th className="px-4 py-3.5 text-left text-sm font-bold text-zinc-400 uppercase tracking-widest w-[180px]">
+                  <button type="button" onClick={() => toggleSort("identifier")} className="flex items-center gap-2 group hover:text-zinc-200 transition-colors">
                     <Hash className="h-4 w-4" />
-                    <span>식별자 (Identifier)</span>
+                    <span>식별자 (ID)</span>
                   </button>
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-bold text-zinc-500 uppercase tracking-widest">텔레그램 정보 (TG Info)</th>
-                <th className="px-4 py-3 text-left text-sm font-bold text-zinc-500 uppercase tracking-widest">프로필 (Profile)</th>
-                <th className="px-4 py-3 text-left text-sm font-bold text-zinc-500 uppercase tracking-widest font-black text-admin-brand">매칭유저 (Matched)</th>
-                <th className="px-4 py-3 text-left text-sm font-bold text-zinc-500 uppercase tracking-widest">최종 동기화 (Sync)</th>
-                <th className="px-4 py-3 text-right text-sm font-bold text-zinc-500 uppercase tracking-widest cursor-pointer hover:text-zinc-300" onClick={() => toggleSort("deposit_amount")}>입금액 (Deposit)</th>
-                <th className="px-4 py-3 text-right text-sm font-bold text-zinc-500 uppercase tracking-widest cursor-pointer hover:text-zinc-300" onClick={() => toggleSort("play_count")}>플레이 (Plays)</th>
-                <th className="px-4 py-3 text-left text-sm font-bold text-zinc-500 uppercase tracking-widest">메모 (Memo)</th>
-                <th className="px-4 py-3 text-center text-sm font-bold text-zinc-500 uppercase tracking-widest">관리 (Action)</th>
+                <th className="px-4 py-3.5 text-left text-sm font-bold text-zinc-400 uppercase tracking-widest">텔레그램 정보 (TG Info)</th>
+                <th className="px-4 py-3.5 text-left text-sm font-bold text-zinc-400 uppercase tracking-widest">프로필 (Profile)</th>
+                <th className="px-4 py-3.5 text-left text-sm font-bold text-zinc-400 uppercase tracking-widest font-black text-admin-brand">매칭유저 (Matched)</th>
+                <th className="px-4 py-3.5 text-left text-sm font-bold text-zinc-400 uppercase tracking-widest">최종 동기화 (Sync)</th>
+                <th className="px-4 py-3.5 text-right text-sm font-bold text-zinc-400 uppercase tracking-widest cursor-pointer hover:text-zinc-200" onClick={() => toggleSort("deposit_amount")}>입금액 (Deposit)</th>
+                <th className="px-4 py-3.5 text-right text-sm font-bold text-zinc-400 uppercase tracking-widest cursor-pointer hover:text-zinc-200" onClick={() => toggleSort("play_count")}>플레이 (Plays)</th>
+                <th className="px-4 py-3.5 text-center text-sm font-bold text-zinc-400 uppercase tracking-widest">관리 (Action)</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-admin-border/30">
@@ -476,7 +475,7 @@ const ExternalRankingPage: React.FC = () => {
                       ${row.__isNew ? "bg-admin-brand/5 hover:bg-admin-brand/10" : ""}
                     `}
                   >
-                    <td className="px-4 py-3 min-w-[240px]">
+                    <td className="px-4 py-3.5 min-w-[180px]">
                       <div className="flex items-center gap-2">
                         <div className="flex-1 space-y-1">
                           <input
@@ -520,37 +519,37 @@ const ExternalRankingPage: React.FC = () => {
                           <span className="text-[11px] text-zinc-500 font-bold">{formatTgUsername(status.user.tg_username)}</span>
                         </div>
                       ) : (
-                        <span className="text-zinc-700 text-xs font-bold">-</span>
+                        <span className="text-zinc-600 text-sm font-medium">-</span>
                       )}
                     </td>
                     <td className="px-4 py-3">
                       {status?.state === "ok" ? (
                         <div className="flex flex-col gap-0.5">
-                          <span className="text-xs text-zinc-300 font-black">
+                          <span className="text-sm text-zinc-300 font-bold">
                             {status.user.real_name || "-"}
                           </span>
-                          <span className="text-[11px] text-zinc-600 font-mono font-bold tracking-tighter">
+                          <span className="text-sm text-zinc-500 font-mono font-medium tracking-tight">
                             {status.user.phone_number || "-"}
                           </span>
                         </div>
                       ) : (
-                        <span className="text-zinc-700 text-xs font-black">-</span>
+                        <span className="text-zinc-600 text-sm font-medium">-</span>
                       )}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3.5">
                       {status?.state === "ok" ? (
-                        <span className="text-sm font-black text-admin-brand uppercase tracking-tight">{status.user.nickname ?? "-"}</span>
+                        <span className="text-sm font-bold text-admin-brand uppercase tracking-tight">{status.user.nickname ?? "-"}</span>
                       ) : (
-                        <span className="text-zinc-700 text-xs font-black">-</span>
+                        <span className="text-zinc-600 text-sm font-medium">-</span>
                       )}
                     </td>
-                    <td className="px-4 py-3">
-                      <span className="text-xs text-zinc-500 font-mono font-medium">
+                    <td className="px-4 py-3.5">
+                      <span className="text-sm text-zinc-400 font-mono font-medium">
                         {formatKst(lastInputAt)?.split(" ")[0] || "-"}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-right relative group/cell">
-                      <span className={`text-sm font-black font-mono tracking-tight tabular-nums ${row.deposit_amount ? "text-emerald-400" : "text-zinc-700"}`}>
+                    <td className="px-4 py-3.5 text-right relative group/cell">
+                      <span className={`text-sm font-black font-mono tracking-tight tabular-nums transition-opacity group-focus-within/cell:opacity-0 ${row.deposit_amount ? "text-emerald-400" : "text-zinc-700"}`}>
                         {row.deposit_amount ? row.deposit_amount.toLocaleString() : "0"}
                       </span>
                       {/* Hidden input for editing logic if we want to support inline edit later, currently Read-Only as per design doc */}
@@ -573,8 +572,8 @@ const ExternalRankingPage: React.FC = () => {
                       />
                       {/* Re-thinking: The user wants to "remove clutter". A transparent input on top of text is a good pattern. */}
                     </td>
-                    <td className="px-4 py-3 text-right relative group/cell">
-                      <span className={`text-sm font-black font-mono tracking-tight tabular-nums ${row.play_count ? "text-zinc-300" : "text-zinc-700"}`}>
+                    <td className="px-4 py-3.5 text-right relative group/cell">
+                      <span className={`text-sm font-black font-mono tracking-tight tabular-nums transition-opacity group-focus-within/cell:opacity-0 ${row.play_count ? "text-zinc-300" : "text-zinc-700"}`}>
                         {row.play_count ? row.play_count.toLocaleString() : "0"}
                       </span>
                       <input
@@ -586,16 +585,7 @@ const ExternalRankingPage: React.FC = () => {
                         min={0}
                       />
                     </td>
-                    <td className="px-4 py-3">
-                      <input
-                        type="text"
-                        value={row.memo ?? ""}
-                        onChange={(e) => handleChange(index, "memo", e.target.value)}
-                        className="w-full bg-transparent text-sm text-zinc-400 placeholder:text-zinc-800 focus:text-white focus:outline-none"
-                        placeholder="..."
-                      />
-                    </td>
-                    <td className="px-4 py-3 text-center">
+                    <td className="px-4 py-3.5 text-center">
                       <button
                         onClick={() => removeRow(index)}
                         className="p-2 text-zinc-600 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all active:scale-90"

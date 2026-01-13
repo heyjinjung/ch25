@@ -728,7 +728,7 @@ const TicketManagerPage: React.FC = () => {
                                         setPlayLogUserFilterInput(formData.userIdentifier);
                                         setActiveTab("playLogs");
                                     }}
-                                    className="flex items-center justify-center gap-1.5 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs text-zinc-300 border border-zinc-700 transition-colors"
+                                    className="flex items-center justify-center gap-1.5 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-sm text-zinc-200 border border-zinc-700 transition-colors"
                                 >
                                     <ScrollText className="h-3.5 w-3.5" />
                                     <span>기록 보기</span>
@@ -740,7 +740,7 @@ const TicketManagerPage: React.FC = () => {
                                         setLedgerUserFilterInput(formData.userIdentifier);
                                         setActiveTab("ledger");
                                     }}
-                                    className="flex items-center justify-center gap-1.5 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs text-zinc-300 border border-zinc-700 transition-colors"
+                                    className="flex items-center justify-center gap-1.5 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-sm text-zinc-200 border border-zinc-700 transition-colors"
                                 >
                                     <History className="h-3.5 w-3.5" />
                                     <span>원장 보기</span>
@@ -751,31 +751,31 @@ const TicketManagerPage: React.FC = () => {
 
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div className="space-y-1">
-                                <label className="text-[10px] font-bold text-zinc-500 uppercase">대상 유저 (Target User)</label>
+                                <label className="text-sm font-semibold text-zinc-300">대상 유저 (Target User)</label>
                                 <input
                                     type="text"
                                     value={formData.userIdentifier}
                                     onChange={(e) => setFormData({ ...formData, userIdentifier: e.target.value })}
                                     placeholder={LABELS.labelUserIdPlaceholder}
-                                    className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:border-admin-brand outline-none transition-colors placeholder:text-zinc-700"
+                                    className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:border-admin-brand outline-none transition-colors placeholder:text-zinc-500"
                                 />
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-1">
-                                    <label className="text-[10px] font-bold text-zinc-500 uppercase">토큰 (Token)</label>
+                                    <label className="text-sm font-semibold text-zinc-300">토큰 (Token)</label>
                                     <select
                                         title={LABELS.labelTokenType}
                                         aria-label={LABELS.labelTokenType}
                                         value={formData.tokenType}
                                         onChange={(e) => setFormData({ ...formData, tokenType: e.target.value as GameTokenType })}
-                                        className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-300 focus:border-admin-brand outline-none"
+                                        className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:border-admin-brand outline-none"
                                     >
                                         {TOKEN_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                                     </select>
                                 </div>
                                 <div className="space-y-1">
-                                    <label className="text-[10px] font-bold text-zinc-500 uppercase">수량 (Amount)</label>
+                                    <label className="text-sm font-semibold text-zinc-300">수량 (Amount)</label>
                                     <input
                                         title={LABELS.labelAmount}
                                         aria-label={LABELS.labelAmount}
@@ -788,12 +788,12 @@ const TicketManagerPage: React.FC = () => {
                                 </div>
                             </div>
                             <div className="space-y-1">
-                                <label className="text-[10px] font-bold text-zinc-500 uppercase">사유 (Reason)</label>
+                                <label className="text-sm font-semibold text-zinc-300">사유 (Reason)</label>
                                 <input
                                     type="text"
                                     value={formData.reason}
                                     onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
-                                    className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-300 focus:border-admin-brand outline-none placeholder:text-zinc-700"
+                                    className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:border-admin-brand outline-none placeholder:text-zinc-500"
                                     placeholder="지급/회수 사유 입력 (Optional)"
                                 />
                             </div>
