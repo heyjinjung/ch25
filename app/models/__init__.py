@@ -46,6 +46,7 @@ from app.models.survey import (
     SurveyResponse,
     SurveyResponseAnswer,
 )
+from app.models.user_history import UserIdentityHistory
 
 __all__ = [
     "FeatureConfig",
@@ -114,4 +115,5 @@ __all__ = [
     "UserInventoryItem",
     "UserInventoryLedger",
     "ExternalRankingDailyDepositDelta",
+    "UserIdentityHistory",
 ]
