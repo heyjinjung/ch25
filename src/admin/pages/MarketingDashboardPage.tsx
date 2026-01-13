@@ -98,11 +98,13 @@ const MarketingDashboardPage: React.FC = () => {
         setIsOpsModalOpen(true);
     };
 
-    const normalizeMetricValue = (raw: string | number | null | undefined) => {
+    const extractFirstNumber = (raw: string | number | null | undefined) => {
         if (raw === null || raw === undefined) return 0;
         if (typeof raw === "number") return Number.isFinite(raw) ? raw : 0;
-        const normalized = String(raw).replace(/,/g, "").trim();
-        const n = Number(normalized);
+        const s = String(raw);
+        const m = s.match(/-?\d[\d,]*/);
+        if (!m) return 0;
+        const n = Number(m[0].replace(/,/g, ""));
         return Number.isFinite(n) ? n : 0;
     };
 
@@ -111,7 +113,7 @@ const MarketingDashboardPage: React.FC = () => {
         const metricKey = selectedOpsMetric?.metricKey;
         if (metricKey !== "total_inventory_liability") return items;
         return items
-            .map((it) => ({ it, n: normalizeMetricValue(it.value) }))
+            .map((it) => ({ it, n: extractFirstNumber(it.value) }))
             .filter(({ n }) => n !== 0)
             .sort((a, b) => b.n - a.n)
             .map(({ it }) => it);

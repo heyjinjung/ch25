@@ -36,6 +36,22 @@ export type OpsPlaybookAction = {
 };
 
 export const OPS_PLAYBOOK_ACTIONS: OpsPlaybookAction[] = [
+  // --- [운영 도구 (Ops Tools)] ---
+  {
+    id: "OPS-TOOLS-INVENTORY_GRANT_ALL",
+    title: "[운영] 전체 유저 아이템 지급 (DIAMOND x1 + VOUCHER_LOTTERY_TICKET_1 x1)",
+    type: "NOTE",
+    payload_json: {
+      kind: "INVENTORY_GRANT_ALL",
+      reason: "OPS_PLAN_GRANT_ALL",
+      items: [
+        { item_type: "DIAMOND", amount: 1 },
+        { item_type: "VOUCHER_LOTTERY_TICKET_1", amount: 1 },
+      ],
+    },
+    default_metric_key: "OTHER",
+  },
+
   // --- [매일 루틴 (Daily Routine)] ---
   {
     id: "ROUTINE-09:00-WAKE_UP_LOTTERY",

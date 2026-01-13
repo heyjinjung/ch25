@@ -228,11 +228,13 @@
   - 운영계획 화면에서 캠페인 선택 → 오늘 플랜 생성/조회 → Task CRUD/상태 업데이트/실행(버튼) 흐름이 가능.
   - 다만 “기존 Golden Hour/Survey 패널 완전 재활용” 수준까지는 아직 아니고, Task 타입별 입력 UI는 점진 확장 중.
 
-- **Step 4 (대상자 목록 Target List)**: **TODO**
-  - `ops_target_list/ops_target_member` 모델/CRUD/화면은 아직 없음.
+- **Step 4 (대상자 목록 Target List)**: **DESIGN DONE** (Implement Pending)
+  - `ops_target_list/ops_target_member` 스키마 및 11개 시나리오 설계 완료.
+  - 상세 명세: [Appendix 2] 참조.
 
-- **Step 5 (마감 요약 + KPI 스냅샷)**: **TODO**
-  - `closing_summary_md`, `kpi_snapshot_json` API 필드는 존재하지만, 어드민에서 입력/저장 UI는 아직 없음.
+- **Step 5 (마감 요약 + KPI 스냅샷)**: **DESIGN DONE** (Implement Pending)
+  - Result Check (전환 추적) 로직 및 `converted_at` 스키마 설계 완료.
+  - 상세 명세: [Appendix 2] 참조.
 
 ### B) 가이드 외(하지만 운영 목표에 유의미한) 추가 구현
 
@@ -274,3 +276,46 @@
 - 운영자가 보고 싶은 것은 action_code가 아니라 **오늘 할 일(작업)과 실행 버튼**입니다.
 - 계획은 유연해야 하므로, 캠페인/플랜/작업 구조로 설계해야 합니다.
 - 기존 구현물(Quick Logger/Routine/GH/Survey 패널, ref_id, 캐싱)은 **Task 기반 운영계획 UI로 재활용**하면 됩니다.
+
+---
+
+## Appendix 2) 11대 위기 신호 시나리오 및 기술 명세 (2026-01-13 추가)
+
+### 1. 상세 마케팅 설계 (11 Crisis Scenarios)
+* `docs/06_ops/202601/20260113_ops_crisis_scenarios_spec.md` 참조.
+
+### 2. 상세 기술 설계 (Backend Spec)
+
+#### 2.1. 데이터베이스 스키마
+**ops_target_list (대상자 그룹)**
+- `id` (PK), `plan_id` (FK)
+- `name` (예: "불운한 뉴비")
+- `source_type` (`SCENARIO`, `SEGMENT`)
+- `source_params` (JSON)
+- `count_snapshot` (Int), `is_processed` (Bool)
+
+**ops_target_member (대상자 개별)**
+- `id` (PK), `target_list_id` (FK), `user_id` (FK)
+- `status` (`PENDING`, `SENT`, `FAILED`)
+- `data` (JSON, 개인화 변수)
+- **`result_status`** (`NONE`, `CHECKED`)
+- **`converted_at`** (DateTime, 전환 시각)
+- **`conversion_value`** (Int, 전환 가치)
+
+#### 2.2. 백엔드 로직 (Scenario Query Logic)
+- **Scenario 1 (불운한 뉴비)**: 가입 24H 내 + 10판 이상 + 잔액 0원.
+- **Scenario 11 (외부 VIP)**: 외부 입금액(`deposit_amount`) 100만+ & 최근 7일 갱신.
+
+#### 2.3. 결과 추적 및 팔로업 (Result Check)
+- **자동 추적**: 리스트 생성 24시간 후 Batch 실행.
+- **로직**:
+    - S1(뉴비): 24H 내 게임 플레이 확인.
+    - S3(첫충전): 24H 내 입금 확인.
+    - S11(외부): 보상 후 로그인/게임 확인.
+- **리포팅**: Ops Plan 화면에 "전환율(Conversion Rate)" 표시.
+
+### 3. 프론트엔드 UI 설계 (ISFJ Edition)
+- **전역 스타일**: Soft Obsidian(`#121214`) 배경, 4px 그리드.
+- **위기 감지 레이더**: 맥동(Pulse) 애니메이션(High Risk), 금색 테두리(Hidden Gem).
+- **원클릭 실행 모달**: Safety Zone(입력 영역 배경 분리), Top 5 미리보기.
+
