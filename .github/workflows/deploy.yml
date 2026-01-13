@@ -163,21 +163,46 @@ jobs:
             docker compose exec -T backend alembic heads
 
             # Gate(3.6): 헬스 체크
-            j=0
-            until curl -fsS http://127.0.0.1/health >/dev/null 2>&1; do
-              j=$((j+1))
-              if [ "$j" -ge 15 ]; then
-                echo "[HEALTH] /health failed" >&2
+            # 1) backend 자체가 준비됐는지 먼저 확인(nginx 영향 제거)
+            echo "[HEALTH] waiting backend container /api/health"
+            k=0
+            until docker compose exec -T backend python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=2).read()" >/dev/null 2>&1; do
+              k=$((k+1))
+              if [ "$k" -ge 45 ]; then
+                echo "[HEALTH] backend container /api/health failed" >&2
+                docker compose logs --tail=200 backend || true
                 exit 1
               fi
               sleep 2
             done
 
-            k=0
-            until curl -fsS http://127.0.0.1/api/health >/dev/null 2>&1; do
-              k=$((k+1))
-              if [ "$k" -ge 15 ]; then
-                echo "[HEALTH] /api/health failed" >&2
+            # 2) nginx 경유 라우팅 확인
+            echo "[HEALTH] waiting nginx /health"
+            j=0
+            until curl -fsS http://127.0.0.1/health >/dev/null 2>&1; do
+              j=$((j+1))
+              if [ "$j" -ge 45 ]; then
+                echo "[HEALTH] /health failed" >&2
+                docker compose logs --tail=200 nginx || true
+                exit 1
+              fi
+              sleep 2
+            done
+
+            echo "[HEALTH] waiting nginx /api/health"
+            a=0
+            API_CODE=""
+            until [ "$API_CODE" = "200" ]; do
+              API_CODE=$(curl -sS -D /tmp/api_headers.txt -o /tmp/api_body.txt -w "%{http_code}" http://127.0.0.1/api/health || true)
+              if [ "$API_CODE" = "200" ]; then
+                break
+              fi
+              a=$((a+1))
+              if [ "$a" -ge 45 ]; then
+                echo "[HEALTH] /api/health failed (last HTTP ${API_CODE})" >&2
+                head -n 30 /tmp/api_headers.txt || true
+                head -n 30 /tmp/api_body.txt || true
+                docker compose logs --tail=200 nginx || true
                 docker compose logs --tail=200 backend || true
                 exit 1
               fi
