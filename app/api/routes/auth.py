@@ -14,6 +14,7 @@ from zoneinfo import ZoneInfo
 
 from app.services.mission_service import MissionService
 from app.models.mission import MissionCategory
+from app.models.user_segment import UserSegment
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -30,6 +31,7 @@ class AuthUser(BaseModel):
     nickname: str | None = None
     status: str | None = None
     level: int | None = None
+    segment: str | None = None
     telegram_id: int | None = None
     login_streak: int = 0
 
@@ -161,6 +163,7 @@ def issue_token(payload: TokenRequest, request: Request, db: Session = Depends(g
             nickname=user.nickname,
             status=user.status,
             level=user.level,
+            segment=db.query(UserSegment.segment).filter(UserSegment.user_id == user.id).scalar(),
             telegram_id=user.telegram_id,
             login_streak=user.login_streak,
         ),

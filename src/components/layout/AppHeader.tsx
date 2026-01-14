@@ -13,9 +13,11 @@ import AttendanceStreakModal from "../modal/AttendanceStreakModal";
 import SeasonPassPromoModal from "../modal/SeasonPassPromoModal";
 import LimitedOfferModal from "../modal/LimitedOfferModal";
 import { useMissionStore } from "../../stores/missionStore";
+import VipPromotionModal from "../modal/VipPromotionModal";
+import { AnimatePresence } from "framer-motion";
 
 const AppHeader: React.FC = () => {
-    const { user } = useAuth();
+    const { user, updateUser } = useAuth();
     const navigate = useNavigate();
     const { isMuted, toggleMute, playClick, playTabTouch } = useSound();
     const [isTicketMenuOpen, setIsTicketMenuOpen] = useState(false);
@@ -24,6 +26,7 @@ const AppHeader: React.FC = () => {
     const [isGoldenHourModalOpen, setIsGoldenHourModalOpen] = useState(false);
     const [isSeasonPassModalOpen, setIsSeasonPassModalOpen] = useState(false);
     const [isLimitedOfferModalOpen, setIsLimitedOfferModalOpen] = useState(false);
+    const [isVipModalOpen, setIsVipModalOpen] = useState(false);
     // Removed local isForcedStreakModalOpen in favor of store state
     const { streakInfo, streakRules, fetchStreakRules, claimStreakReward, isStreakModalOpen, setStreakModalOpen } = useMissionStore();
 
@@ -102,6 +105,28 @@ const AppHeader: React.FC = () => {
         }
     }, [showModalOverride, fetchStreakRules, streakInfo?.claimable_day, streakRules]);
 
+    useEffect(() => {
+        if (user?.segment === "VIP") {
+            const key = `vip_promotion_seen_${user.id}`;
+            if (!localStorage.getItem(key)) {
+                setIsVipModalOpen(true);
+            }
+        }
+    }, [user?.segment, user?.id]);
+
+    const handleVipModalClose = () => {
+        if (user?.id) {
+            localStorage.setItem(`vip_promotion_seen_${user.id}`, "true");
+        }
+        setIsVipModalOpen(false);
+    };
+
+    useEffect(() => {
+        if (vault?.segment && vault.segment !== user?.segment) {
+            updateUser({ segment: vault.segment });
+        }
+    }, [vault?.segment, user?.segment, updateUser]);
+
     const handleSoundToggle = () => {
         playClick();
         toggleMute();
@@ -151,21 +176,39 @@ const AppHeader: React.FC = () => {
                         {/* Avatar + Username + Level */}
                         <button className="flex items-center gap-2 min-w-0 hover:opacity-80 transition-opacity">
                             {/* Avatar */}
-                            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center text-white font-black text-sm shrink-0 border-2 border-emerald-400/30 shadow-lg shadow-emerald-500/20">
-                                {getInitials(user?.nickname || user?.external_id)}
-                            </div>
+                            {(() => {
+                                const isVipTier = user?.segment === "VIP";
+                                return (
+                                    <>
+                                        <div className={clsx(
+                                            "w-9 h-9 rounded-full flex items-center justify-center text-white font-black text-sm shrink-0 border-2 transition-all duration-500",
+                                            isVipTier
+                                                ? "bg-gradient-to-br from-yellow-400 to-orange-500 border-yellow-300 shadow-[0_0_15px_rgba(250,204,21,0.5)] ring-2 ring-yellow-400/50 animate-pulse"
+                                                : "bg-gradient-to-br from-emerald-500 to-cyan-500 border-emerald-400/30 shadow-lg shadow-emerald-500/20"
+                                        )}>
+                                            {getInitials(user?.nickname || user?.external_id)}
+                                        </div>
 
-                            {/* Username + Level */}
-                            <div className="flex flex-col items-start min-w-0">
-                                <div className="flex items-center gap-1.5">
-                                    <span className="text-sm font-semibold text-white truncate max-w-[100px]">
-                                        {user?.nickname || user?.external_id || "사용자"}
-                                    </span>
-                                    <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/30 shrink-0">
-                                        Lv {user?.level ?? 1}
-                                    </span>
-                                </div>
-                            </div>
+                                        {/* Username + Level */}
+                                        <div className="flex flex-col items-start min-w-0">
+                                            <div className="flex items-center gap-1.5">
+                                                <span className="text-sm font-semibold text-white truncate max-w-[80px] sm:max-w-[100px]">
+                                                    {user?.nickname || user?.external_id || "사용자"}
+                                                </span>
+                                                <span className={clsx(
+                                                    "text-[10px] font-bold px-1.5 py-0.5 rounded border shrink-0 transition-colors flex items-center gap-0.5",
+                                                    isVipTier
+                                                        ? "text-yellow-400 bg-yellow-500/10 border-yellow-500/30"
+                                                        : "text-emerald-400 bg-emerald-500/10 border-emerald-500/30"
+                                                )}>
+                                                    {isVipTier && <img src="/images/crown2.png" alt="VIP" className="w-3 h-3 object-contain mb-0.5" />}
+                                                    <span className="leading-none">Lv {user?.level ?? 1}</span>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </>
+                                );
+                            })()}
                         </button>
                     </div>
 
@@ -204,14 +247,14 @@ const AppHeader: React.FC = () => {
                             {isTicketMenuOpen && (
                                 <div className="absolute top-full right-0 mt-2 w-48 rounded-xl border border-white/10 bg-black/90 p-1 backdrop-blur-xl shadow-2xl animate-fadeIn">
                                     <Link
-                                        to="/inventory"
+                                        to="/shop"
                                         onClick={() => setIsTicketMenuOpen(false)}
                                         className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-bold text-white/70 hover:bg-white/5 hover:text-figma-accent transition-all"
                                     >
                                         <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/5 border border-white/5 overflow-hidden p-0.5">
                                             <img src="/assets/icon_inventory_wallet.png" alt="" className="w-full h-full object-contain" />
                                         </div>
-                                        인벤토리
+                                        교환소
                                     </Link>
                                     <button
                                         onClick={() => handleMenuNavigation("https://ccc-010.com", true)}
@@ -242,7 +285,6 @@ const AppHeader: React.FC = () => {
                         <button
                             onClick={handleSoundToggle}
                             aria-label={isMuted ? "사운드 켜기" : "사운드 끄기"}
-                            aria-pressed={!isMuted}
                             className="w-9 h-9 flex items-center justify-center rounded-lg border border-emerald-800 bg-slate-900 transition-colors relative group shadow-lg active:scale-95"
                         >
                             <img
@@ -294,14 +336,14 @@ const AppHeader: React.FC = () => {
                         {isTicketMenuOpen && (
                             <div className="absolute top-full left-0 right-0 mt-2 z-[60] rounded-xl border border-white/10 bg-black/95 p-1 backdrop-blur-2xl shadow-2xl animate-fadeIn">
                                 <Link
-                                    to="/inventory"
+                                    to="/shop"
                                     onClick={() => setIsTicketMenuOpen(false)}
                                     className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-bold text-white/70 active:bg-white/10"
                                 >
                                     <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/5 border border-white/5 overflow-hidden p-0.5">
                                         <img src="/assets/icon_inventory_wallet.png" alt="" className="w-full h-full object-contain" />
                                     </div>
-                                    인벤토리
+                                    교환소
                                 </Link>
                                 <button
                                     onClick={() => handleMenuNavigation("https://ccc-010.com", true)}
@@ -345,6 +387,14 @@ const AppHeader: React.FC = () => {
             {isLimitedOfferModalOpen && (
                 <LimitedOfferModal onClose={() => setIsLimitedOfferModalOpen(false)} />
             )}
+
+            <AnimatePresence>
+                {isVipModalOpen && (
+                    <VipPromotionModal onClose={handleVipModalClose} />
+                )}
+            </AnimatePresence>
+
+
         </>
     );
 };

@@ -89,7 +89,9 @@ const NewUserWelcomePage: React.FC = () => {
 
   const handleShareWallet = async (missionId: number) => {
     try {
-      const appUrl = "https://t.me/jm956_bot/ccjm";
+      const telegramBotUsername = (import.meta.env.VITE_TELEGRAM_BOT_USERNAME as string | undefined) || "jm956_bot";
+      const telegramWebappShortName = (import.meta.env.VITE_TELEGRAM_WEBAPP_SHORT_NAME as string | undefined) || "ccjm";
+      const appUrl = `https://t.me/${telegramBotUsername}/${telegramWebappShortName}`;
       const shareText = "내 지갑 💎 CCJM에서 함께 확인해봐!";
       const shareUrl = `https://t.me/share/url?${new URLSearchParams({ url: appUrl, text: shareText }).toString()}`;
 
@@ -192,7 +194,7 @@ const NewUserWelcomePage: React.FC = () => {
 
     try {
       // 1. Open Link
-      window.open("https://t.me/+IE0NYpuze_k1YWZk", "_blank");
+      window.open("https://t.me/+IE0NYpuze_k1YWZk", "_blank", "noopener,noreferrer");
 
       // 2. Wait a bit for user to join (fake delay or real check?)
       // Since real verification needs bot, we might use the /verify/channel endpoint if implemented.
@@ -370,7 +372,7 @@ const NewUserWelcomePage: React.FC = () => {
           <a
             href="https://ccc-010.com"
             target="_blank"
-            rel="noreferrer"
+            rel="noopener noreferrer"
             className="rounded-xl bg-emerald-500/15 px-4 py-2 text-xs font-black text-emerald-200 hover:bg-emerald-500/20"
           >
             씨씨카지노 바로가기

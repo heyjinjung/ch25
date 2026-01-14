@@ -14,6 +14,10 @@ const RequireAuth: React.FC = () => {
   const allowNonTelegramLogin =
     import.meta.env.DEV;
 
+  const telegramBotUsername = (import.meta.env.VITE_TELEGRAM_BOT_USERNAME as string | undefined) || "jm956_bot";
+  const telegramWebappShortName = (import.meta.env.VITE_TELEGRAM_WEBAPP_SHORT_NAME as string | undefined) || "ccjm";
+  const telegramOpenUrl = `https://t.me/${telegramBotUsername}/${telegramWebappShortName}`;
+
   const didAttemptRef = useRef(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
@@ -132,7 +136,7 @@ const RequireAuth: React.FC = () => {
 
                   <div className="text-slate-400 font-medium leading-relaxed text-sm">
                     <p className="mt-2 text-xs text-slate-500">
-                      <span className="text-[#30FF75] font-bold text-sm">@jm956_bot</span><br />
+                      <span className="text-[#30FF75] font-bold text-sm">@{telegramBotUsername}</span><br />
                       을 통해 접속해주세요.
                     </p>
                   </div>
@@ -140,7 +144,7 @@ const RequireAuth: React.FC = () => {
 
                 {/* Call to Action */}
                 <a
-                  href="https://t.me/jm956_bot/ccjm"
+                  href={telegramOpenUrl}
                   target="_blank"
                   rel="noreferrer"
                   className="group/btn relative flex items-center justify-center gap-3 w-full py-4 rounded-lg bg-figma-primary text-white font-bold shadow-[0_4px_12px_rgba(0,0,0,0.3)] hover:brightness-110 active:scale-95 uppercase tracking-wide transition-all"

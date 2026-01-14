@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_db, get_current_user_id
 from app.models.game_wallet import GameTokenType, UserGameWallet
+from app.models.user_segment import UserSegment
 from app.schemas.vault2 import VaultProgramResponse, VaultTopItem
 from app.schemas.vault import VaultFillResponse, VaultStatusResponse
 from app.services.vault2_service import Vault2Service
@@ -42,7 +43,7 @@ def status(db: Session = Depends(get_db), user_id: int = Depends(get_current_use
     expires_at = getattr(user, "vault_locked_expires_at", None)
     locked_unexpired = locked_balance > 0 and (expires_at is None or expires_at > now)
 
-    ticket_token_types = (GameTokenType.DICE_TOKEN, GameTokenType.ROULETTE_COIN, GameTokenType.LOTTERY_TICKET)
+    ticket_token_types = (GameTokenType.DICE_TOKEN, GameTokenType.ROULETTE_COIN, GameTokenType.LOTTERY_TICKET, GameTokenType.TRIAL_TOKEN)
     wallet_rows = (
         db.query(UserGameWallet)
         .filter(UserGameWallet.user_id == user_id, UserGameWallet.token_type.in_(ticket_token_types))
@@ -101,6 +102,7 @@ def status(db: Session = Depends(get_db), user_id: int = Depends(get_current_use
         accrual_multiplier=service.vault_accrual_multiplier(db, now) if eligible else 1.0,
         ui_copy_json=ui_copy_json,
         total_charge_amount=int(getattr(user, "total_charge_amount", 0) or 0),
+        segment=db.query(UserSegment.segment).filter(UserSegment.user_id == user.id).scalar(),
     )
 
     # Golden Hour Status Injection

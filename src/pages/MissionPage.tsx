@@ -1,19 +1,18 @@
 // src/pages/MissionPage.tsx
 import React, { useEffect, useState } from "react";
 import clsx from "clsx";
-import { ChevronRight, Sparkles, Target, Trophy } from "lucide-react";
+import { ChevronRight, Target, Trophy } from "lucide-react";
 
 import MissionCard from "../components/mission/MissionCard";
 import { useHaptic } from "../hooks/useHaptic";
 import { MissionData, useMissionStore } from "../stores/missionStore";
 
-const TABS = ["DAILY", "WEEKLY", "NEW_USER"] as const;
+const TABS = ["DAILY", "WEEKLY"] as const;
 type MissionTab = (typeof TABS)[number];
 
 const TAB_LABELS: Record<MissionTab, string> = {
   DAILY: "일일 미션",
   WEEKLY: "주간 미션",
-  NEW_USER: "신규 유저",
 };
 
 const MissionPage: React.FC = () => {
@@ -24,16 +23,6 @@ const MissionPage: React.FC = () => {
   useEffect(() => {
     fetchMissions();
   }, [fetchMissions]);
-
-  // Set default tab to NEW_USER if there are incomplete missions there
-  useEffect(() => {
-    if (missions.length > 0) {
-      const hasNewUserMissions = missions.some(m => m.mission.category === "NEW_USER" && !m.progress.is_claimed);
-      if (hasNewUserMissions) {
-        setActiveTab("NEW_USER");
-      }
-    }
-  }, [missions]);
 
   const handleTabChange = (tab: MissionTab) => {
     impact("light");
@@ -69,8 +58,6 @@ const MissionPage: React.FC = () => {
         return <Target size={14} />;
       case "WEEKLY":
         return <Trophy size={14} />;
-      case "NEW_USER":
-        return <Sparkles size={14} />;
       default:
         return null;
     }
@@ -104,12 +91,14 @@ const MissionPage: React.FC = () => {
               <p className="text-sm font-bold text-amber-400">Day {streakInfo.streak_days + 1}</p>
             </div>
           </div>
-          <div className="mt-4 h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-amber-600 to-amber-400 transition-all duration-1000"
-              style={{ width: `${Math.min(100, (streakInfo.streak_days / 7) * 100)}%` }}
-            />
-          </div>
+          <progress
+            value={Math.min(7, streakInfo.streak_days)}
+            max={7}
+            className="mt-4 h-1.5 w-full overflow-hidden rounded-full
+              [&::-webkit-progress-bar]:bg-white/5
+              [&::-webkit-progress-value]:bg-gradient-to-r [&::-webkit-progress-value]:from-amber-600 [&::-webkit-progress-value]:to-amber-400
+              [&::-moz-progress-bar]:bg-gradient-to-r [&::-moz-progress-bar]:from-amber-600 [&::-moz-progress-bar]:to-amber-400"
+          />
         </button>
       )}
 

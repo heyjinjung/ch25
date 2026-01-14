@@ -66,11 +66,10 @@ const InventoryPage: React.FC = () => {
             {/* Title */}
             <div className="mb-4 flex items-center gap-3" data-tour="inventory-link">
                 <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center p-1.5 overflow-hidden">
-                    <img src="/assets/icon_inventory_wallet.png" alt="Inventory" className="w-full h-full object-contain" />
+                    <img src="/assets/icon_inventory_wallet.png" alt="보상함" className="w-full h-full object-contain" />
                 </div>
                 <div>
                     <h1 className="text-xl font-black text-white">보상함</h1>
-                    <p className="text-[11px] text-white/40 tracking-wide">REWARDS</p>
                 </div>
                 <div className="ml-auto">
                     <button
@@ -117,23 +116,24 @@ const InventoryPage: React.FC = () => {
                 <div>
                     <div className="mb-3 flex items-baseline justify-between">
                         <h2 className="text-sm font-black text-white/90">보유 아이템</h2>
-                        <div className="text-[10px] font-medium text-white/35">ITEMS</div>
                     </div>
-                    <div className="space-y-3">
-                        {items.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center py-12 opacity-50 space-y-4">
+                    <div className="grid grid-cols-2 gap-3">
+                        {items.filter(it => it.quantity > 0).length === 0 ? (
+                            <div className="col-span-2 flex flex-col items-center justify-center py-12 opacity-50 space-y-4">
                                 <Package className="w-14 h-14 text-white/10 stroke-1" />
                                 <p className="text-white/30 font-medium">보유한 아이템이 없습니다</p>
                             </div>
                         ) : (
-                            items.map((item) => (
-                                <ItemCard
-                                    key={item.item_type}
-                                    item={item}
-                                    onUse={() => useMutationAction.mutate({ item_type: item.item_type, amount: 1 })}
-                                    isPending={useMutationAction.isPending}
-                                />
-                            ))
+                            items
+                                .filter(it => it.quantity > 0)
+                                .map((item) => (
+                                    <ItemCard
+                                        key={item.item_type}
+                                        item={item}
+                                        onUse={() => useMutationAction.mutate({ item_type: item.item_type, amount: 1 })}
+                                        isPending={useMutationAction.isPending}
+                                    />
+                                ))
                         )}
                     </div>
                 </div>
@@ -141,18 +141,22 @@ const InventoryPage: React.FC = () => {
                 <div>
                     <div className="mb-3 flex items-baseline justify-between">
                         <h2 className="text-[14px] font-black text-white/90">티켓 지갑</h2>
-                        <div className="text-[10px] font-medium text-white/35">WALLET</div>
                     </div>
-                    <div className="grid grid-cols-2 gap-2.5">
-                        {Object.entries(wallet).length === 0 ? (
-                            <div className="rounded-[24px] border border-white/10 bg-white/5 p-5 text-center text-white/50 text-sm font-medium">
-                                지갑 정보가 없습니다.
-                            </div>
-                        ) : (
-                            Object.entries(wallet).map(([key, value]) => (
-                                <WalletCard key={key} tokenType={key} amount={Number(value ?? 0)} />
-                            ))
-                        )}
+                    <div className="grid grid-cols-2 gap-3">
+                        {[
+                            'ROULETTE_COIN',
+                            'DICE_TOKEN',
+                            'TRIAL_TOKEN',
+                            'LOTTERY_TICKET',
+                            'GOLD_KEY',
+                            'DIAMOND_KEY'
+                        ].map((tokenType) => (
+                            <WalletCard
+                                key={tokenType}
+                                tokenType={tokenType}
+                                amount={Number(wallet[tokenType] ?? 0)}
+                            />
+                        ))}
                     </div>
                 </div>
             </div>
@@ -175,7 +179,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, onUse, isPending }) => {
         STARBUCKS: "스타벅스",
         CU: "CU",
         GS25: "GS25",
-        COMPOSE_AMERICANO: "컴포즈 아이스 아메리카노",
+        COMPOSE_AMERICANO: "컴포즈 아아",
     };
 
     const getGifticonInfo = (itemType: string) => {
@@ -189,75 +193,58 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, onUse, isPending }) => {
 
         const brandLabel = GIFTICON_BRAND_LABEL[brandCodeRaw] ?? "기프티콘";
         const title = amount
-            ? `${brandLabel} 기프티콘 ${amount.toLocaleString()}원`
-            : `${brandLabel} 기프티콘`;
+            ? `${brandLabel}`
+            : `${brandLabel}`;
+
+        const sub = amount ? `${amount.toLocaleString()}원` : "기프티콘";
 
         const desc = brandCodeRaw === "CC_COIN"
-            ? "지급 대기(관리자 승인 후 외부플랫폼 처리)"
-            : "지급 대기(관리자 수기 지급)";
+            ? "대기 중"
+            : "수기 지급";
 
         return {
             title,
+            sub,
             desc,
             icon: <img src="/assets/lottery/icon_gift.png" className="w-8 h-8 object-contain" alt="" />,
         };
     };
 
-    // Mapping for user-friendly display
-    const INFO: Record<string, { title: string; desc: string; icon: React.ReactNode }> = {
+    const INFO: Record<string, { title: string; sub: string; desc: string; icon: React.ReactNode }> = {
         "VOUCHER_GOLD_KEY_1": {
-            title: "골드키 교환권",
-            desc: "골드키 1개로 즉시 교환",
+            title: "골드키",
+            sub: "",
+            desc: "즉시 교환",
             icon: <img src="/assets/asset_ticket_gold.png" className="w-8 h-8 object-contain" alt="" />
         },
         "VOUCHER_DIAMOND_KEY_1": {
-            title: "다이아키 교환권",
-            desc: "다이아키 1개로 즉시 교환",
+            title: "다이아키",
+            sub: "",
+            desc: "즉시 교환",
             icon: <img src="/assets/asset_ticket_diamond.png" className="w-8 h-8 object-contain" alt="" />
         },
         "VOUCHER_DICE_TOKEN_1": {
-            title: "주사위 티켓",
-            desc: "주사위 티켓 1개로 즉시 교환",
+            title: "주사위",
+            sub: "",
+            desc: "즉시 교환",
             icon: <img src="/assets/icon_dice_silver.png" className="w-8 h-8 object-contain" alt="" />
         },
         "VOUCHER_ROULETTE_COIN_1": {
             title: "룰렛 티켓",
-            desc: "일반 룰렛 티켓 1개로 즉시 교환",
+            sub: "",
+            desc: "즉시 교환",
             icon: <img src="/assets/asset_ticket_green.png" className="w-8 h-8 object-contain" alt="" />
         },
         "VOUCHER_LOTTERY_TICKET_1": {
             title: "복권 티켓",
-            desc: "복권 티켓 1개로 즉시 교환",
+            sub: "",
+            desc: "즉시 교환",
             icon: <img src="/assets/lottery/icon_lotto_ball.webp" className="w-8 h-8 object-contain" alt="" />
         },
-        "BAEMIN_GIFTICON_5000": {
-            title: "배민 기프티콘 5,000원",
-            desc: "지급 대기(관리자 수기 지급)",
-            icon: <img src="/assets/lottery/icon_gift.png" className="w-8 h-8 object-contain" alt="" />
-        },
-        "BAEMIN_GIFTICON_10000": {
-            title: "배민 기프티콘 10,000원",
-            desc: "지급 대기(관리자 수기 지급)",
-            icon: <img src="/assets/lottery/icon_gift.png" className="w-8 h-8 object-contain" alt="" />
-        },
-        "BAEMIN_GIFTICON_20000": {
-            title: "배민 기프티콘 20,000원",
-            desc: "지급 대기(관리자 수기 지급)",
-            icon: <img src="/assets/lottery/icon_gift.png" className="w-8 h-8 object-contain" alt="" />
-        },
-        "COMPOSE_AMERICANO_GIFTICON_3000": {
-            title: "컴포즈 아이스 아메리카노 3,000원",
-            desc: "지급 대기(관리자 수기 지급)",
-            icon: <img src="/assets/lottery/icon_gift.png" className="w-8 h-8 object-contain" alt="" />
-        },
-        "CC_COIN_GIFTICON": {
-            title: "씨씨코인 기프티콘",
-            desc: "지급 대기(관리자 승인 후 외부플랫폼 처리)",
-            icon: <img src="/assets/lottery/icon_gift.png" className="w-8 h-8 object-contain" alt="" />
-        },
         "DIAMOND": {
-            title: "다이아몬드",
-            desc: "프리미엄 재화",
+            title: "다이아",
+            sub: "",
+            desc: "상점 재화",
             icon: <img src="/assets/icon_diamond.png" className="w-8 h-8 object-contain" alt="" />
         }
     };
@@ -265,46 +252,45 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, onUse, isPending }) => {
     const gifticonInfo = getGifticonInfo(item.item_type);
     const isPendingFulfillment = Boolean(gifticonInfo);
 
-    // Fallback info
     const info = INFO[item.item_type] || gifticonInfo || {
         title: item.item_type,
-        desc: "일반 아이템",
+        sub: "",
+        desc: "보유 중",
         icon: <Package className="w-5 h-5 text-white/40" />
     };
 
     return (
-        <div className="group relative overflow-hidden bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 rounded-2xl p-4 transition-all active:scale-[0.98]">
-            <div className="flex justify-between items-center relative z-10">
-                <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-black/40 flex items-center justify-center border border-white/5 shadow-inner">
+        <div className="relative group overflow-hidden bg-gradient-to-tr from-white/[0.08] to-white/[0.02] border border-white/10 rounded-[22px] p-4 transition-all active:scale-[0.98] hover:border-white/20">
+            <div className="flex flex-col relative z-10 h-full items-center text-center">
+                <div className="relative mb-4">
+                    <div className="w-12 h-12 rounded-2xl bg-black/40 border border-white/5 flex items-center justify-center p-2 shadow-inner">
                         {info.icon}
                     </div>
-                    <div>
-                        <h3 className="font-bold text-base text-white">{info.title}</h3>
-                        <p className="text-xs text-white/40 mt-0.5">{info.desc}</p>
+                    <div className="absolute -top-1.5 -right-1.5 bg-figma-accent text-black text-[10px] font-black px-1.5 py-0.5 rounded-full ring-2 ring-black tabular-nums">
+                        ×{item.quantity.toLocaleString()}
                     </div>
                 </div>
 
-                <div className="flex flex-col items-end gap-2">
-                    <span className="text-xl font-black text-figma-accent tracking-tight">
-                        x{item.quantity.toLocaleString()}
-                    </span>
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            if (item.item_type === "DIAMOND" || isPendingFulfillment) return; // 사용 불가
-                            onUse();
-                        }}
-                        disabled={item.quantity <= 0 || isPending || item.item_type === "DIAMOND" || isPendingFulfillment}
-                        className="bg-white/10 hover:bg-white/20 disabled:bg-black/20 disabled:text-white/20 disabled:cursor-not-allowed text-white text-[11px] font-bold px-3 py-1.5 rounded-lg border border-white/5 transition-colors"
-                    >
-                        {item.item_type === "DIAMOND" ? "보유중" : (isPendingFulfillment ? "지급대기" : (isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : "사용하기"))}
-                    </button>
+                <div className="mb-4 flex-grow w-full">
+                    <div className="mx-auto max-w-full text-[14px] font-black text-white/90 leading-tight whitespace-normal break-keep overflow-hidden line-clamp-2 min-h-[34px]">
+                        {info.title}
+                    </div>
                 </div>
+
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        if (item.item_type === "DIAMOND" || isPendingFulfillment) return;
+                        onUse();
+                    }}
+                    disabled={item.quantity <= 0 || isPending || item.item_type === "DIAMOND" || isPendingFulfillment}
+                    className="w-full h-8 flex items-center justify-center bg-white/10 hover:bg-white/20 disabled:bg-black/20 disabled:text-white/20 disabled:cursor-not-allowed text-white text-[11px] font-bold rounded-xl border border-white/5 transition-colors"
+                >
+                    {item.item_type === "DIAMOND" ? "보유중" : (isPendingFulfillment ? "지급대기" : (isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : "사용하기"))}
+                </button>
             </div>
 
-            {/* Background Glow */}
-            <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-gradient-to-br from-emerald-500/10 to-transparent blur-2xl rounded-full pointer-events-none group-hover:from-emerald-500/20 transition-all duration-500" />
+            <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-emerald-500/[0.03] blur-2xl rounded-full" />
         </div>
     );
 };
@@ -315,23 +301,39 @@ const WalletCard: React.FC<{ tokenType: string; amount: number }> = ({ tokenType
         "DICE_TOKEN": { title: "주사위 티켓", icon: "/assets/icon_dice_silver.png" },
         "LOTTERY_TICKET": { title: "복권 티켓", icon: "/assets/lottery/icon_lotto_ball.webp" },
         "GOLD_KEY": { title: "골드 키", icon: "/assets/asset_ticket_gold.png" },
-        "DIAMOND_KEY": { title: "다이아몬드 키", icon: "/assets/asset_ticket_diamond.png" },
+        "DIAMOND_KEY": { title: "다이아 키", icon: "/assets/asset_ticket_diamond.png" },
         "TRIAL_TOKEN": { title: "체험 티켓", icon: "/assets/asset_ticket_trial.png" }
     };
 
     const info = WALLET_INFO[tokenType] || { title: tokenType, icon: "" };
 
     return (
-        <div className="flex flex-col items-center p-3 bg-white/5 border border-white/10 rounded-xl transition-all hover:bg-white/[0.07]">
-            <div className="w-11 h-11 rounded-xl bg-black/30 border border-white/10 flex items-center justify-center p-2 mb-2">
-                {info.icon ? (
-                    <img src={info.icon} alt={info.title} className="w-full h-full object-contain" />
-                ) : (
-                    <Coins size={20} className="text-gold-400" />
-                )}
+        <div className="relative group overflow-hidden bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/10 rounded-[22px] p-4 transition-all active:scale-[0.98] hover:border-white/20">
+            <div className="flex flex-col relative z-10 items-center text-center">
+                <div className="mb-4 w-12 h-12 rounded-2xl bg-black/40 border border-white/5 flex items-center justify-center p-2 shadow-inner">
+                    {info.icon ? (
+                        <img src={info.icon} alt={info.title} className="w-full h-full object-contain" />
+                    ) : (
+                        <Coins size={24} className="text-white/20" />
+                    )}
+                </div>
+
+                <div className="mb-3 w-full">
+                    <div className="mx-auto max-w-full text-[14px] font-black text-white/90 leading-tight whitespace-normal break-keep overflow-hidden line-clamp-2 min-h-[34px]">
+                        {info.title}
+                    </div>
+                </div>
+
+                <div className="flex items-baseline justify-center gap-1">
+                    <span className="text-2xl font-black text-white tracking-tighter tabular-nums">
+                        {amount.toLocaleString()}
+                    </span>
+                    <span className="text-[10px] font-bold text-white/30">개</span>
+                </div>
             </div>
-            <span className="text-[10px] font-bold text-white/50 mb-1 text-center leading-tight">{info.title}</span>
-            <span className="text-base font-black text-white tracking-tight">{amount.toLocaleString()}</span>
+
+            {/* Subtle Gradient Glow */}
+            <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-white/[0.03] blur-2xl rounded-full" />
         </div>
     );
 };

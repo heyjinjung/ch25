@@ -2,6 +2,7 @@ import pytest
 from datetime import datetime, timedelta
 
 from app.models.user import User
+from app.models.user_segment import UserSegment
 from app.models.feature import UserEventLog
 
 
@@ -11,6 +12,7 @@ def test_token_issues_and_logs_login(client, session_factory, user_id, external_
     session = session_factory()
     try:
         session.add(User(id=user_id, external_id=external_id, status="ACTIVE"))
+        session.add(UserSegment(user_id=user_id, segment="VIP"))
         session.commit()
     finally:
         session.close()
@@ -23,6 +25,7 @@ def test_token_issues_and_logs_login(client, session_factory, user_id, external_
     data = resp.json()
     assert "access_token" in data
     assert data.get("token_type") == "bearer"
+    assert data["user"]["segment"] == "VIP"
 
     # Verify DB updates
     session = session_factory()

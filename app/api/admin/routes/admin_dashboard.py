@@ -451,8 +451,12 @@ def nudge_risk_group(
 @router.get("/details")
 def get_dashboard_details(
     metric_key: str,
+    days: int = Query(7, ge=1, le=90, description="최근 N일 범위( scope=recent )"),
+    scope: str = Query("recent", description="recent | all"),
+    page: int = Query(1, ge=1),
+    limit: int = Query(50, ge=1, le=200),
     db: Session = Depends(get_db),
 ) -> list[dict[str, Any]]:
     """Get detailed list for a specific metric."""
     service = AdminDashboardService()
-    return service.get_metric_details(db, metric_key)
+    return service.get_metric_details(db, metric_key, days=days, scope=scope, page=page, limit=limit)

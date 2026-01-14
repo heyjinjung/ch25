@@ -119,6 +119,9 @@ def run_migrations_online() -> None:
     connectable = create_engine(settings.database_url, poolclass=pool.NullPool)
 
     with connectable.connect() as connection:
+        # MySQL + SQLAlchemy 2.x: force autocommit early (before any SELECTs)
+        # so migrations and alembic_version updates persist.
+        connection = connection.execution_options(isolation_level="AUTOCOMMIT")
         _ensure_alembic_version_num_length(connection)
         context.configure(
             connection=connection,
