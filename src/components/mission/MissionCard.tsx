@@ -2,14 +2,14 @@
 import React from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
-import { Bell, Check, ChevronRight, Share2, Star, Trophy, Users, Gift } from "lucide-react";
+import { Bell, Check, ChevronRight, Share2, Star, Trophy, Users } from "lucide-react";
 
 import { useHaptic } from "../../hooks/useHaptic";
 import { useSound } from "../../hooks/useSound";
 import { useMissionStore, MissionData } from "../../stores/missionStore";
 import { recordViralAction, getCloudItem, setCloudItem, verifyChannelSubscription } from "../../api/viralApi";
 import { useToast } from "../common/ToastProvider";
-import { formatRewardLine, isGifticonRewardType } from "../../utils/rewardLabel";
+import { formatRewardLine } from "../../utils/rewardLabel";
 
 interface MissionCardProps {
   data: MissionData;
@@ -62,21 +62,7 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
     }
   };
 
-  const normalizedMissionRewardType = mission.reward_type === "CASH_UNLOCK" ? "POINT" : mission.reward_type;
-  const rewardLine = formatRewardLine(normalizedMissionRewardType, mission.reward_amount);
 
-  const rewardIconSrc = (() => {
-    const upper = String(normalizedMissionRewardType || "").toUpperCase();
-
-    if (isGifticonRewardType(normalizedMissionRewardType)) return "/assets/lottery/icon_gift.png";
-    if (upper === "POINT" || upper === "CC_POINT") return "/assets/asset_coin_gold.webp";
-    if (upper === "GAME_XP") return "/assets/icons/icon_fire.webp";
-
-    const tickets = new Set(["TICKET_ROULETTE", "ROULETTE_TICKET", "TICKET_DICE", "DICE_TICKET", "TICKET_LOTTERY", "LOTTERY_TICKET"]);
-    if (tickets.has(upper)) return "/assets/asset_ticket_green.webp";
-
-    return "/assets/icon_diamond.png";
-  })();
 
   const handleAction = async () => {
     if (isVerifying) return;
@@ -251,7 +237,13 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
   const renderIcon = () => {
     const iconClass = "h-6 w-6";
     if (isDailyGift) {
-      return <Gift className="h-6 w-6 text-amber-400" />;
+      return (
+        <img
+          src="/assets/icon_diamond.png"
+          alt=""
+          className="h-6 w-6 object-contain"
+        />
+      );
     }
     switch (mission.action_type) {
       case "JOIN_CHANNEL":
@@ -354,23 +346,7 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
           {/* Text Info Column */}
           <div className="flex flex-col items-end gap-1">
             {/* Reward Badge */}
-            <div className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-[#252528] px-2.5 py-1">
-              <img
-                src={rewardIconSrc}
-                alt=""
-                className="h-3.5 w-3.5 object-contain"
-              />
-              <span className="text-[11px] font-black text-white/90 leading-none">
-                {rewardLine?.text ?? mission.reward_amount.toLocaleString()}
-              </span>
-            </div>
 
-            {/* Secondary Reward (XP) */}
-            {mission.xp_reward > 0 && (
-              <span className="text-[10px] font-bold text-white/40">
-                시즌 XP +{mission.xp_reward}
-              </span>
-            )}
           </div>
 
           {/* Action Button */}

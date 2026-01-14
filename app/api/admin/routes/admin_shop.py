@@ -72,12 +72,29 @@ def upsert_overrides(
                 )
 
     # Serialize Pydantic models to dict for storage
+    # DEBUG LOGGING
+    import json
+    try:
+        with open("admin_shop_debug.log", "a", encoding="utf-8") as f:
+            f.write(f"\n--- [UPSERT START] ---\n")
+            f.write(f"Payload Raw: {payload.products}\n")
+    except:
+        pass
+
     updates = {}
     if payload.products:
         updates = {
             sku: patch.model_dump(mode='json', exclude_none=True)
             for sku, patch in payload.products.items()
         }
+
+    # DEBUG LOGGING
+    try:
+        with open("admin_shop_debug.log", "a", encoding="utf-8") as f:
+            f.write(f"Updates Serialized: {json.dumps(updates, ensure_ascii=False, indent=2, default=str)}\n")
+    except Exception as e:
+        with open("admin_shop_debug.log", "a", encoding="utf-8") as f:
+            f.write(f"Log Error: {e}\n")
 
     # Fetch existing config to merge
     existing_row = UiConfigService.get(db, ShopService.UI_CONFIG_KEY)
@@ -97,6 +114,7 @@ def upsert_overrides(
             if sku in SHOP_PRODUCTS:
                 continue
             merged_products.pop(sku, None)
+
 
     value_to_store = {"products": merged_products}
 

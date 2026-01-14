@@ -98,9 +98,9 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) =>
     const ticketAmount = Number(ticketMission?.reward_amount ?? 5);
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fadeIn">
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/90 backdrop-blur-md animate-fadeIn px-4 pt-[calc(1rem+env(safe-area-inset-top))] pb-[calc(1rem+env(safe-area-inset-bottom))]">
             {/* Modal Container: Max Height + Flex Col */}
-            <div className="relative w-full max-w-[340px] max-h-[85vh] flex flex-col bg-zinc-950 border border-emerald-500/30 rounded-[32px] shadow-[0_32px_64px_-16px_rgba(16,185,129,0.3)] overflow-hidden animate-scaleIn">
+            <div className="relative w-full max-w-[340px] max-h-[calc(100dvh-2rem)] flex flex-col bg-zinc-950 border border-emerald-500/30 rounded-[32px] shadow-[0_32px_64px_-16px_rgba(16,185,129,0.3)] overflow-hidden animate-scaleIn">
                 {/* Background Textures (Absolute to container) */}
                 <div className="absolute inset-0 bg-[url('/assets/pattern_noise.png')] opacity-[0.03] pointer-events-none" />
                 <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-emerald-500/10 to-transparent pointer-events-none" />

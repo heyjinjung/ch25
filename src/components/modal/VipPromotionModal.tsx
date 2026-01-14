@@ -8,7 +8,7 @@ interface VipPromotionModalProps {
 
 const VipPromotionModal: React.FC<VipPromotionModalProps> = ({ onClose }) => {
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto px-4 pt-[calc(1rem+env(safe-area-inset-top))] pb-[calc(1rem+env(safe-area-inset-bottom))]">
             {/* Backdrop */}
             <motion.div
                 initial={{ opacity: 0 }}
@@ -23,7 +23,7 @@ const VipPromotionModal: React.FC<VipPromotionModalProps> = ({ onClose }) => {
                 initial={{ scale: 0.9, opacity: 0, y: 20 }}
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                className="relative w-full max-w-[340px] bg-zinc-950 border border-amber-500/30 rounded-[2rem] overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5),0_0_20px_rgba(217,119,6,0.2)]"
+                className="relative w-full max-w-[340px] max-h-[calc(100dvh-2rem)] bg-zinc-950 border border-amber-500/30 rounded-[2rem] overflow-hidden overflow-y-auto shadow-[0_0_50px_rgba(0,0,0,0.5),0_0_20px_rgba(217,119,6,0.2)]"
             >
                 {/* Background Textures */}
                 <div className="absolute inset-0 bg-[url('/assets/pattern_noise.png')] opacity-[0.03] pointer-events-none" />
