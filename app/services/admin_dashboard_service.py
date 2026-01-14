@@ -188,6 +188,8 @@ class AdminDashboardService:
 
     def get_daily_overview(self, db: Session):
         """Daily routine check: risk & settlement (yesterday, KST)."""
+        comprehensive = self.get_comprehensive_overview(db)
+
         kst_now = self._get_kst_now()
         yesterday_start, yesterday_end = self._get_yesterday_kst_range(kst_now)
         today_start_utc = self._get_today_kst_start_in_utc(kst_now)
@@ -265,7 +267,7 @@ class AdminDashboardService:
         if total_deposit_estimated > 0:
             vault_payout_ratio = (total_vault_paid / total_deposit_estimated) * 100.0
 
-        return {
+        legacy = {
             "risk_count": int(risk_count),
             "streak_risk_count": int(streak_risk_count),
             "mission_percent": float(mission_percent),
@@ -273,6 +275,8 @@ class AdminDashboardService:
             "total_vault_paid": int(total_vault_paid),
             "total_deposit_estimated": int(total_deposit_estimated),
         }
+
+        return {**legacy, **comprehensive}
 
     def get_event_status(self, db: Session):
         kst_now = self._get_kst_now()

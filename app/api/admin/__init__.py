@@ -34,6 +34,7 @@ from app.api.admin.routes import (
     admin_ops_target,
     admin_reward_types,
     admin_vault_requests,
+    admin_events,
 )
 
 from app.api.deps import get_current_admin_id
@@ -73,3 +74,4 @@ admin_router.include_router(admin_ops_plan.router)
 admin_router.include_router(admin_ops_target.router)
 admin_router.include_router(admin_vault_requests.router)
 admin_router.include_router(admin_reward_types.router)
+admin_router.include_router(admin_events.router)

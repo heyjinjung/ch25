@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useActiveSurveys } from "../../hooks/useSurvey";
-import { X } from "lucide-react";
+import { X, Gift, ArrowRight, FileText } from "lucide-react";
+import clsx from "clsx";
 
 const SurveyPromptBanner: React.FC = () => {
   const { data, isLoading } = useActiveSurveys();
@@ -30,7 +31,7 @@ const SurveyPromptBanner: React.FC = () => {
 
     if (!dismissed) {
       // Small delay for better UX
-      const timer = setTimeout(() => setIsVisible(true), 500);
+      const timer = setTimeout(() => setIsVisible(true), 1000);
       return () => clearTimeout(timer);
     }
   }, [primary]);
@@ -49,47 +50,79 @@ const SurveyPromptBanner: React.FC = () => {
 
   if (isLoading || !primary || !isVisible) return null;
 
+  const reward = primary.reward_json;
+  const hasReward = reward && (reward.amount || 0) > 0;
+  const rewardAmount = reward?.amount ?? 0;
+  const rewardType = reward?.reward_type === "TICKET" ? "티켓" : "P"; // Simple fallback
+  const isCash = reward?.reward_type !== "TICKET"; // Basic check
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4 backdrop-blur-sm animate-in fade-in duration-300">
-      <div className="relative w-full max-w-sm overflow-hidden rounded-2xl border border-[#91F402]/30 bg-[#111111] p-0 shadow-2xl shadow-[#91F402]/10 zoom-in-95 duration-300">
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/90 backdrop-blur-md animate-fadeIn transition-all duration-300">
+      <div className="relative w-full max-w-[340px] flex flex-col bg-zinc-950 border border-emerald-500/30 rounded-[32px] shadow-[0_32px_64px_-16px_rgba(16,185,129,0.3)] overflow-hidden animate-scaleIn">
 
-        {/* Header Image or Gradient */}
-        <div className="relative h-32 w-full bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A]">
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-4xl">📝</div>
+        {/* Background Textures */}
+        <div className="absolute inset-0 bg-[url('/assets/pattern_noise.png')] opacity-[0.03] pointer-events-none" />
+        <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-emerald-500/10 to-transparent pointer-events-none" />
+
+        {/* Close Button */}
+        <button
+          onClick={handleDismiss}
+          className="absolute top-4 right-4 z-20 w-8 h-8 flex items-center justify-center rounded-full bg-white/5 border border-white/10 text-white/40 hover:text-white hover:bg-white/10 transition-all"
+        >
+          <X size={18} />
+        </button>
+
+        <div className="p-6 pt-10 text-center relative z-10">
+          {/* Header Badge */}
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 mb-4 animate-bounce-subtle mx-auto">
+            <FileText size={12} className="text-emerald-400" />
+            <span className="text-[10px] font-black text-emerald-400 tracking-widest uppercase">SURVEY EVENT</span>
           </div>
-          <button
-            onClick={handleDismiss}
-            className="absolute right-3 top-3 rounded-full bg-black/40 p-1 text-gray-400 hover:text-white backdrop-blur-md"
-          >
-            <X size={20} />
-          </button>
-        </div>
 
-        <div className="p-5 text-center">
-          <h3 className="mb-2 text-xl font-bold text-white">
+          <h3 className="text-2xl font-black text-white leading-tight mb-2">
             {primary.title}
           </h3>
-          <p className="mb-6 text-sm text-gray-400 leading-relaxed">
+          <p className="text-zinc-500 text-xs font-medium tracking-tight mb-8">
             {primary.description || "잠깐! 설문에 참여하고 보상을 받아가세요."}
-            <br />
-            <span className="text-[#91F402] text-xs mt-1 block">
-              (소요시간: 약 1분)
-            </span>
           </p>
 
+          {/* Reward Card (Conditional) */}
+          {hasReward && (
+            <div className="mb-6 relative group p-4 rounded-2xl bg-white/[0.03] border border-white/5 flex items-center gap-4 overflow-hidden">
+              <div className="absolute inset-0 bg-emerald-500/5 blur-xl group-hover:opacity-100 transition-opacity" />
+              <div className="relative z-10 w-12 h-12 bg-black/40 rounded-xl border border-white/5 flex items-center justify-center shrink-0">
+                <img
+                  src={isCash ? "/assets/asset_coin_gold.png" : "/assets/asset_ticket_green.png"}
+                  alt="reward"
+                  className="w-8 h-8 object-contain"
+                />
+              </div>
+              <div className="relative z-10 flex flex-col items-start">
+                <span className="text-[10px] font-bold text-zinc-500">참여 보상</span>
+                <span className="text-lg font-black text-white tabular-nums">
+                  {rewardAmount.toLocaleString()}
+                  <span className="text-xs text-emerald-500 ml-0.5">{rewardType}</span>
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Actions */}
           <div className="flex flex-col gap-3">
             <button
               onClick={handleParticipate}
-              className="w-full rounded-xl bg-[#91F402] py-3.5 text-sm font-bold text-black hover:bg-[#7ED302] active:scale-[0.98] transition-all"
+              className={clsx(
+                "w-full py-4 rounded-[18px] bg-emerald-500 text-black font-black text-base shadow-[0_12px_24px_-8px_rgba(16,185,129,0.5)] active:scale-[0.97] hover:brightness-110 transition-all flex items-center justify-center gap-2 group"
+              )}
             >
-              지금 참여하기
+              <span>지금 참여하기</span>
+              <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
             </button>
             <button
               onClick={handleDismiss}
-              className="w-full rounded-xl bg-[#1A1A1A] py-3.5 text-sm font-medium text-gray-400 hover:bg-[#222222] hover:text-white transition-all"
+              className="w-full py-3 rounded-2xl bg-transparent text-zinc-500 font-bold text-xs hover:text-zinc-300 transition-colors"
             >
-              다음에 하기
+              나중에 하기
             </button>
           </div>
         </div>

@@ -118,3 +118,23 @@ class CrisisSignalsResponse(BaseModel):
     """All crisis signals for dashboard radar."""
     timestamp: datetime
     signals: List[CrisisSignalOut]
+
+
+class CrisisDetectionRunRequest(BaseModel):
+    """Request to run daily crisis detection."""
+    scenario_ids: Optional[List[str]] = None
+
+
+class CrisisDetectionRunResult(BaseModel):
+    """Single crisis detection result."""
+    scenario_id: str
+    target_list_id: Optional[int] = None
+    count: int
+    status: str
+    message: Optional[str] = None
+
+
+class CrisisDetectionRunResponse(BaseModel):
+    """Response for crisis detection run."""
+    plan_id: int
+    results: List[CrisisDetectionRunResult]

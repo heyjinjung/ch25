@@ -19,12 +19,15 @@ from app.api.deps import get_current_admin_id, get_db
 from app.schemas.ops_target import (
     CrisisSignalOut,
     CrisisSignalsResponse,
+    CrisisDetectionRunRequest,
+    CrisisDetectionRunResponse,
     OpsTargetImportRequest,
     OpsTargetImportResponse,
     OpsTargetListOut,
     OpsTargetMemberOut,
     OpsTargetResultCheckResponse,
 )
+from app.services.crisis_detection_service import CrisisDetectionService
 from app.services.ops_target_service import OpsTargetService
 
 router = APIRouter(prefix="/admin/api/ops", tags=["admin-ops-target"])
@@ -43,6 +46,30 @@ def get_crisis_signals(
     return CrisisSignalsResponse(
         timestamp=datetime.utcnow(),
         signals=[CrisisSignalOut(**s) for s in stats],
+    )
+
+
+@router.post(
+    "/plans/{plan_id}/run-crisis-detection",
+    response_model=CrisisDetectionRunResponse,
+)
+def run_crisis_detection(
+    plan_id: int,
+    payload: CrisisDetectionRunRequest | None = None,
+    db: Session = Depends(get_db),
+    admin_id: int = Depends(get_current_admin_id),
+):
+    detector = CrisisDetectionService()
+    scenario_ids = payload.scenario_ids if payload else None
+    results = detector.run_daily(
+        db,
+        plan_id=plan_id,
+        scenario_ids=scenario_ids,
+        actor_admin_id=admin_id,
+    )
+    return CrisisDetectionRunResponse(
+        plan_id=plan_id,
+        results=results,
     )
 
 

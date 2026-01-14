@@ -39,6 +39,7 @@ from app.models.admin_audit_log import AdminAuditLog
 from app.models.ops_log import OpsDailyLog, OpsLogEntry
 from app.models.ops_plan import OpsCampaign, OpsPlan, OpsPlanTask
 from app.models.ops_target import OpsTargetList, OpsTargetMember
+from app.models.event import EventConfig, EventParticipationLog
 from app.models.survey import (
     Survey,
     SurveyQuestion,
@@ -116,6 +117,8 @@ __all__ = [
     "OpsPlanTask",
     "OpsTargetList",
     "OpsTargetMember",
+    "EventConfig",
+    "EventParticipationLog",
     "VaultWithdrawalRequest",
     "UserInventoryItem",
     "UserInventoryLedger",
