@@ -257,7 +257,7 @@ const LotteryConfigPage: React.FC = () => {
     <div className="p-6 space-y-6 max-w-[1600px] mx-auto animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div className="space-y-1">
-          <div className="flex items-center gap-2 text-zinc-500 text-xs font-medium">
+          <div className="flex items-center gap-2 text-zinc-500 text-sm font-medium">
             <span>시스템 관리</span>
             <ChevronRight size={12} />
             <span className="text-zinc-300">복권 설정</span>
@@ -289,7 +289,7 @@ const LotteryConfigPage: React.FC = () => {
         <div className="admin-card p-4 relative overflow-hidden group">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Active Engines</p>
+              <p className="text-sm font-bold text-zinc-500 uppercase tracking-widest">Active Engines</p>
               <h3 className="text-2xl font-black text-white mt-1 tabular-nums">
                 {stats.activeCount} / {configs?.length || 0}
               </h3>
@@ -298,7 +298,7 @@ const LotteryConfigPage: React.FC = () => {
               <Gamepad2 size={20} />
             </div>
           </div>
-          <div className="mt-4 flex items-center gap-2 text-[10px] text-zinc-500 font-medium">
+          <div className="mt-4 flex items-center gap-2 text-sm text-zinc-500 font-medium">
             <CheckCircle2 size={12} className="text-emerald-500" />
             <span>OPERATIONAL</span>
           </div>
@@ -307,14 +307,14 @@ const LotteryConfigPage: React.FC = () => {
         <div className="admin-card p-4 relative overflow-hidden group">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Total Prizes</p>
+              <p className="text-sm font-bold text-zinc-500 uppercase tracking-widest">Total Prizes</p>
               <h3 className="text-2xl font-black text-white mt-1 tabular-nums">{stats.totalPrizes.toLocaleString()}</h3>
             </div>
             <div className="p-2 bg-zinc-800 text-zinc-400 rounded-lg group-hover:scale-110 transition-transform">
               <Package size={20} />
             </div>
           </div>
-          <div className="mt-4 flex items-center gap-2 text-[10px] text-zinc-500 font-medium">
+          <div className="mt-4 flex items-center gap-2 text-sm text-zinc-500 font-medium">
             <Info size={12} />
             <span>Across all configs</span>
           </div>
@@ -323,7 +323,7 @@ const LotteryConfigPage: React.FC = () => {
         <div className="admin-card p-4 relative overflow-hidden group border-admin-danger/20">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Low Stock Alerts</p>
+              <p className="text-sm font-bold text-zinc-500 uppercase tracking-widest">Low Stock Alerts</p>
               <h3 className={`text-2xl font-black mt-1 tabular-nums ${stats.lowStockAlerts > 0 ? "text-rose-400" : "text-white"}`}>
                 {stats.lowStockAlerts}
               </h3>
@@ -332,7 +332,7 @@ const LotteryConfigPage: React.FC = () => {
               <ShieldAlert size={20} />
             </div>
           </div>
-          <div className="mt-4 flex items-center gap-2 text-[10px] text-zinc-500 font-medium">
+          <div className="mt-4 flex items-center gap-2 text-sm text-zinc-500 font-medium">
             <div className={`w-2 h-2 rounded-full ${stats.lowStockAlerts > 0 ? "bg-rose-500 animate-pulse" : "bg-emerald-500"}`} />
             <span>{stats.lowStockAlerts > 0 ? "REPLENISHMENT REQUIRED" : "STABLE INVENTORY"}</span>
           </div>
@@ -341,7 +341,7 @@ const LotteryConfigPage: React.FC = () => {
         <div className="admin-card p-4 relative overflow-hidden group">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Global Status</p>
+              <p className="text-sm font-bold text-zinc-500 uppercase tracking-widest">Global Status</p>
               <h3 className="text-2xl font-black text-emerald-400 mt-1 uppercase tracking-tight">Healthy</h3>
             </div>
             <div className="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg group-hover:scale-110 transition-transform shadow-[0_0_15px_-3px_rgba(16,185,129,0.3)]">
@@ -354,7 +354,7 @@ const LotteryConfigPage: React.FC = () => {
       <div className="space-y-4">
         <div className="flex items-center gap-2 px-2">
           <LayoutGrid className="h-4 w-4 text-admin-brand" />
-          <h2 className="text-sm font-black text-white uppercase tracking-wider">복권 운영 설정 목록 (Lottery Fleet)</h2>
+          <h2 className="text-base font-black text-white uppercase tracking-wider">복권 운영 설정 목록 (Lottery Fleet)</h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -370,12 +370,12 @@ const LotteryConfigPage: React.FC = () => {
                       <Trophy size={24} />
                     </div>
                     <div>
-                      <h3 className="text-lg font-black text-white tracking-tight">{config.name}</h3>
+                      <h3 className="text-base font-black text-white tracking-tight">{config.name}</h3>
                       <div className="flex items-center gap-2 mt-1">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-tight border ${config.is_active ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-zinc-800 text-zinc-500 border-zinc-700'}`}>
+                        <span className={`px-2 py-0.5 rounded text-sm font-black uppercase tracking-tight border ${config.is_active ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-zinc-800 text-zinc-500 border-zinc-700'}`}>
                           {config.is_active ? 'ACTIVE' : 'STANDBY'}
                         </span>
-                        <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest border border-zinc-800 px-2 py-0.5 rounded">
+                        <span className="text-sm font-bold text-zinc-500 uppercase tracking-widest border border-zinc-800 px-2 py-0.5 rounded">
                           {config.max_daily_plays === 0 ? 'Unlimited' : `Limit: ${config.max_daily_plays}`}
                         </span>
                       </div>
@@ -391,7 +391,7 @@ const LotteryConfigPage: React.FC = () => {
                 </div>
 
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between text-[10px] font-black text-zinc-500 uppercase tracking-widest px-1">
+                  <div className="flex items-center justify-between text-sm font-black text-zinc-500 uppercase tracking-widest px-1">
                     <span>Main Prizes</span>
                     <span>{config.prizes.length} Items</span>
                   </div>
@@ -403,13 +403,13 @@ const LotteryConfigPage: React.FC = () => {
                         <div key={idx} className="p-3 rounded-xl bg-zinc-900/50 border border-zinc-800/50 flex items-center justify-between group">
                           <div className="flex items-center gap-3">
                             <div className={`w-1.5 h-1.5 rounded-full ${info.barClass}`} />
-                            <span className="text-xs font-bold text-zinc-300">{prize.label}</span>
+                            <span className="text-base font-bold text-zinc-300">{prize.label}</span>
                           </div>
                           <div className="flex items-center gap-3">
-                            <span className={`text-[10px] font-black px-2 py-0.5 rounded ${info.chipClass}`}>
+                            <span className={`text-sm font-black px-2 py-0.5 rounded ${info.chipClass}`}>
                               {info.percent.toFixed(1)}%
                             </span>
-                            <span className="text-[10px] font-mono text-zinc-500">
+                            <span className="text-sm font-mono text-zinc-500">
                               Stock: {(prize.stock === null || prize.stock === undefined) ? '∞' : prize.stock.toLocaleString()}
                             </span>
                           </div>
@@ -417,7 +417,7 @@ const LotteryConfigPage: React.FC = () => {
                       );
                     })}
                     {config.prizes.length > 3 && (
-                      <p className="text-center text-[10px] text-zinc-600 font-bold uppercase tracking-widest pt-1">
+                      <p className="text-center text-sm text-zinc-600 font-bold uppercase tracking-widest pt-1">
                         + {config.prizes.length - 3} more prizes
                       </p>
                     )}
@@ -425,7 +425,7 @@ const LotteryConfigPage: React.FC = () => {
                 </div>
 
                 <div className="flex items-center justify-between pt-2">
-                  <div className="flex items-center gap-1.5 text-[10px] text-zinc-500 font-bold">
+                  <div className="flex items-center gap-1.5 text-sm text-zinc-500 font-bold">
                     <History size={12} />
                     <span>Last updated: {new Date(config.updated_at).toLocaleDateString()}</span>
                   </div>
@@ -470,6 +470,7 @@ const LotteryConfigPage: React.FC = () => {
                 type="button"
                 onClick={closeModal}
                 className="p-2 text-zinc-500 hover:text-white hover:bg-zinc-800 rounded-lg transition-all"
+                aria-label="모달 닫기"
               >
                 <X size={20} />
               </button>
@@ -575,8 +576,7 @@ const LotteryConfigPage: React.FC = () => {
                             </div>
                             <div className="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
                               <div
-                                className={`h-full transition-all duration-500 ${info.barClass}`}
-                                style={{ width: `${Math.min(info.percent, 100)}%` }}
+                                className={`h-full transition-all duration-500 ${info.barClass} w-[${Math.min(info.percent, 100)}%]`}
                               />
                             </div>
                             <p className="text-[9px] text-zinc-600 font-medium text-center italic mt-1">~{info.expected100} hits / 100 trials</p>

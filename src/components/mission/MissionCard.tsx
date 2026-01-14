@@ -2,7 +2,7 @@
 import React from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
-import { Bell, Check, ChevronRight, Share2, Star, Trophy, Users, Clock3, Gift } from "lucide-react";
+import { Bell, Check, ChevronRight, Share2, Star, Trophy, Users, Gift } from "lucide-react";
 
 import { useHaptic } from "../../hooks/useHaptic";
 import { useSound } from "../../hooks/useSound";
@@ -249,9 +249,9 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
   };
 
   const renderIcon = () => {
-    const iconClass = "h-5 w-5";
+    const iconClass = "h-6 w-6";
     if (isDailyGift) {
-      return <Gift className="h-5 w-5 text-amber-400" />;
+      return <Gift className="h-6 w-6 text-amber-400" />;
     }
     switch (mission.action_type) {
       case "JOIN_CHANNEL":
@@ -259,7 +259,7 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
       case "INVITE_FRIEND":
         return <Users className={iconClass} />;
       case "SHARE_STORY":
-      case "SHARE_WALLET": // Added
+      case "SHARE_WALLET":
         return <Share2 className={iconClass} />;
       case "LOGIN":
         return <Star className={iconClass} />;
@@ -270,7 +270,7 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
           <img
             src="/assets/icon_diamond.png"
             alt=""
-            className="h-5 w-5 object-contain"
+            className="h-6 w-6 object-contain"
           />
         );
     }
@@ -279,123 +279,116 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
   return (
     <div
       className={clsx(
-        "relative overflow-hidden rounded-[24px] border backdrop-blur-md transition-all",
+        "relative rounded-[28px] border transition-all duration-300",
         isClaimed
-          ? "border-white/5 bg-white/5 opacity-60"
+          ? "bg-white/[0.02] border-white/5 opacity-50"
           : isCompleted
-            ? "border-figma-accent bg-white/10 shadow-lg shadow-emerald-900/20"
-            : "border-white/10 bg-white/10 hover:border-white/20"
+            ? "bg-[#1A1A1B] border-emerald-500/20 shadow-[0_4px_20px_-8px_rgba(16,185,129,0.3)]"
+            : "bg-[#1A1A1B] border-white/5 shadow-md shadow-black/40"
       )}
     >
-      <div className="flex items-center gap-3 p-3">
-        {/* Icon */}
+      <div className="flex items-center p-5 gap-4">
+        {/* Left: Icon Box */}
         <div
           className={clsx(
-            "flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ring-1 ring-white/10 transition-transform",
+            "flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-[18px] border shadow-inner transition-colors",
             isClaimed
-              ? "bg-black/30 text-white/30"
+              ? "bg-white/5 border-white/5 text-white/20"
               : isCompleted
-                ? "bg-figma-accent/10 text-figma-accent"
-                : "bg-black/30 text-white/70"
+                ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                : "bg-[#252528] border-white/10 text-white/80"
           )}
         >
-          {isClaimed ? <Check className="h-5 w-5" /> : renderIcon()}
+          {isClaimed ? <Check className="h-6 w-6" /> : renderIcon()}
         </div>
 
-        {/* Content */}
-        <div className="min-w-0 flex-1">
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
-              <div className="truncate text-[13px] font-black leading-snug text-white">{mission.title}</div>
-              <div className="truncate text-[11px] font-semibold text-white/70">
-                {mission.description || "미션을 완료하고 보상을 받으세요"}
-              </div>
+        {/* Middle: Content & Progress */}
+        <div className="flex-1 min-w-0 flex flex-col justify-center gap-3">
+          {/* Header */}
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-[15px] font-black leading-tight text-white tracking-tight truncate">
+                {mission.title}
+              </span>
               {(timeWindow || mission.auto_claim) && (
-                <div className="mt-1 flex flex-wrap gap-2 text-[10px] font-bold text-white/70">
-                  {timeWindow && (
-                    <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2 py-0.5">
-                      <Clock3 className="h-3 w-3" /> {timeWindow}
-                    </span>
-                  )}
-                  {mission.auto_claim && (
-                    <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-figma-accent">
-                      Auto-Claim
-                    </span>
-                  )}
-                </div>
+                <span className="inline-flex items-center rounded-md bg-white/10 px-1.5 py-0.5 text-[9px] font-bold text-white/60">
+                  {mission.auto_claim ? "AUTO" : "TIME"}
+                </span>
               )}
             </div>
-
-            <div className="shrink-0 text-right">
-              <div className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-black/30 px-2 py-0.5">
-                <img
-                  src={rewardIconSrc}
-                  alt=""
-                  className="h-3.5 w-3.5 object-contain"
-                />
-                <span className="text-[12px] font-black text-figma-accent">
-                  {rewardLine?.text ?? mission.reward_amount.toLocaleString()}
-                </span>
-              </div>
-              {rewardLine?.fulfillmentHint && (
-                <div className="mt-1 text-[10px] font-black text-white/50">{rewardLine.fulfillmentHint}</div>
-              )}
-              {mission.xp_reward > 0 && (
-                <div className="mt-1 text-[10px] font-black text-white/70">시즌 XP +{mission.xp_reward}</div>
-              )}
+            <div className="text-[12px] font-medium text-[#888888] truncate mt-0.5">
+              {mission.description || "미션을 완료하고 보상을 받으세요"}
             </div>
           </div>
 
+          {/* Progress Bar (Only visible if not claimed) */}
           {!isClaimed && (
-            <div className="mt-2">
-              <div className="flex items-center justify-between text-[10px] font-bold text-white/70">
-                <span>
-                  {progress.current_value} / {mission.target_value}
+            <div className="w-full">
+              <div className="flex items-center justify-between text-[11px] font-bold mb-1.5 leading-none">
+                <span className="text-white/40 tabular-nums">
+                  {progress.current_value} <span className="text-white/20">/</span> {mission.target_value}
                 </span>
-                <span className={clsx(isCompleted ? "text-figma-accent" : "text-white/70")}>
-                  {isCompleted ? "READY" : `${percent}%`}
+                <span className={clsx("tabular-nums", isCompleted ? "text-emerald-400" : "text-white/40")}>
+                  {isCompleted ? "Completed" : `${percent}%`}
                 </span>
               </div>
-              <div className="mt-1 h-1.5 overflow-hidden rounded-full border border-white/10 bg-white/10">
+              <div className="h-1.5 w-full rounded-full bg-[#252528] overflow-hidden">
                 <div
                   className={clsx(
-                    "h-full rounded-full transition-all duration-700 ease-out",
-                    isCompleted ? "bg-[var(--figma-accent-green)]" : "bg-gradient-to-r from-emerald-500/70 via-green-500/60 to-lime-500/60"
+                    `h-full rounded-full transition-all duration-500 w-[${percent}%]`,
+                    isCompleted ? "bg-emerald-500" : "bg-white/20"
                   )}
-                  style={{ width: `${percent}%` }}
                 />
               </div>
             </div>
           )}
         </div>
 
-        {/* Action */}
-        <div className="shrink-0">
+        {/* Right: Rewards & Action */}
+        <div className="flex items-center gap-3 shrink-0 pl-1">
+          {/* Text Info Column */}
+          <div className="flex flex-col items-end gap-1.5">
+            {/* Reward Badge */}
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-[#252528] px-3 py-1.5">
+              <img
+                src={rewardIconSrc}
+                alt=""
+                className="h-3.5 w-3.5 object-contain"
+              />
+              <span className="text-[12px] font-black text-white/90 leading-none">
+                {rewardLine?.text ?? mission.reward_amount.toLocaleString()}
+              </span>
+            </div>
+
+            {/* Secondary Reward (XP) */}
+            {mission.xp_reward > 0 && (
+              <span className="text-[10px] font-bold text-white/40">
+                시즌 XP +{mission.xp_reward}
+              </span>
+            )}
+          </div>
+
+          {/* Action Button */}
           {isClaimed ? (
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-white/40">
+            <div className="h-10 w-10 flex items-center justify-center rounded-full bg-white/5 text-white/20">
               <Check className="h-5 w-5" />
             </div>
           ) : isCompleted ? (
             <button
               onClick={handleClaim}
-              data-tour="mission-claim"
-              className="flex h-10 w-10 items-center justify-center rounded-2xl bg-figma-primary text-white shadow-lg shadow-emerald-900/30 transition active:scale-95"
-              aria-label="Claim mission reward"
+              className="h-10 w-10 flex items-center justify-center rounded-full bg-emerald-500 text-black shadow-lg shadow-emerald-500/30 hover:scale-105 active:scale-95 transition-all"
+              title="보상 수령"
             >
-              <Trophy className="h-5 w-5" />
+              <Trophy className="h-5 w-5 fill-current" />
             </button>
           ) : (
             <button
               onClick={handleAction}
               disabled={isVerifying}
-              className={clsx(
-                "flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/10 text-white/80 transition hover:bg-white/20 active:scale-95",
-                isVerifying && "opacity-50 cursor-wait"
-              )}
-              aria-label="Mission action"
+              className="h-10 w-10 flex items-center justify-center rounded-full bg-[#2E2E32] text-white/60 hover:bg-[#3E3E42] hover:text-white active:scale-95 transition-all"
             >
               {isVerifying ? (
-                <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/20 border-t-white" />
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-white" />
               ) : (
                 <ChevronRight className="h-5 w-5" />
               )}
@@ -403,10 +396,6 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
           )}
         </div>
       </div>
-
-      {isCompleted && !isClaimed && (
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[var(--figma-accent-green)]/10 to-transparent" />
-      )}
     </div>
   );
 };

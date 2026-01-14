@@ -296,6 +296,7 @@ const UserSegmentsPage: React.FC = () => {
                             <button
                               onClick={() => handleUpdate(seg.user_id)}
                               disabled={updateMutation.isPending}
+                              title="세그먼트 저장"
                               className="p-2 rounded-lg hover:bg-admin-accent/10 text-admin-accent transition-colors disabled:opacity-50"
                             >
                               <CheckCircle2 className="h-4 w-4" />
@@ -305,6 +306,7 @@ const UserSegmentsPage: React.FC = () => {
                                 setEditingUserId(null);
                                 setNewSegment("");
                               }}
+                              title="취소"
                               className="p-2 rounded-lg hover:bg-admin-danger/10 text-admin-danger transition-colors"
                             >
                               <AlertCircle className="h-4 w-4" />
@@ -316,6 +318,7 @@ const UserSegmentsPage: React.FC = () => {
                               setEditingUserId(seg.user_id);
                               setNewSegment(seg.segment);
                             }}
+                            title="세그먼트 수정"
                             className="p-2 rounded-lg hover:bg-admin-brand/10 text-admin-brand transition-colors"
                           >
                             <Edit3 className="h-4 w-4" />

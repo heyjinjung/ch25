@@ -23,6 +23,8 @@ export interface ShopProduct {
         item_type: string;
         amount: number;
     };
+    is_active?: boolean;
+    source?: string;
 }
 
 export const fetchInventory = async (): Promise<InventoryData> => {
@@ -51,7 +53,25 @@ export const fetchInventory = async (): Promise<InventoryData> => {
 
 export const fetchShopProducts = async (): Promise<ShopProduct[]> => {
     const response = await apiClient.get("/api/shop/products");
-    return response.data;
+    const raw = response.data as any;
+    if (!Array.isArray(raw)) {
+        throw new Error("INVALID_SHOP_PRODUCTS");
+    }
+
+    return raw.map((p) => ({
+        sku: String(p?.sku ?? ""),
+        title: String(p?.title ?? ""),
+        cost: {
+            token: String(p?.cost?.token ?? ""),
+            amount: Number(p?.cost?.amount ?? 0),
+        },
+        grant: {
+            item_type: String(p?.grant?.item_type ?? ""),
+            amount: Number(p?.grant?.amount ?? 0),
+        },
+        is_active: typeof p?.is_active === "boolean" ? p.is_active : undefined,
+        source: typeof p?.source === "string" ? p.source : undefined,
+    })).filter((p) => p.sku && p.cost.token);
 };
 
 export const purchaseProduct = async (sku: string): Promise<any> => {

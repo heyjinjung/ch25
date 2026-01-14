@@ -84,4 +84,23 @@ export async function resolveAdminUser(identifier: string) {
   return data;
 }
 
+export interface VaultEarnEvent {
+  id: number;
+  user_id: number;
+  earn_event_id: string;
+  earn_type: string;
+  amount: number;
+  source: string;
+  reward_kind?: string;
+  game_type?: string;
+  token_type?: string;
+  payout_raw_json?: any;
+  created_at: string;
+}
+
+export async function fetchUserVaultHistory(userId: number) {
+  const { data } = await adminApi.get<VaultEarnEvent[]>(`/admin/api/users/${userId}/vault/history`);
+  return data;
+}
+
 export type { AdminUserSummary, AdminUserResolveResponse } from "../types/adminUserSummary";

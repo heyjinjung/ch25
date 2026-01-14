@@ -10,6 +10,7 @@ export interface GrantGameTokensPayload {
   external_id?: string;
   token_type: GameTokenType;
   amount: number;
+  reason?: string;
 }
 
 export interface GrantGameTokensResponse {
@@ -45,6 +46,7 @@ export interface RevokeGameTokensPayload {
   external_id?: string;
   token_type: GameTokenType;
   amount: number;
+  reason?: string;
 }
 
 export interface PlayLogEntry {

@@ -94,17 +94,16 @@ class AdminDashboardService:
         external_ranking_deposit = int(ext_rank_stats[0] or 0)
         external_ranking_play_count = int(ext_rank_stats[1] or 0)
 
-        # Today's Deposits (KST 00:00 ~ Now)
-        deposit_stats = db.query(
-            func.sum(UserCashLedger.delta),
-            func.count(UserCashLedger.id)
+        # Today's Deposits - 입력일(created_at)이 오늘인 것만 반영
+        ext_today_stats = db.query(
+            func.sum(ExternalRankingData.deposit_amount),
+            func.count(ExternalRankingData.id)
         ).filter(
-            UserCashLedger.created_at >= today_start_utc,
-            UserCashLedger.delta > 0,
-            or_(UserCashLedger.reason == "CHARGE", UserCashLedger.reason == "DEPOSIT")
+            ExternalRankingData.created_at >= today_start_utc,
+            ExternalRankingData.deposit_amount > 0
         ).first()
-        today_deposit_sum = int(deposit_stats[0] or 0)
-        today_deposit_count = int(deposit_stats[1] or 0)
+        today_deposit_sum = int(ext_today_stats[0] or 0)
+        today_deposit_count = int(ext_today_stats[1] or 0)
 
         # 4. Liabilities (Vault + Inventory)
         vault_stats = db.query(
@@ -544,20 +543,20 @@ class AdminDashboardService:
                 })
 
         elif metric_key == "today_deposit":
-            # Deposits today
-            txs = db.query(UserCashLedger, User).join(User).filter(
-                UserCashLedger.created_at >= today_start_utc,
-                UserCashLedger.delta > 0,
-                or_(UserCashLedger.reason == "CHARGE", UserCashLedger.reason == "DEPOSIT")
-            ).order_by(UserCashLedger.created_at.desc()).limit(50).all()
+            # 입력일(created_at)이 오늘인 것만 조회
+            from app.models.external_ranking import ExternalRankingData
+            ext_ranks = db.query(ExternalRankingData, User).join(User).filter(
+                ExternalRankingData.created_at >= today_start_utc,
+                ExternalRankingData.deposit_amount > 0
+            ).order_by(ExternalRankingData.deposit_amount.desc()).limit(50).all()
 
-            for tx, u in txs:
+            for r, u in ext_ranks:
                 results.append({
-                    "id": tx.id,
+                    "id": u.id,
                     "label": u.nickname or f"User {u.id}",
-                    "sub_label": tx.reason,
-                    "value": f"+{tx.delta:,} KRW",
-                    "tags": [tx.reason]
+                    "sub_label": f"외부 랭킹 @ {r.created_at.strftime('%H:%M:%S')}",
+                    "value": f"+{r.deposit_amount:,} KRW",
+                    "tags": ["EXTERNAL_RANKING"]
                 })
 
         elif metric_key == "welcome_retention":

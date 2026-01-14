@@ -6,13 +6,16 @@ import { tryHaptic } from "../../utils/haptics";
 import { motion } from "framer-motion";
 
 import { useToast } from "../../components/common/ToastProvider";
-import { Lock, Info } from "lucide-react";
+import { Lock, Info, ListChecks } from "lucide-react";
+import WithdrawalConditionsModal from "../modal/WithdrawalConditionsModal";
 
 // Helper to format currency
 const formatWon = (amount: number) => `${amount.toLocaleString("ko-KR")}원`;
 
 const VaultPageCompact: React.FC = () => {
     const { addToast } = useToast();
+    const [showConditionsModal, setShowConditionsModal] = React.useState(false);
+
     // Fetch Vault Status
     const vault = useQuery({
         queryKey: ["vault-status"],
@@ -206,6 +209,13 @@ const VaultPageCompact: React.FC = () => {
 
                     {/* Footer Info Row - Restored */}
                     <div className="w-full max-w-xs space-y-2 mb-8 px-2">
+                        <button
+                            onClick={() => setShowConditionsModal(true)}
+                            className="w-full mb-3 flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-xs font-bold text-white/50 hover:bg-white/10 hover:text-white transition-colors"
+                        >
+                            <ListChecks size={14} />
+                            <span>출금 조건 확인하기</span>
+                        </button>
                         <div className="flex justify-between items-center text-[11px] font-medium text-white/40">
                             <span>출금 가능 금액</span>
                             <span className="text-amber-500 font-bold text-xs">{formatWon(view.availableAmount)}</span>
@@ -234,6 +244,17 @@ const VaultPageCompact: React.FC = () => {
                         씨씨카지노 충전하기
                     </a>
                 </div>
+            )}
+            {showConditionsModal && vault.data && (
+                <WithdrawalConditionsModal
+                    onClose={() => setShowConditionsModal(false)}
+                    vaultBalance={view.availableAmount}
+                    dailyPlayCount={vault.data.dailyPlayCount ?? 0}
+                    dailyPlayTarget={vault.data.dailyPlayTarget ?? 30}
+                    dailyVaultSpent={vault.data.dailyVaultSpent ?? 0}
+                    dailyVaultSpentTarget={vault.data.dailyVaultSpentTarget ?? 10000}
+                    dailyDepositConfirmed={vault.data.dailyDepositConfirmed ?? false}
+                />
             )}
         </div>
     );

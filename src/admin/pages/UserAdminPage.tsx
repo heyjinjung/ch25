@@ -11,6 +11,7 @@ import { Check, ClipboardList, History, Package, Ticket, X } from "lucide-react"
 import UserInventoryModal from "../components/UserInventoryModal";
 import UserGameTokenModal from "../components/UserGameTokenModal";
 import UserAuditLogModal from "../components/UserAuditLogModal";
+import VaultHistoryTable from "../components/VaultHistoryTable";
 
 type MemberRow = AdminUser & {
   isEditing?: boolean;
@@ -72,6 +73,7 @@ const UserAdminPage: React.FC = () => {
   const [selectedUserForInventory, setSelectedUserForInventory] = useState<AdminUser | null>(null);
   const [selectedUserForGameTokens, setSelectedUserForGameTokens] = useState<{ user: AdminUser; tab: "wallets" | "ledger" } | null>(null);
   const [selectedUserForAuditLogs, setSelectedUserForAuditLogs] = useState<AdminUser | null>(null);
+  const [selectedUserForVaultHistory, setSelectedUserForVaultHistory] = useState<AdminUser | null>(null);
 
   const [sortKey, setSortKey] = useState<SortKey>("nickname");
   const [itemsPerPage, setItemsPerPage] = useState(20);
@@ -876,6 +878,16 @@ const UserAdminPage: React.FC = () => {
                             <History size={16} />
                           </button>
 
+                          <button
+                            type="button"
+                            onClick={() => setSelectedUserForVaultHistory(member)}
+                            className="rounded-md p-2 text-yellow-500 hover:text-white"
+                            title="금고 내역"
+                            aria-label="금고 내역"
+                          >
+                            <span className="font-bold text-xs">V</span>
+                          </button>
+
 
                           <button
                             type="button"
@@ -923,6 +935,7 @@ const UserAdminPage: React.FC = () => {
                 memberId={selectedUserForGameTokens!.user.id}
                 nickname={selectedUserForGameTokens!.user.nickname ?? selectedUserForGameTokens!.user.external_id ?? String(selectedUserForGameTokens!.user.id)}
                 isOpen={true}
+                defaultTab={selectedUserForGameTokens.tab === "ledger" ? "history" : "grant"}
                 onClose={() => setSelectedUserForGameTokens(null)}
               />
             )}
@@ -931,6 +944,13 @@ const UserAdminPage: React.FC = () => {
               <UserAuditLogModal
                 user={selectedUserForAuditLogs!}
                 onClose={() => setSelectedUserForAuditLogs(null)}
+              />
+            )}
+
+            {selectedUserForVaultHistory && (
+              <VaultHistoryTable
+                user={selectedUserForVaultHistory}
+                onClose={() => setSelectedUserForVaultHistory(null)}
               />
             )}
 

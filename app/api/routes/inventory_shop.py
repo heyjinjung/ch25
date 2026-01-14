@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlalchemy.orm import Session
 from typing import Any
+from datetime import datetime
 
 from app.api import deps
 from app.services.inventory_service import InventoryService
@@ -25,24 +26,37 @@ def get_my_inventory(
     # We can fetch wallet via relationship or GameWalletService.
     # User.game_wallets relationship should be available.
     wallet_data = {}
+    legacy_diamond_balance: int | None = None
     if current_user.game_wallets:
         for w in current_user.game_wallets:
             # Phase 2 rule: DIAMOND is Inventory SoT, so hide it from wallet payload.
             if w.token_type.value == "DIAMOND":
+                legacy_diamond_balance = int(w.balance or 0)
                 continue
             wallet_data[w.token_type.value] = w.balance
 
-    return {
-        "items": [
+    items_payload = [
+        {
+            "item_type": item.item_type,
+            "quantity": item.quantity,
+            "created_at": item.created_at,
+        }
+        for item in items
+    ]
+
+    # Legacy compatibility:
+    # Some users may still have DIAMOND stored in wallet (pre-Phase2). If DIAMOND isn't present
+    # in inventory items yet, expose it as an inventory item for UI visibility.
+    if (legacy_diamond_balance or 0) > 0 and not any(p.get("item_type") == "DIAMOND" for p in items_payload):
+        items_payload.append(
             {
-                "item_type": item.item_type, 
-                "quantity": item.quantity,
-                "created_at": item.created_at,
-            } 
-            for item in items
-        ],
-        "wallet": wallet_data
-    }
+                "item_type": "DIAMOND",
+                "quantity": legacy_diamond_balance,
+                "created_at": datetime.utcnow(),
+            }
+        )
+
+    return {"items": items_payload, "wallet": wallet_data}
 
 
 @router.post("/inventory/use", response_model=dict)

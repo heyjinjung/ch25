@@ -11,6 +11,8 @@ from app.schemas.admin_user import AdminUserCreate, AdminUserResponse, AdminUser
 from app.schemas.admin_user_summary import AdminUserResolveResponse
 from app.schemas.user_history import UserIdentityHistoryResponse
 from app.models.user_history import UserIdentityHistory
+from app.models.vault_earn_event import VaultEarnEvent
+from app.schemas.vault import VaultEarnEventSchema
 from app.services.admin_user_service import AdminUserService
 from app.services.admin_user_identity_service import build_admin_user_summary, resolve_user_summary
 
@@ -92,3 +94,16 @@ def get_identity_history(
     history = db.query(UserIdentityHistory).filter(UserIdentityHistory.user_id == user_id).order_by(UserIdentityHistory.created_at.desc()).all()
     return [UserIdentityHistoryResponse.model_validate(h) for h in history]
 
+@router.get("/{user_id}/vault/history", response_model=List[VaultEarnEventSchema])
+def get_vault_history(
+    user_id: int,
+    db: Session = Depends(get_db),
+) -> List[VaultEarnEventSchema]:
+    history = (
+        db.query(VaultEarnEvent)
+        .filter(VaultEarnEvent.user_id == user_id)
+        .order_by(VaultEarnEvent.created_at.desc())
+        .limit(100)
+        .all()
+    )
+    return [VaultEarnEventSchema.model_validate(h) for h in history]

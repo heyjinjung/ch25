@@ -25,6 +25,13 @@ interface BackendVaultStatusResponse {
   readonly golden_hour_remaining_seconds?: number;
   readonly show_modal_override?: string | null;
   readonly segment?: string | null;
+
+  // Withdrawal Conditions
+  readonly daily_play_count?: number;
+  readonly daily_play_target?: number;
+  readonly daily_deposit_confirmed?: boolean;
+  readonly daily_vault_spent?: number;
+  readonly daily_vault_spent_target?: number;
 }
 
 export interface VaultStatusResponse {
@@ -56,6 +63,13 @@ export interface VaultStatusResponse {
   readonly golden_hour_remaining_seconds?: number;
   readonly showModalOverride?: string | null;
   readonly segment?: string | null;
+
+  // Withdrawal Conditions
+  readonly dailyPlayCount?: number;
+  readonly dailyPlayTarget?: number;
+  readonly dailyDepositConfirmed?: boolean;
+  readonly dailyVaultSpent?: number;
+  readonly dailyVaultSpentTarget?: number;
 }
 
 export const getVaultStatus = async (): Promise<VaultStatusResponse> => {
@@ -92,6 +106,13 @@ export const getVaultStatus = async (): Promise<VaultStatusResponse> => {
     golden_hour_remaining_seconds: data.golden_hour_remaining_seconds ?? 0,
     showModalOverride: data.show_modal_override ?? null,
     segment: data.segment ?? null,
+
+    // Withdrawal Conditions
+    dailyPlayCount: data.daily_play_count ?? 0,
+    dailyPlayTarget: data.daily_play_target ?? 30,
+    dailyDepositConfirmed: data.daily_deposit_confirmed ?? false,
+    dailyVaultSpent: data.daily_vault_spent ?? 0,
+    dailyVaultSpentTarget: data.daily_vault_spent_target ?? 10000,
   };
 };
 

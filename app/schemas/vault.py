@@ -64,3 +64,20 @@ class VaultFillResponse(BaseModel):
     delta: int
     vault_balance_after: int
     vault_fill_used_at: datetime
+
+
+class VaultEarnEventSchema(BaseModel):
+    id: int
+    user_id: int
+    earn_event_id: str
+    earn_type: str
+    amount: int
+    source: str
+    reward_kind: str | None = None
+    game_type: str | None = None
+    token_type: str | None = None
+    payout_raw_json: dict[str, Any] | None = None
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True

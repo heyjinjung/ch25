@@ -33,6 +33,7 @@ const InventoryPage: React.FC = () => {
 
     const items = Array.isArray(data?.items) ? data.items : [];
     const wallet = data?.wallet && typeof data.wallet === "object" && !Array.isArray(data.wallet) ? data.wallet : {};
+    const diamondCount = items.find((i) => i.item_type === "DIAMOND")?.quantity ?? 0;
 
     if (isLoading) {
         return (
@@ -70,6 +71,10 @@ const InventoryPage: React.FC = () => {
                 </div>
                 <div>
                     <h1 className="text-xl font-black text-white">보상함</h1>
+                    <div className="mt-1 flex items-center gap-1.5 text-[11px] font-black text-white/60">
+                        <img src="/assets/icon_diamond.png" alt="" className="w-3.5 h-3.5 object-contain" />
+                        <span className="tabular-nums">{diamondCount.toLocaleString()}개</span>
+                    </div>
                 </div>
                 <div className="ml-auto">
                     <button
@@ -275,6 +280,13 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, onUse, isPending }) => {
                     <div className="mx-auto max-w-full text-[14px] font-black text-white/90 leading-tight whitespace-normal break-keep overflow-hidden line-clamp-2 min-h-[34px]">
                         {info.title}
                     </div>
+                </div>
+
+                <div className="mb-2 flex items-baseline justify-center gap-1">
+                    <span className="text-lg font-black text-white tracking-tighter tabular-nums">
+                        {item.quantity.toLocaleString()}
+                    </span>
+                    <span className="text-[10px] font-bold text-white/30">개 보유</span>
                 </div>
 
                 <button
