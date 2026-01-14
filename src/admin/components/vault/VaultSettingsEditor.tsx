@@ -88,13 +88,6 @@ const VaultSettingsEditor: React.FC<Props> = ({ program }) => {
             }
         });
 
-        // Preserve existing DICE config block (managed in Admin Dice page / event params).
-        // This prevents accidental removal when saving unrelated vault settings.
-        const existingDice = (program.config_json?.game_earn_config as any)?.DICE;
-        if (existingDice && typeof existingDice === "object") {
-            newGameEarn["DICE"] = { ...existingDice };
-        }
-
         const json = {
             ...program.config_json,
             accrual_multiplier: multiplier,
@@ -124,12 +117,11 @@ const VaultSettingsEditor: React.FC<Props> = ({ program }) => {
                     <Save className="h-4 w-4" />
                     설정 저장
                 </button>
-                                                disabled={isDice}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-6">
-                                                <option value="DICE">DICE (관리: 주사위 설정)</option>
+                    <div className="admin-card p-6">
                         <div className="flex items-center justify-between mb-4">
                             <h4 className="text-admin-body font-bold text-admin-text-primary">이벤트 적립 배수 (Multiplier)</h4>
                             <span className="px-2 py-0.5 rounded-admin-lg bg-admin-hover text-admin-warning text-[10px] font-bold uppercase tracking-widest border border-admin-border">Active Policy</span>
@@ -138,7 +130,6 @@ const VaultSettingsEditor: React.FC<Props> = ({ program }) => {
                             <div className="flex items-center gap-4">
                                 <div className="flex-1">
                                     <input
-                                                disabled={isDice}
                                         type="number"
                                         step="0.1"
                                         className={inputClass}
@@ -150,24 +141,19 @@ const VaultSettingsEditor: React.FC<Props> = ({ program }) => {
                                 </div>
                                 <div className="text-2xl font-black text-admin-text-primary">x</div>
                             </div>
-                                                disabled={isDice}
                             <p className="text-admin-meta text-admin-text-secondary leading-relaxed">
                                 모든 금고 적립(게임/티켓/체험)에 적용되는 전역 배수입니다. 기본값은 1.0이며, 이벤트 기간에만 조정하는 것을 권장합니다.
                             </p>
                         </div>
                     </div>
-                                            {isDice ? (
-                                                <span className="text-[11px] text-admin-text-muted">DICE는 /admin/dice에서 관리</span>
-                                            ) : (
-                                                <button
-                                                    className="btn-admin-ghost p-2"
-                                                    onClick={() => removeGameEarn(i)}
-                                                    aria-label="삭제"
-                                                    title="삭제"
-                                                >
-                                                    <Trash2 className="h-4 w-4 text-admin-danger" />
-                                                </button>
-                                            )}
+
+                    <div className="admin-card p-6">
+                        <h4 className="text-admin-body font-bold text-admin-text-primary flex items-center gap-2 mb-4">
+                            <HelpCircle className="h-4 w-4 text-admin-brand" />
+                            운영 설정 가이드
+                        </h4>
+                        <div className="space-y-3 text-admin-meta text-admin-text-secondary leading-relaxed">
+                            <p>• <b>게임 적립금</b>: 게임 종류(ROULETTE, DICE)와 결과(WIN, LOSE, SEGMENT_N)별로 금고에 반영되는 기본 금액을 설정합니다.</p>
                             <p>• <b>RewardID 형식</b>: <code>[Type]:[Amount]</code> (예: <code>POINT:1000</code>). 체험 티켓 결과 매칭에 사용됩니다.</p>
                             <p>• <b>누락 시</b>: 해당 보상이 금고 적립에서 스킵될 수 있습니다.</p>
                         </div>
@@ -198,9 +184,7 @@ const VaultSettingsEditor: React.FC<Props> = ({ program }) => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {gameEarn.map((g, i) => {
-                                    const isDice = String(g.game || "").toUpperCase() === "DICE";
-                                    return (
+                                {gameEarn.map((g, i) => (
                                     <tr key={i}>
                                         <td className="admin-td">
                                             <select
@@ -215,8 +199,7 @@ const VaultSettingsEditor: React.FC<Props> = ({ program }) => {
                                                 <option value="LOTTERY">LOTTERY</option>
                                             </select>
                                         </td>
-                                        );
-                                    })}
+                                        <td className="admin-td">
                                             <input
                                                 className={inputClass}
                                                 value={g.outcome}
