@@ -75,7 +75,7 @@ def upsert_overrides(
     updates = {}
     if payload.products:
         updates = {
-            sku: patch.model_dump(exclude_none=True)
+            sku: patch.model_dump(mode='json', exclude_none=True)
             for sku, patch in payload.products.items()
         }
 

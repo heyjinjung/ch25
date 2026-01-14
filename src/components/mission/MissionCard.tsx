@@ -287,7 +287,7 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
             : "bg-[#1A1A1B] border-white/5 shadow-md shadow-black/40"
       )}
     >
-      <div className="flex items-center p-5 gap-4">
+      <div className="grid grid-cols-[52px,1fr,auto] items-center gap-4 p-5">
         {/* Left: Icon Box */}
         <div
           className={clsx(
@@ -306,9 +306,9 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
         <div className="flex-1 min-w-0 flex flex-col justify-center gap-3">
           {/* Header */}
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 min-w-0">
               <span className="text-[15px] font-black leading-tight text-white tracking-tight truncate">
-                {mission.title}
+                {isDailyGift ? "선물" : mission.title}
               </span>
               {(timeWindow || mission.auto_claim) && (
                 <span className="inline-flex items-center rounded-md bg-white/10 px-1.5 py-0.5 text-[9px] font-bold text-white/60">
@@ -316,28 +316,33 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
                 </span>
               )}
             </div>
-            <div className="text-[12px] font-medium text-[#888888] truncate mt-0.5">
-              {mission.description || "미션을 완료하고 보상을 받으세요"}
-            </div>
+            {/* 미션 설명(일일 로그인시 매일선물 등) 제거 */}
           </div>
 
           {/* Progress Bar (Only visible if not claimed) */}
           {!isClaimed && (
             <div className="w-full">
-              <div className="flex items-center justify-between text-[11px] font-bold mb-1.5 leading-none">
-                <span className="text-white/40 tabular-nums">
+              <div className="grid grid-cols-[1fr,auto] items-center gap-2 text-[11px] font-bold mb-1.5 leading-none">
+                <span className="text-white/40 tabular-nums whitespace-nowrap">
                   {progress.current_value} <span className="text-white/20">/</span> {mission.target_value}
                 </span>
-                <span className={clsx("tabular-nums", isCompleted ? "text-emerald-400" : "text-white/40")}>
-                  {isCompleted ? "Completed" : `${percent}%`}
-                </span>
+                {isCompleted ? (
+                  <span className="inline-flex items-center rounded-full border border-emerald-500/20 bg-emerald-500/15 px-2 py-0.5 text-[10px] font-black text-emerald-300 whitespace-nowrap">
+                    Completed
+                  </span>
+                ) : (
+                  <span className="tabular-nums whitespace-nowrap text-white/40">
+                    {percent}%
+                  </span>
+                )}
               </div>
               <div className="h-1.5 w-full rounded-full bg-[#252528] overflow-hidden">
                 <div
                   className={clsx(
-                    `h-full rounded-full transition-all duration-500 w-[${percent}%]`,
+                    "h-full rounded-full transition-all duration-500",
                     isCompleted ? "bg-emerald-500" : "bg-white/20"
                   )}
+                  style={{ width: `${percent}%` }}
                 />
               </div>
             </div>
@@ -345,17 +350,17 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
         </div>
 
         {/* Right: Rewards & Action */}
-        <div className="flex items-center gap-3 shrink-0 pl-1">
+        <div className="flex items-center gap-2 shrink-0 pl-0.5">
           {/* Text Info Column */}
-          <div className="flex flex-col items-end gap-1.5">
+          <div className="flex flex-col items-end gap-1">
             {/* Reward Badge */}
-            <div className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-[#252528] px-3 py-1.5">
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-[#252528] px-2.5 py-1">
               <img
                 src={rewardIconSrc}
                 alt=""
                 className="h-3.5 w-3.5 object-contain"
               />
-              <span className="text-[12px] font-black text-white/90 leading-none">
+              <span className="text-[11px] font-black text-white/90 leading-none">
                 {rewardLine?.text ?? mission.reward_amount.toLocaleString()}
               </span>
             </div>
@@ -370,27 +375,27 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
 
           {/* Action Button */}
           {isClaimed ? (
-            <div className="h-10 w-10 flex items-center justify-center rounded-full bg-white/5 text-white/20">
-              <Check className="h-5 w-5" />
+            <div className="h-9 w-9 flex items-center justify-center rounded-full bg-white/5 text-white/20">
+              <Check className="h-4.5 w-4.5" />
             </div>
           ) : isCompleted ? (
             <button
               onClick={handleClaim}
-              className="h-10 w-10 flex items-center justify-center rounded-full bg-emerald-500 text-black shadow-lg shadow-emerald-500/30 hover:scale-105 active:scale-95 transition-all"
+              className="h-9 w-9 flex items-center justify-center rounded-full bg-emerald-500 text-black shadow-lg shadow-emerald-500/30 hover:scale-105 active:scale-95 transition-all"
               title="보상 수령"
             >
-              <Trophy className="h-5 w-5 fill-current" />
+              <Trophy className="h-4.5 w-4.5 fill-current" />
             </button>
           ) : (
             <button
               onClick={handleAction}
               disabled={isVerifying}
-              className="h-10 w-10 flex items-center justify-center rounded-full bg-[#2E2E32] text-white/60 hover:bg-[#3E3E42] hover:text-white active:scale-95 transition-all"
+              className="h-9 w-9 flex items-center justify-center rounded-full bg-[#2E2E32] text-white/60 hover:bg-[#3E3E42] hover:text-white active:scale-95 transition-all"
             >
               {isVerifying ? (
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-white" />
               ) : (
-                <ChevronRight className="h-5 w-5" />
+                <ChevronRight className="h-4.5 w-4.5" />
               )}
             </button>
           )}

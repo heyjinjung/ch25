@@ -245,7 +245,6 @@ const ExchangePage: React.FC = () => {
                     <div className="flex items-center gap-2 mb-3 border-t border-white/10 pt-6">
                         <img src="/assets/icon_diamond.png" className="w-4 h-4" alt="" />
                         <h2 className="text-sm font-black text-white">다이아 샵</h2>
-                        <span className="text-[10px] text-emerald-400/70 font-medium ml-auto">마일리지 사용</span>
                     </div>
                     <div className="grid grid-cols-3 gap-3">
                         {diamondProducts.map(p => (
