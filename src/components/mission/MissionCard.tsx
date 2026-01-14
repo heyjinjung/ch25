@@ -24,6 +24,10 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
   const queryClient = useQueryClient();
   const [isVerifying, setIsVerifying] = React.useState(false);
 
+  const telegramBotUsername = (import.meta.env.VITE_TELEGRAM_BOT_USERNAME as string | undefined) || "jm956_bot";
+  const telegramWebappShortName = (import.meta.env.VITE_TELEGRAM_WEBAPP_SHORT_NAME as string | undefined) || "ccjm";
+  const telegramAppUrl = `https://t.me/${telegramBotUsername}/${telegramWebappShortName}`;
+
   const timeWindow = mission.start_time && mission.end_time
     ? `${mission.start_time.slice(0, 5)} ~${mission.end_time.slice(0, 5)} `
     : null;
@@ -113,9 +117,8 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
         return;
       }
       if (mission.action_type === "SHARE") {
-        const appUrl = "https://t.me/jm956_bot/ccjm";
         const shareText = "CCJM 주간 미션 참여! 여기로 들어오면 바로 시작돼요";
-        const shareUrl = `https://t.me/share/url?${new URLSearchParams({ url: appUrl, text: shareText }).toString()}`;
+        const shareUrl = `https://t.me/share/url?${new URLSearchParams({ url: telegramAppUrl, text: shareText }).toString()}`;
 
         const tg = window.Telegram?.WebApp;
         let opened = false;
@@ -158,10 +161,9 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
       }
       if (mission.action_type === "SHARE_STORY") {
         if (window.Telegram?.WebApp?.shareToStory) {
-          const appUrl = "https://t.me/jm956_bot/ccjm";
           const storyMediaUrl = `${window.location.origin}/assets/story/ccjm_story_1080x1920.mp4`;
           const fallbackShareText = "CCJM 오픈 기념 미션! 같이 해보자";
-          const fallbackShareUrl = `https://t.me/share/url?${new URLSearchParams({ url: appUrl, text: fallbackShareText }).toString()}`;
+          const fallbackShareUrl = `https://t.me/share/url?${new URLSearchParams({ url: telegramAppUrl, text: fallbackShareText }).toString()}`;
 
           if (!window.location.origin.startsWith("https://")) {
             addToast("스토리 공유는 https 환경에서만 안정적으로 동작합니다.", "error");
@@ -169,7 +171,7 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
           try {
             window.Telegram.WebApp.shareToStory(storyMediaUrl, {
               text: "CCJM 오픈 기념 미션! 같이 해보자",
-              widget_link: { url: appUrl, name: "CCJM 열기" },
+              widget_link: { url: telegramAppUrl, name: "CCJM 열기" },
             });
 
             // Record action immediately (Trust Approach)
@@ -203,9 +205,8 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
         return;
       }
       if (mission.action_type === "SHARE_WALLET") {
-        const appUrl = "https://t.me/jm956_bot/ccjm";
         const shareText = "내 지갑 💎 CCJM에서 함께 확인해봐!";
-        const shareUrl = `https://t.me/share/url?${new URLSearchParams({ url: appUrl, text: shareText }).toString()}`;
+        const shareUrl = `https://t.me/share/url?${new URLSearchParams({ url: telegramAppUrl, text: shareText }).toString()}`;
 
         const tg = window.Telegram?.WebApp;
         let opened = false;

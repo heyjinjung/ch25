@@ -290,6 +290,11 @@ def telegram_auth(
                     db.rollback()
                     raise HTTPException(status_code=500, detail=f"Failed to update telegram user: {str(e)}")
 
+    # Fetch user segment
+    from app.models.user_segment import UserSegment
+    segment_row = db.query(UserSegment).filter(UserSegment.user_id == user.id).first()
+    user_segment = segment_row.segment if segment_row else "COMMON"
+
     # 2. Issue JWT
     token = security.create_access_token(user.id)
     
@@ -303,6 +308,7 @@ def telegram_auth(
             "nickname": user.nickname,
             "status": user.status,
             "level": user.level,
+            "segment": user_segment,
             "telegram_id": user.telegram_id,
         }
     )

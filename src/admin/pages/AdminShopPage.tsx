@@ -39,6 +39,7 @@ const ITEM_TYPE_LABELS: Record<string, string> = {
 
 const COST_TOKEN_LABELS: Record<string, string> = {
   DIAMOND: "다이아",
+  VAULT: "금고(Vault)",
   ROULETTE_COIN: "룰렛 코인",
   DICE_TOKEN: "주사위 토큰",
   LOTTERY_TICKET: "복권 티켓",
@@ -103,6 +104,38 @@ const formatSkuLabel = (sku: string): string => {
     .map((t) => SKU_TOKEN_LABELS[t] ?? t);
   const joined = tokens.join(" ").trim();
   return joined || sku;
+};
+
+const formatDateYYYYMMDD = (d: Date): string => {
+  const yyyy = String(d.getFullYear());
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}${mm}${dd}`;
+};
+
+const sanitizeSkuToken = (raw: string): string => {
+  return String(raw || "")
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .replace(/_+/g, "_");
+};
+
+const buildAutoSku = (params: {
+  costToken: string;
+  itemType: string;
+  costAmount: number;
+  itemAmount: number;
+  date?: Date;
+}): string => {
+  const date = params.date ?? new Date();
+  const costToken = sanitizeSkuToken(params.costToken || "DIAMOND");
+  const itemType = sanitizeSkuToken(params.itemType || "ITEM");
+  const costAmount = Math.max(0, Math.floor(Number(params.costAmount) || 0));
+  const itemAmount = Math.max(0, Math.floor(Number(params.itemAmount) || 0));
+  const ymd = formatDateYYYYMMDD(date);
+  return `SHOP_${costToken}_${itemType}_${costAmount}_X${itemAmount}_${ymd}`;
 };
 
 // reason 패턴 → 한글 라벨
@@ -401,7 +434,7 @@ const AdminShopPage: React.FC = () => {
               {r.cost_amount.toLocaleString()}
             </span>
             <span className="text-xs font-bold text-admin-text-secondary">
-              {rewardTypeMap[r.cost_token] || r.cost_token}
+              {COST_TOKEN_LABELS[r.cost_token] || r.cost_token}
             </span>
           </div>
         </td>
@@ -478,6 +511,47 @@ const AdminShopPage: React.FC = () => {
     const [formItemAmount, setFormItemAmount] = useState(initialData?.item_amount || 1);
     const [formIsActive, setFormIsActive] = useState(initialData?.is_active ?? true);
 
+    // 클릭 직전 변경값까지 반영하기 위해 최신 입력값을 ref로 보관
+    const latestSkuParamsRef = React.useRef({
+      costToken: initialData?.cost_token || "DIAMOND",
+      costAmount: Number(initialData?.cost_amount || 1),
+      itemType: initialData?.item_type || "",
+      itemAmount: Number(initialData?.item_amount || 1),
+    });
+
+    const reservedSkuSet = useMemo(() => {
+      const set = new Set<string>();
+      for (const p of effectiveProducts) set.add(p.sku);
+      for (const key of rows.keys()) set.add(key);
+      for (const key of deletedSkus) set.add(key);
+      return set;
+    }, [effectiveProducts, rows, deletedSkus]);
+
+    const handleAutoGenerateSku = () => {
+      const latest = latestSkuParamsRef.current;
+      if (!String(latest.itemType || "").trim()) {
+        addToast("지급 아이템을 먼저 선택하세요.", "error");
+        return;
+      }
+      const base = buildAutoSku({
+        costToken: latest.costToken,
+        itemType: latest.itemType,
+        costAmount: latest.costAmount,
+        itemAmount: latest.itemAmount,
+      });
+
+      let candidate = base;
+      let version = 2;
+      while (reservedSkuSet.has(candidate)) {
+        candidate = `${base}_V${version}`;
+        version += 1;
+        if (version > 99) break;
+      }
+
+      setFormSku(candidate);
+      addToast(`SKU 자동 생성: ${candidate}`, "success");
+    };
+
     const [itemTypeMode, setItemTypeMode] = useState<"select" | "custom">(
       sku && !rewardTypeOptions.some(o => o.value === initialData?.item_type) ? "custom" : "select"
     );
@@ -545,13 +619,30 @@ const AdminShopPage: React.FC = () => {
             {/* 상품 코드 */}
             <div className="space-y-2">
               <label className="block text-xs font-black text-zinc-500 uppercase tracking-wider ml-1">상품코드 (SKU)</label>
-              <input
-                className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-admin-brand/50 transition-all disabled:opacity-50 font-mono"
-                value={formSku}
-                onChange={e => !isEdit && setFormSku(e.target.value)}
-                disabled={isEdit}
-                placeholder="PROD_DIAMOND_10"
-              />
+              <div className="flex gap-2">
+                <input
+                  className="flex-1 bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-admin-brand/50 transition-all disabled:opacity-50 font-mono"
+                  value={formSku}
+                  onChange={e => !isEdit && setFormSku(e.target.value)}
+                  disabled={isEdit}
+                  placeholder="SHOP_VAULT_VOUCHER_ROULETTE_COIN_1_3000_X5_20260114"
+                />
+                {!isEdit && (
+                  <button
+                    type="button"
+                    onClick={handleAutoGenerateSku}
+                    className="shrink-0 rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-xs font-black text-white/80 hover:bg-white/10"
+                    title="입력값 기반으로 SKU 자동 생성"
+                  >
+                    자동 생성
+                  </button>
+                )}
+              </div>
+              {!isEdit && (
+                <p className="text-[11px] text-white/35">
+                  결제 토큰/지급 아이템/가격/수량 기준으로 생성되며, 중복이면 <span className="font-mono">_V2</span> 같은 suffix가 붙습니다.
+                </p>
+              )}
             </div>
 
             {/* 상품명 */}
@@ -572,7 +663,11 @@ const AdminShopPage: React.FC = () => {
                 <select
                   className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-admin-brand/50 transition-all appearance-none"
                   value={formCostToken}
-                  onChange={e => setFormCostToken(e.target.value)}
+                  onChange={e => {
+                    const next = e.target.value;
+                    latestSkuParamsRef.current.costToken = next;
+                    setFormCostToken(next);
+                  }}
                 >
                   {COST_TOKEN_OPTIONS.map(o => <option key={o.value} value={o.value} className="bg-zinc-900">{o.label}</option>)}
                 </select>
@@ -585,7 +680,12 @@ const AdminShopPage: React.FC = () => {
                     value={costAmountMode === "custom" ? "__CUSTOM__" : formCostAmount}
                     onChange={e => {
                       if (e.target.value === "__CUSTOM__") setCostAmountMode("custom");
-                      else { setCostAmountMode("select"); setFormCostAmount(Number(e.target.value)); }
+                      else {
+                        const next = Number(e.target.value);
+                        latestSkuParamsRef.current.costAmount = next;
+                        setCostAmountMode("select");
+                        setFormCostAmount(next);
+                      }
                     }}
                   >
                     {AMOUNT_OPTIONS.map(n => <option key={n} value={n} className="bg-zinc-900">{n.toLocaleString()}</option>)}
@@ -596,7 +696,11 @@ const AdminShopPage: React.FC = () => {
                       type="number"
                       className="w-full bg-black/20 border border-admin-brand/30 rounded-xl px-4 py-2 text-sm text-white animate-in slide-in-from-top-1 duration-200"
                       value={formCostAmount}
-                      onChange={e => setFormCostAmount(Number(e.target.value))}
+                      onChange={e => {
+                        const next = Number(e.target.value);
+                        latestSkuParamsRef.current.costAmount = next;
+                        setFormCostAmount(next);
+                      }}
                     />
                   )}
                 </div>
@@ -617,7 +721,12 @@ const AdminShopPage: React.FC = () => {
                   value={itemTypeMode === "custom" ? "__CUSTOM__" : formItemType}
                   onChange={e => {
                     if (e.target.value === "__CUSTOM__") setItemTypeMode("custom");
-                    else { setItemTypeMode("select"); setFormItemType(e.target.value); }
+                    else {
+                      const next = e.target.value;
+                      latestSkuParamsRef.current.itemType = next;
+                      setItemTypeMode("select");
+                      setFormItemType(next);
+                    }
                   }}
                 >
                   <option value="" className="bg-zinc-900">선택하세요</option>
@@ -628,7 +737,11 @@ const AdminShopPage: React.FC = () => {
                   <input
                     className="w-full bg-black/20 border border-admin-brand/30 rounded-xl px-4 py-2 text-sm text-white mt-2"
                     value={formItemType}
-                    onChange={e => setFormItemType(e.target.value)}
+                    onChange={e => {
+                      const next = e.target.value;
+                      latestSkuParamsRef.current.itemType = next;
+                      setFormItemType(next);
+                    }}
                   />
                 )}
               </div>
@@ -641,7 +754,12 @@ const AdminShopPage: React.FC = () => {
                     value={itemAmountMode === "custom" ? "__CUSTOM__" : formItemAmount}
                     onChange={e => {
                       if (e.target.value === "__CUSTOM__") setItemAmountMode("custom");
-                      else { setItemAmountMode("select"); setFormItemAmount(Number(e.target.value)); }
+                      else {
+                        const next = Number(e.target.value);
+                        latestSkuParamsRef.current.itemAmount = next;
+                        setItemAmountMode("select");
+                        setFormItemAmount(next);
+                      }
                     }}
                   >
                     {AMOUNT_OPTIONS.map(n => <option key={n} value={n} className="bg-zinc-900">{n}</option>)}
@@ -652,7 +770,11 @@ const AdminShopPage: React.FC = () => {
                       type="number"
                       className="w-full bg-black/20 border border-admin-brand/30 rounded-xl px-4 py-2 text-sm text-white"
                       value={formItemAmount}
-                      onChange={e => setFormItemAmount(Number(e.target.value))}
+                      onChange={e => {
+                        const next = Number(e.target.value);
+                        latestSkuParamsRef.current.itemAmount = next;
+                        setFormItemAmount(next);
+                      }}
                     />
                   )}
                 </div>
@@ -668,6 +790,8 @@ const AdminShopPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setFormIsActive(v => !v)}
+                aria-label="판매 활성화 토글"
+                title={formIsActive ? "비활성으로 전환" : "활성으로 전환"}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 ${formIsActive ? 'bg-admin-brand' : 'bg-zinc-700'}`}
               >
                 <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition duration-300 ${formIsActive ? 'translate-x-6' : 'translate-x-1'}`} />

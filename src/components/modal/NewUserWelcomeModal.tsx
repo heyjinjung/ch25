@@ -1,29 +1,21 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { getNewUserStatus } from "../../api/newUserApi";
-import { getCloudItem, recordViralAction, setCloudItem, verifyChannelSubscription } from "../../api/viralApi";
+import Lottie from "lottie-react";
+import { claimNewUserWelcome, getNewUserStatus } from "../../api/newUserApi";
 import { useToast } from "../common/ToastProvider";
 import { useHaptic } from "../../hooks/useHaptic";
 
-const formatSeconds = (seconds: number | null | undefined) => {
-    if (seconds == null) return "00:00:00";
-    const s = Math.max(0, Math.floor(seconds));
-    const h = Math.floor(s / 3600);
-    const m = Math.floor((s % 3600) / 60);
-    const r = s % 60;
-    return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${r.toString().padStart(2, "0")}`;
-};
+
 
 interface NewUserWelcomeModalProps {
     onClose: () => void;
 }
 
 const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) => {
-    const [isVerifying, setIsVerifying] = useState(false);
-    const [pendingJoinChannelMissionId, setPendingJoinChannelMissionId] = useState<number | null>(null);
-    const pendingJoinRetriesRef = useRef(0);
-    const pendingJoinLastAttemptAtRef = useRef<number>(0);
+    const [isClaiming, setIsClaiming] = useState(false);
+    const [hasClaimed, setHasClaimed] = useState(false);
+    const [successAnimationData, setSuccessAnimationData] = useState<any>(null);
     const { addToast } = useToast();
     const { notification, impact } = useHaptic();
     const queryClient = useQueryClient();
@@ -46,153 +38,58 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) =>
         }
     }, [status]);
 
-    const activeData = status || lastDataRef.current;
-
-    const tryVerifyPendingJoinChannel = async () => {
-        if (pendingJoinChannelMissionId == null) return;
-        if (isVerifying) return;
-
-        const now = Date.now();
-        // Avoid spamming when Telegram toggles focus multiple times.
-        if (now - pendingJoinLastAttemptAtRef.current < 1200) return;
-        pendingJoinLastAttemptAtRef.current = now;
-
-        // Fail-safe: don't retry forever.
-        if (pendingJoinRetriesRef.current >= 5) {
-            setPendingJoinChannelMissionId(null);
-            pendingJoinRetriesRef.current = 0;
-            return;
-        }
-        pendingJoinRetriesRef.current += 1;
-
-        setIsVerifying(true);
-        try {
-            const result = await verifyChannelSubscription(pendingJoinChannelMissionId);
-            if (result?.success) {
-                notification("success");
-                addToast("구독 인증 완료!", "success");
-                setPendingJoinChannelMissionId(null);
-                pendingJoinRetriesRef.current = 0;
-                await queryClient.invalidateQueries({ queryKey: ["new-user-status"] });
-            }
-        } catch (error) {
-            console.error("[NewUserWelcomeModal] Pending channel verify failed:", error);
-        } finally {
-            setIsVerifying(false);
-        }
-    };
-
     useEffect(() => {
-        if (pendingJoinChannelMissionId == null) return;
-
-        const onVisibilityOrFocus = () => {
-            if (document.visibilityState === "visible") {
-                void tryVerifyPendingJoinChannel();
+        if (!hasClaimed) return;
+        let isCancelled = false;
+        (async () => {
+            try {
+                const res = await fetch("/assets/modals/welcome_claim_success.json", { cache: "no-cache" });
+                if (!res.ok) return;
+                const json = await res.json();
+                if (!isCancelled) setSuccessAnimationData(json);
+            } catch {
+                // Ignore animation load failures (keep UX functional).
             }
-        };
-
-        window.addEventListener("focus", onVisibilityOrFocus);
-        document.addEventListener("visibilitychange", onVisibilityOrFocus);
-
-        // Also try once shortly after setting pending state.
-        const t = window.setTimeout(() => {
-            void tryVerifyPendingJoinChannel();
-        }, 800);
-
+        })();
         return () => {
-            window.removeEventListener("focus", onVisibilityOrFocus);
-            document.removeEventListener("visibilitychange", onVisibilityOrFocus);
-            window.clearTimeout(t);
+            isCancelled = true;
         };
-    }, [pendingJoinChannelMissionId]);
+    }, [hasClaimed]);
+
+    const activeData = status || lastDataRef.current;
 
     const handleClose = () => {
         onClose();
     };
 
-    const handleMissionAction = async (missionId: number, actionType: string | null) => {
-        if (isVerifying) return;
+    const handleClaim = async () => {
+        if (isClaiming) return;
 
-        impact("medium");
-
+        impact("heavy");
+        setIsClaiming(true);
         try {
-            if (actionType === "JOIN_CHANNEL") {
-                setIsVerifying(true);
-                const result = await verifyChannelSubscription(missionId);
-                if (result.success) {
-                    notification("success");
-                    addToast("구독 인증 완료!", "success");
-                    await queryClient.invalidateQueries({ queryKey: ["new-user-status"] });
-                } else {
-                    // 씨씨지민 또는 씨씨공식 채널 링크 (기존 코드 유지)
-                    const channelLink = "https://t.me/+LksI3XlSjLlhZmE0";
-                    const tg = window.Telegram?.WebApp;
-                    if (tg?.openTelegramLink) {
-                        tg.openTelegramLink(channelLink);
-                    } else {
-                        // If openTelegramLink doesn't exist, try openLink, then window.open
-                        if (tg?.openLink) {
-                            tg.openLink(channelLink);
-                        } else {
-                            window.open(channelLink, "_blank");
-                        }
-                    }
-                    setPendingJoinChannelMissionId(missionId);
-                    pendingJoinRetriesRef.current = 0;
-                    addToast("채널 구독 후 앱으로 돌아오면 자동으로 확인합니다.", "info");
-                }
-            } else if (actionType === "SHARE_WALLET") {
-                const cacheKey = `mission_verified_${missionId}`;
-                const cachedStatus = await getCloudItem(cacheKey);
-                if (cachedStatus === "VERIFIED") {
-                    addToast("이미 처리된 공유 미션입니다.", "success");
-                    return;
-                }
-
-                const appUrl = "https://t.me/jm956_bot/ccjm";
-                const shareText = "내 지갑 💎 CCJM에서 함께 확인해봐!";
-                const shareUrl = `https://t.me/share/url?${new URLSearchParams({ url: appUrl, text: shareText }).toString()}`;
-                const tg = window.Telegram?.WebApp;
-
-                let opened = false;
-                if (typeof tg?.openTelegramLink === "function") {
-                    try {
-                        tg.openTelegramLink(shareUrl);
-                        opened = true;
-                    } catch {
-                        // fall through
-                    }
-                }
-                if (!opened && typeof tg?.openLink === "function") {
-                    try {
-                        tg.openLink(shareUrl);
-                        opened = true;
-                    } catch {
-                        // fall through
-                    }
-                }
-                if (!opened) {
-                    window.open(shareUrl, "_blank", "noopener,noreferrer");
-                }
-
-                await recordViralAction({ action_type: "SHARE_WALLET", mission_id: missionId });
-                await setCloudItem(cacheKey, "VERIFIED");
-                notification("success");
-                addToast("공유가 기록되었습니다! 보상을 수령하세요.", "success");
-                await queryClient.invalidateQueries({ queryKey: ["new-user-status"] });
-            } else if (actionType === "PLAY_GAME") {
-                addToast("게임을 플레이하여 미션을 완료하세요!", "info");
-                handleClose();
-                navigate("/games");
-            } else if (actionType === "LOGIN") {
-                addToast("내일 다시 접속하면 자동으로 완료됩니다.", "info");
+            const result = await claimNewUserWelcome();
+            if (!result?.success) {
+                notification("error");
+                addToast("웰컴 보상 지급에 실패했습니다. 잠시 후 다시 시도해주세요.", "error");
+                return;
             }
+
+            notification("success");
+            setHasClaimed(true);
+
+            // Refresh balances/inventory and welcome status.
+            await queryClient.invalidateQueries({ queryKey: ["vault-status"] });
+            await queryClient.invalidateQueries({ queryKey: ["inventory"] });
+            await queryClient.invalidateQueries({ queryKey: ["new-user-status"] });
+
+            addToast("정착 지원금이 지급되었습니다.", "success");
         } catch (error) {
-            console.error("[NewUserWelcomeModal] Mission action failed:", error);
+            console.error("[NewUserWelcomeModal] Claim failed:", error);
             notification("error");
             addToast("오류가 발생했습니다. 잠시 후 다시 시도해주세요.", "error");
         } finally {
-            setIsVerifying(false);
+            setIsClaiming(false);
         }
     };
 
@@ -211,66 +108,16 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) =>
         return null;
     }
 
-    const { missions, seconds_left } = activeData;
+    const { missions } = activeData;
+    const safeMissions = Array.isArray(missions) ? missions : [];
+    const cashMission = safeMissions.find((m: any) => m.logic_key === "NEW_USER_WELCOME_CASH");
+    const ticketMission = safeMissions.find((m: any) => m.logic_key === "NEW_USER_WELCOME_TICKET");
 
-    if (!missions || missions.length === 0) {
-        // Missions not configured yet; keep UX visible so 운영에서 문제를 인지할 수 있게 한다.
-        return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-                <div className="relative w-full max-w-md bg-gradient-to-b from-slate-900 to-black border-2 border-emerald-500/30 rounded-3xl shadow-2xl shadow-emerald-500/20 overflow-hidden">
-                    <button
-                        onClick={handleClose}
-                        className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-red-500 hover:bg-red-600 transition-colors"
-                    >
-                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                    <div className="p-8 text-center">
-                        <h2 className="text-xl font-black text-white">웰컴 미션 준비중</h2>
-                        <p className="mt-2 text-sm text-white/60">현재 NEW_USER 미션이 활성화되어 있지 않습니다.</p>
-                        <button
-                            onClick={handleClose}
-                            className="mt-6 w-full py-4 rounded-xl bg-figma-primary text-white font-black text-lg shadow-lg shadow-emerald-500/30 hover:brightness-110 active:scale-95 transition-all uppercase tracking-wide"
-                        >
-                            확인
-                        </button>
-                    </div>
-                </div>
-            </div>
-        );
-    }
+    const isServerAlreadyClaimed = (!!cashMission?.is_claimed && !!ticketMission?.is_claimed);
+    if (isServerAlreadyClaimed && !hasClaimed) return null;
 
-    const getMissionIcon = (actionType: string | null, targetValue: number) => {
-        // Use the "채널구독" icon for both incomplete/complete states
-        if (actionType === "JOIN_CHANNEL") return "/assets/welcome/mission_icon_viral.png";
-        if (actionType === "SHARE_WALLET") return "/assets/welcome/mission_icon_viral.png";
-        if (actionType === "LOGIN") return "/assets/welcome/icon_attendance.png";
-        if (actionType === "PLAY_GAME") {
-            return targetValue >= 3 ? "/assets/welcome/icon_play3.png" : "/assets/welcome/icon_play1.png";
-        }
-        return "/assets/welcome/icon_play1.png"; // Fallback
-    };
-
-    const getMissionHint = (actionType: string | null, isCompleted: boolean) => {
-        if (isCompleted) return "완료되었습니다";
-        if (actionType === "JOIN_CHANNEL") return "클릭하여 채널 구독 확인";
-        if (actionType === "SHARE_WALLET") return "클릭하여 지갑 공유";
-        if (actionType === "LOGIN") return "내일 다시 로그인하세요";
-        if (actionType === "PLAY_GAME") return "게임을 플레이하세요";
-        return "미션을 완료하세요";
-    };
-
-    const completedCount = missions.filter((m: any) => m.is_completed).length;
-    const totalCount = missions.length;
-
-    // Requirement: keep showing until 4 missions are completed.
-    // If 4+ missions exist, require completion of the first 4 by order.
-    const requiredMissions = missions.slice(0, 4);
-    const requiredCompletedCount = requiredMissions.filter((m: any) => m.is_completed).length;
-    if (requiredMissions.length > 0 && requiredCompletedCount >= requiredMissions.length) {
-        return null;
-    }
+    const cashAmount = Number(cashMission?.reward_amount ?? 2000);
+    const ticketAmount = Number(ticketMission?.reward_amount ?? 5);
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
@@ -278,6 +125,7 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) =>
                 {/* Close Button */}
                 <button
                     onClick={handleClose}
+                    aria-label="닫기"
                     className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-red-500 hover:bg-red-600 transition-colors"
                 >
                     <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -286,95 +134,94 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) =>
                 </button>
 
                 {/* Header Image */}
-                <div className="relative h-32 bg-gradient-to-r from-emerald-600 to-cyan-600 flex items-center justify-center overflow-hidden">
-                    <img src="/assets/welcome/header_2026_newyear.png" alt="2026 New Year" className="h-full w-auto object-contain" />
+                <div className="relative w-full aspect-[2/1] max-h-48 bg-slate-800 flex items-center justify-center overflow-hidden">
+                    <img
+                        src="/assets/welcome/welcome2_header.png"
+                        alt="WELCOME 신규보상받기"
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                            const img = e.currentTarget;
+                            if (img.src.includes("/assets/welcome/welcome2_header.png")) {
+                                img.src = "/assets/welcome/header_2026_newyear.png";
+                            }
+                        }}
+                    />
                 </div>
 
                 {/* Content */}
                 <div className="p-6 space-y-4">
-                    {/* Title */}
                     <div className="text-center">
-                        <h2 className="text-2xl font-black text-white mb-1">
-                            4개 미션 완료하고
+                        <h2 className="text-2xl font-black text-white mb-1 leading-tight">
+                            사장님,<br />
+                            오시느라 고생하셨습니다!
                         </h2>
-                        <p className="text-lg font-bold text-emerald-400">
-                            💰 10,000원 받기
-                        </p>
+                        <p className="text-sm font-bold text-white/60">묻지도 따지지도 않고 드립니다.</p>
                     </div>
 
-                    {/* Missions Grid */}
-                    <div className="grid grid-cols-4 gap-3">
-                        {missions.map((mission: any) => (
-                            <div
-                                key={mission.id}
-                                className={`flex flex-col items-center gap-2 group cursor-pointer transition-transform active:scale-95 ${isVerifying ? "pointer-events-none opacity-80" : ""}`}
-                                onClick={() => !mission.is_completed && handleMissionAction(mission.id, mission.action_type)}
-                            >
-                                <div className={`relative w-full aspect-square rounded-2xl border-2 ${mission.is_completed ? "border-emerald-500 bg-emerald-500/10" : "border-white/20 bg-white/5 group-hover:border-white/40"} p-2 transition-all`}>
-                                    <img
-                                        src={getMissionIcon(mission.action_type, mission.target_value)}
-                                        alt={mission.title}
-                                        title={getMissionHint(mission.action_type, mission.is_completed)}
-                                        className={
-                                            "w-full h-full object-contain " +
-                                            (!mission.is_completed && mission.action_type !== "JOIN_CHANNEL"
-                                                ? "opacity-50 grayscale group-hover:opacity-80 group-hover:grayscale-0"
-                                                : "")
-                                        }
-                                    />
-                                    {mission.is_completed && (
-                                        <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center">
-                                            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                            </svg>
-                                        </div>
-                                    )}
-                                    {!mission.is_completed && mission.action_type === "JOIN_CHANNEL" && (
-                                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <div className="bg-emerald-500 text-white text-[8px] font-black px-1 rounded animate-pulse">CHECK</div>
-                                        </div>
-                                    )}
-                                    {isVerifying && mission.action_type === "JOIN_CHANNEL" && (
-                                        <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-2xl">
-                                            <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
-                                        </div>
-                                    )}
+                    {/* Reward Showcase */}
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-center">
+                            <img src="/assets/asset_coin_gold.png" alt="coin" className="mx-auto h-14 w-14 object-contain" />
+                            <div className="mt-2 text-sm font-black text-white">금고 {cashAmount.toLocaleString()}P</div>
+                        </div>
+                        <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-center">
+                            <img
+                                src="/assets/asset_ticket_bundle.png"
+                                alt="ticket"
+                                className="mx-auto h-14 w-14 object-contain"
+                                onError={(e) => {
+                                    const img = e.currentTarget;
+                                    if (img.src.includes("/assets/asset_ticket_bundle.png")) {
+                                        img.src = "/assets/asset_ticket_trial.png";
+                                    }
+                                }}
+                            />
+                            <div className="mt-2 text-sm font-black text-white">룰렛 티켓 {ticketAmount}장</div>
+                        </div>
+                    </div>
+
+                    {!hasClaimed ? (
+                        <button
+                            onClick={handleClaim}
+                            disabled={isClaiming}
+                            className={
+                                "w-full py-4 rounded-xl bg-figma-primary text-white font-black text-lg shadow-lg shadow-emerald-500/30 hover:brightness-110 active:scale-95 transition-all uppercase tracking-wide " +
+                                (isClaiming ? "opacity-80" : "")
+                            }
+                        >
+                            {isClaiming ? "지급 중..." : `정착 지원금 받기 (${cashAmount.toLocaleString()}P + 티켓 ${ticketAmount}장)`}
+                        </button>
+                    ) : (
+                        <div className="space-y-3">
+                            {successAnimationData ? (
+                                <div className="mx-auto w-44 h-44">
+                                    <Lottie animationData={successAnimationData} loop autoplay />
                                 </div>
-                                <div className="text-center text-balance overflow-hidden w-full">
-                                    <p className="text-[9px] font-bold text-white/80 truncate">{mission.title}</p>
-                                    <div className="flex items-center justify-center gap-1 mt-0.5">
-                                        <img src="/assets/logo_cc_v2.png" alt="" className="w-3.5 h-3.5 object-contain" />
-                                        <span className="text-[10px] font-bold text-emerald-400">{mission.reward_amount.toLocaleString()}</span>
-                                    </div>
-                                </div>
+                            ) : (
+                                <div className="text-center text-white/70 text-sm font-semibold">지급 완료!</div>
+                            )}
+
+                            <div className="grid grid-cols-2 gap-2">
+                                <button
+                                    onClick={() => {
+                                        handleClose();
+                                        navigate("/games");
+                                    }}
+                                    className="w-full py-4 rounded-xl bg-figma-primary text-white font-black text-lg shadow-lg shadow-emerald-500/30 hover:brightness-110 active:scale-95 transition-all uppercase tracking-wide"
+                                >
+                                    게임방 이동
+                                </button>
+                                <button
+                                    onClick={handleClose}
+                                    className="w-full py-4 rounded-xl bg-white/10 text-white/90 font-black text-lg border border-white/10 hover:bg-white/15 active:scale-95 transition-all"
+                                >
+                                    닫기
+                                </button>
                             </div>
-                        ))}
-                    </div>
+                        </div>
+                    )}
 
-                    {/* Progress */}
-                    <div className="text-center">
-                        <p className="text-sm font-bold text-white/70">
-                            미션 진행도: <span className="text-emerald-400">{completedCount}/{totalCount}</span>
-                        </p>
-                    </div>
 
-                    {/* CTA Button */}
-                    <button
-                        onClick={handleClose}
-                        className="w-full py-4 rounded-xl bg-figma-primary text-white font-black text-lg shadow-lg shadow-emerald-500/30 hover:brightness-110 active:scale-95 transition-all uppercase tracking-wide"
-                    >
-                        확인
-                    </button>
-
-                    {/* Timer */}
-                    <div className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-amber-500/10 border border-amber-500/30">
-                        <svg className="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span className="text-lg font-black text-amber-400 font-mono">
-                            {formatSeconds(seconds_left)}
-                        </span>
-                    </div>
 
                 </div>
             </div>

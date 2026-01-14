@@ -17,6 +17,7 @@ class GameTokenType(str, Enum):
     GOLD_KEY = "GOLD_KEY"
     DIAMOND_KEY = "DIAMOND_KEY"
     DIAMOND = "DIAMOND"  # Mission Reward Currency
+    VAULT = "VAULT"      # Vault Balance (Ticket Buy-in)
 
 
 

@@ -9,13 +9,30 @@ export const useNewUserWelcome = () => {
         const timer = setTimeout(() => {
             console.log("[useNewUserWelcome] Showing Modal now.");
             setShowModal(true);
+            try {
+                sessionStorage.setItem("welcome_modal_open", "1");
+            } catch {
+                // ignore
+            }
         }, 1000); // 1 second delay
 
-        return () => clearTimeout(timer);
+        return () => {
+            clearTimeout(timer);
+            try {
+                sessionStorage.removeItem("welcome_modal_open");
+            } catch {
+                // ignore
+            }
+        };
     }, []);
 
     const closeModal = () => {
         setShowModal(false);
+        try {
+            sessionStorage.removeItem("welcome_modal_open");
+        } catch {
+            // ignore
+        }
     };
 
     return { showModal, closeModal };

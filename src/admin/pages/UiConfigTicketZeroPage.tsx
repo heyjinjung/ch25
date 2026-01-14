@@ -16,7 +16,7 @@ type FormState = {
 const DEFAULT_TICKET_ZERO: FormState = {
   title: "티켓이 잠깐 부족해요",
   body: "지금 이용하시면 바로 충전/구매로 연결됩니다.",
-  primaryLabel: "씨카드 바로가기",
+  primaryLabel: "씨씨카지노",
   primaryUrl: "https://ccc-010.com",
   secondaryLabel: "실장 텔레 문의",
   secondaryUrl: "https://t.me/jm956",
@@ -26,7 +26,7 @@ const DEFAULT_TICKET_ZERO: FormState = {
 const DEFAULT_COIN_ZERO: FormState = {
   title: "코인이 부족해요",
   body: "씨카드 이용/충전으로 바로 연결됩니다.",
-  primaryLabel: "씨카드 바로가기",
+  primaryLabel: "씨씨카지노",
   primaryUrl: "https://ccc-010.com",
   secondaryLabel: "실장 텔레 문의",
   secondaryUrl: "https://t.me/jm956",

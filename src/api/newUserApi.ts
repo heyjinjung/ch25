@@ -28,7 +28,24 @@ export type NewUserStatusResponse = {
   }[];
 };
 
+export type ClaimWelcomeReward = {
+  readonly logic_key: string;
+  readonly reward_type: string;
+  readonly amount: number;
+};
+
+export type ClaimWelcomeResponse = {
+  readonly success: boolean;
+  readonly reason?: string | null;
+  readonly rewards: ClaimWelcomeReward[];
+};
+
 export const getNewUserStatus = async (): Promise<NewUserStatusResponse> => {
   const response = await userApi.get<NewUserStatusResponse>("/api/new-user/status");
+  return response.data;
+};
+
+export const claimNewUserWelcome = async (): Promise<ClaimWelcomeResponse> => {
+  const response = await userApi.post<ClaimWelcomeResponse>("/api/new-user/claim-welcome");
   return response.data;
 };

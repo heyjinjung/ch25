@@ -8,10 +8,11 @@ from sqlalchemy.exc import DBAPIError
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
-from app.core.exceptions import InvalidConfigError, LockAcquisitionError
+from app.core.exceptions import InvalidConfigError, LockAcquisitionError, ForbiddenError, TooManyRequestsError
 from app.models.feature import FeatureType
 from app.models.game_wallet import GameTokenType
 from app.models.roulette import RouletteConfig, RouletteLog, RouletteSegment
+from app.models.user_segment import UserSegment
 from app.schemas.roulette import RoulettePlayResponse, RouletteStatusResponse
 from app.services.feature_service import FeatureService
 from app.services.game_common import GamePlayContext, log_game_play
@@ -109,6 +110,18 @@ class RouletteService:
             .all()
         )
 
+    def _get_daily_ticket_play_count(self, db: Session, user_id: int, today: date, ticket_type: str) -> int:
+        return db.execute(
+            select(func.count())
+            .select_from(RouletteLog)
+            .join(RouletteConfig, RouletteLog.config_id == RouletteConfig.id)
+            .where(
+                RouletteLog.user_id == user_id,
+                RouletteConfig.ticket_type == ticket_type,
+                func.date(RouletteLog.created_at) == today,
+            )
+        ).scalar_one()
+
     def _get_today_config(self, db: Session, ticket_type: str = GameTokenType.ROULETTE_COIN.value) -> RouletteConfig:
         config = db.execute(
             select(RouletteConfig).where(
@@ -163,6 +176,14 @@ class RouletteService:
         self.feature_service.validate_feature_active(db, today, FeatureType.ROULETTE)
         config = self._get_today_config(db, ticket_type)
 
+        # Premium roulette access control must be enforced at status-time as well,
+        # so the frontend can block tab switching before a play attempt.
+        if ticket_type == "GOLD_KEY" or ticket_type == "DIAMOND_KEY":
+            segment_row = db.query(UserSegment).filter(UserSegment.user_id == user_id).first()
+            user_segment = segment_row.segment if segment_row else "COMMON"
+            if user_segment not in ["VIP", "WHALE"]:
+                raise ForbiddenError("PREMIUM_ROULETTE_FORBIDDEN")
+
         # Map input string to Enum if possible, or just use string
         token_type_enum = GameTokenType(ticket_type)
         token_balance = self.wallet_service.get_balance(db, user_id, token_type_enum)
@@ -196,6 +217,31 @@ class RouletteService:
         self.feature_service.validate_feature_active(db, today, FeatureType.ROULETTE)
         config = self._get_today_config(db, ticket_type)
         token_type_enum = GameTokenType(ticket_type)
+
+        # [Phase 1] Segment Access Control (P0)
+        # GOLD_KEY: WHALE/VIP Only (VIP limit 3)
+        # DIAMOND_KEY: WHALE/VIP Only (VIP limit 1)
+        
+        if ticket_type == "GOLD_KEY" or ticket_type == "DIAMOND_KEY":
+            segment_row = db.query(UserSegment).filter(UserSegment.user_id == user_id).first()
+            user_segment = segment_row.segment if segment_row else "COMMON"
+            
+            # 1. Allowlist: Only VIP and WHALE can access Premium Roulette
+            if user_segment not in ["VIP", "WHALE"]:
+                 raise ForbiddenError("Premium Roulette is restricted to VIP/WHALE users.")
+            
+            # 2. Daily Limits for VIP (WHALE is unlimited)
+            if user_segment == "VIP":
+                current_daily_plays = self._get_daily_ticket_play_count(db, user_id, today, ticket_type)
+                
+                if ticket_type == "GOLD_KEY":
+                    # Limit 3
+                    if current_daily_plays >= 3:
+                        raise TooManyRequestsError("VIP users are limited to 3 Gold Roulette spins per day.")
+                elif ticket_type == "DIAMOND_KEY":
+                    # Limit 1
+                    if current_daily_plays >= 1:
+                        raise TooManyRequestsError("VIP users are limited to 1 Diamond Roulette spin per day.")
 
         segments = None
         for attempt in range(3):

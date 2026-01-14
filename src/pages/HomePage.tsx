@@ -9,8 +9,7 @@ import { useNewUserWelcome } from "../hooks/useNewUserWelcome";
 import NewUserWelcomeModal from "../components/modal/NewUserWelcomeModal";
 import { useMissionStore } from "../stores/missionStore";
 import { useToast } from "../components/common/ToastProvider";
-import AttendanceStreakModal from "../components/modal/AttendanceStreakModal";
-import { tryHaptic } from "../utils/haptics";
+
 
 // --- Components ---
 
@@ -65,7 +64,6 @@ const GameCard: React.FC<GameCardProps> = ({ title, to, gradient, icon, isWide, 
 const CategoryTabs: React.FC<{ active: string; onChange: (id: string) => void }> = ({ active, onChange }) => {
   const { playTabTouch } = useSound();
   const tabs = [
-    { id: "all", label: "전체 게임" },
     { id: "hot", label: "씨씨카지노", link: "https://ccc-010.com" },
     { id: "new", label: "씨씨 공식채널", link: "https://t.me/+IE0NYpuze_k1YWZk" },
   ];
@@ -116,31 +114,13 @@ const CategoryTabs: React.FC<{ active: string; onChange: (id: string) => void }>
 const HomePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState("all");
   const { showModal, closeModal } = useNewUserWelcome();
-  const { missions, fetchMissions, streakInfo, streakRules, fetchStreakRules, claimStreakReward } = useMissionStore();
+  const { missions, fetchMissions, streakInfo } = useMissionStore();
   const { addToast } = useToast();
   const hasAnnouncedGift = React.useRef(false);
-  const [showStreakModal, setShowStreakModal] = useState(false);
-  const hasCheckedStreak = React.useRef(false);
 
   React.useEffect(() => {
     fetchMissions();
-    fetchStreakRules();
-  }, [fetchMissions, fetchStreakRules]);
-
-  // Sequential Modal Logic:
-  // If showModal (Welcome) is false AND we haven't checked streak this session AND we have streakInfo
-  React.useEffect(() => {
-    if (!showModal && !hasCheckedStreak.current && streakInfo) {
-      // Show streak modal if play_streak > 0 (or simply show it anyway for attendance board)
-      // For MVP, we show it once per session after welcome modal is closed.
-      const hasSeenStreakThisSession = sessionStorage.getItem("streak_modal_seen");
-      if (!hasSeenStreakThisSession) {
-        setShowStreakModal(true);
-        sessionStorage.setItem("streak_modal_seen", "true");
-      }
-      hasCheckedStreak.current = true;
-    }
-  }, [showModal, streakInfo]);
+  }, [fetchMissions]);
 
   React.useEffect(() => {
     if (missions.length > 0 && !hasAnnouncedGift.current) {
@@ -232,8 +212,8 @@ const HomePage: React.FC = () => {
               <div className="relative z-10 mt-3 border-t border-white/10 pt-2 text-xs text-slate-300">
 
                 <div className="mt-2 flex gap-2">
-                  <a href="https://ccc-010.com" target="_blank" rel="noreferrer" className="flex-1 py-2 text-center bg-amber-500/20 rounded border border-amber-500/30 text-amber-200 hover:bg-amber-500/30"><img src="/assets/logo_cc_v2.png" alt="CC" className="inline-block w-4 h-4 mr-2 align-text-bottom" />1만원</a>
-                  <a href="https://ccc-010.com" target="_blank" rel="noreferrer" className="flex-1 py-2 text-center bg-amber-500/20 rounded border border-amber-500/30 text-amber-200 hover:bg-amber-500/30"><img src="/assets/logo_cc_v2.png" alt="CC" className="inline-block w-4 h-4 mr-2 align-text-bottom" />5만원</a>
+                  <a href="https://ccc-010.com" target="_blank" rel="noreferrer noopener" className="flex-1 py-2 text-center bg-amber-500/20 rounded border border-amber-500/30 text-amber-200 hover:bg-amber-500/30"><img src="/assets/logo_cc_v2.png" alt="CC" className="inline-block w-4 h-4 mr-2 align-text-bottom" />1만원</a>
+                  <a href="https://ccc-010.com" target="_blank" rel="noreferrer noopener" className="flex-1 py-2 text-center bg-amber-500/20 rounded border border-amber-500/30 text-amber-200 hover:bg-amber-500/30"><img src="/assets/logo_cc_v2.png" alt="CC" className="inline-block w-4 h-4 mr-2 align-text-bottom" />5만원</a>
                 </div>
               </div>
             )}
@@ -250,8 +230,7 @@ const HomePage: React.FC = () => {
         <div className="absolute bottom-5 right-5 z-20 flex flex-col items-end gap-2">
           {streakInfo && streakInfo.streak_days > 0 && (
             <div
-              onClick={() => { tryHaptic(10); setShowStreakModal(true); }}
-              className="flex items-center gap-2 rounded-full px-4 py-1.5 bg-black/60 border border-amber-500/30 backdrop-blur-md shadow-lg animate-bounce-subtle cursor-pointer transition-transform active:scale-95"
+              className="flex items-center gap-2 rounded-full px-4 py-1.5 bg-black/60 border border-amber-500/30 backdrop-blur-md shadow-lg animate-bounce-subtle cursor-default transition-transform"
             >
               <span className="text-xs font-black text-amber-400">🔥 {streakInfo.streak_days}일 연속</span>
             </div>
@@ -259,7 +238,7 @@ const HomePage: React.FC = () => {
           <a
             href="https://t.me/jm956"
             target="_blank"
-            rel="noreferrer"
+            rel="noreferrer noopener"
             className="inline-flex items-center gap-2 rounded-lg px-6 py-2 text-base font-bold transition focus:outline-none bg-figma-primary text-white shadow-[0_4px_12px_rgba(0,0,0,0.3)] shadow-emerald-500/40 hover:brightness-110 active:scale-95 tracking-wide"
           >
             <img
@@ -310,15 +289,7 @@ const HomePage: React.FC = () => {
       {showModal && <NewUserWelcomeModal onClose={closeModal} />}
 
       {/* Attendance Streak Modal */}
-      {showStreakModal && streakInfo && streakRules && (
-        <AttendanceStreakModal
-          onClose={() => setShowStreakModal(false)}
-          onClaim={claimStreakReward}
-          currentStreak={streakInfo.streak_days}
-          claimableDay={streakInfo.claimable_day}
-          rules={streakRules}
-        />
-      )}
+
 
     </section>
   );

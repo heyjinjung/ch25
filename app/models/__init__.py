@@ -49,6 +49,8 @@ from app.models.survey import (
 )
 from app.models.user_history import UserIdentityHistory
 
+from app.models.vault_ledger import VaultLedger
+
 __all__ = [
     "FeatureConfig",
     "FeatureSchedule",
@@ -119,4 +121,5 @@ __all__ = [
     "UserInventoryLedger",
     "ExternalRankingDailyDepositDelta",
     "UserIdentityHistory",
+    "VaultLedger",
 ]

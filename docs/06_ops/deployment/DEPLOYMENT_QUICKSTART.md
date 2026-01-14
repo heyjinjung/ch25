@@ -150,7 +150,29 @@ DATABASE_URL=mysql+pymysql://user:pass@db:3306/xmas_event
 JWT_SECRET=$(openssl rand -hex 32)
 ENV=production
 CORS_ORIGINS=["https://yourdomain.com"]
+
+# Telegram (운영)
+TELEGRAM_BOT_TOKEN=YOUR_TELEGRAM_BOT_TOKEN
+TELEGRAM_BOT_USERNAME=your_bot_username
+TELEGRAM_WEBAPP_SHORT_NAME=your_webapp_short_name
+TELEGRAM_MINI_APP_URL=https://yourdomain.com
+
+# Telegram Webhook 모드(권장: 운영)
+TELEGRAM_USE_WEBHOOK=true
+TELEGRAM_WEBHOOK_URL=https://yourdomain.com
+
+# Frontend(Vite) build-time args
+# 권장: 공란(미설정)으로 두고 same-origin + nginx 프록시(/api, /admin/api) 사용
+VITE_API_URL=
+VITE_ADMIN_API_URL=
+
+# (텔레그램 딥링크 UI) 프론트에서 어떤 봇/short_name으로 링크를 만들지 결정
+VITE_TELEGRAM_BOT_USERNAME=your_bot_username
+VITE_TELEGRAM_WEBAPP_SHORT_NAME=your_webapp_short_name
 ```
+
+주의: `VITE_*` 값은 프론트 이미지를 만들 때 bake-in 된다.
+- `.env` 수정 후에는 `docker-compose build frontend`가 포함된 재배포가 필요할 수 있다.
 
 ### 9.5 SSL 인증서
 ```bash

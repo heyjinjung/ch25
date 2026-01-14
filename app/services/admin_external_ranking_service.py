@@ -1,5 +1,5 @@
 """Admin CRUD for external ranking data and season-pass hooks."""
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 import logging
 from typing import Iterable
 
@@ -145,13 +145,20 @@ class AdminExternalRankingService:
         return row
 
     @staticmethod
-    def upsert_many(db: Session, data: Iterable[ExternalRankingCreate]) -> list[ExternalRankingData]:
+    def upsert_many(db: Session, data: Iterable[ExternalRankingCreate], now: datetime | None = None) -> list[ExternalRankingData]:
+        from zoneinfo import ZoneInfo
         season_pass = SeasonPassService()
         vault_service = VaultService()
         level_xp = LevelXPService()
         settings = get_settings()
-        today = AdminExternalRankingService._kst_today()
-        now = datetime.utcnow()
+
+        if now is None:
+            now = datetime.utcnow()
+
+        # Derive KST date from now (assumed UTC if naive) for baseline tracking
+        kst = ZoneInfo(getattr(settings, "timezone", "Asia/Seoul"))
+        now_tz = now.replace(tzinfo=timezone.utc) if now.tzinfo is None else now
+        today = now_tz.astimezone(kst).date()
         step_amount = int(getattr(settings, "external_ranking_deposit_step_amount", AdminExternalRankingService.STEP_AMOUNT))
         xp_per_step = int(getattr(settings, "external_ranking_deposit_xp_per_step", AdminExternalRankingService.XP_PER_STEP))
         max_steps_per_day = int(getattr(settings, "external_ranking_deposit_max_steps_per_day", AdminExternalRankingService.MAX_STEPS_PER_DAY))
@@ -246,6 +253,7 @@ class AdminExternalRankingService:
                     vault_service.handle_deposit_increase_signal(
                         db,
                         user_id=row.user_id,
+                        # status_only=True removed for compatibility
                         deposit_delta=deposit_delta,
                         prev_amount=prev_amount,
                         new_amount=new_amount,
@@ -258,6 +266,13 @@ class AdminExternalRankingService:
                         prev_amount,
                         new_amount,
                         deposit_delta,
+                    )
+
+                # Whale Check (First 500k + 7D 3M累计)
+                user = db.query(User).filter(User.id == row.user_id).first()
+                if user:
+                    AdminExternalRankingService._check_whale_qualification(
+                        db, user=user, current_external_total=new_amount, now=now
                     )
 
         # Record daily deposit deltas for operational KPIs (KST calendar date)
@@ -429,3 +444,50 @@ class AdminExternalRankingService:
         if result.rowcount == 0:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="EXTERNAL_RANKING_NOT_FOUND")
         db.commit()
+
+    @staticmethod
+    def _check_whale_qualification(db: Session, *, user: User, current_external_total: int, now: datetime):
+        from app.core.notifications import send_ops_notification
+        from app.services.season_pass_service import SeasonPassService
+        from app.models.admin_user_profile import AdminUserProfile
+
+        # 1. Capture First Deposit (External)
+        if not user.first_deposit_at:
+            user.first_deposit_at = now
+            user.first_deposit_amount = current_external_total
+            db.add(user)
+        
+        # 2. Whale Qualification Logic
+        # Cond A: First deposit >= 500,000
+        is_big_start = (user.first_deposit_amount or 0) >= 500_000
+        
+        # Cond B: 7-day cumulative >= 3,000,000
+        days_diff = (now.date() - user.first_deposit_at.date()).days
+        is_high_roller = (days_diff <= 7) and (current_external_total >= 3_000_000)
+
+        if is_big_start and is_high_roller:
+            # Idempotency check via tags
+            profile = db.query(AdminUserProfile).filter(AdminUserProfile.user_id == user.id).first()
+            if not profile:
+                profile = AdminUserProfile(user_id=user.id)
+                db.add(profile)
+            
+            tags = list(profile.tags or [])
+            if "#WHALE_REWARDED" not in tags:
+                # Reward: +500 XP
+                SeasonPassService().add_bonus_xp(db, user_id=user.id, xp_amount=500, now=now, commit=False)
+                
+                # Tagging
+                tags.append("#WHALE_REWARDED")
+                profile.tags = tags
+                db.add(profile)
+                
+                # Notify Admin
+                msg = (
+                    f"🐋 **External Whale Detected!**\n"
+                    f"- UserID: `{user.id}` (Nickname: `{user.nickname or user.external_id}`)\n"
+                    f"- First External: `{user.first_deposit_amount or 0:,}원`\n"
+                    f"- Current Total: `{current_external_total:,}원`\n"
+                    f"- Action: VIP 라운지 케어 필요 (+500 XP 지급됨)"
+                )
+                send_ops_notification(msg, channel="admin")

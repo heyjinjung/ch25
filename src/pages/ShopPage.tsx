@@ -177,6 +177,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, diamondBalance, onBu
     const isGifticonGrant = /GIFTICON/i.test(product.grant.item_type);
     const itemIcon = ITEM_ICONS[product.grant.item_type] || '/assets/lottery/icon_gift.png';
 
+    const costAmount = Number(product.cost?.amount ?? 0);
+
     return (
         <div className="group flex flex-col bg-white/5 border border-white/10 rounded-xl p-3 transition-all hover:bg-white/[0.07] hover:border-white/15">
             {/* Icon */}
@@ -198,22 +200,30 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, diamondBalance, onBu
             </p>
 
             {/* Price - 다이아 가격 명확하게 표시 */}
-            <div className="flex items-center justify-center gap-1 mb-2 py-1.5 px-2 bg-black/30 rounded-lg border border-amber-400/20">
-                <img src="/assets/icon_diamond.png" alt="다이아" className="w-4 h-4" />
-                <span className="text-base font-black text-amber-400">{product.cost.amount}</span>
+            <div className="mb-2 flex items-center justify-center">
+                <div className="inline-flex min-h-10 select-none items-center justify-center gap-1.5 rounded-full border border-white/10 bg-gradient-to-b from-white/10 to-black/40 px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                    <img src="/assets/icon_diamond.png" alt="다이아" className="h-3.5 w-3.5 shrink-0" />
+                    <span className="text-[13px] font-black tabular-nums tracking-tight text-white/90 leading-none whitespace-nowrap">
+                        {costAmount.toLocaleString()}
+                    </span>
+                </div>
             </div>
 
             {/* Buy Button */}
             <button
                 onClick={() => { tryHaptic(10); onBuy(); }}
                 disabled={isDisabled}
-                className="w-full py-2 rounded-lg bg-emerald-600/80 hover:bg-emerald-600 disabled:bg-white/10 disabled:text-white/30 text-white font-bold text-xs transition-all active:scale-[0.97] flex items-center justify-center gap-1.5 disabled:cursor-not-allowed"
+                title={!hasEnoughDiamond ? "다이아가 부족합니다" : ""}
+                className="w-full min-h-10 rounded-xl border border-white/10 bg-gradient-to-b from-emerald-500/90 to-emerald-700/80 text-white shadow-[0_10px_25px_-15px_rgba(16,185,129,0.55)] transition-all active:scale-[0.98] hover:brightness-110 disabled:cursor-not-allowed disabled:border-white/5 disabled:bg-white/5 disabled:text-white/30 disabled:shadow-none"
             >
-                {isPending ? (
-                    <Loader2 className="animate-spin w-3.5 h-3.5" />
-                ) : (
-                    hasEnoughDiamond ? "구매하기" : "다이아 부족"
-                )}
+                <span className="flex items-center justify-center gap-1.5 px-2 text-[12px] font-black tracking-tight leading-none whitespace-nowrap">
+                    {isPending ? (
+                        <Loader2 className="animate-spin w-3.5 h-3.5" />
+                    ) : (
+                        <ShoppingBag className="w-3.5 h-3.5" />
+                    )}
+                    구매
+                </span>
             </button>
         </div>
     );

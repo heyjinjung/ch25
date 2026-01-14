@@ -5,6 +5,7 @@ import RouletteWheel from "../components/game/RouletteWheel";
 import { usePlayRoulette, useRouletteStatus } from "../hooks/useRoulette";
 import FeatureGate from "../components/feature/FeatureGate";
 import { GAME_TOKEN_LABELS, GameTokenType } from "../types/gameTokens";
+import { getRouletteStatus } from "../api/rouletteApi";
 import type { RoulettePlayResponse } from "../api/rouletteApi";
 import AnimatedNumber from "../components/common/AnimatedNumber";
 import { tryHaptic } from "../utils/haptics";
@@ -15,6 +16,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
 import { useSound } from "../hooks/useSound";
 import { formatRewardLine, isGifticonRewardType, parseGifticonRewardType } from "../utils/rewardLabel";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const FALLBACK_SEGMENTS = Array.from({ length: 12 }).map((_, idx) => ({
   label: `BONUS ${idx + 1}`,
@@ -58,12 +61,16 @@ const RoulettePage: React.FC = () => {
   const { data, isLoading, isError, error } = useRouletteStatus(activeTab);
   const playMutation = usePlayRoulette();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const { playRouletteSpin, stopRouletteSpin } = useSound();
   const [selectedIndex, setSelectedIndex] = useState<number | undefined>();
   const SPIN_DURATION_MS = 3000;
   const [isSpinning, setIsSpinning] = useState(false);
   const [rewardToast, setRewardToast] = useState<{ value: number; type: string } | null>(null);
   const [vaultModal, setVaultModal] = useState<{ open: boolean; amount: number }>({ open: false, amount: 0 });
+  const [premiumBlockedModal, setPremiumBlockedModal] = useState<{ open: boolean; message?: string }>({
+    open: false,
+  });
   const pendingResultRef = useRef<RoulettePlayResponse | null>(null);
   const spinStartAtRef = useRef<number | null>(null);
   const transitionEndAtRef = useRef<number | null>(null);
@@ -82,12 +89,24 @@ const RoulettePage: React.FC = () => {
   const usingFallbackSegments = useMemo(() => (data?.segments ?? []).length === 0, [data?.segments]);
 
   const mapErrorMessage = (err: unknown) => {
-    const code = (err as { response?: { data?: { error?: { code?: string } } } })?.response?.data?.error?.code;
-    if (code === "NO_FEATURE_TODAY") return "오늘 활성화된 이벤트가 없습니다.";
-    if (code === "INVALID_FEATURE_SCHEDULE") return "이벤트 일정이 맞지 않습니다. 지민이에게 문의하세요.";
-    if (code === "FEATURE_DISABLED") return "이벤트가 비활성화되었습니다.";
-    if (code === "DAILY_LIMIT_REACHED") return "오늘 참여 횟수를 모두 사용했습니다.";
-    if (code === "NOT_ENOUGH_TOKENS") return "티켓이 부족합니다. 지민이에게 충전을 요청하세요.";
+    if (axios.isAxiosError(err)) {
+      const status = err.response?.status;
+      const detail = err.response?.data?.detail;
+      const code =
+        (typeof detail === "string" && detail) ||
+        (err.response?.data as { error?: { code?: string } } | undefined)?.error?.code;
+
+      if (status === 403) return "현재 등급에서는 골드/다이아 룰렛을 이용할 수 없습니다.";
+      if (status === 429) return "오늘 참여 횟수를 모두 사용했습니다.";
+
+      if (code === "NO_FEATURE_TODAY") return "오늘 활성화된 이벤트가 없습니다.";
+      if (code === "INVALID_FEATURE_SCHEDULE") return "이벤트 일정이 맞지 않습니다. 운영자에게 문의하세요.";
+      if (code === "FEATURE_DISABLED") return "이벤트가 비활성화되었습니다.";
+      if (code === "DAILY_LIMIT_REACHED") return "오늘 참여 횟수를 모두 사용했습니다.";
+      if (code === "NOT_ENOUGH_TOKENS") return "티켓이 부족합니다. 충전 후 다시 시도하세요.";
+
+      return "룰렛 정보를 불러오지 못했습니다.";
+    }
     return "룰렛 정보를 불러오지 못했습니다.";
   };
 
@@ -107,6 +126,33 @@ const RoulettePage: React.FC = () => {
     const typeLabel = data.token_type ? (GAME_TOKEN_LABELS[data.token_type as GameTokenType] ?? data.token_type) : "-";
     return typeLabel;
   }, [data]);
+
+  const handleTabClick = async (nextTab: GameTokenType) => {
+    if (isSpinning) return;
+    if (nextTab === activeTab) return;
+
+    // Pre-check premium roulette access on tab click.
+    if (nextTab === "GOLD_KEY" || nextTab === "DIAMOND_KEY") {
+      try {
+        await getRouletteStatus(nextTab);
+        setActiveTab(nextTab);
+        return;
+      } catch (e) {
+        if (axios.isAxiosError(e) && e.response?.status === 403) {
+          setPremiumBlockedModal({
+            open: true,
+            message: "현재 등급에서는 골드/다이아 룰렛을 이용할 수 없습니다. CC카지노에서 충전 후 다시 이용해보세요.",
+          });
+          return;
+        }
+        // Non-403 errors: fall back to normal tab switch so the page can show its error state.
+        setActiveTab(nextTab);
+        return;
+      }
+    }
+
+    setActiveTab(nextTab);
+  };
 
   const isUnlimited = data?.remaining_spins === 0;
   const isOutOfTokens = typeof data?.token_balance === "number" && data.token_balance <= 0;
@@ -137,6 +183,22 @@ const RoulettePage: React.FC = () => {
       playRouletteSpin(); // Sound: Spin Start
       spinStartAtRef.current = performance.now();
     } catch (e) {
+      // Premium roulette access denied: show retention CTA instead of crashing/redirecting.
+      if (axios.isAxiosError(e)) {
+        const status = e.response?.status;
+        if (status === 403 && (activeTab === "GOLD_KEY" || activeTab === "DIAMOND_KEY")) {
+          const rawDetail = e.response?.data?.detail;
+          const detailText = typeof rawDetail === "string" ? rawDetail : undefined;
+
+          setPremiumBlockedModal({
+            open: true,
+            message:
+              detailText ||
+              "현재 등급에서는 골드/다이아 룰렛을 이용할 수 없습니다. CC카지노에서 충전 후 다시 이용해보세요.",
+          });
+          return;
+        }
+      }
       console.error("Roulette play failed", e);
     }
   };
@@ -424,7 +486,7 @@ const RoulettePage: React.FC = () => {
               <button
                 key={tab.type}
                 onClick={() => {
-                  if (!isSpinning) setActiveTab(tab.type);
+                  void handleTabClick(tab.type);
                 }}
                 className={clsx(
                   "group flex items-center justify-center rounded-xl px-3 py-2 text-sm font-bold transition-all duration-300",
@@ -462,6 +524,53 @@ const RoulettePage: React.FC = () => {
         onClose={() => setVaultModal((prev) => ({ ...prev, open: false }))}
         amount={vaultModal.amount}
       />
+
+      {premiumBlockedModal.open && (
+        <div className="fixed inset-0 z-[10060] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+          <div className="relative w-full max-w-md overflow-hidden rounded-3xl border border-white/10 bg-[#0A0A0A] shadow-2xl">
+            <div className="absolute inset-0 bg-gradient-to-b from-amber-500/10 via-transparent to-transparent pointer-events-none" />
+
+            <div className="relative p-6">
+              <div className="text-[10px] font-black tracking-widest uppercase text-white/40">Premium Roulette</div>
+              <h2 className="mt-1 text-2xl font-black text-white tracking-tight">이용이 제한되어 있어요</h2>
+
+              <p className="mt-4 text-sm font-medium text-white/70 whitespace-pre-wrap leading-relaxed">
+                {premiumBlockedModal.message ?? "현재 등급에서는 골드/다이아 룰렛을 이용할 수 없습니다."}
+              </p>
+
+              <div className="mt-6 space-y-2">
+                <a
+                  href="https://ccc-010.com"
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="block w-full rounded-xl bg-amber-500/20 py-3 text-center text-sm font-black text-amber-200 border border-amber-500/30 hover:bg-amber-500/30 active:scale-[0.99] transition"
+                >
+                  CC 충전하러 가기
+                </a>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPremiumBlockedModal({ open: false });
+                    navigate("/landing", { replace: true });
+                  }}
+                  className="w-full rounded-xl bg-white/5 py-3 text-sm font-black text-white/80 border border-white/10 hover:bg-white/10 active:scale-[0.99] transition"
+                >
+                  메인(홈)으로 돌아가기
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setPremiumBlockedModal({ open: false })}
+                  className="w-full rounded-xl py-3 text-sm font-black text-white/50 hover:text-white/70 transition"
+                >
+                  닫기
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </FeatureGate>
   );
 };

@@ -525,7 +525,8 @@ class MissionService:
                     "start_time": mission.start_time.isoformat(timespec="minutes") if mission.start_time else None,
                     "end_time": mission.end_time.isoformat(timespec="minutes") if mission.end_time else None,
                     "auto_claim": mission.auto_claim,
-                    "is_active": mission.is_active
+                    "is_active": mission.is_active,
+                    "is_featured": (mission.logic_key or "") == "daily_login_gift"
                 },
                 "progress": progress_dict
             })

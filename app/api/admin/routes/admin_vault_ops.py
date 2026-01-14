@@ -163,3 +163,52 @@ def set_user_balance(
 
     db.commit()
     return _build_admin_state(service, db, user_id)
+
+
+from app.services.vault2_service import Vault2Service
+from pydantic import BaseModel
+
+class GoldenHourConfig(BaseModel):
+    enabled: bool
+    manual_override: str  # "AUTO", "FORCE_ON", "FORCE_OFF"
+    multiplier: float = 2.0
+    base_amount_gate: int | None = None
+
+@router.post("/golden-hour", response_model=GoldenHourConfig)
+def set_golden_hour_config(
+    idx: GoldenHourConfig,
+    db: Session = Depends(get_db),
+    admin_id: int = Depends(get_current_admin_id),
+):
+    """Set Golden Hour configuration."""
+    v2 = Vault2Service()
+    # Read existing to preserve other fields if any
+    current = v2.get_config_value(db, "golden_hour_config", {})
+    
+    # Merge
+    current["enabled"] = idx.enabled
+    current["manual_override"] = idx.manual_override
+    current["multiplier"] = idx.multiplier
+    if idx.base_amount_gate is not None:
+         current["base_amount_gate"] = idx.base_amount_gate
+         
+    v2.set_config_value(db, "golden_hour_config", current)
+    # No verify_config needed for simple dict
+    
+    return current
+
+
+@router.get("/golden-hour", response_model=GoldenHourConfig)
+def get_golden_hour_config(
+    db: Session = Depends(get_db),
+):
+    """Get Golden Hour configuration."""
+    v2 = Vault2Service()
+    val = v2.get_config_value(db, "golden_hour_config", {})
+    # Return defaults if empty
+    return GoldenHourConfig(
+        enabled=val.get("enabled", False),
+        manual_override=val.get("manual_override", "AUTO"),
+        multiplier=val.get("multiplier", 2.0),
+        base_amount_gate=val.get("base_amount_gate"),
+    )

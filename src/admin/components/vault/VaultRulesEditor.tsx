@@ -45,9 +45,16 @@ interface VaultProgram {
 
 export const VaultRulesEditor: React.FC = () => {
     const [program, setProgram] = useState<VaultProgram | null>(null);
+    const [activeDiceConfig, setActiveDiceConfig] = useState<{ win: number; draw: number; lose: number } | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const navigate = useNavigate();
+
+    const formatSignedAmount = (value: number | undefined) => {
+        const n = Number(value || 0);
+        const sign = n >= 0 ? "+" : "";
+        return `${sign}${n.toLocaleString()}`;
+    };
 
     const fetchProgram = async () => {
         setLoading(true);
@@ -62,6 +69,32 @@ export const VaultRulesEditor: React.FC = () => {
     };
 
     useEffect(() => { fetchProgram(); }, []);
+
+    useEffect(() => {
+        // DICE rewards are sourced from DiceConfig (Admin Dice page) for NORMAL gameplay.
+        // This prevents the Vault page from drifting due to unrelated VaultProgram defaults.
+        const fetchDice = async () => {
+            try {
+                const res = await adminApi.get("/admin/api/dice-config/");
+                const configs = Array.isArray(res.data) ? res.data : [];
+                const active = configs.find((c: any) => Boolean(c?.is_active)) || configs[0];
+                if (active) {
+                    setActiveDiceConfig({
+                        win: Number(active?.win_reward_amount ?? 0),
+                        draw: Number(active?.draw_reward_amount ?? 0),
+                        lose: Number(active?.lose_reward_amount ?? 0),
+                    });
+                } else {
+                    setActiveDiceConfig(null);
+                }
+            } catch (err) {
+                console.error("Failed to fetch dice config:", err);
+                setActiveDiceConfig(null);
+            }
+        };
+
+        fetchDice();
+    }, []);
 
     const handleConfigChange = (patch: Partial<VaultConfig>) => {
         if (!program) return;
@@ -99,6 +132,8 @@ export const VaultRulesEditor: React.FC = () => {
         if (target === "dice") navigate("/admin/dice");
         else if (target === "roulette") navigate("/admin/roulette");
     };
+
+    const isDiceKey = (game: string) => String(game || "").toUpperCase() === "DICE" || String(game || "").toLowerCase() === "dice";
 
     if (loading) return (
         <div className="flex flex-col items-center justify-center py-20 gap-4">
@@ -146,18 +181,37 @@ export const VaultRulesEditor: React.FC = () => {
                                         className="p-4 bg-admin-bg/40 border border-admin-border rounded-xl cursor-pointer hover:border-admin-brand hover:bg-admin-brand/5 transition-all group/card"
                                     >
                                         <div className="text-admin-meta font-black text-admin-brand mb-3 uppercase flex items-center justify-between">
-                                            {game === "roulette" ? "룰렛 (Roulette)" : game === "dice" ? "주사위 (Dice)" : game}
+                                            {String(game).toUpperCase() === "ROULETTE" || game === "roulette"
+                                                ? "룰렛 (Roulette)"
+                                                : isDiceKey(game)
+                                                    ? "주사위 (Dice)"
+                                                    : game}
                                             <ExternalLink className="h-3 w-3 opacity-30 group-hover/card:opacity-100 group-hover/card:text-admin-brand transition-opacity" />
                                         </div>
                                         <div className="space-y-2">
-                                            {Object.entries(values).map(([type, val]) => (
-                                                <div key={type} className="flex items-center justify-between text-admin-mono text-[14px]">
-                                                    <span className="text-admin-text-muted">
-                                                        {type === "WIN" ? "승리" : type === "LOSE" ? "패배" : type === "DRAW" ? "무승부" : type === "BASE" ? "기본" : type}
-                                                    </span>
-                                                    <span className="text-admin-text-primary font-bold">+{val?.toLocaleString()}</span>
-                                                </div>
-                                            ))}
+                                            {isDiceKey(game) ? (
+                                                [
+                                                    ["WIN", activeDiceConfig?.win],
+                                                    ["DRAW", activeDiceConfig?.draw],
+                                                    ["LOSE", activeDiceConfig?.lose],
+                                                ].map(([type, val]) => (
+                                                    <div key={String(type)} className="flex items-center justify-between text-admin-mono text-[14px]">
+                                                        <span className="text-admin-text-muted">
+                                                            {type === "WIN" ? "승리" : type === "LOSE" ? "패배" : type === "DRAW" ? "무승부" : String(type)}
+                                                        </span>
+                                                        <span className="text-admin-text-primary font-bold">{formatSignedAmount(Number(val ?? 0))}</span>
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                Object.entries(values).map(([type, val]) => (
+                                                    <div key={type} className="flex items-center justify-between text-admin-mono text-[14px]">
+                                                        <span className="text-admin-text-muted">
+                                                            {type === "WIN" ? "승리" : type === "LOSE" ? "패배" : type === "DRAW" ? "무승부" : type === "BASE" ? "기본" : type}
+                                                        </span>
+                                                        <span className="text-admin-text-primary font-bold">{formatSignedAmount(val as any)}</span>
+                                                    </div>
+                                                ))
+                                            )}
                                         </div>
                                     </div>
                                 ))}

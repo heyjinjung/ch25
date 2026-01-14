@@ -42,3 +42,18 @@ class NotEnoughTokensError(HTTPException):
 
     def __init__(self, message: str = "NOT_ENOUGH_TOKENS"):
         super().__init__(status_code=status.HTTP_400_BAD_REQUEST, detail=message)
+
+
+class ForbiddenError(HTTPException):
+    """Raised when the user does not have permission to access the resource."""
+
+    def __init__(self, message: str = "FORBIDDEN"):
+        super().__init__(status_code=status.HTTP_403_FORBIDDEN, detail=message)
+
+
+class TooManyRequestsError(HTTPException):
+    """Raised when the user has exceeded the allow rate limit."""
+
+    def __init__(self, message: str = "TOO_MANY_REQUESTS"):
+        super().__init__(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail=message)
+

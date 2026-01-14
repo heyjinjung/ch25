@@ -146,6 +146,17 @@ function sumBalances(balances: Record<string, number> | undefined) {
     return Object.values(balances).reduce((acc, v) => acc + (typeof v === "number" ? v : 0), 0);
 }
 
+function getBalanceByType(balances: Record<string, number> | undefined, tokenType: GameTokenType) {
+    if (!balances) return 0;
+    const v = balances[tokenType];
+    return typeof v === "number" ? v : 0;
+}
+
+function formatNumberInput(value: string) {
+    const normalized = value.replace(/[^0-9]/g, "");
+    return normalized;
+}
+
 const DeltaDisplay: React.FC<{ delta: number }> = ({ delta }) => (
     <span
         className={`font-mono font-bold tracking-tighter ${delta > 0 ? "text-emerald-400" : delta < 0 ? "text-rose-400" : "text-zinc-600"
@@ -192,7 +203,15 @@ const TicketManagerPage: React.FC = () => {
         sortBy: "time" as "time" | "delta" | "balance_after" | "token_type",
         sortOrder: "desc" as "desc" | "asc",
     });
-    const [userSearch] = useState("");
+    // Users (client-side)
+    const [userSearch, setUserSearch] = useState("");
+    const [userTokenType, setUserTokenType] = useState<"ALL" | GameTokenType>("ALL");
+    const [userIncludeZero, setUserIncludeZero] = useState(false);
+    const [userMinBalanceInput, setUserMinBalanceInput] = useState("0");
+    const [userSort, setUserSort] = useState<{ by: "user_id" | "total" | "token"; order: "asc" | "desc" }>({
+        by: "total",
+        order: "desc",
+    });
 
     // Applied Filters (Server-Side)
     const [appliedLedgerUserFilter, setAppliedLedgerUserFilter] = useState("");
@@ -362,9 +381,16 @@ const TicketManagerPage: React.FC = () => {
     const filteredUsers = useMemo(() => {
         const data = summaryQuery.data ?? [];
         const q = userSearch.trim().toLowerCase();
-        if (!q) return data;
+        const minBalance = Number(userMinBalanceInput || "0") || 0;
 
-        return data.filter((u) => {
+        const filtered = data.filter((u) => {
+            const total = sumBalances(u.balances);
+            const tokenBalance = userTokenType === "ALL" ? total : getBalanceByType(u.balances, userTokenType);
+
+            if (!userIncludeZero && tokenBalance <= 0) return false;
+            if (tokenBalance < minBalance) return false;
+
+            if (!q) return true;
             return (
                 String(u.user_id).includes(q) ||
                 (u.external_id ?? "").toLowerCase().includes(q) ||
@@ -372,7 +398,52 @@ const TicketManagerPage: React.FC = () => {
                 (u.telegram_username ?? "").toLowerCase().includes(q)
             );
         });
+
+        const sorted = [...filtered].sort((a, b) => {
+            const aTotal = sumBalances(a.balances);
+            const bTotal = sumBalances(b.balances);
+            const aToken = userTokenType === "ALL" ? aTotal : getBalanceByType(a.balances, userTokenType);
+            const bToken = userTokenType === "ALL" ? bTotal : getBalanceByType(b.balances, userTokenType);
+
+            let compare = 0;
+            if (userSort.by === "user_id") compare = a.user_id - b.user_id;
+            else if (userSort.by === "token") compare = aToken - bToken;
+            else compare = aTotal - bTotal;
+
+            return userSort.order === "asc" ? compare : -compare;
+        });
+
+        return sorted;
     }, [summaryQuery.data, userSearch]);
+
+    const selectedUserSummary = useMemo(() => {
+        if (!selectedUserId) return null;
+        return (summaryQuery.data ?? []).find((u) => u.user_id === selectedUserId) ?? null;
+    }, [selectedUserId, summaryQuery.data]);
+
+    const selectedUserBalances = useMemo(() => {
+        const balances = selectedUserSummary?.balances ?? {};
+        const entries = (Object.keys(GAME_TOKEN_LABELS) as GameTokenType[]).map((t) => ({
+            tokenType: t,
+            label: GAME_TOKEN_LABELS[t],
+            balance: getBalanceByType(balances, t),
+        }));
+        return entries;
+    }, [selectedUserSummary]);
+
+    const [selectedUserTokenFilter, setSelectedUserTokenFilter] = useState<"ALL" | GameTokenType>("ALL");
+    const [selectedUserHideZero, setSelectedUserHideZero] = useState(true);
+
+    const filteredSelectedUserBalances = useMemo(() => {
+        let entries = selectedUserBalances;
+        if (selectedUserTokenFilter !== "ALL") {
+            entries = entries.filter((e) => e.tokenType === selectedUserTokenFilter);
+        }
+        if (selectedUserHideZero) {
+            entries = entries.filter((e) => e.balance !== 0);
+        }
+        return entries;
+    }, [selectedUserBalances, selectedUserHideZero, selectedUserTokenFilter]);
 
     const tabs: Array<{ id: ActiveTab; label: string; icon: React.ReactNode }> = [
         { id: "grant", label: LABELS.tabGrant, icon: <Wallet className="h-3.5 w-3.5" /> },
@@ -427,6 +498,13 @@ const TicketManagerPage: React.FC = () => {
             </div>
         </th>
     );
+
+    const toggleUserSort = (field: "user_id" | "total" | "token") => {
+        setUserSort((prev) => ({
+            by: field,
+            order: prev.by === field && prev.order === "desc" ? "asc" : "desc",
+        }));
+    };
 
     return (
         <section className="admin-page-container space-y-10 pb-20">
@@ -524,13 +602,13 @@ const TicketManagerPage: React.FC = () => {
                                         onChange={(e) => setPlayLogUserFilterInput(e.target.value)}
                                         onKeyDown={(e) => e.key === "Enter" && handleApplyPlayLogFilter()}
                                         placeholder="User ID / Name..."
-                                        className="w-full h-8 pl-8 pr-2 bg-zinc-900 border border-zinc-800 rounded text-xs text-zinc-200 focus:border-admin-brand focus:outline-none transition-all placeholder:text-zinc-600"
+                                        className="admin-input w-full h-9 pl-9 pr-3 text-sm"
                                     />
                                     {/* Show apply button only if changed? Or generic search button */}
                                 </div>
                                 <button
                                     onClick={handleApplyPlayLogFilter}
-                                    className="px-3 py-1.5 h-8 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded text-xs font-bold transition-colors"
+                                    className="btn-admin-secondary h-9 px-4"
                                 >
                                     검색
                                 </button>
@@ -539,7 +617,7 @@ const TicketManagerPage: React.FC = () => {
                                 <select
                                     title={LABELS.filterGameType}
                                     aria-label={LABELS.filterGameType}
-                                    className="bg-zinc-900 border border-zinc-800 rounded px-2 py-1 text-xs text-zinc-300 focus:border-admin-brand outline-none h-8"
+                                    className="admin-input h-9 text-sm"
                                     value={playLogFilters.gameType}
                                     onChange={(e) => setPlayLogFilters(p => ({ ...p, gameType: e.target.value as any }))}
                                 >
@@ -558,12 +636,12 @@ const TicketManagerPage: React.FC = () => {
                                         onChange={(e) => setLedgerUserFilterInput(e.target.value)}
                                         onKeyDown={(e) => e.key === "Enter" && handleApplyLedgerFilter()}
                                         placeholder="User ID / Name..."
-                                        className="w-full h-8 pl-8 pr-2 bg-zinc-900 border border-zinc-800 rounded text-xs text-zinc-200 focus:border-admin-brand focus:outline-none transition-all placeholder:text-zinc-600"
+                                        className="admin-input w-full h-9 pl-9 pr-3 text-sm"
                                     />
                                 </div>
                                 <button
                                     onClick={handleApplyLedgerFilter}
-                                    className="px-3 py-1.5 h-8 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded text-xs font-bold transition-colors"
+                                    className="btn-admin-secondary h-9 px-4"
                                 >
                                     검색
                                 </button>
@@ -572,7 +650,7 @@ const TicketManagerPage: React.FC = () => {
                                 <select
                                     title={LABELS.filterTokenType}
                                     aria-label={LABELS.filterTokenType}
-                                    className="bg-zinc-900 border border-zinc-800 rounded px-2 py-1 text-xs text-zinc-300 focus:border-admin-brand outline-none h-8"
+                                    className="admin-input h-9 text-sm"
                                     value={ledgerFilters.tokenType}
                                     onChange={(e) => setLedgerFilters(p => ({ ...p, tokenType: e.target.value as any }))}
                                 >
@@ -581,12 +659,64 @@ const TicketManagerPage: React.FC = () => {
                                 </select>
                             </div>
                         )}
+                        {activeTab === 'users' && (
+                            <div className="flex flex-wrap gap-2 items-center justify-end">
+                                <div className="relative group w-56">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 group-focus-within:text-admin-brand transition-colors" />
+                                    <input
+                                        type="text"
+                                        value={userSearch}
+                                        onChange={(e) => setUserSearch(e.target.value)}
+                                        placeholder="External ID / 닉네임 / @텔레그램"
+                                        className="admin-input w-full h-9 pl-10 pr-3 text-sm"
+                                    />
+                                </div>
+
+                                <select
+                                    title={LABELS.filterTokenType}
+                                    aria-label={LABELS.filterTokenType}
+                                    className="admin-input h-9 text-sm"
+                                    value={userTokenType}
+                                    onChange={(e) => setUserTokenType(e.target.value as any)}
+                                >
+                                    <option value="ALL">전체 티켓</option>
+                                    {TOKEN_TYPES.map((t) => (
+                                        <option key={t.value} value={t.value}>
+                                            {t.label}
+                                        </option>
+                                    ))}
+                                </select>
+
+                                <div className="flex items-center gap-2">
+                                    <label className="text-sm text-admin-text-secondary font-bold">최소</label>
+                                    <input
+                                        type="text"
+                                        inputMode="numeric"
+                                        value={userMinBalanceInput}
+                                        onChange={(e) => setUserMinBalanceInput(formatNumberInput(e.target.value))}
+                                        className="admin-input h-9 w-24 text-sm text-right font-mono"
+                                        aria-label="최소 잔액"
+                                        title="최소 잔액"
+                                    />
+                                </div>
+
+                                <label className="flex items-center gap-2 text-sm text-admin-text-secondary font-bold select-none">
+                                    <input
+                                        type="checkbox"
+                                        checked={userIncludeZero}
+                                        onChange={(e) => setUserIncludeZero(e.target.checked)}
+                                        className="accent-admin-brand"
+                                    />
+                                    0 포함
+                                </label>
+                            </div>
+                        )}
                     </div>
 
                     {/* Scrollable Table Area */}
                     <div className="flex-1 overflow-auto custom-scrollbar">
                         {activeTab === 'playLogs' && (
-                            <table className="w-full text-left border-collapse">
+                            <table className="admin-table">
                                 <thead className="sticky top-0 z-10 bg-zinc-900 border-b border-zinc-800">
                                     <tr>
                                         <SortHeader label={LABELS.colTime} field="time" currentField={playLogFilters.sortBy} currentOrder={playLogFilters.sortOrder} onSort={(f) => toggleSort('playLogs', f)} />
@@ -598,16 +728,16 @@ const TicketManagerPage: React.FC = () => {
                                 <tbody className="divide-y divide-zinc-800/50">
                                     {filteredPlayLogs.slice((playLogPage - 1) * PAGE_SIZE, playLogPage * PAGE_SIZE).map((log) => (
                                         <tr key={log.id} className="group hover:bg-white/5 transition-colors h-12">
-                                            <td className="px-4 text-[10px] text-zinc-500 font-mono whitespace-nowrap tabular-nums">{formatKSTTime(log.created_at)}</td>
+                                            <td className="px-4 text-sm text-admin-text-muted font-mono whitespace-nowrap tabular-nums">{formatKSTTime(log.created_at)}</td>
                                             <td className="px-4">
                                                 <div className="flex flex-col">
-                                                    <span className="text-xs font-bold text-zinc-300">{log.nickname}</span>
-                                                    <span className="text-[10px] text-zinc-600 font-mono">{log.external_id}</span>
+                                                    <span className="text-sm font-bold text-zinc-200">{log.nickname}</span>
+                                                    <span className="text-sm text-admin-text-muted font-mono">{log.external_id}</span>
                                                 </div>
                                             </td>
-                                            <td className="px-4 text-xs text-zinc-400 font-bold">{GAME_LABELS[log.game] || log.game}</td>
+                                            <td className="px-4 text-sm text-zinc-300 font-bold">{GAME_LABELS[log.game] || log.game}</td>
                                             <td className="px-4 text-right">
-                                                <span className={`font-mono text-xs font-black tabular-nums ${log.reward_amount > 0 ? "text-emerald-400 font-black" : "text-zinc-600 font-medium"}`}>
+                                                <span className={`font-mono text-sm font-black tabular-nums ${log.reward_amount > 0 ? "text-emerald-400 font-black" : "text-zinc-600 font-medium"}`}>
                                                     {log.reward_amount > 0 ? "+" : ""}{log.reward_amount.toLocaleString()}
                                                 </span>
                                             </td>
@@ -617,7 +747,7 @@ const TicketManagerPage: React.FC = () => {
                             </table>
                         )}
                         {activeTab === 'ledger' && (
-                            <table className="w-full text-left border-collapse">
+                            <table className="admin-table">
                                 <thead className="sticky top-0 z-10 bg-zinc-900 border-b border-zinc-800">
                                     <tr>
                                         <SortHeader label={LABELS.colTime} field="time" currentField={ledgerFilters.sortBy} currentOrder={ledgerFilters.sortOrder} onSort={(f) => toggleSort('ledger', f)} />
@@ -637,18 +767,18 @@ const TicketManagerPage: React.FC = () => {
                                                 setFormData(prev => ({ ...prev, userIdentifier: entry.external_id || String(entry.user_id) }));
                                             }}
                                         >
-                                            <td className="px-4 text-[10px] text-zinc-500 font-mono whitespace-nowrap">{formatKSTTime(entry.created_at)}</td>
+                                            <td className="px-4 text-sm text-admin-text-muted font-mono whitespace-nowrap">{formatKSTTime(entry.created_at)}</td>
                                             <td className="px-4">
                                                 <div className="flex flex-col">
-                                                    <span className="text-xs font-bold text-zinc-300">{entry.nickname}</span>
-                                                    <span className="text-[10px] text-zinc-600 font-mono">{entry.external_id}</span>
+                                                    <span className="text-sm font-bold text-zinc-200">{entry.nickname}</span>
+                                                    <span className="text-sm text-admin-text-muted font-mono">{entry.external_id}</span>
                                                 </div>
                                             </td>
-                                            <td className="px-4 text-xs text-zinc-400">{GAME_TOKEN_LABELS[entry.token_type] || entry.token_type}</td>
+                                            <td className="px-4 text-sm text-zinc-300">{GAME_TOKEN_LABELS[entry.token_type] || entry.token_type}</td>
                                             <td className="px-4 text-right">
                                                 <DeltaDisplay delta={entry.delta} />
                                             </td>
-                                            <td className="px-4 text-right text-xs font-mono text-zinc-500">
+                                            <td className="px-4 text-right text-sm font-mono text-admin-text-muted">
                                                 {entry.balance_after.toLocaleString()}
                                             </td>
                                         </tr>
@@ -658,12 +788,17 @@ const TicketManagerPage: React.FC = () => {
                         )}
                         {/* Users Tab Simplified Logic */}
                         {activeTab === 'users' && (
-                            <table className="w-full text-left border-collapse">
+                            <table className="admin-table">
                                 <thead className="sticky top-0 z-10 bg-zinc-900 border-b border-zinc-800">
                                     <tr>
-                                        <th className="px-4 py-3 text-xs font-semibold text-zinc-500">USER ID</th>
-                                        <th className="px-4 py-3 text-xs font-semibold text-zinc-500">INFO</th>
-                                        <th className="px-4 py-3 text-xs font-semibold text-zinc-500 text-right">TOTAL ASSETS</th>
+                                        <th className="admin-th cursor-pointer select-none hover:bg-admin-hover transition-colors" onClick={() => toggleUserSort("user_id")}>USER ID</th>
+                                        <th className="admin-th">INFO</th>
+                                        {userTokenType !== "ALL" && (
+                                            <th className="admin-th cursor-pointer select-none hover:bg-admin-hover transition-colors text-right" onClick={() => toggleUserSort("token")}>
+                                                {GAME_TOKEN_LABELS[userTokenType]}
+                                            </th>
+                                        )}
+                                        <th className="admin-th cursor-pointer select-none hover:bg-admin-hover transition-colors text-right" onClick={() => toggleUserSort("total")}>TOTAL ASSETS</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-zinc-800/50">
@@ -676,16 +811,19 @@ const TicketManagerPage: React.FC = () => {
                                                 setFormData(prev => ({ ...prev, userIdentifier: u.external_id || String(u.user_id) }));
                                             }}
                                         >
-                                            <td className="px-4 text-xs font-mono text-zinc-500">{u.user_id}</td>
+                                            <td className="px-4 text-sm font-mono text-admin-text-muted">{u.user_id}</td>
                                             <td className="px-4">
                                                 <div className="flex flex-col">
-                                                    <span className="text-xs font-bold text-zinc-300">{u.nickname}</span>
-                                                    <span className="text-[10px] text-zinc-600 font-mono">{u.external_id}</span>
+                                                    <span className="text-sm font-bold text-zinc-200">{u.nickname}</span>
+                                                    <span className="text-sm text-admin-text-muted font-mono">{u.external_id}</span>
                                                 </div>
                                             </td>
-                                            <td className="px-4 text-right text-xs font-mono text-white">
-                                                {sumBalances(u.balances).toLocaleString()}
-                                            </td>
+                                            {userTokenType !== "ALL" && (
+                                                <td className="px-4 text-right text-sm font-mono text-zinc-100">
+                                                    {getBalanceByType(u.balances, userTokenType).toLocaleString()}
+                                                </td>
+                                            )}
+                                            <td className="px-4 text-right text-sm font-mono text-zinc-100">{sumBalances(u.balances).toLocaleString()}</td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -811,6 +949,109 @@ const TicketManagerPage: React.FC = () => {
                                 {formMode === 'grant' ? 'Grant Tokens' : 'Revoke Tokens'}
                             </button>
                         </form>
+                    </div>
+
+                    {/* Selected User Detail */}
+                    <div className="admin-card p-6 flex flex-col gap-4">
+                        <div className="flex items-center justify-between">
+                            <h3 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
+                                <Users className="h-4 w-4 text-admin-brand" />
+                                유저 자산 상세
+                            </h3>
+                            {selectedUserSummary && (
+                                <span className="text-sm text-admin-text-muted font-mono">#{selectedUserSummary.user_id}</span>
+                            )}
+                        </div>
+
+                        {!selectedUserSummary ? (
+                            <div className="text-sm text-admin-text-muted">
+                                좌측 목록에서 유저를 선택하면 잔여 티켓/총합이 표시됩니다.
+                            </div>
+                        ) : (
+                            <>
+                                <div className="space-y-1">
+                                    <div className="text-sm font-bold text-zinc-200">{selectedUserSummary.nickname || "(닉네임 없음)"}</div>
+                                    <div className="text-sm text-admin-text-muted font-mono">{selectedUserSummary.external_id || "(External ID 없음)"}</div>
+                                    {selectedUserSummary.telegram_username && (
+                                        <div className="text-sm text-admin-text-muted font-mono">@{selectedUserSummary.telegram_username}</div>
+                                    )}
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="bg-admin-sidebar/50 border border-admin-border rounded-admin-lg p-3">
+                                        <div className="text-[10px] font-black text-admin-text-muted uppercase tracking-widest">총합</div>
+                                        <div className="text-lg font-black text-zinc-100 font-mono tabular-nums">
+                                            {sumBalances(selectedUserSummary.balances).toLocaleString()}
+                                        </div>
+                                    </div>
+                                    <div className="bg-admin-sidebar/50 border border-admin-border rounded-admin-lg p-3">
+                                        <div className="text-[10px] font-black text-admin-text-muted uppercase tracking-widest">선택 티켓</div>
+                                        <div className="text-lg font-black text-zinc-100 font-mono tabular-nums">
+                                            {(selectedUserTokenFilter === "ALL"
+                                                ? sumBalances(selectedUserSummary.balances)
+                                                : getBalanceByType(selectedUserSummary.balances, selectedUserTokenFilter)
+                                            ).toLocaleString()}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3 items-end">
+                                    <div className="space-y-1">
+                                        <label className="text-sm font-semibold text-admin-text-secondary">티켓 종류</label>
+                                        <select
+                                            className="admin-input h-10 text-sm"
+                                            value={selectedUserTokenFilter}
+                                            onChange={(e) => setSelectedUserTokenFilter(e.target.value as any)}
+                                            aria-label="유저 상세 티켓 종류 필터"
+                                            title="유저 상세 티켓 종류 필터"
+                                        >
+                                            <option value="ALL">전체</option>
+                                            {TOKEN_TYPES.map((t) => (
+                                                <option key={t.value} value={t.value}>
+                                                    {t.label}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <label className="flex items-center gap-2 text-sm text-admin-text-secondary font-bold select-none pb-1">
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedUserHideZero}
+                                            onChange={(e) => setSelectedUserHideZero(e.target.checked)}
+                                            className="accent-admin-brand"
+                                        />
+                                        0 숨김
+                                    </label>
+                                </div>
+
+                                <div className="border border-admin-border rounded-admin-lg overflow-hidden">
+                                    <table className="admin-table">
+                                        <thead>
+                                            <tr>
+                                                <th className="admin-th">티켓</th>
+                                                <th className="admin-th text-right">잔여</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {filteredSelectedUserBalances.length === 0 ? (
+                                                <tr>
+                                                    <td className="admin-td text-sm text-admin-text-muted" colSpan={2}>
+                                                        표시할 티켓이 없습니다.
+                                                    </td>
+                                                </tr>
+                                            ) : (
+                                                filteredSelectedUserBalances.map((row) => (
+                                                    <tr key={row.tokenType} className="admin-tr">
+                                                        <td className="admin-td text-sm text-zinc-200 font-bold">{row.label}</td>
+                                                        <td className="admin-td text-sm text-right font-mono tabular-nums text-zinc-100">{row.balance.toLocaleString()}</td>
+                                                    </tr>
+                                                ))
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </>
+                        )}
                     </div>
                 </div>
             </div>

@@ -143,3 +143,140 @@ ISFJ 관리자는 전체 상황을 먼저 파악하고 세부 업무에 들어�
   * **Table Content Fitting**: 컬럼 너비를 데이터 길이에 맞춰 조정(ID 컬럼 축소, 기간 컬럼 확대).
   * **Empty State Styling**: 데이터가 적을 때도 테이블 형태가 무너지지 않도록 `min-w` 및 균등 분할(`w-full`) 적용.
   * **Status Badge**: '진행중', '종료' 상태를 명확한 뱃지(Dot Indicator + Text)로 표현.
+
+
+🎨 프론트엔드 UI 설계 (Frontend Design Spec - ISFJ Edition)
+docs/design/*.md 가이드라인을 준수하여, "차분하고 예측 가능한(Calm & Predictable)" 운영 환경을 구축합니다.
+
+1. 전역 스타일 규칙 (Global Style Tokens)
+배경색 (Deep Calm): #121214 (Soft Obsidian)
+컨테이너 (Surface): #18181b (Zinc-900)
+텍스트 (Primary): #e4e4e7 (Zinc-200) / (Secondary): #a1a1aa (Zinc-400)
+강조색 (Brand): #6366f1 (Indigo-500)
+위험/경고 (Danger): #f43f5e (Rose-500) / 성공 (Success): #10b981 (Emerald-500)
+그리드: 4px 단위 시스템 (p-6, gap-6, rounded-2xl).
+2. 컴포넌트별 상세 디자인
+A. 위기 감지 레이더 (Crisis Radar Widget)
+위치: 마케팅 대시보드 상단 (기존 카드 영역 대체)
+
+레이아웃: grid grid-cols-4 gap-4.
+카드 디자인 (Pulse Card):
+Normal: bg-zinc-900/50 border border-white/5 hover:border-indigo-500/50.
+High Risk (Scenario 1,9): bg-rose-500/5 border-rose-500/20 + 적색 맥동(Pulse) 애니메이션.
+Hidden Gem (Scenario 11): bg-amber-500/5 border-amber-500/20 + 금색 테두리(ring-1 ring-amber-500/30).
+콘텐츠:
+Title: text-xs font-bold text-zinc-500 uppercase tracking-widest (시나리오명).
+Value: text-2xl font-mono font-bold text-zinc-100 (대상자 수).
+Action: 마우스 오버 시 "작전 실행 >" 버튼 (text-xs text-indigo-400) 노출.
+B. 타겟 리스트 테이블 (Target List Table)
+위치: Ops Plan 페이지 > Target List 섹션
+
+헤더: sticky top-0 z-10 bg-[#121214]/90 backdrop-blur. (text-xs text-zinc-500 uppercase).
+행(Row): h-14 (56px) 등간격. border-b border-white/5.
+시나리오 뱃지: Outlined Style (border border-indigo-500/30 text-indigo-400 bg-indigo-500/5).
+인원수: font-mono text-emerald-400 tabular-nums (우측 정렬).
+상태 표시: PROCESSED (완료) 상태는 투명도 50% 처리하여 시각적 노이즈 감소.
+C. 원클릭 실행 모달 (One-Click Action Modal)
+위치: 위기 감지 카드 클릭 시 팝업
+
+배경: bg-black/80 backdrop-blur-sm (집중 모드).
+컨테이너: bg-zinc-900 border border-white/10 rounded-2xl w-[600px].
+Safety Zone (입력/확인 영역):
+모달 하단 액션 영역에 bg-[#1e1e24] 배경을 깔아 "중요한 결정"임을 암시.
+미리보기: 상단에는 대상자 Top 5 리스트 표시 (Compact List).
+페이로드 설정: 메시지 템플릿 선택 및 보상 금액 확인 (Read-only 권장).
+버튼:
+[취소]: text-zinc-400 hover:text-white.
+[작전 실행]: bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 px-6 rounded-lg.
+3. 인터랙션 가이드 (Interaction)
+Hover: 모든 카드와 리스트 아이템은 hover:bg-white/[0.02] 반응.
+Click Feedback: 버튼 클릭 시 즉각적인 Loading Spinner 표시 (버튼 내부).
+Toast: 작업 완료 후 우측 하단에 "12명에게 작전이 실행되었습니다." 성공 토스트 노출.
+
+
+ 상세 기술 설계 (Backend Spec)
+1. 데이터베이스 스키마 (Database Schema)
+ops_target_list (대상자 그룹)
+Column	Type	Description
+id
+Integer (PK)	고유 ID
+plan_id	Integer (FK)	ops_plan.id 참조
+name
+String(100)	화면 표시용 이름 (예: "불운한 뉴비")
+source_type	String	SCENARIO, SEGMENT
+source_params	JSON	생성 조건 (예: {"scenario_id": 11})
+count_snapshot	Integer	생성 시점의 포함 인원 수
+is_processed	Boolean	처리 완료 여부
+ops_target_member (대상자 개별)
+[Update] 결과 추적(Result Check) 컬럼 추가
+
+Column	Type	Description
+id
+Integer (PK)	고유 ID
+target_list_id	Integer (FK)	ops_target_list.id 참조
+user_id	Integer (FK)	user.id 참조
+status
+String	PENDING, SENT, FAILED
+data	JSON	개인화 변수 (예: {"loss_amount": 50000})
+result_status	String	NONE (미확인), CHECKED (확인됨)
+converted_at	DateTime	목표 행동 달성 시각 (NULL이면 미달성)
+conversion_value	Integer	전환 가치 (예: 입금액, 판수)
+2. 백엔드 로직 (Scenario Query Logic)
+(이전과 동일)
+
+3. 결과 추적 및 팔로업 (Result Check & Follow-up)
+"보내고 끝"이 아니라 "먹혔는지 확인"하는 피드백 루프를 구축합니다.
+
+자동 추적 (Auto-Tracking):
+Trigger: 타겟 리스트 생성 후 24시간 뒤 배치(Batch) 또는 관리자가 수동으로 "결과 확인" 버튼 클릭.
+Logic:
+Scnenario 1 (뉴비): 지급 후 24시간 내 게임 플레이 횟수 확인.
+Scenario 3 (첫충전): 제안 후 24시간 내 입금 발생 여부 확인.
+Scenario 11 (외부VIP): 보상 지급 후 로그인 및 게임 참여 확인.
+리포팅 (Reporting):
+Ops Plan 결과 화면에 "전환율(Conversion Rate)" 표시. (예: "총 12명 중 4명(33%) 복귀 성공")
+팔로업 (Follow-up):
+효과가 없는 그룹은 "실패(Failed)"로 분류하고, 추후 다른 시나리오(예: 더 강력한 미끼) 대상군으로 재활용.
+🎨 프론트엔드 UI 설계 (Frontend Design Spec - ISFJ Edition)
+(이전과 동일)
+
+
+---
+20260113_ops_crisis_scenarios_spec.md 스펙에 따라 다음 구현을 마쳤습니다:
+
+✅ 완료 항목
+레이어	파일	내용
+DB Schema	app/models/ops_target.py	OpsTargetList, OpsTargetMember (Result Check 포함)
+Migration	alembic/versions/20260113_1804_...py	테이블 생성 완료
+Schemas	app/schemas/ops_target.py	CRUD + CrisisSignals + Import/ResultCheck
+Service	app/services/ops_target_service.py	시나리오 감지 (S01, S04, S11) + CRUD
+API Router	app/api/admin/routes/admin_ops_target.py	5개 엔드포인트
+🔌 새로 추가된 API 엔드포인트
+GET /admin/api/ops/dashboard/crisis-signals (위기 레이더)
+POST /admin/api/ops/plans/{plan_id}/import-target (시나리오 임포트)
+GET /admin/api/ops/target-lists/{id}/members (멤버 조회)
+POST /admin/api/ops/target-lists/{id}/check-results (전환 확인)
+📋 다음 단계
+ 프론트엔드: 마케팅 대시보드에 "위기 감지 레이더" 위젯 추가
+ 프론트엔드: 원클릭 임포트 모달 구현
+
+
+ 1 Crisis Scenarios 구현이 완료되었습니다! 🎉
+
+✅ 백엔드 (완료)
+구분	파일
+DB	ops_target_list, ops_target_member 테이블 생성
+API	GET /dashboard/crisis-signals, POST /import-target 등 5개 엔드포인트
+Service	시나리오 1, 4, 11 감지 로직 구현
+✅ 프론트엔드 (완료)
+구분	파일
+컴포넌트	CrisisRadar.tsx - 11개 시나리오 레이더 위젯
+API	fetchCrisisSignals, importTargetFromScenario
+통합	MarketingDashboardPage.tsx 상단에 레이더 추가
+🎨 UI 디자인 (스펙 기반)
+HIGH 레벨: 로즈(Rose) 배경 + 맥동(Pulse) 애니메이션
+SPECIAL 레벨: 앰버(Amber) 금색 테두리 + 링 효과
+호버 시: "작전 실행 →" 버튼 노출
+📦 빌드 확인
+✅ npm run build 성공 (exit code 0)
+마케팅 대시보드(/admin/marketing)에서 위기 감지 레이더를 확인하실 수 있습니다!

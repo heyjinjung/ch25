@@ -178,8 +178,6 @@ class DiceService:
         # --- Event Mode Checking ---
         is_event_active, _ = self._is_event_active(db, user_id, today_plays)
 
-        print(f"DEBUG: is_event_active post-cap={is_event_active}")
-
         # 3. Decision Logic
         outcome = "LOSE"
         reward_type = config.lose_reward_type
@@ -219,6 +217,14 @@ class DiceService:
                      reward_type = "NONE" # Usually event mode rewards are Vault accruals only
 
         if mode == "NORMAL":
+             # [Phase 1] Segment-Based Reward Logic (P0) - Refined
+             # BASE AMOUNT must come from Admin Config (DB).
+             # We only apply Multiplier based on Segment/Event.
+             
+             from app.models.user_segment import UserSegment
+             segment_row = db.query(UserSegment).filter(UserSegment.user_id == user_id).first()
+             user_segment = segment_row.segment if segment_row else "COMMON"
+            
              # Standard Pure RNG
              user_dice = [random.randint(1, 6), random.randint(1, 6)]
              dealer_dice = [random.randint(1, 6), random.randint(1, 6)]
@@ -228,15 +234,34 @@ class DiceService:
              if user_sum > dealer_sum:
                  outcome = "WIN"
                  reward_type = config.win_reward_type
-                 reward_amount = config.win_reward_amount
+                 base_amount = config.win_reward_amount
              elif user_sum == dealer_sum:
                  outcome = "DRAW"
                  reward_type = config.draw_reward_type
-                 reward_amount = config.draw_reward_amount
+                 base_amount = config.draw_reward_amount
              else:
                  outcome = "LOSE"
                  reward_type = config.lose_reward_type
-                 reward_amount = config.lose_reward_amount
+                 base_amount = config.lose_reward_amount
+
+             # Golden Hour Multiplier
+             from app.services.event_service import EventService
+             is_golden_hour = EventService().is_golden_hour(db)
+
+             multiplier = 1.0
+             if is_golden_hour:
+                 if user_segment in ["WHALE", "VIP"]:
+                     multiplier = 2.5
+                 elif user_segment == "COMMON":
+                     multiplier = 2.0
+             
+             # Apply Multiplier (only to positive rewards)
+             # Note: If reward_amounts are 0 in config, multiplier won't help. 
+             # Admin must set base amounts > 0 for this to work.
+             if base_amount > 0:
+                 reward_amount = int(base_amount * multiplier)
+             else:
+                 reward_amount = base_amount
 
         else:
              # Event Mode: Generate Dice to match Outcome
@@ -344,9 +369,12 @@ class DiceService:
         streak_info = mission_service.get_streak_info(user_id)
 
         total_earn = 0
-        point_reward_amount = 0
-        if reward_type in {"POINT", "CC_POINT"} and reward_amount:
-            point_reward_amount = int(reward_amount)
+        # Vault accrual routing:
+        # - DICE rewards are interpreted as vault amounts when reward_type is POINT/CC_POINT/NONE.
+        # - For other reward types (e.g., DIAMOND/TICKET), we do not feed the amount into vault accrual.
+        vault_reward_amount = 0
+        if reward_type in {"POINT", "CC_POINT", "NONE"} and reward_amount is not None:
+            vault_reward_amount = int(reward_amount)
 
         # [REFACTORED V3] Unified Vault Accrual
         # Point rewards are merged into vault accrual.
@@ -364,7 +392,7 @@ class DiceService:
             payout_raw={
                 "result": outcome,
                 "reward_type": reward_type,
-                "reward_amount": point_reward_amount if point_reward_amount > 0 else 0, # Pass only if valid point reward
+                "reward_amount": vault_reward_amount,
                 "mode": mode,
             },
         )
