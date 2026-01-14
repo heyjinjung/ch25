@@ -26,6 +26,7 @@ export interface Mission {
     auto_claim?: boolean;
     requires_approval?: boolean;
     is_active?: boolean;
+    is_featured?: boolean;
 }
 
 export interface MissionProgress {

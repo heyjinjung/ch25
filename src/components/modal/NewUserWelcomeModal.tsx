@@ -1,12 +1,11 @@
 import React, { useRef, useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import Lottie from "lottie-react";
 import { claimNewUserWelcome, getNewUserStatus } from "../../api/newUserApi";
 import { useToast } from "../common/ToastProvider";
 import { useHaptic } from "../../hooks/useHaptic";
-
-
+import { Gift, ArrowRight, CheckCircle2, Gamepad2, X } from "lucide-react";
+import clsx from "clsx";
 
 interface NewUserWelcomeModalProps {
     onClose: () => void;
@@ -15,7 +14,6 @@ interface NewUserWelcomeModalProps {
 const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) => {
     const [isClaiming, setIsClaiming] = useState(false);
     const [hasClaimed, setHasClaimed] = useState(false);
-    const [successAnimationData, setSuccessAnimationData] = useState<any>(null);
     const { addToast } = useToast();
     const { notification, impact } = useHaptic();
     const queryClient = useQueryClient();
@@ -33,28 +31,9 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) =>
 
     useEffect(() => {
         if (status) {
-            console.log("[NewUserWelcomeModal] Status Data:", status);
             lastDataRef.current = status;
         }
     }, [status]);
-
-    useEffect(() => {
-        if (!hasClaimed) return;
-        let isCancelled = false;
-        (async () => {
-            try {
-                const res = await fetch("/assets/modals/welcome_claim_success.json", { cache: "no-cache" });
-                if (!res.ok) return;
-                const json = await res.json();
-                if (!isCancelled) setSuccessAnimationData(json);
-            } catch {
-                // Ignore animation load failures (keep UX functional).
-            }
-        })();
-        return () => {
-            isCancelled = true;
-        };
-    }, [hasClaimed]);
 
     const activeData = status || lastDataRef.current;
 
@@ -93,14 +72,13 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) =>
         }
     };
 
-    // Show a loading shell instead of silently disappearing.
     if (!activeData) {
         if (isFetching) {
             return (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-                    <div className="w-full max-w-md rounded-3xl border border-white/10 bg-black/60 p-8 text-center text-white/70">
-                        <div className="mx-auto mb-4 h-10 w-10 rounded-full border-2 border-white/10 border-t-figma-accent animate-spin" />
-                        웰컴 미션을 불러오는 중...
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
+                    <div className="w-full max-w-[340px] rounded-[32px] border border-white/10 bg-zinc-950 p-10 text-center shadow-2xl">
+                        <div className="mx-auto mb-6 h-12 w-12 rounded-full border-4 border-emerald-500/20 border-t-emerald-500 animate-spin" />
+                        <p className="text-white/60 font-bold tracking-tight">최고의 혜택을 준비 중...</p>
                     </div>
                 </div>
             );
@@ -120,86 +98,96 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) =>
     const ticketAmount = Number(ticketMission?.reward_amount ?? 5);
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
-            <div className="relative w-full max-w-md bg-gradient-to-b from-slate-900 to-black border-2 border-emerald-500/30 rounded-3xl shadow-2xl shadow-emerald-500/20 overflow-hidden animate-scaleIn">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fadeIn">
+            <div className="relative w-full max-w-[350px] bg-zinc-950 border border-emerald-500/30 rounded-[32px] shadow-[0_32px_64px_-16px_rgba(16,185,129,0.3)] overflow-hidden animate-scaleIn">
+                {/* Background Textures */}
+                <div className="absolute inset-0 bg-[url('/assets/pattern_noise.png')] opacity-[0.03] pointer-events-none" />
+                <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-emerald-500/10 to-transparent pointer-events-none" />
+
                 {/* Close Button */}
                 <button
                     onClick={handleClose}
-                    aria-label="닫기"
-                    className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-red-500 hover:bg-red-600 transition-colors"
+                    className="absolute top-5 right-5 z-20 w-8 h-8 flex items-center justify-center rounded-full bg-white/5 border border-white/10 text-white/40 hover:text-white hover:bg-white/10 transition-all"
                 >
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                    <X size={18} />
                 </button>
 
-                {/* Header Image */}
-                <div className="relative w-full aspect-[2/1] max-h-48 bg-slate-800 flex items-center justify-center overflow-hidden">
-                    <img
-                        src="/assets/welcome/welcome2_header.png"
-                        alt="WELCOME 신규보상받기"
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                            const img = e.currentTarget;
-                            if (img.src.includes("/assets/welcome/welcome2_header.png")) {
-                                img.src = "/assets/welcome/header_2026_newyear.png";
-                            }
-                        }}
-                    />
+                {/* Hero Header */}
+                <div className="relative pt-12 pb-6 px-6 text-center">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 mb-4 animate-bounce-subtle">
+                        <Gift size={12} className="text-emerald-400" />
+                        <span className="text-[10px] font-black text-emerald-400 tracking-widest uppercase">WELCOME SPECIAL</span>
+                    </div>
+
+                    <h2 className="text-[28px] font-black text-white leading-[1.1] tracking-tight mb-2">
+                        사장님,<br />
+                        반가움의 선물입니다
+                    </h2>
+                    <p className="text-zinc-500 text-sm font-medium tracking-tight">
+                        바로 게임을 시작하실 수 있도록 준비했습니다.
+                    </p>
                 </div>
 
-                {/* Content */}
-                <div className="p-6 space-y-4">
-                    <div className="text-center">
-                        <h2 className="text-2xl font-black text-white mb-1 leading-tight">
-                            사장님,<br />
-                            오시느라 고생하셨습니다!
-                        </h2>
-                        <p className="text-sm font-bold text-white/60">묻지도 따지지도 않고 드립니다.</p>
-                    </div>
-
-                    {/* Reward Showcase */}
-                    <div className="grid grid-cols-2 gap-3">
-                        <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-center">
-                            <img src="/assets/asset_coin_gold.png" alt="coin" className="mx-auto h-14 w-14 object-contain" />
-                            <div className="mt-2 text-sm font-black text-white">금고 {cashAmount.toLocaleString()}P</div>
+                {/* Reward Showcase */}
+                <div className="px-6 pb-8">
+                    <div className="grid grid-cols-2 gap-3 mb-8">
+                        {/* Cash Card */}
+                        <div className="relative group p-4 rounded-2xl bg-white/[0.03] border border-white/5 flex flex-col items-center justify-center overflow-hidden">
+                            <div className="absolute inset-0 bg-emerald-500/5 blur-xl group-hover:opacity-100 transition-opacity" />
+                            <div className="relative z-10 w-12 h-12 mb-3 bg-black/40 rounded-xl border border-white/5 flex items-center justify-center p-2.5 shadow-inner">
+                                <img src="/assets/asset_coin_gold.png" alt="coin" className="w-full h-full object-contain" />
+                            </div>
+                            <div className="relative z-10 text-[11px] font-bold text-zinc-500 mb-0.5 whitespace-nowrap">정착 지원금</div>
+                            <div className="relative z-10 text-lg font-black text-white tabular-nums">
+                                {cashAmount.toLocaleString()}<span className="text-[10px] text-emerald-500 ml-0.5">P</span>
+                            </div>
                         </div>
-                        <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-center">
-                            <img
-                                src="/assets/asset_ticket_bundle.png"
-                                alt="ticket"
-                                className="mx-auto h-14 w-14 object-contain"
-                                onError={(e) => {
-                                    const img = e.currentTarget;
-                                    if (img.src.includes("/assets/asset_ticket_bundle.png")) {
-                                        img.src = "/assets/asset_ticket_trial.png";
-                                    }
-                                }}
-                            />
-                            <div className="mt-2 text-sm font-black text-white">룰렛 티켓 {ticketAmount}장</div>
+
+                        {/* Ticket Card */}
+                        <div className="relative group p-4 rounded-2xl bg-white/[0.03] border border-white/5 flex flex-col items-center justify-center overflow-hidden">
+                            <div className="absolute inset-0 bg-amber-500/5 blur-xl group-hover:opacity-100 transition-opacity" />
+                            <div className="relative z-10 w-12 h-12 mb-3 bg-black/40 rounded-xl border border-white/5 flex items-center justify-center p-2.5 shadow-inner">
+                                <img src="/assets/asset_ticket_green.png" alt="ticket" className="w-full h-full object-contain" />
+                            </div>
+                            <div className="relative z-10 text-[11px] font-bold text-zinc-500 mb-0.5 whitespace-nowrap">룰렛 티켓</div>
+                            <div className="relative z-10 text-lg font-black text-white tabular-nums">
+                                {ticketAmount}<span className="text-[10px] text-zinc-500 ml-0.5 text-amber-500">장</span>
+                            </div>
                         </div>
                     </div>
 
+                    {/* Action Area */}
                     {!hasClaimed ? (
                         <button
                             onClick={handleClaim}
                             disabled={isClaiming}
-                            className={
-                                "w-full py-4 rounded-xl bg-figma-primary text-white font-black text-lg shadow-lg shadow-emerald-500/30 hover:brightness-110 active:scale-95 transition-all uppercase tracking-wide " +
-                                (isClaiming ? "opacity-80" : "")
-                            }
+                            className={clsx(
+                                "w-full py-4.5 rounded-[18px] font-black text-lg transition-all relative overflow-hidden group",
+                                isClaiming
+                                    ? "bg-zinc-800 text-zinc-500 cursor-not-allowed"
+                                    : "bg-emerald-500 text-black shadow-[0_12px_24px_-8px_rgba(16,185,129,0.5)] active:scale-[0.97] hover:brightness-110"
+                            )}
                         >
-                            {isClaiming ? "지급 중..." : `정착 지원금 받기 (${cashAmount.toLocaleString()}P + 티켓 ${ticketAmount}장)`}
+                            <div className="relative z-10 flex items-center justify-center gap-2">
+                                {isClaiming ? (
+                                    <>
+                                        <div className="w-5 h-5 border-2 border-black/20 border-t-black animate-spin rounded-full" />
+                                        <span>지급 중...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <span>지금 모두 받기</span>
+                                        <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                                    </>
+                                )}
+                            </div>
                         </button>
                     ) : (
-                        <div className="space-y-3">
-                            {successAnimationData ? (
-                                <div className="mx-auto w-44 h-44">
-                                    <Lottie animationData={successAnimationData} loop autoplay />
-                                </div>
-                            ) : (
-                                <div className="text-center text-white/70 text-sm font-semibold">지급 완료!</div>
-                            )}
+                        <div className="space-y-3 animate-fadeIn">
+                            <div className="flex flex-col items-center justify-center py-4 text-emerald-400 gap-1 animate-bounce-subtle">
+                                <CheckCircle2 size={32} />
+                                <span className="font-black text-sm">지급 완료!</span>
+                            </div>
 
                             <div className="grid grid-cols-2 gap-2">
                                 <button
@@ -207,22 +195,20 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) =>
                                         handleClose();
                                         navigate("/games");
                                     }}
-                                    className="w-full py-4 rounded-xl bg-figma-primary text-white font-black text-lg shadow-lg shadow-emerald-500/30 hover:brightness-110 active:scale-95 transition-all uppercase tracking-wide"
+                                    className="w-full py-4 rounded-2xl bg-emerald-500 text-black font-black text-base shadow-lg shadow-emerald-500/20 active:scale-95 transition-all flex items-center justify-center gap-2"
                                 >
-                                    게임방 이동
+                                    <Gamepad2 size={18} />
+                                    게임 시작
                                 </button>
                                 <button
                                     onClick={handleClose}
-                                    className="w-full py-4 rounded-xl bg-white/10 text-white/90 font-black text-lg border border-white/10 hover:bg-white/15 active:scale-95 transition-all"
+                                    className="w-full py-4 rounded-2xl bg-white/5 text-white/70 font-black text-base border border-white/10 hover:bg-white/10 active:scale-95 transition-all"
                                 >
-                                    닫기
+                                    나중에
                                 </button>
                             </div>
                         </div>
                     )}
-
-
-
                 </div>
             </div>
         </div>

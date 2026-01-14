@@ -14,6 +14,7 @@ import SeasonPassPromoModal from "../modal/SeasonPassPromoModal";
 import LimitedOfferModal from "../modal/LimitedOfferModal";
 import { useMissionStore } from "../../stores/missionStore";
 import VipPromotionModal from "../modal/VipPromotionModal";
+import VipEligibilityModal from "../modal/VipEligibilityModal";
 import { AnimatePresence } from "framer-motion";
 
 const AppHeader: React.FC = () => {
@@ -27,6 +28,7 @@ const AppHeader: React.FC = () => {
     const [isSeasonPassModalOpen, setIsSeasonPassModalOpen] = useState(false);
     const [isLimitedOfferModalOpen, setIsLimitedOfferModalOpen] = useState(false);
     const [isVipModalOpen, setIsVipModalOpen] = useState(false);
+    const [isVipEligibilityModalOpen, setIsVipEligibilityModalOpen] = useState(false);
     // Removed local isForcedStreakModalOpen in favor of store state
     const { streakInfo, streakRules, fetchStreakRules, claimStreakReward, isStreakModalOpen, setStreakModalOpen } = useMissionStore();
 
@@ -111,6 +113,12 @@ const AppHeader: React.FC = () => {
             if (!localStorage.getItem(key)) {
                 setIsVipModalOpen(true);
             }
+        } else if (user) {
+            // Show Eligibility guide for non-VIP users
+            const key = `vip_eligibility_seen_${user.id}`;
+            if (!localStorage.getItem(key)) {
+                setIsVipEligibilityModalOpen(true);
+            }
         }
     }, [user?.segment, user?.id]);
 
@@ -119,6 +127,13 @@ const AppHeader: React.FC = () => {
             localStorage.setItem(`vip_promotion_seen_${user.id}`, "true");
         }
         setIsVipModalOpen(false);
+    };
+
+    const handleVipEligibilityModalClose = () => {
+        if (user?.id) {
+            localStorage.setItem(`vip_eligibility_seen_${user.id}`, "true");
+        }
+        setIsVipEligibilityModalOpen(false);
     };
 
     useEffect(() => {
@@ -390,7 +405,10 @@ const AppHeader: React.FC = () => {
 
             <AnimatePresence>
                 {isVipModalOpen && (
-                    <VipPromotionModal onClose={handleVipModalClose} />
+                    <VipPromotionModal key="vip-promo" onClose={handleVipModalClose} />
+                )}
+                {isVipEligibilityModalOpen && (
+                    <VipEligibilityModal key="vip-eligibility" onClose={handleVipEligibilityModalClose} />
                 )}
             </AnimatePresence>
 
