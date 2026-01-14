@@ -73,7 +73,7 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
     const isClaimable = !!claimableDay;
 
     return (
-        <div className="fixed inset-0 z-[10001] flex items-center justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-[10001] flex items-start justify-center overflow-y-auto px-4 pt-[calc(1rem+env(safe-area-inset-top))] pb-[calc(1rem+env(safe-area-inset-bottom))]">
             <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -86,12 +86,12 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
                 initial={{ scale: 0.9, opacity: 0, y: 20 }}
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                className="relative w-full max-w-md max-h-[90vh] my-auto rounded-[40px] border border-white/10 bg-zinc-950 overflow-y-auto shadow-2xl"
+                className="relative w-full max-w-md max-h-[calc(100dvh-2rem)] my-0 rounded-[40px] border border-white/10 bg-zinc-950 overflow-y-auto shadow-2xl"
             >
                 {/* Header Decoration */}
                 <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-amber-500/10 to-transparent pointer-events-none" />
 
-                <div className="relative p-8">
+                <div className="relative p-6 sm:p-8">
                     {/* Header */}
                     <div className="flex justify-between items-start mb-8">
                         <div>

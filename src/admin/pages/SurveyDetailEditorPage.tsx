@@ -53,7 +53,7 @@ const SurveyDetailEditorPage: React.FC = () => {
             questions: [
                 {
                     title: "",
-                    question_type: "CHOICE",
+                    question_type: "SINGLE_CHOICE",
                     order_index: 0,
                     is_required: true,
                     options: [{ label: "옵션 1", value: "1", order_index: 0 }],
@@ -250,7 +250,7 @@ const SurveyDetailEditorPage: React.FC = () => {
                             </h2>
                             <button
                                 type="button"
-                                onClick={() => append({ title: "", question_type: "CHOICE", order_index: fields.length, is_required: true, options: [] })}
+                                onClick={() => append({ title: "", question_type: "SINGLE_CHOICE", order_index: fields.length, is_required: true, options: [] })}
                                 className="btn-admin-secondary py-2 text-xs"
                             >
                                 <Plus className="h-3 w-3" /> 질문 추가
@@ -400,16 +400,17 @@ const QuestionItem: React.FC<{
                         control={control}
                         render={({ field }) => (
                             <select {...field} className="admin-input w-full bg-admin-sidebar">
-                                <option value="CHOICE">객관식 (Choice)</option>
+                                <option value="SINGLE_CHOICE">객관식 (Single Choice)</option>
+                                <option value="MULTI_CHOICE">객관식 (Multi Choice)</option>
                                 <option value="TEXT">주관식 (Text)</option>
-                                <option value="RATING">평점 (Rating)</option>
+                                <option value="LIKERT">평점 (Likert)</option>
                             </select>
                         )}
                     />
                 </div>
             </div>
 
-            {questionType === "CHOICE" && (
+            {(questionType === "SINGLE_CHOICE" || questionType === "MULTI_CHOICE") && (
                 <div className="space-y-3 bg-admin-sidebar/30 p-4 rounded-xl">
                     <label className="admin-label text-[10px] text-admin-brand">객관식 옵션 설정</label>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
