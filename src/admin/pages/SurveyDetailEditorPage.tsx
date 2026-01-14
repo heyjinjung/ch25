@@ -233,7 +233,8 @@ const SurveyDetailEditorPage: React.FC = () => {
                                             <select {...field} className="admin-input w-full bg-admin-sidebar">
                                                 <option value="DRAFT">작성 중 (DRAFT)</option>
                                                 <option value="ACTIVE">활성 (ACTIVE)</option>
-                                                <option value="CLOSED">종료 (CLOSED)</option>
+                                                <option value="PAUSED">일시 중지 (PAUSED)</option>
+                                                <option value="ARCHIVED">종료 (ARCHIVED)</option>
                                             </select>
                                         )}
                                     />
