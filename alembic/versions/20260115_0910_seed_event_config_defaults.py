@@ -37,7 +37,7 @@ def upgrade() -> None:
         )
         SELECT
             'SEGMENT_CAMPAIGN', 1, NULL, NULL, NULL, 'COMMON',
-            '{"vault_balance_threshold":5000,"vault_zero_threshold":0,"require_no_deposit":true,"event_codes":{"vault_threshold":"SEGMENT_COMMON_VAULT_5000","vault_zero":"SEGMENT_COMMON_VAULT_ZERO"}}',
+            '{"vault_balance_threshold": 5000, "vault_zero_threshold": 0, "require_no_deposit": true, "event_codes": {"vault_threshold": "SEGMENT_COMMON_VAULT_5000", "vault_zero": "SEGMENT_COMMON_VAULT_ZERO"}}',
             NOW(), NOW()
         WHERE NOT EXISTS (
             SELECT 1 FROM event_config WHERE event_type = 'SEGMENT_CAMPAIGN' AND target_segment = 'COMMON'
@@ -52,7 +52,7 @@ def upgrade() -> None:
         )
         SELECT
             'SEGMENT_CAMPAIGN', 1, NULL, NULL, NULL, 'VIP',
-            '{"golden_hour_event_type":"SEGMENT_VIP_GOLDEN_HOUR","monthly_charge_threshold":3000000,"monthly_event_type":"SEGMENT_VIP_MONTHLY"}',
+            '{"golden_hour_event_type": "SEGMENT_VIP_GOLDEN_HOUR", "monthly_charge_threshold": 3000000, "monthly_event_type": "SEGMENT_VIP_MONTHLY"}',
             NOW(), NOW()
         WHERE NOT EXISTS (
             SELECT 1 FROM event_config WHERE event_type = 'SEGMENT_CAMPAIGN' AND target_segment = 'VIP'
