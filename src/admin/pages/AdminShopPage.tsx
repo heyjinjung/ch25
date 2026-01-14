@@ -561,8 +561,8 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
               type="button"
               onClick={() => setKeepAdding((v) => !v)}
               className={`h-12 px-4 rounded-xl border text-sm font-bold transition-all ${keepAdding
-                  ? "bg-admin-brand/10 border-admin-brand/30 text-white"
-                  : "bg-zinc-900/20 border-white/10 text-white/70 hover:bg-white/5"
+                ? "bg-admin-brand/10 border-admin-brand/30 text-white"
+                : "bg-zinc-900/20 border-white/10 text-white/70 hover:bg-white/5"
                 }`}
               title="추가 후 모달을 닫지 않고 계속 생성"
             >
@@ -709,9 +709,18 @@ const AdminShopPage: React.FC = () => {
 
   const changedCount = useMemo(() => {
     let count = 0;
+    const serverSkus = new Set((productsQuery.data ?? []).map(p => p.sku));
+
     for (const p of effectiveProducts) {
       const r = rows.get(p.sku);
       if (!r) continue;
+
+      // New draft products (not from server) always count as "changed"
+      if (!serverSkus.has(p.sku)) {
+        count += 1;
+        continue;
+      }
+
       const baseTitle = p.title;
       const baseToken = String(p.cost?.token ?? "DIAMOND");
       const baseCost = Number(p.cost?.amount ?? 0);
@@ -728,8 +737,12 @@ const AdminShopPage: React.FC = () => {
       )
         count += 1;
     }
+
+    // Also count deleted items
+    count += deletedSkus.size;
+
     return count;
-  }, [effectiveProducts, rows]);
+  }, [effectiveProducts, rows, productsQuery.data, deletedSkus]);
 
   const buildOverrides = (): ShopProductsOverrides => {
     const products: Record<
