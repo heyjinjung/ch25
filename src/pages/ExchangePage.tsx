@@ -61,73 +61,71 @@ const ProductCard: React.FC<{ product: ShopProduct; vaultBalance: number; onBuy:
     const info = MAP[product.grant.item_type] || MAP[product.cost.token] || { label: product.title, img: "/assets/lottery/icon_gift.png" };
 
     return (
-        <button
-            onClick={() => {
-                if (!canAfford) {
-                    tryHaptic(50);
-                    return;
-                }
-                tryHaptic(10);
-                onBuy();
-            }}
-            disabled={isPending || !canAfford}
-            className={`
-                group relative flex flex-col items-center p-4 rounded-3xl transition-all duration-300 touch-manipulation overflow-hidden
-                ${canAfford
-                    ? "bg-[#111] border border-white/5 active:scale-95"
-                    : "bg-black/40 border border-white/5 opacity-50 grayscale cursor-not-allowed"}
-            `}
-        >
-            {/* Hover Gradient Effect */}
-            {canAfford && (
-                <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/0 via-emerald-500/0 to-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            )}
-
-            <div className="relative w-14 h-14 mb-3 drop-shadow-2xl transform group-hover:scale-110 transition-transform duration-300">
-                <img src={info.img} alt={info.label} className="w-full h-full object-contain" />
-                {product.grant.amount > 1 && (
-                    <span className="absolute -top-1 -right-2 bg-emerald-500 text-black text-[9px] font-black px-1.5 py-0.5 rounded-full shadow-lg border border-white/20 z-10">
-                        x{product.grant.amount}
-                    </span>
-                )}
-            </div>
-
-            <div className="relative z-10 w-full text-center">
-                <h3 className="text-xs font-black text-white/90 mb-3 tracking-tight group-hover:text-emerald-400 transition-colors">
-                    {info.label}
-                </h3>
-
-                <div className={`
-                    w-full min-h-10 px-3 py-2 rounded-xl text-[11px] font-black flex items-center justify-between gap-2 transition-all border leading-none
-                    whitespace-nowrap
-                    ${canAfford
-                        ? "bg-white/5 border-white/10 text-white group-hover:bg-emerald-500 group-hover:border-emerald-500 group-hover:text-black group-hover:shadow-[0_0_20px_rgba(16,185,129,0.4)]"
-                        : "bg-white/5 border-white/5 text-white/20"}
-                `}>
-                    {isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : (
-                        <>
-                            <span className="min-w-0 truncate">
-                                {canAfford ? "교환" : "부족"}
-                            </span>
-
-                            <span
-                                className={`
-                                    shrink-0 inline-flex items-center gap-1 rounded-lg px-2 py-1 border
-                                    ${canAfford ? "border-white/15 bg-black/20" : "border-white/5 bg-white/5"}
-                                `}
-                            >
-                                <span className="tabular-nums opacity-95">{cost.toLocaleString()}</span>
-                                {product.cost.token === 'DIAMOND' ? (
-                                    <img src="/assets/icon_diamond.png" className="w-3 h-3 object-contain" alt="" />
-                                ) : (
-                                    <span className="text-[9px] opacity-75">P</span>
-                                )}
-                            </span>
-                        </>
+        <div className={clsx(
+            "relative group overflow-hidden bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/10 rounded-[22px] p-4 transition-all duration-300",
+            !canAfford && "opacity-60 grayscale-[0.5]"
+        )}>
+            <div className="flex flex-col relative z-10 items-center text-center">
+                {/* Icon Box */}
+                <div className="relative mb-4">
+                    <div className="w-12 h-12 rounded-2xl bg-black/40 border border-white/5 flex items-center justify-center p-2 shadow-inner group-hover:scale-110 transition-transform duration-300">
+                        <img src={info.img} alt={info.label} className="w-full h-full object-contain" />
+                    </div>
+                    {product.grant.amount > 1 && (
+                        <div className="absolute -top-1.5 -right-1.5 bg-figma-accent text-black text-[10px] font-black px-1.5 py-0.5 rounded-full ring-2 ring-black tabular-nums">
+                            ×{product.grant.amount}
+                        </div>
                     )}
                 </div>
+
+                {/* Title */}
+                <div className="mb-3 w-full">
+                    <div className="mx-auto max-w-full text-[14px] font-black text-white/90 leading-tight whitespace-normal break-keep overflow-hidden line-clamp-2 min-h-[34px]">
+                        {info.label}
+                    </div>
+                </div>
+
+                {/* Price Display */}
+                <div className="mb-4 flex items-baseline justify-center gap-1">
+                    <span className={clsx(
+                        "text-2xl font-black tracking-tighter tabular-nums",
+                        canAfford ? "text-white" : "text-white/30"
+                    )}>
+                        {cost.toLocaleString()}
+                    </span>
+                    {product.cost.token === 'DIAMOND' ? (
+                        <img src="/assets/icon_diamond.png" className="w-3.5 h-3.5 object-contain" alt="" />
+                    ) : (
+                        <span className="text-[10px] font-bold text-emerald-500/50">P</span>
+                    )}
+                </div>
+
+                {/* Action Button */}
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        if (!canAfford || isPending) return;
+                        tryHaptic(10);
+                        onBuy();
+                    }}
+                    disabled={isPending || !canAfford}
+                    className={clsx(
+                        "w-full h-9 flex items-center justify-center text-[12px] font-black rounded-xl transition-all border outline-none",
+                        canAfford
+                            ? "bg-figma-primary border-figma-primary text-white shadow-lg shadow-emerald-900/40 active:scale-[0.97] hover:brightness-110"
+                            : "bg-white/5 border-white/5 text-white/20 cursor-not-allowed"
+                    )}
+                >
+                    {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : (canAfford ? "교환하기" : "포인트 부족")}
+                </button>
             </div>
-        </button>
+
+            {/* Subtle Gradient Glow */}
+            <div className={clsx(
+                "absolute -right-6 -bottom-6 w-24 h-24 blur-2xl rounded-full transition-colors duration-500",
+                canAfford ? "bg-emerald-500/[0.05]" : "bg-white/[0.02]"
+            )} />
+        </div>
     );
 };
 
@@ -216,7 +214,7 @@ const ExchangePage: React.FC = () => {
                 </div>
 
                 {vaultProducts.length > 0 ? (
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-2 gap-3">
                         {vaultProducts.map(p => (
                             <ProductCard
                                 key={p.sku}
@@ -242,13 +240,13 @@ const ExchangePage: React.FC = () => {
                         <h2 className="text-sm font-black text-white">다이아 샵</h2>
                         <span className="text-[10px] text-emerald-400/70 font-medium ml-auto">마일리지 사용</span>
                     </div>
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-2 gap-3">
                         {diamondProducts.map(p => (
                             <ProductCard
                                 key={p.sku}
                                 product={p}
                                 vaultBalance={p.cost.token === 'DIAMOND'
-                                    ? diamondBalance // Used diamondBalance variable
+                                    ? diamondBalance
                                     : lockedBalance
                                 }
                                 onBuy={() => purchaseMutation.mutate(p.sku)}
