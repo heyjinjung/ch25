@@ -37,4 +37,12 @@
         *   `WalletCard`의 프리미엄 그래디언트 배경과 둥근 모서리(`rounded-[22px]`) 스타일 적용.
         *   아이콘을 어두운 박스(`bg-black/40`) 안에 배치하여 대비감 강화.
         *   가격을 인벤토리 스타일의 **대형 숫자(`text-2xl font-black`)**로 강조.
-    *   **UX**: 가격 정보와 '교환하기' 버튼을 하단에 명확하게 배치하여 구매 동기를 강화하고 시각적 위계를 정리.
+## 6. New User Welcome Modal Redesign (로티 제거 및 리뉴얼)
+*   **Goal**: 신규 유저 웰컴 모달에서 로티 애니메이션을 제거하고, 카지노 프리미엄 감성으로 리뉴얼하여 효율성과 디자인 완성도 동시 확보.
+*   **Implementation**:
+    *   **Logic**: `lottie-react` 의존성 제거 및 `welcome_claim_success.json` 호출 로직 삭제.
+    *   **UI/UX**: 
+        *   에메랄드 글로우와 미세 노이즈 텍스처를 활용한 **'Matte Black & Emerald'** 테마 적용.
+        *   보상 수령 전/후 레이아웃을 재구성하여 애니메이션 빈 자리를 시각적 밸런스로 채움.
+        *   `Lucide-react` 아이콘과 `Framer Motion` 베이스의 경량 애니메이션으로 세련된 연출.
+    *   **Optimization**: 텔레그램 뷰포트에 맞춘 컴팩트 사이즈(`max-w-[350px]`) 및 터치 최적화.

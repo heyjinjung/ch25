@@ -197,6 +197,399 @@ type RowState = {
   is_active: boolean;
 };
 
+type ProductFormModalProps = {
+  mode: "create" | "edit";
+  sku?: string;
+  initialData: RowState | null;
+  rewardTypeOptions: Array<{ value: string; label: string }>;
+  reservedSkuSet: Set<string>;
+  addToast: (message: string, type: any) => void;
+  onSubmit: (row: RowState) => void;
+  onClose: () => void;
+};
+
+const ProductFormModal: React.FC<ProductFormModalProps> = ({
+  mode,
+  sku,
+  initialData,
+  rewardTypeOptions,
+  reservedSkuSet,
+  addToast,
+  onSubmit,
+  onClose,
+}) => {
+  const isEdit = mode === "edit";
+
+  const [formSku, setFormSku] = useState(sku || "");
+  const [formTitle, setFormTitle] = useState(initialData?.title || "");
+  const [formCostToken, setFormCostToken] = useState(initialData?.cost_token || "DIAMOND");
+  const [formCostAmount, setFormCostAmount] = useState(initialData?.cost_amount || 1);
+  const [formItemType, setFormItemType] = useState(initialData?.item_type || "");
+  const [formItemAmount, setFormItemAmount] = useState(initialData?.item_amount || 1);
+  const [formIsActive, setFormIsActive] = useState(initialData?.is_active ?? true);
+  const [keepAdding, setKeepAdding] = useState<boolean>(mode === "create");
+
+  const localReservedSkusRef = React.useRef<Set<string>>(new Set());
+  const isReserved = React.useCallback(
+    (candidate: string) => reservedSkuSet.has(candidate) || localReservedSkusRef.current.has(candidate),
+    [reservedSkuSet]
+  );
+
+  // 클릭 직전 변경값까지 반영하기 위해 최신 입력값을 ref로 보관
+  const latestSkuParamsRef = React.useRef({
+    costToken: initialData?.cost_token || "DIAMOND",
+    costAmount: Number(initialData?.cost_amount || 1),
+    itemType: initialData?.item_type || "",
+    itemAmount: Number(initialData?.item_amount || 1),
+  });
+
+  const handleAutoGenerateSku = React.useCallback(() => {
+    const latest = latestSkuParamsRef.current;
+    if (!String(latest.itemType || "").trim()) {
+      addToast("지급 아이템을 먼저 선택하세요.", "error");
+      return;
+    }
+    const base = buildAutoSku({
+      costToken: latest.costToken,
+      itemType: latest.itemType,
+      costAmount: latest.costAmount,
+      itemAmount: latest.itemAmount,
+    });
+
+    let candidate = base;
+    let version = 2;
+    while (isReserved(candidate)) {
+      candidate = `${base}_V${version}`;
+      version += 1;
+      if (version > 99) break;
+    }
+
+    setFormSku(candidate);
+    addToast(`SKU 자동 생성: ${candidate}`, "success");
+  }, [addToast, isReserved]);
+
+  const [itemTypeMode, setItemTypeMode] = useState<"select" | "custom">(
+    isEdit && !rewardTypeOptions.some((o) => o.value === initialData?.item_type) ? "custom" : "select"
+  );
+  const [costAmountMode, setCostAmountMode] = useState<"select" | "custom">(
+    initialData?.cost_amount && !AMOUNT_OPTIONS.includes(initialData?.cost_amount) ? "custom" : "select"
+  );
+  const [itemAmountMode, setItemAmountMode] = useState<"select" | "custom">(
+    initialData?.item_amount && !AMOUNT_OPTIONS.includes(initialData?.item_amount) ? "custom" : "select"
+  );
+
+  const handleSubmit = () => {
+    const trimmedSku = formSku.trim();
+    const trimmedTitle = formTitle.trim();
+    if (!trimmedSku) {
+      addToast("상품코드를 입력하세요.", "error");
+      return;
+    }
+    if (!trimmedTitle) {
+      addToast("상품명을 입력하세요.", "error");
+      return;
+    }
+    if (!formItemType) {
+      addToast("지급 아이템을 선택하세요.", "error");
+      return;
+    }
+    if (!isEdit && isReserved(trimmedSku)) {
+      addToast("이미 존재하는 SKU입니다.", "error");
+      return;
+    }
+
+    onSubmit({
+      sku: trimmedSku,
+      title: trimmedTitle,
+      cost_token: formCostToken,
+      cost_amount: formCostAmount,
+      item_type: formItemType,
+      item_amount: formItemAmount,
+      is_active: formIsActive,
+    });
+
+    addToast(isEdit ? "수정되었습니다." : "추가되었습니다.", "success");
+
+    if (isEdit || !keepAdding) {
+      onClose();
+      return;
+    }
+
+    // 계속 추가: 선택값 유지 + 타이틀만 초기화 + SKU는 새로 생성
+    localReservedSkusRef.current.add(trimmedSku);
+    setFormTitle("");
+    setFormSku("");
+    handleAutoGenerateSku();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+      <div className="bg-[#1e1e24] w-full max-w-lg rounded-2xl border border-white/5 shadow-[0_32px_64px_-12px_rgba(0,0,0,0.6)] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <div className="flex items-center justify-between p-6 border-b border-white/5 bg-white/5">
+          <div className="space-y-1">
+            <h2 className="text-xl font-bold text-white">{isEdit ? "상품 수정" : "새 상품 추가"}</h2>
+            <p className="text-xs text-zinc-500 uppercase font-black tracking-widest">
+              {isEdit ? "Update Product Details" : "Create New Item"}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-2 hover:bg-white/10 rounded-full transition-all text-zinc-500 hover:text-white"
+            aria-label="닫기"
+            title="닫기"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        <div className="p-8 space-y-6 max-h-[75vh] overflow-y-auto custom-scrollbar">
+          {/* 상품 코드 */}
+          <div className="space-y-2">
+            <label className="block text-xs font-black text-zinc-500 uppercase tracking-wider ml-1">상품코드 (SKU)</label>
+            <div className="flex gap-2">
+              <input
+                className="flex-1 bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-admin-brand/50 transition-all disabled:opacity-50 font-mono"
+                value={formSku}
+                onChange={(e) => !isEdit && setFormSku(e.target.value)}
+                disabled={isEdit}
+                placeholder="SHOP_VAULT_VOUCHER_ROULETTE_COIN_1_3000_X5_20260114"
+              />
+              {!isEdit && (
+                <button
+                  type="button"
+                  onClick={handleAutoGenerateSku}
+                  className="shrink-0 rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-xs font-black text-white/80 hover:bg-white/10"
+                  title="입력값 기반으로 SKU 자동 생성"
+                >
+                  자동 생성
+                </button>
+              )}
+            </div>
+            {!isEdit && (
+              <p className="text-[11px] text-white/35">
+                결제 토큰/지급 아이템/가격/수량 기준으로 생성되며, 중복이면 <span className="font-mono">_V2</span> 같은 suffix가 붙습니다.
+              </p>
+            )}
+          </div>
+
+          {/* 상품명 */}
+          <div className="space-y-2">
+            <label className="block text-xs font-black text-zinc-500 uppercase tracking-wider ml-1">상품명 (Title)</label>
+            <input
+              className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-admin-brand/50 transition-all"
+              value={formTitle}
+              onChange={(e) => setFormTitle(e.target.value)}
+              placeholder="예: 다이아 10개 상품"
+            />
+          </div>
+
+          {/* 가격 설정 */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="block text-xs font-black text-zinc-500 uppercase tracking-wider ml-1">결제 토큰</label>
+              <select
+                className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-admin-brand/50 transition-all appearance-none"
+                value={formCostToken}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  latestSkuParamsRef.current.costToken = next;
+                  setFormCostToken(next);
+                }}
+              >
+                {COST_TOKEN_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value} className="bg-zinc-900">
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className="block text-xs font-black text-zinc-500 uppercase tracking-wider ml-1">가격 (Amount)</label>
+              <div className="flex flex-col gap-2">
+                <select
+                  className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-admin-brand/50 transition-all appearance-none"
+                  value={costAmountMode === "custom" ? "__CUSTOM__" : formCostAmount}
+                  onChange={(e) => {
+                    if (e.target.value === "__CUSTOM__") setCostAmountMode("custom");
+                    else {
+                      const next = Number(e.target.value);
+                      latestSkuParamsRef.current.costAmount = next;
+                      setCostAmountMode("select");
+                      setFormCostAmount(next);
+                    }
+                  }}
+                >
+                  {AMOUNT_OPTIONS.map((n) => (
+                    <option key={n} value={n} className="bg-zinc-900">
+                      {n.toLocaleString()}
+                    </option>
+                  ))}
+                  <option value="__CUSTOM__" className="bg-zinc-900">
+                    직접 입력
+                  </option>
+                </select>
+                {costAmountMode === "custom" && (
+                  <input
+                    type="number"
+                    className="w-full bg-black/20 border border-admin-brand/30 rounded-xl px-4 py-2 text-sm text-white animate-in slide-in-from-top-1 duration-200"
+                    value={formCostAmount}
+                    onChange={(e) => {
+                      const next = Number(e.target.value);
+                      latestSkuParamsRef.current.costAmount = next;
+                      setFormCostAmount(next);
+                    }}
+                  />
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* 지급 아이템 설정 */}
+          <div className="p-6 bg-admin-brand/5 rounded-2xl border border-admin-brand/10 space-y-4">
+            <div className="flex items-center gap-2 text-admin-brand mb-2">
+              <Gift size={14} className="animate-bounce" />
+              <span className="text-xs font-black uppercase tracking-widest">지급 보상 (Reward)</span>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-[10px] font-black text-admin-brand/60 uppercase tracking-wider">아이템 종류</label>
+              <select
+                className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-admin-brand/50 transition-all appearance-none"
+                value={itemTypeMode === "custom" ? "__CUSTOM__" : formItemType}
+                onChange={(e) => {
+                  if (e.target.value === "__CUSTOM__") setItemTypeMode("custom");
+                  else {
+                    const next = e.target.value;
+                    latestSkuParamsRef.current.itemType = next;
+                    setItemTypeMode("select");
+                    setFormItemType(next);
+                  }
+                }}
+              >
+                <option value="" className="bg-zinc-900">
+                  선택하세요
+                </option>
+                {rewardTypeOptions.map((o) => (
+                  <option key={o.value} value={o.value} className="bg-zinc-900">
+                    {o.label}
+                  </option>
+                ))}
+                <option value="__CUSTOM__" className="bg-zinc-900">
+                  직접 입력
+                </option>
+              </select>
+              {itemTypeMode === "custom" && (
+                <input
+                  className="w-full bg-black/20 border border-admin-brand/30 rounded-xl px-4 py-2 text-sm text-white mt-2"
+                  value={formItemType}
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    latestSkuParamsRef.current.itemType = next;
+                    setFormItemType(next);
+                  }}
+                />
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-[10px] font-black text-admin-brand/60 uppercase tracking-wider">수량 (Quantity)</label>
+              <div className="flex flex-col gap-2">
+                <select
+                  className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-admin-brand/50 transition-all appearance-none"
+                  value={itemAmountMode === "custom" ? "__CUSTOM__" : formItemAmount}
+                  onChange={(e) => {
+                    if (e.target.value === "__CUSTOM__") setItemAmountMode("custom");
+                    else {
+                      const next = Number(e.target.value);
+                      latestSkuParamsRef.current.itemAmount = next;
+                      setItemAmountMode("select");
+                      setFormItemAmount(next);
+                    }
+                  }}
+                >
+                  {AMOUNT_OPTIONS.map((n) => (
+                    <option key={n} value={n} className="bg-zinc-900">
+                      {n}
+                    </option>
+                  ))}
+                  <option value="__CUSTOM__" className="bg-zinc-900">
+                    직접 입력
+                  </option>
+                </select>
+                {itemAmountMode === "custom" && (
+                  <input
+                    type="number"
+                    className="w-full bg-black/20 border border-admin-brand/30 rounded-xl px-4 py-2 text-sm text-white"
+                    value={formItemAmount}
+                    onChange={(e) => {
+                      const next = Number(e.target.value);
+                      latestSkuParamsRef.current.itemAmount = next;
+                      setFormItemAmount(next);
+                    }}
+                  />
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* 활성 상태 */}
+          <div className="flex items-center justify-between p-5 bg-white/5 rounded-2xl border border-white/5">
+            <div className="flex flex-col gap-0.5">
+              <span className="text-sm font-bold text-white">판매 활성화</span>
+              <span className="text-[10px] text-zinc-500 uppercase font-black tracking-wider">ACTIVE STATUS</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setFormIsActive((v) => !v)}
+              aria-label="판매 활성화 토글"
+              title={formIsActive ? "비활성으로 전환" : "활성으로 전환"}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 ${
+                formIsActive ? "bg-admin-brand" : "bg-zinc-700"
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition duration-300 ${
+                  formIsActive ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
+          </div>
+        </div>
+
+        <div className="p-6 bg-white/5 border-t border-white/5 flex items-center gap-4">
+          {mode === "create" && (
+            <button
+              type="button"
+              onClick={() => setKeepAdding((v) => !v)}
+              className={`h-12 px-4 rounded-xl border text-sm font-bold transition-all ${
+                keepAdding
+                  ? "bg-admin-brand/10 border-admin-brand/30 text-white"
+                  : "bg-zinc-900/20 border-white/10 text-white/70 hover:bg-white/5"
+              }`}
+              title="추가 후 모달을 닫지 않고 계속 생성"
+            >
+              계속 추가: {keepAdding ? "ON" : "OFF"}
+            </button>
+          )}
+          <button
+            onClick={onClose}
+            className="flex-1 h-12 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-sm font-bold text-white transition-all uppercase tracking-widest"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSubmit}
+            className="flex-1 h-12 rounded-xl bg-admin-brand hover:brightness-110 text-sm font-bold text-white transition-all shadow-lg shadow-admin-brand/20 uppercase tracking-widest flex items-center justify-center gap-2"
+          >
+            <Check size={18} /> {isEdit ? "Update" : "Create"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const AdminShopPage: React.FC = () => {
   const { addToast } = useToast();
   const queryClient = useQueryClient();
@@ -497,326 +890,14 @@ const AdminShopPage: React.FC = () => {
   };
 
   // ============================================================
-  // 모달 컴포넌트 (상품 추가/수정용)
-  // ============================================================
-  const ProductFormModal = ({ sku, onClose }: { sku?: string; onClose: () => void }) => {
-    const isEdit = !!sku;
-    const initialData = sku ? rows.get(sku) : null;
-
-    const [formSku, setFormSku] = useState(sku || "");
-    const [formTitle, setFormTitle] = useState(initialData?.title || "");
-    const [formCostToken, setFormCostToken] = useState(initialData?.cost_token || "DIAMOND");
-    const [formCostAmount, setFormCostAmount] = useState(initialData?.cost_amount || 1);
-    const [formItemType, setFormItemType] = useState(initialData?.item_type || "");
-    const [formItemAmount, setFormItemAmount] = useState(initialData?.item_amount || 1);
-    const [formIsActive, setFormIsActive] = useState(initialData?.is_active ?? true);
-
-    // 클릭 직전 변경값까지 반영하기 위해 최신 입력값을 ref로 보관
-    const latestSkuParamsRef = React.useRef({
-      costToken: initialData?.cost_token || "DIAMOND",
-      costAmount: Number(initialData?.cost_amount || 1),
-      itemType: initialData?.item_type || "",
-      itemAmount: Number(initialData?.item_amount || 1),
-    });
-
-    const reservedSkuSet = useMemo(() => {
-      const set = new Set<string>();
-      for (const p of effectiveProducts) set.add(p.sku);
-      for (const key of rows.keys()) set.add(key);
-      for (const key of deletedSkus) set.add(key);
-      return set;
-    }, [effectiveProducts, rows, deletedSkus]);
-
-    const handleAutoGenerateSku = () => {
-      const latest = latestSkuParamsRef.current;
-      if (!String(latest.itemType || "").trim()) {
-        addToast("지급 아이템을 먼저 선택하세요.", "error");
-        return;
-      }
-      const base = buildAutoSku({
-        costToken: latest.costToken,
-        itemType: latest.itemType,
-        costAmount: latest.costAmount,
-        itemAmount: latest.itemAmount,
-      });
-
-      let candidate = base;
-      let version = 2;
-      while (reservedSkuSet.has(candidate)) {
-        candidate = `${base}_V${version}`;
-        version += 1;
-        if (version > 99) break;
-      }
-
-      setFormSku(candidate);
-      addToast(`SKU 자동 생성: ${candidate}`, "success");
-    };
-
-    const [itemTypeMode, setItemTypeMode] = useState<"select" | "custom">(
-      sku && !rewardTypeOptions.some(o => o.value === initialData?.item_type) ? "custom" : "select"
-    );
-    const [costAmountMode, setCostAmountMode] = useState<"select" | "custom">(
-      initialData?.cost_amount && !AMOUNT_OPTIONS.includes(initialData?.cost_amount) ? "custom" : "select"
-    );
-    const [itemAmountMode, setItemAmountMode] = useState<"select" | "custom">(
-      initialData?.item_amount && !AMOUNT_OPTIONS.includes(initialData?.item_amount) ? "custom" : "select"
-    );
-
-    const handleSubmit = () => {
-      const trimmedSku = formSku.trim();
-      const trimmedTitle = formTitle.trim();
-      if (!trimmedSku) { addToast("상품코드를 입력하세요.", "error"); return; }
-      if (!trimmedTitle) { addToast("상품명을 입력하세요.", "error"); return; }
-      if (!formItemType) { addToast("지급 아이템을 선택하세요.", "error"); return; }
-
-      if (!isEdit && rows.has(trimmedSku)) {
-        addToast("이미 존재하는 SKU입니다.", "error");
-        return;
-      }
-
-      setRows(prev => {
-        const next = new Map(prev);
-        next.set(trimmedSku, {
-          sku: trimmedSku,
-          title: trimmedTitle,
-          cost_token: formCostToken,
-          cost_amount: formCostAmount,
-          item_type: formItemType,
-          item_amount: formItemAmount,
-          is_active: formIsActive,
-        });
-        return next;
-      });
-
-      addToast(isEdit ? "수정되었습니다." : "추가되었습니다.", "success");
-      onClose();
-    };
-
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
-        <div className="bg-[#1e1e24] w-full max-w-lg rounded-2xl border border-white/5 shadow-[0_32px_64px_-12px_rgba(0,0,0,0.6)] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-          <div className="flex items-center justify-between p-6 border-b border-white/5 bg-white/5">
-            <div className="space-y-1">
-              <h2 className="text-xl font-bold text-white">
-                {isEdit ? "상품 수정" : "새 상품 추가"}
-              </h2>
-              <p className="text-xs text-zinc-500 uppercase font-black tracking-widest">
-                {isEdit ? "Update Product Details" : "Create New Item"}
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={onClose}
-              className="p-2 hover:bg-white/10 rounded-full transition-all text-zinc-500 hover:text-white"
-              aria-label="닫기"
-              title="닫기"
-            >
-              <X size={20} />
-            </button>
-          </div>
-
-          <div className="p-8 space-y-6 max-h-[75vh] overflow-y-auto custom-scrollbar">
-            {/* 상품 코드 */}
-            <div className="space-y-2">
-              <label className="block text-xs font-black text-zinc-500 uppercase tracking-wider ml-1">상품코드 (SKU)</label>
-              <div className="flex gap-2">
-                <input
-                  className="flex-1 bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-admin-brand/50 transition-all disabled:opacity-50 font-mono"
-                  value={formSku}
-                  onChange={e => !isEdit && setFormSku(e.target.value)}
-                  disabled={isEdit}
-                  placeholder="SHOP_VAULT_VOUCHER_ROULETTE_COIN_1_3000_X5_20260114"
-                />
-                {!isEdit && (
-                  <button
-                    type="button"
-                    onClick={handleAutoGenerateSku}
-                    className="shrink-0 rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-xs font-black text-white/80 hover:bg-white/10"
-                    title="입력값 기반으로 SKU 자동 생성"
-                  >
-                    자동 생성
-                  </button>
-                )}
-              </div>
-              {!isEdit && (
-                <p className="text-[11px] text-white/35">
-                  결제 토큰/지급 아이템/가격/수량 기준으로 생성되며, 중복이면 <span className="font-mono">_V2</span> 같은 suffix가 붙습니다.
-                </p>
-              )}
-            </div>
-
-            {/* 상품명 */}
-            <div className="space-y-2">
-              <label className="block text-xs font-black text-zinc-500 uppercase tracking-wider ml-1">상품명 (Title)</label>
-              <input
-                className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-admin-brand/50 transition-all"
-                value={formTitle}
-                onChange={e => setFormTitle(e.target.value)}
-                placeholder="예: 다이아 10개 상품"
-              />
-            </div>
-
-            {/* 가격 설정 */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="block text-xs font-black text-zinc-500 uppercase tracking-wider ml-1">결제 토큰</label>
-                <select
-                  className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-admin-brand/50 transition-all appearance-none"
-                  value={formCostToken}
-                  onChange={e => {
-                    const next = e.target.value;
-                    latestSkuParamsRef.current.costToken = next;
-                    setFormCostToken(next);
-                  }}
-                >
-                  {COST_TOKEN_OPTIONS.map(o => <option key={o.value} value={o.value} className="bg-zinc-900">{o.label}</option>)}
-                </select>
-              </div>
-              <div className="space-y-2">
-                <label className="block text-xs font-black text-zinc-500 uppercase tracking-wider ml-1">가격 (Amount)</label>
-                <div className="flex flex-col gap-2">
-                  <select
-                    className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-admin-brand/50 transition-all appearance-none"
-                    value={costAmountMode === "custom" ? "__CUSTOM__" : formCostAmount}
-                    onChange={e => {
-                      if (e.target.value === "__CUSTOM__") setCostAmountMode("custom");
-                      else {
-                        const next = Number(e.target.value);
-                        latestSkuParamsRef.current.costAmount = next;
-                        setCostAmountMode("select");
-                        setFormCostAmount(next);
-                      }
-                    }}
-                  >
-                    {AMOUNT_OPTIONS.map(n => <option key={n} value={n} className="bg-zinc-900">{n.toLocaleString()}</option>)}
-                    <option value="__CUSTOM__" className="bg-zinc-900">직접 입력</option>
-                  </select>
-                  {costAmountMode === "custom" && (
-                    <input
-                      type="number"
-                      className="w-full bg-black/20 border border-admin-brand/30 rounded-xl px-4 py-2 text-sm text-white animate-in slide-in-from-top-1 duration-200"
-                      value={formCostAmount}
-                      onChange={e => {
-                        const next = Number(e.target.value);
-                        latestSkuParamsRef.current.costAmount = next;
-                        setFormCostAmount(next);
-                      }}
-                    />
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* 지급 아이템 설정 */}
-            <div className="p-6 bg-admin-brand/5 rounded-2xl border border-admin-brand/10 space-y-4">
-              <div className="flex items-center gap-2 text-admin-brand mb-2">
-                <Gift size={14} className="animate-bounce" />
-                <span className="text-xs font-black uppercase tracking-widest">지급 보상 (Reward)</span>
-              </div>
-
-              <div className="space-y-2">
-                <label className="block text-[10px] font-black text-admin-brand/60 uppercase tracking-wider">아이템 종류</label>
-                <select
-                  className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-admin-brand/50 transition-all appearance-none"
-                  value={itemTypeMode === "custom" ? "__CUSTOM__" : formItemType}
-                  onChange={e => {
-                    if (e.target.value === "__CUSTOM__") setItemTypeMode("custom");
-                    else {
-                      const next = e.target.value;
-                      latestSkuParamsRef.current.itemType = next;
-                      setItemTypeMode("select");
-                      setFormItemType(next);
-                    }
-                  }}
-                >
-                  <option value="" className="bg-zinc-900">선택하세요</option>
-                  {rewardTypeOptions.map(o => <option key={o.value} value={o.value} className="bg-zinc-900">{o.label}</option>)}
-                  <option value="__CUSTOM__" className="bg-zinc-900">직접 입력</option>
-                </select>
-                {itemTypeMode === "custom" && (
-                  <input
-                    className="w-full bg-black/20 border border-admin-brand/30 rounded-xl px-4 py-2 text-sm text-white mt-2"
-                    value={formItemType}
-                    onChange={e => {
-                      const next = e.target.value;
-                      latestSkuParamsRef.current.itemType = next;
-                      setFormItemType(next);
-                    }}
-                  />
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <label className="block text-[10px] font-black text-admin-brand/60 uppercase tracking-wider">수량 (Quantity)</label>
-                <div className="flex flex-col gap-2">
-                  <select
-                    className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-admin-brand/50 transition-all appearance-none"
-                    value={itemAmountMode === "custom" ? "__CUSTOM__" : formItemAmount}
-                    onChange={e => {
-                      if (e.target.value === "__CUSTOM__") setItemAmountMode("custom");
-                      else {
-                        const next = Number(e.target.value);
-                        latestSkuParamsRef.current.itemAmount = next;
-                        setItemAmountMode("select");
-                        setFormItemAmount(next);
-                      }
-                    }}
-                  >
-                    {AMOUNT_OPTIONS.map(n => <option key={n} value={n} className="bg-zinc-900">{n}</option>)}
-                    <option value="__CUSTOM__" className="bg-zinc-900">직접 입력</option>
-                  </select>
-                  {itemAmountMode === "custom" && (
-                    <input
-                      type="number"
-                      className="w-full bg-black/20 border border-admin-brand/30 rounded-xl px-4 py-2 text-sm text-white"
-                      value={formItemAmount}
-                      onChange={e => {
-                        const next = Number(e.target.value);
-                        latestSkuParamsRef.current.itemAmount = next;
-                        setFormItemAmount(next);
-                      }}
-                    />
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* 활성 상태 */}
-            <div className="flex items-center justify-between p-5 bg-white/5 rounded-2xl border border-white/5">
-              <div className="flex flex-col gap-0.5">
-                <span className="text-sm font-bold text-white">판매 활성화</span>
-                <span className="text-[10px] text-zinc-500 uppercase font-black tracking-wider">ACTIVE STATUS</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setFormIsActive(v => !v)}
-                aria-label="판매 활성화 토글"
-                title={formIsActive ? "비활성으로 전환" : "활성으로 전환"}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 ${formIsActive ? 'bg-admin-brand' : 'bg-zinc-700'}`}
-              >
-                <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition duration-300 ${formIsActive ? 'translate-x-6' : 'translate-x-1'}`} />
-              </button>
-            </div>
-          </div>
-
-          <div className="p-6 bg-white/5 border-t border-white/5 flex gap-4">
-            <button
-              onClick={onClose}
-              className="flex-1 h-12 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-sm font-bold text-white transition-all uppercase tracking-widest"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSubmit}
-              className="flex-1 h-12 rounded-xl bg-admin-brand hover:brightness-110 text-sm font-bold text-white transition-all shadow-lg shadow-admin-brand/20 uppercase tracking-widest flex items-center justify-center gap-2"
-            >
-              <Check size={18} /> {isEdit ? "Update" : "Create"}
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  };
+  // 모달에서 SKU 중복 체크에 사용
+  const reservedSkuSet = useMemo(() => {
+    const set = new Set<string>();
+    for (const p of effectiveProducts) set.add(p.sku);
+    for (const key of rows.keys()) set.add(key);
+    for (const key of deletedSkus) set.add(key);
+    return set;
+  }, [effectiveProducts, rows, deletedSkus]);
 
 
   // 로딩/에러 상태
@@ -984,8 +1065,41 @@ const AdminShopPage: React.FC = () => {
       </div>
 
       {/* 상품 추가/수정 모달 */}
-      {isAddingNew && <ProductFormModal onClose={() => setIsAddingNew(false)} />}
-      {editingSku && <ProductFormModal sku={editingSku} onClose={() => setEditingSku(null)} />}
+      {isAddingNew && (
+        <ProductFormModal
+          mode="create"
+          initialData={null}
+          rewardTypeOptions={rewardTypeOptions}
+          reservedSkuSet={reservedSkuSet}
+          addToast={addToast}
+          onSubmit={(row) => {
+            setRows((prev) => {
+              const next = new Map(prev);
+              next.set(row.sku, row);
+              return next;
+            });
+          }}
+          onClose={() => setIsAddingNew(false)}
+        />
+      )}
+      {editingSku && (
+        <ProductFormModal
+          mode="edit"
+          sku={editingSku}
+          initialData={rows.get(editingSku) ?? null}
+          rewardTypeOptions={rewardTypeOptions}
+          reservedSkuSet={reservedSkuSet}
+          addToast={addToast}
+          onSubmit={(row) => {
+            setRows((prev) => {
+              const next = new Map(prev);
+              next.set(row.sku, row);
+              return next;
+            });
+          }}
+          onClose={() => setEditingSku(null)}
+        />
+      )}
     </div>
   );
 };

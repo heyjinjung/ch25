@@ -91,7 +91,7 @@ const VipPromotionModal: React.FC<VipPromotionModalProps> = ({ onClose }) => {
                     </motion.div>
 
                     <motion.button
-                        whileHover={{ scale: 1.02, brightness: 1.1 }}
+                        whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={onClose}
                         className="w-full py-4 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-orange-500 text-black font-black text-lg shadow-[0_8px_16px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.3)] transition-all outline-none"

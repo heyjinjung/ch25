@@ -1,4 +1,5 @@
 import React from 'react';
+import clsx from 'clsx';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchShopProducts, purchaseProduct, ShopProduct, fetchInventory } from '../api/inventoryApi';
 import { Loader2, Lock, ShoppingBag } from 'lucide-react';

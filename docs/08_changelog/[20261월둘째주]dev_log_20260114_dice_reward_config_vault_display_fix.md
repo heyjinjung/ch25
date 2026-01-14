@@ -40,11 +40,13 @@
     *   `src/components/vault/VaultPageCompact.tsx`
 
 ## 5. Build Status
-*   **Frontend Build**: 실패
-    *   Error: `src/admin/components/vault/VaultSettingsEditor.tsx` TypeScript syntax error (TS1109/TS1128 등 다수)
-    *   Note: 본 로그에 포함된 주사위 정합화 패치는 backend 2개 파일 중심이며, 프론트 빌드 실패는 별도 원인으로 분리 추적 필요.
+*   **Frontend Build**: 성공 (재확인)
+    *   Note: 직전 빌드에서 `src/admin/components/vault/VaultSettingsEditor.tsx` TypeScript 문법 오류가 관측되었으나, 현재는 해소되어 빌드가 통과하는 상태.
 
-## 6. Next Actions (Pending)
+## 6. 문서 상태
+*   본 문서(`dev_log_20260114_dice_reward_config_vault_display_fix.md`)의 렌더링/포맷 깨짐 이슈는 복구 완료.
+
+## 7. Next Actions (Pending)
 *   **Admin 금고 페이지 주사위 값 표시**:
     *   어드민 금고 페이지에서 주사위 값이 하드코딩되어 최신 설정값을 못 받는 이슈가 보고됨.
     *   다음 작업에서 하드코딩 제거 후, **활성 DiceConfig 기반 표시**로 교체(필요 시 NORMAL/EVENT 값을 분리 표기).
