@@ -201,9 +201,42 @@ MYSQL_USER=xmasuser
 MYSQL_PASSWORD=YOUR_STRONG_PASSWORD
 
 # 프론트엔드 API URL
-VITE_API_URL=https://yourdomain.com/api
-VITE_ADMIN_API_URL=https://yourdomain.com/admin/api
+# 권장: 공란(미설정)으로 두고 same-origin + nginx 프록시(/api, /admin/api) 사용
+# (브라우저의 localhost 문제를 피하고, 배포 시 도메인 변경에도 안전)
+VITE_API_URL=
+VITE_ADMIN_API_URL=
+
+# 대안: 프론트가 직접 절대 URL로 호출하도록 고정하려면 아래처럼 설정
+# VITE_API_URL=https://yourdomain.com/api
+# VITE_ADMIN_API_URL=https://yourdomain.com/admin/api
+
+# Telegram (서버 배포 시 필수/권장)
+# - 아래 값들은 백엔드/텔레그램봇 컨테이너가 런타임에 읽는다.
+# - 토큰/시크릿은 절대 문서/로그에 남기지 말 것.
+TELEGRAM_BOT_TOKEN=YOUR_TELEGRAM_BOT_TOKEN
+TELEGRAM_BOT_USERNAME=your_bot_username
+TELEGRAM_WEBAPP_SHORT_NAME=your_webapp_short_name
+
+# Bot 버튼/딥링크 생성에 쓰는 “Mini App 기준 URL” (운영 도메인)
+TELEGRAM_MINI_APP_URL=https://yourdomain.com
+
+# (권장: 운영) Webhook 모드
+# - 여러 인스턴스/프로세스가 getUpdates를 동시에 쓰면 충돌할 수 있으므로 운영은 webhook 권장
+TELEGRAM_USE_WEBHOOK=true
+TELEGRAM_WEBHOOK_URL=https://yourdomain.com
+# 기본값 유지 권장
+# TELEGRAM_WEBHOOK_PATH=/telegram/webhook
+# TELEGRAM_WEBHOOK_SECRET_TOKEN=change-me
 ```
+
+#### 4.4.1 프론트(Vite) 환경변수는 “빌드 타임”이다
+`VITE_*` 값은 `docker-compose build`로 프론트 이미지를 만들 때 **이미지에 bake-in** 된다.
+- 서버에서 `.env`만 바꾼 뒤 `docker-compose up -d`만 하면, 프론트는 바뀐 값이 반영되지 않을 수 있다.
+- 반영 방법: `docker-compose build frontend && docker-compose up -d`
+
+특히 텔레그램 딥링크 UI가 운영 봇으로 튀는 이슈를 막으려면, 아래 값이 백엔드(.env)와 프론트(VITE_*)에서 일치해야 한다.
+- `TELEGRAM_BOT_USERNAME` / `TELEGRAM_WEBAPP_SHORT_NAME`
+- `VITE_TELEGRAM_BOT_USERNAME` / `VITE_TELEGRAM_WEBAPP_SHORT_NAME`
 
 **JWT Secret 생성:**
 ```bash
