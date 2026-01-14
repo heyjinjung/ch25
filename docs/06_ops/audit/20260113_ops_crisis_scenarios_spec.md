@@ -143,3 +143,77 @@ AND e.updated_at >= NOW() - INTERVAL 7 DAY -- 최근 7일 내 갱신된 데이�
 #### `PlanImportModal`
 *   **Visual**: "총 12명의 불운한 뉴비가 발견되었습니다. 구조대를 파견하시겠습니까?"
 *   **Action**: "작전 실행" 버튼 클릭 시 `AdminOpsPlanPage`로 이동하며 Task 자동 생성.
+
+
+ 데이터베이스 스키마 분석 (DB Schema Analysis)
+요청하신 대로 **"기존 테이블 중복 활용 가능성"**과 **"확장 필요 영역"**을 면밀히 분석했습니다.
+
+1. 중복/재사용 가능성 검토 (Existing Models)
+A. user_segment (Existing)
+구조: user_id (PK), 
+segment
+ (String).
+분석: 유저당 하나의 세그먼트만 가질 수 있는 1:1 구조입니다.
+한계: 우리가 필요한 "11개 시나리오 중복 해당" 및 "오늘의 Ops Plan을 위한 일회성 스냅샷"을 지원하지 못합니다. (예: A유저가 '불운한 뉴비'이면서 동시에 '잠재적 VIP'일 수 있음).
+결론: 재사용 불가. Ops 타겟팅용 별도 테이블 필요.
+B. segment_rule (Existing)
+구조: 세그먼트 자동 분류 규칙 정의 (조건문 JSON).
+분석: 자동 배치(Batch) 잡을 위한 정적 규칙입니다.
+한계: 운영자가 실시간으로 클릭해서 만드는 "Ad-hoc Target List"의 개념이 없습니다.
+결론: 참고는 가능하나, 직접 활용은 어려움.
+C. ops_plan_task (Existing)
+구조: ops_plan에 종속된 개별 작업. payload_json 필드 보유.
+분석: payload_json에 타겟 유저 ID 목록을 통째로 넣는 방법도 고려해볼 수 있습니다 ({"target_user_ids": [1, 2, 3...]}).
+한계: 대상자가 수천 명일 경우 JSON 필드 용량 한계 및 검색/조회 성능 저하 발생. 개별 유저별 발송 상태(SENT, FAILED) 추적이 불가능함.
+결론: 소규모(10명 이하)라면 가능하나, 확장성 면에서 별도 테이블 분리 필수.
+2. 영역 확장 제안 (Proposed Expansion)
+기존 테이블로는 "대규모 인원 스냅샷" 및 "개별 발송 추적"이 불가능하므로, 
+Ops
+ 도메인 내에서 다음 영역을 확장해야 합니다.
+
+[확장 1] ops_target_list (신규 정의 필요)
+ops_plan (운영 계획)과 1:N 관계로 매핑되는 **"대상자 그룹 명부"**입니다.
+
+역할: "이 리스트는 2026-01-13 플랜의 '불운한 뉴비' 타겟팅용이다"라는 메타데이터 저장.
+재사용성: 향후 'Manual Upload' (엑셀 업로드) 기능 구현 시에도 이 테이블을 공통 컨테이너로 재사용 가능.
+[확장 2] ops_target_member (신규 정의 필요)
+실제 대상자 개개인을 관리하는 테이블입니다.
+
+역할: 유저 ID 매핑 + 개인화 데이터 저장.
+확장 포인트: data JSON 컬럼을 두어, 시나리오별로 상이한 보상액이나 메시지 변수(예: { "loss_amount": 50000 })를 유연하게 담을 수 있게 설계합니다.
+3. 최종 스키마 권장안 (Recommendation)
+기존 ops_plan 영역을 보조하는 서브 모듈(Sub-module) 형태의 확장을 권장합니다.
+
+has
+contains
+targets
+ops_plan
+ops_target_list
+int
+id
+PK
+string
+source_type
+SCENARIO vs UPLOAD
+json
+source_params
+조건 스냅샷
+ops_target_member
+int
+id
+PK
+int
+user_id
+FK
+string
+status
+PENDING/SENT
+json
+data
+개인화변수
+user
+이 구조는 기존 
+User
+나 Game 테이블을 건드리지 않고 
+Ops
+ 영역만 깔끔하게 확장하므로 사이드 이펙트가 가장 적습니다.
