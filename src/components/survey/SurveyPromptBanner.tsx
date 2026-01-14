@@ -67,6 +67,7 @@ const SurveyPromptBanner: React.FC = () => {
         {/* Close Button */}
         <button
           onClick={handleDismiss}
+          aria-label="설문 배너 닫기"
           className="absolute top-4 right-4 z-20 w-8 h-8 flex items-center justify-center rounded-full bg-white/5 border border-white/10 text-white/40 hover:text-white hover:bg-white/10 transition-all"
         >
           <X size={18} />
