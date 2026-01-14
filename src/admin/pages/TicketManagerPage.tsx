@@ -26,6 +26,7 @@ import {
     grantGameTokens,
     revokeGameTokens,
 } from "../api/adminGameTokenApi";
+import UserAssetDetailModal from "../components/UserAssetDetailModal";
 import { GAME_TOKEN_LABELS, type GameTokenType } from "../../types/gameTokens";
 
 type ActiveTab = "grant" | "playLogs" | "ledger" | "users";
@@ -173,6 +174,7 @@ const TicketManagerPage: React.FC = () => {
 
     const [activeTab, setActiveTab] = useState<ActiveTab>("grant");
     const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+    const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
     // Pagination
     const PAGE_SIZE = 20;
@@ -311,6 +313,7 @@ const TicketManagerPage: React.FC = () => {
             user_identifier: parsed.data.userIdentifier,
             token_type: parsed.data.tokenType,
             amount: parsed.data.amount,
+            reason: parsed.data.reason || undefined,
         };
 
         if (formMode === "grant") grantMutation.mutate(payload);
@@ -421,29 +424,7 @@ const TicketManagerPage: React.FC = () => {
         return (summaryQuery.data ?? []).find((u) => u.user_id === selectedUserId) ?? null;
     }, [selectedUserId, summaryQuery.data]);
 
-    const selectedUserBalances = useMemo(() => {
-        const balances = selectedUserSummary?.balances ?? {};
-        const entries = (Object.keys(GAME_TOKEN_LABELS) as GameTokenType[]).map((t) => ({
-            tokenType: t,
-            label: GAME_TOKEN_LABELS[t],
-            balance: getBalanceByType(balances, t),
-        }));
-        return entries;
-    }, [selectedUserSummary]);
-
-    const [selectedUserTokenFilter, setSelectedUserTokenFilter] = useState<"ALL" | GameTokenType>("ALL");
-    const [selectedUserHideZero, setSelectedUserHideZero] = useState(true);
-
-    const filteredSelectedUserBalances = useMemo(() => {
-        let entries = selectedUserBalances;
-        if (selectedUserTokenFilter !== "ALL") {
-            entries = entries.filter((e) => e.tokenType === selectedUserTokenFilter);
-        }
-        if (selectedUserHideZero) {
-            entries = entries.filter((e) => e.balance !== 0);
-        }
-        return entries;
-    }, [selectedUserBalances, selectedUserHideZero, selectedUserTokenFilter]);
+    // Removed inline detail view logic (moved to UserAssetDetailModal)
 
     const tabs: Array<{ id: ActiveTab; label: string; icon: React.ReactNode }> = [
         { id: "grant", label: LABELS.tabGrant, icon: <Wallet className="h-3.5 w-3.5" /> },
@@ -951,110 +932,15 @@ const TicketManagerPage: React.FC = () => {
                         </form>
                     </div>
 
-                    {/* Selected User Detail */}
-                    <div className="admin-card p-6 flex flex-col gap-4">
-                        <div className="flex items-center justify-between">
-                            <h3 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
-                                <Users className="h-4 w-4 text-admin-brand" />
-                                유저 자산 상세
-                            </h3>
-                            {selectedUserSummary && (
-                                <span className="text-sm text-admin-text-muted font-mono">#{selectedUserSummary.user_id}</span>
-                            )}
-                        </div>
-
-                        {!selectedUserSummary ? (
-                            <div className="text-sm text-admin-text-muted">
-                                좌측 목록에서 유저를 선택하면 잔여 티켓/총합이 표시됩니다.
-                            </div>
-                        ) : (
-                            <>
-                                <div className="space-y-1">
-                                    <div className="text-sm font-bold text-zinc-200">{selectedUserSummary.nickname || "(닉네임 없음)"}</div>
-                                    <div className="text-sm text-admin-text-muted font-mono">{selectedUserSummary.external_id || "(External ID 없음)"}</div>
-                                    {selectedUserSummary.telegram_username && (
-                                        <div className="text-sm text-admin-text-muted font-mono">@{selectedUserSummary.telegram_username}</div>
-                                    )}
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div className="bg-admin-sidebar/50 border border-admin-border rounded-admin-lg p-3">
-                                        <div className="text-[10px] font-black text-admin-text-muted uppercase tracking-widest">총합</div>
-                                        <div className="text-lg font-black text-zinc-100 font-mono tabular-nums">
-                                            {sumBalances(selectedUserSummary.balances).toLocaleString()}
-                                        </div>
-                                    </div>
-                                    <div className="bg-admin-sidebar/50 border border-admin-border rounded-admin-lg p-3">
-                                        <div className="text-[10px] font-black text-admin-text-muted uppercase tracking-widest">선택 티켓</div>
-                                        <div className="text-lg font-black text-zinc-100 font-mono tabular-nums">
-                                            {(selectedUserTokenFilter === "ALL"
-                                                ? sumBalances(selectedUserSummary.balances)
-                                                : getBalanceByType(selectedUserSummary.balances, selectedUserTokenFilter)
-                                            ).toLocaleString()}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-3 items-end">
-                                    <div className="space-y-1">
-                                        <label className="text-sm font-semibold text-admin-text-secondary">티켓 종류</label>
-                                        <select
-                                            className="admin-input h-10 text-sm"
-                                            value={selectedUserTokenFilter}
-                                            onChange={(e) => setSelectedUserTokenFilter(e.target.value as any)}
-                                            aria-label="유저 상세 티켓 종류 필터"
-                                            title="유저 상세 티켓 종류 필터"
-                                        >
-                                            <option value="ALL">전체</option>
-                                            {TOKEN_TYPES.map((t) => (
-                                                <option key={t.value} value={t.value}>
-                                                    {t.label}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <label className="flex items-center gap-2 text-sm text-admin-text-secondary font-bold select-none pb-1">
-                                        <input
-                                            type="checkbox"
-                                            checked={selectedUserHideZero}
-                                            onChange={(e) => setSelectedUserHideZero(e.target.checked)}
-                                            className="accent-admin-brand"
-                                        />
-                                        0 숨김
-                                    </label>
-                                </div>
-
-                                <div className="border border-admin-border rounded-admin-lg overflow-hidden">
-                                    <table className="admin-table">
-                                        <thead>
-                                            <tr>
-                                                <th className="admin-th">티켓</th>
-                                                <th className="admin-th text-right">잔여</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {filteredSelectedUserBalances.length === 0 ? (
-                                                <tr>
-                                                    <td className="admin-td text-sm text-admin-text-muted" colSpan={2}>
-                                                        표시할 티켓이 없습니다.
-                                                    </td>
-                                                </tr>
-                                            ) : (
-                                                filteredSelectedUserBalances.map((row) => (
-                                                    <tr key={row.tokenType} className="admin-tr">
-                                                        <td className="admin-td text-sm text-zinc-200 font-bold">{row.label}</td>
-                                                        <td className="admin-td text-sm text-right font-mono tabular-nums text-zinc-100">{row.balance.toLocaleString()}</td>
-                                                    </tr>
-                                                ))
-                                            )}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </>
-                        )}
-                    </div>
+                    {/* Selected User Detail (Moved to Modal) */}
                 </div>
             </div>
+
+            <UserAssetDetailModal
+                isVisible={isDetailModalOpen}
+                onClose={() => setIsDetailModalOpen(false)}
+                userSummary={selectedUserSummary}
+            />
         </section>
     );
 };

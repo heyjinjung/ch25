@@ -73,7 +73,7 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
     const isClaimable = !!claimableDay;
 
     return (
-        <div className="fixed inset-0 z-[10001] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[10001] flex items-center justify-center p-4 overflow-y-auto">
             <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -86,7 +86,7 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
                 initial={{ scale: 0.9, opacity: 0, y: 20 }}
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                className="relative w-full max-w-md rounded-[40px] border border-white/10 bg-zinc-950 overflow-hidden shadow-2xl"
+                className="relative w-full max-w-md max-h-[90vh] my-auto rounded-[40px] border border-white/10 bg-zinc-950 overflow-y-auto shadow-2xl"
             >
                 {/* Header Decoration */}
                 <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-amber-500/10 to-transparent pointer-events-none" />
@@ -114,20 +114,75 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
                         </button>
                     </div>
 
-                    {/* Treasure Track */}
-                    <div className="relative mb-12 py-4">
-                        {/* Connecting Line */}
-                        <div className="absolute top-1/2 left-0 w-full h-1 bg-white/5 -translate-y-1/2 rounded-full" />
-                        <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${Math.min(100, (currentStreak / 7) * 100)}%` }}
-                            className="absolute top-1/2 left-0 h-1 bg-amber-500 -translate-y-1/2 rounded-full shadow-[0_0_12px_rgba(245,158,11,0.5)]"
-                        />
+                    {/* Progress Bar */}
+                    <div className="relative mb-6">
+                        <div className="h-2 bg-zinc-900 rounded-full overflow-hidden border border-white/5">
+                            <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${Math.min(100, (currentStreak / 7) * 100)}%` }}
+                                transition={{ duration: 1, ease: "easeOut" }}
+                                className="h-full bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 shadow-[0_0_16px_rgba(245,158,11,0.6)]"
+                            />
+                        </div>
+                        <div className="flex justify-between mt-2 px-1">
+                            <span className="text-[10px] font-black text-white/40">0일</span>
+                            <span className="text-[10px] font-black text-amber-500">{currentStreak}/7일</span>
+                        </div>
+                    </div>
 
-                        {/* Nodes */}
-                        <div className="relative z-10 flex justify-between items-center">
-                            {Array.from({ length: 7 }).map((_, i) => {
+                    {/* Treasure Grid */}
+                    <div className="relative mb-8">
+                        {/* Grid Layout: 4+3 */}
+                        <div className="grid grid-cols-4 gap-3 mb-3">
+                            {Array.from({ length: 4 }).map((_, i) => {
                                 const day = i + 1;
+                                const rule = sortedRules.find(r => r.day === day);
+                                const isPast = currentStreak > day;
+                                const isToday = currentStreak === day;
+                                const isTarget = day === claimableDay;
+
+                                return (
+                                    <div key={day} className="relative flex flex-col items-center">
+                                        {/* Reward Box */}
+                                        <motion.div
+                                            animate={(isToday || isTarget) ? {
+                                                scale: [1, 1.05, 1],
+                                                rotate: [0, 2, -2, 0]
+                                            } : {}}
+                                            transition={{ duration: 2, repeat: Infinity }}
+                                            className={clsx(
+                                                "relative w-16 h-16 flex items-center justify-center rounded-2xl border-2 transition-all duration-300",
+                                                isPast ? "bg-gradient-to-br from-amber-500 to-orange-600 border-amber-400 shadow-lg shadow-amber-500/30" :
+                                                    (isToday || isTarget) ? "bg-gradient-to-br from-white to-gray-100 border-white shadow-[0_0_24px_rgba(255,255,255,0.5)] animate-pulse" :
+                                                        "bg-zinc-900 border-zinc-800"
+                                            )}
+                                        >
+                                            <div className="relative">
+                                                {rule ? getRewardIcon(day, rule.grants) : <Gift size={24} className="text-white/20" />}
+                                                {isPast && (
+                                                    <div className="absolute -top-1 -right-1 bg-emerald-500 rounded-full p-1 shadow-lg">
+                                                        <CheckCircle2 size={14} className="text-white" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </motion.div>
+
+                                        {/* Day Label */}
+                                        <span className={clsx(
+                                            "mt-2 text-[11px] font-black tracking-tight",
+                                            (isToday || isTarget) ? "text-amber-400" : isPast ? "text-white/60" : "text-white/30"
+                                        )}>
+                                            Day{day}
+                                        </span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {/* Bottom Row: Day 5, 6, 7 */}
+                        <div className="grid grid-cols-3 gap-3">
+                            {Array.from({ length: 3 }).map((_, i) => {
+                                const day = i + 5;
                                 const rule = sortedRules.find(r => r.day === day);
                                 const isPast = currentStreak > day;
                                 const isToday = currentStreak === day;
@@ -139,24 +194,28 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
                                         {/* Reward Box */}
                                         <motion.div
                                             animate={(isToday || isTarget) ? {
-                                                scale: [1, 1.1, 1],
-                                                y: [0, -5, 0]
+                                                scale: [1, 1.08, 1],
+                                                rotate: [0, 3, -3, 0]
                                             } : {}}
                                             transition={{ duration: 2, repeat: Infinity }}
                                             className={clsx(
-                                                "relative z-20 transition-all duration-300",
-                                                isFinal ? "w-20 h-20" : "w-12 h-12",
-                                                "flex items-center justify-center rounded-2xl border",
-                                                isPast ? "bg-amber-600 border-amber-500 text-black shadow-lg" :
-                                                    (isToday || isTarget) ? "bg-white border-white text-black shadow-[0_0_30px_rgba(255,255,255,0.4)]" :
-                                                        "bg-zinc-900 border-white/5 text-white/20"
+                                                "relative flex items-center justify-center rounded-2xl border-2 transition-all duration-300",
+                                                isFinal ? "w-20 h-20" : "w-16 h-16",
+                                                isPast ? "bg-gradient-to-br from-amber-500 to-orange-600 border-amber-400 shadow-lg shadow-amber-500/30" :
+                                                    (isToday || isTarget) ? "bg-gradient-to-br from-white to-gray-100 border-white shadow-[0_0_24px_rgba(255,255,255,0.5)] animate-pulse" :
+                                                        "bg-zinc-900 border-zinc-800"
                                             )}
                                         >
                                             <div className="relative">
-                                                {rule ? getRewardIcon(day, rule.grants) : <Gift size={isFinal ? 32 : 20} />}
+                                                {rule ? getRewardIcon(day, rule.grants) : <Gift size={isFinal ? 36 : 24} className="text-white/20" />}
                                                 {isPast && (
-                                                    <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5 shadow-lg">
-                                                        <CheckCircle2 size={12} className="text-emerald-500 fill-emerald-500/20" />
+                                                    <div className="absolute -top-1 -right-1 bg-emerald-500 rounded-full p-1 shadow-lg">
+                                                        <CheckCircle2 size={14} className="text-white" />
+                                                    </div>
+                                                )}
+                                                {isFinal && !isPast && (
+                                                    <div className="absolute -top-2 -right-2">
+                                                        <Star size={16} className="text-amber-500 fill-amber-500 animate-pulse" />
                                                     </div>
                                                 )}
                                             </div>
@@ -164,17 +223,17 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
 
                                         {/* Day Label */}
                                         <span className={clsx(
-                                            "mt-3 text-[10px] font-black tracking-tight",
-                                            (isToday || isTarget) ? "text-white" : "text-white/30"
+                                            "mt-2 text-[11px] font-black tracking-tight",
+                                            (isToday || isTarget) ? "text-amber-400" : isPast ? "text-white/60" : "text-white/30"
                                         )}>
-                                            Day {day}
+                                            Day{day}
                                         </span>
 
                                         {/* Final Reward Label */}
                                         {isFinal && (
-                                            <div className="absolute -bottom-8 whitespace-nowrap">
-                                                <span className="text-[10px] font-black text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
-                                                    FINAL JACKPOT
+                                            <div className="absolute -bottom-7 whitespace-nowrap">
+                                                <span className="text-[9px] font-black text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
+                                                    🎁 JACKPOT
                                                 </span>
                                             </div>
                                         )}

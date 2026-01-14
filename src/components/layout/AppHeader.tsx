@@ -12,6 +12,7 @@ import GoldenHourPopup from "../events/GoldenHourPopup";
 import AttendanceStreakModal from "../modal/AttendanceStreakModal";
 import SeasonPassPromoModal from "../modal/SeasonPassPromoModal";
 import LimitedOfferModal from "../modal/LimitedOfferModal";
+import BailoutModal from "../modal/BailoutModal";
 import { useMissionStore } from "../../stores/missionStore";
 import VipPromotionModal from "../modal/VipPromotionModal";
 import VipEligibilityModal from "../modal/VipEligibilityModal";
@@ -29,6 +30,7 @@ const AppHeader: React.FC = () => {
     const [isLimitedOfferModalOpen, setIsLimitedOfferModalOpen] = useState(false);
     const [isVipModalOpen, setIsVipModalOpen] = useState(false);
     const [isVipEligibilityModalOpen, setIsVipEligibilityModalOpen] = useState(false);
+    const [isBailoutModalOpen, setIsBailoutModalOpen] = useState(false);
     // Removed local isForcedStreakModalOpen in favor of store state
     const { streakInfo, streakRules, fetchStreakRules, claimStreakReward, isStreakModalOpen, setStreakModalOpen } = useMissionStore();
 
@@ -94,6 +96,12 @@ const AppHeader: React.FC = () => {
             if (!sessionStorage.getItem(key)) {
                 setIsLimitedOfferModalOpen(true);
                 sessionStorage.setItem(key, "true");
+            }
+        } else if (vault?.recommendedAction === "OPEN_VAULT_MODAL") {
+            // Ticket-Zero / Bailout logic
+            if (!sessionStorage.getItem("bailout_modal_shown")) {
+                setIsBailoutModalOpen(true);
+                sessionStorage.setItem("bailout_modal_shown", "true");
             }
         }
 
@@ -401,6 +409,14 @@ const AppHeader: React.FC = () => {
             {/* Limited Offer Modal */}
             {isLimitedOfferModalOpen && (
                 <LimitedOfferModal onClose={() => setIsLimitedOfferModalOpen(false)} />
+            )}
+
+            {/* Bailout / Ticket-Zero Modal */}
+            {isBailoutModalOpen && (
+                <BailoutModal
+                    onClose={() => setIsBailoutModalOpen(false)}
+                    vaultBalance={vault?.vaultBalance ?? 0}
+                />
             )}
 
             <AnimatePresence>

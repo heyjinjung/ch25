@@ -13,6 +13,7 @@ class GrantGameTokensRequest(BaseModel):
     external_id: str | None = None
     telegram_username: str | None = None
     token_type: GameTokenType
+    reason: str | None = None
     amount: int = Field(gt=0)
 
 
@@ -32,6 +33,7 @@ class RevokeGameTokensRequest(BaseModel):
     external_id: str | None = None
     telegram_username: str | None = None
     token_type: GameTokenType
+    reason: str | None = None
     amount: int = Field(gt=0)
 
 

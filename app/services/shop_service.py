@@ -110,10 +110,51 @@ class ShopService:
         if isinstance(raw, GameTokenType):
             return raw
         if isinstance(raw, str):
-            try:
-                return GameTokenType(raw)
-            except ValueError:
+            cleaned = raw.strip()
+            if not cleaned:
                 return None
+            for candidate in {cleaned, cleaned.upper()}:
+                try:
+                    return GameTokenType(candidate)
+                except ValueError:
+                    continue
+            return None
+        return None
+
+    @staticmethod
+    def _parse_int(raw) -> int | None:
+        if isinstance(raw, bool):
+            return None
+        if isinstance(raw, int):
+            return raw
+        if isinstance(raw, float):
+            if raw.is_integer():
+                return int(raw)
+            return None
+        if isinstance(raw, str):
+            cleaned = raw.strip()
+            if not cleaned:
+                return None
+            try:
+                return int(cleaned)
+            except ValueError:
+                try:
+                    as_float = float(cleaned)
+                except ValueError:
+                    return None
+                return int(as_float) if as_float.is_integer() else None
+        return None
+
+    @staticmethod
+    def _parse_bool(raw) -> bool | None:
+        if isinstance(raw, bool):
+            return raw
+        if isinstance(raw, str):
+            normalized = raw.strip().lower()
+            if normalized in {"true", "1", "yes", "y"}:
+                return True
+            if normalized in {"false", "0", "no", "n"}:
+                return False
         return None
 
     @staticmethod
@@ -123,20 +164,20 @@ class ShopService:
 
         title = patch.get("title")
         cost_token = ShopService._parse_cost_token(patch.get("cost_token"))
-        cost_amount = patch.get("cost_amount")
+        cost_amount = ShopService._parse_int(patch.get("cost_amount"))
         item_type = patch.get("item_type")
-        item_amount = patch.get("item_amount")
-        is_active = patch.get("is_active")
+        item_amount = ShopService._parse_int(patch.get("item_amount"))
+        is_active = ShopService._parse_bool(patch.get("is_active"))
 
         if not isinstance(title, str) or not title.strip():
             return None
         if cost_token is None:
             return None
-        if not isinstance(cost_amount, int) or cost_amount <= 0:
+        if cost_amount is None or cost_amount <= 0:
             return None
         if not isinstance(item_type, str) or not item_type.strip():
             return None
-        if not isinstance(item_amount, int) or item_amount <= 0:
+        if item_amount is None or item_amount <= 0:
             return None
 
         return ShopProduct(
@@ -146,7 +187,7 @@ class ShopService:
             cost_amount,
             item_type.strip(),
             item_amount,
-            is_active=bool(is_active) if isinstance(is_active, bool) else True,
+            is_active=is_active if is_active is not None else True,
         )
 
     @staticmethod
@@ -161,20 +202,20 @@ class ShopService:
         if cost_token is not None:
             product.cost_token = cost_token
 
-        cost_amount = patch.get("cost_amount")
-        if isinstance(cost_amount, int) and cost_amount > 0:
+        cost_amount = ShopService._parse_int(patch.get("cost_amount"))
+        if cost_amount is not None and cost_amount > 0:
             product.cost_amount = cost_amount
 
         item_type = patch.get("item_type")
         if isinstance(item_type, str) and item_type.strip():
             product.item_type = item_type.strip()
 
-        item_amount = patch.get("item_amount")
-        if isinstance(item_amount, int) and item_amount > 0:
+        item_amount = ShopService._parse_int(patch.get("item_amount"))
+        if item_amount is not None and item_amount > 0:
             product.item_amount = item_amount
 
-        is_active = patch.get("is_active")
-        if isinstance(is_active, bool):
+        is_active = ShopService._parse_bool(patch.get("is_active"))
+        if is_active is not None:
             product.is_active = is_active
 
     @staticmethod

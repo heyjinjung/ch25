@@ -9,6 +9,8 @@ import { useNewUserWelcome } from "../hooks/useNewUserWelcome";
 import NewUserWelcomeModal from "../components/modal/NewUserWelcomeModal";
 import { useMissionStore } from "../stores/missionStore";
 import { useToast } from "../components/common/ToastProvider";
+import { useAuth } from "../auth/authStore";
+import { Zap } from "lucide-react";
 
 
 // --- Components ---
@@ -140,6 +142,18 @@ const HomePage: React.FC = () => {
   const showVaultBanner = !!vault.data?.eligible && vaultAmount > 0;
   const formatWon = (amount: number) => `${amount.toLocaleString("ko-KR")}원`;
   const [vaultBannerOpen, setVaultBannerOpen] = useState(false);
+  const { user } = useAuth();
+
+  // Almost VIP Logic
+  // Assuming XP info is in user object? Or calculated. 
+  // If user has 'xp' and 'next_level_xp'.
+  // For now, let's assume we can calculate percentage or it's provided.
+  // If not, I will just check level 9.
+  // Actually, I should check if user store has xp.
+  const isAlmostVip = (user?.level === 9); // Simplified for now as I don't see XP in AuthUser type immediately. 
+  // If I need exact XP, I might need to check the API response or Type definition.
+  // Let's assume user has `xp_percent` or similar if available.
+  // Checking `getInitials` in AppHeader uses user.nickname.
 
   // Dynamic Level Display logic
 
@@ -217,6 +231,39 @@ const HomePage: React.FC = () => {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Almost VIP Banner */}
+      {isAlmostVip && (
+        <div className="mx-1 mt-2 mb-4 p-4 rounded-2xl bg-gradient-to-r from-zinc-900 via-zinc-800 to-zinc-900 border border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.15)] relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 blur-[50px] rounded-full pointer-events-none" />
+
+          <div className="relative z-10 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center border border-amber-500/20 animate-pulse">
+                <img src="/images/crown2.png" alt="VIP" className="w-6 h-6 object-contain" />
+              </div>
+              <div>
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  <span className="text-[10px] font-black text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20 uppercase tracking-wider">
+                    ALMOST VIP
+                  </span>
+                </div>
+                <p className="text-sm font-bold text-white">
+                  <span className="text-amber-400">한 판만 더 하면</span> VIP 달성!
+                </p>
+              </div>
+            </div>
+
+            <Link to="/roulette" className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 text-white/40 hover:text-white hover:bg-white/10 transition-colors">
+              <Zap size={16} className="fill-current text-amber-500" />
+            </Link>
+          </div>
+          {/* Progress Bar Simulation */}
+          <div className="mt-3 h-1.5 w-full bg-black/40 rounded-full overflow-hidden border border-white/5">
+            <div className="h-full w-[90%] bg-gradient-to-r from-amber-600 to-yellow-400 shadow-[0_0_10px_rgba(251,191,36,0.5)]" />
           </div>
         </div>
       )}

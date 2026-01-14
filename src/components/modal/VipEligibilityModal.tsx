@@ -11,7 +11,7 @@ const VipEligibilityModal: React.FC<VipEligibilityModalProps> = ({ onClose }) =>
     const navigate = useNavigate();
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fadeIn">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fadeIn overflow-y-auto">
             {/* Background Textures */}
             <div className="absolute inset-0 bg-[url('/assets/pattern_noise.png')] opacity-[0.03] pointer-events-none" />
 
@@ -19,12 +19,13 @@ const VipEligibilityModal: React.FC<VipEligibilityModalProps> = ({ onClose }) =>
             <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                className="relative w-full max-w-[360px] bg-zinc-950 border border-amber-500/30 rounded-[32px] overflow-hidden shadow-[0_32px_64px_-16px_rgba(245,158,11,0.2)]"
+                className="relative w-full max-w-[360px] max-h-[90vh] my-auto bg-zinc-950 border border-amber-500/30 rounded-[32px] overflow-y-auto shadow-[0_32px_64px_-16px_rgba(245,158,11,0.2)]"
             >
                 {/* Close Button */}
                 <button
                     onClick={onClose}
                     className="absolute top-5 right-5 z-20 w-8 h-8 flex items-center justify-center rounded-full bg-white/5 border border-white/10 text-white/40 hover:text-white hover:bg-white/10 transition-all"
+                    title="닫기"
                 >
                     <X size={18} />
                 </button>

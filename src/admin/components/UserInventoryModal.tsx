@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Package,
   X,
@@ -8,7 +8,13 @@ import {
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { adminApi } from "../api/httpClient";
+import { fetchRewardTypes } from "../api/adminRewardTypesApi";
+import {
+  adjustAdminUserInventory,
+  adjustAdminUserInventoryByIdentifier,
+  fetchAdminUserInventory,
+  fetchAdminUserInventoryByIdentifier
+} from "../api/adminInventoryApi";
 
 interface UserInventoryModalProps {
   memberId: number | string;
@@ -17,32 +23,76 @@ interface UserInventoryModalProps {
   nickname?: string;
 }
 
+type ItemOption = { value: string; label: string };
+
 const UserInventoryModal: React.FC<UserInventoryModalProps> = ({ memberId, isOpen, onClose, nickname }) => {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<"items" | "adjust">("items");
+  const [itemTypeMode, setItemTypeMode] = useState<"select" | "custom">("select");
   const [itemType, setItemType] = useState("");
   const [delta, setDelta] = useState<number>(0);
   const [note, setNote] = useState("");
 
-  // Fetch Inventory Data
+  const numericId = typeof memberId === "number" ? memberId : Number(memberId);
+  const isNumericId = Number.isFinite(numericId);
+  const identifier = String(memberId ?? "").trim();
+
   const invQuery = useQuery({
     queryKey: ["user-inventory", memberId],
     queryFn: async () => {
-      const { data } = await adminApi.get(`/admin/api/inventory/users/${memberId}`);
-      return data;
+      if (isNumericId) return fetchAdminUserInventory(numericId, 50);
+      return fetchAdminUserInventoryByIdentifier(identifier, 50);
     },
     enabled: isOpen,
   });
 
-  // Adjust Mutation
+  const rewardTypesQuery = useQuery({
+    queryKey: ["admin", "reward-types"],
+    queryFn: fetchRewardTypes,
+    enabled: isOpen,
+  });
+
+  const rewardTypeMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    (rewardTypesQuery.data ?? []).forEach((rt) => {
+      map[rt.key] = rt.display_name;
+    });
+    return map;
+  }, [rewardTypesQuery.data]);
+
+  const ownedItemOptions = useMemo<ItemOption[]>(() => {
+    const items = invQuery.data?.items ?? [];
+    return items
+      .map((item) => ({
+        value: item.item_type,
+        label: rewardTypeMap[item.item_type] ?? item.item_type,
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label, "ko"));
+  }, [invQuery.data?.items, rewardTypeMap]);
+
+  const ownedItemKeys = useMemo(() => new Set(ownedItemOptions.map((o) => o.value)), [ownedItemOptions]);
+
+  const rewardItemOptions = useMemo<ItemOption[]>(() => {
+    return (rewardTypesQuery.data ?? [])
+      .filter((rt) => !ownedItemKeys.has(rt.key))
+      .map((rt) => ({
+        value: rt.key,
+        label: rt.display_name || rt.key,
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label, "ko"));
+  }, [ownedItemKeys, rewardTypesQuery.data]);
+
+  useEffect(() => {
+    if (itemType || itemTypeMode === "custom") return;
+    const first = ownedItemOptions[0] ?? rewardItemOptions[0];
+    if (first) setItemType(first.value);
+  }, [itemType, itemTypeMode, ownedItemOptions, rewardItemOptions]);
+
   const adjustMutation = useMutation({
     mutationFn: async (vars: { type: string; delta: number; note: string }) => {
-      const { data } = await adminApi.post(`/admin/api/inventory/users/${memberId}/adjust`, {
-        item_type: vars.type,
-        delta: vars.delta,
-        note: vars.note
-      });
-      return data;
+      const payload = { item_type: vars.type, delta: vars.delta, note: vars.note };
+      if (isNumericId) return adjustAdminUserInventory(numericId, payload);
+      return adjustAdminUserInventoryByIdentifier(identifier, payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["user-inventory", memberId] });
@@ -57,6 +107,8 @@ const UserInventoryModal: React.FC<UserInventoryModalProps> = ({ memberId, isOpe
   });
 
   if (!isOpen) return null;
+
+  const formatItemType = (type: string) => rewardTypeMap[type] ?? type;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
@@ -105,7 +157,11 @@ const UserInventoryModal: React.FC<UserInventoryModalProps> = ({ memberId, isOpe
           {invQuery.isLoading ? (
             <div className="flex flex-col items-center justify-center py-20 text-admin-text-muted gap-3">
               <Loader2 size={32} className="animate-spin text-admin-brand" />
-              <p className="text-admin-meta">정보를 불러오는 중입니다...</p>
+              <p className="text-admin-meta">인벤토리 데이터를 불러오는 중입니다...</p>
+            </div>
+          ) : invQuery.isError ? (
+            <div className="py-20 text-center text-admin-danger">
+              인벤토리 조회에 실패했습니다.
             </div>
           ) : activeTab === "items" ? (
             <div className="space-y-8">
@@ -113,17 +169,20 @@ const UserInventoryModal: React.FC<UserInventoryModalProps> = ({ memberId, isOpe
               <div className="space-y-3">
                 <h3 className="text-admin-meta font-bold text-admin-text-secondary uppercase tracking-wider px-1">현재 보유 아이템</h3>
                 <div className="grid grid-cols-2 gap-3">
-                  {invQuery.data?.items?.length > 0 ? (
-                    invQuery.data.items.map((item: any) => (
+                  {invQuery.data?.items?.length ? (
+                    invQuery.data?.items?.map((item: any) => (
                       <div key={item.item_type} className="p-4 rounded-xl bg-admin-sidebar/40 border border-admin-border flex items-center justify-between group hover:border-admin-brand/30 transition-all">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-lg bg-admin-bg border border-admin-border flex items-center justify-center text-admin-brand group-hover:scale-110 transition-transform">
                             <Package size={20} />
                           </div>
                           <div>
-                            <p className="text-admin-meta font-bold text-admin-text-primary">{item.item_type}</p>
+                            <p className="text-admin-meta font-bold text-admin-text-primary">{formatItemType(item.item_type)}</p>
+                            {rewardTypeMap[item.item_type] && (
+                              <p className="text-[10px] text-admin-text-muted font-mono">{item.item_type}</p>
+                            )}
                             <p className="text-[10px] text-admin-text-muted">
-                              Last update: {new Date(item.updated_at).toLocaleString("ko-KR", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false })}
+                              최근 업데이트: {new Date(item.updated_at).toLocaleString("ko-KR", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false })}
                             </p>
                           </div>
                         </div>
@@ -140,25 +199,31 @@ const UserInventoryModal: React.FC<UserInventoryModalProps> = ({ memberId, isOpe
 
               {/* Ledger History */}
               <div className="space-y-3">
-                <h3 className="text-admin-meta font-bold text-admin-text-secondary uppercase tracking-wider px-1">최근 변경 이력</h3>
+                <h3 className="text-admin-meta font-bold text-admin-text-secondary uppercase tracking-wider px-1">최근 변동 이력</h3>
                 <div className="space-y-2">
-                  {invQuery.data?.ledger?.map((log: any) => (
-                    <div key={log.id} className="p-3 rounded-lg bg-admin-sidebar/30 border border-admin-border/50 flex items-center justify-between text-admin-meta">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-1.5 h-1.5 rounded-full ${log.change_amount > 0 ? "bg-admin-accent glow-admin" : "bg-admin-danger"}`} />
-                        <span className="font-bold text-admin-text-primary w-20">{log.item_type}</span>
-                        <span className={`font-mono font-bold ${log.change_amount > 0 ? "text-admin-accent" : "text-admin-danger"}`}>
-                          {log.change_amount > 0 ? `+${log.change_amount}` : log.change_amount}
-                        </span>
-                        <span className="text-admin-text-muted truncate max-w-[200px] border-l border-admin-border pl-3 ml-1">
-                          {log.reason || "-"}
+                  {invQuery.data?.ledger?.length ? (
+                    invQuery.data.ledger.map((log: any) => (
+                      <div key={log.id} className="p-3 rounded-lg bg-admin-sidebar/30 border border-admin-border/50 flex items-center justify-between text-admin-meta">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-1.5 h-1.5 rounded-full ${log.change_amount > 0 ? "bg-admin-accent glow-admin" : "bg-admin-danger"}`} />
+                          <span className="font-bold text-admin-text-primary w-20">{formatItemType(log.item_type)}</span>
+                          <span className={`font-mono font-bold ${log.change_amount > 0 ? "text-admin-accent" : "text-admin-danger"}`}>
+                            {log.change_amount > 0 ? `+${log.change_amount}` : log.change_amount}
+                          </span>
+                          <span className="text-admin-text-muted truncate max-w-[200px] border-l border-admin-border pl-3 ml-1">
+                            {log.reason || "-"}
+                          </span>
+                        </div>
+                        <span className="text-[10px] text-admin-text-muted font-mono">
+                          {new Date(log.created_at).toLocaleString("ko-KR", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false })}
                         </span>
                       </div>
-                      <span className="text-[10px] text-admin-text-muted font-mono">
-                        {new Date(log.created_at).toLocaleString("ko-KR", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false })}
-                      </span>
+                    ))
+                  ) : (
+                    <div className="py-8 text-center border-2 border-dashed border-admin-border rounded-xl opacity-40">
+                      <p className="text-admin-meta">변동 이력이 없습니다.</p>
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
             </div>
@@ -168,22 +233,64 @@ const UserInventoryModal: React.FC<UserInventoryModalProps> = ({ memberId, isOpe
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="admin-label">아이템 코드</label>
-                  <input
-                    type="text"
-                    value={itemType}
-                    onChange={(e) => setItemType(e.target.value.toUpperCase())}
-                    className="admin-input w-full font-mono"
-                    placeholder="e.g. DIAMOND, TICKET_S1"
-                  />
+                  <select
+                    value={itemTypeMode === "custom" ? "__CUSTOM__" : itemType}
+                    onChange={(e) => {
+                      if (e.target.value === "__CUSTOM__") {
+                        setItemTypeMode("custom");
+                        setItemType("");
+                        return;
+                      }
+                      setItemTypeMode("select");
+                      setItemType(e.target.value);
+                    }}
+                    className="admin-input w-full"
+                    aria-label="아이템 코드 선택"
+                  >
+                    <option value="" disabled>
+                      아이템 선택
+                    </option>
+                    {ownedItemOptions.length > 0 && (
+                      <optgroup label="보유 아이템">
+                        {ownedItemOptions.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </optgroup>
+                    )}
+                    {rewardItemOptions.length > 0 && (
+                      <optgroup label="전체 아이템">
+                        {rewardItemOptions.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </optgroup>
+                    )}
+                    <option value="__CUSTOM__">직접 입력</option>
+                  </select>
+                  {itemTypeMode === "custom" && (
+                    <input
+                      type="text"
+                      value={itemType}
+                      onChange={(e) => setItemType(e.target.value.toUpperCase())}
+                      className="admin-input w-full font-mono"
+                      placeholder="e.g. DIAMOND, TICKET_S1"
+                    />
+                  )}
+                  {rewardTypesQuery.isError && (
+                    <p className="text-[11px] text-admin-danger">아이템 목록을 불러오지 못했습니다. 직접 입력을 사용해 주세요.</p>
+                  )}
                 </div>
                 <div className="space-y-2">
-                  <label className="admin-label">변동 수박 (Delta)</label>
+                  <label className="admin-label">변동 수량 (Delta)</label>
                   <input
                     type="number"
                     value={delta}
                     onChange={(e) => setDelta(Number(e.target.value))}
                     className="admin-input w-full"
-                    placeholder="지급(+), 회수(-)"
+                    placeholder="0"
                   />
                 </div>
               </div>
@@ -220,9 +327,9 @@ const UserInventoryModal: React.FC<UserInventoryModalProps> = ({ memberId, isOpe
           {activeTab === "adjust" && (
             <button
               onClick={() => {
-                if (!itemType) return alert("아이템 코드를 입력하세요.");
-                if (delta === 0) return alert("변동 수량을 입력하세요.");
-                adjustMutation.mutate({ type: itemType, delta, note });
+                if (!itemType.trim()) return alert("아이템 코드를 입력해주세요.");
+                if (delta === 0) return alert("변동 수량을 입력해주세요.");
+                adjustMutation.mutate({ type: itemType.trim(), delta, note: note.trim() });
               }}
               disabled={adjustMutation.isPending}
               className="btn-admin-primary min-w-[120px]"

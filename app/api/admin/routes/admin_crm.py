@@ -413,30 +413,37 @@ def fan_out_message(
         msg_ref = db.query(AdminMessage).filter(AdminMessage.id == message_id).first()
         if msg_ref and "TELEGRAM" in (msg_ref.channels or []):
             from app.services.notification_service import NotificationService
-            import asyncio
             
             notifier = NotificationService()
             user_tg_ids = db.execute(
                 select(User.telegram_id).where(User.id.in_(target_user_ids), User.telegram_id.isnot(None))
             ).scalars().all()
             
-            async def _send_batch():
-                # Note: Simple serial send for now to respect TG limits
-                for tid in set(user_tg_ids):
-                    await notifier.send_telegram_message(
-                        chat_id=int(tid),
-                        text=f"<b>[공지] {msg_ref.title}</b>\n\n{msg_ref.content}"
-                    )
+            # 텔레그램 메시지 전송 (동기 방식으로 안전하게 처리)
+            import logging
+            logger = logging.getLogger(__name__)
             
-            try:
-                loop = asyncio.get_event_loop()
-                if loop.is_running():
-                    asyncio.create_task(_send_batch())
-                else:
-                    loop.run_until_complete(_send_batch())
-            except Exception as e:
-                import logging
-                logging.getLogger(__name__).error(f"Telegram fan-out failed: {e}")
+            for tid in set(user_tg_ids):
+                try:
+                    import asyncio
+                    message_text = f"<b>[공지] {msg_ref.title}</b>\n\n{msg_ref.content}"
+                    
+                    # 새 이벤트 루프에서 실행
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                    try:
+                        loop.run_until_complete(
+                            notifier.send_telegram_message(
+                                chat_id=int(tid),
+                                text=message_text
+                            )
+                        )
+                    finally:
+                        loop.close()
+                        
+                except Exception as e:
+                    logger.error(f"Telegram send failed for chat_id={tid}: {e}")
+                    continue
 
     finally:
         if local_db_created:

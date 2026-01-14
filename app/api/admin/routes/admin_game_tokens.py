@@ -53,6 +53,7 @@ def _resolve_user_id(db: Session, payload) -> int:
 def grant_tokens(payload: GrantGameTokensRequest, db: Session = Depends(get_db)):
     user_id = _resolve_user_id(db, payload)
     user = db.get(User, user_id)
+    reason = payload.reason or "ADMIN_GRANT"
 
     # Phase 2 rule: DIAMOND is Inventory SoT (not wallet).
     if payload.token_type == GameTokenType.DIAMOND:
@@ -61,13 +62,13 @@ def grant_tokens(payload: GrantGameTokensRequest, db: Session = Depends(get_db))
             user_id=user_id,
             item_type="DIAMOND",
             amount=payload.amount,
-            reason="ADMIN_GRANT",
+            reason=reason,
             related_id="admin_game_tokens_grant",
             auto_commit=True,
         )
         balance = int(item.quantity)
     else:
-        balance = wallet_service.grant_tokens(db, user_id, payload.token_type, payload.amount)
+        balance = wallet_service.grant_tokens(db, user_id, payload.token_type, payload.amount, reason=reason)
     summary = build_admin_user_summary(user) if user else None
     return GrantGameTokensResponse(
         user_id=user_id, 
@@ -84,6 +85,7 @@ def grant_tokens(payload: GrantGameTokensRequest, db: Session = Depends(get_db))
 def revoke_tokens(payload: RevokeGameTokensRequest, db: Session = Depends(get_db)):
     user_id = _resolve_user_id(db, payload)
     user = db.get(User, user_id)
+    reason = payload.reason or "ADMIN_REVOKE"
 
     # Phase 2 rule: DIAMOND is Inventory SoT (not wallet).
     if payload.token_type == GameTokenType.DIAMOND:
@@ -92,13 +94,13 @@ def revoke_tokens(payload: RevokeGameTokensRequest, db: Session = Depends(get_db
             user_id=user_id,
             item_type="DIAMOND",
             amount=payload.amount,
-            reason="ADMIN_REVOKE",
+            reason=reason,
             related_id="admin_game_tokens_revoke",
             auto_commit=True,
         )
         balance = int(item.quantity)
     else:
-        balance = wallet_service.revoke_tokens(db, user_id, payload.token_type, payload.amount)
+        balance = wallet_service.revoke_tokens(db, user_id, payload.token_type, payload.amount, reason=reason)
     summary = build_admin_user_summary(user) if user else None
     return GrantGameTokensResponse(
         user_id=user_id, 

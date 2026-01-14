@@ -102,11 +102,11 @@ const UserDetailSidePanel: React.FC<UserDetailSidePanelProps> = ({ user, onClose
                         </div>
                     </section>
 
-                    {/* Quick Actions */}
+                    {/* 빠른 실행 */}
                     <section>
                         <div className="mb-2 flex items-center gap-2 text-admin-text-secondary">
                             <Package size={12} />
-                            <h3 className="text-admin-meta font-bold uppercase tracking-wider">빠른 실행</h3>
+                            <h3 className="text-admin-meta font-bold tracking-wider">빠른 실행</h3>
                         </div>
                         <div className="grid grid-cols-3 gap-2">
                             <button

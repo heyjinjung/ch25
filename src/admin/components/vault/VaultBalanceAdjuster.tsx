@@ -135,6 +135,7 @@ export const VaultBalanceAdjuster: React.FC<VaultBalanceAdjusterProps> = ({ onUp
                                 <button
                                     type="button"
                                     onClick={clearInput}
+                                    title="입력 지우기"
                                     className="px-3 text-zinc-500 hover:text-white transition-colors"
                                 >
                                     <X className="h-4 w-4" />
@@ -153,37 +154,37 @@ export const VaultBalanceAdjuster: React.FC<VaultBalanceAdjusterProps> = ({ onUp
                 </div>
             </div>
 
-            {/* Results & Action Section */}
+            {/* 결과 및 조정 섹션 */}
             {userState && (
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-6 animate-in zoom-in-95 duration-200">
-                    {/* User Profile Card */}
+                    {/* 유저 프로필 카드 */}
                     <div className="md:col-span-4 space-y-4">
                         <div className="bg-admin-card border border-admin-border/50 rounded-2xl p-6 flex flex-col items-center text-center space-y-4 shadow-xl">
                             <div className="h-20 w-20 rounded-full bg-zinc-900 border-2 border-zinc-800 flex items-center justify-center mb-2 shadow-inner">
                                 <User className="h-10 w-10 text-zinc-500" />
                             </div>
                             <div className="space-y-1 w-full">
-                                <div className="text-xl font-black text-white truncate px-2">{userState.nickname || "Unknown"}</div>
+                                <div className="text-xl font-black text-white truncate px-2">{userState.nickname || "알 수 없음"}</div>
                                 <div className="text-xs font-mono text-admin-brand">UID: {userState.user_id}</div>
                             </div>
                             <div className="w-full pt-4 border-t border-zinc-800/50 flex flex-col gap-2">
                                 <div className="flex justify-between items-center px-2">
-                                    <span className="text-[10px] uppercase font-bold text-zinc-500">Eligibility</span>
+                                    <span className="text-[10px] font-bold text-zinc-500">상태</span>
                                     <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${userState.eligible ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-500 border border-rose-500/20'}`}>
-                                        {userState.eligible ? "ACTIVE" : "INACTIVE"}
+                                        {userState.eligible ? "활성" : "비활성"}
                                     </span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Balance Adjustment Card */}
+                    {/* 잔액 강제 조정 카드 */}
                     <div className="md:col-span-8">
                         <div className="bg-admin-card border border-admin-border/50 rounded-2xl overflow-hidden shadow-xl h-full flex flex-col">
                             <div className="px-6 py-4 border-b border-admin-border/50 bg-zinc-900/50 flex items-center justify-between">
                                 <h3 className="text-sm font-black text-white flex items-center gap-2">
                                     <Wallet className="h-4 w-4 text-admin-brand" />
-                                    강제 잔액 설정 (Manual Adjustment)
+                                    강제 잔액 설정
                                 </h3>
                                 <div className="flex items-center gap-2 text-[10px] text-zinc-500">
                                     <ShieldAlert className="h-3 w-3 text-rose-500" />
@@ -194,7 +195,7 @@ export const VaultBalanceAdjuster: React.FC<VaultBalanceAdjusterProps> = ({ onUp
                             <div className="p-6 flex-1 space-y-6">
                                 <div className="grid grid-cols-2 gap-6">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest pl-1">금고 잠금 금액 (Vault Locked)</label>
+                                        <label className="text-[10px] font-black text-zinc-500 tracking-widest pl-1">금고 잠금 금액</label>
                                         <div className="relative group">
                                             <input
                                                 type="number"
@@ -210,7 +211,7 @@ export const VaultBalanceAdjuster: React.FC<VaultBalanceAdjusterProps> = ({ onUp
                                     </div>
 
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest pl-1">가용 원화 잔액 (Available Cash)</label>
+                                        <label className="text-[10px] font-black text-zinc-500 tracking-widest pl-1">가용 원화 잔액</label>
                                         <div className="relative group">
                                             <input
                                                 type="number"
@@ -244,7 +245,7 @@ export const VaultBalanceAdjuster: React.FC<VaultBalanceAdjusterProps> = ({ onUp
                                     className="w-full h-12 bg-admin-brand text-white font-black rounded-xl hover:brightness-110 active:scale-95 transition-all shadow-lg shadow-admin-brand/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:grayscale disabled:active:scale-100"
                                 >
                                     {updating ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                                    업데이트 및 정산 반영
+                                    잔액 강제 수정
                                 </button>
                             </div>
                         </div>

@@ -98,21 +98,20 @@ const ProductCard: React.FC<{ product: ShopProduct; vaultBalance: number; onBuy:
                 </h3>
 
                 <div className={`
-                    w-full min-h-10 px-3 py-2 rounded-xl text-[11px] font-black flex items-center justify-between gap-2 transition-all border leading-none
-                    whitespace-nowrap
+                    relative w-full px-3 py-2.5 rounded-xl text-[11px] font-black flex flex-col items-center gap-2 transition-all border
                     ${canAfford
                         ? "bg-white/5 border-white/10 text-white group-hover:bg-emerald-500 group-hover:border-emerald-500 group-hover:text-black group-hover:shadow-[0_0_20px_rgba(16,185,129,0.4)]"
                         : "bg-white/5 border-white/5 text-white/20"}
                 `}>
                     {isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : (
                         <>
-                            <span className="min-w-0 truncate">
+                            <span className="font-black tracking-tight">
                                 {canAfford ? "교환" : "부족"}
                             </span>
 
                             <span
                                 className={`
-                                    shrink-0 inline-flex items-center gap-1 rounded-lg px-2 py-1 border
+                                    inline-flex items-center gap-1 rounded-lg px-2.5 py-1 border
                                     ${canAfford ? "border-white/15 bg-black/20" : "border-white/5 bg-white/5"}
                                 `}
                             >
@@ -175,8 +174,14 @@ const ExchangePage: React.FC = () => {
     });
 
     // Filter Logic
-    const vaultProducts = products?.filter(p => p.cost.token === 'VAULT') || [];
-    const diamondProducts = products?.filter(p => p.cost.token === 'DIAMOND') || [];
+    const vaultProducts = (products ?? []).filter((p) => {
+        const token = String(p.cost?.token ?? "").toUpperCase();
+        return token === "VAULT" && p.is_active !== false;
+    });
+    const diamondProducts = (products ?? []).filter((p) => {
+        const token = String(p.cost?.token ?? "").toUpperCase();
+        return token === "DIAMOND" && p.is_active !== false;
+    });
 
     if (isLoading) return <div className="flex h-[50vh] items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-emerald-500" /></div>;
     if (isError) return (
