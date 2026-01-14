@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useActiveSurveys } from "../../hooks/useSurvey";
-import { X, Gift, ArrowRight, FileText } from "lucide-react";
+import { X, ArrowRight, FileText } from "lucide-react";
 import clsx from "clsx";
 
 const SurveyPromptBanner: React.FC = () => {
