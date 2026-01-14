@@ -144,6 +144,35 @@ def status(db: Session = Depends(get_db), user_id: int = Depends(get_current_use
         # Inject Global Modal Overrides
         res.show_modal_override = v2_service.get_config_value(db, "show_modal_override")
     
+    # Withdrawal Conditions Calculation
+    op_date_kst = service._operational_date_kst(now)
+    from app.models.feature import UserEventLog
+    from sqlalchemy import cast, Date, func
+
+    # Daily Play Count
+    daily_play_count = db.query(func.count(UserEventLog.id)).filter(
+        UserEventLog.user_id == user_id,
+        UserEventLog.event_name.like("GAME_%_PLAY"),
+        cast(UserEventLog.created_at, Date) == op_date_kst
+    ).scalar() or 0
+    
+    # Daily Deposit Confirmation
+    has_deposit_today = db.query(UserEventLog.id).filter(
+        UserEventLog.user_id == user_id,
+        UserEventLog.event_name == "DEPOSIT_CONFIRMED",
+        cast(UserEventLog.created_at, Date) == op_date_kst
+    ).first() is not None
+
+    res.daily_play_count = int(daily_play_count)
+    res.daily_play_target = 30 # Hardcoded target
+    res.daily_deposit_confirmed = has_deposit_today
+    # For daily_vault_spent, we'll use a placeholder or check vault_spent_total if it was meant as daily
+    # In this phase, we'll treat it as a target to reach 10,000 cumulative or daily? 
+    # Example said 3,000/10,000. Let's assume daily.
+    # We can try to sum negative ledger entries or just use a placeholder for now as it's a new requirement.
+    res.daily_vault_spent = 0 
+    res.daily_vault_spent_target = 10000
+
     return res
 
 

@@ -51,6 +51,13 @@ class VaultStatusResponse(BaseModel):
     # Global Modal Overrides (Admin controlled)
     show_modal_override: str | None = None
 
+    # Withdrawal Conditions (Phase 2)
+    daily_play_count: int = 0
+    daily_play_target: int = 30
+    daily_vault_spent: int = 0
+    daily_vault_spent_target: int = 10000
+    daily_deposit_confirmed: bool = False
+
 
 class VaultFillResponse(BaseModel):
     eligible: bool
