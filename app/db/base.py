@@ -61,6 +61,8 @@ from app.models import (  # noqa: F401
     OpsPlanTask,
     OpsTargetList,
     OpsTargetMember,
+    EventConfig,
+    EventParticipationLog,
     VaultLedger,
 )
 from app.models.admin_user_profile import AdminUserProfile

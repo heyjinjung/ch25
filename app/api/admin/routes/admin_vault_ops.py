@@ -1,16 +1,19 @@
 """Admin Vault operations: timer control and user vault inspection."""
 
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db, get_current_admin_id
+from app.core.config import get_settings
 from app.schemas.vault2 import VaultAdminStateResponse, VaultTimerActionRequest, VaultBalanceSetRequest
 from app.services.vault_service import VaultService
 from app.services.admin_user_identity_service import resolve_user_id_by_identifier
 from app.models.user import User
 from app.models.user_cash_ledger import UserCashLedger
+from app.services.ops_log_service import OpsLogService
 
 
 # Canonical admin API base in this codebase is `/admin/api/*`.
@@ -184,6 +187,10 @@ def set_golden_hour_config(
     v2 = Vault2Service()
     # Read existing to preserve other fields if any
     current = v2.get_config_value(db, "golden_hour_config", {})
+
+    prev_enabled = bool(current.get("enabled", False))
+    prev_override = str(current.get("manual_override", "AUTO"))
+    prev_multiplier = float(current.get("multiplier", 2.0))
     
     # Merge
     current["enabled"] = idx.enabled
@@ -194,6 +201,51 @@ def set_golden_hour_config(
          
     v2.set_config_value(db, "golden_hour_config", current)
     # No verify_config needed for simple dict
+
+    try:
+        now = datetime.utcnow()
+        tz = ZoneInfo(getattr(get_settings(), "timezone", "Asia/Seoul"))
+        log_date = now.astimezone(tz).date()
+        ops_log = OpsLogService()
+
+        if prev_enabled != idx.enabled or prev_override != idx.manual_override:
+            ops_log.create_log_entry(
+                db,
+                log_date=log_date,
+                category="SYSTEM",
+                action_code="SYS_GOLDEN_HOUR_TOGGLE",
+                target_model="Vault2Config",
+                target_id="golden_hour_config",
+                meta_data={
+                    "enabled": idx.enabled,
+                    "manual_override": idx.manual_override,
+                    "prev_enabled": prev_enabled,
+                    "prev_manual_override": prev_override,
+                },
+                is_automated=False,
+                actor_id=admin_id,
+                ref_id=f"GOLDEN_HOUR_TOGGLE:{admin_id}:{int(now.timestamp())}",
+            )
+
+        if prev_multiplier != float(idx.multiplier):
+            ops_log.create_log_entry(
+                db,
+                log_date=log_date,
+                category="SYSTEM",
+                action_code="SYS_GOLDEN_HOUR_MULTIPLIER_SET",
+                target_model="Vault2Config",
+                target_id="golden_hour_config",
+                meta_data={
+                    "multiplier": float(idx.multiplier),
+                    "prev_multiplier": prev_multiplier,
+                },
+                is_automated=False,
+                actor_id=admin_id,
+                ref_id=f"GOLDEN_HOUR_MULTIPLIER:{admin_id}:{int(now.timestamp())}",
+            )
+    except Exception:
+        # Do not block config updates due to ops logging failures.
+        pass
     
     return current
 

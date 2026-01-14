@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from app.models.feature import FeatureConfig, FeatureSchedule, FeatureType
 from app.models.game_wallet import GameTokenType, UserGameWallet
 from app.models.roulette import RouletteConfig, RouletteSegment
+from app.models.user_segment import UserSegment
 from app.models.user import User
 
 
@@ -36,6 +37,11 @@ def _wallet_balance(session: Session, token_type: GameTokenType) -> int:
 def test_roulette_play_with_gold_key_deducts_one_ticket(client: TestClient, session_factory) -> None:
     session: Session = session_factory()
     _seed_common(session)
+    existing_segment = session.execute(
+        select(UserSegment).where(UserSegment.user_id == 1)
+    ).scalar_one_or_none()
+    if existing_segment is None:
+        session.add(UserSegment(user_id=1, segment="VIP"))
     cfg = RouletteConfig(name="KEY_ONLY", is_active=True, ticket_type=GameTokenType.GOLD_KEY.value, max_daily_spins=0)
     session.add(cfg)
     session.flush()

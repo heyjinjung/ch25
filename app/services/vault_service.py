@@ -671,7 +671,10 @@ class VaultService:
                 and mode == "NORMAL"
             )
         elif game_type_upper == "ROULETTE":
-            eligible_for_streak_bonus = token_type == GameTokenType.ROULETTE_COIN.value
+            eligible_for_streak_bonus = (
+                token_type == GameTokenType.ROULETTE_COIN.value
+                and mode_upper != "EVENT"
+            )
         elif game_type_upper == "LOTTERY":
             eligible_for_streak_bonus = token_type == GameTokenType.LOTTERY_TICKET.value
 
@@ -837,6 +840,35 @@ class VaultService:
         except Exception:
             pass
         db.add(event)
+
+        if is_gh_active_now:
+            try:
+                from app.models.event import EventConfig
+                from app.services.event_service import EventService
+
+                gh_event = (
+                    db.query(EventConfig.id)
+                    .filter(EventConfig.event_type == "GOLDEN_HOUR")
+                    .order_by(EventConfig.id.desc())
+                    .first()
+                )
+                EventService().safe_log_participation(
+                    db,
+                    user_id=user.id,
+                    event_type="GOLDEN_HOUR",
+                    event_id=gh_event.id if gh_event else None,
+                    reward_type=(payout_raw or {}).get("reward_type"),
+                    reward_amount=int(amount),
+                    meta={
+                        "game_type": game_type_upper,
+                        "game_log_id": int(game_log_id),
+                        "amount_before_multiplier": int(amount_before_multiplier),
+                        "total_multiplier": float(total_multiplier),
+                    },
+                )
+            except Exception:
+                # Fail-open: do not block accrual for event logging.
+                pass
 
         # Observability: streak vault bonus application
         if eligible_for_streak_bonus and amount_before_multiplier == 200 and float(streak_multiplier) > 1.0:

@@ -17,6 +17,9 @@ from app.models.ops_plan import OpsPlan
 from app.models.ops_target import OpsTargetList, OpsTargetMember
 from app.models.user import User
 from app.models.external_ranking import ExternalRankingData
+from app.models.feature import UserEventLog
+from app.models.game_wallet import GameTokenType, UserGameWallet
+from app.models.user_activity import UserActivity
 
 
 # Scenario definitions
@@ -61,8 +64,12 @@ class OpsTargetService:
         try:
             if scenario_id == "SCENARIO_01":
                 return self._count_scenario_01(db)
+            elif scenario_id == "SCENARIO_03":
+                return self._count_scenario_03(db)
             elif scenario_id == "SCENARIO_04":
                 return self._count_scenario_04(db)
+            elif scenario_id == "SCENARIO_05":
+                return self._count_scenario_05(db)
             elif scenario_id == "SCENARIO_11":
                 return self._count_scenario_11(db)
             else:
@@ -74,9 +81,50 @@ class OpsTargetService:
     def _count_scenario_01(self, db: Session) -> int:
         """Scenario 1: Unlucky Newbie - Joined 24h, 10+ plays, 0 balance."""
         cutoff = self.now() - timedelta(days=1)
-        query = select(func.count(User.id)).where(
-            User.created_at >= cutoff,
-            User.vault_balance == 0,
+        plays_total = (
+            func.coalesce(UserActivity.roulette_plays, 0)
+            + func.coalesce(UserActivity.dice_plays, 0)
+            + func.coalesce(UserActivity.lottery_plays, 0)
+        )
+        query = (
+            select(func.count(User.id))
+            .select_from(User)
+            .outerjoin(UserActivity, UserActivity.user_id == User.id)
+            .where(
+                User.created_at >= cutoff,
+                User.vault_locked_balance == 0,
+                plays_total >= 10,
+            )
+        )
+        result = db.execute(query).scalar() or 0
+        return result
+
+    def _count_scenario_03(self, db: Session) -> int:
+        """Scenario 3: Window Shopper - free tickets exhausted, no deposit."""
+        ticket_types = [
+            GameTokenType.ROULETTE_COIN,
+            GameTokenType.DICE_TOKEN,
+            GameTokenType.LOTTERY_TICKET,
+            GameTokenType.TRIAL_TOKEN,
+        ]
+        wallet_sub = (
+            select(
+                UserGameWallet.user_id,
+                func.coalesce(func.sum(UserGameWallet.balance), 0).label("ticket_balance"),
+            )
+            .where(UserGameWallet.token_type.in_(ticket_types))
+            .group_by(UserGameWallet.user_id)
+            .subquery()
+        )
+        ticket_balance = func.coalesce(wallet_sub.c.ticket_balance, 0)
+        query = (
+            select(func.count(User.id))
+            .select_from(User)
+            .outerjoin(wallet_sub, wallet_sub.c.user_id == User.id)
+            .where(
+                User.total_charge_amount <= 0,
+                ticket_balance <= 0,
+            )
         )
         result = db.execute(query).scalar() or 0
         return result
@@ -86,7 +134,37 @@ class OpsTargetService:
         cutoff = self.now() - timedelta(days=7)
         query = select(func.count(User.id)).where(
             User.last_login_at < cutoff,
-            User.vault_balance > 10000,
+            User.vault_locked_balance > 10000,
+        )
+        result = db.execute(query).scalar() or 0
+        return result
+
+    def _count_scenario_05(self, db: Session) -> int:
+        """Scenario 5: Turning Regular - 30d active but 10d inactive."""
+        now = self.now()
+        active_cutoff = now - timedelta(days=30)
+        inactive_cutoff = now - timedelta(days=10)
+        login_sub = (
+            select(
+                UserEventLog.user_id,
+                func.count(UserEventLog.id).label("login_count"),
+            )
+            .where(
+                UserEventLog.event_name == "AUTH_LOGIN",
+                UserEventLog.created_at >= active_cutoff,
+            )
+            .group_by(UserEventLog.user_id)
+            .subquery()
+        )
+        query = (
+            select(func.count(User.id))
+            .select_from(User)
+            .join(login_sub, login_sub.c.user_id == User.id)
+            .where(
+                login_sub.c.login_count >= 15,
+                User.last_login_at.isnot(None),
+                User.last_login_at < inactive_cutoff,
+            )
         )
         result = db.execute(query).scalar() or 0
         return result
@@ -103,38 +181,173 @@ class OpsTargetService:
         return result
 
     def get_scenario_users(
-        self, db: Session, scenario_id: str, limit: int = 100
+        self,
+        db: Session,
+        scenario_id: str,
+        limit: int = 100,
+        options: Optional[Dict[str, Any]] = None,
     ) -> List[Dict[str, Any]]:
         """Get users matching a specific scenario."""
         if scenario_id == "SCENARIO_01":
-            return self._get_scenario_01_users(db, limit)
+            return self._get_scenario_01_users(db, limit, options=options)
+        elif scenario_id == "SCENARIO_03":
+            return self._get_scenario_03_users(db, limit, options=options)
         elif scenario_id == "SCENARIO_04":
             return self._get_scenario_04_users(db, limit)
+        elif scenario_id == "SCENARIO_05":
+            return self._get_scenario_05_users(db, limit, options=options)
         elif scenario_id == "SCENARIO_11":
             return self._get_scenario_11_users(db, limit)
         else:
             return []
 
-    def _get_scenario_01_users(self, db: Session, limit: int) -> List[Dict[str, Any]]:
+    def _get_scenario_01_users(
+        self,
+        db: Session,
+        limit: int,
+        options: Optional[Dict[str, Any]] = None,
+    ) -> List[Dict[str, Any]]:
         """Get Scenario 1 users."""
         cutoff = self.now() - timedelta(days=1)
-        query = select(User.id, User.nickname).where(
-            User.created_at >= cutoff,
-            User.vault_balance == 0,
-        ).limit(limit)
+        plays_total = (
+            func.coalesce(UserActivity.roulette_plays, 0)
+            + func.coalesce(UserActivity.dice_plays, 0)
+            + func.coalesce(UserActivity.lottery_plays, 0)
+        )
+        min_plays = int((options or {}).get("min_plays", 10))
+        query = (
+            select(User.id, User.nickname, plays_total.label("play_count"))
+            .select_from(User)
+            .outerjoin(UserActivity, UserActivity.user_id == User.id)
+            .where(
+                User.created_at >= cutoff,
+                User.vault_locked_balance == 0,
+                plays_total >= min_plays,
+            )
+            .limit(limit)
+        )
         results = db.execute(query).fetchall()
-        return [{"user_id": r.id, "nickname": r.nickname, "data": {}} for r in results]
+        return [
+            {
+                "user_id": r.id,
+                "nickname": r.nickname,
+                "data": {"play_count": int(r.play_count or 0)},
+            }
+            for r in results
+        ]
 
     def _get_scenario_04_users(self, db: Session, limit: int) -> List[Dict[str, Any]]:
         """Get Scenario 4 users."""
         cutoff = self.now() - timedelta(days=7)
-        query = select(User.id, User.nickname, User.vault_balance).where(
+        query = select(User.id, User.nickname, User.vault_locked_balance).where(
             User.last_login_at < cutoff,
-            User.vault_balance > 10000,
+            User.vault_locked_balance > 10000,
         ).limit(limit)
         results = db.execute(query).fetchall()
         return [
-            {"user_id": r.id, "nickname": r.nickname, "data": {"vault_balance": r.vault_balance}}
+            {
+                "user_id": r.id,
+                "nickname": r.nickname,
+                "data": {"vault_balance": int(r.vault_locked_balance or 0)},
+            }
+            for r in results
+        ]
+
+    def _get_scenario_03_users(
+        self,
+        db: Session,
+        limit: int,
+        options: Optional[Dict[str, Any]] = None,
+    ) -> List[Dict[str, Any]]:
+        """Get Scenario 3 users (Window Shopper)."""
+        ticket_types = [
+            GameTokenType.ROULETTE_COIN,
+            GameTokenType.DICE_TOKEN,
+            GameTokenType.LOTTERY_TICKET,
+            GameTokenType.TRIAL_TOKEN,
+        ]
+        wallet_sub = (
+            select(
+                UserGameWallet.user_id,
+                func.coalesce(func.sum(UserGameWallet.balance), 0).label("ticket_balance"),
+            )
+            .where(UserGameWallet.token_type.in_(ticket_types))
+            .group_by(UserGameWallet.user_id)
+            .subquery()
+        )
+        ticket_balance = func.coalesce(wallet_sub.c.ticket_balance, 0)
+        require_no_deposit = bool((options or {}).get("require_no_deposit", True))
+
+        query = (
+            select(User.id, User.nickname, User.total_charge_amount, ticket_balance.label("ticket_balance"))
+            .select_from(User)
+            .outerjoin(wallet_sub, wallet_sub.c.user_id == User.id)
+            .where(
+                ticket_balance <= 0,
+                User.total_charge_amount <= 0 if require_no_deposit else True,
+            )
+            .limit(limit)
+        )
+        results = db.execute(query).fetchall()
+        return [
+            {
+                "user_id": r.id,
+                "nickname": r.nickname,
+                "data": {
+                    "ticket_balance": int(r.ticket_balance or 0),
+                    "total_charge_amount": int(r.total_charge_amount or 0),
+                },
+            }
+            for r in results
+        ]
+
+    def _get_scenario_05_users(
+        self,
+        db: Session,
+        limit: int,
+        options: Optional[Dict[str, Any]] = None,
+    ) -> List[Dict[str, Any]]:
+        """Get Scenario 5 users (Turning Regular)."""
+        now = self.now()
+        active_days = int((options or {}).get("active_days", 30))
+        inactive_days = int((options or {}).get("inactive_days", 10))
+        min_login_count = int((options or {}).get("min_login_count", 15))
+
+        active_cutoff = now - timedelta(days=active_days)
+        inactive_cutoff = now - timedelta(days=inactive_days)
+        login_sub = (
+            select(
+                UserEventLog.user_id,
+                func.count(UserEventLog.id).label("login_count"),
+            )
+            .where(
+                UserEventLog.event_name == "AUTH_LOGIN",
+                UserEventLog.created_at >= active_cutoff,
+            )
+            .group_by(UserEventLog.user_id)
+            .subquery()
+        )
+        query = (
+            select(User.id, User.nickname, User.last_login_at, login_sub.c.login_count)
+            .select_from(User)
+            .join(login_sub, login_sub.c.user_id == User.id)
+            .where(
+                login_sub.c.login_count >= min_login_count,
+                User.last_login_at.isnot(None),
+                User.last_login_at < inactive_cutoff,
+            )
+            .limit(limit)
+        )
+        results = db.execute(query).fetchall()
+        return [
+            {
+                "user_id": r.id,
+                "nickname": r.nickname,
+                "data": {
+                    "login_count_30d": int(r.login_count or 0),
+                    "last_login_at": r.last_login_at,
+                },
+            }
             for r in results
         ]
 
@@ -209,7 +422,7 @@ class OpsTargetService:
         )
 
         # Get scenario users
-        users = self.get_scenario_users(db, scenario_id)
+        users = self.get_scenario_users(db, scenario_id, options=options)
 
         # Add members
         for user_data in users:

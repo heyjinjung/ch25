@@ -10,6 +10,7 @@ from app.api.routes import (
 	health,
 	lottery,
 	mission,
+	events,
 	ranking,
 	roulette,
 	season_pass,
@@ -51,6 +52,7 @@ api_router.include_router(roulette.router)
 api_router.include_router(dice.router)
 api_router.include_router(lottery.router)
 api_router.include_router(mission.router)
+api_router.include_router(events.router)
 api_router.include_router(ranking.router)
 api_router.include_router(team_battle.router)
 api_router.include_router(survey.router)

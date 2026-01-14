@@ -13,7 +13,7 @@ from app.models.feature import FeatureType
 from app.models.game_wallet import GameTokenType
 from app.models.roulette import RouletteConfig, RouletteLog, RouletteSegment
 from app.models.user_segment import UserSegment
-from app.schemas.roulette import RoulettePlayResponse, RouletteStatusResponse
+from app.schemas.roulette import RoulettePlayResponse, RouletteSegmentSchema, RouletteStatusResponse
 from app.services.feature_service import FeatureService
 from app.services.game_common import GamePlayContext, log_game_play
 from app.services.game_wallet_service import GameWalletService
@@ -267,6 +267,26 @@ class RouletteService:
             weighted_segments.extend([seg] * max(seg.weight, 0))
         chosen = random.choice(weighted_segments)
 
+        reward_type = chosen.reward_type
+        reward_amount = int(chosen.reward_amount or 0)
+        payout_mode = None
+        event_multiplier = 1.0
+        if reward_type in {"POINT", "CC_POINT"} and reward_amount > 0 and not getattr(chosen, "is_jackpot", False):
+            from app.services.event_service import EventService
+
+            if EventService().is_golden_hour(db):
+                segment_row = db.query(UserSegment).filter(UserSegment.user_id == user_id).first()
+                user_segment = segment_row.segment if segment_row else "COMMON"
+
+                if user_segment in {"VIP", "WHALE"}:
+                    event_multiplier = 2.5
+                elif user_segment == "COMMON":
+                    event_multiplier = 2.0
+
+                if event_multiplier > 1.0:
+                    reward_amount = int(round(reward_amount * event_multiplier))
+                    payout_mode = "EVENT"
+
         _, consumed_trial = self.wallet_service.require_and_consume_token(
             db,
             user_id,
@@ -281,8 +301,8 @@ class RouletteService:
             user_id=user_id,
             config_id=config.id,
             segment_id=chosen.id,
-            reward_type=chosen.reward_type,
-            reward_amount=chosen.reward_amount,
+            reward_type=reward_type,
+            reward_amount=reward_amount,
         )
         db.add(log_entry)
         db.commit()
@@ -305,8 +325,8 @@ class RouletteService:
         vault_accrual_amount = 0
         point_reward_amount = 0
         
-        if chosen.reward_type in {"POINT", "CC_POINT"}:
-            point_reward_amount = int(chosen.reward_amount)
+        if reward_type in {"POINT", "CC_POINT"}:
+            point_reward_amount = int(reward_amount)
         
         # Determine the effective vault accrual for this spin.
         # If the user won POINTs, that amount IS the accrual.
@@ -314,7 +334,16 @@ class RouletteService:
         
         # However, VaultService.record_game_play_earn_event logic currently looks at 'payout_raw.reward_amount'.
         # If reward_amount is present, it uses that. If 0, it treats as LOSE (-50).
-        
+
+        payout_raw = {
+            "segment_id": chosen.id,
+            "reward_type": reward_type,
+            "reward_amount": reward_amount,
+        }
+        if payout_mode:
+            payout_raw["mode"] = payout_mode
+            payout_raw["event_multiplier"] = event_multiplier
+
         total_earn += self.vault_service.record_game_play_earn_event(
             db,
             user_id=user_id,
@@ -322,11 +351,7 @@ class RouletteService:
             game_log_id=log_entry.id,
             token_type=token_type_enum.value,
             outcome=f"SEGMENT_{chosen.id}",
-            payout_raw={
-                "segment_id": chosen.id,
-                "reward_type": chosen.reward_type,
-                "reward_amount": chosen.reward_amount,
-            },
+            payout_raw=payout_raw,
         )
 
         settings = get_settings()
@@ -344,12 +369,12 @@ class RouletteService:
         
         # Calculate XP award for meta logging
         xp_award = 0
-        if chosen.reward_type == "GAME_XP":
-            xp_award = chosen.reward_amount
+        if reward_type == "GAME_XP":
+            xp_award = reward_amount
         
         # Deliver NON-POINT rewards via RewardService
         # (POINT rewards are already accrued to Vault above)
-        if chosen.reward_type not in {"POINT", "CC_POINT"}:
+        if reward_type not in {"POINT", "CC_POINT"}:
              # For Trial tokens, we might skip delivery if trial_payout_to_vault is ON and it was a monetary reward?
              # But here we only enter if NOT point. So Diamond/Ticket/Coupon/Gifticon.
              # These should always be delivered.
@@ -357,11 +382,11 @@ class RouletteService:
             self.reward_service.deliver(
                 db,
                 user_id=user_id,
-                reward_type=chosen.reward_type,
-                reward_amount=chosen.reward_amount,
+                reward_type=reward_type,
+                reward_amount=reward_amount,
                 meta={"reason": "roulette_spin", "segment_id": chosen.id, "game_xp": xp_award},
             )
-        if chosen.reward_amount > 0:
+        if reward_amount > 0:
             self.season_pass_service.maybe_add_internal_win_stamp(db, user_id=user_id, now=today)
         season_pass = None  # 게임 1회당 자동 스탬프 발급을 중단하고, 조건 달성 시 별도 로직으로 처리
 
@@ -372,16 +397,20 @@ class RouletteService:
             db,
             {
                 "segment_id": chosen.id,
-                "reward_type": chosen.reward_type,
-                "reward_amount": chosen.reward_amount,
+                "reward_type": reward_type,
+                "reward_amount": reward_amount,
                 "reward_label": chosen.label,
                 "xp_from_reward": xp_award,
             },
         )
 
+        segment_payload = RouletteSegmentSchema.model_validate(chosen)
+        if reward_amount != int(chosen.reward_amount or 0):
+            segment_payload = segment_payload.model_copy(update={"reward_amount": reward_amount})
+
         return RoulettePlayResponse(
             result="OK",
-            segment=chosen,
+            segment=segment_payload,
             season_pass=season_pass,
             vault_earn=total_earn,
             streak_info=streak_info,
