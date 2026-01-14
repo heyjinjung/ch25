@@ -7,7 +7,8 @@
     *   **Backend**: 
         *   `AuthUser` 및 `VaultStatusResponse` 스키마에 `segment` 필드 추가.
         *   `auth/token` 및 `vault/status` 라우터에서 `UserSegment` 테이블을 조회하여 세그먼트 정보를 응답에 포함.
-  ### 8. 도파민 04: 리텐션 메커니즘 고도화 (2026-01-14)
+
+### 8. 도파민 04: 리텐션 메커니즘 고도화 (2026-01-14)
 - **Ticket-Zero 구제 (Bailout Modal)**: 티켓이 0일 때 금고 채우기 혹은 구제 지원금 지급 모달을 자동 트리거하여 '부활' 유도.
 - **원픽 미션 (Today Card)**: 미션 페이지 최상단에 핵심 미션을 카드 형태로 배치하여 집중도 향상.
 - **스트릭 트랙 (Renewal)**: 기존 7일 그리드 디자인을 폐기하고 가로형 보물상자 길(Path) 디자인으로 전면 개편.
@@ -34,6 +35,9 @@
 
 ## 4. Documentation
 *   **Updated**: `walkthrough.md`에 VIP UI 연출 관련 내용 및 이미지 링크 업데이트.
+
+*   **Updated**: `task.md` 모든 항목 완료 처리.
+
 ## 5. Exchange Page UI 리뉴얼 (티켓 지갑 스타일 반영)
 *   **Goal**: 교환소의 카드 디자인을 인벤토리의 '티켓 지갑' 섹션과 통일하고, 텔레그램 뷰포트에서의 가독성과 시각적 완성도 향상.
 *   **Implementation**:

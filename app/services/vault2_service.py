@@ -144,6 +144,10 @@ class Vault2Service:
         cfg = self._build_effective_config(getattr(program, "config_json", None))
         return cfg.get(key, default)
 
+    def set_config_value(self, db: Session, key: str, value: Any, admin_id: int = 0) -> VaultProgram:
+        """Helper to set value in the default program's config_json."""
+        return self.update_config_value(db, program_key=self.DEFAULT_PROGRAM_KEY, key=key, value=value, admin_id=admin_id)
+
     def update_config_value(self, db: Session, *, program_key: str, key: str, value: Any, admin_id: int = 0) -> VaultProgram:
         program = self.get_program_by_key(db, program_key=program_key)
         if program is None:

@@ -299,12 +299,18 @@ const AdminMissionPage: React.FC = () => {
                                             <div className="flex items-center justify-end gap-1">
                                                 <button
                                                     onClick={() => handleOpenEdit(mission)}
+                                                    aria-label="미션 수정"
+                                                    title="수정"
+                                                    type="button"
                                                     className="p-1.5 rounded text-zinc-500 hover:text-white hover:bg-white/10 transition-colors"
                                                 >
                                                     <Edit3 className="h-3.5 w-3.5" />
                                                 </button>
                                                 <button
                                                     onClick={() => { if (confirm("삭제하시겠습니까?")) deleteMutation.mutate(mission.id); }}
+                                                    aria-label="미션 삭제"
+                                                    title="삭제"
+                                                    type="button"
                                                     className="p-1.5 rounded text-zinc-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
                                                 >
                                                     <Trash2 className="h-3.5 w-3.5" />
@@ -342,6 +348,9 @@ const AdminMissionPage: React.FC = () => {
                             </div>
                             <button
                                 onClick={() => { setIsAdding(false); setEditingMission(null); }}
+                                aria-label="미션 편집 모달 닫기"
+                                title="닫기"
+                                type="button"
                                 className="p-2 rounded-lg hover:bg-white/5 transition-colors"
                             >
                                 <X className="h-5 w-5 text-zinc-400" />

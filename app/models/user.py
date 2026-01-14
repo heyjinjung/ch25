@@ -33,8 +33,13 @@ class User(Base):
     cash_balance = Column(Integer, nullable=False, server_default="0", default=0)
     vault_fill_used_at = Column(DateTime, nullable=True)
     
+    # Phase 2: Buy-in Tracking
+    vault_spent_total = Column(Integer, nullable=False, server_default="0", default=0)
+    
     # VIP System (Vault 2.0 Unlock condition)
     total_charge_amount = Column(Integer, nullable=False, server_default="0", default=0)
+    first_deposit_amount = Column(Integer, nullable=False, server_default="0", default=0)
+    first_deposit_at = Column(DateTime, nullable=True)
 
     # [Season] Carry-over
     next_season_seed = Column(Integer, nullable=False, server_default="0", default=0)
@@ -77,3 +82,4 @@ class User(Base):
     admin_profile = relationship("AdminUserProfile", back_populates="user", uselist=False, cascade="all, delete-orphan")
 
     game_wallets = relationship("UserGameWallet", back_populates="user", cascade="all, delete-orphan")
+

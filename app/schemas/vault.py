@@ -29,6 +29,7 @@ class VaultStatusResponse(BaseModel):
     
     # VIP
     total_charge_amount: int = 0
+    segment: str | None = None
 
     # Phase 1 UX integration (optional)
     recommended_action: str | None = None

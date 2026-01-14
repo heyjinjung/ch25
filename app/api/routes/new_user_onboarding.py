@@ -1,8 +1,8 @@
 """New-user onboarding utilities (Phase 0 instant-action funnel).
 
-This router is intentionally read-only for now:
-- It helps the frontend render a separate onboarding page only for new users.
-- It exposes coarse progress signals derived from existing tables.
+Notes:
+- /status is used by the Home welcome modal (Policy B: show to all users; hide after claim).
+- /claim-welcome provides a single-click welcome grant (vault + ticket).
 """
 
 from __future__ import annotations
@@ -11,7 +11,7 @@ from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user_id, get_db
@@ -22,6 +22,12 @@ from app.models.mission import Mission, MissionCategory, UserMissionProgress
 from app.services.mission_service import MissionService
 
 router = APIRouter(prefix="/api/new-user", tags=["new-user"])
+
+
+WELCOME_LOGIC_KEYS = (
+    "NEW_USER_WELCOME_CASH",
+    "NEW_USER_WELCOME_TICKET",
+)
 
 
 class NewUserMissionInfo(BaseModel):
@@ -52,6 +58,12 @@ class NewUserStatusResponse(BaseModel):
 
     bonus_cap: int
     missions: list[NewUserMissionInfo]
+
+
+class ClaimWelcomeResponse(BaseModel):
+    success: bool
+    reason: str | None = None
+    rewards: list[dict] = Field(default_factory=list)
 
 
 def _to_utc_naive(dt: datetime) -> datetime:
@@ -125,9 +137,18 @@ def status(db: Session = Depends(get_db), user_id: int = Depends(get_current_use
         + (getattr(activity, "lottery_plays", 0) or 0)
     )
 
-    # 1. Fetch missions in NEW_USER category
+    # 1. Fetch missions for welcome modal (keep legacy NEW_USER missions for ops/debug, but do not expose here)
     ms = MissionService(db)
-    missions_raw = db.query(Mission).filter(Mission.category == MissionCategory.NEW_USER, Mission.is_active == True).all()
+    missions_raw = (
+        db.query(Mission)
+        .filter(
+            Mission.category == MissionCategory.NEW_USER,
+            Mission.is_active == True,
+            Mission.logic_key.in_(WELCOME_LOGIC_KEYS),
+        )
+        .order_by(Mission.id.asc())
+        .all()
+    )
     
     missions_info = []
     for m in missions_raw:
@@ -168,3 +189,77 @@ def status(db: Session = Depends(get_db), user_id: int = Depends(get_current_use
         bonus_cap=10_000,
         missions=missions_info,
     )
+
+
+@router.post("/claim-welcome", response_model=ClaimWelcomeResponse)
+def claim_welcome(db: Session = Depends(get_db), user_id: int = Depends(get_current_user_id)) -> ClaimWelcomeResponse:
+    """Single-click welcome claim.
+
+    Idempotent by design:
+    - If progress is already completed but not claimed, we attempt to claim.
+    - If already claimed, return success.
+    """
+
+    ms = MissionService(db)
+    rewards: list[dict] = []
+
+    missions = (
+        db.query(Mission)
+        .filter(Mission.logic_key.in_(WELCOME_LOGIC_KEYS), Mission.is_active == True)
+        .all()
+    )
+    missions_by_key = {m.logic_key: m for m in missions}
+
+    missing = [k for k in WELCOME_LOGIC_KEYS if k not in missions_by_key]
+    if missing:
+        return ClaimWelcomeResponse(success=False, reason="WELCOME_MISSION_NOT_CONFIGURED", rewards=[])
+
+    for logic_key in WELCOME_LOGIC_KEYS:
+        mission = missions_by_key[logic_key]
+        reset_date = ms.get_reset_date_str(mission.category)
+
+        progress = (
+            db.query(UserMissionProgress)
+            .filter(
+                UserMissionProgress.user_id == user_id,
+                UserMissionProgress.mission_id == mission.id,
+                UserMissionProgress.reset_date == reset_date,
+            )
+            .with_for_update()
+            .first()
+        )
+        if not progress:
+            progress = UserMissionProgress(
+                user_id=user_id,
+                mission_id=mission.id,
+                current_value=0,
+                reset_date=reset_date,
+            )
+            db.add(progress)
+
+        # Mark as completed (single-click) if not yet completed.
+        if not progress.is_completed:
+            progress.current_value = int(mission.target_value or 1)
+            progress.is_completed = True
+            progress.completed_at = datetime.utcnow()
+            db.add(progress)
+            db.flush()
+
+        # Ensure claimed when completed.
+        if progress.is_completed and not progress.is_claimed:
+            try:
+                ok, reward_type, amount = ms.claim_reward(user_id, mission.id)
+                if ok:
+                    rewards.append(
+                        {
+                            "logic_key": logic_key,
+                            "reward_type": reward_type,
+                            "amount": int(amount or 0),
+                        }
+                    )
+            except Exception:
+                # Do not fail the whole claim; keep idempotent behavior.
+                db.rollback()
+                return ClaimWelcomeResponse(success=False, reason="CLAIM_FAILED", rewards=rewards)
+
+    return ClaimWelcomeResponse(success=True, reason=None, rewards=rewards)

@@ -10,6 +10,11 @@ from app.models.roulette import RouletteLog
 from app.models.lottery import LotteryLog
 # from app.models.feature import FeatureConfig, FeatureType # If needed for status
 
+WELCOME_LOGIC_KEYS = (
+    "NEW_USER_WELCOME_CASH",
+    "NEW_USER_WELCOME_TICKET",
+)
+
 class AdminDashboardService:
     def __init__(self):
         pass
@@ -362,7 +367,16 @@ class AdminDashboardService:
         # ... Send logic ...
         return count
 
-    def get_metric_details(self, db: Session, metric_key: str):
+    def get_metric_details(
+        self,
+        db: Session,
+        metric_key: str,
+        *,
+        days: int = 7,
+        scope: str = "recent",
+        page: int = 1,
+        limit: int = 50,
+    ):
         """
         Return detailed list data for a specific metric.
         Format: [{"id": 1, "label": "Main Text", "sub_label": "Sub Text", "value": "Value", "tags": ["TAG"]}]
@@ -372,6 +386,103 @@ class AdminDashboardService:
         today_start_utc = self._get_today_kst_start_in_utc(kst_now)
         
         results = []
+
+        if metric_key == "welcome_claims":
+            # Who claimed welcome missions (per-user drill-down)
+            # - scope=recent: only users created within last N KST days (incl today)
+            # - scope=all: all users (paged)
+            try:
+                days = int(days or 7)
+            except Exception:
+                days = 7
+            days = max(1, min(90, days))
+
+            try:
+                page = int(page or 1)
+            except Exception:
+                page = 1
+            page = max(1, page)
+
+            try:
+                limit = int(limit or 50)
+            except Exception:
+                limit = 50
+            limit = max(1, min(200, limit))
+            offset = (page - 1) * limit
+
+            missions = db.query(Mission.id, Mission.logic_key).filter(Mission.logic_key.in_(WELCOME_LOGIC_KEYS)).all()
+            if not missions:
+                return []
+
+            mission_id_by_key = {logic_key: mid for mid, logic_key in missions}
+            mission_ids = [mid for mid, _logic_key in missions]
+
+            user_query = db.query(User)
+            if str(scope or "recent").lower() != "all":
+                # Recent N days in KST
+                start_kst_date = kst_now.date() - timedelta(days=(days - 1))
+                start_utc = datetime.combine(start_kst_date, time.min) - timedelta(hours=9)
+                now_utc = datetime.utcnow()
+                user_query = user_query.filter(User.created_at >= start_utc, User.created_at <= now_utc)
+
+            users = (
+                user_query
+                .order_by(User.created_at.desc())
+                .offset(offset)
+                .limit(limit)
+                .all()
+            )
+            if not users:
+                return []
+
+            user_ids = [int(u.id) for u in users]
+            progress_rows = (
+                db.query(UserMissionProgress)
+                .filter(
+                    UserMissionProgress.user_id.in_(user_ids),
+                    UserMissionProgress.mission_id.in_(mission_ids),
+                    UserMissionProgress.reset_date == "STATIC",
+                )
+                .all()
+            )
+
+            claimed_by_user: dict[int, set[int]] = {uid: set() for uid in user_ids}
+            for p in progress_rows:
+                if getattr(p, "is_claimed", False):
+                    claimed_by_user.setdefault(int(p.user_id), set()).add(int(p.mission_id))
+
+            cash_id = mission_id_by_key.get("NEW_USER_WELCOME_CASH")
+            ticket_id = mission_id_by_key.get("NEW_USER_WELCOME_TICKET")
+
+            for u in users:
+                uid = int(u.id)
+                claimed_set = claimed_by_user.get(uid, set())
+                claimed_cash = bool(cash_id and cash_id in claimed_set)
+                claimed_ticket = bool(ticket_id and ticket_id in claimed_set)
+                claimed_count = int(claimed_cash) + int(claimed_ticket)
+
+                if claimed_count == 2:
+                    status = "BOTH_CLAIMED"
+                elif claimed_count == 1:
+                    status = "PARTIAL_CLAIMED"
+                else:
+                    status = "NONE_CLAIMED"
+
+                tags = ["WELCOME", status]
+                if claimed_cash:
+                    tags.append("CLAIMED_CASH")
+                if claimed_ticket:
+                    tags.append("CLAIMED_TICKET")
+
+                results.append({
+                    "id": uid,
+                    "label": u.nickname or f"User {uid}",
+                    "sub_label": f"Joined: {u.created_at.strftime('%m-%d %H:%M') if getattr(u, 'created_at', None) else '-'}",
+                    "value": f"{claimed_count}/2",
+                    "tags": tags,
+                })
+
+            return results
 
         if metric_key == "churn_risk":
             # Users active yesterday but not today

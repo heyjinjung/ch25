@@ -18,6 +18,9 @@ const LoginPage: React.FC = () => {
   const allowLegacyLogin = import.meta.env.DEV;
   const tg = (window as any).Telegram?.WebApp;
   const isTelegramWebView = Boolean(tg && tg.initData);
+  const telegramBotUsername = (import.meta.env.VITE_TELEGRAM_BOT_USERNAME as string | undefined) || "jm956_bot";
+  const telegramWebappShortName = (import.meta.env.VITE_TELEGRAM_WEBAPP_SHORT_NAME as string | undefined) || "ccjm";
+  const telegramOpenUrl = `https://t.me/${telegramBotUsername}/${telegramWebappShortName}`;
 
   const resolvePostLoginPath = (): string => {
     const state = location.state as { from?: { pathname?: string; search?: string; hash?: string } } | null;
@@ -92,13 +95,13 @@ const LoginPage: React.FC = () => {
                     : "현재 화면은 텔레그램 앱에서 열어야 이용할 수 있어요. 아래 버튼으로 다시 접속해주세요."}
                 </p>
                 <p className="text-xs text-white/45">
-                  접속 경로: <span className="text-[#30FF75] font-bold">@jm956_bot</span>
+                  접속 경로: <span className="text-[#30FF75] font-bold">@{telegramBotUsername}</span>
                 </p>
               </div>
 
               <div className="space-y-3">
                 <a
-                  href="https://t.me/jm956_bot/ccjm"
+                  href={telegramOpenUrl}
                   target="_blank"
                   rel="noreferrer"
                   className="flex items-center justify-center gap-3 w-full py-4 rounded-xl bg-figma-primary text-white font-black shadow-[0_6px_18px_rgba(0,0,0,0.35)] hover:brightness-110 active:scale-[0.98] transition"

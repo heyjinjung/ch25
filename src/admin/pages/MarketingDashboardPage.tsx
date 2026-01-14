@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
     Users,
+    ClipboardList,
     Crown,
     TrendingUp,
     Zap,
@@ -322,6 +323,21 @@ const MarketingDashboardPage: React.FC = () => {
                         <div className="mt-3 text-xs text-gray-500 font-mono flex justify-between items-center">
                             <span>D-2 Retention</span>
                             <ArrowUpRight size={14} />
+                        </div>
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() => handleOpsCardClick("웰컴 지급 현황", "welcome_claims")}
+                        className="admin-card p-5 text-left hover:border-admin-brand hover:bg-admin-hover transition-all"
+                    >
+                        <p className="text-sm font-medium text-gray-400">웰컴 지급 현황</p>
+                        <h3 className="mt-2 text-2xl font-bold text-white tracking-tight">
+                            {opsLoading ? "-" : "조회"}
+                        </h3>
+                        <div className="mt-3 text-xs text-gray-500 font-mono flex justify-between items-center">
+                            <span>Who claimed / unclaimed</span>
+                            <ClipboardList size={14} />
                         </div>
                     </button>
 

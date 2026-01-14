@@ -7,6 +7,7 @@ export interface AuthUser {
   readonly nickname?: string;
   readonly status?: string;
   readonly level?: number;
+  readonly segment?: string;
   readonly diamond_key_count?: number;
   readonly telegram_id?: number | null;
   readonly telegram_username?: string | null;
@@ -71,6 +72,16 @@ export const setAuth = (token: string, user: AuthUser | null): void => {
   notify();
 };
 
+export const updateUser = (partialUser: Partial<AuthUser>): void => {
+  if (state.user) {
+    state.user = { ...state.user, ...partialUser };
+    if (isBrowser) {
+      localStorage.setItem(ACCESS_USER_KEY, JSON.stringify(state.user));
+    }
+    notify();
+  }
+};
+
 export const clearAuth = (): void => {
   state.token = null;
   state.user = null;
@@ -99,6 +110,7 @@ export const useAuth = () => {
     token: state.token,
     user: state.user,
     login: setAuth,
+    updateUser,
     logout: clearAuth,
   };
 };

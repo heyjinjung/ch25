@@ -26,7 +26,8 @@ const VaultPage = React.lazy(() => import("../pages/VaultPage"));
 const MissionPage = React.lazy(() => import("../pages/MissionPage"));
 const EventDashboardPage = React.lazy(() => import("../pages/EventDashboardPage"));
 const InventoryPage = React.lazy(() => import("../pages/InventoryPage"));
-const ShopPage = React.lazy(() => import("../pages/ShopPage"));
+const ExchangePage = React.lazy(() => import("../pages/ExchangePage"));
+
 
 // Simple loading fallback
 const PageLoader = () => (
@@ -69,7 +70,7 @@ const UserRoutes: React.FC = () => {
             <Route path="/lottery" element={<LotteryPage />} />
             <Route path="/guide" element={<GuidePage />} />
             <Route path="/inventory" element={<Navigate to="/rewards" replace />} />
-            <Route path="/shop" element={<ShopPage />} />
+            <Route path="/shop" element={<ExchangePage />} />
           </Route>
         </Route>
 

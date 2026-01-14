@@ -32,7 +32,7 @@ def seed_new_user_missions():
             "target_value": 1,
             "reward_type": "CASH_UNLOCK",  # Custom type for unlock
             "reward_amount": 2500,
-            "is_active": True,
+            "is_active": False,
         },
         {
             "title": "게임 마스터 (3회)",
@@ -43,7 +43,7 @@ def seed_new_user_missions():
             "target_value": 3,
             "reward_type": "CASH_UNLOCK",
             "reward_amount": 2500,
-            "is_active": True,
+            "is_active": False,
         },
         {
             "title": "커뮤니티 함께하기",
@@ -54,7 +54,7 @@ def seed_new_user_missions():
             "target_value": 1,
             "reward_type": "CASH_UNLOCK",
             "reward_amount": 2500,
-            "is_active": True,
+            "is_active": False,
         },
         {
             "title": "2일차 출석 체크",
@@ -65,7 +65,7 @@ def seed_new_user_missions():
             "target_value": 2,
             "reward_type": "CASH_UNLOCK",
             "reward_amount": 2500,
-            "is_active": True,
+            "is_active": False,
         }
     ]
 

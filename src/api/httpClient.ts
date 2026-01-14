@@ -66,7 +66,9 @@ userApi.interceptors.response.use(
     console.error("[userApi] response error", error);
     // Handle 401/403 by redirecting to home or login (when login page exists)
     const status = error?.response?.status;
-    if (status === 401 || status === 403) {
+    // NOTE: 403 can be a valid "business/authorization" denial (e.g., segment-gated premium roulette).
+    // Only treat 401 as an auth/session problem that should clear tokens and redirect.
+    if (status === 401) {
       const hadAuthHeader = Boolean(
         error?.config?.headers?.Authorization ||
           error?.config?.headers?.authorization ||

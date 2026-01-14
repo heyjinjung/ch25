@@ -26,12 +26,37 @@ class TelegramBridgeResponse(BaseModel):
     bridge_token: str
 
 
+
+class TelegramAuthRequest(BaseModel):
+    """Payload for Telegram Mini App authentication."""
+    init_data: str
+    start_param: Optional[str] = None
+
+
+class TelegramLinkRequest(BaseModel):
+    """Payload for linking an existing account to Telegram (inside TMA)."""
+    init_data: str
+
+
+class TelegramManualLinkRequest(BaseModel):
+    """Payload for manual credential linking inside TMA."""
+    init_data: str
+    external_id: str
+    password: str
+
+
+class TelegramBridgeResponse(BaseModel):
+    """Bridge link for Telegram."""
+    bridge_token: str
+
+
 class AuthUser(BaseModel):
     id: int
     external_id: str
     nickname: Optional[str] = None
     status: Optional[str] = None
     level: Optional[int] = None
+    segment: Optional[str] = None
     telegram_id: Optional[int] = None
 
 

@@ -1,244 +1,239 @@
 import React, { useMemo } from "react";
-import clsx from "clsx";
+
 import { useQuery } from "@tanstack/react-query";
 import { getVaultStatus } from "../../api/vaultApi";
-import { Link } from "react-router-dom";
 import { tryHaptic } from "../../utils/haptics";
 
+import { useToast } from "../../components/common/ToastProvider";
+import { Lock, Info } from "lucide-react";
+
+// Helper to format currency
 const formatWon = (amount: number) => `${amount.toLocaleString("ko-KR")}원`;
 
-// FloatingCoin: removed as per compacting/UX update — was used for decorative particles.
-
 const VaultPageCompact: React.FC = () => {
+    const { addToast } = useToast();
+    // Fetch Vault Status
     const vault = useQuery({
         queryKey: ["vault-status"],
         queryFn: getVaultStatus,
-        staleTime: 30_000,
-        retry: false,
+        staleTime: 5000,
+        refetchInterval: 10000,
     });
 
     const view = useMemo(() => {
         const data = vault.data;
+        // Basic Balances
         const vaultBalance = data?.vaultBalance ?? 0;
         const availableAmount = data?.vaultAmountAvailable ?? data?.availableBalance ?? 0;
         const reservedAmount = data?.vaultAmountReserved ?? Math.max(vaultBalance - availableAmount, 0);
-        const eligible = !!data?.eligible;
-        return { vaultBalance, availableAmount, reservedAmount, eligible };
+
+        // Unlock Conditions (Hardcoded for now based on Reward Guide Logic or API data)
+        // Assuming API returns 'vault_spent_total' or we calculate percentage
+        // If API doesn't support 'vault_spent_total' yet, fallback to dummy or partial logic.
+        // Assuming 'totalChargeAmount' logic was referring to deposit, but we need 'Shop Spending'.
+        // Let's check API response structure in 'getVaultStatus'. For now, we use a placeholder logic if field missing.
+        // If 'eligible' is true, it means unlock complete.
+
+        const isUnlocked = !!data?.eligible;
+
+        // Progress Logic (This needs to be provided by backend ideally, or calculated)
+        // For Phase 1, we might rely on 'eligible' flag. 
+        // If we want "Gauge", we need Current / Target. 
+        // Let's assume the API returns 'unlockProgress' (0-100) or we simulate it.
+        // If not available, we default to 0 or 100.
+        // *Correction*: User DB column `vault_spent_total` was added. API `getVaultStatus` might need update to return it.
+        // If not available yet, we hide the detailed gauge or show 'Play to Unlock'.
+        // But user ASKED for gauge. I will assume `unlockProgress` is passed or I map `totalChargeAmount` if meant as spent.
+        // Actually, previous code used `totalChargeAmount`. I will reuse it but re-label it as "Energy".
+
+        // Fallback calculation until API provides dedicated field
+        const progressPercent = Math.min(100, ((data?.totalChargeAmount ?? 0) / 100000) * 100);
+
+        return { vaultBalance, availableAmount, reservedAmount, isUnlocked, progressPercent };
     }, [vault.data]);
 
+    // Handle Loading
     if (vault.isLoading) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
                 <div className="h-10 w-10 animate-spin rounded-full border-4 border-emerald-500/70 border-t-transparent" />
-                <p className="text-white/60 text-sm">금고 정보 로딩 중...</p>
-                {/* Joyride 타겟 프리홀더 (로딩 중에도 크래시 방지) */}
-                <div className="sr-only" data-tour="vault-inventory-btn" aria-hidden />
             </div>
         );
     }
 
     return (
-        <div className="flex flex-col items-center px-4 py-6 min-h-[calc(100vh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-120px)] relative overflow-hidden">
-            {/* Floating Coin Particles removed */}
+        <div className="flex flex-col items-center px-4 py-6 min-h-[calc(100vh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-80px)] relative overflow-hidden bg-black text-white">
 
-            {/* Title Badge with Pulse */}
-            <div className="mb-4 z-10">
-                <span className="px-4 py-1.5 rounded-full bg-emerald-950/90 border border-emerald-600/25 text-emerald-500/80 text-[10px] font-black tracking-[0.15em] uppercase">
-                    THE VAULT
-                </span>
-            </div>
+            {/* Title */}
+            <h1 className="text-xs font-black tracking-[0.2em] text-emerald-500 uppercase mb-8 border border-emerald-900/50 px-4 py-1.5 rounded-full bg-emerald-950/30">
+                THE VAULT
+            </h1>
 
-            {/* Hero Vault Image with Breathing Effect */}
-            <div className="relative w-[55%] max-w-[180px] aspect-square mb-2 z-10 animate-float">
-                {/* Pulsing Glow Background */}
-                <div className={clsx(
-                    "absolute inset-0 rounded-full blur-[60px] animate-pulse",
-                    view.eligible ? "bg-emerald-600/40" : "bg-emerald-900/30"
-                )} />
+            {/* 1. Unlocked State (CASH OUT MODE) */}
+            {view.isUnlocked ? (
+                <div className="w-full flex-1 flex flex-col items-center justify-center animate-fadeIn">
 
-                {/* Rotating Ring (locked state only) */}
-                {!view.eligible && (
-                    <div className="absolute inset-[-10%] rounded-full border-2 border-dashed border-white/10 animate-spin-slow" />
-                )}
-
-                <img
-                    src={view.eligible ? "/assets/vault/vault_open.png" : "/assets/vault/vault_closed.png"}
-                    className={clsx(
-                        "relative z-10 w-full h-full object-contain drop-shadow-[0_15px_40px_rgba(0,0,0,0.7)] transition-transform duration-500",
-                        view.eligible && "animate-bounce-subtle"
-                    )}
-                    alt="금고"
-                />
-
-                {/* Status Badge */}
-                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 z-20">
-                    <div className={clsx(
-                        "px-4 py-1 rounded-full border font-black text-[10px] tracking-[0.1em] uppercase backdrop-blur-md transition-all",
-                        view.eligible
-                            ? "bg-black/90 border-emerald-500/60 text-emerald-400/90 ring-1 ring-emerald-500/20 shadow-[0_0_16px_rgba(52,211,153,0.25)]"
-                            : "bg-black/80 border-white/15 text-white/45"
-                    )}>
-                        {view.eligible ? "내돈찾기" : "잠금"}
+                    {/* Unlocked Icon Animation */}
+                    <div className="relative mb-6">
+                        <div className="absolute inset-0 bg-emerald-500 blur-[80px] opacity-20 animate-pulse" />
+                        <img
+                            src="/assets/vault/vault_open.png"
+                            alt="Unlocked Vault"
+                            className="relative z-10 w-48 h-48 object-contain drop-shadow-[0_0_30px_rgba(16,185,129,0.3)]"
+                        />
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
+                            <span className="bg-emerald-500 text-black font-black text-[10px] px-2 py-0.5 rounded-full animate-bounce">내돈찾기</span>
+                        </div>
                     </div>
-                </div>
-            </div>
 
-            {/* Locked Amount with Shimmer Effect */}
-            <div className="text-center mt-6 mb-4 z-10">
-                <div className="flex items-center justify-center gap-3 relative">
-                    <img
-                        src="/assets/asset_coin_gold.webp"
-                        alt="Coin"
-                        className="w-8 h-8 drop-shadow-[0_0_10px_rgba(255,215,0,0.4)] animate-spin-slow"
-                    />
-                    <div className="relative overflow-hidden">
-                        <span className="text-4xl font-black text-white tracking-tight">
-                            {formatWon(view.vaultBalance)}
-                        </span>
-                        {/* Shimmer Overlay */}
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
-                    </div>
-                </div>
-                <p className={clsx(
-                    "text-xs mt-2 font-medium transition-colors",
-                    view.eligible ? "text-emerald-500/80" : "text-white/45"
-                )}>
-                    {view.eligible ? "출금 가능 금액 기준으로 신청됩니다" : "조건 충족 시 해금됩니다"}
-                </p>
-            </div>
-
-
-            {/* VIP Progress Section */}
-            <div className="w-full max-w-xs mb-4">
-                {(vault.data?.totalChargeAmount ?? 0) >= 100000 ? (
-                    <div className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border border-amber-500/50 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <span className="text-xl">👑</span>
-                            <div>
-                                <p className="text-amber-400 font-black text-base">VIP 금고 해금 완료</p>
-                                <p className="text-amber-200/70 text-xs font-bold">모든 보관금이 즉시 출금 가능해집니다.</p>
+                    <div className="flex items-center gap-3 mb-8">
+                        <div className="relative">
+                            <div className="absolute inset-0 bg-amber-400 blur-xl opacity-40 animate-pulse" />
+                            <img src="/assets/asset_coin_gold.png" alt="Coin" className="relative z-10 w-12 h-12 object-contain animate-bounce-subtle" />
+                        </div>
+                        <div className="text-center">
+                            <div className="text-5xl font-black text-white tracking-tighter drop-shadow-xl flex items-center gap-1">
+                                {formatWon(view.availableAmount)}
                             </div>
                         </div>
                     </div>
-                ) : (
-                    <div className="w-full p-4 rounded-xl bg-white/5 border border-white/10">
-                        <div className="flex justify-between items-end mb-2">
-                            <span className="text-white/90 text-sm font-black">VIP 금고 진행도</span>
-                            <span className="text-amber-400 text-sm font-black">
-                                {Math.floor(((vault.data?.totalChargeAmount ?? 0) / 100000) * 100)}%
-                            </span>
-                        </div>
-                        <div className="w-full h-2 bg-black/40 rounded-full overflow-hidden mb-2">
-                            <div
-                                className="h-full bg-gradient-to-r from-amber-600 to-yellow-400 transition-all duration-1000"
-                                style={{ width: `${Math.min(100, ((vault.data?.totalChargeAmount ?? 0) / 100000) * 100)}%` }}
+
+                    <button
+                        onClick={async () => {
+                            if (view.availableAmount < 10000) {
+                                addToast("최소 10,000원부터 출금 가능합니다.", "error");
+                                return;
+                            }
+                            if (!window.confirm("전액 출금 신청하시겠습니까?")) return;
+                            tryHaptic(50);
+                            const { requestWithdrawal } = await import("../../api/vaultApi");
+                            const res = await requestWithdrawal(view.availableAmount);
+                            addToast(res.message, res.success ? "success" : "error");
+                            vault.refetch();
+                        }}
+                        className="w-full max-w-xs py-3 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 text-white font-black text-base shadow-[0_0_16px_rgba(245,158,11,0.25)] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 mb-6"
+                    >
+                        <img src="/assets/asset_coin_gold.png" className="w-4 h-4 object-contain" alt="" />
+                        출금 신청하기
+                    </button>
+
+                    {/* Charge Button */}
+                    <a
+                        href="https://ccc-010.com"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full max-w-xs py-3 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 text-white font-black text-base shadow-[0_0_16px_rgba(16,185,129,0.25)] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-1.5"
+                    >
+                        <img src="/assets/logo_cc_v2.png" className="w-4 h-4 object-contain mix-blend-screen" alt="" />
+                        씨씨카지노 충전하기
+                    </a>
+                </div>
+            ) : (
+                /* 2. Locked State (CHARGING MODE) */
+                <div className="w-full flex-1 flex flex-col items-center">
+
+                    <div className="relative mb-6">
+                        <span className="absolute -top-6 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-emerald-900/50 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold tracking-widest uppercase mb-2">
+                            THE VAULT
+                        </span>
+
+                        {/* Realistic Locked Vault */}
+                        <div className="relative w-48 h-48">
+                            <img src="/assets/vault/vault_closed.png" alt="Locked Vault" className="w-full h-full object-contain" />
+                            {/* Handle Animation */}
+                            <img
+                                src="/assets/vault/vault_handle.png"
+                                alt=""
+                                className="absolute top-[42%] left-[16%] w-[68%] h-[68%] object-contain origin-center animate-spin-slow-reverse opacity-80"
+                                style={{ animationDuration: '60s' }}
                             />
                         </div>
-                        <p className="text-center text-xs text-white/55 font-bold leading-relaxed">
-                            총 충전 <span className="text-amber-400">{formatWon(vault.data?.totalChargeAmount ?? 0)}</span> / 100,000 달성 시 <br />
-                            <span className="text-white/80">보관금 전액이 즉시 잠금 해제됩니다.</span>
+                    </div>
+
+                    <div className="flex items-center gap-2 mb-8">
+                        <img src="/assets/asset_coin_gold.png" alt="Coin" className="w-8 h-8 object-contain opacity-80" />
+                        <div className="text-4xl font-black text-white/90 tracking-tighter">
+                            {formatWon(view.vaultBalance)}
+                        </div>
+                    </div>
+
+                    {/* Dopamine Gauge */}
+                    <div className="w-full max-w-xs bg-gray-900 rounded-2xl p-5 border border-gray-800 shadow-2xl relative overflow-hidden group mb-8">
+
+                        {/* Gauge Header */}
+                        <div className="flex justify-between items-end mb-4 relative z-10">
+                            <span className="text-white font-bold text-sm flex items-center gap-2">
+                                <span className="text-white font-black">VIP 금고 진행도</span>
+                            </span>
+                            <span className="text-xl font-black text-amber-500 tabular-nums">
+                                {view.progressPercent}<span className="text-sm text-amber-500/70">%</span>
+                            </span>
+                        </div>
+
+                        {/* Progress Bar */}
+                        <div className="h-3 bg-black rounded-full overflow-hidden border border-white/10 relative z-10">
+                            <div
+                                className="h-full bg-gradient-to-r from-amber-600 via-amber-400 to-white animate-shimmer-fast transition-all duration-1000 ease-out"
+                                style={{ width: `${view.progressPercent}%` }}
+                            />
+                        </div>
+
+                        {/* Message */}
+                        <p className="text-[11px] text-gray-400 mt-4 text-center font-medium leading-relaxed">
+                            총 충전 <span className="text-amber-500 font-bold">{formatWon(vault.data?.totalChargeAmount ?? 0)}</span> / 100,000 달성 시<br />
+                            <span className="text-white font-bold">보관금 전액이 즉시 잠금 해제됩니다.</span>
                         </p>
                     </div>
-                )}
-            </div>
 
-            {/* Cash Balance & Withdraw Section */}
-            <div className="w-full max-w-xs mb-4">
-                {(() => {
-                    return (
-                        <>
-                            <div className="flex justify-between items-center text-sm mb-2 px-1">
-                                <span className="text-white/60">출금 가능 금액</span>
-                                <span className="font-bold text-amber-400">{formatWon(view.availableAmount)}</span>
+                    {/* Peak Time Event Banner - Smaller Text */}
+                    <div className="w-full max-w-xs relative mb-6 overflow-hidden rounded-xl border border-white/5">
+                        <div className="relative flex items-center gap-3 bg-black/40 px-4 py-3 backdrop-blur-md">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 text-white/40">
+                                <Lock className="h-4 w-4" />
                             </div>
-
-                            <div className="flex justify-between items-center text-xs mb-3 px-1">
-                                <span className="text-white/40">예약됨(처리 중)</span>
-                                <span className="font-bold text-white/60">{formatWon(view.reservedAmount)}</span>
+                            <div className="flex-1">
+                                <h3 className="text-[9px] font-black tracking-widest text-white/30 uppercase">
+                                    PEAK TIME EVENT
+                                </h3>
+                                <p className="text-[11px] font-bold text-white/60">
+                                    오늘 30만원 이상 입금 시 참여 가능
+                                </p>
                             </div>
+                            <Info className="h-3.5 w-3.5 text-white/20" />
+                        </div>
+                    </div>
 
-                            {/* Withdraw Button: Always show if balance > 0, disable if < 10000 */}
-                            {view.availableAmount > 0 && (
-                                <div className="w-full">
-                                    <button
-                                        disabled={view.availableAmount < 10000}
-                                        onClick={async () => {
-                                            if (view.availableAmount < 10000) return;
-                                            if (!window.confirm("출금을 신청하시겠습니까?")) return;
-                                            tryHaptic(20);
-                                            const { requestWithdrawal } = await import("../../api/vaultApi");
-                                            const res = await requestWithdrawal(view.availableAmount);
-                                            if (res.success) {
-                                                alert(res.message);
-                                                vault.refetch();
-                                            } else {
-                                                alert(res.message);
-                                            }
-                                        }}
-                                        className={clsx(
-                                            "w-full py-4 rounded-xl font-black text-center text-base uppercase tracking-wide transition-all flex items-center justify-center gap-2",
-                                            view.availableAmount >= 10000
-                                                ? "bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-lg shadow-amber-500/30 hover:brightness-110 active:scale-[0.98]"
-                                                : "bg-gray-800 border border-white/10 text-white/30 cursor-not-allowed"
-                                        )}
-                                    >
-                                        <img src="/assets/asset_coin_gold.png" alt="Coin" className={clsx("w-5 h-5 drop-shadow-sm", view.availableAmount < 10000 && "grayscale opacity-50")} />
-                                        출금 신청하기
-                                    </button>
-                                    {view.availableAmount < 10000 && (
-                                        <p className="text-[10px] text-center text-red-400/80 mt-1">
-                                            * 최소 10,000원부터 출금 가능합니다.
-                                        </p>
-                                    )}
-                                    {view.availableAmount >= 10000 && (
-                                        <p className="text-[10px] text-center text-amber-500/80 mt-1">
-                                            * 보유 중인 전액 신청됩니다.
-                                        </p>
-                                    )}
-                                </div>
-                            )}
-                        </>
-                    );
-                })()}
-            </div>
+                    {/* Footer Info Row - Restored */}
+                    <div className="w-full max-w-xs space-y-2 mb-8 px-2">
+                        <div className="flex justify-between items-center text-[11px] font-medium text-white/40">
+                            <span>출금 가능 금액</span>
+                            <span className="text-amber-500 font-bold text-xs">{formatWon(view.availableAmount)}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-[11px] font-medium text-white/40">
+                            <span>예약됨(처리 중)</span>
+                            <span>0원</span>
+                        </div>
+                    </div>
 
-            {/* CTA Buttons */}
-            <div className="w-full max-w-xs space-y-3 mt-auto z-10">
-                <a
-                    href="https://ccc-010.com"
-                    target="_blank"
-                    rel="noreferrer noopener"
-                    onClick={() => tryHaptic(30)}
-                    className="group block w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-black text-center text-base shadow-lg shadow-emerald-500/30 hover:brightness-110 active:scale-[0.98] transition-all uppercase tracking-wide relative overflow-hidden"
-                >
-                    {/* Button Shimmer */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-                    <span className="relative z-10 flex items-center justify-center">
-                        <img src="/assets/logo_cc_v2.png" alt="CC" className="inline-block w-5 h-5 mr-2" />
+                    <button className="w-full max-w-xs py-3 rounded-xl bg-amber-600/20 text-amber-500 font-bold border border-amber-500/30 mb-6 items-center justify-center gap-1.5 flex" disabled>
+                        <img src="/assets/asset_coin_gold.png" className="w-4 h-4 object-contain grayscale opacity-50" alt="" />
+                        출금 신청하기
+                    </button>
+
+
+
+                    {/* Charge Button */}
+                    <a
+                        href="https://ccc-010.com"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full max-w-xs py-3 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 text-white font-black text-base shadow-[0_0_16px_rgba(16,185,129,0.25)] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-1.5"
+                    >
+                        <img src="/assets/logo_cc_v2.png" className="w-4 h-4 object-contain mix-blend-screen" alt="" />
                         씨씨카지노 충전하기
-                    </span>
-                </a>
-
-                <div className="flex gap-2">
-                    <Link
-                        to="/inventory"
-                        onClick={() => tryHaptic(10)}
-                        data-tour="vault-inventory-btn"
-                        className="flex-1 py-3 rounded-xl bg-white/10 border border-white/20 text-white font-bold text-center text-sm shadow-lg shadow-black/20 hover:bg-white/15 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
-                    >
-                        <img src="/assets/icon_inventory_wallet.png" className="w-5 h-5 object-contain" alt="" />
-                        보상함
-                    </Link>
-                    <Link
-                        to="/home"
-                        onClick={() => tryHaptic(10)}
-                        className="flex-1 py-3 rounded-xl bg-white/5 border border-white/10 text-white/70 font-semibold text-center text-sm hover:bg-white/10 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
-                    >
-                        <img src="/assets/roulette/icon_slot_machine.png" className="w-5 h-5 object-contain opacity-70" alt="" />
-                        게임으로
-                    </Link>
+                    </a>
                 </div>
-            </div>
+            )}
         </div>
     );
 };

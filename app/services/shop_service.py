@@ -268,6 +268,15 @@ class ShopService:
                     related_id=sku,
                     auto_commit=False
                 )
+            elif product.cost_token == GameTokenType.VAULT:
+                 # Phase 2: Vault Buy-in
+                 from app.services.vault_service import VaultService
+                 VaultService().consume_locked_balance(
+                     db,
+                     user_id,
+                     product.cost_amount,
+                     reason=f"SHOP_PURCHASE:{sku}"
+                 )
             else:
                 # Wallet Token Consumption
                 wallet_service = GameWalletService()

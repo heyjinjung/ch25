@@ -92,6 +92,9 @@ services:
         VITE_ADMIN_API_URL: ${VITE_ADMIN_API_URL:-}
         VITE_API_TIMEOUT_MS: ${VITE_API_TIMEOUT_MS:-}
         VITE_ADMIN_API_TIMEOUT_MS: ${VITE_ADMIN_API_TIMEOUT_MS:-}
+        # Telegram deep-link UI (hardcode 제거). 운영은 기본값 유지, 로컬은 .env로 override.
+        VITE_TELEGRAM_BOT_USERNAME: ${VITE_TELEGRAM_BOT_USERNAME:-jm956_bot}
+        VITE_TELEGRAM_WEBAPP_SHORT_NAME: ${VITE_TELEGRAM_WEBAPP_SHORT_NAME:-ccjm}
         VITE_ENV: production
     container_name: xmas-frontend
     restart: unless-stopped

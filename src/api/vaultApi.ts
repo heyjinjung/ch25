@@ -24,6 +24,7 @@ interface BackendVaultStatusResponse {
   readonly golden_hour_multiplier?: number;
   readonly golden_hour_remaining_seconds?: number;
   readonly show_modal_override?: string | null;
+  readonly segment?: string | null;
 }
 
 export interface VaultStatusResponse {
@@ -54,6 +55,7 @@ export interface VaultStatusResponse {
   readonly golden_hour_multiplier?: number;
   readonly golden_hour_remaining_seconds?: number;
   readonly showModalOverride?: string | null;
+  readonly segment?: string | null;
 }
 
 export const getVaultStatus = async (): Promise<VaultStatusResponse> => {
@@ -89,7 +91,21 @@ export const getVaultStatus = async (): Promise<VaultStatusResponse> => {
     golden_hour_multiplier: data.golden_hour_multiplier ?? 1.0,
     golden_hour_remaining_seconds: data.golden_hour_remaining_seconds ?? 0,
     showModalOverride: data.show_modal_override ?? null,
+    segment: data.segment ?? null,
   };
+};
+
+const mapWithdrawalErrorMessage = (detail: unknown): string | null => {
+  if (typeof detail !== "string") return null;
+
+  switch (detail) {
+    case "DEPOSIT_REQUIRED_TODAY":
+      return "오늘 입금(충전) 내역이 있어야 출금 신청이 가능합니다.";
+    case "NO_DEPOSIT_RECORD_TODAY":
+      return "오늘 입금(충전) 내역이 확인되지 않아 출금 신청이 불가능합니다.";
+    default:
+      return null;
+  }
 };
 // Phase 1 MVP Withdrawal Request
 export const requestWithdrawal = async (amount: number): Promise<{ success: boolean; message: string }> => {
@@ -98,7 +114,8 @@ export const requestWithdrawal = async (amount: number): Promise<{ success: bool
     return { success: true, message: "출금 신청이 완료되었습니다." };
   } catch (err: any) {
     // Handle specific errors like 'insufficient_funds', 'daily_limit', etc.
-    const msg = err.response?.data?.detail || "신청 중 오류가 발생했습니다.";
+    const detail = err.response?.data?.detail;
+    const msg = mapWithdrawalErrorMessage(detail) ?? detail ?? "신청 중 오류가 발생했습니다.";
     return { success: false, message: msg };
   }
 };
