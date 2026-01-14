@@ -46,3 +46,10 @@
         *   보상 수령 전/후 레이아웃을 재구성하여 애니메이션 빈 자리를 시각적 밸런스로 채움.
         *   `Lucide-react` 아이콘과 `Framer Motion` 베이스의 경량 애니메이션으로 세련된 연출.
     *   **Optimization**: 텔레그램 뷰포트에 맞춘 컴팩트 사이즈(`max-w-[350px]`) 및 터치 최적화.
+
+## 7. Vault Page Button Refinement (버튼 최적화)
+*   **Goal**: 금고 페이지 버튼의 가독성을 높이고 프리미엄 감성 강화.
+*   **Implementation**:
+    *   **Dimensions**: `max-w-[280px]` 적용으로 컴팩트한 레이아웃.
+    *   **Aesthetics**: 엠버/에메랄드 3단계 그라데이션 및 입체적 섀도우 적용.
+    *   **Readability**: 아이콘 크기 확대(`w-6`), 텍스트 드롭 섀도우 및 폰트 두께 최적화.

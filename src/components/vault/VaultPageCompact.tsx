@@ -111,10 +111,10 @@ const VaultPageCompact: React.FC = () => {
                             addToast(res.message, res.success ? "success" : "error");
                             vault.refetch();
                         }}
-                        className="w-full max-w-xs py-3 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 text-white font-black text-base shadow-[0_0_16px_rgba(245,158,11,0.25)] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 mb-6"
+                        className="w-full max-w-[280px] py-4 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 text-black font-black text-lg shadow-[0_12px_24px_-8px_rgba(245,158,11,0.5),inset_0_1px_0_rgba(255,255,255,0.3)] hover:brightness-110 active:scale-[0.97] transition-all flex items-center justify-center gap-2 mb-6"
                     >
-                        <img src="/assets/asset_coin_gold.png" className="w-4 h-4 object-contain" alt="" />
-                        출금 신청하기
+                        <img src="/assets/asset_coin_gold.png" className="w-6 h-6 object-contain drop-shadow-sm" alt="" />
+                        <span>출금 신청하기</span>
                     </button>
 
                     {/* Charge Button */}
@@ -122,10 +122,10 @@ const VaultPageCompact: React.FC = () => {
                         href="https://ccc-010.com"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-full max-w-xs py-3 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 text-white font-black text-base shadow-[0_0_16px_rgba(16,185,129,0.25)] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-1.5"
+                        className="w-full max-w-[280px] py-4 rounded-2xl bg-gradient-to-r from-emerald-400 via-emerald-500 to-emerald-600 text-white font-black text-lg shadow-[0_12px_24px_-8px_rgba(16,185,129,0.5),inset_0_1px_0_rgba(255,255,255,0.2)] hover:brightness-110 active:scale-[0.97] transition-all flex items-center justify-center gap-2"
                     >
-                        <img src="/assets/logo_cc_v2.png" className="w-4 h-4 object-contain mix-blend-screen" alt="" />
-                        씨씨카지노 충전하기
+                        <img src="/assets/logo_cc_v2.png" className="w-6 h-6 object-contain mix-blend-screen drop-shadow-md" alt="" />
+                        <span className="drop-shadow-sm">씨씨카지노 충전하기</span>
                     </a>
                 </div>
             ) : (
@@ -215,9 +215,9 @@ const VaultPageCompact: React.FC = () => {
                         </div>
                     </div>
 
-                    <button className="w-full max-w-xs py-3 rounded-xl bg-amber-600/20 text-amber-500 font-bold border border-amber-500/30 mb-6 items-center justify-center gap-1.5 flex" disabled>
-                        <img src="/assets/asset_coin_gold.png" className="w-4 h-4 object-contain grayscale opacity-50" alt="" />
-                        출금 신청하기
+                    <button className="w-full max-w-[280px] py-4 rounded-2xl bg-zinc-900 text-zinc-600 font-bold border border-white/5 mb-6 items-center justify-center gap-2 flex cursor-not-allowed opacity-50" disabled>
+                        <img src="/assets/asset_coin_gold.png" className="w-5 h-5 object-contain grayscale opacity-30" alt="" />
+                        <span>출금 신청하기</span>
                     </button>
 
 

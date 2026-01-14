@@ -117,7 +117,7 @@ const ProductCard: React.FC<{ product: ShopProduct; vaultBalance: number; onBuy:
                             : "bg-white/5 border-white/5 text-white/20 cursor-not-allowed"
                     )}
                 >
-                    {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : (canAfford ? "교환하기" : "포인트 부족")}
+                    {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : (canAfford ? "교환하기" : (product.cost.token === 'DIAMOND' ? "다이아 부족" : "포인트 부족"))}
                 </button>
             </div>
 
@@ -239,7 +239,6 @@ const ExchangePage: React.FC = () => {
                     <div className="flex items-center gap-2 mb-3 border-t border-white/10 pt-6">
                         <img src="/assets/icon_diamond.png" className="w-4 h-4" alt="" />
                         <h2 className="text-sm font-black text-white">다이아 샵</h2>
-                        <span className="text-[10px] text-emerald-400/70 font-medium ml-auto">마일리지 사용</span>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                         {diamondProducts.map(p => (
