@@ -88,6 +88,13 @@ const VaultSettingsEditor: React.FC<Props> = ({ program }) => {
             }
         });
 
+        // Preserve existing DICE config block (managed in Admin Dice page / event params).
+        // This prevents accidental removal when saving unrelated vault settings.
+        const existingDice = (program.config_json?.game_earn_config as any)?.DICE;
+        if (existingDice && typeof existingDice === "object") {
+            newGameEarn["DICE"] = { ...existingDice };
+        }
+
         const json = {
             ...program.config_json,
             accrual_multiplier: multiplier,
@@ -109,67 +116,44 @@ const VaultSettingsEditor: React.FC<Props> = ({ program }) => {
                     </h3>
                     <p className="text-admin-body text-admin-text-secondary">적립 배수, 게임 적립금, 체험 티켓 보상 가치를 설정합니다.</p>
                 </div>
-                <button
-                    onClick={saveConfig}
-                    disabled={mutation.isPending}
-                    className="btn-admin-primary"
-                >
+                <button onClick={saveConfig} disabled={mutation.isPending} className="btn-admin-primary">
                     <Save className="h-4 w-4" />
                     설정 저장
                 </button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-6">
-                    <div className="admin-card p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <h4 className="text-admin-body font-bold text-admin-text-primary">이벤트 적립 배수 (Multiplier)</h4>
-                            <span className="px-2 py-0.5 rounded-admin-lg bg-admin-hover text-admin-warning text-[10px] font-bold uppercase tracking-widest border border-admin-border">Active Policy</span>
-                        </div>
-                        <div className="space-y-4">
-                            <div className="flex items-center gap-4">
-                                <div className="flex-1">
-                                    <input
-                                        type="number"
-                                        step="0.1"
-                                        className={inputClass}
-                                        value={multiplier}
-                                        onChange={e => setMultiplier(parseFloat(e.target.value) || 1.0)}
-                                        aria-label="적립 배수"
-                                        title="적립 배수"
-                                    />
-                                </div>
-                                <div className="text-2xl font-black text-admin-text-primary">x</div>
-                            </div>
-                            <p className="text-admin-meta text-admin-text-secondary leading-relaxed">
-                                모든 금고 적립(게임/티켓/체험)에 적용되는 전역 배수입니다. 기본값은 1.0이며, 이벤트 기간에만 조정하는 것을 권장합니다.
-                            </p>
+                <div className="admin-card p-4 space-y-4">
+                    <div className="flex items-center justify-between">
+                        <h4 className="text-admin-body font-bold text-admin-text-primary">이벤트 적립 배수 (Multiplier)</h4>
+                        <div className="flex items-center gap-2 text-admin-text-muted text-xs">
+                            <HelpCircle className="h-4 w-4" />
+                            <span>전역 배수</span>
                         </div>
                     </div>
-
-                    <div className="admin-card p-6">
-                        <h4 className="text-admin-body font-bold text-admin-text-primary flex items-center gap-2 mb-4">
-                            <HelpCircle className="h-4 w-4 text-admin-brand" />
-                            운영 설정 가이드
-                        </h4>
-                        <div className="space-y-3 text-admin-meta text-admin-text-secondary leading-relaxed">
-                            <p>• <b>게임 적립금</b>: 게임 종류(ROULETTE, DICE)와 결과(WIN, LOSE, SEGMENT_N)별로 금고에 반영되는 기본 금액을 설정합니다.</p>
-                            <p>• <b>RewardID 형식</b>: <code>[Type]:[Amount]</code> (예: <code>POINT:1000</code>). 체험 티켓 결과 매칭에 사용됩니다.</p>
-                            <p>• <b>누락 시</b>: 해당 보상이 금고 적립에서 스킵될 수 있습니다.</p>
+                    <div className="flex items-center gap-4">
+                        <div className="flex-1">
+                            <input
+                                type="number"
+                                step="0.1"
+                                className={inputClass}
+                                value={multiplier}
+                                onChange={e => setMultiplier(parseFloat(e.target.value) || 1.0)}
+                                aria-label="적립 배수"
+                                title="적립 배수"
+                            />
                         </div>
+                        <div className="text-2xl font-black text-admin-text-primary">x</div>
                     </div>
+                    <p className="text-admin-meta text-admin-text-secondary leading-relaxed">
+                        모든 금고 적립(게임/티켓/체험)에 적용되는 전역 배수입니다. 기본값은 1.0이며, 이벤트 기간에만 조정하는 것을 권장합니다.
+                    </p>
                 </div>
 
-                {/* Game Earn Config Section */}
                 <div className="admin-card overflow-hidden">
                     <div className="p-4 border-b border-admin-border bg-admin-sidebar/80 flex items-center justify-between">
                         <h4 className="text-admin-body font-bold text-admin-text-primary">게임 적립 설정 (Game Earn)</h4>
-                        <button
-                            onClick={addGameEarn}
-                            className="btn-admin-ghost p-2"
-                            aria-label="게임 적립 항목 추가"
-                            title="게임 적립 항목 추가"
-                        >
+                        <button onClick={addGameEarn} className="btn-admin-ghost p-2" aria-label="게임 적립 항목 추가" title="게임 적립 항목 추가">
                             <Plus className="h-4 w-4" />
                         </button>
                     </div>
@@ -184,53 +168,63 @@ const VaultSettingsEditor: React.FC<Props> = ({ program }) => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {gameEarn.map((g, i) => (
-                                    <tr key={i}>
-                                        <td className="admin-td">
-                                            <select
-                                                className={inputClass}
-                                                value={g.game}
-                                                onChange={e => updateGameEarn(i, "game", e.target.value)}
-                                                aria-label={`게임 종류 ${i + 1}`}
-                                                title="게임 종류"
-                                            >
-                                                <option value="ROULETTE">ROULETTE</option>
-                                                <option value="DICE">DICE</option>
-                                                <option value="LOTTERY">LOTTERY</option>
-                                            </select>
-                                        </td>
-                                        <td className="admin-td">
-                                            <input
-                                                className={inputClass}
-                                                value={g.outcome}
-                                                onChange={e => updateGameEarn(i, "outcome", e.target.value)}
-                                                placeholder="WIN, LOSE, SEGMENT_0..."
-                                                aria-label={`결과(outcome) ${i + 1}`}
-                                                title="Outcome"
-                                            />
-                                        </td>
-                                        <td className="admin-td">
-                                            <input
-                                                type="number"
-                                                className={inputClass}
-                                                value={g.amount}
-                                                onChange={e => updateGameEarn(i, "amount", parseInt(e.target.value) || 0)}
-                                                aria-label={`금액(amount) ${i + 1}`}
-                                                title="Amount"
-                                            />
-                                        </td>
-                                        <td className="admin-td text-right">
-                                            <button
-                                                onClick={() => removeGameEarn(i)}
-                                                className="btn-admin-ghost p-2 text-admin-danger"
-                                                aria-label={`게임 적립 항목 삭제 ${i + 1}`}
-                                                title="삭제"
-                                            >
-                                                <Trash2 className="h-4 w-4" />
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
+                                {gameEarn.map((g, i) => {
+                                    const isDice = String(g.game || "").toUpperCase() === "DICE";
+                                    return (
+                                        <tr key={i}>
+                                            <td className="admin-td">
+                                                <select
+                                                    className={inputClass}
+                                                    value={g.game}
+                                                    onChange={e => updateGameEarn(i, "game", e.target.value)}
+                                                    aria-label={`게임 종류 ${i + 1}`}
+                                                    title="게임 종류"
+                                                    disabled={isDice}
+                                                >
+                                                    <option value="ROULETTE">ROULETTE</option>
+                                                    <option value="DICE">DICE (관리: 주사위 설정)</option>
+                                                    <option value="LOTTERY">LOTTERY</option>
+                                                </select>
+                                            </td>
+                                            <td className="admin-td">
+                                                <input
+                                                    className={inputClass}
+                                                    value={g.outcome}
+                                                    onChange={e => updateGameEarn(i, "outcome", e.target.value)}
+                                                    placeholder="WIN, LOSE, SEGMENT_0..."
+                                                    aria-label={`결과(outcome) ${i + 1}`}
+                                                    title="Outcome"
+                                                    disabled={isDice}
+                                                />
+                                            </td>
+                                            <td className="admin-td">
+                                                <input
+                                                    type="number"
+                                                    className={inputClass}
+                                                    value={g.amount}
+                                                    onChange={e => updateGameEarn(i, "amount", parseInt(e.target.value) || 0)}
+                                                    aria-label={`금액(amount) ${i + 1}`}
+                                                    title="Amount"
+                                                    disabled={isDice}
+                                                />
+                                            </td>
+                                            <td className="admin-td text-right">
+                                                {isDice ? (
+                                                    <span className="text-[11px] text-admin-text-muted">DICE는 /admin/dice에서 관리</span>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => removeGameEarn(i)}
+                                                        className="btn-admin-ghost p-2 text-admin-danger"
+                                                        aria-label={`게임 적립 항목 삭제 ${i + 1}`}
+                                                        title="삭제"
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </button>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
                                 {gameEarn.length === 0 && (
                                     <tr>
                                         <td colSpan={4} className="px-6 py-8 text-center text-admin-text-secondary italic">설정된 게임 적립 항목이 없습니다.</td>
