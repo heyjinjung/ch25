@@ -248,10 +248,7 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
                         <div className="p-5 rounded-3xl bg-white/5 border border-white/10">
                             <div className="flex justify-between items-center mb-4">
                                 <p className="text-xs font-black text-white/40 uppercase tracking-widest">Attendance Status</p>
-                                <div className="flex items-center gap-1 text-emerald-400 font-bold text-xs">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                    Active Now
-                                </div>
+                                {/* Active Now indicator removed */}
                             </div>
                             <div className="flex items-center gap-4">
                                 <div className="text-4xl font-black text-white tabular-nums">{currentStreak}</div>
@@ -290,8 +287,6 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
                     </div>
                 </div>
 
-                {/* Bottom Animation Layer */}
-                <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-amber-500 opacity-20" />
             </motion.div>
         </div>
     );
