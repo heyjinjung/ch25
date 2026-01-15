@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 
 const InventoryPage: React.FC = () => {
     const queryClient = useQueryClient();
-    const { addToast } = useToast();
+    const { addToast, addToastNode } = useToast();
     const navigate = useNavigate();
 
     const { data, isLoading, isError } = useQuery({
@@ -81,11 +81,17 @@ const InventoryPage: React.FC = () => {
                         type="button"
                         onClick={() => {
                             tryHaptic(10);
-                            addToast("교환권/티켓은 ‘사용하기’를 누르면 지갑/키로 반영돼요. 기프티콘은 지급대기 후 운영자가 발송합니다.", "info");
+                            addToastNode(
+                                <div className="text-center space-y-1">
+                                    <p>배민 2만부터 기프트콘 지급</p>
+                                    <p>씨씨코인 지민문의</p>
+                                </div>,
+                                { tone: "info" }
+                            );
                         }}
                         className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-[11px] font-black text-white/70 active:scale-[0.98]"
                     >
-                        <img src="/assets/icons/takeaway-cup-dynamic-color.png" className="w-4 h-4 object-contain" alt="" />
+                        <img src="/assets/logo_cc_v2.png" className="w-4 h-4 object-contain" alt="" />
                         안내
                     </button>
                 </div>
@@ -230,13 +236,13 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, onUse, isPending }) => {
             title: "골드키",
             sub: "",
             desc: "즉시 교환",
-            icon: <img src="/assets/asset_ticket_gold.png" className="w-8 h-8 object-contain" alt="" />
+            icon: <img src="/assets/icons/goldkey.png" className="w-8 h-8 object-contain" alt="" />
         },
         "VOUCHER_DIAMOND_KEY_1": {
             title: "다이아키",
             sub: "",
             desc: "즉시 교환",
-            icon: <img src="/assets/asset_ticket_diamond.png" className="w-8 h-8 object-contain" alt="" />
+            icon: <img src="/assets/icons/diakey.png" className="w-8 h-8 object-contain" alt="" />
         },
         "VOUCHER_DICE_TOKEN_1": {
             title: "주사위",
@@ -322,8 +328,8 @@ const WalletCard: React.FC<{ tokenType: string; amount: number }> = ({ tokenType
         "ROULETTE_COIN": { title: "룰렛 티켓", icon: "/assets/asset_ticket_green.png" },
         "DICE_TOKEN": { title: "주사위 티켓", icon: "/assets/icon_dice_silver.png" },
         "LOTTERY_TICKET": { title: "복권 티켓", icon: "/assets/lottery/icon_lotto_ball.webp" },
-        "GOLD_KEY": { title: "골드 키", icon: "/assets/asset_ticket_gold.png" },
-        "DIAMOND_KEY": { title: "다이아 키", icon: "/assets/asset_ticket_diamond.png" },
+        "GOLD_KEY": { title: "골드 키", icon: "/assets/icons/goldkey.png" },
+        "DIAMOND_KEY": { title: "다이아 키", icon: "/assets/icons/diakey.png" },
         "TRIAL_TOKEN": { title: "체험 티켓", icon: "/assets/asset_ticket_trial.png" }
     };
 
