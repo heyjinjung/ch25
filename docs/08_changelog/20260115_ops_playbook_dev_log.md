@@ -23,7 +23,12 @@
 - API/훅: OpsTargetList 타입 및 조회 훅(`useOpsTargetLists`) 추가로 UI에서 타깃 리스트 목록/카운트 사용.
 
 ## 테스트/이슈
-- 백엔드 신규 테스트는 통과.
+- 백엔드 신규 테스트는 통과. (2026-01-15 19:15 추가 검증 완료)
+  - `tests/test_ops_plan_actions.py`:
+    - `InventoryService` 메서드 명칭 (`get_user_inventory` -> `get_inventory`) 및 속성 (`amount` -> `quantity`) 불일치 수정.
+    - `GOLDEN_HOUR` 실행 결과 구조 (Nest removal) 수정.
+    - Payload에 `kind` 필드 누락 수정.
+    - **결과**: 총 8개 테스트 케이스 모두 통과 (Targeted Grant, Broadcast, Golden Hour, Grant All).
 - `npm test -- --watch=false` 실행 시 로컬 환경에서 Vitest가 `spawn EPERM`으로 실패(환경 문제). 프런트 변경 후 별도 자동 테스트는 미실행 상태.
 
 ## 영향도/다음 단계
