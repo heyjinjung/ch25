@@ -16,7 +16,7 @@ import { formatRewardLine, isGifticonRewardType } from "../utils/rewardLabel";
 
 const DicePage: React.FC = () => {
   const { data, isLoading, isError } = useDiceStatus();
-  const { playDiceShake, playDiceThrow, playToast } = useSound();
+  const { playDiceShake, playDiceThrow, playDiceReveal, playBigWin } = useSound(); // Updated hook usage
   const playMutation = usePlayDice();
   const queryClient = useQueryClient();
   const [result, setResult] = useState<"WIN" | "LOSE" | "DRAW" | null>(null);
@@ -52,7 +52,9 @@ const DicePage: React.FC = () => {
       // Artificial delay for animation feel
       setTimeout(() => {
         setIsRolling(false);
-        playDiceThrow(); // Sound: Land/Reveal
+        playDiceThrow(); // Sound: Land
+        setTimeout(() => playDiceReveal(), 300); // Sound: Reveal effect slightly after throw
+        
         setResult(response.result);
         setUserDice(response.user_dice);
         setDealerDice(response.dealer_dice);
@@ -66,18 +68,13 @@ const DicePage: React.FC = () => {
 
         if (response.result === "WIN" && rewardValue > 0 && isAllowedReward) {
           setRewardToast({ value: rewardValue, type: rewardType });
-          playToast(); // Sound: Victory/Reward
+          playBigWin(); // Sound: Victory/Reward (User Requested Jingle)
           setTimeout(() => setRewardToast(null), 3000);
         }
 
+        // [UX FIX] 중복 모달 방지: 보상 획득 시 보상 토스트가 뜨므로 금고 적립 모달은 최소화
         if (response.eventSeeded && response.eventSeedAmount) {
           setVaultModal({ open: true, amount: response.eventSeedAmount, title: "이벤트 첫 참여 시드 보너스" });
-          // If we also earned from the play, show it after the seed (simple queue)
-          if ((response.vaultEarn ?? 0) !== 0) {
-            setTimeout(() => {
-              setVaultModal({ open: true, amount: response.vaultEarn!, title: "이벤트 게임 적립" });
-            }, 3000);
-          }
         } else if ((response.vaultEarn ?? 0) !== 0) {
           setVaultModal({ open: true, amount: response.vaultEarn! });
         }

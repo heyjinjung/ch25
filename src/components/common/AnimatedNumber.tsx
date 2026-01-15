@@ -5,14 +5,14 @@ type Props = {
   from?: number;
   durationMs?: number;
   locale?: string;
+  onAnimationStart?: () => void;
 };
 
 const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
 
-const AnimatedNumber: React.FC<Props> = ({ value, from = 0, durationMs = 650, locale = "ko-KR" }) => {
+const AnimatedNumber: React.FC<Props> = ({ value, from = 0, durationMs = 650, locale = "ko-KR", onAnimationStart }) => {
   const [display, setDisplay] = useState<number>(() => from);
   const rafRef = useRef<number | null>(null);
-  const lastValueRef = useRef<number>(value);
 
   useEffect(() => {
     if (rafRef.current) {
@@ -20,14 +20,17 @@ const AnimatedNumber: React.FC<Props> = ({ value, from = 0, durationMs = 650, lo
       rafRef.current = null;
     }
 
-    const startValue = Number.isFinite(lastValueRef.current) ? lastValueRef.current : from;
+    // [FIX] Use current 'display' state as startValue to handle StrictMode re-runs and interruptions correctly.
+    // This prevents the "skip to end" bug where refs were updated prematurely.
+    const startValue = display;
     const endValue = Number.isFinite(value) ? value : 0;
-    lastValueRef.current = endValue;
 
     if (durationMs <= 0 || startValue === endValue) {
       setDisplay(endValue);
       return;
     }
+
+    if (onAnimationStart) onAnimationStart();
 
     const startAt = performance.now();
 
@@ -39,7 +42,6 @@ const AnimatedNumber: React.FC<Props> = ({ value, from = 0, durationMs = 650, lo
       if (t < 1) rafRef.current = window.requestAnimationFrame(tick);
     };
 
-    setDisplay(startValue);
     rafRef.current = window.requestAnimationFrame(tick);
 
     return () => {
@@ -48,7 +50,7 @@ const AnimatedNumber: React.FC<Props> = ({ value, from = 0, durationMs = 650, lo
         rafRef.current = null;
       }
     };
-  }, [value, from, durationMs]);
+  }, [value, durationMs]);
 
   return <>{display.toLocaleString(locale)}</>;
 };

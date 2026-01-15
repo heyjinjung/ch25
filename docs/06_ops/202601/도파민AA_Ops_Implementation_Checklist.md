@@ -43,3 +43,11 @@
 - 2026-01-16: `OpsPlanAnalysisWorker` 서비스 구현 완료 (D+1 반응성/D+3 효과성 분석 로직 적용).
 - 2026-01-16: Ops Plan 프론트 모듈화/선택기/타임라인/리포트/모바일 접기 완료.
 - 2026-01-16: 실행 결과 뷰 타깃 리스트 ID 파싱 보강 및 상태 문구 정리, 탭별 로딩 훅 순서 정리.
+- 2026-01-16: 프론트엔드 Lint(TS Ignore → Expect Error) 수정 및 AdminOpsPlanPage 구문 오류 수정.
+- 2026-01-16: Ops Plan Backend API(Items, TargetLists, EvalMetrics, Timeline) 전체 구현 및 `admin_feed_config` 의존성 수정 완료.
+- 2026-01-16: 골든아워(Guerrilla Drop) 실행 시 `FeedService` 연동하여 퍼블릭 피드 자동 발행 로직 추가.
+- 2026-01-16: 로컬 도커 컨테이너 전체 재빌드 및 정상 구동 확인 (Frontend Build Pass).
+- 2026-01-16: 도파민/사운드 시스템 전면 개편.
+  - 사운드 자산 교체: 룰렛/복권/주사위/Vault에 사용자 제공 고품질 SFX 적용 (`Ball_Drop`, `Small_Win`, `Big_Win`, `Dice_Reveal`, `Vault_Jingle` 등).
+  - 로직 개선: 룰렛 회전음 뮤트, 결과 화면 동기화. 주사위/복권 결과 공개 시점 사운드 매핑.
+  - Vault UX: `AnimatedNumber` 초기화 버그 수정(Skip 방지) 및 애니메이션 시작 시 사운드 트리거(`onAnimationStart`) 추가.

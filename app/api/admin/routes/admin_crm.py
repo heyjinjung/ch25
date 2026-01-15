@@ -113,6 +113,9 @@ class CrmStatsResponse(BaseModel):
     last7d_deposit_amount: int = 0
     total_play_count: int = 0
 
+    # NEW: Samples for Segmentation (2026-01-16)
+    samples: dict = {}  # { "WHALE": ["nick1", ...], "DORMANT": [...] }
+
 @router.get("/stats", response_model=CrmStatsResponse)
 def get_crm_stats(db: Session = Depends(get_db)):
     """Get aggregated CRM statistics."""
