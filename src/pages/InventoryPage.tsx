@@ -211,8 +211,10 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, onUse, isPending }) => {
         let iconPath = "/assets/icons/icon_cart.png";
         if (brandCodeRaw === "CC_COIN") {
             iconPath = "/assets/asset_coin_gold.webp";
+        } else if (brandCodeRaw === "BAEMIN") {
+            iconPath = "/assets/icons/baemin.png";
         } else if (brandCodeRaw === "COMPOSE_AMERICANO") {
-            iconPath = "/assets/icons/icon_compose.svg";
+            iconPath = "/assets/icons/takeaway-cup-dynamic-color.png";
         }
 
         return {
