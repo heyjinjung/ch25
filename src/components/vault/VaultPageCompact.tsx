@@ -15,35 +15,29 @@ import WithdrawalProgressModal from "../modal/WithdrawalProgressModal";
 const formatWon = (amount: number) => `${amount.toLocaleString("ko-KR")}원`;
 
 const SparkleDust: React.FC = () => {
-    // Generate 15 random sparkles (Memorized to prevent re-render resets)
-    const sparkles = useMemo(() => Array.from({ length: 15 }).map(() => ({
-        initialX: Math.random() * 100,
-        initialY: Math.random() * 100,
-        scale: Math.random() * 0.5 + 0.5,
-        targetX1: Math.random() * 100,
-        targetX2: Math.random() * 100,
-        duration: Math.random() * 10 + 10, // 10-20s
-        delay: Math.random() * 20
+    // Generate 25 random sparkles for a cleaner "Falling Stars" effect
+    const sparkles = useMemo(() => Array.from({ length: 25 }).map(() => ({
+        left: Math.random() * 100, // Random horizontal position 0-100%
+        scale: Math.random() * 1.0 + 0.5, // 0.5 ~ 1.5 size variation
+        duration: Math.random() * 5 + 3, // 3~8 seconds fall duration
+        delay: -Math.random() * 10 // Negative delay for instant coverage
     })), []);
 
     return (
-        <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+        <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
             {sparkles.map((s, i) => (
                 <motion.img
                     key={i}
                     src="/assets/sparkle.png"
-                    className="absolute w-4 h-4 opacity-0"
-                    initial={{
-                        x: `${s.initialX}%`,
-                        y: `${s.initialY}%`,
-                        scale: s.scale,
-                        rotate: 0
+                    className="absolute w-6 h-6 object-contain opacity-50"
+                    style={{
+                        left: `${s.left}%`,
+                        top: "-10%", // Start above screen
                     }}
                     animate={{
-                        y: ["-10%", "110%"],
-                        x: [`${s.targetX1}%`, `${s.targetX2}%`],
-                        opacity: [0, 0.4, 0.6, 0.4, 0],
-                        rotate: [0, 180, 360],
+                        y: ["0vh", "120vh"], // Fall down relative to viewport height
+                        opacity: [0, 0.8, 0.8, 0], // Subtle fade interaction
+                        rotate: [0, 180, 360]
                     }}
                     transition={{
                         duration: s.duration,
@@ -167,9 +161,9 @@ const VaultPageCompact: React.FC = () => {
                             addToast(res.message, res.success ? "success" : "error");
                             vault.refetch();
                         }}
-                        className="w-full max-w-[280px] py-4 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 text-black font-black text-lg shadow-[0_12px_24px_-8px_rgba(245,158,11,0.5),inset_0_1px_0_rgba(255,255,255,0.3)] hover:brightness-110 active:scale-[0.97] transition-all flex items-center justify-center gap-2 mb-6"
+                        className="w-full max-w-[200px] h-[48px] rounded-2xl bg-amber-500/80 backdrop-blur-md border border-white/20 text-black font-bold text-[14px] shadow-[0_8px_16px_-4px_rgba(245,158,11,0.5)] hover:bg-amber-400 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 mb-3"
                     >
-                        <img src="/assets/asset_coin_gold.png" className="w-6 h-6 object-contain drop-shadow-sm" alt="" />
+                        <img src="/assets/asset_coin_gold.png" className="w-5 h-5 object-contain drop-shadow-sm" alt="" />
                         <span>출금 신청하기</span>
                     </button>
 
@@ -178,18 +172,18 @@ const VaultPageCompact: React.FC = () => {
                         href="https://ccc-010.com"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-full max-w-[280px] py-4 rounded-2xl bg-gradient-to-r from-emerald-400 via-emerald-500 to-emerald-600 text-white font-black text-lg shadow-[0_12px_24px_-8px_rgba(16,185,129,0.5),inset_0_1px_0_rgba(255,255,255,0.2)] hover:brightness-110 active:scale-[0.97] transition-all flex items-center justify-center gap-2"
+                        className="w-full max-w-[200px] h-[48px] rounded-2xl bg-emerald-500/80 backdrop-blur-md border border-white/20 text-white font-bold text-[14px] shadow-[0_8px_16px_-4px_rgba(16,185,129,0.5)] hover:bg-emerald-400 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 mb-3"
                     >
-                        <img src="/assets/logo_cc_v2.png" className="w-6 h-6 object-contain mix-blend-screen drop-shadow-md" alt="" />
+                        <img src="/assets/logo_cc_v2.png" className="w-5 h-5 object-contain mix-blend-screen drop-shadow-md" alt="" />
                         <span className="drop-shadow-sm">씨씨카지노 충전하기</span>
                     </a>
 
                     {/* Secondary Info Link for Unlocked state */}
                     <button
                         onClick={() => setShowConditionsModal(true)}
-                        className="mt-8 text-[11px] font-bold text-white/20 hover:text-white/40 transition-colors flex items-center gap-1"
+                        className="w-full max-w-[200px] h-[48px] rounded-2xl bg-white/5 border border-white/10 text-white/70 font-bold text-[14px] hover:bg-white/10 hover:text-white hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2"
                     >
-                        <ListChecks size={12} />
+                        <ListChecks size={14} />
                         출금 조건 및 규정 확인
                     </button>
                 </div>
@@ -304,7 +298,7 @@ const VaultPageCompact: React.FC = () => {
                         href="https://ccc-010.com"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-full max-w-xs py-3 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 text-white font-black text-base shadow-[0_0_16px_rgba(16,185,129,0.25)] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-1.5"
+                        className="w-full max-w-[200px] h-[48px] rounded-2xl bg-emerald-500/80 backdrop-blur-md border border-white/20 text-white font-bold text-[14px] shadow-[0_8px_16px_-4px_rgba(16,185,129,0.5)] hover:bg-emerald-400 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-1.5"
                     >
                         <img src="/assets/logo_cc_v2.png" className="w-4 h-4 object-contain mix-blend-screen" alt="" />
                         씨씨카지노 충전하기
