@@ -117,7 +117,6 @@ def status(db: Session = Depends(get_db), user_id: int = Depends(get_current_use
         else:
             from zoneinfo import ZoneInfo
             from app.core.config import get_settings
-            from datetime import timedelta
             settings = get_settings()
             tz = ZoneInfo(getattr(settings, "timezone", "Asia/Seoul"))
             now_kst = now.astimezone(tz)

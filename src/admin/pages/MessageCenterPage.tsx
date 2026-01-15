@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -25,6 +25,7 @@ import {
     updateMessage,
     UpdateMessagePayload
 } from "../api/adminMessageApi";
+import { fetchSegmentRules } from "../api/adminSegmentRulesApi";
 
 const messageSchema = z.object({
     title: z.string().min(1, "제목을 입력해주세요"),
@@ -61,6 +62,17 @@ const MessageCenterPage: React.FC = () => {
         queryKey: ["admin", "messages", page],
         queryFn: () => fetchMessages(page * 50, 50),
     });
+
+    const { data: segmentRules } = useQuery({
+        queryKey: ["admin", "segment-rules"],
+        queryFn: fetchSegmentRules,
+        staleTime: 1000 * 60 * 5,
+    });
+
+    const distinctSegments = useMemo(() => {
+        if (!segmentRules) return [];
+        return Array.from(new Set(segmentRules.map(r => r.segment))).sort();
+    }, [segmentRules]);
 
     const sendMutation = useMutation({
         mutationFn: (payload: SendMessagePayload) => sendMessage(payload),
@@ -265,21 +277,43 @@ const MessageCenterPage: React.FC = () => {
                                         <label className="text-admin-meta font-black text-admin-text-secondary uppercase tracking-widest pl-1">
                                             대상 식별자 {editingMessage ? "(변경 불가)" : ""}
                                         </label>
-                                        <input
-                                            {...field}
-                                            type="text"
-                                            readOnly={!!editingMessage}
-                                            disabled={watchedTargetType === "ALL"}
-                                            placeholder={
-                                                watchedTargetType === "ALL"
-                                                    ? "전체 발송은 대상 식별자가 필요 없습니다."
-                                                    : "세그먼트명, 태그명, 또는 사용자 ID"
-                                            }
-                                            className={`admin-input w-full h-11 ${(!!editingMessage || watchedTargetType === "ALL")
-                                                ? "bg-admin-sidebar/50"
-                                                : ""
-                                                }`}
-                                        />
+                                        
+                                        {watchedTargetType === "SEGMENT" ? (
+                                            <div className="relative">
+                                                <select
+                                                    {...field}
+                                                    className="admin-input w-full h-11 appearance-none cursor-pointer bg-admin-sidebar hover:border-admin-brand/50 transition-colors"
+                                                >
+                                                    <option value="">세그먼트를 선택하세요</option>
+                                                    {distinctSegments.map((seg) => (
+                                                        <option key={seg} value={seg}>{seg}</option>
+                                                    ))}
+                                                </select>
+                                                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-admin-text-secondary">
+                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                        <path d="m6 9 6 6 6-6"/>
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <input
+                                                {...field}
+                                                type="text"
+                                                readOnly={!!editingMessage}
+                                                disabled={watchedTargetType === "ALL"}
+                                                placeholder={
+                                                    watchedTargetType === "ALL"
+                                                        ? "전체 발송은 대상 식별자가 필요 없습니다."
+                                                        : watchedTargetType === "TAG" 
+                                                            ? "태그명 입력 (예: VIP, BLACKLIST)"
+                                                            : "사용자 ID (로그인 ID 또는 고유번호)"
+                                                }
+                                                className={`admin-input w-full h-11 ${(!!editingMessage || watchedTargetType === "ALL")
+                                                    ? "bg-admin-sidebar/50"
+                                                    : ""
+                                                    }`}
+                                            />
+                                        )}
                                     </div>
                                 )}
                             />

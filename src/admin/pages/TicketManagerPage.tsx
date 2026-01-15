@@ -17,7 +17,9 @@ import {
     ChevronDown,
     Search,
     ExternalLink,
+    Package,
 } from "lucide-react";
+import { adminInventoryApi } from "../api/adminInventoryApi";
 import { useToast } from "../../components/common/ToastProvider";
 import {
     fetchLedger,
@@ -29,7 +31,7 @@ import {
 import UserAssetDetailModal from "../components/UserAssetDetailModal";
 import { GAME_TOKEN_LABELS, type GameTokenType } from "../../types/gameTokens";
 
-type ActiveTab = "grant" | "playLogs" | "ledger" | "users";
+type ActiveTab = "grant" | "playLogs" | "ledger" | "users" | "inventory";
 
 const LABELS = {
     pageTitle: "코인/티켓 관리",
@@ -40,6 +42,7 @@ const LABELS = {
     tabPlayLogs: "플레이 로그",
     tabLedger: "원장 로그",
     tabUserLookup: "유저 조회",
+    tabInventory: "인벤토리",
 
     statGrantToday: "오늘 지급",
     statRevokeToday: "오늘 회수",
@@ -215,6 +218,13 @@ const TicketManagerPage: React.FC = () => {
         order: "desc",
     });
 
+    // Inventory Tab State
+    const [inventoryTabMode, setInventoryTabMode] = useState<"ledger" | "items">("ledger");
+    const [inventoryFilters, setInventoryFilters] = useState({
+        itemType: "",
+        minQuantity: 0,
+    });
+
     // Applied Filters (Server-Side)
     const [appliedLedgerUserFilter, setAppliedLedgerUserFilter] = useState("");
     const [appliedPlayLogUserFilter, setAppliedPlayLogUserFilter] = useState("");
@@ -256,6 +266,26 @@ const TicketManagerPage: React.FC = () => {
         queryKey: ["admin", "game-tokens", "play-logs", "recent", appliedPlayLogUserFilter],
         queryFn: () => fetchRecentPlayLogs(300, appliedPlayLogUserFilter || undefined),
         staleTime: 30 * 1000,
+    });
+
+    // Inventory Queries
+    const inventoryLedgerQuery = useQuery({
+        queryKey: ["admin", "inventory", "ledger", inventoryFilters],
+        queryFn: () => adminInventoryApi.fetchLedger({
+            item_type: inventoryFilters.itemType || undefined,
+            limit: 100
+        }),
+        enabled: activeTab === "inventory" && inventoryTabMode === "ledger",
+    });
+
+    const inventoryItemsQuery = useQuery({
+        queryKey: ["admin", "inventory", "items", inventoryFilters],
+        queryFn: () => adminInventoryApi.fetchItems({
+            item_type: inventoryFilters.itemType || undefined,
+            min_quantity: inventoryFilters.minQuantity || undefined,
+            limit: 100
+        }),
+        enabled: activeTab === "inventory" && inventoryTabMode === "items",
     });
 
 
@@ -419,17 +449,13 @@ const TicketManagerPage: React.FC = () => {
         return sorted;
     }, [summaryQuery.data, userSearch]);
 
-    const selectedUserSummary = useMemo(() => {
-        if (!selectedUserId) return null;
-        return (summaryQuery.data ?? []).find((u) => u.user_id === selectedUserId) ?? null;
-    }, [selectedUserId, summaryQuery.data]);
-
     // Removed inline detail view logic (moved to UserAssetDetailModal)
 
     const tabs: Array<{ id: ActiveTab; label: string; icon: React.ReactNode }> = [
         { id: "grant", label: LABELS.tabGrant, icon: <Wallet className="h-3.5 w-3.5" /> },
         { id: "playLogs", label: LABELS.tabPlayLogs, icon: <ScrollText className="h-3.5 w-3.5" /> },
         { id: "ledger", label: LABELS.tabLedger, icon: <History className="h-3.5 w-3.5" /> },
+        { id: "inventory", label: LABELS.tabInventory, icon: <Package className="h-3.5 w-3.5" /> },
         { id: "users", label: LABELS.tabUserLookup, icon: <Users className="h-3.5 w-3.5" /> },
     ];
 
@@ -692,6 +718,41 @@ const TicketManagerPage: React.FC = () => {
                                 </label>
                             </div>
                         )}
+                        {activeTab === 'inventory' && (
+                            <div className="flex gap-2">
+                                <div className="flex bg-zinc-900 rounded-lg p-0.5 border border-zinc-800 h-9">
+                                    <button
+                                        onClick={() => setInventoryTabMode("ledger")}
+                                        className={`px-3 text-xs font-bold rounded-md transition-colors ${inventoryTabMode === 'ledger' ? 'bg-zinc-800 text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
+                                    >
+                                        Ledger
+                                    </button>
+                                    <button
+                                        onClick={() => setInventoryTabMode("items")}
+                                        className={`px-3 text-xs font-bold rounded-md transition-colors ${inventoryTabMode === 'items' ? 'bg-zinc-800 text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
+                                    >
+                                        Items
+                                    </button>
+                                </div>
+                                <div className="w-px h-9 bg-zinc-800 mx-1" />
+                                <input
+                                    type="text"
+                                    placeholder="Item Type Filter..."
+                                    value={inventoryFilters.itemType}
+                                    onChange={(e) => setInventoryFilters(prev => ({ ...prev, itemType: e.target.value }))}
+                                    className="admin-input h-9 w-40 text-sm"
+                                />
+                                {inventoryTabMode === 'items' && (
+                                    <input
+                                        type="number"
+                                        placeholder="Min Qty"
+                                        value={inventoryFilters.minQuantity || ""}
+                                        onChange={(e) => setInventoryFilters(prev => ({ ...prev, minQuantity: Number(e.target.value) }))}
+                                        className="admin-input h-9 w-24 text-sm"
+                                    />
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     {/* Scrollable Table Area */}
@@ -724,6 +785,66 @@ const TicketManagerPage: React.FC = () => {
                                             </td>
                                         </tr>
                                     ))}
+                                </tbody>
+                            </table>
+                        )}
+                        {activeTab === 'inventory' && (
+                            <table className="admin-table">
+                                <thead className="sticky top-0 z-10 bg-zinc-900 border-b border-zinc-800">
+                                    <tr>
+                                        {inventoryTabMode === 'ledger' ? (
+                                            <>
+                                                <th className="admin-th">시간</th>
+                                                <th className="admin-th">User ID</th>
+                                                <th className="admin-th">Item</th>
+                                                <th className="admin-th text-right">변동</th>
+                                                <th className="admin-th text-right">잔여</th>
+                                                <th className="admin-th">사유</th>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <th className="admin-th">User ID</th>
+                                                <th className="admin-th">Item</th>
+                                                <th className="admin-th text-right">수량</th>
+                                                <th className="admin-th">업데이트</th>
+                                            </>
+                                        )}
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-zinc-800/50">
+                                    {inventoryTabMode === 'ledger' ? (
+                                        (inventoryLedgerQuery.data || []).map((entry) => (
+                                            <tr key={entry.id} className="group hover:bg-white/5 transition-colors h-12 cursor-pointer"
+                                                onClick={() => {
+                                                    setSelectedUserId(entry.user_id);
+                                                    setIsDetailModalOpen(true);
+                                                }}
+                                            >
+                                                <td className="px-4 text-sm text-admin-text-muted font-mono">{formatKSTTime(entry.created_at)}</td>
+                                                <td className="px-4 text-sm font-bold text-zinc-300">{entry.user_id}</td>
+                                                <td className="px-4 text-sm text-zinc-200">{entry.item_type}</td>
+                                                <td className={`px-4 text-right text-sm font-mono font-bold ${entry.change_amount > 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                                                    {entry.change_amount > 0 ? "+" : ""}{entry.change_amount.toLocaleString()}
+                                                </td>
+                                                <td className="px-4 text-right text-sm font-mono text-zinc-400">{entry.balance_after.toLocaleString()}</td>
+                                                <td className="px-4 text-xs text-zinc-500">{entry.reason}</td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        (inventoryItemsQuery.data || []).map((item) => (
+                                            <tr key={item.id} className="group hover:bg-white/5 transition-colors h-12 cursor-pointer"
+                                                onClick={() => {
+                                                    setSelectedUserId(item.user_id);
+                                                    setIsDetailModalOpen(true);
+                                                }}
+                                            >
+                                                <td className="px-4 text-sm font-bold text-zinc-300">{item.user_id}</td>
+                                                <td className="px-4 text-sm text-zinc-200">{item.item_type}</td>
+                                                <td className="px-4 text-right text-sm font-mono font-bold text-emerald-400">{item.quantity.toLocaleString()}</td>
+                                                <td className="px-4 text-sm text-admin-text-muted font-mono">{formatKSTTime(item.updated_at)}</td>
+                                            </tr>
+                                        ))
+                                    )}
                                 </tbody>
                             </table>
                         )}
@@ -939,9 +1060,9 @@ const TicketManagerPage: React.FC = () => {
             <UserAssetDetailModal
                 isVisible={isDetailModalOpen}
                 onClose={() => setIsDetailModalOpen(false)}
-                userSummary={selectedUserSummary}
+                userId={selectedUserId}
             />
-        </section>
+        </section >
     );
 };
 

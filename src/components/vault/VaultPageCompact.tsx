@@ -25,7 +25,7 @@ const SparkleDust: React.FC = () => {
         duration: Math.random() * 10 + 10, // 10-20s
         delay: Math.random() * 20
     })), []);
-    
+
     return (
         <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
             {sparkles.map((s, i) => (
@@ -33,13 +33,13 @@ const SparkleDust: React.FC = () => {
                     key={i}
                     src="/assets/sparkle.png"
                     className="absolute w-4 h-4 opacity-0"
-                    initial={{ 
-                        x: `${s.initialX}%`, 
+                    initial={{
+                        x: `${s.initialX}%`,
                         y: `${s.initialY}%`,
                         scale: s.scale,
-                        rotate: 0 
+                        rotate: 0
                     }}
-                    animate={{ 
+                    animate={{
                         y: ["-10%", "110%"],
                         x: [`${s.targetX1}%`, `${s.targetX2}%`],
                         opacity: [0, 0.4, 0.6, 0.4, 0],
@@ -66,7 +66,7 @@ const VaultPageCompact: React.FC = () => {
     const vault = useQuery({
         queryKey: ["vault-status"],
         queryFn: getVaultStatus,
-        staleTime: 5000,        retry: false,        refetchInterval: 10000,
+        staleTime: 5000, retry: false, refetchInterval: 10000,
     });
 
     const view = useMemo(() => {
@@ -132,7 +132,7 @@ const VaultPageCompact: React.FC = () => {
                             className="relative z-10 w-48 h-48 object-contain drop-shadow-[0_0_30px_rgba(16,185,129,0.3)]"
                         />
                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
-                            <button 
+                            <button
                                 onClick={() => setShowProgressModal(true)}
                                 className="bg-emerald-500 text-black font-black text-[10px] px-2 py-0.5 rounded-full animate-bounce hover:scale-110 active:scale-95 transition-transform"
                             >
@@ -206,15 +206,15 @@ const VaultPageCompact: React.FC = () => {
                         <div className="relative w-48 h-48">
                             <img src="/assets/vault/vault_closed.png" alt="Locked Vault" className="w-full h-full object-contain" />
                             {/* Handle Animation - Static */}
-                        <div className="absolute top-[42%] left-[16%] w-[68%] h-[68%]">
-                            <img
-                                src="/assets/vault/vault_handle.png"
-                                alt=""
-                                className="w-full h-full object-contain opacity-80"
-                            />
+                            <div className="absolute top-[42%] left-[16%] w-[68%] h-[68%]">
+                                <img
+                                    src="/assets/vault/vault_handle.png"
+                                    alt=""
+                                    className="w-full h-full object-contain opacity-80"
+                                />
+                            </div>
                         </div>
                     </div>
-                </div>
 
                     <div className="flex items-center gap-2 mb-8">
                         <img src="/assets/asset_coin_gold.png" alt="Coin" className="w-8 h-8 object-contain opacity-80" />
@@ -231,7 +231,7 @@ const VaultPageCompact: React.FC = () => {
                             <span className="text-white font-bold text-sm flex items-center gap-2">
                                 <span className="text-white font-black">출금 조건 충전</span>
                             </span>
-                            <button 
+                            <button
                                 onClick={() => setShowProgressModal(true)}
                                 className="text-xl font-black text-amber-500 tabular-nums hover:scale-105 active:scale-95 transition-transform"
                             >
@@ -277,9 +277,9 @@ const VaultPageCompact: React.FC = () => {
                     <div className="w-full max-w-xs space-y-2 mb-8 px-2">
                         <button
                             onClick={() => setShowConditionsModal(true)}
-                            className="w-full mb-3 flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-xs font-bold text-white/50 hover:bg-white/10 hover:text-white transition-colors"
+                            className="w-full mb-3 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 text-xs font-black tracking-wide hover:bg-emerald-500/30 hover:shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all"
                         >
-                            <ListChecks size={14} />
+                            <ListChecks size={16} />
                             <span>출금 조건 확인하기</span>
                         </button>
                         <div className="flex justify-between items-center text-[11px] font-medium text-white/40">
