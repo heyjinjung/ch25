@@ -146,25 +146,56 @@ def status(db: Session = Depends(get_db), user_id: int = Depends(get_current_use
     
     # Withdrawal Conditions Calculation
     op_date_kst = service._operational_date_kst(now)
+    # [MODIFIED] Use 7-day window for play count logic to match Phase 2 tiered rules
+    seven_days_ago_ts = now - timedelta(days=7)
+    
     from app.models.feature import UserEventLog
     from sqlalchemy import cast, Date, func
 
-    # Daily Play Count
-    daily_play_count = db.query(func.count(UserEventLog.id)).filter(
+    # Recent Play Count (Last 7 Days)
+    recent_play_count = db.query(func.count(UserEventLog.id)).filter(
         UserEventLog.user_id == user_id,
         UserEventLog.event_name.like("GAME_%_PLAY"),
-        cast(UserEventLog.created_at, Date) == op_date_kst
+        UserEventLog.created_at >= seven_days_ago_ts
     ).scalar() or 0
     
-    # Daily Deposit Confirmation
+    # Daily Deposit Confirmation (Still check Today for explicit "Active Today" check if needed, 
+    # but for Withdrawal "Request" we might stick to 7-day deposit check or just the "Deposit Record Today" rule.
+    # request_withdrawal says: "User must have a deposit record TODAY". So we keep this.
     has_deposit_today = db.query(UserEventLog.id).filter(
         UserEventLog.user_id == user_id,
         UserEventLog.event_name == "DEPOSIT_CONFIRMED",
         cast(UserEventLog.created_at, Date) == op_date_kst
     ).first() is not None
 
-    res.daily_play_count = int(daily_play_count)
-    res.daily_play_target = 30 # Hardcoded target
+    # [MODIFIED] Determine Tier & Targets using UserSegmentService & Ranking Data
+    from app.services.user_segment_service import UserSegmentService
+    from app.models.external_ranking_daily_deposit_delta import ExternalRankingDailyDepositDelta
+    
+    seven_days_ago_date = (now - timedelta(days=6)).date()
+    deposit_7d = db.query(func.coalesce(func.sum(ExternalRankingDailyDepositDelta.deposit_delta), 0)).filter(
+        ExternalRankingDailyDepositDelta.user_id == user_id,
+        ExternalRankingDailyDepositDelta.kst_date >= seven_days_ago_date
+    ).scalar() or 0
+
+    segments = UserSegmentService.get_computed_segments(db, user_id)
+    
+    # Defaults (COMMON) - Matches VaultService.request_withdrawal logic
+    play_target = 30
+    spend_target = 10000
+    
+    if "AT_RISK" in segments:
+        play_target = 100
+        spend_target = 30000
+    elif deposit_7d >= 3000000: # WHALE
+        play_target = 0
+        spend_target = 0
+    elif deposit_7d >= 500000: # VIP
+        play_target = 15
+        spend_target = 5000
+
+    res.daily_play_count = int(recent_play_count) # Reusing field name but semantic is now 7-day
+    res.daily_play_target = int(play_target)
     res.daily_deposit_confirmed = has_deposit_today
     
     # Withdrawal Count (APPROVED or PENDING)
@@ -175,7 +206,7 @@ def status(db: Session = Depends(get_db), user_id: int = Depends(get_current_use
     ).scalar() or 0
 
     res.daily_vault_spent = int(getattr(user, "vault_spent_total", 0) or 0)
-    res.daily_vault_spent_target = 10000
+    res.daily_vault_spent_target = int(spend_target)
     res.withdrawal_count = int(withdrawal_count)
 
     return res
