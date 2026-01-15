@@ -58,8 +58,7 @@ const VaultPageCompact: React.FC = () => {
     const vault = useQuery({
         queryKey: ["vault-status"],
         queryFn: getVaultStatus,
-        staleTime: 5000,
-        refetchInterval: 10000,
+        staleTime: 5000,        retry: false,        refetchInterval: 10000,
     });
 
     const view = useMemo(() => {

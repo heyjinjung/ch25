@@ -141,6 +141,7 @@ const ExchangePage: React.FC = () => {
         queryKey: ["vault-status"],
         queryFn: getVaultStatus,
         refetchInterval: 5000,
+        retry: false,
     });
     const lockedBalance = vault?.vaultBalance ?? 0; // Use LOCKED balance
 

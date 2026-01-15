@@ -1230,15 +1230,63 @@ class VaultService:
         if last_charge_date != today:
              raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="DEPOSIT_REQUIRED_TODAY")
 
-        # [Phase 2] Stronger Withdrawal Conditions
-        # 3. Minimum Play Count (30)
-        if int(activity.roulette_plays or 0) + int(activity.dice_plays or 0) < 30:
-             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="MIN_PLAY_COUNT_30")
+        # [Phase 2] Stronger Withdrawal Conditions (Tiered)
+        # Determine Tier
+        from app.services.user_segment_service import UserSegmentService
+        from app.models.external_ranking_daily_deposit_delta import ExternalRankingDailyDepositDelta
+
+        # Calculate 7-day deposit amount
+        seven_days_ago_date = (now - timedelta(days=6)).date() # Including today
+        deposit_7d = db.query(func.coalesce(func.sum(ExternalRankingDailyDepositDelta.deposit_delta), 0)).filter(
+            ExternalRankingDailyDepositDelta.user_id == user_id,
+            ExternalRankingDailyDepositDelta.kst_date >= seven_days_ago_date
+        ).scalar() or 0
+
+        # Get computed segments (for AT_RISK check)
+        segments = UserSegmentService.get_computed_segments(db, user_id)
+
+        # Default: COMMON
+        min_play_count = 30
+        min_vault_spend = 10000
+        tier_label = "COMMON"
+
+        if "AT_RISK" in segments:
+            tier_label = "AT_RISK"
+            min_play_count = 100
+            min_vault_spend = 30000
+        elif deposit_7d >= 3000000: # WHALE
+            tier_label = "WHALE"
+            min_play_count = 0
+            min_vault_spend = 0
+        elif deposit_7d >= 500000: # VIP
+            tier_label = "VIP"
+            min_play_count = 15
+            min_vault_spend = 5000
+
+        # 3. Minimum Play Count Logic (Last 7 Days)
+        if min_play_count > 0:
+            seven_days_ago_ts = now - timedelta(days=7)
+            recent_play_count = db.query(func.count(VaultEarnEvent.id)).filter(
+                VaultEarnEvent.user_id == user_id,
+                VaultEarnEvent.earn_type == "GAME_PLAY",
+                VaultEarnEvent.created_at >= seven_days_ago_ts
+            ).scalar() or 0
+
+            if recent_play_count < min_play_count:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST, 
+                    detail=f"MIN_PLAY_COUNT_{min_play_count}_REQUIRED_FOR_{tier_label}"
+                )
         
-        # 4. Minimum Vault Spend (10,000) - Buy-in
-        q_user = db.query(User).filter(User.id == user_id).first()
-        if int(getattr(q_user, "vault_spent_total", 0) or 0) < 10000:
-             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="MIN_VAULT_SPEND_10000")
+        # 4. Minimum Vault Spend check
+        if min_vault_spend > 0:
+            q_user = db.query(User).filter(User.id == user_id).first()
+            current_spend = int(getattr(q_user, "vault_spent_total", 0) or 0)
+            if current_spend < min_vault_spend:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST, 
+                    detail=f"MIN_VAULT_SPEND_{min_vault_spend}_REQUIRED_FOR_{tier_label}"
+                )
 
         # 3. Check Available & Create Request (no balance deduction at request time)
         q = db.query(User).filter(User.id == user_id)

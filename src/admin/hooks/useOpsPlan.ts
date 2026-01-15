@@ -10,6 +10,7 @@ import {
   executeOpsPlanTask,
   fetchOpsCampaigns,
   fetchOpsTargetLists,
+  fetchOpsTargetListMembers,
   fetchOpsPlanTasks,
   updateOpsCampaign,
   updateOpsPlanTask,
@@ -147,6 +148,15 @@ export function useOpsTargetLists(planId: number | null) {
     queryKey: planId ? ["admin", "ops-plan", "target-lists", planId] : ["admin", "ops-plan", "target-lists", null],
     queryFn: () => fetchOpsTargetLists(planId as number),
     enabled: Boolean(planId),
+    staleTime: 5_000,
+  });
+}
+
+export function useOpsTargetMembers(targetListId: number | null, limit = 50) {
+  return useQuery({
+    queryKey: targetListId ? ["admin", "ops-plan", "target-members", targetListId, limit] : ["admin", "ops-plan", "target-members", null, limit],
+    queryFn: () => fetchOpsTargetListMembers(targetListId as number, { limit }),
+    enabled: Boolean(targetListId),
     staleTime: 5_000,
   });
 }

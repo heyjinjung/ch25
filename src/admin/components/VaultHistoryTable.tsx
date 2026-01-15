@@ -1,7 +1,7 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { fetchUserVaultHistory, VaultEarnEvent } from "../api/adminUserApi";
-import { X } from "lucide-react";
+import { fetchUserVaultHistory, VaultEarnEvent, fetchUserVaultState } from "../api/adminUserApi";
+import { X, Vault } from "lucide-react";
 
 interface VaultHistoryTableProps {
     user: { id: number; nickname?: string; external_id?: string; telegram_username?: string | null };
@@ -12,6 +12,11 @@ const VaultHistoryTable: React.FC<VaultHistoryTableProps> = ({ user, onClose }) 
     const { data: history, isLoading, isError } = useQuery<VaultEarnEvent[]>({
         queryKey: ["admin", "users", user.id, "vault", "history"],
         queryFn: () => fetchUserVaultHistory(user.id),
+    });
+
+    const { data: vaultState } = useQuery({
+        queryKey: ["admin", "users", user.id, "vault", "state"],
+        queryFn: () => fetchUserVaultState(user.id),
     });
 
     return (
@@ -27,6 +32,19 @@ const VaultHistoryTable: React.FC<VaultHistoryTableProps> = ({ user, onClose }) 
                             </span>
                         </h2>
                         <p className="text-xs text-zinc-500">최근 100건의 금고 변동 내역을 조회합니다.</p>
+                        {vaultState && (
+                            <div className="flex items-center gap-4 mt-2 pt-2 border-t border-zinc-800/50">
+                                <div className="flex items-center gap-2">
+                                    <Vault size={16} className="text-emerald-400" />
+                                    <span className="text-sm font-semibold text-emerald-400">
+                                        현재 누적 금고액: {vaultState.locked_balance.toLocaleString()}원
+                                    </span>
+                                </div>
+                                <div className="text-xs text-zinc-500">
+                                    (사용가능: {vaultState.available_balance.toLocaleString()}원)
+                                </div>
+                            </div>
+                        )}
                     </div>
                     <button
                         onClick={onClose}

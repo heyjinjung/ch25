@@ -375,6 +375,86 @@ class OpsPlanService:
             db.add(task)
             db.commit()
             db.refresh(task)
+        elif kind == "TARGETLIST_BROADCAST" and status_value == "DONE":
+            target_list_id = payload.get("target_list_id")
+            sent_count = 0
+            if target_list_id:
+                try:
+                    members = self.ops_target_service.get_target_members(db, target_list_id=int(target_list_id))
+                    sent_count = len(members)
+                    for member in members:
+                        member.status = "SENT"
+                        member.updated_at = self.now()
+                        db.add(member)
+                    db.commit()
+                except Exception:
+                    db.rollback()
+            latest_payload = (task.payload_json or {}) if isinstance(task.payload_json, dict) else {}
+            task.payload_json = {**latest_payload, "execution_result": {"kind": "TARGETLIST_BROADCAST", "sent_count": sent_count}}
+            db.add(task)
+            db.commit()
+            db.refresh(task)
+        elif kind == "TARGETED_ITEM_GRANT" and status_value == "DONE":
+            target_list_id = payload.get("target_list_id")
+            raw_items = payload.get("items")
+            reason = str(payload.get("reason") or "OPS_PLAN_GRANT").strip() or "OPS_PLAN_GRANT"
+
+            items: list[dict] = []
+            if isinstance(raw_items, list):
+                for it in raw_items:
+                    if not isinstance(it, dict):
+                        continue
+                    item_type = str(it.get("item_type") or "").strip()
+                    try:
+                        amount = int(it.get("amount") or 0)
+                    except Exception:
+                        amount = 0
+                    if item_type and amount > 0:
+                        items.append({"item_type": item_type, "amount": amount})
+            else:
+                item_type = str(payload.get("item_type") or "").strip()
+                try:
+                    amount = int(payload.get("amount") or 0)
+                except Exception:
+                    amount = 0
+                if item_type and amount > 0:
+                    items.append({"item_type": item_type, "amount": amount})
+
+            if not items:
+                raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="OPS_GRANT_ALL_ITEMS_INVALID")
+            members = []
+            if target_list_id:
+                try:
+                    members = self.ops_target_service.get_target_members(db, target_list_id=int(target_list_id))
+                except Exception:
+                    members = []
+            else:
+                members = []
+            # If no target list provided, no-op to avoid global grant.
+            granted = 0
+            if members:
+                related_id = f"ops_plan_task:{task.id}"
+                for m in members:
+                    for it in items:
+                        InventoryService.grant_item(
+                            db,
+                            user_id=int(m.user_id),
+                            item_type=it["item_type"],
+                            amount=int(it["amount"]),
+                            reason=reason,
+                            related_id=related_id,
+                            auto_commit=False,
+                        )
+                    granted += 1
+                db.commit()
+            latest_payload = (task.payload_json or {}) if isinstance(task.payload_json, dict) else {}
+            task.payload_json = {
+                **latest_payload,
+                "execution_result": {"kind": "TARGETED_ITEM_GRANT", "granted_users": granted, "items": items},
+            }
+            db.add(task)
+            db.commit()
+            db.refresh(task)
         return task
 
     def delete_plan(self, db: Session, *, plan_id: int) -> None:

@@ -33,7 +33,9 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 COPY app/ ./app/
 COPY alembic/ ./alembic/
 COPY scripts/ ./scripts/
+COPY tests/ ./tests/
 COPY alembic.ini .
+COPY pytest.ini .
 
 # Create non-root user
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app

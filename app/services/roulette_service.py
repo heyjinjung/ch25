@@ -297,6 +297,22 @@ class RouletteService:
             meta={"segment_id": getattr(chosen, "id", None)},
         )
 
+        # Track play count in user_activity (backend-side to avoid client misses)
+        try:
+            from app.models.user_activity import UserActivity
+
+            activity = db.query(UserActivity).filter(UserActivity.user_id == user_id).first()
+            if activity is None:
+                activity = UserActivity(user_id=user_id)
+            activity.roulette_plays = int(activity.roulette_plays or 0) + 1
+            activity.last_play_at = datetime.utcnow()
+            db.add(activity)
+            db.flush()
+        except Exception:
+            # 실패하더라도 게임 진행은 계속
+            db.rollback()
+            db.begin()
+
         log_entry = RouletteLog(
             user_id=user_id,
             config_id=config.id,
