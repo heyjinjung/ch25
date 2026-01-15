@@ -52,7 +52,8 @@ const WithdrawalConditionsModal: React.FC<WithdrawalConditionsModalProps> = ({
         {
             id: "plays",
             title: "게임 플레이",
-            description: "오늘 게임 30회 이상 플레이",
+            // [MODIFIED] Dynamic text for 7-day window and variable target
+            description: `최근 7일 게임 ${dailyPlayTarget}회 이상 플레이`,
             status: isPlayMet,
             icon: Gamepad2,
             progress: `${dailyPlayCount} / ${dailyPlayTarget}회`,
@@ -61,7 +62,8 @@ const WithdrawalConditionsModal: React.FC<WithdrawalConditionsModalProps> = ({
         {
             id: "spent",
             title: "금고 사용 실적",
-            description: "금고 잠금해제(사용) 1만원 이상",
+            // [MODIFIED] Dynamic text for variable target
+            description: `금고 잠금해제(사용) ${dailyVaultSpentTarget.toLocaleString()}원 이상`,
             status: isSpentMet,
             icon: Coins,
             progress: `${dailyVaultSpent.toLocaleString()} / ${dailyVaultSpentTarget.toLocaleString()}원`,
@@ -86,11 +88,11 @@ const WithdrawalConditionsModal: React.FC<WithdrawalConditionsModalProps> = ({
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.95, opacity: 0, y: 10 }}
                 transition={{ type: "spring", bounce: 0.3, duration: 0.5 }}
-                className="relative w-full max-w-[340px] overflow-hidden rounded-[32px] border border-white/10 shadow-2xl bg-[#0f0f11] flex flex-col max-h-[85vh]"
+                className="relative w-full max-w-[340px] overflow-hidden rounded-[32px] border border-white/10 shadow-2xl bg-[#0f0f11] flex flex-col max-h-[85vh] shadow-[0_0_40px_rgba(163,230,53,0.05)]"
             >
                 {/* Background Details */}
                 <div className="absolute inset-0 bg-[url('/assets/pattern_noise.png')] opacity-[0.03] pointer-events-none" />
-                <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
+                <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-lime-500/10 to-transparent pointer-events-none" />
 
                 {/* Header */}
                 <div className="relative pt-8 pb-5 px-6 text-center">
@@ -119,7 +121,7 @@ const WithdrawalConditionsModal: React.FC<WithdrawalConditionsModalProps> = ({
                             <div className={clsx(
                                 "flex flex-col p-4 rounded-2xl border transition-all duration-300",
                                 item.status
-                                    ? "bg-emerald-500/[0.03] border-emerald-500/20 shadow-[inset_0_0_20px_rgba(16,185,129,0.02)]"
+                                    ? "bg-lime-500/[0.03] border-lime-500/30 shadow-[inset_0_0_20px_rgba(163,230,53,0.05)]"
                                     : "bg-white/[0.02] border-white/5"
                             )}>
                                 {/* Top Row */}
@@ -127,7 +129,7 @@ const WithdrawalConditionsModal: React.FC<WithdrawalConditionsModalProps> = ({
                                     <div className={clsx(
                                         "w-9 h-9 rounded-xl flex items-center justify-center shadow-inner",
                                         item.status
-                                            ? "bg-emerald-500/10 text-emerald-400"
+                                            ? "bg-lime-500/10 text-lime-400"
                                             : "bg-black/40 text-zinc-500"
                                     )}>
                                         <item.icon size={18} />
@@ -139,9 +141,9 @@ const WithdrawalConditionsModal: React.FC<WithdrawalConditionsModalProps> = ({
                                                 item.status ? "text-white" : "text-white/70"
                                             )}>{item.title}</span>
                                             {item.status ? (
-                                                <div className="flex items-center gap-1 text-emerald-400">
+                                                <div className="flex items-center gap-1 text-lime-400">
                                                     <span className="text-[10px] font-bold">완료</span>
-                                                    <CheckCircle2 size={14} className="fill-emerald-500/20" />
+                                                    <CheckCircle2 size={14} className="fill-lime-500/20" />
                                                 </div>
                                             ) : (
                                                 <Circle size={14} className="text-white/10" />
@@ -154,10 +156,10 @@ const WithdrawalConditionsModal: React.FC<WithdrawalConditionsModalProps> = ({
                                 {/* Progress Bar */}
                                 <div className="mt-1">
                                     <div className="flex justify-between items-center text-[10px] font-bold mb-1.5">
-                                        <span className={item.status ? "text-emerald-500/70" : "text-zinc-600"}>
+                                        <span className={item.status ? "text-lime-500/70" : "text-zinc-600"}>
                                             PROGRESS
                                         </span>
-                                        <span className={item.status ? "text-emerald-400" : "text-zinc-500"}>
+                                        <span className={item.status ? "text-lime-400" : "text-zinc-500"}>
                                             {item.progress}
                                         </span>
                                     </div>
@@ -166,8 +168,8 @@ const WithdrawalConditionsModal: React.FC<WithdrawalConditionsModalProps> = ({
                                             initial={{ width: 0 }}
                                             animate={{ width: `${item.percent}%` }}
                                             className={clsx(
-                                                "h-full rounded-full transition-all duration-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]",
-                                                item.status ? "bg-emerald-500" : "bg-white/10"
+                                                "h-full rounded-full transition-all duration-500 shadow-[0_0_10px_rgba(163,230,53,0.6)]",
+                                                item.status ? "bg-lime-500" : "bg-white/10"
                                             )}
                                         />
                                     </div>
@@ -184,7 +186,7 @@ const WithdrawalConditionsModal: React.FC<WithdrawalConditionsModalProps> = ({
                         className={clsx(
                             "w-full py-3.5 rounded-xl font-black text-sm transition-all flex items-center justify-center gap-2",
                             allConditionsMet
-                                ? "bg-emerald-500 text-black shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:brightness-110 active:scale-[0.98]"
+                                ? "bg-lime-400 text-black shadow-[0_0_20px_rgba(163,230,53,0.4)] hover:brightness-110 active:scale-[0.98]"
                                 : "bg-zinc-800 text-zinc-500 cursor-default"
                         )}
                     >

@@ -23,7 +23,7 @@ class DiceService:
     """Encapsulates dice gameplay."""
 
     BASE_GAME_XP = 0
-    WIN_GAME_XP = 5
+    WIN_GAME_XP = 0  # FIX: Prevent infinite XP farming (was 5)
 
     def __init__(self) -> None:
         self.feature_service = FeatureService()

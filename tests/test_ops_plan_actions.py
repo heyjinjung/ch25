@@ -114,6 +114,7 @@ class TestTargetedItemGrant:
             type="GRANT",
             status="PENDING",
             payload_json={
+                "kind": "TARGETED_ITEM_GRANT",
                 "target_list_id": test_target_list.id,
                 "items": [
                     {"item_type": "POINT", "amount": 1000}
@@ -139,10 +140,10 @@ class TestTargetedItemGrant:
 
         # Verify inventory grants
         for user in test_users:
-            inventory = InventoryService.get_user_inventory(db, user_id=user.id)
+            inventory = InventoryService.get_inventory(db, user_id=user.id)
             point_item = next((item for item in inventory if item.item_type == "POINT"), None)
             assert point_item is not None
-            assert point_item.amount >= 1000
+            assert point_item.quantity >= 1000
 
     def test_multiple_items_grant(self, db: Session, ops_service, test_plan, test_target_list, test_users):
         """Test granting multiple items to target list members."""
@@ -177,14 +178,14 @@ class TestTargetedItemGrant:
 
         # Verify all items granted to all users
         for user in test_users:
-            inventory = InventoryService.get_user_inventory(db, user_id=user.id)
+            inventory = InventoryService.get_inventory(db, user_id=user.id)
             point_item = next((item for item in inventory if item.item_type == "POINT"), None)
             roulette_item = next((item for item in inventory if item.item_type == "TICKET_ROULETTE"), None)
             dice_item = next((item for item in inventory if item.item_type == "TICKET_DICE"), None)
 
-            assert point_item is not None and point_item.amount >= 500
-            assert roulette_item is not None and roulette_item.amount >= 3
-            assert dice_item is not None and dice_item.amount >= 2
+            assert point_item is not None and point_item.quantity >= 500
+            assert roulette_item is not None and roulette_item.quantity >= 3
+            assert dice_item is not None and dice_item.quantity >= 2
 
     def test_no_target_list_no_op(self, db: Session, ops_service, test_plan, test_users):
         """Test that grant without target list is a no-op (safety)."""
@@ -278,8 +279,8 @@ class TestGoldenHourToggle:
         execution_result = result.payload_json.get("execution_result", {})
         assert execution_result["kind"] == "GOLDEN_HOUR"
         assert execution_result["action"] == "FORCE_ON"
-        assert execution_result["result"]["enabled"] is True
-        assert execution_result["result"]["manual_override"] == "FORCE_ON"
+        assert execution_result["enabled"] is True
+        assert execution_result["manual_override"] == "FORCE_ON"
 
     def test_force_off(self, db: Session, ops_service, test_plan):
         """Test forcing golden hour OFF."""
@@ -304,8 +305,8 @@ class TestGoldenHourToggle:
         execution_result = result.payload_json.get("execution_result", {})
         assert execution_result["kind"] == "GOLDEN_HOUR"
         assert execution_result["action"] == "FORCE_OFF"
-        assert execution_result["result"]["enabled"] is False
-        assert execution_result["result"]["manual_override"] == "FORCE_OFF"
+        assert execution_result["enabled"] is False
+        assert execution_result["manual_override"] == "FORCE_OFF"
 
     def test_multiplier_set(self, db: Session, ops_service, test_plan):
         """Test setting golden hour multiplier."""
@@ -331,7 +332,7 @@ class TestGoldenHourToggle:
         execution_result = result.payload_json.get("execution_result", {})
         assert execution_result["kind"] == "GOLDEN_HOUR"
         assert execution_result["action"] == "MULTIPLIER_SET"
-        assert execution_result["result"]["multiplier"] == 3.5
+        assert execution_result["multiplier"] == 3.5
 
 
 class TestInventoryGrantAll:

@@ -15,32 +15,40 @@ import WithdrawalProgressModal from "../modal/WithdrawalProgressModal";
 const formatWon = (amount: number) => `${amount.toLocaleString("ko-KR")}원`;
 
 const SparkleDust: React.FC = () => {
-    // Generate 15 random sparkles
-    const sparkles = Array.from({ length: 15 });
+    // Generate 15 random sparkles (Memorized to prevent re-render resets)
+    const sparkles = useMemo(() => Array.from({ length: 15 }).map(() => ({
+        initialX: Math.random() * 100,
+        initialY: Math.random() * 100,
+        scale: Math.random() * 0.5 + 0.5,
+        targetX1: Math.random() * 100,
+        targetX2: Math.random() * 100,
+        duration: Math.random() * 10 + 10, // 10-20s
+        delay: Math.random() * 20
+    })), []);
     
     return (
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-            {sparkles.map((_, i) => (
+        <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+            {sparkles.map((s, i) => (
                 <motion.img
                     key={i}
                     src="/assets/sparkle.png"
                     className="absolute w-4 h-4 opacity-0"
                     initial={{ 
-                        x: `${Math.random() * 100}%`, 
-                        y: `${Math.random() * 100}%`,
-                        scale: Math.random() * 0.5 + 0.5,
+                        x: `${s.initialX}%`, 
+                        y: `${s.initialY}%`,
+                        scale: s.scale,
                         rotate: 0 
                     }}
                     animate={{ 
                         y: ["-10%", "110%"],
-                        x: [`${Math.random() * 100}%`, `${Math.random() * 100}%`],
+                        x: [`${s.targetX1}%`, `${s.targetX2}%`],
                         opacity: [0, 0.4, 0.6, 0.4, 0],
                         rotate: [0, 180, 360],
                     }}
                     transition={{
-                        duration: Math.random() * 10 + 10, // 10-20s
+                        duration: s.duration,
                         repeat: Infinity,
-                        delay: Math.random() * 20,
+                        delay: s.delay,
                         ease: "linear"
                     }}
                 />
@@ -197,14 +205,16 @@ const VaultPageCompact: React.FC = () => {
                         {/* Realistic Locked Vault */}
                         <div className="relative w-48 h-48">
                             <img src="/assets/vault/vault_closed.png" alt="Locked Vault" className="w-full h-full object-contain" />
-                            {/* Handle Animation */}
+                            {/* Handle Animation - Static */}
+                        <div className="absolute top-[42%] left-[16%] w-[68%] h-[68%]">
                             <img
                                 src="/assets/vault/vault_handle.png"
                                 alt=""
-                                className="absolute top-[42%] left-[16%] w-[68%] h-[68%] object-contain origin-center animate-spin-slow-reverse opacity-80 [animation-duration:60s]"
+                                className="w-full h-full object-contain opacity-80"
                             />
                         </div>
                     </div>
+                </div>
 
                     <div className="flex items-center gap-2 mb-8">
                         <img src="/assets/asset_coin_gold.png" alt="Coin" className="w-8 h-8 object-contain opacity-80" />
