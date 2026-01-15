@@ -18,6 +18,8 @@ import { useSound } from "../hooks/useSound";
 import { formatRewardLine, isGifticonRewardType, parseGifticonRewardType } from "../utils/rewardLabel";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { motion, useAnimation } from "framer-motion";
+import { triggerFireworks, triggerJackpotExplosion } from "../utils/confetti";
 
 const FALLBACK_SEGMENTS = Array.from({ length: 12 }).map((_, idx) => ({
   label: `BONUS ${idx + 1}`,
@@ -76,6 +78,7 @@ const RoulettePage: React.FC = () => {
   const transitionEndAtRef = useRef<number | null>(null);
   const spinHapticIntervalRef = useRef<number | null>(null);
   const spinHapticTimeoutsRef = useRef<number[]>([]);
+  const shakeControls = useAnimation();
 
   const segments = useMemo(() => {
     const resolved = (data?.segments ?? []).map((segment) => ({
@@ -237,6 +240,18 @@ const RoulettePage: React.FC = () => {
       tryHaptic([18, 50, 18]);
       playRouletteStop(); // Clack sound
       playBigWin(); // [USER REQUEST] Big Win Jingle on Result
+
+      // Visual Effects: Shake & Fireworks
+      shakeControls.start({
+        x: [0, -10, 10, -10, 10, 0],
+        transition: { duration: 0.5 }
+      });
+
+      if (rewardValue >= 50000 || isGifticonReward) {
+        triggerJackpotExplosion();
+      } else {
+        triggerFireworks();
+      }
     } else {
       tryHaptic(12);
     }
@@ -372,7 +387,7 @@ const RoulettePage: React.FC = () => {
             <div className="pointer-events-auto relative min-w-[300px] overflow-hidden rounded-3xl border border-white/20 bg-black/95 px-8 py-6 text-white shadow-[0_0_50px_rgba(255,215,0,0.2)] backdrop-blur-2xl animate-bounce-in">
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-cc-gold/10 via-transparent to-transparent opacity-50" />
               <div className="pointer-events-none absolute inset-y-0 left-0 w-1.5 bg-gradient-to-b from-cc-gold via-yellow-300 to-cc-orange shadow-[0_0_15px_rgba(255,215,0,0.5)]" />
-              
+
               <div className="relative flex items-center gap-5 pl-2">
                 <span className="inline-flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full border border-cc-gold/40 bg-cc-gold/10 text-2xl shadow-[0_0_20px_rgba(255,215,0,0.4)] animate-pulse">
                   🪙
@@ -397,7 +412,7 @@ const RoulettePage: React.FC = () => {
                         // formatRewardLine은 "금고 적립 100원" 형태이므로, 여기서는 "원" 같은 단위만 떼기 어렵습니다.
                         // 기존 로직 유지하되 "금고 적립" 등 중복 텍스트 주의.
                         // 위에서 POINT -> "원" 으로 처리했으므로, 나머지는 그대로 둡니다.
-                        return line?.text.replace(/[0-9,\s]/g, "") || rewardToast.type; 
+                        return line?.text.replace(/[0-9,\s]/g, "") || rewardToast.type;
                       })()}
                     </span>
                   </div>
@@ -527,7 +542,9 @@ const RoulettePage: React.FC = () => {
         <div className="mb-3 text-center text-sm font-black text-white/80">
           {TABS.find((t) => t.type === activeTab)?.label.replace("\n", " ")}
         </div>
-        {content}
+        <motion.div animate={shakeControls}>
+          {content}
+        </motion.div>
       </GamePageShell>
 
       <VaultAccrualModal
