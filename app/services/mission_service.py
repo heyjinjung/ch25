@@ -539,8 +539,18 @@ class MissionService:
         Also falls back to logic_key for legacy support.
         Returns list of updated progress objects.
         """
+        # [COMPATIBILITY] Handle 'PLAY' as 'PLAY_GAME'
+        query_action_types = [action_type]
+        if action_type == "PLAY_GAME":
+            query_action_types.append("PLAY")
+        elif action_type == "PLAY":
+            query_action_types.append("PLAY_GAME")
+
         missions = self.db.query(Mission).filter(
-            or_(Mission.action_type == action_type, Mission.logic_key == action_type),
+            or_(
+                Mission.action_type.in_(query_action_types), 
+                Mission.logic_key == action_type
+            ),
             Mission.is_active == True
         ).all()
 
@@ -549,7 +559,7 @@ class MissionService:
         now_tz = self._now_tz()
 
         # Play streak sync is tied to actual game play actions.
-        if action_type == "PLAY_GAME" and delta > 0:
+        if action_type in ["PLAY_GAME", "PLAY"] and delta > 0:
             try:
                 self.sync_play_streak(user_id=user_id, now_tz=now_tz)
             except Exception:

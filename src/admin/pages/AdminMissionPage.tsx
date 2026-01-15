@@ -34,9 +34,11 @@ const MISSION_CATEGORIES = [
 ];
 
 const ACTION_TYPES = [
-    { value: "JOIN", label: "가입" },
+    { value: "PLAY_GAME", label: "플레이 (Game Play)" },
+    { value: "LOGIN", label: "로그인" },
+    { value: "JOIN_CHANNEL", label: "채널입장 (Telegram)" },
+    { value: "INVITE_FRIEND", label: "친구초대" },
     { value: "DEPOSIT", label: "입금" },
-    { value: "PLAY", label: "플레이" },
     { value: "WIN", label: "승리" },
     { value: "SOCIAL", label: "소셜액션" },
     { value: "OTHER", label: "기타" },
