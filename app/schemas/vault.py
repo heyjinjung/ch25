@@ -31,6 +31,14 @@ class VaultStatusResponse(BaseModel):
     total_charge_amount: int = 0
     segment: str | None = None
 
+    # Withdrawal Conditions
+    daily_play_count: int = 0
+    daily_play_target: int = 30
+    daily_deposit_confirmed: bool = False
+    daily_vault_spent: int = 0
+    daily_vault_spent_target: int = 10000
+    withdrawal_count: int = 0
+
     # Phase 1 UX integration (optional)
     recommended_action: str | None = None
     cta_payload: dict[str, Any] | None = None

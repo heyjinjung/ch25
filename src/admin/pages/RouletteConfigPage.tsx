@@ -98,6 +98,26 @@ const normalizeToSixSegments = (segments: any[]): RouletteFormValues["segments"]
   });
 };
 
+// Simulation Helper
+const runSimulation = (segments: RouletteFormValues["segments"], iterations = 1000) => {
+  const totalWeight = segments.reduce((acc, s) => acc + (s.weight || 0), 0);
+  if (totalWeight <= 0) return Array(6).fill(0);
+
+  const hits = Array(6).fill(0);
+  for (let i = 0; i < iterations; i++) {
+    const r = Math.random() * totalWeight;
+    let accum = 0;
+    for (let idx = 0; idx < segments.length; idx++) {
+      accum += segments[idx].weight || 0;
+      if (r < accum) {
+        hits[idx]++;
+        break;
+      }
+    }
+  }
+  return hits;
+};
+
 const mapErrorDetail = (error: unknown): string => {
   const detail = (error as any)?.response?.data?.detail;
   if (typeof detail === "string") {
@@ -155,6 +175,7 @@ const RouletteConfigPage: React.FC = () => {
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState<AdminRouletteConfig | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [simResults, setSimResults] = useState<number[] | null>(null);
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["admin", "roulette"],
@@ -185,6 +206,7 @@ const RouletteConfigPage: React.FC = () => {
     setIsModalOpen(false);
     setEditing(null);
     form.reset(initialValues);
+    setSimResults(null);
   };
 
   useEffect(() => {
@@ -232,6 +254,20 @@ const RouletteConfigPage: React.FC = () => {
       max_daily_spins: config.max_daily_spins,
       segments: normalizeToSixSegments(config.segments ?? []),
     });
+  };
+
+  const onEqualizeWeights = () => {
+    const current = form.getValues().segments;
+    current.forEach((_, idx) => {
+      form.setValue(`segments.${idx}.weight`, 100);
+    });
+    setSimResults(null);
+  };
+
+  const onRunSimulation = () => {
+    const current = form.getValues().segments;
+    const results = runSimulation(current, 1000);
+    setSimResults(results);
   };
 
   const onSubmit = form.handleSubmit((values) => {
@@ -399,6 +435,7 @@ const RouletteConfigPage: React.FC = () => {
                       deleteMutation.mutate(config.id);
                     }}
                     disabled={deleteMutation.isPending}
+                    aria-label="Delete Config"
                     className="h-10 w-10 flex items-center justify-center bg-zinc-800 hover:bg-rose-500/10 text-zinc-500 hover:text-rose-400 rounded-xl border border-zinc-700 hover:border-rose-500/30 transition-all disabled:opacity-50"
                   >
                     <Trash2 size={18} />
@@ -446,7 +483,7 @@ const RouletteConfigPage: React.FC = () => {
                   <p className="text-xs text-zinc-500 font-medium">Rule ID: {editing?.id || 'NEW'}</p>
                 </div>
               </div>
-              <button onClick={closeModal} className="h-10 w-10 flex items-center justify-center rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-400 transition-colors">
+              <button onClick={closeModal} aria-label="Close Modal" className="h-10 w-10 flex items-center justify-center rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-400 transition-colors">
                 <X size={20} />
               </button>
             </div>
@@ -508,6 +545,13 @@ const RouletteConfigPage: React.FC = () => {
                     <div className="flex items-center gap-2 text-admin-brand">
                       <LayoutGrid size={16} />
                       <h4 className="text-sm font-black uppercase tracking-widest">세그먼트 설정 (Slots & Probability)</h4>
+                      <button
+                        type="button"
+                        onClick={onEqualizeWeights}
+                        className="ml-4 px-2 py-0.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white rounded border border-zinc-700 text-[10px] font-bold transition-all"
+                      >
+                        EQUALIZE (ALL 100)
+                      </button>
                     </div>
                     <div className="text-[11px] font-black text-zinc-500 flex items-center gap-4">
                       <span>TOTAL WEIGHT: <span className="text-white font-mono">{totalWeightWatch}</span></span>
@@ -516,90 +560,88 @@ const RouletteConfigPage: React.FC = () => {
                   </div>
 
                   <div className="space-y-3">
-                    {segments.fields.map((field, idx) => (
-                      <div key={field.id} className="admin-card p-4 bg-zinc-800/20 border border-zinc-800/50 hover:border-zinc-700 transition-colors">
-                        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
-                          {/* Slot Info */}
-                          <div className="xl:col-span-3 space-y-3">
-                            <div className="flex items-center gap-2">
-                              <div className="w-6 h-6 rounded bg-zinc-800 text-[10px] font-black flex items-center justify-center text-zinc-500">#{idx + 1}</div>
-                              <input
-                                placeholder="표시 라벨"
-                                className="flex-1 bg-transparent border-b border-zinc-800 focus:border-admin-brand text-sm font-bold text-white py-1 outline-none"
-                                {...form.register(`segments.${idx}.label`)}
-                              />
-                            </div>
-                            <div className="space-y-1.5 pt-1">
-                              <div className="flex justify-between items-center text-[10px] font-black">
-                                <span className="text-zinc-500">WEIGHT</span>
-                                <span className="text-white font-mono">{field.weight || 0}</span>
+                    {segments.fields.map((field, idx) => {
+                      const currentWeight = Number(form.watch(`segments.${idx}.weight`)) || 0;
+                      const info = getProbabilityInfo(currentWeight, totalWeightWatch);
+
+                      return (
+                        <div key={field.id} className="p-4 rounded-xl bg-zinc-900/20 border border-zinc-800/50 hover:border-zinc-700 transition-all group">
+                          <div className="flex flex-col gap-4">
+                            <div className="grid grid-cols-12 gap-4 items-start">
+                              
+                              {/* Label Section */}
+                              <div className="col-span-12 md:col-span-4 lg:col-span-3 space-y-2">
+                                <label className="text-[10px] font-black text-zinc-500 uppercase ml-1">Segment Label</label>
+                                <div className="flex items-center gap-2">
+                                  <div className="w-8 h-11 rounded-xl bg-zinc-800 text-xs font-black flex items-center justify-center text-zinc-500">#{idx + 1}</div>
+                                  <input
+                                    placeholder="Label"
+                                    className="w-full h-11 bg-zinc-900 border border-zinc-800 rounded-xl px-4 text-sm text-white font-bold focus:border-admin-brand outline-none transition-all placeholder:text-zinc-700 placeholder:font-normal"
+                                    {...form.register(`segments.${idx}.label`)}
+                                  />
+                                </div>
                               </div>
-                              <input
-                                type="range"
-                                min="0"
-                                max="1000"
-                                step="1"
-                                className="w-full accent-admin-brand"
-                                {...form.register(`segments.${idx}.weight`, { valueAsNumber: true })}
-                              />
-                            </div>
-                          </div>
 
-                          {/* Probability Visualizer */}
-                          <div className="xl:col-span-3 flex flex-col justify-center gap-2">
-                            {(() => {
-                              const info = getProbabilityInfo(field.weight || 0, totalWeightWatch);
-                              return (
-                                <>
-                                  <div className="flex items-center justify-between">
-                                    <span className={`text-[10px] font-black py-0.5 px-2 rounded-md border ${info.badgeClass}`}>{info.label}</span>
-                                    <span className={`text-xl font-black tabular-nums ${info.textClass}`}>{info.percent.toFixed(2)}%</span>
+                              {/* Weight Section */}
+                              <div className="col-span-6 md:col-span-4 lg:col-span-3 space-y-2">
+                                <label className="text-[10px] font-black text-zinc-500 uppercase ml-1">Weight Config</label>
+                                <div className="relative">
+                                  <input
+                                    type="number"
+                                    className="w-full h-11 bg-zinc-900 border border-zinc-800 rounded-xl px-4 text-sm text-white font-mono focus:border-admin-brand outline-none transition-all"
+                                    {...form.register(`segments.${idx}.weight`, { valueAsNumber: true })}
+                                  />
+                                  <div className="absolute right-3 top-3.5 pointer-events-none">
+                                    <span className={`text-[10px] font-black px-1.5 py-0.5 rounded ${info.badgeClass} opacity-80`}>{info.percent.toFixed(1)}%</span>
                                   </div>
-                                  <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
-                                    <div className={`h-full transition-all duration-500 ${info.barClass}`} style={{ width: `${Math.min(info.percent, 100)}%` }} />
-                                  </div>
-                                  <div className="flex justify-between items-center text-[10px] text-zinc-500 font-medium">
-                                    <span>1,000회 당 약 {((field.weight || 0) / (totalWeightWatch || 1) * 1000).toFixed(0)}회</span>
-                                    <span>EX-100: {info.expected100} hits</span>
-                                  </div>
-                                </>
-                              );
-                            })()}
-                          </div>
+                                </div>
+                                {/* Mini Bar */}
+                                <div className="h-1 w-full bg-zinc-800 rounded-full overflow-hidden">
+                                  <div className={`h-full transition-all duration-500 ${info.barClass} w-[${Math.min(info.percent, 100)}%]`} />
+                                </div>
+                              </div>
 
-                          {/* Reward Config */}
-                          <div className="xl:col-span-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <label className="text-[10px] font-black text-zinc-500 uppercase">보상 타입 (Type)</label>
-                              <div className="relative">
-                                <select
-                                  className="w-full h-10 bg-zinc-900 border border-zinc-800 rounded-xl px-3 text-xs text-white focus:border-admin-brand outline-none appearance-none"
-                                  {...form.register(`segments.${idx}.reward_type`)}
-                                >
-                                  {REWARD_TYPES.map((rt) => (
-                                    <option key={rt.value} value={rt.value}>{rt.label}</option>
-                                  ))}
-                                </select>
-                                <div className="absolute right-3 top-3 pointer-events-none text-zinc-500">
-                                  <ArrowRight size={14} />
+                              {/* Reward Section */}
+                              <div className="col-span-6 md:col-span-4 lg:col-span-6 space-y-2">
+                                <label className="text-[10px] font-black text-zinc-500 uppercase ml-1">Reward Definition (Type & Amount)</label>
+                                <div className="flex gap-2">
+                                  <div className="relative flex-1">
+                                    <select
+                                      className="w-full h-11 bg-zinc-900 border border-zinc-800 rounded-xl px-3 text-xs text-white focus:border-admin-brand outline-none appearance-none font-medium"
+                                      {...form.register(`segments.${idx}.reward_type`)}
+                                    >
+                                      {Object.entries(REWARD_TYPES.reduce((acc, item) => {
+                                        const g = (item as any).group || 'Other';
+                                        if(!acc[g]) acc[g] = [];
+                                        acc[g].push(item);
+                                        return acc;
+                                      }, {} as Record<string, typeof REWARD_TYPES[number][]>)).map(([group, items]) => (
+                                        <optgroup key={group} label={group}>
+                                          {items.map(rt => <option key={rt.value} value={rt.value}>{rt.label}</option>)}
+                                        </optgroup>
+                                      ))}
+                                    </select>
+                                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-600">
+                                      <ArrowRight size={14} />
+                                    </div>
+                                  </div>
+                                  <input
+                                    type="number"
+                                    placeholder="Qty"
+                                    className="w-24 h-11 bg-zinc-900 border border-zinc-800 rounded-xl px-3 text-xs text-white font-mono focus:border-admin-brand outline-none transition-all placeholder:text-zinc-700"
+                                    {...form.register(`segments.${idx}.reward_value`, { valueAsNumber: true })}
+                                  />
                                 </div>
                               </div>
                             </div>
-                            <div className="space-y-2">
-                              <label className="text-[10px] font-black text-zinc-500 uppercase">지급 수량 (Amount)</label>
-                              <input
-                                type="number"
-                                className="w-full h-10 bg-zinc-900 border border-zinc-800 rounded-xl px-4 text-xs text-white font-mono focus:border-admin-brand outline-none"
-                                {...form.register(`segments.${idx}.reward_value`, { valueAsNumber: true })}
-                              />
-                            </div>
 
-                            {/* Gifticon Special Config */}
+                            {/* Gifticon Panel */}
                             {isGifticonType(form.watch(`segments.${idx}.reward_type`)) && (
-                              <div className="md:col-span-2 p-3 bg-zinc-900/50 rounded-xl border border-zinc-800/50 flex flex-col md:flex-row gap-4 items-center">
+                              <div className="p-3 bg-zinc-900/50 rounded-xl border border-zinc-800/50 flex flex-col md:flex-row gap-3 items-center animate-in fade-in zoom-in-95 duration-200">
+                                <div className="text-[10px] font-bold text-zinc-500 whitespace-nowrap px-1">GIFTICON OPTION</div>
                                 <div className="flex-1 flex gap-2 w-full">
                                   <select
-                                    className="flex-1 h-9 bg-zinc-900 border border-zinc-800 rounded-lg px-2 text-[11px] text-white outline-none"
+                                    className="flex-1 h-9 bg-zinc-800 border border-zinc-700 rounded-lg px-2 text-[11px] text-white outline-none focus:border-admin-brand appearance-none"
                                     value={gifticonBrands.some(b => b.value === getGifticonBrand(form.watch(`segments.${idx}.reward_type`))) ? getGifticonBrand(form.watch(`segments.${idx}.reward_type`)) : "CUSTOM"}
                                     onChange={(e) => {
                                       if (e.target.value === "CUSTOM") return;
@@ -610,25 +652,71 @@ const RouletteConfigPage: React.FC = () => {
                                       <option key={b.value} value={b.value}>{b.label}</option>
                                     ))}
                                   </select>
-                                  {!gifticonBrands.some(b => b.value === getGifticonBrand(form.watch(`segments.${idx}.reward_type`))) || getGifticonBrand(form.watch(`segments.${idx}.reward_type`)) === "CUSTOM" ? (
+                                  {(!gifticonBrands.some(b => b.value === getGifticonBrand(form.watch(`segments.${idx}.reward_type`))) || getGifticonBrand(form.watch(`segments.${idx}.reward_type`)) === "CUSTOM") && (
                                     <input
-                                      className="flex-1 h-9 bg-zinc-900 border border-zinc-800 rounded-lg px-2 text-[11px] text-white outline-none"
-                                      placeholder="브랜드 직접 입력"
+                                      className="flex-1 h-9 bg-zinc-800 border border-zinc-700 rounded-lg px-2 text-[11px] text-white outline-none focus:border-admin-brand placeholder:text-zinc-600"
+                                      placeholder="Brand Code (e.g. SBUX)"
                                       defaultValue={getGifticonBrand(form.watch(`segments.${idx}.reward_type`))}
                                       onBlur={(e) => form.setValue(`segments.${idx}.reward_type`, buildGifticonType(e.target.value.trim() || "CUSTOM"))}
                                     />
-                                  ) : null}
+                                  )}
                                 </div>
                                 <div className="text-[10px] text-zinc-600 font-medium whitespace-nowrap">
-                                  Result: <span className="text-zinc-400 font-mono">{form.watch(`segments.${idx}.reward_type`)}</span>
+                                  Code: <span className="text-zinc-400 font-mono">{form.watch(`segments.${idx}.reward_type`)}</span>
                                 </div>
                               </div>
                             )}
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
+                </div>
+
+                {/* Verification Section */}
+                <div className="pt-6 border-t border-zinc-800">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-admin-brand">
+                      <RefreshCw size={16} /> 검증 시뮬레이션 (Verification)
+                    </h4>
+                    <button
+                      type="button"
+                      onClick={onRunSimulation}
+                      className="px-4 py-2 bg-admin-brand text-black text-xs font-black rounded-xl hover:brightness-110 active:scale-95 transition-all shadow-lg shadow-admin-brand/20"
+                    >
+                      RUN 1,000 SPINS
+                    </button>
+                  </div>
+
+                  {simResults ? (
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                      {simResults.map((hits, idx) => {
+                        const totalW = totalWeightWatch || 1;
+                        const w = form.getValues().segments[idx].weight || 0;
+                        const expectedPct = (w / totalW) * 100;
+                        const actualPct = (hits / 1000) * 100;
+                        const diff = actualPct - expectedPct;
+
+                        return (
+                          <div key={idx} className="p-3 bg-zinc-800/40 border border-zinc-700/50 rounded-xl flex flex-col items-center gap-1">
+                            <span className="text-[10px] text-zinc-500 font-bold uppercase">Slot #{idx + 1}</span>
+                            <span className="text-2xl font-black text-white tabular-nums">{hits}</span>
+                            <div className="flex flex-col items-center">
+                              <span className="text-[10px] font-mono text-zinc-400">Act: {actualPct.toFixed(1)}%</span>
+                              <span className="text-[9px] font-mono text-zinc-600">Exp: {expectedPct.toFixed(1)}%</span>
+                            </div>
+                            <span className={`text-[10px] font-bold mt-1 ${Math.abs(diff) < 2 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                              {diff > 0 ? '+' : ''}{diff.toFixed(1)}%
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="p-6 bg-zinc-800/30 border border-zinc-800 border-dashed rounded-2xl text-center">
+                      <p className="text-xs text-zinc-500 font-medium">위 버튼을 눌러 현재 설정된 확률대로 1,000회 시뮬레이션을 실행하여 결과를 검증합니다.</p>
+                    </div>
+                  )}
                 </div>
               </form>
             </div>

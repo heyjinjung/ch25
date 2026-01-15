@@ -32,6 +32,7 @@ interface BackendVaultStatusResponse {
   readonly daily_deposit_confirmed?: boolean;
   readonly daily_vault_spent?: number;
   readonly daily_vault_spent_target?: number;
+  readonly withdrawal_count?: number;
 }
 
 export interface VaultStatusResponse {
@@ -70,6 +71,7 @@ export interface VaultStatusResponse {
   readonly dailyDepositConfirmed?: boolean;
   readonly dailyVaultSpent?: number;
   readonly dailyVaultSpentTarget?: number;
+  readonly withdrawalCount?: number;
 }
 
 export const getVaultStatus = async (): Promise<VaultStatusResponse> => {
@@ -113,6 +115,7 @@ export const getVaultStatus = async (): Promise<VaultStatusResponse> => {
     dailyDepositConfirmed: data.daily_deposit_confirmed ?? false,
     dailyVaultSpent: data.daily_vault_spent ?? 0,
     dailyVaultSpentTarget: data.daily_vault_spent_target ?? 10000,
+    withdrawalCount: data.withdrawal_count ?? 0,
   };
 };
 
