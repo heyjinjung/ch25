@@ -59,6 +59,7 @@ from app.models import (  # noqa: F401
     OpsCampaign,
     OpsPlan,
     OpsPlanTask,
+    OpsEvalMetric,
     OpsTargetList,
     OpsTargetMember,
     EventConfig,

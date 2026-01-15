@@ -1,7 +1,7 @@
 # OPS Plan Execution Result Schema (백엔드 응답 구조)
 
 **문서 유형**: 아키텍처 / API 스키마  
-**버전**: v1.1  
+**버전**: v1.2  
 **작성일**: 2026-01-15  
 **최종 업데이트**: 2026-01-16  
 **상태**: Active (SoT)
@@ -232,6 +232,8 @@ OPS Plan 액션 실행 시 `OpsPlanService.execute_task()`가 `payload_json["exe
 {
   "kind": "MESSAGE_TEMPLATE",
   "target_list_id": 120,
+  "channel": "TELEGRAM_DM",
+  "audience": "TARGET_LIST",
   "sent_count": 42
 }
 ```
@@ -240,6 +242,8 @@ OPS Plan 액션 실행 시 `OpsPlanService.execute_task()`가 `payload_json["exe
 {
   "kind": "SURVEY_DM",
   "target_list_id": 120,
+  "channel": "TELEGRAM_DM",
+  "audience": "TARGET_LIST",
   "sent_count": 42
 }
 ```
@@ -249,12 +253,14 @@ OPS Plan 액션 실행 시 `OpsPlanService.execute_task()`가 `payload_json["exe
 |------|------|------|------|------|
 | `kind` | string | O | `"MESSAGE_TEMPLATE"` 또는 `"SURVEY_DM"` | `"MESSAGE_TEMPLATE"` |
 | `target_list_id` | integer | O | 대상 리스트 ID | `120` |
+| `channel` | string | O | 발송 채널 | `"TELEGRAM_DM"`, `"TELEGRAM_BROADCAST"` |
+| `audience` | string | O | 수신자 범위 | `"ALL_USERS"`, `"TARGET_LIST"` |
 | `sent_count` | integer | O | `SENT`로 변경된 멤버 수 | `42` |
 
 #### 동작
 - `target_list_id`가 있으면 대상 리스트 멤버를 조회하여 `status="SENT"`로 업데이트한다.
 - 예외 발생 시 `sent_count=0`으로 반환될 수 있다.
-- `channel`, `audience` 등 발송 메타는 로그용이며 `execution_result`에는 포함되지 않는다.
+- `channel`, `audience`는 결과 영수증 표시용 메타로 `execution_result`에 포함한다.
 
 ---
 
@@ -329,4 +335,3 @@ assert result["sent_count"] >= 0
 
 1. **LEVEL_UP_BOOST** - 레벨업 부스트 이벤트
 2. **TEAM_BATTLE_REWARD** - 팀 배틀 보상 일괄 지급
-

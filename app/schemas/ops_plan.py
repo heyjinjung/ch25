@@ -98,6 +98,17 @@ class OpsPlanTaskExecuteRequest(BaseModel):
     status: str = "DONE"
 
 
+class OpsEvalMetricOut(BaseModel):
+    id: int
+    plan_id: int
+    eval_type: str
+    metrics_json: Dict[str, Any]
+    grade: str
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class OpsPlanTaskOut(BaseModel):
     id: int
     plan_id: int

@@ -1,7 +1,7 @@
 # 액션/게임 스키마 SoT (Game Action Schema Standard)
 
 **문서 타입**: API 스키마 / 아키텍처 표준
-**버전**: v1.0
+**버전**: v1.1
 **작성일**: 2026-01-16
 **상태**: SoT (Source of Truth)
 
@@ -70,7 +70,7 @@
     "label": "100 POINT",
     "reward_type": "POINT",
     "reward_amount": 100,
-    "slot_index": 3,           // 휠에서의 위치 인덱스 (0~11)
+    "slot_index": 3,           // 휠에서의 위치 인덱스 (0~5)
     "is_fever_reward": false   // 피버 모드로 인한 특수 보상 여부
   },
   "animation_type": "NORMAL"   // 연출 타입: NORMAL, SLOW_DRAMA, FEVER_BLAST

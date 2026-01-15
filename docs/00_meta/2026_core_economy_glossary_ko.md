@@ -43,7 +43,8 @@
 | 금고(가용) | Vault Available | `user.vault_available_balance` | 잠금에서 가용으로 전이된 출금 가능 잔액(Phase 2 스캐폴드) | (정책/전이 로그는 Vault2 쪽에 존재) | 현재 정책상 비활성/미사용일 수 있음(활성/폐기 결정 필요) |
 | 금고(레거시 미러) | vault_balance | `user.vault_balance` | 과거 잔액 미러/호환용 필드 | - | 읽기 전용 권장(혼선 방지) |
 | 현금 잔액 | Cash Balance | `user.cash_balance` | 출금 가능 잔액(현금 SoT) | `user_cash_ledger(delta, balance_after, reason, meta_json)` | **신규 보상 지급 경로로 사용 금지**(레거시/운영툴/디버그 외) |
-| 환전(출금) | Exchange / Withdraw | (정책) | 금고 누적액을 외부 환전 가능한 흐름으로 전환/신청하는 개념 | (운영/프로그램 로그) | 최소 환전 가능액(예: 10,000원) 같은 정책이 존재 |
+| 금고 사용 누적 | Vault Spent Total | `user.vault_spent_total` | 금고에서 차감된 누적 금액(샵/바이인 등) | - | 출금 조건 계산에 사용 |
+| 환전(출금) | Exchange / Withdraw | `vault_withdrawal_request` | 금고 누적액을 외부 환전 가능한 흐름으로 전환/신청하는 개념 | (운영/프로그램 로그) | 최소 환전 가능액(예: 10,000원) 같은 정책이 존재 |
 
 ### 4.2 보상 타입(Reward Types)
 
@@ -68,7 +69,7 @@
 
 | 용어(권장) | 코드/키워드 | SoT(테이블.필드) | 정의 | 로그(대표) | 주의사항 |
 | --- | --- | --- | --- | --- | --- |
-| 시즌패스 XP | Season XP | `season_pass_progress.current_xp` | 시즌 진행 경험치(SoT) | `season_pass_stamp_log`, `season_pass_reward_log` | XP는 `GAME_XP`로만 증가(POINT와 분리) |
+| 시즌패스 XP | Season XP | `season_pass_progress.current_xp` | 시즌 진행 경험치(SoT) | `season_pass_stamp_log`, `season_pass_reward_log` | XP는 `GAME_XP`로만 증가(POINT와 분리). 로그의 `reward_type`는 `XP`로 기록됨 |
 | 시즌 레벨 | Season Level | `season_pass_progress.current_level` | 시즌패스 레벨(SoT) | `season_pass_reward_log(level, claimed_at)` | 자동수령/수동수령 정책은 시즌 레벨 보상 설정에 따름 |
 | 스탬프 | Stamp | (시즌패스) | XP 적립의 원인 단위(게임/로그인/미션 등) | `season_pass_stamp_log(period_key)` | 중복 방지 키(period_key) 중요 |
 
@@ -76,21 +77,24 @@
 
 | 용어(권장) | 토큰/아이템 타입 | SoT | 정의 | 주의사항 |
 | --- | --- | --- | --- | --- |
-| 게임 토큰 지갑 | Wallet | `user_game_wallet(balance)` | 토큰별 잔액 저장(소비/지급) | ledger 합산=balance 정합성 유지 |
+| 게임 토큰 지갑 | Wallet | `user_game_wallet(balance)` | 토큰별 잔액 저장(소비/지급) | `user_game_wallet_ledger` 합산=balance 정합성 유지 |
 | 룰렛 코인 | `ROULETTE_COIN` | Wallet | 룰렛 플레이 토큰 | |
 | 다이스 토큰 | `DICE_TOKEN` | Wallet | 주사위 플레이 토큰 | |
 | 복권 티켓 | `LOTTERY_TICKET` | Wallet | 복권 구매/플레이 토큰 | |
 | 체험 토큰 | `TRIAL_TOKEN` | Wallet | 체험/무료 루프 토큰 | 정책/플래그에 영향 |
 | 골드 키 | `GOLD_KEY` | Wallet | 고가/특수 플레이 키 | 특정 룰렛에서 Vault 강제 라우팅과 결합될 수 있음 |
 | 다이아 키 | `DIAMOND_KEY` | Wallet | 프리미엄 플레이 키 | |
+| 다이아(인벤) | `DIAMOND` | Inventory | 상점 결제에 쓰는 인벤 재화 | Wallet DIAMOND와 혼동 금지 |
 | 인벤토리 아이템 | Inventory Item | `user_inventory_item` | 다이아/기프티콘/바우처 같은 “보관형 자산” | item_type 네이밍 규칙 준수 |
 | 바우처(교환권) | `VOUCHER_*` | Inventory | 사용 시 특정 토큰/보상을 지급하는 교환권 | use 시 멱등성/동시성 이슈 주의 |
+| 금고 결제 토큰(샵 전용) | `VAULT` | `user.vault_locked_balance` | 샵에서 금고 잔액을 차감하기 위한 cost_token | `user_game_wallet`에 잔액을 만들지 않음 |
 
 ### 4.5 미션(운영/보상)
 
 | 용어(권장) | 코드/키워드 | SoT(테이블.필드) | 정의 | 주의사항 |
 | --- | --- | --- | --- | --- |
 | 미션 정의 | Mission | `mission` | 운영자가 생성/편집하는 미션 정책(보상 타입/수량 포함) | 운영 변경은 어드민 미션 관리에서 수행 |
+| 미션 보상 타입 | MissionRewardType | `mission.reward_type` | 미션 전용 보상 타입 enum | 지급 시 RewardService 타입으로 매핑(CASH_UNLOCK→POINT, TICKET_*→지갑 등) |
 | 미션 로직 키 | logic_key | `mission.logic_key` | 미션을 식별하는 유니크 키 | 이미 수령한 유저(진행/claimed)에 소급 영향 제한 |
 | 유저 미션 진행 | Progress | `user_mission_progress` | 유저별 진행/완료/수령 상태 | `is_claimed`가 지급 여부 SoT |
 | 승인 워크플로우 | Approval | `approval_status` | 승인 필요 미션의 지급 통제 | 미승인 지급 차단이 기본 |
@@ -104,11 +108,15 @@
 - 시즌 XP 적립 여부: `season_pass_progress` + `season_pass_stamp_log/reward_log`
 - 티켓/키 증감: `user_game_wallet` + `user_game_wallet_ledger`
 - 인벤토리 지급대기/사용: `user_inventory_item` + `user_inventory_ledger`
+- 출금 요청/승인 상태: `vault_withdrawal_request` (PENDING/APPROVED/REJECTED/CANCELLED)
 
 ### 5.2 흔한 혼동 케이스(방지용)
 - “POINT라는 글자가 보이면 금고인가?” → **아님.** 금고는 금고 잔액/금고 이벤트로만 판단.
 - “XP가 금고에 들어가나?” → **아님.** XP는 `GAME_XP`로만 시즌패스에 적립.
 - “cash_balance가 SoT인데 왜 안 쓰나?” → 경제 통합 정책상 **신규 포인트성 지급을 금고로 단일화**했기 때문.
+- “TICKET_*와 ROULETTE_COIN/DICE_TOKEN은 같은가?” → **다름.** 전자는 reward_type, 후자는 지갑 토큰 타입.
+- “DIAMOND는 지갑 재화인가?” → **아님.** 현재 SoT는 인벤토리(`user_inventory_item`).
 
 ## 6. 변경 이력
+- v1.1 (2026-01-16): reward_type/토큰/인벤토리 항목 정합성 업데이트, 출금 요청 테이블 추가
 - v1.0 (2026-01-14): 최초 작성(핵심 경제체계 용어 정리)
