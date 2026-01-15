@@ -35,6 +35,9 @@ export interface CrmStats {
     // Financial Metrics
     ltv?: number;  // Lifetime Value
     arpu?: number; // Average Revenue Per User
+
+    // NEW: Samples for dashboard (2026-01-16)
+    samples: Record<string, string[]>;
 }
 
 export interface AdminUserProfile {

@@ -113,6 +113,7 @@ class CrisisSignalOut(BaseModel):
     name: str  # e.g. "불운한 뉴비"
     count: int
     level: str  # HIGH, MEDIUM, LOW, SPECIAL
+    samples: List[str] = []  # Sample nicknames
 
 
 class CrisisSignalsResponse(BaseModel):

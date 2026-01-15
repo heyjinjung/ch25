@@ -10,6 +10,7 @@ import { useToast } from "../../components/common/ToastProvider";
 import { Lock, Info, ListChecks } from "lucide-react";
 import WithdrawalConditionsModal from "../modal/WithdrawalConditionsModal";
 import WithdrawalProgressModal from "../modal/WithdrawalProgressModal";
+import { useSound } from "../../hooks/useSound";
 
 // Helper to format currency
 const formatWon = (amount: number) => `${amount.toLocaleString("ko-KR")}원`;
@@ -19,8 +20,8 @@ const SparkleDust: React.FC = () => {
     const sparkles = useMemo(() => Array.from({ length: 25 }).map(() => ({
         left: Math.random() * 100, // Random horizontal position 0-100%
         scale: Math.random() * 1.0 + 0.5, // 0.5 ~ 1.5 size variation
-        duration: Math.random() * 5 + 3, // 3~8 seconds fall duration
-        delay: -Math.random() * 10 // Negative delay for instant coverage
+        duration: Math.random() * 10 + 12, // 12~22 seconds fall duration (Slower & Smoother)
+        delay: -Math.random() * 20 // Negative delay for instant coverage
     })), []);
 
     return (
@@ -53,6 +54,7 @@ const SparkleDust: React.FC = () => {
 
 const VaultPageCompact: React.FC = () => {
     const { addToast } = useToast();
+    const { playVaultJingle } = useSound();
     const [showConditionsModal, setShowConditionsModal] = React.useState(false);
     const [showProgressModal, setShowProgressModal] = React.useState(false);
 
@@ -142,7 +144,10 @@ const VaultPageCompact: React.FC = () => {
                         </div>
                         <div className="text-center">
                             <div className="text-5xl font-black text-white tracking-tighter drop-shadow-xl flex items-center gap-1">
-                                <AnimatedNumber value={view.availableAmount} />
+                                <AnimatedNumber 
+                                    value={view.availableAmount} 
+                                    onAnimationStart={playVaultJingle}
+                                />
                                 <span className="text-2xl ml-[-2px]">원</span>
                             </div>
                         </div>

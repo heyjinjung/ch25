@@ -539,6 +539,48 @@ class UserSegmentService:
             or 0
         )
 
+        # 19. Samples (Nicknames) for Dashboard Cards
+        def get_uuids(q, limit=3):
+            return [row[0] for row in q.limit(limit).all()]
+
+        def get_nicks(uids):
+            if not uids: return []
+            return [u.nickname for u in db.query(User.nickname).filter(User.id.in_(uids)).all() if u.nickname]
+
+        samples = {}
+
+        # S1. Total Users (Recent joined)
+        s_total = db.query(User.id).order_by(desc(User.created_at))
+        samples["TOTAL_USERS"] = get_nicks(get_uuids(s_total))
+
+        # S2. Paying Users (Highest deposits)
+        s_paying = db.query(ExternalRankingData.user_id)\
+            .filter(ExternalRankingData.deposit_amount > 0)\
+            .order_by(desc(ExternalRankingData.deposit_amount))
+        samples["PAYING_USERS"] = get_nicks(get_uuids(s_paying))
+
+        # S3. Whale (Vault Earners)
+        # Note: 'having' with group_by can be slow, but limit avoids full scan usually
+        s_whale = db.query(VaultEarnEvent.user_id)\
+            .group_by(VaultEarnEvent.user_id)\
+            .having(func.sum(VaultEarnEvent.amount) >= WHALE_ACCRUAL_THRESHOLD)
+        samples["WHALE"] = get_nicks(get_uuids(s_whale))
+
+        # S4. Empty Tank (Recent Active + Low Balance)
+        s_empty = db.query(User.id).filter(
+            User.last_login_at >= active_24h,
+            (func.coalesce(User.cash_balance, 0) + func.coalesce(User.vault_balance, 0)) < EMPTY_TANK_THRESHOLD
+        ).order_by(desc(User.last_login_at))
+        samples["EMPTY_TANK"] = get_nicks(get_uuids(s_empty))
+
+        # S5. Dormant (Just before 30 days or oldest inactivity? Usually recently became dormant)
+        # Let's show users who are "deeply" dormant (oldest login) or recently? 
+        # "Churn Risk" is usually recent. But DORMANT segment is > 30 days.
+        s_dormant = db.query(User.id).filter(
+             (User.last_login_at < inactive_threshold) | (User.last_login_at == None)
+        ).order_by(desc(User.last_login_at)) # Most recently dormant (closest to 30 days)
+        samples["DORMANT"] = get_nicks(get_uuids(s_dormant))
+
         return {
             "total_users": total_users,
             "active_users": active_users,
@@ -565,6 +607,9 @@ class UserSegmentService:
             "total_deposit_amount": total_deposit_amount,
             "today_deposit_amount": today_deposit_amount,
             "last7d_deposit_amount": last7d_deposit_amount,
-            "total_play_count": total_play_count
+            "total_play_count": total_play_count,
+            # Samples (Nicknames)
+            "samples": samples
         }
+
 

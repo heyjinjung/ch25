@@ -132,6 +132,8 @@ export default {
         'fade-in': 'fade-in 0.8s ease-out forwards',
         'spin-slow-reverse': 'spin-reverse 8s linear infinite',
         'shimmer-fast': 'shimmer 1.6s linear infinite',
+        'shimmer': 'shimmer 2.5s linear infinite',
+        'shine': 'shine 4s ease-in-out infinite',
         'bounce-subtle': 'bounce-subtle 2.4s ease-in-out infinite',
       },
       keyframes: {
@@ -169,6 +171,10 @@ export default {
         'bounce-subtle': {
           '0%, 100%': { transform: 'translateY(0)' },
           '50%': { transform: 'translateY(-6px)' },
+        },
+        'shine': {
+          '0%': { transform: 'translateX(-200%)' },
+          '100%': { transform: 'translateX(200%)' },
         },
       },
     },

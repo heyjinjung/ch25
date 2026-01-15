@@ -631,11 +631,11 @@ class VaultService:
                     # Point win: accrual = reward amount
                     amount_before_multiplier = r_amount
                 elif r_amount == 0:
-                    # Lose/Zero: penalty -50
-                    amount_before_multiplier = -50
+                    # Lose/Zero: penalty removed (was -50)
+                    amount_before_multiplier = 0
                 else:
-                    # Other reward (XP, Ticket, etc): base bonus 200
-                    amount_before_multiplier = 200
+                    # Other reward (XP, Ticket, etc): base bonus removed (was 200)
+                    amount_before_multiplier = 0
             else:
                 # Default for other games (LOTTERY, etc.)
                 payout = payout_raw or {}

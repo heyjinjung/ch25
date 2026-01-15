@@ -52,11 +52,20 @@ class OpsTargetService:
         results = []
         for scenario in SCENARIOS:
             count = self._get_scenario_count(db, scenario["id"])
+            
+            # Fetch sample users (nicknames)
+            try:
+                users = self.get_scenario_users(db, scenario["id"], limit=5)
+                samples = [str(u["nickname"]) for u in users if u.get("nickname")]
+            except Exception:
+                samples = []
+
             results.append({
                 "id": scenario["id"],
                 "name": scenario["name"],
                 "count": count,
                 "level": scenario["level"],
+                "samples": samples,
             })
         return results
 
@@ -335,12 +344,24 @@ class OpsTargetService:
         """Get users matching a specific scenario."""
         if scenario_id == "SCENARIO_01":
             return self._get_scenario_01_users(db, limit, options=options)
+        elif scenario_id == "SCENARIO_02":
+            return self._get_scenario_02_users(db, limit)
         elif scenario_id == "SCENARIO_03":
             return self._get_scenario_03_users(db, limit, options=options)
         elif scenario_id == "SCENARIO_04":
             return self._get_scenario_04_users(db, limit)
         elif scenario_id == "SCENARIO_05":
             return self._get_scenario_05_users(db, limit, options=options)
+        elif scenario_id == "SCENARIO_06":
+            return self._get_scenario_06_users(db, limit)
+        elif scenario_id == "SCENARIO_07":
+            return self._get_scenario_07_users(db, limit)
+        elif scenario_id == "SCENARIO_08":
+            return self._get_scenario_08_users(db, limit)
+        elif scenario_id == "SCENARIO_09":
+            return self._get_scenario_09_users(db, limit)
+        elif scenario_id == "SCENARIO_10":
+            return self._get_scenario_10_users(db, limit)
         elif scenario_id == "SCENARIO_11":
             return self._get_scenario_11_users(db, limit)
         else:
@@ -511,6 +532,151 @@ class OpsTargetService:
         results = db.execute(query).fetchall()
         return [
             {"user_id": r.id, "nickname": r.nickname, "data": {"external_deposit": r.deposit_amount}}
+            for r in results
+        ]
+
+    def _get_scenario_02_users(self, db: Session, limit: int) -> List[Dict[str, Any]]:
+        """Get Scenario 2 users (One-Day Tester)."""
+        now = self.now()
+        start = now - timedelta(days=2)
+        end = now - timedelta(days=1)
+        query = (
+            select(User.id, User.nickname, User.created_at)
+            .select_from(User)
+            .outerjoin(UserActivity, UserActivity.user_id == User.id)
+            .where(
+                User.created_at >= start,
+                User.created_at < end,
+                User.total_charge_amount <= 0,
+                func.coalesce(UserActivity.roulette_plays, 0)
+                + func.coalesce(UserActivity.dice_plays, 0)
+                + func.coalesce(UserActivity.lottery_plays, 0)
+                >= 1,
+                User.last_login_at < end,
+            )
+            .limit(limit)
+        )
+        results = db.execute(query).fetchall()
+        return [
+            {
+                "user_id": r.id,
+                "nickname": r.nickname,
+                "data": {"created_at": r.created_at},
+            }
+            for r in results
+        ]
+
+    def _get_scenario_06_users(self, db: Session, limit: int) -> List[Dict[str, Any]]:
+        """Get Scenario 6 users (Broken Streak)."""
+        cutoff = self.now() - timedelta(hours=72)
+        query = (
+            select(User.id, User.nickname, User.login_streak)
+            .select_from(User)
+            .where(
+                User.login_streak >= 3,
+                User.last_streak_updated_at.isnot(None),
+                User.last_streak_updated_at < cutoff,
+                User.last_login_at.isnot(None),
+                User.last_login_at < cutoff,
+            )
+            .limit(limit)
+        )
+        results = db.execute(query).fetchall()
+        return [
+            {
+                "user_id": r.id,
+                "nickname": r.nickname,
+                "data": {"streak": r.login_streak},
+            }
+            for r in results
+        ]
+
+    def _get_scenario_07_users(self, db: Session, limit: int) -> List[Dict[str, Any]]:
+        """Get Scenario 7 users (Stuck Climber)."""
+        cutoff = self.now() - timedelta(hours=48)
+        query = (
+            select(User.id, User.nickname, User.level)
+            .select_from(User)
+            .where(
+                User.level.between(4, 5),
+                User.last_play_date.isnot(None),
+                User.last_play_date < cutoff.date(),
+                User.last_login_at.isnot(None),
+                User.last_login_at >= cutoff - timedelta(days=2),
+            )
+            .limit(limit)
+        )
+        results = db.execute(query).fetchall()
+        return [
+            {
+                "user_id": r.id,
+                "nickname": r.nickname,
+                "data": {"level": r.level},
+            }
+            for r in results
+        ]
+
+    def _get_scenario_08_users(self, db: Session, limit: int) -> List[Dict[str, Any]]:
+        """Get Scenario 8 users (Bored VIP)."""
+        cutoff_play = self.now() - timedelta(hours=72)
+        cutoff_deposit = self.now() - timedelta(days=7)
+        cutoff_date = cutoff_deposit.date()
+        deposit_sub = self._subquery_deposit_sum(cutoff_date)
+
+        query = (
+            select(User.id, User.nickname, User.total_charge_amount)
+            .select_from(User)
+            .join(deposit_sub, deposit_sub.c.user_id == User.id, isouter=True)
+            .where(
+                User.total_charge_amount >= 1_000_000,
+                User.last_play_date.isnot(None),
+                User.last_play_date < cutoff_play.date(),
+                User.last_login_at.isnot(None),
+                User.last_login_at < cutoff_play,
+                User.first_deposit_at.isnot(None),
+                func.coalesce(deposit_sub.c.deposit_sum, 0) <= 0,
+            )
+            .limit(limit)
+        )
+        results = db.execute(query).fetchall()
+        return [
+            {
+                "user_id": r.id,
+                "nickname": r.nickname,
+                "data": {"total_charge": r.total_charge_amount},
+            }
+            for r in results
+        ]
+
+    def _get_scenario_09_users(self, db: Session, limit: int) -> List[Dict[str, Any]]:
+        """Get Scenario 9 users (Tilting Player)."""
+        # Scenario 9 is currently a placeholder fallback to 0 in detection,
+        # so we return empty list here to match _count_scenario_09 behavior.
+        return []
+
+    def _get_scenario_10_users(self, db: Session, limit: int) -> List[Dict[str, Any]]:
+        """Get Scenario 10 users (Bonus Hunter)."""
+        cutoff = self.now() - timedelta(days=7)
+        cutoff_date = cutoff.date()
+        deposit_sub = self._subquery_deposit_sum(cutoff_date)
+        query = (
+            select(User.id, User.nickname, User.last_free_ticket_claimed_at)
+            .select_from(User)
+            .join(deposit_sub, deposit_sub.c.user_id == User.id, isouter=True)
+            .where(
+                func.coalesce(deposit_sub.c.deposit_sum, 0) <= 0,
+                User.last_free_ticket_claimed_at.isnot(None),
+                User.last_free_ticket_claimed_at >= cutoff,
+            )
+            .limit(limit)
+        )
+        results = db.execute(query).fetchall()
+        return [
+            {
+                "user_id": r.id,
+                "nickname": r.nickname,
+                "data": {"last_claimed_at": r.last_free_ticket_claimed_at},
+            }
             for r in results
         ]
 

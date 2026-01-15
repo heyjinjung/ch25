@@ -210,7 +210,8 @@ const AdminOpsPlanPage: React.FC = () => {
         setGoldenHourConfig(res.data);
       })
       .catch((err) => {
-        setGoldenHourError(err?.response?.data?.detail || "골든아워 상태를 불러오지 못했습니다.");
+        const message = getAdminApiErrorMessage(err);
+        setGoldenHourError(message || "골든아워 상태를 불러오지 못했습니다.");
       })
       .finally(() => {
         setGoldenHourLoading(false);
@@ -228,7 +229,8 @@ const AdminOpsPlanPage: React.FC = () => {
       })
       .catch((err) => {
         setEvalMetrics([]);
-        setEvalMetricsError(err?.response?.data?.detail || "평가 리포트를 불러오지 못했습니다.");
+        const message = getAdminApiErrorMessage(err);
+        setEvalMetricsError(message || "평가 리포트를 불러오지 못했습니다.");
       })
       .finally(() => {
         setEvalMetricsLoading(false);

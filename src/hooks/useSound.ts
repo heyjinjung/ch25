@@ -6,18 +6,23 @@ import { Howl } from "howler";
 // using local constants for easy reference if needed.
 const SOUND_SOURCES = {
     BGM: {
-        MAIN: "/assets/sounds/bgm/Red Curtain.ogg",
+        MAIN: "/assets/sounds/bgm/battle_theme.wav",
         BATTLE: "/assets/sounds/bgm/battle_theme.wav",
     },
     SFX: {
         TRANSITION: "/assets/sounds/sfx/page_turn.mp3",
-        TOAST: "/assets/sounds/sfx/MESSAGE-B_Accept.wav",
+        // TOAST: "/assets/sounds/sfx/MESSAGE-B_Accept.wav", // Deleted
         DICE_SHAKE: "/assets/sounds/sfx/dice-shake-3.ogg",
         DICE_THROW: "/assets/sounds/sfx/dice-throw-3.ogg",
+        DICE_REVEAL: "/assets/sounds/sfx/Dice_Reveal.ogg",
         TAB_TOUCH: "/assets/sounds/sfx/page_turn.mp3",
-        LOTTERY_SCRATCH: "/assets/sounds/sfx/lottery_reveal.wav",
-        ROULETTE_SPIN: "/assets/sounds/sfx/roulette_spin.wav",
-        ENTER_GAME: "/assets/sounds/sfx/MESSAGE-B_Accept.wav",
+        LOTTERY_ROLL: "/assets/sounds/sfx/Lotto_Ball_Roll.ogg",
+        LOTTERY_WIN: "/assets/sounds/sfx/Lotto_Win.ogg",
+        ROULETTE_STOP: "/assets/sounds/sfx/Ball_Drop_Clack.ogg",
+        SMALL_WIN: "/assets/sounds/sfx/Small_Win.ogg",
+        BIG_WIN: "/assets/sounds/sfx/Big_Win.ogg",
+        VAULT_JINGLE: "/assets/sounds/sfx/Vault_Jingle.ogg",
+        // ENTER_GAME: "/assets/sounds/sfx/MESSAGE-B_Accept.wav", // Deleted
     },
 };
 
@@ -33,34 +38,44 @@ export const useSound = () => {
     }, []);
 
     const playPageTransition = useCallback(() => playSfx(SOUND_SOURCES.SFX.TRANSITION, { volume: 0.4 }), [playSfx]);
-    const playToast = useCallback(() => playSfx(SOUND_SOURCES.SFX.TOAST, { volume: 0.7 }), [playSfx]);
+    const playToast = useCallback(() => {
+        // playSfx(SOUND_SOURCES.SFX.TOAST, { volume: 0.7 })
+    }, [playSfx]);
 
     const playDiceShake = useCallback(() => playSfx(SOUND_SOURCES.SFX.DICE_SHAKE, { volume: 0.8 }), [playSfx]);
     const playDiceThrow = useCallback(() => playSfx(SOUND_SOURCES.SFX.DICE_THROW, { volume: 1.0 }), [playSfx]);
+    const playDiceReveal = useCallback(() => playSfx(SOUND_SOURCES.SFX.DICE_REVEAL, { volume: 0.9 }), [playSfx]);
     const playTabTouch = useCallback(() => playSfx(SOUND_SOURCES.SFX.TAB_TOUCH, { volume: 1.0 }), [playSfx]);
 
     const playLotteryScratch = useCallback(() => {
         if (lotteryScratchRef.current) {
             lotteryScratchRef.current.stop();
         }
-        lotteryScratchRef.current = playSfx(SOUND_SOURCES.SFX.LOTTERY_SCRATCH, { volume: 0.8 });
+        lotteryScratchRef.current = playSfx(SOUND_SOURCES.SFX.LOTTERY_ROLL, { volume: 1.0, loop: true });
     }, [playSfx]);
 
     const stopLotteryScratch = useCallback(() => {
         if (lotteryScratchRef.current) {
-            lotteryScratchRef.current.fade(0.8, 0, 500);
+            lotteryScratchRef.current.fade(1.0, 0, 300);
             setTimeout(() => {
                 lotteryScratchRef.current?.stop();
                 lotteryScratchRef.current = null;
-            }, 500);
+            }, 300);
         }
     }, []);
 
+    const playLotteryWin = useCallback(() => playSfx(SOUND_SOURCES.SFX.LOTTERY_WIN, { volume: 1.0 }), [playSfx]);
+
+    const playRouletteStop = useCallback(() => playSfx(SOUND_SOURCES.SFX.ROULETTE_STOP, { volume: 0.9 }), [playSfx]);
+    const playSmallWin = useCallback(() => playSfx(SOUND_SOURCES.SFX.SMALL_WIN, { volume: 0.8 }), [playSfx]);
+    const playBigWin = useCallback(() => playSfx(SOUND_SOURCES.SFX.BIG_WIN, { volume: 1.0 }), [playSfx]);
+    const playVaultJingle = useCallback(() => playSfx(SOUND_SOURCES.SFX.VAULT_JINGLE, { volume: 0.8 }), [playSfx]);
+
     const playRouletteSpin = useCallback(() => {
-        if (rouletteSpinRef.current) {
-            rouletteSpinRef.current.stop();
-        }
-        rouletteSpinRef.current = playSfx(SOUND_SOURCES.SFX.ROULETTE_SPIN, { volume: 0.8 });
+        // if (rouletteSpinRef.current) {
+        //     rouletteSpinRef.current.stop();
+        // }
+        // rouletteSpinRef.current = playSfx(SOUND_SOURCES.SFX.ROULETTE_SPIN, { volume: 0.8 });
     }, [playSfx]);
 
     const stopRouletteSpin = useCallback(() => {
@@ -76,7 +91,9 @@ export const useSound = () => {
     const startMainBgm = useCallback(() => playBgm(SOUND_SOURCES.BGM.MAIN), [playBgm]);
     const startBattleBgm = useCallback(() => playBgm(SOUND_SOURCES.BGM.BATTLE), [playBgm]);
 
-    const playEnterGame = useCallback(() => playSfx(SOUND_SOURCES.SFX.ENTER_GAME, { volume: 0.6 }), [playSfx]);
+    const playEnterGame = useCallback(() => {
+        // playSfx(SOUND_SOURCES.SFX.ENTER_GAME, { volume: 0.6 })
+    }, [playSfx]);
 
     return {
         playClick,
@@ -87,6 +104,7 @@ export const useSound = () => {
         playTabTouch,
         playLotteryScratch,
         stopLotteryScratch,
+        playLotteryWin,
         playRouletteSpin,
         stopRouletteSpin,
         startMainBgm,
@@ -97,5 +115,10 @@ export const useSound = () => {
         isReady,
         playSfx,
         playEnterGame,
+        playRouletteStop,
+        playSmallWin,
+        playBigWin,
+        playVaultJingle,
+        playDiceReveal,
     };
 };
