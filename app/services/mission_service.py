@@ -693,7 +693,9 @@ class MissionService:
              target_reward_type = "DICE_TOKEN"
         elif mission.reward_type == MissionRewardType.TICKET_LOTTERY:
              target_reward_type = "LOTTERY_TICKET"
-             
+        elif mission.reward_type == MissionRewardType.POINT:
+             target_reward_type = "POINT"
+
         # 2. Deliver Main Asset Reward
         if target_reward_type and target_amount > 0:
              from app.services.reward_service import RewardService
