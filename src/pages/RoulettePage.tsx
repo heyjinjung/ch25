@@ -36,7 +36,7 @@ const TABS: { type: GameTokenType; label: string; activeColors: string; icon: st
   {
     type: "GOLD_KEY",
     label: "골드\n룰렛",
-    activeColors: "bg-gradient-to-br from-yellow-300 via-amber-400 to-yellow-500 text-black shadow-[0_0_20px_rgba(255,215,0,0.5)] border-amber-300",
+    activeColors: "bg-black text-amber-400 border border-amber-400 shadow-[0_0_20px_rgba(255,215,0,0.5)]",
     icon: "🗝️",
     iconImg: "/assets/icons/goldkey.png"
   },

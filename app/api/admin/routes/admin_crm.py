@@ -121,6 +121,52 @@ def get_crm_stats(db: Session = Depends(get_db)):
 @router.get("/segment-detail", response_model=List[AdminUserProfileResponse])
 def get_segment_detail(segment_type: str, limit: int = 100, db: Session = Depends(get_db)):
     """Get users in a specific segment with profile info."""
+    
+    # [Mod] Support for Crisis Scenarios (SCENARIO_XX)
+    if segment_type.startswith("SCENARIO_"):
+        from app.services.ops_target_service import OpsTargetService
+        ops_service = OpsTargetService()
+        
+        # Get users from OpsService (returns [{"user_id": 1, "nickname": "...", "data": {...}}])
+        scenario_users = ops_service.get_scenario_users(db, segment_type, limit=limit)
+        
+        results = []
+        for u_data in scenario_users:
+            uid = u_data["user_id"]
+            
+            # Fetch standard profile info to hydrate
+            profile = UserSegmentService.get_user_profile(db, uid)
+            segments = UserSegmentService.get_computed_segments(db, uid)
+            
+            # Fallback for user basic info if not fully in u_data
+            u = db.query(User).filter(User.id == uid).first()
+            
+            telegram_id_value = None
+            if profile and profile.telegram_id:
+                telegram_id_value = str(profile.telegram_id)
+            elif u and u.telegram_id is not None:
+                telegram_id_value = str(u.telegram_id)
+
+            resp = AdminUserProfileResponse(
+                user_id=uid,
+                external_id=u.external_id if u else None,
+                nickname=u.nickname if u else None,
+                real_name=profile.real_name if profile else None,
+                phone_number=profile.phone_number if profile else None,
+                telegram_id=telegram_id_value,
+                telegram_username=u.telegram_username if u else None,
+                tags=profile.tags if profile else [],
+                memo=profile.memo if profile else None,
+                computed_segments=segments
+            )
+            # Append scenario data context to memo or specific field if needed (optional)
+            # if u_data.get("data"):
+            #     resp.memo = f"{resp.memo or ''} [Scenario Data: {u_data['data']}]"
+                
+            results.append(resp)
+        return results
+
+    # Existing Logic
     user_ids = UserSegmentService.get_users_by_segment(db, segment_type, limit)
     results = []
     for uid in user_ids:

@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getVaultStatus } from "../../api/vaultApi";
 import { tryHaptic } from "../../utils/haptics";
 import { motion, AnimatePresence } from "framer-motion";
+import AnimatedNumber from "../common/AnimatedNumber";
 
 import { useToast } from "../../components/common/ToastProvider";
 import { Lock, Info, ListChecks } from "lucide-react";
@@ -12,6 +13,41 @@ import WithdrawalProgressModal from "../modal/WithdrawalProgressModal";
 
 // Helper to format currency
 const formatWon = (amount: number) => `${amount.toLocaleString("ko-KR")}원`;
+
+const SparkleDust: React.FC = () => {
+    // Generate 15 random sparkles
+    const sparkles = Array.from({ length: 15 });
+    
+    return (
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            {sparkles.map((_, i) => (
+                <motion.img
+                    key={i}
+                    src="/assets/sparkle.png"
+                    className="absolute w-4 h-4 opacity-0"
+                    initial={{ 
+                        x: `${Math.random() * 100}%`, 
+                        y: `${Math.random() * 100}%`,
+                        scale: Math.random() * 0.5 + 0.5,
+                        rotate: 0 
+                    }}
+                    animate={{ 
+                        y: ["-10%", "110%"],
+                        x: [`${Math.random() * 100}%`, `${Math.random() * 100}%`],
+                        opacity: [0, 0.4, 0.6, 0.4, 0],
+                        rotate: [0, 180, 360],
+                    }}
+                    transition={{
+                        duration: Math.random() * 10 + 10, // 10-20s
+                        repeat: Infinity,
+                        delay: Math.random() * 20,
+                        ease: "linear"
+                    }}
+                />
+            ))}
+        </div>
+    );
+};
 
 const VaultPageCompact: React.FC = () => {
     const { addToast } = useToast();
@@ -69,6 +105,7 @@ const VaultPageCompact: React.FC = () => {
 
     return (
         <div className="flex flex-col items-center px-4 py-6 min-h-[calc(100vh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-80px)] relative overflow-hidden bg-black text-white">
+            <SparkleDust />
 
             {/* Title */}
             <h1 className="text-xs font-black tracking-[0.2em] text-emerald-500 uppercase mb-8 border border-emerald-900/50 px-4 py-1.5 rounded-full bg-emerald-950/30">
@@ -104,7 +141,8 @@ const VaultPageCompact: React.FC = () => {
                         </div>
                         <div className="text-center">
                             <div className="text-5xl font-black text-white tracking-tighter drop-shadow-xl flex items-center gap-1">
-                                {formatWon(view.availableAmount)}
+                                <AnimatedNumber value={view.availableAmount} />
+                                <span className="text-2xl ml-[-2px]">원</span>
                             </div>
                         </div>
                     </div>
@@ -172,7 +210,7 @@ const VaultPageCompact: React.FC = () => {
                     <div className="flex items-center gap-2 mb-8">
                         <img src="/assets/asset_coin_gold.png" alt="Coin" className="w-8 h-8 object-contain opacity-80" />
                         <div className="text-4xl font-black text-white/90 tracking-tighter">
-                            {formatWon(view.vaultBalance)}
+                            <AnimatedNumber value={view.vaultBalance} />원
                         </div>
                     </div>
 

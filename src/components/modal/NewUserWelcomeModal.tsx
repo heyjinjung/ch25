@@ -136,26 +136,26 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) =>
                     <div className="px-6 pb-6">
                         <div className="grid grid-cols-2 gap-2 mb-6">
                             {/* Cash Card */}
-                            <div className="relative group p-3 rounded-2xl bg-white/[0.03] border border-white/5 flex flex-col items-center justify-center overflow-hidden aspect-[4/5]">
+                            <div className="relative group p-4 rounded-2xl bg-white/[0.03] border border-white/5 flex flex-col items-center justify-center overflow-hidden aspect-[4/5]">
                                 <div className="absolute inset-0 bg-emerald-500/5 blur-xl group-hover:opacity-100 transition-opacity" />
-                                <div className="relative z-10 w-10 h-10 mb-2 bg-black/40 rounded-xl border border-white/5 flex items-center justify-center p-2 shadow-inner">
+                                <div className="relative z-10 w-14 h-14 mb-3 bg-black/40 rounded-xl border border-white/5 flex items-center justify-center p-2.5 shadow-inner">
                                     <img src="/assets/asset_coin_gold.png" alt="coin" className="w-full h-full object-contain" />
                                 </div>
-                                <div className="relative z-10 text-[10px] font-bold text-zinc-500 mb-0.5 whitespace-nowrap">정착 지원금</div>
-                                <div className="relative z-10 text-base font-black text-white tabular-nums">
-                                    {cashAmount.toLocaleString()}<span className="text-[10px] text-emerald-500 ml-0.5">P</span>
+                                <div className="relative z-10 text-[12px] font-bold text-zinc-500 mb-1 whitespace-nowrap">정착 지원금</div>
+                                <div className="relative z-10 text-xl font-black text-white tabular-nums">
+                                    {cashAmount.toLocaleString()}<span className="text-[12px] text-emerald-500 ml-0.5">P</span>
                                 </div>
                             </div>
 
                             {/* Ticket Card */}
-                            <div className="relative group p-3 rounded-2xl bg-white/[0.03] border border-white/5 flex flex-col items-center justify-center overflow-hidden aspect-[4/5]">
+                            <div className="relative group p-4 rounded-2xl bg-white/[0.03] border border-white/5 flex flex-col items-center justify-center overflow-hidden aspect-[4/5]">
                                 <div className="absolute inset-0 bg-amber-500/5 blur-xl group-hover:opacity-100 transition-opacity" />
-                                <div className="relative z-10 w-10 h-10 mb-2 bg-black/40 rounded-xl border border-white/5 flex items-center justify-center p-2 shadow-inner">
+                                <div className="relative z-10 w-14 h-14 mb-3 bg-black/40 rounded-xl border border-white/5 flex items-center justify-center p-2.5 shadow-inner">
                                     <img src="/assets/asset_ticket_green.png" alt="ticket" className="w-full h-full object-contain" />
                                 </div>
-                                <div className="relative z-10 text-[10px] font-bold text-zinc-500 mb-0.5 whitespace-nowrap">룰렛 티켓</div>
-                                <div className="relative z-10 text-base font-black text-white tabular-nums">
-                                    {ticketAmount}<span className="text-[10px] ml-0.5 text-amber-500">장</span>
+                                <div className="relative z-10 text-[12px] font-bold text-zinc-500 mb-1 whitespace-nowrap">룰렛 티켓</div>
+                                <div className="relative z-10 text-xl font-black text-white tabular-nums">
+                                    {ticketAmount}<span className="text-[12px] ml-0.5 text-amber-500">장</span>
                                 </div>
                             </div>
                         </div>

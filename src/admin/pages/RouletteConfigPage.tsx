@@ -102,16 +102,17 @@ const buildDefaultSegments = (): RouletteFormValues["segments"] =>
 const normalizeToSixSegments = (segments: AdminRouletteSegmentPayload[]): RouletteFormValues["segments"] => {
   const base = buildDefaultSegments();
   return Array.from({ length: 6 }).map((_, idx) => {
-    const raw = segments.find((s) => {
-      const sidx = s.index;
-      return sidx === idx;
-    }) || ({} as Partial<AdminRouletteSegmentPayload> & { reward_amount?: number });
+    const raw =
+      segments.find((s: any) => {
+        const sidx = typeof (s as any).index === "number" ? (s as any).index : (s as any).slot_index;
+        return sidx === idx;
+      }) || ({} as Partial<AdminRouletteSegmentPayload> & { reward_amount?: number; slot_index?: number });
 
     return {
       label: raw.label ?? base[idx].label,
       weight: raw.weight ?? base[idx].weight,
       reward_type: raw.reward_type ?? base[idx].reward_type,
-      reward_value: raw.reward_value ?? (raw as any).reward_amount ?? base[idx].reward_value,
+      reward_value: (raw as any).reward_value ?? (raw as any).reward_amount ?? base[idx].reward_value,
     };
   });
 };

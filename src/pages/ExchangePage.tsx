@@ -54,6 +54,7 @@ const ProductCard: React.FC<{ product: ShopProduct; vaultBalance: number; onBuy:
         'VOUCHER_DIAMOND_KEY_1': { label: "다이아 키", img: "/assets/icons/diakey.png" },
         'ROULETTE_COIN': { label: "룰렛 티켓", img: "/assets/asset_ticket_green.png" },
         'DICE_TOKEN': { label: "주사위 티켓", img: "/assets/icon_dice_silver.png" },
+        'LOTTERY_TICKET': { label: "복권 티켓", img: "/assets/lottery/icon_lotto_ball.webp" },
         'GOLD_KEY': { label: "골드 키", img: "/assets/icons/goldkey.png" },
         'DIAMOND_KEY': { label: "다이아 키", img: "/assets/icons/diakey.png" },
     };

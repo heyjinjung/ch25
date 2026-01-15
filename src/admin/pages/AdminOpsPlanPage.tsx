@@ -11,6 +11,7 @@ import {
   useEnsureOpsPlan,
   useExecuteOpsPlanTask,
   useOpsCampaigns,
+  useOpsTargetLists,
   useOpsPlanTasks,
   useUpdateOpsCampaign,
   useUpdateOpsPlanTask,
@@ -40,6 +41,23 @@ function getKstDateKey(value: Date): string {
 
 const STATUS_OPTIONS = ["TODO", "DOING", "DONE", "SKIPPED", "BLOCKED"] as const;
 const TYPE_OPTIONS = ["NOTE", "TOGGLE", "DM"] as const;
+const STATUS_LABEL: Record<string, string> = {
+  TODO: "대기",
+  DOING: "진행",
+  DONE: "완료",
+  SKIPPED: "건너뜀",
+  BLOCKED: "차단",
+};
+const TYPE_LABEL: Record<string, string> = {
+  NOTE: "메모",
+  TOGGLE: "토글",
+  DM: "메시지",
+};
+const ACTION_LABEL: Record<string, string> = {
+  FORCE_ON: "강제 ON",
+  FORCE_OFF: "강제 OFF",
+  MULTIPLIER_SET: "배수 설정",
+};
 
 type LocalTaskDraft = {
   slot_time: string;
@@ -69,7 +87,7 @@ function humanizeOpsPlanError(message: string): string {
   if (!m) return "요청에 실패했습니다.";
 
   const map: Record<string, string> = {
-    OPS_TASK_ALREADY_EXECUTED: "이미 실행된 Task입니다.",
+    OPS_TASK_ALREADY_EXECUTED: "이미 실행된 작업입니다.",
     OPS_GRANT_ALL_ITEMS_REQUIRED: "지급 아이템 목록(items)이 필요합니다.",
     OPS_GRANT_ALL_ITEMS_INVALID: "지급 아이템 목록(items)이 올바르지 않습니다.",
   };
@@ -102,6 +120,7 @@ const AdminOpsPlanPage: React.FC = () => {
   const deletePlan = useDeleteOpsPlan(selectedCampaignId, todayKst);
 
   const tasksQuery = useOpsPlanTasks(planId);
+  const targetListsQuery = useOpsTargetLists(planId);
   const deleteTask = useDeleteOpsPlanTask(planId);
 
   const createTask = useCreateOpsPlanTask(planId);
@@ -110,11 +129,14 @@ const AdminOpsPlanPage: React.FC = () => {
 
   const [taskDraft, setTaskDraft] = useState<LocalTaskDraft>({ slot_time: "", title: "" });
 
-  const [selectedActionId, setSelectedActionId] = useState<string>("");
+  const [selectedActionIds, setSelectedActionIds] = useState<string[]>([]);
+  const [filterStatus, setFilterStatus] = useState<string>("ALL");
+  const [filterType, setFilterType] = useState<string>("ALL");
+  const [searchTerm, setSearchTerm] = useState<string>("");
   const [experimentDrafts, setExperimentDrafts] = useState<Record<number, OpsExperimentDraft>>({});
 
   const [toggleDrafts, setToggleDrafts] = useState<Record<number, { action: string; multiplier: string }>>({});
-  const [dmDrafts, setDmDrafts] = useState<Record<number, { audience: string; message: string }>>({});
+  const [dmDrafts, setDmDrafts] = useState<Record<number, { audience: string; message: string; target_list_id?: number | null }>>({});
   const [piiConfirmTaskId, setPiiConfirmTaskId] = useState<number | null>(null);
   const [piiHitsByTaskId, setPiiHitsByTaskId] = useState<Record<number, ReturnType<typeof findPiiHits>>>({});
 
@@ -142,14 +164,14 @@ const AdminOpsPlanPage: React.FC = () => {
   const onDeleteTodayPlan = async () => {
     if (!planId) return;
     const ok = window.confirm(
-      "오늘 플랜을 삭제(초기화)할까요?\n- 플랜에 속한 Task는 함께 삭제됩니다.\n- 화면은 자동으로 새 플랜을 다시 생성합니다.",
+      "오늘 플랜을 삭제(초기화)할까요?\n- 플랜에 속한 작업은 함께 삭제됩니다.\n- 화면은 자동으로 새 플랜을 다시 생성합니다.",
     );
     if (!ok) return;
 
     try {
       await deletePlan.mutateAsync(planId);
       setTaskDraft({ slot_time: "", title: "" });
-      setSelectedActionId("");
+      setSelectedActionIds([]);
       setExperimentDrafts({});
       setToggleDrafts({});
       setDmDrafts({});
@@ -163,7 +185,7 @@ const AdminOpsPlanPage: React.FC = () => {
   };
 
   const onDeleteSingleTask = async (taskId: number) => {
-    const ok = window.confirm("이 Task를 삭제할까요?");
+    const ok = window.confirm("이 작업을 삭제할까요?");
     if (!ok) return;
 
     try {
@@ -189,9 +211,9 @@ const AdminOpsPlanPage: React.FC = () => {
         return next;
       });
       if (piiConfirmTaskId === taskId) setPiiConfirmTaskId(null);
-      addToast("Task를 삭제했습니다.", "success");
+      addToast("작업을 삭제했습니다.", "success");
     } catch {
-      addToast("Task 삭제에 실패했습니다.", "error");
+      addToast("작업 삭제에 실패했습니다.", "error");
     }
   };
 
@@ -210,9 +232,10 @@ const AdminOpsPlanPage: React.FC = () => {
     setTaskDraft({ slot_time: "", title: "" });
   };
 
+  /*
   const onAddPlaybookAction = async () => {
     if (!planId) return;
-    const action = OPS_PLAYBOOK_ACTIONS.find((a) => a.id === selectedActionId);
+    const action = OPS_PLAYBOOK_ACTIONS.find((a) => selectedActionIds.includes(a.id));
     if (!action) return;
 
     await createTask.mutateAsync({
@@ -235,6 +258,7 @@ const AdminOpsPlanPage: React.FC = () => {
       },
     });
   };
+  */
 
   const getExperimentDraft = (payloadJson: Record<string, unknown> | null | undefined): OpsExperimentDraft => {
     const existing = (payloadJson ?? {}) as Record<string, unknown>;
@@ -329,7 +353,7 @@ const AdminOpsPlanPage: React.FC = () => {
       .map((it) => `- ${it.item_type} x${it.amount}`)
       .join("\n");
     return window.confirm(
-      `⚠️ 전체 유저(상태 무관)에게 아이템을 지급합니다.\n\nTask ID: ${taskId}\nReason: ${draft.reason}\n\n지급 목록:\n${lines}\n\n실행 후 되돌릴 수 없습니다. 진행할까요?`
+      `⚠️ 전체 유저(상태 무관)에게 아이템을 지급합니다.\n\n작업 ID: ${taskId}\n사유: ${draft.reason}\n\n지급 목록:\n${lines}\n\n실행 후 되돌릴 수 없습니다. 진행할까요?`
     );
   };
 
@@ -384,9 +408,14 @@ const AdminOpsPlanPage: React.FC = () => {
     updateTask.mutate({ taskId, patch: { type: "TOGGLE", payload_json: payload } });
   };
 
-  const saveDmPayload = (taskId: number, draft: { audience: string; message: string }, opts?: { bypassPii?: boolean }) => {
+  const saveDmPayload = (
+    taskId: number,
+    draft: { audience: string; message: string; target_list_id?: number | null },
+    opts?: { bypassPii?: boolean },
+  ) => {
     const audience = (draft.audience || "SURVEY_COMPLETERS").trim();
     const message = draft.message ?? "";
+    const targetListId = draft.target_list_id ?? null;
 
     if (!opts?.bypassPii) {
       const hits = findPiiHits(message);
@@ -408,16 +437,26 @@ const AdminOpsPlanPage: React.FC = () => {
           kind: "SURVEY_DM",
           audience,
           message,
+          target_list_id: targetListId,
         },
       },
     });
   };
 
+  const tasks = tasksQuery.data ?? [];
+  const filteredTasks = tasks.filter((t) => {
+    const statusOk = filterStatus === "ALL" || t.status === filterStatus;
+    const typeOk = filterType === "ALL" || t.type === filterType;
+    const term = searchTerm.trim().toLowerCase();
+    const textOk = !term || `${t.title} ${t.memo ?? ""}`.toLowerCase().includes(term);
+    return statusOk && typeOk && textOk;
+  });
+
   return (
     <section className="admin-page-container">
       <header className="flex flex-col gap-2 border-b border-admin-border pb-6 pt-4">
         <h1 className="text-3xl font-bold text-admin-text-base tracking-tight uppercase">
-          운영계획 <span className="text-admin-brand/40">Playbook</span>
+          운영계획 <span className="text-admin-brand/40">플레이북</span>
         </h1>
 
         <div>
@@ -546,13 +585,13 @@ const AdminOpsPlanPage: React.FC = () => {
         <div className="col-span-12 lg:col-span-8 space-y-6">
           <div className="rounded-xl border border-admin-border bg-admin-sidebar p-4 shadow-lg">
             <div className="flex items-center justify-between gap-3">
-              <h2 className="text-admin-subtitle text-admin-text-primary">Task 체크리스트</h2>
+              <h2 className="text-admin-subtitle text-admin-text-primary">작업 체크리스트</h2>
               <button
                 type="button"
                 className="inline-flex items-center gap-2 rounded-lg border border-admin-border bg-admin-bg px-3 py-2 text-xs font-bold text-admin-text-secondary hover:bg-admin-bg/70"
                 onClick={() => tasksQuery.refetch()}
                 disabled={!planId}
-                aria-label="Task 목록 새로고침"
+                aria-label="작업 목록 새로고침"
                 title="새로고침"
               >
                 <RefreshCw size={14} />
@@ -589,8 +628,8 @@ const AdminOpsPlanPage: React.FC = () => {
                   className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-admin-brand px-3 py-2 text-sm font-bold text-white disabled:opacity-50"
                   onClick={onAddTask}
                   disabled={!planId || !taskDraft.title.trim() || createTask.isPending}
-                  aria-label="Task 추가"
-                  title="Task 추가"
+                  aria-label="작업 추가"
+                  title="작업 추가"
                 >
                   <Plus size={16} />
                   추가
@@ -642,40 +681,127 @@ const AdminOpsPlanPage: React.FC = () => {
             </div>
 
             <div className="mt-3 rounded-lg border border-admin-border bg-admin-bg/40 p-3">
-              <div className="text-xs font-bold text-admin-text-muted">플레이북 액션 추가 (실험 추적 포함)</div>
+              <div className="text-xs font-bold text-admin-text-muted">플레이북 액션 다중 추가 (실험 추적 포함)</div>
               <div className="mt-2 grid grid-cols-12 gap-2">
-                <div className="col-span-12 md:col-span-9">
-                  <label htmlFor="ops-playbook-action" className="sr-only">플레이북 액션</label>
-                  <select
-                    id="ops-playbook-action"
-                    className="w-full rounded-lg border border-admin-border bg-admin-bg px-3 py-2 text-xs"
-                    value={selectedActionId}
-                    onChange={(e) => setSelectedActionId(e.target.value)}
-                    disabled={!planId}
-                  >
-                    <option value="">(선택) 리텐션 문서 액션</option>
-                    {OPS_PLAYBOOK_ACTIONS.map((a) => (
-                      <option key={a.id} value={a.id}>
-                        {a.title}
-                      </option>
-                    ))}
-                  </select>
+                <div className="col-span-12">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-48 overflow-y-auto rounded-lg border border-admin-border bg-admin-bg/60 p-2">
+                    {OPS_PLAYBOOK_ACTIONS.map((a) => {
+                      const checked = selectedActionIds.includes(a.id);
+                      return (
+                        <label key={a.id} className="flex items-start gap-2 text-xs text-admin-text-primary">
+                          <input
+                            type="checkbox"
+                            className="mt-1"
+                            checked={checked}
+                            onChange={(e) => {
+                              setSelectedActionIds((prev) =>
+                                e.target.checked ? [...prev, a.id] : prev.filter((id) => id !== a.id)
+                              );
+                            }}
+                            disabled={!planId}
+                          />
+                          <span>
+                            <span className="font-bold text-admin-text-base">{a.title}</span>
+                            {a.slot_time && <span className="ml-2 text-admin-text-muted">({a.slot_time})</span>}
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
                 </div>
-                <div className="col-span-12 md:col-span-3">
+                <div className="col-span-12 flex items-center justify-between text-[11px] text-admin-text-muted">
+                  <span>선택된 {selectedActionIds.length}개 액션을 한번에 추가합니다.</span>
                   <button
                     type="button"
-                    className="w-full rounded-lg bg-admin-brand px-3 py-2 text-xs font-bold text-white disabled:opacity-50"
-                    onClick={onAddPlaybookAction}
-                    disabled={!planId || !selectedActionId || createTask.isPending}
-                    aria-label="플레이북 액션 Task 추가"
+                    className="rounded-lg bg-admin-brand px-3 py-2 text-xs font-bold text-white disabled:opacity-50"
+                    onClick={async () => {
+                      if (!planId || selectedActionIds.length === 0) return;
+                      for (const id of selectedActionIds) {
+                        const action = OPS_PLAYBOOK_ACTIONS.find((a) => a.id === id);
+                        if (!action) continue;
+                        await createTask.mutateAsync({
+                          title: action.title,
+                          slot_time: action.slot_time ?? null,
+                          type: action.type,
+                          status: "TODO",
+                          payload_json: {
+                            ...action.payload_json,
+                            playbook_action_id: action.id,
+                            experiment: {
+                              metric_key: action.default_metric_key ?? ("OTHER" as StandardMetricKey),
+                              metric_custom_key: "",
+                              window: action.default_window ?? "일",
+                              before: null,
+                              after: null,
+                              evidence: "",
+                              note: "",
+                            },
+                          },
+                        });
+                      }
+                      setSelectedActionIds([]);
+                    }}
+                    disabled={!planId || selectedActionIds.length === 0 || createTask.isPending}
+                    aria-label="플레이북 액션 작업 추가"
                     title="추가"
                   >
-                    액션 추가
+                    선택 액션 추가
                   </button>
                 </div>
               </div>
               <div className="mt-2 text-[11px] text-admin-text-muted">
-                표준 지표 드롭다운 + before/after + 기간 + 근거 링크를 payload_json에 저장합니다.
+                표준 지표 드롭다운 + 이전/이후 값 + 기간 + 근거 링크를 payload_json에 저장합니다.
+              </div>
+            </div>
+
+            <div className="mt-3 grid grid-cols-12 gap-2">
+              <div className="col-span-12 md:col-span-4">
+                <label htmlFor="ops-filter-status" className="block text-[11px] font-bold text-admin-text-muted">
+                  상태 필터
+                </label>
+                <select
+                  id="ops-filter-status"
+                  className="mt-1 w-full rounded-lg border border-admin-border bg-admin-bg px-3 py-2 text-xs"
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                >
+                  <option value="ALL">전체</option>
+                  {STATUS_OPTIONS.map((s) => (
+                    <option key={s} value={s}>
+                      {STATUS_LABEL[s] ?? s}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="col-span-12 md:col-span-4">
+                <label htmlFor="ops-filter-type" className="block text-[11px] font-bold text-admin-text-muted">
+                  타입 필터
+                </label>
+                <select
+                  id="ops-filter-type"
+                  className="mt-1 w-full rounded-lg border border-admin-border bg-admin-bg px-3 py-2 text-xs"
+                  value={filterType}
+                  onChange={(e) => setFilterType(e.target.value)}
+                >
+                  <option value="ALL">전체</option>
+                  {TYPE_OPTIONS.map((s) => (
+                    <option key={s} value={s}>
+                      {TYPE_LABEL[s] ?? s}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="col-span-12 md:col-span-4">
+                <label htmlFor="ops-filter-search" className="block text-[11px] font-bold text-admin-text-muted">
+                  검색(제목/메모)
+                </label>
+                <input
+                  id="ops-filter-search"
+                  className="mt-1 w-full rounded-lg border border-admin-border bg-admin-bg px-3 py-2 text-xs"
+                  placeholder="검색어 입력"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
               </div>
             </div>
 
@@ -686,18 +812,19 @@ const AdminOpsPlanPage: React.FC = () => {
                     <th className="admin-th w-[90px]">시간</th>
                     <th className="admin-th">제목</th>
                     <th className="admin-th w-[140px]">상태</th>
+                    <th className="admin-th w-[180px]">결과</th>
                     <th className="admin-th w-[260px]">실행</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {(tasksQuery.data ?? []).map((t) => (
+                  {filteredTasks.map((t) => (
                     <tr key={t.id} className="border-t border-admin-border">
                       <td className="admin-td font-mono whitespace-nowrap">{t.slot_time || "-"}</td>
                       <td className="admin-td">
                         <div className="flex flex-wrap items-center gap-2">
                           <div className="text-admin-text-primary font-semibold">{t.title}</div>
                           <span className="rounded-md border border-admin-border bg-admin-bg px-2 py-0.5 text-[11px] font-bold text-admin-text-muted">
-                            {t.type}
+                            {TYPE_LABEL[t.type] ?? t.type}
                           </span>
                         </div>
 
@@ -713,7 +840,7 @@ const AdminOpsPlanPage: React.FC = () => {
                           >
                             {TYPE_OPTIONS.map((opt) => (
                               <option key={opt} value={opt}>
-                                {opt}
+                                {TYPE_LABEL[opt] ?? opt}
                               </option>
                             ))}
                           </select>
@@ -922,16 +1049,17 @@ const AdminOpsPlanPage: React.FC = () => {
                               const draft = dmDrafts[t.id] ?? {
                                 audience: String(payload.audience ?? "SURVEY_COMPLETERS"),
                                 message: String(payload.message ?? ""),
+                                target_list_id: payload.target_list_id as number | undefined,
                               };
 
                               const hits = piiHitsByTaskId[t.id] ?? [];
                               const needsConfirm = piiConfirmTaskId === t.id && hits.length > 0;
 
-                              return (
-                                <div className="mt-2 space-y-2">
-                                  <div className="grid grid-cols-12 gap-2">
-                                    <div className="col-span-12 md:col-span-4">
-                                      <label htmlFor={`ops-dm-audience-${t.id}`} className="block text-[11px] font-bold text-admin-text-muted">
+                                  return (
+                                    <div className="mt-2 space-y-2">
+                                      <div className="grid grid-cols-12 gap-2">
+                                        <div className="col-span-12 md:col-span-4">
+                                          <label htmlFor={`ops-dm-audience-${t.id}`} className="block text-[11px] font-bold text-admin-text-muted">
                                         대상
                                       </label>
                                       <select
@@ -950,11 +1078,11 @@ const AdminOpsPlanPage: React.FC = () => {
                                         <option value="SEGMENT">SEGMENT</option>
                                       </select>
                                     </div>
-                                    <div className="col-span-12 md:col-span-8">
-                                      <label htmlFor={`ops-dm-message-${t.id}`} className="block text-[11px] font-bold text-admin-text-muted">
-                                        메시지
-                                      </label>
-                                      <textarea
+                                        <div className="col-span-12 md:col-span-8">
+                                          <label htmlFor={`ops-dm-message-${t.id}`} className="block text-[11px] font-bold text-admin-text-muted">
+                                            메시지
+                                          </label>
+                                          <textarea
                                         id={`ops-dm-message-${t.id}`}
                                         className="mt-1 w-full rounded-lg border border-admin-border bg-admin-bg px-3 py-2 text-xs"
                                         rows={3}
@@ -966,9 +1094,35 @@ const AdminOpsPlanPage: React.FC = () => {
                                           }))
                                         }
                                         placeholder="(예) 설문 감사합니다! 보상은 금일 23:59까지…"
-                                      />
-                                    </div>
-                                  </div>
+                                          />
+                                        </div>
+                                      </div>
+
+                                      <div className="grid grid-cols-12 gap-2">
+                                        <div className="col-span-12 md:col-span-6">
+                                          <label htmlFor={`ops-dm-targetlist-${t.id}`} className="block text-[11px] font-bold text-admin-text-muted">
+                                            타깃 리스트(선택)
+                                          </label>
+                                          <select
+                                            id={`ops-dm-targetlist-${t.id}`}
+                                            className="mt-1 w-full rounded-lg border border-admin-border bg-admin-bg px-3 py-2 text-xs"
+                                            value={draft.target_list_id ?? ""}
+                                            onChange={(e) =>
+                                              setDmDrafts((prev) => ({
+                                                ...prev,
+                                                [t.id]: { ...draft, target_list_id: e.target.value ? Number(e.target.value) : undefined },
+                                              }))
+                                            }
+                                          >
+                                            <option value="">(선택 안 함)</option>
+                                            {(targetListsQuery.data ?? []).map((tl) => (
+                                              <option key={tl.id} value={tl.id}>
+                                                {tl.name} ({tl.count_snapshot})
+                                              </option>
+                                            ))}
+                                          </select>
+                                        </div>
+                                      </div>
 
                                   {needsConfirm && (
                                     <div className="rounded-lg border border-admin-danger/40 bg-admin-danger/10 p-2 text-xs text-admin-danger">
@@ -1172,10 +1326,33 @@ const AdminOpsPlanPage: React.FC = () => {
                         >
                           {STATUS_OPTIONS.map((s) => (
                             <option key={s} value={s}>
-                              {s}
+                              {STATUS_LABEL[s] ?? s}
                             </option>
                           ))}
                         </select>
+                      </td>
+                      <td className="admin-td">
+                        {(() => {
+                          const payload = (t.payload_json ?? {}) as Record<string, any>;
+                          const execResult = payload.execution_result as Record<string, any> | undefined;
+                          const execError = (payload as any).execution_error;
+                          if (execError) {
+                            return <div className="text-xs text-admin-danger">에러: {String(execError)}</div>;
+                          }
+                          if (execResult) {
+                            const sent = execResult.sent_count;
+                            const mult = execResult.multiplier;
+                            const items: string[] = [];
+                            if (sent != null) items.push(`발송 ${sent}건`);
+                            if (execResult.action) items.push(ACTION_LABEL[String(execResult.action)] ?? String(execResult.action));
+                            if (mult != null) items.push(`배수 ${mult}`);
+                            return <div className="text-xs text-admin-text-secondary">{items.join(" / ") || "결과 기록"}</div>;
+                          }
+                          return <div className="text-xs text-admin-text-muted">-</div>;
+                        })()}
+                        <div className="mt-1 text-[11px] text-admin-text-muted">
+                          실행시각: {t.executed_at ? formatKstDateTime(t.executed_at) : "-"}
+                        </div>
                       </td>
                       <td className="admin-td">
                         <div className="flex items-center gap-2">
@@ -1196,7 +1373,7 @@ const AdminOpsPlanPage: React.FC = () => {
                                 });
                             }}
                             disabled={!planId || executeTask.isPending}
-                            aria-label="Task 실행(완료 처리)"
+                            aria-label="작업 실행(완료 처리)"
                             title="실행"
                           >
                             실행
@@ -1207,7 +1384,7 @@ const AdminOpsPlanPage: React.FC = () => {
                               className="rounded-lg border border-admin-border bg-admin-bg px-3 py-2 text-xs font-bold text-admin-text-secondary hover:bg-admin-bg/70 disabled:opacity-50"
                               onClick={() => updateTask?.mutate({ taskId: t.id, patch: { status: "DONE" } })}
                               disabled={!planId || updateTask.isPending}
-                              aria-label="Task 완료 체크"
+                              aria-label="작업 완료 체크"
                               title="완료"
                             >
                               완료
@@ -1218,7 +1395,7 @@ const AdminOpsPlanPage: React.FC = () => {
                             className="rounded-lg border border-admin-danger/40 bg-admin-danger/10 px-3 py-2 text-xs font-bold text-admin-danger hover:bg-admin-danger/15 disabled:opacity-50"
                             onClick={() => onDeleteSingleTask(t.id)}
                             disabled={!planId || deleteTask.isPending}
-                            aria-label="Task 삭제"
+                            aria-label="작업 삭제"
                             title="삭제"
                           >
                             삭제
@@ -1227,19 +1404,19 @@ const AdminOpsPlanPage: React.FC = () => {
                       </td>
                     </tr>
                   ))}
-                  {!tasksQuery.isLoading && (tasksQuery.data ?? []).length === 0 && (
+                  {!tasksQuery.isLoading && filteredTasks.length === 0 && (
                     <tr>
-                      <td className="admin-td text-admin-text-muted" colSpan={4}>
-                        Task가 아직 없습니다. 위에서 추가해 주세요.
+                      <td className="admin-td text-admin-text-muted" colSpan={5}>
+                        작업이 아직 없습니다. 위에서 추가해 주세요.
                       </td>
                     </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+              )}
+            </tbody>
+          </table>
+        </div>
 
-            {tasksQuery.isLoading && <div className="mt-3 text-xs text-admin-text-muted">Task 로딩 중…</div>}
-            {tasksQuery.error && <div className="mt-3 text-xs text-admin-danger">Task 로드 실패</div>}
+        {tasksQuery.isLoading && <div className="mt-3 text-xs text-admin-text-muted">작업 로딩 중…</div>}
+        {tasksQuery.error && <div className="mt-3 text-xs text-admin-danger">작업 로드 실패</div>}
           </div>
         </div>
       </div>
