@@ -56,9 +56,11 @@ const MobileBottomNav: React.FC = memo(() => {
             isActive: isActive("/vault"),
             dataTour: "nav-vault",
             icon: (active: boolean) => (
-                <svg xmlns="http://www.w3.org/2000/svg" className={clsx("w-6 h-6 mb-1 transition-transform", active ? "scale-110" : "opacity-60")} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={active ? 2.5 : 2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
+                <img 
+                    src="/assets/icons/locker-dynamic-color.png" 
+                    className={clsx("w-6 h-6 mb-1 transition-transform", active ? "scale-110" : "opacity-40 grayscale")} 
+                    alt="" 
+                />
             )
         },
         {
@@ -67,9 +69,11 @@ const MobileBottomNav: React.FC = memo(() => {
             isActive: isActive("/shop"),
             dataTour: "nav-shop",
             icon: (active: boolean) => (
-                <svg xmlns="http://www.w3.org/2000/svg" className={clsx("w-6 h-6 mb-1 transition-transform", active ? "scale-110" : "opacity-60")} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={active ? 2.5 : 2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                </svg>
+                <img 
+                    src="/assets/icons/icon_cart.png" 
+                    className={clsx("w-6 h-6 mb-1 transition-transform", active ? "scale-110" : "opacity-40 grayscale")} 
+                    alt="" 
+                />
             )
         },
         {
@@ -79,9 +83,11 @@ const MobileBottomNav: React.FC = memo(() => {
             dataTour: "nav-events",
             icon: (active: boolean) => (
                 <div className="relative">
-                    <svg xmlns="http://www.w3.org/2000/svg" className={clsx("w-6 h-6 mb-1 transition-transform", active ? "scale-110 text-amber-400" : "opacity-60")} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={active ? 2.5 : 2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                    </svg>
+                    <img 
+                        src="/assets/icons/rocket-dynamic-color.png" 
+                        className={clsx("w-6 h-6 mb-1 transition-transform", active ? "scale-110" : "opacity-40 grayscale")} 
+                        alt="" 
+                    />
                     {globalHasUnclaimed && (
                         <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>

@@ -10,6 +10,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { AdminLotteryConfig, AdminLotteryConfigPayload, createLotteryConfig, fetchLotteryConfigs, updateLotteryConfig } from "../api/adminLotteryApi";
 import { REWARD_TYPES } from "../constants/rewardTypes";
 import { useToast } from "../../components/common/ToastProvider";
+import type { AdminRewardType } from "../types/adminReward";
 
 const normalizeStock = (value: unknown): number | null => {
   if (value === null || value === undefined) return null;
@@ -207,15 +208,15 @@ const LotteryConfigPage: React.FC = () => {
       name: config.name,
       is_active: config.is_active,
       max_daily_plays: config.max_daily_plays,
-      prizes: config.prizes.map((p: any) => ({
+      prizes: config.prizes.map((p) => ({
         id: p.id,
         label: p.label,
         weight: p.weight,
         stock: normalizeStock(p.stock),
         reward_type: p.reward_type,
-        reward_value: p.reward_value ?? p.reward_amount ?? 0,
+        reward_value: (p.reward_value ?? (p as any).reward_amount ?? 0) as number,
         is_active: p.is_active,
-      })) as any,
+      })),
     });
   };
 
@@ -228,10 +229,11 @@ const LotteryConfigPage: React.FC = () => {
       name: values.name.trim(),
       is_active: values.is_active,
       max_daily_plays: values.max_daily_plays,
-      prizes: values.prizes.map((p: any) => ({
+      prizes: values.prizes.map((p) => ({
         ...p,
         label: String(p.label ?? "").trim(),
         stock: normalizeStock(p.stock),
+        reward_type: p.reward_type as AdminRewardType,
       })),
     };
     mutation.mutate(payload);

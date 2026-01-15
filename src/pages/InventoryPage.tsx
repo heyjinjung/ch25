@@ -1,7 +1,7 @@
 import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchInventory, useInventoryItem, InventoryItem } from '../api/inventoryApi';
-import { Loader2, Package, Coins } from 'lucide-react';
+import { Loader2, Coins } from 'lucide-react';
 import { useToast } from '../components/common/ToastProvider';
 import { tryHaptic } from '../utils/haptics';
 import { useNavigate } from 'react-router-dom';
@@ -32,7 +32,7 @@ const InventoryPage: React.FC = () => {
     });
 
     const items = Array.isArray(data?.items) ? data.items : [];
-    const wallet = data?.wallet && typeof data.wallet === "object" && !Array.isArray(data.wallet) ? data.wallet : {};
+    const wallet = (data?.wallet && typeof data.wallet === "object" && !Array.isArray(data.wallet) ? data.wallet : {}) as Record<string, number>;
     const diamondCount = items.find((i) => i.item_type === "DIAMOND")?.quantity ?? 0;
 
     if (isLoading) {
@@ -52,8 +52,8 @@ const InventoryPage: React.FC = () => {
         return (
             <div className="mx-auto w-full max-w-lg pb-[calc(96px+env(safe-area-inset-bottom))]">
                 <div className="rounded-[24px] border border-white/10 bg-white/5 p-5 text-center">
-                    <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-2xl bg-black/30 ring-1 ring-white/10">
-                        <Package className="h-5 w-5 text-white/40" />
+                    <div className="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-2xl bg-black/30 ring-1 ring-white/10">
+                        <img src="/assets/icons/locker-dynamic-color.png" className="w-10 h-10 object-contain" alt="" />
                     </div>
                     <div className="text-sm font-black text-white/90">데이터 로딩 실패</div>
                     <div className="mt-1 text-[11px] font-medium text-white/50">인벤토리 정보를 불러오지 못했습니다.</div>
@@ -83,8 +83,9 @@ const InventoryPage: React.FC = () => {
                             tryHaptic(10);
                             addToast("교환권/티켓은 ‘사용하기’를 누르면 지갑/키로 반영돼요. 기프티콘은 지급대기 후 운영자가 발송합니다.", "info");
                         }}
-                        className="px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-[11px] font-black text-white/70 active:scale-[0.98]"
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-[11px] font-black text-white/70 active:scale-[0.98]"
                     >
+                        <img src="/assets/icons/takeaway-cup-dynamic-color.png" className="w-4 h-4 object-contain" alt="" />
                         안내
                     </button>
                 </div>
@@ -124,9 +125,9 @@ const InventoryPage: React.FC = () => {
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                         {items.filter(it => it.quantity > 0).length === 0 ? (
-                            <div className="col-span-2 flex flex-col items-center justify-center py-12 opacity-50 space-y-4">
-                                <Package className="w-14 h-14 text-white/10 stroke-1" />
-                                <p className="text-white/30 font-medium">보유한 아이템이 없습니다</p>
+                            <div className="col-span-2 flex flex-col items-center justify-center py-12 opacity-80 space-y-4">
+                                <img src="/assets/icons/icon_rocket.png" className="w-24 h-24 object-contain animate-bounce" alt="" />
+                                <p className="text-white/30 font-medium tracking-tight">보유한 아이템이 없습니다</p>
                             </div>
                         ) : (
                             items
@@ -207,11 +208,18 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, onUse, isPending }) => {
             ? "대기 중"
             : "수기 지급";
 
+        let iconPath = "/assets/icons/icon_cart.png";
+        if (brandCodeRaw === "CC_COIN") {
+            iconPath = "/assets/asset_coin_gold.webp";
+        } else if (brandCodeRaw === "COMPOSE_AMERICANO") {
+            iconPath = "/assets/icons/icon_compose.svg";
+        }
+
         return {
             title,
             sub,
             desc,
-            icon: <img src="/assets/lottery/icon_gift.png" className="w-8 h-8 object-contain" alt="" />,
+            icon: <img src={iconPath} className="w-8 h-8 object-contain" alt="" />,
         };
     };
 
@@ -261,7 +269,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, onUse, isPending }) => {
         title: item.item_type,
         sub: "",
         desc: "보유 중",
-        icon: <Package className="w-5 h-5 text-white/40" />
+        icon: <img src="/assets/icons/locker-dynamic-color.png" className="w-5 h-5 object-contain opacity-50" alt="" />
     };
 
     return (

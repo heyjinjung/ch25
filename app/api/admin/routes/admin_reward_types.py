@@ -131,6 +131,14 @@ REWARD_TYPE_DEFINITIONS = [
         "description": "배달의민족 상품권"
     },
     {
+        "key": "GIFTICON_COMPOSE",
+        "display_name": "컴포즈커피 기프티콘",
+        "icon": "Coffee",
+        "color": "#FBBF24",
+        "category": "기프티콘",
+        "description": "컴포즈커피 아메리카노 교환권"
+    },
+    {
         "key": "GIFTICON_CC_COIN",
         "display_name": "씨씨코인 기프티콘",
         "icon": "Gift",
