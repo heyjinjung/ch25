@@ -1,11 +1,11 @@
 # 핵심 경제체계 용어 정리 (Core Economy Glossary)
 
 문서 타입: 용어집(Glossary) / 운영·개발 공통 기준
-버전: v1.0
-작성일: 2026-01-14
+버전: v1.1
+작성일: 2026-01-16
 작성자: 
 대상: 운영/기획/개발(Backend/Frontend)
-상태: SoT(용어) — 동작/정책 SoT는 `unified_economy_and_progression_ko.md`를 우선
+상태: SoT(용어) / 동작·정책 SoT는 `unified_economy_and_progression_ko.md`를 우선
 
 ## 1. 목적 (Purpose)
 - 경제/보상/성장(시즌패스) 관련 용어를 “하나의 언어”로 통일해 운영·개발 커뮤니케이션 비용을 낮춘다.
@@ -49,13 +49,20 @@
 
 | 용어(권장) | reward_type | 지급 경로(요약) | 정의 | 주의사항 |
 | --- | --- | --- | --- | --- |
+| 없음 | `NONE` | - | 보상 없음 | no-op |
 | 금고 적립(포인트) | `POINT` | Vault로 적립 | “현금성 금액” 보상 | `cash_balance`로 직접 지급 금지 |
-| 금고 적립(외부포인트) | `CC_POINT` | Vault로 적립 | 외부 포인트 계열이더라도 통합 이후 금고로 적립 | `POINT`와 운영상 동일 취급(금고) |
+| 금고 적립(외부포인트) | `CC_POINT` | Vault로 적립 | 외부 포인트 계열 보상 | `POINT`와 동일 취급(금고) |
 | 시즌 XP | `GAME_XP` | SeasonPass로 적립 | 경험치 전용 보상 타입 | 금고/포인트와 절대 혼동 금지 |
-| 다이아 | `DIAMOND` | Inventory로 적립 | 상점 결제/교환권 구매에 쓰는 재화(인벤 SoT) | 게임 토큰의 DIAMOND(지갑)와 혼재 시 반드시 SoT 확인 |
-| 기프티콘(배민) | `GIFTICON_BAEMIN_*` | Inventory 지급대기 | 실물/대기형 보상 | 금액/브랜드 규칙(item_type 네이밍) 준수 |
-| 기프티콘(씨씨코인) | `CC_COIN_GIFTICON` | Inventory 지급대기 | 씨씨코인 계열 실물/대기형 보상 | 지급대기/보상함 UX가 기본 |
-| 티켓/키 | `ROULETTE_COIN` 등 | Wallet(지갑) | 게임 입장권/연료(소비형) | 토큰 타입 혼동 주의 |
+| 다이아 | `DIAMOND` | Inventory로 적립 | 상점 결제/교환권 구매 재화 | GameTokenType에 `DIAMOND`가 있어도 SoT는 인벤토리 |
+| 기프티콘(배민) | `GIFTICON_BAEMIN` | Inventory 지급대기 | 배민 상품권 | item_type은 `BAEMIN_GIFTICON_{금액}` |
+| 기프티콘(컴포즈) | `GIFTICON_COMPOSE` | Inventory 지급대기 | 컴포즈 커피 | item_type은 `COMPOSE_AMERICANO_GIFTICON_{금액}` |
+| 기프티콘(씨씨코인) | `CC_COIN`/`CC_COIN_GIFTICON` | Inventory 지급대기 | 씨씨코인 계열 | item_type은 `CC_COIN_GIFTICON` |
+| 티켓 지급(룰렛) | `TICKET_ROULETTE`/`ROULETTE_TICKET` | Wallet | 룰렛 토큰 지급 | 실제 토큰은 `ROULETTE_COIN` |
+| 티켓 지급(주사위) | `TICKET_DICE`/`DICE_TICKET` | Wallet | 주사위 토큰 지급 | 실제 토큰은 `DICE_TOKEN` |
+| 티켓 지급(복권) | `TICKET_LOTTERY`/`LOTTERY_TICKET` | Wallet | 복권 토큰 지급 | 실제 토큰은 `LOTTERY_TICKET` |
+| 키 지급 | `GOLD_KEY`/`DIAMOND_KEY` | Wallet | 키 토큰 지급 | 룰렛 탭/권한 정책 주의 |
+| 번들 | `BUNDLE`/`TICKET_BUNDLE` | 복합 | 복수 토큰/포인트 묶음 | `reward_amount` 값에 따라 구성(RewardService 기준) |
+| 쿠폰(비활성) | `COUPON` | - | 현재 no-op | 운영/코드상 비활성 |
 
 ### 4.3 시즌패스/진행(Progression)
 
