@@ -1,6 +1,6 @@
 """Vault APIs (status + free fill once)."""
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
