@@ -8,7 +8,7 @@ type SoundContextType = {
     setBgmVolume: (vol: number) => void;
     sfxVolume: number;
     setSfxVolume: (vol: number) => void;
-    playSfx: (src: string, options?: { volume?: number; speed?: number }) => Howl | null;
+    playSfx: (src: string, options?: { volume?: number; speed?: number; loop?: boolean }) => Howl | null;
     stopSfx: (howl: Howl | null) => void;
     playBgm: (src: string) => void;
     stopBgm: () => void;
@@ -20,18 +20,21 @@ type SoundContextType = {
 
 const SOUND_ASSETS = {
     BGM: {
-        MAIN: "/assets/sounds/bgm/Red Curtain.ogg",
+        MAIN: "/assets/sounds/bgm/battle_theme.wav",
         BATTLE: "/assets/sounds/bgm/battle_theme.wav",
     },
     SFX: {
-        CLICK: "/assets/sounds/sfx/MESSAGE-B_Accept.wav",
         TRANSITION: "/assets/sounds/sfx/page_turn.mp3",
-        TOAST: "/assets/sounds/sfx/MESSAGE-B_Accept.wav",
         DICE_SHAKE: "/assets/sounds/sfx/dice-shake-3.ogg",
         DICE_THROW: "/assets/sounds/sfx/dice-throw-3.ogg",
+        DICE_REVEAL: "/assets/sounds/sfx/Dice_Reveal.ogg",
         TAB_TOUCH: "/assets/sounds/sfx/page_turn.mp3",
-        LOTTERY_SCRATCH: "/assets/sounds/sfx/lottery_reveal.wav",
-        ROULETTE_SPIN: "/assets/sounds/sfx/roulette_spin.wav",
+        ROULETTE_STOP: "/assets/sounds/sfx/Ball_Drop_Clack.ogg",
+        SMALL_WIN: "/assets/sounds/sfx/Small_Win.ogg",
+        BIG_WIN: "/assets/sounds/sfx/Big_Win.ogg",
+        VAULT_JINGLE: "/assets/sounds/sfx/Vault_Jingle.ogg",
+        LOTTERY_ROLL: "/assets/sounds/sfx/Lotto_Ball_Roll.ogg",
+        LOTTERY_WIN: "/assets/sounds/sfx/Lotto_Win.ogg",
     },
 };
 
@@ -111,7 +114,7 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         });
     }, []);
 
-    const playSfx = useCallback((src: string, options?: { volume?: number; speed?: number }) => {
+    const playSfx = useCallback((src: string, options?: { volume?: number; speed?: number; loop?: boolean }) => {
         recordE2eSoundEvent({ kind: "sfx", src, options });
         if (isMuted) return null;
 
@@ -132,6 +135,7 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 html5: false,
                 volume: (options?.volume ?? 1.0) * sfxVolume,
                 rate: options?.speed ?? 1.0,
+                loop: options?.loop ?? false,
                 onplayerror: (_id, error) => {
                     console.error(`[SOUND] Play error for: ${src}`, error);
                     setLastError(`Play fail: ${src}`);
@@ -143,6 +147,7 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         } else {
             sound.volume((options?.volume ?? 1.0) * sfxVolume);
             sound.rate(options?.speed ?? 1.0);
+            sound.loop(options?.loop ?? false);
         }
 
         try {

@@ -25,7 +25,7 @@ const LotteryPage: React.FC = () => {
   const { data, isLoading, isError, error } = useLotteryStatus();
   const playMutation = usePlayLottery();
   const queryClient = useQueryClient();
-  const { playLotteryScratch, stopLotteryScratch } = useSound();
+  const { playLotteryScratch, stopLotteryScratch, playLotteryWin } = useSound();
   const [revealedPrize, setRevealedPrize] = useState<RevealedPrize | null>(null);
   const [isScratching, setIsScratching] = useState(false);
   const [isRevealed, setIsRevealed] = useState(false);
@@ -68,9 +68,14 @@ const LotteryPage: React.FC = () => {
     try {
       tryHaptic(12);
       setIsScratching(true);
+      playLotteryScratch(); // Sound: Rolling start
       const result = await playMutation.mutateAsync();
+      
+      // Artificial delay for tension if needed, but keeping it snappy for now
+      stopLotteryScratch(); 
       setIsScratching(false);
-      playLotteryScratch(); // Sound: Reveal
+      
+      playLotteryWin(); // Sound: Win/Reveal
       setIsRevealed(true);
       setRevealedPrize({
         id: result.prize.id,

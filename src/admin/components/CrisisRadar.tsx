@@ -112,6 +112,14 @@ const CrisisRadar: React.FC<CrisisRadarProps> = ({ onScenarioClick }) => {
                                 {signal.count.toLocaleString()}
                             </div>
 
+                            {/* Samples */}
+                            {signal.count > 0 && signal.samples?.length > 0 && (
+                                <div className="mt-1 text-[10px] text-zinc-500 truncate">
+                                    {signal.samples.slice(0, 3).join(", ")}
+                                    {signal.samples.length > 3 && ", ..."}
+                                </div>
+                            )}
+
                             {/* Hover action */}
                             {signal.count > 0 && (
                                 <div className="mt-2 opacity-0 group-hover:opacity-100 transition-opacity">

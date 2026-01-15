@@ -11,6 +11,7 @@ import { useMissionStore } from "../stores/missionStore";
 import { useToast } from "../components/common/ToastProvider";
 import { useAuth } from "../auth/authStore";
 import { Zap } from "lucide-react";
+import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 
 
 // --- Components ---
@@ -27,38 +28,91 @@ interface GameCardProps {
 
 
 
-const GameCard: React.FC<GameCardProps> = ({ title, to, gradient, icon, isWide, bgImage, badge }) => {
+
+
+const TiltCard: React.FC<GameCardProps> = ({ title, to, gradient, icon, isWide, bgImage, badge }) => {
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+
+  const mouseX = useSpring(x, { stiffness: 500, damping: 30 });
+  const mouseY = useSpring(y, { stiffness: 500, damping: 30 });
+
+  const rotateX = useTransform(mouseY, [-0.5, 0.5], ["7deg", "-7deg"]);
+  const rotateY = useTransform(mouseX, [-0.5, 0.5], ["-7deg", "7deg"]);
+  const brightness = useTransform(mouseY, [-0.5, 0.5], [1.1, 0.9]);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const width = rect.width;
+    const height = rect.height;
+    const mouseXVal = e.clientX - rect.left;
+    const mouseYVal = e.clientY - rect.top;
+    const xPct = mouseXVal / width - 0.5;
+    const yPct = mouseYVal / height - 0.5;
+    x.set(xPct);
+    y.set(yPct);
+  };
+
+  const handleMouseLeave = () => {
+    x.set(0);
+    y.set(0);
+  };
+
   return (
-    <Link
-      to={to}
-      className={clsx(
-        "group relative overflow-hidden rounded-[24px] border border-white/10 p-4 transition-all",
-        !bgImage && gradient,
-        isWide ? "col-span-2 aspect-[2/1]" : "col-span-1 aspect-square"
-      )}
-    >
-      {bgImage && (
-        <div className="absolute inset-0 z-0">
-          <img src={bgImage} alt={title} className="h-full w-full object-cover opacity-90" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-        </div>
-      )}
+    <Link to={to} className={clsx(isWide ? "col-span-2 aspect-[2/1]" : "col-span-1 aspect-square", "perspective-1000")}>
+      <motion.div
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+        style={{
+          rotateX,
+          rotateY,
+          transformStyle: "preserve-3d",
+          filter: `brightness(${brightness})`, // slight brightness shift on tilt
+        }}
+        className={clsx(
+          "group relative h-full w-full overflow-hidden rounded-[24px] border border-white/10 p-4 transition-colors duration-300",
+          !bgImage && gradient
+        )}
+      >
+        {/* Glow Effect */}
+        <div className="absolute inset-0 z-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 mix-blend-overlay" />
 
-      <div className="relative z-10 flex h-full flex-col justify-between">
-        <div className="flex justify-between items-start">
-          {badge && (
-            <span className="absolute top-0 right-0 rounded-bl-xl bg-red-600 px-3 py-1 text-[10px] font-black text-white shadow-sm z-20">{badge}</span>
-          )}
-          {!bgImage && <span className="text-3xl">{icon}</span>}
-        </div>
+        {bgImage && (
+          <div className="absolute inset-0 z-0" style={{ transform: "translateZ(-20px)" }}>
+            {/* Scale up slightly to prevent edge gaps during tilt */}
+            <motion.img
+              src={bgImage}
+              alt={title}
+              className="h-full w-full object-cover opacity-90 scale-110"
+              transition={{ duration: 0.5 }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+          </div>
+        )}
 
-        <div className="mt-auto">
-          {/* Title removed per user request */}
-          <div className="inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-[10px] font-black text-white backdrop-blur border border-white/10">
-            지금 플레이
+        <div className="relative z-10 flex h-full flex-col justify-between" style={{ transform: "translateZ(30px)" }}>
+          <div className="flex justify-between items-start">
+            {badge && (
+              <motion.span
+                className="absolute top-0 right-0 rounded-bl-xl bg-red-600 px-3 py-1 text-[10px] font-black text-white shadow-lg z-20"
+                style={{ transform: "translateZ(40px)" }}
+              >
+                {badge}
+              </motion.span>
+            )}
+            {!bgImage && <span className="text-4xl drop-shadow-md">{icon}</span>}
+          </div>
+
+          <div className="mt-auto">
+            <motion.div
+              className="inline-flex items-center rounded-full bg-white/20 px-3 py-1 text-[10px] font-black text-white backdrop-blur-md border border-white/20 shadow-lg"
+              whileHover={{ scale: 1.05 }}
+            >
+              지금 플레이
+            </motion.div>
           </div>
         </div>
-      </div>
+      </motion.div>
     </Link>
   );
 };
@@ -146,7 +200,7 @@ const HomePage: React.FC = () => {
 
   // Almost VIP Logic
   // Show only if level 9 AND NOT already in VIP segment
-  const isAlmostVip = (user?.level === 9 && user?.segment !== "VIP"); 
+  const isAlmostVip = (user?.level === 9 && user?.segment !== "VIP");
   // Dynamic Level Display logic
 
   const games = [
@@ -261,34 +315,56 @@ const HomePage: React.FC = () => {
       )}
 
       {/* Hero Section */}
-      <div className="relative mx-1 overflow-hidden rounded-3xl border border-white/10 shadow-2xl aspect-[8/3]">
-        <img src="/assets/hero_event_banner.png" className="absolute inset-0 w-full h-full object-cover" alt="Banner" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
+      <motion.div
+        className="relative mx-1 overflow-hidden rounded-3xl border border-white/10 shadow-2xl aspect-[8/3] group"
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.6 }}
+      >
+        <motion.img
+          src="/assets/hero_event_banner.png"
+          className="absolute inset-0 w-full h-full object-cover"
+          alt="Banner"
+          animate={{ scale: [1, 1.05, 1] }}
+          transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+        />
+        {/* Shimmer Overlay */}
+
+
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
 
         {/* Contact Manager Button - Bottom Right Alignment */}
         <div className="absolute bottom-5 right-5 z-20 flex flex-col items-end gap-2">
           {streakInfo && streakInfo.streak_days > 0 && (
-            <div
-              className="flex items-center gap-2 rounded-full px-4 py-1.5 bg-black/60 border border-amber-500/30 backdrop-blur-md shadow-lg animate-bounce-subtle cursor-default transition-transform"
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="flex items-center gap-2 rounded-full px-4 py-1.5 bg-black/60 border border-amber-500/30 backdrop-blur-md shadow-lg cursor-default"
             >
               <span className="text-xs font-black text-amber-400">🔥 {streakInfo.streak_days}일 연속</span>
-            </div>
+            </motion.div>
           )}
-          <a
+          <motion.a
             href="https://t.me/jm956"
             target="_blank"
             rel="noreferrer noopener"
-            className="inline-flex items-center gap-2 rounded-lg px-6 py-2 text-base font-bold transition focus:outline-none bg-figma-primary text-white shadow-[0_4px_12px_rgba(0,0,0,0.3)] shadow-emerald-500/40 hover:brightness-110 active:scale-95 tracking-wide"
+            className="inline-flex items-center gap-2 rounded-lg px-6 py-2 text-base font-bold transition focus:outline-none bg-figma-primary text-white shadow-[0_4px_12px_rgba(0,0,0,0.3)] shadow-emerald-500/40 hover:brightness-110 active:scale-95 tracking-wide overflow-hidden relative"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
+            {/* Button Shine */}
+            <div className="absolute inset-0 w-1/2 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12 -translate-x-[200%] animate-shine" />
+
             <img
               src="/assets/icon_telegram_button.png"
               className="w-5 h-5 object-contain"
               alt=""
             />
             실장문의
-          </a>
+          </motion.a>
         </div>
-      </div>
+      </motion.div>
 
       {/* Tabs */}
       <div className="px-1">
@@ -298,7 +374,7 @@ const HomePage: React.FC = () => {
       {/* Games Grid - 3 rows x 2 columns */}
       <div className="grid grid-cols-2 gap-3 px-1">
         {games.map((game) => (
-          <GameCard key={game.title} {...game} />
+          <TiltCard key={game.title} {...game} />
         ))}
       </div>
 

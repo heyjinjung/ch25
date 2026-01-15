@@ -113,10 +113,12 @@
     appearance: none;
   }
 
+/* 
   .admin-progress::-webkit-progress-bar {
     background-color: var(--admin-sidebar);
     border-radius: 9999px;
   }
+*/
 
   /* Roulette probability UI (no inline styles) */
   .roulette-prob-bar {

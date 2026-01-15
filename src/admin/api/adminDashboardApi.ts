@@ -138,6 +138,7 @@ export interface CrisisSignal {
   name: string; // e.g. "불운한 뉴비"
   count: number;
   level: "HIGH" | "MEDIUM" | "LOW" | "SPECIAL";
+  samples: string[];
 }
 
 export interface CrisisSignalsResponse {

@@ -474,25 +474,42 @@ const MarketingDashboardPage: React.FC = () => {
 
             {/* KPI Grid */}
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-                {kpis.map((kpi, idx) => (
-                    <div
-                        key={idx}
-                        onClick={() => handleCardClick(kpi.title, kpi.segment)}
-                        className="admin-card p-6 shadow-lg relative overflow-hidden group hover:border-admin-brand hover:bg-admin-hover transition-all cursor-pointer"
-                    >
-                        <div className="flex justify-between items-start">
-                            <div>
-                                <p className="text-sm font-medium text-gray-400">{kpi.title}</p>
-                                <h3 className="mt-2 text-2xl font-bold text-white tracking-tight">{isLoading ? "-" : kpi.value}</h3>
+                {kpis.map((kpi, idx) => {
+                    const samples = stats?.samples?.[kpi.segment] || [];
+                    const hasSamples = samples.length > 0;
+
+                    return (
+                        <div
+                            key={idx}
+                            onClick={() => handleCardClick(kpi.title, kpi.segment)}
+                            className="admin-card p-6 shadow-lg relative overflow-hidden group hover:border-admin-brand hover:bg-admin-hover transition-all cursor-pointer"
+                        >
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <p className="text-sm font-medium text-gray-400">{kpi.title}</p>
+                                    <h3 className="mt-2 text-2xl font-bold text-white tracking-tight">{isLoading ? "-" : kpi.value}</h3>
+                                </div>
+                                <div className="p-2.5 bg-admin-hover text-admin-text-secondary rounded-lg group-hover:bg-admin-brand group-hover:text-black transition-colors">{kpi.icon}</div>
                             </div>
-                            <div className="p-2.5 bg-admin-hover text-admin-text-secondary rounded-lg group-hover:bg-admin-brand group-hover:text-black transition-colors">{kpi.icon}</div>
+                            
+                            {/* Subtext and Samples */}
+                            <div className="mt-3">
+                                <div className="text-xs text-gray-500 font-mono flex justify-between items-center mb-1">
+                                    <span>{kpi.sub}</span>
+                                    <ExternalLink size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                                </div>
+                                
+                                {hasSamples && (
+                                    <div className="text-[10px] text-indigo-400/80 truncate border-t border-white/5 pt-2 mt-2">
+                                        <span className="text-gray-600 mr-1">Ex:</span>
+                                        {samples.slice(0, 3).join(", ")}
+                                        {samples.length > 3 && ", ..."}
+                                    </div>
+                                )}
+                            </div>
                         </div>
-                        <div className="mt-3 text-xs text-gray-500 font-mono flex justify-between items-center">
-                            <span>{kpi.sub}</span>
-                            <ExternalLink size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </div>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
             {/* ──────────────────────────────────────────────────────────────────
                 SECTION DIVIDER: Actions Panel (Dynamic from API)
