@@ -38,14 +38,14 @@ const TABS: { type: GameTokenType; label: string; activeColors: string; icon: st
     label: "골드\n룰렛",
     activeColors: "bg-gradient-to-br from-yellow-300 via-amber-400 to-yellow-500 text-black shadow-[0_0_20px_rgba(255,215,0,0.5)] border-amber-300",
     icon: "🗝️",
-    iconImg: "/assets/asset_ticket_gold.png"
+    iconImg: "/assets/icons/goldkey.png"
   },
   {
     type: "DIAMOND_KEY",
     label: "다이아\n룰렛",
     activeColors: "bg-gradient-to-br from-cyan-300 via-blue-400 to-indigo-500 text-white shadow-[0_0_20px_rgba(0,191,255,0.5)] border-blue-300",
     icon: "💎",
-    iconImg: "/assets/asset_ticket_diamond.png"
+    iconImg: "/assets/icons/diakey.png"
   },
   {
     type: "TRIAL_TOKEN",

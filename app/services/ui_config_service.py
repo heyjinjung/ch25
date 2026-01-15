@@ -16,6 +16,8 @@ class UiConfigService:
 
     @staticmethod
     def upsert(db: Session, key: str, value: dict | None, admin_id: int = 0) -> AppUiConfig:
+        from sqlalchemy.orm.attributes import flag_modified
+        
         row = UiConfigService.get(db, key)
         before = {"value": row.value_json} if row else None
         
@@ -26,6 +28,8 @@ class UiConfigService:
             db.refresh(row)
         else:
             row.value_json = value or {}
+            # Force SQLAlchemy to recognize the change for JSON type
+            flag_modified(row, "value_json")
             db.add(row)
             db.commit()
             db.refresh(row)

@@ -50,12 +50,12 @@ const ProductCard: React.FC<{ product: ShopProduct; vaultBalance: number; onBuy:
         'VOUCHER_ROULETTE_COIN_1': { label: "룰렛 티켓", img: "/assets/asset_ticket_green.png" },
         'VOUCHER_DICE_TOKEN_1': { label: "주사위 티켓", img: "/assets/icon_dice_silver.png" },
         'VOUCHER_LOTTERY_TICKET_1': { label: "복권 티켓", img: "/assets/lottery/icon_lotto_ball.webp" },
-        'VOUCHER_GOLD_KEY_1': { label: "골드 키", img: "/assets/asset_ticket_gold.png" },
-        'VOUCHER_DIAMOND_KEY_1': { label: "다이아 키", img: "/assets/asset_ticket_diamond.png" },
+        'VOUCHER_GOLD_KEY_1': { label: "골드 키", img: "/assets/icons/goldkey.png" },
+        'VOUCHER_DIAMOND_KEY_1': { label: "다이아 키", img: "/assets/icons/diakey.png" },
         'ROULETTE_COIN': { label: "룰렛 티켓", img: "/assets/asset_ticket_green.png" },
         'DICE_TOKEN': { label: "주사위 티켓", img: "/assets/icon_dice_silver.png" },
-        'GOLD_KEY': { label: "골드 키", img: "/assets/asset_ticket_gold.png" },
-        'DIAMOND_KEY': { label: "다이아 키", img: "/assets/asset_ticket_diamond.png" },
+        'GOLD_KEY': { label: "골드 키", img: "/assets/icons/goldkey.png" },
+        'DIAMOND_KEY': { label: "다이아 키", img: "/assets/icons/diakey.png" },
     };
 
     const info = MAP[product.grant.item_type] || MAP[product.cost.token] || { label: product.title, img: "/assets/lottery/icon_gift.png" };

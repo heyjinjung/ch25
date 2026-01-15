@@ -2,6 +2,17 @@
 
 2026-01-13: 운영 안정화 최종보고 — 배포 preflight 문서 강화, Docker/Nginx 프록시 표준화(/api·/admin/api), 운영 DB 덤프 로컬 동기화(sha256/마이그레이션/헬스체크), CI 기반 자동 배포 게이트 안정화(502 흡수/401 정상 판정), HTTPS(443) 복구, admin 유저 수정 500(user_identity_history 누락) 대응, Ops Log/Plan + Audit + Cypress(E2E) 정리.
 
+## 2026-01-15 (Shop Saving Fix & UI Improvements)
+- **Admin Shop**:
+  - **Critical Fix**: 금고(VAULT) 재화로 결제하는 커스텀 상품(주사위 등)이 저장되지 않는 문제 해결.
+  - **Cause**: SQLAlchemy가 JSON 컬럼(`value_json`)의 내부 딕셔너리 변경을 감지하지 못해 커밋 누락.
+  - **Solution**: `UiConfigService.upsert`에 `flag_modified`를 적용하여 변경 사항 강제 감지 및 저장 보장.
+- **Mobile Navigation**:
+  - **Icon Restore**: 하단 네비게이션의 금고(Vault), 교환소(Exchange), 이벤트(Event) 아이콘을 기존 이미지에서 원본 SVG로 복구하여 스타일 통일성 확보.
+- **Inventory Page**:
+  - **Guide Button**: 안내 버튼 아이콘을 커피 모양에서 **CC 로고**로 변경.
+  - **Toast Message**: 안내 메시지를 기존 1줄에서 "배민 2만부터 기프트콘 지급 / 씨씨코인 지민문의"의 **2줄 형식**으로 가독성 개선.
+
 ## 2026-01-13 (Admin Dashboard & Playbook Implementation)
 - **Admin Dashboard**:
   - **Drill-down Modal**: 메인 대시보드 4대 지표(활성, 입금, 이탈, 플레이) 클릭 시 실시간 상세 내역 조회 기능 추가.
