@@ -329,7 +329,7 @@ const AdminOpsPlanPage: React.FC = () => {
       .map((it) => `- ${it.item_type} x${it.amount}`)
       .join("\n");
     return window.confirm(
-      `⚠️ 전체 유저(상태 무관)에게 아이템을 지급합니다.\n\nTask ID: ${taskId}\nReason: ${draft.reason}\n\n지급 목록:\n${lines}\n\n실행 후 되돌릴 수 없습니다. 진행할까요?`,
+      `⚠️ 전체 유저(상태 무관)에게 아이템을 지급합니다.\n\nTask ID: ${taskId}\nReason: ${draft.reason}\n\n지급 목록:\n${lines}\n\n실행 후 되돌릴 수 없습니다. 진행할까요?`
     );
   };
 
@@ -1201,16 +1201,18 @@ const AdminOpsPlanPage: React.FC = () => {
                           >
                             실행
                           </button>
-                          <button
-                            type="button"
-                            className="rounded-lg border border-admin-border bg-admin-bg px-3 py-2 text-xs font-bold text-admin-text-secondary hover:bg-admin-bg/70 disabled:opacity-50"
-                            onClick={() => updateTask?.mutate({ taskId: t.id, patch: { status: "DONE" } })}
-                            disabled={!planId || updateTask.isPending}
-                            aria-label="Task 완료 체크"
-                            title="완료"
-                          >
-                            완료
-                          </button>
+                          {!isInventoryGrantAllTask((t.payload_json ?? {}) as Record<string, unknown>) && (
+                            <button
+                              type="button"
+                              className="rounded-lg border border-admin-border bg-admin-bg px-3 py-2 text-xs font-bold text-admin-text-secondary hover:bg-admin-bg/70 disabled:opacity-50"
+                              onClick={() => updateTask?.mutate({ taskId: t.id, patch: { status: "DONE" } })}
+                              disabled={!planId || updateTask.isPending}
+                              aria-label="Task 완료 체크"
+                              title="완료"
+                            >
+                              완료
+                            </button>
+                          )}
                           <button
                             type="button"
                             className="rounded-lg border border-admin-danger/40 bg-admin-danger/10 px-3 py-2 text-xs font-bold text-admin-danger hover:bg-admin-danger/15 disabled:opacity-50"

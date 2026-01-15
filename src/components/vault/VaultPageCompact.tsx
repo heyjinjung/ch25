@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import { useToast } from "../../components/common/ToastProvider";
 import { Lock, Info, ListChecks } from "lucide-react";
 import WithdrawalConditionsModal from "../modal/WithdrawalConditionsModal";
+import WithdrawalProgressModal from "../modal/WithdrawalProgressModal";
 
 // Helper to format currency
 const formatWon = (amount: number) => `${amount.toLocaleString("ko-KR")}원`;
@@ -15,6 +16,7 @@ const formatWon = (amount: number) => `${amount.toLocaleString("ko-KR")}원`;
 const VaultPageCompact: React.FC = () => {
     const { addToast } = useToast();
     const [showConditionsModal, setShowConditionsModal] = React.useState(false);
+    const [showProgressModal, setShowProgressModal] = React.useState(false);
 
     // Fetch Vault Status
     const vault = useQuery({
@@ -86,7 +88,12 @@ const VaultPageCompact: React.FC = () => {
                             className="relative z-10 w-48 h-48 object-contain drop-shadow-[0_0_30px_rgba(16,185,129,0.3)]"
                         />
                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
-                            <span className="bg-emerald-500 text-black font-black text-[10px] px-2 py-0.5 rounded-full animate-bounce">내돈찾기</span>
+                            <button 
+                                onClick={() => setShowProgressModal(true)}
+                                className="bg-emerald-500 text-black font-black text-[10px] px-2 py-0.5 rounded-full animate-bounce hover:scale-110 active:scale-95 transition-transform"
+                            >
+                                내돈찾기
+                            </button>
                         </div>
                     </div>
 
@@ -166,11 +173,14 @@ const VaultPageCompact: React.FC = () => {
                         {/* Gauge Header */}
                         <div className="flex justify-between items-end mb-4 relative z-10">
                             <span className="text-white font-bold text-sm flex items-center gap-2">
-                                <span className="text-white font-black">VIP 금고 진행도</span>
+                                <span className="text-white font-black">출금 조건 충전</span>
                             </span>
-                            <span className="text-xl font-black text-amber-500 tabular-nums">
+                            <button 
+                                onClick={() => setShowProgressModal(true)}
+                                className="text-xl font-black text-amber-500 tabular-nums hover:scale-105 active:scale-95 transition-transform"
+                            >
                                 {view.progressPercent}<span className="text-sm text-amber-500/70">%</span>
-                            </span>
+                            </button>
                         </div>
 
                         {/* Progress Bar */}
@@ -254,6 +264,18 @@ const VaultPageCompact: React.FC = () => {
                     dailyVaultSpent={vault.data.dailyVaultSpent ?? 0}
                     dailyVaultSpentTarget={vault.data.dailyVaultSpentTarget ?? 10000}
                     dailyDepositConfirmed={vault.data.dailyDepositConfirmed ?? false}
+                />
+            )}
+            {showProgressModal && vault.data && (
+                <WithdrawalProgressModal
+                    onClose={() => setShowProgressModal(false)}
+                    vaultBalance={view.availableAmount}
+                    dailyPlayCount={vault.data.dailyPlayCount ?? 0}
+                    dailyPlayTarget={vault.data.dailyPlayTarget ?? 30}
+                    dailyVaultSpent={vault.data.dailyVaultSpent ?? 0}
+                    dailyVaultSpentTarget={vault.data.dailyVaultSpentTarget ?? 10000}
+                    dailyDepositConfirmed={vault.data.dailyDepositConfirmed ?? false}
+                    withdrawalCount={vault.data.withdrawalCount ?? 0}
                 />
             )}
         </div>

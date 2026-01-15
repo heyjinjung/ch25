@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from "react";
+import clsx from "clsx";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  Trophy, AlertCircle, RefreshCw, LayoutGrid, BarChart3, Edit3, Gamepad2, ChevronRight, Settings2, Save, Info, CheckCircle2, ShieldAlert, Plus, Trash2, X, History, Package
+  Trophy, AlertCircle, RefreshCw, LayoutGrid, BarChart3, Edit3, Gamepad2, ChevronRight, Settings2, Save, Info, CheckCircle2, ShieldAlert, Plus, Trash2, X, History, Package, ChevronDown
 } from "lucide-react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
@@ -595,23 +596,41 @@ const LotteryConfigPage: React.FC = () => {
                             <div className="flex-1 space-y-1.5">
                               <label className="text-[10px] font-black text-zinc-500 uppercase ml-1">보상 설정</label>
                               <div className="flex gap-2">
-                                <select
-                                  className="flex-1 h-11 bg-zinc-900 border border-zinc-800 rounded-xl px-3 text-xs text-white focus:border-admin-brand outline-none"
-                                  {...form.register(`prizes.${idx}.reward_type`)}
-                                >
-                                  {REWARD_TYPES.map((rt) => (
-                                    <option key={rt.value} value={rt.value}>
-                                      {rt.label}
-                                    </option>
-                                  ))}
-                                </select>
+                                <div className="flex-1 relative">
+                                  <select
+                                    className={clsx(
+                                      "w-full h-11 bg-zinc-900 border rounded-xl px-3 text-xs text-white focus:border-admin-brand outline-none transition-all appearance-none",
+                                      REWARD_TYPES.some((rt) => rt.value === form.watch(`prizes.${idx}.reward_type`))
+                                        ? "border-zinc-800"
+                                        : "border-rose-500 bg-rose-500/5 animate-pulse"
+                                    )}
+                                    {...form.register(`prizes.${idx}.reward_type`)}
+                                  >
+                                    {!REWARD_TYPES.some((rt) => rt.value === form.watch(`prizes.${idx}.reward_type`)) && (
+                                      <option value={form.getValues(`prizes.${idx}.reward_type`)}>
+                                        ⚠️ 알 수 없음 ({form.getValues(`prizes.${idx}.reward_type`)})
+                                      </option>
+                                    )}
+                                    {REWARD_TYPES.map((rt) => (
+                                      <option key={rt.value} value={rt.value}>
+                                        {rt.label}
+                                      </option>
+                                    ))}
+                                  </select>
+                                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-500">
+                                    <ChevronDown size={14} />
+                                  </div>
+                                </div>
                                 <input
                                   type="number"
-                                  placeholder="Amt"
+                                  placeholder="수량"
                                   className="w-20 h-11 bg-zinc-900 border border-zinc-800 rounded-xl px-3 text-xs text-white font-mono focus:border-admin-brand outline-none"
                                   {...form.register(`prizes.${idx}.reward_value`, { valueAsNumber: true })}
                                 />
                               </div>
+                              {!REWARD_TYPES.some((rt) => rt.value === form.watch(`prizes.${idx}.reward_type`)) && (
+                                <p className="text-[9px] text-rose-400 font-bold ml-1">전역 동기화되지 않은 타입입니다. 수정이 필요합니다.</p>
+                              )}
                             </div>
                           </div>
 

@@ -166,12 +166,17 @@ def status(db: Session = Depends(get_db), user_id: int = Depends(get_current_use
     res.daily_play_count = int(daily_play_count)
     res.daily_play_target = 30 # Hardcoded target
     res.daily_deposit_confirmed = has_deposit_today
-    # For daily_vault_spent, we'll use a placeholder or check vault_spent_total if it was meant as daily
-    # In this phase, we'll treat it as a target to reach 10,000 cumulative or daily? 
-    # Example said 3,000/10,000. Let's assume daily.
-    # We can try to sum negative ledger entries or just use a placeholder for now as it's a new requirement.
-    res.daily_vault_spent = 0 
+    
+    # Withdrawal Count (APPROVED or PENDING)
+    from app.models.vault_withdrawal_request import VaultWithdrawalRequest
+    withdrawal_count = db.query(func.count(VaultWithdrawalRequest.id)).filter(
+        VaultWithdrawalRequest.user_id == user_id,
+        VaultWithdrawalRequest.status.in_(["PENDING", "APPROVED"])
+    ).scalar() or 0
+
+    res.daily_vault_spent = int(getattr(user, "vault_spent_total", 0) or 0)
     res.daily_vault_spent_target = 10000
+    res.withdrawal_count = int(withdrawal_count)
 
     return res
 
