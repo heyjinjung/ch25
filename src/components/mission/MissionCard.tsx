@@ -2,7 +2,7 @@
 import React from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
-import { Bell, Check, ChevronRight, Share2, Star, Trophy, Users } from "lucide-react";
+import { Check, ChevronRight, Trophy } from "lucide-react";
 
 import { useHaptic } from "../../hooks/useHaptic";
 import { useSound } from "../../hooks/useSound";
@@ -234,144 +234,157 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
     }
   };
 
-  const renderIcon = () => {
-    const iconClass = "h-6 w-6";
-    if (isDailyGift) {
-      return (
-        <img
-          src="/assets/icon_diamond.png"
-          alt=""
-          className="h-6 w-6 object-contain"
-        />
-      );
-    }
+  const getIconSource = () => {
+    if (isDailyGift) return "/assets/asset_coin_gold.webp";
+    
+    // Title-based heuristic for better icons (Frontend Delight)
+    const titleLower = mission.title.toLowerCase();
+    
+    // Game Specifics
+    if (titleLower.includes("룰렛")) return "/assets/asset_ticket_green.webp";
+    if (titleLower.includes("주사위")) return "/assets/icon_dice_silver.webp";
+    if (titleLower.includes("복권")) return "/assets/asset_ticket_diamond.webp";
+    
+    // Action Types
     switch (mission.action_type) {
       case "JOIN_CHANNEL":
-        return <Bell className={iconClass} />;
+        return "/assets/icon_megaphone.png";
       case "INVITE_FRIEND":
-        return <Users className={iconClass} />;
+        return "/assets/icon_telegram_button.png";
       case "SHARE_STORY":
       case "SHARE_WALLET":
-        return <Share2 className={iconClass} />;
-      case "LOGIN":
-        return <Star className={iconClass} />;
+        return "/assets/icon_telegram_button.png";
       case "PLAY_GAME":
-        return <Trophy className={iconClass} />;
+        return "/assets/asset_ticket_bundle.png";
       default:
-        return (
-          <img
-            src="/assets/icon_diamond.png"
-            alt=""
-            className="h-6 w-6 object-contain"
-          />
-        );
+        // Default Fallback
+        return "/assets/icon_diamond.png";
     }
   };
 
   return (
     <div
       className={clsx(
-        "relative rounded-[28px] border transition-all duration-300",
+        "relative group isolate overflow-hidden rounded-[26px] border transition-all duration-300",
         isClaimed
-          ? "bg-white/[0.02] border-white/5 opacity-50"
+          ? "bg-white/[0.02] border-white/5 opacity-60 grayscale-[0.5]"
           : isCompleted
-            ? "bg-[#1A1A1B] border-emerald-500/20 shadow-[0_4px_20px_-8px_rgba(16,185,129,0.3)]"
-            : "bg-[#1A1A1B] border-white/5 shadow-md shadow-black/40"
+            ? "bg-zinc-900/80 border-lime-500/30 shadow-[0_0_20px_-5px_rgba(132,204,22,0.15)] ring-1 ring-lime-500/20"
+            : "bg-zinc-900/60 border-white/5 hover:bg-zinc-800/60"
       )}
     >
-      <div className="grid grid-cols-[52px,1fr,auto] items-center gap-4 p-5">
+      {/* Glassmorphism Gradient Glow */}
+      {!isClaimed && isCompleted && (
+        <div className="absolute -inset-1 bg-gradient-to-r from-lime-500/10 via-emerald-500/10 to-transparent opacity-50 blur-xl -z-10" />
+      )}
+
+      <div className="grid grid-cols-[56px,1fr,auto] items-center gap-4 p-4">
         {/* Left: Icon Box */}
-        <div
-          className={clsx(
-            "flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-[18px] border shadow-inner transition-colors",
-            isClaimed
-              ? "bg-white/5 border-white/5 text-white/20"
-              : isCompleted
-                ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
-                : "bg-[#252528] border-white/10 text-white/80"
-          )}
-        >
-          {isClaimed ? <Check className="h-6 w-6" /> : renderIcon()}
+        <div className={clsx(
+          "relative flex h-[56px] w-[56px] shrink-0 items-center justify-center rounded-[20px] transition-all duration-300",
+          isClaimed
+            ? "bg-white/5"
+            : isCompleted
+              ? "bg-gradient-to-br from-lime-500/20 to-emerald-500/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]"
+              : "bg-gradient-to-b from-white/10 to-white/5 shadow-inner"
+        )}>
+           {isClaimed ? (
+             <Check className="h-6 w-6 text-white/20" />
+           ) : (
+             <img 
+               src={getIconSource()} 
+               alt="Mission Icon" 
+               className={clsx(
+                 "object-contain drop-shadow-md transition-transform duration-300 group-hover:scale-110",
+                 isDailyGift ? "h-9 w-9" : "h-8 w-8"
+               )}
+             />
+           )}
         </div>
 
         {/* Middle: Content & Progress */}
-        <div className="flex-1 min-w-0 flex flex-col justify-center gap-3">
+        <div className="flex-1 min-w-0 flex flex-col justify-center gap-1.5">
           {/* Header */}
-          <div>
+          <div className="flex flex-col gap-0.5">
             <div className="flex items-center gap-2 min-w-0">
-              <span className="text-[15px] font-black leading-tight text-white tracking-tight truncate">
-                {isDailyGift ? "선물" : mission.title}
+              <span className={clsx(
+                "text-[15px] font-black leading-tight tracking-tight truncate",
+                isClaimed ? "text-white/40" : "text-white"
+              )}>
+                {isDailyGift ? "매일매일 보너스" : mission.title}
               </span>
               {(timeWindow || mission.auto_claim) && (
-                <span className="inline-flex items-center rounded-md bg-white/10 px-1.5 py-0.5 text-[9px] font-bold text-white/60">
+                <span className="inline-flex items-center rounded-[4px] bg-white/10 px-1.5 py-px text-[9px] font-bold text-white/50 tracking-wide uppercase">
                   {mission.auto_claim ? "AUTO" : "TIME"}
                 </span>
               )}
             </div>
-            {/* 미션 설명(일일 로그인시 매일선물 등) 제거 */}
+            {/* Mission Subtitle/Desc (Optional: if we want to show reward amount/type here) */}
+             {!isClaimed && (
+               <p className="text-[11px] font-medium text-white/40 truncate">
+                 {mission.action_type === 'JOIN_CHANNEL' ? '공식 채널 구독하고 보상받기' : 
+                  mission.action_type === 'PLAY_GAME' ? '게임 플레이 미션' : 
+                  isDailyGift ? '오늘의 출석 보상' : '한정 미션'}
+               </p>
+             )}
           </div>
 
           {/* Progress Bar (Only visible if not claimed) */}
           {!isClaimed && (
-            <div className="w-full">
-              <div className="grid grid-cols-[1fr,auto] items-center gap-2 text-[11px] font-bold mb-1.5 leading-none">
-                <span className="text-white/40 tabular-nums whitespace-nowrap">
-                  {progress.current_value} <span className="text-white/20">/</span> {mission.target_value}
+            <div className="w-full mt-1">
+              <div className="flex items-end justify-between text-[10px] font-bold mb-1.5 leading-none">
+                <span className="text-white/30 font-mono tracking-tight">
+                  <span className={clsx("text-sm", isCompleted ? "text-lime-400" : "text-white")}>{progress.current_value}</span>
+                  <span className="mx-0.5 opacity-50">/</span>
+                  {mission.target_value}
                 </span>
+                
                 {isCompleted ? (
-                  <span className="inline-flex items-center rounded-full border border-emerald-500/20 bg-emerald-500/15 px-2 py-0.5 text-[10px] font-black text-emerald-300 whitespace-nowrap">
-                    Completed
-                  </span>
+                   <span className="text-lime-400 animate-pulse">Claim Now</span>
                 ) : (
-                  <span className="tabular-nums whitespace-nowrap text-white/40">
-                    {percent}%
-                  </span>
+                   <span className="text-white/30">{percent}%</span>
                 )}
               </div>
-              <div className="h-1.5 w-full rounded-full bg-[#252528] overflow-hidden">
+              <div className="h-1.5 w-full rounded-full bg-white/5 overflow-hidden ring-1 ring-white/5">
                 <div
                   className={clsx(
-                    "h-full rounded-full transition-all duration-500",
-                    isCompleted ? "bg-emerald-500" : "bg-white/20"
+                    "h-full rounded-full transition-all duration-700 ease-out",
+                    isCompleted 
+                      ? "bg-gradient-to-r from-lime-400 to-emerald-400 shadow-[0_0_10px_rgba(132,204,22,0.5)]" 
+                      : "bg-white/20",
+                    `w-[${percent}%]`
                   )}
-                  style={{ width: `${percent}%` }}
                 />
               </div>
             </div>
           )}
         </div>
 
-        {/* Right: Rewards & Action */}
-        <div className="flex items-center gap-2 shrink-0 pl-0.5">
-          {/* Text Info Column */}
-          <div className="flex flex-col items-end gap-1">
-            {/* Reward Badge */}
-
-          </div>
-
-          {/* Action Button */}
+        {/* Right: Action Area */}
+        <div className="flex items-center pl-1">
           {isClaimed ? (
-            <div className="h-9 w-9 flex items-center justify-center rounded-full bg-white/5 text-white/20">
-              <Check className="h-4.5 w-4.5" />
-            </div>
+             <div className="h-8 min-w-[3rem] px-3 flex items-center justify-center rounded-xl bg-white/5 border border-white/5 text-[11px] font-bold text-white/20">
+               완료
+             </div>
           ) : isCompleted ? (
             <button
               onClick={handleClaim}
-              className="h-9 w-9 flex items-center justify-center rounded-full bg-emerald-500 text-black shadow-lg shadow-emerald-500/30 hover:scale-105 active:scale-95 transition-all"
-              title="보상 수령"
+              className="relative h-10 min-w-[3.5rem] px-3 flex items-center justify-center rounded-xl bg-gradient-to-b from-lime-400 to-lime-500 text-black shadow-[0_0_15px_-3px_rgba(132,204,22,0.4)] hover:scale-105 active:scale-95 transition-all border-t border-white/20"
+              title="보상 받기"
             >
-              <Trophy className="h-4.5 w-4.5 fill-current" />
+              <Trophy className="h-5 w-5 fill-black/20 text-black" />
+              <div className="absolute inset-0 rounded-xl ring-1 ring-inset ring-white/20" />
             </button>
           ) : (
             <button
               onClick={handleAction}
               disabled={isVerifying}
-              className="h-9 w-9 flex items-center justify-center rounded-full bg-[#2E2E32] text-white/60 hover:bg-[#3E3E42] hover:text-white active:scale-95 transition-all"
+              className="h-10 w-10 flex items-center justify-center rounded-xl bg-[#28282C] border border-white/5 text-white/40 hover:bg-[#323236] hover:text-white/80 active:scale-95 transition-all"
             >
               {isVerifying ? (
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-white" />
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-lime-400" />
               ) : (
-                <ChevronRight className="h-4.5 w-4.5" />
+                <ChevronRight className="h-5 w-5" />
               )}
             </button>
           )}

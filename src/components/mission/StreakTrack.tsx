@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Gift, CheckCircle2, Zap } from "lucide-react";
+import { Gift, CheckCircle2 } from "lucide-react";
 import clsx from "clsx";
 import { useMissionStore } from "../../stores/missionStore";
 import { tryHaptic } from "../../utils/haptics";
@@ -27,7 +27,7 @@ const StreakTrack: React.FC = () => {
             <div className="flex items-center justify-between mb-3 px-1">
                 <div className="flex items-center gap-1.5">
                     <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 text-[10px] font-black uppercase tracking-wider">
-                        <Zap size={10} className="fill-current" />
+                        <img src="/assets/icons/fire-dynamic-color.png" className="w-4 h-4 object-contain" alt="" />
                         Streak
                     </div>
                     <span className="text-sm font-black text-white glow-gold">

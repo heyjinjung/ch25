@@ -29,7 +29,6 @@
       "@testing-library/jest-dom"
     ],
     /* Path mapping */
-    "baseUrl": ".",
     "paths": {
       "@/*": [
         "./src/*"

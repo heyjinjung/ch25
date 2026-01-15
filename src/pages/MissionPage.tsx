@@ -1,7 +1,6 @@
 // src/pages/MissionPage.tsx
 import React, { useEffect, useState } from "react";
 import clsx from "clsx";
-import { Target, Trophy } from "lucide-react";
 
 import MissionCard from "../components/mission/MissionCard";
 import TodayMissionCard from "../components/mission/TodayMissionCard";
@@ -60,9 +59,9 @@ const MissionPage: React.FC = () => {
   const tabIcon = (tab: MissionTab) => {
     switch (tab) {
       case "DAILY":
-        return <Target size={14} />;
+        return <img src="/assets/icons/rocket-dynamic-color.png" className="w-4 h-4 object-contain" alt="" />;
       case "WEEKLY":
-        return <Trophy size={14} />;
+        return <img src="/assets/icons/takeaway-cup-dynamic-color.png" className="w-4 h-4 object-contain" alt="" />;
       default:
         return null;
     }
@@ -120,8 +119,8 @@ const MissionPage: React.FC = () => {
           </>
         ) : (
           <div className="rounded-[24px] border border-white/10 bg-white/10 p-5 text-center">
-            <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-2xl bg-black/40 ring-1 ring-white/10">
-              <Target className="h-5 w-5 text-white/40" />
+            <div className="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-2xl bg-black/40 ring-1 ring-white/10">
+              <img src="/assets/icons/rocket-dynamic-color.png" className="w-10 h-10 object-contain" alt="" />
             </div>
             <div className="text-sm font-black text-white/90">No missions</div>
             <div className="mt-1 text-[11px] font-semibold text-white/70">현재 카테고리에 활성 미션이 없습니다.</div>

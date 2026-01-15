@@ -1,7 +1,7 @@
 import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchShopProducts, purchaseProduct, ShopProduct, fetchInventory } from '../api/inventoryApi';
-import { Loader2, Lock, ShoppingBag } from 'lucide-react';
+import { Loader2, Lock } from 'lucide-react';
 import { useToast } from '../components/common/ToastProvider';
 import { tryHaptic } from '../utils/haptics';
 import { useNavigate } from 'react-router-dom';
@@ -196,7 +196,7 @@ const ExchangePage: React.FC = () => {
             {/* Header */}
             <div className="sticky top-0 z-40 bg-black/80 backdrop-blur-xl border-b border-white/5 px-4 h-14 flex items-center justify-between">
                 <h1 className="text-lg font-black text-white flex items-center gap-2 tracking-tight">
-                    <ShoppingBag className="w-5 h-5 text-emerald-500" />
+                    <img src="/assets/icons/icon_cart.png" className="w-8 h-8 object-contain" alt="" />
                     교환소
                 </h1>
 

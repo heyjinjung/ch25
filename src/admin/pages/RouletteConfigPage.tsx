@@ -24,6 +24,7 @@ import {
 import {
   AdminRouletteConfig,
   AdminRouletteConfigPayload,
+  AdminRouletteSegmentPayload,
   createRouletteConfig,
   deleteRouletteConfig,
   fetchRouletteConfigs,
@@ -36,6 +37,7 @@ import type { AdminRewardType } from "../types/adminReward";
 const gifticonBrands = [
   { value: "CC_COIN", label: "씨씨코인" },
   { value: "BAEMIN", label: "배민" },
+  { value: "COMPOSE", label: "컴포즈커피" },
   { value: "STARBUCKS", label: "스타벅스" },
   { value: "CU", label: "CU" },
   { value: "GS25", label: "GS25" },
@@ -43,13 +45,29 @@ const gifticonBrands = [
 ] as const;
 
 const isGifticonType = (value?: string | null) => Boolean(value && value.toUpperCase().includes("GIFTICON"));
+
 const getGifticonBrand = (value?: string | null) => {
   if (!isGifticonType(value)) return "";
-  const raw = String(value ?? "");
-  const brand = raw.replace(/_GIFTICON.*/i, "");
-  return brand || "";
+  const raw = String(value ?? "").toUpperCase();
+
+  // Special Case: CC_COIN (CC_COIN_GIFTICON)
+  if (raw.startsWith("CC_COIN")) return "CC_COIN";
+
+  // Standard: GIFTICON_BRAND
+  if (raw.startsWith("GIFTICON_")) {
+    return raw.replace("GIFTICON_", "");
+  }
+
+  // Legacy/Fallback: BRAND_GIFTICON
+  return raw.replace(/_GIFTICON.*/i, "") || "";
 };
-const buildGifticonType = (brand: string) => `${brand}_GIFTICON`;
+
+const buildGifticonType = (brand: string) => {
+  // Special Case
+  if (brand === "CC_COIN") return "CC_COIN_GIFTICON";
+  // Standard
+  return `GIFTICON_${brand}`;
+};
 
 const segmentSchema = z.object({
   label: z.string().min(1, "라벨을 입력하세요"),
@@ -81,19 +99,19 @@ const buildDefaultSegments = (): RouletteFormValues["segments"] =>
     reward_value: 0,
   }));
 
-const normalizeToSixSegments = (segments: any[]): RouletteFormValues["segments"] => {
+const normalizeToSixSegments = (segments: AdminRouletteSegmentPayload[]): RouletteFormValues["segments"] => {
   const base = buildDefaultSegments();
   return Array.from({ length: 6 }).map((_, idx) => {
-    const raw = segments.find((s: any) => {
-      const sidx = s.index ?? s.slot_index;
+    const raw = segments.find((s) => {
+      const sidx = s.index;
       return sidx === idx;
-    }) ?? {};
+    }) || ({} as Partial<AdminRouletteSegmentPayload> & { reward_amount?: number });
 
     return {
       label: raw.label ?? base[idx].label,
       weight: raw.weight ?? base[idx].weight,
       reward_type: raw.reward_type ?? base[idx].reward_type,
-      reward_value: raw.reward_value ?? raw.reward_amount ?? base[idx].reward_value,
+      reward_value: raw.reward_value ?? (raw as any).reward_amount ?? base[idx].reward_value,
     };
   });
 };
@@ -281,7 +299,7 @@ const RouletteConfigPage: React.FC = () => {
         label: seg.label.trim(),
         weight: seg.weight,
         reward_type: seg.reward_type as AdminRewardType,
-        reward_value: seg.reward_value,
+        reward_value: seg.reward_value as number,
       })),
     };
     mutation.mutate(payload);
@@ -568,7 +586,7 @@ const RouletteConfigPage: React.FC = () => {
                         <div key={field.id} className="p-4 rounded-xl bg-zinc-900/20 border border-zinc-800/50 hover:border-zinc-700 transition-all group">
                           <div className="flex flex-col gap-4">
                             <div className="grid grid-cols-12 gap-4 items-start">
-                              
+
                               {/* Label Section */}
                               <div className="col-span-12 md:col-span-4 lg:col-span-3 space-y-2">
                                 <label className="text-[10px] font-black text-zinc-500 uppercase ml-1">Segment Label</label>
@@ -612,7 +630,7 @@ const RouletteConfigPage: React.FC = () => {
                                     >
                                       {Object.entries(REWARD_TYPES.reduce((acc, item) => {
                                         const g = (item as any).group || 'Other';
-                                        if(!acc[g]) acc[g] = [];
+                                        if (!acc[g]) acc[g] = [];
                                         acc[g].push(item);
                                         return acc;
                                       }, {} as Record<string, typeof REWARD_TYPES[number][]>)).map(([group, items]) => (
