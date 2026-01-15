@@ -62,10 +62,10 @@ class NotificationService:
         import threading
         def _send():
             try:
-                import requests
+                # [Fix] Use httpx instead of requests (requests is not in requirements.txt)
                 url = f"{self.api_base}/sendMessage"
                 text = f"👀 <b>Keep it up!</b>\n\nYou are just <b>{remaining}</b> step{'s' if remaining > 1 else ''} away from completing <b>{mission_title}</b>!\n\nPlay now to claim your reward! 💎"
-                requests.post(url, json={"chat_id": chat_id, "text": text, "parse_mode": "HTML"}, timeout=5)
+                httpx.post(url, json={"chat_id": chat_id, "text": text, "parse_mode": "HTML"}, timeout=5)
             except Exception as e:
                 logger.error(f"Nudge failed: {e}")
         
@@ -84,9 +84,9 @@ class NotificationService:
             return False
 
         try:
-            import requests
+            # [Fix] Use httpx instead of requests
             url = f"{self.api_base}/getChatMember"
-            resp = requests.get(url, params={"chat_id": channel_username, "user_id": user_id}, timeout=5)
+            resp = httpx.get(url, params={"chat_id": channel_username, "user_id": user_id}, timeout=5)
             data = resp.json()
             
             if not data.get("ok"):

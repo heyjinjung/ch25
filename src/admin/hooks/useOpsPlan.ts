@@ -9,6 +9,7 @@ import {
   ensureOpsPlan,
   executeOpsPlanTask,
   fetchOpsCampaigns,
+  fetchOpsTargetLists,
   fetchOpsPlanTasks,
   updateOpsCampaign,
   updateOpsPlanTask,
@@ -138,5 +139,14 @@ export function useDeleteOpsPlanTask(planId: number | null) {
         qc.invalidateQueries({ queryKey: ["admin", "ops-plan", "tasks"], exact: false });
       }
     },
+  });
+}
+
+export function useOpsTargetLists(planId: number | null) {
+  return useQuery({
+    queryKey: planId ? ["admin", "ops-plan", "target-lists", planId] : ["admin", "ops-plan", "target-lists", null],
+    queryFn: () => fetchOpsTargetLists(planId as number),
+    enabled: Boolean(planId),
+    staleTime: 5_000,
   });
 }

@@ -131,9 +131,16 @@ const InventoryPage: React.FC = () => {
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                         {items.filter(it => it.quantity > 0).length === 0 ? (
-                            <div className="col-span-2 flex flex-col items-center justify-center py-12 opacity-80 space-y-4">
-                                <img src="/assets/icons/icon_rocket.png" className="w-24 h-24 object-contain animate-bounce" alt="" />
-                                <p className="text-white/30 font-medium tracking-tight">보유한 아이템이 없습니다</p>
+                            <div className="col-span-2 flex flex-col items-center justify-center py-12 space-y-3">
+                                <div className="relative mb-2">
+                                    <div className="absolute inset-0 bg-emerald-500/10 blur-3xl rounded-full" />
+                                    <img 
+                                        src="/assets/icons/rocket-dynamic-color.png" 
+                                        className="relative z-10 w-20 h-20 object-contain opacity-20 grayscale" 
+                                        alt="" 
+                                    />
+                                </div>
+                                <p className="text-white/20 text-sm font-bold tracking-tight">보유한 아이템이 없습니다</p>
                             </div>
                         ) : (
                             items
@@ -227,7 +234,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, onUse, isPending }) => {
             title,
             sub,
             desc,
-            icon: <img src={iconPath} className="w-8 h-8 object-contain" alt="" />,
+            icon: <img src={iconPath} className="w-full h-full object-contain" alt="" />,
         };
     };
 
@@ -236,37 +243,37 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, onUse, isPending }) => {
             title: "골드키",
             sub: "",
             desc: "즉시 교환",
-            icon: <img src="/assets/icons/goldkey.png" className="w-8 h-8 object-contain" alt="" />
+            icon: <img src="/assets/icons/goldkey.png" className="w-full h-full object-contain" alt="" />
         },
         "VOUCHER_DIAMOND_KEY_1": {
             title: "다이아키",
             sub: "",
             desc: "즉시 교환",
-            icon: <img src="/assets/icons/diakey.png" className="w-8 h-8 object-contain" alt="" />
+            icon: <img src="/assets/icons/diakey.png" className="w-full h-full object-contain" alt="" />
         },
         "VOUCHER_DICE_TOKEN_1": {
             title: "주사위",
             sub: "",
             desc: "즉시 교환",
-            icon: <img src="/assets/icon_dice_silver.png" className="w-8 h-8 object-contain" alt="" />
+            icon: <img src="/assets/icon_dice_silver.png" className="w-full h-full object-contain" alt="" />
         },
         "VOUCHER_ROULETTE_COIN_1": {
             title: "룰렛 티켓",
             sub: "",
             desc: "즉시 교환",
-            icon: <img src="/assets/asset_ticket_green.png" className="w-8 h-8 object-contain" alt="" />
+            icon: <img src="/assets/asset_ticket_green.png" className="w-full h-full object-contain" alt="" />
         },
         "VOUCHER_LOTTERY_TICKET_1": {
             title: "복권 티켓",
             sub: "",
             desc: "즉시 교환",
-            icon: <img src="/assets/lottery/icon_lotto_ball.webp" className="w-8 h-8 object-contain" alt="" />
+            icon: <img src="/assets/lottery/icon_lotto_ball.webp" className="w-full h-full object-contain" alt="" />
         },
         "DIAMOND": {
             title: "다이아",
             sub: "",
             desc: "상점 재화",
-            icon: <img src="/assets/icon_diamond.png" className="w-8 h-8 object-contain" alt="" />
+            icon: <img src="/assets/icon_diamond.png" className="w-full h-full object-contain" alt="" />
         }
     };
 
@@ -277,14 +284,14 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, onUse, isPending }) => {
         title: item.item_type,
         sub: "",
         desc: "보유 중",
-        icon: <img src="/assets/icons/locker-dynamic-color.png" className="w-5 h-5 object-contain opacity-50" alt="" />
+        icon: <img src="/assets/icons/locker-dynamic-color.png" className="w-full h-full object-contain opacity-50" alt="" />
     };
 
     return (
         <div className="relative group overflow-hidden bg-gradient-to-tr from-white/[0.08] to-white/[0.02] border border-white/10 rounded-[22px] p-4 transition-all active:scale-[0.98] hover:border-white/20">
             <div className="flex flex-col relative z-10 h-full items-center text-center">
                 <div className="relative mb-4">
-                    <div className="w-12 h-12 rounded-2xl bg-black/40 border border-white/5 flex items-center justify-center p-2 shadow-inner">
+                    <div className="w-12 h-12 rounded-2xl bg-black/40 border border-white/5 flex items-center justify-center p-1 shadow-inner">
                         {info.icon}
                     </div>
                     <div className="absolute -top-1.5 -right-1.5 bg-figma-accent text-black text-[10px] font-black px-1.5 py-0.5 rounded-full ring-2 ring-black tabular-nums">

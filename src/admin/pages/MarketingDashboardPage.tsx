@@ -230,8 +230,7 @@ const MarketingDashboardPage: React.FC = () => {
             <div className="admin-card p-6">
                 <CrisisRadar
                     onScenarioClick={(scenario: CrisisSignal) => {
-                        addToast(`${scenario.name} 시나리오 선택됨 (${scenario.count}명)`, "info");
-                        // TODO: Open import modal
+                        handleCardClick(scenario.name, scenario.id);
                     }}
                 />
             </div>

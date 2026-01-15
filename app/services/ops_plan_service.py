@@ -12,11 +12,18 @@ from sqlalchemy.orm import Session
 from app.models.ops_plan import OpsCampaign, OpsPlan, OpsPlanTask
 from app.models.user import User
 from app.services.inventory_service import InventoryService
+from app.services.ops_log_service import OpsLogService
+from app.services.ops_target_service import OpsTargetService
+from app.services.vault2_service import Vault2Service
+from zoneinfo import ZoneInfo
+from app.core.config import get_settings
 
 
 class OpsPlanService:
     def __init__(self) -> None:
         self.now = datetime.utcnow
+        self.ops_log_service = OpsLogService()
+        self.ops_target_service = OpsTargetService()
 
     def _execute_inventory_grant_all(self, db: Session, *, task: OpsPlanTask) -> dict:
         payload = (task.payload_json or {}) if isinstance(task.payload_json, dict) else {}
@@ -71,6 +78,141 @@ class OpsPlanService:
             "items": cleaned_items,
             "target": "ALL_USERS",
             "granted_users": granted_users,
+        }
+
+    def _execute_golden_hour_toggle(self, db: Session, *, payload: dict, actor_admin_id: int) -> dict:
+        """Apply Golden Hour toggle/multiplier settings."""
+        action = str(payload.get("action") or "FORCE_ON").upper()
+        multiplier_raw = payload.get("multiplier")
+        multiplier = float(multiplier_raw) if multiplier_raw is not None else None
+
+        v2 = Vault2Service()
+        current = v2.get_config_value(db, "golden_hour_config", {}) or {}
+
+        prev_enabled = bool(current.get("enabled", False))
+        prev_override = str(current.get("manual_override", "AUTO"))
+        prev_multiplier = float(current.get("multiplier", 2.0))
+
+        if action == "FORCE_OFF":
+            current["enabled"] = False
+            current["manual_override"] = "FORCE_OFF"
+        elif action == "MULTIPLIER_SET":
+            if multiplier is not None:
+                current["multiplier"] = multiplier
+            current["manual_override"] = str(current.get("manual_override") or "AUTO")
+            current["enabled"] = bool(current.get("enabled", True))
+        else:
+            current["enabled"] = True
+            current["manual_override"] = "FORCE_ON"
+
+        v2.set_config_value(db, "golden_hour_config", current)
+
+        try:
+            now = datetime.utcnow()
+            tz = ZoneInfo(getattr(get_settings(), "timezone", "Asia/Seoul"))
+            log_date = now.astimezone(tz).date()
+
+            if prev_enabled != current.get("enabled", prev_enabled) or prev_override != current.get("manual_override", prev_override):
+                self.ops_log_service.create_log_entry(
+                    db,
+                    log_date=log_date,
+                    category="SYSTEM",
+                    action_code="SYS_GOLDEN_HOUR_TOGGLE",
+                    target_model="Vault2Config",
+                    target_id="golden_hour_config",
+                    meta_data={
+                        "enabled": current.get("enabled"),
+                        "manual_override": current.get("manual_override"),
+                        "prev_enabled": prev_enabled,
+                        "prev_manual_override": prev_override,
+                    },
+                    is_automated=False,
+                    actor_id=actor_admin_id,
+                    ref_id=f"GOLDEN_HOUR_TOGGLE:{actor_admin_id}:{int(now.timestamp())}",
+                )
+
+            if multiplier is not None and prev_multiplier != float(current.get("multiplier", prev_multiplier)):
+                self.ops_log_service.create_log_entry(
+                    db,
+                    log_date=log_date,
+                    category="SYSTEM",
+                    action_code="SYS_GOLDEN_HOUR_MULTIPLIER_SET",
+                    target_model="Vault2Config",
+                    target_id="golden_hour_config",
+                    meta_data={
+                        "multiplier": float(current.get("multiplier")),
+                        "prev_multiplier": prev_multiplier,
+                    },
+                    is_automated=False,
+                    actor_id=actor_admin_id,
+                    ref_id=f"GOLDEN_HOUR_MULTIPLIER:{actor_admin_id}:{int(now.timestamp())}",
+                )
+        except Exception:
+            # Fail-open: config already applied; logging not critical.
+            pass
+
+        return {
+            "kind": "GOLDEN_HOUR",
+            "action": action,
+            "multiplier": current.get("multiplier"),
+            "enabled": current.get("enabled"),
+            "manual_override": current.get("manual_override"),
+        }
+
+    def _execute_message_template(
+        self,
+        db: Session,
+        *,
+        task: OpsPlanTask,
+        payload: dict,
+        actor_admin_id: int,
+    ) -> dict:
+        """Mark DM/message template as sent for a target list (no-op send)."""
+        target_list_id = payload.get("target_list_id")
+        sent_count = 0
+
+        if target_list_id:
+            try:
+                members = self.ops_target_service.get_target_members(db, target_list_id=target_list_id)
+                for member in members:
+                    member.status = "SENT"
+                    member.updated_at = self.now()
+                    db.add(member)
+                db.commit()
+                sent_count = len(members)
+            except Exception:
+                db.rollback()
+                sent_count = 0
+
+        try:
+            now = datetime.utcnow()
+            tz = ZoneInfo(getattr(get_settings(), "timezone", "Asia/Seoul"))
+            log_date = now.astimezone(tz).date()
+            self.ops_log_service.create_log_entry(
+                db,
+                log_date=log_date,
+                category="CS",
+                action_code="CS_SURVEY_DM_SENT",
+                target_model="OpsPlanTask",
+                target_id=str(task.id),
+                meta_data={
+                    "channel": payload.get("channel") or "DM",
+                    "audience": payload.get("audience") or "UNKNOWN",
+                    "target_list_id": target_list_id,
+                    "sent_count": sent_count,
+                },
+                is_automated=False,
+                actor_id=actor_admin_id,
+                ref_id=f"OPS_TASK_DM:{task.id}:{int(now.timestamp())}",
+            )
+        except Exception:
+            # Logging failure should not break execution mark.
+            pass
+
+        return {
+            "kind": str(payload.get("kind") or "MESSAGE_TEMPLATE"),
+            "target_list_id": target_list_id,
+            "sent_count": sent_count,
         }
 
     # Campaign
@@ -219,6 +361,20 @@ class OpsPlanService:
                 except Exception:
                     db.rollback()
                 raise
+        elif kind == "GOLDEN_HOUR" and status_value == "DONE":
+            result = self._execute_golden_hour_toggle(db, payload=payload, actor_admin_id=actor_admin_id)
+            latest_payload = (task.payload_json or {}) if isinstance(task.payload_json, dict) else {}
+            task.payload_json = {**latest_payload, "execution_result": result}
+            db.add(task)
+            db.commit()
+            db.refresh(task)
+        elif kind in {"MESSAGE_TEMPLATE", "SURVEY_DM"} and status_value == "DONE":
+            result = self._execute_message_template(db, task=task, payload=payload, actor_admin_id=actor_admin_id)
+            latest_payload = (task.payload_json or {}) if isinstance(task.payload_json, dict) else {}
+            task.payload_json = {**latest_payload, "execution_result": result}
+            db.add(task)
+            db.commit()
+            db.refresh(task)
         return task
 
     def delete_plan(self, db: Session, *, plan_id: int) -> None:

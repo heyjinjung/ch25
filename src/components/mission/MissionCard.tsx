@@ -236,15 +236,15 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
 
   const getIconSource = () => {
     if (isDailyGift) return "/assets/asset_coin_gold.webp";
-    
+
     // Title-based heuristic for better icons (Frontend Delight)
     const titleLower = mission.title.toLowerCase();
-    
+
     // Game Specifics
     if (titleLower.includes("룰렛")) return "/assets/asset_ticket_green.webp";
     if (titleLower.includes("주사위")) return "/assets/icon_dice_silver.webp";
     if (titleLower.includes("복권")) return "/assets/asset_ticket_diamond.webp";
-    
+
     // Action Types
     switch (mission.action_type) {
       case "JOIN_CHANNEL":
@@ -265,41 +265,49 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
   return (
     <div
       className={clsx(
-        "relative group isolate overflow-hidden rounded-[26px] border transition-all duration-300",
+        "relative group isolate overflow-hidden rounded-[26px] border transition-all duration-500",
         isClaimed
-          ? "bg-white/[0.02] border-white/5 opacity-60 grayscale-[0.5]"
+          ? "bg-white/[0.02] border-white/5 opacity-50 grayscale"
           : isCompleted
-            ? "bg-zinc-900/80 border-lime-500/30 shadow-[0_0_20px_-5px_rgba(132,204,22,0.15)] ring-1 ring-lime-500/20"
-            : "bg-zinc-900/60 border-white/5 hover:bg-zinc-800/60"
+            ? "bg-gradient-to-br from-[#1a1a1a]/80 via-black/80 to-lime-900/20 border-lime-400/50 shadow-[0_0_30px_-10px_rgba(163,230,53,0.2)]"
+            : "bg-black/40 backdrop-blur-md border-white/10 hover:border-white/20 hover:bg-white/5"
       )}
     >
-      {/* Glassmorphism Gradient Glow */}
+      {/* Neon Glow Effect for Completed/Active */}
       {!isClaimed && isCompleted && (
-        <div className="absolute -inset-1 bg-gradient-to-r from-lime-500/10 via-emerald-500/10 to-transparent opacity-50 blur-xl -z-10" />
+        <>
+          <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-lime-400/50 to-transparent opacity-70" />
+          <div className="absolute -inset-0.5 bg-gradient-to-br from-lime-400/10 to-transparent opacity-30 blur-2xl -z-10 group-hover:opacity-50 transition-opacity duration-700" />
+        </>
       )}
 
-      <div className="grid grid-cols-[56px,1fr,auto] items-center gap-4 p-4">
+      {/* Decorative Background Element for Normal State */}
+      {!isClaimed && !isCompleted && (
+        <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/5 rounded-full blur-3xl pointer-events-none group-hover:bg-lime-400/5 transition-colors duration-500" />
+      )}
+
+      <div className="grid grid-cols-[60px,1fr,auto] items-center gap-4 p-5">
         {/* Left: Icon Box */}
         <div className={clsx(
-          "relative flex h-[56px] w-[56px] shrink-0 items-center justify-center rounded-[20px] transition-all duration-300",
+          "relative flex h-[60px] w-[60px] shrink-0 items-center justify-center rounded-[22px] transition-all duration-300 shadow-xl",
           isClaimed
-            ? "bg-white/5"
+            ? "bg-white/5 border border-white/5"
             : isCompleted
-              ? "bg-gradient-to-br from-lime-500/20 to-emerald-500/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]"
-              : "bg-gradient-to-b from-white/10 to-white/5 shadow-inner"
+              ? "bg-gradient-to-br from-[#2a2a2a] to-black border border-lime-500/30 ring-1 ring-lime-500/20"
+              : "bg-[#18181b] border border-white/10 group-hover:border-lime-500/30 group-hover:shadow-[0_0_15px_-5px_rgba(163,230,53,0.3)]"
         )}>
-           {isClaimed ? (
-             <Check className="h-6 w-6 text-white/20" />
-           ) : (
-             <img 
-               src={getIconSource()} 
-               alt="Mission Icon" 
-               className={clsx(
-                 "object-contain drop-shadow-md transition-transform duration-300 group-hover:scale-110",
-                 isDailyGift ? "h-9 w-9" : "h-8 w-8"
-               )}
-             />
-           )}
+          {isClaimed ? (
+            <Check className="h-6 w-6 text-white/20" />
+          ) : (
+            <img
+              src={getIconSource()}
+              alt="Mission Icon"
+              className={clsx(
+                "object-contain drop-shadow-[0_4px_6px_rgba(0,0,0,0.5)] transition-transform duration-500 ease-out group-hover:scale-110",
+                isDailyGift ? "h-10 w-10" : "h-9 w-9"
+              )}
+            />
+          )}
         </div>
 
         {/* Middle: Content & Progress */}
@@ -308,53 +316,66 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
           <div className="flex flex-col gap-0.5">
             <div className="flex items-center gap-2 min-w-0">
               <span className={clsx(
-                "text-[15px] font-black leading-tight tracking-tight truncate",
-                isClaimed ? "text-white/40" : "text-white"
+                "text-[16px] font-black leading-tight tracking-tight truncate",
+                !isClaimed && "drop-shadow-md",
+                isCompleted && !isClaimed ? "text-white" : (isClaimed ? "text-white/40" : "text-white")
               )}>
                 {isDailyGift ? "매일매일 보너스" : mission.title}
               </span>
               {(timeWindow || mission.auto_claim) && (
-                <span className="inline-flex items-center rounded-[4px] bg-white/10 px-1.5 py-px text-[9px] font-bold text-white/50 tracking-wide uppercase">
+                <span className={clsx(
+                  "inline-flex items-center rounded-[6px] px-1.5 py-[2px] text-[9px] font-black tracking-wide uppercase shadow-sm border",
+                  isCompleted && !isClaimed
+                    ? "bg-lime-400/10 text-lime-400 border-lime-400/20"
+                    : "bg-white/5 text-white/40 border-white/10"
+                )}>
                   {mission.auto_claim ? "AUTO" : "TIME"}
                 </span>
               )}
             </div>
-            {/* Mission Subtitle/Desc (Optional: if we want to show reward amount/type here) */}
-             {!isClaimed && (
-               <p className="text-[11px] font-medium text-white/40 truncate">
-                 {mission.action_type === 'JOIN_CHANNEL' ? '공식 채널 구독하고 보상받기' : 
-                  mission.action_type === 'PLAY_GAME' ? '게임 플레이 미션' : 
-                  isDailyGift ? '오늘의 출석 보상' : '한정 미션'}
-               </p>
-             )}
+
+            {/* Description */}
+            {!isClaimed && (
+              <p className="text-[11px] font-bold text-white/50 truncate tracking-tight">
+                {mission.action_type === 'JOIN_CHANNEL' ? '공식 채널 구독하고 보상받기' :
+                  mission.action_type === 'PLAY_GAME' ? '게임 플레이 미션' :
+                    isDailyGift ? '오늘의 출석 보상' : '한정 미션'}
+              </p>
+            )}
           </div>
 
-          {/* Progress Bar (Only visible if not claimed) */}
+          {/* Progress Bar */}
           {!isClaimed && (
-            <div className="w-full mt-1">
-              <div className="flex items-end justify-between text-[10px] font-bold mb-1.5 leading-none">
-                <span className="text-white/30 font-mono tracking-tight">
-                  <span className={clsx("text-sm", isCompleted ? "text-lime-400" : "text-white")}>{progress.current_value}</span>
-                  <span className="mx-0.5 opacity-50">/</span>
-                  {mission.target_value}
+            <div className="w-full mt-2">
+              <div className="flex items-end justify-between text-[11px] font-bold mb-1.5 leading-none">
+                <span className="text-white/30 font-mono tracking-tight flex items-center gap-1">
+                  <span className={clsx("text-sm", isCompleted ? "text-lime-400" : "text-white/80")}>{progress.current_value}</span>
+                  <span className="h-2 w-[1px] bg-white/10" />
+                  <span className="opacity-60">{mission.target_value}</span>
                 </span>
-                
+
                 {isCompleted ? (
-                   <span className="text-lime-400 animate-pulse">Claim Now</span>
+                  <span className="text-lime-400 animate-pulse drop-shadow-[0_0_8px_rgba(163,230,53,0.5)]">Claim Reward</span>
                 ) : (
-                   <span className="text-white/30">{percent}%</span>
+                  <span className="text-lime-400/80">{percent}%</span>
                 )}
               </div>
-              <div className="h-1.5 w-full rounded-full bg-white/5 overflow-hidden ring-1 ring-white/5">
+              <div className="h-2 w-full rounded-full bg-black/40 overflow-hidden ring-1 ring-white/5 select-none">
                 <div
                   className={clsx(
-                    "h-full rounded-full transition-all duration-700 ease-out",
-                    isCompleted 
-                      ? "bg-gradient-to-r from-lime-400 to-emerald-400 shadow-[0_0_10px_rgba(132,204,22,0.5)]" 
-                      : "bg-white/20",
+                    "h-full rounded-full transition-all duration-1000 ease-out relative overflow-hidden",
+                    isCompleted
+                      ? "bg-gradient-to-r from-lime-400 to-emerald-400 shadow-[0_0_15px_rgba(163,230,53,0.6)]"
+                      : "bg-white/10",
                     `w-[${percent}%]`
                   )}
-                />
+                  style={{ width: `${percent}%` }}
+                >
+                  {/* Shimmer effect on progress bar */}
+                  {percent > 0 && percent < 100 && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent w-full -translate-x-full animate-[shimmer_2s_infinite]" />
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -363,26 +384,26 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
         {/* Right: Action Area */}
         <div className="flex items-center pl-1">
           {isClaimed ? (
-             <div className="h-8 min-w-[3rem] px-3 flex items-center justify-center rounded-xl bg-white/5 border border-white/5 text-[11px] font-bold text-white/20">
-               완료
-             </div>
+            <div className="h-9 min-w-[3.5rem] px-3 flex items-center justify-center rounded-xl bg-white/5 border border-white/5 text-[11px] font-bold text-white/20">
+              완료
+            </div>
           ) : isCompleted ? (
             <button
               onClick={handleClaim}
-              className="relative h-10 min-w-[3.5rem] px-3 flex items-center justify-center rounded-xl bg-gradient-to-b from-lime-400 to-lime-500 text-black shadow-[0_0_15px_-3px_rgba(132,204,22,0.4)] hover:scale-105 active:scale-95 transition-all border-t border-white/20"
+              className="relative group/btn h-11 min-w-[3.5rem] px-4 flex items-center justify-center rounded-[18px] bg-gradient-to-b from-lime-300 via-lime-400 to-lime-500 text-black shadow-[0_4px_20px_-5px_rgba(163,230,53,0.6)] hover:scale-105 active:scale-95 transition-all border-t border-white/40 overflow-hidden"
               title="보상 받기"
             >
-              <Trophy className="h-5 w-5 fill-black/20 text-black" />
-              <div className="absolute inset-0 rounded-xl ring-1 ring-inset ring-white/20" />
+              <Trophy className="relative z-10 h-5 w-5 fill-black text-black/80 drop-shadow-sm animate-[bounce_2s_infinite]" />
+              <div className="absolute inset-0 bg-white/30 skew-x-12 -translate-x-full group-hover/btn:animate-[shimmer_0.5s_ease-in-out_forwards]" />
             </button>
           ) : (
             <button
               onClick={handleAction}
               disabled={isVerifying}
-              className="h-10 w-10 flex items-center justify-center rounded-xl bg-[#28282C] border border-white/5 text-white/40 hover:bg-[#323236] hover:text-white/80 active:scale-95 transition-all"
+              className="h-11 w-11 flex items-center justify-center rounded-[18px] bg-[#222225] border border-white/10 text-white/40 hover:bg-[#323236] hover:text-white hover:border-lime-500/30 hover:shadow-[0_0_15px_-5px_rgba(163,230,53,0.3)] active:scale-95 transition-all"
             >
               {isVerifying ? (
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-lime-400" />
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/20 border-t-lime-400" />
               ) : (
                 <ChevronRight className="h-5 w-5" />
               )}

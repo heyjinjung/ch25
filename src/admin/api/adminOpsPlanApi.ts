@@ -43,6 +43,18 @@ export type OpsPlanTask = {
   updated_at: string;
 };
 
+export type OpsTargetList = {
+  id: number;
+  plan_id: number;
+  name: string;
+  source_type: string;
+  source_params?: Record<string, unknown> | null;
+  count_snapshot: number;
+  is_processed: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
 export type CreateOpsCampaignRequest = {
   name: string;
   status?: string;
@@ -122,5 +134,10 @@ export async function executeOpsPlanTask(taskId: number, payload?: { status?: st
   const { data } = await adminApi.post<OpsPlanTask>(`${BASE_PATH}/tasks/${taskId}/execute`, {
     status: payload?.status ?? "DONE",
   });
+  return data;
+}
+
+export async function fetchOpsTargetLists(planId: number) {
+  const { data } = await adminApi.get<OpsTargetList[]>(`${BASE_PATH}/plans/${planId}/target-lists`);
   return data;
 }
