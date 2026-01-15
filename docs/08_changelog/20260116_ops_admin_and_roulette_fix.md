@@ -1,13 +1,13 @@
 # 2026-01-16 개발 로그 - 룰렛 보상 규칙 개선 및 OPS Admin UX 설계
 
-## 🚨 중요 알림 (Critical Update)
+##### 🚨 중요 알림 (Critical Update)
 ### **룰렛 금고 적립 규칙 변경 (Hardcoded Rule Removal)**
 - **변경 내용**: 기존 `RouletteService` 및 `VaultService`에 하드코딩되어 있던 **"기본 승리 시 +200원 / 패배(5번 세그먼트) 시 -50원"** 적립 로직을 **삭제**했습니다.
 - **현재 동작**: `POINT` 타입 보상이 아닌 경우(예: 티켓, XP)나 `꽝(LOSE)`인 경우, 금고 적립금은 **0원**이 됩니다.
 - **후속 조치 (DB Cleanup Script)**:
   - 서버 배포 시, DB `VaultProgram` 설정에 남아있을 수 있는 구버전 규칙(+200/-50)을 제거하기 위해 아래 스크립트를 실행해야 합니다.
   - **실행 명령어**: `python scripts/remove_roulette_vault_config.py`
-  - *이 스크립트는 `VaultProgram` 내 `ROULETTE` 관련 `game_earn_config`를 안전하게 제거하여 코드 기본값(0원)을 따르게 합니다.*
+  - *이 스크립트는 `VaultProgram` 내 `ROULETTE` 관련 `game_earn_config`를 안전하게 제거하여 코드 기본값(0원)을 따르게 합니다.* #####
 
 ---
 
