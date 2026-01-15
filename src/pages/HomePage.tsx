@@ -145,16 +145,8 @@ const HomePage: React.FC = () => {
   const { user } = useAuth();
 
   // Almost VIP Logic
-  // Assuming XP info is in user object? Or calculated. 
-  // If user has 'xp' and 'next_level_xp'.
-  // For now, let's assume we can calculate percentage or it's provided.
-  // If not, I will just check level 9.
-  // Actually, I should check if user store has xp.
-  const isAlmostVip = (user?.level === 9); // Simplified for now as I don't see XP in AuthUser type immediately. 
-  // If I need exact XP, I might need to check the API response or Type definition.
-  // Let's assume user has `xp_percent` or similar if available.
-  // Checking `getInitials` in AppHeader uses user.nickname.
-
+  // Show only if level 9 AND NOT already in VIP segment
+  const isAlmostVip = (user?.level === 9 && user?.segment !== "VIP"); 
   // Dynamic Level Display logic
 
   const games = [

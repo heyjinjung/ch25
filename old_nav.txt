@@ -28,7 +28,7 @@ const MobileBottomNav: React.FC = memo(() => {
 
     const navItems = [
         {
-            label: "홈",
+            label: "??,
             to: "/",
             isActive: isActive("/"),
             dataTour: "nav-home",
@@ -39,7 +39,7 @@ const MobileBottomNav: React.FC = memo(() => {
             )
         },
         {
-            label: "게임",
+            label: "???",
             to: "/games",
             isActive: isActive("/games") || ["/roulette", "/dice", "/lottery"].some(p => currentPath.startsWith(p)),
             dataTour: "nav-games",
@@ -51,7 +51,7 @@ const MobileBottomNav: React.FC = memo(() => {
             )
         },
         {
-            label: "금고",
+            label: "???",
             to: "/vault",
             isActive: isActive("/vault"),
             dataTour: "nav-vault",
@@ -62,7 +62,7 @@ const MobileBottomNav: React.FC = memo(() => {
             )
         },
         {
-            label: "교환소",
+            label: "?????,
             to: "/shop",
             isActive: isActive("/shop"),
             dataTour: "nav-shop",
@@ -73,7 +73,7 @@ const MobileBottomNav: React.FC = memo(() => {
             )
         },
         {
-            label: "이벤트",
+            label: "?????,
             to: "/events",
             isActive: isActive("/events") || isActive("/season-pass") || isActive("/missions"),
             dataTour: "nav-events",

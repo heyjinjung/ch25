@@ -3,7 +3,7 @@ import React, { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getVaultStatus } from "../../api/vaultApi";
 import { tryHaptic } from "../../utils/haptics";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 import { useToast } from "../../components/common/ToastProvider";
 import { Lock, Info, ListChecks } from "lucide-react";
@@ -138,6 +138,15 @@ const VaultPageCompact: React.FC = () => {
                         <img src="/assets/logo_cc_v2.png" className="w-6 h-6 object-contain mix-blend-screen drop-shadow-md" alt="" />
                         <span className="drop-shadow-sm">씨씨카지노 충전하기</span>
                     </a>
+
+                    {/* Secondary Info Link for Unlocked state */}
+                    <button
+                        onClick={() => setShowConditionsModal(true)}
+                        className="mt-8 text-[11px] font-bold text-white/20 hover:text-white/40 transition-colors flex items-center gap-1"
+                    >
+                        <ListChecks size={12} />
+                        출금 조건 및 규정 확인
+                    </button>
                 </div>
             ) : (
                 /* 2. Locked State (CHARGING MODE) */
@@ -255,29 +264,35 @@ const VaultPageCompact: React.FC = () => {
                     </a>
                 </div>
             )}
-            {showConditionsModal && vault.data && (
-                <WithdrawalConditionsModal
-                    onClose={() => setShowConditionsModal(false)}
-                    vaultBalance={view.availableAmount}
-                    dailyPlayCount={vault.data.dailyPlayCount ?? 0}
-                    dailyPlayTarget={vault.data.dailyPlayTarget ?? 30}
-                    dailyVaultSpent={vault.data.dailyVaultSpent ?? 0}
-                    dailyVaultSpentTarget={vault.data.dailyVaultSpentTarget ?? 10000}
-                    dailyDepositConfirmed={vault.data.dailyDepositConfirmed ?? false}
-                />
-            )}
-            {showProgressModal && vault.data && (
-                <WithdrawalProgressModal
-                    onClose={() => setShowProgressModal(false)}
-                    vaultBalance={view.availableAmount}
-                    dailyPlayCount={vault.data.dailyPlayCount ?? 0}
-                    dailyPlayTarget={vault.data.dailyPlayTarget ?? 30}
-                    dailyVaultSpent={vault.data.dailyVaultSpent ?? 0}
-                    dailyVaultSpentTarget={vault.data.dailyVaultSpentTarget ?? 10000}
-                    dailyDepositConfirmed={vault.data.dailyDepositConfirmed ?? false}
-                    withdrawalCount={vault.data.withdrawalCount ?? 0}
-                />
-            )}
+
+            <AnimatePresence>
+                {showConditionsModal && (
+                    <WithdrawalConditionsModal
+                        onClose={() => setShowConditionsModal(false)}
+                        vaultBalance={view.availableAmount}
+                        dailyPlayCount={vault.data?.dailyPlayCount ?? 0}
+                        dailyPlayTarget={vault.data?.dailyPlayTarget ?? 30}
+                        dailyVaultSpent={vault.data?.dailyVaultSpent ?? 0}
+                        dailyVaultSpentTarget={vault.data?.dailyVaultSpentTarget ?? 10000}
+                        dailyDepositConfirmed={vault.data?.dailyDepositConfirmed ?? false}
+                    />
+                )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {showProgressModal && (
+                    <WithdrawalProgressModal
+                        onClose={() => setShowProgressModal(false)}
+                        vaultBalance={view.availableAmount}
+                        dailyPlayCount={vault.data?.dailyPlayCount ?? 0}
+                        dailyPlayTarget={vault.data?.dailyPlayTarget ?? 30}
+                        dailyVaultSpent={vault.data?.dailyVaultSpent ?? 0}
+                        dailyVaultSpentTarget={vault.data?.dailyVaultSpentTarget ?? 10000}
+                        dailyDepositConfirmed={vault.data?.dailyDepositConfirmed ?? false}
+                        withdrawalCount={vault.data?.withdrawalCount ?? 0}
+                    />
+                )}
+            </AnimatePresence>
         </div>
     );
 };

@@ -41,12 +41,12 @@ const GoldenHourPopup: React.FC<GoldenHourPopupProps> = ({ onClose, multiplier }
                     <div className="relative mb-6">
                         <div className="absolute inset-0 blur-2xl bg-amber-500/40 animate-pulse" />
                         <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-amber-600 shadow-lg shadow-amber-500/50">
-                            <img src="/assets/icons/icon_clock.webp" alt="" className="h-10 w-10 object-contain" />
+                            <img src="/assets/icons/bomb-dynamic-color.png" alt="" className="h-10 w-10 object-contain" />
                         </div>
                     </div>
 
                     <h2 className="text-2xl font-black italic tracking-tighter text-white uppercase drop-shadow-lg mb-1 inline-flex items-center justify-center gap-2">
-                        <img src="/assets/icons/icon_clock.webp" alt="" className="h-6 w-6 object-contain" />
+                        <img src="/assets/icons/clock-dynamic-color.png" alt="" className="h-6 w-6 object-contain" />
                         Golden Hour
                     </h2>
                     <div className="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 mb-5">

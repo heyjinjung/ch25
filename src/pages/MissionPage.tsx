@@ -59,9 +59,9 @@ const MissionPage: React.FC = () => {
   const tabIcon = (tab: MissionTab) => {
     switch (tab) {
       case "DAILY":
-        return <img src="/assets/icons/rocket-dynamic-color.png" className="w-4 h-4 object-contain" alt="" />;
+        return <img src="/assets/icons/fire-dynamic-color.png" className="w-4 h-4 object-contain" alt="" />;
       case "WEEKLY":
-        return <img src="/assets/icons/takeaway-cup-dynamic-color.png" className="w-4 h-4 object-contain" alt="" />;
+        return <img src="/assets/icons/icon_clock.webp" className="w-4 h-4 object-contain" alt="" />;
       default:
         return null;
     }
