@@ -29,7 +29,7 @@ export type OpsPlaybookAction = {
   id: string;
   title: string;
   slot_time?: string | null;
-  type: "NOTE" | "TOGGLE" | "DM";
+  type: "NOTE" | "TOGGLE" | "DM" | "GRANT" | "BROADCAST" | "WEBHOOK";
   payload_json: Record<string, unknown>;
   default_metric_key?: StandardMetricKey;
   default_window?: string;

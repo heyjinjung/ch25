@@ -12,7 +12,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import List
 
-from fastapi import APIRouter, Depends, Response, status
+from fastapi import APIRouter, Depends, Query, Response, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_admin_id, get_db
@@ -132,11 +132,12 @@ def get_target_list(
 )
 def get_target_members(
     target_list_id: int,
+    limit: int = Query(default=50, ge=1, le=500, description="Number of members to fetch (sample)"),
     db: Session = Depends(get_db),
     _: int = Depends(get_current_admin_id),
 ):
     """Get all members of a target list."""
-    return service.get_target_members(db, target_list_id=target_list_id)
+    return service.get_target_members(db, target_list_id=target_list_id, limit=limit)
 
 
 # ========== Result Check Endpoints ==========

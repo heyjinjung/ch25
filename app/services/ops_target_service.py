@@ -6,7 +6,7 @@ Implements 11 crisis scenarios detection and target list CRUD.
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from typing import Any, Dict, List, Optional, Tuple
 
 from fastapi import HTTPException, status
@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session
 from app.models.ops_plan import OpsPlan
 from app.models.ops_target import OpsTargetList, OpsTargetMember
 from app.models.user import User
+from app.models.external_ranking_daily_deposit_delta import ExternalRankingDailyDepositDelta
 from app.models.external_ranking import ExternalRankingData
 from app.models.feature import UserEventLog
 from app.models.game_wallet import GameTokenType, UserGameWallet
@@ -63,20 +64,64 @@ class OpsTargetService:
         """Get count for a specific scenario."""
         try:
             if scenario_id == "SCENARIO_01":
-                return self._count_scenario_01(db)
+                count = self._count_scenario_01(db)
+            elif scenario_id == "SCENARIO_02":
+                count = self._count_scenario_02(db)
             elif scenario_id == "SCENARIO_03":
-                return self._count_scenario_03(db)
+                count = self._count_scenario_03(db)
             elif scenario_id == "SCENARIO_04":
-                return self._count_scenario_04(db)
+                count = self._count_scenario_04(db)
             elif scenario_id == "SCENARIO_05":
-                return self._count_scenario_05(db)
+                count = self._count_scenario_05(db)
+            elif scenario_id == "SCENARIO_06":
+                count = self._count_scenario_06(db)
+            elif scenario_id == "SCENARIO_07":
+                count = self._count_scenario_07(db)
+            elif scenario_id == "SCENARIO_08":
+                count = self._count_scenario_08(db)
+            elif scenario_id == "SCENARIO_09":
+                count = self._count_scenario_09(db)
+            elif scenario_id == "SCENARIO_10":
+                count = self._count_scenario_10(db)
             elif scenario_id == "SCENARIO_11":
-                return self._count_scenario_11(db)
+                count = self._count_scenario_11(db)
             else:
-                # Placeholder for other scenarios
-                return 0
+                count = 0
+
+            if count > 0:
+                return count
+
+            # Fallback to latest target list count (recent detection/import)
+            return self._get_latest_target_list_count(db, scenario_id=scenario_id)
+        except Exception:
+            return self._get_latest_target_list_count(db, scenario_id=scenario_id)
+
+    def _get_latest_target_list_count(self, db: Session, *, scenario_id: str) -> int:
+        """Fallback: use latest target list count for the scenario."""
+        try:
+            scenario_json = func.json_extract(OpsTargetList.source_params, "$.scenario_id")
+            query = (
+                select(func.coalesce(func.max(OpsTargetList.count_snapshot), 0))
+                .where(
+                    OpsTargetList.source_type == "SCENARIO",
+                    scenario_json == scenario_id,
+                )
+            )
+            return int(db.execute(query).scalar() or 0)
         except Exception:
             return 0
+
+    def _subquery_deposit_sum(self, cutoff_date: date) -> Any:
+        """Return subquery of deposit sum per user since cutoff_date (ExternalRankingDailyDepositDelta)."""
+        return (
+            select(
+                ExternalRankingDailyDepositDelta.user_id.label("user_id"),
+                func.coalesce(func.sum(ExternalRankingDailyDepositDelta.deposit_delta), 0).label("deposit_sum"),
+            )
+            .where(ExternalRankingDailyDepositDelta.kst_date >= cutoff_date)
+            .group_by(ExternalRankingDailyDepositDelta.user_id)
+            .subquery()
+        )
 
     def _count_scenario_01(self, db: Session) -> int:
         """Scenario 1: Unlucky Newbie - Joined 24h, 10+ plays, 0 balance."""
@@ -98,6 +143,30 @@ class OpsTargetService:
         )
         result = db.execute(query).scalar() or 0
         return result
+
+    def _count_scenario_02(self, db: Session) -> int:
+        """Scenario 2: One-Day Tester - Played on D0, inactive on D+1, no deposit."""
+        now = self.now()
+        start = now - timedelta(days=2)
+        end = now - timedelta(days=1)
+        query = (
+            select(func.count(User.id))
+            .select_from(User)
+            .outerjoin(UserActivity, UserActivity.user_id == User.id)
+            .where(
+                User.created_at >= start,
+                User.created_at < end,
+                User.total_charge_amount <= 0,
+                # Played at least once on day0
+                func.coalesce(UserActivity.roulette_plays, 0)
+                + func.coalesce(UserActivity.dice_plays, 0)
+                + func.coalesce(UserActivity.lottery_plays, 0)
+                >= 1,
+                # No login after D0
+                User.last_login_at < end,
+            )
+        )
+        return int(db.execute(query).scalar() or 0)
 
     def _count_scenario_03(self, db: Session) -> int:
         """Scenario 3: Window Shopper - free tickets exhausted, no deposit."""
@@ -168,6 +237,82 @@ class OpsTargetService:
         )
         result = db.execute(query).scalar() or 0
         return result
+
+    def _count_scenario_06(self, db: Session) -> int:
+        """Scenario 6: Broken Streak - had streak, now 72h inactive."""
+        cutoff = self.now() - timedelta(hours=72)
+        query = (
+            select(func.count(User.id))
+            .select_from(User)
+            .where(
+                User.login_streak >= 3,
+                User.last_streak_updated_at.isnot(None),
+                User.last_streak_updated_at < cutoff,
+                User.last_login_at.isnot(None),
+                User.last_login_at < cutoff,
+            )
+        )
+        return int(db.execute(query).scalar() or 0)
+
+    def _count_scenario_07(self, db: Session) -> int:
+        """Scenario 7: Stuck Climber - mid-level, no progress 48h."""
+        cutoff = self.now() - timedelta(hours=48)
+        query = (
+            select(func.count(User.id))
+            .select_from(User)
+            .where(
+                User.level.between(4, 5),
+                User.last_play_date.isnot(None),
+                User.last_play_date < cutoff.date(),
+                User.last_login_at.isnot(None),
+                User.last_login_at >= cutoff - timedelta(days=2),  # still around recently
+            )
+        )
+        return int(db.execute(query).scalar() or 0)
+
+    def _count_scenario_08(self, db: Session) -> int:
+        """Scenario 8: Bored VIP - high value, activity drop."""
+        cutoff_play = self.now() - timedelta(hours=72)
+        cutoff_deposit = self.now() - timedelta(days=7)
+        cutoff_date = cutoff_deposit.date()
+        deposit_sub = self._subquery_deposit_sum(cutoff_date)
+
+        query = (
+            select(func.count(User.id))
+            .select_from(User)
+            .join(deposit_sub, deposit_sub.c.user_id == User.id, isouter=True)
+            .where(
+                User.total_charge_amount >= 1_000_000,
+                User.last_play_date.isnot(None),
+                User.last_play_date < cutoff_play.date(),
+                User.last_login_at.isnot(None),
+                User.last_login_at < cutoff_play,
+                User.first_deposit_at.isnot(None),
+                deposit_sub.c.deposit_sum <= 0,  # 최근 7일 입금 없음/감소
+            )
+        )
+        return int(db.execute(query).scalar() or 0)
+
+    def _count_scenario_09(self, db: Session) -> int:
+        """Scenario 9: Tilting Player - fallback to 0 (use target list fallback)."""
+        return 0
+
+    def _count_scenario_10(self, db: Session) -> int:
+        """Scenario 10: Bonus Hunter - no deposits, collects rewards."""
+        cutoff = self.now() - timedelta(days=7)
+        cutoff_date = cutoff.date()
+        deposit_sub = self._subquery_deposit_sum(cutoff_date)
+        query = (
+            select(func.count(User.id))
+            .select_from(User)
+            .join(deposit_sub, deposit_sub.c.user_id == User.id, isouter=True)
+            .where(
+                func.coalesce(deposit_sub.c.deposit_sum, 0) <= 0,
+                User.last_free_ticket_claimed_at.isnot(None),
+                User.last_free_ticket_claimed_at >= cutoff,
+            )
+        )
+        return int(db.execute(query).scalar() or 0)
 
     def _count_scenario_11(self, db: Session) -> int:
         """Scenario 11: External VIP - External deposit 1M+, recent update."""
@@ -460,13 +605,34 @@ class OpsTargetService:
         return list(db.execute(query).scalars().all())
 
     def get_target_members(
-        self, db: Session, *, target_list_id: int
+        self,
+        db: Session,
+        *,
+        target_list_id: int,
+        limit: int | None = None,
     ) -> List[OpsTargetMember]:
-        """Get all members of a target list."""
-        query = select(OpsTargetMember).where(
-            OpsTargetMember.target_list_id == target_list_id
+        """Get members of a target list (optionally limited, with nickname)."""
+        max_limit = None
+        if limit is not None:
+            safe_limit = max(1, min(limit, 500))
+            max_limit = safe_limit
+
+        query = (
+            select(OpsTargetMember, User.nickname)
+            .join(User, User.id == OpsTargetMember.user_id, isouter=True)
+            .where(OpsTargetMember.target_list_id == target_list_id)
+            .order_by(OpsTargetMember.id.asc())
         )
-        return list(db.execute(query).scalars().all())
+        if max_limit is not None:
+            query = query.limit(max_limit)
+
+        rows = db.execute(query).all()
+        members: List[OpsTargetMember] = []
+        for member, nickname in rows:
+            # Attach nickname for response_model serialization
+            setattr(member, "nickname", nickname)
+            members.append(member)
+        return members
 
     def update_member_status(
         self,

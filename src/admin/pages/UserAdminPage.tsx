@@ -7,7 +7,7 @@ import { createUser, deleteUser, fetchUsers, purgeUser, updateUser, AdminUser, A
 import { useToast } from "../../components/common/ToastProvider";
 import UserImportModal from "../components/UserImportModal";
 import { fetchUserMissions, updateUserMission, AdminUserMissionDetail, AdminUserMissionUpdatePayload } from "../api/adminUserMissionApi";
-import { Check, ClipboardList, History, Package, Ticket, X } from "lucide-react";
+import { Check, ClipboardList, History, Package, X } from "lucide-react";
 import UserInventoryModal from "../components/UserInventoryModal";
 import UserGameTokenModal from "../components/UserGameTokenModal";
 import UserAuditLogModal from "../components/UserAuditLogModal";
@@ -856,16 +856,6 @@ const UserAdminPage: React.FC = () => {
                             aria-label="인벤 CS"
                           >
                             <Package size={16} />
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => setSelectedUserForGameTokens({ user: member, tab: "wallets" })}
-                            className="rounded-md p-2 text-amber-500 hover:text-white"
-                            title="잔액 티켓"
-                            aria-label="잔액 티켓"
-                          >
-                            <Ticket size={16} />
                           </button>
 
                           <button

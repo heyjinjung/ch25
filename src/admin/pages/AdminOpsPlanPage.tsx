@@ -12,6 +12,7 @@ import {
   useExecuteOpsPlanTask,
   useOpsCampaigns,
   useOpsTargetLists,
+  useOpsTargetMembers,
   useOpsPlanTasks,
   useUpdateOpsCampaign,
   useUpdateOpsPlanTask,
@@ -40,7 +41,7 @@ function getKstDateKey(value: Date): string {
 }
 
 const STATUS_OPTIONS = ["TODO", "DOING", "DONE", "SKIPPED", "BLOCKED"] as const;
-const TYPE_OPTIONS = ["NOTE", "TOGGLE", "DM"] as const;
+const TYPE_OPTIONS = ["TOGGLE", "DM", "GRANT", "BROADCAST"] as const;
 const STATUS_LABEL: Record<string, string> = {
   TODO: "대기",
   DOING: "진행",
@@ -49,9 +50,10 @@ const STATUS_LABEL: Record<string, string> = {
   BLOCKED: "차단",
 };
 const TYPE_LABEL: Record<string, string> = {
-  NOTE: "메모",
   TOGGLE: "토글",
   DM: "메시지",
+  GRANT: "지급",
+  BROADCAST: "공지",
 };
 const ACTION_LABEL: Record<string, string> = {
   FORCE_ON: "강제 ON",
@@ -97,6 +99,53 @@ function humanizeOpsPlanError(message: string): string {
   return map[code] ?? map[m.trim()] ?? m;
 }
 
+const TargetListPreview: React.FC<{ targetListId: number | null | undefined; countSnapshot?: number }> = ({
+  targetListId,
+  countSnapshot,
+}) => {
+  const membersQuery = useOpsTargetMembers(targetListId ?? null, 20);
+
+  if (!targetListId) return null;
+
+  const members = membersQuery.data ?? [];
+
+  return (
+    <div className="mt-2 rounded-lg border border-admin-border bg-admin-bg/40 p-2 text-[11px]">
+      <div className="flex items-center justify-between">
+        <span className="font-bold text-admin-text-muted">타깃 멤버 샘플</span>
+        {typeof countSnapshot === "number" && <span className="text-admin-text-muted">총 {countSnapshot}명</span>}
+      </div>
+
+      {membersQuery.isLoading && <div className="mt-1 text-admin-text-muted">불러오는 중…</div>}
+      {membersQuery.isError && <div className="mt-1 text-admin-danger">멤버를 불러오지 못했습니다.</div>}
+
+      {!membersQuery.isLoading && members.length === 0 && !membersQuery.isError && (
+        <div className="mt-1 text-admin-text-muted">멤버가 없습니다.</div>
+      )}
+
+      {members.length > 0 && (
+        <ul className="mt-2 space-y-1">
+          {members.map((m) => (
+            <li
+              key={m.id}
+              className="flex items-center justify-between rounded-md border border-admin-border bg-admin-bg px-2 py-1"
+            >
+              <span className="font-mono text-[11px] text-admin-text-primary">#{m.user_id}</span>
+              <span className="text-[11px] text-admin-text-secondary">
+                {m.nickname ||
+                  (m.data && typeof (m.data as Record<string, unknown>).nickname === "string"
+                    ? String((m.data as Record<string, unknown>).nickname)
+                    : "") ||
+                  "닉네임 없음"}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+};
+
 const AdminOpsPlanPage: React.FC = () => {
   const todayKst = useMemo(() => getKstDateKey(new Date()), []);
 
@@ -137,6 +186,10 @@ const AdminOpsPlanPage: React.FC = () => {
 
   const [toggleDrafts, setToggleDrafts] = useState<Record<number, { action: string; multiplier: string }>>({});
   const [dmDrafts, setDmDrafts] = useState<Record<number, { audience: string; message: string; target_list_id?: number | null }>>({});
+  const [grantDrafts, setGrantDrafts] = useState<
+    Record<number, { items: { item_type: string; amount: string }[]; reason: string; target_list_id?: number | null }>
+  >({});
+  const [broadcastDrafts, setBroadcastDrafts] = useState<Record<number, { channel: string; message: string; target_list_id?: number | null }>>({});
   const [piiConfirmTaskId, setPiiConfirmTaskId] = useState<number | null>(null);
   const [piiHitsByTaskId, setPiiHitsByTaskId] = useState<Record<number, ReturnType<typeof findPiiHits>>>({});
 
@@ -442,6 +495,75 @@ const AdminOpsPlanPage: React.FC = () => {
       },
     });
   };
+
+  const saveGrantPayload = (
+    taskId: number,
+    draft: { items: { item_type: string; amount: string }[]; reason: string; target_list_id?: number | null },
+  ) => {
+    const cleanedItems = (draft.items || [])
+      .map((it) => ({ item_type: it.item_type.trim(), amount: Number(it.amount || "0") }))
+      .filter((it) => it.item_type && it.amount > 0);
+    if (cleanedItems.length === 0) {
+      addToast("지급할 보상(포인트/아이템)을 하나 이상 입력하세요.", "error");
+      return;
+    }
+    updateTask.mutate({
+      taskId,
+      patch: {
+        type: "GRANT",
+        payload_json: {
+          kind: "TARGETED_ITEM_GRANT",
+          items: cleanedItems,
+          reason: (draft.reason || "OPS_PLAN_GRANT").trim(),
+          target_list_id: draft.target_list_id ?? null,
+        },
+      },
+    });
+  };
+
+  const saveBroadcastPayload = (
+    taskId: number,
+    draft: { channel: string; message: string; target_list_id?: number | null },
+  ) => {
+    if (!draft.message.trim()) {
+      addToast("메시지를 입력하세요.", "error");
+      return;
+    }
+    updateTask.mutate({
+      taskId,
+      patch: {
+        type: "BROADCAST",
+        payload_json: {
+          kind: "TARGETLIST_BROADCAST",
+          channel: (draft.channel || "CHANNEL").trim(),
+          message: draft.message,
+          target_list_id: draft.target_list_id ?? null,
+        },
+      },
+    });
+  };
+
+  /*
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _saveWebhookPayload = (taskId: number, draft: { url: string; message: string; severity: string }) => {
+    if (!draft.url.trim()) {
+      addToast("웹훅 URL을 입력하세요.", "error");
+      return;
+    }
+    updateTask.mutate({
+      taskId,
+      patch: {
+        type: "WEBHOOK",
+        payload_json: {
+          kind: "WEBHOOK_ALERT",
+          url: draft.url.trim(),
+          message: draft.message,
+          severity: draft.severity || "INFO",
+        },
+      },
+    });
+  };
+  */
 
   const tasks = tasksQuery.data ?? [];
   const filteredTasks = tasks.filter((t) => {
@@ -806,58 +928,63 @@ const AdminOpsPlanPage: React.FC = () => {
             </div>
 
             <div className="mt-4 overflow-x-auto">
-              <table className="min-w-full border-collapse">
+              <table className="min-w-full border-collapse table-fixed">
                 <thead>
                   <tr>
                     <th className="admin-th w-[90px]">시간</th>
-                    <th className="admin-th">제목</th>
+                    <th className="admin-th w-[720px]">제목</th>
                     <th className="admin-th w-[140px]">상태</th>
-                    <th className="admin-th w-[180px]">결과</th>
-                    <th className="admin-th w-[260px]">실행</th>
+                    <th className="admin-th w-[200px]">결과</th>
+                    <th className="admin-th w-[220px]">실행</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredTasks.map((t) => (
                     <tr key={t.id} className="border-t border-admin-border">
-                      <td className="admin-td font-mono whitespace-nowrap">{t.slot_time || "-"}</td>
-                      <td className="admin-td">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <div className="text-admin-text-primary font-semibold">{t.title}</div>
-                          <span className="rounded-md border border-admin-border bg-admin-bg px-2 py-0.5 text-[11px] font-bold text-admin-text-muted">
-                            {TYPE_LABEL[t.type] ?? t.type}
-                          </span>
-                        </div>
+                      <td className="admin-td align-top font-mono whitespace-nowrap">{t.slot_time || "-"}</td>
+                      <td className="admin-td align-top">
+                        <div className="min-w-[720px] max-w-5xl">
+                          <div className="rounded-xl border border-admin-border bg-admin-bg/60 p-4 shadow-sm space-y-3">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <div className="text-admin-text-primary font-semibold">{t.title}</div>
+                              <span className="rounded-md border border-admin-border bg-admin-bg px-2 py-0.5 text-[11px] font-bold text-admin-text-muted">
+                                {TYPE_LABEL[t.type] ?? t.type}
+                              </span>
+                            </div>
 
-                        <div className="mt-2">
-                          <label htmlFor={`ops-task-type-${t.id}`} className="sr-only">타입</label>
-                          <select
-                            id={`ops-task-type-${t.id}`}
-                            className="w-full rounded-lg border border-admin-border bg-admin-bg px-3 py-2 text-xs"
-                            value={t.type}
-                            onChange={(e) => {
-                              updateTask.mutate({ taskId: t.id, patch: { type: e.target.value } });
-                            }}
-                          >
-                            {TYPE_OPTIONS.map((opt) => (
-                              <option key={opt} value={opt}>
-                                {TYPE_LABEL[opt] ?? opt}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-
-                        <label htmlFor={`ops-task-memo-${t.id}`} className="sr-only">메모</label>
-                        <input
-                          id={`ops-task-memo-${t.id}`}
-                          className="mt-2 w-full rounded-lg border border-admin-border bg-admin-bg px-3 py-2 text-xs"
-                          placeholder="메모(선택)"
-                          defaultValue={t.memo ?? ""}
-                          onBlur={(e) => {
-                            const memo = e.target.value;
-                            if ((t.memo ?? "") === memo) return;
-                            updateTask.mutate({ taskId: t.id, patch: { memo } });
-                          }}
-                        />
+                            <div className="grid grid-cols-12 gap-2">
+                              <div className="col-span-12 md:col-span-4">
+                                <label htmlFor={`ops-task-type-${t.id}`} className="sr-only">타입</label>
+                                <select
+                                  id={`ops-task-type-${t.id}`}
+                                  className="w-full rounded-lg border border-admin-border bg-admin-bg px-3 py-2 text-xs"
+                                  value={t.type}
+                                  onChange={(e) => {
+                                    updateTask.mutate({ taskId: t.id, patch: { type: e.target.value } });
+                                  }}
+                                >
+                                  {TYPE_OPTIONS.map((opt) => (
+                                    <option key={opt} value={opt}>
+                                      {TYPE_LABEL[opt] ?? opt}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div className="col-span-12 md:col-span-8">
+                                <label htmlFor={`ops-task-memo-${t.id}`} className="sr-only">메모</label>
+                                <input
+                                  id={`ops-task-memo-${t.id}`}
+                                  className="w-full rounded-lg border border-admin-border bg-admin-bg px-3 py-2 text-xs"
+                                  placeholder="메모(선택)"
+                                  defaultValue={t.memo ?? ""}
+                                  onBlur={(e) => {
+                                    const memo = e.target.value;
+                                    if ((t.memo ?? "") === memo) return;
+                                    updateTask.mutate({ taskId: t.id, patch: { memo } });
+                                  }}
+                                />
+                              </div>
+                            </div>
 
                         {(() => {
                           if (!isInventoryGrantAllTask(t.payload_json as Record<string, unknown> | null | undefined)) return null;
@@ -1054,6 +1181,10 @@ const AdminOpsPlanPage: React.FC = () => {
 
                               const hits = piiHitsByTaskId[t.id] ?? [];
                               const needsConfirm = piiConfirmTaskId === t.id && hits.length > 0;
+                              const selectedTargetList =
+                                draft.target_list_id != null
+                                  ? (targetListsQuery.data ?? []).find((tl) => tl.id === draft.target_list_id) ?? null
+                                  : null;
 
                                   return (
                                     <div className="mt-2 space-y-2">
@@ -1124,6 +1255,15 @@ const AdminOpsPlanPage: React.FC = () => {
                                         </div>
                                       </div>
 
+                                      {draft.target_list_id ? (
+                                        <TargetListPreview
+                                          targetListId={draft.target_list_id}
+                                          countSnapshot={selectedTargetList?.count_snapshot}
+                                        />
+                                      ) : (
+                                        <div className="text-[11px] text-admin-text-muted">타깃 리스트를 선택하면 멤버 샘플을 보여줍니다.</div>
+                                      )}
+
                                   {needsConfirm && (
                                     <div className="rounded-lg border border-admin-danger/40 bg-admin-danger/10 p-2 text-xs text-admin-danger">
                                       PII 의심 패턴 감지: {hits.map((h) => h.type).join(", ")}
@@ -1167,6 +1307,263 @@ const AdminOpsPlanPage: React.FC = () => {
                             })()}
                           </div>
                         )}
+
+                        {t.type === "GRANT" && (
+                          <div className="mt-3 rounded-lg border border-admin-border bg-admin-bg/40 p-3">
+                            <div className="text-xs font-bold text-admin-text-muted">지급 설정 (타깃 리스트)</div>
+                            {(() => {
+                              const payload = (t.payload_json ?? {}) as Record<string, unknown>;
+                              const draft = grantDrafts[t.id] ?? {
+                                items: Array.isArray((payload as any).items)
+                                  ? ((payload as any).items as any[]).map((it) => ({
+                                      item_type: String((it as any).item_type ?? "POINT"),
+                                      amount: (it as any).amount == null ? "" : String((it as any).amount),
+                                    }))
+                                  : [{ item_type: String(payload.item_type ?? "POINT"), amount: payload.amount == null ? "" : String(payload.amount ?? "") }],
+                                reason: String(payload.reason ?? "OPS_PLAN_GRANT"),
+                                target_list_id: payload.target_list_id as number | undefined,
+                              };
+                              const selectedTargetList =
+                                draft.target_list_id != null
+                                  ? (targetListsQuery.data ?? []).find((tl) => tl.id === draft.target_list_id) ?? null
+                                  : null;
+
+                              return (
+                          <div className="space-y-3 mt-2">
+                                  <div className="grid grid-cols-12 gap-2">
+                                    <div className="col-span-12 md:col-span-8">
+                                      <div className="space-y-2">
+                                        {(draft.items || []).map((it, idx) => (
+                                          <div key={`${t.id}-grant-${idx}`} className="grid grid-cols-12 gap-2">
+                                            <div className="col-span-12 md:col-span-6">
+                                              <label className="block text-[11px] font-bold text-admin-text-muted">보상 코드</label>
+                                              <input
+                                                className="mt-1 w-full rounded-lg border border-admin-border bg-admin-bg px-3 py-2 text-xs"
+                                                value={it.item_type}
+                                                onChange={(e) =>
+                                                  setGrantDrafts((prev) => {
+                                                    const next = { ...draft, items: [...draft.items] };
+                                                    next.items[idx] = { ...next.items[idx], item_type: e.target.value };
+                                                    return { ...prev, [t.id]: next };
+                                                  })
+                                                }
+                                                placeholder="예: POINT, VOUCHER_LOTTERY_TICKET_1"
+                                              />
+                                            </div>
+                                            <div className="col-span-12 md:col-span-5">
+                                              <label className="block text-[11px] font-bold text-admin-text-muted">수량/금액</label>
+                                              <input
+                                                className="mt-1 w-full rounded-lg border border-admin-border bg-admin-bg px-3 py-2 text-xs"
+                                                value={it.amount}
+                                                inputMode="decimal"
+                                                onChange={(e) =>
+                                                  setGrantDrafts((prev) => {
+                                                    const next = { ...draft, items: [...draft.items] };
+                                                    next.items[idx] = { ...next.items[idx], amount: e.target.value };
+                                                    return { ...prev, [t.id]: next };
+                                                  })
+                                                }
+                                                placeholder="숫자"
+                                              />
+                                            </div>
+                                            <div className="col-span-12 md:col-span-1 flex items-end">
+                                              <button
+                                                type="button"
+                                                className="w-full rounded-lg border border-admin-danger/40 bg-admin-danger/10 px-3 py-2 text-xs font-bold text-admin-danger hover:bg-admin-danger/15"
+                                                onClick={() =>
+                                                  setGrantDrafts((prev) => {
+                                                    const nextItems = draft.items.filter((_, i) => i !== idx);
+                                                    return { ...prev, [t.id]: { ...draft, items: nextItems } };
+                                                  })
+                                                }
+                                              >
+                                                삭제
+                                              </button>
+                                            </div>
+                                          </div>
+                                        ))}
+                                        <div className="flex justify-end">
+                                          <button
+                                            type="button"
+                                            className="rounded-lg border border-admin-border bg-admin-bg px-3 py-2 text-xs font-bold text-admin-text-secondary hover:bg-admin-bg/70"
+                                            onClick={() =>
+                                              setGrantDrafts((prev) => ({
+                                                ...prev,
+                                                [t.id]: { ...draft, items: [...(draft.items || []), { item_type: "POINT", amount: "0" }] },
+                                              }))
+                                            }
+                                          >
+                                            보상 추가
+                                          </button>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div className="col-span-12 md:col-span-4">
+                                      <label htmlFor={`ops-grant-reason-${t.id}`} className="block text-[11px] font-bold text-admin-text-muted">
+                                        reason(ledger)
+                                      </label>
+                                      <input
+                                        id={`ops-grant-reason-${t.id}`}
+                                        className="mt-1 w-full rounded-lg border border-admin-border bg-admin-bg px-3 py-2 text-xs"
+                                        value={draft.reason}
+                                        onChange={(e) =>
+                                          setGrantDrafts((prev) => ({ ...prev, [t.id]: { ...draft, reason: e.target.value } }))
+                                        }
+                                        placeholder="예: OPS_PLAN_GRANT"
+                                      />
+                                    </div>
+                                  </div>
+
+                                  <div className="grid grid-cols-12 gap-2">
+                                    <div className="col-span-12 md:col-span-6">
+                                      <label htmlFor={`ops-grant-target-${t.id}`} className="block text-[11px] font-bold text-admin-text-muted">
+                                        타깃 리스트(선택)
+                                      </label>
+                                      <select
+                                        id={`ops-grant-target-${t.id}`}
+                                        className="mt-1 w-full rounded-lg border border-admin-border bg-admin-bg px-3 py-2 text-xs"
+                                        value={draft.target_list_id ?? ""}
+                                        onChange={(e) =>
+                                          setGrantDrafts((prev) => ({
+                                            ...prev,
+                                            [t.id]: { ...draft, target_list_id: e.target.value ? Number(e.target.value) : undefined },
+                                          }))
+                                        }
+                                      >
+                                        <option value="">(선택 안 함)</option>
+                                        {(targetListsQuery.data ?? []).map((tl) => (
+                                          <option key={tl.id} value={tl.id}>
+                                            {tl.name} ({tl.count_snapshot})
+                                          </option>
+                                        ))}
+                                      </select>
+                                    </div>
+                                  </div>
+
+                                  {draft.target_list_id ? (
+                                    <TargetListPreview targetListId={draft.target_list_id} countSnapshot={selectedTargetList?.count_snapshot} />
+                                  ) : (
+                                    <div className="text-[11px] text-admin-text-muted">타깃 리스트 미선택 시 전체에 지급될 수 있습니다.</div>
+                                  )}
+
+                                  <div className="flex justify-end">
+                                    <button
+                                      type="button"
+                                      className="rounded-lg bg-admin-brand px-3 py-2 text-xs font-bold text-white disabled:opacity-50"
+                                      onClick={() => saveGrantPayload(t.id, draft)}
+                                      disabled={updateTask.isPending}
+                                      aria-label="지급 payload 저장"
+                                      title="저장"
+                                    >
+                                      저장
+                                    </button>
+                                  </div>
+                                </div>
+                              );
+                            })()}
+                          </div>
+                        )}
+
+                        {t.type === "BROADCAST" && (
+                          <div className="mt-3 rounded-lg border border-admin-border bg-admin-bg/40 p-3">
+                            <div className="text-xs font-bold text-admin-text-muted">공지/브로드캐스트</div>
+                            {(() => {
+                              const payload = (t.payload_json ?? {}) as Record<string, unknown>;
+                              const draft = broadcastDrafts[t.id] ?? {
+                                channel: String(payload.channel ?? "CHANNEL"),
+                                message: String(payload.message ?? ""),
+                                target_list_id: payload.target_list_id as number | undefined,
+                              };
+                              const selectedTargetList =
+                                draft.target_list_id != null
+                                  ? (targetListsQuery.data ?? []).find((tl) => tl.id === draft.target_list_id) ?? null
+                                  : null;
+                              return (
+                                <div className="space-y-2 mt-2">
+                                  <div className="grid grid-cols-12 gap-2">
+                                    <div className="col-span-12 md:col-span-4">
+                                      <label htmlFor={`ops-broadcast-channel-${t.id}`} className="block text-[11px] font-bold text-admin-text-muted">
+                                        채널
+                                      </label>
+                                      <select
+                                        id={`ops-broadcast-channel-${t.id}`}
+                                        className="mt-1 w-full rounded-lg border border-admin-border bg-admin-bg px-3 py-2 text-xs"
+                                        value={draft.channel}
+                                        onChange={(e) =>
+                                          setBroadcastDrafts((prev) => ({ ...prev, [t.id]: { ...draft, channel: e.target.value } }))
+                                        }
+                                      >
+                                        <option value="CHANNEL">CHANNEL</option>
+                                        <option value="DM">DM</option>
+                                      </select>
+                                    </div>
+                                    <div className="col-span-12 md:col-span-8">
+                                      <label htmlFor={`ops-broadcast-message-${t.id}`} className="block text-[11px] font-bold text-admin-text-muted">
+                                        메시지
+                                      </label>
+                                      <textarea
+                                        id={`ops-broadcast-message-${t.id}`}
+                                        className="mt-1 w-full rounded-lg border border-admin-border bg-admin-bg px-3 py-2 text-xs"
+                                        rows={3}
+                                        value={draft.message}
+                                        onChange={(e) =>
+                                          setBroadcastDrafts((prev) => ({ ...prev, [t.id]: { ...draft, message: e.target.value } }))
+                                        }
+                                        placeholder="공지 메시지"
+                                      />
+                                    </div>
+                                  </div>
+
+                                  <div className="grid grid-cols-12 gap-2">
+                                    <div className="col-span-12 md:col-span-6">
+                                      <label htmlFor={`ops-broadcast-target-${t.id}`} className="block text-[11px] font-bold text-admin-text-muted">
+                                        타깃 리스트(선택)
+                                      </label>
+                                      <select
+                                        id={`ops-broadcast-target-${t.id}`}
+                                        className="mt-1 w-full rounded-lg border border-admin-border bg-admin-bg px-3 py-2 text-xs"
+                                        value={draft.target_list_id ?? ""}
+                                        onChange={(e) =>
+                                          setBroadcastDrafts((prev) => ({
+                                            ...prev,
+                                            [t.id]: { ...draft, target_list_id: e.target.value ? Number(e.target.value) : undefined },
+                                          }))
+                                        }
+                                      >
+                                        <option value="">(선택 안 함)</option>
+                                        {(targetListsQuery.data ?? []).map((tl) => (
+                                          <option key={tl.id} value={tl.id}>
+                                            {tl.name} ({tl.count_snapshot})
+                                          </option>
+                                        ))}
+                                      </select>
+                                    </div>
+                                  </div>
+
+                                  {draft.target_list_id ? (
+                                    <TargetListPreview targetListId={draft.target_list_id} countSnapshot={selectedTargetList?.count_snapshot} />
+                                  ) : (
+                                    <div className="text-[11px] text-admin-text-muted">타깃 리스트 미선택 시 전체 발송으로 간주합니다.</div>
+                                  )}
+
+                                  <div className="flex justify-end">
+                                    <button
+                                      type="button"
+                                      className="rounded-lg bg-admin-brand px-3 py-2 text-xs font-bold text-white disabled:opacity-50"
+                                      onClick={() => saveBroadcastPayload(t.id, draft)}
+                                      disabled={updateTask.isPending}
+                                      aria-label="브로드캐스트 payload 저장"
+                                      title="저장"
+                                    >
+                                      저장
+                                    </button>
+                                  </div>
+                                </div>
+                              );
+                            })()}
+                          </div>
+                        )}
+
 
                         <details className="mt-3 rounded-lg border border-admin-border bg-admin-bg/30 p-3">
                           <summary className="cursor-pointer text-xs font-bold text-admin-text-muted">
@@ -1313,8 +1710,10 @@ const AdminOpsPlanPage: React.FC = () => {
                         <div className="mt-1 text-[11px] text-admin-text-muted">
                           executed_at: <span className="font-mono">{t.executed_at ? formatKstDateTime(t.executed_at) : "-"}</span>
                         </div>
+                      </div>
+                    </div>
                       </td>
-                      <td className="admin-td">
+                      <td className="admin-td align-top w-[140px]">
                         <label htmlFor={`ops-task-status-${t.id}`} className="sr-only">상태</label>
                         <select
                           id={`ops-task-status-${t.id}`}
@@ -1331,7 +1730,7 @@ const AdminOpsPlanPage: React.FC = () => {
                           ))}
                         </select>
                       </td>
-                      <td className="admin-td">
+                      <td className="admin-td align-top w-[200px]">
                         {(() => {
                           const payload = (t.payload_json ?? {}) as Record<string, any>;
                           const execResult = payload.execution_result as Record<string, any> | undefined;
@@ -1354,7 +1753,7 @@ const AdminOpsPlanPage: React.FC = () => {
                           실행시각: {t.executed_at ? formatKstDateTime(t.executed_at) : "-"}
                         </div>
                       </td>
-                      <td className="admin-td">
+                      <td className="admin-td align-top w-[220px]">
                         <div className="flex items-center gap-2">
                           <button
                             type="button"

@@ -55,6 +55,20 @@ export type OpsTargetList = {
   updated_at: string;
 };
 
+export type OpsTargetMember = {
+  id: number;
+  target_list_id: number;
+  user_id: number;
+  nickname?: string | null;
+  status: string;
+  data?: Record<string, unknown> | null;
+  result_status: string;
+  converted_at?: string | null;
+  conversion_value?: number | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export type CreateOpsCampaignRequest = {
   name: string;
   status?: string;
@@ -139,5 +153,12 @@ export async function executeOpsPlanTask(taskId: number, payload?: { status?: st
 
 export async function fetchOpsTargetLists(planId: number) {
   const { data } = await adminApi.get<OpsTargetList[]>(`${BASE_PATH}/plans/${planId}/target-lists`);
+  return data;
+}
+
+export async function fetchOpsTargetListMembers(targetListId: number, params?: { limit?: number }) {
+  const { data } = await adminApi.get<OpsTargetMember[]>(`${BASE_PATH}/target-lists/${targetListId}/members`, {
+    params,
+  });
   return data;
 }

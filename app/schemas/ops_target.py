@@ -64,6 +64,7 @@ class OpsTargetMemberOut(BaseModel):
     id: int
     target_list_id: int
     user_id: int
+    nickname: Optional[str] = None
     status: str
     data: Optional[Dict[str, Any]] = None
     result_status: str
