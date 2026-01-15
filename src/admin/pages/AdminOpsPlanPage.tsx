@@ -1,8 +1,10 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Plus, RefreshCw, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import axios from "axios";
 
+import { adminApi } from "../api/httpClient";
+import { fetchUsers } from "../api/adminUserApi";
 import {
   useCreateOpsCampaign,
   useCreateOpsPlanTask,
@@ -26,6 +28,10 @@ import {
   type OpsExperimentDraft,
   type StandardMetricKey,
 } from "../constants/opsPlaybookCatalog";
+import ExecutionResultView from "../components/ops/ExecutionResultView";
+import ItemSelector from "../components/ops/ItemSelector";
+import TargetListSelector from "../components/ops/TargetListSelector";
+import { OpsTaskCard, OpsTaskList, TaskEditor } from "../components/ops/OpsTaskLayout";
 
 function getKstDateKey(value: Date): string {
   const parts = new Intl.DateTimeFormat("en-CA", {
@@ -55,11 +61,6 @@ const TYPE_LABEL: Record<string, string> = {
   GRANT: "지급",
   BROADCAST: "공지",
 };
-const ACTION_LABEL: Record<string, string> = {
-  FORCE_ON: "강제 ON",
-  FORCE_OFF: "강제 OFF",
-  MULTIPLIER_SET: "배수 설정",
-};
 
 type LocalTaskDraft = {
   slot_time: string;
@@ -67,6 +68,12 @@ type LocalTaskDraft = {
 };
 
 type InventoryGrantAllItem = { item_type: string; amount: number };
+type GoldenHourConfig = {
+  enabled: boolean;
+  manual_override: string;
+  multiplier: number;
+  base_amount_gate?: number | null;
+};
 
 function getAdminApiErrorMessage(error: unknown): string {
   if (axios.isAxiosError(error)) {
@@ -176,6 +183,68 @@ const AdminOpsPlanPage: React.FC = () => {
   const updateTask = useUpdateOpsPlanTask(planId);
   const executeTask = useExecuteOpsPlanTask(planId);
 
+  const targetListLabelById = useMemo(() => {
+    const map = new Map<number, string>();
+    (targetListsQuery.data ?? []).forEach((tl) => {
+      map.set(tl.id, `${tl.name} (${tl.count_snapshot})`);
+    });
+    return map;
+  }, [targetListsQuery.data]);
+
+  const [activeTab, setActiveTab] = useState<"tasks" | "timeline" | "report">("tasks");
+  const [collapsedTaskIds, setCollapsedTaskIds] = useState<Record<number, boolean>>({});
+  const [goldenHourConfig, setGoldenHourConfig] = useState<GoldenHourConfig | null>(null);
+  const [goldenHourLoading, setGoldenHourLoading] = useState(false);
+  const [goldenHourError, setGoldenHourError] = useState<string | null>(null);
+  const [evalMetrics, setEvalMetrics] = useState<Array<Record<string, any>>>([]);
+  const [evalMetricsLoading, setEvalMetricsLoading] = useState(false);
+  const [evalMetricsError, setEvalMetricsError] = useState<string | null>(null);
+  const [adminNameById, setAdminNameById] = useState<Record<number, string>>({});
+
+  const fetchGoldenHourConfig = useCallback(() => {
+    setGoldenHourLoading(true);
+    setGoldenHourError(null);
+    return adminApi
+      .get<GoldenHourConfig>("/admin/api/vault/golden-hour")
+      .then((res) => {
+        setGoldenHourConfig(res.data);
+      })
+      .catch((err) => {
+        setGoldenHourError(err?.response?.data?.detail || "골든아워 상태를 불러오지 못했습니다.");
+      })
+      .finally(() => {
+        setGoldenHourLoading(false);
+      });
+  }, []);
+
+  const fetchEvalMetrics = useCallback(() => {
+    if (!planId) return Promise.resolve();
+    setEvalMetricsLoading(true);
+    setEvalMetricsError(null);
+    return adminApi
+      .get<Array<Record<string, any>>>(`/admin/api/ops/plans/${planId}/eval-metrics`)
+      .then((res) => {
+        setEvalMetrics(Array.isArray(res.data) ? res.data : []);
+      })
+      .catch((err) => {
+        setEvalMetrics([]);
+        setEvalMetricsError(err?.response?.data?.detail || "평가 리포트를 불러오지 못했습니다.");
+      })
+      .finally(() => {
+        setEvalMetricsLoading(false);
+      });
+  }, [planId]);
+
+  useEffect(() => {
+    if (activeTab !== "tasks") return;
+    fetchGoldenHourConfig();
+  }, [activeTab, fetchGoldenHourConfig]);
+
+  useEffect(() => {
+    if (activeTab !== "report") return;
+    fetchEvalMetrics();
+  }, [activeTab, fetchEvalMetrics]);
+
   const [taskDraft, setTaskDraft] = useState<LocalTaskDraft>({ slot_time: "", title: "" });
 
   const [selectedActionIds, setSelectedActionIds] = useState<string[]>([]);
@@ -185,7 +254,9 @@ const AdminOpsPlanPage: React.FC = () => {
   const [experimentDrafts, setExperimentDrafts] = useState<Record<number, OpsExperimentDraft>>({});
 
   const [toggleDrafts, setToggleDrafts] = useState<Record<number, { action: string; multiplier: string }>>({});
-  const [dmDrafts, setDmDrafts] = useState<Record<number, { audience: string; message: string; target_list_id?: number | null }>>({});
+  const [dmDrafts, setDmDrafts] = useState<
+    Record<number, { kind: string; audience: string; channel: string; message: string; target_list_id?: number | null }>
+  >({});
   const [grantDrafts, setGrantDrafts] = useState<
     Record<number, { items: { item_type: string; amount: string }[]; reason: string; target_list_id?: number | null }>
   >({});
@@ -439,6 +510,7 @@ const AdminOpsPlanPage: React.FC = () => {
       status: "TODO",
       payload_json: {
         kind: "SURVEY_DM",
+        channel: "TELEGRAM_DM",
         audience: "SURVEY_COMPLETERS",
         message: "",
       },
@@ -463,12 +535,26 @@ const AdminOpsPlanPage: React.FC = () => {
 
   const saveDmPayload = (
     taskId: number,
-    draft: { audience: string; message: string; target_list_id?: number | null },
+    draft: { kind: string; audience: string; channel: string; message: string; target_list_id?: number | null },
     opts?: { bypassPii?: boolean },
   ) => {
-    const audience = (draft.audience || "SURVEY_COMPLETERS").trim();
+    const rawAudience = (draft.audience || "").trim();
     const message = draft.message ?? "";
     const targetListId = draft.target_list_id ?? null;
+    const channel = (draft.channel || "TELEGRAM_DM").trim();
+    const kind = (draft.kind || "MESSAGE_TEMPLATE").trim();
+
+    const audience = ((): string => {
+      if (rawAudience === "ALL") return "ALL_USERS";
+      if (rawAudience === "TARGET") return "TARGET_LIST";
+      if (rawAudience) return rawAudience;
+      return targetListId ? "TARGET_LIST" : "ALL_USERS";
+    })();
+
+    if (audience === "TARGET_LIST" && !targetListId) {
+      addToast("타깃 리스트를 선택하세요.", "error");
+      return;
+    }
 
     if (!opts?.bypassPii) {
       const hits = findPiiHits(message);
@@ -487,7 +573,8 @@ const AdminOpsPlanPage: React.FC = () => {
       patch: {
         type: "DM",
         payload_json: {
-          kind: "SURVEY_DM",
+          kind,
+          channel,
           audience,
           message,
           target_list_id: targetListId,
@@ -506,6 +593,10 @@ const AdminOpsPlanPage: React.FC = () => {
     if (cleanedItems.length === 0) {
       addToast("지급할 보상(포인트/아이템)을 하나 이상 입력하세요.", "error");
       return;
+    }
+    if (!draft.target_list_id) {
+      const ok = window.confirm("타깃 리스트가 비어 있습니다.\n전체 지급 위험이 있어 확인이 필요합니다. 계속 저장할까요?");
+      if (!ok) return;
     }
     updateTask.mutate({
       taskId,
@@ -527,6 +618,11 @@ const AdminOpsPlanPage: React.FC = () => {
   ) => {
     if (!draft.message.trim()) {
       addToast("메시지를 입력하세요.", "error");
+      return;
+    }
+    const hits = findPiiHits(draft.message);
+    if (hits.length > 0) {
+      addToast(`PII(전화/이메일/계좌) 의심 패턴 감지: ${hits.map((h) => h.type).join(", ")}`, "error");
       return;
     }
     updateTask.mutate({
@@ -566,6 +662,50 @@ const AdminOpsPlanPage: React.FC = () => {
   */
 
   const tasks = tasksQuery.data ?? [];
+  const actorIds = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          tasks
+            .map((t) => t.actor_admin_id)
+            .filter((id): id is number => typeof id === "number" && Number.isFinite(id))
+        )
+      ),
+    [tasks]
+  );
+
+  useEffect(() => {
+    if (actorIds.length === 0) return;
+    const missing = actorIds.filter((id) => !adminNameById[id]);
+    if (missing.length === 0) return;
+
+    let mounted = true;
+    Promise.all(
+      missing.map(async (id) => {
+        try {
+          const users = await fetchUsers(`id:${id}`);
+          const user = users[0];
+          const name = user?.admin_profile?.real_name || user?.nickname || `Admin #${id}`;
+          return { id, name };
+        } catch {
+          return { id, name: `Admin #${id}` };
+        }
+      })
+    ).then((results) => {
+      if (!mounted) return;
+      setAdminNameById((prev) => {
+        const next = { ...prev };
+        results.forEach((r) => {
+          next[r.id] = r.name;
+        });
+        return next;
+      });
+    });
+
+    return () => {
+      mounted = false;
+    };
+  }, [actorIds, adminNameById]);
   const filteredTasks = tasks.filter((t) => {
     const statusOk = filterStatus === "ALL" || t.status === filterStatus;
     const typeOk = filterType === "ALL" || t.type === filterType;
@@ -573,6 +713,13 @@ const AdminOpsPlanPage: React.FC = () => {
     const textOk = !term || `${t.title} ${t.memo ?? ""}`.toLowerCase().includes(term);
     return statusOk && typeOk && textOk;
   });
+  const timelineTasks = useMemo(
+    () =>
+      [...tasks]
+        .filter((t) => t.executed_at)
+        .sort((a, b) => String(b.executed_at).localeCompare(String(a.executed_at))),
+    [tasks]
+  );
 
   return (
     <section className="admin-page-container">
@@ -705,7 +852,77 @@ const AdminOpsPlanPage: React.FC = () => {
         </div>
 
         <div className="col-span-12 lg:col-span-8 space-y-6">
-          <div className="rounded-xl border border-admin-border bg-admin-sidebar p-4 shadow-lg">
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              className={`rounded-lg border px-3 py-2 text-xs font-bold ${
+                activeTab === "tasks"
+                  ? "border-admin-brand bg-admin-brand text-white"
+                  : "border-admin-border bg-admin-bg text-admin-text-secondary"
+              }`}
+              onClick={() => setActiveTab("tasks")}
+            >
+              작업
+            </button>
+            <button
+              type="button"
+              className={`rounded-lg border px-3 py-2 text-xs font-bold ${
+                activeTab === "timeline"
+                  ? "border-admin-brand bg-admin-brand text-white"
+                  : "border-admin-border bg-admin-bg text-admin-text-secondary"
+              }`}
+              onClick={() => setActiveTab("timeline")}
+            >
+              타임라인
+            </button>
+            <button
+              type="button"
+              className={`rounded-lg border px-3 py-2 text-xs font-bold ${
+                activeTab === "report"
+                  ? "border-admin-brand bg-admin-brand text-white"
+                  : "border-admin-border bg-admin-bg text-admin-text-secondary"
+              }`}
+              onClick={() => setActiveTab("report")}
+            >
+              평가 리포트
+            </button>
+          </div>
+
+          {activeTab === "tasks" && (
+            <>
+              <div className="rounded-xl border border-admin-border bg-admin-sidebar p-4 shadow-lg">
+                <div className="flex items-center justify-between gap-3">
+                  <h2 className="text-admin-subtitle text-admin-text-primary">골든아워 상태</h2>
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-2 rounded-lg border border-admin-border bg-admin-bg px-3 py-2 text-xs font-bold text-admin-text-secondary hover:bg-admin-bg/70 disabled:opacity-50"
+                    onClick={() => fetchGoldenHourConfig()}
+                    disabled={goldenHourLoading}
+                    aria-label="골든아워 상태 새로고침"
+                    title="새로고침"
+                  >
+                    <RefreshCw size={14} />
+                    새로고침
+                  </button>
+                </div>
+                {goldenHourLoading && <div className="mt-2 text-xs text-admin-text-muted">불러오는 중…</div>}
+                {goldenHourError && <div className="mt-2 text-xs text-admin-danger">{goldenHourError}</div>}
+                {goldenHourConfig && (
+                  <div className="mt-3 grid grid-cols-12 gap-3 text-xs">
+                    <div className="col-span-12 md:col-span-4 rounded-lg border border-admin-border bg-admin-bg px-3 py-2">
+                      상태: {goldenHourConfig.enabled ? "ON" : "OFF"}
+                    </div>
+                    <div className="col-span-12 md:col-span-4 rounded-lg border border-admin-border bg-admin-bg px-3 py-2">
+                      모드: {goldenHourConfig.manual_override}
+                    </div>
+                    <div className="col-span-12 md:col-span-4 rounded-lg border border-admin-border bg-admin-bg px-3 py-2">
+                      배수: {goldenHourConfig.multiplier}x
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="rounded-xl border border-admin-border bg-admin-sidebar p-4 shadow-lg">
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-admin-subtitle text-admin-text-primary">작업 체크리스트</h2>
               <button
@@ -929,90 +1146,92 @@ const AdminOpsPlanPage: React.FC = () => {
 
 
 
-            <div className="mt-4 space-y-3">
+            <OpsTaskList>
               {filteredTasks.map((t) => {
+                const isCollapsed = !!collapsedTaskIds[t.id];
+                const isExecuting = executeTask.isPending && executeTask.variables?.taskId === t.id;
                 return (
-                  <div key={t.id} className="rounded-2xl border border-admin-border bg-admin-bg/60 p-4 shadow-sm space-y-3">
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div className="flex items-center gap-3">
-                        <div className="font-mono text-sm text-admin-text-muted">{t.slot_time || "-"}</div>
-                        <div className="text-admin-text-primary text-sm font-semibold md:text-base">{t.title}</div>
-                      </div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <label htmlFor={`ops-task-status-${t.id}`} className="sr-only">
-                          상태
-                        </label>
-                        <select
-                          id={`ops-task-status-${t.id}`}
-                          className="w-full rounded-lg border border-admin-border bg-admin-bg px-3 py-2 text-sm"
-                          value={t.status}
-                          onChange={(e) => {
-                            updateTask.mutate({ taskId: t.id, patch: { status: e.target.value } });
-                          }}
-                        >
-                          {STATUS_OPTIONS.map((s) => (
-                            <option key={s} value={s}>
-                              {STATUS_LABEL[s] ?? s}
-                            </option>
-                          ))}
-                        </select>
-                        <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            className="rounded-lg border border-admin-border bg-admin-bg px-3 py-2 text-xs font-bold text-admin-text-secondary hover:bg-admin-bg/70 disabled:opacity-50"
-                            onClick={() => {
-                              const payload = (t.payload_json ?? {}) as Record<string, unknown>;
-                              if (isInventoryGrantAllTask(payload)) {
-                                const ok = confirmExecuteInventoryGrantAll(t.id, payload);
-                                if (!ok) return;
-                              }
-                              executeTask
-                                ?.mutateAsync({ taskId: t.id, status: "DONE" })
-                                .then(() => addToast("실행 완료", "success"))
-                                .catch((err) => {
-                                  addToast(humanizeOpsPlanError(getAdminApiErrorMessage(err)), "error");
-                                });
+                  <OpsTaskCard
+                    key={t.id}
+                    collapsed={isCollapsed}
+                    onToggleCollapse={() =>
+                      setCollapsedTaskIds((prev) => ({ ...prev, [t.id]: !prev[t.id] }))
+                    }
+                    header={
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <div className="font-mono text-sm text-admin-text-muted">{t.slot_time || "-"}</div>
+                          <div className="text-admin-text-primary text-sm font-semibold md:text-base">{t.title}</div>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <label htmlFor={`ops-task-status-${t.id}`} className="sr-only">
+                            상태
+                          </label>
+                          <select
+                            id={`ops-task-status-${t.id}`}
+                            className="w-full rounded-lg border border-admin-border bg-admin-bg px-3 py-2 text-sm"
+                            value={t.status}
+                            onChange={(e) => {
+                              updateTask.mutate({ taskId: t.id, patch: { status: e.target.value } });
                             }}
-                            disabled={!planId || executeTask.isPending}
-                            aria-label="작업 실행(완료 처리)"
-                            title="실행"
                           >
-                            실행
-                          </button>
-                          {!isInventoryGrantAllTask((t.payload_json ?? {}) as Record<string, unknown>) && (
+                            {STATUS_OPTIONS.map((s) => (
+                              <option key={s} value={s}>
+                                {STATUS_LABEL[s] ?? s}
+                              </option>
+                            ))}
+                          </select>
+                          <div className="flex items-center gap-2">
                             <button
                               type="button"
                               className="rounded-lg border border-admin-border bg-admin-bg px-3 py-2 text-xs font-bold text-admin-text-secondary hover:bg-admin-bg/70 disabled:opacity-50"
-                              onClick={() => updateTask?.mutate({ taskId: t.id, patch: { status: "DONE" } })}
-                              disabled={!planId || updateTask.isPending}
-                              aria-label="작업 완료 체크"
-                              title="완료"
+                              onClick={() => {
+                                const payload = (t.payload_json ?? {}) as Record<string, unknown>;
+                                if (isInventoryGrantAllTask(payload)) {
+                                  const ok = confirmExecuteInventoryGrantAll(t.id, payload);
+                                  if (!ok) return;
+                                }
+                                executeTask
+                                  ?.mutateAsync({ taskId: t.id, status: "DONE" })
+                                  .then(() => addToast("실행 완료", "success"))
+                                  .catch((err) => {
+                                    addToast(humanizeOpsPlanError(getAdminApiErrorMessage(err)), "error");
+                                  });
+                              }}
+                              disabled={!planId || executeTask.isPending}
+                              aria-label="작업 실행(완료 처리)"
+                              title="실행"
                             >
-                              완료
+                              실행
                             </button>
-                          )}
-                          <button
-                            type="button"
-                            className="rounded-lg border border-admin-danger/40 bg-admin-danger/10 px-3 py-2 text-xs font-bold text-admin-danger hover:bg-admin-danger/15 disabled:opacity-50"
-                            onClick={() => onDeleteSingleTask(t.id)}
-                            disabled={!planId || deleteTask.isPending}
-                            aria-label="작업 삭제"
-                            title="삭제"
-                          >
-                            삭제
-                          </button>
+                            {!isInventoryGrantAllTask((t.payload_json ?? {}) as Record<string, unknown>) && (
+                              <button
+                                type="button"
+                                className="rounded-lg border border-admin-border bg-admin-bg px-3 py-2 text-xs font-bold text-admin-text-secondary hover:bg-admin-bg/70 disabled:opacity-50"
+                                onClick={() => updateTask?.mutate({ taskId: t.id, patch: { status: "DONE" } })}
+                                disabled={!planId || updateTask.isPending}
+                                aria-label="작업 완료 체크"
+                                title="완료"
+                              >
+                                완료
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              className="rounded-lg border border-admin-danger/40 bg-admin-danger/10 px-3 py-2 text-xs font-bold text-admin-danger hover:bg-admin-danger/15 disabled:opacity-50"
+                              onClick={() => onDeleteSingleTask(t.id)}
+                              disabled={!planId || deleteTask.isPending}
+                              aria-label="작업 삭제"
+                              title="삭제"
+                            >
+                              삭제
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-
-                    <div className="w-full">
-                      <div className="rounded-xl border border-admin-border bg-admin-bg/60 p-4 shadow-sm space-y-3">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <div className="text-admin-text-primary font-semibold">{t.title}</div>
-                          <span className="rounded-md border border-admin-border bg-admin-bg px-2 py-0.5 text-[11px] font-bold text-admin-text-muted">
-                            {TYPE_LABEL[t.type] ?? t.type}
-                          </span>
-                        </div>
+                    }
+                  >
+                    <TaskEditor title={t.title} typeLabel={TYPE_LABEL[t.type] ?? t.type}>
 
                                                 <div className="grid grid-cols-12 gap-2">
                                                   <div className="col-span-12 md:col-span-4">
@@ -1091,17 +1310,12 @@ const AdminOpsPlanPage: React.FC = () => {
                                                     {(draft.items ?? []).map((it, idx) => (
                                                       <div key={`${t.id}-grantall-${idx}`} className="grid grid-cols-12 gap-2">
                                                         <div className="col-span-12 md:col-span-8">
-                                                          <label htmlFor={`ops-grantall-item-${t.id}-${idx}`} className="block text-[11px] font-bold text-admin-text-muted">
-                                                            item_type
-                                                          </label>
-                                                          <input
-                                                            id={`ops-grantall-item-${t.id}-${idx}`}
-                                                            className="mt-1 w-full rounded-lg border border-admin-border bg-admin-bg px-3 py-2 text-xs font-mono"
-                                                            defaultValue={it.item_type}
-                                                            placeholder='예: DIAMOND, VOUCHER_LOTTERY_TICKET_1'
-                                                            onBlur={(e) => {
+                                                          <ItemSelector
+                                                            label="item_type"
+                                                            value={it.item_type}
+                                                            onChange={(value) => {
                                                               const nextItems = [...draft.items];
-                                                              nextItems[idx] = { ...nextItems[idx], item_type: e.target.value };
+                                                              nextItems[idx] = { ...nextItems[idx], item_type: value };
                                                               saveInventoryGrantAllPayload(t.id, payload, { ...draft, items: nextItems });
                                                             }}
                                                           />
@@ -1171,6 +1385,10 @@ const AdminOpsPlanPage: React.FC = () => {
                                                     action: String(payload.action ?? "FORCE_ON"),
                                                     multiplier: payload.multiplier == null ? "" : String(payload.multiplier),
                                                   };
+                                                  const currentMultiplier = goldenHourConfig?.multiplier;
+                                                  const nextMultiplier = Number(draft.multiplier);
+                                                  const showPreview =
+                                                    draft.action === "MULTIPLIER_SET" && Number.isFinite(nextMultiplier) && currentMultiplier != null;
 
                                                   return (
                                                     <div className="mt-2 grid grid-cols-12 gap-2">
@@ -1211,6 +1429,11 @@ const AdminOpsPlanPage: React.FC = () => {
                                                           placeholder="예: 2.5"
                                                           disabled={draft.action !== "MULTIPLIER_SET"}
                                                         />
+                                                        {showPreview && (
+                                                          <div className="mt-1 text-[11px] text-admin-text-muted">
+                                                            현재 {currentMultiplier}배 → 변경 {nextMultiplier}배
+                                                          </div>
+                                                        )}
                                                       </div>
                                                       <div className="col-span-12 md:col-span-2 flex items-end">
                                                         <button
@@ -1236,7 +1459,9 @@ const AdminOpsPlanPage: React.FC = () => {
                                                 {(() => {
                                                   const payload = (t.payload_json ?? {}) as Record<string, unknown>;
                                                   const draft = dmDrafts[t.id] ?? {
-                                                    audience: String(payload.audience ?? "SURVEY_COMPLETERS"),
+                                                    kind: String(payload.kind ?? "MESSAGE_TEMPLATE"),
+                                                    channel: String(payload.channel ?? "TELEGRAM_DM"),
+                                                    audience: String(payload.audience ?? (payload.target_list_id ? "TARGET_LIST" : "ALL_USERS")),
                                                     message: String(payload.message ?? ""),
                                                     target_list_id: payload.target_list_id as number | undefined,
                                                   };
@@ -1253,67 +1478,87 @@ const AdminOpsPlanPage: React.FC = () => {
                                                           <div className="grid grid-cols-12 gap-2">
                                                             <div className="col-span-12 md:col-span-4">
                                                               <label htmlFor={`ops-dm-audience-${t.id}`} className="block text-[11px] font-bold text-admin-text-muted">
-                                                            대상
-                                                          </label>
-                                                          <select
-                                                            id={`ops-dm-audience-${t.id}`}
-                                                            className="mt-1 w-full rounded-lg border border-admin-border bg-admin-bg px-3 py-2 text-xs"
-                                                            value={draft.audience}
-                                                            onChange={(e) =>
-                                                              setDmDrafts((prev) => ({
-                                                                ...prev,
-                                                                [t.id]: { ...draft, audience: e.target.value },
-                                                              }))
-                                                            }
-                                                          >
-                                                            <option value="SURVEY_COMPLETERS">SURVEY_COMPLETERS</option>
-                                                            <option value="ALL">ALL</option>
-                                                            <option value="SEGMENT">SEGMENT</option>
-                                                          </select>
-                                                        </div>
-                                                            <div className="col-span-12 md:col-span-8">
+                                                                대상
+                                                              </label>
+                                                              <select
+                                                                id={`ops-dm-audience-${t.id}`}
+                                                                className="mt-1 w-full rounded-lg border border-admin-border bg-admin-bg px-3 py-2 text-xs"
+                                                                value={draft.audience}
+                                                                onChange={(e) =>
+                                                                  setDmDrafts((prev) => ({
+                                                                    ...prev,
+                                                                    [t.id]: { ...draft, audience: e.target.value },
+                                                                  }))
+                                                                }
+                                                              >
+                                                                <option value="TARGET_LIST">TARGET_LIST</option>
+                                                                <option value="ALL_USERS">ALL_USERS</option>
+                                                                <option value="SURVEY_COMPLETERS">SURVEY_COMPLETERS</option>
+                                                                <option value="SEGMENT">SEGMENT</option>
+                                                              </select>
+                                                            </div>
+                                                            <div className="col-span-12 md:col-span-4">
+                                                              <label htmlFor={`ops-dm-channel-${t.id}`} className="block text-[11px] font-bold text-admin-text-muted">
+                                                                채널
+                                                              </label>
+                                                              <select
+                                                                id={`ops-dm-channel-${t.id}`}
+                                                                className="mt-1 w-full rounded-lg border border-admin-border bg-admin-bg px-3 py-2 text-xs"
+                                                                value={draft.channel}
+                                                                onChange={(e) =>
+                                                                  setDmDrafts((prev) => ({
+                                                                    ...prev,
+                                                                    [t.id]: { ...draft, channel: e.target.value },
+                                                                  }))
+                                                                }
+                                                              >
+                                                                <option value="TELEGRAM_DM">TELEGRAM_DM</option>
+                                                                <option value="TELEGRAM_BROADCAST">TELEGRAM_BROADCAST</option>
+                                                              </select>
+                                                            </div>
+                                                            <div className="col-span-12 md:col-span-4">
+                                                              <label className="block text-[11px] font-bold text-admin-text-muted">템플릿 종류</label>
+                                                              <div className="mt-1 rounded-lg border border-admin-border bg-admin-bg px-3 py-2 text-xs text-admin-text-secondary">
+                                                                {draft.kind}
+                                                              </div>
+                                                            </div>
+                                                            <div className="col-span-12 md:col-span-12">
                                                               <label htmlFor={`ops-dm-message-${t.id}`} className="block text-[11px] font-bold text-admin-text-muted">
                                                                 메시지
                                                               </label>
                                                               <textarea
-                                                            id={`ops-dm-message-${t.id}`}
-                                                            className="mt-1 w-full rounded-lg border border-admin-border bg-admin-bg px-3 py-2 text-xs"
-                                                            rows={3}
-                                                            value={draft.message}
-                                                            onChange={(e) =>
-                                                              setDmDrafts((prev) => ({
-                                                                ...prev,
-                                                                [t.id]: { ...draft, message: e.target.value },
-                                                              }))
-                                                            }
-                                                            placeholder="(예) 설문 감사합니다! 보상은 금일 23:59까지…"
+                                                                id={`ops-dm-message-${t.id}`}
+                                                                className="mt-1 w-full rounded-lg border border-admin-border bg-admin-bg px-3 py-2 text-xs"
+                                                                rows={3}
+                                                                value={draft.message}
+                                                                onChange={(e) =>
+                                                                  setDmDrafts((prev) => ({
+                                                                    ...prev,
+                                                                    [t.id]: { ...draft, message: e.target.value },
+                                                                  }))
+                                                                }
+                                                                placeholder="(예) 설문 감사합니다! 보상은 금일 23:59까지…"
                                                               />
                                                             </div>
                                                           </div>
 
                                                           <div className="grid grid-cols-12 gap-2">
                                                             <div className="col-span-12 md:col-span-6">
-                                                              <label htmlFor={`ops-dm-targetlist-${t.id}`} className="block text-[11px] font-bold text-admin-text-muted">
-                                                                타깃 리스트(선택)
-                                                              </label>
-                                                              <select
-                                                                id={`ops-dm-targetlist-${t.id}`}
-                                                                className="mt-1 w-full rounded-lg border border-admin-border bg-admin-bg px-3 py-2 text-xs"
-                                                                value={draft.target_list_id ?? ""}
-                                                                onChange={(e) =>
+                                                              <TargetListSelector
+                                                                label="타깃 리스트(선택)"
+                                                                value={draft.target_list_id ?? null}
+                                                                onChange={(value) =>
                                                                   setDmDrafts((prev) => ({
                                                                     ...prev,
-                                                                    [t.id]: { ...draft, target_list_id: e.target.value ? Number(e.target.value) : undefined },
+                                                                    [t.id]: {
+                                                                      ...draft,
+                                                                      target_list_id: value ?? undefined,
+                                                                      audience: value ? "TARGET_LIST" : draft.audience,
+                                                                    },
                                                                   }))
                                                                 }
-                                                              >
-                                                                <option value="">(선택 안 함)</option>
-                                                                {(targetListsQuery.data ?? []).map((tl) => (
-                                                                  <option key={tl.id} value={tl.id}>
-                                                                    {tl.name} ({tl.count_snapshot})
-                                                                  </option>
-                                                                ))}
-                                                              </select>
+                                                                lists={targetListsQuery.data ?? []}
+                                                              />
                                                             </div>
                                                           </div>
 
@@ -1398,18 +1643,16 @@ const AdminOpsPlanPage: React.FC = () => {
                                                             {(draft.items || []).map((it, idx) => (
                                                               <div key={`${t.id}-grant-${idx}`} className="grid grid-cols-12 gap-2">
                                                                 <div className="col-span-12 md:col-span-6">
-                                                                  <label className="block text-[11px] font-bold text-admin-text-muted">보상 코드</label>
-                                                                  <input
-                                                                    className="mt-1 w-full rounded-lg border border-admin-border bg-admin-bg px-3 py-2 text-xs"
+                                                                  <ItemSelector
+                                                                    label="보상 코드"
                                                                     value={it.item_type}
-                                                                    onChange={(e) =>
+                                                                    onChange={(value) =>
                                                                       setGrantDrafts((prev) => {
                                                                         const next = { ...draft, items: [...draft.items] };
-                                                                        next.items[idx] = { ...next.items[idx], item_type: e.target.value };
+                                                                        next.items[idx] = { ...next.items[idx], item_type: value };
                                                                         return { ...prev, [t.id]: next };
                                                                       })
                                                                     }
-                                                                    placeholder="예: POINT, VOUCHER_LOTTERY_TICKET_1"
                                                                   />
                                                                 </div>
                                                                 <div className="col-span-12 md:col-span-5">
@@ -1478,27 +1721,17 @@ const AdminOpsPlanPage: React.FC = () => {
 
                                                       <div className="grid grid-cols-12 gap-2">
                                                         <div className="col-span-12 md:col-span-6">
-                                                          <label htmlFor={`ops-grant-target-${t.id}`} className="block text-[11px] font-bold text-admin-text-muted">
-                                                            타깃 리스트(선택)
-                                                          </label>
-                                                          <select
-                                                            id={`ops-grant-target-${t.id}`}
-                                                            className="mt-1 w-full rounded-lg border border-admin-border bg-admin-bg px-3 py-2 text-xs"
-                                                            value={draft.target_list_id ?? ""}
-                                                            onChange={(e) =>
+                                                          <TargetListSelector
+                                                            label="타깃 리스트(선택)"
+                                                            value={draft.target_list_id ?? null}
+                                                            onChange={(value) =>
                                                               setGrantDrafts((prev) => ({
                                                                 ...prev,
-                                                                [t.id]: { ...draft, target_list_id: e.target.value ? Number(e.target.value) : undefined },
+                                                                [t.id]: { ...draft, target_list_id: value ?? undefined },
                                                               }))
                                                             }
-                                                          >
-                                                            <option value="">(선택 안 함)</option>
-                                                            {(targetListsQuery.data ?? []).map((tl) => (
-                                                              <option key={tl.id} value={tl.id}>
-                                                                {tl.name} ({tl.count_snapshot})
-                                                              </option>
-                                                            ))}
-                                                          </select>
+                                                            lists={targetListsQuery.data ?? []}
+                                                          />
                                                         </div>
                                                       </div>
 
@@ -1532,7 +1765,7 @@ const AdminOpsPlanPage: React.FC = () => {
                                                 {(() => {
                                                   const payload = (t.payload_json ?? {}) as Record<string, unknown>;
                                                   const draft = broadcastDrafts[t.id] ?? {
-                                                    channel: String(payload.channel ?? "CHANNEL"),
+                                                    channel: String(payload.channel ?? "TELEGRAM_BROADCAST"),
                                                     message: String(payload.message ?? ""),
                                                     target_list_id: payload.target_list_id as number | undefined,
                                                   };
@@ -1555,8 +1788,8 @@ const AdminOpsPlanPage: React.FC = () => {
                                                               setBroadcastDrafts((prev) => ({ ...prev, [t.id]: { ...draft, channel: e.target.value } }))
                                                             }
                                                           >
-                                                            <option value="CHANNEL">CHANNEL</option>
-                                                            <option value="DM">DM</option>
+                                                            <option value="TELEGRAM_BROADCAST">TELEGRAM_BROADCAST</option>
+                                                            <option value="TELEGRAM_DM">TELEGRAM_DM</option>
                                                           </select>
                                                         </div>
                                                         <div className="col-span-12 md:col-span-8">
@@ -1578,27 +1811,17 @@ const AdminOpsPlanPage: React.FC = () => {
 
                                                       <div className="grid grid-cols-12 gap-2">
                                                         <div className="col-span-12 md:col-span-6">
-                                                          <label htmlFor={`ops-broadcast-target-${t.id}`} className="block text-[11px] font-bold text-admin-text-muted">
-                                                            타깃 리스트(선택)
-                                                          </label>
-                                                          <select
-                                                            id={`ops-broadcast-target-${t.id}`}
-                                                            className="mt-1 w-full rounded-lg border border-admin-border bg-admin-bg px-3 py-2 text-xs"
-                                                            value={draft.target_list_id ?? ""}
-                                                            onChange={(e) =>
+                                                          <TargetListSelector
+                                                            label="타깃 리스트(선택)"
+                                                            value={draft.target_list_id ?? null}
+                                                            onChange={(value) =>
                                                               setBroadcastDrafts((prev) => ({
                                                                 ...prev,
-                                                                [t.id]: { ...draft, target_list_id: e.target.value ? Number(e.target.value) : undefined },
+                                                                [t.id]: { ...draft, target_list_id: value ?? undefined },
                                                               }))
                                                             }
-                                                          >
-                                                            <option value="">(선택 안 함)</option>
-                                                            {(targetListsQuery.data ?? []).map((tl) => (
-                                                              <option key={tl.id} value={tl.id}>
-                                                                {tl.name} ({tl.count_snapshot})
-                                                              </option>
-                                                            ))}
-                                                          </select>
+                                                            lists={targetListsQuery.data ?? []}
+                                                          />
                                                         </div>
                                                       </div>
 
@@ -1772,32 +1995,20 @@ const AdminOpsPlanPage: React.FC = () => {
                                             <div className="mt-1 text-[11px] text-admin-text-muted">
                                               executed_at: <span className="font-mono">{t.executed_at ? formatKstDateTime(t.executed_at) : "-"}</span>
                                             </div>
-                                          </div>
-                                        </div>
+                    </TaskEditor>
+
                     <div className="rounded-lg border border-admin-border bg-admin-bg/40 p-3">
-                      {(() => {
-                                                const payload = (t.payload_json ?? {}) as Record<string, any>;
-                                                const execResult = payload.execution_result as Record<string, any> | undefined;
-                                                const execError = (payload as any).execution_error;
-                                                if (execError) {
-                                                  return <div className="text-xs text-admin-danger">에러: {String(execError)}</div>;
-                                                }
-                                                if (execResult) {
-                                                  const sent = execResult.sent_count;
-                                                  const mult = execResult.multiplier;
-                                                  const items: string[] = [];
-                                                  if (sent != null) items.push(`발송 ${sent}건`);
-                                                  if (execResult.action) items.push(ACTION_LABEL[String(execResult.action)] ?? String(execResult.action));
-                                                  if (mult != null) items.push(`배수 ${mult}`);
-                                                  return <div className="text-xs text-admin-text-secondary">{items.join(" / ") || "결과 기록"}</div>;
-                                                }
-                                                return <div className="text-xs text-admin-text-muted">-</div>;
-                                              })()}
-                                              <div className="mt-1 text-[11px] text-admin-text-muted">
-                                                실행시각: {t.executed_at ? formatKstDateTime(t.executed_at) : "-"}
-                                              </div>
+                      <ExecutionResultView
+                        result={(t.payload_json ?? {}).execution_result as Record<string, any> | undefined}
+                        error={(t.payload_json ?? {}).execution_error as string | undefined}
+                        status={isExecuting ? "DOING" : t.status}
+                        targetListLabelById={targetListLabelById}
+                      />
+                      <div className="mt-1 text-[11px] text-admin-text-muted text-right">
+                        실행시각: {t.executed_at ? formatKstDateTime(t.executed_at) : "-"}
+                      </div>
                     </div>
-                  </div>
+                  </OpsTaskCard>
                 );
               })}
 
@@ -1806,11 +2017,105 @@ const AdminOpsPlanPage: React.FC = () => {
                   작업이 아직 없습니다. 위에서 추가해 주세요.
                 </div>
               )}
-            </div>
+            </OpsTaskList>
 
             {tasksQuery.isLoading && <div className="mt-3 text-xs text-admin-text-muted">작업 로딩 중…</div>}
             {tasksQuery.error && <div className="mt-3 text-xs text-admin-danger">작업 로드 실패</div>}
           </div>
+            </>
+          )}
+
+          {activeTab === "timeline" && (
+            <div className="rounded-xl border border-admin-border bg-admin-sidebar p-4 shadow-lg">
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="text-admin-subtitle text-admin-text-primary">실행 타임라인</h2>
+              </div>
+              {timelineTasks.length === 0 && (
+                <div className="mt-3 text-xs text-admin-text-muted">실행된 작업이 없습니다.</div>
+              )}
+              {timelineTasks.length > 0 && (
+                <div className="mt-4 space-y-3">
+                  {timelineTasks.map((t) => {
+                    const actorId = t.actor_admin_id;
+                    const actorLabel = actorId ? adminNameById[actorId] || `Admin #${actorId}` : "미지정";
+                    return (
+                      <div key={`timeline-${t.id}`} className="rounded-lg border border-admin-border bg-admin-bg/50 p-3">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div className="text-xs text-admin-text-muted">{t.executed_at ? formatKstDateTime(t.executed_at) : "-"}</div>
+                          <div className="text-xs text-admin-text-secondary">
+                            실행자: {actorLabel} {actorId ? `(#${actorId})` : ""}
+                          </div>
+                        </div>
+                        <div className="mt-2 text-sm font-semibold text-admin-text-primary">{t.title}</div>
+                        <div className="mt-1 text-[11px] text-admin-text-muted">
+                          타입: {TYPE_LABEL[t.type] ?? t.type} · 상태: {STATUS_LABEL[t.status] ?? t.status}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === "report" && (
+            <div className="rounded-xl border border-admin-border bg-admin-sidebar p-4 shadow-lg">
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="text-admin-subtitle text-admin-text-primary">평가 리포트</h2>
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-2 rounded-lg border border-admin-border bg-admin-bg px-3 py-2 text-xs font-bold text-admin-text-secondary hover:bg-admin-bg/70 disabled:opacity-50"
+                  onClick={() => fetchEvalMetrics()}
+                  disabled={evalMetricsLoading || !planId}
+                  aria-label="평가 리포트 새로고침"
+                  title="새로고침"
+                >
+                  <RefreshCw size={14} />
+                  새로고침
+                </button>
+              </div>
+              {evalMetricsLoading && <div className="mt-2 text-xs text-admin-text-muted">리포트 로딩 중…</div>}
+              {evalMetricsError && <div className="mt-2 text-xs text-admin-danger">{evalMetricsError}</div>}
+              {!evalMetricsLoading && evalMetrics.length === 0 && (
+                <div className="mt-3 text-xs text-admin-text-muted">평가 데이터가 없습니다. (집계 작업/엔드포인트 확인 필요)</div>
+              )}
+              {evalMetrics.length > 0 && (
+                <div className="mt-4 space-y-4">
+                  <div className="rounded-lg border border-admin-border bg-admin-bg/60 p-3 text-sm">
+                    Summary Grade:{" "}
+                    <span className="font-bold">
+                      {evalMetrics.find((m) => m.eval_type === "D7")?.grade ||
+                        evalMetrics.find((m) => m.eval_type === "D3")?.grade ||
+                        evalMetrics.find((m) => m.eval_type === "D1")?.grade ||
+                        "-"}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-12 gap-3">
+                    {["D1", "D3", "D7"].map((key) => {
+                      const metric = evalMetrics.find((m) => m.eval_type === key);
+                      const metricsJson = (metric?.metrics_json ?? {}) as Record<string, number>;
+                      return (
+                        <div key={`report-${key}`} className="col-span-12 md:col-span-4 rounded-lg border border-admin-border bg-admin-bg/60 p-3">
+                          <div className="text-xs font-bold text-admin-text-muted">{key}</div>
+                          <div className="mt-2 space-y-1">
+                            {Object.keys(metricsJson).length === 0 && (
+                              <div className="text-[11px] text-admin-text-muted">지표 없음</div>
+                            )}
+                            {Object.entries(metricsJson).map(([metricKey, metricValue]) => (
+                              <div key={`${key}-${metricKey}`} className="flex items-center justify-between text-[11px]">
+                                <span className="text-admin-text-secondary">{metricKey}</span>
+                                <span className="font-mono text-admin-text-primary">{String(metricValue)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </section>

@@ -7,16 +7,13 @@ import { clearAdminToken, getAdminToken } from "../../auth/adminAuth";
 // - localhost/127.0.0.1: talk to backend on :8000/admin/api
 // - non-local host: use same-origin /admin/api via reverse proxy
 const envAdminBase = (
-  // @ts-ignore
   import.meta.env.VITE_ADMIN_API_BASE_URL ||
-  // @ts-ignore
   import.meta.env.VITE_ADMIN_API_URL ||
   ""
 ).trim();
 
 // E2E test mode: run admin UI without login flows, and prefer same-origin API via nginx.
 // This flag is compile-time for Vite builds.
-// @ts-ignore
 const isE2ETestMode = (import.meta.env.VITE_TEST_MODE ?? "false") === "true";
 
 const normalizeHttps = (base: string) => {
@@ -63,7 +60,6 @@ const resolvedBaseURL = (() => {
 
 const DEFAULT_TIMEOUT_MS = 15000;
 const resolvedTimeoutMs = (() => {
-  // @ts-ignore
   const raw = String(import.meta.env.VITE_ADMIN_API_TIMEOUT_MS ?? import.meta.env.VITE_API_TIMEOUT_MS ?? "").trim();
   const parsed = Number.parseInt(raw, 10);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_TIMEOUT_MS;

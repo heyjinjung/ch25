@@ -140,6 +140,14 @@ class LotteryService:
         db.commit()
         db.refresh(log_entry)
 
+        # [Live Feed] Publish Jackpot Win
+        if chosen.reward_type in {"POINT", "CC_POINT"} and chosen.reward_amount and chosen.reward_amount >= 1000:
+            try:
+                from app.services.feed_service import FeedService
+                FeedService().check_and_publish_jackpot(db, user_id, "LOTTERY", chosen.reward_amount)
+            except Exception as e:
+                logging.getLogger(__name__).error(f"Feed publish failed: {e}")
+
         # [Mission] Update progress (includes streak sync). Do this before Vault accrual so
         # streak-based vault bonuses apply immediately on the same play.
         from app.services.mission_service import MissionService

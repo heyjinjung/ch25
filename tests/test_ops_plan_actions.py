@@ -367,5 +367,68 @@ class TestInventoryGrantAll:
         assert execution_result["target"] == "ALL_USERS"
 
 
+class TestMessageTemplate:
+    """Test MESSAGE_TEMPLATE & SURVEY_DM actions."""
+
+    def test_message_template_execution(self, db: Session, ops_service, test_plan, test_target_list, test_users):
+        """Test executing MESSAGE_TEMPLATE returns correct execution_result."""
+        task = OpsPlanTask(
+            plan_id=test_plan.id,
+            title="Send Template Message",
+            type="DM",
+            status="PENDING",
+            payload_json={
+                "kind": "MESSAGE_TEMPLATE",
+                "target_list_id": test_target_list.id,
+                "channel": "TELEGRAM_DM",
+                "message": "Hello World",
+            },
+        )
+        db.add(task)
+        db.commit()
+        db.refresh(task)
+
+        # Execute task
+        result = ops_service.execute_task(db, task_id=task.id, status_value="DONE", actor_admin_id=1)
+
+        # Verify execution result
+        assert result.payload_json is not None
+        execution_result = result.payload_json.get("execution_result", {})
+        assert execution_result["kind"] == "MESSAGE_TEMPLATE"
+        assert execution_result["sent_count"] == len(test_users)
+        assert execution_result["channel"] == "TELEGRAM_DM"
+        assert execution_result["audience"] == "TARGET_LIST"
+        assert execution_result["target_list_id"] == test_target_list.id
+
+    def test_survey_dm_execution(self, db: Session, ops_service, test_plan, test_target_list, test_users):
+        """Test executing SURVEY_DM returns correct execution_result."""
+        task = OpsPlanTask(
+            plan_id=test_plan.id,
+            title="Send Survey DM",
+            type="DM",
+            status="PENDING",
+            payload_json={
+                "kind": "SURVEY_DM",
+                "target_list_id": test_target_list.id,
+                "channel": "TELEGRAM_DM",
+            },
+        )
+        db.add(task)
+        db.commit()
+        db.refresh(task)
+
+        # Execute task
+        result = ops_service.execute_task(db, task_id=task.id, status_value="DONE", actor_admin_id=1)
+
+        # Verify execution result
+        assert result.payload_json is not None
+        execution_result = result.payload_json.get("execution_result", {})
+        assert execution_result["kind"] == "SURVEY_DM"
+        assert execution_result["sent_count"] == len(test_users)
+        assert execution_result["channel"] == "TELEGRAM_DM"
+        assert execution_result["audience"] == "TARGET_LIST"
+        assert execution_result["target_list_id"] == test_target_list.id
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

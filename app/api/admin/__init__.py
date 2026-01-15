@@ -35,6 +35,7 @@ from app.api.admin.routes import (
     admin_reward_types,
     admin_vault_requests,
     admin_events,
+    admin_feed_config,
 )
 
 from app.api.deps import get_current_admin_id
@@ -48,6 +49,7 @@ admin_router.include_router(admin_dice.router)
 admin_router.include_router(admin_lottery.router)
 admin_router.include_router(admin_ranking.router)
 admin_router.include_router(admin_game_tokens.router)
+admin_router.include_router(admin_feed_config.router)
 admin_router.include_router(admin_external_ranking.router)
 admin_router.include_router(admin_users.router)
 admin_router.include_router(admin_team_battle.router)
