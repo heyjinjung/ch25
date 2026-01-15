@@ -1,4 +1,4 @@
-"""Service for shop purchases."""
+﻿"""Service for shop purchases."""
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 
@@ -331,38 +331,73 @@ class ShopService:
                 )
 
             # 2. Grant Item
-            InventoryService.grant_item(
-                db,
-                user_id,
-                product.item_type,
-                product.item_amount,
-                reason=f"SHOP_PURCHASE:{sku}",
-                related_id=sku,
-                auto_commit=False
-            )
-
-            # 3. Auto-fulfill certain vouchers immediately (voucher -> wallet token)
-            auto_fulfill_vouchers = {
-                "VOUCHER_GOLD_KEY_1",
-                "VOUCHER_DIAMOND_KEY_1",
-                "VOUCHER_ROULETTE_COIN_1",
-                "VOUCHER_DICE_TOKEN_1",
-                "VOUCHER_LOTTERY_TICKET_1",
+            # For VAULT purchases: if item_type is a direct token type (not voucher),
+            # grant directly to GameWallet instead of Inventory
+            direct_token_types = {
+                "ROULETTE_COIN",
+                "DICE_TOKEN",
+                "LOTTERY_TICKET",
+                "TRIAL_TOKEN",
+                "GOLD_KEY",
+                "DIAMOND_KEY",
             }
+
+            is_vault_purchase = product.cost_token == GameTokenType.VAULT
+            is_direct_token = product.item_type.upper() in direct_token_types
 
             reward_token = None
             reward_amount = None
-            if product.item_type in auto_fulfill_vouchers:
-                use_result = InventoryService.use_voucher(
+
+            if is_vault_purchase and is_direct_token:
+                # Direct grant to GameWallet (bypass Inventory for immediate usability)
+                try:
+                    target_token = GameTokenType(product.item_type.upper())
+                except ValueError:
+                    raise HTTPException(status_code=400, detail=f"INVALID_TOKEN_TYPE:{product.item_type}")
+                
+                wallet_service = GameWalletService()
+                wallet_service.grant_tokens(
+                    db,
+                    user_id,
+                    target_token,
+                    product.item_amount,
+                    reason=f"SHOP_PURCHASE:{sku}",
+                    auto_commit=False
+                )
+                reward_token = target_token.value
+                reward_amount = product.item_amount
+            else:
+                # Standard flow: grant to Inventory
+                InventoryService.grant_item(
                     db,
                     user_id,
                     product.item_type,
                     product.item_amount,
-                    idempotency_key=None,
-                    auto_commit=False,
+                    reason=f"SHOP_PURCHASE:{sku}",
+                    related_id=sku,
+                    auto_commit=False
                 )
-                reward_token = use_result.get("reward_token")
-                reward_amount = use_result.get("reward_amount")
+
+                # 3. Auto-fulfill certain vouchers immediately (voucher -> wallet token)
+                auto_fulfill_vouchers = {
+                    "VOUCHER_GOLD_KEY_1",
+                    "VOUCHER_DIAMOND_KEY_1",
+                    "VOUCHER_ROULETTE_COIN_1",
+                    "VOUCHER_DICE_TOKEN_1",
+                    "VOUCHER_LOTTERY_TICKET_1",
+                }
+
+                if product.item_type in auto_fulfill_vouchers:
+                    use_result = InventoryService.use_voucher(
+                        db,
+                        user_id,
+                        product.item_type,
+                        product.item_amount,
+                        idempotency_key=None,
+                        auto_commit=False,
+                    )
+                    reward_token = use_result.get("reward_token")
+                    reward_amount = use_result.get("reward_amount")
 
             response = {
                 "success": True,
