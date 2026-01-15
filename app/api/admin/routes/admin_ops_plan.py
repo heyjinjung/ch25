@@ -10,9 +10,14 @@ from __future__ import annotations
 from datetime import date
 
 from fastapi import APIRouter, Depends, Response, status
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_admin_id, get_db
+from app.models.ops_plan import OpsPlanTask
+from app.models.ops_target import OpsTargetList
+from app.models.ops_eval_metric import OpsEvalMetric
+from app.schemas.ops_target import OpsTargetListOut
 from app.schemas.ops_plan import (
     OpsCampaignCreate,
     OpsCampaignOut,
@@ -24,6 +29,7 @@ from app.schemas.ops_plan import (
     OpsPlanTaskOut,
     OpsPlanTaskUpdate,
     OpsPlanUpdate,
+    OpsEvalMetricOut,
 )
 from app.services.ops_plan_service import OpsPlanService
 
@@ -170,3 +176,51 @@ def delete_task(
 ):
     service.delete_task(db, task_id=task_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.get("/plans/{plan_id}/target-lists", response_model=list[OpsTargetListOut])
+def list_plan_target_lists(
+    plan_id: int,
+    db: Session = Depends(get_db),
+    _: int = Depends(get_current_admin_id),
+):
+    plan = service.get_plan(db, plan_id=plan_id)
+    # Only return processed (ready) lists
+    return db.scalars(select(OpsTargetList).where(OpsTargetList.plan_id == plan.id).where(OpsTargetList.is_processed == True).order_by(OpsTargetList.id.desc())).all()
+
+
+@router.get("/items", response_model=list[dict])
+def list_item_selector_items(
+    _: int = Depends(get_current_admin_id),
+):
+    # Hardcoded list for MVP as requested
+    return [
+        {"code": "GEM", "name": "보석", "category": "CURRENCY"},
+        {"code": "GOLD", "name": "골드", "category": "CURRENCY"},
+        {"code": "CANDY", "name": "캔디", "category": "CURRENCY"},
+        {"code": "TICKET_GOLD", "name": "황금 티켓", "category": "TICKET"},
+        {"code": "TICKET_SILVER", "name": "실버 티켓", "category": "TICKET"},
+        {"code": "TICKET_BRONZE", "name": "브론즈 티켓", "category": "TICKET"},
+        {"code": "BOX_KEY_S", "name": "금고 열쇠 S", "category": "ITEM"},
+        {"code": "BOX_KEY_A", "name": "금고 열쇠 A", "category": "ITEM"},
+    ]
+
+
+@router.get("/plans/{plan_id}/eval-metrics", response_model=list[OpsEvalMetricOut])
+def list_plan_eval_metrics(
+    plan_id: int,
+    db: Session = Depends(get_db),
+    _: int = Depends(get_current_admin_id),
+):
+    return db.scalars(select(OpsEvalMetric).where(OpsEvalMetric.plan_id == plan_id).order_by(OpsEvalMetric.eval_type.asc())).all()
+
+
+@router.get("/plans/{plan_id}/timeline", response_model=list[OpsPlanTaskOut])
+def list_plan_timeline(
+    plan_id: int,
+    db: Session = Depends(get_db),
+    _: int = Depends(get_current_admin_id),
+):
+    # Only executed tasks
+    return db.scalars(select(OpsPlanTask).where(OpsPlanTask.plan_id == plan_id).where(OpsPlanTask.executed_at.is_not(None)).order_by(OpsPlanTask.executed_at.desc())).all()
+

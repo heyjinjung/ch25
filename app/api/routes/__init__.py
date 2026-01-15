@@ -33,6 +33,7 @@ from app.api.routes import (
 	inventory_shop,
 	metrics,
 	ws_ops,
+	ws_feed,
 )
 
 api_router = APIRouter()
@@ -71,3 +72,4 @@ api_router.include_router(telegram_unlink.router)
 api_router.include_router(telegram_unlink.admin_router)
 api_router.include_router(inventory_shop.router, prefix="/api")
 api_router.include_router(ws_ops.router)
+api_router.include_router(ws_feed.router)

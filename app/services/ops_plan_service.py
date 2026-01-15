@@ -15,6 +15,7 @@ from app.services.inventory_service import InventoryService
 from app.services.ops_log_service import OpsLogService
 from app.services.ops_target_service import OpsTargetService
 from app.services.vault2_service import Vault2Service
+from app.services.feed_service import FeedService
 from zoneinfo import ZoneInfo
 from app.core.config import get_settings
 
@@ -147,8 +148,16 @@ class OpsPlanService:
                     actor_id=actor_admin_id,
                     ref_id=f"GOLDEN_HOUR_MULTIPLIER:{actor_admin_id}:{int(now.timestamp())}",
                 )
+            
+            # Feed Publish (Guerrilla Drop)
+            if bool(payload.get("send_feed")):
+                # Only publish if enabled or multiplier set
+                feed_multiplier = float(current.get("multiplier", 1.0))
+                if current.get("enabled") and feed_multiplier > 1.0:
+                    FeedService().publish_guerrilla_drop(feed_multiplier)
+
         except Exception:
-            # Fail-open: config already applied; logging not critical.
+            # Fail-open: config already applied; logging/feed not critical.
             pass
 
         return {
@@ -168,7 +177,22 @@ class OpsPlanService:
         actor_admin_id: int,
     ) -> dict:
         """Mark DM/message template as sent for a target list (no-op send)."""
-        target_list_id = payload.get("target_list_id")
+        target_list_id = None
+        if "target_list_id" in payload:
+            try:
+                target_list_id = int(payload.get("target_list_id"))
+            except (TypeError, ValueError):
+                target_list_id = None
+        channel_raw = str(payload.get("channel") or "").strip()
+        channel_key = channel_raw.upper()
+        if channel_key in {"DM", "TELEGRAM_DM"}:
+            channel = "TELEGRAM_DM"
+        elif channel_key in {"BROADCAST", "TELEGRAM_BROADCAST"}:
+            channel = "TELEGRAM_BROADCAST"
+        else:
+            channel = channel_raw or "TELEGRAM_DM"
+        audience_default = "TARGET_LIST" if target_list_id else "ALL_USERS"
+        audience = str(payload.get("audience") or audience_default).strip() or audience_default
         sent_count = 0
 
         if target_list_id:
@@ -196,8 +220,8 @@ class OpsPlanService:
                 target_model="OpsPlanTask",
                 target_id=str(task.id),
                 meta_data={
-                    "channel": payload.get("channel") or "DM",
-                    "audience": payload.get("audience") or "UNKNOWN",
+                    "channel": channel,
+                    "audience": audience,
                     "target_list_id": target_list_id,
                     "sent_count": sent_count,
                 },
@@ -212,6 +236,8 @@ class OpsPlanService:
         return {
             "kind": str(payload.get("kind") or "MESSAGE_TEMPLATE"),
             "target_list_id": target_list_id,
+            "channel": channel,
+            "audience": audience,
             "sent_count": sent_count,
         }
 
