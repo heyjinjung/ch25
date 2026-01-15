@@ -202,3 +202,76 @@ def adjust_user_inventory_by_identifier(
     user_id = resolve_user_id_by_identifier(db, identifier)
     return adjust_user_inventory(user_id=user_id, payload=payload, db=db, admin_id=admin_id)
 
+
+@router.get("/ledger")
+def get_inventory_ledger(
+    user_id: int | None = None,
+    item_type: str | None = None,
+    related_id: str | None = None,
+    limit: int = 50,
+    db: Session = Depends(get_db),
+):
+    """List system-wide inventory ledger entries."""
+    limit = min(max(limit, 1), 200)
+    q = select(UserInventoryLedger)
+
+    if user_id:
+        q = q.where(UserInventoryLedger.user_id == user_id)
+    if item_type:
+        q = q.where(UserInventoryLedger.item_type == item_type)
+    if related_id:
+        q = q.where(UserInventoryLedger.related_id.ilike(f"%{related_id}%"))
+
+    q = q.order_by(desc(UserInventoryLedger.id)).limit(limit)
+    
+    # Eager load user for display needs if we want nicknames (optional, skipping for perf now)
+    results = db.scalars(q).all()
+
+    return [
+        {
+            "id": l.id,
+            "user_id": l.user_id,
+            "item_type": l.item_type,
+            "change_amount": int(l.change_amount),
+            "balance_after": int(l.balance_after),
+            "reason": l.reason,
+            "related_id": l.related_id,
+            "created_at": l.created_at,
+        }
+        for l in results
+    ]
+
+
+@router.get("/items")
+def get_inventory_items(
+    user_id: int | None = None,
+    item_type: str | None = None,
+    min_quantity: int | None = None,
+    limit: int = 50,
+    db: Session = Depends(get_db),
+):
+    """List system-wide inventory items (snapshot)."""
+    limit = min(max(limit, 1), 200)
+    q = select(UserInventoryItem)
+
+    if user_id:
+        q = q.where(UserInventoryItem.user_id == user_id)
+    if item_type:
+        q = q.where(UserInventoryItem.item_type.ilike(f"%{item_type}%"))
+    if min_quantity is not None:
+        q = q.where(UserInventoryItem.quantity >= min_quantity)
+
+    q = q.order_by(desc(UserInventoryItem.updated_at)).limit(limit)
+    
+    results = db.scalars(q).all()
+
+    return [
+        {
+            "id": i.id,
+            "user_id": i.user_id,
+            "item_type": i.item_type,
+            "quantity": int(i.quantity),
+            "updated_at": i.updated_at,
+        }
+        for i in results
+    ]
