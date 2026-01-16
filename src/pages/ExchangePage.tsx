@@ -31,12 +31,6 @@ const BalanceHero: React.FC<{ balance: number }> = ({ balance }) => (
                     </span>
                     <span className="text-xl font-bold text-emerald-500">P</span>
                 </div>
-
-                <div className="h-px w-12 bg-gradient-to-r from-transparent via-white/20 to-transparent my-4" />
-
-                <p className="text-[11px] text-white/40 font-medium">
-                    <span className="text-emerald-400">티켓 교환</span> 전용 재화입니다
-                </p>
             </div>
         </div>
     </div>
@@ -82,15 +76,15 @@ const ProductCard: React.FC<{ product: ShopProduct; vaultBalance: number; onBuy:
             {/* Shelf/Base 3D Effect Container */}
             <div className={`
                 w-full relative flex flex-col items-center rounded-2xl border-t border-l border-r border-white/10
-                ${canAfford 
-                    ? "bg-gradient-to-b from-[#222] to-[#111] shadow-[0_10px_20px_-5px_rgba(0,0,0,0.5)] border-b-[6px] border-b-[#050505]" 
+                ${canAfford
+                    ? "bg-gradient-to-b from-[#222] to-[#111] shadow-[0_10px_20px_-5px_rgba(0,0,0,0.5)] border-b-[6px] border-b-[#050505]"
                     : "bg-[#111] border-b-[6px] border-b-black"}
                 pt-4 pb-3 px-2
                 transition-all duration-200
                 group-hover:border-t-white/20
                 ${canAfford ? "group-active:border-b-[2px] group-active:translate-y-[4px] group-active:shadow-none" : ""}
             `}>
-                
+
                 {/* Spotlight/Glow on Shelf */}
                 {canAfford && (
                     <div className="absolute top-0 inset-x-0 h-1/2 bg-gradient-to-b from-white/5 to-transparent opacity-50 rounded-t-2xl pointer-events-none" />
@@ -201,14 +195,14 @@ const ExchangePage: React.FC = () => {
         <div className="mx-auto w-full max-w-lg min-h-screen bg-black pb-[calc(96px+env(safe-area-inset-bottom))]">
             {/* Header */}
             <div className="sticky top-0 z-40 bg-black/80 backdrop-blur-xl border-b border-white/5 px-4 h-14 flex items-center justify-between">
-                <h1 className="text-lg font-black text-white flex items-center gap-2 tracking-tight">
-                    <img src="/assets/icons/icon_cart.png" className="w-8 h-8 object-contain" alt="" />
+                <h1 className="text-[15px] font-bold text-white flex items-center gap-1.5 tracking-tight">
+                    <img src="/assets/icons/icon_cart.png" className="w-5 h-5 object-contain" alt="" />
                     교환소
                 </h1>
 
                 <button
                     onClick={() => navigate('/inventory')}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 active:scale-95 transition-all text-lg font-bold text-white/70 border border-white/5"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 active:scale-95 transition-all text-[15px] font-bold text-white/70 border border-white/5"
                 >
                     <img src="/assets/icon_inventory_wallet.png" className="w-5 h-5 object-contain opacity-70" alt="" />
                     보상함
@@ -227,15 +221,16 @@ const ExchangePage: React.FC = () => {
                 </div>
 
                 {vaultProducts.length > 0 ? (
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="flex gap-3 overflow-x-auto pb-3 snap-x snap-mandatory scrollbar-hide -mx-1 px-1">
                         {vaultProducts.map(p => (
-                            <ProductCard
-                                key={p.sku}
-                                product={p}
-                                vaultBalance={lockedBalance}
-                                onBuy={() => purchaseMutation.mutate(p.sku)}
-                                isPending={purchaseMutation.isPending}
-                            />
+                            <div className="flex-shrink-0 w-[45%] snap-start" key={p.sku}>
+                                <ProductCard
+                                    product={p}
+                                    vaultBalance={lockedBalance}
+                                    onBuy={() => purchaseMutation.mutate(p.sku)}
+                                    isPending={purchaseMutation.isPending}
+                                />
+                            </div>
                         ))}
                     </div>
                 ) : (
@@ -252,18 +247,19 @@ const ExchangePage: React.FC = () => {
                         <img src="/assets/icon_diamond.png" className="w-4 h-4" alt="" />
                         <h2 className="text-sm font-black text-white">다이아 샵</h2>
                     </div>
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="flex gap-3 overflow-x-auto pb-3 snap-x snap-mandatory scrollbar-hide -mx-1 px-1">
                         {diamondProducts.map(p => (
-                            <ProductCard
-                                key={p.sku}
-                                product={p}
-                                vaultBalance={p.cost.token === 'DIAMOND'
-                                    ? diamondBalance // Used diamondBalance variable
-                                    : lockedBalance
-                                }
-                                onBuy={() => purchaseMutation.mutate(p.sku)}
-                                isPending={purchaseMutation.isPending}
-                            />
+                            <div className="flex-shrink-0 w-[45%] snap-start" key={p.sku}>
+                                <ProductCard
+                                    product={p}
+                                    vaultBalance={p.cost.token === 'DIAMOND'
+                                        ? diamondBalance // Used diamondBalance variable
+                                        : lockedBalance
+                                    }
+                                    onBuy={() => purchaseMutation.mutate(p.sku)}
+                                    isPending={purchaseMutation.isPending}
+                                />
+                            </div>
                         ))}
                     </div>
                 </div>

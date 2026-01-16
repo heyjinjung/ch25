@@ -348,7 +348,25 @@ class RewardService:
             )
             return
 
+        # [FIX] Puzzle Collection Delivery (C -> C1/C2 Random)
+        if reward_type == "PUZZLE_C":
+            import random
+            outcome = random.choice([GameTokenType.PUZZLE_C1, GameTokenType.PUZZLE_C2])
+            self.grant_ticket(
+                db,
+                user_id=user_id,
+                token_type=outcome,
+                amount=reward_amount,
+                meta=meta,
+                commit=commit
+            )
+            return
+
         ticket_map = {
+            "PUZZLE_J": GameTokenType.PUZZLE_J,
+            "PUZZLE_M": GameTokenType.PUZZLE_M,
+            "PUZZLE_C1": GameTokenType.PUZZLE_C1,
+            "PUZZLE_C2": GameTokenType.PUZZLE_C2,
             "TICKET_ROULETTE": GameTokenType.ROULETTE_COIN,
             "ROULETTE_TICKET": GameTokenType.ROULETTE_COIN,
             "ROULETTE_COIN": GameTokenType.ROULETTE_COIN,
