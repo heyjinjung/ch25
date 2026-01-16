@@ -8,12 +8,13 @@ import StreakTrack from "../components/mission/StreakTrack";
 import { useHaptic } from "../hooks/useHaptic";
 import { MissionData, useMissionStore } from "../stores/missionStore";
 
-const TABS = ["DAILY", "WEEKLY"] as const;
+const TABS = ["DAILY", "WEEKLY", "NEW_USER"] as const;
 type MissionTab = (typeof TABS)[number];
 
 const TAB_LABELS: Record<MissionTab, string> = {
   DAILY: "일일 미션",
   WEEKLY: "주간 미션",
+  NEW_USER: "신규 미션",
 };
 
 const MissionPage: React.FC = () => {
@@ -62,6 +63,8 @@ const MissionPage: React.FC = () => {
         return <img src="/assets/icons/fire-dynamic-color.png" className="w-4 h-4 object-contain" alt="" />;
       case "WEEKLY":
         return <img src="/assets/icons/icon_clock.webp" className="w-4 h-4 object-contain" alt="" />;
+      case "NEW_USER":
+        return <img src="/assets/icons/rocket-dynamic-color.png" className="w-4 h-4 object-contain" alt="" />;
       default:
         return null;
     }

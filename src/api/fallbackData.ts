@@ -68,7 +68,7 @@ export const playFallbackDice = () => {
   if (userTotal > dealerTotal) result = "WIN";
   else if (userTotal < dealerTotal) result = "LOSE";
 
-  const vaultEarn = result === "WIN" ? 200 : result === "LOSE" ? 50 : 100;
+  const vaultEarn = 0;
   return {
     user_dice: userDice,
     dealer_dice: dealerDice,

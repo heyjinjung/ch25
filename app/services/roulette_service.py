@@ -378,10 +378,8 @@ class RouletteService:
 
         total_earn = 0
         # [REFACTORED V3] Unified Vault Accrual Strategy
-        # 1. Base Accrual: Fixed small amount (+200/-50) for playing.
-        # 2. Winning Reward: Huge points (e.g. 1000, 10000, 50000).
-        # Policy: If Reward is POINT, it SUPERSEDES the base accrual (or base is implicitly part of it).
-        # We invoke vault_service exactly once per play to ensuring atomicity.
+        # Vault accrual follows the segment payout payload (no implicit base/penalty).
+        # We invoke vault_service exactly once per play to ensure atomicity.
         
         vault_accrual_amount = 0
         point_reward_amount = 0
@@ -391,10 +389,7 @@ class RouletteService:
         
         # Determine the effective vault accrual for this spin.
         # If the user won POINTs, that amount IS the accrual.
-        # If the user hit NONE/Other, we rely on VaultService's default logic (-50 for loss, +200 default).
-        
-        # However, VaultService.record_game_play_earn_event logic currently looks at 'payout_raw.reward_amount'.
-        # If reward_amount is present, it uses that. If 0, it treats as LOSE (-50).
+        # Non-point outcomes should not create a base accrual.
 
         payout_raw = {
             "segment_id": chosen.id,

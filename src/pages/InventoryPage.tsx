@@ -84,8 +84,9 @@ const InventoryPage: React.FC = () => {
                             tryHaptic(10);
                             addToastNode(
                                 <div className="text-center space-y-1">
-                                    <p>배민 2만부터 기프트콘 지급</p>
-                                    <p>씨씨코인 지민문의</p>
+                                    <p>배민 2만부터 지급가능</p>
+                                    <p>씨씨코인 하루 1개 지급가능</p>
+                                    <p>컴포즈 아아 1만부터 지급가능</p>
                                 </div>,
                                 { tone: "info" }
                             );
@@ -135,10 +136,10 @@ const InventoryPage: React.FC = () => {
                             <div className="col-span-2 flex flex-col items-center justify-center py-12 space-y-3">
                                 <div className="relative mb-2">
                                     <div className="absolute inset-0 bg-emerald-500/10 blur-3xl rounded-full" />
-                                    <img 
-                                        src="/assets/icons/rocket-dynamic-color.png" 
-                                        className="relative z-10 w-20 h-20 object-contain opacity-20 grayscale" 
-                                        alt="" 
+                                    <img
+                                        src="/assets/icons/rocket-dynamic-color.png"
+                                        className="relative z-10 w-20 h-20 object-contain opacity-20 grayscale"
+                                        alt=""
                                     />
                                 </div>
                                 <p className="text-white/20 text-sm font-bold tracking-tight">보유한 아이템이 없습니다</p>
@@ -335,10 +336,10 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, onUse, isPending }) => {
         >
             {/* Inner Content */}
             <div className="absolute inset-0 rounded-[24px] overflow-hidden" style={{ transform: "translateZ(0px)" }}>
-                 {/* Shine Effect */}
-                 <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none mix-blend-overlay" />
-                 
-                 <div className="flex flex-col relative z-10 h-full items-center text-center p-4">
+                {/* Shine Effect */}
+                <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none mix-blend-overlay" />
+
+                <div className="flex flex-col relative z-10 h-full items-center text-center p-4">
                     <div className="relative mb-4 mt-2" style={{ transform: "translateZ(20px)" }}>
                         <div className={`w-14 h-14 rounded-2xl flex items-center justify-center p-1 shadow-inner backdrop-blur-md ${info.rarity === 'legendary' ? 'bg-amber-500/20 border border-amber-500/30' : 'bg-black/40 border border-white/5'}`}>
                             {info.icon}

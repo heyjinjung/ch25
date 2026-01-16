@@ -98,6 +98,24 @@ const TOKEN_TYPES: Array<{ value: GameTokenType; label: string }> = (Object.keys
     (value) => ({ value, label: GAME_TOKEN_LABELS[value] })
 );
 
+const INVENTORY_ITEM_TYPES = [
+    { value: "VOUCHER_GOLD_KEY_1", label: "교환권: 골드키" },
+    { value: "VOUCHER_DIAMOND_KEY_1", label: "교환권: 다이아키" },
+    { value: "VOUCHER_ROULETTE_COIN_1", label: "교환권: 룰렛티켓" },
+    { value: "VOUCHER_DICE_TOKEN_1", label: "교환권: 주사위티켓" },
+    { value: "VOUCHER_LOTTERY_TICKET_1", label: "교환권: 복권티켓" },
+    { value: "DIAMOND", label: "재화: 다이아" },
+    { value: "BAEMIN_GIFTICON_10000", label: "기프티콘: 배민 1만" },
+    { value: "BAEMIN_GIFTICON_20000", label: "기프티콘: 배민 2만" },
+    { value: "BAEMIN_GIFTICON_30000", label: "기프티콘: 배민 3만" },
+    { value: "BAEMIN_GIFTICON_50000", label: "기프티콘: 배민 5만" },
+    { value: "COMPOSE_AMERICANO_GIFTICON", label: "기프티콘: 컴포즈 아아" },
+    { value: "STARBUCKS_GIFTICON", label: "기프티콘: 스타벅스" },
+    { value: "CU_GIFTICON", label: "기프티콘: CU" },
+    { value: "GS25_GIFTICON", label: "기프티콘: GS25" },
+    { value: "CC_COIN_GIFTICON", label: "기프티콘: 씨씨코인" },
+];
+
 const GAME_LABELS: Record<string, string> = {
     ROULETTE: LABELS.gameRoulette,
     DICE: LABELS.gameDice,
@@ -375,8 +393,8 @@ const TicketManagerPage: React.FC = () => {
 
         if (quickActionCategory === "INVENTORY") {
             if (!formData.userIdentifier || !inventoryItemType || formData.amount < 1) {
-                 addToast("모든 필드를 입력하세요 (유저, 아이템 종류, 수량)", "error");
-                 return;
+                addToast("모든 필드를 입력하세요 (유저, 아이템 종류, 수량)", "error");
+                return;
             }
             inventoryMutation.mutate({
                 userIdentifier: formData.userIdentifier,
@@ -1117,13 +1135,16 @@ const TicketManagerPage: React.FC = () => {
                                             {TOKEN_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                                         </select>
                                     ) : (
-                                        <input
-                                            type="text"
+                                        <select
+                                            title="아이템 종류"
+                                            aria-label="아이템 종류"
                                             value={inventoryItemType}
                                             onChange={(e) => setInventoryItemType(e.target.value)}
-                                            placeholder="e.g. ticket_entry"
                                             className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:border-admin-brand outline-none"
-                                        />
+                                        >
+                                            <option value="">아이템 선택...</option>
+                                            {INVENTORY_ITEM_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                                        </select>
                                     )}
                                 </div>
                                 <div className="space-y-1">
@@ -1161,8 +1182,8 @@ const TicketManagerPage: React.FC = () => {
                             >
                                 {isSubmitting ? <RefreshCw className="h-4 w-4 animate-spin" /> : (formMode === 'grant' ? <Plus className="h-4 w-4" /> : <Minus className="h-4 w-4" />)}
                                 {formMode === 'grant'
-                                     ? `Grant ${quickActionCategory === 'TOKEN' ? 'Tokens' : 'Item'}`
-                                     : `Revoke ${quickActionCategory === 'TOKEN' ? 'Tokens' : 'Item'}`
+                                    ? `Grant ${quickActionCategory === 'TOKEN' ? 'Tokens' : 'Item'}`
+                                    : `Revoke ${quickActionCategory === 'TOKEN' ? 'Tokens' : 'Item'}`
                                 }
                             </button>
                         </form>

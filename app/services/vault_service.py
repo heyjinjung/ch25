@@ -541,10 +541,10 @@ class VaultService:
         """Idempotently accrue Phase 1 vault locked balance for a game play.
 
         - Idempotency key is derived from (game_type, game_log_id).
-                - Amount: determined by VaultProgram.config_json["game_earn_config"] (DB) first.
-                    Fallbacks:
-                    - DICE: WIN=+200, LOSE=-50 (DRAW=0)
-                    - ROULETTE: reward_amount==0 => -50 else +200
+        - Amount: determined by VaultProgram.config_json["game_earn_config"] (DB) first.
+          - DICE EVENT mode uses game_earn_config.
+          - DICE NORMAL mode uses payout_raw.reward_amount for POINT/CC_POINT/NONE; non-point rewards accrue 0.
+          - ROULETTE/LOTTERY accrue only when payout_raw.reward_type is POINT/CC_POINT; otherwise 0.
         - Eligibility required (same as Phase 1 vault funnel).
         - Expires-at is set only when absent/expired; never refreshed while active.
 
@@ -599,6 +599,10 @@ class VaultService:
         game_config = game_earn_config.get(game_type_upper, {})
         amount_before_multiplier = game_config.get(outcome_upper)
 
+        # Roulette/Lottery accruals should only follow the actual payout payload.
+        if game_type_upper in {"ROULETTE", "LOTTERY"}:
+            amount_before_multiplier = None
+
         # DICE special rule:
         # - EVENT mode: use DB game_earn_config (global event tuning)
         # - NORMAL mode: use payout-reported reward_amount (DiceConfig-driven), even if DB config exists
@@ -606,6 +610,9 @@ class VaultService:
             payout_reward_type = str(payout.get("reward_type") or "").upper()
             if payout_reward_type in {"POINT", "CC_POINT", "NONE"} and payout.get("reward_amount") is not None:
                 amount_before_multiplier = int(payout.get("reward_amount") or 0)
+            else:
+                # Non-point rewards should not trigger a base vault accrual.
+                amount_before_multiplier = 0
 
         # 2. Hardcoded Fallbacks
         if amount_before_multiplier is None:
@@ -636,16 +643,26 @@ class VaultService:
                 else:
                     # Other reward (XP, Ticket, etc): base bonus removed (was 200)
                     amount_before_multiplier = 0
-            else:
-                # Default for other games (LOTTERY, etc.)
+            elif game_type_upper == "LOTTERY":
                 payout = payout_raw or {}
                 r_amount = int(payout.get("reward_amount", 0))
                 r_type = str(payout.get("reward_type", "NONE"))
-                
+
+                if r_type in ("POINT", "CC_POINT") and r_amount != 0:
+                    amount_before_multiplier = r_amount
+                else:
+                    # Lottery should only accrue vault points from explicit POINT rewards.
+                    amount_before_multiplier = 0
+            else:
+                # Default for other games.
+                payout = payout_raw or {}
+                r_amount = int(payout.get("reward_amount", 0))
+                r_type = str(payout.get("reward_type", "NONE"))
+
                 if r_type in ("POINT", "CC_POINT") and r_amount > 0:
                     amount_before_multiplier = r_amount
                 elif r_amount == 0:
-                     # Lose/Zero: penalty -50 (Consistent with Roulette/Dice lose logic)
+                    # Lose/Zero: penalty -50 (Consistent with Roulette/Dice lose logic)
                     amount_before_multiplier = -50
                 else:
                     # Other reward: base bonus 200
