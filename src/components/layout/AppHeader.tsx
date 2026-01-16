@@ -15,6 +15,7 @@ import { useMissionStore } from "../../stores/missionStore";
 import VipPromotionModal from "../modal/VipPromotionModal";
 import VipEligibilityModal from "../modal/VipEligibilityModal";
 import { AnimatePresence } from "framer-motion";
+import { useModalVisibility } from "../../hooks/useModalVisibility";
 
 const AppHeader: React.FC = () => {
     const { user, updateUser } = useAuth();
@@ -29,6 +30,8 @@ const AppHeader: React.FC = () => {
     const [isBailoutModalOpen, setIsBailoutModalOpen] = useState(false);
     // Removed local isForcedStreakModalOpen in favor of store state
     const { streakInfo, streakRules, fetchStreakRules, claimStreakReward, isStreakModalOpen, setStreakModalOpen } = useMissionStore();
+
+    const { attendance_streak_enabled, bailout_enabled } = useModalVisibility();
 
     const { data: vault } = useQuery({
         queryKey: ["vault-status"],
@@ -397,7 +400,7 @@ const AppHeader: React.FC = () => {
             )}
 
             {/* Attendance Streak Modal (Admin Forced or Manual) */}
-            {isStreakModalOpen && streakInfo && streakRules && (
+            {attendance_streak_enabled && isStreakModalOpen && streakInfo && streakRules && (
                 <AttendanceStreakModal
                     onClose={() => setStreakModalOpen(false)}
                     onClaim={claimStreakReward}
@@ -408,7 +411,7 @@ const AppHeader: React.FC = () => {
             )}
 
             {/* Bailout / Ticket-Zero Modal */}
-            {isBailoutModalOpen && (
+            {bailout_enabled && isBailoutModalOpen && (
                 <BailoutModal
                     onClose={() => setIsBailoutModalOpen(false)}
                     vaultBalance={vault?.vaultBalance ?? 0}
