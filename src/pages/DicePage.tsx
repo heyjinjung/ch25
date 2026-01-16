@@ -6,7 +6,7 @@ import FeatureGate from "../components/feature/FeatureGate";
 import { tryHaptic } from "../utils/haptics";
 import GamePageShell from "../components/game/GamePageShell";
 import TicketZeroPanel from "../components/game/TicketZeroPanel";
-import Button from "../components/common/Button";
+
 import VaultAccrualModal from "../components/vault/VaultAccrualModal";
 import { useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
@@ -136,11 +136,11 @@ const DicePage: React.FC = () => {
 
           {/* Battle Arena - Comact Height */}
           <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-black/40 p-1 shadow-2xl backdrop-blur-md">
-            <div 
+            <div
               className={clsx(
                 "rounded-[1.8rem] bg-gradient-to-b from-white/5 to-transparent px-3 py-4 min-h-[320px] flex flex-col justify-center transition-all duration-200 outline-none select-none",
-                (!isRolling && !playMutation.isPending && !isOutOfTokens && (isUnlimited || data.remaining_plays > 0)) 
-                  ? "cursor-pointer active:scale-[0.98] hover:bg-white/5" 
+                (!isRolling && !playMutation.isPending && !isOutOfTokens && (isUnlimited || data.remaining_plays > 0))
+                  ? "cursor-pointer active:scale-[0.98] hover:bg-white/5"
                   : "cursor-default"
               )}
               onClick={() => {

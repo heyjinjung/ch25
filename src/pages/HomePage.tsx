@@ -177,7 +177,7 @@ const CategoryTabs: React.FC<{ active: string; onChange: (id: string) => void }>
 
 const HomePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState("all");
-  const { showWelcomeModal, showStarterModal, closeWelcomeModal, closeStarterModal, closeAllModals } = useNewUserWelcome();
+  const { showWelcomeModal, closeWelcomeModal, closeAllModals } = useNewUserWelcome();
   const { missions, fetchMissions, streakInfo } = useMissionStore();
   const { addToast } = useToast();
   const hasAnnouncedGift = React.useRef(false);
@@ -417,7 +417,7 @@ const HomePage: React.FC = () => {
       )}
 
       {/* Starter Missions Modal - FORCED FOR TEST */}
-      <StarterMissionsModal onClose={() => {}} />
+      <StarterMissionsModal onClose={() => { }} />
 
       {/* Attendance Streak Modal */}
 
