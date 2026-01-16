@@ -16,7 +16,7 @@ import { formatRewardLine, isGifticonRewardType } from "../utils/rewardLabel";
 
 const DicePage: React.FC = () => {
   const { data, isLoading, isError } = useDiceStatus();
-  const { playDiceShake, playDiceThrow, playDiceReveal, playBigWin } = useSound(); // Updated hook usage
+  const { playDiceShake, playDiceThrow, playDiceReveal, playBigWin, playDiceLose } = useSound(); // Updated hook usage
   const playMutation = usePlayDice();
   const queryClient = useQueryClient();
   const [result, setResult] = useState<"WIN" | "LOSE" | "DRAW" | null>(null);
@@ -70,6 +70,8 @@ const DicePage: React.FC = () => {
           setRewardToast({ value: rewardValue, type: rewardType });
           playBigWin(); // Sound: Victory/Reward (User Requested Jingle)
           setTimeout(() => setRewardToast(null), 3000);
+        } else if (response.result === "LOSE") {
+          playDiceLose(); // Sound: Defeat (User Requested)
         }
 
         // [UX FIX] 중복 모달 방지: 보상 획득 시 보상 토스트가 뜨므로 금고 적립 모달은 최소화
@@ -134,7 +136,19 @@ const DicePage: React.FC = () => {
 
           {/* Battle Arena - Comact Height */}
           <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-black/40 p-1 shadow-2xl backdrop-blur-md">
-            <div className="rounded-[1.8rem] bg-gradient-to-b from-white/5 to-transparent p-3 min-h-[320px] flex flex-col justify-center">
+            <div 
+              className={clsx(
+                "rounded-[1.8rem] bg-gradient-to-b from-white/5 to-transparent px-3 py-4 min-h-[320px] flex flex-col justify-center transition-all duration-200 outline-none select-none",
+                (!isRolling && !playMutation.isPending && !isOutOfTokens && (isUnlimited || data.remaining_plays > 0)) 
+                  ? "cursor-pointer active:scale-[0.98] hover:bg-white/5" 
+                  : "cursor-default"
+              )}
+              onClick={() => {
+                if (!isRolling && !playMutation.isPending && !isOutOfTokens && (isUnlimited || data.remaining_plays > 0)) {
+                  handlePlay();
+                }
+              }}
+            >
               <DiceView userDice={userDice} dealerDice={dealerDice} result={result} isRolling={isRolling} />
 
               {/* Result Message Overlay */}
@@ -169,29 +183,7 @@ const DicePage: React.FC = () => {
             </div>
           )}
 
-          <Button
-            type="button"
-            disabled={isRolling || playMutation.isPending || (!isUnlimited && data.remaining_plays <= 0) || isOutOfTokens}
-            onClick={handlePlay}
-            variant="figma-primary"
-            fullWidth
-            className="rounded-xl py-[10px] transform active:scale-95 transition-transform"
-          >
-            <div className="flex items-center justify-center gap-1.5">
-              {isRolling || playMutation.isPending ? (
-                <>
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                  <span className="font-bold text-white text-sm">Rolling...</span>
-                </>
-              ) : (
-                <>
-                  <span className="text-base font-black tracking-wider text-white">
-                    {result ? "RETRY" : "ROLL DICE"}
-                  </span>
-                </>
-              )}
-            </div>
-          </Button>
+          {/* Button Removed - Click play area to roll */}
         </div>
 
         {/* Reward Alert - Adjusted Position */}

@@ -6,10 +6,11 @@ import { useCraftItem } from "../../hooks/useExchange";
 import { tryHaptic } from "../../utils/haptics";
 import { triggerFireworks } from "../../utils/confetti";
 
+
 interface LotteryCollectionModalProps {
     open: boolean;
     onClose: () => void;
-    collection: { C: number; J: number; M: number };
+    collection: { C1: number; C2: number; J: number; M: number };
 }
 
 // 3D Puzzle Piece Component
@@ -90,12 +91,13 @@ const LotteryCollectionModal: React.FC<LotteryCollectionModalProps> = ({
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
     // Requirements
-    const REQ_C = 2;
+    const REQ_C1 = 1;
+    const REQ_C2 = 1;
     const REQ_J = 1;
     const REQ_M = 1;
 
     const canCraft =
-        collection.C >= REQ_C && collection.J >= REQ_J && collection.M >= REQ_M;
+        collection.C1 >= REQ_C1 && collection.C2 >= REQ_C2 && collection.J >= REQ_J && collection.M >= REQ_M;
 
     const handleCraft = async () => {
         if (!canCraft || isPending) return;
@@ -150,14 +152,25 @@ const LotteryCollectionModal: React.FC<LotteryCollectionModalProps> = ({
                         </div>
 
                         {/* Puzzle Grid */}
-                        <div className="flex justify-center gap-4 mb-8">
-                            {/* C (Requires 2) */}
-                            <PuzzlePiece char="C" count={collection.C} required={REQ_C} />
+                        <div className="flex justify-center gap-3 sm:gap-4 mb-8">
+                            {/* C1 */}
+                            <PuzzlePiece
+                                char="C"
+                                count={collection.C1}
+                                required={REQ_C1}
+                            />
 
-                            {/* J (Requires 1) */}
+                            {/* C2 */}
+                            <PuzzlePiece
+                                char="C"
+                                count={collection.C2}
+                                required={REQ_C2}
+                            />
+
+                            {/* J */}
                             <PuzzlePiece char="J" count={collection.J} required={REQ_J} />
 
-                            {/* M (Requires 1) */}
+                            {/* M */}
                             <PuzzlePiece char="M" count={collection.M} required={REQ_M} />
                         </div>
 

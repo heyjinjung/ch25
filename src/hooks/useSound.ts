@@ -22,6 +22,8 @@ const SOUND_SOURCES = {
         SMALL_WIN: "/assets/sounds/sfx/Small_Win.ogg",
         BIG_WIN: "/assets/sounds/sfx/Big_Win.ogg",
         VAULT_JINGLE: "/assets/sounds/sfx/Vault_Jingle.ogg",
+        ROULETTE_LOSE: "/assets/sounds/sfx/roulette_lose.wav",
+        DICE_LOSE: "/assets/sounds/sfx/dice_lose.ogg",
         // ENTER_GAME: "/assets/sounds/sfx/MESSAGE-B_Accept.wav", // Deleted
     },
 };
@@ -70,6 +72,8 @@ export const useSound = () => {
     const playSmallWin = useCallback(() => playSfx(SOUND_SOURCES.SFX.SMALL_WIN, { volume: 0.8 }), [playSfx]);
     const playBigWin = useCallback(() => playSfx(SOUND_SOURCES.SFX.BIG_WIN, { volume: 1.0 }), [playSfx]);
     const playVaultJingle = useCallback(() => playSfx(SOUND_SOURCES.SFX.VAULT_JINGLE, { volume: 0.8 }), [playSfx]);
+    const playRouletteLose = useCallback(() => playSfx(SOUND_SOURCES.SFX.ROULETTE_LOSE, { volume: 0.8 }), [playSfx]);
+    const playDiceLose = useCallback(() => playSfx(SOUND_SOURCES.SFX.DICE_LOSE, { volume: 0.8 }), [playSfx]);
 
     const playRouletteSpin = useCallback(() => {
         // if (rouletteSpinRef.current) {
@@ -126,6 +130,8 @@ export const useSound = () => {
         playSmallWin,
         playBigWin,
         playVaultJingle,
+        playRouletteLose,
+        playDiceLose,
         playDiceReveal,
     };
 };

@@ -22,9 +22,10 @@ class ExchangeService:
             source_token = GameTokenType.DIAMOND_KEY_FRAGMENT
             required_amount = 30
         elif target_token_type == "GOLD_KEY_FROM_PUZZLE":
-            # Special Recipe: 2*C + 1*J + 1*M -> 1 GOLD_KEY
+            # Special Recipe: 1*C1 + 1*C2 + 1*J + 1*M -> 1 GOLD_KEY
             required_tokens = [
-                (GameTokenType.PUZZLE_C, 2),
+                (GameTokenType.PUZZLE_C1, 1),
+                (GameTokenType.PUZZLE_C2, 1),
                 (GameTokenType.PUZZLE_J, 1),
                 (GameTokenType.PUZZLE_M, 1)
             ]

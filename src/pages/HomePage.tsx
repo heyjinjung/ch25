@@ -330,7 +330,7 @@ const HomePage: React.FC = () => {
         transition={{ duration: 0.6 }}
       >
         <motion.img
-          src="/assets/hero_event_banner.png"
+          src="/assets/hero_event_banner_20260116.png"
           className="absolute inset-0 w-full h-full object-cover"
           alt="Banner"
           animate={{ scale: [1, 1.05, 1] }}
@@ -416,8 +416,8 @@ const HomePage: React.FC = () => {
         />
       )}
 
-      {/* Starter Missions Modal */}
-      {showStarterModal && <StarterMissionsModal onClose={closeStarterModal} />}
+      {/* Starter Missions Modal - FORCED FOR TEST */}
+      <StarterMissionsModal onClose={() => {}} />
 
       {/* Attendance Streak Modal */}
 
