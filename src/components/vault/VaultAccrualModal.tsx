@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import AnimatedNumber from "../common/AnimatedNumber";
-import Lottie from "lottie-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 type Props = {
@@ -15,15 +14,7 @@ type Props = {
  * Uses Lottie animation and heavy visual effects to celebrate vault updates.
  */
 const VaultAccrualModal: React.FC<Props> = ({ open, onClose, amount, title }) => {
-    const [animationData, setAnimationData] = useState<any>(null);
     const isDebit = amount < 0;
-
-    useEffect(() => {
-        fetch("/assets/modals/welcome_claim_success.json")
-            .then(res => res.json())
-            .then(data => setAnimationData(data))
-            .catch(err => console.error("Failed to load lottie", err));
-    }, []);
 
     // Auto-dismiss logic remains, but slightly longer for the animation to play
     useEffect(() => {
@@ -46,16 +37,7 @@ const VaultAccrualModal: React.FC<Props> = ({ open, onClose, amount, title }) =>
                     />
 
                     <div className="relative w-full max-w-sm mx-4 flex flex-col items-center justify-center">
-                        {/* Lottie Burst - Center Stage */}
-                        {animationData && !isDebit && (
-                            <div className="absolute inset-0 flex items-center justify-center -translate-y-12 scale-[1.8] pointer-events-none mix-blend-screen">
-                                <Lottie 
-                                    animationData={animationData} 
-                                    loop={false}
-                                    autoplay={true} 
-                                />
-                            </div>
-                        )}
+                        {/* Lottie Burst Removed */}
 
                         {/* Main Card */}
                         <motion.div

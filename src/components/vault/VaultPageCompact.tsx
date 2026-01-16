@@ -1,19 +1,17 @@
 import React, { useMemo } from "react";
 
 import { useQuery } from "@tanstack/react-query";
-import { getVaultStatus } from "../../api/vaultApi";
+import { getVaultStatus, requestWithdrawal, VaultStatusResponse } from "../../api/vaultApi";
 import { tryHaptic } from "../../utils/haptics";
 import { motion, AnimatePresence } from "framer-motion";
 import AnimatedNumber from "../common/AnimatedNumber";
-
 import { useToast } from "../../components/common/ToastProvider";
-import { Lock, Info, ListChecks } from "lucide-react";
+import { Lock, ListChecks } from "lucide-react";
 import WithdrawalConditionsModal from "../modal/WithdrawalConditionsModal";
 import WithdrawalProgressModal from "../modal/WithdrawalProgressModal";
 import { useSound } from "../../hooks/useSound";
 
-// Helper to format currency
-const formatWon = (amount: number) => `${amount.toLocaleString("ko-KR")}원`;
+
 
 const SparkleDust: React.FC = () => {
     // Generate 25 random sparkles for a cleaner "Falling Stars" effect
@@ -59,10 +57,12 @@ const VaultPageCompact: React.FC = () => {
     const [showProgressModal, setShowProgressModal] = React.useState(false);
 
     // Fetch Vault Status
-    const vault = useQuery({
+    const vault = useQuery<VaultStatusResponse>({
         queryKey: ["vault-status"],
         queryFn: getVaultStatus,
-        staleTime: 5000, retry: false, refetchInterval: 10000,
+        staleTime: 5000,
+        retry: false,
+        refetchInterval: 10000,
     });
 
     const view = useMemo(() => {
@@ -110,11 +110,11 @@ const VaultPageCompact: React.FC = () => {
     }
 
     return (
-        <div className="flex flex-col items-center px-4 py-6 min-h-[calc(100vh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-80px)] relative overflow-hidden bg-black text-white">
+        <div className="flex flex-col items-center mx-auto w-full max-w-lg relative min-h-[50vh]">
             <SparkleDust />
 
             {/* Header */}
-            <div className="w-full max-w-xs mb-8 flex items-center justify-between">
+            <div className="w-full mb-8 flex items-center justify-between">
                 <h1 className="text-xs font-black tracking-[0.2em] text-emerald-500 uppercase border border-emerald-900/50 px-4 py-1.5 rounded-full bg-emerald-950/30">
                     THE VAULT
                 </h1>
@@ -184,12 +184,15 @@ const VaultPageCompact: React.FC = () => {
                             }
                             if (!window.confirm("전액 출금 신청하시겠습니까?")) return;
                             tryHaptic(50);
-                            const { requestWithdrawal } = await import("../../api/vaultApi");
-                            const res = await requestWithdrawal(view.availableAmount);
-                            addToast(res.message, res.success ? "success" : "error");
-                            vault.refetch();
+                            try {
+                                const res = await requestWithdrawal(view.availableAmount);
+                                addToast(res.message, res.success ? "success" : "error");
+                                vault.refetch();
+                            } catch {
+                                addToast("신청 중 오류가 발생했습니다.", "error");
+                            }
                         }}
-                        className="w-full max-w-[200px] h-[48px] rounded-2xl bg-amber-500/80 backdrop-blur-md border border-white/20 text-black font-bold text-[14px] shadow-[0_8px_16px_-4px_rgba(245,158,11,0.5)] hover:bg-amber-400 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 mb-3"
+                        className="w-full max-w-[200px] h-[48px] rounded-2xl bg-emerald-500/80 backdrop-blur-md border border-white/20 text-white font-bold text-[14px] shadow-[0_8px_16px_-4px_rgba(16,185,129,0.5)] hover:bg-emerald-400 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-1.5 mb-3"
                     >
                         <img src="/assets/asset_coin_gold.png" className="w-5 h-5 object-contain drop-shadow-sm" alt="" />
                         <span>출금 신청하기</span>
@@ -217,7 +220,7 @@ const VaultPageCompact: React.FC = () => {
                 </div>
             ) : (
                 /* 2. Locked State (CHARGING MODE) */
-                <div className="w-full flex-1 flex flex-col items-center">
+                <div className="w-full flex-1 flex flex-col items-center animate-fadeIn">
 
                     <div className="relative mb-6">
                         <span className="absolute -top-6 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-emerald-900/50 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold tracking-widest uppercase mb-2">
@@ -227,14 +230,6 @@ const VaultPageCompact: React.FC = () => {
                         {/* Realistic Locked Vault */}
                         <div className="relative w-48 h-48">
                             <img src="/assets/vault/vault_closed.png" alt="Locked Vault" className="w-full h-full object-contain" />
-                            {/* Handle Animation - Static */}
-                            <div className="absolute top-[42%] left-[16%] w-[68%] h-[68%]">
-                                <img
-                                    src="/assets/vault/vault_handle.png"
-                                    alt=""
-                                    className="w-full h-full object-contain opacity-80"
-                                />
-                            </div>
                         </div>
                     </div>
 
@@ -277,23 +272,6 @@ const VaultPageCompact: React.FC = () => {
                         </p>
                     </div>
 
-                    {/* Peak Time Event Banner - Smaller Text */}
-                    <div className="w-full max-w-xs relative mb-6 overflow-hidden rounded-xl border border-white/5">
-                        <div className="relative flex items-center gap-3 bg-black/40 px-4 py-3 backdrop-blur-md">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 text-white/40">
-                                <Lock className="h-4 w-4" />
-                            </div>
-                            <div className="flex-1">
-                                <h3 className="text-[9px] font-black tracking-widest text-white/30 uppercase">
-                                    PEAK TIME EVENT
-                                </h3>
-                                <p className="text-[11px] font-bold text-white/60">
-                                    오늘 30만원 이상 입금 시 참여 가능
-                                </p>
-                            </div>
-                            <Info className="h-3.5 w-3.5 text-white/20" />
-                        </div>
-                    </div>
 
                     {/* Footer Info Row - Restored */}
                     <div className="w-full max-w-xs space-y-2 mb-8 px-2">
@@ -304,18 +282,10 @@ const VaultPageCompact: React.FC = () => {
                             <ListChecks size={16} />
                             <span>출금 조건 확인하기</span>
                         </button>
-                        <div className="flex justify-between items-center text-[11px] font-medium text-white/40">
-                            <span>출금 가능 금액</span>
-                            <span className="text-amber-500 font-bold text-xs">{formatWon(view.availableAmount)}</span>
-                        </div>
-                        <div className="flex justify-between items-center text-[11px] font-medium text-white/40">
-                            <span>예약됨(처리 중)</span>
-                            <span>0원</span>
-                        </div>
                     </div>
 
-                    <button className="w-full max-w-[280px] py-4 rounded-2xl bg-zinc-900 text-zinc-600 font-bold border border-white/5 mb-6 items-center justify-center gap-2 flex cursor-not-allowed opacity-50" disabled>
-                        <img src="/assets/asset_coin_gold.png" className="w-5 h-5 object-contain grayscale opacity-30" alt="" />
+                    <button className="w-full max-w-[200px] h-[48px] rounded-2xl bg-emerald-500/80 backdrop-blur-md border border-white/20 text-white font-bold text-[14px] shadow-[0_8px_16px_-4px_rgba(16,185,129,0.5)] mb-6 items-center justify-center gap-1.5 flex cursor-not-allowed opacity-50" disabled>
+                        <Lock size={16} className="opacity-30" />
                         <span>출금 신청하기</span>
                     </button>
 
