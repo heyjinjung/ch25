@@ -35,6 +35,8 @@ class User(Base):
     
     # Phase 2: Buy-in Tracking
     vault_spent_total = Column(Integer, nullable=False, server_default="0", default=0)
+    vault_spent_today = Column(Integer, nullable=False, server_default="0", default=0)
+    vault_spent_reset_date = Column(String(10), nullable=True)  # YYYY-MM-DD format
     
     # VIP System (Vault 2.0 Unlock condition)
     total_charge_amount = Column(Integer, nullable=False, server_default="0", default=0)

@@ -184,14 +184,14 @@ def status(db: Session = Depends(get_db), user_id: int = Depends(get_current_use
     spend_target = 10000
     
     if "AT_RISK" in segments:
-        play_target = 100
+        play_target =100
         spend_target = 30000
     elif deposit_7d >= 3000000: # WHALE
         play_target = 0
         spend_target = 0
     elif deposit_7d >= 500000: # VIP
         play_target = 15
-        spend_target = 5000
+        spend_target = 20000  # Changed from 5000 to 20000
 
     res.daily_play_count = int(recent_play_count) # Reusing field name but semantic is now 7-day
     res.daily_play_target = int(play_target)
@@ -204,7 +204,8 @@ def status(db: Session = Depends(get_db), user_id: int = Depends(get_current_use
         VaultWithdrawalRequest.status.in_(["PENDING", "APPROVED"])
     ).scalar() or 0
 
-    res.daily_vault_spent = int(getattr(user, "vault_spent_total", 0) or 0)
+    # Use daily vault spent instead of total
+    res.daily_vault_spent = int(getattr(user, "vault_spent_today", 0) or 0)
     res.daily_vault_spent_target = int(spend_target)
     res.withdrawal_count = int(withdrawal_count)
 
