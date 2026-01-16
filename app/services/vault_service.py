@@ -70,6 +70,15 @@ class VaultService:
             return now_kst.date() - timedelta(days=1)
         return now_kst.date()
 
+    def _ensure_daily_vault_spent_reset(self, user: User, now: datetime) -> None:
+        """Reset vault_spent_today if operational date has changed."""
+        op_date = self._operational_date_kst(now)
+        op_date_str = op_date.strftime("%Y-%m-%d")
+        
+        if user.vault_spent_reset_date != op_date_str:
+            user.vault_spent_today = 0
+            user.vault_spent_reset_date = op_date_str
+
     @staticmethod
     def _streak_vault_schedule(streak_days: int) -> tuple[float, int | None]:
         """Return (multiplier, duration_hours).
@@ -1095,6 +1104,11 @@ class VaultService:
             
         user.vault_locked_balance = current - amount
         user.vault_spent_total = int(getattr(user, "vault_spent_total", 0) or 0) + amount
+        
+        # Daily spent tracking with auto-reset
+        now = datetime.utcnow()
+        self._ensure_daily_vault_spent_reset(user, now)
+        user.vault_spent_today = int(getattr(user, "vault_spent_today", 0) or 0) + amount
         
         self.sync_legacy_mirror(user)
         

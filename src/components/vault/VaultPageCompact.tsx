@@ -9,7 +9,7 @@ import { useToast } from "../../components/common/ToastProvider";
 import { Lock, ListChecks } from "lucide-react";
 import WithdrawalConditionsModal from "../modal/WithdrawalConditionsModal";
 import WithdrawalProgressModal from "../modal/WithdrawalProgressModal";
-// import { useSound } from "../../hooks/useSound"; // Commented out to fix server build error
+import { useSound } from "../../hooks/useSound";
 
 
 
@@ -52,7 +52,7 @@ const SparkleDust: React.FC = () => {
 
 const VaultPageCompact: React.FC = () => {
     const { addToast, addToastNode } = useToast();
-    // const { playVaultJingle } = useSound(); // Commented out to fix server build error
+    const { playVaultJingle } = useSound();
     const [showConditionsModal, setShowConditionsModal] = React.useState(false);
     const [showProgressModal, setShowProgressModal] = React.useState(false);
 
@@ -169,7 +169,7 @@ const VaultPageCompact: React.FC = () => {
                             <div className="text-5xl font-black text-white tracking-tighter drop-shadow-xl flex items-center gap-1">
                                 <AnimatedNumber
                                     value={view.availableAmount}
-                                    // onAnimationStart={playVaultJingle} // Commented out to fix server build error
+                                    onAnimationStart={playVaultJingle}
                                 />
                                 <span className="text-2xl ml-[-2px]">원</span>
                             </div>

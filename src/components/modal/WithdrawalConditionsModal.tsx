@@ -53,7 +53,7 @@ const WithdrawalConditionsModal: React.FC<WithdrawalConditionsModalProps> = ({
             id: "plays",
             title: "게임 플레이",
             // [MODIFIED] Dynamic text for 7-day window and variable target
-            description: `최근 7일 게임 ${dailyPlayTarget}회 이상 플레이`,
+            description: `최근 3일 이내 게임 ${dailyPlayTarget}회 이상 플레이`,
             status: isPlayMet,
             icon: Gamepad2,
             progress: `${dailyPlayCount} / ${dailyPlayTarget}회`,
@@ -62,8 +62,7 @@ const WithdrawalConditionsModal: React.FC<WithdrawalConditionsModalProps> = ({
         {
             id: "spent",
             title: "금고 사용 실적",
-            // [MODIFIED] Dynamic text for variable target
-            description: `금고 잠금해제(사용) ${dailyVaultSpentTarget.toLocaleString()}원 이상`,
+            description: `금고 일일 사용액 ${dailyVaultSpentTarget.toLocaleString()}원 이상`,
             status: isSpentMet,
             icon: Coins,
             progress: `${dailyVaultSpent.toLocaleString()} / ${dailyVaultSpentTarget.toLocaleString()}원`,

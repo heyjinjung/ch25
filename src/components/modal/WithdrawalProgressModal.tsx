@@ -62,7 +62,7 @@ const WithdrawalProgressModal: React.FC<WithdrawalProgressModalProps> = ({
         },
         {
             id: "spent",
-            title: "금고 소비",
+            title: "금고 일일 사용",
             target: `${dailyVaultSpentTarget.toLocaleString()}원`,
             current: `${dailyVaultSpent.toLocaleString()}원`,
             status: isSpentMet,
