@@ -5,7 +5,10 @@ export type GameTokenType =
   | "GOLD_KEY"
   | "DIAMOND_KEY"
   | "TRIAL_TOKEN"
-  | "DIAMOND";
+  | "DIAMOND"
+  | "PUZZLE_C"
+  | "PUZZLE_J"
+  | "PUZZLE_M";
 
 export const GAME_TOKEN_LABELS: Record<GameTokenType, string> = {
   ROULETTE_COIN: "룰렛 코인",
@@ -15,4 +18,7 @@ export const GAME_TOKEN_LABELS: Record<GameTokenType, string> = {
   DIAMOND_KEY: "다이아 키",
   TRIAL_TOKEN: "체험 토큰",
   DIAMOND: "다이아",
+  PUZZLE_C: "퍼즐 C",
+  PUZZLE_J: "퍼즐 J",
+  PUZZLE_M: "퍼즐 M",
 };

@@ -1,6 +1,7 @@
 import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchInventory, useInventoryItem, InventoryItem } from '../api/inventoryApi';
+import { adminApi } from '../admin/api/httpClient';
 import { Loader2, Coins } from 'lucide-react';
 import { useToast } from '../components/common/ToastProvider';
 import { tryHaptic } from '../utils/haptics';
@@ -28,6 +29,20 @@ const InventoryPage: React.FC = () => {
         onError: (error: any) => {
             const msg = error.response?.data?.detail || "사용 실패";
             tryHaptic(50); // Error heavy haptic
+            addToast(msg, "error");
+        }
+    });
+
+    const useCraftAction = useMutation({
+        mutationFn: ({ target_token_type }: { target_token_type: string }) => adminApi.post("/api/exchange/craft", { target_token_type }),
+        onSuccess: (data: any) => {
+            tryHaptic(20);
+            addToast(`제작 완료: ${data.reward_token} x${data.reward_amount}`, "success");
+            queryClient.invalidateQueries({ queryKey: ['inventory'] });
+        },
+        onError: (error: any) => {
+            const msg = error.response?.data?.detail || "제작 실패";
+            tryHaptic(50);
             addToast(msg, "error");
         }
     });
@@ -151,8 +166,15 @@ const InventoryPage: React.FC = () => {
                                     <ItemCard
                                         key={item.item_type}
                                         item={item}
-                                        onUse={() => useMutationAction.mutate({ item_type: item.item_type, amount: 1 })}
-                                        isPending={useMutationAction.isPending}
+                                        onUse={() => {
+                                            if (item.item_type.includes("FRAGMENT")) {
+                                                const target = item.item_type === "GOLD_KEY_FRAGMENT" ? "GOLD_KEY" : "DIAMOND_KEY";
+                                                useCraftAction.mutate({ target_token_type: target });
+                                            } else {
+                                                useMutationAction.mutate({ item_type: item.item_type, amount: 1 });
+                                            }
+                                        }}
+                                        isPending={useMutationAction.isPending || useCraftAction.isPending}
                                     />
                                 ))
                         )}
@@ -282,6 +304,20 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, onUse, isPending }) => {
             desc: "상점 재화",
             icon: <img src="/assets/icon_diamond.png" className="w-full h-full object-contain" alt="" />,
             rarity: 'legendary'
+        },
+        "GOLD_KEY_FRAGMENT": {
+            title: "골드키 조각",
+            sub: "10개 모아 제작",
+            desc: "제작 재료",
+            icon: <img src="/assets/icons/gold_key_fragment.png" className="w-full h-full object-contain" alt="" />,
+            rarity: 'rare'
+        },
+        "DIAMOND_KEY_FRAGMENT": {
+            title: "다이아키 조각",
+            sub: "30개 모아 제작",
+            desc: "제작 재료",
+            icon: <img src="/assets/icons/diamond_key_fragment.png" className="w-full h-full object-contain" alt="" />,
+            rarity: 'epic'
         }
     };
 
@@ -344,7 +380,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, onUse, isPending }) => {
                         <div className={`w-14 h-14 rounded-2xl flex items-center justify-center p-1 shadow-inner backdrop-blur-md ${info.rarity === 'legendary' ? 'bg-amber-500/20 border border-amber-500/30' : 'bg-black/40 border border-white/5'}`}>
                             {info.icon}
                         </div>
-                        <div className="absolute -top-1.5 -right-1.5 bg-figma-accent text-black text-[10px] font-black px-1.5 py-0.5 rounded-full ring-2 ring-black tabular-nums shadow-lg">
+                        <div className="absolute -top-1.5 -right-1.5 bg-white text-black text-[10px] font-black px-1.5 py-0.5 rounded-full ring-2 ring-black tabular-nums shadow-lg">
                             ×{item.quantity.toLocaleString()}
                         </div>
                     </div>
@@ -368,7 +404,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, onUse, isPending }) => {
                         className="w-full h-9 flex items-center justify-center bg-white/10 hover:bg-white/20 disabled:bg-black/20 disabled:text-white/20 disabled:cursor-not-allowed text-white text-[11px] font-bold rounded-xl border border-white/5 transition-colors shadow-lg"
                         style={{ transform: "translateZ(20px)" }}
                     >
-                        {item.item_type === "DIAMOND" ? "보유중" : (isPendingFulfillment ? "지급대기" : (isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : "사용하기"))}
+                        {item.item_type === "DIAMOND" ? "보유중" : (item.item_type.includes("FRAGMENT") ? "제작하기 (Craft)" : (isPendingFulfillment ? "지급대기" : (isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : "사용하기")))}
                     </button>
                 </div>
             </div>

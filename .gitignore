@@ -322,3 +322,9 @@ scripts/check_user_103.py
 scripts/cleanup_user_103.py
 user_log_103.txt
 scripts/manual_purge_target_113.py
+
+# Temporary backups / dumps (로컬 백업 및 임시 덤프)
+*.sql
+*_dump.json
+*_backup*.sql
+*_output.txt

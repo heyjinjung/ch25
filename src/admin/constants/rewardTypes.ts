@@ -5,7 +5,7 @@ export const REWARD_TYPES = [
   { value: "POINT", label: "금고 적립 (POINT)", group: "Common" },
   { value: "CC_POINT", label: "CC 포인트 (CC_POINT)", group: "Common" },
   { value: "GAME_XP", label: "시즌 XP (GAME_XP)", group: "Common" },
-  
+
   // --- Game Tickets (Canonical) ---
   { value: "TICKET_ROULETTE", label: "룰렛 티켓 (TICKET_ROULETTE)", group: "Ticket" },
   { value: "TICKET_DICE", label: "주사위 티켓 (TICKET_DICE)", group: "Ticket" },
@@ -14,6 +14,8 @@ export const REWARD_TYPES = [
   // --- Keys & Premium ---
   { value: "GOLD_KEY", label: "골드 키 (GOLD_KEY)", group: "Key" },
   { value: "DIAMOND_KEY", label: "다이아 키 (DIAMOND_KEY)", group: "Key" },
+  { value: "GOLD_KEY_FRAGMENT", label: "골드 키 조각 (FRAGMENT)", group: "Key" },
+  { value: "DIAMOND_KEY_FRAGMENT", label: "다이아 키 조각 (FRAGMENT)", group: "Key" },
   { value: "DIAMOND", label: "다이아 (DIAMOND)", group: "Premium" },
 
   // --- Real-world / Gifticons ---
@@ -23,7 +25,12 @@ export const REWARD_TYPES = [
 
   // --- Bundles ---
   { value: "BUNDLE", label: "종합 번들 (BUNDLE)", group: "Bundle" },
-  
+
+  // --- Collections ---
+  { value: "PUZZLE_C", label: "퍼즐 C (PUZZLE_C)", group: "Collection" },
+  { value: "PUZZLE_J", label: "퍼즐 J (PUZZLE_J)", group: "Collection" },
+  { value: "PUZZLE_M", label: "퍼즐 M (PUZZLE_M)", group: "Collection" },
+
   // --- Special / Legacy ---
   { value: "NONE", label: "없음 (NONE)", group: "Etc" },
 ] as const;

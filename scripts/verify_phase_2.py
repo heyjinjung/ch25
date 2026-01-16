@@ -74,13 +74,10 @@ def verify_phase_2():
         wallet_diamond = wallet_service.get_balance(db, user_id, GameTokenType.DIAMOND)
         assert wallet_diamond == 0
 
-        # Verify Voucher Grant
-        inventory_items = InventoryService.get_inventory(db, user_id)
-        voucher_item = next((i for i in inventory_items if i.item_type == "VOUCHER_GOLD_KEY_1"), None)
-        
-        print(f"Inventory Voucher: {voucher_item.quantity if voucher_item else 'None'}")
-        assert voucher_item is not None
-        assert voucher_item.quantity == 1
+        # Verify Wallet Grant (GOLD_KEY)
+        wallet_key = wallet_service.get_balance(db, user_id, GameTokenType.GOLD_KEY)
+        print(f"Wallet GOLD_KEY: {wallet_key}")
+        assert wallet_key == 1
 
         print(">>> ALL CHECKS PASSED: Phase 2 Flow Verified!")
 

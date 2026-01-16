@@ -1,5 +1,5 @@
 // src/admin/pages/UserSegmentsPage.tsx
-import { useState } from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Users,
@@ -25,10 +25,12 @@ type SortKey = "user_id" | "nickname" | "segment" | "recommended_segment" | "tot
 const UserSegmentsPage: React.FC = () => {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
+  const [localSearchTerm, setLocalSearchTerm] = useState("");
   const [editingUserId, setEditingUserId] = useState<number | null>(null);
   const [newSegment, setNewSegment] = useState("");
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: "asc" | "desc" } | null>(null);
   const [selectedSegment, setSelectedSegment] = useState<string | null>(null);
+  const [recommendedSegmentFilter, setRecommendedSegmentFilter] = useState<string | null>(null);
 
   const { data: segments, isLoading } = useQuery({
     queryKey: ["admin", "segments", searchTerm],
@@ -64,9 +66,25 @@ const UserSegmentsPage: React.FC = () => {
     return direction === "asc" ? result : -result;
   }) : [];
 
-  const filteredSegments = selectedSegment
-    ? sortedSegments.filter(s => s.segment === selectedSegment)
-    : sortedSegments;
+  const filteredSegments = sortedSegments.filter(s => {
+    // 1. Current Segment Filter
+    if (selectedSegment && s.segment !== selectedSegment) return false;
+
+    // 2. Recommended Segment Filter
+    if (recommendedSegmentFilter && s.recommended_segment !== recommendedSegmentFilter) return false;
+
+    // 3. Local Search (Nickname, Username, External ID, User ID)
+    if (localSearchTerm) {
+      const term = localSearchTerm.toLowerCase();
+      const matchNickname = (s.nickname || "").toLowerCase().includes(term);
+      const matchUsername = (s.telegram_username || "").toLowerCase().includes(term);
+      const matchExternal = (s.external_id || "").toLowerCase().includes(term);
+      const matchId = s.user_id.toString().includes(term);
+      if (!matchNickname && !matchUsername && !matchExternal && !matchId) return false;
+    }
+
+    return true;
+  });
 
   const handleSort = (key: SortKey) => {
     setSortConfig((prev) => {
@@ -98,6 +116,12 @@ const UserSegmentsPage: React.FC = () => {
     }
   };
 
+  const resetFilters = () => {
+    setLocalSearchTerm("");
+    setSelectedSegment(null);
+    setRecommendedSegmentFilter(null);
+  };
+
   const getSegmentBadge = (segment: string) => {
     const colors: Record<string, string> = {
       VIP: "ring-1 ring-inset ring-amber-500/30 text-amber-500 bg-amber-500/5",
@@ -109,11 +133,12 @@ const UserSegmentsPage: React.FC = () => {
     return colors[segment] || "ring-1 ring-inset ring-zinc-700/30 text-zinc-500 bg-zinc-500/5";
   };
 
+  const segmentOptions = ["VIP", "WHALE", "ACTIVE", "INACTIVE", "CHURN"];
+
   return (
     <section className="admin-page-container space-y-10 pb-20">
       <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="space-y-1">
-
           <h1 className="text-admin-title text-admin-text-primary">세그먼트 관리</h1>
         </div>
         <button
@@ -125,22 +150,22 @@ const UserSegmentsPage: React.FC = () => {
         </button>
       </header>
 
-      {/* Search Bar */}
-      <div className="admin-card-premium p-6 flex items-center gap-4">
+      {/* Global Fetch Search Bar */}
+      <div className="admin-card-premium p-6 flex items-center gap-4 border-b-2 border-admin-brand/30">
         <Search className="h-5 w-5 text-admin-brand" />
         <div className="flex-1">
-          <label className="text-admin-meta font-black text-admin-text-secondary uppercase tracking-widest block mb-2">회원 검색</label>
+          <label className="text-admin-meta font-black text-admin-text-secondary uppercase tracking-widest block mb-2">서버 검색 (ID/Nickname)</label>
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="External ID / Telegram Username / Nickname..."
-            className="admin-input h-11 w-full"
+            placeholder="서버에서 특정 회원 한 명을 찾으려면 입력 후 잠시 기다리세요..."
+            className="admin-input h-11 w-full bg-zinc-900/50"
           />
         </div>
       </div>
 
-      {/* Stats */}
+      {/* Stats Cards - Quick Filters */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div
           onClick={() => setSelectedSegment(null)}
@@ -181,6 +206,61 @@ const UserSegmentsPage: React.FC = () => {
             <p className="text-3xl font-black text-rose-500">{segments?.filter(s => s.segment === "CHURN").length || 0}</p>
             <AlertCircle className="h-5 w-5 text-rose-500 mb-1" />
           </div>
+        </div>
+      </div>
+
+      {/* Advanced Filter Controls */}
+      <div className="admin-card-premium p-6 space-y-6">
+        <div className="flex flex-wrap items-end gap-6">
+          <div className="flex-1 min-w-[240px]">
+            <label className="text-admin-meta font-black text-admin-text-secondary uppercase tracking-widest block mb-2">로컬 리스트 검색</label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+              <input
+                type="text"
+                value={localSearchTerm}
+                onChange={(e) => setLocalSearchTerm(e.target.value)}
+                placeholder="현재 리스트 내 식별자 검색..."
+                className="admin-input h-10 w-full pl-10"
+              />
+            </div>
+          </div>
+
+          <div className="w-48">
+            <label className="text-admin-meta font-black text-admin-text-secondary uppercase tracking-widest block mb-2">현재 세그먼트</label>
+            <select
+              value={selectedSegment || ""}
+              onChange={(e) => setSelectedSegment(e.target.value || null)}
+              className="admin-input h-10 w-full text-sm"
+            >
+              <option value="">전체 보기</option>
+              {segmentOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+            </select>
+          </div>
+
+          <div className="w-48">
+            <label className="text-admin-meta font-black text-admin-text-secondary uppercase tracking-widest block mb-2">추천 세그먼트</label>
+            <select
+              value={recommendedSegmentFilter || ""}
+              onChange={(e) => setRecommendedSegmentFilter(e.target.value || null)}
+              className="admin-input h-10 w-full text-sm"
+            >
+              <option value="">전체 보기</option>
+              {segmentOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+            </select>
+          </div>
+
+          <button
+            onClick={resetFilters}
+            className="h-10 px-4 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-bold uppercase tracking-wider transition-colors border border-zinc-700"
+          >
+            필터 초기화
+          </button>
+        </div>
+
+        <div className="flex items-center gap-2 text-xs text-zinc-500">
+          <Users className="h-3 w-3" />
+          <span>필터링된 결과: <b className="text-admin-brand">{filteredSegments.length}</b> / {segments?.length || 0} 명</span>
         </div>
       </div>
 

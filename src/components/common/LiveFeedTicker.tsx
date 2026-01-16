@@ -7,6 +7,7 @@ type FeedItem = {
   action: string;
   amount: number; // e.g., 50000
   type: "WIN" | "JACKPOT";
+  currencyLabel?: string; // "원" or "개" etc.
 };
 
 const MOCK_USERS = [
@@ -18,6 +19,12 @@ const MOCK_USERS = [
   "tg_7721****", "tg_2281****", "tg_d102**", "tg_a923**", "tg_b441**"
 ];
 
+// Simple seeded random function
+const seededRandom = (seed: number) => {
+  const x = Math.sin(seed++) * 10000;
+  return x - Math.floor(x);
+};
+
 // Helper to format amount
 const formatAmount = (num: number) => new Intl.NumberFormat().format(num);
 
@@ -25,49 +32,90 @@ export default function LiveFeedTicker() {
   const [feed, setFeed] = useState<FeedItem | null>(null);
 
   useEffect(() => {
-    const generateFeed = () => {
-      const rand = Math.random();
+    const INTERVAL_MS = 180000; // 3분
+
+    const generateFeedForTime = (timestamp: number) => {
+      // 3분 단위 버킷 계산
+      const bucket = Math.floor(timestamp / INTERVAL_MS);
+
+      // 시드 생성 (버킷 + 고정된 상수로 난수성 확보)
+      const seedBase = bucket * 9999;
+
+      // 1. 유저 선택
+      const userRand = seededRandom(seedBase + 1);
+      const userIndex = Math.floor(userRand * MOCK_USERS.length);
+      const user = MOCK_USERS[userIndex];
+
+      // 2. 아이템 로직 (확률)
+      // 배민 20%, CC코인 20%, 현금 60%
+      const typeRand = seededRandom(seedBase + 2);
+
       let amount = 0;
       let action = "획득!";
       let type: "WIN" | "JACKPOT" = "WIN";
+      let currencyLabel = "원";
 
-      if (rand < 0.3) {
-        // 30% Chance: Baemin Gifticon
+      if (typeRand < 0.2) {
+        // 20% Chance: Baemin Gifticon
         amount = 5000;
         action = "배민 상품권 획득!";
         type = "WIN";
+        currencyLabel = "원"; // 상품권도 원단위 표시
+      } else if (typeRand < 0.4) {
+        // 20% Chance: CC Coin
+        // 수량 1~5개 랜덤 (seeded)
+        const amtRand = seededRandom(seedBase + 3);
+        amount = Math.floor(amtRand * 5) + 1;
+        action = "씨씨코인 획득!";
+        type = "WIN";
+        currencyLabel = "개";
       } else {
-        // 70% Chance: Cash
-        // Of this, 80% is 10k~20k
-        const subRand = Math.random();
+        // 60% Chance: Cash
+        const subRand = seededRandom(seedBase + 4);
         if (subRand < 0.8) {
-          // 10,000 ~ 20,000 (1k steps)
-          amount = Math.floor(Math.random() * 11) * 1000 + 10000;
+          // 80% of Cash: 10,000 ~ 20,000 (1k steps)
+          const rangeRand = seededRandom(seedBase + 5);
+          amount = Math.floor(rangeRand * 11) * 1000 + 10000;
           type = "WIN";
         } else {
-          // 20,000 ~ 50,000 (Jacekpot feel)
-          amount = Math.floor(Math.random() * 31) * 1000 + 20000;
+          // 20% of Cash: 20,000 ~ 50,000 (Jackpot feel)
+          const rangeRand = seededRandom(seedBase + 6);
+          amount = Math.floor(rangeRand * 31) * 1000 + 20000;
           type = "JACKPOT";
         }
+        currencyLabel = "원";
       }
 
       return {
-        id: Math.random().toString(36).substring(7),
-        user: MOCK_USERS[Math.floor(Math.random() * MOCK_USERS.length)],
+        id: `feed-${bucket}`, // 버킷 ID를 키로 사용해 재렌더링 시 안정성 확보
+        user,
         action,
         amount,
         type,
+        currencyLabel
       } as FeedItem;
     };
 
-    // Initial feed
-    setFeed(generateFeed());
+    // 초기 실행
+    setFeed(generateFeedForTime(Date.now()));
 
-    const interval = setInterval(() => {
-      setFeed(generateFeed());
-    }, 180000); // Update every 3 minutes
+    // 주기적 업데이트 (1초마다 체크하여 버킷이 바뀌면 갱신)
+    const checkInterval = setInterval(() => {
+      const now = Date.now();
+      const currentBucket = Math.floor(now / INTERVAL_MS);
 
-    return () => clearInterval(interval);
+      setFeed(prev => {
+        if (!prev) return generateFeedForTime(now);
+
+        const prevBucket = parseInt(prev.id.split('-')[1]);
+        if (currentBucket !== prevBucket) {
+          return generateFeedForTime(now);
+        }
+        return prev;
+      });
+    }, 1000);
+
+    return () => clearInterval(checkInterval);
   }, []);
 
   if (!feed) return null;
@@ -91,7 +139,7 @@ export default function LiveFeedTicker() {
             <span className="text-white/60">{feed.user}</span>
             <span>님이</span>
             <span className={feed.type === "JACKPOT" ? "text-cc-gold font-bold" : "text-white font-bold"}>
-              {formatAmount(feed.amount)}원
+              {formatAmount(feed.amount)}{feed.currencyLabel}
             </span>
             <span>{feed.action}</span>
           </motion.div>

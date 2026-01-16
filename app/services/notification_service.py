@@ -64,12 +64,36 @@ class NotificationService:
             try:
                 # [Fix] Use httpx instead of requests (requests is not in requirements.txt)
                 url = f"{self.api_base}/sendMessage"
-                text = f"👀 <b>Keep it up!</b>\n\nYou are just <b>{remaining}</b> step{'s' if remaining > 1 else ''} away from completing <b>{mission_title}</b>!\n\nPlay now to claim your reward! 💎"
+                text = f"👀 <b>조금만 더!</b>\n\n<b>{mission_title}</b> 완료까지 <b>{remaining}</b>걸음 남았어요.\n\n지금 플레이하고 보상을 받아가세요! 💎"
                 httpx.post(url, json={"chat_id": chat_id, "text": text, "parse_mode": "HTML"}, timeout=5)
             except Exception as e:
                 logger.error(f"Nudge failed: {e}")
         
         # Fire and forget thread to not block game play
+        threading.Thread(target=_send).start()
+
+    def send_text_sync(self, chat_id: int, text: str):
+        """Sync helper to send arbitrary HTML-formatted Telegram text."""
+        if not self.bot_token or not chat_id:
+            return
+
+        ok, drift_ms, provider, error = TimeSyncService(self.settings).check_clock_sync()
+        if not ok:
+            logger.error(
+                "NTP preflight failed; skip nudge",
+                extra={"drift_ms": drift_ms, "provider": provider, "error": error},
+            )
+            return
+
+        import threading
+
+        def _send():
+            try:
+                url = f"{self.api_base}/sendMessage"
+                httpx.post(url, json={"chat_id": chat_id, "text": text, "parse_mode": "HTML"}, timeout=5)
+            except Exception as e:
+                logger.error(f"Nudge failed: {e}")
+
         threading.Thread(target=_send).start()
 
     def check_chat_member(self, channel_username: str, user_id: int) -> bool:

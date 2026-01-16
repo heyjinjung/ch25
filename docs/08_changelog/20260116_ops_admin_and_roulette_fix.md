@@ -24,6 +24,16 @@
 - `scripts/remove_roulette_vault_config.py` (신규)
   - DB에 저장된 Legacy Config를 청소하는 유틸리티 스크립트 추가.
 
+### 1-1. 백엔드 (Nudge/Notification)
+- `app/services/notification_service.py`
+  - 텔레그램 동기 발송 헬퍼 `send_text_sync` 추가 (NTP 체크 + HTML 지원).
+- `app/services/nudge_service.py` (신규)
+  - 연승 리셋 3~4시간 전, 당일 미플레이 시 넛지 발송(`nudge.streak.pre_reset`).
+  - 시즌 종료 24h 이내, 다음 레벨 XP 90% 이상 근접 시 넛지 발송(`nudge.season.final_push`).
+  - 금고 출금 요건 3개 중 정확히 1개만 미달 시 넛지 발송(`nudge.vault.withdraw_ready`).
+  - 중복 방지: `UserEventLog`에 period_key 단위 기록 후 1일/시즌 1회 제한.
+  - 실행 엔트리포인트: `NudgeService(db).run_all_for_user(user)` 또는 `run_all()` (텔레그램 연동 유저 대상 배치 호출용).
+
 ### 2. 기획 & 설계 (Planning)
 - **Ops Admin UX 개선안 도출 (`도파민AA_Ops_Admin_UX_Plan.md`)**:
   - **Raw Input 제거**: 아이템 코드/타겟 ID 직접 입력 방식 → **검색 가능한 셀렉터(Selector)**로 변경.
@@ -89,5 +99,23 @@
 - **UI/UX 개선 (`RouletteConfigPage.tsx`)**:
   - **등급 필터 탭**: `ALL`, `COMMON`, `WHALE`, `NEW` 탭으로 룰렛 설정 필터링 기능 구현.
   - **비주얼 업데이트**: 각 카드에 타겟 등급을 표시하는 **Badge UI** 추가 (New: Blue, Whale: Purple).
-  - **설정 모달**: 룰렛 생성/수정 시 `Target Grade`를 선택할 수 있는 **Selector** 추가.
   - **검증**: `multi_replace`로 인한 JSX Syntax 오류(괄호 불일치) 수정 및 정상 렌더링 확인.
+
+#### 8-3. 프런트엔드 (Frontend - User) & Exchange (조각 및 교환)
+- **교환 시스템 (Exchange System)**:
+  - **Backend**: `ExchangeService` 구현 및 `POST /api/exchange/craft` 엔드포인트 추가. (조각 10개 -> 열쇠 1개 교환 로직)
+  - **Frontend (Inventory)**:
+    - `InventoryPage.tsx`에 조각 아이템(`GOLD_KEY_FRAGMENT`, `DIAMOND_KEY_FRAGMENT`) 표시 및 Rarity 등급 적용.
+    - **"제작하기 (Craft)"** 버튼 및 액션 구현 (성공 시 Haptic/Toast 피드백).
+- **룰렛 UI (Roulette Wheel)**:
+  - `RouletteWheel.tsx`: `reward_type`에 따라 조각 아이콘(Placeholder)이 휠 세그먼트에 렌더링되도록 매핑 로직 추가.
+  - **Assets**: `gold_key_fragment.png`, `diamond_key_fragment.png` (기존 키 아이콘 기반 Placeholder) 적용 완료.
+ 
+ # # #   9 .   N u d g e   S y s t e m   V e r i f i c a t i o n   &   F i x e s  
+ -   * * N u d g e S e r v i c e   U n i t   T e s t s * * :  
+     -   ` t e s t s / t e s t _ n u d g e _ s e r v i c e _ l o g i c . p y `   ? �f�.  
+     -   3 �Z� ���   ? ����  ? ��y�1uJ��( S t r e a k   R e s e t ,   S e a s o n   E n d ,   V a u l t   W i t h d r a w ) ? ? ? � ? ? �o��E�  �[� ��? ? ����.  
+     -   �s? 7 �Z? ? ����? ? 3�� ? ���  * * A l l   P a s s e d * * .  
+ -   * * B u g   F i x * * :  
+     -   ` a p p / s e r v i c e s / l o t t e r y _ s e r v i c e . p y ` ? /�L�  ۊ��Į? ? ` t o k e n _ b a l a n c e `   ? ���  �N���( S y n t a x E r r o r )   ? ��.  
+ 
