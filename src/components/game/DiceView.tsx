@@ -10,38 +10,7 @@ interface DiceViewProps {
   readonly isRolling?: boolean;
 }
 
-// HP Bar Component
-const HealthBar: React.FC<{ hp: number; maxHp: number; isUser?: boolean }> = ({ hp, maxHp, isUser }) => {
-  const percent = Math.max(0, (hp / maxHp) * 100);
-  
-  return (
-    <div className={clsx("w-full mb-4", isUser ? "text-left" : "text-right")}>
-      {/* Bars Container */}
-      <div className={clsx("relative h-2 w-full bg-zinc-900 rounded-full border border-white/5 overflow-hidden")}>
-        {/* Background Damage layer (delayed red) */}
-        <motion.div 
-          className="absolute top-0 bottom-0 bg-red-600 w-full"
-          initial={{ x: isUser ? "-100%" : "100%" }}
-          animate={{ x: isUser ? `${percent - 100}%` : `${100 - percent}%` }} // Simplified, logically fill from left or right
-          style={{ 
-             left: 0, 
-             right: 'auto', 
-             width: `${percent}%`,
-             transition: "width 0.5s ease-out 0.2s" 
-          }}
-        />
-        {/* Main HP Bar */}
-        <motion.div 
-          className={clsx("absolute top-0 bottom-0 h-full", isUser ? "bg-emerald-500" : "bg-rose-500")}
-          initial={{ width: "100%" }}
-          animate={{ width: `${percent}%` }}
-          transition={{ type: "spring", stiffness: 100, damping: 20 }}
-          style={{ [isUser ? 'left' : 'right']: 0 }}
-        />
-      </div>
-    </div>
-  );
-};
+
 
 const DiceFace: React.FC<{ value: number; isRolling?: boolean; delay?: string }> = ({ value, isRolling, delay = "0s" }) => {
   return (
@@ -67,16 +36,12 @@ const DiceView: React.FC<DiceViewProps> = ({ userDice, dealerDice, result, isRol
   const dealerSum = dealerDice.reduce((a, b) => a + b, 0);
 
   // Battle State
-  const [userHp, setUserHp] = useState(100);
-  const [dealerHp, setDealerHp] = useState(100);
   const [showAttack, setShowAttack] = useState(false);
   const [shake, setShake] = useState<"USER" | "DEALER" | null>(null);
 
   // Reset Battle when rolling starts
   useEffect(() => {
     if (isRolling) {
-      setUserHp(100);
-      setDealerHp(100);
       setShowAttack(false);
       setShake(null);
     }
@@ -90,13 +55,11 @@ const DiceView: React.FC<DiceViewProps> = ({ userDice, dealerDice, result, isRol
         if (result === "WIN") {
           setShowAttack(true); // User Attacks
           setTimeout(() => {
-            setDealerHp(0);
             setShake("DEALER");
           }, 400); // Hit timing
         } else if (result === "LOSE") {
           setShowAttack(true); // Dealer Attacks
           setTimeout(() => {
-            setUserHp(0);
             setShake("USER");
           }, 400);
         } else {
@@ -168,8 +131,6 @@ const DiceView: React.FC<DiceViewProps> = ({ userDice, dealerDice, result, isRol
           <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-transparent opacity-50" />
           
           <div className="relative z-10 flex flex-col items-center">
-            <HealthBar hp={userHp} maxHp={100} isUser />
-
             {/* Dice Area */}
             <div className="flex justify-center gap-3 my-4">
               {userDice.length > 0 || isRolling ? (
@@ -209,8 +170,6 @@ const DiceView: React.FC<DiceViewProps> = ({ userDice, dealerDice, result, isRol
           <div className="absolute inset-0 bg-gradient-to-bl from-red-500/5 via-transparent to-transparent opacity-50" />
 
           <div className="relative z-10 flex flex-col items-center">
-            <HealthBar hp={dealerHp} maxHp={100} />
-
              {/* Dice Area */}
              <div className="flex justify-center gap-3 my-4">
               {dealerDice.length > 0 || isRolling ? (

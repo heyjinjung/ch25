@@ -16,12 +16,9 @@
 | 파일 경로 | 컴포넌트명 | 설명 |
 | :--- | :--- | :--- |
 | `src/components/modal/AttendanceStreakModal.tsx` | `AttendanceStreakModal` | 매일 출석 체크 및 연속 출석(Streak) 보상 |
-| `src/components/modal/NewUserWelcomeModal.tsx` | `NewUserWelcomeModal` | 신규 가입 유저 환영 메시지 및 초기 가이드 |
-| `src/components/modal/StarterMissionsModal.tsx` | `StarterMissionsModal` | 초보자용 필수 미션 목록 안내 |
-| `src/components/modal/TicketZeroRetentionModal.tsx` | `TicketZeroRetentionModal` | 티켓 소진 시 이탈 방지 / 충전 / 광고 유도 |
-| `src/components/modal/LimitedOfferModal.tsx` | `LimitedOfferModal` | 한정판 상품 / 타임 세일 오퍼 |
-| `src/components/modal/SeasonPassPromoModal.tsx` | `SeasonPassPromoModal` | 시즌 패스 구매 유도 및 혜택 안내 |
-| `src/components/modal/BailoutModal.tsx` | `BailoutModal` | 파산/자산 부족 시 구제(Bailout) 지원 안내 |
+| `src/components/modal/NewUserWelcomeModal.tsx` | `NewUserWelcomeModal` | **[HomePage]** 진입 1초 후 자동 실행 (전체 유저). `useNewUserWelcome` 훅 제어. |
+| `src/components/modal/StarterMissionsModal.tsx` | `StarterMissionsModal` | **[HomePage]** 웰컴 모달 종료 후 연속 실행. `useNewUserWelcome` 훅 제어. |
+| `src/components/modal/BailoutModal.tsx` | `BailoutModal` | **[AppHeader]** 서버 API(`vault`)가 구제 필요(`OPEN_VAULT_MODAL`) 응답 시 실행. |
 
 ## 3. 금고 및 재화 (Vault & Finance)
 유저의 자산(포인트, 현금성 재화)을 관리하는 핵심 기능 모달입니다.
