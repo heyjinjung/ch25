@@ -1,6 +1,7 @@
 import clsx from "clsx";
 import React from "react";
 import { useSound } from "../../hooks/useSound";
+import LiveFeedTicker from "../common/LiveFeedTicker";
 
 type Props = {
   title: string;
@@ -29,6 +30,11 @@ const GamePageShell: React.FC<Props> = ({ children, footerNote, px = "p-4 sm:p-8
   return (
     <div className="relative w-full text-white">
       <div className="mx-auto w-full max-w-[1040px]">
+        {/* Live Feed Ticker - Top of Game Zone */}
+        <div className="mb-4 flex justify-center">
+          <LiveFeedTicker />
+        </div>
+
         <section className={clsx("relative overflow-hidden rounded-3xl border border-white/15 bg-black/40 shadow-2xl", containerPadding)}>
 
           {children}

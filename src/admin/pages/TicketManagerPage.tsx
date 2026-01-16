@@ -112,6 +112,14 @@ const grantRevokeSchema = z.object({
 
 type GrantRevokeFormData = z.infer<typeof grantRevokeSchema>;
 
+const normalizeInventoryRows = (value: unknown) => {
+    if (Array.isArray(value)) return value;
+    const candidate = value as { data?: unknown; items?: unknown } | null | undefined;
+    if (candidate && Array.isArray(candidate.data)) return candidate.data;
+    if (candidate && Array.isArray(candidate.items)) return candidate.items;
+    return [];
+};
+
 function getKSTDateKey(date: Date) {
     const parts = new Intl.DateTimeFormat("sv-SE", {
         timeZone: "Asia/Seoul",
@@ -287,6 +295,9 @@ const TicketManagerPage: React.FC = () => {
         }),
         enabled: activeTab === "inventory" && inventoryTabMode === "items",
     });
+
+    const inventoryLedgerRows = useMemo(() => normalizeInventoryRows(inventoryLedgerQuery.data), [inventoryLedgerQuery.data]);
+    const inventoryItemRows = useMemo(() => normalizeInventoryRows(inventoryItemsQuery.data), [inventoryItemsQuery.data]);
 
 
 
@@ -813,7 +824,7 @@ const TicketManagerPage: React.FC = () => {
                                 </thead>
                                 <tbody className="divide-y divide-zinc-800/50">
                                     {inventoryTabMode === 'ledger' ? (
-                                        (inventoryLedgerQuery.data || []).map((entry) => (
+                                        inventoryLedgerRows.map((entry) => (
                                             <tr key={entry.id} className="group hover:bg-white/5 transition-colors h-12 cursor-pointer"
                                                 onClick={() => {
                                                     setSelectedUserId(entry.user_id);
@@ -831,7 +842,7 @@ const TicketManagerPage: React.FC = () => {
                                             </tr>
                                         ))
                                     ) : (
-                                        (inventoryItemsQuery.data || []).map((item) => (
+                                        inventoryItemRows.map((item) => (
                                             <tr key={item.id} className="group hover:bg-white/5 transition-colors h-12 cursor-pointer"
                                                 onClick={() => {
                                                     setSelectedUserId(item.user_id);

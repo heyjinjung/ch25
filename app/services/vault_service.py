@@ -1081,29 +1081,15 @@ class VaultService:
         
         self.sync_legacy_mirror(user)
         
-        # Record Ledger (Assuming VaultLedger exists, if not use log)
-        # Based on checklist, we should use VaultLedger.
-        # But wait, does VaultLedger exist? The imports hint 'app.models.vault_ledger' above.
-        # Let's verify import success in thought, but assuming it exists or defined in similar path.
-        # Checked file list? I didn't see vault_ledger.py in app/models in file list?
-        # Actually I didn't list app/models.
-        # But `app/services/vault_service.py` imports `UserCashLedger`.
-        # Step 2.1.1 in checklist defines `VaultLedger`.
-        # If it doesn't exist, I should create it or reuse `VaultEarnEvent` with negative amount?
-        # `VaultEarnEvent` seems to be for accrual.
-        # Let's try to import `VaultLedger`. If it fails, I'll fallback to `UserCashLedger` or just log.
-        # However, for Phase 2 strictness, I should probably check if `app/models/vault_ledger.py` exists by LIST.
-        # But I'm in multi-replace.
-        # I'll use `VaultEarnEvent` with negative amount if `VaultLedger` is not available, or assume `UserCashLedger` if used for generic logging.
-        # But checklist Step 2.1.1 explicitely says `ledger = VaultLedger(...)`.
-        # If `VaultLedger` doesn't exist, I'll use `UserCashLedger` (which exists).
-        # Actually, `vault_locked_balance` is NOT cash. `UserCashLedger` is for cash.
-        # I'll stick to updating `vault_spent_total` and `vault_locked_balance` for now.
-        # And maybe create a `VaultEarnEvent` with negative amount?
-        # The schema of `VaultEarnEvent` expects `earn_type`.
-        
-        # Let's just update balance and `vault_spent_total`.
-        # If tracking is needed, I can add a `VaultEarnEvent` with earn_type="SPEND".
+        # Record Ledger
+        ledger = VaultLedger(
+            user_id=user.id,
+            amount=-amount,
+            balance_after=user.vault_locked_balance,
+            reason=reason,
+            ref_type="CONSUME"
+        )
+        db.add(ledger)
         
         db.add(user)
         # db.commit() # Caller handles commit usually for atomicity with shop
@@ -1230,63 +1216,41 @@ class VaultService:
         if last_charge_date != today:
              raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="DEPOSIT_REQUIRED_TODAY")
 
-        # [Phase 2] Stronger Withdrawal Conditions (Tiered)
-        # Determine Tier
-        from app.services.user_segment_service import UserSegmentService
-        from app.models.external_ranking_daily_deposit_delta import ExternalRankingDailyDepositDelta
-
-        # Calculate 7-day deposit amount
-        seven_days_ago_date = (now - timedelta(days=6)).date() # Including today
-        deposit_7d = db.query(func.coalesce(func.sum(ExternalRankingDailyDepositDelta.deposit_delta), 0)).filter(
-            ExternalRankingDailyDepositDelta.user_id == user_id,
-            ExternalRankingDailyDepositDelta.kst_date >= seven_days_ago_date
+        # [Phase 2] Stronger Withdrawal Conditions (Updated 2026-01-16)
+        # 3. Game Play Condition: 30+ plays in last 3 days
+        three_days_ago_ts = now - timedelta(days=3)
+        recent_play_count = db.query(func.count(VaultEarnEvent.id)).filter(
+            VaultEarnEvent.user_id == user_id,
+            VaultEarnEvent.earn_type == "GAME_PLAY",
+            VaultEarnEvent.created_at >= three_days_ago_ts
         ).scalar() or 0
 
-        # Get computed segments (for AT_RISK check)
-        segments = UserSegmentService.get_computed_segments(db, user_id)
+        if recent_play_count < 30:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, 
+                detail="MIN_PLAY_COUNT_30_REQUIRED"
+            )
 
-        # Default: COMMON
-        min_play_count = 30
-        min_vault_spend = 10000
-        tier_label = "COMMON"
+        # 4. Vault Consumption Condition: 10,000+ KRW consumed TODAY
+        today_start = datetime(now.year, now.month, now.day)
+        today_spend_neg = db.query(func.sum(VaultLedger.amount)).filter(
+            VaultLedger.user_id == user_id,
+            VaultLedger.amount < 0,
+            VaultLedger.created_at >= today_start
+        ).scalar() or 0
+        today_spend = abs(today_spend_neg)
 
-        if "AT_RISK" in segments:
-            tier_label = "AT_RISK"
-            min_play_count = 100
-            min_vault_spend = 30000
-        elif deposit_7d >= 3000000: # WHALE
-            tier_label = "WHALE"
-            min_play_count = 0
-            min_vault_spend = 0
-        elif deposit_7d >= 500000: # VIP
-            tier_label = "VIP"
-            min_play_count = 15
-            min_vault_spend = 5000
+        if today_spend < 10000:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, 
+                detail="MIN_DAILY_SPEND_10000_REQUIRED"
+            )
 
-        # 3. Minimum Play Count Logic (Last 7 Days)
-        if min_play_count > 0:
-            seven_days_ago_ts = now - timedelta(days=7)
-            recent_play_count = db.query(func.count(VaultEarnEvent.id)).filter(
-                VaultEarnEvent.user_id == user_id,
-                VaultEarnEvent.earn_type == "GAME_PLAY",
-                VaultEarnEvent.created_at >= seven_days_ago_ts
-            ).scalar() or 0
+        # 5. Min Withdrawal Amount Logic
+        # Enforce valid withdrawal amounts (10k, 30k, 50k - though logic just enforces min 10k)
+        if amount < 10000:
+             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="MIN_WITHDRAWAL_AMOUNT_10000")
 
-            if recent_play_count < min_play_count:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST, 
-                    detail=f"MIN_PLAY_COUNT_{min_play_count}_REQUIRED_FOR_{tier_label}"
-                )
-        
-        # 4. Minimum Vault Spend check
-        if min_vault_spend > 0:
-            q_user = db.query(User).filter(User.id == user_id).first()
-            current_spend = int(getattr(q_user, "vault_spent_total", 0) or 0)
-            if current_spend < min_vault_spend:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST, 
-                    detail=f"MIN_VAULT_SPEND_{min_vault_spend}_REQUIRED_FOR_{tier_label}"
-                )
 
         # 3. Check Available & Create Request (no balance deduction at request time)
         q = db.query(User).filter(User.id == user_id)

@@ -383,43 +383,38 @@ const RoulettePage: React.FC = () => {
       <div className="relative mx-auto max-w-4xl space-y-6">
 
         {!isSpinning && rewardToast && (
-          <div className="fixed inset-0 z-[2000] flex items-center justify-center pointer-events-none p-6">
-            <div className="pointer-events-auto relative min-w-[300px] overflow-hidden rounded-3xl border border-white/20 bg-black/95 px-8 py-6 text-white shadow-[0_0_50px_rgba(255,215,0,0.2)] backdrop-blur-2xl animate-bounce-in">
+          <div className="fixed inset-0 z-[2000] flex items-center justify-center pointer-events-none p-4">
+            <div className="pointer-events-auto relative w-[85vw] max-w-[300px] overflow-hidden rounded-[2rem] border border-white/20 bg-black/95 px-6 py-5 text-white shadow-[0_0_50px_rgba(255,215,0,0.2)] backdrop-blur-2xl animate-bounce-in">
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-cc-gold/10 via-transparent to-transparent opacity-50" />
               <div className="pointer-events-none absolute inset-y-0 left-0 w-1.5 bg-gradient-to-b from-cc-gold via-yellow-300 to-cc-orange shadow-[0_0_15px_rgba(255,215,0,0.5)]" />
 
-              <div className="relative flex items-center gap-5 pl-2">
-                <span className="inline-flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full border border-cc-gold/40 bg-cc-gold/10 text-2xl shadow-[0_0_20px_rgba(255,215,0,0.4)] animate-pulse">
+              <div className="relative flex items-center gap-4 pl-1">
+                <span className="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-cc-gold/40 bg-cc-gold/10 text-xl shadow-[0_0_20px_rgba(255,215,0,0.4)] animate-pulse">
                   🪙
                 </span>
-                <div className="flex flex-col">
+                <div className="flex flex-col min-w-0 flex-1">
                   <p className="text-[10px] font-black uppercase tracking-[0.2em] text-cc-gold mb-0.5 animate-pulse">Rewards</p>
-                  <p className="text-sm font-bold text-white/90">획득 보상</p>
-                  <div className="flex flex-wrap items-baseline gap-2 mt-1">
-                    <span className="text-3xl font-black text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
+                  <p className="text-xs font-bold text-white/90">획득 보상</p>
+                  <div className="flex flex-wrap items-baseline gap-1.5 mt-0.5">
+                    <span className="text-2xl font-black text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
                       <AnimatedNumber value={rewardToast.value} from={0} />
                     </span>
-                    <span className="text-base font-bold text-white/60">
+                    <span className="text-sm font-bold text-white/60 truncate">
                       {(() => {
                         const upper = rewardToast.type.toUpperCase();
                         const normalized = upper.includes("GAME_XP") ? "GAME_XP" : upper.includes("POINT") ? "POINT" : rewardToast.type;
-                        if (upper.includes("GAME_XP")) return "시즌 XP";
+                        if (upper.includes("GAME_XP")) return "XP";
                         if (upper.includes("POINT")) return "원";
                         if (upper.includes("GIFTICON")) return "기프티콘";
-                        // 만약 formatRewardLine 결과에 text가 있으면 그것을, 아니면 타입을 노출
-                        // 여기서는 단순 단위(원/장/개)가 아니라 전체 텍스트가 올 수 있으므로 조정
                         const line = formatRewardLine(normalized, 0);
-                        // formatRewardLine은 "금고 적립 100원" 형태이므로, 여기서는 "원" 같은 단위만 떼기 어렵습니다.
-                        // 기존 로직 유지하되 "금고 적립" 등 중복 텍스트 주의.
-                        // 위에서 POINT -> "원" 으로 처리했으므로, 나머지는 그대로 둡니다.
                         return line?.text.replace(/[0-9,\s]/g, "") || rewardToast.type;
                       })()}
                     </span>
                   </div>
                   {rewardToast.type.toUpperCase().includes("GIFTICON") && (
-                    <span className="mt-1 text-xs font-bold text-cc-gold/80 flex items-center gap-1">
-                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-cc-gold" />
-                      보상함에서 확인하세요
+                    <span className="mt-1 text-[10px] font-bold text-cc-gold/80 flex items-center gap-1">
+                      <span className="inline-block w-1 h-1 rounded-full bg-cc-gold" />
+                      보상함 확인
                     </span>
                   )}
                 </div>

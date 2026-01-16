@@ -1,7 +1,7 @@
 // src/components/layout/MainLayout.tsx
 import React from "react";
 import AppHeader from "./AppHeader";
-import { LiveFeedTicker } from "../common/LiveFeedTicker";
+import LiveFeedTicker from "../common/LiveFeedTicker";
 
 interface MainLayoutProps {
   readonly children: React.ReactNode;
