@@ -6,6 +6,7 @@ import Button from "../components/common/Button";
 import { getVaultStatus } from "../api/vaultApi";
 import { useSound } from "../hooks/useSound";
 import { useNewUserWelcome } from "../hooks/useNewUserWelcome";
+import { useModalVisibility } from "../hooks/useModalVisibility";
 import NewUserWelcomeModal from "../components/modal/NewUserWelcomeModal";
 import StarterMissionsModal from "../components/modal/StarterMissionsModal";
 import { useMissionStore } from "../stores/missionStore";
@@ -178,6 +179,7 @@ const CategoryTabs: React.FC<{ active: string; onChange: (id: string) => void }>
 const HomePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState("all");
   const { showWelcomeModal, showStarterModal, closeWelcomeModal, closeStarterModal, closeAllModals } = useNewUserWelcome();
+  const { new_user_welcome_enabled, starter_missions_enabled } = useModalVisibility();
   const { missions, fetchMissions, streakInfo } = useMissionStore();
   const { addToast } = useToast();
   const hasAnnouncedGift = React.useRef(false);
@@ -409,7 +411,7 @@ const HomePage: React.FC = () => {
       </Link>
 
       {/* New User Welcome Modal */}
-      {showWelcomeModal && (
+      {new_user_welcome_enabled && showWelcomeModal && (
         <NewUserWelcomeModal
           onClose={closeAllModals}
           onClaimSuccess={closeWelcomeModal}
@@ -417,7 +419,7 @@ const HomePage: React.FC = () => {
       )}
 
       {/* Starter Missions Modal */}
-      {showStarterModal && (
+      {starter_missions_enabled && showStarterModal && (
         <StarterMissionsModal onClose={closeStarterModal} />
       )}
 

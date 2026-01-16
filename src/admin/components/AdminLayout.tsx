@@ -21,7 +21,8 @@ import {
   Menu,
   ChevronRight,
   ChevronDown,
-  Bell
+  Bell,
+  ToggleRight
 } from "lucide-react";
 
 interface NavItem {
@@ -70,6 +71,7 @@ const navSections: NavSection[] = [
       { label: "주사위 설정", path: "/admin/dice", icon: <Dice6 size={18} /> },
       { label: "복권 설정", path: "/admin/lottery", icon: <Ticket size={18} /> },
       { label: "UI 설정", path: "/admin/ui-config", icon: <Settings size={18} /> },
+      { label: "모달 노출 제어", path: "/admin/modal-visibility", icon: <ToggleRight size={18} /> },
     ],
   },
 ];
