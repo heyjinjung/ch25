@@ -250,7 +250,7 @@ const HomePage: React.FC = () => {
       bgImage: "/assets/welcome/event_v2.png"
     },
     {
-      title: "THE VAULT",
+      title: "CC코드금고",
       to: "/vault",
       gradient: "bg-gradient-to-br from-amber-500 to-orange-600",
       icon: "🔐",

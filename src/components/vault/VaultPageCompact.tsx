@@ -214,7 +214,7 @@ const VaultPageCompact: React.FC = () => {
 
                     <div className="relative mb-6">
                         <span className="absolute -top-6 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-emerald-900/50 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold tracking-widest uppercase mb-2">
-                            THE VAULT
+                            CC코드금고
                         </span>
 
                         {/* Glassmorphism Vault Icon */}
@@ -240,7 +240,7 @@ const VaultPageCompact: React.FC = () => {
                         <div className="flex justify-between items-center mb-3 relative z-10">
                             <span className="flex items-center gap-2">
                                 <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse shadow-[0_0_10px_rgba(245,158,11,0.6)]" />
-                                <span className="text-white/80 font-bold text-[13px] tracking-widest uppercase drop-shadow-sm">출금 미션 현황</span>
+                                <span className="text-white/80 font-bold text-[16px] tracking-widest uppercase drop-shadow-sm">출금 미션 현황</span>
                             </span>
                             <div className="flex items-baseline gap-0.5" onClick={() => setShowProgressModal(true)} style={{ cursor: 'pointer' }}>
                                 <span className="text-xl font-black text-amber-500 tabular-nums drop-shadow-[0_0_15px_rgba(245,158,11,0.4)]">
@@ -271,13 +271,13 @@ const VaultPageCompact: React.FC = () => {
                     <div className="flex w-full max-w-xs gap-2 mb-3">
                         <button
                             onClick={() => setShowConditionsModal(true)}
-                            className="flex-1 h-[50px] flex items-center justify-center gap-1.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/50 text-emerald-400 text-[14px] font-bold tracking-wide hover:bg-emerald-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                            className="flex-1 h-[50px] flex items-center justify-center gap-1.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/50 text-emerald-400 text-[15px] font-bold tracking-wide hover:bg-emerald-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
                         >
                             <ListChecks size={16} />
                             <span>출금 조건</span>
                         </button>
 
-                        <button className="flex-1 h-[50px] rounded-2xl bg-emerald-900/40 border border-white/10 text-white/50 font-bold text-[14px] items-center justify-center gap-1.5 flex cursor-not-allowed" disabled>
+                        <button className="flex-1 h-[50px] rounded-2xl bg-emerald-900/40 border border-white/10 text-white/50 font-bold text-[15px] items-center justify-center gap-1.5 flex cursor-not-allowed" disabled>
                             <Lock size={14} className="opacity-50" />
                             <span>출금 신청</span>
                         </button>
@@ -288,7 +288,7 @@ const VaultPageCompact: React.FC = () => {
                         href="https://ccc-010.com"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-full max-w-xs h-[50px] rounded-2xl bg-emerald-600 border border-emerald-400/30 text-white font-black text-[14px] shadow-[0_4px_12px_rgba(16,185,129,0.3)] hover:bg-emerald-500 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                        className="w-full max-w-xs h-[50px] rounded-2xl bg-emerald-600 border border-emerald-400/30 text-white font-black text-[15px] shadow-[0_4px_12px_rgba(16,185,129,0.3)] hover:bg-emerald-500 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
                     >
                         <img src="/assets/logo_cc_v2.png" className="w-4 h-4 object-contain mix-blend-screen" alt="" />
                         씨씨카지노 충전하기

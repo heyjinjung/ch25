@@ -230,16 +230,26 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
             // Clean up previous sound if it exists
             if (bgmRef.current) {
-                bgmRef.current.unload();
+                const oldBgm = bgmRef.current;
+                oldBgm.stop();
+                oldBgm.unload();
             }
 
             const sound = new Howl({
                 src: [file],
-                html5: true,
+                html5: false, // Use Web Audio for gapless playback and reliable onend
                 loop: sources.length === 1, // Loop only if single file
                 volume: 0,
                 autoplay: true,
                 onend: () => {
+                    if (sources.length > 1) {
+                        currentIndex = (currentIndex + 1) % sources.length;
+                        playNext();
+                    }
+                },
+                onloaderror: (_id, error) => {
+                    console.error(`[SOUND] BGM Load error: ${file}`, error);
+                    setLastError(`BGM Load fail: ${file}`);
                     if (sources.length > 1) {
                         currentIndex = (currentIndex + 1) % sources.length;
                         playNext();

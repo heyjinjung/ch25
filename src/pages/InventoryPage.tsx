@@ -10,7 +10,7 @@ import { motion, useMotionValue, useTransform } from "framer-motion";
 
 const InventoryPage: React.FC = () => {
     const queryClient = useQueryClient();
-    const { addToast, addToastNode } = useToast();
+    const { addToast } = useToast();
     const navigate = useNavigate();
 
     const { data, isLoading, isError } = useQuery({
@@ -79,35 +79,20 @@ const InventoryPage: React.FC = () => {
     }
 
     return (
-        <div className="mx-auto w-full max-w-lg pt-1.5 pb-[calc(96px+env(safe-area-inset-bottom))]">
-            {/* Title */}
-            <div className="mb-4 flex items-center gap-3" data-tour="inventory-link">
-                <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center p-1.5 overflow-hidden">
-                    <img src="/assets/icon_inventory_wallet.png" alt="보상함" className="w-full h-full object-contain" />
-                </div>
-                <div>
-                    <h1 className="text-sm font-black text-amber-400/90 bg-gradient-to-r from-amber-500/10 to-amber-600/10 border border-amber-500/20 px-4 py-2.5 rounded-xl shadow-sm hover:text-amber-300 hover:border-amber-500/30 active:scale-[0.98] transition-all">보상함</h1>
-                </div>
-                <div className="ml-auto">
-                    <button
-                        type="button"
-                        onClick={() => {
-                            tryHaptic(10);
-                            addToastNode(
-                                <div className="text-center space-y-1">
-                                    <p>배민 2만부터 지급가능</p>
-                                    <p>씨씨코인 하루 1개 지급가능</p>
-                                    <p>컴포즈 아아 1만부터 지급가능</p>
-                                </div>,
-                                { tone: "info" }
-                            );
-                        }}
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500/10 to-amber-600/10 border border-amber-500/20 text-sm font-black text-amber-400/90 hover:text-amber-300 hover:border-amber-500/30 active:scale-[0.98] transition-all shadow-sm"
-                    >
-                        <img src="/assets/logo_cc_v2.png" className="w-5 h-5 object-contain" alt="" />
-                        안내
-                    </button>
-                </div>
+        <div className="mx-auto w-full max-w-lg min-h-screen bg-black pb-[calc(96px+env(safe-area-inset-bottom))]">
+            {/* Header */}
+            <div className="sticky top-0 z-40 bg-black/80 backdrop-blur-xl border-b border-white/5 px-4 h-14 flex items-center justify-between" data-tour="inventory-link">
+                <h1 className="text-[15px] font-bold text-white flex items-center gap-1.5 tracking-tight">
+                    <img src="/assets/icon_inventory_wallet.png" className="w-5 h-5 object-contain" alt="보상함" />
+                    보상함
+                </h1>
+                <button
+                    onClick={() => navigate('/shop')}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 active:scale-95 transition-all text-[15px] font-bold text-white/70 border border-white/5"
+                >
+                    <img src="/assets/icons/icon_cart.png" className="w-5 h-5 object-contain opacity-70" alt="교환소" />
+                    교환소
+                </button>
             </div>
 
             {/* Tabs (route) */}
