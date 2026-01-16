@@ -269,7 +269,7 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
                             fullWidth
                             disabled={isClaiming || (!isClaimable && currentStreak > 0)}
                             onClick={handleClaim}
-                            className="rounded-3xl py-5 text-xl font-black shadow-xl"
+                            className="shadow-xl"
                         >
                             {isClaiming ? <RefreshCw className="animate-spin" /> :
                                 isClaimable ? "🎁 오늘의 보상 받기" :

@@ -39,7 +39,7 @@ const TABS: { type: GameTokenType; label: string; activeColors: string; icon: st
   {
     type: "GOLD_KEY",
     label: "골드\n룰렛",
-    activeColors: "bg-black text-amber-400 border border-amber-400 shadow-[0_0_20px_rgba(255,215,0,0.5)]",
+    activeColors: "bg-black text-amber-400 shadow-[0_0_20px_rgba(255,215,0,0.5)]",
     icon: "🗝️",
     iconImg: "/assets/icons/goldkey.png"
   },
@@ -396,7 +396,7 @@ const RoulettePage: React.FC = () => {
                 <div className="inline-flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full border border-cc-gold/40 bg-cc-gold/10 shadow-[0_0_20px_rgba(255,215,0,0.4)] animate-pulse p-2">
                   <img
                     src={(() => {
-                      if (!rewardToast) return ""; 
+                      if (!rewardToast) return "";
                       const t = rewardToast.type.toUpperCase();
                       if (t.includes("DICE")) return "/assets/icon_dice_silver.png";
                       if (t.includes("BAEMIN") || t.includes("GIFT")) return "/assets/icons/baemin.png";

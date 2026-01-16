@@ -130,14 +130,14 @@ const StarterMissionsModal: React.FC<StarterMissionsModalProps> = ({ onClose }) 
                 <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-purple-500/10 to-transparent pointer-events-none" />
 
                 {/* Header */}
-                <div className="relative pt-10 pb-6 px-6 text-center flex-shrink-0">
-                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-purple-500/10 border-2 border-purple-400/30 mb-4">
-                        <Gift className="w-8 h-8 text-purple-400" />
+                <div className="relative pt-5 pb-3 px-5 text-center flex-shrink-0">
+                    <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-purple-500/10 border border-purple-400/30 mb-2">
+                        <Gift className="w-5 h-5 text-purple-400" />
                     </div>
-                    <h2 className="text-2xl font-black text-white mb-2">
+                    <h2 className="text-lg font-black text-white mb-0.5">
                         스타터 미션 🚀
                     </h2>
-                    <p className="text-sm text-white/60 font-medium">
+                    <p className="text-[11px] text-white/50 font-medium">
                         4가지 기본 미션으로 시작하세요
                     </p>
                 </div>
@@ -215,8 +215,12 @@ const StarterMissionsModal: React.FC<StarterMissionsModalProps> = ({ onClose }) 
                     </button>
 
                     <button
-                        onClick={onClose}
-                        className="w-full mt-3 py-3 rounded-xl text-sm font-bold text-white/60 hover:text-white transition-colors"
+                        type="button"
+                        onClick={() => {
+                            console.log("[StarterMissionsModal] Close button clicked");
+                            if (onClose) onClose();
+                        }}
+                        className="w-full mt-3 py-3 rounded-xl text-sm font-bold text-white/60 hover:text-white transition-colors relative z-50 cursor-pointer"
                     >
                         닫기
                     </button>

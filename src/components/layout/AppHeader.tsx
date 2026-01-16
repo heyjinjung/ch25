@@ -99,20 +99,7 @@ const AppHeader: React.FC = () => {
         }
     }, [showModalOverride, fetchStreakRules, streakInfo?.claimable_day, streakRules]);
 
-    useEffect(() => {
-        if (user?.segment === "VIP") {
-            const key = `vip_promotion_seen_${user.id}`;
-            if (!localStorage.getItem(key)) {
-                setIsVipModalOpen(true);
-            }
-        } else if (user) {
-            // Show Eligibility guide for non-VIP users
-            const key = `vip_eligibility_seen_${user.id}`;
-            if (!localStorage.getItem(key)) {
-                setIsVipEligibilityModalOpen(true);
-            }
-        }
-    }, [user?.segment, user?.id]);
+
 
     const handleVipModalClose = () => {
         if (user?.id) {
@@ -123,16 +110,51 @@ const AppHeader: React.FC = () => {
 
     const handleVipEligibilityModalClose = () => {
         if (user?.id) {
-            localStorage.setItem(`vip_eligibility_seen_${user.id}`, "true");
+            const currentCount = parseInt(localStorage.getItem(`vip_eligibility_count_${user.id}`) || "0");
+            localStorage.setItem(`vip_eligibility_count_${user.id}`, String(currentCount + 1));
+            localStorage.setItem(`vip_eligibility_last_${user.id}`, new Date().toISOString());
         }
         setIsVipEligibilityModalOpen(false);
     };
+
+    useEffect(() => {
+        if (user?.segment === "VIP") {
+            const key = `vip_promotion_seen_${user.id}`;
+            if (!localStorage.getItem(key)) {
+                setIsVipModalOpen(true);
+            }
+        } else if (user) {
+            // VIP Eligibility Modal: Show up to 5 times with 3-day intervals
+            const showCount = parseInt(localStorage.getItem(`vip_eligibility_count_${user.id}`) || "0");
+            const lastShown = localStorage.getItem(`vip_eligibility_last_${user.id}`);
+
+            const MAX_SHOWS = 5;
+            const INTERVAL_DAYS = 3;
+
+            if (showCount < MAX_SHOWS) {
+                if (!lastShown) {
+                    // First time - show immediately
+                    setIsVipEligibilityModalOpen(true);
+                } else {
+                    // Check if enough days have passed
+                    const lastDate = new Date(lastShown);
+                    const now = new Date();
+                    const daysSince = Math.floor((now.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
+
+                    if (daysSince >= INTERVAL_DAYS) {
+                        setIsVipEligibilityModalOpen(true);
+                    }
+                }
+            }
+        }
+    }, [user?.segment, user?.id]);
 
     useEffect(() => {
         if (vault?.segment && vault.segment !== user?.segment) {
             updateUser({ segment: vault.segment });
         }
     }, [vault?.segment, user?.segment, updateUser]);
+
 
     const handleSoundToggle = () => {
         playClick();
