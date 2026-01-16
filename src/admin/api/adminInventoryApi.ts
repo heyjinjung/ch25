@@ -61,25 +61,25 @@ export interface UserInventoryResponse {
 export const adminInventoryApi = {
   // System-wide Ledger
   fetchLedger: async (params: InventoryLedgerParams): Promise<AdminInventoryLedger[]> => {
-    const { data } = await adminApi.get('/inventory/ledger', { params });
+    const { data } = await adminApi.get('/admin/api/inventory/ledger', { params });
     return data;
   },
 
   // System-wide Items (Snapshot)
   fetchItems: async (params: InventoryItemParams): Promise<AdminInventoryItem[]> => {
-    const { data } = await adminApi.get('/inventory/items', { params });
+    const { data } = await adminApi.get('/admin/api/inventory/items', { params });
     return data;
   },
 
   // Single User Detailed Inventory (Items + Ledger)
   fetchUserInventory: async (userId: number, limit: number = 50): Promise<UserInventoryResponse> => {
-    const { data } = await adminApi.get(`/inventory/users/${userId}`, { params: { limit } });
+    const { data } = await adminApi.get(`/admin/api/inventory/users/${userId}`, { params: { limit } });
     return data;
   },
 
   // Single User Ledger Only
   fetchUserLedger: async (userId: number, limit: number = 50): Promise<AdminInventoryLedger[]> => {
-    const { data } = await adminApi.get(`/inventory/users/${userId}/ledger`, { params: { limit } });
+    const { data } = await adminApi.get(`/admin/api/inventory/users/${userId}/ledger`, { params: { limit } });
     return data;
   },
 };
@@ -89,7 +89,7 @@ export const adminInventoryApi = {
 export const fetchAdminUserInventory = adminInventoryApi.fetchUserInventory;
 
 export const fetchAdminUserInventoryByIdentifier = async (identifier: string, limit: number = 50): Promise<UserInventoryResponse> => {
-  const { data } = await adminApi.get(`/inventory/users/by-identifier/${encodeURIComponent(identifier)}`, { params: { limit } });
+  const { data } = await adminApi.get(`/admin/api/inventory/users/by-identifier/${encodeURIComponent(identifier)}`, { params: { limit } });
   return data;
 };
 
@@ -100,11 +100,11 @@ export interface InventoryAdjustPayload {
 }
 
 export const adjustAdminUserInventory = async (userId: number, payload: InventoryAdjustPayload) => {
-  const { data } = await adminApi.post(`/inventory/users/${userId}/adjust`, payload);
+  const { data } = await adminApi.post(`/admin/api/inventory/users/${userId}/adjust`, payload);
   return data;
 };
 
 export const adjustAdminUserInventoryByIdentifier = async (identifier: string, payload: InventoryAdjustPayload) => {
-  const { data } = await adminApi.post(`/inventory/users/by-identifier/${encodeURIComponent(identifier)}/adjust`, payload);
+  const { data } = await adminApi.post(`/admin/api/inventory/users/by-identifier/${encodeURIComponent(identifier)}/adjust`, payload);
   return data;
 };

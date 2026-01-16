@@ -1,96 +1,81 @@
-import { useEffect, useState, useRef } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
-import { Trophy, Zap, Dice5 } from 'lucide-react';
-import { useFeedStore } from '../../stores/feedStore';
-import { JackpotWin } from '../../types/feed';
+import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useState } from "react";
 
-export const LiveFeedTicker = () => {
-  const { connect, messages } = useFeedStore();
-  const [displayMsg, setDisplayMsg] = useState<JackpotWin | null>(null);
-  const processedTimestamps = useRef<Set<string>>(new Set());
-  
-  // Connect on mount
+type FeedItem = {
+  id: string;
+  user: string;
+  action: string;
+  amount: number; // e.g., 50000
+  type: "WIN" | "JACKPOT";
+};
+
+const MOCK_USERS = [
+  "tg_1928****", "tg_5821****", "tg_9923****", "tg_d382**", "tg_a821**",
+  "tg_b103**", "tg_c928**", "tg_7312****", "tg_4482****", "tg_e912**",
+  "tg_2049****", "tg_1102****", "tg_f283**", "tg_8291****", "tg_d992**",
+  "tg_3382****", "tg_6721****", "tg_0029****", "tg_a112**", "tg_b823**",
+  "tg_c821**", "tg_5512****", "tg_9283****", "tg_e221**", "tg_f112**",
+  "tg_7721****", "tg_2281****", "tg_d102**", "tg_a923**", "tg_b441**"
+];
+
+// Helper to format amount
+const formatAmount = (num: number) => new Intl.NumberFormat().format(num);
+
+export default function LiveFeedTicker() {
+  const [feed, setFeed] = useState<FeedItem | null>(null);
+
   useEffect(() => {
-    connect();
-  }, [connect]);
+    const generateFeed = () => {
+      const isJackpot = Math.random() < 0.1; // 10% chance
+      const baseAmount = isJackpot ? 10000 : 1000;
+      const randomValue = Math.floor(Math.random() * 50) * 1000 + baseAmount;
 
-  // Queue processing logic
-  useEffect(() => {
-    if (messages.length === 0) return;
+      return {
+        id: Math.random().toString(36).substring(7),
+        user: MOCK_USERS[Math.floor(Math.random() * MOCK_USERS.length)],
+        action: "획득!",
+        amount: randomValue,
+        type: isJackpot ? "JACKPOT" : "WIN",
+      } as FeedItem;
+    };
 
-    // We only care about the newest message derived from the store
-    const newest = messages[0];
-    
-    // If we haven't shown this exact message timestamp yet
-    if (!processedTimestamps.current.has(newest.timestamp)) {
-      processedTimestamps.current.add(newest.timestamp);
-      setDisplayMsg(newest);
+    // Initial feed
+    setFeed(generateFeed());
 
-      // Cleanup old timestamps to prevent memory leak
-      if (processedTimestamps.current.size > 50) {
-        processedTimestamps.current = new Set(Array.from(processedTimestamps.current).slice(-20));
-      }
+    const interval = setInterval(() => {
+      setFeed(generateFeed());
+    }, 4500); // Update every 4.5s
 
-      // Auto hide after 5 seconds? Optional. 
-      // For now, let it stay until replaced.
-      const timer = setTimeout(() => {
-         setDisplayMsg(prev => (prev?.timestamp === newest.timestamp ? null : prev));
-      }, 5000); // 5 seconds visibility
-      
-      return () => clearTimeout(timer);
-    }
-  }, [messages]);
+    return () => clearInterval(interval);
+  }, []);
 
-  if (!displayMsg) return null;
-
-  // Determine icon based on game type
-  const getIcon = (type: string) => {
-    switch (type.toLowerCase()) {
-      case 'dice': return <Dice5 className="w-4 h-4 text-purple-200" />;
-      case 'roulette': return <Zap className="w-4 h-4 text-yellow-200" />;
-      case 'lottery': return <Trophy className="w-4 h-4 text-amber-200" />;
-      default: return <Trophy className="w-4 h-4 text-white" />;
-    }
-  };
-
-  const getBgColor = (isMega: boolean) => {
-    return isMega 
-      ? "bg-gradient-to-r from-purple-600 via-pink-600 to-red-500 border-purple-300" 
-      : "bg-gray-800/90 border-gray-600";
-  };
+  if (!feed) return null;
 
   return (
-    <div className="fixed top-16 left-0 right-0 z-50 pointer-events-none flex justify-center px-4">
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={displayMsg.timestamp}
-          initial={{ opacity: 0, y: -20, scale: 0.9 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -20, scale: 0.9 }}
-          transition={{ duration: 0.3 }}
-          className={`
-            pointer-events-auto
-            flex items-center gap-3 px-4 py-2 rounded-full shadow-xl border
-            backdrop-blur-md text-white font-medium text-sm md:text-base
-            ${getBgColor(displayMsg.is_mega)}
-          `}
-        >
-          <div className="p-1 bg-white/20 rounded-full">
-            {getIcon(displayMsg.game_type)}
-          </div>
-          
-          <div className="flex flex-col md:flex-row md:items-center md:gap-2">
-            <span className="opacity-90">{displayMsg.nickname}</span>
-            <span className="hidden md:inline text-white/40">|</span>
-            <span className="text-yellow-300 font-bold">
-              {displayMsg.reward_amount.toLocaleString()} P
+    <div className="relative flex h-8 items-center justify-center overflow-hidden rounded-full bg-black/40 px-4 backdrop-blur-md border border-white/5">
+      <div className="flex items-center gap-2">
+        <span className="flex h-2 w-2 relative">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+        </span>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={feed.id}
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -20, opacity: 0 }}
+            transition={{ duration: 0.4 }}
+            className="flex items-center gap-1.5 text-xs font-medium text-white/90"
+          >
+            <span className="text-white/60">{feed.user}</span>
+            <span>님이</span>
+            <span className={feed.type === "JACKPOT" ? "text-cc-gold font-bold" : "text-white font-bold"}>
+              {formatAmount(feed.amount)}원
             </span>
-            <span className="text-xs text-white/70 uppercase">
-              Won in {displayMsg.game_type}
-            </span>
-          </div>
-        </motion.div>
-      </AnimatePresence>
+            <span>{feed.action}</span>
+          </motion.div>
+        </AnimatePresence>
+      </div>
     </div>
   );
-};
+}

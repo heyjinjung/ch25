@@ -49,3 +49,19 @@
 - **체류시간 증대 전략 (`도파민2차_체류시간증대_전략_v1.0.md`)**:
   - 룰렛 피버 게이지, 주사위 더블업, 복권 컬렉션 등 "한 번 더"를 유도하는 게임별 장치 기획.
   - 시스템 단위의 잭팟 피드, 연쇄 보상 게이트 설계.
+
+### 5. 룰렛 시각 효과 / 라이브 피드 (Roulette WIN & Live Feed)
+- **Visual Effects (RoulettePage.tsx)**:
+  - **Fireworks**: `canvas-confetti` 라이브러리를 활용, 승리 시 좌우/중앙에서 폭죽이 터지는 연출 구현.
+  - **Screen Shake**: `framer-motion`으로 잭팟 등 대박 시 화면 흔들림(Impact) 효과 추가.
+  - **Mobile Optimized Reward Toast**: Telegram 인앱 브라우저 등에서 잘리지 않도록 반응형(Width Clamp) 스타일 적용.
+- **실시간 위너 피드 (LiveFeedTicker.tsx)**:
+  - **구현**: 상단 롤링 텍스트 ("User123님이 50,000원 획득!") 컴포넌트 개발.
+  - **데이터**: 실제 DB 유저 패턴(한글 닉네임, tg_ ID)을 반영한 **Realistic Mock Data** 적용 (Backend API 연동 전 단계).
+  - **배치**: `GamePageShell`에 통합하여 모든 게임 상단에서 FOMO 자극.
+
+### 6. 백엔드 검증 (Backend Verification)
+- **Roulette Vault Logic Test**:
+  - `tests/test_roulette_vault_fix.py` 작성 및 통과.
+  - 룰렛의 하드코딩된 보상(+200/-50)이 제거되고, `POINT` 타입만 정상 적립되는지 검증 완료.
+  - `Vault2Service`의 Config Fallback 로직에 대한 테스트 커버리지 확보.
