@@ -15,12 +15,14 @@ export interface StreakRule {
 }
 
 export const fetchStreakRules = async (): Promise<StreakRule[]> => {
-    const { data } = await apiClient.get<StreakRule[]>('/mission/streak/rules');
-    return data;
+    const { data } = await apiClient.get('/api/mission/streak/rules');
+    if (Array.isArray(data)) return data as StreakRule[];
+    const maybeRules = (data as { rules?: StreakRule[] } | null | undefined)?.rules;
+    return Array.isArray(maybeRules) ? maybeRules : [];
 };
 
 export const claimStreakReward = async (): Promise<{ success: boolean; message?: string }> => {
-    const { data } = await apiClient.post('/mission/streak/claim');
+    const { data } = await apiClient.post('/api/mission/streak/claim');
     return data;
 };
 
