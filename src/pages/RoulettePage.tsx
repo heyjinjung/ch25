@@ -1,5 +1,5 @@
 ﻿import { useEffect, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+// Remove createPortal as we use inline Game Toast now
 // TODO: [VERIFY] When playing with Gold/Diamond Key, ensure UI shows Vault Accrual animation, NOT XP.
 // TODO: [VERIFY] If Ticket Reward is won, ensure it flies to Wallet/Header.
 import RouletteWheel from "../components/game/RouletteWheel";
@@ -383,49 +383,45 @@ const RoulettePage: React.FC = () => {
     return (
       <div className="relative mx-auto max-w-4xl space-y-6">
 
-        {!isSpinning && rewardToast && createPortal(
-          <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4 touch-none h-[100dvh] w-screen">
-            {/* Backdrop */}
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setRewardToast(null)} />
-
-            <div className="relative pointer-events-auto w-[85vw] max-w-[300px] overflow-hidden rounded-[2rem] border border-white/20 bg-black/95 px-6 py-5 text-white shadow-[0_0_50px_rgba(255,215,0,0.2)] animate-bounce-in">
+        {/* Reward Toast (Like DicePage) */}
+        {!isSpinning && rewardToast && (
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[100] w-full px-4 pointer-events-none">
+             <div className="mx-auto flex max-w-[280px] flex-col items-center justify-center gap-2 rounded-[2rem] border border-figma-accent/30 bg-black/90 px-5 py-5 shadow-2xl backdrop-blur-3xl animate-bounce-subtle">
+              {/* Effect Layers */}
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-cc-gold/10 via-transparent to-transparent opacity-50" />
-              <div className="pointer-events-none absolute inset-y-0 left-0 w-1.5 bg-gradient-to-b from-cc-gold via-yellow-300 to-cc-orange shadow-[0_0_15px_rgba(255,215,0,0.5)]" />
-
-              <div className="relative flex items-center gap-4 pl-1">
-                <span className="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-cc-gold/40 bg-cc-gold/10 text-xl shadow-[0_0_20px_rgba(255,215,0,0.4)] animate-pulse">
-                  🪙
-                </span>
-                <div className="flex flex-col min-w-0 flex-1">
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-cc-gold mb-0.5 animate-pulse">Rewards</p>
-                  <p className="text-xs font-bold text-white/90">획득 보상</p>
-                  <div className="flex flex-wrap items-baseline gap-1.5 mt-0.5">
-                    <span className="text-2xl font-black text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
+              
+              <div className="relative flex flex-col items-center gap-3">
+                 <div className="inline-flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full border border-cc-gold/40 bg-cc-gold/10 text-2xl shadow-[0_0_20px_rgba(255,215,0,0.4)] animate-pulse">
+                    {(rewardToast.type.includes("GIFTICON") || rewardToast.type.toUpperCase().includes("GIFT")) ? "🎁" : "🪙"}
+                 </div>
+                 
+                 <div className="text-center">
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-cc-gold mb-1 animate-pulse">YOU WON</p>
+                    <p className="text-3xl font-black text-white leading-none">
                       <AnimatedNumber value={rewardToast.value} from={0} />
-                    </span>
-                    <span className="text-sm font-bold text-white/60 truncate">
+                      <span className="text-sm font-bold text-white/50 ml-1">
+                         {(() => {
+                            const upper = rewardToast.type.toUpperCase();
+                            if (upper.includes("GAME_XP")) return "XP";
+                            if (upper.includes("POINT")) return "원"; 
+                            return "";
+                         })()}
+                      </span>
+                    </p>
+                    <p className="text-xs font-bold text-white/60 mt-1">
                       {(() => {
                         const upper = rewardToast.type.toUpperCase();
                         const normalized = upper.includes("GAME_XP") ? "GAME_XP" : upper.includes("POINT") ? "POINT" : rewardToast.type;
-                        if (upper.includes("GAME_XP")) return "XP";
-                        if (upper.includes("POINT")) return "원";
-                        if (upper.includes("GIFTICON")) return "기프티콘";
                         const line = formatRewardLine(normalized, 0);
-                        return line?.text.replace(/[0-9,\s]/g, "") || rewardToast.type;
+                        const label = line?.text.replace(/[0-9,\s]/g, "") || rewardToast.type;
+                        if (isGifticonRewardType(normalized)) return `${label} (보상함)`;
+                        return label;
                       })()}
-                    </span>
-                  </div>
-                  {rewardToast.type.toUpperCase().includes("GIFTICON") && (
-                    <span className="mt-1 text-[10px] font-bold text-cc-gold/80 flex items-center gap-1">
-                      <span className="inline-block w-1 h-1 rounded-full bg-cc-gold" />
-                      보상함 확인
-                    </span>
-                  )}
-                </div>
+                    </p>
+                 </div>
               </div>
             </div>
-          </div>,
-          document.body
+          </div>
         )}
 
         <div className="flex flex-col items-center gap-4 lg:flex-row lg:items-center lg:justify-center lg:gap-10">
