@@ -13,12 +13,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
 import { useSound } from "../hooks/useSound";
 import { formatRewardLine } from "../utils/rewardLabel";
+import { triggerJackpotExplosion } from "../utils/confetti";
 
 interface RevealedPrize {
   id: number;
   label: string;
   reward_type: string;
-  reward_value: string | number;
+  reward_amount: string | number;
 }
 
 const LotteryPage: React.FC = () => {
@@ -81,8 +82,14 @@ const LotteryPage: React.FC = () => {
         id: result.prize.id,
         label: result.prize.label,
         reward_type: result.prize.reward_type,
-        reward_value: result.prize.reward_value,
+        reward_amount: result.prize.reward_amount,
       });
+
+      
+      // Confetti Effect (User Request: Unify all effects, no value check)
+      if (result.prize.reward_type !== 'NONE') {
+        triggerJackpotExplosion();
+      }
 
       if ((result.vaultEarn ?? 0) > 0) {
         setVaultModal({ open: true, amount: result.vaultEarn! });
@@ -220,16 +227,15 @@ const LotteryPage: React.FC = () => {
                             ? "GAME_XP"
                             : rawType;
 
-                      const rewardLine = formatRewardLine(normalizedType, Number(prize.reward_value));
-                      if (!rewardLine) {
-                        return <span className="text-[9px] font-black text-white/60 italic uppercase tracking-tighter">{rawType}</span>;
-                      }
+                  const rewardLine = formatRewardLine(normalizedType, Number(prize.reward_amount));
+                  const displayText = rewardLine ? rewardLine.text : rawType;
+                  const displayHint = rewardLine ? rewardLine.fulfillmentHint : undefined;
 
                       return (
                         <div className="flex flex-col items-center">
-                          <span className="text-[10px] font-black text-white/80 leading-none">{rewardLine.text}</span>
-                          {rewardLine.fulfillmentHint && (
-                            <span className="mt-0.5 text-[8px] font-black text-white/40 leading-none">({rewardLine.fulfillmentHint})</span>
+                          <span className="text-[10px] font-black text-white/80 leading-none">{displayText}</span>
+                          {displayHint && (
+                            <span className="mt-0.5 text-[8px] font-black text-white/40 leading-none">({displayHint})</span>
                           )}
                         </div>
                       );

@@ -83,7 +83,9 @@
 | 복권 티켓 | `LOTTERY_TICKET` | Wallet | 복권 구매/플레이 토큰 | |
 | 체험 토큰 | `TRIAL_TOKEN` | Wallet | 체험/무료 루프 토큰 | 정책/플래그에 영향 |
 | 골드 키 | `GOLD_KEY` | Wallet | 고가/특수 플레이 키 | 특정 룰렛에서 Vault 강제 라우팅과 결합될 수 있음 |
+| 골드 키 조각 | `GOLD_KEY_FRAGMENT` | Wallet | 10개 수집 시 골드 키로 교환 | **[New]** Safe Mode 꽝 대체 보상 |
 | 다이아 키 | `DIAMOND_KEY` | Wallet | 프리미엄 플레이 키 | |
+| 다이아 키 조각 | `DIAMOND_KEY_FRAGMENT` | Wallet | 30개 수집 시 다이아 키로 교환 | **[New]** Safe Mode 꽝 대체 보상 |
 | 다이아(인벤) | `DIAMOND` | Inventory | 상점 결제에 쓰는 인벤 재화 | Wallet DIAMOND와 혼동 금지 |
 | 인벤토리 아이템 | Inventory Item | `user_inventory_item` | 다이아/기프티콘/바우처 같은 “보관형 자산” | item_type 네이밍 규칙 준수 |
 | 바우처(교환권) | `VOUCHER_*` | Inventory | 사용 시 특정 토큰/보상을 지급하는 교환권 | use 시 멱등성/동시성 이슈 주의 |

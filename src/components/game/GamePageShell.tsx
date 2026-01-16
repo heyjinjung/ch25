@@ -16,16 +16,21 @@ type Props = {
 
 const GamePageShell: React.FC<Props> = ({ children, footerNote, px = "p-4 sm:p-8", py, disableMainBgm }) => {
   const containerPadding = py ? `${px} ${py}` : px;
-  const { startMainBgm, playEnterGame } = useSound();
+  const { startMainBgm, stopBgm, playEnterGame } = useSound();
 
-  // Attempt to start BGM and play Enter sound on mount
   React.useEffect(() => {
-    if (!disableMainBgm) {
+    if (!disableMainBgm) return;
+    stopBgm();
+    return () => {
       startMainBgm();
-    }
-    // Use a small timeout to ensure interaction overlap or just fire it
-    setTimeout(() => playEnterGame(), 100);
-  }, [startMainBgm, playEnterGame, disableMainBgm]);
+    };
+  }, [disableMainBgm, startMainBgm, stopBgm]);
+
+  // Play Enter sound on mount
+  React.useEffect(() => {
+    const t = setTimeout(() => playEnterGame(), 100);
+    return () => clearTimeout(t);
+  }, [playEnterGame]);
 
   return (
     <div className="relative w-full text-white">

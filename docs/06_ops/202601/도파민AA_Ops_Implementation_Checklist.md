@@ -51,3 +51,7 @@
   - 사운드 자산 교체: 룰렛/복권/주사위/Vault에 사용자 제공 고품질 SFX 적용 (`Ball_Drop`, `Small_Win`, `Big_Win`, `Dice_Reveal`, `Vault_Jingle` 등).
   - 로직 개선: 룰렛 회전음 뮤트, 결과 화면 동기화. 주사위/복권 결과 공개 시점 사운드 매핑.
   - Vault UX: `AnimatedNumber` 초기화 버그 수정(Skip 방지) 및 애니메이션 시작 시 사운드 트리거(`onAnimationStart`) 추가.
+- 2026-01-16: BGM 전역 자동 시작 및 자동재생 제한 대응.
+  - 유저 영역에서 Main BGM 자동 시작(`/admin` 제외)하도록 시작 지점을 `src/App.tsx`로 승격.
+  - `AudioContext suspended` 상황에서 pending BGM 보류 → 첫 터치 `unlockAudio()`에서 재생 재시도(`src/contexts/SoundContext.tsx`).
+  - `GamePageShell` 기본 마운트 BGM start 호출 제거(중복 호출/끊김 체감 완화 목적).

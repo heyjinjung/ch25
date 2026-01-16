@@ -16,7 +16,7 @@ const BalanceHero: React.FC<{ balance: number }> = ({ balance }) => (
 
         <div className="relative p-6 rounded-[2.5rem] bg-gradient-to-br from-[#0A0A0A] via-[#111] to-[#050505] border border-emerald-500/20 shadow-[0_20px_50px_-20px_rgba(16,185,129,0.3)] overflow-hidden">
             {/* Texture/Pattern Overlay */}
-            <div className="absolute inset-0 bg-[url('/assets/noise.png')] opacity-[0.03]" />
+            <div className="absolute inset-0 bg-black/20" />
             <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
 
             <div className="relative z-10 flex flex-col items-center">

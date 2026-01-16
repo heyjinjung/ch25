@@ -22,6 +22,7 @@ const LimitedOfferModal: React.FC<LimitedOfferModalProps> = ({ onClose }) => {
                 {/* Close Button */}
                 <button
                     onClick={onClose}
+                    aria-label="Close"
                     className="absolute top-4 right-4 p-2 rounded-full bg-black/40 text-white/70 hover:bg-black/60 hover:text-white transition-colors z-10"
                 >
                     <X size={20} />
@@ -29,7 +30,7 @@ const LimitedOfferModal: React.FC<LimitedOfferModalProps> = ({ onClose }) => {
 
                 {/* Hero Section */}
                 <div className="bg-gradient-to-br from-indigo-600 to-violet-800 p-8 flex flex-col items-center text-center pt-12 pb-10 relative overflow-hidden">
-                    <div className="absolute inset-0 bg-[url('/assets/pattern_noise.png')] opacity-20 mix-blend-overlay" />
+                    <div className="absolute inset-0 bg-white/[0.02] mix-blend-overlay" />
 
                     <div className="absolute top-4 left-4 px-2 py-1 bg-red-500/90 text-white text-[10px] font-black rounded-md animate-pulse">
                         LIMITED TIME

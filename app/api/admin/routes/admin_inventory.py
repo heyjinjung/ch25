@@ -213,7 +213,7 @@ def get_inventory_ledger(
 ):
     """List system-wide inventory ledger entries."""
     limit = min(max(limit, 1), 200)
-    q = select(UserInventoryLedger)
+    q = select(UserInventoryLedger, User.nickname).join(User, UserInventoryLedger.user_id == User.id)
 
     if user_id:
         q = q.where(UserInventoryLedger.user_id == user_id)
@@ -224,13 +224,13 @@ def get_inventory_ledger(
 
     q = q.order_by(desc(UserInventoryLedger.id)).limit(limit)
     
-    # Eager load user for display needs if we want nicknames (optional, skipping for perf now)
-    results = db.scalars(q).all()
+    results = db.execute(q).all()
 
     return [
         {
             "id": l.id,
             "user_id": l.user_id,
+            "nickname": nickname,
             "item_type": l.item_type,
             "change_amount": int(l.change_amount),
             "balance_after": int(l.balance_after),
@@ -238,7 +238,7 @@ def get_inventory_ledger(
             "related_id": l.related_id,
             "created_at": l.created_at,
         }
-        for l in results
+        for (l, nickname) in results
     ]
 
 
@@ -247,12 +247,14 @@ def get_inventory_items(
     user_id: int | None = None,
     item_type: str | None = None,
     min_quantity: int | None = None,
+    sort_by: str = "updated_at",
+    sort_desc: bool = True,
     limit: int = 50,
     db: Session = Depends(get_db),
 ):
     """List system-wide inventory items (snapshot)."""
     limit = min(max(limit, 1), 200)
-    q = select(UserInventoryItem)
+    q = select(UserInventoryItem, User.nickname).join(User, UserInventoryItem.user_id == User.id)
 
     if user_id:
         q = q.where(UserInventoryItem.user_id == user_id)
@@ -261,17 +263,30 @@ def get_inventory_items(
     if min_quantity is not None:
         q = q.where(UserInventoryItem.quantity >= min_quantity)
 
-    q = q.order_by(desc(UserInventoryItem.updated_at)).limit(limit)
+    # Sorting logic
+    sort_column = UserInventoryItem.updated_at
+    if sort_by == "quantity":
+        sort_column = UserInventoryItem.quantity
+    elif sort_by == "item_type":
+        sort_column = UserInventoryItem.item_type
     
-    results = db.scalars(q).all()
+    if sort_desc:
+        q = q.order_by(desc(sort_column))
+    else:
+        q = q.order_by(sort_column)
+
+    q = q.limit(limit)
+    
+    results = db.execute(q).all()
 
     return [
         {
             "id": i.id,
             "user_id": i.user_id,
+            "nickname": nickname,
             "item_type": i.item_type,
             "quantity": int(i.quantity),
             "updated_at": i.updated_at,
         }
-        for i in results
+        for (i, nickname) in results
     ]

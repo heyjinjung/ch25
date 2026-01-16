@@ -27,8 +27,8 @@ const DicePage: React.FC = () => {
   const [vaultModal, setVaultModal] = useState<{ open: boolean; amount: number; title?: string }>({ open: false, amount: 0 });
   const [isRolling, setIsRolling] = useState(false);
 
-  const mapErrorMessage = (err: unknown) => {
-    const code = (err as { response?: { data?: { error?: { code?: string } } } })?.response?.data?.error?.code;
+  const mapErrorMessage = (err: any) => {
+    const code = err?.response?.data?.error?.code;
     if (code === "NO_FEATURE_TODAY") return "오늘 설정된 이벤트가 없습니다.";
     if (code === "INVALID_FEATURE_SCHEDULE") return "이벤트 스케줄이 잘못되었습니다. 지민이에게 문의하세요.";
     if (code === "FEATURE_DISABLED") return "이벤트가 비활성화되었습니다.";
@@ -54,7 +54,7 @@ const DicePage: React.FC = () => {
         setIsRolling(false);
         playDiceThrow(); // Sound: Land
         setTimeout(() => playDiceReveal(), 300); // Sound: Reveal effect slightly after throw
-        
+
         setResult(response.result);
         setUserDice(response.user_dice);
         setDealerDice(response.dealer_dice);

@@ -200,7 +200,7 @@ const SeasonPassPage: React.FC = () => {
                 const isLockedState = isLocked(level, data.current_level);
                 const isLast = idx === data.levels.length - 1;
                 const requiredXp = level.required_xp ?? 0;
-                const rewardChip = formatRewardChip(level.reward_type as any, (level as any).reward_amount);
+                const rewardChip = formatRewardChip(level.reward_type, (level as { reward_amount?: number }).reward_amount);
 
                 return (
                   <div key={level.level} className="relative flex flex-col">

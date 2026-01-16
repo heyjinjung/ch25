@@ -16,6 +16,7 @@ const LoginPage: React.FC = () => {
   const [password, setPassword] = useState<string>("");
 
   const allowLegacyLogin = import.meta.env.DEV;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const tg = (window as any).Telegram?.WebApp;
   const isTelegramWebView = Boolean(tg && tg.initData);
   const telegramBotUsername = (import.meta.env.VITE_TELEGRAM_BOT_USERNAME as string | undefined) || "jm956_bot";

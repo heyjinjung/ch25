@@ -83,11 +83,11 @@ const lotteryState = {
   remainingPlays: 0,
   tokenBalance: 10,
   prizes: [
-    { id: 1, label: "다이아", reward_type: "DIAMOND", reward_value: 1, stock: null, is_active: true, weight: 5 },
-    { id: 2, label: "금고 적립 1,000원", reward_type: "POINT", reward_value: 1000, stock: null, is_active: true, weight: 30 },
-    { id: 3, label: "토큰 50개", reward_type: "TOKEN", reward_value: 50, stock: 10, is_active: true, weight: 15 },
-    { id: 4, label: "쿠폰 20,000원", reward_type: "COUPON", reward_value: 20000, stock: 3, is_active: true, weight: 2 },
-    { id: 5, label: "꽝", reward_type: "NONE", reward_value: 0, stock: null, is_active: true, weight: 48 },
+    { id: 1, label: "다이아", reward_type: "DIAMOND", reward_amount: 1, stock: null, is_active: true, weight: 5 },
+    { id: 2, label: "금고 적립 1,000원", reward_type: "POINT", reward_amount: 1000, stock: null, is_active: true, weight: 30 },
+    { id: 3, label: "토큰 50개", reward_type: "TOKEN", reward_amount: 50, stock: 10, is_active: true, weight: 15 },
+    { id: 4, label: "쿠폰 20,000원", reward_type: "COUPON", reward_amount: 20000, stock: 3, is_active: true, weight: 2 },
+    { id: 5, label: "꽝", reward_type: "NONE", reward_amount: 0, stock: null, is_active: true, weight: 48 },
   ],
 };
 
@@ -96,7 +96,9 @@ export const getFallbackLotteryStatus = () => ({
   remaining_plays: lotteryState.remainingPlays,
   token_type: "LOTTERY_TICKET" as const,
   token_balance: lotteryState.tokenBalance,
-  prizes: lotteryState.prizes.filter((p) => p.is_active).map((prize) => ({ ...prize })),
+  prizes: lotteryState.prizes
+    .filter((p) => p.is_active)
+    .map((prize) => ({ ...prize, reward_value: prize.reward_amount })),
 });
 
 export const playFallbackLottery = () => {

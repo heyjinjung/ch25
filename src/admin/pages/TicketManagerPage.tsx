@@ -18,8 +18,9 @@ import {
     Search,
     ExternalLink,
     Package,
+    Coins,
 } from "lucide-react";
-import { adminInventoryApi } from "../api/adminInventoryApi";
+import { adminInventoryApi, adjustAdminUserInventoryByIdentifier } from "../api/adminInventoryApi";
 import { useToast } from "../../components/common/ToastProvider";
 import {
     fetchLedger,
@@ -232,6 +233,12 @@ const TicketManagerPage: React.FC = () => {
         itemType: "",
         minQuantity: 0,
     });
+    const [inventorySortBy, setInventorySortBy] = useState<"item_type" | "quantity" | "updated_at">("updated_at");
+    const [inventorySortDesc, setInventorySortDesc] = useState(true);
+
+    // Quick Action State
+    const [quickActionCategory, setQuickActionCategory] = useState<"TOKEN" | "INVENTORY">("TOKEN");
+    const [inventoryItemType, setInventoryItemType] = useState("");
 
     // Applied Filters (Server-Side)
     const [appliedLedgerUserFilter, setAppliedLedgerUserFilter] = useState("");
@@ -287,17 +294,38 @@ const TicketManagerPage: React.FC = () => {
     });
 
     const inventoryItemsQuery = useQuery({
-        queryKey: ["admin", "inventory", "items", inventoryFilters],
+        queryKey: ["admin", "inventory", "items", inventoryFilters, inventorySortBy, inventorySortDesc],
         queryFn: () => adminInventoryApi.fetchItems({
             item_type: inventoryFilters.itemType || undefined,
             min_quantity: inventoryFilters.minQuantity || undefined,
-            limit: 100
+            limit: 100,
+            sort_by: inventorySortBy,
+            sort_desc: inventorySortDesc,
         }),
         enabled: activeTab === "inventory" && inventoryTabMode === "items",
     });
 
     const inventoryLedgerRows = useMemo(() => normalizeInventoryRows(inventoryLedgerQuery.data), [inventoryLedgerQuery.data]);
     const inventoryItemRows = useMemo(() => normalizeInventoryRows(inventoryItemsQuery.data), [inventoryItemsQuery.data]);
+
+    const inventoryMutation = useMutation({
+        mutationFn: async (payload: { userIdentifier: string; itemType: string; amount: number; reason?: string }) => {
+            const delta = formMode === "grant" ? payload.amount : -payload.amount;
+            return adjustAdminUserInventoryByIdentifier(payload.userIdentifier, {
+                item_type: payload.itemType,
+                delta,
+                note: payload.reason,
+            });
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["admin", "inventory"] });
+            addToast("인벤토리 조정 완료", "success");
+        },
+        onError: (err: any) => {
+            console.error("Inventory adjustment failed:", err);
+            addToast("인벤토리 조정 실패", "error");
+        },
+    });
 
 
 
@@ -340,13 +368,28 @@ const TicketManagerPage: React.FC = () => {
         },
     });
 
-    const isSubmitting = grantMutation.isPending || revokeMutation.isPending;
+    const isSubmitting = grantMutation.isPending || revokeMutation.isPending || inventoryMutation.isPending;
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (quickActionCategory === "INVENTORY") {
+            if (!formData.userIdentifier || !inventoryItemType || formData.amount < 1) {
+                 addToast("모든 필드를 입력하세요 (유저, 아이템 종류, 수량)", "error");
+                 return;
+            }
+            inventoryMutation.mutate({
+                userIdentifier: formData.userIdentifier,
+                itemType: inventoryItemType,
+                amount: formData.amount,
+                reason: formData.reason,
+            });
+            return;
+        }
+
         const parsed = grantRevokeSchema.safeParse(formData);
         if (!parsed.success) {
-            addToast(parsed.error.errors[0]?.message ?? "?ëì °åªë¯ªì£ ?ëº¤ì¤?ëï¼?ëªì.", "error");
+            addToast(parsed.error.errors[0]?.message ?? "입력값을 확인해주세요.", "error");
             return;
         }
 
@@ -806,7 +849,7 @@ const TicketManagerPage: React.FC = () => {
                                         {inventoryTabMode === 'ledger' ? (
                                             <>
                                                 <th className="admin-th">시간</th>
-                                                <th className="admin-th">User ID</th>
+                                                <th className="admin-th">User</th>
                                                 <th className="admin-th">Item</th>
                                                 <th className="admin-th text-right">변동</th>
                                                 <th className="admin-th text-right">잔여</th>
@@ -814,9 +857,27 @@ const TicketManagerPage: React.FC = () => {
                                             </>
                                         ) : (
                                             <>
-                                                <th className="admin-th">User ID</th>
-                                                <th className="admin-th">Item</th>
-                                                <th className="admin-th text-right">수량</th>
+                                                <th className="admin-th">User</th>
+                                                <th
+                                                    className="admin-th cursor-pointer select-none hover:bg-admin-hover transition-colors"
+                                                    onClick={() => {
+                                                        const field = "item_type";
+                                                        if (inventorySortBy === field) setInventorySortDesc(!inventorySortDesc);
+                                                        else { setInventorySortBy(field); setInventorySortDesc(true); }
+                                                    }}
+                                                >
+                                                    Item {inventorySortBy === "item_type" && (inventorySortDesc ? "↓" : "↑")}
+                                                </th>
+                                                <th
+                                                    className="admin-th cursor-pointer select-none hover:bg-admin-hover transition-colors text-right"
+                                                    onClick={() => {
+                                                        const field = "quantity";
+                                                        if (inventorySortBy === field) setInventorySortDesc(!inventorySortDesc);
+                                                        else { setInventorySortBy(field); setInventorySortDesc(true); }
+                                                    }}
+                                                >
+                                                    수량 {inventorySortBy === "quantity" && (inventorySortDesc ? "↓" : "↑")}
+                                                </th>
                                                 <th className="admin-th">업데이트</th>
                                             </>
                                         )}
@@ -832,7 +893,12 @@ const TicketManagerPage: React.FC = () => {
                                                 }}
                                             >
                                                 <td className="px-4 text-sm text-admin-text-muted font-mono">{formatKSTTime(entry.created_at)}</td>
-                                                <td className="px-4 text-sm font-bold text-zinc-300">{entry.user_id}</td>
+                                                <td className="px-4">
+                                                    <div className="flex flex-col">
+                                                        <span className="text-sm font-bold text-zinc-200">{entry.nickname || 'Unknown'}</span>
+                                                        <span className="text-xs text-admin-text-muted font-mono">{entry.user_id}</span>
+                                                    </div>
+                                                </td>
                                                 <td className="px-4 text-sm text-zinc-200">{entry.item_type}</td>
                                                 <td className={`px-4 text-right text-sm font-mono font-bold ${entry.change_amount > 0 ? "text-emerald-400" : "text-rose-400"}`}>
                                                     {entry.change_amount > 0 ? "+" : ""}{entry.change_amount.toLocaleString()}
@@ -849,7 +915,12 @@ const TicketManagerPage: React.FC = () => {
                                                     setIsDetailModalOpen(true);
                                                 }}
                                             >
-                                                <td className="px-4 text-sm font-bold text-zinc-300">{item.user_id}</td>
+                                                <td className="px-4">
+                                                    <div className="flex flex-col">
+                                                        <span className="text-sm font-bold text-zinc-200">{item.nickname || 'Unknown'}</span>
+                                                        <span className="text-xs text-admin-text-muted font-mono">{item.user_id}</span>
+                                                    </div>
+                                                </td>
                                                 <td className="px-4 text-sm text-zinc-200">{item.item_type}</td>
                                                 <td className="px-4 text-right text-sm font-mono font-bold text-emerald-400">{item.quantity.toLocaleString()}</td>
                                                 <td className="px-4 text-sm text-admin-text-muted font-mono">{formatKSTTime(item.updated_at)}</td>
@@ -970,6 +1041,24 @@ const TicketManagerPage: React.FC = () => {
                             </div>
                         </div>
 
+                        {/* Category Toggle */}
+                        <div className="flex bg-zinc-900 rounded-lg p-1 border border-zinc-800">
+                            <button
+                                onClick={() => { setQuickActionCategory("TOKEN"); }}
+                                className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-xs font-bold transition-all ${quickActionCategory === 'TOKEN' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-400'}`}
+                            >
+                                <Coins className="h-3.5 w-3.5" />
+                                재화 (Tokens)
+                            </button>
+                            <button
+                                onClick={() => { setQuickActionCategory("INVENTORY"); }}
+                                className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-xs font-bold transition-all ${quickActionCategory === 'INVENTORY' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-400'}`}
+                            >
+                                <Package className="h-3.5 w-3.5" />
+                                아이템 (Inventory)
+                            </button>
+                        </div>
+
                         {/* Selected User Actions */}
                         {formData.userIdentifier && (
                             <div className="grid grid-cols-2 gap-2">
@@ -1014,16 +1103,28 @@ const TicketManagerPage: React.FC = () => {
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-1">
-                                    <label className="text-sm font-semibold text-zinc-300">토큰 (Token)</label>
-                                    <select
-                                        title={LABELS.labelTokenType}
-                                        aria-label={LABELS.labelTokenType}
-                                        value={formData.tokenType}
-                                        onChange={(e) => setFormData({ ...formData, tokenType: e.target.value as GameTokenType })}
-                                        className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:border-admin-brand outline-none"
-                                    >
-                                        {TOKEN_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-                                    </select>
+                                    <label className="text-sm font-semibold text-zinc-300">
+                                        {quickActionCategory === 'TOKEN' ? "토큰 (Token)" : "아이템 (Item Type)"}
+                                    </label>
+                                    {quickActionCategory === 'TOKEN' ? (
+                                        <select
+                                            title={LABELS.labelTokenType}
+                                            aria-label={LABELS.labelTokenType}
+                                            value={formData.tokenType}
+                                            onChange={(e) => setFormData({ ...formData, tokenType: e.target.value as GameTokenType })}
+                                            className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:border-admin-brand outline-none"
+                                        >
+                                            {TOKEN_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                                        </select>
+                                    ) : (
+                                        <input
+                                            type="text"
+                                            value={inventoryItemType}
+                                            onChange={(e) => setInventoryItemType(e.target.value)}
+                                            placeholder="e.g. ticket_entry"
+                                            className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:border-admin-brand outline-none"
+                                        />
+                                    )}
                                 </div>
                                 <div className="space-y-1">
                                     <label className="text-sm font-semibold text-zinc-300">수량 (Amount)</label>
@@ -1059,7 +1160,10 @@ const TicketManagerPage: React.FC = () => {
                                     } disabled:opacity-50 disabled:cursor-not-allowed`}
                             >
                                 {isSubmitting ? <RefreshCw className="h-4 w-4 animate-spin" /> : (formMode === 'grant' ? <Plus className="h-4 w-4" /> : <Minus className="h-4 w-4" />)}
-                                {formMode === 'grant' ? 'Grant Tokens' : 'Revoke Tokens'}
+                                {formMode === 'grant'
+                                     ? `Grant ${quickActionCategory === 'TOKEN' ? 'Tokens' : 'Item'}`
+                                     : `Revoke ${quickActionCategory === 'TOKEN' ? 'Tokens' : 'Item'}`
+                                }
                             </button>
                         </form>
                     </div>

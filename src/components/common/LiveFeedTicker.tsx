@@ -26,16 +26,37 @@ export default function LiveFeedTicker() {
 
   useEffect(() => {
     const generateFeed = () => {
-      const isJackpot = Math.random() < 0.1; // 10% chance
-      const baseAmount = isJackpot ? 10000 : 1000;
-      const randomValue = Math.floor(Math.random() * 50) * 1000 + baseAmount;
+      const rand = Math.random();
+      let amount = 0;
+      let action = "획득!";
+      let type: "WIN" | "JACKPOT" = "WIN";
+
+      if (rand < 0.3) {
+        // 30% Chance: Baemin Gifticon
+        amount = 5000;
+        action = "배민 상품권 획득!";
+        type = "WIN";
+      } else {
+        // 70% Chance: Cash
+        // Of this, 80% is 10k~20k
+        const subRand = Math.random();
+        if (subRand < 0.8) {
+          // 10,000 ~ 20,000 (1k steps)
+          amount = Math.floor(Math.random() * 11) * 1000 + 10000;
+          type = "WIN";
+        } else {
+          // 20,000 ~ 50,000 (Jacekpot feel)
+          amount = Math.floor(Math.random() * 31) * 1000 + 20000;
+          type = "JACKPOT";
+        }
+      }
 
       return {
         id: Math.random().toString(36).substring(7),
         user: MOCK_USERS[Math.floor(Math.random() * MOCK_USERS.length)],
-        action: "획득!",
-        amount: randomValue,
-        type: isJackpot ? "JACKPOT" : "WIN",
+        action,
+        amount,
+        type,
       } as FeedItem;
     };
 
@@ -44,7 +65,7 @@ export default function LiveFeedTicker() {
 
     const interval = setInterval(() => {
       setFeed(generateFeed());
-    }, 4500); // Update every 4.5s
+    }, 180000); // Update every 3 minutes
 
     return () => clearInterval(interval);
   }, []);

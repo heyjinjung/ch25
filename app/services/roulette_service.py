@@ -13,6 +13,7 @@ from app.models.feature import FeatureType
 from app.models.game_wallet import GameTokenType
 from app.models.roulette import RouletteConfig, RouletteLog, RouletteSegment
 from app.models.user_segment import UserSegment
+from app.schemas.mission import StreakInfoSchema
 from app.schemas.roulette import RoulettePlayResponse, RouletteSegmentSchema, RouletteStatusResponse
 from app.services.feature_service import FeatureService
 from app.services.game_common import GamePlayContext, log_game_play
@@ -122,13 +123,48 @@ class RouletteService:
             )
         ).scalar_one()
 
-    def _get_today_config(self, db: Session, ticket_type: str = GameTokenType.ROULETTE_COIN.value) -> RouletteConfig:
+    def _resolve_user_grade(self, db: Session, user_id: int) -> str:
+        """Determine roulette target grade: NEW, WHALE, or COMMON."""
+        from app.models.user import User
+        from app.models.external_ranking import ExternalRankingData
+
+        # 1. NEW: Check if created < 7 days
+        user = db.get(User, user_id)
+        if user and (datetime.utcnow() - user.created_at).days < 7:
+            return "NEW"
+
+        # 2. WHALE: Check deposit > 5,000,000 (Dynamic Check)
+        ranking = db.query(ExternalRankingData).filter(ExternalRankingData.user_id == user_id).first()
+        deposit = ranking.deposit_amount if ranking else 0
+        if deposit >= 5_000_000:
+            return "WHALE"
+
+        # 3. COMMON: Default
+        return "COMMON"
+
+    def _get_today_config(self, db: Session, ticket_type: str = GameTokenType.ROULETTE_COIN.value, user_id: int | None = None) -> RouletteConfig:
+        target_grade = "COMMON"
+        if user_id:
+             target_grade = self._resolve_user_grade(db, user_id)
+
+        # Priority 1: Config matching Grade
         config = db.execute(
             select(RouletteConfig).where(
                 RouletteConfig.is_active.is_(True),
-                RouletteConfig.ticket_type == ticket_type
+                RouletteConfig.ticket_type == ticket_type,
+                RouletteConfig.grade == target_grade
             ).order_by(RouletteConfig.id.desc())
         ).scalars().first()
+
+        # Priority 2: Fallback to COMMON (if specific grade config is missing)
+        if config is None and target_grade != "COMMON":
+            config = db.execute(
+                select(RouletteConfig).where(
+                    RouletteConfig.is_active.is_(True),
+                    RouletteConfig.ticket_type == ticket_type,
+                    RouletteConfig.grade == "COMMON"
+                ).order_by(RouletteConfig.id.desc())
+            ).scalars().first()
 
         if config is None:
             settings = get_settings()
@@ -174,7 +210,7 @@ class RouletteService:
 
     def get_status(self, db: Session, user_id: int, today: date, ticket_type: str = GameTokenType.ROULETTE_COIN.value) -> RouletteStatusResponse:
         self.feature_service.validate_feature_active(db, today, FeatureType.ROULETTE)
-        config = self._get_today_config(db, ticket_type)
+        config = self._get_today_config(db, ticket_type, user_id=user_id)
 
         # Premium roulette access control must be enforced at status-time as well,
         # so the frontend can block tab switching before a play attempt.
@@ -215,7 +251,7 @@ class RouletteService:
     def play(self, db: Session, user_id: int, now: date | datetime, ticket_type: str = GameTokenType.ROULETTE_COIN.value) -> RoulettePlayResponse:
         today = now.date() if isinstance(now, datetime) else now
         self.feature_service.validate_feature_active(db, today, FeatureType.ROULETTE)
-        config = self._get_today_config(db, ticket_type)
+        config = self._get_today_config(db, ticket_type, user_id=user_id)
         token_type_enum = GameTokenType(ticket_type)
 
         # [Phase 1] Segment Access Control (P0)
@@ -433,10 +469,15 @@ class RouletteService:
         if reward_amount != int(chosen.reward_amount or 0):
             segment_payload = segment_payload.model_copy(update={"reward_amount": reward_amount})
 
+        if streak_info:
+            streak_info_payload = StreakInfoSchema(**streak_info)
+        else:
+            streak_info_payload = None
+
         return RoulettePlayResponse(
             result="OK",
             segment=segment_payload,
             season_pass=season_pass,
             vault_earn=total_earn,
-            streak_info=streak_info,
+            streak_info=streak_info_payload,
         )

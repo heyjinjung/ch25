@@ -26,7 +26,7 @@ const VipPromotionModal: React.FC<VipPromotionModalProps> = ({ onClose }) => {
                 className="relative w-full max-w-[340px] max-h-[calc(100dvh-2rem)] bg-zinc-950 border border-amber-500/30 rounded-[2rem] overflow-hidden overflow-y-auto shadow-[0_0_50px_rgba(0,0,0,0.5),0_0_20px_rgba(217,119,6,0.2)]"
             >
                 {/* Background Textures */}
-                <div className="absolute inset-0 bg-[url('/assets/pattern_noise.png')] opacity-[0.03] pointer-events-none" />
+                <div className="absolute inset-0 bg-white/[0.02] pointer-events-none" />
                 <div className="absolute inset-0 bg-gradient-to-b from-amber-500/5 to-transparent pointer-events-none" />
 
                 {/* Close Button */}
