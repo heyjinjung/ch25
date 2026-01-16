@@ -9,9 +9,10 @@ import clsx from "clsx";
 
 interface NewUserWelcomeModalProps {
     onClose: () => void;
+    onClaimSuccess?: () => void;  // Called only when "받기" succeeds
 }
 
-const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) => {
+const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose, onClaimSuccess }) => {
     const [isClaiming, setIsClaiming] = useState(false);
     const [hasClaimed, setHasClaimed] = useState(false);
     const { addToast } = useToast();
@@ -70,6 +71,15 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) =>
             await queryClient.invalidateQueries({ queryKey: ["new-user-status"] });
 
             addToast("정착 지원금이 지급되었습니다.", "success");
+
+            // Trigger next modal if callback provided
+            setTimeout(() => {
+                if (onClaimSuccess) {
+                    onClaimSuccess();
+                } else {
+                    onClose();
+                }
+            }, 1000);
         } catch (error: unknown) {
             console.error("[NewUserWelcomeModal] Exception caught during claim:");
             console.error("[NewUserWelcomeModal] Error type:", (error as any)?.constructor?.name);

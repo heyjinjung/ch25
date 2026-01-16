@@ -7,6 +7,7 @@ import { getVaultStatus } from "../api/vaultApi";
 import { useSound } from "../hooks/useSound";
 import { useNewUserWelcome } from "../hooks/useNewUserWelcome";
 import NewUserWelcomeModal from "../components/modal/NewUserWelcomeModal";
+import StarterMissionsModal from "../components/modal/StarterMissionsModal";
 import { useMissionStore } from "../stores/missionStore";
 import { useToast } from "../components/common/ToastProvider";
 import { useAuth } from "../auth/authStore";
@@ -84,7 +85,7 @@ const TiltCard: React.FC<GameCardProps> = ({ title, to, gradient, icon, isWide, 
 
           {bgImage && (
             <div className="absolute inset-0 z-0">
-               <motion.img
+              <motion.img
                 src={bgImage}
                 alt={title}
                 className="h-full w-full object-cover opacity-90 scale-110"
@@ -176,7 +177,7 @@ const CategoryTabs: React.FC<{ active: string; onChange: (id: string) => void }>
 
 const HomePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState("all");
-  const { showModal, closeModal } = useNewUserWelcome();
+  const { showWelcomeModal, showStarterModal, closeWelcomeModal, closeStarterModal, closeAllModals } = useNewUserWelcome();
   const { missions, fetchMissions, streakInfo } = useMissionStore();
   const { addToast } = useToast();
   const hasAnnouncedGift = React.useRef(false);
@@ -408,7 +409,15 @@ const HomePage: React.FC = () => {
       </Link>
 
       {/* New User Welcome Modal */}
-      {showModal && <NewUserWelcomeModal onClose={closeModal} />}
+      {showWelcomeModal && (
+        <NewUserWelcomeModal
+          onClose={closeAllModals}
+          onClaimSuccess={closeWelcomeModal}
+        />
+      )}
+
+      {/* Starter Missions Modal */}
+      {showStarterModal && <StarterMissionsModal onClose={closeStarterModal} />}
 
       {/* Attendance Streak Modal */}
 

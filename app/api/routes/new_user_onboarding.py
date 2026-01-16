@@ -24,9 +24,13 @@ from app.services.mission_service import MissionService
 router = APIRouter(prefix="/api/new-user", tags=["new-user"])
 
 
-WELCOME_LOGIC_KEYS = (
+WELCOME_AUTO_CLAIM_KEYS = (
     "NEW_USER_WELCOME_CASH",
     "NEW_USER_WELCOME_TICKET",
+)
+
+WELCOME_LOGIC_KEYS = (
+    *WELCOME_AUTO_CLAIM_KEYS,
     "starter_play_1",
     "starter_play_3",
     "starter_channel_join",
@@ -209,16 +213,16 @@ def claim_welcome(db: Session = Depends(get_db), user_id: int = Depends(get_curr
 
     missions = (
         db.query(Mission)
-        .filter(Mission.logic_key.in_(WELCOME_LOGIC_KEYS), Mission.is_active == True)
+        .filter(Mission.logic_key.in_(WELCOME_AUTO_CLAIM_KEYS), Mission.is_active == True)
         .all()
     )
     missions_by_key = {m.logic_key: m for m in missions}
 
-    missing = [k for k in WELCOME_LOGIC_KEYS if k not in missions_by_key]
+    missing = [k for k in WELCOME_AUTO_CLAIM_KEYS if k not in missions_by_key]
     if missing:
         return ClaimWelcomeResponse(success=False, reason="WELCOME_MISSION_NOT_CONFIGURED", rewards=[])
 
-    for logic_key in WELCOME_LOGIC_KEYS:
+    for logic_key in WELCOME_AUTO_CLAIM_KEYS:
         mission = missions_by_key[logic_key]
         reset_date = ms.get_reset_date_str(mission.category)
 

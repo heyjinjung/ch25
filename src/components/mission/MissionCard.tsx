@@ -38,10 +38,24 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
   const percent = Math.min(100, Math.round((progress.current_value / Math.max(1, mission.target_value)) * 100));
 
   const handleClaim = async () => {
-    if (!isCompleted || isClaimed) return;
+    console.log("[MissionCard] handleClaim called", {
+      missionId: mission.id,
+      isCompleted,
+      isClaimed
+    });
+
+    if (!isCompleted || isClaimed) {
+      console.log("[MissionCard] Early return:", { isCompleted, isClaimed });
+      return;
+    }
+
     impact("heavy");
+    console.log("[MissionCard] Starting claim process for mission:", mission.id);
+
     try {
       const result = await claimReward(mission.id);
+      console.log("[MissionCard] Claim result:", result);
+
       if (result.success) {
         notification("success");
         playToast();
@@ -52,11 +66,12 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
         queryClient.invalidateQueries({ queryKey: ["vault-status"] });
         queryClient.invalidateQueries({ queryKey: ["inventory"] });
       } else {
+        console.error("[MissionCard] Claim failed with result:", result);
         notification("error");
         addToast(result.message || "보상 수령 실패", "error");
       }
     } catch (error) {
-      console.error("[MissionCard] Claim failed:", error);
+      console.error("[MissionCard] Claim exception:", error);
       notification("error");
       addToast("오류가 발생했습니다. 잠시 후 다시 시도해주세요.", "error");
     }

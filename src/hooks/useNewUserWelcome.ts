@@ -1,14 +1,16 @@
 import { useState, useEffect } from "react";
 
+type ModalState = "none" | "welcome" | "starter";
+
 export const useNewUserWelcome = () => {
-    const [showModal, setShowModal] = useState(false);
+    const [modalState, setModalState] = useState<ModalState>("none");
 
     useEffect(() => {
         // Policy B: show to all users; keep showing until missions are completed (modal self-hides when done).
         console.log("[useNewUserWelcome] Starting timer...");
         const timer = setTimeout(() => {
-            console.log("[useNewUserWelcome] Showing Modal now.");
-            setShowModal(true);
+            console.log("[useNewUserWelcome] Showing Welcome Modal now.");
+            setModalState("welcome");
             try {
                 sessionStorage.setItem("welcome_modal_open", "1");
             } catch {
@@ -26,8 +28,14 @@ export const useNewUserWelcome = () => {
         };
     }, []);
 
-    const closeModal = () => {
-        setShowModal(false);
+    const closeWelcomeModal = () => {
+        console.log("[useNewUserWelcome] Welcome modal closed, showing Starter modal...");
+        setModalState("starter");
+    };
+
+    const closeStarterModal = () => {
+        console.log("[useNewUserWelcome] Starter modal closed, all modals complete.");
+        setModalState("none");
         try {
             sessionStorage.removeItem("welcome_modal_open");
         } catch {
@@ -35,5 +43,20 @@ export const useNewUserWelcome = () => {
         }
     };
 
-    return { showModal, closeModal };
+    const closeAllModals = () => {
+        setModalState("none");
+        try {
+            sessionStorage.removeItem("welcome_modal_open");
+        } catch {
+            // ignore
+        }
+    };
+
+    return {
+        showWelcomeModal: modalState === "welcome",
+        showStarterModal: modalState === "starter",
+        closeWelcomeModal,
+        closeStarterModal,
+        closeAllModals,
+    };
 };
