@@ -208,9 +208,9 @@ const ExchangePage: React.FC = () => {
 
                 <button
                     onClick={() => navigate('/inventory')}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 active:scale-95 transition-all text-[11px] font-bold text-white/70 border border-white/5"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 active:scale-95 transition-all text-lg font-bold text-white/70 border border-white/5"
                 >
-                    <img src="/assets/icon_inventory_wallet.png" className="w-3.5 h-3.5 object-contain opacity-70" alt="" />
+                    <img src="/assets/icon_inventory_wallet.png" className="w-5 h-5 object-contain opacity-70" alt="" />
                     보상함
                 </button>
             </div>

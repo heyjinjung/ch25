@@ -227,6 +227,12 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
         const playNext = () => {
             const file = sources[currentIndex];
+
+            // Clean up previous sound if it exists
+            if (bgmRef.current) {
+                bgmRef.current.unload();
+            }
+
             const sound = new Howl({
                 src: [file],
                 html5: true,
@@ -256,6 +262,7 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
         playNext();
         currentBgmSrcRef.current = srcKey;
+
 
     }, [bgmVolume]);
 

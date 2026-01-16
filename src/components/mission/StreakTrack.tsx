@@ -66,7 +66,7 @@ const StreakTrack: React.FC = () => {
                                     "w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all shadow-lg",
                                     isPast ? "bg-amber-500 border-amber-400 text-white" :
                                         isClaimable ? "bg-white border-white text-amber-500 animate-bounce" :
-                                            isCurrentTarget ? "bg-zinc-800 border-amber-500/50 text-white/50" :
+                                            isCurrentTarget ? "bg-zinc-800 border-amber-500/50 text-white/50 animate-pulse" :
                                                 "bg-zinc-900 border-zinc-800 text-white/20"
                                 )}>
                                     {isPast ? (
