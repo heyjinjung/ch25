@@ -106,7 +106,7 @@ const VaultPageCompact: React.FC = () => {
             <SparkleDust />
 
             {/* Header */}
-            <div className="w-full mb-8 flex items-center justify-end">
+            <div className="w-full mb-8 pt-3 flex items-center justify-end">
 
                 <button
                     type="button"
@@ -121,9 +121,9 @@ const VaultPageCompact: React.FC = () => {
                             { tone: "info" }
                         );
                     }}
-                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white/5 border border-white/10 text-[10px] font-black text-white/70 active:scale-[0.98] transition-transform"
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white/5 border border-white/10 text-[12px] font-black text-white/70 active:scale-[0.98] transition-transform"
                 >
-                    <img src="/assets/logo_cc_v2.png" className="w-3.5 h-3.5 object-contain" alt="" />
+                    <img src="/assets/logo_cc_v2.png" className="w-4 h-4 object-contain" alt="" />
                     안내
                 </button>
             </div>
@@ -231,19 +231,19 @@ const VaultPageCompact: React.FC = () => {
                     </div>
 
                     {/* Ultimate Glassmorphism Gauge Card */}
-                    <div className="w-full max-w-xs rounded-[32px] p-6 relative overflow-hidden group mb-8 backdrop-blur-3xl bg-white/[0.04] border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
+                    <div className="w-full max-w-xs rounded-[24px] p-5 relative overflow-hidden group mb-6 backdrop-blur-3xl bg-white/[0.04] border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
 
                         {/* Shimmering glass highlight */}
                         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/25 to-transparent" />
 
                         {/* Gauge Header */}
-                        <div className="flex justify-between items-center mb-5 relative z-10">
+                        <div className="flex justify-between items-center mb-3 relative z-10">
                             <span className="flex items-center gap-2">
                                 <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse shadow-[0_0_10px_rgba(245,158,11,0.6)]" />
-                                <span className="text-white/80 font-bold text-[14px] tracking-widest uppercase drop-shadow-sm">출금 미션 현황</span>
+                                <span className="text-white/80 font-bold text-[13px] tracking-widest uppercase drop-shadow-sm">출금 미션 현황</span>
                             </span>
                             <div className="flex items-baseline gap-0.5" onClick={() => setShowProgressModal(true)} style={{ cursor: 'pointer' }}>
-                                <span className="text-2xl font-black text-amber-500 tabular-nums drop-shadow-[0_0_15px_rgba(245,158,11,0.4)]">
+                                <span className="text-xl font-black text-amber-500 tabular-nums drop-shadow-[0_0_15px_rgba(245,158,11,0.4)]">
                                     {view.progressPercent}
                                 </span>
                                 <span className="text-[10px] font-bold text-amber-500/60">%</span>
@@ -251,7 +251,7 @@ const VaultPageCompact: React.FC = () => {
                         </div>
 
                         {/* Premium Progress Bar */}
-                        <div className="relative h-4 bg-black/40 rounded-full p-1 border border-white/5 shadow-inner mb-6">
+                        <div className="relative h-3 bg-black/40 rounded-full p-0.5 border border-white/5 shadow-inner">
                             <motion.div
                                 initial={{ width: 0 }}
                                 animate={{ width: `${view.progressPercent}%` }}
@@ -268,25 +268,27 @@ const VaultPageCompact: React.FC = () => {
 
 
                     {/* Footer Info Row - Redesigned for Uniformity */}
-                    <button
-                        onClick={() => setShowConditionsModal(true)}
-                        className="w-full max-w-xs h-[50px] mb-3 flex items-center justify-center gap-2 rounded-2xl bg-emerald-500/10 border border-emerald-500/50 text-emerald-400 text-sm font-bold tracking-wide hover:bg-emerald-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
-                    >
-                        <ListChecks size={18} />
-                        <span>출금 조건 확인하기</span>
-                    </button>
+                    <div className="flex w-full max-w-xs gap-2 mb-3">
+                        <button
+                            onClick={() => setShowConditionsModal(true)}
+                            className="flex-1 h-[50px] flex items-center justify-center gap-1.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/50 text-emerald-400 text-xs font-bold tracking-wide hover:bg-emerald-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                        >
+                            <ListChecks size={16} />
+                            <span>출금 조건</span>
+                        </button>
 
-                    <button className="w-full max-w-xs h-[50px] mb-3 rounded-2xl bg-emerald-500/80 backdrop-blur-md border border-white/20 text-white font-bold text-[14px] shadow-lg items-center justify-center gap-1.5 flex cursor-not-allowed opacity-50" disabled>
-                        <Lock size={16} className="opacity-50" />
-                        <span>출금 신청하기</span>
-                    </button>
+                        <button className="flex-1 h-[50px] rounded-2xl bg-emerald-900/40 border border-white/10 text-white/50 font-bold text-xs items-center justify-center gap-1.5 flex cursor-not-allowed" disabled>
+                            <Lock size={14} className="opacity-50" />
+                            <span>출금 신청</span>
+                        </button>
+                    </div>
 
                     {/* Charge Button */}
                     <a
                         href="https://ccc-010.com"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-full max-w-xs h-[50px] rounded-2xl bg-emerald-500/80 backdrop-blur-md border border-white/20 text-white font-bold text-[14px] shadow-lg hover:bg-emerald-400 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                        className="w-full max-w-xs h-[50px] rounded-2xl bg-emerald-600 border border-emerald-400/30 text-white font-black text-sm shadow-[0_4px_12px_rgba(16,185,129,0.3)] hover:bg-emerald-500 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
                     >
                         <img src="/assets/logo_cc_v2.png" className="w-4 h-4 object-contain mix-blend-screen" alt="" />
                         씨씨카지노 충전하기

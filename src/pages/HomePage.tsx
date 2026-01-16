@@ -331,7 +331,7 @@ const HomePage: React.FC = () => {
       >
         <motion.img
           src="/assets/hero_event_banner_20260116.png"
-          className="absolute inset-0 w-full h-full object-cover"
+          className="absolute inset-0 w-full h-full object-cover object-left-top"
           alt="Banner"
           animate={{ scale: [1, 1.05, 1] }}
           transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
@@ -342,7 +342,7 @@ const HomePage: React.FC = () => {
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
 
         {/* Contact Manager Button - Bottom Right Alignment */}
-        <div className="absolute bottom-5 right-5 z-20 flex flex-col items-end gap-2">
+        <div className="absolute bottom-5 right-4 z-20 flex flex-col items-end gap-2">
           {streakInfo && streakInfo.streak_days > 0 && (
             <motion.div
               initial={{ y: 20, opacity: 0 }}

@@ -49,7 +49,7 @@ const InventoryPage: React.FC = () => {
 
     const items = Array.isArray(data?.items) ? data.items : [];
     const wallet = (data?.wallet && typeof data.wallet === "object" && !Array.isArray(data.wallet) ? data.wallet : {}) as Record<string, number>;
-    const diamondCount = items.find((i) => i.item_type === "DIAMOND")?.quantity ?? 0;
+
 
     if (isLoading) {
         return (
@@ -87,10 +87,6 @@ const InventoryPage: React.FC = () => {
                 </div>
                 <div>
                     <h1 className="text-xl font-black text-white">보상함</h1>
-                    <div className="mt-1 flex items-center gap-1.5 text-[11px] font-black text-white/60">
-                        <img src="/assets/icon_diamond.png" alt="" className="w-3.5 h-3.5 object-contain" />
-                        <span className="tabular-nums">{diamondCount.toLocaleString()}개</span>
-                    </div>
                 </div>
                 <div className="ml-auto">
                     <button
@@ -106,9 +102,9 @@ const InventoryPage: React.FC = () => {
                                 { tone: "info" }
                             );
                         }}
-                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-[11px] font-black text-white/70 active:scale-[0.98]"
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500/10 to-amber-600/10 border border-amber-500/20 text-sm font-black text-amber-400/90 hover:text-amber-300 hover:border-amber-500/30 active:scale-[0.98] transition-all shadow-sm"
                     >
-                        <img src="/assets/logo_cc_v2.png" className="w-4 h-4 object-contain" alt="" />
+                        <img src="/assets/logo_cc_v2.png" className="w-5 h-5 object-contain" alt="" />
                         안내
                     </button>
                 </div>
@@ -116,14 +112,15 @@ const InventoryPage: React.FC = () => {
 
             {/* Tabs (route) */}
             <div className="mb-6" data-tour="inventory-tabs">
-                <div className="flex p-1 bg-white/5 rounded-2xl border border-white/10">
+                <div className="relative flex p-1.5 bg-gradient-to-r from-white/5 to-white/[0.03] rounded-2xl border border-white/10 shadow-inner">
                     <button
                         type="button"
                         data-tour="inventory-items-tab"
                         disabled
-                        className="flex-1 py-3 text-sm font-black rounded-xl transition-all bg-figma-primary text-white shadow-lg shadow-emerald-900/20"
+                        className="relative flex-1 py-3.5 text-sm font-black rounded-xl transition-all bg-gradient-to-r from-figma-primary to-emerald-600 text-white shadow-[0_0_20px_rgba(16,185,129,0.2)] overflow-hidden"
                     >
-                        보유함
+                        <span className="relative z-10">보유함</span>
+                        <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 animate-shine" />
                     </button>
                     <button
                         type="button"
@@ -132,7 +129,7 @@ const InventoryPage: React.FC = () => {
                             tryHaptic(10);
                             navigate('/shop');
                         }}
-                        className="flex-1 py-3 text-sm font-black rounded-xl transition-all text-white/60 hover:text-white hover:bg-white/5 active:scale-[0.98]"
+                        className="flex-1 py-3.5 text-sm font-black rounded-xl transition-all text-white/60 hover:text-white hover:bg-white/10 active:scale-[0.98] hover:shadow-md"
                     >
                         상점
                     </button>
@@ -146,9 +143,9 @@ const InventoryPage: React.FC = () => {
                     <div className="mb-3 flex items-baseline justify-between">
                         <h2 className="text-sm font-black text-white/90">보유 아이템</h2>
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="flex gap-3 overflow-x-auto pb-3 snap-x snap-mandatory scrollbar-hide -mx-1 px-1">
                         {items.filter(it => it.quantity > 0).length === 0 ? (
-                            <div className="col-span-2 flex flex-col items-center justify-center py-12 space-y-3">
+                            <div className="w-full flex flex-col items-center justify-center py-12 space-y-3">
                                 <div className="relative mb-2">
                                     <div className="absolute inset-0 bg-emerald-500/10 blur-3xl rounded-full" />
                                     <img
@@ -163,19 +160,21 @@ const InventoryPage: React.FC = () => {
                             items
                                 .filter(it => it.quantity > 0)
                                 .map((item) => (
-                                    <ItemCard
-                                        key={item.item_type}
-                                        item={item}
-                                        onUse={() => {
-                                            if (item.item_type.includes("FRAGMENT")) {
-                                                const target = item.item_type === "GOLD_KEY_FRAGMENT" ? "GOLD_KEY" : "DIAMOND_KEY";
-                                                useCraftAction.mutate({ target_token_type: target });
-                                            } else {
-                                                useMutationAction.mutate({ item_type: item.item_type, amount: 1 });
-                                            }
-                                        }}
-                                        isPending={useMutationAction.isPending || useCraftAction.isPending}
-                                    />
+                                    <div className="flex-shrink-0 w-[45%] snap-start">
+                                        <ItemCard
+                                            key={item.item_type}
+                                            item={item}
+                                            onUse={() => {
+                                                if (item.item_type.includes("FRAGMENT")) {
+                                                    const target = item.item_type === "GOLD_KEY_FRAGMENT" ? "GOLD_KEY" : "DIAMOND_KEY";
+                                                    useCraftAction.mutate({ target_token_type: target });
+                                                } else {
+                                                    useMutationAction.mutate({ item_type: item.item_type, amount: 1 });
+                                                }
+                                            }}
+                                            isPending={useMutationAction.isPending || useCraftAction.isPending}
+                                        />
+                                    </div>
                                 ))
                         )}
                     </div>
@@ -185,7 +184,7 @@ const InventoryPage: React.FC = () => {
                     <div className="mb-3 flex items-baseline justify-between">
                         <h2 className="text-[14px] font-black text-white/90">티켓 지갑</h2>
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="flex gap-3 overflow-x-auto pb-3 snap-x snap-mandatory scrollbar-hide -mx-1 px-1">
                         {[
                             'ROULETTE_COIN',
                             'DICE_TOKEN',
@@ -194,11 +193,12 @@ const InventoryPage: React.FC = () => {
                             'GOLD_KEY',
                             'DIAMOND_KEY'
                         ].map((tokenType) => (
-                            <WalletCard
-                                key={tokenType}
-                                tokenType={tokenType}
-                                amount={Number(wallet[tokenType] ?? 0)}
-                            />
+                            <div key={tokenType} className="flex-shrink-0 w-[45%] snap-start">
+                                <WalletCard
+                                    tokenType={tokenType}
+                                    amount={Number(wallet[tokenType] ?? 0)}
+                                />
+                            </div>
                         ))}
                     </div>
                 </div>
