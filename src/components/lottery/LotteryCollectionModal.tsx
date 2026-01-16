@@ -24,6 +24,17 @@ const PuzzlePiece = ({
 }) => {
     const isAcquired = count >= required;
 
+    // Map char to image file name
+    const getImageSrc = (c: string) => {
+        const key = c.toUpperCase();
+        if (key === "C") return "/assets/icons/puzzle_c.png";
+        if (key === "J") return "/assets/icons/puzzle_j.png";
+        if (key === "M") return "/assets/icons/puzzle_m.png";
+        return null;
+    };
+
+    const imgSrc = getImageSrc(char);
+
     return (
         <div className="flex flex-col items-center gap-2">
             <div className="relative group perspective-500">
@@ -35,24 +46,26 @@ const PuzzlePiece = ({
                     }}
                     transition={{ duration: 0.8, type: "spring" }}
                     className={clsx(
-                        "relative w-16 h-20 sm:w-20 sm:h-24 rounded-lg flex items-center justify-center text-4xl font-black shadow-xl transition-all duration-300 transform-style-3d",
+                        "relative w-16 h-20 sm:w-20 sm:h-24 rounded-lg flex items-center justify-center shadow-xl transition-all duration-300 transform-style-3d",
                         isAcquired
-                            ? "bg-gradient-to-br from-amber-300 via-amber-500 to-amber-700 text-white shadow-amber-500/50"
-                            : "bg-white/10 text-white/20 border-2 border-dashed border-white/20 shadow-inner"
+                            ? "shadow-amber-500/50" // Remove background color, let image handle it
+                            : "bg-white/5 border-2 border-dashed border-white/20 shadow-inner"
                     )}
-                    style={{
-                        // Placeholder styling: "Scrabble Tile" feel
-                        boxShadow: isAcquired
-                            ? "0 10px 20px rgba(0,0,0,0.5), inset 0 2px 0 rgba(255,255,255,0.4), inset 0 -4px 0 rgba(0,0,0,0.2)"
-                            : "none"
-                    }}
                 >
-                    {/* Placeholder Image or Text */}
-                    <span className="drop-shadow-md pb-1">{char}</span>
-
-                    {/* 3D Thickness Effect (Pseudo) */}
-                    {isAcquired && (
-                        <div className="absolute inset-x-0 -bottom-1 h-2 bg-amber-900/50 rounded-b-lg -z-10 transform translate-z-[-5px]" />
+                    {isAcquired && imgSrc ? (
+                        <img
+                            src={imgSrc}
+                            alt={`Puzzle ${char}`}
+                            className="w-full h-full object-contain drop-shadow-md"
+                        />
+                    ) : (
+                        // Fallback / Placeholder for unacquired state or missing image
+                        <span className={clsx(
+                            "text-4xl font-black drop-shadow-md pb-1",
+                            isAcquired ? "text-white" : "text-white/20"
+                        )}>
+                            {char}
+                        </span>
                     )}
                 </motion.div>
             </div>

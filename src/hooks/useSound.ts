@@ -90,8 +90,10 @@ export const useSound = () => {
 
     const startMainBgm = useCallback(() => {
         playBgm([
-            "/assets/sounds/bgm/battle_theme.wav",
-            "/assets/sounds/bgm/Red Curtain.ogg"
+            "/assets/sounds/bgm/Sketchbook 2025-12-11_INTRO.ogg",
+            "/assets/sounds/bgm/Sketchbook 2025-12-11_VERSE.ogg",
+            "/assets/sounds/bgm/Sketchbook 2025-12-11_NEURO.ogg",
+            "/assets/sounds/bgm/Sketchbook 2025-12-11_BREAKDOWN.ogg"
         ]);
     }, [playBgm]);
     const startBattleBgm = useCallback(() => playBgm(SOUND_SOURCES.BGM.BATTLE), [playBgm]);
