@@ -47,13 +47,20 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) =>
         impact("heavy");
         setIsClaiming(true);
         try {
+            console.log("[NewUserWelcomeModal] Calling claimNewUserWelcome API...");
             const result = await claimNewUserWelcome();
+            console.log("[NewUserWelcomeModal] API Response:", result);
+
             if (!result?.success) {
+                console.error("[NewUserWelcomeModal] Claim failed - API returned success=false");
+                console.error("[NewUserWelcomeModal] Reason:", result?.reason);
+                console.error("[NewUserWelcomeModal] Rewards:", result?.rewards);
                 notification("error");
-                addToast("웰컴 보상 지급에 실패했습니다. 잠시 후 다시 시도해주세요.", "error");
+                addToast(`웰컴 보상 지급에 실패했습니다. ${result?.reason || '잠시 후 다시 시도해주세요.'}`, "error");
                 return;
             }
 
+            console.log("[NewUserWelcomeModal] Claim succeeded! Rewards count:", result.rewards?.length);
             notification("success");
             setHasClaimed(true);
 
@@ -63,10 +70,16 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose }) =>
             await queryClient.invalidateQueries({ queryKey: ["new-user-status"] });
 
             addToast("정착 지원금이 지급되었습니다.", "success");
-        } catch (error) {
-            console.error("[NewUserWelcomeModal] Claim failed:", error);
+        } catch (error: unknown) {
+            console.error("[NewUserWelcomeModal] Exception caught during claim:");
+            console.error("[NewUserWelcomeModal] Error type:", (error as any)?.constructor?.name);
+            console.error("[NewUserWelcomeModal] Error message:", (error as any)?.message);
+            console.error("[NewUserWelcomeModal] Full error:", error);
+            console.error("[NewUserWelcomeModal] Error response:", (error as any)?.response?.data);
+            console.error("[NewUserWelcomeModal] Error status:", (error as any)?.response?.status);
             notification("error");
-            addToast("오류가 발생했습니다. 잠시 후 다시 시도해주세요.", "error");
+            const errorMsg = (error as any)?.response?.data?.detail || (error as any)?.message || "오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
+            addToast(errorMsg, "error");
         } finally {
             setIsClaiming(false);
         }
