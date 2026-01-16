@@ -86,7 +86,7 @@ const InventoryPage: React.FC = () => {
                     <img src="/assets/icon_inventory_wallet.png" alt="보상함" className="w-full h-full object-contain" />
                 </div>
                 <div>
-                    <h1 className="text-xl font-black text-white">보상함</h1>
+                    <h1 className="text-sm font-black text-amber-400/90 bg-gradient-to-r from-amber-500/10 to-amber-600/10 border border-amber-500/20 px-4 py-2.5 rounded-xl shadow-sm hover:text-amber-300 hover:border-amber-500/30 active:scale-[0.98] transition-all">보상함</h1>
                 </div>
                 <div className="ml-auto">
                     <button

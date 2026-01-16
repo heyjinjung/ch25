@@ -251,7 +251,7 @@ const VaultPageCompact: React.FC = () => {
                         </div>
 
                         {/* Premium Progress Bar */}
-                        <div className="relative h-3 bg-black/40 rounded-full p-0.5 border border-white/5 shadow-inner">
+                        <div className="relative h-4 bg-black/40 rounded-full p-1 border border-white/5 shadow-inner">
                             <motion.div
                                 initial={{ width: 0 }}
                                 animate={{ width: `${view.progressPercent}%` }}
@@ -271,13 +271,13 @@ const VaultPageCompact: React.FC = () => {
                     <div className="flex w-full max-w-xs gap-2 mb-3">
                         <button
                             onClick={() => setShowConditionsModal(true)}
-                            className="flex-1 h-[50px] flex items-center justify-center gap-1.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/50 text-emerald-400 text-xs font-bold tracking-wide hover:bg-emerald-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                            className="flex-1 h-[50px] flex items-center justify-center gap-1.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/50 text-emerald-400 text-[14px] font-bold tracking-wide hover:bg-emerald-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
                         >
                             <ListChecks size={16} />
                             <span>출금 조건</span>
                         </button>
 
-                        <button className="flex-1 h-[50px] rounded-2xl bg-emerald-900/40 border border-white/10 text-white/50 font-bold text-xs items-center justify-center gap-1.5 flex cursor-not-allowed" disabled>
+                        <button className="flex-1 h-[50px] rounded-2xl bg-emerald-900/40 border border-white/10 text-white/50 font-bold text-[14px] items-center justify-center gap-1.5 flex cursor-not-allowed" disabled>
                             <Lock size={14} className="opacity-50" />
                             <span>출금 신청</span>
                         </button>
@@ -288,7 +288,7 @@ const VaultPageCompact: React.FC = () => {
                         href="https://ccc-010.com"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-full max-w-xs h-[50px] rounded-2xl bg-emerald-600 border border-emerald-400/30 text-white font-black text-sm shadow-[0_4px_12px_rgba(16,185,129,0.3)] hover:bg-emerald-500 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                        className="w-full max-w-xs h-[50px] rounded-2xl bg-emerald-600 border border-emerald-400/30 text-white font-black text-[14px] shadow-[0_4px_12px_rgba(16,185,129,0.3)] hover:bg-emerald-500 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
                     >
                         <img src="/assets/logo_cc_v2.png" className="w-4 h-4 object-contain mix-blend-screen" alt="" />
                         씨씨카지노 충전하기
