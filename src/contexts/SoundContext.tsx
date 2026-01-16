@@ -10,7 +10,7 @@ type SoundContextType = {
     setSfxVolume: (vol: number) => void;
     playSfx: (src: string, options?: { volume?: number; speed?: number; loop?: boolean }) => Howl | null;
     stopSfx: (howl: Howl | null) => void;
-    playBgm: (src: string) => void;
+    playBgm: (src: string | string[]) => void;
     stopBgm: () => void;
     unlockAudio: () => void;
     isReady: boolean;
@@ -201,14 +201,15 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setSfxVolumeState(vol);
     }, []);
 
-    const playBgm = useCallback((src: string) => {
-        recordE2eSoundEvent({ kind: "bgm", src });
-        if (currentBgmSrcRef.current === src && bgmRef.current?.playing()) return;
+    const playBgm = useCallback((src: string | string[]) => {
+        const srcKey = Array.isArray(src) ? src.join(",") : src;
+        recordE2eSoundEvent({ kind: "bgm", src: srcKey });
 
-        // If called before user gesture, browsers (especially mobile webviews) may block autoplay.
-        // Queue it and let unlockAudio() start it after a click/touch.
+        if (currentBgmSrcRef.current === srcKey && bgmRef.current?.playing()) return;
+
+        // If called before user gesture...
         if (Howler.ctx && Howler.ctx.state === "suspended") {
-            pendingBgmSrcRef.current = src;
+            pendingBgmSrcRef.current = srcKey; // Store as string for simplicity
             return;
         }
 
@@ -221,29 +222,51 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             }, 1000);
         }
 
-        const sound = new Howl({
-            src: [src],
-            html5: true, // Stream large files
-            loop: true,
-            volume: 0,
-            autoplay: true,
-            onplayerror: (_id, error) => {
-                console.error(`[SOUND] BGM Play error: ${src}`, error);
-                setLastError(`BGM fail: ${src}`);
-                pendingBgmSrcRef.current = src;
-            }
-        });
+        const sources = Array.isArray(src) ? src : [src];
+        let currentIndex = 0;
 
-        bgmRef.current = sound;
-        currentBgmSrcRef.current = src;
-        sound.fade(0, bgmVolume, 1000);
+        const playNext = () => {
+            const file = sources[currentIndex];
+            const sound = new Howl({
+                src: [file],
+                html5: true,
+                loop: sources.length === 1, // Loop only if single file
+                volume: 0,
+                autoplay: true,
+                onend: () => {
+                    if (sources.length > 1) {
+                        currentIndex = (currentIndex + 1) % sources.length;
+                        playNext();
+                    }
+                },
+                onplayerror: (_id, error) => {
+                    console.error(`[SOUND] BGM Play error: ${file}`, error);
+                    setLastError(`BGM fail: ${file}`);
+                    // If error, try next
+                    if (sources.length > 1) {
+                        currentIndex = (currentIndex + 1) % sources.length;
+                        playNext();
+                    }
+                }
+            });
+
+            bgmRef.current = sound;
+            sound.fade(0, bgmVolume, 1000);
+        };
+
+        playNext();
+        currentBgmSrcRef.current = srcKey;
+
     }, [bgmVolume]);
 
     // Provide a safe starter for queued BGM without reordering hooks/callbacks.
     startPendingBgmRef.current = () => {
-        const src = pendingBgmSrcRef.current;
-        if (!src) return;
+        const srcKey = pendingBgmSrcRef.current;
+        if (!srcKey) return;
         pendingBgmSrcRef.current = null;
+
+        // Restore array if it contained comma
+        const src = srcKey.includes(",") ? srcKey.split(",") : srcKey;
         playBgm(src);
     };
 
