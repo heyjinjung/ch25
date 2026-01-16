@@ -22,6 +22,7 @@ const SeasonPassPromoModal: React.FC<SeasonPassPromoModalProps> = ({ onClose }) 
                 {/* Close Button */}
                 <button
                     onClick={onClose}
+                    aria-label="Close"
                     className="absolute top-4 right-4 p-2 rounded-full bg-black/40 text-white/70 hover:bg-black/60 hover:text-white transition-colors z-10"
                 >
                     <X size={20} />
@@ -29,7 +30,7 @@ const SeasonPassPromoModal: React.FC<SeasonPassPromoModalProps> = ({ onClose }) 
 
                 {/* Hero Section */}
                 <div className="bg-gradient-to-br from-amber-600 to-amber-800 p-8 flex flex-col items-center text-center pt-12 pb-10 relative overflow-hidden">
-                    <div className="absolute inset-0 bg-[url('/assets/pattern_noise.png')] opacity-20 mix-blend-overlay" />
+                    <div className="absolute inset-0 bg-white/[0.02] mix-blend-overlay" />
 
                     <div className="p-4 rounded-full bg-white/10 mb-4 backdrop-blur-md border border-white/20 shadow-lg shadow-amber-900/50">
                         <Crown size={48} className="text-white drop-shadow-md" />

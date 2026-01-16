@@ -63,7 +63,7 @@ export const useSoundContext = () => {
 
 interface RetryItem {
     src: string;
-    options?: { volume?: number; speed?: number };
+    options?: { volume?: number; speed?: number; loop?: boolean };
 }
 
 export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -83,6 +83,8 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const bgmRef = useRef<Howl | null>(null);
     const currentBgmSrcRef = useRef<string | null>(null);
     const sfxCacheRef = useRef<Record<string, Howl>>({});
+    const pendingBgmSrcRef = useRef<string | null>(null);
+    const startPendingBgmRef = useRef<(() => void) | null>(null);
 
     // 1. Preload all SFX
     useEffect(() => {
@@ -177,9 +179,11 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             Howler.ctx.resume().then(() => {
                 console.log("[SOUND] AudioContext resumed");
                 flushRetryQueue();
+                startPendingBgmRef.current?.();
             });
         } else {
             flushRetryQueue();
+            startPendingBgmRef.current?.();
         }
     }, [flushRetryQueue]);
 
@@ -201,6 +205,13 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         recordE2eSoundEvent({ kind: "bgm", src });
         if (currentBgmSrcRef.current === src && bgmRef.current?.playing()) return;
 
+        // If called before user gesture, browsers (especially mobile webviews) may block autoplay.
+        // Queue it and let unlockAudio() start it after a click/touch.
+        if (Howler.ctx && Howler.ctx.state === "suspended") {
+            pendingBgmSrcRef.current = src;
+            return;
+        }
+
         if (bgmRef.current) {
             bgmRef.current.fade(bgmRef.current.volume(), 0, 1000);
             const oldBgm = bgmRef.current;
@@ -219,6 +230,7 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             onplayerror: (_id, error) => {
                 console.error(`[SOUND] BGM Play error: ${src}`, error);
                 setLastError(`BGM fail: ${src}`);
+                pendingBgmSrcRef.current = src;
             }
         });
 
@@ -226,6 +238,14 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         currentBgmSrcRef.current = src;
         sound.fade(0, bgmVolume, 1000);
     }, [bgmVolume]);
+
+    // Provide a safe starter for queued BGM without reordering hooks/callbacks.
+    startPendingBgmRef.current = () => {
+        const src = pendingBgmSrcRef.current;
+        if (!src) return;
+        pendingBgmSrcRef.current = null;
+        playBgm(src);
+    };
 
     const stopBgm = useCallback(() => {
         if (bgmRef.current) {

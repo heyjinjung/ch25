@@ -6,7 +6,7 @@ interface Prize {
   readonly id: number;
   readonly label: string;
   readonly reward_type: string;
-  readonly reward_value: string | number;
+  readonly reward_amount: string | number;
   readonly stock?: number | null;
   readonly is_active?: boolean;
   readonly weight?: number;
@@ -71,11 +71,6 @@ const LotteryCard: React.FC<LotteryCardProps> = React.memo(({ prize, isRevealed,
               <div className="relative z-10 w-full h-full flex flex-col items-center justify-center p-4 text-center animate-in zoom-in-90 fade-in duration-500">
                 {/* Simplified Visual Effects */}
                 <div className="absolute inset-0 bg-gradient-to-b from-amber-500/10 via-transparent to-emerald-500/10 opacity-50" />
-                <img
-                  src="/assets/lottery/star_rays.png"
-                  className="absolute inset-0 w-full h-full object-contain opacity-20 animate-spin-slow mix-blend-screen"
-                  alt=""
-                />
 
                 <div className="relative z-20 flex flex-col items-center">
                   <span className="inline-block px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-[10px] font-black tracking-widest uppercase mb-4 shadow-lg">
@@ -83,7 +78,7 @@ const LotteryCard: React.FC<LotteryCardProps> = React.memo(({ prize, isRevealed,
                   </span>
 
                   {/* Result Logic Fix */}
-                  {prize.reward_type === 'NONE' || (Number(prize.reward_value) === 0 && prize.reward_type.includes('POINT')) ? (
+                  {prize.reward_type === 'NONE' || (Number(prize.reward_amount) === 0 && prize.reward_type.includes('POINT')) ? (
                     <>
                       <span className="text-6xl mb-4">💨</span>
                       <h2 className="text-white text-2xl font-black tracking-tight uppercase italic">{prize.label}</h2>
@@ -104,7 +99,7 @@ const LotteryCard: React.FC<LotteryCardProps> = React.memo(({ prize, isRevealed,
                       {(() => {
                         const rawType = prize.reward_type;
                         const upper = rawType.toUpperCase();
-                        const val = Number(prize.reward_value);
+                        const val = Number(prize.reward_amount);
 
                         const normalizedType =
                           upper.includes("POINT") || upper === "CASH" || upper === "CURRENCY" || upper === "CASH_UNLOCK"

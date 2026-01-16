@@ -16,6 +16,8 @@ class GameTokenType(str, Enum):
     # CC_COIN = "CC_COIN"  # [DEPRECATED]
     GOLD_KEY = "GOLD_KEY"
     DIAMOND_KEY = "DIAMOND_KEY"
+    GOLD_KEY_FRAGMENT = "GOLD_KEY_FRAGMENT"       # New: Collect 10 -> GOLD_KEY
+    DIAMOND_KEY_FRAGMENT = "DIAMOND_KEY_FRAGMENT" # New: Collect 30 -> DIAMOND_KEY
     DIAMOND = "DIAMOND"  # Mission Reward Currency
     VAULT = "VAULT"      # Vault Balance (Ticket Buy-in)
 

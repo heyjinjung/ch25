@@ -170,6 +170,7 @@ const SegmentRulesPage: React.FC = () => {
         </div>
         <div className="flex gap-3">
           <button
+            type="button"
             onClick={() => queryClient.invalidateQueries({ queryKey: ["admin", "segment-rules"] })}
             disabled={isLoading}
             className="btn-admin-secondary flex items-center gap-2 px-5 py-2.5 h-auto disabled:opacity-50"
@@ -178,6 +179,7 @@ const SegmentRulesPage: React.FC = () => {
           </button>
           {!isCreating && (
             <button
+              type="button"
               onClick={() => setIsCreating(true)}
               className="btn-admin-primary flex items-center gap-2 px-5 py-2.5 h-auto shadow-admin-glow"
             >
@@ -285,12 +287,14 @@ const SegmentRulesPage: React.FC = () => {
 
           <div className="flex justify-end gap-3 pt-6">
             <button
+              type="button"
               onClick={handleCancel}
               className="btn-admin-secondary flex items-center gap-2 px-5 py-2.5"
             >
               <X className="h-4 w-4" /> 취소
             </button>
             <button
+              type="button"
               onClick={handleSave}
               disabled={createMutation.isPending}
               className="btn-admin-primary flex items-center gap-2 px-5 py-2.5 shadow-admin-glow disabled:opacity-50"
@@ -388,18 +392,22 @@ const SegmentRulesPage: React.FC = () => {
                       <td className="px-4 py-4 text-center">
                         <div className="flex items-center justify-center gap-2">
                           <button
+                            type="button"
                             onClick={() => handleEdit(rule)}
                             className="p-2 rounded-lg hover:bg-admin-brand/10 text-admin-brand transition-colors"
+                            aria-label="규칙 수정"
                           >
                             <Edit3 className="h-4 w-4" />
                           </button>
                           <button
+                            type="button"
                             onClick={() => {
                               if (confirm(`"${rule.name}" 규칙을 삭제하시겠습니까?`)) {
                                 deleteMutation.mutate(rule.id);
                               }
                             }}
                             className="p-2 rounded-lg hover:bg-admin-danger/10 text-admin-danger transition-colors"
+                            aria-label="규칙 삭제"
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>
@@ -485,12 +493,14 @@ const SegmentRulesPage: React.FC = () => {
 
           <div className="flex justify-end gap-3 pt-6">
             <button
+              type="button"
               onClick={handleCancel}
               className="btn-admin-secondary flex items-center gap-2 px-5 py-2.5"
             >
               <X className="h-4 w-4" /> 취소
             </button>
             <button
+              type="button"
               onClick={handleSave}
               disabled={updateMutation.isPending}
               className="btn-admin-primary flex items-center gap-2 px-5 py-2.5 shadow-admin-glow disabled:opacity-50"

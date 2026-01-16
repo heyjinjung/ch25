@@ -28,7 +28,7 @@ const AdminTeamBattlePage: React.FC = () => {
   });
 
   const { data: teamsData, isLoading: teamsLoading } = useQuery({
-    queryKey: ["admin", "team", "teams", selectedSeasonId],
+    queryKey: ["admin", "team", "teams", selectedSeasonId ?? "NO_SEASON"],
     queryFn: () => fetchTeams({ season_id: selectedSeasonId || undefined, size: 20 }),
     enabled: true,
   });

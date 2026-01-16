@@ -31,7 +31,7 @@ export interface LotteryPrizeDto {
   readonly id: number;
   readonly label: string;
   readonly reward_type: string;
-  readonly reward_value: number | string;
+  readonly reward_amount: number | string;
   readonly stock?: number | null;
   readonly is_active?: boolean;
 }
@@ -65,7 +65,7 @@ export const getLotteryStatus = async (): Promise<LotteryStatusResponse> => {
         id: prize.id,
         label: prize.label,
         reward_type: prize.reward_type,
-        reward_value: prize.reward_amount,
+        reward_amount: prize.reward_amount,
         stock: prize.stock ?? null,
         is_active: prize.is_active ?? true,
       })),
@@ -91,7 +91,7 @@ export const playLottery = async (): Promise<LotteryPlayResponse> => {
         id: data.prize.id,
         label: data.prize.label,
         reward_type: data.prize.reward_type,
-        reward_value: data.prize.reward_amount,
+        reward_amount: data.prize.reward_amount,
         stock: data.prize.stock ?? null,
         is_active: data.prize.is_active ?? true,
       },

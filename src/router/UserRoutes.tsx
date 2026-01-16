@@ -67,7 +67,7 @@ const UserRoutes: React.FC = () => {
             <Route path="/roulette" element={<RoulettePage />} />
             <Route path="/dice" element={<DicePage />} />
             <Route path="/lottery" element={<LotteryPage />} />
-            <Route path="/lottery" element={<LotteryPage />} />
+
             <Route path="/guide" element={<GuidePage />} />
             <Route path="/inventory" element={<Navigate to="/rewards" replace />} />
             <Route path="/shop" element={<ExchangePage />} />

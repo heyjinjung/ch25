@@ -17,6 +17,7 @@ class RouletteConfig(Base):
     ticket_type = Column(String(50), nullable=False, default="ROULETTE_COIN", server_default="ROULETTE_COIN")
     is_active = Column(Boolean, nullable=False, default=True)
     max_daily_spins = Column(Integer, nullable=False, default=0)
+    grade = Column(String(20), nullable=False, default="COMMON", server_default="COMMON")  # Target Segment: COMMON, WHALE, NEW
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 

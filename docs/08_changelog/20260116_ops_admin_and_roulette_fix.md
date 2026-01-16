@@ -65,3 +65,29 @@
   - `tests/test_roulette_vault_fix.py` 작성 및 통과.
   - 룰렛의 하드코딩된 보상(+200/-50)이 제거되고, `POINT` 타입만 정상 적립되는지 검증 완료.
   - `Vault2Service`의 Config Fallback 로직에 대한 테스트 커버리지 확보.
+
+### 7. 사운드 시스템 (BGM) - 전역 자동 시작 & 자동재생 제한 대응
+- **BGM 시작 지점 승격**: 게임 진입 이후에만 BGM이 들리던 문제를 해결하기 위해, `src/App.tsx`에서 **유저 영역 라우트 진입 시 Main BGM 자동 시작**하도록 변경. (`/admin` 진입 시에는 stop 처리)
+- **모바일/Telegram 자동재생 제한 대응**: `AudioContext`가 `suspended` 상태일 때 BGM 재생 요청을 pending으로 보류하고, 첫 클릭/터치 이후 `unlockAudio()`에서 재생을 재시도하도록 `src/contexts/SoundContext.tsx`에 보강.
+- **중복 호출 정리**: `GamePageShell`의 기본 마운트 시 BGM start 호출을 제거하고, `disableMainBgm` 사용 시에만 stop/resume로 제어하도록 정리.
+
+### 8. Phase 2-1: 룰렛 등급제 및 어드민 개선 (Roulette Segmentation & Admin UI)
+#### 8-1. 백엔드 (Backend)
+- **등급(Grade) 시스템 도입**:
+  - `RouletteConfig` 모델에 `grade` 컬럼 추가 (`COMMON`, `WHALE`, `NEW`).
+  - `RouletteService`에 유저 세그먼트 결정 로직(`_resolve_user_grade`) 추가 (가입일/입금액 기준).
+  - `GameTokenType`에 `GOLD_KEY_FRAGMENT`, `DIAMOND_KEY_FRAGMENT` 추가.
+  - Alembic 마이그레이션 (`20260116_1236_23cb59c1173f`) 적용 완료.
+- **Admin API 업데이트**:
+  - `AdminRouletteConfigBase` 스키마에 `grade` 필드 추가.
+  - `AdminRouletteService` CRUD 로직에 등급 필드 처리 추가.
+  - `scripts/test_admin_roulette.py`로 생성/수정/조회 검증 완료.
+
+#### 8-2. 프런트엔드 (Frontend - Admin)
+- **API 클라이언트**:
+  - `src/admin/api/adminRouletteApi.ts` 타입 정의에 `grade` 필드 및 `RouletteGrade` 타입 추가.
+- **UI/UX 개선 (`RouletteConfigPage.tsx`)**:
+  - **등급 필터 탭**: `ALL`, `COMMON`, `WHALE`, `NEW` 탭으로 룰렛 설정 필터링 기능 구현.
+  - **비주얼 업데이트**: 각 카드에 타겟 등급을 표시하는 **Badge UI** 추가 (New: Blue, Whale: Purple).
+  - **설정 모달**: 룰렛 생성/수정 시 `Target Grade`를 선택할 수 있는 **Selector** 추가.
+  - **검증**: `multi_replace`로 인한 JSX Syntax 오류(괄호 불일치) 수정 및 정상 렌더링 확인.

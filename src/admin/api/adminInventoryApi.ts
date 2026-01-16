@@ -3,6 +3,7 @@ import { adminApi } from './httpClient';
 export interface AdminInventoryItem {
   id: number;
   user_id: number;
+  nickname?: string;
   item_type: string;
   quantity: number;
   updated_at: string;
@@ -11,6 +12,7 @@ export interface AdminInventoryItem {
 export interface AdminInventoryLedger {
   id: number;
   user_id: number;
+  nickname?: string;
   item_type: string;
   change_amount: number;
   balance_after: number;
@@ -31,6 +33,8 @@ export interface InventoryItemParams {
   item_type?: string;
   min_quantity?: number;
   limit?: number;
+  sort_by?: string;
+  sort_desc?: boolean;
 }
 
 export interface UserInventoryResponse {

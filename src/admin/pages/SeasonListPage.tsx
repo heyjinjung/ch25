@@ -164,6 +164,7 @@ const SeasonListPage: React.FC = () => {
             <h1 className="text-2xl font-bold tracking-tight text-white">시즌 관리 (Season Ops)</h1>
           </div>
           <button
+            type="button"
             onClick={() => {
               setEditingSeason(null);
               form.reset(defaultValues);
@@ -230,6 +231,7 @@ const SeasonListPage: React.FC = () => {
                           <div className="h-2 w-full bg-zinc-800 rounded-full overflow-hidden">
                             <div
                               className={`h-full ${season.is_active ? 'bg-indigo-500' : 'bg-zinc-600'}`}
+                              // eslint-disable-next-line
                               style={{ width: `${getSeasonProgress(season.start_date, season.end_date)}%` }}
                             />
                           </div>
@@ -261,6 +263,7 @@ const SeasonListPage: React.FC = () => {
                       <td className="px-4 py-2 text-center">
                         <div className="flex items-center justify-center gap-2 opacity-50 group-hover:opacity-100 transition-opacity">
                           <button
+                            type="button"
                             onClick={() => {
                               setEditingSeason(season);
                               setIsModalOpen(true);
@@ -275,10 +278,12 @@ const SeasonListPage: React.FC = () => {
                             }}
                             className="p-1.5 rounded hover:bg-white/10 text-zinc-400 hover:text-white transition-colors"
                             title="설정 수정"
+                            aria-label="설정 수정"
                           >
                             <Check className="h-4 w-4" />
                           </button>
                           <button
+                            type="button"
                             onClick={async () => {
                               setLevelEditingSeason(season);
                               setIsLevelLoading(true);
@@ -329,16 +334,20 @@ const SeasonListPage: React.FC = () => {
                 </div>
                 <div className="flex gap-1">
                   <button
+                    type="button"
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={page <= 1}
                     className="p-1.5 rounded border border-white/10 bg-zinc-800 text-zinc-400 hover:text-white disabled:opacity-30 transition-colors"
+                    aria-label="이전 페이지"
                   >
                     <ChevronLeft className="h-3.5 w-3.5" />
                   </button>
                   <button
+                    type="button"
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                     disabled={page >= totalPages}
                     className="p-1.5 rounded border border-white/10 bg-zinc-800 text-zinc-400 hover:text-white disabled:opacity-30 transition-colors"
+                    aria-label="다음 페이지"
                   >
                     <ChevronRight className="h-3.5 w-3.5" />
                   </button>
@@ -444,6 +453,7 @@ const SeasonListPage: React.FC = () => {
                   </div>
                 </div>
                 <button
+                  type="button"
                   disabled={isSavingLevels}
                   onClick={async () => {
                     setIsSavingLevels(true);
@@ -476,6 +486,7 @@ const SeasonListPage: React.FC = () => {
                     <div className="absolute top-0 left-0 h-1 bg-zinc-800 w-full">
                       <div
                         className="h-full bg-indigo-500 transition-all"
+                        // eslint-disable-next-line
                         style={{ width: `${(lv.level / (levelEditingSeason?.max_level || 1)) * 100}%` }}
                       />
                     </div>

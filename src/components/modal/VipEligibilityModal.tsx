@@ -13,7 +13,7 @@ const VipEligibilityModal: React.FC<VipEligibilityModalProps> = ({ onClose }) =>
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fadeIn overflow-y-auto">
             {/* Background Textures */}
-            <div className="absolute inset-0 bg-[url('/assets/pattern_noise.png')] opacity-[0.03] pointer-events-none" />
+            <div className="absolute inset-0 bg-white/[0.02] pointer-events-none" />
 
             {/* Modal Container */}
             <motion.div

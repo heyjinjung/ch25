@@ -88,10 +88,10 @@ const WithdrawalConditionsModal: React.FC<WithdrawalConditionsModalProps> = ({
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.95, opacity: 0, y: 10 }}
                 transition={{ type: "spring", bounce: 0.3, duration: 0.5 }}
-                className="relative w-full max-w-[340px] overflow-hidden rounded-[32px] border border-white/10 shadow-2xl bg-[#0f0f11] flex flex-col max-h-[85vh] shadow-[0_0_40px_rgba(163,230,53,0.05)]"
+                className="relative w-full max-w-[340px] overflow-hidden rounded-[32px] border border-white/10 bg-[#0f0f11] flex flex-col max-h-[85vh] shadow-[0_0_40px_rgba(163,230,53,0.05)]"
             >
                 {/* Background Details */}
-                <div className="absolute inset-0 bg-[url('/assets/pattern_noise.png')] opacity-[0.03] pointer-events-none" />
+                <div className="absolute inset-0 bg-white/[0.02] pointer-events-none" />
                 <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-lime-500/10 to-transparent pointer-events-none" />
 
                 {/* Header */}

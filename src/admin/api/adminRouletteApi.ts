@@ -13,9 +13,12 @@ export interface AdminRouletteSegmentPayload {
   reward_value: number;
 }
 
+export type RouletteGrade = "COMMON" | "WHALE" | "NEW";
+
 export interface AdminRouletteConfigPayload {
   name: string;
   ticket_type: RouletteTicketType;
+  grade?: RouletteGrade; // Default: COMMON
   is_active: boolean;
   max_daily_spins: number;
   segments: AdminRouletteSegmentPayload[];
@@ -23,6 +26,7 @@ export interface AdminRouletteConfigPayload {
 
 export interface AdminRouletteConfig extends AdminRouletteConfigPayload {
   id: number;
+  grade: RouletteGrade;
   created_at: string;
   updated_at: string;
 }

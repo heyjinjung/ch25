@@ -18,6 +18,7 @@ import {
   CheckCircle2,
   ShieldAlert,
   Tags,
+  Plus,
 } from "lucide-react";
 import {
   fetchDiceConfigs,
@@ -29,7 +30,7 @@ import {
   AdminDiceConfig,
 } from "../api/adminDiceApi";
 import { useToast } from "../../components/common/ToastProvider";
-import { Plus } from "lucide-react";
+
 
 const DiceConfigPage: React.FC = () => {
   const { addToast } = useToast();
@@ -152,9 +153,9 @@ const DiceConfigPage: React.FC = () => {
     createConfigMutation.mutate({
       ...newConfig,
       is_active: true,
-      win_reward_type: newConfig.win_reward_type as any,
-      draw_reward_type: newConfig.draw_reward_type as any,
-      lose_reward_type: newConfig.lose_reward_type as any,
+      win_reward_type: newConfig.win_reward_type,
+      draw_reward_type: newConfig.draw_reward_type,
+      lose_reward_type: newConfig.lose_reward_type,
     });
   };
 

@@ -58,8 +58,8 @@ const TeamBattlePage: React.FC = () => {
   const handleJoin = async () => {
     try {
       await autoAssignMutation.mutateAsync();
-    } catch (err) {
-      const msg = (err as any).response?.data?.detail || "알 수 없는 오류";
+    } catch (err: any) {
+      const msg = err.response?.data?.detail || "알 수 없는 오류";
       alert(`팀 배정 실패: ${msg}`);
     }
   };

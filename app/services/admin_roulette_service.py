@@ -77,6 +77,7 @@ class AdminRouletteService:
                 ticket_type=data.ticket_type,
                 is_active=data.is_active,
                 max_daily_spins=data.max_daily_spins,
+                grade=data.grade,
             )
             AdminRouletteService._apply_segments(db, config, data.segments)
             db.add(config)
@@ -103,6 +104,8 @@ class AdminRouletteService:
                 config.is_active = update_data["is_active"]
             if "max_daily_spins" in update_data:
                 config.max_daily_spins = update_data["max_daily_spins"]
+            if "grade" in update_data:
+                config.grade = update_data["grade"]
             if data.segments is not None:
                 AdminRouletteService._apply_segments(db, config, data.segments)
             db.add(config)

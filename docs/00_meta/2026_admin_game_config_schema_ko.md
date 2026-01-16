@@ -36,6 +36,7 @@ class AdminRouletteConfigBase(BaseModel):
     ticket_type: str        # 사용 티켓 (기본: ROULETTE_COIN)
     is_active: bool         # 기본값 True
     max_daily_spins: int    # 일일 최대 회전수
+    grade: Optional[str]    # 적용 등급 (COMMON, WHALE, NEW) - Default "COMMON"
     segments: List[AdminRouletteSegmentBase]  # 6개 고정 슬롯
 ```
 

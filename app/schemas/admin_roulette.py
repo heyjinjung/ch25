@@ -38,6 +38,7 @@ class AdminRouletteConfigBase(BaseModel):
     ticket_type: str = GameTokenType.ROULETTE_COIN.value
     is_active: bool = True
     max_daily_spins: int
+    grade: str = "COMMON"
     segments: List[AdminRouletteSegmentBase] = Field(default_factory=list)
 
     @validator("ticket_type")
@@ -58,6 +59,7 @@ class AdminRouletteConfigUpdate(BaseModel):
     ticket_type: Optional[str] = None
     is_active: Optional[bool] = None
     max_daily_spins: Optional[int] = None
+    grade: Optional[str] = None
     segments: Optional[List[AdminRouletteSegmentBase]] = None
 
     @validator("ticket_type")

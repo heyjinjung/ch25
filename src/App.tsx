@@ -9,22 +9,22 @@ import { useSound } from "./hooks/useSound";
 
 const App: React.FC = () => {
   const location = useLocation();
-  const { playPageTransition, startMainBgm } = useSound();
-
-  // [BGM Logic] Start BGM globally unless on specific pages
-  React.useEffect(() => {
-    const isLogin = location.pathname === "/login";
-    const isAdmin = location.pathname.startsWith("/admin");
-    
-    if (!isLogin && !isAdmin) {
-        startMainBgm();
-    }
-  }, [location.pathname, startMainBgm]);
+  const { playPageTransition, startMainBgm, stopBgm } = useSound();
 
   // Play sound on route change
   React.useEffect(() => {
     playPageTransition();
   }, [location.pathname, playPageTransition]);
+
+  // BGM: auto-start in user area only (exclude /admin)
+  React.useEffect(() => {
+    const isAdmin = location.pathname.startsWith("/admin");
+    if (isAdmin) {
+      stopBgm();
+      return;
+    }
+    startMainBgm();
+  }, [location.pathname, startMainBgm, stopBgm]);
 
   return (
     <ErrorBoundary>

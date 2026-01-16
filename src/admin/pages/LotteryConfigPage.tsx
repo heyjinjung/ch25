@@ -579,7 +579,8 @@ const LotteryConfigPage: React.FC = () => {
                             </div>
                             <div className="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
                               <div
-                                className={`h-full transition-all duration-500 ${info.barClass} w-[${Math.min(info.percent, 100)}%]`}
+                                className={`h-full transition-all duration-500 ${info.barClass}`}
+                                style={{ width: `${Math.min(info.percent, 100)}%` }}
                               />
                             </div>
                             <p className="text-[9px] text-zinc-600 font-medium text-center italic mt-1">~{info.expected100} hits / 100 trials</p>

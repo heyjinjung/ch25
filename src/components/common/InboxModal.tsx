@@ -40,6 +40,8 @@ const InboxModal: React.FC<InboxModalProps> = ({ onClose }) => {
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
             <div className="relative w-full max-w-lg max-h-[calc(100vh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-2rem)] rounded-2xl border border-emerald-800 bg-slate-900 shadow-2xl shadow-emerald-900/50 flex flex-col">
                 <button
+                    type="button"
+                    aria-label="Close"
                     onClick={onClose}
                     className="absolute right-4 top-4 text-gray-400 hover:text-white z-10"
                 >
