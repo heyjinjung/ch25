@@ -25,6 +25,7 @@ interface BackendLotteryStatusResponse {
   readonly token_balance: number;
   readonly prize_preview: BackendLotteryPrizeDto[];
   readonly feature_type: string;
+  readonly collection_progress?: Record<string, number>; // { "C": 2, ... }
 }
 
 export interface LotteryPrizeDto {
@@ -42,6 +43,7 @@ export interface LotteryStatusResponse {
   readonly prizes: LotteryPrizeDto[];
   readonly token_type: GameTokenType;
   readonly token_balance: number;
+  readonly collectionProgress: Record<string, number>;
 }
 
 export interface LotteryPlayResponse {
@@ -50,6 +52,7 @@ export interface LotteryPlayResponse {
   readonly message?: string;
   readonly vaultEarn?: number;
   readonly streakInfo?: StreakInfo | null;
+  readonly gameData?: { collection_piece?: string };
 }
 
 export const getLotteryStatus = async (): Promise<LotteryStatusResponse> => {
@@ -69,6 +72,7 @@ export const getLotteryStatus = async (): Promise<LotteryStatusResponse> => {
         stock: prize.stock ?? null,
         is_active: prize.is_active ?? true,
       })),
+      collectionProgress: data.collection_progress ?? { C: 0, J: 0, M: 0 },
     };
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -84,7 +88,7 @@ export const getLotteryStatus = async (): Promise<LotteryStatusResponse> => {
 
 export const playLottery = async (): Promise<LotteryPlayResponse> => {
   try {
-    const response = await userApi.post<{ result: string; prize: BackendLotteryPrizeDto; vault_earn?: number; streak_info?: StreakInfo | null }>("/api/lottery/play");
+    const response = await userApi.post<{ result: string; prize: BackendLotteryPrizeDto; vault_earn?: number; streak_info?: StreakInfo | null; game_data?: { collection_piece?: string } }>("/api/lottery/play");
     const data = response.data;
     return {
       prize: {
@@ -99,6 +103,7 @@ export const playLottery = async (): Promise<LotteryPlayResponse> => {
       message: data.result !== "OK" ? data.result : undefined,
       vaultEarn: data.vault_earn,
       streakInfo: data.streak_info ?? null,
+      gameData: data.game_data,
     };
   } catch (error) {
     if (axios.isAxiosError(error)) {

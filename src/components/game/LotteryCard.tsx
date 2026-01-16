@@ -98,6 +98,27 @@ const LotteryCard: React.FC<LotteryCardProps> = React.memo(({ prize, isRevealed,
                       {/* Reward Value Display */}
                       {(() => {
                         const rawType = prize.reward_type;
+
+                        // [PUZZLE PIECE RENDER]
+                        if (rawType.startsWith("PUZZLE_")) {
+                          const char = rawType.replace("PUZZLE_", "");
+                          return (
+                            <div className="my-2 relative group perspective-500 animate-bounce-subtle">
+                              <div
+                                className="relative w-20 h-24 rounded-xl flex items-center justify-center text-5xl font-black shadow-2xl transform-style-3d bg-gradient-to-br from-amber-300 via-amber-500 to-amber-700 text-white shadow-amber-500/50"
+                                style={{
+                                  boxShadow: "0 10px 20px rgba(0,0,0,0.5), inset 0 2px 0 rgba(255,255,255,0.4), inset 0 -4px 0 rgba(0,0,0,0.2)",
+                                  transform: "rotateY(0deg) scale(1)"
+                                }}
+                              >
+                                <span className="drop-shadow-md pb-1">{char}</span>
+                                <div className="absolute inset-x-0 -bottom-1 h-3 bg-amber-900/50 rounded-b-xl -z-10 transform translate-z-[-5px]" />
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        // [STANDARD RENDER]
                         const upper = rawType.toUpperCase();
                         const val = Number(prize.reward_amount);
 

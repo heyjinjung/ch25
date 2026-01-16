@@ -6,7 +6,18 @@ interface Segment {
   readonly label: string;
   readonly weight?: number;
   readonly isJackpot?: boolean;
+  readonly reward_type?: string;
 }
+
+const getIconForRewardType = (rewardType?: string) => {
+  if (!rewardType) return null;
+  if (rewardType === "GOLD_KEY_FRAGMENT") return "/assets/icons/gold_key_fragment.png";
+  if (rewardType === "DIAMOND_KEY_FRAGMENT") return "/assets/icons/diamond_key_fragment.png";
+  if (rewardType === "CC_COIN") return "/assets/logo_cc_v2.png";
+  if (rewardType === "ROULETTE_COIN") return "/assets/asset_ticket_green.png";
+  if (rewardType === "TRIAL_TOKEN") return "/assets/asset_ticket_trial.png";
+  return null;
+};
 
 const polarToCartesian = (cx: number, cy: number, r: number, angle: number) => {
   const rad = ((angle - 90) * Math.PI) / 180;
@@ -199,6 +210,16 @@ const RouletteWheel: React.FC<RouletteWheelProps> = ({
                     >
                       {segment.label}
                     </text>
+                    {getIconForRewardType(segment.reward_type) && (
+                      <image
+                        href={getIconForRewardType(segment.reward_type)!}
+                        x="88" // Centered roughly (100 - 12)
+                        y="60" // Adjusted radius for icon
+                        width="24"
+                        height="24"
+                        transform="rotate(90, 100, 72)"
+                      />
+                    )}
                   </g>
                 </g>
               );

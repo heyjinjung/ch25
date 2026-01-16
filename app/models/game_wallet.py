@@ -18,6 +18,11 @@ class GameTokenType(str, Enum):
     DIAMOND_KEY = "DIAMOND_KEY"
     GOLD_KEY_FRAGMENT = "GOLD_KEY_FRAGMENT"       # New: Collect 10 -> GOLD_KEY
     DIAMOND_KEY_FRAGMENT = "DIAMOND_KEY_FRAGMENT" # New: Collect 30 -> DIAMOND_KEY
+
+    # Puzzle Pieces (Lottery)
+    PUZZLE_C = "PUZZLE_C"
+    PUZZLE_J = "PUZZLE_J"
+    PUZZLE_M = "PUZZLE_M"
     DIAMOND = "DIAMOND"  # Mission Reward Currency
     VAULT = "VAULT"      # Vault Balance (Ticket Buy-in)
 

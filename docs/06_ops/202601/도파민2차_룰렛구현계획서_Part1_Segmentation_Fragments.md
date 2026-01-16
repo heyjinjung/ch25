@@ -37,7 +37,7 @@
 기존 "꽝" 슬롯을 대체하여, 수집 및 상위 컨텐츠 도전 욕구를 자극하는 재화.
 
 ### 3-1. 모델 정의 (`GameTokenType`)
-`app/models/game_wallet.py`에 신규 토큰 타입 추가.
+`app/models/game_wallet.py`에 신규 토큰 타입 추가. [x] 완료
 
 | Token Type | 한글명 | 용도 | 수급처 |
 | :--- | :--- | :--- | :--- |
@@ -45,7 +45,7 @@
 | `DIAMOND_KEY_FRAGMENT` | 다이아열쇠 조각 | 30개 → `DIAMOND_KEY` 1개로 교환 | 룰렛(Safe Mode), 이벤트 |
 
 ### 3-2. 교환 로직 (Exchange)
-신규 API `POST /api/exchange/craft` (가칭)
+신규 API `POST /api/exchange/craft` (가칭) [x] 완료
 - 10 `Fragment` -> 1 `Key`
 - 교환 시 화려한 연출(크래프팅) 필요 (프론트엔드).
 
@@ -118,22 +118,23 @@
         - **생성/수정 모달**: `Grade` 선택 드롭다운 (Select) 추가.
         - **필터링**: 등급별로 설정을 모아볼 수 있는 상단 탭 필터 구현.
     - **API**: `POST /api/admin/roulette/config` payload에 `grade` 필드 추가.
-ㄴ 이건 어떻게 컨피그 분류해서 인식할건데?? 
-ㄴ 어드민에선 이 모드를 어떻게 인식하고 관리할건데? 
+    - **Status**: [x] 구현 완료 (`AdminRouletteService`, `RouletteConfigPage.tsx`)
 
 4.  **Seed Script**: Safe Mode용 룰렛 설정(`scripts/seed_safe_roulette.py`) 작성 및 실행.
+    - **Status**: [x] 구현 및 실행 완료
 
 ### Phase 2-2: Frontend & Exchange
 1.  **Wallet UI**: 나의 '조각' 보유량 표시.
+    - **Status**: [x] 완료 (`InventoryPage.tsx`)
 
 2.  **Roulette UI**: `reward_type`에 따른 이미지 매핑 (기존 로직 활용).
     - `GOLD_KEY_FRAGMENT` -> 황금열쇠 조각 아이콘
     - `DIAMOND_KEY_FRAGMENT` -> 다이아열쇠 조각 아이콘
     - *별도 프론트 로직 개발 없이, 리소스(이미지)만 추가하면 됨.*
+    - **Status**: [x] 완료 (`RouletteWheel.tsx`, Placeholder 이미지 적용됨)
 
-ㄴ ??? 슬롯 결과후 조각이 뜨면 조각 이미지가 뜨도록 한다는 말이지??? 
-ㄴ 결론적으로 1번 3번만 구현하는게 깔끔한거 아니야? 
 3.  **Craft UI**: 조각 10개 모으면 열쇠로 바꾸는 팝업/모달.
+    - **Status**: [x] 완료 (InventoryPage 내 '제작하기' 버튼 및 API 연동)
 
 ---
 

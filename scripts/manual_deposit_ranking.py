@@ -29,11 +29,15 @@ raw_data = [
     ("정우성", 200000), # 10:54
     ("봄꽃잎", 200000), # 09:14
     ("민똘이", 300000),
-    ("persipic", 60000),
-    ("아사카", 100000), # 01:13 - Wait, earlier lists "아사카" twice.
+    ("percipic", 60000), # Corrected from persipic
+    ("아사카", 100000), # 01:13
 ]
 
-# Aggregate updates
+# Aliases for known typos (from request -> database)
+aliases = {
+    "persipic": "percipic"
+}
+
 updates = defaultdict(int)
 for nick, amt in raw_data:
     updates[nick] += amt

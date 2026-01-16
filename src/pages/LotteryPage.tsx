@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { usePlayLottery, useLotteryStatus } from "../hooks/useLottery";
 import FeatureGate from "../components/feature/FeatureGate";
 import LotteryCard from "../components/game/LotteryCard";
+import LotteryCollectionModal from "../components/lottery/LotteryCollectionModal"; // Import Modal
 import { tryHaptic } from "../utils/haptics";
 import GamePageShell from "../components/game/GamePageShell";
 import TicketZeroPanel from "../components/game/TicketZeroPanel";
@@ -31,6 +32,14 @@ const LotteryPage: React.FC = () => {
   const [isScratching, setIsScratching] = useState(false);
   const [isRevealed, setIsRevealed] = useState(false);
   const [vaultModal, setVaultModal] = useState<{ open: boolean; amount: number }>({ open: false, amount: 0 });
+  const [collectionModalOpen, setCollectionModalOpen] = useState(false); // Modal State
+
+  const collection = {
+    C: data?.collectionProgress?.C ?? 0,
+    J: data?.collectionProgress?.J ?? 0,
+    M: data?.collectionProgress?.M ?? 0,
+  };
+  const canCraft = collection.C >= 2 && collection.J >= 1 && collection.M >= 1;
 
   const mapErrorMessage = (err: unknown) => {
     const code = (err as { response?: { data?: { error?: { code?: string } } } })?.response?.data?.error?.code;
@@ -71,11 +80,11 @@ const LotteryPage: React.FC = () => {
       setIsScratching(true);
       playLotteryScratch(); // Sound: Rolling start
       const result = await playMutation.mutateAsync();
-      
+
       // Artificial delay for tension if needed, but keeping it snappy for now
-      stopLotteryScratch(); 
+      stopLotteryScratch();
       setIsScratching(false);
-      
+
       playLotteryWin(); // Sound: Win/Reveal
       setIsRevealed(true);
       setRevealedPrize({
@@ -85,7 +94,7 @@ const LotteryPage: React.FC = () => {
         reward_amount: result.prize.reward_amount,
       });
 
-      
+
       // Confetti Effect (User Request: Unify all effects, no value check)
       if (result.prize.reward_type !== 'NONE') {
         triggerJackpotExplosion();
@@ -149,6 +158,27 @@ const LotteryPage: React.FC = () => {
               </div>
             </div>
             <div className="h-px flex-1 bg-white/5" />
+
+            {/* Collection Button */}
+            <button
+              onClick={() => setCollectionModalOpen(true)}
+              className="relative flex items-center gap-2 rounded-full bg-white/5 border border-white/10 px-3 py-1.5 hover:bg-white/10 transition-colors"
+            >
+              <div className="flex -space-x-1">
+                {/* Mini Icons Concept */}
+                <div className="w-4 h-4 rounded bg-amber-500/20 text-[10px] flex items-center justify-center text-amber-500 font-bold border border-amber-500/30">C</div>
+                <div className="w-4 h-4 rounded bg-amber-500/20 text-[10px] flex items-center justify-center text-amber-500 font-bold border border-amber-500/30 z-[1]">J</div>
+              </div>
+              <span className="text-xs font-bold text-white/80 pr-1">컬렉션</span>
+
+              {/* Notification Badge */}
+              {canCraft && (
+                <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+                </span>
+              )}
+            </button>
           </div>
         </div>
 
@@ -227,9 +257,9 @@ const LotteryPage: React.FC = () => {
                             ? "GAME_XP"
                             : rawType;
 
-                  const rewardLine = formatRewardLine(normalizedType, Number(prize.reward_amount));
-                  const displayText = rewardLine ? rewardLine.text : rawType;
-                  const displayHint = rewardLine ? rewardLine.fulfillmentHint : undefined;
+                      const rewardLine = formatRewardLine(normalizedType, Number(prize.reward_amount));
+                      const displayText = rewardLine ? rewardLine.text : rawType;
+                      const displayHint = rewardLine ? rewardLine.fulfillmentHint : undefined;
 
                       return (
                         <div className="flex flex-col items-center">
@@ -260,6 +290,12 @@ const LotteryPage: React.FC = () => {
         open={vaultModal.open}
         amount={vaultModal.amount}
         onClose={() => setVaultModal((p) => ({ ...p, open: false }))}
+      />
+
+      <LotteryCollectionModal
+        open={collectionModalOpen}
+        onClose={() => setCollectionModalOpen(false)}
+        collection={collection}
       />
     </FeatureGate>
   );

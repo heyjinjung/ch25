@@ -80,6 +80,7 @@ const rouletteSchema = z
   .object({
     name: z.string().min(1, "이름을 입력하세요"),
     ticket_type: z.enum(["ROULETTE_COIN", "TRIAL_TOKEN", "GOLD_KEY", "DIAMOND_KEY"]).default("ROULETTE_COIN"),
+    grade: z.enum(["COMMON", "WHALE", "NEW"]).default("COMMON"),
     is_active: z.boolean().default(false),
     max_daily_spins: z.number().int().nonnegative("0이면 무제한"),
     segments: z.array(segmentSchema).length(6, "세그먼트는 6개가 필요합니다"),
@@ -207,6 +208,7 @@ const RouletteConfigPage: React.FC = () => {
     () => ({
       name: "",
       ticket_type: "ROULETTE_COIN",
+      grade: "COMMON",
       is_active: false,
       max_daily_spins: 0,
       segments: buildDefaultSegments(),
@@ -269,6 +271,7 @@ const RouletteConfigPage: React.FC = () => {
     form.reset({
       name: config.name,
       ticket_type: config.ticket_type ?? "ROULETTE_COIN",
+      grade: config.grade ?? "COMMON",
       is_active: config.is_active,
       max_daily_spins: config.max_daily_spins,
       segments: normalizeToSixSegments(config.segments ?? []),
@@ -293,6 +296,7 @@ const RouletteConfigPage: React.FC = () => {
     const payload: AdminRouletteConfigPayload = {
       name: values.name.trim(),
       ticket_type: values.ticket_type,
+      grade: values.grade,
       is_active: values.is_active,
       max_daily_spins: values.max_daily_spins,
       segments: values.segments.map((seg, idx) => ({
@@ -429,6 +433,12 @@ const RouletteConfigPage: React.FC = () => {
                         <span className="font-mono text-zinc-300">{config.ticket_type}</span>
                       </div>
                       <div className="flex items-center gap-1.5 text-xs text-zinc-400 border-l border-zinc-800 pl-4">
+                        <Users size={14} className="text-zinc-500" />
+                        <span className={`font-black ${config.grade === 'NEW' ? 'text-emerald-400' : config.grade === 'WHALE' ? 'text-purple-400' : 'text-zinc-400'}`}>
+                          {config.grade || 'COMMON'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs text-zinc-400 border-l border-zinc-800 pl-4">
                         <CircleDot size={14} className="text-zinc-500" />
                         <span>{config.segments?.length || 0} Slots</span>
                       </div>
@@ -536,6 +546,17 @@ const RouletteConfigPage: React.FC = () => {
                         <option value="TRIAL_TOKEN">체험권 (TRIAL_TOKEN)</option>
                         <option value="GOLD_KEY">골드키 (GOLD_KEY)</option>
                         <option value="DIAMOND_KEY">다이아키 (DIAMOND_KEY)</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-zinc-500 uppercase ml-1">타겟 세그먼트 (Grade)</label>
+                      <select
+                        className="w-full h-12 bg-zinc-800/50 border border-zinc-700 rounded-xl px-4 text-sm text-white focus:border-admin-brand outline-none transition-colors appearance-none"
+                        {...form.register("grade")}
+                      >
+                        <option value="COMMON">일반 (COMMON)</option>
+                        <option value="NEW">신규 유저 (NEW)</option>
+                        <option value="WHALE">고액 유저 (WHALE)</option>
                       </select>
                     </div>
                     <div className="space-y-2">

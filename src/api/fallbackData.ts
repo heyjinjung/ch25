@@ -99,6 +99,7 @@ export const getFallbackLotteryStatus = () => ({
   prizes: lotteryState.prizes
     .filter((p) => p.is_active)
     .map((prize) => ({ ...prize, reward_value: prize.reward_amount })),
+  collectionProgress: { C: 1, J: 0, M: 0 },
 });
 
 export const playFallbackLottery = () => {

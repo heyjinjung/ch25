@@ -27,6 +27,7 @@ class LotteryStatusResponse(BaseModel):
     token_balance: int
     prize_preview: list[LotteryPrizeSchema]
     feature_type: FeatureType
+    collection_progress: Optional[dict] = None  # { "C": 2, "J": 1, "M": 0 }
 
 
 class LotteryPlayResponse(BaseModel):
@@ -35,3 +36,4 @@ class LotteryPlayResponse(BaseModel):
     season_pass: dict | None = None
     vault_earn: int = 0
     streak_info: Optional[StreakInfoSchema] = None
+    game_data: Optional[dict] = None  # Added for schema compliance (collection_piece)

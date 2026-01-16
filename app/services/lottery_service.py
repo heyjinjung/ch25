@@ -63,6 +63,11 @@ class LotteryService:
         token_balance = self.wallet_service.get_balance(db, user_id, token_type)
         prizes = self._eligible_prizes(db, config.id)
 
+        # Check collection progress (PUZZLE_C, J, M)
+        c_count = self.wallet_service.get_balance(db, user_id, GameTokenType.PUZZLE_C)
+        j_count = self.wallet_service.get_balance(db, user_id, GameTokenType.PUZZLE_J)
+        m_count = self.wallet_service.get_balance(db, user_id, GameTokenType.PUZZLE_M)
+
         today_tickets = db.execute(
             select(func.count()).select_from(LotteryLog).where(
                 LotteryLog.user_id == user_id,
@@ -84,6 +89,7 @@ class LotteryService:
             token_balance=token_balance,
             prize_preview=[LotteryPrizeSchema.from_orm(p) for p in prizes],
             feature_type=FeatureType.LOTTERY,
+            collection_progress={ "C": c_count, "J": j_count, "M": m_count },
         )
 
     def play(self, db: Session, user_id: int, now: date | datetime) -> LotteryPlayResponse:
@@ -222,4 +228,7 @@ class LotteryService:
             season_pass=season_pass,
             vault_earn=total_earn,
             streak_info=streak_info,
+            game_data={
+                "collection_piece": chosen.reward_type.replace("PUZZLE_", "") if "PUZZLE_" in chosen.reward_type else None
+            }
         )

@@ -86,6 +86,7 @@ const RoulettePage: React.FC = () => {
       label: segment.label,
       weight: segment.weight,
       isJackpot: segment.isJackpot,
+      reward_type: segment.reward_type,
     }));
     return resolved.length > 0 ? resolved : FALLBACK_SEGMENTS;
   }, [data?.segments]);
@@ -386,39 +387,39 @@ const RoulettePage: React.FC = () => {
         {/* Reward Toast (Like DicePage) */}
         {!isSpinning && rewardToast && (
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[100] w-full px-4 pointer-events-none">
-             <div className="mx-auto flex max-w-[280px] flex-col items-center justify-center gap-2 rounded-[2rem] border border-figma-accent/30 bg-black/90 px-5 py-5 shadow-2xl backdrop-blur-3xl animate-bounce-subtle">
+            <div className="mx-auto flex max-w-[280px] flex-col items-center justify-center gap-2 rounded-[2rem] border border-figma-accent/30 bg-black/90 px-5 py-5 shadow-2xl backdrop-blur-3xl animate-bounce-subtle">
               {/* Effect Layers */}
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-cc-gold/10 via-transparent to-transparent opacity-50" />
-              
+
               <div className="relative flex flex-col items-center gap-3">
-                 <div className="inline-flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full border border-cc-gold/40 bg-cc-gold/10 text-2xl shadow-[0_0_20px_rgba(255,215,0,0.4)] animate-pulse">
-                    {(rewardToast.type.includes("GIFTICON") || rewardToast.type.toUpperCase().includes("GIFT")) ? "🎁" : "🪙"}
-                 </div>
-                 
-                 <div className="text-center">
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-cc-gold mb-1 animate-pulse">YOU WON</p>
-                    <p className="text-3xl font-black text-white leading-none">
-                      <AnimatedNumber value={rewardToast.value} from={0} />
-                      <span className="text-sm font-bold text-white/50 ml-1">
-                         {(() => {
-                            const upper = rewardToast.type.toUpperCase();
-                            if (upper.includes("GAME_XP")) return "XP";
-                            if (upper.includes("POINT")) return "원"; 
-                            return "";
-                         })()}
-                      </span>
-                    </p>
-                    <p className="text-xs font-bold text-white/60 mt-1">
+                <div className="inline-flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full border border-cc-gold/40 bg-cc-gold/10 text-2xl shadow-[0_0_20px_rgba(255,215,0,0.4)] animate-pulse">
+                  {(rewardToast.type.includes("GIFTICON") || rewardToast.type.toUpperCase().includes("GIFT")) ? "🎁" : "🪙"}
+                </div>
+
+                <div className="text-center">
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-cc-gold mb-1 animate-pulse">YOU WON</p>
+                  <p className="text-3xl font-black text-white leading-none">
+                    <AnimatedNumber value={rewardToast.value} from={0} />
+                    <span className="text-sm font-bold text-white/50 ml-1">
                       {(() => {
                         const upper = rewardToast.type.toUpperCase();
-                        const normalized = upper.includes("GAME_XP") ? "GAME_XP" : upper.includes("POINT") ? "POINT" : rewardToast.type;
-                        const line = formatRewardLine(normalized, 0);
-                        const label = line?.text.replace(/[0-9,\s]/g, "") || rewardToast.type;
-                        if (isGifticonRewardType(normalized)) return `${label} (보상함)`;
-                        return label;
+                        if (upper.includes("GAME_XP")) return "XP";
+                        if (upper.includes("POINT")) return "원";
+                        return "";
                       })()}
-                    </p>
-                 </div>
+                    </span>
+                  </p>
+                  <p className="text-xs font-bold text-white/60 mt-1">
+                    {(() => {
+                      const upper = rewardToast.type.toUpperCase();
+                      const normalized = upper.includes("GAME_XP") ? "GAME_XP" : upper.includes("POINT") ? "POINT" : rewardToast.type;
+                      const line = formatRewardLine(normalized, 0);
+                      const label = line?.text.replace(/[0-9,\s]/g, "") || rewardToast.type;
+                      if (isGifticonRewardType(normalized)) return `${label} (보상함)`;
+                      return label;
+                    })()}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
