@@ -145,9 +145,8 @@ const InventoryPage: React.FC = () => {
                             items
                                 .filter(it => it.quantity > 0)
                                 .map((item) => (
-                                    <div className="flex-shrink-0 w-[45%] snap-start">
+                                    <div key={item.item_type} className="flex-shrink-0 w-[45%] snap-start">
                                         <ItemCard
-                                            key={item.item_type}
                                             item={item}
                                             onUse={() => {
                                                 if (item.item_type.includes("FRAGMENT")) {

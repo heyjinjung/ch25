@@ -37,7 +37,7 @@ const TOKEN_GROUPS: Array<{ label: string; keys: GameTokenType[] }> = [
   { label: "게임 토큰", keys: ["ROULETTE_COIN", "DICE_TOKEN", "LOTTERY_TICKET", "TRIAL_TOKEN"] },
   { label: "금고 열쇠", keys: ["GOLD_KEY", "DIAMOND_KEY"] },
   { label: "재화", keys: ["DIAMOND"] },
-  { label: "퍼즐", keys: ["PUZZLE_C", "PUZZLE_J", "PUZZLE_M"] },
+  { label: "퍼즐", keys: ["PUZZLE_C1", "PUZZLE_C2", "PUZZLE_J", "PUZZLE_M"] },
 ];
 
 const TOKEN_LABELS: Record<GameTokenType, string> = {
@@ -48,7 +48,8 @@ const TOKEN_LABELS: Record<GameTokenType, string> = {
   GOLD_KEY: "황금 열쇠",
   DIAMOND_KEY: "다이아 키",
   DIAMOND: "다이아",
-  PUZZLE_C: "퍼즐 C",
+  PUZZLE_C1: "퍼즐 C1",
+  PUZZLE_C2: "퍼즐 C2",
   PUZZLE_J: "퍼즐 J",
   PUZZLE_M: "퍼즐 M",
 };
