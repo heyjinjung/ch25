@@ -9,7 +9,7 @@ import { useToast } from "../../components/common/ToastProvider";
 import { Lock, ListChecks } from "lucide-react";
 import WithdrawalConditionsModal from "../modal/WithdrawalConditionsModal";
 import WithdrawalProgressModal from "../modal/WithdrawalProgressModal";
-import { useSound } from "../../hooks/useSound";
+// import { useSound } from "../../hooks/useSound"; // Commented out to fix server build error
 
 
 
@@ -52,7 +52,7 @@ const SparkleDust: React.FC = () => {
 
 const VaultPageCompact: React.FC = () => {
     const { addToast, addToastNode } = useToast();
-    const { playVaultJingle } = useSound();
+    // const { playVaultJingle } = useSound(); // Commented out to fix server build error
     const [showConditionsModal, setShowConditionsModal] = React.useState(false);
     const [showProgressModal, setShowProgressModal] = React.useState(false);
 
@@ -169,7 +169,7 @@ const VaultPageCompact: React.FC = () => {
                             <div className="text-5xl font-black text-white tracking-tighter drop-shadow-xl flex items-center gap-1">
                                 <AnimatedNumber
                                     value={view.availableAmount}
-                                    onAnimationStart={playVaultJingle}
+                                    // onAnimationStart={playVaultJingle} // Commented out to fix server build error
                                 />
                                 <span className="text-2xl ml-[-2px]">원</span>
                             </div>
@@ -273,30 +273,26 @@ const VaultPageCompact: React.FC = () => {
                     </div>
 
 
-                    {/* Footer Info Row - Restored */}
-                    <div className="w-full max-w-xs space-y-2 mb-8 px-2">
-                        <button
-                            onClick={() => setShowConditionsModal(true)}
-                            className="w-full mb-3 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 text-xs font-black tracking-wide hover:bg-emerald-500/30 hover:shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all"
-                        >
-                            <ListChecks size={16} />
-                            <span>출금 조건 확인하기</span>
-                        </button>
-                    </div>
-
-                    <button className="w-full max-w-[200px] h-[48px] rounded-2xl bg-emerald-500/80 backdrop-blur-md border border-white/20 text-white font-bold text-[14px] shadow-[0_8px_16px_-4px_rgba(16,185,129,0.5)] mb-6 items-center justify-center gap-1.5 flex cursor-not-allowed opacity-50" disabled>
-                        <Lock size={16} className="opacity-30" />
-                        <span>출금 신청하기</span>
+                    {/* Footer Info Row - Redesigned for Uniformity */}
+                    <button
+                        onClick={() => setShowConditionsModal(true)}
+                        className="w-full max-w-xs h-[50px] mb-3 flex items-center justify-center gap-2 rounded-2xl bg-emerald-500/10 border border-emerald-500/50 text-emerald-400 text-sm font-bold tracking-wide hover:bg-emerald-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                    >
+                        <ListChecks size={18} />
+                        <span>출금 조건 확인하기</span>
                     </button>
 
-
+                    <button className="w-full max-w-xs h-[50px] mb-3 rounded-2xl bg-emerald-500/80 backdrop-blur-md border border-white/20 text-white font-bold text-[14px] shadow-lg items-center justify-center gap-1.5 flex cursor-not-allowed opacity-50" disabled>
+                        <Lock size={16} className="opacity-50" />
+                        <span>출금 신청하기</span>
+                    </button>
 
                     {/* Charge Button */}
                     <a
                         href="https://ccc-010.com"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-full max-w-[200px] h-[48px] rounded-2xl bg-emerald-500/80 backdrop-blur-md border border-white/20 text-white font-bold text-[14px] shadow-[0_8px_16px_-4px_rgba(16,185,129,0.5)] hover:bg-emerald-400 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-1.5"
+                        className="w-full max-w-xs h-[50px] rounded-2xl bg-emerald-500/80 backdrop-blur-md border border-white/20 text-white font-bold text-[14px] shadow-lg hover:bg-emerald-400 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
                     >
                         <img src="/assets/logo_cc_v2.png" className="w-4 h-4 object-contain mix-blend-screen" alt="" />
                         씨씨카지노 충전하기
