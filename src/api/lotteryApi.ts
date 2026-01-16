@@ -72,7 +72,7 @@ export const getLotteryStatus = async (): Promise<LotteryStatusResponse> => {
         stock: prize.stock ?? null,
         is_active: prize.is_active ?? true,
       })),
-      collectionProgress: data.collection_progress ?? { C: 0, J: 0, M: 0 },
+      collectionProgress: data.collection_progress ?? { C1: 0, C2: 0, J: 0, M: 0 },
     };
   } catch (error) {
     if (axios.isAxiosError(error)) {

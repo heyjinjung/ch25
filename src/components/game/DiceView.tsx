@@ -11,17 +11,11 @@ interface DiceViewProps {
 }
 
 // HP Bar Component
-const HealthBar: React.FC<{ hp: number; maxHp: number; label: string; isUser?: boolean }> = ({ hp, maxHp, label, isUser }) => {
+const HealthBar: React.FC<{ hp: number; maxHp: number; isUser?: boolean }> = ({ hp, maxHp, isUser }) => {
   const percent = Math.max(0, (hp / maxHp) * 100);
   
   return (
     <div className={clsx("w-full mb-4", isUser ? "text-left" : "text-right")}>
-      <div className={clsx("flex items-center gap-2 mb-1", isUser ? "flex-row" : "flex-row-reverse")}>
-        <span className="text-[10px] font-black uppercase tracking-widest text-white/50">{label}</span>
-        <div className="px-1.5 py-0.5 rounded bg-black/40 border border-white/10 text-[9px] font-mono text-white/70">
-          체력 {hp}/{maxHp}
-        </div>
-      </div>
       {/* Bars Container */}
       <div className={clsx("relative h-2 w-full bg-zinc-900 rounded-full border border-white/5 overflow-hidden")}>
         {/* Background Damage layer (delayed red) */}
@@ -174,7 +168,7 @@ const DiceView: React.FC<DiceViewProps> = ({ userDice, dealerDice, result, isRol
           <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-transparent opacity-50" />
           
           <div className="relative z-10 flex flex-col items-center">
-            <HealthBar hp={userHp} maxHp={100} label="내 스쿼드" isUser />
+            <HealthBar hp={userHp} maxHp={100} isUser />
 
             {/* Dice Area */}
             <div className="flex justify-center gap-3 my-4">
@@ -198,7 +192,6 @@ const DiceView: React.FC<DiceViewProps> = ({ userDice, dealerDice, result, isRol
               )}>
                 {isRolling ? "?" : (userDice.length > 0 ? userSum : "-")}
               </span>
-              <p className="text-[10px] font-bold text-white/30 uppercase mt-1">전투력</p>
             </div>
           </div>
         </motion.div>
@@ -216,7 +209,7 @@ const DiceView: React.FC<DiceViewProps> = ({ userDice, dealerDice, result, isRol
           <div className="absolute inset-0 bg-gradient-to-bl from-red-500/5 via-transparent to-transparent opacity-50" />
 
           <div className="relative z-10 flex flex-col items-center">
-            <HealthBar hp={dealerHp} maxHp={100} label="적 보스" />
+            <HealthBar hp={dealerHp} maxHp={100} />
 
              {/* Dice Area */}
              <div className="flex justify-center gap-3 my-4">
@@ -240,7 +233,6 @@ const DiceView: React.FC<DiceViewProps> = ({ userDice, dealerDice, result, isRol
               )}>
                 {isRolling ? "?" : (dealerDice.length > 0 ? dealerSum : "-")}
               </span>
-              <p className="text-[10px] font-bold text-white/30 uppercase mt-1">위협 수준</p>
             </div>
           </div>
         </motion.div>

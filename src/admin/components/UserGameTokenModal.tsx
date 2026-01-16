@@ -252,6 +252,8 @@ const UserGameTokenModal: React.FC<UserGameTokenModalProps> = ({ memberId, isOpe
               }}
               className="btn-admin-secondary text-admin-meta px-3 py-1.5"
               disabled={walletsQuery.isFetching || inventoryQuery.isFetching || ledgerQuery.isFetching}
+              title="새로고침"
+              aria-label="새로고침"
             >
               <RefreshCw size={14} className={walletsQuery.isFetching || inventoryQuery.isFetching || ledgerQuery.isFetching ? "animate-spin" : ""} />
             </button>

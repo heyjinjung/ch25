@@ -160,6 +160,22 @@ const SidebarAppLayout: React.FC = memo(() => {
         <AppGuide />
         <GuideFloatingButton />
 
+        {/* FORCED FOR TEST */}
+        <TicketZeroRetentionModal
+            vaultBalance={vaultBalance}
+            trialEnabled={isTrialGrantEnabled}
+            isRequestingTrial={trialGrantMutation.isPending}
+            onClose={() => setIsTicketZeroModalOpen(false)}
+            onGoVault={() => {
+              setIsTicketZeroModalOpen(false);
+              window.location.href = "/vault";
+            }}
+            onRequestTrial={() => {
+              if (!isTrialGrantEnabled) return;
+              trialGrantMutation.mutate();
+            }}
+        />
+
         {isTicketZeroModalOpen && (
           <TicketZeroRetentionModal
             vaultBalance={vaultBalance}

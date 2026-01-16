@@ -35,11 +35,14 @@ const LotteryPage: React.FC = () => {
   const [collectionModalOpen, setCollectionModalOpen] = useState(false); // Modal State
 
   const collection = {
-    C: data?.collectionProgress?.C ?? 0,
+
+    // Basic mapping from backend dict
+    C1: data?.collectionProgress?.C1 ?? 0,
+    C2: data?.collectionProgress?.C2 ?? 0,
     J: data?.collectionProgress?.J ?? 0,
     M: data?.collectionProgress?.M ?? 0,
   };
-  const canCraft = collection.C >= 2 && collection.J >= 1 && collection.M >= 1;
+  const canCraft = collection.C1 >= 1 && collection.C2 >= 1 && collection.J >= 1 && collection.M >= 1;
 
   const mapErrorMessage = (err: unknown) => {
     const code = (err as { response?: { data?: { error?: { code?: string } } } })?.response?.data?.error?.code;
@@ -164,11 +167,7 @@ const LotteryPage: React.FC = () => {
               onClick={() => setCollectionModalOpen(true)}
               className="relative flex items-center gap-2 rounded-full bg-white/5 border border-white/10 px-3 py-1.5 hover:bg-white/10 transition-colors"
             >
-              <div className="flex -space-x-1">
-                {/* Mini Icons Concept */}
-                <div className="w-4 h-4 rounded bg-amber-500/20 text-[10px] flex items-center justify-center text-amber-500 font-bold border border-amber-500/30">C</div>
-                <div className="w-4 h-4 rounded bg-amber-500/20 text-[10px] flex items-center justify-center text-amber-500 font-bold border border-amber-500/30 z-[1]">J</div>
-              </div>
+
               <span className="text-xs font-bold text-white/80 pr-1">컬렉션</span>
 
               {/* Notification Badge */}

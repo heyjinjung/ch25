@@ -65,7 +65,7 @@ const RoulettePage: React.FC = () => {
   const playMutation = usePlayRoulette();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const { playRouletteStop, stopRouletteSpin, playBigWin } = useSound();
+  const { playRouletteStop, stopRouletteSpin, playBigWin, playRouletteLose } = useSound();
   const [selectedIndex, setSelectedIndex] = useState<number | undefined>();
   const SPIN_DURATION_MS = 3000;
   const [isSpinning, setIsSpinning] = useState(false);
@@ -256,6 +256,7 @@ const RoulettePage: React.FC = () => {
       }
     } else {
       tryHaptic(12);
+      playRouletteLose(); // [USER REQUEST] Lose sound for "NONE" or 0 value
     }
 
     // Sync all statuses
@@ -392,8 +393,20 @@ const RoulettePage: React.FC = () => {
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-cc-gold/10 via-transparent to-transparent opacity-50" />
 
               <div className="relative flex flex-col items-center gap-3">
-                <div className="inline-flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full border border-cc-gold/40 bg-cc-gold/10 text-2xl shadow-[0_0_20px_rgba(255,215,0,0.4)] animate-pulse">
-                  {(rewardToast.type.includes("GIFTICON") || rewardToast.type.toUpperCase().includes("GIFT")) ? "🎁" : "🪙"}
+                <div className="inline-flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full border border-cc-gold/40 bg-cc-gold/10 shadow-[0_0_20px_rgba(255,215,0,0.4)] animate-pulse p-2">
+                  <img
+                    src={(() => {
+                      if (!rewardToast) return ""; 
+                      const t = rewardToast.type.toUpperCase();
+                      if (t.includes("DICE")) return "/assets/icon_dice_silver.png";
+                      if (t.includes("BAEMIN") || t.includes("GIFT")) return "/assets/icons/baemin.png";
+                      if (t.includes("POINT") || t.includes("VAULT")) return "/assets/logo_cc_v2.png"; // 금고머니 -> CC Logo
+                      if (t.includes("COIN")) return "/assets/asset_coin_gold.png"; // 씨씨코인 -> Coin Asset
+                      return "/assets/asset_ticket_green.png"; // Default fallback
+                    })()}
+                    alt="Reward"
+                    className="h-full w-full object-contain drop-shadow-md"
+                  />
                 </div>
 
                 <div className="text-center">

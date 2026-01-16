@@ -26,11 +26,11 @@ const AppHeader: React.FC = () => {
     const desktopMenuRef = useRef<HTMLDivElement>(null);
     const mobileMenuRef = useRef<HTMLDivElement>(null);
     const [isGoldenHourModalOpen, setIsGoldenHourModalOpen] = useState(false);
-    const [isSeasonPassModalOpen, setIsSeasonPassModalOpen] = useState(false);
-    const [isLimitedOfferModalOpen, setIsLimitedOfferModalOpen] = useState(false);
+    const [isSeasonPassModalOpen, setIsSeasonPassModalOpen] = useState(true); // FORCED FOR TEST
+    const [isLimitedOfferModalOpen, setIsLimitedOfferModalOpen] = useState(true); // FORCED FOR TEST
     const [isVipModalOpen, setIsVipModalOpen] = useState(false);
     const [isVipEligibilityModalOpen, setIsVipEligibilityModalOpen] = useState(false);
-    const [isBailoutModalOpen, setIsBailoutModalOpen] = useState(false);
+    const [isBailoutModalOpen, setIsBailoutModalOpen] = useState(true); // FORCED FOR TEST
     // Removed local isForcedStreakModalOpen in favor of store state
     const { streakInfo, streakRules, fetchStreakRules, claimStreakReward, isStreakModalOpen, setStreakModalOpen } = useMissionStore();
 
