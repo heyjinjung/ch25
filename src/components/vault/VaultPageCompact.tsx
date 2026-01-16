@@ -79,20 +79,23 @@ const VaultPageCompact: React.FC = () => {
         // Let's check API response structure in 'getVaultStatus'. For now, we use a placeholder logic if field missing.
         // If 'eligible' is true, it means unlock complete.
 
-        const isUnlocked = !!data?.eligible;
+        // Progress Logic based on Condition Targets (Backend driven)
+        // Average of: Play Count Progress + Vault Spent Progress
+        const playTarget = data?.dailyPlayTarget || 1;
+        const spentTarget = data?.dailyVaultSpentTarget || 1;
 
-        // Progress Logic (This needs to be provided by backend ideally, or calculated)
-        // For Phase 1, we might rely on 'eligible' flag. 
-        // If we want "Gauge", we need Current / Target. 
-        // Let's assume the API returns 'unlockProgress' (0-100) or we simulate it.
-        // If not available, we default to 0 or 100.
-        // *Correction*: User DB column `vault_spent_total` was added. API `getVaultStatus` might need update to return it.
-        // If not available yet, we hide the detailed gauge or show 'Play to Unlock'.
-        // But user ASKED for gauge. I will assume `unlockProgress` is passed or I map `totalChargeAmount` if meant as spent.
-        // Actually, previous code used `totalChargeAmount`. I will reuse it but re-label it as "Energy".
+        const playProg = Math.min(100, ((data?.dailyPlayCount ?? 0) / playTarget) * 100);
+        const spentProg = Math.min(100, ((data?.dailyVaultSpent ?? 0) / spentTarget) * 100);
+        const depositProg = (data?.dailyDepositConfirmed) ? 100 : 0;
 
-        // Fallback calculation until API provides dedicated field
-        const progressPercent = Math.min(100, ((data?.totalChargeAmount ?? 0) / 100000) * 100);
+        const progressPercent = Math.floor((playProg + spentProg + depositProg) / 3);
+
+        const isPlayMet = (data?.dailyPlayCount ?? 0) >= (data?.dailyPlayTarget ?? 0);
+        const isSpentMet = (data?.dailyVaultSpent ?? 0) >= (data?.dailyVaultSpentTarget ?? 0);
+        const isDepositMet = !!data?.dailyDepositConfirmed;
+
+        // Unlocked ONLY if Eligible AND All Conditions Met
+        const isUnlocked = !!data?.eligible && isPlayMet && isSpentMet && isDepositMet;
 
         return { vaultBalance, availableAmount, reservedAmount, isUnlocked, progressPercent };
     }, [vault.data]);
@@ -144,8 +147,8 @@ const VaultPageCompact: React.FC = () => {
                         </div>
                         <div className="text-center">
                             <div className="text-5xl font-black text-white tracking-tighter drop-shadow-xl flex items-center gap-1">
-                                <AnimatedNumber 
-                                    value={view.availableAmount} 
+                                <AnimatedNumber
+                                    value={view.availableAmount}
                                     onAnimationStart={playVaultJingle}
                                 />
                                 <span className="text-2xl ml-[-2px]">원</span>
@@ -228,7 +231,7 @@ const VaultPageCompact: React.FC = () => {
                         {/* Gauge Header */}
                         <div className="flex justify-between items-end mb-4 relative z-10">
                             <span className="text-white font-bold text-sm flex items-center gap-2">
-                                <span className="text-white font-black">출금 조건 충전</span>
+                                <span className="text-white font-black">출금 조건 현황</span>
                             </span>
                             <button
                                 onClick={() => setShowProgressModal(true)}
@@ -249,8 +252,8 @@ const VaultPageCompact: React.FC = () => {
 
                         {/* Message */}
                         <p className="text-[11px] text-gray-400 mt-4 text-center font-medium leading-relaxed">
-                            총 충전 <span className="text-amber-500 font-bold">{formatWon(vault.data?.totalChargeAmount ?? 0)}</span> / 100,000 달성 시<br />
-                            <span className="text-white font-bold">보관금 전액이 즉시 잠금 해제됩니다.</span>
+                            매일 주어지는 <span className="text-amber-500 font-bold">출금 미션</span>(플레이/사용) 달성 시<br />
+                            <span className="text-white font-bold">보관금 전액이 즉시 출금 가능해집니다.</span>
                         </p>
                     </div>
 

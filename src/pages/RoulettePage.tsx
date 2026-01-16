@@ -1,4 +1,5 @@
 ﻿import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 // TODO: [VERIFY] When playing with Gold/Diamond Key, ensure UI shows Vault Accrual animation, NOT XP.
 // TODO: [VERIFY] If Ticket Reward is won, ensure it flies to Wallet/Header.
 import RouletteWheel from "../components/game/RouletteWheel";
@@ -382,9 +383,12 @@ const RoulettePage: React.FC = () => {
     return (
       <div className="relative mx-auto max-w-4xl space-y-6">
 
-        {!isSpinning && rewardToast && (
-          <div className="fixed inset-0 z-[2000] flex items-center justify-center pointer-events-none p-4">
-            <div className="pointer-events-auto relative w-[85vw] max-w-[300px] overflow-hidden rounded-[2rem] border border-white/20 bg-black/95 px-6 py-5 text-white shadow-[0_0_50px_rgba(255,215,0,0.2)] backdrop-blur-2xl animate-bounce-in">
+        {!isSpinning && rewardToast && createPortal(
+          <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+
+            <div className="relative pointer-events-auto w-[85vw] max-w-[300px] overflow-hidden rounded-[2rem] border border-white/20 bg-black/95 px-6 py-5 text-white shadow-[0_0_50px_rgba(255,215,0,0.2)] animate-bounce-in">
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-cc-gold/10 via-transparent to-transparent opacity-50" />
               <div className="pointer-events-none absolute inset-y-0 left-0 w-1.5 bg-gradient-to-b from-cc-gold via-yellow-300 to-cc-orange shadow-[0_0_15px_rgba(255,215,0,0.5)]" />
 
@@ -420,7 +424,8 @@ const RoulettePage: React.FC = () => {
                 </div>
               </div>
             </div>
-          </div>
+          </div>,
+          document.body
         )}
 
         <div className="flex flex-col items-center gap-4 lg:flex-row lg:items-center lg:justify-center lg:gap-10">

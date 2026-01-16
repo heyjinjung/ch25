@@ -5,6 +5,7 @@ import { Loader2, Coins } from 'lucide-react';
 import { useToast } from '../components/common/ToastProvider';
 import { tryHaptic } from '../utils/haptics';
 import { useNavigate } from 'react-router-dom';
+import { motion, useMotionValue, useTransform } from "framer-motion";
 
 const InventoryPage: React.FC = () => {
     const queryClient = useQueryClient();
@@ -238,95 +239,139 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, onUse, isPending }) => {
         };
     };
 
-    const INFO: Record<string, { title: string; sub: string; desc: string; icon: React.ReactNode }> = {
+    const INFO: Record<string, { title: string; sub: string; desc: string; icon: React.ReactNode; rarity: 'common' | 'rare' | 'epic' | 'legendary' }> = {
         "VOUCHER_GOLD_KEY_1": {
             title: "골드키",
             sub: "",
             desc: "즉시 교환",
-            icon: <img src="/assets/icons/goldkey.png" className="w-full h-full object-contain" alt="" />
+            icon: <img src="/assets/icons/goldkey.png" className="w-full h-full object-contain" alt="" />,
+            rarity: 'epic'
         },
         "VOUCHER_DIAMOND_KEY_1": {
             title: "다이아키",
             sub: "",
             desc: "즉시 교환",
-            icon: <img src="/assets/icons/diakey.png" className="w-full h-full object-contain" alt="" />
+            icon: <img src="/assets/icons/diakey.png" className="w-full h-full object-contain" alt="" />,
+            rarity: 'legendary'
         },
         "VOUCHER_DICE_TOKEN_1": {
             title: "주사위",
             sub: "",
             desc: "즉시 교환",
-            icon: <img src="/assets/icon_dice_silver.png" className="w-full h-full object-contain" alt="" />
+            icon: <img src="/assets/icon_dice_silver.png" className="w-full h-full object-contain" alt="" />,
+            rarity: 'rare'
         },
         "VOUCHER_ROULETTE_COIN_1": {
             title: "룰렛 티켓",
             sub: "",
             desc: "즉시 교환",
-            icon: <img src="/assets/asset_ticket_green.png" className="w-full h-full object-contain" alt="" />
+            icon: <img src="/assets/asset_ticket_green.png" className="w-full h-full object-contain" alt="" />,
+            rarity: 'rare'
         },
         "VOUCHER_LOTTERY_TICKET_1": {
             title: "복권 티켓",
             sub: "",
             desc: "즉시 교환",
-            icon: <img src="/assets/lottery/icon_lotto_ball.webp" className="w-full h-full object-contain" alt="" />
+            icon: <img src="/assets/lottery/icon_lotto_ball.webp" className="w-full h-full object-contain" alt="" />,
+            rarity: 'rare'
         },
         "DIAMOND": {
             title: "다이아",
             sub: "",
             desc: "상점 재화",
-            icon: <img src="/assets/icon_diamond.png" className="w-full h-full object-contain" alt="" />
+            icon: <img src="/assets/icon_diamond.png" className="w-full h-full object-contain" alt="" />,
+            rarity: 'legendary'
         }
     };
 
     const gifticonInfo = getGifticonInfo(item.item_type);
     const isPendingFulfillment = Boolean(gifticonInfo);
 
-    const info = INFO[item.item_type] || gifticonInfo || {
+    const info = INFO[item.item_type] || (gifticonInfo ? { ...gifticonInfo, rarity: 'epic' } : {
         title: item.item_type,
         sub: "",
         desc: "보유 중",
-        icon: <img src="/assets/icons/locker-dynamic-color.png" className="w-full h-full object-contain opacity-50" alt="" />
+        icon: <img src="/assets/icons/locker-dynamic-color.png" className="w-full h-full object-contain opacity-50" alt="" />,
+        rarity: 'common'
+    });
+
+    // 3D Tilt Logic
+    const x = useMotionValue(0);
+    const y = useMotionValue(0);
+    const rotateX = useTransform(y, [-0.5, 0.5], ["15deg", "-15deg"]);
+    const rotateY = useTransform(x, [-0.5, 0.5], ["-15deg", "15deg"]);
+
+    const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const width = rect.width;
+        const height = rect.height;
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+        const xPct = mouseX / width - 0.5;
+        const yPct = mouseY / height - 0.5;
+        x.set(xPct);
+        y.set(yPct);
+    };
+
+    const handleMouseLeave = () => {
+        x.set(0);
+        y.set(0);
+    };
+
+    // Rarity Styles
+    const rarityStyles = {
+        common: "border-white/10 shadow-none from-white/[0.05] to-white/[0.01]",
+        rare: "border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.15)] from-blue-900/20 to-blue-900/5",
+        epic: "border-purple-500/40 shadow-[0_0_20px_rgba(168,85,247,0.2)] from-purple-900/30 to-purple-900/10",
+        legendary: "border-amber-500/50 shadow-[0_0_25px_rgba(245,158,11,0.25)] from-amber-900/40 to-amber-900/10"
     };
 
     return (
-        <div className="relative group overflow-hidden bg-gradient-to-tr from-white/[0.08] to-white/[0.02] border border-white/10 rounded-[22px] p-4 transition-all active:scale-[0.98] hover:border-white/20">
-            <div className="flex flex-col relative z-10 h-full items-center text-center">
-                <div className="relative mb-4">
-                    <div className="w-12 h-12 rounded-2xl bg-black/40 border border-white/5 flex items-center justify-center p-1 shadow-inner">
-                        {info.icon}
+        <motion.div
+            style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+            className={`relative group h-[200px] overflow-visible rounded-[24px] border bg-gradient-to-br transition-colors duration-300 perspective-1000 ${rarityStyles[info.rarity as keyof typeof rarityStyles] || rarityStyles.common}`}
+        >
+            {/* Inner Content */}
+            <div className="absolute inset-0 rounded-[24px] overflow-hidden" style={{ transform: "translateZ(0px)" }}>
+                 {/* Shine Effect */}
+                 <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none mix-blend-overlay" />
+                 
+                 <div className="flex flex-col relative z-10 h-full items-center text-center p-4">
+                    <div className="relative mb-4 mt-2" style={{ transform: "translateZ(20px)" }}>
+                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center p-1 shadow-inner backdrop-blur-md ${info.rarity === 'legendary' ? 'bg-amber-500/20 border border-amber-500/30' : 'bg-black/40 border border-white/5'}`}>
+                            {info.icon}
+                        </div>
+                        <div className="absolute -top-1.5 -right-1.5 bg-figma-accent text-black text-[10px] font-black px-1.5 py-0.5 rounded-full ring-2 ring-black tabular-nums shadow-lg">
+                            ×{item.quantity.toLocaleString()}
+                        </div>
                     </div>
-                    <div className="absolute -top-1.5 -right-1.5 bg-figma-accent text-black text-[10px] font-black px-1.5 py-0.5 rounded-full ring-2 ring-black tabular-nums">
-                        ×{item.quantity.toLocaleString()}
+
+                    <div className="mb-auto w-full" style={{ transform: "translateZ(10px)" }}>
+                        <div className="mx-auto max-w-full text-sm font-black text-white/90 leading-tight whitespace-normal break-keep overflow-hidden line-clamp-2">
+                            {info.title}
+                        </div>
+                        <div className={`text-[10px] font-bold mt-1 uppercase tracking-wider ${info.rarity === 'legendary' ? 'text-amber-400' : 'text-white/40'}`}>
+                            {info.rarity === 'common' ? 'Basic Item' : `${info.rarity} Item`}
+                        </div>
                     </div>
-                </div>
 
-                <div className="mb-4 flex-grow w-full">
-                    <div className="mx-auto max-w-full text-[14px] font-black text-white/90 leading-tight whitespace-normal break-keep overflow-hidden line-clamp-2 min-h-[34px]">
-                        {info.title}
-                    </div>
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            if (item.item_type === "DIAMOND" || isPendingFulfillment) return;
+                            onUse();
+                        }}
+                        disabled={item.quantity <= 0 || isPending || item.item_type === "DIAMOND" || isPendingFulfillment}
+                        className="w-full h-9 flex items-center justify-center bg-white/10 hover:bg-white/20 disabled:bg-black/20 disabled:text-white/20 disabled:cursor-not-allowed text-white text-[11px] font-bold rounded-xl border border-white/5 transition-colors shadow-lg"
+                        style={{ transform: "translateZ(20px)" }}
+                    >
+                        {item.item_type === "DIAMOND" ? "보유중" : (isPendingFulfillment ? "지급대기" : (isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : "사용하기"))}
+                    </button>
                 </div>
-
-                <div className="mb-2 flex items-baseline justify-center gap-1">
-                    <span className="text-lg font-black text-white tracking-tighter tabular-nums">
-                        {item.quantity.toLocaleString()}
-                    </span>
-                    <span className="text-[10px] font-bold text-white/30">개 보유</span>
-                </div>
-
-                <button
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        if (item.item_type === "DIAMOND" || isPendingFulfillment) return;
-                        onUse();
-                    }}
-                    disabled={item.quantity <= 0 || isPending || item.item_type === "DIAMOND" || isPendingFulfillment}
-                    className="w-full h-8 flex items-center justify-center bg-white/10 hover:bg-white/20 disabled:bg-black/20 disabled:text-white/20 disabled:cursor-not-allowed text-white text-[11px] font-bold rounded-xl border border-white/5 transition-colors"
-                >
-                    {item.item_type === "DIAMOND" ? "보유중" : (isPendingFulfillment ? "지급대기" : (isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : "사용하기"))}
-                </button>
             </div>
-
-            <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-emerald-500/[0.03] blur-2xl rounded-full" />
-        </div>
+        </motion.div>
     );
 };
 

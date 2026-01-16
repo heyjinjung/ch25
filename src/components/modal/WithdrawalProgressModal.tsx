@@ -25,15 +25,9 @@ const WithdrawalProgressModal: React.FC<WithdrawalProgressModalProps> = ({
     withdrawalCount
 }) => {
     // Determine target based on withdrawal steps
-    // 1st: 10,000, 2nd: 10,000, 3rd+: 30,000
-    const getMinWithdrawal = () => {
-        if (withdrawalCount === 0) return 10000;
-        if (withdrawalCount === 1) return 10000;
-        return 30000;
-    };
+    // Backend enforces flat 10,000 KRW constraint (vault_service.py)
+    const minWithdrawal = 10000;
 
-    const minWithdrawal = getMinWithdrawal();
-    
     // Condition Checks
     const isBalanceMet = vaultBalance >= minWithdrawal;
     const isPlayMet = dailyPlayCount >= dailyPlayTarget;
@@ -119,7 +113,7 @@ const WithdrawalProgressModal: React.FC<WithdrawalProgressModalProps> = ({
             >
                 {/* Visual Accent */}
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-1 bg-white/10 rounded-full mt-3" />
-                
+
                 {/* Header */}
                 <div className="pt-10 pb-6 px-8 flex flex-col items-center">
                     <div className="w-16 h-16 bg-gradient-to-br from-amber-400/20 to-yellow-600/20 rounded-3xl flex items-center justify-center mb-4 border border-amber-500/20 shadow-lg shadow-amber-900/20">
@@ -127,7 +121,7 @@ const WithdrawalProgressModal: React.FC<WithdrawalProgressModalProps> = ({
                     </div>
                     <h2 className="text-2xl font-black text-white tracking-tighter mb-1">출금조건</h2>
                     <p className="text-zinc-500 text-xs font-semibold">게이지가 다 차면 출금가능</p>
-                    
+
                     <button
                         onClick={onClose}
                         aria-label="Close"
@@ -160,17 +154,17 @@ const WithdrawalProgressModal: React.FC<WithdrawalProgressModalProps> = ({
                                 className="relative h-full rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 flex items-center justify-end px-3 shadow-[0_0_25px_rgba(251,191,36,0.2)]"
                             >
                                 {/* End Glow & Pulse */}
-                                <motion.div 
+                                <motion.div
                                     animate={{ opacity: [0.6, 1, 0.6], scale: [0.95, 1.05, 0.95] }}
                                     transition={{ repeat: Infinity, duration: 1.5 }}
                                     className="absolute right-[-8px] w-4 h-full bg-white/40 blur-md rounded-full"
                                 />
-                                
+
                                 <span className="relative text-[11px] font-black text-amber-950 font-mono">
                                     CHARGING
                                 </span>
                             </motion.div>
-                            
+
                             {/* Inner Glass Reflection */}
                             <div className="absolute inset-0 top-0 h-1/2 bg-white/5 pointer-events-none" />
                         </div>
@@ -221,7 +215,7 @@ const WithdrawalProgressModal: React.FC<WithdrawalProgressModalProps> = ({
                         )}
                     >
                         {allConditionsMet ? (
-                            <motion.div 
+                            <motion.div
                                 className="flex items-center gap-2"
                                 animate={{ scale: [1, 1.05, 1] }}
                                 transition={{ repeat: Infinity, duration: 1 }}
@@ -236,7 +230,7 @@ const WithdrawalProgressModal: React.FC<WithdrawalProgressModalProps> = ({
                             </div>
                         )}
                     </button>
-                    
+
                     {!allConditionsMet && (
                         <p className="text-center mt-4 text-[10px] font-bold text-zinc-600 tracking-tighter">
                             출금 횟수: {withdrawalCount}회 | 최소 {minWithdrawal.toLocaleString()}원부터 가능
