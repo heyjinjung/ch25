@@ -384,9 +384,9 @@ const RoulettePage: React.FC = () => {
       <div className="relative mx-auto max-w-4xl space-y-6">
 
         {!isSpinning && rewardToast && createPortal(
-          <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4 touch-none h-[100dvh] w-screen">
             {/* Backdrop */}
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setRewardToast(null)} />
 
             <div className="relative pointer-events-auto w-[85vw] max-w-[300px] overflow-hidden rounded-[2rem] border border-white/20 bg-black/95 px-6 py-5 text-white shadow-[0_0_50px_rgba(255,215,0,0.2)] animate-bounce-in">
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-cc-gold/10 via-transparent to-transparent opacity-50" />
