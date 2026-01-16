@@ -73,14 +73,6 @@ const VaultPageCompact: React.FC = () => {
         const reservedAmount = data?.vaultAmountReserved ?? Math.max(vaultBalance - availableAmount, 0);
 
         // Unlock Conditions (Hardcoded for now based on Reward Guide Logic or API data)
-        // Assuming API returns 'vault_spent_total' or we calculate percentage
-        // If API doesn't support 'vault_spent_total' yet, fallback to dummy or partial logic.
-        // Assuming 'totalChargeAmount' logic was referring to deposit, but we need 'Shop Spending'.
-        // Let's check API response structure in 'getVaultStatus'. For now, we use a placeholder logic if field missing.
-        // If 'eligible' is true, it means unlock complete.
-
-        // Progress Logic based on Condition Targets (Backend driven)
-        // Average of: Play Count Progress + Vault Spent Progress
         const playTarget = data?.dailyPlayTarget || 1;
         const spentTarget = data?.dailyVaultSpentTarget || 1;
 
@@ -227,9 +219,9 @@ const VaultPageCompact: React.FC = () => {
                             THE VAULT
                         </span>
 
-                        {/* Realistic Locked Vault */}
+                        {/* Glassmorphism Vault Icon */}
                         <div className="relative w-48 h-48">
-                            <img src="/assets/vault/vault_closed.png" alt="Locked Vault" className="w-full h-full object-contain" />
+                            <img src="/assets/vault/vault_open.png" alt="Vault" className="w-full h-full object-contain drop-shadow-[0_8px_16px_rgba(16,185,129,0.3)]" />
                         </div>
                     </div>
 
@@ -240,36 +232,46 @@ const VaultPageCompact: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Dopamine Gauge */}
-                    <div className="w-full max-w-xs bg-gray-900 rounded-2xl p-5 border border-gray-800 shadow-2xl relative overflow-hidden group mb-8">
+                    {/* Ultimate Glassmorphism Gauge Card */}
+                    <div className="w-full max-w-xs rounded-[32px] p-6 relative overflow-hidden group mb-8 backdrop-blur-3xl bg-white/[0.04] border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
+
+                        {/* Shimmering glass highlight */}
+                        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/25 to-transparent" />
 
                         {/* Gauge Header */}
-                        <div className="flex justify-between items-end mb-4 relative z-10">
-                            <span className="text-white font-bold text-sm flex items-center gap-2">
-                                <span className="text-white font-black">출금 조건 현황</span>
+                        <div className="flex justify-between items-center mb-5 relative z-10">
+                            <span className="flex items-center gap-2">
+                                <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse shadow-[0_0_10px_rgba(245,158,11,0.6)]" />
+                                <span className="text-white/80 font-bold text-[10px] tracking-widest uppercase drop-shadow-sm">출금 미션 현황</span>
                             </span>
-                            <button
-                                onClick={() => setShowProgressModal(true)}
-                                className="text-xl font-black text-amber-500 tabular-nums hover:scale-105 active:scale-95 transition-transform"
-                            >
-                                {view.progressPercent}<span className="text-sm text-amber-500/70">%</span>
-                            </button>
+                            <div className="flex items-baseline gap-0.5" onClick={() => setShowProgressModal(true)} style={{ cursor: 'pointer' }}>
+                                <span className="text-2xl font-black text-amber-500 tabular-nums drop-shadow-[0_0_15px_rgba(245,158,11,0.4)]">
+                                    {view.progressPercent}
+                                </span>
+                                <span className="text-[10px] font-bold text-amber-500/60">%</span>
+                            </div>
                         </div>
 
-                        {/* Progress Bar */}
-                        <div className="h-3 bg-black rounded-full overflow-hidden border border-white/10 relative z-10">
+                        {/* Premium Progress Bar */}
+                        <div className="relative h-4 bg-black/40 rounded-full p-1 border border-white/5 shadow-inner mb-6">
                             <motion.div
                                 initial={{ width: 0 }}
                                 animate={{ width: `${view.progressPercent}%` }}
-                                className="h-full bg-gradient-to-r from-amber-600 via-amber-400 to-white animate-shimmer-fast transition-all duration-1000 ease-out"
-                            />
+                                transition={{ duration: 1.5, ease: "easeOut" }}
+                                className="h-full rounded-full relative overflow-hidden"
+                            >
+                                <div className="absolute inset-0 bg-gradient-to-r from-amber-600 via-amber-400 to-amber-300" />
+                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent w-full -translate-x-full animate-[shimmer_2s_infinite]" />
+                            </motion.div>
                         </div>
 
-                        {/* Message */}
-                        <p className="text-[11px] text-gray-400 mt-4 text-center font-medium leading-relaxed">
-                            매일 주어지는 <span className="text-amber-500 font-bold">출금 미션</span>(플레이/사용) 달성 시<br />
-                            <span className="text-white font-bold">보관금 전액이 즉시 출금 가능해집니다.</span>
-                        </p>
+                        {/* Instruction Label */}
+                        <div className="relative py-4 px-3 rounded-2xl bg-white/[0.03] border border-white/5">
+                            <p className="text-[10px] sm:text-[11px] text-white/50 text-center font-bold tracking-tight leading-relaxed">
+                                매일 주어지는 <span className="text-amber-400/90 underline decoration-amber-500/30 underline-offset-4 font-black">출금 미션</span>(플레이/사용) 달성 시<br />
+                                <span className="text-white/80 font-black">보관금 전액 즉시 출금 모드 활성화</span>
+                            </p>
+                        </div>
                     </div>
 
 
