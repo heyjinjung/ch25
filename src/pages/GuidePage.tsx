@@ -186,8 +186,8 @@ const GamesSection: React.FC = () => {
   const games: GameCardProps[] = [
     {
       title: "룰렛",
-      description: "돌리고 보상 받기. 꼽 나오면 금고에서 -50원",
-      beginnerTip: "꼽이 나오면 금고에서 50원 차감",
+      description: "돌리고 보상 받기. 보상은 룰렛 설정값 기준으로 지급",
+      beginnerTip: "보상은 룰렛 설정값 기준으로 확인",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 20 20" fill="white">
           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
@@ -198,8 +198,8 @@ const GamesSection: React.FC = () => {
     },
     {
       title: "주사위 배틀",
-      description: "승리시 +200원, 패배시 -50원 금고 반영",
-      beginnerTip: "지면 금고에서 50원 차감",
+      description: "승부 결과에 따라 보상 지급(설정값 + 골든아워 조건 반영)",
+      beginnerTip: "보상은 설정값/골든아워 기준으로 반영",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 20 20" fill="white">
           <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
@@ -352,8 +352,8 @@ const NewFeaturesSection: React.FC = () => {
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
             </div>
             <h3 className="mb-2 text-lg font-bold text-red-700">주의: 금고 차감</h3>
-            <p className="text-gray-600">룰렛 꽝, 주사위 패배 시 금고에서 -50원.</p>
-            <p className="mt-2 text-sm font-bold text-red-600">→ 이기면 +200원, 지면 -50원</p>
+            <p className="text-gray-600">룰렛/주사위 보상은 설정값 기준으로 금고에 반영됩니다.</p>
+            <p className="mt-2 text-sm font-bold text-red-600">→ 보상은 각 게임 설정값 기준으로 확인</p>
           </div>
         </div>
       </div>

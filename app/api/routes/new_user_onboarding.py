@@ -27,6 +27,10 @@ router = APIRouter(prefix="/api/new-user", tags=["new-user"])
 WELCOME_LOGIC_KEYS = (
     "NEW_USER_WELCOME_CASH",
     "NEW_USER_WELCOME_TICKET",
+    "starter_play_1",
+    "starter_play_3",
+    "starter_channel_join",
+    "starter_attendance",
 )
 
 

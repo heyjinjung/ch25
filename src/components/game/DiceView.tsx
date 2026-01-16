@@ -1,5 +1,7 @@
-import { useMemo } from "react";
+import React, { useMemo, useEffect, useState } from "react";
 import clsx from "clsx";
+import { motion, AnimatePresence } from "framer-motion";
+import { Heart, Shield, Swords } from "lucide-react";
 
 interface DiceViewProps {
   readonly userDice: number[];
@@ -8,14 +10,51 @@ interface DiceViewProps {
   readonly isRolling?: boolean;
 }
 
+// HP Bar Component
+const HealthBar: React.FC<{ hp: number; maxHp: number; label: string; isUser?: boolean }> = ({ hp, maxHp, label, isUser }) => {
+  const percent = Math.max(0, (hp / maxHp) * 100);
+  
+  return (
+    <div className={clsx("w-full mb-4", isUser ? "text-left" : "text-right")}>
+      <div className={clsx("flex items-center gap-2 mb-1", isUser ? "flex-row" : "flex-row-reverse")}>
+        <span className="text-[10px] font-black uppercase tracking-widest text-white/50">{label}</span>
+        <div className="px-1.5 py-0.5 rounded bg-black/40 border border-white/10 text-[9px] font-mono text-white/70">
+          체력 {hp}/{maxHp}
+        </div>
+      </div>
+      {/* Bars Container */}
+      <div className={clsx("relative h-2 w-full bg-zinc-900 rounded-full border border-white/5 overflow-hidden")}>
+        {/* Background Damage layer (delayed red) */}
+        <motion.div 
+          className="absolute top-0 bottom-0 bg-red-600 w-full"
+          initial={{ x: isUser ? "-100%" : "100%" }}
+          animate={{ x: isUser ? `${percent - 100}%` : `${100 - percent}%` }} // Simplified, logically fill from left or right
+          style={{ 
+             left: 0, 
+             right: 'auto', 
+             width: `${percent}%`,
+             transition: "width 0.5s ease-out 0.2s" 
+          }}
+        />
+        {/* Main HP Bar */}
+        <motion.div 
+          className={clsx("absolute top-0 bottom-0 h-full", isUser ? "bg-emerald-500" : "bg-rose-500")}
+          initial={{ width: "100%" }}
+          animate={{ width: `${percent}%` }}
+          transition={{ type: "spring", stiffness: 100, damping: 20 }}
+          style={{ [isUser ? 'left' : 'right']: 0 }}
+        />
+      </div>
+    </div>
+  );
+};
+
 const DiceFace: React.FC<{ value: number; isRolling?: boolean; delay?: string }> = ({ value, isRolling, delay = "0s" }) => {
   return (
     <div className={clsx(
-      "relative h-[72px] w-[72px] sm:h-24 sm:w-24 flex items-center justify-center transition-all duration-500",
+      "relative h-16 w-16 sm:h-20 sm:w-20 flex items-center justify-center transition-all duration-500",
       isRolling && "animate-[bounce_0.5s_infinite_alternate]"
     )} style={{ animationDelay: delay }}>
-
-      {/* No soft glow for higher contrast */}
 
       <img
         src={isRolling ? "/assets/dice/dice_1.png" : `/assets/dice/dice_${value || 1}.png`}
@@ -33,109 +72,208 @@ const DiceView: React.FC<DiceViewProps> = ({ userDice, dealerDice, result, isRol
   const userSum = userDice.reduce((a, b) => a + b, 0);
   const dealerSum = dealerDice.reduce((a, b) => a + b, 0);
 
+  // Battle State
+  const [userHp, setUserHp] = useState(100);
+  const [dealerHp, setDealerHp] = useState(100);
+  const [showAttack, setShowAttack] = useState(false);
+  const [shake, setShake] = useState<"USER" | "DEALER" | null>(null);
+
+  // Reset Battle when rolling starts
+  useEffect(() => {
+    if (isRolling) {
+      setUserHp(100);
+      setDealerHp(100);
+      setShowAttack(false);
+      setShake(null);
+    }
+  }, [isRolling]);
+
+  // Handle Result Logic (HP Damage & Effects)
+  useEffect(() => {
+    if (!isRolling && result) {
+      // Small Delay for dramatic effect after dice reveal
+      const timer = setTimeout(() => {
+        if (result === "WIN") {
+          setShowAttack(true); // User Attacks
+          setTimeout(() => {
+            setDealerHp(0);
+            setShake("DEALER");
+          }, 400); // Hit timing
+        } else if (result === "LOSE") {
+          setShowAttack(true); // Dealer Attacks
+          setTimeout(() => {
+            setUserHp(0);
+            setShake("USER");
+          }, 400);
+        } else {
+           // Draw - maybe clash effect?
+        }
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [result, isRolling]);
+
   const resultConfig = useMemo(() => {
-    if (!result) return { text: "전투 준비!", color: "text-white/40", bg: "bg-white/5" };
+    if (!result) return { text: "전투 준비", color: "text-white/40", bg: "bg-white/5", icon: Swords };
     switch (result) {
       case "WIN":
-        return { text: "승리", color: "text-figma-accent", bg: "bg-figma-accent/10" };
+        return { text: "승리", color: "text-[#30FF75]", bg: "bg-emerald-500/10", icon: Shield };
       case "LOSE":
-        return { text: "패배", color: "text-red-500", bg: "bg-red-500/10" };
+        return { text: "패배", color: "text-red-500", bg: "bg-red-500/10", icon: Heart };
       case "DRAW":
-        return { text: "무승부", color: "text-amber-400", bg: "bg-amber-500/10" };
+        return { text: "무승부", color: "text-amber-400", bg: "bg-amber-500/10", icon: Swords };
     }
   }, [result]);
 
   return (
-    <div className="space-y-4">
-      {/* Battle Columns */}
-      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 relative h-full">
+    <div className="space-y-6 relative">
+      {/* Attack Projectile Animation */}
+      <AnimatePresence>
+        {showAttack && result === "WIN" && (
+           <motion.div 
+             className="absolute left-1/4 top-1/2 w-8 h-8 rounded-full bg-emerald-400 blur-md z-50 pointer-events-none"
+             initial={{ x: 0, y: "-50%", opacity: 1, scale: 0.5 }}
+             animate={{ x: 200, opacity: 0, scale: 2 }}
+             transition={{ duration: 0.4, ease: "circIn" }}
+           />
+        )}
+        {showAttack && result === "LOSE" && (
+           <motion.div 
+             className="absolute right-1/4 top-1/2 w-8 h-8 rounded-full bg-red-500 blur-md z-50 pointer-events-none"
+             initial={{ x: 0, y: "-50%", opacity: 1, scale: 0.5 }}
+             animate={{ x: -200, opacity: 0, scale: 2 }}
+             transition={{ duration: 0.4, ease: "circIn" }}
+           />
+        )}
+      </AnimatePresence>
 
-        {/* VS Label (sm+ shown, compact on small screens) */}
-        <div className="hidden sm:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
-          <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-black border border-white/10 flex items-center justify-center shadow-[0_0_30px_rgba(0,0,0,0.8)]">
-            <span className="text-lg sm:text-2xl font-black italic text-white/20">VS</span>
-          </div>
+      {/* Battle Arena */}
+      <div className="grid gap-6 grid-cols-1 md:grid-cols-2 relative h-full">
+
+        {/* VS Badge */}
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none">
+          <motion.div 
+            animate={isRolling ? { scale: [1, 1.2, 1], rotate: [0, 180, 360] } : {}}
+            transition={{ duration: 0.5 }}
+            className="w-12 h-12 rounded-full bg-black border-2 border-white/10 flex items-center justify-center shadow-[0_0_20px_rgba(255,255,255,0.1)]"
+          >
+            <span className="text-sm font-black italic text-zinc-500">VS</span>
+          </motion.div>
         </div>
 
-        {/* User Side */}
-        <div className={clsx(
-          "relative rounded-[2rem] border p-3 transition-all duration-700 shadow-2xl",
-          result === "WIN" ? "bg-figma-accent/10 border-figma-accent/40" : "bg-black/60 border-white/10"
-        )}>
-          <div className="flex flex-col items-center">
-            <div className="mb-4 flex items-center gap-2 px-4 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-              <span className="text-xs font-black uppercase tracking-[0.2em] text-figma-accent">내 스쿼드</span>
-            </div>
+        {/* User Card (Left) */}
+        <motion.div 
+          animate={shake === "USER" ? { x: [-10, 10, -10, 10, 0], color: ["#fff", "#f87171", "#fff"] } : {}}
+          transition={{ duration: 0.4 }}
+          className={clsx(
+            "relative rounded-[2rem] border p-5 transition-all duration-700 shadow-2xl overflow-hidden group",
+            result === "WIN" ? "bg-emerald-900/20 border-emerald-500/50" : "bg-black/40 border-white/5"
+          )}
+        >
+          {/* Spotlight user */}
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-transparent opacity-50" />
+          
+          <div className="relative z-10 flex flex-col items-center">
+            <HealthBar hp={userHp} maxHp={100} label="내 스쿼드" isUser />
 
-            <div className="flex justify-center gap-4 min-h-[80px]">
+            {/* Dice Area */}
+            <div className="flex justify-center gap-3 my-4">
               {userDice.length > 0 || isRolling ? (
                 (isRolling ? [1, 1] : userDice).map((val, i) => (
                   <DiceFace key={i} value={val} isRolling={isRolling} delay={`${i * 0.1}s`} />
                 ))
               ) : (
-                <>
-                  <div className="h-[72px] w-[72px] sm:h-24 sm:w-24 rounded-[2rem] border-2 border-dashed border-white/5 bg-white/5 animate-pulse" />
-                  <div className="h-[72px] w-[72px] sm:h-24 sm:w-24 rounded-[2rem] border-2 border-dashed border-white/5 bg-white/5 animate-pulse" />
-                </>
+                <div className="flex gap-3 opacity-30">
+                   <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-2xl bg-white/10" />
+                   <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-2xl bg-white/10" />
+                </div>
               )}
             </div>
 
-            <div className="mt-4 flex flex-col items-center">
-              <span className="text-[2rem] sm:text-[3.5rem] font-black text-white leading-none tracking-tighter">
+            {/* Score */}
+            <div className="mt-2 text-center">
+              <span className={clsx(
+                "text-4xl sm:text-5xl font-black tracking-tighter transition-colors duration-300",
+                result === "WIN" ? "text-emerald-400 drop-shadow-[0_0_15px_rgba(52,211,153,0.6)]" : "text-white"
+              )}>
                 {isRolling ? "?" : (userDice.length > 0 ? userSum : "-")}
               </span>
-              <span className="text-xs font-bold text-white/30 uppercase mt-2">전투력</span>
+              <p className="text-[10px] font-bold text-white/30 uppercase mt-1">전투력</p>
             </div>
           </div>
-        </div>
+        </motion.div>
 
-        {/* Dealer Side */}
-        <div className={clsx(
-          "relative rounded-[2rem] border p-3 transition-all duration-700 shadow-2xl",
-          result === "LOSE" ? "bg-red-500/10 border-red-500/40" : "bg-black/60 border-white/10"
-        )}>
-          <div className="flex flex-col items-center">
-            <div className="mb-4 flex items-center gap-2 px-4 py-1 rounded-full bg-white/5 border border-white/10">
-              <span className="text-xs font-black uppercase tracking-[0.2em] text-white/60">딜러</span>
-            </div>
+        {/* Dealer Card (Right) */}
+        <motion.div 
+          animate={shake === "DEALER" ? { x: [-10, 10, -10, 10, 0], filter: ["brightness(1)", "brightness(2)", "brightness(1)"] } : {}}
+          transition={{ duration: 0.4 }}
+          className={clsx(
+            "relative rounded-[2rem] border p-5 transition-all duration-700 shadow-2xl overflow-hidden",
+            result === "LOSE" ? "bg-red-900/20 border-red-500/50" : "bg-black/40 border-white/5"
+          )}
+        >
+          {/* Spotlight dealer */}
+          <div className="absolute inset-0 bg-gradient-to-bl from-red-500/5 via-transparent to-transparent opacity-50" />
 
-            <div className="flex justify-center gap-4 min-h-[80px]">
+          <div className="relative z-10 flex flex-col items-center">
+            <HealthBar hp={dealerHp} maxHp={100} label="적 보스" />
+
+             {/* Dice Area */}
+             <div className="flex justify-center gap-3 my-4">
               {dealerDice.length > 0 || isRolling ? (
                 (isRolling ? [1, 1] : dealerDice).map((val, i) => (
                   <DiceFace key={i} value={val} isRolling={isRolling} delay={`${i * 0.15}s`} />
                 ))
               ) : (
-                <>
-                  <div className="h-[72px] w-[72px] sm:h-24 sm:w-24 rounded-[2rem] border-2 border-dashed border-white/5 bg-white/5 opacity-50" />
-                  <div className="h-[72px] w-[72px] sm:h-24 sm:w-24 rounded-[2rem] border-2 border-dashed border-white/5 bg-white/5 opacity-50" />
-                </>
+                <div className="flex gap-3 opacity-30">
+                   <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-2xl bg-white/10" />
+                   <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-2xl bg-white/10" />
+                </div>
               )}
             </div>
 
-            <div className="mt-4 flex flex-col items-center">
-              <span className="text-[2rem] sm:text-[3.5rem] font-black text-white/90 leading-none tracking-tighter">
+             {/* Score */}
+             <div className="mt-2 text-center">
+              <span className={clsx(
+                "text-4xl sm:text-5xl font-black tracking-tighter transition-colors duration-300",
+                result === "LOSE" ? "text-red-400 drop-shadow-[0_0_15px_rgba(248,113,113,0.6)]" : "text-white"
+              )}>
                 {isRolling ? "?" : (dealerDice.length > 0 ? dealerSum : "-")}
               </span>
-              <span className="text-xs font-bold text-white/30 uppercase mt-2">위협 수준</span>
+              <p className="text-[10px] font-bold text-white/30 uppercase mt-1">위협 수준</p>
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
 
-      {/* Result Display: Compact and Premium */}
-      <div className={clsx(
-        "rounded-2xl border p-3 text-center shadow-xl transition-all duration-1000",
-        "min-h-[52px]",
-        resultConfig.bg,
-        result ? "border-current/20 scale-100 opacity-100" : "border-white/5 scale-95 opacity-50"
-      )}>
-        <p className={clsx(
-          "text-lg sm:text-2xl font-black tracking-[0.08em] italic uppercase drop-shadow-lg",
-          resultConfig.color
-        )}>
-          {resultConfig.text}
-        </p>
-      </div>
+      {/* Result Status Bar */}
+      <AnimatePresence mode='wait'>
+        {!isRolling && result && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className={clsx(
+              "rounded-2xl border p-4 text-center shadow-xl backdrop-blur-xl relative overflow-hidden",
+              resultConfig.bg,
+              resultConfig.color === "text-[#30FF75]" ? "border-emerald-500/30" : resultConfig.color === "text-red-500" ? "border-red-500/30" : "border-white/10"
+            )}
+          > 
+             {result === "WIN" && <div className="absolute inset-0 bg-emerald-400/10 animate-pulse" />}
+             {result === "LOSE" && <div className="absolute inset-0 bg-red-500/10 animate-pulse" />}
+
+             <div className="relative z-10 flex items-center justify-center gap-3">
+                <resultConfig.icon size={24} className={resultConfig.color} />
+                <span className={clsx(
+                  "text-2xl font-black tracking-widest italic uppercase drop-shadow-sm",
+                  resultConfig.color
+                )}>
+                  {resultConfig.text}
+                </span>
+             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

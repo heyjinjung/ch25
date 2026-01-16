@@ -53,7 +53,7 @@ const SparkleDust: React.FC = () => {
 };
 
 const VaultPageCompact: React.FC = () => {
-    const { addToast } = useToast();
+    const { addToast, addToastNode } = useToast();
     const { playVaultJingle } = useSound();
     const [showConditionsModal, setShowConditionsModal] = React.useState(false);
     const [showProgressModal, setShowProgressModal] = React.useState(false);
@@ -113,10 +113,30 @@ const VaultPageCompact: React.FC = () => {
         <div className="flex flex-col items-center px-4 py-6 min-h-[calc(100vh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-80px)] relative overflow-hidden bg-black text-white">
             <SparkleDust />
 
-            {/* Title */}
-            <h1 className="text-xs font-black tracking-[0.2em] text-emerald-500 uppercase mb-8 border border-emerald-900/50 px-4 py-1.5 rounded-full bg-emerald-950/30">
-                THE VAULT
-            </h1>
+            {/* Header */}
+            <div className="w-full max-w-xs mb-8 flex items-center justify-between">
+                <h1 className="text-xs font-black tracking-[0.2em] text-emerald-500 uppercase border border-emerald-900/50 px-4 py-1.5 rounded-full bg-emerald-950/30">
+                    THE VAULT
+                </h1>
+                <button
+                    type="button"
+                    onClick={() => {
+                        tryHaptic(10);
+                        addToastNode(
+                            <div className="text-center space-y-1">
+                                <p>배민 2만부터 지급가능</p>
+                                <p>씨씨코인 하루 1개 지급가능</p>
+                                <p>컴포즈 아아 1만부터 지급가능</p>
+                            </div>,
+                            { tone: "info" }
+                        );
+                    }}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white/5 border border-white/10 text-[10px] font-black text-white/70 active:scale-[0.98] transition-transform"
+                >
+                    <img src="/assets/logo_cc_v2.png" className="w-3.5 h-3.5 object-contain" alt="" />
+                    안내
+                </button>
+            </div>
 
             {/* 1. Unlocked State (CASH OUT MODE) */}
             {view.isUnlocked ? (
