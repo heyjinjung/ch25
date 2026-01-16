@@ -106,10 +106,8 @@ const VaultPageCompact: React.FC = () => {
             <SparkleDust />
 
             {/* Header */}
-            <div className="w-full mb-8 flex items-center justify-between">
-                <h1 className="text-xs font-black tracking-[0.2em] text-emerald-500 uppercase border border-emerald-900/50 px-4 py-1.5 rounded-full bg-emerald-950/30">
-                    THE VAULT
-                </h1>
+            <div className="w-full mb-8 flex items-center justify-end">
+
                 <button
                     type="button"
                     onClick={() => {
@@ -242,7 +240,7 @@ const VaultPageCompact: React.FC = () => {
                         <div className="flex justify-between items-center mb-5 relative z-10">
                             <span className="flex items-center gap-2">
                                 <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse shadow-[0_0_10px_rgba(245,158,11,0.6)]" />
-                                <span className="text-white/80 font-bold text-[10px] tracking-widest uppercase drop-shadow-sm">출금 미션 현황</span>
+                                <span className="text-white/80 font-bold text-[14px] tracking-widest uppercase drop-shadow-sm">출금 미션 현황</span>
                             </span>
                             <div className="flex items-baseline gap-0.5" onClick={() => setShowProgressModal(true)} style={{ cursor: 'pointer' }}>
                                 <span className="text-2xl font-black text-amber-500 tabular-nums drop-shadow-[0_0_15px_rgba(245,158,11,0.4)]">
@@ -265,13 +263,7 @@ const VaultPageCompact: React.FC = () => {
                             </motion.div>
                         </div>
 
-                        {/* Instruction Label */}
-                        <div className="relative py-4 px-3 rounded-2xl bg-white/[0.03] border border-white/5">
-                            <p className="text-[10px] sm:text-[11px] text-white/50 text-center font-bold tracking-tight leading-relaxed">
-                                매일 주어지는 <span className="text-amber-400/90 underline decoration-amber-500/30 underline-offset-4 font-black">출금 미션</span>(플레이/사용) 달성 시<br />
-                                <span className="text-white/80 font-black">보관금 전액 즉시 출금 모드 활성화</span>
-                            </p>
-                        </div>
+
                     </div>
 
 

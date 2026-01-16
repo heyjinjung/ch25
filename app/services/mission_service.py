@@ -685,14 +685,13 @@ class MissionService:
         elif mission.reward_type == MissionRewardType.DIAMOND_KEY:
              target_reward_type = "DIAMOND_KEY"
         elif mission.reward_type == MissionRewardType.TICKET_BUNDLE:
-             # Legacy mapping: TICKET_BUNDLE -> LOTTERY_TICKET per original logic
-             target_reward_type = "LOTTERY_TICKET"
+             target_reward_type = "TICKET_BUNDLE"
         elif mission.reward_type == MissionRewardType.TICKET_ROULETTE:
-             target_reward_type = "ROULETTE_COIN"
+             target_reward_type = "TICKET_ROULETTE"
         elif mission.reward_type == MissionRewardType.TICKET_DICE:
-             target_reward_type = "DICE_TOKEN"
+             target_reward_type = "TICKET_DICE"
         elif mission.reward_type == MissionRewardType.TICKET_LOTTERY:
-             target_reward_type = "LOTTERY_TICKET"
+             target_reward_type = "TICKET_LOTTERY"
         elif mission.reward_type == MissionRewardType.POINT:
              target_reward_type = "POINT"
 

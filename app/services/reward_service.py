@@ -351,8 +351,10 @@ class RewardService:
         ticket_map = {
             "TICKET_ROULETTE": GameTokenType.ROULETTE_COIN,
             "ROULETTE_TICKET": GameTokenType.ROULETTE_COIN,
+            "ROULETTE_COIN": GameTokenType.ROULETTE_COIN,
             "TICKET_DICE": GameTokenType.DICE_TOKEN,
             "DICE_TICKET": GameTokenType.DICE_TOKEN,
+            "DICE_TOKEN": GameTokenType.DICE_TOKEN,
             "TICKET_LOTTERY": GameTokenType.LOTTERY_TICKET,
             "LOTTERY_TICKET": GameTokenType.LOTTERY_TICKET,
             # "CC_COIN": GameTokenType.CC_COIN,  # [REMOVED]

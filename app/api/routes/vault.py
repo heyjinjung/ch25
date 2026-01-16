@@ -145,17 +145,18 @@ def status(db: Session = Depends(get_db), user_id: int = Depends(get_current_use
     
     # Withdrawal Conditions Calculation
     op_date_kst = service._operational_date_kst(now)
-    # [MODIFIED] Use 7-day window for play count logic to match Phase 2 tiered rules
-    seven_days_ago_ts = now - timedelta(days=7)
+    # [MODIFIED] Use 3-day window for play count logic to match Phase 2 tiered rules and UI text
+    three_days_ago_ts = now - timedelta(days=3)
     
+    from app.models.vault_earn_event import VaultEarnEvent
     from app.models.feature import UserEventLog
     from sqlalchemy import cast, Date, func
 
-    # Recent Play Count (Last 7 Days)
-    recent_play_count = db.query(func.count(UserEventLog.id)).filter(
-        UserEventLog.user_id == user_id,
-        UserEventLog.event_name.like("GAME_%_PLAY"),
-        UserEventLog.created_at >= seven_days_ago_ts
+    # Recent Play Count (Last 3 Days) - Using VaultEarnEvent as SoT
+    recent_play_count = db.query(func.count(VaultEarnEvent.id)).filter(
+        VaultEarnEvent.user_id == user_id,
+        VaultEarnEvent.earn_type == "GAME_PLAY",
+        VaultEarnEvent.created_at >= three_days_ago_ts
     ).scalar() or 0
     
     # Daily Deposit Confirmation (Still check Today for explicit "Active Today" check if needed, 
