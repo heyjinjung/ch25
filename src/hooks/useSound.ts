@@ -88,7 +88,12 @@ export const useSound = () => {
         }
     }, []);
 
-    const startMainBgm = useCallback(() => playBgm(SOUND_SOURCES.BGM.MAIN), [playBgm]);
+    const startMainBgm = useCallback(() => {
+        playBgm([
+            "/assets/sounds/bgm/battle_theme.wav",
+            "/assets/sounds/bgm/Red Curtain.ogg"
+        ]);
+    }, [playBgm]);
     const startBattleBgm = useCallback(() => playBgm(SOUND_SOURCES.BGM.BATTLE), [playBgm]);
 
     const playEnterGame = useCallback(() => {
