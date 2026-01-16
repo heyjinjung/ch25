@@ -10,8 +10,6 @@ import { ChevronDown } from "lucide-react";
 import GoldenHourTimer from "./GoldenHourTimer";
 import GoldenHourPopup from "../events/GoldenHourPopup";
 import AttendanceStreakModal from "../modal/AttendanceStreakModal";
-import SeasonPassPromoModal from "../modal/SeasonPassPromoModal";
-import LimitedOfferModal from "../modal/LimitedOfferModal";
 import BailoutModal from "../modal/BailoutModal";
 import { useMissionStore } from "../../stores/missionStore";
 import VipPromotionModal from "../modal/VipPromotionModal";
@@ -26,11 +24,9 @@ const AppHeader: React.FC = () => {
     const desktopMenuRef = useRef<HTMLDivElement>(null);
     const mobileMenuRef = useRef<HTMLDivElement>(null);
     const [isGoldenHourModalOpen, setIsGoldenHourModalOpen] = useState(false);
-    const [isSeasonPassModalOpen, setIsSeasonPassModalOpen] = useState(true); // FORCED FOR TEST
-    const [isLimitedOfferModalOpen, setIsLimitedOfferModalOpen] = useState(true); // FORCED FOR TEST
     const [isVipModalOpen, setIsVipModalOpen] = useState(false);
     const [isVipEligibilityModalOpen, setIsVipEligibilityModalOpen] = useState(false);
-    const [isBailoutModalOpen, setIsBailoutModalOpen] = useState(true); // FORCED FOR TEST
+    const [isBailoutModalOpen, setIsBailoutModalOpen] = useState(false);
     // Removed local isForcedStreakModalOpen in favor of store state
     const { streakInfo, streakRules, fetchStreakRules, claimStreakReward, isStreakModalOpen, setStreakModalOpen } = useMissionStore();
 
@@ -83,18 +79,6 @@ const AppHeader: React.FC = () => {
             const key = `forced_modal_${showModalOverride}`;
             if (!sessionStorage.getItem(key)) {
                 setIsGoldenHourModalOpen(true);
-                sessionStorage.setItem(key, "true");
-            }
-        } else if (showModalOverride === "SEASON_PASS_PROMO") {
-            const key = `forced_modal_${showModalOverride}`;
-            if (!sessionStorage.getItem(key)) {
-                setIsSeasonPassModalOpen(true);
-                sessionStorage.setItem(key, "true");
-            }
-        } else if (showModalOverride === "LIMITED_OFFER") {
-            const key = `forced_modal_${showModalOverride}`;
-            if (!sessionStorage.getItem(key)) {
-                setIsLimitedOfferModalOpen(true);
                 sessionStorage.setItem(key, "true");
             }
         } else if (vault?.recommendedAction === "OPEN_VAULT_MODAL") {
@@ -399,16 +383,6 @@ const AppHeader: React.FC = () => {
                     claimableDay={streakInfo.claimable_day}
                     rules={streakRules}
                 />
-            )}
-
-            {/* Season Pass Promo Modal */}
-            {isSeasonPassModalOpen && (
-                <SeasonPassPromoModal onClose={() => setIsSeasonPassModalOpen(false)} />
-            )}
-
-            {/* Limited Offer Modal */}
-            {isLimitedOfferModalOpen && (
-                <LimitedOfferModal onClose={() => setIsLimitedOfferModalOpen(false)} />
             )}
 
             {/* Bailout / Ticket-Zero Modal */}
