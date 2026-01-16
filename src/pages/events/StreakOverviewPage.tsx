@@ -23,6 +23,7 @@ const StreakOverviewPage: React.FC = () => {
         queryFn: fetchStreakRules,
         staleTime: 60000,
     });
+    const rulesList = Array.isArray(rules) ? rules : [];
 
     const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -81,7 +82,7 @@ const StreakOverviewPage: React.FC = () => {
                     <h2 className="text-sm font-black text-white/50 mb-4 px-1 uppercase tracking-wider">Rewards Map</h2>
                     <div className="flex gap-4 overflow-x-auto pb-8 snap-x snap-mandatory -mx-4 px-4 scrollbar-hide">
                         {days.map(day => {
-                            const rule = rules?.find(r => r.day === day);
+                            const rule = rulesList.find(r => r.day === day);
                             return (
                                 <StreakCard
                                     key={day}
@@ -106,7 +107,7 @@ const StreakOverviewPage: React.FC = () => {
                 onClaim={handleClaim}
                 currentStreak={currentStreak}
                 claimableDay={claimableDay}
-                rules={rules || []}
+                rules={rulesList}
             />
         </div>
     );
