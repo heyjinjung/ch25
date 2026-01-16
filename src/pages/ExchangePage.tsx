@@ -73,58 +73,62 @@ const ProductCard: React.FC<{ product: ShopProduct; vaultBalance: number; onBuy:
             }}
             disabled={isPending || !canAfford}
             className={`
-                group relative flex flex-col items-center p-4 rounded-3xl transition-all duration-300 touch-manipulation overflow-hidden
+                group relative flex flex-col items-center p-0 rounded-2xl transition-all duration-100 touch-manipulation overflow-visible
                 ${canAfford
-                    ? "bg-[#111] border border-white/5 active:scale-95"
-                    : "bg-black/40 border border-white/5 opacity-50 grayscale cursor-not-allowed"}
+                    ? "active:scale-[0.98] active:translate-y-1"
+                    : "opacity-60 grayscale cursor-not-allowed"}
             `}
         >
-            {/* Hover Gradient Effect */}
-            {canAfford && (
-                <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/0 via-emerald-500/0 to-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            )}
-
-            <div className="relative w-14 h-14 mb-3 drop-shadow-2xl transform group-hover:scale-110 transition-transform duration-300">
-                <img src={info.img} alt={info.label} className="w-full h-full object-contain" />
-                {product.grant.amount > 1 && (
-                    <span className="absolute -top-1 -right-2 bg-emerald-500 text-black text-[9px] font-black px-1.5 py-0.5 rounded-full shadow-lg border border-white/20 z-10">
-                        x{product.grant.amount}
-                    </span>
+            {/* Shelf/Base 3D Effect Container */}
+            <div className={`
+                w-full relative flex flex-col items-center rounded-2xl border-t border-l border-r border-white/10
+                ${canAfford 
+                    ? "bg-gradient-to-b from-[#222] to-[#111] shadow-[0_10px_20px_-5px_rgba(0,0,0,0.5)] border-b-[6px] border-b-[#050505]" 
+                    : "bg-[#111] border-b-[6px] border-b-black"}
+                pt-4 pb-3 px-2
+                transition-all duration-200
+                group-hover:border-t-white/20
+                ${canAfford ? "group-active:border-b-[2px] group-active:translate-y-[4px] group-active:shadow-none" : ""}
+            `}>
+                
+                {/* Spotlight/Glow on Shelf */}
+                {canAfford && (
+                    <div className="absolute top-0 inset-x-0 h-1/2 bg-gradient-to-b from-white/5 to-transparent opacity-50 rounded-t-2xl pointer-events-none" />
                 )}
-            </div>
 
-            <div className="relative z-10 w-full text-center">
-                <h3 className="text-xs font-black text-white/90 mb-3 tracking-tight group-hover:text-emerald-400 transition-colors">
-                    {info.label}
-                </h3>
+                <div className="relative w-14 h-14 mb-2 drop-shadow-2xl transform group-hover:scale-110 group-active:scale-95 transition-transform duration-200 z-10">
+                    <img src={info.img} alt={info.label} className="w-full h-full object-contain filter drop-shadow-[0_5px_5px_rgba(0,0,0,0.5)]" />
+                    {product.grant.amount > 1 && (
+                        <span className="absolute -top-1 -right-2 bg-emerald-500 text-black text-[9px] font-black px-1.5 py-0.5 rounded-full shadow-lg border border-white/20 z-10">
+                            x{product.grant.amount}
+                        </span>
+                    )}
+                </div>
 
-                <div className={`
-                    relative w-full px-3 py-2.5 rounded-xl text-[11px] font-black flex flex-col items-center gap-2 transition-all border
-                    ${canAfford
-                        ? "bg-white/5 border-white/10 text-white group-hover:bg-emerald-500 group-hover:border-emerald-500 group-hover:text-black group-hover:shadow-[0_0_20px_rgba(16,185,129,0.4)]"
-                        : "bg-white/5 border-white/5 text-white/20"}
-                `}>
-                    {isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : (
-                        <>
-                            <span className="font-black tracking-tight">
-                                {canAfford ? "교환" : "부족"}
-                            </span>
+                <div className="relative z-10 w-full text-center">
+                    <h3 className="text-[11px] font-bold text-white/80 mb-2 tracking-tight group-hover:text-emerald-400 transition-colors line-clamp-1">
+                        {info.label}
+                    </h3>
 
-                            <span
-                                className={`
-                                    inline-flex items-center gap-1 rounded-lg px-2.5 py-1 border
-                                    ${canAfford ? "border-white/15 bg-black/20" : "border-white/5 bg-white/5"}
-                                `}
-                            >
-                                <span className="tabular-nums opacity-95">{cost.toLocaleString()}</span>
+                    <div className={`
+                        w-full py-1.5 rounded-lg text-[10px] font-black flex items-center justify-center gap-1.5 transition-all
+                        ${canAfford
+                            ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 group-hover:bg-emerald-500 group-hover:text-black shadow-inner"
+                            : "bg-white/5 border border-white/5 text-white/20"}
+                    `}>
+                        {isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : (
+                            <>
+                                <span className={`tabular-nums text-xs ${canAfford ? "" : "line-through opacity-50"}`}>
+                                    {cost.toLocaleString()}
+                                </span>
                                 {product.cost.token === 'DIAMOND' ? (
                                     <img src="/assets/icon_diamond.png" className="w-3 h-3 object-contain" alt="" />
                                 ) : (
                                     <span className="text-[9px] opacity-75">P</span>
                                 )}
-                            </span>
-                        </>
-                    )}
+                            </>
+                        )}
+                    </div>
                 </div>
             </div>
         </button>

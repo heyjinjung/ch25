@@ -37,8 +37,9 @@ const TiltCard: React.FC<GameCardProps> = ({ title, to, gradient, icon, isWide, 
   const mouseX = useSpring(x, { stiffness: 500, damping: 30 });
   const mouseY = useSpring(y, { stiffness: 500, damping: 30 });
 
-  const rotateX = useTransform(mouseY, [-0.5, 0.5], ["7deg", "-7deg"]);
-  const rotateY = useTransform(mouseX, [-0.5, 0.5], ["-7deg", "7deg"]);
+  // Increased Tilt 7deg -> 12deg for prominent 3D
+  const rotateX = useTransform(mouseY, [-0.5, 0.5], ["12deg", "-12deg"]);
+  const rotateY = useTransform(mouseX, [-0.5, 0.5], ["-12deg", "12deg"]);
   const brightness = useTransform(mouseY, [-0.5, 0.5], [1.1, 0.9]);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -59,7 +60,7 @@ const TiltCard: React.FC<GameCardProps> = ({ title, to, gradient, icon, isWide, 
   };
 
   return (
-    <Link to={to} className={clsx(isWide ? "col-span-2 aspect-[2/1]" : "col-span-1 aspect-square", "perspective-1000")}>
+    <Link to={to} className={clsx(isWide ? "col-span-2 aspect-[2/1]" : "col-span-1 aspect-square", "perspective-1000 group")}>
       <motion.div
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
@@ -67,46 +68,52 @@ const TiltCard: React.FC<GameCardProps> = ({ title, to, gradient, icon, isWide, 
           rotateX,
           rotateY,
           transformStyle: "preserve-3d",
-          filter: `brightness(${brightness})`, // slight brightness shift on tilt
+          filter: `brightness(${brightness})`,
         }}
         className={clsx(
-          "group relative h-full w-full overflow-hidden rounded-[24px] border border-white/10 p-4 transition-colors duration-300",
-          !bgImage && gradient
+          "relative h-full w-full rounded-[24px] border border-white/10 transition-all duration-300",
+          // Hover Neon Glow
+          "shadow-lg hover:shadow-[0_0_25px_rgba(255,255,255,0.2)] hover:border-white/30",
+          !bgImage && gradient // Fallback gradient if no image
         )}
       >
-        {/* Glow Effect */}
-        <div className="absolute inset-0 z-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 mix-blend-overlay" />
+        {/* Background Layer (Clipped) */}
+        <div className="absolute inset-0 overflow-hidden rounded-[24px]" style={{ transform: "translateZ(0px)" }}>
+          {/* Inner Glow */}
+          <div className="absolute inset-0 z-10 bg-gradient-to-br from-white/10 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 mix-blend-overlay" />
 
-        {bgImage && (
-          <div className="absolute inset-0 z-0" style={{ transform: "translateZ(-20px)" }}>
-            {/* Scale up slightly to prevent edge gaps during tilt */}
-            <motion.img
-              src={bgImage}
-              alt={title}
-              className="h-full w-full object-cover opacity-90 scale-110"
-              transition={{ duration: 0.5 }}
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-          </div>
-        )}
+          {bgImage && (
+            <div className="absolute inset-0 z-0">
+               <motion.img
+                src={bgImage}
+                alt={title}
+                className="h-full w-full object-cover opacity-90 scale-110"
+                transition={{ duration: 0.5 }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+            </div>
+          )}
+        </div>
 
-        <div className="relative z-10 flex h-full flex-col justify-between" style={{ transform: "translateZ(30px)" }}>
+        {/* Floating Content (Visible Depth) */}
+        <div className="relative z-20 flex h-full flex-col justify-between p-4" style={{ transform: "translateZ(30px)" }}>
           <div className="flex justify-between items-start">
             {badge && (
               <motion.span
-                className="absolute top-0 right-0 rounded-bl-xl bg-red-600 px-3 py-1 text-[10px] font-black text-white shadow-lg z-20"
-                style={{ transform: "translateZ(40px)" }}
+                className="absolute top-0 right-0 rounded-bl-xl bg-red-600 px-3 py-1 text-[10px] font-black text-white shadow-lg"
+                style={{ transform: "translateZ(20px)" }} // Pop badge
               >
                 {badge}
               </motion.span>
             )}
-            {!bgImage && <span className="text-4xl drop-shadow-md">{icon}</span>}
+            {!bgImage && <span className="text-4xl drop-shadow-md" style={{ transform: "translateZ(10px)" }}>{icon}</span>}
           </div>
 
           <div className="mt-auto">
             <motion.div
               className="inline-flex items-center rounded-full bg-white/20 px-3 py-1 text-[10px] font-black text-white backdrop-blur-md border border-white/20 shadow-lg"
               whileHover={{ scale: 1.05 }}
+              style={{ transform: "translateZ(20px)" }} // Pop button
             >
               지금 플레이
             </motion.div>
