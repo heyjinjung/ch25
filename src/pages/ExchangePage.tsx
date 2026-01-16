@@ -7,6 +7,7 @@ import { tryHaptic } from '../utils/haptics';
 import { useNavigate } from 'react-router-dom';
 import Button from '../components/common/Button';
 import { getVaultStatus } from '../api/vaultApi';
+import { motion, useMotionValue, useTransform } from 'framer-motion';
 
 // --- Components ---
 const BalanceHero: React.FC<{ balance: number }> = ({ balance }) => (
@@ -40,92 +41,118 @@ const ProductCard: React.FC<{ product: ShopProduct; vaultBalance: number; onBuy:
     const cost = product.cost.amount;
     const canAfford = vaultBalance >= cost;
 
-    const MAP: Record<string, { label: string, img: string }> = {
-        'VOUCHER_ROULETTE_COIN_1': { label: "룰렛 티켓", img: "/assets/asset_ticket_green.png" },
-        'VOUCHER_DICE_TOKEN_1': { label: "주사위 티켓", img: "/assets/icon_dice_silver.png" },
-        'VOUCHER_LOTTERY_TICKET_1': { label: "복권 티켓", img: "/assets/lottery/icon_lotto_ball.webp" },
-        'VOUCHER_GOLD_KEY_1': { label: "골드 키", img: "/assets/icons/goldkey.png" },
-        'VOUCHER_DIAMOND_KEY_1': { label: "다이아 키", img: "/assets/icons/diakey.png" },
-        'ROULETTE_COIN': { label: "룰렛 티켓", img: "/assets/asset_ticket_green.png" },
-        'DICE_TOKEN': { label: "주사위 티켓", img: "/assets/icon_dice_silver.png" },
-        'LOTTERY_TICKET': { label: "복권 티켓", img: "/assets/lottery/icon_lotto_ball.webp" },
-        'GOLD_KEY': { label: "골드 키", img: "/assets/icons/goldkey.png" },
-        'DIAMOND_KEY': { label: "다이아 키", img: "/assets/icons/diakey.png" },
+    const MAP: Record<string, { label: string, img: string, rarity: 'common' | 'rare' | 'epic' | 'legendary' }> = {
+        'VOUCHER_ROULETTE_COIN_1': { label: "룰렛 티켓", img: "/assets/asset_ticket_green.png", rarity: 'rare' },
+        'VOUCHER_DICE_TOKEN_1': { label: "주사위 티켓", img: "/assets/icon_dice_silver.png", rarity: 'rare' },
+        'VOUCHER_LOTTERY_TICKET_1': { label: "복권 티켓", img: "/assets/lottery/icon_lotto_ball.webp", rarity: 'rare' },
+        'VOUCHER_GOLD_KEY_1': { label: "골드 키", img: "/assets/icons/goldkey.png", rarity: 'epic' },
+        'VOUCHER_DIAMOND_KEY_1': { label: "다이아 키", img: "/assets/icons/diakey.png", rarity: 'legendary' },
+        'ROULETTE_COIN': { label: "룰렛 티켓", img: "/assets/asset_ticket_green.png", rarity: 'rare' },
+        'DICE_TOKEN': { label: "주사위 티켓", img: "/assets/icon_dice_silver.png", rarity: 'rare' },
+        'LOTTERY_TICKET': { label: "복권 티켓", img: "/assets/lottery/icon_lotto_ball.webp", rarity: 'rare' },
+        'GOLD_KEY': { label: "골드 키", img: "/assets/icons/goldkey.png", rarity: 'epic' },
+        'DIAMOND_KEY': { label: "다이아 키", img: "/assets/icons/diakey.png", rarity: 'legendary' },
     };
 
-    const info = MAP[product.grant.item_type] || MAP[product.cost.token] || { label: product.title, img: "/assets/lottery/icon_gift.png" };
+    const info = MAP[product.grant.item_type] || MAP[product.cost.token] || { label: product.title, img: "/assets/lottery/icon_gift.png", rarity: 'common' };
+
+    // 3D Tilt Logic (Shared from InventoryPage)
+    const x = useMotionValue(0);
+    const y = useMotionValue(0);
+    const rotateX = useTransform(y, [-0.5, 0.5], ["15deg", "-15deg"]);
+    const rotateY = useTransform(x, [-0.5, 0.5], ["-15deg", "15deg"]);
+
+    const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const width = rect.width;
+        const height = rect.height;
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+        const xPct = mouseX / width - 0.5;
+        const yPct = mouseY / height - 0.5;
+        x.set(xPct);
+        y.set(yPct);
+    };
+
+    const handleMouseLeave = () => {
+        x.set(0);
+        y.set(0);
+    };
+
+    const rarityStyles = {
+        common: "border-white/10 shadow-none from-white/[0.05] to-white/[0.01]",
+        rare: "border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.15)] from-blue-900/20 to-blue-900/5",
+        epic: "border-purple-500/40 shadow-[0_0_20px_rgba(168,85,247,0.2)] from-purple-900/30 to-purple-900/10",
+        legendary: "border-amber-500/50 shadow-[0_0_25px_rgba(245,158,11,0.25)] from-amber-900/40 to-amber-900/10"
+    };
 
     return (
-        <button
+        <motion.div
+            style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+            className={`relative group h-[200px] overflow-visible rounded-[24px] border bg-gradient-to-br transition-all duration-300 perspective-1000 ${rarityStyles[info.rarity as keyof typeof rarityStyles] || rarityStyles.common} ${!canAfford ? 'opacity-60 grayscale' : 'hover:scale-[1.02]'}`}
             onClick={() => {
-                if (!canAfford) {
+                if (!canAfford || isPending) {
                     tryHaptic(50);
                     return;
                 }
                 tryHaptic(10);
                 onBuy();
             }}
-            disabled={isPending || !canAfford}
-            className={`
-                group relative flex flex-col items-center p-0 rounded-2xl transition-all duration-100 touch-manipulation overflow-visible
-                ${canAfford
-                    ? "active:scale-[0.98] active:translate-y-1"
-                    : "opacity-60 grayscale cursor-not-allowed"}
-            `}
         >
-            {/* Shelf/Base 3D Effect Container */}
-            <div className={`
-                w-full relative flex flex-col items-center rounded-2xl border-t border-l border-r border-white/10
-                ${canAfford
-                    ? "bg-gradient-to-b from-[#222] to-[#111] shadow-[0_10px_20px_-5px_rgba(0,0,0,0.5)] border-b-[6px] border-b-[#050505]"
-                    : "bg-[#111] border-b-[6px] border-b-black"}
-                pt-4 pb-3 px-2
-                transition-all duration-200
-                group-hover:border-t-white/20
-                ${canAfford ? "group-active:border-b-[2px] group-active:translate-y-[4px] group-active:shadow-none" : ""}
-            `}>
+            <div className="absolute inset-0 rounded-[24px] overflow-hidden" style={{ transform: "translateZ(0px)" }}>
+                <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none mix-blend-overlay" />
 
-                {/* Spotlight/Glow on Shelf */}
-                {canAfford && (
-                    <div className="absolute top-0 inset-x-0 h-1/2 bg-gradient-to-b from-white/5 to-transparent opacity-50 rounded-t-2xl pointer-events-none" />
-                )}
-
-                <div className="relative w-14 h-14 mb-2 drop-shadow-2xl transform group-hover:scale-110 group-active:scale-95 transition-transform duration-200 z-10">
-                    <img src={info.img} alt={info.label} className="w-full h-full object-contain filter drop-shadow-[0_5px_5px_rgba(0,0,0,0.5)]" />
-                    {product.grant.amount > 1 && (
-                        <span className="absolute -top-1 -right-2 bg-emerald-500 text-black text-[9px] font-black px-1.5 py-0.5 rounded-full shadow-lg border border-white/20 z-10">
-                            x{product.grant.amount}
-                        </span>
-                    )}
-                </div>
-
-                <div className="relative z-10 w-full text-center">
-                    <h3 className="text-[11px] font-bold text-white/80 mb-2 tracking-tight group-hover:text-emerald-400 transition-colors line-clamp-1">
-                        {info.label}
-                    </h3>
-
-                    <div className={`
-                        w-full py-1.5 rounded-lg text-[10px] font-black flex items-center justify-center gap-1.5 transition-all
-                        ${canAfford
-                            ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 group-hover:bg-emerald-500 group-hover:text-black shadow-inner"
-                            : "bg-white/5 border border-white/5 text-white/20"}
-                    `}>
-                        {isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : (
-                            <>
-                                <span className={`tabular-nums text-xs ${canAfford ? "" : "line-through opacity-50"}`}>
-                                    {cost.toLocaleString()}
-                                </span>
-                                {product.cost.token === 'DIAMOND' ? (
-                                    <img src="/assets/icon_diamond.png" className="w-3 h-3 object-contain" alt="" />
-                                ) : (
-                                    <span className="text-[9px] opacity-75">P</span>
-                                )}
-                            </>
-                        )}
+                <div className="flex flex-col relative z-10 h-full items-center text-center p-4">
+                    {/* Icon Section */}
+                    <div className="relative mb-4 mt-2" style={{ transform: "translateZ(20px)" }}>
+                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center p-1 shadow-inner backdrop-blur-md ${info.rarity === 'legendary' ? 'bg-amber-500/20 border border-amber-500/30' : 'bg-black/40 border border-white/5'}`}>
+                            <img src={info.img} alt={info.label} className="w-full h-full object-contain filter drop-shadow-[0_5px_5px_rgba(0,0,0,0.5)]" />
+                        </div>
+                        <div className="absolute -top-1.5 -right-1.5 bg-white text-black text-[10px] font-black px-1.5 py-0.5 rounded-full ring-2 ring-black tabular-nums shadow-lg z-10">
+                            ×{product.grant.amount.toLocaleString()}
+                        </div>
                     </div>
+
+                    {/* Title Section */}
+                    <div className="mb-auto w-full" style={{ transform: "translateZ(10px)" }}>
+                        <div className="mx-auto max-w-full text-sm font-black text-white/90 leading-tight whitespace-normal break-keep overflow-hidden line-clamp-2">
+                            {info.label}
+                        </div>
+                        <div className={`text-[10px] font-bold mt-1 uppercase tracking-wider ${info.rarity === 'legendary' ? 'text-amber-400' : 'text-white/40'}`}>
+                            {info.rarity === 'common' ? 'Basic Item' : `${info.rarity} Item`}
+                        </div>
+                    </div>
+
+                    {/* Price/Buy Section */}
+                    <div className="w-full mt-2" style={{ transform: "translateZ(20px)" }}>
+                        <div className={`
+                            w-full h-9 rounded-xl text-[11px] font-black flex items-center justify-center gap-1.5 transition-all
+                            ${canAfford
+                                ? "bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 group-hover:bg-emerald-500 group-hover:text-black shadow-lg"
+                                : "bg-white/5 border border-white/10 text-white/20"}
+                        `}>
+                            {isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : (
+                                <>
+                                    <span className={`tabular-nums text-xs ${canAfford ? "" : "line-through opacity-50"}`}>
+                                        {cost.toLocaleString()}
+                                    </span>
+                                    {product.cost.token === 'DIAMOND' ? (
+                                        <img src="/assets/icon_diamond.png" className="w-3 h-3 object-contain" alt="" />
+                                    ) : (
+                                        <span className="text-[9px] opacity-75">P</span>
+                                    )}
+                                </>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Subtle Glow at bottom right */}
+                    <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-white/[0.03] blur-2xl rounded-full pointer-events-none" />
                 </div>
             </div>
-        </button>
+        </motion.div>
     );
 };
 

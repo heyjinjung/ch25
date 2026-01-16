@@ -27,6 +27,7 @@ const MissionPage = React.lazy(() => import("../pages/MissionPage"));
 const EventDashboardPage = React.lazy(() => import("../pages/EventDashboardPage"));
 const InventoryPage = React.lazy(() => import("../pages/InventoryPage"));
 const ExchangePage = React.lazy(() => import("../pages/ExchangePage"));
+const StreakOverviewPage = React.lazy(() => import("../pages/events/StreakOverviewPage"));
 
 
 // Simple loading fallback
@@ -60,6 +61,7 @@ const UserRoutes: React.FC = () => {
             <Route path="/vault" element={<VaultPage />} />
             <Route path="/rewards" element={<InventoryPage />} />
             <Route path="/events" element={<EventDashboardPage />} />
+            <Route path="/events/streaks" element={<StreakOverviewPage />} />
             <Route path="/season-pass" element={<LevelTowerPage />} />
             <Route path="/missions" element={<MissionPage />} />
             <Route path="/team-battle" element={<TeamBattlePage />} />

@@ -5,6 +5,7 @@ import Button from "../common/Button";
 import { useCraftItem } from "../../hooks/useExchange";
 import { tryHaptic } from "../../utils/haptics";
 import { triggerFireworks } from "../../utils/confetti";
+import { X } from "lucide-react";
 
 
 interface LotteryCollectionModalProps {
@@ -199,12 +200,13 @@ const LotteryCollectionModal: React.FC<LotteryCollectionModalProps> = ({
                             )}
                         </div>
 
-                        {/* Close Button */}
+                        {/* Close Button - Mobile Optimized */}
                         <button
                             onClick={onClose}
-                            className="absolute top-4 right-4 text-white/30 hover:text-white transition-colors"
+                            className="absolute top-4 right-4 p-2 rounded-full bg-white/5 border border-white/10 text-white/50 hover:bg-white/10 hover:text-white hover:scale-105 active:scale-95 transition-all w-10 h-10 flex items-center justify-center z-50 backdrop-blur-md"
+                            aria-label="닫기"
                         >
-                            ✕
+                            <X size={20} />
                         </button>
 
                     </motion.div>
