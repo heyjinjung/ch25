@@ -37,35 +37,35 @@ const SeasonPassPromoModal: React.FC<SeasonPassPromoModalProps> = ({ onClose }) 
                 </button>
 
                 {/* Hero Section */}
-                <div className="relative pt-8 pb-4 text-center px-5">
+                <div className="relative pt-6 pb-3 text-center px-5">
                      <motion.div 
                         animate={{ y: [0, -4, 0] }}
                         transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                        className="w-20 h-20 mx-auto bg-gradient-to-br from-amber-400 to-orange-600 rounded-3xl flex items-center justify-center shadow-[0_8px_24px_rgba(245,158,11,0.4)] mb-4 rotate-3 border border-white/20"
+                        className="w-16 h-16 mx-auto bg-gradient-to-br from-amber-400 to-orange-600 rounded-2xl flex items-center justify-center shadow-[0_8px_24px_rgba(245,158,11,0.4)] mb-3 rotate-3 border border-white/20"
                     >
-                        <Crown size={40} className="text-white drop-shadow-md" strokeWidth={2.5} />
+                        <Crown size={32} className="text-white drop-shadow-md" strokeWidth={2.5} />
                     </motion.div>
 
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 text-[9px] font-black tracking-widest uppercase mb-2">
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 text-[9px] font-black tracking-widest uppercase mb-1.5">
                         <Zap size={10} className="fill-current" />
                         Limited Offer
                     </div>
 
-                    <h2 className="text-xl font-black text-white leading-tight">
+                    <h2 className="text-lg font-black text-white leading-tight">
                         시즌패스로<br/>
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-500">초고속 레벨업!</span>
                     </h2>
                 </div>
 
                 {/* Level Progress Visualize */}
-                <div className="px-5 mb-5">
-                    <div className="relative p-4 rounded-xl bg-white/[0.03] border border-white/5 overflow-hidden">
+                <div className="px-5 mb-4">
+                    <div className="relative p-3 rounded-xl bg-white/[0.03] border border-white/5 overflow-hidden">
                         {/* Progress Bar Animation */}
-                        <div className="flex items-center justify-between text-[11px] font-bold text-zinc-500 mb-2">
+                        <div className="flex items-center justify-between text-[11px] font-bold text-zinc-500 mb-1.5">
                             <span>Lv.1</span>
                             <span className="text-amber-500 animate-pulse">Lv.10 Easy!</span>
                         </div>
-                        <div className="relative h-2.5 bg-zinc-800 rounded-full overflow-hidden">
+                        <div className="relative h-2 bg-zinc-800 rounded-full overflow-hidden">
                             <motion.div 
                                 initial={{ width: "10%" }}
                                 animate={{ width: "60%" }}
@@ -75,7 +75,7 @@ const SeasonPassPromoModal: React.FC<SeasonPassPromoModalProps> = ({ onClose }) 
                             {/* Particles */}
                             <div className="absolute top-0 right-[40%] text-[8px]">✨</div>
                         </div>
-                        <div className="mt-2.5 flex items-center gap-2 text-[10px] text-zinc-400 font-medium">
+                        <div className="mt-2 flex items-center gap-2 text-[10px] text-zinc-400 font-medium">
                             <TrendingUp size={12} className="text-amber-500" />
                             <span>남들보다 <b className="text-white">3배</b> 더 빨리 성장합니다.</span>
                         </div>
@@ -83,30 +83,30 @@ const SeasonPassPromoModal: React.FC<SeasonPassPromoModalProps> = ({ onClose }) 
                 </div>
 
                 {/* Rewards Compact */}
-                <div className="px-5 grid grid-cols-2 gap-2.5 mb-6">
-                    <div className="p-2.5 rounded-xl bg-zinc-900 border border-zinc-800 flex flex-col items-center gap-1.5">
-                         <div className="w-7 h-7 rounded-full bg-blue-500/10 flex items-center justify-center">
-                            <Gem size={14} className="text-blue-400" />
+                <div className="px-5 grid grid-cols-2 gap-2 mb-5">
+                    <div className="p-2 rounded-xl bg-zinc-900 border border-zinc-800 flex flex-col items-center gap-1">
+                         <div className="w-6 h-6 rounded-full bg-blue-500/10 flex items-center justify-center">
+                            <Gem size={12} className="text-blue-400" />
                          </div>
                          <div className="text-center leading-tight">
                             <div className="text-[9px] text-zinc-500 font-bold mb-0.5">매일 지급</div>
-                            <div className="text-[11px] font-bold text-white">다이아몬드 키</div>
+                            <div className="text-[10px] font-bold text-white">다이아몬드 키</div>
                          </div>
                     </div>
                     
-                    <div className="p-2.5 rounded-xl bg-zinc-900 border border-zinc-800 flex flex-col items-center gap-1.5">
-                         <div className="w-7 h-7 rounded-full bg-amber-500/10 flex items-center justify-center">
-                            <Crown size={14} className="text-amber-500" />
+                    <div className="p-2 rounded-xl bg-zinc-900 border border-zinc-800 flex flex-col items-center gap-1">
+                         <div className="w-6 h-6 rounded-full bg-amber-500/10 flex items-center justify-center">
+                            <Crown size={12} className="text-amber-500" />
                          </div>
                          <div className="text-center leading-tight">
                             <div className="text-[9px] text-zinc-500 font-bold mb-0.5">VIP 혜택</div>
-                            <div className="text-[11px] font-bold text-white">전용 프로필</div>
+                            <div className="text-[10px] font-bold text-white">전용 프로필</div>
                          </div>
                     </div>
                 </div>
 
                 {/* Action Section */}
-                <div className="p-5 pt-0">
+                <div className="px-5 pb-5">
                     <motion.button
                         whileTap={{ scale: 0.98 }}
                         whileHover={{ scale: 1.02 }}
@@ -114,7 +114,7 @@ const SeasonPassPromoModal: React.FC<SeasonPassPromoModalProps> = ({ onClose }) 
                             navigate("/vault");
                             onClose();
                         }}
-                        className="relative w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-black font-black text-base shadow-[0_8px_20px_-8px_rgba(245,158,11,0.5)] flex items-center justify-center gap-2 overflow-hidden group"
+                        className="relative w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-black font-black text-sm shadow-[0_8px_20px_-8px_rgba(245,158,11,0.5)] flex items-center justify-center gap-2 overflow-hidden group"
                     >
                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out" />
                         <span>시즌패스 확인하기</span>

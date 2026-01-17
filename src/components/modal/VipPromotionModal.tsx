@@ -1,5 +1,5 @@
 import React from "react";
-import { X, Sparkles, TrendingUp } from "lucide-react";
+import { X, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface VipPromotionModalProps {
@@ -85,9 +85,6 @@ const VipPromotionModal: React.FC<VipPromotionModalProps> = ({ onClose }) => {
                         {/* Shimmer Effect */}
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.02] to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
 
-                        <div className="flex items-center gap-2 text-amber-500/60 mb-0.5">
-                            <TrendingUp size={12} />
-                        </div>
                         <div className="flex items-baseline gap-1.5">
                             <span className="text-3xl font-black text-amber-400 drop-shadow-[0_0_15px_rgba(251,191,36,0.3)]">+500</span>
                             <span className="text-lg font-black text-amber-500/50">XP</span>
@@ -103,10 +100,6 @@ const VipPromotionModal: React.FC<VipPromotionModalProps> = ({ onClose }) => {
                     >
                         혜택 수령하기
                     </motion.button>
-
-                    <p className="text-[9px] text-white/20 font-bold uppercase tracking-[0.3em] text-center">
-                        Premium Service Only
-                    </p>
                 </div>
             </motion.div>
         </div>

@@ -255,7 +255,7 @@ const GamesSection: React.FC = () => {
             <a
               href="https://t.me/jm956"
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               className="rounded-full border border-[#394508] px-4 py-2 text-sm font-bold text-[#394508] transition hover:border-[#d2fd9c] hover:bg-[#d2fd9c] hover:text-[#394508] focus:ring-2 focus:ring-[#d2fd9c] focus:ring-offset-2"
             >
               운영자에게 문의하기
@@ -469,7 +469,7 @@ const MyVaultSection: React.FC = () => {
               <a
                 href="https://ccc-010.com"
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className="w-full rounded-xl bg-[#394508] py-3 text-center font-bold text-white transition hover:bg-opacity-90 focus:ring-2 focus:ring-[#394508] focus:ring-offset-2"
               >
                 씨씨카지노 충전하기

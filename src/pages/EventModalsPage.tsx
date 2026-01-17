@@ -234,7 +234,7 @@ const EventModalsPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="mx-auto w-full max-w-6xl px-4 py-4">
+      <div className="mx-auto w-full max-w-6xl px-4 py-4" data-tour="event-modal-list">
         <div className="space-y-6">
           {sections.map((section, sectionIndex) => (
             <motion.section
