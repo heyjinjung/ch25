@@ -8,13 +8,13 @@
 
 ### 구현 내용
 - **Frontend**: [src/components/modal/WithdrawalProgressModal.tsx](src/components/modal/WithdrawalProgressModal.tsx) 신규 생성
-  - **Dynamic Targets**: 출금 횟수(`withdrawalCount`)에 따라 목표 금액 자동 조정 (1회차 1만 -> 2회차 3만)
+  - **Dynamic Targets**: 출금 횟수(`withdrawalCount`)에 따라 목표 금액 자동 조정 (1/2회차 1만 -> 3회차 3만 -> 4회차 5만)
   - **Visuals**: Framer Motion을 활용한 게이지 차징 애니메이션 및 Pulse 효과
   - **Triggers**: [src/components/vault/VaultPageCompact.tsx](src/components/vault/VaultPageCompact.tsx) 내 "내돈찾기" 버튼 및 진행률 텍스트 연동
 
 ### 기술적 상세
 - **Conditions**: 
-  - Vault Balance (10k/30k)
+  - Vault Balance (10k/10k/30k/50k)
   - Daily Play Count (30회)
   - Daily Vault Spent (10k)
   - Deposit Confirmed (당일 입금)

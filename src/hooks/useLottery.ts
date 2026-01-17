@@ -19,6 +19,7 @@ export const usePlayLottery = () => {
     mutationFn: playLottery,
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: LOTTERY_STATUS_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: ["inventory"] }); // Invalidate inventory to update wallet/items
       recordActivity({ event_type: "LOTTERY_PLAY" }).catch(() => undefined);
 
       if (data.streakInfo) {
