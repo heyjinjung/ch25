@@ -382,9 +382,9 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
                     isCompleted
                       ? "bg-gradient-to-r from-lime-400 to-emerald-400 shadow-[0_0_15px_rgba(163,230,53,0.6)]"
                       : "bg-white/10",
-                    `w-[${percent}%]`
+                    "w-[var(--prog-width)]"
                   )}
-                  style={{ width: `${percent}%` }}
+                  style={{ "--prog-width": `${percent}%` } as React.CSSProperties}
                 >
                   {/* Shimmer effect on progress bar */}
                   {percent > 0 && percent < 100 && (
@@ -405,6 +405,7 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
           ) : isCompleted ? (
             <button
               onClick={handleClaim}
+              data-tour="mission-claim-btn"
               className="relative group/btn h-11 min-w-[3.5rem] px-4 flex items-center justify-center rounded-[18px] bg-gradient-to-b from-lime-300 via-lime-400 to-lime-500 text-black shadow-[0_4px_20px_-5px_rgba(163,230,53,0.6)] hover:scale-105 active:scale-95 transition-all border-t border-white/40 overflow-hidden"
               title="보상 받기"
             >

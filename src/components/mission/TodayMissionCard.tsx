@@ -100,6 +100,7 @@ const TodayMissionCard: React.FC<TodayMissionCardProps> = ({ data }) => {
                         <button
                             disabled={isClaiming}
                             onClick={handleClaim}
+                            data-tour="mission-claim-btn"
                             className="px-6 py-3 rounded-2xl bg-emerald-500 text-black font-black text-sm shadow-[0_8px_16px_-4px_rgba(16,185,129,0.4)] active:scale-[0.95] transition-all flex items-center gap-2"
                         >
                             {isClaiming ? "처리 중..." : "보상 받기"}

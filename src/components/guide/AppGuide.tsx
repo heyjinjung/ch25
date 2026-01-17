@@ -5,8 +5,9 @@ import { useGuide } from "../../contexts/GuideContext";
 import { useNavigate, useLocation } from "react-router-dom";
 
 // 시니어 친화적 큰 글씨, 명확한 한글 안내
-// 전체 플로우(최신): 홈 → 게임 → 금고 → (금고 하단) 보상함 버튼 → 보상함 → 상점 → 이벤트/미션
+// 전체 플로우(최신): 홈 → 게임 → 금고 → 출금조건버튼 → 출금안내 → 상점 → 보상함 → 이벤트 → 미션 → 보상수령
 const guideSteps: Step[] = [
+  // 1. 홈
   {
     target: '[data-tour="nav-home"]',
     content: (
@@ -20,6 +21,7 @@ const guideSteps: Step[] = [
     placement: "top",
     disableBeacon: true,
   },
+  // 2. 게임
   {
     target: '[data-tour="nav-games"]',
     content: (
@@ -34,6 +36,7 @@ const guideSteps: Step[] = [
     placement: "top",
     disableBeacon: true,
   },
+  // 3. 금고
   {
     target: '[data-tour="nav-vault"]',
     content: (
@@ -48,68 +51,115 @@ const guideSteps: Step[] = [
     placement: "top",
     disableBeacon: true,
   },
-  // 금고 페이지 내 보상함 버튼
+  // 4. 금고 출금 조건 버튼 (금고 페이지 내)
   {
-    target: '[data-tour="vault-inventory-btn"]',
+    target: '[data-tour="vault-condition-btn"]',
     content: (
       <div className="text-left">
-        <div className="text-lg font-black mb-2">📦 금고 → 보상함</div>
+        <div className="text-lg font-black mb-2">📋 출금 조건</div>
         <div className="text-sm leading-snug break-keep">
-          <strong>여기를 눌러 보상함으로 이동</strong>해요.
-          <div className="mt-2">금고 화면 맨 아래에 있는 버튼입니다.</div>
+          상금을 출금하려면 조건이 필요해요.
+          <br />
+          <strong>이 버튼</strong>을 눌러 현재 달성 현황을 확인할 수 있습니다.
         </div>
       </div>
     ),
     placement: "top",
     disableBeacon: true,
   },
-  // 보상함(아이템/티켓) 안내
+  // 5. 출금 안내 (화면 중앙 or 버튼) -> Step 5가 "안내"
+  {
+    target: '[data-tour="vault-condition-btn"]',
+    content: (
+      <div className="text-left">
+        <div className="text-lg font-black mb-2">💡 미션 달성 팁</div>
+        <div className="text-sm leading-snug break-keep">
+          출금 조건을 채우기 위해 <strong>게임 플레이</strong>와 <strong>상점 아이템 구매</strong>가 도움이 됩니다.
+          <div className="mt-2 text-emerald-400">이제 상점으로 가볼까요?</div>
+        </div>
+      </div>
+    ),
+    placement: "top",
+    disableBeacon: true,
+  },
+  // 6. 상점 (하단 네비)
+  {
+    target: '[data-tour="nav-shop"]',
+    content: (
+      <div className="text-left">
+        <div className="text-lg font-black mb-2">🛒 교환소 (상점)</div>
+        <div className="text-sm leading-snug break-keep">
+          여기서 <strong>티켓과 아이템</strong>을 구매하고 교환할 수 있어요.
+          <div className="mt-2 text-white/70">구매한 아이템은 바로 보상함으로 갑니다!</div>
+        </div>
+      </div>
+    ),
+    placement: "top",
+    disableBeacon: true,
+  },
+  // 7. 보상함 (자동이동) -> /rewards 페이지의 탭 타겟
   {
     target: '[data-tour="inventory-items-tab"]',
     content: (
       <div className="text-left">
-        <div className="text-lg font-black mb-2">🎒 보유 아이템 / 🎫 티켓 지갑</div>
+        <div className="text-lg font-black mb-2">📦 보상함 (보유 아이템)</div>
         <div className="text-sm leading-snug break-keep">
-          <strong>보유함</strong>에서 교환권/기프티콘을 확인하고, <strong>지갑</strong>에서 티켓 수량을 확인해요.
-          <div className="mt-2 text-amber-400 font-bold">💡 상점에서 구매하면 바로 지갑에 들어옵니다.</div>
+          구매하거나 선물 받은 아이템은 모두 <strong>보상함</strong>에 보관됩니다.
+          <br />
+          <span className="text-amber-400">언제든지 꺼내 쓸 수 있어요!</span>
         </div>
       </div>
     ),
     placement: "bottom",
     disableBeacon: true,
   },
-  // 상점 페이지
+  // 8. 이벤트 (하단 네비)
   {
-    target: '[data-tour="shop-link"]',
+    target: '[data-tour="nav-events"]',
     content: (
       <div className="text-left">
-        <div className="text-lg font-black mb-2">🛒 상점</div>
+        <div className="text-lg font-black mb-2">⭐ 이벤트</div>
         <div className="text-sm leading-snug break-keep">
-          <strong>다이아로 티켓/키</strong>를 살 수 있어요.
-          <div className="mt-2 text-white/70">기프티콘은 지급대기 후 관리자 승인 처리</div>
+          다양한 <strong>이벤트와 미션</strong>이 모여있는 곳입니다.
+          <br />
+          매일매일 새로운 보상을 확인하세요.
         </div>
       </div>
     ),
     placement: "top",
     disableBeacon: true,
   },
-  // 이벤트/미션
+  // 9. 미션 페이지 (자동이동) -> body or title
   {
-    target: '[data-tour="nav-events"]',
+    target: 'body', 
     content: (
       <div className="text-left">
-        <div className="text-lg font-black mb-2">⭐ 이벤트 / 미션</div>
+        <div className="text-lg font-black mb-2">📝 미션 수행</div>
         <div className="text-sm leading-snug break-keep">
-          <strong>일일 미션</strong>과 <strong>출석 보상</strong>을 여기서 확인하고 받을 수 있어요.
-          <div className="mt-2 text-white/70">
-            완료된 미션은 <span className="text-amber-300 font-black">트로피(받기)</span> 버튼을 누르면 보상이 들어옵니다.
+          <strong>일일 미션</strong>을 달성하고 다양한 보상을 받으세요.
+        </div>
+      </div>
+    ),
+    placement: "center",
+    disableBeacon: true,
+  },
+  // 10. 미션 보상 수령 버튼 -> 강력한 안내
+  {
+    target: '[data-tour="mission-claim-btn"]',
+    content: (
+      <div className="text-left">
+        <div className="text-lg font-black mb-2 text-emerald-400">🎁 보상 받기 필수!</div>
+        <div className="text-sm leading-snug break-keep">
+          미션을 완료했다면 <strong>꼭 이 버튼을 눌러야</strong> 보상이 지급됩니다.
+          <div className="mt-3 p-2 bg-red-500/20 border border-red-500/30 rounded-lg text-red-200 font-bold text-xs">
+            ⚠️ 버튼을 누르지 않으면 보상이 사라질 수 있어요!
           </div>
-          <div className="mt-2 text-red-400 font-bold">🎁 매일 보상을 놓치지 마세요.</div>
         </div>
       </div>
     ),
     placement: "top",
     disableBeacon: true,
+    spotlightPadding: 5,
   },
 ];
 
@@ -252,59 +302,80 @@ const AppGuide: React.FC = () => {
   const errorRetryRef = useRef<Set<number>>(new Set());
   const [isTargetReady, setIsTargetReady] = useState(true);
 
-  // 스텝별 페이지 이동 로직
+  // 스텝별 페이지 이동 로직 (Flow Control)
+  // 0: 홈, 1: 게임, 2: 금고 Nav, 3: 금고 Page, 4: 금고 버튼, 5: 출금 안내
+  // 6: 상점 Nav, 7: 보상함 Page, 8: 이벤트 Nav, 9: 미션 Page, 10: 미션 보상
   useEffect(() => {
     if (!isGuideRunning) return;
 
-    // 스텝 0~2: 하단 네비 (어느 페이지든 OK)
-    // 스텝 3: 금고 페이지의 인벤토리 버튼 → /vault로 이동
-    if (stepIndex === 3) {
+    // Step 3, 4, 5: 금고 페이지 유지
+    if (stepIndex >= 3 && stepIndex <= 5) {
       if (!location.pathname.startsWith("/vault")) {
         navigate("/vault");
       }
     }
-    // 스텝 4: 보상함 페이지 → /rewards로 이동
-    if (stepIndex === 4) {
-      if (!location.pathname.startsWith("/rewards")) {
-        navigate("/rewards");
-      }
-    }
-    // 스텝 5: 상점 페이지 → /shop로 이동
-    if (stepIndex === 5) {
+    // Step 6: 상점 Nav를 가리키지만, 페이지는 상점으로 이동되어 있어야 자연스러움
+    if (stepIndex === 6) {
       if (!location.pathname.startsWith("/shop")) {
         navigate("/shop");
       }
     }
-    // 스텝 6: 이벤트 (하단 네비, 어느 페이지든 OK)
+
+    // Step 7: 보상함 (자동이동)
+    if (stepIndex === 7) {
+      if (!location.pathname.startsWith("/rewards")) {
+        navigate("/rewards");
+      }
+    }
+
+    // Step 8: 이벤트 (하단네비) -> 이벤트 페이지로 이동
+    if (stepIndex === 8) {
+      if (!location.pathname.startsWith("/events")) {
+        navigate("/events");
+      }
+    }
+
+    // Step 9, 10: 미션 페이지
+    if (stepIndex >= 9) {
+      if (!location.pathname.startsWith("/missions")) {
+        navigate("/missions");
+      }
+    }
+
   }, [stepIndex, isGuideRunning, navigate, location.pathname]);
 
-  // 페이지 이동이 필요한 스텝에서 타겟이 준비될 때까지 Joyride 일시 정지
+  // 타겟 대기 로직
   useEffect(() => {
     if (!isGuideRunning) return;
 
-    // 스텝 3~5: 페이지 이동 후 타겟 대기 필요
-    if (stepIndex >= 3 && stepIndex <= 5) {
+    // 페이지 이동 직후 타겟이 없을 수 있으므로 대기
+    // 이동 그룹: 3(금고), 6(상점), 7(보상함), 8(이벤트), 9(미션)
+    const movingSteps = [3, 4, 5, 6, 7, 8, 9, 10]; 
+    if (movingSteps.includes(stepIndex)) {
       const selector = guideSteps[stepIndex]?.target;
       if (typeof selector !== "string") return;
 
-      // 일단 Joyride 멈춤
       setIsTargetReady(false);
-
       let cancelled = false;
+      
       (async () => {
-        // 실제 타겟이 렌더될 때까지 최대 3초 대기
-        const el = await waitForVisibleTarget(selector, 3000, 100);
+        // Body 타겟은 즉시 반환 (Step 9)
+        if (selector === "body") {
+          setIsTargetReady(true);
+          return;
+        }
+
+        // 로딩 시간 고려 넉넉히 대기
+        const el = await waitForVisibleTarget(selector, 3500, 100);
         if (cancelled) return;
         if (el) {
           el.scrollIntoView({ behavior: "smooth", block: "center" });
-          // 스크롤 완료 후 약간 대기
           await new Promise(r => setTimeout(r, 300));
         }
         if (!cancelled) {
           setIsTargetReady(true);
         }
       })();
-
       return () => { cancelled = true; };
     } else {
       setIsTargetReady(true);

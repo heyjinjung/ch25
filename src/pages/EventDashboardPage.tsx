@@ -5,13 +5,11 @@ import { useMissionStore } from "../stores/missionStore";
 import { useSeasonPassStatus } from "../hooks/useSeasonPass";
 import { AlertCircle } from "lucide-react";
 import SurveyPromptBanner from "../components/survey/SurveyPromptBanner";
-import { useModalVisibility } from "../hooks/useModalVisibility";
 
 const EventDashboardPage: React.FC = () => {
   const { impact } = useHaptic();
   const { hasUnclaimed: missionsUnclaimed } = useMissionStore();
   const { data: seasonData } = useSeasonPassStatus();
-  const { attendance_streak_enabled } = useModalVisibility();
 
   const seasonUnclaimed = React.useMemo(() => {
     if (!seasonData?.levels) return false;
@@ -39,34 +37,6 @@ const EventDashboardPage: React.FC = () => {
         <div className="space-y-6">
           {/* Survey Banner */}
           <SurveyPromptBanner />
-
-          {/* Attendance Streak Section - Conditionally Rendered */}
-          {attendance_streak_enabled && (
-            <Link
-              to="/events/streaks"
-              onClick={handleCardClick}
-              className={cardClass}
-            >
-              <img
-                src="/assets/welcome/event_v2.png"
-                className={cardImageClass}
-                alt="Streak Event"
-              />
-              <div className={cardContentClass}>
-                <div className={cardPanelClass}>
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
-                      <div className="truncate text-base font-black text-white tracking-wide">출석 스트릭</div>
-                    </div>
-                    <div className="shrink-0 inline-flex items-center justify-center rounded-xl bg-orange-500/15 px-4 py-2.5 text-sm font-black text-orange-400 ring-1 ring-inset ring-orange-500/20">
-                      현황 보기
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </Link>
-          )}
 
           {/* Level Tower Section */}
           <Link
