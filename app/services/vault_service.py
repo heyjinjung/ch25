@@ -893,11 +893,14 @@ class VaultService:
         # If event mode (or generally configured), check caps.
         # We check "daily_gain" cap if defined in VaultProgram.
 
+        daily_gain_cap = None
+        current_daily_gain = 0
+
         caps = cfg_service.get_config_value(db, "caps", {}).get(game_type_upper)
         if caps and isinstance(caps, dict):
-            daily_gain_cap = caps.get("daily_gain")
-            if daily_gain_cap is not None:
-                daily_gain_cap = int(daily_gain_cap)
+            cap_val = caps.get("daily_gain")
+            if cap_val is not None:
+                daily_gain_cap = int(cap_val)
                 # Calculate today's net gain so far
                 today_start = datetime(now_dt.year, now_dt.month, now_dt.day)
 
@@ -925,7 +928,7 @@ class VaultService:
         # The requirement says "1일 최대 순증 +20,000".
         # If amount is positive, we clamp it. If negative, we let it pass (it reduces gain).
 
-        if amount > 0:
+        if amount > 0 and daily_gain_cap is not None:
             potential_total = current_daily_gain + amount
             if potential_total > daily_gain_cap:
                 # Clamp amount
@@ -1391,17 +1394,19 @@ class VaultService:
         now_kst = datetime.now(tz).date()
         
         if sync_date_kst != now_kst:
-             # Fallback: strict UserActivity check (Legacy) if sync hasn't happened yet?
-             # But user wants "Sync Internal Logic" = "ExternalRankingData".
-             # If ExternalRanking says yesterday, then no withdrawal today.
-             pass 
-             # For debug clarity, let's allow if UserActivity says yes? 
-             # No, User said "Match ExternalRankingData logic".
-             # So if ExternalRanking is old, we block.
+             # Fallback: Check UserActivity (Internal Ledger)
+             # User reported manual updates not reflecting in ExternalRankingData immediately.
+             # As a safety net, if Internal Ledger says "Today", allow it.
+             activity = db.query(UserActivity).filter(UserActivity.user_id == user_id).first()
+             internal_ok = False
              
-             # Wait, what if user deposited but Sync is delayed?
-             # Then they are blocked. That's the trade-off.
-             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="DEPOSIT_REQUIRED_TODAY_SYNC")
+             if activity and activity.last_charge_at:
+                 last_charge_kst = activity.last_charge_at.replace(tzinfo=timezone.utc).astimezone(tz).date()
+                 if last_charge_kst == now_kst:
+                     internal_ok = True
+             
+             if not internal_ok:
+                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="DEPOSIT_REQUIRED_TODAY_SYNC")
 
         # [Phase 2] Stronger Withdrawal Conditions (Updated 2026-01-16)
         # 3. Game Play Condition: 30+ plays in last 3 days

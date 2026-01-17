@@ -175,11 +175,42 @@ def status(db: Session = Depends(get_db), user_id: int = Depends(get_current_use
     # Daily Deposit Confirmation (Still check Today for explicit "Active Today" check if needed, 
     # but for Withdrawal "Request" we might stick to 7-day deposit check or just the "Deposit Record Today" rule.
     # request_withdrawal says: "User must have a deposit record TODAY". So we keep this.
-    has_deposit_today = db.query(UserEventLog.id).filter(
-        UserEventLog.user_id == user_id,
-        UserEventLog.event_name == "DEPOSIT_CONFIRMED",
-        cast(UserEventLog.created_at, Date) == op_date_kst
-    ).first() is not None
+    # Daily Deposit Confirmation
+    # Must match VaultService.request_withdrawal logic:
+    # 1. ExternalRankingData.updated_at == Today(KST)
+    # 2. OR UserActivity.last_charge_at == Today(KST) (Fallback)
+    
+    from app.models.external_ranking import ExternalRankingData
+    from app.models.user_activity import UserActivity
+    from zoneinfo import ZoneInfo
+    from app.core.config import get_settings
+    
+    settings = get_settings()
+    tz = ZoneInfo(getattr(settings, "timezone", "Asia/Seoul"))
+    now_kst_date = now.astimezone(tz).date()
+    
+    has_deposit_today = False
+    
+    # 1. Check External Ranking (Primary)
+    rank_data = db.query(ExternalRankingData).filter(ExternalRankingData.user_id == user_id).first()
+    if rank_data and rank_data.deposit_amount > 0:
+        sync_dt_utc = rank_data.updated_at
+        if sync_dt_utc.tzinfo is None:
+             sync_dt_utc = sync_dt_utc.replace(tzinfo=timezone.utc)
+        sync_date_kst = sync_dt_utc.astimezone(tz).date()
+        if sync_date_kst == now_kst_date:
+            has_deposit_today = True
+            
+    # 2. Fallback: Check UserActivity (Secondary)
+    if not has_deposit_today:
+        activity = db.query(UserActivity).filter(UserActivity.user_id == user_id).first()
+        if activity and activity.last_charge_at:
+             last_charge_utc = activity.last_charge_at
+             if last_charge_utc.tzinfo is None:
+                 last_charge_utc = last_charge_utc.replace(tzinfo=timezone.utc)
+             last_charge_kst_date = last_charge_utc.astimezone(tz).date()
+             if last_charge_kst_date == now_kst_date:
+                 has_deposit_today = True
 
     # [MODIFIED] Determine Tier & Targets using UserSegmentService & Ranking Data
     from app.services.user_segment_service import UserSegmentService
