@@ -12,7 +12,10 @@
 ## 2. 주요 변경 사항 (Changes)
 
 ### 2.1 Backend Policy Logic (`vault_service.py`)
-- **Inactive 기준 명확화**: 최근 7일간 입금 이력이 없는 경우 `INACTIVE` 등급 부여.
+- **Last Deposit Source 변경**: 기존 `UserCashLedger` 대신 **`ExternalRankingData.updated_at` (최종 동기화 일자)**를 유일한 기준(`Source of Truth`)으로 채택.
+  - 조건: `deposit_amount > 0` 인 유저에 한함.
+  - 이유: 내부 원장의 정합성 문제 해결 및 외부 서버와의 "유효 활동" 기준 통일.
+- **Inactive 기준 명확화**: 최종 동기화 일자가 7일 이상 경과된 경우 `INACTIVE` 등급 부여.
 - **Zero-Deposit Cap 확대**: 기존 "생애 최초 무입금" 조건 외에 **`INACTIVE` 등급 유저**에게도 **금고 한도 30,000원** 강제 적용.
   - **Reason**: 7일간 입금이 없다면 사실상 Free Tier 유저로 간주하여 보유 한도를 축소함.
 - **Timezone Fix**: 입금일(`last_deposit_at`)과 현재 시간(`now`) 비교 시 발생하던 UTC Offset Mismatch 버그 수정 (`_to_utc` 헬퍼 적용).
@@ -40,7 +43,7 @@
 ## 3. 검증 결과 (Verification)
 
 ### 3.1 Backend Test Scenario (`tests/test_strict_policy.py`)
-별도의 테스트 스크립트를 작성하여 4가지 핵심 유저 시나리오를 검증함.
+별도의 테스트 스크립트(`test_strict_policy.py`, `test_withdrawal_eligibility.py`)를 작성하여 `ExternalRankingData` 모킹을 포함한 검증 수행.
 
 **Test Output:**
 ```text

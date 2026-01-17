@@ -13,7 +13,9 @@
 - `request_withdrawal` 메서드에 다음 3가지 필수 조건을 추가했습니다 (기존 1만원 최소 금액 조건 유지).
     1. **게임 30회 이상 플레이**: 최근 3일(72시간) 이내 `VaultEarnEvent` (type=GAME_PLAY) 카운트 30회 이상.
     2. **당일 금고 사용 1만원 이상**: 오늘 00:00 이후 `VaultLedger` 음수 변동액 합계 10,000원 이상.
-    3. **당일 입금 이력**: `UserActivity.last_charge_at`이 오늘 날짜여야 함.
+    3. **당일 입금 이력(External Sync)**: `ExternalRankingData`의 최종 동기화(Sync) 일자(`updated_at`)가 오늘 날짜(KST)여야 함 (입금액 > 0 유저 한정).
+       - 기존 `UserActivity` 내부 원장 체크 로직 폐기.
+       - 외부 서버의 동기화 시점을 "유효 활동/입금" 기준으로 단일화.
 
 ### Frontend (`src/components/vault/VaultMainPanel.tsx`, `src/utils/vaultUtils.ts`)
 - `parseVaultUnlockRules` 유틸리티 함수 업데이트:
