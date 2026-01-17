@@ -254,6 +254,20 @@ class RouletteService:
         config = self._get_today_config(db, ticket_type, user_id=user_id)
         token_type_enum = GameTokenType(ticket_type)
 
+        # [Strict Vault Policy] Check Benefit Suspension
+        from app.models.user import User
+        from fastapi import HTTPException
+        user = db.get(User, user_id)
+        if user:
+            chk_dt = now if isinstance(now, datetime) else datetime(now.year, now.month, now.day)
+            policy = self.vault_service.get_user_vault_policy(db, user, chk_dt)
+            if policy.get("benefits_suspended"):
+                raise HTTPException(
+                    status_code=403, 
+                    detail="입금을 하셔야 경품 응모 및 상점 이용이 가능합니다", 
+                    headers={"X-Reason": "DEPOSIT_REQUIRED"}
+                )
+
         # [Phase 1] Segment Access Control (P0)
         # GOLD_KEY: WHALE/VIP Only (VIP limit 3)
         # DIAMOND_KEY: WHALE/VIP Only (VIP limit 1)

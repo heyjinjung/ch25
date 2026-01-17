@@ -290,7 +290,7 @@ class ShopService:
         if policy.get("benefits_suspended"):
             raise HTTPException(
                 status_code=403, 
-                detail="BENEFITS_SUSPENDED", 
+                detail="입금을 하셔야 경품 응모 및 상점 이용이 가능합니다", 
                 headers={"X-Reason": "DEPOSIT_REQUIRED"}
             )
 

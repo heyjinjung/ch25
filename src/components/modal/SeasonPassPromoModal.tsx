@@ -17,7 +17,7 @@ const SeasonPassPromoModal: React.FC<SeasonPassPromoModalProps> = ({ onClose }) 
                 onClick={onClose}
             />
 
-            <motion.div 
+            <motion.div
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 transition={{ type: "spring", duration: 0.5 }}
@@ -38,7 +38,7 @@ const SeasonPassPromoModal: React.FC<SeasonPassPromoModalProps> = ({ onClose }) 
 
                 {/* Hero Section */}
                 <div className="relative pt-6 pb-3 text-center px-5">
-                     <motion.div 
+                    <motion.div
                         animate={{ y: [0, -4, 0] }}
                         transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                         className="w-16 h-16 mx-auto bg-gradient-to-br from-amber-400 to-orange-600 rounded-2xl flex items-center justify-center shadow-[0_8px_24px_rgba(245,158,11,0.4)] mb-3 rotate-3 border border-white/20"
@@ -52,7 +52,7 @@ const SeasonPassPromoModal: React.FC<SeasonPassPromoModalProps> = ({ onClose }) 
                     </div>
 
                     <h2 className="text-lg font-black text-white leading-tight">
-                        시즌패스로<br/>
+                        시즌패스로<br />
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-500">초고속 레벨업!</span>
                     </h2>
                 </div>
@@ -66,7 +66,7 @@ const SeasonPassPromoModal: React.FC<SeasonPassPromoModalProps> = ({ onClose }) 
                             <span className="text-amber-500 animate-pulse">Lv.10 Easy!</span>
                         </div>
                         <div className="relative h-2 bg-zinc-800 rounded-full overflow-hidden">
-                            <motion.div 
+                            <motion.div
                                 initial={{ width: "10%" }}
                                 animate={{ width: "60%" }}
                                 transition={{ duration: 1.5, ease: "easeOut", delay: 0.2 }}
@@ -85,23 +85,23 @@ const SeasonPassPromoModal: React.FC<SeasonPassPromoModalProps> = ({ onClose }) 
                 {/* Rewards Compact */}
                 <div className="px-5 grid grid-cols-2 gap-2 mb-5">
                     <div className="p-2 rounded-xl bg-zinc-900 border border-zinc-800 flex flex-col items-center gap-1">
-                         <div className="w-6 h-6 rounded-full bg-blue-500/10 flex items-center justify-center">
+                        <div className="w-6 h-6 rounded-full bg-blue-500/10 flex items-center justify-center">
                             <Gem size={12} className="text-blue-400" />
-                         </div>
-                         <div className="text-center leading-tight">
+                        </div>
+                        <div className="text-center leading-tight">
                             <div className="text-[9px] text-zinc-500 font-bold mb-0.5">매일 지급</div>
                             <div className="text-[10px] font-bold text-white">다이아몬드 키</div>
-                         </div>
+                        </div>
                     </div>
-                    
+
                     <div className="p-2 rounded-xl bg-zinc-900 border border-zinc-800 flex flex-col items-center gap-1">
-                         <div className="w-6 h-6 rounded-full bg-amber-500/10 flex items-center justify-center">
+                        <div className="w-6 h-6 rounded-full bg-amber-500/10 flex items-center justify-center">
                             <Crown size={12} className="text-amber-500" />
-                         </div>
-                         <div className="text-center leading-tight">
+                        </div>
+                        <div className="text-center leading-tight">
                             <div className="text-[9px] text-zinc-500 font-bold mb-0.5">VIP 혜택</div>
                             <div className="text-[10px] font-bold text-white">전용 프로필</div>
-                         </div>
+                        </div>
                     </div>
                 </div>
 
@@ -111,12 +111,12 @@ const SeasonPassPromoModal: React.FC<SeasonPassPromoModalProps> = ({ onClose }) 
                         whileTap={{ scale: 0.98 }}
                         whileHover={{ scale: 1.02 }}
                         onClick={() => {
-                            navigate("/vault");
+                            navigate("/season-pass");
                             onClose();
                         }}
                         className="relative w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-black font-black text-sm shadow-[0_8px_20px_-8px_rgba(245,158,11,0.5)] flex items-center justify-center gap-2 overflow-hidden group"
                     >
-                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out" />
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out" />
                         <span>시즌패스 확인하기</span>
                     </motion.button>
                 </div>
