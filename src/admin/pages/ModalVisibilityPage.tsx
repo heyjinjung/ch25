@@ -25,6 +25,17 @@ export default function ModalVisibilityPage() {
          attendance_streak_enabled: true,
          new_user_welcome_enabled: true,
          starter_missions_enabled: true,
+         golden_hour_enabled: true,
+         vip_promo_enabled: true,
+         vip_eligibility_enabled: true,
+         inbox_enabled: true,
+         vault_info_enabled: true,
+         withdrawal_conditions_enabled: true,
+         withdrawal_progress_enabled: true,
+         lottery_collection_enabled: true,
+         limited_offer_enabled: true,
+         season_pass_enabled: true,
+         ticket_zero_enabled: true,
        });
     }
   }, [data]);
@@ -52,9 +63,20 @@ export default function ModalVisibilityPage() {
   if (isLoading) return <div className="p-8 text-white">Loading...</div>;
 
   const toggles = [
-      { key: "attendance_streak_enabled", label: "출석 스트릭 모달 (AttendanceStreak)" },
-      { key: "new_user_welcome_enabled", label: "신규 유저 웰컴 모달 (NewUserWelcome)" },
-      { key: "starter_missions_enabled", label: "스타터 미션 모달 (StarterMissions)" },
+      { key: "attendance_streak_enabled", label: "출석 스트릭 (Streak)" },
+      { key: "new_user_welcome_enabled", label: "신규 유저 웰컴 (NewUserWelcome)" },
+      { key: "starter_missions_enabled", label: "스타터 미션 (StarterMissions)" },
+      { key: "golden_hour_enabled", label: "골든 아워 (GoldenHour)" },
+      { key: "vip_promo_enabled", label: "VIP 프로모션 (VipPromo)" },
+      { key: "vip_eligibility_enabled", label: "VIP 자격 확인 (VipEligibility)" },
+      { key: "inbox_enabled", label: "인박스/알림함 (Inbox)" },
+      { key: "vault_info_enabled", label: "금고 정보 (VaultInfo)" },
+      { key: "withdrawal_conditions_enabled", label: "출금 조건 (WithdrawalConditions)" },
+      { key: "withdrawal_progress_enabled", label: "출금 진행 (WithdrawalProgress)" },
+      { key: "lottery_collection_enabled", label: "복권 모음 (LotteryCollection)" },
+      { key: "limited_offer_enabled", label: "한정 오퍼 (LimitedOffer)" },
+      { key: "season_pass_enabled", label: "시즌 패스 (SeasonPass)" },
+      { key: "ticket_zero_enabled", label: "티켓 제로 (TicketZero)" },
   ];
 
   return (
