@@ -1,7 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import Button from "../common/Button";
-import { X } from "lucide-react";
+import { X, AlertCircle } from "lucide-react";
 
 type TicketZeroRetentionModalProps = {
   vaultBalance: number;
@@ -30,112 +29,171 @@ const TicketZeroRetentionModal: React.FC<TicketZeroRetentionModalProps> = ({
     : "지금은 티켓이 없어서 게임을 시작하기 어려워요.\n체험 티켓으로 먼저 한 판 시작해볼까요?";
 
   return (
-    <div className="fixed inset-0 z-[10050] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-fade-in">
-      <div className="relative w-full max-w-sm rounded-3xl border border-emerald-500/30 bg-[#070D0A] p-1 shadow-[0_0_60px_rgba(16,185,129,0.25)] overflow-hidden animate-zoom-in">
+    <div className="fixed inset-0 z-[10050] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9, rotateX: 10 }}
+        animate={{ opacity: 1, scale: 1, rotateX: 0 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        transition={{ type: "spring", damping: 25, stiffness: 300 }}
+        className="relative w-full max-w-md perspective-1000"
+      >
+        {/* Main Card with 3D depth */}
+        <div className="relative rounded-[2rem] bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 shadow-[0_25px_60px_-12px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.05),inset_0_1px_0_rgba(255,255,255,0.1)] overflow-hidden border border-white/10">
 
-        {/* Animated Background Rays */}
-        <div className="absolute inset-0 opacity-30 pointer-events-none">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200%] h-[200%] bg-[conic-gradient(from_0deg,transparent,rgba(16,185,129,0.4),transparent)] animate-spin-slow" />
-        </div>
+          {/* Top decorative bar with gradient */}
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-lime-400 to-emerald-500" />
 
-        <div className="relative rounded-[1.3rem] bg-gradient-to-b from-emerald-500/10 to-transparent p-6 flex flex-col items-center text-center">
+          {/* Animated background pattern */}
+          <div className="absolute inset-0 opacity-5">
+            <div className="absolute inset-0" style={{
+              backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(16,185,129,0.3) 10px, rgba(16,185,129,0.3) 20px)`,
+              backgroundSize: '200% 200%',
+              animation: 'shift 20s linear infinite'
+            }} />
+          </div>
 
+          {/* Close Button */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors"
+            className="absolute top-5 right-5 p-2.5 rounded-xl bg-zinc-800/80 backdrop-blur-sm border border-white/10 hover:bg-zinc-700/80 transition-all shadow-lg z-10"
             aria-label="Close"
           >
-            <X className="w-5 h-5 text-white/40" />
+            <X className="w-5 h-5 text-white/60" />
           </button>
 
-          {/* Icon Section */}
-          <div className="relative mb-6">
-            <motion.div
-              className="absolute inset-0 rounded-full border border-emerald-400/40"
-              animate={{ scale: [1, 1.25, 1], opacity: [0.2, 0.6, 0.2] }}
-              transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
-            />
-            <motion.div
-              className="absolute inset-0 rounded-full blur-2xl bg-emerald-500/50"
-              animate={{ scale: [1, 1.35, 1], opacity: [0.3, 0.7, 0.3] }}
-              transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
-            />
-            <motion.div
-              className="relative flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-emerald-300 via-emerald-400 to-lime-400 shadow-[0_0_40px_rgba(16,185,129,0.6)]"
-              animate={{ scale: [1, 1.08, 1], rotate: [0, 3, -3, 0] }}
-              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-            >
-              <motion.img
-                src="/assets/icons/ticket-dynamic-color.png"
-                alt=""
-                className="h-12 w-12 object-contain drop-shadow-[0_0_12px_rgba(0,0,0,0.6)]"
-                animate={{ y: [0, -4, 0] }}
-                transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
-              />
-            </motion.div>
-          </div>
-
-          <div className="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-red-500/15 border border-red-500/40 mb-3">
-            <span className="text-xs font-black text-red-300 animate-pulse">TICKET ZERO</span>
-          </div>
-
-          <h2 className="text-2xl font-black text-white tracking-tight mb-2">
-            {title}
-          </h2>
-
-          <p className="text-sm font-medium text-white/70 whitespace-pre-wrap leading-relaxed mb-6">
-            {body}
-          </p>
-
-          <div className="w-full space-y-2">
-            {hasVault ? (
-              <Button
-                variant="figma-primary"
-                onClick={onGoVault}
-                className="w-full rounded-xl py-3.5 bg-gradient-to-r from-emerald-400 via-lime-400 to-emerald-500 border-none shadow-[0_10px_30px_rgba(16,185,129,0.35)] text-base text-black font-black"
-              >
-                금고로 티켓 채우기
-              </Button>
-            ) : (
-              <Button
-                variant="figma-primary"
-                onClick={onRequestTrial}
-                disabled={!trialEnabled || isRequestingTrial}
-                className="w-full rounded-xl py-3.5 bg-gradient-to-r from-emerald-400 via-lime-400 to-emerald-500 border-none shadow-[0_10px_30px_rgba(16,185,129,0.35)] text-base text-black font-black disabled:opacity-50"
-              >
-                {!trialEnabled ? "체험 티켓 준비중" : isRequestingTrial ? "지급 중..." : "체험 티켓 받기"}
-              </Button>
-            )}
-
-            <div className="grid grid-cols-2 gap-2">
-              <a
-                href="https://ccc-010.com"
-                target="_blank"
-                rel="noreferrer noopener"
-                className="py-3 text-center rounded-xl bg-white/5 border border-emerald-500/20 text-emerald-300 font-black text-sm hover:bg-emerald-500/10 active:scale-[0.99] transition"
-              >
-                씨씨카지노
-              </a>
-              <a
-                href="https://t.me/jm956"
-                target="_blank"
-                rel="noreferrer noopener"
-                className="py-3 text-center rounded-xl bg-white/5 border border-emerald-500/20 text-emerald-300 font-black text-sm hover:bg-emerald-500/10 active:scale-[0.99] transition"
-              >
-                실장 문의
-              </a>
+          <div className="relative p-8 pt-10">
+            {/* Alert badge with 3D effect */}
+            <div className="flex justify-center mb-6">
+              <div className="relative inline-flex">
+                <motion.div
+                  animate={{ scale: [1, 1.1, 1] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                  className="absolute inset-0 rounded-2xl bg-red-500/20 blur-xl"
+                />
+                <div className="relative flex items-center gap-2 px-4 py-2 rounded-2xl bg-gradient-to-br from-red-500/20 to-orange-500/20 border-2 border-red-500/40 shadow-[0_8px_16px_rgba(239,68,68,0.2),inset_0_1px_0_rgba(255,255,255,0.2)]">
+                  <AlertCircle size={16} className="text-red-400" />
+                  <span className="text-xs font-black text-red-300 tracking-wider uppercase">Ticket Zero</span>
+                </div>
+              </div>
             </div>
 
-            <Button
-              variant="figma-secondary"
-              onClick={onClose}
-              className="w-full rounded-xl py-3 bg-white/5 border-emerald-500/20 text-white/80 hover:bg-white/10"
-            >
-              나중에 하기
-            </Button>
+            {/* Large 3D Ticket Display */}
+            <div className="relative mb-8 flex justify-center">
+              <div className="relative">
+                {/* Shadow layers for depth */}
+                <motion.div
+                  animate={{
+                    y: [0, 8, 0],
+                    opacity: [0.3, 0.6, 0.3]
+                  }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                  className="absolute top-8 left-1/2 -translate-x-1/2 w-32 h-32 rounded-3xl bg-emerald-500/40 blur-3xl"
+                />
+
+                {/* Main ticket card */}
+                <motion.div
+                  animate={{
+                    y: [0, -8, 0],
+                    rotateY: [0, 5, 0, -5, 0]
+                  }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                  className="relative w-36 h-36 rounded-3xl bg-gradient-to-br from-emerald-500/90 via-lime-400/90 to-emerald-600/90 shadow-[0_20px_50px_-12px_rgba(16,185,129,0.5),0_0_0_1px_rgba(255,255,255,0.2),inset_0_2px_0_rgba(255,255,255,0.3),inset_0_-2px_4px_rgba(0,0,0,0.2)] flex items-center justify-center transform-gpu"
+                  style={{ transformStyle: 'preserve-3d' }}
+                >
+                  {/* Ticket icon with emboss effect */}
+                  <div className="relative">
+                    <img
+                      src="/assets/icons/ticket-dynamic-color.png"
+                      alt="Ticket"
+                      className="w-20 h-20 object-contain drop-shadow-[0_4px_8px_rgba(0,0,0,0.4)]"
+                      style={{ filter: 'brightness(1.2) contrast(1.1)' }}
+                    />
+                    {/* Zero overlay */}
+                    <div className="absolute -bottom-2 -right-2 w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-orange-600 border-[3px] border-white shadow-[0_4px_12px_rgba(239,68,68,0.6),inset_0_1px_0_rgba(255,255,255,0.4)] flex items-center justify-center">
+                      <span className="text-xl font-black text-white">0</span>
+                    </div>
+                  </div>
+
+                  {/* Shine effect */}
+                  <motion.div
+                    animate={{
+                      x: ['-200%', '200%'],
+                    }}
+                    transition={{
+                      duration: 3,
+                      repeat: Infinity,
+                      repeatDelay: 2,
+                      ease: "easeInOut"
+                    }}
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12"
+                  />
+                </motion.div>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-black text-white mb-3 tracking-tight drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
+                {title}
+              </h2>
+              <p className="text-base font-medium text-white/70 whitespace-pre-wrap leading-relaxed">
+                {body}
+              </p>
+            </div>
+
+            {/* Action Buttons with depth */}
+            <div className="space-y-3">
+              {hasVault ? (
+                <motion.button
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={onGoVault}
+                  className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-400 via-lime-400 to-emerald-500 font-black text-lg text-black shadow-[0_12px_28px_-8px_rgba(16,185,129,0.5),0_0_0_1px_rgba(255,255,255,0.2),inset_0_2px_0_rgba(255,255,255,0.4),inset_0_-2px_4px_rgba(0,0,0,0.15)] transition-all"
+                >
+                  금고로 티켓 채우기
+                </motion.button>
+              ) : (
+                <motion.button
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={onRequestTrial}
+                  disabled={!trialEnabled || isRequestingTrial}
+                  className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-400 via-lime-400 to-emerald-500 font-black text-lg text-black shadow-[0_12px_28px_-8px_rgba(16,185,129,0.5),0_0_0_1px_rgba(255,255,255,0.2),inset_0_2px_0_rgba(255,255,255,0.4),inset_0_-2px_4px_rgba(0,0,0,0.15)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {!trialEnabled ? "체험 티켓 준비중" : isRequestingTrial ? "지급 중..." : "체험 티켓 받기"}
+                </motion.button>
+              )}
+
+              {/* Secondary actions with glass effect */}
+              <div className="grid grid-cols-2 gap-3">
+                <a
+                  href="https://ccc-010.com"
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="py-3.5 text-center rounded-xl bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-sm border border-emerald-500/30 text-emerald-300 font-bold text-sm hover:from-emerald-500/10 hover:to-emerald-500/5 active:scale-[0.97] transition-all shadow-[0_4px_12px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.1)]"
+                >
+                  씨씨카지노
+                </a>
+                <a
+                  href="https://t.me/jm956"
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="py-3.5 text-center rounded-xl bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-sm border border-emerald-500/30 text-emerald-300 font-bold text-sm hover:from-emerald-500/10 hover:to-emerald-500/5 active:scale-[0.97] transition-all shadow-[0_4px_12px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.1)]"
+                >
+                  실장 문의
+                </a>
+              </div>
+
+              <button
+                onClick={onClose}
+                className="w-full py-3.5 rounded-xl bg-gradient-to-br from-zinc-800 to-zinc-900 border border-white/10 text-white/60 font-bold text-sm hover:bg-zinc-700 active:scale-[0.98] transition-all shadow-[0_4px_12px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.05)]"
+              >
+                나중에 하기
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };

@@ -130,35 +130,34 @@ const StarterMissionsModal: React.FC<StarterMissionsModalProps> = ({ onClose }) 
                                     navigate("/missions");
                                 }}
                                 className={clsx(
-                                    "group relative flex items-center gap-3 p-3 rounded-2xl border transition-all cursor-pointer overflow-hidden",
+                                    "group relative flex items-center gap-3 p-4 rounded-2xl border transition-all cursor-pointer overflow-hidden mb-2",
                                     mission.is_claimed
                                         ? "bg-white/5 border-white/5 opacity-50"
-                                        : "bg-white/5 border-white/10 hover:bg-purple-500/10 hover:border-purple-500/30"
+                                        : "bg-gradient-to-br from-purple-500/20 to-indigo-600/20 border-purple-500/50 hover:border-purple-400 shadow-[0_4px_12px_rgba(168,85,247,0.15)] hover:shadow-[0_4px_16px_rgba(168,85,247,0.3)] hover:scale-[1.02] active:scale-[0.98]"
                                 )}
                             >
                                 <div className={clsx(
                                     "relative z-10 flex items-center justify-center w-10 h-10 rounded-xl",
-                                    mission.is_claimed ? "bg-white/10 text-white/20" : "bg-purple-500/20 text-purple-400"
+                                    mission.is_claimed ? "bg-white/10 text-white/20" : "bg-purple-500 text-white shadow-lg shadow-purple-500/40"
                                 )}>
                                     {mission.is_claimed ? <CheckCircle2 size={20} /> : getMissionIcon(mission.logic_key)}
                                 </div>
                                 <div className="relative z-10 flex-1 min-w-0">
                                     <div className="flex items-center gap-2">
-                                        <p className="text-sm font-bold text-white truncate">
+                                        <p className={clsx("text-sm font-bold truncate", mission.is_claimed ? "text-white" : "text-white")}>
                                             {mission.title}
                                         </p>
-                                        {!mission.is_claimed && (
-                                            <span className="text-[10px] font-bold text-purple-400 bg-purple-500/10 px-1.5 py-0.5 rounded">
-                                                +{mission.reward_amount?.toLocaleString()}
-                                            </span>
-                                        )}
                                     </div>
-                                    <p className="text-xs text-white/40 truncate">
+                                    <p className="text-xs text-white/50 truncate mt-0.5">
                                         {mission.description || "미션 완료하고 보상 받기"}
                                     </p>
                                 </div>
                                 {!mission.is_claimed && (
-                                    <ChevronRight className="relative z-10 w-4 h-4 text-white/20 group-hover:text-purple-400 transition-colors" />
+                                    <div className="relative z-10 flex flex-col items-end gap-1">
+                                         <span className="text-[11px] font-black text-purple-200 bg-purple-500/80 px-2 py-0.5 rounded-full shadow-sm">
+                                            +{mission.reward_amount?.toLocaleString()}
+                                        </span>
+                                    </div>
                                 )}
                             </motion.div>
                         ))}
@@ -167,33 +166,19 @@ const StarterMissionsModal: React.FC<StarterMissionsModalProps> = ({ onClose }) 
                     {/* Total Reward & Action */}
                     <div className="pt-4 border-t border-white/10">
                         <div className="flex items-center justify-between mb-4">
-                            <span className="text-xs font-bold text-white/40">예상 총 보상</span>
-                            <span className="text-xl font-black text-purple-400">
+                            <span className="text-xs font-bold text-white/40">완료 시 보상</span>
+                            <span className="text-lg font-black text-purple-400">
                                 {totalReward.toLocaleString()}원
                             </span>
                         </div>
                         
                         <motion.button
                             onClick={handleAction}
-                            animate={{ 
-                                scale: [1, 1.03, 1],
-                                boxShadow: [
-                                    "0 0 0 0 rgba(168, 85, 247, 0)",
-                                    "0 0 0 6px rgba(168, 85, 247, 0.3)",
-                                    "0 0 0 0 rgba(168, 85, 247, 0)"
-                                ]
-                            }}
-                            transition={{ 
-                                duration: 1.5, 
-                                repeat: Infinity,
-                                ease: "easeInOut"
-                            }}
                             whileTap={{ scale: 0.95 }}
-                            className="relative w-full py-4 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-black text-lg flex items-center justify-center gap-2 overflow-hidden"
+                            className="relative w-full py-3.5 rounded-xl bg-[#1A1A1E] border border-white/10 text-white/60 font-bold text-base flex items-center justify-center gap-2 transition-colors hover:bg-white/5 hover:text-white hover:border-white/20"
                         >
-                            <div className="absolute inset-0 bg-white/20 animate-pulse" />
-                            <span className="relative z-10">🚀 전부 받으러 가기</span>
-                            <ChevronRight size={20} className="relative z-10" strokeWidth={3} />
+                            <span>전체 미션 보러가기</span>
+                            <ChevronRight size={16} />
                         </motion.button>
                     </div>
                 </div>
