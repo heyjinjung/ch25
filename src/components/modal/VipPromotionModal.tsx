@@ -47,12 +47,12 @@ const VipPromotionModal: React.FC<VipPromotionModalProps> = ({ onClose }) => {
                         initial={{ rotate: -10, scale: 0.8 }}
                         animate={{ rotate: 0, scale: 1 }}
                         transition={{ type: "spring", damping: 12, stiffness: 120, delay: 0.1 }}
-                        className="relative p-5 rounded-full bg-gradient-to-b from-white/10 to-transparent mb-4 backdrop-blur-md border border-white/20 shadow-2xl"
+                        className="relative p-4 rounded-full bg-gradient-to-b from-white/10 to-transparent mb-4 backdrop-blur-md border border-white/20 shadow-2xl"
                     >
                         <motion.img
                             src="/images/crown2.png"
                             alt="VIP Crown"
-                            className="w-18 h-18 object-contain drop-shadow-[0_6px_16px_rgba(0,0,0,0.55)]"
+                            className="w-12 h-12 object-contain drop-shadow-[0_6px_16px_rgba(0,0,0,0.55)]"
                             animate={{ y: [0, -4, 0], rotate: [0, -2, 2, 0] }}
                             transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
                         />
@@ -61,7 +61,7 @@ const VipPromotionModal: React.FC<VipPromotionModalProps> = ({ onClose }) => {
                             transition={{ duration: 3, repeat: Infinity }}
                             className="absolute -top-1 -right-1 text-amber-300"
                         >
-                            <Sparkles size={20} />
+                            <Sparkles size={16} />
                         </motion.div>
                     </motion.div>
 

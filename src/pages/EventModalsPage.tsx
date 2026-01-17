@@ -180,8 +180,8 @@ const EventModalsPage: React.FC = () => {
     "vault-info": { icon: <Vault size={20} className="text-emerald-300" />, accent: "from-emerald-500/20 via-transparent to-transparent" },
     "withdrawal-conditions": { icon: <Wallet size={20} className="text-lime-300" />, accent: "from-lime-500/20 via-transparent to-transparent" },
     "withdrawal-progress": { icon: <Banknote size={20} className="text-emerald-200" />, accent: "from-emerald-400/20 via-transparent to-transparent" },
-    "ticket-zero": { icon: <Ticket size={20} className="text-amber-300" />, accent: "from-ambergo-500/20 via-transparent to-transparent" },    "lottery-collection": { icon: <Gift size={20} className="text-yellow-300" />, accent: "from-yellow-500/20 via-transparent to-transparent" },
-    "limited-offer": { icon: <Sparkles size={20} className="text-indigo-300" />, accent: "from-indigo-500/20 via-transparent to-transparent" },    "season-pass": { icon: <Crown size={20} className="text-amber-300" />, accent: "from-amber-500/20 via-transparent to-transparent" },
+    "ticket-zero": { icon: <Ticket size={20} className="text-amber-300" />, accent: "from-ambergo-500/20 via-transparent to-transparent" }, "lottery-collection": { icon: <Gift size={20} className="text-yellow-300" />, accent: "from-yellow-500/20 via-transparent to-transparent" },
+    "limited-offer": { icon: <Sparkles size={20} className="text-indigo-300" />, accent: "from-indigo-500/20 via-transparent to-transparent" }, "season-pass": { icon: <Crown size={20} className="text-amber-300" />, accent: "from-amber-500/20 via-transparent to-transparent" },
     inbox: { icon: <Inbox size={20} className="text-emerald-300" />, accent: "from-emerald-500/20 via-transparent to-transparent" },
   };
 
@@ -234,29 +234,7 @@ const EventModalsPage: React.FC = () => {
       </div>
 
       <div className="mx-auto w-full max-w-6xl px-4 py-6">
-        <div className="rounded-[28px] border border-white/10 bg-gradient-to-br from-white/[0.04] via-black to-black/80 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.35)]">
-          <div className="flex flex-col gap-2">
-            <span className="text-xs font-black tracking-[0.3em] text-emerald-400/70 uppercase">
-              {resolvedConfig.kicker}
-            </span>
-            <h2 className="text-2xl font-black text-white tracking-tight">
-              {resolvedConfig.subtitle}
-            </h2>
-            <p className="text-sm text-white/50">
-              {resolvedConfig.note}
-            </p>
-          </div>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-[11px] font-bold text-emerald-300">
-              항상 오픈 모드
-            </span>
-            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-bold text-white/40">
-              이벤트/모달
-            </span>
-          </div>
-        </div>
-
-        <div className="mt-8 space-y-10">
+        <div className="space-y-10">
           {sections.map((section) => (
             <section key={section.title}>
               <div className="mb-4 flex items-end justify-between">
