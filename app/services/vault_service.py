@@ -1362,13 +1362,46 @@ class VaultService:
         today = now.date()
 
         # 2. Check Eligibility (Same Day Deposit)
-        activity = db.query(UserActivity).filter(UserActivity.user_id == user_id).first()
-        if not activity or not activity.last_charge_at:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="NO_DEPOSIT_RECORD_TODAY")
+        # 2. Check Eligibility (Same Day Deposit/Activity via ExternalRankingData)
+        # Policy Change (2026-01-17): Use ExternalRankingData.updated_at (Final Sync)
+        # as the source of truth for "Activity/Deposit Today".
+        from app.models.external_ranking import ExternalRankingData
+        
+        rank_data = db.query(ExternalRankingData).filter(ExternalRankingData.user_id == user_id).first()
+        
+        # Condition A: Must have External Ranking Data with Deposits
+        if not rank_data or rank_data.deposit_amount <= 0:
+             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="NO_DEPOSIT_HISTORY")
 
-        last_charge_date = activity.last_charge_at.date()
-        if last_charge_date != today:
-             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="DEPOSIT_REQUIRED_TODAY")
+        # Condition B: Final Sync must be TODAY (KST)
+        from zoneinfo import ZoneInfo
+        settings = get_settings()
+        tz = ZoneInfo(getattr(settings, "timezone", "Asia/Seoul"))
+        
+        # updated_at is UTC. Convert to KST date.
+        sync_dt_utc = rank_data.updated_at
+        if sync_dt_utc.tzinfo is None:
+            sync_dt_utc = sync_dt_utc.replace(tzinfo=timezone.utc)
+            
+        sync_date_kst = sync_dt_utc.astimezone(tz).date()
+        
+        # Operational Date (Today KST)
+        # Note: request_withdrawal doesn't use _operational_date_kst currently, just utcnow().date().
+        # But for accurate "Today" matching, we should use KST comparison.
+        now_kst = datetime.now(tz).date()
+        
+        if sync_date_kst != now_kst:
+             # Fallback: strict UserActivity check (Legacy) if sync hasn't happened yet?
+             # But user wants "Sync Internal Logic" = "ExternalRankingData".
+             # If ExternalRanking says yesterday, then no withdrawal today.
+             pass 
+             # For debug clarity, let's allow if UserActivity says yes? 
+             # No, User said "Match ExternalRankingData logic".
+             # So if ExternalRanking is old, we block.
+             
+             # Wait, what if user deposited but Sync is delayed?
+             # Then they are blocked. That's the trade-off.
+             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="DEPOSIT_REQUIRED_TODAY_SYNC")
 
         # [Phase 2] Stronger Withdrawal Conditions (Updated 2026-01-16)
         # 3. Game Play Condition: 30+ plays in last 3 days
