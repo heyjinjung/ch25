@@ -10,7 +10,6 @@ import { ChevronDown } from "lucide-react";
 import GoldenHourTimer from "./GoldenHourTimer";
 import GoldenHourPopup from "../events/GoldenHourPopup";
 import AttendanceStreakModal from "../modal/AttendanceStreakModal";
-import BailoutModal from "../modal/BailoutModal";
 import { useMissionStore } from "../../stores/missionStore";
 import VipPromotionModal from "../modal/VipPromotionModal";
 import VipEligibilityModal from "../modal/VipEligibilityModal";
@@ -27,11 +26,10 @@ const AppHeader: React.FC = () => {
     const [isGoldenHourModalOpen, setIsGoldenHourModalOpen] = useState(false);
     const [isVipModalOpen, setIsVipModalOpen] = useState(false);
     const [isVipEligibilityModalOpen, setIsVipEligibilityModalOpen] = useState(false);
-    const [isBailoutModalOpen, setIsBailoutModalOpen] = useState(false);
     // Removed local isForcedStreakModalOpen in favor of store state
     const { streakInfo, streakRules, fetchStreakRules, claimStreakReward, isStreakModalOpen, setStreakModalOpen } = useMissionStore();
 
-    const { attendance_streak_enabled, bailout_enabled } = useModalVisibility();
+    const { attendance_streak_enabled } = useModalVisibility();
 
     const { data: vault } = useQuery({
         queryKey: ["vault-status"],
@@ -83,12 +81,6 @@ const AppHeader: React.FC = () => {
             if (!sessionStorage.getItem(key)) {
                 setIsGoldenHourModalOpen(true);
                 sessionStorage.setItem(key, "true");
-            }
-        } else if (vault?.recommendedAction === "OPEN_VAULT_MODAL") {
-            // Ticket-Zero / Bailout logic
-            if (!sessionStorage.getItem("bailout_modal_shown")) {
-                setIsBailoutModalOpen(true);
-                sessionStorage.setItem("bailout_modal_shown", "true");
             }
         }
 
@@ -407,14 +399,6 @@ const AppHeader: React.FC = () => {
                     currentStreak={streakInfo.streak_days}
                     claimableDay={streakInfo.claimable_day}
                     rules={streakRules}
-                />
-            )}
-
-            {/* Bailout / Ticket-Zero Modal */}
-            {bailout_enabled && isBailoutModalOpen && (
-                <BailoutModal
-                    onClose={() => setIsBailoutModalOpen(false)}
-                    vaultBalance={vault?.vaultBalance ?? 0}
                 />
             )}
 

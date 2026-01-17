@@ -85,7 +85,7 @@ const VipEligibilityModal: React.FC<VipEligibilityModalProps> = ({ onClose }) =>
                             navigate("/vault");
                             onClose();
                         }}
-                        className="w-full py-4.5 rounded-[20px] bg-gradient-to-r from-amber-500 to-orange-600 text-black font-black text-lg shadow-[0_12px_24px_-8px_rgba(245,158,11,0.4)] active:scale-[0.97] hover:brightness-110 flex items-center justify-center gap-2 group transition-all"
+                        className="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-500 to-orange-500 text-black font-black text-lg shadow-[0_16px_30px_-10px_rgba(245,158,11,0.45)] border border-amber-300/30 active:scale-[0.98] hover:brightness-110 hover:shadow-[0_20px_36px_-12px_rgba(245,158,11,0.5)] flex items-center justify-center gap-2 group transition-all"
                     >
                         <span>입금하고 자격 획득하기</span>
                         <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />

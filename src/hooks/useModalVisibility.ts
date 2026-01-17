@@ -8,14 +8,12 @@ type ModalVisibilityConfig = {
     attendance_streak_enabled: boolean;
     new_user_welcome_enabled: boolean;
     starter_missions_enabled: boolean;
-    bailout_enabled: boolean;
 };
 
 const DEFAULT_VISIBILITY: ModalVisibilityConfig = {
     attendance_streak_enabled: true,
     new_user_welcome_enabled: true,
     starter_missions_enabled: true,
-    bailout_enabled: true,
 };
 
 export const useModalVisibility = () => {
@@ -33,7 +31,6 @@ export const useModalVisibility = () => {
             attendance_streak_enabled: data.value.attendance_streak_enabled !== false,
             new_user_welcome_enabled: data.value.new_user_welcome_enabled !== false,
             starter_missions_enabled: data.value.starter_missions_enabled !== false,
-            bailout_enabled: data.value.bailout_enabled !== false,
         };
     }, [data]);
 

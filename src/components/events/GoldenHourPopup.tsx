@@ -1,4 +1,5 @@
 import React from "react";
+import { motion } from "framer-motion";
 import { X } from "lucide-react";
 import Button from "../common/Button";
 import { tryHaptic } from "../../utils/haptics";
@@ -9,16 +10,17 @@ interface GoldenHourPopupProps {
 }
 
 const GoldenHourPopup: React.FC<GoldenHourPopupProps> = ({ onClose, multiplier }) => {
+    const displayMultiplier = Number.isFinite(multiplier) ? multiplier : 2;
     return (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-            <div className="relative w-full max-w-sm rounded-3xl border border-amber-500/30 bg-[#0A0A0A] p-1 shadow-[0_0_50px_rgba(245,158,11,0.2)] overflow-hidden animate-zoom-in">
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-fade-in">
+            <div className="relative w-full max-w-sm rounded-3xl border border-emerald-500/30 bg-[#070D0A] p-1 shadow-[0_0_60px_rgba(16,185,129,0.25)] overflow-hidden animate-zoom-in">
 
                 {/* Animated Background Rays */}
-                <div className="absolute inset-0 opacity-20 pointer-events-none">
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200%] h-[200%] bg-[conic-gradient(from_0deg,transparent,rgba(245,158,11,0.3),transparent)] animate-spin-slow" />
+                <div className="absolute inset-0 opacity-30 pointer-events-none">
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200%] h-[200%] bg-[conic-gradient(from_0deg,transparent,rgba(16,185,129,0.4),transparent)] animate-spin-slow" />
                 </div>
 
-                <div className="relative rounded-[1.3rem] bg-gradient-to-b from-amber-500/10 to-transparent p-6 flex flex-col items-center text-center">
+                <div className="relative rounded-[1.3rem] bg-gradient-to-b from-emerald-500/10 to-transparent p-6 flex flex-col items-center text-center">
 
                     {/* Header Banner */}
                     <div className="w-full overflow-hidden rounded-2xl border border-white/10 bg-black/40 mb-5">
@@ -39,33 +41,61 @@ const GoldenHourPopup: React.FC<GoldenHourPopupProps> = ({ onClose, multiplier }
 
                     {/* Icon Section */}
                     <div className="relative mb-6">
-                        <div className="absolute inset-0 blur-2xl bg-amber-500/40 animate-pulse" />
-                        <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-amber-600 shadow-lg shadow-amber-500/50">
-                            <img src="/assets/icons/bomb-dynamic-color.png" alt="" className="h-10 w-10 object-contain" />
+                        <motion.div
+                            className="absolute inset-0 rounded-full border border-emerald-400/40"
+                            animate={{ scale: [1, 1.25, 1], opacity: [0.2, 0.6, 0.2] }}
+                            transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+                        />
+                        <motion.div
+                            className="absolute inset-0 rounded-full blur-2xl bg-emerald-500/50"
+                            animate={{ scale: [1, 1.35, 1], opacity: [0.3, 0.7, 0.3] }}
+                            transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
+                        />
+                        <motion.div
+                            className="relative flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-emerald-300 via-emerald-400 to-lime-400 shadow-[0_0_40px_rgba(16,185,129,0.6)]"
+                            animate={{ scale: [1, 1.08, 1], rotate: [0, 3, -3, 0] }}
+                            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                        >
+                            <motion.img
+                                src="/assets/icons/bomb-dynamic-color.png"
+                                alt=""
+                                className="h-12 w-12 object-contain drop-shadow-[0_0_12px_rgba(0,0,0,0.6)]"
+                                animate={{ y: [0, -4, 0] }}
+                                transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+                            />
+                        </motion.div>
+                        <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 rounded-full border border-emerald-400/40 bg-emerald-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.25em] text-emerald-300">
+                            HIGH-STAKE DICE
                         </div>
                     </div>
 
-                    <h2 className="text-2xl font-black italic tracking-tighter text-white uppercase drop-shadow-lg mb-1 inline-flex items-center justify-center gap-2">
+                    <h2 className="text-2xl font-black italic tracking-tight text-white uppercase drop-shadow-lg mb-2 inline-flex items-center justify-center gap-2">
                         <img src="/assets/icons/clock-dynamic-color.png" alt="" className="h-6 w-6 object-contain" />
-                        Golden Hour
+                        GOLDEN HOUR
                     </h2>
-                    <div className="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 mb-5">
-                        <span className="text-xs font-black text-amber-400 animate-pulse">LIVE NOW</span>
+                    <div className="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/40 mb-5">
+                        <span className="text-xs font-black text-emerald-300 animate-pulse">LIVE NOW</span>
                     </div>
 
-                    <p className="text-base font-bold text-white/90 leading-tight mb-6">
-                        지금부터 1시간 동안<br />
-                        <span className="text-amber-400 text-xl font-black">금고 적립 {multiplier}배</span> 보너스!
+                    <p className="text-base font-semibold text-white/80 leading-tight mb-2">
+                        지금부터 1시간 동안
+                    </p>
+                    <p className="text-xl font-black text-white leading-tight mb-6">
+                        <span className="text-emerald-300">고액 주사위</span> 적립
+                        <span className="ml-2 text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-lime-300 to-emerald-500">
+                            {displayMultiplier}배
+                        </span>
+                        <span className="text-emerald-200"> 폭발</span>
                     </p>
 
                     <p className="-mt-4 mb-6 text-[11px] font-bold text-white/50">
-                        배율은 <span className="text-amber-300">금고 적립(POINT/CC_POINT)</span>에만 적용됩니다.
+                        배율은 <span className="text-emerald-300">금고 적립(POINT/CC_POINT)</span>에만 적용됩니다.
                     </p>
 
                     <Button
                         variant="figma-primary"
                         fullWidth
-                        className="rounded-xl py-3.5 bg-gradient-to-r from-amber-400 to-amber-600 border-none shadow-amber-500/30 text-base"
+                        className="rounded-xl py-3.5 bg-gradient-to-r from-emerald-400 via-lime-400 to-emerald-500 border-none shadow-[0_10px_30px_rgba(16,185,129,0.35)] text-base text-black font-black"
                         onClick={() => { tryHaptic(30); onClose(); }}
                     >
                         적립하러 가기
