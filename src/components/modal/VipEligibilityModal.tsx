@@ -1,5 +1,5 @@
 import React from "react";
-import { X, Crown, Zap, ArrowRight, ShieldCheck } from "lucide-react";
+import { X, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 
@@ -33,7 +33,7 @@ const VipEligibilityModal: React.FC<VipEligibilityModalProps> = ({ onClose }) =>
                 {/* Hero Header */}
                 <div className="relative pt-12 pb-6 px-6 text-center">
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 mb-4">
-                        <Crown size={12} className="text-amber-400" />
+                        <img src="/images/crown2.png" alt="Crown" className="w-3 h-3 object-contain" />
                         <span className="text-[10px] font-black text-amber-500 tracking-widest uppercase">VIP ELIGIBILITY</span>
                     </div>
 
@@ -50,7 +50,7 @@ const VipEligibilityModal: React.FC<VipEligibilityModalProps> = ({ onClose }) =>
                     <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/5 group hover:border-amber-500/30 transition-all">
                         <div className="flex items-start gap-4">
                             <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
-                                <Zap size={20} className="text-amber-500" />
+                                <img src="/assets/icon_trophy.png" alt="Trophy" className="w-6 h-6 object-contain" />
                             </div>
                             <div className="flex-1">
                                 <div className="text-[11px] font-bold text-zinc-500 mb-0.5 whitespace-nowrap uppercase">Condition 01</div>
@@ -65,7 +65,7 @@ const VipEligibilityModal: React.FC<VipEligibilityModalProps> = ({ onClose }) =>
                     <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/5 group hover:border-amber-500/30 transition-all">
                         <div className="flex items-start gap-4">
                             <div className="w-10 h-10 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center shrink-0">
-                                <ShieldCheck size={20} className="text-orange-500" />
+                                <img src="/assets/icons/fire-dynamic-color.png" alt="Fire" className="w-6 h-6 object-contain" />
                             </div>
                             <div className="flex-1">
                                 <div className="text-[11px] font-bold text-zinc-500 mb-0.5 whitespace-nowrap uppercase">Condition 02</div>

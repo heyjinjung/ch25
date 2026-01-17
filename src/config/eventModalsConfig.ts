@@ -137,7 +137,7 @@ export const DEFAULT_EVENT_MODALS_CONFIG: EventModalsConfig = {
       badge: "STATUS",
       sectionId: "vault",
       order: 2,
-      enabled: true,
+      enabled: false,
     },
     {
       key: "ticket-zero",
@@ -182,7 +182,7 @@ export const DEFAULT_EVENT_MODALS_CONFIG: EventModalsConfig = {
       badge: "NEW",
       sectionId: "inbox",
       order: 0,
-      enabled: true,
+      enabled: false,
     },
   ],
 };

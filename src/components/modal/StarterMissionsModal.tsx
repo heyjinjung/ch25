@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getNewUserStatus } from "../../api/newUserApi";
 import { useToast } from "../common/ToastProvider";
 import { useHaptic } from "../../hooks/useHaptic";
-import { Gift, CheckCircle2, Gamepad2, Users, Calendar, X, ChevronRight, Zap } from "lucide-react";
+import { CheckCircle2, X, ChevronRight, Zap } from "lucide-react";
 import clsx from "clsx";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -65,13 +65,13 @@ const StarterMissionsModal: React.FC<StarterMissionsModalProps> = ({ onClose }) 
         switch (logicKey) {
             case "starter_play_1":
             case "starter_play_3":
-                return <Gamepad2 className="w-5 h-5" />;
+                return <img src="/images/direction.svg" alt="Play" className="w-5 h-5 object-contain opacity-80" />;
             case "starter_channel_join":
-                return <Users className="w-5 h-5" />;
+                return <img src="/images/tele.svg" alt="Community" className="w-5 h-5 object-contain" />;
             case "starter_attendance":
-                return <Calendar className="w-5 h-5" />;
+                return <img src="/images/flag.svg" alt="Attendance" className="w-5 h-5 object-contain" />;
             default:
-                return <Gift className="w-5 h-5" />;
+                return <img src="/images/clip-path-group.svg" alt="Mission" className="w-5 h-5 object-contain" />;
         }
     };
 
@@ -173,13 +173,28 @@ const StarterMissionsModal: React.FC<StarterMissionsModalProps> = ({ onClose }) 
                             </span>
                         </div>
                         
-                        <button
+                        <motion.button
                             onClick={handleAction}
-                            className="w-full py-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold text-base shadow-lg shadow-purple-900/40 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                            animate={{ 
+                                scale: [1, 1.03, 1],
+                                boxShadow: [
+                                    "0 0 0 0 rgba(168, 85, 247, 0)",
+                                    "0 0 0 6px rgba(168, 85, 247, 0.3)",
+                                    "0 0 0 0 rgba(168, 85, 247, 0)"
+                                ]
+                            }}
+                            transition={{ 
+                                duration: 1.5, 
+                                repeat: Infinity,
+                                ease: "easeInOut"
+                            }}
+                            whileTap={{ scale: 0.95 }}
+                            className="relative w-full py-4 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-black text-lg flex items-center justify-center gap-2 overflow-hidden"
                         >
-                            <span>전부 받으러 가기</span>
-                            <ChevronRight size={18} />
-                        </button>
+                            <div className="absolute inset-0 bg-white/20 animate-pulse" />
+                            <span className="relative z-10">🚀 전부 받으러 가기</span>
+                            <ChevronRight size={20} className="relative z-10" strokeWidth={3} />
+                        </motion.button>
                     </div>
                 </div>
             </motion.div>

@@ -72,7 +72,7 @@ const guideSteps: Step[] = [
     target: '[data-tour="vault-condition-btn"]',
     content: (
       <div className="text-left">
-        <div className="text-lg font-black mb-2">💡 미션 달성 팁</div>
+        <div className="text-lg font-black mb-2">💡 금고 해제 팁</div>
         <div className="text-sm leading-snug break-keep">
           출금 조건을 채우기 위해 <strong>게임 플레이</strong>와 <strong>상점 아이템 구매</strong>가 도움이 됩니다.
           <div className="mt-2 text-emerald-400">이제 상점으로 가볼까요?</div>
@@ -111,53 +111,6 @@ const guideSteps: Step[] = [
       </div>
     ),
     placement: "bottom",
-    disableBeacon: true,
-  },
-  // 8. 이벤트 (하단 네비)
-  {
-    target: '[data-tour="nav-events"]',
-    content: (
-      <div className="text-left">
-        <div className="text-lg font-black mb-2">⭐ 이벤트</div>
-        <div className="text-sm leading-snug break-keep">
-          다양한 <strong>이벤트와 미션</strong>이 모여있는 곳입니다.
-          <br />
-          매일매일 새로운 보상을 확인하세요.
-        </div>
-      </div>
-    ),
-    placement: "top",
-    disableBeacon: true,
-  },
-  // 9. 미션 페이지 (자동이동) -> body or title
-  {
-    target: 'body', 
-    content: (
-      <div className="text-left">
-        <div className="text-lg font-black mb-2">📝 미션 수행</div>
-        <div className="text-sm leading-snug break-keep">
-          <strong>일일 미션</strong>을 달성하고 다양한 보상을 받으세요.
-        </div>
-      </div>
-    ),
-    placement: "center",
-    disableBeacon: true,
-  },
-  // 10. 미션 보상 수령 버튼 -> 강력한 안내
-  {
-    target: '[data-tour="mission-claim-btn"]',
-    content: (
-      <div className="text-left">
-        <div className="text-lg font-black mb-2 text-emerald-400">🎁 보상 받기 필수!</div>
-        <div className="text-sm leading-snug break-keep">
-          미션을 완료했다면 <strong>꼭 이 버튼을 눌러야</strong> 보상이 지급됩니다.
-          <div className="mt-3 p-2 bg-red-500/20 border border-red-500/30 rounded-lg text-red-200 font-bold text-xs">
-            ⚠️ 버튼을 누르지 않으면 보상이 사라질 수 있어요!
-          </div>
-        </div>
-      </div>
-    ),
-    placement: "top",
     disableBeacon: true,
     spotlightPadding: 5,
   },
@@ -201,7 +154,7 @@ const joyrideStyles: Partial<Styles> = {
     backgroundColor: "#1a1a1a",
     textColor: "#ffffff",
     primaryColor: "#22c55e",
-    arrowColor: "#1a1a1a",
+    arrowColor: "#22c55e",
     overlayColor: "rgba(0, 0, 0, 0.85)",
     zIndex: 10000,
   },
@@ -314,34 +267,15 @@ const AppGuide: React.FC = () => {
         navigate("/vault");
       }
     }
-    // Step 6: 상점 Nav를 가리키지만, 페이지는 상점으로 이동되어 있어야 자연스러움
-    if (stepIndex === 6) {
-      if (!location.pathname.startsWith("/shop")) {
-        navigate("/shop");
-      }
-    }
 
-    // Step 7: 보상함 (자동이동)
-    if (stepIndex === 7) {
+    // Step 7: 보상함 (자동이동) -> Index 6
+    if (stepIndex === 6) {
       if (!location.pathname.startsWith("/rewards")) {
         navigate("/rewards");
       }
     }
 
-    // Step 8: 이벤트 (하단네비) -> 이벤트 페이지로 이동
-    if (stepIndex === 8) {
-      if (!location.pathname.startsWith("/events")) {
-        navigate("/events");
-      }
-    }
-
-    // Step 9, 10: 미션 페이지
-    if (stepIndex >= 9) {
-      if (!location.pathname.startsWith("/missions")) {
-        navigate("/missions");
-      }
-    }
-
+    // Step 8+: 제거됨 (7에서 멈춤)
   }, [stepIndex, isGuideRunning, navigate, location.pathname]);
 
   // 타겟 대기 로직
@@ -366,7 +300,7 @@ const AppGuide: React.FC = () => {
         }
 
         // 로딩 시간 고려 넉넉히 대기
-        const el = await waitForVisibleTarget(selector, 3500, 100);
+        const el = await waitForVisibleTarget(selector, 8000, 100);
         if (cancelled) return;
         if (el) {
           el.scrollIntoView({ behavior: "smooth", block: "center" });

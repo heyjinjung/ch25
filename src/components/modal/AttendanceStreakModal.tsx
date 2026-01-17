@@ -228,15 +228,6 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
                                         )}>
                                             Day{day}
                                         </span>
-
-                                        {/* Final Reward Label */}
-                                        {isFinal && (
-                                            <div className="absolute -bottom-7 whitespace-nowrap">
-                                                <span className="text-[9px] font-black text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
-                                                    🎁 JACKPOT
-                                                </span>
-                                            </div>
-                                        )}
                                     </div>
                                 );
                             })}
@@ -247,7 +238,7 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
                         {/* Info Pad */}
                         <div className="p-5 rounded-3xl bg-white/5 border border-white/10">
                             <div className="flex justify-between items-center mb-4">
-                                <p className="text-xs font-black text-white/40 uppercase tracking-widest">Attendance Status</p>
+                                <p className="text-xs font-black text-white/40 uppercase tracking-widest">출석현황</p>
                                 {/* Active Now indicator removed */}
                             </div>
                             <div className="flex items-center gap-4">

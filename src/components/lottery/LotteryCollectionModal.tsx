@@ -5,7 +5,7 @@ import Button from "../common/Button";
 import { useCraftItem } from "../../hooks/useExchange";
 import { tryHaptic } from "../../utils/haptics";
 import { triggerFireworks } from "../../utils/confetti";
-import { X } from "lucide-react";
+import { X, Check } from "lucide-react";
 
 
 interface LotteryCollectionModalProps {
@@ -38,44 +38,69 @@ const PuzzlePiece = ({
     const imgSrc = getImageSrc(char);
 
     return (
-        <div className="flex flex-col items-center gap-2">
-            <div className="relative group perspective-500">
+        <div className="flex flex-col items-center gap-3">
+            <div className="relative group">
                 <motion.div
                     initial={false}
                     animate={{
-                        rotateY: isAcquired ? [0, 360] : 0,
-                        scale: isAcquired ? 1 : 0.95,
+                        scale: isAcquired ? 1.05 : 1,
+                        filter: isAcquired ? "grayscale(0%) brightness(1.1)" : "grayscale(100%) brightness(0.6)",
                     }}
-                    transition={{ duration: 0.8, type: "spring" }}
+                    transition={{ duration: 0.5 }}
                     className={clsx(
-                        "relative w-16 h-20 sm:w-20 sm:h-24 rounded-lg flex items-center justify-center shadow-xl transition-all duration-300 transform-style-3d",
+                        "relative w-18 h-22 sm:w-20 sm:h-24 rounded-2xl flex items-center justify-center transition-all duration-300 overflow-hidden",
                         isAcquired
-                            ? "shadow-amber-500/50" // Remove background color, let image handle it
-                            : "bg-white/5 border-2 border-dashed border-white/20 shadow-inner"
+                            ? "shadow-[0_0_25px_-5px_rgba(245,158,11,0.4)] border border-amber-500/30 bg-amber-500/5"
+                            : "bg-white/5 border border-white/5 shadow-inner"
                     )}
                 >
-                    {isAcquired && imgSrc ? (
+                    {imgSrc ? (
                         <img
                             src={imgSrc}
                             alt={`Puzzle ${char}`}
-                            className="w-full h-full object-contain drop-shadow-md"
+                            className={clsx(
+                                "w-full h-full object-contain p-2 transition-transform duration-500",
+                                isAcquired ? "scale-110" : "scale-90 opacity-60"
+                            )}
                         />
                     ) : (
-                        // Fallback / Placeholder for unacquired state or missing image
                         <span className={clsx(
-                            "text-4xl font-black drop-shadow-md pb-1",
-                            isAcquired ? "text-white" : "text-white/20"
+                            "text-3xl font-black drop-shadow-md pb-1",
+                            isAcquired ? "text-amber-500" : "text-white/10"
                         )}>
                             {char}
                         </span>
                     )}
+
+                    {/* Acquired Badge */}
+                    {isAcquired && (
+                         <motion.div
+                            initial={{ opacity: 0, scale: 0 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="absolute pointer-events-none inset-0 border-2 border-amber-400/50 rounded-2xl"
+                         />
+                    )}
                 </motion.div>
+                
+                {isAcquired && (
+                    <div className="absolute -top-2 -right-2 z-10">
+                        <motion.div
+                           initial={{ scale: 0 }}
+                           animate={{ scale: 1 }}
+                           className="w-6 h-6 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg border border-white/20"
+                        >
+                            <Check size={14} className="text-black stroke-[3px]" />
+                        </motion.div>
+                    </div>
+                )}
             </div>
 
             {/* Count Badge */}
             <div className={clsx(
-                "text-xs font-bold px-2 py-0.5 rounded-full transition-colors",
-                isAcquired ? "bg-amber-500 text-black" : "bg-white/10 text-white/30"
+                "text-[10px] font-bold px-2.5 py-1 rounded-full border transition-all",
+                isAcquired 
+                    ? "bg-amber-500/20 text-amber-400 border-amber-500/30" 
+                    : "bg-white/5 text-white/20 border-white/5"
             )}>
                 {count} / {required}
             </div>
@@ -140,15 +165,21 @@ const LotteryCollectionModal: React.FC<LotteryCollectionModalProps> = ({
                         initial={{ scale: 0.9, opacity: 0, y: 20 }}
                         animate={{ scale: 1, opacity: 1, y: 0 }}
                         exit={{ scale: 0.95, opacity: 0, y: 10 }}
-                        className="relative w-full max-w-md overflow-hidden rounded-[2rem] border border-white/10 bg-[#1A1A1A] p-6 shadow-2xl"
+                        className="relative w-full max-w-md overflow-hidden rounded-[32px] border border-amber-500/20 bg-[#121212] p-8 shadow-2xl"
                     >
+                         {/* Background Gradients */}
+                         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-40 bg-amber-500/10 blur-[60px] pointer-events-none" />
+
                         {/* Header */}
-                        <div className="text-center mb-8">
-                            <h2 className="text-2xl font-black text-white uppercase tracking-tight">
+                        <div className="relative text-center mb-8 z-10">
+                            <div className="inline-block px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 mb-3">
+                                <span className="text-[10px] font-black text-amber-500 tracking-widest uppercase">Secret Puzzle</span>
+                            </div>
+                            <h2 className="text-3xl font-black text-white uppercase tracking-tight italic">
                                 Collection
                             </h2>
-                            <p className="text-sm text-white/50 mt-1">
-                                퍼즐을 모아 <span className="text-amber-400 font-bold">황금열쇠</span>를 완성하세요!
+                            <p className="text-sm text-zinc-500 mt-2 font-medium">
+                                퍼즐을 모아 <span className="text-amber-400 font-bold underline decoration-amber-500/30 underline-offset-4">황금열쇠</span>를 완성하세요!
                             </p>
                         </div>
 

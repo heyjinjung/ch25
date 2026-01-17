@@ -64,14 +64,11 @@ const GoldenHourPopup: React.FC<GoldenHourPopupProps> = ({ onClose, multiplier }
                                 transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
                             />
                         </motion.div>
-                        <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 rounded-full border border-emerald-400/40 bg-emerald-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.25em] text-emerald-300">
-                            HIGH-STAKE DICE
-                        </div>
+
                     </div>
 
-                    <h2 className="text-2xl font-black italic tracking-tight text-white uppercase drop-shadow-lg mb-2 inline-flex items-center justify-center gap-2">
-                        <img src="/assets/icons/clock-dynamic-color.png" alt="" className="h-6 w-6 object-contain" />
-                        GOLDEN HOUR
+                    <h2 className="text-2xl font-black italic tracking-tight text-white uppercase drop-shadow-lg mb-2">
+                        골든아워
                     </h2>
                     <div className="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/40 mb-5">
                         <span className="text-xs font-black text-emerald-300 animate-pulse">LIVE NOW</span>
@@ -88,9 +85,7 @@ const GoldenHourPopup: React.FC<GoldenHourPopupProps> = ({ onClose, multiplier }
                         <span className="text-emerald-200"> 폭발</span>
                     </p>
 
-                    <p className="-mt-4 mb-6 text-[11px] font-bold text-white/50">
-                        배율은 <span className="text-emerald-300">금고 적립(POINT/CC_POINT)</span>에만 적용됩니다.
-                    </p>
+
 
                     <Button
                         variant="figma-primary"
@@ -101,9 +96,7 @@ const GoldenHourPopup: React.FC<GoldenHourPopupProps> = ({ onClose, multiplier }
                         적립하러 가기
                     </Button>
 
-                    <p className="mt-4 text-[10px] font-bold text-white/30 uppercase tracking-widest">
-                        Limited Time Only
-                    </p>
+
                 </div>
             </div>
         </div>
