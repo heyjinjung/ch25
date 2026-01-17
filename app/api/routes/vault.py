@@ -83,6 +83,14 @@ def status(db: Session = Depends(get_db), user_id: int = Depends(get_current_use
         else:
             ui_copy_json = hardcoded_ui_copy
 
+    # Strict Vault Policy (Phase 2)
+    policy = service.get_user_vault_policy(db, user, now)
+    
+    # Apply recency multiplier to the base global multiplier for the UI display
+    base_mult = service.vault_accrual_multiplier(db, now) if eligible else 1.0
+    recency_mult = policy["recency_multiplier"]
+    effective_multiplier = base_mult * recency_mult
+
     res = VaultStatusResponse(
         eligible=eligible,
         vault_balance=user.vault_balance or 0,
@@ -99,10 +107,15 @@ def status(db: Session = Depends(get_db), user_id: int = Depends(get_current_use
         cta_payload=cta_payload,
         program_key=service.PROGRAM_KEY,
         unlock_rules_json=unlock_rules_json,
-        accrual_multiplier=service.vault_accrual_multiplier(db, now) if eligible else 1.0,
+        accrual_multiplier=effective_multiplier, # Show effective multiplier
         ui_copy_json=ui_copy_json,
         total_charge_amount=int(getattr(user, "total_charge_amount", 0) or 0),
         segment=db.query(UserSegment.segment).filter(UserSegment.user_id == user.id).scalar(),
+        
+        # New Policy Fields
+        deposit_status=policy["status"],
+        vault_max_limit=policy["vault_max_limit"],
+        benefits_suspended=policy["benefits_suspended"],
     )
 
     # Golden Hour Status Injection

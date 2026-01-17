@@ -14,6 +14,7 @@ interface BackendVaultStatusResponse {
   readonly expires_at?: string | null;
   readonly recommended_action?: string | null;
   readonly cta_payload?: Record<string, unknown> | null;
+  readonly vault_max_limit?: number;
   readonly program_key?: string | null;
   readonly unlock_rules_json?: Record<string, unknown> | null;
   readonly ui_copy_json?: Record<string, unknown> | null;
@@ -25,6 +26,8 @@ interface BackendVaultStatusResponse {
   readonly golden_hour_remaining_seconds?: number;
   readonly show_modal_override?: string | null;
   readonly segment?: string | null;
+  readonly deposit_status?: string | null;
+  readonly benefits_suspended?: boolean;
 
   // Withdrawal Conditions
   readonly daily_play_count?: number;
@@ -64,6 +67,9 @@ export interface VaultStatusResponse {
   readonly golden_hour_remaining_seconds?: number;
   readonly showModalOverride?: string | null;
   readonly segment?: string | null;
+  readonly vaultMaxLimit?: number;
+  readonly depositStatus?: string | null;
+  readonly benefitsSuspended?: boolean;
 
   // Withdrawal Conditions
   readonly dailyPlayCount?: number;
@@ -108,6 +114,9 @@ export const getVaultStatus = async (): Promise<VaultStatusResponse> => {
     golden_hour_remaining_seconds: data.golden_hour_remaining_seconds ?? 0,
     showModalOverride: data.show_modal_override ?? null,
     segment: data.segment ?? null,
+    vaultMaxLimit: data.vault_max_limit ?? 0,
+    depositStatus: data.deposit_status ?? "ACTIVE",
+    benefitsSuspended: data.benefits_suspended ?? false,
 
     // Withdrawal Conditions
     dailyPlayCount: data.daily_play_count ?? 0,
