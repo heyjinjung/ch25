@@ -56,6 +56,7 @@ const VaultPageCompact: React.FC = () => {
     const [showConditionsModal, setShowConditionsModal] = React.useState(false);
     const [showProgressModal, setShowProgressModal] = React.useState(false);
 
+
     // Fetch Vault Status
     const vault = useQuery<VaultStatusResponse>({
         queryKey: ["vault-status"],
@@ -64,6 +65,7 @@ const VaultPageCompact: React.FC = () => {
         retry: false,
         refetchInterval: 10000,
     });
+
 
     const view = useMemo(() => {
         const data = vault.data;
@@ -89,7 +91,14 @@ const VaultPageCompact: React.FC = () => {
         // Unlocked ONLY if Eligible AND All Conditions Met
         const isUnlocked = !!data?.eligible && isPlayMet && isSpentMet && isDepositMet;
 
-        return { vaultBalance, availableAmount, reservedAmount, isUnlocked, progressPercent };
+        // Policy Status
+        const depositStatus = data?.depositStatus || "ACTIVE";
+        const benefitsSuspended = data?.benefitsSuspended || false;
+        const vaultMaxLimit = data?.vaultMaxLimit || 0;
+        const showLimitWarning = vaultMaxLimit > 0 && vaultBalance >= vaultMaxLimit;
+        const accrualMultiplier = data?.accrualMultiplier ?? 1.0;
+
+        return { vaultBalance, availableAmount, reservedAmount, isUnlocked, progressPercent, depositStatus, benefitsSuspended, vaultMaxLimit, showLimitWarning, accrualMultiplier };
     }, [vault.data]);
 
     // Handle Loading
@@ -214,9 +223,35 @@ const VaultPageCompact: React.FC = () => {
                 <div className="w-full flex-1 flex flex-col items-center animate-fadeIn">
 
                     <div className="relative mb-6">
-                        <span className="absolute -top-6 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-emerald-900/50 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold tracking-widest uppercase mb-2">
-                            CC코드금고
-                        </span>
+
+                        <div className="flex flex-col items-center gap-2 mb-2">
+                            {/* Status Badge */}
+                            {(view.depositStatus === "WARNING" || view.depositStatus === "INACTIVE") && (
+                                <motion.div
+                                    initial={{ scale: 0.9, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    className={`px-3 py-1 rounded-full border text-[11px] font-bold tracking-widest uppercase flex items-center gap-1.5 shadow-lg ${view.depositStatus === "INACTIVE"
+                                        ? "bg-red-900/80 border-red-500/50 text-red-100 animate-pulse"
+                                        : "bg-amber-900/80 border-amber-500/50 text-amber-100"
+                                        }`}
+                                >
+                                    <div className={`w-1.5 h-1.5 rounded-full ${view.depositStatus === "INACTIVE" ? "bg-red-500" : "bg-amber-500"}`} />
+                                    {view.depositStatus === "INACTIVE" ? "활동 정지 (적립 불가)" : "적립 경고 (50% 감소)"}
+                                </motion.div>
+                            )}
+
+                            {/* Limit Warning */}
+                            {view.showLimitWarning && (
+                                <div className="px-3 py-1 rounded-full bg-red-500/20 border border-red-500/50 text-red-200 text-[10px] font-bold">
+                                    ⚠️ 보관 한도 초과
+                                </div>
+                            )}
+
+                            {/* CC Vault Label */}
+                            <span className="px-3 py-1 rounded-full bg-emerald-900/50 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold tracking-widest uppercase">
+                                CC코드금고
+                            </span>
+                        </div>
 
                         {/* Glassmorphism Vault Icon */}
                         <div className="relative w-48 h-48">
@@ -267,7 +302,6 @@ const VaultPageCompact: React.FC = () => {
 
                     </div>
 
-
                     {/* Footer Info Row - Redesigned for Uniformity */}
                     <div className="flex w-full max-w-xs gap-2 mb-3">
                         <button
@@ -284,6 +318,16 @@ const VaultPageCompact: React.FC = () => {
                             <span>출금 신청</span>
                         </button>
                     </div>
+
+                    {/* Benefit Suspension Warning */}
+                    {view.benefitsSuspended && (
+                        <div className="w-full max-w-xs mb-3 px-3 py-2 rounded-xl bg-red-900/20 border border-red-500/30 flex items-center gap-2">
+                            <Lock size={14} className="text-red-400" />
+                            <span className="text-[11px] text-red-200 font-bold leading-tight">
+                                장기 미활동으로 입금 전까지<br />모든 혜택이 일시 정지됩니다.
+                            </span>
+                        </div>
+                    )}
 
                     {/* Charge Button */}
                     <a

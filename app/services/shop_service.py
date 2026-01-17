@@ -282,6 +282,18 @@ class ShopService:
         if not user:
              raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
 
+        # [Strict Vault Policy] Check Benefit Suspension
+        # If user is INACTIVE (no deposit > 7 days), they cannot purchase shop items (Giftycons, etc.)
+        from app.services.vault_service import VaultService
+        from datetime import datetime
+        policy = VaultService.get_user_vault_policy(db, user, datetime.utcnow())
+        if policy.get("benefits_suspended"):
+            raise HTTPException(
+                status_code=403, 
+                detail="BENEFITS_SUSPENDED", 
+                headers={"X-Reason": "DEPOSIT_REQUIRED"}
+            )
+
         request_payload = {"sku": sku}
         idem_record = None
         if idempotency_key:

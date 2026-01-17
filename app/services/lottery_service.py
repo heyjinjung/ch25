@@ -6,6 +6,7 @@ import time
 from sqlalchemy import func, select
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.orm import Session
+from app.models.user import User
 
 from app.core.config import get_settings
 from app.core.exceptions import InvalidConfigError, LockAcquisitionError
@@ -98,6 +99,24 @@ class LotteryService:
         self.feature_service.validate_feature_active(db, today, FeatureType.LOTTERY)
         config = self._get_today_config(db)
         token_type = GameTokenType.LOTTERY_TICKET
+
+        # [Strict Vault Policy] Check Benefit Suspension
+        # Inactive users (no deposit > 7 days) cannot play lottery (win prizes)
+        from app.services.vault_service import VaultService
+        user = db.get(User, user_id)
+        if user:
+            # Normalize 'today' to datetime for policy check
+            chk_dt = today if isinstance(today, datetime) else datetime(today.year, today.month, today.day)
+            policy = VaultService.get_user_vault_policy(db, user, chk_dt)
+            if policy.get("benefits_suspended"):
+                 # Use HTTPException for immediate rejection logic
+                 from fastapi import HTTPException
+                 raise HTTPException(
+                    status_code=403, 
+                    detail="BENEFITS_SUSPENDED", 
+                    headers={"X-Reason": "DEPOSIT_REQUIRED"}
+                )
+
         prizes = None
         for attempt in range(3):
             try:

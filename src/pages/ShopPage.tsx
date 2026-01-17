@@ -1,7 +1,8 @@
 import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchInventory, fetchShopProducts, purchaseProduct, ShopProduct } from '../api/inventoryApi';
-import { Loader2, ShoppingBag } from 'lucide-react';
+import { getVaultStatus } from '../api/vaultApi';
+import { Loader2, ShoppingBag, Lock } from 'lucide-react';
 import { useToast } from '../components/common/ToastProvider';
 import { tryHaptic } from '../utils/haptics';
 import { useNavigate } from 'react-router-dom';
@@ -23,6 +24,14 @@ const ShopPage: React.FC = () => {
         queryKey: ['inventory'],
         queryFn: fetchInventory,
     });
+
+    const { data: vaultStatus } = useQuery({
+        queryKey: ['vault-status'],
+        queryFn: getVaultStatus,
+        staleTime: 10000,
+    });
+
+    const benefitsSuspended = vaultStatus?.benefitsSuspended ?? false;
 
     const purchaseMutation = useMutation({
         mutationFn: (sku: string) => purchaseProduct(sku),
@@ -121,6 +130,7 @@ const ShopPage: React.FC = () => {
                             }
                             onBuy={() => purchaseMutation.mutate(product.sku)}
                             isPending={purchaseMutation.isPending}
+                            benefitsSuspended={benefitsSuspended}
                         />
                     ))
                 ) : (
@@ -139,6 +149,7 @@ interface ProductCardProps {
     diamondBalance: number;
     onBuy: () => void;
     isPending: boolean;
+    benefitsSuspended?: boolean;
 }
 
 // 아이템 타입 한글화 매핑
@@ -169,10 +180,10 @@ const ITEM_ICONS: Record<string, string> = {
     'LOTTERY_TICKET': '/assets/lottery/icon_lotto_ball.webp',
 };
 
-const ProductCard: React.FC<ProductCardProps> = ({ product, diamondBalance, onBuy, isPending }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product, diamondBalance, onBuy, isPending, benefitsSuspended }) => {
     const requiresDiamond = String(product.cost?.token ?? '').toUpperCase() === 'DIAMOND';
     const hasEnoughDiamond = !requiresDiamond || diamondBalance >= Number(product.cost?.amount ?? 0);
-    const isDisabled = isPending || !hasEnoughDiamond;
+    const isDisabled = isPending || !hasEnoughDiamond || benefitsSuspended;
     const grantItemName = ITEM_NAMES[product.grant.item_type] || product.grant.item_type;
     const isGifticonGrant = /GIFTICON/i.test(product.grant.item_type);
     const itemIcon = ITEM_ICONS[product.grant.item_type] || '/assets/lottery/icon_gift.png';
@@ -213,16 +224,27 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, diamondBalance, onBu
             <button
                 onClick={() => { tryHaptic(10); onBuy(); }}
                 disabled={isDisabled}
-                title={!hasEnoughDiamond ? "다이아가 부족합니다" : ""}
-                className="w-full min-h-10 rounded-xl border border-white/10 bg-gradient-to-b from-emerald-500/90 to-emerald-700/80 text-white shadow-[0_10px_25px_-15px_rgba(16,185,129,0.55)] transition-all active:scale-[0.98] hover:brightness-110 disabled:cursor-not-allowed disabled:border-white/5 disabled:bg-white/5 disabled:text-white/30 disabled:shadow-none"
+                title={benefitsSuspended ? "장기 미활동으로 구매 제한됨 (입금 필요)" : (!hasEnoughDiamond ? "다이아가 부족합니다" : "")}
+                className={`w-full min-h-10 rounded-xl border transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center gap-1.5
+                    ${benefitsSuspended
+                        ? "bg-red-900/40 border-red-500/30 text-red-400"
+                        : "border-white/10 bg-gradient-to-b from-emerald-500/90 to-emerald-700/80 text-white shadow-[0_10px_25px_-15px_rgba(16,185,129,0.55)] hover:brightness-110 disabled:border-white/5 disabled:bg-white/5 disabled:text-white/30"
+                    }`}
             >
                 <span className="flex items-center justify-center gap-1.5 px-2 text-[12px] font-black tracking-tight leading-none whitespace-nowrap">
                     {isPending ? (
                         <Loader2 className="animate-spin w-3.5 h-3.5" />
+                    ) : benefitsSuspended ? (
+                        <>
+                            <Lock className="w-3.5 h-3.5" />
+                            제한됨
+                        </>
                     ) : (
-                        <ShoppingBag className="w-3.5 h-3.5" />
+                        <>
+                            <ShoppingBag className="w-3.5 h-3.5" />
+                            구매
+                        </>
                     )}
-                    구매
                 </span>
             </button>
         </div>

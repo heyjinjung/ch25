@@ -59,6 +59,11 @@ class VaultStatusResponse(BaseModel):
     # Global Modal Overrides (Admin controlled)
     show_modal_override: str | None = None
 
+    # Strict Vault Policy (Phase 2)
+    deposit_status: str = "ACTIVE"  # ACTIVE, WARNING, INACTIVE
+    vault_max_limit: int = 0  # 0 means no limit (or default cap), 30000 for zero-deposit
+    benefits_suspended: bool = False
+
     # Withdrawal Conditions (Phase 2)
     daily_play_count: int = 0
     daily_play_target: int = 30

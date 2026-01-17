@@ -51,11 +51,103 @@ class VaultService:
     GAME_EARN_DICE_LOSE = -50
 
 
+
     @staticmethod
     def _to_utc(now: datetime) -> datetime:
         if now.tzinfo is None:
             return now.replace(tzinfo=timezone.utc)
         return now.astimezone(timezone.utc)
+    
+    @classmethod
+    def _get_last_deposit_date(cls, db: Session, user_id: int) -> datetime | None:
+        """Return the created_at of the most recent CHARGE (deposit)."""
+        # Avoid circular import if possible, but safe here inside method
+        row = (
+            db.query(UserCashLedger.created_at)
+            .filter(UserCashLedger.user_id == user_id, UserCashLedger.reason == "CHARGE")
+            .order_by(UserCashLedger.created_at.desc())
+            .first()
+        )
+        return row[0] if row else None
+
+    @classmethod
+    def get_user_vault_policy(cls, db: Session, user: User, now: datetime) -> dict:
+        """Determine strict vault policy status based on deposit recency.
+        
+        Rules:
+        - ACTIVE: Deposit within 3 days (or Total > 0 and recent). Multiplier 1.0x
+        - WARNING: No deposit in 3~7 days. Multiplier 0.5x
+        - INACTIVE: No deposit in 7+ days. Multiplier 0.1x + Benefits Suspended.
+        
+        Zero Deposit Limit:
+        - If total_charge_amount == 0, max vault limit is 30,000 KRW.
+        """
+        now_utc = cls._to_utc(now)
+        last_deposit = cls._get_last_deposit_date(db, user.id)
+        
+        # Default State
+        status = "ACTIVE"
+        multiplier = 1.0
+        suspended = False
+        
+        total_charged = int(getattr(user, "total_charge_amount", 0) or 0)
+        vault_limit = 0 # Unlimited
+        
+        if total_charged == 0:
+            vault_limit = 30_000
+            # Treat Zero depositors as Inactive if created long ago? 
+            # Policy says: "입금 이력이 없거나 ... 7일 경과"
+            # If created_at is recent (newbie), maybe give grace period?
+            # Prompt implies flat rule: "입금 이력이 없거나" -> applies immediately?
+            # Let's assume 'No Deposit History' OR 'Last Deposit > 7 days' -> Inactive (0.1x)
+            # But newbies need to farm initial seed. 
+            # For now, let's implement strict interpretation but maybe allow grace for NEW (<3 days) users?
+            # "최근 3일 내 입금 이력이 없을 경우" implies a window.
+            # If user joined 1 hour ago, they have no deposit history. Should they be penalised?
+            # Usually New User buffer exists.
+            anchor_date = cls._to_utc(last_deposit) if last_deposit else cls._to_utc(user.created_at)
+        else:
+            anchor_date = cls._to_utc(last_deposit) if last_deposit else cls._to_utc(user.created_at) # Should have last_deposit if total > 0, fallback just in case
+
+        days_since = (now_utc - anchor_date).total_seconds() / 86400.0
+
+        if days_since >= 7:
+            status = "INACTIVE"
+            multiplier = 0.1
+            suspended = True
+            vault_limit = 30_000 # Cap for Inactive users (7+ days no deposit)
+        elif days_since >= 3:
+            status = "WARNING"
+            multiplier = 0.5
+        
+        # If user has NEVER deposited, they are treated as INACTIVE defaults if days_since checks out, 
+        # but let's ensure Lifetime Zero users are definitely capped even if they joined < 7 days ago?
+        # User request: "Target: 7days total_charge_amount 0 user".
+        # If I joined today (created_at=now), days_since=0. total_charged=0.
+        # 7-day sum is 0. So I should be capped?
+        # "Zero-Deposit Cap: Target 7days total_charge_amount 0".
+        # If new user, they satisfy this.
+        # But Recency says "Recent 3 days -> Normal".
+        # Conflict? "Normal: Recent 3 days deposit YES -> 1.0x".
+        # If New User (0 deposit), they have NO deposit in recent 3 days.
+        # So New User = Warning? Or Inactive?
+        # Usually New User grace period exists.
+        # Let's stick to the prompt strictly:
+        # "Normal (ACTIVE): Recent 3 days deposit YES".
+        # "Warning: Recent 3 days NO".
+        # So a fresh user with 0 deposit is technically WAITING/INACTIVE immediately?
+        # Let's assume 'New User' defaults to 'ACTIVE' for a grace period, OR strictly enforce.
+        # "Zero-Deposit Cap: 7 day sum 0 -> Cap 30k".
+        # I will apply the 30k cap if (INACTIVE) OR (Total Lifetime == 0).
+        if total_charged == 0:
+            vault_limit = 30_000
+            
+        return {
+            "status": status,
+            "recency_multiplier": multiplier,
+            "benefits_suspended": suspended,
+            "vault_max_limit": vault_limit
+        }
 
     @classmethod
     def _operational_date_kst(cls, now: datetime) -> datetime.date:
@@ -63,7 +155,7 @@ class VaultService:
         reset_hour_raw = getattr(settings, "streak_day_reset_hour_kst", 9)
         reset_hour = 9 if reset_hour_raw is None else int(reset_hour_raw)
         tz = ZoneInfo(getattr(settings, "timezone", "Asia/Seoul"))
-
+        
         now_utc = cls._to_utc(now)
         now_kst = now_utc.astimezone(tz)
         if now_kst.hour < reset_hour:
@@ -685,8 +777,23 @@ class VaultService:
         # Event 모드 보상은 Golden Hour/기타 배수를 적용하지 않는다 (과적립 방지)
         if mode_upper == "EVENT":
             base_multiplier = 1.0
+            recency_mult = 1.0 # Event ignores penalty too? Or no? "모든 보상에서 해당" -> Applies to everything.
+            # But wait, original code skipped Golden Hour.
+            # Let's apply penalty to everything.
+            policy = self.get_user_vault_policy(db, user, now_dt)
+            recency_mult = float(policy["recency_multiplier"])
         else:
             base_multiplier = float(self.vault_accrual_multiplier(db, now_dt))
+            policy = self.get_user_vault_policy(db, user, now_dt)
+            recency_mult = float(policy["recency_multiplier"])
+
+        # Check Zero-Deposit Limit (30,000 KRW)
+        vault_limit = policy["vault_max_limit"]
+        if vault_limit > 0:
+            current_locked = int(getattr(user, "vault_locked_balance", 0) or 0)
+            if current_locked >= vault_limit:
+                # Already at or above limit -> No more accrual
+                return 0
 
         # Streak vault bonus: applies ONLY to the base +200 accrual amount and only for base game modes.
         eligible_for_streak_bonus = False
@@ -710,7 +817,7 @@ class VaultService:
                 self._streak_vault_bonus_multiplier(user=user, now=now_dt, eligible=eligible_for_streak_bonus)
             )
 
-        total_multiplier = float(base_multiplier) * float(streak_multiplier)
+        total_multiplier = float(base_multiplier) * float(streak_multiplier) * recency_mult
 
         # Golden Hour specific: Apply a 200 KRW (Win) / -50 KRW (Loss) gate for the Golden Hour multiplier boost.
         # This ensures the 2.0x boost ONLY applies to base game results as per Slot Plan.
@@ -797,20 +904,30 @@ class VaultService:
                     )
                 ).scalar() or 0
 
-                # Check if adding 'amount' exceeds cap
-                # Note: amount can be negative (LOSE). Caps usually limit positive gain?
-                # The requirement says "1일 최대 순증 +20,000".
-                # If amount is positive, we clamp it. If negative, we let it pass (it reduces gain).
+        # Final Amount
+        amount = int(amount)
+        
+        # [Strict] If limiting, clamp final balance
+        if vault_limit > 0 and amount > 0:
+            current_locked = int(getattr(user, "vault_locked_balance", 0) or 0)
+            if current_locked + amount > vault_limit:
+                amount = max(0, vault_limit - current_locked)
+        
+        if amount == 0:
+            return 0
+        # Note: amount can be negative (LOSE). Caps usually limit positive gain?
+        # The requirement says "1일 최대 순증 +20,000".
+        # If amount is positive, we clamp it. If negative, we let it pass (it reduces gain).
 
-                if amount > 0:
-                    potential_total = current_daily_gain + amount
-                    if potential_total > daily_gain_cap:
-                        # Clamp amount
-                        allowed = max(0, daily_gain_cap - current_daily_gain)
-                        if allowed < amount:
-                            # Log clamping if significant?
-                            pass
-                        amount = allowed
+        if amount > 0:
+            potential_total = current_daily_gain + amount
+            if potential_total > daily_gain_cap:
+                # Clamp amount
+                allowed = max(0, daily_gain_cap - current_daily_gain)
+                if allowed < amount:
+                    # Log clamping if significant?
+                    pass
+                amount = allowed
 
         # [REFACTORED] Vault Expiry Logic Disabled (Phase 3 Unified Economy)
         # All points are accrued immediately and serve as a persistent asset.
