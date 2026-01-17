@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -21,7 +22,6 @@ import { useMissionStore } from "../stores/missionStore";
 import { getVaultStatus } from "../api/vaultApi";
 import { getUiConfig } from "../api/uiConfigApi";
 import { useLotteryStatus } from "../hooks/useLottery";
-import { motion } from "framer-motion";
 import { useToast } from "../components/common/ToastProvider";
 import { requestTrialGrant } from "../api/trialGrantApi";
 import { useAuth } from "../auth/authStore";
