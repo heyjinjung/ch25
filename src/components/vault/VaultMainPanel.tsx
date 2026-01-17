@@ -146,8 +146,17 @@ const VaultMainPanel: React.FC = React.memo(() => {
     try {
       // Use locked_balance from query if available, otherwise fallback
       const amount = vault.data?.vaultAmountAvailable ?? vault.data?.availableBalance ?? 0;
-      if (amount < 10000) {
-        alert("최소 10,000원 이상부터 출금 신청 가능합니다.");
+      
+      // Dynamic Limit Logic (10k/10k/30k/50k)
+      // Note: API returns camelCase `withdrawalCount`
+      const wCount = vault.data?.withdrawalCount ?? 0;
+      let minLimit = 10000;
+      if (wCount >= 3) minLimit = 50000;
+      else if (wCount === 2) minLimit = 30000;
+      else minLimit = 10000;
+
+      if (amount < minLimit) {
+        alert(`현재 회차(${wCount + 1}회차)는 최소 ${minLimit.toLocaleString()}원 이상부터 출금 신청 가능합니다.`);
         return;
       }
 

@@ -107,3 +107,13 @@
 - **Today (Now)**: 문서 작성 및 Backend (`TokenType`, `Exchange`) 구현.
 - **Next**: Frontend UI (`LotteryPage`) 구현 및 연동.
 - **Verification**: 로컬 테스트 및 운영일지 업데이트.
+
+---
+
+## 5. 사후 개선 (Post-Launch Fixes)
+
+### 2026-01-17: 복권 당첨 후 인벤토리 동기화 지연 해결
+- **문제**: 복권 긁기 성공(Win) 직후, 상단 인벤토리/지갑 표시가 즉시 갱신되지 않아 유저가 "지급 안 됨"으로 오인하는 UX 문제 발생.
+- **원인**: React Query의 `useLottery` 훅에서 Mutation 성공 시 `inventory` 키를 무효화(Invalidate)하지 않았음.
+- **조치**: `src/hooks/useLottery.ts` 내 `onSuccess` 콜백에 `queryClient.invalidateQueries({ queryKey: ["inventory"] })` 추가.
+- **결과**: 당첨 즉시 보유 재화/퍼즐 조각 카운트가 실시간 업데이트됨.
