@@ -25,7 +25,6 @@ export default function ModalVisibilityPage() {
          attendance_streak_enabled: true,
          new_user_welcome_enabled: true,
          starter_missions_enabled: true,
-         bailout_enabled: true,
        });
     }
   }, [data]);
@@ -56,7 +55,6 @@ export default function ModalVisibilityPage() {
       { key: "attendance_streak_enabled", label: "출석 스트릭 모달 (AttendanceStreak)" },
       { key: "new_user_welcome_enabled", label: "신규 유저 웰컴 모달 (NewUserWelcome)" },
       { key: "starter_missions_enabled", label: "스타터 미션 모달 (StarterMissions)" },
-      { key: "bailout_enabled", label: "구제(Bailout) 모달 (Ticket/Coin Zero)" },
   ];
 
   return (

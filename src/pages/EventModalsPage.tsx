@@ -4,7 +4,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
   Banknote,
-  Bell,
   Crown,
   Flame,
   Gift,
@@ -26,7 +25,6 @@ import { useToast } from "../components/common/ToastProvider";
 import { requestTrialGrant } from "../api/trialGrantApi";
 import { useAuth } from "../auth/authStore";
 import AttendanceStreakModal from "../components/modal/AttendanceStreakModal";
-import BailoutModal from "../components/modal/BailoutModal";
 import VipPromotionModal from "../components/modal/VipPromotionModal";
 import VipEligibilityModal from "../components/modal/VipEligibilityModal";
 import GoldenHourPopup from "../components/events/GoldenHourPopup";
@@ -34,7 +32,7 @@ import NewUserWelcomeModal from "../components/modal/NewUserWelcomeModal";
 import StarterMissionsModal from "../components/modal/StarterMissionsModal";
 import InboxModal from "../components/common/InboxModal";
 import VaultModal from "../components/vault/VaultModal";
-import VaultAccrualModal from "../components/vault/VaultAccrualModal";
+
 import WithdrawalConditionsModal from "../components/modal/WithdrawalConditionsModal";
 import WithdrawalProgressModal from "../components/modal/WithdrawalProgressModal";
 import LotteryCollectionModal from "../components/lottery/LotteryCollectionModal";
@@ -108,8 +106,6 @@ const EventModalsPage: React.FC = () => {
     [lotteryStatus]
   );
 
-  const vaultAccrualAmount = vaultBalance > 0 ? Math.max(1000, Math.round(vaultBalance * 0.02)) : 10000;
-
   const closeModal = () => setActiveModal(null);
 
   const openModal = (key: ModalKey) => {
@@ -157,20 +153,17 @@ const EventModalsPage: React.FC = () => {
   const badgeOverrides: Partial<Record<ModalKey, string>> = {
     streak: claimableDay ? "보상 가능" : "진행 중",
     "golden-hour": vault?.is_golden_hour_active ? "LIVE" : "안내",
-    bailout: vaultBalance === 0 ? "지원 가능" : "안내",
   };
 
   const metaOverrides: Partial<Record<ModalKey, string>> = {
     streak: `현재 ${currentStreak}일 연속 · 다음 Day ${Math.min(currentStreak + 1, 7)}`,
     "golden-hour": `적립 배율 ${goldenHourMultiplier}x`,
-    bailout: `금고 잔액 ${vaultBalance.toLocaleString()}원`,
     "vip-promo": user?.segment === "VIP" ? "VIP 전용" : "VIP 안내",
     "vip-eligibility": "자격 조건 확인",
     "vault-info": "금고 정보",
     "withdrawal-conditions": "조건 체크",
     "withdrawal-progress": "진행 상태",
     "ticket-zero": "리커버리 플로우",
-    "vault-accrual": `예시 적립 +${vaultAccrualAmount.toLocaleString()}원`,
     "lottery-collection": `C1 ${lotteryCollection.C1} · C2 ${lotteryCollection.C2} · J ${lotteryCollection.J} · M ${lotteryCollection.M}`,
     "limited-offer": "타임 세일",
     "season-pass": "프리미엄 혜택",
@@ -180,7 +173,6 @@ const EventModalsPage: React.FC = () => {
   const cardDecor: Record<ModalKey, { icon: React.ReactNode; accent: string }> = {
     streak: { icon: <Flame size={20} className="text-amber-300" />, accent: "from-amber-500/20 via-transparent to-transparent" },
     "golden-hour": { icon: <Hourglass size={20} className="text-amber-200" />, accent: "from-yellow-400/20 via-transparent to-transparent" },
-    bailout: { icon: <Ticket size={20} className="text-indigo-300" />, accent: "from-indigo-500/20 via-transparent to-transparent" },
     "vip-promo": { icon: <Crown size={20} className="text-amber-300" />, accent: "from-amber-500/20 via-transparent to-transparent" },
     "vip-eligibility": { icon: <ShieldCheck size={20} className="text-orange-300" />, accent: "from-orange-500/20 via-transparent to-transparent" },
     "new-user": { icon: <Sparkles size={20} className="text-emerald-300" />, accent: "from-emerald-500/20 via-transparent to-transparent" },
@@ -188,11 +180,8 @@ const EventModalsPage: React.FC = () => {
     "vault-info": { icon: <Vault size={20} className="text-emerald-300" />, accent: "from-emerald-500/20 via-transparent to-transparent" },
     "withdrawal-conditions": { icon: <Wallet size={20} className="text-lime-300" />, accent: "from-lime-500/20 via-transparent to-transparent" },
     "withdrawal-progress": { icon: <Banknote size={20} className="text-emerald-200" />, accent: "from-emerald-400/20 via-transparent to-transparent" },
-    "ticket-zero": { icon: <Ticket size={20} className="text-amber-300" />, accent: "from-amber-500/20 via-transparent to-transparent" },
-    "vault-accrual": { icon: <Bell size={20} className="text-emerald-300" />, accent: "from-emerald-500/20 via-transparent to-transparent" },
-    "lottery-collection": { icon: <Gift size={20} className="text-yellow-300" />, accent: "from-yellow-500/20 via-transparent to-transparent" },
-    "limited-offer": { icon: <Sparkles size={20} className="text-indigo-300" />, accent: "from-indigo-500/20 via-transparent to-transparent" },
-    "season-pass": { icon: <Crown size={20} className="text-amber-300" />, accent: "from-amber-500/20 via-transparent to-transparent" },
+    "ticket-zero": { icon: <Ticket size={20} className="text-amber-300" />, accent: "from-ambergo-500/20 via-transparent to-transparent" },    "lottery-collection": { icon: <Gift size={20} className="text-yellow-300" />, accent: "from-yellow-500/20 via-transparent to-transparent" },
+    "limited-offer": { icon: <Sparkles size={20} className="text-indigo-300" />, accent: "from-indigo-500/20 via-transparent to-transparent" },    "season-pass": { icon: <Crown size={20} className="text-amber-300" />, accent: "from-amber-500/20 via-transparent to-transparent" },
     inbox: { icon: <Inbox size={20} className="text-emerald-300" />, accent: "from-emerald-500/20 via-transparent to-transparent" },
   };
 
@@ -338,10 +327,6 @@ const EventModalsPage: React.FC = () => {
         <GoldenHourPopup onClose={closeModal} multiplier={goldenHourMultiplier} />
       )}
 
-      {activeModal === "bailout" && (
-        <BailoutModal onClose={closeModal} vaultBalance={vaultBalance} />
-      )}
-
       {activeModal === "vip-promo" && <VipPromotionModal onClose={closeModal} />}
       {activeModal === "vip-eligibility" && <VipEligibilityModal onClose={closeModal} />}
 
@@ -355,12 +340,6 @@ const EventModalsPage: React.FC = () => {
 
       <VaultModal open={activeModal === "vault-info"} onClose={closeModal} />
 
-      <VaultAccrualModal
-        open={activeModal === "vault-accrual"}
-        amount={vaultAccrualAmount}
-        title="이벤트 적립 안내"
-        onClose={closeModal}
-      />
 
       {activeModal === "withdrawal-conditions" && (
         <WithdrawalConditionsModal
