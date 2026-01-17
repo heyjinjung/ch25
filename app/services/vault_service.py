@@ -60,15 +60,21 @@ class VaultService:
     
     @classmethod
     def _get_last_deposit_date(cls, db: Session, user_id: int) -> datetime | None:
-        """Return the created_at of the most recent CHARGE (deposit)."""
-        # Avoid circular import if possible, but safe here inside method
-        row = (
-            db.query(UserCashLedger.created_at)
-            .filter(UserCashLedger.user_id == user_id, UserCashLedger.reason == "CHARGE")
-            .order_by(UserCashLedger.created_at.desc())
-            .first()
-        )
-        return row[0] if row else None
+        """Return the Last Activity/Deposit Date.
+        
+        Policy Change (2026-01-17):
+        - UserCashLedger is unreliable for external deposits.
+        - Primary Source: ExternalRankingData.updated_at (Sync Time)
+        - Condition: User must have deposit_amount > 0.
+        """
+        from app.models.external_ranking import ExternalRankingData
+        
+        rank_data = db.query(ExternalRankingData).filter(ExternalRankingData.user_id == user_id).first()
+        
+        if rank_data and rank_data.deposit_amount > 0:
+            return rank_data.updated_at
+            
+        return None
 
     @classmethod
     def get_user_vault_policy(cls, db: Session, user: User, now: datetime) -> dict:
