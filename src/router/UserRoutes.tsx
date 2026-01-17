@@ -24,10 +24,9 @@ const TeamBattlePage = React.lazy(() => import("../pages/TeamBattlePage"));
 const GameLobbyPage = React.lazy(() => import("../pages/GameLobbyPage"));
 const VaultPage = React.lazy(() => import("../pages/VaultPage"));
 const MissionPage = React.lazy(() => import("../pages/MissionPage"));
-const EventDashboardPage = React.lazy(() => import("../pages/EventDashboardPage"));
+const EventModalsPage = React.lazy(() => import("../pages/EventModalsPage"));
 const InventoryPage = React.lazy(() => import("../pages/InventoryPage"));
 const ExchangePage = React.lazy(() => import("../pages/ExchangePage"));
-const StreakOverviewPage = React.lazy(() => import("../pages/events/StreakOverviewPage"));
 
 
 // Simple loading fallback
@@ -60,8 +59,9 @@ const UserRoutes: React.FC = () => {
             <Route path="/landing/mobile" element={<FigmaLandingMobile />} />
             <Route path="/vault" element={<VaultPage />} />
             <Route path="/rewards" element={<InventoryPage />} />
-            <Route path="/events" element={<EventDashboardPage />} />
-            <Route path="/events/streaks" element={<StreakOverviewPage />} />
+            <Route path="/events" element={<EventModalsPage />} />
+            <Route path="/events/modals" element={<EventModalsPage />} />
+            <Route path="/events/streaks" element={<Navigate to="/events/modals" replace />} />
             <Route path="/season-pass" element={<LevelTowerPage />} />
             <Route path="/missions" element={<MissionPage />} />
             <Route path="/team-battle" element={<TeamBattlePage />} />

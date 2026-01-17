@@ -21,6 +21,7 @@ import UserSegmentsPage from "../admin/pages/UserSegmentsPage";
 import SegmentRulesPage from "../admin/pages/SegmentRulesPage";
 import UiConfigTicketZeroPage from "../admin/pages/UiConfigTicketZeroPage";
 import ModalVisibilityPage from "../admin/pages/ModalVisibilityPage";
+import EventModalsHubPage from "../admin/pages/EventModalsHubPage";
 import VaultAdminPage from "../admin/pages/VaultAdminPage";
 import AdminMissionPage from "../admin/pages/AdminMissionPage";
 import AdminShopPage from "../admin/pages/AdminShopPage";
@@ -62,6 +63,7 @@ const AdminRoutes: React.FC = () => {
           <Route path="segment-rules" element={<SegmentRulesPage />} />
           <Route path="team-battle" element={<AdminTeamBattlePage />} />
           <Route path="ui-config" element={<UiConfigTicketZeroPage />} />
+          <Route path="event-modals" element={<EventModalsHubPage />} />
           <Route path="modal-visibility" element={<ModalVisibilityPage />} />
           <Route path="vault" element={<VaultAdminPage />} />
           <Route path="shop" element={<AdminShopPage />} />

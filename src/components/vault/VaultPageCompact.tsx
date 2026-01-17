@@ -202,6 +202,7 @@ const VaultPageCompact: React.FC = () => {
                     {/* Secondary Info Link for Unlocked state */}
                     <button
                         onClick={() => setShowConditionsModal(true)}
+                        data-tour="vault-condition-btn"
                         className="w-full max-w-[200px] h-[48px] rounded-2xl bg-white/5 border border-white/10 text-white/70 font-bold text-[14px] hover:bg-white/10 hover:text-white hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2"
                     >
                         <ListChecks size={14} />
@@ -242,7 +243,7 @@ const VaultPageCompact: React.FC = () => {
                                 <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse shadow-[0_0_10px_rgba(245,158,11,0.6)]" />
                                 <span className="text-white/80 font-bold text-[16px] tracking-widest uppercase drop-shadow-sm">출금 미션 현황</span>
                             </span>
-                            <div className="flex items-baseline gap-0.5" onClick={() => setShowProgressModal(true)} style={{ cursor: 'pointer' }}>
+                            <div className="flex items-baseline gap-0.5 cursor-pointer" onClick={() => setShowProgressModal(true)}>
                                 <span className="text-xl font-black text-amber-500 tabular-nums drop-shadow-[0_0_15px_rgba(245,158,11,0.4)]">
                                     {view.progressPercent}
                                 </span>
@@ -271,6 +272,7 @@ const VaultPageCompact: React.FC = () => {
                     <div className="flex w-full max-w-xs gap-2 mb-3">
                         <button
                             onClick={() => setShowConditionsModal(true)}
+                            data-tour="vault-condition-btn"
                             className="flex-1 h-[50px] flex items-center justify-center gap-1.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/50 text-emerald-400 text-[15px] font-bold tracking-wide hover:bg-emerald-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
                         >
                             <ListChecks size={16} />
