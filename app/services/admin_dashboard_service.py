@@ -94,13 +94,15 @@ class AdminDashboardService:
         external_ranking_deposit = int(ext_rank_stats[0] or 0)
         external_ranking_play_count = int(ext_rank_stats[1] or 0)
 
-        # Today's Deposits - 입력일(created_at)이 오늘인 것만 반영
+        # Today's Deposits (Net Increase)
+        # Logic: updated_at >= today (UTC for KST day) AND sum(deposit_amount - daily_base_deposit)
+        # Assuming daily_base_deposit was 'yesterday total' at reset.
         ext_today_stats = db.query(
-            func.sum(ExternalRankingData.deposit_amount),
+            func.sum(ExternalRankingData.deposit_amount - func.coalesce(ExternalRankingData.daily_base_deposit, 0)),
             func.count(ExternalRankingData.id)
         ).filter(
-            ExternalRankingData.created_at >= today_start_utc,
-            ExternalRankingData.deposit_amount > 0
+            ExternalRankingData.updated_at >= today_start_utc,
+            (ExternalRankingData.deposit_amount - func.coalesce(ExternalRankingData.daily_base_deposit, 0)) > 0
         ).first()
         today_deposit_sum = int(ext_today_stats[0] or 0)
         today_deposit_count = int(ext_today_stats[1] or 0)

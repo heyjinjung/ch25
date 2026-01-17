@@ -21,6 +21,9 @@ from app.models.external_ranking import ExternalRankingData
 from app.models.feature import UserEventLog
 from app.models.game_wallet import GameTokenType, UserGameWallet
 from app.models.user_activity import UserActivity
+from app.models.dice import DiceLog
+from app.models.roulette import RouletteLog
+from app.models.lottery import LotteryLog
 
 
 # Scenario definitions
@@ -135,15 +138,21 @@ class OpsTargetService:
     def _count_scenario_01(self, db: Session) -> int:
         """Scenario 1: Unlucky Newbie - Joined 24h, 10+ plays, 0 balance."""
         cutoff = self.now() - timedelta(days=1)
+        
+        # [PATCH 2026-01-17] Use internal logs for play_count (UserActivity is unreliable for Dice/Lottery)
+        dice_count = select(func.count(DiceLog.id)).where(DiceLog.user_id == User.id).scalar_subquery()
+        roulette_count = select(func.count(RouletteLog.id)).where(RouletteLog.user_id == User.id).scalar_subquery()
+        lottery_count = select(func.count(LotteryLog.id)).where(LotteryLog.user_id == User.id).scalar_subquery()
+
         plays_total = (
-            func.coalesce(UserActivity.roulette_plays, 0)
-            + func.coalesce(UserActivity.dice_plays, 0)
-            + func.coalesce(UserActivity.lottery_plays, 0)
+            func.coalesce(dice_count, 0)
+            + func.coalesce(roulette_count, 0) 
+            + func.coalesce(lottery_count, 0)
         )
+        
         query = (
             select(func.count(User.id))
             .select_from(User)
-            .outerjoin(UserActivity, UserActivity.user_id == User.id)
             .where(
                 User.created_at >= cutoff,
                 User.vault_locked_balance == 0,
@@ -158,19 +167,27 @@ class OpsTargetService:
         now = self.now()
         start = now - timedelta(days=2)
         end = now - timedelta(days=1)
+
+        # [PATCH 2026-01-17] Use internal logs
+        dice_count = select(func.count(DiceLog.id)).where(DiceLog.user_id == User.id).scalar_subquery()
+        roulette_count = select(func.count(RouletteLog.id)).where(RouletteLog.user_id == User.id).scalar_subquery()
+        lottery_count = select(func.count(LotteryLog.id)).where(LotteryLog.user_id == User.id).scalar_subquery()
+
+        plays_total = (
+            func.coalesce(dice_count, 0)
+            + func.coalesce(roulette_count, 0) 
+            + func.coalesce(lottery_count, 0)
+        )
+
         query = (
             select(func.count(User.id))
             .select_from(User)
-            .outerjoin(UserActivity, UserActivity.user_id == User.id)
             .where(
                 User.created_at >= start,
                 User.created_at < end,
                 User.total_charge_amount <= 0,
-                # Played at least once on day0
-                func.coalesce(UserActivity.roulette_plays, 0)
-                + func.coalesce(UserActivity.dice_plays, 0)
-                + func.coalesce(UserActivity.lottery_plays, 0)
-                >= 1,
+                # Played at least once on day0 (total plays >= 1 for new user)
+                plays_total >= 1,
                 # No login after D0
                 User.last_login_at < end,
             )
@@ -375,16 +392,21 @@ class OpsTargetService:
     ) -> List[Dict[str, Any]]:
         """Get Scenario 1 users."""
         cutoff = self.now() - timedelta(days=1)
+        
+        dice_count = select(func.count(DiceLog.id)).where(DiceLog.user_id == User.id).scalar_subquery()
+        roulette_count = select(func.count(RouletteLog.id)).where(RouletteLog.user_id == User.id).scalar_subquery()
+        lottery_count = select(func.count(LotteryLog.id)).where(LotteryLog.user_id == User.id).scalar_subquery()
+
         plays_total = (
-            func.coalesce(UserActivity.roulette_plays, 0)
-            + func.coalesce(UserActivity.dice_plays, 0)
-            + func.coalesce(UserActivity.lottery_plays, 0)
+            func.coalesce(dice_count, 0)
+            + func.coalesce(roulette_count, 0) 
+            + func.coalesce(lottery_count, 0)
         )
+        
         min_plays = int((options or {}).get("min_plays", 10))
         query = (
             select(User.id, User.nickname, plays_total.label("play_count"))
             .select_from(User)
-            .outerjoin(UserActivity, UserActivity.user_id == User.id)
             .where(
                 User.created_at >= cutoff,
                 User.vault_locked_balance == 0,
@@ -540,18 +562,25 @@ class OpsTargetService:
         now = self.now()
         start = now - timedelta(days=2)
         end = now - timedelta(days=1)
+        
+        dice_count = select(func.count(DiceLog.id)).where(DiceLog.user_id == User.id).scalar_subquery()
+        roulette_count = select(func.count(RouletteLog.id)).where(RouletteLog.user_id == User.id).scalar_subquery()
+        lottery_count = select(func.count(LotteryLog.id)).where(LotteryLog.user_id == User.id).scalar_subquery()
+
+        plays_total = (
+            func.coalesce(dice_count, 0)
+            + func.coalesce(roulette_count, 0) 
+            + func.coalesce(lottery_count, 0)
+        )
+
         query = (
             select(User.id, User.nickname, User.created_at)
             .select_from(User)
-            .outerjoin(UserActivity, UserActivity.user_id == User.id)
             .where(
                 User.created_at >= start,
                 User.created_at < end,
                 User.total_charge_amount <= 0,
-                func.coalesce(UserActivity.roulette_plays, 0)
-                + func.coalesce(UserActivity.dice_plays, 0)
-                + func.coalesce(UserActivity.lottery_plays, 0)
-                >= 1,
+                plays_total >= 1,
                 User.last_login_at < end,
             )
             .limit(limit)

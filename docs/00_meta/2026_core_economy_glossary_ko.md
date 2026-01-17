@@ -44,7 +44,9 @@
 | 금고(레거시 미러) | vault_balance | `user.vault_balance` | 과거 잔액 미러/호환용 필드 | - | 읽기 전용 권장(혼선 방지) |
 | 현금 잔액 | Cash Balance | `user.cash_balance` | 출금 가능 잔액(현금 SoT) | `user_cash_ledger(delta, balance_after, reason, meta_json)` | **신규 보상 지급 경로로 사용 금지**(레거시/운영툴/디버그 외) |
 | 금고 사용 누적 | Vault Spent Total | `user.vault_spent_total` | 금고에서 차감된 누적 금액(샵/바이인 등) | - | 출금 조건 계산에 사용 |
-| 환전(출금) | Exchange / Withdraw | `vault_withdrawal_request` | 금고 누적액을 외부 환전 가능한 흐름으로 전환/신청하는 개념 | (운영/프로그램 로그) | 최소 환전 가능액(예: 10,000원) 같은 정책이 존재 |
+    | 환전(출금) | Exchange / Withdraw | `vault_withdrawal_request` | 금고 누적액을 외부 환전 가능한 흐름으로 전환/신청하는 개념 | (운영/프로그램 로그) | 최소 환전 가능액(예: 10,000원) 같은 정책이 존재 |
+| 당일 실질 입금 (Today Deposit Net) | `daily_deposit_confirmed` | `ExternalRankingData` (+`UserActivity`) | 출금 조건을 위한 "오늘의 유효 입금" 판단 로직 | - | 단순 입금액 0 이상이 아닌, **전일 대비 순증(Net Increase)** 여부로 판단 |
+| 혜택 중단 (Benefit Suspension) | `benefits_suspended` | `vault_policy_status` (Code Logic) | 장기 미활동(7일 이상) 또는 무입금 유저의 상점/게임/적립 차단 상태 | - | 금고 한도 30,000원 제한 및 구매 불가 |
 
 ### 4.2 보상 타입(Reward Types)
 
@@ -100,6 +102,15 @@
 | 미션 로직 키 | logic_key | `mission.logic_key` | 미션을 식별하는 유니크 키 | 이미 수령한 유저(진행/claimed)에 소급 영향 제한 |
 | 유저 미션 진행 | Progress | `user_mission_progress` | 유저별 진행/완료/수령 상태 | `is_claimed`가 지급 여부 SoT |
 | 승인 워크플로우 | Approval | `approval_status` | 승인 필요 미션의 지급 통제 | 미승인 지급 차단이 기본 |
+
+### 4.6 게임 플레이 지표 (Game Stats)
+
+| 용어(권장) | 코드/키워드 | SoT(테이블.필드) | 정의 | 주의사항 |
+| --- | --- | --- | --- | --- |
+| 총 플레이 횟수 | Total Play Count | `dice_log` + `roulette_log` + `lottery_log` (.count) | 어드민/지표용 플레이 횟수 합계 | **ExternalRankingData.play_count 사용 금지** (동기화 부정확) |
+| 주사위 로그 | Dice Log | `dice_log` | 주사위 게임 상세 기록 | |
+| 룰렛 로그 | Roulette Log | `roulette_log` | 룰렛 게임 상세 기록 | |
+| 복권 로그 | Lottery Log | `lottery_log` | 복권(스크래치) 상세 기록 | |
 
 ---
 
