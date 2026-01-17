@@ -38,42 +38,12 @@ const EventDashboardPage: React.FC = () => {
           {/* Survey Banner */}
           <SurveyPromptBanner />
 
-          {/* Level Tower Section */}
-          <Link
-            to="/season-pass"
-            onClick={handleCardClick}
-            className={cardClass}
-          >
-            {/* Background Image */}
-            <img
-              src="/assets/welcome/levelup_v3.png"
-              className={cardImageClass}
-              alt="Level Tower"
-            />
-
-            <div className={cardContentClass}>
-              <div className={cardPanelClass}>
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 rounded-full bg-figma-accent animate-pulse" />
-                    <div className="truncate text-base font-black text-white tracking-wide">시즌패스</div>
-                    {seasonUnclaimed && <AlertCircle className="w-4 h-4 text-red-500 animate-pulse" />}
-                  </div>
-                  <div className="shrink-0 inline-flex items-center justify-center rounded-xl bg-figma-accent/10 px-4 py-2.5 text-sm font-black text-figma-accent ring-1 ring-inset ring-figma-accent/20">
-                    보상 받기
-                  </div>
-                </div>
-              </div>
-            </div>
-          </Link>
-
-          {/* Daily Missions Section */}
+          {/* Mission Section */}
           <Link
             to="/missions"
             onClick={handleCardClick}
             className={cardClass}
           >
-            {/* Background Image */}
             <img
               src="/assets/welcome/mission_v3.png"
               className={cardImageClass}
@@ -90,6 +60,61 @@ const EventDashboardPage: React.FC = () => {
                   </div>
                   <div className="shrink-0 inline-flex items-center justify-center rounded-xl bg-emerald-500/15 px-4 py-2.5 text-sm font-black text-emerald-400 ring-1 ring-inset ring-emerald-500/20">
                     미션 진행
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Link>
+
+          {/* Level Section */}
+          <Link
+            to="/season-pass"
+            onClick={handleCardClick}
+            className={cardClass}
+          >
+            <img
+              src="/assets/welcome/levelup_v3.png"
+              className={cardImageClass}
+              alt="Level Tower"
+            />
+
+            <div className={cardContentClass}>
+              <div className={cardPanelClass}>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-figma-accent animate-pulse" />
+                    <div className="truncate text-base font-black text-white tracking-wide">레벨</div>
+                    {seasonUnclaimed && <AlertCircle className="w-4 h-4 text-red-500 animate-pulse" />}
+                  </div>
+                  <div className="shrink-0 inline-flex items-center justify-center rounded-xl bg-figma-accent/10 px-4 py-2.5 text-sm font-black text-figma-accent ring-1 ring-inset ring-figma-accent/20">
+                    레벨 확인
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Link>
+
+          {/* Modals Section */}
+          <Link
+            to="/events/modals"
+            onClick={handleCardClick}
+            className={cardClass}
+          >
+            <img
+              src="/assets/welcome/event_v2.png"
+              className={cardImageClass}
+              alt="Event Modals"
+            />
+
+            <div className={cardContentClass}>
+              <div className={cardPanelClass}>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
+                    <div className="truncate text-base font-black text-white tracking-wide">모달모음</div>
+                  </div>
+                  <div className="shrink-0 inline-flex items-center justify-center rounded-xl bg-orange-500/15 px-4 py-2.5 text-sm font-black text-orange-400 ring-1 ring-inset ring-orange-500/20">
+                    열기
                   </div>
                 </div>
               </div>
