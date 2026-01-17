@@ -15,6 +15,11 @@ import clsx from "clsx";
 import { useSound } from "../hooks/useSound";
 import { formatRewardLine } from "../utils/rewardLabel";
 import { triggerJackpotExplosion } from "../utils/confetti";
+import TicketZeroRetentionModal from "../components/modal/TicketZeroRetentionModal";
+import { useNavigate } from "react-router-dom";
+import { requestTrialGrant, isTrialGrantAllowedTokenType } from "../api/trialGrantApi";
+import { getLotteryStatus } from "../api/lotteryApi";
+import { useToast } from "../components/common/ToastProvider";
 
 interface RevealedPrize {
   id: number;
@@ -33,6 +38,10 @@ const LotteryPage: React.FC = () => {
   const [isRevealed, setIsRevealed] = useState(false);
   const [vaultModal, setVaultModal] = useState<{ open: boolean; amount: number }>({ open: false, amount: 0 });
   const [collectionModalOpen, setCollectionModalOpen] = useState(false); // Modal State
+  const [ticketZeroModal, setTicketZeroModal] = useState(false);
+  const [isRequestingTrial, setIsRequestingTrial] = useState(false);
+  const navigate = useNavigate();
+  const { addToast } = useToast();
 
   const collection = {
 
@@ -115,6 +124,21 @@ const LotteryPage: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ["season-pass-status"] });
       queryClient.invalidateQueries({ queryKey: ["team-leaderboard"] });
       queryClient.invalidateQueries({ queryKey: ["team-membership"] });
+
+      // Check if tickets reached zero -> show retention modal
+      setTimeout(async () => {
+        try {
+          const updatedStatus = await queryClient.fetchQuery({
+            queryKey: ["lottery-status"],
+            queryFn: getLotteryStatus,
+          });
+          if (updatedStatus?.token_balance === 0 && isTrialGrantAllowedTokenType("LOTTERY_TICKET")) {
+            setTicketZeroModal(true);
+          }
+        } catch {
+          // Silent fail
+        }
+      }, 500);
     } catch {
       setIsScratching(false);
     }
@@ -296,6 +320,38 @@ const LotteryPage: React.FC = () => {
         onClose={() => setCollectionModalOpen(false)}
         collection={collection}
       />
+
+      {ticketZeroModal && (
+        <TicketZeroRetentionModal
+          vaultBalance={0}
+          trialEnabled
+          isRequestingTrial={isRequestingTrial}
+          onClose={() => setTicketZeroModal(false)}
+          onGoVault={() => {
+            setTicketZeroModal(false);
+            navigate("/vault");
+          }}
+          onRequestTrial={async () => {
+            if (isRequestingTrial) return;
+            setIsRequestingTrial(true);
+            try {
+              const res = await requestTrialGrant({ token_type: "LOTTERY_TICKET" });
+              if (res.result === "OK" && res.granted > 0) {
+                addToast(`체험 티켓 ${res.granted}개가 지급되었습니다! 🎁`, "success");
+                await queryClient.invalidateQueries({ queryKey: ["lottery-status"] });
+                setTicketZeroModal(false);
+              } else {
+                addToast("현재는 체험 티켓을 받을 수 없습니다.", "error");
+              }
+            } catch (error: any) {
+              const message = error?.response?.data?.detail || "요청 처리 중 오류가 발생했습니다.";
+              addToast(message, "error");
+            } finally {
+              setIsRequestingTrial(false);
+            }
+          }}
+        />
+      )}
     </FeatureGate>
   );
 };

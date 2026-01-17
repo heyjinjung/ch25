@@ -8,9 +8,14 @@ import GamePageShell from "../components/game/GamePageShell";
 import TicketZeroPanel from "../components/game/TicketZeroPanel";
 
 import VaultAccrualModal from "../components/vault/VaultAccrualModal";
+import TicketZeroRetentionModal from "../components/modal/TicketZeroRetentionModal";
 import { useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
 import { useSound } from "../hooks/useSound";
+import { useNavigate } from "react-router-dom";
+import { requestTrialGrant, isTrialGrantAllowedTokenType } from "../api/trialGrantApi";
+import { getDiceStatus } from "../api/diceApi";
+import { useToast } from "../components/common/ToastProvider";
 
 import { formatRewardLine, isGifticonRewardType } from "../utils/rewardLabel";
 
@@ -26,6 +31,10 @@ const DicePage: React.FC = () => {
   const [rewardToast, setRewardToast] = useState<{ value: number; type: string } | null>(null);
   const [vaultModal, setVaultModal] = useState<{ open: boolean; amount: number; title?: string }>({ open: false, amount: 0 });
   const [isRolling, setIsRolling] = useState(false);
+  const [ticketZeroModal, setTicketZeroModal] = useState(false);
+  const [isRequestingTrial, setIsRequestingTrial] = useState(false);
+  const navigate = useNavigate();
+  const { addToast } = useToast();
 
   const mapErrorMessage = (err: any) => {
     const code = err?.response?.data?.error?.code;
@@ -85,6 +94,21 @@ const DicePage: React.FC = () => {
         queryClient.invalidateQueries({ queryKey: ["dice-status"] });
         queryClient.invalidateQueries({ queryKey: ["vault-status"] });
         queryClient.invalidateQueries({ queryKey: ["season-pass-status"] });
+
+        // Check if tickets reached zero -> show retention modal
+        setTimeout(async () => {
+          try {
+            const updatedStatus = await queryClient.fetchQuery({
+              queryKey: ["dice-status"],
+              queryFn: getDiceStatus,
+            });
+            if (updatedStatus?.token_balance === 0 && isTrialGrantAllowedTokenType("DICE_TOKEN")) {
+              setTicketZeroModal(true);
+            }
+          } catch {
+            // Silent fail
+          }
+        }, 500);
       }, 1000);
     } catch (e) {
       setIsRolling(false);
@@ -233,6 +257,38 @@ const DicePage: React.FC = () => {
         title={vaultModal.title}
         onClose={() => setVaultModal(p => ({ ...p, open: false }))}
       />
+
+      {ticketZeroModal && (
+        <TicketZeroRetentionModal
+          vaultBalance={0}
+          trialEnabled
+          isRequestingTrial={isRequestingTrial}
+          onClose={() => setTicketZeroModal(false)}
+          onGoVault={() => {
+            setTicketZeroModal(false);
+            navigate("/vault");
+          }}
+          onRequestTrial={async () => {
+            if (isRequestingTrial) return;
+            setIsRequestingTrial(true);
+            try {
+              const res = await requestTrialGrant({ token_type: "DICE_TOKEN" });
+              if (res.result === "OK" && res.granted > 0) {
+                addToast(`체험 티켓 ${res.granted}개가 지급되었습니다! 🎁`, "success");
+                await queryClient.invalidateQueries({ queryKey: ["dice-status"] });
+                setTicketZeroModal(false);
+              } else {
+                addToast("현재는 체험 티켓을 받을 수 없습니다.", "error");
+              }
+            } catch (error: any) {
+              const message = error?.response?.data?.detail || "요청 처리 중 오류가 발생했습니다.";
+              addToast(message, "error");
+            } finally {
+              setIsRequestingTrial(false);
+            }
+          }}
+        />
+      )}
     </FeatureGate>
   );
 };
