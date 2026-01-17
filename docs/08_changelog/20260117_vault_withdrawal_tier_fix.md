@@ -40,3 +40,24 @@
 - **Code**: `app/services/vault_service.py` L1600~ 로직 확인.
 - **Hook**: `src/hooks/useLottery.ts` invalidation 로직 확인.
 - **Build**: Frontend 빌드 완료 (`npm run build`).
+
+## 6. Additional UX & Logic Fixes (Evening Update)
+
+### A. Vault Main Panel UX (`VaultMainPanel.tsx`)
+- **Issue**: 모달 진입 전 "내돈찾기" 버튼 클릭 시, 1회차/2회차 여부와 무관하게 `10,000원` 미만이면 경고창이 뜨는 하드코딩 로직 존재.
+- **Fix**: 버튼 클릭 핸들러(`handleWithdrawalClick`) 내 로직을 동적 티어 시스템(1만/1만/3만/5만)으로 교체.
+    - 이제 현재 회차(`withdrawalCount`)에 맞는 최소 금액을 정확히 안내함 (예: "3회차는 최소 30,000원 이상...").
+
+### B. Wallet/Header Sync (`useLottery.ts`)
+- **Fix**: 복권 당첨 시 `inventory`뿐만 아니라 상단 헤더의 `vault-status` 쿼리도 무효화(`invalidateQueries`)하도록 추가.
+- **Effect**: 복권으로 재화 획득 시, 헤더의 다이아/티켓/포인트 숫자가 즉시 최신화됨 (새로고침 불필요).
+
+### C. Withdrawal Count Integrity Check
+- **Question**: "유저가 신청 후 어드민이 승인/반려했을 때 카운트가 정확한가?"
+- **Verification**: `app/api/routes/vault.py` 및 `vault_service.py` 로직 검증 결과,
+    - `withdrawal_count` = `PENDING` (신청 중) + `APPROVED` (승인됨)
+    - **반려(REJECTED)**/취소(CANCELLED) 시 카운트에서 제외됨.
+    - 즉, 어드민이 승인하면 **높은 티어 유지**, 반려하면 **이전 티어 복귀**가 자동으로 이루어짐을 확인.
+
+---
+**Next Step**: Backend/Frontend 배포 시 위 변경사항 모두 **소급 적용**됩니다. (DB 마이그레이션 불필요)
