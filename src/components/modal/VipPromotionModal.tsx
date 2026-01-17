@@ -52,7 +52,7 @@ const VipPromotionModal: React.FC<VipPromotionModalProps> = ({ onClose }) => {
                         <motion.img
                             src="/images/crown2.png"
                             alt="VIP Crown"
-                            className="w-12 h-12 object-contain drop-shadow-[0_6px_16px_rgba(0,0,0,0.55)]"
+                            className="w-16 h-16 object-contain drop-shadow-[0_6px_16px_rgba(0,0,0,0.55)]"
                             animate={{ y: [0, -4, 0], rotate: [0, -2, 2, 0] }}
                             transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
                         />
@@ -87,20 +87,19 @@ const VipPromotionModal: React.FC<VipPromotionModalProps> = ({ onClose }) => {
 
                         <div className="flex items-center gap-2 text-amber-500/60 mb-0.5">
                             <TrendingUp size={12} />
-                            <span className="text-[9px] font-black tracking-widest uppercase">Whale 패스트트랙 보너스</span>
                         </div>
                         <div className="flex items-baseline gap-1.5">
                             <span className="text-3xl font-black text-amber-400 drop-shadow-[0_0_15px_rgba(251,191,36,0.3)]">+500</span>
                             <span className="text-lg font-black text-amber-500/50">XP</span>
                         </div>
-                        <p className="text-[10px] text-white/30 font-medium">시즌 패스 레벨이 상승했습니다</p>
+                        <p className="text-[10px] text-white/30 font-medium">시즌 패스 레벨이 상승합니다</p>
                     </motion.div>
 
                     <motion.button
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={onClose}
-                        className="w-full py-4 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-orange-500 text-black font-black text-lg shadow-[0_8px_16px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.3)] transition-all outline-none hover:brightness-110"
+                        className="w-full py-4 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-orange-500 text-black font-black text-lg shadow-[0_8px_12px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.3)] transition-all outline-none hover:brightness-110"
                     >
                         혜택 수령하기
                     </motion.button>

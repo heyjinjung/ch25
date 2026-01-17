@@ -141,7 +141,7 @@ export const DEFAULT_EVENT_MODALS_CONFIG: EventModalsConfig = {
     },
     {
       key: "ticket-zero",
-      title: "티켓 제로 리텐션",
+      title: "티켓이 없을땐?",
       description: "티켓이 없을 때 빠르게 복귀할 수 있도록 지원합니다.",
       badge: "RECOVER",
       sectionId: "vault",

@@ -21,6 +21,7 @@ import { useMissionStore } from "../stores/missionStore";
 import { getVaultStatus } from "../api/vaultApi";
 import { getUiConfig } from "../api/uiConfigApi";
 import { useLotteryStatus } from "../hooks/useLottery";
+import { motion } from "framer-motion";
 import { useToast } from "../components/common/ToastProvider";
 import { requestTrialGrant } from "../api/trialGrantApi";
 import { useAuth } from "../auth/authStore";
@@ -233,60 +234,108 @@ const EventModalsPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="mx-auto w-full max-w-6xl px-4 py-6">
-        <div className="space-y-10">
-          {sections.map((section) => (
-            <section key={section.title}>
-              <div className="mb-4 flex items-end justify-between">
+      <div className="mx-auto w-full max-w-6xl px-4 py-4">
+        <div className="space-y-6">
+          {sections.map((section, sectionIndex) => (
+            <motion.section
+              key={section.title}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: sectionIndex * 0.1 }}
+            >
+              <div className="mb-3 flex items-center justify-between">
                 <div>
-                  <h3 className="text-lg font-black text-white">{section.title}</h3>
-                  <p className="text-xs text-white/40">{section.subtitle}</p>
+                  <h3 className="text-base font-black text-white">{section.title}</h3>
+                  <p className="text-[11px] text-white/40 mt-0.5">{section.subtitle}</p>
                 </div>
               </div>
-              <div className="grid gap-4 md:grid-cols-2">
-                {section.items.map((card) => (
-                  <button
+
+              <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.03] to-transparent overflow-hidden backdrop-blur-sm">
+                {section.items.map((card, cardIndex) => (
+                  <motion.button
                     key={card.key}
                     type="button"
-                    onClick={() => openModal(card.key)}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: sectionIndex * 0.1 + cardIndex * 0.05 }}
+                    whileHover={{
+                      scale: 1.01,
+                      x: 4,
+                      backgroundColor: "rgba(255,255,255,0.04)"
+                    }}
+                    whileTap={{ scale: 0.99 }}
+                    onClick={() => {
+                      impact("heavy");
+                      openModal(card.key);
+                    }}
                     className={clsx(
-                      "group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02] p-4 text-left transition-all",
-                      "hover:-translate-y-0.5 hover:border-emerald-500/40 hover:bg-white/[0.04]"
+                      "w-full flex items-center gap-3 px-4 py-3.5 text-left transition-all relative group",
+                      cardIndex < section.items.length - 1 && "border-b border-white/5"
                     )}
                   >
+                    {/* Hover gradient effect */}
                     <div
                       className={clsx(
-                        "pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100",
-                        "bg-gradient-to-br",
+                        "absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300",
+                        "bg-gradient-to-r",
                         card.accent
                       )}
                     />
-                    <div className="relative z-10 flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-2">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5">
-                          {card.icon}
-                        </div>
-                        <div>
-                          <p className="text-sm font-black text-white">{card.title}</p>
-                          {card.badge && (
-                            <span className="mt-1 inline-flex rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[9px] font-black text-white/50 uppercase tracking-widest">
-                              {card.badge}
-                            </span>
-                          )}
-                        </div>
+
+                    {/* Icon with glow */}
+                    <div className="relative z-10 flex-shrink-0">
+                      <div className="w-11 h-11 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center relative overflow-hidden group-hover:border-emerald-500/30 transition-colors">
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                        {card.icon}
                       </div>
-                      <span className="text-xs font-bold text-emerald-300">열기</span>
                     </div>
-                    <p className="relative z-10 mt-3 text-sm text-white/55 leading-relaxed">{card.description}</p>
-                    {card.meta && (
-                      <div className="relative z-10 mt-3 flex items-center gap-2 text-[11px] font-bold text-white/40">
-                        {card.meta}
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0 relative z-10">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-black text-white truncate">{card.title}</p>
+                        {card.badge && (
+                          <motion.span
+                            animate={
+                              card.badge === "LIVE"
+                                ? { scale: [1, 1.1, 1] }
+                                : card.badge === "NEW"
+                                  ? { y: [0, -2, 0] }
+                                  : {}
+                            }
+                            transition={{ duration: 1.5, repeat: Infinity }}
+                            className={clsx(
+                              "inline-flex rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider",
+                              card.badge === "LIVE"
+                                ? "bg-red-500/20 border border-red-500/40 text-red-300"
+                                : "bg-white/10 border border-white/20 text-white/60"
+                            )}
+                          >
+                            {card.badge}
+                          </motion.span>
+                        )}
                       </div>
-                    )}
-                  </button>
+                      {card.meta && (
+                        <p className="text-[11px] text-white/50 mt-0.5 truncate">{card.meta}</p>
+                      )}
+                    </div>
+
+                    {/* Arrow indicator */}
+                    <motion.div
+                      className="relative z-10 flex-shrink-0"
+                      animate={{ x: [0, 4, 0] }}
+                      transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                    >
+                      <div className="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 opacity-60 group-hover:opacity-100 transition-opacity">
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                          <path d="M4 2L8 6L4 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </div>
+                    </motion.div>
+                  </motion.button>
                 ))}
               </div>
-            </section>
+            </motion.section>
           ))}
         </div>
       </div>

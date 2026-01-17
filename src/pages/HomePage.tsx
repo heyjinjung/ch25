@@ -89,10 +89,10 @@ const TiltCard: React.FC<GameCardProps> = ({ title, to, gradient, icon, isWide, 
               <motion.img
                 src={bgImage}
                 alt={title}
-                className="h-full w-full object-cover opacity-90 scale-110"
+                className="h-full w-full object-cover opacity-90"
                 transition={{ duration: 0.5 }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
             </div>
           )}
         </div>

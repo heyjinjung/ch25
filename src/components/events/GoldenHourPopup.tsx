@@ -90,7 +90,7 @@ const GoldenHourPopup: React.FC<GoldenHourPopupProps> = ({ onClose, multiplier }
                     <Button
                         variant="figma-primary"
                         fullWidth
-                        className="rounded-xl py-3.5 bg-gradient-to-r from-emerald-400 via-lime-400 to-emerald-500 border-none shadow-[0_10px_30px_rgba(16,185,129,0.35)] text-base text-black font-black"
+                        className="rounded-xl py-3.5 bg-emerald-950 border border-emerald-800 shadow-none text-base text-emerald-50 font-bold hover:bg-emerald-900 active:scale-[0.98] transition-all"
                         onClick={() => { tryHaptic(30); onClose(); }}
                     >
                         적립하러 가기
