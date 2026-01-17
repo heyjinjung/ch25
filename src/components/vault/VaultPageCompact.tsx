@@ -124,7 +124,7 @@ const VaultPageCompact: React.FC = () => {
                         addToastNode(
                             <div className="text-center space-y-1">
                                 <p>배민 2만부터 지급가능</p>
-                                <p>씨씨코인 하루 1개 지급가능</p>
+                                <p>씨씨코인 하루 1개 지급가능 (케어방이벤트 중복적용x)</p>
                                 <p>컴포즈 아아 1만부터 지급가능</p>
                             </div>,
                             { tone: "info" }
