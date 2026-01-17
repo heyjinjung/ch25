@@ -1389,11 +1389,16 @@ class VaultService:
         sync_date_kst = sync_dt_utc.astimezone(tz).date()
         
         # Operational Date (Today KST)
-        # Note: request_withdrawal doesn't use _operational_date_kst currently, just utcnow().date().
-        # But for accurate "Today" matching, we should use KST comparison.
         now_kst = datetime.now(tz).date()
         
-        if sync_date_kst != now_kst:
+        # Check B.1: Sync Date
+        is_synced_today = (sync_date_kst == now_kst)
+
+        # Check B.2: Net Deposit Increase (deposit_amount > daily_base_deposit)
+        # This confirms a fresh deposit was made TODAY.
+        has_new_deposit = (rank_data.deposit_amount > (rank_data.daily_base_deposit or 0))
+
+        if not is_synced_today or not has_new_deposit:
              # Fallback: Check UserActivity (Internal Ledger)
              # User reported manual updates not reflecting in ExternalRankingData immediately.
              # As a safety net, if Internal Ledger says "Today", allow it.
@@ -1439,9 +1444,27 @@ class VaultService:
             )
 
         # 5. Min Withdrawal Amount Logic
-        # Enforce valid withdrawal amounts (10k, 30k, 50k - though logic just enforces min 10k)
-        if amount < 10000:
-             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="MIN_WITHDRAWAL_AMOUNT_10000")
+        # Enforce tiered withdrawal amounts (10k, 10k, 30k, 50k)
+        prev_count = db.query(func.count(VaultWithdrawalRequest.id)).filter(
+            VaultWithdrawalRequest.user_id == user_id,
+            VaultWithdrawalRequest.status.in_(["PENDING", "APPROVED"])
+        ).scalar() or 0
+        
+        needed_min = 10_000
+        if prev_count == 0:
+            needed_min = 10_000
+        elif prev_count == 1:
+            needed_min = 10_000
+        elif prev_count == 2:
+            needed_min = 30_000
+        else:
+            needed_min = 50_000
+
+        if amount < needed_min:
+             raise HTTPException(
+                 status_code=status.HTTP_400_BAD_REQUEST, 
+                 detail=f"MIN_WITHDRAWAL_AMOUNT_{needed_min}_REQUIRED"
+             )
 
 
         # 3. Check Available & Create Request (no balance deduction at request time)

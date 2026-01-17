@@ -25,8 +25,16 @@ const WithdrawalProgressModal: React.FC<WithdrawalProgressModalProps> = ({
     withdrawalCount
 }) => {
     // Determine target based on withdrawal steps
-    // Backend enforces flat 10,000 KRW constraint (vault_service.py)
-    const minWithdrawal = 10000;
+    // Backend enforces 10k -> 10k -> 30k -> 50k (vault_service.py)
+    // 0: 10,000
+    // 1: 10,000
+    // 2: 30,000
+    // 3+: 50,000
+    let minWithdrawal = 10000;
+    if (withdrawalCount === 0) minWithdrawal = 10000;
+    else if (withdrawalCount === 1) minWithdrawal = 10000;
+    else if (withdrawalCount === 2) minWithdrawal = 30000;
+    else minWithdrawal = 50000;
 
     // Condition Checks
     const isBalanceMet = vaultBalance >= minWithdrawal;

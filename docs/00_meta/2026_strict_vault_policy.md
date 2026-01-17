@@ -41,10 +41,11 @@
 ### 2.4 Withdrawal Logic Update (Hotfix)
 출금 신청 시 확인하는 "당일 입금 여부" 로직을 강화 및 이중화함.
 - **Problem**: 외부 랭킹 서버 동기화 지연 시, 실제 입금을 했음에도 출금이 불가능한 문제 발생.
-- **Solution (`vault_service.py`)**: 이중 확인(Fallback) 로직 적용.
+- **Solution (`vault_service.py`)**: 이중 확인(Fallback) 및 **실질적 입금 확인(Net Increase)** 적용.
   1. **Primary**: `ExternalRankingData.updated_at` (외부 동기화 데이터)가 오늘 날짜인지 확인.
-  2. **Fallback**: 만약 1차가 아니라면, **`UserActivity` (내부 원장)**의 `last_charge_at`이 오늘 날짜인지 추가 확인.
-  3. **Result**: 둘 중 하나라도 "오늘"이면 출금 허용.
+  2. **Net Deposit Check**: 동기화 날짜뿐만 아니라, **`deposit_amount > daily_base_deposit` (당일 순증액 존재)** 여부를 확인하여, 단순 동기화 갱신이 아닌 실제 입금이 있었는지 검증.
+  3. **Fallback**: 만약 1차/2차 조건 미달 시, **`UserActivity` (내부 원장)**의 `last_charge_at`이 오늘 날짜인지 추가 확인(Fallback).
+  4. **Result**: (1차 날짜 OK AND 2차 순증 OK) OR (Fallback 날짜 OK) 조건 만족 시 출금 허용.
 - **Frontend Fix**: `getVaultStatus` API 응답에도 동일한 로직을 적용하여, UI 상의 "금일 입금 내역" 표시가 백엔드 출금 가능 여부와 100% 일치하도록 수정.
 
 ---

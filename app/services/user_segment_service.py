@@ -18,6 +18,7 @@ from app.models.external_ranking import ExternalRankingData
 from app.models.external_ranking_daily_deposit_delta import ExternalRankingDailyDepositDelta
 from app.models.roulette import RouletteLog
 from app.models.dice import DiceLog
+from app.models.lottery import LotteryLog
 from app.models.segment_rule import SegmentRule
 from app.services.segment_rules_engine import SegmentContext, matches_condition
 
@@ -503,6 +504,7 @@ class UserSegmentService:
         # 17. NEW: Game & Vault KPIs (2026-01-03)
         roulette_spins = db.query(func.count(RouletteLog.id)).scalar() or 0
         dice_rolls = db.query(func.count(DiceLog.id)).scalar() or 0
+        lottery_scratches = db.query(func.count(LotteryLog.id)).scalar() or 0
         
         avg_vault_result = db.query(func.avg(User.vault_locked_balance)).filter(
             User.vault_locked_balance > 0
@@ -510,12 +512,12 @@ class UserSegmentService:
         avg_vault_balance = round(float(avg_vault_result), 0) if avg_vault_result else 0.0
 
         # 18. NEW: Financial KPIs (2026-01-03)
+        # [PATCH 2026-01-17] Use internal logs for play_count (ExternalRankingData is unreliable)
         financial_stats = db.query(
-            func.sum(ExternalRankingData.deposit_amount),
-            func.sum(ExternalRankingData.play_count)
+            func.sum(ExternalRankingData.deposit_amount)
         ).first()
         total_deposit_amount = int(financial_stats[0] or 0)
-        total_play_count = int(financial_stats[1] or 0)
+        total_play_count = dice_rolls + roulette_spins + lottery_scratches
 
         # 18.1 운영형 외부 입금액 (KST 오늘/최근 7일 델타)
         try:
