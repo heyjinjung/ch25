@@ -136,6 +136,14 @@ const mapWithdrawalErrorMessage = (detail: unknown): string | null => {
       return "오늘 입금(충전) 내역이 있어야 출금 신청이 가능합니다.";
     case "NO_DEPOSIT_RECORD_TODAY":
       return "오늘 입금(충전) 내역이 확인되지 않아 출금 신청이 불가능합니다.";
+    case "MIN_PLAY_COUNT_30_REQUIRED":
+        return "최근 3일 이내 게임 플레이 30회 조건을 만족해야 합니다.";
+    case "MIN_DAILY_SPEND_10000_REQUIRED":
+        return "오늘 금고 사용액이 10,000원 이상이어야 합니다.";
+    case "NO_DEPOSIT_HISTORY":
+        return "입금 이력이 없는 계정은 출금할 수 없습니다.";
+    case "DEPOSIT_REQUIRED_TODAY_SYNC":
+        return "오늘 입금(충전) 기록이 확인되지 않았습니다.";
     default:
       return null;
   }

@@ -40,6 +40,10 @@ const WithdrawalConditionsModal: React.FC<WithdrawalConditionsModalProps> = ({
             progress: `${vaultBalance.toLocaleString()} / ${minWithdrawal.toLocaleString()}`,
             percent: Math.min(100, (vaultBalance / minWithdrawal) * 100)
         },
+        // [New Condition] Lifetime Deposit > 0 check is implied by 'deposit' status from server
+        // but explicit UI can be added if backend sends 'hasLifetimeDeposit' flag. 
+        // For now, adhere to 4 main conditions displayed.
+        
         {
             id: "deposit",
             title: "금일 입금 내역",

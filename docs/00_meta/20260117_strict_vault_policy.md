@@ -38,6 +38,15 @@
     - **Button Disabled**: "구매" 버튼이 "🚫 제한됨"으로 변경되고 비활성화.
     - **Msg**: "장기 미활동으로 구매 제한됨 (입금 필요)" 툴팁 제공.
 
+### 2.4 Withdrawal Logic Update (Hotfix)
+출금 신청 시 확인하는 "당일 입금 여부" 로직을 강화 및 이중화함.
+- **Problem**: 외부 랭킹 서버 동기화 지연 시, 실제 입금을 했음에도 출금이 불가능한 문제 발생.
+- **Solution (`vault_service.py`)**: 이중 확인(Fallback) 로직 적용.
+  1. **Primary**: `ExternalRankingData.updated_at` (외부 동기화 데이터)가 오늘 날짜인지 확인.
+  2. **Fallback**: 만약 1차가 아니라면, **`UserActivity` (내부 원장)**의 `last_charge_at`이 오늘 날짜인지 추가 확인.
+  3. **Result**: 둘 중 하나라도 "오늘"이면 출금 허용.
+- **Frontend Fix**: `getVaultStatus` API 응답에도 동일한 로직을 적용하여, UI 상의 "금일 입금 내역" 표시가 백엔드 출금 가능 여부와 100% 일치하도록 수정.
+
 ---
 
 ## 3. 검증 결과 (Verification)
