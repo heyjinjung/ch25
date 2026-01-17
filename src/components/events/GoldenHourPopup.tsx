@@ -70,20 +70,34 @@ const GoldenHourPopup: React.FC<GoldenHourPopupProps> = ({ onClose, multiplier }
                     <h2 className="text-2xl font-black italic tracking-tight text-white uppercase drop-shadow-lg mb-2">
                         골든아워
                     </h2>
-                    <div className="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/40 mb-5">
-                        <span className="text-xs font-black text-emerald-300 animate-pulse">LIVE NOW</span>
-                    </div>
+                    
+                    {displayMultiplier > 1 ? (
+                        <>
+                            <div className="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/40 mb-5">
+                                <span className="text-xs font-black text-emerald-300 animate-pulse">LIVE NOW</span>
+                            </div>
 
-                    <p className="text-base font-semibold text-white/80 leading-tight mb-2">
-                        지금부터 1시간 동안
-                    </p>
-                    <p className="text-xl font-black text-white leading-tight mb-6">
-                        <span className="text-emerald-300">고액 주사위</span> 적립
-                        <span className="ml-2 text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-lime-300 to-emerald-500">
-                            {displayMultiplier}배
-                        </span>
-                        <span className="text-emerald-200"> 폭발</span>
-                    </p>
+                            <p className="text-base font-semibold text-white/80 leading-tight mb-2">
+                                지금부터 1시간 동안
+                            </p>
+                            <p className="text-xl font-black text-white leading-tight mb-6">
+                                <span className="text-emerald-300">고액 주사위</span> 적립
+                                <span className="ml-2 text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-lime-300 to-emerald-500">
+                                    {displayMultiplier}배
+                                </span>
+                                <span className="text-emerald-200"> 폭발</span>
+                            </p>
+                        </>
+                    ) : (
+                        <>
+                            <div className="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-white/5 border border-white/10 mb-5">
+                                <span className="text-xs font-black text-white/40">WAITING</span>
+                            </div>
+                            <p className="text-lg font-bold text-white/60 leading-tight mb-10 mt-2">
+                                지금은 골든아워 시간이 아닙니다
+                            </p>
+                        </>
+                    )}
 
 
 

@@ -114,6 +114,84 @@ const guideSteps: Step[] = [
     disableBeacon: true,
     spotlightPadding: 5,
   },
+  // 8. 이벤트/미션 탭 (Index 7)
+  {
+    target: '[data-tour="nav-events"]',
+    content: (
+      <div className="text-left">
+        <div className="text-lg font-black mb-2">🎉 이벤트/미션</div>
+        <div className="text-sm leading-snug break-keep">
+          다양한 <strong>보상과 이벤트</strong>를 확인하려면 여기를 누르세요.
+          <br />
+          <span className="text-emerald-400">미션도 여기서 시작합니다!</span>
+        </div>
+      </div>
+    ),
+    placement: "top",
+    disableBeacon: true,
+  },
+  // 9. 이벤트 대시보드 - 미션 카드 (Index 8)
+  {
+    target: '[data-tour="event-mission-card"]',
+    content: (
+      <div className="text-left">
+        <div className="text-lg font-black mb-2">🎯 데일리 미션</div>
+        <div className="text-sm leading-snug break-keep">
+          매일 주어지는 미션을 완료하면 <strong>다이아</strong>를 드립니다.
+          <br />
+          눌러서 미션을 확인해보세요.
+        </div>
+      </div>
+    ),
+    placement: "bottom",
+    disableBeacon: true,
+  },
+  // 10. 미션 보상 (Index 9) -> /missions
+  {
+    target: '[data-tour="mission-claim-btn"]',
+    content: (
+      <div className="text-left">
+        <div className="text-lg font-black mb-2">💰 보상 받기</div>
+        <div className="text-sm leading-snug break-keep">
+          미션을 완료했다면 <strong>이 버튼</strong>을 눌러 보상을 챙기세요.
+          <div className="mt-2 text-amber-400">잊지 말고 꼭 챙겨가세요!</div>
+        </div>
+      </div>
+    ),
+    placement: "bottom",
+    disableBeacon: true,
+  },
+  // 11. 이벤트 모달 카드 (Index 10) -> /events
+  {
+    target: '[data-tour="event-modals-card"]',
+    content: (
+      <div className="text-left">
+        <div className="text-lg font-black mb-2">🎫 이벤트 모음</div>
+        <div className="text-sm leading-snug break-keep">
+          스트릭, 한정 혜택 등 <strong>모든 이벤트 팝업</strong>을 다시 보려면
+          여기를 누르세요.
+        </div>
+      </div>
+    ),
+    placement: "bottom",
+    disableBeacon: true,
+  },
+  // 12. 모달 페이지 (Index 11) -> /events/modals
+  {
+    target: '[data-tour="event-modal-list"]',
+    content: (
+      <div className="text-left">
+        <div className="text-lg font-black mb-2">✨ 진행 중인 혜택</div>
+        <div className="text-sm leading-snug break-keep">
+          현재 참여 가능한 모든 혜택이 여기에 있습니다.
+          <br />
+          <strong>하나씩 눌러서 확인해보세요!</strong>
+        </div>
+      </div>
+    ),
+    placement: "center",
+    disableBeacon: true,
+  },
 ];
 
 const scrollToSelector = (selector: string, behavior: ScrollBehavior = "smooth") => {
@@ -275,7 +353,27 @@ const AppGuide: React.FC = () => {
       }
     }
 
-    // Step 8+: 제거됨 (7에서 멈춤)
+    // Step 8, 9, 11 (Index 7, 8, 10): 이벤트 대시보드
+    // /events 페이지로 이동 (단, /events/modals는 아님)
+    if (stepIndex === 7 || stepIndex === 8 || stepIndex === 10) {
+      if (location.pathname !== "/events") {
+        navigate("/events");
+      }
+    }
+
+    // Step 10 (Index 9): 미션 페이지
+    if (stepIndex === 9) {
+      if (!location.pathname.startsWith("/missions")) {
+        navigate("/missions");
+      }
+    }
+
+    // Step 12 (Index 11): 이벤트 모달 페이지
+    if (stepIndex === 11) {
+      if (!location.pathname.startsWith("/events/modals")) {
+        navigate("/events/modals");
+      }
+    }
   }, [stepIndex, isGuideRunning, navigate, location.pathname]);
 
   // 타겟 대기 로직
@@ -283,8 +381,8 @@ const AppGuide: React.FC = () => {
     if (!isGuideRunning) return;
 
     // 페이지 이동 직후 타겟이 없을 수 있으므로 대기
-    // 이동 그룹: 3(금고), 6(상점), 7(보상함), 8(이벤트), 9(미션)
-    const movingSteps = [3, 4, 5, 6, 7, 8, 9, 10]; 
+    // 이동 그룹 업데이트 (Index 0~11 커버)
+    const movingSteps = [3, 4, 5, 6, 7, 8, 9, 10, 11]; 
     if (movingSteps.includes(stepIndex)) {
       const selector = guideSteps[stepIndex]?.target;
       if (typeof selector !== "string") return;

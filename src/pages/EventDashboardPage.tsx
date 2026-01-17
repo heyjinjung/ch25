@@ -43,6 +43,7 @@ const EventDashboardPage: React.FC = () => {
             to="/missions"
             onClick={handleCardClick}
             className={cardClass}
+            data-tour="event-mission-card"
           >
             <img
               src="/assets/welcome/mission_v3.png"
@@ -99,6 +100,7 @@ const EventDashboardPage: React.FC = () => {
             to="/events/modals"
             onClick={handleCardClick}
             className={cardClass}
+            data-tour="event-modals-card"
           >
             <img
               src="/assets/welcome/event_v2.png"

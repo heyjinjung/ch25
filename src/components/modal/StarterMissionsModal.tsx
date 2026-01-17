@@ -111,6 +111,7 @@ const StarterMissionsModal: React.FC<StarterMissionsModalProps> = ({ onClose }) 
                             type="button"
                             onClick={onClose}
                             className="p-2 rounded-full bg-white/5 border border-white/10 text-white/40 hover:text-white transition-colors"
+                            aria-label="닫기"
                         >
                             <X size={20} />
                         </button>
