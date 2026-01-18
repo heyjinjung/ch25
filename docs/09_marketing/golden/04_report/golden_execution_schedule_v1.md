@@ -3,7 +3,7 @@ Project: Golden
 Type: Report
 Author: Antigravity (AI) & USER
 Status: Draft
-Last Updated: 2026-01-17
+Last Updated: 2026-01-18
 ---
 
 # Golden 업데이트 실행 스케줄 & 순서도 (v1)
@@ -64,10 +64,10 @@ A/B: golden_ab_test_framework_v1.md
 
 ### Phase 4: 검증/배포 (W4) 🟡
 - [x] A/B 테스트 설계/대시보드 준비
-- [ ] 모니터링 지표/알람 기준 설정 🟡
+- [x] 모니터링 지표/알람 기준 설정 ✅
 - [ ] 시스템 유기적 연동 점검 (체크리스트 적용)
-- [ ] 배포 체크리스트 완료
-- [ ] 결과 리포트 작성
+- [x] 배포 체크리스트 완료 ✅
+- [x] 결과 리포트 작성 ✅
 - 산출물: 대시보드, 결과 보고서
 
 ### Phase 4 보강: 미반영 항목 순차 적용 계획
@@ -163,18 +163,18 @@ flowchart TD
   - 운영: **이번 세션 적용 완료** (마이그레이션 적용)
 - Dynamic Task/Intervention API
   - 테크: 확인 ([docs/09_marketing/golden/02_tech_spec/golden_adaptive_engine_v1.md](docs/09_marketing/golden/02_tech_spec/golden_adaptive_engine_v1.md))
-  - 코드: 부분 확인 (publish 파이프라인만 존재) ([app/services/ch25_event_service.py](app/services/ch25_event_service.py))
-  - 운영: ❌ 미확인(증거 없음)
+  - 코드: 확인 ([app/api/routes/retention_intervention.py](app/api/routes/retention_intervention.py), [app/services/retention_intervention_service.py](app/services/retention_intervention_service.py))
+  - 운영: 🟡 부분 확인(운영 호출/로그 확인)
 - Predictive Re-engagement
   - 테크: 확인
-  - 코드: 미확인
-  - 운영: ❌ 미확인
+  - 코드: 확인 ([app/api/routes/retention_intervention.py](app/api/routes/retention_intervention.py), [app/services/retention_intervention_service.py](app/services/retention_intervention_service.py))
+  - 운영: 🟡 부분 확인(운영 호출/로그 확인)
 
 ### C. Goldilocks 진단
 - 승/패/연패 실시간 감지
   - 테크: 확인 ([docs/09_marketing/golden/02_tech_spec/golden_dda_algorithm_v1.md](docs/09_marketing/golden/02_tech_spec/golden_dda_algorithm_v1.md))
   - 코드: 확인 ([app/workers/ch25_event_worker.py](app/workers/ch25_event_worker.py))
-  - 운영: ❌ 미확인(증거 없음)
+  - 운영: ✅ 확인됨 (`ch25:state:*` 갱신 증거 확보)
 - DDA 적용(룰렛/주사위/복권)
   - 테크: 확인 ([docs/09_marketing/golden/02_tech_spec/golden_dda_algorithm_v1.md](docs/09_marketing/golden/02_tech_spec/golden_dda_algorithm_v1.md))
   - 코드: 확인 ([app/services/roulette_service.py](app/services/roulette_service.py), [app/services/dice_service.py](app/services/dice_service.py), [app/services/lottery_service.py](app/services/lottery_service.py))
@@ -182,7 +182,7 @@ flowchart TD
 - 심리 상태 저장(BORED/FRUSTRATED)
   - 테크: 확인 ([docs/09_marketing/golden/02_tech_spec/golden_adaptive_engine_v1.md](docs/09_marketing/golden/02_tech_spec/golden_adaptive_engine_v1.md))
   - 코드: 확인 ([app/workers/ch25_event_worker.py](app/workers/ch25_event_worker.py))
-  - 운영: ❌ 미확인(증거 없음)
+  - 운영: ✅ 확인됨 (`psych_state` 갱신 증거 확보)
 
 ### D. 사용자 페르소나
 - 세그먼트/상태 태깅
@@ -191,8 +191,8 @@ flowchart TD
   - 운영: **이번 세션 적용 완료** (마이그레이션 적용)
 - 가변 보상 알고리즘
   - 테크: 확인 ([docs/09_marketing/golden/02_tech_spec/golden_variable_reward_algorithm_v1.md](docs/09_marketing/golden/02_tech_spec/golden_variable_reward_algorithm_v1.md))
-  - 코드: 미확인
-  - 운영: ❌ 미확인
+  - 코드: 확인 ([app/services/reward_scheduler.py](app/services/reward_scheduler.py), [app/services/retention_intervention_service.py](app/services/retention_intervention_service.py))
+  - 운영: 🟡 부분 확인(개입 API 메타 기록 확인)
 
 ### E. ROI/증명 로깅
 - ROI 로그 테이블
@@ -201,8 +201,8 @@ flowchart TD
   - 운영: **이번 세션 적용 완료** (마이그레이션 적용)
 - Reward_Size ≤ Cmax 강제
   - 테크: 확인
-  - 코드: 미확인
-  - 운영: ❌ 미확인
+  - 코드: 확인 ([app/services/retention_intervention_service.py](app/services/retention_intervention_service.py))
+  - 운영: 🟡 부분 확인(ROI 로그/응답 메타 확인)
 
 > 운영 증거: 이번 세션에서 `alembic upgrade head` 및 `update_predicted_ltv_daily.py --apply` 실행 완료.
 
@@ -251,8 +251,8 @@ flowchart TD
 
 ### Step 3. 배포 체크리스트 완료
 - [x] Feature Flag 상태 확인 ✅
-- [ ] 롤백 플래그 검증 🟡
-- [ ] 운영 안전장치(쿨다운/어뷰징/Fail-Open) 확인 🟡
+- [x] 롤백 플래그 검증 ✅
+- [x] 운영 안전장치(쿨다운/어뷰징/Fail-Open) 확인 ✅
 
 #### Step 3-1. 배포 전 필수 확인
 - Feature Flag: `CH25_INTERVENTION_ENABLED`, `CH25_DDA_ENABLED`
@@ -267,12 +267,13 @@ flowchart TD
   - CH25 플래그 확인됨 (CH25_INTERVENTION_ENABLED/CH25_DDA_ENABLED/ROLLOUT_PCT)
   - 쿨다운 키 확인됨 (`ch25_events:cooldown:*`)
   - Fail-Open 확인됨 (Redis 중지 상태에서도 `/` 200)
-  - 롤백 플래그/어뷰징 필터는 추가 확인 필요
+  - 어뷰징 필터 키 확인됨 (`ch25:abuse:{day}:{user}:exclude_reason`)
+  - 롤백 플래그 검증 완료: `CH25_INTERVENTION_ENABLED=false`/`CH25_INTERVENTION_ROLLOUT_PCT=0` → `INTERVENTION_DISABLED` 응답
 
 ### Step 4. 결과 리포트 작성
-- [ ] 지표 스냅샷 정리 (일/주) 🟡
-- [ ] 실험군 분배 결과 요약 🟡
-- [ ] 이슈/개선점 기록 🟡
+- [x] 지표 스냅샷 정리 (일/주) ✅
+- [x] 실험군 분배 결과 요약 ✅
+- [x] 이슈/개선점 기록 ✅
 
 #### Step 4-1. 리포트 구성
 - 지표 스냅샷: LOSS_STREAK/ASSET_DEPLETION/SESSION_END, 실험군 분배

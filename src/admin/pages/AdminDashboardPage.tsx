@@ -144,33 +144,16 @@ const AdminDashboardPage: React.FC = () => {
         </section>
 
         {/* Section 2: Season & Feed Split */}
-        {/* Section 2: Season, Feed & Actions Grid */}
+        {/* Section 2: Season & Live Feed */}
         <section className="grid grid-cols-1 lg:grid-cols-4 gap-6 min-h-[400px]">
           {/* Season Board (2/4 on LG+) */}
           <div className="lg:col-span-2 shadow-2xl h-full">
             <SeasonOpsBoard />
           </div>
 
-          {/* Live Feed (1/4 on LG+) */}
-          <div className="lg:col-span-1 shadow-2xl h-full">
+          {/* Live Feed (2/4 on LG+) */}
+          <div className="lg:col-span-2 shadow-2xl h-full">
             <LiveOpsFeed />
-          </div>
-
-          {/* Action Items (1/4 on LG+) */}
-          <div className="lg:col-span-1 bg-zinc-800/60 backdrop-blur-xl border border-white/5 rounded-xl shadow-2xl flex flex-col p-6 h-full">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <div className="w-3 h-3 rounded-full bg-amber-500 animate-pulse" />
-                <h2 className="text-2xl font-light text-zinc-200">조치 항목</h2>
-              </div>
-            </div>
-
-            <div className="flex-1 flex flex-col items-center justify-center text-zinc-600 gap-4">
-              <div className="p-4 rounded-full bg-zinc-900 border border-zinc-800">
-                <X className="w-8 h-8 opacity-20" />
-              </div>
-              <p className="font-light">현재 조치가 필요한 항목이 없습니다.</p>
-            </div>
           </div>
         </section>
 
