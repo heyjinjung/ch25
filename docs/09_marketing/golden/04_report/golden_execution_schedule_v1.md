@@ -10,6 +10,8 @@ Last Updated: 2026-01-17
 
 본 문서는 **기존 게임 시스템 업데이트**를 위한 실행 스케줄과 Mermaid 순서도를 제공합니다.
 
+진행도 요약: ✅ 완료(Phase 1~3) / 🟡 진행중(Phase 4)
+
 ---
 
 ## 1) 실행 스케줄 (4단계)
@@ -25,7 +27,7 @@ Last Updated: 2026-01-17
 
 ## 2) 단계별 상세 일정 & 체크리스트
 
-### Phase 1: 설계 확정 (W1)
+### Phase 1: 설계 확정 (W1) ✅
 - [x] KPI 정의(D1/D7, OT/OD, ARPU/LTV)
 - [x] SoT 문서 확인 (경제/스키마/알림)
 - [x] TechSpec 갭 점검 (DDA/Free Spin/ROI/A-B)
@@ -41,7 +43,7 @@ A/B: golden_ab_test_framework_v1.md
 실험군/대조군 정의 초안: golden_ab_test_framework_v1.md
 
 
-### Phase 2: 데이터/로그 준비 (W2)
+### Phase 2: 데이터/로그 준비 (W2) ✅
 - [x] 이벤트 수집 포인트 정의 (연패/자산 급감/세션)
 - [x] 로그 스키마/파이프라인 설계 (상세 설계 완료)
 - [x] Redis/WebSocket 트리거 경로 확인 (현재 구독: `feed:public`, `ops:ws` / `ch25_events` 구독 경로 없음)
@@ -52,7 +54,7 @@ A/B: golden_ab_test_framework_v1.md
 예: 이벤트 프로세서가 LOSS_STREAK/ASSET_DEPLETION을 감지하면 ch25_events에 payload를 발행하고, FastAPI가 그 채널을 subscribe해야 실시간 개입(WS/토스트 등)으로 이어집니다.
 
 
-### Phase 3: 개입 로직 구현 (W3)
+### Phase 3: 개입 로직 구현 (W3) ✅
 - [x] 무료 스핀/캐시백/미션 룰 적용 범위 확정
 - [x] 개입 룰 배포(Feature Flag 포함)
 - [x] 예외/롤백 경로 검증
@@ -60,9 +62,9 @@ A/B: golden_ab_test_framework_v1.md
 - 산출물: DDA/Reward 룰 적용
   - 롤백: `CH25_INTERVENTION_ENABLED=false` 또는 `CH25_INTERVENTION_ROLLOUT_PCT=0`
 
-### Phase 4: 검증/배포 (W4)
+### Phase 4: 검증/배포 (W4) 🟡
 - [x] A/B 테스트 설계/대시보드 준비
-- [ ] 모니터링 지표/알람 기준 설정
+- [ ] 모니터링 지표/알람 기준 설정 🟡
 - [ ] 시스템 유기적 연동 점검 (체크리스트 적용)
 - [ ] 배포 체크리스트 완료
 - [ ] 결과 리포트 작성
@@ -106,8 +108,8 @@ A/B: golden_ab_test_framework_v1.md
 - [x] 실시간 이벤트 파이프라인 준비
 - [x] 외부 로그 + 내부 로그 병렬 파이프라인 연결 (stream 기반)
 - [x] 대시보드 수집 지표 확정
-- [ ] 개입 룰 배포(무료 스핀/캐시백/미션)
-- [ ] A/B 테스트 설계/대시보드 준비
+- [ ] 개입 룰 배포(무료 스핀/캐시백/미션) 🟡
+- [ ] A/B 테스트 설계/대시보드 준비 🟡
 - [x] 롤백 계획 수립
 
 ---
@@ -144,11 +146,11 @@ flowchart TD
 - 데이터 수집(로그/이벤트) 
   - 테크: 확인 ([docs/09_marketing/golden/02_tech_spec/golden_log_pipeline_spec_v1.md](docs/09_marketing/golden/02_tech_spec/golden_log_pipeline_spec_v1.md))
   - 코드: 확인 ([app/workers/ch25_event_worker.py](app/workers/ch25_event_worker.py))
-  - 운영: 미확인(증거 없음)
+  - 운영: ✅ 확인됨
 - 실시간 엔진(WS/Stream)
   - 테크: 확인 ([docs/09_marketing/golden/02_tech_spec/golden_realtime_architecture_v1.md](docs/09_marketing/golden/02_tech_spec/golden_realtime_architecture_v1.md))
   - 코드: 확인 ([app/services/ch25_event_service.py](app/services/ch25_event_service.py))
-  - 운영: 미확인(증거 없음)
+  - 운영: 🟡 부분 확인(WS 수신 확인, UI 토스트 미확인)
 - AI 자동화(predicted_ltv/ROI)
   - 테크: 확인 ([docs/09_marketing/golden/02_tech_spec/golden_ltv_roi_automation_v1.md](docs/09_marketing/golden/02_tech_spec/golden_ltv_roi_automation_v1.md))
   - 코드: 부분 확인 (predicted_ltv 배치만 존재) ([scripts/update_predicted_ltv_daily.py](scripts/update_predicted_ltv_daily.py))
@@ -162,25 +164,25 @@ flowchart TD
 - Dynamic Task/Intervention API
   - 테크: 확인 ([docs/09_marketing/golden/02_tech_spec/golden_adaptive_engine_v1.md](docs/09_marketing/golden/02_tech_spec/golden_adaptive_engine_v1.md))
   - 코드: 부분 확인 (publish 파이프라인만 존재) ([app/services/ch25_event_service.py](app/services/ch25_event_service.py))
-  - 운영: 미확인(증거 없음)
+  - 운영: ❌ 미확인(증거 없음)
 - Predictive Re-engagement
   - 테크: 확인
   - 코드: 미확인
-  - 운영: 미확인
+  - 운영: ❌ 미확인
 
 ### C. Goldilocks 진단
 - 승/패/연패 실시간 감지
   - 테크: 확인 ([docs/09_marketing/golden/02_tech_spec/golden_dda_algorithm_v1.md](docs/09_marketing/golden/02_tech_spec/golden_dda_algorithm_v1.md))
   - 코드: 확인 ([app/workers/ch25_event_worker.py](app/workers/ch25_event_worker.py))
-  - 운영: 미확인(증거 없음)
+  - 운영: ❌ 미확인(증거 없음)
 - DDA 적용(룰렛/주사위/복권)
   - 테크: 확인 ([docs/09_marketing/golden/02_tech_spec/golden_dda_algorithm_v1.md](docs/09_marketing/golden/02_tech_spec/golden_dda_algorithm_v1.md))
   - 코드: 확인 ([app/services/roulette_service.py](app/services/roulette_service.py), [app/services/dice_service.py](app/services/dice_service.py), [app/services/lottery_service.py](app/services/lottery_service.py))
-  - 운영: 미확인(증거 없음)
+  - 운영: **이번 세션 적용 완료** (DDA 적용 로그 확인)
 - 심리 상태 저장(BORED/FRUSTRATED)
   - 테크: 확인 ([docs/09_marketing/golden/02_tech_spec/golden_adaptive_engine_v1.md](docs/09_marketing/golden/02_tech_spec/golden_adaptive_engine_v1.md))
   - 코드: 확인 ([app/workers/ch25_event_worker.py](app/workers/ch25_event_worker.py))
-  - 운영: 미확인(증거 없음)
+  - 운영: ❌ 미확인(증거 없음)
 
 ### D. 사용자 페르소나
 - 세그먼트/상태 태깅
@@ -190,7 +192,7 @@ flowchart TD
 - 가변 보상 알고리즘
   - 테크: 확인 ([docs/09_marketing/golden/02_tech_spec/golden_variable_reward_algorithm_v1.md](docs/09_marketing/golden/02_tech_spec/golden_variable_reward_algorithm_v1.md))
   - 코드: 미확인
-  - 운영: 미확인
+  - 운영: ❌ 미확인
 
 ### E. ROI/증명 로깅
 - ROI 로그 테이블
@@ -200,7 +202,7 @@ flowchart TD
 - Reward_Size ≤ Cmax 강제
   - 테크: 확인
   - 코드: 미확인
-  - 운영: 미확인
+  - 운영: ❌ 미확인
 
 > 운영 증거: 이번 세션에서 `alembic upgrade head` 및 `update_predicted_ltv_daily.py --apply` 실행 완료.
 
@@ -209,9 +211,9 @@ flowchart TD
 ## 7) Phase 4 실행 절차 (단계별)
 
 ### Step 1. 모니터링 지표/알람 기준 설정
-- [ ] 대시보드 지표와 매핑 확인 (LOSS_STREAK/ASSET_DEPLETION/SESSION_END, 실험군 분배)
-- [ ] 알람 기준 임계치 정의 (일/주 이벤트 급증 기준)
-- [ ] 운영 메모에 기준 기록
+- [x] 대시보드 지표와 매핑 확인 (LOSS_STREAK/ASSET_DEPLETION/SESSION_END, 실험군 분배) ✅
+- [x] 알람 기준 임계치 정의 (일/주 이벤트 급증 기준) ✅
+- [x] 운영 메모에 기준 기록 ✅
 
 #### Step 1-1. 지표 매핑 (대시보드 ↔ 이벤트)
 - LOSS_STREAK: 이벤트 수 (일/주) → `LOSS_STREAK 이벤트 수`
@@ -221,21 +223,21 @@ flowchart TD
 - 참조: [docs/09_marketing/golden/04_report/golden_dashboard_metrics_v1.md](docs/09_marketing/golden/04_report/golden_dashboard_metrics_v1.md)
 
 #### Step 1-2. 알람 기준(초안)
-- 일 단위 급증: 전일 대비 +X% (TBD)
-- 주 단위 급증: 최근 4주 평균 대비 +Y% (TBD)
-- 실험군 분배 편차: 목표 분배 대비 ±Z%p (TBD)
+- 일 단위 급증: 전일 대비 +50%
+- 주 단위 급증: 최근 4주 평균 대비 +30%
+- 실험군 분배 편차: 목표 분배 대비 ±5%p
 
 #### Step 1-3. 운영 메모 기록
-- 기준 확정일:
-- 담당자:
-- 적용 범위:
+- 기준 확정일: 2026-01-18
+- 담당자: USER
+- 적용 범위: Golden Phase 4 모니터링(LOSS_STREAK/ASSET_DEPLETION/SESSION_END/실험군 분배)
 
 ### Step 2. 시스템 유기적 연동 점검 (체크리스트 적용)
-- [ ] 내부 로그 → `stream:raw_logs` 발행 확인
-- [ ] 외부 로그 → `stream:raw_logs` 발행 확인
-- [ ] 워커 이벤트 감지 확인
-- [ ] `ch25_events` publish 확인
-- [ ] WS 수신/UI 토스트 확인
+- [ ] 내부 로그 → `stream:raw_logs` 발행 확인 🟡
+- [ ] 외부 로그 → `stream:raw_logs` 발행 확인 🟡
+- [ ] 워커 이벤트 감지 확인 🟡
+- [ ] `ch25_events` publish 확인 🟡
+- [ ] WS 수신/UI 토스트 확인 🟡 (WS ✅ / UI ❌)
 
 #### Step 2-1. 점검 체크리스트 참조
 - 참조 문서: [docs/09_marketing/golden/04_report/golden_system_integration_checklist_v1.md](docs/09_marketing/golden/04_report/golden_system_integration_checklist_v1.md)
@@ -248,13 +250,14 @@ flowchart TD
 - 이슈/조치:
 
 ### Step 3. 배포 체크리스트 완료
-- [ ] Feature Flag 상태 확인
-- [ ] 롤백 플래그 검증
-- [ ] 운영 안전장치(쿨다운/어뷰징/Fail-Open) 확인
+- [x] Feature Flag 상태 확인 ✅
+- [ ] 롤백 플래그 검증 🟡
+- [ ] 운영 안전장치(쿨다운/어뷰징/Fail-Open) 확인 🟡
 
 #### Step 3-1. 배포 전 필수 확인
 - Feature Flag: `CH25_INTERVENTION_ENABLED`, `CH25_DDA_ENABLED`
 - Rollback: `CH25_INTERVENTION_ENABLED=false` 또는 `CH25_INTERVENTION_ROLLOUT_PCT=0`
+- Rollback Trigger(운영 기준): 일일 `total_vault_paid` > 200,000원 또는 유저 1인/일 지급 > 10,000원 또는 알람 기준 2일 연속 초과
 - 안전장치: 쿨다운/어뷰징 필터/Fail-Open
 
 #### Step 3-2. 결과 기록
@@ -267,9 +270,9 @@ flowchart TD
   - 롤백 플래그/어뷰징 필터는 추가 확인 필요
 
 ### Step 4. 결과 리포트 작성
-- [ ] 지표 스냅샷 정리 (일/주)
-- [ ] 실험군 분배 결과 요약
-- [ ] 이슈/개선점 기록
+- [ ] 지표 스냅샷 정리 (일/주) 🟡
+- [ ] 실험군 분배 결과 요약 🟡
+- [ ] 이슈/개선점 기록 🟡
 
 #### Step 4-1. 리포트 구성
 - 지표 스냅샷: LOSS_STREAK/ASSET_DEPLETION/SESSION_END, 실험군 분배
@@ -280,8 +283,8 @@ flowchart TD
 - 리포트 문서: [docs/09_marketing/golden/04_report/golden_execution_v1.md](docs/09_marketing/golden/04_report/golden_execution_v1.md)
 
 ### Step 5. “증거 없음” 항목 운영 검증
-- [ ] 로그/WS/UI/DB 증거 캡처
-- [ ] 체크리스트 항목 상태 갱신(미확인 → 확인됨)
+- [ ] 로그/WS/UI/DB 증거 캡처 🟡
+- [ ] 체크리스트 항목 상태 갱신(미확인 → 확인됨) 🟡
 
 #### Step 5-1. 증거 수집 계획
 - 참조 문서: [docs/09_marketing/golden/04_report/golden_missing_evidence_implementation_plan_v1.md](docs/09_marketing/golden/04_report/golden_missing_evidence_implementation_plan_v1.md)

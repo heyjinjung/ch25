@@ -24,13 +24,14 @@ def run_query(query: str) -> str:
     clean_query = ' '.join(query.split())
     # Try docker exec first (if container name is known)
     # Using 'xmas-db' as identified in `docker ps`
-    cmd = f'docker exec -i {DB_CONTAINER} mysql -u {DB_USER} -p{DB_PASS} {DB_NAME} -N -e "{clean_query}"'
-    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    # [FIX] Force utf8mb4 to handle Korean nicknames correctly
+    cmd = f'docker exec -i {DB_CONTAINER} mysql -u {DB_USER} -p{DB_PASS} {DB_NAME} --default-character-set=utf8mb4 -N -e "{clean_query}"'
+    result = subprocess.run(cmd, shell=True, capture_output=True, text=True, encoding='utf-8')
     
     if result.returncode != 0:
         # Fallback to docker compose if direct exec fails (rare but possible)
-        cmd = f'docker compose exec -T db mysql -u {DB_USER} -p{DB_PASS} {DB_NAME} -N -e "{clean_query}"'
-        result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+        cmd = f'docker compose exec -T db mysql -u {DB_USER} -p{DB_PASS} {DB_NAME} --default-character-set=utf8mb4 -N -e "{clean_query}"'
+        result = subprocess.run(cmd, shell=True, capture_output=True, text=True, encoding='utf-8')
         
     return result.stdout.strip()
 
@@ -89,6 +90,18 @@ def get_inventory_snapshot():
         parts = line.split('\t')
         if len(parts) == 2:
             inv[parts[0]] = int(parts[1])
+
+    # [FIX] Diamond SoT is user_inventory_item, not user_game_wallet
+    # Using item_type column as verified by schema
+    diamond_query = "SELECT SUM(quantity) FROM user_inventory_item WHERE item_type = 'DIAMOND'"
+    d_out = run_query(diamond_query)
+    try:
+        if d_out and d_out != 'NULL':
+            inv['DIAMOND'] = int(d_out)
+        else:
+            inv['DIAMOND'] = 0
+    except:
+        inv['DIAMOND'] = 0
             
     # Vault Current Balance (Updated to use user.vault_locked_balance as SoT)
     # vault_status table is deprecated.
@@ -145,7 +158,53 @@ def generate_report(date_str: str):
     today_s = target_date.strftime("%Y-%m-%d")
     yst_s = yesterday.strftime("%Y-%m-%d")
     dbf_s = day_before.strftime("%Y-%m-%d")
+
+    # [New] No-Play Visitors Analysis
+    def get_visitors_set(t_date: str):
+        # 1. Login Activity (Limited by overwrite)
+        q1 = f"SELECT user_id FROM user_activity WHERE DATE(DATE_ADD(last_login_at, INTERVAL 9 HOUR)) = '{t_date}'"
+        # 2. Event Log (Any interaction)
+        q2 = f"SELECT DISTINCT user_id FROM user_event_log WHERE DATE(DATE_ADD(created_at, INTERVAL 9 HOUR)) = '{t_date}'"
+        # 3. Wallet Ledger (Any spending/earning)
+        q3 = f"SELECT DISTINCT user_id FROM user_game_wallet_ledger WHERE DATE(DATE_ADD(created_at, INTERVAL 9 HOUR)) = '{t_date}'"
+        
+        o1 = run_query(q1).split()
+        o2 = run_query(q2).split()
+        o3 = run_query(q3).split()
+        
+        s1 = set(map(int, filter(None, o1)))
+        s2 = set(map(int, filter(None, o2)))
+        s3 = set(map(int, filter(None, o3)))
+        return s1 | s2 | s3
+
+    def get_players_set(t_date: str):
+        # Users who actually played games (negative delta in wallet with specific reasons)
+        reasons = "'DICE_PLAY', 'ROULETTE_PLAY', 'LOTTERY_PLAY'"
+        q = f"""
+        SELECT DISTINCT user_id 
+        FROM user_game_wallet_ledger 
+        WHERE reason IN ({reasons})
+          AND delta < 0
+          AND DATE(DATE_ADD(created_at, INTERVAL 9 HOUR)) = '{t_date}'
+        """
+        out = run_query(q).split()
+        return set(map(int, filter(None, out)))
+
+    visitors_today = get_visitors_set(today_s)
+    players_today = get_players_set(today_s)
+    no_play_today = visitors_today - players_today
     
+    visitors_yst = get_visitors_set(yst_s)
+    players_yst = get_players_set(yst_s)
+    no_play_yst = visitors_yst - players_yst
+    
+    def format_user_list(u_set):
+        if not u_set: return "없음"
+        return f"{len(u_set)}명 (ID: {', '.join(map(str, sorted(list(u_set))))})"
+
+    noplay_today_s = format_user_list(no_play_today)
+    noplay_yst_s = format_user_list(no_play_yst)
+
     # 1. Gather Data
     stats_today = get_game_stats(today_s)
     stats_yst = get_game_stats(yst_s)
@@ -157,6 +216,97 @@ def generate_report(date_str: str):
     inv_map, vault_bal, vault_users = get_inventory_snapshot()
     
     conv_today = get_conversion_stats(today_s)
+    
+    # [3.1] User Nickname Mapping
+    def get_user_map(user_ids):
+        if not user_ids: return {}
+        ids_str = ','.join(map(str, user_ids))
+        q = f"SELECT id, nickname FROM user WHERE id IN ({ids_str})"
+        out = run_query(q)
+        u_map = {}
+        for line in out.split('\n'):
+            if not line.strip(): continue
+            parts = line.split('\t')
+            if len(parts) >= 2:
+                u_map[int(parts[0])] = parts[1]
+        return u_map
+
+    # [3.2] Consumption Targets (Users with remaining tickets)
+    def get_consumption_targets():
+        # Tokens: DICE_TOKEN, ROULETTE_COIN, LOTTERY_TICKET
+        tokens = "'DICE_TOKEN', 'ROULETTE_COIN', 'LOTTERY_TICKET'"
+        q = f"""
+        SELECT user_id, token_type, balance 
+        FROM user_game_wallet 
+        WHERE token_type IN ({tokens}) 
+          AND balance > 0
+        """
+        out = run_query(q)
+        targets = {}
+        all_ids = set()
+        
+        for line in out.split('\n'):
+            if not line.strip(): continue
+            parts = line.split('\t')
+            if len(parts) == 3:
+                uid = int(parts[0])
+                ttype = parts[1]
+                bal = int(parts[2])
+                
+                if uid not in targets: targets[uid] = []
+                targets[uid].append(f"{ttype.replace('DICE_TOKEN','주사위').replace('ROULETTE_COIN','룰렛').replace('LOTTERY_TICKET','복권')}({bal})")
+                all_ids.add(uid)
+        
+        # [New] Fetch Visit Counts for Priority Scoring
+        if not all_ids: return {}, set()
+        
+        ids_str = ','.join(map(str, all_ids))
+        v_q = f"SELECT user_id, COUNT(*) FROM user_event_log WHERE user_id IN ({ids_str}) GROUP BY user_id"
+        v_out = run_query(v_q)
+        visits = {}
+        for line in v_out.split('\n'):
+            if not line.strip(): continue
+            p = line.split('\t')
+            visits[int(p[0])] = int(p[1])
+            
+        return targets, all_ids, visits
+
+    # [3.3] Formatters
+    target_map, target_ids, visit_map = get_consumption_targets()
+    
+    # Fetch nicknames for all relevant users (NoPlay + Targets)
+    all_related_ids = no_play_today | no_play_yst | target_ids
+    user_nick_map = get_user_map(all_related_ids)
+    
+    def format_user_list_with_nick(u_set):
+        if not u_set: return "없음"
+        sorted_list = sorted(list(u_set))
+        formatted = []
+        for uid in sorted_list:
+            nick = user_nick_map.get(uid, "Unknown")
+            formatted.append(f"{uid}({nick})")
+        return f"{len(u_set)}명 (ID: {', '.join(formatted)})"
+
+    noplay_today_s = format_user_list_with_nick(no_play_today)
+    noplay_yst_s = format_user_list_with_nick(no_play_yst)
+    
+    def format_targets(t_map, n_map, v_map):
+        if not t_map: return "없음"
+        lines = []
+        # Sort by user id
+        for uid in sorted(t_map.keys()):
+            nick = n_map.get(uid, "Unknown")
+            assets = ", ".join(t_map[uid])
+            visit_count = v_map.get(uid, 0)
+            
+            # Simple tagging based on visit count (Proxy for engagement/dormancy without CSV)
+            # ideally we merge CSV data here, but for daily log solely DB based:
+            tag = "🔥활성" if visit_count > 100 else "💤휴면의심" if visit_count < 10 else "⚠️관망"
+            
+            lines.append(f"- **ID {uid} ({nick})** [{tag}/방문{visit_count}]: {assets}")
+        return "\n".join(lines)
+    
+    consumption_targets_s = format_targets(target_map, user_nick_map, visit_map)
     
     # 2. Format Logic (Delta Calculation)
     def calc_delta(curr, prev):
@@ -227,7 +377,24 @@ def generate_report(date_str: str):
 
 ---
 
-## 5. 📝 운영 제언 (Action Items)
+---
+
+## 5. 📉 미참여 방문자 (No-Play Visitors)
+> 사이트에 방문했으나 게임을 1회도 수행하지 않은 유저 (잠재 이탈 관리 대상)
+
+- **오늘 ({today_s})**: {noplay_today_s}
+- **어제 ({yst_s})**: {noplay_yst_s}
+
+---
+
+## 6. 🎯 금일 소진 유도 대상 (Consumption Targets)
+> 보유 티켓/코인이 남아있는 유저 리스트 (접속 유도 및 사용 독려)
+
+{consumption_targets_s}
+
+---
+
+## 7. 📝 운영 제언 (Action Items)
 1. (자동 생성) 재화 보유량 기반: 복권 티켓 {inv_map.get('LOTTERY_TICKET', 0)}개 → 소진 이벤트 필요 여부 판단.
 2. (자동 생성) 금고 참여자 수 변화를 보고 프로모션 결정.
 """
