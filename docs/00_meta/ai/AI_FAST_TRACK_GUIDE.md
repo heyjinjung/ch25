@@ -100,3 +100,34 @@ AI가 자주 헤매지 않도록 주요 파일 위치를 미리 지정합니다.
 - API연동: `src/api/`
 - 라우팅: `src/router/`
 - 타입: `src/types/`
+
+---
+
+## 5. 🧭 메타 문서 활용 지침 (Golden 연계)
+
+이 섹션은 **현재 구현된 시스템 메타데이터 문서**를 **Golden 프로젝트 전략/기술 문서와 연결**하는 최소 가이드입니다.
+
+### 5.1 “어떤 질문에 어떤 문서?” 매핑
+- **경제/보상 SoT** → `2026_core_economy_glossary_ko.md`
+- **게임 액션/응답 스키마** → `2026_game_action_schema_ko.md`
+- **어드민 설정 스키마** → `2026_admin_game_config_schema_ko.md`
+- **알림/피드 스키마** → `2026_notification_feed_schema_ko.md`
+- **OPS 실행 결과 스키마** → `2026_ops_plan_execution_result_schema.md`
+- **성장/시즌패스 구조** → `2026_progression_schema_ko.md`
+- **Strict Vault 정책/제재** → `2026_strict_vault_policy.md`
+
+### 5.2 Golden 문서로 이어붙이는 규칙
+1) **메타 문서에서 SoT를 확인**
+2) **Golden 레이어(Strategy/Tech/Research/Report)** 중 어디에 반영할지 결정
+3) **프롬프트에 “SoT 근거 + 적용 위치 + 제약”**를 명시
+
+### 5.3 AI 프롬프트 최소 템플릿
+```
+[Meta→Golden]
+목표: {지표/문제}
+SoT 근거: {메타 문서 파일명}
+적용 레이어: {Strategy|TechSpec|Research|Report}
+채널/노출: {UI 위치}
+제약: {항상-on, KST, 금액 정수, 푸시 미사용}
+출력: {아이디어|카피|스키마}
+```

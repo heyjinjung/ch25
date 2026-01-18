@@ -30,18 +30,22 @@ from app.api.routes import (
 	admin_user_merge,
 	telegram_unlink,
 	dev_auth,
+	dev_ch25_events,
 	inventory_shop,
 	metrics,
 	ws_ops,
 	ws_ops,
 	ws_feed,
+	ws_events,
 	exchange,
+	retention_intervention,
 )
 
 api_router = APIRouter()
 
 # Dev endpoints (only enabled in development)
 api_router.include_router(dev_auth.router, prefix="/api/dev", tags=["dev"])
+api_router.include_router(dev_ch25_events.router, prefix="/api/dev", tags=["dev"])
 
 # Metrics endpoint
 api_router.include_router(metrics.router, tags=["metrics"])
@@ -75,4 +79,6 @@ api_router.include_router(telegram_unlink.admin_router)
 api_router.include_router(inventory_shop.router, prefix="/api")
 api_router.include_router(ws_ops.router)
 api_router.include_router(ws_feed.router)
+api_router.include_router(ws_events.router)
 api_router.include_router(exchange.router)
+api_router.include_router(retention_intervention.router)

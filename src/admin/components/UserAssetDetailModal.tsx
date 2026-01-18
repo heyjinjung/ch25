@@ -1,14 +1,18 @@
 import React, { useEffect, useState } from "react";
-import { X, Users, Wallet, ScrollText, History, Package } from "lucide-react";
+import { X, Users, Wallet, ScrollText, History, Package, Lock, ShieldAlert, Save, RefreshCw, AlertCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchRecentPlayLogs, fetchLedger, fetchWalletSummary } from "../api/adminGameTokenApi";
+import { adminApi } from "../api/httpClient";
 import { adminInventoryApi } from "../api/adminInventoryApi";
+import { fetchUserVaultHistory, fetchUserVaultState, VaultEarnEvent } from "../api/adminUserApi";
+import { useToast } from "../../components/common/ToastProvider";
 import { GAME_TOKEN_LABELS, GameTokenType } from "../../types/gameTokens";
 
 interface UserAssetDetailModalProps {
     isVisible: boolean;
     onClose: () => void;
-    userId: number | null;
+    userId: number | null | undefined;
+    initialTab?: "summary" | "playLogs" | "ledger" | "inventory" | "vault";
 }
 
 
@@ -31,8 +35,12 @@ function formatKSTTime(iso: string) {
     }).format(d).replace(/\. /g, "/").replace(/\.$/, "");
 }
 
-const UserAssetDetailModal: React.FC<UserAssetDetailModalProps> = ({ isVisible, onClose, userId }) => {
-    const [activeTab, setActiveTab] = useState<"summary" | "playLogs" | "ledger" | "inventory">("summary");
+const UserAssetDetailModal: React.FC<UserAssetDetailModalProps> = ({ isVisible, onClose, userId, initialTab }) => {
+    const [activeTab, setActiveTab] = useState<"summary" | "playLogs" | "ledger" | "inventory" | "vault">("summary");
+    const { addToast } = useToast();
+    const [newLocked, setNewLocked] = useState<string>("");
+    const [newAvailable, setNewAvailable] = useState<string>("");
+    const [updatingVault, setUpdatingVault] = useState(false);
 
     // Check if user is selected
     const enabled = isVisible && !!userId;
@@ -66,10 +74,68 @@ const UserAssetDetailModal: React.FC<UserAssetDetailModalProps> = ({ isVisible, 
         enabled: enabled && (activeTab === "inventory" || activeTab === "summary"),
     });
 
+    const vaultQuery = useQuery({
+        queryKey: ["admin", "user-detail", userId, "vault"],
+        queryFn: async () => {
+            if (!userId) return null;
+            return fetchUserVaultState(userId);
+        },
+        enabled: enabled && activeTab === "vault",
+    });
+
+    const vaultHistoryQuery = useQuery<VaultEarnEvent[]>({
+        queryKey: ["admin", "users", userId, "vault", "history"],
+        queryFn: () => userId ? fetchUserVaultHistory(userId) : Promise.resolve([]),
+        enabled: enabled && activeTab === "vault",
+    });
+
+    // Sync state when vault data loads
+    useEffect(() => {
+        if (vaultQuery.data) {
+            setNewLocked(vaultQuery.data.locked_balance.toString());
+            setNewAvailable(vaultQuery.data.available_balance.toString());
+        }
+    }, [vaultQuery.data]);
+
+    const handleVaultUpdate = async () => {
+        if (!userId || !vaultQuery.data) return;
+
+        const lockedVal = parseInt(newLocked);
+        const availableVal = parseInt(newAvailable);
+
+        if (isNaN(lockedVal) || isNaN(availableVal)) {
+            addToast("올바른 금액을 입력해주세요.", "error");
+            return;
+        }
+
+        if (!window.confirm(`정말 ID:${userId} 유저의 금고 잔액을 수정하시겠습니까?`)) {
+            return;
+        }
+
+        setUpdatingVault(true);
+        try {
+            await adminApi.post(`/admin/api/vault/${userId}/balance`, {
+                locked_amount: lockedVal,
+                available_amount: availableVal,
+                reason: "ADMIN_MODAL_MANUAL_SET"
+            });
+            addToast("금고 잔액이 수정되었습니다.", "success");
+            vaultQuery.refetch();
+            summaryQuery.refetch(); // Refresh wallet summary too if correlated
+        } catch (error) {
+            console.error("Vault update failed:", error);
+            addToast("잔액 수정 실패", "error");
+        } finally {
+            setUpdatingVault(false);
+        }
+    };
+
     // Reset tab when modal opens
     useEffect(() => {
-        if (isVisible) setActiveTab("summary");
-    }, [isVisible]);
+        if (isVisible) {
+            setActiveTab(initialTab || "summary");
+        }
+    }, [isVisible, initialTab]);
 
     if (!isVisible || !userId) return null;
 
@@ -111,6 +177,7 @@ const UserAssetDetailModal: React.FC<UserAssetDetailModalProps> = ({ isVisible, 
                             { id: "playLogs", label: "플레이 로그", icon: ScrollText },
                             { id: "ledger", label: "지갑 원장", icon: History },
                             { id: "inventory", label: "인벤토리", icon: Package },
+                            { id: "vault", label: "금고 관리", icon: Lock },
                         ].map(tab => (
                             <button
                                 key={tab.id}
@@ -306,6 +373,149 @@ const UserAssetDetailModal: React.FC<UserAssetDetailModalProps> = ({ isVisible, 
                                     </tbody>
                                 </table>
                             </div>
+                        </div>
+                    )}
+
+                    {activeTab === "vault" && (
+                        <div className="space-y-8">
+                            {vaultQuery.isLoading ? (
+                                <div className="text-center py-10 text-zinc-500">불러오는 중...</div>
+                            ) : vaultQuery.data ? (
+                                <div className="space-y-6">
+                                    {/* Current Status Cards */}
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div className="bg-zinc-800/50 border border-zinc-700/50 rounded-xl p-4">
+                                            <div className="text-xs text-zinc-500 font-bold mb-1">총 금고 잔액 (Total)</div>
+                                            <div className="text-2xl font-black text-white font-mono tabular-nums">
+                                                {(vaultQuery.data.locked_balance + vaultQuery.data.available_balance).toLocaleString()}
+                                            </div>
+                                        </div>
+                                        <div className="bg-zinc-800/50 border border-zinc-700/50 rounded-xl p-4">
+                                            <div className="text-xs text-zinc-500 font-bold mb-1">잠금 금액 (Locked)</div>
+                                            <div className="text-xl font-bold text-admin-brand font-mono tabular-nums">
+                                                {vaultQuery.data.locked_balance.toLocaleString()}
+                                            </div>
+                                        </div>
+                                        <div className="bg-zinc-800/50 border border-zinc-700/50 rounded-xl p-4">
+                                            <div className="text-xs text-zinc-500 font-bold mb-1">가용 금액 (Available)</div>
+                                            <div className="text-xl font-bold text-emerald-400 font-mono tabular-nums">
+                                                {vaultQuery.data.available_balance.toLocaleString()}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Force Balance Adjustment */}
+                                    <div className="bg-red-900/5 border border-red-500/20 rounded-2xl overflow-hidden">
+                                        <div className="px-6 py-4 border-b border-red-500/20 bg-red-900/10 flex items-center justify-between">
+                                            <h3 className="text-sm font-black text-white flex items-center gap-2">
+                                                <ShieldAlert className="h-4 w-4 text-red-500" />
+                                                금고 잔액 강제 수정 (Force Update)
+                                            </h3>
+                                        </div>
+
+                                        <div className="p-6 space-y-6">
+                                            <div className="grid grid-cols-2 gap-6">
+                                                <div className="space-y-2">
+                                                    <label className="text-[10px] font-black text-zinc-500 tracking-widest pl-1">잠금 금액 (Locked)</label>
+                                                    <div className="relative group">
+                                                        <input
+                                                            type="number"
+                                                            value={newLocked}
+                                                            onChange={(e) => setNewLocked(e.target.value)}
+                                                            className="w-full h-12 bg-zinc-950/80 border border-zinc-800 rounded-xl px-4 text-lg font-bold text-admin-brand outline-none focus:border-admin-brand focus:ring-2 focus:ring-admin-brand/20 transition-all font-mono"
+                                                        />
+                                                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-zinc-700 font-bold">KRW</span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="space-y-2">
+                                                    <label className="text-[10px] font-black text-zinc-500 tracking-widest pl-1">가용 금액 (Available)</label>
+                                                    <div className="relative group">
+                                                        <input
+                                                            type="number"
+                                                            value={newAvailable}
+                                                            onChange={(e) => setNewAvailable(e.target.value)}
+                                                            className="w-full h-12 bg-zinc-950/80 border border-zinc-800 rounded-xl px-4 text-lg font-bold text-emerald-400 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 transition-all font-mono"
+                                                        />
+                                                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-zinc-700 font-bold">KRW</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="bg-rose-500/5 border border-rose-500/20 rounded-xl p-4 flex items-start gap-4">
+                                                <div className="h-8 w-8 rounded-lg bg-rose-500/10 flex items-center justify-center shrink-0">
+                                                    <AlertCircle className="h-5 w-5 text-rose-500" />
+                                                </div>
+                                                <div className="text-[11px] text-zinc-400 leading-relaxed">
+                                                    이 작업은 실시간 원장에 즉시 반영되며 복구할 수 없습니다. 신중하게 진행해주세요.
+                                                </div>
+                                            </div>
+
+                                            <button
+                                                onClick={handleVaultUpdate}
+                                                disabled={updatingVault || (newLocked === vaultQuery.data?.locked_balance.toString() && newAvailable === vaultQuery.data?.available_balance.toString())}
+                                                className="w-full h-12 bg-red-600/90 hover:bg-red-600 text-white font-black rounded-xl hover:brightness-110 active:scale-95 transition-all shadow-lg shadow-red-600/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:grayscale disabled:active:scale-100"
+                                            >
+                                                {updatingVault ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                                                잔액 강제 수정 실행
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Vault History Table */}
+                                    <div className="bg-zinc-800/20 border border-zinc-700/50 rounded-xl overflow-hidden">
+                                        <div className="px-6 py-4 border-b border-zinc-700/50 flex items-center justify-between">
+                                            <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                                                <History className="h-4 w-4 text-zinc-400" />
+                                                금고 변동 내역
+                                            </h3>
+                                        </div>
+                                        <div className="overflow-x-auto">
+                                            {vaultHistoryQuery.isLoading ? (
+                                                <div className="p-8 text-center text-zinc-500">내역 불러오는 중...</div>
+                                            ) : vaultHistoryQuery.data?.length === 0 ? (
+                                                <div className="p-8 text-center text-zinc-500">기록된 내역이 없습니다.</div>
+                                            ) : (
+                                                <table className="w-full text-left border-collapse">
+                                                    <thead className="bg-zinc-900/50 border-b border-zinc-800">
+                                                        <tr>
+                                                            <th className="px-4 py-3 text-xs font-medium text-zinc-400 uppercase">Time</th>
+                                                            <th className="px-4 py-3 text-xs font-medium text-zinc-400 uppercase">Type</th>
+                                                            <th className="px-4 py-3 text-right text-xs font-medium text-zinc-400 uppercase">Amount</th>
+                                                            <th className="px-4 py-3 text-xs font-medium text-zinc-400 uppercase">Reason/Meta</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody className="divide-y divide-zinc-800/50">
+                                                        {vaultHistoryQuery.data?.map((event) => {
+                                                            const isPositive = event.amount > 0;
+                                                            return (
+                                                                <tr key={event.id} className="hover:bg-white/5 transition-colors">
+                                                                    <td className="px-4 py-3 text-xs text-zinc-400 font-mono whitespace-nowrap">
+                                                                        {new Date(event.created_at).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}
+                                                                    </td>
+                                                                    <td className="px-4 py-3 text-xs text-white">
+                                                                        <span className={`px-1.5 py-0.5 rounded ${event.earn_type === 'GAME_PLAY' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-zinc-800 text-zinc-300'}`}>
+                                                                            {event.earn_type}
+                                                                        </span>
+                                                                    </td>
+                                                                    <td className={`px-4 py-3 text-xs font-bold text-right font-mono ${isPositive ? 'text-emerald-400' : 'text-red-400'}`}>
+                                                                        {isPositive ? '+' : ''}{event.amount.toLocaleString()}
+                                                                    </td>
+                                                                    <td className="px-4 py-3 text-xs text-zinc-500 max-w-[200px] truncate" title={JSON.stringify(event.payout_raw_json)}>
+                                                                        {event.source}
+                                                                    </td>
+                                                                </tr>
+                                                            );
+                                                        })}
+                                                    </tbody>
+                                                </table>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="text-center py-10 text-zinc-500">데이터를 불러올 수 없습니다.</div>
+                            )}
                         </div>
                     )}
                 </div>

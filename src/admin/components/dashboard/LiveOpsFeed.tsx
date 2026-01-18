@@ -36,6 +36,38 @@ const LiveOpsFeed: React.FC = () => {
 
     const logsList = Array.isArray(logs) ? logs : [];
 
+    const ACTION_LABELS: Record<string, string> = {
+        OFFER_PERSONALIZED_TRACKED: "개입/재참여 시도",
+        FEED_EVENT_PUBLISHED: "피드 이벤트 발행",
+        GAME_PLAY_RECORDED: "게임 플레이 기록",
+        ADMIN_MANUAL_GRANT: "관리자 수동 지급",
+        SYSTEM_HEALTHCHECK: "시스템 점검",
+    };
+
+    const CATEGORY_LABELS: Record<string, string> = {
+        [OpsLogCategoryValues.GAME_PLAY]: "게임",
+        [OpsLogCategoryValues.ECONOMY]: "정산",
+        [OpsLogCategoryValues.SYSTEM]: "시스템",
+        [OpsLogCategoryValues.USER_MANAGEMENT]: "유저",
+        [OpsLogCategoryValues.SECURITY]: "보안",
+    };
+
+    const toSummary = (log: { action_code: string; meta_data?: Record<string, unknown> }) => {
+        const meta = log.meta_data ?? {};
+        if (log.action_code === "OFFER_PERSONALIZED_TRACKED") {
+            const trigger = String(meta.trigger ?? "");
+            if (trigger === "PREDICTIVE_REENGAGEMENT") {
+                const segment = String(meta.segment ?? "-");
+                const churn = meta.churn_probability !== undefined ? `(${Number(meta.churn_probability).toFixed(2)})` : "";
+                return `재참여 큐 등록 · ${segment} ${churn}`.trim();
+            }
+            const eventType = String(meta.event_type ?? "-");
+            const eligible = meta.eligible === false ? "(중지됨)" : "";
+            return `개입 시도 · ${eventType} ${eligible}`.trim();
+        }
+        return "운영 이벤트";
+    };
+
     const getCategoryIcon = (category: OpsLogCategoryType) => {
         switch (category) {
             case OpsLogCategoryValues.GAME_PLAY:
@@ -110,18 +142,23 @@ const LiveOpsFeed: React.FC = () => {
 
                                 {/* Content Column */}
                                 <div className="flex-1 min-w-0 space-y-1">
-                                    <div className="flex justify-between items-start">
-                                        <span className="text-sm font-bold text-zinc-300">
-                                            {log.action_code}
-                                        </span>
+                                    <div className="flex justify-between items-start gap-4">
+                                        <div className="min-w-0">
+                                            <div className="text-sm font-bold text-zinc-200 truncate">
+                                                {ACTION_LABELS[log.action_code] ?? log.action_code}
+                                            </div>
+                                            <div className="text-xs text-zinc-500 truncate">
+                                                {toSummary(log)}
+                                            </div>
+                                        </div>
                                         <span className="text-[10px] text-zinc-600 font-mono">
                                             {formatTimeHHmmss(new Date(log.timestamp))}
                                         </span>
                                     </div>
-                                    <p className="text-xs text-zinc-500 leading-relaxed break-all line-clamp-2 group-hover/item:line-clamp-none transition-all">
-                                        {JSON.stringify(log.meta_data)}
-                                    </p>
                                     <div className="pt-1 flex items-center gap-2">
+                                        <span className="px-1.5 py-0.5 rounded bg-zinc-900 border border-white/5 text-[10px] text-zinc-500">
+                                            {CATEGORY_LABELS[log.category] ?? log.category}
+                                        </span>
                                         {log.target_id && (
                                             <span className="px-1.5 py-0.5 rounded bg-zinc-900 border border-white/5 text-[10px] text-zinc-500 font-mono">
                                                 ID: {log.target_id}

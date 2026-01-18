@@ -11,7 +11,7 @@ import { Check, ClipboardList, History, Package, X } from "lucide-react";
 import UserInventoryModal from "../components/UserInventoryModal";
 import UserGameTokenModal from "../components/UserGameTokenModal";
 import UserAuditLogModal from "../components/UserAuditLogModal";
-import VaultHistoryTable from "../components/VaultHistoryTable";
+import UserAssetDetailModal from "../components/UserAssetDetailModal";
 
 type MemberRow = AdminUser & {
   isEditing?: boolean;
@@ -73,7 +73,8 @@ const UserAdminPage: React.FC = () => {
   const [selectedUserForInventory, setSelectedUserForInventory] = useState<AdminUser | null>(null);
   const [selectedUserForGameTokens, setSelectedUserForGameTokens] = useState<{ user: AdminUser; tab: "wallets" | "ledger" } | null>(null);
   const [selectedUserForAuditLogs, setSelectedUserForAuditLogs] = useState<AdminUser | null>(null);
-  const [selectedUserForVaultHistory, setSelectedUserForVaultHistory] = useState<AdminUser | null>(null);
+
+  const [assetDetailModal, setAssetDetailModal] = useState<{ user: AdminUser; tab: "summary" | "playLogs" | "ledger" | "inventory" | "vault" } | null>(null);
 
   const [sortKey, setSortKey] = useState<SortKey>("nickname");
   const [itemsPerPage, setItemsPerPage] = useState(20);
@@ -839,6 +840,7 @@ const UserAdminPage: React.FC = () => {
                               <Edit2 size={14} />
                             </button>
                           )}
+
                           <button
                             type="button"
                             onClick={() => setSelectedUserForMissions(member)}
@@ -870,10 +872,10 @@ const UserAdminPage: React.FC = () => {
 
                           <button
                             type="button"
-                            onClick={() => setSelectedUserForVaultHistory(member)}
+                            onClick={() => setAssetDetailModal({ user: member, tab: "vault" })}
                             className="rounded-md p-2 text-yellow-500 hover:text-white"
-                            title="금고 내역"
-                            aria-label="금고 내역"
+                            title="금고 관리 (내역/잔액)"
+                            aria-label="금고 관리 (내역/잔액)"
                           >
                             <span className="font-bold text-xs">V</span>
                           </button>
@@ -937,10 +939,12 @@ const UserAdminPage: React.FC = () => {
               />
             )}
 
-            {selectedUserForVaultHistory && (
-              <VaultHistoryTable
-                user={selectedUserForVaultHistory}
-                onClose={() => setSelectedUserForVaultHistory(null)}
+            {assetDetailModal && (
+              <UserAssetDetailModal
+                isVisible={true}
+                userId={assetDetailModal.user.id}
+                initialTab={assetDetailModal.tab}
+                onClose={() => setAssetDetailModal(null)}
               />
             )}
 
