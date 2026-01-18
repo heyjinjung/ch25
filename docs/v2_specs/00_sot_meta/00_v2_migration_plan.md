@@ -56,15 +56,17 @@
     *   **Action**: Phase 0에서 확정한 문서를 코드로 변환 (Pydantic & Zod).
     *   **원칙**: `any` 타입 절대 금지. 모든 입/출력 데이터는 스키마에 의해 검증되어야 함.
     *   [x] 스키마 SoT 문서 정리 완료
-    *   [ ] Pydantic/Zod 코드 변환
-    *   **진행도**: 문서 완료 / 코드 미착수
-    *   **근거**: [docs/v2_specs/02_game/v2_game_action_schema_sot_ko.md](../02_game/v2_game_action_schema_sot_ko.md#L1), [docs/v2_specs/01_core/v2_progression_schema_ko.md](../01_core/v2_progression_schema_ko.md#L1), [docs/v2_specs/03_api/v2_notification_feed_schema_ko.md](../03_api/v2_notification_feed_schema_ko.md#L1), [docs/v2_specs/02_game/v2_admin_game_config_schema_ko.md](../02_game/v2_admin_game_config_schema_ko.md#L1)
+    *   [x] Pydantic/Zod 코드 변환 (Progression → Game Action → Admin Game Config → Notification Feed)
+    *   **진행도**: 진행중 (4개 스키마 코드 완료)
+    *   **근거**: [docs/v2_specs/02_game/v2_game_action_schema_sot_ko.md](../02_game/v2_game_action_schema_sot_ko.md#L1), [docs/v2_specs/01_core/v2_progression_schema_ko.md](../01_core/v2_progression_schema_ko.md#L1), [docs/v2_specs/03_api/v2_notification_feed_schema_ko.md](../03_api/v2_notification_feed_schema_ko.md#L1), [docs/v2_specs/02_game/v2_admin_game_config_schema_ko.md](../02_game/v2_admin_game_config_schema_ko.md#L1), [app/schemas/v2_progression.py](../../../app/schemas/v2_progression.py#L1), [app/schemas/v2_game_action.py](../../../app/schemas/v2_game_action.py#L1), [app/schemas/v2_admin_game_config.py](../../../app/schemas/v2_admin_game_config.py#L1), [app/schemas/v2_notification_feed.py](../../../app/schemas/v2_notification_feed.py#L1), [src/types/v2/enums.ts](../../../src/types/v2/enums.ts#L1), [src/types/v2/progression.ts](../../../src/types/v2/progression.ts#L1), [src/types/v2/gameAction.ts](../../../src/types/v2/gameAction.ts#L1), [src/types/v2/adminGameConfig.ts](../../../src/types/v2/adminGameConfig.ts#L1), [src/types/v2/notificationFeed.ts](../../../src/types/v2/notificationFeed.ts#L1)
 
 6.  **데이터베이스 재설계 (V2 Schema)**
     *   `dirty`한 컬럼명 정리, 인덱스 최적화.
     *   **Money Integrity**: `Check Constraint (balance >= 0)` 설정 필수.
-    *   **진행도**: 미착수
-    *   **근거**: 문서/스키마 미작성 상태
+    *   [x] Money Integrity 체크 제약 추가
+    *   **마이그레이션 전략**: 다음달 완전 리셋 배포 전제 → **베이스라인 스냅샷 1개 + 이후 최소 누적**
+    *   **진행도**: 진행중 (제약 추가 완료, 베이스라인 스냅샷/추가 스키마 설계 필요)
+    *   **근거**: [alembic/versions/20260119_0001_add_money_integrity_checks.py](../../../alembic/versions/20260119_0001_add_money_integrity_checks.py#L1)
 
 ---
 
