@@ -331,3 +331,16 @@ scripts/manual_purge_target_113.py
 docs/06_ops/202601/도파민2차_체류시간증대_전략_v1.0.md
 docs/06_ops/202601/도파민2차_체류시간증대_전략_v1.0.md
 docs/06_ops/202601/exports/CC260117.CSV
+docs/06_ops/202601/exterior/rawdata/20260117_casino_logs_raw.md
+docs/06_ops/202601/exterior/rawdata/20260117_slot_logs_raw_1.CSV
+docs/06_ops/202601/exterior/rawdata/20260117_slot_logs_raw_2.CSV
+docs/06_ops/202601/exterior/rawdata/20260117_slot_logs_raw_3.CSV
+docs/06_ops/202601/exterior/rawdata/20260117_sports_logs_raw.md
+docs/06_ops/202601/exterior/segments/1_Registered_Active_Depositors.csv
+docs/06_ops/202601/exterior/segments/2_Registered_NonDepositors_Fuel.csv
+docs/06_ops/202601/exterior/segments/3_Unregistered_Potential_Whales.csv
+docs/06_ops/202601/exterior/segments/4_Unregistered_NPCs.csv
+docs/06_ops/202601/exterior/도파민/전체회원.CSV
+docs/06_ops/202601/exterior/도파민/CC0118_RAW.CSV
+docs/06_ops/202601/exterior/도파민/CC260117.CSV
+docs/08_changelog/20260117_ops_report_fix.md
