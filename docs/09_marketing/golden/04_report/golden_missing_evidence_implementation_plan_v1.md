@@ -138,17 +138,22 @@ Last Updated: 2026-01-17
 
 ## 5) 상태 갱신 (2026-01-18)
 
-- A. 로그/이벤트 파이프라인 운영 확인: **확인됨**
+상태 아이콘: ✅ 확인됨 / 🟡 부분 확인 / ❌ 미확인
+
+- A. 로그/이벤트 파이프라인 운영 확인: ✅ **확인됨**
   - 내부 이벤트 주입/워커 소비/`ch25_events` 발행 증거 확보
-- B. 실시간 엔진(WS/Stream) 운영 확인: **부분 확인**
-  - WS 수신 확인 완료, UI 토스트는 텔레그램 인증으로 미확인
-- C. Dynamic Task/Intervention API: **코드 구현됨(운영 미확인)**
-- D. Predictive Re-engagement: **코드 구현됨(운영 미확인)**
-- E. Goldilocks 이벤트 감지 운영 확인: **확인됨**
+- B. 실시간 엔진(WS/Stream) 운영 확인: 🟡 **부분 확인**
+  - WS 수신 확인 완료(✅), UI 토스트는 텔레그램 인증으로 미확인(❌)
+- C. Dynamic Task/Intervention API: 🟡 **부분 확인(운영 호출/로그 확인)**
+- D. Predictive Re-engagement: 🟡 **부분 확인(운영 호출/로그 확인)**
+- E. Goldilocks 이벤트 감지 운영 확인: ✅ **확인됨**
   - `loss_streak`/`psych_state` 갱신 증거 확보
-- F. DDA 적용 운영 확인: **미확인**
-- G. 심리 상태 저장 운영 확인: **확인됨**
-- H. 가변 보상 알고리즘 구현: **코드 구현됨(운영 미확인)**
-- I. Reward_Size ≤ Cmax 강제: **코드 구현됨(운영 미확인)**
+- F. DDA 적용 운영 확인: ✅ **확인됨**
+- G. 심리 상태 저장 운영 확인: ✅ **확인됨**
+- H. 가변 보상 알고리즘 구현: 🟡 **부분 확인(운영 호출 메타 확인)**
+- I. Reward_Size ≤ Cmax 강제: 🟡 **부분 확인(ROI 로그 생성 확인)**
+
+추가 메모:
+- 개입 API 응답 meta에 빈도/감쇠(`decay_factor`, `frequency_probability`, `frequency_multiplier`, `repeat_count`) 포함 확인
 
 참조: [docs/09_marketing/golden/04_report/golden_system_integration_checklist_v1.md](docs/09_marketing/golden/04_report/golden_system_integration_checklist_v1.md)

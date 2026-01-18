@@ -418,6 +418,7 @@ async def run_ch25_event_worker(stop_event: Optional[asyncio.Event] = None) -> N
                                 day_ttl = _seconds_until_kst_day_end(event_ts)
                                 abuse_prefix = f"ch25:abuse:{day_key}:{state_user_key}"
                                 abuse_exclude_key = f"{abuse_prefix}:exclude"
+                                abuse_reason_key = f"{abuse_prefix}:exclude_reason"
 
                                 previous_ts = await client.get(last_event_key)
                                 if previous_ts and event_ts - int(previous_ts) >= SESSION_END_GAP_SECONDS:
@@ -448,6 +449,7 @@ async def run_ch25_event_worker(stop_event: Optional[asyncio.Event] = None) -> N
                                         await client.expire(amount_key, day_ttl)
                                         if amount_count >= DAILY_AMOUNT_REPEAT_THRESHOLD:
                                             await client.set(abuse_exclude_key, "1", ex=day_ttl)
+                                            await client.set(abuse_reason_key, "amount_repeat", ex=day_ttl)
                                             continue
 
                                         last_delta_key = f"{abuse_prefix}:last_delta"
@@ -460,6 +462,7 @@ async def run_ch25_event_worker(stop_event: Optional[asyncio.Event] = None) -> N
                                                 await client.expire(periodic_count_key, day_ttl)
                                                 if periodic_count >= DAILY_PERIODIC_REPEAT_THRESHOLD:
                                                     await client.set(abuse_exclude_key, "1", ex=day_ttl)
+                                                    await client.set(abuse_reason_key, "periodic_repeat", ex=day_ttl)
                                                     continue
                                             else:
                                                 await client.set(periodic_count_key, 0, ex=day_ttl)
@@ -485,6 +488,7 @@ async def run_ch25_event_worker(stop_event: Optional[asyncio.Event] = None) -> N
                                         await client.expire(amount_key, day_ttl)
                                         if amount_count >= DAILY_AMOUNT_REPEAT_THRESHOLD:
                                             await client.set(abuse_exclude_key, "1", ex=day_ttl)
+                                            await client.set(abuse_reason_key, "amount_repeat", ex=day_ttl)
                                             continue
 
                                         last_delta_key = f"{abuse_prefix}:last_delta"
@@ -497,6 +501,7 @@ async def run_ch25_event_worker(stop_event: Optional[asyncio.Event] = None) -> N
                                                 await client.expire(periodic_count_key, day_ttl)
                                                 if periodic_count >= DAILY_PERIODIC_REPEAT_THRESHOLD:
                                                     await client.set(abuse_exclude_key, "1", ex=day_ttl)
+                                                    await client.set(abuse_reason_key, "periodic_repeat", ex=day_ttl)
                                                     continue
                                             else:
                                                 await client.set(periodic_count_key, 0, ex=day_ttl)

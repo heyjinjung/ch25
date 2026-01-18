@@ -15,6 +15,7 @@ from app.models.user import User
 from app.models.user_retention_state import UserRetentionState
 from app.services.ch25_event_service import Ch25EventService
 from app.services.ops_log_service import OpsLogService
+from app.services.reward_scheduler import RewardScheduler
 
 logger = logging.getLogger(__name__)
 
@@ -44,24 +45,29 @@ class RetentionInterventionService:
         settings = get_settings()
 
         if not settings.ch25_intervention_enabled:
-            return {
+            result = {
                 "eligible": False,
                 "reason": "INTERVENTION_DISABLED",
             }
+            self._log_intervention(db, user_id=user_id, event_type=event_type, result=result)
+            return result
 
         group = Ch25EventService._assign_experiment_group(user_id, settings)
         if group == "CONTROL":
-            return {
+            result = {
                 "eligible": False,
                 "reason": "CONTROL_GROUP",
                 "experiment_group": group,
             }
+            self._log_intervention(db, user_id=user_id, event_type=event_type, result=result)
+            return result
 
         state = db.query(UserRetentionState).filter(UserRetentionState.user_id == user_id).first()
         churn_prob = float(getattr(state, "churn_probability_score", 0) or 0)
         churn_prob = min(max(churn_prob, 0.0), 1.0)
         segment = str(getattr(state, "user_segment_tag", "NEW_USER") or "NEW_USER")
         predicted_ltv = float(getattr(state, "predicted_ltv", 0) or 0)
+        last_intervention_at = getattr(state, "last_intervention_at", None)
 
         if predicted_ltv <= 0:
             predicted_ltv = self._fallback_predicted_ltv(db, user_id)
@@ -71,17 +77,24 @@ class RetentionInterventionService:
         ltv_reward = predicted_ltv * base_rate * max(churn_prob, 0.1)
         raw_reward = max(base_reward, int(ltv_reward))
 
-        decayed_reward, decay_factor = self._apply_value_decay(db, user_id, event_type, raw_reward)
+        repeat_count = self._get_recent_intervention_count(db, user_id, event_type)
+        scheduler = RewardScheduler(r0=self.R0, alpha=self.ALPHA, beta=self.BETA)
+        schedule = scheduler.schedule(
+            base_reward=raw_reward,
+            repeat_count=repeat_count,
+            last_intervention_at=last_intervention_at,
+            now=datetime.utcnow(),
+        )
 
         reward_type = self._resolve_reward_type(group)
-        capped_reward, cmax = self._apply_cmax(db, user_id, predicted_ltv, decayed_reward)
+        capped_reward, cmax = self._apply_cmax(db, user_id, predicted_ltv, schedule.reward_amount)
 
         roi_percent = self._log_roi(db, user_id, predicted_ltv, capped_reward, event_type, reward_type)
 
         if capped_reward > 0:
             self._touch_last_intervention(db, user_id)
 
-        return {
+        result = {
             "eligible": capped_reward > 0,
             "experiment_group": group,
             "reward_type": reward_type,
@@ -95,9 +108,14 @@ class RetentionInterventionService:
                 "churn_probability": churn_prob,
                 "base_reward": base_reward,
                 "raw_reward": raw_reward,
-                "decay_factor": decay_factor,
+                "decay_factor": schedule.decay_factor,
+                "frequency_probability": schedule.frequency_probability,
+                "frequency_multiplier": schedule.frequency_multiplier,
+                "repeat_count": repeat_count,
             },
         }
+        self._log_intervention(db, user_id=user_id, event_type=event_type, result=result)
+        return result
 
     def enqueue_reengagement(self, db: Session, *, user_id: int, reason: str | None, channel: str) -> dict[str, Any]:
         state = db.query(UserRetentionState).filter(UserRetentionState.user_id == user_id).first()
@@ -142,6 +160,37 @@ class RetentionInterventionService:
             "meta": {"entry_id": entry.id, "churn_probability": churn_prob, "segment": segment},
         }
 
+    def _log_intervention(self, db: Session, *, user_id: int, event_type: str, result: dict[str, Any]) -> None:
+        try:
+            service = OpsLogService()
+            log_date = date.today()
+            meta = {
+                "event_type": event_type,
+                "eligible": bool(result.get("eligible")),
+                "reason": result.get("reason"),
+                "experiment_group": result.get("experiment_group"),
+                "reward_type": result.get("reward_type"),
+                "reward_amount": result.get("reward_amount"),
+                "cmax": result.get("cmax"),
+                "predicted_ltv": result.get("predicted_ltv"),
+                "roi_percent": result.get("roi_percent"),
+            }
+            ref_id = f"intervention:{user_id}:{event_type}:{log_date.isoformat()}"
+            service.create_log_entry(
+                db,
+                log_date=log_date,
+                category="RETENTION",
+                action_code="OFFER_PERSONALIZED_TRACKED",
+                target_model="USER",
+                target_id=str(user_id),
+                meta_data=meta,
+                is_automated=True,
+                actor_id=0,
+                ref_id=ref_id,
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("intervention ops log failed", exc_info=exc)
+
     def _fallback_predicted_ltv(self, db: Session, user_id: int) -> float:
         from app.models.external_ranking import ExternalRankingData
 
@@ -167,7 +216,7 @@ class RetentionInterventionService:
             return max(1000, min(50000, int(loss_amount * 0.1)))
         return int(self.EVENT_BASE_REWARD.get(event_type, 2000))
 
-    def _apply_value_decay(self, db: Session, user_id: int, event_type: str, base_reward: int) -> tuple[int, float]:
+    def _get_recent_intervention_count(self, db: Session, user_id: int, event_type: str) -> int:
         lookback = datetime.utcnow() - timedelta(days=7)
         count = (
             db.query(func.count(EventParticipationLog.id))
@@ -179,9 +228,7 @@ class RetentionInterventionService:
             .scalar()
             or 0
         )
-        decay_factor = 1 / (1 + self.BETA * int(count))
-        reward = int(round(base_reward * decay_factor))
-        return max(reward, 0), decay_factor
+        return int(count)
 
     def _apply_cmax(self, db: Session, user_id: int, predicted_ltv: float, reward_amount: int) -> tuple[int, int | None]:
         if reward_amount <= 0:

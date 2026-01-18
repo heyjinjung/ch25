@@ -81,3 +81,17 @@
 ### C. 참조
 - 체크리스트: [docs/09_marketing/golden/04_report/golden_system_integration_checklist_v1.md](docs/09_marketing/golden/04_report/golden_system_integration_checklist_v1.md)
 - 진행도 보고서: [docs/09_marketing/golden/04_report/golden_progress_report_20260118.md](docs/09_marketing/golden/04_report/golden_progress_report_20260118.md)
+
+### D. 결과 리포트 초안 (진행중)
+#### 1) 지표 스냅샷(일/주)
+- LOSS_STREAK 이벤트 수: TBD (대시보드 확인 필요)
+- ASSET_DEPLETION 이벤트 수: TBD (대시보드 확인 필요)
+- SESSION_END 이벤트 수: TBD (대시보드 확인 필요)
+
+#### 2) 실험군 분배 결과 요약
+- Control/FreeSpin/Cashback/Mission 분배 비율: TBD (대시보드 확인 필요)
+
+#### 3) 이슈/개선점
+- UI 토스트 증거: 텔레그램 인증 필요로 로컬 확인 불가 → 운영 환경 캡처 필요
+- 롤백 플래그 검증: 토글 검증 미완 → 운영 점검 필요
+- 알람 임계치(X/Y/Z): 기준 수치 확정 필요
