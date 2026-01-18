@@ -1,0 +1,41 @@
+문서 타입: 인덱스
+- 팀배틀 SoT: docs/v2_specs/02_game/v2_team_battle_sot_ko.md
+- 티켓 Enum SoT: docs/v2_specs/01_core/v2_ticket_enum_sot_ko.md
+- 티켓 Enum 코드 정합 SoT: docs/v2_specs/01_core/v2_ticket_enum_code_alignment_sot_ko.md
+- 레벨포인트 SoT: docs/v2_specs/01_core/v2_level_point_sot_ko.md
+- 레벨포인트 저장 필드 SoT: docs/v2_specs/01_core/v2_level_point_storage_sot_ko.md
+- Redis 키/채널 SoT: docs/v2_specs/01_core/v2_redis_keys_channels_sot_ko.md
+- 보상 매핑 SoT: docs/v2_specs/01_core/v2_reward_mapping_sot_ko.md
+- RewardType 표준 SoT: docs/v2_specs/01_core/v2_reward_type_standard_sot_ko.md
+- 금고 용어 SoT: docs/v2_specs/01_core/v2_vault_glossary_sot_ko.md
+- 레벨 보상표 SoT: docs/v2_specs/01_core/v2_level_reward_table_sot_ko.md
+- 기프티콘 네이밍 SoT: docs/v2_specs/01_core/v2_gifticon_naming_sot_ko.md
+- 만능티켓 변환 SoT: docs/v2_specs/01_core/v2_ticket_conversion_sot_ko.md
+- 레벨포인트 확장 SoT: docs/v2_specs/01_core/v2_level_point_extension_sot_ko.md
+- **아이템/인벤토리 SoT**: docs/v2_specs/01_core/v2_item_inventory_sot_ko.md
+- **상점/교환소 정책 SoT**: docs/v2_specs/01_core/v2_shop_exchange_policy_sot_ko.md
+- 어드민 게임 설정 스키마 SoT: docs/v2_specs/02_game/v2_admin_game_config_schema_ko.md
+- 검증/세그먼트 SoT: docs/v2_specs/01_core/v2_grade_segment_sot_ko.md
+- 알림/피드 스키마 SoT: docs/v2_specs/03_api/v2_notification_feed_schema_ko.md
+- **V1 Legacy API 감사**: docs/v2_specs/03_api/v1_legacy_api_list_ko.md (보안감사 포함)
+- **V1 API 불일치 리포트**: docs/v2_specs/03_api/v1_api_discrepancy_report_ko.md (Deep Audit)
+- 미션 용어 SoT: docs/v2_specs/02_game/v2_mission_glossary_sot_ko.md
+- **신규 유저 미션 로직 SoT**: docs/v2_specs/02_game/v2_new_user_mission_logic_sot_ko.md
+- 게임 액션 스키마 SoT: docs/v2_specs/02_game/v2_game_action_schema_sot_ko.md
+- Ops Plan 실행 스키마 SoT: docs/v2_specs/05_ops/v2_ops_plan_execution_schema_sot_ko.md
+- Ops Action 용어집 SoT: docs/v2_specs/05_ops/v2_ops_action_glossary_sot_ko.md
+- 강력한 금고 정책 SoT: docs/v2_specs/01_core/v2_strict_vault_policy_sot_ko.md
+- 프로그레션/레벨 스키마 SoT: docs/v2_specs/01_core/v2_progression_schema_ko.md
+- **Golden System 정의서**: docs/v2_specs/01_core/golden_v2_system_definition_ko.md
+- **Golden 개입 로직 SoT**: docs/v2_specs/02_game/golden_v2_intervention_logic_ko.md
+- **Golden Ops 로직 SoT**: docs/v2_specs/05_ops/golden_v2_operational_logic_ko.md
+- **골든아워 정책 SoT**: docs/v2_specs/02_game/v2_golden_hour_policy_sot_ko.md
+- **출석 스트릭 로직 SoT**: docs/v2_specs/02_game/v2_attendance_streak_logic_sot_ko.md
+- **티켓 제로(구조) SoT**: docs/v2_specs/02_game/v2_ticket_zero_policy_sot_ko.md
+
+## 6. 운영/검증 (QA)
+- [ ] 문서 분류/링크 최신화
+- [ ] SoT 우선순위 준수
+
+## 7. 변경 이력
+- v1.0 (2026-01-18, GitHub Copilot): 최초 작성
