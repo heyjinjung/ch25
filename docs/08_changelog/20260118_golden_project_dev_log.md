@@ -41,6 +41,13 @@ Golden 프로젝트의 **리텐션 개입/관제/증거 수집** 진행 사항�
 - **진척 보고 최신화**: [docs/09_marketing/golden/04_report/golden_progress_report_20260118.md](docs/09_marketing/golden/04_report/golden_progress_report_20260118.md)
 - **대시보드 메트릭 정의 정비**: [docs/09_marketing/golden/04_report/golden_dashboard_metrics_v1.md](docs/09_marketing/golden/04_report/golden_dashboard_metrics_v1.md)
 
+### 2.6 금고 강제 잔액 수정 로그 정합성
+- **관리자 강제 수정 시 기록 규칙 확정**: 감소(-)는 출금내역, 증가(+)는 유저 적립내역으로 기록
+  - 로직: [app/api/admin/routes/admin_vault_ops.py](app/api/admin/routes/admin_vault_ops.py)
+  - 테스트: [tests/test_admin_vault_manual_set_logs.py](tests/test_admin_vault_manual_set_logs.py)
+- **관리자 라우터 초기화 오류 수정**
+  - 등록 파일: [app/api/admin/__init__.py](app/api/admin/__init__.py)
+
 ## 3) 데이터/증거 수집 현황
 - **DDA 적용 증거 수집 및 로그 반영**
   - 관련 설계/정의: [docs/09_marketing/golden/02_tech_spec/golden_dda_algorithm_v1.md](docs/09_marketing/golden/02_tech_spec/golden_dda_algorithm_v1.md)

@@ -30,6 +30,7 @@ import GameHubPage from "../admin/pages/GameHubPage";
 import AdminPlaceholderPage from "../admin/pages/AdminPlaceholderPage";
 import AdminOpsLogPage from "../admin/pages/AdminOpsLogPage";
 import AdminOpsCsvUploadPage from "../admin/pages/AdminOpsCsvUploadPage";
+import AdminCh25RawLogsUploadPage from "../admin/pages/AdminCh25RawLogsUploadPage";
 import AdminOpsPage from "../admin/pages/AdminOpsPage";
 import AdminOpsPlanPage from "../admin/pages/AdminOpsPlanPage";
 import AdminSystemHealthPage from "../admin/pages/AdminSystemHealthPage";
@@ -74,6 +75,7 @@ const AdminRoutes: React.FC = () => {
             <Route index element={<AdminOpsPlanPage />} />
             <Route path="logs" element={<AdminOpsLogPage />} />
             <Route path="import" element={<AdminOpsCsvUploadPage />} />
+            <Route path="raw-logs" element={<AdminCh25RawLogsUploadPage />} />
           </Route>
 
           {/* Grouped & Placeholder Routes */}

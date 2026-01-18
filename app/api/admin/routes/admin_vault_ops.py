@@ -1,6 +1,7 @@
 """Admin Vault operations: timer control and user vault inspection."""
 
 from datetime import datetime
+from uuid import uuid4
 from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -13,6 +14,8 @@ from app.services.vault_service import VaultService
 from app.services.admin_user_identity_service import resolve_user_id_by_identifier
 from app.models.user import User
 from app.models.user_cash_ledger import UserCashLedger
+from app.models.vault_earn_event import VaultEarnEvent
+from app.models.vault_withdrawal_request import VaultWithdrawalRequest
 from app.services.ops_log_service import OpsLogService
 
 
@@ -131,23 +134,58 @@ def set_user_balance(
     # 1. Update Locked (Vault)
     if payload.locked_amount is not None:
         old_locked = int(user.vault_locked_balance or 0)
-        user.vault_locked_balance = payload.locked_amount
+        new_locked = int(payload.locked_amount)
+        user.vault_locked_balance = new_locked
         # Sync mirror immediately
         service.sync_legacy_mirror(user)
         
         # Log Ledger if changed
-        if old_locked != payload.locked_amount:
+        if old_locked != new_locked:
             # We use UserCashLedger for tracking important money flows, usually for Cash.
             # But for Vault Admin edits, it's good to record it too.
             # Use specific type? Or just generic message.
             ledger = UserCashLedger(
                 user_id=user.id,
-                delta=(payload.locked_amount - old_locked),
-                balance_after=payload.locked_amount,
+                delta=(new_locked - old_locked),
+                balance_after=new_locked,
                 reason="VAULT_ADMIN_ADJUST",
-                label=f"Admin {admin_id}: Vault Locked {old_locked} -> {payload.locked_amount}"
+                label=f"Admin {admin_id}: Vault Locked {old_locked} -> {new_locked}"
             )
             db.add(ledger)
+
+            delta = new_locked - old_locked
+            now = datetime.utcnow()
+
+            if delta < 0:
+                db.add(
+                    VaultWithdrawalRequest(
+                        user_id=user.id,
+                        amount=abs(int(delta)),
+                        status="APPROVED",
+                        admin_memo=f"ADMIN_MANUAL_SET: {reason}",
+                        processed_at=now,
+                        processed_by=admin_id,
+                        created_at=now,
+                    )
+                )
+            elif delta > 0:
+                earn_event_id = f"ADMIN:MANUAL_SET:{admin_id}:{user.id}:{uuid4().hex}"
+                db.add(
+                    VaultEarnEvent(
+                        user_id=user.id,
+                        earn_event_id=earn_event_id,
+                        earn_type="ADMIN_ADJUST",
+                        amount=int(delta),
+                        source="ADMIN",
+                        reward_kind="MANUAL_SET",
+                        payout_raw_json={
+                            "reason": reason,
+                            "admin_id": admin_id,
+                            "action": "MANUAL_SET",
+                        },
+                        created_at=now,
+                    )
+                )
 
     # 2. Update Cash (Available) - Optional but requested "balances" usually implies this
     if payload.available_amount is not None:
