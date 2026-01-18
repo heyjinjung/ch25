@@ -1,0 +1,13 @@
+[tool.mypy]
+strict = true
+ignore_missing_imports = true
+disallow_untyped_defs = true
+check_untyped_defs = true
+
+[tool.ruff]
+line-length = 88
+select = ["E", "F", "I", "N", "W", "B"]
+ignore = []
+
+[tool.ruff.isort]
+known-first-party = ["app"]
