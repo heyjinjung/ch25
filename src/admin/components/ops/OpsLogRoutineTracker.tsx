@@ -27,14 +27,14 @@ const OpsLogRoutineTracker: React.FC = () => {
           <div className="p-1.5 rounded-md bg-admin-brand/20 text-admin-brand">
             <RotateCw className="h-4 w-4" />
           </div>
-          <h3 className="text-sm font-bold text-admin-text-primary uppercase tracking-wider">Routine Check</h3>
+          <h3 className="text-sm font-bold text-admin-text-primary uppercase tracking-wider">루틴 점검</h3>
         </div>
       </div>
 
       <div className="space-y-2">
         {!routineLogs || routineLogs.length === 0 ? (
           <div className="text-xs text-admin-text-muted text-center py-4">
-            No routine checks recorded today.
+            오늘 기록된 루틴 점검이 없습니다.
           </div>
         ) : (
           routineLogs.map((log) => (

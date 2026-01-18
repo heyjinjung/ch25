@@ -49,12 +49,12 @@ const AdminOpsLogPage: React.FC = () => {
         </div>
         <div className="flex items-center gap-2 rounded-lg border border-admin-border bg-admin-sidebar px-4 py-2 shadow-inner">
           <div className="flex flex-col">
-            <span className="text-[9px] font-bold text-admin-text-muted uppercase tracking-widest leading-none">Status</span>
+            <span className="text-[9px] font-bold text-admin-text-muted uppercase tracking-widest leading-none">상태</span>
             <span className="text-xs font-bold text-admin-success">NODE_OPERATIONAL</span>
           </div>
           <div className="h-6 w-px bg-admin-border mx-2" />
           <div className="flex flex-col">
-            <span className="text-[9px] font-bold text-admin-text-muted uppercase tracking-widest leading-none">Last Audit</span>
+            <span className="text-[9px] font-bold text-admin-text-muted uppercase tracking-widest leading-none">최근 감사</span>
             <span className="text-xs font-mono font-bold text-admin-text-base">{new Date().toLocaleTimeString()}</span>
           </div>
         </div>
@@ -97,7 +97,7 @@ const AdminOpsLogPage: React.FC = () => {
                   title="분류 필터"
                   value={category}
                   onChange={(e) => setCategory(e.target.value as any)}
-                  className="bg-transparent border-none text-sm font-bold text-admin-text-base focus:ring-0 outline-none w-full appearance-none"
+                  className="bg-admin-input border border-admin-border text-sm font-bold text-admin-text-base focus:ring-0 outline-none w-full appearance-none rounded-md px-2 py-1"
                 >
                   <option value="">전체 내역 (ALL)</option>
                   <option value="ROUTINE">루틴 (ROUTINE)</option>
@@ -126,7 +126,7 @@ const AdminOpsLogPage: React.FC = () => {
           {/* Result Stream */}
           <div className="admin-card-premium overflow-hidden">
             <div className="px-6 py-4 border-b border-admin-border flex items-center justify-between">
-              <h2 className="text-admin-subtitle text-admin-text-primary">Ops Logs</h2>
+              <h2 className="text-admin-subtitle text-admin-text-primary">운영 로그</h2>
               <span className="text-xs text-admin-text-muted">총 {(logs ?? []).length}건</span>
             </div>
 

@@ -384,3 +384,13 @@ docs/06_ops/202601/exterior/도파민/CC0118_RAW.CSV
 docs/06_ops/202601/exterior/도파민/CC260117.CSV
 docs/06_ops/202601/exterior/rawdata/20260117_casino_logs_raw.md
 docs/06_ops/202601/exterior/rawdata/20260117_sports_logs_raw.md
+docs/06_ops/202601/response_templates/result.json
+docs/06_ops/202601/response_templates/telegram_report_pro_report.csv
+docs/09_marketing/golden/이해.md
+scripts/analyze_telegram_retention.py
+scripts/parse_telegram_json.py
+docs/06_ops/202601/response_templates/telegram_report_Blacklist_Risks.csv
+docs/06_ops/202601/response_templates/telegram_report_CherryPickers.csv
+docs/06_ops/202601/response_templates/telegram_report_Depositors.csv
+docs/06_ops/202601/response_templates/telegram_report_General_Users.csv
+docs/06_ops/202601/response_templates/telegram_report_VIP_Customers.csv

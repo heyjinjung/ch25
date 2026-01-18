@@ -58,7 +58,7 @@ const OpsLogSurveyDmPanel: React.FC<OpsLogSurveyDmPanelProps> = ({ date }) => {
           <MessageSquare className="h-5 w-5" />
         </div>
         <div>
-          <h3 className="text-admin-subtitle text-admin-text-primary">Survey & DM Logger</h3>
+          <h3 className="text-admin-subtitle text-admin-text-primary">설문/DM 로거</h3>
           <p className="text-xs text-admin-text-secondary">설문조사 및 공지 DM 발송 기록</p>
         </div>
       </div>
@@ -66,7 +66,7 @@ const OpsLogSurveyDmPanel: React.FC<OpsLogSurveyDmPanelProps> = ({ date }) => {
       <div className="space-y-4">
         <div className="space-y-1">
           <label className="text-xs font-bold text-admin-text-secondary uppercase tracking-wider flex items-center gap-2">
-            <Users className="h-3 w-3" /> Target Group
+            <Users className="h-3 w-3" /> 대상 그룹
           </label>
           <select
             id="ops-log-survey-dm-target-group"
@@ -76,16 +76,16 @@ const OpsLogSurveyDmPanel: React.FC<OpsLogSurveyDmPanelProps> = ({ date }) => {
             aria-label="대상 그룹"
             title="대상 그룹"
           >
-            <option value="ALL_ACTIVE">All Active Users</option>
-            <option value="VIP_ONLY">VIP Users Only</option>
-            <option value="NEW_USERS">New Users (Last 7 Days)</option>
-            <option value="CHURN_RISK">Churn Risk Segment</option>
+            <option value="ALL_ACTIVE">전체 활성 사용자</option>
+            <option value="VIP_ONLY">VIP 전용</option>
+            <option value="NEW_USERS">신규 사용자 (최근 7일)</option>
+            <option value="CHURN_RISK">이탈 위험 세그먼트</option>
           </select>
         </div>
 
         <div className="space-y-1">
           <label className="text-xs font-bold text-admin-text-secondary uppercase tracking-wider">
-            Message Content
+            메시지 내용
           </label>
           <textarea
             id="ops-log-survey-dm-message"
@@ -105,7 +105,7 @@ const OpsLogSurveyDmPanel: React.FC<OpsLogSurveyDmPanelProps> = ({ date }) => {
             className="btn-admin-primary flex items-center gap-2"
           >
             <Send className="h-4 w-4" />
-            <span>Log Survey DM</span>
+            <span>설문/DM 로그 기록</span>
           </button>
         </div>
       </div>
