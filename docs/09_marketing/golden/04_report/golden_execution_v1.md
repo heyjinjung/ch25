@@ -69,14 +69,14 @@
 - `ch25_events` publish 수신 확인 (experiment_group 포함)
 - WS `/api/ws/events` 수신 확인
 - DB 영속성 확인(`event_participation_log`), Redis 중지 상태에서도 조회 가능
-- 신규 개입 API(`/api/retention/intervention/resolve`) 구현 완료(운영 미확인)
-- 재참여 큐 API(`/api/retention/reengagement/queue`) 구현 완료(운영 미확인)
-- Reward_Size ≤ Cmax 캡 + ROI 로그(`retention_roi_log`) 구현 완료(운영 미확인)
+- 신규 개입 API(`/api/retention/intervention/resolve`) 운영 호출/로그 확인(🟡 부분 확인)
+- 재참여 큐 API(`/api/retention/reengagement/queue`) 운영 호출/로그 확인(🟡 부분 확인)
+- Reward_Size ≤ Cmax 캡 + ROI 로그(`retention_roi_log`) 메타/로그 확인(🟡 부분 확인)
 
 ### B. 미확인/제약
 - UI 토스트: 텔레그램 인증 필요로 로컬 확인 불가
-- 어뷰징 필터/롤백 플래그: 추가 확인 필요
-- 신규 개입/재참여 API 운영 증거 필요
+- 어뷰징 필터/롤백 플래그: 확인 완료(로그/응답 증거)
+- 신규 개입/재참여 API 운영 증거는 부분 확인(추가 스냅샷 필요)
 
 ### C. 참조
 - 체크리스트: [docs/09_marketing/golden/04_report/golden_system_integration_checklist_v1.md](docs/09_marketing/golden/04_report/golden_system_integration_checklist_v1.md)
@@ -84,14 +84,26 @@
 
 ### D. 결과 리포트 초안 (진행중)
 #### 1) 지표 스냅샷(일/주)
-- LOSS_STREAK 이벤트 수: TBD (대시보드 확인 필요)
-- ASSET_DEPLETION 이벤트 수: TBD (대시보드 확인 필요)
-- SESSION_END 이벤트 수: TBD (대시보드 확인 필요)
+- LOSS_STREAK 이벤트 수: 일 1 / 주 1
+- ASSET_DEPLETION 이벤트 수: 일 0 / 주 0
+- SESSION_END 이벤트 수: 일 0 / 주 0
+
+**대시보드 일간 요약(확정)**
+- today_active_users: 10
+- today_game_plays: 42
+- today_ticket_usage: 35
+- today_deposit_sum / count: 1,860,000 / 5
+- external_ranking_deposit / play_count: 49,864,298 / 163
+- total_vault_balance: 1,463,600
+- total_inventory_liability: 108
+- total_vault_paid: 105,200
+- mission_percent: 70.0
+- welcome_retention_rate(D-2): 28.6%
+- streak_counts: NORMAL 49 / HOT 5 / LEGEND 2
 
 #### 2) 실험군 분배 결과 요약
-- Control/FreeSpin/Cashback/Mission 분배 비율: TBD (대시보드 확인 필요)
+- Control/FreeSpin/Cashback/Mission 분배 비율: Control 0 / FreeSpin 0 / Cashback 1 / Mission 0
 
 #### 3) 이슈/개선점
 - UI 토스트 증거: 텔레그램 인증 필요로 로컬 확인 불가 → 운영 환경 캡처 필요
-- 롤백 플래그 검증: 토글 검증 미완 → 운영 점검 필요
-- 알람 임계치(X/Y/Z): 기준 수치 확정 필요
+- 결과 리포트 스냅샷/분배 수치: 이벤트 수/실험군 분배 집계 확인 필요

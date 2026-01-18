@@ -191,3 +191,10 @@ Last Updated: 2026-01-17
 - 결과:
 	- WS 메시지 수신 확인: `{"event_type":"LOSS_STREAK",...}`
 - 상태: ✅ **확인(WS 수신 증거 확보)**
+
+### 증거 수집 로그 (17차)
+- 일시: 2026-01-18
+- 대상: 롤백 플래그 검증
+- 결과:
+	- `CH25_INTERVENTION_ENABLED=false`/`CH25_INTERVENTION_ROLLOUT_PCT=0` 설정 후 개입 API 결과 `INTERVENTION_DISABLED` 확인
+- 상태: ✅ **확인(롤백 플래그 검증 완료)**
