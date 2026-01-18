@@ -22,7 +22,8 @@ import {
   ChevronRight,
   ChevronDown,
   Bell,
-  ToggleRight
+  ToggleRight,
+  UploadCloud
 } from "lucide-react";
 
 interface NavItem {
@@ -44,6 +45,8 @@ const navSections: NavSection[] = [
       { label: "운영 대시보드", path: "/admin", icon: <LayoutDashboard size={18} /> },
       { label: "마케팅 센터", path: "/admin/marketing", icon: <Target size={18} /> },
       { label: "운영계획(플레이북)", path: "/admin/ops", icon: <ShieldCheck size={18} /> },
+      { label: "운영 로그", path: "/admin/ops/logs", icon: <ClipboardCheck size={18} /> },
+      { label: "운영 로그 CSV 업로드", path: "/admin/ops/import", icon: <UploadCloud size={18} /> },
     ],
   },
   {

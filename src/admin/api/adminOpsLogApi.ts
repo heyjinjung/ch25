@@ -44,6 +44,19 @@ export type OpsLogCreate = {
     is_automated?: boolean;
 };
 
+export type OpsLogCsvImportError = {
+    row_number: number;
+    reason: string;
+};
+
+export type OpsLogCsvImportResponse = {
+    total_rows: number;
+    imported: number;
+    duplicates: number;
+    failed: number;
+    errors: OpsLogCsvImportError[];
+};
+
 export type CreateOpsLogEntryOptions = {
     confirm?: boolean;
 };
@@ -89,6 +102,17 @@ export async function createOpsLogEntryWithOptions(payload: OpsLogCreate, option
         `${BASE_PATH}/log-entry`,
         payload,
         { params: confirm ? { confirm: true } : undefined }
+    );
+    return data;
+}
+
+export async function importOpsLogCsv(file: File) {
+    const formData = new FormData();
+    formData.append("file", file);
+    const { data } = await adminApi.post<OpsLogCsvImportResponse>(
+        `${BASE_PATH}/import-csv`,
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
     );
     return data;
 }
