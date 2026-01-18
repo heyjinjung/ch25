@@ -54,3 +54,16 @@ class OpsDailyLogOut(BaseModel):
     kpi_snapshot: Optional[Dict[str, Any]] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class OpsLogCsvImportError(BaseModel):
+    row_number: int
+    reason: str
+
+
+class OpsLogCsvImportResponse(BaseModel):
+    total_rows: int
+    imported: int
+    duplicates: int
+    failed: int
+    errors: list[OpsLogCsvImportError] = Field(default_factory=list)

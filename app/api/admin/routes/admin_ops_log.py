@@ -1,11 +1,21 @@
 """Admin ops log endpoints."""
 from datetime import date
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+import csv
+import json
+from io import StringIO
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, UploadFile, File, status
 from fastapi.responses import PlainTextResponse
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db, get_current_admin_id, get_current_admin_info
-from app.schemas.ops_log import OpsDailyLogOut, OpsDailyLogUpsert, OpsLogCreate, OpsLogEntryOut
+from app.schemas.ops_log import (
+    OpsDailyLogOut,
+    OpsDailyLogUpsert,
+    OpsLogCreate,
+    OpsLogEntryOut,
+    OpsLogCsvImportResponse,
+    OpsLogCsvImportError,
+)
 from app.services.ops_log_service import OpsLogService
 
 router = APIRouter(prefix="/admin/api/ops", tags=["admin-ops-log"])
@@ -115,3 +125,87 @@ def export_daily_log(
     export = service.export_daily_log(entries, log_date)
     headers = {"Content-Disposition": f"attachment; filename=\"{export['filename']}\""}
     return PlainTextResponse(export["content_md"], headers=headers)
+
+
+def _parse_bool(value: str | None) -> bool:
+    if value is None:
+        return False
+    return str(value).strip().lower() in {"1", "true", "yes", "y"}
+
+
+@router.post("/import-csv", response_model=OpsLogCsvImportResponse)
+def import_ops_log_csv(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    admin_id, current_role = admin_info
+    content = file.file.read()
+    if not content:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="CSV_EMPTY")
+    try:
+        text = content.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="CSV_ENCODING_ERROR")
+
+    reader = csv.DictReader(StringIO(text))
+    required = {"date", "category", "action_code", "target_model"}
+    if not reader.fieldnames:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="CSV_HEADER_MISSING")
+    missing = required - {name.strip() for name in reader.fieldnames}
+    if missing:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"CSV_MISSING_COLUMNS:{','.join(sorted(missing))}")
+
+    total_rows = 0
+    imported = 0
+    duplicates = 0
+    errors: list[OpsLogCsvImportError] = []
+
+    for idx, row in enumerate(reader, start=2):
+        total_rows += 1
+        try:
+            raw_date = (row.get("date") or "").strip()
+            if not raw_date:
+                raise ValueError("DATE_REQUIRED")
+            log_date = date.fromisoformat(raw_date)
+            category = (row.get("category") or "").strip()
+            action_code = (row.get("action_code") or "").strip()
+            target_model = (row.get("target_model") or "").strip()
+            if not category or not action_code or not target_model:
+                raise ValueError("REQUIRED_FIELD_MISSING")
+            target_id = (row.get("target_id") or "").strip() or None
+            ref_id = (row.get("ref_id") or "").strip() or None
+            meta_raw = (row.get("meta_data") or "").strip()
+            meta_data = json.loads(meta_raw) if meta_raw else {}
+            is_automated = _parse_bool(row.get("is_automated"))
+
+            required_role = service.required_role(action_code)
+            if not service.has_role(current_role.upper(), required_role):
+                raise ValueError("ADMIN_ROLE_INSUFFICIENT")
+
+            entry, created = service.create_log_entry(
+                db,
+                log_date=log_date,
+                category=category,
+                action_code=action_code,
+                target_model=target_model,
+                target_id=target_id,
+                meta_data=meta_data,
+                is_automated=is_automated,
+                actor_id=admin_id,
+                ref_id=ref_id,
+            )
+            if created:
+                imported += 1
+            else:
+                duplicates += 1
+        except Exception as exc:  # noqa: BLE001
+            errors.append(OpsLogCsvImportError(row_number=idx, reason=str(exc)))
+
+    return OpsLogCsvImportResponse(
+        total_rows=total_rows,
+        imported=imported,
+        duplicates=duplicates,
+        failed=len(errors),
+        errors=errors,
+    )
