@@ -47,6 +47,7 @@ const navSections: NavSection[] = [
       { label: "운영계획(플레이북)", path: "/admin/ops", icon: <ShieldCheck size={18} /> },
       { label: "운영 로그", path: "/admin/ops/logs", icon: <ClipboardCheck size={18} /> },
       { label: "운영 로그 CSV 업로드", path: "/admin/ops/import", icon: <UploadCloud size={18} /> },
+      { label: "CH25 로데이터 업로드", path: "/admin/ops/raw-logs", icon: <UploadCloud size={18} /> },
     ],
   },
   {
