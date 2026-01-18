@@ -9,6 +9,7 @@ from app.api.routes import api_router
 from app.core.config import get_settings
 from app.core.error_handlers import register_exception_handlers
 from app.workers.ops_outbox_worker import run_ops_outbox_worker
+from app.workers.ch25_event_worker import run_ch25_event_worker
 
 settings = get_settings()
 
@@ -82,21 +83,26 @@ app.add_middleware(LegacyAdminPathAliasMiddleware)
 
 _outbox_task = None
 _outbox_stop = None
+_ch25_task = None
+_ch25_stop = None
 
 @app.on_event("startup")
 async def startup_event():
     print(f"Startup: CORS origins loaded: {cors_origins}", flush=True)
-    global _outbox_task, _outbox_stop
+    global _outbox_task, _outbox_stop, _ch25_task, _ch25_stop
     import asyncio
 
     _outbox_stop = asyncio.Event()
     _outbox_task = asyncio.create_task(run_ops_outbox_worker(stop_event=_outbox_stop))
     app.state.ops_outbox_task = _outbox_task
+    _ch25_stop = asyncio.Event()
+    _ch25_task = asyncio.create_task(run_ch25_event_worker(stop_event=_ch25_stop))
+    app.state.ch25_event_task = _ch25_task
 
 
 @app.on_event("shutdown")
 async def shutdown_event():
-    global _outbox_task, _outbox_stop
+    global _outbox_task, _outbox_stop, _ch25_task, _ch25_stop
     import asyncio
     if _outbox_stop is not None:
         _outbox_stop.set()
@@ -110,6 +116,18 @@ async def shutdown_event():
             pass
     _outbox_task = None
     _outbox_stop = None
+    if _ch25_stop is not None:
+        _ch25_stop.set()
+    if _ch25_task is not None:
+        _ch25_task.cancel()
+        try:
+            await _ch25_task
+        except asyncio.CancelledError:
+            pass
+        except Exception:
+            pass
+    _ch25_task = None
+    _ch25_stop = None
 
 register_exception_handlers(app)
 app.include_router(api_router)

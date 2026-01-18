@@ -1,5 +1,6 @@
 """Roulette service implementing status and play flows."""
 from datetime import date, datetime
+import logging
 import random
 import time
 
@@ -16,7 +17,7 @@ from app.models.user_segment import UserSegment
 from app.schemas.mission import StreakInfoSchema
 from app.schemas.roulette import RoulettePlayResponse, RouletteSegmentSchema, RouletteStatusResponse
 from app.services.feature_service import FeatureService
-from app.services.game_common import GamePlayContext, log_game_play
+from app.services.game_common import GamePlayContext, log_game_play, should_apply_dda
 from app.services.game_wallet_service import GameWalletService
 from app.services.reward_service import RewardService
 from app.services.season_pass_service import SeasonPassService
@@ -312,9 +313,15 @@ class RouletteService:
             )
         ).scalar_one()
 
+        settings = get_settings()
+        dda_apply = should_apply_dda(user_id, settings)
+
         weighted_segments = []
         for seg in segments:
-            weighted_segments.extend([seg] * max(seg.weight, 0))
+            weight = max(seg.weight, 0)
+            if dda_apply and (seg.reward_amount or 0) > 0 and str(seg.reward_type).upper() != "NONE":
+                weight = int(round(weight * (1 + float(settings.ch25_dda_win_boost))))
+            weighted_segments.extend([seg] * max(weight, 0))
         chosen = random.choice(weighted_segments)
 
         reward_type = chosen.reward_type
@@ -345,23 +352,25 @@ class RouletteService:
             reason="ROULETTE_PLAY",
             label=chosen.label,
             meta={"segment_id": getattr(chosen, "id", None)},
+            auto_commit=False,  # [Fix] Atomicity: Commit together with Log/Activity
         )
 
         # Track play count in user_activity (backend-side to avoid client misses)
         try:
             from app.models.user_activity import UserActivity
-
-            activity = db.query(UserActivity).filter(UserActivity.user_id == user_id).first()
-            if activity is None:
-                activity = UserActivity(user_id=user_id)
-            activity.roulette_plays = int(activity.roulette_plays or 0) + 1
-            activity.last_play_at = datetime.utcnow()
-            db.add(activity)
-            db.flush()
+            # Use SAVEPOINT to avoid breaking the main transaction on error
+            with db.begin_nested():
+                activity = db.query(UserActivity).filter(UserActivity.user_id == user_id).first()
+                if activity is None:
+                    activity = UserActivity(user_id=user_id)
+                    db.add(activity)
+                activity.roulette_plays = int(activity.roulette_plays or 0) + 1
+                activity.last_play_at = datetime.utcnow()
+                db.flush()
         except Exception:
             # 실패하더라도 게임 진행은 계속
-            db.rollback()
-            db.begin()
+            logging.getLogger(__name__).warning("UserActivity update failed", exc_info=True)
+            # No rollback needed for main transaction due to begin_nested()
 
         log_entry = RouletteLog(
             user_id=user_id,
@@ -471,6 +480,7 @@ class RouletteService:
                 "reward_amount": reward_amount,
                 "reward_label": chosen.label,
                 "xp_from_reward": xp_award,
+                "dda_applied": dda_apply,
             },
         )
 

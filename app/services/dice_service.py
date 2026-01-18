@@ -13,7 +13,7 @@ from app.models.feature import FeatureType
 from app.models.game_wallet import GameTokenType
 from app.schemas.dice import DicePlayResponse, DiceResult, DiceStatusResponse
 from app.services.feature_service import FeatureService
-from app.services.game_common import GamePlayContext, log_game_play
+from app.services.game_common import GamePlayContext, log_game_play, should_apply_dda
 from app.services.game_wallet_service import GameWalletService
 from app.services.reward_service import RewardService
 from app.services.season_pass_service import SeasonPassService
@@ -168,6 +168,10 @@ class DiceService:
         config = self._get_today_config(db)
         token_type = GameTokenType.DICE_TOKEN
 
+        settings = get_settings()
+        dda_apply = should_apply_dda(user_id, settings)
+        dda_applied = False
+
         today_plays = db.execute(
             select(func.count()).select_from(DiceLog).where(
                 DiceLog.user_id == user_id,
@@ -200,6 +204,13 @@ class DiceService:
             p_draw = dice_event_probs.get("p_draw", 0.10)
             p_lose = dice_event_probs.get("p_lose", 0.55)
 
+            if dda_apply:
+                boost = max(0.0, float(settings.ch25_dda_win_boost))
+                boost_amount = min(boost, p_lose)
+                p_win = p_win + boost_amount
+                p_lose = p_lose - boost_amount
+                dda_applied = True
+
             # Normalize just in case
             total_p = p_win + p_draw + p_lose
             if total_p <= 0:
@@ -231,6 +242,11 @@ class DiceService:
              dealer_dice = [random.randint(1, 6), random.randint(1, 6)]
              user_sum = sum(user_dice)
              dealer_sum = sum(dealer_dice)
+
+             if dda_apply and user_sum <= dealer_sum:
+                 user_dice = [random.randint(1, 6), random.randint(1, 6)]
+                 user_sum = sum(user_dice)
+                 dda_applied = True
 
              if user_sum > dealer_sum:
                  outcome = "WIN"
@@ -422,6 +438,7 @@ class DiceService:
                 "reward_label": f"{config.name} - {outcome}",
                 "xp_from_reward": xp_award,
                 "mode": mode,
+                "dda_applied": dda_applied,
             },
         )
         

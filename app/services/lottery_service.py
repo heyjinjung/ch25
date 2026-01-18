@@ -15,7 +15,7 @@ from app.models.game_wallet import GameTokenType
 from app.models.lottery import LotteryConfig, LotteryLog, LotteryPrize
 from app.schemas.lottery import LotteryPlayResponse, LotteryPrizeSchema, LotteryStatusResponse
 from app.services.feature_service import FeatureService
-from app.services.game_common import GamePlayContext, log_game_play
+from app.services.game_common import GamePlayContext, log_game_play, should_apply_dda
 from app.services.game_wallet_service import GameWalletService
 from app.services.reward_service import RewardService
 from app.services.season_pass_service import SeasonPassService
@@ -142,9 +142,15 @@ class LotteryService:
             )
         ).scalar_one()
 
+        settings = get_settings()
+        dda_apply = should_apply_dda(user_id, settings)
+
         weighted_pool: list[LotteryPrize] = []
         for prize in prizes:
-            weighted_pool.extend([prize] * max(prize.weight, 0))
+            weight = max(prize.weight, 0)
+            if dda_apply and (prize.reward_amount or 0) > 0 and str(prize.reward_type).upper() != "NONE":
+                weight = int(round(weight * (1 + float(settings.ch25_dda_win_boost))))
+            weighted_pool.extend([prize] * max(weight, 0))
         chosen = random.choice(weighted_pool)
 
         _, consumed_trial = self.wallet_service.require_and_consume_token(
@@ -155,6 +161,7 @@ class LotteryService:
             reason="LOTTERY_PLAY",
             label=chosen.label,
             meta={"prize_id": chosen.id},
+            auto_commit=False,  # [Fix] Atomicity: Commit together with Log/Stock
         )
 
         if chosen.stock is not None:
@@ -227,6 +234,7 @@ class LotteryService:
                 "reward_amount": chosen.reward_amount,
                 "label": chosen.label,
                 "xp_from_reward": xp_award,
+                "dda_applied": dda_apply,
             },
         )
 

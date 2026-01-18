@@ -139,6 +139,96 @@ class Settings(BaseSettings):
         ),
     )
 
+    # Golden / ch25 internal stream (ticket-value based)
+    ch25_internal_stream_enabled: bool = Field(
+        True,
+        validation_alias=AliasChoices(
+            "CH25_INTERNAL_STREAM_ENABLED",
+            "ch25_internal_stream_enabled",
+        ),
+    )
+    roulette_bet_value: int = Field(
+        1000,
+        validation_alias=AliasChoices(
+            "ROULETTE_BET_VALUE",
+            "roulette_bet_value",
+        ),
+    )
+    dice_bet_value: int = Field(
+        1000,
+        validation_alias=AliasChoices(
+            "DICE_BET_VALUE",
+            "dice_bet_value",
+        ),
+    )
+    lottery_bet_value: int = Field(
+        2000,
+        validation_alias=AliasChoices(
+            "LOTTERY_BET_VALUE",
+            "lottery_bet_value",
+        ),
+    )
+    ticket_reward_min: int = Field(
+        2000,
+        validation_alias=AliasChoices(
+            "TICKET_REWARD_MIN",
+            "ticket_reward_min",
+        ),
+    )
+
+    # Golden intervention feature flags
+    ch25_intervention_enabled: bool = Field(
+        False,
+        validation_alias=AliasChoices(
+            "CH25_INTERVENTION_ENABLED",
+            "ch25_intervention_enabled",
+        ),
+    )
+    ch25_intervention_rollout_pct: int = Field(
+        100,
+        validation_alias=AliasChoices(
+            "CH25_INTERVENTION_ROLLOUT_PCT",
+            "ch25_intervention_rollout_pct",
+        ),
+    )
+    ch25_intervention_seed: str = Field(
+        "golden_v1",
+        validation_alias=AliasChoices(
+            "CH25_INTERVENTION_SEED",
+            "ch25_intervention_seed",
+        ),
+    )
+
+    # DDA controls
+    ch25_dda_enabled: bool = Field(
+        False,
+        validation_alias=AliasChoices(
+            "CH25_DDA_ENABLED",
+            "ch25_dda_enabled",
+        ),
+    )
+    ch25_dda_loss_streak_threshold: int = Field(
+        5,
+        validation_alias=AliasChoices(
+            "CH25_DDA_LOSS_STREAK_THRESHOLD",
+            "ch25_dda_loss_streak_threshold",
+        ),
+    )
+    ch25_dda_win_boost: float = Field(
+        0.05,
+        validation_alias=AliasChoices(
+            "CH25_DDA_WIN_BOOST",
+            "ch25_dda_win_boost",
+        ),
+    )
+    ch25_dda_max_consecutive: int = Field(
+        3,
+        validation_alias=AliasChoices(
+            "CH25_DDA_MAX_CONSECUTIVE",
+            "ch25_dda_max_consecutive",
+        ),
+    )
+
     # Admin-only destructive operations (dangerous).
     # Keep disabled by default; enable explicitly in controlled environments.
     allow_admin_user_purge: bool = Field(

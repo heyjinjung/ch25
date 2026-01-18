@@ -52,6 +52,8 @@ from app.models.survey import (
 from app.models.user_history import UserIdentityHistory
 
 from app.models.vault_ledger import VaultLedger
+from app.models.user_retention_state import UserRetentionState
+from app.models.retention_roi_log import RetentionRoiLog
 
 __all__ = [
     "FeatureConfig",
@@ -127,4 +129,6 @@ __all__ = [
     "ExternalRankingDailyDepositDelta",
     "UserIdentityHistory",
     "VaultLedger",
+    "UserRetentionState",
+    "RetentionRoiLog",
 ]
