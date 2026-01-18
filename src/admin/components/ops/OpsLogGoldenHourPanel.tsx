@@ -80,7 +80,7 @@ const OpsLogGoldenHourPanel: React.FC<OpsLogGoldenHourPanelProps> = ({ date, lis
             <Zap className="h-5 w-5 fill-current" />
           </div>
           <div>
-            <h3 className="text-admin-subtitle text-admin-text-primary uppercase tracking-widest">Golden Hour Control</h3>
+            <h3 className="text-admin-subtitle text-admin-text-primary uppercase tracking-widest">골든 아워 제어</h3>
             <p className="mt-0.5 text-xs text-admin-text-secondary">골든 아워 상태 및 배수 실시간 제어</p>
           </div>
         </div>
@@ -90,26 +90,26 @@ const OpsLogGoldenHourPanel: React.FC<OpsLogGoldenHourPanelProps> = ({ date, lis
         {/* On/Off Controls */}
         <div className="space-y-4 p-4 rounded-xl bg-admin-sidebar/50 border border-admin-border">
           <label className="text-xs font-bold text-admin-text-secondary uppercase tracking-wider block mb-2">
-            System Status
+            시스템 상태
           </label>
           <div className="grid grid-cols-2 gap-3">
             <button
               type="button"
               disabled={!date || createMutation.isPending}
-              onClick={() => submit(togglePayload(true), "Golden Hour ON 기록")}
+              onClick={() => submit(togglePayload(true), "골든 아워 ON 기록")}
               className="btn-admin-primary bg-admin-accent/20 border-admin-accent/40 text-admin-accent hover:bg-admin-accent hover:text-white flex flex-col items-center justify-center gap-2 py-4 h-full"
             >
               <Power className="h-6 w-6" />
-              <span>ACTIVATE (ON)</span>
+              <span>활성화 (ON)</span>
             </button>
             <button
               type="button"
               disabled={!date || createMutation.isPending}
-              onClick={() => submit(togglePayload(false), "Golden Hour OFF 기록")}
+              onClick={() => submit(togglePayload(false), "골든 아워 OFF 기록")}
               className="btn-admin-primary bg-admin-danger/20 border-admin-danger/40 text-admin-danger hover:bg-admin-danger hover:text-white flex flex-col items-center justify-center gap-2 py-4 h-full"
             >
               <Power className="h-6 w-6" />
-              <span>DEACTIVATE (OFF)</span>
+              <span>비활성화 (OFF)</span>
             </button>
           </div>
         </div>
@@ -123,7 +123,7 @@ const OpsLogGoldenHourPanel: React.FC<OpsLogGoldenHourPanelProps> = ({ date, lis
                   htmlFor="ops-log-golden-hour-multiplier"
                   className="text-xs font-bold text-admin-text-secondary uppercase tracking-wider block mb-1"
                 >
-                  Multiplier
+                  배수
                 </label>
                 <input
                   id="ops-log-golden-hour-multiplier"
@@ -146,19 +146,19 @@ const OpsLogGoldenHourPanel: React.FC<OpsLogGoldenHourPanelProps> = ({ date, lis
                       addToast("배수는 0보다 큰 숫자여야 합니다.", "error");
                       return;
                     }
-                    submit(multiplierPayload, "Golden Hour 배수 기록");
+                    submit(multiplierPayload, "골든 아워 배수 기록");
                   }}
                   className="btn-admin-primary w-full flex items-center justify-center gap-2 h-11"
                 >
                   <Save size={16} />
-                  <span>Update Multiplier</span>
+                  <span>배수 업데이트</span>
                 </button>
               </div>
             </div>
 
             <div className="space-y-1">
               <label className="text-xs font-bold text-admin-text-secondary uppercase tracking-wider block">
-                Operation Note
+                운영 메모
               </label>
               <input
                 type="text"

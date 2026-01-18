@@ -51,10 +51,10 @@ const OpsDailyPlanPanel: React.FC = () => {
     }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "ops-daily-log", selectedDate] });
-      alert("Daily Plan Saved!");
+      alert("데일리 플랜이 저장되었습니다.");
     },
     onError: (err) => {
-      alert(`Error saving plan: ${err} `);
+      alert(`저장 실패: ${err} `);
     }
   });
 
@@ -66,8 +66,8 @@ const OpsDailyPlanPanel: React.FC = () => {
             <Calendar className="h-5 w-5" />
           </div>
           <div>
-            <h2 className="text-admin-subtitle text-admin-text-primary">Ops Daily Plan</h2>
-            <p className="text-xs text-admin-text-secondary">Manage daily themes & priorities</p>
+            <h2 className="text-admin-subtitle text-admin-text-primary">운영 데일리 플랜</h2>
+            <p className="text-xs text-admin-text-secondary">일일 테마 및 우선순위 관리</p>
           </div>
         </div>
 
@@ -88,7 +88,7 @@ const OpsDailyPlanPanel: React.FC = () => {
             className="btn-admin-primary flex items-center gap-2"
           >
             {mutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-            Save
+            저장
           </button>
         </div>
       </div>
@@ -102,13 +102,13 @@ const OpsDailyPlanPanel: React.FC = () => {
           {/* Theme Title */}
           <div className="space-y-2">
             <label className="text-admin-meta text-admin-text-secondary font-bold uppercase flex items-center gap-2">
-              <Layout className="h-4 w-4" /> Daily Theme
+              <Layout className="h-4 w-4" /> 오늘의 테마
             </label>
             <input
               type="text"
               value={themeTitle}
               onChange={(e) => setThemeTitle(e.target.value)}
-              placeholder="e.g., Weekend Retention Boost"
+              placeholder="예: 주말 리텐션 부스트"
               className="admin-input w-full text-lg font-bold"
             />
           </div>
@@ -116,7 +116,7 @@ const OpsDailyPlanPanel: React.FC = () => {
           {/* Status Selection */}
           <div className="space-y-2">
             <label className="text-admin-meta text-admin-text-secondary font-bold uppercase flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4" /> Status
+              <CheckCircle2 className="h-4 w-4" /> 상태
             </label>
             <div className="flex gap-2">
               {["PLANNING", "ACTIVE", "REVIEW", "CLOSED"].map((s) => (
@@ -129,7 +129,7 @@ const OpsDailyPlanPanel: React.FC = () => {
                       : "bg-admin-sidebar text-admin-text-secondary border-admin-border hover:bg-admin-hover"
                     } `}
                 >
-                  {s}
+                  {s === "PLANNING" ? "계획" : s === "ACTIVE" ? "진행" : s === "REVIEW" ? "리뷰" : "종료"}
                 </button>
               ))}
             </div>
@@ -138,12 +138,12 @@ const OpsDailyPlanPanel: React.FC = () => {
           {/* Summary / Notes */}
           <div className="space-y-2 flex-1 flex flex-col">
             <label className="text-admin-meta text-admin-text-secondary font-bold uppercase flex items-center gap-2">
-              <AlignLeft className="h-4 w-4" /> Plan Details / Logs
+              <AlignLeft className="h-4 w-4" /> 플랜 상세 / 로그
             </label>
             <textarea
               value={summaryMd}
               onChange={(e) => setSummaryMd(e.target.value)}
-              placeholder="- Priority Task 1..."
+              placeholder="- 우선순위 작업 1..."
               className="w-full h-64 bg-admin-sidebar/50 border border-admin-border rounded-lg p-4 text-admin-text-primary focus:ring-2 focus:ring-admin-brand/50 resize-none font-mono text-sm leading-relaxed"
             />
           </div>
