@@ -65,8 +65,9 @@
     *   **Money Integrity**: `Check Constraint (balance >= 0)` 설정 필수.
     *   [x] Money Integrity 체크 제약 추가
     *   **마이그레이션 전략**: 다음달 완전 리셋 배포 전제 → **베이스라인 스냅샷 1개 + 이후 최소 누적**
-    *   **진행도**: 진행중 (베이스라인 + 레벨 보상 + 티켓 전환 + 상점/교환소/티켓제로/Ops 결과 테이블 마이그레이션 적용 완료)
+    *   **진행도**: 진행중 (V2 DB 기준 마이그레이션 적용 완료, head=20260119_1200)
     *   **근거**: [alembic/versions/20260119_0904_3bc52f37e0c0_baseline_v2_snapshot.py](../../../alembic/versions/20260119_0904_3bc52f37e0c0_baseline_v2_snapshot.py#L1), [alembic/versions/20260119_1000_add_v2_level_reward_table.py](../../../alembic/versions/20260119_1000_add_v2_level_reward_table.py#L1), [alembic/versions/20260119_1100_add_v2_ticket_conversion_policy.py](../../../alembic/versions/20260119_1100_add_v2_ticket_conversion_policy.py#L1), [alembic/versions/20260119_1200_add_v2_shop_exchange_ticketzero_ops_tables.py](../../../alembic/versions/20260119_1200_add_v2_shop_exchange_ticketzero_ops_tables.py#L1), [docs/v2_specs/04_db/v2_db_level_reward_table_ko.md](../04_db/v2_db_level_reward_table_ko.md#L1), [docs/v2_specs/04_db/v2_db_ticket_conversion_policy_ko.md](../04_db/v2_db_ticket_conversion_policy_ko.md#L1), [docs/v2_specs/04_db/v2_db_shop_order_ko.md](../04_db/v2_db_shop_order_ko.md#L1), [docs/v2_specs/04_db/v2_db_exchange_log_ko.md](../04_db/v2_db_exchange_log_ko.md#L1), [docs/v2_specs/04_db/v2_db_ticket_zero_log_ko.md](../04_db/v2_db_ticket_zero_log_ko.md#L1), [docs/v2_specs/04_db/v2_db_ops_execution_result_ko.md](../04_db/v2_db_ops_execution_result_ko.md#L1)
+    *   **운영 주의**: 컨테이너 기본 DB는 V1일 수 있으므로, V2 작업은 `DATABASE_URL=mysql+pymysql://xmasuser:2026@db:3306/v2`로 실행
 
 ---
 
@@ -90,10 +91,32 @@
 *목표: 돈과 관련된 로직의 무결성 확보 (TDD 필수)*
 **[구현 계획서 바로가기](./v2_phase2_core_economy_plan.md)**
 
+### Phase 2 상태
+- **Unblock**: [BLOCKING] Wait for External AI: DB Snapshot (v2) 완료 처리
+- **Status Change**: Phase 2를 EXECUTION 상태로 전환
+
+### Phase 2 선행 작업 반영
+2. **V2 독립 폴더 구조 생성 (Folder Setup)**
+    - Backend: `app/v2` 하위 `models`, `schemas`, `services`, `api`, `utils` 디렉토리 생성 완료
+    - Frontend: `src/v2` 하위 `types`, `api`, `components`, `hooks` 디렉토리 생성 완료
+    - Action: PowerShell `New-Item`로 안전 생성
+
+3. **스키마 및 타입 이관 (Clean & Move)**
+    - Backend Schemas: `app/v2_*.py` → `app/v2/schemas/`로 이동 및 리네임 완료
+    - Frontend Types: `src/types/v2/*` 및 루트 V2 타입 → `src/v2/types/`로 통합 이동 완료
+    - Alembic Config: `alembic.env.py`가 V2 메타데이터를 참조하도록 전환 완료
+
+4. **핵심 경제 로직 구현 (TDD Start)**
+    - Target: Vault Consistency (금고 무결성)
+    - Step 1: `tests/v2/core/test_vault_consistency.py` 작성 (완료)
+    - Step 2: `app/v2/models/user.py` (V2 User 모델) 정의 및 `vault_locked_balance` 엄격 적용 (완료)
+    - Step 3: 테스트 통과 및 검증 (완료)
+    - 산출물: V2 User SoT 문서 및 V2 DB User 스키마 문서 생성 완료
+
 7.  **User Ledger & Vault (TDD)**
     *   **원칙**: 테스트 코드(Test Case) 작성 후 개발.
     *   **검증**: 입금(외부 랭킹 동기화), 출금(Strict Policy 일치 여부), 동시성(따닥 방지).
-    *   **진행도**: 미착수
+    *   **진행도**: EXECUTION (Vault Consistency TDD 완료)
 
 8.  **상점(Shop) 및 인벤토리**
     *   트랜잭션 원자성(Atomicity) 보장. 구매와 인벤토리 지급, 차감이 한 호흡으로 동작.
@@ -102,22 +125,62 @@
         *   동시성 테스트: 0.1초 간격으로 10번 구매 요청 시 1번만 결제되는지 확인.
    "구매 -> 인벤토리 지급 -> 차감" 트랜잭션의 원자성(Atomicity) 보장 구현.
     *   기존의 복잡한 아이템 로직을 단순화하되 확장성 있게 재구성.
-    *   **진행도**: 미착수
+    *   **진행도**: EXECUTION (Shop/Inventory TDD 전환 완료)
 
 
+### 현황 메모
 현재 출금시에 유저금고 / 어드민회원페이지 / 어드민금고페이지에서 각각 다른 금액이 도출됨
 금고락인금액 / 금고가용금액이 더블로 계산되어 나오는 경우도 존재했고
 그냥 한마디로 엉망이었음
-정확한 로직과 규칙 준수가 절실하고 프론트 반영까지 모두 확인되어야함 
----
+정확한 로직과 규칙 준수가 절실하고 프론트 반영까지 모두 확인되어야함
+
+### 추가 계획
+#### 1) 상점/인벤토리 서비스 레이어 설계 확정 (진행 중)
+- 상태: **완료** (설계 확정 및 TDD 케이스 정리 완료)
+- 작업 내용:
+    - ShopService 구매 플로우 확정(차감 → 로그 → 지급)
+    - InventoryService 교환/지급 흐름 확정
+    - 실패/롤백 케이스 목록화
+- 산출물:
+    - 서비스 인터페이스 명세서
+    - TDD 케이스 목록
+    - 근거: [docs/v2_specs/01_core/v2_shop_inventory_service_design_ko.md](../01_core/v2_shop_inventory_service_design_ko.md#L1)
+
+#### 2) Ticket Zero 로직 API 계약서/테스트 초안 (미착수)
+- 상태: **진행 중** (API 계약서 초안/테스트 초안 작성 완료)
+- 작업 내용:
+    - `GET /status` 응답 계약(bailout_available 플래그)
+    - `POST /api/retention/bailout` 요청/응답 스키마 정의
+    - 쿨다운/잔액/미수령 조건 테스트 초안
+- 산출물:
+    - API 계약서 초안
+    - 테스트 케이스 초안
+    - 근거: [docs/v2_specs/03_api/v2_ticket_zero_api_contract_ko.md](../03_api/v2_ticket_zero_api_contract_ko.md#L1)
+
+#### 3) Ops 실행 결과 저장/조회 API 스펙/어드민 연동 (미착수)
+- 상태: **미착수**
+- 작업 내용:
+    - 결과 저장/조회 API 스펙 정의
+    - 어드민 화면 연동 범위 결정
+    - payload_json 표시/검색 기준 합의
+- 산출물:
+    - API 스펙 문서
+    - 어드민 연동 범위 정의
+
+#### 4) V2 전용 마이그레이션 스냅샷 재생성 기준 수립 (미착수)
+- 상태: **미착수**
+- 작업 내용:
+    - 배포 전 clean snapshot 생성 기준 정리
+    - 스냅샷 생성/적용 절차 문서화
+    - 기준 리비전 고정 규칙 수립
+- 산출물:
+    - 스냅샷 기준 문서
 
 ## Phase 3: 게임 및 컨텐츠 (3주차)
 *목표: 웹 환경에서 게임 로직 완벽 검증*
-
 9.  **게임 엔진 표준화 (Game Engine V2)**
     *   룰렛, 주사위, 복권 로직 추상화 및 Config Schema 강제 적용.
     *   룰렛, 주사위, 복권의 공통 로직(입장 -> 결과 산출 -> 보상 지급)을 추상화.
-    *   **Config Loader**: 어드민 설정값(확률 등)이 스키마에 어긋나면 서버가 켜지지 않도록 강제.
     *   **진행도**: 미착수
 
 10. **프론트엔드-백엔드 연동 (Web Ver.)**

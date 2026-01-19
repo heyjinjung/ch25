@@ -8,15 +8,18 @@
 - 보상 매핑 SoT: docs/v2_specs/01_core/v2_reward_mapping_sot_ko.md
 - RewardType 표준 SoT: docs/v2_specs/01_core/v2_reward_type_standard_sot_ko.md
 - 금고 용어 SoT: docs/v2_specs/01_core/v2_vault_glossary_sot_ko.md
+- V2 User SoT: docs/v2_specs/01_core/v2_user_sot_ko.md
 - 레벨 보상표 SoT: docs/v2_specs/01_core/v2_level_reward_table_sot_ko.md
 - 기프티콘 네이밍 SoT: docs/v2_specs/01_core/v2_gifticon_naming_sot_ko.md
 - 만능티켓 변환 SoT: docs/v2_specs/01_core/v2_ticket_conversion_sot_ko.md
 - 레벨포인트 확장 SoT: docs/v2_specs/01_core/v2_level_point_extension_sot_ko.md
 - **아이템/인벤토리 SoT**: docs/v2_specs/01_core/v2_item_inventory_sot_ko.md
 - **상점/교환소 정책 SoT**: docs/v2_specs/01_core/v2_shop_exchange_policy_sot_ko.md
+- 상점/인벤토리 서비스 설계: docs/v2_specs/01_core/v2_shop_inventory_service_design_ko.md
 - 어드민 게임 설정 스키마 SoT: docs/v2_specs/02_game/v2_admin_game_config_schema_ko.md
 - 검증/세그먼트 SoT: docs/v2_specs/01_core/v2_grade_segment_sot_ko.md
 - 알림/피드 스키마 SoT: docs/v2_specs/03_api/v2_notification_feed_schema_ko.md
+- Ticket Zero API 계약: docs/v2_specs/03_api/v2_ticket_zero_api_contract_ko.md
 - **V1 Legacy API 감사**: docs/v2_specs/03_api/v1_legacy_api_list_ko.md (보안감사 포함)
 - **V1 API 불일치 리포트**: docs/v2_specs/03_api/v1_api_discrepancy_report_ko.md (Deep Audit)
 - 미션 용어 SoT: docs/v2_specs/02_game/v2_mission_glossary_sot_ko.md
@@ -34,6 +37,7 @@
 - **티켓 제로(구조) SoT**: docs/v2_specs/02_game/v2_ticket_zero_policy_sot_ko.md
 - V2 DB 베이스라인 스냅샷: docs/v2_specs/04_db/v2_db_baseline_snapshot_ko.md
 - V2 DB 레벨 보상 테이블: docs/v2_specs/04_db/v2_db_level_reward_table_ko.md
+- V2 DB User: docs/v2_specs/04_db/v2_db_user_ko.md
 - V2 DB 티켓 전환 정책: docs/v2_specs/04_db/v2_db_ticket_conversion_policy_ko.md
 - V2 DB 상점 주문 로그: docs/v2_specs/04_db/v2_db_shop_order_ko.md
 - V2 DB 교환소 로그: docs/v2_specs/04_db/v2_db_exchange_log_ko.md
@@ -41,9 +45,13 @@
 - V2 DB Ops 실행 결과: docs/v2_specs/04_db/v2_db_ops_execution_result_ko.md
 
 ## 6. 운영/검증 (QA)
+- 프론트엔드 마스터 플랜: docs/v2_specs/06_design/v2_frontend_master_plan_ko.md
+- 어드민 마스터 플랜: docs/v2_specs/06_design/v2_admin_master_plan_ko.md
+
 - [ ] 문서 분류/링크 최신화
 - [ ] SoT 우선순위 준수
 
 ## 7. 변경 이력
+- v1.2 (2026-01-19, GitHub Copilot): V2 DB 진행 상태 업데이트 반영
 - v1.1 (2026-01-19, GitHub Copilot): V2 DB 로그/ops 문서 링크 추가
 - v1.0 (2026-01-18, GitHub Copilot): 최초 작성

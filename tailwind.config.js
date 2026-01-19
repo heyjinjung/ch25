@@ -57,6 +57,16 @@ export default {
           900: '#fafafa',
         },
 
+        // V2 Soft Obsidian Theme
+        obsidian: {
+          bg: '#121214',      // Deep Calm Background
+          surface: '#18181b', // Card/Container
+          border: 'rgba(255, 255, 255, 0.06)', // Subtle Border
+          text: '#e4e4e7',    // Zinc-200 (Eye Comfort)
+          muted: '#a1a1aa',   // Zinc-400
+          accent: '#10b981',  // Emerald (Trust)
+          warning: '#f59e0b', // Gold (Caution)
+        },
         // Admin Premium System (Obsidian + Indigo)
         admin: {
           bg: 'var(--admin-bg)',
@@ -179,5 +189,7 @@ export default {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    require("tailwindcss-animate"),
+  ],
 }
