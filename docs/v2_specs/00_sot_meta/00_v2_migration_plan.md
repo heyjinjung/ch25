@@ -65,8 +65,8 @@
     *   **Money Integrity**: `Check Constraint (balance >= 0)` 설정 필수.
     *   [x] Money Integrity 체크 제약 추가
     *   **마이그레이션 전략**: 다음달 완전 리셋 배포 전제 → **베이스라인 스냅샷 1개 + 이후 최소 누적**
-    *   **진행도**: 진행중 (V2 DB 기준 마이그레이션 적용 완료, head=20260119_1600)
-    *   **근거**: [alembic/versions/20260119_0904_3bc52f37e0c0_baseline_v2_snapshot.py](../../../alembic/versions/20260119_0904_3bc52f37e0c0_baseline_v2_snapshot.py#L1), [alembic/versions/20260119_1000_add_v2_level_reward_table.py](../../../alembic/versions/20260119_1000_add_v2_level_reward_table.py#L1), [alembic/versions/20260119_1100_add_v2_ticket_conversion_policy.py](../../../alembic/versions/20260119_1100_add_v2_ticket_conversion_policy.py#L1), [alembic/versions/20260119_1200_add_v2_shop_exchange_ticketzero_ops_tables.py](../../../alembic/versions/20260119_1200_add_v2_shop_exchange_ticketzero_ops_tables.py#L1), [alembic/versions/20260119_1400_add_v2_user_table.py](../../../alembic/versions/20260119_1400_add_v2_user_table.py#L1), [alembic/versions/20260119_1500_add_v2_game_tables.py](../../../alembic/versions/20260119_1500_add_v2_game_tables.py#L1), [docs/v2_specs/04_db/v2_db_level_reward_table_ko.md](../04_db/v2_db_level_reward_table_ko.md#L1), [docs/v2_specs/04_db/v2_db_ticket_conversion_policy_ko.md](../04_db/v2_db_ticket_conversion_policy_ko.md#L1), [docs/v2_specs/04_db/v2_db_shop_order_ko.md](../04_db/v2_db_shop_order_ko.md#L1), [docs/v2_specs/04_db/v2_db_exchange_log_ko.md](../04_db/v2_db_exchange_log_ko.md#L1), [docs/v2_specs/04_db/v2_db_ticket_zero_log_ko.md](../04_db/v2_db_ticket_zero_log_ko.md#L1), [docs/v2_specs/04_db/v2_db_ops_execution_result_ko.md](../04_db/v2_db_ops_execution_result_ko.md#L1), [docs/v2_specs/04_db/v2_db_user_ko.md](../04_db/v2_db_user_ko.md#L1), [docs/v2_specs/04_db/v2_db_roulette_ko.md](../04_db/v2_db_roulette_ko.md#L1), [docs/v2_specs/04_db/v2_db_dice_ko.md](../04_db/v2_db_dice_ko.md#L1), [docs/v2_specs/04_db/v2_db_lottery_ko.md](../04_db/v2_db_lottery_ko.md#L1)
+    *   **진행도**: 완료 (V2 DB 기준 마이그레이션 적용 완료, head=20260119_1700)
+    *   **근거**: [alembic/versions/20260119_0904_3bc52f37e0c0_baseline_v2_snapshot.py](../../../alembic/versions/20260119_0904_3bc52f37e0c0_baseline_v2_snapshot.py#L1), [alembic/versions/20260119_1000_add_v2_level_reward_table.py](../../../alembic/versions/20260119_1000_add_v2_level_reward_table.py#L1), [alembic/versions/20260119_1100_add_v2_ticket_conversion_policy.py](../../../alembic/versions/20260119_1100_add_v2_ticket_conversion_policy.py#L1), [alembic/versions/20260119_1200_add_v2_shop_exchange_ticketzero_ops_tables.py](../../../alembic/versions/20260119_1200_add_v2_shop_exchange_ticketzero_ops_tables.py#L1), [alembic/versions/20260119_1400_add_v2_user_table.py](../../../alembic/versions/20260119_1400_add_v2_user_table.py#L1), [alembic/versions/20260119_1500_add_v2_game_tables.py](../../../alembic/versions/20260119_1500_add_v2_game_tables.py#L1), [alembic/versions/20260119_1600_add_v2_segment_message_tables.py](../../../alembic/versions/20260119_1600_add_v2_segment_message_tables.py#L1), [alembic/versions/20260119_1700_add_v2_golden_retention_tables.py](../../../alembic/versions/20260119_1700_add_v2_golden_retention_tables.py#L1), [docs/v2_specs/04_db/v2_db_level_reward_table_ko.md](../04_db/v2_db_level_reward_table_ko.md#L1), [docs/v2_specs/04_db/v2_db_ticket_conversion_policy_ko.md](../04_db/v2_db_ticket_conversion_policy_ko.md#L1), [docs/v2_specs/04_db/v2_db_shop_order_ko.md](../04_db/v2_db_shop_order_ko.md#L1), [docs/v2_specs/04_db/v2_db_exchange_log_ko.md](../04_db/v2_db_exchange_log_ko.md#L1), [docs/v2_specs/04_db/v2_db_ticket_zero_log_ko.md](../04_db/v2_db_ticket_zero_log_ko.md#L1), [docs/v2_specs/04_db/v2_db_ops_execution_result_ko.md](../04_db/v2_db_ops_execution_result_ko.md#L1), [docs/v2_specs/04_db/v2_db_user_ko.md](../04_db/v2_db_user_ko.md#L1), [docs/v2_specs/04_db/v2_db_roulette_ko.md](../04_db/v2_db_roulette_ko.md#L1), [docs/v2_specs/04_db/v2_db_dice_ko.md](../04_db/v2_db_dice_ko.md#L1), [docs/v2_specs/04_db/v2_db_lottery_ko.md](../04_db/v2_db_lottery_ko.md#L1)
     *   **운영 주의**: 컨테이너 기본 DB는 V1일 수 있으므로, V2 작업은 `DATABASE_URL=mysql+pymysql://xmasuser:2026@db:3306/v2`로 실행
 
 ---
@@ -148,8 +148,8 @@
     - TDD 케이스 목록
     - 근거: [docs/v2_specs/01_core/v2_shop_inventory_service_design_ko.md](../01_core/v2_shop_inventory_service_design_ko.md#L1)
 
-#### 2) Ticket Zero 로직 API 계약서/테스트 초안 (미착수)
-- 상태: **진행 중** (API 계약서 초안/테스트 초안 작성 완료)
+#### 2) Ticket Zero 로직 API 계약서/테스트 초안 (완료)
+- 상태: **완료** (API 계약서 초안/테스트 초안 작성 완료)
 - 작업 내용:
     - `GET /status` 응답 계약(bailout_available 플래그)
     - `POST /api/retention/bailout` 요청/응답 스키마 정의
@@ -157,10 +157,10 @@
 - 산출물:
     - API 계약서 초안
     - 테스트 케이스 초안
-    - 근거: [docs/v2_specs/03_api/v2_ticket_zero_api_contract_ko.md](../03_api/v2_ticket_zero_api_contract_ko.md#L1)
+    - 근거: [docs/v2_specs/03_api/v2_ticket_zero_api_contract_ko.md](../03_api/v2_ticket_zero_api_contract_ko.md#L1), [app/v2/api/routes.py](../../../app/v2/api/routes.py#L579), [app/v2/services/ticket_zero_service.py](../../../app/v2/services/ticket_zero_service.py#L1), [app/v2/schemas/v2_ticket_zero.py](../../../app/v2/schemas/v2_ticket_zero.py#L1), [app/v2/models/v2_ticket_zero_log.py](../../../app/v2/models/v2_ticket_zero_log.py#L1)
 
-#### 3) Ops 실행 결과 저장/조회 API 스펙/어드민 연동 (미착수)
-- 상태: **진행 중** (API 스펙/연동 범위 초안 작성 완료)
+#### 3) Ops 실행 결과 저장/조회 API 스펙/어드민 연동 (완료)
+- 상태: **완료** (API 스펙/연동 범위 초안 작성 완료)
 - 작업 내용:
     - 결과 저장/조회 API 스펙 정의
     - 어드민 화면 연동 범위 결정
@@ -168,7 +168,7 @@
 - 산출물:
     - API 스펙 문서
     - 어드민 연동 범위 정의
-    - 근거: [docs/v2_specs/05_ops/v2_ops_execution_api_contract_ko.md](../05_ops/v2_ops_execution_api_contract_ko.md#L1)
+    - 근거: [docs/v2_specs/05_ops/v2_ops_execution_api_contract_ko.md](../05_ops/v2_ops_execution_api_contract_ko.md#L1), [app/v2/api/admin_ops_plan.py](../../../app/v2/api/admin_ops_plan.py#L1), [app/v2/models/v2_ops_execution_result.py](../../../app/v2/models/v2_ops_execution_result.py#L1), [app/v2/schemas/v2_ops_execution.py](../../../app/v2/schemas/v2_ops_execution.py#L1)
 
 #### 4) V2 전용 마이그레이션 스냅샷 재생성 기준 수립 (미착수)
 - 상태: **완료** (기준/절차 문서화 완료)
@@ -191,11 +191,7 @@
     *   **검증**: V2 core 테스트 16건 통과 (2026-01-19)
     *   **검증**: V2 게임 API /api/v2/{game}/status|play 스모크 테스트 통과 (tests/v2/core/test_v2_game_api_flow.py) 
 
-10. **프론트엔드-백엔드 연동 (Web Ver.)**
-    *   표준 Web API로 게임 플레이 연동 및 Network 탭 검증.
-    *   **진행도**: 미착수
 
----
 
 ## Phase 4: 어드민 및 운영 도구 (3주차 후반)
 *목표: 운영자가 신뢰할 수 있는 제어판*
@@ -217,7 +213,24 @@
 13. **Golden V2 이관 (문서/기능)**
     *   Golden V2 API/DB 문서 정리 및 기능 이관.
     *   **진행도**: 완료 (문서 경로 이동 및 V2 라우트 이관 완료)
-    *   **근거**: [docs/v2_specs/07_golden/golden_v2_system_definition_ko.md](../07_golden/golden_v2_system_definition_ko.md#L1), [docs/v2_specs/07_golden/golden_v2_intervention_logic_ko.md](../07_golden/golden_v2_intervention_logic_ko.md#L1), [docs/v2_specs/07_golden/golden_v2_operational_logic_ko.md](../07_golden/golden_v2_operational_logic_ko.md#L1), [docs/v2_specs/07_golden/02_golden_v2_realtime_architecture.md](../07_golden/02_golden_v2_realtime_architecture.md#L1), [docs/v2_specs/07_golden/v2_golden_api_contract_ko.md](../07_golden/v2_golden_api_contract_ko.md#L1), [docs/v2_specs/07_golden/v2_db_golden_data_map_ko.md](../07_golden/v2_db_golden_data_map_ko.md#L1), [app/v2/api/routes.py](../../../app/v2/api/routes.py#L1)
+    *   **근거**: [docs/v2_specs/07_golden/golden_v2_system_definition_ko.md](../07_golden/golden_v2_system_definition_ko.md#L1), [docs/v2_specs/07_golden/golden_v2_intervention_logic_ko.md](../07_golden/golden_v2_intervention_logic_ko.md#L1), [docs/v2_specs/07_golden/golden_v2_operational_logic_ko.md](../07_golden/golden_v2_operational_logic_ko.md#L1), [docs/v2_specs/07_golden/02_golden_v2_realtime_architecture.md](../07_golden/02_golden_v2_realtime_architecture.md#L1), [docs/v2_specs/07_golden/v2_golden_api_contract_ko.md](../07_golden/v2_golden_api_contract_ko.md#L1), [docs/v2_specs/07_golden/v2_db_golden_data_map_ko.md](../07_golden/v2_db_golden_data_map_ko.md#L1), [app/v2/api/routes.py](../../../app/v2/api/routes.py#L1), [app/v2/services/golden_event_service.py](../../../app/v2/services/golden_event_service.py#L1), [app/v2/workers/golden_event_worker.py](../../../app/v2/workers/golden_event_worker.py#L1)
+
+
+
+
+10. **프론트엔드-백엔드 연동 (Web Ver.)**
+    *   표준 Web API로 게임 플레이 연동 및 Network 탭 검증.
+    *   **진행도**: 진행중
+    *   **근거**: [src/v2/api/gameApi.ts](../../../src/v2/api/gameApi.ts#L1), [src/v2/hooks/useV2Game.ts](../../../src/v2/hooks/useV2Game.ts#L1)
+
+---
+
+
+
+
+
+
+
 
 
 ## Phase 5: 디자인 & 모션 시스템 검증 (4주차 초반)

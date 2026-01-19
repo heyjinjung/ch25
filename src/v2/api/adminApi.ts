@@ -310,7 +310,7 @@ export const getSurveys = async (): Promise<SurveyDto[]> => {
 };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export const getSurveyResults = async (surveyId: number): Promise<SurveyResultDto[]> => {
+export const getSurveyResults = async (_surveyId: number): Promise<SurveyResultDto[]> => {
     // Mock Data
     return [
         {
@@ -329,4 +329,146 @@ export const getSurveyResults = async (surveyId: number): Promise<SurveyResultDt
 
 export const toggleSurvey = async (surveyId: number, isActive: boolean): Promise<void> => {
     await v2Client.put(`/admin/api/marketing/surveys/${surveyId}`, { isActive });
+};
+
+
+// ============================================================================
+// Game Config API
+// ============================================================================
+
+export type RouletteGrade = "COMMON" | "VIP" | "WHALE" | "AT_RISK";
+
+export interface AdminRouletteConfigDto {
+    id: number;
+    gameType: "ROULETTE";
+    name: string;
+    grade: RouletteGrade;
+    ticketType: string;
+    maxDailySpins: number;
+    isActive: boolean;
+    segments: AdminRouletteSegmentDto[];
+}
+
+export interface AdminRouletteSegmentDto {
+    slotIndex: number;
+    label: string;
+    weight: number;
+    rewardType: string;
+    rewardAmount: number;
+    isJackpot: boolean;
+    color: string;
+}
+
+export interface AdminDiceConfigDto {
+    id: number;
+    gameType: "DICE";
+    name: string;
+    isActive: boolean;
+    maxDailyPlays: number;
+    
+    // Win/Draw/Lose Rewards
+    winRewardType: string;
+    winRewardAmount: number;
+    drawRewardType: string;
+    drawRewardAmount: number;
+    loseRewardType: string;
+    loseRewardAmount: number;
+}
+
+
+export interface AdminLotteryPrizeDto {
+    id: number;
+    label: string;
+    weight: number;      // SoT: 가중치
+    stock?: number;      // SoT: 재고 (Optional)
+    rewardType: string;
+    rewardAmount: number;
+    isActive: boolean;   // SoT: 활성화 여부
+    color: string;       // Frontend Only
+}
+
+export interface AdminLotteryConfigDto {
+    id: number;
+    name: string;
+    isActive: boolean;
+    maxDailyPlays: number;
+    puzzlePieceProbability: number; // SoT: 퍼즐 조각 드랍 확률 (0~100%)
+    prizes: AdminLotteryPrizeDto[];
+}
+
+// Roulette API
+export const getRouletteConfigs = async (): Promise<AdminRouletteConfigDto[]> => {
+    const createMockConfig = (grade: RouletteGrade, id: number, ticket: string): AdminRouletteConfigDto => ({
+        id,
+        gameType: "ROULETTE",
+        name: `${grade} Roulette`,
+        grade,
+        ticketType: ticket,
+        maxDailySpins: grade === "VIP" ? 10 : grade === "WHALE" ? 999 : 3,
+        isActive: true,
+        segments: Array.from({ length: 6 }).map((_, idx) => ({
+            slotIndex: idx,
+            label: idx % 2 === 0 ? "100 P" : "꽝",
+            weight: 10,
+            rewardType: idx % 2 === 0 ? "POINT" : "NONE",
+            rewardAmount: idx % 2 === 0 ? 100 : 0,
+            isJackpot: false,
+            color: idx % 2 === 0 ? "#EF4444" : "#E5E7EB"
+        }))
+    });
+
+    return [
+        createMockConfig("COMMON", 1, "ROULETTE_TICKET"),
+        createMockConfig("VIP", 2, "GOLD_KEY_TICKET"),
+        createMockConfig("WHALE", 3, "DIAMOND_TICKET"),
+        createMockConfig("AT_RISK", 4, "TRIAL_TICKET"),
+    ];
+};
+
+export const updateRouletteConfig = async (data: Partial<AdminRouletteConfigDto>): Promise<void> => {
+    await v2Client.put(`/admin/api/game/roulette/config/${data.id}`, data);
+};
+
+// Dice API
+export const getDiceConfig = async (): Promise<AdminDiceConfigDto> => {
+    // Mock Data
+    return {
+        id: 1,
+        gameType: "DICE",
+        name: "Basic Dice",
+        isActive: true,
+        maxDailyPlays: 10,
+        winRewardType: "POINT",
+        winRewardAmount: 1000,
+        drawRewardType: "NONE",
+        drawRewardAmount: 0,
+        loseRewardType: "POINT",   // Example: Lose gives negative or small consolation? SoT says negative allowed.
+        loseRewardAmount: -100
+    };
+};
+
+export const updateDiceConfig = async (data: Partial<AdminDiceConfigDto>): Promise<void> => {
+    await v2Client.put("/admin/api/game/dice/config", data);
+};
+
+// Lottery API
+export const getLotteryConfig = async (): Promise<AdminLotteryConfigDto> => {
+    // Mock Data
+    return {
+        id: 1,
+        name: "Instant Lottery",
+        isActive: true,
+        maxDailyPlays: 5,
+        puzzlePieceProbability: 5.0, // 5% base drop rate
+        prizes: [
+            { id: 1, label: "1등 (100만 P)", weight: 1, stock: 1, rewardType: "POINT", rewardAmount: 1000000, isActive: true, color: "#FDBA74" },
+            { id: 2, label: "2등 (10만 P)", weight: 10, stock: 10, rewardType: "POINT", rewardAmount: 100000, isActive: true, color: "#FCD34D" },
+            { id: 3, label: "3등 (1만 P)", weight: 100, stock: 100, rewardType: "POINT", rewardAmount: 10000, isActive: true, color: "#86EFAC" },
+            { id: 4, label: "꽝", weight: 500, stock: undefined, rewardType: "NONE", rewardAmount: 0, isActive: true, color: "#E5E7EB" },
+        ]
+    };
+};
+
+export const updateLotteryConfig = async (data: Partial<AdminLotteryConfigDto>): Promise<void> => {
+    await v2Client.put("/admin/api/game/lottery/config", data);
 };
