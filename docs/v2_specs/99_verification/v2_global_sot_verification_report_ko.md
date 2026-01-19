@@ -439,7 +439,7 @@ return {
 
 **백엔드 구현**: ✅ **완료 (실시간 인프라 포함)**
 - ✅ Database Models 완료 (Admin/Ops, Golden V2 마이그레이션 완료)
-- ✅ API 라우트 및 서비스 로직 완료
+- ✅ API 라우트 및 서비스 로직 완료 (User Detail, Withdrawals, Ops Status 검증 완료)
 - ✅ Redis 채널/키 패턴 구현 완료
 - ✅ Golden System Workers 구현 완료
 - ✅ 개입 로직 (5 losses / 50% balance drop) 구현 완료

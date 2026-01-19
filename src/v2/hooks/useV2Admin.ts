@@ -2,7 +2,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
     runV2SegmentBatch, 
     createV2AdminMessage, 
-    AdminMessageDto, 
     getAdminMessages, 
     getAdminWithdrawals, 
     approveWithdrawal, 

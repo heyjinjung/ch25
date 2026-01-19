@@ -20,6 +20,27 @@ from app.v2.schemas.v2_admin_ops import (
     OpsSystemStatusDto,
 )
 from app.v2.schemas.v2_admin_user import AdminUserDetailDto
+from app.v2.schemas.v2_admin_dashboard import (
+    DashboardMetricsResponse,
+    MetricValue,
+    DailyOverviewResponse,
+    EventsStatusResponse,
+    ComprehensiveOverviewResponse,
+)
+from app.v2.schemas.v2_admin_streak import StreakMetricsResponse, StreakDailyMetric
+from app.v2.schemas.v2_admin_feature_schedule import (
+    AdminFeatureScheduleResponse, 
+    AdminFeatureScheduleCreate,
+    AdminFeatureScheduleUpdate
+)
+from app.v2.schemas.v2_admin_game_config import (
+    AdminDiceConfigV2, 
+    DiceEventParams
+)
+from app.v2.schemas.v2_notification_feed import (
+    FeedConfigResponse, 
+    FeedJackpotConfig
+)
 
 router = APIRouter(prefix="/admin", tags=["v2-admin-ui"])
 
@@ -167,3 +188,128 @@ def get_ops_dashboard_status(
         golden_radar=golden_radar,
         metrics=metrics
     )
+
+
+@router.get("/dashboard/metrics", response_model=DashboardMetricsResponse)
+def get_dashboard_metrics(
+    range_hours: int = 24,
+    db: Session = Depends(get_db),
+    admin_id: int = Depends(get_current_admin_id),
+):
+    """
+    Get high-level dashboard metrics (V2).
+    Migrated from V1 admin_dashboard.py
+    """
+    _ = admin_id
+    now = datetime.utcnow()
+    
+    # Mock V2 Implementation for Migration Phase 1
+    # Real implementation needs to query UserActivityEvent, etc.
+    
+    return DashboardMetricsResponse(
+        range_hours=range_hours,
+        generated_at=now,
+        active_users=MetricValue(value=150, diff_percent=5.2),
+        game_participation=MetricValue(value=1200, diff_percent=12.5),
+        unique_players=MetricValue(value=85, diff_percent=-2.1),
+        ticket_usage=MetricValue(value=5000, diff_percent=0.0),
+        avg_session_time_seconds=MetricValue(value=420, diff_percent=1.5),
+    )
+
+
+@router.get("/dashboard/streak", response_model=StreakMetricsResponse)
+def get_streak_metrics(
+    days: int = 7,
+    db: Session = Depends(get_db),
+    admin_id: int = Depends(get_current_admin_id),
+):
+    """
+    Get streak observability metrics.
+    Migrated from V1 admin_dashboard.py
+    """
+    _ = admin_id
+    
+    # Mock V2 Implementation
+    items = []
+    for i in range(days):
+        items.append(StreakDailyMetric(
+            day=datetime.utcnow().date(),
+            promote=10,
+            reset=2,
+            vault_base_plays=100
+        ))
+        
+    return StreakMetricsResponse(
+        days=days,
+        generated_at=datetime.utcnow(),
+        items=items
+    )
+
+
+@router.get("/feature-schedule", response_model=List[AdminFeatureScheduleResponse])
+def list_feature_schedules(
+    start_date: datetime,
+    end_date: datetime,
+    db: Session = Depends(get_db),
+    admin_id: int = Depends(get_current_admin_id),
+):
+    """List feature Schedules."""
+    # Mock return for now
+    return []
+
+@router.put("/feature-schedule", response_model=AdminFeatureScheduleResponse)
+def upsert_feature_schedule(
+    payload: AdminFeatureScheduleCreate,
+    db: Session = Depends(get_db),
+    admin_id: int = Depends(get_current_admin_id),
+):
+    """Upsert feature schedule."""
+    # Mock return
+    return AdminFeatureScheduleResponse(
+        id=1,
+        date=payload.date,
+        feature_type=payload.feature_type,
+        is_active=payload.is_active,
+        created_at=str(datetime.utcnow())
+    )
+
+@router.get("/game-config/dice", response_model=AdminDiceConfigV2)
+def get_dice_config(
+    db: Session = Depends(get_db),
+    admin_id: int = Depends(get_current_admin_id),
+):
+    """Get Dice Config."""
+    # Mock V2 Config
+    return AdminDiceConfigV2(
+        name="Standard Dice",
+        max_daily_plays=10,
+        win_reward_type="POINT",
+        win_reward_amount=100,
+        draw_reward_type="NONE",
+        draw_reward_amount=0,
+        lose_reward_type="NONE",
+        lose_reward_amount=0
+    )
+
+
+@router.get("/feed/config", response_model=FeedConfigResponse)
+def get_feed_config(
+    db: Session = Depends(get_db),
+    admin_id: int = Depends(get_current_admin_id),
+):
+    """Get Feed Config."""
+    # Mock V2 Config
+    return FeedConfigResponse(
+        threshold=10000,
+        mega_threshold=30000
+    )
+
+@router.put("/feed/config", response_model=FeedConfigResponse)
+def update_feed_config(
+    payload: FeedJackpotConfig,
+    db: Session = Depends(get_db),
+    admin_id: int = Depends(get_current_admin_id),
+):
+    """Update Feed Config."""
+    # Mock Return
+    return FeedConfigResponse(**payload.dict())

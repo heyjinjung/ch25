@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from typing import Literal, Optional, Union
 
+from pydantic import Field
+
 from app.schemas.base import KstBaseModel as BaseModel
 
 FeedType = Literal[
@@ -57,6 +59,15 @@ class FeedEnvelope(BaseModel):
     timestamp: int
     id: str
     payload: FeedPayload
+
+
+class FeedJackpotConfig(BaseModel):
+    threshold: int = Field(..., description="Minimum amount to trigger jackpot feed", ge=1000)
+    mega_threshold: int = Field(..., description="Minimum amount to trigger MEGA jackpot", ge=5000)
+
+
+class FeedConfigResponse(FeedJackpotConfig):
+    pass
 
 
 __all__ = [

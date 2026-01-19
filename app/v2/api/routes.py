@@ -64,7 +64,10 @@ _team_battle_service = TeamBattleService()
 _wallet_service = GameWalletService()
 
 from app.v2.api.admin_routes import router as admin_router
+from app.v2.api.activity_routes import router as activity_router
+
 router.include_router(admin_router)
+router.include_router(activity_router)
 
 
 def _get_optional_user_id(
