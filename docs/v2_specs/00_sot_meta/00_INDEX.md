@@ -21,6 +21,11 @@
 - 유저 세그먼트 정책 SoT: docs/v2_specs/01_core/v2_user_segment_policy_sot_ko.md
 - 알림/피드 스키마 SoT: docs/v2_specs/03_api/v2_notification_feed_schema_ko.md
 - 게임 API 계약: docs/v2_specs/03_api/v2_game_api_contract_ko.md
+- Auth/User API 계약: docs/v2_specs/03_api/v2_auth_user_api_contract_ko.md
+- Mission/Streak API 계약: docs/v2_specs/03_api/v2_mission_streak_api_contract_ko.md
+- Inventory/Shop API 계약: docs/v2_specs/03_api/v2_inventory_shop_api_contract_ko.md
+- Team Battle API 계약: docs/v2_specs/03_api/v2_team_battle_api_contract_ko.md
+- Admin/Ops API 계약: docs/v2_specs/03_api/v2_admin_ops_api_contract_ko.md
 - Golden V2 API 계약: docs/v2_specs/07_golden/v2_golden_api_contract_ko.md
 - Ticket Zero API 계약: docs/v2_specs/03_api/v2_ticket_zero_api_contract_ko.md
 - **V1 Legacy API 감사**: docs/v2_specs/03_api/v1_legacy_api_list_ko.md (보안감사 포함)
@@ -70,6 +75,7 @@
 
 
 ## 7. 변경 이력
+- v2.0 (2026-01-19, GitHub Copilot): Auth/User·Mission·Inventory·TeamBattle·Admin/Ops API 계약 문서 추가
 - v1.9 (2026-01-19, GitHub Copilot): Golden V2 문서 경로 07_golden으로 이동
 - v1.8 (2026-01-19, GitHub Copilot): Golden V2 API/DB 문서 링크 추가
 - v1.7 (2026-01-19, GitHub Copilot): 세그먼트/메시지 SoT 및 DB 문서 링크 추가
