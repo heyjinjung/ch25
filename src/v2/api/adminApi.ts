@@ -75,29 +75,74 @@ export interface GrantItemRequest {
   reason: string;
 }
 
+export interface AdminUserDetailDto {
+  id: number;
+  nickname: string | null;
+  telegramId: number | null;
+  createdAt: string;
+  totalDeposit: number;
+  currentAssets: number;
+  vaultBalance: number;
+  ticketBalance: number;
+  level: number;
+  vipLevel: string;
+  isActive: boolean;
+  riskLevel: "LOW" | "MEDIUM" | "HIGH";
+  riskReason: string | null;
+}
+
+export interface OpsDashboardResponse {
+  system: {
+    db: "OK" | "DEGRADED" | "ERROR";
+    redis: "OK" | "DEGRADED" | "ERROR";
+    worker: "OK" | "DEGRADED" | "ERROR";
+  };
+  goldenRadar: {
+    highRollers: number;
+    churnRisks: number;
+    onlineNow: number;
+  };
+  metrics: {
+    todayRevenue: number;
+    activeUsers24h: number;
+  };
+}
+
 // ============================================================================
 // Withdrawal API
 // ============================================================================
 
-export const getAdminWithdrawals = async (): Promise<AdminWithdrawalDto[]> => {
-  // TODO: Replace with actual endpoint when available on backend
-  // const response = await v2Client.get<AdminWithdrawalDto[]>("/admin/api/economy/withdrawals/pending");
-  // return response.data;
-  
-  // Return Mock Data for now as backend endpoint might not be fully ready for GET list
-  return [
-    { id: 101, userId: 1001, nickname: "HighRoller99", amount: 150000, requestTime: "10:30 AM", riskLevel: "LOW", status: "PENDING" },
-    { id: 102, userId: 1005, nickname: "Tester01", amount: 50000, requestTime: "10:45 AM", riskLevel: "LOW", status: "PENDING" },
-    { id: 103, userId: 1042, nickname: "UnknownUser", amount: 5000000, requestTime: "11:00 AM", riskLevel: "HIGH", status: "PENDING" },
-  ];
+export const getAdminWithdrawals = async (status: string = "PENDING"): Promise<AdminWithdrawalDto[]> => {
+  const response = await v2Client.get<AdminWithdrawalDto[]>("/api/v2/admin/withdrawals", {
+    params: { status }
+  });
+  return response.data;
 };
 
 export const approveWithdrawal = async (id: number): Promise<void> => {
-   await v2Client.post(`/admin/api/economy/withdrawals/${id}/approve`);
+   await v2Client.post(`/api/v2/admin/withdrawals/${id}/approve`); // Note: Assuming approved endpoint structure
 };
 
 export const rejectWithdrawal = async (id: number, reason: string): Promise<void> => {
-   await v2Client.post(`/admin/api/economy/withdrawals/${id}/reject`, { reason });
+   await v2Client.post(`/api/v2/admin/withdrawals/${id}/reject`, { reason });
+};
+
+// ============================================================================
+// User Detail API
+// ============================================================================
+
+export const getAdminUserDetail = async (userId: number): Promise<AdminUserDetailDto> => {
+  const response = await v2Client.get<AdminUserDetailDto>(`/api/v2/admin/users/${userId}`);
+  return response.data;
+};
+
+// ============================================================================
+// Ops Dashboard API
+// ============================================================================
+
+export const getOpsDashboardStatus = async (): Promise<OpsDashboardResponse> => {
+  const response = await v2Client.get<OpsDashboardResponse>("/api/v2/admin/ops/status");
+  return response.data;
 };
 
 // ============================================================================

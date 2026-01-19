@@ -1,15 +1,37 @@
-
-import { Activity, ShieldAlert, Users, CreditCard, TriangleAlert, Server } from 'lucide-react';
+import { useNavigate } from "react-router-dom";
+import { 
+    Activity, 
+    CreditCard, 
+    Server, 
+    ShieldAlert, 
+    Users, 
+    TriangleAlert
+} from "lucide-react";
 import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
 import { BentoGrid } from "../../components/ui/BentoGrid";
 import { QuickActionCard } from "../../components/ui/QuickActionCard";
 import { PulsatingDot } from "../../components/ui/PulsatingDot";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../../components/ui/card";
-import { useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
+import { useOpsStatus } from "../../../hooks/useV2Admin";
 
 export default function OpsDashboard() {
   const navigate = useNavigate();
+  const { data: status, isLoading } = useOpsStatus();
+  
+  if (isLoading || !status) {
+      return (
+        <div className="p-8 h-screen bg-[#121214] text-white flex items-center justify-center">
+            <div className="flex flex-col items-center gap-4">
+                <PulsatingDot color="#6366f1" />
+                <span className="text-zinc-400">Loading Dashboard...</span>
+            </div>
+        </div>
+      );
+  }
+
+  // Derived status colors
+  const getStatusColor = (s: string) => s === "OK" ? "bg-emerald-500" : s === "DEGRADED" ? "bg-amber-500" : "bg-red-500";
 
   return (
     <div className="p-6 space-y-8 h-full bg-[#121214] min-h-screen text-[#E4E4E7] font-sans">
@@ -34,25 +56,31 @@ export default function OpsDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <QuickActionCard 
             label="시스템 상태" 
-            description="All Services Operational" 
+            description={
+                <div className="flex gap-2 mt-1">
+                    <span className={`w-2 h-2 rounded-full ${getStatusColor(status.system.db)}`} title="DB" />
+                    <span className={`w-2 h-2 rounded-full ${getStatusColor(status.system.redis)}`} title="Redis" />
+                    <span className={`w-2 h-2 rounded-full ${getStatusColor(status.system.worker)}`} title="Worker" />
+                </div>
+            }
             icon={Server}
             onClick={() => navigate('/admin/v2/system/health')}
           />
           <QuickActionCard 
-            label="출금 대기" 
-            description="Pending: 12건 (High Risk 1)" 
+            label="오늘 매출 (Revenue)" 
+            description={`₩ ${status.metrics.todayRevenue.toLocaleString()}`} 
             icon={CreditCard} 
             onClick={() => navigate('/admin/v2/economy/vault')}
           />
           <QuickActionCard 
             label="골든 레이더" 
-            description="Intervention Needed: 3" 
+            description={`Risk: ${status.goldenRadar.churnRisks} / High: ${status.goldenRadar.highRollers}`} 
             icon={ShieldAlert}
             className="border-red-500/30 bg-red-500/5 hover:bg-red-500/10" 
           />
           <QuickActionCard 
             label="현재 접속자" 
-            description="Active: 1,204명" 
+            description={`Active: ${status.goldenRadar.onlineNow}명`} 
             icon={Users} 
             onClick={() => navigate('/admin/v2/users')}
           />
@@ -85,17 +113,9 @@ export default function OpsDashboard() {
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        {[1, 2, 3].map(i => (
-                            <div key={i} className="flex justify-between items-center text-sm p-2 rounded bg-red-500/5 border border-red-500/10">
-                                <div>
-                                    <div className="text-white font-medium">User_{900+i}</div>
-                                    <div className="text-xs text-red-300">연패 7회 (Tilt 감지)</div>
-                                </div>
-                                <Button size="sm" variant="ghost" className="text-red-400 hover:text-red-300 hover:bg-red-500/20 h-7 text-xs">
-                                    개입
-                                </Button>
-                            </div>
-                        ))}
+                        <div className="text-center py-8 text-zinc-500 text-sm">
+                            {(status.goldenRadar.churnRisks > 0) ? `${status.goldenRadar.churnRisks} users detected` : "No urgent risks detected"}
+                        </div>
                     </CardContent>
                  </Card>
 
@@ -107,17 +127,9 @@ export default function OpsDashboard() {
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        {[1, 2].map(i => (
-                            <div key={i} className="flex justify-between items-center text-sm p-2 rounded bg-emerald-500/5 border border-emerald-500/10">
-                                <div>
-                                    <div className="text-white font-medium">User_{100+i}</div>
-                                    <div className="text-xs text-emerald-300">잔액 500만+ (Win Streak)</div>
-                                </div>
-                                <Button size="sm" variant="ghost" className="text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/20 h-7 text-xs">
-                                    관찰
-                                </Button>
-                            </div>
-                        ))}
+                        <div className="text-center py-8 text-zinc-500 text-sm">
+                            {(status.goldenRadar.highRollers > 0) ? `${status.goldenRadar.highRollers} whales active` : "No whales active"}
+                        </div>
                     </CardContent>
                  </Card>
              </div>
@@ -130,20 +142,7 @@ export default function OpsDashboard() {
                 운영 알림
              </h3>
              <div className="space-y-4 overflow-y-auto pr-2">
-                 <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-sm">
-                     <div className="flex justify-between mb-1">
-                        <span className="font-bold text-yellow-400">출금 지연</span>
-                        <span className="text-xs text-zinc-500">2m ago</span>
-                     </div>
-                     <p className="text-zinc-300">100만원 이상 고액 출금 요청 3건이 대기 중입니다.</p>
-                 </div>
-                 <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20 text-sm">
-                     <div className="flex justify-between mb-1">
-                        <span className="font-bold text-blue-400">신규 가입 급증</span>
-                        <span className="text-xs text-zinc-500">15m ago</span>
-                     </div>
-                     <p className="text-zinc-300">최근 1시간 내 신규 가입자가 평소 대비 200% 증가했습니다.</p>
-                 </div>
+                 {/* Mock Alerts for now, can be connected to real logs later */}
                  <div className="p-3 rounded-lg bg-zinc-800/50 border border-white/5 text-sm">
                      <div className="flex justify-between mb-1">
                         <span className="font-bold text-zinc-400">시스템 백업</span>
