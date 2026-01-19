@@ -38,3 +38,42 @@ class V2MessageResponse(BaseModel):
 class V2SegmentBatchResponse(BaseModel):
     processed: int
     changed: int
+
+
+# ============================================================================
+# Inbox Schemas
+# ============================================================================
+
+
+class V2InboxMessageDto(BaseModel):
+    """Individual inbox message for a user."""
+
+    id: int
+    message_id: int
+    title: str
+    content: str
+    is_read: bool
+    read_at: datetime | None = None
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class V2InboxListResponse(BaseModel):
+    """List of inbox messages for a user."""
+
+    messages: list[V2InboxMessageDto]
+    unread_count: int
+
+
+class V2MarkInboxReadRequest(BaseModel):
+    """Mark one or more inbox messages as read."""
+
+    inbox_ids: list[int] = Field(..., min_length=1)
+
+
+class V2MarkInboxReadResponse(BaseModel):
+    """Response after marking messages as read."""
+
+    marked_count: int
+    remaining_unread: int
