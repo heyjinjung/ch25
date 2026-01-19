@@ -1361,87 +1361,104 @@ class VaultService:
         if amount < 10_000:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="MIN_WITHDRAWAL_AMOUNT_10000")
 
-        now = datetime.utcnow()
-        today = now.date()
+        now = datetime.now(timezone.utc)
 
-        # 2. Check Eligibility (Same Day Deposit)
-        # 2. Check Eligibility (Same Day Deposit/Activity via ExternalRankingData)
-        # Policy Change (2026-01-17): Use ExternalRankingData.updated_at (Final Sync)
-        # as the source of truth for "Activity/Deposit Today".
+        # 2. Check Eligibility (Same Day Net Deposit Increase)
+        # SoT (Strict Vault Policy): prefer ExternalRankingDailyDepositDelta (KST operational day net increase)
         from app.models.external_ranking import ExternalRankingData
-        
-        rank_data = db.query(ExternalRankingData).filter(ExternalRankingData.user_id == user_id).first()
-        
-        # Condition A: Must have External Ranking Data with Deposits
-        if not rank_data or rank_data.deposit_amount <= 0:
-             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="NO_DEPOSIT_HISTORY")
+        from app.models.external_ranking_daily_deposit_delta import ExternalRankingDailyDepositDelta
 
-        # Condition B: Final Sync must be TODAY (KST)
         from zoneinfo import ZoneInfo
         settings = get_settings()
         tz = ZoneInfo(getattr(settings, "timezone", "Asia/Seoul"))
-        
-        # updated_at is UTC. Convert to KST date.
-        sync_dt_utc = rank_data.updated_at
-        if sync_dt_utc.tzinfo is None:
-            sync_dt_utc = sync_dt_utc.replace(tzinfo=timezone.utc)
-            
-        sync_date_kst = sync_dt_utc.astimezone(tz).date()
-        
-        # Operational Date (Today KST)
-        now_kst = datetime.now(tz).date()
-        
-        # Check B.1: Sync Date
-        is_synced_today = (sync_date_kst == now_kst)
 
-        # Check B.2: Net Deposit Increase (deposit_amount > daily_base_deposit)
-        # This confirms a fresh deposit was made TODAY.
-        has_new_deposit = (rank_data.deposit_amount > (rank_data.daily_base_deposit or 0))
+        op_date_kst = self._operational_date_kst(now)
+        now_kst_date = now.astimezone(tz).date()
 
-        if not is_synced_today or not has_new_deposit:
-             # Fallback: Check UserActivity (Internal Ledger)
-             # User reported manual updates not reflecting in ExternalRankingData immediately.
-             # As a safety net, if Internal Ledger says "Today", allow it.
-             activity = db.query(UserActivity).filter(UserActivity.user_id == user_id).first()
-             internal_ok = False
-             
-             if activity and activity.last_charge_at:
-                 last_charge_kst = activity.last_charge_at.replace(tzinfo=timezone.utc).astimezone(tz).date()
-                 if last_charge_kst == now_kst:
-                     internal_ok = True
-             
-             if not internal_ok:
-                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="DEPOSIT_REQUIRED_TODAY_SYNC")
-
-        # [Phase 2] Stronger Withdrawal Conditions (Updated 2026-01-16)
-        # 3. Game Play Condition: 30+ plays in last 3 days
-        three_days_ago_ts = now - timedelta(days=3)
-        recent_play_count = db.query(func.count(VaultEarnEvent.id)).filter(
-            VaultEarnEvent.user_id == user_id,
-            VaultEarnEvent.earn_type == "GAME_PLAY",
-            VaultEarnEvent.created_at >= three_days_ago_ts
-        ).scalar() or 0
-
-        if recent_play_count < 30:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, 
-                detail="MIN_PLAY_COUNT_30_REQUIRED"
+        delta_today = (
+            db.query(ExternalRankingDailyDepositDelta.deposit_delta)
+            .filter(
+                ExternalRankingDailyDepositDelta.user_id == user_id,
+                ExternalRankingDailyDepositDelta.kst_date == op_date_kst,
             )
+            .scalar()
+            or 0
+        )
+        has_cc_deposit_net_increase_today = int(delta_today) > 0
 
-        # 4. Vault Consumption Condition: 10,000+ KRW consumed TODAY
-        today_start = datetime(now.year, now.month, now.day)
-        today_spend_neg = db.query(func.sum(VaultLedger.amount)).filter(
-            VaultLedger.user_id == user_id,
-            VaultLedger.amount < 0,
-            VaultLedger.created_at >= today_start
-        ).scalar() or 0
-        today_spend = abs(today_spend_neg)
+        rank_data = db.query(ExternalRankingData).filter(ExternalRankingData.user_id == user_id).first()
+        is_synced_today = False
+        has_new_deposit = False
+        if rank_data and rank_data.deposit_amount > 0 and rank_data.updated_at:
+            sync_dt_utc = rank_data.updated_at
+            if sync_dt_utc.tzinfo is None:
+                sync_dt_utc = sync_dt_utc.replace(tzinfo=timezone.utc)
 
-        if today_spend < 10000:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, 
-                detail="MIN_DAILY_SPEND_10000_REQUIRED"
+            sync_date_kst = sync_dt_utc.astimezone(tz).date()
+            is_synced_today = sync_date_kst == now_kst_date
+
+            # Legacy fallback net check
+            has_new_deposit = rank_data.deposit_amount > (rank_data.daily_base_deposit or 0)
+
+        if not has_cc_deposit_net_increase_today:
+            if not (is_synced_today and has_new_deposit):
+                # Fallback: Check UserActivity (Internal Ledger)
+                activity = db.query(UserActivity).filter(UserActivity.user_id == user_id).first()
+                internal_ok = False
+
+                if activity and activity.last_charge_at:
+                    last_charge_utc = activity.last_charge_at
+                    if last_charge_utc.tzinfo is None:
+                        last_charge_utc = last_charge_utc.replace(tzinfo=timezone.utc)
+                    last_charge_kst = last_charge_utc.astimezone(tz).date()
+                    if last_charge_kst == now_kst_date:
+                        internal_ok = True
+
+                if not internal_ok:
+                    if not rank_data or int(getattr(rank_data, "deposit_amount", 0) or 0) <= 0:
+                        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="NO_DEPOSIT_HISTORY")
+                    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="DEPOSIT_REQUIRED_TODAY_NET")
+
+        # 3. Activity Condition: 30+ GAME_PLAY in last 3 operational days (KST)
+        reset_hour_raw = getattr(settings, "streak_day_reset_hour_kst", 9)
+        reset_hour = 9 if reset_hour_raw is None else int(reset_hour_raw)
+        window_start_op_date = op_date_kst - timedelta(days=2)
+        window_start_kst = datetime(
+            window_start_op_date.year,
+            window_start_op_date.month,
+            window_start_op_date.day,
+            reset_hour,
+            0,
+            0,
+            tzinfo=tz,
+        )
+        window_start_utc_naive = window_start_kst.astimezone(timezone.utc).replace(tzinfo=None)
+
+        recent_play_count = (
+            db.query(func.count(VaultEarnEvent.id))
+            .filter(
+                VaultEarnEvent.user_id == user_id,
+                VaultEarnEvent.earn_type == "GAME_PLAY",
+                VaultEarnEvent.created_at >= window_start_utc_naive,
             )
+            .scalar()
+            or 0
+        )
+        if int(recent_play_count) < 30:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="MIN_PLAY_COUNT_30_REQUIRED")
+
+        # 4. Vault Consumption Condition: 10,000+ KRW consumed TODAY (SoT: user.vault_spent_today)
+        q = db.query(User).filter(User.id == user_id)
+        if db.bind and db.bind.dialect.name != "sqlite":
+            q = q.with_for_update()
+        user = q.one_or_none()
+        if not user:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="USER_NOT_FOUND")
+
+        self._ensure_daily_vault_spent_reset(user, now)
+        today_spend = int(getattr(user, "vault_spent_today", 0) or 0)
+        if today_spend < 10_000:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="MIN_DAILY_SPEND_10000_REQUIRED")
 
         # 5. Min Withdrawal Amount Logic
         # Enforce tiered withdrawal amounts (10k, 10k, 30k, 50k)
@@ -1467,13 +1484,17 @@ class VaultService:
              )
 
 
-        # 3. Check Available & Create Request (no balance deduction at request time)
-        q = db.query(User).filter(User.id == user_id)
-        if db.bind and db.bind.dialect.name != "sqlite":
-            q = q.with_for_update()
-        user = q.one_or_none()
-        if not user:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="USER_NOT_FOUND")
+        # 5. Concurrency guard: allow only one pending withdrawal request at a time
+        pending_exists = (
+            db.query(func.count(VaultWithdrawalRequest.id))
+            .filter(VaultWithdrawalRequest.user_id == user_id, VaultWithdrawalRequest.status == "PENDING")
+            .scalar()
+            or 0
+        )
+        if int(pending_exists) > 0:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="WITHDRAWAL_REQUEST_ALREADY_PENDING")
+
+        # 6. Check Available & Create Request (no balance deduction at request time)
 
         reserved_before = self.get_withdrawal_reserved_amount(db=db, user_id=user_id)
         total = int(getattr(user, "vault_locked_balance", 0) or 0)

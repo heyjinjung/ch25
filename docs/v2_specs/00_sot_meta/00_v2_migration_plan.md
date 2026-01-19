@@ -322,9 +322,9 @@
 - **Dual Existence**: V2 생성, V1 유지 (대부분의 admin 스키마)
 - **API-Only**: V2 라우트만 생성, 스키마 미전환 (events.py 부분)
 
-### ✅ 완료 반영 (9개 Core + 13개 Admin + 5개 API/Service = 27개)
+### ✅ 완료 반영 (28개 Core + 16개 Admin + 5개 API/Service = 49개)
 
-#### Core Schemas (9개)
+#### Core Schemas (28개)
 - activity.py → v2_activity.py (app/v2/schemas/v2_activity.py)
 - cc_deposit.py → v2_cc_deposit.py (shim pattern: app/schemas/cc_deposit.py re-exports app/v2/schemas/v2_cc_deposit.py)
 - dice.py → v2_dice.py (app/v2/schemas/v2_dice.py)
@@ -334,9 +334,30 @@
 - game_tokens.py → v2_game_tokens.py (app/v2/schemas/v2_game_tokens.py)
 - level_xp.py → v2_level_xp.py (app/v2/schemas/v2_level_xp.py)
 - lottery.py → v2_lottery.py (app/v2/schemas/v2_lottery.py)
+- mission.py → v2_mission.py (app/v2/schemas/v2_mission.py) 📋 2차 배치 완료
+- ops_log.py → v2_ops_log.py (app/v2/schemas/v2_ops_log.py) 📋 2차 배치 완료
+- ops_plan.py → v2_ops_plan.py (app/v2/schemas/v2_ops_plan.py) 📋 2차 배치 완료
+- ops_target.py → v2_ops_target.py (app/v2/schemas/v2_ops_target.py) 📋 2차 배치 완료
+- ranking.py → v2_ranking.py (app/v2/schemas/v2_ranking.py) ⚠️ 우선순위 완료
+- retention_intervention.py → v2_retention_intervention.py (app/v2/schemas/v2_retention_intervention.py) ⚠️ 우선순위 완료
+- roulette.py → v2_roulette.py (app/v2/schemas/v2_roulette.py) ⚠️ 우선순위 완료
+- season_pass.py → v2_season_pass.py (app/v2/schemas/v2_season_pass.py) 📋 2차 배치 완료
+- shop_overrides.py → v2_shop_overrides.py (app/v2/schemas/v2_shop_overrides.py) 📋 2차 배치 완료
+- survey.py → v2_survey.py (app/v2/schemas/v2_survey.py) 📋 2차 배치 완료
+- team_battle.py → v2_team_battle.py (app/v2/schemas/v2_team_battle.py) 📦 3차 배치 완료
+- telegram.py → v2_telegram.py (app/v2/schemas/v2_telegram.py) 📦 3차 배치 완료
+- today_feature.py → v2_today_feature.py (app/v2/schemas/v2_today_feature.py) 📦 3차 배치 완료
+- trial_grant.py → v2_trial_grant.py (app/v2/schemas/v2_trial_grant.py) 📦 3차 배치 완료
+- ui_config.py → v2_ui_config.py (app/v2/schemas/v2_ui_config.py) 🎯 최종 배치 완료
+- ui_copy.py → v2_ui_copy.py (app/v2/schemas/v2_ui_copy.py) 🎯 최종 배치 완료
+- user_history.py → v2_user_history.py (app/v2/schemas/v2_user_history.py) 📦 3차 배치 완료
+- vault.py → v2_vault.py (app/v2/schemas/v2_vault.py) ⚠️ 우선순위 완료
+- vault2.py → v2_vault_program.py (app/v2/schemas/v2_vault_program.py) ⚠️ 우선순위 완료
 
-#### Admin Schemas (13개 - V2 생성, V1 유지)
+#### Admin Schemas (16개 - V2 생성, V1 유지)
 - admin_dashboard.py → v2_admin_dashboard.py (dual existence)
+- admin_dice.py → v2_admin_game_config.py (기능적으로 v2_admin_game_config.py로 커버됨) 🎯 효율적 커버
+- admin_feed.py → v2_admin_feed.py (app/v2/schemas/v2_admin_feed.py) 🎯 최종 배치 완료
 - admin_feature_schedule.py → v2_admin_feature_schedule.py (dual existence)
 - admin_game_config.py → v2_admin_game_config.py (via v2_dice/lottery/roulette)
 - admin_lottery.py → v2_admin_lottery.py (dual existence)
@@ -345,10 +366,11 @@
 - admin_season.py → v2_admin_season.py (dual existence)
 - admin_segment.py → v2_admin_segment.py (dual existence)
 - admin_segment_rule.py → v2_admin_segment_rule.py (dual existence)
+- admin_streak_metrics.py → v2_admin_streak.py (기능적으로 v2_admin_streak.py로 커버됨) 🎯 효율적 커버
 - admin_streak_rewards.py → v2_admin_streak_rewards.py (dual existence)
 - admin_user.py → v2_admin_user.py (dual existence)
 - admin_user_summary.py → v2_admin_user_summary.py (dual existence)
-- admin_streak_metrics.py → v2_admin_streak.py (기능적으로 v2_admin_streak.py로 흡수)
+- admin_streak.py → v2_admin_streak.py (dual existence)
 
 #### API Routes & Services (5개)
 - admin_routes.py → app/v2/api/admin_routes.py (V2 전용 admin API)
@@ -361,39 +383,23 @@
 - admin_cc_deposit_service.py → app/v2/services/admin_cc_deposit_service.py
 - admin_external_ranking_service.py (shim pattern)
 
-### 🟡 미반영 잔여 (24개 + 3개 Admin = 27개)
+### 🟡 미반영 잔여 (1개 베이스 클래스 = 1개)
 
-#### Core Schemas (24개)
+#### Core Schemas (1개)
 - base.py (베이스 클래스, 마이그레이션 불필요)
-- mission.py
-- ops_log.py
-- ops_plan.py
-- ops_target.py
-- ranking.py ⚠️ (유저 대상 기능, 마이그레이션 우선순위 높음)
-- retention_intervention.py (V2 service 존재, schema 필요)
-- roulette.py ⚠️ (유저 대상 기능, 마이그레이션 우선순위 높음)
-- season_pass.py
-- shop_overrides.py
-- survey.py
-- team_battle.py
-- telegram.py
-- today_feature.py
-- trial_grant.py
-- ui_config.py
-- ui_copy.py
-- user_history.py
-- vault.py ⚠️ (금융 핵심 기능, 마이그레이션 우선순위 높음)
-- vault2.py ⚠️ (금융 핵심 기능, 마이그레이션 우선순위 높음)
 
-#### Admin Schemas (3개 - V2 미생성)
-- admin_dice.py (v2_admin_game_config.py가 커버 가능)
-- admin_feed.py (V2 equivalent 없음)
-- admin_streak_metrics.py (v2_admin_streak.py가 커버 가능)
+#### Admin Schemas (0개 - 전부 완료 또는 커버됨)
+- ✅ 모든 admin 스키마 완료
 
 ### 📊 마이그레이션 현황
-- **완료**: 27개 (Core 9 + Admin 13 + API 5)
-- **잔여**: 27개 (Core 24 + Admin 3)
-- **진행률**: 50% (27/54)
+- **완료**: 49개 (Core 28 + Admin 16 + API 5) ✅
+- **잔여**: 1개 (base.py 베이스 클래스 - 마이그레이션 불필요)
+- **진행률**: 98% (49/50 migrateable schemas) 🎉
+- **1차 배치 (우선순위 5개)**: vault.py, vault2.py, ranking.py, roulette.py, retention_intervention.py
+- **2차 배치 (운영/게임 7개)**: mission.py, ops_log.py, ops_plan.py, ops_target.py, season_pass.py, shop_overrides.py, survey.py
+- **3차 배치 (유틸리티 5개)**: team_battle.py, telegram.py, today_feature.py, trial_grant.py, user_history.py
+- **최종 배치 (마무리 3개)**: ui_config.py, ui_copy.py, admin_feed.py
+- **효율적 커버 (2개)**: admin_dice.py → v2_admin_game_config.py, admin_streak_metrics.py → v2_admin_streak.py
 - **검증**: [verify_admin_ops_v2.py](../../../scripts/verify_admin_ops_v2.py) 활용 가능
 
 
