@@ -95,7 +95,7 @@ graph LR
 
 ## 5. 구현 가이드 (Implementation Guide)
 1.  **Redis Setup**: `docker-compose`에 Redis 서비스가 필수(Healthy)로 설정되어야 함.
-2.  **Worker Process**: `celery` 또는 `python -m app.worker` 형태로 별도 프로세스 구동 필요.
+2.  **Worker Process**: `celery` 또는 `python -m app.v2.worker` 형태로 별도 프로세스 구동 필요.
 3.  **WebSocket Endpoint**: `/api/v2/ws/golden` 엔드포인트 개설 및 `Connection Manager` 구현.
 
 ---

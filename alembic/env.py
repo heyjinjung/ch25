@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env"))
 
 from app.core.config import get_settings
-from app.db.base import Base
+from app.v2.db.base import Base
 
 config = context.config
 

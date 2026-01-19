@@ -20,6 +20,7 @@ XMAS Event System에서 AI가 지속적으로 개발 작업을 수행할 때, �
 - PLAN/PATCH/VERIFY/SHIP: 작업 응답 순서 규칙
 
 ## 4. 기본 원칙 (필수)
+### 4.1 일반 원칙
 1) 응답은 **항상 한글만** 사용한다.
 2) 모든 변경은 **PLAN → PATCH → VERIFY → SHIP** 순서를 지킨다.
 3) **Allowed Files**와 **Out of Scope**를 먼저 명시한다.

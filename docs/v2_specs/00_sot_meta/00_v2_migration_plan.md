@@ -58,15 +58,31 @@
     *   [x] 스키마 SoT 문서 정리 완료
     *   [x] Pydantic/Zod 코드 변환 (Progression → Game Action → Admin Game Config → Notification Feed)
     *   **진행도**: 진행중 (4개 스키마 코드 완료)
-    *   **근거**: [docs/v2_specs/02_game/v2_game_action_schema_sot_ko.md](../02_game/v2_game_action_schema_sot_ko.md#L1), [docs/v2_specs/01_core/v2_progression_schema_ko.md](../01_core/v2_progression_schema_ko.md#L1), [docs/v2_specs/03_api/v2_notification_feed_schema_ko.md](../03_api/v2_notification_feed_schema_ko.md#L1), [docs/v2_specs/02_game/v2_admin_game_config_schema_ko.md](../02_game/v2_admin_game_config_schema_ko.md#L1), [app/schemas/v2_progression.py](../../../app/schemas/v2_progression.py#L1), [app/schemas/v2_game_action.py](../../../app/schemas/v2_game_action.py#L1), [app/schemas/v2_admin_game_config.py](../../../app/schemas/v2_admin_game_config.py#L1), [app/schemas/v2_notification_feed.py](../../../app/schemas/v2_notification_feed.py#L1), [src/types/v2/enums.ts](../../../src/types/v2/enums.ts#L1), [src/types/v2/progression.ts](../../../src/types/v2/progression.ts#L1), [src/types/v2/gameAction.ts](../../../src/types/v2/gameAction.ts#L1), [src/types/v2/adminGameConfig.ts](../../../src/types/v2/adminGameConfig.ts#L1), [src/types/v2/notificationFeed.ts](../../../src/types/v2/notificationFeed.ts#L1)
+    *   **근거**: [docs/v2_specs/02_game/v2_game_action_schema_sot_ko.md](../02_game/v2_game_action_schema_sot_ko.md#L1), [docs/v2_specs/01_core/v2_progression_schema_ko.md](../01_core/v2_progression_schema_ko.md#L1), [docs/v2_specs/03_api/v2_notification_feed_schema_ko.md](../03_api/v2_notification_feed_schema_ko.md#L1), [docs/v2_specs/02_game/v2_admin_game_config_schema_ko.md](../02_game/v2_admin_game_config_schema_ko.md#L1), [app/v2/schemas/v2_progression.py](../../../app/v2/schemas/v2_progression.py#L1), [app/v2/schemas/v2_game_action.py](../../../app/v2/schemas/v2_game_action.py#L1), [app/v2/schemas/v2_admin_game_config.py](../../../app/v2/schemas/v2_admin_game_config.py#L1), [app/v2/schemas/v2_notification_feed.py](../../../app/v2/schemas/v2_notification_feed.py#L1), [src/v2/types/enums.ts](../../../src/v2/types/enums.ts#L1), [src/v2/types/progression.ts](../../../src/v2/types/progression.ts#L1), [src/v2/types/gameAction.ts](../../../src/v2/types/gameAction.ts#L1), [src/v2/types/adminGameConfig.ts](../../../src/v2/types/adminGameConfig.ts#L1), [src/v2/types/notificationFeed.ts](../../../src/v2/types/notificationFeed.ts#L1)
 
 6.  **데이터베이스 재설계 (V2 Schema)**
     *   `dirty`한 컬럼명 정리, 인덱스 최적화.
     *   **Money Integrity**: `Check Constraint (balance >= 0)` 설정 필수.
     *   [x] Money Integrity 체크 제약 추가
     *   **마이그레이션 전략**: 다음달 완전 리셋 배포 전제 → **베이스라인 스냅샷 1개 + 이후 최소 누적**
-    *   **진행도**: 진행중 (제약 추가 완료, 베이스라인 스냅샷/추가 스키마 설계 필요)
-    *   **근거**: [alembic/versions/20260119_0001_add_money_integrity_checks.py](../../../alembic/versions/20260119_0001_add_money_integrity_checks.py#L1)
+    *   **진행도**: 진행중 (베이스라인 스냅샷 생성/적용 완료, 추가 스키마 설계 필요)
+    *   **근거**: [alembic/versions/20260119_0904_3bc52f37e0c0_baseline_v2_snapshot.py](../../../alembic/versions/20260119_0904_3bc52f37e0c0_baseline_v2_snapshot.py#L1)
+
+---
+
+## **[Critical] V2 Independent Folder Structure Strategy**
+**Objective**: Build a clean, independent V2 codebase (`app/v2`, `src/v2`) separate from V1 legacy.
+
+1.  **Directory Structure**:
+    - **Backend**: `app/v2/` (Models, Schemas, API Routes, Services, Utils)
+    - **Frontend**: `src/v2/` (Types, API Clients, Components, Hooks)
+    - **Database**: Independent `Base` class for V2 models to allow isolated Alembic migrations.
+
+2.  **Migration Actions**:
+    - Move existing V2 schemas/types to `app/v2/schemas` and `src/v2/types`.
+    - Create `app/v2/models` for fresh ORM definitions (unbound from V1 Base).
+    - Update `alembic.env` to utilize V2 metadata.
+    - **Minimal Patch Strategy**: No refactoring of V1, strictly "Create New & Move".
 
 ---
 
