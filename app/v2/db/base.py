@@ -8,6 +8,14 @@ from app.v2.models import (  # noqa: F401
     V2ExchangeLog,
     V2TicketZeroLog,
     V2OpsExecutionResult,
+    V2RouletteConfig,
+    V2RouletteSegment,
+    V2RouletteLog,
+    V2DiceConfig,
+    V2DiceLog,
+    V2LotteryConfig,
+    V2LotteryPrize,
+    V2LotteryLog,
     V2User,
 )
 

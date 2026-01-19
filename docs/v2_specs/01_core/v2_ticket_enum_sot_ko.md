@@ -25,10 +25,12 @@ V2 티켓 Enum의 단일 기준을 확정한다.
 | 골드키티켓 | GOLD_KEY_TICKET | user_game_wallet | 프리미엄 참여 티켓 |
 | 다이아티켓 | DIAMOND_TICKET | user_game_wallet | 최상위 등급 참여 티켓 |
 | 복권티켓 | LOTTERY_TICKET | user_game_wallet | 복권 참여 티켓 |
+| 체험티켓 | TRIAL_TICKET | user_game_wallet | 체험 룰렛 참여 티켓 |
 
 ## 5. 운영/검증 (QA)
 - [ ] Enum/용어/SoT 일치 여부 확인
 - [ ] 레거시 명칭 사용 금지 확인
 
 ## 6. 변경 이력
+- v1.1 (2026-01-19, GitHub Copilot): TRIAL_TICKET 추가
 - v1.0 (2026-01-18, GitHub Copilot): 최초 작성

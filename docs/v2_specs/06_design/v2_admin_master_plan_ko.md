@@ -33,8 +33,8 @@
 | 영역 | 개선 방향 | 비고 |
 | :--- | :--- | :--- |
 | **대시보드** | **한 줄 요약**: 복잡한 그래프 대신, "지금 중요한 것"만 한 문장으로 표시. | 가독성 4.5:1 유지 |
-| **유저 관리** | **360도 뷰**: 유저 클릭 시 [정보+금고+로그]가 한 화면(서랍/시트)에 통합 표시. | 모달 팝업 지양 |
-| **금고 관리** | **안전 장치**: 터치 실수를 막기 위한 **'밀어서 승인(Slide)'** 및 큼직한 버튼 적용. | Emerald/Gold 컬러 |
+| **유저 관리** | **360도 뷰**: 유저 클릭 시 [정보+금고+로그]가 한 화면(서랍/시트)에 통합 표시. | 모달 팝업이되 라우팅|
+| **금고 관리** | **안전 장치**: 터치 실수를 막기 위한 **'밀어서 승인 버튼 적용. | Emerald/Gold 컬러 |
 | **설정 관리** | **쉬운 입력**: 모바일에서도 입력하기 편한 숫자 패드/토글 스위치 제공. | JSON 직접 수정 금지 |
 
 ## 5. UI 컴포넌트 매핑 (Magic UI 활용)
@@ -56,23 +56,44 @@
 
 ## 6. 화면 리스트 (Screen List)
 
-### 6.1 관제 (Monitoring)
+## 6. 화면 리스트 (Screen List) - 2026.01.19 Revised
+
+### 6.1 운영 대시보드 (Ops Dashboard) - golden 폴더내용 정립 후 작업예정
 | 화면명 | 파일 경로 (예정) | 설명 |
 | :--- | :--- | :--- |
+| **마케팅 센터** | `src/v2/admin/pages/dashboard/MarketingCenterPage.tsx` | 주요 KPI 및 마케팅 성과 지표 |
+| **운영 로그** | `src/v2/admin/pages/dashboard/OpsLogPage.tsx` | 운영 로그 조회 및 **CSV 업로드** |
 | **종합 대시보드** | `src/v2/admin/pages/dashboard/OpsDashboard.tsx` | 골든 레이더, 실시간 매출, 시스템 상태 요약 |
 | **시스템 상태** | `src/v2/admin/pages/system/HealthPage.tsx` | 서버/DB 상태 신호등 표시 |
 
-### 6.2 유저 및 CRM
+### 6.2 관리 및 운영 (Management & Ops)
 | 화면명 | 파일 경로 (예정) | 설명 |
 | :--- | :--- | :--- |
-| **유저 목록** | `src/v2/admin/pages/users/UserListPage.tsx` | 강력한 검색/필터가 있는 유저 테이블 |
-| **유저 상세 (통합)** | `src/v2/admin/components/users/UserDetailDrawer.tsx` | (중요) 유저의 모든 정보를 보는 통합 뷰 |
+| **회원 관리** | `src/v2/admin/pages/users/UserListPage.tsx` | 유저 검색/필터/상세(Drawer) 진입 |
+### 상세 유저 및 CRM (User & CRM)
+| 화면명 | 파일 경로 (예정) | 설명 | 상세 기능 (Features) |
+| :--- | :--- | :--- | :--- |
+| **유저 목록** | `src/v2/admin/pages/users/UserListPage.tsx` | 검색/필터 테이블 | **SoT 검색**: 닉네임, CC_id, telegram_id, telegram_username <br> **필터**: 상태(Active/Warning/Inactive/Suspended), 레벨 범위, 가입일 |
+| **유저 상세 (통합)** | `src/v2/admin/components/users/UserDetailDrawer.tsx` | **360도 통합 뷰** | 1. **기본 정보**: 프로필, 가입일, 레벨xp,  최근 접속, 기기 정보 <br> 2. **지갑(Wallet)**: **티켓(Ticket)** 및 티켓 보유량 조회/수정/티켓로그확인/각티켓이용 보상품내역 확인되어야함 (**핵심**) <br> 3. **금고(Vault)**: 현재 잔액, 누적 출금, 입금내역 확인 (**입금은 외부 CC 연동**) / 강제잔액수정 <br> 4. **인벤토리(Item)**: 기프티콘 및 모든 보상 밸류 (지갑 폐기 여부 확인 중) <br> 5. **활동 로그**: 게임 플레이(Ticket Use) 및 입출금 이력 타임라인 <br> 6. **상담/메모**: 운영자 메모(Memo) + 7. 유저세그먼트 
++8. 수정가능기능  = 9 미션관리기능 (유저가 수행한 미션확인/어드민에서 미션수행처리보상관리)
+| **CC 입금** | `src/v2/admin/pages/economy/CCDepositPage.tsx` | 외부 CC 입금 내역 관리자가 수동 확인/처리 | 입금시각 kst 기준 / 입금횟수 / 메모 / 관리편집기능 
+| **금고 통합 관리** | `src/v2/admin/pages/economy/VaultControlPage.tsx` | 전체 금고 현황, 출금상황/승인,반려/ 강제잔액 조정 | 그리고 강제잔액조정시 +면 입금 / -면 출금 처리되야함 / 리스크 유저 식별  / 오입금/사고 처리용 <br> 3. **개인 금고 조회**: 특정 유저의 금고 상세 내역(History) 및 현재 상태 조회 |
+| **티켓/인벤 관리** | `src/v2/admin/pages/economy/TicketInventoryPage.tsx` | 유저별 티켓/아이템 지급 및 회수 **기능**: 아이템 지급/회수, 사용 로그 조회 - 이때 유저별 티켓이용보상 내역 확인되어야함 즉 게임보상내역 로그 !  | 유저별 티켓/아이템 지급 및 회수 **기능**: 아이템 지급/회수, 사용 로그 조회 - 이때 유저별 티켓이용보상 내역 확인되어야함 즉 게임보상내역 로그 !  
+| **미션 관리** | `src/v2/admin/pages/game/MissionManagerPage.tsx` | **SoT 미션 분류 설정** | 1. **카테고리**: `DAILY`(일일), `WEEKLY`(주간), `NEW_USER`(신규), `SPECIAL_EVENT` <br> 2. **보상 매핑**: 카테고리별 허용 보상(티켓/포인트/번들) 자동 필터링 적용 <br> 3. **스트릭 관리**: 연속 출석 보상 테이블(Day 1~7) 및 보상 반복 주기 설정 |
+| **레벨 관리** | `src/v2/admin/pages/game/LevelConfigPage.tsx` | **XP 및 보상 테이블** | 1. **XP 테이블**: 레벨 1~20 구간별 필요 경험치 설정 <br> 2. **레벨업 보상**: 각 레벨 도달 시 지급할 티켓/포인트 매핑 (`v2_level_reward_table`) <br> 3. **적립률**: CC 입금액 대비 XP 적립 비율(Current: 10만/20XP) 설정 |
+| **상점 관리** | `src/v2/admin/pages/economy/ShopManagerPage.tsx` | **상품 라이브 제어** | 1. **상품 CRUD**: SKU, 이름, 가격(`VAULT`), 지급품(`TICKET`/`ITEM`), 수량 설정 <br> 2. **진열/제한**: 노출 여부(ON/OFF), 일일 구매 제한(Daily Limit) 설정 <br> 3. **교환소**: `Fragment` <-> `Ticket` 변환 비율 및 재료 관리 |
+| **유저 세그먼트** | `src/v2/admin/pages/users/UserSegmentPage.tsx` | 고객 등급 분류 및 세그먼트 타겟팅 |
+| **설문조사** | `src/v2/admin/pages/marketing/SurveyPage.tsx` | 설문 생성 및 결과 분석 |
 
-### 6.3 경제 및 운영
+### 6.3 설정 및 시스템 (Settings & System)
 | 화면명 | 파일 경로 (예정) | 설명 |
 | :--- | :--- | :--- |
-| **금고 제어** | `src/v2/admin/pages/economy/VaultControlPage.tsx` | 입출금 요청 승인/반려 (슬라이드 방식) |
-| **상점 관리** | `src/v2/admin/pages/economy/ShopManagerPage.tsx` | 상품 진열 및 재고 관리 |
+| **메시지 발송** | `src/v2/admin/pages/marketing/MessageSenderPage.tsx` | 전체/타겟 유저 대상 Push/쪽지 발송 |
+| **팀 배틀** | `src/v2/admin/pages/game/TeamBattleConfigPage.tsx` | 팀 배틀 시즌/매치 설정 |
+| **룰렛 설정** | `src/v2/admin/pages/game/RouletteConfigPage.tsx` | 룰렛 확률 및 보상 배율 설정 |
+| **주사위 설정** | `src/v2/admin/pages/game/DiceConfigPage.tsx` | 주사위 게임 설정 |
+| **복권 설정** | `src/v2/admin/pages/game/LotteryConfigPage.tsx` | 복권 회차/당첨번호 관리 |
+| **모달 노출 제어** | `src/v2/admin/pages/system/ModalControlPage.tsx` | 긴급 공지/이벤트 모달 전역 제어 |
 
 ## 7. 검증 체크리스트 (Self-Check)
 - [ ] **디자인**: 배경색이 완전 검정(#000)이 아닌 **Soft Obsidian(#121214)**인가?
@@ -84,27 +105,59 @@
 ## 9. 구현 순서도 (Implementation Roadmap)
 
 ### Step 1: Foundation (환경 설정)
-- [ ] **Theme Setup**: Soft Obsidian(`bg-[#121214]`) 테마 및 Typography(Pretendard) 적용
-- [ ] **Layout Shell**: Mobile Dock(하단 메뉴) + Desktop Sidebar 반응형 구조 구현
-- [ ] **Common UI**: `Shadcn/UI` 설치 및 커스텀(Rounded-2xl, Warm Gray)
+- [x] **Theme Setup**: Soft Obsidian(`bg-[#121214]`) 테마 및 Typography(Pretendard) 적용
+- [x] **Layout Shell**: Mobile Dock(하단 메뉴) + Desktop Sidebar 반응형 구조 구현
+- [x] **Common UI**: `Shadcn/UI` 설치 및 커스텀(Rounded-2xl, Warm Gray)
 
-### Step 2: Ops Dashboard (Monitoring)
-- [ ] **Bento Layout**: KPI 카드 배치 및 그리드 정렬(4px Rule)
-- [ ] **Golden Radar**: 상태 신호등(Pulsating Dot) 위젯 구현
-- [ ] **Log Feed**: 실시간 로그용 `Animated List` 적용
+### Step 2: Ops Dashboard (운영 대시보드)
+- [ ] **Marketing Center**: KPI 카드 및 매출 차트
+    - **UI**: `BentoGrid`(Magic UI), `AreaChart`(Recharts), `NumberTicker`(Magic UI)
+- [ ] **Ops Log**: CSV 업로드 기능 및 로그 뷰어
+    - **UI**: `Input`(File), `ScrollArea`, `Table`(Logs), `Badge`(Status)
+- [ ] **Real-time**: 실시간 매출 및 위기 감지 위젯
+    - **UI**: `PulsatingDot`(Magic UI), `Card`(Glass Effect), `Sparkles`(Animation)
 
-### Step 3: User CRM (Action)
-- [ ] **User Table**: Tanstack Table 기반 검색/필터/페이지네이션
-- [ ] **Detail Drawer**: 하단 시트(Mobile) / 우측 서랍(PC) 통합 뷰 구현
-- [ ] **History Tab**: 게임/금고/상담 이력 탭 뷰 구성
+### Step 3: Management & Ops (관리 및 운영)
+- [ ] **3-1. User CRM (회원 관리)**
+    - [ ] `UserListPage`: 검색 및 상태 필터
+        - **UI**: `Tanstack Table`, `Command`(Search), `Popover`(Filter), `Badge`(Active/Black)
+    - [ ] `UserDetailDrawer`: 6-Section 통합 뷰
+        - **UI**: `Sheet`(Right Side), `Tabs`(Sections), `Avatar`, `Timeline`(Custom)
+    - [ ] `WalletEditor`: 티켓 강제 수정
+        - **UI**: `Dialog`(Alert), `Input`(Number), `Form`(Validation)
+- [ ] **3-2. Economy Ops (경제 관리)**
+    - [ ] `VaultControlPage`: 출금 승인/반려
+        - **UI**: `Slider`(Swipe to Approve), `AlertDialog`(Reject), `Progress`(Limit)
+    - [ ] `CCDepositPage`: 입금 수동 승인
+        - **UI**: `Table`(Pending List), `Button`(Action), `Textarea`(Memo)
+    - [ ] `ShopManagerPage`: 상품 관리
+        - **UI**: `Switch`(On/Off), `Card`(Product Item), `Input`(Price)
+- [ ] **3-3. Game Ops (게임 운영)**
+    - [ ] `MissionManagerPage`: 미션/스트릭 설정
+        - **UI**: `Select`(Category), `Calendar`(Schedule), `Accordion`(Reward Table)
+    - [ ] `LevelConfigPage`: XP/보상 매핑
+        - **UI**: `Table`(Editable), `Input`(XP), `Select`(Reward Type)
+- [ ] **3-4. Inventory Ops (인벤토리)**
+    - [ ] `TicketInventoryPage`: 지급/회수 로그
+        - **UI**: `Data Table`, `DateRangePicker`, `HoverCard`(Item Detail)
 
-### Step 4: Economy Ops (Control)
-- [ ] **Vault Control**: 밀어서 승인(Slide to Approve) 버튼 구현
-- [ ] **Shop Manager**: 상품 CRUD 및 재고 관리 폼 (Mobile-friendly)
-
-### Step 5: Safety & Polish
-- [ ] **Audit Check**: 변경 사유(Reason) 강제 입력 로직 검증
-- [ ] **Korean Patch**: 'Validation Error' 등 영문 메시지 전체 한글화
+### Step 4: Settings & System (설정 및 시스템)
+- [ ] **4-1. Marketing Tools**
+    - [ ] `MessageSenderPage`: 푸시 발송
+        - **UI**: `Textarea`(Message), `Select`(Target), `RadioGroup`(Type)
+    - [ ] `SurveyPage`: 설문 관리
+        - **UI**: `FormBuilder`(Dynamic), `BarChart`(Result)
+- [ ] **4-2. Game Configuration**
+    - [ ] `RouletteConfigPage` & `DiceConfigPage`: 확률 설정
+        - **UI**: `Slider`(Probability), `Input`(Multiplier), `Chart`(Simulation)
+    - [ ] `LotteryConfigPage`: 회차 관리
+        - **UI**: `DatePicker`(Draw Date), `InputOTP`(Winning Number)
+- [ ] **4-3. System Control**
+    - [ ] `ModalControlPage`: 전역 모달 제어
+        - **UI**: `Switch`(Global Toggle), `Card`(Modal Preview)
+- [ ] **4-4. Final Polish**
+    - [ ] **Easy Korean**: 용어 전수 검수
+    - [ ] **Audit Link**: `Toast`(Action Feedback) 및 로그 적재 확인
 
 ## 10. 변경 이력
 - v1.3 (2026-01-19, Antigravity Agent): 구현 순서도(Roadmap) 추가

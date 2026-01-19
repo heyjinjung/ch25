@@ -127,6 +127,9 @@ export default {
         'admin-lg': '0.5rem', // 8px
         'admin-xl': '0.75rem', // 12px
       },
+      height: {
+        'tg': 'var(--tg-viewport-height, 100vh)', // Telegram Viewport Height
+      },
       boxShadow: {
         // Admin Depth (SoT)
         'admin-card': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
