@@ -126,7 +126,8 @@
    "구매 -> 인벤토리 지급 -> 차감" 트랜잭션의 원자성(Atomicity) 보장 구현.
     *   기존의 복잡한 아이템 로직을 단순화하되 확장성 있게 재구성.
     *   **v2_shop_products UI Config 미설정 시 상점 목록이 빈 배열로 반환됨** → 운영/개발 환경에서 키 설정 필수.
-    *   **진행도**: EXECUTION (Shop/Inventory TDD 전환 완료)
+    *   **Status**: V1 데이터 기반 변환 및 검증 완료 (`sot_verification_report_shop.md`).
+    *   **진행도**: EXECUTION (Shop/Inventory TDD 전환 완료, 상품 데이터 마이그레이션 완료)
 
 
 ### 현황 메모

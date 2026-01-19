@@ -56,7 +56,11 @@ V2 마이그레이션의 핵심인 "돈과 아이템"의 무결성을 확보하�
     - [v2_item_inventory_sot_ko.md](../01_core/v2_item_inventory_sot_ko.md)
 *   **Tests**:
     - `test_shop_atomicity.py`: 잔액 부족, 재고 부족, 트랜잭션 롤백 테스트.
+    - `test_shop_atomicity.py`: 잔액 부족, 재고 부족, 트랜잭션 롤백 테스트.
     - `test_item_delivery.py`: 티켓(`ROULETTE_TICKET`)/바우처(`VOUCHER_*`) 지급 정확성 검증.
+*   **Data Migration**:
+    - V1 `shop_products` 추출 및 `cost_type="DIAMOND"` 매핑 적용 완료.
+    - 변환 결과: `v2_shop_products.json` (검증 리포트 참조).
 
 ### 4.3 Admin / UI Corrections
 *   **Target**: Admin API (`app/api/admin/routes/admin_users.py`), FE (`VaultAdminPage`)

@@ -46,6 +46,13 @@ V2에서도 금고는 현금성 자산의 유일한 저장소입니다.
 | **다이아포인트** | `DIAMOND_POINT` | `user_inventory_item` | 사용 시 **금고포인트**로 교환. |
 | **기프티콘** | `GIFTICON_*` | `user_inventory_item` | 외부 교환 가능한 실물 경품 쿠폰. (브랜드별 네이밍 재확인 필요) |
 
+### 2.4 상점 상품 (Shop Products)
+운영자가 설정하는 판매 상품 구성입니다.
+| 용어 | 키워드 | SoT | 설명 |
+| :--- | :--- | :--- | :--- |
+| **상점 상품** | `Shop Product` | `v2_shop_products` (UI Config) | ID, 가격(Cost), 보상(Reward) 정보를 담은 JSON 객체. |
+| **비용 타입** | `Cost Type` | `cost_type` | `VAULT`(현금) 또는 `DIAMOND`(재화) 중 하나. |
+
 ---
 
 ## 3. 보상 및 성장 (Reward & Progression)
