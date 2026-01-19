@@ -3,6 +3,7 @@
 from fastapi import APIRouter
 
 from app.api import admin
+from app.v2.api import v2_router
 from app.api.routes import (
 	activity,
 	auth,
@@ -84,3 +85,4 @@ api_router.include_router(ws_feed.router)
 api_router.include_router(ws_events.router)
 api_router.include_router(exchange.router)
 api_router.include_router(retention_intervention.router)
+api_router.include_router(v2_router, prefix="/api/v2")

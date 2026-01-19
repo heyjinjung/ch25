@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>미션 관리 (Mission Manager) - Admin Wireframe</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Comic Sans MS', cursive;
+            background: #fff;
+            color: #333;
+            padding: 20px;
+            padding-bottom: 80px;
+            line-height: 1.6;
+        }
+        .wireframe-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #f5f5f5;
+            border: 2px solid #333;
+            padding: 20px;
+        }
+        .header {
+            background: #fff;
+            border: 2px solid #666;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .category-tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .category-tab {
+            padding: 10px 16px;
+            background: #f0f0f0;
+            border: 2px solid #999;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .category-tab.active {
+            background: #fff;
+            border-bottom: 3px solid #333;
+            font-weight: bold;
+        }
+        .mission-card {
+            background: #fff;
+            border: 2px solid #999;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .mission-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #ccc;
+        }
+        .mission-title {
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .mission-toggle {
+            width: 40px;
+            height: 20px;
+            background: #ccc;
+            border: 2px solid #999;
+            border-radius: 10px;
+            cursor: pointer;
+            position: relative;
+        }
+        .mission-toggle.on {
+            background: #90EE90;
+        }
+        .mission-body {
+            font-size: 11px;
+            color: #666;
+        }
+        .reward-section {
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-top: 10px;
+        }
+        .reward-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .streak-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        .streak-table th,
+        .streak-table td {
+            border: 1px solid #ccc;
+            padding: 6px;
+            font-size: 11px;
+            text-align: center;
+        }
+        .streak-table th {
+            background: #e0e0e0;
+        }
+        .btn {
+            padding: 8px 12px;
+            background: #f0f0f0;
+            border: 2px solid #999;
+            cursor: pointer;
+            font-size: 11px;
+            font-family: 'Comic Sans MS', cursive;
+            margin-right: 5px;
+        }
+        .btn.primary {
+            background: #90EE90;
+            border-color: #4CAF50;
+            font-weight: bold;
+        }
+        .tag {
+            position: absolute;
+            background: #4CAF50;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-family: Arial, sans-serif;
+            font-weight: bold;
+            z-index: 10;
+        }
+        .tag.new {
+            background: #FF9800;
+        }
+        .relative {
+            position: relative;
+        }
+        .mobile-dock {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #ddd;
+            border-top: 2px solid #666;
+            padding: 10px;
+            display: flex;
+            justify-content: space-around;
+            z-index: 100;
+        }
+        .dock-item {
+            text-align: center;
+            font-size: 10px;
+        }
+        .dock-icon {
+            width: 24px;
+            height: 24px;
+            background: #999;
+            margin: 0 auto 4px;
+            border-radius: 4px;
+        }
+        @media (max-width: 768px) {
+            .mission-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="wireframe-container">
+        <div class="header">
+            <h1 style="font-size: 20px; margin-bottom: 5px;">🎯 미션 관리 (Mission Manager)</h1>
+            <p style="font-size: 12px; color: #666;">카테고리별 미션 설정 + 보상 매핑 + 스트릭 관리</p>
+        </div>
+
+        <!-- Category Tabs (SoT Enum) -->
+        <!-- REUSABLE: Tabs component -->
+        <div class="relative">
+            <span class="tag" style="top: -8px; right: -8px;" 
+                  title="Reusable tabs component">[REUSE] Tabs</span>
+            <div class="category-tabs">
+                <button class="category-tab active">일일 (DAILY)</button>
+                <button class="category-tab">주간 (WEEKLY)</button>
+                <button class="category-tab">신규 유저 (NEW_USER)</button>
+                <button class="category-tab">특별 이벤트 (SPECIAL_EVENT)</button>
+                <button class="category-tab">+ 새 미션</button>
+            </div>
+        </div>
+
+        <!-- Mission Card 1: Daily Play -->
+        <div class="mission-card">
+            <div class="mission-header">
+                <div class="mission-title">📅 매일 게임 플레이 (Daily Play)</div>
+                <div class="mission-toggle on"></div>
+            </div>
+            <div class="mission-body">
+                <div style="display: grid; grid-template-columns: 100px 1fr; gap: 8px; margin-bottom: 10px;">
+                    <div>카테고리:</div><div><strong>DAILY</strong></div>
+                    <div>조건:</div><div>게임 3회 플레이 (룰렛/주사위/복권)</div>
+                    <div>반복 주기:</div><div>매일 자정 리셋</div>
+                    <div>진행 상태:</div><div>활성화 (234명 진행 중)</div>
+                </div>
+
+                <!-- Reward Mapping -->
+                <div class="reward-section">
+                    <div style="font-weight: bold; font-size: 12px; margin-bottom: 8px;">
+                        💰 보상 매핑 (Reward Mapping)
+                    </div>
+                    <!-- NEW COMPONENT: RewardSelector -->
+                    <div class="relative">
+                        <span class="tag new" style="top: -8px; right: -8px;" 
+                              title="Dropdown with category-based filtering">[NEW] RewardSelector</span>
+                        <div class="reward-item">
+                            <span>보상 타입:</span>
+                            <select style="border: 1px solid #999; padding: 4px; font-family: 'Comic Sans MS', cursive; font-size: 11px;">
+                                <option>TICKET (티켓)</option>
+                                <option>POINT (금고포인트)</option>
+                                <option>BUNDLE (패키지)</option>
+                                <option disabled>DIAMOND (다이아) - DAILY 불가</option>
+                            </select>
+                        </div>
+                        <div class="reward-item">
+                            <span>수량:</span>
+                            <input type="number" value="3" style="width: 60px; border: 1px solid #999; padding: 4px; font-family: 'Comic Sans MS', cursive;">
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 10px; display: flex; gap: 10px;">
+                    <button class="btn primary">저장</button>
+                    <button class="btn">복제</button>
+                    <button class="btn" style="border-color: #FF6B6B;">삭제</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mission Card 2: Streak Management -->
+        <div class="mission-card">
+            <div class="mission-header">
+                <div class="mission-title">🔥 출석 스트릭 관리 (Attendance Streak)</div>
+                <div class="mission-toggle on"></div>
+            </div>
+            <div class="mission-body">
+                <div style="display: grid; grid-template-columns: 100px 1fr; gap: 8px; margin-bottom: 10px;">
+                    <div>카테고리:</div><div><strong>DAILY (특수)</strong></div>
+                    <div>조건:</div><div>연속 출석 (1일차 ~ 7일차)</div>
+                    <div>반복 주기:</div><div>7일 사이클 반복</div>
+                </div>
+
+                <!-- Streak Reward Table -->
+                <!-- NEW COMPONENT: EditableStreakTable -->
+                <div class="relative">
+                    <span class="tag new" style="top: -8px; right: -8px;" 
+                          title="Editable table for streak rewards">[NEW] EditableStreakTable</span>
+                    <div style="font-weight: bold; font-size: 12px; margin-bottom: 8px;">
+                        📊 스트릭 보상 테이블 (Day 1~7)
+                    </div>
+                    <table class="streak-table">
+                        <thead>
+                            <tr>
+                                <th>Day</th>
+                                <th>보상 타입</th>
+                                <th>수량</th>
+                                <th>상태</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Day 1</td>
+                                <td>TICKET</td>
+                                <td><input type="number" value="1" style="width: 40px; border: 1px solid #ccc; padding: 2px; font-family: 'Comic Sans MS', cursive;"></td>
+                                <td><span style="color: #4CAF50;">✓</span></td>
+                            </tr>
+                            <tr>
+                                <td>Day 2</td>
+                                <td>TICKET</td>
+                                <td><input type="number" value="2" style="width: 40px; border: 1px solid #ccc; padding: 2px; font-family: 'Comic Sans MS', cursive;"></td>
+                                <td><span style="color: #4CAF50;">✓</span></td>
+                            </tr>
+                            <tr>
+                                <td>Day 3</td>
+                                <td>POINT</td>
+                                <td><input type="number" value="500" style="width: 50px; border: 1px solid #ccc; padding: 2px; font-family: 'Comic Sans MS', cursive;"></td>
+                                <td><span style="color: #4CAF50;">✓</span></td>
+                            </tr>
+                            <tr>
+                                <td>Day 4</td>
+                                <td>TICKET</td>
+                                <td><input type="number" value="3" style="width: 40px; border: 1px solid #ccc; padding: 2px; font-family: 'Comic Sans MS', cursive;"></td>
+                                <td><span style="color: #4CAF50;">✓</span></td>
+                            </tr>
+                            <tr>
+                                <td>Day 5</td>
+                                <td>BUNDLE</td>
+                                <td><input type="text" value="티켓3+포인트1000" style="width: 100px; border: 1px solid #ccc; padding: 2px; font-family: 'Comic Sans MS', cursive; font-size: 10px;"></td>
+                                <td><span style="color: #4CAF50;">✓</span></td>
+                            </tr>
+                            <tr>
+                                <td>Day 6</td>
+                                <td>TICKET</td>
+                                <td><input type="number" value="5" style="width: 40px; border: 1px solid #ccc; padding: 2px; font-family: 'Comic Sans MS', cursive;"></td>
+                                <td><span style="color: #4CAF50;">✓</span></td>
+                            </tr>
+                            <tr style="background: #FFF9E6;">
+                                <td><strong>Day 7</strong></td>
+                                <td><strong>BUNDLE</strong></td>
+                                <td><input type="text" value="티켓10+포인트5000" style="width: 100px; border: 1px solid #ccc; padding: 2px; font-family: 'Comic Sans MS', cursive; font-size: 10px; font-weight: bold;"></td>
+                                <td><span style="color: #FFD700;">★</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="margin-top: 10px; display: flex; gap: 10px;">
+                    <button class="btn primary">스트릭 테이블 저장</button>
+                    <button class="btn">초기화</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mission Card 3: New User Welcome -->
+        <div class="mission-card" style="border-color: #6366F1;">
+            <div class="mission-header">
+                <div class="mission-title">🎉 신규 유저 웰컴 미션 (Welcome Mission)</div>
+                <div class="mission-toggle on"></div>
+            </div>
+            <div class="mission-body">
+                <div style="display: grid; grid-template-columns: 100px 1fr; gap: 8px; margin-bottom: 10px;">
+                    <div>카테고리:</div><div><strong>NEW_USER</strong></div>
+                    <div>조건:</div><div>가입 후 4개 미션 완료 (게임, 출석, 친구초대 등)</div>
+                    <div>반복 주기:</div><div>1회성 (가입 시 1번만)</div>
+                    <div>진행 상태:</div><div>활성화 (오늘 45명 완료)</div>
+                </div>
+
+                <div class="reward-section">
+                    <div style="font-weight: bold; font-size: 12px; margin-bottom: 8px;">
+                        💰 보상 (신규 유저 특별 보상)
+                    </div>
+                    <div class="reward-item">
+                        <span>보상 타입:</span>
+                        <span><strong>BUNDLE</strong> (티켓 5개 + 포인트 10,000)</span>
+                    </div>
+                </div>
+
+                <div style="margin-top: 10px; display: flex; gap: 10px;">
+                    <button class="btn primary">저장</button>
+                    <button class="btn">미션 미리보기</button>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 20px; padding: 15px; background: #fff; border: 2px dashed #999;">
+            <p style="font-size: 12px; color: #666;">
+                💡 <strong>SoT 카테고리</strong>: DAILY/WEEKLY/NEW_USER/SPECIAL_EVENT 분류 자동 적용<br>
+                🎯 <strong>보상 매핑</strong>: 카테고리별 허용 보상(티켓/포인트/번들) 자동 필터링<br>
+                📊 <strong>스트릭 관리</strong>: 연속 출석 보상 테이블(Day 1~7) 직접 편집 가능
+            </p>
+        </div>
+    </div>
+
+    <!-- Mobile Dock -->
+    <div class="mobile-dock">
+        <div class="dock-item">
+            <div class="dock-icon"></div>
+            <div>대시보드</div>
+        </div>
+        <div class="dock-item">
+            <div class="dock-icon"></div>
+            <div>회원</div>
+        </div>
+        <div class="dock-item">
+            <div class="dock-icon"></div>
+            <div>금고</div>
+        </div>
+        <div class="dock-item">
+            <div class="dock-icon"></div>
+            <div>로그</div>
+        </div>
+        <div class="dock-item">
+            <div class="dock-icon" style="background: #666;"></div>
+            <div style="font-weight: bold;">설정</div>
+        </div>
+    </div>
+</body>
+</html>

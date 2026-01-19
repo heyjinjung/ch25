@@ -13,6 +13,7 @@ TicketType = Literal[
     "GOLD_KEY_TICKET",
     "DIAMOND_TICKET",
     "LOTTERY_TICKET",
+    "TRIAL_TICKET",
 ]
 
 RewardType = Literal[
