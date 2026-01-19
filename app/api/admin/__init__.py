@@ -12,7 +12,7 @@ from app.api.admin.routes import (
     admin_ranking,
     admin_roulette,
     admin_seasons,
-    admin_external_ranking,
+    admin_cc_deposit,
     admin_users,
     admin_team_battle,
     admin_survey,
@@ -52,7 +52,7 @@ admin_router.include_router(admin_lottery.router)
 admin_router.include_router(admin_ranking.router)
 admin_router.include_router(admin_game_tokens.router)
 admin_router.include_router(admin_feed_config.router)
-admin_router.include_router(admin_external_ranking.router)
+admin_router.include_router(admin_cc_deposit.router)
 admin_router.include_router(admin_users.router)
 admin_router.include_router(admin_team_battle.router)
 admin_router.include_router(admin_survey.router)

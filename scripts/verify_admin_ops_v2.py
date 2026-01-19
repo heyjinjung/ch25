@@ -123,5 +123,38 @@ def test_admin_routes():
     else:
         print(f"❌ Failed: {response.status_code} - {response.text}")
 
+    # 4. Dashboard Metrics (New)
+    url = "/api/v2/admin/dashboard/metrics"
+    print(f"\n[4] GET {url}")
+    response = client.get(url)
+    if response.status_code == 200:
+        data = response.json()
+        print(f"✅ Success: Active Users={data['active_users']['value']}")
+        assert data['range_hours'] == 24
+    else:
+        print(f"❌ Failed: {response.status_code} - {response.text}")
+
+    # 5. Streak Metrics (New)
+    url = "/api/v2/admin/dashboard/streak"
+    print(f"\n[5] GET {url}")
+    response = client.get(url)
+    if response.status_code == 200:
+        data = response.json()
+        print(f"✅ Success: Streak Days={data['days']}")
+        assert data['days'] == 7
+    else:
+        print(f"❌ Failed: {response.status_code} - {response.text}")
+
+    # 6. Dice Config (New)
+    url = "/api/v2/admin/game-config/dice"
+    print(f"\n[6] GET {url}")
+    response = client.get(url)
+    if response.status_code == 200:
+        data = response.json()
+        print(f"✅ Success: Dice Config Name={data['name']}")
+        assert data['name'] == "Standard Dice"
+    else:
+        print(f"❌ Failed: {response.status_code} - {response.text}")
+
 if __name__ == "__main__":
     test_admin_routes()

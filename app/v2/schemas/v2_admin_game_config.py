@@ -125,12 +125,41 @@ class AdminLotteryConfigV2(BaseModel):
         return self
 
 
+class DiceEventParams(BaseModel):
+    is_active: bool
+    probability: Optional[dict[str, Optional[dict[str, float]]]] = None
+    game_earn_config: Optional[dict[str, Optional[dict[str, int]]]] = None
+    caps: Optional[dict[str, Optional[dict[str, int]]]] = None
+    eligibility: Optional[dict] = None
+
+
+class AdminDiceConfigCreate(AdminDiceConfigV2):
+    pass
+
+
+class AdminDiceConfigUpdate(BaseModel):
+    name: Optional[str] = None
+    is_active: Optional[bool] = None
+    max_daily_plays: Optional[int] = None
+    win_reward_type: Optional[RewardType] = None
+    win_reward_amount: Optional[int] = None
+    draw_reward_type: Optional[RewardType] = None
+    draw_reward_amount: Optional[int] = None
+    lose_reward_type: Optional[RewardType] = None
+    lose_reward_amount: Optional[int] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 __all__ = [
     "TicketType",
     "RewardType",
     "AdminRouletteSegmentV2",
     "AdminRouletteConfigV2",
     "AdminDiceConfigV2",
+    "AdminDiceConfigCreate",
+    "AdminDiceConfigUpdate",
+    "DiceEventParams",
     "AdminLotteryPrizeV2",
     "AdminLotteryConfigV2",
 ]

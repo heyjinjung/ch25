@@ -1,48 +1,26 @@
-"""Pydantic schemas for external ranking admin APIs."""
-from datetime import datetime
-from typing import Optional
+"""Backward-compatible shim for renamed CC deposit schemas."""
+from app.schemas.cc_deposit import (  # noqa: F401
+    CCDepositBase,
+    CCDepositCreate,
+    CCDepositEntry,
+    CCDepositListResponse,
+    CCDepositUpdate,
+    ExternalRankingBase,
+    ExternalRankingCreate,
+    ExternalRankingEntry,
+    ExternalRankingListResponse,
+    ExternalRankingUpdate,
+)
 
-from pydantic import ConfigDict, Field
-
-from app.schemas.base import KstBaseModel as BaseModel
-from app.schemas.admin_user_summary import AdminUserSummary
-
-
-class ExternalRankingBase(BaseModel):
-    user_id: int | None = None
-    external_id: str | None = None
-    telegram_username: str | None = None
-    deposit_amount: int = Field(0, ge=0)
-    play_count: int = Field(0, ge=0)
-    memo: Optional[str] = None
-
-
-class ExternalRankingCreate(ExternalRankingBase):
-    pass
-
-
-class ExternalRankingUpdate(BaseModel):
-    external_id: str | None = None
-    telegram_username: str | None = None
-    deposit_amount: Optional[int] = Field(None, ge=0)
-    play_count: Optional[int] = Field(None, ge=0)
-    memo: Optional[str] = None
-
-
-class ExternalRankingEntry(BaseModel):
-    id: int
-    user_id: int
-    external_id: str | None = None
-    telegram_username: str | None = None
-    user: AdminUserSummary | None = None
-    deposit_amount: int
-    play_count: int
-    memo: Optional[str] = None
-    created_at: datetime
-    updated_at: datetime
-
-    model_config = ConfigDict(from_attributes=True)
-
-
-class ExternalRankingListResponse(BaseModel):
-    items: list[ExternalRankingEntry]
+__all__ = [
+    "CCDepositBase",
+    "CCDepositCreate",
+    "CCDepositEntry",
+    "CCDepositListResponse",
+    "CCDepositUpdate",
+    "ExternalRankingBase",
+    "ExternalRankingCreate",
+    "ExternalRankingEntry",
+    "ExternalRankingListResponse",
+    "ExternalRankingUpdate",
+]

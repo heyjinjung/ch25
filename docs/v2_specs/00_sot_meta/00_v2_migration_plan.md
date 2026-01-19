@@ -52,6 +52,11 @@
     *   **진행도**: ✅ 완료
     *   **근거**: [app/api/routes/dev_login.py](../../../app/api/routes/dev_login.py#L1-L83), [app/api/routes/__init__.py](../../../app/api/routes/__init__.py#L47-L50)
 
+
+
+
+    
+
 5.  **Strict Type & Schema 정의**
     *   **Action**: Phase 0에서 확정한 문서를 코드로 변환 (Pydantic & Zod).
     *   **원칙**: `any` 타입 절대 금지. 모든 입/출력 데이터는 스키마에 의해 검증되어야 함.
@@ -59,6 +64,11 @@
     *   [x] Pydantic/Zod 코드 변환 (Progression → Game Action → Admin Game Config → Notification Feed → Ops Execution)
     *   **진행도**: ✅ 완료 (5개 스키마 코드 완료)
     *   **근거**: [docs/v2_specs/02_game/v2_game_action_schema_sot_ko.md](../02_game/v2_game_action_schema_sot_ko.md#L1), [docs/v2_specs/01_core/v2_progression_schema_ko.md](../01_core/v2_progression_schema_ko.md#L1), [docs/v2_specs/03_api/v2_notification_feed_schema_ko.md](../03_api/v2_notification_feed_schema_ko.md#L1), [docs/v2_specs/02_game/v2_admin_game_config_schema_ko.md](../02_game/v2_admin_game_config_schema_ko.md#L1), [docs/v2_specs/05_ops/v2_ops_plan_execution_schema_sot_ko.md](../05_ops/v2_ops_plan_execution_schema_sot_ko.md#L1), [app/v2/schemas/v2_progression.py](../../../app/v2/schemas/v2_progression.py#L1), [app/v2/schemas/v2_game_action.py](../../../app/v2/schemas/v2_game_action.py#L1), [app/v2/schemas/v2_admin_game_config.py](../../../app/v2/schemas/v2_admin_game_config.py#L1), [app/v2/schemas/v2_notification_feed.py](../../../app/v2/schemas/v2_notification_feed.py#L1), [app/v2/schemas/v2_ops_execution.py](../../../app/v2/schemas/v2_ops_execution.py#L1), [src/v2/types/enums.ts](../../../src/v2/types/enums.ts#L1), [src/v2/types/progression.ts](../../../src/v2/types/progression.ts#L1), [src/v2/types/gameAction.ts](../../../src/v2/types/gameAction.ts#L1), [src/v2/types/adminGameConfig.ts](../../../src/v2/types/adminGameConfig.ts#L1), [src/v2/types/notificationFeed.ts](../../../src/v2/types/notificationFeed.ts#L1), [src/v2/types/opsExecution.ts](../../../src/v2/types/opsExecution.ts#L1)
+
+
+
+
+
 
 6.  **데이터베이스 재설계 (V2 Schema)**
     *   `dirty`한 컬럼명 정리, 인덱스 최적화.
@@ -95,6 +105,11 @@
 - **Unblock**: [BLOCKING] Wait for External AI: DB Snapshot (v2) 완료 처리
 - **Status Change**: 🚧 Phase 2를 EXECUTION 상태로 전환
 
+
+
+
+
+
 ### Phase 2 선행 작업 반영
 2. **V2 독립 폴더 구조 생성 (Folder Setup)**
     - Backend: `app/v2` 하위 `models`, `schemas`, `services`, `api`, `utils` 디렉토리 생성 완료
@@ -117,6 +132,10 @@
     *   **원칙**: 테스트 코드(Test Case) 작성 후 개발.
     *   **검증**: 입금(외부 랭킹 동기화), 출금(Strict Policy 일치 여부), 동시성(따닥 방지).
     *   **진행도**: 🚧 EXECUTION (Vault Consistency TDD 완료)
+
+
+
+
 
 8.  **상점(Shop) 및 인벤토리**
     *   트랜잭션 원자성(Atomicity) 보장. 구매와 인벤토리 지급, 차감이 한 호흡으로 동작.
@@ -182,6 +201,9 @@
     - 스냅샷 기준 문서
     - 근거: [docs/v2_specs/04_db/v2_db_snapshot_regeneration_policy_ko.md](../04_db/v2_db_snapshot_regeneration_policy_ko.md#L1)
 
+
+
+
 ## Phase 3: 게임 및 컨텐츠 (3주차)
 *목표: 웹 환경에서 게임 로직 완벽 검증*
 **완료됨**
@@ -195,6 +217,9 @@
 
 
 
+
+
+
 ## Phase 4: 어드민 및 운영 도구 (3주차 후반)
 *목표: 운영자가 신뢰할 수 있는 제어판*
 
@@ -203,6 +228,8 @@
     *   기존 운영툴(응대 플레이북, 위기 레이더) DB 연결.
     *   **진행도**: 🟡 진행중 (Foundation, Dashboard, User CRM, Game Ops 구현 완료)
     *   **근거**: [v2_admin_master_plan_ko.md](../06_design/v2_admin_master_plan_ko.md), [src/v2/admin/pages](../../../src/v2/admin/pages)
+
+
 
 12. **세그먼트 분류/메시지 발송 V2 SoT/DB 구성**
     *   세그먼트 룰/결과 저장 및 메시지 인박스 스키마 정의.
@@ -286,39 +313,65 @@
 
 ## V1 스키마 → V2 전환 대상 (잔여 목록)
 
-**기준**: [app/schemas](../../../app/schemas) 내 V1 스키마 전수
+**기준**: [app/schemas](../../../app/schemas) 내 V1 스키마 전수 (41개 파일, `__init__.py`, `base.py` 제외)
 **제외**: `v2_*.py` 및 [app/v2/schemas](../../../app/v2/schemas) 전용 스키마
 
-- activity.py
-- admin_dashboard.py
-- admin_dice.py
-- admin_feature_schedule.py
-- admin_feed.py
-- admin_lottery.py
-- admin_ranking.py
-- admin_roulette.py
-- admin_season.py
-- admin_segment.py
-- admin_segment_rule.py
-- admin_streak_metrics.py
-- admin_streak_rewards.py
-- admin_user.py
-- admin_user_summary.py
-- base.py
-- dice.py
-- event.py
-- exchange.py
-- external_ranking.py
-- game_tokens.py
-- level_xp.py
-- lottery.py
+**마이그레이션 패턴**:
+- **Full Migration**: V1 파일을 V2로 완전 이동 (dice.py → v2_dice.py)
+- **Shim Pattern**: V1 파일이 V2를 재수출하여 호환성 유지 (cc_deposit.py → v2_cc_deposit.py with shim)
+- **Dual Existence**: V2 생성, V1 유지 (대부분의 admin 스키마)
+- **API-Only**: V2 라우트만 생성, 스키마 미전환 (events.py 부분)
+
+### ✅ 완료 반영 (9개 Core + 13개 Admin + 5개 API/Service = 27개)
+
+#### Core Schemas (9개)
+- activity.py → v2_activity.py (app/v2/schemas/v2_activity.py)
+- cc_deposit.py → v2_cc_deposit.py (shim pattern: app/schemas/cc_deposit.py re-exports app/v2/schemas/v2_cc_deposit.py)
+- dice.py → v2_dice.py (app/v2/schemas/v2_dice.py)
+- event.py → v2 API routes (app/v2/api/events.py with shim at app/api/routes/events.py)
+- exchange.py → v2_exchange.py (app/v2/schemas/v2_exchange.py)
+- external_ranking.py → v2_cc_deposit.py (shim pattern: re-exports from v2_cc_deposit)
+- game_tokens.py → v2_game_tokens.py (app/v2/schemas/v2_game_tokens.py)
+- level_xp.py → v2_level_xp.py (app/v2/schemas/v2_level_xp.py)
+- lottery.py → v2_lottery.py (app/v2/schemas/v2_lottery.py)
+
+#### Admin Schemas (13개 - V2 생성, V1 유지)
+- admin_dashboard.py → v2_admin_dashboard.py (dual existence)
+- admin_feature_schedule.py → v2_admin_feature_schedule.py (dual existence)
+- admin_game_config.py → v2_admin_game_config.py (via v2_dice/lottery/roulette)
+- admin_lottery.py → v2_admin_lottery.py (dual existence)
+- admin_ranking.py → v2_admin_ranking.py (dual existence)
+- admin_roulette.py → v2_admin_roulette.py (dual existence)
+- admin_season.py → v2_admin_season.py (dual existence)
+- admin_segment.py → v2_admin_segment.py (dual existence)
+- admin_segment_rule.py → v2_admin_segment_rule.py (dual existence)
+- admin_streak_rewards.py → v2_admin_streak_rewards.py (dual existence)
+- admin_user.py → v2_admin_user.py (dual existence)
+- admin_user_summary.py → v2_admin_user_summary.py (dual existence)
+- admin_streak_metrics.py → v2_admin_streak.py (기능적으로 v2_admin_streak.py로 흡수)
+
+#### API Routes & Services (5개)
+- admin_routes.py → app/v2/api/admin_routes.py (V2 전용 admin API)
+- admin_ops_plan.py → app/v2/api/admin_ops_plan.py (V2 ops API)
+- activity_routes.py → app/v2/api/activity_routes.py (V2 activity API)
+- admin_cc_deposit.py → app/v2/api/admin_cc_deposit.py (V2 CC deposit API)
+- events.py → app/v2/api/events.py (V2 events API with V1 shim)
+
+#### Services (2개)
+- admin_cc_deposit_service.py → app/v2/services/admin_cc_deposit_service.py
+- admin_external_ranking_service.py (shim pattern)
+
+### 🟡 미반영 잔여 (24개 + 3개 Admin = 27개)
+
+#### Core Schemas (24개)
+- base.py (베이스 클래스, 마이그레이션 불필요)
 - mission.py
 - ops_log.py
 - ops_plan.py
 - ops_target.py
-- ranking.py
-- retention_intervention.py
-- roulette.py
+- ranking.py ⚠️ (유저 대상 기능, 마이그레이션 우선순위 높음)
+- retention_intervention.py (V2 service 존재, schema 필요)
+- roulette.py ⚠️ (유저 대상 기능, 마이그레이션 우선순위 높음)
 - season_pass.py
 - shop_overrides.py
 - survey.py
@@ -329,10 +382,21 @@
 - ui_config.py
 - ui_copy.py
 - user_history.py
-- vault.py
-- vault2.py
+- vault.py ⚠️ (금융 핵심 기능, 마이그레이션 우선순위 높음)
+- vault2.py ⚠️ (금융 핵심 기능, 마이그레이션 우선순위 높음)
 
----
+#### Admin Schemas (3개 - V2 미생성)
+- admin_dice.py (v2_admin_game_config.py가 커버 가능)
+- admin_feed.py (V2 equivalent 없음)
+- admin_streak_metrics.py (v2_admin_streak.py가 커버 가능)
+
+### 📊 마이그레이션 현황
+- **완료**: 27개 (Core 9 + Admin 13 + API 5)
+- **잔여**: 27개 (Core 24 + Admin 3)
+- **진행률**: 50% (27/54)
+- **검증**: [verify_admin_ops_v2.py](../../../scripts/verify_admin_ops_v2.py) 활용 가능
+
+
 
 ## 버그 박멸 체크리스트 (Subtle Bugs)
 
