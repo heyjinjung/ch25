@@ -31,7 +31,18 @@
 | 조건명 | 기준 (SoT) | 설명 |
 | :--- | :--- | :--- |
 | **당일 실질 입금** | `cc_deposit` / `cc_data` | 단순 데이터 갱신이 아닌, **전일 대비 순증(Net Increase)**이 확인되어야 함. (정의: [Vault Glossary](v2_vault_glossary_sot_ko.md)) |
+| **당일 금고 사용** | `vault_spent_today` | 당일 금고 사용 누적액이 1만원 이상이어야 함. (정의: [Vault Glossary](v2_vault_glossary_sot_ko.md)) |
 | **활동성 체크** | `UserActivity` | (Fallback) 외부 연동 지연 시 내부 원장의 `last_charge_at` 등을 보조적으로 활용 가능하지만, 원칙은 `cc_deposit` 우선. |
+
+#### 3.1.1 출금 버튼 활성 조건 (회차별 최소 금액)
+출금은 **각 회차별 최소 금액 조건**을 만족할 때만 금고 버튼이 활성화됩니다.
+
+| 회차 | 최소 금액 (KRW) |
+| :--- | :--- |
+| 1회차 | 10,000 |
+| 2회차 | 10,000 |
+| 3회차 | 30,000 |
+| 4회차 | 50,000 |
 
 ### 3.2 유저 상태 및 혜택 중단 (Status & Suspension)
 유저의 활동 이력(입금/접속)에 따라 등급을 분류하고, 제재 상태(`benefits_suspended`)를 적용합니다.

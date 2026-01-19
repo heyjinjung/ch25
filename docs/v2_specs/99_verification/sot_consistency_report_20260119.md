@@ -29,7 +29,7 @@
 
 ### 3.2 레벨 보상 표기 통일
 - **현상**: `v2_level_reward_table_sot_ko`에서 "배민 5000"으로 표기된 부분.
-- **조치**: `v2_gifticon_naming_sot_ko`의 표준(`GIFTICON_BAEMIN_5000`)을 따르도록 **구현 단계에서 매핑** 필요. (문서는 가독성을 위해 한글 유지 허용)
+- **조치**: `v2_gifticon_naming_sot_ko`의 표준(`GIFTICON_BAEMIN_5000`)으로 명확히 매핑 규칙이 수립됨. 구현 시 해당 표준 Enum으로 변환 필수.
 
 ## 4. 결론 (Conclusion)
 제공된 SoT 문서들은 서로 **유기적으로 모순 없이 연결**되어 있으며, **V2 구현을 위한 단일 진실 공급원(SoT)으로서 유효**합니다.

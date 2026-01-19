@@ -69,12 +69,12 @@ V1 상품 ID에서 reward_type을 추론하고, 티켓 개수 기반 가격을 V
 
 | V1 SKU                | V1 cost (티켓 개수) | 추론 reward_type     | reward_amount | V2 cost (Vault) | 환산 근거                           |
 | :-------------------- | :------------------ | :------------------- | :------------ | :-------------- | :---------------------------------- |
-| PROD_GOLD_KEY_1       | 30개                | GOLD_KEY_TICKET      | 1             | 3000            | 티켓 1개당 100 포인트 환산          |
-| PROD_DIAMOND_KEY_1    | 100개               | DIAMOND_TICKET       | 1             | 10000           | 티켓 1개당 100 포인트 환산          |
-| PROD_TICKET_COIN_1    | 1개                 | ROULETTE_TICKET      | 1             | 100             | 티켓 1개당 100 포인트 환산          |
-| PROD_TICKET_DICE_1    | 2개                 | DICE_TICKET          | 1             | 200             | 티켓 1개당 100 포인트 환산          |
+| PROD_GOLD_KEY_1       | 30개                | GOLD_KEY_TICKET      | 1             | 30000           | 티켓 1개당 1000 포인트 환산          |
+| PROD_DIAMOND_KEY_1    | 100개               | DIAMOND_TICKET       | 1             | 100000          | 티켓 1개당 1000 포인트 환산          |
+| PROD_TICKET_COIN_1    | 1개                 | ROULETTE_TICKET      | 1             | 1000            | 티켓 1개당 1000 포인트 환산          |
+| PROD_TICKET_DICE_1    | 2개                 | DICE_TICKET          | 1             | 2000            | 티켓 1개당 1000 포인트 환산          |
 
-**환산 기준**: V1 티켓 1개 = V2 Vault 100 포인트 (금고 정책 SoT 기준)
+**환산 기준**: V1 티켓 1개 = V2 Vault 1000 포인트 (금고 정책 SoT 기준)
 
 ## 5. V2 허용 reward_type (현재 로직 기준)
 V2 상점 purchase 로직이 **실제로 처리 가능한 reward_type**:
@@ -102,7 +102,7 @@ SUPPORTED_REWARD_TYPES = [
     "description": "바로 사용 가능한 룰렛 티켓",
     "reward_type": "ROULETTE_TICKET",
     "reward_amount": 1,
-    "cost_amount": 100,
+    "cost_amount": 1000,
     "visible": true,
     "sort_order": 10,
     "tags": ["ticket", "roulette"]
@@ -113,7 +113,7 @@ SUPPORTED_REWARD_TYPES = [
     "description": "바로 사용 가능한 주사위 티켓",
     "reward_type": "DICE_TICKET",
     "reward_amount": 1,
-    "cost_amount": 200,
+    "cost_amount": 2000,
     "visible": true,
     "sort_order": 20,
     "tags": ["ticket", "dice"]
@@ -124,7 +124,7 @@ SUPPORTED_REWARD_TYPES = [
     "description": "특별 보상 키 (V1: 티켓 30개 가치)",
     "reward_type": "GOLD_KEY_TICKET",
     "reward_amount": 1,
-    "cost_amount": 3000,
+    "cost_amount": 30000,
     "visible": true,
     "sort_order": 30,
     "tags": ["key", "gold"]
@@ -135,7 +135,7 @@ SUPPORTED_REWARD_TYPES = [
     "description": "프리미엄 보상 키 (V1: 티켓 100개 가치)",
     "reward_type": "DIAMOND_TICKET",
     "reward_amount": 1,
-    "cost_amount": 10000,
+    "cost_amount": 100000,
     "visible": true,
     "sort_order": 40,
     "tags": ["key", "diamond"]
@@ -162,12 +162,12 @@ SUPPORTED_REWARD_TYPES = [
 ### 7.3 변환 로직 설명
 - **V1 가격 체계**: 티켓 개수 기반 (cost_amount=1 → 티켓 1개로 교환 가능)
 - **V2 가격 체계**: Vault 포인트 기반 (실제 금액)
-- **환산 기준**: 티켓 1개 = Vault 100 포인트
-  - V1 cost=1 → V2 cost=100
-  - V1 cost=2 → V2 cost=200
-  - V1 cost=30 → V2 cost=3000
-  - V1 cost=100 → V2 cost=10000
-- **확인 필요**: 티켓당 100 포인트 환산율은 금고 정책 SoT 기준이며, 실제 운영 정책과 협의 필요.
+- **환산 기준**: 티켓 1개 = Vault 1000 포인트
+  - V1 cost=1 → V2 cost=1000
+  - V1 cost=2 → V2 cost=2000
+  - V1 cost=30 → V2 cost=30000
+  - V1 cost=100 → V2 cost=100000
+- **확인 완료**: 티켓당 1000 포인트 환산율 적용 완료 (Section 4.3).
 
 ## 8. 운영 적용 절차 (Deployment Steps)
 1) UI Config 테이블에 `v2_shop_products` 키 생성

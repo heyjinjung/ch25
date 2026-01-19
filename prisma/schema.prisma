@@ -1,0 +1,142 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// Stub for User model to satisfy relations
+model User {
+  id                    Int                     @id @default(autoincrement())
+  v2_retention_state    v2_user_retention_state?
+  v2_roi_logs           v2_retention_roi_log[]
+}
+
+// V2 Golden System: Retention State
+model v2_user_retention_state {
+  user_id                 Int                     @id
+  churn_probability_score Float                   @default(0)
+  predicted_ltv           Float                   @default(0)
+  current_win_loss_streak Int                     @default(0)
+  session_balance_delta   Float                   @default(0)
+  bet_size_variation_score Float                  @default(0)
+  loyalty_frequency_score Int                     @default(0)
+  psychological_state     v2_retention_psych_state @default(IN_FLOW)
+  user_segment_tag        v2_retention_segment_tag @default(NEW_USER)
+  last_intervention_at    DateTime?
+  updated_at              DateTime                @default(now()) @updatedAt
+
+  user                    User                    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("v2_user_retention_state")
+}
+
+// V2 Golden System: ROI Log
+model v2_retention_roi_log {
+  id              Int      @id @default(autoincrement())
+  user_id         Int?
+  predicted_ltv   Float    @default(0)
+  marketing_cost  Float    @default(0)
+  roi_percent     Float    @default(0)
+  event_type      String?  @db.VarChar(50)
+  reward_type     String?  @db.VarChar(50)
+  reward_amount   Int      @default(0)
+  created_at      DateTime @default(now())
+
+  user            User?    @relation(fields: [user_id], references: [id], onDelete: SetNull)
+
+  @@index([user_id])
+  @@index([created_at])
+  @@map("v2_retention_roi_log")
+}
+
+// V2 Admin: Messages
+model v2_admin_message {
+  id              Int      @id @default(autoincrement())
+  title           String   @db.VarChar(200)
+  content         String   @db.Text
+  target_type     String   @default("ALL") @db.VarChar(20)
+  target_value    String?  @db.VarChar(100)
+  reward_type     String?  @default("NONE") @db.VarChar(50)
+  reward_amount   Int      @default(0)
+  visible         Boolean  @default(true)
+  created_at      DateTime @default(now())
+  expires_at      DateTime?
+  read_count      Int      @default(0)
+  author_admin_id String?  @db.VarChar(50)
+
+  // Relations
+  inbox_entries   v2_admin_message_inbox[]
+
+  @@map("v2_admin_message")
+}
+
+// V2 Admin: Message Inbox (User Status)
+model v2_admin_message_inbox {
+  id          Int       @id @default(autoincrement())
+  user_id     Int
+  message_id  Int
+  is_read     Boolean   @default(false)
+  is_claimed  Boolean   @default(false)
+  read_at     DateTime?
+  claimed_at  DateTime?
+  created_at  DateTime  @default(now())
+
+  // Relations
+  message     v2_admin_message @relation(fields: [message_id], references: [id], onDelete: Cascade)
+  user        User             @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, message_id])
+  @@index([user_id, is_read])
+  @@map("v2_admin_message_inbox")
+}
+
+// V2 Core: Segment Rules
+model v2_segment_rule {
+  id              Int      @id @default(autoincrement())
+  segment_key     String   @unique @db.VarChar(50)
+  description     String?  @db.VarChar(200)
+  condition_json  String   @db.Text
+  priority        Int      @default(0)
+  enabled         Boolean  @default(true)
+  updated_at      DateTime @default(now()) @updatedAt
+  
+  // Relations
+  user_segments   v2_user_segment[]
+
+  @@map("v2_segment_rule")
+}
+
+// V2 Core: User Segments
+model v2_user_segment {
+  id              Int      @id @default(autoincrement())
+  user_id         Int
+  segment_key     String   @db.VarChar(50)
+  assigned_at     DateTime @default(now())
+  expires_at      DateTime?
+
+  // Relations
+  rule            v2_segment_rule @relation(fields: [segment_key], references: [segment_key], onDelete: Cascade)
+  user            User            @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, segment_key])
+  @@index([segment_key])
+  @@map("v2_user_segment")
+}
+
+// Enums moved to bottom or kept with models
+enum v2_retention_psych_state {
+  IN_FLOW
+  BORED
+  FRUSTRATED
+  TILTED
+}
+
+enum v2_retention_segment_tag {
+  HIGH_ROLLER
+  CASUAL_LOYAL
+  NEW_USER
+  CHURN_RISK
+}

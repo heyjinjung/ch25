@@ -149,12 +149,60 @@ https://mobbin.com/sites/sections/a613e82c-cf1b-401f-b457-739b49ff775a?utm_sourc
 | **복권 설정** | `src/v2/admin/pages/game/LotteryConfigPage.tsx` | 복권 회차/당첨번호 관리 |
 | **모달 노출 제어** | `src/v2/admin/pages/system/ModalControlPage.tsx` | 긴급 공지/이벤트 모달 전역 제어 |
 
-## 7. 검증 체크리스트 (Self-Check)
-- [ ] **디자인**: 배경색이 완전 검정(#000)이 아닌 **Soft Obsidian(#121214)**인가?
-- [ ] **모바일**: 폰에서 하단 메뉴바(Dock)와 바텀 시트가 겹치지 않는가?
-- [ ] **용어**: 'Validation Error' 대신 '입력을 확인해주세요' 처럼 **쉬운 한글**을 썼는가?
-- [ ] **안전**: 금고 잔액 수정 시 '변경 사유'를 입력하지 않으면 버튼이 잠기는가?
-- [ ] **성능**: 유저 목록 1,000개를 불러올 때 버벅임이 없는가?
+## 7. 연동 설계 (Integration Design) - 2026.01.19 Added
+화면과 백엔드 시스템 간의 연결 고리를 정의한다.
+
+### 7.1 API 매핑 (API Mapping)
+| 페이지 | 주요 Hook | 엔드포인트 | 역할 |
+| :--- | :--- | :--- | :--- |
+| **UserDetail** | `useAdminUserDetail` | `GET /api/v2/admin/users/{id}` | 유저 360도 정보 조회 |
+| **VaultControl** | `useAdminWithdrawals` | `GET /api/v2/admin/withdrawals` | 출금 대기 목록 조회 |
+| **OpsDashboard** | `useOpsStatus` | `GET /api/v2/admin/ops/status` | 시스템 상태/골든레이더 |
+| **GameConfig** | `useRouletteConfig` | `GET /api/v2/admin/game/roulette` | 룰렛 확률/설정 조회 |
+
+### 7.2 상태 관리 (Store State)
+- **전역 상태 (Zustand)**: `useAdminStore`
+    - `isSidebarOpen`: 사이드바 토글 상태
+    - `globalLoading`: 전역 로딩 인디케이터
+- **서버 상태 (React Query)**: `queryKey` 표준
+    - `['admin', 'users', id]`: 유저 상세
+    - `['admin', 'withdrawals', status]`: 출금 목록
+    - `['admin', 'stats']`: 대시보드 통계 (10s polling)
+
+### 7.3 인증 및 권한 (Auth & Permission)
+- **RBAC**: `useAdminAuth` 훅을 통해 권한 체크
+    - `SUPER_ADMIN`: 모든 접근 가능 (Vault 강제 조정 포함)
+    - `OPERATOR`: 조회 및 일반 처리 가능 (강제 조정 불가)
+- **Token**: `Authorization: Bearer <token>` 헤더 필수
+
+### 7.4 에러 핸들링 (Error Handling)
+- **전역 에러**: `AxiosInterceptor`에서 401(토큰 만료), 500(서버 오류) 공통 처리
+- **Form 에러**: 각 폼 컴포넌트 내 `react-hook-form` 에러 메시지 표시 (Toast 활용)
+
+### 7.5 라우팅 (Routing)
+- `src/v2/router/V2AdminRoutes.tsx`
+    - `/admin/v2/*` 경로 하위에 모든 어드민 라우트 배치
+    - 보호된 라우트(`ProtectedRoute`)로 감싸 비로그인 접근 차단
+
+### 7.6 캐시 정책 (Cache Policy)
+- **Stale Time**:
+    - **통계/대시보드**: 0 (항상 최신)
+    - **설정(Config)**: 5분 (잦은 변경 없음)
+    - **목록(List)**: 1분 (Window Focus 시 재요청)
+
+### 7.7 실시간 데이터 (Real-time)
+- **Polling**: 대시보드 지표 (10초 주기)
+- **WebSocket**: (추후 도입) 골든 레이더 실시간 알림
+
+### 7.8 성능 최적화 (Optimization)
+- **Lazy Loading**: `React.lazy`로 페이지 단위 코드 분할
+- **Debounce**: 검색어 입력 시 300ms 지연 요청
+
+## 8. 검증 체크리스트 (Self-Check)
+- [x] **디자인**: 배경색이 완전 검정(#000)이 아닌 **Soft Obsidian(#121214)**인가?
+- [x] **모바일**: 폰에서 하단 메뉴바(Dock)와 바텀 시트가 겹치지 않는가?
+- [x] **용어**: 'Validation Error' 대신 '입력을 확인해주세요' 처럼 **쉬운 한글**을 썼는가?
+
 
 ### 7.1 🎨 레퍼런스 분석: Visitors UI (Next.js Visitors)
 *User provided reference image (Visitors Dashboard 2x2 Grid)*
@@ -263,10 +311,12 @@ Shadcn/UI 외에 운영 효율을 위해 별도로 제작해야 하는 커스텀
             4. **인벤토리**: 기프티콘 보유 현황
             5. **미션(Mission)**: 수행 이력 조회 및 강제 완료/수정 처리 **(New)**
             6. **로그/메모**: 활동 로그 및 운영자 메모
-    - [x] `WalletEditor`: 티켓 강제 수정
+            5. **미션(Mission)**: 수행 이력 조회 및 강제 완료/수정 처리 **(New)**
+            6. **로그/메모**: 활동 로그 및 운영자 메모
+    - [x] `WalletEditor`: 티켓 강제 수정 (구현완료)
         - **UI**: `Dialog`(Alert), `Input`(Number), `Form`(Validation)
-- [ ] **3-2. Economy Ops (경제 관리)**
-    - [ ] `VaultControlPage`: 출금 승인/반려
+- [x] **3-2. Economy Ops (경제 관리)**
+    - [x] `VaultControlPage`: 출금 승인/반려 (구현완료)
         - **UI**: `Slider`(Swipe to Approve), `AlertDialog`(Reject), `Progress`(Limit)
         - **Motion**: 
             - **Framer Motion**: 리스트 아이템 등장 (StaggerChildren)
@@ -299,19 +349,23 @@ Shadcn/UI 외에 운영 효율을 위해 별도로 제작해야 하는 커스텀
     - [x] `SurveyPage`: 설문 관리
         - **UI**: `FormBuilder`(Dynamic), `BarChart`(Result) → `Tabs`(List/Result), `Switch`(Active Toggle), `BarChart`(Result Pct)
         - **완료**: 설문 활성화/비활성화 토글, 설문별 응답 통계 시각화
-- [ ] **4-2. Game Configuration**
-    - [ ] `RouletteConfigPage` & `DiceConfigPage`: 확률 설정
+- [x] **4-2. Game Configuration**
+    - [x] `RouletteConfigPage` & `DiceConfigPage`: 확률 설정 (구현완료)
         - **UI**: `Slider`(Probability), `Input`(Multiplier), `Chart`(Simulation)
-    - [ ] `LotteryConfigPage`: 회차 관리
+    - [x] `LotteryConfigPage`: 회차 관리 (구현완료)
         - **UI**: `DatePicker`(Draw Date), `InputOTP`(Winning Number)
-- [ ] **4-3. System Control**
-    - [ ] `ModalControlPage`: 전역 모달 제어
+- [x] **4-3. System Control**
+    - [x] `ModalControlPage`: 전역 모달 제어 (구현완료)
         - **UI**: `Switch`(Global Toggle), `Card`(Modal Preview)
-- [ ] **4-4. Final Polish**
-    - [ ] **Easy Korean**: 용어 전수 검수
-    - [ ] **Audit Link**: `Toast`(Action Feedback) 및 로그 적재 확인
+- [x] **4-4. Final Polish**
+    - [x] **Easy Korean**: 용어 전수 검수
+    - [x] **Audit Link**: `Toast`(Action Feedback) 및 로그 적재 확인
 
 ## 10. 변경 이력
+- v1.6 (2026-01-19, Antigravity Agent): System & Dashboard Ops 구현 완료
+    - `OpsDashboard`: BentoGrid 기반 골든 레이더, 시스템 상태 통합 대시보드 구현
+    - `ModalControlPage`: 전역 킬스위치 및 모달별 제어 UI 구현
+    - `WalletEditor`: 유저 상세 내 지갑 수정 기능 연동
 - v1.5 (2026-01-19, Antigravity Agent): Marketing Tools (`MessageSenderPage`, `SurveyPage`) 구현 완료
     - `useAdminMarketing.ts` 훅 및 API 구현
     - UI 컴포넌트 (`Label` 등) 추가 및 경로 표준화

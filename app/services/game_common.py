@@ -2,6 +2,7 @@
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
 from typing import Any, Optional
+from uuid import uuid4
 
 import hashlib
 import redis
@@ -40,12 +41,12 @@ def log_game_play(ctx: GamePlayContext, db: Session, result_payload: dict[str, A
     # Opportunistically award team battle points; failures are non-blocking by design.
     _log_team_battle_points(ctx, db, result_payload)
 
-    _publish_internal_game_result(ctx, result_payload)
+    _publish_internal_game_result(ctx, db, result_payload)
 
     _record_dda_outcome_if_needed(ctx, result_payload)
 
 
-def _publish_internal_game_result(ctx: GamePlayContext, result_payload: dict[str, Any]) -> None:
+def _publish_internal_game_result(ctx: GamePlayContext, db: Session, result_payload: dict[str, Any]) -> None:
     settings = get_settings()
     if not settings.ch25_internal_stream_enabled:
         return
@@ -70,6 +71,42 @@ def _publish_internal_game_result(ctx: GamePlayContext, result_payload: dict[str
         from app.services.ch25_event_service import Ch25EventService
 
         Ch25EventService().publish_internal_game_result(data)
+    except Exception:
+        pass
+
+    _publish_golden_v2_game_event(ctx, db, result_payload, bet_amount, payout_amount)
+
+
+def _publish_golden_v2_game_event(
+    ctx: GamePlayContext,
+    db: Session,
+    result_payload: dict[str, Any],
+    bet_amount: int,
+    payout_amount: int,
+) -> None:
+    client = _get_golden_redis_client()
+    if client is None:
+        return
+
+    result = _infer_game_result(result_payload)
+    current_balance = _get_current_balance(db, ctx.user_id)
+    _update_golden_redis_state(client, ctx.user_id, result, current_balance)
+
+    payload = {
+        "event_id": str(uuid4()),
+        "timestamp": int(datetime.now(tz=timezone(timedelta(hours=9))).timestamp() * 1000),
+        "user_id": ctx.user_id,
+        "game_type": (ctx.feature_type or "").upper(),
+        "result": result,
+        "bet_amount": bet_amount,
+        "payout": payout_amount,
+        "current_balance": current_balance,
+    }
+
+    try:
+        from app.v2.services.golden_event_service import GoldenV2EventService
+
+        GoldenV2EventService().publish_game_event(payload)
     except Exception:
         return
 
@@ -113,6 +150,72 @@ def _ticket_reward_value(reward_type: str, settings) -> int | None:
         "TICKET_LOTTERY": int(settings.lottery_bet_value),
     }
     return ticket_map.get(reward_type)
+
+
+def _infer_game_result(result_payload: dict[str, Any]) -> str:
+    result = str(result_payload.get("result") or result_payload.get("outcome") or "").upper()
+    if result in {"WIN", "LOSE", "DRAW"}:
+        return result
+    reward_amount = int(result_payload.get("reward_amount") or 0)
+    return "WIN" if reward_amount > 0 else "LOSE"
+
+
+def _get_current_balance(db: Session, user_id: int) -> int:
+    try:
+        from app.models.user import User
+
+        user = db.get(User, user_id)
+        return int(getattr(user, "vault_locked_balance", 0) or 0)
+    except Exception:
+        return 0
+
+
+_GOLDEN_REDIS_CLIENT: Optional[redis.Redis] = None
+
+
+def _get_golden_redis_client() -> Optional[redis.Redis]:
+    global _GOLDEN_REDIS_CLIENT
+    if _GOLDEN_REDIS_CLIENT is not None:
+        return _GOLDEN_REDIS_CLIENT
+
+    settings = get_settings()
+    if not settings.redis_url:
+        return None
+    try:
+        _GOLDEN_REDIS_CLIENT = redis.from_url(settings.redis_url, decode_responses=True)
+        return _GOLDEN_REDIS_CLIENT
+    except Exception:
+        return None
+
+
+def _update_golden_redis_state(client: redis.Redis, user_id: int, result: str, current_balance: int) -> None:
+    loss_streak_ttl = 60 * 60
+    session_ttl = 24 * 60 * 60
+    psych_ttl = 24 * 60 * 60
+
+    legacy_loss_key = f"user:{user_id}:loss_streak"
+    v2_loss_key = f"golden:v2:user:{user_id}:loss_streak"
+    vault_locked_key = f"user:{user_id}:vault:locked"
+
+    try:
+        if result == "LOSE":
+            client.incr(legacy_loss_key)
+            client.expire(legacy_loss_key, loss_streak_ttl)
+            client.incr(v2_loss_key)
+            client.expire(v2_loss_key, loss_streak_ttl)
+        else:
+            client.set(legacy_loss_key, 0, ex=loss_streak_ttl)
+            client.set(v2_loss_key, 0, ex=loss_streak_ttl)
+
+        client.set(vault_locked_key, int(current_balance or 0), ex=session_ttl)
+
+        session_key = f"golden:v2:user:{user_id}:session_start_balance"
+        client.set(session_key, int(current_balance or 0), nx=True, ex=session_ttl)
+
+        psych_key = f"golden:v2:user:{user_id}:psych_state"
+        client.set(psych_key, "NEUTRAL", nx=True, ex=psych_ttl)
+    except Exception:
+        return
 
 
 _DDA_REDIS_CLIENT: Optional[redis.Redis] = None

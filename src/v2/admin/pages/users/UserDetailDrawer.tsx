@@ -6,9 +6,10 @@ import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
 import { NumberTicker } from "../../components/ui/NumberTicker";
-import { Shield, AlertTriangle } from "lucide-react";
-import { useRef, useEffect } from "react";
+import { Shield, AlertTriangle, Ticket, Edit } from "lucide-react";
+import { useRef, useEffect, useState } from "react";
 import gsap from "gsap";
+import { WalletEditor } from "../../components/users/WalletEditor";
 
 interface UserDetailDrawerProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ interface UserDetailDrawerProps {
 
 export function UserDetailDrawer({ isOpen, onClose, userId }: UserDetailDrawerProps) {
   const contentRef = useRef<HTMLDivElement>(null);
+  const [isWalletEditorOpen, setIsWalletEditorOpen] = useState(false);
 
   // GSAP Animation for Tab Content
   useEffect(() => {
@@ -115,9 +117,24 @@ export function UserDetailDrawer({ isOpen, onClose, userId }: UserDetailDrawerPr
                 </div>
               </TabsContent>
 
-              <TabsContent value="wallet" className="m-0">
+              <TabsContent value="wallet" className="m-0 space-y-4">
+                <div className="flex justify-between items-center bg-[#18181B] p-4 rounded-xl border border-white/5">
+                    <div>
+                        <div className="text-sm text-zinc-500">현재 티켓 보유량</div>
+                        <div className="text-2xl font-mono text-white font-bold flex items-center gap-2">
+                            <Ticket className="w-6 h-6 text-indigo-400" />
+                            1,250 T
+                        </div>
+                    </div>
+                    <Button variant="outline" className="border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/10" onClick={() => setIsWalletEditorOpen(true)}>
+                        <Edit className="w-4 h-4 mr-2" />
+                        수량 조정
+                    </Button>
+                </div>
+
                 <div className="p-4 rounded-xl bg-[#18181B] border border-white/5 text-center text-zinc-500 py-10">
-                    Wallet History Component Here
+                    <div>[Ticket Log Table Placeholder]</div>
+                    <div className="text-xs mt-2">최근 30일간의 티켓 획득/사용 내역이 표시됩니다.</div>
                 </div>
               </TabsContent>
 
@@ -136,6 +153,19 @@ export function UserDetailDrawer({ isOpen, onClose, userId }: UserDetailDrawerPr
             </div>
           </ScrollArea>
         </Tabs>
+        
+        {userId && (
+            <WalletEditor 
+                isOpen={isWalletEditorOpen} 
+                onClose={() => setIsWalletEditorOpen(false)} 
+                userId={userId} 
+                currentTickets={1250} 
+                onUpdate={async (amt, reason) => {
+                    console.log("Update wallet:", amt, reason);
+                    await new Promise(r => setTimeout(r, 1000));
+                }} 
+            />
+        )}
       </SheetContent>
     </Sheet>
   );

@@ -1,6 +1,7 @@
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import AdminLayout from "../admin/layouts/AdminLayout";
+import OpsDashboard from "../admin/pages/dashboard/OpsDashboard";
 import MarketingCenterPage from "../admin/pages/dashboard/MarketingCenterPage";
 import UserListPage from "../admin/pages/users/UserListPage";
 
@@ -21,7 +22,8 @@ const V2AdminRoutes: React.FC = () => {
   return (
     <Routes>
       <Route element={<AdminLayout />}>
-        <Route path="dashboard" element={<MarketingCenterPage />} />
+        <Route path="dashboard" element={<OpsDashboard />} />
+        <Route path="marketing" element={<MarketingCenterPage />} />
         <Route path="users" element={<UserListPage />} />
         {/* Economy */}
         <Route path="economy/vault" element={<VaultControlPage />} />
