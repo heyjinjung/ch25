@@ -22,7 +22,15 @@ from app.services.game_wallet_service import GameWalletService
 from app.services.dice_service import DiceService
 from app.services.lottery_service import LotteryService
 from app.services.roulette_service import RouletteService
-from app.v2.schemas.v2_admin_message import V2MessageCreate, V2MessageResponse, V2SegmentBatchResponse
+from app.v2.schemas.v2_admin_message import (
+    V2MessageCreate,
+    V2MessageResponse,
+    V2SegmentBatchResponse,
+    V2InboxListResponse,
+    V2InboxMessageDto,
+    V2MarkInboxReadRequest,
+    V2MarkInboxReadResponse,
+)
 from app.v2.schemas.v2_golden import (
     V2ReengagementQueueRequest,
     V2ReengagementQueueResponse,
@@ -612,3 +620,90 @@ def ticket_zero_bailout(
     db.add(log)
     db.commit()
     return V2TicketZeroBailoutResponse(granted=True, ticket_type="ROULETTE_TICKET", ticket_amount=ticket_amount)
+
+
+# ============================================================================
+# Inbox API (User-facing)
+# ============================================================================
+
+
+@router.get("/inbox", response_model=V2InboxListResponse, tags=["v2-user"])
+def get_user_inbox(
+    db: Session = Depends(get_db),
+    user_id: int = Depends(get_current_user_id),
+) -> V2InboxListResponse:
+    """Get all inbox messages for the current user."""
+    from app.v2.models.v2_admin_message import V2AdminMessageInbox, V2AdminMessage
+
+    inbox_entries = (
+        db.query(V2AdminMessageInbox)
+        .join(V2AdminMessage, V2AdminMessageInbox.message_id == V2AdminMessage.id)
+        .filter(
+            V2AdminMessageInbox.user_id == user_id,
+            V2AdminMessage.is_deleted == False,
+        )
+        .order_by(V2AdminMessageInbox.created_at.desc())
+        .all()
+    )
+
+    messages = []
+    unread_count = 0
+
+    for entry in inbox_entries:
+        messages.append(
+            V2InboxMessageDto(
+                id=entry.id,
+                message_id=entry.message_id,
+                title=entry.message.title,
+                content=entry.message.content,
+                is_read=entry.is_read,
+                read_at=entry.read_at,
+                created_at=entry.created_at,
+            )
+        )
+        if not entry.is_read:
+            unread_count += 1
+
+    return V2InboxListResponse(messages=messages, unread_count=unread_count)
+
+
+@router.patch("/inbox/read", response_model=V2MarkInboxReadResponse, tags=["v2-user"])
+def mark_inbox_read(
+    payload: V2MarkInboxReadRequest,
+    db: Session = Depends(get_db),
+    user_id: int = Depends(get_current_user_id),
+) -> V2MarkInboxReadResponse:
+    """Mark one or more inbox messages as read."""
+    from app.v2.models.v2_admin_message import V2AdminMessageInbox
+
+    now = datetime.utcnow()
+    marked_count = 0
+
+    for inbox_id in payload.inbox_ids:
+        entry = (
+            db.query(V2AdminMessageInbox)
+            .filter(
+                V2AdminMessageInbox.id == inbox_id,
+                V2AdminMessageInbox.user_id == user_id,
+                V2AdminMessageInbox.is_read == False,
+            )
+            .first()
+        )
+        if entry:
+            entry.is_read = True
+            entry.read_at = now
+            marked_count += 1
+
+    db.commit()
+
+    # Count remaining unread messages
+    remaining_unread = (
+        db.query(V2AdminMessageInbox)
+        .filter(
+            V2AdminMessageInbox.user_id == user_id,
+            V2AdminMessageInbox.is_read == False,
+        )
+        .count()
+    )
+
+    return V2MarkInboxReadResponse(marked_count=marked_count, remaining_unread=remaining_unread)
