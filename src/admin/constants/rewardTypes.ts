@@ -6,16 +6,17 @@ export const REWARD_TYPES = [
   { value: "CC_POINT", label: "CC 포인트 (CC_POINT)", group: "Common" },
   { value: "GAME_XP", label: "시즌 XP (GAME_XP)", group: "Common" },
 
-  // --- Game Tickets (Canonical) ---
-  { value: "TICKET_ROULETTE", label: "룰렛 티켓 (TICKET_ROULETTE)", group: "Ticket" },
-  { value: "TICKET_DICE", label: "주사위 티켓 (TICKET_DICE)", group: "Ticket" },
-  { value: "TICKET_LOTTERY", label: "복권 티켓 (TICKET_LOTTERY)", group: "Ticket" },
+  // --- Game Tickets (V2 Standard) ---
+  { value: "ROULETTE_TICKET", label: "룰렛 티켓 (ROULETTE_TICKET)", group: "Ticket" },
+  { value: "DICE_TICKET", label: "주사위 티켓 (DICE_TICKET)", group: "Ticket" },
+  { value: "LOTTERY_TICKET", label: "복권 티켓 (LOTTERY_TICKET)", group: "Ticket" },
+  { value: "TRIAL_TICKET", label: "체험 티켓 (TRIAL_TICKET)", group: "Ticket" },
 
-  // --- Keys & Premium ---
-  { value: "GOLD_KEY", label: "골드 키 (GOLD_KEY)", group: "Key" },
-  { value: "DIAMOND_KEY", label: "다이아 키 (DIAMOND_KEY)", group: "Key" },
+  // --- Keys & Premium (V2 Standard) ---
+  { value: "GOLD_KEY_TICKET", label: "골드 키 티켓 (GOLD_KEY_TICKET)", group: "Key" },
+  { value: "DIAMOND_TICKET", label: "다이아 티켓 (DIAMOND_TICKET)", group: "Key" },
   { value: "GOLD_KEY_FRAGMENT", label: "골드 키 조각 (FRAGMENT)", group: "Key" },
-  { value: "DIAMOND_KEY_FRAGMENT", label: "다이아 키 조각 (FRAGMENT)", group: "Key" },
+  { value: "DIAMOND_FRAGMENT", label: "다이아 조각 (FRAGMENT)", group: "Key" },
   { value: "DIAMOND", label: "다이아 (DIAMOND)", group: "Premium" },
 
   // --- Real-world / Gifticons ---

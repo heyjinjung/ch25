@@ -1,30 +1,43 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../../components/ui/card";
+import { Card, CardHeader, CardContent } from "../../../components/ui/card";
 import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "../../../components/ui/dialog";
 import { SlideToApprove } from "../../components/ui/SlideToApprove";
-import { ShieldAlert, History } from "lucide-react";
-
-// Mock Data
-const PENDING_WITHDRAWALS = [
-  { id: 101, userId: 1001, nickname: "HighRoller99", amount: 150000, requestTime: "10:30 AM", riskLevel: "LOW" },
-  { id: 102, userId: 1005, nickname: "Tester01", amount: 50000, requestTime: "10:45 AM", riskLevel: "LOW" },
-  { id: 103, userId: 1042, nickname: "UnknownUser", amount: 5000000, requestTime: "11:00 AM", riskLevel: "HIGH" },
-];
+import { ShieldAlert, Key } from "lucide-react";
+import { useAdminWithdrawals, useAdminApproveWithdrawal, useAdminRejectWithdrawal } from "../../../hooks/useAdminEconomy";
+import { cn } from "../../../lib/utils";
+import type { AdminWithdrawalDto } from "../../../api/adminApi";
 
 export default function VaultControlPage() {
-  const [withdrawals, setWithdrawals] = useState(PENDING_WITHDRAWALS);
+  const { data: withdrawals = [] } = useAdminWithdrawals();
+  const approveMutation = useAdminApproveWithdrawal();
+  const rejectMutation = useAdminRejectWithdrawal();
+
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [rejectId, setRejectId] = useState<number | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
 
   const handleApprove = async (id: number) => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setWithdrawals(prev => prev.filter(w => w.id !== id));
+    await approveMutation.mutateAsync(id);
   };
+
+  const handleRejectClick = (id: number) => {
+    setRejectId(id);
+    setRejectReason("");
+  };
+
+  const confirmReject = async () => {
+    if (rejectId) {
+        await rejectMutation.mutateAsync({ id: rejectId, reason: rejectReason });
+        setRejectId(null);
+    }
+  };
+
+  const pendingWithdrawals = withdrawals.filter((w: AdminWithdrawalDto) => w.status === 'PENDING');
 
   return (
     <div className="space-y-6 h-full p-6">
@@ -75,19 +88,19 @@ export default function VaultControlPage() {
 
       <Tabs defaultValue="withdrawals" className="space-y-4">
         <TabsList className="bg-[#18181B] border border-white/5">
-          <TabsTrigger value="withdrawals">출금 승인 ({withdrawals.length})</TabsTrigger>
+          <TabsTrigger value="withdrawals">출금 승인 ({pendingWithdrawals.length})</TabsTrigger>
           <TabsTrigger value="history">승인 이력</TabsTrigger>
         </TabsList>
 
         <TabsContent value="withdrawals" className="space-y-4">
             <AnimatePresence mode="popLayout">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {withdrawals.length === 0 && (
+                    {pendingWithdrawals.length === 0 && (
                         <div className="col-span-full h-40 flex items-center justify-center text-zinc-500 border border-dashed border-white/10 rounded-xl">
                             대기 중인 출금 요청이 없습니다.
                         </div>
                     )}
-                    {withdrawals.map((item) => (
+                    {pendingWithdrawals.map((item: AdminWithdrawalDto) => (
                         <motion.div
                             key={item.id}
                             initial={{ opacity: 0, y: 20 }}
@@ -99,35 +112,46 @@ export default function VaultControlPage() {
                                 <CardHeader className="bg-zinc-900/50 border-b border-white/5 pb-3">
                                     <div className="flex justify-between items-start">
                                         <div>
-                                            <CardTitle className="text-base text-white flex items-center gap-2">
-                                                {item.nickname}
-                                                {item.riskLevel === 'HIGH' && <Badge variant="destructive" className="h-5 px-1 text-[10px]">RISK</Badge>}
-                                            </CardTitle>
-                                            <CardDescription className="text-xs">U#{item.userId} • {item.requestTime}</CardDescription>
+                                            <div className="text-sm font-medium text-zinc-400">Request #{item.id}</div>
+                                            <div className="text-lg font-bold text-white mt-1">₩ {item.amount.toLocaleString()}</div>
                                         </div>
-                                        <div className="text-right">
-                                             <div className="text-lg font-bold text-emerald-400">₩ {item.amount.toLocaleString()}</div>
-                                        </div>
+                                        <Badge variant="outline" className={cn(
+                                            "bg-black/40",
+                                            item.riskLevel === 'HIGH' ? "text-red-400 border-red-500/30" : "text-emerald-400 border-emerald-500/30"
+                                        )}>
+                                            {item.riskLevel} RISK
+                                        </Badge>
                                     </div>
                                 </CardHeader>
                                 <CardContent className="pt-4 space-y-4">
-                                    <div className="flex justify-between text-xs text-zinc-500">
-                                        <span>Bank: KB Kookmin</span>
-                                        <span>123-***-****89</span>
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-zinc-500">User</span>
+                                        <span className="text-zinc-300">{item.nickname} (ID: {item.userId})</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-zinc-500">Requested</span>
+                                        <span className="text-zinc-300">{item.requestTime}</span>
                                     </div>
                                     
-                                    <SlideToApprove 
-                                        onApprove={() => handleApprove(item.id)}
-                                        text="밀어서 출금 승인"
-                                        successText="승인 완료"
-                                        className="h-12 text-sm"
-                                        disabled={item.riskLevel === 'HIGH'} 
-                                    />
-                                    {item.riskLevel === 'HIGH' && (
-                                        <p className="text-[10px] text-red-500 text-center">
-                                            ⚠️ 리스크 유저는 자동 승인이 불가능합니다. 상세 확인 필요.
-                                        </p>
-                                    )}
+                                    <div className="pt-2 flex flex-col gap-2">
+                                        {item.riskLevel === 'HIGH' ? (
+                                             <Button variant="outline" className="w-full border-red-500/30 text-red-400 cursor-not-allowed opacity-80" disabled>
+                                                <Key className="w-4 h-4 mr-2" />
+                                                Locked (Audit Required)
+                                             </Button>
+                                        ) : (
+                                            <SlideToApprove 
+                                                onApprove={() => handleApprove(item.id)}
+                                            />
+                                        )}
+                                        <Button 
+                                            variant="ghost" 
+                                            className="w-full text-zinc-500 hover:text-red-400 hover:bg-red-500/10"
+                                            onClick={() => handleRejectClick(item.id)}
+                                        >
+                                            반려 (Reject)
+                                        </Button>
+                                    </div>
                                 </CardContent>
                             </Card>
                         </motion.div>
@@ -135,20 +159,35 @@ export default function VaultControlPage() {
                 </div>
             </AnimatePresence>
         </TabsContent>
-
+        
         <TabsContent value="history">
-            <Card className="bg-[#18181B] border-white/5">
-                <CardHeader>
-                    <CardTitle className="text-white flex items-center gap-2"><History className="w-5 h-5"/> 최근 처리 내역</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="text-zinc-500 text-sm">
-                        최근 30일간의 입출금 처리 내역이 이곳에 표시됩니다. (Pending Implementation)
-                    </div>
-                </CardContent>
-            </Card>
+             <div className="h-40 flex items-center justify-center text-zinc-500 border border-dashed border-white/10 rounded-xl">
+                승인 이력 조회 기능 준비 중...
+            </div>
         </TabsContent>
       </Tabs>
+
+      {/* Reject Dialog */}
+      <Dialog open={!!rejectId} onOpenChange={(open) => !open && setRejectId(null)}>
+        <DialogContent className="bg-[#18181B] border-white/10 text-white">
+            <DialogHeader>
+                <DialogTitle>출금 반려</DialogTitle>
+                <DialogDescription className="text-zinc-400">
+                    반려 사유를 입력하면 유저에게 알림이 발송됩니다.
+                </DialogDescription>
+            </DialogHeader>
+            <Input 
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+                placeholder="예: 부정 플레이 의심, 계좌 정보 불일치 등"
+                className="bg-black/50 border-white/10 text-white"
+            />
+            <DialogFooter>
+                <Button variant="ghost" onClick={() => setRejectId(null)}>취소</Button>
+                <Button variant="destructive" onClick={confirmReject} disabled={!rejectReason}>반려 확정</Button>
+            </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

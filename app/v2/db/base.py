@@ -20,6 +20,8 @@ from app.v2.models import (  # noqa: F401
     V2UserSegment,
     V2AdminMessage,
     V2AdminMessageInbox,
+    V2UserRetentionState,
+    V2RetentionRoiLog,
     V2User,
 )
 
