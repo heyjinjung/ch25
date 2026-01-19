@@ -8,7 +8,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_admin_id, get_current_user_id, get_db
+from app.api.deps import get_current_admin_info, get_current_user_id, get_db
 from app.models.admin_message import AdminMessageInbox
 from app.models.game_wallet import GameTokenType
 from app.models.inventory import UserInventoryItem
@@ -197,9 +197,9 @@ def lottery_play(
 @router.post("/segments/run", response_model=V2SegmentBatchResponse, tags=["v2-admin"])
 def run_segment_batch(
     db: Session = Depends(get_db),
-    admin_id: int = Depends(get_current_admin_id),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ) -> V2SegmentBatchResponse:
-    _ = admin_id
+    admin_id, admin_role = admin_info
     result = V2SegmentService.segment_all_users(db)
     return V2SegmentBatchResponse(**result)
 
@@ -208,8 +208,9 @@ def run_segment_batch(
 def create_admin_message(
     payload: V2MessageCreate,
     db: Session = Depends(get_db),
-    admin_id: int = Depends(get_current_admin_id),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ) -> V2MessageResponse:
+    admin_id, admin_role = admin_info
     if payload.target_type != "ALL" and not (payload.target_value and payload.target_value.strip()):
         raise HTTPException(status_code=400, detail="TARGET_VALUE_REQUIRED")
 

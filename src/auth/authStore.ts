@@ -12,6 +12,7 @@ export interface AuthUser {
   readonly telegram_id?: number | null;
   readonly telegram_username?: string | null;
   readonly login_streak?: number;
+  readonly role?: string;
 }
 
 interface AuthState {

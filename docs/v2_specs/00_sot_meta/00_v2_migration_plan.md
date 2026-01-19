@@ -226,8 +226,8 @@
 11. **Admin V2 재구축**
     *   RBAC(권한 관리)가 적용된 엄격한 어드민.
     *   기존 운영툴(응대 플레이북, 위기 레이더) DB 연결.
-    *   **진행도**: 🟡 진행중 (Foundation, Dashboard, User CRM, Game Ops 구현 완료)
-    *   **근거**: [v2_admin_master_plan_ko.md](../06_design/v2_admin_master_plan_ko.md), [src/v2/admin/pages](../../../src/v2/admin/pages)
+    *   **진행도**: ✅ 완료 (RBAC, Foundation, Dashboard, User CRM, Game Ops 구현 및 검증 완료)
+    *   **근거**: [v2_admin_master_plan_ko.md](../06_design/v2_admin_master_plan_ko.md), [src/v2/admin/pages](../../../src/v2/admin/pages), [verify_admin_ops_v2.py](../../../scripts/verify_admin_ops_v2.py)
 
 
 

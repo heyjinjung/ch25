@@ -17,8 +17,12 @@ import TicketInventoryPage from "../admin/pages/economy/TicketInventoryPage";
 import MessageSenderPage from "../admin/pages/marketing/MessageSenderPage";
 import SurveyPage from "../admin/pages/marketing/SurveyPage";
 import ModalControlPage from "../admin/pages/system/ModalControlPage";
+import { useAdminAuth } from "../hooks/useAdminAuth";
+import { ShieldAlert } from "lucide-react";
 
 const V2AdminRoutes: React.FC = () => {
+  const { isSuperAdmin } = useAdminAuth();
+
   return (
     <Routes>
       <Route element={<AdminLayout />}>
@@ -26,7 +30,9 @@ const V2AdminRoutes: React.FC = () => {
         <Route path="marketing" element={<MarketingCenterPage />} />
         <Route path="users" element={<UserListPage />} />
         {/* Economy */}
-        <Route path="economy/vault" element={<VaultControlPage />} />
+        <Route path="economy/vault" element={
+            isSuperAdmin ? <VaultControlPage /> : <AccessDenied />
+        } />
         <Route path="economy/deposits" element={<CCDepositPage />} />
         <Route path="economy/shop" element={<ShopManagerPage />} />
 
@@ -52,5 +58,15 @@ const V2AdminRoutes: React.FC = () => {
     </Routes>
   );
 };
+
+function AccessDenied() {
+    return (
+        <div className="h-full flex flex-col items-center justify-center p-20 text-zinc-500">
+            <ShieldAlert className="w-16 h-16 mb-4 text-red-500/50" />
+            <h2 className="text-xl font-bold text-white mb-2">접근 권한 없음</h2>
+            <p>이 페이지에 접근하려면 SUPER_ADMIN 권한이 필요합니다.</p>
+        </div>
+    );
+}
 
 export default V2AdminRoutes;

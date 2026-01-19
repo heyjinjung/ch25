@@ -4,7 +4,7 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db, get_current_active_user
+from app.api.deps import get_db, get_current_user
 from app.models.user import User
 from app.v2.schemas.v2_activity import ActivityRecordRequest, ActivityRecordResponse
 
@@ -15,7 +15,7 @@ router = APIRouter(prefix="/activity", tags=["v2-activity"])
 def ingest_activity(
     payload: ActivityRecordRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(get_current_user),
 ):
     """
     Ingest user activity event.

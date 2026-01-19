@@ -12,12 +12,20 @@ import { Button } from "../../../components/ui/button";
 import { BentoGrid } from "../../components/ui/BentoGrid";
 import { QuickActionCard } from "../../components/ui/QuickActionCard";
 import { PulsatingDot } from "../../components/ui/PulsatingDot";
-import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
 import { useOpsStatus } from "../../../hooks/useV2Admin";
+import { useState } from "react";
+import { UserDetailDrawer } from "../users/UserDetailDrawer";
 
 export default function OpsDashboard() {
   const navigate = useNavigate();
   const { data: status, isLoading } = useOpsStatus();
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  const handleUserClick = (userId: number) => {
+    setSelectedUserId(userId);
+    setIsDrawerOpen(true);
+  };
   
   if (isLoading || !status) {
       return (
@@ -113,9 +121,29 @@ export default function OpsDashboard() {
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="text-center py-8 text-zinc-500 text-sm">
-                            {(status.goldenRadar.churnRisks > 0) ? `${status.goldenRadar.churnRisks} users detected` : "No urgent risks detected"}
-                        </div>
+                        {status.goldenRadar.riskUsers && status.goldenRadar.riskUsers.length > 0 ? (
+                            <div className="space-y-2">
+                                {status.goldenRadar.riskUsers.map(u => (
+                                    <div 
+                                        key={u.userId} 
+                                        className="flex items-center justify-between p-2 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 cursor-pointer transition-colors"
+                                        onClick={() => handleUserClick(u.userId)}
+                                    >
+                                        <div className="flex flex-col">
+                                            <span className="text-sm font-bold text-white">{u.nickname}</span>
+                                            <span className="text-[10px] text-zinc-500">Churn Score: {(u.churnScore * 100).toFixed(0)}%</span>
+                                        </div>
+                                        <Badge variant="outline" className={`text-[10px] ${u.riskLevel === 'HIGH' ? 'border-red-500/50 text-red-400' : 'border-amber-500/50 text-amber-400'}`}>
+                                            {u.riskLevel}
+                                        </Badge>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-center py-8 text-zinc-500 text-sm">
+                                No urgent risks detected
+                            </div>
+                        )}
                     </CardContent>
                  </Card>
 
@@ -155,6 +183,11 @@ export default function OpsDashboard() {
 
       </BentoGrid>
       
+      <UserDetailDrawer 
+        isOpen={isDrawerOpen} 
+        onClose={() => setIsDrawerOpen(false)} 
+        userId={selectedUserId} 
+      />
     </div>
   );
 }
