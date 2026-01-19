@@ -44,5 +44,21 @@ export default tseslint.config(
       "react-hooks/rules-of-hooks": "off",
       "react-hooks/exhaustive-deps": "off",
     },
+  },
+  {
+    files: ["src/v2/**/*.{ts,tsx}"],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@/components/*', '@/hooks/*', '@/lib/*', '@/utils/*'],
+              message: 'V2 code must not import from V1 legacy paths. Use relative imports within src/v2 or standard libraries.',
+            },
+          ],
+        },
+      ],
+    },
   }
 );

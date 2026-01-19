@@ -43,6 +43,7 @@ V2 문서의 폴더 구조, 네이밍, SoT 우선순위, 작성 규칙을 표준
 - docs/v2_specs/04_db/       : V2 DB 스키마/마이그레이션
 - docs/v2_specs/05_ops/      : 운영/배포/런북
 - docs/v2_specs/06_design/   : UX/카피/모션/디자인 규칙
+- docs/v2_specs/07_golden/   : Golden V2 전용 SoT/아키텍처/정책
 - docs/v2_specs/99_archive/  : 폐기/구버전 문서
 
 ## 6. 네이밍 규칙

@@ -70,7 +70,7 @@ V2 게임(룰렛/주사위/복권) 로직의 **기준 동작**과 **공통 규�
 5) 보상 매핑 SoT: docs/v2_specs/01_core/v2_reward_mapping_sot_ko.md
 6) 티켓 Enum 정합 SoT: docs/v2_specs/01_core/v2_ticket_enum_code_alignment_sot_ko.md
 7) 금고 정책 SoT: docs/v2_specs/01_core/v2_strict_vault_policy_sot_ko.md
-8) 골든아워 정책 SoT: docs/v2_specs/02_game/v2_golden_hour_policy_sot_ko.md
+8) 골든아워 정책 SoT: docs/v2_specs/07_golden/v2_golden_hour_policy_sot_ko.md
 9) 팀배틀 SoT: docs/v2_specs/02_game/v2_team_battle_sot_ko.md
 
 ## 4. 공통 게임 플로우 (입장 → 결과 → 보상)

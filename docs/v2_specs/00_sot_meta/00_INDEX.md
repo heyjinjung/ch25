@@ -21,7 +21,7 @@
 - 유저 세그먼트 정책 SoT: docs/v2_specs/01_core/v2_user_segment_policy_sot_ko.md
 - 알림/피드 스키마 SoT: docs/v2_specs/03_api/v2_notification_feed_schema_ko.md
 - 게임 API 계약: docs/v2_specs/03_api/v2_game_api_contract_ko.md
-- Golden V2 API 계약: docs/v2_specs/03_api/v2_golden_api_contract_ko.md
+- Golden V2 API 계약: docs/v2_specs/07_golden/v2_golden_api_contract_ko.md
 - Ticket Zero API 계약: docs/v2_specs/03_api/v2_ticket_zero_api_contract_ko.md
 - **V1 Legacy API 감사**: docs/v2_specs/03_api/v1_legacy_api_list_ko.md (보안감사 포함)
 - **V1 API 불일치 리포트**: docs/v2_specs/03_api/v1_api_discrepancy_report_ko.md (Deep Audit)
@@ -36,10 +36,10 @@
 - Ops 실행 결과 API 계약: docs/v2_specs/05_ops/v2_ops_execution_api_contract_ko.md
 - 강력한 금고 정책 SoT: docs/v2_specs/01_core/v2_strict_vault_policy_sot_ko.md
 - 프로그레션/레벨 스키마 SoT: docs/v2_specs/01_core/v2_progression_schema_ko.md
-- **Golden System 정의서**: docs/v2_specs/01_core/golden_v2_system_definition_ko.md
-- **Golden 개입 로직 SoT**: docs/v2_specs/02_game/golden_v2_intervention_logic_ko.md
-- **Golden Ops 로직 SoT**: docs/v2_specs/05_ops/golden_v2_operational_logic_ko.md
-- **골든아워 정책 SoT**: docs/v2_specs/02_game/v2_golden_hour_policy_sot_ko.md
+- **Golden System 정의서**: docs/v2_specs/07_golden/golden_v2_system_definition_ko.md
+- **Golden 개입 로직 SoT**: docs/v2_specs/07_golden/golden_v2_intervention_logic_ko.md
+- **Golden Ops 로직 SoT**: docs/v2_specs/07_golden/golden_v2_operational_logic_ko.md
+- **골든아워 정책 SoT**: docs/v2_specs/07_golden/v2_golden_hour_policy_sot_ko.md
 - **출석 스트릭 로직 SoT**: docs/v2_specs/02_game/v2_attendance_streak_logic_sot_ko.md
 - **티켓 제로(구조) SoT**: docs/v2_specs/02_game/v2_ticket_zero_policy_sot_ko.md
 - V2 DB 베이스라인 스냅샷: docs/v2_specs/04_db/v2_db_baseline_snapshot_ko.md
@@ -54,7 +54,7 @@
 - V2 DB 룰렛: docs/v2_specs/04_db/v2_db_roulette_ko.md
 - V2 DB 주사위: docs/v2_specs/04_db/v2_db_dice_ko.md
 - V2 DB 복권: docs/v2_specs/04_db/v2_db_lottery_ko.md
-- V2 DB Golden 데이터 맵: docs/v2_specs/04_db/v2_db_golden_data_map_ko.md
+- V2 DB Golden 데이터 맵: docs/v2_specs/07_golden/v2_db_golden_data_map_ko.md
 - V2 DB 세그먼트 규칙: docs/v2_specs/04_db/v2_db_segment_rule_ko.md
 - V2 DB 유저 세그먼트: docs/v2_specs/04_db/v2_db_user_segment_ko.md
 - V2 DB 관리자 메시지: docs/v2_specs/04_db/v2_db_admin_message_ko.md
@@ -65,6 +65,18 @@
 - 프론트엔드 마스터 플랜: docs/v2_specs/06_design/v2_frontend_master_plan_ko.md
 - 어드민 마스터 플랜: docs/v2_specs/06_design/v2_admin_master_plan_ko.md
 
+- [ ] 문서 분류/링크 최신화
+- [ ] SoT 우선순위 준수
+
 
 ## 7. 변경 이력
- - v1.8 (2026-01-19, GitHub Copilot): Golden V2 API/DB 문서 링크 추가
+- v1.9 (2026-01-19, GitHub Copilot): Golden V2 문서 경로 07_golden으로 이동
+- v1.8 (2026-01-19, GitHub Copilot): Golden V2 API/DB 문서 링크 추가
+- v1.7 (2026-01-19, GitHub Copilot): 세그먼트/메시지 SoT 및 DB 문서 링크 추가
+- v1.6 (2026-01-19, GitHub Copilot): V2 게임 DB 문서 링크 추가
+- v1.5 (2026-01-19, GitHub Copilot): 게임 API 계약 문서 링크 추가
+- v1.4 (2026-01-19, GitHub Copilot): 게임 엔진 SoT 문서 링크 추가
+- v1.3 (2026-01-19, GitHub Copilot): 게임 엔진 표준화 설계 문서 링크 추가
+- v1.2 (2026-01-19, GitHub Copilot): V2 DB 진행 상태 업데이트 반영
+- v1.1 (2026-01-19, GitHub Copilot): V2 DB 로그/ops 문서 링크 추가
+- v1.0 (2026-01-18, GitHub Copilot): 최초 작성
