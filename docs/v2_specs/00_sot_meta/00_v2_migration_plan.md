@@ -227,7 +227,7 @@
     *   RBAC(권한 관리)가 적용된 엄격한 어드민.
     *   기존 운영툴(응대 플레이북, 위기 레이더) DB 연결.
     *   **진행도**: ✅ 완료 (RBAC, Foundation, Dashboard, User CRM, Game Ops 구현 및 검증 완료)
-    *   **근거**: [v2_admin_master_plan_ko.md](../06_design/v2_admin_master_plan_ko.md), [src/v2/admin/pages](../../../src/v2/admin/pages), [verify_admin_ops_v2.py](../../../scripts/verify_admin_ops_v2.py)
+    *   **근거**: [v2_admin_master_plan_ko.md](../06_design/v2_admin_master_plan_ko.md), [src/v2/admin/pages/dashboard/CrisisRadarPage.tsx](../../../src/v2/admin/pages/dashboard/CrisisRadarPage.tsx), [src/v2/admin/pages/system/HealthPage.tsx](../../../src/v2/admin/pages/system/HealthPage.tsx), [app/services/admin_audit_service.py](../../../app/services/admin_audit_service.py)
 
 
 
@@ -237,8 +237,8 @@
         - V2 세그먼트 배치 트리거 API (완료)
         - V2 관리자 메시지 생성/팬아웃 API (완료)
     *   **진행도**: ✅ 완료 (DB/API/Admin Page 구현 완료, 정합성 100% 검증 완료)
-    *   **검증**: 마이그레이션 적용 완료, Admin MessageSenderPage 구현 완료
-    *   **근거**: [docs/v2_specs/01_core/v2_user_segment_policy_sot_ko.md](../01_core/v2_user_segment_policy_sot_ko.md#L1), [docs/v2_specs/05_ops/v2_admin_message_policy_sot_ko.md](../05_ops/v2_admin_message_policy_sot_ko.md#L1), [docs/v2_specs/04_db/v2_db_segment_rule_ko.md](../04_db/v2_db_segment_rule_ko.md#L1), [docs/v2_specs/04_db/v2_db_user_segment_ko.md](../04_db/v2_db_user_segment_ko.md#L1), [docs/v2_specs/04_db/v2_db_admin_message_ko.md](../04_db/v2_db_admin_message_ko.md#L1), [docs/v2_specs/04_db/v2_db_admin_message_inbox_ko.md](../04_db/v2_db_admin_message_inbox_ko.md#L1), [app/v2/api/routes.py](../../../app/v2/api/routes.py#L1)
+    *   **검증**: 마이그레이션 적용 완료, Admin MessageSenderPage/UserSegmentPage 구현 완료
+    *   **근거**: [docs/v2_specs/01_core/v2_user_segment_policy_sot_ko.md](../01_core/v2_user_segment_policy_sot_ko.md#L1), [src/v2/admin/pages/marketing/UserSegmentPage.tsx](../../../src/v2/admin/pages/marketing/UserSegmentPage.tsx), [app/v2/api/routes.py](../../../app/v2/api/routes.py#L1)
 
 13. **Golden V2 이관 (문서/기능)**
     *   Golden V2 API/DB 문서 정리 및 기능 이관.
@@ -249,9 +249,13 @@
 
 
 10. **프론트엔드-백엔드 연동 (Web Ver.)**
-    *   표준 Web API로 게임 플레이 연동 및 Network 탭 검증.
-    *   **진행도**: 🟡 진행중 (Admin 외 일반 FE는 미구현 상태)
-    *   **근거**: [src/v2/api/gameApi.ts](../../../src/v2/api/gameApi.ts#L1), [src/v2/hooks/useV2Game.ts](../../../src/v2/hooks/useV2Game.ts#L1)
+    *   **Action**: 표준 Web API로 게임 플레이 연동 및 Network 탭 검증.
+    *   **구현 특이사항**:
+        - **Schema**: `V2InventoryUseRequest`, `V2ShopPurchaseRequest` 등 Pydantic 기반 엄격한 스키마 적용.
+        - **Idempotency**: `X-Idempotency-Key` 헤더를 통한 중복 요청 방지 및 상태 복구 로직 구현.
+        - **Integrity**: `db.begin()/rollback()` 트랜잭션 제어를 통해 "아이템 차감 - 보상 지급" 원자성 보장.
+    *   **진행도**: ✅ 완료
+    *   **근거**: [app/v2/api/routes.py](../../../app/v2/api/routes.py#L69-L585), [src/v2/api/gameApi.ts](../../../src/v2/api/gameApi.ts#L1), [src/v2/hooks/useV2Game.ts](../../../src/v2/hooks/useV2Game.ts#L1)
 
 ---
 

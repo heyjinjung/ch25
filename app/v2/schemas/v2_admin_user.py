@@ -107,4 +107,17 @@ class AdminUserDetailDto(BaseModel):
     playbook: Optional[InterventionPlaybookDto] = None
 
 
+class AdminWalletAdjustmentRequest(BaseModel):
+    amount: int = Field(..., description="Amount to change (positive for grant, negative for revoke)")
+    token_type: str = Field("VAULT", description="VAULT or specific Token name")
+    reason: str = Field(..., min_length=1)
+
+
+class InterventionExecutionResponse(BaseModel):
+    success: bool
+    action_id: str
+    message: str
+    details: Optional[dict] = None
+
+
 from app.v2.schemas.v2_admin_user_summary import AdminUserSummary  # noqa: E402

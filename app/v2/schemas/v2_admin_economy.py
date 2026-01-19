@@ -11,6 +11,18 @@ from app.schemas.base import KstBaseModel as BaseModel
 WithdrawalStatus = Literal["PENDING", "APPROVED", "REJECTED"]
 DepositStatus = Literal["PENDING", "APPROVED", "REJECTED"]
 RiskLevel = Literal["LOW", "MEDIUM", "HIGH"]
+AdminProductCategory = Literal["TICKET", "OTHER"]
+
+
+class AdminProductDto(BaseModel):
+    id: int
+    sku: str
+    name: str
+    price: int
+    is_visible: bool = True
+    category: AdminProductCategory = "OTHER"
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class AdminWithdrawalDto(BaseModel):

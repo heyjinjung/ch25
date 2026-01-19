@@ -1,4 +1,5 @@
-from datetime import datetime, timedelta, time
+from datetime import datetime, timedelta, time, timezone
+from zoneinfo import ZoneInfo
 from sqlalchemy import func, select, or_, case, distinct
 from sqlalchemy.orm import Session
 from app.models.user import User
@@ -15,13 +16,15 @@ WELCOME_LOGIC_KEYS = (
     "NEW_USER_WELCOME_TICKET",
 )
 
+KST = ZoneInfo("Asia/Seoul")
+
 class AdminDashboardService:
     def __init__(self):
         pass
 
     def _get_kst_now(self) -> datetime:
-        # Server is UTC. KST is UTC+9.
-        return datetime.utcnow() + timedelta(hours=9)
+        """Return current datetime in KST timezone."""
+        return datetime.now(KST)
 
     def _get_yesterday_kst_range(self, kst_now: datetime):
         """Return UTC start/end for Yesterday (KST)."""

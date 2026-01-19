@@ -64,8 +64,13 @@ V1 레거시 API 대비 **Auth/User 영역이 미구현**이며, 해당 영역�
 
 ### 3.1 Auth & User
 - V1: `/api/auth/token`, `/api/activity/record`, `/api/telegram/*`, `/api/new-user/*`
-- V2: ❌ 운영 라우트 없음 (dev 전용 `/api/v2/dev/login`만 존재, 운영 비활성)
-- SoT: ✅ V2 Auth/User API 계약 문서 있음 (라우트 미구현)
+- V2: ✅ **V1과 동일 동작의 alias(래퍼) 라우트 제공**
+	- `/api/v2/auth/token` → V1 `/api/auth/token`
+	- `/api/v2/activity/record` → V1 `/api/activity/record`
+	- `/api/v2/telegram/*` → V1 `/api/telegram/*`
+	- `/api/v2/new-user/*` → V1 `/api/new-user/*`
+	- 목적: FE가 `/api/v2/*`로 전환해도 서버 로직은 기존 검증된 V1을 그대로 재사용
+- SoT: ✅ V2 Auth/User API 계약 문서 있음 (초기 마이그레이션은 alias로 마감)
 
 ### 3.2 System/Ops
 - V1: `/api/health`, `/api/today-feature`, `/metrics`

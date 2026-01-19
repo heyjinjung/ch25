@@ -9,7 +9,7 @@ import { Shield, AlertTriangle, Ticket, Edit, CheckCircle2 } from "lucide-react"
 import { useRef, useEffect, useState } from "react";
 import gsap from "gsap";
 import { WalletEditor } from "../../components/users/WalletEditor";
-import { useAdminUserDetail } from "../../../hooks/useV2Admin";
+import { useAdminUserDetail, useRunIntervention, useAdjustUserWallet } from "../../../hooks/useV2Admin";
 
 interface UserDetailDrawerProps {
   isOpen: boolean;
@@ -21,6 +21,8 @@ export function UserDetailDrawer({ isOpen, onClose, userId }: UserDetailDrawerPr
   const contentRef = useRef<HTMLDivElement>(null);
   const [isWalletEditorOpen, setIsWalletEditorOpen] = useState(false);
   const { data: user, isLoading } = useAdminUserDetail(userId);
+  const runIntervention = useRunIntervention();
+  const adjustWallet = useAdjustUserWallet();
 
   // GSAP Animation for Tab Content
   useEffect(() => {
@@ -194,7 +196,14 @@ export function UserDetailDrawer({ isOpen, onClose, userId }: UserDetailDrawerPr
                                         <CardHeader className="p-4 pb-2">
                                             <div className="flex justify-between items-start">
                                                 <Badge variant="outline" className="text-[10px] border-indigo-500/30 text-indigo-400">{action.type}</Badge>
-                                                <Button size="sm" className="h-7 text-xs bg-indigo-500 text-white hover:bg-indigo-600">실행 (Run)</Button>
+                                                <Button 
+                                                    size="sm" 
+                                                    className="h-7 text-xs bg-indigo-500 text-white hover:bg-indigo-600"
+                                                    onClick={() => user && runIntervention.mutate({ userId: user.id, actionId: action.actionId })}
+                                                    disabled={runIntervention.isPending}
+                                                >
+                                                    {runIntervention.isPending ? "Executing..." : "실행 (Run)"}
+                                                </Button>
                                             </div>
                                             <CardTitle className="text-base font-bold mt-2">{action.label}</CardTitle>
                                         </CardHeader>
@@ -244,9 +253,16 @@ export function UserDetailDrawer({ isOpen, onClose, userId }: UserDetailDrawerPr
                 userId={user.id} 
                 currentTickets={user.ticket_balance} 
                 onUpdate={async (amt, reason) => {
-                    console.log("Update wallet:", amt, reason);
-                    // This could be wired up to a mutation later
-                    await new Promise(r => setTimeout(r, 1000));
+                    if (user) {
+                        await adjustWallet.mutateAsync({
+                            userId: user.id,
+                            request: {
+                                amount: amt - user.ticket_balance, // amt is new total, we need the delta
+                                token_type: "ROULETTE_TICKET", // Assuming ticket editing is the priority here
+                                reason: reason
+                            }
+                        });
+                    }
                 }} 
             />
         )}

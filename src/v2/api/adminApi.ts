@@ -104,6 +104,19 @@ export interface AdminUserDetailDto {
   playbook?: InterventionPlaybookDto;
 }
 
+export interface AdminWalletAdjustmentRequest {
+  amount: number;
+  token_type: string;
+  reason: string;
+}
+
+export interface InterventionExecutionResponse {
+  success: boolean;
+  action_id: string;
+  message: string;
+  details?: Record<string, unknown>;
+}
+
 export interface OpsDashboardResponse {
   system: {
     db: "OK" | "DEGRADED" | "ERROR";
@@ -167,20 +180,23 @@ export const getOpsDashboardStatus = async (): Promise<OpsDashboardResponse> => 
   return response.data;
 };
 
+export const runInterventionAction = async (userId: number, actionId: string): Promise<InterventionExecutionResponse> => {
+  const response = await v2Client.post<InterventionExecutionResponse>(`/api/v2/admin/users/${userId}/intervention/${actionId}`);
+  return response.data;
+};
+
+export const adjustUserWallet = async (userId: number, request: AdminWalletAdjustmentRequest): Promise<InterventionExecutionResponse> => {
+  const response = await v2Client.post<InterventionExecutionResponse>(`/api/v2/admin/users/${userId}/wallet/adjust`, request);
+  return response.data;
+};
+
 // ============================================================================
 // Deposit API
 // ============================================================================
 
 export const getAdminDeposits = async (): Promise<AdminDepositDto[]> => {
-    // TODO: Replace with actual endpoint
-    // const response = await v2Client.get<AdminDepositDto[]>("/admin/api/economy/deposits/pending");
-    // return response.data;
-
-    return [
-        { id: 201, userId: 1042, amount: 300000, bankOwner: "김철수", status: "PENDING", requestedAt: "10 min ago", isNew: true },
-        { id: 202, userId: 1001, amount: 1000000, bankOwner: "이영희", status: "PENDING", requestedAt: "30 min ago", isNew: false },
-        { id: 203, userId: 999, amount: 50000, bankOwner: "박민수", status: "APPROVED", requestedAt: "2 hours ago", isNew: false },
-    ];
+    const response = await v2Client.get<AdminDepositDto[]>("/api/v2/admin/economy/deposits/pending");
+    return response.data;
 };
 
 export const confirmDeposit = async (id: number): Promise<void> => {
@@ -192,14 +208,8 @@ export const confirmDeposit = async (id: number): Promise<void> => {
 // ============================================================================
 
 export const getAdminProducts = async (): Promise<AdminProductDto[]> => {
-    // TODO: Replace with actual endpoint
-    // const response = await v2Client.get<AdminProductDto[]>("/admin/api/shop/products");
-    // return response.data;
-
-    return [
-        { id: 1, sku: "TICKET_10", name: "Premium Ticket Pack", price: 10000, isVisible: true, category: "TICKET" },
-        { id: 2, sku: "GOLD_KEY", name: "Golden Key", price: 50000, isVisible: false, category: "KEY" },
-    ];
+    const response = await v2Client.get<AdminProductDto[]>("/api/v2/admin/shop/products");
+    return response.data;
 };
 
 export const updateProductStatus = async (id: number, isVisible: boolean): Promise<void> => {

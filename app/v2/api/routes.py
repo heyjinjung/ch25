@@ -5,6 +5,7 @@ from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, HTTPException, Header, Request, Response
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from pydantic import BaseModel
 from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 from sqlalchemy.orm import Session
 
@@ -65,9 +66,22 @@ _wallet_service = GameWalletService()
 
 from app.v2.api.admin_routes import router as admin_router
 from app.v2.api.activity_routes import router as activity_router
+from app.v2.api.v1_auth_user_alias import router as v1_auth_user_alias_router
 
 router.include_router(admin_router)
 router.include_router(activity_router)
+router.include_router(v1_auth_user_alias_router)
+
+
+class V2InventoryUseRequest(BaseModel):
+    item_type: str
+    amount: int = 1
+    idempotency_key: str | None = None
+
+
+class V2ShopPurchaseRequest(BaseModel):
+    sku: str
+    idempotency_key: str | None = None
 
 
 def _get_optional_user_id(
@@ -404,21 +418,27 @@ def get_inventory(
 
 @router.post("/inventory/use", tags=["v2-inventory"])
 def use_inventory_item(
-    payload: dict,
+    payload: V2InventoryUseRequest,
     db: Session = Depends(get_db),
     user_id: int = Depends(get_current_user_id),
+    x_idempotency_key: str | None = Header(default=None, alias="X-Idempotency-Key"),
     idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
 ):
-    item_type = payload.get("item_type")
-    amount = payload.get("amount", payload.get("quantity", 1))
+    item_type = (payload.item_type or "").strip()
     if not item_type:
         raise HTTPException(status_code=400, detail="MISSING_ITEM_TYPE")
+    amount = int(payload.amount or 1)
+
+    resolved_key = (payload.idempotency_key or x_idempotency_key or idempotency_key or "").strip()
+    if not resolved_key:
+        raise HTTPException(status_code=400, detail="IDEMPOTENCY_KEY_REQUIRED")
+
     result = InventoryService.use_voucher(
         db,
         user_id,
         item_type,
         amount,
-        idempotency_key=payload.get("idempotency_key") or idempotency_key,
+        idempotency_key=resolved_key,
     )
     reward_token = result.get("reward_token")
     if isinstance(reward_token, str):
@@ -465,14 +485,32 @@ def list_shop_products(
 
 @router.post("/shop/purchase", tags=["v2-shop"])
 def purchase_shop_product(
-    payload: dict,
+    payload: V2ShopPurchaseRequest,
     db: Session = Depends(get_db),
     user_id: int = Depends(get_current_user_id),
+    x_idempotency_key: str | None = Header(default=None, alias="X-Idempotency-Key"),
     idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
 ):
-    sku = payload.get("sku")
+    sku = (payload.sku or "").strip()
     if not sku:
         raise HTTPException(status_code=400, detail="MISSING_SKU")
+
+    resolved_key = (payload.idempotency_key or x_idempotency_key or idempotency_key or "").strip()
+    if not resolved_key:
+        raise HTTPException(status_code=400, detail="IDEMPOTENCY_KEY_REQUIRED")
+
+    from app.services.idempotency_service import IdempotencyService
+
+    idem_record, existing = IdempotencyService.begin(
+        db,
+        user_id=user_id,
+        scope="v2_shop_purchase",
+        idempotency_key=resolved_key,
+        request_payload={"sku": sku},
+    )
+    if existing is not None:
+        return existing
+
     products = list_shop_products(db=db, user_id=user_id)
     product = next((item for item in products if item.get("sku") == sku), None)
     if not product:
@@ -490,53 +528,60 @@ def purchase_shop_product(
     # Deduct vault balance (SoT) and record order.
     from app.v2.services.shop_service import V2ShopService
 
-    order = V2ShopService.purchase(
-        db,
-        user_id=user_id,
-        sku=sku,
-        name=str(product.get("name")),
-        cost_amount=cost_amount,
-        reward_type=reward_type,
-        reward_amount=reward_amount,
-    )
+    try:
+        order = V2ShopService.purchase(
+            db,
+            user_id=user_id,
+            sku=sku,
+            name=str(product.get("name")),
+            cost_amount=cost_amount,
+            reward_type=reward_type,
+            reward_amount=reward_amount,
+        )
 
-    # Grant reward
-    if reward_type in {
-        "ROULETTE_TICKET",
-        "DICE_TICKET",
-        "LOTTERY_TICKET",
-        "GOLD_KEY_TICKET",
-        "DIAMOND_TICKET",
-        "TRIAL_TICKET",
-    }:
-        token_type = _map_v2_ticket_to_legacy(reward_type)
-        _wallet_service.grant_tokens(
-            db,
-            user_id=user_id,
-            token_type=token_type,
-            amount=reward_amount,
-            reason="V2_SHOP_PURCHASE",
-            auto_commit=True,
-        )
-    elif reward_type == "DIAMOND":
-        InventoryService.grant_item(
-            db,
-            user_id=user_id,
-            item_type="DIAMOND",
-            amount=reward_amount,
-            reason="V2_SHOP_PURCHASE",
-        )
-    elif reward_type in {"POINT", "CC_POINT"}:
-        user = db.query(User).filter(User.id == user_id).first()
-        if not user:
-            raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
-        user.vault_locked_balance = int(user.vault_locked_balance or 0) + reward_amount
-        db.add(user)
+        # Grant reward (single transaction)
+        if reward_type in {
+            "ROULETTE_TICKET",
+            "DICE_TICKET",
+            "LOTTERY_TICKET",
+            "GOLD_KEY_TICKET",
+            "DIAMOND_TICKET",
+            "TRIAL_TICKET",
+        }:
+            token_type = _map_v2_ticket_to_legacy(reward_type)
+            _wallet_service.grant_tokens(
+                db,
+                user_id=user_id,
+                token_type=token_type,
+                amount=reward_amount,
+                reason="V2_SHOP_PURCHASE",
+                auto_commit=False,
+            )
+        elif reward_type == "DIAMOND":
+            InventoryService.grant_item(
+                db,
+                user_id=user_id,
+                item_type="DIAMOND",
+                amount=reward_amount,
+                reason="V2_SHOP_PURCHASE",
+                auto_commit=False,
+            )
+        elif reward_type in {"POINT", "CC_POINT"}:
+            user = db.query(User).filter(User.id == user_id).first()
+            if not user:
+                raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
+            user.vault_locked_balance = int(user.vault_locked_balance or 0) + reward_amount
+            db.add(user)
+        else:
+            raise HTTPException(status_code=400, detail="UNSUPPORTED_REWARD_TYPE")
+
+        response = {"order_id": order.id, "sku": sku, "reward_type": reward_type, "reward_amount": reward_amount}
+        IdempotencyService.complete(db, record=idem_record, response_payload=response)
         db.commit()
-    else:
-        raise HTTPException(status_code=400, detail="UNSUPPORTED_REWARD_TYPE")
-
-    return {"order_id": order.id, "sku": sku, "reward_type": reward_type, "reward_amount": reward_amount}
+        return response
+    except Exception:
+        db.rollback()
+        raise
 
 
 @router.get("/team-battle/seasons/active", tags=["v2-team-battle"])

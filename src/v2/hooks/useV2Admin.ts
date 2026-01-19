@@ -8,9 +8,13 @@ import {
     rejectWithdrawal,
     getAdminUserDetail,
     getOpsDashboardStatus,
+    getOpsDashboardStatus,
+    runInterventionAction,
+    adjustUserWallet,
     AdminUserDetailDto,
     AdminWithdrawalDto,
-    OpsDashboardResponse
+    OpsDashboardResponse,
+    AdminWalletAdjustmentRequest
 } from "../api/adminApi";
 import { CreateMessageRequest } from "../api/adminApi";
 
@@ -93,5 +97,29 @@ export function useOpsStatus() {
         queryKey: ADMIN_KEYS.opsStatus,
         queryFn: getOpsDashboardStatus,
         refetchInterval: 10000, // Poll every 10s
+    });
+}
+
+// Interventions & Actions
+export function useRunIntervention() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ userId, actionId }: { userId: number; actionId: string }) => 
+            runInterventionAction(userId, actionId),
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: ADMIN_KEYS.userDetail(variables.userId) });
+            queryClient.invalidateQueries({ queryKey: ADMIN_KEYS.opsStatus });
+        }
+    });
+}
+
+export function useAdjustUserWallet() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ userId, request }: { userId: number; request: AdminWalletAdjustmentRequest }) => 
+            adjustUserWallet(userId, request),
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: ADMIN_KEYS.userDetail(variables.userId) });
+        }
     });
 }
