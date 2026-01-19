@@ -65,8 +65,8 @@
     *   **Money Integrity**: `Check Constraint (balance >= 0)` 설정 필수.
     *   [x] Money Integrity 체크 제약 추가
     *   **마이그레이션 전략**: 다음달 완전 리셋 배포 전제 → **베이스라인 스냅샷 1개 + 이후 최소 누적**
-    *   **진행도**: 진행중 (V2 DB 기준 마이그레이션 적용 완료, head=20260119_1200)
-    *   **근거**: [alembic/versions/20260119_0904_3bc52f37e0c0_baseline_v2_snapshot.py](../../../alembic/versions/20260119_0904_3bc52f37e0c0_baseline_v2_snapshot.py#L1), [alembic/versions/20260119_1000_add_v2_level_reward_table.py](../../../alembic/versions/20260119_1000_add_v2_level_reward_table.py#L1), [alembic/versions/20260119_1100_add_v2_ticket_conversion_policy.py](../../../alembic/versions/20260119_1100_add_v2_ticket_conversion_policy.py#L1), [alembic/versions/20260119_1200_add_v2_shop_exchange_ticketzero_ops_tables.py](../../../alembic/versions/20260119_1200_add_v2_shop_exchange_ticketzero_ops_tables.py#L1), [docs/v2_specs/04_db/v2_db_level_reward_table_ko.md](../04_db/v2_db_level_reward_table_ko.md#L1), [docs/v2_specs/04_db/v2_db_ticket_conversion_policy_ko.md](../04_db/v2_db_ticket_conversion_policy_ko.md#L1), [docs/v2_specs/04_db/v2_db_shop_order_ko.md](../04_db/v2_db_shop_order_ko.md#L1), [docs/v2_specs/04_db/v2_db_exchange_log_ko.md](../04_db/v2_db_exchange_log_ko.md#L1), [docs/v2_specs/04_db/v2_db_ticket_zero_log_ko.md](../04_db/v2_db_ticket_zero_log_ko.md#L1), [docs/v2_specs/04_db/v2_db_ops_execution_result_ko.md](../04_db/v2_db_ops_execution_result_ko.md#L1)
+    *   **진행도**: 진행중 (V2 DB 기준 마이그레이션 적용 완료, head=20260119_1600)
+    *   **근거**: [alembic/versions/20260119_0904_3bc52f37e0c0_baseline_v2_snapshot.py](../../../alembic/versions/20260119_0904_3bc52f37e0c0_baseline_v2_snapshot.py#L1), [alembic/versions/20260119_1000_add_v2_level_reward_table.py](../../../alembic/versions/20260119_1000_add_v2_level_reward_table.py#L1), [alembic/versions/20260119_1100_add_v2_ticket_conversion_policy.py](../../../alembic/versions/20260119_1100_add_v2_ticket_conversion_policy.py#L1), [alembic/versions/20260119_1200_add_v2_shop_exchange_ticketzero_ops_tables.py](../../../alembic/versions/20260119_1200_add_v2_shop_exchange_ticketzero_ops_tables.py#L1), [alembic/versions/20260119_1400_add_v2_user_table.py](../../../alembic/versions/20260119_1400_add_v2_user_table.py#L1), [alembic/versions/20260119_1500_add_v2_game_tables.py](../../../alembic/versions/20260119_1500_add_v2_game_tables.py#L1), [docs/v2_specs/04_db/v2_db_level_reward_table_ko.md](../04_db/v2_db_level_reward_table_ko.md#L1), [docs/v2_specs/04_db/v2_db_ticket_conversion_policy_ko.md](../04_db/v2_db_ticket_conversion_policy_ko.md#L1), [docs/v2_specs/04_db/v2_db_shop_order_ko.md](../04_db/v2_db_shop_order_ko.md#L1), [docs/v2_specs/04_db/v2_db_exchange_log_ko.md](../04_db/v2_db_exchange_log_ko.md#L1), [docs/v2_specs/04_db/v2_db_ticket_zero_log_ko.md](../04_db/v2_db_ticket_zero_log_ko.md#L1), [docs/v2_specs/04_db/v2_db_ops_execution_result_ko.md](../04_db/v2_db_ops_execution_result_ko.md#L1), [docs/v2_specs/04_db/v2_db_user_ko.md](../04_db/v2_db_user_ko.md#L1), [docs/v2_specs/04_db/v2_db_roulette_ko.md](../04_db/v2_db_roulette_ko.md#L1), [docs/v2_specs/04_db/v2_db_dice_ko.md](../04_db/v2_db_dice_ko.md#L1), [docs/v2_specs/04_db/v2_db_lottery_ko.md](../04_db/v2_db_lottery_ko.md#L1)
     *   **운영 주의**: 컨테이너 기본 DB는 V1일 수 있으므로, V2 작업은 `DATABASE_URL=mysql+pymysql://xmasuser:2026@db:3306/v2`로 실행
 
 ---
@@ -180,11 +180,14 @@
 
 ## Phase 3: 게임 및 컨텐츠 (3주차)
 *목표: 웹 환경에서 게임 로직 완벽 검증*
+**완료됨**
 9.  **게임 엔진 표준화 (Game Engine V2)**
     *   룰렛, 주사위, 복권 로직 추상화 및 Config Schema 강제 적용.
     *   룰렛, 주사위, 복권의 공통 로직(입장 -> 결과 산출 -> 보상 지급)을 추상화.
     *   **진행도**: 진행중
-    *   **근거**: [docs/v2_specs/02_game/v2_game_engine_standardization_design_ko.md](../02_game/v2_game_engine_standardization_design_ko.md#L1)
+    *   **근거**: [docs/v2_specs/02_game/v2_game_engine_standardization_design_ko.md](../02_game/v2_game_engine_standardization_design_ko.md#L1), [docs/v2_specs/02_game/v2_game_engine_sot_ko.md](../02_game/v2_game_engine_sot_ko.md#L1), [docs/v2_specs/03_api/v2_game_api_contract_ko.md](../03_api/v2_game_api_contract_ko.md#L1)
+    *   **검증**: V2 core 테스트 16건 통과 (2026-01-19)
+    *   **검증**: V2 게임 API /api/v2/{game}/status|play 스모크 테스트 통과 (tests/v2/core/test_v2_game_api_flow.py) 
 
 10. **프론트엔드-백엔드 연동 (Web Ver.)**
     *   표준 Web API로 게임 플레이 연동 및 Network 탭 검증.
@@ -200,12 +203,16 @@
     *   기존 운영툴(응대 플레이북, 위기 레이더) DB 연결.
     *   **진행도**: 미착수
 
----
+12. **세그먼트 분류/메시지 발송 V2 SoT/DB 구성**
+    *   세그먼트 룰/결과 저장 및 메시지 인박스 스키마 정의.
+    *   **진행도**: 진행중 (SoT/DB 스키마 초안 완료)
+    *   **근거**: [docs/v2_specs/01_core/v2_user_segment_policy_sot_ko.md](../01_core/v2_user_segment_policy_sot_ko.md#L1), [docs/v2_specs/05_ops/v2_admin_message_policy_sot_ko.md](../05_ops/v2_admin_message_policy_sot_ko.md#L1), [docs/v2_specs/04_db/v2_db_segment_rule_ko.md](../04_db/v2_db_segment_rule_ko.md#L1), [docs/v2_specs/04_db/v2_db_user_segment_ko.md](../04_db/v2_db_user_segment_ko.md#L1), [docs/v2_specs/04_db/v2_db_admin_message_ko.md](../04_db/v2_db_admin_message_ko.md#L1), [docs/v2_specs/04_db/v2_db_admin_message_inbox_ko.md](../04_db/v2_db_admin_message_inbox_ko.md#L1)
+
 
 ## Phase 5: 디자인 & 모션 시스템 검증 (4주차 초반)
 *목표: "심심하다"는 평가 제거 및 프리미엄 UX 완성 (GSAP + Liquid Glass)*
 
-12. **모션 시스템 표준화 (GSAP + CSS)**
+13. **모션 시스템 표준화 (GSAP + CSS)**
     *   **Tech Stack**: Next.js + GSAP 3 (gsap.context 사용).
     *   **5대 핵심 모션 적용**:
         1.  **Press**: 버튼/카드 클릭 시 Scale 0.985 -> 1 (쫀쫀한 타격감).
@@ -215,7 +222,7 @@
         5.  **Spotlight**: 핵심 보상/CTA에 1회성 강조 (무한 루프 지양).
     *   **진행도**: 미착수
 
-13. **텔레그램 Liquid Glass & UI 최적화**
+14. **텔레그램 Liquid Glass & UI 최적화**
     *   **Liquid Glass**: 텔레그램 네이티브 배경과 어우러지는 반투명/블러 효과(`backdrop-filter`) 적극 활용.
     *   **Event Hub 구축**: 산발적인 모달을 제거하고 "이벤트 모음 페이지"로 통합. (Top1 추천 + 진행중 리스트 구조).
     *   **성능 최적화**: `transform`, `opacity` 속성 위주 사용으로 60fps 유지.
@@ -226,17 +233,17 @@
 ## Phase 6: 텔레그램 통합 및 최종 검증 (말일)
 *목표: 웹에서 검증된 시스템을 텔레그램에 이식*
 
-14. **텔레그램 SDK 인젝션 (Bridge)**
+15. **텔레그램 SDK 인젝션 (Bridge)**
     *   `DevLogin` 비활성화 및 `Telegram WebApp Auth` 활성화.
     *   `viewport` 확장 및 햅틱 피드백 연동.
     *   **진행도**: 미착수
 
-15. **E2E 테스트 및 부하 테스트**
+16. **E2E 테스트 및 부하 테스트**
     *   텔레그램 샌드박스 환경에서 결제/게임 플로우 최종 확인.
     *   가상 유저 1,000명 부하 테스트.
     *   **진행도**: 미착수
 
-16. **데이터 이관 및 컷오버 (Switching)**
+17. **데이터 이관 및 컷오버 (Switching)**
     *   V1 -> V2 ETL 스크립트 실행 (Dry Run 필수).
     *   점검 후 서비스 교체.
     *   **진행도**: 미착수

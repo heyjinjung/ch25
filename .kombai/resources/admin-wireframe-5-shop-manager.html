@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>상점 관리 (Shop Manager) - Admin Wireframe</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Comic Sans MS', cursive;
+            background: #fff;
+            color: #333;
+            padding: 20px;
+            padding-bottom: 80px;
+            line-height: 1.6;
+        }
+        .wireframe-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #f5f5f5;
+            border: 2px solid #333;
+            padding: 20px;
+        }
+        .header {
+            background: #fff;
+            border: 2px solid #666;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .product-card {
+            background: #fff;
+            border: 2px solid #999;
+            padding: 15px;
+            position: relative;
+        }
+        .product-card.disabled {
+            opacity: 0.5;
+            border-color: #ccc;
+        }
+        .product-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+        .product-title {
+            font-size: 13px;
+            font-weight: bold;
+        }
+        .product-toggle {
+            width: 36px;
+            height: 18px;
+            background: #ccc;
+            border: 2px solid #999;
+            border-radius: 9px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .product-toggle.on {
+            background: #90EE90;
+        }
+        .product-image {
+            width: 100%;
+            height: 120px;
+            background: #f0f0f0;
+            border: 2px dashed #999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+            font-size: 11px;
+            color: #666;
+        }
+        .product-info {
+            font-size: 11px;
+            color: #666;
+        }
+        .product-info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .btn {
+            padding: 6px 10px;
+            background: #f0f0f0;
+            border: 2px solid #999;
+            cursor: pointer;
+            font-size: 10px;
+            font-family: 'Comic Sans MS', cursive;
+            width: 100%;
+            margin-top: 8px;
+        }
+        .btn.primary {
+            background: #90EE90;
+            border-color: #4CAF50;
+            font-weight: bold;
+        }
+        .add-product-card {
+            background: #f9f9f9;
+            border: 3px dashed #999;
+            padding: 40px 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .add-product-card:hover {
+            background: #f0f0f0;
+        }
+        .exchange-section {
+            background: #fff;
+            border: 2px solid #666;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .exchange-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        .exchange-table th,
+        .exchange-table td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            font-size: 11px;
+            text-align: left;
+        }
+        .exchange-table th {
+            background: #e0e0e0;
+            text-transform: uppercase;
+        }
+        .tag {
+            position: absolute;
+            background: #4CAF50;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-family: Arial, sans-serif;
+            font-weight: bold;
+            z-index: 10;
+        }
+        .tag.new {
+            background: #FF9800;
+        }
+        .relative {
+            position: relative;
+        }
+        .mobile-dock {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #ddd;
+            border-top: 2px solid #666;
+            padding: 10px;
+            display: flex;
+            justify-content: space-around;
+            z-index: 100;
+        }
+        .dock-item {
+            text-align: center;
+            font-size: 10px;
+        }
+        .dock-icon {
+            width: 24px;
+            height: 24px;
+            background: #999;
+            margin: 0 auto 4px;
+            border-radius: 4px;
+        }
+        @media (max-width: 768px) {
+            .product-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="wireframe-container">
+        <div class="header">
+            <h1 style="font-size: 20px; margin-bottom: 5px;">🛒 상점 관리 (Shop Manager)</h1>
+            <p style="font-size: 12px; color: #666;">상품 라이브 제어 + 교환소 비율 설정</p>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 10px; background: #fff; border: 1px solid #ccc;">
+            <div style="font-size: 12px; color: #666;">
+                총 <strong>8개</strong> 상품 / 진열 중 <strong>6개</strong>
+            </div>
+            <div>
+                <button class="btn primary" style="width: auto; display: inline-block; margin: 0;">
+                    + 새 상품 추가
+                </button>
+            </div>
+        </div>
+
+        <!-- Product Grid -->
+        <!-- NEW COMPONENT: LiveProductGrid -->
+        <div class="relative">
+            <span class="tag new" style="top: -8px; right: -8px;" 
+                  title="Live product card grid with instant updates">[NEW] LiveProductGrid</span>
+            <div class="product-grid">
+                <!-- Product Card 1 (Active) -->
+                <div class="product-card">
+                    <div class="product-header">
+                        <div class="product-title">룰렛 티켓 3개</div>
+                        <div class="product-toggle on"></div>
+                    </div>
+                    <div class="product-image">
+                        [Image: 룰렛 티켓]<br>
+                        200x120
+                    </div>
+                    <div class="product-info">
+                        <div class="product-info-row">
+                            <span>SKU:</span><span>SHOP-001</span>
+                        </div>
+                        <div class="product-info-row">
+                            <span>가격:</span><span style="font-weight: bold;">5,000 VAULT</span>
+                        </div>
+                        <div class="product-info-row">
+                            <span>지급품:</span><span>ROULETTE_TICKET x3</span>
+                        </div>
+                        <div class="product-info-row">
+                            <span>재고:</span><span>무제한</span>
+                        </div>
+                        <div class="product-info-row">
+                            <span>일일 한도:</span><span>1회</span>
+                        </div>
+                    </div>
+                    <button class="btn primary">편집</button>
+                </div>
+
+                <!-- Product Card 2 (Active) -->
+                <div class="product-card">
+                    <div class="product-header">
+                        <div class="product-title">주사위 티켓 5개</div>
+                        <div class="product-toggle on"></div>
+                    </div>
+                    <div class="product-image">
+                        [Image: 주사위 티켓]<br>
+                        200x120
+                    </div>
+                    <div class="product-info">
+                        <div class="product-info-row">
+                            <span>SKU:</span><span>SHOP-002</span>
+                        </div>
+                        <div class="product-info-row">
+                            <span>가격:</span><span style="font-weight: bold;">8,000 VAULT</span>
+                        </div>
+                        <div class="product-info-row">
+                            <span>지급품:</span><span>DICE_TICKET x5</span>
+                        </div>
+                        <div class="product-info-row">
+                            <span>재고:</span><span>무제한</span>
+                        </div>
+                        <div class="product-info-row">
+                            <span>일일 한도:</span><span>2회</span>
+                        </div>
+                    </div>
+                    <button class="btn primary">편집</button>
+                </div>
+
+                <!-- Product Card 3 (Disabled) -->
+                <div class="product-card disabled">
+                    <div class="product-header">
+                        <div class="product-title">복권 티켓 1개</div>
+                        <div class="product-toggle"></div>
+                    </div>
+                    <div class="product-image">
+                        [Image: 복권 티켓]<br>
+                        200x120
+                    </div>
+                    <div class="product-info">
+                        <div class="product-info-row">
+                            <span>SKU:</span><span>SHOP-003</span>
+                        </div>
+                        <div class="product-info-row">
+                            <span>가격:</span><span style="font-weight: bold;">3,000 VAULT</span>
+                        </div>
+                        <div class="product-info-row">
+                            <span>지급품:</span><span>LOTTERY_TICKET x1</span>
+                        </div>
+                        <div class="product-info-row">
+                            <span>상태:</span><span style="color: #999;">진열 중지</span>
+                        </div>
+                    </div>
+                    <button class="btn">편집</button>
+                </div>
+
+                <!-- Product Card 4 (Active - Bundle) -->
+                <div class="product-card">
+                    <div class="product-header">
+                        <div class="product-title">럭키 패키지</div>
+                        <div class="product-toggle on"></div>
+                    </div>
+                    <div class="product-image">
+                        [Image: 패키지]<br>
+                        200x120
+                    </div>
+                    <div class="product-info">
+                        <div class="product-info-row">
+                            <span>SKU:</span><span>SHOP-BUNDLE-01</span>
+                        </div>
+                        <div class="product-info-row">
+                            <span>가격:</span><span style="font-weight: bold; color: #FF6B6B;">15,000 VAULT</span>
+                        </div>
+                        <div class="product-info-row">
+                            <span>지급품:</span><span style="font-size: 10px;">룰렛3+주사위3+복권1</span>
+                        </div>
+                        <div class="product-info-row">
+                            <span>일일 한도:</span><span>1회</span>
+                        </div>
+                    </div>
+                    <button class="btn primary">편집</button>
+                </div>
+
+                <!-- Add New Product Card -->
+                <div class="add-product-card">
+                    <div style="font-size: 40px; color: #999; margin-bottom: 10px;">+</div>
+                    <div style="font-size: 12px; color: #666; font-weight: bold;">새 상품 추가</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Exchange Section (Fragment <-> Ticket) -->
+        <div class="exchange-section">
+            <h2 style="font-size: 16px; margin-bottom: 10px; border-bottom: 2px solid #ccc; padding-bottom: 8px;">
+                ♻️ 교환소 (Fragment ↔ Ticket 변환)
+            </h2>
+            
+            <!-- NEW COMPONENT: ExchangeRateEditor -->
+            <div class="relative">
+                <span class="tag new" style="top: -8px; right: -8px;" 
+                      title="Fragment to Ticket conversion rate editor">[NEW] ExchangeRateEditor</span>
+                <table class="exchange-table">
+                    <thead>
+                        <tr>
+                            <th>재료 (Fragment)</th>
+                            <th>필요 수량</th>
+                            <th>→</th>
+                            <th>결과 (Ticket)</th>
+                            <th>액션</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>골드 키 조각</td>
+                            <td>
+                                <input type="number" value="10" style="width: 50px; border: 1px solid #ccc; padding: 4px; font-family: 'Comic Sans MS', cursive;">
+                            </td>
+                            <td style="text-align: center;">→</td>
+                            <td>GOLD_KEY_TICKET x1</td>
+                            <td>
+                                <button class="btn primary" style="margin: 0;">저장</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>다이아 키 조각</td>
+                            <td>
+                                <input type="number" value="20" style="width: 50px; border: 1px solid #ccc; padding: 4px; font-family: 'Comic Sans MS', cursive;">
+                            </td>
+                            <td style="text-align: center;">→</td>
+                            <td>DIAMOND_TICKET x1</td>
+                            <td>
+                                <button class="btn primary" style="margin: 0;">저장</button>
+                            </td>
+                        </tr>
+                        <tr style="background: #f9f9f9;">
+                            <td colspan="5" style="text-align: center;">
+                                <button class="btn" style="margin: 5px auto; display: inline-block; width: auto;">
+                                    + 새 교환 규칙 추가
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div style="padding: 15px; background: #fff; border: 2px dashed #999;">
+            <p style="font-size: 12px; color: #666;">
+                💡 <strong>라이브 제어</strong>: ON/OFF 토글로 즉시 진열 제어 (Auto-save)<br>
+                🛍️ <strong>상품 CRUD</strong>: SKU, 이름, 가격(VAULT), 지급품(TICKET/ITEM), 수량 설정<br>
+                🔄 <strong>교환소</strong>: Fragment ↔ Ticket 변환 비율 및 재료 관리
+            </p>
+        </div>
+    </div>
+
+    <!-- Mobile Dock -->
+    <div class="mobile-dock">
+        <div class="dock-item">
+            <div class="dock-icon"></div>
+            <div>대시보드</div>
+        </div>
+        <div class="dock-item">
+            <div class="dock-icon"></div>
+            <div>회원</div>
+        </div>
+        <div class="dock-item">
+            <div class="dock-icon"></div>
+            <div>금고</div>
+        </div>
+        <div class="dock-item">
+            <div class="dock-icon"></div>
+            <div>로그</div>
+        </div>
+        <div class="dock-item">
+            <div class="dock-icon" style="background: #666;"></div>
+            <div style="font-weight: bold;">설정</div>
+        </div>
+    </div>
+</body>
+</html>

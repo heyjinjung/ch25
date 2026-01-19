@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>회원 관리 (User Management) - Admin Wireframe</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Comic Sans MS', cursive;
+            background: #fff;
+            color: #333;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .wireframe-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #f5f5f5;
+            border: 2px solid #333;
+            padding: 20px;
+        }
+        .header {
+            background: #fff;
+            border: 2px solid #666;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .search-bar {
+            background: #fff;
+            border: 2px dashed #999;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .filter-section {
+            background: #fff;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .filter-chip {
+            background: #e0e0e0;
+            border: 1px solid #999;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+        }
+        .table-container {
+            background: #fff;
+            border: 2px solid #666;
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th {
+            background: #ddd;
+            border: 1px solid #999;
+            padding: 8px;
+            text-align: left;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+        td {
+            border: 1px solid #ccc;
+            padding: 6px 8px;
+            font-size: 12px;
+        }
+        tr:hover {
+            background: #f9f9f9;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border: 1px solid #999;
+            border-radius: 3px;
+            font-size: 10px;
+        }
+        .action-btn {
+            background: #fff;
+            border: 2px solid #666;
+            padding: 4px 8px;
+            cursor: pointer;
+            font-size: 11px;
+            border-radius: 3px;
+        }
+        .mobile-dock {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #ddd;
+            border-top: 2px solid #666;
+            padding: 10px;
+            display: flex;
+            justify-content: space-around;
+            z-index: 100;
+        }
+        .dock-item {
+            text-align: center;
+            font-size: 10px;
+        }
+        .dock-icon {
+            width: 24px;
+            height: 24px;
+            background: #999;
+            margin: 0 auto 4px;
+            border-radius: 4px;
+        }
+        .drawer-overlay {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 400px;
+            height: 100vh;
+            background: #f5f5f5;
+            border-left: 3px solid #333;
+            padding: 20px;
+            overflow-y: auto;
+            transition: right 0.3s;
+        }
+        .drawer-overlay.open {
+            right: 0;
+        }
+        .section-card {
+            background: #fff;
+            border: 2px solid #666;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .tag {
+            position: absolute;
+            background: #4CAF50;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-family: Arial, sans-serif;
+            font-weight: bold;
+            z-index: 10;
+        }
+        .tag.new {
+            background: #FF9800;
+        }
+        .relative {
+            position: relative;
+        }
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+                padding-bottom: 80px;
+            }
+            .wireframe-container {
+                padding: 10px;
+            }
+            table {
+                font-size: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="wireframe-container">
+        <div class="header">
+            <h1 style="font-size: 20px; margin-bottom: 5px;">👥 회원 관리 (User Management)</h1>
+            <p style="font-size: 12px; color: #666;">검색/필터 → 유저 목록 → 상세 Drawer (360도 뷰)</p>
+        </div>
+
+        <!-- REUSABLE: SearchInput component -->
+        <div class="relative">
+            <span class="tag" style="top: -8px; right: -8px;" title="Reusable from existing admin components">[REUSE] SearchInput</span>
+            <div class="search-bar">
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <div style="width: 24px; height: 24px; background: #999; border-radius: 3px;"></div>
+                    <input type="text" placeholder="닉네임, CC_id, telegram_id, telegram_username" 
+                           style="flex: 1; border: 1px solid #ccc; padding: 8px; font-family: 'Comic Sans MS', cursive;">
+                    <button class="action-btn">검색</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- REUSABLE: FilterChips component -->
+        <div class="relative">
+            <span class="tag" style="top: -8px; right: -8px;" title="Reusable filter component">[REUSE] FilterChips</span>
+            <div class="filter-section">
+                <div class="filter-chip">전체 상태 ▼</div>
+                <div class="filter-chip">Active (활성)</div>
+                <div class="filter-chip">Warning (경고)</div>
+                <div class="filter-chip">Inactive (비활성)</div>
+                <div class="filter-chip">레벨 범위 ▼</div>
+                <div class="filter-chip">가입일 ▼</div>
+            </div>
+        </div>
+
+        <!-- NEW COMPONENT: CompactUserTable -->
+        <div class="relative">
+            <span class="tag new" style="top: -8px; right: -8px;" title="New compact table component">[NEW] CompactUserTable</span>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 40px;">ID</th>
+                            <th>닉네임</th>
+                            <th style="width: 80px;">상태</th>
+                            <th style="width: 60px;">레벨</th>
+                            <th>금고포인트</th>
+                            <th>최근접속</th>
+                            <th style="width: 80px;">액션</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1004</td>
+                            <td>게이머123</td>
+                            <td><span class="status-badge" style="background: #90EE90;">ACTIVE</span></td>
+                            <td>15</td>
+                            <td>45,000</td>
+                            <td>2분 전</td>
+                            <td><button class="action-btn">상세 →</button></td>
+                        </tr>
+                        <tr>
+                            <td>1023</td>
+                            <td>럭키스타</td>
+                            <td><span class="status-badge" style="background: #FFD700;">WARNING</span></td>
+                            <td>8</td>
+                            <td>12,300</td>
+                            <td>1시간 전</td>
+                            <td><button class="action-btn">상세 →</button></td>
+                        </tr>
+                        <tr>
+                            <td>1045</td>
+                            <td>행운아</td>
+                            <td><span class="status-badge" style="background: #90EE90;">ACTIVE</span></td>
+                            <td>20</td>
+                            <td>98,500</td>
+                            <td>5분 전</td>
+                            <td><button class="action-btn">상세 →</button></td>
+                        </tr>
+                        <tr>
+                            <td>1067</td>
+                            <td>도전자</td>
+                            <td><span class="status-badge" style="background: #D3D3D3;">INACTIVE</span></td>
+                            <td>3</td>
+                            <td>2,100</td>
+                            <td>3일 전</td>
+                            <td><button class="action-btn">상세 →</button></td>
+                        </tr>
+                        <tr>
+                            <td colspan="7" style="text-align: center; color: #999;">
+                                ... 더 보기 (스크롤 또는 페이지네이션)
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div style="margin-top: 20px; padding: 15px; background: #fff; border: 2px dashed #999;">
+            <p style="font-size: 12px; color: #666;">
+                💡 <strong>Compact 테이블</strong>: 행 높이 최소화, 한 화면에 더 많은 유저 표시<br>
+                📱 <strong>모바일</strong>: 가로 스크롤 지원, 핵심 정보만 표시
+            </p>
+        </div>
+    </div>
+
+    <!-- Mobile Dock (Fixed Bottom) -->
+    <!-- REUSABLE: Mobile Dock from Magic UI -->
+    <div class="relative">
+        <span class="tag" style="position: fixed; bottom: 70px; right: 20px; z-index: 101;" 
+              title="Magic UI Dock component">[REUSE] Dock</span>
+        <div class="mobile-dock">
+            <div class="dock-item">
+                <div class="dock-icon"></div>
+                <div>대시보드</div>
+            </div>
+            <div class="dock-item">
+                <div class="dock-icon" style="background: #666;"></div>
+                <div style="font-weight: bold;">회원</div>
+            </div>
+            <div class="dock-item">
+                <div class="dock-icon"></div>
+                <div>금고</div>
+            </div>
+            <div class="dock-item">
+                <div class="dock-icon"></div>
+                <div>로그</div>
+            </div>
+            <div class="dock-item">
+                <div class="dock-icon"></div>
+                <div>설정</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Detail Drawer (Right Side - Hidden by default) -->
+    <!-- NEW COMPONENT: UserDetailDrawer (360° View) -->
+    <div class="drawer-overlay" id="userDrawer">
+        <div class="relative">
+            <span class="tag new" style="top: -8px; right: -8px;" 
+                  title="New 360-degree user view component">[NEW] UserDetailDrawer</span>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="font-size: 18px;">유저 상세 (ID: 1004)</h2>
+                <button class="action-btn" onclick="document.getElementById('userDrawer').classList.remove('open')">
+                    ✕ 닫기
+                </button>
+            </div>
+
+            <!-- Tab Navigation -->
+            <div style="display: flex; gap: 5px; margin-bottom: 15px; border-bottom: 2px solid #ccc;">
+                <button class="action-btn" style="border-bottom: 3px solid #333; font-weight: bold;">기본정보</button>
+                <button class="action-btn">지갑</button>
+                <button class="action-btn">금고</button>
+                <button class="action-btn">인벤토리</button>
+                <button class="action-btn">로그</button>
+                <button class="action-btn">메모</button>
+            </div>
+
+            <!-- Section 1: Basic Info -->
+            <div class="section-card">
+                <h3 style="font-size: 14px; margin-bottom: 10px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">
+                    1️⃣ 기본 정보
+                </h3>
+                <div style="display: grid; grid-template-columns: 100px 1fr; gap: 8px; font-size: 12px;">
+                    <div>닉네임:</div><div>게이머123</div>
+                    <div>가입일:</div><div>2025-12-01 14:23</div>
+                    <div>레벨:</div><div>15 (XP: 3,450 / 4,000)</div>
+                    <div>최근접속:</div><div>2026-01-19 10:15</div>
+                    <div>기기:</div><div>iPhone 14 Pro</div>
+                    <div>상태:</div><div><span class="status-badge" style="background: #90EE90;">ACTIVE</span></div>
+                </div>
+            </div>
+
+            <!-- Section 2: Wallet (Tickets) -->
+            <div class="section-card">
+                <h3 style="font-size: 14px; margin-bottom: 10px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">
+                    2️⃣ 지갑 (Tickets)
+                </h3>
+                <div style="font-size: 12px;">
+                    <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #eee;">
+                        <span>룰렛티켓:</span><span>12개</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #eee;">
+                        <span>다이스티켓:</span><span>8개</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #eee;">
+                        <span>골드키티켓:</span><span>3개</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 5px 0;">
+                        <span>복권티켓:</span><span>1개</span>
+                    </div>
+                    <button class="action-btn" style="width: 100%; margin-top: 10px;">티켓 강제 수정</button>
+                </div>
+            </div>
+
+            <!-- Section 3: Vault -->
+            <div class="section-card">
+                <h3 style="font-size: 14px; margin-bottom: 10px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">
+                    3️⃣ 금고 (Vault)
+                </h3>
+                <div style="font-size: 12px;">
+                    <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #eee;">
+                        <span>현재 잔액:</span><span style="font-weight: bold;">45,000원</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #eee;">
+                        <span>누적 출금:</span><span>10,000원</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 5px 0;">
+                        <span>누적 입금 (CC):</span><span>55,000원</span>
+                    </div>
+                    <button class="action-btn" style="width: 100%; margin-top: 10px;">금고 강제 조정</button>
+                </div>
+            </div>
+
+            <!-- More sections placeholder -->
+            <div class="section-card" style="background: #f9f9f9;">
+                <p style="font-size: 11px; color: #666;">
+                    4️⃣ 인벤토리<br>
+                    5️⃣ 활동 로그 (타임라인)<br>
+                    6️⃣ 운영자 메모<br>
+                    7️⃣ 유저 세그먼트<br>
+                    8️⃣ 수정 가능 기능<br>
+                    9️⃣ 미션 관리
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Demo: Click table row to open drawer
+        document.querySelectorAll('tbody tr').forEach((row, index) => {
+            if (index < 4) { // Exclude last row
+                row.style.cursor = 'pointer';
+                row.addEventListener('click', () => {
+                    document.getElementById('userDrawer').classList.add('open');
+                });
+            }
+        });
+    </script>
+</body>
+</html>

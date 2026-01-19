@@ -14,20 +14,52 @@
 ## 2. 범위 (Scope)
 - **대상**: `src/v2/admin/*` (신규 어드민)
 - **제외**: `src/admin/*` (구버전 - 유지보수만 진행)
-- **우선순위**: **Mobile View (아이폰/갤럭시)** 최적화 → PC 화면 확장
+- **우선순위**: **Mobile View (아이폰/갤럭시)** = PC 화면 확장 / pc에서 작업하는 시간이 많지만
+모바일 환경에서 접근/제어가 안됐음..
+
+참고디자인 링크 : https://mobbin.com/sites/sections/2a5e8d2d-b16a-4f4d-9523-6a8b1f673dc9?utm_source=copy_link&utm_medium=link&utm_campaign=section_sharing
+https://mobbin.com/sites/sections/a613e82c-cf1b-401f-b457-739b49ff775a?utm_source=copy_link&utm_medium=link&utm_campaign=section_sharing
 
 ## 3. 핵심 디자인 철학: "Soft Obsidian & Order"
-- **테마 (Theme)**: 눈이 편안한 `Warm Gray` 다크 모드 (`#121214`). 완전 블랙(#000) 금지.
-- **레이아웃 (Layout)**: 4px 그리드 시스템에 맞춘 **칼 같은 정렬**.
-- **언어 (Language)**: 개발 용어 지양, **'일상적인 한글'** 사용 (예: ValidationError -> 입력 확인 필요).
+**(Reference: Mobbin Premium Dark UI Patterns)**
+
+### 3.1 Color Palette (Soft Obsidian)
+눈의 피로를 최소화하고 데이터 가독성을 높이는 **Warm Dark** 테마를 적용한다.
+| Token | Hex / Value | 사용처 | 느낌 |
+| :--- | :--- | :--- | :--- |
+| **Background** | `#121214` (Zinc-950) | 전체 배경 | 완전한 블랙(#000)보다 깊이감 있고 부드러움 |
+| **Surface** | `#18181B` (Zinc-900) | 카드/컨테이너 | 배경과 미세하게 구분되는 레이어 |
+| **Border** | `rgba(255, 255, 255, 0.08)` | 경계선 | 1px의 아주 얇고 투명한 선 (Hairline) |
+| **Primary** | `#D2FD9C` (Luminous Lime) | 핵심 액션 (Submit) | 어두운 배경에서 가장 명시적인 주목도 (CC Brand) |
+| **Text Main** | `#E4E4E7` (Zinc-200) | 주요 텍스트 | #ZZZ(White) 대신 사용하여 눈부심 방지 |
+| **Text Muted** | `#A1A1AA` (Zinc-400) | 부가 정보 | 데이터 레이블, 설명 문구 |
+| **Destructive** | `#FF453A` (iOS Red) | 삭제/반려/차단 | 명확한 경고 및 위험 신호 |
+
+### 3.2 Button & Action Design
+"데이터를 다루는 도구"로서의 명확한 피드백과 실수를 방지하는 인터랙션을 제공한다.
+
+- **Hierarchy (계층)**:
+    - **Primary**: `bg-[#D2FD9C] text-black hover:opacity-90` (저장, 승인, 완료)
+    - **Secondary**: `bg-white/10 text-white hover:bg-white/20` (취소, 닫기, 필터)
+    - **Ghost**: `hover:bg-white/5 text-zinc-400` (더보기, 아이콘 버튼)
+    - **Destructive**: `bg-red-500/10 text-red-500 border-red-500/20` (삭제, 차단)
+- **Interaction (반응)**:
+    - **Active Scale**: 버튼 클릭 시 `scale(0.98)`로 눌리는 물리적 느낌 제공.
+    - **Loading State**: 로딩 중 `Opacity 0.7` + `Spinner` + `Cursor-not-allowed`.
+    - **Haptic (Mobile)**: 중요 액션(승인/반려) 시 햅틱 피드백 연동(Web Vibration API).
+- **Shape**:
+    - **Radius**: `rounded-lg` (8px) - 너무 둥글지 않은 단단한 느낌 (Order).
+    - **Height**: `h-10` (40px) - 터치하기 충분한 영역 확보.
 
 ## 4. 개선 전략 (CRM & Mobile First)
 ### 4.1 기술 스택
 - **프레임워크**: React + Vite
 - **UI 라이브러리**: **Shadcn/UI** (기본 디자인), **Tanstack Table** (데이터 표)
+- **모션/애니메이션**: `Framer Motion` (페이지 전환, 모달 등장), `Magic UI` (대시보드 효과)
 - **레이아웃 구조**:
     - **Mobile**: 하단 메뉴바 (**Dock**) + 바텀 시트 (Bottom Sheet)
     - **PC**: 좌측 사이드바 + 우측 서랍 (Drawer)
+
 
 ### 4.2 핵심 기능
 | 영역 | 개선 방향 | 비고 |
@@ -101,6 +133,59 @@
 - [ ] **용어**: 'Validation Error' 대신 '입력을 확인해주세요' 처럼 **쉬운 한글**을 썼는가?
 - [ ] **안전**: 금고 잔액 수정 시 '변경 사유'를 입력하지 않으면 버튼이 잠기는가?
 - [ ] **성능**: 유저 목록 1,000개를 불러올 때 버벅임이 없는가?
+
+### 7.1 🎨 레퍼런스 분석: Visitors UI (Next.js Visitors)
+*User provided reference image (Visitors Dashboard 2x2 Grid)*
+- **Card Style**:
+    - **Deep Surface**: `#1C1C1E` (매우 어두운 회색) 배경.
+    - **Color Coding**: 각 기능별 고유 컬러를 **아이콘 배경(Circle)**과 **텍스트**에 매칭.
+        - `Analytics`: **Purple** (분석/통계)
+        - `Realtime`: **Blue** (실시간/라이브)
+        - `Performance`: **Orange** (성능/서버상태)
+        - `Profiles`: **Green** (유저/프로필)
+- **Typography**:
+    - **Feature Title**: White, Bold, San-serif.
+    - **Description**: Muted Grey, 13px, 읽기 편한 대비.
+- **적용점 (To-Do)**:
+    - **대시보드 Quick Action**: 단순 텍스트 버튼 대신, 위 레퍼런스처럼 **[아이콘+타이틀+설명]**이 있는 2x2 큰 카드 형태로 제작하여 주목도 향상.
+
+
+
+## 8. 와이어프레임 분석 및 반영 (Wireframe Analysis & Learning)
+*User provided 5 Wireframes (2026-01-19). The following specs are adopted:*
+C:\Users\JAVIS\ch\ch25\.kombai\resources\admin-wireframe-1-user-management.html
+C:\Users\JAVIS\ch\ch25\.kombai\resources\admin-wireframe-2-vault-control.html
+C:\Users\JAVIS\ch\ch25\.kombai\resources\admin-wireframe-3-ops-dashboard.html
+C:\Users\JAVIS\ch\ch25\.kombai\resources\admin-wireframe-4-mission-manager.html
+C:\Users\JAVIS\ch\ch25\.kombai\resources\admin-wireframe-5-shop-manager.html
+
+### 8.1 👥 회원 관리 (`admin-wireframe-1`)
+- **Compact Table**: 모바일 대응을 위해 행 높이 최소화, 핵심 컬럼(ID, 닉네임, 상태Badge, 레벨, 금고, 접속)만 노출.
+- **360 Drawer**: 우측 오버레이 방식. 탭 네비게이션(기본/지갑/금고/인벤/로그/메모) 도입 **확정**.
+- **Search Spec**: `닉네임, CC_id, telegram_id, telegram_username` 4가지 키워드 플레이스홀더 명시.
+
+### 8.2 💰 금고 제어 (`admin-wireframe-2`)
+- **Slide-to-Approve**: 터치 실수를 원천 차단하는 '밀어서 승인' 인터랙션 적용 (**Essential**).
+- **Risk Indicator**: 리스크 유저(Red Dot/Background) 시각적 강조 및 '승인 잠금(Lock)' 처리.
+- **Tab Layout**: `출금승인` / `강제조정` / `CC입금` / `리스크` 4단 탭 구조.
+
+### 8.3 📊 종합 대시보드 (`admin-wireframe-3`)
+- **Bento Grid**: 4px Gird 기반 카드 배치. (매출, 접속자, 시스템상태, 골든레이더).
+- **Interactive Widgets**:
+    - `NumberTicker`: 실시간 매출 롤링 효과.
+    - `PulsatingDot`: 골든 레이더(위기/기회) 상태 점멸.
+- **Quick Actions**: 자주 쓰는 기능(CSV업로드, 메시지, 모달제어) 바로가기 버튼 배치.
+
+### 8.4 🎯 미션 관리 (`admin-wireframe-4`)
+- **Streak Table**: Day 1~7 보상 테이블을 **직접 수정(Input)** 가능한 형태로 구현. Day 7(Major) 강조.
+- **Reward Mapping**: 보상 타입(`TICKET`/`POINT`/`BUNDLE`) 선택 시 수량 입력 UX.
+
+### 8.5 🛒 상점 관리 (`admin-wireframe-5`)
+- **Live Product Grid**: 카드형 리스트. **ON/OFF 토글**로 즉시 진열 제어.
+- **Exchange Editor**: 조각(Fragment) -> 티켓(Ticket) 교환 비율을 테이블에서 직접 수정.
+
+
+
 
 ## 9. 구현 순서도 (Implementation Roadmap)
 

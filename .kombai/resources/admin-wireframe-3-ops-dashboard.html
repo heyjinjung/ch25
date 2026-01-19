@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>종합 대시보드 (Ops Dashboard) - Admin Wireframe</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Comic Sans MS', cursive;
+            background: #fff;
+            color: #333;
+            padding: 20px;
+            padding-bottom: 80px;
+            line-height: 1.6;
+        }
+        .wireframe-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: #f5f5f5;
+            border: 2px solid #333;
+            padding: 20px;
+        }
+        .header {
+            background: #fff;
+            border: 2px solid #666;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .summary-card {
+            background: #fff;
+            border: 2px solid #666;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .bento-card {
+            background: #fff;
+            border: 2px solid #999;
+            padding: 15px;
+            min-height: 150px;
+        }
+        .bento-card.large {
+            grid-column: span 2;
+        }
+        .card-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: #666;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 5px;
+        }
+        .number-large {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .chart-placeholder {
+            background: #f0f0f0;
+            border: 2px dashed #999;
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-size: 11px;
+        }
+        .pulsating-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        .live-feed {
+            background: #fff;
+            border: 2px solid #666;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .feed-item {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .feed-icon {
+            width: 24px;
+            height: 24px;
+            background: #ccc;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+        .tag {
+            position: absolute;
+            background: #4CAF50;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-family: Arial, sans-serif;
+            font-weight: bold;
+            z-index: 10;
+        }
+        .tag.new {
+            background: #FF9800;
+        }
+        .relative {
+            position: relative;
+        }
+        .mobile-dock {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #ddd;
+            border-top: 2px solid #666;
+            padding: 10px;
+            display: flex;
+            justify-content: space-around;
+            z-index: 100;
+        }
+        .dock-item {
+            text-align: center;
+            font-size: 10px;
+        }
+        .dock-icon {
+            width: 24px;
+            height: 24px;
+            background: #999;
+            margin: 0 auto 4px;
+            border-radius: 4px;
+        }
+        @media (max-width: 768px) {
+            .bento-grid {
+                grid-template-columns: 1fr;
+            }
+            .bento-card.large {
+                grid-column: span 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="wireframe-container">
+        <div class="header">
+            <h1 style="font-size: 20px; margin-bottom: 5px;">📊 종합 대시보드 (Ops Dashboard)</h1>
+            <p style="font-size: 12px; color: #666;">골든 레이더 + 실시간 매출 + 시스템 상태</p>
+        </div>
+
+        <!-- One-Line Summary -->
+        <div class="summary-card">
+            <div style="font-size: 14px; font-weight: bold; color: #4CAF50; margin-bottom: 5px;">
+                ✅ 정상 운영 중 (Normal Operations)
+            </div>
+            <div style="font-size: 11px; color: #666;">
+                접속자 234명 / 오늘 매출 1,250,000원 / 위기 유저 3명 감지
+            </div>
+        </div>
+
+        <!-- REUSABLE: Bento Grid Layout (Magic UI) -->
+        <div class="relative">
+            <span class="tag" style="top: -8px; right: -8px;" 
+                  title="Magic UI Bento Grid component">[REUSE] BentoGrid</span>
+            <div class="bento-grid">
+                <!-- Card 1: Real-time Revenue -->
+                <div class="bento-card">
+                    <div class="card-title">💰 실시간 매출</div>
+                    <!-- NEW: NumberTicker -->
+                    <div class="relative">
+                        <span class="tag new" style="top: -8px; right: -8px;" 
+                              title="Magic UI Number Ticker">[NEW] NumberTicker</span>
+                        <div class="number-large" style="color: #4CAF50;">1,250,000</div>
+                    </div>
+                    <div style="font-size: 11px; color: #666;">원 (오늘)</div>
+                    <div style="margin-top: 10px; font-size: 10px; color: #999;">
+                        📈 전일 대비 +15%
+                    </div>
+                </div>
+
+                <!-- Card 2: Active Users -->
+                <div class="bento-card">
+                    <div class="card-title">👥 현재 접속자</div>
+                    <div class="number-large" style="color: #6366F1;">234</div>
+                    <div style="font-size: 11px; color: #666;">명</div>
+                    <div style="margin-top: 10px; font-size: 10px; color: #999;">
+                        🕐 최근 5분 평균
+                    </div>
+                </div>
+
+                <!-- Card 3: Golden Radar -->
+                <div class="bento-card">
+                    <div class="card-title">🎯 골든 레이더 (위기/기회)</div>
+                    <!-- REUSABLE: Pulsating Dot (Magic UI) -->
+                    <div class="relative">
+                        <span class="tag" style="top: -8px; right: -8px;" 
+                              title="Magic UI Pulsating Dot">[REUSE] PulsatingDot</span>
+                        <div style="margin: 15px 0;">
+                            <div style="font-size: 12px; margin-bottom: 8px;">
+                                <span class="pulsating-dot" style="background: #FF6B6B;"></span>
+                                위기 유저: 3명
+                            </div>
+                            <div style="font-size: 12px;">
+                                <span class="pulsating-dot" style="background: #4CAF50;"></span>
+                                기회 유저: 12명
+                            </div>
+                        </div>
+                    </div>
+                    <div style="font-size: 10px; color: #666;">
+                        5연패 이상 또는 급격한 이탈 징후 감지
+                    </div>
+                </div>
+
+                <!-- Card 4: System Health -->
+                <div class="bento-card">
+                    <div class="card-title">🔧 시스템 상태</div>
+                    <div style="margin: 15px 0;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 11px;">
+                            <span>API Server:</span>
+                            <span style="color: #4CAF50; font-weight: bold;">정상 ✓</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 11px;">
+                            <span>Database:</span>
+                            <span style="color: #4CAF50; font-weight: bold;">정상 ✓</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 11px;">
+                            <span>Redis:</span>
+                            <span style="color: #4CAF50; font-weight: bold;">정상 ✓</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 5: Revenue Chart (Large) -->
+                <div class="bento-card large">
+                    <div class="card-title">📈 매출 추이 (최근 7일)</div>
+                    <!-- REUSABLE: Recharts -->
+                    <div class="relative">
+                        <span class="tag" style="top: -8px; right: -8px;" 
+                              title="Recharts Area Chart">[REUSE] AreaChart</span>
+                        <div class="chart-placeholder" style="height: 180px;">
+                            [Area Chart: 매출 추이]<br>
+                            X축: 날짜 (1/13 ~ 1/19)<br>
+                            Y축: 금액 (만원 단위)
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 6: Event Metrics -->
+                <div class="bento-card">
+                    <div class="card-title">🎉 이벤트 현황</div>
+                    <div style="font-size: 11px; margin-top: 10px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                            <span>웰컴 미션 완료:</span>
+                            <span style="font-weight: bold;">45명</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                            <span>스트릭 HOT:</span>
+                            <span style="font-weight: bold; color: #FFA500;">23명</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>골든아워 활성:</span>
+                            <span style="font-weight: bold; color: #4CAF50;">YES</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 7: Quick Actions -->
+                <div class="bento-card">
+                    <div class="card-title">⚡ 빠른 작업</div>
+                    <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px;">
+                        <button style="padding: 8px; background: #f0f0f0; border: 2px solid #999; cursor: pointer; font-size: 11px; font-family: 'Comic Sans MS', cursive;">
+                            📤 CSV 업로드
+                        </button>
+                        <button style="padding: 8px; background: #f0f0f0; border: 2px solid #999; cursor: pointer; font-size: 11px; font-family: 'Comic Sans MS', cursive;">
+                            📢 전체 메시지 발송
+                        </button>
+                        <button style="padding: 8px; background: #f0f0f0; border: 2px solid #999; cursor: pointer; font-size: 11px; font-family: 'Comic Sans MS', cursive;">
+                            🔧 긴급 모달 제어
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Card 8: Returning Users -->
+                <div class="bento-card">
+                    <div class="card-title">🔄 재방문 유저</div>
+                    <div class="number-large" style="color: #8B5CF6;">87</div>
+                    <div style="font-size: 11px; color: #666;">명 (오늘)</div>
+                    <div style="margin-top: 10px; font-size: 10px; color: #999;">
+                        📊 전일 대비 +8%
+                    </div>
+                </div>
+
+                <!-- Card 9: Churn Risk Users -->
+                <div class="bento-card">
+                    <div class="card-title">⚠️ 이탈 리스크 유저</div>
+                    <div class="number-large" style="color: #FF6B6B;">12</div>
+                    <div style="font-size: 11px; color: #666;">명 (주의 필요)</div>
+                    <div style="margin-top: 10px; font-size: 10px; color: #999;">
+                        🔔 3일 이상 미접속
+                    </div>
+                </div>
+
+                <!-- Card 10: Today's Gameplay -->
+                <div class="bento-card">
+                    <div class="card-title">🎮 금일 게임 플레이</div>
+                    <div class="number-large" style="color: #10B981;">1,245</div>
+                    <div style="font-size: 11px; color: #666;">회 (누적)</div>
+                    <div style="margin-top: 10px; font-size: 10px; color: #999;">
+                        🏆 가장 인기: 룰렛 (45%)
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional Metrics Section -->
+
+        <div style="margin-top: 20px; padding: 15px; background: #fff; border: 2px dashed #999;">
+            <p style="font-size: 12px; color: #666;">
+                💡 <strong>한눈에 보는 요약</strong>: 복잡한 그래프 대신 '지금 중요한 것'만 카드로 표시<br>
+                📱 <strong>모바일 최적화</strong>: Bento Grid가 모바일에서는 1열로 자동 전환<br>
+                📊 <strong>핵심 지표</strong>: 재방문율, 이탈 위험, 게임 활동 모니터링
+            </p>
+        </div>
+    </div>
+
+    <!-- Mobile Dock -->
+    <div class="mobile-dock">
+        <div class="dock-item">
+            <div class="dock-icon" style="background: #666;"></div>
+            <div style="font-weight: bold;">대시보드</div>
+        </div>
+        <div class="dock-item">
+            <div class="dock-icon"></div>
+            <div>회원</div>
+        </div>
+        <div class="dock-item">
+            <div class="dock-icon"></div>
+            <div>금고</div>
+        </div>
+        <div class="dock-item">
+            <div class="dock-icon"></div>
+            <div>로그</div>
+        </div>
+        <div class="dock-item">
+            <div class="dock-icon"></div>
+            <div>설정</div>
+        </div>
+    </div>
+</body>
+</html>

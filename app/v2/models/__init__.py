@@ -8,6 +8,9 @@ from app.v2.models.v2_ops_execution_result import V2OpsExecutionResult
 from app.v2.models.v2_roulette import V2RouletteConfig, V2RouletteSegment, V2RouletteLog
 from app.v2.models.v2_dice import V2DiceConfig, V2DiceLog
 from app.v2.models.v2_lottery import V2LotteryConfig, V2LotteryPrize, V2LotteryLog
+from app.v2.models.v2_segment_rule import V2SegmentRule
+from app.v2.models.v2_user_segment import V2UserSegment
+from app.v2.models.v2_admin_message import V2AdminMessage, V2AdminMessageInbox
 from app.v2.models.user import V2User
 
 __all__ = [
@@ -25,5 +28,9 @@ __all__ = [
     "V2LotteryConfig",
     "V2LotteryPrize",
     "V2LotteryLog",
+    "V2SegmentRule",
+    "V2UserSegment",
+    "V2AdminMessage",
+    "V2AdminMessageInbox",
     "V2User",
 ]
