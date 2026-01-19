@@ -24,6 +24,7 @@
 | GOLD_KEY_TICKET | GOLD_KEY | 레거시 | 문서 표준으로 단일화 |
 | DIAMOND_TICKET | DIAMOND_KEY | 레거시 | 문서 표준으로 단일화 |
 | LOTTERY_TICKET | LOTTERY_TICKET | 현행 | 동일 |
+| TRIAL_TICKET | TRIAL_TOKEN | 레거시 | 문서 표준으로 단일화 |
 
 ## 5. 표준화 규칙
 - 신규 문서/기획/스펙에서는 문서 Enum(ROULETTE_TICKET 등)만 사용한다.
@@ -35,4 +36,5 @@
 - [ ] 코드 상 매핑 테이블과 문서 Enum 일치 확인
 
 ## 7. 변경 이력
+- v1.1 (2026-01-19, GitHub Copilot): TRIAL_TICKET 매핑 추가
 - v1.0 (2026-01-19, GitHub Copilot): 최초 작성

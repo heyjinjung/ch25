@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --tg-viewport-height: 100vh;
+}
+
+@layer utilities {
+  .liquid-glass {
+    @apply bg-white/10 backdrop-blur-xl border border-white/20 shadow-lg;
+  }
+  
+  .h-tg {
+    height: var(--tg-viewport-height, 100vh);
+  }
+}

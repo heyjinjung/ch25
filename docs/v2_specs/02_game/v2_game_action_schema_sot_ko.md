@@ -54,7 +54,7 @@
 
 ### 3.1 룰렛 (Roulette)
 
-**Action**: `POST /api/v2/game/roulette/spin`
+**Action**: `POST /api/v2/roulette/play`
 
 #### Request
 ```json
@@ -83,7 +83,7 @@
 
 ### 3.2 주사위 (Dice)
 
-**Action A**: `POST /api/v2/game/dice/roll` (기본 플레이)
+**Action A**: `POST /api/v2/dice/play` (기본 플레이)
 
 #### Request
 ```json
@@ -106,7 +106,7 @@
 }
 ```
 
-**Action B**: `POST /api/v2/game/dice/double-up` (야수 모드)
+**Action B**: `POST /api/v2/dice/double-up` (야수 모드)
 
 #### Request
 ```json
@@ -129,7 +129,7 @@
 
 ### 3.3 복권 (Lottery)
 
-**Action**: `POST /api/v2/game/lottery/scratch` (구매 및 긁기)
+**Action**: `POST /api/v2/lottery/play` (구매 및 긁기)
 
 #### Request
 ```json
@@ -187,7 +187,7 @@ HTTP 4xx/5xx 외에 비즈니스 로직 불가 시 `400 Bad Request`와 함께 �
 
 | Error Code | 설명 | 메시지 예시 |
 | :--- | :--- | :--- |
-| `NOT_ENOUGH_TOKEN` | 재화 부족 | "티켓이 부족합니다." |
+| `NOT_ENOUGH_TOKENS` | 재화 부족 | "티켓이 부족합니다." |
 | `DAILY_LIMIT_REACHED` | 일일 제한 초과 | "오늘 룰렛 횟수를 모두 사용했습니다." |
 | `INVALID_BET` | 베팅값 오류 | "베팅 금액이 유효하지 않습니다." |
 | `RATE_LIMITED` | 요청 과다 | "천천히 시도해주세요." (V2 Redis Rate Limiter) |
@@ -195,5 +195,7 @@ HTTP 4xx/5xx 외에 비즈니스 로직 불가 시 `400 Bad Request`와 함께 �
 ---
 
 ## 6. 변경 이력
+- v2.2 (2026-01-19, GitHub Copilot): 에러 코드 NOT_ENOUGH_TOKENS로 표준화
+- v2.1 (2026-01-19, GitHub Copilot): 게임 플레이 엔드포인트를 /api/v2/{game}/* 기준으로 표준화
 - v2.0 (2026-01-18, GitHub Copilot): V2 스키마 이관 (Endpoint `/api/v2/` 로 변경, Metadata Update)
 - v1.1 (2026-01-16): 기존 `2026_game_action_schema_ko.md`

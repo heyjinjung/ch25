@@ -158,7 +158,7 @@
     - 근거: [docs/v2_specs/03_api/v2_ticket_zero_api_contract_ko.md](../03_api/v2_ticket_zero_api_contract_ko.md#L1)
 
 #### 3) Ops 실행 결과 저장/조회 API 스펙/어드민 연동 (미착수)
-- 상태: **미착수**
+- 상태: **진행 중** (API 스펙/연동 범위 초안 작성 완료)
 - 작업 내용:
     - 결과 저장/조회 API 스펙 정의
     - 어드민 화면 연동 범위 결정
@@ -166,22 +166,25 @@
 - 산출물:
     - API 스펙 문서
     - 어드민 연동 범위 정의
+    - 근거: [docs/v2_specs/05_ops/v2_ops_execution_api_contract_ko.md](../05_ops/v2_ops_execution_api_contract_ko.md#L1)
 
 #### 4) V2 전용 마이그레이션 스냅샷 재생성 기준 수립 (미착수)
-- 상태: **미착수**
+- 상태: **완료** (기준/절차 문서화 완료)
 - 작업 내용:
     - 배포 전 clean snapshot 생성 기준 정리
     - 스냅샷 생성/적용 절차 문서화
     - 기준 리비전 고정 규칙 수립
 - 산출물:
     - 스냅샷 기준 문서
+    - 근거: [docs/v2_specs/04_db/v2_db_snapshot_regeneration_policy_ko.md](../04_db/v2_db_snapshot_regeneration_policy_ko.md#L1)
 
 ## Phase 3: 게임 및 컨텐츠 (3주차)
 *목표: 웹 환경에서 게임 로직 완벽 검증*
 9.  **게임 엔진 표준화 (Game Engine V2)**
     *   룰렛, 주사위, 복권 로직 추상화 및 Config Schema 강제 적용.
     *   룰렛, 주사위, 복권의 공통 로직(입장 -> 결과 산출 -> 보상 지급)을 추상화.
-    *   **진행도**: 미착수
+    *   **진행도**: 진행중
+    *   **근거**: [docs/v2_specs/02_game/v2_game_engine_standardization_design_ko.md](../02_game/v2_game_engine_standardization_design_ko.md#L1)
 
 10. **프론트엔드-백엔드 연동 (Web Ver.)**
     *   표준 Web API로 게임 플레이 연동 및 Network 탭 검증.

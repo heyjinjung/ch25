@@ -19,14 +19,18 @@
 - 어드민 게임 설정 스키마 SoT: docs/v2_specs/02_game/v2_admin_game_config_schema_ko.md
 - 검증/세그먼트 SoT: docs/v2_specs/01_core/v2_grade_segment_sot_ko.md
 - 알림/피드 스키마 SoT: docs/v2_specs/03_api/v2_notification_feed_schema_ko.md
+- 게임 API 계약: docs/v2_specs/03_api/v2_game_api_contract_ko.md
 - Ticket Zero API 계약: docs/v2_specs/03_api/v2_ticket_zero_api_contract_ko.md
 - **V1 Legacy API 감사**: docs/v2_specs/03_api/v1_legacy_api_list_ko.md (보안감사 포함)
 - **V1 API 불일치 리포트**: docs/v2_specs/03_api/v1_api_discrepancy_report_ko.md (Deep Audit)
 - 미션 용어 SoT: docs/v2_specs/02_game/v2_mission_glossary_sot_ko.md
+- 게임 엔진 SoT: docs/v2_specs/02_game/v2_game_engine_sot_ko.md
 - **신규 유저 미션 로직 SoT**: docs/v2_specs/02_game/v2_new_user_mission_logic_sot_ko.md
 - 게임 액션 스키마 SoT: docs/v2_specs/02_game/v2_game_action_schema_sot_ko.md
+- 게임 엔진 표준화 설계: docs/v2_specs/02_game/v2_game_engine_standardization_design_ko.md
 - Ops Plan 실행 스키마 SoT: docs/v2_specs/05_ops/v2_ops_plan_execution_schema_sot_ko.md
 - Ops Action 용어집 SoT: docs/v2_specs/05_ops/v2_ops_action_glossary_sot_ko.md
+- Ops 실행 결과 API 계약: docs/v2_specs/05_ops/v2_ops_execution_api_contract_ko.md
 - 강력한 금고 정책 SoT: docs/v2_specs/01_core/v2_strict_vault_policy_sot_ko.md
 - 프로그레션/레벨 스키마 SoT: docs/v2_specs/01_core/v2_progression_schema_ko.md
 - **Golden System 정의서**: docs/v2_specs/01_core/golden_v2_system_definition_ko.md
@@ -43,6 +47,7 @@
 - V2 DB 교환소 로그: docs/v2_specs/04_db/v2_db_exchange_log_ko.md
 - V2 DB 티켓 제로 로그: docs/v2_specs/04_db/v2_db_ticket_zero_log_ko.md
 - V2 DB Ops 실행 결과: docs/v2_specs/04_db/v2_db_ops_execution_result_ko.md
+- V2 DB 스냅샷 재생성 정책: docs/v2_specs/04_db/v2_db_snapshot_regeneration_policy_ko.md
 
 ## 6. 운영/검증 (QA)
 - 프론트엔드 마스터 플랜: docs/v2_specs/06_design/v2_frontend_master_plan_ko.md
@@ -52,6 +57,9 @@
 - [ ] SoT 우선순위 준수
 
 ## 7. 변경 이력
+- v1.5 (2026-01-19, GitHub Copilot): 게임 API 계약 문서 링크 추가
+- v1.4 (2026-01-19, GitHub Copilot): 게임 엔진 SoT 문서 링크 추가
+- v1.3 (2026-01-19, GitHub Copilot): 게임 엔진 표준화 설계 문서 링크 추가
 - v1.2 (2026-01-19, GitHub Copilot): V2 DB 진행 상태 업데이트 반영
 - v1.1 (2026-01-19, GitHub Copilot): V2 DB 로그/ops 문서 링크 추가
 - v1.0 (2026-01-18, GitHub Copilot): 최초 작성

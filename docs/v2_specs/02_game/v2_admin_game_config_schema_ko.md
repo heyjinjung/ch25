@@ -95,7 +95,7 @@ class AdminLotteryPrizeBase(BaseModel):
 
 ## 4. 검증 로직 (Validation)
 - 룰렛: 슬롯은 6개 고정(0~5)이며, slot_index 또는 index 입력을 받아 0~5로 재배치한다. 부족분은 패딩, 초과분은 잘린다. weight가 0/누락이면 1로 보정한다.
-- 룰렛/복권/주사위: ticket_type 허용값은 ROULETTE_TICKET, DICE_TICKET, GOLD_KEY_TICKET, DIAMOND_TICKET, LOTTERY_TICKET이다.
+- 룰렛/복권/주사위: ticket_type 허용값은 ROULETTE_TICKET, DICE_TICKET, GOLD_KEY_TICKET, DIAMOND_TICKET, LOTTERY_TICKET, TRIAL_TICKET이다.
 - 복권: label 중복 금지, weight는 0 이상, stock은 설정 시 0 이상. 총 가중치 합은 0보다 커야 하며 활성 Prize(is_active && weight > 0)가 1개 이상 필요하다.
 - 복권: reward_type이 GIFTICON_*일 때 reward_amount는 해당 브랜드 SoT에 따름.
 - 주사위: max_daily_plays는 음수가 될 수 없다.
@@ -110,4 +110,5 @@ class AdminLotteryPrizeBase(BaseModel):
 - [ ] 가중치/재고/중복 검증 로직 확인
 
 ## 6. 변경 이력
+- v2.1 (2026-01-19, GitHub Copilot): TRIAL_TICKET 허용값 추가
 - v2.0 (2026-01-18, GitHub Copilot): v1 문서 기반 V2 SoT 생성
