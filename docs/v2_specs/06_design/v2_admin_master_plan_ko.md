@@ -207,6 +207,32 @@ C:\Users\JAVIS\ch\ch25\.kombai\resources\admin-wireframe-5-shop-manager.html
 - **Exchange Editor**: 조각(Fragment) -> 티켓(Ticket) 교환 비율을 테이블에서 직접 수정.
 
 
+##어드민전용 컴포넌트 구현 순서도 
+
+
+### 8.6 🧩 어드민 전용 컴포넌트 목록 (Admin-Specific Components)
+Shadcn/UI 외에 운영 효율을 위해 별도로 제작해야 하는 커스텀 컴포넌트 리스트.
+
+- [x] **BentoGrid (`src/v2/admin/components/ui/BentoGrid.tsx`)**
+    - 용도: 대시보드 KPI 및 위젯 배치용 레이아웃 시스템
+    - 특징: 모바일/PC 반응형, Magic UI 스타일 적용
+- [x] **SlideToApprove (`src/v2/admin/components/ui/SlideToApprove.tsx`)**
+    - 용도: 금고 출금 승인 등 중요 액션 실수 방지
+    - 특징: 아이폰 '밀어서 잠금해제' UX, 햅틱 피드백 연동
+- [x] **QuickActionCard (`src/v2/admin/components/ui/QuickActionCard.tsx`)**
+    - 용도: 자주 쓰는 기능(CSV 업로드, 공지 발송) 포탈
+    - 특징: 아이콘 + 라벨 + 호버 이펙트
+- [x] **StatusBadge (`src/v2/admin/components/ui/StatusBadge.tsx`)**
+    - 용도: 유저 상태, 결제 상태 등을 일관된 컬러 코드로 표시
+    - 색상: `Green`(승인/활성), `Red`(반려/정지), `Yellow`(대기), `Black`(구독)
+- [x] **LogViewer (`src/v2/admin/components/ui/LogViewer.tsx`)**
+    - 용도: JSON 로그 데이터 가독성 확보
+    - 특징: Syntax Highlighting, Diff View (변경 전후 비교)
+- [x] **CompactTable (`src/v2/admin/components/ui/CompactTable.tsx`)**
+    - 용도: 모바일 화면에서 많은 데이터를 보여주기 위한 초소형 행 높이 테이블
+- [x] **AdminChart (`src/v2/admin/components/ui/AdminChart.tsx`)**
+    - 용도: Recharts 래퍼 컴포넌트 (Line, Area, Bar 통일)
+    - 특징: Shadcn 테마(CSS Variable) 자동 연동
 
 
 ## 9. 구현 순서도 (Implementation Roadmap)
@@ -226,9 +252,9 @@ C:\Users\JAVIS\ch\ch25\.kombai\resources\admin-wireframe-5-shop-manager.html
 
 ### Step 3: Management & Ops (관리 및 운영)
 - [ ] **3-1. User CRM (회원 관리)**
-    - [ ] `UserListPage`: 검색 및 상태 필터
+    - [x] `UserListPage`: 검색 및 상태 필터
         - **UI**: `Tanstack Table`, `Command`(Search), `Popover`(Filter), `Badge`(Active/Black)
-    - [ ] `UserDetailDrawer`: 6-Section 통합 뷰
+    - [x] `UserDetailDrawer`: 6-Section 통합 뷰
         - **UI**: `Sheet`(Right Side), `Tabs`(Sections), `Avatar`, `Timeline`(Custom)
     - [ ] `WalletEditor`: 티켓 강제 수정
         - **UI**: `Dialog`(Alert), `Input`(Number), `Form`(Validation)

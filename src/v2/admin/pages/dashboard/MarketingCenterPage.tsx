@@ -34,32 +34,24 @@ export default function MarketingCenterPage() {
       {/* KPI Section with Visitors Style Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <QuickActionCard 
-            title="실시간 매출" 
+            label="실시간 매출" 
             description="오늘 누적: 1,250,000원" 
             icon={DollarSign} 
-            colorClass="text-purple-400" 
-            bgClass="bg-purple-500/10" 
           />
           <QuickActionCard 
-            title="현재 접속자" 
+            label="현재 접속자" 
             description="Active: 234명 (▲15%)" 
             icon={Users} 
-            colorClass="text-blue-400" 
-            bgClass="bg-blue-500/10" 
           />
            <QuickActionCard 
-            title="시스템 상태" 
+            label="시스템 상태" 
             description="All Systems Operational" 
             icon={Activity} 
-            colorClass="text-orange-400" 
-            bgClass="bg-orange-500/10" 
           />
            <QuickActionCard 
-            title="골든 레이더" 
+            label="골든 레이더" 
             description="위기: 3명 / 기회: 12명" 
             icon={AlertTriangle} 
-            colorClass="text-green-400" 
-            bgClass="bg-green-500/10" 
           />
       </div>
 
