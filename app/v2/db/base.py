@@ -8,6 +8,7 @@ from app.v2.models import (  # noqa: F401
     V2ExchangeLog,
     V2TicketZeroLog,
     V2OpsExecutionResult,
+    V2User,
 )
 
 __all__ = ["Base"]

@@ -5,6 +5,7 @@ from app.v2.models.v2_shop_order import V2ShopOrder
 from app.v2.models.v2_exchange_log import V2ExchangeLog
 from app.v2.models.v2_ticket_zero_log import V2TicketZeroLog
 from app.v2.models.v2_ops_execution_result import V2OpsExecutionResult
+from app.v2.models.user import V2User
 
 __all__ = [
     "V2LevelRewardTable",
@@ -13,4 +14,5 @@ __all__ = [
     "V2ExchangeLog",
     "V2TicketZeroLog",
     "V2OpsExecutionResult",
+    "V2User",
 ]
