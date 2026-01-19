@@ -63,7 +63,7 @@ V1 레거시 API 리포트의 구조를 참고하되, **현재 구현된 기능�
   - [x] 상점 목록/구매 API
   - [x] 인벤토리 조회/사용 API
   - [ ] 교환 로그/정책 반영
-  - [ ] v2_shop_products UI Config 설정
+  - [x] v2_shop_products UI Config 설정 (V1 이관 검증 완료)
 
 ### 4.5 세그먼트/메시지
 - SoT: `v2_user_segment_policy_sot_ko.md`, `v2_admin_message_policy_sot_ko.md`

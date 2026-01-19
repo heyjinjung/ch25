@@ -18,6 +18,7 @@
 - 상점/인벤토리 서비스 설계: docs/v2_specs/01_core/v2_shop_inventory_service_design_ko.md
 - 상점 상품 UI Config SoT: docs/v2_specs/05_ops/v2_shop_products_ui_config_sot_ko.md
 - **V1→V2 상점 상품 변환 가이드**: docs/v2_specs/99_verification/v1_to_v2_shop_products_conversion_ko.md
+- **V1->V2 상점 이관 검증 보고서**: docs/v2_specs/99_verification/sot_verification_report_shop.md
 - 어드민 게임 설정 스키마 SoT: docs/v2_specs/02_game/v2_admin_game_config_schema_ko.md
 - 검증/세그먼트 SoT: docs/v2_specs/01_core/v2_grade_segment_sot_ko.md
 - 유저 세그먼트 정책 SoT: docs/v2_specs/01_core/v2_user_segment_policy_sot_ko.md

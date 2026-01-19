@@ -1,0 +1,24 @@
+[
+    {
+        "product_id": "PROD_GOLD_KEY_1",
+        "title": "골드키 교환권",
+        "description": "골드키 티켓 교환",
+        "reward_type": "GOLD_KEY_TICKET",
+        "reward_amount": 1,
+        "cost_type": "DIAMOND",
+        "cost_amount": 30,
+        "visible": true,
+        "sort_order": 10
+    },
+    {
+        "product_id": "PROD_DIAMOND_KEY_1",
+        "title": "다이아키 교환권",
+        "description": "다이아키 티켓 교환",
+        "reward_type": "DIAMOND_TICKET",
+        "reward_amount": 1,
+        "cost_type": "DIAMOND",
+        "cost_amount": 100,
+        "visible": true,
+        "sort_order": 20
+    }
+]

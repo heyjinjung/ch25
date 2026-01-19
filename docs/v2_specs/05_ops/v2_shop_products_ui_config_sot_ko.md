@@ -37,7 +37,8 @@
 - `title` (string): 표시 이름
 - `reward_type` (string): 보상 타입 (예: `ROULETTE_TICKET`, `LOTTERY_TICKET`, `DICE_TICKET`, `UNIVERSAL_TICKET`, `DIAMOND`, `POINT`, `CC_POINT`)
 - `reward_amount` (int): 보상 수량
-- `cost_amount` (int): 비용 금액 (Vault 기준)
+- `cost_type` (string): 비용 타입 (기본: `VAULT`, 옵션: `DIAMOND`)
+- `cost_amount` (int): 비용 금액
 - `visible` (bool): 노출 여부
 - `sort_order` (int): 노출 순서 (오름차순)
 
