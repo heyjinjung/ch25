@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
-from app.services.vault2_service import Vault2Service
+from app.v2.services.vault2_service import Vault2Service
 
 
 router = APIRouter(prefix="/admin/api/vault2", tags=["admin-vault2"])

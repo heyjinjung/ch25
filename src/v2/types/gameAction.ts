@@ -129,18 +129,3 @@ export type DiceDoubleUpResponse = z.infer<typeof diceDoubleUpResponseSchema>;
 export type LotteryScratchRequest = z.infer<typeof lotteryScratchRequestSchema>;
 export type LotteryPlayResponse = z.infer<typeof lotteryPlayResponseSchema>;
 export type JackpotWinPayload = z.infer<typeof jackpotWinPayloadSchema>;
-
-export const puzzleCraftRequestSchema = z.object({
-  target_token_type: z.string(),
-});
-
-export const puzzleCraftResponseSchema = z.object({
-  result: z.string(), // "OK"
-  reward_token: z.string(),
-  reward_amount: z.number().int(),
-  used_token: z.string(),
-  used_amount: z.number().int(),
-});
-
-export type PuzzleCraftRequest = z.infer<typeof puzzleCraftRequestSchema>;
-export type PuzzleCraftResponse = z.infer<typeof puzzleCraftResponseSchema>;

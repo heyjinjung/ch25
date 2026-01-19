@@ -32,7 +32,7 @@ from app.api.routes import (
 	telegram_unlink,
 	dev_auth,
 	dev_ch25_events,
-	dev_login,
+	# dev_login moved to v2 api
 	inventory_shop,
 	metrics,
 	ws_ops,
@@ -42,6 +42,7 @@ from app.api.routes import (
 	exchange,
 	retention_intervention,
 )
+from app.v2.api import dev_login
 
 api_router = APIRouter()
 

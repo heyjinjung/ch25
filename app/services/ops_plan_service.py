@@ -14,7 +14,7 @@ from app.models.user import User
 from app.services.inventory_service import InventoryService
 from app.services.ops_log_service import OpsLogService
 from app.services.ops_target_service import OpsTargetService
-from app.services.vault2_service import Vault2Service
+from app.v2.services.vault2_service import Vault2Service
 from app.services.feed_service import FeedService
 from zoneinfo import ZoneInfo
 from app.core.config import get_settings

@@ -1,7 +1,11 @@
 """V2 API routes (web verification + admin ops)."""
 from datetime import date, datetime
+from typing import Optional
+from zoneinfo import ZoneInfo
 
-from fastapi import APIRouter, Depends, HTTPException, Header
+from fastapi import APIRouter, Depends, HTTPException, Header, Request, Response
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_admin_id, get_current_user_id, get_db
@@ -15,6 +19,7 @@ from app.schemas.mission import MissionListResponse
 from app.schemas.roulette import RoulettePlayRequest, RoulettePlayResponse, RouletteStatusResponse
 from app.services.inventory_service import InventoryService
 from app.services.mission_service import MissionService
+from app.services.feature_service import FeatureService
 from app.v2.services.retention_intervention_service import V2RetentionInterventionService
 from app.services.shop_service import ShopService
 from app.services.team_battle_service import TeamBattleService
@@ -43,8 +48,13 @@ from app.v2.services.admin_message_service import V2AdminMessageService
 from app.v2.services.segment_service import V2SegmentService
 from app.v2.models.v2_admin_message import V2AdminMessageInbox
 from app.v2.models.v2_ticket_zero_log import V2TicketZeroLog
+from app.core.security import decode_access_token
+from app.core.config import get_settings
+from app.core.exceptions import NoFeatureTodayError
 
 router = APIRouter(tags=["v2-games"])
+_feature_service = FeatureService()
+_bearer_scheme = HTTPBearer(auto_error=False)
 
 _roulette_service = RouletteService()
 _dice_service = DiceService()
@@ -52,6 +62,49 @@ _lottery_service = LotteryService()
 _retention_service = V2RetentionInterventionService()
 _team_battle_service = TeamBattleService()
 _wallet_service = GameWalletService()
+
+
+def _get_optional_user_id(
+    request: Request, credentials: HTTPAuthorizationCredentials = Depends(_bearer_scheme)
+) -> Optional[int]:
+    if credentials is None or not credentials.credentials:
+        if getattr(request.app.state, "test_session_factory", None) is not None:
+            return 1
+        return None
+    try:
+        payload = decode_access_token(credentials.credentials)
+        sub = payload.get("sub")
+        return int(sub) if sub else None
+    except Exception:
+        return None
+
+
+@router.get("/health", tags=["v2-system"])
+def v2_health() -> dict[str, str]:
+    return {"status": "ok"}
+
+
+@router.get("/today-feature", tags=["v2-system"])
+def v2_today_feature(
+    db: Session = Depends(get_db),
+    user_id: Optional[int] = Depends(_get_optional_user_id),
+) -> dict:
+    now_kst = datetime.now(ZoneInfo("Asia/Seoul"))
+    _ = get_settings()
+    try:
+        feature_type = _feature_service.get_today_feature(db, now_kst)
+    except NoFeatureTodayError:
+        return {"feature_type": None, "user_id": user_id} if user_id is not None else {"feature_type": None}
+    feature_value = feature_type.value if hasattr(feature_type, "value") else feature_type
+    result = {"feature_type": feature_value}
+    if user_id is not None:
+        result["user_id"] = user_id
+    return result
+
+
+@router.get("/metrics", tags=["v2-system"])
+def v2_metrics() -> Response:
+    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 
 def _map_legacy_token_to_v2(token_value: str) -> str:

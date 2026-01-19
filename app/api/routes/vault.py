@@ -10,7 +10,7 @@ from app.models.game_wallet import GameTokenType, UserGameWallet
 from app.models.user_segment import UserSegment
 from app.schemas.vault2 import VaultProgramResponse, VaultTopItem
 from app.schemas.vault import VaultFillResponse, VaultStatusResponse
-from app.services.vault2_service import Vault2Service
+from app.v2.services.vault2_service import Vault2Service
 from app.services.vault_service import VaultService
 
 from pydantic import BaseModel

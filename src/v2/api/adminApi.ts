@@ -39,6 +39,42 @@ export interface CreateMessageRequest {
   targetSegment: string;
 }
 
+export interface AdminMissionDto {
+  id: number;
+  category: "DAILY" | "WEEKLY" | "NEW_USER" | "SPECIAL_EVENT";
+  title: string;
+  condition: string;
+  rewardType: "TICKET" | "POINT" | "BUNDLE";
+  rewardAmount: number;
+  isActive: boolean;
+}
+
+export interface AdminLevelDto {
+  level: number;
+  requiredXp: number;
+  rewardTicket: number;
+  rewardPoint: number;
+}
+
+export interface TicketLogDto {
+  id: number;
+  userId: number;
+  type: "GRANT" | "REVOKE" | "USE" | "EXPIRE";
+  itemType: string;
+  amount: number;
+  balanceAfter: number;
+  reason: string;
+  timestamp: string;
+  adminId?: string;
+}
+
+export interface GrantItemRequest {
+  userId: number;
+  itemType: string;
+  amount: number;
+  reason: string;
+}
+
 // ============================================================================
 // Withdrawal API
 // ============================================================================
@@ -117,4 +153,180 @@ export const runV2SegmentBatch = async (): Promise<void> => {
 
 export const createV2AdminMessage = async (request: CreateMessageRequest): Promise<void> => {
     await v2Client.post("/admin/api/messages", request);
+};
+
+// ============================================================================
+// Game Ops API (Mission, Level)
+// ============================================================================
+
+export const getAdminMissions = async (): Promise<AdminMissionDto[]> => {
+    // Mock Data
+    return [
+        { id: 1, category: "DAILY", title: "출석체크", condition: "로그인 1회", rewardType: "TICKET", rewardAmount: 1, isActive: true },
+        { id: 2, category: "DAILY", title: "룰렛 돌리기", condition: "룰렛 3회 참여", rewardType: "POINT", rewardAmount: 100, isActive: true },
+        { id: 3, category: "NEW_USER", title: "첫 입금", condition: "1만원 이상 충전", rewardType: "BUNDLE", rewardAmount: 1, isActive: true },
+    ];
+};
+
+export const updateMission = async (id: number, data: Partial<AdminMissionDto>): Promise<void> => {
+    await v2Client.put(`/admin/api/game/missions/${id}`, data);
+};
+
+export const getAdminLevels = async (): Promise<AdminLevelDto[]> => {
+    // Mock Data
+    const levels = [];
+    for(let i=1; i<=20; i++) {
+        levels.push({
+            level: i,
+            requiredXp: i * 1000,
+            rewardTicket: Math.floor(i / 5) + 1,
+            rewardPoint: i * 500
+        });
+    }
+    return levels;
+};
+
+export const updateLevelConfig = async (level: number, data: Partial<AdminLevelDto>): Promise<void> => {
+    await v2Client.put(`/admin/api/game/levels/${level}`, data);
+};
+
+// ============================================================================
+// Inventory Ops API
+// ============================================================================
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export const getTicketLogs = async (_userId?: number): Promise<TicketLogDto[]> => {
+    // Mock Data
+    return [
+        { id: 501, userId: 1001, type: "USE", itemType: "L_TICKET", amount: 1, balanceAfter: 4, reason: "룰렛 참여", timestamp: "2024-01-19 14:30:00" },
+        { id: 502, userId: 1001, type: "GRANT", itemType: "L_TICKET", amount: 5, balanceAfter: 5, reason: "이벤트 보상", timestamp: "2024-01-19 14:00:00", adminId: "admin" },
+        { id: 503, userId: 1042, type: "REVOKE", itemType: "G_TICKET", amount: 1, balanceAfter: 0, reason: "오지급 회수", timestamp: "2024-01-19 13:00:00", adminId: "admin" },
+    ];
+};
+
+export const grantItem = async (data: GrantItemRequest): Promise<void> => {
+    await v2Client.post("/admin/api/inventory/grant", data);
+};
+
+export const revokeItem = async (data: GrantItemRequest): Promise<void> => {
+    await v2Client.post("/admin/api/inventory/revoke", data);
+};
+
+// ============================================================================
+// Marketing Tools API
+// ============================================================================
+
+export interface AdminMessageDto {
+    id: number;
+    title: string;
+    content: string;
+    targetSegment: string;
+    messageType: "PUSH" | "INBOX" | "BOTH";
+    sentCount: number;
+    scheduledAt?: string;
+    createdAt: string;
+    status: "DRAFT" | "SCHEDULED" | "SENT";
+}
+
+export interface SendMessageRequest {
+    title: string;
+    content: string;
+    targetSegment: string;
+    messageType: "PUSH" | "INBOX" | "BOTH";
+    scheduledAt?: string;
+}
+
+export interface SurveyDto {
+    id: number;
+    title: string;
+    description: string;
+    questions: SurveyQuestion[];
+    isActive: boolean;
+    responseCount: number;
+    createdAt: string;
+}
+
+export interface SurveyQuestion {
+    id: number;
+    type: "SINGLE" | "MULTIPLE" | "TEXT";
+    question: string;
+    options?: string[];
+}
+
+export interface SurveyResultDto {
+    surveyId: number;
+    questionId: number;
+    question: string;
+    responses: { option: string; count: number; percentage: number }[];
+}
+
+export const getAdminMessages = async (): Promise<AdminMessageDto[]> => {
+    // Mock Data
+    return [
+        {
+            id: 1,
+            title: "신규 이벤트 안내",
+            content: "골든 타임 2배 보상 이벤트가 시작됩니다!",
+            targetSegment: "ALL",
+            messageType: "BOTH",
+            sentCount: 1240,
+            createdAt: "2024-01-19 10:00:00",
+            status: "SENT"
+        },
+        {
+            id: 2,
+            title: "휴면 유저 복귀 혜택",
+            content: "7일 이상 미접속 유저 대상 특별 보상",
+            targetSegment: "DORMANT",
+            messageType: "PUSH",
+            sentCount: 320,
+            scheduledAt: "2024-01-20 09:00:00",
+            createdAt: "2024-01-19 14:00:00",
+            status: "SCHEDULED"
+        }
+    ];
+};
+
+export const sendAdminMessage = async (data: SendMessageRequest): Promise<void> => {
+    await v2Client.post("/admin/api/marketing/messages", data);
+};
+
+export const getSurveys = async (): Promise<SurveyDto[]> => {
+    // Mock Data
+    return [
+        {
+            id: 1,
+            title: "게임 만족도 조사",
+            description: "서비스 개선을 위한 유저 설문",
+            questions: [
+                { id: 1, type: "SINGLE", question: "전반적인 만족도는?", options: ["매우 만족", "만족", "보통", "불만족"] },
+                { id: 2, type: "MULTIPLE", question: "선호하는 게임은? (복수 선택)", options: ["룰렛", "주사위", "복권"] }
+            ],
+            isActive: true,
+            responseCount: 450,
+            createdAt: "2024-01-15 10:00:00"
+        }
+    ];
+};
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export const getSurveyResults = async (surveyId: number): Promise<SurveyResultDto[]> => {
+    // Mock Data
+    return [
+        {
+            surveyId: 1,
+            questionId: 1,
+            question: "전반적인 만족도는?",
+            responses: [
+                { option: "매우 만족", count: 180, percentage: 40 },
+                { option: "만족", count: 135, percentage: 30 },
+                { option: "보통", count: 90, percentage: 20 },
+                { option: "불만족", count: 45, percentage: 10 }
+            ]
+        }
+    ];
+};
+
+export const toggleSurvey = async (surveyId: number, isActive: boolean): Promise<void> => {
+    await v2Client.put(`/admin/api/marketing/surveys/${surveyId}`, { isActive });
 };

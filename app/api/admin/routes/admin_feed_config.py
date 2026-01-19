@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_db, get_current_admin_id  # Ensure admin auth
 # from app.api.admin.deps import get_current_admin
 from app.services.feed_service import FeedService
-from app.services.vault2_service import Vault2Service
+from app.v2.services.vault2_service import Vault2Service
 from app.schemas.admin_feed import FeedJackpotConfig, FeedConfigResponse
 
 router = APIRouter(prefix="/feed", tags=["admin-feed"])

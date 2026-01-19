@@ -9,8 +9,8 @@
 ---
 
 ## 1. 요약 (Summary)
-현재 V2에서 **게임/세그먼트/메시지/Golden + 미션/스트릭 + 상점/인벤토리 + 팀배틀 + Ticket Zero + Admin/Ops 실행결과**까지 라우트가 구현되었습니다.
-V1 레거시 API 대비 **Auth/User 및 일부 System/Ops 영역이 미구현**이며, 해당 영역은 **추가 V2 라우트 및 연동 정리가 필요**합니다.
+현재 V2에서 **게임/세그먼트/메시지/Golden + 미션/스트릭 + 상점/인벤토리 + 팀배틀 + Ticket Zero + Admin/Ops 실행결과 + System/Ops**까지 라우트가 구현되었습니다.
+V1 레거시 API 대비 **Auth/User 영역이 미구현**이며, 해당 영역은 **추가 V2 라우트 및 연동 정리가 필요**합니다.
 
 ---
 
@@ -64,13 +64,13 @@ V1 레거시 API 대비 **Auth/User 및 일부 System/Ops 영역이 미구현**�
 
 ### 3.1 Auth & User
 - V1: `/api/auth/token`, `/api/activity/record`, `/api/telegram/*`, `/api/new-user/*`
-- V2: ❌ 라우트 없음
+- V2: ❌ 운영 라우트 없음 (dev 전용 `/api/v2/dev/login`만 존재, 운영 비활성)
 - SoT: ✅ V2 Auth/User API 계약 문서 있음 (라우트 미구현)
 
 ### 3.2 System/Ops
 - V1: `/api/health`, `/api/today-feature`, `/metrics`
-- V2: ❌ 전용 라우트 없음 (V1 유지 가능)
-- SoT: ✅ V2 Ops API 계약 문서 있음 (실행 결과 외 기타 라우트 정리 필요)
+- V2: ✅ 전용 라우트 추가 (`/api/v2/health`, `/api/v2/today-feature`, `/api/v2/metrics`)
+- SoT: ✅ V2 System/Ops SoT 기준 문서 추가 (V1 폐기 예정)
 
 ---
 
@@ -81,7 +81,15 @@ V1 레거시 API 대비 **Auth/User 및 일부 System/Ops 영역이 미구현**�
 
 ### 4.2 로직/라우트 미구현
 - Auth/User V2 라우트
-- System/Ops 전용 라우트 (health/today-feature/metrics 등)
+
+---
+
+## 4.3 V2 System/Ops SoT 준수 체크
+기준 문서: `docs/v2_specs/05_ops/v2_system_ops_sot_ko.md`
+
+- `/api/v2/health`: ✅ `{"status":"ok"}`
+- `/api/v2/today-feature`: ✅ `feature_type` 반환, 인증 시 `user_id` 포함
+- `/api/v2/metrics`: ✅ Prometheus 포맷 응답
 
 ---
 
@@ -93,5 +101,8 @@ V1 레거시 API 대비 **Auth/User 및 일부 System/Ops 영역이 미구현**�
 ---
 
 ## 6. 변경 이력
+- v1.4 (2026-01-19, GitHub Copilot): V2 System/Ops SoT 문서 추가 및 준수 체크 반영
+- v1.3 (2026-01-19, GitHub Copilot): System/Ops V2 라우트 추가 반영 및 V1 폐기 계획 반영
+- v1.2 (2026-01-19, GitHub Copilot): Auth/User 미구현 상태 구체화(dev 전용 로그인만 존재) 및 System/Ops V1 유지 명시
 - v1.1 (2026-01-19, GitHub Copilot): V2 라우트/계약 구현 반영 및 미구현 영역 갱신
 - v1.0 (2026-01-19, GitHub Copilot): 최초 작성

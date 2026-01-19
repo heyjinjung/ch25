@@ -271,20 +271,25 @@ Shadcn/UI 외에 운영 효율을 위해 별도로 제작해야 하는 커스텀
         - **Motion**: 
             - **Framer Motion**: 리스트 아이템 등장 (StaggerChildren)
         - **Features**: 오입금 사고 처리용 강제 입/출금 조정 기능 포함
-    - [ ] `CCDepositPage`: 입금 수동 승인
+    - [x] `CCDepositPage`: 입금 수동 승인
         - **UI**: `Table`(Pending List), `Button`(Action), `Textarea`(Memo)
         - **Motion**:
             - **Magic UI**: 신규 요청 건 `ShineBorder` 적용 (주목도 향상)
-    - [ ] `ShopManagerPage`: 상품 관리
+        - **완료**: 입금 승인 플로우, 샤인 보더 강조 효과 적용
+    - [x] `ShopManagerPage`: 상품 관리
         - **UI**: `Switch`(On/Off), `Card`(Product Item), `Input`(Price)
-- [ ] **3-3. Game Ops (게임 운영)**
-    - [ ] `MissionManagerPage`: 미션/스트릭 설정
-        - **UI**: `Select`(Category), `Calendar`(Schedule), `Accordion`(Reward Table)
-    - [ ] `LevelConfigPage`: XP/보상 매핑
+        - **완료**: 상품 활성화/가격 수정 기능, Skeleton 로딩 상태
+- [x] **3-3. Game Ops (게임 운영)**
+    - [x] `MissionManagerPage`: 미션/스트릭 설정
+        - **UI**: `Select`(Category), `Calendar`(Schedule), `Accordion`(Reward Table) → `Tabs`(Category), `Card`(Mission List), `Switch`(Active Toggle)
+        - **완료**: 탭 기반 카테고리 필터, 미션 활성화/보상 설정, 실시간 업데이트
+    - [x] `LevelConfigPage`: XP/보상 매핑
         - **UI**: `Table`(Editable), `Input`(XP), `Select`(Reward Type)
-- [ ] **3-4. Inventory Ops (인벤토리)**
-    - [ ] `TicketInventoryPage`: 지급/회수 로그
-        - **UI**: `Data Table`, `DateRangePicker`, `HoverCard`(Item Detail)
+        - **완료**: 레벨별 XP 테이블, 티켓/포인트 보상 설정, 자동 저장
+- [x] **3-4. Inventory Ops (인벤토리)**
+    - [x] `TicketInventoryPage`: 지급/회수 로그
+        - **UI**: `Data Table`, `DateRangePicker`, `HoverCard`(Item Detail) → `Dialog`(Grant Form), `Input`(User ID Search), `Badge`(Type Label)
+        - **완료**: 유저별 로그 조회, 아이템 수동 지급 다이얼로그, 타입별 배지 시각화
 
 ### Step 4: Settings & System (설정 및 시스템)
 - [ ] **4-1. Marketing Tools**
@@ -305,6 +310,12 @@ Shadcn/UI 외에 운영 효율을 위해 별도로 제작해야 하는 커스텀
     - [ ] **Audit Link**: `Toast`(Action Feedback) 및 로그 적재 확인
 
 ## 10. 변경 이력
+- v1.4 (2026-01-19, Antigravity Agent): Game Ops & Inventory Ops 구현 완료
+    - `MissionManagerPage`, `LevelConfigPage`, `TicketInventoryPage` 구현
+    - `adminApi.ts`: Mission/Level/Inventory API 및 DTO 추가
+    - `useAdminGame.ts`, `useAdminInventory.ts`: React Query 훅 생성
+    - V2 경로 표준화 완료 (src/v2 격리, @/v2 alias 추가)
+    - Economy Ops (`CCDepositPage`, `ShopManagerPage`) 구현 완료
 - v1.3 (2026-01-19, Antigravity Agent): 구현 순서도(Roadmap) 추가
 - v1.2 (2026-01-19, Antigravity Agent): 디자인 가이드(Soft Obsidian) 반영 및 용어 한글화
 - v1.1 (2026-01-19, Antigravity Agent): Magic UI Ops 적용 전략 추가

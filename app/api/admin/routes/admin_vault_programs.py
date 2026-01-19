@@ -25,7 +25,7 @@ from app.schemas.vault2 import (
     VaultBalanceSetRequest,
     VaultAdminStateResponse,
 )
-from app.services.vault2_service import Vault2Service
+from app.v2.services.vault2_service import Vault2Service
 from app.services.admin_user_identity_service import resolve_user_id_by_identifier
 
 

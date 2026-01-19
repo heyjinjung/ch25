@@ -49,7 +49,7 @@ class DiceService:
         
         Returns: (is_active, ineligible_reason)
         """
-        from app.services.vault2_service import Vault2Service
+        from app.v2.services.vault2_service import Vault2Service
         vault2_service = Vault2Service()
 
         # 1. Check Config
@@ -129,7 +129,7 @@ class DiceService:
         event_plays_max = None
         
         if event_active:
-             from app.services.vault2_service import Vault2Service
+             from app.v2.services.vault2_service import Vault2Service
              v2 = Vault2Service()
              
              # Get Cap
@@ -194,7 +194,7 @@ class DiceService:
         if is_event_active:
             mode = "EVENT"
             # Reload config for event logic
-            from app.services.vault2_service import Vault2Service
+            from app.v2.services.vault2_service import Vault2Service
             vault2_service = Vault2Service()
             dice_event_probs = vault2_service.get_config_value(db, "probability", {}).get("DICE", {})
             game_earn_config = vault2_service.get_config_value(db, "game_earn_config", {})
@@ -324,7 +324,7 @@ class DiceService:
 
         # [Event Mode] Update Progress (plays_done)
         if mode == "EVENT" and not consumed_trial:
-            from app.services.vault2_service import Vault2Service
+            from app.v2.services.vault2_service import Vault2Service
             v2 = Vault2Service()
             program = v2.get_default_program(db)
             status = v2.get_or_create_status(db, user_id=user_id, program=program)

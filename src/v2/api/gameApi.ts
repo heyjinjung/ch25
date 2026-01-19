@@ -8,8 +8,6 @@ import type {
   DiceDoubleUpRequest,
   DiceDoubleUpResponse,
   LotteryScratchRequest,
-  PuzzleCraftRequest,
-  PuzzleCraftResponse,
 } from "../types/gameAction";
 import type { GameTokenType } from "../../types/gameTokens";
 
@@ -170,29 +168,10 @@ export const getV2LotteryStatus = async (): Promise<LotteryStatusResponse> => {
 };
 
 export const playV2Lottery = async (request: LotteryScratchRequest): Promise<LotteryPlayResponse> => {
-  try {
-    const payload = {
-      ticket_type: mapTokenToV2(request.ticket_type),
-      selection_numbers: request.selection_numbers || null,
-    };
-    const response = await v2Client.post<LotteryPlayResponse>("/api/v2/lottery/play", payload);
-    return response.data;
-  } catch (error) {
-    console.error("[gameApi] Failed to play V2 lottery", error);
-    throw error;
-  }
-};
-
-// ============================================================================
-// Exchange/Craft API
-// ============================================================================
-
-export const craftV2Exchange = async (request: PuzzleCraftRequest): Promise<PuzzleCraftResponse> => {
-  try {
-    const response = await v2Client.post<PuzzleCraftResponse>("/api/v2/exchange/craft", request);
-    return response.data;
-  } catch (error) {
-    console.error("[gameApi] Failed to craft V2 exchange", error);
-    throw error;
-  }
+  const payload = {
+    ticket_type: mapTokenToV2(request.ticket_type),
+    selection_numbers: request.selection_numbers || null,
+  };
+  const response = await v2Client.post<LotteryPlayResponse>("/api/v2/lottery/play", payload);
+  return response.data;
 };

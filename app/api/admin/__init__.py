@@ -31,13 +31,13 @@ from app.api.admin.routes import (
     admin_economy_stats,
     admin_streak_rewards,
     admin_ops_log,
-    admin_ops_plan,
     admin_ops_target,
     admin_reward_types,
     admin_vault_requests,
     admin_events,
     admin_feed_config,
 )
+from app.v2.api import admin_ops_plan
 
 from app.api.deps import get_current_admin_id
 
