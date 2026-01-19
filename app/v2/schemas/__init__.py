@@ -41,6 +41,29 @@ from app.v2.schemas.v2_notification_feed import (
     SystemNoticePayload,
     UserAssetUpdatePayload,
 )
+from app.v2.schemas.v2_ticket_conversion import (
+    V2TicketConversionPolicyCreate,
+    V2TicketConversionPolicyResponse,
+)
+from app.v2.schemas.v2_shop_exchange import (
+    V2ExchangeLogCreate,
+    V2ExchangeLogResponse,
+    V2ShopOrderCreate,
+    V2ShopOrderResponse,
+)
+from app.v2.schemas.v2_ticket_zero import (
+    V2TicketZeroLogCreate,
+    V2TicketZeroLogResponse,
+)
+from app.v2.schemas.v2_ops_execution import (
+    OpsExecutionEnvelope,
+    OpsExecutionError,
+    OpsGoldenHourResult,
+    OpsGrantedItem,
+    OpsInventoryGrantAll,
+    OpsTargetedItemGrant,
+    V2OpsExecutionResultRecord,
+)
 
 __all__ = [
     "V2LevelRewardRow",
@@ -80,4 +103,19 @@ __all__ = [
     "UserAssetUpdatePayload",
     "FeedPayload",
     "FeedEnvelope",
+    "V2TicketConversionPolicyCreate",
+    "V2TicketConversionPolicyResponse",
+    "V2ShopOrderCreate",
+    "V2ShopOrderResponse",
+    "V2ExchangeLogCreate",
+    "V2ExchangeLogResponse",
+    "V2TicketZeroLogCreate",
+    "V2TicketZeroLogResponse",
+    "OpsExecutionError",
+    "OpsExecutionEnvelope",
+    "OpsGrantedItem",
+    "OpsInventoryGrantAll",
+    "OpsTargetedItemGrant",
+    "OpsGoldenHourResult",
+    "V2OpsExecutionResultRecord",
 ]

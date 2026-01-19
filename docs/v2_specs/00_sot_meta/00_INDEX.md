@@ -34,10 +34,16 @@
 - **티켓 제로(구조) SoT**: docs/v2_specs/02_game/v2_ticket_zero_policy_sot_ko.md
 - V2 DB 베이스라인 스냅샷: docs/v2_specs/04_db/v2_db_baseline_snapshot_ko.md
 - V2 DB 레벨 보상 테이블: docs/v2_specs/04_db/v2_db_level_reward_table_ko.md
+- V2 DB 티켓 전환 정책: docs/v2_specs/04_db/v2_db_ticket_conversion_policy_ko.md
+- V2 DB 상점 주문 로그: docs/v2_specs/04_db/v2_db_shop_order_ko.md
+- V2 DB 교환소 로그: docs/v2_specs/04_db/v2_db_exchange_log_ko.md
+- V2 DB 티켓 제로 로그: docs/v2_specs/04_db/v2_db_ticket_zero_log_ko.md
+- V2 DB Ops 실행 결과: docs/v2_specs/04_db/v2_db_ops_execution_result_ko.md
 
 ## 6. 운영/검증 (QA)
 - [ ] 문서 분류/링크 최신화
 - [ ] SoT 우선순위 준수
 
 ## 7. 변경 이력
+- v1.1 (2026-01-19, GitHub Copilot): V2 DB 로그/ops 문서 링크 추가
 - v1.0 (2026-01-18, GitHub Copilot): 최초 작성
