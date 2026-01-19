@@ -6,7 +6,7 @@ import { Input } from "../../../components/ui/input";
 import { Button } from "../../../components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select";
 import { RadioGroup, RadioGroupItem } from "../../../components/ui/radio-group";
-import { Label } from "../../../components/ui/Label";
+import { Label } from "../../../components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../components/ui/table";
 import { Badge } from "../../../components/ui/badge";
 import { Send, Clock, CheckCircle2 } from "lucide-react";

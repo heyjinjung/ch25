@@ -292,11 +292,13 @@ Shadcn/UI 외에 운영 효율을 위해 별도로 제작해야 하는 커스텀
         - **완료**: 유저별 로그 조회, 아이템 수동 지급 다이얼로그, 타입별 배지 시각화
 
 ### Step 4: Settings & System (설정 및 시스템)
-- [ ] **4-1. Marketing Tools**
-    - [ ] `MessageSenderPage`: 푸시 발송
+- [x] **4-1. Marketing Tools**
+    - [x] `MessageSenderPage`: 푸시 발송
         - **UI**: `Textarea`(Message), `Select`(Target), `RadioGroup`(Type)
-    - [ ] `SurveyPage`: 설문 관리
-        - **UI**: `FormBuilder`(Dynamic), `BarChart`(Result)
+        - **완료**: 타겟/타입별 메시지 발송 폼, 발송 이력 조회 테이블, 즉시 발송 API 연동
+    - [x] `SurveyPage`: 설문 관리
+        - **UI**: `FormBuilder`(Dynamic), `BarChart`(Result) → `Tabs`(List/Result), `Switch`(Active Toggle), `BarChart`(Result Pct)
+        - **완료**: 설문 활성화/비활성화 토글, 설문별 응답 통계 시각화
 - [ ] **4-2. Game Configuration**
     - [ ] `RouletteConfigPage` & `DiceConfigPage`: 확률 설정
         - **UI**: `Slider`(Probability), `Input`(Multiplier), `Chart`(Simulation)
@@ -310,6 +312,9 @@ Shadcn/UI 외에 운영 효율을 위해 별도로 제작해야 하는 커스텀
     - [ ] **Audit Link**: `Toast`(Action Feedback) 및 로그 적재 확인
 
 ## 10. 변경 이력
+- v1.5 (2026-01-19, Antigravity Agent): Marketing Tools (`MessageSenderPage`, `SurveyPage`) 구현 완료
+    - `useAdminMarketing.ts` 훅 및 API 구현
+    - UI 컴포넌트 (`Label` 등) 추가 및 경로 표준화
 - v1.4 (2026-01-19, Antigravity Agent): Game Ops & Inventory Ops 구현 완료
     - `MissionManagerPage`, `LevelConfigPage`, `TicketInventoryPage` 구현
     - `adminApi.ts`: Mission/Level/Inventory API 및 DTO 추가
