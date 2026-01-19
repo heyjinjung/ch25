@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from datetime import date
 
-from fastapi import APIRouter, Depends, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -32,6 +32,8 @@ from app.schemas.ops_plan import (
     OpsEvalMetricOut,
 )
 from app.services.ops_plan_service import OpsPlanService
+from app.v2.models.v2_ops_execution_result import V2OpsExecutionResult
+from app.v2.schemas.v2_ops_execution import V2OpsExecutionResultRecord
 
 router = APIRouter(prefix="/admin/api/ops", tags=["admin-ops-plan"])
 service = OpsPlanService()
@@ -223,4 +225,38 @@ def list_plan_timeline(
 ):
     # Only executed tasks
     return db.scalars(select(OpsPlanTask).where(OpsPlanTask.plan_id == plan_id).where(OpsPlanTask.executed_at.is_not(None)).order_by(OpsPlanTask.executed_at.desc())).all()
+
+
+@router.post("/tasks/{task_id}/execution-result")
+def save_execution_result(
+    task_id: int,
+    payload: dict,
+    db: Session = Depends(get_db),
+    _: int = Depends(get_current_admin_id),
+):
+    kind = payload.get("kind")
+    if not kind:
+        raise HTTPException(status_code=400, detail="MISSING_KIND")
+
+    record = V2OpsExecutionResult(task_id=task_id, kind=str(kind), payload_json=payload)
+    db.add(record)
+    db.commit()
+    return {"saved": True}
+
+
+@router.get("/tasks/{task_id}/execution-result", response_model=V2OpsExecutionResultRecord)
+def get_execution_result(
+    task_id: int,
+    db: Session = Depends(get_db),
+    _: int = Depends(get_current_admin_id),
+):
+    record = (
+        db.query(V2OpsExecutionResult)
+        .filter(V2OpsExecutionResult.task_id == task_id)
+        .order_by(V2OpsExecutionResult.id.desc())
+        .first()
+    )
+    if not record:
+        raise HTTPException(status_code=404, detail="EXECUTION_RESULT_NOT_FOUND")
+    return record
 

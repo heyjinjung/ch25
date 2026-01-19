@@ -251,18 +251,30 @@ Shadcn/UI 외에 운영 효율을 위해 별도로 제작해야 하는 커스텀
     - **UI**: `PulsatingDot`(Magic UI), `Card`(Glass Effect), `Sparkles`(Animation)
 
 ### Step 3: Management & Ops (관리 및 운영)
-- [ ] **3-1. User CRM (회원 관리)**
+- [x] **3-1. User CRM (회원 관리)**
     - [x] `UserListPage`: 검색 및 상태 필터
         - **UI**: `Tanstack Table`, `Command`(Search), `Popover`(Filter), `Badge`(Active/Black)
     - [x] `UserDetailDrawer`: 6-Section 통합 뷰
         - **UI**: `Sheet`(Right Side), `Tabs`(Sections), `Avatar`, `Timeline`(Custom)
-    - [ ] `WalletEditor`: 티켓 강제 수정
+        - **Features**: 
+            1. **기본 정보**: 프로필, 레벨, 기기 정보
+            2. **지갑(Wallet)**: 티켓 로그, 보유량 수정 **(핵심)**
+            3. **금고(Vault)**: 입출금 이력, 강제 잔액 조정 (+입금/-출금), 리스크 식별
+            4. **인벤토리**: 기프티콘 보유 현황
+            5. **미션(Mission)**: 수행 이력 조회 및 강제 완료/수정 처리 **(New)**
+            6. **로그/메모**: 활동 로그 및 운영자 메모
+    - [x] `WalletEditor`: 티켓 강제 수정
         - **UI**: `Dialog`(Alert), `Input`(Number), `Form`(Validation)
 - [ ] **3-2. Economy Ops (경제 관리)**
     - [ ] `VaultControlPage`: 출금 승인/반려
         - **UI**: `Slider`(Swipe to Approve), `AlertDialog`(Reject), `Progress`(Limit)
+        - **Motion**: 
+            - **Framer Motion**: 리스트 아이템 등장 (StaggerChildren)
+        - **Features**: 오입금 사고 처리용 강제 입/출금 조정 기능 포함
     - [ ] `CCDepositPage`: 입금 수동 승인
         - **UI**: `Table`(Pending List), `Button`(Action), `Textarea`(Memo)
+        - **Motion**:
+            - **Magic UI**: 신규 요청 건 `ShineBorder` 적용 (주목도 향상)
     - [ ] `ShopManagerPage`: 상품 관리
         - **UI**: `Switch`(On/Off), `Card`(Product Item), `Input`(Price)
 - [ ] **3-3. Game Ops (게임 운영)**
