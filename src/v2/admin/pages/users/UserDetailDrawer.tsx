@@ -1,13 +1,12 @@
 
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/v2/components/ui/sheet";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/v2/components/ui/tabs";
-import { ScrollArea } from "@/v2/components/ui/scroll-area";
-import { Separator } from "@/v2/components/ui/separator";
-import { Badge } from "@/v2/components/ui/badge";
-import { Button } from "@/v2/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/v2/components/ui/card";
-import { NumberTicker } from "@/v2/admin/components/ui/NumberTicker";
-import { Activity, CreditCard, Box, FileText, User, Shield, AlertTriangle } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "../../../components/ui/sheet";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/ui/tabs";
+import { ScrollArea } from "../../../components/ui/scroll-area";
+import { Badge } from "../../../components/ui/badge";
+import { Button } from "../../../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
+import { NumberTicker } from "../../components/ui/NumberTicker";
+import { Shield, AlertTriangle } from "lucide-react";
 import { useRef, useEffect } from "react";
 import gsap from "gsap";
 

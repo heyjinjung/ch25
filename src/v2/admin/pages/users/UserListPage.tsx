@@ -5,6 +5,7 @@ import { Button } from "../../../components/ui/button";
 import { Badge } from "../../../components/ui/badge";
 import { Search, Filter, MoreHorizontal, Eye } from "lucide-react";
 import { cn } from "../../../lib/utils";
+import { UserDetailDrawer } from "./UserDetailDrawer";
 
 // Mock Data
 const users = [
@@ -17,6 +18,7 @@ const users = [
 
 export default function UserListPage() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
 
   const filteredUsers = users.filter(user => 
     user.nickname.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -100,7 +102,12 @@ export default function UserListPage() {
                     </div>
                 </TableCell>
                 <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-zinc-500 hover:text-white hover:bg-zinc-800">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 text-zinc-500 hover:text-white hover:bg-zinc-800"
+                      onClick={() => setSelectedUserId(user.id)}
+                    >
                         <Eye className="h-4 w-4" />
                     </Button>
                     <Button variant="ghost" size="icon" className="h-8 w-8 text-zinc-500 hover:text-white hover:bg-zinc-800">
@@ -112,6 +119,12 @@ export default function UserListPage() {
           </TableBody>
         </Table>
       </div>
+      
+      <UserDetailDrawer 
+        isOpen={!!selectedUserId} 
+        onClose={() => setSelectedUserId(null)} 
+        userId={selectedUserId} 
+      />
     </div>
   );
 }
