@@ -242,6 +242,7 @@ export function UserDetailDrawer({ isOpen, onClose, userId }: UserDetailDrawerPr
 
                 </div>
             </ScrollArea>
+            </Tabs>
             </>
         )}
         
