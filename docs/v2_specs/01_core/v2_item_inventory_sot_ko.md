@@ -39,6 +39,7 @@ V2 시스템은 자산을 성격에 따라 3가지 카테고리로 엄격히 구
 - `DIAMOND_FRAGMENT`: 30개 -> 1 Diamond Ticket
 - `PUZZLE_*`: 복권 당첨용 퍼즐 조각 (C1, C2, J, M)
 - `DIAMOND`: (재화) 미션 리워드 등으로 획득, 주로 상점 재화로 사용
+    - 표준 조각: `PUZZLE_C1`, `PUZZLE_C2`, `PUZZLE_J`, `PUZZLE_M`
 
 ---
 

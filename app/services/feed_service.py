@@ -109,7 +109,9 @@ class FeedService:
             "id": str(uuid.uuid4()),
             "payload": message["payload"]
         }
-        client.publish("feed:public", json.dumps(envelope, ensure_ascii=False))
+        payload = json.dumps(envelope, ensure_ascii=False)
+        client.publish("feed:public", payload)
+        client.publish("golden:v2:feed:public", payload)
 
     def publish_guerrilla_drop(self, multiplier: float):
         """Publish a guerrilla drop (Golden Hour) event to the public feed."""

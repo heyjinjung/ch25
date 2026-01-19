@@ -65,8 +65,8 @@
     *   **Money Integrity**: `Check Constraint (balance >= 0)` 설정 필수.
     *   [x] Money Integrity 체크 제약 추가
     *   **마이그레이션 전략**: 다음달 완전 리셋 배포 전제 → **베이스라인 스냅샷 1개 + 이후 최소 누적**
-    *   **진행도**: 완료 (V2 DB 기준 마이그레이션 적용 완료, head=20260119_1700)
-    *   **근거**: [alembic/versions/20260119_0904_3bc52f37e0c0_baseline_v2_snapshot.py](../../../alembic/versions/20260119_0904_3bc52f37e0c0_baseline_v2_snapshot.py#L1), [alembic/versions/20260119_1000_add_v2_level_reward_table.py](../../../alembic/versions/20260119_1000_add_v2_level_reward_table.py#L1), [alembic/versions/20260119_1100_add_v2_ticket_conversion_policy.py](../../../alembic/versions/20260119_1100_add_v2_ticket_conversion_policy.py#L1), [alembic/versions/20260119_1200_add_v2_shop_exchange_ticketzero_ops_tables.py](../../../alembic/versions/20260119_1200_add_v2_shop_exchange_ticketzero_ops_tables.py#L1), [alembic/versions/20260119_1400_add_v2_user_table.py](../../../alembic/versions/20260119_1400_add_v2_user_table.py#L1), [alembic/versions/20260119_1500_add_v2_game_tables.py](../../../alembic/versions/20260119_1500_add_v2_game_tables.py#L1), [alembic/versions/20260119_1600_add_v2_segment_message_tables.py](../../../alembic/versions/20260119_1600_add_v2_segment_message_tables.py#L1), [alembic/versions/20260119_1700_add_v2_golden_retention_tables.py](../../../alembic/versions/20260119_1700_add_v2_golden_retention_tables.py#L1), [docs/v2_specs/04_db/v2_db_level_reward_table_ko.md](../04_db/v2_db_level_reward_table_ko.md#L1), [docs/v2_specs/04_db/v2_db_ticket_conversion_policy_ko.md](../04_db/v2_db_ticket_conversion_policy_ko.md#L1), [docs/v2_specs/04_db/v2_db_shop_order_ko.md](../04_db/v2_db_shop_order_ko.md#L1), [docs/v2_specs/04_db/v2_db_exchange_log_ko.md](../04_db/v2_db_exchange_log_ko.md#L1), [docs/v2_specs/04_db/v2_db_ticket_zero_log_ko.md](../04_db/v2_db_ticket_zero_log_ko.md#L1), [docs/v2_specs/04_db/v2_db_ops_execution_result_ko.md](../04_db/v2_db_ops_execution_result_ko.md#L1), [docs/v2_specs/04_db/v2_db_user_ko.md](../04_db/v2_db_user_ko.md#L1), [docs/v2_specs/04_db/v2_db_roulette_ko.md](../04_db/v2_db_roulette_ko.md#L1), [docs/v2_specs/04_db/v2_db_dice_ko.md](../04_db/v2_db_dice_ko.md#L1), [docs/v2_specs/04_db/v2_db_lottery_ko.md](../04_db/v2_db_lottery_ko.md#L1)
+    *   **진행도**: 완료 (V2 DB 기준 마이그레이션 적용 완료, head=20260119_1712)
+    *   **근거**: [alembic/versions/20260119_0904_3bc52f37e0c0_baseline_v2_snapshot.py](../../../alembic/versions/20260119_0904_3bc52f37e0c0_baseline_v2_snapshot.py#L1), [alembic/versions/20260119_1000_add_v2_level_reward_table.py](../../../alembic/versions/20260119_1000_add_v2_level_reward_table.py#L1), [alembic/versions/20260119_1100_add_v2_ticket_conversion_policy.py](../../../alembic/versions/20260119_1100_add_v2_ticket_conversion_policy.py#L1), [alembic/versions/20260119_1200_add_v2_shop_exchange_ticketzero_ops_tables.py](../../../alembic/versions/20260119_1200_add_v2_shop_exchange_ticketzero_ops_tables.py#L1), [alembic/versions/20260119_1400_add_v2_user_table.py](../../../alembic/versions/20260119_1400_add_v2_user_table.py#L1), [alembic/versions/20260119_1500_add_v2_game_tables.py](../../../alembic/versions/20260119_1500_add_v2_game_tables.py#L1), [alembic/versions/20260119_1600_add_v2_segment_message_tables.py](../../../alembic/versions/20260119_1600_add_v2_segment_message_tables.py#L1), [alembic/versions/20260119_1700_add_v2_golden_retention_tables.py](../../../alembic/versions/20260119_1700_add_v2_golden_retention_tables.py#L1), [alembic/versions/20260119_1711_add_v2_puzzle_tokens.py](../../../alembic/versions/20260119_1711_add_v2_puzzle_tokens.py#L1), [alembic/versions/20260119_1712_add_vault_spent_today_fields.py](../../../alembic/versions/20260119_1712_add_vault_spent_today_fields.py#L1), [docs/v2_specs/04_db/v2_db_level_reward_table_ko.md](../04_db/v2_db_level_reward_table_ko.md#L1), [docs/v2_specs/04_db/v2_db_ticket_conversion_policy_ko.md](../04_db/v2_db_ticket_conversion_policy_ko.md#L1), [docs/v2_specs/04_db/v2_db_shop_order_ko.md](../04_db/v2_db_shop_order_ko.md#L1), [docs/v2_specs/04_db/v2_db_exchange_log_ko.md](../04_db/v2_db_exchange_log_ko.md#L1), [docs/v2_specs/04_db/v2_db_ticket_zero_log_ko.md](../04_db/v2_db_ticket_zero_log_ko.md#L1), [docs/v2_specs/04_db/v2_db_ops_execution_result_ko.md](../04_db/v2_db_ops_execution_result_ko.md#L1), [docs/v2_specs/04_db/v2_db_user_ko.md](../04_db/v2_db_user_ko.md#L1), [docs/v2_specs/04_db/v2_db_roulette_ko.md](../04_db/v2_db_roulette_ko.md#L1), [docs/v2_specs/04_db/v2_db_dice_ko.md](../04_db/v2_db_dice_ko.md#L1), [docs/v2_specs/04_db/v2_db_lottery_ko.md](../04_db/v2_db_lottery_ko.md#L1)
     *   **운영 주의**: 컨테이너 기본 DB는 V1일 수 있으므로, V2 작업은 `DATABASE_URL=mysql+pymysql://xmasuser:2026@db:3306/v2`로 실행
 
 ---
@@ -130,11 +130,11 @@
     *   **진행도**: EXECUTION (Shop/Inventory TDD 전환 완료, 상품 데이터 마이그레이션 완료)
 
 
-### 현황 메모
-현재 출금시에 유저금고 / 어드민회원페이지 / 어드민금고페이지에서 각각 다른 금액이 도출됨
-금고락인금액 / 금고가용금액이 더블로 계산되어 나오는 경우도 존재했고
-그냥 한마디로 엉망이었음
-정확한 로직과 규칙 준수가 절실하고 프론트 반영까지 모두 확인되어야함
+### 현황 메모 (2026-01-19 Update)
+**"Reverse Sync" 진행 중**: 구현 속도가 계획을 앞질러, `v2_admin_master_plan_ko.md` 및 `v2_global_sot_verification_report_ko.md` 내용이 더 최신입니다.
+- **Admin**: Foundation, Dashboard, CRM, GameOps, InventoryOps 구현 완료. (Phase 4 선행 진행)
+- **Backend*: Golden V2, Redis Infrabstructure, DB Models 구현 완료. (Verification 단계 진입)
+- **Game**: V2 표준 게임 엔진 및 API 구현/검증 완료.
 
 ### 추가 계획
 #### 1) 상점/인벤토리 서비스 레이어 설계 확정 (진행 중)
@@ -186,9 +186,9 @@
 9.  **게임 엔진 표준화 (Game Engine V2)**
     *   룰렛, 주사위, 복권 로직 추상화 및 Config Schema 강제 적용.
     *   룰렛, 주사위, 복권의 공통 로직(입장 -> 결과 산출 -> 보상 지급)을 추상화.
-    *   **진행도**: 진행중
-    *   **근거**: [docs/v2_specs/02_game/v2_game_engine_standardization_design_ko.md](../02_game/v2_game_engine_standardization_design_ko.md#L1), [docs/v2_specs/02_game/v2_game_engine_sot_ko.md](../02_game/v2_game_engine_sot_ko.md#L1), [docs/v2_specs/03_api/v2_game_api_contract_ko.md](../03_api/v2_game_api_contract_ko.md#L1)
-    *   **검증**: V2 core 테스트 16건 통과 (2026-01-19)
+    *   **진행도**: 완료 (검증 리포트 기준 90% Pass)
+    *   **근거**: [docs/v2_specs/02_game/v2_game_engine_standardization_design_ko.md](../02_game/v2_game_engine_standardization_design_ko.md#L1), [docs/v2_specs/02_game/v2_game_engine_sot_ko.md](../02_game/v2_game_engine_sot_ko.md#L1)
+    *   **검증**: V2 core 테스트 16건 통과, API 스모크 테스트 통과
     *   **검증**: V2 게임 API /api/v2/{game}/status|play 스모크 테스트 통과 (tests/v2/core/test_v2_game_api_flow.py) 
 
 
@@ -199,21 +199,22 @@
 11. **Admin V2 재구축**
     *   RBAC(권한 관리)가 적용된 엄격한 어드민.
     *   기존 운영툴(응대 플레이북, 위기 레이더) DB 연결.
-    *   **진행도**: 미착수
+    *   **진행도**: 진행중 (Foundation, Dashboard, User CRM, Game Ops 구현 완료)
+    *   **근거**: [v2_admin_master_plan_ko.md](../06_design/v2_admin_master_plan_ko.md), [src/v2/admin/pages](../../../src/v2/admin/pages)
 
 12. **세그먼트 분류/메시지 발송 V2 SoT/DB 구성**
     *   세그먼트 룰/결과 저장 및 메시지 인박스 스키마 정의.
     *   **작업 내용**:
-        - V2 세그먼트 배치 트리거 API
-        - V2 관리자 메시지 생성/팬아웃 API
-    *   **진행도**: 진행중 (SoT/DB 스키마 초안 완료)
-    *   **검증**: 마이그레이션 적용 완료 (revision 20260119_1600)
+        - V2 세그먼트 배치 트리거 API (완료)
+        - V2 관리자 메시지 생성/팬아웃 API (완료)
+    *   **진행도**: 완료 (DB/API/Admin Page 구현 완료)
+    *   **검증**: 마이그레이션 적용 완료, Admin MessageSenderPage 구현 완료
     *   **근거**: [docs/v2_specs/01_core/v2_user_segment_policy_sot_ko.md](../01_core/v2_user_segment_policy_sot_ko.md#L1), [docs/v2_specs/05_ops/v2_admin_message_policy_sot_ko.md](../05_ops/v2_admin_message_policy_sot_ko.md#L1), [docs/v2_specs/04_db/v2_db_segment_rule_ko.md](../04_db/v2_db_segment_rule_ko.md#L1), [docs/v2_specs/04_db/v2_db_user_segment_ko.md](../04_db/v2_db_user_segment_ko.md#L1), [docs/v2_specs/04_db/v2_db_admin_message_ko.md](../04_db/v2_db_admin_message_ko.md#L1), [docs/v2_specs/04_db/v2_db_admin_message_inbox_ko.md](../04_db/v2_db_admin_message_inbox_ko.md#L1), [app/v2/api/routes.py](../../../app/v2/api/routes.py#L1)
 
 13. **Golden V2 이관 (문서/기능)**
     *   Golden V2 API/DB 문서 정리 및 기능 이관.
-    *   **진행도**: 완료 (문서 경로 이동 및 V2 라우트 이관 완료)
-    *   **근거**: [docs/v2_specs/07_golden/golden_v2_system_definition_ko.md](../07_golden/golden_v2_system_definition_ko.md#L1), [docs/v2_specs/07_golden/golden_v2_intervention_logic_ko.md](../07_golden/golden_v2_intervention_logic_ko.md#L1), [docs/v2_specs/07_golden/golden_v2_operational_logic_ko.md](../07_golden/golden_v2_operational_logic_ko.md#L1), [docs/v2_specs/07_golden/02_golden_v2_realtime_architecture.md](../07_golden/02_golden_v2_realtime_architecture.md#L1), [docs/v2_specs/07_golden/v2_golden_api_contract_ko.md](../07_golden/v2_golden_api_contract_ko.md#L1), [docs/v2_specs/07_golden/v2_db_golden_data_map_ko.md](../07_golden/v2_db_golden_data_map_ko.md#L1), [app/v2/api/routes.py](../../../app/v2/api/routes.py#L1), [app/v2/services/golden_event_service.py](../../../app/v2/services/golden_event_service.py#L1), [app/v2/workers/golden_event_worker.py](../../../app/v2/workers/golden_event_worker.py#L1)
+    *   **진행도**: 완료 (DB Models, Workers, Redis Infra, API 구현 완료)
+    *   **근거**: [v2_global_sot_verification_report_ko.md](../99_verification/v2_global_sot_verification_report_ko.md), [app/v2/services/golden_event_service.py](../../../app/v2/services/golden_event_service.py)
 
 
 

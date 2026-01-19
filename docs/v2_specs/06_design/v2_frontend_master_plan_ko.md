@@ -158,7 +158,52 @@ graph TD
 
 ---
 
-## 9. 검증 체크리스트 (Verification Checklist)
+## 9. 프론트엔드 연동 설계 (API / State / UX)
+
+### 9.1 API 연동 매핑 (화면 ↔ API ↔ 스키마)
+| 화면 | 주요 API 엔드포인트 | 응답 스키마(참조) | 비고 |
+| :--- | :--- | :--- | :--- |
+| **VaultPage** | `GET /api/vault/status`, `POST /api/vault/withdraw` | `VaultStatusResponse`, `VaultWithdrawResponse` | 출금 버튼 활성 조건 반영 |
+| **ShopPage** | `GET /api/v2/shop/products`, `POST /api/v2/shop/purchase` | `ShopProductsResponse`, `ShopPurchaseResponse` | 원자적 트랜잭션 모달 |
+| **InventoryPage** | `GET /api/v2/inventory` | `InventoryListResponse` | 보유/사용 탭 분리 |
+| **HomePage** | `GET /api/v2/feed/public` | `FeedMessage[]` | Marquee 연동 |
+| **Roulette/Dice/Lottery** | `POST /api/v2/game/*/play` | `gameAction` envelope | `vault_earn`, `streak_info` 반영 |
+
+### 9.2 상태/스토어 설계 (React Query + Zustand)
+- **React Query 키**
+  - `vault:status`, `shop:products`, `inventory:list`, `feed:public`, `game:status:*`
+- **캐시 정책**
+  - Vault/Shop: `staleTime=10s`, Inventory: `staleTime=30s`, Feed: `refetchInterval=5s`
+- **Zustand 상태**
+  - `auth`(token, user_id), `ui`(modals, toasts), `golden`(intervention_state)
+
+### 9.3 인증/세션 흐름
+- **DevLogin** → 토큰 저장 → 기본 헤더 주입(`Authorization: Bearer`)
+- 만료 시 **401 처리**: 로그아웃 + 재로그인 유도
+- 토큰/헤더는 `src/v2/api/client.ts` 단일 진입점에서 관리
+
+### 9.4 공통 오류/로딩 UX
+- **에러 코드 매핑**: `BENEFITS_SUSPENDED`, `DEPOSIT_REQUIRED`, `VAULT_LIMIT_EXCEEDED`
+- **재시도 정책**: `GET` 요청 1회 자동 재시도, `POST`는 사용자 재시도
+- **스켈레톤**: Vault/Shop/Inventory 기본 스켈레톤 제공
+
+### 9.5 이벤트/피드 연결
+- **이벤트 소스**: `golden:v2:events:*`, `golden:v2:feed:public`
+- **소비 위치**: Home Marquee, Vault 알림, Golden Intervention 위젯
+
+### 9.6 권한/차단 UI 규칙
+- `benefits_suspended=true` → Shop/Game 버튼 비활성화 + 툴팁
+- 출금 버튼 활성 조건: 회차별 최소 금액 + 당일 입금/금고 사용 조건 충족 시만 활성
+
+### 9.7 게임 결과 수집 포맷
+- `gameAction` 스키마 기준 바인딩
+- UI 반영 필드: `vault_earn`, `result`, `season_pass`, `streak_info`
+
+### 9.8 라우팅/네비 구조
+- V2 진입: `/v2/*` 기본 라우팅, V1 경로와 격리
+- 딥링크: `/v2/game/roulette`, `/v2/vault`, `/v2/shop`, `/v2/inventory`
+
+## 10. 검증 체크리스트 (Verification Checklist)
 **AI_BASE_GUIDE 7. 품질/검증 기준 준수**
 
 - [ ] **Retention Core**: "도파민(화려함)"과 "탐험(숨겨진 요소)"이 반영되었는가?

@@ -11,6 +11,7 @@ from app.core.error_handlers import register_exception_handlers
 from app.workers.ops_outbox_worker import run_ops_outbox_worker
 from app.workers.ch25_event_worker import run_ch25_event_worker
 from app.v2.workers.golden_event_worker import run_golden_event_worker
+from app.v2.workers.golden_intervention_worker import run_golden_intervention_worker
 
 settings = get_settings()
 
@@ -88,11 +89,14 @@ _ch25_task = None
 _ch25_stop = None
 _golden_task = None
 _golden_stop = None
+_golden_intervention_task = None
+_golden_intervention_stop = None
 
 @app.on_event("startup")
 async def startup_event():
     print(f"Startup: CORS origins loaded: {cors_origins}", flush=True)
     global _outbox_task, _outbox_stop, _ch25_task, _ch25_stop, _golden_task, _golden_stop
+    global _golden_intervention_task, _golden_intervention_stop
     import asyncio
 
     _outbox_stop = asyncio.Event()
@@ -104,11 +108,17 @@ async def startup_event():
     _golden_stop = asyncio.Event()
     _golden_task = asyncio.create_task(run_golden_event_worker(stop_event=_golden_stop))
     app.state.golden_event_task = _golden_task
+    _golden_intervention_stop = asyncio.Event()
+    _golden_intervention_task = asyncio.create_task(
+        run_golden_intervention_worker(stop_event=_golden_intervention_stop)
+    )
+    app.state.golden_intervention_task = _golden_intervention_task
 
 
 @app.on_event("shutdown")
 async def shutdown_event():
     global _outbox_task, _outbox_stop, _ch25_task, _ch25_stop, _golden_task, _golden_stop
+    global _golden_intervention_task, _golden_intervention_stop
     import asyncio
     if _outbox_stop is not None:
         _outbox_stop.set()
@@ -146,6 +156,18 @@ async def shutdown_event():
             pass
     _golden_task = None
     _golden_stop = None
+    if _golden_intervention_stop is not None:
+        _golden_intervention_stop.set()
+    if _golden_intervention_task is not None:
+        _golden_intervention_task.cancel()
+        try:
+            await _golden_intervention_task
+        except asyncio.CancelledError:
+            pass
+        except Exception:
+            pass
+    _golden_intervention_task = None
+    _golden_intervention_stop = None
 
 register_exception_handlers(app)
 app.include_router(api_router)

@@ -204,9 +204,6 @@ def create_admin_message(
     db: Session = Depends(get_db),
     admin_id: int = Depends(get_current_admin_id),
 ) -> V2MessageResponse:
-            msg = db.query(V2AdminMessage).filter(V2AdminMessage.id == entry.message_id).first()
-            if msg is not None:
-                msg.read_count = (msg.read_count or 0) + 1
     if payload.target_type != "ALL" and not (payload.target_value and payload.target_value.strip()):
         raise HTTPException(status_code=400, detail="TARGET_VALUE_REQUIRED")
 
