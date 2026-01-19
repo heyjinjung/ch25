@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime, time
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Literal
 
 from pydantic import ConfigDict
 
@@ -55,9 +55,30 @@ class EventStatusResponse(BaseModel):
     multiplier: float
     next_event_time: Optional[datetime] = None
     active_events: List[ActiveEventOut]
+    golden_hour: Optional["GoldenHourStatus"] = None
 
 
 class EventToggleRequest(BaseModel):
     event_id: Optional[int] = None
     event_type: Optional[str] = None
     is_active: bool
+
+
+# V2 Golden Hour Policy (SoT aligned)
+GoldenHourOverride = Literal["AUTO", "FORCE_ON", "FORCE_OFF"]
+
+
+class GoldenHourConfig(BaseModel):
+    enabled: bool = False
+    manual_override: GoldenHourOverride = "AUTO"
+    multiplier: float = 2.0
+    start_time_kst: str = "20:00"
+    end_time_kst: str = "22:00"
+    base_amount_gate: Optional[int] = None
+
+
+class GoldenHourStatus(BaseModel):
+    is_golden_hour: bool
+    multiplier: float
+    start_time_kst: str
+    end_time_kst: str

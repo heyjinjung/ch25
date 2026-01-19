@@ -75,6 +75,18 @@ export interface GrantItemRequest {
   reason: string;
 }
 
+export interface InterventionActionDto {
+  actionId: string;
+  label: string;
+  type: string;
+  description: string;
+}
+
+export interface InterventionPlaybookDto {
+  riskLevel: string;
+  suggestedActions: InterventionActionDto[];
+}
+
 export interface AdminUserDetailDto {
   id: number;
   nickname: string | null;
@@ -89,6 +101,7 @@ export interface AdminUserDetailDto {
   isActive: boolean;
   riskLevel: "LOW" | "MEDIUM" | "HIGH";
   riskReason: string | null;
+  playbook?: InterventionPlaybookDto;
 }
 
 export interface OpsDashboardResponse {
@@ -101,11 +114,20 @@ export interface OpsDashboardResponse {
     highRollers: number;
     churnRisks: number;
     onlineNow: number;
+    riskUsers: OpsRiskUserDto[];
   };
   metrics: {
     todayRevenue: number;
     activeUsers24h: number;
   };
+}
+
+export interface OpsRiskUserDto {
+  userId: number;
+  nickname: string;
+  riskLevel: "LOW" | "MEDIUM" | "HIGH";
+  riskReason: string | null;
+  churnScore: number;
 }
 
 // ============================================================================

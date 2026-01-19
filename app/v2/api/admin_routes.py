@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_admin_id, get_db
+from app.api.deps import get_current_admin_info, get_db
 from app.models.game_wallet import GameTokenType, UserGameWallet
 from app.models.inventory import UserInventoryItem
 from app.models.user import User
@@ -18,8 +18,13 @@ from app.v2.schemas.v2_admin_ops import (
     OpsGoldenRadarDto,
     OpsMetricsDto,
     OpsSystemStatusDto,
+    OpsRiskUserDto,
 )
-from app.v2.schemas.v2_admin_user import AdminUserDetailDto
+from app.v2.schemas.v2_admin_user import (
+    AdminUserDetailDto,
+    InterventionPlaybookDto,
+    InterventionActionDto
+)
 from app.v2.schemas.v2_admin_dashboard import (
     DashboardMetricsResponse,
     MetricValue,
@@ -49,16 +54,15 @@ router = APIRouter(prefix="/admin", tags=["v2-admin-ui"])
 def get_admin_user_detail(
     user_id: int,
     db: Session = Depends(get_db),
-    admin_id: int = Depends(get_current_admin_id),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
     """Get 360-view of a user."""
-    _ = admin_id
+    admin_id, admin_role = admin_info
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
 
     # 1. Ticket Balance
-    # Sum of all major ticket types
     ticket_balance = 0
     wallets = db.query(UserGameWallet).filter(UserGameWallet.user_id == user_id).all()
     for w in wallets:
@@ -67,9 +71,6 @@ def get_admin_user_detail(
 
     # 2. Vault/Assets
     vault_balance = int(user.vault_locked_balance or 0) + int(user.vault_available_balance or 0)
-    
-    # Inventory Asset Value (Optional approximation)
-    # For now, just using Vault + Cash logic if any
     current_assets = vault_balance  
     
     # 3. Retention/Risk State
@@ -84,10 +85,41 @@ def get_admin_user_detail(
         elif retention.churn_probability_score > 0.5:
             risk_level = "MEDIUM"
             
-    # Check simple high roller logic
-    if user.total_charge_amount > 10000000:  # 10m KRW
-        risk_level = "HIGH" # Just as example of importance
+    if user.total_charge_amount > 10000000:
+        risk_level = "HIGH"
         risk_reason = "High Value Account"
+
+    # 4. Intervention Playbook (Logic from Golden System)
+    suggested_actions = []
+    if risk_level == "HIGH":
+        suggested_actions = [
+            InterventionActionDto(
+                action_id="BAILOUT_GIFT",
+                label="긴급 구호 자금 지급",
+                type="REWARD",
+                description="파산 위험 유저에게 소액의 티켓 지급 (Retention)"
+            ),
+            InterventionActionDto(
+                action_id="SEND_CRM_PULSE",
+                label="CRM 펄스 전송",
+                type="MESSAGE",
+                description="이탈 방지용 개인화 메시지 전송"
+            )
+        ]
+    elif risk_level == "MEDIUM":
+         suggested_actions = [
+            InterventionActionDto(
+                action_id="MONITOR_CLOSELY",
+                label="밀착 모니터링 지정",
+                type="SYSTEM",
+                description="해당 유저의 다음 게임 결과 실시간 알림 활성화"
+            )
+        ]
+
+    playbook = InterventionPlaybookDto(
+        risk_level=risk_level,
+        suggested_actions=suggested_actions
+    )
 
     return AdminUserDetailDto(
         id=user.id,
@@ -99,10 +131,11 @@ def get_admin_user_detail(
         vault_balance=vault_balance,
         ticket_balance=ticket_balance,
         level=user.level,
-        vip_level="VIP" if user.total_charge_amount > 5000000 else "COMMON", # Simple logic
+        vip_level="VIP" if user.total_charge_amount > 5000000 else "COMMON",
         is_active=(user.status == "ACTIVE"),
         risk_level=risk_level,
-        risk_reason=risk_reason
+        risk_reason=risk_reason,
+        playbook=playbook if suggested_actions else None
     )
 
 
@@ -110,10 +143,10 @@ def get_admin_user_detail(
 def list_admin_withdrawals(
     status: str = "PENDING",
     db: Session = Depends(get_db),
-    admin_id: int = Depends(get_current_admin_id),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
     """List withdrawal requests."""
-    _ = admin_id
+    admin_id, admin_role = admin_info
     query = db.query(VaultWithdrawalRequest)
     if status:
         query = query.filter(VaultWithdrawalRequest.status == status)
@@ -144,33 +177,41 @@ def list_admin_withdrawals(
 @router.get("/ops/status", response_model=OpsDashboardResponse)
 def get_ops_dashboard_status(
     db: Session = Depends(get_db),
-    admin_id: int = Depends(get_current_admin_id),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
     """Get Ops Dashboard Status (System & Radar)."""
-    _ = admin_id
+    admin_id, admin_role = admin_info
+    
+    # Enforce RBAC for certain metrics if needed, but dashboard is generally for all admins/operators
     
     # 1. System Status (Mock Check)
-    # Real implementation would ping Redis/Celery
-    system_status = OpsSystemStatusDto(
-        db="OK",
-        redis="OK",
-        worker="OK"
-    )
+    system_status = OpsSystemStatusDto(db="OK", redis="OK", worker="OK")
     
     # 2. Golden Radar
-    # Count High Rollers (e.g. Total Charge > 1m)
-    high_rollers = db.query(User).filter(User.total_charge_amount >= 1000000).count()
+    high_rollers_count = db.query(User).filter(User.total_charge_amount >= 1000000).count()
     
-    # Count Churn Risk (from retention state)
-    churn_risks = db.query(UserRetentionState).filter(UserRetentionState.churn_probability_score >= 0.7).count()
+    # Get high risk users for Crisis Radar
+    risk_users_query = db.query(User, UserRetentionState).join(
+        UserRetentionState, User.id == UserRetentionState.user_id
+    ).filter(UserRetentionState.churn_probability_score >= 0.7).limit(10).all()
     
-    # Online Users (would normally check Redis sessions)
-    online_now = 42 # Mock for now
+    risk_users = []
+    for u, ret in risk_users_query:
+        risk_users.append(OpsRiskUserDto(
+            user_id=u.id,
+            nickname=u.nickname,
+            risk_level="HIGH" if ret.churn_probability_score > 0.85 else "MEDIUM",
+            risk_reason="High Churn Score",
+            churn_score=float(ret.churn_probability_score)
+        ))
+    
+    online_now = 42 # Mock
     
     golden_radar = OpsGoldenRadarDto(
-        high_rollers=high_rollers,
-        churn_risks=churn_risks,
-        online_now=online_now
+        high_rollers=high_rollers_count,
+        churn_risks=len(risk_users_query),
+        online_now=online_now,
+        risk_users=risk_users
     )
     
     # 3. Metrics
@@ -194,13 +235,13 @@ def get_ops_dashboard_status(
 def get_dashboard_metrics(
     range_hours: int = 24,
     db: Session = Depends(get_db),
-    admin_id: int = Depends(get_current_admin_id),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
     """
     Get high-level dashboard metrics (V2).
     Migrated from V1 admin_dashboard.py
     """
-    _ = admin_id
+    admin_id, admin_role = admin_info
     now = datetime.utcnow()
     
     # Mock V2 Implementation for Migration Phase 1
@@ -221,13 +262,13 @@ def get_dashboard_metrics(
 def get_streak_metrics(
     days: int = 7,
     db: Session = Depends(get_db),
-    admin_id: int = Depends(get_current_admin_id),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
     """
     Get streak observability metrics.
     Migrated from V1 admin_dashboard.py
     """
-    _ = admin_id
+    admin_id, admin_role = admin_info
     
     # Mock V2 Implementation
     items = []
@@ -251,20 +292,22 @@ def list_feature_schedules(
     start_date: datetime,
     end_date: datetime,
     db: Session = Depends(get_db),
-    admin_id: int = Depends(get_current_admin_id),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
     """List feature Schedules."""
-    # Mock return for now
+    admin_id, admin_role = admin_info
     return []
 
 @router.put("/feature-schedule", response_model=AdminFeatureScheduleResponse)
 def upsert_feature_schedule(
     payload: AdminFeatureScheduleCreate,
     db: Session = Depends(get_db),
-    admin_id: int = Depends(get_current_admin_id),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
     """Upsert feature schedule."""
-    # Mock return
+    admin_id, admin_role = admin_info
+    if admin_role not in ["SUPER_ADMIN", "OPERATOR"]:
+        raise HTTPException(status_code=403, detail="NOT_AUTHORIZED")
     return AdminFeatureScheduleResponse(
         id=1,
         date=payload.date,
@@ -276,10 +319,10 @@ def upsert_feature_schedule(
 @router.get("/game-config/dice", response_model=AdminDiceConfigV2)
 def get_dice_config(
     db: Session = Depends(get_db),
-    admin_id: int = Depends(get_current_admin_id),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
     """Get Dice Config."""
-    # Mock V2 Config
+    admin_id, admin_role = admin_info
     return AdminDiceConfigV2(
         name="Standard Dice",
         max_daily_plays=10,
@@ -295,10 +338,10 @@ def get_dice_config(
 @router.get("/feed/config", response_model=FeedConfigResponse)
 def get_feed_config(
     db: Session = Depends(get_db),
-    admin_id: int = Depends(get_current_admin_id),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
     """Get Feed Config."""
-    # Mock V2 Config
+    admin_id, admin_role = admin_info
     return FeedConfigResponse(
         threshold=10000,
         mega_threshold=30000
@@ -308,8 +351,10 @@ def get_feed_config(
 def update_feed_config(
     payload: FeedJackpotConfig,
     db: Session = Depends(get_db),
-    admin_id: int = Depends(get_current_admin_id),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
     """Update Feed Config."""
-    # Mock Return
+    admin_id, admin_role = admin_info
+    if admin_role not in ["SUPER_ADMIN", "OPERATOR"]:
+        raise HTTPException(status_code=403, detail="NOT_AUTHORIZED")
     return FeedConfigResponse(**payload.dict())
