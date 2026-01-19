@@ -4,7 +4,7 @@ import { cn } from "../../../lib/utils";
 interface QuickActionCardProps {
   icon: LucideIcon;
   label: string;
-  description?: string;
+  description?: React.ReactNode;
   onClick?: () => void;
   className?: string;
 }

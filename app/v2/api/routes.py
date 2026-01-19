@@ -63,6 +63,9 @@ _retention_service = V2RetentionInterventionService()
 _team_battle_service = TeamBattleService()
 _wallet_service = GameWalletService()
 
+from app.v2.api.admin_routes import router as admin_router
+router.include_router(admin_router)
+
 
 def _get_optional_user_id(
     request: Request, credentials: HTTPAuthorizationCredentials = Depends(_bearer_scheme)
