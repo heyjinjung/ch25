@@ -54,6 +54,8 @@ from app.v2.schemas.v2_shop_exchange import (
 from app.v2.schemas.v2_ticket_zero import (
     V2TicketZeroLogCreate,
     V2TicketZeroLogResponse,
+    V2TicketZeroStatusResponse,
+    V2TicketZeroBailoutResponse,
 )
 from app.v2.schemas.v2_ops_execution import (
     OpsExecutionEnvelope,
@@ -111,6 +113,8 @@ __all__ = [
     "V2ExchangeLogResponse",
     "V2TicketZeroLogCreate",
     "V2TicketZeroLogResponse",
+    "V2TicketZeroStatusResponse",
+    "V2TicketZeroBailoutResponse",
     "OpsExecutionError",
     "OpsExecutionEnvelope",
     "OpsGrantedItem",

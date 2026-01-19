@@ -20,7 +20,7 @@ Ticket Zero(긴급 구호) API 계약을 정의한다.
 
 ## 4. API 계약 (Contract)
 ### 4.1 상태 조회
-- Endpoint: `GET /status`
+- Endpoint: `GET /api/v2/ticket-zero/status`
 - Response:
 ```json
 {
@@ -29,7 +29,7 @@ Ticket Zero(긴급 구호) API 계약을 정의한다.
 ```
 
 ### 4.2 구조 요청
-- Endpoint: `POST /api/retention/bailout`
+- Endpoint: `POST /api/v2/ticket-zero/bailout`
 - Request:
 ```json
 {}

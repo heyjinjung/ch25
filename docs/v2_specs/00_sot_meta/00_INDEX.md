@@ -16,6 +16,8 @@
 - **아이템/인벤토리 SoT**: docs/v2_specs/01_core/v2_item_inventory_sot_ko.md
 - **상점/교환소 정책 SoT**: docs/v2_specs/01_core/v2_shop_exchange_policy_sot_ko.md
 - 상점/인벤토리 서비스 설계: docs/v2_specs/01_core/v2_shop_inventory_service_design_ko.md
+- 상점 상품 UI Config SoT: docs/v2_specs/05_ops/v2_shop_products_ui_config_sot_ko.md
+- **V1→V2 상점 상품 변환 가이드**: docs/v2_specs/99_verification/v1_to_v2_shop_products_conversion_ko.md
 - 어드민 게임 설정 스키마 SoT: docs/v2_specs/02_game/v2_admin_game_config_schema_ko.md
 - 검증/세그먼트 SoT: docs/v2_specs/01_core/v2_grade_segment_sot_ko.md
 - 유저 세그먼트 정책 SoT: docs/v2_specs/01_core/v2_user_segment_policy_sot_ko.md
@@ -69,12 +71,15 @@
 ## 6. 운영/검증 (QA)
 - 프론트엔드 마스터 플랜: docs/v2_specs/06_design/v2_frontend_master_plan_ko.md
 - 어드민 마스터 플랜: docs/v2_specs/06_design/v2_admin_master_plan_ko.md
+- **GSAP 레퍼런스**: docs/v2_specs/06_design/v2_gsap_reference_ko.md
 
 - [ ] 문서 분류/링크 최신화
 - [ ] SoT 우선순위 준수
 
 
 ## 7. 변경 이력
+- v2.2 (2026-01-19, GitHub Copilot): V1→V2 상점 상품 변환 가이드 링크 추가
+- v2.1 (2026-01-19, GitHub Copilot): 상점 상품 UI Config SoT 링크 추가
 - v2.0 (2026-01-19, GitHub Copilot): Auth/User·Mission·Inventory·TeamBattle·Admin/Ops API 계약 문서 추가
 - v1.9 (2026-01-19, GitHub Copilot): Golden V2 문서 경로 07_golden으로 이동
 - v1.8 (2026-01-19, GitHub Copilot): Golden V2 API/DB 문서 링크 추가

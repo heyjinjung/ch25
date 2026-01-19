@@ -27,3 +27,13 @@ class V2TicketZeroLogResponse(V2TicketZeroLogBase):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class V2TicketZeroStatusResponse(BaseModel):
+    bailout_available: bool
+
+
+class V2TicketZeroBailoutResponse(BaseModel):
+    granted: bool
+    ticket_type: TicketType
+    ticket_amount: int
