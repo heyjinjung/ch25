@@ -38,6 +38,14 @@ V2 유저 세그먼트 분류 규칙과 운영 기준을 단일 SoT로 정의한
 - 기준 데이터는 V2 사용자/활동/입금/게임 지표 테이블을 사용한다.
 - 룰에서 참조하는 필드 명은 `condition_json`에 기록한다.
 
+### 5.1 현재 지원 조건 필드
+- last_play_at, last_active_at
+- days_since_last_play, days_since_last_active
+- roulette_plays, dice_plays, lottery_plays
+- vault_balance
+
+*미지원 필드는 매칭 실패로 처리한다.*
+
 ## 6. 운영/검증 (QA)
 - [ ] 세그먼트 키 표준(대문자/언더스코어) 준수
 - [ ] 룰 우선순위 충돌 여부 확인
