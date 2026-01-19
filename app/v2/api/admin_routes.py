@@ -26,7 +26,9 @@ from app.v2.schemas.v2_admin_economy import AdminProductDto, AdminDepositDto
 from app.v2.schemas.v2_admin_user import (
     AdminUserDetailDto,
     InterventionPlaybookDto,
-    InterventionActionDto
+    InterventionActionDto,
+    AdminWalletAdjustmentRequest,
+    InterventionExecutionResponse,
 )
 from app.v2.schemas.v2_admin_dashboard import (
     DashboardMetricsResponse,

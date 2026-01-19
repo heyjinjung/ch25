@@ -186,21 +186,37 @@
 
 ## 4. 보안 감사 결과 (Security Audit)
 
+> ✅ **2026-01-20 업데이트**: 아래 Critical/Warning 항목 중 일부는 코드 레벨 조치가 반영되었습니다.
+> - Dev Endpoints: 운영 환경에서 라우터 등록 자체를 차단(=Swagger/OpenAPI 노출 방지)
+> - V2 Auth/User: `/api/v2/*` 경로로 V1 동작 alias(래퍼) 제공(마이그레이션 브리지)
+> - V2 Shop/Inventory: `payload: dict` 제거 + Idempotency-Key 필수화(표준 `X-Idempotency-Key`)
+
 ### 🚨 Critical Findings
 1.  **Dev Endpoints Exposure**:
-    - `/api/dev/*` 경로가 Swagger에 노출되어 있음.
-    - 프로덕션 배포 시 `creation_test_user` 등이 열려있으면 **치명적**(데이터 조작 및 Free Grant 가능).
-    - **조치 권고**: `openapi_url` 설정에서 제외하거나, 미들웨어로 IP 화이트리스트/제거 처리 필수.
+    - (과거 상태) `/api/dev/*` 경로가 Swagger에 노출될 수 있음.
+    - 위험: 프로덕션 배포 시 `create-test-user`/`grant-game-tokens` 등이 열려있으면 **치명적**(데이터 조작 및 Free Grant 가능).
+    - ✅ 조치 반영: 운영 환경에서는 `/api/dev/*` 라우터를 **등록하지 않도록** 변경되어(OpenAPI 포함) 기본 노출이 차단됨.
+    - 남은 운영 가드: 배포 환경에서 `ENV=production`(또는 local/dev가 아닌 값) 설정을 강제.
 
 ### ⚠️ Warning Findings
 1.  **Implicit Typing**:
-    - Shop/Intervention API가 `payload: dict` 형태로 Pydantic 검증 없이 사용됨. 악의적 Payload 주입 취약.
+    - (V1) Shop/Intervention API가 `payload: dict` 형태로 Pydantic 검증 없이 사용될 수 있음. 악의적 Payload 주입 취약.
+    - ✅ 조치 반영(부분): V2의 `/api/v2/shop/purchase`, `/api/v2/inventory/use`는 `payload: dict` 제거 및 엄격 스키마 적용.
 2.  **Idempotency Key Usage**:
-    - `Inventory`, `Mission`에서 `X-Idempotency-Key` 헤더를 지원하나, 강제성이 코드 레벨에서 보장되지 않는 경우가 있음 (Optional Header).
+    - (V1) `Inventory`, `Mission`에서 `X-Idempotency-Key` 헤더를 지원하나, 강제성이 코드 레벨에서 보장되지 않는 경우가 있음 (Optional Header).
+    - ✅ 조치 반영(부분): V2의 `/api/v2/shop/purchase`, `/api/v2/inventory/use`는 멱등성 키가 **필수**이며 `X-Idempotency-Key`를 표준으로 사용.
+      (호환) `Idempotency-Key`도 과도기 허용하되 둘 중 하나는 반드시 필요.
 
 ---
 
 ## 5. V2 마이그레이션 계획
 - [ ] **Unified Game Router**: `/api/v2/game/{type}`로 표준화.
-- [ ] **Strict Schema**: 모든 `payload: dict` 제거 및 Pydantic V2 적용.
+- [ ] **Strict Schema**: 모든 `payload: dict` 제거 및 Pydantic V2 적용. (🟡 부분 완료: Shop/Inventory V2 엔드포인트부터 적용)
 - [ ] **Auto-Generated Docs**: `docs/v2_specs/03_api/` 자동 생성 파이프라인 구축.
+
+### 5.1 V2 Auth/User 마이그레이션 브리지(현행)
+- ✅ `/api/v2/auth/token` → V1 `/api/auth/token` (동일 로직)
+- ✅ `/api/v2/activity/record` → V1 `/api/activity/record` (동일 로직)
+- ✅ `/api/v2/telegram/*` → V1 `/api/telegram/*` (동일 로직)
+- ✅ `/api/v2/new-user/*` → V1 `/api/new-user/*` (동일 로직)
+- 목적: FE가 `/api/v2/*`로 전환해도 서버 로직은 기존 V1 검증 흐름을 재사용하여 리스크 최소화
