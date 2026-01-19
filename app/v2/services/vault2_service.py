@@ -235,7 +235,7 @@ class Vault2Service:
         mode = (cfg.get("eligibility_mode") or "all").lower()
         allow = set(cfg.get("eligibility_allow") or [])
         block = set(cfg.get("eligibility_block") or [])
-        
+
         # Segment-based override (if configured)
         segment_allow = cfg.get("eligibility_segment_allow")
         if segment_allow:
@@ -264,13 +264,13 @@ class Vault2Service:
                 program = self._ensure_default_program(db)
             else:
                 raise ValueError("PROGRAM_NOT_FOUND")
-        
+
         before = {"unlock_rules_json": program.unlock_rules_json}
         program.unlock_rules_json = unlock_rules_json
         after = {"unlock_rules_json": unlock_rules_json}
-        
+
         AuditService.record_admin_audit(db, admin_id=admin_id, action="UPDATE_UNLOCK_RULES", target_type="VaultProgram", target_id=program_key, before=before, after=after)
-        
+
         db.add(program)
         db.commit()
         db.refresh(program)
@@ -283,13 +283,13 @@ class Vault2Service:
                 program = self._ensure_default_program(db)
             else:
                 raise ValueError("PROGRAM_NOT_FOUND")
-        
+
         before = {"ui_copy_json": program.ui_copy_json}
         program.ui_copy_json = ui_copy_json
         after = {"ui_copy_json": ui_copy_json}
-        
+
         AuditService.record_admin_audit(db, admin_id=admin_id, action="UPDATE_UI_COPY", target_type="VaultProgram", target_id=program_key, before=before, after=after)
-        
+
         db.add(program)
         db.commit()
         db.refresh(program)
@@ -302,7 +302,7 @@ class Vault2Service:
                 program = self._ensure_default_program(db)
             else:
                 raise ValueError("PROGRAM_NOT_FOUND")
-        
+
         before = {"config_json": program.config_json}
 
         # Treat incoming config as a patch: preserve existing keys and fill missing defaults.
@@ -321,9 +321,9 @@ class Vault2Service:
                 merged = merged
             program.config_json = merged
             after = {"config_json": program.config_json}
-        
+
         AuditService.record_admin_audit(db, admin_id=admin_id, action="UPDATE_CONFIG", target_type="VaultProgram", target_id=program_key, before=before, after=after)
-        
+
         db.add(program)
         db.commit()
         db.refresh(program)
@@ -364,7 +364,7 @@ class Vault2Service:
         # Admins might interact with users who only have User-table balances.
         from app.models.user import User
         user = db.query(User).filter(User.id == user_id).one_or_none()
-        
+
         initial_locked = int(getattr(user, "vault_locked_balance", 0) or 0) if user else 0
         initial_available = int(getattr(user, "vault_available_balance", 0) or 0) if user else 0
         initial_expires_at = getattr(user, "vault_locked_expires_at", None)
@@ -373,7 +373,7 @@ class Vault2Service:
         now_dt = datetime.utcnow()
         initial_locked_at = None
         if initial_locked > 0:
-            initial_locked_at = now_dt 
+            initial_locked_at = now_dt
 
         row = VaultStatus(
             user_id=user_id,
@@ -562,7 +562,7 @@ class Vault2Service:
         """Aggregate performance metrics for Vault Phase 1."""
         now_dt = now or datetime.utcnow()
         today_start = now_dt.replace(hour=0, minute=0, second=0, microsecond=0)
-        
+
         # 1. Today's Accrual
         accrual_stats = (
             db.query(VaultEarnEvent.earn_type, func.count(VaultEarnEvent.id), func.sum(VaultEarnEvent.amount))
@@ -571,7 +571,7 @@ class Vault2Service:
             .all()
         )
         accrual_summary = {row[0]: {"count": row[1], "total": int(row[2] or 0)} for row in accrual_stats}
-        
+
         # 2. Trial SKIP Reasons
         skip_stats = (
             db.query(VaultEarnEvent.source, func.count(VaultEarnEvent.id))
@@ -580,14 +580,14 @@ class Vault2Service:
             .all()
         )
         skip_summary = {row[0]: row[1] for row in skip_stats}
-        
+
         # 3. Expirations in next 24h (Critical for retention ops)
         expiring_soon_count = (
             db.query(func.count(User.id))
             .filter(User.vault_locked_balance > 0, User.vault_locked_expires_at.between(now_dt, now_dt + timedelta(hours=24)))
             .scalar()
         )
-        
+
         # 4. Total Unlocked Cash (Today)
         unlocked_cash_today = (
             db.query(func.sum(UserCashLedger.delta))
@@ -600,16 +600,16 @@ class Vault2Service:
         from app.models.vault_withdrawal_request import VaultWithdrawalRequest
 
         total_assets = db.query(func.sum(ExternalRankingData.deposit_amount)).scalar() or 0
-        
+
         # Breakdown of Vault states
         total_locked = db.query(func.sum(User.vault_locked_balance)).scalar() or 0
         total_available = db.query(func.sum(User.vault_available_balance)).scalar() or 0
-        
+
         # Reserved: Sum of pending withdrawal requests
         total_reserved = db.query(func.sum(VaultWithdrawalRequest.amount))\
             .filter(VaultWithdrawalRequest.status == "PENDING")\
             .scalar() or 0
-            
+
         total_liabilities = total_locked + total_available + total_reserved
 
         return {
@@ -763,7 +763,7 @@ class Vault2Service:
                     "timestamp": getattr(req, "created_at", None),
                     "meta": {"status": getattr(req, "status", None), "request_id": getattr(req, "id", None)},
                 })
-        
+
         return results
 
     def update_balance(self, db: Session, *, user_id: int, locked_delta: int, available_delta: int, reason: str, admin_id: int = 0) -> VaultStatus:
@@ -777,7 +777,7 @@ class Vault2Service:
 
         new_locked = max(0, prev_locked + int(locked_delta))
         new_avail = max(0, int(status.available_amount or 0) + int(available_delta))
-        
+
         AuditService.record_admin_audit(
             db,
             admin_id=admin_id,
@@ -804,7 +804,7 @@ class Vault2Service:
                 }
             )
             db.add(ledger)
-        
+
         status.locked_amount = new_locked
         status.available_amount = new_avail
 
@@ -825,7 +825,7 @@ class Vault2Service:
                     status.expires_at = self.compute_expires_at(now_dt, int(program.duration_hours or 24))
 
         db.add(status)
-        
+
         # [PHASE 1 SYNC] Sync to User table as it's the current live source of truth
         user = db.query(User).filter(User.id == user_id).one_or_none()
         if user:
@@ -835,7 +835,7 @@ class Vault2Service:
             user.vault_balance = int(new_locked)
             user.vault_locked_expires_at = status.expires_at
             db.add(user)
-        
+
         db.commit()
         db.refresh(status)
         return status
@@ -940,11 +940,11 @@ class Vault2Service:
                 program = self._ensure_default_program(db)
             else:
                 raise ValueError("PROGRAM_NOT_FOUND")
-        
+
         before = {"is_active": program.is_active}
         program.is_active = is_active
         after = {"is_active": is_active}
-        
+
         AuditService.record_admin_audit(
             db,
             admin_id=admin_id,
@@ -954,17 +954,8 @@ class Vault2Service:
             before=before,
             after=after,
         )
-        
+
         db.add(program)
         db.commit()
         db.refresh(program)
         return program
-
-
-    # Deprecated: re-export v2 implementation to avoid v1/v2 mixing.
-    from app.v2.services.vault2_service import Vault2Service as _Vault2ServiceV2, DEFAULT_CONFIG as _DEFAULT_CONFIG_V2
-
-    Vault2Service = _Vault2ServiceV2
-    DEFAULT_CONFIG = _DEFAULT_CONFIG_V2
-
-    __all__ = ["Vault2Service", "DEFAULT_CONFIG"]

@@ -3,7 +3,7 @@ import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import UserRoutes from "./UserRoutes";
 import AdminRoutes from "./AdminRoutes";
-import V2AdminRoutes from "./V2AdminRoutes";
+import V2AdminRoutes from "@/v2/router/V2AdminRoutes";
 
 const AppRouter: React.FC = () => {
   return (

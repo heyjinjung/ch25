@@ -26,7 +26,7 @@ from app.models.vault_ledger import VaultLedger
 from app.models.user_cash_ledger import UserCashLedger
 from app.core.notifications import notify_vault_skip_error
 from app.services.reward_service import RewardService
-from app.services.vault2_service import Vault2Service
+from app.v2.services.vault2_service import Vault2Service
 
 
 logger = logging.getLogger(__name__)

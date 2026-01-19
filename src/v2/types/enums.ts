@@ -17,7 +17,6 @@ export const ticketTypeEnum = z.enum([
   "GOLD_KEY_TICKET",
   "DIAMOND_TICKET",
   "LOTTERY_TICKET",
-  "TRIAL_TICKET",
 ]);
 
 export const gameResultEnum = z.enum(["WIN", "LOSE", "DRAW"]);

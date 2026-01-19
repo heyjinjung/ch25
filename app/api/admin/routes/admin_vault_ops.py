@@ -206,7 +206,7 @@ def set_user_balance(
     return _build_admin_state(service, db, user_id)
 
 
-from app.services.vault2_service import Vault2Service
+from app.v2.services.vault2_service import Vault2Service
 from pydantic import BaseModel
 
 class GoldenHourConfig(BaseModel):

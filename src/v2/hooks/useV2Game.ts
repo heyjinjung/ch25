@@ -8,14 +8,12 @@ import {
   getV2LotteryStatus,
   playV2Lottery,
   playV2DiceDoubleUp,
-  craftV2Exchange,
 } from "../api/gameApi";
 import type {
   RoulettePlayRequest,
   DiceRollRequest,
   DiceDoubleUpRequest,
   LotteryScratchRequest,
-  PuzzleCraftRequest,
 } from "../types/gameAction";
 
 // ============================================================================
@@ -122,22 +120,3 @@ export function useV2LotteryPlay() {
 }
 
 // ============================================================================
-// Exchange/Craft Hooks
-// ============================================================================
-
-export function useV2ExchangeCraft() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (request: PuzzleCraftRequest) => craftV2Exchange(request),
-    onSuccess: () => {
-      // Invalidate inventory/wallet queries
-      queryClient.invalidateQueries({ queryKey: ["v2", "inventory"] });
-      // Invalidate vault/balance queries
-      queryClient.invalidateQueries({ queryKey: ["vault-status"] });
-      // Invalidate lottery status if collection pieces were consumed/gained (implied)
-      queryClient.invalidateQueries({ queryKey: ["v2", "lottery", "status"] });
-    },
-  });
-}
-

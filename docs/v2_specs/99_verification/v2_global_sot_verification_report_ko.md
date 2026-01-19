@@ -1,5 +1,5 @@
 문서 타입: 전역 검증 보고서
-버전: v1.2
+버전: v1.3
 작성일: 2026-01-19
 작성자: GitHub Copilot
 대상: BE/FE/운영/기획/QA
@@ -491,12 +491,12 @@ export const VAULT_LIMITS = {
 [❌] Redis 채널 구현 (golden:v2:events:*) - 실시간 아키텍처 필요
 [❌] Redis 키 패턴 구현 (user:{id}:*) - 실시간 추적 필요
 [✅] Database Models 생성 (Admin/Ops 완료, Golden V2 완료)
-    ├─ [✅] v2_admin_message / v2_admin_message_inbox (완료)
-    ├─ [✅] v2_user_retention_state / v2_retention_roi_log (마이그레이션 완료)
-    ├─ [✅] v2_segment_rule / v2_user_segment (완료)
-    └─ [✅] v2_ops_execution_result (완료)
+  ├─ [✅] v2_admin_message / v2_admin_message_inbox (완료)
+  ├─ [✅] v2_user_retention_state / v2_retention_roi_log (마이그레이션 완료)
+  ├─ [✅] v2_segment_rule / v2_user_segment (완료)
+  └─ [✅] v2_ops_execution_result (완료)
 [✅] Admin 메시지 정책 보완 (TAG 타게팅 + read_count 갱신)
-[❌] Golden System Workers (Event-driven 인프라) - 워커 구현 필요
+[✅] Golden System Workers (Event-driven 인프라) - 코드 구현 완료 (운영 검증 대기)
 [❌] 개입 로직 (5 losses OR 50% balance drop) - 실시간 감지 로직 필요
 [⚠️] Golden Hour 배율 구현 (사양은 완전히 문서화됨, 구현 확인 필요)
 ```
@@ -507,6 +507,9 @@ export const VAULT_LIMITS = {
 - ✅ Admin 메시지 정책 보완 코드: TAG 타게팅 및 read_count 갱신
   - [app/v2/services/admin_message_service.py](../../../app/v2/services/admin_message_service.py)
   - [app/v2/api/routes.py](../../../app/v2/api/routes.py#L630-L690)
+- ✅ Golden V2 워커 코드: 이벤트 브리지 + 앱 startup 등록
+  - [app/v2/workers/golden_event_worker.py](../../../app/v2/workers/golden_event_worker.py)
+  - [app/main.py](../../../app/main.py)
 - ❌ Redis/Workers: 실시간 인프라는 백엔드 구현 필요 (프론트엔드 책임 아님)
 
 ---
@@ -614,6 +617,7 @@ export const VAULT_LIMITS = {
 
 ## 9. 변경 이력
 
+- v1.3 (2026-01-19, GitHub Copilot): Golden System Workers 코드 구현 반영 및 근거 링크 추가
 - v1.2 (2026-01-19, GitHub Copilot): Admin 메시지 정책 보완(TAG 타게팅/read_count 갱신) 코드 근거 반영
 - v1.1 (2026-01-19, GitHub Copilot): HIGH PRIORITY 수정 완료 및 체크리스트 업데이트
   - 프론트엔드 정합성 100% 달성 (TRIAL_TICKET enum, Admin 상수, Vault 상수)

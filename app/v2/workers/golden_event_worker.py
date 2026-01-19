@@ -55,10 +55,19 @@ async def _run_bridge(stop_event: asyncio.Event) -> None:
             pass
 
 
+async def run_golden_event_worker(stop_event: asyncio.Event | None = None) -> None:
+    local_stop = stop_event or asyncio.Event()
+    try:
+        await _run_bridge(stop_event=local_stop)
+    except asyncio.CancelledError:
+        local_stop.set()
+        raise
+
+
 async def main() -> None:
     stop_event = asyncio.Event()
     try:
-        await _run_bridge(stop_event=stop_event)
+        await run_golden_event_worker(stop_event=stop_event)
     except KeyboardInterrupt:  # pragma: no cover - manual stop
         stop_event.set()
 

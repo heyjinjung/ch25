@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.models.user import User
-from app.services.vault2_service import Vault2Service
+from app.v2.services.vault2_service import Vault2Service
 
 logger = logging.getLogger(__name__)
 

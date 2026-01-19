@@ -75,7 +75,7 @@ class AdminDiceService:
 
     @staticmethod
     def get_event_params(db: Session):
-        from app.services.vault2_service import Vault2Service, DEFAULT_CONFIG
+        from app.v2.services.vault2_service import Vault2Service, DEFAULT_CONFIG
         vault_service = Vault2Service()
         
         game_earn_config_val = vault_service.get_config_value(db, "game_earn_config", {})
@@ -105,7 +105,7 @@ class AdminDiceService:
 
     @staticmethod
     def update_event_params(db: Session, params: "DiceEventParams", admin_id: int = 0):
-        from app.services.vault2_service import Vault2Service, DEFAULT_CONFIG
+        from app.v2.services.vault2_service import Vault2Service, DEFAULT_CONFIG
         vault_service = Vault2Service()
         program = vault_service.get_default_program(db, ensure=True)
         

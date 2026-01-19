@@ -1,21 +1,21 @@
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import AdminLayout from "../v2/admin/layouts/AdminLayout";
-import MarketingCenterPage from "../v2/admin/pages/dashboard/MarketingCenterPage";
-import UserListPage from "../v2/admin/pages/users/UserListPage";
+import AdminLayout from "../admin/layouts/AdminLayout";
+import MarketingCenterPage from "../admin/pages/dashboard/MarketingCenterPage";
+import UserListPage from "../admin/pages/users/UserListPage";
 
-import VaultControlPage from "../v2/admin/pages/economy/VaultControlPage";
-import CCDepositPage from "../v2/admin/pages/economy/CCDepositPage";
-import ShopManagerPage from "../v2/admin/pages/economy/ShopManagerPage";
-import MissionManagerPage from "../v2/admin/pages/game/MissionManagerPage";
-import LevelConfigPage from "../v2/admin/pages/game/LevelConfigPage";
-import RouletteConfigPage from "../v2/admin/pages/game/RouletteConfigPage";
-import DiceConfigPage from "../v2/admin/pages/game/DiceConfigPage";
-import LotteryConfigPage from "../v2/admin/pages/game/LotteryConfigPage";
-import TicketInventoryPage from "../v2/admin/pages/inventory/TicketInventoryPage";
-import MessageSenderPage from "../v2/admin/pages/marketing/MessageSenderPage";
-import SurveyPage from "../v2/admin/pages/marketing/SurveyPage";
-import ModalControlPage from "../v2/admin/pages/system/ModalControlPage";
+import VaultControlPage from "../admin/pages/economy/VaultControlPage";
+import CCDepositPage from "../admin/pages/economy/CCDepositPage";
+import ShopManagerPage from "../admin/pages/economy/ShopManagerPage";
+import MissionManagerPage from "../admin/pages/game/MissionManagerPage";
+import LevelConfigPage from "../admin/pages/game/LevelConfigPage";
+import RouletteConfigPage from "../admin/pages/game/RouletteConfigPage";
+import DiceConfigPage from "../admin/pages/game/DiceConfigPage";
+import LotteryConfigPage from "../admin/pages/game/LotteryConfigPage";
+import TicketInventoryPage from "../admin/pages/economy/TicketInventoryPage";
+import MessageSenderPage from "../admin/pages/marketing/MessageSenderPage";
+import SurveyPage from "../admin/pages/marketing/SurveyPage";
+import ModalControlPage from "../admin/pages/system/ModalControlPage";
 
 const V2AdminRoutes: React.FC = () => {
   return (
