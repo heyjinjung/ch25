@@ -9,12 +9,13 @@
 
 ## 1. 개요 (Overview)
 V2 마이그레이션의 핵심인 "돈과 아이템"의 무결성을 확보하는 단계이다.
-기존 V1의 **금고 잔액 이중 계산(Double Counting)** 문제를 영구적으로 해결하고, 상점 구매와 인벤토리 지급의 **원자성(Atomicity)**을 보장하는 것이 최우선 목표이다.
+**`app/v2`, `src/v2` 독립 폴더 구조에서 클린 빌드**를 수행하며, 기존 V1의 금고 잔액 이중 계산 문제를 해결한다.
 
 ## 2. 해결 과제 (Key Challenges)
 1.  **Vault Double Counting**: `locked`와 `available` 잔액이 혼재되어 어드민/유저 뷰에서 자산이 뻥튀기되는 현상.
-2.  **Transaction Integrity**: 구매 도중 오류 발생 시 재화만 차감되거나 아이템이 지급되지 않는 문제.
-3.  **Legacy Code**: `GameTokenType` 및 `Shop` 로직이 V1 레거시와 섞여 있어 정리가 필요함.
+2.  **Structural Integrity**: V1과 섞이지 않는 독립적인 V2 코드베이스(`app/v2`) 구축.
+3.  **Transaction Integrity**: 구매 도중 오류 발생 시 재화만 차감되거나 아이템이 지급되지 않는 문제.
+4.  **Legacy Code**: `GameTokenType` 및 `Shop` 로직이 V1 레거시와 섞여 있어 정리가 필요함.
 
 ## 3. 구현 전략 (Implementation Strategy)
 
@@ -23,12 +24,17 @@ V2 마이그레이션의 핵심인 "돈과 아이템"의 무결성을 확보하�
 - **Coverage**: 입금, 출금, 구매, 환불, 동시성(Concurrency).
 
 ### 3.2 Single Source of Truth Enforcement
-- **Vault**: `User.vault_locked_balance`만 유효한 잔액으로 취급. `available` 및 `vault_balance`은 무시하거나 Sync 전용으로 격하.
+- **Vault**: `User.vault_locked_balance`만 유효한 잔액으로 취급. `available` 및 `vault_balance` (Legacy) 필드는 **사용하지 않거나 0으로 고정**.
+    - 참조: [v2_strict_vault_policy_sot_ko.md](../01_core/v2_strict_vault_policy_sot_ko.md)
 - **Inventory**: `UserGameWallet`(Token)과 `UserInventoryItem`(Item)의 엄격한 분리 구현.
+    - 참조: [v2_item_inventory_sot_ko.md](../01_core/v2_item_inventory_sot_ko.md)
+    - 참조: [v2_ticket_enum_sot_ko.md](../01_core/v2_ticket_enum_sot_ko.md) (Standard Enum: `ROULETTE_TICKET`, `DICE_TICKET` 등)
 
 ### 3.3 Atomic Transaction Service
-- **`ShopService.purchase()`**: 단일 트랜잭션 내에서 `Vault차감 -> ShopLog생성 -> Inventory지급` 수행.
-- **`VaultService.deposit/withdraw()`**: `AuditLog` 생성과 잔액 변경을 Atomic하게 수행.
+- **`ShopService.purchase()`**: 단일 트랜잭션 내에서 `Vault차감(locked) -> ShopLog생성 -> Inventory지급` 수행.
+    - Cost: `VAULT` (Virtual Token -> `vault_locked_balance`)
+    - Reward: `ROULETTE_TICKET` etc.
+- **`VaultService.deposit/withdraw()`**: `AuditLog` 생성과 잔액(`vault_locked_balance`) 변경을 Atomic하게 수행.
 
 ---
 
@@ -36,39 +42,45 @@ V2 마이그레이션의 핵심인 "돈과 아이템"의 무결성을 확보하�
 
 ### 4.1 Vault Consistency (금고 정합성)
 *   **Target**: `app/services/v2/vault_service.py`
-*   **Rules**: [v2_strict_vault_policy_sot_ko.md](../01_core/v2_strict_vault_policy_sot_ko.md)
+*   **Rules**: 
+    - [v2_strict_vault_policy_sot_ko.md](../01_core/v2_strict_vault_policy_sot_ko.md)
+    - [v2_vault_glossary_sot_ko.md](../01_core/v2_vault_glossary_sot_ko.md)
 *   **Tests**:
     - `test_vault_consistency.py`: Double Counting 시나리오 재현 및 방어.
     - `test_vault_concurrency.py`: 따닥 입/출금 방어.
 
 ### 4.2 Shop & Inventory (상점 및 인벤토리)
 *   **Target**: `app/services/v2/shop_service.py`
-*   **Rules**: [v2_shop_exchange_policy_sot_ko.md](../01_core/v2_shop_exchange_policy_sot_ko.md)
+*   **Rules**: 
+    - [v2_shop_exchange_policy_sot_ko.md](../01_core/v2_shop_exchange_policy_sot_ko.md)
+    - [v2_item_inventory_sot_ko.md](../01_core/v2_item_inventory_sot_ko.md)
 *   **Tests**:
     - `test_shop_atomicity.py`: 잔액 부족, 재고 부족, 트랜잭션 롤백 테스트.
-    - `test_item_delivery.py`: 티켓/바우처 지급 정확성 검증.
+    - `test_item_delivery.py`: 티켓(`ROULETTE_TICKET`)/바우처(`VOUCHER_*`) 지급 정확성 검증.
 
 ### 4.3 Admin / UI Corrections
 *   **Target**: Admin API (`app/api/admin/routes/admin_users.py`), FE (`VaultAdminPage`)
 *   **Action**:
     - `vault_available_balance` 표시 제거.
-    - `Total Balance` 계산 로직 수정 (`locked` only).
+    - `Total Balance` 계산 로직 수정 (`locked_balance` only).
 
 ### 4.4 Withdrawal Logic Improvement (출금 조건 개선)
 *   **Issue**: 게임 플레이 등 다양한 활동 트리거가 반영되지 않아 출금이 불필요하게 막힘.
 *   **Action**: `VaultService.check_eligibility()`에 다양한 Activity Signal 연동.
-    - `User.play_streak` (게임 플레이)
-    - `UserMissionProgress` (미션 완료)
+    - `User.play_streak` (게임 플레이 -> [v2_game_action_schema_sot_ko.md](../02_game/v2_game_action_schema_sot_ko.md))
+    - `UserMissionProgress` (미션 완료 -> [v2_mission_glossary_sot_ko.md](../02_game/v2_mission_glossary_sot_ko.md))
     - `EventParticipation` (이벤트 참여)
 
 ### 4.5 Reward System Integrity (보상 적립 오류 수정)
 *   **Issue**: 신규 이벤트/미션 보상이 금고(Vault) 금액으로 적립되지 않는 현상.
 *   **Action**: `RewardService`가 `POINT` 타입 보상 처리 시 반드시 `VaultService.deposit()`을 호출하도록 강제.
-    - `v2_reward_type_standard_sot_ko.md` 기준 매핑 검증.
+    - 참조: [v2_reward_type_standard_sot_ko.md](../01_core/v2_reward_type_standard_sot_ko.md)
+    - 참조: [v2_reward_mapping_sot_ko.md](../01_core/v2_reward_mapping_sot_ko.md)
 
 ### 4.6 Golden Hour Logic (배수 적용 오류 수정)
 *   **Issue**: 골든아워 배수가 어드민 설정과 다르게 적용됨.
 *   **Action**: `GameService`/`RewardService` 내 배수 연산 로직 디버깅.
+    - 참조: [v2_golden_hour_policy_sot_ko.md](../02_game/v2_golden_hour_policy_sot_ko.md)
     - Admin Config(`GoldenHourPolicy`) 로드 시점 및 캐싱 데이터 확인.
     - `apply_multiplier(base_amount, policy)` 함수 TDD 검증.
 
@@ -119,3 +131,12 @@ V2 마이그레이션의 핵심인 "돈과 아이템"의 무결성을 확보하�
 *   **Issue**: 어드민에서 상품 추가 후 유저 화면에 즉시 노출되지 않음 (Auto-save 부재).
 *   **Resolution**: 상품 Create/Update 시점즉시 서버 저장(PUT) 및 캐시 무효화.
 
+
+### 7.5 DB Migration Strategy (Waiting)
+*   **Status**: External AI is processing.
+*   **Action**: `v2` Database creation & Alembic Snapshot generation.
+*   **Command**: `docker compose exec db sh -lc "mysql -uroot -p$MYSQL_ROOT_PASSWORD -e 'CREATE DATABASE IF NOT EXISTS v2;'"`
+*   **Plan**: Wait for snapshot completion before running TDD migrations.
+            3bc52f37e0c0, baseline_v2_snapshot
+            C:\Users\JAVIS\ch\ch25\alembic\versions\20260119_0904_3bc52f37e0c0_baseline_v2_snapshot.py
+            v2 전용 배포 설정(DATABASE_URL 전환)

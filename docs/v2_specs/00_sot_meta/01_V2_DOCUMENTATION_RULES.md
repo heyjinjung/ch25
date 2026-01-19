@@ -16,7 +16,26 @@ V2 문서의 폴더 구조, 네이밍, SoT 우선순위, 작성 규칙을 표준
 - SoT(Source of Truth): 정책/동작 판단의 기준 문서
 - V2 전용: V1과 분리된 V2 스펙/정책 범주
 
-## 4. 폴더 구조 규칙
+## 4. 문서 및 코드 구조 (Directory Structure)
+### 4.1 Documentation
+- **Root**: `docs/v2_specs/`
+- **Naming**: `v2_{feature}_{type}_ko.md` (예: `v2_vault_glossary_sot_ko.md`)
+
+### 4.2 Codebase (New V2 Structure)
+**All V2 code must reside in independent directories to ensure isolation.**
+- **Backend**: `app/v2/`
+    - `app/v2/models/`
+    - `app/v2/schemas/`
+    - `app/v2/services/`
+    - `app/v2/api/`
+- **Frontend**: `src/v2/`
+    - `src/v2/types/`
+    - `src/v2/api/`
+    - `src/v2/components/`
+    - `src/v2/hooks/`
+- **Rule**: Do NOT mix V2 code into root `app/` or `src/` (reserved for V1/Legacy).
+
+## 5. 폴더 구조 규칙
 - docs/v2_specs/00_sot_meta/ : V2 문서 규칙, 인덱스, 템플릿
 - docs/v2_specs/01_core/     : 핵심 경제/정책/권한/보안
 - docs/v2_specs/02_game/     : 게임 룰, 확률, 보상 스키마
@@ -26,7 +45,7 @@ V2 문서의 폴더 구조, 네이밍, SoT 우선순위, 작성 규칙을 표준
 - docs/v2_specs/06_design/   : UX/카피/모션/디자인 규칙
 - docs/v2_specs/99_archive/  : 폐기/구버전 문서
 
-## 5. 네이밍 규칙
+## 6. 네이밍 규칙
 - 접두어: v2_ 필수 (예: v2_core_economy_glossary_ko.md)
 - 권장 형식: v2_{domain}_{topic}_ko.md
 - 버전 표기: 문서 상단 메타 블록의 버전으로 관리

@@ -32,6 +32,8 @@
 - **골든아워 정책 SoT**: docs/v2_specs/02_game/v2_golden_hour_policy_sot_ko.md
 - **출석 스트릭 로직 SoT**: docs/v2_specs/02_game/v2_attendance_streak_logic_sot_ko.md
 - **티켓 제로(구조) SoT**: docs/v2_specs/02_game/v2_ticket_zero_policy_sot_ko.md
+- V2 DB 베이스라인 스냅샷: docs/v2_specs/04_db/v2_db_baseline_snapshot_ko.md
+- V2 DB 레벨 보상 테이블: docs/v2_specs/04_db/v2_db_level_reward_table_ko.md
 
 ## 6. 운영/검증 (QA)
 - [ ] 문서 분류/링크 최신화
