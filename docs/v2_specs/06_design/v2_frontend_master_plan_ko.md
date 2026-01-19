@@ -23,7 +23,7 @@
 
 ## 4. 핵심 철학 (Core Philosophy: Golden Project)
 **"모든 클릭이 기대감이 되게 하라 (Make Every Click an Anticipation)"**
-V2 프론트엔드는 단순한 UI가 아니라, [Golden System Definition](../01_core/golden_v2_system_definition_ko.md)의 "개입(Intervention)"을 시각화하는 **리텐션 엔진**이다.
+V2 프론트엔드는 단순한 UI가 아니라, [Golden System Definition](../07_golden/golden_v2_system_definition_ko.md)의 "개입(Intervention)"을 시각화하는 **리텐션 엔진**이다.
 
 ### 4.1 Telegram Native (텔레그램 네이티브)
 - **Liquid Glass**: 텔레그램 배경화면이 은은하게 비치는 `backdrop-filter: blur(20px)` + 반투명 레이어 적극 활용. (단색 배경 지양)
@@ -75,7 +75,29 @@ graph TD
     - "Clean Code": 불필요한 `useEffect` 제거, 선언적 UI.
     - "Premium Feel": 정적인 화면에 생동감(Micro-interaction) 부여.
     - "Retention First": 모든 화면 전환과 로딩에 "기대감"을 심는 연출 사용.
-    - **"Native Performance"**: `transform`, `opacity` 속성만 사용하여 60fps 유지 (Layout Thrashing 방지).
+    - **Layout Thrashing**: `transform`, `opacity` 속성 위주 사용 (60fps 보장).
+
+### 6.1 V1/V2 격리 전략 (Isolation Strategy)
+- **목적**: V1 컴포넌트의 우발적 사용으로 인한 의존성 오염 및 스타일 충돌 방지.
+- **정책**: `src/v2/**` 디렉토리 내에서는 `src/components`, `src/hooks`, `src/lib` 등 V1 경로의 Import를 엄격히 금지.
+- **구현**: `eslint.config.js`에 `no-restricted-imports` 규칙 적용.
+    ```javascript
+    // eslint.config.js
+    {
+      files: ["src/v2/**/*.{ts,tsx}"],
+      rules: {
+        'no-restricted-imports': [
+          'error',
+          {
+            patterns: [{
+              group: ['@/components/*', '@/hooks/*', '@/lib/*', '@/utils/*'],
+              message: 'V2 must not import from V1 paths.'
+            }]
+          }
+        ]
+      }
+    }
+    ```
 
 ## 7. Magic UI Component Mapping (Detail Strategy)
 

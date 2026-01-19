@@ -60,6 +60,28 @@ https://mobbin.com/sites/sections/a613e82c-cf1b-401f-b457-739b49ff775a?utm_sourc
     - **Mobile**: 하단 메뉴바 (**Dock**) + 바텀 시트 (Bottom Sheet)
     - **PC**: 좌측 사이드바 + 우측 서랍 (Drawer)
 
+### 4.3 V1/V2 격리 전략 (Isolation Strategy)
+- **목적**: V1 컴포넌트의 우발적 사용으로 인한 의존성 오염 및 스타일 충돌 방지.
+- **정책**: `src/v2/**` 디렉토리 내에서는 `src/components`, `src/hooks`, `src/lib` 등 V1 경로의 Import를 엄격히 금지.
+- **구현**: `eslint.config.js`에 `no-restricted-imports` 규칙 적용.
+    ```javascript
+    // eslint.config.js
+    {
+      files: ["src/v2/**/*.{ts,tsx}"],
+      rules: {
+        'no-restricted-imports': [
+          'error',
+          {
+            patterns: [{
+              group: ['@/components/*', '@/hooks/*', '@/lib/*', '@/utils/*'],
+              message: 'V2 must not import from V1 paths.'
+            }]
+          }
+        ]
+      }
+    }
+    ```
+
 
 ### 4.2 핵심 기능
 | 영역 | 개선 방향 | 비고 |
@@ -195,11 +217,11 @@ C:\Users\JAVIS\ch\ch25\.kombai\resources\admin-wireframe-5-shop-manager.html
 - [x] **Common UI**: `Shadcn/UI` 설치 및 커스텀(Rounded-2xl, Warm Gray)
 
 ### Step 2: Ops Dashboard (운영 대시보드)
-- [ ] **Marketing Center**: KPI 카드 및 매출 차트
+- [x] **Marketing Center**: KPI 카드 및 매출 차트
     - **UI**: `BentoGrid`(Magic UI), `AreaChart`(Recharts), `NumberTicker`(Magic UI)
-- [ ] **Ops Log**: CSV 업로드 기능 및 로그 뷰어
+- [x] **Ops Log**: CSV 업로드 기능 및 로그 뷰어
     - **UI**: `Input`(File), `ScrollArea`, `Table`(Logs), `Badge`(Status)
-- [ ] **Real-time**: 실시간 매출 및 위기 감지 위젯
+- [x] **Real-time**: 실시간 매출 및 위기 감지 위젯
     - **UI**: `PulsatingDot`(Magic UI), `Card`(Glass Effect), `Sparkles`(Animation)
 
 ### Step 3: Management & Ops (관리 및 운영)

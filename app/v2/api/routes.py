@@ -9,10 +9,17 @@ from app.models.game_wallet import GameTokenType
 from app.schemas.dice import DicePlayResponse, DiceStatusResponse
 from app.schemas.lottery import LotteryPlayResponse, LotteryStatusResponse
 from app.schemas.roulette import RoulettePlayRequest, RoulettePlayResponse, RouletteStatusResponse
+from app.services.retention_intervention_service import RetentionInterventionService
 from app.services.dice_service import DiceService
 from app.services.lottery_service import LotteryService
 from app.services.roulette_service import RouletteService
 from app.v2.schemas.v2_admin_message import V2MessageCreate, V2MessageResponse, V2SegmentBatchResponse
+from app.v2.schemas.v2_golden import (
+    V2ReengagementQueueRequest,
+    V2ReengagementQueueResponse,
+    V2RetentionInterventionRequest,
+    V2RetentionInterventionResponse,
+)
 from app.v2.services.admin_message_service import V2AdminMessageService
 from app.v2.services.segment_service import V2SegmentService
 
@@ -21,6 +28,7 @@ router = APIRouter(tags=["v2-games"])
 _roulette_service = RouletteService()
 _dice_service = DiceService()
 _lottery_service = LotteryService()
+_retention_service = RetentionInterventionService()
 
 
 @router.get("/roulette/status", response_model=RouletteStatusResponse)
@@ -130,3 +138,45 @@ def create_admin_message(
     )
 
     return msg
+
+
+@router.post(
+    "/golden/intervention/resolve",
+    response_model=V2RetentionInterventionResponse,
+    tags=["v2-golden"],
+)
+def resolve_golden_intervention(
+    payload: V2RetentionInterventionRequest,
+    db: Session = Depends(get_db),
+    user_id: int = Depends(get_current_user_id),
+) -> V2RetentionInterventionResponse:
+    event_type = payload.event_type.strip().upper()
+    if not event_type:
+        raise HTTPException(status_code=400, detail="INVALID_EVENT_TYPE")
+
+    result = _retention_service.resolve_intervention(
+        db,
+        user_id=user_id,
+        event_type=event_type,
+        data=payload.data or {},
+    )
+    return V2RetentionInterventionResponse(**result)
+
+
+@router.post(
+    "/golden/reengagement/queue",
+    response_model=V2ReengagementQueueResponse,
+    tags=["v2-golden"],
+)
+def queue_golden_reengagement(
+    payload: V2ReengagementQueueRequest,
+    db: Session = Depends(get_db),
+    user_id: int = Depends(get_current_user_id),
+) -> V2ReengagementQueueResponse:
+    result = _retention_service.enqueue_reengagement(
+        db,
+        user_id=user_id,
+        reason=payload.reason,
+        channel=payload.channel,
+    )
+    return V2ReengagementQueueResponse(**result)

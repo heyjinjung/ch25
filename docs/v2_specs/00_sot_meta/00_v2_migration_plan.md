@@ -28,7 +28,7 @@
     *   [x] Ops Specs: `v2_ops_plan_execution_schema`, `v2_ops_action_glossary`
     *   [x] Infra Specs: `v2_redis_keys_channels`, `02_golden_v2_realtime_architecture`
     *   **진행도**: 완료
-    *   **근거**: [docs/v2_specs/01_core/v2_vault_glossary_sot_ko.md](../01_core/v2_vault_glossary_sot_ko.md#L1), [docs/v2_specs/01_core/v2_strict_vault_policy_sot_ko.md](../01_core/v2_strict_vault_policy_sot_ko.md#L1), [docs/v2_specs/01_core/v2_reward_mapping_sot_ko.md](../01_core/v2_reward_mapping_sot_ko.md#L1), [docs/v2_specs/00_sot_meta/golden_v2_core_economy_glossary_ko.md](../00_sot_meta/golden_v2_core_economy_glossary_ko.md#L1), [docs/v2_specs/02_game/v2_game_action_schema_sot_ko.md](../02_game/v2_game_action_schema_sot_ko.md#L1), [docs/v2_specs/02_game/v2_mission_glossary_sot_ko.md](../02_game/v2_mission_glossary_sot_ko.md#L1), [docs/v2_specs/02_game/v2_admin_game_config_schema_ko.md](../02_game/v2_admin_game_config_schema_ko.md#L1), [docs/v2_specs/05_ops/v2_ops_plan_execution_schema_sot_ko.md](../05_ops/v2_ops_plan_execution_schema_sot_ko.md#L1), [docs/v2_specs/05_ops/v2_ops_action_glossary_sot_ko.md](../05_ops/v2_ops_action_glossary_sot_ko.md#L1), [docs/v2_specs/01_core/v2_redis_keys_channels_sot_ko.md](../01_core/v2_redis_keys_channels_sot_ko.md#L1), [docs/v2_specs/00_sot_meta/02_golden_v2_realtime_architecture.md](../00_sot_meta/02_golden_v2_realtime_architecture.md#L1), [docs/v2_specs/01_core/v2_ticket_enum_code_alignment_sot_ko.md](../01_core/v2_ticket_enum_code_alignment_sot_ko.md#L1), [docs/v2_specs/01_core/v2_reward_type_standard_sot_ko.md](../01_core/v2_reward_type_standard_sot_ko.md#L1), [docs/v2_specs/01_core/v2_level_point_storage_sot_ko.md](../01_core/v2_level_point_storage_sot_ko.md#L1), [docs/v2_specs/02_game/v2_team_battle_sot_ko.md](../02_game/v2_team_battle_sot_ko.md#L1)
+    *   **근거**: [docs/v2_specs/01_core/v2_vault_glossary_sot_ko.md](../01_core/v2_vault_glossary_sot_ko.md#L1), [docs/v2_specs/01_core/v2_strict_vault_policy_sot_ko.md](../01_core/v2_strict_vault_policy_sot_ko.md#L1), [docs/v2_specs/01_core/v2_reward_mapping_sot_ko.md](../01_core/v2_reward_mapping_sot_ko.md#L1), [docs/v2_specs/07_golden/golden_v2_core_economy_glossary_ko.md](../07_golden/golden_v2_core_economy_glossary_ko.md#L1), [docs/v2_specs/02_game/v2_game_action_schema_sot_ko.md](../02_game/v2_game_action_schema_sot_ko.md#L1), [docs/v2_specs/02_game/v2_mission_glossary_sot_ko.md](../02_game/v2_mission_glossary_sot_ko.md#L1), [docs/v2_specs/02_game/v2_admin_game_config_schema_ko.md](../02_game/v2_admin_game_config_schema_ko.md#L1), [docs/v2_specs/05_ops/v2_ops_plan_execution_schema_sot_ko.md](../05_ops/v2_ops_plan_execution_schema_sot_ko.md#L1), [docs/v2_specs/05_ops/v2_ops_action_glossary_sot_ko.md](../05_ops/v2_ops_action_glossary_sot_ko.md#L1), [docs/v2_specs/01_core/v2_redis_keys_channels_sot_ko.md](../01_core/v2_redis_keys_channels_sot_ko.md#L1), [docs/v2_specs/07_golden/02_golden_v2_realtime_architecture.md](../07_golden/02_golden_v2_realtime_architecture.md#L1), [docs/v2_specs/01_core/v2_ticket_enum_code_alignment_sot_ko.md](../01_core/v2_ticket_enum_code_alignment_sot_ko.md#L1), [docs/v2_specs/01_core/v2_reward_type_standard_sot_ko.md](../01_core/v2_reward_type_standard_sot_ko.md#L1), [docs/v2_specs/01_core/v2_level_point_storage_sot_ko.md](../01_core/v2_level_point_storage_sot_ko.md#L1), [docs/v2_specs/02_game/v2_team_battle_sot_ko.md](../02_game/v2_team_battle_sot_ko.md#L1)
 
 3.  **API 전수 조사 및 보안 감사**
     *   **Task**: 현재 V1의 모든 API 리스트업 (Swagger 추출).
@@ -205,15 +205,23 @@
 
 12. **세그먼트 분류/메시지 발송 V2 SoT/DB 구성**
     *   세그먼트 룰/결과 저장 및 메시지 인박스 스키마 정의.
+    *   **작업 내용**:
+        - V2 세그먼트 배치 트리거 API
+        - V2 관리자 메시지 생성/팬아웃 API
     *   **진행도**: 진행중 (SoT/DB 스키마 초안 완료)
     *   **검증**: 마이그레이션 적용 완료 (revision 20260119_1600)
-    *   **근거**: [docs/v2_specs/01_core/v2_user_segment_policy_sot_ko.md](../01_core/v2_user_segment_policy_sot_ko.md#L1), [docs/v2_specs/05_ops/v2_admin_message_policy_sot_ko.md](../05_ops/v2_admin_message_policy_sot_ko.md#L1), [docs/v2_specs/04_db/v2_db_segment_rule_ko.md](../04_db/v2_db_segment_rule_ko.md#L1), [docs/v2_specs/04_db/v2_db_user_segment_ko.md](../04_db/v2_db_user_segment_ko.md#L1), [docs/v2_specs/04_db/v2_db_admin_message_ko.md](../04_db/v2_db_admin_message_ko.md#L1), [docs/v2_specs/04_db/v2_db_admin_message_inbox_ko.md](../04_db/v2_db_admin_message_inbox_ko.md#L1)
+    *   **근거**: [docs/v2_specs/01_core/v2_user_segment_policy_sot_ko.md](../01_core/v2_user_segment_policy_sot_ko.md#L1), [docs/v2_specs/05_ops/v2_admin_message_policy_sot_ko.md](../05_ops/v2_admin_message_policy_sot_ko.md#L1), [docs/v2_specs/04_db/v2_db_segment_rule_ko.md](../04_db/v2_db_segment_rule_ko.md#L1), [docs/v2_specs/04_db/v2_db_user_segment_ko.md](../04_db/v2_db_user_segment_ko.md#L1), [docs/v2_specs/04_db/v2_db_admin_message_ko.md](../04_db/v2_db_admin_message_ko.md#L1), [docs/v2_specs/04_db/v2_db_admin_message_inbox_ko.md](../04_db/v2_db_admin_message_inbox_ko.md#L1), [app/v2/api/routes.py](../../../app/v2/api/routes.py#L1)
+
+13. **Golden V2 이관 (문서/기능)**
+    *   Golden V2 API/DB 문서 정리 및 기능 이관.
+    *   **진행도**: 완료 (문서 경로 이동 및 V2 라우트 이관 완료)
+    *   **근거**: [docs/v2_specs/07_golden/golden_v2_system_definition_ko.md](../07_golden/golden_v2_system_definition_ko.md#L1), [docs/v2_specs/07_golden/golden_v2_intervention_logic_ko.md](../07_golden/golden_v2_intervention_logic_ko.md#L1), [docs/v2_specs/07_golden/golden_v2_operational_logic_ko.md](../07_golden/golden_v2_operational_logic_ko.md#L1), [docs/v2_specs/07_golden/02_golden_v2_realtime_architecture.md](../07_golden/02_golden_v2_realtime_architecture.md#L1), [docs/v2_specs/07_golden/v2_golden_api_contract_ko.md](../07_golden/v2_golden_api_contract_ko.md#L1), [docs/v2_specs/07_golden/v2_db_golden_data_map_ko.md](../07_golden/v2_db_golden_data_map_ko.md#L1), [app/v2/api/routes.py](../../../app/v2/api/routes.py#L1)
 
 
 ## Phase 5: 디자인 & 모션 시스템 검증 (4주차 초반)
 *목표: "심심하다"는 평가 제거 및 프리미엄 UX 완성 (GSAP + Liquid Glass)*
 
-13. **모션 시스템 표준화 (GSAP + CSS)**
+14. **모션 시스템 표준화 (GSAP + CSS)**
     *   **Tech Stack**: Next.js + GSAP 3 (gsap.context 사용).
     *   **5대 핵심 모션 적용**:
         1.  **Press**: 버튼/카드 클릭 시 Scale 0.985 -> 1 (쫀쫀한 타격감).
@@ -223,7 +231,7 @@
         5.  **Spotlight**: 핵심 보상/CTA에 1회성 강조 (무한 루프 지양).
     *   **진행도**: 미착수
 
-14. **텔레그램 Liquid Glass & UI 최적화**
+15. **텔레그램 Liquid Glass & UI 최적화**
     *   **Liquid Glass**: 텔레그램 네이티브 배경과 어우러지는 반투명/블러 효과(`backdrop-filter`) 적극 활용.
     *   **Event Hub 구축**: 산발적인 모달을 제거하고 "이벤트 모음 페이지"로 통합. (Top1 추천 + 진행중 리스트 구조).
     *   **성능 최적화**: `transform`, `opacity` 속성 위주 사용으로 60fps 유지.
@@ -234,17 +242,17 @@
 ## Phase 6: 텔레그램 통합 및 최종 검증 (말일)
 *목표: 웹에서 검증된 시스템을 텔레그램에 이식*
 
-15. **텔레그램 SDK 인젝션 (Bridge)**
+16. **텔레그램 SDK 인젝션 (Bridge)**
     *   `DevLogin` 비활성화 및 `Telegram WebApp Auth` 활성화.
     *   `viewport` 확장 및 햅틱 피드백 연동.
     *   **진행도**: 미착수
 
-16. **E2E 테스트 및 부하 테스트**
+17. **E2E 테스트 및 부하 테스트**
     *   텔레그램 샌드박스 환경에서 결제/게임 플로우 최종 확인.
     *   가상 유저 1,000명 부하 테스트.
     *   **진행도**: 미착수
 
-17. **데이터 이관 및 컷오버 (Switching)**
+18. **데이터 이관 및 컷오버 (Switching)**
     *   V1 -> V2 ETL 스크립트 실행 (Dry Run 필수).
     *   점검 후 서비스 교체.
     *   **진행도**: 미착수

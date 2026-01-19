@@ -80,7 +80,7 @@ V2 마이그레이션의 핵심인 "돈과 아이템"의 무결성을 확보하�
 ### 4.6 Golden Hour Logic (배수 적용 오류 수정)
 *   **Issue**: 골든아워 배수가 어드민 설정과 다르게 적용됨.
 *   **Action**: `GameService`/`RewardService` 내 배수 연산 로직 디버깅.
-    - 참조: [v2_golden_hour_policy_sot_ko.md](../02_game/v2_golden_hour_policy_sot_ko.md)
+    - 참조: [v2_golden_hour_policy_sot_ko.md](../07_golden/v2_golden_hour_policy_sot_ko.md)
     - Admin Config(`GoldenHourPolicy`) 로드 시점 및 캐싱 데이터 확인.
     - `apply_multiplier(base_amount, policy)` 함수 TDD 검증.
 
