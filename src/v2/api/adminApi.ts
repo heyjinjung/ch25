@@ -1,78 +1,120 @@
-// src/v2/api/adminApi.ts
-import userApi from "../../api/httpClient";
+import { v2Client } from "./client";
 
 // ============================================================================
-// Admin/Ops API (세그먼트/메시지 관리용)
+// Types
 // ============================================================================
 
-export type TargetType = "ALL" | "SEGMENT" | "USER" | "TAG";
+export interface AdminWithdrawalDto {
+  id: number;
+  userId: number;
+  nickname: string;
+  amount: number;
+  requestTime: string;
+  riskLevel: "LOW" | "MEDIUM" | "HIGH";
+  status: "PENDING" | "APPROVED" | "REJECTED";
+}
 
-export interface SegmentBatchResponse {
-  readonly processed: number;
-  readonly changed: number;
+export interface AdminDepositDto {
+  id: number;
+  userId: number;
+  amount: number;
+  bankOwner: string;
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  requestedAt: string;
+  isNew: boolean;
+}
+
+export interface AdminProductDto {
+  id: number;
+  sku: string;
+  name: string;
+  price: number;
+  isVisible: boolean;
+  category: string;
 }
 
 export interface CreateMessageRequest {
-  readonly title: string;
-  readonly content: string;
-  readonly target_type: TargetType;
-  readonly target_value?: string;
-  readonly channels?: string[];
+  title: string;
+  body: string;
+  targetSegment: string;
 }
 
-export interface AdminMessageResponse {
-  readonly id: number;
-  readonly sender_admin_id: number;
-  readonly title: string;
-  readonly content: string;
-  readonly target_type: TargetType;
-  readonly target_value?: string;
-  readonly channels?: string[];
-  readonly recipient_count: number;
-  readonly read_count: number;
-  readonly created_at: string;
-}
+// ============================================================================
+// Withdrawal API
+// ============================================================================
 
-export interface OpsExecutionResult {
-  readonly id: number;
-  readonly task_id: string;
-  readonly kind: string;
-  readonly payload_json: Record<string, unknown>;
-  readonly created_at: string;
-}
-
-export interface OpsExecutionListResponse {
-  readonly results: OpsExecutionResult[];
-  readonly total_count: number;
-}
-
-export const runV2SegmentBatch = async (): Promise<SegmentBatchResponse> => {
-  try {
-    const response = await userApi.post<SegmentBatchResponse>("/api/v2/segments/run");
-    return response.data;
-  } catch (error) {
-    console.error("[adminApi] Failed to run V2 segment batch", error);
-    throw error;
-  }
+export const getAdminWithdrawals = async (): Promise<AdminWithdrawalDto[]> => {
+  // TODO: Replace with actual endpoint when available on backend
+  // const response = await v2Client.get<AdminWithdrawalDto[]>("/admin/api/economy/withdrawals/pending");
+  // return response.data;
+  
+  // Return Mock Data for now as backend endpoint might not be fully ready for GET list
+  return [
+    { id: 101, userId: 1001, nickname: "HighRoller99", amount: 150000, requestTime: "10:30 AM", riskLevel: "LOW", status: "PENDING" },
+    { id: 102, userId: 1005, nickname: "Tester01", amount: 50000, requestTime: "10:45 AM", riskLevel: "LOW", status: "PENDING" },
+    { id: 103, userId: 1042, nickname: "UnknownUser", amount: 5000000, requestTime: "11:00 AM", riskLevel: "HIGH", status: "PENDING" },
+  ];
 };
 
-export const createV2AdminMessage = async (request: CreateMessageRequest): Promise<AdminMessageResponse> => {
-  try {
-    const response = await userApi.post<AdminMessageResponse>("/api/v2/messages", request);
-    return response.data;
-  } catch (error) {
-    console.error("[adminApi] Failed to create V2 admin message", error);
-    throw error;
-  }
+export const approveWithdrawal = async (id: number): Promise<void> => {
+   await v2Client.post(`/admin/api/economy/withdrawals/${id}/approve`);
 };
 
-// Ops 실행 결과 조회는 향후 API가 추가되면 구현
-// export const getV2OpsExecutionResults = async (params?: { limit?: number; offset?: number }): Promise<OpsExecutionListResponse> => {
-//   try {
-//     const response = await userApi.get<OpsExecutionListResponse>("/api/v2/ops/executions", { params });
-//     return response.data;
-//   } catch (error) {
-//     console.error("[adminApi] Failed to fetch V2 ops execution results", error);
-//     throw error;
-//   }
-// };
+export const rejectWithdrawal = async (id: number, reason: string): Promise<void> => {
+   await v2Client.post(`/admin/api/economy/withdrawals/${id}/reject`, { reason });
+};
+
+// ============================================================================
+// Deposit API
+// ============================================================================
+
+export const getAdminDeposits = async (): Promise<AdminDepositDto[]> => {
+    // TODO: Replace with actual endpoint
+    // const response = await v2Client.get<AdminDepositDto[]>("/admin/api/economy/deposits/pending");
+    // return response.data;
+
+    return [
+        { id: 201, userId: 1042, amount: 300000, bankOwner: "김철수", status: "PENDING", requestedAt: "10 min ago", isNew: true },
+        { id: 202, userId: 1001, amount: 1000000, bankOwner: "이영희", status: "PENDING", requestedAt: "30 min ago", isNew: false },
+        { id: 203, userId: 999, amount: 50000, bankOwner: "박민수", status: "APPROVED", requestedAt: "2 hours ago", isNew: false },
+    ];
+};
+
+export const confirmDeposit = async (id: number): Promise<void> => {
+    await v2Client.post(`/admin/api/economy/deposits/${id}/confirm`);
+};
+
+// ============================================================================
+// Shop API
+// ============================================================================
+
+export const getAdminProducts = async (): Promise<AdminProductDto[]> => {
+    // TODO: Replace with actual endpoint
+    // const response = await v2Client.get<AdminProductDto[]>("/admin/api/shop/products");
+    // return response.data;
+
+    return [
+        { id: 1, sku: "TICKET_10", name: "Premium Ticket Pack", price: 10000, isVisible: true, category: "TICKET" },
+        { id: 2, sku: "GOLD_KEY", name: "Golden Key", price: 50000, isVisible: false, category: "KEY" },
+    ];
+};
+
+export const updateProductStatus = async (id: number, isVisible: boolean): Promise<void> => {
+    await v2Client.put(`/admin/api/shop/products/${id}/status`, { isVisible });
+};
+
+export const updateProductPrice = async (id: number, price: number): Promise<void> => {
+    await v2Client.put(`/admin/api/shop/products/${id}/price`, { price });
+};
+
+// ============================================================================
+// User Segment & Message API
+// ============================================================================
+
+export const runV2SegmentBatch = async (): Promise<void> => {
+    await v2Client.post("/admin/api/segments/batch/run");
+};
+
+export const createV2AdminMessage = async (request: CreateMessageRequest): Promise<void> => {
+    await v2Client.post("/admin/api/messages", request);
+};

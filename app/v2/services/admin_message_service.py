@@ -40,7 +40,7 @@ class V2AdminMessageService:
     def _resolve_user_ids(db: Session, target_type: str, target_value: str | None) -> list[int]:
         if target_type == "ALL":
             return db.execute(select(V2User.id)).scalars().all()
-        if target_type == "SEGMENT" and target_value:
+        if target_type in {"SEGMENT", "TAG"} and target_value:
             return (
                 db.execute(
                     select(V2UserSegment.user_id).where(V2UserSegment.segment == target_value)

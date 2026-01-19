@@ -15,7 +15,7 @@ from app.schemas.mission import MissionListResponse
 from app.schemas.roulette import RoulettePlayRequest, RoulettePlayResponse, RouletteStatusResponse
 from app.services.inventory_service import InventoryService
 from app.services.mission_service import MissionService
-from app.services.retention_intervention_service import RetentionInterventionService
+from app.v2.services.retention_intervention_service import V2RetentionInterventionService
 from app.services.shop_service import ShopService
 from app.services.team_battle_service import TeamBattleService
 from app.services.game_wallet_service import GameWalletService
@@ -49,7 +49,7 @@ router = APIRouter(tags=["v2-games"])
 _roulette_service = RouletteService()
 _dice_service = DiceService()
 _lottery_service = LotteryService()
-_retention_service = RetentionInterventionService()
+_retention_service = V2RetentionInterventionService()
 _team_battle_service = TeamBattleService()
 _wallet_service = GameWalletService()
 
@@ -151,6 +151,9 @@ def create_admin_message(
     db: Session = Depends(get_db),
     admin_id: int = Depends(get_current_admin_id),
 ) -> V2MessageResponse:
+            msg = db.query(V2AdminMessage).filter(V2AdminMessage.id == entry.message_id).first()
+            if msg is not None:
+                msg.read_count = (msg.read_count or 0) + 1
     if payload.target_type != "ALL" and not (payload.target_value and payload.target_value.strip()):
         raise HTTPException(status_code=400, detail="TARGET_VALUE_REQUIRED")
 
@@ -674,10 +677,11 @@ def mark_inbox_read(
     user_id: int = Depends(get_current_user_id),
 ) -> V2MarkInboxReadResponse:
     """Mark one or more inbox messages as read."""
-    from app.v2.models.v2_admin_message import V2AdminMessageInbox
+    from app.v2.models.v2_admin_message import V2AdminMessage, V2AdminMessageInbox
 
     now = datetime.utcnow()
     marked_count = 0
+    updated_message_ids = set()
 
     for inbox_id in payload.inbox_ids:
         entry = (
@@ -693,6 +697,13 @@ def mark_inbox_read(
             entry.is_read = True
             entry.read_at = now
             marked_count += 1
+            updated_message_ids.add(entry.message_id)
+
+    # Increment read_count for each message
+    for message_id in updated_message_ids:
+        message = db.query(V2AdminMessage).filter(V2AdminMessage.id == message_id).first()
+        if message:
+            message.read_count += 1
 
     db.commit()
 

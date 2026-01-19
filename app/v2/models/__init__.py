@@ -11,6 +11,8 @@ from app.v2.models.v2_lottery import V2LotteryConfig, V2LotteryPrize, V2LotteryL
 from app.v2.models.v2_segment_rule import V2SegmentRule
 from app.v2.models.v2_user_segment import V2UserSegment
 from app.v2.models.v2_admin_message import V2AdminMessage, V2AdminMessageInbox
+from app.v2.models.v2_user_retention_state import V2UserRetentionState
+from app.v2.models.v2_retention_roi_log import V2RetentionRoiLog
 from app.v2.models.user import V2User
 
 __all__ = [
@@ -32,5 +34,7 @@ __all__ = [
     "V2UserSegment",
     "V2AdminMessage",
     "V2AdminMessageInbox",
+    "V2UserRetentionState",
+    "V2RetentionRoiLog",
     "V2User",
 ]
