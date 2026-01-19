@@ -1,5 +1,7 @@
 # /workspace/ch25/app/api/routes/__init__.py
 """API route registrations."""
+import os
+
 from fastapi import APIRouter
 
 from app.api import admin
@@ -47,9 +49,11 @@ from app.v2.api import dev_login
 api_router = APIRouter()
 
 # Dev endpoints (only enabled in development)
-api_router.include_router(dev_auth.router, prefix="/api/dev", tags=["dev"])
-api_router.include_router(dev_ch25_events.router, prefix="/api/dev", tags=["dev"])
-api_router.include_router(dev_login.router)
+_env = (os.getenv("ENV") or os.getenv("env") or "local").strip().lower()
+if _env in {"local", "development", "dev"}:
+	api_router.include_router(dev_auth.router, prefix="/api/dev", tags=["dev"])
+	api_router.include_router(dev_ch25_events.router, prefix="/api/dev", tags=["dev"])
+	api_router.include_router(dev_login.router)
 
 # Metrics endpoint
 api_router.include_router(metrics.router, tags=["metrics"])

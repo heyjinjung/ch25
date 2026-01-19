@@ -1,5 +1,5 @@
 // src/v2/api/inventoryApi.ts
-import userApi from "../../api/httpClient";
+import { v2Client } from "./client";
 
 // ============================================================================
 // Inventory API
@@ -18,8 +18,7 @@ export interface WalletBalanceDto {
 
 export interface InventoryResponse {
   readonly items: InventoryItemDto[];
-  readonly wallet: WalletBalanceDto[];
-  readonly diamond_balance?: number; // Legacy compatibility
+  readonly wallet: Record<string, number>;
 }
 
 export interface UseInventoryItemRequest {
@@ -38,7 +37,7 @@ export interface UseInventoryItemResponse {
 
 export const getV2Inventory = async (): Promise<InventoryResponse> => {
   try {
-    const response = await userApi.get<InventoryResponse>("/api/v2/inventory");
+    const response = await v2Client.get<InventoryResponse>("/api/v2/inventory");
     return response.data;
   } catch (error) {
     console.error("[inventoryApi] Failed to fetch V2 inventory", error);
@@ -48,7 +47,7 @@ export const getV2Inventory = async (): Promise<InventoryResponse> => {
 
 export const useV2InventoryItem = async (request: UseInventoryItemRequest): Promise<UseInventoryItemResponse> => {
   try {
-    const response = await userApi.post<UseInventoryItemResponse>("/api/v2/inventory/use", request);
+    const response = await v2Client.post<UseInventoryItemResponse>("/api/v2/inventory/use", request);
     return response.data;
   } catch (error) {
     console.error("[inventoryApi] Failed to use V2 inventory item", error);

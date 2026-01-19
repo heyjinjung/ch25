@@ -4,6 +4,8 @@ import AdminLayout from "../admin/layouts/AdminLayout";
 import OpsDashboard from "../admin/pages/dashboard/OpsDashboard";
 import MarketingCenterPage from "../admin/pages/dashboard/MarketingCenterPage";
 import UserListPage from "../admin/pages/users/UserListPage";
+import CrisisRadarPage from "../admin/pages/dashboard/CrisisRadarPage";
+
 
 import VaultControlPage from "../admin/pages/economy/VaultControlPage";
 import CCDepositPage from "../admin/pages/economy/CCDepositPage";
@@ -15,7 +17,9 @@ import DiceConfigPage from "../admin/pages/game/DiceConfigPage";
 import LotteryConfigPage from "../admin/pages/game/LotteryConfigPage";
 import TicketInventoryPage from "../admin/pages/economy/TicketInventoryPage";
 import MessageSenderPage from "../admin/pages/marketing/MessageSenderPage";
+import UserSegmentPage from "../admin/pages/marketing/UserSegmentPage";
 import SurveyPage from "../admin/pages/marketing/SurveyPage";
+import HealthPage from "../admin/pages/system/HealthPage";
 import ModalControlPage from "../admin/pages/system/ModalControlPage";
 import { useAdminAuth } from "../hooks/useAdminAuth";
 import { ShieldAlert } from "lucide-react";
@@ -27,6 +31,7 @@ const V2AdminRoutes: React.FC = () => {
     <Routes>
       <Route element={<AdminLayout />}>
         <Route path="dashboard" element={<OpsDashboard />} />
+        <Route path="dashboard/radar" element={<CrisisRadarPage />} />
         <Route path="marketing" element={<MarketingCenterPage />} />
         <Route path="users" element={<UserListPage />} />
         {/* Economy */}
@@ -48,9 +53,11 @@ const V2AdminRoutes: React.FC = () => {
 
         {/* Marketing */}
         <Route path="marketing/messages" element={<MessageSenderPage />} />
+        <Route path="marketing/segments" element={<UserSegmentPage />} />
         <Route path="marketing/surveys" element={<SurveyPage />} />
 
         {/* System */}
+        <Route path="system/health" element={<HealthPage />} />
         <Route path="system/modals" element={<ModalControlPage />} />
         <Route path="settings" element={<div className="p-10">Total Settings (Pending)</div>} />
         <Route path="*" element={<Navigate to="dashboard" replace />} />
