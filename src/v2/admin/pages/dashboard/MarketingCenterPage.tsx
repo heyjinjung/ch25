@@ -1,113 +1,10 @@
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/v2/lib/utils";
-import { Activity, Users, DollarSign, AlertTriangle, TrendingUp, Search, Bell } from 'lucide-react';
 
-// --- Magic UI: NumberTicker (Simplified) ---
-const NumberTicker = ({ value, className }: { value: number, className?: string }) => {
-  // In a real implementation, this would use Framer Motion for counting up
-  return <span className={className}>{value.toLocaleString()}</span>;
-};
+import { Badge } from "../../../components/ui/badge";
+import { Activity, Users, DollarSign, AlertTriangle, Search, Bell } from 'lucide-react';
 
-// --- Magic UI: PulsatingDot (Simplified) ---
-const PulsatingDot = ({ color = "#4CAF50" }: { color?: string }) => (
-  <span className="relative flex h-2 w-2 mr-2">
-    <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ backgroundColor: color }}></span>
-    <span className="relative inline-flex rounded-full h-2 w-2" style={{ backgroundColor: color }}></span>
-  </span>
-);
-
-// --- Component: Bento Grid Layout ---
-const BentoGrid = ({ children, className }: { children: React.ReactNode; className?: string }) => {
-  return (
-    <div
-      className={cn(
-        "grid w-full auto-rows-[22rem] grid-cols-3 gap-4",
-        className
-      )}
-    >
-      {children}
-    </div>
-  );
-};
-
-const BentoCard = ({
-  name,
-  className,
-  background,
-  Icon,
-  description,
-  href,
-  cta,
-}: {
-  name: string;
-  className?: string;
-  background: React.ReactNode;
-  Icon: any;
-  description: string;
-  href: string;
-  cta: string;
-}) => (
-  <div
-    key={name}
-    className={cn(
-      "group relative col-span-3 flex flex-col justify-between overflow-hidden rounded-xl",
-      // Light mode styles
-      "bg-white [box-shadow:0_0_0_1px_rgba(0,0,0,.03),0_2px_5px_rgba(0,0,0,.05),0_10px_30px_rgba(0,0,0,.025)]",
-      // Dark mode styles (Soft Obsidian)
-      "dark:bg-[#18181B] dark:[box-shadow:0_0_0_1px_rgba(255,255,255,.08),0_2px_5px_rgba(0,0,0,.3),0_10px_30px_rgba(0,0,0,.2)]",
-      className
-    )}
-  >
-    <div>{background}</div>
-    <div className="pointer-events-none z-10 flex transform-gpu flex-col gap-1 p-6 transition-all duration-300 group-hover:-translate-y-10">
-      <Icon className="h-12 w-12 origin-left transform-gpu text-neutral-700 transition-all duration-300 ease-in-out group-hover:scale-75 dark:text-neutral-300" />
-      <h3 className="text-xl font-semibold text-neutral-700 dark:text-neutral-300">
-        {name}
-      </h3>
-      <p className="max-w-lg text-neutral-400">{description}</p>
-    </div>
-
-    <div
-      className={cn(
-        "pointer-events-none absolute bottom-0 flex w-full translate-y-10 transform-gpu flex-row items-center p-4 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100"
-      )}
-    >
-        <div className="pointer-events-auto">
-            <a href={href} className="text-sm font-bold text-primary dark:text-[#D2FD9C] flex items-center gap-1">
-                {cta}
-                <TrendingUp className="h-3 w-3" />
-            </a>
-        </div>
-    </div>
-    <div className="pointer-events-none absolute inset-0 transform-gpu transition-all duration-300 group-hover:bg-black/[.03] group-hover:dark:bg-neutral-800/10" />
-  </div>
-);
-
-// --- Component: Quick Action Card (Visitors Style) ---
-const QuickActionCard = ({ 
-    title, 
-    description, 
-    icon: Icon, 
-    colorClass, 
-    bgClass 
-}: { 
-    title: string, 
-    description: string, 
-    icon: any, 
-    colorClass: string, 
-    bgClass: string 
-}) => (
-    <div className="flex flex-col p-6 rounded-xl bg-[#1C1C1E] border border-white/5 hover:border-white/10 transition-all cursor-pointer group">
-        <div className={cn("w-10 h-10 rounded-full flex items-center justify-center mb-4 transition-transform group-hover:scale-110", bgClass)}>
-            <Icon className={cn("w-5 h-5", colorClass)} />
-        </div>
-        <h3 className="text-lg font-bold text-white mb-1">{title}</h3>
-        <p className="text-zinc-500 text-xs font-medium">{description}</p>
-    </div>
-);
-
+import { BentoGrid } from "../../components/ui/BentoGrid";
+import { QuickActionCard } from "../../components/ui/QuickActionCard";
+import { PulsatingDot } from "../../components/ui/PulsatingDot";
 
 export default function MarketingCenterPage() {
   return (
@@ -193,7 +90,7 @@ export default function MarketingCenterPage() {
              <div className="space-y-4 relative z-10">
                  {[1, 2, 3, 4, 5].map((i) => (
                      <div key={i} className="flex items-center gap-3 text-sm">
-                         <div className="w-2 h-2 rounded-full bg-[#D2FD9C] animate-pulse" />
+                         <PulsatingDot color="#D2FD9C" />
                          <span className="text-zinc-300">User_{100+i}</span>
                          <span className="ml-auto text-zinc-500 text-xs">구매 완료</span>
                      </div>

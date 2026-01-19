@@ -1,16 +1,15 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { 
   CreditCard, 
   Users, 
   LayoutDashboard, 
   Settings, 
-  Menu, 
   Bell, 
   Search,
   LogOut
 } from "lucide-react";
-import { cn } from "@/v2/lib/utils";
+import { cn } from "../../lib/utils";
 
 /**
  * V2 Admin Layout Shell

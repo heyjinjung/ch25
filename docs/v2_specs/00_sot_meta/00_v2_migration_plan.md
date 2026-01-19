@@ -206,6 +206,7 @@
 12. **세그먼트 분류/메시지 발송 V2 SoT/DB 구성**
     *   세그먼트 룰/결과 저장 및 메시지 인박스 스키마 정의.
     *   **진행도**: 진행중 (SoT/DB 스키마 초안 완료)
+    *   **검증**: 마이그레이션 적용 완료 (revision 20260119_1600)
     *   **근거**: [docs/v2_specs/01_core/v2_user_segment_policy_sot_ko.md](../01_core/v2_user_segment_policy_sot_ko.md#L1), [docs/v2_specs/05_ops/v2_admin_message_policy_sot_ko.md](../05_ops/v2_admin_message_policy_sot_ko.md#L1), [docs/v2_specs/04_db/v2_db_segment_rule_ko.md](../04_db/v2_db_segment_rule_ko.md#L1), [docs/v2_specs/04_db/v2_db_user_segment_ko.md](../04_db/v2_db_user_segment_ko.md#L1), [docs/v2_specs/04_db/v2_db_admin_message_ko.md](../04_db/v2_db_admin_message_ko.md#L1), [docs/v2_specs/04_db/v2_db_admin_message_inbox_ko.md](../04_db/v2_db_admin_message_inbox_ko.md#L1)
 
 
