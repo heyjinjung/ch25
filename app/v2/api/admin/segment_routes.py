@@ -160,5 +160,5 @@ def delete_segment_rule_endpoint(
     db: Session = Depends(get_db),
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
-    AdminSegmentRuleService.delete_rule(db, rule_id)
+    AdminSegmentRuleService.delete_rule(db, rule_id=rule_id)
     return {"message": "deleted"}
