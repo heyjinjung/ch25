@@ -2,6 +2,8 @@ import { useState } from "react";
 import {
   useAdminMissions,
   useAdminUpdateMission,
+  useAdminCreateMission,
+  useAdminDeleteMission,
 } from "../../../hooks/useAdminGame";
 import { type AdminMissionDto } from "../../../api/adminApi";
 import {
@@ -21,7 +23,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../../components/ui/select";
-import { Ticket, Gift, Coins } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "../../../components/ui/dialog";
+import { Button } from "../../../components/ui/button";
+import { Label } from "../../../components/ui/label";
+import { Ticket, Gift, Coins, Plus, Trash2 } from "lucide-react";
 
 type MissionRewardTypeValue =
   | "NONE"
@@ -71,8 +82,43 @@ const CATEGORIES = ["DAILY", "WEEKLY", "NEW_USER", "SPECIAL_EVENT"];
 export default function MissionManagerPage() {
   const { data: missions = [], isLoading } = useAdminMissions();
   const updateMutation = useAdminUpdateMission();
+  const createMutation = useAdminCreateMission();
+  const deleteMutation = useAdminDeleteMission();
 
   const [activeTab, setActiveTab] = useState("DAILY");
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [createForm, setCreateForm] = useState({
+    category: "DAILY",
+    title: "",
+    condition: "",
+    rewardType: "POINT",
+    rewardAmount: 100,
+    targetValue: 1,
+    logicKey: "PLAY_GAME",
+  });
+
+  const handleCreate = () => {
+    createMutation.mutate(createForm, {
+      onSuccess: () => {
+        setIsCreateOpen(false);
+        setCreateForm({
+          category: "DAILY",
+          title: "",
+          condition: "",
+          rewardType: "POINT",
+          rewardAmount: 100,
+          targetValue: 1,
+          logicKey: "PLAY_GAME",
+        });
+      },
+    });
+  };
+
+  const handleDelete = (id: number) => {
+    if (confirm("정말로 이 미션을 삭제하시겠습니까?")) {
+      deleteMutation.mutate(id);
+    }
+  };
 
   // Filter missions by active tab
   const filteredMissions = missions.filter((m) => m.category === activeTab);
@@ -123,10 +169,17 @@ export default function MissionManagerPage() {
           >
             Active Season 25
           </Badge>
+          <Button
+            size="sm"
+            className="bg-emerald-500 hover:bg-emerald-600 text-white gap-2"
+            onClick={() => setIsCreateOpen(true)}
+          >
+            <Plus className="w-4 h-4" />
+            미션 생성
+          </Button>
         </div>
       </div>
 
-      {/* Search/Filter area or just the list directly */}
       <div className="space-y-4">
         <Tabs
           defaultValue="DAILY"
@@ -232,6 +285,15 @@ export default function MissionManagerPage() {
                         handleUpdate(mission.id, "isActive", checked)
                       }
                     />
+                    
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-zinc-500 hover:text-red-400 hover:bg-red-500/10"
+                      onClick={() => handleDelete(mission.id)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
                   </div>
                 </Card>
               ))
@@ -239,6 +301,150 @@ export default function MissionManagerPage() {
           </TabsContent>
         </Tabs>
       </div>
+
+      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+        <DialogContent className="bg-[#18181B] border-white/10 text-white">
+          <DialogHeader>
+            <DialogTitle>새 미션 생성</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="category" className="text-right text-zinc-400">
+                카테고리
+              </Label>
+              <Select
+                value={createForm.category}
+                onValueChange={(val) =>
+                  setCreateForm({ ...createForm, category: val })
+                }
+              >
+                <SelectTrigger className="col-span-3 bg-black/50 border-white/10">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-[#18181B] border-white/10 text-white">
+                  {CATEGORIES.map((cat) => (
+                    <SelectItem key={cat} value={cat}>
+                      {cat}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="title" className="text-right text-zinc-400">
+                제목
+              </Label>
+              <Input
+                id="title"
+                value={createForm.title}
+                onChange={(e) =>
+                  setCreateForm({ ...createForm, title: e.target.value })
+                }
+                className="col-span-3 bg-black/50 border-white/10"
+              />
+            </div>
+
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="logicKey" className="text-right text-zinc-400">
+                로직 키
+              </Label>
+              <Input
+                id="logicKey"
+                value={createForm.logicKey}
+                onChange={(e) =>
+                  setCreateForm({ ...createForm, logicKey: e.target.value })
+                }
+                className="col-span-3 bg-black/50 border-white/10"
+                placeholder="PLAY_ROULETTE, ATTENDANCE..."
+              />
+            </div>
+
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="condition" className="text-right text-zinc-400">
+                설명/조건
+              </Label>
+              <Input
+                id="condition"
+                value={createForm.condition}
+                onChange={(e) =>
+                  setCreateForm({ ...createForm, condition: e.target.value })
+                }
+                className="col-span-3 bg-black/50 border-white/10"
+              />
+            </div>
+
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="targetValue" className="text-right text-zinc-400">
+                목표 횟수
+              </Label>
+              <Input
+                id="targetValue"
+                type="number"
+                value={createForm.targetValue}
+                onChange={(e) =>
+                  setCreateForm({
+                    ...createForm,
+                    targetValue: parseInt(e.target.value),
+                  })
+                }
+                className="col-span-3 bg-black/50 border-white/10"
+              />
+            </div>
+
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="reward" className="text-right text-zinc-400">
+                보상
+              </Label>
+              <div className="col-span-3 flex gap-2">
+                <Select
+                  value={createForm.rewardType}
+                  onValueChange={(val) =>
+                    setCreateForm({ ...createForm, rewardType: val })
+                  }
+                >
+                  <SelectTrigger className="flex-1 bg-black/50 border-white/10">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#18181B] border-white/10 text-white max-h-[200px]">
+                    {MISSION_REWARD_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Input
+                  type="number"
+                  className="w-24 bg-black/50 border-white/10"
+                  value={createForm.rewardAmount}
+                  onChange={(e) =>
+                    setCreateForm({
+                      ...createForm,
+                      rewardAmount: parseInt(e.target.value),
+                    })
+                  }
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="ghost"
+              onClick={() => setIsCreateOpen(false)}
+              className="text-zinc-400 hover:text-white"
+            >
+              취소
+            </Button>
+            <Button
+              onClick={handleCreate}
+              className="bg-emerald-500 hover:bg-emerald-600 text-white"
+            >
+              생성
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

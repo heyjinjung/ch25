@@ -161,7 +161,7 @@ export function UserDetailDrawer({
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className="w-[90%] sm:w-[1200px] bg-[#121214] border-l border-white/10 p-0 text-white overflow-y-auto">
+      <SheetContent className="w-[90%] sm:max-w-[600px] sm:w-[600px] bg-[#121214] border-l border-white/10 p-0 text-white overflow-y-auto">
         {isLoading || !user ? (
           <div className="h-full flex flex-col items-center justify-center text-zinc-500 gap-4">
             <SheetHeader className="sr-only">
@@ -368,7 +368,7 @@ export function UserDetailDrawer({
                         variant="outline"
                         className="border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/10"
                         onClick={() => {
-                          setWalletEditorInitialType("ROULETTE_COIN");
+                          setWalletEditorInitialType("ROULETTE_TICKET");
                           setIsWalletEditorOpen(true);
                         }}
                       >
@@ -889,7 +889,9 @@ function UserVaultLedgerSection({ userId }: { userId: number | null }) {
           onClick={() => refetch()}
           className="h-7 text-xs border-white/10 hover:bg-white/5"
         >
-          <RefreshCw className={cn("w-3 h-3 mr-1", isLoading && "animate-spin")} />
+          <RefreshCw
+            className={cn("w-3 h-3 mr-1", isLoading && "animate-spin")}
+          />
           새로고침
         </Button>
       </div>
@@ -915,7 +917,10 @@ function UserVaultLedgerSection({ userId }: { userId: number | null }) {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={4} className="h-32 text-center text-zinc-500">
+                <TableCell
+                  colSpan={4}
+                  className="h-32 text-center text-zinc-500"
+                >
                   <div className="flex flex-col items-center gap-2">
                     <RefreshCw className="w-5 h-5 animate-spin" />
                     <span>내역을 불러오는 중...</span>
@@ -943,7 +948,7 @@ function UserVaultLedgerSection({ userId }: { userId: number | null }) {
                   <TableCell
                     className={cn(
                       "text-xs font-bold font-mono",
-                      item.amount > 0 ? "text-emerald-400" : "text-red-400"
+                      item.amount > 0 ? "text-emerald-400" : "text-red-400",
                     )}
                   >
                     {item.amount > 0 ? "+" : ""}
@@ -961,24 +966,34 @@ function UserVaultLedgerSection({ userId }: { userId: number | null }) {
           </TableBody>
         </Table>
       </div>
-      
+
       {data && (
-         <div className="grid grid-cols-3 gap-2 mt-4 text-xs">
-            <div className="bg-black/20 p-2 rounded border border-white/5 text-center">
-                <div className="text-zinc-500 mb-1">총 입금</div>
-                <div className="text-emerald-400 font-bold">+{data.total_in.toLocaleString()}</div>
+        <div className="grid grid-cols-3 gap-2 mt-4 text-xs">
+          <div className="bg-black/20 p-2 rounded border border-white/5 text-center">
+            <div className="text-zinc-500 mb-1">총 입금</div>
+            <div className="text-emerald-400 font-bold">
+              +{data.total_in.toLocaleString()}
             </div>
-            <div className="bg-black/20 p-2 rounded border border-white/5 text-center">
-                <div className="text-zinc-500 mb-1">총 출금</div>
-                <div className="text-red-400 font-bold">{data.total_out.toLocaleString()}</div>
+          </div>
+          <div className="bg-black/20 p-2 rounded border border-white/5 text-center">
+            <div className="text-zinc-500 mb-1">총 출금</div>
+            <div className="text-red-400 font-bold">
+              {data.total_out.toLocaleString()}
             </div>
-             <div className="bg-black/20 p-2 rounded border border-white/5 text-center">
-                <div className="text-zinc-500 mb-1">순 변동</div>
-                <div className={cn("font-bold", data.net_change >= 0 ? "text-emerald-400" : "text-red-400")}>
-                    {data.net_change > 0 ? "+" : ""}{data.net_change.toLocaleString()}
-                </div>
+          </div>
+          <div className="bg-black/20 p-2 rounded border border-white/5 text-center">
+            <div className="text-zinc-500 mb-1">순 변동</div>
+            <div
+              className={cn(
+                "font-bold",
+                data.net_change >= 0 ? "text-emerald-400" : "text-red-400",
+              )}
+            >
+              {data.net_change > 0 ? "+" : ""}
+              {data.net_change.toLocaleString()}
             </div>
-         </div>
+          </div>
+        </div>
       )}
     </div>
   );

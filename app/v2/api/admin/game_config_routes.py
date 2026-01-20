@@ -43,11 +43,40 @@ def _normalize_reward_type_for_dto(value: object) -> str:
         "TICKET_BUNDLE",
         "NONE",
         "CREDIT",
+        "ROULETTE_TICKET",
+        "DICE_TICKET",
+        "LOTTERY_TICKET",
+        "GOLD_KEY_TICKET",
+        "DIAMOND_TICKET",
+        "GOLD_KEY_FRAGMENT",
+        "DIAMOND_FRAGMENT",
+        "PUZZLE_C",
+        "PUZZLE_C1",
+        "PUZZLE_C2",
+        "PUZZLE_J",
+        "PUZZLE_M",
+        "CHICKEN_GIFTICON_5000",
+        "CHICKEN_GIFTICON_10000",
+        "STARBUCKS_GIFTICON_2000",
+        "STARBUCKS_GIFTICON_10000",
+        "PIZZA_GIFTICON_5000",
+        "PIZZA_GIFTICON_10000",
+        "GOOGLE_GIFTICON_5000",
+        "GOOGLE_GIFTICON_10000",
+        "BAEMIN_GIFTICON_5000",
+        "BAEMIN_GIFTICON_10000",
+        "BAEMIN_GIFTICON_20000",
+        "COMPOSE_AMERICANO_GIFTICON_3000",
+        "GIFTICON_BAEMIN",
+        "GIFTICON_COMPOSE",
+        "CC_COIN_GIFTICON",
     }
     raw = str(value) if value is not None else ""
     if raw == "VAULT":
         return "POINT"
     if raw in allowed:
+        return raw
+    if "GIFTICON" in raw:
         return raw
     if raw.startswith("TICKET"):
         return "TICKET"
@@ -72,7 +101,36 @@ def _normalize_reward_type_for_write(value: object) -> str:
         "TICKET_BUNDLE",
         "NONE",
         "CREDIT",
+        "ROULETTE_TICKET",
+        "DICE_TICKET",
+        "LOTTERY_TICKET",
+        "GOLD_KEY_TICKET",
+        "DIAMOND_TICKET",
+        "GOLD_KEY_FRAGMENT",
+        "DIAMOND_FRAGMENT",
+        "PUZZLE_C",
+        "PUZZLE_C1",
+        "PUZZLE_C2",
+        "PUZZLE_J",
+        "PUZZLE_M",
+        "CHICKEN_GIFTICON_5000",
+        "CHICKEN_GIFTICON_10000",
+        "STARBUCKS_GIFTICON_2000",
+        "STARBUCKS_GIFTICON_10000",
+        "PIZZA_GIFTICON_5000",
+        "PIZZA_GIFTICON_10000",
+        "GOOGLE_GIFTICON_5000",
+        "GOOGLE_GIFTICON_10000",
+        "BAEMIN_GIFTICON_5000",
+        "BAEMIN_GIFTICON_10000",
+        "BAEMIN_GIFTICON_20000",
+        "COMPOSE_AMERICANO_GIFTICON_3000",
+        "GIFTICON_BAEMIN",
+        "GIFTICON_COMPOSE",
+        "CC_COIN_GIFTICON",
     }
+    if "GIFTICON" in raw:
+        return raw
     return raw if raw in allowed else "NONE"
 
 
@@ -93,14 +151,6 @@ def get_roulette_configs(
     db: Session = Depends(get_db),
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
-    def _normalize_reward_type(value: str) -> str:
-        allowed = {"POINT", "CREDIT", "TICKET", "NONE"}
-        if value in allowed:
-            return value
-        if value.startswith("TICKET"):
-            return "TICKET"
-        return "NONE"
-
     configs = (
         db.query(RouletteConfig)
         .options(selectinload(RouletteConfig.segments))
@@ -117,7 +167,7 @@ def get_roulette_configs(
                     slot_index=seg.slot_index,
                     label=seg.label,
                     weight=seg.weight,
-                    reward_type=_normalize_reward_type(str(seg.reward_type)),
+                    reward_type=_normalize_reward_type_for_dto(str(seg.reward_type)),
                     reward_amount=seg.reward_amount,
                     is_jackpot=seg.is_jackpot,
                 )
@@ -153,14 +203,6 @@ def get_roulette_config(
     db: Session = Depends(get_db),
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
-    def _normalize_reward_type(value: str) -> str:
-        allowed = {"POINT", "CREDIT", "TICKET", "NONE"}
-        if value in allowed:
-            return value
-        if value.startswith("TICKET"):
-            return "TICKET"
-        return "NONE"
-
     config = (
         db.query(RouletteConfig)
         .options(selectinload(RouletteConfig.segments))
@@ -177,7 +219,7 @@ def get_roulette_config(
             slot_index=seg.slot_index,
             label=seg.label,
             weight=seg.weight,
-            reward_type=_normalize_reward_type(str(seg.reward_type)),
+            reward_type=_normalize_reward_type_for_dto(str(seg.reward_type)),
             reward_amount=seg.reward_amount,
             is_jackpot=seg.is_jackpot,
         )

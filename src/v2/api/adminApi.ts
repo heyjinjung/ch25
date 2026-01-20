@@ -684,6 +684,19 @@ export const updateMission = async (
   await v2Client.put(`/api/v2/admin/game/missions/${id}`, data);
 };
 
+export const createAdminMission = async (
+  data: Omit<AdminMissionDto, "id" | "isActive"> & {
+    targetValue: number;
+    logicKey: string;
+  },
+): Promise<void> => {
+  await v2Client.post("/api/v2/admin/game/missions", data);
+};
+
+export const deleteAdminMission = async (id: number): Promise<void> => {
+  await v2Client.delete(`/api/v2/admin/game/missions/${id}`);
+};
+
 // Level Management
 export interface AdminLevelDto {
   level: number;
@@ -725,6 +738,18 @@ export const updateAdminLevelGlobalConfig = async (
 // Inventory Ops API
 // ============================================================================
 
+const toKstIso = (dateStr: string, isEnd: boolean) => {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  if (!y || !m || !d) return dateStr;
+  const end = isEnd
+    ? { h: 23, min: 59, s: 59, ms: 999 }
+    : { h: 0, min: 0, s: 0, ms: 0 };
+  const kst = new Date(
+    Date.UTC(y, m - 1, d, end.h, end.min, end.s, end.ms) - 9 * 60 * 60 * 1000,
+  );
+  return kst.toISOString();
+};
+
 export const getTicketLogs = async (
   userId?: number,
   startDate?: string,
@@ -733,8 +758,8 @@ export const getTicketLogs = async (
 ): Promise<TicketLogDto[]> => {
   const params: any = {};
   if (userId) params.userId = userId;
-  if (startDate) params.startDate = startDate;
-  if (endDate) params.endDate = endDate;
+  if (startDate) params.startDate = toKstIso(startDate, false);
+  if (endDate) params.endDate = toKstIso(endDate, true);
   if (limit) params.limit = limit;
 
   const response = await v2Client.get<TicketLogDto[]>(

@@ -294,6 +294,31 @@ def force_edit_vault(
             user.vault_available_balance = current_available + remaining
 
     after_balance = int(user.vault_available_balance or 0) + int(user.vault_locked_balance or 0)
+    now = datetime.utcnow()
+
+    db.add(
+        VaultLedger(
+            user_id=user.id,
+            amount=delta,
+            balance_after=int(user.vault_locked_balance or 0),
+            reason=payload.reason,
+            ref_type="ADMIN_FORCE_EDIT",
+            created_at=now,
+        )
+    )
+
+    if delta < 0:
+        db.add(
+            VaultWithdrawalRequest(
+                user_id=user.id,
+                amount=abs(int(delta)),
+                status="APPROVED",
+                admin_memo=payload.reason,
+                processed_at=now,
+                processed_by=admin_id,
+                created_at=now,
+            )
+        )
 
     AdminAuditService.log(
         db,
