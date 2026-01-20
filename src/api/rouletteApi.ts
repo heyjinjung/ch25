@@ -64,9 +64,22 @@ export interface RoulettePlayResponse {
   readonly streakInfo?: StreakInfo | null;
 }
 
+// V2 Token Type Mapping (Legacy -> Standard)
+const TOKEN_TYPE_V2_MAP: Record<string, string> = {
+  GOLD_KEY: "GOLD_KEY_TICKET",
+  DIAMOND_KEY: "DIAMOND_TICKET",
+  TRIAL_TOKEN: "TRIAL_TICKET",
+  ROULETTE_COIN: "ROULETTE_TICKET",
+  DICE_TOKEN: "DICE_TICKET",
+};
+
 export const getRouletteStatus = async (ticketType?: string): Promise<RouletteStatusResponse> => {
   try {
-    const params = ticketType ? { ticket_type: ticketType } : undefined;
+    // Map legacy token types to V2 standard
+    const mappedTicketType = ticketType && TOKEN_TYPE_V2_MAP[ticketType]
+      ? TOKEN_TYPE_V2_MAP[ticketType]
+      : ticketType;
+    const params = mappedTicketType ? { ticket_type: mappedTicketType } : undefined;
     const response = await userApi.get<BackendRouletteStatusResponse>("/api/roulette/status", { params });
     const data = response.data;
     const segments = data.segments
@@ -101,7 +114,11 @@ export const getRouletteStatus = async (ticketType?: string): Promise<RouletteSt
 
 export const playRoulette = async (ticketType?: string): Promise<RoulettePlayResponse> => {
   try {
-    const payload = ticketType ? { ticket_type: ticketType } : {};
+    // Map legacy token types to V2 standard
+    const mappedTicketType = ticketType && TOKEN_TYPE_V2_MAP[ticketType]
+      ? TOKEN_TYPE_V2_MAP[ticketType]
+      : ticketType;
+    const payload = mappedTicketType ? { ticket_type: mappedTicketType } : {};
     const response = await userApi.post<BackendRoulettePlayResponse>("/api/roulette/play", payload);
     const data = response.data;
     const mappedSegment: RouletteSegmentDto = {

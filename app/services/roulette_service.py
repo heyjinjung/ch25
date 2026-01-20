@@ -148,11 +148,28 @@ class RouletteService:
         if user_id:
              target_grade = self._resolve_user_grade(db, user_id)
 
+        # Build list of ticket types to query (V2 standard + legacy alias)
+        # This ensures we find configs regardless of which naming convention was used
+        ticket_types_to_query = [ticket_type]
+        legacy_map = {
+            "GOLD_KEY_TICKET": "GOLD_KEY",
+            "DIAMOND_TICKET": "DIAMOND_KEY",
+            "TRIAL_TICKET": "TRIAL_TOKEN",
+            "ROULETTE_TICKET": "ROULETTE_COIN",
+            "DICE_TICKET": "DICE_TOKEN",
+        }
+        reverse_legacy_map = {v: k for k, v in legacy_map.items()}
+
+        if ticket_type in legacy_map:
+            ticket_types_to_query.append(legacy_map[ticket_type])
+        elif ticket_type in reverse_legacy_map:
+            ticket_types_to_query.append(reverse_legacy_map[ticket_type])
+
         # Priority 1: Config matching Grade
         config = db.execute(
             select(RouletteConfig).where(
                 RouletteConfig.is_active.is_(True),
-                RouletteConfig.ticket_type == ticket_type,
+                RouletteConfig.ticket_type.in_(ticket_types_to_query),
                 RouletteConfig.grade == target_grade
             ).order_by(RouletteConfig.id.desc())
         ).scalars().first()
@@ -162,7 +179,7 @@ class RouletteService:
             config = db.execute(
                 select(RouletteConfig).where(
                     RouletteConfig.is_active.is_(True),
-                    RouletteConfig.ticket_type == ticket_type,
+                    RouletteConfig.ticket_type.in_(ticket_types_to_query),
                     RouletteConfig.grade == "COMMON"
                 ).order_by(RouletteConfig.id.desc())
             ).scalars().first()
@@ -215,7 +232,9 @@ class RouletteService:
 
         # Premium roulette access control must be enforced at status-time as well,
         # so the frontend can block tab switching before a play attempt.
-        if ticket_type == "GOLD_KEY" or ticket_type == "DIAMOND_KEY":
+        # Support both V2 standard and legacy aliases
+        is_premium = ticket_type in ("GOLD_KEY", "DIAMOND_KEY", "GOLD_KEY_TICKET", "DIAMOND_TICKET")
+        if is_premium:
             segment_row = db.query(UserSegment).filter(UserSegment.user_id == user_id).first()
             user_segment = segment_row.segment if segment_row else "COMMON"
             if user_segment not in ["VIP", "WHALE"]:
@@ -270,26 +289,30 @@ class RouletteService:
                 )
 
         # [Phase 1] Segment Access Control (P0)
-        # GOLD_KEY: WHALE/VIP Only (VIP limit 3)
-        # DIAMOND_KEY: WHALE/VIP Only (VIP limit 1)
-        
-        if ticket_type == "GOLD_KEY" or ticket_type == "DIAMOND_KEY":
+        # GOLD_KEY/GOLD_KEY_TICKET: WHALE/VIP Only (VIP limit 3)
+        # DIAMOND_KEY/DIAMOND_TICKET: WHALE/VIP Only (VIP limit 1)
+
+        # Support both V2 standard and legacy aliases
+        is_gold = ticket_type in ("GOLD_KEY", "GOLD_KEY_TICKET")
+        is_diamond = ticket_type in ("DIAMOND_KEY", "DIAMOND_TICKET")
+
+        if is_gold or is_diamond:
             segment_row = db.query(UserSegment).filter(UserSegment.user_id == user_id).first()
             user_segment = segment_row.segment if segment_row else "COMMON"
-            
+
             # 1. Allowlist: Only VIP and WHALE can access Premium Roulette
             if user_segment not in ["VIP", "WHALE"]:
                  raise ForbiddenError("Premium Roulette is restricted to VIP/WHALE users.")
-            
+
             # 2. Daily Limits for VIP (WHALE is unlimited)
             if user_segment == "VIP":
                 current_daily_plays = self._get_daily_ticket_play_count(db, user_id, today, ticket_type)
-                
-                if ticket_type == "GOLD_KEY":
+
+                if is_gold:
                     # Limit 3
                     if current_daily_plays >= 3:
                         raise TooManyRequestsError("VIP users are limited to 3 Gold Roulette spins per day.")
-                elif ticket_type == "DIAMOND_KEY":
+                elif is_diamond:
                     # Limit 1
                     if current_daily_plays >= 1:
                         raise TooManyRequestsError("VIP users are limited to 1 Diamond Roulette spin per day.")

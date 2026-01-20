@@ -747,9 +747,9 @@ export const getInventoryLogs = async (
   limit: number = 200,
 ): Promise<TicketLogDto[]> => {
   const params: Record<string, string | number> = { limit };
-  if (userId !== undefined) params.userId = userId;
-  if (startDate) params.startDate = startDate;
-  if (endDate) params.endDate = endDate;
+  if (userId !== undefined) params.user_id = userId;
+  if (startDate) params.start_date = startDate;
+  if (endDate) params.end_date = endDate;
 
   const response = await v2Client.get<TicketLogDto[]>(
     "/api/v2/admin/inventory/logs",
