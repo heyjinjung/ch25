@@ -137,7 +137,23 @@ export default function InventoryManagementTab() {
     const numericId = parseInt(val);
     if (!isNaN(numericId) && /^\d+$/.test(val)) {
       setSearchUserId(numericId);
+      return;
     }
+
+    setSearchUserId(undefined);
+  };
+
+  const resolveUserId = async (value: string) => {
+    const numericId = parseInt(value);
+    if (!isNaN(numericId) && /^\d+$/.test(value)) {
+      return numericId;
+    }
+
+    const response = await getAdminUserList({ search: value, limit: 1 });
+    if (response.users && response.users.length > 0) {
+      return response.users[0].id;
+    }
+    return undefined;
   };
 
   const handleSearchCommit = async () => {
@@ -146,20 +162,14 @@ export default function InventoryManagementTab() {
       return;
     }
 
-    const numericId = parseInt(inputValue);
-    if (!isNaN(numericId) && /^\d+$/.test(inputValue)) {
-      setSearchUserId(numericId);
-      return;
-    }
-
     try {
-      const response = await getAdminUserList({ search: inputValue, limit: 1 });
-      if (response.users && response.users.length > 0) {
-        setSearchUserId(response.users[0].id);
-      } else {
-        alert("해당 닉네임의 유저를 찾을 수 없습니다.");
-        setSearchUserId(undefined);
+      const resolved = await resolveUserId(inputValue);
+      if (resolved) {
+        setSearchUserId(resolved);
+        return;
       }
+      alert("해당 닉네임의 유저를 찾을 수 없습니다.");
+      setSearchUserId(undefined);
     } catch (error) {
       console.error("User search failed", error);
       alert("유저 검색 중 오류가 발생했습니다.");
@@ -170,14 +180,19 @@ export default function InventoryManagementTab() {
     if (!targetUserId) return;
     setIsSearchingUser(true);
     try {
+      const resolved = await resolveUserId(targetUserId);
+      if (!resolved) {
+        setTargetUserNickname("유저를 찾을 수 없음");
+        return;
+      }
       const response = await getAdminUserList({
-        search: targetUserId,
+        search: String(resolved),
         limit: 1,
       });
       if (response.users && response.users.length > 0) {
         const foundUser = response.users[0];
         setTargetUserNickname(foundUser.nickname || "");
-        setTargetUserId(foundUser.id.toString()); // Auto-fill ID
+        setTargetUserId(foundUser.id.toString());
       } else {
         setTargetUserNickname("유저를 찾을 수 없음");
       }
@@ -188,11 +203,11 @@ export default function InventoryManagementTab() {
     }
   };
 
-  const handleCreate = () => {
-    const uid = parseInt(targetUserId);
+  const handleCreate = async () => {
+    const uid = await resolveUserId(targetUserId);
     const amt = parseInt(amount);
-    if (isNaN(uid) || isNaN(amt)) {
-      alert("유저 ID와 수량을 확인해주세요.");
+    if (!uid || isNaN(amt)) {
+      alert("유저 ID/닉네임과 수량을 확인해주세요.");
       return;
     }
 
@@ -581,12 +596,12 @@ export default function InventoryManagementTab() {
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="userId" className="text-zinc-400">
-                지급 대상 (User ID)
+                지급 대상 (User ID 또는 닉네임)
               </Label>
               <div className="flex gap-2">
                 <Input
                   id="userId"
-                  placeholder="유저 ID 입력"
+                  placeholder="유저 ID 또는 닉네임 입력"
                   className="bg-black/50 border-white/10 text-white"
                   value={targetUserId}
                   onChange={(e) => setTargetUserId(e.target.value)}

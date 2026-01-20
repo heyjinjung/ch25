@@ -5,6 +5,7 @@ import AdminLayout from "../admin/layouts/AdminLayout";
 import OpsDashboard from "../admin/pages/dashboard/OpsDashboard";
 import MarketingCenterPage from "../admin/pages/dashboard/MarketingCenterPage";
 import CrisisRadarPage from "../admin/pages/dashboard/CrisisRadarPage";
+import GoldenRealTimePage from "../admin/pages/dashboard/GoldenRealTimePage";
 
 import VaultControlPage from "../admin/pages/economy/VaultControlPage";
 import CCDepositPage from "../admin/pages/economy/CCDepositPage";
@@ -38,6 +39,7 @@ const V2AdminRoutes: React.FC = () => {
           />
           <Route path="dashboard" element={<OpsDashboard />} />
           <Route path="dashboard/radar" element={<CrisisRadarPage />} />
+          <Route path="dashboard/golden" element={<GoldenRealTimePage />} />
           <Route path="marketing" element={<MarketingCenterPage />} />
 
           {/* Users - Tabbed */}
