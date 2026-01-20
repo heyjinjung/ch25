@@ -194,7 +194,16 @@ export interface SegmentRuleDto {
   id: number;
   label: string;
   rule: string;
+  targetSegment: string;
   status: "Active" | "Inactive";
+  description?: string;
+}
+
+export interface CreateSegmentRuleRequest {
+  label: string;
+  rule: string;
+  targetSegment: string;
+  description?: string;
 }
 
 export interface SegmentStatsResponse {
@@ -385,6 +394,18 @@ export const getAdminSegmentStats = async (): Promise<SegmentStatsResponse> => {
 export const getAdminSegmentRules = async (): Promise<SegmentRuleDto[]> => {
     const response = await v2Client.get<SegmentRuleDto[]>("/api/v2/admin/segments/rules");
     return response.data;
+};
+
+export const createSegmentRule = async (data: CreateSegmentRuleRequest): Promise<void> => {
+    await v2Client.post("/api/v2/admin/segments/rules", data);
+};
+
+export const updateSegmentRule = async (id: number, data: Partial<SegmentRuleDto>): Promise<void> => {
+    await v2Client.put(`/api/v2/admin/segments/rules/${id}`, data);
+};
+
+export const deleteSegmentRule = async (id: number): Promise<void> => {
+    await v2Client.delete(`/api/v2/admin/segments/rules/${id}`);
 };
 
 export const createV2AdminMessage = async (request: CreateMessageRequest): Promise<void> => {
@@ -732,4 +753,70 @@ export const getLotteryConfig = async (): Promise<AdminLotteryConfigDto> => {
 
 export const updateLotteryConfig = async (data: Partial<AdminLotteryConfigDto>): Promise<void> => {
     await v2Client.put("/admin/api/game/lottery/config", data);
+};
+
+// ============================================================================
+// Vault Control API
+// ============================================================================
+
+export interface VaultStatsDto {
+  today_total_vault: number;
+  today_withdrawal_pending: number;
+  today_withdrawal_approved: number;
+  today_withdrawal_rejected: number;
+  total_pending_count: number;
+}
+
+export interface UserVaultDto {
+  user_id: number;
+  nickname: string;
+  telegram_username: string | null;
+  vault_balance: number;
+  total_deposit: number;
+  total_withdrawal: number;
+  last_activity: string | null;
+  tier: string;
+}
+
+export interface VaultDailyTrendDto {
+  date: string;
+  total_vault: number;
+  deposit_count: number;
+  withdrawal_count: number;
+  deposit_amount: number;
+  withdrawal_amount: number;
+}
+
+export interface VaultForceEditRequest {
+  user_id: number;
+  amount: number;
+  reason: string;
+}
+
+export const getVaultStats = async (): Promise<VaultStatsDto> => {
+  const response = await v2Client.get<VaultStatsDto>("/api/v2/admin/vault/stats");
+  return response.data;
+};
+
+export const getVaultUsers = async (
+  limit: number = 50,
+  offset: number = 0,
+  sortBy: string = "vault_balance"
+): Promise<UserVaultDto[]> => {
+  const response = await v2Client.get<UserVaultDto[]>("/api/v2/admin/vault/users", {
+    params: { limit, offset, sort_by: sortBy }
+  });
+  return response.data;
+};
+
+export const getVaultTrend = async (days: number = 30): Promise<VaultDailyTrendDto[]> => {
+  const response = await v2Client.get<VaultDailyTrendDto[]>("/api/v2/admin/vault/trend", {
+    params: { days }
+  });
+  return response.data;
+};
+
+export const forceEditVault = async (request: VaultForceEditRequest): Promise<any> => {
+  const response = await v2Client.post("/api/v2/admin/vault/force-edit", request);
+  return response.data;
 };

@@ -200,7 +200,7 @@ export function UserDetailDrawer({
                         </CardHeader>
                         <CardContent>
                           <div className="text-2xl font-bold text-white flex items-baseline gap-1">
-                            ₩ <NumberTicker value={user.totalDeposit} />
+                            ₩ <NumberTicker value={user.totalDeposit || 0} />
                           </div>
                         </CardContent>
                       </Card>
@@ -212,7 +212,7 @@ export function UserDetailDrawer({
                         </CardHeader>
                         <CardContent>
                           <div className="text-2xl font-bold text-emerald-400 flex items-baseline gap-1">
-                            ₩ <NumberTicker value={user.currentAssets} />
+                            ₩ <NumberTicker value={user.currentAssets || 0} />
                           </div>
                         </CardContent>
                       </Card>
@@ -312,7 +312,7 @@ export function UserDetailDrawer({
                         </div>
                         <div className="text-2xl font-mono text-white font-bold flex items-center gap-2">
                           <Ticket className="w-6 h-6 text-indigo-400" />
-                          {user.ticketBalance.toLocaleString()} T
+                          {(user.ticketBalance || 0).toLocaleString()} T
                         </div>
                       </div>
                       <Button
@@ -417,7 +417,7 @@ export function UserDetailDrawer({
                         </CardHeader>
                         <CardContent>
                           <div className="text-2xl text-emerald-400 font-bold">
-                            ₩ {user.vaultBalance.toLocaleString()}
+                            ₩ {(user.vaultBalance || 0).toLocaleString()}
                           </div>
                         </CardContent>
                       </Card>
@@ -429,7 +429,7 @@ export function UserDetailDrawer({
                         </CardHeader>
                         <CardContent>
                           <div className="text-2xl text-zinc-300 font-bold">
-                            ₩ {(user.totalDeposit * 0.3).toLocaleString()}
+                            ₩ {((user.totalDeposit || 0) * 0.3).toLocaleString()}
                           </div>
                         </CardContent>
                       </Card>

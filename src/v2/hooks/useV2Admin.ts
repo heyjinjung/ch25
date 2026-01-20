@@ -47,6 +47,16 @@ import {
   AdminProductDto,
   grantItem,
   GrantItemRequest,
+  getVaultStats,
+  getVaultUsers,
+  getVaultTrend,
+  forceEditVault,
+  createSegmentRule,
+  updateSegmentRule,
+  deleteSegmentRule,
+  VaultStatsDto,
+  UserVaultDto,
+  VaultDailyTrendDto,
 } from "../api/adminApi";
 import { CreateMessageRequest } from "../api/adminApi";
 
@@ -89,8 +99,39 @@ export function useAdminSegmentStats() {
 
 export function useAdminSegmentRules() {
   return useQuery<SegmentRuleDto[]>({
-    queryKey: ADMIN_KEYS.segmentRules,
+    queryKey: ["admin", "segment-rules"],
     queryFn: getAdminSegmentRules,
+  });
+}
+
+export function useCreateSegmentRule() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createSegmentRule,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "segment-rules"] });
+    },
+  });
+}
+
+export function useUpdateSegmentRule() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Partial<SegmentRuleDto> }) =>
+      updateSegmentRule(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "segment-rules"] });
+    },
+  });
+}
+
+export function useDeleteSegmentRule() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteSegmentRule,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "segment-rules"] });
+    },
   });
 }
 
@@ -362,10 +403,47 @@ export function useAdminUpdateProductStatus() {
 export function useAdminUpdateProductPrice() {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: ({ id, price }: { id: number; price: number }) => 
+        mutationFn: ({ id, price }: { id: number; price: number }) =>
             updateProductPrice(id, price),
         onSuccess: () => {
              queryClient.invalidateQueries({ queryKey: ["admin", "products"] });
+        },
+    });
+}
+
+// ============================================================================
+// Vault Control Hooks
+// ============================================================================
+
+export function useVaultStats() {
+    return useQuery<VaultStatsDto>({
+        queryKey: ["admin", "vault", "stats"],
+        queryFn: getVaultStats,
+        refetchInterval: 30000, // 30초마다 자동 새로고침
+    });
+}
+
+export function useVaultUsers(limit: number = 50, offset: number = 0, sortBy: string = "vault_balance") {
+    return useQuery<UserVaultDto[]>({
+        queryKey: ["admin", "vault", "users", limit, offset, sortBy],
+        queryFn: () => getVaultUsers(limit, offset, sortBy),
+    });
+}
+
+export function useVaultTrend(days: number = 30) {
+    return useQuery<VaultDailyTrendDto[]>({
+        queryKey: ["admin", "vault", "trend", days],
+        queryFn: () => getVaultTrend(days),
+    });
+}
+
+export function useForceEditVault() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: forceEditVault,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["admin", "vault"] });
+            queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
         },
     });
 }
