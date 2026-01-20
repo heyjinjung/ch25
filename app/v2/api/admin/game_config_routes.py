@@ -595,3 +595,90 @@ def update_lottery_prize(
         reward_amount=prize.reward_amount,
         is_active=prize.is_active,
     )
+
+
+@router.post("/game/lottery/config/{config_id}/prize", response_model=LotteryPrizeDto)
+def create_lottery_prize(
+    config_id: int,
+    payload: LotteryPrizeUpdateRequest,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    admin_id, admin_role = admin_info
+
+    if admin_role not in ["ADMIN", "SUPER_ADMIN"]:
+        raise HTTPException(status_code=403, detail="NOT_AUTHORIZED")
+
+    config = db.query(LotteryConfig).filter(LotteryConfig.id == config_id).first()
+    if not config:
+        raise HTTPException(status_code=404, detail="LOTTERY_CONFIG_NOT_FOUND")
+
+    new_prize = LotteryPrize(
+        config_id=config_id,
+        label=payload.label,
+        weight=payload.weight,
+        stock=payload.stock,
+        reward_type=payload.reward_type,
+        reward_amount=payload.reward_amount,
+        is_active=payload.is_active,
+    )
+    db.add(new_prize)
+
+    AdminAuditService.log(
+        db,
+        admin_id,
+        "LOTTERY_PRIZE_CREATE",
+        "GAME_CONFIG",
+        str(config_id),
+        after={"label": new_prize.label, "weight": new_prize.weight},
+    )
+
+    db.commit()
+    db.refresh(new_prize)
+
+    return LotteryPrizeDto(
+        id=new_prize.id,
+        label=new_prize.label,
+        weight=new_prize.weight,
+        stock=new_prize.stock,
+        reward_type=new_prize.reward_type,
+        reward_amount=new_prize.reward_amount,
+        is_active=new_prize.is_active,
+    )
+
+
+@router.delete("/game/lottery/config/{config_id}/prize/{prize_id}")
+def delete_lottery_prize(
+    config_id: int,
+    prize_id: int,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    admin_id, admin_role = admin_info
+
+    if admin_role not in ["ADMIN", "SUPER_ADMIN"]:
+        raise HTTPException(status_code=403, detail="NOT_AUTHORIZED")
+
+    prize = (
+        db.query(LotteryPrize)
+        .filter(LotteryPrize.id == prize_id, LotteryPrize.config_id == config_id)
+        .first()
+    )
+
+    if not prize:
+        raise HTTPException(status_code=404, detail="LOTTERY_PRIZE_NOT_FOUND")
+
+    label = prize.label
+    db.delete(prize)
+
+    AdminAuditService.log(
+        db,
+        admin_id,
+        "LOTTERY_PRIZE_DELETE",
+        "GAME_CONFIG",
+        f"{config_id}/{prize_id}",
+        before={"label": label},
+    )
+
+    db.commit()
+    return {"message": "DELETED", "id": prize_id}

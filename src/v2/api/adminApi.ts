@@ -458,13 +458,24 @@ export interface InventoryItemUpdateRequest {
   expires_at?: string | null;
 }
 
-export const createTicket = async (data: TicketCreateRequest): Promise<TicketLogDto> => {
-  const response = await v2Client.post<TicketLogDto>("/api/v2/admin/inventory/tickets", data);
+export const createTicket = async (
+  data: TicketCreateRequest,
+): Promise<TicketLogDto> => {
+  const response = await v2Client.post<TicketLogDto>(
+    "/api/v2/admin/inventory/tickets",
+    data,
+  );
   return response.data;
 };
 
-export const updateTicket = async (id: number, data: TicketUpdateRequest): Promise<TicketLogDto> => {
-  const response = await v2Client.put<TicketLogDto>(`/api/v2/admin/inventory/tickets/${id}`, data);
+export const updateTicket = async (
+  id: number,
+  data: TicketUpdateRequest,
+): Promise<TicketLogDto> => {
+  const response = await v2Client.put<TicketLogDto>(
+    `/api/v2/admin/inventory/tickets/${id}`,
+    data,
+  );
   return response.data;
 };
 
@@ -472,13 +483,24 @@ export const deleteTicket = async (id: number): Promise<void> => {
   await v2Client.delete(`/api/v2/admin/inventory/tickets/${id}`);
 };
 
-export const createInventoryItem = async (data: InventoryItemCreateRequest): Promise<TicketLogDto> => {
-  const response = await v2Client.post<TicketLogDto>("/api/v2/admin/inventory/items", data);
+export const createInventoryItem = async (
+  data: InventoryItemCreateRequest,
+): Promise<TicketLogDto> => {
+  const response = await v2Client.post<TicketLogDto>(
+    "/api/v2/admin/inventory/items",
+    data,
+  );
   return response.data;
 };
 
-export const updateInventoryItem = async (id: number, data: InventoryItemUpdateRequest): Promise<TicketLogDto> => {
-  const response = await v2Client.put<TicketLogDto>(`/api/v2/admin/inventory/items/${id}`, data);
+export const updateInventoryItem = async (
+  id: number,
+  data: InventoryItemUpdateRequest,
+): Promise<TicketLogDto> => {
+  const response = await v2Client.put<TicketLogDto>(
+    `/api/v2/admin/inventory/items/${id}`,
+    data,
+  );
   return response.data;
 };
 
@@ -588,14 +610,21 @@ export const updateProductStatus = async (
   id: number,
   isVisible: boolean,
 ): Promise<void> => {
-  await v2Client.put(`/admin/api/shop/products/${id}/status`, { isVisible });
+  await v2Client.put(`/api/v2/admin/shop/products/${id}/status`, { isVisible });
 };
 
 export const updateProductPrice = async (
   id: number,
   price: number,
 ): Promise<void> => {
-  await v2Client.put(`/admin/api/shop/products/${id}/price`, { price });
+  await v2Client.put(`/api/v2/admin/shop/products/${id}/price`, { price });
+};
+
+export const syncAdminProducts = async (): Promise<AdminProductDto[]> => {
+  const response = await v2Client.post<AdminProductDto[]>(
+    "/api/v2/admin/shop/products/sync",
+  );
+  return response.data;
 };
 
 // ============================================================================
@@ -1347,6 +1376,34 @@ export const updateLotteryPrize = async (
   await v2Client.put(
     `/api/v2/admin/game/lottery/config/${configId}/prize/${prizeId}`,
     payload,
+  );
+};
+
+export const createLotteryPrize = async (
+  configId: number,
+  data: Partial<AdminLotteryPrizeDto>,
+): Promise<AdminLotteryPrizeDto> => {
+  const payload: Record<string, any> = {
+    label: data.label || "New Prize",
+    weight: data.weight || 0,
+    stock: data.stock === undefined ? null : data.stock,
+    reward_type: data.rewardType || "NONE",
+    reward_amount: data.rewardAmount || 0,
+    is_active: data.isActive !== undefined ? data.isActive : true,
+  };
+  const response = await v2Client.post<AdminLotteryPrizeDto>(
+    `/api/v2/admin/game/lottery/config/${configId}/prize`,
+    payload,
+  );
+  return response.data;
+};
+
+export const deleteLotteryPrize = async (
+  configId: number,
+  prizeId: number,
+): Promise<void> => {
+  await v2Client.delete(
+    `/api/v2/admin/game/lottery/config/${configId}/prize/${prizeId}`,
   );
 };
 

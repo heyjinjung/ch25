@@ -7,6 +7,8 @@ import {
   getLotteryConfig,
   updateLotteryConfig,
   updateLotteryPrize,
+  createLotteryPrize,
+  deleteLotteryPrize,
   type AdminRouletteConfigDto,
   type AdminDiceConfigDto,
   type AdminLotteryConfigDto,
@@ -75,6 +77,32 @@ export function useUpdateLotteryPrize() {
       prizeId: number;
       data: Partial<AdminLotteryPrizeDto>;
     }) => updateLotteryPrize(configId, prizeId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "game", "lottery"] });
+    },
+  });
+}
+
+export function useCreateLotteryPrize() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ configId, data }: {
+      configId: number;
+      data: Partial<AdminLotteryPrizeDto>;
+    }) => createLotteryPrize(configId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "game", "lottery"] });
+    },
+  });
+}
+
+export function useDeleteLotteryPrize() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ configId, prizeId }: {
+      configId: number;
+      prizeId: number;
+    }) => deleteLotteryPrize(configId, prizeId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "game", "lottery"] });
     },

@@ -43,6 +43,7 @@ import {
   getAdminDeposits,
   confirmDeposit,
   getAdminProducts,
+  syncAdminProducts,
   updateProductStatus,
   updateProductPrice,
   AdminDepositDto,
@@ -556,6 +557,16 @@ export function useAdminUpdateProductPrice() {
   return useMutation({
     mutationFn: ({ id, price }: { id: number; price: number }) =>
       updateProductPrice(id, price),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "products"] });
+    },
+  });
+}
+
+export function useSyncAdminProducts() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => syncAdminProducts(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "products"] });
     },

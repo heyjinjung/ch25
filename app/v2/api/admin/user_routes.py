@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from app.api.deps import get_current_admin_info, get_db
 from app.models.admin_audit_log import AdminAuditLog
+from app.models.game_wallet import GameTokenType
 from app.models.game_wallet import UserGameWallet
 from app.models.inventory import UserInventoryItem
 from app.models.mission import UserMissionProgress
@@ -261,22 +262,36 @@ def adjust_user_wallet(
 ):
     admin_id, admin_role = admin_info
 
+    if payload.amount == 0:
+        raise HTTPException(status_code=400, detail="INVALID_AMOUNT")
+
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
 
     if payload.token_type == "VAULT":
-        if payload.amount > 0:
-            V2VaultService.deposit(db, user_id, payload.amount)
-        else:
-            V2VaultService.withdraw(db, user_id, abs(payload.amount))
+        try:
+            if payload.amount > 0:
+                V2VaultService.deposit(db, user_id, payload.amount)
+            else:
+                V2VaultService.withdraw(db, user_id, abs(payload.amount))
+        except ValueError as e:
+            msg = str(e).lower()
+            if "insufficient" in msg:
+                raise HTTPException(status_code=400, detail="INSUFFICIENT_VAULT_BALANCE")
+            raise HTTPException(status_code=400, detail="INVALID_VAULT_ADJUST")
     else:
+        try:
+            token_enum = GameTokenType(payload.token_type)
+        except Exception:
+            raise HTTPException(status_code=400, detail="INVALID_TOKEN_TYPE")
+
         wallet = db.query(UserGameWallet).filter(
             UserGameWallet.user_id == user_id,
-            UserGameWallet.token_type == payload.token_type,
+            UserGameWallet.token_type == token_enum,
         ).first()
         if not wallet:
-            wallet = UserGameWallet(user_id=user_id, token_type=payload.token_type, balance=0)
+            wallet = UserGameWallet(user_id=user_id, token_type=token_enum, balance=0)
             db.add(wallet)
 
         wallet.balance = int(wallet.balance or 0) + payload.amount

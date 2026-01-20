@@ -4,14 +4,24 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Literal
 
-from pydantic import ConfigDict
+from pydantic import ConfigDict, Field
 
 from app.schemas.base import KstBaseModel as BaseModel
 
 WithdrawalStatus = Literal["PENDING", "APPROVED", "REJECTED"]
 DepositStatus = Literal["PENDING", "APPROVED", "REJECTED"]
 RiskLevel = Literal["LOW", "MEDIUM", "HIGH"]
-AdminProductCategory = Literal["TICKET", "OTHER"]
+AdminProductCategory = Literal[
+    "GAME_TICKET",
+    "VAULT",
+    "PREMIUM",
+    "FRAGMENT",
+    "PUZZLE",
+    "DIAMOND",
+    "GIFTICON",
+    "SPECIAL",
+    "OTHER",
+]
 
 
 class AdminProductDto(BaseModel):
@@ -19,7 +29,11 @@ class AdminProductDto(BaseModel):
     sku: str
     name: str
     price: int
-    is_visible: bool = True
+    is_visible: bool = Field(
+        default=True,
+        validation_alias="isVisible",
+        serialization_alias="isVisible",
+    )
     category: AdminProductCategory = "OTHER"
 
     model_config = ConfigDict(from_attributes=True)

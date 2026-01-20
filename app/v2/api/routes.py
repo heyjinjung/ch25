@@ -464,6 +464,8 @@ def list_shop_products(
     for raw in products:
         if not isinstance(raw, dict):
             continue
+        if raw.get("is_visible") is False:
+            continue
         sku = raw.get("sku")
         name = raw.get("name")
         cost_amount = raw.get("cost_amount")
@@ -522,8 +524,8 @@ def purchase_shop_product(
         raise HTTPException(status_code=400, detail="INVALID_COST_AMOUNT")
 
     reward_type = str(product.get("reward_type"))
-    reward_amount = int(product.get("reward_amount", 0))
-    if reward_amount <= 0:
+    reward_amount = int(product.get("reward_amount", 0) or 0)
+    if reward_type != "NONE" and reward_amount <= 0:
         raise HTTPException(status_code=400, detail="INVALID_REWARD_AMOUNT")
 
     # Deduct vault balance (SoT) and record order.
@@ -541,24 +543,16 @@ def purchase_shop_product(
         )
 
         # Grant reward (single transaction)
-        if reward_type in {
-            "ROULETTE_TICKET",
-            "DICE_TICKET",
-            "LOTTERY_TICKET",
-            "GOLD_KEY_TICKET",
-            "DIAMOND_TICKET",
-            "TRIAL_TICKET",
-        }:
-            token_type = _map_v2_ticket_to_legacy(reward_type)
-            _wallet_service.grant_tokens(
-                db,
-                user_id=user_id,
-                token_type=token_type,
-                amount=reward_amount,
-                reason="V2_SHOP_PURCHASE",
-                auto_commit=False,
-            )
+        if reward_type == "NONE" or reward_amount == 0:
+            pass
+        elif reward_type in {"POINT", "CC_POINT", "VAULT"}:
+            user = db.query(User).filter(User.id == user_id).first()
+            if not user:
+                raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
+            user.vault_locked_balance = int(user.vault_locked_balance or 0) + reward_amount
+            db.add(user)
         elif reward_type == "DIAMOND":
+            # Phase 2 rule in this codebase: DIAMOND is inventory SoT
             InventoryService.grant_item(
                 db,
                 user_id=user_id,
@@ -567,14 +561,44 @@ def purchase_shop_product(
                 reason="V2_SHOP_PURCHASE",
                 auto_commit=False,
             )
-        elif reward_type in {"POINT", "CC_POINT"}:
-            user = db.query(User).filter(User.id == user_id).first()
-            if not user:
-                raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
-            user.vault_locked_balance = int(user.vault_locked_balance or 0) + reward_amount
-            db.add(user)
         else:
-            raise HTTPException(status_code=400, detail="UNSUPPORTED_REWARD_TYPE")
+            def _resolve_wallet_token_type(token_value: str) -> GameTokenType | None:
+                mapping = {
+                    "ROULETTE_TICKET": GameTokenType.ROULETTE_COIN,
+                    "DICE_TICKET": GameTokenType.DICE_TOKEN,
+                    "LOTTERY_TICKET": GameTokenType.LOTTERY_TICKET,
+                    "GOLD_KEY_TICKET": GameTokenType.GOLD_KEY,
+                    "DIAMOND_TICKET": GameTokenType.DIAMOND_KEY,
+                    "TRIAL_TICKET": GameTokenType.TRIAL_TOKEN,
+                    "DIAMOND_FRAGMENT": GameTokenType.DIAMOND_KEY_FRAGMENT,
+                }
+                if token_value in mapping:
+                    return mapping[token_value]
+                try:
+                    return GameTokenType(token_value)
+                except Exception:
+                    return None
+
+            token_type = _resolve_wallet_token_type(reward_type)
+            if token_type is not None and token_type != GameTokenType.VAULT:
+                _wallet_service.grant_tokens(
+                    db,
+                    user_id=user_id,
+                    token_type=token_type,
+                    amount=reward_amount,
+                    reason="V2_SHOP_PURCHASE",
+                    auto_commit=False,
+                )
+            else:
+                # Default to inventory for non-wallet reward types (e.g., gifticons)
+                InventoryService.grant_item(
+                    db,
+                    user_id=user_id,
+                    item_type=reward_type,
+                    amount=reward_amount,
+                    reason="V2_SHOP_PURCHASE",
+                    auto_commit=False,
+                )
 
         response = {"order_id": order.id, "sku": sku, "reward_type": reward_type, "reward_amount": reward_amount}
         IdempotencyService.complete(db, record=idem_record, response_payload=response)
