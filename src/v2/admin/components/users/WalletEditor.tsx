@@ -47,9 +47,10 @@ export function WalletEditor({
   const [amount, setAmount] = useState<string>("");
   const [reason, setReason] = useState<string>("");
   const [selectedType, setSelectedType] = useState<string>(
-    initialTokenType || "ROULETTE_COIN",
+    initialTokenType || "ROULETTE_TICKET",
   );
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string>("");
 
   const walletTypes = getRewardItemsByCategories([
     "GAME_TICKET",
@@ -59,9 +60,16 @@ export function WalletEditor({
 
   // Reset or update selected type when modal opens or prop changes
   useEffect(() => {
-    if (isOpen && initialTokenType) {
-      setSelectedType(initialTokenType);
+    if (!isOpen) {
+      setErrorMessage("");
+      return;
     }
+    const allowedTypes = new Set(walletTypes.map((item) => item.value));
+    const nextType =
+      initialTokenType && allowedTypes.has(initialTokenType)
+        ? initialTokenType
+        : walletTypes[0]?.value || "ROULETTE_TICKET";
+    setSelectedType(nextType);
   }, [isOpen, initialTokenType]);
 
   const handleSubmit = async () => {
@@ -71,6 +79,7 @@ export function WalletEditor({
     if (!Number.isFinite(delta) || delta === 0) return;
 
     setIsLoading(true);
+    setErrorMessage("");
     try {
       // Pass the selected type and amount directly (Delta)
       await onUpdate(delta, reason, selectedType);
@@ -78,6 +87,18 @@ export function WalletEditor({
       setAmount("");
       setReason("");
     } catch (e) {
+      const detail = (e as any)?.response?.data?.detail;
+      const nextMessage =
+        detail === "INVALID_TOKEN_TYPE"
+          ? "지원하지 않는 재화 타입입니다."
+          : detail === "INVALID_AMOUNT"
+            ? "수량이 올바르지 않습니다."
+            : detail === "INSUFFICIENT_TOKEN_BALANCE"
+              ? "보유량이 부족합니다."
+              : detail === "INSUFFICIENT_VAULT_BALANCE"
+                ? "금고 잔액이 부족합니다."
+                : "요청이 실패했습니다. 입력값과 잔액을 확인하세요.";
+      setErrorMessage(nextMessage);
       console.error("Failed to update wallet", e);
     } finally {
       setIsLoading(false);
@@ -101,6 +122,11 @@ export function WalletEditor({
         </DialogHeader>
 
         <div className="grid gap-4 py-4">
+          {errorMessage && (
+            <div className="rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-300">
+              {errorMessage}
+            </div>
+          )}
           <div className="space-y-2">
             <Label>대상 재화 (Asset Type)</Label>
             <Select value={selectedType} onValueChange={setSelectedType}>

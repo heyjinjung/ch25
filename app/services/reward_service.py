@@ -362,6 +362,18 @@ class RewardService:
             )
             return
 
+        if "GIFTICON" in reward_type:
+            InventoryService.grant_item(
+                db,
+                user_id,
+                reward_type,
+                max(1, int(reward_amount)),
+                reason=(meta or {}).get("reason") or "GIFTICON_REWARD",
+                related_id=(meta or {}).get("related_id") or (f"prize:{(meta or {}).get('prize_id')}" if meta else None),
+                auto_commit=commit,
+            )
+            return
+
         ticket_map = {
             "PUZZLE_J": GameTokenType.PUZZLE_J,
             "PUZZLE_M": GameTokenType.PUZZLE_M,
@@ -378,6 +390,10 @@ class RewardService:
             # "CC_COIN": GameTokenType.CC_COIN,  # [REMOVED]
             "GOLD_KEY": GameTokenType.GOLD_KEY,
             "DIAMOND_KEY": GameTokenType.DIAMOND_KEY,
+            "GOLD_KEY_TICKET": GameTokenType.GOLD_KEY_TICKET,
+            "DIAMOND_TICKET": GameTokenType.DIAMOND_TICKET,
+            "GOLD_KEY_FRAGMENT": GameTokenType.GOLD_KEY_FRAGMENT,
+            "DIAMOND_FRAGMENT": GameTokenType.DIAMOND_FRAGMENT,
         }
         if reward_type in ticket_map:
             token_type = ticket_map[reward_type]

@@ -2,6 +2,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   getAdminMissions,
   updateMission,
+  createAdminMission,
+  deleteAdminMission,
   getAdminLevels,
   updateAdminLevel,
   updateAdminLevelGlobalConfig,
@@ -26,6 +28,26 @@ export function useAdminUpdateMission() {
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<AdminMissionDto> }) =>
       updateMission(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "game", "missions"] });
+    },
+  });
+}
+
+export function useAdminCreateMission() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: any) => createAdminMission(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "game", "missions"] });
+    },
+  });
+}
+
+export function useAdminDeleteMission() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => deleteAdminMission(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "game", "missions"] });
     },
