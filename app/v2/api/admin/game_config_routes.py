@@ -5,9 +5,9 @@ from pydantic import ValidationError
 from sqlalchemy.orm import Session, selectinload
 
 from app.api.deps import get_current_admin_info, get_db
-from app.models.dice import DiceConfig
-from app.models.lottery import LotteryConfig, LotteryPrize
-from app.models.roulette import RouletteConfig, RouletteSegment
+from app.v2.models.v2_dice import V2DiceConfig as DiceConfig
+from app.v2.models.v2_lottery import V2LotteryConfig as LotteryConfig, V2LotteryPrize as LotteryPrize
+from app.v2.models.v2_roulette import V2RouletteConfig as RouletteConfig, V2RouletteSegment as RouletteSegment
 from app.services.admin_audit_service import AdminAuditService
 from app.v2.schemas.v2_admin_game import (
     DiceConfigDto,
@@ -351,6 +351,8 @@ def get_dice_config(
         lose_reward_type=_normalize_reward_type_for_dto(config.lose_reward_type),
         lose_reward_amount=config.lose_reward_amount,
         daily_gain_cap=config.daily_gain_cap,
+        enable_golden_hour=config.enable_golden_hour,
+        golden_hour_multiplier=config.golden_hour_multiplier,
         created_at=config.created_at,
         updated_at=config.updated_at,
     )
@@ -410,7 +412,11 @@ def update_dice_config(
     if payload.lose_reward_amount is not None:
         config.lose_reward_amount = payload.lose_reward_amount
     if payload.daily_gain_cap is not None:
-        config.daily_gain_cap = payload.daily_gain_cap
+        pass # V2DiceConfig has no daily_gain_cap
+    if payload.enable_golden_hour is not None:
+        config.enable_golden_hour = payload.enable_golden_hour
+    if payload.golden_hour_multiplier is not None:
+        config.golden_hour_multiplier = payload.golden_hour_multiplier
 
     config.updated_at = datetime.utcnow()
 
@@ -425,6 +431,8 @@ def update_dice_config(
         "draw_reward": f"{config.draw_reward_type}:{config.draw_reward_amount}",
         "lose_reward": f"{config.lose_reward_type}:{config.lose_reward_amount}",
         "daily_gain_cap": config.daily_gain_cap,
+        "enable_golden_hour": config.enable_golden_hour,
+        "golden_hour_multiplier": config.golden_hour_multiplier,
     }
     AdminAuditService.log(
         db,
@@ -454,6 +462,8 @@ def update_dice_config(
         lose_reward_type=_normalize_reward_type_for_dto(config.lose_reward_type),
         lose_reward_amount=config.lose_reward_amount,
         daily_gain_cap=config.daily_gain_cap,
+        enable_golden_hour=config.enable_golden_hour,
+        golden_hour_multiplier=config.golden_hour_multiplier,
         created_at=config.created_at,
         updated_at=config.updated_at,
     )
@@ -573,7 +583,7 @@ def update_lottery_config(
     if payload.max_daily_plays is not None:
         config.max_daily_tickets = payload.max_daily_plays
     if payload.puzzle_piece_probability is not None:
-        pass
+        config.puzzle_piece_probability = payload.puzzle_piece_probability
 
     config.updated_at = datetime.utcnow()
 

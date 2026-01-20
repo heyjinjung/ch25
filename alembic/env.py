@@ -12,9 +12,12 @@ from dotenv import load_dotenv
 load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env"))
 
 from app.core.config import get_settings
-from app.v2.db.base import Base
-
+from app.db.base import Base as V1Base
+from app.v2.db.base import Base as V2Base
 config = context.config
+
+# Both share the same metadata from app.db.base_class
+Base = V1Base 
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)

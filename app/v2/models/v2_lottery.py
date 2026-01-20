@@ -1,7 +1,7 @@
 """V2 lottery configuration, prizes, and play logs."""
 from datetime import datetime
 
-from sqlalchemy import Boolean, CheckConstraint, Column, DateTime, ForeignKey, Index, Integer, String, UniqueConstraint
+from sqlalchemy import Boolean, CheckConstraint, Column, DateTime, Float, ForeignKey, Index, Integer, String, UniqueConstraint
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
@@ -17,6 +17,7 @@ class V2LotteryConfig(Base):
     ticket_type = Column(String(50), nullable=False, default="LOTTERY_TICKET")
     is_active = Column(Boolean, nullable=False, default=True)
     max_daily_tickets = Column(Integer, nullable=False, default=0)
+    puzzle_piece_probability = Column(Float, nullable=False, default=0.0)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 

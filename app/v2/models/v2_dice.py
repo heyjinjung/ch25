@@ -16,12 +16,22 @@ class V2DiceConfig(Base):
     ticket_type = Column(String(50), nullable=False, default="DICE_TICKET")
     is_active = Column(Boolean, nullable=False, default=True)
     max_daily_plays = Column(Integer, nullable=False, default=0)
+    
+    # Probabilities (0.0 ~ 1.0)
+    win_probability = Column(Float, nullable=False, default=0.4)
+    draw_probability = Column(Float, nullable=False, default=0.1)
+    lose_probability = Column(Float, nullable=False, default=0.5)
+
+    # Rewards
     win_reward_type = Column(String(50), nullable=False, default="NONE")
     win_reward_amount = Column(Integer, nullable=False, default=0)
     draw_reward_type = Column(String(50), nullable=False, default="NONE")
     draw_reward_amount = Column(Integer, nullable=False, default=0)
     lose_reward_type = Column(String(50), nullable=False, default="NONE")
     lose_reward_amount = Column(Integer, nullable=False, default=0)
+
+    # Daily gain cap
+    daily_gain_cap = Column(Integer, nullable=False, default=20000)
     
     # Golden Hour Multiplier Settings
     enable_golden_hour = Column(Boolean, nullable=False, default=True)
