@@ -223,7 +223,7 @@ def upsert_feature_schedule(
 
 
 @router.get("/game-config/dice", response_model=AdminDiceConfigV2)
-def get_dice_config(
+def get_dice_config_ops_stub(
     db: Session = Depends(get_db),
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
