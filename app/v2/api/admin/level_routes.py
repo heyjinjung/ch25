@@ -135,6 +135,9 @@ def update_admin_level(
 
     lvl.reward_payload = None
 
+    db.commit()
+    db.refresh(lvl)
+
     return AdminLevelDto(
         level=lvl.level,
         requiredXp=lvl.required_xp,

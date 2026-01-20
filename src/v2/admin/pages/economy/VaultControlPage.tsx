@@ -1,11 +1,21 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import gsap from "gsap";
-import { Card, CardHeader, CardContent, CardTitle } from "../../../components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardContent,
+  CardTitle,
+} from "../../../components/ui/card";
 import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/ui/tabs";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../../../components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -27,6 +37,7 @@ import {
 import {
   useVaultStats,
   useVaultUsers,
+  useVaultUserLedger,
   useForceEditVault,
   useAdminWithdrawals,
   useAdminApproveWithdrawal,
@@ -50,9 +61,12 @@ import {
   SelectValue,
 } from "../../../components/ui/select";
 import { cn } from "../../../lib/utils";
-import type { AdminWithdrawalDto, UserVaultDto, AdminUserListDto } from "../../../api/adminApi";
+import type {
+  AdminWithdrawalDto,
+  UserVaultDto,
+  AdminUserListDto,
+} from "../../../api/adminApi";
 import { NumberTicker } from "../../components/ui/NumberTicker";
-
 
 export default function VaultControlPage() {
   const statsRef = useRef<HTMLDivElement>(null);
@@ -74,30 +88,41 @@ export default function VaultControlPage() {
   });
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("vault_balance");
-  const [sortField, setSortField] = useState<keyof UserVaultDto>("vault_balance");
+  const [sortField, setSortField] =
+    useState<keyof UserVaultDto>("vault_balance");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-  
+
+  // Vault Ledger Modal
+  const [ledgerUser, setLedgerUser] = useState<UserVaultDto | null>(null);
+  const { data: vaultLedger } = useVaultUserLedger(ledgerUser?.user_id ?? null);
+
   // Withdrawal Details Modal
-  const [detailsModalStatus, setDetailsModalStatus] = useState<string | null>(null);
-  const { data: withdrawalDetails } = useWithdrawalDetails(detailsModalStatus || "");
-  
+  const [detailsModalStatus, setDetailsModalStatus] = useState<string | null>(
+    null,
+  );
+  const { data: withdrawalDetails } = useWithdrawalDetails(
+    detailsModalStatus || "",
+  );
+
   // User Search for Force Edit
   const [userSearchTerm, setUserSearchTerm] = useState("");
-  const [selectedUser, setSelectedUser] = useState<AdminUserListDto | null>(null);
-  const { data: userSearchResults } = useAdminUserList({ 
-    search: userSearchTerm, 
-    limit: 5 
+  const [selectedUser, setSelectedUser] = useState<AdminUserListDto | null>(
+    null,
+  );
+  const { data: userSearchResults } = useAdminUserList({
+    search: userSearchTerm,
+    limit: 5,
   });
 
   const handleSelectUser = (user: AdminUserListDto) => {
     setSelectedUser(user);
-    setForceEditData(prev => ({ ...prev, user_id: user.id.toString() }));
+    setForceEditData((prev) => ({ ...prev, user_id: user.id.toString() }));
     setUserSearchTerm("");
   };
 
   const clearSelectedUser = () => {
     setSelectedUser(null);
-    setForceEditData(prev => ({ ...prev, user_id: "" }));
+    setForceEditData((prev) => ({ ...prev, user_id: "" }));
   };
 
   // GSAP Animation for Stats Cards
@@ -114,7 +139,7 @@ export default function VaultControlPage() {
           duration: 0.6,
           stagger: 0.1,
           ease: "back.out(1.7)",
-        }
+        },
       );
     }
   }, [stats]);
@@ -136,7 +161,11 @@ export default function VaultControlPage() {
   };
 
   const handleForceEdit = async () => {
-    if (!forceEditData.user_id || !forceEditData.amount || !forceEditData.reason) {
+    if (
+      !forceEditData.user_id ||
+      !forceEditData.amount ||
+      !forceEditData.reason
+    ) {
       return;
     }
 
@@ -151,7 +180,7 @@ export default function VaultControlPage() {
   };
 
   const pendingWithdrawals = withdrawals.filter(
-    (w: AdminWithdrawalDto) => w.status === "PENDING"
+    (w: AdminWithdrawalDto) => w.status === "PENDING",
   );
 
   const handleSort = (field: keyof UserVaultDto) => {
@@ -163,29 +192,28 @@ export default function VaultControlPage() {
     }
   };
 
-  const filteredUsers = vaultUsers.filter((user: UserVaultDto) =>
-    user.nickname.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.telegram_username?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredUsers = vaultUsers.filter(
+    (user: UserVaultDto) =>
+      user.nickname.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.telegram_username?.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const sortedUsers = [...filteredUsers].sort((a, b) => {
     const aVal = a[sortField] ?? 0;
     const bVal = b[sortField] ?? 0;
-    
+
     if (typeof aVal === "string" && typeof bVal === "string") {
-      return sortOrder === "asc" 
-        ? aVal.localeCompare(bVal) 
+      return sortOrder === "asc"
+        ? aVal.localeCompare(bVal)
         : bVal.localeCompare(aVal);
     }
-    
+
     if (typeof aVal === "number" && typeof bVal === "number") {
       return sortOrder === "asc" ? aVal - bVal : bVal - aVal;
     }
-    
+
     return 0;
   });
-
-
 
   return (
     <div className="space-y-6 h-full p-6">
@@ -212,7 +240,10 @@ export default function VaultControlPage() {
       </div>
 
       {/* Stats Dashboard */}
-      <div ref={statsRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div
+        ref={statsRef}
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+      >
         <motion.div className="stat-card">
           <Card className="bg-gradient-to-br from-indigo-500/10 to-indigo-600/5 border-indigo-500/20 overflow-hidden relative">
             <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent pointer-events-none" />
@@ -235,7 +266,10 @@ export default function VaultControlPage() {
           </Card>
         </motion.div>
 
-        <motion.div className="stat-card" onClick={() => setDetailsModalStatus("PENDING")}>
+        <motion.div
+          className="stat-card"
+          onClick={() => setDetailsModalStatus("PENDING")}
+        >
           <Card className="bg-gradient-to-br from-amber-500/10 to-amber-600/5 border-amber-500/20 overflow-hidden relative cursor-pointer hover:border-amber-500/40 transition-all">
             <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent pointer-events-none" />
             <CardHeader className="pb-2">
@@ -259,7 +293,10 @@ export default function VaultControlPage() {
           </Card>
         </motion.div>
 
-        <motion.div className="stat-card" onClick={() => setDetailsModalStatus("APPROVED")}>
+        <motion.div
+          className="stat-card"
+          onClick={() => setDetailsModalStatus("APPROVED")}
+        >
           <Card className="bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 border-emerald-500/20 overflow-hidden relative cursor-pointer hover:border-emerald-500/40 transition-all">
             <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent pointer-events-none" />
             <CardHeader className="pb-2">
@@ -281,7 +318,10 @@ export default function VaultControlPage() {
           </Card>
         </motion.div>
 
-        <motion.div className="stat-card" onClick={() => setDetailsModalStatus("REJECTED")}>
+        <motion.div
+          className="stat-card"
+          onClick={() => setDetailsModalStatus("REJECTED")}
+        >
           <Card className="bg-gradient-to-br from-red-500/10 to-red-600/5 border-red-500/20 overflow-hidden relative cursor-pointer hover:border-red-500/40 transition-all">
             <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent pointer-events-none" />
             <CardHeader className="pb-2">
@@ -307,10 +347,16 @@ export default function VaultControlPage() {
       {/* Tabs */}
       <Tabs defaultValue="withdrawals" className="space-y-4">
         <TabsList className="bg-[#18181B] border border-white/5">
-          <TabsTrigger value="withdrawals" className="data-[state=active]:bg-indigo-500/20">
+          <TabsTrigger
+            value="withdrawals"
+            className="data-[state=active]:bg-indigo-500/20"
+          >
             출금 승인 ({pendingWithdrawals.length})
           </TabsTrigger>
-          <TabsTrigger value="users" className="data-[state=active]:bg-indigo-500/20">
+          <TabsTrigger
+            value="users"
+            className="data-[state=active]:bg-indigo-500/20"
+          >
             회원별 금고
           </TabsTrigger>
         </TabsList>
@@ -349,7 +395,7 @@ export default function VaultControlPage() {
                             "bg-black/40",
                             item.riskLevel === "HIGH"
                               ? "text-red-400 border-red-500/30"
-                              : "text-emerald-400 border-emerald-500/30"
+                              : "text-emerald-400 border-emerald-500/30",
                           )}
                         >
                           {item.riskLevel} RISK
@@ -365,7 +411,9 @@ export default function VaultControlPage() {
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-zinc-500">요청 시각</span>
-                        <span className="text-zinc-300">{item.requestTime}</span>
+                        <span className="text-zinc-300">
+                          {item.requestTime}
+                        </span>
                       </div>
 
                       <div className="pt-2 flex flex-col gap-2">
@@ -436,80 +484,94 @@ export default function VaultControlPage() {
             <Table>
               <TableHeader className="bg-zinc-900/50">
                 <TableRow className="border-zinc-800 hover:bg-transparent">
-                  <TableHead 
+                  <TableHead
                     className="text-zinc-400 cursor-pointer hover:text-white transition-colors select-none"
                     onClick={() => handleSort("user_id")}
                   >
                     <div className="flex items-center gap-1">
                       UID
                       {sortField === "user_id" && (
-                        <span className="text-xs">{sortOrder === "asc" ? "↑" : "↓"}</span>
+                        <span className="text-xs">
+                          {sortOrder === "asc" ? "↑" : "↓"}
+                        </span>
                       )}
                     </div>
                   </TableHead>
-                  <TableHead 
+                  <TableHead
                     className="text-zinc-400 cursor-pointer hover:text-white transition-colors select-none"
                     onClick={() => handleSort("nickname")}
                   >
                     <div className="flex items-center gap-1">
                       닉네임
                       {sortField === "nickname" && (
-                        <span className="text-xs">{sortOrder === "asc" ? "↑" : "↓"}</span>
+                        <span className="text-xs">
+                          {sortOrder === "asc" ? "↑" : "↓"}
+                        </span>
                       )}
                     </div>
                   </TableHead>
-                  <TableHead 
+                  <TableHead
                     className="text-zinc-400 cursor-pointer hover:text-white transition-colors select-none"
                     onClick={() => handleSort("tier")}
                   >
                     <div className="flex items-center gap-1">
                       등급
                       {sortField === "tier" && (
-                        <span className="text-xs">{sortOrder === "asc" ? "↑" : "↓"}</span>
+                        <span className="text-xs">
+                          {sortOrder === "asc" ? "↑" : "↓"}
+                        </span>
                       )}
                     </div>
                   </TableHead>
-                  <TableHead 
+                  <TableHead
                     className="text-zinc-400 text-right cursor-pointer hover:text-white transition-colors select-none"
                     onClick={() => handleSort("vault_balance")}
                   >
                     <div className="flex items-center justify-end gap-1">
                       금고 잔액
                       {sortField === "vault_balance" && (
-                        <span className="text-xs">{sortOrder === "asc" ? "↑" : "↓"}</span>
+                        <span className="text-xs">
+                          {sortOrder === "asc" ? "↑" : "↓"}
+                        </span>
                       )}
                     </div>
                   </TableHead>
-                  <TableHead 
+                  <TableHead
                     className="text-zinc-400 text-right cursor-pointer hover:text-white transition-colors select-none"
                     onClick={() => handleSort("total_deposit")}
                   >
                     <div className="flex items-center justify-end gap-1">
                       총 입금
                       {sortField === "total_deposit" && (
-                        <span className="text-xs">{sortOrder === "asc" ? "↑" : "↓"}</span>
+                        <span className="text-xs">
+                          {sortOrder === "asc" ? "↑" : "↓"}
+                        </span>
                       )}
                     </div>
                   </TableHead>
-                  <TableHead 
+                  <TableHead
                     className="text-zinc-400 text-right cursor-pointer hover:text-white transition-colors select-none"
                     onClick={() => handleSort("total_withdrawal")}
                   >
                     <div className="flex items-center justify-end gap-1">
                       총 출금
                       {sortField === "total_withdrawal" && (
-                        <span className="text-xs">{sortOrder === "asc" ? "↑" : "↓"}</span>
+                        <span className="text-xs">
+                          {sortOrder === "asc" ? "↑" : "↓"}
+                        </span>
                       )}
                     </div>
                   </TableHead>
-                  <TableHead 
+                  <TableHead
                     className="text-zinc-400 cursor-pointer hover:text-white transition-colors select-none"
                     onClick={() => handleSort("last_activity")}
                   >
                     <div className="flex items-center gap-1">
                       최근 활동
                       {sortField === "last_activity" && (
-                        <span className="text-xs">{sortOrder === "asc" ? "↑" : "↓"}</span>
+                        <span className="text-xs">
+                          {sortOrder === "asc" ? "↑" : "↓"}
+                        </span>
                       )}
                     </div>
                   </TableHead>
@@ -526,7 +588,13 @@ export default function VaultControlPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col">
-                        <span className="font-medium text-white">{user.nickname}</span>
+                        <button
+                          type="button"
+                          onClick={() => setLedgerUser(user)}
+                          className="text-left font-medium text-white hover:text-indigo-300 transition-colors"
+                        >
+                          {user.nickname}
+                        </button>
                         {user.telegram_username && (
                           <span className="text-xs text-zinc-500">
                             @{user.telegram_username}
@@ -541,7 +609,7 @@ export default function VaultControlPage() {
                             ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
                             : user.tier === "VIP"
                               ? "bg-purple-500/10 text-purple-400 border-purple-500/20"
-                              : "bg-zinc-500/10 text-zinc-400 border-zinc-500/20"
+                              : "bg-zinc-500/10 text-zinc-400 border-zinc-500/20",
                         )}
                       >
                         {user.tier}
@@ -567,8 +635,6 @@ export default function VaultControlPage() {
             </Table>
           </div>
         </TabsContent>
-
-
       </Tabs>
 
       {/* Force Edit Modal */}
@@ -580,27 +646,32 @@ export default function VaultControlPage() {
             </DialogTitle>
             <DialogDescription className="text-zinc-400 text-sm">
               이 작업은 유저의 실제 금고 잔액을 강제로 변경하며, 모든 내역이{" "}
-              <strong className="text-red-400">Audit Log</strong>에 영구히 기록됩니다.
-              오입금 처리 등 비상 상황에서만 사용하십시오.
+              <strong className="text-red-400">Audit Log</strong>에 영구히
+              기록됩니다. 오입금 처리 등 비상 상황에서만 사용하십시오.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
-              <span className="text-right text-sm text-zinc-400">대상 유저</span>
+              <span className="text-right text-sm text-zinc-400">
+                대상 유저
+              </span>
               <div className="col-span-3 relative">
                 {selectedUser ? (
                   <div className="flex items-center justify-between bg-zinc-900 border border-zinc-700 rounded-md p-2">
-                     <span className="text-white text-sm">
-                       {selectedUser.nickname} <span className="text-zinc-500 text-xs">#{selectedUser.id}</span>
-                     </span>
-                     <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={clearSelectedUser}
-                        className="h-6 w-6 p-0 text-zinc-400 hover:text-white"
-                     >
-                       <XCircle className="w-4 h-4" />
-                     </Button>
+                    <span className="text-white text-sm">
+                      {selectedUser.nickname}{" "}
+                      <span className="text-zinc-500 text-xs">
+                        #{selectedUser.id}
+                      </span>
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={clearSelectedUser}
+                      className="h-6 w-6 p-0 text-zinc-400 hover:text-white"
+                    >
+                      <XCircle className="w-4 h-4" />
+                    </Button>
                   </div>
                 ) : (
                   <>
@@ -610,26 +681,34 @@ export default function VaultControlPage() {
                       className="bg-black/50 border-white/10 text-white"
                       placeholder="닉네임 검색..."
                     />
-                    {userSearchTerm && userSearchResults?.users && userSearchResults.users.length > 0 && (
-                      <div className="absolute top-full left-0 right-0 mt-1 bg-[#27272A] border border-zinc-700 rounded-md shadow-xl z-50 overflow-hidden">
-                        {userSearchResults.users.map(user => (
-                          <div
-                            key={user.id}
-                            className="px-3 py-2 text-sm hover:bg-zinc-700 cursor-pointer flex justify-between items-center"
-                            onClick={() => handleSelectUser(user)}
-                          >
-                            <span className="text-white">{user.nickname}</span>
-                            <span className="text-zinc-500 text-xs">#{user.id}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                    {userSearchTerm &&
+                      userSearchResults?.users &&
+                      userSearchResults.users.length > 0 && (
+                        <div className="absolute top-full left-0 right-0 mt-1 bg-[#27272A] border border-zinc-700 rounded-md shadow-xl z-50 overflow-hidden">
+                          {userSearchResults.users.map((user) => (
+                            <div
+                              key={user.id}
+                              className="px-3 py-2 text-sm hover:bg-zinc-700 cursor-pointer flex justify-between items-center"
+                              onClick={() => handleSelectUser(user)}
+                            >
+                              <span className="text-white">
+                                {user.nickname}
+                              </span>
+                              <span className="text-zinc-500 text-xs">
+                                #{user.id}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                   </>
                 )}
               </div>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <span className="text-right text-sm text-zinc-400">조정 금액</span>
+              <span className="text-right text-sm text-zinc-400">
+                조정 금액
+              </span>
               <Input
                 value={forceEditData.amount}
                 onChange={(e) =>
@@ -682,8 +761,130 @@ export default function VaultControlPage() {
         </DialogContent>
       </Dialog>
 
+      {/* Vault Ledger Modal */}
+      <Dialog
+        open={!!ledgerUser}
+        onOpenChange={(open) => !open && setLedgerUser(null)}
+      >
+        <DialogContent className="bg-[#18181B] border-white/10 text-white max-w-4xl max-h-[80vh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle className="text-white text-xl">
+              {ledgerUser
+                ? `${ledgerUser.nickname} 금고 상세 내역`
+                : "금고 상세 내역"}
+            </DialogTitle>
+            <DialogDescription className="text-zinc-400 text-sm">
+              누적/차감 내역 및 잔액 변동 기록입니다.
+            </DialogDescription>
+          </DialogHeader>
+
+          {vaultLedger ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-3 gap-4">
+                <Card className="bg-zinc-900/60 border-zinc-800">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-xs text-zinc-400">
+                      누적
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-emerald-400 font-bold text-lg">
+                    ₩{vaultLedger.total_in.toLocaleString()}
+                  </CardContent>
+                </Card>
+                <Card className="bg-zinc-900/60 border-zinc-800">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-xs text-zinc-400">
+                      차감
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-red-400 font-bold text-lg">
+                    ₩{Math.abs(vaultLedger.total_out).toLocaleString()}
+                  </CardContent>
+                </Card>
+                <Card className="bg-zinc-900/60 border-zinc-800">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-xs text-zinc-400">
+                      순변동
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-indigo-300 font-bold text-lg">
+                    ₩{vaultLedger.net_change.toLocaleString()}
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="rounded-xl border border-white/5 bg-zinc-900/50 overflow-hidden">
+                <Table>
+                  <TableHeader className="bg-zinc-900">
+                    <TableRow className="border-zinc-800 hover:bg-transparent">
+                      <TableHead className="text-zinc-400">시각</TableHead>
+                      <TableHead className="text-zinc-400">사유</TableHead>
+                      <TableHead className="text-zinc-400">구분</TableHead>
+                      <TableHead className="text-zinc-400 text-right">
+                        증감
+                      </TableHead>
+                      <TableHead className="text-zinc-400 text-right">
+                        잔액
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {vaultLedger.items.length === 0 ? (
+                      <TableRow className="border-zinc-800">
+                        <TableCell
+                          colSpan={5}
+                          className="text-center text-zinc-500 py-8"
+                        >
+                          내역이 없습니다.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      vaultLedger.items.map((item) => (
+                        <TableRow
+                          key={item.id}
+                          className="border-zinc-800 hover:bg-white/5 transition-colors"
+                        >
+                          <TableCell className="text-zinc-400 text-xs">
+                            {new Date(item.created_at).toLocaleString()}
+                          </TableCell>
+                          <TableCell className="text-zinc-300">
+                            {item.reason || "-"}
+                          </TableCell>
+                          <TableCell className="text-zinc-500 text-xs">
+                            {item.ref_type || "-"}
+                          </TableCell>
+                          <TableCell
+                            className={cn(
+                              "text-right font-mono",
+                              item.amount >= 0
+                                ? "text-emerald-400"
+                                : "text-red-400",
+                            )}
+                          >
+                            {item.amount >= 0 ? "+" : ""}₩
+                            {item.amount.toLocaleString()}
+                          </TableCell>
+                          <TableCell className="text-right font-mono text-zinc-300">
+                            ₩{item.balance_after.toLocaleString()}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center text-zinc-500 py-12">로딩 중...</div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Reject Dialog */}
-      <Dialog open={!!rejectId} onOpenChange={(open) => !open && setRejectId(null)}>
+      <Dialog
+        open={!!rejectId}
+        onOpenChange={(open) => !open && setRejectId(null)}
+      >
         <DialogContent className="bg-[#18181B] border-white/10 text-white">
           <DialogHeader>
             <DialogTitle className="text-white">출금 반려</DialogTitle>
@@ -717,19 +918,38 @@ export default function VaultControlPage() {
       </Dialog>
 
       {/* Withdrawal Details Modal */}
-      <Dialog open={!!detailsModalStatus} onOpenChange={(open) => !open && setDetailsModalStatus(null)}>
+      <Dialog
+        open={!!detailsModalStatus}
+        onOpenChange={(open) => !open && setDetailsModalStatus(null)}
+      >
         <DialogContent className="bg-[#18181B] border-white/10 text-white max-w-4xl max-h-[80vh] overflow-auto">
           <DialogHeader>
             <DialogTitle className="text-white flex items-center gap-2 text-xl">
-              {detailsModalStatus === "PENDING" && <><Clock className="w-5 h-5 text-amber-400" />출금 대기 내역</>}
-              {detailsModalStatus === "APPROVED" && <><CheckCircle className="w-5 h-5 text-emerald-400" />출금 승인 내역</>}
-              {detailsModalStatus === "REJECTED" && <><XCircle className="w-5 h-5 text-red-400" />출금 반려 내역</>}
+              {detailsModalStatus === "PENDING" && (
+                <>
+                  <Clock className="w-5 h-5 text-amber-400" />
+                  출금 대기 내역
+                </>
+              )}
+              {detailsModalStatus === "APPROVED" && (
+                <>
+                  <CheckCircle className="w-5 h-5 text-emerald-400" />
+                  출금 승인 내역
+                </>
+              )}
+              {detailsModalStatus === "REJECTED" && (
+                <>
+                  <XCircle className="w-5 h-5 text-red-400" />
+                  출금 반려 내역
+                </>
+              )}
             </DialogTitle>
             <DialogDescription className="text-zinc-400 text-sm">
               {detailsModalStatus} 상태의 당일 출금 요청 목록입니다.
               {withdrawalDetails && (
                 <span className="ml-2 font-semibold text-white">
-                  총 {withdrawalDetails.count}건, ₩{withdrawalDetails.total_amount.toLocaleString()}
+                  총 {withdrawalDetails.count}건, ₩
+                  {withdrawalDetails.total_amount.toLocaleString()}
                 </span>
               )}
             </DialogDescription>
@@ -742,30 +962,47 @@ export default function VaultControlPage() {
                   <TableRow className="border-zinc-800 hover:bg-transparent">
                     <TableHead className="text-zinc-400">ID</TableHead>
                     <TableHead className="text-zinc-400">유저</TableHead>
-                    <TableHead className="text-zinc-400 text-right">금액</TableHead>
+                    <TableHead className="text-zinc-400 text-right">
+                      금액
+                    </TableHead>
                     <TableHead className="text-zinc-400">요청 시각</TableHead>
                     {detailsModalStatus === "APPROVED" && (
                       <TableHead className="text-zinc-400">승인 시각</TableHead>
                     )}
                     {detailsModalStatus === "REJECTED" && (
                       <>
-                        <TableHead className="text-zinc-400">반려 시각</TableHead>
-                        <TableHead className="text-zinc-400">반려 사유</TableHead>
+                        <TableHead className="text-zinc-400">
+                          반려 시각
+                        </TableHead>
+                        <TableHead className="text-zinc-400">
+                          반려 사유
+                        </TableHead>
                       </>
                     )}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {withdrawalDetails.withdrawals.map((w) => (
-                    <TableRow key={w.id} className="border-zinc-800 hover:bg-white/5 transition-colors">
-                      <TableCell className="font-mono text-zinc-400">#{w.id}</TableCell>
+                    <TableRow
+                      key={w.id}
+                      className="border-zinc-800 hover:bg-white/5 transition-colors"
+                    >
+                      <TableCell className="font-mono text-zinc-400">
+                        #{w.id}
+                      </TableCell>
                       <TableCell>
                         <div className="flex flex-col">
-                          <span className="font-medium text-white">{w.nickname}</span>
+                          <span className="font-medium text-white">
+                            {w.nickname}
+                          </span>
                           {w.telegram_username && (
-                            <span className="text-xs text-zinc-500">@{w.telegram_username}</span>
+                            <span className="text-xs text-zinc-500">
+                              @{w.telegram_username}
+                            </span>
                           )}
-                          <span className="text-xs text-zinc-600">UID: {w.user_id}</span>
+                          <span className="text-xs text-zinc-600">
+                            UID: {w.user_id}
+                          </span>
                         </div>
                       </TableCell>
                       <TableCell className="text-right font-mono font-bold text-emerald-400">
@@ -782,7 +1019,9 @@ export default function VaultControlPage() {
                       {detailsModalStatus === "REJECTED" && (
                         <>
                           <TableCell className="text-zinc-400 text-xs">
-                            {w.rejected_at ? new Date(w.rejected_at).toLocaleString() : "-"}
+                            {w.rejected_at
+                              ? new Date(w.rejected_at).toLocaleString()
+                              : "-"}
                           </TableCell>
                           <TableCell className="text-red-400 text-sm">
                             {w.rejection_reason || "-"}

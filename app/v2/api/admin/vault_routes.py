@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, timezone
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import func
+from sqlalchemy import case, func
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_admin_info, get_db
@@ -11,11 +11,14 @@ from app.models.vault_withdrawal_request import VaultWithdrawalRequest
 from app.services.admin_audit_service import AdminAuditService
 from app.v2.schemas.v2_admin_economy import (
     UserVaultDto,
+    VaultLedgerItemDto,
+    VaultLedgerResponseDto,
     VaultDailyTrendDto,
     VaultForceEditRequest,
     VaultStatsDto,
     AdminWithdrawalRejectRequest,
 )
+from app.models.vault_ledger import VaultLedger
 
 router = APIRouter()
 
@@ -147,6 +150,65 @@ def get_vault_users(
         )
 
     return result
+
+
+@router.get("/vault/users/{user_id}/ledger", response_model=VaultLedgerResponseDto)
+def get_vault_user_ledger(
+    user_id: int,
+    limit: int = 50,
+    offset: int = 0,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    admin_id, admin_role = admin_info
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
+
+    total_in = (
+        db.query(func.coalesce(func.sum(case((VaultLedger.amount > 0, VaultLedger.amount), else_=0)), 0))
+        .filter(VaultLedger.user_id == user_id)
+        .scalar()
+        or 0
+    )
+    total_out = (
+        db.query(func.coalesce(func.sum(case((VaultLedger.amount < 0, VaultLedger.amount), else_=0)), 0))
+        .filter(VaultLedger.user_id == user_id)
+        .scalar()
+        or 0
+    )
+
+    entries = (
+        db.query(VaultLedger)
+        .filter(VaultLedger.user_id == user_id)
+        .order_by(VaultLedger.created_at.desc())
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
+
+    items = [
+        VaultLedgerItemDto(
+            id=entry.id,
+            user_id=entry.user_id,
+            amount=entry.amount,
+            balance_after=entry.balance_after,
+            reason=entry.reason,
+            ref_type=entry.ref_type,
+            created_at=entry.created_at,
+        )
+        for entry in entries
+    ]
+
+    return VaultLedgerResponseDto(
+        user_id=user.id,
+        nickname=user.nickname or "(미설정)",
+        total_in=int(total_in),
+        total_out=int(total_out),
+        net_change=int(total_in + total_out),
+        items=items,
+    )
 
 
 @router.get("/vault/trend", response_model=list[VaultDailyTrendDto])

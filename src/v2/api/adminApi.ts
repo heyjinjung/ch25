@@ -51,10 +51,6 @@ export interface AdminMissionDto {
   isActive: boolean;
 }
 
-
-
-
-
 export interface TicketLogDto {
   id: number;
   userId: number;
@@ -1445,6 +1441,25 @@ export interface VaultForceEditRequest {
   reason: string;
 }
 
+export interface VaultLedgerItemDto {
+  id: number;
+  user_id: number;
+  amount: number;
+  balance_after: number;
+  reason?: string | null;
+  ref_type?: string | null;
+  created_at: string;
+}
+
+export interface VaultLedgerResponseDto {
+  user_id: number;
+  nickname: string;
+  total_in: number;
+  total_out: number;
+  net_change: number;
+  items: VaultLedgerItemDto[];
+}
+
 export const getVaultStats = async (): Promise<VaultStatsDto> => {
   const response = await v2Client.get<VaultStatsDto>(
     "/api/v2/admin/vault/stats",
@@ -1462,6 +1477,18 @@ export const getVaultUsers = async (
     {
       params: { limit, offset, sort_by: sortBy },
     },
+  );
+  return response.data;
+};
+
+export const getVaultUserLedger = async (
+  userId: number,
+  limit: number = 50,
+  offset: number = 0,
+): Promise<VaultLedgerResponseDto> => {
+  const response = await v2Client.get<VaultLedgerResponseDto>(
+    `/api/v2/admin/vault/users/${userId}/ledger`,
+    { params: { limit, offset } },
   );
   return response.data;
 };
@@ -1488,7 +1515,6 @@ export const forceEditVault = async (
   return response.data;
 };
 
-
 export interface WithdrawalDetailDto {
   id: number;
   user_id: number;
@@ -1510,12 +1536,10 @@ export interface WithdrawalDetailsResponse {
 }
 
 export const getWithdrawalDetails = async (
-  status: string
+  status: string,
 ): Promise<WithdrawalDetailsResponse> => {
   const response = await v2Client.get<WithdrawalDetailsResponse>(
-    `/api/v2/admin/vault/withdrawals/${status}`
+    `/api/v2/admin/vault/withdrawals/${status}`,
   );
   return response.data;
 };
-
-

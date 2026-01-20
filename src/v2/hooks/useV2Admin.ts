@@ -58,6 +58,7 @@ import {
   InventoryItemUpdateRequest,
   getVaultStats,
   getVaultUsers,
+  getVaultUserLedger,
   getVaultTrend,
   forceEditVault,
   getWithdrawalDetails,
@@ -67,6 +68,7 @@ import {
   VaultStatsDto,
   UserVaultDto,
   VaultDailyTrendDto,
+  VaultLedgerResponseDto,
   WithdrawalDetailsResponse,
   AdminDepositLogDto,
   AdminDepositCreateRequest,
@@ -101,6 +103,8 @@ export const ADMIN_KEYS = {
   segmentStats: ["admin", "segments", "stats"] as const,
   segmentRules: ["admin", "segments", "rules"] as const,
   exchangeRates: ["admin", "economy", "rates"] as const,
+  vaultLedger: (userId: number) =>
+    ["admin", "vault", "ledger", userId] as const,
 };
 
 // Segments
@@ -118,6 +122,16 @@ export function useAdminSegmentStats() {
   return useQuery<SegmentStatsResponse>({
     queryKey: ADMIN_KEYS.segmentStats,
     queryFn: getAdminSegmentStats,
+  });
+}
+
+export function useVaultUserLedger(userId: number | null) {
+  return useQuery<VaultLedgerResponseDto>({
+    queryKey: userId
+      ? ADMIN_KEYS.vaultLedger(userId)
+      : ["admin", "vault", "ledger"],
+    queryFn: () => getVaultUserLedger(userId as number),
+    enabled: typeof userId === "number",
   });
 }
 

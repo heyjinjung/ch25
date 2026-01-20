@@ -125,6 +125,29 @@ class UserVaultDto(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class VaultLedgerItemDto(BaseModel):
+    id: int
+    user_id: int
+    amount: int
+    balance_after: int
+    reason: str | None = None
+    ref_type: str | None = None
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class VaultLedgerResponseDto(BaseModel):
+    user_id: int
+    nickname: str
+    total_in: int
+    total_out: int
+    net_change: int
+    items: list[VaultLedgerItemDto]
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class VaultDailyTrendDto(BaseModel):
     """일자별 금고 추이"""
     date: str  # YYYY-MM-DD

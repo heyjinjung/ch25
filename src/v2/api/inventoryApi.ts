@@ -23,7 +23,9 @@ export interface InventoryResponse {
 
 export interface UseInventoryItemRequest {
   readonly item_type: string;
-  readonly quantity: number;
+  readonly quantity?: number;
+  readonly amount?: number;
+  readonly idempotency_key?: string;
 }
 
 export interface UseInventoryItemResponse {
@@ -45,9 +47,30 @@ export const getV2Inventory = async (): Promise<InventoryResponse> => {
   }
 };
 
-export const useV2InventoryItem = async (request: UseInventoryItemRequest): Promise<UseInventoryItemResponse> => {
+export const useV2InventoryItem = async (
+  request: UseInventoryItemRequest,
+): Promise<UseInventoryItemResponse> => {
   try {
-    const response = await v2Client.post<UseInventoryItemResponse>("/api/v2/inventory/use", request);
+    const resolvedAmount = request.amount ?? request.quantity ?? 1;
+    const resolvedKey =
+      request.idempotency_key ||
+      (typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : `idem-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`);
+
+    const response = await v2Client.post<UseInventoryItemResponse>(
+      "/api/v2/inventory/use",
+      {
+        item_type: request.item_type,
+        amount: resolvedAmount,
+        idempotency_key: resolvedKey,
+      },
+      {
+        headers: {
+          "X-Idempotency-Key": resolvedKey,
+        },
+      },
+    );
     return response.data;
   } catch (error) {
     console.error("[inventoryApi] Failed to use V2 inventory item", error);
