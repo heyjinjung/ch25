@@ -129,7 +129,7 @@ export default function ShopManagerPage() {
                         />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-white mb-4">₩ {product.price.toLocaleString()}</div>
+                        <div className="text-2xl font-bold text-white mb-4">₩ {(product.price || 0).toLocaleString()}</div>
                         <div className="relative">
                             <span className="absolute left-3 top-2.5 text-zinc-500 text-sm">₩</span>
                             <Input 

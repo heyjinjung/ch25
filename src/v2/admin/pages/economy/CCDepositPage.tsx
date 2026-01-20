@@ -53,13 +53,15 @@ export default function CCDepositPage() {
              ) : (
                <Table>
                  <TableHeader className="bg-white/5">
-                   <TableRow className="border-white/5 hover:bg-transparent">
-                     <TableHead className="text-zinc-400 w-[80px]">ID</TableHead>
-                     <TableHead className="text-zinc-400">Amount</TableHead>
-                     <TableHead className="text-zinc-400">Bank Owner</TableHead>
-                     <TableHead className="text-zinc-400">Status</TableHead>
-                     <TableHead className="text-zinc-400 text-right">Requested At</TableHead>
-                   </TableRow>
+                     <TableRow className="border-white/5 hover:bg-transparent">
+                       <TableHead className="text-zinc-400 w-[60px]">ID</TableHead>
+                       <TableHead className="text-zinc-400">User</TableHead>
+                       <TableHead className="text-zinc-400">Amount</TableHead>
+                       <TableHead className="text-zinc-400 text-center">Count</TableHead>
+                       <TableHead className="text-zinc-400">Bank Owner</TableHead>
+                       <TableHead className="text-zinc-400">Status</TableHead>
+                       <TableHead className="text-zinc-400 text-right">Requested At</TableHead>
+                     </TableRow>
                  </TableHeader>
                  <TableBody>
                    {deposits.map((item: AdminDepositDto) => (
@@ -69,6 +71,12 @@ export default function CCDepositPage() {
                         onClick={() => setSelectedId(item.id)}
                      >
                        <TableCell className="font-mono text-zinc-500 py-4">#{item.id}</TableCell>
+                       <TableCell className="py-4">
+                           <div className="flex flex-col">
+                               <span className="text-white font-medium">{item.nickname || "(미설정)"}</span>
+                               <span className="text-xs text-zinc-500">ID: {item.userId}</span>
+                           </div>
+                       </TableCell>
                        <TableCell className="font-bold text-lg text-white py-4">
                             {item.isNew ? (
                                 <ShineBorder className="inline-block px-2 py-0.5 rounded text-sm bg-zinc-800" color={["#D2FD9C", "#FFD700"]}>
@@ -78,11 +86,11 @@ export default function CCDepositPage() {
                                 <span>₩ {item.amount.toLocaleString()}</span>
                             )}
                        </TableCell>
+                       <TableCell className="text-center font-mono text-zinc-400 py-4">
+                           {item.depositCount ?? 0}회
+                       </TableCell>
                        <TableCell className="text-zinc-300 py-4">
-                            <div className="flex flex-col">
-                                <span>{item.bankOwner}</span>
-                                <span className="text-xs text-zinc-500">User ID: {item.userId}</span>
-                            </div>
+                            <span>{item.bankOwner}</span>
                        </TableCell>
                        <TableCell className="py-4"><StatusBadge status={item.status} /></TableCell>
                        <TableCell className="text-right text-zinc-500 font-mono py-4 text-xs">{item.requestedAt}</TableCell>

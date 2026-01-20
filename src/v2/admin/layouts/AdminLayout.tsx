@@ -1,13 +1,15 @@
 import { useState, useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { 
-  CreditCard, 
-  Users, 
-  LayoutDashboard, 
-  Settings, 
-  Bell, 
+import {
+  CreditCard,
+  Users,
+  LayoutDashboard,
+  Settings,
+  ClipboardList,
+  MessageSquare,
+  Bell,
   Search,
-  LogOut
+  LogOut,
 } from "lucide-react";
 import { cn } from "../../lib/utils";
 
@@ -36,7 +38,20 @@ export default function AdminLayout() {
     { icon: CreditCard, label: "금고현황", path: "/v2/admin/economy/vault" },
     { icon: CreditCard, label: "입금관리", path: "/v2/admin/economy/deposits" },
     { icon: CreditCard, label: "상점관리", path: "/v2/admin/economy/shop" },
-    { icon: Settings, label: "게임설정", path: "/v2/admin/game/missions" },
+    {
+      icon: MessageSquare,
+      label: "메시지발송",
+      path: "/v2/admin/marketing/messages",
+    },
+    {
+      icon: ClipboardList,
+      label: "설문조사",
+      path: "/v2/admin/marketing/surveys",
+    },
+    { icon: Settings, label: "미션관리", path: "/v2/admin/game/missions" },
+    { icon: Settings, label: "룰렛설정", path: "/v2/admin/game/roulette" },
+    { icon: Settings, label: "주사위설정", path: "/v2/admin/game/dice" },
+    { icon: Settings, label: "복권설정", path: "/v2/admin/game/lottery" },
     { icon: Settings, label: "시스템", path: "/v2/admin/system/modals" },
   ];
 
@@ -49,7 +64,9 @@ export default function AdminLayout() {
             <div className="h-8 w-8 rounded-lg bg-obsidian-accent/20 flex items-center justify-center">
               <div className="h-4 w-4 rounded-sm bg-obsidian-accent" />
             </div>
-            <span className="text-xl font-bold tracking-tight text-white">Admin V2</span>
+            <span className="text-xl font-bold tracking-tight text-white">
+              Admin V2
+            </span>
           </div>
 
           <nav className="space-y-2">
@@ -61,7 +78,7 @@ export default function AdminLayout() {
                   "flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200",
                   location.pathname.startsWith(item.path)
                     ? "bg-obsidian-accent text-white shadow-lg shadow-obsidian-accent/20"
-                    : "text-obsidian-muted hover:bg-white/5 hover:text-white"
+                    : "text-obsidian-muted hover:bg-white/5 hover:text-white",
                 )}
               >
                 <item.icon size={18} />
@@ -78,21 +95,23 @@ export default function AdminLayout() {
       )}
 
       {/* Main Content Area */}
-      <main 
+      <main
         className={cn(
           "min-h-screen transition-all duration-300",
-          !isMobile ? "pl-64" : "pb-24" // Mobile adds padding for Dock
+          !isMobile ? "pl-64" : "pb-24", // Mobile adds padding for Dock
         )}
       >
         {/* Header (Top Bar) */}
         <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-obsidian-border bg-obsidian-bg/80 px-6 backdrop-blur-md">
           <div className="flex items-center gap-4">
-            {isMobile && <span className="text-lg font-bold text-white">Admin V2</span>}
+            {isMobile && (
+              <span className="text-lg font-bold text-white">Admin V2</span>
+            )}
             {!isMobile && (
               <div className="flex items-center gap-2 rounded-lg bg-obsidian-surface px-3 py-1.5 border border-obsidian-border">
                 <Search size={14} className="text-obsidian-muted" />
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   placeholder="유저 검색 (Enter)"
                   className="bg-transparent text-sm text-white placeholder-obsidian-muted focus:outline-none w-64"
                 />
@@ -100,7 +119,11 @@ export default function AdminLayout() {
             )}
           </div>
           <div className="flex items-center gap-4">
-            <button className="relative rounded-full p-2 text-obsidian-muted hover:bg-white/5 hover:text-white">
+            <button
+              className="relative rounded-full p-2 text-obsidian-muted hover:bg-white/5 hover:text-white"
+              aria-label="알림"
+              title="알림"
+            >
               <Bell size={20} />
               <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500" />
             </button>
@@ -125,7 +148,7 @@ export default function AdminLayout() {
                 "flex flex-col items-center justify-center gap-1 rounded-xl px-4 py-2 transition-all",
                 location.pathname.startsWith(item.path)
                   ? "bg-white/15 text-white"
-                  : "text-white/60 hover:bg-white/5 hover:text-white"
+                  : "text-white/60 hover:bg-white/5 hover:text-white",
               )}
             >
               <item.icon size={20} />
