@@ -300,7 +300,7 @@ export default function TicketInventoryPage() {
 
   const openEditModal = (log: TicketLogDto) => {
     setSelectedLog(log);
-    setAmount(log.amount.toString());
+    setAmount((log.amount ?? 0).toString());
     setReason(log.reason);
     setEditOpen(true);
   };
@@ -611,10 +611,10 @@ export default function TicketInventoryPage() {
                       )}
                     >
                       {log.type === "GRANT" ? "+" : "-"}
-                      {log.amount.toLocaleString()}
+                      {(log.amount ?? 0).toLocaleString()}
                     </TableCell>
                     <TableCell className="text-zinc-400">
-                      {log.balanceAfter.toLocaleString()}
+                      {(log.balanceAfter ?? 0).toLocaleString()}
                     </TableCell>
                     <TableCell className="text-zinc-500 max-w-[300px] truncate group border-l border-white/5 pl-4 ml-4">
                       {log.reason}

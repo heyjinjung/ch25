@@ -22,6 +22,22 @@ from app.v2.schemas.v2_admin_game import (
 router = APIRouter()
 
 
+def _normalize_reward_type_for_dto(value: object) -> str:
+    """Normalize legacy/extended reward_type values into the admin DTO union.
+
+    Admin game-config DTOs currently allow: POINT | CREDIT | TICKET | NONE.
+    Legacy values like TICKET_ROULETTE should be normalized to TICKET.
+    """
+
+    allowed = {"POINT", "CREDIT", "TICKET", "NONE"}
+    raw = str(value) if value is not None else ""
+    if raw in allowed:
+        return raw
+    if raw.startswith("TICKET"):
+        return "TICKET"
+    return "NONE"
+
+
 @router.get("/game/roulette/configs", response_model=list[RouletteConfigDto])
 def get_roulette_configs(
     db: Session = Depends(get_db),
@@ -381,7 +397,7 @@ def get_lottery_configs(
                 label=prize.label,
                 weight=prize.weight,
                 stock=prize.stock,
-                reward_type=prize.reward_type,
+                reward_type=_normalize_reward_type_for_dto(prize.reward_type),
                 reward_amount=prize.reward_amount,
                 is_active=prize.is_active,
             )
@@ -426,7 +442,7 @@ def get_lottery_config(
             label=prize.label,
             weight=prize.weight,
             stock=prize.stock,
-            reward_type=prize.reward_type,
+            reward_type=_normalize_reward_type_for_dto(prize.reward_type),
             reward_amount=prize.reward_amount,
             is_active=prize.is_active,
         )
@@ -508,7 +524,7 @@ def update_lottery_config(
             label=prize.label,
             weight=prize.weight,
             stock=prize.stock,
-            reward_type=prize.reward_type,
+            reward_type=_normalize_reward_type_for_dto(prize.reward_type),
             reward_amount=prize.reward_amount,
             is_active=prize.is_active,
         )
