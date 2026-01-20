@@ -118,11 +118,11 @@ def list_deposit_logs(
     return [
         AdminDepositLogDto(
             id=r.ExternalRankingDailyDepositDelta.id,
-            user_id=r.ExternalRankingDailyDepositDelta.user_id,
+            userId=r.ExternalRankingDailyDepositDelta.user_id,
             nickname=r.User.nickname,
             amount=r.ExternalRankingDailyDepositDelta.deposit_delta,
-            kst_date=r.ExternalRankingDailyDepositDelta.kst_date.isoformat(),
-            created_at=r.ExternalRankingDailyDepositDelta.created_at,
+            kstDate=r.ExternalRankingDailyDepositDelta.kst_date.isoformat(),
+            createdAt=r.ExternalRankingDailyDepositDelta.created_at,
         )
         for r in rows
     ]
@@ -181,11 +181,11 @@ def create_deposit_log(
 
     return AdminDepositLogDto(
         id=row.id,
-        user_id=row.user_id,
+        userId=row.user_id,
         nickname=user.nickname if user else None,
         amount=row.deposit_delta,
-        kst_date=row.kst_date.isoformat(),
-        created_at=row.created_at,
+        kstDate=row.kst_date.isoformat(),
+        createdAt=row.created_at,
     )
 
 
@@ -234,11 +234,11 @@ def update_deposit_log(
     user = db.query(User).filter(User.id == user_id).first()
     return AdminDepositLogDto(
         id=row.id,
-        user_id=row.user_id,
+        userId=row.user_id,
         nickname=user.nickname if user else None,
         amount=row.deposit_delta,
-        kst_date=row.kst_date.isoformat(),
-        created_at=row.created_at,
+        kstDate=row.kst_date.isoformat(),
+        createdAt=row.created_at,
     )
 
 

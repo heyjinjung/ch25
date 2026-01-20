@@ -49,6 +49,15 @@ import { format } from "date-fns";
 export default function CCDepositPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const { data: logs = [], isLoading, refetch } = useAdminDepositLogs(searchTerm);
+
+  const formatKstDateTime = (value?: string) => {
+    if (!value) return "-";
+    const match = value.match(/^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2})/);
+    if (match) return `${match[1]} ${match[2]}`;
+    const dt = new Date(value);
+    if (Number.isNaN(dt.getTime())) return "-";
+    return format(dt, "yyyy-MM-dd HH:mm");
+  };
   
   const createMutation = useCreateDepositLog();
   const updateMutation = useUpdateDepositLog();
@@ -206,7 +215,7 @@ export default function CCDepositPage() {
                     </div>
                   </TableCell>
                   <TableCell className="text-zinc-500 text-xs">
-                    {format(new Date(log.createdAt), "yyyy-MM-dd HH:mm")}
+                    {formatKstDateTime(log.createdAt)}
                   </TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>

@@ -6,9 +6,11 @@ import {
   updateDiceConfig,
   getLotteryConfig,
   updateLotteryConfig,
+  updateLotteryPrize,
   type AdminRouletteConfigDto,
   type AdminDiceConfigDto,
-  type AdminLotteryConfigDto
+  type AdminLotteryConfigDto,
+  type AdminLotteryPrizeDto,
 } from "../api/adminApi";
 
 // Roulette
@@ -71,8 +73,8 @@ export function useUpdateLotteryPrize() {
     mutationFn: ({ configId, prizeId, data }: {
       configId: number;
       prizeId: number;
-      data: Partial<import("../api/adminApi").AdminLotteryPrizeDto>;
-    }) => import("../api/adminApi").updateLotteryPrize(configId, prizeId, data),
+      data: Partial<AdminLotteryPrizeDto>;
+    }) => updateLotteryPrize(configId, prizeId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "game", "lottery"] });
     },
