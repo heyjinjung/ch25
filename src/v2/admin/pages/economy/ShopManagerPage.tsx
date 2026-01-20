@@ -268,7 +268,7 @@ export default function ShopManagerPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-white mb-4">
-                  ₩ {(product.price || 0).toLocaleString()}
+                  ₩ {(product.costAmount || 0).toLocaleString()}
                 </div>
                 <div className="flex gap-2 items-center">
                   <div className="relative flex-1">
@@ -277,7 +277,7 @@ export default function ShopManagerPage() {
                     </span>
                     <Input
                       className="bg-black/50 border-white/10 pl-8"
-                      defaultValue={product.price}
+                      defaultValue={product.costAmount}
                       onChange={(e) =>
                         handlePriceChange(product.id, e.target.value)
                       }
