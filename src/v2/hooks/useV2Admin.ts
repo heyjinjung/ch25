@@ -48,6 +48,8 @@ import {
   updateProductPrice,
   AdminDepositDto,
   AdminProductDto,
+  getInterventionLogs,
+  InterventionLogDto,
   createTicket,
   updateTicket,
   deleteTicket,
@@ -659,5 +661,18 @@ export function useWithdrawalDetails(status: string) {
     queryKey: ["admin", "vault", "withdrawals", status],
     queryFn: () => getWithdrawalDetails(status),
     enabled: !!status,
+  });
+}
+
+// ============================================================================
+// Golden Intervention Hooks
+// ============================================================================
+
+export function useInterventionLogs(userId: number | null, limit: number = 50) {
+  return useQuery<InterventionLogDto[]>({
+    queryKey: ["admin", "golden", "interventions", userId, limit],
+    queryFn: () => getInterventionLogs(userId!, limit),
+    enabled: !!userId && userId > 0,
+    refetchInterval: 10000, // 10초마다 자동 새로고침
   });
 }

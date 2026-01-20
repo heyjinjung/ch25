@@ -12,6 +12,7 @@ import {
   ChevronDown,
   ChevronRight,
   Store,
+  Radio,
 } from "lucide-react";
 import { cn } from "../../lib/utils";
 
@@ -71,7 +72,12 @@ export default function AdminLayout() {
   const navSections: Array<{
     key: NavSectionKey;
     label: string;
-    items: Array<{ icon: any; label: string; path: string }>;
+    items: Array<{
+      icon: any;
+      label: string;
+      path: string;
+      submenu?: Array<{ label: string; path: string }>;
+    }>;
   }> = [
     {
       key: "OPS",
@@ -81,6 +87,11 @@ export default function AdminLayout() {
           icon: LayoutDashboard,
           label: "대시보드",
           path: "/v2/admin/dashboard",
+          submenu: [
+            { label: "Ops 대시보드", path: "/v2/admin/dashboard" },
+            { label: "Golden 실시간", path: "/v2/admin/dashboard/golden" },
+            { label: "위기 레이더", path: "/v2/admin/dashboard/radar" },
+          ],
         },
         {
           icon: MessageSquare,
@@ -137,7 +148,16 @@ export default function AdminLayout() {
     },
   ];
 
-  const flatNavItems = navSections.flatMap((s) => s.items);
+  const flatNavItems = navSections.flatMap((s) =>
+    s.items.flatMap((item) => {
+      // If item has submenu, include all submenu items
+      if (item.submenu) {
+        return [item, ...item.submenu.map((sub) => ({ ...item, label: sub.label, path: sub.path }))];
+      }
+      return [item];
+    }),
+  );
+
   const activeItemPath = flatNavItems
     .filter((item) => {
       if (location.pathname === item.path) return true;
@@ -212,19 +232,47 @@ export default function AdminLayout() {
                     {!isCollapsed && (
                       <div className="mt-2 space-y-2">
                         {section.items.map((item) => (
-                          <button
-                            key={item.path}
-                            onClick={() => navigate(item.path)}
-                            className={cn(
-                              "flex w-full items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200",
-                              activeItemPath === item.path
-                                ? "bg-obsidian-accent text-white shadow-lg shadow-obsidian-accent/20"
-                                : "text-obsidian-muted hover:bg-white/5 hover:text-white",
+                          <div key={item.path}>
+                            <button
+                              type="button"
+                              onClick={() => navigate(item.path)}
+                              className={cn(
+                                "flex w-full items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200",
+                                activeItemPath === item.path ||
+                                  (item.submenu &&
+                                    item.submenu.some(
+                                      (sub) => location.pathname === sub.path,
+                                    ))
+                                  ? "bg-obsidian-accent text-white shadow-lg shadow-obsidian-accent/20"
+                                  : "text-obsidian-muted hover:bg-white/5 hover:text-white",
+                              )}
+                            >
+                              <item.icon size={18} />
+                              {item.label}
+                            </button>
+
+                            {/* Submenu */}
+                            {item.submenu && (
+                              <div className="mt-1 ml-6 space-y-1">
+                                {item.submenu.map((subItem) => (
+                                  <button
+                                    type="button"
+                                    key={subItem.path}
+                                    onClick={() => navigate(subItem.path)}
+                                    className={cn(
+                                      "flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-xs transition-all duration-200",
+                                      location.pathname === subItem.path
+                                        ? "bg-obsidian-accent/50 text-white font-medium"
+                                        : "text-obsidian-muted hover:bg-white/5 hover:text-white",
+                                    )}
+                                  >
+                                    <div className="w-1 h-1 rounded-full bg-current opacity-50" />
+                                    {subItem.label}
+                                  </button>
+                                ))}
+                              </div>
                             )}
-                          >
-                            <item.icon size={18} />
-                            {item.label}
-                          </button>
+                          </div>
                         ))}
                       </div>
                     )}
@@ -233,7 +281,10 @@ export default function AdminLayout() {
               })}
           </nav>
 
-          <button className="absolute bottom-6 left-6 flex items-center gap-2 text-sm text-obsidian-muted hover:text-red-400">
+          <button
+            type="button"
+            className="absolute bottom-6 left-6 flex items-center gap-2 text-sm text-obsidian-muted hover:text-red-400"
+          >
             <LogOut size={18} />
             로그아웃
           </button>
@@ -266,6 +317,7 @@ export default function AdminLayout() {
           </div>
           <div className="flex items-center gap-4">
             <button
+              type="button"
               className="relative rounded-full p-2 text-obsidian-muted hover:bg-white/5 hover:text-white"
               aria-label="알림"
               title="알림"
@@ -288,6 +340,7 @@ export default function AdminLayout() {
         <nav className="fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-1 rounded-2xl border border-white/10 bg-black/50 p-2 shadow-2xl backdrop-blur-xl">
           {flatNavItems.map((item) => (
             <button
+              type="button"
               key={item.path}
               onClick={() => navigate(item.path)}
               className={cn(
