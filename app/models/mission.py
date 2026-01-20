@@ -35,6 +35,12 @@ class MissionRewardType(str, Enum):
     POINT = "POINT"
     GIFTICON_BAEMIN = "GIFTICON_BAEMIN"
     GIFTICON_COMPOSE = "GIFTICON_COMPOSE"
+    
+    # V2 Standard Types (SoT)
+    CC_POINT = "CC_POINT"
+    GAME_XP = "GAME_XP"
+    TICKET = "TICKET"
+    BUNDLE = "BUNDLE"
 
 
 class Mission(Base):
