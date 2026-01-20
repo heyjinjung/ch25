@@ -119,6 +119,7 @@ export default function OpsDashboard() {
           }
           icon={ShieldAlert}
           className="border-red-500/30 bg-red-500/5 hover:bg-red-500/10"
+          onClick={() => navigate("/v2/admin/dashboard/golden")}
         />
         <QuickActionCard
           label="금일 접속자 (Active)"

@@ -750,9 +750,6 @@ export const getInventoryLogs = async (
   if (userId !== undefined) params.user_id = userId;
   if (startDate) params.start_date = startDate;
   if (endDate) params.end_date = endDate;
-
-  const response = await v2Client.get<TicketLogDto[]>(
-    "/api/v2/admin/inventory/logs",
     {
       params,
     },

@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Literal
 
-from pydantic import ConfigDict
+from pydantic import ConfigDict, Field
 
 from app.schemas.base import KstBaseModel as BaseModel
 
@@ -18,31 +18,37 @@ class OpsSystemStatusDto(BaseModel):
 
 
 class OpsRiskUserDto(BaseModel):
-    user_id: int
+    user_id: int = Field(alias="userId", serialization_alias="userId")
     nickname: str
-    risk_level: Literal["LOW", "MEDIUM", "HIGH"]
-    risk_reason: str | None = None
-    churn_score: float
+    risk_level: Literal["LOW", "MEDIUM", "HIGH"] = Field(alias="riskLevel", serialization_alias="riskLevel")
+    risk_reason: str | None = Field(default=None, alias="riskReason", serialization_alias="riskReason")
+    churn_score: float = Field(alias="churnScore", serialization_alias="churnScore")
+
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class OpsGoldenRadarDto(BaseModel):
-    high_rollers: int = 0
-    churn_risks: int = 0
-    online_now: int = 0
-    risk_users: list[OpsRiskUserDto] = []
+    high_rollers: int = Field(default=0, alias="highRollers", serialization_alias="highRollers")
+    churn_risks: int = Field(default=0, alias="churnRisks", serialization_alias="churnRisks")
+    online_now: int = Field(default=0, alias="onlineNow", serialization_alias="onlineNow")
+    risk_users: list[OpsRiskUserDto] = Field(default=[], alias="riskUsers", serialization_alias="riskUsers")
+
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class OpsMetricsDto(BaseModel):
-    today_revenue: int = 0
-    active_users_24h: int = 0
+    today_revenue: int = Field(default=0, alias="todayRevenue", serialization_alias="todayRevenue")
+    active_users_24h: int = Field(default=0, alias="activeUsers24h", serialization_alias="activeUsers24h")
+
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class OpsDashboardResponse(BaseModel):
     system: OpsSystemStatusDto
-    golden_radar: OpsGoldenRadarDto
+    golden_radar: OpsGoldenRadarDto = Field(alias="goldenRadar", serialization_alias="goldenRadar")
     metrics: OpsMetricsDto
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
 
 class InterventionLogDto(BaseModel):

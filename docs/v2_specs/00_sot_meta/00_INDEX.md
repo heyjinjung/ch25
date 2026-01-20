@@ -75,6 +75,7 @@
 - (Backend Runtime) docs/v2_specs/90_troubleshooting/v2_troubleshooting_20260120_backend_runtime_ko.md
 - (Frontend Startup) docs/v2_specs/90_troubleshooting/v2_troubleshooting_20260120_frontend_startup_ko.md
 - (Admin UI Undefined Error) docs/v2_specs/90_troubleshooting/v2_troubleshooting_20260120_undefined_error_ko.md
+- (Ticket/Inventory Search) docs/v2_specs/90_troubleshooting/v2_troubleshooting_20260121_ticket_inventory_search_ko.md
 
 ## 5.1 V2 Admin 라우터 모듈(코드 맵)
 - 라우터 엔트리: app/v2/api/routes.py (admin_router include)

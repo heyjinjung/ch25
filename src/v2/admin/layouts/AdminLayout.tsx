@@ -12,7 +12,6 @@ import {
   ChevronDown,
   ChevronRight,
   Store,
-  Radio,
 } from "lucide-react";
 import { cn } from "../../lib/utils";
 
