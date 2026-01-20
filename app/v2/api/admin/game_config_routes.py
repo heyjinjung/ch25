@@ -27,19 +27,53 @@ logger = logging.getLogger(__name__)
 
 
 def _normalize_reward_type_for_dto(value: object) -> str:
-    """Normalize legacy/extended reward_type values into the admin DTO union.
+    """Normalize reward_type for admin DTO (v2 SoT aligned).
 
-    Admin game-config DTOs currently allow: POINT | CREDIT | TICKET | NONE.
-    Legacy values like TICKET_ROULETTE should be normalized to TICKET.
+    허용: POINT, CC_POINT, GAME_XP, DIAMOND, TICKET, BUNDLE, TICKET_BUNDLE, NONE (+ legacy CREDIT).
+    UI 호환 값 VAULT는 POINT로 정규화한다.
     """
 
-    allowed = {"POINT", "CREDIT", "TICKET", "NONE"}
+    allowed = {
+        "POINT",
+        "CC_POINT",
+        "GAME_XP",
+        "DIAMOND",
+        "TICKET",
+        "BUNDLE",
+        "TICKET_BUNDLE",
+        "NONE",
+        "CREDIT",
+    }
     raw = str(value) if value is not None else ""
+    if raw == "VAULT":
+        return "POINT"
     if raw in allowed:
         return raw
     if raw.startswith("TICKET"):
         return "TICKET"
     return "NONE"
+
+
+def _normalize_reward_type_for_write(value: object) -> str:
+    """Normalize incoming reward_type before persisting (v2 SoT aligned)."""
+
+    raw = str(value) if value is not None else ""
+    if raw == "VAULT":
+        return "POINT"
+    if raw.startswith("TICKET"):
+        return "TICKET"
+    allowed = {
+        "POINT",
+        "CC_POINT",
+        "GAME_XP",
+        "DIAMOND",
+        "TICKET",
+        "BUNDLE",
+        "TICKET_BUNDLE",
+        "NONE",
+        "CREDIT",
+    }
+    return raw if raw in allowed else "NONE"
 
 
 def _normalize_roulette_grade_for_dto(value: object) -> str:
@@ -216,7 +250,7 @@ def update_roulette_config(
                 seg = segment_map[seg_update.slot_index]
                 seg.label = seg_update.label
                 seg.weight = seg_update.weight
-                seg.reward_type = seg_update.reward_type
+                seg.reward_type = _normalize_reward_type_for_write(seg_update.reward_type)
                 seg.reward_amount = seg_update.reward_amount
                 seg.is_jackpot = seg_update.is_jackpot
                 seg.updated_at = datetime.utcnow()
@@ -226,7 +260,7 @@ def update_roulette_config(
                     slot_index=seg_update.slot_index,
                     label=seg_update.label,
                     weight=seg_update.weight,
-                    reward_type=seg_update.reward_type,
+                    reward_type=_normalize_reward_type_for_write(seg_update.reward_type),
                     reward_amount=seg_update.reward_amount,
                     is_jackpot=seg_update.is_jackpot,
                 )
@@ -358,15 +392,15 @@ def update_dice_config(
     if payload.lose_probability is not None:
         config.lose_probability = payload.lose_probability
     if payload.win_reward_type is not None:
-        config.win_reward_type = payload.win_reward_type
+        config.win_reward_type = _normalize_reward_type_for_write(payload.win_reward_type)
     if payload.win_reward_amount is not None:
         config.win_reward_amount = payload.win_reward_amount
     if payload.draw_reward_type is not None:
-        config.draw_reward_type = payload.draw_reward_type
+        config.draw_reward_type = _normalize_reward_type_for_write(payload.draw_reward_type)
     if payload.draw_reward_amount is not None:
         config.draw_reward_amount = payload.draw_reward_amount
     if payload.lose_reward_type is not None:
-        config.lose_reward_type = payload.lose_reward_type
+        config.lose_reward_type = _normalize_reward_type_for_write(payload.lose_reward_type)
     if payload.lose_reward_amount is not None:
         config.lose_reward_amount = payload.lose_reward_amount
     if payload.daily_gain_cap is not None:
@@ -605,7 +639,7 @@ def update_lottery_prize(
     prize.label = payload.label
     prize.weight = payload.weight
     prize.stock = payload.stock
-    prize.reward_type = payload.reward_type
+    prize.reward_type = _normalize_reward_type_for_write(payload.reward_type)
     prize.reward_amount = payload.reward_amount
     prize.is_active = payload.is_active
     prize.updated_at = datetime.utcnow()
@@ -655,7 +689,7 @@ def create_lottery_prize(
         label=payload.label,
         weight=payload.weight,
         stock=payload.stock,
-        reward_type=payload.reward_type,
+        reward_type=_normalize_reward_type_for_write(payload.reward_type),
         reward_amount=payload.reward_amount,
         is_active=payload.is_active,
     )

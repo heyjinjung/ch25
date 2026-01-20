@@ -69,7 +69,12 @@ export default function LevelConfigPage() {
     const localData = localLevels[level];
     if (!localData) return;
 
-    console.log("Saving level:", level, "with data:", localData);
+    // Only log the data being sent to avoid confusing the user with derived fields like rewardPoint
+    console.log("Saving level:", level, "payload:", {
+      requiredXp: localData.requiredXp,
+      rewardType: localData.rewardType,
+      rewardAmount: localData.rewardAmount,
+    });
 
     updateMutation.mutate(
       {

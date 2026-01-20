@@ -263,10 +263,13 @@ export function useAdminTicketLogs(
   userId?: number,
   startDate?: string,
   endDate?: string,
+  limit: number = 1000,
+  options?: { enabled?: boolean },
 ) {
   return useQuery<TicketLogDto[]>({
-    queryKey: ["admin", "ticket-logs", userId, startDate, endDate],
-    queryFn: () => getTicketLogs(userId, startDate, endDate),
+    queryKey: ["admin", "ticket-logs", userId, startDate, endDate, limit],
+    queryFn: () => getTicketLogs(userId, startDate, endDate, limit),
+    enabled: options?.enabled !== undefined ? options.enabled : true,
   });
 }
 
@@ -386,6 +389,9 @@ export function useAdjustUserWallet() {
       queryClient.invalidateQueries({
         queryKey: ADMIN_KEYS.userDetail(variables.userId),
       });
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "ticket-logs"],
+      });
     },
   });
 }
@@ -403,6 +409,9 @@ export function useAdjustUserInventory() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: ADMIN_KEYS.userInventory(variables.userId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "ticket-logs"],
       });
     },
   });

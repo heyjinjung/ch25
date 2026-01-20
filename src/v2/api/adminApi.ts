@@ -51,12 +51,7 @@ export interface AdminMissionDto {
   isActive: boolean;
 }
 
-export interface AdminLevelDto {
-  level: number;
-  requiredXp: number;
-  rewardTicket: number;
-  rewardPoint: number;
-}
+
 
 
 
@@ -738,11 +733,13 @@ export const getTicketLogs = async (
   userId?: number,
   startDate?: string,
   endDate?: string,
+  limit?: number,
 ): Promise<TicketLogDto[]> => {
   const params: any = {};
   if (userId) params.userId = userId;
   if (startDate) params.startDate = startDate;
   if (endDate) params.endDate = endDate;
+  if (limit) params.limit = limit;
 
   const response = await v2Client.get<TicketLogDto[]>(
     "/api/v2/admin/inventory/logs",

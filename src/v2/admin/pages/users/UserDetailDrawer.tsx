@@ -108,7 +108,13 @@ export function UserDetailDrawer({
   const { data: notes } = useUserNotes(userId);
   const { data: missions } = useUserMissionHistory(userId);
   const { data: segment } = useUserSegment(userId);
-  const { data: ticketLogs } = useAdminTicketLogs(userId || undefined);
+  const { data: ticketLogs } = useAdminTicketLogs(
+    userId || undefined,
+    undefined,
+    undefined,
+    1000,
+    { enabled: !!userId },
+  );
 
   const runIntervention = useRunIntervention();
   const adjustWallet = useAdjustUserWallet();
@@ -577,33 +583,12 @@ export function UserDetailDrawer({
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {/* Placeholder rows to simulate real data since specialized Vault API is pending */}
-                          <TableRow className="border-white/5 hover:bg-white/5 text-[11px]">
-                            <TableCell className="py-2 text-indigo-400">
-                              WITHDRAWAL
-                            </TableCell>
-                            <TableCell className="py-2 text-red-400 font-mono">
-                              -₩50,000
-                            </TableCell>
-                            <TableCell className="py-2 text-zinc-300">
-                              COMPLETED
-                            </TableCell>
-                            <TableCell className="py-2 text-right text-zinc-500 font-mono">
-                              2024.01.20
-                            </TableCell>
-                          </TableRow>
-                          <TableRow className="border-white/5 hover:bg-white/5 text-[11px]">
-                            <TableCell className="py-2 text-emerald-400">
-                              DEPOSIT
-                            </TableCell>
-                            <TableCell className="py-2 text-emerald-400 font-mono">
-                              +₩100,000
-                            </TableCell>
-                            <TableCell className="py-2 text-zinc-300">
-                              COMPLETED
-                            </TableCell>
-                            <TableCell className="py-2 text-right text-zinc-500 font-mono">
-                              2024.01.18
+                          <TableRow>
+                            <TableCell
+                              colSpan={4}
+                              className="h-24 text-center text-zinc-600"
+                            >
+                              금고 입출금 내역 API 준비 중입니다.
                             </TableCell>
                           </TableRow>
                         </TableBody>
