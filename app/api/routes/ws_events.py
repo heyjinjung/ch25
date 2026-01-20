@@ -6,7 +6,7 @@ from redis import asyncio as aioredis
 
 from app.core.config import get_settings
 
-router = APIRouter()
+router = APIRouter(prefix="/api/ws", tags=["websocket"])
 logger = logging.getLogger(__name__)
 
 
@@ -35,7 +35,7 @@ async def _receive_ws_messages(websocket: WebSocket) -> None:
         raise
 
 
-@router.websocket("/api/ws/events")
+@router.websocket("/events")
 async def websocket_events(websocket: WebSocket):
     await websocket.accept()
     settings = get_settings()

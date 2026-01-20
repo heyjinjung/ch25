@@ -6,7 +6,11 @@ import { clearAuth, getAuthToken } from "../auth/authStore";
 // Resolution priority:
 // 1) Explicit env (VITE_API_BASE_URL or VITE_API_URL)
 // 2) Runtime-derived: localhost -> :8000, otherwise same-origin (expects reverse proxy)
-const rawEnvBase = (import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || "").trim();
+const rawEnvBase = (
+  import.meta.env.VITE_API_BASE_URL ||
+  import.meta.env.VITE_API_URL ||
+  ""
+).trim();
 
 const normalizeUserApiBase = (base: string) => {
   const trimmed = base.replace(/\/+$/, "");
@@ -21,12 +25,8 @@ const resolvedBaseURL = (() => {
   if (envBase) return envBase.replace(/\/+$/, "");
 
   if (typeof window !== "undefined") {
-    const { hostname, protocol } = window.location;
-    const isLocalHost = hostname === "localhost" || hostname === "127.0.0.1";
-
-    if (isLocalHost) return `${protocol}//${hostname}:8000`;
-
-    // In production, use empty or relative if paths are handled by proxy
+    // Default to same-origin (reverse proxy handles `/api`).
+    // If you need a fixed origin, set VITE_API_BASE_URL/VITE_API_URL.
     return "";
   }
   return "";
@@ -46,7 +46,11 @@ export const userApi = axios.create({
 
 // Attach bearer token if present in storage; keeps compatibility with existing `token` key.
 userApi.interceptors.request.use((config) => {
-  const token = getAuthToken() || (typeof localStorage !== "undefined" ? localStorage.getItem("token") : null);
+  const token =
+    getAuthToken() ||
+    (typeof localStorage !== "undefined"
+      ? localStorage.getItem("token")
+      : null);
   const url = String(config.url ?? "");
   // Do not attach Authorization to login endpoint.
   if (url.endsWith("/api/auth/token")) {
@@ -71,22 +75,28 @@ userApi.interceptors.response.use(
     if (status === 401) {
       const hadAuthHeader = Boolean(
         error?.config?.headers?.Authorization ||
-          error?.config?.headers?.authorization ||
-          error?.config?.headers?.AUTHORIZATION
+        error?.config?.headers?.authorization ||
+        error?.config?.headers?.AUTHORIZATION,
       );
       const currentToken =
-        getAuthToken() || (typeof localStorage !== "undefined" ? localStorage.getItem("token") : null);
+        getAuthToken() ||
+        (typeof localStorage !== "undefined"
+          ? localStorage.getItem("token")
+          : null);
 
       // Avoid logout/redirect loops for anonymous calls (e.g., app boot before login).
       if (hadAuthHeader || currentToken) {
         clearAuth();
-        if (typeof window !== "undefined" && window.location.pathname !== "/login") {
+        if (
+          typeof window !== "undefined" &&
+          window.location.pathname !== "/login"
+        ) {
           window.location.href = "/login";
         }
       }
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 export default userApi;

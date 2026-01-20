@@ -38,7 +38,6 @@ from app.api.routes import (
 	inventory_shop,
 	metrics,
 	ws_ops,
-	ws_ops,
 	ws_feed,
 	ws_events,
 	exchange,

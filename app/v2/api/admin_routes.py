@@ -1,6 +1,8 @@
 """V2 Admin UI Routes."""
 from datetime import datetime
-from typing import List
+from typing import List, Optional, Any
+
+from pydantic import BaseModel
 
 from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy import func
@@ -52,6 +54,7 @@ from app.v2.schemas.v2_admin_user import (
     UserNoteDto,
     CreateUserNoteRequest,
     UserMissionHistoryDto,
+    TicketLogDto,
 )
 from app.v2.schemas.v2_admin_segment import AdminUserSegmentResponse
 from app.v2.schemas.v2_admin_dashboard import (
@@ -103,6 +106,7 @@ from app.models.survey import (
     SurveyResponseStatus,
     SurveyStatus,
 )
+from app.models.inventory import UserInventoryItem, UserInventoryLedger
 from app.v2.schemas.v2_admin_marketing import (
     V2AdminSurveyDto,
     V2AdminSurveyQuestionDto,
@@ -849,6 +853,37 @@ def get_user_inventory(
             expiresAt=None,
             status="ACTIVE" if item.quantity > 0 else "USED"
         ) for item in items
+    ]
+
+
+@router.get("/inventory/logs", response_model=List[TicketLogDto])
+def get_ticket_logs(
+    userId: Optional[int] = None,
+    startDate: Optional[datetime] = None,
+    endDate: Optional[datetime] = None,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """List ticket/inventory logs (ledgers)."""
+    query = db.query(UserInventoryLedger)
+    if userId:
+        query = query.filter(UserInventoryLedger.user_id == userId)
+    if startDate:
+        query = query.filter(UserInventoryLedger.created_at >= startDate)
+    if endDate:
+        query = query.filter(UserInventoryLedger.created_at <= endDate)
+    
+    logs = query.order_by(UserInventoryLedger.id.desc()).limit(100).all()
+    return [
+        TicketLogDto(
+            id=log.id,
+            userId=log.user_id,
+            itemType=log.item_type,
+            changeAmount=log.change_amount,
+            balanceAfter=log.balance_after,
+            reason=log.reason,
+            createdAt=log.created_at
+        ) for log in logs
     ]
 
 
@@ -2207,6 +2242,7 @@ def update_lottery_prize(
 # ============================================================================
 # Mission Management Endpoints
 # ============================================================================
+
 
 class AdminMissionDto(BaseModel):
     id: int

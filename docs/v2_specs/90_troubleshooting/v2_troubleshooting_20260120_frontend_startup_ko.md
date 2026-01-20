@@ -44,7 +44,14 @@ V2 Admin 프론트엔드(`localhost:5173/v2/admin`) 초기 구동 과정에서 �
     status?.metrics?.todayRevenue?.toLocaleString() ?? "0"
     ```
 
+### 2.4 빌드 에러: 사용되지 않는 React 임포트 (TS6133)
+*   **증상**: `npm run build` 또는 Docker 빌드 중 `error TS6133: 'React' is declared but its value is never read` 발생.
+*   **원인**: TypeScript 설정(`tsconfig.json`)에서 `noUnusedLocals`가 활성화된 경우, 컴포넌트 내에서 JSX가 직접적인 `React.createElement` 호출 대신 변환되면서 상단에 명시적으로 `import React from 'react'`가 남아 있을 때 발생.
+*   **해결**: 사용되지 않는 `import React` 구문을 제거하거나, 필요 시 `import { type FC } from 'react'`와 같이 타입 임포트로 변경.
+*   **대상 파일**: `LevelConfigPage.tsx`, `V2AdminLoginPage.tsx` 등.
+
 ## 3. 교훈 및 예방 조치 (Lessons Learned)
 1.  **경로 상수화**: `/v2/admin`과 같은 기본 경로(Base Path)를 상수(`ADMIN_BASE_PATH`)로 관리하여 타이핑 오류 방지 필요.
 2.  **Safe Navigation**: UI 컴포넌트 개발 시 API 응답이 `null` 또는 `undefined`일 수 있음을 항상 가정하고(특히 Optional Chaining 사용), 스켈레톤 UI나 Fallback 처리를 기본 적용해야 함.
 3.  **프로세스 확인**: 연결 오류 시 설정 파일(`vite.config.ts`)부터 확인하기보다, 실제 프로세스 실행 여부(`docker ps`, 포트 확인)를 먼저 검증하는 것이 효율적임.
+4.  **Lint/TSC 사전 검사**: 빌드 서버(Docker)로 코드를 넘기기 전, 로컬에서 `npx tsc --noEmit`을 실행하여 미사용 변수나 타입 오류가 없는지 미리 확인하는 습관 필요.
