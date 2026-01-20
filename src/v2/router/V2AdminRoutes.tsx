@@ -17,7 +17,7 @@ import DiceConfigPage from "../admin/pages/game/DiceConfigPage";
 import LotteryConfigPage from "../admin/pages/game/LotteryConfigPage";
 import TicketInventoryPage from "../admin/pages/economy/TicketInventoryPage";
 import MessageSenderPage from "../admin/pages/marketing/MessageSenderPage";
-import UserSegmentPage from "../admin/pages/marketing/UserSegmentPage";
+import UserSegmentPage from "../admin/pages/users/UserSegmentPage";
 import SurveyPage from "../admin/pages/marketing/SurveyPage";
 import HealthPage from "../admin/pages/system/HealthPage";
 import ModalControlPage from "../admin/pages/system/ModalControlPage";
@@ -62,7 +62,7 @@ const V2AdminRoutes: React.FC = () => {
 
           {/* Marketing */}
           <Route path="marketing/messages" element={<MessageSenderPage />} />
-          <Route path="marketing/segments" element={<UserSegmentPage />} />
+          <Route path="users/segments" element={<UserSegmentPage />} />
           <Route path="marketing/surveys" element={<SurveyPage />} />
 
           {/* System */}

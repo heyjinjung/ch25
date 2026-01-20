@@ -18,6 +18,7 @@ import {
 import { BentoGrid } from "../../components/ui/BentoGrid";
 import { QuickActionCard } from "../../components/ui/QuickActionCard";
 import { PulsatingDot } from "../../components/ui/PulsatingDot";
+import { NumberTicker } from "../../components/ui/NumberTicker";
 import { useOpsStatus } from "../../../hooks/useV2Admin";
 import { useState } from "react";
 import { UserDetailDrawer } from "../users/UserDetailDrawer";
@@ -103,19 +104,41 @@ export default function OpsDashboard() {
         />
         <QuickActionCard
           label="오늘 매출 (Revenue)"
-          description={`₩ ${status?.metrics?.todayRevenue?.toLocaleString() ?? "0"}`}
+          description={
+            <div className="flex items-baseline gap-1">
+              <span className="text-xs text-zinc-500 mr-1">₩</span>
+              <NumberTicker
+                value={status?.metrics?.todayRevenue ?? 0}
+                className="text-lg font-bold"
+              />
+            </div>
+          }
           icon={CreditCard}
           onClick={() => navigate("/v2/admin/economy/vault")}
         />
         <QuickActionCard
           label="골든 레이더"
-          description={`Risk: ${status?.goldenRadar?.churnRisks ?? 0} / High: ${status?.goldenRadar?.highRollers ?? 0}`}
+          description={
+            <div className="flex gap-2">
+              <span className="text-red-400">Risk: {status?.goldenRadar?.churnRisks ?? 0}</span>
+              <span className="text-zinc-500">/</span>
+              <span className="text-emerald-400">High: {status?.goldenRadar?.highRollers ?? 0}</span>
+            </div>
+          }
           icon={ShieldAlert}
           className="border-red-500/30 bg-red-500/5 hover:bg-red-500/10"
         />
         <QuickActionCard
           label="현재 접속자"
-          description={`Active: ${status?.goldenRadar?.onlineNow ?? 0}명`}
+          description={
+            <div className="flex items-center gap-1">
+              <NumberTicker
+                value={status?.goldenRadar?.onlineNow ?? 0}
+                className="text-lg font-bold"
+              />
+              <span className="text-xs text-zinc-500">명</span>
+            </div>
+          }
           icon={Users}
           onClick={() => navigate("/v2/admin/users")}
         />

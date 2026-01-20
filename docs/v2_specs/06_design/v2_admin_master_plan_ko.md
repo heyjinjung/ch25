@@ -218,7 +218,7 @@ graph TD
 | 화면명 | 세부 기능 | UI 요소 |
 | :--- | :--- | :--- |
 | **OpsDashboard** | 1. 실시간 매출 롤링 표시 <br> 2. 골든 레이더 위기/기회 유저 표시 <br> 3. 시스템 상태 신호등 <br> 4. Quick Action 버튼 (CSV, 메시지, 모달) | `BentoGrid`, `NumberTicker`, `PulsatingDot`, `QuickActionCard` |
-| **MarketingCenterPage** | 1. 일별/주별/월별 매출 차트 <br> 2. 신규 가입자 추이 <br> 3. 활성 유저 지표 <br> 4. 캠페인 성과 요약 | `AreaChart`, `Tabs`, `Card`, `Badge` |
+| **MarketingCenterPage** | 1. 신규 가입자 추이 <br> 3. 활성 유저 지표 <br> 4. 캠페인 성과 요약 | `Tabs`, `Card`, `Badge` |
 | **OpsLogPage** | 1. 로그 검색 및 필터 <br> 2. CSV 파일 업로드 <br> 3. 로그 상세 보기 <br> 4. JSON 포맷 하이라이팅 | `Table`, `Command`, `Input(File)`, `LogViewer` |
 | **HealthPage** | 1. API 서버 상태 <br> 2. DB 연결 상태 <br> 3. 외부 서비스 상태 <br> 4. 최근 에러 로그 | `Card`, `Badge`, `AnimatedList` |
 
