@@ -34,6 +34,7 @@ import {
   MessageSquare,
   Target,
   Trophy,
+  RefreshCw,
 } from "lucide-react";
 import {
   useRef,
@@ -60,6 +61,7 @@ import {
   useUserActivityLogs,
   useUserInventory,
   useUserNotes,
+  useVaultUserLedger,
 } from "../../../hooks/useV2Admin";
 import { REWARD_ITEMS } from "../../../constants/rewardItems";
 import { Textarea } from "../../../components/ui/textarea";
@@ -159,7 +161,7 @@ export function UserDetailDrawer({
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className="w-[90%] sm:w-[900px] bg-[#121214] border-l border-white/10 p-0 text-white overflow-y-auto">
+      <SheetContent className="w-[90%] sm:w-[1200px] bg-[#121214] border-l border-white/10 p-0 text-white overflow-y-auto">
         {isLoading || !user ? (
           <div className="h-full flex flex-col items-center justify-center text-zinc-500 gap-4">
             <SheetHeader className="sr-only">
@@ -511,89 +513,7 @@ export function UserDetailDrawer({
 
                   {/* 3. 금고 (Vault) */}
                   <TabsContent value="vault" className="m-0 space-y-4">
-                    <div className="flex justify-between items-center bg-[#18181B] p-4 rounded-xl border border-white/5">
-                      <div>
-                        <div className="text-sm text-zinc-500">
-                          현재 금고 잔액
-                        </div>
-                        <div className="text-2xl font-mono text-white font-bold flex items-center gap-2">
-                          ₩ {(user.vaultBalance || 0).toLocaleString()}
-                        </div>
-                      </div>
-                      <Button
-                        variant="outline"
-                        className="border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/10"
-                        onClick={() => {
-                          setWalletEditorInitialType("VAULT");
-                          setIsWalletEditorOpen(true);
-                        }}
-                      >
-                        <Edit className="w-4 h-4 mr-2" />
-                        강제 수정
-                      </Button>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <Card className="bg-[#18181B] border-white/5">
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-sm text-zinc-400">
-                            누적 출금
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="text-2xl text-zinc-300 font-bold">
-                            ₩{" "}
-                            {((user.totalDeposit || 0) * 0.3).toLocaleString()}
-                          </div>
-                        </CardContent>
-                      </Card>
-                      <Card className="bg-[#18181B] border-white/5">
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-sm text-zinc-400">
-                            총 입금
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="text-2xl text-emerald-400 font-bold">
-                            ₩ {(user.totalDeposit || 0).toLocaleString()}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </div>
-
-                    <div className="rounded-xl bg-[#18181B] border border-white/5 overflow-hidden">
-                      <div className="p-3 border-b border-white/5 bg-zinc-900/30 text-[10px] font-bold uppercase tracking-wider text-zinc-500">
-                        입출금 트랜잭션
-                      </div>
-                      <Table>
-                        <TableHeader>
-                          <TableRow className="border-white/5 hover:bg-transparent">
-                            <TableHead className="text-[10px] h-8 text-zinc-400">
-                              구분
-                            </TableHead>
-                            <TableHead className="text-[10px] h-8 text-zinc-400">
-                              금액
-                            </TableHead>
-                            <TableHead className="text-[10px] h-8 text-zinc-400">
-                              상태
-                            </TableHead>
-                            <TableHead className="text-right text-[10px] h-8 text-zinc-400">
-                              일시
-                            </TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          <TableRow>
-                            <TableCell
-                              colSpan={4}
-                              className="h-24 text-center text-zinc-600"
-                            >
-                              금고 입출금 내역 API 준비 중입니다.
-                            </TableCell>
-                          </TableRow>
-                        </TableBody>
-                      </Table>
-                    </div>
+                    <UserVaultLedgerSection userId={userId} />
                   </TabsContent>
 
                   {/* 4. 인벤토리 (Inventory) */}
@@ -951,5 +871,115 @@ export function UserDetailDrawer({
         }
       `}</style>
     </Sheet>
+  );
+}
+
+function UserVaultLedgerSection({ userId }: { userId: number | null }) {
+  const { data, isLoading, refetch } = useVaultUserLedger(userId);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h3 className="text-sm font-medium text-zinc-400">
+          금고 입출금 내역 (Vault Ledger)
+        </h3>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => refetch()}
+          className="h-7 text-xs border-white/10 hover:bg-white/5"
+        >
+          <RefreshCw className={cn("w-3 h-3 mr-1", isLoading && "animate-spin")} />
+          새로고침
+        </Button>
+      </div>
+
+      <div className="rounded-md border border-white/5 overflow-hidden">
+        <Table>
+          <TableHeader className="bg-white/5">
+            <TableRow className="border-white/5 hover:bg-transparent">
+              <TableHead className="text-[10px] h-8 text-zinc-400">
+                일시
+              </TableHead>
+              <TableHead className="text-[10px] h-8 text-zinc-400">
+                변동액
+              </TableHead>
+              <TableHead className="text-[10px] h-8 text-zinc-400">
+                잔액 (After)
+              </TableHead>
+              <TableHead className="text-[10px] h-8 text-zinc-400 text-right">
+                사유
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={4} className="h-32 text-center text-zinc-500">
+                  <div className="flex flex-col items-center gap-2">
+                    <RefreshCw className="w-5 h-5 animate-spin" />
+                    <span>내역을 불러오는 중...</span>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : !data?.items || data.items.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={4}
+                  className="h-32 text-center text-zinc-600"
+                >
+                  거래 내역이 없습니다.
+                </TableCell>
+              </TableRow>
+            ) : (
+              data.items.map((item) => (
+                <TableRow
+                  key={item.id}
+                  className="border-white/5 hover:bg-white/[0.02]"
+                >
+                  <TableCell className="text-[10px] font-mono text-zinc-500">
+                    {new Date(item.created_at).toLocaleString()}
+                  </TableCell>
+                  <TableCell
+                    className={cn(
+                      "text-xs font-bold font-mono",
+                      item.amount > 0 ? "text-emerald-400" : "text-red-400"
+                    )}
+                  >
+                    {item.amount > 0 ? "+" : ""}
+                    {item.amount.toLocaleString()} P
+                  </TableCell>
+                  <TableCell className="text-xs font-mono text-zinc-300">
+                    {item.balance_after.toLocaleString()} P
+                  </TableCell>
+                  <TableCell className="text-[10px] text-zinc-500 text-right max-w-[200px] truncate">
+                    {item.reason || "-"}
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+      
+      {data && (
+         <div className="grid grid-cols-3 gap-2 mt-4 text-xs">
+            <div className="bg-black/20 p-2 rounded border border-white/5 text-center">
+                <div className="text-zinc-500 mb-1">총 입금</div>
+                <div className="text-emerald-400 font-bold">+{data.total_in.toLocaleString()}</div>
+            </div>
+            <div className="bg-black/20 p-2 rounded border border-white/5 text-center">
+                <div className="text-zinc-500 mb-1">총 출금</div>
+                <div className="text-red-400 font-bold">{data.total_out.toLocaleString()}</div>
+            </div>
+             <div className="bg-black/20 p-2 rounded border border-white/5 text-center">
+                <div className="text-zinc-500 mb-1">순 변동</div>
+                <div className={cn("font-bold", data.net_change >= 0 ? "text-emerald-400" : "text-red-400")}>
+                    {data.net_change > 0 ? "+" : ""}{data.net_change.toLocaleString()}
+                </div>
+            </div>
+         </div>
+      )}
+    </div>
   );
 }
