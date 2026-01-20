@@ -168,7 +168,7 @@ def upsert_feature_schedule(
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
     admin_id, admin_role = admin_info
-    if admin_role not in ["SUPER_ADMIN", "OPERATOR"]:
+    if admin_role not in ["ADMIN", "OPERATOR", "SUPER_ADMIN"]:
         raise HTTPException(status_code=403, detail="NOT_AUTHORIZED")
     return AdminFeatureScheduleResponse(
         id=1,
@@ -213,6 +213,6 @@ def update_feed_config(
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
     admin_id, admin_role = admin_info
-    if admin_role not in ["SUPER_ADMIN", "OPERATOR"]:
+    if admin_role not in ["ADMIN", "OPERATOR", "SUPER_ADMIN"]:
         raise HTTPException(status_code=403, detail="NOT_AUTHORIZED")
     return FeedConfigResponse(**payload.dict())

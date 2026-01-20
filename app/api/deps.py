@@ -67,18 +67,17 @@ def get_current_admin_info(
     db: Session = Depends(get_db),
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
 ) -> tuple[int, str]:
-    """Return (admin_id, role) with JWT claim preferred, Admin 프로필 보조.
+    """Return (admin_id, role) for admin APIs.
 
-    - JWT `role` 또는 `roles[0]`가 있으면 우선 사용.
-    - 없으면 AdminUserProfile.tags 내 `ROLE_*` 첫 값을 사용.
-    - 모두 없으면 ADMIN 기본값.
+    Admin 인증은 Bearer 토큰 + role(클레임 또는 AdminUserProfile.tags의 ROLE_*)가 모두 필요하다.
+    role이 없는 일반 유저 토큰에 ADMIN을 기본 부여하면 보안상 위험하므로 금지한다.
     """
 
-    settings = get_settings()
-    admin_id = get_current_user_id(db=db, credentials=credentials)
-
     if credentials is None or not credentials.credentials:
-        return admin_id, "ADMIN"
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="AUTH_REQUIRED")
+
+    _settings = get_settings()
+    admin_id = get_current_user_id(db=db, credentials=credentials)
 
     payload = decode_access_token(credentials.credentials)
     role = payload.get("role")
@@ -99,7 +98,14 @@ def get_current_admin_info(
             if tag_role:
                 role_str = tag_role.replace("ROLE_", "", 1).upper()
 
-    return admin_id, (role_str or "ADMIN")
+    if not role_str:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="ADMIN_REQUIRED")
+
+    # Backward compatibility: treat SUPER_ADMIN as ADMIN.
+    if role_str == "SUPER_ADMIN":
+        role_str = "ADMIN"
+
+    return admin_id, role_str
 
 
 def get_current_user(

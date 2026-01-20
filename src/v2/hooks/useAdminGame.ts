@@ -49,7 +49,7 @@ export function useAdminUpdateLevel() {
     mutationFn: (vars: { level: number; data: Partial<AdminLevelDto> }) =>
       updateAdminLevel(vars.level, vars.data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["adminLevels"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "game", "levels"] });
     },
   });
 };
@@ -59,7 +59,7 @@ export const useAdminUpdateLevelGlobalConfig = () => {
   return useMutation({
     mutationFn: (data: AdminLevelGlobalConfig) => updateAdminLevelGlobalConfig(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["adminLevels"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "game", "levels"] });
     },
   });
 };

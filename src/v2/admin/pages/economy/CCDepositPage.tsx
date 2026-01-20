@@ -9,6 +9,9 @@ import {
   AlertCircle,
   RefreshCw,
   MoreVertical,
+  ChevronUp,
+  ChevronDown,
+  ChevronsUpDown,
 } from "lucide-react";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
@@ -56,6 +59,43 @@ export default function CCDepositPage() {
     isLoading,
     refetch,
   } = useAdminDepositLogs(searchTerm);
+
+  // Sorting State
+  const [sortConfig, setSortConfig] = useState<{
+    key: keyof AdminDepositLogDto | null;
+    direction: "asc" | "desc" | null;
+  }>({ key: null, direction: null });
+
+  const handleSort = (key: keyof AdminDepositLogDto) => {
+    let direction: "asc" | "desc" | null = "asc";
+    if (sortConfig.key === key) {
+      if (sortConfig.direction === "asc") direction = "desc";
+      else if (sortConfig.direction === "desc") direction = null;
+    }
+    setSortConfig({ key: direction ? key : null, direction });
+  };
+
+  const sortedLogs = [...logs].sort((a, b) => {
+    if (!sortConfig.key || !sortConfig.direction) return 0;
+
+    const aVal = a[sortConfig.key];
+    const bVal = b[sortConfig.key];
+
+    if (aVal === null || aVal === undefined) return 1;
+    if (bVal === null || bVal === undefined) return -1;
+
+    if (aVal < bVal) return sortConfig.direction === "asc" ? -1 : 1;
+    if (aVal > bVal) return sortConfig.direction === "asc" ? 1 : -1;
+    return 0;
+  });
+
+  const getSortIcon = (key: keyof AdminDepositLogDto) => {
+    if (sortConfig.key !== key)
+      return <ChevronsUpDown className="w-3 h-3 ml-1 text-zinc-600" />;
+    if (sortConfig.direction === "asc")
+      return <ChevronUp className="w-3 h-3 ml-1 text-indigo-400" />;
+    return <ChevronDown className="w-3 h-3 ml-1 text-indigo-400" />;
+  };
 
   const formatKstDateTime = (value?: string) => {
     if (!value) return "-";
@@ -194,16 +234,51 @@ export default function CCDepositPage() {
         <Table>
           <TableHeader className="bg-white/5">
             <TableRow className="border-white/5 hover:bg-transparent">
-              <TableHead className="text-zinc-400 w-[80px]">ID</TableHead>
-              <TableHead className="text-zinc-400">유저</TableHead>
-              <TableHead className="text-zinc-400">금액 (KRW)</TableHead>
-              <TableHead className="text-zinc-400">입금 날짜 (KST)</TableHead>
-              <TableHead className="text-zinc-400">작업일시</TableHead>
+              <TableHead
+                className="text-zinc-400 w-[80px] cursor-pointer hover:text-white transition-colors"
+                onClick={() => handleSort("id")}
+              >
+                <div className="flex items-center">
+                  ID {getSortIcon("id")}
+                </div>
+              </TableHead>
+              <TableHead
+                className="text-zinc-400 cursor-pointer hover:text-white transition-colors"
+                onClick={() => handleSort("nickname")}
+              >
+                <div className="flex items-center">
+                  유저 {getSortIcon("nickname")}
+                </div>
+              </TableHead>
+              <TableHead
+                className="text-zinc-400 cursor-pointer hover:text-white transition-colors"
+                onClick={() => handleSort("amount")}
+              >
+                <div className="flex items-center">
+                  금액 (KRW) {getSortIcon("amount")}
+                </div>
+              </TableHead>
+              <TableHead
+                className="text-zinc-400 cursor-pointer hover:text-white transition-colors"
+                onClick={() => handleSort("kstDate")}
+              >
+                <div className="flex items-center">
+                  입금 날짜 (KST) {getSortIcon("kstDate")}
+                </div>
+              </TableHead>
+              <TableHead
+                className="text-zinc-400 cursor-pointer hover:text-white transition-colors"
+                onClick={() => handleSort("createdAt")}
+              >
+                <div className="flex items-center">
+                  작업일시 {getSortIcon("createdAt")}
+                </div>
+              </TableHead>
               <TableHead className="text-zinc-400 w-[60px]"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {logs.length === 0 ? (
+            {sortedLogs.length === 0 ? (
               <TableRow>
                 <TableCell
                   colSpan={6}
@@ -213,7 +288,7 @@ export default function CCDepositPage() {
                 </TableCell>
               </TableRow>
             ) : (
-              logs.map((log) => (
+              sortedLogs.map((log) => (
                 <TableRow
                   key={log.id}
                   className="border-white/5 hover:bg-white/5 transition-colors"

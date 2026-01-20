@@ -25,9 +25,11 @@ router = APIRouter()
 
 
 def check_admin_permission(role: str):
-    """Check if the admin has SuperAdmin or Operator status."""
-    if role.upper() not in ["SUPERADMIN", "OPERATOR", "SUPER_ADMIN", "ADMIN"]:
-        raise HTTPException(status_code=403, detail="INSUFFICIENT_PERMISSIONS")
+    role_str = str(role or "").upper()
+    if role_str == "SUPER_ADMIN":
+        role_str = "ADMIN"
+    if role_str not in ["ADMIN", "OPERATOR"]:
+        raise HTTPException(status_code=403, detail="NOT_AUTHORIZED")
 
 
 class TicketStatsDto(BaseModel):
