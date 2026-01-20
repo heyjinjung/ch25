@@ -3,7 +3,9 @@
     "allow": [
       "Bash(docker compose:*)",
       "Bash(python -m pytest tests/v2/test_csv_import.py -v)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(npm run type-check:*)",
+      "Bash(npx tsc:*)"
     ]
   }
 }

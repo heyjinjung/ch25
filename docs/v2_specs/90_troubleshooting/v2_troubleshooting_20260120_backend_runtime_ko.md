@@ -108,6 +108,31 @@ V2 Admin API 연동 과정에서 백엔드가 재시작/런타임 에러를 발�
     3. 출금 상세 내역 모달 추가 (금고 통계 카드 클릭 시 PENDING/APPROVED/REJECTED 내역 테이블 표시)
 - **상태**: 해결됨
 
+### 2.13 Admin User 디테일 드로우 데이터 표시 이상 (0/Invalid Date)
+- **증상**: Admin 유저 디테일 드로우에서 티켓/금고 잔액이 0으로 보이거나, 날짜가 `Invalid Date`로 표시됨.
+- **원인**:
+    1. 백엔드 응답 필드명이 프론트가 기대하는 계약(camelCase)과 불일치
+    2. 레거시 데이터의 NULL/빈 값이 직렬화/파싱 단계에서 예외를 유발
+- **해결**:
+    1. 백엔드 응답 스키마를 프론트 계약(camelCase)과 정렬(필요 시 alias/serialize alias 적용)
+    2. NULL-safe 기본값을 적용하여 response_model 직렬화 및 프론트 파싱 안정화
+    3. 날짜/시간 필드는 ISO 형식 문자열로 일관되게 전달
+- **상태**: 해결됨(화면 동작 확인)
+
+### 2.14 Admin User 금고(VAULT) 강제 수정 400 (user not found)
+- **증상**: Admin UI에서 금고(VAULT) 강제 수정 시 `400 user not found`가 발생.
+- **원인**: V2 vault 서비스가 `v2_user` 테이블 row 존재를 전제로 동작하여, 운영 DB에서 v2_user가 미동기화된 경우 실패.
+- **해결**: 금고 SoT를 `User.vault_locked_balance`로 고정하고, VAULT 입금/출금이 `User`를 직접 업데이트하도록 서비스 로직 전환.
+- **상태**: 해결됨
+
+### 2.15 Admin Mission rewardType 업데이트 400 (INVALID_REWARD_TYPE)
+- **증상**: `PUT /api/v2/admin/game/missions/{id}` 요청이 `400 INVALID_REWARD_TYPE`로 실패(미션 관리 화면에서 rewardType 변경 불가).
+- **원인**: 프론트에서 전송하는 `rewardType` 값이 백엔드 `MissionRewardType` enum 허용값과 불일치.
+- **해결**:
+    1. 프론트에서 선택 옵션을 `MissionRewardType` 허용값만 노출/전송하도록 제한(MISSION_REWARD_OPTIONS)
+    2. 백엔드는 invalid 입력 시 400을 유지하여 계약 위반을 조기 차단
+- **상태**: 해결됨
+
 ---
 
 ## 3. 관찰 필요 (Known Issues)
@@ -122,3 +147,4 @@ V2 Admin API 연동 과정에서 백엔드가 재시작/런타임 에러를 발�
 - [ ] DTO 변환 전 기본값 초기화 확인
 - [ ] Enum/Literal 스키마와 DB 값 불일치 시 정규화 로직 적용
 - [ ] V1 Shim 라우터 변경 시 V2 모듈과의 순환 참조 여부 검토
+- [ ] V2 Admin 핵심 회귀 테스트 수행: `pytest -q tests/v2_tests/phase4_admin` (최근 실행 결과: 32 passed)

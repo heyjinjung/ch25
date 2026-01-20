@@ -13,7 +13,7 @@ import LevelConfigPage from "../admin/pages/game/LevelConfigPage";
 import RouletteConfigPage from "../admin/pages/game/RouletteConfigPage";
 import DiceConfigPage from "../admin/pages/game/DiceConfigPage";
 import LotteryConfigPage from "../admin/pages/game/LotteryConfigPage";
-import TicketInventoryPage from "../admin/pages/economy/TicketInventoryPage";
+import TicketInventoryTabPage from "../admin/pages/economy/TicketInventoryTabPage";
 import MarketingTabPage from "../admin/pages/marketing/MarketingTabPage";
 import UserManagementTabPage from "../admin/pages/users/UserManagementTabPage";
 import HealthPage from "../admin/pages/system/HealthPage";
@@ -59,7 +59,7 @@ const V2AdminRoutes: React.FC = () => {
           <Route path="game/golden-hour" element={<AdminGoldenHourPage />} />
 
           {/* Inventory */}
-          <Route path="inventory/tickets" element={<TicketInventoryPage />} />
+          <Route path="inventory/tickets" element={<TicketInventoryTabPage />} />
 
           {/* Marketing - Tabbed */}
           <Route path="marketing/messages" element={<MarketingTabPage />} />
