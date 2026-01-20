@@ -203,11 +203,13 @@ class UserMissionHistoryDto(BaseModel):
 class TicketLogDto(BaseModel):
     id: int
     userId: int
+    type: str  # "GRANT", "REVOKE", "USE", "EXPIRE"
     itemType: str
-    changeAmount: int
+    amount: int
     balanceAfter: int
     reason: str
-    createdAt: datetime
+    timestamp: datetime
+    adminId: Optional[str] = None
 
 
 from app.v2.schemas.v2_admin_user_summary import AdminUserSummary  # noqa: E402

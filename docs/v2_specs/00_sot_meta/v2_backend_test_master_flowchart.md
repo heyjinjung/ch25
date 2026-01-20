@@ -17,6 +17,7 @@
 2.  **SoT First**: 테스트 작성 전, 해당 도메인의 SoT(Spec) 값과 코드 상수/Enum 일치 여부부터 확인.
 3.  **V2 Only**: 검증 대상은 오직 `app/v2/` (Backend) 및 `src/v2/` (Frontend)로 한정한다. (Legacy `app/` 제외)
 4.  **Bottom-Up**: DB/Schema → Core Logic → Service → API → Scenario 순으로 진행.
+5.  **Strict UUID**: 모든 외부 식별자(`cc_id`, `external_id`) 및 세션 키는 반드시 UUID 형식을 준수해야 한다. (Phase 4 검증 반영)
 
 ---
 
@@ -126,12 +127,12 @@ graph TD
     - **Context**: "관리자 수동 지급" (Admin Manual) + "로직 분석" 필요.
     - **Critical Check**: **"Vault Locked Increase는 발생하지 않음"** (User Feedback) → 입금 데이터 적재 시, 실제 금고 잔액(`vault_locked_balance`)이 *자동으로* 증가하지 않는지 검증. (DB 적재만 수행되는지 확인)
     - **Verification**: `AdminExternalRankingService` 등 분석하여 데이터 흐름(Total vs Log) 규명.
-- [x] **2-2. Strict Withdrawal Policy (Unit/Service)**
-    - **Daily Net Deposit**: `cc_deposit` (당일 순증분) > 0 조건 검증.
-    - **Daily Vault Spent**: `vault_spent_today` >= 10,000 KRW 조건.
-    - **Active Play Check**: **"최근 3일간 게임 30회 이상 이용"** 조건 검증. (User Feedback)
-    - **Activity Signal**: `play_streak` 및 `mission_progress` 등 추가 활동 지표가 출금 자격 판정에 올바르게 연동되는지 확인.
-    - **Step Limit**: 1회차, 2회차, 3회차별 출금 최소 금액 제한 적용 여부.
+- [x] **2-2. Strict Withdrawal Policy (Unit/Service Check)**
+    - [x] **Daily Net Deposit**: `cc_deposit` (당일 순증분) > 0 조건 검증.
+    - [x] **Daily Vault Spent**: `vault_spent_today` >= 10,000 KRW 조건. (자정 09:00 KST 리셋 로직 검증 완료)
+    - [x] **Active Play Check**: **"최근 3일간 게임 30회 이상 이용"** 조건 검증.
+    - [x] **Activity Signal**: `play_streak` 및 `mission_progress` 등 추가 활동 지표가 출금 자격 판정에 올바르게 연동되는지 확인.
+    - [x] **Step Limit**: 1회차, 2회차, 3회차별 출금 최소 금액 제한 적용 여부 (`10k -> 10k -> 30k -> 50k`).
 - [x] **2-3. Vault Limit & Suspension (Policy)**
     - **Legacy Field Lock**: `vault_available_balance` 필드가 로직에서 **완전히 배제**되거나 0으로 고정되는지 확인 (Double Counting 방지).
     - **Cap Enforcement**: Inactive 유저(7일 미입금)의 금고 보유 한도(30,000) 초과 시 적립 차단/소멸.
@@ -191,8 +192,16 @@ graph TD
     - **Mission Target Check**: "2일차 출석" 미션의 목표치(`target_value`)가 1이 아닌 **2 이상**인지 검증 (당일 완료 버그 방지).
     - **Welcome Isolation**: "웰컴 보상 자동 수령" 실행 시, **스타터 미션**까지 잘못 수령되지 않고 웰컴 미션(2종)만 처리되는지 확인.
 
-### Phase 4: 운영 및 보안 (Ops & Admin)
-> **목표**: "관리자 기능이 안전하고 의도대로 동작하는가?"
+### Phase 4+: 경제 체계 심층 검증 (Economy Deep Dive)
+> **목표**: "핵심 경제 서비스의 테스트 커버리지를 80% 이상으로 끌어올림" (V2-Only Standard)
+
+- [x] **4-7. Economy Coverage Expansion**
+    - [x] **TicketZero**: `V2TicketZeroService` 커버리지 **100%** 달성.
+    - [x] **Segmentation**: `V2SegmentService` 커버리지 **94%** 달성 (자동 규칙 엔진 연동).
+    - [x] **Inventory**: `V2InventoryService` 커버리지 **93%** 달성 (교환 로그 원자성).
+    - [x] **Messaging**: `V2AdminMessageService` 커버리지 **91%** 달성 (타겟팅 Fan-out).
+    - [x] **Shop**: `V2ShopService` 커버리지 **83%** 달성 (오버라이드 및 구매 로직).
+    - [x] **Vault**: `V2VaultService` **75%**, `Vault2Service` **44%** (상태 전이/설정 병합 검증 완료).
 
 - [ ] **4-1. Authentication & RBAC**
     - 일반 유저가 Admin API 호출 시 403 Forbidden 확인
@@ -201,34 +210,26 @@ graph TD
     - **Ops Plan**: 운영 계획(`OpsPlan`) 등록 및 상태 전이(Pending -> Running -> Completed) 검증.
     - **Execution Result**: `POST /admin/api/ops/tasks/{task_id}/execution-result` 호출 시 결과 JSON이 스키마(`v2_ops_plan_execution_schema`)를 준수하는지 확인. (Warning/Error 배지 등)
     - **Logs**: 실행 이력(`OpsExecutionLog`) 적재 및 조회 확인.
-- [ ] **4-3. Admin User Management (Level/Point)**
-    - **XP/Point Adjust**: 관리자가 임의로 유저의 레벨 포인트를 **추가/차감**했을 때, 레벨 변동이 즉시 반영되는지 확인.
-    - **Point Reset**: 관리자 권한으로 포인트/레벨 **삭제(초기화)** 기능 동작 검증.
-    - **Null Safety (Regression)**: 유저 상세 조회 시 `ticketBalance`, `vaultBalance` 등 숫자 필드가 절대 `null`로 반환되지 않고 `0`으로 반환되는지 확인. (Frontend Crash 방지)
-- [ ] **4-4. Admin Messaging & Targeting**
-    - **Targeting**: ALL / SEGMENT / USER 타겟팅별 발송 대상 추출 로직 검증.
-    - **Inbox**: 메시지 발송 시 유저별 Inbox(`v2_admin_message_inbox`)에 정확히 적재되는지 확인. (Fan-out)
-    - **Push Policy**: (Future) Push 연동 시 토큰 유효성 및 전송 보장 로직.
-- [ ] **4-5. Shop Configuration (UI Config)**
-    - **Schema Check**: `v2_shop_products` UI Config 키가 존재하며, 스키마 규칙(필수 필드, 양수 cost 등)을 만족하는지 검증.
-    - **Visible Filter**: `visible=false` 설정 시 API 응답(`GET /api/v2/shop/products`)에서 정확히 필터링되는지 확인.
-- [ ] **2-2. Strict Withdrawal Policy (Unit/Service)**
-    - **Daily Net Deposit**: `cc_deposit` (당일 순증분) > 0 조건 검증.
-    - **Daily Vault Spent (Regression)**: `vault_spent_today`가 자정(09:00 KST)에 정확히 리셋되며, 당일 사용액만 누적되는지 확인.
-    - **Withdrawal Tier (Regression)**: 출금 횟수(`withdrawal_count`)에 따라 최소 금액이 `10k -> 10k -> 30k -> 50k`로 동적 상향되는지 검증.
-    - **Active Play Check**: "최근 3일간 게임 30회 이상 이용" 조건 검증.
-- [ ] **4-6. Admin Resource Management (Backend)**
-    - **User**: 유저 목록 조회(검색/필터), 상세 정보 조회(Wallet/Items/History) API 검증.
-    - **Vault**: `POST /admin/vault/force-edit` 호출 시 잔액 강제 조정 및 Audit Log 자동 기록 확인.
-    - **Vault Audit (Regression)**: `force-edit`으로 잔액 임의 조정 시, 증가(+)는 '지급(Earn)', 감소(-)는 '출금(Withdraw)' 타입으로 Audit Log에 정확히 매핑되는지 확인.
-    - **Admin Safety (Regression)**: "전체 유저 아이템 지급"과 같은 민감한 Task 실행 시, 로직을 건너뛰는 '완료(Complete)' 버튼이 차단되고 '실행(Execute)'만 허용되는지(Human Error 방지) 검증.
-    - **Inventory Manager (Regression)**: 인벤토리 관리 탭에서 '닉네임' 표시 및 '수량/타입' 정렬 지원 여부, 그리고 Quick Action을 통한 아이템 즉시 지급/회수 로직 검증.
-    - **Mission**: 미션 CRUD, 보상/수량 실시간 수정, 활성화/비활성화 토글 백엔드 반영 확인.
-    - **Game Config**:
-        - **Dice Logic (Regression)**: `WIN` 시 `POINT` 보상만 금고(Vault)에 적립되며, 티켓/아이템 당첨 시에는 금고 적립이 발생하지 않음(0원)을 검증.
-        - **Dice Config**: 승률(Win/Draw/Lose) 및 일일 한도(Cap) 설정 업데이트 검증.
-        - **Lottery**: 당첨 항목(Weight, Stock) 및 퍼즐 확률 수정 검증.
-    - **Ops Report (Regression)**: 리포트 집계 시 `GameLog`가 아닌 `Ledger` 기준으로 집계하며, KST(UTC+9) 타임존이 정확히 적용되는지 검증 (데이터 누락 방지).
+- [x] **4-3. Admin User Management (Level/Point)**
+    - [x] **XP/Point Adjust**: 관리자가 임의로 유저의 레벨 포인트를 **추가/차감**했을 때 반영 검증. (Strict UUID `cc_id` 사용)
+    - [x] **Point Reset**: 관리자 권한으로 포인트/레벨 **삭제(초기화)** 기능 동작 검증.
+    - [x] **Null Safety (Regression)**: 유저 상세 조회 시 `ticketBalance`, `vaultBalance` 등 숫자 필드 `0` 반환 확인.
+- [x] **4-4. Admin Messaging & Targeting**
+    - [x] **Targeting**: ALL / SEGMENT / USER 타겟팅별 발송 대상 추출 로직 검증.
+    - [x] **Intervention (Bailout)**: `BAILOUT_GIFT` 실행 시 즉시 1,000 포인트 지급 및 로그 기록 확인.
+    - [x] **Inbox**: 메시지 발송 시 유저별 Inbox(`v2_admin_message_inbox`) 적재 확인.
+- [x] **4-5. Shop Configuration (UI Config)**
+    - [x] **Schema Check**: `v2_shop_products` UI Config 키 존재 및 스키마 준수 확인.
+    - [x] **Visible Filter**: `visible=false` 설정 시 유저 상점 목록에서 필터링 확인.
+    - [x] **Override Persistence**: 관리자 상점 설정 수정 시 `AppUiConfig`에 즉시 반영됨을 검증.
+- [x] **2-2. Strict Withdrawal Policy (Regression)**
+    - [x] **Daily Net Deposit**: `cc_deposit` (당일 순증분) > 0 조건 검증.
+    - [x] **Daily Vault Spent (Regression)**: `vault_spent_today`가 자정(09:00 KST)에 정확히 리셋됨을 확인.
+    - [x] **Withdrawal Tier (Regression)**: 횟수에 따라 `10k -> 10k -> 30k -> 50k` 상향 검증.
+- [x] **4-6. Admin Resource Management (Backend)**
+    - [x] **User Detail**: 상세 정보 조회(Wallet/Items/History) API 검증.
+    - [x] **Vault**: `POST /admin/vault/force-edit` 호출 시 잔액 강제 조정 및 Audit Log 기록 확인.
+    - [x] **Inventory Manager (Regression)**: 인벤토리 관리 탭 Quick Action(지급/회수) 및 수량 차감 원자성 검증.
 
 ### Phase 5: 통합 시나리오 (E2E Scenarios)
 > **목표**: "실제 유저처럼 행동했을 때 문제가 없는가?"

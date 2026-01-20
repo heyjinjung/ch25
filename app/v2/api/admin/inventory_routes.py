@@ -104,11 +104,13 @@ def get_inventory_logs(
         TicketLogDto(
             id=log.id,
             userId=log.user_id,
+            type="GRANT" if log.change_amount > 0 else "USE",
             itemType=log.item_type,
-            changeAmount=log.change_amount,
+            amount=abs(log.change_amount),
             balanceAfter=log.balance_after,
             reason=log.reason,
-            createdAt=log.created_at,
+            timestamp=log.created_at,
+            adminId=log.related_id,
         )
         for log in logs
     ]
