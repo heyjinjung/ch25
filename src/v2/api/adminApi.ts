@@ -46,6 +46,8 @@ export interface AdminMissionDto {
   category: "DAILY" | "WEEKLY" | "NEW_USER" | "SPECIAL_EVENT";
   title: string;
   condition: string;
+  targetValue: number;
+  logicKey: string;
   rewardType: string;
   rewardAmount: number;
   isActive: boolean;
@@ -593,9 +595,77 @@ export const deleteAdminDepositLog = async (id: number): Promise<void> => {
 // Shop API
 // ============================================================================
 
+export interface AdminProductDto {
+  id: number;
+  sku: string;
+  name: string;
+  price: number; // Legacy field (= costAmount)
+  costType: string;
+  costAmount: number;
+  rewardType: string;
+  rewardAmount: number;
+  isVisible: boolean;
+  category: string;
+  sortOrder: number;
+  dailyLimit: number | null;
+  description: string | null;
+}
+
+export interface AdminProductCreateRequest {
+  sku: string;
+  name: string;
+  cost_type?: string;
+  cost_amount: number;
+  reward_type: string;
+  reward_amount: number;
+  is_visible?: boolean;
+  sort_order?: number;
+  daily_limit?: number | null;
+  description?: string | null;
+}
+
+export interface AdminProductUpdateRequest {
+  name?: string;
+  cost_type?: string;
+  cost_amount?: number;
+  reward_type?: string;
+  reward_amount?: number;
+  is_visible?: boolean;
+  sort_order?: number;
+  daily_limit?: number | null;
+  description?: string | null;
+}
+
 export const getAdminProducts = async (): Promise<AdminProductDto[]> => {
   const response = await v2Client.get<AdminProductDto[]>(
     "/api/v2/admin/shop/products",
+  );
+  return response.data;
+};
+
+export const createAdminProduct = async (
+  data: AdminProductCreateRequest,
+): Promise<AdminProductDto> => {
+  const response = await v2Client.post<AdminProductDto>("/api/v2/admin/shop/products", data);
+  return response.data;
+};
+
+export const updateAdminProduct = async (
+  productId: number,
+  data: AdminProductUpdateRequest,
+): Promise<{ success: boolean }> => {
+  const response = await v2Client.put<{ success: boolean }>(
+    `/api/v2/admin/shop/products/${productId}`,
+    data,
+  );
+  return response.data;
+};
+
+export const deleteAdminProduct = async (
+  productId: number,
+): Promise<{ success: boolean }> => {
+  const response = await v2Client.delete<{ success: boolean }>(
+    `/api/v2/admin/shop/products/${productId}`,
   );
   return response.data;
 };
@@ -685,9 +755,8 @@ export const updateMission = async (
 };
 
 export const createAdminMission = async (
-  data: Omit<AdminMissionDto, "id" | "isActive"> & {
-    targetValue: number;
-    logicKey: string;
+  data: Omit<AdminMissionDto, "id"> & {
+    isActive?: boolean;
   },
 ): Promise<void> => {
   await v2Client.post("/api/v2/admin/game/missions", data);
@@ -1482,6 +1551,7 @@ export interface VaultLedgerResponseDto {
   total_in: number;
   total_out: number;
   net_change: number;
+  current_balance: number;
   items: VaultLedgerItemDto[];
 }
 
@@ -1568,3 +1638,5 @@ export const getWithdrawalDetails = async (
   );
   return response.data;
 };
+
+

@@ -1,7 +1,7 @@
 문서 타입: 핵심 로직/정책
-버전: v1.2
-작성일: 2026-01-19
-작성자: Antigravity Agent
+버전: v1.3
+작성일: 2026-01-21
+작성자: GitHub Copilot
 대상: BE/FE/기획
 상태: SoT
 
@@ -17,7 +17,7 @@ V2 시스템은 자산을 성격에 따라 3가지 카테고리로 엄격히 구
 | :--- | :--- | :--- | :--- | :--- |
 | **Cash** | `Vault` | `User.vault_locked_balance` | 현금성 자산, 출금 가능, 유효기간 존재 | (구) `KRW_POINT` |
 | **Token** | `GameWallet` | `UserGameWallet.balance` | 게임 내 재화, 대체 가능(Fungible) | `ROULETTE_TICKET`, `DICE_TICKET` |
-| **Item** | `Inventory` | `UserInventoryItem.quantity` | 소비성 아이템, 보관함 (비대체성 또는 스택형) | `VOUCHER_*`, `RANDOM_BOX` |
+| **Item** | `Inventory` | `UserInventoryItem.quantity` | 소비성 아이템, 보관함 (비대체성 또는 스택형) | `*_GIFTICON_*` |
 
 > **Note**: `VAULT` (Virtual Token)는 상점 등에서 `User.vault_locked_balance`를 지칭하기 위한 가상의 토큰 타입이다.
 
@@ -50,10 +50,14 @@ V2 시스템은 자산을 성격에 따라 3가지 카테고리로 엄격히 구
 `UserInventoryItem` 테이블에 저장되는 문자열 키.
 | ItemType | 설명 | 효과/로직 |
 | :--- | :--- | :--- |
-| `VOUCHER_STARBUCKS` | 교환권 | 오프라인 기프티콘 사용을 위한 바코드 노출 |
-| `RANDOM_BOX_A` | 랜덤박스 | 사용 시 확률에 따라 Token/Point 획득 |
-| `STREAK_FREEZER` | 기능성 | 스트릭 초기화 방어 (자동/수동 사용) |
-| `STARTER_PACK` | 번들 | 사용 시 다수의 Ticket/Point가 Wallet으로 지급 |
+| `CHICKEN_GIFTICON_5000` | 치킨 기프티콘 5천원 | 기프티콘 보관/사용 |
+| `CHICKEN_GIFTICON_10000` | 치킨 기프티콘 1만원 | 기프티콘 보관/사용 |
+| `STARBUCKS_GIFTICON_2000` | 스타벅스 기프티콘 2천원 | 기프티콘 보관/사용 |
+| `STARBUCKS_GIFTICON_10000` | 스타벅스 기프티콘 1만원 | 기프티콘 보관/사용 |
+| `PIZZA_GIFTICON_5000` | 피자 기프티콘 5천원 | 기프티콘 보관/사용 |
+| `PIZZA_GIFTICON_10000` | 피자 기프티콘 1만원 | 기프티콘 보관/사용 |
+| `GOOGLE_GIFTICON_5000` | 구글 기프트카드 5천원 | 기프티콘 보관/사용 |
+| `GOOGLE_GIFTICON_10000` | 구글 기프트카드 1만원 | 기프티콘 보관/사용 |
 
 ### 4.2. 사용 로직 (Usage Logic)
 1.  **Client**: `POST /api/inventory/use` `{item_type, quantity}`
@@ -76,16 +80,17 @@ TABLE user_inventory_item (
     UNIQUE(user_id, item_type)
 )
 ```
-게임 티켓 3종 (ROULETTE/DICE/LOTTERY_TICKET)
-금고 (VAULT)
-프리미엄 티켓 & 조각 4종 (GOLD_KEY_TICKET, DIAMOND_TICKET 등)
-복권 퍼즐 4종 (PUZZLE_C1, C2, J, M)
-재화 (DIAMOND)
-기프티콘 8종 (SoT 정의된 것만)
-특수 (NONE)
+공통 지급 아이템 목록(금고는 별도 관리)
+- 게임 티켓 3종 (ROULETTE_TICKET, DICE_TICKET, LOTTERY_TICKET)
+- 프리미엄 티켓 2종 (GOLD_KEY_TICKET, DIAMOND_TICKET)
+- 조각 2종 (GOLD_KEY_FRAGMENT, DIAMOND_FRAGMENT)
+- 퍼즐 4종 (PUZZLE_C1, PUZZLE_C2, PUZZLE_J, PUZZLE_M)
+- 재화 1종 (DIAMOND)
+- 기프티콘 8종 (SoT 정의된 것만)
+- 특수 1종 (NONE)
 
 ## 6. 변경 이력
-- v1.3 (2026-01-20, Antigravity Agent): UI 라벨 표준화 (괄호 설명 제거) 및 문서 정리.
+- v1.3 (2026-01-21, GitHub Copilot): 공통 지급 아이템 목록 및 인벤토리 아이템 타입을 기프티콘 중심으로 정리.
 - v1.2 (2026-01-19, Antigravity Agent): V2 Ticket Enum SoT 기준으로 토큰 명칭 정정 (`_TICKET` suffix 통일).
 - v1.1 (2026-01-19, Antigravity Agent): 실제 DB 필드명(`vault_locked_balance`, `UserGameWallet`)과 매핑 보정.
 - v1.0 (2026-01-19, Antigravity Agent): Wallet/Inventory 분리 원칙 확립.

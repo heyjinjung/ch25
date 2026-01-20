@@ -32,49 +32,14 @@ import {
 } from "../../../components/ui/dialog";
 import { Button } from "../../../components/ui/button";
 import { Label } from "../../../components/ui/label";
-import { Ticket, Gift, Coins, Plus, Trash2 } from "lucide-react";
+import { Ticket, Gift, Coins, Plus, Trash2, Edit2 } from "lucide-react";
+import { REWARD_ITEMS } from "../../../constants/rewardItems";
 
-type MissionRewardTypeValue =
-  | "NONE"
-  | "DIAMOND"
-  | "GOLD_KEY"
-  | "DIAMOND_KEY"
-  | "CASH_UNLOCK"
-  | "TICKET_BUNDLE"
-  | "TICKET_ROULETTE"
-  | "TICKET_LOTTERY"
-  | "TICKET_DICE"
-  | "POINT"
-  | "GIFTICON_BAEMIN"
-  | "GIFTICON_COMPOSE"
-  | "CC_POINT"
-  | "GAME_XP"
-  | "TICKET"
-  | "BUNDLE";
-
-const MISSION_REWARD_OPTIONS: readonly {
-  value: MissionRewardTypeValue;
-  label: string;
-}[] = [
-  { value: "POINT", label: "금고 포인트 (P)" },
-  { value: "TICKET_ROULETTE", label: "룰렛 티켓" },
-  { value: "TICKET_DICE", label: "다이스 티켓" },
-  { value: "TICKET_LOTTERY", label: "복권 티켓" },
-  { value: "DIAMOND", label: "다이아몬드" },
-  { value: "TICKET_BUNDLE", label: "티켓 번들" },
-  { value: "GIFTICON_BAEMIN", label: "기프티콘(배민)" },
-  { value: "GIFTICON_COMPOSE", label: "기프티콘(컴포즈)" },
-  // 마이그레이션/표준 타입(백엔드 enum에 존재)
-  { value: "CC_POINT", label: "CC 포인트" },
-  { value: "GAME_XP", label: "게임 XP" },
-  { value: "TICKET", label: "만능 티켓" },
-  { value: "BUNDLE", label: "번들" },
-  // 기타
-  { value: "GOLD_KEY", label: "골드 키" },
-  { value: "DIAMOND_KEY", label: "다이아 키" },
-  { value: "CASH_UNLOCK", label: "출금 잠금 해제" },
-  { value: "NONE", label: "없음 (보상 없음)" },
-] as const;
+/**
+ * V2 SoT-compliant mission reward options
+ * 근거: docs/v2_specs/01_core/v2_reward_type_standard_sot_ko.md
+ */
+const MISSION_REWARD_OPTIONS = REWARD_ITEMS;
 
 // Mock Categories for Tabs
 const CATEGORIES = ["DAILY", "WEEKLY", "NEW_USER", "SPECIAL_EVENT"];
@@ -87,11 +52,13 @@ export default function MissionManagerPage() {
 
   const [activeTab, setActiveTab] = useState("DAILY");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editForm, setEditForm] = useState<AdminMissionDto | null>(null);
   const [createForm, setCreateForm] = useState({
     category: "DAILY",
     title: "",
     condition: "",
-    rewardType: "POINT",
+    rewardType: "VAULT",
     rewardAmount: 100,
     targetValue: 1,
     logicKey: "PLAY_GAME",
@@ -105,7 +72,7 @@ export default function MissionManagerPage() {
           category: "DAILY",
           title: "",
           condition: "",
-          rewardType: "POINT",
+          rewardType: "VAULT",
           rewardAmount: 100,
           targetValue: 1,
           logicKey: "PLAY_GAME",
@@ -118,6 +85,33 @@ export default function MissionManagerPage() {
     if (confirm("정말로 이 미션을 삭제하시겠습니까?")) {
       deleteMutation.mutate(id);
     }
+  };
+
+  const openEdit = (mission: AdminMissionDto) => {
+    setEditForm({ ...mission });
+    setIsEditOpen(true);
+  };
+
+  const handleSaveEdit = () => {
+    if (!editForm) return;
+    updateMutation.mutate(
+      {
+        id: editForm.id,
+        data: {
+          category: editForm.category,
+          title: editForm.title,
+          condition: editForm.condition,
+          targetValue: editForm.targetValue,
+          logicKey: editForm.logicKey,
+          rewardType: editForm.rewardType,
+          rewardAmount: editForm.rewardAmount,
+          isActive: editForm.isActive,
+        },
+      },
+      {
+        onSuccess: () => setIsEditOpen(false),
+      },
+    );
   };
 
   // Filter missions by active tab
@@ -133,19 +127,54 @@ export default function MissionManagerPage() {
 
   const getRewardIcon = (type: string) => {
     switch (type) {
+      // V2 SoT: Game Tickets
+      case "ROULETTE_TICKET":
+      case "DICE_TICKET":
+      case "LOTTERY_TICKET":
+        return <Ticket className="w-4 h-4 text-emerald-400" />;
+      // V2 SoT: Vault
+      case "VAULT":
+        return <Coins className="w-4 h-4 text-yellow-400" />;
+      // V2 SoT: Currency
+      case "DIAMOND":
+        return <Coins className="w-4 h-4 text-sky-400" />;
+      // V2 SoT: Premium Tickets
+      case "GOLD_KEY_TICKET":
+      case "DIAMOND_TICKET":
+        return <Gift className="w-4 h-4 text-purple-400" />;
+      // V2 SoT: Fragments
+      case "GOLD_KEY_FRAGMENT":
+      case "DIAMOND_FRAGMENT":
+        return <Gift className="w-4 h-4 text-amber-400" />;
+      // V2 SoT: Puzzle Pieces
+      case "PUZZLE_C1":
+      case "PUZZLE_C2":
+      case "PUZZLE_J":
+      case "PUZZLE_M":
+        return <Gift className="w-4 h-4 text-indigo-400" />;
+      // V2 SoT: Gifticoms
+      case "CHICKEN_GIFTICON_5000":
+      case "CHICKEN_GIFTICON_10000":
+      case "STARBUCKS_GIFTICON_2000":
+      case "STARBUCKS_GIFTICON_10000":
+      case "PIZZA_GIFTICON_5000":
+      case "PIZZA_GIFTICON_10000":
+      case "GOOGLE_GIFTICON_5000":
+      case "GOOGLE_GIFTICON_10000":
+        return <Gift className="w-4 h-4 text-pink-400" />;
+      // V2 SoT: Special
+      case "NONE":
+        return null;
+      // Legacy support (백엔드가 아직 변환 전인 경우)
       case "TICKET_ROULETTE":
       case "TICKET_DICE":
       case "TICKET_LOTTERY":
-        return <Ticket className="w-4 h-4 text-emerald-400" />;
+        return <Ticket className="w-4 h-4 text-emerald-400 opacity-50" />;
       case "POINT":
-        return <Coins className="w-4 h-4 text-yellow-400" />;
-      case "DIAMOND":
-        return <Coins className="w-4 h-4 text-sky-400" />;
-      case "TICKET_BUNDLE":
-        return <Gift className="w-4 h-4 text-purple-400" />;
-      case "GIFTICON_BAEMIN":
-      case "GIFTICON_COMPOSE":
-        return <Gift className="w-4 h-4 text-pink-400" />;
+        return <Coins className="w-4 h-4 text-yellow-400 opacity-50" />;
+      case "GOLD_KEY":
+      case "DIAMOND_KEY":
+        return <Gift className="w-4 h-4 text-purple-400 opacity-50" />;
       default:
         return null;
     }
@@ -285,7 +314,16 @@ export default function MissionManagerPage() {
                         handleUpdate(mission.id, "isActive", checked)
                       }
                     />
-                    
+
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-zinc-500 hover:text-indigo-400 hover:bg-indigo-500/10"
+                      onClick={() => openEdit(mission)}
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </Button>
+
                     <Button
                       variant="ghost"
                       size="icon"
@@ -330,7 +368,7 @@ export default function MissionManagerPage() {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="title" className="text-right text-zinc-400">
                 제목
@@ -441,6 +479,145 @@ export default function MissionManagerPage() {
               className="bg-emerald-500 hover:bg-emerald-600 text-white"
             >
               생성
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent className="bg-[#18181B] border-white/10 text-white">
+          <DialogHeader>
+            <DialogTitle>미션 편집</DialogTitle>
+          </DialogHeader>
+          {editForm && (
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label className="text-right text-zinc-400">카테고리</Label>
+                <Select
+                  value={editForm.category}
+                  onValueChange={(val) =>
+                    setEditForm({ ...editForm, category: val as any })
+                  }
+                >
+                  <SelectTrigger className="col-span-3 bg-black/50 border-white/10">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#18181B] border-white/10 text-white">
+                    {CATEGORIES.map((cat) => (
+                      <SelectItem key={cat} value={cat}>
+                        {cat}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label className="text-right text-zinc-400">제목</Label>
+                <Input
+                  value={editForm.title}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, title: e.target.value })
+                  }
+                  className="col-span-3 bg-black/50 border-white/10"
+                />
+              </div>
+
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label className="text-right text-zinc-400">로직 키</Label>
+                <Input
+                  value={editForm.logicKey}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, logicKey: e.target.value })
+                  }
+                  className="col-span-3 bg-black/50 border-white/10"
+                />
+              </div>
+
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label className="text-right text-zinc-400">설명/조건</Label>
+                <Input
+                  value={editForm.condition}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, condition: e.target.value })
+                  }
+                  className="col-span-3 bg-black/50 border-white/10"
+                />
+              </div>
+
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label className="text-right text-zinc-400">목표 횟수</Label>
+                <Input
+                  type="number"
+                  value={editForm.targetValue}
+                  onChange={(e) =>
+                    setEditForm({
+                      ...editForm,
+                      targetValue: parseInt(e.target.value),
+                    })
+                  }
+                  className="col-span-3 bg-black/50 border-white/10"
+                />
+              </div>
+
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label className="text-right text-zinc-400">보상</Label>
+                <div className="col-span-3 flex gap-2">
+                  <Select
+                    value={editForm.rewardType}
+                    onValueChange={(val) =>
+                      setEditForm({ ...editForm, rewardType: val })
+                    }
+                  >
+                    <SelectTrigger className="flex-1 bg-black/50 border-white/10">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#18181B] border-white/10 text-white max-h-[200px]">
+                      {MISSION_REWARD_OPTIONS.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    type="number"
+                    className="w-24 bg-black/50 border-white/10"
+                    value={editForm.rewardAmount}
+                    onChange={(e) =>
+                      setEditForm({
+                        ...editForm,
+                        rewardAmount: parseInt(e.target.value),
+                      })
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end">
+                <Switch
+                  checked={editForm.isActive}
+                  onCheckedChange={(checked) =>
+                    setEditForm({ ...editForm, isActive: checked })
+                  }
+                />
+                <span className="ml-2 text-sm text-zinc-400">활성</span>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button
+              variant="ghost"
+              onClick={() => setIsEditOpen(false)}
+              className="text-zinc-400 hover:text-white"
+            >
+              취소
+            </Button>
+            <Button
+              onClick={handleSaveEdit}
+              className="bg-emerald-500 hover:bg-emerald-600 text-white"
+            >
+              저장
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -1,13 +1,13 @@
 /**
  * V2 보상 아이템 표준 상수 (SoT 준수)
- * 
+ *
  * 근거 문서:
  * - docs/v2_specs/01_core/v2_item_inventory_sot_ko.md (아이템 분류)
  * - docs/v2_specs/01_core/v2_reward_type_standard_sot_ko.md (보상 타입)
  * - docs/v2_specs/01_core/v2_gifticon_naming_sot_ko.md (기프티콘 명칭)
- * 
- * 최종 업데이트: 2026-01-20
- * 버전: v2.0 (SoT 완전 준수)
+ *
+ * 최종 업데이트: 2026-01-21
+ * 버전: v2.1 (공통 지급 목록 정렬)
  */
 
 export type RewardCategory =
@@ -24,7 +24,11 @@ export interface RewardItem {
   value: string;
   label: string;
   category: RewardCategory;
-  storage: "UserGameWallet" | "User.vault_locked_balance" | "UserInventoryItem" | "N/A";
+  storage:
+    | "UserGameWallet"
+    | "User.vault_locked_balance"
+    | "UserInventoryItem"
+    | "N/A";
   description?: string;
 }
 
@@ -210,7 +214,7 @@ export type RewardItemValue = (typeof REWARD_ITEMS)[number]["value"];
  * 카테고리별 보상 아이템 필터링
  */
 export const getRewardItemsByCategory = (
-  category: RewardCategory
+  category: RewardCategory,
 ): readonly RewardItem[] => {
   return REWARD_ITEMS.filter((item) => item.category === category);
 };
@@ -219,7 +223,7 @@ export const getRewardItemsByCategory = (
  * 여러 카테고리에 속하는 보상 아이템 필터링
  */
 export const getRewardItemsByCategories = (
-  categories: RewardCategory[]
+  categories: RewardCategory[],
 ): readonly RewardItem[] => {
   return REWARD_ITEMS.filter((item) => categories.includes(item.category));
 };

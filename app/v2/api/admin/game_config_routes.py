@@ -29,32 +29,25 @@ logger = logging.getLogger(__name__)
 def _normalize_reward_type_for_dto(value: object) -> str:
     """Normalize reward_type for admin DTO (v2 SoT aligned).
 
-    허용: POINT, CC_POINT, GAME_XP, DIAMOND, TICKET, BUNDLE, TICKET_BUNDLE, NONE (+ legacy CREDIT).
-    UI 호환 값 VAULT는 POINT로 정규화한다.
+    허용: 공통 지급 20개 + VAULT + NONE.
+    POINT/CC_POINT는 UI 호환 값 VAULT로 정규화한다.
+    그 외 레거시는 NONE으로 강제 변환한다.
     """
 
     allowed = {
-        "POINT",
-        "CC_POINT",
-        "GAME_XP",
-        "DIAMOND",
-        "TICKET",
-        "BUNDLE",
-        "TICKET_BUNDLE",
-        "NONE",
-        "CREDIT",
         "ROULETTE_TICKET",
         "DICE_TICKET",
         "LOTTERY_TICKET",
+        "VAULT",
         "GOLD_KEY_TICKET",
         "DIAMOND_TICKET",
         "GOLD_KEY_FRAGMENT",
         "DIAMOND_FRAGMENT",
-        "PUZZLE_C",
         "PUZZLE_C1",
         "PUZZLE_C2",
         "PUZZLE_J",
         "PUZZLE_M",
+        "DIAMOND",
         "CHICKEN_GIFTICON_5000",
         "CHICKEN_GIFTICON_10000",
         "STARBUCKS_GIFTICON_2000",
@@ -63,23 +56,13 @@ def _normalize_reward_type_for_dto(value: object) -> str:
         "PIZZA_GIFTICON_10000",
         "GOOGLE_GIFTICON_5000",
         "GOOGLE_GIFTICON_10000",
-        "BAEMIN_GIFTICON_5000",
-        "BAEMIN_GIFTICON_10000",
-        "BAEMIN_GIFTICON_20000",
-        "COMPOSE_AMERICANO_GIFTICON_3000",
-        "GIFTICON_BAEMIN",
-        "GIFTICON_COMPOSE",
-        "CC_COIN_GIFTICON",
+        "NONE",
     }
     raw = str(value) if value is not None else ""
-    if raw == "VAULT":
-        return "POINT"
+    if raw in {"POINT", "CC_POINT"}:
+        return "VAULT"
     if raw in allowed:
         return raw
-    if "GIFTICON" in raw:
-        return raw
-    if raw.startswith("TICKET"):
-        return "TICKET"
     return "NONE"
 
 
@@ -87,20 +70,9 @@ def _normalize_reward_type_for_write(value: object) -> str:
     """Normalize incoming reward_type before persisting (v2 SoT aligned)."""
 
     raw = str(value) if value is not None else ""
-    if raw == "VAULT":
+    if raw in {"VAULT", "POINT", "CC_POINT"}:
         return "POINT"
-    if raw.startswith("TICKET"):
-        return "TICKET"
     allowed = {
-        "POINT",
-        "CC_POINT",
-        "GAME_XP",
-        "DIAMOND",
-        "TICKET",
-        "BUNDLE",
-        "TICKET_BUNDLE",
-        "NONE",
-        "CREDIT",
         "ROULETTE_TICKET",
         "DICE_TICKET",
         "LOTTERY_TICKET",
@@ -108,11 +80,11 @@ def _normalize_reward_type_for_write(value: object) -> str:
         "DIAMOND_TICKET",
         "GOLD_KEY_FRAGMENT",
         "DIAMOND_FRAGMENT",
-        "PUZZLE_C",
         "PUZZLE_C1",
         "PUZZLE_C2",
         "PUZZLE_J",
         "PUZZLE_M",
+        "DIAMOND",
         "CHICKEN_GIFTICON_5000",
         "CHICKEN_GIFTICON_10000",
         "STARBUCKS_GIFTICON_2000",
@@ -121,16 +93,8 @@ def _normalize_reward_type_for_write(value: object) -> str:
         "PIZZA_GIFTICON_10000",
         "GOOGLE_GIFTICON_5000",
         "GOOGLE_GIFTICON_10000",
-        "BAEMIN_GIFTICON_5000",
-        "BAEMIN_GIFTICON_10000",
-        "BAEMIN_GIFTICON_20000",
-        "COMPOSE_AMERICANO_GIFTICON_3000",
-        "GIFTICON_BAEMIN",
-        "GIFTICON_COMPOSE",
-        "CC_COIN_GIFTICON",
+        "NONE",
     }
-    if "GIFTICON" in raw:
-        return raw
     return raw if raw in allowed else "NONE"
 
 
@@ -380,11 +344,11 @@ def get_dice_config(
         win_probability=config.win_probability,
         draw_probability=config.draw_probability,
         lose_probability=config.lose_probability,
-        win_reward_type=config.win_reward_type,
+        win_reward_type=_normalize_reward_type_for_dto(config.win_reward_type),
         win_reward_amount=config.win_reward_amount,
-        draw_reward_type=config.draw_reward_type,
+        draw_reward_type=_normalize_reward_type_for_dto(config.draw_reward_type),
         draw_reward_amount=config.draw_reward_amount,
-        lose_reward_type=config.lose_reward_type,
+        lose_reward_type=_normalize_reward_type_for_dto(config.lose_reward_type),
         lose_reward_amount=config.lose_reward_amount,
         daily_gain_cap=config.daily_gain_cap,
         created_at=config.created_at,
@@ -483,11 +447,11 @@ def update_dice_config(
         win_probability=config.win_probability,
         draw_probability=config.draw_probability,
         lose_probability=config.lose_probability,
-        win_reward_type=config.win_reward_type,
+        win_reward_type=_normalize_reward_type_for_dto(config.win_reward_type),
         win_reward_amount=config.win_reward_amount,
-        draw_reward_type=config.draw_reward_type,
+        draw_reward_type=_normalize_reward_type_for_dto(config.draw_reward_type),
         draw_reward_amount=config.draw_reward_amount,
-        lose_reward_type=config.lose_reward_type,
+        lose_reward_type=_normalize_reward_type_for_dto(config.lose_reward_type),
         lose_reward_amount=config.lose_reward_amount,
         daily_gain_cap=config.daily_gain_cap,
         created_at=config.created_at,

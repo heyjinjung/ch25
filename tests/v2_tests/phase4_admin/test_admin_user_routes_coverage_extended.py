@@ -143,14 +143,14 @@ def test_admin_wallet_adjustment_branches(client: TestClient, db_session: Sessio
     # token wallet create/grant
     resp = client.post(
         "/api/v2/admin/users/10/wallet/adjust",
-        json={"amount": 3, "token_type": "ROULETTE_COIN", "reason": "grant"},
+        json={"amount": 3, "token_type": "ROULETTE_TICKET", "reason": "grant"},
     )
     assert resp.status_code == 200, resp.text
 
     # insufficient token balance
     resp = client.post(
         "/api/v2/admin/users/10/wallet/adjust",
-        json={"amount": -999, "token_type": "ROULETTE_COIN", "reason": "revoke"},
+        json={"amount": -999, "token_type": "ROULETTE_TICKET", "reason": "revoke"},
     )
     assert resp.status_code == 400
 
@@ -168,28 +168,28 @@ def test_admin_inventory_adjust_and_notes(client: TestClient, db_session: Sessio
     # validation: delta==0
     resp = client.post(
         "/api/v2/admin/users/20/inventory/adjust",
-        json={"itemType": "TICKET", "delta": 0, "note": "x"},
+        json={"itemType": "CHICKEN_GIFTICON_5000", "delta": 0, "note": "x"},
     )
     assert resp.status_code == 400
 
     # grant
     resp = client.post(
         "/api/v2/admin/users/20/inventory/adjust",
-        json={"itemType": "TICKET", "delta": 5, "note": "grant"},
+        json={"itemType": "CHICKEN_GIFTICON_5000", "delta": 5, "note": "grant"},
     )
     assert resp.status_code == 200, resp.text
 
     # consume
     resp = client.post(
         "/api/v2/admin/users/20/inventory/adjust",
-        json={"itemType": "TICKET", "delta": -3, "note": "consume"},
+        json={"itemType": "CHICKEN_GIFTICON_5000", "delta": -3, "note": "consume"},
     )
     assert resp.status_code == 200, resp.text
 
     resp = client.get("/api/v2/admin/users/20/inventory")
     assert resp.status_code == 200, resp.text
     items = resp.json()
-    assert any(i.get("itemType") == "TICKET" for i in items)
+    assert any(i.get("itemType") == "CHICKEN_GIFTICON_5000" for i in items)
 
     # notes
     resp = client.post("/api/v2/admin/users/notes", json={"userId": 20, "content": "hello"})

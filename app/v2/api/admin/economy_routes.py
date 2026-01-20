@@ -17,6 +17,8 @@ from app.v2.schemas.v2_admin_economy import (
     AdminDepositLogDto,
     AdminDepositUpdateRequest,
     AdminProductDto,
+    AdminProductCreateRequest,
+    AdminProductUpdateRequest,
     AdminWithdrawalDto,
     AdminWithdrawalRejectRequest,
     TicketStatDto,
@@ -70,45 +72,66 @@ def _build_sot_shop_catalog_defaults() -> list[dict]:
     """SoT 전체 상품을 최소 기본값으로 생성한다.
 
     Storage: UiConfig key `v2_shop_products` -> {"products": [..]}
+    
+    교환 비율 기준:
+    - VAULT: 기본 화폐 (1P = 1원 개념)
+    - 게임 티켓: 100P (룰렛/다이스/복권)
+    - 프리미엄 티켓: 1000P (골드/다이아)
+    - 조각: 500P
+    - 퍼즐: 300P
+    - 다이아몬드: 2000P
+    - 기프티콘: 실제 가치 기준 (5000원권 = 5000P)
     """
 
-    # Defaults per user approval:
-    # - visible
-    # - minimal vault cost
-    # - reward 1 (except NONE)
-    defaults: list[tuple[str, str, int]] = [
-        ("ROULETTE_TICKET", "룰렛 티켓", 1),
-        ("DICE_TICKET", "다이스 티켓", 1),
-        ("LOTTERY_TICKET", "복권 티켓", 1),
-        ("VAULT", "금고 포인트", 1),
-        ("GOLD_KEY_TICKET", "골드 열쇠 티켓", 1),
-        ("DIAMOND_TICKET", "다이아몬드 티켓", 1),
-        ("GOLD_KEY_FRAGMENT", "골드 열쇠 조각", 1),
-        ("DIAMOND_FRAGMENT", "다이아몬드 조각", 1),
-        ("PUZZLE_C1", "퍼즐 조각 C1", 1),
-        ("PUZZLE_C2", "퍼즐 조각 C2", 1),
-        ("PUZZLE_J", "퍼즐 조각 J", 1),
-        ("PUZZLE_M", "퍼즐 조각 M", 1),
-        ("DIAMOND", "다이아몬드", 1),
-        ("CHICKEN_GIFTICON_5000", "치킨 기프티콘 5천원", 1),
-        ("CHICKEN_GIFTICON_10000", "치킨 기프티콘 1만원", 1),
-        ("STARBUCKS_GIFTICON_2000", "스타벅스 기프티콘 2천원", 1),
-        ("STARBUCKS_GIFTICON_10000", "스타벅스 기프티콘 1만원", 1),
-        ("PIZZA_GIFTICON_5000", "피자 기프티콘 5천원", 1),
-        ("PIZZA_GIFTICON_10000", "피자 기프티콘 1만원", 1),
-        ("GOOGLE_GIFTICON_5000", "구글 기프티콘 5천원", 1),
-        ("GOOGLE_GIFTICON_10000", "구글 기프티콘 1만원", 1),
-        ("NONE", "없음(특수)", 1),
+    # Format: (reward_type, label, reward_amount, cost_amount, cost_type)
+    defaults: list[tuple[str, str, int, int, str]] = [
+        # 게임 티켓 (100P)
+        ("ROULETTE_TICKET", "룰렛 티켓", 1, 100, "VAULT"),
+        ("DICE_TICKET", "다이스 티켓", 1, 100, "VAULT"),
+        ("LOTTERY_TICKET", "복권 티켓", 1, 100, "VAULT"),
+        
+        # 금고 포인트 (직접 교환)
+        ("VAULT", "금고 포인트", 100, 100, "VAULT"),
+        
+        # 프리미엄 티켓 (1000P)
+        ("GOLD_KEY_TICKET", "골드 열쇠 티켓", 1, 1000, "VAULT"),
+        ("DIAMOND_TICKET", "다이아몬드 티켓", 1, 1000, "VAULT"),
+        
+        # 조각 (500P)
+        ("GOLD_KEY_FRAGMENT", "골드 열쇠 조각", 1, 500, "VAULT"),
+        ("DIAMOND_FRAGMENT", "다이아몬드 조각", 1, 500, "VAULT"),
+        
+        # 퍼즐 (300P)
+        ("PUZZLE_C1", "퍼즐 조각 C1", 1, 300, "VAULT"),
+        ("PUZZLE_C2", "퍼즐 조각 C2", 1, 300, "VAULT"),
+        ("PUZZLE_J", "퍼즐 조각 J", 1, 300, "VAULT"),
+        ("PUZZLE_M", "퍼즐 조각 M", 1, 300, "VAULT"),
+        
+        # 다이아몬드 (2000P)
+        ("DIAMOND", "다이아몬드", 1, 2000, "VAULT"),
+        
+        # 기프티콘 (실제 가치 기준)
+        ("CHICKEN_GIFTICON_5000", "치킨 기프티콘 5천원", 1, 5000, "VAULT"),
+        ("CHICKEN_GIFTICON_10000", "치킨 기프티콘 1만원", 1, 10000, "VAULT"),
+        ("STARBUCKS_GIFTICON_2000", "스타벅스 기프티콘 2천원", 1, 2000, "VAULT"),
+        ("STARBUCKS_GIFTICON_10000", "스타벅스 기프티콘 1만원", 1, 10000, "VAULT"),
+        ("PIZZA_GIFTICON_5000", "피자 기프티콘 5천원", 1, 5000, "VAULT"),
+        ("PIZZA_GIFTICON_10000", "피자 기프티콘 1만원", 1, 10000, "VAULT"),
+        ("GOOGLE_GIFTICON_5000", "구글 기프트카드 5천원", 1, 5000, "VAULT"),
+        ("GOOGLE_GIFTICON_10000", "구글 기프트카드 1만원", 1, 10000, "VAULT"),
+        
+        # 특수 (교환 불가)
+        ("NONE", "없음(특수)", 1, 999999, "VAULT"),
     ]
 
     products: list[dict] = []
-    for reward_type, label, reward_amount in defaults:
+    for reward_type, label, reward_amount, cost_amount, cost_type in defaults:
         products.append(
             {
                 "sku": f"SOT_{reward_type}",
                 "name": label,
-                "cost_type": "VAULT",
-                "cost_amount": 1,
+                "cost_type": cost_type,
+                "cost_amount": cost_amount,
                 "reward_type": reward_type,
                 "reward_amount": reward_amount,
                 "is_visible": True,
@@ -150,29 +173,28 @@ def get_wallet_transaction_types(
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
     return [
-        {"value": "POINT", "label": "포인트 (금고)", "group": "mission"},
-        {"value": "TICKET_ROULETTE", "label": "룰렛 티켓", "group": "mission"},
-        {"value": "TICKET_DICE", "label": "주사위 티켓", "group": "mission"},
-        {"value": "TICKET_LOTTERY", "label": "복권 티켓", "group": "mission"},
-        {"value": "DIAMOND", "label": "다이아", "group": "mission, wallet, inventory"},
-        {"value": "TICKET_BUNDLE", "label": "티켓 번들", "group": "mission"},
-        {"value": "GIFTICON_BAEMIN", "label": "깁콘(배민)", "group": "mission"},
-        {"value": "GIFTICON_COMPOSE", "label": "깁콘(컴포즈)", "group": "mission"},
-        {"value": "VAULT", "label": "예치금 (Vault)", "group": "wallet"},
-        {"value": "ROULETTE_COIN", "label": "룰렛 티켓(지갑)", "group": "wallet"},
-        {"value": "DICE_TOKEN", "label": "주사위 티켓(지갑)", "group": "wallet"},
-        {"value": "LOTTERY_TICKET", "label": "복권 티켓(지갑)", "group": "wallet"},
-        {"value": "GOLD_KEY", "label": "황금열쇠", "group": "wallet"},
-        {"value": "DIAMOND_KEY", "label": "다이아몬드 열쇠", "group": "wallet"},
-        {"value": "GOLD_KEY_FRAGMENT", "label": "황금열쇠 조각", "group": "wallet"},
-        {"value": "DIAMOND_KEY_FRAGMENT", "label": "다이아몬드 열쇠 조각", "group": "wallet"},
-        {"value": "DIAMOND_POINT", "label": "다이아 포인트", "group": "inventory"},
-        {"value": "TICKET", "label": "만능 티켓", "group": "inventory"},
-        {"value": "CC_COIN_GIFTICON", "label": "씨씨코인 깁콘", "group": "inventory"},
-        {"value": "BAEMIN_GIFTICON_5000", "label": "깁콘(배민) 5000", "group": "inventory"},
-        {"value": "BAEMIN_GIFTICON_10000", "label": "깁콘(배민) 10000", "group": "inventory"},
-        {"value": "BAEMIN_GIFTICON_20000", "label": "깁콘(배민) 20000", "group": "inventory"},
-        {"value": "COMPOSE_AMERICANO_GIFTICON_3000", "label": "깁콘(컴포즈) 3000", "group": "inventory"},
+        {"value": "ROULETTE_TICKET", "label": "룰렛 티켓", "group": "wallet"},
+        {"value": "DICE_TICKET", "label": "다이스 티켓", "group": "wallet"},
+        {"value": "LOTTERY_TICKET", "label": "복권 티켓", "group": "wallet"},
+        {"value": "GOLD_KEY_TICKET", "label": "골드 열쇠 티켓", "group": "wallet"},
+        {"value": "DIAMOND_TICKET", "label": "다이아몬드 티켓", "group": "wallet"},
+        {"value": "GOLD_KEY_FRAGMENT", "label": "골드 열쇠 조각", "group": "wallet"},
+        {"value": "DIAMOND_FRAGMENT", "label": "다이아몬드 조각", "group": "wallet"},
+        {"value": "PUZZLE_C1", "label": "퍼즐 조각 C1", "group": "wallet"},
+        {"value": "PUZZLE_C2", "label": "퍼즐 조각 C2", "group": "wallet"},
+        {"value": "PUZZLE_J", "label": "퍼즐 조각 J", "group": "wallet"},
+        {"value": "PUZZLE_M", "label": "퍼즐 조각 M", "group": "wallet"},
+        {"value": "DIAMOND", "label": "다이아몬드", "group": "wallet"},
+        {"value": "VAULT", "label": "금고 포인트 (P)", "group": "vault"},
+        {"value": "CHICKEN_GIFTICON_5000", "label": "치킨 기프티콘 5천원", "group": "inventory"},
+        {"value": "CHICKEN_GIFTICON_10000", "label": "치킨 기프티콘 1만원", "group": "inventory"},
+        {"value": "STARBUCKS_GIFTICON_2000", "label": "스타벅스 기프티콘 2천원", "group": "inventory"},
+        {"value": "STARBUCKS_GIFTICON_10000", "label": "스타벅스 기프티콘 1만원", "group": "inventory"},
+        {"value": "PIZZA_GIFTICON_5000", "label": "피자 기프티콘 5천원", "group": "inventory"},
+        {"value": "PIZZA_GIFTICON_10000", "label": "피자 기프티콘 1만원", "group": "inventory"},
+        {"value": "GOOGLE_GIFTICON_5000", "label": "구글 기프트카드 5천원", "group": "inventory"},
+        {"value": "GOOGLE_GIFTICON_10000", "label": "구글 기프트카드 1만원", "group": "inventory"},
+        {"value": "NONE", "label": "없음", "group": "special"},
     ]
 
 
@@ -495,8 +517,15 @@ def list_admin_shop_products(
                 sku=str(p.get("sku") or ""),
                 name=str(p.get("name") or ""),
                 price=int(p.get("cost_amount", 0) or 0),
+                cost_type=str(p.get("cost_type") or "VAULT"),
+                cost_amount=int(p.get("cost_amount", 0) or 0),
+                reward_type=str(p.get("reward_type") or ""),
+                reward_amount=int(p.get("reward_amount", 0) or 0),
                 is_visible=bool(p.get("is_visible", True)),
                 category=_classify_product_category(str(p.get("reward_type") or "")),
+                sort_order=int(p.get("sort_order", 0) or 0),
+                daily_limit=p.get("daily_limit"),
+                description=p.get("description"),
             )
         )
     return result
@@ -581,6 +610,162 @@ def update_admin_shop_product_price(
     if not updated:
         raise HTTPException(status_code=404, detail="PRODUCT_NOT_FOUND")
     _save_v2_shop_products(db, products, admin_id=admin_id)
+    return {"success": True}
+
+
+# ============================================================================
+# Shop Product CRUD (Exchange Model)
+# ============================================================================
+
+@router.post("/shop/products", response_model=AdminProductDto)
+def create_admin_shop_product(
+    payload: AdminProductCreateRequest,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """새 상점 상품 생성 (교환소 모델)"""
+    admin_id, _ = admin_info
+
+    products = _load_v2_shop_products(db)
+
+    # SKU 중복 체크
+    existing_skus = {str(p.get("sku") or "") for p in products if isinstance(p, dict)}
+    if payload.sku in existing_skus:
+        raise HTTPException(status_code=400, detail="DUPLICATE_SKU")
+
+    new_product = {
+        "sku": payload.sku,
+        "name": payload.name,
+        "cost_type": payload.cost_type,
+        "cost_amount": payload.cost_amount,
+        "reward_type": payload.reward_type,
+        "reward_amount": payload.reward_amount,
+        "is_visible": payload.is_visible,
+        "sort_order": payload.sort_order,
+        "daily_limit": payload.daily_limit,
+        "description": payload.description,
+    }
+    products.append(new_product)
+    _save_v2_shop_products(db, products, admin_id=admin_id)
+
+    AdminAuditService.log(
+        db,
+        admin_id,
+        "SHOP_PRODUCT_CREATE",
+        "SHOP",
+        payload.sku,
+        after=new_product,
+    )
+
+    return AdminProductDto(
+        id=_product_id_from_sku(payload.sku),
+        sku=payload.sku,
+        name=payload.name,
+        price=payload.cost_amount,
+        cost_type=payload.cost_type,
+        cost_amount=payload.cost_amount,
+        reward_type=payload.reward_type,
+        reward_amount=payload.reward_amount,
+        is_visible=payload.is_visible,
+        category=_classify_product_category(payload.reward_type),
+        sort_order=payload.sort_order,
+        daily_limit=payload.daily_limit,
+        description=payload.description,
+    )
+
+
+@router.put("/shop/products/{product_id}")
+def update_admin_shop_product(
+    product_id: int,
+    payload: AdminProductUpdateRequest,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """상점 상품 전체 수정 (교환소 모델)"""
+    admin_id, _ = admin_info
+
+    products = _load_v2_shop_products(db)
+    updated = False
+    for p in products:
+        sku = str(p.get("sku") or "")
+        if not sku:
+            continue
+        if _product_id_from_sku(sku) == int(product_id):
+            before = dict(p)
+            if payload.name is not None:
+                p["name"] = payload.name
+            if payload.cost_type is not None:
+                p["cost_type"] = payload.cost_type
+            if payload.cost_amount is not None:
+                p["cost_amount"] = payload.cost_amount
+            if payload.reward_type is not None:
+                p["reward_type"] = payload.reward_type
+            if payload.reward_amount is not None:
+                p["reward_amount"] = payload.reward_amount
+            if payload.is_visible is not None:
+                p["is_visible"] = payload.is_visible
+            if payload.sort_order is not None:
+                p["sort_order"] = payload.sort_order
+            if payload.daily_limit is not None:
+                p["daily_limit"] = payload.daily_limit
+            if payload.description is not None:
+                p["description"] = payload.description
+            updated = True
+
+            AdminAuditService.log(
+                db,
+                admin_id,
+                "SHOP_PRODUCT_UPDATE",
+                "SHOP",
+                sku,
+                before=before,
+                after=dict(p),
+            )
+            break
+
+    if not updated:
+        raise HTTPException(status_code=404, detail="PRODUCT_NOT_FOUND")
+
+    _save_v2_shop_products(db, products, admin_id=admin_id)
+    return {"success": True}
+
+
+@router.delete("/shop/products/{product_id}")
+def delete_admin_shop_product(
+    product_id: int,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """상점 상품 삭제"""
+    admin_id, _ = admin_info
+
+    products = _load_v2_shop_products(db)
+    original_len = len(products)
+    deleted_product = None
+
+    new_products = []
+    for p in products:
+        sku = str(p.get("sku") or "")
+        if sku and _product_id_from_sku(sku) == int(product_id):
+            deleted_product = p
+            continue
+        new_products.append(p)
+
+    if len(new_products) == original_len:
+        raise HTTPException(status_code=404, detail="PRODUCT_NOT_FOUND")
+
+    _save_v2_shop_products(db, new_products, admin_id=admin_id)
+
+    if deleted_product:
+        AdminAuditService.log(
+            db,
+            admin_id,
+            "SHOP_PRODUCT_DELETE",
+            "SHOP",
+            str(deleted_product.get("sku") or ""),
+            before=deleted_product,
+        )
+
     return {"success": True}
 
 

@@ -40,6 +40,7 @@ import {
   useRef,
   useEffect,
   useState,
+  useMemo,
   JSXElementConstructor,
   Key,
   ReactElement,
@@ -63,7 +64,10 @@ import {
   useUserNotes,
   useVaultUserLedger,
 } from "../../../hooks/useV2Admin";
-import { REWARD_ITEMS } from "../../../constants/rewardItems";
+import {
+  getInventoryRewardItems,
+  getRewardItemLabel,
+} from "../../../constants/rewardItems";
 import { Textarea } from "../../../components/ui/textarea";
 import {
   Table,
@@ -99,8 +103,11 @@ export function UserDetailDrawer({
   const [walletEditorInitialType, setWalletEditorInitialType] =
     useState<string>("ROULETTE_COIN");
   const [newNote, setNewNote] = useState("");
+  const inventoryAdjustItems = useMemo(() => getInventoryRewardItems(), []);
+  const defaultInventoryItem =
+    inventoryAdjustItems[0]?.value || "CHICKEN_GIFTICON_5000";
   const [inventoryAdjustItemType, setInventoryAdjustItemType] =
-    useState<string>("DIAMOND");
+    useState<string>(defaultInventoryItem);
   const [inventoryAdjustDelta, setInventoryAdjustDelta] = useState<string>("");
   const [inventoryAdjustNote, setInventoryAdjustNote] = useState<string>("");
 
@@ -117,6 +124,46 @@ export function UserDetailDrawer({
     1000,
     { enabled: !!userId },
   );
+
+  const mergedTicketLogs = useMemo(() => {
+    const ledgerLogs = (ticketLogs ?? []).map((log) => ({
+      id: log.id,
+      type: log.type,
+      amount: typeof log.amount === "number" ? log.amount : null,
+      balanceAfter:
+        typeof log.balanceAfter === "number" ? log.balanceAfter : null,
+      reason: log.reason || "-",
+      timestamp: log.timestamp,
+    }));
+
+    const activityAsLogs = (activityLogs ?? []).map((log) => {
+      const meta = (log.metadata || {}) as {
+        before?: Record<string, unknown>;
+        after?: Record<string, unknown>;
+      };
+      const before = meta.before || {};
+      const after = meta.after || {};
+      const rawAmount = (after.amount_change ??
+        after.delta ??
+        before.amount_change) as number | undefined;
+
+      return {
+        id: `activity-${log.id}`,
+        type: `ACTIVITY:${log.type}`,
+        amount: typeof rawAmount === "number" ? rawAmount : null,
+        balanceAfter: null,
+        reason: log.description || "-",
+        timestamp: log.timestamp,
+      };
+    });
+
+    return [...ledgerLogs, ...activityAsLogs]
+      .sort(
+        (a, b) =>
+          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+      )
+      .slice(0, 100);
+  }, [ticketLogs, activityLogs]);
 
   const runIntervention = useRunIntervention();
   const adjustWallet = useAdjustUserWallet();
@@ -379,7 +426,7 @@ export function UserDetailDrawer({
 
                     <div className="rounded-xl bg-[#18181B] border border-white/5 overflow-hidden">
                       <div className="p-3 border-b border-white/5 bg-zinc-900/30 text-[10px] font-bold uppercase tracking-wider text-zinc-500">
-                        티켓 변동 내역
+                        티켓/활동 내역
                       </div>
                       <Table>
                         <TableHeader className="bg-transparent">
@@ -402,8 +449,8 @@ export function UserDetailDrawer({
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {ticketLogs && ticketLogs.length > 0 ? (
-                            ticketLogs.map(
+                          {mergedTicketLogs.length > 0 ? (
+                            mergedTicketLogs.map(
                               (log: {
                                 id: Key | null | undefined;
                                 type:
@@ -464,7 +511,9 @@ export function UserDetailDrawer({
                                         "text-[9px] px-1 h-4",
                                         log.type === "USE"
                                           ? "bg-red-500/10 text-red-500"
-                                          : "bg-emerald-500/10 text-emerald-500",
+                                          : log.type === "GRANT"
+                                            ? "bg-emerald-500/10 text-emerald-500"
+                                            : "bg-zinc-500/10 text-zinc-400",
                                       )}
                                     >
                                       {log.type}
@@ -473,17 +522,23 @@ export function UserDetailDrawer({
                                   <TableCell
                                     className={cn(
                                       "py-2 font-mono",
-                                      (log.amount as number) > 0
-                                        ? "text-emerald-400"
-                                        : "text-red-400",
+                                      typeof log.amount === "number"
+                                        ? (log.amount as number) > 0
+                                          ? "text-emerald-400"
+                                          : "text-red-400"
+                                        : "text-zinc-400",
                                     )}
                                   >
-                                    {(log.amount as number) > 0
-                                      ? `+${log.amount}`
-                                      : log.amount}
+                                    {typeof log.amount === "number"
+                                      ? (log.amount as number) > 0
+                                        ? `+${log.amount}`
+                                        : log.amount
+                                      : "-"}
                                   </TableCell>
                                   <TableCell className="py-2 text-zinc-400">
-                                    {log.balanceAfter} T
+                                    {typeof log.balanceAfter === "number"
+                                      ? `${log.balanceAfter} T`
+                                      : "-"}
                                   </TableCell>
                                   <TableCell className="py-2 text-zinc-300 max-w-[120px] truncate">
                                     {log.reason}
@@ -542,13 +597,13 @@ export function UserDetailDrawer({
                                 <SelectValue placeholder="아이템 선택" />
                               </SelectTrigger>
                               <SelectContent className="bg-[#18181B] border-white/10 text-white">
-                                {REWARD_ITEMS.map((item) => (
+                                {inventoryAdjustItems.map((item) => (
                                   <SelectItem
                                     key={item.value}
                                     value={item.value}
                                     className="text-zinc-100 focus:bg-zinc-800"
                                   >
-                                    {item.label}
+                                    {getRewardItemLabel(item.value)}
                                   </SelectItem>
                                 ))}
                               </SelectContent>
