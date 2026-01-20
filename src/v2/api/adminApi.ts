@@ -750,10 +750,10 @@ export const getInventoryLogs = async (
   if (userId !== undefined) params.user_id = userId;
   if (startDate) params.start_date = startDate;
   if (endDate) params.end_date = endDate;
-    {
-      params,
-    },
-  );
+
+  const response = await v2Client.get<TicketLogDto[]>("/api/v2/admin/ticket/logs", {
+    params,
+  });
   return response.data;
 };
 
@@ -1261,6 +1261,10 @@ export interface AdminDiceConfigDto {
 
   // Daily gain cap
   dailyGainCap: number;
+  
+  // Golden Hour Multiplier Settings
+  enableGoldenHour: boolean;
+  goldenHourMultiplier: number;
 }
 
 export interface AdminLotteryPrizeDto {
@@ -1381,6 +1385,8 @@ interface DiceConfigBackend {
   lose_reward_type: string;
   lose_reward_amount: number;
   daily_gain_cap: number;
+  enable_golden_hour: boolean;
+  golden_hour_multiplier: number;
 }
 
 export const getDiceConfig = async (): Promise<AdminDiceConfigDto> => {
@@ -1405,6 +1411,8 @@ export const getDiceConfig = async (): Promise<AdminDiceConfigDto> => {
     loseRewardType: config.lose_reward_type,
     loseRewardAmount: config.lose_reward_amount,
     dailyGainCap: config.daily_gain_cap,
+    enableGoldenHour: config.enable_golden_hour ?? true,
+    goldenHourMultiplier: config.golden_hour_multiplier ?? 2.0,
   };
 };
 
@@ -1437,6 +1445,10 @@ export const updateDiceConfig = async (
     payload.lose_reward_amount = data.loseRewardAmount;
   if (data.dailyGainCap !== undefined)
     payload.daily_gain_cap = data.dailyGainCap;
+  if (data.enableGoldenHour !== undefined)
+    payload.enable_golden_hour = data.enableGoldenHour;
+  if (data.goldenHourMultiplier !== undefined)
+    payload.golden_hour_multiplier = data.goldenHourMultiplier;
 
   await v2Client.put(`/api/v2/admin/game/dice/config/${data.id}`, payload);
 };

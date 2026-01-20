@@ -1,7 +1,7 @@
 """V2 dice configuration and play logs."""
 from datetime import datetime
 
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Index, Integer, String
+from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Index, Integer, String
 
 from app.db.base_class import Base
 
@@ -22,6 +22,11 @@ class V2DiceConfig(Base):
     draw_reward_amount = Column(Integer, nullable=False, default=0)
     lose_reward_type = Column(String(50), nullable=False, default="NONE")
     lose_reward_amount = Column(Integer, nullable=False, default=0)
+    
+    # Golden Hour Multiplier Settings
+    enable_golden_hour = Column(Boolean, nullable=False, default=True)
+    golden_hour_multiplier = Column(Float, nullable=False, default=2.0)
+    
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 

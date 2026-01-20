@@ -239,6 +239,55 @@ export default function DiceConfigPage() {
            </CardContent>
         </Card>
 
+        {/* Golden Hour Multiplier Card */}
+        <Card className="col-span-12 lg:col-span-4 admin-card-premium flex flex-col">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-zinc-100">
+              <Zap className="w-5 h-5 text-amber-400" />
+              골든아워 배율 설정
+            </CardTitle>
+            <CardDescription className="text-zinc-500">
+              특정 시간대 보상을 배율만큼 증폭합니다.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6 flex-1">
+            <div className="flex items-center justify-between p-4 bg-amber-500/5 rounded-xl border border-amber-500/10 group hover:border-amber-500/20 transition-colors">
+              <div className="space-y-0.5">
+                <Label className="text-base text-zinc-200">골든아워 적용</Label>
+                <p className="text-xs text-zinc-500">비활성화 시 배율이 적용되지 않습니다.</p>
+              </div>
+              <Switch
+                checked={localConfig.enableGoldenHour}
+                onCheckedChange={(c) => handleChange("enableGoldenHour", c)}
+              />
+            </div>
+            
+            <div className="p-5 rounded-2xl bg-amber-500/5 border border-amber-500/10 space-y-4">
+              <div className="flex justify-between items-end">
+                <Label className="text-zinc-300 text-xs font-bold">보상 배율 (Multiplier)</Label>
+                <span className="text-3xl font-mono font-black text-amber-400 tracking-tighter">
+                  ×{localConfig.goldenHourMultiplier.toFixed(1)}
+                </span>
+              </div>
+              <Input
+                type="number"
+                step="0.1"
+                min="1.0"
+                max="5.0"
+                value={localConfig.goldenHourMultiplier}
+                onChange={(e) => handleChange("goldenHourMultiplier", parseFloat(e.target.value))}
+                className="admin-input border-amber-500/20 bg-black/30 w-full h-12 text-center text-xl font-mono"
+              />
+              <div className="flex items-start gap-2 p-3 bg-amber-500/10 rounded-lg">
+                <Info className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                <p className="text-[11px] text-amber-300/80 leading-relaxed">
+                  골든아워 활성화 시 모든 주사위 보상에 이 배율이 곱해집니다. (예: 100P × 2.0 = 200P)
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         <Card className="col-span-12 lg:col-span-4 admin-card-premium flex flex-col">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-zinc-100">

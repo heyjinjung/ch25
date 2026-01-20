@@ -73,6 +73,10 @@ class AdminDiceConfigV2(BaseModel):
     draw_reward_amount: int
     lose_reward_type: RewardType
     lose_reward_amount: int
+    
+    # Golden Hour Multiplier Settings
+    enable_golden_hour: bool = True
+    golden_hour_multiplier: float = 2.0
 
     @field_validator("max_daily_plays")
     @classmethod
@@ -147,6 +151,10 @@ class AdminDiceConfigUpdate(BaseModel):
     draw_reward_amount: Optional[int] = None
     lose_reward_type: Optional[RewardType] = None
     lose_reward_amount: Optional[int] = None
+    
+    # Golden Hour Multiplier Settings
+    enable_golden_hour: Optional[bool] = None
+    golden_hour_multiplier: Optional[float] = None
 
     model_config = ConfigDict(from_attributes=True)
 
