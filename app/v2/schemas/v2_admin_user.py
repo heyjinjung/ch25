@@ -120,4 +120,39 @@ class InterventionExecutionResponse(BaseModel):
     details: Optional[dict] = None
 
 
+class AdminUserListDto(BaseModel):
+    """User list item for admin table."""
+    id: int
+    cc_id: Optional[int] = None
+    nickname: str
+    telegram_id: Optional[int] = None
+    telegram_username: Optional[str] = None
+    tier: str = "COMMON"
+    level: int = 1
+    vaultBalance: int = 0
+    last_active: str
+    status: str = "Active"
+
+
+class UserSearchParams(BaseModel):
+    """Search parameters for user list."""
+    search: Optional[str] = None
+    status: Optional[str] = None
+    minLevel: Optional[int] = None
+    maxLevel: Optional[int] = None
+    sortBy: str = "last_active"
+    sortOrder: str = "desc"
+    page: int = 1
+    limit: int = 20
+
+
+class UserListResponse(BaseModel):
+    """Response for user list with pagination."""
+    users: List[AdminUserListDto]
+    total: int
+    page: int
+    limit: int
+    totalPages: int
+
+
 from app.v2.schemas.v2_admin_user_summary import AdminUserSummary  # noqa: E402

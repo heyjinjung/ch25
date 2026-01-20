@@ -166,7 +166,7 @@ export default function OpsDashboard() {
               variant="outline"
               className="border-amber-500/30 text-amber-500 bg-amber-500/5 animate-pulse"
             >
-              Live Scanning
+              실시간 스캔 중
             </Badge>
           </div>
 
@@ -207,7 +207,7 @@ export default function OpsDashboard() {
                   </div>
                 ) : (
                   <div className="text-center py-8 text-zinc-500 text-sm">
-                    No urgent risks detected
+                    감지된 위험 요소 없음
                   </div>
                 )}
               </CardContent>
@@ -223,8 +223,8 @@ export default function OpsDashboard() {
               <CardContent className="space-y-4">
                 <div className="text-center py-8 text-zinc-500 text-sm">
                   {status?.goldenRadar?.highRollers > 0
-                    ? `${status.goldenRadar.highRollers} whales active`
-                    : "No whales active"}
+                    ? `${status.goldenRadar.highRollers}명의 고액 유저 활성`
+                    : "활성 고액 사용자 없음"}
                 </div>
               </CardContent>
             </Card>

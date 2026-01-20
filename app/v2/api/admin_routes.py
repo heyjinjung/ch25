@@ -29,6 +29,9 @@ from app.v2.schemas.v2_admin_user import (
     InterventionActionDto,
     AdminWalletAdjustmentRequest,
     InterventionExecutionResponse,
+    AdminUserListDto,
+    UserSearchParams,
+    UserListResponse,
 )
 from app.v2.schemas.v2_admin_dashboard import (
     DashboardMetricsResponse,
@@ -53,6 +56,109 @@ from app.v2.schemas.v2_notification_feed import (
 )
 
 router = APIRouter(prefix="/admin", tags=["v2-admin-ui"])
+
+
+@router.get("/users", response_model=UserListResponse)
+def get_admin_users_list(
+    search: str = None,
+    status: str = None,
+    minLevel: int = None,
+    maxLevel: int = None,
+    sortBy: str = "last_active",
+    sortOrder: str = "desc",
+    page: int = 1,
+    limit: int = 20,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """Get paginated user list with search and filters."""
+    admin_id, admin_role = admin_info
+
+    # Build query
+    query = db.query(User)
+
+    # Search filter
+    if search:
+        search_pattern = f"%{search}%"
+        query = query.filter(
+            (User.nickname.ilike(search_pattern)) |
+            (User.telegram_username.ilike(search_pattern)) |
+            (User.external_id.ilike(search_pattern))
+        )
+
+    # Status filter
+    if status:
+        query = query.filter(User.status == status)
+
+    # Level filter
+    if minLevel is not None:
+        query = query.filter(User.level >= minLevel)
+    if maxLevel is not None:
+        query = query.filter(User.level <= maxLevel)
+
+    # Sorting
+    if sortBy == "level":
+        order_col = User.level
+    elif sortBy == "vault_balance":
+        order_col = func.coalesce(User.vault_available_balance, 0) + func.coalesce(User.vault_locked_balance, 0)
+    elif sortBy == "created_at":
+        order_col = User.created_at
+    else:  # last_active (default)
+        order_col = User.updated_at
+
+    if sortOrder == "asc":
+        query = query.order_by(order_col.asc())
+    else:
+        query = query.order_by(order_col.desc())
+
+    # Count total
+    total = query.count()
+
+    # Pagination
+    offset = (page - 1) * limit
+    users = query.offset(offset).limit(limit).all()
+
+    # Format response
+    user_list = []
+    for user in users:
+        vault_balance = int(user.vault_available_balance or 0) + int(user.vault_locked_balance or 0)
+
+        # Determine tier
+        tier = "COMMON"
+        if user.total_charge_amount:
+            if user.total_charge_amount >= 10000000:
+                tier = "VVIP"
+            elif user.total_charge_amount >= 5000000:
+                tier = "VIP"
+
+        # Determine status
+        status_str = "Active" if user.status == "ACTIVE" else "Inactive" if user.status == "INACTIVE" else "Suspended"
+
+        # Last active (use updated_at as proxy)
+        last_active = user.updated_at.strftime("%Y-%m-%d %H:%M") if user.updated_at else "-"
+
+        user_list.append(AdminUserListDto(
+            id=user.id,
+            cc_id=user.id,
+            nickname=user.nickname or "(미설정)",
+            telegram_id=user.telegram_id,
+            telegram_username=user.telegram_username,
+            tier=tier,
+            level=user.level or 1,
+            vaultBalance=vault_balance,
+            last_active=last_active,
+            status=status_str
+        ))
+
+    total_pages = (total + limit - 1) // limit
+
+    return UserListResponse(
+        users=user_list,
+        total=total,
+        page=page,
+        limit=limit,
+        totalPages=total_pages
+    )
 
 
 @router.get("/users/{user_id}", response_model=AdminUserDetailDto)
