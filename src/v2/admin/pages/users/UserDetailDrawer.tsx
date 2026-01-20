@@ -63,12 +63,14 @@ interface UserDetailDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   userId: number | null;
+  defaultTab?: string;
 }
 
 export function UserDetailDrawer({
   isOpen,
   onClose,
   userId,
+  defaultTab = "overview",
 }: UserDetailDrawerProps) {
   const contentRef = useRef<HTMLDivElement>(null);
   const [isWalletEditorOpen, setIsWalletEditorOpen] = useState(false);
@@ -136,8 +138,8 @@ export function UserDetailDrawer({
                       )}
                     </SheetTitle>
                     <SheetDescription className="text-zinc-400 text-xs">
-                      Joined {new Date(user.createdAt).toLocaleDateString()} •
-                      Lv.{user.level || 1}
+                      가입일 {new Date(user.createdAt).toLocaleDateString()} •
+                      레벨 {user.level || 1}
                     </SheetDescription>
                   </div>
                 </div>
@@ -148,16 +150,16 @@ export function UserDetailDrawer({
                       size="sm"
                       className="h-8 bg-red-900/40 text-red-500 hover:bg-red-900/60 border border-red-900/50"
                     >
-                      <Shield className="w-3 h-3 mr-1" /> Ban
+                      <Shield className="w-3 h-3 mr-1" /> 정지
                     </Button>
                   ) : (
-                    <Badge className="bg-red-500 text-white">BANNED</Badge>
+                    <Badge className="bg-red-500 text-white">정지됨</Badge>
                   )}
                 </div>
               </div>
             </SheetHeader>
 
-            <Tabs defaultValue="overview" className="h-full">
+            <Tabs defaultValue={defaultTab} className="h-full">
               <TabsList className="w-full justify-start rounded-none bg-[#18181B] border-b border-white/5 px-6 h-12 overflow-x-auto flex-nowrap">
                 <TabsTrigger value="overview" className="tab-trigger">
                   기본 정보
@@ -193,7 +195,7 @@ export function UserDetailDrawer({
                       <Card className="bg-[#18181B] border-white/5">
                         <CardHeader className="pb-2">
                           <CardTitle className="text-sm font-medium text-zinc-400">
-                            총 입금 (Total Deposit)
+                            총 입금
                           </CardTitle>
                         </CardHeader>
                         <CardContent>
@@ -205,7 +207,7 @@ export function UserDetailDrawer({
                       <Card className="bg-[#18181B] border-white/5">
                         <CardHeader className="pb-2">
                           <CardTitle className="text-sm font-medium text-zinc-400">
-                            현재 자산 (Assets)
+                            현재 자산
                           </CardTitle>
                         </CardHeader>
                         <CardContent>
@@ -222,10 +224,10 @@ export function UserDetailDrawer({
                         <AlertTriangle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
                         <div>
                           <h4 className="text-sm font-bold text-red-400 mb-1">
-                            Risk Warning ({user.riskLevel})
+                            위험 경고 ({user.riskLevel})
                           </h4>
                           <p className="text-xs text-red-400/80">
-                            {user.riskReason || "Unusual activity detected."}
+                            {user.riskReason || "비정상적인 활동이 감지되었습니다."}
                           </p>
                         </div>
                       </div>
@@ -234,10 +236,10 @@ export function UserDetailDrawer({
                         <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
                         <div>
                           <h4 className="text-sm font-bold text-amber-400 mb-1">
-                            Moderate Risk
+                            중간 위험도
                           </h4>
                           <p className="text-xs text-amber-400/80">
-                            Monitor closely.
+                            면밀한 모니터링이 필요합니다.
                           </p>
                         </div>
                       </div>
@@ -246,10 +248,10 @@ export function UserDetailDrawer({
                         <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
                         <div>
                           <h4 className="text-sm font-bold text-emerald-400 mb-1">
-                            Good Standing
+                            정상
                           </h4>
                           <p className="text-xs text-emerald-400/80">
-                            No risk factors detected.
+                            위험 요소가 감지되지 않았습니다.
                           </p>
                         </div>
                       </div>
@@ -262,7 +264,7 @@ export function UserDetailDrawer({
                           <CardHeader>
                             <CardTitle className="text-sm flex items-center gap-2">
                               <Shield className="w-4 h-4 text-red-500" />
-                              추천 개입 (Suggested Actions)
+                              추천 개입 조치
                             </CardTitle>
                           </CardHeader>
                           <CardContent className="space-y-2">
@@ -325,7 +327,7 @@ export function UserDetailDrawer({
 
                     <div className="rounded-xl bg-[#18181B] border border-white/5 overflow-hidden">
                       <div className="p-3 border-b border-white/5 bg-zinc-900/30 text-[10px] font-bold uppercase tracking-wider text-zinc-500">
-                        티켓 변동 내역 (Ticket Logs)
+                        티켓 변동 내역
                       </div>
                       <Table>
                         <TableHeader className="bg-transparent">
@@ -435,7 +437,7 @@ export function UserDetailDrawer({
 
                     <div className="rounded-xl bg-[#18181B] border border-white/5 overflow-hidden">
                       <div className="p-3 border-b border-white/5 bg-zinc-900/30 text-[10px] font-bold uppercase tracking-wider text-zinc-500">
-                        입출금 트랜잭션 (Vault Logs)
+                        입출금 트랜잭션
                       </div>
                       <Table>
                         <TableHeader>

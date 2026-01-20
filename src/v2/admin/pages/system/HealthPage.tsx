@@ -64,7 +64,7 @@ export default function HealthPage() {
     return (
       <div className="p-8 h-full flex items-center justify-center text-zinc-500">
         <Activity className="w-6 h-6 animate-pulse mr-2" />
-        Checking System Health...
+        시스템 상태 확인 중...
       </div>
     );
   }
@@ -77,7 +77,7 @@ export default function HealthPage() {
           <div className="flex items-center gap-2 text-[#D2FD9C] mb-2">
             <Server className="w-4 h-4" />
             <span className="text-xs font-bold uppercase tracking-wider">
-              Infrastructure Monitor
+              인프라 모니터링 (Infrastructure)
             </span>
           </div>
           <h1 className="text-2xl font-bold tracking-tight">
@@ -89,16 +89,16 @@ export default function HealthPage() {
         </div>
         <div className="flex flex-col items-end gap-2 text-xs text-zinc-500">
           <span className="flex items-center gap-2">
-            <PulsatingDot color="#D2FD9C" /> Live Updates Enabled
+            <PulsatingDot color="#D2FD9C" /> 실시간 업데이트 중
           </span>
-          <span>Last checked: {lastCheck.toLocaleTimeString()}</span>
+          <span>마지막 확인: {lastCheck.toLocaleTimeString()}</span>
           <Button
             variant="outline"
             size="sm"
             className="h-8 border-white/10 hover:bg-white/5"
             onClick={() => refetch()}
           >
-            <RefreshCcw className="w-3 h-3 mr-2" /> Force Refresh
+            <RefreshCcw className="w-3 h-3 mr-2" /> 새로고침
           </Button>
         </div>
       </div>
@@ -115,12 +115,12 @@ export default function HealthPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex justify-between text-sm">
-              <span className="text-zinc-500">Status</span>
+              <span className="text-zinc-500">상태 (Status)</span>
               {getStatusBadge(status.system.db)}
             </div>
             <div className="space-y-1.5">
               <div className="flex justify-between text-xs">
-                <span className="text-zinc-500">Active Connections</span>
+                <span className="text-zinc-500">활성 연결 수</span>
                 <span className="text-zinc-300">12 / 150</span>
               </div>
               <Progress
@@ -145,12 +145,12 @@ export default function HealthPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex justify-between text-sm">
-              <span className="text-zinc-500">Status</span>
+              <span className="text-zinc-500">상태 (Status)</span>
               {getStatusBadge(status.system.redis)}
             </div>
             <div className="space-y-1.5">
               <div className="flex justify-between text-xs">
-                <span className="text-zinc-500">Client Count</span>
+                <span className="text-zinc-500">접속 클라이언트</span>
                 <span className="text-zinc-300">8 Connected</span>
               </div>
               <Progress
@@ -175,12 +175,12 @@ export default function HealthPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex justify-between text-sm">
-              <span className="text-zinc-500">Status</span>
+              <span className="text-zinc-500">상태 (Status)</span>
               {getStatusBadge(status.system.worker)}
             </div>
             <div className="space-y-1.5">
               <div className="flex justify-between text-xs">
-                <span className="text-zinc-500">Uptime</span>
+                <span className="text-zinc-500">가동 시간</span>
                 <span className="text-zinc-300">148h 22m</span>
               </div>
               <Progress
@@ -197,7 +197,7 @@ export default function HealthPage() {
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <Activity className="w-5 h-5 text-[#D2FD9C]" />
-            Recent System Events
+            최근 시스템 이벤트 (Recent Events)
           </CardTitle>
           <CardDescription className="text-zinc-500">
             실시간 인프라 활동 로그입니다.

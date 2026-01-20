@@ -33,6 +33,11 @@ import {
   UserPlus,
   Mail,
   Ban,
+  Wallet,
+  Package,
+  Shield,
+  MessageSquare,
+  History,
 } from "lucide-react";
 import { UserDetailDrawer } from "./UserDetailDrawer";
 import { useAdminUserList } from "../../../hooks/useV2Admin";
@@ -63,6 +68,7 @@ export default function UserListPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
+  const [selectedDrawerTab, setSelectedDrawerTab] = useState<string>("overview");
 
   // Filters
   const [statusFilter, setStatusFilter] = useState<string>("");
@@ -124,11 +130,10 @@ export default function UserListPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white mb-1">
-            회원 관리 (User Management)
+            회원 관리
           </h1>
           <p className="text-sm text-zinc-400">
-            총 {total.toLocaleString()}명의 회원을 관리하고 상세 정보를
-            조회합니다.
+            총 {total.toLocaleString()}명의 회원을 관리하고 상세 정보를 조회합니다.
           </p>
         </div>
         <Button className="bg-[#D2FD9C] text-black hover:bg-[#D2FD9C]/90 font-bold">
@@ -169,7 +174,7 @@ export default function UserListPage() {
             <div className="space-y-4">
               <div>
                 <label className="text-sm text-zinc-400 mb-2 block">
-                  상태 (Status)
+                  상태
                 </label>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="bg-zinc-900 border-zinc-800">
@@ -185,7 +190,7 @@ export default function UserListPage() {
               </div>
               <div>
                 <label className="text-sm text-zinc-400 mb-2 block">
-                  레벨 범위 (Level Range)
+                  레벨 범위
                 </label>
                 <div className="flex items-center gap-2">
                   <Input
@@ -267,11 +272,10 @@ export default function UserListPage() {
                     className="border-zinc-600"
                   />
                 </TableHead>
-                <TableHead className="w-[100px] text-zinc-500">UID</TableHead>
-                <TableHead className="text-zinc-500">닉네임</TableHead>
-                <TableHead className="text-zinc-500">Telegram ID</TableHead>
-                <TableHead className="text-zinc-500">등급 (Tier)</TableHead>
-                <TableHead className="text-zinc-500">
+                <TableHead className="w-[100px] text-zinc-400">UID</TableHead>
+                <TableHead className="text-zinc-400">닉네임</TableHead>
+                <TableHead className="text-zinc-400">텔레그램 ID</TableHead>
+                <TableHead className="text-zinc-400">
                   <button
                     className="flex items-center gap-1 hover:text-white transition-colors"
                     onClick={() => handleSort("level")}
@@ -280,7 +284,7 @@ export default function UserListPage() {
                     <ArrowUpDown className="w-3 h-3" />
                   </button>
                 </TableHead>
-                <TableHead className="text-zinc-500">
+                <TableHead className="text-zinc-400">
                   <button
                     className="flex items-center gap-1 hover:text-white transition-colors"
                     onClick={() => handleSort("vault_balance")}
@@ -289,17 +293,16 @@ export default function UserListPage() {
                     <ArrowUpDown className="w-3 h-3" />
                   </button>
                 </TableHead>
-                <TableHead className="text-zinc-500">
+                <TableHead className="text-zinc-400">
                   <button
                     className="flex items-center gap-1 hover:text-white transition-colors"
                     onClick={() => handleSort("last_active")}
                   >
-                    최근 활동
+                    최근 접속일
                     <ArrowUpDown className="w-3 h-3" />
                   </button>
                 </TableHead>
-                <TableHead className="text-zinc-500">상태</TableHead>
-                <TableHead className="text-right text-zinc-500">관리</TableHead>
+                <TableHead className="text-center text-zinc-400">관리</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -332,20 +335,6 @@ export default function UserListPage() {
                       <span className="text-zinc-600">-</span>
                     )}
                   </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant="secondary"
-                      className={cn(
-                        "bg-zinc-800 text-zinc-300 border-zinc-700",
-                        user.tier === "VIP" &&
-                          "bg-purple-500/10 text-purple-400 border-purple-500/20",
-                        user.tier === "VVIP" &&
-                          "bg-amber-500/10 text-amber-400 border-amber-500/20",
-                      )}
-                    >
-                      {user.tier}
-                    </Badge>
-                  </TableCell>
                   <TableCell className="text-zinc-300">
                     Lv.{user.level}
                   </TableCell>
@@ -355,39 +344,93 @@ export default function UserListPage() {
                   <TableCell className="text-zinc-400 text-xs">
                     {user.last_active}
                   </TableCell>
-                  <TableCell>
-                    <div
-                      className={cn(
-                        "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium",
-                        user.status === "Active"
-                          ? "bg-green-500/10 text-green-500"
-                          : user.status === "Suspended"
-                            ? "bg-red-500/10 text-red-500"
-                            : "bg-zinc-500/10 text-zinc-500",
-                      )}
-                    >
-                      <span
-                        className={cn(
-                          "w-1.5 h-1.5 rounded-full",
-                          user.status === "Active"
-                            ? "bg-green-500"
-                            : user.status === "Suspended"
-                              ? "bg-red-500"
-                              : "bg-zinc-500",
-                        )}
-                      />
-                      {user.status}
+                  <TableCell className="text-center">
+                    <div className="flex items-center justify-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-zinc-500 hover:text-white hover:bg-zinc-800"
+                        onClick={() => {
+                          setSelectedUserId(user.id);
+                          setSelectedDrawerTab("overview");
+                        }}
+                        title="상세 정보"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-indigo-400 hover:text-white hover:bg-zinc-800"
+                        onClick={() => {
+                          setSelectedUserId(user.id);
+                          setSelectedDrawerTab("wallet");
+                        }}
+                        title="지갑 관리"
+                      >
+                        <Wallet className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-emerald-400 hover:text-white hover:bg-zinc-800"
+                        onClick={() => {
+                          setSelectedUserId(user.id);
+                          setSelectedDrawerTab("vault");
+                        }}
+                        title="금고 관리"
+                      >
+                        <Wallet className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-purple-400 hover:text-white hover:bg-zinc-800"
+                        onClick={() => {
+                          setSelectedUserId(user.id);
+                          setSelectedDrawerTab("inventory");
+                        }}
+                        title="인벤토리"
+                      >
+                        <Package className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-amber-400 hover:text-white hover:bg-zinc-800"
+                        onClick={() => {
+                          setSelectedUserId(user.id);
+                          setSelectedDrawerTab("logs");
+                        }}
+                        title="활동 로그"
+                      >
+                        <History className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-blue-400 hover:text-white hover:bg-zinc-800"
+                        onClick={() => {
+                          setSelectedUserId(user.id);
+                          setSelectedDrawerTab("notes");
+                        }}
+                        title="상담/메모"
+                      >
+                        <MessageSquare className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-red-400 hover:text-white hover:bg-zinc-800"
+                        onClick={() => {
+                          setSelectedUserId(user.id);
+                          setSelectedDrawerTab("overview");
+                        }}
+                        title="제재 관리"
+                      >
+                        <Shield className="h-4 w-4" />
+                      </Button>
                     </div>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-zinc-500 hover:text-white hover:bg-zinc-800"
-                      onClick={() => setSelectedUserId(user.id)}
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -399,8 +442,8 @@ export default function UserListPage() {
       {/* Pagination */}
       <div className="flex items-center justify-between px-4 py-3 bg-[#18181B] rounded-xl border border-white/5">
         <div className="text-sm text-zinc-400">
-          Showing {(page - 1) * limit + 1} to {Math.min(page * limit, total)} of{" "}
-          {total} results
+          {(page - 1) * limit + 1}~{Math.min(page * limit, total)} / 총{" "}
+          {total}개
         </div>
         <div className="flex items-center gap-2">
           <Button
@@ -411,10 +454,10 @@ export default function UserListPage() {
             onClick={() => setPage(page - 1)}
           >
             <ChevronLeft className="h-4 w-4" />
-            Previous
+            이전
           </Button>
           <span className="text-sm text-zinc-400">
-            Page {page} of {totalPages}
+            {page} / {totalPages} 페이지
           </span>
           <Button
             variant="outline"
@@ -423,7 +466,7 @@ export default function UserListPage() {
             disabled={page === totalPages}
             onClick={() => setPage(page + 1)}
           >
-            Next
+            다음
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
@@ -433,6 +476,7 @@ export default function UserListPage() {
         isOpen={!!selectedUserId}
         onClose={() => setSelectedUserId(null)}
         userId={selectedUserId}
+        defaultTab={selectedDrawerTab}
       />
     </div>
   );

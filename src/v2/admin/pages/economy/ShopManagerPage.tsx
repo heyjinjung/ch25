@@ -7,13 +7,13 @@ import {
     useAdminUpdateProductPrice,
     useExchangeRates,
     useUpdateExchangeRate
-} from "../../../hooks/useV2Admin"; // Updated hook path
+} from "../../../hooks/useV2Admin";
 import { Skeleton } from "../../../components/ui/skeleton";
 import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
 import { RefreshCw, ArrowRightLeft } from "lucide-react";
 import type { AdminProductDto, ExchangeRateDto } from "../../../api/adminApi";
-import { useState } from "react";
+import React from "react";
 
 export default function ShopManagerPage() {
   const { data: products = [], isLoading: isProductsLoading } = useAdminProducts();
@@ -67,34 +67,40 @@ export default function ShopManagerPage() {
               <h2 className="text-lg font-semibold text-zinc-200">Exchange Editor</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {rates.map((rate: ExchangeRateDto) => (
-                  <Card key={rate.id} className="bg-[#18181B] border-white/5 relative overflow-hidden">
-                      <div className="absolute top-0 right-0 p-3 opacity-10">
-                          <RefreshCw className="w-16 h-16" />
-                      </div>
-                      <CardHeader className="pb-2">
-                          <CardTitle className="text-sm font-medium text-zinc-400">
-                              {rate.source} <span className="text-zinc-600">to</span> {rate.target}
-                          </CardTitle>
-                          <CardDescription className="text-xs text-zinc-500">
-                              Last updated: {rate.updatedAt}
-                          </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                          <div className="flex items-end gap-2">
-                              <div className="flex-1 space-y-1">
-                                  <label className="text-xs font-medium text-zinc-500">Rate</label>
-                                  <Input 
-                                      className="bg-black/50 border-white/10 text-lg font-bold h-10" 
-                                      defaultValue={rate.rate}
-                                      onBlur={(e) => handleRateUpdate(rate.id, e.target.value)}
-                                  />
-                              </div>
-                              <div className="pb-2 text-zinc-500 text-sm font-mono">= 1 {rate.source}</div>
-                          </div>
-                      </CardContent>
-                  </Card>
-              ))}
+              {rates && rates.length > 0 ? (
+                  rates.map((rate: ExchangeRateDto) => (
+                    <Card key={rate.id} className="bg-[#18181B] border-white/5 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-3 opacity-10">
+                            <RefreshCw className="w-16 h-16" />
+                        </div>
+                        <CardHeader className="pb-2">
+                            <CardTitle className="text-sm font-medium text-zinc-400">
+                                {rate.source} <span className="text-zinc-600">to</span> {rate.target}
+                            </CardTitle>
+                            <CardDescription className="text-xs text-zinc-500">
+                                Last updated: {rate.updatedAt}
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="flex items-end gap-2">
+                                <div className="flex-1 space-y-1">
+                                    <label className="text-xs font-medium text-zinc-500">Rate</label>
+                                    <Input 
+                                        className="bg-black/50 border-white/10 text-lg font-bold h-10" 
+                                        defaultValue={rate.rate}
+                                        onBlur={(e) => handleRateUpdate(rate.id, e.target.value)}
+                                    />
+                                </div>
+                                <div className="pb-2 text-zinc-500 text-sm font-mono">= 1 {rate.source}</div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                  ))
+              ) : (
+                  <div className="col-span-full py-10 text-center text-zinc-500 border border-dashed border-white/10 rounded-xl">
+                      환율 정보가 없습니다. Mock 데이터를 확인해주세요.
+                  </div>
+              )}
           </div>
       </section>
 
@@ -144,4 +150,3 @@ export default function ShopManagerPage() {
     </div>
   );
 }
-

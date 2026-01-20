@@ -32,7 +32,9 @@ export default function AdminLayout() {
   const navItems = [
     { icon: LayoutDashboard, label: "대시보드", path: "/v2/admin/dashboard" },
     { icon: Users, label: "유저관리", path: "/v2/admin/users" },
+    { icon: Users, label: "세그먼트", path: "/v2/admin/users/segments" },
     { icon: CreditCard, label: "금고현황", path: "/v2/admin/economy/vault" },
+    { icon: CreditCard, label: "입금관리", path: "/v2/admin/economy/deposits" },
     { icon: CreditCard, label: "상점관리", path: "/v2/admin/economy/shop" },
     { icon: Settings, label: "게임설정", path: "/v2/admin/game/missions" },
     { icon: Settings, label: "시스템", path: "/v2/admin/system/modals" },
