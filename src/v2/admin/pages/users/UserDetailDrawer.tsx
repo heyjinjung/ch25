@@ -16,67 +16,28 @@ import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
-import { cn } from "../../../lib/utils";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from "../../../components/ui/card";
-import { NumberTicker } from "../../components/ui/NumberTicker";
-import {
-  Shield,
-  AlertTriangle,
-  Ticket,
-  Edit,
-  CheckCircle2,
-  Package,
-  MessageSquare,
-  Target,
-  Trophy,
-  RefreshCw,
-} from "lucide-react";
-import {
-  useRef,
-  useEffect,
-  useState,
-  useMemo,
-  JSXElementConstructor,
-  Key,
-  ReactElement,
-  ReactNode,
-  ReactPortal,
-} from "react";
+import { Ticket, Edit, Package, Vault } from "lucide-react";
+import { useRef, useEffect, useState, useMemo } from "react";
 import gsap from "gsap";
 import { WalletEditor } from "../../components/users/WalletEditor";
 import {
-  useUserMissionHistory,
-  useForceCompleteMission,
-  useUserSegment,
-  useAdminTicketLogs,
   useAdjustUserWallet,
   useAdjustUserInventory,
   useAdminUserDetail,
-  useCreateUserNote,
-  useRunIntervention,
-  useUserActivityLogs,
   useUserInventory,
-  useUserNotes,
-  useVaultUserLedger,
 } from "../../../hooks/useV2Admin";
 import {
   getInventoryRewardItems,
   getRewardItemLabel,
+  type RewardCategory,
 } from "../../../constants/rewardItems";
 import { Textarea } from "../../../components/ui/textarea";
-import {
-  Table,
-  TableHeader,
-  TableRow,
-  TableHead,
-  TableBody,
-  TableCell,
-} from "../../../components/ui/table";
 import {
   Select,
   SelectContent,
@@ -96,13 +57,15 @@ export function UserDetailDrawer({
   isOpen,
   onClose,
   userId,
-  defaultTab = "overview",
+  defaultTab = "wallet",
 }: UserDetailDrawerProps) {
   const contentRef = useRef<HTMLDivElement>(null);
   const [isWalletEditorOpen, setIsWalletEditorOpen] = useState(false);
   const [walletEditorInitialType, setWalletEditorInitialType] =
     useState<string>("ROULETTE_COIN");
-  const [newNote, setNewNote] = useState("");
+  const [walletEditorCategories, setWalletEditorCategories] = useState<
+    RewardCategory[]
+  >(["GAME_TICKET"]);
   const inventoryAdjustItems = useMemo(() => getInventoryRewardItems(), []);
   const defaultInventoryItem =
     inventoryAdjustItems[0]?.value || "CHICKEN_GIFTICON_5000";
@@ -112,65 +75,9 @@ export function UserDetailDrawer({
   const [inventoryAdjustNote, setInventoryAdjustNote] = useState<string>("");
 
   const { data: user, isLoading } = useAdminUserDetail(userId);
-  const { data: activityLogs } = useUserActivityLogs(userId);
   const { data: inventory } = useUserInventory(userId);
-  const { data: notes } = useUserNotes(userId);
-  const { data: missions } = useUserMissionHistory(userId);
-  const { data: segment } = useUserSegment(userId);
-  const { data: ticketLogs } = useAdminTicketLogs(
-    userId || undefined,
-    undefined,
-    undefined,
-    1000,
-    { enabled: !!userId },
-  );
-
-  const mergedTicketLogs = useMemo(() => {
-    const ledgerLogs = (ticketLogs ?? []).map((log) => ({
-      id: log.id,
-      type: log.type,
-      amount: typeof log.amount === "number" ? log.amount : null,
-      balanceAfter:
-        typeof log.balanceAfter === "number" ? log.balanceAfter : null,
-      reason: log.reason || "-",
-      timestamp: log.timestamp,
-    }));
-
-    const activityAsLogs = (activityLogs ?? []).map((log) => {
-      const meta = (log.metadata || {}) as {
-        before?: Record<string, unknown>;
-        after?: Record<string, unknown>;
-      };
-      const before = meta.before || {};
-      const after = meta.after || {};
-      const rawAmount = (after.amount_change ??
-        after.delta ??
-        before.amount_change) as number | undefined;
-
-      return {
-        id: `activity-${log.id}`,
-        type: `ACTIVITY:${log.type}`,
-        amount: typeof rawAmount === "number" ? rawAmount : null,
-        balanceAfter: null,
-        reason: log.description || "-",
-        timestamp: log.timestamp,
-      };
-    });
-
-    return [...ledgerLogs, ...activityAsLogs]
-      .sort(
-        (a, b) =>
-          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
-      )
-      .slice(0, 100);
-  }, [ticketLogs, activityLogs]);
-
-  const runIntervention = useRunIntervention();
   const adjustWallet = useAdjustUserWallet();
   const adjustInventory = useAdjustUserInventory();
-  const createNote = useCreateUserNote();
-  const forceCompleteMission = useForceCompleteMission();
-
   // GSAP Animation for Tab Content
   useEffect(() => {
     if (isOpen && contentRef.current && user) {
@@ -181,12 +88,6 @@ export function UserDetailDrawer({
       );
     }
   }, [isOpen, user]);
-
-  const handleCreateNote = async () => {
-    if (!userId || !newNote.trim()) return;
-    await createNote.mutateAsync({ userId, content: newNote });
-    setNewNote("");
-  };
 
   const handleInventoryAdjust = async () => {
     if (!userId) return;
@@ -236,11 +137,6 @@ export function UserDetailDrawer({
                           VIP
                         </Badge>
                       )}
-                      {segment && (
-                        <Badge className="bg-indigo-500/10 text-indigo-400 border-indigo-500/20 text-[10px] h-5">
-                          {segment.label}
-                        </Badge>
-                      )}
                     </SheetTitle>
                     <SheetDescription className="text-zinc-400 text-xs">
                       가입일 {new Date(user.createdAt).toLocaleDateString()} •
@@ -256,156 +152,24 @@ export function UserDetailDrawer({
 
             <Tabs defaultValue={defaultTab} className="h-full">
               <TabsList className="w-full grid grid-cols-3 gap-2 bg-[#18181B] p-4 h-auto">
-                <TabsTrigger value="overview" className="tab-trigger">
-                  기본 정보
-                </TabsTrigger>
                 <TabsTrigger value="wallet" className="tab-trigger">
-                  지갑
-                </TabsTrigger>
-                <TabsTrigger value="vault" className="tab-trigger">
-                  금고
+                  티켓
                 </TabsTrigger>
                 <TabsTrigger value="inventory" className="tab-trigger">
                   인벤토리
                 </TabsTrigger>
-                <TabsTrigger value="logs" className="tab-trigger">
-                  활동 로그
-                </TabsTrigger>
-                <TabsTrigger value="notes" className="tab-trigger">
-                  상담/메모
-                </TabsTrigger>
-                <TabsTrigger value="segment" className="tab-trigger">
-                  세그먼트
-                </TabsTrigger>
-                <TabsTrigger value="missions" className="tab-trigger">
-                  미션
+                <TabsTrigger value="vault" className="tab-trigger">
+                  금고
                 </TabsTrigger>
               </TabsList>
 
               <ScrollArea className="h-[calc(100vh-160px)] bg-[#121214]">
                 <div className="p-6 space-y-6" ref={contentRef}>
-                  {/* 1. 기본 정보 (Overview) */}
-                  <TabsContent value="overview" className="m-0 space-y-6">
-                    <div className="grid grid-cols-2 gap-4">
-                      <Card className="bg-[#18181B] border-white/5">
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-sm font-medium text-zinc-400">
-                            총 입금
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="text-2xl font-bold text-white flex items-baseline gap-1">
-                            ₩ <NumberTicker value={user.totalDeposit || 0} />
-                          </div>
-                        </CardContent>
-                      </Card>
-                      <Card className="bg-[#18181B] border-white/5">
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-sm font-medium text-zinc-400">
-                            현재 자산
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="text-2xl font-bold text-emerald-400 flex items-baseline gap-1">
-                            ₩ <NumberTicker value={user.currentAssets || 0} />
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </div>
-
-                    {/* Risk Section */}
-                    {user.riskLevel === "HIGH" ? (
-                      <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-4 flex items-start gap-3">
-                        <AlertTriangle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
-                        <div>
-                          <h4 className="text-sm font-bold text-red-400 mb-1">
-                            위험 경고 ({user.riskLevel})
-                          </h4>
-                          <p className="text-xs text-red-400/80">
-                            {user.riskReason ||
-                              "비정상적인 활동이 감지되었습니다."}
-                          </p>
-                        </div>
-                      </div>
-                    ) : user.riskLevel === "MEDIUM" ? (
-                      <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 flex items-start gap-3">
-                        <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
-                        <div>
-                          <h4 className="text-sm font-bold text-amber-400 mb-1">
-                            중간 위험도
-                          </h4>
-                          <p className="text-xs text-amber-400/80">
-                            면밀한 모니터링이 필요합니다.
-                          </p>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 flex items-start gap-3">
-                        <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
-                        <div>
-                          <h4 className="text-sm font-bold text-emerald-400 mb-1">
-                            정상
-                          </h4>
-                          <p className="text-xs text-emerald-400/80">
-                            위험 요소가 감지되지 않았습니다.
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Intervention Playbook */}
-                    {user.playbook &&
-                      user.playbook.suggestedActions.length > 0 && (
-                        <Card className="bg-[#18181B] border-red-500/10">
-                          <CardHeader>
-                            <CardTitle className="text-sm flex items-center gap-2">
-                              <Shield className="w-4 h-4 text-red-500" />
-                              추천 개입 조치
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent className="space-y-2">
-                            {user.playbook.suggestedActions
-                              .slice(0, 2)
-                              .map((action) => (
-                                <div
-                                  key={action.actionId}
-                                  className="flex justify-between items-center p-3 rounded-lg bg-zinc-900/50 border border-white/5"
-                                >
-                                  <div className="flex-1">
-                                    <div className="text-sm font-medium">
-                                      {action.label}
-                                    </div>
-                                    <div className="text-xs text-zinc-500">
-                                      {action.description}
-                                    </div>
-                                  </div>
-                                  <Button
-                                    size="sm"
-                                    className="h-7 text-xs bg-indigo-500 text-white hover:bg-indigo-600"
-                                    onClick={() =>
-                                      runIntervention.mutate({
-                                        userId: user.id,
-                                        actionId: action.actionId,
-                                      })
-                                    }
-                                    disabled={runIntervention.isPending}
-                                  >
-                                    실행
-                                  </Button>
-                                </div>
-                              ))}
-                          </CardContent>
-                        </Card>
-                      )}
-                  </TabsContent>
-
-                  {/* 2. 지갑 (Wallet) */}
+                  {/* 1. 티켓 (Wallet) */}
                   <TabsContent value="wallet" className="m-0 space-y-4">
                     <div className="flex justify-between items-center bg-[#18181B] p-4 rounded-xl border border-white/5">
                       <div>
-                        <div className="text-sm text-zinc-500">
-                          현재 티켓 보유량
-                        </div>
+                        <div className="text-sm text-zinc-500">잔여 티켓</div>
                         <div className="text-2xl font-mono text-white font-bold flex items-center gap-2">
                           <Ticket className="w-6 h-6 text-indigo-400" />
                           {(user.ticketBalance || 0).toLocaleString()} T
@@ -416,162 +180,17 @@ export function UserDetailDrawer({
                         className="border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/10"
                         onClick={() => {
                           setWalletEditorInitialType("ROULETTE_TICKET");
+                          setWalletEditorCategories(["GAME_TICKET"]);
                           setIsWalletEditorOpen(true);
                         }}
                       >
                         <Edit className="w-4 h-4 mr-2" />
-                        수량 조정
+                        티켓 지급/회수
                       </Button>
                     </div>
-
-                    <div className="rounded-xl bg-[#18181B] border border-white/5 overflow-hidden">
-                      <div className="p-3 border-b border-white/5 bg-zinc-900/30 text-[10px] font-bold uppercase tracking-wider text-zinc-500">
-                        티켓/활동 내역
-                      </div>
-                      <Table>
-                        <TableHeader className="bg-transparent">
-                          <TableRow className="border-white/5 hover:bg-transparent">
-                            <TableHead className="text-[10px] h-8">
-                              구분
-                            </TableHead>
-                            <TableHead className="text-[10px] h-8">
-                              변동
-                            </TableHead>
-                            <TableHead className="text-[10px] h-8">
-                              잔액
-                            </TableHead>
-                            <TableHead className="text-[10px] h-8">
-                              사유
-                            </TableHead>
-                            <TableHead className="text-right text-[10px] h-8">
-                              일시
-                            </TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {mergedTicketLogs.length > 0 ? (
-                            mergedTicketLogs.map(
-                              (log: {
-                                id: Key | null | undefined;
-                                type:
-                                  | string
-                                  | number
-                                  | boolean
-                                  | ReactElement<
-                                      any,
-                                      string | JSXElementConstructor<any>
-                                    >
-                                  | Iterable<ReactNode>
-                                  | null
-                                  | undefined;
-                                amount:
-                                  | string
-                                  | number
-                                  | boolean
-                                  | ReactElement<
-                                      any,
-                                      string | JSXElementConstructor<any>
-                                    >
-                                  | Iterable<ReactNode>
-                                  | null
-                                  | undefined;
-                                balanceAfter:
-                                  | string
-                                  | number
-                                  | boolean
-                                  | ReactElement<
-                                      any,
-                                      string | JSXElementConstructor<any>
-                                    >
-                                  | Iterable<ReactNode>
-                                  | ReactPortal
-                                  | null
-                                  | undefined;
-                                reason:
-                                  | string
-                                  | number
-                                  | boolean
-                                  | ReactElement<
-                                      any,
-                                      string | JSXElementConstructor<any>
-                                    >
-                                  | Iterable<ReactNode>
-                                  | ReactPortal
-                                  | null
-                                  | undefined;
-                                timestamp: string | number | Date;
-                              }) => (
-                                <TableRow
-                                  key={log.id}
-                                  className="border-white/5 hover:bg-white/5 text-[11px]"
-                                >
-                                  <TableCell className="py-2">
-                                    <Badge
-                                      className={cn(
-                                        "text-[9px] px-1 h-4",
-                                        log.type === "USE"
-                                          ? "bg-red-500/10 text-red-500"
-                                          : log.type === "GRANT"
-                                            ? "bg-emerald-500/10 text-emerald-500"
-                                            : "bg-zinc-500/10 text-zinc-400",
-                                      )}
-                                    >
-                                      {log.type}
-                                    </Badge>
-                                  </TableCell>
-                                  <TableCell
-                                    className={cn(
-                                      "py-2 font-mono",
-                                      typeof log.amount === "number"
-                                        ? (log.amount as number) > 0
-                                          ? "text-emerald-400"
-                                          : "text-red-400"
-                                        : "text-zinc-400",
-                                    )}
-                                  >
-                                    {typeof log.amount === "number"
-                                      ? (log.amount as number) > 0
-                                        ? `+${log.amount}`
-                                        : log.amount
-                                      : "-"}
-                                  </TableCell>
-                                  <TableCell className="py-2 text-zinc-400">
-                                    {typeof log.balanceAfter === "number"
-                                      ? `${log.balanceAfter} T`
-                                      : "-"}
-                                  </TableCell>
-                                  <TableCell className="py-2 text-zinc-300 max-w-[120px] truncate">
-                                    {log.reason}
-                                  </TableCell>
-                                  <TableCell className="py-2 text-right text-zinc-500">
-                                    {new Date(
-                                      log.timestamp,
-                                    ).toLocaleDateString()}
-                                  </TableCell>
-                                </TableRow>
-                              ),
-                            )
-                          ) : (
-                            <TableRow>
-                              <TableCell
-                                colSpan={5}
-                                className="h-24 text-center text-zinc-600"
-                              >
-                                최근 내역이 없습니다.
-                              </TableCell>
-                            </TableRow>
-                          )}
-                        </TableBody>
-                      </Table>
-                    </div>
                   </TabsContent>
 
-                  {/* 3. 금고 (Vault) */}
-                  <TabsContent value="vault" className="m-0 space-y-4">
-                    <UserVaultLedgerSection userId={userId} />
-                  </TabsContent>
-
-                  {/* 4. 인벤토리 (Inventory) */}
+                  {/* 2. 인벤토리 (Inventory) */}
                   <TabsContent value="inventory" className="m-0 space-y-4">
                     <div className="flex items-center gap-2 mb-4">
                       <Package className="w-5 h-5 text-indigo-400" />
@@ -687,236 +306,58 @@ export function UserDetailDrawer({
                     )}
                   </TabsContent>
 
-                  {/* 5. 활동 로그 (Activity Logs) */}
-                  <TabsContent value="logs" className="m-0 space-y-4">
-                    {activityLogs && activityLogs.length > 0 ? (
-                      <div className="space-y-2">
-                        {activityLogs.map((log) => (
-                          <div
-                            key={log.id}
-                            className="p-3 rounded-lg bg-[#18181B] border border-white/5"
-                          >
-                            <div className="flex justify-between items-start mb-1">
-                              <Badge className="text-[10px]">{log.type}</Badge>
-                              <span className="text-xs text-zinc-500">
-                                {new Date(log.timestamp).toLocaleString()}
-                              </span>
-                            </div>
-                            <div className="text-sm text-zinc-300">
-                              {log.description}
-                            </div>
-                          </div>
-                        ))}
+                  {/* 3. 금고 (Vault) */}
+                  <TabsContent value="vault" className="m-0 space-y-4">
+                    <div className="flex justify-between items-center bg-[#18181B] p-4 rounded-xl border border-white/5">
+                      <div>
+                        <div className="text-sm text-zinc-500">잔여 금고액</div>
+                        <div className="text-2xl font-mono text-white font-bold flex items-center gap-2">
+                          <Vault className="w-6 h-6 text-emerald-400" />₩{" "}
+                          {(user.vaultBalance || 0).toLocaleString()} P
+                        </div>
                       </div>
-                    ) : (
-                      <div className="text-center text-zinc-500 py-10">
-                        활동 로그가 없습니다.
-                      </div>
-                    )}
-                  </TabsContent>
-
-                  {/* 6. 상담/메모 (Notes) */}
-                  <TabsContent value="notes" className="m-0 space-y-4">
-                    <div className="flex items-center gap-2 mb-4">
-                      <MessageSquare className="w-5 h-5 text-indigo-400" />
-                      <h3 className="text-lg font-bold">운영자 메모</h3>
+                      <Button
+                        variant="outline"
+                        className="border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10"
+                        onClick={() => {
+                          setWalletEditorInitialType("VAULT");
+                          setWalletEditorCategories(["VAULT"]);
+                          setIsWalletEditorOpen(true);
+                        }}
+                      >
+                        <Edit className="w-4 h-4 mr-2" />
+                        금고 지급/차감
+                      </Button>
                     </div>
-
-                    <Card className="bg-[#18181B] border-white/5">
-                      <CardContent className="p-4 space-y-3">
-                        <Textarea
-                          placeholder="메모 내용을 입력하세요..."
-                          className="bg-zinc-900 border-zinc-800 text-white min-h-[100px]"
-                          value={newNote}
-                          onChange={(e) => setNewNote(e.target.value)}
-                        />
-                        <Button
-                          className="w-full bg-indigo-500 hover:bg-indigo-600"
-                          onClick={handleCreateNote}
-                          disabled={!newNote.trim() || createNote.isPending}
-                        >
-                          메모 저장
-                        </Button>
-                      </CardContent>
-                    </Card>
-
-                    {notes && notes.length > 0 ? (
-                      <div className="space-y-3">
-                        {notes.map((note) => (
-                          <Card
-                            key={note.id}
-                            className="bg-[#18181B] border-white/5"
-                          >
-                            <CardContent className="p-4">
-                              <div className="flex justify-between items-start mb-2">
-                                <span className="text-sm font-medium text-indigo-400">
-                                  {note.adminNickname}
-                                </span>
-                                <span className="text-xs text-zinc-500">
-                                  {new Date(note.createdAt).toLocaleString()}
-                                </span>
-                              </div>
-                              <p className="text-sm text-zinc-300 whitespace-pre-wrap">
-                                {note.content}
-                              </p>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center text-zinc-500 py-10">
-                        작성된 메모가 없습니다.
-                      </div>
-                    )}
-                  </TabsContent>
-
-                  {/* 7. 세그먼트 (Segment) */}
-                  <TabsContent value="segment" className="m-0 space-y-4">
-                    <div className="flex items-center gap-2 mb-4">
-                      <Target className="w-5 h-5 text-indigo-400" />
-                      <h3 className="text-lg font-bold">유저 세그먼트</h3>
-                    </div>
-
-                    {segment ? (
-                      <Card className="bg-[#18181B] border-white/5">
-                        <CardHeader>
-                          <CardTitle>현재 세그먼트</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <Badge className="text-lg px-4 py-2">
-                            {segment.label}
-                          </Badge>
-                          <p className="text-sm text-zinc-400 mt-3">
-                            이 유저는 자동 분류 규칙에 따라 위 세그먼트에
-                            속합니다.
-                          </p>
-                        </CardContent>
-                      </Card>
-                    ) : (
-                      <div className="text-center text-zinc-500 py-10">
-                        세그먼트 정보를 불러올 수 없습니다.
-                      </div>
-                    )}
-                  </TabsContent>
-
-                  {/* 8. 미션 (Missions) */}
-                  <TabsContent value="missions" className="m-0 space-y-4">
-                    <div className="flex items-center gap-2 mb-4">
-                      <Trophy className="w-5 h-5 text-indigo-400" />
-                      <h3 className="text-lg font-bold">
-                        미션 수행 이력 (당일)
-                      </h3>
-                    </div>
-
-                    {missions && missions.length > 0 ? (
-                      <div className="space-y-3">
-                        {missions
-                          .filter((mission) => {
-                            // Filter DAILY and WEEKLY missions to show only today's
-                            if (
-                              mission.category === "DAILY" ||
-                              mission.category === "WEEKLY"
-                            ) {
-                              const today = new Date();
-                              today.setHours(0, 0, 0, 0);
-                              const missionDate = new Date(mission.updatedAt);
-                              missionDate.setHours(0, 0, 0, 0);
-                              return missionDate.getTime() === today.getTime();
-                            }
-                            // Show all other mission types
-                            return true;
-                          })
-                          .map((mission) => (
-                            <Card
-                              key={mission.id}
-                              className="bg-[#18181B] border-white/5"
-                            >
-                              <CardContent className="p-4">
-                                <div className="flex justify-between items-start mb-2">
-                                  <div>
-                                    <div className="font-medium">
-                                      {mission.missionTitle}
-                                    </div>
-                                    <Badge className="text-[10px] mt-1">
-                                      {mission.category}
-                                    </Badge>
-                                  </div>
-                                  <Badge
-                                    className={
-                                      mission.status === "COMPLETED"
-                                        ? "bg-green-500/10 text-green-500"
-                                        : "bg-zinc-500/10 text-zinc-500"
-                                    }
-                                  >
-                                    {mission.status}
-                                  </Badge>
-                                </div>
-                                <div className="flex items-center gap-2 mb-2">
-                                  <div className="flex-1">
-                                    <progress
-                                      value={mission.progress}
-                                      max={mission.maxProgress || 1}
-                                      className="h-2 w-full appearance-none rounded-full overflow-hidden bg-zinc-800 [&::-webkit-progress-bar]:bg-zinc-800 [&::-webkit-progress-value]:bg-indigo-500 [&::-moz-progress-bar]:bg-indigo-500"
-                                    />
-                                  </div>
-                                  <span className="text-xs text-zinc-400">
-                                    {mission.progress}/{mission.maxProgress}
-                                  </span>
-                                </div>
-                                {mission.status !== "COMPLETED" && (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="w-full mt-2"
-                                    onClick={() =>
-                                      forceCompleteMission.mutate({
-                                        userId: user.id,
-                                        missionId: mission.missionId,
-                                      })
-                                    }
-                                    disabled={forceCompleteMission.isPending}
-                                  >
-                                    강제 완료 처리
-                                  </Button>
-                                )}
-                              </CardContent>
-                            </Card>
-                          ))}
-                      </div>
-                    ) : (
-                      <div className="text-center text-zinc-500 py-10">
-                        미션 수행 이력이 없습니다.
-                      </div>
-                    )}
                   </TabsContent>
                 </div>
               </ScrollArea>
             </Tabs>
-          </>
-        )}
 
-        {/* Wallet Editor Modal */}
-        {user && (
-          <WalletEditor
-            isOpen={isWalletEditorOpen}
-            onClose={() => setIsWalletEditorOpen(false)}
-            userId={user.id}
-            currentTickets={user.ticketBalance}
-            currentVaultBalance={user.vaultBalance}
-            initialTokenType={walletEditorInitialType}
-            onUpdate={async (amt, reason, type) => {
-              if (user) {
-                await adjustWallet.mutateAsync({
-                  userId: user.id,
-                  request: {
-                    amount: amt,
-                    token_type: type,
-                    reason: reason,
-                  },
-                });
-              }
-            }}
-          />
+            {isWalletEditorOpen && (
+              <WalletEditor
+                isOpen={isWalletEditorOpen}
+                onClose={() => setIsWalletEditorOpen(false)}
+                userId={user.id}
+                currentTickets={user.ticketBalance}
+                currentVaultBalance={user.vaultBalance}
+                initialTokenType={walletEditorInitialType}
+                allowedCategories={walletEditorCategories}
+                onUpdate={async (amt, reason, type) => {
+                  if (user) {
+                    await adjustWallet.mutateAsync({
+                      userId: user.id,
+                      request: {
+                        amount: amt,
+                        token_type: type,
+                        reason: reason,
+                      },
+                    });
+                  }
+                }}
+              />
+            )}
+          </>
         )}
       </SheetContent>
 
@@ -926,130 +367,5 @@ export function UserDetailDrawer({
         }
       `}</style>
     </Sheet>
-  );
-}
-
-function UserVaultLedgerSection({ userId }: { userId: number | null }) {
-  const { data, isLoading, refetch } = useVaultUserLedger(userId);
-
-  return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h3 className="text-sm font-medium text-zinc-400">
-          금고 입출금 내역 (Vault Ledger)
-        </h3>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => refetch()}
-          className="h-7 text-xs border-white/10 hover:bg-white/5"
-        >
-          <RefreshCw
-            className={cn("w-3 h-3 mr-1", isLoading && "animate-spin")}
-          />
-          새로고침
-        </Button>
-      </div>
-
-      <div className="rounded-md border border-white/5 overflow-hidden">
-        <Table>
-          <TableHeader className="bg-white/5">
-            <TableRow className="border-white/5 hover:bg-transparent">
-              <TableHead className="text-[10px] h-8 text-zinc-400">
-                일시
-              </TableHead>
-              <TableHead className="text-[10px] h-8 text-zinc-400">
-                변동액
-              </TableHead>
-              <TableHead className="text-[10px] h-8 text-zinc-400">
-                잔액 (After)
-              </TableHead>
-              <TableHead className="text-[10px] h-8 text-zinc-400 text-right">
-                사유
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell
-                  colSpan={4}
-                  className="h-32 text-center text-zinc-500"
-                >
-                  <div className="flex flex-col items-center gap-2">
-                    <RefreshCw className="w-5 h-5 animate-spin" />
-                    <span>내역을 불러오는 중...</span>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ) : !data?.items || data.items.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={4}
-                  className="h-32 text-center text-zinc-600"
-                >
-                  거래 내역이 없습니다.
-                </TableCell>
-              </TableRow>
-            ) : (
-              data.items.map((item) => (
-                <TableRow
-                  key={item.id}
-                  className="border-white/5 hover:bg-white/[0.02]"
-                >
-                  <TableCell className="text-[10px] font-mono text-zinc-500">
-                    {new Date(item.created_at).toLocaleString()}
-                  </TableCell>
-                  <TableCell
-                    className={cn(
-                      "text-xs font-bold font-mono",
-                      item.amount > 0 ? "text-emerald-400" : "text-red-400",
-                    )}
-                  >
-                    {item.amount > 0 ? "+" : ""}
-                    {item.amount.toLocaleString()} P
-                  </TableCell>
-                  <TableCell className="text-xs font-mono text-zinc-300">
-                    {item.balance_after.toLocaleString()} P
-                  </TableCell>
-                  <TableCell className="text-[10px] text-zinc-500 text-right max-w-[200px] truncate">
-                    {item.reason || "-"}
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
-      {data && (
-        <div className="grid grid-cols-3 gap-2 mt-4 text-xs">
-          <div className="bg-black/20 p-2 rounded border border-white/5 text-center">
-            <div className="text-zinc-500 mb-1">총 입금</div>
-            <div className="text-emerald-400 font-bold">
-              +{data.total_in.toLocaleString()}
-            </div>
-          </div>
-          <div className="bg-black/20 p-2 rounded border border-white/5 text-center">
-            <div className="text-zinc-500 mb-1">총 출금</div>
-            <div className="text-red-400 font-bold">
-              {data.total_out.toLocaleString()}
-            </div>
-          </div>
-          <div className="bg-black/20 p-2 rounded border border-white/5 text-center">
-            <div className="text-zinc-500 mb-1">순 변동</div>
-            <div
-              className={cn(
-                "font-bold",
-                data.net_change >= 0 ? "text-emerald-400" : "text-red-400",
-              )}
-            >
-              {data.net_change > 0 ? "+" : ""}
-              {data.net_change.toLocaleString()}
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
   );
 }

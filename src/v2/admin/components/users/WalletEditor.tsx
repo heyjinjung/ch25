@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
-import { getRewardItemsByCategories } from "../../../constants/rewardItems";
+import {
+  getRewardItemsByCategories,
+  type RewardCategory,
+} from "../../../constants/rewardItems";
 import {
   Dialog,
   DialogContent,
@@ -28,6 +31,7 @@ interface WalletEditorProps {
   currentTickets: number; // Optional reference
   currentVaultBalance: number; // [NEW]
   initialTokenType?: string;
+  allowedCategories?: RewardCategory[];
   onUpdate: (
     newAmount: number,
     reason: string,
@@ -42,6 +46,7 @@ export function WalletEditor({
   currentTickets,
   currentVaultBalance,
   initialTokenType,
+  allowedCategories,
   onUpdate,
 }: WalletEditorProps) {
   const [amount, setAmount] = useState<string>("");
@@ -52,11 +57,9 @@ export function WalletEditor({
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
 
-  const walletTypes = getRewardItemsByCategories([
-    "GAME_TICKET",
-    "CURRENCY",
-    "VAULT",
-  ]);
+  const walletTypes = getRewardItemsByCategories(
+    allowedCategories ?? ["GAME_TICKET", "CURRENCY", "VAULT"],
+  );
 
   // Reset or update selected type when modal opens or prop changes
   useEffect(() => {

@@ -77,6 +77,7 @@ import {
   createAdminDepositLog,
   updateAdminDepositLog,
   deleteAdminDepositLog,
+  getInventoryLogs,
 } from "../api/adminApi";
 import { CreateMessageRequest } from "../api/adminApi";
 
@@ -283,6 +284,20 @@ export function useAdminTicketLogs(
   return useQuery<TicketLogDto[]>({
     queryKey: ["admin", "ticket-logs", userId, startDate, endDate, limit],
     queryFn: () => getTicketLogs(userId, startDate, endDate, limit),
+    enabled: options?.enabled !== undefined ? options.enabled : true,
+  });
+}
+
+export function useAdminInventoryLogs(
+  userId?: number,
+  startDate?: string,
+  endDate?: string,
+  limit: number = 200,
+  options?: { enabled?: boolean },
+) {
+  return useQuery<TicketLogDto[]>({
+    queryKey: ["admin", "inventory-logs", userId, startDate, endDate, limit],
+    queryFn: () => getInventoryLogs(userId, startDate, endDate, limit),
     enabled: options?.enabled !== undefined ? options.enabled : true,
   });
 }
