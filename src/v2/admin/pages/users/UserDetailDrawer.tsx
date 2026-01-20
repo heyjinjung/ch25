@@ -160,7 +160,7 @@ export function UserDetailDrawer({
             </SheetHeader>
 
             <Tabs defaultValue={defaultTab} className="h-full">
-              <TabsList className="w-full justify-start rounded-none bg-[#18181B] border-b border-white/5 px-6 h-12 overflow-x-auto flex-nowrap">
+              <TabsList className="w-full grid grid-cols-3 gap-2 bg-[#18181B] p-4 h-auto">
                 <TabsTrigger value="overview" className="tab-trigger">
                   기본 정보
                 </TabsTrigger>
@@ -761,7 +761,7 @@ export function UserDetailDrawer({
 
       <style>{`
         .tab-trigger {
-          @apply rounded-none border-b-2 border-transparent data-[state=active]:border-indigo-500 data-[state=active]:bg-transparent data-[state=active]:text-indigo-400 px-3 pb-3 pt-2 text-zinc-400 text-sm whitespace-nowrap;
+          @apply rounded-md border border-white/5 bg-zinc-900/50 data-[state=active]:bg-indigo-500 data-[state=active]:text-white data-[state=active]:border-indigo-500 px-3 py-2 text-zinc-400 text-sm whitespace-nowrap transition-all hover:bg-white/5;
         }
       `}</style>
     </Sheet>

@@ -10,6 +10,8 @@ import {
   Bell,
   Search,
   LogOut,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import { cn } from "../../lib/utils";
 
@@ -23,6 +25,30 @@ export default function AdminLayout() {
   const location = useLocation();
   const navigate = useNavigate();
 
+  type NavSectionKey = "OPS" | "CORE" | "GAME" | "SYSTEM";
+
+  const [activeSectionFilter, setActiveSectionFilter] = useState<
+    NavSectionKey | "ALL"
+  >("ALL");
+  const [collapsedSections, setCollapsedSections] = useState<
+    Record<NavSectionKey, boolean>
+  >(() => {
+    try {
+      const raw = localStorage.getItem("v2_admin_sidebar_collapsed_sections");
+      const parsed = raw
+        ? (JSON.parse(raw) as Partial<Record<NavSectionKey, boolean>>)
+        : null;
+      return {
+        OPS: Boolean(parsed?.OPS),
+        CORE: Boolean(parsed?.CORE),
+        GAME: Boolean(parsed?.GAME),
+        SYSTEM: Boolean(parsed?.SYSTEM),
+      };
+    } catch {
+      return { OPS: false, CORE: false, GAME: false, SYSTEM: false };
+    }
+  });
+
   // Responsive Check
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 1024);
@@ -31,29 +57,104 @@ export default function AdminLayout() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  const navItems = [
-    { icon: LayoutDashboard, label: "대시보드", path: "/v2/admin/dashboard" },
-    { icon: Users, label: "유저관리", path: "/v2/admin/users" },
-    { icon: Users, label: "세그먼트", path: "/v2/admin/users/segments" },
-    { icon: CreditCard, label: "금고현황", path: "/v2/admin/economy/vault" },
-    { icon: CreditCard, label: "입금관리", path: "/v2/admin/economy/deposits" },
-    { icon: CreditCard, label: "상점관리", path: "/v2/admin/economy/shop" },
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        "v2_admin_sidebar_collapsed_sections",
+        JSON.stringify(collapsedSections),
+      );
+    } catch {
+      // ignore
+    }
+  }, [collapsedSections]);
+
+  const navSections: Array<{
+    key: NavSectionKey;
+    label: string;
+    items: Array<{ icon: any; label: string; path: string }>;
+  }> = [
     {
-      icon: MessageSquare,
-      label: "메시지발송",
-      path: "/v2/admin/marketing/messages",
+      key: "OPS",
+      label: "운영",
+      items: [
+        {
+          icon: LayoutDashboard,
+          label: "대시보드",
+          path: "/v2/admin/dashboard",
+        },
+        {
+          icon: MessageSquare,
+          label: "메시지발송",
+          path: "/v2/admin/marketing/messages",
+        },
+        {
+          icon: ClipboardList,
+          label: "설문조사",
+          path: "/v2/admin/marketing/surveys",
+        },
+        { icon: Users, label: "세그먼트", path: "/v2/admin/users/segments" },
+      ],
     },
     {
-      icon: ClipboardList,
-      label: "설문조사",
-      path: "/v2/admin/marketing/surveys",
+      key: "CORE",
+      label: "코어",
+      items: [
+        { icon: Users, label: "유저관리", path: "/v2/admin/users" },
+        { icon: Settings, label: "레벨관리", path: "/v2/admin/game/level" },
+        {
+          icon: CreditCard,
+          label: "금고현황",
+          path: "/v2/admin/economy/vault",
+        },
+        {
+          icon: CreditCard,
+          label: "입금관리",
+          path: "/v2/admin/economy/deposits",
+        },
+        {
+          icon: CreditCard,
+          label: "티켓/토큰관리",
+          path: "/v2/admin/inventory/tickets",
+        },
+        { icon: Settings, label: "미션관리", path: "/v2/admin/game/missions" },
+        { icon: CreditCard, label: "상점관리", path: "/v2/admin/economy/shop" },
+      ],
     },
-    { icon: Settings, label: "미션관리", path: "/v2/admin/game/missions" },
-    { icon: Settings, label: "룰렛설정", path: "/v2/admin/game/roulette" },
-    { icon: Settings, label: "주사위설정", path: "/v2/admin/game/dice" },
-    { icon: Settings, label: "복권설정", path: "/v2/admin/game/lottery" },
-    { icon: Settings, label: "시스템", path: "/v2/admin/system/modals" },
+    {
+      key: "GAME",
+      label: "게임관리",
+      items: [
+        { icon: Settings, label: "룰렛", path: "/v2/admin/game/roulette" },
+        { icon: Settings, label: "주사위", path: "/v2/admin/game/dice" },
+        { icon: Settings, label: "복권", path: "/v2/admin/game/lottery" },
+        { icon: Settings, label: "팀배틀", path: "/v2/admin/game/team-battle" },
+        {
+          icon: Settings,
+          label: "이벤트페이지(골든아워관리)",
+          path: "/v2/admin/game/golden-hour",
+        },
+      ],
+    },
+    {
+      key: "SYSTEM",
+      label: "시스템",
+      items: [
+        { icon: Settings, label: "시스템", path: "/v2/admin/system/health" },
+      ],
+    },
   ];
+
+  const flatNavItems = navSections.flatMap((s) => s.items);
+  const activeItemPath = flatNavItems
+    .filter((item) => {
+      if (location.pathname === item.path) return true;
+      return location.pathname.startsWith(`${item.path}/`);
+    })
+    .sort((a, b) => b.path.length - a.path.length)[0]?.path;
+
+  const toggleSection = (key: NavSectionKey) => {
+    setCollapsedSections((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
 
   return (
     <div className="min-h-screen bg-obsidian-bg text-obsidian-text font-sans selection:bg-obsidian-accent selection:text-white">
@@ -69,22 +170,74 @@ export default function AdminLayout() {
             </span>
           </div>
 
-          <nav className="space-y-2">
-            {navItems.map((item) => (
-              <button
-                key={item.path}
-                onClick={() => navigate(item.path)}
-                className={cn(
-                  "flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200",
-                  location.pathname.startsWith(item.path)
-                    ? "bg-obsidian-accent text-white shadow-lg shadow-obsidian-accent/20"
-                    : "text-obsidian-muted hover:bg-white/5 hover:text-white",
-                )}
-              >
-                <item.icon size={18} />
-                {item.label}
-              </button>
-            ))}
+          <div className="mb-4">
+            <label className="block text-xs font-medium text-obsidian-muted mb-2">
+              메뉴 필터
+            </label>
+            <select
+              className="w-full rounded-lg bg-obsidian-bg/60 border border-obsidian-border px-3 py-2 text-sm text-white focus:outline-none"
+              value={activeSectionFilter}
+              onChange={(e) => {
+                const next = e.target.value as NavSectionKey | "ALL";
+                setActiveSectionFilter(next);
+              }}
+            >
+              <option value="ALL">전체</option>
+              <option value="OPS">운영</option>
+              <option value="CORE">코어</option>
+              <option value="GAME">게임관리</option>
+              <option value="SYSTEM">시스템</option>
+            </select>
+          </div>
+
+          <nav className="space-y-4">
+            {navSections
+              .filter(
+                (section) =>
+                  activeSectionFilter === "ALL" ||
+                  section.key === activeSectionFilter,
+              )
+              .map((section) => {
+                const isCollapsed = collapsedSections[section.key];
+                return (
+                  <div key={section.key}>
+                    <button
+                      type="button"
+                      onClick={() => toggleSection(section.key)}
+                      className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-xs font-semibold text-obsidian-muted hover:bg-white/5 hover:text-white"
+                      aria-label={`${section.label} 섹션 ${isCollapsed ? "펼치기" : "접기"}`}
+                      title={`${section.label} ${isCollapsed ? "펼치기" : "접기"}`}
+                    >
+                      <span>{section.label}</span>
+                      {isCollapsed ? (
+                        <ChevronRight size={16} />
+                      ) : (
+                        <ChevronDown size={16} />
+                      )}
+                    </button>
+
+                    {!isCollapsed && (
+                      <div className="mt-2 space-y-2">
+                        {section.items.map((item) => (
+                          <button
+                            key={item.path}
+                            onClick={() => navigate(item.path)}
+                            className={cn(
+                              "flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200",
+                              activeItemPath === item.path
+                                ? "bg-obsidian-accent text-white shadow-lg shadow-obsidian-accent/20"
+                                : "text-obsidian-muted hover:bg-white/5 hover:text-white",
+                            )}
+                          >
+                            <item.icon size={18} />
+                            {item.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
           </nav>
 
           <button className="absolute bottom-6 left-6 flex items-center gap-3 text-sm text-obsidian-muted hover:text-red-400">
@@ -140,13 +293,13 @@ export default function AdminLayout() {
       {/* Mobile Dock (Bottom Navigation) */}
       {isMobile && (
         <nav className="fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-1 rounded-2xl border border-white/10 bg-black/50 p-2 shadow-2xl backdrop-blur-xl">
-          {navItems.map((item) => (
+          {flatNavItems.map((item) => (
             <button
               key={item.path}
               onClick={() => navigate(item.path)}
               className={cn(
                 "flex flex-col items-center justify-center gap-1 rounded-xl px-4 py-2 transition-all",
-                location.pathname.startsWith(item.path)
+                activeItemPath === item.path
                   ? "bg-white/15 text-white"
                   : "text-white/60 hover:bg-white/5 hover:text-white",
               )}

@@ -1,7 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import {
   Activity,
-  CreditCard,
   Server,
   ShieldAlert,
   Users,
@@ -103,18 +102,15 @@ export default function OpsDashboard() {
           onClick={() => navigate("/v2/admin/system/health")}
         />
         <QuickActionCard
-          label="오늘 매출 (Revenue)"
+          label="개발중 (Holding)"
           description={
             <div className="flex items-baseline gap-1">
-              <span className="text-xs text-zinc-500 mr-1">₩</span>
-              <NumberTicker
-                value={status?.metrics?.todayRevenue ?? 0}
-                className="text-lg font-bold"
-              />
+              <span className="text-xs text-zinc-500">리텐션 현황 준비중</span>
             </div>
           }
-          icon={CreditCard}
-          onClick={() => navigate("/v2/admin/economy/vault")}
+          icon={Activity}
+          className="opacity-50 cursor-not-allowed"
+          onClick={() => {}}
         />
         <QuickActionCard
           label="골든 레이더"
@@ -133,14 +129,14 @@ export default function OpsDashboard() {
           className="border-red-500/30 bg-red-500/5 hover:bg-red-500/10"
         />
         <QuickActionCard
-          label="현재 접속자"
+          label="금일 접속자 (Active)"
           description={
             <div className="flex items-center gap-1">
               <NumberTicker
-                value={status?.goldenRadar?.onlineNow ?? 0}
+                value={status?.metrics?.activeUsers24h ?? 0}
                 className="text-lg font-bold"
               />
-              <span className="text-xs text-zinc-500">명</span>
+              <span className="text-xs text-zinc-500">명 (24h)</span>
             </div>
           }
           icon={Users}
