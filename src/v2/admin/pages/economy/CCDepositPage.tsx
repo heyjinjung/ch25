@@ -1,14 +1,11 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Plus,
   Search,
-  Edit2,
   Trash2,
   Calendar,
   User as UserIcon,
-  AlertCircle,
   RefreshCw,
-  MoreVertical,
   ChevronUp,
   ChevronDown,
   ChevronsUpDown,
@@ -20,12 +17,8 @@ import {
   useCreateDepositLog,
   useUpdateDepositLog,
   useDeleteDepositLog,
-  useAdminUserList,
 } from "../../../hooks/useV2Admin";
-import type {
-  AdminDepositLogDto,
-  AdminUserListDto,
-} from "../../../api/adminApi";
+import { getAdminUserList } from "../../../api/adminApi";
 import {
   Table,
   TableHeader,
@@ -34,23 +27,32 @@ import {
   TableBody,
   TableCell,
 } from "../../../components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-} from "../../../components/ui/dialog";
-import { Label } from "../../../components/ui/label";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "../../components/ui/dropdown-menu";
 import { cn } from "../../../lib/utils";
 import { format } from "date-fns";
+
+type EditableRow = {
+  id?: number;
+  userId?: number;
+  nickname?: string | null;
+  amount: number;
+  kstDate: string;
+  createdAt?: string;
+  userQuery: string;
+  __key: string;
+  __isNew?: boolean;
+  __dirty?: boolean;
+};
+
+type SortKey = "nickname" | "amount" | "kstDate" | "createdAt";
+
+type ResolveRowStatus =
+  | { state: "idle" }
+  | { state: "loading" }
+  | { state: "ok"; user: { id: number; nickname: string | null } }
+  | { state: "error"; message: string };
+
+const newRowKey = () =>
+  `new:${Date.now()}:${Math.random().toString(16).slice(2)}`;
 
 export default function CCDepositPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -60,13 +62,21 @@ export default function CCDepositPage() {
     refetch,
   } = useAdminDepositLogs(searchTerm);
 
+  const [rows, setRows] = useState<EditableRow[]>([]);
+  const [isDirty, setIsDirty] = useState(false);
+  const [deletedIds, setDeletedIds] = useState<number[]>([]);
+  const [resolveStatusByKey, setResolveStatusByKey] = useState<
+    Record<string, ResolveRowStatus>
+  >({});
+  const [isSaving, setIsSaving] = useState(false);
+
   // Sorting State
   const [sortConfig, setSortConfig] = useState<{
-    key: keyof AdminDepositLogDto | null;
+    key: SortKey | null;
     direction: "asc" | "desc" | null;
   }>({ key: null, direction: null });
 
-  const handleSort = (key: keyof AdminDepositLogDto) => {
+  const handleSort = (key: SortKey) => {
     let direction: "asc" | "desc" | null = "asc";
     if (sortConfig.key === key) {
       if (sortConfig.direction === "asc") direction = "desc";
@@ -75,18 +85,51 @@ export default function CCDepositPage() {
     setSortConfig({ key: direction ? key : null, direction });
   };
 
-  // Group logs by userId and aggregate
-  const sortedLogs = [...logs].sort((a, b) => {
+  useEffect(() => {
+    const mapped: EditableRow[] = logs.map((log) => ({
+      __key: `id:${log.id}`,
+      id: log.id,
+      userId: log.userId,
+      nickname: log.nickname ?? null,
+      amount: log.amount,
+      kstDate: log.kstDate,
+      createdAt: log.createdAt,
+      userQuery: log.nickname ?? String(log.userId ?? ""),
+      __isNew: false,
+      __dirty: false,
+    }));
+    setRows(mapped);
+    setIsDirty(false);
+    setDeletedIds([]);
+    const initialResolve: Record<string, ResolveRowStatus> = {};
+    for (const row of mapped) {
+      initialResolve[row.__key] = row.userId
+        ? {
+            state: "ok",
+            user: { id: row.userId, nickname: row.nickname ?? null },
+          }
+        : { state: "idle" };
+    }
+    setResolveStatusByKey(initialResolve);
+  }, [logs]);
+
+  const totalByUserId = useMemo(() => {
+    const map = new Map<number, number>();
+    for (const row of rows) {
+      if (!row.userId) continue;
+      map.set(row.userId, (map.get(row.userId) ?? 0) + (row.amount || 0));
+    }
+    return map;
+  }, [rows]);
+
+  const sortedRows = [...rows].sort((a, b) => {
     if (!sortConfig.key || !sortConfig.direction) return 0;
 
     let aVal: any;
     let bVal: any;
 
     // Map sortConfig.key to logs data
-    if (sortConfig.key === "id") {
-      aVal = a.id;
-      bVal = b.id;
-    } else if (sortConfig.key === "nickname") {
+    if (sortConfig.key === "nickname") {
       aVal = a.nickname;
       bVal = b.nickname;
     } else if (sortConfig.key === "amount") {
@@ -110,7 +153,7 @@ export default function CCDepositPage() {
     return 0;
   });
 
-  const getSortIcon = (key: keyof AdminDepositLogDto) => {
+  const getSortIcon = (key: SortKey) => {
     if (sortConfig.key !== key)
       return <ChevronsUpDown className="w-3 h-3 ml-1 text-zinc-600" />;
     if (sortConfig.direction === "asc")
@@ -131,77 +174,160 @@ export default function CCDepositPage() {
   const updateMutation = useUpdateDepositLog();
   const deleteMutation = useDeleteDepositLog();
 
-  // Modals
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editingLog, setEditingLog] = useState<AdminDepositLogDto | null>(null);
-
-  // Create / Edit Form State
-  const [formUserId, setFormUserId] = useState<number | null>(null);
-  const [formAmount, setFormAmount] = useState("");
-  const [formDate, setFormDate] = useState(format(new Date(), "yyyy-MM-dd"));
-  const [userSearchTerm, setUserSearchTerm] = useState("");
-  const [selectedUser, setSelectedUser] = useState<AdminUserListDto | null>(
-    null,
-  );
-
-  const { data: userSearchResults } = useAdminUserList({
-    search: userSearchTerm,
-    limit: 5,
-  });
-
-  const handleAddClick = () => {
-    setFormUserId(null);
-    setSelectedUser(null);
-    setFormAmount("");
-    setFormDate(format(new Date(), "yyyy-MM-dd"));
-    setUserSearchTerm("");
-    setIsAddModalOpen(true);
-  };
-
-  const handleEditClick = (log: AdminDepositLogDto) => {
-    setEditingLog(log);
-    setFormAmount(log.amount.toString());
-    setFormDate(log.kstDate);
-    setIsEditModalOpen(true);
-  };
-
-  const handleCreateSubmit = async () => {
-    if (!formUserId || !formAmount) return;
-    await createMutation.mutateAsync({
-      user_id: formUserId,
-      amount: parseInt(formAmount),
-      kst_date: formDate,
-    });
-    setIsAddModalOpen(false);
-  };
-
-  const handleUpdateSubmit = async () => {
-    if (!editingLog || !formAmount) return;
-    await updateMutation.mutateAsync({
-      id: editingLog.id,
-      data: {
-        amount: parseInt(formAmount),
-        kst_date: formDate,
-      },
-    });
-    setIsEditModalOpen(false);
-  };
-
-  const handleDelete = async (id: number) => {
-    if (
-      confirm(
-        "정말 이 입금 내역을 삭제하시겠습니까? 전체 누적액에서도 차감됩니다.",
-      )
-    ) {
-      await deleteMutation.mutateAsync(id);
+  const handleRowChange = (
+    key: string,
+    field: keyof EditableRow,
+    value: string | number,
+  ) => {
+    setRows((prev) =>
+      prev.map((row) =>
+        row.__key === key
+          ? {
+              ...row,
+              [field]:
+                field === "amount"
+                  ? Number(value)
+                  : field === "userQuery"
+                    ? String(value)
+                    : value,
+              __dirty: true,
+            }
+          : row,
+      ),
+    );
+    setIsDirty(true);
+    if (field === "userQuery") {
+      setRows((prev) =>
+        prev.map((row) =>
+          row.__key === key
+            ? { ...row, userId: undefined, nickname: null, __dirty: true }
+            : row,
+        ),
+      );
+      setResolveStatusByKey((prev) => ({ ...prev, [key]: { state: "idle" } }));
     }
   };
 
-  const handleSelectUser = (user: AdminUserListDto) => {
-    setSelectedUser(user);
-    setFormUserId(user.id);
-    setUserSearchTerm("");
+  const addRow = () => {
+    const key = newRowKey();
+    setRows((prev) => [
+      {
+        __key: key,
+        amount: 0,
+        kstDate: format(new Date(), "yyyy-MM-dd"),
+        userQuery: "",
+        __isNew: true,
+        __dirty: true,
+      },
+      ...prev,
+    ]);
+    setIsDirty(true);
+    setResolveStatusByKey((prev) => ({ ...prev, [key]: { state: "idle" } }));
+  };
+
+  const removeRow = (row: EditableRow) => {
+    if (row.id) {
+      setDeletedIds((prev) => [...prev, row.id!]);
+    }
+    setRows((prev) => prev.filter((r) => r.__key !== row.__key));
+    setIsDirty(true);
+  };
+
+  const resolveRowUser = async (row: EditableRow) => {
+    const query = String(row.userQuery ?? "").trim();
+    if (!query) {
+      setResolveStatusByKey((prev) => ({
+        ...prev,
+        [row.__key]: { state: "idle" },
+      }));
+      return;
+    }
+
+    setResolveStatusByKey((prev) => ({
+      ...prev,
+      [row.__key]: { state: "loading" },
+    }));
+    try {
+      const response = await getAdminUserList({ search: query, limit: 1 });
+      if (response.users && response.users.length > 0) {
+        const user = response.users[0];
+        setRows((prev) =>
+          prev.map((r) =>
+            r.__key === row.__key
+              ? {
+                  ...r,
+                  userId: user.id,
+                  nickname: user.nickname ?? null,
+                  __dirty: true,
+                }
+              : r,
+          ),
+        );
+        setResolveStatusByKey((prev) => ({
+          ...prev,
+          [row.__key]: {
+            state: "ok",
+            user: { id: user.id, nickname: user.nickname ?? null },
+          },
+        }));
+        setIsDirty(true);
+      } else {
+        setResolveStatusByKey((prev) => ({
+          ...prev,
+          [row.__key]: { state: "error", message: "유저를 찾을 수 없습니다." },
+        }));
+      }
+    } catch {
+      setResolveStatusByKey((prev) => ({
+        ...prev,
+        [row.__key]: { state: "error", message: "유저 검색 오류" },
+      }));
+    }
+  };
+
+  const handleSaveAll = async () => {
+    if (isSaving) return;
+
+    const invalidRows = rows.filter(
+      (row) => !row.userId || !row.amount || !row.kstDate,
+    );
+    if (invalidRows.length > 0) {
+      alert("유저 검증/금액/날짜가 비어 있는 행이 있습니다.");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      for (const id of deletedIds) {
+        await deleteMutation.mutateAsync(id);
+      }
+
+      for (const row of rows) {
+        if (row.__isNew) {
+          await createMutation.mutateAsync({
+            user_id: row.userId!,
+            amount: Number(row.amount),
+            kst_date: row.kstDate,
+          });
+          continue;
+        }
+        if (row.__dirty && row.id) {
+          await updateMutation.mutateAsync({
+            id: row.id,
+            data: {
+              amount: Number(row.amount),
+              kst_date: row.kstDate,
+            },
+          });
+        }
+      }
+
+      await refetch();
+      setIsDirty(false);
+      setDeletedIds([]);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -230,9 +356,16 @@ export default function CCDepositPage() {
           </Button>
           <Button
             className="bg-indigo-600 hover:bg-indigo-700 gap-2"
-            onClick={handleAddClick}
+            onClick={addRow}
           >
             <Plus className="w-4 h-4" />새 행 추가
+          </Button>
+          <Button
+            className="bg-emerald-600 hover:bg-emerald-700 gap-2"
+            onClick={handleSaveAll}
+            disabled={!isDirty || isSaving}
+          >
+            {isSaving ? "저장 중..." : "전체 저장"}
           </Button>
         </div>
       </div>
@@ -256,14 +389,6 @@ export default function CCDepositPage() {
           <TableHeader className="bg-white/5">
             <TableRow className="border-white/5 hover:bg-transparent">
               <TableHead
-                className="text-zinc-400 w-[80px] cursor-pointer hover:text-white transition-colors"
-                onClick={() => handleSort("id")}
-              >
-                <div className="flex items-center">
-                  ID {getSortIcon("id")}
-                </div>
-              </TableHead>
-              <TableHead
                 className="text-zinc-400 cursor-pointer hover:text-white transition-colors"
                 onClick={() => handleSort("nickname")}
               >
@@ -271,6 +396,7 @@ export default function CCDepositPage() {
                   유저 {getSortIcon("nickname")}
                 </div>
               </TableHead>
+              <TableHead className="text-zinc-400">누적</TableHead>
               <TableHead
                 className="text-zinc-400 cursor-pointer hover:text-white transition-colors"
                 onClick={() => handleSort("amount")}
@@ -295,240 +421,125 @@ export default function CCDepositPage() {
                   작업일시 {getSortIcon("createdAt")}
                 </div>
               </TableHead>
+              <TableHead className="text-zinc-400">검증</TableHead>
               <TableHead className="text-zinc-400 w-[60px]"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sortedLogs.length === 0 ? (
+            {sortedRows.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={6}
+                  colSpan={7}
                   className="text-center py-20 text-zinc-500"
                 >
                   {isLoading ? "불러오는 중..." : "입금 내역이 없습니다."}
                 </TableCell>
               </TableRow>
             ) : (
-              sortedLogs.map((log) => (
-                <TableRow
-                  key={log.id}
-                  className="border-white/5 hover:bg-white/5 transition-colors"
-                >
-                  <TableCell className="font-mono text-zinc-500">
-                    #{log.id}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-col">
-                      <span className="font-medium text-white">
-                        {log.nickname || "(미설정)"}
+              sortedRows.map((row) => {
+                const status = resolveStatusByKey[row.__key];
+                return (
+                  <TableRow
+                    key={row.__key}
+                    className="border-white/5 hover:bg-white/5 transition-colors"
+                  >
+                    <TableCell>
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                          <Input
+                            value={row.userQuery}
+                            onChange={(e) =>
+                              handleRowChange(
+                                row.__key,
+                                "userQuery",
+                                e.target.value,
+                              )
+                            }
+                            placeholder="닉네임/ID"
+                            className="bg-black/40 border-white/10 h-8"
+                          />
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-white/10 h-8"
+                            onClick={() => resolveRowUser(row)}
+                          >
+                            검증
+                          </Button>
+                        </div>
+                        <div className="text-xs text-zinc-500">
+                          UID: {row.userId ?? "-"} / {row.nickname ?? "미확인"}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className="font-mono text-zinc-300">
+                        ₩{" "}
+                        {(
+                          totalByUserId.get(row.userId ?? 0) || 0
+                        ).toLocaleString()}
                       </span>
-                      <span className="text-xs text-zinc-500">
-                        UID: {log.userId}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="font-bold text-lg text-emerald-400 font-mono">
-                    ₩ {log.amount.toLocaleString()}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2 text-zinc-300">
-                      <Calendar className="w-4 h-4 text-zinc-500" />
-                      {log.kstDate}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-zinc-500 text-xs">
-                    {formatKstDateTime(log.createdAt)}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          className="h-8 w-8 p-0 hover:bg-white/10"
-                        >
-                          <MoreVertical className="h-4 w-4 text-zinc-400" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent
-                        align="end"
-                        className="bg-[#1C1C1F] border-white/10 text-white"
+                    </TableCell>
+                    <TableCell className="font-bold text-emerald-400 font-mono">
+                      <Input
+                        type="number"
+                        value={String(row.amount ?? 0)}
+                        onChange={(e) =>
+                          handleRowChange(row.__key, "amount", e.target.value)
+                        }
+                        className="bg-black/40 border-white/10 h-8 font-mono"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2 text-zinc-300">
+                        <Calendar className="w-4 h-4 text-zinc-500" />
+                        <Input
+                          type="date"
+                          value={row.kstDate}
+                          onChange={(e) =>
+                            handleRowChange(
+                              row.__key,
+                              "kstDate",
+                              e.target.value,
+                            )
+                          }
+                          className="bg-black/40 border-white/10 h-8"
+                        />
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-zinc-500 text-xs">
+                      {formatKstDateTime(row.createdAt)}
+                    </TableCell>
+                    <TableCell className="text-xs">
+                      {status?.state === "loading" && (
+                        <span className="text-zinc-500">검증 중...</span>
+                      )}
+                      {status?.state === "ok" && (
+                        <span className="text-emerald-400">확인됨</span>
+                      )}
+                      {status?.state === "error" && (
+                        <span className="text-red-400">{status.message}</span>
+                      )}
+                      {status?.state === "idle" && (
+                        <span className="text-zinc-500">대기</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="ghost"
+                        className="h-8 w-8 p-0 hover:bg-white/10"
+                        onClick={() => removeRow(row)}
                       >
-                        <DropdownMenuItem
-                          className="gap-2 focus:bg-zinc-800 focus:text-white"
-                          onClick={() => handleEditClick(log)}
-                        >
-                          <Edit2 className="w-4 h-4 text-blue-400" />
-                          편집
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="gap-2 focus:bg-red-500/20 focus:text-red-400 text-red-400"
-                          onClick={() => handleDelete(log.id)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                          삭제
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))
+                        <Trash2 className="h-4 w-4 text-red-400" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>
       </div>
-
-      {/* Add Modal */}
-      <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-        <DialogContent className="bg-[#18181B] border-white/10 text-white max-w-md">
-          <DialogHeader>
-            <DialogTitle>새 입금 로그 추가</DialogTitle>
-            <DialogDescription className="text-zinc-400">
-              특정 유저의 일자별 입금액을 추가합니다. 랭킹에 즉시 반영됩니다.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>유저 검색</Label>
-              {selectedUser ? (
-                <div className="flex items-center justify-between bg-zinc-900 border border-zinc-700 rounded-md p-2">
-                  <span className="text-white">
-                    {selectedUser.nickname}{" "}
-                    <span className="text-zinc-500 text-xs">
-                      #{selectedUser.id}
-                    </span>
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setSelectedUser(null);
-                      setFormUserId(null);
-                    }}
-                    className="h-6 w-6 p-0 text-zinc-400 hover:text-white"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              ) : (
-                <div className="relative">
-                  <Input
-                    placeholder="닉네임 검색..."
-                    value={userSearchTerm}
-                    onChange={(e) => setUserSearchTerm(e.target.value)}
-                    className="bg-black/40 border-white/10"
-                  />
-                  {userSearchTerm &&
-                    userSearchResults?.users &&
-                    userSearchResults.users.length > 0 && (
-                      <div className="absolute top-full left-0 right-0 mt-1 bg-[#27272A] border border-zinc-700 rounded-md shadow-xl z-50 max-h-40 overflow-y-auto">
-                        {userSearchResults.users.map((u) => (
-                          <div
-                            key={u.id}
-                            className="px-3 py-2 text-sm hover:bg-indigo-600 cursor-pointer flex justify-between"
-                            onClick={() => handleSelectUser(u)}
-                          >
-                            <span>{u.nickname}</span>
-                            <span className="text-zinc-500 text-xs">
-                              #{u.id}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                </div>
-              )}
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>금액 (KRW)</Label>
-                <Input
-                  type="number"
-                  placeholder="금액 입력"
-                  value={formAmount}
-                  onChange={(e) => setFormAmount(e.target.value)}
-                  className="bg-black/40 border-white/10 font-mono"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>입금 날짜</Label>
-                <Input
-                  type="date"
-                  value={formDate}
-                  onChange={(e) => setFormDate(e.target.value)}
-                  className="bg-black/40 border-white/10"
-                />
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setIsAddModalOpen(false)}>
-              취소
-            </Button>
-            <Button
-              className="bg-indigo-600 hover:bg-indigo-700"
-              onClick={handleCreateSubmit}
-              disabled={!formUserId || !formAmount || createMutation.isPending}
-            >
-              {createMutation.isPending ? "추가 중..." : "행 추가 완료"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Modal */}
-      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="bg-[#18181B] border-white/10 text-white max-w-md">
-          <DialogHeader>
-            <DialogTitle>입금 로그 편집</DialogTitle>
-            <DialogDescription className="text-zinc-400">
-              {editingLog?.nickname} (#{editingLog?.userId})의 내역을
-              수정합니다.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>금액 (KRW)</Label>
-                <Input
-                  type="number"
-                  value={formAmount}
-                  onChange={(e) => setFormAmount(e.target.value)}
-                  className="bg-black/40 border-white/10 font-mono"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>입금 날짜</Label>
-                <Input
-                  type="date"
-                  value={formDate}
-                  onChange={(e) => setFormDate(e.target.value)}
-                  className="bg-black/40 border-white/10"
-                />
-              </div>
-            </div>
-            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex gap-3 text-xs text-red-200">
-              <AlertCircle className="w-5 h-5 shrink-0" />
-              <p>
-                날짜를 수정하면 해당 날짜의 랭킹 데이터로 이동하며, 기존 날짜의
-                데이터는 재계산됩니다.
-              </p>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setIsEditModalOpen(false)}>
-              취소
-            </Button>
-            <Button
-              className="bg-indigo-600 hover:bg-indigo-700"
-              onClick={handleUpdateSubmit}
-              disabled={!formAmount || updateMutation.isPending}
-            >
-              {updateMutation.isPending ? "저장 중..." : "수정사항 저장"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
