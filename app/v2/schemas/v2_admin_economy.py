@@ -173,3 +173,38 @@ class InventoryItemUpdateRequest(BaseModel):
     quantity: int
     reason: str
     expires_at: datetime | None = None
+
+
+class TicketStatDto(BaseModel):
+    ticketType: str
+    currentBalance: int
+    totalIssued: int
+    totalUsed: int
+
+
+class UserTicketDto(BaseModel):
+    userId: int
+    nickname: str
+    telegramUsername: str | None = None
+    ticketType: str
+    currentBalance: int
+    totalUsed: int
+    lastUsedAt: datetime | None = None
+
+
+class InventoryStatDto(BaseModel):
+    itemType: str
+    currentBalance: int
+    totalIssued: int
+    totalUsed: int
+
+
+class UserInventoryItemDto(BaseModel):
+    userId: int
+    nickname: str
+    telegramUsername: str | None = None
+    itemType: str
+    currentQuantity: int
+    totalUsed: int
+    expiresAt: datetime | None = None
+    lastUsedAt: datetime | None = None

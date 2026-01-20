@@ -133,6 +133,15 @@ V2 Admin API 연동 과정에서 백엔드가 재시작/런타임 에러를 발�
     2. 백엔드는 invalid 입력 시 400을 유지하여 계약 위반을 조기 차단
 - **상태**: 해결됨
 
+### 2.16 Admin Vault 통계/출금 상세 500 (approved_at/rejected_at 필드 불일치)
+- **증상**: 금고 페이지 로딩 시 `/api/v2/admin/vault/stats` 또는 `/api/v2/admin/vault/withdrawals/{status}`가 500으로 실패 (프론트: Axios `ERR_BAD_RESPONSE`).
+- **원인**: `VaultWithdrawalRequest` 모델에는 `approved_at/rejected_at/rejection_reason` 컬럼이 없는데, v2 admin vault 라우트에서 해당 필드를 참조하여 `AttributeError` 발생.
+- **해결**:
+    1. 쿼리 필터의 `approved_at/rejected_at` 참조를 `processed_at`으로 교체
+    2. API 계약 필드(`approved_at/rejected_at/rejection_reason`)는 유지하되, 응답에서 `processed_at/admin_memo` 기반으로 매핑
+    3. approve/reject 처리도 모델 필드(`processed_at/processed_by/admin_memo`)에 맞게 정렬
+- **상태**: 해결됨(phase4_admin 회귀 테스트 통과)
+
 ---
 
 ## 3. 관찰 필요 (Known Issues)
@@ -148,3 +157,4 @@ V2 Admin API 연동 과정에서 백엔드가 재시작/런타임 에러를 발�
 - [ ] Enum/Literal 스키마와 DB 값 불일치 시 정규화 로직 적용
 - [ ] V1 Shim 라우터 변경 시 V2 모듈과의 순환 참조 여부 검토
 - [ ] V2 Admin 핵심 회귀 테스트 수행: `pytest -q tests/v2_tests/phase4_admin` (최근 실행 결과: 32 passed)
+- [ ] DB 모델 필드와 API 계약 필드명 불일치 시, 서버에서 매핑/어댑팅 후 계약 필드명 유지(직접 속성 접근으로 500 금지)

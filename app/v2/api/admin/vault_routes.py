@@ -48,8 +48,8 @@ def get_vault_stats(
         db.query(func.sum(VaultWithdrawalRequest.amount))
         .filter(
             VaultWithdrawalRequest.status == "APPROVED",
-            VaultWithdrawalRequest.approved_at >= today_start_utc,
-            VaultWithdrawalRequest.approved_at < today_end_utc
+            VaultWithdrawalRequest.processed_at >= today_start_utc,
+            VaultWithdrawalRequest.processed_at < today_end_utc
         )
         .scalar()
         or 0
@@ -60,8 +60,8 @@ def get_vault_stats(
         db.query(func.sum(VaultWithdrawalRequest.amount))
         .filter(
             VaultWithdrawalRequest.status == "REJECTED",
-            VaultWithdrawalRequest.rejected_at >= today_start_utc,
-            VaultWithdrawalRequest.rejected_at < today_end_utc
+            VaultWithdrawalRequest.processed_at >= today_start_utc,
+            VaultWithdrawalRequest.processed_at < today_end_utc
         )
         .scalar()
         or 0
@@ -287,15 +287,15 @@ def get_withdrawals_by_status(
     elif status_upper == "APPROVED":
         query = query.filter(
             VaultWithdrawalRequest.status == "APPROVED",
-            VaultWithdrawalRequest.approved_at >= today_start_utc,
-            VaultWithdrawalRequest.approved_at < today_end_utc
+            VaultWithdrawalRequest.processed_at >= today_start_utc,
+            VaultWithdrawalRequest.processed_at < today_end_utc
         )
         
     elif status_upper == "REJECTED":
         query = query.filter(
             VaultWithdrawalRequest.status == "REJECTED",
-            VaultWithdrawalRequest.rejected_at >= today_start_utc,
-            VaultWithdrawalRequest.rejected_at < today_end_utc
+            VaultWithdrawalRequest.processed_at >= today_start_utc,
+            VaultWithdrawalRequest.processed_at < today_end_utc
         )
     
     # Get filtered withdrawals
@@ -312,9 +312,14 @@ def get_withdrawals_by_status(
             "amount": w.amount,
             "status": w.status,
             "created_at": w.created_at.strftime("%Y-%m-%d %H:%M:%S"),
-            "approved_at": w.approved_at.strftime("%Y-%m-%d %H:%M:%S") if w.approved_at else None,
-            "rejected_at": w.rejected_at.strftime("%Y-%m-%d %H:%M:%S") if w.rejected_at else None,
-            "rejection_reason": w.rejection_reason,
+            # DB model uses `processed_at` + `admin_memo`. Keep API contract stable.
+            "approved_at": w.processed_at.strftime("%Y-%m-%d %H:%M:%S")
+            if (w.status == "APPROVED" and w.processed_at)
+            else None,
+            "rejected_at": w.processed_at.strftime("%Y-%m-%d %H:%M:%S")
+            if (w.status == "REJECTED" and w.processed_at)
+            else None,
+            "rejection_reason": w.admin_memo if w.status == "REJECTED" else None,
         })
     
     total_amount = sum(w.amount for w in today_withdrawals)
@@ -347,8 +352,8 @@ def approve_withdrawal(
         raise HTTPException(status_code=400, detail="WITHDRAWAL_ALREADY_PROCESSED")
     
     withdrawal.status = "APPROVED"
-    withdrawal.approved_at = datetime.utcnow()
-    withdrawal.approved_by = admin_id
+    withdrawal.processed_at = datetime.utcnow()
+    withdrawal.processed_by = admin_id
     
     AdminAuditService.log(
         db,
@@ -367,16 +372,11 @@ def approve_withdrawal(
 @router.post("/vault/withdrawals/{withdrawal_id}/reject")
 def reject_withdrawal(
     withdrawal_id: int,
+    payload: AdminWithdrawalRejectRequest,
     db: Session = Depends(get_db),
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
     """Reject a withdrawal request"""
-    from pydantic import BaseModel
-    from fastapi import Body
-    
-    class RejectRequest(BaseModel):
-        reason: str
-    
     admin_id, admin_role = admin_info
     
     withdrawal = db.query(VaultWithdrawalRequest).filter(
@@ -388,8 +388,26 @@ def reject_withdrawal(
     
     if withdrawal.status != "PENDING":
         raise HTTPException(status_code=400, detail="WITHDRAWAL_ALREADY_PROCESSED")
-    
-    # Get reason from request - will be populated by FastAPI
-    # This is a workaround since we can't access request body in function signature
+
+    withdrawal.status = "REJECTED"
+    withdrawal.processed_at = datetime.utcnow()
+    withdrawal.processed_by = admin_id
+    withdrawal.admin_memo = (payload.reason or "").strip() or None
+
+    AdminAuditService.log(
+        db,
+        admin_id,
+        "WITHDRAWAL_REJECT",
+        "WITHDRAWAL",
+        str(withdrawal_id),
+        before={"status": "PENDING"},
+        after={
+            "status": "REJECTED",
+            "amount": withdrawal.amount,
+            "reason": withdrawal.admin_memo,
+        },
+    )
+
+    db.commit()
     return {"success": True, "id": withdrawal_id}
 
