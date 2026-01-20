@@ -304,12 +304,13 @@ graph TD
 
 ### 10.1 UI/UX 프레임워크 (완료)
 - [x] **Soft Obsidian 테마**: `#121214` 기반 다크 모드 테마 적용 및 가이드라인 수립. (근거: `AdminLayout.tsx` 주 적용 및 `index.css` 변수화 완료)
+- [x] **디자인 밀도 고도화**: 전체 간격 12px -> 8px 조정 완료 (2026-01-20).
 - [x] **Magic UI 통합**: `NumberTicker`, `AnimatedList`, `PulsatingDot` 컴포넌트 구현 및 대시보드 적용. (근거: `src/v2/admin/components/ui/` 내 컴포넌트 실체 확인)
 - [x] **공통 레이아웃**: 상단 헤더, 반응형 배리어블 그리드 레이아웃 구축. (근거: `AdminLayout.tsx` 모바일 하단 독 및 데스크톱 사이드바 전환 로직 확인)
 
 ### 10.2 핵심 대시보드 (진행 중)
 - [x] **종합 대시보드 (OpsDashboard)**: 실시간 금고 잔액, 활성 유저, 퀵 액션 카드 구현. (**API 연동 완료**: `useOpsStatus` hook을 통한 실시간 데이터 동기화 완료)
-- [x] **마케팅 센터 (MarketingCenter)**: KPI 탭 구조(Overview, Acquisition, Retention) 개편 및 인터랙션 강화. (**API 미연동**: 현재 프론트엔드 UI 및 Mock 데이터 기반 레이아웃 작업 완료)
+- [x] **마케팅 센터 (MarketingCenter)**: UI 간소화 및 발송 폼 최적화 완료 (2026-01-20). (**API 미연동**: 현재 프론트엔드 UI 및 Mock 데이터 기반 레이아웃 작업 완료)
 - [x] **운영 로그 (OpsLog)**: 로그 상세 보기(Sheet + LogViewer) 및 필터링 시스템 구축. (**API 미연동**: JSON 페이로드 시각화 UI 구현 완료)
 - [x] **시스템 상태 (Health)**: 인프라 상태 모니터링 및 애니메이션 이벤트 피드 적용. (**API 연동 완료**: `useOpsStatus`를 이용한 DB/Redis/Worker 실시간 상태 관제)
 

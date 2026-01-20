@@ -32,16 +32,24 @@ import {
   MessageSquare,
   Target,
   Trophy,
-  Table,
 } from "lucide-react";
-import { useRef, useEffect, useState, JSXElementConstructor, Key, ReactElement, ReactNode, ReactPortal } from "react";
+import {
+  useRef,
+  useEffect,
+  useState,
+  JSXElementConstructor,
+  Key,
+  ReactElement,
+  ReactNode,
+  ReactPortal,
+} from "react";
 import gsap from "gsap";
 import { WalletEditor } from "../../components/users/WalletEditor";
 import {
   useUserMissionHistory,
   useForceCompleteMission,
   useUserSegment,
-  useAdminTicketLogs, 
+  useAdminTicketLogs,
   useAdjustUserWallet,
   useAdminUserDetail,
   useCreateUserNote,
@@ -52,6 +60,7 @@ import {
 } from "../../../hooks/useV2Admin";
 import { Textarea } from "../../../components/ui/textarea";
 import {
+  Table,
   TableHeader,
   TableRow,
   TableHead,
@@ -112,8 +121,15 @@ export function UserDetailDrawer({
     <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent className="w-[90%] sm:w-[700px] bg-[#121214] border-l border-white/10 p-0 text-white overflow-y-auto">
         {isLoading || !user ? (
-          <div className="h-full flex items-center justify-center text-zinc-500">
-            Loading User Details...
+          <div className="h-full flex flex-col items-center justify-center text-zinc-500 gap-4">
+            <SheetHeader className="sr-only">
+              <SheetTitle>Loading User Details</SheetTitle>
+              <SheetDescription>
+                유저 정보를 불러오는 중입니다.
+              </SheetDescription>
+            </SheetHeader>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" />
+            <span>Loading User Details...</span>
           </div>
         ) : (
           <>
@@ -227,7 +243,8 @@ export function UserDetailDrawer({
                             위험 경고 ({user.riskLevel})
                           </h4>
                           <p className="text-xs text-red-400/80">
-                            {user.riskReason || "비정상적인 활동이 감지되었습니다."}
+                            {user.riskReason ||
+                              "비정상적인 활동이 감지되었습니다."}
                           </p>
                         </div>
                       </div>
@@ -351,46 +368,99 @@ export function UserDetailDrawer({
                         </TableHeader>
                         <TableBody>
                           {ticketLogs && ticketLogs.length > 0 ? (
-                            ticketLogs.map((log: { id: Key | null | undefined; type: string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined; amount: string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined; balanceAfter: string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | null | undefined; reason: string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | null | undefined; timestamp: string | number | Date; }) => (
-                              <TableRow
-                                key={log.id}
-                                className="border-white/5 hover:bg-white/5 text-[11px]"
-                              >
-                                <TableCell className="py-2">
-                                  <Badge
+                            ticketLogs.map(
+                              (log: {
+                                id: Key | null | undefined;
+                                type:
+                                  | string
+                                  | number
+                                  | boolean
+                                  | ReactElement<
+                                      any,
+                                      string | JSXElementConstructor<any>
+                                    >
+                                  | Iterable<ReactNode>
+                                  | null
+                                  | undefined;
+                                amount:
+                                  | string
+                                  | number
+                                  | boolean
+                                  | ReactElement<
+                                      any,
+                                      string | JSXElementConstructor<any>
+                                    >
+                                  | Iterable<ReactNode>
+                                  | null
+                                  | undefined;
+                                balanceAfter:
+                                  | string
+                                  | number
+                                  | boolean
+                                  | ReactElement<
+                                      any,
+                                      string | JSXElementConstructor<any>
+                                    >
+                                  | Iterable<ReactNode>
+                                  | ReactPortal
+                                  | null
+                                  | undefined;
+                                reason:
+                                  | string
+                                  | number
+                                  | boolean
+                                  | ReactElement<
+                                      any,
+                                      string | JSXElementConstructor<any>
+                                    >
+                                  | Iterable<ReactNode>
+                                  | ReactPortal
+                                  | null
+                                  | undefined;
+                                timestamp: string | number | Date;
+                              }) => (
+                                <TableRow
+                                  key={log.id}
+                                  className="border-white/5 hover:bg-white/5 text-[11px]"
+                                >
+                                  <TableCell className="py-2">
+                                    <Badge
+                                      className={cn(
+                                        "text-[9px] px-1 h-4",
+                                        log.type === "USE"
+                                          ? "bg-red-500/10 text-red-500"
+                                          : "bg-emerald-500/10 text-emerald-500",
+                                      )}
+                                    >
+                                      {log.type}
+                                    </Badge>
+                                  </TableCell>
+                                  <TableCell
                                     className={cn(
-                                      "text-[9px] px-1 h-4",
-                                      log.type === "USE"
-                                        ? "bg-red-500/10 text-red-500"
-                                        : "bg-emerald-500/10 text-emerald-500",
+                                      "py-2 font-mono",
+                                      (log.amount as number) > 0
+                                        ? "text-emerald-400"
+                                        : "text-red-400",
                                     )}
                                   >
-                                    {log.type}
-                                  </Badge>
-                                </TableCell>
-                                <TableCell
-                                  className={cn(
-                                    "py-2 font-mono",
-                                    (log.amount as number) > 0
-                                      ? "text-emerald-400"
-                                      : "text-red-400",
-                                  )}
-                                >
                                     {(log.amount as number) > 0
                                       ? `+${log.amount}`
                                       : log.amount}
-                                </TableCell>
-                                <TableCell className="py-2 text-zinc-400">
-                                  {log.balanceAfter} T
-                                </TableCell>
-                                <TableCell className="py-2 text-zinc-300 max-w-[120px] truncate">
-                                  {log.reason}
-                                </TableCell>
-                                <TableCell className="py-2 text-right text-zinc-500">
-                                  {new Date(log.timestamp).toLocaleDateString()}
-                                </TableCell>
-                              </TableRow>
-                            ))
+                                  </TableCell>
+                                  <TableCell className="py-2 text-zinc-400">
+                                    {log.balanceAfter} T
+                                  </TableCell>
+                                  <TableCell className="py-2 text-zinc-300 max-w-[120px] truncate">
+                                    {log.reason}
+                                  </TableCell>
+                                  <TableCell className="py-2 text-right text-zinc-500">
+                                    {new Date(
+                                      log.timestamp,
+                                    ).toLocaleDateString()}
+                                  </TableCell>
+                                </TableRow>
+                              ),
+                            )
                           ) : (
                             <TableRow>
                               <TableCell
@@ -429,7 +499,8 @@ export function UserDetailDrawer({
                         </CardHeader>
                         <CardContent>
                           <div className="text-2xl text-zinc-300 font-bold">
-                            ₩ {((user.totalDeposit || 0) * 0.3).toLocaleString()}
+                            ₩{" "}
+                            {((user.totalDeposit || 0) * 0.3).toLocaleString()}
                           </div>
                         </CardContent>
                       </Card>
@@ -692,12 +763,11 @@ export function UserDetailDrawer({
                                 </Badge>
                               </div>
                               <div className="flex items-center gap-2 mb-2">
-                                <div className="flex-1 bg-zinc-800 rounded-full h-2">
-                                  <div
-                                    className="bg-indigo-500 h-2 rounded-full"
-                                    style={{
-                                      width: `${(mission.progress / mission.maxProgress) * 100}%`,
-                                    }}
+                                <div className="flex-1">
+                                  <progress
+                                    value={mission.progress}
+                                    max={mission.maxProgress || 1}
+                                    className="h-2 w-full appearance-none rounded-full overflow-hidden bg-zinc-800 [&::-webkit-progress-bar]:bg-zinc-800 [&::-webkit-progress-value]:bg-indigo-500 [&::-moz-progress-bar]:bg-indigo-500"
                                   />
                                 </div>
                                 <span className="text-xs text-zinc-400">
@@ -743,13 +813,13 @@ export function UserDetailDrawer({
             onClose={() => setIsWalletEditorOpen(false)}
             userId={user.id}
             currentTickets={user.ticketBalance}
-            onUpdate={async (amt, reason) => {
+            onUpdate={async (amt, reason, type) => {
               if (user) {
                 await adjustWallet.mutateAsync({
                   userId: user.id,
                   request: {
-                    amount: amt - user.ticketBalance,
-                    token_type: "ROULETTE_TICKET",
+                    amount: amt,
+                    token_type: type,
                     reason: reason,
                   },
                 });

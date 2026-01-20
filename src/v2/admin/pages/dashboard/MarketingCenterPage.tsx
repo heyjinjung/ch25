@@ -29,6 +29,16 @@ import { PulsatingDot } from "../../components/ui/PulsatingDot";
 import { NumberTicker } from "../../components/ui/NumberTicker";
 
 export default function MarketingCenterPage() {
+  const barHeights = [
+    "h-[40%]",
+    "h-[65%]",
+    "h-[45%]",
+    "h-[90%]",
+    "h-[75%]",
+    "h-[55%]",
+    "h-[80%]",
+  ];
+
   return (
     <div className="p-6 space-y-8 h-full bg-[#121214] min-h-screen text-[#E4E4E7] font-sans">
       {/* Header Section */}
@@ -161,11 +171,10 @@ export default function MarketingCenterPage() {
               {/* Chart Placeholder with Gradient */}
               <div className="flex-1 w-full bg-gradient-to-t from-[#D2FD9C]/5 to-transparent mt-2 rounded-lg border border-white/5 flex flex-col items-center justify-center relative overflow-hidden">
                 <div className="absolute inset-0 flex items-end justify-around px-8 pb-4">
-                  {[40, 65, 45, 90, 75, 55, 80].map((h, i) => (
+                  {barHeights.map((heightClass, i) => (
                     <div
                       key={i}
-                      className="w-8 bg-[#D2FD9C]/20 rounded-t-sm border-t border-[#D2FD9C]/40 transition-all hover:bg-[#D2FD9C]/40"
-                      style={{ height: `${h}%` } as React.CSSProperties}
+                      className={`w-8 ${heightClass} bg-[#D2FD9C]/20 rounded-t-sm border-t border-[#D2FD9C]/40 transition-all hover:bg-[#D2FD9C]/40`}
                     />
                   ))}
                 </div>
