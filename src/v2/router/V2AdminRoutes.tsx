@@ -21,13 +21,15 @@ import UserSegmentPage from "../admin/pages/users/UserSegmentPage";
 import SurveyPage from "../admin/pages/marketing/SurveyPage";
 import HealthPage from "../admin/pages/system/HealthPage";
 import ModalControlPage from "../admin/pages/system/ModalControlPage";
+import {
+  AdminTeamBattlePage,
+  AdminGoldenHourPage,
+} from "../admin/pages/placeholders";
 
 import { isAdminAuthenticated } from "../../auth/adminAuth";
 import V2AdminLoginPage from "../admin/pages/auth/V2AdminLoginPage";
 
 const V2AdminRoutes: React.FC = () => {
-
-
   return (
     <Routes>
       <Route path="login" element={<V2AdminLoginPage />} />
@@ -42,10 +44,7 @@ const V2AdminRoutes: React.FC = () => {
           <Route path="marketing" element={<MarketingCenterPage />} />
           <Route path="users" element={<UserListPage />} />
           {/* Economy */}
-          <Route
-            path="economy/vault"
-            element={<VaultControlPage />}
-          />
+          <Route path="economy/vault" element={<VaultControlPage />} />
           <Route path="economy/deposits" element={<CCDepositPage />} />
           <Route path="economy/shop" element={<ShopManagerPage />} />
 
@@ -55,6 +54,8 @@ const V2AdminRoutes: React.FC = () => {
           <Route path="game/roulette" element={<RouletteConfigPage />} />
           <Route path="game/dice" element={<DiceConfigPage />} />
           <Route path="game/lottery" element={<LotteryConfigPage />} />
+          <Route path="game/team-battle" element={<AdminTeamBattlePage />} />
+          <Route path="game/golden-hour" element={<AdminGoldenHourPage />} />
 
           {/* Inventory */}
           <Route path="inventory/tickets" element={<TicketInventoryPage />} />
@@ -87,7 +88,5 @@ function RequireV2AdminAuth() {
   }
   return <Outlet />;
 }
-
-
 
 export default V2AdminRoutes;

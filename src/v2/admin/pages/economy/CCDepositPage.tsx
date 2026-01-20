@@ -33,7 +33,7 @@ export default function CCDepositPage() {
     <div className="space-y-6 h-full p-6 text-white min-h-screen">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight mb-1">CC 입금 관리 (Deposit Ops)</h1>
+          <h1 className="text-2xl font-bold tracking-tight mb-1">CC 입금 관리 (Deposit Ops - V2 Updated)</h1>
           <p className="text-sm text-zinc-400">외부 CC 입금 내역을 수동으로 확인하고 승인합니다.</p>
         </div>
         <Button variant="outline" className="gap-2" onClick={() => refetch()}>

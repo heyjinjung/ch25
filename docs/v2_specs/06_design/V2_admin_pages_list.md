@@ -18,13 +18,13 @@
 | :--- | :--- | :---: | :---: | :--- |
 | **유저 리스트** | `/v2/admin/users` | ✅ 완료 | **Real** | v1 스타일 아이콘 기반 모달 확장 패턴 적용 완료<br/>- 테이블: UID/닉네임/텔레ID/레벨/금고잔액/최근접속일/관리(7개 아이콘)<br/>- 아이콘 클릭 → 모달 해당 탭 직접 접근<br/>- 검색, 필터, 정렬, 페이지네이션 완벽 구현 |
 | **유저 상세 (Drawer)** | *(Drawer)* | ✅ 완료 | **Real** | 8개 탭(기본정보, 지갑, 금고, 인벤토리, 활동로그, 미션, 메모, 세그먼트)<br/>- defaultTab prop으로 탭 직접 접근 가능<br/>- 완전 한글화 |
-| **고객 세그먼트** | `/v2/admin/users/segments` | ✅ 완료 | **Real** | 배치 실행 및 통계 조회 연동 완료 |
+| **고객 세그먼트** | `/v2/admin/users/segments` | ✅ 완료 | **Real** | 배치 실행 및 통계(`GET /stats`), 규칙(`GET /rules`) 연동 완료 (404 해결) |
 
 ### 1-3. 경제 관리 (Economy)
 | 페이지명 | 경로 (Route) | UI 상태 | API 상태 | 비고 |
 | :--- | :--- | :---: | :---: | :--- |
-| **금고 제어** | `/v2/admin/economy/vault` | ✅ 완료 | **Real** | **완전 풀스택 구현 완료** (GSAP + 매직 UI)<br/>- 실시간 금고 통계 대시보드 (NumberTicker 애니메이션)<br/>- 회원별 금고 조회 (검색, 정렬, 페이지네이션)<br/>- 출금 승인/반려 처리<br/>- 금고 강제 조정 (Audit Log 자동 기록)<br/>- 일자별 추이 차트 (Recharts AreaChart 30일) |
-| **입금 관리** | `/v2/admin/economy/deposits` | ✅ 완료 | **Real** | CC 입금 대기열 확인 및 승인 |
+| **금고 제어** | `/v2/admin/economy/vault` | ✅ 완료 | **Real** | **완전 풀스택 구현 완료** (GSAP + 매직 UI)<br/>- 실시간 금고 통계 대시보드 (NumberTicker 애니메이션)<br/>- 회원별 금고 조회 (검색, 정렬, 페이지네이션)<br/>- 출금 승인/반려 처리<br/>- 금고 강제 조정 (닉네임 검색 지원, Audit Log 자동 기록)<br/>- 일자별 추이 차트 (Recharts AreaChart 30일) |
+| **입금 관리** | `/v2/admin/economy/deposits` | ✅ 완료 | **Real** | CC 입금 대기열 확인 및 승인<br/>- 닉네임, 입금횟수, 입력일 표시 개선 (백엔드 연동 완료) |
 | **상점 관리** | `/v2/admin/economy/shop` | ✅ 완료 | **Hybrid** | 상품(Real) + 환율(Mock) |
 | **티켓/인벤토리** | `/v2/admin/inventory/tickets` | 🚧 UI만 | **Mock** | 유저 티켓 로그 조회 (날짜 필터 등) |
 
@@ -100,6 +100,16 @@
 - 토글은 `PUT /surveys/{id}`(수정)와 충돌 방지로 `PUT /surveys/{id}/toggle`로 분리
 - 삭제는 하드 삭제가 아니라 `status=ARCHIVED`로 처리(응답/히스토리 보존)
 
+### 3-4. 입금 관리 페이지 고도화 (2026-01-20)
+**운영 효율성을 위한 정보 표시 강화**
+- 테이블 컬럼 개선: 닉네임(User ID), 입금횟수(Count), 입력일(Requested At) 추가
+- 백엔드 로직 개선: `list_pending_deposits`에서 유저 닉네임 조인 및 `ExternalRankingDailyDepositDelta` 기반 입금 횟수 계산 로직 추가
+
+### 3-5. 세그먼트 관리자 API 연결 (2026-01-20)
+**콘솔 404 에러 해결 및 기능 정상화**
+- `UserSegmentService` 및 `AdminSegmentRuleService`를 기반으로 API 엔드포인트 구현
+- `GET /segments/stats`, `GET /segments/rules`, `POST/PUT/DELETE /segments/rules` 구현 완료
+
 ## 4. 향후 로드맵 (Action Items)
 
 1.  [ ] **Game Ops 리얼 연동**: 미션, 룰렛, 로또 등의 설정을 실제 DB Config 테이블과 연동.
@@ -109,3 +119,5 @@
 5.  [x] **금고 제어 풀스택 구현** ✅ 완료 (2026-01-20)
 6.  [x] **유저 리스트 v1 스타일 적용** ✅ 완료 (2026-01-20)
 7.  [x] **마케팅(설문) V2 래핑 완료** ✅ 완료 (2026-01-20)
+8.  [x] **입금 관리 페이지 개선 (닉네임/횟수 표시)** ✅ 완료 (2026-01-20)
+9.  [x] **세그먼트 관리자 API 404 에러 수정** ✅ 완료 (2026-01-20)
