@@ -64,8 +64,17 @@ def update_admin_mission(
         raise HTTPException(status_code=404, detail="MISSION_NOT_FOUND")
 
     if payload.rewardType is not None:
+        # Backward/legacy compatibility:
+        # Older admin UIs may send RewardItem values (e.g. ROULETTE_TICKET) instead of MissionRewardType.
+        reward_type_raw = str(payload.rewardType or "").strip().upper()
+        legacy_map = {
+            "ROULETTE_TICKET": "TICKET_ROULETTE",
+            "DICE_TICKET": "TICKET_DICE",
+            "LOTTERY_TICKET": "TICKET_LOTTERY",
+        }
+        reward_type_norm = legacy_map.get(reward_type_raw, reward_type_raw)
         try:
-            m.reward_type = MissionRewardType(payload.rewardType)
+            m.reward_type = MissionRewardType(reward_type_norm)
         except Exception:
             raise HTTPException(status_code=400, detail="INVALID_REWARD_TYPE")
 

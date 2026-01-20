@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -27,9 +27,15 @@ def get_vault_stats(
 ):
     admin_id, admin_role = admin_info
 
-    from datetime import date
-
-    today = date.today()
+    # KST Date Range Logic
+    KST = timezone(timedelta(hours=9))
+    now_kst = datetime.now(KST)
+    today_start_kst = now_kst.replace(hour=0, minute=0, second=0, microsecond=0)
+    today_end_kst = today_start_kst + timedelta(days=1)
+    
+    # Convert to UTC for DB query (assuming naive UTC in DB)
+    today_start_utc = today_start_kst.astimezone(timezone.utc).replace(tzinfo=None)
+    today_end_utc = today_end_kst.astimezone(timezone.utc).replace(tzinfo=None)
 
     today_total = (
         db.query(func.sum(User.vault_available_balance) + func.sum(User.vault_locked_balance))
@@ -37,13 +43,37 @@ def get_vault_stats(
         or 0
     )
 
-    today_withdrawals = db.query(VaultWithdrawalRequest).filter(
-        func.date(VaultWithdrawalRequest.created_at) == today
-    ).all()
+    # Today's Approved (processed today)
+    today_approved = (
+        db.query(func.sum(VaultWithdrawalRequest.amount))
+        .filter(
+            VaultWithdrawalRequest.status == "APPROVED",
+            VaultWithdrawalRequest.approved_at >= today_start_utc,
+            VaultWithdrawalRequest.approved_at < today_end_utc
+        )
+        .scalar()
+        or 0
+    )
 
-    today_pending = sum(w.amount for w in today_withdrawals if w.status == "PENDING")
-    today_approved = sum(w.amount for w in today_withdrawals if w.status == "APPROVED")
-    today_rejected = sum(w.amount for w in today_withdrawals if w.status == "REJECTED")
+    # Today's Rejected (processed today)
+    today_rejected = (
+        db.query(func.sum(VaultWithdrawalRequest.amount))
+        .filter(
+            VaultWithdrawalRequest.status == "REJECTED",
+            VaultWithdrawalRequest.rejected_at >= today_start_utc,
+            VaultWithdrawalRequest.rejected_at < today_end_utc
+        )
+        .scalar()
+        or 0
+    )
+
+    # Current Pending (ALL pending, regardless of date)
+    today_pending = (
+        db.query(func.sum(VaultWithdrawalRequest.amount))
+        .filter(VaultWithdrawalRequest.status == "PENDING")
+        .scalar()
+        or 0
+    )
 
     total_pending_count = db.query(VaultWithdrawalRequest).filter(
         VaultWithdrawalRequest.status == "PENDING"
@@ -51,9 +81,9 @@ def get_vault_stats(
 
     return VaultStatsDto(
         today_total_vault=int(today_total),
-        today_withdrawal_pending=today_pending,
-        today_withdrawal_approved=today_approved,
-        today_withdrawal_rejected=today_rejected,
+        today_withdrawal_pending=int(today_pending),
+        today_withdrawal_approved=int(today_approved),
+        today_withdrawal_rejected=int(today_rejected),
         total_pending_count=total_pending_count,
     )
 
@@ -237,19 +267,39 @@ def get_withdrawals_by_status(
     """Get withdrawal requests by status (PENDING, APPROVED, REJECTED, ALL)"""
     admin_id, admin_role = admin_info
     
-    from datetime import date
-    today = date.today()
+    # KST Date Range Logic
+    KST = timezone(timedelta(hours=9))
+    now_kst = datetime.now(KST)
+    today_start_kst = now_kst.replace(hour=0, minute=0, second=0, microsecond=0)
+    today_end_kst = today_start_kst + timedelta(days=1)
+    
+    # Convert to UTC for DB query (assuming naive UTC in DB)
+    today_start_utc = today_start_kst.astimezone(timezone.utc).replace(tzinfo=None)
+    today_end_utc = today_end_kst.astimezone(timezone.utc).replace(tzinfo=None)
     
     query = db.query(VaultWithdrawalRequest)
+    status_upper = status.upper()
     
-    # Filter by status
-    if status.upper() != "ALL":
-        query = query.filter(VaultWithdrawalRequest.status == status.upper())
+    # Filter by status and date
+    if status_upper == "PENDING":
+        query = query.filter(VaultWithdrawalRequest.status == "PENDING")
     
-    # Get today's withdrawals
-    today_withdrawals = query.filter(
-        func.date(VaultWithdrawalRequest.created_at) == today
-    ).all()
+    elif status_upper == "APPROVED":
+        query = query.filter(
+            VaultWithdrawalRequest.status == "APPROVED",
+            VaultWithdrawalRequest.approved_at >= today_start_utc,
+            VaultWithdrawalRequest.approved_at < today_end_utc
+        )
+        
+    elif status_upper == "REJECTED":
+        query = query.filter(
+            VaultWithdrawalRequest.status == "REJECTED",
+            VaultWithdrawalRequest.rejected_at >= today_start_utc,
+            VaultWithdrawalRequest.rejected_at < today_end_utc
+        )
+    
+    # Get filtered withdrawals
+    today_withdrawals = query.order_by(VaultWithdrawalRequest.created_at.desc()).all()
     
     result = []
     for w in today_withdrawals:

@@ -69,14 +69,28 @@ export default function LevelConfigPage() {
     const localData = localLevels[level];
     if (!localData) return;
 
-    updateMutation.mutate({
-      level,
-      data: {
-        requiredXp: localData.requiredXp,
-        rewardType: localData.rewardType,
-        rewardAmount: localData.rewardAmount,
+    console.log("Saving level:", level, "with data:", localData);
+
+    updateMutation.mutate(
+      {
+        level,
+        data: {
+          requiredXp: localData.requiredXp,
+          rewardType: localData.rewardType,
+          rewardAmount: localData.rewardAmount,
+        },
+      },
+      {
+        onSuccess: (updatedLevel) => {
+          console.log("Level saved successfully:", updatedLevel);
+          refetch();
+        },
+        onError: (error) => {
+          console.error("Failed to save level:", error);
+          alert("레벨 저장에 실패했습니다. 콘솔을 확인하세요.");
+        },
       }
-    });
+    );
   };
 
   const filteredLevels = useMemo(() => {
@@ -230,10 +244,14 @@ export default function LevelConfigPage() {
       {/* --- Grid Layout --- */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
         {filteredLevels.map((level) => {
-          const localLevel = localLevels[level.level] || level;
-          const hasChanges = localLevel.requiredXp !== level.requiredXp ||
-                            localLevel.rewardType !== level.rewardType ||
-                            localLevel.rewardAmount !== level.rewardAmount;
+          const localLevel = localLevels[level.level];
+          const hasChanges = localLevel ? (
+            localLevel.requiredXp !== level.requiredXp ||
+            localLevel.rewardType !== level.rewardType ||
+            localLevel.rewardAmount !== level.rewardAmount
+          ) : false;
+
+          const displayLevel = localLevel || level;
 
           return (
             <div
@@ -278,7 +296,7 @@ export default function LevelConfigPage() {
                     <div className="relative">
                       <input
                         type="number"
-                        value={localLevel.requiredXp}
+                        value={displayLevel.requiredXp}
                         onChange={(e) =>
                           handleLocalChange(
                             level.level,
@@ -312,7 +330,7 @@ export default function LevelConfigPage() {
                       <div className="relative">
                         <select
                           className="w-full h-10 bg-zinc-900 border border-zinc-700 rounded-lg px-3 text-xs font-medium text-zinc-300 focus:border-indigo-500 outline-none appearance-none"
-                          value={localLevel.rewardType || "POINT"}
+                          value={displayLevel.rewardType || "POINT"}
                           onChange={(e) =>
                             handleLocalChange(
                               level.level,
@@ -336,7 +354,7 @@ export default function LevelConfigPage() {
                       <div className="relative">
                         <input
                           type="number"
-                          value={localLevel.rewardAmount}
+                          value={displayLevel.rewardAmount}
                           onChange={(e) =>
                             handleLocalChange(
                               level.level,
@@ -358,7 +376,11 @@ export default function LevelConfigPage() {
                 <div className="mt-6 pt-4 border-t border-white/5 flex justify-between items-center gap-2">
                   {hasChanges ? (
                     <Button
-                      onClick={() => handleSaveLevel(level.level)}
+                      type="button"
+                      onClick={() => {
+                        console.log("Button clicked for level:", level.level);
+                        handleSaveLevel(level.level);
+                      }}
                       disabled={updateMutation.isPending}
                       className="w-full bg-indigo-600 hover:bg-indigo-700 text-white h-9 text-sm font-bold"
                     >
