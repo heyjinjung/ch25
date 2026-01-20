@@ -1,9 +1,14 @@
 /// <reference types="vite/client" />
 import axios from "axios";
 import { getAuthToken, clearAuth } from "../../auth/authStore"; // Reuse auth store for now as it handles token storage
+import { getAdminToken, clearAdminToken } from "../../auth/adminAuth";
 
 // V2 API Base URL logic - mirroring V1 for now but isolated for future changes
-const rawEnvBase = (import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || "").trim();
+const rawEnvBase = (
+  import.meta.env.VITE_API_BASE_URL ||
+  import.meta.env.VITE_API_URL ||
+  ""
+).trim();
 
 const normalizeApiBase = (base: string) => {
   const trimmed = base.replace(/\/+$/, "");
@@ -14,7 +19,7 @@ const envBase = normalizeApiBase(rawEnvBase);
 
 const resolvedBaseURL = (() => {
   if (envBase) return envBase.replace(/\/+$/, "");
-  
+
   if (typeof window !== "undefined") {
     const { hostname, protocol } = window.location;
     const isLocalHost = hostname === "localhost" || hostname === "127.0.0.1";
@@ -38,9 +43,14 @@ export const v2Client = axios.create({
 
 // Request Interceptor: Attach Token
 v2Client.interceptors.request.use((config) => {
-  const token = getAuthToken() || (typeof localStorage !== "undefined" ? localStorage.getItem("token") : null);
+  const token =
+    getAdminToken() ||
+    getAuthToken() ||
+    (typeof localStorage !== "undefined"
+      ? localStorage.getItem("token")
+      : null);
   const url = String(config.url ?? "");
-  
+
   // Skip auth for public endpoints if any (currently mostly auth'd)
   if (url.endsWith("/api/auth/token")) {
     return config;
@@ -59,27 +69,38 @@ v2Client.interceptors.response.use(
   (error) => {
     // eslint-disable-next-line no-console
     console.error("[v2Client] response error", error);
-    
+
     const status = error?.response?.status;
-    
+
     if (status === 401) {
       const hadAuthHeader = Boolean(
         error?.config?.headers?.Authorization ||
         error?.config?.headers?.authorization ||
-        error?.config?.headers?.AUTHORIZATION
+        error?.config?.headers?.AUTHORIZATION,
       );
-      const currentToken = getAuthToken() || (typeof localStorage !== "undefined" ? localStorage.getItem("token") : null);
+      const currentToken =
+        getAdminToken() ||
+        getAuthToken() ||
+        (typeof localStorage !== "undefined"
+          ? localStorage.getItem("token")
+          : null);
 
       if (hadAuthHeader || currentToken) {
+        clearAdminToken();
         clearAuth();
-        if (typeof window !== "undefined" && window.location.pathname !== "/login") {
-           // Basic redirect for now, maybe use a custom event or router later
-           window.location.href = "/login";
+        if (typeof window !== "undefined") {
+          const pathname = window.location.pathname || "";
+          const isV2AdminPath = pathname.startsWith("/v2/admin");
+          const target = isV2AdminPath ? "/v2/admin/login" : "/login";
+          if (pathname !== target) {
+            // Basic redirect for now, maybe use a custom event or router later
+            window.location.href = target;
+          }
         }
       }
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 export default v2Client;
