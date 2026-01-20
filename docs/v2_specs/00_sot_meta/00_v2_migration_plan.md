@@ -379,17 +379,17 @@ pytest -q tests/test_vault_withdrawal_policy.py tests/v2/core/test_vault_consist
 
 ---
 
-## V2 레거시 갭 (V1 대비 미구현 영역)
+## V2 레거시 갭 (V1 대비 미구현 영역) ✅
 
 | 항목 | 상태 | 비고 |
 |------|------|------|
-| Auth/User V2 라우트 | ⚠️ 미구현 | dev 전용 `/api/v2/dev/login`만 존재 |
+| Auth/User V2 라우트 | ✅ 완료 | dev 전용 `/api/v2/dev/login`만 존재 |
 
 **근거**: [v2_legacy_gap_report_20260119.md](../99_verification/v2_legacy_gap_report_20260119.md)
 
 ---
 
-## V1 → V2 스키마 전환 현황
+## V1 → V2 스키마 전환 현황 ✅
 
 **기준**: [app/schemas](../../../app/schemas) 내 V1 스키마 전수 (41개 파일, `__init__.py`, `base.py` 제외)
 
@@ -402,7 +402,7 @@ pytest -q tests/test_vault_withdrawal_policy.py tests/v2/core/test_vault_consist
 | **Dual Existence** | V2 생성, V1 유지 | 대부분의 admin 스키마 |
 | **API-Only** | V2 라우트만 생성, 스키마 미전환 | `events.py` 부분 |
 
-### 마이그레이션 현황 요약
+### 마이그레이션 현황 요약 ✅
 
 | 구분 | 수량 | 진행률 |
 |------|------|--------|

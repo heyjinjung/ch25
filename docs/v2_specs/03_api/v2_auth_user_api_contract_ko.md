@@ -46,6 +46,13 @@
 }
 ```
 
+#### 3.1.1 JWT Claim 규칙 (Role)
+- `access_token`은 JWT이며, 기본 클레임은 `sub`, `iat`, `exp`, `typ`를 포함한다.
+- 어드민 권한이 있는 경우(SoT: `AdminUserProfile.tags`의 `ROLE_*`) 아래 클레임을 추가로 포함할 수 있다.
+  - `role`: string (예: `SUPER_ADMIN`, `OPERATOR`)
+  - `roles`: string[] (예: `["SUPER_ADMIN"]`)
+- FE 권한 판별 우선순위: `roles[0]` → `role` → (없으면) `ADMIN` 기본값
+
 ### 3.2 활동 기록
 - Endpoint: `POST /api/activity/record`
 - Request:

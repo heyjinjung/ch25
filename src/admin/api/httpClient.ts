@@ -20,7 +20,11 @@ const normalizeHttps = (base: string) => {
   if (!base) return base;
 
   // If we are in the browser on HTTPS and the provided base is HTTP, upgrade to HTTPS to avoid mixed content.
-  if (typeof window !== "undefined" && window.location.protocol === "https:" && base.startsWith("http://")) {
+  if (
+    typeof window !== "undefined" &&
+    window.location.protocol === "https:" &&
+    base.startsWith("http://")
+  ) {
     try {
       const url = new URL(base, window.location.origin);
       url.protocol = "https:";
@@ -60,7 +64,11 @@ const resolvedBaseURL = (() => {
 
 const DEFAULT_TIMEOUT_MS = 15000;
 const resolvedTimeoutMs = (() => {
-  const raw = String(import.meta.env.VITE_ADMIN_API_TIMEOUT_MS ?? import.meta.env.VITE_API_TIMEOUT_MS ?? "").trim();
+  const raw = String(
+    import.meta.env.VITE_ADMIN_API_TIMEOUT_MS ??
+      import.meta.env.VITE_API_TIMEOUT_MS ??
+      "",
+  ).trim();
   const parsed = Number.parseInt(raw, 10);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_TIMEOUT_MS;
 })();
@@ -79,12 +87,13 @@ adminApi.interceptors.request.use((config) => {
   const token =
     getAdminToken() ||
     (typeof localStorage !== "undefined"
-      ? localStorage.getItem("xmas_access_token") || localStorage.getItem("token")
+      ? localStorage.getItem("xmas_access_token") ||
+        localStorage.getItem("token")
       : null);
   if (token) {
     (config as any).headers = {
       ...(config.headers || {}),
-      Authorization: `Bearer ${token}`
+      Authorization: `Bearer ${token}`,
     };
   }
   return config;
@@ -105,23 +114,30 @@ adminApi.interceptors.response.use(
       const hadAuthHeader = Boolean(
         error?.config?.headers?.Authorization ||
         error?.config?.headers?.authorization ||
-        error?.config?.headers?.AUTHORIZATION
+        error?.config?.headers?.AUTHORIZATION,
       );
       const currentToken =
         getAdminToken() ||
         (typeof localStorage !== "undefined"
-          ? localStorage.getItem("xmas_access_token") || localStorage.getItem("token")
+          ? localStorage.getItem("xmas_access_token") ||
+            localStorage.getItem("token")
           : null);
 
       if (hadAuthHeader || currentToken) {
         clearAdminToken();
-        if (typeof window !== "undefined" && window.location.pathname !== "/admin/login") {
-          window.location.href = "/admin/login";
+        if (typeof window !== "undefined") {
+          const pathname = window.location.pathname || "";
+          const target = pathname.startsWith("/v2/admin")
+            ? "/v2/admin/login"
+            : "/admin/login";
+          if (pathname !== target) {
+            window.location.href = target;
+          }
         }
       }
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 export default adminApi;

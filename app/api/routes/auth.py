@@ -154,7 +154,26 @@ def issue_token(payload: TokenRequest, request: Request, db: Session = Depends(g
         db.rollback()
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="LOGIN_FAILED")
 
-    token = create_access_token(user_id=user.id)
+    role_str = None
+    try:
+        from app.models.admin_user_profile import AdminUserProfile
+
+        profile = db.query(AdminUserProfile).filter(AdminUserProfile.user_id == user.id).first()
+        if profile and isinstance(profile.tags, list):
+            tag_role = next(
+                (t for t in profile.tags if isinstance(t, str) and t.upper().startswith("ROLE_")),
+                None,
+            )
+            if tag_role:
+                role_str = tag_role.replace("ROLE_", "", 1).upper()
+    except Exception:
+        role_str = None
+
+    token = (
+        create_access_token(user_id=user.id, role=role_str, roles=[role_str])
+        if role_str
+        else create_access_token(user_id=user.id)
+    )
     return TokenResponse(
         access_token=token,
         user=AuthUser(
