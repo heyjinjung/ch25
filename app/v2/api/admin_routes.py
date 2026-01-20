@@ -4,14 +4,18 @@ from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.api.deps import get_current_admin_info, get_db
 from app.models.game_wallet import GameTokenType, UserGameWallet
 from app.models.inventory import UserInventoryItem
 from app.models.user import User
 from app.models.vault_withdrawal_request import VaultWithdrawalRequest
-from app.models.user_retention_state import UserRetentionState  
+from app.models.external_ranking_daily_deposit_delta import ExternalRankingDailyDepositDelta
+from app.models.user_retention_state import UserRetentionState
+from app.models.roulette import RouletteConfig, RouletteSegment
+from app.models.dice import DiceConfig
+from app.models.lottery import LotteryConfig, LotteryPrize
 from app.v2.services.vault_service import V2VaultService
 from app.services.admin_audit_service import AdminAuditService
 from app.v2.schemas.v2_admin_economy import AdminWithdrawalDto
@@ -54,15 +58,436 @@ from app.v2.schemas.v2_admin_feature_schedule import (
     AdminFeatureScheduleUpdate
 )
 from app.v2.schemas.v2_admin_game_config import (
-    AdminDiceConfigV2, 
+    AdminDiceConfigV2,
     DiceEventParams
+)
+from app.v2.schemas.v2_admin_game import (
+    RouletteConfigDto,
+    RouletteSegmentDto,
+    RouletteConfigUpdateRequest,
+    RouletteConfigFullUpdateRequest,
+    RouletteSegmentUpdateRequest,
+    DiceConfigDto,
+    DiceConfigUpdateRequest,
+    LotteryConfigDto,
+    LotteryPrizeDto,
+    LotteryConfigUpdateRequest,
+    LotteryPrizeUpdateRequest,
 )
 from app.v2.schemas.v2_notification_feed import (
     FeedConfigResponse, 
     FeedJackpotConfig
 )
 
+from app.v2.models.v2_admin_message import V2AdminMessage
+from app.v2.schemas.v2_admin_message import V2MessageCreate, V2MessageResponse
+from app.v2.services.admin_message_service import V2AdminMessageService
+
+from app.models.survey import (
+    Survey,
+    SurveyOption,
+    SurveyQuestion,
+    SurveyQuestionType,
+    SurveyResponse,
+    SurveyResponseAnswer,
+    SurveyResponseStatus,
+    SurveyStatus,
+)
+from app.v2.schemas.v2_admin_marketing import (
+    V2AdminSurveyDto,
+    V2AdminSurveyQuestionDto,
+    V2AdminSurveyResultDto,
+    V2AdminSurveyResultOptionDto,
+    V2AdminSurveyToggleRequest,
+)
+
+from app.schemas.survey import SurveyDetailResponse, SurveyUpsertRequest
+
 router = APIRouter(prefix="/admin", tags=["v2-admin-ui"])
+
+
+# ============================================================================
+# Marketing (Message Sender / Survey Manager)
+# ============================================================================
+
+
+@router.get("/marketing/messages", response_model=list[V2MessageResponse])
+def list_admin_marketing_messages(
+    limit: int = 50,
+    offset: int = 0,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+) -> list[V2MessageResponse]:
+    _admin_id, _admin_role = admin_info
+
+    items = (
+        db.query(V2AdminMessage)
+        .filter(V2AdminMessage.is_deleted.is_(False))
+        .order_by(V2AdminMessage.created_at.desc())
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
+    return items
+
+
+@router.post("/marketing/messages", response_model=V2MessageResponse, status_code=201)
+def create_admin_marketing_message(
+    payload: V2MessageCreate,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+) -> V2MessageResponse:
+    admin_id, _admin_role = admin_info
+
+    if payload.target_type != "ALL" and not (payload.target_value and payload.target_value.strip()):
+        raise HTTPException(status_code=400, detail="TARGET_VALUE_REQUIRED")
+
+    resolved_user_ids = None
+    if payload.target_type == "USER" and payload.target_value:
+        resolved_user_ids = []
+        for raw in payload.target_value.split(","):
+            raw = raw.strip()
+            if not raw:
+                continue
+            try:
+                resolved_user_ids.append(int(raw))
+            except ValueError:
+                continue
+
+    msg = V2AdminMessageService.create_message(
+        db,
+        sender_admin_id=admin_id,
+        title=payload.title,
+        content=payload.content,
+        target_type=payload.target_type,
+        target_value=payload.target_value,
+        channels=payload.channels,
+    )
+    V2AdminMessageService.fan_out_message(
+        db,
+        message_id=msg.id,
+        target_type=payload.target_type,
+        target_value=payload.target_value,
+        resolved_user_ids=resolved_user_ids,
+    )
+    return msg
+
+
+def _map_survey_question_type(question_type: SurveyQuestionType) -> str:
+    raw = question_type.value if hasattr(question_type, "value") else str(question_type)
+    if raw == SurveyQuestionType.SINGLE_CHOICE.value:
+        return "SINGLE"
+    if raw == SurveyQuestionType.MULTI_CHOICE.value:
+        return "MULTIPLE"
+    return "TEXT"
+
+
+def _serialize_survey_detail(survey: Survey) -> SurveyDetailResponse:
+    # Reuse legacy admin response contract (KST datetime serialization).
+    from app.schemas.survey import SurveyOptionSchema, SurveyQuestionSchema
+
+    return SurveyDetailResponse(
+        id=survey.id,
+        title=survey.title,
+        description=survey.description,
+        channel=survey.channel,
+        status=survey.status,
+        reward_json=survey.reward_json,
+        questions=[
+            SurveyQuestionSchema(
+                id=q.id,
+                order_index=q.order_index,
+                randomize_group=q.randomize_group,
+                question_type=q.question_type,
+                title=q.title,
+                helper_text=q.helper_text,
+                is_required=q.is_required,
+                config_json=q.config_json,
+                options=[
+                    SurveyOptionSchema(
+                        id=opt.id,
+                        value=opt.value,
+                        label=opt.label,
+                        order_index=opt.order_index,
+                        weight=opt.weight,
+                    )
+                    for opt in sorted(q.options, key=lambda o: o.order_index)
+                ],
+            )
+            for q in sorted(survey.questions, key=lambda q: q.order_index)
+        ],
+    )
+
+
+def _replace_survey_questions(db: Session, survey: Survey, payload: SurveyUpsertRequest) -> None:
+    # Same behavior as legacy admin route: full replace + option normalization.
+    survey.questions.clear()
+    db.flush()
+
+    for q in payload.questions:
+        question = SurveyQuestion(
+            survey_id=survey.id,
+            order_index=q.order_index,
+            randomize_group=q.randomize_group,
+            question_type=q.question_type,
+            title=q.title,
+            helper_text=q.helper_text,
+            is_required=q.is_required,
+            config_json=q.config_json,
+        )
+        db.add(question)
+        db.flush()
+
+        for idx, opt in enumerate(q.options):
+            db.add(
+                SurveyOption(
+                    question_id=question.id,
+                    value=str(opt.get("value") or opt.get("id") or idx),
+                    label=opt.get("label") or str(opt.get("value") or ""),
+                    order_index=opt.get("order_index") or idx,
+                    weight=opt.get("weight") or 1,
+                )
+            )
+
+    db.commit()
+    db.refresh(survey)
+
+
+@router.get("/marketing/surveys", response_model=list[V2AdminSurveyDto])
+def list_admin_marketing_surveys(
+    limit: int = 100,
+    offset: int = 0,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+) -> list[V2AdminSurveyDto]:
+    _admin_id, _admin_role = admin_info
+
+    surveys = (
+        db.query(Survey)
+        .options(selectinload(Survey.questions).selectinload(SurveyQuestion.options))
+        .order_by(Survey.created_at.desc())
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
+
+    # Aggregate completed response counts per survey
+    counts = dict(
+        db.query(SurveyResponse.survey_id, func.count(SurveyResponse.id))
+        .filter(SurveyResponse.status == SurveyResponseStatus.COMPLETED)
+        .group_by(SurveyResponse.survey_id)
+        .all()
+    )
+
+    result: list[V2AdminSurveyDto] = []
+    for s in surveys:
+        questions = [
+            V2AdminSurveyQuestionDto(
+                id=q.id,
+                type=_map_survey_question_type(q.question_type),
+                question=q.title,
+                options=[opt.label for opt in sorted(q.options, key=lambda o: o.order_index)]
+                if q.options
+                else None,
+            )
+            for q in sorted(s.questions, key=lambda q: q.order_index)
+        ]
+        result.append(
+            V2AdminSurveyDto(
+                id=s.id,
+                title=s.title,
+                description=s.description,
+                questions=questions,
+                is_active=(s.status == SurveyStatus.ACTIVE),
+                response_count=int(counts.get(s.id, 0) or 0),
+                created_at=s.created_at,
+            )
+        )
+    return result
+
+
+@router.post("/marketing/surveys", response_model=SurveyDetailResponse, status_code=201)
+def create_admin_marketing_survey(
+    payload: SurveyUpsertRequest,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+) -> SurveyDetailResponse:
+    admin_id, _admin_role = admin_info
+
+    survey = Survey(
+        title=payload.title,
+        description=payload.description,
+        channel=payload.channel,
+        status=payload.status or SurveyStatus.DRAFT,
+        reward_json=payload.reward_json,
+        target_segment_json=payload.target_segment_json,
+        auto_launch=payload.auto_launch,
+        start_at=payload.start_at,
+        end_at=payload.end_at,
+        created_by=admin_id,
+    )
+    db.add(survey)
+    db.commit()
+    db.refresh(survey)
+    _replace_survey_questions(db, survey, payload)
+    return _serialize_survey_detail(survey)
+
+
+@router.get("/marketing/surveys/{survey_id}", response_model=SurveyDetailResponse)
+def get_admin_marketing_survey(
+    survey_id: int,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+) -> SurveyDetailResponse:
+    _admin_id, _admin_role = admin_info
+    survey = db.get(Survey, survey_id)
+    if not survey:
+        raise HTTPException(status_code=404, detail="SURVEY_NOT_FOUND")
+    return _serialize_survey_detail(survey)
+
+
+@router.put("/marketing/surveys/{survey_id}", response_model=SurveyDetailResponse)
+def update_admin_marketing_survey(
+    survey_id: int,
+    payload: SurveyUpsertRequest,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+) -> SurveyDetailResponse:
+    _admin_id, _admin_role = admin_info
+    survey = db.get(Survey, survey_id)
+    if not survey:
+        raise HTTPException(status_code=404, detail="SURVEY_NOT_FOUND")
+
+    survey.title = payload.title
+    survey.description = payload.description
+    survey.channel = payload.channel
+    survey.status = payload.status or survey.status
+    survey.reward_json = payload.reward_json
+    survey.target_segment_json = payload.target_segment_json
+    survey.auto_launch = payload.auto_launch
+    survey.start_at = payload.start_at
+    survey.end_at = payload.end_at
+    db.add(survey)
+    db.commit()
+    db.refresh(survey)
+    _replace_survey_questions(db, survey, payload)
+    return _serialize_survey_detail(survey)
+
+
+@router.delete("/marketing/surveys/{survey_id}")
+def delete_admin_marketing_survey(
+    survey_id: int,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+) -> dict:
+    _admin_id, _admin_role = admin_info
+    survey = db.get(Survey, survey_id)
+    if not survey:
+        raise HTTPException(status_code=404, detail="SURVEY_NOT_FOUND")
+
+    # Soft-delete by archiving (keeps historical responses intact).
+    survey.status = SurveyStatus.ARCHIVED
+    survey.updated_at = datetime.utcnow()
+    db.add(survey)
+    db.commit()
+    return {"ok": True}
+
+
+@router.put("/marketing/surveys/{survey_id}/toggle")
+def toggle_admin_marketing_survey(
+    survey_id: int,
+    payload: V2AdminSurveyToggleRequest,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+) -> dict:
+    _admin_id, _admin_role = admin_info
+    survey = db.get(Survey, survey_id)
+    if not survey:
+        raise HTTPException(status_code=404, detail="SURVEY_NOT_FOUND")
+
+    survey.status = SurveyStatus.ACTIVE if payload.is_active else SurveyStatus.PAUSED
+    survey.updated_at = datetime.utcnow()
+    db.add(survey)
+    db.commit()
+    return {"ok": True}
+
+
+@router.get("/marketing/surveys/{survey_id}/results", response_model=list[V2AdminSurveyResultDto])
+def get_admin_marketing_survey_results(
+    survey_id: int,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+) -> list[V2AdminSurveyResultDto]:
+    _admin_id, _admin_role = admin_info
+    survey = (
+        db.query(Survey)
+        .options(selectinload(Survey.questions).selectinload(SurveyQuestion.options))
+        .filter(Survey.id == survey_id)
+        .first()
+    )
+    if not survey:
+        raise HTTPException(status_code=404, detail="SURVEY_NOT_FOUND")
+
+    results: list[V2AdminSurveyResultDto] = []
+    for q in sorted(survey.questions, key=lambda q: q.order_index):
+        # Choice questions
+        if q.options:
+            rows = (
+                db.query(SurveyResponseAnswer.option_id, func.count(SurveyResponseAnswer.id))
+                .join(SurveyResponse, SurveyResponseAnswer.response_id == SurveyResponse.id)
+                .filter(
+                    SurveyResponse.survey_id == survey_id,
+                    SurveyResponse.status == SurveyResponseStatus.COMPLETED,
+                    SurveyResponseAnswer.question_id == q.id,
+                )
+                .group_by(SurveyResponseAnswer.option_id)
+                .all()
+            )
+            count_by_option_id = {int(opt_id): int(cnt) for opt_id, cnt in rows if opt_id is not None}
+            total = sum(count_by_option_id.values())
+
+            option_items: list[V2AdminSurveyResultOptionDto] = []
+            for opt in sorted(q.options, key=lambda o: o.order_index):
+                cnt = int(count_by_option_id.get(opt.id, 0))
+                pct = int(round((cnt * 100) / total)) if total > 0 else 0
+                option_items.append(
+                    V2AdminSurveyResultOptionDto(option=opt.label, count=cnt, percentage=pct)
+                )
+
+            results.append(
+                V2AdminSurveyResultDto(
+                    survey_id=survey_id,
+                    question_id=q.id,
+                    question=q.title,
+                    responses=option_items,
+                )
+            )
+            continue
+
+        # Text/number/etc.
+        text_count = (
+            db.query(func.count(SurveyResponseAnswer.id))
+            .join(SurveyResponse, SurveyResponseAnswer.response_id == SurveyResponse.id)
+            .filter(
+                SurveyResponse.survey_id == survey_id,
+                SurveyResponse.status == SurveyResponseStatus.COMPLETED,
+                SurveyResponseAnswer.question_id == q.id,
+            )
+            .scalar()
+        )
+        total = int(text_count or 0)
+        results.append(
+            V2AdminSurveyResultDto(
+                survey_id=survey_id,
+                question_id=q.id,
+                question=q.title,
+                responses=[
+                    V2AdminSurveyResultOptionDto(option="응답", count=total, percentage=100 if total > 0 else 0)
+                ],
+            )
+        )
+
+    return results
 
 
 @router.get("/users", response_model=UserListResponse)
@@ -392,12 +817,36 @@ def list_pending_deposits(
     from app.services.admin_external_ranking_service import AdminExternalRankingService
     rows = AdminExternalRankingService.list_all(db) # Assuming this lists entries that need review
     
+    # Pre-fetch user nicknames map
+    user_ids = [r.user_id for r in rows]
+    user_map = {}
+    deposit_count_map = {}
+
+    if user_ids:
+        users = db.query(User).filter(User.id.in_(user_ids)).all()
+        user_map = {u.id: u.nickname for u in users}
+
+        # Calculate deposit counts (days active in deposit ranking)
+        raw_counts = (
+            db.query(
+                ExternalRankingDailyDepositDelta.user_id, 
+                func.count(ExternalRankingDailyDepositDelta.id)
+            )
+            .filter(ExternalRankingDailyDepositDelta.user_id.in_(user_ids))
+            .filter(ExternalRankingDailyDepositDelta.deposit_delta > 0)
+            .group_by(ExternalRankingDailyDepositDelta.user_id)
+            .all()
+        )
+        deposit_count_map = {uid: cnt for uid, cnt in raw_counts}
+    
     result = []
     for r in rows:
         result.append(AdminDepositDto(
             id=r.id,
             user_id=r.user_id,
+            nickname=user_map.get(r.user_id),
             amount=int(r.deposit_amount or 0),
+            deposit_count=int(deposit_count_map.get(r.user_id, 0)),
             bank_owner="Manual Entry", # Placeholder as fallback
             status="PENDING",
             requested_at=r.created_at,
@@ -830,3 +1279,529 @@ def force_edit_vault(
         "after_balance": int(new_balance),
         "amount_change": payload.amount
     }
+
+
+# ============================================================================
+# Game Configuration - Roulette
+# ============================================================================
+
+@router.get("/game/roulette/configs", response_model=list[RouletteConfigDto])
+def get_roulette_configs(
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """모든 룰렛 설정 조회 (등급별로 4개)"""
+    configs = db.query(RouletteConfig).options(
+        selectinload(RouletteConfig.segments)
+    ).order_by(RouletteConfig.grade).all()
+
+    result = []
+    for config in configs:
+        segments_dto = [
+            RouletteSegmentDto(
+                id=seg.id,
+                slot_index=seg.slot_index,
+                label=seg.label,
+                weight=seg.weight,
+                reward_type=seg.reward_type,
+                reward_amount=seg.reward_amount,
+                is_jackpot=seg.is_jackpot
+            )
+            for seg in sorted(config.segments, key=lambda x: x.slot_index)
+        ]
+
+        result.append(RouletteConfigDto(
+            id=config.id,
+            name=config.name,
+            grade=config.grade,
+            ticket_type=config.ticket_type,
+            max_daily_spins=config.max_daily_spins,
+            is_active=config.is_active,
+            segments=segments_dto,
+            created_at=config.created_at,
+            updated_at=config.updated_at
+        ))
+
+    return result
+
+
+@router.get("/game/roulette/config/{config_id}", response_model=RouletteConfigDto)
+def get_roulette_config(
+    config_id: int,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """특정 룰렛 설정 조회"""
+    config = db.query(RouletteConfig).options(
+        selectinload(RouletteConfig.segments)
+    ).filter(RouletteConfig.id == config_id).first()
+
+    if not config:
+        raise HTTPException(status_code=404, detail="ROULETTE_CONFIG_NOT_FOUND")
+
+    segments_dto = [
+        RouletteSegmentDto(
+            id=seg.id,
+            slot_index=seg.slot_index,
+            label=seg.label,
+            weight=seg.weight,
+            reward_type=seg.reward_type,
+            reward_amount=seg.reward_amount,
+            is_jackpot=seg.is_jackpot
+        )
+        for seg in sorted(config.segments, key=lambda x: x.slot_index)
+    ]
+
+    return RouletteConfigDto(
+        id=config.id,
+        name=config.name,
+        grade=config.grade,
+        ticket_type=config.ticket_type,
+        max_daily_spins=config.max_daily_spins,
+        is_active=config.is_active,
+        segments=segments_dto,
+        created_at=config.created_at,
+        updated_at=config.updated_at
+    )
+
+
+@router.put("/game/roulette/config/{config_id}", response_model=RouletteConfigDto)
+def update_roulette_config(
+    config_id: int,
+    payload: RouletteConfigFullUpdateRequest,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """룰렛 설정 업데이트 (Config + Segments)"""
+    admin_id, admin_role = admin_info
+
+    # 권한 체크 - SuperAdmin 또는 Operator만 가능
+    if admin_role not in ["SUPER_ADMIN", "OPERATOR"]:
+        raise HTTPException(status_code=403, detail="NOT_AUTHORIZED")
+
+    config = db.query(RouletteConfig).options(
+        selectinload(RouletteConfig.segments)
+    ).filter(RouletteConfig.id == config_id).first()
+
+    if not config:
+        raise HTTPException(status_code=404, detail="ROULETTE_CONFIG_NOT_FOUND")
+
+    # Config 기본 정보 업데이트
+    before_data = {
+        "name": config.name,
+        "ticket_type": config.ticket_type,
+        "max_daily_spins": config.max_daily_spins,
+        "is_active": config.is_active
+    }
+
+    if payload.name is not None:
+        config.name = payload.name
+    if payload.ticket_type is not None:
+        config.ticket_type = payload.ticket_type
+    if payload.max_daily_spins is not None:
+        config.max_daily_spins = payload.max_daily_spins
+    if payload.is_active is not None:
+        config.is_active = payload.is_active
+
+    # Segments 업데이트
+    if payload.segments is not None:
+        # 기존 세그먼트를 slot_index로 매핑
+        segment_map = {seg.slot_index: seg for seg in config.segments}
+
+        for seg_update in payload.segments:
+            if seg_update.slot_index in segment_map:
+                # 기존 세그먼트 업데이트
+                seg = segment_map[seg_update.slot_index]
+                seg.label = seg_update.label
+                seg.weight = seg_update.weight
+                seg.reward_type = seg_update.reward_type
+                seg.reward_amount = seg_update.reward_amount
+                seg.is_jackpot = seg_update.is_jackpot
+                seg.updated_at = datetime.utcnow()
+            else:
+                # 새 세그먼트 생성
+                new_seg = RouletteSegment(
+                    config_id=config.id,
+                    slot_index=seg_update.slot_index,
+                    label=seg_update.label,
+                    weight=seg_update.weight,
+                    reward_type=seg_update.reward_type,
+                    reward_amount=seg_update.reward_amount,
+                    is_jackpot=seg_update.is_jackpot
+                )
+                db.add(new_seg)
+
+    config.updated_at = datetime.utcnow()
+
+    # Audit Log 기록
+    after_data = {
+        "name": config.name,
+        "ticket_type": config.ticket_type,
+        "max_daily_spins": config.max_daily_spins,
+        "is_active": config.is_active
+    }
+    AdminAuditService.log(
+        db, admin_id, "ROULETTE_CONFIG_UPDATE", "GAME_CONFIG", str(config_id),
+        before=before_data,
+        after=after_data
+    )
+
+    db.commit()
+    db.refresh(config)
+
+    # 업데이트된 설정 반환
+    segments_dto = [
+        RouletteSegmentDto(
+            id=seg.id,
+            slot_index=seg.slot_index,
+            label=seg.label,
+            weight=seg.weight,
+            reward_type=seg.reward_type,
+            reward_amount=seg.reward_amount,
+            is_jackpot=seg.is_jackpot
+        )
+        for seg in sorted(config.segments, key=lambda x: x.slot_index)
+    ]
+
+    return RouletteConfigDto(
+        id=config.id,
+        name=config.name,
+        grade=config.grade,
+        ticket_type=config.ticket_type,
+        max_daily_spins=config.max_daily_spins,
+        is_active=config.is_active,
+        segments=segments_dto,
+        created_at=config.created_at,
+        updated_at=config.updated_at
+    )
+
+
+# ============================================================================
+# Game Configuration - Dice
+# ============================================================================
+
+@router.get("/game/dice/config", response_model=DiceConfigDto)
+def get_dice_config(
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """주사위 게임 설정 조회"""
+    # 기본 설정 1개만 존재 (ID=1)
+    config = db.query(DiceConfig).first()
+
+    if not config:
+        raise HTTPException(status_code=404, detail="DICE_CONFIG_NOT_FOUND")
+
+    return DiceConfigDto(
+        id=config.id,
+        name=config.name,
+        is_active=config.is_active,
+        max_daily_plays=config.max_daily_plays,
+        win_reward_type=config.win_reward_type,
+        win_reward_amount=config.win_reward_amount,
+        draw_reward_type=config.draw_reward_type,
+        draw_reward_amount=config.draw_reward_amount,
+        lose_reward_type=config.lose_reward_type,
+        lose_reward_amount=config.lose_reward_amount,
+        created_at=config.created_at,
+        updated_at=config.updated_at
+    )
+
+
+@router.put("/game/dice/config/{config_id}", response_model=DiceConfigDto)
+def update_dice_config(
+    config_id: int,
+    payload: DiceConfigUpdateRequest,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """주사위 게임 설정 업데이트"""
+    admin_id, admin_role = admin_info
+
+    # 권한 체크
+    if admin_role not in ["SUPER_ADMIN", "OPERATOR"]:
+        raise HTTPException(status_code=403, detail="NOT_AUTHORIZED")
+
+    config = db.query(DiceConfig).filter(DiceConfig.id == config_id).first()
+    if not config:
+        raise HTTPException(status_code=404, detail="DICE_CONFIG_NOT_FOUND")
+
+    # 업데이트 전 상태 저장
+    before_data = {
+        "name": config.name,
+        "is_active": config.is_active,
+        "max_daily_plays": config.max_daily_plays,
+        "win_reward": f"{config.win_reward_type}:{config.win_reward_amount}",
+        "draw_reward": f"{config.draw_reward_type}:{config.draw_reward_amount}",
+        "lose_reward": f"{config.lose_reward_type}:{config.lose_reward_amount}",
+    }
+
+    # 부분 업데이트
+    if payload.name is not None:
+        config.name = payload.name
+    if payload.is_active is not None:
+        config.is_active = payload.is_active
+    if payload.max_daily_plays is not None:
+        config.max_daily_plays = payload.max_daily_plays
+    if payload.win_reward_type is not None:
+        config.win_reward_type = payload.win_reward_type
+    if payload.win_reward_amount is not None:
+        config.win_reward_amount = payload.win_reward_amount
+    if payload.draw_reward_type is not None:
+        config.draw_reward_type = payload.draw_reward_type
+    if payload.draw_reward_amount is not None:
+        config.draw_reward_amount = payload.draw_reward_amount
+    if payload.lose_reward_type is not None:
+        config.lose_reward_type = payload.lose_reward_type
+    if payload.lose_reward_amount is not None:
+        config.lose_reward_amount = payload.lose_reward_amount
+
+    config.updated_at = datetime.utcnow()
+
+    # Audit Log
+    after_data = {
+        "name": config.name,
+        "is_active": config.is_active,
+        "max_daily_plays": config.max_daily_plays,
+        "win_reward": f"{config.win_reward_type}:{config.win_reward_amount}",
+        "draw_reward": f"{config.draw_reward_type}:{config.draw_reward_amount}",
+        "lose_reward": f"{config.lose_reward_type}:{config.lose_reward_amount}",
+    }
+    AdminAuditService.log(
+        db, admin_id, "DICE_CONFIG_UPDATE", "GAME_CONFIG", str(config_id),
+        before=before_data,
+        after=after_data
+    )
+
+    db.commit()
+    db.refresh(config)
+
+    return DiceConfigDto(
+        id=config.id,
+        name=config.name,
+        is_active=config.is_active,
+        max_daily_plays=config.max_daily_plays,
+        win_reward_type=config.win_reward_type,
+        win_reward_amount=config.win_reward_amount,
+        draw_reward_type=config.draw_reward_type,
+        draw_reward_amount=config.draw_reward_amount,
+        lose_reward_type=config.lose_reward_type,
+        lose_reward_amount=config.lose_reward_amount,
+        created_at=config.created_at,
+        updated_at=config.updated_at
+    )
+
+
+# ============================================================================
+# Game Configuration - Lottery
+# ============================================================================
+
+@router.get("/game/lottery/configs", response_model=list[LotteryConfigDto])
+def get_lottery_configs(
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """복권 게임 설정 조회 (일반적으로 1개)"""
+    configs = db.query(LotteryConfig).options(
+        selectinload(LotteryConfig.prizes)
+    ).all()
+
+    result = []
+    for config in configs:
+        prizes_dto = [
+            LotteryPrizeDto(
+                id=prize.id,
+                label=prize.label,
+                weight=prize.weight,
+                stock=prize.stock,
+                reward_type=prize.reward_type,
+                reward_amount=prize.reward_amount,
+                is_active=prize.is_active
+            )
+            for prize in config.prizes
+        ]
+
+        result.append(LotteryConfigDto(
+            id=config.id,
+            name=config.name,
+            is_active=config.is_active,
+            max_daily_plays=config.max_daily_tickets,  # DB는 max_daily_tickets
+            puzzle_piece_probability=0.0,  # TODO: 실제 필드 추가 필요
+            prizes=prizes_dto,
+            created_at=config.created_at,
+            updated_at=config.updated_at
+        ))
+
+    return result
+
+
+@router.get("/game/lottery/config/{config_id}", response_model=LotteryConfigDto)
+def get_lottery_config(
+    config_id: int,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """특정 복권 설정 조회"""
+    config = db.query(LotteryConfig).options(
+        selectinload(LotteryConfig.prizes)
+    ).filter(LotteryConfig.id == config_id).first()
+
+    if not config:
+        raise HTTPException(status_code=404, detail="LOTTERY_CONFIG_NOT_FOUND")
+
+    prizes_dto = [
+        LotteryPrizeDto(
+            id=prize.id,
+            label=prize.label,
+            weight=prize.weight,
+            stock=prize.stock,
+            reward_type=prize.reward_type,
+            reward_amount=prize.reward_amount,
+            is_active=prize.is_active
+        )
+        for prize in config.prizes
+    ]
+
+    return LotteryConfigDto(
+        id=config.id,
+        name=config.name,
+        is_active=config.is_active,
+        max_daily_plays=config.max_daily_tickets,
+        puzzle_piece_probability=0.0,  # TODO: 실제 필드 추가 필요
+        prizes=prizes_dto,
+        created_at=config.created_at,
+        updated_at=config.updated_at
+    )
+
+
+@router.put("/game/lottery/config/{config_id}", response_model=LotteryConfigDto)
+def update_lottery_config(
+    config_id: int,
+    payload: LotteryConfigUpdateRequest,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """복권 설정 업데이트"""
+    admin_id, admin_role = admin_info
+
+    # 권한 체크
+    if admin_role not in ["SUPER_ADMIN", "OPERATOR"]:
+        raise HTTPException(status_code=403, detail="NOT_AUTHORIZED")
+
+    config = db.query(LotteryConfig).options(
+        selectinload(LotteryConfig.prizes)
+    ).filter(LotteryConfig.id == config_id).first()
+
+    if not config:
+        raise HTTPException(status_code=404, detail="LOTTERY_CONFIG_NOT_FOUND")
+
+    # 업데이트 전 상태
+    before_data = {
+        "name": config.name,
+        "is_active": config.is_active,
+        "max_daily_tickets": config.max_daily_tickets
+    }
+
+    # 부분 업데이트
+    if payload.name is not None:
+        config.name = payload.name
+    if payload.is_active is not None:
+        config.is_active = payload.is_active
+    if payload.max_daily_plays is not None:
+        config.max_daily_tickets = payload.max_daily_plays
+    if payload.puzzle_piece_probability is not None:
+        pass  # TODO: DB 필드 추가 필요
+
+    config.updated_at = datetime.utcnow()
+
+    # Audit Log
+    after_data = {
+        "name": config.name,
+        "is_active": config.is_active,
+        "max_daily_tickets": config.max_daily_tickets
+    }
+    AdminAuditService.log(
+        db, admin_id, "LOTTERY_CONFIG_UPDATE", "GAME_CONFIG", str(config_id),
+        before=before_data,
+        after=after_data
+    )
+
+    db.commit()
+    db.refresh(config)
+
+    prizes_dto = [
+        LotteryPrizeDto(
+            id=prize.id,
+            label=prize.label,
+            weight=prize.weight,
+            stock=prize.stock,
+            reward_type=prize.reward_type,
+            reward_amount=prize.reward_amount,
+            is_active=prize.is_active
+        )
+        for prize in config.prizes
+    ]
+
+    return LotteryConfigDto(
+        id=config.id,
+        name=config.name,
+        is_active=config.is_active,
+        max_daily_plays=config.max_daily_tickets,
+        puzzle_piece_probability=0.0,
+        prizes=prizes_dto,
+        created_at=config.created_at,
+        updated_at=config.updated_at
+    )
+
+
+@router.put("/game/lottery/config/{config_id}/prize/{prize_id}", response_model=LotteryPrizeDto)
+def update_lottery_prize(
+    config_id: int,
+    prize_id: int,
+    payload: LotteryPrizeUpdateRequest,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """복권 당첨 항목 업데이트"""
+    admin_id, admin_role = admin_info
+
+    # 권한 체크
+    if admin_role not in ["SUPER_ADMIN", "OPERATOR"]:
+        raise HTTPException(status_code=403, detail="NOT_AUTHORIZED")
+
+    prize = db.query(LotteryPrize).filter(
+        LotteryPrize.id == prize_id,
+        LotteryPrize.config_id == config_id
+    ).first()
+
+    if not prize:
+        raise HTTPException(status_code=404, detail="LOTTERY_PRIZE_NOT_FOUND")
+
+    # 업데이트
+    prize.label = payload.label
+    prize.weight = payload.weight
+    prize.stock = payload.stock
+    prize.reward_type = payload.reward_type
+    prize.reward_amount = payload.reward_amount
+    prize.is_active = payload.is_active
+    prize.updated_at = datetime.utcnow()
+
+    # Audit Log
+    AdminAuditService.log(
+        db, admin_id, "LOTTERY_PRIZE_UPDATE", "GAME_CONFIG", f"{config_id}/{prize_id}",
+        before={},
+        after={"label": prize.label, "weight": prize.weight, "reward": f"{prize.reward_type}:{prize.reward_amount}"}
+    )
+
+    db.commit()
+    db.refresh(prize)
+
+    return LotteryPrizeDto(
+        id=prize.id,
+        label=prize.label,
+        weight=prize.weight,
+        stock=prize.stock,
+        reward_type=prize.reward_type,
+        reward_amount=prize.reward_amount,
+        is_active=prize.is_active
+    )

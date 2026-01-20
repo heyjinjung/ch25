@@ -42,8 +42,8 @@
 ### 1-5. 마케팅 (Marketing)
 | 페이지명 | 경로 (Route) | UI 상태 | API 상태 | 비고 |
 | :--- | :--- | :---: | :---: | :--- |
-| **메시지 발송** | `/v2/admin/marketing/messages` | ✅ 완료 | **Mock** | 푸시/인박스 발송 UI |
-| **설문 조사** | `/v2/admin/marketing/surveys` | ✅ 완료 | **Mock** | 설문 생성 및 결과 조회 |
+| **메시지 발송** | `/v2/admin/marketing/messages` | ✅ 완료 | **Real** | V2 어드민 래핑 완료<br/>- `GET /api/v2/admin/marketing/messages` (목록)<br/>- `POST /api/v2/admin/marketing/messages` (발송/팬아웃) |
+| **설문 조사** | `/v2/admin/marketing/surveys` | ✅ 완료 | **Real** | V2 어드민 래핑 완료 (레거시 설문 모델 재사용)<br/>- `GET /api/v2/admin/marketing/surveys` (목록)<br/>- `GET /api/v2/admin/marketing/surveys/{id}` (단건)<br/>- `POST /api/v2/admin/marketing/surveys` (생성)<br/>- `PUT /api/v2/admin/marketing/surveys/{id}` (수정: 질문/옵션 전체 교체)<br/>- `DELETE /api/v2/admin/marketing/surveys/{id}` (삭제=ARCHIVED)<br/>- `PUT /api/v2/admin/marketing/surveys/{id}/toggle` (토글: 경로 충돌 방지)<br/>- `GET /api/v2/admin/marketing/surveys/{id}/results` (결과 통계) |
 
 ### 1-6. 시스템 (System)
 | 페이지명 | 경로 (Route) | UI 상태 | API 상태 | 비고 |
@@ -93,6 +93,13 @@
 - 아이콘 클릭 시 UserDetailDrawer가 해당 탭으로 자동 열림
 - 완전 한글화 (페이지네이션, 필터, 모든 라벨)
 
+### 3-3. 마케팅(설문) CRUD V2 래핑 완료 (2026-01-20)
+
+**설문 CRUD(생성/수정/삭제) 포함 V2 어드민 경로로 래핑 완료**
+- `/api/v2/admin/marketing/surveys...` 아래로 레거시 설문 기능을 단계적으로 이관
+- 토글은 `PUT /surveys/{id}`(수정)와 충돌 방지로 `PUT /surveys/{id}/toggle`로 분리
+- 삭제는 하드 삭제가 아니라 `status=ARCHIVED`로 처리(응답/히스토리 보존)
+
 ## 4. 향후 로드맵 (Action Items)
 
 1.  [ ] **Game Ops 리얼 연동**: 미션, 룰렛, 로또 등의 설정을 실제 DB Config 테이블과 연동.
@@ -101,3 +108,4 @@
 4.  [ ] **Modal 제어 전역화**: 모달 제어를 단순 로컬 상태가 아닌, 서버 설정(Config) 기반으로 변경 검토.
 5.  [x] **금고 제어 풀스택 구현** ✅ 완료 (2026-01-20)
 6.  [x] **유저 리스트 v1 스타일 적용** ✅ 완료 (2026-01-20)
+7.  [x] **마케팅(설문) V2 래핑 완료** ✅ 완료 (2026-01-20)

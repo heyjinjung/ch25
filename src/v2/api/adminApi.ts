@@ -17,7 +17,9 @@ export interface AdminWithdrawalDto {
 export interface AdminDepositDto {
   id: number;
   userId: number;
+  nickname?: string;
   amount: number;
+  depositCount?: number;
   bankOwner: string;
   status: "PENDING" | "APPROVED" | "REJECTED";
   requestedAt: string;
@@ -263,41 +265,70 @@ export interface CreateUserNoteRequest {
 // User List & Search API
 // ============================================================================
 
-export const getAdminUserList = async (params: UserSearchParams = {}): Promise<UserListResponse> => {
-  const response = await v2Client.get<UserListResponse>("/api/v2/admin/users", { params });
+export const getAdminUserList = async (
+  params: UserSearchParams = {},
+): Promise<UserListResponse> => {
+  const response = await v2Client.get<UserListResponse>("/api/v2/admin/users", {
+    params,
+  });
   return response.data;
 };
 
-export const getUserActivityLogs = async (userId: number): Promise<UserActivityLogDto[]> => {
-  const response = await v2Client.get<UserActivityLogDto[]>(`/api/v2/admin/users/${userId}/activity-logs`);
+export const getUserActivityLogs = async (
+  userId: number,
+): Promise<UserActivityLogDto[]> => {
+  const response = await v2Client.get<UserActivityLogDto[]>(
+    `/api/v2/admin/users/${userId}/activity-logs`,
+  );
   return response.data;
 };
 
-export const getUserInventory = async (userId: number): Promise<UserInventoryItemDto[]> => {
-  const response = await v2Client.get<UserInventoryItemDto[]>(`/api/v2/admin/users/${userId}/inventory`);
+export const getUserInventory = async (
+  userId: number,
+): Promise<UserInventoryItemDto[]> => {
+  const response = await v2Client.get<UserInventoryItemDto[]>(
+    `/api/v2/admin/users/${userId}/inventory`,
+  );
   return response.data;
 };
 
 export const getUserNotes = async (userId: number): Promise<UserNoteDto[]> => {
-  const response = await v2Client.get<UserNoteDto[]>(`/api/v2/admin/users/${userId}/notes`);
+  const response = await v2Client.get<UserNoteDto[]>(
+    `/api/v2/admin/users/${userId}/notes`,
+  );
   return response.data;
 };
 
-export const createUserNote = async (data: CreateUserNoteRequest): Promise<void> => {
+export const createUserNote = async (
+  data: CreateUserNoteRequest,
+): Promise<void> => {
   await v2Client.post("/api/v2/admin/users/notes", data);
 };
 
-export const getUserMissionHistory = async (userId: number): Promise<UserMissionHistoryDto[]> => {
-  const response = await v2Client.get<UserMissionHistoryDto[]>(`/api/v2/admin/users/${userId}/missions`);
+export const getUserMissionHistory = async (
+  userId: number,
+): Promise<UserMissionHistoryDto[]> => {
+  const response = await v2Client.get<UserMissionHistoryDto[]>(
+    `/api/v2/admin/users/${userId}/missions`,
+  );
   return response.data;
 };
 
-export const forceCompleteMission = async (userId: number, missionId: number): Promise<void> => {
-  await v2Client.post(`/api/v2/admin/users/${userId}/missions/${missionId}/complete`);
+export const forceCompleteMission = async (
+  userId: number,
+  missionId: number,
+): Promise<void> => {
+  await v2Client.post(
+    `/api/v2/admin/users/${userId}/missions/${missionId}/complete`,
+  );
 };
 
-export const getUserSegment = async (userId: number): Promise<{ segment: string; label: string }> => {
-  const response = await v2Client.get<{ segment: string; label: string }>(`/api/v2/admin/users/${userId}/segment`);
+export const getUserSegment = async (
+  userId: number,
+): Promise<{ segment: string; label: string }> => {
+  const response = await v2Client.get<{ segment: string; label: string }>(
+    `/api/v2/admin/users/${userId}/segment`,
+  );
   return response.data;
 };
 
@@ -305,27 +336,39 @@ export const getUserSegment = async (userId: number): Promise<{ segment: string;
 // Withdrawal API
 // ============================================================================
 
-export const getAdminWithdrawals = async (status: string = "PENDING"): Promise<AdminWithdrawalDto[]> => {
-  const response = await v2Client.get<AdminWithdrawalDto[]>("/api/v2/admin/withdrawals", {
-    params: { status }
-  });
+export const getAdminWithdrawals = async (
+  status: string = "PENDING",
+): Promise<AdminWithdrawalDto[]> => {
+  const response = await v2Client.get<AdminWithdrawalDto[]>(
+    "/api/v2/admin/withdrawals",
+    {
+      params: { status },
+    },
+  );
   return response.data;
 };
 
 export const approveWithdrawal = async (id: number): Promise<void> => {
-   await v2Client.post(`/api/v2/admin/withdrawals/${id}/approve`); // Note: Assuming approved endpoint structure
+  await v2Client.post(`/api/v2/admin/withdrawals/${id}/approve`); // Note: Assuming approved endpoint structure
 };
 
-export const rejectWithdrawal = async (id: number, reason: string): Promise<void> => {
-   await v2Client.post(`/api/v2/admin/withdrawals/${id}/reject`, { reason });
+export const rejectWithdrawal = async (
+  id: number,
+  reason: string,
+): Promise<void> => {
+  await v2Client.post(`/api/v2/admin/withdrawals/${id}/reject`, { reason });
 };
 
 // ============================================================================
 // User Detail API
 // ============================================================================
 
-export const getAdminUserDetail = async (userId: number): Promise<AdminUserDetailDto> => {
-  const response = await v2Client.get<AdminUserDetailDto>(`/api/v2/admin/users/${userId}`);
+export const getAdminUserDetail = async (
+  userId: number,
+): Promise<AdminUserDetailDto> => {
+  const response = await v2Client.get<AdminUserDetailDto>(
+    `/api/v2/admin/users/${userId}`,
+  );
   return response.data;
 };
 
@@ -333,18 +376,32 @@ export const getAdminUserDetail = async (userId: number): Promise<AdminUserDetai
 // Ops Dashboard API
 // ============================================================================
 
-export const getOpsDashboardStatus = async (): Promise<OpsDashboardResponse> => {
-  const response = await v2Client.get<OpsDashboardResponse>("/api/v2/admin/ops/status");
+export const getOpsDashboardStatus =
+  async (): Promise<OpsDashboardResponse> => {
+    const response = await v2Client.get<OpsDashboardResponse>(
+      "/api/v2/admin/ops/status",
+    );
+    return response.data;
+  };
+
+export const runInterventionAction = async (
+  userId: number,
+  actionId: string,
+): Promise<InterventionExecutionResponse> => {
+  const response = await v2Client.post<InterventionExecutionResponse>(
+    `/api/v2/admin/users/${userId}/intervention/${actionId}`,
+  );
   return response.data;
 };
 
-export const runInterventionAction = async (userId: number, actionId: string): Promise<InterventionExecutionResponse> => {
-  const response = await v2Client.post<InterventionExecutionResponse>(`/api/v2/admin/users/${userId}/intervention/${actionId}`);
-  return response.data;
-};
-
-export const adjustUserWallet = async (userId: number, request: AdminWalletAdjustmentRequest): Promise<InterventionExecutionResponse> => {
-  const response = await v2Client.post<InterventionExecutionResponse>(`/api/v2/admin/users/${userId}/wallet/adjust`, request);
+export const adjustUserWallet = async (
+  userId: number,
+  request: AdminWalletAdjustmentRequest,
+): Promise<InterventionExecutionResponse> => {
+  const response = await v2Client.post<InterventionExecutionResponse>(
+    `/api/v2/admin/users/${userId}/wallet/adjust`,
+    request,
+  );
   return response.data;
 };
 
@@ -353,12 +410,14 @@ export const adjustUserWallet = async (userId: number, request: AdminWalletAdjus
 // ============================================================================
 
 export const getAdminDeposits = async (): Promise<AdminDepositDto[]> => {
-    const response = await v2Client.get<AdminDepositDto[]>("/api/v2/admin/economy/deposits/pending");
-    return response.data;
+  const response = await v2Client.get<AdminDepositDto[]>(
+    "/api/v2/admin/economy/deposits/pending",
+  );
+  return response.data;
 };
 
 export const confirmDeposit = async (id: number): Promise<void> => {
-    await v2Client.post(`/admin/api/economy/deposits/${id}/confirm`);
+  await v2Client.post(`/admin/api/economy/deposits/${id}/confirm`);
 };
 
 // ============================================================================
@@ -366,16 +425,24 @@ export const confirmDeposit = async (id: number): Promise<void> => {
 // ============================================================================
 
 export const getAdminProducts = async (): Promise<AdminProductDto[]> => {
-    const response = await v2Client.get<AdminProductDto[]>("/api/v2/admin/shop/products");
-    return response.data;
+  const response = await v2Client.get<AdminProductDto[]>(
+    "/api/v2/admin/shop/products",
+  );
+  return response.data;
 };
 
-export const updateProductStatus = async (id: number, isVisible: boolean): Promise<void> => {
-    await v2Client.put(`/admin/api/shop/products/${id}/status`, { isVisible });
+export const updateProductStatus = async (
+  id: number,
+  isVisible: boolean,
+): Promise<void> => {
+  await v2Client.put(`/admin/api/shop/products/${id}/status`, { isVisible });
 };
 
-export const updateProductPrice = async (id: number, price: number): Promise<void> => {
-    await v2Client.put(`/admin/api/shop/products/${id}/price`, { price });
+export const updateProductPrice = async (
+  id: number,
+  price: number,
+): Promise<void> => {
+  await v2Client.put(`/admin/api/shop/products/${id}/price`, { price });
 };
 
 // ============================================================================
@@ -383,33 +450,44 @@ export const updateProductPrice = async (id: number, price: number): Promise<voi
 // ============================================================================
 
 export const runV2SegmentBatch = async (): Promise<void> => {
-    await v2Client.post("/api/v2/admin/segments/batch/run");
+  await v2Client.post("/api/v2/admin/segments/batch/run");
 };
 
 export const getAdminSegmentStats = async (): Promise<SegmentStatsResponse> => {
-    const response = await v2Client.get<SegmentStatsResponse>("/api/v2/admin/segments/stats");
-    return response.data;
+  const response = await v2Client.get<SegmentStatsResponse>(
+    "/api/v2/admin/segments/stats",
+  );
+  return response.data;
 };
 
 export const getAdminSegmentRules = async (): Promise<SegmentRuleDto[]> => {
-    const response = await v2Client.get<SegmentRuleDto[]>("/api/v2/admin/segments/rules");
-    return response.data;
+  const response = await v2Client.get<SegmentRuleDto[]>(
+    "/api/v2/admin/segments/rules",
+  );
+  return response.data;
 };
 
-export const createSegmentRule = async (data: CreateSegmentRuleRequest): Promise<void> => {
-    await v2Client.post("/api/v2/admin/segments/rules", data);
+export const createSegmentRule = async (
+  data: CreateSegmentRuleRequest,
+): Promise<void> => {
+  await v2Client.post("/api/v2/admin/segments/rules", data);
 };
 
-export const updateSegmentRule = async (id: number, data: Partial<SegmentRuleDto>): Promise<void> => {
-    await v2Client.put(`/api/v2/admin/segments/rules/${id}`, data);
+export const updateSegmentRule = async (
+  id: number,
+  data: Partial<SegmentRuleDto>,
+): Promise<void> => {
+  await v2Client.put(`/api/v2/admin/segments/rules/${id}`, data);
 };
 
 export const deleteSegmentRule = async (id: number): Promise<void> => {
-    await v2Client.delete(`/api/v2/admin/segments/rules/${id}`);
+  await v2Client.delete(`/api/v2/admin/segments/rules/${id}`);
 };
 
-export const createV2AdminMessage = async (request: CreateMessageRequest): Promise<void> => {
-    await v2Client.post("/api/v2/admin/messages", request);
+export const createV2AdminMessage = async (
+  request: CreateMessageRequest,
+): Promise<void> => {
+  await v2Client.post("/api/v2/admin/messages", request);
 };
 
 // ============================================================================
@@ -417,48 +495,85 @@ export const createV2AdminMessage = async (request: CreateMessageRequest): Promi
 // ============================================================================
 
 export const getAdminMissions = async (): Promise<AdminMissionDto[]> => {
-    // Mock Data
-    return [
-        { id: 1, category: "DAILY", title: "출석체크", condition: "로그인 1회", rewardType: "TICKET", rewardAmount: 1, isActive: true },
-        { id: 2, category: "DAILY", title: "룰렛 돌리기", condition: "룰렛 3회 참여", rewardType: "POINT", rewardAmount: 100, isActive: true },
-        { id: 3, category: "NEW_USER", title: "첫 입금", condition: "1만원 이상 충전", rewardType: "BUNDLE", rewardAmount: 1, isActive: true },
-    ];
+  // Mock Data
+  return [
+    {
+      id: 1,
+      category: "DAILY",
+      title: "출석체크",
+      condition: "로그인 1회",
+      rewardType: "TICKET",
+      rewardAmount: 1,
+      isActive: true,
+    },
+    {
+      id: 2,
+      category: "DAILY",
+      title: "룰렛 돌리기",
+      condition: "룰렛 3회 참여",
+      rewardType: "POINT",
+      rewardAmount: 100,
+      isActive: true,
+    },
+    {
+      id: 3,
+      category: "NEW_USER",
+      title: "첫 입금",
+      condition: "1만원 이상 충전",
+      rewardType: "BUNDLE",
+      rewardAmount: 1,
+      isActive: true,
+    },
+  ];
 };
 
-export const updateMission = async (id: number, data: Partial<AdminMissionDto>): Promise<void> => {
-    await v2Client.put(`/admin/api/game/missions/${id}`, data);
+export const updateMission = async (
+  id: number,
+  data: Partial<AdminMissionDto>,
+): Promise<void> => {
+  await v2Client.put(`/admin/api/game/missions/${id}`, data);
 };
 
 export const getAdminLevels = async (): Promise<AdminLevelDto[]> => {
-    // Mock Data
-    const levels = [];
-    for(let i=1; i<=20; i++) {
-        levels.push({
-            level: i,
-            requiredXp: i * 1000,
-            rewardTicket: Math.floor(i / 5) + 1,
-            rewardPoint: i * 500
-        });
-    }
-    return levels;
+  // Mock Data
+  const levels = [];
+  for (let i = 1; i <= 20; i++) {
+    levels.push({
+      level: i,
+      requiredXp: i * 1000,
+      rewardTicket: Math.floor(i / 5) + 1,
+      rewardPoint: i * 500,
+    });
+  }
+  return levels;
 };
 
-export const updateLevelConfig = async (level: number, data: Partial<AdminLevelDto>): Promise<void> => {
-    await v2Client.put(`/admin/api/game/levels/${level}`, data);
+export const updateLevelConfig = async (
+  level: number,
+  data: Partial<AdminLevelDto>,
+): Promise<void> => {
+  await v2Client.put(`/admin/api/game/levels/${level}`, data);
 };
 
 // ============================================================================
 // Inventory Ops API
 // ============================================================================
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export const getTicketLogs = async (_userId?: number, _startDate?: string, _endDate?: string): Promise<TicketLogDto[]> => {
-    // Mock Data
-    return [
-        { id: 501, userId: 1001, type: "USE", itemType: "L_TICKET", amount: 1, balanceAfter: 4, reason: "룰렛 참여", timestamp: "2024-01-19 14:30:00" },
-        { id: 502, userId: 1001, type: "GRANT", itemType: "L_TICKET", amount: 5, balanceAfter: 5, reason: "이벤트 보상", timestamp: "2024-01-19 14:00:00", adminId: "admin" },
-        { id: 503, userId: 1042, type: "REVOKE", itemType: "G_TICKET", amount: 1, balanceAfter: 0, reason: "오지급 회수", timestamp: "2024-01-19 13:00:00", adminId: "admin" },
-    ];
+export const getTicketLogs = async (
+  userId?: number,
+  startDate?: string,
+  endDate?: string,
+): Promise<TicketLogDto[]> => {
+  const params: any = {};
+  if (userId) params.userId = userId;
+  if (startDate) params.startDate = startDate;
+  if (endDate) params.endDate = endDate;
+
+  const response = await v2Client.get<TicketLogDto[]>(
+    "/api/v2/admin/inventory/logs",
+    { params },
+  );
+  return response.data;
 };
 
 // ============================================================================
@@ -466,32 +581,46 @@ export const getTicketLogs = async (_userId?: number, _startDate?: string, _endD
 // ============================================================================
 
 export interface ExchangeRateDto {
-    id: string; // e.g., "KRW_TO_POINT"
-    source: string;
-    target: string;
-    rate: number;
-    updatedAt: string;
+  id: string; // e.g., "KRW_TO_POINT"
+  source: string;
+  target: string;
+  rate: number;
+  updatedAt: string;
 }
 
 export const getExchangeRates = async (): Promise<ExchangeRateDto[]> => {
-    // Mock Data
-    return [
-        { id: "KRW_TO_POINT", source: "KRW", target: "POINT", rate: 1.0, updatedAt: "2024-01-01" },
-        { id: "TICKET_TO_POINT", source: "TICKET", target: "POINT", rate: 500, updatedAt: "2024-01-01" },
-    ];
+  // Mock Data
+  return [
+    {
+      id: "KRW_TO_POINT",
+      source: "KRW",
+      target: "POINT",
+      rate: 1.0,
+      updatedAt: "2024-01-01",
+    },
+    {
+      id: "TICKET_TO_POINT",
+      source: "TICKET",
+      target: "POINT",
+      rate: 500,
+      updatedAt: "2024-01-01",
+    },
+  ];
 };
 
-export const updateExchangeRate = async (id: string, rate: number): Promise<void> => {
-    await v2Client.put(`/admin/api/economy/exchange-rates/${id}`, { rate });
+export const updateExchangeRate = async (
+  id: string,
+  rate: number,
+): Promise<void> => {
+  await v2Client.put(`/admin/api/economy/exchange-rates/${id}`, { rate });
 };
-
 
 export const grantItem = async (data: GrantItemRequest): Promise<void> => {
-    await v2Client.post("/admin/api/inventory/grant", data);
+  await v2Client.post("/api/v2/admin/inventory/grant", data);
 };
 
 export const revokeItem = async (data: GrantItemRequest): Promise<void> => {
-    await v2Client.post("/admin/api/inventory/revoke", data);
+  await v2Client.post("/api/v2/admin/inventory/revoke", data);
 };
 
 // ============================================================================
@@ -499,120 +628,185 @@ export const revokeItem = async (data: GrantItemRequest): Promise<void> => {
 // ============================================================================
 
 export interface AdminMessageDto {
-    id: number;
-    title: string;
-    content: string;
-    targetSegment: string;
-    messageType: "PUSH" | "INBOX" | "BOTH";
-    sentCount: number;
-    scheduledAt?: string;
-    createdAt: string;
-    status: "DRAFT" | "SCHEDULED" | "SENT";
+  id: number;
+  title: string;
+  content: string;
+  targetSegment: string;
+  messageType: "PUSH" | "INBOX" | "BOTH";
+  sentCount: number;
+  scheduledAt?: string;
+  createdAt: string;
+  status: "DRAFT" | "SCHEDULED" | "SENT";
 }
 
 export interface SendMessageRequest {
-    title: string;
-    content: string;
-    targetSegment: string;
-    messageType: "PUSH" | "INBOX" | "BOTH";
-    scheduledAt?: string;
+  title: string;
+  content: string;
+  targetSegment: string;
+  messageType: "PUSH" | "INBOX" | "BOTH";
+  scheduledAt?: string;
 }
 
 export interface SurveyDto {
-    id: number;
-    title: string;
-    description: string;
-    questions: SurveyQuestion[];
-    isActive: boolean;
-    responseCount: number;
-    createdAt: string;
+  id: number;
+  title: string;
+  description: string;
+  questions: SurveyQuestion[];
+  isActive: boolean;
+  responseCount: number;
+  createdAt: string;
 }
 
 export interface SurveyQuestion {
-    id: number;
-    type: "SINGLE" | "MULTIPLE" | "TEXT";
-    question: string;
-    options?: string[];
+  id: number;
+  type: "SINGLE" | "MULTIPLE" | "TEXT";
+  question: string;
+  options?: string[];
 }
 
 export interface SurveyResultDto {
-    surveyId: number;
-    questionId: number;
-    question: string;
-    responses: { option: string; count: number; percentage: number }[];
+  surveyId: number;
+  questionId: number;
+  question: string;
+  responses: { option: string; count: number; percentage: number }[];
 }
 
-export const getAdminMessages = async (): Promise<AdminMessageDto[]> => {
-    // Mock Data
-    return [
-        {
-            id: 1,
-            title: "신규 이벤트 안내",
-            content: "골든 타임 2배 보상 이벤트가 시작됩니다!",
-            targetSegment: "ALL",
-            messageType: "BOTH",
-            sentCount: 1240,
-            createdAt: "2024-01-19 10:00:00",
-            status: "SENT"
-        },
-        {
-            id: 2,
-            title: "휴면 유저 복귀 혜택",
-            content: "7일 이상 미접속 유저 대상 특별 보상",
-            targetSegment: "DORMANT",
-            messageType: "PUSH",
-            sentCount: 320,
-            scheduledAt: "2024-01-20 09:00:00",
-            createdAt: "2024-01-19 14:00:00",
-            status: "SCHEDULED"
-        }
-    ];
+type V2MessageResponseDto = {
+  id: number;
+  sender_admin_id: number;
+  title: string;
+  content: string;
+  target_type: "ALL" | "SEGMENT" | "USER" | "TAG";
+  target_value: string | null;
+  channels: string[] | null;
+  recipient_count: number;
+  read_count: number;
+  created_at: string;
 };
 
-export const sendAdminMessage = async (data: SendMessageRequest): Promise<void> => {
-    await v2Client.post("/admin/api/marketing/messages", data);
+type V2AdminSurveyDtoBackend = {
+  id: number;
+  title: string;
+  description: string | null;
+  questions: {
+    id: number;
+    type: "SINGLE" | "MULTIPLE" | "TEXT";
+    question: string;
+    options?: string[] | null;
+  }[];
+  is_active: boolean;
+  response_count: number;
+  created_at: string;
+};
+
+type V2AdminSurveyResultDtoBackend = {
+  survey_id: number;
+  question_id: number;
+  question: string;
+  responses: { option: string; count: number; percentage: number }[];
+};
+
+const mapChannelsToMessageType = (
+  channels: string[] | null | undefined,
+): "PUSH" | "INBOX" | "BOTH" => {
+  const set = new Set((channels ?? []).map((c) => String(c).toUpperCase()));
+  const hasInbox = set.has("INBOX");
+  const hasPush = set.has("PUSH");
+  if (hasInbox && hasPush) return "BOTH";
+  if (hasPush) return "PUSH";
+  return "INBOX";
+};
+
+const mapV2MessageToAdminMessageDto = (
+  msg: V2MessageResponseDto,
+): AdminMessageDto => {
+  const targetSegment =
+    msg.target_type === "ALL" ? "ALL" : (msg.target_value ?? msg.target_type);
+  return {
+    id: msg.id,
+    title: msg.title,
+    content: msg.content,
+    targetSegment,
+    messageType: mapChannelsToMessageType(msg.channels),
+    sentCount: msg.recipient_count ?? 0,
+    createdAt: msg.created_at,
+    status: "SENT",
+  };
+};
+
+export const getAdminMessages = async (): Promise<AdminMessageDto[]> => {
+  const response = await v2Client.get<V2MessageResponseDto[]>(
+    "/api/v2/admin/marketing/messages",
+  );
+  return (response.data ?? []).map(mapV2MessageToAdminMessageDto);
+};
+
+export const sendAdminMessage = async (
+  data: SendMessageRequest,
+): Promise<void> => {
+  const target_type = data.targetSegment === "ALL" ? "ALL" : "SEGMENT";
+  const target_value = data.targetSegment === "ALL" ? null : data.targetSegment;
+
+  // 현재는 안전하게 INBOX 팬아웃을 기본 보장한다.
+  const channels = (() => {
+    if (data.messageType === "BOTH") return ["PUSH", "INBOX"];
+    if (data.messageType === "PUSH") return ["PUSH", "INBOX"];
+    return ["INBOX"];
+  })();
+
+  await v2Client.post("/api/v2/admin/marketing/messages", {
+    title: data.title,
+    content: data.content,
+    target_type,
+    target_value,
+    channels,
+  });
 };
 
 export const getSurveys = async (): Promise<SurveyDto[]> => {
-    // Mock Data
-    return [
-        {
-            id: 1,
-            title: "게임 만족도 조사",
-            description: "서비스 개선을 위한 유저 설문",
-            questions: [
-                { id: 1, type: "SINGLE", question: "전반적인 만족도는?", options: ["매우 만족", "만족", "보통", "불만족"] },
-                { id: 2, type: "MULTIPLE", question: "선호하는 게임은? (복수 선택)", options: ["룰렛", "주사위", "복권"] }
-            ],
-            isActive: true,
-            responseCount: 450,
-            createdAt: "2024-01-15 10:00:00"
-        }
-    ];
+  const response = await v2Client.get<V2AdminSurveyDtoBackend[]>(
+    "/api/v2/admin/marketing/surveys",
+  );
+  return (response.data ?? []).map((s) => ({
+    id: s.id,
+    title: s.title,
+    description: s.description ?? "",
+    questions: (s.questions ?? []).map((q) => ({
+      id: q.id,
+      type: q.type,
+      question: q.question,
+      options: q.options ?? undefined,
+    })),
+    isActive: Boolean(s.is_active),
+    responseCount: Number(s.response_count ?? 0),
+    createdAt: s.created_at,
+  }));
 };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export const getSurveyResults = async (_surveyId: number): Promise<SurveyResultDto[]> => {
-    // Mock Data
-    return [
-        {
-            surveyId: 1,
-            questionId: 1,
-            question: "전반적인 만족도는?",
-            responses: [
-                { option: "매우 만족", count: 180, percentage: 40 },
-                { option: "만족", count: 135, percentage: 30 },
-                { option: "보통", count: 90, percentage: 20 },
-                { option: "불만족", count: 45, percentage: 10 }
-            ]
-        }
-    ];
+export const getSurveyResults = async (
+  _surveyId: number,
+): Promise<SurveyResultDto[]> => {
+  const response = await v2Client.get<V2AdminSurveyResultDtoBackend[]>(
+    `/api/v2/admin/marketing/surveys/${_surveyId}/results`,
+  );
+
+  return (response.data ?? []).map((r) => ({
+    surveyId: r.survey_id,
+    questionId: r.question_id,
+    question: r.question,
+    responses: r.responses ?? [],
+  }));
 };
 
-export const toggleSurvey = async (surveyId: number, isActive: boolean): Promise<void> => {
-    await v2Client.put(`/admin/api/marketing/surveys/${surveyId}`, { isActive });
+export const toggleSurvey = async (
+  surveyId: number,
+  isActive: boolean,
+): Promise<void> => {
+  await v2Client.put(`/api/v2/admin/marketing/surveys/${surveyId}/toggle`, {
+    is_active: isActive,
+  });
 };
-
 
 // ============================================================================
 // Game Config API
@@ -621,138 +815,226 @@ export const toggleSurvey = async (surveyId: number, isActive: boolean): Promise
 export type RouletteGrade = "COMMON" | "VIP" | "WHALE" | "AT_RISK";
 
 export interface AdminRouletteConfigDto {
-    id: number;
-    gameType: "ROULETTE";
-    name: string;
-    grade: RouletteGrade;
-    ticketType: string;
-    maxDailySpins: number;
-    isActive: boolean;
-    segments: AdminRouletteSegmentDto[];
+  id: number;
+  gameType: "ROULETTE";
+  name: string;
+  grade: RouletteGrade;
+  ticketType: string;
+  maxDailySpins: number;
+  isActive: boolean;
+  segments: AdminRouletteSegmentDto[];
 }
 
 export interface AdminRouletteSegmentDto {
-    slotIndex: number;
-    label: string;
-    weight: number;
-    rewardType: string;
-    rewardAmount: number;
-    isJackpot: boolean;
-    color: string;
+  slotIndex: number;
+  label: string;
+  weight: number;
+  rewardType: string;
+  rewardAmount: number;
+  isJackpot: boolean;
+  color: string;
 }
 
 export interface AdminDiceConfigDto {
-    id: number;
-    gameType: "DICE";
-    name: string;
-    isActive: boolean;
-    maxDailyPlays: number;
-    
-    // Win/Draw/Lose Rewards
-    winRewardType: string;
-    winRewardAmount: number;
-    drawRewardType: string;
-    drawRewardAmount: number;
-    loseRewardType: string;
-    loseRewardAmount: number;
+  id: number;
+  gameType: "DICE";
+  name: string;
+  isActive: boolean;
+  maxDailyPlays: number;
+
+  // Win/Draw/Lose Rewards
+  winRewardType: string;
+  winRewardAmount: number;
+  drawRewardType: string;
+  drawRewardAmount: number;
+  loseRewardType: string;
+  loseRewardAmount: number;
 }
 
-
 export interface AdminLotteryPrizeDto {
-    id: number;
-    label: string;
-    weight: number;      // SoT: 가중치
-    stock?: number;      // SoT: 재고 (Optional)
-    rewardType: string;
-    rewardAmount: number;
-    isActive: boolean;   // SoT: 활성화 여부
-    color: string;       // Frontend Only
+  id: number;
+  label: string;
+  weight: number; // SoT: 가중치
+  stock?: number; // SoT: 재고 (Optional)
+  rewardType: string;
+  rewardAmount: number;
+  isActive: boolean; // SoT: 활성화 여부
+  color: string; // Frontend Only
 }
 
 export interface AdminLotteryConfigDto {
-    id: number;
-    name: string;
-    isActive: boolean;
-    maxDailyPlays: number;
-    puzzlePieceProbability: number; // SoT: 퍼즐 조각 드랍 확률 (0~100%)
-    prizes: AdminLotteryPrizeDto[];
+  id: number;
+  name: string;
+  isActive: boolean;
+  maxDailyPlays: number;
+  puzzlePieceProbability: number; // SoT: 퍼즐 조각 드랍 확률 (0~100%)
+  prizes: AdminLotteryPrizeDto[];
 }
 
 // Roulette API
-export const getRouletteConfigs = async (): Promise<AdminRouletteConfigDto[]> => {
-    const createMockConfig = (grade: RouletteGrade, id: number, ticket: string): AdminRouletteConfigDto => ({
-        id,
-        gameType: "ROULETTE",
-        name: `${grade} Roulette`,
-        grade,
-        ticketType: ticket,
-        maxDailySpins: grade === "VIP" ? 10 : grade === "WHALE" ? 999 : 3,
-        isActive: true,
-        segments: Array.from({ length: 6 }).map((_, idx) => ({
-            slotIndex: idx,
-            label: idx % 2 === 0 ? "100 P" : "꽝",
-            weight: 10,
-            rewardType: idx % 2 === 0 ? "POINT" : "NONE",
-            rewardAmount: idx % 2 === 0 ? 100 : 0,
-            isJackpot: false,
-            color: idx % 2 === 0 ? "#EF4444" : "#E5E7EB"
-        }))
-    });
+// Backend response type (snake_case)
+interface RouletteConfigBackend {
+  id: number;
+  name: string;
+  grade: RouletteGrade;
+  ticket_type: string;
+  max_daily_spins: number;
+  is_active: boolean;
+  segments: Array<{
+    id?: number;
+    slot_index: number;
+    label: string;
+    weight: number;
+    reward_type: string;
+    reward_amount: number;
+    is_jackpot: boolean;
+  }>;
+}
 
-    return [
-        createMockConfig("COMMON", 1, "ROULETTE_TICKET"),
-        createMockConfig("VIP", 2, "GOLD_KEY_TICKET"),
-        createMockConfig("WHALE", 3, "DIAMOND_TICKET"),
-        createMockConfig("AT_RISK", 4, "TRIAL_TICKET"),
-    ];
+// Color palette for segments (frontend only)
+const SEGMENT_COLORS = [
+  "#EF4444", // red
+  "#E5E7EB", // gray
+  "#10B981", // green
+  "#F59E0B", // amber
+  "#8B5CF6", // purple
+  "#3B82F6", // blue
+];
+
+export const getRouletteConfigs = async (): Promise<
+  AdminRouletteConfigDto[]
+> => {
+  const response = await v2Client.get<RouletteConfigBackend[]>(
+    "/api/v2/admin/game/roulette/configs",
+  );
+
+  return response.data.map((config) => ({
+    id: config.id,
+    gameType: "ROULETTE" as const,
+    name: config.name,
+    grade: config.grade,
+    ticketType: config.ticket_type,
+    maxDailySpins: config.max_daily_spins,
+    isActive: config.is_active,
+    segments: config.segments.map((seg) => ({
+      slotIndex: seg.slot_index,
+      label: seg.label,
+      weight: seg.weight,
+      rewardType: seg.reward_type,
+      rewardAmount: seg.reward_amount,
+      isJackpot: seg.is_jackpot,
+      color: SEGMENT_COLORS[seg.slot_index % SEGMENT_COLORS.length],
+    })),
+  }));
 };
 
-export const updateRouletteConfig = async (data: Partial<AdminRouletteConfigDto>): Promise<void> => {
-    await v2Client.put(`/admin/api/game/roulette/config/${data.id}`, data);
+export const updateRouletteConfig = async (
+  data: Partial<AdminRouletteConfigDto>,
+): Promise<void> => {
+  // Map camelCase to snake_case for backend
+  const payload: any = {
+    name: data.name,
+    ticket_type: data.ticketType,
+    max_daily_spins: data.maxDailySpins,
+    is_active: data.isActive,
+  };
+
+  if (data.segments) {
+    payload.segments = data.segments.map((seg) => ({
+      slot_index: seg.slotIndex,
+      label: seg.label,
+      weight: seg.weight,
+      reward_type: seg.rewardType,
+      reward_amount: seg.rewardAmount,
+      is_jackpot: seg.isJackpot,
+    }));
+  }
+
+  await v2Client.put(`/api/v2/admin/game/roulette/config/${data.id}`, payload);
 };
 
 // Dice API
 export const getDiceConfig = async (): Promise<AdminDiceConfigDto> => {
-    // Mock Data
-    return {
-        id: 1,
-        gameType: "DICE",
-        name: "Basic Dice",
-        isActive: true,
-        maxDailyPlays: 10,
-        winRewardType: "POINT",
-        winRewardAmount: 1000,
-        drawRewardType: "NONE",
-        drawRewardAmount: 0,
-        loseRewardType: "POINT",   // Example: Lose gives negative or small consolation? SoT says negative allowed.
-        loseRewardAmount: -100
-    };
+  // Mock Data
+  return {
+    id: 1,
+    gameType: "DICE",
+    name: "Basic Dice",
+    isActive: true,
+    maxDailyPlays: 10,
+    winRewardType: "POINT",
+    winRewardAmount: 1000,
+    drawRewardType: "NONE",
+    drawRewardAmount: 0,
+    loseRewardType: "POINT", // Example: Lose gives negative or small consolation? SoT says negative allowed.
+    loseRewardAmount: -100,
+  };
 };
 
-export const updateDiceConfig = async (data: Partial<AdminDiceConfigDto>): Promise<void> => {
-    await v2Client.put("/admin/api/game/dice/config", data);
+export const updateDiceConfig = async (
+  data: Partial<AdminDiceConfigDto>,
+): Promise<void> => {
+  await v2Client.put("/admin/api/game/dice/config", data);
 };
 
 // Lottery API
 export const getLotteryConfig = async (): Promise<AdminLotteryConfigDto> => {
-    // Mock Data
-    return {
+  // Mock Data
+  return {
+    id: 1,
+    name: "Instant Lottery",
+    isActive: true,
+    maxDailyPlays: 5,
+    puzzlePieceProbability: 5.0, // 5% base drop rate
+    prizes: [
+      {
         id: 1,
-        name: "Instant Lottery",
+        label: "1등 (100만 P)",
+        weight: 1,
+        stock: 1,
+        rewardType: "POINT",
+        rewardAmount: 1000000,
         isActive: true,
-        maxDailyPlays: 5,
-        puzzlePieceProbability: 5.0, // 5% base drop rate
-        prizes: [
-            { id: 1, label: "1등 (100만 P)", weight: 1, stock: 1, rewardType: "POINT", rewardAmount: 1000000, isActive: true, color: "#FDBA74" },
-            { id: 2, label: "2등 (10만 P)", weight: 10, stock: 10, rewardType: "POINT", rewardAmount: 100000, isActive: true, color: "#FCD34D" },
-            { id: 3, label: "3등 (1만 P)", weight: 100, stock: 100, rewardType: "POINT", rewardAmount: 10000, isActive: true, color: "#86EFAC" },
-            { id: 4, label: "꽝", weight: 500, stock: undefined, rewardType: "NONE", rewardAmount: 0, isActive: true, color: "#E5E7EB" },
-        ]
-    };
+        color: "#FDBA74",
+      },
+      {
+        id: 2,
+        label: "2등 (10만 P)",
+        weight: 10,
+        stock: 10,
+        rewardType: "POINT",
+        rewardAmount: 100000,
+        isActive: true,
+        color: "#FCD34D",
+      },
+      {
+        id: 3,
+        label: "3등 (1만 P)",
+        weight: 100,
+        stock: 100,
+        rewardType: "POINT",
+        rewardAmount: 10000,
+        isActive: true,
+        color: "#86EFAC",
+      },
+      {
+        id: 4,
+        label: "꽝",
+        weight: 500,
+        stock: undefined,
+        rewardType: "NONE",
+        rewardAmount: 0,
+        isActive: true,
+        color: "#E5E7EB",
+      },
+    ],
+  };
 };
 
-export const updateLotteryConfig = async (data: Partial<AdminLotteryConfigDto>): Promise<void> => {
-    await v2Client.put("/admin/api/game/lottery/config", data);
+export const updateLotteryConfig = async (
+  data: Partial<AdminLotteryConfigDto>,
+): Promise<void> => {
+  await v2Client.put("/admin/api/game/lottery/config", data);
 };
 
 // ============================================================================
@@ -794,29 +1076,44 @@ export interface VaultForceEditRequest {
 }
 
 export const getVaultStats = async (): Promise<VaultStatsDto> => {
-  const response = await v2Client.get<VaultStatsDto>("/api/v2/admin/vault/stats");
+  const response = await v2Client.get<VaultStatsDto>(
+    "/api/v2/admin/vault/stats",
+  );
   return response.data;
 };
 
 export const getVaultUsers = async (
   limit: number = 50,
   offset: number = 0,
-  sortBy: string = "vault_balance"
+  sortBy: string = "vault_balance",
 ): Promise<UserVaultDto[]> => {
-  const response = await v2Client.get<UserVaultDto[]>("/api/v2/admin/vault/users", {
-    params: { limit, offset, sort_by: sortBy }
-  });
+  const response = await v2Client.get<UserVaultDto[]>(
+    "/api/v2/admin/vault/users",
+    {
+      params: { limit, offset, sort_by: sortBy },
+    },
+  );
   return response.data;
 };
 
-export const getVaultTrend = async (days: number = 30): Promise<VaultDailyTrendDto[]> => {
-  const response = await v2Client.get<VaultDailyTrendDto[]>("/api/v2/admin/vault/trend", {
-    params: { days }
-  });
+export const getVaultTrend = async (
+  days: number = 30,
+): Promise<VaultDailyTrendDto[]> => {
+  const response = await v2Client.get<VaultDailyTrendDto[]>(
+    "/api/v2/admin/vault/trend",
+    {
+      params: { days },
+    },
+  );
   return response.data;
 };
 
-export const forceEditVault = async (request: VaultForceEditRequest): Promise<any> => {
-  const response = await v2Client.post("/api/v2/admin/vault/force-edit", request);
+export const forceEditVault = async (
+  request: VaultForceEditRequest,
+): Promise<any> => {
+  const response = await v2Client.post(
+    "/api/v2/admin/vault/force-edit",
+    request,
+  );
   return response.data;
 };

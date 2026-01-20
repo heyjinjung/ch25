@@ -68,7 +68,7 @@ export function WalletEditor({
           <div className="bg-black/30 p-3 rounded-lg border border-white/5 flex justify-between items-center">
             <span className="text-sm text-zinc-500">현재 보유량</span>
             <span className="text-lg font-mono font-bold text-white">
-              {currentTickets.toLocaleString()} 개
+              {(currentTickets || 0).toLocaleString()} 개
             </span>
           </div>
 

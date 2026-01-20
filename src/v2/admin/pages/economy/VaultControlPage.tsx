@@ -18,9 +18,7 @@ import { SlideToApprove } from "../../components/ui/SlideToApprove";
 import {
   ShieldAlert,
   TrendingUp,
-  TrendingDown,
   Wallet,
-  Users,
   Clock,
   CheckCircle,
   XCircle,
@@ -36,9 +34,10 @@ import {
   useAdminWithdrawals,
   useAdminApproveWithdrawal,
   useAdminRejectWithdrawal,
+  useAdminUserList,
 } from "../../../hooks/useV2Admin";
 import { cn } from "../../../lib/utils";
-import type { AdminWithdrawalDto, UserVaultDto } from "../../../api/adminApi";
+import type { AdminWithdrawalDto, UserVaultDto, AdminUserListDto } from "../../../api/adminApi";
 import { NumberTicker } from "../../components/ui/NumberTicker";
 import {
   Table,
@@ -56,8 +55,6 @@ import {
   SelectValue,
 } from "../../../components/ui/select";
 import {
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -69,7 +66,7 @@ import {
 
 export default function VaultControlPage() {
   const statsRef = useRef<HTMLDivElement>(null);
-  const { data: stats, isLoading: statsLoading } = useVaultStats();
+  const { data: stats } = useVaultStats();
   const { data: withdrawals = [] } = useAdminWithdrawals();
   const { data: vaultUsers = [] } = useVaultUsers(50, 0, "vault_balance");
   const { data: trend = [] } = useVaultTrend(30);
@@ -88,6 +85,25 @@ export default function VaultControlPage() {
   });
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("vault_balance");
+  
+  // User Search for Force Edit
+  const [userSearchTerm, setUserSearchTerm] = useState("");
+  const [selectedUser, setSelectedUser] = useState<AdminUserListDto | null>(null);
+  const { data: userSearchResults } = useAdminUserList({ 
+    search: userSearchTerm, 
+    limit: 5 
+  });
+
+  const handleSelectUser = (user: AdminUserListDto) => {
+    setSelectedUser(user);
+    setForceEditData(prev => ({ ...prev, user_id: user.id.toString() }));
+    setUserSearchTerm("");
+  };
+
+  const clearSelectedUser = () => {
+    setSelectedUser(null);
+    setForceEditData(prev => ({ ...prev, user_id: "" }));
+  };
 
   // GSAP Animation for Stats Cards
   useEffect(() => {
@@ -311,7 +327,7 @@ export default function VaultControlPage() {
                             Request #{item.id}
                           </div>
                           <div className="text-lg font-bold text-white mt-1">
-                            ₩ {item.amount.toLocaleString()}
+                            ₩ {(item.amount || 0).toLocaleString()}
                           </div>
                         </div>
                         <Badge
@@ -438,13 +454,13 @@ export default function VaultControlPage() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right font-mono text-emerald-400 font-bold">
-                      ₩{user.vault_balance.toLocaleString()}
+                      ₩{(user.vault_balance || 0).toLocaleString()}
                     </TableCell>
                     <TableCell className="text-right font-mono text-zinc-300">
-                      ₩{user.total_deposit.toLocaleString()}
+                      ₩{(user.total_deposit || 0).toLocaleString()}
                     </TableCell>
                     <TableCell className="text-right font-mono text-zinc-300">
-                      ₩{user.total_withdrawal.toLocaleString()}
+                      ₩{(user.total_withdrawal || 0).toLocaleString()}
                     </TableCell>
                     <TableCell className="text-zinc-400 text-xs">
                       {user.last_activity
@@ -495,7 +511,7 @@ export default function VaultControlPage() {
                         borderRadius: "8px",
                         color: "#E4E4E7",
                       }}
-                      formatter={(value: number) => [`₩${value}만`, ""]}
+                      formatter={(value: any) => [`₩${value}만`, ""]}
                     />
                     <Area
                       type="monotone"
@@ -536,15 +552,47 @@ export default function VaultControlPage() {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
-              <span className="text-right text-sm text-zinc-400">User ID</span>
-              <Input
-                value={forceEditData.user_id}
-                onChange={(e) =>
-                  setForceEditData({ ...forceEditData, user_id: e.target.value })
-                }
-                className="col-span-3 bg-black/50 border-white/10 text-white"
-                placeholder="예: 1001"
-              />
+              <span className="text-right text-sm text-zinc-400">대상 유저</span>
+              <div className="col-span-3 relative">
+                {selectedUser ? (
+                  <div className="flex items-center justify-between bg-zinc-900 border border-zinc-700 rounded-md p-2">
+                     <span className="text-white text-sm">
+                       {selectedUser.nickname} <span className="text-zinc-500 text-xs">#{selectedUser.id}</span>
+                     </span>
+                     <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={clearSelectedUser}
+                        className="h-6 w-6 p-0 text-zinc-400 hover:text-white"
+                     >
+                       <XCircle className="w-4 h-4" />
+                     </Button>
+                  </div>
+                ) : (
+                  <>
+                    <Input
+                      value={userSearchTerm}
+                      onChange={(e) => setUserSearchTerm(e.target.value)}
+                      className="bg-black/50 border-white/10 text-white"
+                      placeholder="닉네임 검색..."
+                    />
+                    {userSearchTerm && userSearchResults?.users && userSearchResults.users.length > 0 && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-[#27272A] border border-zinc-700 rounded-md shadow-xl z-50 overflow-hidden">
+                        {userSearchResults.users.map(user => (
+                          <div
+                            key={user.id}
+                            className="px-3 py-2 text-sm hover:bg-zinc-700 cursor-pointer flex justify-between items-center"
+                            onClick={() => handleSelectUser(user)}
+                          >
+                            <span className="text-white">{user.nickname}</span>
+                            <span className="text-zinc-500 text-xs">#{user.id}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <span className="text-right text-sm text-zinc-400">조정 금액</span>

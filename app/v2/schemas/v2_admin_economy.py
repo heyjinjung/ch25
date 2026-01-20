@@ -40,7 +40,9 @@ class AdminWithdrawalDto(BaseModel):
 class AdminDepositDto(BaseModel):
     id: int
     user_id: int
+    nickname: str | None = None
     amount: int
+    deposit_count: int = 0
     bank_owner: str
     status: DepositStatus
     requested_at: datetime
