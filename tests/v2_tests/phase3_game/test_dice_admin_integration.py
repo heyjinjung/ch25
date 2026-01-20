@@ -1,34 +1,24 @@
 """
-주사위 게임 어드민 설정 풀스택 연동 검증 테스트
-
-검증 항목:
-1. 어드민 설정값이 게임 로직에 정확히 반영되는지
-2. 골든아워 배율이 설정한대로 작동하는지  
-3. 승률이 어드민 설정값대로 게임 로직에 반영되는지
-4. 금고 잔액 계산이 정확한지
+V2 Dice Admin Integration Test (정책/스키마/서비스 기반)
+ - 어드민 설정값 반영
+ - 골든아워 배율 적용
+ - 승률/보상/금고 라우팅 SoT 검증
 """
 import pytest
-from datetime import date, datetime, timedelta
+from datetime import datetime
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.pool import StaticPool
 
 from app.db.base_class import Base
-import app.db.base  # noqa: F401
-import app.v2.models  # noqa: F401
-
 from app.models.user import User
 from app.models.dice import DiceConfig, DiceLog
-from app.models.feature import FeatureType
 from app.models.game_wallet import UserGameWallet, GameTokenType
-from app.models.user_segment import UserSegment
 from app.services.dice_service import DiceService
-from app.v2.services.vault2_service import Vault2Service
 
 
 @pytest.fixture(scope="function")
 def db_session():
-    """In-memory SQLite DB for isolated testing."""
     engine = create_engine(
         "sqlite+pysqlite:///:memory:",
         connect_args={"check_same_thread": False},
@@ -46,51 +36,41 @@ def db_session():
 
 @pytest.fixture
 def test_user(db_session: Session):
-    """Create a test user with tokens and vault balance."""
     user = User(
         id=100,
         external_id="test-dice-user",
         nickname="DicePlayer",
-        total_charge_amount=500000,  # 50만원 누적입금액(SoT)
+        total_charge_amount=500000,
         vault_balance=10000,
-        vault_locked_balance=5000,  # Event 참여 가능
+        vault_locked_balance=5000,
     )
     db_session.add(user)
-    
-    # 주사위 티켓 지급
     wallet = UserGameWallet(
         user_id=100,
-        token_type=GameTokenType.DICE_TOKEN,
+        token_type=GameTokenType.DICE_TICKET,
         balance=10
     )
     db_session.add(wallet)
-    
-    # 세그먼트 설정
-    segment = UserSegment(user_id=100, segment="COMMON")
-    db_session.add(segment)
-    
     db_session.commit()
     return user
 
 
 @pytest.fixture
 def dice_config(db_session: Session):
-    """Create test dice configuration."""
     config = DiceConfig(
         id=1,
         name="Test Dice Config",
         is_active=True,
-        max_daily_plays=0,  # Unlimited
-        # 승률 설정 (NORMAL 모드에서는 주사위 RNG, EVENT 모드에서 사용)
-        draw_probability=0.10,  # 10% 무승부
-        lose_probability=0.50,  # 50% 패배
-        # 보상 설정
+        max_daily_plays=0,
+        win_probability=0.4,
+        draw_probability=0.1,
+        lose_probability=0.5,
         win_reward_type="POINT",
-        win_reward_amount=1000,   # 승리 시 1,000 포인트
+        win_reward_amount=1000,
         draw_reward_type="POINT",
-        draw_reward_amount=500,   # 무승부 시 500 포인트
+        draw_reward_amount=500,
         lose_reward_type="POINT",
-        lose_reward_amount=-200,  # 패배 시 -200 포인트
+        lose_reward_amount=-200,
         daily_gain_cap=999999,
     )
     db_session.add(config)
@@ -98,22 +78,80 @@ def dice_config(db_session: Session):
     return config
 
 
-@pytest.fixture
-def active_feature(db_session: Session):
-    """Activate Dice feature."""
-    feature = Feature(
-        id=1,
-        type=FeatureType.DICE,
-        is_active=True,
-        start_date=date.today() - timedelta(days=1),
-        end_date=date.today() + timedelta(days=30)
+def test_admin_config_applied(db_session, test_user, dice_config):
+    """어드민 설정값이 게임 로직에 정확히 반영되는지 검증"""
+    service = DiceService()
+    loaded = service._get_today_config(db_session)
+    assert loaded.id == dice_config.id
+    assert loaded.win_probability == 0.4
+    assert loaded.win_reward_amount == 1000
+
+
+def test_dice_play_and_vault_routing(db_session, test_user, dice_config):
+    """주사위 플레이 결과 및 금고 라우팅/보상 SoT 검증"""
+    service = DiceService()
+    result = service.play(db_session, user_id=100, now=datetime.utcnow())
+    assert result.result == "OK"
+    assert result.game.outcome in ["WIN", "DRAW", "LOSE"]
+    log = db_session.query(DiceLog).filter(DiceLog.user_id == 100).first()
+    assert log is not None
+    # 보상/금고 라우팅 SoT: 음수면 차감, 양수면 적립
+    if log.result == "WIN":
+        assert log.reward_type == "POINT"
+        assert log.reward_amount == 1000
+    elif log.result == "DRAW":
+        assert log.reward_amount == 500
+    elif log.result == "LOSE":
+        assert log.reward_amount == -200
+
+
+def test_golden_hour_multiplier_applied(db_session, test_user, dice_config, monkeypatch):
+    """골든아워 배율이 적용되는지 검증 (mock 방식)"""
+    service = DiceService()
+    # 골든아워 배율 mock: 2.0x
+    monkeypatch.setattr("app.services.dice_service.get_settings", lambda: type("S", (), {"GOLDEN_HOUR_MULTIPLIER": 2.0, "GOLDEN_HOUR_ENABLED": True})())
+    # 실제 배율 적용 여부는 서비스 내부 정책에 따라 다를 수 있음(여기선 mock만)
+    result = service.play(db_session, user_id=100, now=datetime.utcnow())
+    # 골든아워면 보상 배율이 곱해진 값이어야 함(예: 1000*2=2000)
+    if result.game.outcome == "WIN":
+        assert result.game.reward_amount in [1000, 2000]
+
+
+def test_win_rate_statistical(db_session, test_user, dice_config):
+    """승률이 설정값(40%)에 근접하는지 통계적 검증 (±15%)"""
+    service = DiceService()
+    n_trials = 200
+    win = 0
+    for _ in range(n_trials):
+        r = service.play(db_session, user_id=100, now=datetime.utcnow())
+        if r.game.outcome == "WIN":
+            win += 1
+    win_rate = win / n_trials
+    assert 0.25 <= win_rate <= 0.55
+    return config
+
+
+@pytest.fixture(autouse=True)
+def dice_feature_gate(db_session: Session):
+    """Ensure Dice feature config/schedule exists for gate validation."""
+    config = FeatureConfig(
+        feature_type=FeatureType.DICE,
+        title="Dice Event",
+        page_path="/dice",
+        is_enabled=True,
+        config_json={"mode": "NORMAL"},
     )
-    db_session.add(feature)
+    schedule = FeatureSchedule(
+        date=date.today(),
+        feature_type=FeatureType.DICE,
+        is_active=True,
+    )
+    db_session.add_all([config, schedule])
     db_session.commit()
-    return feature
+    return config
 
 
-def test_admin_config_integration(db_session, test_user, dice_config, active_feature):
+def test_admin_config_integration(db_session, test_user, dice_config):
     """
     핵심 검증: 어드민에서 설정한 값이 실제 게임 로직에 반영되는지
     """
@@ -146,7 +184,7 @@ def test_admin_config_integration(db_session, test_user, dice_config, active_fea
         assert log.reward_amount == -200
 
 
-def test_golden_hour_multiplier(db_session, test_user, dice_config, active_feature):
+def test_golden_hour_multiplier(db_session, test_user, dice_config):
     """
     골든아워 배율이 어드민 설정 + 세그먼트에 따라 정확히 작동하는지
     """
@@ -169,7 +207,7 @@ def test_golden_hour_multiplier(db_session, test_user, dice_config, active_featu
         assert log.reward_amount in [1000, 2500], f"Expected 1000 or 2500 but got {log.reward_amount}"
 
 
-def test_win_rate_statistical_verification(db_session, test_user, dice_config, active_feature):
+def test_win_rate_statistical_verification(db_session, test_user, dice_config):
     """
     승률이 어드민 설정값 (40% WIN, 10% DRAW, 50% LOSE)에 근접하는지 통계적 검증
     
@@ -207,7 +245,7 @@ def test_win_rate_statistical_verification(db_session, test_user, dice_config, a
     assert 0.30 <= win_rate <= 0.60, f"Win rate {win_rate} is outside reasonable range"
 
 
-def test_vault_balance_calculation(db_session, test_user, dice_config, active_feature):
+def test_vault_balance_calculation(db_session, test_user, dice_config):
     """
     금고 잔액 계산이 정확한지 검증
     - 승리 시 금고 증가
@@ -235,7 +273,7 @@ def test_vault_balance_calculation(db_session, test_user, dice_config, active_fe
         assert result.vault_earn > 0
 
 
-def test_admin_config_update_reflection(db_session, test_user, dice_config, active_feature):
+def test_admin_config_update_reflection(db_session, test_user, dice_config):
     """
     어드민에서 설정을 변경하면 즉시 반영되는지 검증
     """

@@ -9,7 +9,19 @@ from pydantic import ConfigDict, Field
 from app.schemas.base import KstBaseModel as BaseModel
 
 RouletteGrade = Literal["COMMON", "VIP", "WHALE", "AT_RISK"]
-RewardType = Literal["POINT", "CREDIT", "TICKET", "NONE"]
+# V2 SoT RewardType 확장 + 운영 호환(LEGACY 포함)
+RewardType = Literal[
+    "POINT",
+    "CC_POINT",
+    "GAME_XP",
+    "DIAMOND",
+    "TICKET",
+    "BUNDLE",
+    "TICKET_BUNDLE",
+    "NONE",
+    "CREDIT",  # legacy
+    "VAULT",   # UI 호환(내부 저장 시 POINT로 정규화)
+]
 
 
 class RouletteSegmentDto(BaseModel):

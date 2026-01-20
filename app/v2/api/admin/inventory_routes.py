@@ -88,7 +88,7 @@ def get_inventory_logs(
             parsed = parsed.replace(tzinfo=None)
         return parsed
 
-    query = db.query(UserInventoryLedger, User).join(User, UserInventoryLedger.user_id == User.id)
+    query = db.query(UserInventoryLedger, User).outerjoin(User, UserInventoryLedger.user_id == User.id)
     if userId is not None:
         query = query.filter(UserInventoryLedger.user_id == userId)
     if startDate:
@@ -106,7 +106,7 @@ def get_inventory_logs(
         TicketLogDto(
             id=log.id,
             userId=log.user_id,
-            nickname=user.nickname or "",
+            nickname=user.nickname if user else "",  # Safe handling for None user
             type="GRANT" if log.change_amount > 0 else "USE",
             itemType=log.item_type,
             amount=abs(log.change_amount),
