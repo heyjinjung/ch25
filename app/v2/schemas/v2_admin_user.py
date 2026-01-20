@@ -93,18 +93,20 @@ class InterventionPlaybookDto(BaseModel):
 class AdminUserDetailDto(BaseModel):
     id: int
     nickname: str
-    telegram_id: Optional[int]
-    created_at: datetime
-    total_deposit: int
-    current_assets: int
-    vault_balance: int
-    ticket_balance: int
+    telegramId: Optional[int] = Field(None, alias="telegram_id")
+    createdAt: datetime = Field(..., alias="created_at")
+    totalDeposit: int = Field(..., alias="total_deposit")
+    currentAssets: int = Field(..., alias="current_assets")
+    vaultBalance: int = Field(..., alias="vault_balance")
+    ticketBalance: int = Field(..., alias="ticket_balance")
     level: int
     vip_level: str
     is_active: bool
     risk_level: str
     risk_reason: Optional[str] = None
     playbook: Optional[InterventionPlaybookDto] = None
+
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class AdminWalletAdjustmentRequest(BaseModel):

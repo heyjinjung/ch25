@@ -172,7 +172,7 @@ def force_edit_vault(
 ):
     admin_id, admin_role = admin_info
 
-    if admin_role not in ["SUPER_ADMIN", "OPERATOR"]:
+    if admin_role not in ["ADMIN", "OPERATOR", "SUPER_ADMIN"]:
         raise HTTPException(status_code=403, detail="NOT_AUTHORIZED")
 
     user = db.query(User).filter(User.id == payload.user_id).first()

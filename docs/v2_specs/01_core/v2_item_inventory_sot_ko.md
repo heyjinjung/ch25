@@ -76,6 +76,13 @@ TABLE user_inventory_item (
     UNIQUE(user_id, item_type)
 )
 ```
+게임 티켓 3종 (ROULETTE/DICE/LOTTERY_TICKET)
+금고 (VAULT)
+프리미엄 티켓 & 조각 4종 (GOLD_KEY_TICKET, DIAMOND_TICKET 등)
+복권 퍼즐 4종 (PUZZLE_C1, C2, J, M)
+재화 (DIAMOND)
+기프티콘 8종 (SoT 정의된 것만)
+특수 (NONE)
 
 ## 6. 변경 이력
 - v1.3 (2026-01-20, Antigravity Agent): UI 라벨 표준화 (괄호 설명 제거) 및 문서 정리.

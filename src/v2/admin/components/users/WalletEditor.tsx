@@ -26,6 +26,7 @@ interface WalletEditorProps {
   onClose: () => void;
   userId: number;
   currentTickets: number; // Optional reference
+  currentVaultBalance: number; // [NEW]
   initialTokenType?: string;
   onUpdate: (
     newAmount: number,
@@ -39,6 +40,7 @@ export function WalletEditor({
   onClose,
   userId,
   currentTickets,
+  currentVaultBalance,
   initialTokenType,
   onUpdate,
 }: WalletEditorProps) {
@@ -49,7 +51,11 @@ export function WalletEditor({
   );
   const [isLoading, setIsLoading] = useState(false);
 
-  const walletTypes = getRewardItemsByCategories(["GAME_TICKET", "CURRENCY"]);
+  const walletTypes = getRewardItemsByCategories([
+    "GAME_TICKET",
+    "CURRENCY",
+    "VAULT",
+  ]);
 
   // Reset or update selected type when modal opens or prop changes
   useEffect(() => {
@@ -99,41 +105,78 @@ export function WalletEditor({
                 <SelectValue placeholder="재화 선택" />
               </SelectTrigger>
               <SelectContent className="bg-[#18181B] border-white/10 text-white">
-                {walletTypes.map((item) => (
-                  <SelectItem
-                    key={item.value}
-                    value={item.value}
-                    className="text-zinc-100 focus:bg-zinc-800"
-                  >
-                    {item.label}
-                  </SelectItem>
-                ))}
+                {walletTypes.map((item) => {
+                  const balance =
+                    item.value === "VAULT"
+                      ? `${(currentVaultBalance || 0).toLocaleString()} P`
+                      : `${(currentTickets || 0).toLocaleString()} T`;
+                  return (
+                    <SelectItem
+                      key={item.value}
+                      value={item.value}
+                      className="text-zinc-100 focus:bg-zinc-800"
+                    >
+                      {item.label} (현재: {balance})
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>
 
-          {(selectedType === "ROULETTE_COIN" ||
-            selectedType === "ROULETTE_TICKET") && (
-            <div className="bg-indigo-500/10 p-3 rounded-lg border border-indigo-500/20 flex justify-between items-center">
-              <span className="text-xs text-indigo-300">
-                현재 티켓 보유량 (참고)
+          {selectedType === "VAULT" ? (
+            <div className="bg-emerald-500/10 p-3 rounded-lg border border-emerald-500/20 flex justify-between items-center">
+              <span className="text-xs text-emerald-300">
+                금고잔액 (참고)
               </span>
-              <span className="text-sm font-mono font-bold text-indigo-100">
-                {(currentTickets || 0).toLocaleString()} T
+              <span className="text-sm font-mono font-bold text-emerald-100">
+                ₩ {(currentVaultBalance || 0).toLocaleString()}
               </span>
             </div>
+          ) : (
+            (selectedType === "ROULETTE_COIN" ||
+              selectedType === "ROULETTE_TICKET" ||
+              selectedType === "DICE_TICKET" ||
+              selectedType === "LOTTERY_TICKET") && (
+              <div className="bg-indigo-500/10 p-3 rounded-lg border border-indigo-500/20 flex justify-between items-center">
+                <span className="text-xs text-indigo-300">
+                  현재 보유량 (참고)
+                </span>
+                <span className="text-sm font-mono font-bold text-indigo-100">
+                  {(currentTickets || 0).toLocaleString()} T
+                </span>
+              </div>
+            )
           )}
 
           <div className="space-y-2">
             <Label htmlFor="amount">변동 수량 (+ 지급, - 차감)</Label>
-            <Input
-              id="amount"
-              type="number"
-              placeholder="예: 50 또는 -50"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className="bg-black/50 border-white/10 text-white font-mono"
-            />
+            <div className="relative">
+              <Input
+                id="amount"
+                type="number"
+                placeholder="예: 50 또는 -50"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className="bg-black/50 border-white/10 text-white font-mono h-11"
+              />
+              {amount && !isNaN(parseInt(amount)) && (
+                <div className="mt-2 p-2 rounded bg-indigo-500/10 border border-indigo-500/20">
+                  <p className="text-[11px] text-indigo-300 flex justify-between">
+                    <span>수정 후 예상 잔액:</span>
+                    <span className="font-bold font-mono">
+                      {selectedType === "VAULT" ? "₩ " : ""}
+                      {(
+                        (selectedType === "VAULT"
+                          ? currentVaultBalance
+                          : currentTickets) + parseInt(amount)
+                      ).toLocaleString()}
+                      {selectedType === "VAULT" ? " P" : " T"}
+                    </span>
+                  </p>
+                </div>
+              )}
+            </div>
             <p className="text-[10px] text-zinc-500">
               * 양수 입력 시 지급, 음수 입력 시 차감됩니다.
             </p>
@@ -156,11 +199,11 @@ export function WalletEditor({
             취소
           </Button>
           <Button
-            className="bg-indigo-600 hover:bg-indigo-700 text-white"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white h-11 px-6"
             onClick={handleSubmit}
             disabled={!amount || !reason || isLoading}
           >
-            {isLoading ? "처리 중..." : "수정 실행"}
+            {isLoading ? "처리 중..." : "수정 실행 (Force Modification)"}
           </Button>
         </DialogFooter>
       </DialogContent>

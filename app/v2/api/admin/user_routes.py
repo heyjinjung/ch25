@@ -260,8 +260,6 @@ def adjust_user_wallet(
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
     admin_id, admin_role = admin_info
-    if admin_role not in ["SUPER_ADMIN", "OPERATOR"]:
-        raise HTTPException(status_code=403, detail="NOT_AUTHORIZED_FOR_WALLET_ADJUST")
 
     user = db.query(User).filter(User.id == user_id).first()
     if not user:

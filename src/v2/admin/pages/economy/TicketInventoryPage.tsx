@@ -62,6 +62,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { cn } from "../../../lib/utils";
+import { REWARD_ITEMS } from "../../../constants/rewardItems";
 
 export default function TicketInventoryPage() {
   const [searchUserId, setSearchUserId] = useState<number | undefined>(
@@ -707,11 +708,12 @@ export default function TicketInventoryPage() {
                   <SelectTrigger className="bg-black/50 border-white/10">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-[#18181B] border-white/10 text-white">
-                    <SelectItem value="TICKET">🎫 Ticket</SelectItem>
-                    <SelectItem value="POINT">💰 Point</SelectItem>
-                    <SelectItem value="BUNDLE">📦 Bundle</SelectItem>
-                    <SelectItem value="COUPON">🎫 Coupon</SelectItem>
+                  <SelectContent className="bg-[#18181B] border-white/10 text-white max-h-[300px]">
+                    {REWARD_ITEMS.map((item) => (
+                      <SelectItem key={item.value} value={item.value}>
+                        {item.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

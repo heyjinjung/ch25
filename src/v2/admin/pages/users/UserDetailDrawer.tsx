@@ -952,6 +952,7 @@ export function UserDetailDrawer({
             onClose={() => setIsWalletEditorOpen(false)}
             userId={user.id}
             currentTickets={user.ticketBalance}
+            currentVaultBalance={user.vaultBalance}
             initialTokenType={walletEditorInitialType}
             onUpdate={async (amt, reason, type) => {
               if (user) {

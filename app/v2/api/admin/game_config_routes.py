@@ -149,7 +149,7 @@ def update_roulette_config(
 ):
     admin_id, admin_role = admin_info
 
-    if admin_role not in ["SUPER_ADMIN", "OPERATOR"]:
+    if admin_role not in ["ADMIN", "OPERATOR", "SUPER_ADMIN"]:
         raise HTTPException(status_code=403, detail="NOT_AUTHORIZED")
 
     config = (
@@ -288,7 +288,7 @@ def update_dice_config(
 ):
     admin_id, admin_role = admin_info
 
-    if admin_role not in ["SUPER_ADMIN", "OPERATOR"]:
+    if admin_role not in ["ADMIN", "OPERATOR", "SUPER_ADMIN"]:
         raise HTTPException(status_code=403, detail="NOT_AUTHORIZED")
 
     config = db.query(DiceConfig).filter(DiceConfig.id == config_id).first()
@@ -470,7 +470,7 @@ def update_lottery_config(
 ):
     admin_id, admin_role = admin_info
 
-    if admin_role not in ["SUPER_ADMIN", "OPERATOR"]:
+    if admin_role not in ["ADMIN", "OPERATOR", "SUPER_ADMIN"]:
         raise HTTPException(status_code=403, detail="NOT_AUTHORIZED")
 
     config = (
@@ -553,7 +553,7 @@ def update_lottery_prize(
 ):
     admin_id, admin_role = admin_info
 
-    if admin_role not in ["SUPER_ADMIN", "OPERATOR"]:
+    if admin_role not in ["ADMIN", "OPERATOR", "SUPER_ADMIN"]:
         raise HTTPException(status_code=403, detail="NOT_AUTHORIZED")
 
     prize = (
