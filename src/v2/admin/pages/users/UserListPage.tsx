@@ -26,18 +26,12 @@ import {
 import {
   Search,
   Filter,
-  Eye,
   ArrowUpDown,
   ChevronLeft,
   ChevronRight,
   UserPlus,
   Mail,
   Ban,
-  Wallet,
-  Package,
-  Shield,
-  MessageSquare,
-  History,
 } from "lucide-react";
 import { UserDetailDrawer } from "./UserDetailDrawer";
 import { useAdminUserList } from "../../../hooks/useV2Admin";
@@ -68,7 +62,8 @@ export default function UserListPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
-  const [selectedDrawerTab, setSelectedDrawerTab] = useState<string>("overview");
+  const [selectedDrawerTab, setSelectedDrawerTab] =
+    useState<string>("overview");
 
   // Filters
   const [statusFilter, setStatusFilter] = useState<string>("");
@@ -133,7 +128,8 @@ export default function UserListPage() {
             회원 관리
           </h1>
           <p className="text-sm text-zinc-400">
-            총 {total.toLocaleString()}명의 회원을 관리하고 상세 정보를 조회합니다.
+            총 {total.toLocaleString()}명의 회원을 관리하고 상세 정보를
+            조회합니다.
           </p>
         </div>
         <Button className="bg-[#D2FD9C] text-black hover:bg-[#D2FD9C]/90 font-bold">
@@ -173,9 +169,7 @@ export default function UserListPage() {
           <PopoverContent className="w-80 bg-[#18181B] border-white/10 text-white">
             <div className="space-y-4">
               <div>
-                <label className="text-sm text-zinc-400 mb-2 block">
-                  상태
-                </label>
+                <label className="text-sm text-zinc-400 mb-2 block">상태</label>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="bg-zinc-900 border-zinc-800">
                     <SelectValue placeholder="전체" />
@@ -302,7 +296,9 @@ export default function UserListPage() {
                     <ArrowUpDown className="w-3 h-3" />
                   </button>
                 </TableHead>
-                <TableHead className="text-center text-zinc-400">관리</TableHead>
+                <TableHead className="text-center text-zinc-400 w-[80px]">
+                  관리
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -345,92 +341,17 @@ export default function UserListPage() {
                     {user.last_active}
                   </TableCell>
                   <TableCell className="text-center">
-                    <div className="flex items-center justify-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-zinc-500 hover:text-white hover:bg-zinc-800"
-                        onClick={() => {
-                          setSelectedUserId(user.id);
-                          setSelectedDrawerTab("overview");
-                        }}
-                        title="상세 정보"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-indigo-400 hover:text-white hover:bg-zinc-800"
-                        onClick={() => {
-                          setSelectedUserId(user.id);
-                          setSelectedDrawerTab("wallet");
-                        }}
-                        title="지갑 관리"
-                      >
-                        <Wallet className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-emerald-400 hover:text-white hover:bg-zinc-800"
-                        onClick={() => {
-                          setSelectedUserId(user.id);
-                          setSelectedDrawerTab("vault");
-                        }}
-                        title="금고 관리"
-                      >
-                        <Wallet className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-purple-400 hover:text-white hover:bg-zinc-800"
-                        onClick={() => {
-                          setSelectedUserId(user.id);
-                          setSelectedDrawerTab("inventory");
-                        }}
-                        title="인벤토리"
-                      >
-                        <Package className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-amber-400 hover:text-white hover:bg-zinc-800"
-                        onClick={() => {
-                          setSelectedUserId(user.id);
-                          setSelectedDrawerTab("logs");
-                        }}
-                        title="활동 로그"
-                      >
-                        <History className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-blue-400 hover:text-white hover:bg-zinc-800"
-                        onClick={() => {
-                          setSelectedUserId(user.id);
-                          setSelectedDrawerTab("notes");
-                        }}
-                        title="상담/메모"
-                      >
-                        <MessageSquare className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-red-400 hover:text-white hover:bg-zinc-800"
-                        onClick={() => {
-                          setSelectedUserId(user.id);
-                          setSelectedDrawerTab("overview");
-                        }}
-                        title="제재 관리"
-                      >
-                        <Shield className="h-4 w-4" />
-                      </Button>
-                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 px-3 text-zinc-400 hover:text-indigo-400 hover:bg-indigo-500/10 font-normal hover:font-bold transition-all"
+                      onClick={() => {
+                        setSelectedUserId(user.id);
+                        setSelectedDrawerTab("overview");
+                      }}
+                    >
+                      관리
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -442,8 +363,8 @@ export default function UserListPage() {
       {/* Pagination */}
       <div className="flex items-center justify-between px-4 py-3 bg-[#18181B] rounded-xl border border-white/5">
         <div className="text-sm text-zinc-400">
-          {(page - 1) * limit + 1}~{Math.min(page * limit, total)} / 총{" "}
-          {total}개
+          {(page - 1) * limit + 1}~{Math.min(page * limit, total)} / 총 {total}
+          개
         </div>
         <div className="flex items-center gap-2">
           <Button

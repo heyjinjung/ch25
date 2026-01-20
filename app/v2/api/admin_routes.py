@@ -2,13 +2,17 @@
 from datetime import datetime
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy import func
 from sqlalchemy.orm import Session, selectinload
 
 from app.api.deps import get_current_admin_info, get_db
-from app.models.game_wallet import GameTokenType, UserGameWallet
+from app.models.game_wallet import UserGameWallet
 from app.models.inventory import UserInventoryItem
+from app.models.admin_audit_log import AdminAuditLog
+from app.models.mission import UserMissionProgress, Mission
+from app.models.user_segment import UserSegment
+from app.models.v2_level_reward import V2LevelRewardTable
 from app.models.user import User
 from app.models.vault_withdrawal_request import VaultWithdrawalRequest
 from app.models.external_ranking_daily_deposit_delta import ExternalRankingDailyDepositDelta
@@ -43,7 +47,13 @@ from app.v2.schemas.v2_admin_user import (
     AdminUserListDto,
     UserSearchParams,
     UserListResponse,
+    UserActivityLogDto,
+    UserInventoryItemDto,
+    UserNoteDto,
+    CreateUserNoteRequest,
+    UserMissionHistoryDto,
 )
+from app.v2.schemas.v2_admin_segment import AdminUserSegmentResponse
 from app.v2.schemas.v2_admin_dashboard import (
     DashboardMetricsResponse,
     MetricValue,
@@ -614,12 +624,17 @@ def get_admin_user_detail(
     if not user:
         raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
 
-    # 1. Ticket Balance
     ticket_balance = 0
     wallets = db.query(UserGameWallet).filter(UserGameWallet.user_id == user_id).all()
     for w in wallets:
-        if "TICKET" in w.token_type.name or "COIN" in w.token_type.name:
-             ticket_balance += int(w.balance or 0)
+        try:
+            token_name = w.token_type.name if hasattr(w.token_type, "name") else str(w.token_type)
+            if "TICKET" in token_name or "COIN" in token_name:
+                 ticket_balance += int(w.balance or 0)
+        except Exception:
+            continue
+
+
 
     # 2. Vault/Assets
     vault_balance = int(user.vault_locked_balance or 0) + int(user.vault_available_balance or 0)
@@ -637,7 +652,8 @@ def get_admin_user_detail(
         elif retention.churn_probability_score > 0.5:
             risk_level = "MEDIUM"
             
-    if user.total_charge_amount > 10000000:
+    total_charge = user.total_charge_amount or 0
+    if total_charge > 10000000:
         risk_level = "HIGH"
         risk_reason = "High Value Account"
 
@@ -786,8 +802,163 @@ def list_admin_withdrawals(
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
     """List withdrawal requests."""
-    admin_id, admin_role = admin_info
-    query = db.query(VaultWithdrawalRequest)
+# ============================================================================
+# Missing User Detail Endpoints (Added for V2 Admin Drawer)
+# ============================================================================
+
+@router.get("/users/{user_id}/activity-logs", response_model=List[UserActivityLogDto])
+def get_user_activity_logs(
+    user_id: int,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """Get user activity logs (Mocking using AuditLog for demonstration)."""
+    # In a real system, query OpsLogEntry or a specific GameLog table.
+    # For now, return empty or audit logs related to this user.
+    logs = db.query(AdminAuditLog).filter(
+        AdminAuditLog.target_id == str(user_id),
+        AdminAuditLog.target_type == "USER"
+    ).order_by(AdminAuditLog.created_at.desc()).limit(20).all()
+
+    return [
+        UserActivityLogDto(
+            id=log.id,
+            userId=user_id,
+            type="ADMIN_ACTION", # Placeholder type
+            description=f"{log.action} by Admin #{log.admin_id}",
+            metadata=log.after_json or {},
+            timestamp=log.created_at
+        ) for log in logs
+    ]
+
+
+@router.get("/users/{user_id}/inventory", response_model=List[UserInventoryItemDto])
+def get_user_inventory(
+    user_id: int,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """Get user inventory items."""
+    items = db.query(UserInventoryItem).filter(UserInventoryItem.user_id == user_id).all()
+    return [
+        UserInventoryItemDto(
+            id=item.id,
+            itemType=item.item_type,
+            itemName=item.item_type, # Map to name if needed
+            quantity=item.quantity,
+            expiresAt=None,
+            status="ACTIVE" if item.quantity > 0 else "USED"
+        ) for item in items
+    ]
+
+
+@router.get("/users/{user_id}/notes", response_model=List[UserNoteDto])
+def get_user_notes(
+    user_id: int,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """Get admin notes for a user."""
+    notes = db.query(AdminAuditLog).filter(
+        AdminAuditLog.target_id == str(user_id),
+        AdminAuditLog.action == "USER_NOTE"
+    ).order_by(AdminAuditLog.created_at.desc()).all()
+
+    return [
+        UserNoteDto(
+            id=note.id,
+            userId=user_id,
+            adminId=str(note.admin_id),
+            adminNickname=f"Admin #{note.admin_id}",
+            content=note.after_json.get("content", "") if note.after_json else "",
+            createdAt=note.created_at
+        ) for note in notes
+    ]
+
+
+@router.post("/users/notes")
+def create_user_note(
+    payload: CreateUserNoteRequest,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """Create a note for a user."""
+    admin_id, _ = admin_info
+    
+    # Store note in AdminAuditLog for simplicity as requested
+    AdminAuditService.log(
+        db, admin_id, "USER_NOTE", "USER", str(payload.userId),
+        before=None,
+        after={"content": payload.content}
+    )
+    return {"success": True}
+
+
+@router.get("/users/{user_id}/missions", response_model=List[UserMissionHistoryDto])
+def get_user_missions(
+    user_id: int,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """Get user mission history."""
+    progress = db.query(UserMissionProgress).options(
+        selectinload(UserMissionProgress.mission)
+    ).filter(UserMissionProgress.user_id == user_id).limit(50).all()
+
+    return [
+        UserMissionHistoryDto(
+            id=p.id,
+            missionId=p.mission_id,
+            missionTitle=p.mission.title if p.mission else "Unknown Mission",
+            category=p.mission.category if p.mission else "DAILY",
+            status="COMPLETED" if p.is_completed else "IN_PROGRESS",
+            progress=p.current_value,
+            maxProgress=p.mission.target_value if p.mission else 1,
+            completedAt=p.completed_at,
+            rewardClaimed=p.is_claimed
+        ) for p in progress
+    ]
+
+
+@router.post("/users/{user_id}/missions/{mission_id}/complete")
+def force_complete_mission(
+    user_id: int,
+    mission_id: int,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """Force complete a mission."""
+    admin_id, _ = admin_info
+    
+    # Simple direct DB update
+    progress = db.query(UserMissionProgress).filter(
+        UserMissionProgress.user_id == user_id,
+        UserMissionProgress.mission_id == mission_id
+    ).first()
+    
+    if progress:
+        progress.is_completed = True
+        progress.current_value = progress.mission.target_value if progress.mission else 1
+        progress.completed_at = datetime.utcnow()
+        db.commit()
+    
+    return {"success": True}
+
+
+@router.get("/users/{user_id}/segment")
+def get_user_segment_info(
+    user_id: int,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """Get user segment info."""
+    seg = db.query(UserSegment).filter(UserSegment.user_id == user_id).first()
+    if seg:
+         return {"segment": seg.segment, "label": seg.segment} # Using segment code as label if no mapping
+    return {"segment": "UNKNOWN", "label": "미분류"}
+
+
+
     if status:
         query = query.filter(VaultWithdrawalRequest.status == status)
     
@@ -1500,6 +1671,14 @@ def get_roulette_configs(
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
     """모든 룰렛 설정 조회 (등급별로 4개)"""
+    def _normalize_reward_type(value: str) -> str:
+        allowed = {"POINT", "CREDIT", "TICKET", "NONE"}
+        if value in allowed:
+            return value
+        if value.startswith("TICKET"):
+            return "TICKET"
+        return "NONE"
+
     configs = db.query(RouletteConfig).options(
         selectinload(RouletteConfig.segments)
     ).order_by(RouletteConfig.grade).all()
@@ -1512,7 +1691,7 @@ def get_roulette_configs(
                 slot_index=seg.slot_index,
                 label=seg.label,
                 weight=seg.weight,
-                reward_type=seg.reward_type,
+                reward_type=_normalize_reward_type(str(seg.reward_type)),
                 reward_amount=seg.reward_amount,
                 is_jackpot=seg.is_jackpot
             )
@@ -1541,6 +1720,14 @@ def get_roulette_config(
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
     """특정 룰렛 설정 조회"""
+    def _normalize_reward_type(value: str) -> str:
+        allowed = {"POINT", "CREDIT", "TICKET", "NONE"}
+        if value in allowed:
+            return value
+        if value.startswith("TICKET"):
+            return "TICKET"
+        return "NONE"
+
     config = db.query(RouletteConfig).options(
         selectinload(RouletteConfig.segments)
     ).filter(RouletteConfig.id == config_id).first()
@@ -1554,7 +1741,7 @@ def get_roulette_config(
             slot_index=seg.slot_index,
             label=seg.label,
             weight=seg.weight,
-            reward_type=seg.reward_type,
+            reward_type=_normalize_reward_type(str(seg.reward_type)),
             reward_amount=seg.reward_amount,
             is_jackpot=seg.is_jackpot
         )
@@ -2014,3 +2201,117 @@ def update_lottery_prize(
         reward_amount=prize.reward_amount,
         is_active=prize.is_active
     )
+
+
+# ============================================================================
+# Level Management Endpoints (V2)
+# ============================================================================
+
+class AdminLevelDto(BaseModel):
+    level: int
+    requiredXp: int
+    rewardTicket: int
+    rewardPoint: int
+
+class AdminLevelUpdateRequest(BaseModel):
+    requiredXp: int | None = None
+    rewardTicket: int | None = None
+    rewardPoint: int | None = None
+
+
+@router.get("/game/levels", response_model=List[AdminLevelDto])
+def get_admin_levels(
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """Get all level configurations."""
+    levels = db.query(V2LevelRewardTable).order_by(V2LevelRewardTable.level).all()
+    
+    # Auto-seed if empty (Standard V2 behavior for config tables)
+    if not levels:
+        levels = []
+        for i in range(1, 21):
+            new_level = V2LevelRewardTable(
+                level=i,
+                required_xp=i * 1000,
+                reward_type="TICKET" if i % 5 == 0 else "POINT",
+                reward_amount=(i // 5 + 1) if i % 5 == 0 else i * 100
+            )
+            db.add(new_level)
+            levels.append(new_level)
+        db.commit()
+
+    result = []
+    for l in levels:
+        t_amt = 0
+        p_amt = 0
+        
+        # Primary
+        if l.reward_type == "TICKET":
+            t_amt = l.reward_amount
+        elif l.reward_type == "POINT":
+            p_amt = l.reward_amount
+            
+        # Payload Secondary
+        if l.reward_payload:
+            t_amt += l.reward_payload.get("ticket", 0)
+            p_amt += l.reward_payload.get("point", 0)
+
+        result.append(AdminLevelDto(
+            level=l.level,
+            requiredXp=l.required_xp,
+            rewardTicket=t_amt,
+            rewardPoint=p_amt
+        ))
+    return result
+
+
+@router.put("/game/levels/{level}")
+def update_admin_level(
+    level: int,
+    payload: AdminLevelUpdateRequest,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """Update level configuration."""
+    lvl = db.query(V2LevelRewardTable).filter(V2LevelRewardTable.level == level).first()
+    if not lvl:
+        lvl = V2LevelRewardTable(level=level, required_xp=1000, reward_type="POINT", reward_amount=0)
+        db.add(lvl)
+
+    if payload.requiredXp is not None:
+        lvl.required_xp = payload.requiredXp
+    
+    # Reward Logic: 
+    # If Ticket > 0, Primary = TICKET. Point goes to Payload.
+    # Else Primary = POINT.
+    
+    # Current values as base
+    current_t = 0
+    current_p = 0
+    if lvl.reward_type == "TICKET": current_t = lvl.reward_amount
+    elif lvl.reward_type == "POINT": current_p = lvl.reward_amount
+    if lvl.reward_payload:
+        current_t += lvl.reward_payload.get("ticket", 0)
+        current_p += lvl.reward_payload.get("point", 0)
+
+    # New values
+    new_t = payload.rewardTicket if payload.rewardTicket is not None else current_t
+    new_p = payload.rewardPoint if payload.rewardPoint is not None else current_p
+    
+    payload_data = {}
+    
+    if new_t > 0:
+        lvl.reward_type = "TICKET"
+        lvl.reward_amount = new_t
+        if new_p > 0:
+            payload_data["point"] = new_p
+    else:
+        lvl.reward_type = "POINT"
+        lvl.reward_amount = new_p
+        
+    lvl.reward_payload = payload_data if payload_data else None
+    
+    db.commit()
+    return {"success": True}
+
