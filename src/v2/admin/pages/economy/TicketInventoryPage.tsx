@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useAdminTicketLogs, useAdminGrantItem } from "../../../hooks/useAdminInventory";
+import { useAdminTicketLogs, useAdminGrantItem } from "../../../hooks/useV2Admin"; // Updated hook path
 import { type TicketLogDto } from "../../../api/adminApi";
 import { Input } from "../../../components/ui/input";
 import { Button } from "../../../components/ui/button";
@@ -14,6 +14,10 @@ export default function TicketInventoryPage() {
   const [searchUserId, setSearchUserId] = useState<number | undefined>(undefined);
   const [inputValue, setInputValue] = useState("");
   
+  // Date Range State
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  
   // Grant Form State
   const [grantOpen, setGrantOpen] = useState(false);
   const [targetUserId, setTargetUserId] = useState("");
@@ -21,7 +25,8 @@ export default function TicketInventoryPage() {
   const [amount, setAmount] = useState("1");
   const [reason, setReason] = useState("이벤트 보상");
 
-  const { data: logs = [], isLoading } = useAdminTicketLogs(searchUserId);
+  // Updated Hook Call with Date Params
+  const { data: logs = [], isLoading } = useAdminTicketLogs(searchUserId, startDate, endDate);
   const grantMutation = useAdminGrantItem();
 
   const handleSearch = () => {
@@ -47,8 +52,7 @@ export default function TicketInventoryPage() {
               setGrantOpen(false);
               setTargetUserId("");
               setAmount("1");
-          }
-      });
+      }});
   };
 
   return (
@@ -75,7 +79,7 @@ export default function TicketInventoryPage() {
                     <div className="grid grid-cols-4 items-center gap-4">
                         <span className="text-right text-sm text-zinc-400">User ID</span>
                         <Input 
-                            className="col-span-3 bg-black/50 border-white/10" 
+                            className="col-span-3 bg-black/50 border-white/10 text-white" 
                             placeholder="ex. 1042"
                             value={targetUserId}
                             onChange={(e) => setTargetUserId(e.target.value)}
@@ -84,10 +88,10 @@ export default function TicketInventoryPage() {
                     <div className="grid grid-cols-4 items-center gap-4">
                         <span className="text-right text-sm text-zinc-400">Type</span>
                         <Select value={itemType} onValueChange={setItemType}>
-                            <SelectTrigger className="col-span-3 bg-black/50 border-white/10">
+                            <SelectTrigger className="col-span-3 bg-black/50 border-white/10 text-white">
                                 <SelectValue />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="bg-[#18181B] border-white/10 text-white">
                                 <SelectItem value="TICKET">Ticket (티켓)</SelectItem>
                                 <SelectItem value="POINT">Point (포인트)</SelectItem>
                                 <SelectItem value="BUNDLE">Bundle (꾸러미)</SelectItem>
@@ -98,7 +102,7 @@ export default function TicketInventoryPage() {
                         <span className="text-right text-sm text-zinc-400">Amount</span>
                         <Input 
                             type="number" 
-                            className="col-span-3 bg-black/50 border-white/10" 
+                            className="col-span-3 bg-black/50 border-white/10 text-white" 
                             value={amount}
                             onChange={(e) => setAmount(e.target.value)}
                         />
@@ -106,7 +110,7 @@ export default function TicketInventoryPage() {
                     <div className="grid grid-cols-4 items-center gap-4">
                         <span className="text-right text-sm text-zinc-400">Reason</span>
                         <Input 
-                            className="col-span-3 bg-black/50 border-white/10" 
+                            className="col-span-3 bg-black/50 border-white/10 text-white" 
                             placeholder="지급 사유 입력"
                             value={reason}
                             onChange={(e) => setReason(e.target.value)}
@@ -123,20 +127,44 @@ export default function TicketInventoryPage() {
         </Dialog>
       </div>
 
-      <div className="flex gap-4 items-end">
+      <div className="flex flex-col md:flex-row gap-4 items-end">
           <div className="w-full max-w-sm space-y-2">
               <label className="text-xs text-zinc-400 font-medium ml-1">Search User Logs</label>
               <div className="relative">
                   <Search className="absolute left-3 top-2.5 w-4 h-4 text-zinc-500" />
                   <Input 
                     placeholder="Enter User ID (ex. 1001)" 
-                    className="pl-9 bg-black/50 border-white/10 h-10" 
+                    className="pl-9 bg-black/50 border-white/10 h-10 text-white" 
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                   />
               </div>
           </div>
+          
+          {/* Date Range Picker Fallback */}
+          <div className="flex gap-2 items-center">
+             <div className="space-y-2">
+                  <label className="text-xs text-zinc-400 font-medium ml-1">Start Date</label>
+                  <Input 
+                      type="date"
+                      className="bg-black/50 border-white/10 h-10 text-white w-[150px]"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                  />
+             </div>
+             <span className="text-zinc-500 pb-2">~</span>
+             <div className="space-y-2">
+                  <label className="text-xs text-zinc-400 font-medium ml-1">End Date</label>
+                  <Input 
+                      type="date"
+                      className="bg-black/50 border-white/10 h-10 text-white w-[150px]"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                  />
+             </div>
+          </div>
+
           <Button variant="secondary" onClick={handleSearch} className="h-10">Search</Button>
       </div>
 
@@ -199,3 +227,4 @@ export default function TicketInventoryPage() {
     </div>
   );
 }
+

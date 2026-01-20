@@ -35,6 +35,18 @@ import {
   SegmentStatsResponse,
   SegmentRuleDto,
   TicketLogDto,
+  getExchangeRates,
+  updateExchangeRate,
+  ExchangeRateDto,
+  getAdminDeposits,
+  confirmDeposit,
+  getAdminProducts,
+  updateProductStatus,
+  updateProductPrice,
+  AdminDepositDto,
+  AdminProductDto,
+  grantItem,
+  GrantItemRequest,
 } from "../api/adminApi";
 import { CreateMessageRequest } from "../api/adminApi";
 
@@ -54,6 +66,7 @@ export const ADMIN_KEYS = {
   ticketLogs: (userId: number) => ["admin", "users", userId, "ticket-logs"] as const,
   segmentStats: ["admin", "segments", "stats"] as const,
   segmentRules: ["admin", "segments", "rules"] as const,
+  exchangeRates: ["admin", "economy", "rates"] as const,
 };
 
 // Segments
@@ -258,10 +271,101 @@ export function useUserSegment(userId: number | null) {
   });
 }
 
-export function useUserTicketLogs(userId: number | null) {
-  return useQuery<TicketLogDto[]>({
-    queryKey: ADMIN_KEYS.ticketLogs(userId || 0),
-    queryFn: () => getTicketLogs(userId!),
-    enabled: !!userId,
-  });
+// Ticket Logs (Admin Context? It seems there are two ticket log hooks, one for specific user, one general?)
+// The previous code had `useAdminTicketLogs` in TicketInventoryPage but it wasn't defined in the viewed file snippet of useV2Admin.ts?
+// Wait, Step 335 showed `useUserTicketLogs` at line 261, but `TicketInventoryPage` imports `useAdminTicketLogs` from `../../../hooks/useAdminInventory`.
+// Ah, `TicketInventoryPage` imports from `useAdminInventory`, NOT `useV2Admin`.
+// I need to check `useAdminInventory` content. Or better, consolidate into `useV2Admin` since we are refactoring.
+// I will add `useAdminTicketLogs` here matching `TicketInventoryPage` needs.
+
+export function useAdminTicketLogs(userId?: number, startDate?: string, endDate?: string) {
+    return useQuery<TicketLogDto[]>({
+        queryKey: ["admin", "ticket-logs", userId, startDate, endDate],
+        queryFn: () => getTicketLogs(userId, startDate, endDate),
+    });
+}
+
+export function useAdminGrantItem() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (data: GrantItemRequest) => grantItem(data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["admin", "ticket-logs"] });
+        }
+    });
+}
+
+// Exchange Rates
+export function useExchangeRates() {
+    return useQuery<ExchangeRateDto[]>({
+        queryKey: ADMIN_KEYS.exchangeRates,
+        queryFn: getExchangeRates,
+    });
+}
+
+export function useUpdateExchangeRate() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ id, rate }: { id: string, rate: number }) => updateExchangeRate(id, rate),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ADMIN_KEYS.exchangeRates });
+        }
+    });
+}
+
+
+// ============================================================================
+// Deposit Hooks
+// ============================================================================
+
+export function useAdminDeposits() {
+    return useQuery<AdminDepositDto[]>({
+        queryKey: ["admin", "deposits"], // Simplified key
+        queryFn: getAdminDeposits,
+        staleTime: 1000 * 60,
+    });
+}
+
+export function useAdminConfirmDeposit() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: confirmDeposit,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["admin", "deposits"] });
+        },
+    });
+}
+
+// ============================================================================
+// Shop / Product Hooks
+// ============================================================================
+
+export function useAdminProducts() {
+    return useQuery<AdminProductDto[]>({
+        queryKey: ["admin", "products"],
+        queryFn: getAdminProducts,
+        staleTime: 1000 * 60,
+    });
+}
+
+export function useAdminUpdateProductStatus() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ id, isVisible }: { id: number; isVisible: boolean }) => 
+            updateProductStatus(id, isVisible),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["admin", "products"] });
+        },
+    });
+}
+
+export function useAdminUpdateProductPrice() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ id, price }: { id: number; price: number }) => 
+            updateProductPrice(id, price),
+        onSuccess: () => {
+             queryClient.invalidateQueries({ queryKey: ["admin", "products"] });
+        },
+    });
 }

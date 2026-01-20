@@ -34,14 +34,14 @@ import {
   Trophy,
   Table,
 } from "lucide-react";
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, JSXElementConstructor, Key, ReactElement, ReactNode, ReactPortal } from "react";
 import gsap from "gsap";
 import { WalletEditor } from "../../components/users/WalletEditor";
 import {
   useUserMissionHistory,
   useForceCompleteMission,
   useUserSegment,
-  useUserTicketLogs,
+  useAdminTicketLogs, 
   useAdjustUserWallet,
   useAdminUserDetail,
   useCreateUserNote,
@@ -80,7 +80,7 @@ export function UserDetailDrawer({
   const { data: notes } = useUserNotes(userId);
   const { data: missions } = useUserMissionHistory(userId);
   const { data: segment } = useUserSegment(userId);
-  const { data: ticketLogs } = useUserTicketLogs(userId);
+  const { data: ticketLogs } = useAdminTicketLogs(userId || undefined);
 
   const runIntervention = useRunIntervention();
   const adjustWallet = useAdjustUserWallet();
@@ -349,7 +349,7 @@ export function UserDetailDrawer({
                         </TableHeader>
                         <TableBody>
                           {ticketLogs && ticketLogs.length > 0 ? (
-                            ticketLogs.map((log) => (
+                            ticketLogs.map((log: { id: Key | null | undefined; type: string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined; amount: string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined; balanceAfter: string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | null | undefined; reason: string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | null | undefined; timestamp: string | number | Date; }) => (
                               <TableRow
                                 key={log.id}
                                 className="border-white/5 hover:bg-white/5 text-[11px]"
@@ -369,14 +369,14 @@ export function UserDetailDrawer({
                                 <TableCell
                                   className={cn(
                                     "py-2 font-mono",
-                                    log.amount > 0
+                                    (log.amount as number) > 0
                                       ? "text-emerald-400"
                                       : "text-red-400",
                                   )}
                                 >
-                                  {log.amount > 0
-                                    ? `+${log.amount}`
-                                    : log.amount}
+                                    {(log.amount as number) > 0
+                                      ? `+${log.amount}`
+                                      : log.amount}
                                 </TableCell>
                                 <TableCell className="py-2 text-zinc-400">
                                   {log.balanceAfter} T

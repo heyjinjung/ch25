@@ -431,7 +431,7 @@ export const updateLevelConfig = async (level: number, data: Partial<AdminLevelD
 // ============================================================================
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export const getTicketLogs = async (_userId?: number): Promise<TicketLogDto[]> => {
+export const getTicketLogs = async (_userId?: number, _startDate?: string, _endDate?: string): Promise<TicketLogDto[]> => {
     // Mock Data
     return [
         { id: 501, userId: 1001, type: "USE", itemType: "L_TICKET", amount: 1, balanceAfter: 4, reason: "룰렛 참여", timestamp: "2024-01-19 14:30:00" },
@@ -439,6 +439,31 @@ export const getTicketLogs = async (_userId?: number): Promise<TicketLogDto[]> =
         { id: 503, userId: 1042, type: "REVOKE", itemType: "G_TICKET", amount: 1, balanceAfter: 0, reason: "오지급 회수", timestamp: "2024-01-19 13:00:00", adminId: "admin" },
     ];
 };
+
+// ============================================================================
+// Exchange Rate API
+// ============================================================================
+
+export interface ExchangeRateDto {
+    id: string; // e.g., "KRW_TO_POINT"
+    source: string;
+    target: string;
+    rate: number;
+    updatedAt: string;
+}
+
+export const getExchangeRates = async (): Promise<ExchangeRateDto[]> => {
+    // Mock Data
+    return [
+        { id: "KRW_TO_POINT", source: "KRW", target: "POINT", rate: 1.0, updatedAt: "2024-01-01" },
+        { id: "TICKET_TO_POINT", source: "TICKET", target: "POINT", rate: 500, updatedAt: "2024-01-01" },
+    ];
+};
+
+export const updateExchangeRate = async (id: string, rate: number): Promise<void> => {
+    await v2Client.put(`/admin/api/economy/exchange-rates/${id}`, { rate });
+};
+
 
 export const grantItem = async (data: GrantItemRequest): Promise<void> => {
     await v2Client.post("/admin/api/inventory/grant", data);
