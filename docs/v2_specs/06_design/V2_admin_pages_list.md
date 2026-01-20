@@ -29,8 +29,8 @@
 | **회원 목록** | `/v2/admin/users/list` | **Real** | 통합 검색(SoT 반영), 상세 필터링, 일괄 상태 변경 |
 | **회원 상세 (Drawer)** | - | **Real** | 8개 탭 (지갑, 뱅킹, 아이템, 미션, 세그먼트 등) 통합 상세 뷰 |
 | **레벨/보상 설정** | `/v2/admin/game/levels` | **Real** | 단계별 경험치 및 보상(Ticket, Point) 타임라인형 편집 |
-| **금고/뱅킹 관제** | `/v2/admin/economy/vault` | **Real** | 금고 잔액 현황, 출금 신청 승인/거절, 트렌드 차트, Audit Log |
-| **CC 입금 관리** | `/v2/admin/economy/deposits` | **Real** | 입금 요청 실시간 트래킹, 입금 확인 처리(ShineBorder UI) |
+| **금고/뱅킹 관제** | `/v2/admin/economy/vault` | **Real** | 금고 잔액 현황, 출금 신청 승인/거절, **Audit Log 연동 강제 조정** |
+| **CC 입금 관리** | `/v2/admin/economy/deposits` | **Real** | 입금 로그 CRUD (수동 행 추가, 금액/날이트 수정, 삭제), 유저별 랭킹 자동 동기화 |
 | **미션 매니저** | `/v2/admin/game/missions` | **Real** | 데일리/주간 미션 설정, 보상 종류 및 수량 실시간 변경 |
 | **상점 관리** | `/v2/admin/economy/shop` | **Hybrid** | 상품 노출/가격(Real), 교환소 환율 설정(Mock: Static Array) |
 | **인벤토리/로그** | `/v2/admin/economy/inventory` | **Real** | 아이템 지급/회수 로그 조회, 수동 아이템 지급 기능 |
@@ -101,7 +101,14 @@
 - **프론트엔드** (React/TypeScript + GSAP)
   - 실시간 금고 대시보드 (4개 통계 카드, NumberTicker 애니메이션)
   - GSAP back.out 이징으로 카드 등장 효과
-  - Recharts AreaChart로 30일 추이 시각화
+  - **(최적화)** 일자별 추이 차트를 제거하여 데이터 집약적 관리 UI로 개편
+
+### 3-7. CC 입금 관리 시스템 완전 개편 (2026-01-20)
+**운영 효율화를 위한 CRUD 기능 도입**
+- **수동 입금 관리**: 닉네임 검색을 통한 신규 입금 행 추가 기능 (`POST /api/v2/admin/economy/deposits`)
+- **내역 수정/삭제**: 잘못 기입된 입금 금액 및 날짜(KST) 수동 조정 및 삭제 연동.
+- **자동 누적 동기화**: 로그 수정 시 해당 유저의 전체 누적 입금액(`ExternalRankingData`) 즉시 재계산 및 반영.
+- **UI/UX**: `Lucide` 아이콘 기반 액션 메뉴, `date-fns` 날짜 포맷팅 적용.
 
 ---
 

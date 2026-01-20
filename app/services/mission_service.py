@@ -663,7 +663,7 @@ class MissionService:
         if mission.requires_approval:
             # Assuming 'APPROVED' is the string value for MissionApprovalStatus.APPROVED
             if str(progress.approval_status) != "APPROVED":
-                 return False, "Approval Pending", 0
+                return False, "Approval Pending", 0
 
         if progress.is_claimed:
             return False, "Already claimed", 0
@@ -680,51 +680,55 @@ class MissionService:
         
         # 1. Map MissionRewardType to RewardService Types
         if mission.reward_type == MissionRewardType.CASH_UNLOCK:
-             target_reward_type = "POINT" # Vault Accrual
+            target_reward_type = "POINT"  # Vault Accrual
         elif mission.reward_type == MissionRewardType.DIAMOND:
-             target_reward_type = "DIAMOND"
+            target_reward_type = "DIAMOND"
         elif mission.reward_type == MissionRewardType.GOLD_KEY:
-             target_reward_type = "GOLD_KEY"
+            target_reward_type = "GOLD_KEY"
         elif mission.reward_type == MissionRewardType.DIAMOND_KEY:
-             target_reward_type = "DIAMOND_KEY"
+            target_reward_type = "DIAMOND_KEY"
         elif mission.reward_type == MissionRewardType.TICKET_BUNDLE:
-             target_reward_type = "TICKET_BUNDLE"
+            target_reward_type = "TICKET_BUNDLE"
         elif mission.reward_type == MissionRewardType.TICKET_ROULETTE:
-             target_reward_type = "TICKET_ROULETTE"
+            target_reward_type = "TICKET_ROULETTE"
         elif mission.reward_type == MissionRewardType.TICKET_DICE:
-             target_reward_type = "TICKET_DICE"
+            target_reward_type = "TICKET_DICE"
         elif mission.reward_type == MissionRewardType.TICKET_LOTTERY:
-             target_reward_type = "TICKET_LOTTERY"
+            target_reward_type = "TICKET_LOTTERY"
         elif mission.reward_type == MissionRewardType.POINT:
-             target_reward_type = "POINT"
+            target_reward_type = "POINT"
+        elif mission.reward_type == MissionRewardType.GIFTICON_BAEMIN:
+            target_reward_type = "GIFTICON_BAEMIN"
+        elif mission.reward_type == MissionRewardType.GIFTICON_COMPOSE:
+            target_reward_type = "GIFTICON_COMPOSE"
 
         # 2. Deliver Main Asset Reward
         if target_reward_type and target_amount > 0:
-             from app.services.reward_service import RewardService
-             RewardService().deliver(
-                  self.db,
-                  user_id=user_id,
-                  reward_type=target_reward_type,
-                  reward_amount=target_amount,
-                  meta={
-                      "reason": "MISSION_REWARD",
-                      "mission_id": mission_id,
-                      "mission_title": mission.title
-                  },
-                  commit=False
-             )
+            from app.services.reward_service import RewardService
+            RewardService().deliver(
+                self.db,
+                user_id=user_id,
+                reward_type=target_reward_type,
+                reward_amount=target_amount,
+                meta={
+                    "reason": "MISSION_REWARD",
+                    "mission_id": mission_id,
+                    "mission_title": mission.title
+                },
+                commit=False
+            )
 
         # 3. Deliver XP Reward (if any)
         if mission.xp_reward > 0:
-             from app.services.reward_service import RewardService
-             RewardService().deliver(
-                  self.db,
-                  user_id=user_id,
-                  reward_type="GAME_XP",
-                  reward_amount=mission.xp_reward,
-                  meta={"reason": "MISSION_REWARD_XP", "mission_id": mission_id},
-                  commit=False
-             )
+            from app.services.reward_service import RewardService
+            RewardService().deliver(
+                self.db,
+                user_id=user_id,
+                reward_type="GAME_XP",
+                reward_amount=mission.xp_reward,
+                meta={"reason": "MISSION_REWARD_XP", "mission_id": mission_id},
+                commit=False
+            )
 
         progress.is_claimed = True
         self.db.commit()

@@ -196,6 +196,7 @@ class UserMissionHistoryDto(BaseModel):
     progress: int
     maxProgress: int
     completedAt: Optional[datetime] = None
+    updatedAt: datetime
     rewardClaimed: bool
 
 

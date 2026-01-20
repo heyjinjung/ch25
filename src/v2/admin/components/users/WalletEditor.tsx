@@ -1,6 +1,5 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { getWalletTransactionTypes } from "../../../api/adminApi";
+import { useState, useEffect } from "react";
+import { getRewardItemsByCategories } from "../../../constants/rewardItems";
 import {
   Dialog,
   DialogContent,
@@ -13,6 +12,13 @@ import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
 import { Textarea } from "../../../components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../../components/ui/select";
 import { Coins } from "lucide-react";
 
 interface WalletEditorProps {
@@ -20,7 +26,12 @@ interface WalletEditorProps {
   onClose: () => void;
   userId: number;
   currentTickets: number; // Optional reference
-  onUpdate: (newAmount: number, reason: string, tokenType: string) => Promise<void>;
+  initialTokenType?: string;
+  onUpdate: (
+    newAmount: number,
+    reason: string,
+    tokenType: string,
+  ) => Promise<void>;
 }
 
 export function WalletEditor({
@@ -28,17 +39,24 @@ export function WalletEditor({
   onClose,
   userId,
   currentTickets,
+  initialTokenType,
   onUpdate,
 }: WalletEditorProps) {
   const [amount, setAmount] = useState<string>("");
   const [reason, setReason] = useState<string>("");
-  const [selectedType, setSelectedType] = useState<string>("ROULETTE_COIN");
+  const [selectedType, setSelectedType] = useState<string>(
+    initialTokenType || "ROULETTE_COIN",
+  );
   const [isLoading, setIsLoading] = useState(false);
 
-  const { data: transactionTypes } = useQuery({
-    queryKey: ["walletTransactionTypes"],
-    queryFn: getWalletTransactionTypes,
-  });
+  const walletTypes = getRewardItemsByCategories(["TICKET", "CURRENCY"]);
+
+  // Reset or update selected type when modal opens or prop changes
+  useEffect(() => {
+    if (isOpen && initialTokenType) {
+      setSelectedType(initialTokenType);
+    }
+  }, [isOpen, initialTokenType]);
 
   const handleSubmit = async () => {
     if (!amount || !reason) return;
@@ -74,29 +92,35 @@ export function WalletEditor({
         </DialogHeader>
 
         <div className="grid gap-4 py-4">
-          
           <div className="space-y-2">
-             <Label>대상 재화 (Asset Type)</Label>
-             <select
-                className="flex h-10 w-full rounded-md border border-white/10 bg-black/50 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                value={selectedType}
-                onChange={(e) => setSelectedType(e.target.value)}
-             >
-                {transactionTypes?.map((t) => (
-                    <option key={t.value} value={t.value}>
-                        {t.label}
-                    </option>
+            <Label>대상 재화 (Asset Type)</Label>
+            <Select value={selectedType} onValueChange={setSelectedType}>
+              <SelectTrigger className="bg-black/60 border-white/10 text-zinc-100">
+                <SelectValue placeholder="재화 선택" />
+              </SelectTrigger>
+              <SelectContent className="bg-[#18181B] border-white/10 text-white">
+                {walletTypes.map((item) => (
+                  <SelectItem
+                    key={item.value}
+                    value={item.value}
+                    className="text-zinc-100 focus:bg-zinc-800"
+                  >
+                    {item.label}
+                  </SelectItem>
                 ))}
-                {!transactionTypes && <option value="ROULETTE_COIN">Loading...</option>}
-             </select>
+              </SelectContent>
+            </Select>
           </div>
 
-          {(selectedType === "ROULETTE_COIN" || selectedType === "ROULETTE_TICKET") && (
+          {(selectedType === "ROULETTE_COIN" ||
+            selectedType === "ROULETTE_TICKET") && (
             <div className="bg-indigo-500/10 p-3 rounded-lg border border-indigo-500/20 flex justify-between items-center">
-                <span className="text-xs text-indigo-300">현재 티켓 보유량 (참고)</span>
-                <span className="text-sm font-mono font-bold text-indigo-100">
+              <span className="text-xs text-indigo-300">
+                현재 티켓 보유량 (참고)
+              </span>
+              <span className="text-sm font-mono font-bold text-indigo-100">
                 {(currentTickets || 0).toLocaleString()} T
-                </span>
+              </span>
             </div>
           )}
 
@@ -111,7 +135,7 @@ export function WalletEditor({
               className="bg-black/50 border-white/10 text-white font-mono"
             />
             <p className="text-[10px] text-zinc-500">
-                * 양수 입력 시 지급, 음수 입력 시 차감됩니다.
+              * 양수 입력 시 지급, 음수 입력 시 차감됩니다.
             </p>
           </div>
 
