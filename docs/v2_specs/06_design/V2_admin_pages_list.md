@@ -42,7 +42,7 @@
 | :--- | :--- | :--- | :--- |
 | **룰렛 설정** | `/v2/admin/game/roulette` | **Real** | 등급별(Common/VIP/Whale) 확률, 보상, 가중치 슬롯 구성 |
 | **다이스 설정** | `/v2/admin/game/dice` | **Real** | 승률 확률(Win/Draw/Lose Probability 0.0~1.0), 결과별 보상(REWARD_ITEMS), 일일 누적 한도(Daily Gain Cap) 전역 설정 |
-| **복권(Lottery) 설정** | `/v2/admin/game/lottery` | **Mock** | 당첨권 수량, 등수별 가중치, 퍼즐 조각 이벤트 확률 설정 UI |
+| **복권(Lottery) 설정** | `/v2/admin/game/lottery` | **Real** | 당첨권 수량, 등수별 가중치(Weight), 재고 관리(Stock), 퍼즐 조각 이벤트 확률 설정 (REWARD_ITEMS 연동) |
 
 ---
 
@@ -122,6 +122,20 @@
   - **결과별 보상 설정**: Win/Draw/Lose 각각 `REWARD_ITEMS` 상수 기반 보상 종류 및 수량 설정
   - **일일 누적 한도**: Daily Gain Cap으로 경제 안정성 보장
   - **실시간 동기화**: 어드민 입력값이 게임 로직에 즉시 반영
+
+### 3-9. 복권(Lottery) 설정 풀스택 연동 완료 (2026-01-20)
+**즉석 복권 시스템 및 퍼즐 이벤트 제어**
+- **백엔드 API** (Python/FastAPI)
+  - `GET /api/v2/admin/game/lottery/configs` - 복권 설정 리스트 조회
+  - `PUT /api/v2/admin/game/lottery/config/{config_id}` - 전역 설정 업데이트 (이름, 활성화, 일일 한도, 퍼즐 확률)
+  - `PUT /api/v2/admin/game/lottery/config/{config_id}/prize/{prize_id}` - 개별 당첨 항목 업데이트 (Audit Log 자동 기록)
+
+- **프론트엔드** (React/TypeScript)
+  - **당첨 보상 테이블**: 등수별 Label, Weight(가중치), Stock(재고), Reward Type/Amount 실시간 편집
+  - **REWARD_ITEMS 연동**: 모든 보상 종류 선택이 표준화된 상수 기반으로 통일
+  - **퍼즐 조각 이벤트**: 0~100% 범위 슬라이더로 드랍 확률 조정
+  - **확률 자동 계산**: 활성화된 항목의 가중치 기준 당첨 확률 백분율 실시간 표시
+  - **재고 관리**: 재고 입력란 비어있을 시 "∞" 무제한 표시, 0개 시 빨강 강조
 
 ---
 
