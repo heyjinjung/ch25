@@ -22,7 +22,14 @@ from app.v2.schemas.v2_admin_ops import (
     OpsSystemStatusDto,
     OpsRiskUserDto,
 )
-from app.v2.schemas.v2_admin_economy import AdminProductDto, AdminDepositDto
+from app.v2.schemas.v2_admin_economy import (
+    AdminProductDto,
+    AdminDepositDto,
+    VaultStatsDto,
+    UserVaultDto,
+    VaultDailyTrendDto,
+    VaultForceEditRequest,
+)
 from app.v2.schemas.v2_admin_user import (
     AdminUserDetailDto,
     InterventionPlaybookDto,
@@ -632,3 +639,194 @@ def update_feed_config(
     if admin_role not in ["SUPER_ADMIN", "OPERATOR"]:
         raise HTTPException(status_code=403, detail="NOT_AUTHORIZED")
     return FeedConfigResponse(**payload.dict())
+
+
+# ============================================================================
+# Vault Control API
+# ============================================================================
+
+@router.get("/vault/stats", response_model=VaultStatsDto)
+def get_vault_stats(
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """금고 통계 정보 조회"""
+    admin_id, admin_role = admin_info
+
+    # 오늘 날짜 기준
+    from datetime import date
+    today = date.today()
+
+    # 당일 금고 누적 총액 (전체 유저의 금고 잔액 합계)
+    today_total = db.query(
+        func.sum(User.vault_available_balance) + func.sum(User.vault_locked_balance)
+    ).scalar() or 0
+
+    # 당일 출금 통계
+    today_withdrawals = db.query(VaultWithdrawalRequest).filter(
+        func.date(VaultWithdrawalRequest.created_at) == today
+    ).all()
+
+    today_pending = sum(w.amount for w in today_withdrawals if w.status == "PENDING")
+    today_approved = sum(w.amount for w in today_withdrawals if w.status == "APPROVED")
+    today_rejected = sum(w.amount for w in today_withdrawals if w.status == "REJECTED")
+
+    # 전체 대기 중인 출금 건수
+    total_pending_count = db.query(VaultWithdrawalRequest).filter(
+        VaultWithdrawalRequest.status == "PENDING"
+    ).count()
+
+    return VaultStatsDto(
+        today_total_vault=int(today_total),
+        today_withdrawal_pending=today_pending,
+        today_withdrawal_approved=today_approved,
+        today_withdrawal_rejected=today_rejected,
+        total_pending_count=total_pending_count
+    )
+
+
+@router.get("/vault/users", response_model=list[UserVaultDto])
+def get_vault_users(
+    limit: int = 50,
+    offset: int = 0,
+    sort_by: str = "vault_balance",  # vault_balance, total_deposit, last_activity
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """회원별 금고 정보 조회"""
+    admin_id, admin_role = admin_info
+
+    query = db.query(User)
+
+    # 정렬
+    if sort_by == "vault_balance":
+        order_col = func.coalesce(User.vault_available_balance, 0) + func.coalesce(User.vault_locked_balance, 0)
+        query = query.order_by(order_col.desc())
+    elif sort_by == "total_deposit":
+        query = query.order_by(User.total_charge_amount.desc())
+    elif sort_by == "last_activity":
+        query = query.order_by(User.updated_at.desc())
+
+    users = query.offset(offset).limit(limit).all()
+
+    result = []
+    for user in users:
+        vault_balance = int(user.vault_available_balance or 0) + int(user.vault_locked_balance or 0)
+
+        # Tier 결정
+        tier = "COMMON"
+        if user.total_charge_amount:
+            if user.total_charge_amount >= 10000000:
+                tier = "VVIP"
+            elif user.total_charge_amount >= 5000000:
+                tier = "VIP"
+
+        # 총 출금액 계산
+        total_withdrawal = db.query(func.sum(VaultWithdrawalRequest.amount)).filter(
+            VaultWithdrawalRequest.user_id == user.id,
+            VaultWithdrawalRequest.status == "APPROVED"
+        ).scalar() or 0
+
+        result.append(UserVaultDto(
+            user_id=user.id,
+            nickname=user.nickname or "(미설정)",
+            telegram_username=user.telegram_username,
+            vault_balance=vault_balance,
+            total_deposit=int(user.total_charge_amount or 0),
+            total_withdrawal=int(total_withdrawal),
+            last_activity=user.updated_at,
+            tier=tier
+        ))
+
+    return result
+
+
+@router.get("/vault/trend", response_model=list[VaultDailyTrendDto])
+def get_vault_trend(
+    days: int = 30,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """일자별 금고 추이"""
+    admin_id, admin_role = admin_info
+
+    from datetime import timedelta, date
+    today = date.today()
+
+    result = []
+    for i in range(days):
+        target_date = today - timedelta(days=days - i - 1)
+
+        # 해당일의 출금 통계
+        day_withdrawals = db.query(VaultWithdrawalRequest).filter(
+            func.date(VaultWithdrawalRequest.created_at) == target_date
+        ).all()
+
+        withdrawal_count = len([w for w in day_withdrawals if w.status == "APPROVED"])
+        withdrawal_amount = sum(w.amount for w in day_withdrawals if w.status == "APPROVED")
+
+        # 입금 통계는 total_charge_amount 증가분으로 추정 (간소화)
+        deposit_count = 0
+        deposit_amount = 0
+
+        # 해당일 총 금고액 (snapshot 방식 - 실제로는 daily_snapshot 테이블 필요)
+        # 여기서는 현재 총액으로 대체
+        total_vault = db.query(
+            func.sum(User.vault_available_balance) + func.sum(User.vault_locked_balance)
+        ).scalar() or 0
+
+        result.append(VaultDailyTrendDto(
+            date=target_date.strftime("%Y-%m-%d"),
+            total_vault=int(total_vault),
+            deposit_count=deposit_count,
+            withdrawal_count=withdrawal_count,
+            deposit_amount=deposit_amount,
+            withdrawal_amount=withdrawal_amount
+        ))
+
+    return result
+
+
+@router.post("/vault/force-edit")
+def force_edit_vault(
+    payload: VaultForceEditRequest,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """금고 잔액 강제 수정"""
+    admin_id, admin_role = admin_info
+
+    # 권한 체크 - SuperAdmin 또는 Operator만 가능
+    if admin_role not in ["SUPER_ADMIN", "OPERATOR"]:
+        raise HTTPException(status_code=403, detail="NOT_AUTHORIZED")
+
+    user = db.query(User).filter(User.id == payload.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
+
+    # 기존 잔액 저장
+    before_balance = int(user.vault_available_balance or 0) + int(user.vault_locked_balance or 0)
+
+    # 잔액 조정 (available_balance에만 적용)
+    new_balance = (user.vault_available_balance or 0) + payload.amount
+    if new_balance < 0:
+        raise HTTPException(status_code=400, detail="INSUFFICIENT_BALANCE")
+
+    user.vault_available_balance = new_balance
+
+    # Audit Log 기록
+    AdminAuditService.log(
+        db, admin_id, "VAULT_FORCE_EDIT", "USER", str(payload.user_id),
+        before={"vault_balance": before_balance},
+        after={"vault_balance": int(new_balance), "amount_change": payload.amount, "reason": payload.reason}
+    )
+
+    db.commit()
+
+    return {
+        "success": True,
+        "user_id": payload.user_id,
+        "before_balance": before_balance,
+        "after_balance": int(new_balance),
+        "amount_change": payload.amount
+    }

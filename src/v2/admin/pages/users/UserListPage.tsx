@@ -339,7 +339,7 @@ export default function UserListPage() {
                     Lv.{user.level}
                   </TableCell>
                   <TableCell className="text-zinc-300">
-                    ₩{user.vaultBalance.toLocaleString()}
+                    ₩{(user.vaultBalance || 0).toLocaleString()}
                   </TableCell>
                   <TableCell className="text-zinc-400 text-xs">
                     {user.last_active}
