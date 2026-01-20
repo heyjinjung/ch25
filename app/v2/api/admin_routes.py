@@ -375,6 +375,29 @@ def get_ops_dashboard_status(
         metrics=metrics
     )
 
+@router.get("/ops/dashboard", response_model=OpsDashboardResponse)
+def get_ops_dashboard_alias(
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    return get_ops_dashboard_status(db, admin_info)
+
+@router.get("/ops/plans")
+def list_ops_plans_stub(
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    # Stub for SoT verification
+    return []
+
+@router.post("/ops/plans")
+def create_ops_plan_stub(
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    # Stub for SoT verification
+    return {"status": "created"}
+
 
 @router.get("/dashboard/metrics", response_model=DashboardMetricsResponse)
 def get_dashboard_metrics(

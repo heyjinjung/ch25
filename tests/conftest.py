@@ -38,6 +38,11 @@ def client() -> Generator[TestClient, None, None]:
     def override_get_db() -> Generator[Session, None, None]:
         db = TestingSessionLocal()
         # Seed default token balances for tests so gameplay calls succeed without admin grants.
+        from app.models.user import User
+        if not db.query(User).filter(User.id == 1).first():
+            db.add(User(id=1, nickname="test_user", status="ACTIVE"))
+            db.commit()
+
         for token in GameTokenType:
             existing = (
                 db.query(UserGameWallet)
@@ -72,3 +77,13 @@ def session_factory(client: TestClient) -> Callable[[], Session]:
     """Expose the test session factory to individual tests for seeding data."""
 
     return app.state.test_session_factory
+
+
+@pytest.fixture()
+def db(session_factory: Callable[[], Session]) -> Generator[Session, None, None]:
+    """Provide a standalone Session for DB interactions."""
+    session = session_factory()
+    try:
+        yield session
+    finally:
+        session.close()

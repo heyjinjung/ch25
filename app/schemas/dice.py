@@ -38,7 +38,7 @@ class DiceGameData(BaseModel):
 
 
 class DicePlayResponse(BaseModel):
-    result: GameResult
+    result: str
     game_data: DiceGameData
     season_pass: dict | None = None
     vault_earn: int = 0

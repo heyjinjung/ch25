@@ -172,6 +172,9 @@ async def shutdown_event():
 register_exception_handlers(app)
 app.include_router(api_router)
 
+from app.v2.api.routes import router as v2_router
+app.include_router(v2_router, prefix="/api/v2")
+
 
 @app.get("/", summary="Root ping")
 def root() -> dict[str, str]:

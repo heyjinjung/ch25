@@ -9,15 +9,16 @@ import {
   updateProductStatus,
   updateProductPrice,
 } from "../api/adminApi";
+import type { AdminWithdrawalDto } from "../api/adminApi";
 
 // ============================================================================
 // Vault Hooks
 // ============================================================================
 
 export function useAdminWithdrawals() {
-  return useQuery({
+  return useQuery<AdminWithdrawalDto[]>({
     queryKey: ["admin", "withdrawals"],
-    queryFn: getAdminWithdrawals,
+    queryFn: () => getAdminWithdrawals(),
   });
 }
 
