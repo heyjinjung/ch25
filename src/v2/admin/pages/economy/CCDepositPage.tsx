@@ -1,25 +1,28 @@
 import { useState } from "react";
-import { 
-  Plus, 
-  Search, 
-  Edit2, 
-  Trash2, 
-  Calendar, 
+import {
+  Plus,
+  Search,
+  Edit2,
+  Trash2,
+  Calendar,
   User as UserIcon,
   AlertCircle,
   RefreshCw,
-  MoreVertical
+  MoreVertical,
 } from "lucide-react";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
-import { 
-  useAdminDepositLogs, 
-  useCreateDepositLog, 
-  useUpdateDepositLog, 
+import {
+  useAdminDepositLogs,
+  useCreateDepositLog,
+  useUpdateDepositLog,
   useDeleteDepositLog,
-  useAdminUserList
+  useAdminUserList,
 } from "../../../hooks/useV2Admin";
-import type { AdminDepositLogDto, AdminUserListDto } from "../../../api/adminApi";
+import type {
+  AdminDepositLogDto,
+  AdminUserListDto,
+} from "../../../api/adminApi";
 import {
   Table,
   TableHeader,
@@ -48,7 +51,11 @@ import { format } from "date-fns";
 
 export default function CCDepositPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const { data: logs = [], isLoading, refetch } = useAdminDepositLogs(searchTerm);
+  const {
+    data: logs = [],
+    isLoading,
+    refetch,
+  } = useAdminDepositLogs(searchTerm);
 
   const formatKstDateTime = (value?: string) => {
     if (!value) return "-";
@@ -58,7 +65,7 @@ export default function CCDepositPage() {
     if (Number.isNaN(dt.getTime())) return "-";
     return format(dt, "yyyy-MM-dd HH:mm");
   };
-  
+
   const createMutation = useCreateDepositLog();
   const updateMutation = useUpdateDepositLog();
   const deleteMutation = useDeleteDepositLog();
@@ -67,17 +74,19 @@ export default function CCDepositPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingLog, setEditingLog] = useState<AdminDepositLogDto | null>(null);
-  
+
   // Create / Edit Form State
   const [formUserId, setFormUserId] = useState<number | null>(null);
   const [formAmount, setFormAmount] = useState("");
   const [formDate, setFormDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [userSearchTerm, setUserSearchTerm] = useState("");
-  const [selectedUser, setSelectedUser] = useState<AdminUserListDto | null>(null);
+  const [selectedUser, setSelectedUser] = useState<AdminUserListDto | null>(
+    null,
+  );
 
-  const { data: userSearchResults } = useAdminUserList({ 
-    search: userSearchTerm, 
-    limit: 5 
+  const { data: userSearchResults } = useAdminUserList({
+    search: userSearchTerm,
+    limit: 5,
   });
 
   const handleAddClick = () => {
@@ -101,7 +110,7 @@ export default function CCDepositPage() {
     await createMutation.mutateAsync({
       user_id: formUserId,
       amount: parseInt(formAmount),
-      kst_date: formDate
+      kst_date: formDate,
     });
     setIsAddModalOpen(false);
   };
@@ -112,14 +121,18 @@ export default function CCDepositPage() {
       id: editingLog.id,
       data: {
         amount: parseInt(formAmount),
-        kst_date: formDate
-      }
+        kst_date: formDate,
+      },
     });
     setIsEditModalOpen(false);
   };
 
   const handleDelete = async (id: number) => {
-    if (confirm("정말 이 입금 내역을 삭제하시겠습니까? 전체 누적액에서도 차감됩니다.")) {
+    if (
+      confirm(
+        "정말 이 입금 내역을 삭제하시겠습니까? 전체 누적액에서도 차감됩니다.",
+      )
+    ) {
       await deleteMutation.mutateAsync(id);
     }
   };
@@ -144,20 +157,21 @@ export default function CCDepositPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             className="border-white/10 hover:bg-white/5"
             onClick={() => refetch()}
           >
-            <RefreshCw className={cn("w-4 h-4 mr-2", isLoading && "animate-spin")} />
+            <RefreshCw
+              className={cn("w-4 h-4 mr-2", isLoading && "animate-spin")}
+            />
             새로고침
           </Button>
-          <Button 
+          <Button
             className="bg-indigo-600 hover:bg-indigo-700 gap-2"
             onClick={handleAddClick}
           >
-            <Plus className="w-4 h-4" />
-            새 행 추가
+            <Plus className="w-4 h-4" />새 행 추가
           </Button>
         </div>
       </div>
@@ -166,7 +180,7 @@ export default function CCDepositPage() {
       <div className="flex items-center gap-4">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-zinc-500" />
-          <Input 
+          <Input
             placeholder="닉네임으로 검색..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -191,18 +205,30 @@ export default function CCDepositPage() {
           <TableBody>
             {logs.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-20 text-zinc-500">
+                <TableCell
+                  colSpan={6}
+                  className="text-center py-20 text-zinc-500"
+                >
                   {isLoading ? "불러오는 중..." : "입금 내역이 없습니다."}
                 </TableCell>
               </TableRow>
             ) : (
               logs.map((log) => (
-                <TableRow key={log.id} className="border-white/5 hover:bg-white/5 transition-colors">
-                  <TableCell className="font-mono text-zinc-500">#{log.id}</TableCell>
+                <TableRow
+                  key={log.id}
+                  className="border-white/5 hover:bg-white/5 transition-colors"
+                >
+                  <TableCell className="font-mono text-zinc-500">
+                    #{log.id}
+                  </TableCell>
                   <TableCell>
                     <div className="flex flex-col">
-                      <span className="font-medium text-white">{log.nickname || "(미설정)"}</span>
-                      <span className="text-xs text-zinc-500">UID: {log.userId}</span>
+                      <span className="font-medium text-white">
+                        {log.nickname || "(미설정)"}
+                      </span>
+                      <span className="text-xs text-zinc-500">
+                        UID: {log.userId}
+                      </span>
                     </div>
                   </TableCell>
                   <TableCell className="font-bold text-lg text-emerald-400 font-mono">
@@ -220,19 +246,25 @@ export default function CCDepositPage() {
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-white/10">
+                        <Button
+                          variant="ghost"
+                          className="h-8 w-8 p-0 hover:bg-white/10"
+                        >
                           <MoreVertical className="h-4 w-4 text-zinc-400" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="bg-[#1C1C1F] border-white/10 text-white">
-                        <DropdownMenuItem 
+                      <DropdownMenuContent
+                        align="end"
+                        className="bg-[#1C1C1F] border-white/10 text-white"
+                      >
+                        <DropdownMenuItem
                           className="gap-2 focus:bg-zinc-800 focus:text-white"
                           onClick={() => handleEditClick(log)}
                         >
                           <Edit2 className="w-4 h-4 text-blue-400" />
                           편집
                         </DropdownMenuItem>
-                        <DropdownMenuItem 
+                        <DropdownMenuItem
                           className="gap-2 focus:bg-red-500/20 focus:text-red-400 text-red-400"
                           onClick={() => handleDelete(log.id)}
                         >
@@ -264,12 +296,18 @@ export default function CCDepositPage() {
               {selectedUser ? (
                 <div className="flex items-center justify-between bg-zinc-900 border border-zinc-700 rounded-md p-2">
                   <span className="text-white">
-                    {selectedUser.nickname} <span className="text-zinc-500 text-xs">#{selectedUser.id}</span>
+                    {selectedUser.nickname}{" "}
+                    <span className="text-zinc-500 text-xs">
+                      #{selectedUser.id}
+                    </span>
                   </span>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => { setSelectedUser(null); setFormUserId(null); }}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setSelectedUser(null);
+                      setFormUserId(null);
+                    }}
                     className="h-6 w-6 p-0 text-zinc-400 hover:text-white"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -277,26 +315,30 @@ export default function CCDepositPage() {
                 </div>
               ) : (
                 <div className="relative">
-                  <Input 
+                  <Input
                     placeholder="닉네임 검색..."
                     value={userSearchTerm}
                     onChange={(e) => setUserSearchTerm(e.target.value)}
                     className="bg-black/40 border-white/10"
                   />
-                  {userSearchTerm && userSearchResults?.users && userSearchResults.users.length > 0 && (
-                     <div className="absolute top-full left-0 right-0 mt-1 bg-[#27272A] border border-zinc-700 rounded-md shadow-xl z-50 max-h-40 overflow-y-auto">
-                        {userSearchResults.users.map(u => (
-                          <div 
+                  {userSearchTerm &&
+                    userSearchResults?.users &&
+                    userSearchResults.users.length > 0 && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-[#27272A] border border-zinc-700 rounded-md shadow-xl z-50 max-h-40 overflow-y-auto">
+                        {userSearchResults.users.map((u) => (
+                          <div
                             key={u.id}
                             className="px-3 py-2 text-sm hover:bg-indigo-600 cursor-pointer flex justify-between"
                             onClick={() => handleSelectUser(u)}
                           >
                             <span>{u.nickname}</span>
-                            <span className="text-zinc-500 text-xs">#{u.id}</span>
+                            <span className="text-zinc-500 text-xs">
+                              #{u.id}
+                            </span>
                           </div>
                         ))}
-                     </div>
-                  )}
+                      </div>
+                    )}
                 </div>
               )}
             </div>
@@ -304,7 +346,7 @@ export default function CCDepositPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>금액 (KRW)</Label>
-                <Input 
+                <Input
                   type="number"
                   placeholder="금액 입력"
                   value={formAmount}
@@ -314,7 +356,7 @@ export default function CCDepositPage() {
               </div>
               <div className="space-y-2">
                 <Label>입금 날짜</Label>
-                <Input 
+                <Input
                   type="date"
                   value={formDate}
                   onChange={(e) => setFormDate(e.target.value)}
@@ -324,8 +366,10 @@ export default function CCDepositPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setIsAddModalOpen(false)}>취소</Button>
-            <Button 
+            <Button variant="ghost" onClick={() => setIsAddModalOpen(false)}>
+              취소
+            </Button>
+            <Button
               className="bg-indigo-600 hover:bg-indigo-700"
               onClick={handleCreateSubmit}
               disabled={!formUserId || !formAmount || createMutation.isPending}
@@ -342,14 +386,15 @@ export default function CCDepositPage() {
           <DialogHeader>
             <DialogTitle>입금 로그 편집</DialogTitle>
             <DialogDescription className="text-zinc-400">
-               {editingLog?.nickname} (#{editingLog?.userId})의 내역을 수정합니다.
+              {editingLog?.nickname} (#{editingLog?.userId})의 내역을
+              수정합니다.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>금액 (KRW)</Label>
-                <Input 
+                <Input
                   type="number"
                   value={formAmount}
                   onChange={(e) => setFormAmount(e.target.value)}
@@ -358,7 +403,7 @@ export default function CCDepositPage() {
               </div>
               <div className="space-y-2">
                 <Label>입금 날짜</Label>
-                <Input 
+                <Input
                   type="date"
                   value={formDate}
                   onChange={(e) => setFormDate(e.target.value)}
@@ -368,12 +413,17 @@ export default function CCDepositPage() {
             </div>
             <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex gap-3 text-xs text-red-200">
               <AlertCircle className="w-5 h-5 shrink-0" />
-              <p>날짜를 수정하면 해당 날짜의 랭킹 데이터로 이동하며, 기존 날짜의 데이터는 재계산됩니다.</p>
+              <p>
+                날짜를 수정하면 해당 날짜의 랭킹 데이터로 이동하며, 기존 날짜의
+                데이터는 재계산됩니다.
+              </p>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setIsEditModalOpen(false)}>취소</Button>
-            <Button 
+            <Button variant="ghost" onClick={() => setIsEditModalOpen(false)}>
+              취소
+            </Button>
+            <Button
               className="bg-indigo-600 hover:bg-indigo-700"
               onClick={handleUpdateSubmit}
               disabled={!formAmount || updateMutation.isPending}

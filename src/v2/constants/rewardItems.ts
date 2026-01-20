@@ -36,21 +36,21 @@ export const REWARD_ITEMS: readonly RewardItem[] = [
   // ========== 1. 게임 티켓 (Game Tickets) ==========
   {
     value: "ROULETTE_TICKET",
-    label: "룰렛 티켓 (금파)",
+    label: "룰렛 티켓",
     category: "GAME_TICKET",
     storage: "UserGameWallet",
     description: "룰렛 게임 참여권",
   },
   {
     value: "DICE_TICKET",
-    label: "다이스 티켓 (Dice)",
+    label: "다이스 티켓",
     category: "GAME_TICKET",
     storage: "UserGameWallet",
     description: "주사위 게임 참여권",
   },
   {
     value: "LOTTERY_TICKET",
-    label: "복권 티켓 (그리기)",
+    label: "복권 티켓",
     category: "GAME_TICKET",
     storage: "UserGameWallet",
     description: "즉석 복권 참여권",
