@@ -143,6 +143,155 @@ export interface OpsRiskUserDto {
   churnScore: number;
 }
 
+// User List & Search Types
+export interface AdminUserListDto {
+  id: number;
+  cc_id: number;
+  nickname: string | null;
+  telegram_id: number | null;
+  telegram_username: string | null;
+  level: number;
+  vaultBalance: number;
+  status: "Active" | "Inactive" | "Suspended";
+  tier: string;
+  total_deposit: number;
+  last_active: string;
+  createdAt: string;
+}
+
+export interface UserSearchParams {
+  search?: string; // 닉네임, CC_id, telegram_id, telegram_username
+  status?: string; // Active, Inactive, Suspended
+  minLevel?: number;
+  maxLevel?: number;
+  startDate?: string; // 가입일 시작
+  endDate?: string; // 가입일 종료
+  sortBy?: "last_active" | "level" | "vault_balance" | "created_at";
+  sortOrder?: "asc" | "desc";
+  page?: number;
+  limit?: number;
+}
+
+export interface UserListResponse {
+  users: AdminUserListDto[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+// User Segment Types
+export interface UserSegmentDto {
+  name: string;
+  label: string;
+  count: number;
+  color: string;
+  bg: string;
+  border: string;
+  desc: string;
+}
+
+export interface SegmentRuleDto {
+  id: number;
+  label: string;
+  rule: string;
+  status: "Active" | "Inactive";
+}
+
+export interface SegmentStatsResponse {
+  segments: UserSegmentDto[];
+  lastBatchTime: string;
+}
+
+// User Mission History Types
+export interface UserMissionHistoryDto {
+  id: number;
+  missionId: number;
+  missionTitle: string;
+  category: "DAILY" | "WEEKLY" | "NEW_USER" | "SPECIAL_EVENT";
+  status: "COMPLETED" | "IN_PROGRESS" | "FAILED";
+  progress: number;
+  maxProgress: number;
+  completedAt: string | null;
+  rewardClaimed: boolean;
+}
+
+// User Activity Log Types
+export interface UserActivityLogDto {
+  id: number;
+  userId: number;
+  type: "GAME_PLAY" | "DEPOSIT" | "WITHDRAWAL" | "LOGIN" | "ITEM_USE";
+  description: string;
+  metadata: Record<string, unknown>;
+  timestamp: string;
+}
+
+// User Inventory Types
+export interface UserInventoryItemDto {
+  id: number;
+  itemType: string;
+  itemName: string;
+  quantity: number;
+  expiresAt: string | null;
+  status: "ACTIVE" | "USED" | "EXPIRED";
+}
+
+// User Notes Types
+export interface UserNoteDto {
+  id: number;
+  userId: number;
+  adminId: string;
+  adminNickname: string;
+  content: string;
+  createdAt: string;
+}
+
+export interface CreateUserNoteRequest {
+  userId: number;
+  content: string;
+}
+
+// ============================================================================
+// User List & Search API
+// ============================================================================
+
+export const getAdminUserList = async (params: UserSearchParams = {}): Promise<UserListResponse> => {
+  const response = await v2Client.get<UserListResponse>("/api/v2/admin/users", { params });
+  return response.data;
+};
+
+export const getUserActivityLogs = async (userId: number): Promise<UserActivityLogDto[]> => {
+  const response = await v2Client.get<UserActivityLogDto[]>(`/api/v2/admin/users/${userId}/activity-logs`);
+  return response.data;
+};
+
+export const getUserInventory = async (userId: number): Promise<UserInventoryItemDto[]> => {
+  const response = await v2Client.get<UserInventoryItemDto[]>(`/api/v2/admin/users/${userId}/inventory`);
+  return response.data;
+};
+
+export const getUserNotes = async (userId: number): Promise<UserNoteDto[]> => {
+  const response = await v2Client.get<UserNoteDto[]>(`/api/v2/admin/users/${userId}/notes`);
+  return response.data;
+};
+
+export const createUserNote = async (data: CreateUserNoteRequest): Promise<void> => {
+  await v2Client.post("/api/v2/admin/users/notes", data);
+};
+
+export const getUserMissionHistory = async (userId: number): Promise<UserMissionHistoryDto[]> => {
+  const response = await v2Client.get<UserMissionHistoryDto[]>(`/api/v2/admin/users/${userId}/missions`);
+  return response.data;
+};
+
+export const forceCompleteMission = async (userId: number, missionId: number): Promise<void> => {
+  await v2Client.post(`/api/v2/admin/users/${userId}/missions/${missionId}/complete`);
+};
+
+export const getUserSegment = async (userId: number): Promise<{ segment: string; label: string }> => {
+  const response = await v2Client.get<{ segment: string; label: string }>(`/api/v2/admin/users/${userId}/segment`);
+  return response.data;
+};
+
 // ============================================================================
 // Withdrawal API
 // ============================================================================
@@ -225,11 +374,21 @@ export const updateProductPrice = async (id: number, price: number): Promise<voi
 // ============================================================================
 
 export const runV2SegmentBatch = async (): Promise<void> => {
-    await v2Client.post("/admin/api/segments/batch/run");
+    await v2Client.post("/api/v2/admin/segments/batch/run");
+};
+
+export const getAdminSegmentStats = async (): Promise<SegmentStatsResponse> => {
+    const response = await v2Client.get<SegmentStatsResponse>("/api/v2/admin/segments/stats");
+    return response.data;
+};
+
+export const getAdminSegmentRules = async (): Promise<SegmentRuleDto[]> => {
+    const response = await v2Client.get<SegmentRuleDto[]>("/api/v2/admin/segments/rules");
+    return response.data;
 };
 
 export const createV2AdminMessage = async (request: CreateMessageRequest): Promise<void> => {
-    await v2Client.post("/admin/api/messages", request);
+    await v2Client.post("/api/v2/admin/messages", request);
 };
 
 // ============================================================================
