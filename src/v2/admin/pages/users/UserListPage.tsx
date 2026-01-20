@@ -10,6 +10,7 @@ import {
 import { Input } from "../../../components/ui/input";
 import { Button } from "../../../components/ui/button";
 import { Badge } from "../../../components/ui/badge";
+import { cn } from "../../../lib/utils";
 import {
   Popover,
   PopoverContent,
@@ -33,18 +34,28 @@ import {
   Mail,
   Ban,
 } from "lucide-react";
-import { cn } from "../../../lib/utils";
 import { UserDetailDrawer } from "./UserDetailDrawer";
 import { useAdminUserList } from "../../../hooks/useV2Admin";
 import { AdminUserListDto, UserSearchParams } from "../../../api/adminApi";
 
 // Simple Checkbox component (temporary)
-const Checkbox = ({ checked, onCheckedChange, className }: { checked: boolean; onCheckedChange: () => void; className?: string }) => (
+const Checkbox = ({
+  checked,
+  onCheckedChange,
+  className,
+}: {
+  checked: boolean;
+  onCheckedChange: () => void;
+  className?: string;
+}) => (
   <input
     type="checkbox"
     checked={checked}
     onChange={onCheckedChange}
-    className={cn("w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-indigo-500 focus:ring-indigo-500", className)}
+    className={cn(
+      "w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-indigo-500 focus:ring-indigo-500",
+      className,
+    )}
   />
 );
 
@@ -82,7 +93,7 @@ export default function UserListPage() {
   const totalPages = Math.ceil(total / limit);
 
   const handleSort = (
-    field: "last_active" | "level" | "vault_balance" | "created_at"
+    field: "last_active" | "level" | "vault_balance" | "created_at",
   ) => {
     if (sortBy === field) {
       setSortOrder(sortOrder === "asc" ? "desc" : "asc");
@@ -288,9 +299,7 @@ export default function UserListPage() {
                   </button>
                 </TableHead>
                 <TableHead className="text-zinc-500">상태</TableHead>
-                <TableHead className="text-right text-zinc-500">
-                  관리
-                </TableHead>
+                <TableHead className="text-right text-zinc-500">관리</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -331,7 +340,7 @@ export default function UserListPage() {
                         user.tier === "VIP" &&
                           "bg-purple-500/10 text-purple-400 border-purple-500/20",
                         user.tier === "VVIP" &&
-                          "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                          "bg-amber-500/10 text-amber-400 border-amber-500/20",
                       )}
                     >
                       {user.tier}
@@ -354,7 +363,7 @@ export default function UserListPage() {
                           ? "bg-green-500/10 text-green-500"
                           : user.status === "Suspended"
                             ? "bg-red-500/10 text-red-500"
-                            : "bg-zinc-500/10 text-zinc-500"
+                            : "bg-zinc-500/10 text-zinc-500",
                       )}
                     >
                       <span
@@ -364,7 +373,7 @@ export default function UserListPage() {
                             ? "bg-green-500"
                             : user.status === "Suspended"
                               ? "bg-red-500"
-                              : "bg-zinc-500"
+                              : "bg-zinc-500",
                         )}
                       />
                       {user.status}
