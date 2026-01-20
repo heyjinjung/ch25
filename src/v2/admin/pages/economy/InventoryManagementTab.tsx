@@ -173,7 +173,9 @@ export default function InventoryManagementTab() {
         limit: 1,
       });
       if (response.users && response.users.length > 0) {
-        setTargetUserNickname(response.users[0].nickname || "");
+        const foundUser = response.users[0];
+        setTargetUserNickname(foundUser.nickname || "");
+        setTargetUserId(foundUser.id.toString()); // Auto-fill ID
       } else {
         setTargetUserNickname("유저를 찾을 수 없음");
       }

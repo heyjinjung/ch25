@@ -443,7 +443,7 @@ export default function CCDepositPage() {
                     key={row.__key}
                     className="border-white/5 hover:bg-white/5 transition-colors"
                   >
-                    <TableCell>
+                    <TableCell className="py-[5px]">
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2">
                           <Input
@@ -456,12 +456,12 @@ export default function CCDepositPage() {
                               )
                             }
                             placeholder="닉네임/ID"
-                            className="bg-black/40 border-white/10 h-8"
+                            className="bg-black/40 border-white/10 h-9"
                           />
                           <Button
                             size="sm"
                             variant="outline"
-                            className="border-white/10 h-8"
+                            className="border-white/10 h-9"
                             onClick={() => resolveRowUser(row)}
                           >
                             검증
@@ -472,7 +472,7 @@ export default function CCDepositPage() {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="py-[5px]">
                       <span className="font-mono text-zinc-300">
                         ₩{" "}
                         {(
@@ -480,17 +480,17 @@ export default function CCDepositPage() {
                         ).toLocaleString()}
                       </span>
                     </TableCell>
-                    <TableCell className="font-bold text-emerald-400 font-mono">
+                    <TableCell className="font-bold text-emerald-400 font-mono py-[5px]">
                       <Input
                         type="number"
                         value={String(row.amount ?? 0)}
                         onChange={(e) =>
                           handleRowChange(row.__key, "amount", e.target.value)
                         }
-                        className="bg-black/40 border-white/10 h-8 font-mono"
+                        className="bg-black/40 border-white/10 h-9 font-mono bg-emerald-950/20 text-emerald-400"
                       />
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="py-[5px]">
                       <div className="flex items-center gap-2 text-zinc-300">
                         <Calendar className="w-4 h-4 text-zinc-500" />
                         <Input
@@ -503,14 +503,14 @@ export default function CCDepositPage() {
                               e.target.value,
                             )
                           }
-                          className="bg-black/40 border-white/10 h-8"
+                          className="bg-black/40 border-white/10 h-9"
                         />
                       </div>
                     </TableCell>
-                    <TableCell className="text-zinc-500 text-xs">
+                    <TableCell className="text-zinc-500 text-xs py-[5px]">
                       {formatKstDateTime(row.createdAt)}
                     </TableCell>
-                    <TableCell className="text-xs">
+                    <TableCell className="text-xs py-[5px]">
                       {status?.state === "loading" && (
                         <span className="text-zinc-500">검증 중...</span>
                       )}
@@ -524,10 +524,10 @@ export default function CCDepositPage() {
                         <span className="text-zinc-500">대기</span>
                       )}
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right py-[5px]">
                       <Button
                         variant="ghost"
-                        className="h-8 w-8 p-0 hover:bg-white/10"
+                        className="h-9 w-9 p-0 hover:bg-white/10"
                         onClick={() => removeRow(row)}
                       >
                         <Trash2 className="h-4 w-4 text-red-400" />
