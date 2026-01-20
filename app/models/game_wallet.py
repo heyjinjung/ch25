@@ -28,7 +28,8 @@ class GameTokenType(str, Enum):
     # Legacy V1 Aliases (Deprecated - For Migration Compatibility)
     ROULETTE_COIN = "ROULETTE_COIN"  # [DEPRECATED] Use ROULETTE_TICKET
     DICE_TOKEN = "DICE_TOKEN"  # [DEPRECATED] Use DICE_TICKET
-    TRIAL_TOKEN = "TRIAL_TOKEN"  # [DEPRECATED] 
+    TRIAL_TICKET = "TRIAL_TICKET"
+    TRIAL_TOKEN = "TRIAL_TOKEN"  # [DEPRECATED] Use TRIAL_TICKET 
     
     # ==== Premium Tickets (V2 Standard) ====
     GOLD_KEY_TICKET = "GOLD_KEY_TICKET"
