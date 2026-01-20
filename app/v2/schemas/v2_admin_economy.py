@@ -208,3 +208,16 @@ class UserInventoryItemDto(BaseModel):
     totalUsed: int
     expiresAt: datetime | None = None
     lastUsedAt: datetime | None = None
+
+
+class TicketLogDto(BaseModel):
+    id: int
+    userId: int
+    type: str  # GRANT, USE, REVOKE, EXPIRE
+    itemType: str
+    amount: int
+    balanceAfter: int = 0
+    reason: str
+    timestamp: str
+
+    model_config = ConfigDict(from_attributes=True)
