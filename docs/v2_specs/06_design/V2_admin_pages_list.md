@@ -41,7 +41,7 @@
 | 페이지명 | 경로 | API 상태 | 주요 기능 / 특이사항 |
 | :--- | :--- | :--- | :--- |
 | **룰렛 설정** | `/v2/admin/game/roulette` | **Real** | 등급별(Common/VIP/Whale) 확률, 보상, 가중치 슬롯 구성 |
-| **다이스 설정** | `/v2/admin/game/dice` | **Mock** | 활성화 여부, 승/무/패 보상 설정 UI (API Hook은 Mock 데이터 연동) |
+| **다이스 설정** | `/v2/admin/game/dice` | **Real** | 승률 확률(Win/Draw/Lose Probability 0.0~1.0), 결과별 보상(REWARD_ITEMS), 일일 누적 한도(Daily Gain Cap) 전역 설정 |
 | **복권(Lottery) 설정** | `/v2/admin/game/lottery` | **Mock** | 당첨권 수량, 등수별 가중치, 퍼즐 조각 이벤트 확률 설정 UI |
 
 ---
@@ -109,6 +109,19 @@
 - **내역 수정/삭제**: 잘못 기입된 입금 금액 및 날짜(KST) 수동 조정 및 삭제 연동.
 - **자동 누적 동기화**: 로그 수정 시 해당 유저의 전체 누적 입금액(`ExternalRankingData`) 즉시 재계산 및 반영.
 - **UI/UX**: `Lucide` 아이콘 기반 액션 메뉴, `date-fns` 날짜 포맷팅 적용.
+
+### 3-8. 주사위 게임 설정 풀스택 구현 (2026-01-20)
+**전역 전략 설정 및 경제 밸런스 제어**
+- **백엔드 API** (Python/FastAPI)
+  - `GET /api/v2/admin/game/dice/config` - 주사위 설정 조회
+  - `PUT /api/v2/admin/game/dice/config/{config_id}` - 설정 업데이트 (Audit Log 자동 기록)
+  - **DB 모델 확장**: 승률 확률 필드 추가 (`win_probability`, `draw_probability`, `lose_probability`), 일일 한도(`daily_gain_cap`)
+
+- **프론트엔드** (React/TypeScript)
+  - **승률 확률 설정**: 0.0 ~ 1.0 범위로 승리/무승부/패배 확률 실시간 조정 (백분율 표시)
+  - **결과별 보상 설정**: Win/Draw/Lose 각각 `REWARD_ITEMS` 상수 기반 보상 종류 및 수량 설정
+  - **일일 누적 한도**: Daily Gain Cap으로 경제 안정성 보장
+  - **실시간 동기화**: 어드민 입력값이 게임 로직에 즉시 반영
 
 ---
 

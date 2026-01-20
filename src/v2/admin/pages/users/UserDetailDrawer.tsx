@@ -14,6 +14,8 @@ import {
 import { ScrollArea } from "../../../components/ui/scroll-area";
 import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
+import { Input } from "../../../components/ui/input";
+import { Label } from "../../../components/ui/label";
 import { cn } from "../../../lib/utils";
 import {
   Card,
@@ -51,6 +53,7 @@ import {
   useUserSegment,
   useAdminTicketLogs,
   useAdjustUserWallet,
+  useAdjustUserInventory,
   useAdminUserDetail,
   useCreateUserNote,
   useRunIntervention,
@@ -58,6 +61,7 @@ import {
   useUserInventory,
   useUserNotes,
 } from "../../../hooks/useV2Admin";
+import { REWARD_ITEMS } from "../../../constants/rewardItems";
 import { Textarea } from "../../../components/ui/textarea";
 import {
   Table,
@@ -67,6 +71,13 @@ import {
   TableBody,
   TableCell,
 } from "../../../components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../../components/ui/select";
 
 interface UserDetailDrawerProps {
   isOpen: boolean;
@@ -83,7 +94,13 @@ export function UserDetailDrawer({
 }: UserDetailDrawerProps) {
   const contentRef = useRef<HTMLDivElement>(null);
   const [isWalletEditorOpen, setIsWalletEditorOpen] = useState(false);
+  const [walletEditorInitialType, setWalletEditorInitialType] =
+    useState<string>("ROULETTE_COIN");
   const [newNote, setNewNote] = useState("");
+  const [inventoryAdjustItemType, setInventoryAdjustItemType] =
+    useState<string>("DIAMOND");
+  const [inventoryAdjustDelta, setInventoryAdjustDelta] = useState<string>("");
+  const [inventoryAdjustNote, setInventoryAdjustNote] = useState<string>("");
 
   const { data: user, isLoading } = useAdminUserDetail(userId);
   const { data: activityLogs } = useUserActivityLogs(userId);
@@ -95,6 +112,7 @@ export function UserDetailDrawer({
 
   const runIntervention = useRunIntervention();
   const adjustWallet = useAdjustUserWallet();
+  const adjustInventory = useAdjustUserInventory();
   const createNote = useCreateUserNote();
   const forceCompleteMission = useForceCompleteMission();
 
@@ -115,11 +133,27 @@ export function UserDetailDrawer({
     setNewNote("");
   };
 
+  const handleInventoryAdjust = async () => {
+    if (!userId) return;
+    const delta = Number.parseInt(inventoryAdjustDelta, 10);
+    if (!Number.isFinite(delta) || delta === 0) return;
+    await adjustInventory.mutateAsync({
+      userId,
+      request: {
+        itemType: inventoryAdjustItemType,
+        delta,
+        note: inventoryAdjustNote.trim() || undefined,
+      },
+    });
+    setInventoryAdjustDelta("");
+    setInventoryAdjustNote("");
+  };
+
   if (!userId) return null;
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className="w-[90%] sm:w-[700px] bg-[#121214] border-l border-white/10 p-0 text-white overflow-y-auto">
+      <SheetContent className="w-[90%] sm:w-[900px] bg-[#121214] border-l border-white/10 p-0 text-white overflow-y-auto">
         {isLoading || !user ? (
           <div className="h-full flex flex-col items-center justify-center text-zinc-500 gap-4">
             <SheetHeader className="sr-only">
@@ -335,7 +369,10 @@ export function UserDetailDrawer({
                       <Button
                         variant="outline"
                         className="border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/10"
-                        onClick={() => setIsWalletEditorOpen(true)}
+                        onClick={() => {
+                          setWalletEditorInitialType("ROULETTE_COIN");
+                          setIsWalletEditorOpen(true);
+                        }}
                       >
                         <Edit className="w-4 h-4 mr-2" />
                         수량 조정
@@ -478,19 +515,29 @@ export function UserDetailDrawer({
 
                   {/* 3. 금고 (Vault) */}
                   <TabsContent value="vault" className="m-0 space-y-4">
+                    <div className="flex justify-between items-center bg-[#18181B] p-4 rounded-xl border border-white/5">
+                      <div>
+                        <div className="text-sm text-zinc-500">
+                          현재 금고 잔액
+                        </div>
+                        <div className="text-2xl font-mono text-white font-bold flex items-center gap-2">
+                          ₩ {(user.vaultBalance || 0).toLocaleString()}
+                        </div>
+                      </div>
+                      <Button
+                        variant="outline"
+                        className="border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/10"
+                        onClick={() => {
+                          setWalletEditorInitialType("VAULT");
+                          setIsWalletEditorOpen(true);
+                        }}
+                      >
+                        <Edit className="w-4 h-4 mr-2" />
+                        강제 수정
+                      </Button>
+                    </div>
+
                     <div className="grid grid-cols-2 gap-4">
-                      <Card className="bg-[#18181B] border-white/5">
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-sm text-zinc-400">
-                            현재 잔액
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="text-2xl text-emerald-400 font-bold">
-                            ₩ {(user.vaultBalance || 0).toLocaleString()}
-                          </div>
-                        </CardContent>
-                      </Card>
                       <Card className="bg-[#18181B] border-white/5">
                         <CardHeader className="pb-2">
                           <CardTitle className="text-sm text-zinc-400">
@@ -501,6 +548,18 @@ export function UserDetailDrawer({
                           <div className="text-2xl text-zinc-300 font-bold">
                             ₩{" "}
                             {((user.totalDeposit || 0) * 0.3).toLocaleString()}
+                          </div>
+                        </CardContent>
+                      </Card>
+                      <Card className="bg-[#18181B] border-white/5">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm text-zinc-400">
+                            총 입금
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-2xl text-emerald-400 font-bold">
+                            ₩ {(user.totalDeposit || 0).toLocaleString()}
                           </div>
                         </CardContent>
                       </Card>
@@ -560,18 +619,6 @@ export function UserDetailDrawer({
                         </TableBody>
                       </Table>
                     </div>
-
-                    <Card className="bg-amber-500/5 border-amber-500/20">
-                      <CardHeader>
-                        <CardTitle className="text-sm text-amber-400">
-                          ⚠️ 강제 잔액 수정
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="text-xs text-zinc-400">
-                        오입금 및 사고 처리용 기능입니다. (+면 입금, -면 출금
-                        처리)
-                      </CardContent>
-                    </Card>
                   </TabsContent>
 
                   {/* 4. 인벤토리 (Inventory) */}
@@ -580,6 +627,80 @@ export function UserDetailDrawer({
                       <Package className="w-5 h-5 text-indigo-400" />
                       <h3 className="text-lg font-bold">보유 아이템</h3>
                     </div>
+                    <Card className="bg-[#18181B] border-white/5">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-sm font-bold text-zinc-200">
+                          인벤토리 강제 수정
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <div className="grid grid-cols-1 md:grid-cols-[1.6fr_1fr] gap-3">
+                          <div className="space-y-2">
+                            <Label className="text-xs text-zinc-400">
+                              아이템 타입
+                            </Label>
+                            <Select
+                              value={inventoryAdjustItemType}
+                              onValueChange={setInventoryAdjustItemType}
+                            >
+                              <SelectTrigger className="bg-black/60 border-white/10 text-zinc-100">
+                                <SelectValue placeholder="아이템 선택" />
+                              </SelectTrigger>
+                              <SelectContent className="bg-[#18181B] border-white/10 text-white">
+                                {REWARD_ITEMS.map((item) => (
+                                  <SelectItem
+                                    key={item.value}
+                                    value={item.value}
+                                    className="text-zinc-100 focus:bg-zinc-800"
+                                  >
+                                    {item.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-xs text-zinc-400">
+                              수량 (+지급, -차감)
+                            </Label>
+                            <Input
+                              type="number"
+                              placeholder="예: 10 또는 -10"
+                              value={inventoryAdjustDelta}
+                              onChange={(e) =>
+                                setInventoryAdjustDelta(e.target.value)
+                              }
+                              className="bg-black/50 border-white/10 text-white font-mono"
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs text-zinc-400">사유</Label>
+                          <Textarea
+                            placeholder="예: 운영자 조정"
+                            value={inventoryAdjustNote}
+                            onChange={(e) =>
+                              setInventoryAdjustNote(e.target.value)
+                            }
+                            className="bg-black/50 border-white/10 text-white min-h-[70px]"
+                          />
+                        </div>
+                        <div className="flex justify-end">
+                          <Button
+                            className="bg-indigo-600 hover:bg-indigo-700"
+                            onClick={handleInventoryAdjust}
+                            disabled={
+                              adjustInventory.isPending ||
+                              !inventoryAdjustDelta.trim()
+                            }
+                          >
+                            {adjustInventory.isPending
+                              ? "처리 중..."
+                              : "수정 실행"}
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
                     {inventory && inventory.length > 0 ? (
                       <div className="grid gap-3">
                         {inventory.map((item) => (
@@ -732,67 +853,85 @@ export function UserDetailDrawer({
                   <TabsContent value="missions" className="m-0 space-y-4">
                     <div className="flex items-center gap-2 mb-4">
                       <Trophy className="w-5 h-5 text-indigo-400" />
-                      <h3 className="text-lg font-bold">미션 수행 이력</h3>
+                      <h3 className="text-lg font-bold">
+                        미션 수행 이력 (당일)
+                      </h3>
                     </div>
 
                     {missions && missions.length > 0 ? (
                       <div className="space-y-3">
-                        {missions.map((mission) => (
-                          <Card
-                            key={mission.id}
-                            className="bg-[#18181B] border-white/5"
-                          >
-                            <CardContent className="p-4">
-                              <div className="flex justify-between items-start mb-2">
-                                <div>
-                                  <div className="font-medium">
-                                    {mission.missionTitle}
+                        {missions
+                          .filter((mission) => {
+                            // Filter DAILY and WEEKLY missions to show only today's
+                            if (
+                              mission.category === "DAILY" ||
+                              mission.category === "WEEKLY"
+                            ) {
+                              const today = new Date();
+                              today.setHours(0, 0, 0, 0);
+                              const missionDate = new Date(mission.updatedAt);
+                              missionDate.setHours(0, 0, 0, 0);
+                              return missionDate.getTime() === today.getTime();
+                            }
+                            // Show all other mission types
+                            return true;
+                          })
+                          .map((mission) => (
+                            <Card
+                              key={mission.id}
+                              className="bg-[#18181B] border-white/5"
+                            >
+                              <CardContent className="p-4">
+                                <div className="flex justify-between items-start mb-2">
+                                  <div>
+                                    <div className="font-medium">
+                                      {mission.missionTitle}
+                                    </div>
+                                    <Badge className="text-[10px] mt-1">
+                                      {mission.category}
+                                    </Badge>
                                   </div>
-                                  <Badge className="text-[10px] mt-1">
-                                    {mission.category}
+                                  <Badge
+                                    className={
+                                      mission.status === "COMPLETED"
+                                        ? "bg-green-500/10 text-green-500"
+                                        : "bg-zinc-500/10 text-zinc-500"
+                                    }
+                                  >
+                                    {mission.status}
                                   </Badge>
                                 </div>
-                                <Badge
-                                  className={
-                                    mission.status === "COMPLETED"
-                                      ? "bg-green-500/10 text-green-500"
-                                      : "bg-zinc-500/10 text-zinc-500"
-                                  }
-                                >
-                                  {mission.status}
-                                </Badge>
-                              </div>
-                              <div className="flex items-center gap-2 mb-2">
-                                <div className="flex-1">
-                                  <progress
-                                    value={mission.progress}
-                                    max={mission.maxProgress || 1}
-                                    className="h-2 w-full appearance-none rounded-full overflow-hidden bg-zinc-800 [&::-webkit-progress-bar]:bg-zinc-800 [&::-webkit-progress-value]:bg-indigo-500 [&::-moz-progress-bar]:bg-indigo-500"
-                                  />
+                                <div className="flex items-center gap-2 mb-2">
+                                  <div className="flex-1">
+                                    <progress
+                                      value={mission.progress}
+                                      max={mission.maxProgress || 1}
+                                      className="h-2 w-full appearance-none rounded-full overflow-hidden bg-zinc-800 [&::-webkit-progress-bar]:bg-zinc-800 [&::-webkit-progress-value]:bg-indigo-500 [&::-moz-progress-bar]:bg-indigo-500"
+                                    />
+                                  </div>
+                                  <span className="text-xs text-zinc-400">
+                                    {mission.progress}/{mission.maxProgress}
+                                  </span>
                                 </div>
-                                <span className="text-xs text-zinc-400">
-                                  {mission.progress}/{mission.maxProgress}
-                                </span>
-                              </div>
-                              {mission.status !== "COMPLETED" && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="w-full mt-2"
-                                  onClick={() =>
-                                    forceCompleteMission.mutate({
-                                      userId: user.id,
-                                      missionId: mission.missionId,
-                                    })
-                                  }
-                                  disabled={forceCompleteMission.isPending}
-                                >
-                                  강제 완료 처리
-                                </Button>
-                              )}
-                            </CardContent>
-                          </Card>
-                        ))}
+                                {mission.status !== "COMPLETED" && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="w-full mt-2"
+                                    onClick={() =>
+                                      forceCompleteMission.mutate({
+                                        userId: user.id,
+                                        missionId: mission.missionId,
+                                      })
+                                    }
+                                    disabled={forceCompleteMission.isPending}
+                                  >
+                                    강제 완료 처리
+                                  </Button>
+                                )}
+                              </CardContent>
+                            </Card>
+                          ))}
                       </div>
                     ) : (
                       <div className="text-center text-zinc-500 py-10">
@@ -813,6 +952,7 @@ export function UserDetailDrawer({
             onClose={() => setIsWalletEditorOpen(false)}
             userId={user.id}
             currentTickets={user.ticketBalance}
+            initialTokenType={walletEditorInitialType}
             onUpdate={async (amt, reason, type) => {
               if (user) {
                 await adjustWallet.mutateAsync({

@@ -10,10 +10,12 @@ import {
   getOpsDashboardStatus,
   runInterventionAction,
   adjustUserWallet,
+  adjustUserInventory,
   AdminUserDetailDto,
   AdminWithdrawalDto,
   OpsDashboardResponse,
   AdminWalletAdjustmentRequest,
+  AdminInventoryAdjustmentRequest,
   getAdminUserList,
   UserSearchParams,
   UserListResponse,
@@ -45,8 +47,14 @@ import {
   updateProductPrice,
   AdminDepositDto,
   AdminProductDto,
-  grantItem,
-  GrantItemRequest,
+  createTicket,
+  updateTicket,
+  deleteTicket,
+  createInventoryItem,
+  updateInventoryItem,
+  deleteInventoryItem,
+  TicketUpdateRequest,
+  InventoryItemUpdateRequest,
   getVaultStats,
   getVaultUsers,
   getVaultTrend,
@@ -57,6 +65,13 @@ import {
   VaultStatsDto,
   UserVaultDto,
   VaultDailyTrendDto,
+  AdminDepositLogDto,
+  AdminDepositCreateRequest,
+  AdminDepositUpdateRequest,
+  getAdminDepositLogs,
+  createAdminDepositLog,
+  updateAdminDepositLog,
+  deleteAdminDepositLog,
 } from "../api/adminApi";
 import { CreateMessageRequest } from "../api/adminApi";
 
@@ -67,13 +82,19 @@ export const ADMIN_KEYS = {
   withdrawals: (status: string) => ["admin", "withdrawals", status] as const,
   userDetail: (userId: number) => ["admin", "users", userId] as const,
   opsStatus: ["admin", "ops", "status"] as const,
-  userList: (params: UserSearchParams) => ["admin", "users", "list", params] as const,
-  userActivityLogs: (userId: number) => ["admin", "users", userId, "activity-logs"] as const,
-  userInventory: (userId: number) => ["admin", "users", userId, "inventory"] as const,
+  userList: (params: UserSearchParams) =>
+    ["admin", "users", "list", params] as const,
+  userActivityLogs: (userId: number) =>
+    ["admin", "users", userId, "activity-logs"] as const,
+  userInventory: (userId: number) =>
+    ["admin", "users", userId, "inventory"] as const,
   userNotes: (userId: number) => ["admin", "users", userId, "notes"] as const,
-  userMissions: (userId: number) => ["admin", "users", userId, "missions"] as const,
-  userSegment: (userId: number) => ["admin", "users", userId, "segment"] as const,
-  ticketLogs: (userId: number) => ["admin", "users", userId, "ticket-logs"] as const,
+  userMissions: (userId: number) =>
+    ["admin", "users", userId, "missions"] as const,
+  userSegment: (userId: number) =>
+    ["admin", "users", userId, "segment"] as const,
+  ticketLogs: (userId: number) =>
+    ["admin", "users", userId, "ticket-logs"] as const,
   segmentStats: ["admin", "segments", "stats"] as const,
   segmentRules: ["admin", "segments", "rules"] as const,
   exchangeRates: ["admin", "economy", "rates"] as const,
@@ -135,6 +156,57 @@ export function useDeleteSegmentRule() {
   });
 }
 
+// CC Deposits CRUD
+export function useAdminDepositLogs(search?: string) {
+  return useQuery<AdminDepositLogDto[]>({
+    queryKey: ["admin", "deposits", "logs", search],
+    queryFn: () => getAdminDepositLogs({ search }),
+  });
+}
+
+export function useCreateDepositLog() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: AdminDepositCreateRequest) =>
+      createAdminDepositLog(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "deposits", "logs"],
+      });
+    },
+  });
+}
+
+export function useUpdateDepositLog() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: number;
+      data: AdminDepositUpdateRequest;
+    }) => updateAdminDepositLog(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "deposits", "logs"],
+      });
+    },
+  });
+}
+
+export function useDeleteDepositLog() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => deleteAdminDepositLog(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "deposits", "logs"],
+      });
+    },
+  });
+}
+
 // Messages
 export function useAdminMessages() {
   return useQuery({
@@ -179,6 +251,86 @@ export function useAdminRejectWithdrawal() {
       rejectWithdrawal(id, reason),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "withdrawals"] });
+    },
+  });
+}
+
+// Tickets
+export function useAdminTicketLogs(
+  userId?: number,
+  startDate?: string,
+  endDate?: string,
+) {
+  return useQuery<TicketLogDto[]>({
+    queryKey: ["admin", "ticket-logs", userId, startDate, endDate],
+    queryFn: () => getTicketLogs(userId, startDate, endDate),
+  });
+}
+
+// Ticket & Inventory CRUD
+export function useCreateTicket() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createTicket,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "ticket-logs"] });
+    },
+  });
+}
+
+export function useUpdateTicket() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: TicketUpdateRequest }) =>
+      updateTicket(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "ticket-logs"] });
+    },
+  });
+}
+
+export function useDeleteTicket() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => deleteTicket(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "ticket-logs"] });
+    },
+  });
+}
+
+export function useCreateInventoryItem() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createInventoryItem,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "ticket-logs"] });
+    },
+  });
+}
+
+export function useUpdateInventoryItem() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: number;
+      data: InventoryItemUpdateRequest;
+    }) => updateInventoryItem(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "ticket-logs"] });
+    },
+  });
+}
+
+export function useDeleteInventoryItem() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => deleteInventoryItem(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "ticket-logs"] });
     },
   });
 }
@@ -230,6 +382,24 @@ export function useAdjustUserWallet() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: ADMIN_KEYS.userDetail(variables.userId),
+      });
+    },
+  });
+}
+
+export function useAdjustUserInventory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      userId,
+      request,
+    }: {
+      userId: number;
+      request: AdminInventoryAdjustmentRequest;
+    }) => adjustUserInventory(userId, request),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ADMIN_KEYS.userInventory(variables.userId),
       });
     },
   });
@@ -291,8 +461,13 @@ export function useUserMissionHistory(userId: number | null) {
 export function useForceCompleteMission() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ userId, missionId }: { userId: number; missionId: number }) =>
-      forceCompleteMission(userId, missionId),
+    mutationFn: ({
+      userId,
+      missionId,
+    }: {
+      userId: number;
+      missionId: number;
+    }) => forceCompleteMission(userId, missionId),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: ADMIN_KEYS.userMissions(variables.userId),
@@ -312,69 +487,45 @@ export function useUserSegment(userId: number | null) {
   });
 }
 
-// Ticket Logs (Admin Context? It seems there are two ticket log hooks, one for specific user, one general?)
-// The previous code had `useAdminTicketLogs` in TicketInventoryPage but it wasn't defined in the viewed file snippet of useV2Admin.ts?
-// Wait, Step 335 showed `useUserTicketLogs` at line 261, but `TicketInventoryPage` imports `useAdminTicketLogs` from `../../../hooks/useAdminInventory`.
-// Ah, `TicketInventoryPage` imports from `useAdminInventory`, NOT `useV2Admin`.
-// I need to check `useAdminInventory` content. Or better, consolidate into `useV2Admin` since we are refactoring.
-// I will add `useAdminTicketLogs` here matching `TicketInventoryPage` needs.
-
-export function useAdminTicketLogs(userId?: number, startDate?: string, endDate?: string) {
-    return useQuery<TicketLogDto[]>({
-        queryKey: ["admin", "ticket-logs", userId, startDate, endDate],
-        queryFn: () => getTicketLogs(userId, startDate, endDate),
-    });
-}
-
-export function useAdminGrantItem() {
-    const queryClient = useQueryClient();
-    return useMutation({
-        mutationFn: (data: GrantItemRequest) => grantItem(data),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["admin", "ticket-logs"] });
-        }
-    });
-}
-
 // Exchange Rates
 export function useExchangeRates() {
-    return useQuery<ExchangeRateDto[]>({
-        queryKey: ADMIN_KEYS.exchangeRates,
-        queryFn: getExchangeRates,
-    });
+  return useQuery<ExchangeRateDto[]>({
+    queryKey: ADMIN_KEYS.exchangeRates,
+    queryFn: getExchangeRates,
+  });
 }
 
 export function useUpdateExchangeRate() {
-    const queryClient = useQueryClient();
-    return useMutation({
-        mutationFn: ({ id, rate }: { id: string, rate: number }) => updateExchangeRate(id, rate),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ADMIN_KEYS.exchangeRates });
-        }
-    });
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, rate }: { id: string; rate: number }) =>
+      updateExchangeRate(id, rate),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ADMIN_KEYS.exchangeRates });
+    },
+  });
 }
-
 
 // ============================================================================
 // Deposit Hooks
 // ============================================================================
 
 export function useAdminDeposits() {
-    return useQuery<AdminDepositDto[]>({
-        queryKey: ["admin", "deposits"], // Simplified key
-        queryFn: getAdminDeposits,
-        staleTime: 1000 * 60,
-    });
+  return useQuery<AdminDepositDto[]>({
+    queryKey: ["admin", "deposits"], // Simplified key
+    queryFn: getAdminDeposits,
+    staleTime: 1000 * 60,
+  });
 }
 
 export function useAdminConfirmDeposit() {
-    const queryClient = useQueryClient();
-    return useMutation({
-        mutationFn: confirmDeposit,
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["admin", "deposits"] });
-        },
-    });
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: confirmDeposit,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "deposits"] });
+    },
+  });
 }
 
 // ============================================================================
@@ -382,33 +533,33 @@ export function useAdminConfirmDeposit() {
 // ============================================================================
 
 export function useAdminProducts() {
-    return useQuery<AdminProductDto[]>({
-        queryKey: ["admin", "products"],
-        queryFn: getAdminProducts,
-        staleTime: 1000 * 60,
-    });
+  return useQuery<AdminProductDto[]>({
+    queryKey: ["admin", "products"],
+    queryFn: getAdminProducts,
+    staleTime: 1000 * 60,
+  });
 }
 
 export function useAdminUpdateProductStatus() {
-    const queryClient = useQueryClient();
-    return useMutation({
-        mutationFn: ({ id, isVisible }: { id: number; isVisible: boolean }) => 
-            updateProductStatus(id, isVisible),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["admin", "products"] });
-        },
-    });
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, isVisible }: { id: number; isVisible: boolean }) =>
+      updateProductStatus(id, isVisible),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "products"] });
+    },
+  });
 }
 
 export function useAdminUpdateProductPrice() {
-    const queryClient = useQueryClient();
-    return useMutation({
-        mutationFn: ({ id, price }: { id: number; price: number }) =>
-            updateProductPrice(id, price),
-        onSuccess: () => {
-             queryClient.invalidateQueries({ queryKey: ["admin", "products"] });
-        },
-    });
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, price }: { id: number; price: number }) =>
+      updateProductPrice(id, price),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "products"] });
+    },
+  });
 }
 
 // ============================================================================
@@ -416,34 +567,38 @@ export function useAdminUpdateProductPrice() {
 // ============================================================================
 
 export function useVaultStats() {
-    return useQuery<VaultStatsDto>({
-        queryKey: ["admin", "vault", "stats"],
-        queryFn: getVaultStats,
-        refetchInterval: 30000, // 30초마다 자동 새로고침
-    });
+  return useQuery<VaultStatsDto>({
+    queryKey: ["admin", "vault", "stats"],
+    queryFn: getVaultStats,
+    refetchInterval: 30000, // 30초마다 자동 새로고침
+  });
 }
 
-export function useVaultUsers(limit: number = 50, offset: number = 0, sortBy: string = "vault_balance") {
-    return useQuery<UserVaultDto[]>({
-        queryKey: ["admin", "vault", "users", limit, offset, sortBy],
-        queryFn: () => getVaultUsers(limit, offset, sortBy),
-    });
+export function useVaultUsers(
+  limit: number = 50,
+  offset: number = 0,
+  sortBy: string = "vault_balance",
+) {
+  return useQuery<UserVaultDto[]>({
+    queryKey: ["admin", "vault", "users", limit, offset, sortBy],
+    queryFn: () => getVaultUsers(limit, offset, sortBy),
+  });
 }
 
 export function useVaultTrend(days: number = 30) {
-    return useQuery<VaultDailyTrendDto[]>({
-        queryKey: ["admin", "vault", "trend", days],
-        queryFn: () => getVaultTrend(days),
-    });
+  return useQuery<VaultDailyTrendDto[]>({
+    queryKey: ["admin", "vault", "trend", days],
+    queryFn: () => getVaultTrend(days),
+  });
 }
 
 export function useForceEditVault() {
-    const queryClient = useQueryClient();
-    return useMutation({
-        mutationFn: forceEditVault,
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["admin", "vault"] });
-            queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
-        },
-    });
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: forceEditVault,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "vault"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
+    },
+  });
 }

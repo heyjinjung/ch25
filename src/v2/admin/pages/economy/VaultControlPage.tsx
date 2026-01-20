@@ -17,7 +17,6 @@ import {
 import { SlideToApprove } from "../../components/ui/SlideToApprove";
 import {
   ShieldAlert,
-  TrendingUp,
   Wallet,
   Clock,
   CheckCircle,
@@ -29,16 +28,12 @@ import {
 import {
   useVaultStats,
   useVaultUsers,
-  useVaultTrend,
   useForceEditVault,
   useAdminWithdrawals,
   useAdminApproveWithdrawal,
   useAdminRejectWithdrawal,
   useAdminUserList,
 } from "../../../hooks/useV2Admin";
-import { cn } from "../../../lib/utils";
-import type { AdminWithdrawalDto, UserVaultDto, AdminUserListDto } from "../../../api/adminApi";
-import { NumberTicker } from "../../components/ui/NumberTicker";
 import {
   Table,
   TableBody,
@@ -54,22 +49,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../../components/ui/select";
-import {
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Area,
-  AreaChart,
-} from "recharts";
+import { cn } from "../../../lib/utils";
+import type { AdminWithdrawalDto, UserVaultDto, AdminUserListDto } from "../../../api/adminApi";
+import { NumberTicker } from "../../components/ui/NumberTicker";
+
 
 export default function VaultControlPage() {
   const statsRef = useRef<HTMLDivElement>(null);
   const { data: stats } = useVaultStats();
   const { data: withdrawals = [] } = useAdminWithdrawals();
   const { data: vaultUsers = [] } = useVaultUsers(50, 0, "vault_balance");
-  const { data: trend = [] } = useVaultTrend(30);
 
   const approveMutation = useAdminApproveWithdrawal();
   const rejectMutation = useAdminRejectWithdrawal();
@@ -164,12 +153,7 @@ export default function VaultControlPage() {
     user.telegram_username?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Trend 차트 데이터 포맷
-  const chartData = trend.map((item) => ({
-    date: item.date.slice(5), // MM-DD만 표시
-    총금고액: Math.floor(item.total_vault / 10000), // 만원 단위
-    출금액: Math.floor(item.withdrawal_amount / 10000),
-  }));
+
 
   return (
     <div className="space-y-6 h-full p-6">
@@ -296,9 +280,6 @@ export default function VaultControlPage() {
           </TabsTrigger>
           <TabsTrigger value="users" className="data-[state=active]:bg-indigo-500/20">
             회원별 금고
-          </TabsTrigger>
-          <TabsTrigger value="trend" className="data-[state=active]:bg-indigo-500/20">
-            일자별 추이
           </TabsTrigger>
         </TabsList>
 
@@ -474,67 +455,7 @@ export default function VaultControlPage() {
           </div>
         </TabsContent>
 
-        {/* 일자별 추이 탭 */}
-        <TabsContent value="trend" className="space-y-4">
-          <Card className="bg-[#18181B] border-white/5">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-white">
-                <TrendingUp className="w-5 h-5 text-indigo-400" />
-                최근 30일 금고 추이
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[400px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={chartData}>
-                    <defs>
-                      <linearGradient id="colorVault" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#818CF8" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="#818CF8" stopOpacity={0} />
-                      </linearGradient>
-                      <linearGradient id="colorWithdrawal" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#F87171" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="#F87171" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#27272A" />
-                    <XAxis
-                      dataKey="date"
-                      stroke="#71717A"
-                      style={{ fontSize: "12px" }}
-                    />
-                    <YAxis stroke="#71717A" style={{ fontSize: "12px" }} />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "#18181B",
-                        border: "1px solid #27272A",
-                        borderRadius: "8px",
-                        color: "#E4E4E7",
-                      }}
-                      formatter={(value: any) => [`₩${value}만`, ""]}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="총금고액"
-                      stroke="#818CF8"
-                      fillOpacity={1}
-                      fill="url(#colorVault)"
-                      strokeWidth={2}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="출금액"
-                      stroke="#F87171"
-                      fillOpacity={1}
-                      fill="url(#colorWithdrawal)"
-                      strokeWidth={2}
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+
       </Tabs>
 
       {/* Force Edit Modal */}
