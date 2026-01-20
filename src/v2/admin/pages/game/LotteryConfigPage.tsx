@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
 import { useLotteryConfig, useUpdateLotteryConfig } from "../../../hooks/useAdminGameConfig";
 import { type AdminLotteryConfigDto, type AdminLotteryPrizeDto } from "../../../api/adminApi";
+import { REWARD_ITEMS } from "../../../constants/rewardItems";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../../components/ui/card";
 import { Switch } from "../../../components/ui/switch";
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
 import { Button } from "../../../components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../components/ui/table";
-import { Badge } from "../../../components/ui/badge";
 import { Slider } from "../../../components/ui/slider";
 import { Ticket, Save, Info, Settings, Grid2x2, Trophy } from "lucide-react";
 
@@ -184,9 +185,21 @@ export default function LotteryConfigPage() {
                         />
                       </TableCell>
                       <TableCell>
-                         <Badge variant="outline" className="bg-zinc-800/50 border-zinc-700 text-zinc-300">
-                           {prize.rewardType}
-                         </Badge>
+                         <Select
+                           value={prize.rewardType}
+                           onValueChange={(v) => handlePrizeChange(prize.id, "rewardType", v)}
+                         >
+                           <SelectTrigger className="h-8 bg-transparent border-transparent hover:bg-black/50 hover:border-white/10 w-[150px] text-xs">
+                             <SelectValue />
+                           </SelectTrigger>
+                           <SelectContent>
+                             {REWARD_ITEMS.map((item) => (
+                               <SelectItem key={item.value} value={item.value} className="text-xs">
+                                 {item.label}
+                               </SelectItem>
+                             ))}
+                           </SelectContent>
+                         </Select>
                       </TableCell>
                       <TableCell>
                         <Input

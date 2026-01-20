@@ -1257,63 +1257,97 @@ export const updateDiceConfig = async (
 };
 
 // Lottery API
+// Backend response type (snake_case)
+interface LotteryConfigBackend {
+  id: number;
+  name: string;
+  is_active: boolean;
+  max_daily_plays: number;
+  puzzle_piece_probability: number;
+  prizes: Array<{
+    id: number;
+    label: string;
+    weight: number;
+    stock: number | null;
+    reward_type: string;
+    reward_amount: number;
+    is_active: boolean;
+  }>;
+}
+
+// Color palette for prizes (frontend only)
+const PRIZE_COLORS = [
+  "#FDBA74", // Orange - 1st
+  "#FCD34D", // Yellow - 2nd
+  "#86EFAC", // Green - 3rd
+  "#A78BFA", // Purple - 4th
+  "#E5E7EB", // Gray - Miss
+];
+
 export const getLotteryConfig = async (): Promise<AdminLotteryConfigDto> => {
-  // Mock Data
+  const response = await v2Client.get<LotteryConfigBackend[]>(
+    "/api/v2/admin/game/lottery/configs",
+  );
+
+  // Get first config (usually only one)
+  const config = response.data[0];
+  if (!config) {
+    throw new Error("No lottery config found");
+  }
+
   return {
-    id: 1,
-    name: "Instant Lottery",
-    isActive: true,
-    maxDailyPlays: 5,
-    puzzlePieceProbability: 5.0, // 5% base drop rate
-    prizes: [
-      {
-        id: 1,
-        label: "1등 (100만 P)",
-        weight: 1,
-        stock: 1,
-        rewardType: "POINT",
-        rewardAmount: 1000000,
-        isActive: true,
-        color: "#FDBA74",
-      },
-      {
-        id: 2,
-        label: "2등 (10만 P)",
-        weight: 10,
-        stock: 10,
-        rewardType: "POINT",
-        rewardAmount: 100000,
-        isActive: true,
-        color: "#FCD34D",
-      },
-      {
-        id: 3,
-        label: "3등 (1만 P)",
-        weight: 100,
-        stock: 100,
-        rewardType: "POINT",
-        rewardAmount: 10000,
-        isActive: true,
-        color: "#86EFAC",
-      },
-      {
-        id: 4,
-        label: "꽝",
-        weight: 500,
-        stock: undefined,
-        rewardType: "NONE",
-        rewardAmount: 0,
-        isActive: true,
-        color: "#E5E7EB",
-      },
-    ],
+    id: config.id,
+    name: config.name,
+    isActive: config.is_active,
+    maxDailyPlays: config.max_daily_plays,
+    puzzlePieceProbability: config.puzzle_piece_probability,
+    prizes: config.prizes.map((prize, index) => ({
+      id: prize.id,
+      label: prize.label,
+      weight: prize.weight,
+      stock: prize.stock ?? undefined,
+      rewardType: prize.reward_type,
+      rewardAmount: prize.reward_amount,
+      isActive: prize.is_active,
+      color: PRIZE_COLORS[index % PRIZE_COLORS.length],
+    })),
   };
 };
 
 export const updateLotteryConfig = async (
   data: Partial<AdminLotteryConfigDto>,
 ): Promise<void> => {
-  await v2Client.put("/admin/api/game/lottery/config", data);
+  const payload: Record<string, any> = {};
+
+  if (data.name !== undefined) payload.name = data.name;
+  if (data.isActive !== undefined) payload.is_active = data.isActive;
+  if (data.maxDailyPlays !== undefined)
+    payload.max_daily_plays = data.maxDailyPlays;
+  if (data.puzzlePieceProbability !== undefined)
+    payload.puzzle_piece_probability = data.puzzlePieceProbability;
+
+  await v2Client.put(`/api/v2/admin/game/lottery/config/${data.id}`, payload);
+};
+
+export const updateLotteryPrize = async (
+  configId: number,
+  prizeId: number,
+  data: Partial<AdminLotteryPrizeDto>,
+): Promise<void> => {
+  const payload: Record<string, any> = {};
+
+  if (data.label !== undefined) payload.label = data.label;
+  if (data.weight !== undefined) payload.weight = data.weight;
+  if (data.stock !== undefined) payload.stock = data.stock ?? null;
+  if (data.rewardType !== undefined) payload.reward_type = data.rewardType;
+  if (data.rewardAmount !== undefined)
+    payload.reward_amount = data.rewardAmount;
+  if (data.isActive !== undefined) payload.is_active = data.isActive;
+
+  await v2Client.put(
+    `/api/v2/admin/game/lottery/config/${configId}/prize/${prizeId}`,
+    payload,
+  );
 };
 
 // ============================================================================

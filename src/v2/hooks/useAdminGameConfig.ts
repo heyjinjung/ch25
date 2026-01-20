@@ -64,3 +64,17 @@ export function useUpdateLotteryConfig() {
     },
   });
 }
+
+export function useUpdateLotteryPrize() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ configId, prizeId, data }: {
+      configId: number;
+      prizeId: number;
+      data: Partial<import("../api/adminApi").AdminLotteryPrizeDto>;
+    }) => import("../api/adminApi").updateLotteryPrize(configId, prizeId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "game", "lottery"] });
+    },
+  });
+}

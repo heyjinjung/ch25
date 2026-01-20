@@ -68,6 +68,53 @@ class UserInventoryDto(BaseModel):
 
 
 
+@router.get("/inventory/logs", response_model=List[TicketLogDto])
+def get_inventory_logs(
+    userId: Optional[int] = None,
+    startDate: Optional[str] = None,
+    endDate: Optional[str] = None,
+    limit: int = 200,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    _, admin_role = admin_info
+    check_admin_permission(admin_role)
+
+    def parse_iso_dt(value: str) -> datetime:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        if parsed.tzinfo is not None:
+            parsed = parsed.replace(tzinfo=None)
+        return parsed
+
+    query = db.query(UserInventoryLedger)
+    if userId is not None:
+        query = query.filter(UserInventoryLedger.user_id == userId)
+    if startDate:
+        query = query.filter(UserInventoryLedger.created_at >= parse_iso_dt(startDate))
+    if endDate:
+        query = query.filter(UserInventoryLedger.created_at <= parse_iso_dt(endDate))
+
+    logs = (
+        query.order_by(UserInventoryLedger.created_at.desc())
+        .limit(max(1, min(limit, 1000)))
+        .all()
+    )
+
+    return [
+        TicketLogDto(
+            id=log.id,
+            userId=log.user_id,
+            itemType=log.item_type,
+            changeAmount=log.change_amount,
+            balanceAfter=log.balance_after,
+            reason=log.reason,
+            createdAt=log.created_at,
+        )
+        for log in logs
+    ]
+
+
+
 @router.post("/inventory/tickets", response_model=TicketLogDto)
 def create_ticket_log(
     payload: TicketCreateRequest,
