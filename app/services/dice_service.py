@@ -11,7 +11,7 @@ from app.core.config import get_settings
 from app.models.dice import DiceConfig, DiceLog
 from app.models.feature import FeatureType
 from app.models.game_wallet import GameTokenType
-from app.schemas.dice import DicePlayResponse, DiceResult, DiceStatusResponse
+from app.schemas.dice import DiceGameData, DicePlayResponse, DiceResult, DiceStatusResponse
 from app.services.feature_service import FeatureService
 from app.services.game_common import GamePlayContext, log_game_play, should_apply_dda
 from app.services.game_wallet_service import GameWalletService
@@ -468,17 +468,20 @@ class DiceService:
         # 게임 설정 포인트를 레벨 XP 보너스로 반영
         season_pass = None  # 게임 1회당 자동 스탬프 발급을 중단하고, 조건 달성 시 별도 로직으로 처리
 
+        game_data = DiceGameData(
+            user_dice=user_dice,
+            dealer_dice=dealer_dice,
+            user_sum=user_sum,
+            dealer_sum=dealer_sum,
+            outcome=outcome,
+            reward_amount=reward_amount,
+            can_double_up=False,
+        )
+
         return DicePlayResponse(
             result="OK",
-            game=DiceResult(
-                user_dice=user_dice,
-                dealer_dice=dealer_dice,
-                user_sum=user_sum,
-                dealer_sum=dealer_sum,
-                outcome=outcome,
-                reward_type=reward_type,
-                reward_amount=reward_amount,
-            ),
+            game=game_data,
+            game_data=game_data,
             season_pass=season_pass,
             vault_earn=total_earn,
             streak_info=streak_info,

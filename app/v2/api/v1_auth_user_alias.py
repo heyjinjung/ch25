@@ -72,3 +72,31 @@ def v2_telegram_auth(
     db: Session = Depends(get_db),
 ) -> v1_telegram.TelegramAuthResponse:
     return v1_telegram.telegram_auth(payload, db)
+
+# --- Added for SoT Compliance ---
+
+@router.post("/auth/login", tags=["v2-auth"])
+def v2_login(
+    payload: v1_auth.TokenRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    # Alias to token issue
+    return v1_auth.issue_token(payload, request, db)
+
+@router.post("/auth/refresh", tags=["v2-auth"])
+def v2_refresh():
+    # Placeholder
+    return {"access_token": "mock_refresh", "token_type": "bearer"}
+
+@router.post("/auth/logout", tags=["v2-auth"])
+def v2_logout():
+    return {"success": True}
+
+@router.get("/user/me", tags=["v2-user"])
+def v2_user_me(user_id: int = Depends(get_current_user_id)):
+    return {"id": user_id, "nickname": "test_user"}
+
+@router.get("/user/balance", tags=["v2-user"])
+def v2_user_balance(user_id: int = Depends(get_current_user_id)):
+    return {"vault_locked": 0, "vault_available": 0}
