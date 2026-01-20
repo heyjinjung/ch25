@@ -45,6 +45,28 @@ V2 Admin API 연동 과정에서 백엔드가 재시작/런타임 에러를 발�
 - **해결**: `app/v2/api/__init__.py` 본문을 비워 패키지 임포트 시 부수 효과(side-effect) 제거. 필요한 경우 개별 모듈에서 명시적으로 임포트하도록 유도.
 - **상태**: 해결됨
 
+### 2.6 Docker 볼륨 마운트 누락으로 인한 코드 미반영
+- **증상**: 코드를 수정하고 컨테이너를 재시작해도 수정 내용이 반영되지 않고 동일한 에러(ImportError)가 반복됨.
+- **원인**: `docker-compose.yml`의 backend 서비스에 로컬 소스 코드(`src` or `app`) 볼륨 마운트가 설정되어 있지 않아, 이미지 빌드 시점의 코드만 실행됨.
+- **해결**: `docker-compose.yml`에 `- ./app:/app/app` 볼륨 마운트 추가.
+- **상태**: 해결됨
+
+### 2.7 V2 Admin 라우터 경로 매핑 오류 (404/502)
+- **증상**: 프론트엔드는 `/api/v2/admin/...` 경로를 호출하나, 백엔드는 `/api/v2/...`로 대기하여 404 발생 (또는 잘못된 경로 매핑).
+- **원인**: `app/v2/api/routes.py`에서 `admin_router`를 include할 때 `prefix="/admin"` 설정이 누락됨.
+- **해결**: `router.include_router(admin_router, prefix="/admin")`으로 수정.
+- **상태**: 해결됨
+
+### 2.8 WebSocket 연결 실패 (404/Connection Failed)
+- **증상**: 프론트엔드에서 `/api/ws/events` 연결 시도 시 404 오류 또는 연결 실패. 백엔드 로그에 `GET /api/ws/events HTTP/1.0 404`가 찍힘.
+- **원인**:
+    1.  사용자가 Nginx Gateway(80)가 아닌 Frontend Container(3000)로 직접 접속하여 프록시 설정 부재. (기존 frontend.conf에 Upgrade Header 누락)
+    2.  Nginx Gateway(80) 설정(`nginx.conf`)에서도 `/api/` 블록에 WebSocket Upgrade Header(`Connection: Upgrade`) 설정이 누락되어 있어, WS 요청이 HTTP/1.0 GET으로 다운그레이드되어 백엔드에 전달됨.
+- **해결**:
+    1.  `nginx.conf` (Gateway 80) 및 `nginx/frontend.conf` (Frontend 3000) 모두 `/api/`, `/admin/api/` 블록에 `proxy_http_version 1.1`, `Upgrade`, `Connection` 헤더 설정 추가 완료.
+    2.  **조치**: `docker compose up -d --build frontend` 명령어로 프론트엔드 컨테이너 재빌드/재시작 필요.
+- **상태**: 해결됨
+
 ---
 
 ## 3. 관찰 필요 (Known Issues)

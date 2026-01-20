@@ -161,7 +161,7 @@ export default function AdminLayout() {
       {/* Desktop Sidebar */}
       {!isMobile && (
         <aside className="fixed left-0 top-0 h-screen w-64 border-r border-obsidian-border bg-obsidian-surface p-6">
-          <div className="mb-10 flex items-center gap-3">
+          <div className="mb-10 flex items-center gap-2">
             <div className="h-8 w-8 rounded-lg bg-obsidian-accent/20 flex items-center justify-center">
               <div className="h-4 w-4 rounded-sm bg-obsidian-accent" />
             </div>
@@ -175,7 +175,7 @@ export default function AdminLayout() {
               메뉴 필터
             </label>
             <select
-              className="w-full rounded-lg bg-obsidian-bg/60 border border-obsidian-border px-3 py-2 text-sm text-white focus:outline-none"
+              className="w-full rounded-lg bg-obsidian-bg/60 border border-obsidian-border px-2 py-2 text-sm text-white focus:outline-none"
               value={activeSectionFilter}
               onChange={(e) => {
                 const next = e.target.value as NavSectionKey | "ALL";
@@ -223,7 +223,7 @@ export default function AdminLayout() {
                             key={item.path}
                             onClick={() => navigate(item.path)}
                             className={cn(
-                              "flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200",
+                              "flex w-full items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200",
                               activeItemPath === item.path
                                 ? "bg-obsidian-accent text-white shadow-lg shadow-obsidian-accent/20"
                                 : "text-obsidian-muted hover:bg-white/5 hover:text-white",
@@ -240,7 +240,7 @@ export default function AdminLayout() {
               })}
           </nav>
 
-          <button className="absolute bottom-6 left-6 flex items-center gap-3 text-sm text-obsidian-muted hover:text-red-400">
+          <button className="absolute bottom-6 left-6 flex items-center gap-2 text-sm text-obsidian-muted hover:text-red-400">
             <LogOut size={18} />
             로그아웃
           </button>
@@ -261,7 +261,7 @@ export default function AdminLayout() {
               <span className="text-lg font-bold text-white">Admin V2</span>
             )}
             {!isMobile && (
-              <div className="flex items-center gap-2 rounded-lg bg-obsidian-surface px-3 py-1.5 border border-obsidian-border">
+              <div className="flex items-center gap-2 rounded-lg bg-obsidian-surface px-2 py-1.5 border border-obsidian-border">
                 <Search size={14} className="text-obsidian-muted" />
                 <input
                   type="text"

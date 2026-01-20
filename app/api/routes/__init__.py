@@ -5,7 +5,7 @@ import os
 from fastapi import APIRouter
 
 from app.api import admin
-from app.v2.api import v2_router
+from app.v2.api.routes import router as v2_router
 from app.api.routes import (
 	activity,
 	auth,

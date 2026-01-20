@@ -3,9 +3,11 @@ import {
   getAdminMissions,
   updateMission,
   getAdminLevels,
-  updateLevelConfig,
+  updateAdminLevel,
+  updateAdminLevelGlobalConfig,
   type AdminMissionDto,
-  type AdminLevelDto
+  type AdminLevelDto,
+  type AdminLevelGlobalConfig,
 } from "../api/adminApi";
 
 // ============================================================================
@@ -44,10 +46,20 @@ export function useAdminLevels() {
 export function useAdminUpdateLevel() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ level, data }: { level: number; data: Partial<AdminLevelDto> }) =>
-      updateLevelConfig(level, data),
+    mutationFn: (vars: { level: number; data: Partial<AdminLevelDto> }) =>
+      updateAdminLevel(vars.level, vars.data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "game", "levels"] });
+      queryClient.invalidateQueries({ queryKey: ["adminLevels"] });
     },
   });
-}
+};
+
+export const useAdminUpdateLevelGlobalConfig = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: AdminLevelGlobalConfig) => updateAdminLevelGlobalConfig(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["adminLevels"] });
+    },
+  });
+};

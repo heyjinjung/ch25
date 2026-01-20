@@ -405,6 +405,16 @@ export const adjustUserWallet = async (
   return response.data;
 };
 
+export interface WalletTransactionTypeDto {
+  value: string;
+  label: string;
+}
+
+export const getWalletTransactionTypes = async (): Promise<WalletTransactionTypeDto[]> => {
+  const response = await v2Client.get<WalletTransactionTypeDto[]>("/api/v2/admin/economy/transaction-types");
+  return response.data;
+};
+
 // ============================================================================
 // Deposit API
 // ============================================================================
@@ -508,20 +518,33 @@ export const updateMission = async (
   await v2Client.put(`/api/v2/admin/game/missions/${id}`, data);
 };
 
+// Level Management
+export interface AdminLevelDto {
+  level: number;
+  requiredXp: number;
+  rewardType: string;
+  rewardAmount: number;
+}
+
+export interface AdminLevelGlobalConfig {
+  maxLevel: number;
+  maxXp: number;
+}
+
 export const getAdminLevels = async (): Promise<AdminLevelDto[]> => {
-  const response = await v2Client.get<AdminLevelDto[]>(
-    "/api/v2/admin/game/levels",
-  );
+  const response = await v2Client.get<AdminLevelDto[]>("/api/v2/admin/game/levels");
   return response.data;
 };
 
-export const updateLevelConfig = async (
-  level: number,
-  data: Partial<AdminLevelDto>,
-): Promise<void> => {
-  await v2Client.put(`/api/v2/admin/game/levels/${level}`, data);
+export const updateAdminLevel = async (level: number, data: Partial<AdminLevelDto>) => {
+  const response = await v2Client.put<AdminLevelDto>(`/api/v2/admin/game/levels/${level}`, data);
+  return response.data;
 };
 
+export const updateAdminLevelGlobalConfig = async (data: AdminLevelGlobalConfig) => {
+  const response = await v2Client.put("/api/v2/admin/game/levels/config", data);
+  return response.data;
+};
 // ============================================================================
 // Inventory Ops API
 // ============================================================================

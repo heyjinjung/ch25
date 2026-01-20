@@ -75,6 +75,7 @@ services:
       - xmas-network
     volumes:
       - ./logs:/app/logs
+      - ./app:/app/app
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8000/" ]
 

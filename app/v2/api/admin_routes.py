@@ -799,6 +799,23 @@ def adjust_user_wallet(
     )
 
 
+@router.get("/economy/transaction-types")
+def get_wallet_transaction_types(
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """Get list of adjustable wallet transaction types."""
+    return [
+        {"value": "VAULT", "label": "예치금 (Vault)"},
+        {"value": "ROULETTE_COIN", "label": "룰렛 티켓"},
+        {"value": "DICE_TOKEN", "label": "다이스 토큰"},
+        {"value": "GOLD_KEY", "label": "황금열쇠"},
+        {"value": "DIAMOND_KEY", "label": "다이아몬드 열쇠"},
+        {"value": "DIAMOND", "label": "다이아몬드 (재화)"},
+        {"value": "GOLD_KEY_FRAGMENT", "label": "황금열쇠 조각"},
+        {"value": "DIAMOND_KEY_FRAGMENT", "label": "다이아몬드 열쇠 조각"},
+    ]
+
+
 @router.get("/withdrawals", response_model=List[AdminWithdrawalDto])
 def list_admin_withdrawals(
     status: str = "PENDING",
@@ -2325,17 +2342,27 @@ def update_admin_mission(
 # Level Management Endpoints (V2)
 # ============================================================================
 
+# ============================================================================
+# Level Management Endpoints (V2)
+# ============================================================================
+
 class AdminLevelDto(BaseModel):
     level: int
     requiredXp: int
-    rewardTicket: int
-    rewardPoint: int
-
-class AdminLevelUpdateRequest(BaseModel):
-    requiredXp: int | None = None
+    rewardType: str
+    rewardAmount: int
+    # Keep legacy for compatibility if needed, but we will focus on generic type
     rewardTicket: int | None = None
     rewardPoint: int | None = None
 
+class AdminLevelUpdateRequest(BaseModel):
+    requiredXp: int | None = None
+    rewardType: str | None = None
+    rewardAmount: int | None = None
+
+class AdminLevelGlobalConfigRequest(BaseModel):
+    maxLevel: int
+    maxXp: int  # Target XP for the final level
 
 @router.get("/game/levels", response_model=List[AdminLevelDto])
 def get_admin_levels(
@@ -2345,7 +2372,7 @@ def get_admin_levels(
     """Get all level configurations."""
     levels = db.query(V2LevelRewardTable).order_by(V2LevelRewardTable.level).all()
     
-    # Auto-seed if empty (Standard V2 behavior for config tables)
+    # Auto-seed if empty
     if not levels:
         levels = []
         for i in range(1, 21):
@@ -2361,28 +2388,63 @@ def get_admin_levels(
 
     result = []
     for l in levels:
-        t_amt = 0
-        p_amt = 0
-        
-        # Primary
-        if l.reward_type == "TICKET":
-            t_amt = l.reward_amount
-        elif l.reward_type == "POINT":
-            p_amt = l.reward_amount
-            
-        # Payload Secondary
-        if l.reward_payload:
-            t_amt += l.reward_payload.get("ticket", 0)
-            p_amt += l.reward_payload.get("point", 0)
-
         result.append(AdminLevelDto(
             level=l.level,
             requiredXp=l.required_xp,
-            rewardTicket=t_amt,
-            rewardPoint=p_amt
+            rewardType=l.reward_type,
+            rewardAmount=l.reward_amount,
+            # Legacy fields (optional, can be derived or ignored)
+            rewardTicket=l.reward_amount if "TICKET" in l.reward_type else 0,
+            rewardPoint=l.reward_amount if l.reward_type == "POINT" else 0
         ))
     return result
 
+@router.put("/game/levels/config")
+def update_admin_level_global_config(
+    payload: AdminLevelGlobalConfigRequest,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """Update Global Level Config (Max Level, Max XP)."""
+    admin_id, admin_role = admin_info
+    
+    # 1. Handle Max Level (Create/Delete rows)
+    current_levels = db.query(V2LevelRewardTable).order_by(V2LevelRewardTable.level).all()
+    current_max = len(current_levels)
+    
+    if payload.maxLevel > current_max:
+        # Create new levels
+        for i in range(current_max + 1, payload.maxLevel + 1):
+            # Interpolate XP (Linear increase for now)
+            prev_xp = current_levels[-1].required_xp if current_levels else 0
+            new_level = V2LevelRewardTable(
+                level=i,
+                required_xp=prev_xp + 1000, # Default step
+                reward_type="POINT",
+                reward_amount=100
+            )
+            db.add(new_level)
+    elif payload.maxLevel < current_max:
+        # Delete excess levels
+        db.query(V2LevelRewardTable).filter(V2LevelRewardTable.level > payload.maxLevel).delete()
+    
+    db.flush()
+    
+    # 2. Handle Max XP (Set the LAST level's XP requirement)
+    # Note: Intermediate XP is manual, but we ensure the cap is set.
+    last_level = db.query(V2LevelRewardTable).filter(V2LevelRewardTable.level == payload.maxLevel).first()
+    if last_level:
+        last_level.required_xp = payload.maxXp
+        
+    db.commit()
+    
+    AdminAuditService.log(
+        db, admin_id, "LEVEL_CONFIG_GLOBAL_UPDATE", "GAME_CONFIG", "GLOBAL",
+        before={"max_level": current_max},
+        after={"max_level": payload.maxLevel, "max_xp": payload.maxXp}
+    )
+    
+    return {"success": True}
 
 @router.put("/game/levels/{level}")
 def update_admin_level(
@@ -2394,29 +2456,32 @@ def update_admin_level(
     """Update level configuration."""
     lvl = db.query(V2LevelRewardTable).filter(V2LevelRewardTable.level == level).first()
     if not lvl:
-        lvl = V2LevelRewardTable(level=level, required_xp=1000, reward_type="POINT", reward_amount=0)
-        db.add(lvl)
+        raise HTTPException(status_code=404, detail="LEVEL_NOT_FOUND")
 
     if payload.requiredXp is not None:
         lvl.required_xp = payload.requiredXp
     
-    # Reward Logic: 
-    # If Ticket > 0, Primary = TICKET. Point goes to Payload.
-    # Else Primary = POINT.
+    if payload.rewardType is not None:
+        lvl.reward_type = payload.rewardType
+        
+    if payload.rewardAmount is not None:
+        lvl.reward_amount = payload.rewardAmount
     
-    # Current values as base
-    current_t = 0
-    current_p = 0
-    if lvl.reward_type == "TICKET": current_t = lvl.reward_amount
-    elif lvl.reward_type == "POINT": current_p = lvl.reward_amount
-    if lvl.reward_payload:
-        current_t += lvl.reward_payload.get("ticket", 0)
-        current_p += lvl.reward_payload.get("point", 0)
-
-    # New values
-    new_t = payload.rewardTicket if payload.rewardTicket is not None else current_t
-    new_p = payload.rewardPoint if payload.rewardPoint is not None else current_p
+    # Reset Payload logic for now to simplify V2 model
+    # To support complex bundles later, we can re-enable it.
+    # For now, UI is strictly Single Reward Type.
+    lvl.reward_payload = None 
     
+    db.commit()
+    
+    return AdminLevelDto(
+            level=lvl.level,
+            requiredXp=lvl.required_xp,
+            rewardType=lvl.reward_type,
+            rewardAmount=lvl.reward_amount,
+            rewardTicket=lvl.reward_amount if "TICKET" in lvl.reward_type else 0,
+            rewardPoint=lvl.reward_amount if lvl.reward_type == "POINT" else 0
+        )
     payload_data = {}
     
     if new_t > 0:
