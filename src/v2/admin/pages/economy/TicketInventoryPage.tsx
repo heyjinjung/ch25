@@ -583,7 +583,10 @@ export default function TicketInventoryPage() {
                       {log.timestamp}
                     </TableCell>
                     <TableCell className="font-mono text-zinc-300">
-                      #{log.userId}
+                      <div className="flex flex-col">
+                        <span className="text-white font-bold">{log.nickname || "-"}</span>
+                        <span className="text-[10px] text-zinc-500">#{log.userId}</span>
+                      </div>
                     </TableCell>
                     <TableCell>
                       <Badge
