@@ -535,24 +535,15 @@ export const updateMission = async (
 };
 
 export const getAdminLevels = async (): Promise<AdminLevelDto[]> => {
-  // Mock Data
-  const levels = [];
-  for (let i = 1; i <= 20; i++) {
-    levels.push({
-      level: i,
-      requiredXp: i * 1000,
-      rewardTicket: Math.floor(i / 5) + 1,
-      rewardPoint: i * 500,
-    });
-  }
-  return levels;
+  const response = await v2Client.get<AdminLevelDto[]>("/api/v2/admin/game/levels");
+  return response.data;
 };
 
 export const updateLevelConfig = async (
   level: number,
   data: Partial<AdminLevelDto>,
 ): Promise<void> => {
-  await v2Client.put(`/admin/api/game/levels/${level}`, data);
+  await v2Client.put(`/api/v2/admin/game/levels/${level}`, data);
 };
 
 // ============================================================================
