@@ -120,9 +120,13 @@ export default function OpsDashboard() {
           label="골든 레이더"
           description={
             <div className="flex gap-2">
-              <span className="text-red-400">Risk: {status?.goldenRadar?.churnRisks ?? 0}</span>
+              <span className="text-red-400">
+                Risk: {status?.goldenRadar?.churnRisks ?? 0}
+              </span>
               <span className="text-zinc-500">/</span>
-              <span className="text-emerald-400">High: {status?.goldenRadar?.highRollers ?? 0}</span>
+              <span className="text-emerald-400">
+                High: {status?.goldenRadar?.highRollers ?? 0}
+              </span>
             </div>
           }
           icon={ShieldAlert}

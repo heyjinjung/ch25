@@ -217,8 +217,8 @@ graph TD
 
 | 화면명 | 세부 기능 | UI 요소 |
 | :--- | :--- | :--- |
-| **OpsDashboard** | 1. 실시간 매출 롤링 표시 <br> 2. 골든 레이더 위기/기회 유저 표시 <br> 3. 시스템 상태 신호등 <br> 4. Quick Action 버튼 (CSV, 메시지, 모달) | `BentoGrid`, `NumberTicker`, `PulsatingDot`, `QuickActionCard` |
-| **MarketingCenterPage** | 1. 신규 가입자 추이 <br> 3. 활성 유저 지표 <br> 4. 캠페인 성과 요약 | `Tabs`, `Card`, `Badge` |
+| **OpsDashboard** | 1. 실시간 금고잔액 표시 <br> 2. 골든 레이더 위기/기회 유저 표시 <br> 3. 시스템 상태 신호등 <br> 4. Quick Action 버튼 (CSV, 메시지, 모달) | `BentoGrid`, `NumberTicker`, `PulsatingDot`, `QuickActionCard` |
+| **MarketingCenterPage** | 1.신규 가입자 추이 <br> 3. 활성 유저 지표 <br> 4. 캠페인 성과 요약 | `AreaChart`, `Tabs`, `Card`, `Badge` |
 | **OpsLogPage** | 1. 로그 검색 및 필터 <br> 2. CSV 파일 업로드 <br> 3. 로그 상세 보기 <br> 4. JSON 포맷 하이라이팅 | `Table`, `Command`, `Input(File)`, `LogViewer` |
 | **HealthPage** | 1. API 서버 상태 <br> 2. DB 연결 상태 <br> 3. 외부 서비스 상태 <br> 4. 최근 에러 로그 | `Card`, `Badge`, `AnimatedList` |
 
@@ -298,7 +298,31 @@ graph TD
 | **ModalControlPage** | 1. 전역 킬스위치 (전체 모달 OFF) <br> 2. 모달별 개별 ON/OFF <br> 3. 모달 미리보기 <br> 4. 노출 기간 설정 | `Switch`, `Card`, `DateRangePicker`, `Dialog` |
 
 ---
+## 10. 이행 현황 (Implementation Status)
 
+현재 V2 Admin 시스템의 핵심 관제 대시보드 및 공통 UI 라이브러리 구축이 완료되었습니다.
+
+### 10.1 UI/UX 프레임워크 (완료)
+- [x] **Soft Obsidian 테마**: `#121214` 기반 다크 모드 테마 적용 및 가이드라인 수립. (근거: `AdminLayout.tsx` 주 적용 및 `index.css` 변수화 완료)
+- [x] **Magic UI 통합**: `NumberTicker`, `AnimatedList`, `PulsatingDot` 컴포넌트 구현 및 대시보드 적용. (근거: `src/v2/admin/components/ui/` 내 컴포넌트 실체 확인)
+- [x] **공통 레이아웃**: 상단 헤더, 반응형 배리어블 그리드 레이아웃 구축. (근거: `AdminLayout.tsx` 모바일 하단 독 및 데스크톱 사이드바 전환 로직 확인)
+
+### 10.2 핵심 대시보드 (진행 중)
+- [x] **종합 대시보드 (OpsDashboard)**: 실시간 금고 잔액, 활성 유저, 퀵 액션 카드 구현. (**API 연동 완료**: `useOpsStatus` hook을 통한 실시간 데이터 동기화 완료)
+- [x] **마케팅 센터 (MarketingCenter)**: KPI 탭 구조(Overview, Acquisition, Retention) 개편 및 인터랙션 강화. (**API 미연동**: 현재 프론트엔드 UI 및 Mock 데이터 기반 레이아웃 작업 완료)
+- [x] **운영 로그 (OpsLog)**: 로그 상세 보기(Sheet + LogViewer) 및 필터링 시스템 구축. (**API 미연동**: JSON 페이로드 시각화 UI 구현 완료)
+- [x] **시스템 상태 (Health)**: 인프라 상태 모니터링 및 애니메이션 이벤트 피드 적용. (**API 연동 완료**: `useOpsStatus`를 이용한 DB/Redis/Worker 실시간 상태 관제)
+
+### 10.3 회원 관리 (완료)
+- [x] **회원 목록 (UserList)**: 검색/필터/정렬 및 다중 선택 일괄 액션. (**API 연동 완료**: `useAdminUserList` hooks 연결 완료)
+- [x] **360도 상세 뷰 (UserDetail)**: 8개 탭 구조 통합 및 개입(Intervention) 시스템 연결. (**API 연동 완료**: `useAdminUserDetail`, `useUserTicketLogs` 등 10여 개 API 연동 완료)
+- [x] **세그먼트 엔진 (Segment)**: AI 기반 유저 분류 목록 및 배치 실행 제어. (**API 연동 완료**: `useAdminSegmentStats`, `useRunSegmentBatch` 등 연동 완료)
+
+### 10.4 다음 단계 (Next Steps)
+- [ ] **경제 관리 (Economy Ops)**: '밀어서 승인' 기능이 포함된 금고 관리 및 출금 승인 시스템.
+- [ ] **게임 관리 (Game Ops)**: 미션, 룰렛, 주사위 등 인게임 파라미터 제어 패널.
+
+---
 ## 10. 어드민 전용 컴포넌트 목록 (Admin-Specific Components)
 
 ### 10.1 레이아웃 컴포넌트 (Layout)
