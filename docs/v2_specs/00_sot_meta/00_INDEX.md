@@ -74,6 +74,8 @@
 - 어드민 마스터 플랜: docs/v2_specs/06_design/v2_admin_master_plan_ko.md
 - **GSAP 레퍼런스**: docs/v2_specs/06_design/v2_gsap_reference_ko.md
 
+- **V2 어드민 개발/테스트 가이드(로컬 런북)**: docs/06_ops/admin/01_v2_admin_dev_test_guide_ko_v1.0.md
+
 - [ ] 문서 분류/링크 최신화
 - [ ] SoT 우선순위 준수
 

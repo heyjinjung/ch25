@@ -68,7 +68,7 @@ export default function OpsDashboard() {
           <Button
             variant="outline"
             className="border-white/10 text-zinc-300 hover:text-white hover:bg-white/5"
-            onClick={() => navigate("/admin/v2/system/modals")}
+            onClick={() => navigate("/v2/admin/system/modals")}
           >
             모달 제어
           </Button>
@@ -99,25 +99,25 @@ export default function OpsDashboard() {
             </div>
           }
           icon={Server}
-          onClick={() => navigate("/admin/v2/system/health")}
+          onClick={() => navigate("/v2/admin/system/health")}
         />
         <QuickActionCard
           label="오늘 매출 (Revenue)"
-          description={`₩ ${status.metrics.todayRevenue.toLocaleString()}`}
+          description={`₩ ${status?.metrics?.todayRevenue?.toLocaleString() ?? "0"}`}
           icon={CreditCard}
-          onClick={() => navigate("/admin/v2/economy/vault")}
+          onClick={() => navigate("/v2/admin/economy/vault")}
         />
         <QuickActionCard
           label="골든 레이더"
-          description={`Risk: ${status.goldenRadar.churnRisks} / High: ${status.goldenRadar.highRollers}`}
+          description={`Risk: ${status?.goldenRadar?.churnRisks ?? 0} / High: ${status?.goldenRadar?.highRollers ?? 0}`}
           icon={ShieldAlert}
           className="border-red-500/30 bg-red-500/5 hover:bg-red-500/10"
         />
         <QuickActionCard
           label="현재 접속자"
-          description={`Active: ${status.goldenRadar.onlineNow}명`}
+          description={`Active: ${status?.goldenRadar?.onlineNow ?? 0}명`}
           icon={Users}
-          onClick={() => navigate("/admin/v2/users")}
+          onClick={() => navigate("/v2/admin/users")}
         />
       </div>
 
@@ -152,7 +152,7 @@ export default function OpsDashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {status.goldenRadar.riskUsers &&
+                {status?.goldenRadar?.riskUsers &&
                 status.goldenRadar.riskUsers.length > 0 ? (
                   <div className="space-y-2">
                     {status.goldenRadar.riskUsers.map((u) => (
@@ -195,7 +195,7 @@ export default function OpsDashboard() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="text-center py-8 text-zinc-500 text-sm">
-                  {status.goldenRadar.highRollers > 0
+                  {status?.goldenRadar?.highRollers > 0
                     ? `${status.goldenRadar.highRollers} whales active`
                     : "No whales active"}
                 </div>
