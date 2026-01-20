@@ -194,17 +194,7 @@ export function UserDetailDrawer({
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  {user.isActive ? (
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      className="h-8 bg-red-900/40 text-red-500 hover:bg-red-900/60 border border-red-900/50"
-                    >
-                      <Shield className="w-3 h-3 mr-1" /> 정지
-                    </Button>
-                  ) : (
-                    <Badge className="bg-red-500 text-white">정지됨</Badge>
-                  )}
+                  {/* 정지 버튼 제거됨 (Placeholder) */}
                 </div>
               </div>
             </SheetHeader>

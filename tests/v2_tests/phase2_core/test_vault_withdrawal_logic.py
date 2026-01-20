@@ -75,7 +75,7 @@ def test_withdrawal_tiers(db_session):
         MockSettings.return_value.streak_day_reset_hour_kst = 9
         
         service = VaultService()
-        user = setup_valid_user(db_session, user_id=1, locked=100_000)
+        user = setup_valid_user(db_session, user_id=1, locked=500_000, spent_today=20_000)
 
         # --- Tier 1 (Count 0): Min 10,000 ---
         # Try 5,000 -> Fail
@@ -83,22 +83,30 @@ def test_withdrawal_tiers(db_session):
             service.request_withdrawal(db_session, 1, 5_000)
         assert "MIN_WITHDRAWAL_AMOUNT_10000" in str(exc.value.detail)
 
+
+
         # Try 10,000 -> Success
+        service.consume_locked_balance(db_session, 1, 20_000)
         res = service.request_withdrawal(db_session, 1, 10_000)
         assert res["status"] == "PENDING"
-        
+
         # Approve it to increment count
         req_id = res["request_id"]
         req = db_session.get(VaultWithdrawalRequest, req_id)
-        req.status = "APPROVED" 
+        req.status = "APPROVED"
         db_session.commit()
 
+
+
         # --- Tier 2 (Count 1): Min 10,000 ---
+        service.consume_locked_balance(db_session, 1, 20_000)
         res = service.request_withdrawal(db_session, 1, 10_000)
         req_id = res["request_id"]
         req = db_session.get(VaultWithdrawalRequest, req_id)
         req.status = "APPROVED"
         db_session.commit()
+
+
 
         # --- Tier 3 (Count 2): Min 30,000 ---
         # Try 20,000 -> Fail
@@ -107,11 +115,14 @@ def test_withdrawal_tiers(db_session):
         assert "MIN_WITHDRAWAL_AMOUNT_30000" in str(exc.value.detail)
 
         # Try 30,000 -> Success
+        service.consume_locked_balance(db_session, 1, 20_000)
         res = service.request_withdrawal(db_session, 1, 30_000)
         req_id = res["request_id"]
         req = db_session.get(VaultWithdrawalRequest, req_id)
         req.status = "APPROVED"
         db_session.commit()
+
+
 
         # --- Tier 4 (Count 3): Min 50,000 ---
         # Try 40,000 -> Fail
@@ -120,6 +131,7 @@ def test_withdrawal_tiers(db_session):
         assert "MIN_WITHDRAWAL_AMOUNT_50000" in str(exc.value.detail)
 
         # Try 50,000 -> Success
+        service.consume_locked_balance(db_session, 1, 20_000)
         service.request_withdrawal(db_session, 1, 50_000)
 
 def test_daily_spent_reset_check(db_session):

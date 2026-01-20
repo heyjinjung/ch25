@@ -1414,10 +1414,23 @@ class VaultService:
                     if last_charge_kst == now_kst_date:
                         internal_ok = True
 
+                # [정책 완화] 입금 이력 없더라도 최근 3일 내 금고 적립(GAME_PLAY, MISSION_REWARD 등) 있으면 허용
                 if not internal_ok:
-                    if not rank_data or int(getattr(rank_data, "deposit_amount", 0) or 0) <= 0:
-                        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="NO_DEPOSIT_HISTORY")
-                    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="DEPOSIT_REQUIRED_TODAY_NET")
+                    # 최근 3일 내 금고 적립 이벤트(GAME_PLAY, MISSION_REWARD 등) 체크
+                    earn_event_count = (
+                        db.query(func.count(VaultEarnEvent.id))
+                        .filter(
+                            VaultEarnEvent.user_id == user_id,
+                            VaultEarnEvent.earn_type.in_(["GAME_PLAY", "MISSION_REWARD"]),
+                            VaultEarnEvent.created_at >= now - timedelta(days=3)
+                        )
+                        .scalar()
+                        or 0
+                    )
+                    if int(earn_event_count) < 1:
+                        if not rank_data or int(getattr(rank_data, "deposit_amount", 0) or 0) <= 0:
+                            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="NO_DEPOSIT_HISTORY")
+                        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="DEPOSIT_REQUIRED_TODAY_NET")
 
         # 3. Activity Condition: 30+ GAME_PLAY in last 3 operational days (KST)
         reset_hour_raw = getattr(settings, "streak_day_reset_hour_kst", 9)

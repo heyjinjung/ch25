@@ -128,7 +128,7 @@ export default function RouletteConfigPage() {
                   <SelectTrigger className="bg-black/50 border-white/10 h-10">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-[#18181B] border-white/10 text-white">
                     <SelectItem value="ROULETTE_TICKET">ROULETTE_TICKET</SelectItem>
                     <SelectItem value="GOLD_KEY_TICKET">GOLD_KEY_TICKET</SelectItem>
                     <SelectItem value="DIAMOND_TICKET">DIAMOND_TICKET</SelectItem>
