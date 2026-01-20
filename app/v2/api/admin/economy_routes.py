@@ -4,6 +4,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import func, case
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_admin_info, get_db
@@ -1063,15 +1064,26 @@ def create_inventory_item(
     db: Session = Depends(get_db), 
     admin_info: tuple[int, str] = Depends(get_current_admin_info)
 ):
-    InventoryService.grant_item(
-        db, 
-        user_id=payload.user_id, 
-        item_type=payload.item_type, 
-        amount=payload.quantity, 
-        reason=payload.reason,
-        expires_at=None # Expire logic omitted for now as per schema
-    )
-    return {"success": True}
+    user = db.query(User).filter(User.id == payload.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
+
+    try:
+        InventoryService.grant_item(
+            db, 
+            user_id=payload.user_id, 
+            item_type=payload.item_type, 
+            amount=payload.quantity, 
+            reason=payload.reason,
+            expires_at=None # Expire logic omitted for now as per schema
+        )
+        return {"success": True}
+    except ValueError as exc:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(exc))
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="INVENTORY_CONSTRAINT_VIOLATION")
 
 @router.put("/inventory/items/{id}")
 def update_inventory_item(
