@@ -58,11 +58,10 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { cn } from "../../../lib/utils";
-
-const TICKET_ITEMS = [
-  { value: "TICKET", label: "티켓 (TICKET)" },
-  { value: "POINT", label: "포인트 (POINT)" },
-];
+import {
+  getWalletRewardItems,
+  getRewardItemLabel,
+} from "../../../constants/rewardItems";
 
 export default function TicketManagementTab() {
   const [searchUserId, setSearchUserId] = useState<number | undefined>(
@@ -83,7 +82,14 @@ export default function TicketManagementTab() {
   const [targetUserId, setTargetUserId] = useState("");
   const [targetUserNickname, setTargetUserNickname] = useState("");
   const [isSearchingUser, setIsSearchingUser] = useState(false);
-  const [itemType, setItemType] = useState("TICKET");
+  const walletItems = useMemo(() => getWalletRewardItems(), []);
+  const walletItemValues = useMemo(
+    () => new Set(walletItems.map((item) => item.value)),
+    [walletItems],
+  );
+  const defaultWalletItem = walletItems[0]?.value || "ROULETTE_TICKET";
+
+  const [itemType, setItemType] = useState(defaultWalletItem);
   const [amount, setAmount] = useState("1");
   const [reason, setReason] = useState("이벤트 보상");
   const [expiresAt, setExpiresAt] = useState("");
@@ -102,12 +108,10 @@ export default function TicketManagementTab() {
   const updateTicketMutation = useUpdateTicket();
   const deleteTicketMutation = useDeleteTicket();
 
-  // Filter logs to show only tickets (TICKET, POINT)
+  // Filter logs to show only wallet items
   const ticketLogs = useMemo(() => {
-    return logs.filter(
-      (log) => log.itemType === "TICKET" || log.itemType === "POINT"
-    );
-  }, [logs]);
+    return logs.filter((log) => walletItemValues.has(log.itemType));
+  }, [logs, walletItemValues]);
 
   // Stats based on filtered ticket logs
   const stats = useMemo(() => {
@@ -184,7 +188,10 @@ export default function TicketManagementTab() {
   const handleCreate = () => {
     const uid = parseInt(targetUserId);
     const amt = parseInt(amount);
-    if (isNaN(uid) || isNaN(amt)) return;
+    if (isNaN(uid) || isNaN(amt)) {
+      alert("유저 ID와 수량을 확인해주세요.");
+      return;
+    }
 
     createTicketMutation.mutate(
       {
@@ -238,7 +245,7 @@ export default function TicketManagementTab() {
   const resetForm = () => {
     setTargetUserId("");
     setTargetUserNickname("");
-    setItemType("TICKET");
+    setItemType(defaultWalletItem);
     setAmount("1");
     setReason("이벤트 보상");
     setExpiresAt("");
@@ -430,7 +437,7 @@ export default function TicketManagementTab() {
             <TableHeader className="bg-black/20">
               <TableRow className="border-white/5 hover:bg-transparent">
                 <TableHead className="w-[180px]">시간</TableHead>
-                <TableHead>유저 ID</TableHead>
+                <TableHead>유저 닉네임</TableHead>
                 <TableHead>구분</TableHead>
                 <TableHead>티켓 종류</TableHead>
                 <TableHead>수량</TableHead>
@@ -468,7 +475,7 @@ export default function TicketManagementTab() {
                       {log.timestamp}
                     </TableCell>
                     <TableCell className="font-mono text-zinc-300">
-                      #{log.userId}
+                      {log.nickname || "-"}
                     </TableCell>
                     <TableCell>
                       <Badge
@@ -488,7 +495,7 @@ export default function TicketManagementTab() {
                       </Badge>
                     </TableCell>
                     <TableCell className="font-medium">
-                      {log.itemType}
+                      {getRewardItemLabel(log.itemType)}
                     </TableCell>
                     <TableCell
                       className={cn(
@@ -595,9 +602,9 @@ export default function TicketManagementTab() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-[#18181B] border-white/10 text-white">
-                    {TICKET_ITEMS.map((item) => (
+                    {walletItems.map((item) => (
                       <SelectItem key={item.value} value={item.value}>
-                        {item.label}
+                        {getRewardItemLabel(item.value)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -664,7 +671,9 @@ export default function TicketManagementTab() {
             <div className="p-3 bg-black/30 rounded border border-white/10 text-xs">
               <span className="text-zinc-500">
                 ID: #{selectedLog?.id} | User: {selectedLog?.userId} | Type:{" "}
-                {selectedLog?.itemType}
+                {selectedLog?.itemType
+                  ? getRewardItemLabel(selectedLog.itemType)
+                  : "-"}
               </span>
             </div>
             <div className="space-y-2">
@@ -715,8 +724,11 @@ export default function TicketManagementTab() {
             <div className="text-sm p-3 bg-red-500/5 rounded border border-red-500/10">
               <div className="font-mono text-zinc-400 mb-1">LOG DETAIL</div>
               <div className="font-medium">
-                #{selectedLog?.id} | {selectedLog?.itemType} (
-                {selectedLog?.amount})
+                #{selectedLog?.id} |{" "}
+                {selectedLog?.itemType
+                  ? getRewardItemLabel(selectedLog.itemType)
+                  : "-"}{" "}
+                ({selectedLog?.amount})
               </div>
               <div className="text-xs text-zinc-500 mt-1">
                 {selectedLog?.reason}

@@ -28,15 +28,49 @@ class AdminProductDto(BaseModel):
     id: int
     sku: str
     name: str
-    price: int
+    # Legacy field (maps to cost_amount for backward compat)
+    price: int = 0
+    # Exchange model fields
+    cost_type: str = Field(default="VAULT", serialization_alias="costType")
+    cost_amount: int = Field(default=0, serialization_alias="costAmount")
+    reward_type: str = Field(default="", serialization_alias="rewardType")
+    reward_amount: int = Field(default=0, serialization_alias="rewardAmount")
     is_visible: bool = Field(
         default=True,
         validation_alias="isVisible",
         serialization_alias="isVisible",
     )
     category: AdminProductCategory = "OTHER"
+    sort_order: int = Field(default=0, serialization_alias="sortOrder")
+    daily_limit: int | None = Field(default=None, serialization_alias="dailyLimit")
+    description: str | None = None
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+
+
+class AdminProductCreateRequest(BaseModel):
+    sku: str
+    name: str
+    cost_type: str = "VAULT"
+    cost_amount: int
+    reward_type: str
+    reward_amount: int
+    is_visible: bool = True
+    sort_order: int = 0
+    daily_limit: int | None = None
+    description: str | None = None
+
+
+class AdminProductUpdateRequest(BaseModel):
+    name: str | None = None
+    cost_type: str | None = None
+    cost_amount: int | None = None
+    reward_type: str | None = None
+    reward_amount: int | None = None
+    is_visible: bool | None = None
+    sort_order: int | None = None
+    daily_limit: int | None = None
+    description: str | None = None
 
 
 class AdminWithdrawalDto(BaseModel):
@@ -143,6 +177,7 @@ class VaultLedgerResponseDto(BaseModel):
     total_in: int
     total_out: int
     net_change: int
+    current_balance: int
     items: list[VaultLedgerItemDto]
 
     model_config = ConfigDict(from_attributes=True)

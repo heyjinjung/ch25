@@ -337,7 +337,10 @@ def get_user_activity_logs(
             userId=user_id,
             type="ADMIN_ACTION",
             description=f"{log.action} by Admin #{log.admin_id}",
-            metadata=log.after_json or {},
+            metadata={
+                "before": log.before_json or {},
+                "after": log.after_json or {},
+            },
             timestamp=log.created_at,
         )
         for log in logs
@@ -393,64 +396,26 @@ def adjust_user_inventory(
     reason = "ADMIN_ADJUST" if not clean_note else f"ADMIN_ADJUST:{clean_note[:70]}"
     related_id = f"admin:{admin_id}"
 
-    # 1. Handle Vault (Cash)
+    # 1. Block Vault adjustments here (handled in wallet adjust)
     if clean_item_type == "VAULT":
-        try:
-            if delta > 0:
-                V2VaultService.deposit(db, user_id, delta, description=reason, admin_id=admin_id)
-            else:
-                V2VaultService.withdraw(db, user_id, abs(delta))
-        except ValueError as e:
-            raise HTTPException(status_code=400, detail=str(e))
-        except Exception as e:
-             raise HTTPException(status_code=500, detail=str(e))
-             
-        AdminAuditService.log(
-            db,
-            admin_id,
-            "VAULT_ADJUST",
-            "USER",
-            str(user_id),
-            before=None,
-            after={"amount": delta, "reason": reason}
-        )
-        db.commit()
-        return {"success": True, "type": "VAULT", "delta": delta}
+        raise HTTPException(status_code=400, detail="INVALID_ITEM_TYPE")
 
-    # 2. Handle Game Wallet Tokens (Tickets, Coins, Keys)
-    try:
-        # Check if it's a valid GameTokenType
-        if clean_item_type in GameTokenType.__members__:
-            token_enum = GameTokenType[clean_item_type]
-            
-            from app.services.game_wallet_service import GameWalletService
-            wallet_service = GameWalletService()
-            
-            if delta > 0:
-                wallet_service.grant_tokens(
-                    db, user_id, token_enum, delta, reason=reason, related_id=related_id
-                )
-            else:
-                current_bal = wallet_service.get_balance(db, user_id, token_enum)
-                if current_bal < abs(delta):
-                     raise HTTPException(status_code=400, detail="INSUFFICIENT_WALLET_BALANCE")
-                wallet_service.consume_tokens(
-                     db, user_id, token_enum, abs(delta), reason=reason, related_id=related_id
-                )
-            
-            AdminAuditService.log(
-                db,
-                admin_id,
-                "WALLET_ADJUST",
-                "USER",
-                str(user_id),
-                before=None,
-                after={"token": clean_item_type, "delta": delta, "reason": reason}
-            )
-            return {"success": True, "type": "WALLET", "token": clean_item_type, "delta": delta}
-            
-    except KeyError:
-        pass # Not a wallet token, proceed to inventory
+    # 2. Block GameWallet tokens here (handled in wallet adjust)
+    if clean_item_type in GameTokenType.__members__:
+        raise HTTPException(status_code=400, detail="INVALID_INVENTORY_ITEM")
+
+    allowed_inventory_types = {
+        "CHICKEN_GIFTICON_5000",
+        "CHICKEN_GIFTICON_10000",
+        "STARBUCKS_GIFTICON_2000",
+        "STARBUCKS_GIFTICON_10000",
+        "PIZZA_GIFTICON_5000",
+        "PIZZA_GIFTICON_10000",
+        "GOOGLE_GIFTICON_5000",
+        "GOOGLE_GIFTICON_10000",
+    }
+    if clean_item_type not in allowed_inventory_types:
+        raise HTTPException(status_code=400, detail="INVALID_INVENTORY_ITEM")
 
     # 3. Handle Regular Inventory Items (Gifticons, etc.)
     before_item = db.query(UserInventoryItem).filter(

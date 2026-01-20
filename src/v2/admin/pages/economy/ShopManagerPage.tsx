@@ -8,6 +8,22 @@ import {
   CardDescription,
 } from "../../../components/ui/card";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../../../components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../../components/ui/select";
+import { Label } from "../../../components/ui/label";
+import {
   useAdminProducts,
   useAdminUpdateProductPrice,
   useAdminUpdateProductStatus,
@@ -15,12 +31,14 @@ import {
   useSyncAdminProducts,
   useUpdateExchangeRate,
 } from "../../../hooks/useV2Admin";
+import { useAdminDeleteProduct, useAdminCreateProduct, useAdminUpdateProduct } from "../../../hooks/useAdminShop";
 import { Skeleton } from "../../../components/ui/skeleton";
 import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
-import { RefreshCw, ArrowRightLeft } from "lucide-react";
+import { RefreshCw, ArrowRightLeft, Trash2, Plus, Edit } from "lucide-react";
 import type { AdminProductDto, ExchangeRateDto } from "../../../api/adminApi";
-import React from "react";
+import { SOT_REWARD_TYPES } from "../../../constants/rewardTypes";
+import { useState } from "react";
 
 export default function ShopManagerPage() {
   const { data: products = [], isLoading: isProductsLoading } =
@@ -31,6 +49,23 @@ export default function ShopManagerPage() {
   const priceMutation = useAdminUpdateProductPrice();
   const syncMutation = useSyncAdminProducts();
   const rateMutation = useUpdateExchangeRate();
+  const deleteMutation = useAdminDeleteProduct();
+  const createMutation = useAdminCreateProduct();
+  const updateMutation = useAdminUpdateProduct();
+
+  // Dialog state
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<AdminProductDto | null>(null);
+  const [formData, setFormData] = useState({
+    sku: "",
+    name: "",
+    cost_type: "VAULT",
+    cost_amount: 100,
+    reward_type: "ROULETTE_TICKET",
+    reward_amount: 1,
+    is_visible: true,
+  });
 
   const handleStatusChange = (id: number, checked: boolean) => {
     statusMutation.mutate({ id, isVisible: checked });
@@ -48,6 +83,66 @@ export default function ShopManagerPage() {
     if (!isNaN(numRate)) {
       rateMutation.mutate({ id, rate: numRate });
     }
+  };
+
+  const handleDelete = (productId: number, productName: string) => {
+    if (confirm(`"${productName}" 상품을 삭제하시겠습니까?`)) {
+      deleteMutation.mutate(productId);
+    }
+  };
+
+  const handleCreate = () => {
+    createMutation.mutate(formData, {
+      onSuccess: () => {
+        setIsCreateOpen(false);
+        setFormData({
+          sku: "",
+          name: "",
+          cost_type: "VAULT",
+          cost_amount: 100,
+          reward_type: "ROULETTE_TICKET",
+          reward_amount: 1,
+          is_visible: true,
+        });
+      },
+    });
+  };
+
+  const handleEditClick = (product: AdminProductDto) => {
+    setEditingProduct(product);
+    setFormData({
+      sku: product.sku,
+      name: product.name,
+      cost_type: product.costType,
+      cost_amount: product.costAmount,
+      reward_type: product.rewardType,
+      reward_amount: product.rewardAmount,
+      is_visible: product.isVisible,
+    });
+    setIsEditOpen(true);
+  };
+
+  const handleUpdate = () => {
+    if (!editingProduct) return;
+    updateMutation.mutate(
+      {
+        productId: editingProduct.id,
+        data: {
+          name: formData.name,
+          cost_type: formData.cost_type,
+          cost_amount: formData.cost_amount,
+          reward_type: formData.reward_type,
+          reward_amount: formData.reward_amount,
+          is_visible: formData.is_visible,
+        },
+      },
+      {
+        onSuccess: () => {
+          setIsEditOpen(false);
+          setEditingProduct(null);
+        },
+      }
+    );
   };
 
   if (isProductsLoading || isRatesLoading) {
@@ -175,29 +270,273 @@ export default function ShopManagerPage() {
                 <div className="text-2xl font-bold text-white mb-4">
                   ₩ {(product.price || 0).toLocaleString()}
                 </div>
-                <div className="relative">
-                  <span className="absolute left-3 top-2.5 text-zinc-500 text-sm">
-                    ₩
-                  </span>
-                  <Input
-                    className="bg-black/50 border-white/10 pl-8"
-                    defaultValue={product.price}
-                    onBlur={(e: React.FocusEvent<HTMLInputElement>) =>
-                      handlePriceChange(product.id, e.target.value)
-                    }
-                  />
+                <div className="flex gap-2 items-center">
+                  <div className="relative flex-1">
+                    <span className="absolute left-3 top-2.5 text-zinc-500 text-sm">
+                      ₩
+                    </span>
+                    <Input
+                      className="bg-black/50 border-white/10 pl-8"
+                      defaultValue={product.price}
+                      onChange={(e) =>
+                        handlePriceChange(product.id, e.target.value)
+                      }
+                    />
+                  </div>
+                  <div className="flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-blue-400 hover:text-blue-300 hover:bg-blue-950/30"
+                      onClick={() => handleEditClick(product)}
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-red-400 hover:text-red-300 hover:bg-red-950/30"
+                      onClick={() => handleDelete(product.id, product.name)}
+                      disabled={deleteMutation.isPending}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
           ))}
-          {/* Add New Placeholder */}
-          <Card className="bg-[#18181B]/50 border-dashed border-white/10 flex items-center justify-center cursor-pointer hover:bg-white/5 hover:border-white/20 h-[190px]">
-            <div className="text-zinc-500 text-sm font-medium">
-              + New Product
+          {/* Create Product Button */}
+          <Card
+            className="bg-[#18181B]/50 border-dashed border-white/10 flex items-center justify-center cursor-pointer hover:bg-white/5 hover:border-white/20 h-[190px]"
+            onClick={() => setIsCreateOpen(true)}
+          >
+            <div className="flex flex-col items-center gap-2 text-zinc-500">
+              <Plus className="w-8 h-8" />
+              <span className="text-sm font-medium">New Product</span>
             </div>
           </Card>
         </div>
       </section>
+
+      {/* Create Product Dialog */}
+      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+        <DialogContent className="bg-zinc-900 border-white/10 text-white max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>새 상품 생성</DialogTitle>
+            <DialogDescription className="text-zinc-400">
+              20개 SoT 재화를 활용한 교환 상품을 추가합니다.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="sku">SKU *</Label>
+                <Input
+                  id="sku"
+                  value={formData.sku}
+                  onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
+                  className="bg-black/50 border-white/10"
+                  placeholder="PRODUCT_001"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="name">상품명 *</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="bg-black/50 border-white/10"
+                  placeholder="특별 상품"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>결제 재화 (Cost Type) *</Label>
+                <Select
+                  value={formData.cost_type}
+                  onValueChange={(value) => setFormData({ ...formData, cost_type: value })}
+                >
+                  <SelectTrigger className="bg-black/50 border-white/10">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-zinc-900 border-white/10">
+                    {SOT_REWARD_TYPES.map((type) => (
+                      <SelectItem key={type.value} value={type.value}>
+                        {type.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="cost_amount">결제 수량 *</Label>
+                <Input
+                  id="cost_amount"
+                  type="number"
+                  value={formData.cost_amount}
+                  onChange={(e) =>
+                    setFormData({ ...formData, cost_amount: parseInt(e.target.value) || 0 })
+                  }
+                  className="bg-black/50 border-white/10"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>획득 재화 (Reward Type) *</Label>
+                <Select
+                  value={formData.reward_type}
+                  onValueChange={(value) => setFormData({ ...formData, reward_type: value })}
+                >
+                  <SelectTrigger className="bg-black/50 border-white/10">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-zinc-900 border-white/10">
+                    {SOT_REWARD_TYPES.map((type) => (
+                      <SelectItem key={type.value} value={type.value}>
+                        {type.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="reward_amount">획득 수량 *</Label>
+                <Input
+                  id="reward_amount"
+                  type="number"
+                  value={formData.reward_amount}
+                  onChange={(e) =>
+                    setFormData({ ...formData, reward_amount: parseInt(e.target.value) || 0 })
+                  }
+                  className="bg-black/50 border-white/10"
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsCreateOpen(false)}
+              className="border-white/10 hover:bg-white/5"
+            >
+              취소
+            </Button>
+            <Button
+              onClick={handleCreate}
+              disabled={createMutation.isPending || !formData.sku || !formData.name}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              생성
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Product Dialog */}
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent className="bg-zinc-900 border-white/10 text-white max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>상품 수정</DialogTitle>
+            <DialogDescription className="text-zinc-400">
+              SKU: {editingProduct?.sku}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit_name">상품명 *</Label>
+              <Input
+                id="edit_name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="bg-black/50 border-white/10"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>결제 재화 (Cost Type) *</Label>
+                <Select
+                  value={formData.cost_type}
+                  onValueChange={(value) => setFormData({ ...formData, cost_type: value })}
+                >
+                  <SelectTrigger className="bg-black/50 border-white/10">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-zinc-900 border-white/10">
+                    {SOT_REWARD_TYPES.map((type) => (
+                      <SelectItem key={type.value} value={type.value}>
+                        {type.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit_cost_amount">결제 수량 *</Label>
+                <Input
+                  id="edit_cost_amount"
+                  type="number"
+                  value={formData.cost_amount}
+                  onChange={(e) =>
+                    setFormData({ ...formData, cost_amount: parseInt(e.target.value) || 0 })
+                  }
+                  className="bg-black/50 border-white/10"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>획득 재화 (Reward Type) *</Label>
+                <Select
+                  value={formData.reward_type}
+                  onValueChange={(value) => setFormData({ ...formData, reward_type: value })}
+                >
+                  <SelectTrigger className="bg-black/50 border-white/10">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-zinc-900 border-white/10">
+                    {SOT_REWARD_TYPES.map((type) => (
+                      <SelectItem key={type.value} value={type.value}>
+                        {type.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit_reward_amount">획득 수량 *</Label>
+                <Input
+                  id="edit_reward_amount"
+                  type="number"
+                  value={formData.reward_amount}
+                  onChange={(e) =>
+                    setFormData({ ...formData, reward_amount: parseInt(e.target.value) || 0 })
+                  }
+                  className="bg-black/50 border-white/10"
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsEditOpen(false)}
+              className="border-white/10 hover:bg-white/5"
+            >
+              취소
+            </Button>
+            <Button
+              onClick={handleUpdate}
+              disabled={updateMutation.isPending || !formData.name}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              저장
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -62,7 +62,11 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { cn } from "../../../lib/utils";
-import { REWARD_ITEMS } from "../../../constants/rewardItems";
+import {
+  getWalletRewardItems,
+  getInventoryRewardItems,
+  getRewardItemLabel,
+} from "../../../constants/rewardItems";
 
 export default function TicketInventoryPage() {
   const [searchUserId, setSearchUserId] = useState<number | undefined>(
@@ -83,7 +87,23 @@ export default function TicketInventoryPage() {
   const [targetUserId, setTargetUserId] = useState("");
   const [targetUserNickname, setTargetUserNickname] = useState("");
   const [isSearchingUser, setIsSearchingUser] = useState(false);
-  const [itemType, setItemType] = useState("TICKET");
+  const walletItems = useMemo(() => getWalletRewardItems(), []);
+  const inventoryItems = useMemo(() => getInventoryRewardItems(), []);
+  const walletItemValues = useMemo(
+    () => new Set(walletItems.map((item) => item.value)),
+    [walletItems],
+  );
+  const inventoryItemValues = useMemo(
+    () => new Set(inventoryItems.map((item) => item.value)),
+    [inventoryItems],
+  );
+  const combinedItems = useMemo(
+    () => [...walletItems, ...inventoryItems],
+    [walletItems, inventoryItems],
+  );
+  const defaultItemType = combinedItems[0]?.value || "ROULETTE_TICKET";
+
+  const [itemType, setItemType] = useState(defaultItemType);
   const [amount, setAmount] = useState("1");
   const [reason, setReason] = useState("이벤트 보상");
   const [expiresAt, setExpiresAt] = useState("");
@@ -111,16 +131,13 @@ export default function TicketInventoryPage() {
     const totalIssued = logs.filter((l) => l.type === "GRANT").length;
     const totalUsed = logs.filter((l) => l.type === "USE").length;
     return {
-      totalTickets: logs.filter(
-        (l) => l.itemType === "TICKET" || l.itemType === "POINT",
-      ).length,
-      totalItems: logs.filter(
-        (l) => l.itemType !== "TICKET" && l.itemType !== "POINT",
-      ).length,
+      totalTickets: logs.filter((l) => walletItemValues.has(l.itemType)).length,
+      totalItems: logs.filter((l) => inventoryItemValues.has(l.itemType))
+        .length,
       totalIssued,
       totalUsed,
     };
-  }, [logs]);
+  }, [logs, walletItemValues, inventoryItemValues]);
 
   const handleUserSearch = async (val: string) => {
     setInputValue(val);
@@ -188,7 +205,7 @@ export default function TicketInventoryPage() {
     const amt = parseInt(amount);
     if (isNaN(uid) || isNaN(amt)) return;
 
-    const isTicket = itemType === "TICKET" || itemType === "POINT";
+    const isTicket = walletItemValues.has(itemType);
 
     if (isTicket) {
       createTicketMutation.mutate(
@@ -232,8 +249,7 @@ export default function TicketInventoryPage() {
     const amt = parseInt(amount);
     if (isNaN(amt)) return;
 
-    const isTicket =
-      selectedLog.itemType === "TICKET" || selectedLog.itemType === "POINT";
+    const isTicket = walletItemValues.has(selectedLog.itemType);
 
     if (isTicket) {
       updateTicketMutation.mutate(
@@ -269,8 +285,7 @@ export default function TicketInventoryPage() {
   const handleDelete = () => {
     if (!selectedLog) return;
 
-    const isTicket =
-      selectedLog.itemType === "TICKET" || selectedLog.itemType === "POINT";
+    const isTicket = walletItemValues.has(selectedLog.itemType);
 
     if (isTicket) {
       deleteTicketMutation.mutate(selectedLog.id, {
@@ -294,7 +309,7 @@ export default function TicketInventoryPage() {
   const resetForm = () => {
     setTargetUserId("");
     setTargetUserNickname("");
-    setItemType("TICKET");
+    setItemType(defaultItemType);
     setAmount("1");
     setReason("이벤트 보상");
     setExpiresAt("");
@@ -584,8 +599,12 @@ export default function TicketInventoryPage() {
                     </TableCell>
                     <TableCell className="font-mono text-zinc-300">
                       <div className="flex flex-col">
-                        <span className="text-white font-bold">{log.nickname || "-"}</span>
-                        <span className="text-[10px] text-zinc-500">#{log.userId}</span>
+                        <span className="text-white font-bold">
+                          {log.nickname || "-"}
+                        </span>
+                        <span className="text-[10px] text-zinc-500">
+                          #{log.userId}
+                        </span>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -714,9 +733,9 @@ export default function TicketInventoryPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-[#18181B] border-white/10 text-white max-h-[300px]">
-                    {REWARD_ITEMS.map((item) => (
+                    {combinedItems.map((item) => (
                       <SelectItem key={item.value} value={item.value}>
-                        {item.label}
+                        {getRewardItemLabel(item.value)}
                       </SelectItem>
                     ))}
                   </SelectContent>

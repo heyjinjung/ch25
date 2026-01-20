@@ -5,7 +5,7 @@ V2 Dice Admin Integration Test (정책/스키마/서비스 기반)
  - 승률/보상/금고 라우팅 SoT 검증
 """
 import pytest
-from datetime import datetime
+from datetime import datetime, date
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.pool import StaticPool
@@ -14,6 +14,8 @@ from app.db.base_class import Base
 from app.models.user import User
 from app.models.dice import DiceConfig, DiceLog
 from app.models.game_wallet import UserGameWallet, GameTokenType
+from app.models.feature import FeatureConfig, FeatureSchedule, FeatureType
+from app.models.user_segment import UserSegment
 from app.services.dice_service import DiceService
 
 
@@ -226,7 +228,7 @@ def test_win_rate_statistical_verification(db_session, test_user, dice_config):
     # 티켓 추가 지급
     wallet = db_session.query(UserGameWallet).filter(
         UserGameWallet.user_id == 100,
-        UserGameWallet.token_type == GameTokenType.DICE_TOKEN
+        UserGameWallet.token_type == GameTokenType.DICE_TICKET
     ).first()
     wallet.balance = n_trials
     db_session.commit()

@@ -58,7 +58,10 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { cn } from "../../../lib/utils";
-import { REWARD_ITEMS } from "../../../constants/rewardItems";
+import {
+  getInventoryRewardItems,
+  getRewardItemLabel,
+} from "../../../constants/rewardItems";
 
 export default function InventoryManagementTab() {
   const [searchUserId, setSearchUserId] = useState<number | undefined>(
@@ -79,7 +82,7 @@ export default function InventoryManagementTab() {
   const [targetUserId, setTargetUserId] = useState("");
   const [targetUserNickname, setTargetUserNickname] = useState("");
   const [isSearchingUser, setIsSearchingUser] = useState(false);
-  const [itemType, setItemType] = useState("BUNDLE");
+  const [itemType, setItemType] = useState("CHICKEN_GIFTICON_5000");
   const [amount, setAmount] = useState("1");
   const [reason, setReason] = useState("이벤트 보상");
   const [expiresAt, setExpiresAt] = useState("");
@@ -98,25 +101,24 @@ export default function InventoryManagementTab() {
   const updateInventoryItemMutation = useUpdateInventoryItem();
   const deleteInventoryItemMutation = useDeleteInventoryItem();
 
-  // Filter logs to show only inventory items (not TICKET or POINT)
-  const inventoryLogs = useMemo(() => {
-    return logs.filter(
-      (log) => log.itemType !== "TICKET" && log.itemType !== "POINT"
-    );
-  }, [logs]);
+  const inventoryItems = useMemo(() => getInventoryRewardItems(), []);
+  const inventoryItemValues = useMemo(
+    () => new Set(inventoryItems.map((item) => item.value)),
+    [inventoryItems],
+  );
 
-  // Filter REWARD_ITEMS to exclude TICKET and POINT
-  const inventoryItems = useMemo(() => {
-    return REWARD_ITEMS.filter(
-      (item) => item.value !== "TICKET" && item.value !== "POINT"
-    );
-  }, []);
+  // Filter logs to show only inventory items
+  const inventoryLogs = useMemo(() => {
+    return logs.filter((log) => inventoryItemValues.has(log.itemType));
+  }, [logs, inventoryItemValues]);
 
   // Stats based on filtered inventory logs
   const stats = useMemo(() => {
     const totalIssued = inventoryLogs.filter((l) => l.type === "GRANT").length;
     const totalUsed = inventoryLogs.filter((l) => l.type === "USE").length;
-    const totalRevoked = inventoryLogs.filter((l) => l.type === "REVOKE").length;
+    const totalRevoked = inventoryLogs.filter(
+      (l) => l.type === "REVOKE",
+    ).length;
     return {
       totalCount: inventoryLogs.length,
       totalIssued,
@@ -189,7 +191,10 @@ export default function InventoryManagementTab() {
   const handleCreate = () => {
     const uid = parseInt(targetUserId);
     const amt = parseInt(amount);
-    if (isNaN(uid) || isNaN(amt)) return;
+    if (isNaN(uid) || isNaN(amt)) {
+      alert("유저 ID와 수량을 확인해주세요.");
+      return;
+    }
 
     createInventoryItemMutation.mutate(
       {
@@ -245,7 +250,7 @@ export default function InventoryManagementTab() {
   const resetForm = () => {
     setTargetUserId("");
     setTargetUserNickname("");
-    setItemType("BUNDLE");
+    setItemType(inventoryItems[0]?.value || "CHICKEN_GIFTICON_5000");
     setAmount("1");
     setReason("이벤트 보상");
     setExpiresAt("");
@@ -437,7 +442,7 @@ export default function InventoryManagementTab() {
             <TableHeader className="bg-black/20">
               <TableRow className="border-white/5 hover:bg-transparent">
                 <TableHead className="w-[180px]">시간</TableHead>
-                <TableHead>유저 ID</TableHead>
+                <TableHead>유저 닉네임</TableHead>
                 <TableHead>구분</TableHead>
                 <TableHead>아이템</TableHead>
                 <TableHead>수량</TableHead>
@@ -476,8 +481,12 @@ export default function InventoryManagementTab() {
                     </TableCell>
                     <TableCell className="font-mono text-zinc-300">
                       <div className="flex flex-col">
-                        <span className="text-white font-bold">{log.nickname || "-"}</span>
-                        <span className="text-[10px] text-zinc-500">#{log.userId}</span>
+                        <span className="text-white font-bold">
+                          {log.nickname || "-"}
+                        </span>
+                        <span className="text-[10px] text-zinc-500">
+                          #{log.userId}
+                        </span>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -498,7 +507,7 @@ export default function InventoryManagementTab() {
                       </Badge>
                     </TableCell>
                     <TableCell className="font-medium">
-                      {log.itemType}
+                      {getRewardItemLabel(log.itemType)}
                     </TableCell>
                     <TableCell
                       className={cn(
@@ -607,7 +616,7 @@ export default function InventoryManagementTab() {
                   <SelectContent className="bg-[#18181B] border-white/10 text-white max-h-[300px]">
                     {inventoryItems.map((item) => (
                       <SelectItem key={item.value} value={item.value}>
-                        {item.label}
+                        {getRewardItemLabel(item.value)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -674,7 +683,9 @@ export default function InventoryManagementTab() {
             <div className="p-3 bg-black/30 rounded border border-white/10 text-xs">
               <span className="text-zinc-500">
                 ID: #{selectedLog?.id} | User: {selectedLog?.userId} | Type:{" "}
-                {selectedLog?.itemType}
+                {selectedLog?.itemType
+                  ? getRewardItemLabel(selectedLog.itemType)
+                  : "-"}
               </span>
             </div>
             <div className="space-y-2">
@@ -734,8 +745,11 @@ export default function InventoryManagementTab() {
             <div className="text-sm p-3 bg-red-500/5 rounded border border-red-500/10">
               <div className="font-mono text-zinc-400 mb-1">LOG DETAIL</div>
               <div className="font-medium">
-                #{selectedLog?.id} | {selectedLog?.itemType} (
-                {selectedLog?.amount})
+                #{selectedLog?.id} |{" "}
+                {selectedLog?.itemType
+                  ? getRewardItemLabel(selectedLog.itemType)
+                  : "-"}{" "}
+                ({selectedLog?.amount})
               </div>
               <div className="text-xs text-zinc-500 mt-1">
                 {selectedLog?.reason}

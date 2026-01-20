@@ -201,12 +201,17 @@ def get_vault_user_ledger(
         for entry in entries
     ]
 
+    current_balance = int(user.vault_available_balance or 0) + int(
+        user.vault_locked_balance or 0
+    )
+
     return VaultLedgerResponseDto(
         user_id=user.id,
         nickname=user.nickname or "(미설정)",
         total_in=int(total_in),
         total_out=int(total_out),
         net_change=int(total_in + total_out),
+        current_balance=current_balance,
         items=items,
     )
 

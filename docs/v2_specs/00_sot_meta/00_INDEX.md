@@ -27,6 +27,7 @@
 - Auth/User API 계약: docs/v2_specs/03_api/v2_auth_user_api_contract_ko.md
 - Mission/Streak API 계약: docs/v2_specs/03_api/v2_mission_streak_api_contract_ko.md
 - Inventory/Shop API 계약: docs/v2_specs/03_api/v2_inventory_shop_api_contract_ko.md
+- **지갑/금고/인벤 로그 라우터 요약**: docs/v2_specs/03_api/v2_economy_asset_log_routes_ko_v1.0.md
 - Team Battle API 계약: docs/v2_specs/03_api/v2_team_battle_api_contract_ko.md
 - Admin/Ops API 계약: docs/v2_specs/03_api/v2_admin_ops_api_contract_ko.md
 - Golden V2 API 계약: docs/v2_specs/07_golden/v2_golden_api_contract_ko.md

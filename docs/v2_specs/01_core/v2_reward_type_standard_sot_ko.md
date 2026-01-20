@@ -1,6 +1,6 @@
 문서 타입: SoT
-버전: v1.0
-작성일: 2026-01-19
+버전: v1.1
+작성일: 2026-01-21
 작성자: GitHub Copilot
 대상: BE/FE/기획
 상태: SoT
@@ -23,13 +23,13 @@ V2 RewardType의 표준 집합과 처리 규칙을 확정한다.
 | POINT | 금고포인트 지급 |
 | CC_POINT | 외부 포인트 계열(금고포인트로 적립) |
 | GAME_XP | 레벨포인트 지급 |
-| DIAMOND | 인벤토리 다이아 지급 |
+| DIAMOND | 다이아몬드 지급 (지갑) |
 | TICKET | 만능티켓 지급 |
 | BUNDLE | 복합 지급(금고포인트 + 인벤토리) |
 | TICKET_BUNDLE | 티켓 묶음 지급 |
 | NONE | 무지급(no-op) |
 
-SoT 기준 표준 보상 아이템 (10개 카테고리)
+SoT 기준 표준 보상 아이템 (공통 지급 목록, 금고는 별도 관리)
 1. 게임 티켓 (Game Wallet - Fungible Tokens)
 Value	Label	저장소
 ROULETTE_TICKET	룰렛 티켓 (금파)	
@@ -104,7 +104,7 @@ UserInventoryItem
 GOOGLE_GIFTICON_10000	구글 기프티콘 1만원	
 UserInventoryItem
 근거: 
-v2 _gifticon_naming_sot_ko.md
+v2_gifticon_naming_sot_ko.md
  5절
 
 7. 특수 (No-Op)
@@ -113,9 +113,6 @@ NONE	없음 (보상 없음)	N/A
 근거: 
 v2_reward_type_standard_sot_ko.md
  4절
-
-20260120
-
 
 ## 5. 지급 경로 기준
 - 지급 경로의 단일 기준은 보상 매핑표를 따른다.
@@ -132,5 +129,5 @@ v2_reward_type_standard_sot_ko.md
 - [ ] 보상 매핑표와 지급 경로 일치 확인
 
 ## 8. 변경 이력
+- v1.1 (2026-01-21, GitHub Copilot): DIAMOND 지급 경로 및 공통 지급 목록 주석 정리.
 - v1.0 (2026-01-19, GitHub Copilot): 최초 작성
-- v1.1 (2026-01-20, GitHub Copilot): CC 입금 용어 SoT 링크 및 어드민 라우터 모듈화/레거시 제거 규칙 추가

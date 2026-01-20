@@ -61,6 +61,7 @@ import {
   SelectValue,
 } from "../../../components/ui/select";
 import { cn } from "../../../lib/utils";
+import { getRewardItemLabel } from "../../../constants/rewardItems";
 import type {
   AdminWithdrawalDto,
   UserVaultDto,
@@ -214,6 +215,15 @@ export default function VaultControlPage() {
 
     return 0;
   });
+
+  const normalizeVaultRefType = (value?: string | null) => {
+    if (!value) return "-";
+    const raw = value.toUpperCase();
+    if (raw === "POINT" || raw === "CC_POINT" || raw === "VAULT") {
+      return getRewardItemLabel("VAULT");
+    }
+    return getRewardItemLabel(raw);
+  };
 
   return (
     <div className="space-y-6 h-full p-6">
@@ -804,11 +814,11 @@ export default function VaultControlPage() {
                 <Card className="bg-zinc-900/60 border-zinc-800">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-xs text-zinc-400">
-                      순변동
+                      현재 잔액(유저)
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="text-indigo-300 font-bold text-lg">
-                    ₩{vaultLedger.net_change.toLocaleString()}
+                    ₩{vaultLedger.current_balance.toLocaleString()}
                   </CardContent>
                 </Card>
               </div>
@@ -851,7 +861,7 @@ export default function VaultControlPage() {
                             {item.reason || "-"}
                           </TableCell>
                           <TableCell className="text-zinc-500 text-xs">
-                            {item.ref_type || "-"}
+                            {normalizeVaultRefType(item.ref_type)}
                           </TableCell>
                           <TableCell
                             className={cn(
