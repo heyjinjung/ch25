@@ -231,6 +231,12 @@ graph TD
     - [x] **Vault**: `POST /admin/vault/force-edit` 호출 시 잔액 강제 조정 및 Audit Log 기록 확인.
     - [x] **Inventory Manager (Regression)**: 인벤토리 관리 탭 Quick Action(지급/회수) 및 수량 차감 원자성 검증.
 
+- [x] **4-8. Phase4 Admin 회귀 스위트 실행 증빙**
+    - **목적**: Admin 주요 라우트/스키마/권한 회귀 확인(금고/미션/회원관리 포함)
+    - **실행일**: 2026-01-21
+    - **커맨드**: `docker compose exec backend pytest -q tests/v2_tests/phase4_admin`
+    - **결과**: `32 passed` (warnings 존재)
+
 ### Phase 5: 통합 시나리오 (E2E Scenarios)
 > **목표**: "실제 유저처럼 행동했을 때 문제가 없는가?"
 
@@ -257,6 +263,15 @@ graph TD
 ---
 
 ## 3. 실행 가이드
+
+### 3.1 최소 회귀(추천)
+- V2 Admin 핵심 회귀(Phase 4): `docker compose exec backend pytest -q tests/v2_tests/phase4_admin`
+
+### 3.2 빠른 사전 점검
+- 파이썬 컴파일(임포트/문법): `docker compose exec backend python -m compileall -q app`
+
+### 3.3 결과 기록 규칙
+- 최소한 다음 4가지는 문서에 남긴다: `실행일`, `커맨드`, `결과(pass/fail)`, `핵심 경고/특이사항(있으면 1줄)`
 
 각 단계 수행 시 반드시 **"실패 시 즉시 중단 및 수정 후 재시도"** 원칙을 따른다.
 테스트 코드는 `tests/v2_tests/` 하위에 각 Phase 별로 디렉토리를 나누어 관리한다.

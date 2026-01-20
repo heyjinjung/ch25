@@ -3,7 +3,7 @@ from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import func
+from sqlalchemy import func, case
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_admin_info, get_db
@@ -19,7 +19,22 @@ from app.v2.schemas.v2_admin_economy import (
     AdminProductDto,
     AdminWithdrawalDto,
     AdminWithdrawalRejectRequest,
+    TicketStatDto,
+    UserTicketDto,
+    InventoryStatDto,
+    UserInventoryItemDto,
+    TicketCreateRequest,
+    TicketUpdateRequest,
+    InventoryItemCreateRequest,
+    InventoryItemUpdateRequest,
+    TicketLogDto,
 )
+from app.models.game_wallet import UserGameWallet, GameTokenType
+from app.models.game_wallet_ledger import UserGameWalletLedger
+from app.models.inventory import UserInventoryItem, UserInventoryLedger
+from app.services.game_wallet_service import GameWalletService
+from app.services.inventory_service import InventoryService
+from sqlalchemy import desc, text
 
 router = APIRouter()
 
@@ -642,3 +657,312 @@ def reject_withdrawal(
     
     db.commit()
     return {"success": True, "id": withdrawal_id}
+
+
+# ============================================================================
+# Ticket Controls (GameWallet)
+# ============================================================================
+
+@router.get("/inventory/tickets/stats", response_model=List[TicketStatDto])
+def get_ticket_stats(db: Session = Depends(get_db)):
+    stats = db.query(
+        UserGameWallet.token_type,
+        func.sum(UserGameWallet.balance).label("current_balance")
+    ).group_by(UserGameWallet.token_type).all()
+    
+    # Ledger stats
+    ledger_stats = db.query(
+        UserGameWalletLedger.token_type,
+        func.sum(case((UserGameWalletLedger.delta > 0, UserGameWalletLedger.delta), else_=0)).label("total_issued"),
+        func.sum(case((UserGameWalletLedger.delta < 0, func.abs(UserGameWalletLedger.delta)), else_=0)).label("total_used")
+    ).group_by(UserGameWalletLedger.token_type).all()
+    
+    ledger_map = {s.token_type: s for s in ledger_stats}
+    
+    result = []
+    # Use known types or DB results. Using DB results for dynamic support.
+    for s in stats:
+        l_stat = ledger_map.get(s.token_type)
+        total_issued = int(l_stat.total_issued) if l_stat and l_stat.total_issued else 0
+        total_used = int(l_stat.total_used) if l_stat and l_stat.total_used else 0
+        
+        result.append(TicketStatDto(
+            ticketType=s.token_type.value,
+            currentBalance=int(s.current_balance or 0),
+            totalIssued=total_issued,
+            totalUsed=total_used
+        ))
+        
+    return result
+
+@router.get("/inventory/tickets/users", response_model=List[UserTicketDto])
+def get_user_tickets(search: str | None = None, db: Session = Depends(get_db)):
+    query = db.query(UserGameWallet).join(User)
+    
+    if search:
+        if search.isdigit():
+            query = query.filter(User.id == int(search))
+        else:
+            query = query.filter(
+                (User.nickname.ilike(f"%{search}%")) | 
+                (User.telegram_username.ilike(f"%{search}%"))
+            )
+            
+    wallets = query.limit(100).all()
+    
+    result = []
+    for w in wallets:
+        usage = db.query(
+            func.sum(func.abs(UserGameWalletLedger.delta)).label("total_used"),
+            func.max(UserGameWalletLedger.created_at).label("last_used_at")
+        ).filter(
+            UserGameWalletLedger.user_id == w.user_id,
+            UserGameWalletLedger.token_type == w.token_type,
+            UserGameWalletLedger.delta < 0
+        ).first()
+        
+        result.append(UserTicketDto(
+            userId=w.user_id,
+            nickname=w.user.nickname or "Unknown",
+            telegramUsername=w.user.telegram_username,
+            ticketType=w.token_type.value,
+            currentBalance=w.balance,
+            totalUsed=int(usage.total_used or 0) if usage else 0,
+            lastUsedAt=usage.last_used_at if usage else None
+        ))
+        
+    return result
+
+@router.post("/inventory/tickets")
+def create_ticket(
+    payload: TicketCreateRequest, 
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info)
+):
+    admin_id, _ = admin_info
+    service = GameWalletService()
+    
+    try:
+        from app.models.game_wallet import GameTokenType
+        token_enum = GameTokenType(payload.ticket_type)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="INVALID_TICKET_TYPE")
+        
+    service.grant_tokens(
+        db, 
+        user_id=payload.user_id, 
+        token_type=token_enum, 
+        amount=payload.amount, 
+        reason=payload.reason,
+        label=f"ADMIN:{admin_id}"
+    )
+    return {"success": True}
+
+@router.put("/inventory/tickets/{id}")
+def update_ticket(
+    id: int, 
+    payload: TicketUpdateRequest, 
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info)
+):
+    ledger = db.query(UserGameWalletLedger).filter(UserGameWalletLedger.id == id).first()
+    if not ledger:
+        raise HTTPException(status_code=404, detail="LOG_NOT_FOUND")
+        
+    if payload.reason:
+        ledger.reason = payload.reason
+    if payload.amount is not None:
+        ledger.delta = payload.amount
+        
+    db.commit()
+    return {"success": True}
+    
+@router.delete("/inventory/tickets/{id}")
+def delete_ticket(id: int, db: Session = Depends(get_db), admin_info: tuple[int, str] = Depends(get_current_admin_info)):
+    ledger = db.query(UserGameWalletLedger).filter(UserGameWalletLedger.id == id).first()
+    if not ledger:
+        raise HTTPException(status_code=404, detail="LOG_NOT_FOUND")
+    db.delete(ledger)
+    db.commit()
+    return {"success": True}
+
+
+# ============================================================================
+# Item Controls (Inventory)
+# ============================================================================
+
+@router.get("/inventory/items/stats", response_model=List[InventoryStatDto])
+def get_inventory_stats(db: Session = Depends(get_db)):
+    stats = db.query(
+        UserInventoryItem.item_type,
+        func.sum(UserInventoryItem.quantity).label("current_balance")
+    ).group_by(UserInventoryItem.item_type).all()
+    
+    ledger_stats = db.query(
+        UserInventoryLedger.item_type,
+        func.sum(case((UserInventoryLedger.change_amount > 0, UserInventoryLedger.change_amount), else_=0)).label("total_issued"),
+        func.sum(case((UserInventoryLedger.change_amount < 0, func.abs(UserInventoryLedger.change_amount)), else_=0)).label("total_used")
+    ).group_by(UserInventoryLedger.item_type).all()
+    
+    ledger_map = {s.item_type: s for s in ledger_stats}
+    
+    result = []
+    for s in stats:
+        l_stat = ledger_map.get(s.item_type)
+        total_issued = int(l_stat.total_issued) if l_stat and l_stat.total_issued else 0
+        total_used = int(l_stat.total_used) if l_stat and l_stat.total_used else 0
+        
+        result.append(InventoryStatDto(
+            itemType=s.item_type,
+            currentBalance=int(s.current_balance or 0),
+            totalIssued=total_issued,
+            totalUsed=total_used
+        ))
+    return result
+
+@router.get("/inventory/items/users", response_model=List[UserInventoryItemDto])
+def get_user_inventory_list(search: str | None = None, db: Session = Depends(get_db)):
+    query = db.query(UserInventoryItem).join(User)
+    
+    if search:
+        if search.isdigit():
+            query = query.filter(User.id == int(search))
+        else:
+            query = query.filter(
+                (User.nickname.ilike(f"%{search}%")) | 
+                (User.telegram_username.ilike(f"%{search}%"))
+            )
+            
+    items = query.limit(100).all()
+    
+    result = []
+    for item in items:
+        usage = db.query(
+            func.sum(func.abs(UserInventoryLedger.change_amount)).label("total_used"),
+            func.max(UserInventoryLedger.created_at).label("last_used_at")
+        ).filter(
+            UserInventoryLedger.user_id == item.user_id,
+            UserInventoryLedger.item_type == item.item_type,
+            UserInventoryLedger.change_amount < 0
+        ).first()
+        
+        result.append(UserInventoryItemDto(
+            userId=item.user_id,
+            nickname=item.user.nickname or "Unknown",
+            telegramUsername=item.user.telegram_username,
+            itemType=item.item_type,
+            currentQuantity=item.quantity,
+            totalUsed=int(usage.total_used or 0) if usage else 0,
+            lastUsedAt=usage.last_used_at if usage else None
+        ))
+    return result
+
+@router.post("/inventory/items")
+def create_inventory_item(
+    payload: InventoryItemCreateRequest, 
+    db: Session = Depends(get_db), 
+    admin_info: tuple[int, str] = Depends(get_current_admin_info)
+):
+    InventoryService.grant_item(
+        db, 
+        user_id=payload.user_id, 
+        item_type=payload.item_type, 
+        amount=payload.quantity, 
+        reason=payload.reason,
+        expires_at=None # Expire logic omitted for now as per schema
+    )
+    return {"success": True}
+
+@router.put("/inventory/items/{id}")
+def update_inventory_item(
+    id: int, 
+    payload: InventoryItemUpdateRequest, 
+    db: Session = Depends(get_db), 
+    admin_info: tuple[int, str] = Depends(get_current_admin_info)
+):
+    ledger = db.query(UserInventoryLedger).filter(UserInventoryLedger.id == id).first()
+    if not ledger:
+        raise HTTPException(status_code=404, detail="LOG_NOT_FOUND")
+    
+    if payload.reason:
+        ledger.reason = payload.reason
+    if payload.quantity is not None:
+        ledger.change_amount = payload.quantity
+        
+    db.commit()
+    return {"success": True}
+
+@router.delete("/inventory/items/{id}")
+def delete_inventory_item(id: int, db: Session = Depends(get_db), admin_info: tuple[int, str] = Depends(get_current_admin_info)):
+    ledger = db.query(UserInventoryLedger).filter(UserInventoryLedger.id == id).first()
+    if not ledger:
+        raise HTTPException(status_code=404, detail="LOG_NOT_FOUND")
+    db.delete(ledger)
+    db.commit()
+    return {"success": True}
+
+
+# ============================================================================
+# Combined Logs
+# ============================================================================
+
+@router.get("/inventory/logs", response_model=List[TicketLogDto])
+def get_ticket_logs(
+    user_id: int | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
+    db: Session = Depends(get_db)
+):
+    # Fetch Wallet Logs
+    w_query = db.query(UserGameWalletLedger)
+    if user_id:
+        w_query = w_query.filter(UserGameWalletLedger.user_id == user_id)
+    if start_date:
+        w_query = w_query.filter(func.date(UserGameWalletLedger.created_at) >= start_date)
+    if end_date:
+        w_query = w_query.filter(func.date(UserGameWalletLedger.created_at) <= end_date)
+    
+    w_logs = w_query.order_by(UserGameWalletLedger.created_at.desc()).limit(100).all()
+    
+    # Fetch Inventory Logs
+    i_query = db.query(UserInventoryLedger)
+    if user_id:
+        i_query = i_query.filter(UserInventoryLedger.user_id == user_id)
+    if start_date:
+        i_query = i_query.filter(func.date(UserInventoryLedger.created_at) >= start_date)
+    if end_date:
+        i_query = i_query.filter(func.date(UserInventoryLedger.created_at) <= end_date)
+        
+    i_logs = i_query.order_by(UserInventoryLedger.created_at.desc()).limit(100).all()
+    
+    # Merge
+    combined = []
+    for l in w_logs:
+        l_type = "GRANT" if l.delta > 0 else "USE"
+        combined.append(TicketLogDto(
+            id=l.id,
+            userId=l.user_id,
+            type=l_type,
+            itemType=l.token_type.value,
+            amount=abs(l.delta),
+            balanceAfter=l.balance_after,
+            reason=l.reason or "",
+            timestamp=l.created_at.isoformat()
+        ))
+        
+    for l in i_logs:
+        l_type = "GRANT" if l.change_amount > 0 else "USE"
+        combined.append(TicketLogDto(
+            id=l.id,
+            userId=l.user_id,
+            type=l_type,
+            itemType=l.item_type,
+            amount=abs(l.change_amount),
+            balanceAfter=l.balance_after,
+            reason=l.reason or "",
+            timestamp=l.created_at.isoformat()
+        ))
+        
+    # Sort desc
+    combined.sort(key=lambda x: x.timestamp, reverse=True)
+    return combined[:100]

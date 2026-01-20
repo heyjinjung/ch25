@@ -58,6 +58,8 @@ export interface AdminLevelDto {
   rewardPoint: number;
 }
 
+
+
 export interface TicketLogDto {
   id: number;
   userId: number;
@@ -799,7 +801,7 @@ export const revokeItem = async (data: GrantItemRequest): Promise<void> => {
 // Ticket & Inventory Statistics API
 // ============================================================================
 
-export interface TicketStatsDto {
+export interface TicketStatDto {
   ticketType: string;
   totalIssued: number;
   totalUsed: number;
@@ -817,7 +819,7 @@ export interface UserTicketDto {
   rewardItems: string[];
 }
 
-export interface InventoryStatsDto {
+export interface InventoryStatDto {
   itemType: string;
   totalIssued: number;
   totalUsed: number;
@@ -836,8 +838,8 @@ export interface UserInventoryDto {
   expiresAt: string | null;
 }
 
-export const getTicketStats = async (): Promise<TicketStatsDto[]> => {
-  const response = await v2Client.get<TicketStatsDto[]>(
+export const getTicketStats = async (): Promise<TicketStatDto[]> => {
+  const response = await v2Client.get<TicketStatDto[]>(
     "/api/v2/admin/inventory/tickets/stats",
   );
   return response.data;
@@ -856,8 +858,8 @@ export const getUserTickets = async (params?: {
   return response.data;
 };
 
-export const getInventoryStats = async (): Promise<InventoryStatsDto[]> => {
-  const response = await v2Client.get<InventoryStatsDto[]>(
+export const getInventoryStats = async (): Promise<InventoryStatDto[]> => {
+  const response = await v2Client.get<InventoryStatDto[]>(
     "/api/v2/admin/inventory/items/stats",
   );
   return response.data;
@@ -1517,3 +1519,5 @@ export const getWithdrawalDetails = async (
   );
   return response.data;
 };
+
+
