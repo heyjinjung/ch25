@@ -1,0 +1,557 @@
+from datetime import datetime
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session, selectinload
+
+from app.api.deps import get_current_admin_info, get_db
+from app.models.dice import DiceConfig
+from app.models.lottery import LotteryConfig, LotteryPrize
+from app.models.roulette import RouletteConfig, RouletteSegment
+from app.services.admin_audit_service import AdminAuditService
+from app.v2.schemas.v2_admin_game import (
+    DiceConfigDto,
+    DiceConfigUpdateRequest,
+    LotteryConfigDto,
+    LotteryConfigUpdateRequest,
+    LotteryPrizeDto,
+    LotteryPrizeUpdateRequest,
+    RouletteConfigDto,
+    RouletteConfigFullUpdateRequest,
+    RouletteSegmentDto,
+)
+
+router = APIRouter()
+
+
+@router.get("/game/roulette/configs", response_model=list[RouletteConfigDto])
+def get_roulette_configs(
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    def _normalize_reward_type(value: str) -> str:
+        allowed = {"POINT", "CREDIT", "TICKET", "NONE"}
+        if value in allowed:
+            return value
+        if value.startswith("TICKET"):
+            return "TICKET"
+        return "NONE"
+
+    configs = (
+        db.query(RouletteConfig)
+        .options(selectinload(RouletteConfig.segments))
+        .order_by(RouletteConfig.grade)
+        .all()
+    )
+
+    result = []
+    for config in configs:
+        segments_dto = [
+            RouletteSegmentDto(
+                id=seg.id,
+                slot_index=seg.slot_index,
+                label=seg.label,
+                weight=seg.weight,
+                reward_type=_normalize_reward_type(str(seg.reward_type)),
+                reward_amount=seg.reward_amount,
+                is_jackpot=seg.is_jackpot,
+            )
+            for seg in sorted(config.segments, key=lambda x: x.slot_index)
+        ]
+
+        result.append(
+            RouletteConfigDto(
+                id=config.id,
+                name=config.name,
+                grade=config.grade,
+                ticket_type=config.ticket_type,
+                max_daily_spins=config.max_daily_spins,
+                is_active=config.is_active,
+                segments=segments_dto,
+                created_at=config.created_at,
+                updated_at=config.updated_at,
+            )
+        )
+
+    return result
+
+
+@router.get("/game/roulette/config/{config_id}", response_model=RouletteConfigDto)
+def get_roulette_config(
+    config_id: int,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    def _normalize_reward_type(value: str) -> str:
+        allowed = {"POINT", "CREDIT", "TICKET", "NONE"}
+        if value in allowed:
+            return value
+        if value.startswith("TICKET"):
+            return "TICKET"
+        return "NONE"
+
+    config = (
+        db.query(RouletteConfig)
+        .options(selectinload(RouletteConfig.segments))
+        .filter(RouletteConfig.id == config_id)
+        .first()
+    )
+
+    if not config:
+        raise HTTPException(status_code=404, detail="ROULETTE_CONFIG_NOT_FOUND")
+
+    segments_dto = [
+        RouletteSegmentDto(
+            id=seg.id,
+            slot_index=seg.slot_index,
+            label=seg.label,
+            weight=seg.weight,
+            reward_type=_normalize_reward_type(str(seg.reward_type)),
+            reward_amount=seg.reward_amount,
+            is_jackpot=seg.is_jackpot,
+        )
+        for seg in sorted(config.segments, key=lambda x: x.slot_index)
+    ]
+
+    return RouletteConfigDto(
+        id=config.id,
+        name=config.name,
+        grade=config.grade,
+        ticket_type=config.ticket_type,
+        max_daily_spins=config.max_daily_spins,
+        is_active=config.is_active,
+        segments=segments_dto,
+        created_at=config.created_at,
+        updated_at=config.updated_at,
+    )
+
+
+@router.put("/game/roulette/config/{config_id}", response_model=RouletteConfigDto)
+def update_roulette_config(
+    config_id: int,
+    payload: RouletteConfigFullUpdateRequest,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    admin_id, admin_role = admin_info
+
+    if admin_role not in ["SUPER_ADMIN", "OPERATOR"]:
+        raise HTTPException(status_code=403, detail="NOT_AUTHORIZED")
+
+    config = (
+        db.query(RouletteConfig)
+        .options(selectinload(RouletteConfig.segments))
+        .filter(RouletteConfig.id == config_id)
+        .first()
+    )
+
+    if not config:
+        raise HTTPException(status_code=404, detail="ROULETTE_CONFIG_NOT_FOUND")
+
+    before_data = {
+        "name": config.name,
+        "ticket_type": config.ticket_type,
+        "max_daily_spins": config.max_daily_spins,
+        "is_active": config.is_active,
+    }
+
+    if payload.name is not None:
+        config.name = payload.name
+    if payload.ticket_type is not None:
+        config.ticket_type = payload.ticket_type
+    if payload.max_daily_spins is not None:
+        config.max_daily_spins = payload.max_daily_spins
+    if payload.is_active is not None:
+        config.is_active = payload.is_active
+
+    if payload.segments is not None:
+        segment_map = {seg.slot_index: seg for seg in config.segments}
+
+        for seg_update in payload.segments:
+            if seg_update.slot_index in segment_map:
+                seg = segment_map[seg_update.slot_index]
+                seg.label = seg_update.label
+                seg.weight = seg_update.weight
+                seg.reward_type = seg_update.reward_type
+                seg.reward_amount = seg_update.reward_amount
+                seg.is_jackpot = seg_update.is_jackpot
+                seg.updated_at = datetime.utcnow()
+            else:
+                new_seg = RouletteSegment(
+                    config_id=config.id,
+                    slot_index=seg_update.slot_index,
+                    label=seg_update.label,
+                    weight=seg_update.weight,
+                    reward_type=seg_update.reward_type,
+                    reward_amount=seg_update.reward_amount,
+                    is_jackpot=seg_update.is_jackpot,
+                )
+                db.add(new_seg)
+
+    config.updated_at = datetime.utcnow()
+
+    after_data = {
+        "name": config.name,
+        "ticket_type": config.ticket_type,
+        "max_daily_spins": config.max_daily_spins,
+        "is_active": config.is_active,
+    }
+    AdminAuditService.log(
+        db,
+        admin_id,
+        "ROULETTE_CONFIG_UPDATE",
+        "GAME_CONFIG",
+        str(config_id),
+        before=before_data,
+        after=after_data,
+    )
+
+    db.commit()
+    db.refresh(config)
+
+    segments_dto = [
+        RouletteSegmentDto(
+            id=seg.id,
+            slot_index=seg.slot_index,
+            label=seg.label,
+            weight=seg.weight,
+            reward_type=seg.reward_type,
+            reward_amount=seg.reward_amount,
+            is_jackpot=seg.is_jackpot,
+        )
+        for seg in sorted(config.segments, key=lambda x: x.slot_index)
+    ]
+
+    return RouletteConfigDto(
+        id=config.id,
+        name=config.name,
+        grade=config.grade,
+        ticket_type=config.ticket_type,
+        max_daily_spins=config.max_daily_spins,
+        is_active=config.is_active,
+        segments=segments_dto,
+        created_at=config.created_at,
+        updated_at=config.updated_at,
+    )
+
+
+@router.get("/game/dice/config", response_model=DiceConfigDto)
+def get_dice_config(
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    config = db.query(DiceConfig).first()
+
+    if not config:
+        raise HTTPException(status_code=404, detail="DICE_CONFIG_NOT_FOUND")
+
+    return DiceConfigDto(
+        id=config.id,
+        name=config.name,
+        is_active=config.is_active,
+        max_daily_plays=config.max_daily_plays,
+        win_reward_type=config.win_reward_type,
+        win_reward_amount=config.win_reward_amount,
+        draw_reward_type=config.draw_reward_type,
+        draw_reward_amount=config.draw_reward_amount,
+        lose_reward_type=config.lose_reward_type,
+        lose_reward_amount=config.lose_reward_amount,
+        created_at=config.created_at,
+        updated_at=config.updated_at,
+    )
+
+
+@router.put("/game/dice/config/{config_id}", response_model=DiceConfigDto)
+def update_dice_config(
+    config_id: int,
+    payload: DiceConfigUpdateRequest,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    admin_id, admin_role = admin_info
+
+    if admin_role not in ["SUPER_ADMIN", "OPERATOR"]:
+        raise HTTPException(status_code=403, detail="NOT_AUTHORIZED")
+
+    config = db.query(DiceConfig).filter(DiceConfig.id == config_id).first()
+    if not config:
+        raise HTTPException(status_code=404, detail="DICE_CONFIG_NOT_FOUND")
+
+    before_data = {
+        "name": config.name,
+        "is_active": config.is_active,
+        "max_daily_plays": config.max_daily_plays,
+        "win_reward": f"{config.win_reward_type}:{config.win_reward_amount}",
+        "draw_reward": f"{config.draw_reward_type}:{config.draw_reward_amount}",
+        "lose_reward": f"{config.lose_reward_type}:{config.lose_reward_amount}",
+    }
+
+    if payload.name is not None:
+        config.name = payload.name
+    if payload.is_active is not None:
+        config.is_active = payload.is_active
+    if payload.max_daily_plays is not None:
+        config.max_daily_plays = payload.max_daily_plays
+    if payload.win_reward_type is not None:
+        config.win_reward_type = payload.win_reward_type
+    if payload.win_reward_amount is not None:
+        config.win_reward_amount = payload.win_reward_amount
+    if payload.draw_reward_type is not None:
+        config.draw_reward_type = payload.draw_reward_type
+    if payload.draw_reward_amount is not None:
+        config.draw_reward_amount = payload.draw_reward_amount
+    if payload.lose_reward_type is not None:
+        config.lose_reward_type = payload.lose_reward_type
+    if payload.lose_reward_amount is not None:
+        config.lose_reward_amount = payload.lose_reward_amount
+
+    config.updated_at = datetime.utcnow()
+
+    after_data = {
+        "name": config.name,
+        "is_active": config.is_active,
+        "max_daily_plays": config.max_daily_plays,
+        "win_reward": f"{config.win_reward_type}:{config.win_reward_amount}",
+        "draw_reward": f"{config.draw_reward_type}:{config.draw_reward_amount}",
+        "lose_reward": f"{config.lose_reward_type}:{config.lose_reward_amount}",
+    }
+    AdminAuditService.log(
+        db,
+        admin_id,
+        "DICE_CONFIG_UPDATE",
+        "GAME_CONFIG",
+        str(config_id),
+        before=before_data,
+        after=after_data,
+    )
+
+    db.commit()
+    db.refresh(config)
+
+    return DiceConfigDto(
+        id=config.id,
+        name=config.name,
+        is_active=config.is_active,
+        max_daily_plays=config.max_daily_plays,
+        win_reward_type=config.win_reward_type,
+        win_reward_amount=config.win_reward_amount,
+        draw_reward_type=config.draw_reward_type,
+        draw_reward_amount=config.draw_reward_amount,
+        lose_reward_type=config.lose_reward_type,
+        lose_reward_amount=config.lose_reward_amount,
+        created_at=config.created_at,
+        updated_at=config.updated_at,
+    )
+
+
+@router.get("/game/lottery/configs", response_model=list[LotteryConfigDto])
+def get_lottery_configs(
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    configs = db.query(LotteryConfig).options(selectinload(LotteryConfig.prizes)).all()
+
+    result = []
+    for config in configs:
+        prizes_dto = [
+            LotteryPrizeDto(
+                id=prize.id,
+                label=prize.label,
+                weight=prize.weight,
+                stock=prize.stock,
+                reward_type=prize.reward_type,
+                reward_amount=prize.reward_amount,
+                is_active=prize.is_active,
+            )
+            for prize in config.prizes
+        ]
+
+        result.append(
+            LotteryConfigDto(
+                id=config.id,
+                name=config.name,
+                is_active=config.is_active,
+                max_daily_plays=config.max_daily_tickets,
+                puzzle_piece_probability=0.0,
+                prizes=prizes_dto,
+                created_at=config.created_at,
+                updated_at=config.updated_at,
+            )
+        )
+
+    return result
+
+
+@router.get("/game/lottery/config/{config_id}", response_model=LotteryConfigDto)
+def get_lottery_config(
+    config_id: int,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    config = (
+        db.query(LotteryConfig)
+        .options(selectinload(LotteryConfig.prizes))
+        .filter(LotteryConfig.id == config_id)
+        .first()
+    )
+
+    if not config:
+        raise HTTPException(status_code=404, detail="LOTTERY_CONFIG_NOT_FOUND")
+
+    prizes_dto = [
+        LotteryPrizeDto(
+            id=prize.id,
+            label=prize.label,
+            weight=prize.weight,
+            stock=prize.stock,
+            reward_type=prize.reward_type,
+            reward_amount=prize.reward_amount,
+            is_active=prize.is_active,
+        )
+        for prize in config.prizes
+    ]
+
+    return LotteryConfigDto(
+        id=config.id,
+        name=config.name,
+        is_active=config.is_active,
+        max_daily_plays=config.max_daily_tickets,
+        puzzle_piece_probability=0.0,
+        prizes=prizes_dto,
+        created_at=config.created_at,
+        updated_at=config.updated_at,
+    )
+
+
+@router.put("/game/lottery/config/{config_id}", response_model=LotteryConfigDto)
+def update_lottery_config(
+    config_id: int,
+    payload: LotteryConfigUpdateRequest,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    admin_id, admin_role = admin_info
+
+    if admin_role not in ["SUPER_ADMIN", "OPERATOR"]:
+        raise HTTPException(status_code=403, detail="NOT_AUTHORIZED")
+
+    config = (
+        db.query(LotteryConfig)
+        .options(selectinload(LotteryConfig.prizes))
+        .filter(LotteryConfig.id == config_id)
+        .first()
+    )
+
+    if not config:
+        raise HTTPException(status_code=404, detail="LOTTERY_CONFIG_NOT_FOUND")
+
+    before_data = {
+        "name": config.name,
+        "is_active": config.is_active,
+        "max_daily_tickets": config.max_daily_tickets,
+    }
+
+    if payload.name is not None:
+        config.name = payload.name
+    if payload.is_active is not None:
+        config.is_active = payload.is_active
+    if payload.max_daily_plays is not None:
+        config.max_daily_tickets = payload.max_daily_plays
+    if payload.puzzle_piece_probability is not None:
+        pass
+
+    config.updated_at = datetime.utcnow()
+
+    after_data = {
+        "name": config.name,
+        "is_active": config.is_active,
+        "max_daily_tickets": config.max_daily_tickets,
+    }
+    AdminAuditService.log(
+        db,
+        admin_id,
+        "LOTTERY_CONFIG_UPDATE",
+        "GAME_CONFIG",
+        str(config_id),
+        before=before_data,
+        after=after_data,
+    )
+
+    db.commit()
+    db.refresh(config)
+
+    prizes_dto = [
+        LotteryPrizeDto(
+            id=prize.id,
+            label=prize.label,
+            weight=prize.weight,
+            stock=prize.stock,
+            reward_type=prize.reward_type,
+            reward_amount=prize.reward_amount,
+            is_active=prize.is_active,
+        )
+        for prize in config.prizes
+    ]
+
+    return LotteryConfigDto(
+        id=config.id,
+        name=config.name,
+        is_active=config.is_active,
+        max_daily_plays=config.max_daily_tickets,
+        puzzle_piece_probability=0.0,
+        prizes=prizes_dto,
+        created_at=config.created_at,
+        updated_at=config.updated_at,
+    )
+
+
+@router.put("/game/lottery/config/{config_id}/prize/{prize_id}", response_model=LotteryPrizeDto)
+def update_lottery_prize(
+    config_id: int,
+    prize_id: int,
+    payload: LotteryPrizeUpdateRequest,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    admin_id, admin_role = admin_info
+
+    if admin_role not in ["SUPER_ADMIN", "OPERATOR"]:
+        raise HTTPException(status_code=403, detail="NOT_AUTHORIZED")
+
+    prize = (
+        db.query(LotteryPrize)
+        .filter(LotteryPrize.id == prize_id, LotteryPrize.config_id == config_id)
+        .first()
+    )
+
+    if not prize:
+        raise HTTPException(status_code=404, detail="LOTTERY_PRIZE_NOT_FOUND")
+
+    prize.label = payload.label
+    prize.weight = payload.weight
+    prize.stock = payload.stock
+    prize.reward_type = payload.reward_type
+    prize.reward_amount = payload.reward_amount
+    prize.is_active = payload.is_active
+    prize.updated_at = datetime.utcnow()
+
+    AdminAuditService.log(
+        db,
+        admin_id,
+        "LOTTERY_PRIZE_UPDATE",
+        "GAME_CONFIG",
+        f"{config_id}/{prize_id}",
+        before={},
+        after={"label": prize.label, "weight": prize.weight, "reward": f"{prize.reward_type}:{prize.reward_amount}"},
+    )
+
+    db.commit()
+    db.refresh(prize)
+
+    return LotteryPrizeDto(
+        id=prize.id,
+        label=prize.label,
+        weight=prize.weight,
+        stock=prize.stock,
+        reward_type=prize.reward_type,
+        reward_amount=prize.reward_amount,
+        is_active=prize.is_active,
+    )

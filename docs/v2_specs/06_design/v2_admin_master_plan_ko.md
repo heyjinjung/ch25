@@ -319,9 +319,14 @@ graph TD
 - [x] **360도 상세 뷰 (UserDetail)**: 8개 탭 구조 통합 및 개입(Intervention) 시스템 연결. (**API 연동 완료**: `useAdminUserDetail`, `useUserTicketLogs` 등 10여 개 API 연동 완료)
 - [x] **세그먼트 엔진 (Segment)**: AI 기반 유저 분류 목록 및 배치 실행 제어. (**API 연동 완료**: `useAdminSegmentStats`, `useRunSegmentBatch` 등 연동 완료)
 
-### 10.4 다음 단계 (Next Steps)
-- [ ] **경제 관리 (Economy Ops)**: '밀어서 승인' 기능이 포함된 금고 관리 및 출금 승인 시스템.
-- [ ] **게임 관리 (Game Ops)**: 미션, 룰렛, 주사위 등 인게임 파라미터 제어 패널.
+### 10.4 경제 관리 (Economy Ops) (완료)
+- [x] **금고 통합 관리 (Vault)**: 출금 승인/반려(Slide-to-Approve), 실시간 통계, 강제 조정 기능. (근거: `VaultControlPage.tsx` 구현 완료)
+- [x] **CC 입금 관리 (Deposit)**: 일자별 입금 로그 CRUD (추가, 수정, 삭제) 및 유저별 누적 랭킹 자동 동기화. (근거: `CCDepositPage.tsx` 및 백엔드 연동 완료)
+- [x] **상점/인벤토리**: 상품 진열 제어, 인벤토리 지급 로그 및 수동 조정. (근거: `ShopManagerPage.tsx`, `TicketInventoryPage.tsx` 연동 완료)
+
+### 10.5 게임 관리 (Game Ops) (완합)
+- [x] **미션/레벨 설정**: 전체 미션 카테고리별 제어 및 레벨별 보상 테이블 동기화. (근거: `MissionManagerPage.tsx`, `LevelConfigPage.tsx` 연동 완료)
+- [ ] **게임별 확률 설정**: 룰렛, 주사위, 복권 등 세부 게임 파라미터 백엔드 최종 연동 중.
 
 ---
 ## 10. 어드민 전용 컴포넌트 목록 (Admin-Specific Components)
@@ -630,6 +635,10 @@ graph TD
 ---
 
 ## 15. 변경 이력
+- v2.1 (2026-01-20, Antigravity Agent): 경제 관리(Economy Ops) 고도화 완료
+    - `VaultControlPage`: 일자별 추이 차트 제거 및 UI 단순화, 출금/조정 기능 최적화.
+    - `CCDepositPage`: 수동 입금 로그 CRUD 시스템 구축 및 랭킹 누적액 자동 동기화 백엔드 구현.
+    - 전수 타입 체크(tsc) 및 빌드 무결성 확보.
 - v2.0 (2026-01-20, Antigravity Agent): Frontend Master Plan 구조에 맞춰 전면 재편집
     - 용어 정의 섹션 추가 (Section 3)
     - 핵심 철학 (CRM Command Center) 섹션 분리 (Section 4)

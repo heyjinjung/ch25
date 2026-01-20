@@ -33,6 +33,8 @@ class MissionRewardType(str, Enum):
     TICKET_LOTTERY = "TICKET_LOTTERY"
     TICKET_DICE = "TICKET_DICE"
     POINT = "POINT"
+    GIFTICON_BAEMIN = "GIFTICON_BAEMIN"
+    GIFTICON_COMPOSE = "GIFTICON_COMPOSE"
 
 
 class Mission(Base):

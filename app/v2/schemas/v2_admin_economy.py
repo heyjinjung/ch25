@@ -63,6 +63,28 @@ class AdminDepositConfirmRequest(BaseModel):
     pass
 
 
+class AdminDepositLogDto(BaseModel):
+    id: int
+    user_id: int
+    nickname: str | None = None
+    amount: int
+    kst_date: str # YYYY-MM-DD
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class AdminDepositCreateRequest(BaseModel):
+    user_id: int
+    amount: int
+    kst_date: str | None = None # Defaults to today if null
+
+
+class AdminDepositUpdateRequest(BaseModel):
+    amount: int | None = None
+    kst_date: str | None = None
+
+
 # Vault Control Schemas
 class VaultStatsDto(BaseModel):
     """금고 통계 정보"""
@@ -108,3 +130,32 @@ class VaultForceEditRequest(BaseModel):
     reason: str
 
     model_config = ConfigDict(from_attributes=True)
+
+
+# 티켓 CRUD
+class TicketCreateRequest(BaseModel):
+    user_id: int
+    ticket_type: str
+    amount: int
+    reason: str
+
+
+class TicketUpdateRequest(BaseModel):
+    amount: int
+    reason: str
+
+
+# 인벤토리 CRUD
+class InventoryItemCreateRequest(BaseModel):
+    user_id: int
+    item_type: str
+    item_name: str
+    quantity: int
+    reason: str
+    expires_at: datetime | None = None
+
+
+class InventoryItemUpdateRequest(BaseModel):
+    quantity: int
+    reason: str
+    expires_at: datetime | None = None

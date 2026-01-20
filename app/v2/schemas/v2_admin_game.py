@@ -84,13 +84,21 @@ class DiceConfigDto(BaseModel):
     is_active: bool = True
     max_daily_plays: int = Field(..., ge=0)
 
-    # Win/Draw/Lose Rewards
+    # Probabilities
+    win_probability: float = Field(..., ge=0.0, le=1.0)
+    draw_probability: float = Field(..., ge=0.0, le=1.0)
+    lose_probability: float = Field(..., ge=0.0, le=1.0)
+
+    # Rewards
     win_reward_type: RewardType
     win_reward_amount: int = 0
     draw_reward_type: RewardType
     draw_reward_amount: int = 0
     lose_reward_type: RewardType
     lose_reward_amount: int = 0
+
+    # Daily gain cap
+    daily_gain_cap: int = Field(..., ge=0)
 
     created_at: datetime | None = None
     updated_at: datetime | None = None
@@ -104,12 +112,21 @@ class DiceConfigUpdateRequest(BaseModel):
     is_active: bool | None = None
     max_daily_plays: int | None = Field(None, ge=0)
 
+    # Probabilities
+    win_probability: float | None = Field(None, ge=0.0, le=1.0)
+    draw_probability: float | None = Field(None, ge=0.0, le=1.0)
+    lose_probability: float | None = Field(None, ge=0.0, le=1.0)
+
+    # Rewards
     win_reward_type: RewardType | None = None
     win_reward_amount: int | None = None
     draw_reward_type: RewardType | None = None
     draw_reward_amount: int | None = None
     lose_reward_type: RewardType | None = None
     lose_reward_amount: int | None = None
+
+    # Daily gain cap
+    daily_gain_cap: int | None = Field(None, ge=0)
 
 
 # Lottery Configuration Schemas

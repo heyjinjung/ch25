@@ -12,6 +12,7 @@ V2 RewardType의 표준 집합과 처리 규칙을 확정한다.
 - reward_type 표준 집합
 - 표준 reward_type의 지급 경로 기준
 - 레거시/확장 처리 원칙
+- **CC 입금 용어 기준**: [docs/v2_specs/01_core/v2_cc_deposit_sot_ko.md](docs/v2_specs/01_core/v2_cc_deposit_sot_ko.md) SoT를 따른다.
 
 ## 3. 용어 정의 (Definitions)
 - reward_type: 게임/이벤트/프로모션 결과로 발생하는 보상 타입 코드
@@ -36,6 +37,7 @@ V2 RewardType의 표준 집합과 처리 규칙을 확정한다.
 - 신규 보상 설계는 표준 RewardType 집합 내에서만 정의한다.
 - 레거시 문자열(예: XP, VAULT 등)은 신규 정의에 사용하지 않는다.
 - RewardType은 대소문자/스펠링을 고정한다.
+- **어드민 라우터 모듈화 및 레거시 제거**: V2 Admin 라우터는 [app/v2/api/admin/](app/v2/api/admin/) 모듈로 분리하며, 레거시 [app/v2/api/admin_routes.py](app/v2/api/admin_routes.py)는 제거한다.
 
 ## 7. 운영/검증 (QA)
 - [ ] reward_type 값이 표준 집합 내인지 검증
@@ -43,3 +45,4 @@ V2 RewardType의 표준 집합과 처리 규칙을 확정한다.
 
 ## 8. 변경 이력
 - v1.0 (2026-01-19, GitHub Copilot): 최초 작성
+- v1.1 (2026-01-20, GitHub Copilot): CC 입금 용어 SoT 링크 및 어드민 라우터 모듈화/레거시 제거 규칙 추가
