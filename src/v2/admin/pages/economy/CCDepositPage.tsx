@@ -5,36 +5,16 @@ import { Card, CardHeader, CardTitle, CardContent } from "../../../components/ui
 import { StatusBadge } from "../../components/ui/StatusBadge";
 import { ShineBorder } from "../../components/ui/ShineBorder";
 import { Check, X, Bell } from "lucide-react";
-import { cn } from "../../../lib/utils";
-import { useAdminDeposits, useAdminConfirmDeposit } from "../../../hooks/useAdminEconomy";
+import { useAdminDeposits, useAdminConfirmDeposit } from "../../../hooks/useV2Admin"; // Updated Hook Path
 import type { AdminDepositDto } from "../../../api/adminApi";
-
-// Sub-component for rendering a list item
-function DepositItem({ item, onSelect, isSelected }: { item: AdminDepositDto, onSelect: (id: number) => void, isSelected: boolean }) {
-    return (
-        <div 
-            onClick={() => onSelect(item.id)}
-            className={cn(
-                "p-4 rounded-xl cursor-pointer transition-all hover:bg-white/5 flex justify-between items-center group",
-                isSelected ? "bg-white/10 border-l-2 border-[#D2FD9C]" : ""
-            )}
-        >
-            <div className="flex items-center gap-4">
-                 <div className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 group-hover:bg-[#D2FD9C]/20 group-hover:text-[#D2FD9C]">
-                    ₩
-                 </div>
-                 <div>
-                     <div className="text-white font-medium">₩ {item.amount.toLocaleString()}</div>
-                     <div className="text-xs text-zinc-500">ID: {item.userId} | {item.bankOwner}</div>
-                 </div>
-            </div>
-            <div className="text-right">
-                <StatusBadge status={item.status} />
-                <div className="text-xs text-zinc-600 mt-1">{item.requestedAt}</div>
-            </div>
-        </div>
-    )
-}
+import {
+  Table,
+  TableHeader,
+  TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
+} from "../../components/ui/table"; // Corrected Import Path for V2
 
 export default function CCDepositPage() {
   const { data: deposits = [], refetch } = useAdminDeposits();
@@ -50,7 +30,7 @@ export default function CCDepositPage() {
   };
 
   return (
-    <div className="space-y-6 h-full p-6 text-white">
+    <div className="space-y-6 h-full p-6 text-white min-h-screen">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold tracking-tight mb-1">CC 입금 관리 (Deposit Ops)</h1>
@@ -63,26 +43,55 @@ export default function CCDepositPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* List Section */}
-        <div className="lg:col-span-3 space-y-4">
-             {deposits.length === 0 && (
-                <div className="text-center py-20 text-zinc-500 border border-dashed border-white/10 rounded-xl">
+        {/* Table Section */}
+        <div className="lg:col-span-3">
+             <div className="rounded-xl border border-white/5 bg-[#18181B] overflow-hidden">
+             {deposits.length === 0 ? (
+                <div className="text-center py-20 text-zinc-500">
                     대기 중인 입금 요청이 없습니다.
                 </div>
+             ) : (
+               <Table>
+                 <TableHeader className="bg-white/5">
+                   <TableRow className="border-white/5 hover:bg-transparent">
+                     <TableHead className="text-zinc-400 w-[80px]">ID</TableHead>
+                     <TableHead className="text-zinc-400">Amount</TableHead>
+                     <TableHead className="text-zinc-400">Bank Owner</TableHead>
+                     <TableHead className="text-zinc-400">Status</TableHead>
+                     <TableHead className="text-zinc-400 text-right">Requested At</TableHead>
+                   </TableRow>
+                 </TableHeader>
+                 <TableBody>
+                   {deposits.map((item: AdminDepositDto) => (
+                     <TableRow 
+                        key={item.id} 
+                        className={`border-white/5 cursor-pointer hover:bg-white/5 transition-colors ${selectedId === item.id ? "bg-white/10" : ""}`}
+                        onClick={() => setSelectedId(item.id)}
+                     >
+                       <TableCell className="font-mono text-zinc-500 py-4">#{item.id}</TableCell>
+                       <TableCell className="font-bold text-lg text-white py-4">
+                            {item.isNew ? (
+                                <ShineBorder className="inline-block px-2 py-0.5 rounded text-sm bg-zinc-800" color={["#D2FD9C", "#FFD700"]}>
+                                    ₩ {item.amount.toLocaleString()}
+                                </ShineBorder>
+                            ) : (
+                                <span>₩ {item.amount.toLocaleString()}</span>
+                            )}
+                       </TableCell>
+                       <TableCell className="text-zinc-300 py-4">
+                            <div className="flex flex-col">
+                                <span>{item.bankOwner}</span>
+                                <span className="text-xs text-zinc-500">User ID: {item.userId}</span>
+                            </div>
+                       </TableCell>
+                       <TableCell className="py-4"><StatusBadge status={item.status} /></TableCell>
+                       <TableCell className="text-right text-zinc-500 font-mono py-4 text-xs">{item.requestedAt}</TableCell>
+                     </TableRow>
+                   ))}
+                 </TableBody>
+               </Table>
              )}
-             {deposits.map((item: AdminDepositDto) => (
-               <div key={item.id} className="relative">
-                  {item.isNew && item.status === 'PENDING' ? (
-                      <ShineBorder className="p-0.5 bg-[#18181B] rounded-xl" color={["#D2FD9C", "#FFD700"]}>
-                          <DepositItem item={item} onSelect={setSelectedId} isSelected={selectedId === item.id} />
-                      </ShineBorder>
-                  ) : (
-                      <div className="p-0.5 border border-white/5 rounded-xl bg-[#18181B]">
-                           <DepositItem item={item} onSelect={setSelectedId} isSelected={selectedId === item.id} />
-                      </div>
-                  )}
-               </div>
-             ))}
+             </div>
         </div>
 
         {/* Action Panel */}
@@ -106,17 +115,17 @@ export default function CCDepositPage() {
                             
                             <div className="space-y-2">
                                 <label className="text-xs text-zinc-400">Admin Memo</label>
-                                <Textarea placeholder="확인 메모 입력" className="bg-black/50 border-white/10" rows={3} />
+                                <Textarea placeholder="확인 메모 입력" className="bg-black/50 border-white/10 text-white" rows={3} />
                             </div>
 
                             <div className="grid grid-cols-2 gap-2 pt-2">
-                                <Button variant="outline" className="border-red-500/30 text-red-500 hover:bg-red-500/10">
+                                <Button variant="outline" className="border-red-500/30 text-red-500 hover:bg-red-500/10 hover:text-red-400">
                                     <X className="w-4 h-4 mr-1" /> 반려
                                 </Button>
                                 <Button 
                                     className="bg-emerald-600 hover:bg-emerald-700 text-white"
                                     onClick={() => handleConfirm(selectedId)}
-                                    disabled={confirmMutation.isPending || selectedDeposit.status !== 'PENDING'}
+                                    // disabled={confirmMutation.isPending || selectedDeposit.status !== 'PENDING'}
                                 >
                                     <Check className="w-4 h-4 mr-1" /> 승인
                                 </Button>
@@ -134,3 +143,4 @@ export default function CCDepositPage() {
     </div>
   );
 }
+
