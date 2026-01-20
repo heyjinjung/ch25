@@ -5,7 +5,11 @@ import type { Ch25EventPayload } from "../types/ch25Events";
 const RECONNECT_INTERVAL = 5000;
 
 const getWsUrl = () => {
-  const rawEnvBase = (import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || "http://localhost:8000").trim();
+  const rawEnvBase = (
+    import.meta.env.VITE_API_BASE_URL ||
+    import.meta.env.VITE_API_URL ||
+    ""
+  ).trim();
   const baseUrl = rawEnvBase.replace(/\/+$/, "");
 
   if (baseUrl.startsWith("https")) {
@@ -47,7 +51,11 @@ export const useCh25Events = () => {
     };
 
     const connect = () => {
-      if (wsRef.current && (wsRef.current.readyState === WebSocket.OPEN || wsRef.current.readyState === WebSocket.CONNECTING)) {
+      if (
+        wsRef.current &&
+        (wsRef.current.readyState === WebSocket.OPEN ||
+          wsRef.current.readyState === WebSocket.CONNECTING)
+      ) {
         return;
       }
 

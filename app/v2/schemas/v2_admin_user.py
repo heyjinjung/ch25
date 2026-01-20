@@ -155,4 +155,58 @@ class UserListResponse(BaseModel):
     totalPages: int
 
 
+class UserActivityLogDto(BaseModel):
+    id: int
+    userId: int
+    type: str
+    description: str
+    metadata: dict
+    timestamp: datetime
+
+
+class UserInventoryItemDto(BaseModel):
+    id: int
+    itemType: str
+    itemName: str
+    quantity: int
+    expiresAt: Optional[datetime] = None
+    status: str
+
+
+class UserNoteDto(BaseModel):
+    id: int
+    userId: int
+    adminId: str
+    adminNickname: str
+    content: str
+    createdAt: datetime
+
+
+class CreateUserNoteRequest(BaseModel):
+    userId: int
+    content: str
+
+
+class UserMissionHistoryDto(BaseModel):
+    id: int
+    missionId: int
+    missionTitle: str
+    category: str
+    status: str
+    progress: int
+    maxProgress: int
+    completedAt: Optional[datetime] = None
+    rewardClaimed: bool
+
+
+class TicketLogDto(BaseModel):
+    id: int
+    userId: int
+    itemType: str
+    changeAmount: int
+    balanceAfter: int
+    reason: str
+    createdAt: datetime
+
+
 from app.v2.schemas.v2_admin_user_summary import AdminUserSummary  # noqa: E402

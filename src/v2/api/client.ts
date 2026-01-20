@@ -21,9 +21,10 @@ const resolvedBaseURL = (() => {
   if (envBase) return envBase.replace(/\/+$/, "");
 
   if (typeof window !== "undefined") {
-    const { hostname, protocol } = window.location;
-    const isLocalHost = hostname === "localhost" || hostname === "127.0.0.1";
-    if (isLocalHost) return `${protocol}//${hostname}:8000`;
+    // Default to same-origin.
+    // - Vite dev server uses proxy for `/api` -> backend.
+    // - Docker/nginx uses reverse proxy on the same origin.
+    // If you need a fixed origin, set VITE_API_BASE_URL/VITE_API_URL.
     return "";
   }
   return "";
