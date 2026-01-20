@@ -25,6 +25,7 @@
   - 운영 문서: `docs/06_ops/ops/`
     - [NEW] 배포 후 정밀 검증 체크리스트: `docs/06_ops/ops/01_post_deployment_verification_v1.0.md`
   - 어드민 운영: `docs/06_ops/admin/`
+    - [NEW] V2 어드민 개발/테스트 가이드: `docs/06_ops/admin/01_v2_admin_dev_test_guide_ko_v1.0.md`
   - 배포/인프라: `docs/06_ops/deployment/`
     - [NEW] Vultr 서울 서버 설정 가이드: `docs/06_ops/deployment/01_vultr_seoul_setup_guide_v1.0.md`
     - [NEW] 서버 초기화 자동화 런북: `docs/06_ops/deployment/02_vultr_ubuntu_init_script_v1.0.md`
