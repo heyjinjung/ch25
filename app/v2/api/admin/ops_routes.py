@@ -140,15 +140,53 @@ def get_streak_metrics(
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
     admin_id, admin_role = admin_info
-
+    
+    from sqlalchemy import func
+    from datetime import date, timedelta
+    from app.models.feature import UserEventLog
+    
+    end_date = datetime.utcnow().date()
+    start_date = end_date - timedelta(days=days - 1)
+    
+    # Query promote counts per day
+    promotes = (
+        db.query(func.date(UserEventLog.created_at).label("day"), func.count().label("count"))
+        .filter(
+            UserEventLog.feature_type == "STREAK",
+            UserEventLog.event_name == "streak.promote",
+            UserEventLog.created_at >= datetime.combine(start_date, datetime.min.time())
+        )
+        .group_by(func.date(UserEventLog.created_at))
+        .all()
+    )
+    
+    # Query reset counts per day
+    resets = (
+        db.query(func.date(UserEventLog.created_at).label("day"), func.count().label("count"))
+        .filter(
+            UserEventLog.feature_type == "STREAK",
+            UserEventLog.event_name == "streak.reset",
+            UserEventLog.created_at >= datetime.combine(start_date, datetime.min.time())
+        )
+        .group_by(func.date(UserEventLog.created_at))
+        .all()
+    )
+    
+    promote_map = {str(r.day): r.count for r in promotes}
+    reset_map = {str(r.day): r.count for r in resets}
+    
     items = []
     for i in range(days):
+        curr_day = start_date + timedelta(days=i)
+        day_str = curr_day.isoformat()
+        
         items.append(
             StreakDailyMetric(
-                day=datetime.utcnow().date(),
-                promote=10,
-                reset=2,
-                vault_base_plays=100,
+                day=curr_day,
+                promote=promote_map.get(day_str, 0),
+                reset=reset_map.get(day_str, 0),
+                vault_base_plays=0, # Placeholder or query from logs
+                vault_bonus_applied=0
             )
         )
 

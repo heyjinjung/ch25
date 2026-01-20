@@ -8,6 +8,7 @@ from .segment_routes import router as segment_router
 from .vault_routes import router as vault_router
 from .game_config_routes import router as game_config_router
 from .mission_routes import router as mission_router
+from .streak_routes import router as streak_router
 from .level_routes import router as level_router
 from .inventory_routes import router as inventory_router
 from .csv_import_routes import router as csv_import_router
@@ -21,6 +22,7 @@ router.include_router(segment_router)
 router.include_router(vault_router)
 router.include_router(game_config_router)
 router.include_router(mission_router)
+router.include_router(streak_router)
 router.include_router(level_router)
 router.include_router(inventory_router)
 router.include_router(csv_import_router)

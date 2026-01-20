@@ -12,7 +12,7 @@ class V2GoldenInterventionLog(Base):
     __tablename__ = "v2_golden_intervention_log"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("v2_user.id", ondelete="CASCADE"), nullable=False, index=True)
     trigger_id = Column(String(50), nullable=False, index=True)  # e.g. TRG_LOSE_5, TRG_ZERO_BAL
     trigger_condition = Column(Text, nullable=True)  # Human-readable condition description
     action_taken = Column(String(100), nullable=False)  # e.g. Trigger_Pity_Win, Offer_Zero_Ticket
