@@ -14,6 +14,7 @@ import {
 import { ScrollArea } from "../../../components/ui/scroll-area";
 import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
+import { cn } from "../../../lib/utils";
 import {
   Card,
   CardContent,
@@ -50,8 +51,13 @@ import {
   useUserNotes,
 } from "../../../hooks/useV2Admin";
 import { Textarea } from "../../../components/ui/textarea";
-import { TableHeader, TableRow, TableHead, TableBody, TableCell } from "../../../components/ui/table";
-import { cn } from "../../../lib/utils";
+import {
+  TableHeader,
+  TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
+} from "../../../components/ui/table";
 
 interface UserDetailDrawerProps {
   isOpen: boolean;
@@ -87,7 +93,7 @@ export function UserDetailDrawer({
       gsap.fromTo(
         contentRef.current,
         { opacity: 0, y: 10 },
-        { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" }
+        { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" },
       );
     }
   }, [isOpen, user]);
@@ -250,42 +256,49 @@ export function UserDetailDrawer({
                     )}
 
                     {/* Intervention Playbook */}
-                    {user.playbook && user.playbook.suggestedActions.length > 0 && (
-                      <Card className="bg-[#18181B] border-red-500/10">
-                        <CardHeader>
-                          <CardTitle className="text-sm flex items-center gap-2">
-                            <Shield className="w-4 h-4 text-red-500" />
-                            추천 개입 (Suggested Actions)
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-2">
-                          {user.playbook.suggestedActions.slice(0, 2).map((action) => (
-                            <div
-                              key={action.actionId}
-                              className="flex justify-between items-center p-3 rounded-lg bg-zinc-900/50 border border-white/5"
-                            >
-                              <div className="flex-1">
-                                <div className="text-sm font-medium">{action.label}</div>
-                                <div className="text-xs text-zinc-500">{action.description}</div>
-                              </div>
-                              <Button
-                                size="sm"
-                                className="h-7 text-xs bg-indigo-500 text-white hover:bg-indigo-600"
-                                onClick={() =>
-                                  runIntervention.mutate({
-                                    userId: user.id,
-                                    actionId: action.actionId,
-                                  })
-                                }
-                                disabled={runIntervention.isPending}
-                              >
-                                실행
-                              </Button>
-                            </div>
-                          ))}
-                        </CardContent>
-                      </Card>
-                    )}
+                    {user.playbook &&
+                      user.playbook.suggestedActions.length > 0 && (
+                        <Card className="bg-[#18181B] border-red-500/10">
+                          <CardHeader>
+                            <CardTitle className="text-sm flex items-center gap-2">
+                              <Shield className="w-4 h-4 text-red-500" />
+                              추천 개입 (Suggested Actions)
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="space-y-2">
+                            {user.playbook.suggestedActions
+                              .slice(0, 2)
+                              .map((action) => (
+                                <div
+                                  key={action.actionId}
+                                  className="flex justify-between items-center p-3 rounded-lg bg-zinc-900/50 border border-white/5"
+                                >
+                                  <div className="flex-1">
+                                    <div className="text-sm font-medium">
+                                      {action.label}
+                                    </div>
+                                    <div className="text-xs text-zinc-500">
+                                      {action.description}
+                                    </div>
+                                  </div>
+                                  <Button
+                                    size="sm"
+                                    className="h-7 text-xs bg-indigo-500 text-white hover:bg-indigo-600"
+                                    onClick={() =>
+                                      runIntervention.mutate({
+                                        userId: user.id,
+                                        actionId: action.actionId,
+                                      })
+                                    }
+                                    disabled={runIntervention.isPending}
+                                  >
+                                    실행
+                                  </Button>
+                                </div>
+                              ))}
+                          </CardContent>
+                        </Card>
+                      )}
                   </TabsContent>
 
                   {/* 2. 지갑 (Wallet) */}
@@ -317,33 +330,60 @@ export function UserDetailDrawer({
                       <Table>
                         <TableHeader className="bg-transparent">
                           <TableRow className="border-white/5 hover:bg-transparent">
-                            <TableHead className="text-[10px] h-8">구분</TableHead>
-                            <TableHead className="text-[10px] h-8">변동</TableHead>
-                            <TableHead className="text-[10px] h-8">잔액</TableHead>
-                            <TableHead className="text-[10px] h-8">사유</TableHead>
-                            <TableHead className="text-right text-[10px] h-8">일시</TableHead>
+                            <TableHead className="text-[10px] h-8">
+                              구분
+                            </TableHead>
+                            <TableHead className="text-[10px] h-8">
+                              변동
+                            </TableHead>
+                            <TableHead className="text-[10px] h-8">
+                              잔액
+                            </TableHead>
+                            <TableHead className="text-[10px] h-8">
+                              사유
+                            </TableHead>
+                            <TableHead className="text-right text-[10px] h-8">
+                              일시
+                            </TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {ticketLogs && ticketLogs.length > 0 ? (
                             ticketLogs.map((log) => (
-                              <TableRow key={log.id} className="border-white/5 hover:bg-white/5 text-[11px]">
+                              <TableRow
+                                key={log.id}
+                                className="border-white/5 hover:bg-white/5 text-[11px]"
+                              >
                                 <TableCell className="py-2">
-                                  <Badge className={cn(
-                                    "text-[9px] px-1 h-4",
-                                    log.type === 'USE' ? "bg-red-500/10 text-red-500" : "bg-emerald-500/10 text-emerald-500"
-                                  )}>
+                                  <Badge
+                                    className={cn(
+                                      "text-[9px] px-1 h-4",
+                                      log.type === "USE"
+                                        ? "bg-red-500/10 text-red-500"
+                                        : "bg-emerald-500/10 text-emerald-500",
+                                    )}
+                                  >
                                     {log.type}
                                   </Badge>
                                 </TableCell>
-                                <TableCell className={cn(
-                                  "py-2 font-mono",
-                                  log.amount > 0 ? "text-emerald-400" : "text-red-400"
-                                )}>
-                                  {log.amount > 0 ? `+${log.amount}` : log.amount}
+                                <TableCell
+                                  className={cn(
+                                    "py-2 font-mono",
+                                    log.amount > 0
+                                      ? "text-emerald-400"
+                                      : "text-red-400",
+                                  )}
+                                >
+                                  {log.amount > 0
+                                    ? `+${log.amount}`
+                                    : log.amount}
                                 </TableCell>
-                                <TableCell className="py-2 text-zinc-400">{log.balanceAfter} T</TableCell>
-                                <TableCell className="py-2 text-zinc-300 max-w-[120px] truncate">{log.reason}</TableCell>
+                                <TableCell className="py-2 text-zinc-400">
+                                  {log.balanceAfter} T
+                                </TableCell>
+                                <TableCell className="py-2 text-zinc-300 max-w-[120px] truncate">
+                                  {log.reason}
+                                </TableCell>
                                 <TableCell className="py-2 text-right text-zinc-500">
                                   {new Date(log.timestamp).toLocaleDateString()}
                                 </TableCell>
@@ -351,7 +391,10 @@ export function UserDetailDrawer({
                             ))
                           ) : (
                             <TableRow>
-                              <TableCell colSpan={5} className="h-24 text-center text-zinc-600">
+                              <TableCell
+                                colSpan={5}
+                                className="h-24 text-center text-zinc-600"
+                              >
                                 최근 내역이 없습니다.
                               </TableCell>
                             </TableRow>
@@ -397,25 +440,49 @@ export function UserDetailDrawer({
                       <Table>
                         <TableHeader>
                           <TableRow className="border-white/5 hover:bg-transparent">
-                            <TableHead className="text-[10px] h-8 text-zinc-400">구분</TableHead>
-                            <TableHead className="text-[10px] h-8 text-zinc-400">금액</TableHead>
-                            <TableHead className="text-[10px] h-8 text-zinc-400">상태</TableHead>
-                            <TableHead className="text-right text-[10px] h-8 text-zinc-400">일시</TableHead>
+                            <TableHead className="text-[10px] h-8 text-zinc-400">
+                              구분
+                            </TableHead>
+                            <TableHead className="text-[10px] h-8 text-zinc-400">
+                              금액
+                            </TableHead>
+                            <TableHead className="text-[10px] h-8 text-zinc-400">
+                              상태
+                            </TableHead>
+                            <TableHead className="text-right text-[10px] h-8 text-zinc-400">
+                              일시
+                            </TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {/* Placeholder rows to simulate real data since specialized Vault API is pending */}
                           <TableRow className="border-white/5 hover:bg-white/5 text-[11px]">
-                            <TableCell className="py-2 text-indigo-400">WITHDRAWAL</TableCell>
-                            <TableCell className="py-2 text-red-400 font-mono">-₩50,000</TableCell>
-                            <TableCell className="py-2 text-zinc-300">COMPLETED</TableCell>
-                            <TableCell className="py-2 text-right text-zinc-500 font-mono">2024.01.20</TableCell>
+                            <TableCell className="py-2 text-indigo-400">
+                              WITHDRAWAL
+                            </TableCell>
+                            <TableCell className="py-2 text-red-400 font-mono">
+                              -₩50,000
+                            </TableCell>
+                            <TableCell className="py-2 text-zinc-300">
+                              COMPLETED
+                            </TableCell>
+                            <TableCell className="py-2 text-right text-zinc-500 font-mono">
+                              2024.01.20
+                            </TableCell>
                           </TableRow>
                           <TableRow className="border-white/5 hover:bg-white/5 text-[11px]">
-                            <TableCell className="py-2 text-emerald-400">DEPOSIT</TableCell>
-                            <TableCell className="py-2 text-emerald-400 font-mono">+₩100,000</TableCell>
-                            <TableCell className="py-2 text-zinc-300">COMPLETED</TableCell>
-                            <TableCell className="py-2 text-right text-zinc-500 font-mono">2024.01.18</TableCell>
+                            <TableCell className="py-2 text-emerald-400">
+                              DEPOSIT
+                            </TableCell>
+                            <TableCell className="py-2 text-emerald-400 font-mono">
+                              +₩100,000
+                            </TableCell>
+                            <TableCell className="py-2 text-zinc-300">
+                              COMPLETED
+                            </TableCell>
+                            <TableCell className="py-2 text-right text-zinc-500 font-mono">
+                              2024.01.18
+                            </TableCell>
                           </TableRow>
                         </TableBody>
                       </Table>
@@ -428,7 +495,8 @@ export function UserDetailDrawer({
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="text-xs text-zinc-400">
-                        오입금 및 사고 처리용 기능입니다. (+면 입금, -면 출금 처리)
+                        오입금 및 사고 처리용 기능입니다. (+면 입금, -면 출금
+                        처리)
                       </CardContent>
                     </Card>
                   </TabsContent>
@@ -442,10 +510,15 @@ export function UserDetailDrawer({
                     {inventory && inventory.length > 0 ? (
                       <div className="grid gap-3">
                         {inventory.map((item) => (
-                          <Card key={item.id} className="bg-[#18181B] border-white/5">
+                          <Card
+                            key={item.id}
+                            className="bg-[#18181B] border-white/5"
+                          >
                             <CardContent className="p-4 flex justify-between items-center">
                               <div>
-                                <div className="font-medium">{item.itemName}</div>
+                                <div className="font-medium">
+                                  {item.itemName}
+                                </div>
                                 <div className="text-xs text-zinc-500">
                                   {item.itemType} • x{item.quantity}
                                 </div>
@@ -485,7 +558,9 @@ export function UserDetailDrawer({
                                 {new Date(log.timestamp).toLocaleString()}
                               </span>
                             </div>
-                            <div className="text-sm text-zinc-300">{log.description}</div>
+                            <div className="text-sm text-zinc-300">
+                              {log.description}
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -524,7 +599,10 @@ export function UserDetailDrawer({
                     {notes && notes.length > 0 ? (
                       <div className="space-y-3">
                         {notes.map((note) => (
-                          <Card key={note.id} className="bg-[#18181B] border-white/5">
+                          <Card
+                            key={note.id}
+                            className="bg-[#18181B] border-white/5"
+                          >
                             <CardContent className="p-4">
                               <div className="flex justify-between items-start mb-2">
                                 <span className="text-sm font-medium text-indigo-400">
@@ -565,7 +643,8 @@ export function UserDetailDrawer({
                             {segment.label}
                           </Badge>
                           <p className="text-sm text-zinc-400 mt-3">
-                            이 유저는 자동 분류 규칙에 따라 위 세그먼트에 속합니다.
+                            이 유저는 자동 분류 규칙에 따라 위 세그먼트에
+                            속합니다.
                           </p>
                         </CardContent>
                       </Card>
@@ -586,11 +665,16 @@ export function UserDetailDrawer({
                     {missions && missions.length > 0 ? (
                       <div className="space-y-3">
                         {missions.map((mission) => (
-                          <Card key={mission.id} className="bg-[#18181B] border-white/5">
+                          <Card
+                            key={mission.id}
+                            className="bg-[#18181B] border-white/5"
+                          >
                             <CardContent className="p-4">
                               <div className="flex justify-between items-start mb-2">
                                 <div>
-                                  <div className="font-medium">{mission.missionTitle}</div>
+                                  <div className="font-medium">
+                                    {mission.missionTitle}
+                                  </div>
                                   <Badge className="text-[10px] mt-1">
                                     {mission.category}
                                   </Badge>
