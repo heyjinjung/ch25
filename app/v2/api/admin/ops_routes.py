@@ -1,12 +1,15 @@
 from datetime import datetime
 from typing import List
+import json
+import asyncio
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect, Query
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_admin_info, get_db
 from app.models.user import User
 from app.models.user_retention_state import UserRetentionState
+from app.v2.models.v2_golden_intervention_log import V2GoldenInterventionLog
 from app.v2.schemas.v2_admin_dashboard import DashboardMetricsResponse, MetricValue
 from app.v2.schemas.v2_admin_feature_schedule import (
     AdminFeatureScheduleCreate,
@@ -19,6 +22,8 @@ from app.v2.schemas.v2_admin_ops import (
     OpsMetricsDto,
     OpsRiskUserDto,
     OpsSystemStatusDto,
+    InterventionLogDto,
+    GoldenGameEventDto,
 )
 from app.v2.schemas.v2_admin_streak import StreakDailyMetric, StreakMetricsResponse
 from app.v2.schemas.v2_notification_feed import FeedConfigResponse, FeedJackpotConfig
@@ -216,3 +221,132 @@ def update_feed_config(
     if admin_role not in ["ADMIN", "OPERATOR", "SUPER_ADMIN"]:
         raise HTTPException(status_code=403, detail="NOT_AUTHORIZED")
     return FeedConfigResponse(**payload.dict())
+
+
+@router.get("/ops/interventions", response_model=List[InterventionLogDto])
+def get_intervention_logs(
+    user_id: int = Query(..., description="Target user ID"),
+    limit: int = Query(50, ge=1, le=500, description="Maximum number of logs to return"),
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """
+    Get Golden intervention logs for a specific user.
+
+    Returns chronological list of intervention events including:
+    - Trigger conditions (e.g., TRG_LOSE_5, TRG_BAL_DROP_50)
+    - Actions taken
+    - User context (balance, recent results)
+    - Cooldown information
+    """
+    admin_id, admin_role = admin_info
+
+    logs = (
+        db.query(V2GoldenInterventionLog)
+        .filter(V2GoldenInterventionLog.user_id == user_id)
+        .order_by(V2GoldenInterventionLog.created_at.desc())
+        .limit(limit)
+        .all()
+    )
+
+    return logs
+
+
+@router.websocket("/ws/golden/events")
+async def ws_golden_events(websocket: WebSocket):
+    """
+    WebSocket endpoint for real-time Golden game event streaming.
+
+    Subscribes to Redis channel: golden:v2:events:game
+    Streams events to connected clients in real-time.
+
+    Event format: GoldenGameEventDto
+    """
+    await websocket.accept()
+
+    # Get Redis client
+    from app.core.config import get_settings
+    import redis.asyncio as aioredis
+
+    settings = get_settings()
+
+    if not settings.redis_url:
+        await websocket.send_json({"error": "Redis not configured"})
+        await websocket.close(code=1011)
+        return
+
+    redis_client = None
+    pubsub = None
+
+    try:
+        # Connect to Redis
+        redis_client = await aioredis.from_url(
+            settings.redis_url,
+            encoding="utf-8",
+            decode_responses=True,
+        )
+
+        # Subscribe to Golden events channel
+        pubsub = redis_client.pubsub()
+        await pubsub.subscribe("golden:v2:events:game")
+
+        # Send connection confirmation
+        await websocket.send_json({
+            "type": "connection",
+            "status": "connected",
+            "channel": "golden:v2:events:game",
+        })
+
+        # Listen for messages
+        while True:
+            try:
+                # Get message with timeout
+                message = await pubsub.get_message(ignore_subscribe_messages=True, timeout=1.0)
+
+                if message and message["type"] == "message":
+                    try:
+                        # Parse and forward event
+                        event_data = json.loads(message["data"])
+                        await websocket.send_json({
+                            "type": "event",
+                            "data": event_data,
+                        })
+                    except json.JSONDecodeError:
+                        # Skip malformed messages
+                        continue
+
+                # Allow other tasks to run
+                await asyncio.sleep(0.01)
+
+            except WebSocketDisconnect:
+                break
+
+    except Exception as e:
+        # Send error to client if still connected
+        try:
+            await websocket.send_json({
+                "type": "error",
+                "message": str(e),
+            })
+        except:  # noqa: E722
+            pass
+
+    finally:
+        # Cleanup
+        if pubsub:
+            try:
+                await pubsub.unsubscribe("golden:v2:events:game")
+                await pubsub.close()
+            except:  # noqa: E722
+                pass
+
+        if redis_client:
+            try:
+                await redis_client.close()
+            except:  # noqa: E722
+                pass
+
+        try:
+            await websocket.close()
+        except:  # noqa: E722
+            pass

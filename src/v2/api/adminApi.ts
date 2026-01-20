@@ -147,6 +147,35 @@ export interface OpsRiskUserDto {
   churnScore: number;
 }
 
+export interface InterventionLogDto {
+  id: number;
+  userId: number;
+  triggerId: string;
+  triggerCondition: string | null;
+  actionTaken: string;
+  userBalanceBefore: number | null;
+  sessionBalanceDelta: number | null;
+  recentResults: string | null;
+  cooldownExpiresAt: string | null;
+  createdAt: string;
+}
+
+export interface GoldenGameEventDto {
+  eventId: string;
+  userId: number;
+  timestamp: string;
+  source: string;
+  gameType: string;
+  result: string;
+  betAmount: number;
+  payoutAmount: number;
+  currentBalance: number;
+  externalUserId?: string;
+  sessionId?: string;
+  gameMetadata?: Record<string, any>;
+  isHistorical: boolean;
+}
+
 // User List & Search Types
 export interface AdminUserListDto {
   id: number;
@@ -408,6 +437,19 @@ export const adjustUserWallet = async (
   return response.data;
 };
 
+export const getInterventionLogs = async (
+  userId: number,
+  limit: number = 50,
+): Promise<InterventionLogDto[]> => {
+  const response = await v2Client.get<InterventionLogDto[]>(
+    `/api/v2/admin/ops/interventions`,
+    {
+      params: { user_id: userId, limit },
+    },
+  );
+  return response.data;
+};
+
 export const adjustUserInventory = async (
   userId: number,
   request: AdminInventoryAdjustmentRequest,
@@ -646,7 +688,10 @@ export const getAdminProducts = async (): Promise<AdminProductDto[]> => {
 export const createAdminProduct = async (
   data: AdminProductCreateRequest,
 ): Promise<AdminProductDto> => {
-  const response = await v2Client.post<AdminProductDto>("/api/v2/admin/shop/products", data);
+  const response = await v2Client.post<AdminProductDto>(
+    "/api/v2/admin/shop/products",
+    data,
+  );
   return response.data;
 };
 
@@ -687,6 +732,30 @@ export const updateProductPrice = async (
 export const syncAdminProducts = async (): Promise<AdminProductDto[]> => {
   const response = await v2Client.post<AdminProductDto[]>(
     "/api/v2/admin/shop/products/sync",
+  );
+  return response.data;
+};
+
+// ============================================================================
+// Inventory/Ticket Logs API
+// ============================================================================
+
+export const getInventoryLogs = async (
+  userId?: number,
+  startDate?: string,
+  endDate?: string,
+  limit: number = 200,
+): Promise<TicketLogDto[]> => {
+  const params: Record<string, string | number> = { limit };
+  if (userId !== undefined) params.userId = userId;
+  if (startDate) params.startDate = startDate;
+  if (endDate) params.endDate = endDate;
+
+  const response = await v2Client.get<TicketLogDto[]>(
+    "/api/v2/admin/inventory/logs",
+    {
+      params,
+    },
   );
   return response.data;
 };
@@ -1638,5 +1707,3 @@ export const getWithdrawalDetails = async (
   );
   return response.data;
 };
-
-
