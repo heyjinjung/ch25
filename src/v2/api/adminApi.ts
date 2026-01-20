@@ -70,6 +70,7 @@ export interface TicketLogDto {
   reason: string;
   timestamp: string;
   adminId?: string;
+  nickname?: string;
 }
 
 export interface GrantItemRequest {

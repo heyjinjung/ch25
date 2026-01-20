@@ -88,7 +88,7 @@ def get_inventory_logs(
             parsed = parsed.replace(tzinfo=None)
         return parsed
 
-    query = db.query(UserInventoryLedger)
+    query = db.query(UserInventoryLedger, User).join(User, UserInventoryLedger.user_id == User.id)
     if userId is not None:
         query = query.filter(UserInventoryLedger.user_id == userId)
     if startDate:
@@ -96,7 +96,7 @@ def get_inventory_logs(
     if endDate:
         query = query.filter(UserInventoryLedger.created_at <= parse_iso_dt(endDate))
 
-    logs = (
+    results = (
         query.order_by(UserInventoryLedger.created_at.desc())
         .limit(max(1, min(limit, 1000)))
         .all()
@@ -106,6 +106,7 @@ def get_inventory_logs(
         TicketLogDto(
             id=log.id,
             userId=log.user_id,
+            nickname=user.nickname or "",
             type="GRANT" if log.change_amount > 0 else "USE",
             itemType=log.item_type,
             amount=abs(log.change_amount),
@@ -114,7 +115,7 @@ def get_inventory_logs(
             timestamp=log.created_at,
             adminId=log.related_id,
         )
-        for log in logs
+        for log, user in results
     ]
 
 
