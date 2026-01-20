@@ -46,7 +46,7 @@ export interface AdminMissionDto {
   category: "DAILY" | "WEEKLY" | "NEW_USER" | "SPECIAL_EVENT";
   title: string;
   condition: string;
-  rewardType: "TICKET" | "POINT" | "BUNDLE";
+  rewardType: string;
   rewardAmount: number;
   isActive: boolean;
 }
@@ -110,6 +110,12 @@ export interface AdminWalletAdjustmentRequest {
   amount: number;
   token_type: string;
   reason: string;
+}
+
+export interface AdminInventoryAdjustmentRequest {
+  itemType: string;
+  delta: number;
+  note?: string;
 }
 
 export interface InterventionExecutionResponse {
@@ -223,6 +229,7 @@ export interface UserMissionHistoryDto {
   progress: number;
   maxProgress: number;
   completedAt: string | null;
+  updatedAt: string;
   rewardClaimed: boolean;
 }
 
@@ -405,13 +412,92 @@ export const adjustUserWallet = async (
   return response.data;
 };
 
+export const adjustUserInventory = async (
+  userId: number,
+  request: AdminInventoryAdjustmentRequest,
+): Promise<{
+  success: boolean;
+  user_id: number;
+  item_type: string;
+  quantity: number;
+}> => {
+  const response = await v2Client.post<{
+    success: boolean;
+    user_id: number;
+    item_type: string;
+    quantity: number;
+  }>(`/api/v2/admin/users/${userId}/inventory/adjust`, request);
+  return response.data;
+};
+
+// Ticket & Inventory CRUD (Modular Backend)
+export interface TicketCreateRequest {
+  user_id: number;
+  ticket_type: string;
+  amount: number;
+  reason: string;
+}
+
+export interface TicketUpdateRequest {
+  amount: number;
+  reason: string;
+}
+
+export interface InventoryItemCreateRequest {
+  user_id: number;
+  item_type: string;
+  item_name: string;
+  quantity: number;
+  reason: string;
+  expires_at?: string | null;
+}
+
+export interface InventoryItemUpdateRequest {
+  quantity: number;
+  reason: string;
+  expires_at?: string | null;
+}
+
+export const createTicket = async (data: TicketCreateRequest): Promise<TicketLogDto> => {
+  const response = await v2Client.post<TicketLogDto>("/api/v2/admin/inventory/tickets", data);
+  return response.data;
+};
+
+export const updateTicket = async (id: number, data: TicketUpdateRequest): Promise<TicketLogDto> => {
+  const response = await v2Client.put<TicketLogDto>(`/api/v2/admin/inventory/tickets/${id}`, data);
+  return response.data;
+};
+
+export const deleteTicket = async (id: number): Promise<void> => {
+  await v2Client.delete(`/api/v2/admin/inventory/tickets/${id}`);
+};
+
+export const createInventoryItem = async (data: InventoryItemCreateRequest): Promise<TicketLogDto> => {
+  const response = await v2Client.post<TicketLogDto>("/api/v2/admin/inventory/items", data);
+  return response.data;
+};
+
+export const updateInventoryItem = async (id: number, data: InventoryItemUpdateRequest): Promise<TicketLogDto> => {
+  const response = await v2Client.put<TicketLogDto>(`/api/v2/admin/inventory/items/${id}`, data);
+  return response.data;
+};
+
+export const deleteInventoryItem = async (id: number): Promise<void> => {
+  await v2Client.delete(`/api/v2/admin/inventory/items/${id}`);
+};
+
 export interface WalletTransactionTypeDto {
   value: string;
   label: string;
+  group?: string;
 }
 
-export const getWalletTransactionTypes = async (): Promise<WalletTransactionTypeDto[]> => {
-  const response = await v2Client.get<WalletTransactionTypeDto[]>("/api/v2/admin/economy/transaction-types");
+export const getWalletTransactionTypes = async (): Promise<
+  WalletTransactionTypeDto[]
+> => {
+  const response = await v2Client.get<WalletTransactionTypeDto[]>(
+    "/api/v2/admin/economy/transaction-types",
+  );
   return response.data;
 };
 
@@ -428,6 +514,63 @@ export const getAdminDeposits = async (): Promise<AdminDepositDto[]> => {
 
 export const confirmDeposit = async (id: number): Promise<void> => {
   await v2Client.post(`/admin/api/economy/deposits/${id}/confirm`);
+};
+
+export interface AdminDepositLogDto {
+  id: number;
+  userId: number;
+  nickname: string | null;
+  amount: number;
+  kstDate: string;
+  createdAt: string;
+}
+
+export interface AdminDepositCreateRequest {
+  user_id: number;
+  amount: number;
+  kst_date?: string;
+}
+
+export interface AdminDepositUpdateRequest {
+  amount?: number;
+  kst_date?: string;
+}
+
+export const getAdminDepositLogs = async (params?: {
+  search?: string;
+  page?: number;
+  limit?: number;
+}): Promise<AdminDepositLogDto[]> => {
+  const response = await v2Client.get<AdminDepositLogDto[]>(
+    "/api/v2/admin/economy/deposits",
+    { params },
+  );
+  return response.data;
+};
+
+export const createAdminDepositLog = async (
+  data: AdminDepositCreateRequest,
+): Promise<AdminDepositLogDto> => {
+  const response = await v2Client.post<AdminDepositLogDto>(
+    "/api/v2/admin/economy/deposits",
+    data,
+  );
+  return response.data;
+};
+
+export const updateAdminDepositLog = async (
+  id: number,
+  data: AdminDepositUpdateRequest,
+): Promise<AdminDepositLogDto> => {
+  const response = await v2Client.put<AdminDepositLogDto>(
+    `/api/v2/admin/economy/deposits/${id}`,
+    data,
+  );
+  return response.data;
+};
+
+export const deleteAdminDepositLog = async (id: number): Promise<void> => {
+  await v2Client.delete(`/api/v2/admin/economy/deposits/${id}`);
 };
 
 // ============================================================================
@@ -532,16 +675,26 @@ export interface AdminLevelGlobalConfig {
 }
 
 export const getAdminLevels = async (): Promise<AdminLevelDto[]> => {
-  const response = await v2Client.get<AdminLevelDto[]>("/api/v2/admin/game/levels");
+  const response = await v2Client.get<AdminLevelDto[]>(
+    "/api/v2/admin/game/levels",
+  );
   return response.data;
 };
 
-export const updateAdminLevel = async (level: number, data: Partial<AdminLevelDto>) => {
-  const response = await v2Client.put<AdminLevelDto>(`/api/v2/admin/game/levels/${level}`, data);
+export const updateAdminLevel = async (
+  level: number,
+  data: Partial<AdminLevelDto>,
+) => {
+  const response = await v2Client.put<AdminLevelDto>(
+    `/api/v2/admin/game/levels/${level}`,
+    data,
+  );
   return response.data;
 };
 
-export const updateAdminLevelGlobalConfig = async (data: AdminLevelGlobalConfig) => {
+export const updateAdminLevelGlobalConfig = async (
+  data: AdminLevelGlobalConfig,
+) => {
   const response = await v2Client.put("/api/v2/admin/game/levels/config", data);
   return response.data;
 };
@@ -611,6 +764,87 @@ export const grantItem = async (data: GrantItemRequest): Promise<void> => {
 
 export const revokeItem = async (data: GrantItemRequest): Promise<void> => {
   await v2Client.post("/api/v2/admin/inventory/revoke", data);
+};
+
+// ============================================================================
+// Ticket & Inventory Statistics API
+// ============================================================================
+
+export interface TicketStatsDto {
+  ticketType: string;
+  totalIssued: number;
+  totalUsed: number;
+  currentBalance: number;
+}
+
+export interface UserTicketDto {
+  userId: number;
+  nickname: string;
+  telegramUsername: string | null;
+  ticketType: string;
+  currentBalance: number;
+  totalUsed: number;
+  lastUsedAt: string | null;
+  rewardItems: string[];
+}
+
+export interface InventoryStatsDto {
+  itemType: string;
+  totalIssued: number;
+  totalUsed: number;
+  currentBalance: number;
+}
+
+export interface UserInventoryDto {
+  userId: number;
+  nickname: string;
+  telegramUsername: string | null;
+  itemType: string;
+  itemName: string;
+  currentQuantity: number;
+  totalUsed: number;
+  lastUsedAt: string | null;
+  expiresAt: string | null;
+}
+
+export const getTicketStats = async (): Promise<TicketStatsDto[]> => {
+  const response = await v2Client.get<TicketStatsDto[]>(
+    "/api/v2/admin/inventory/tickets/stats",
+  );
+  return response.data;
+};
+
+export const getUserTickets = async (params?: {
+  search?: string;
+  ticket_type?: string;
+  page?: number;
+  limit?: number;
+}): Promise<UserTicketDto[]> => {
+  const response = await v2Client.get<UserTicketDto[]>(
+    "/api/v2/admin/inventory/tickets/users",
+    { params },
+  );
+  return response.data;
+};
+
+export const getInventoryStats = async (): Promise<InventoryStatsDto[]> => {
+  const response = await v2Client.get<InventoryStatsDto[]>(
+    "/api/v2/admin/inventory/items/stats",
+  );
+  return response.data;
+};
+
+export const getUserInventoryList = async (params?: {
+  search?: string;
+  item_type?: string;
+  page?: number;
+  limit?: number;
+}): Promise<UserInventoryDto[]> => {
+  const response = await v2Client.get<UserInventoryDto[]>(
+    "/api/v2/admin/inventory/items/users",
+    { params },
+  );
+  return response.data;
 };
 
 // ============================================================================
@@ -827,13 +1061,21 @@ export interface AdminDiceConfigDto {
   isActive: boolean;
   maxDailyPlays: number;
 
-  // Win/Draw/Lose Rewards
+  // Probabilities
+  winProbability: number;
+  drawProbability: number;
+  loseProbability: number;
+
+  // Rewards
   winRewardType: string;
   winRewardAmount: number;
   drawRewardType: string;
   drawRewardAmount: number;
   loseRewardType: string;
   loseRewardAmount: number;
+
+  // Daily gain cap
+  dailyGainCap: number;
 }
 
 export interface AdminLotteryPrizeDto {
@@ -939,27 +1181,79 @@ export const updateRouletteConfig = async (
 };
 
 // Dice API
+interface DiceConfigBackend {
+  id: number;
+  name: string;
+  is_active: boolean;
+  max_daily_plays: number;
+  win_probability: number;
+  draw_probability: number;
+  lose_probability: number;
+  win_reward_type: string;
+  win_reward_amount: number;
+  draw_reward_type: string;
+  draw_reward_amount: number;
+  lose_reward_type: string;
+  lose_reward_amount: number;
+  daily_gain_cap: number;
+}
+
 export const getDiceConfig = async (): Promise<AdminDiceConfigDto> => {
-  // Mock Data
+  const response = await v2Client.get<DiceConfigBackend>(
+    "/api/v2/admin/game/dice/config",
+  );
+  const config = response.data;
+
   return {
-    id: 1,
+    id: config.id,
     gameType: "DICE",
-    name: "Basic Dice",
-    isActive: true,
-    maxDailyPlays: 10,
-    winRewardType: "POINT",
-    winRewardAmount: 1000,
-    drawRewardType: "NONE",
-    drawRewardAmount: 0,
-    loseRewardType: "POINT", // Example: Lose gives negative or small consolation? SoT says negative allowed.
-    loseRewardAmount: -100,
+    name: config.name,
+    isActive: config.is_active,
+    maxDailyPlays: config.max_daily_plays,
+    winProbability: config.win_probability,
+    drawProbability: config.draw_probability,
+    loseProbability: config.lose_probability,
+    winRewardType: config.win_reward_type,
+    winRewardAmount: config.win_reward_amount,
+    drawRewardType: config.draw_reward_type,
+    drawRewardAmount: config.draw_reward_amount,
+    loseRewardType: config.lose_reward_type,
+    loseRewardAmount: config.lose_reward_amount,
+    dailyGainCap: config.daily_gain_cap,
   };
 };
 
 export const updateDiceConfig = async (
   data: Partial<AdminDiceConfigDto>,
 ): Promise<void> => {
-  await v2Client.put("/admin/api/game/dice/config", data);
+  const payload: Record<string, any> = {};
+
+  if (data.name !== undefined) payload.name = data.name;
+  if (data.isActive !== undefined) payload.is_active = data.isActive;
+  if (data.maxDailyPlays !== undefined)
+    payload.max_daily_plays = data.maxDailyPlays;
+  if (data.winProbability !== undefined)
+    payload.win_probability = data.winProbability;
+  if (data.drawProbability !== undefined)
+    payload.draw_probability = data.drawProbability;
+  if (data.loseProbability !== undefined)
+    payload.lose_probability = data.loseProbability;
+  if (data.winRewardType !== undefined)
+    payload.win_reward_type = data.winRewardType;
+  if (data.winRewardAmount !== undefined)
+    payload.win_reward_amount = data.winRewardAmount;
+  if (data.drawRewardType !== undefined)
+    payload.draw_reward_type = data.drawRewardType;
+  if (data.drawRewardAmount !== undefined)
+    payload.draw_reward_amount = data.drawRewardAmount;
+  if (data.loseRewardType !== undefined)
+    payload.lose_reward_type = data.loseRewardType;
+  if (data.loseRewardAmount !== undefined)
+    payload.lose_reward_amount = data.loseRewardAmount;
+  if (data.dailyGainCap !== undefined)
+    payload.daily_gain_cap = data.dailyGainCap;
+
+  await v2Client.put(`/api/v2/admin/game/dice/config/${data.id}`, payload);
 };
 
 // Lottery API

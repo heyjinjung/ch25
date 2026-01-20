@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
 import { useDiceConfig, useUpdateDiceConfig } from "../../../hooks/useAdminGameConfig";
 import { type AdminDiceConfigDto } from "../../../api/adminApi";
+import { REWARD_ITEMS } from "../../../constants/rewardItems";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../../components/ui/card";
 import { Switch } from "../../../components/ui/switch";
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
 import { Button } from "../../../components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select";
-import { Dice5, Save, TriangleAlert, Settings2 } from "lucide-react";
+import { Dice5, Save, TriangleAlert, Settings2, Zap, TrendingUp } from "lucide-react";
 
 export default function DiceConfigPage() {
   const { data: config, isLoading } = useDiceConfig();
@@ -42,13 +43,13 @@ export default function DiceConfigPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight mb-1 flex items-center gap-2">
             <Dice5 className="w-6 h-6 text-indigo-400" />
-            주사위 설정 (Dice Config SoT)
+            주사위 게임 설정 (전역 전략)
           </h1>
-          <p className="text-sm text-zinc-400">주사위 게임의 결과별 보상을 관리합니다. (Win/Draw/Lose Reward)</p>
+          <p className="text-sm text-zinc-400">승률, 보상, 일일 한도를 설정합니다.</p>
         </div>
-        <Button 
-          onClick={handleSave} 
-          disabled={updateMutation.isPending} 
+        <Button
+          onClick={handleSave}
+          disabled={updateMutation.isPending}
           className="bg-indigo-500 hover:bg-indigo-600 text-white shadow-lg shadow-indigo-500/20"
         >
           <Save className="w-4 h-4 mr-2" />
@@ -73,21 +74,21 @@ export default function DiceConfigPage() {
               </div>
               <Switch checked={localConfig.isActive} onCheckedChange={(c) => handleChange("isActive", c)} />
             </div>
-            
+
             <div className="space-y-2">
                <Label>설정명 (Name)</Label>
-               <Input 
-                 value={localConfig.name} 
+               <Input
+                 value={localConfig.name}
                  onChange={(e) => handleChange("name", e.target.value)}
                  className="bg-black/50 border-white/10 h-10"
                />
             </div>
 
             <div className="space-y-2">
-               <Label>일일 최대 플레이 횟수 (Max Daily Plays)</Label>
-               <Input 
+               <Label>일일 최대 플레이 횟수</Label>
+               <Input
                  type="number"
-                 value={localConfig.maxDailyPlays} 
+                 value={localConfig.maxDailyPlays}
                  onChange={(e) => handleChange("maxDailyPlays", parseInt(e.target.value))}
                  className="bg-black/50 border-white/10 h-10"
                />
@@ -96,14 +97,81 @@ export default function DiceConfigPage() {
           </CardContent>
         </Card>
 
-        {/* Win/Draw/Lose Rewards */}
+        {/* Probabilities */}
         <Card className="bg-[#18181B] border-white/5 shadow-xl">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Zap className="w-5 h-5 text-amber-400" />
+              승률 확률 (PROBABILITY)
+            </CardTitle>
+            <CardDescription>승률 0.0 ~ 1.0 범위 (예: 0.4 = 40%)</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2 p-4 bg-emerald-500/5 border border-emerald-500/20 rounded-lg">
+              <Label className="text-emerald-400 font-bold flex items-center justify-between">
+                <span>승리 확률 (Win)</span>
+                <span className="text-sm text-emerald-500">{(localConfig.winProbability * 100).toFixed(2)}%</span>
+              </Label>
+              <Input
+                type="number"
+                step="0.01"
+                min="0"
+                max="1"
+                value={localConfig.winProbability}
+                onChange={(e) => handleChange("winProbability", parseFloat(e.target.value))}
+                className="bg-black/50 border-white/10 h-10 text-emerald-400 font-mono"
+              />
+            </div>
+
+            <div className="space-y-2 p-4 bg-zinc-800/30 border border-white/10 rounded-lg">
+              <Label className="text-zinc-300 font-bold flex items-center justify-between">
+                <span>무승부 확률 (Draw)</span>
+                <span className="text-sm text-zinc-500">{(localConfig.drawProbability * 100).toFixed(2)}%</span>
+              </Label>
+              <Input
+                type="number"
+                step="0.01"
+                min="0"
+                max="1"
+                value={localConfig.drawProbability}
+                onChange={(e) => handleChange("drawProbability", parseFloat(e.target.value))}
+                className="bg-black/50 border-white/10 h-10 text-zinc-300 font-mono"
+              />
+            </div>
+
+            <div className="space-y-2 p-4 bg-red-500/5 border border-red-500/20 rounded-lg">
+              <Label className="text-red-400 font-bold flex items-center justify-between">
+                <span>패배 확률 (Lose)</span>
+                <span className="text-sm text-red-500">{(localConfig.loseProbability * 100).toFixed(2)}%</span>
+              </Label>
+              <Input
+                type="number"
+                step="0.01"
+                min="0"
+                max="1"
+                value={localConfig.loseProbability}
+                onChange={(e) => handleChange("loseProbability", parseFloat(e.target.value))}
+                className="bg-black/50 border-white/10 h-10 text-red-400 font-mono"
+              />
+            </div>
+
+            <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg flex items-start gap-2">
+              <TriangleAlert className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+              <p className="text-xs text-amber-200">확률 총합이 1.0 (100%)이 되도록 설정해야 합니다.</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Win/Draw/Lose Rewards */}
+        <Card className="bg-[#18181B] border-white/5 shadow-xl lg:col-span-1">
            <CardHeader>
              <CardTitle className="text-lg flex items-center gap-2">
                 <Dice5 className="w-5 h-5 text-emerald-400" />
                 결과별 보상 설정
              </CardTitle>
-             <CardDescription>승리 시 지급량, 패배 시 차감량(음수) 설정 가능</CardDescription>
+             <CardDescription>승리/무승부/패배 시 지급할 보상 종류와 수량</CardDescription>
            </CardHeader>
            <CardContent className="space-y-6">
              {/* Win */}
@@ -116,13 +184,13 @@ export default function DiceConfigPage() {
                    <Select value={localConfig.winRewardType} onValueChange={(v) => handleChange("winRewardType", v)}>
                       <SelectTrigger className="bg-black/50 border-white/10 h-10"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="POINT">POINT</SelectItem>
-                        <SelectItem value="CC_POINT">CC_POINT</SelectItem>
-                        <SelectItem value="NONE">NONE</SelectItem>
+                        {REWARD_ITEMS.map((item) => (
+                          <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>
+                        ))}
                       </SelectContent>
                    </Select>
-                   <Input 
-                      type="number" 
+                   <Input
+                      type="number"
                       value={localConfig.winRewardAmount}
                       onChange={(e) => handleChange("winRewardAmount", parseInt(e.target.value))}
                       className="bg-black/50 border-white/10 text-emerald-400 font-bold h-10 text-right"
@@ -140,13 +208,13 @@ export default function DiceConfigPage() {
                    <Select value={localConfig.drawRewardType} onValueChange={(v) => handleChange("drawRewardType", v)}>
                       <SelectTrigger className="bg-black/50 border-white/10 h-10"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="POINT">POINT</SelectItem>
-                        <SelectItem value="CC_POINT">CC_POINT</SelectItem>
-                        <SelectItem value="NONE">NONE</SelectItem>
+                        {REWARD_ITEMS.map((item) => (
+                          <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>
+                        ))}
                       </SelectContent>
                    </Select>
-                   <Input 
-                      type="number" 
+                   <Input
+                      type="number"
                       value={localConfig.drawRewardAmount}
                       onChange={(e) => handleChange("drawRewardAmount", parseInt(e.target.value))}
                       className="bg-black/50 border-white/10 text-zinc-300 h-10 text-right"
@@ -167,13 +235,13 @@ export default function DiceConfigPage() {
                    <Select value={localConfig.loseRewardType} onValueChange={(v) => handleChange("loseRewardType", v)}>
                       <SelectTrigger className="bg-black/50 border-white/10 h-10"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="POINT">POINT</SelectItem>
-                        <SelectItem value="CC_POINT">CC_POINT</SelectItem>
-                        <SelectItem value="NONE">NONE</SelectItem>
+                        {REWARD_ITEMS.map((item) => (
+                          <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>
+                        ))}
                       </SelectContent>
                    </Select>
-                   <Input 
-                      type="number" 
+                   <Input
+                      type="number"
                       value={localConfig.loseRewardAmount}
                       onChange={(e) => handleChange("loseRewardAmount", parseInt(e.target.value))}
                       className="bg-black/50 border-white/10 text-red-400 font-bold h-10 text-right"
@@ -182,6 +250,29 @@ export default function DiceConfigPage() {
              </div>
 
            </CardContent>
+        </Card>
+
+        {/* Global Caps */}
+        <Card className="bg-[#18181B] border-white/5 shadow-xl">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-indigo-400" />
+              제한 설정 (GLOBAL CAPS)
+            </CardTitle>
+            <CardDescription>일일 누적 한도로 경제 안정성을 보장합니다.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2 p-4 bg-indigo-500/5 border border-indigo-500/20 rounded-lg">
+              <Label className="text-indigo-400 font-bold">일일 누적 획득 한도 (Daily Gain)</Label>
+              <Input
+                type="number"
+                value={localConfig.dailyGainCap}
+                onChange={(e) => handleChange("dailyGainCap", parseInt(e.target.value))}
+                className="bg-black/50 border-white/10 h-10 text-indigo-400 font-mono text-right"
+              />
+              <p className="text-xs text-zinc-500">유저가 하루에 획득할 수 있는 최대 수량입니다.</p>
+            </div>
+          </CardContent>
         </Card>
       </div>
     </div>

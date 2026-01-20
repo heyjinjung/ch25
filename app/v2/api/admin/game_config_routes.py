@@ -248,12 +248,16 @@ def get_dice_config(
         name=config.name,
         is_active=config.is_active,
         max_daily_plays=config.max_daily_plays,
+        win_probability=config.win_probability,
+        draw_probability=config.draw_probability,
+        lose_probability=config.lose_probability,
         win_reward_type=config.win_reward_type,
         win_reward_amount=config.win_reward_amount,
         draw_reward_type=config.draw_reward_type,
         draw_reward_amount=config.draw_reward_amount,
         lose_reward_type=config.lose_reward_type,
         lose_reward_amount=config.lose_reward_amount,
+        daily_gain_cap=config.daily_gain_cap,
         created_at=config.created_at,
         updated_at=config.updated_at,
     )
@@ -279,9 +283,13 @@ def update_dice_config(
         "name": config.name,
         "is_active": config.is_active,
         "max_daily_plays": config.max_daily_plays,
+        "win_probability": config.win_probability,
+        "draw_probability": config.draw_probability,
+        "lose_probability": config.lose_probability,
         "win_reward": f"{config.win_reward_type}:{config.win_reward_amount}",
         "draw_reward": f"{config.draw_reward_type}:{config.draw_reward_amount}",
         "lose_reward": f"{config.lose_reward_type}:{config.lose_reward_amount}",
+        "daily_gain_cap": config.daily_gain_cap,
     }
 
     if payload.name is not None:
@@ -290,6 +298,12 @@ def update_dice_config(
         config.is_active = payload.is_active
     if payload.max_daily_plays is not None:
         config.max_daily_plays = payload.max_daily_plays
+    if payload.win_probability is not None:
+        config.win_probability = payload.win_probability
+    if payload.draw_probability is not None:
+        config.draw_probability = payload.draw_probability
+    if payload.lose_probability is not None:
+        config.lose_probability = payload.lose_probability
     if payload.win_reward_type is not None:
         config.win_reward_type = payload.win_reward_type
     if payload.win_reward_amount is not None:
@@ -302,6 +316,8 @@ def update_dice_config(
         config.lose_reward_type = payload.lose_reward_type
     if payload.lose_reward_amount is not None:
         config.lose_reward_amount = payload.lose_reward_amount
+    if payload.daily_gain_cap is not None:
+        config.daily_gain_cap = payload.daily_gain_cap
 
     config.updated_at = datetime.utcnow()
 
@@ -309,9 +325,13 @@ def update_dice_config(
         "name": config.name,
         "is_active": config.is_active,
         "max_daily_plays": config.max_daily_plays,
+        "win_probability": config.win_probability,
+        "draw_probability": config.draw_probability,
+        "lose_probability": config.lose_probability,
         "win_reward": f"{config.win_reward_type}:{config.win_reward_amount}",
         "draw_reward": f"{config.draw_reward_type}:{config.draw_reward_amount}",
         "lose_reward": f"{config.lose_reward_type}:{config.lose_reward_amount}",
+        "daily_gain_cap": config.daily_gain_cap,
     }
     AdminAuditService.log(
         db,
@@ -331,12 +351,16 @@ def update_dice_config(
         name=config.name,
         is_active=config.is_active,
         max_daily_plays=config.max_daily_plays,
+        win_probability=config.win_probability,
+        draw_probability=config.draw_probability,
+        lose_probability=config.lose_probability,
         win_reward_type=config.win_reward_type,
         win_reward_amount=config.win_reward_amount,
         draw_reward_type=config.draw_reward_type,
         draw_reward_amount=config.draw_reward_amount,
         lose_reward_type=config.lose_reward_type,
         lose_reward_amount=config.lose_reward_amount,
+        daily_gain_cap=config.daily_gain_cap,
         created_at=config.created_at,
         updated_at=config.updated_at,
     )
