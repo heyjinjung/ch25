@@ -65,13 +65,6 @@ export default function OpsDashboard() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            className="border-white/10 text-zinc-300 hover:text-white hover:bg-white/5"
-            onClick={() => navigate("/v2/admin/system/modals")}
-          >
-            모달 제어
-          </Button>
           <Button className="bg-[#D2FD9C] text-black hover:bg-[#bbf07c]">
             긴급 점검 (Maintenance)
           </Button>
@@ -99,7 +92,6 @@ export default function OpsDashboard() {
             </div>
           }
           icon={Server}
-          onClick={() => navigate("/v2/admin/system/health")}
         />
         <QuickActionCard
           label="개발중 (Holding)"

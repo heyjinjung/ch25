@@ -139,13 +139,6 @@ export default function AdminLayout() {
         },
       ],
     },
-    {
-      key: "SYSTEM",
-      label: "시스템",
-      items: [
-        { icon: Settings, label: "시스템", path: "/v2/admin/system/health" },
-      ],
-    },
   ];
 
   const flatNavItems = navSections.flatMap((s) =>

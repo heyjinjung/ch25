@@ -738,23 +738,38 @@ def delete_admin_shop_product(
 ):
     """상점 상품 삭제"""
     admin_id, _ = admin_info
+    
+    import logging
+    logger = logging.getLogger(__name__)
 
     products = _load_v2_shop_products(db)
     original_len = len(products)
     deleted_product = None
+    
+    logger.info(f"[DELETE] Attempting to delete product_id={product_id}")
+    logger.info(f"[DELETE] Total products in DB: {len(products)}")
 
     new_products = []
     for p in products:
         sku = str(p.get("sku") or "")
-        if sku and _product_id_from_sku(sku) == int(product_id):
+        if not sku:
+            new_products.append(p)
+            continue
+        # ID 비교를 명시적으로 처리
+        product_hash_id = _product_id_from_sku(sku)
+        logger.info(f"[DELETE] Checking SKU={sku}, hash_id={product_hash_id}, target={product_id}, match={product_hash_id == product_id}")
+        if product_hash_id == product_id:
             deleted_product = p
+            logger.info(f"[DELETE] Found matching product: {sku}")
             continue
         new_products.append(p)
 
     if len(new_products) == original_len:
+        logger.error(f"[DELETE] PRODUCT_NOT_FOUND for product_id={product_id}")
         raise HTTPException(status_code=404, detail="PRODUCT_NOT_FOUND")
 
     _save_v2_shop_products(db, new_products, admin_id=admin_id)
+    logger.info(f"[DELETE] Successfully deleted product with SKU={deleted_product.get('sku')}")
 
     if deleted_product:
         AdminAuditService.log(

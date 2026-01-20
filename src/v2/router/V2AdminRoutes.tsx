@@ -17,8 +17,6 @@ import LotteryConfigPage from "../admin/pages/game/LotteryConfigPage";
 import TicketInventoryTabPage from "../admin/pages/economy/TicketInventoryTabPage";
 import MarketingTabPage from "../admin/pages/marketing/MarketingTabPage";
 import UserManagementTabPage from "../admin/pages/users/UserManagementTabPage";
-import HealthPage from "../admin/pages/system/HealthPage";
-import ModalControlPage from "../admin/pages/system/ModalControlPage";
 import {
   AdminTeamBattlePage,
   AdminGoldenHourPage,
@@ -65,14 +63,6 @@ const V2AdminRoutes: React.FC = () => {
 
           {/* Marketing - Tabbed */}
           <Route path="marketing/messages" element={<MarketingTabPage />} />
-
-          {/* System */}
-          <Route path="system/health" element={<HealthPage />} />
-          <Route path="system/modals" element={<ModalControlPage />} />
-          <Route
-            path="settings"
-            element={<div className="p-10">Total Settings (Pending)</div>}
-          />
           <Route
             path="*"
             element={<Navigate to="/v2/admin/dashboard" replace />}
