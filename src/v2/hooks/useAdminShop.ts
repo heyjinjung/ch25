@@ -11,7 +11,7 @@ import {
 
 export const useAdminProducts = () => {
   return useQuery({
-    queryKey: ["adminProducts"],
+    queryKey: ["admin", "products"],
     queryFn: getAdminProducts,
   });
 };
@@ -21,7 +21,7 @@ export const useAdminCreateProduct = () => {
   return useMutation({
     mutationFn: (data: AdminProductCreateRequest) => createAdminProduct(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["adminProducts"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "products"] });
     },
   });
 };
@@ -32,7 +32,7 @@ export const useAdminUpdateProduct = () => {
     mutationFn: ({ productId, data }: { productId: number; data: AdminProductUpdateRequest }) =>
       updateAdminProduct(productId, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["adminProducts"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "products"] });
     },
   });
 };
@@ -42,7 +42,7 @@ export const useAdminDeleteProduct = () => {
   return useMutation({
     mutationFn: (productId: number) => deleteAdminProduct(productId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["adminProducts"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "products"] });
     },
   });
 };
@@ -52,7 +52,7 @@ export const useAdminSyncProducts = () => {
   return useMutation({
     mutationFn: syncAdminProducts,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["adminProducts"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "products"] });
     },
   });
 };

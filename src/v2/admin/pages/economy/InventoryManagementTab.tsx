@@ -63,6 +63,12 @@ import {
   getRewardItemLabel,
 } from "../../../constants/rewardItems";
 
+const formatKst = (value: string) => {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return parsed.toLocaleString("ko-KR", { timeZone: "Asia/Seoul" });
+};
+
 export default function InventoryManagementTab() {
   const [searchUserId, setSearchUserId] = useState<number | undefined>(
     undefined,
@@ -492,7 +498,7 @@ export default function InventoryManagementTab() {
                     className="border-white/5 hover:bg-white/[0.04] transition-colors"
                   >
                     <TableCell className="text-zinc-500 text-xs font-mono">
-                      {log.timestamp}
+                      {formatKst(log.timestamp)}
                     </TableCell>
                     <TableCell className="font-mono text-zinc-300">
                       <div className="flex flex-col">

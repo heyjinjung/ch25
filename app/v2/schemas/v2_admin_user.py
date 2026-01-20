@@ -219,6 +219,7 @@ class TicketLogDto(BaseModel):
     timestamp: datetime
     adminId: Optional[str] = None
     nickname: Optional[str] = None
+    nickname: Optional[str] = None
 
 
 from app.v2.schemas.v2_admin_user_summary import AdminUserSummary  # noqa: E402

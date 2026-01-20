@@ -1,5 +1,4 @@
 import { useEffect, useState, useRef } from "react";
-import { toast } from "sonner";
 
 interface GameEvent {
   eventId: string;
@@ -39,7 +38,7 @@ export const GoldenEventStream = () => {
           const message = JSON.parse(e.data);
 
           if (message.type === "connection") {
-            toast.success("Golden 이벤트 스트림 연결됨");
+            console.log("Golden 이벤트 스트림 연결됨");
             return;
           }
 
@@ -61,7 +60,7 @@ export const GoldenEventStream = () => {
           }
 
           if (message.type === "error") {
-            toast.error(`WebSocket 오류: ${message.message}`);
+            console.error(`WebSocket 오류: ${message.message}`);
           }
         } catch (err) {
           console.error("Failed to parse WebSocket message:", err);
@@ -70,7 +69,7 @@ export const GoldenEventStream = () => {
 
       ws.onerror = (error) => {
         console.error("WebSocket error:", error);
-        toast.error("Golden 이벤트 스트림 연결 오류");
+        console.error("Golden 이벤트 스트림 연결 오류");
         setIsConnected(false);
       };
 
@@ -85,7 +84,7 @@ export const GoldenEventStream = () => {
       };
     } catch (error) {
       console.error("Failed to connect WebSocket:", error);
-      toast.error("WebSocket 연결 실패");
+      console.error("WebSocket 연결 실패");
     }
   };
 

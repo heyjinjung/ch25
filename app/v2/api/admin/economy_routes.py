@@ -1114,7 +1114,9 @@ def get_ticket_logs(
     db: Session = Depends(get_db)
 ):
     # Fetch Wallet Logs
-    w_query = db.query(UserGameWalletLedger)
+    w_query = db.query(UserGameWalletLedger, User).outerjoin(
+        User, UserGameWalletLedger.user_id == User.id
+    )
     if user_id:
         w_query = w_query.filter(UserGameWalletLedger.user_id == user_id)
     if start_date:
@@ -1125,7 +1127,9 @@ def get_ticket_logs(
     w_logs = w_query.order_by(UserGameWalletLedger.created_at.desc()).limit(100).all()
     
     # Fetch Inventory Logs
-    i_query = db.query(UserInventoryLedger)
+    i_query = db.query(UserInventoryLedger, User).outerjoin(
+        User, UserInventoryLedger.user_id == User.id
+    )
     if user_id:
         i_query = i_query.filter(UserInventoryLedger.user_id == user_id)
     if start_date:
@@ -1137,7 +1141,7 @@ def get_ticket_logs(
     
     # Merge
     combined = []
-    for l in w_logs:
+    for l, user in w_logs:
         l_type = "GRANT" if l.delta > 0 else "USE"
         combined.append(TicketLogDto(
             id=l.id,
@@ -1147,10 +1151,11 @@ def get_ticket_logs(
             amount=abs(l.delta),
             balanceAfter=l.balance_after,
             reason=l.reason or "",
-            timestamp=l.created_at.isoformat()
+            timestamp=l.created_at.isoformat(),
+            nickname=(user.nickname if user else "")
         ))
         
-    for l in i_logs:
+    for l, user in i_logs:
         l_type = "GRANT" if l.change_amount > 0 else "USE"
         combined.append(TicketLogDto(
             id=l.id,
@@ -1160,7 +1165,8 @@ def get_ticket_logs(
             amount=abs(l.change_amount),
             balanceAfter=l.balance_after,
             reason=l.reason or "",
-            timestamp=l.created_at.isoformat()
+            timestamp=l.created_at.isoformat(),
+            nickname=(user.nickname if user else "")
         ))
         
     # Sort desc
