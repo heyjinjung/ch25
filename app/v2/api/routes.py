@@ -20,7 +20,7 @@ from app.schemas.mission import MissionListResponse
 from app.schemas.roulette import RoulettePlayRequest, RoulettePlayResponse, RouletteStatusResponse
 from app.schemas.survey import SurveyCompleteRequest, SurveyListResponse, SurveyResponseUpdateRequest
 from app.services.inventory_service import InventoryService
-from app.services.mission_service import MissionService
+from app.v2.services.mission_service import V2MissionService
 from app.services.feature_service import FeatureService
 from app.v2.services.retention_intervention_service import V2RetentionInterventionService
 from app.services.shop_service import ShopService
@@ -312,7 +312,7 @@ def list_missions(
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
-    service = MissionService(db)
+    service = V2MissionService(db)
     missions = service.get_user_missions(user_id)
     streak_info = service.get_streak_info(user_id)
     return MissionListResponse(missions=missions, streak_info=streak_info)
@@ -327,7 +327,7 @@ def claim_mission(
 ):
     if not idempotency_key:
         raise HTTPException(status_code=400, detail="X-Idempotency-Key header required")
-    service = MissionService(db)
+    service = V2MissionService(db)
     success, reward_type, amount = service.claim_reward(user_id, mission_id)
     if not success:
         raise HTTPException(status_code=400, detail=reward_type)
@@ -339,7 +339,7 @@ def claim_daily_gift(
     db: Session = Depends(get_db),
     user_id: int = Depends(get_current_user_id),
 ):
-    service = MissionService(db)
+    service = V2MissionService(db)
     success, reward_type, amount = service.claim_daily_gift(user_id)
     if not success:
         raise HTTPException(status_code=400, detail=reward_type)
@@ -376,7 +376,7 @@ def claim_streak_reward(
     db: Session = Depends(get_db),
     user_id: int = Depends(get_current_user_id),
 ):
-    service = MissionService(db)
+    service = V2MissionService(db)
     result = service.claim_streak_reward(user_id)
     if not result.get("success"):
         raise HTTPException(status_code=400, detail=result.get("message"))

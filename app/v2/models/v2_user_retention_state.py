@@ -11,7 +11,7 @@ class V2UserRetentionState(Base):
 
     __tablename__ = "v2_user_retention_state"
 
-    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), primary_key=True)
+    user_id = Column(Integer, ForeignKey("v2_user.id", ondelete="CASCADE"), primary_key=True)
     churn_probability_score = Column(Float, nullable=False, default=0)
     predicted_ltv = Column(Float, nullable=False, default=0)
     current_win_loss_streak = Column(Integer, nullable=False, default=0)
