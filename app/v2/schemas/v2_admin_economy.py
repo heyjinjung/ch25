@@ -277,5 +277,6 @@ class TicketLogDto(BaseModel):
     balanceAfter: int = 0
     reason: str
     timestamp: str
+    nickname: str | None = None
 
     model_config = ConfigDict(from_attributes=True)

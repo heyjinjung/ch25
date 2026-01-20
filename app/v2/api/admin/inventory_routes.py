@@ -182,14 +182,17 @@ def create_ticket_log(
 
         db.commit()
         db.refresh(log)
+        user = db.query(User).filter(User.id == log.user_id).first()
         return TicketLogDto(
             id=log.id,
             userId=log.user_id,
+            nickname=(user.nickname if user else ""),
+            type="GRANT" if log.change_amount > 0 else "USE",
             itemType=log.item_type,
-            changeAmount=log.change_amount,
+            amount=abs(log.change_amount),
             balanceAfter=log.balance_after,
             reason=log.reason,
-            createdAt=log.created_at
+            timestamp=log.created_at
         )
     except Exception as e:
         db.rollback()
@@ -250,14 +253,17 @@ def update_ticket_log(
 
         db.commit()
         db.refresh(log)
+        user = db.query(User).filter(User.id == log.user_id).first()
         return TicketLogDto(
             id=log.id,
             userId=log.user_id,
+            nickname=(user.nickname if user else ""),
+            type="GRANT" if log.change_amount > 0 else "USE",
             itemType=log.item_type,
-            changeAmount=log.change_amount,
+            amount=abs(log.change_amount),
             balanceAfter=log.balance_after,
             reason=log.reason,
-            createdAt=log.created_at
+            timestamp=log.created_at
         )
     except Exception as e:
         db.rollback()
@@ -354,14 +360,17 @@ def create_inventory_item_log(
 
         db.commit()
         db.refresh(log)
+        user = db.query(User).filter(User.id == log.user_id).first()
         return TicketLogDto(
             id=log.id,
             userId=log.user_id,
+            nickname=(user.nickname if user else ""),
+            type="GRANT" if log.change_amount > 0 else "USE",
             itemType=log.item_type,
-            changeAmount=log.change_amount,
+            amount=abs(log.change_amount),
             balanceAfter=log.balance_after,
             reason=log.reason,
-            createdAt=log.created_at
+            timestamp=log.created_at
         )
     except Exception as e:
         db.rollback()
@@ -409,14 +418,17 @@ def update_inventory_item_log(
 
         db.commit()
         db.refresh(log)
+        user = db.query(User).filter(User.id == log.user_id).first()
         return TicketLogDto(
             id=log.id,
             userId=log.user_id,
+            nickname=(user.nickname if user else ""),
+            type="GRANT" if log.change_amount > 0 else "USE",
             itemType=log.item_type,
-            changeAmount=log.change_amount,
+            amount=abs(log.change_amount),
             balanceAfter=log.balance_after,
             reason=log.reason,
-            createdAt=log.created_at
+            timestamp=log.created_at
         )
     except Exception as e:
         db.rollback()
