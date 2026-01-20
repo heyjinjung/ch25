@@ -18,6 +18,7 @@ from app.v2.schemas.v2_admin_economy import (
     AdminDepositUpdateRequest,
     AdminProductDto,
     AdminWithdrawalDto,
+    AdminWithdrawalRejectRequest,
 )
 
 router = APIRouter()
@@ -168,6 +169,8 @@ def list_admin_withdrawals(
 ):
     admin_id, admin_role = admin_info
 
+    status = (status or "").strip().upper()
+
     query = db.query(VaultWithdrawalRequest)
     if status:
         query = query.filter(VaultWithdrawalRequest.status == status)
@@ -182,15 +185,24 @@ def list_admin_withdrawals(
         elif r.amount >= 300000:
             risk = "MEDIUM"
 
+        safe_nickname = "Unknown"
+        if r.user and (r.user.nickname is not None):
+            safe_nickname = r.user.nickname or "(미설정)"
+
+        safe_status = str(r.status or "").strip().upper()
+        if safe_status not in {"PENDING", "APPROVED", "REJECTED"}:
+            # Legacy/unknown statuses (e.g., CANCELLED) should not crash response validation
+            safe_status = "REJECTED"
+
         result.append(
             AdminWithdrawalDto(
                 id=r.id,
-                user_id=r.user_id,
-                nickname=r.user.nickname if r.user else "Unknown",
-                amount=r.amount,
-                request_time=r.created_at,
-                risk_level=risk,
-                status=r.status,
+                userId=r.user_id,
+                nickname=safe_nickname,
+                amount=int(r.amount or 0),
+                requestTime=r.created_at,
+                riskLevel=risk,
+                status=safe_status,
             )
         )
     return result
@@ -555,3 +567,78 @@ def update_admin_shop_product_price(
         raise HTTPException(status_code=404, detail="PRODUCT_NOT_FOUND")
     _save_v2_shop_products(db, products, admin_id=admin_id)
     return {"success": True}
+
+
+@router.post("/withdrawals/{withdrawal_id}/approve")
+def approve_withdrawal(
+    withdrawal_id: int,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """Approve a withdrawal request"""
+    admin_id, admin_role = admin_info
+    
+    withdrawal = db.query(VaultWithdrawalRequest).filter(
+        VaultWithdrawalRequest.id == withdrawal_id
+    ).first()
+    
+    if not withdrawal:
+        raise HTTPException(status_code=404, detail="WITHDRAWAL_NOT_FOUND")
+    
+    if withdrawal.status != "PENDING":
+        raise HTTPException(status_code=400, detail="WITHDRAWAL_ALREADY_PROCESSED")
+    
+    withdrawal.status = "APPROVED"
+    withdrawal.approved_at = datetime.utcnow()
+    withdrawal.approved_by = admin_id
+    
+    AdminAuditService.log(
+        db,
+        admin_id,
+        "WITHDRAWAL_APPROVE",
+        "WITHDRAWAL",
+        str(withdrawal_id),
+        before={"status": "PENDING"},
+        after={"status": "APPROVED", "amount": withdrawal.amount},
+    )
+    
+    db.commit()
+    return {"success": True, "id": withdrawal_id}
+
+
+@router.post("/withdrawals/{withdrawal_id}/reject")
+def reject_withdrawal(
+    withdrawal_id: int,
+    payload: AdminWithdrawalRejectRequest,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """Reject a withdrawal request"""
+    admin_id, admin_role = admin_info
+    
+    withdrawal = db.query(VaultWithdrawalRequest).filter(
+        VaultWithdrawalRequest.id == withdrawal_id
+    ).first()
+    
+    if not withdrawal:
+        raise HTTPException(status_code=404, detail="WITHDRAWAL_NOT_FOUND")
+    
+    if withdrawal.status != "PENDING":
+        raise HTTPException(status_code=400, detail="WITHDRAWAL_ALREADY_PROCESSED")
+    
+    withdrawal.status = "REJECTED"
+    withdrawal.rejected_at = datetime.utcnow()
+    withdrawal.rejection_reason = payload.reason
+    
+    AdminAuditService.log(
+        db,
+        admin_id,
+        "WITHDRAWAL_REJECT",
+        "WITHDRAWAL",
+        str(withdrawal_id),
+        before={"status": "PENDING"},
+        after={"status": "REJECTED", "amount": withdrawal.amount, "reason": payload.reason},
+    )
+    
+    db.commit()
+    return {"success": True, "id": withdrawal_id}

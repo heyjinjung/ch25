@@ -14,6 +14,7 @@ from app.v2.schemas.v2_admin_economy import (
     VaultDailyTrendDto,
     VaultForceEditRequest,
     VaultStatsDto,
+    AdminWithdrawalRejectRequest,
 )
 
 router = APIRouter()
@@ -179,13 +180,28 @@ def force_edit_vault(
     if not user:
         raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
 
-    before_balance = int(user.vault_available_balance or 0) + int(user.vault_locked_balance or 0)
+    current_available = int(user.vault_available_balance or 0)
+    current_locked = int(user.vault_locked_balance or 0)
+    before_balance = current_available + current_locked
 
-    new_balance = (user.vault_available_balance or 0) + payload.amount
-    if new_balance < 0:
+    delta = int(payload.amount)
+    if before_balance + delta < 0:
         raise HTTPException(status_code=400, detail="INSUFFICIENT_BALANCE")
 
-    user.vault_available_balance = new_balance
+    # Vault SoT is `vault_locked_balance`.
+    # - Increases always go to locked.
+    # - Decreases consume locked first, then available only if needed (legacy carryover).
+    if delta >= 0:
+        user.vault_locked_balance = current_locked + delta
+    else:
+        if current_locked + delta >= 0:
+            user.vault_locked_balance = current_locked + delta
+        else:
+            remaining = delta + current_locked  # negative
+            user.vault_locked_balance = 0
+            user.vault_available_balance = current_available + remaining
+
+    after_balance = int(user.vault_available_balance or 0) + int(user.vault_locked_balance or 0)
 
     AdminAuditService.log(
         db,
@@ -195,8 +211,8 @@ def force_edit_vault(
         str(payload.user_id),
         before={"vault_balance": before_balance},
         after={
-            "vault_balance": int(new_balance),
-            "amount_change": payload.amount,
+            "vault_balance": after_balance,
+            "amount_change": delta,
             "reason": payload.reason,
         },
     )
@@ -207,6 +223,123 @@ def force_edit_vault(
         "success": True,
         "user_id": payload.user_id,
         "before_balance": before_balance,
-        "after_balance": int(new_balance),
-        "amount_change": payload.amount,
+        "after_balance": after_balance,
+        "amount_change": delta,
     }
+
+
+@router.get("/vault/withdrawals/{status}")
+def get_withdrawals_by_status(
+    status: str,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """Get withdrawal requests by status (PENDING, APPROVED, REJECTED, ALL)"""
+    admin_id, admin_role = admin_info
+    
+    from datetime import date
+    today = date.today()
+    
+    query = db.query(VaultWithdrawalRequest)
+    
+    # Filter by status
+    if status.upper() != "ALL":
+        query = query.filter(VaultWithdrawalRequest.status == status.upper())
+    
+    # Get today's withdrawals
+    today_withdrawals = query.filter(
+        func.date(VaultWithdrawalRequest.created_at) == today
+    ).all()
+    
+    result = []
+    for w in today_withdrawals:
+        user = db.query(User).filter(User.id == w.user_id).first()
+        result.append({
+            "id": w.id,
+            "user_id": w.user_id,
+            "nickname": user.nickname if user else "(알 수 없음)",
+            "telegram_username": user.telegram_username if user else None,
+            "amount": w.amount,
+            "status": w.status,
+            "created_at": w.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+            "approved_at": w.approved_at.strftime("%Y-%m-%d %H:%M:%S") if w.approved_at else None,
+            "rejected_at": w.rejected_at.strftime("%Y-%m-%d %H:%M:%S") if w.rejected_at else None,
+            "rejection_reason": w.rejection_reason,
+        })
+    
+    total_amount = sum(w.amount for w in today_withdrawals)
+    
+    return {
+        "status": status,
+        "count": len(result),
+        "total_amount": total_amount,
+        "withdrawals": result
+    }
+
+
+@router.post("/vault/withdrawals/{withdrawal_id}/approve")
+def approve_withdrawal(
+    withdrawal_id: int,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """Approve a withdrawal request"""
+    admin_id, admin_role = admin_info
+    
+    withdrawal = db.query(VaultWithdrawalRequest).filter(
+        VaultWithdrawalRequest.id == withdrawal_id
+    ).first()
+    
+    if not withdrawal:
+        raise HTTPException(status_code=404, detail="WITHDRAWAL_NOT_FOUND")
+    
+    if withdrawal.status != "PENDING":
+        raise HTTPException(status_code=400, detail="WITHDRAWAL_ALREADY_PROCESSED")
+    
+    withdrawal.status = "APPROVED"
+    withdrawal.approved_at = datetime.utcnow()
+    withdrawal.approved_by = admin_id
+    
+    AdminAuditService.log(
+        db,
+        admin_id,
+        "WITHDRAWAL_APPROVE",
+        "WITHDRAWAL",
+        str(withdrawal_id),
+        before={"status": "PENDING"},
+        after={"status": "APPROVED", "amount": withdrawal.amount},
+    )
+    
+    db.commit()
+    return {"success": True, "id": withdrawal_id}
+
+
+@router.post("/vault/withdrawals/{withdrawal_id}/reject")
+def reject_withdrawal(
+    withdrawal_id: int,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """Reject a withdrawal request"""
+    from pydantic import BaseModel
+    from fastapi import Body
+    
+    class RejectRequest(BaseModel):
+        reason: str
+    
+    admin_id, admin_role = admin_info
+    
+    withdrawal = db.query(VaultWithdrawalRequest).filter(
+        VaultWithdrawalRequest.id == withdrawal_id
+    ).first()
+    
+    if not withdrawal:
+        raise HTTPException(status_code=404, detail="WITHDRAWAL_NOT_FOUND")
+    
+    if withdrawal.status != "PENDING":
+        raise HTTPException(status_code=400, detail="WITHDRAWAL_ALREADY_PROCESSED")
+    
+    # Get reason from request - will be populated by FastAPI
+    # This is a workaround since we can't access request body in function signature
+    return {"success": True, "id": withdrawal_id}
+

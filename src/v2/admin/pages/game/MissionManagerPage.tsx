@@ -4,7 +4,6 @@ import {
   useAdminUpdateMission,
 } from "../../../hooks/useAdminGame";
 import { type AdminMissionDto } from "../../../api/adminApi";
-import { REWARD_ITEMS } from "../../../constants/rewardItems";
 import {
   Tabs,
   TabsContent,
@@ -23,6 +22,48 @@ import {
   SelectValue,
 } from "../../../components/ui/select";
 import { Ticket, Gift, Coins } from "lucide-react";
+
+type MissionRewardTypeValue =
+  | "NONE"
+  | "DIAMOND"
+  | "GOLD_KEY"
+  | "DIAMOND_KEY"
+  | "CASH_UNLOCK"
+  | "TICKET_BUNDLE"
+  | "TICKET_ROULETTE"
+  | "TICKET_LOTTERY"
+  | "TICKET_DICE"
+  | "POINT"
+  | "GIFTICON_BAEMIN"
+  | "GIFTICON_COMPOSE"
+  | "CC_POINT"
+  | "GAME_XP"
+  | "TICKET"
+  | "BUNDLE";
+
+const MISSION_REWARD_OPTIONS: readonly {
+  value: MissionRewardTypeValue;
+  label: string;
+}[] = [
+  { value: "POINT", label: "금고 포인트 (P)" },
+  { value: "TICKET_ROULETTE", label: "룰렛 티켓" },
+  { value: "TICKET_DICE", label: "다이스 티켓" },
+  { value: "TICKET_LOTTERY", label: "복권 티켓" },
+  { value: "DIAMOND", label: "다이아몬드" },
+  { value: "TICKET_BUNDLE", label: "티켓 번들" },
+  { value: "GIFTICON_BAEMIN", label: "기프티콘(배민)" },
+  { value: "GIFTICON_COMPOSE", label: "기프티콘(컴포즈)" },
+  // 마이그레이션/표준 타입(백엔드 enum에 존재)
+  { value: "CC_POINT", label: "CC 포인트" },
+  { value: "GAME_XP", label: "게임 XP" },
+  { value: "TICKET", label: "만능 티켓" },
+  { value: "BUNDLE", label: "번들" },
+  // 기타
+  { value: "GOLD_KEY", label: "골드 키" },
+  { value: "DIAMOND_KEY", label: "다이아 키" },
+  { value: "CASH_UNLOCK", label: "출금 잠금 해제" },
+  { value: "NONE", label: "없음 (보상 없음)" },
+] as const;
 
 // Mock Categories for Tabs
 const CATEGORIES = ["DAILY", "WEEKLY", "NEW_USER", "SPECIAL_EVENT"];
@@ -154,9 +195,9 @@ export default function MissionManagerPage() {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent className="bg-[#18181B] border-white/10 text-white max-h-[300px]">
-                            {REWARD_ITEMS.map((item) => (
-                              <SelectItem 
-                                key={item.value} 
+                            {MISSION_REWARD_OPTIONS.map((item) => (
+                              <SelectItem
+                                key={item.value}
                                 value={item.value}
                                 className="text-sm py-2.5 cursor-pointer hover:bg-white/5 focus:bg-white/10"
                               >
@@ -179,7 +220,9 @@ export default function MissionManagerPage() {
                             )
                           }
                         />
-                        <span className="text-xs text-zinc-500 font-medium">개</span>
+                        <span className="text-xs text-zinc-500 font-medium">
+                          개
+                        </span>
                       </div>
                     </div>
 

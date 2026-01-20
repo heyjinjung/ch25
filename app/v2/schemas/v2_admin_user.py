@@ -79,31 +79,37 @@ class AdminUserResponse(AdminUserBase):
 
 
 class InterventionActionDto(BaseModel):
-    action_id: str
+    actionId: str = Field(..., validation_alias="action_id")
     label: str
     type: str  # e.g. "REWARD", "MESSAGE", "RESTRICTION"
     description: str
 
+    model_config = ConfigDict(populate_by_name=True)
+
 
 class InterventionPlaybookDto(BaseModel):
-    risk_level: str
-    suggested_actions: List[InterventionActionDto]
+    riskLevel: str = Field(..., validation_alias="risk_level")
+    suggestedActions: List[InterventionActionDto] = Field(
+        ..., validation_alias="suggested_actions"
+    )
+
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class AdminUserDetailDto(BaseModel):
     id: int
     nickname: str
-    telegramId: Optional[int] = Field(None, alias="telegram_id")
-    createdAt: datetime = Field(..., alias="created_at")
-    totalDeposit: int = Field(..., alias="total_deposit")
-    currentAssets: int = Field(..., alias="current_assets")
-    vaultBalance: int = Field(..., alias="vault_balance")
-    ticketBalance: int = Field(..., alias="ticket_balance")
+    telegramId: Optional[int] = Field(None, validation_alias="telegram_id")
+    createdAt: datetime = Field(..., validation_alias="created_at")
+    totalDeposit: int = Field(..., validation_alias="total_deposit")
+    currentAssets: int = Field(..., validation_alias="current_assets")
+    vaultBalance: int = Field(..., validation_alias="vault_balance")
+    ticketBalance: int = Field(..., validation_alias="ticket_balance")
     level: int
-    vip_level: str
-    is_active: bool
-    risk_level: str
-    risk_reason: Optional[str] = None
+    vipLevel: str = Field(..., validation_alias="vip_level")
+    isActive: bool = Field(..., validation_alias="is_active")
+    riskLevel: str = Field(..., validation_alias="risk_level")
+    riskReason: Optional[str] = Field(None, validation_alias="risk_reason")
     playbook: Optional[InterventionPlaybookDto] = None
 
     model_config = ConfigDict(populate_by_name=True)

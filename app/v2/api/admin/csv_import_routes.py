@@ -1,0 +1,176 @@
+"""Admin API routes for CSV import operations."""
+from __future__ import annotations
+
+from typing import Any
+
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from sqlalchemy.orm import Session
+
+from app.api.deps import get_current_admin_info, get_db
+from app.v2.schemas.v2_csv_import import (
+    CSVImportRequest,
+    CSVImportResult,
+)
+from app.v2.services.csv_import_service import CSVImportService
+
+router = APIRouter()
+
+
+@router.post("/csv-import/validate", response_model=dict[str, Any])
+def validate_csv_file(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """
+    Validate CSV file format and structure.
+
+    Returns validation status and any errors found.
+    """
+    admin_id, admin_role = admin_info
+
+    if admin_role != "SUPERADMIN":
+        raise HTTPException(status_code=403, detail="Requires SUPERADMIN role")
+
+    # Save uploaded file temporarily
+    import tempfile
+    from pathlib import Path
+
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".csv") as tmp_file:
+        tmp_file.write(file.file.read())
+        tmp_path = Path(tmp_file.name)
+
+    try:
+        service = CSVImportService(db)
+
+        # Validate file
+        is_valid, error_msg = service.validate_csv_file(str(tmp_path))
+
+        # Get estimate
+        estimate = {}
+        if is_valid:
+            estimate = service.estimate_import_time(str(tmp_path))
+
+        return {
+            "is_valid": is_valid,
+            "error": error_msg if not is_valid else None,
+            "filename": file.filename,
+            "file_size_bytes": tmp_path.stat().st_size,
+            **estimate,
+        }
+
+    finally:
+        # Cleanup temp file
+        tmp_path.unlink(missing_ok=True)
+
+
+@router.post("/csv-import/upload", response_model=dict[str, str])
+def upload_csv_file(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """
+    Upload CSV file for import.
+
+    Saves file to configured upload directory and returns file ID.
+    """
+    admin_id, admin_role = admin_info
+
+    if admin_role != "SUPERADMIN":
+        raise HTTPException(status_code=403, detail="Requires SUPERADMIN role")
+
+    # Validate file extension
+    if not file.filename or not file.filename.endswith(".csv"):
+        raise HTTPException(status_code=400, detail="Only CSV files are allowed")
+
+    # Save to upload directory
+    from pathlib import Path
+    from datetime import datetime
+    import os
+
+    # Create upload directory if not exists
+    upload_dir = Path("uploads/csv_imports")
+    upload_dir.mkdir(parents=True, exist_ok=True)
+
+    # Generate unique filename
+    timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+    safe_filename = f"casino_log_{timestamp}_{file.filename}"
+    file_path = upload_dir / safe_filename
+
+    # Save file
+    with file_path.open("wb") as f:
+        f.write(file.file.read())
+
+    return {
+        "file_id": safe_filename,
+        "file_path": str(file_path),
+        "message": "File uploaded successfully",
+    }
+
+
+@router.post("/csv-import/import", response_model=CSVImportResult)
+def import_csv_file(
+    request: CSVImportRequest,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """
+    Import CSV file into Golden V2 system.
+
+    Processes CSV records and emits events to Redis.
+    """
+    admin_id, admin_role = admin_info
+
+    if admin_role != "SUPERADMIN":
+        raise HTTPException(status_code=403, detail="Requires SUPERADMIN role")
+
+    from pathlib import Path
+
+    # Validate file exists
+    file_path = Path(request.file_path)
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail=f"File not found: {request.file_path}")
+
+    # Execute import
+    service = CSVImportService(db)
+
+    try:
+        result = service.import_csv(request)
+        return result
+
+    except Exception as e:  # noqa: BLE001
+        raise HTTPException(status_code=500, detail=f"Import failed: {e!s}") from e
+
+
+@router.get("/csv-import/estimate", response_model=dict[str, Any])
+def estimate_import_time(
+    file_path: str,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """
+    Estimate processing time for CSV import.
+
+    Args:
+        file_path: Path to CSV file
+
+    Returns:
+        Estimation data (total rows, estimated seconds/minutes)
+    """
+    admin_id, admin_role = admin_info
+
+    if admin_role != "SUPERADMIN":
+        raise HTTPException(status_code=403, detail="Requires SUPERADMIN role")
+
+    from pathlib import Path
+
+    # Validate file exists
+    path = Path(file_path)
+    if not path.exists():
+        raise HTTPException(status_code=404, detail=f"File not found: {file_path}")
+
+    service = CSVImportService(db)
+    estimate = service.estimate_import_time(file_path)
+
+    return estimate

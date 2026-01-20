@@ -105,15 +105,15 @@ def test_admin_wallet_adjustment_vault(db_session, setup_user):
     # Simulate V2 route logic: V2VaultService.deposit/withdraw
     V2VaultService.deposit(db_session, user.id, 10000)
     db_session.commit()
-    
-    v2_user = db_session.get(V2User, user.id)
-    assert v2_user.vault_locked_balance == initial_balance + 10000
+
+    db_user = db_session.get(User, user.id)
+    assert db_user.vault_locked_balance == initial_balance + 10000
 
     V2VaultService.withdraw(db_session, user.id, 5000)
     db_session.commit()
-    
-    v2_user = db_session.get(V2User, user.id)
-    assert v2_user.vault_locked_balance == initial_balance + 5000
+
+    db_user = db_session.get(User, user.id)
+    assert db_user.vault_locked_balance == initial_balance + 5000
 
 def test_admin_inventory_adjustment(db_session, setup_user):
     """4-6. Admin Resource Management: Inventory Adjustment."""
@@ -142,9 +142,9 @@ def test_intervention_bailout(db_session, setup_user):
     # BAILOUT_GIFT grants 1000 points
     V2VaultService.deposit(db_session, user.id, 1000)
     db_session.commit()
-    
-    v2_user = db_session.get(V2User, user.id)
-    assert v2_user.vault_locked_balance == initial_balance + 1000
+
+    db_user = db_session.get(User, user.id)
+    assert db_user.vault_locked_balance == initial_balance + 1000
 
 def test_daily_spent_reset_logic(db_session, setup_user):
     """2-2. Strict Withdrawal Policy: Daily spent reset at 9 AM KST."""

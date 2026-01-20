@@ -1,5 +1,7 @@
 from datetime import datetime
+import logging
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import ValidationError
 from sqlalchemy.orm import Session, selectinload
 
 from app.api.deps import get_current_admin_info, get_db
@@ -21,6 +23,8 @@ from app.v2.schemas.v2_admin_game import (
 
 router = APIRouter()
 
+logger = logging.getLogger(__name__)
+
 
 def _normalize_reward_type_for_dto(value: object) -> str:
     """Normalize legacy/extended reward_type values into the admin DTO union.
@@ -36,6 +40,18 @@ def _normalize_reward_type_for_dto(value: object) -> str:
     if raw.startswith("TICKET"):
         return "TICKET"
     return "NONE"
+
+
+def _normalize_roulette_grade_for_dto(value: object) -> str:
+    allowed = {"COMMON", "VIP", "WHALE", "AT_RISK"}
+    raw = str(value) if value is not None else ""
+    if raw in allowed:
+        return raw
+    if raw in {"NEW", "NEW_USER", "NEWBIE"}:
+        return "COMMON"
+    if raw in {"RISK", "ATRISK"}:
+        return "AT_RISK"
+    return "COMMON"
 
 
 @router.get("/game/roulette/configs", response_model=list[RouletteConfigDto])
@@ -60,32 +76,39 @@ def get_roulette_configs(
 
     result = []
     for config in configs:
-        segments_dto = [
-            RouletteSegmentDto(
-                id=seg.id,
-                slot_index=seg.slot_index,
-                label=seg.label,
-                weight=seg.weight,
-                reward_type=_normalize_reward_type(str(seg.reward_type)),
-                reward_amount=seg.reward_amount,
-                is_jackpot=seg.is_jackpot,
-            )
-            for seg in sorted(config.segments, key=lambda x: x.slot_index)
-        ]
+        try:
+            segments_dto = [
+                RouletteSegmentDto(
+                    id=seg.id,
+                    slot_index=seg.slot_index,
+                    label=seg.label,
+                    weight=seg.weight,
+                    reward_type=_normalize_reward_type(str(seg.reward_type)),
+                    reward_amount=seg.reward_amount,
+                    is_jackpot=seg.is_jackpot,
+                )
+                for seg in sorted(config.segments, key=lambda x: x.slot_index)
+            ]
 
-        result.append(
-            RouletteConfigDto(
-                id=config.id,
-                name=config.name,
-                grade=config.grade,
-                ticket_type=config.ticket_type,
-                max_daily_spins=config.max_daily_spins,
-                is_active=config.is_active,
-                segments=segments_dto,
-                created_at=config.created_at,
-                updated_at=config.updated_at,
+            result.append(
+                RouletteConfigDto(
+                    id=config.id,
+                    name=config.name,
+                    grade=_normalize_roulette_grade_for_dto(config.grade),
+                    ticket_type=config.ticket_type,
+                    max_daily_spins=config.max_daily_spins,
+                    is_active=config.is_active,
+                    segments=segments_dto,
+                    created_at=config.created_at,
+                    updated_at=config.updated_at,
+                )
             )
-        )
+        except ValidationError:
+            logger.exception(
+                "Failed to serialize roulette config",
+                extra={"config_id": getattr(config, "id", None)},
+            )
+            continue
 
     return result
 
@@ -127,17 +150,24 @@ def get_roulette_config(
         for seg in sorted(config.segments, key=lambda x: x.slot_index)
     ]
 
-    return RouletteConfigDto(
-        id=config.id,
-        name=config.name,
-        grade=config.grade,
-        ticket_type=config.ticket_type,
-        max_daily_spins=config.max_daily_spins,
-        is_active=config.is_active,
-        segments=segments_dto,
-        created_at=config.created_at,
-        updated_at=config.updated_at,
-    )
+    try:
+        return RouletteConfigDto(
+            id=config.id,
+            name=config.name,
+            grade=_normalize_roulette_grade_for_dto(config.grade),
+            ticket_type=config.ticket_type,
+            max_daily_spins=config.max_daily_spins,
+            is_active=config.is_active,
+            segments=segments_dto,
+            created_at=config.created_at,
+            updated_at=config.updated_at,
+        )
+    except ValidationError:
+        logger.exception(
+            "Failed to serialize roulette config",
+            extra={"config_id": config_id},
+        )
+        raise HTTPException(status_code=500, detail="ROULETTE_CONFIG_SERIALIZATION_FAILED")
 
 
 @router.put("/game/roulette/config/{config_id}", response_model=RouletteConfigDto)
@@ -229,24 +259,31 @@ def update_roulette_config(
             slot_index=seg.slot_index,
             label=seg.label,
             weight=seg.weight,
-            reward_type=seg.reward_type,
+            reward_type=_normalize_reward_type_for_dto(seg.reward_type),
             reward_amount=seg.reward_amount,
             is_jackpot=seg.is_jackpot,
         )
         for seg in sorted(config.segments, key=lambda x: x.slot_index)
     ]
 
-    return RouletteConfigDto(
-        id=config.id,
-        name=config.name,
-        grade=config.grade,
-        ticket_type=config.ticket_type,
-        max_daily_spins=config.max_daily_spins,
-        is_active=config.is_active,
-        segments=segments_dto,
-        created_at=config.created_at,
-        updated_at=config.updated_at,
-    )
+    try:
+        return RouletteConfigDto(
+            id=config.id,
+            name=config.name,
+            grade=_normalize_roulette_grade_for_dto(config.grade),
+            ticket_type=config.ticket_type,
+            max_daily_spins=config.max_daily_spins,
+            is_active=config.is_active,
+            segments=segments_dto,
+            created_at=config.created_at,
+            updated_at=config.updated_at,
+        )
+    except ValidationError:
+        logger.exception(
+            "Failed to serialize roulette config",
+            extra={"config_id": config_id},
+        )
+        raise HTTPException(status_code=500, detail="ROULETTE_CONFIG_SERIALIZATION_FAILED")
 
 
 @router.get("/game/dice/config", response_model=DiceConfigDto)

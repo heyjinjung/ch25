@@ -60,12 +60,14 @@ import {
   getVaultUsers,
   getVaultTrend,
   forceEditVault,
+  getWithdrawalDetails,
   createSegmentRule,
   updateSegmentRule,
   deleteSegmentRule,
   VaultStatsDto,
   UserVaultDto,
   VaultDailyTrendDto,
+  WithdrawalDetailsResponse,
   AdminDepositLogDto,
   AdminDepositCreateRequest,
   AdminDepositUpdateRequest,
@@ -611,5 +613,13 @@ export function useForceEditVault() {
       queryClient.invalidateQueries({ queryKey: ["admin", "vault"] });
       queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
     },
+  });
+}
+
+export function useWithdrawalDetails(status: string) {
+  return useQuery<WithdrawalDetailsResponse>({
+    queryKey: ["admin", "vault", "withdrawals", status],
+    queryFn: () => getWithdrawalDetails(status),
+    enabled: !!status,
   });
 }
