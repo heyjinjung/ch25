@@ -8,7 +8,7 @@ import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
 import { Button } from "../../../components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select";
-import { Dice5, Save, TriangleAlert, Settings2, Zap, TrendingUp } from "lucide-react";
+import { Dice5, Save, TriangleAlert, Settings2, Zap, TrendingUp, Trophy, Info } from "lucide-react";
 
 export default function DiceConfigPage() {
   const { data: config, isLoading } = useDiceConfig();
@@ -38,80 +38,91 @@ export default function DiceConfigPage() {
   if (!localConfig) return <div className="text-center py-20 text-zinc-500">Config Load Failed</div>;
 
   return (
-    <div className="space-y-6 text-white p-6 h-full overflow-y-auto">
-      <div className="flex justify-between items-start">
+    <div className="admin-page-container custom-scrollbar">
+      <div className="flex justify-between items-end mb-8">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight mb-1 flex items-center gap-2">
-            <Dice5 className="w-6 h-6 text-indigo-400" />
-            주사위 게임 설정 (전역 전략)
+          <h1 className="text-3xl font-extrabold tracking-tight flex items-center gap-3 text-white">
+            <div className="p-2 bg-indigo-500/10 rounded-xl border border-indigo-500/20">
+              <Dice5 className="w-8 h-8 text-indigo-400" />
+            </div>
+            주사위 게임 설정
           </h1>
-          <p className="text-sm text-zinc-400">승률, 보상, 일일 한도를 설정합니다.</p>
+          <p className="text-zinc-400 mt-2 ml-1">전역 전략, 승률 및 보상 시스템을 관리합니다.</p>
         </div>
         <Button
           onClick={handleSave}
           disabled={updateMutation.isPending}
-          className="bg-indigo-500 hover:bg-indigo-600 text-white shadow-lg shadow-indigo-500/20"
+          className="btn-admin-primary px-8 h-12 shadow-indigo-500/10"
         >
           <Save className="w-4 h-4 mr-2" />
-          {updateMutation.isPending ? "저장 중..." : "설정 저장"}
+          {updateMutation.isPending ? "저장 중..." : "설정 변경사항 저장"}
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Basic Settings */}
-        <Card className="bg-[#18181B] border-white/5 shadow-xl">
+      <div className="grid grid-cols-12 gap-6 pb-20">
+        {/* Row 1: Basic (4) + Probability (8) */}
+        <Card className="col-span-12 lg:col-span-4 admin-card-premium flex flex-col">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-zinc-100">
               <Settings2 className="w-5 h-5 text-zinc-400" />
-              기본 설정
+              기본 운영 설정
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/5">
+          <CardContent className="space-y-6 flex-1">
+            <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5 group hover:border-white/10 transition-colors">
               <div className="space-y-0.5">
-                <Label className="text-base">게임 활성화</Label>
-                <p className="text-xs text-zinc-500">비활성화 시 입장이 차단됩니다.</p>
+                <Label className="text-base text-zinc-200">게임 서비스 활성화</Label>
+                <p className="text-xs text-zinc-500">비활성화 시 모든 유저의 진입이 차단됩니다.</p>
               </div>
               <Switch checked={localConfig.isActive} onCheckedChange={(c) => handleChange("isActive", c)} />
             </div>
 
-            <div className="space-y-2">
-               <Label>설정명 (Name)</Label>
+            <div className="space-y-3">
+               <Label className="admin-label">전략 설정명</Label>
                <Input
                  value={localConfig.name}
                  onChange={(e) => handleChange("name", e.target.value)}
-                 className="bg-black/50 border-white/10 h-10"
+                 className="admin-input w-full"
+                 placeholder="예: 2026 신년 이벤트 전략"
                />
             </div>
 
-            <div className="space-y-2">
-               <Label>일일 최대 플레이 횟수</Label>
-               <Input
-                 type="number"
-                 value={localConfig.maxDailyPlays}
-                 onChange={(e) => handleChange("maxDailyPlays", parseInt(e.target.value))}
-                 className="bg-black/50 border-white/10 h-10"
-               />
-               <p className="text-xs text-zinc-500">모든 유저에게 공통 적용됩니다.</p>
+            <div className="space-y-3">
+               <Label className="admin-label">일일 최대 플레이 횟수</Label>
+               <div className="relative">
+                 <Input
+                   type="number"
+                   value={localConfig.maxDailyPlays}
+                   onChange={(e) => handleChange("maxDailyPlays", parseInt(e.target.value))}
+                   className="admin-input w-full pr-12"
+                 />
+                 <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-zinc-500 font-mono">회</span>
+               </div>
+               <p className="text-[11px] text-zinc-500 italic">* 0으로 입력 시 무제한 플레이가 가능합니다.</p>
             </div>
           </CardContent>
         </Card>
 
-        {/* Probabilities */}
-        <Card className="bg-[#18181B] border-white/5 shadow-xl">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Zap className="w-5 h-5 text-amber-400" />
-              승률 확률 (PROBABILITY)
-            </CardTitle>
-            <CardDescription>승률 0.0 ~ 1.0 범위 (예: 0.4 = 40%)</CardDescription>
+        <Card className="col-span-12 lg:col-span-8 admin-card-premium">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2 text-zinc-100">
+                <Zap className="w-5 h-5 text-amber-400" />
+                승률 전략 (Probability System)
+              </CardTitle>
+              <CardDescription className="text-zinc-500 mt-1">확률 총합이 1.0(100%)이 되도록 정밀하게 조정하세요.</CardDescription>
+            </div>
+            <div className="px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-full text-[10px] text-amber-400 font-bold uppercase tracking-wider">
+              Simulation Mode
+            </div>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2 p-4 bg-emerald-500/5 border border-emerald-500/20 rounded-lg">
-              <Label className="text-emerald-400 font-bold flex items-center justify-between">
-                <span>승리 확률 (Win)</span>
-                <span className="text-sm text-emerald-500">{(localConfig.winProbability * 100).toFixed(2)}%</span>
-              </Label>
+          <CardContent className="grid grid-cols-3 gap-6">
+            {/* Probability Inputs - No more heavy backgrounds */}
+            <div className="space-y-3 group">
+              <div className="flex justify-between items-center px-1">
+                <Label className="text-emerald-400 font-bold text-xs uppercase tracking-tighter">Win Rate</Label>
+                <span className="text-xl font-mono font-black text-emerald-400">{(localConfig.winProbability * 100).toFixed(0)}%</span>
+              </div>
               <Input
                 type="number"
                 step="0.01"
@@ -119,15 +130,18 @@ export default function DiceConfigPage() {
                 max="1"
                 value={localConfig.winProbability}
                 onChange={(e) => handleChange("winProbability", parseFloat(e.target.value))}
-                className="bg-black/50 border-white/10 h-10 text-emerald-400 font-mono"
+                className="admin-input border-emerald-500/20 focus:ring-emerald-500/30 text-emerald-400 font-mono text-center text-lg"
               />
+              <div className="h-1 w-full bg-zinc-800 rounded-full overflow-hidden">
+                <div className="h-full bg-emerald-500 transition-all duration-500" style={{ width: `${localConfig.winProbability * 100}%` }} />
+              </div>
             </div>
 
-            <div className="space-y-2 p-4 bg-zinc-800/30 border border-white/10 rounded-lg">
-              <Label className="text-zinc-300 font-bold flex items-center justify-between">
-                <span>무승부 확률 (Draw)</span>
-                <span className="text-sm text-zinc-500">{(localConfig.drawProbability * 100).toFixed(2)}%</span>
-              </Label>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center px-1">
+                <Label className="text-zinc-400 font-bold text-xs uppercase tracking-tighter">Draw Rate</Label>
+                <span className="text-xl font-mono font-black text-zinc-400">{(localConfig.drawProbability * 100).toFixed(0)}%</span>
+              </div>
               <Input
                 type="number"
                 step="0.01"
@@ -135,15 +149,18 @@ export default function DiceConfigPage() {
                 max="1"
                 value={localConfig.drawProbability}
                 onChange={(e) => handleChange("drawProbability", parseFloat(e.target.value))}
-                className="bg-black/50 border-white/10 h-10 text-zinc-300 font-mono"
+                className="admin-input border-white/5 focus:ring-zinc-500/30 text-zinc-300 font-mono text-center text-lg"
               />
+              <div className="h-1 w-full bg-zinc-800 rounded-full overflow-hidden">
+                <div className="h-full bg-zinc-500 transition-all duration-500" style={{ width: `${localConfig.drawProbability * 100}%` }} />
+              </div>
             </div>
 
-            <div className="space-y-2 p-4 bg-red-500/5 border border-red-500/20 rounded-lg">
-              <Label className="text-red-400 font-bold flex items-center justify-between">
-                <span>패배 확률 (Lose)</span>
-                <span className="text-sm text-red-500">{(localConfig.loseProbability * 100).toFixed(2)}%</span>
-              </Label>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center px-1">
+                <Label className="text-red-400 font-bold text-xs uppercase tracking-tighter">Lose Rate</Label>
+                <span className="text-xl font-mono font-black text-red-400">{(localConfig.loseProbability * 100).toFixed(0)}%</span>
+              </div>
               <Input
                 type="number"
                 step="0.01"
@@ -151,126 +168,104 @@ export default function DiceConfigPage() {
                 max="1"
                 value={localConfig.loseProbability}
                 onChange={(e) => handleChange("loseProbability", parseFloat(e.target.value))}
-                className="bg-black/50 border-white/10 h-10 text-red-400 font-mono"
+                className="admin-input border-red-500/20 focus:ring-red-500/30 text-red-400 font-mono text-center text-lg"
               />
+              <div className="h-1 w-full bg-zinc-800 rounded-full overflow-hidden">
+                <div className="h-full bg-red-500 transition-all duration-500" style={{ width: `${localConfig.loseProbability * 100}%` }} />
+              </div>
             </div>
 
-            <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg flex items-start gap-2">
-              <TriangleAlert className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-              <p className="text-xs text-amber-200">확률 총합이 1.0 (100%)이 되도록 설정해야 합니다.</p>
+            <div className="col-span-3 mt-4">
+               <div className={`p-4 rounded-xl border flex items-center gap-3 transition-all ${
+                 Math.abs(localConfig.winProbability + localConfig.drawProbability + localConfig.loseProbability - 1.0) < 0.001
+                 ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400'
+                 : 'bg-red-500/5 border-red-500/20 text-red-400 animate-pulse'
+               }`}>
+                 <TriangleAlert className="w-5 h-5 shrink-0" />
+                 <div className="text-sm">
+                   현재 확률 총합: <span className="font-mono font-bold">{ (localConfig.winProbability + localConfig.drawProbability + localConfig.loseProbability).toFixed(2) }</span>
+                   {Math.abs(localConfig.winProbability + localConfig.drawProbability + localConfig.loseProbability - 1.0) < 0.001 
+                     ? ' - 완벽한 비율입니다.' 
+                     : ' - 총합이 1.0이 되도록 조정이 필요합니다.'}
+                 </div>
+               </div>
             </div>
           </CardContent>
         </Card>
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Win/Draw/Lose Rewards */}
-        <Card className="bg-[#18181B] border-white/5 shadow-xl lg:col-span-1">
+        {/* Row 2: Rewards (8) + Caps (4) */}
+        <Card className="col-span-12 lg:col-span-8 admin-card-premium">
            <CardHeader>
-             <CardTitle className="text-lg flex items-center gap-2">
-                <Dice5 className="w-5 h-5 text-emerald-400" />
-                결과별 보상 설정
+             <CardTitle className="flex items-center gap-2 text-zinc-100">
+                <Trophy className="w-5 h-5 text-emerald-400" />
+                결과별 보상 매트릭스
              </CardTitle>
-             <CardDescription>승리/무승부/패배 시 지급할 보상 종류와 수량</CardDescription>
+             <CardDescription className="text-zinc-500">게임 결과에 따른 보상 아이템과 수량을 설정합니다.</CardDescription>
            </CardHeader>
-           <CardContent className="space-y-6">
-             {/* Win */}
-             <div className="space-y-2 p-4 bg-emerald-500/5 border border-emerald-500/20 rounded-lg transition-all hover:bg-emerald-500/10">
-                <div className="flex justify-between items-center mb-2">
-                   <Label className="text-emerald-400 font-bold text-base">승리 (WIN)</Label>
-                   <span className="text-xs text-emerald-500/70 uppercase">Get Reward</span>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                   <Select value={localConfig.winRewardType} onValueChange={(v) => handleChange("winRewardType", v)}>
-                      <SelectTrigger className="bg-black/50 border-white/10 h-10"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {REWARD_ITEMS.map((item) => (
-                          <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                   </Select>
-                   <Input
-                      type="number"
-                      value={localConfig.winRewardAmount}
-                      onChange={(e) => handleChange("winRewardAmount", parseInt(e.target.value))}
-                      className="bg-black/50 border-white/10 text-emerald-400 font-bold h-10 text-right"
-                   />
-                </div>
-             </div>
-
-             {/* Draw */}
-             <div className="space-y-2 p-4 bg-zinc-800/30 border border-white/10 rounded-lg transition-all hover:bg-zinc-800/50">
-                <div className="flex justify-between items-center mb-2">
-                   <Label className="text-zinc-300 font-bold text-base">무승부 (DRAW)</Label>
-                   <span className="text-xs text-zinc-500 uppercase">Refund or Small Reward</span>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                   <Select value={localConfig.drawRewardType} onValueChange={(v) => handleChange("drawRewardType", v)}>
-                      <SelectTrigger className="bg-black/50 border-white/10 h-10"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {REWARD_ITEMS.map((item) => (
-                          <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                   </Select>
-                   <Input
-                      type="number"
-                      value={localConfig.drawRewardAmount}
-                      onChange={(e) => handleChange("drawRewardAmount", parseInt(e.target.value))}
-                      className="bg-black/50 border-white/10 text-zinc-300 h-10 text-right"
-                   />
-                </div>
-             </div>
-
-             {/* Lose */}
-             <div className="space-y-2 p-4 bg-red-500/5 border border-red-500/20 rounded-lg transition-all hover:bg-red-500/10">
-                <div className="flex justify-between items-center mb-2">
-                   <Label className="text-red-400 font-bold text-base">패배 (LOSE)</Label>
-                   <span className="text-xs text-red-400/70 flex items-center gap-1">
-                     <TriangleAlert className="w-3 h-3" />
-                     음수 입력 시 포인트 차감
-                   </span>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                   <Select value={localConfig.loseRewardType} onValueChange={(v) => handleChange("loseRewardType", v)}>
-                      <SelectTrigger className="bg-black/50 border-white/10 h-10"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {REWARD_ITEMS.map((item) => (
-                          <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                   </Select>
-                   <Input
-                      type="number"
-                      value={localConfig.loseRewardAmount}
-                      onChange={(e) => handleChange("loseRewardAmount", parseInt(e.target.value))}
-                      className="bg-black/50 border-white/10 text-red-400 font-bold h-10 text-right"
-                   />
-                </div>
-             </div>
-
+           <CardContent className="space-y-4">
+             {/* Reward Row - Refined with Mono colors and glass look */}
+             {[
+               { label: '승리 (WIN)', typeField: 'winRewardType' as const, amountField: 'winRewardAmount' as const, color: 'emerald' },
+               { label: '무승부 (DRAW)', typeField: 'drawRewardType' as const, amountField: 'drawRewardAmount' as const, color: 'zinc' },
+               { label: '패배 (LOSE)', typeField: 'loseRewardType' as const, amountField: 'loseRewardAmount' as const, color: 'red' }
+             ].map((row) => (
+               <div key={row.label} className={`flex items-center gap-6 p-4 rounded-2xl bg-[#1c1c20] border border-white/5 transition-all hover:bg-[#222226]`}>
+                 <div className="w-32">
+                   <Label className={`text-${row.color}-400 font-black text-sm uppercase tracking-tight`}>{row.label}</Label>
+                 </div>
+                 <div className="flex-1 grid grid-cols-2 gap-4">
+                    <Select value={localConfig[row.typeField]} onValueChange={(v) => handleChange(row.typeField, v)}>
+                       <SelectTrigger className="admin-input border-white/5 bg-black/40 h-10">
+                         <SelectValue />
+                       </SelectTrigger>
+                       <SelectContent className="bg-zinc-900 border-white/10 text-white">
+                         {REWARD_ITEMS.map((item) => (
+                           <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>
+                         ))}
+                       </SelectContent>
+                    </Select>
+                    <div className="relative">
+                      <Input
+                         type="number"
+                         value={localConfig[row.amountField]}
+                         onChange={(e) => handleChange(row.amountField, parseInt(e.target.value))}
+                         className={`admin-input border-white/5 bg-black/40 h-10 text-right pr-12 font-bold text-${row.color}-400`}
+                      />
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] text-zinc-600 font-bold uppercase">Value</span>
+                    </div>
+                 </div>
+               </div>
+             ))}
            </CardContent>
         </Card>
 
-        {/* Global Caps */}
-        <Card className="bg-[#18181B] border-white/5 shadow-xl">
+        <Card className="col-span-12 lg:col-span-4 admin-card-premium flex flex-col">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-zinc-100">
               <TrendingUp className="w-5 h-5 text-indigo-400" />
-              제한 설정 (GLOBAL CAPS)
+              경제 안정성 (Global Caps)
             </CardTitle>
-            <CardDescription>일일 누적 한도로 경제 안정성을 보장합니다.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2 p-4 bg-indigo-500/5 border border-indigo-500/20 rounded-lg">
-              <Label className="text-indigo-400 font-bold">일일 누적 획득 한도 (Daily Gain)</Label>
+          <CardContent className="space-y-6 flex-1">
+            <div className="p-5 rounded-2xl bg-indigo-500/5 border border-indigo-500/10 space-y-4">
+              <div className="flex justify-between items-end">
+                <Label className="text-zinc-300 text-xs font-bold">일일 누적 획득 한도</Label>
+                <span className="text-2xl font-mono font-black text-indigo-400 tracking-tighter">
+                  {localConfig.dailyGainCap.toLocaleString()}
+                </span>
+              </div>
               <Input
                 type="number"
                 value={localConfig.dailyGainCap}
                 onChange={(e) => handleChange("dailyGainCap", parseInt(e.target.value))}
-                className="bg-black/50 border-white/10 h-10 text-indigo-400 font-mono text-right"
+                className="admin-input border-indigo-500/20 bg-black/30 w-full h-12 text-center text-xl font-mono"
               />
-              <p className="text-xs text-zinc-500">유저가 하루에 획득할 수 있는 최대 수량입니다.</p>
+              <div className="flex items-start gap-2 p-3 bg-indigo-500/10 rounded-lg">
+                <Info className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
+                <p className="text-[11px] text-indigo-300/80 leading-relaxed">
+                  유저가 24시간 내에 획득 가능한 총량입니다. 초과 시 보상이 지급되지 않습니다.
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>

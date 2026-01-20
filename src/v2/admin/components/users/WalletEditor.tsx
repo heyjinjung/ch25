@@ -67,10 +67,13 @@ export function WalletEditor({
   const handleSubmit = async () => {
     if (!amount || !reason) return;
 
+    const delta = Number.parseInt(amount, 10);
+    if (!Number.isFinite(delta) || delta === 0) return;
+
     setIsLoading(true);
     try {
       // Pass the selected type and amount directly (Delta)
-      await onUpdate(parseInt(amount), reason, selectedType);
+      await onUpdate(delta, reason, selectedType);
       onClose();
       setAmount("");
       setReason("");
@@ -126,9 +129,7 @@ export function WalletEditor({
 
           {selectedType === "VAULT" ? (
             <div className="bg-emerald-500/10 p-3 rounded-lg border border-emerald-500/20 flex justify-between items-center">
-              <span className="text-xs text-emerald-300">
-                금고잔액 (참고)
-              </span>
+              <span className="text-xs text-emerald-300">금고잔액 (참고)</span>
               <span className="text-sm font-mono font-bold text-emerald-100">
                 ₩ {(currentVaultBalance || 0).toLocaleString()}
               </span>

@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -20,6 +21,112 @@ from app.v2.schemas.v2_admin_economy import (
 )
 
 router = APIRouter()
+
+
+def _product_id_from_sku(sku: str) -> int:
+    import zlib
+
+    return int(zlib.crc32(str(sku or "").encode("utf-8")) & 0x7FFFFFFF)
+
+
+def _classify_product_category(reward_type: str) -> str:
+    rt = str(reward_type or "").upper()
+    if rt in {"ROULETTE_TICKET", "DICE_TICKET", "LOTTERY_TICKET"}:
+        return "GAME_TICKET"
+    if rt == "VAULT" or rt in {"POINT", "CC_POINT"}:
+        return "VAULT"
+    if rt in {"GOLD_KEY_TICKET", "DIAMOND_TICKET"}:
+        return "PREMIUM"
+    if rt in {"GOLD_KEY_FRAGMENT", "DIAMOND_FRAGMENT"}:
+        return "FRAGMENT"
+    if rt in {"PUZZLE_C1", "PUZZLE_C2", "PUZZLE_J", "PUZZLE_M"}:
+        return "PUZZLE"
+    if rt == "DIAMOND":
+        return "DIAMOND"
+    if "GIFTICON" in rt:
+        return "GIFTICON"
+    if rt == "NONE":
+        return "SPECIAL"
+    return "OTHER"
+
+
+def _build_sot_shop_catalog_defaults() -> list[dict]:
+    """SoT 전체 상품을 최소 기본값으로 생성한다.
+
+    Storage: UiConfig key `v2_shop_products` -> {"products": [..]}
+    """
+
+    # Defaults per user approval:
+    # - visible
+    # - minimal vault cost
+    # - reward 1 (except NONE)
+    defaults: list[tuple[str, str, int]] = [
+        ("ROULETTE_TICKET", "룰렛 티켓", 1),
+        ("DICE_TICKET", "다이스 티켓", 1),
+        ("LOTTERY_TICKET", "복권 티켓", 1),
+        ("VAULT", "금고 포인트", 1),
+        ("GOLD_KEY_TICKET", "골드 열쇠 티켓", 1),
+        ("DIAMOND_TICKET", "다이아몬드 티켓", 1),
+        ("GOLD_KEY_FRAGMENT", "골드 열쇠 조각", 1),
+        ("DIAMOND_FRAGMENT", "다이아몬드 조각", 1),
+        ("PUZZLE_C1", "퍼즐 조각 C1", 1),
+        ("PUZZLE_C2", "퍼즐 조각 C2", 1),
+        ("PUZZLE_J", "퍼즐 조각 J", 1),
+        ("PUZZLE_M", "퍼즐 조각 M", 1),
+        ("DIAMOND", "다이아몬드", 1),
+        ("CHICKEN_GIFTICON_5000", "치킨 기프티콘 5천원", 1),
+        ("CHICKEN_GIFTICON_10000", "치킨 기프티콘 1만원", 1),
+        ("STARBUCKS_GIFTICON_2000", "스타벅스 기프티콘 2천원", 1),
+        ("STARBUCKS_GIFTICON_10000", "스타벅스 기프티콘 1만원", 1),
+        ("PIZZA_GIFTICON_5000", "피자 기프티콘 5천원", 1),
+        ("PIZZA_GIFTICON_10000", "피자 기프티콘 1만원", 1),
+        ("GOOGLE_GIFTICON_5000", "구글 기프티콘 5천원", 1),
+        ("GOOGLE_GIFTICON_10000", "구글 기프티콘 1만원", 1),
+        ("NONE", "없음(특수)", 1),
+    ]
+
+    products: list[dict] = []
+    for reward_type, label, reward_amount in defaults:
+        products.append(
+            {
+                "sku": f"SOT_{reward_type}",
+                "name": label,
+                "cost_type": "VAULT",
+                "cost_amount": 1,
+                "reward_type": reward_type,
+                "reward_amount": reward_amount,
+                "is_visible": True,
+            }
+        )
+    return products
+
+
+def _load_v2_shop_products(db: Session) -> list[dict]:
+    from app.services.ui_config_service import UiConfigService
+
+    row = UiConfigService.get(db, "v2_shop_products")
+    value = row.value_json if row and isinstance(row.value_json, dict) else {}
+    products = value.get("products", []) if isinstance(value, dict) else []
+    if not isinstance(products, list):
+        return []
+    return [p for p in products if isinstance(p, dict)]
+
+
+def _save_v2_shop_products(db: Session, products: list[dict], *, admin_id: int) -> None:
+    from app.services.ui_config_service import UiConfigService
+
+    UiConfigService.upsert(db, "v2_shop_products", {"products": products}, admin_id=admin_id)
+
+
+class _AdminProductStatusPayload(BaseModel):
+    is_visible: bool = Field(..., validation_alias="isVisible", serialization_alias="isVisible")
+
+    model_config = ConfigDict(populate_by_name=True)
+
+
+class _AdminProductPricePayload(BaseModel):
+    price: int
+
 
 
 @router.get("/economy/transaction-types")
@@ -348,22 +455,103 @@ def list_admin_shop_products(
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
     admin_id, admin_role = admin_info
-    from app.services.ui_config_service import UiConfigService
 
-    row = UiConfigService.get(db, "v2_shop_products")
-    value = row.value_json if row and isinstance(row.value_json, dict) else {}
-    products = value.get("products", []) if isinstance(value, dict) else []
+    products = _load_v2_shop_products(db)
 
     result = []
     for p in products:
+        if not isinstance(p, dict):
+            continue
         result.append(
             AdminProductDto(
-                id=hash(p.get("sku", "")),
-                sku=p.get("sku"),
-                name=p.get("name"),
-                price=int(p.get("cost_amount", 0)),
-                is_visible=True,
-                category="TICKET" if "TICKET" in p.get("sku", "") else "OTHER",
+                id=_product_id_from_sku(str(p.get("sku") or "")),
+                sku=str(p.get("sku") or ""),
+                name=str(p.get("name") or ""),
+                price=int(p.get("cost_amount", 0) or 0),
+                is_visible=bool(p.get("is_visible", True)),
+                category=_classify_product_category(str(p.get("reward_type") or "")),
             )
         )
     return result
+
+
+@router.post("/shop/products/sync", response_model=List[AdminProductDto])
+def sync_admin_shop_products(
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    admin_id, _ = admin_info
+
+    current = _load_v2_shop_products(db)
+    current_by_sku = {
+        str(p.get("sku") or ""): p for p in current if isinstance(p, dict) and str(p.get("sku") or "")
+    }
+
+    defaults = _build_sot_shop_catalog_defaults()
+    for p in defaults:
+        sku = str(p.get("sku") or "")
+        if not sku:
+            continue
+        if sku not in current_by_sku:
+            current_by_sku[sku] = p
+        else:
+            # Fill only missing required keys without overwriting operator edits.
+            existing = current_by_sku[sku]
+            for key in ["name", "cost_type", "cost_amount", "reward_type", "reward_amount", "is_visible"]:
+                if key not in existing or existing.get(key) is None:
+                    existing[key] = p.get(key)
+
+    merged = list(current_by_sku.values())
+    _save_v2_shop_products(db, merged, admin_id=admin_id)
+
+    return list_admin_shop_products(db=db, admin_info=admin_info)
+
+
+@router.put("/shop/products/{product_id}/status")
+def update_admin_shop_product_status(
+    product_id: int,
+    payload: _AdminProductStatusPayload,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    admin_id, _ = admin_info
+    products = _load_v2_shop_products(db)
+    updated = False
+    for p in products:
+        sku = str(p.get("sku") or "")
+        if not sku:
+            continue
+        if _product_id_from_sku(sku) == int(product_id):
+            p["is_visible"] = bool(payload.is_visible)
+            updated = True
+            break
+    if not updated:
+        raise HTTPException(status_code=404, detail="PRODUCT_NOT_FOUND")
+    _save_v2_shop_products(db, products, admin_id=admin_id)
+    return {"success": True}
+
+
+@router.put("/shop/products/{product_id}/price")
+def update_admin_shop_product_price(
+    product_id: int,
+    payload: _AdminProductPricePayload,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    admin_id, _ = admin_info
+    if int(payload.price) < 0:
+        raise HTTPException(status_code=400, detail="INVALID_PRICE")
+    products = _load_v2_shop_products(db)
+    updated = False
+    for p in products:
+        sku = str(p.get("sku") or "")
+        if not sku:
+            continue
+        if _product_id_from_sku(sku) == int(product_id):
+            p["cost_amount"] = int(payload.price)
+            updated = True
+            break
+    if not updated:
+        raise HTTPException(status_code=404, detail="PRODUCT_NOT_FOUND")
+    _save_v2_shop_products(db, products, admin_id=admin_id)
+    return {"success": True}

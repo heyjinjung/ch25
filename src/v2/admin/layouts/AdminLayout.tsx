@@ -5,13 +5,13 @@ import {
   Users,
   LayoutDashboard,
   Settings,
-  ClipboardList,
   MessageSquare,
   Bell,
   Search,
   LogOut,
   ChevronDown,
   ChevronRight,
+  Store,
 } from "lucide-react";
 import { cn } from "../../lib/utils";
 
@@ -84,22 +84,16 @@ export default function AdminLayout() {
         },
         {
           icon: MessageSquare,
-          label: "메시지발송",
+          label: "연락관리",
           path: "/v2/admin/marketing/messages",
         },
-        {
-          icon: ClipboardList,
-          label: "설문조사",
-          path: "/v2/admin/marketing/surveys",
-        },
-        { icon: Users, label: "세그먼트", path: "/v2/admin/users/segments" },
       ],
     },
     {
       key: "CORE",
       label: "코어",
       items: [
-        { icon: Users, label: "유저관리", path: "/v2/admin/users" },
+        { icon: Users, label: "유저통합", path: "/v2/admin/users" },
         { icon: Settings, label: "레벨관리", path: "/v2/admin/game/level" },
         {
           icon: CreditCard,
@@ -116,8 +110,7 @@ export default function AdminLayout() {
           label: "티켓/토큰관리",
           path: "/v2/admin/inventory/tickets",
         },
-        { icon: Settings, label: "미션관리", path: "/v2/admin/game/missions" },
-        { icon: CreditCard, label: "상점관리", path: "/v2/admin/economy/shop" },
+        { icon: Store, label: "상점/미션", path: "/v2/admin/economy/shop" },
       ],
     },
     {
