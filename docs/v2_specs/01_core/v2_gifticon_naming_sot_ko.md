@@ -48,3 +48,15 @@ V2 브랜드 기프티콘 네이밍 규칙을 확정한다.
 
 ## 7. 변경 이력
 - v1.0 (2026-01-18, GitHub Copilot): 최초 작성
+
+ SoT 기준 완전 재정립 계획을 수립했습니다. 10개 카테고리 전체를 프론트엔드 상수/백엔드 enum/DB 스키마에 일관되게 적용하는 Full-Stack 표준화 작업입니다.
+
+주요 변경사항:
+
+게임 티켓 3종 (ROULETTE/DICE/LOTTERY_TICKET)
+금고 (VAULT)
+프리미엄 티켓 & 조각 4종 (GOLD_KEY_TICKET, DIAMOND_TICKET 등)
+복권 퍼즐 4종 (PUZZLE_C1, C2, J, M)
+재화 (DIAMOND)
+기프티콘 8종 (SoT 정의된 것만)
+특수 (NONE)

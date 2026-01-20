@@ -49,7 +49,7 @@ export function WalletEditor({
   );
   const [isLoading, setIsLoading] = useState(false);
 
-  const walletTypes = getRewardItemsByCategories(["TICKET", "CURRENCY"]);
+  const walletTypes = getRewardItemsByCategories(["GAME_TICKET", "CURRENCY"]);
 
   // Reset or update selected type when modal opens or prop changes
   useEffect(() => {

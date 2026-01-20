@@ -58,6 +58,94 @@
 - **환불 불가**: 상점/교환소에서 구매/제작 완료된 아이템은 원칙적으로 환불이 불가능하다.
 - **가격 변동**: 어드민을 통해 상품 가격/구성을 변경하더라도, 기존 구매 건에 소급 적용하지 않는다.
 
+SoT 기준 표준 보상 아이템 (10개 카테고리)
+1. 게임 티켓 (Game Wallet - Fungible Tokens)
+Value	Label	저장소
+ROULETTE_TICKET	룰렛 티켓 (금파)	
+UserGameWallet
+DICE_TICKET	다이스 티켓 (Dice)	
+UserGameWallet
+LOTTERY_TICKET	복권 티켓 (그리기)	
+UserGameWallet
+근거: 
+v2_item_inventory_sot_ko.md
+ 3.1절
+
+2. 금고 (Virtual Token for Buy-In)
+Value	Label	저장소
+VAULT	금고 포인트 (P)	User.vault_locked_balance
+근거: 
+v2_item_inventory_sot_ko.md
+ 2절 주석
+
+3. 프리미엄 티켓 & 조각 (Game Wallet)
+Value	Label	저장소
+GOLD_KEY_TICKET	골드 열쇠 티켓 (S급)	
+UserGameWallet
+DIAMOND_TICKET	다이아몬드 티켓 (SS급)	
+UserGameWallet
+GOLD_KEY_FRAGMENT	골드 열쇠 조각 (x10)	
+UserGameWallet
+DIAMOND_FRAGMENT	다이아몬드 조각 (x30)	
+UserGameWallet
+근거: 
+v2_item_inventory_sot_ko.md
+ 3.1절
+
+4. 복권 퍼즐 조각 (Game Wallet)
+Value	Label	저장소
+PUZZLE_C1	퍼즐 조각 C1 (당첨)	
+UserGameWallet
+PUZZLE_C2	퍼즐 조각 C2 (당첨)	
+UserGameWallet
+PUZZLE_J	퍼즐 조각 J (당첨)	
+UserGameWallet
+PUZZLE_M	퍼즐 조각 M (당첨)	
+UserGameWallet
+근거: 
+v2_item_inventory_sot_ko.md
+ 3.1절
+
+5. 재화 (Game Wallet - Currency)
+Value	Label	저장소
+DIAMOND	다이아몬드 (재화)	
+UserGameWallet
+근거: 
+v2_item_inventory_sot_ko.md
+ 3.1절
+
+6. 기프티콘 (Inventory - Non-Fungible Items)
+Value	Label	저장소
+CHICKEN_GIFTICON_5000	치킨 기프티콘 5천원	
+UserInventoryItem
+CHICKEN_GIFTICON_10000	치킨 기프티콘 1만원	
+UserInventoryItem
+STARBUCKS_GIFTICON_2000	스타벅스 기프티콘 2천원	
+UserInventoryItem
+STARBUCKS_GIFTICON_10000	스타벅스 기프티콘 1만원	
+UserInventoryItem
+PIZZA_GIFTICON_5000	피자 기프티콘 5천원	
+UserInventoryItem
+PIZZA_GIFTICON_10000	피자 기프티콘 1만원	
+UserInventoryItem
+GOOGLE_GIFTICON_5000	구글 기프티콘 5천원	
+UserInventoryItem
+GOOGLE_GIFTICON_10000	구글 기프티콘 1만원	
+UserInventoryItem
+근거: 
+v2 _gifticon_naming_sot_ko.md
+ 5절
+
+7. 특수 (No-Op)
+Value	Label	저장소
+NONE	없음 (보상 없음)	N/A
+근거: 
+v2_reward_type_standard_sot_ko.md
+ 4절
+
+20260120
+
+
 ## 5. 변경 이력
 - v1.1 (2026-01-19, Antigravity Agent): V2 Ticket Enum(`_TICKET`) 표준 명칭 적용.
 - v1.0 (2026-01-19, Antigravity Agent): 상점/교환소 로직 SoT 및 상품 구조 정의.

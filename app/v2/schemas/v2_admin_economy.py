@@ -65,11 +65,11 @@ class AdminDepositConfirmRequest(BaseModel):
 
 class AdminDepositLogDto(BaseModel):
     id: int
-    user_id: int
+    userId: int
     nickname: str | None = None
     amount: int
-    kst_date: str # YYYY-MM-DD
-    created_at: datetime
+    kstDate: str  # YYYY-MM-DD
+    createdAt: datetime
 
     model_config = ConfigDict(from_attributes=True)
 
