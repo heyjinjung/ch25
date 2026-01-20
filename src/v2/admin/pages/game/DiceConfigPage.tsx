@@ -18,7 +18,11 @@ export default function DiceConfigPage() {
 
   useEffect(() => {
     if (config) {
-      setLocalConfig(config);
+      setLocalConfig({
+        ...config,
+        enableGoldenHour: config.enableGoldenHour ?? true,
+        goldenHourMultiplier: config.goldenHourMultiplier ?? 2.0,
+      });
     }
   }, [config]);
 
