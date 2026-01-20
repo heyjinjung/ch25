@@ -23,13 +23,14 @@ class V2AdminMessageService:
         target_value: str | None,
         channels: list[str] | None = None,
     ) -> V2AdminMessage:
+        # PUSH 기능은 제거됨: 채널 입력과 무관하게 INBOX만 저장/사용한다.
         msg = V2AdminMessage(
             sender_admin_id=sender_admin_id,
             title=title,
             content=content,
             target_type=target_type,
             target_value=target_value,
-            channels=channels or ["INBOX"],
+            channels=["INBOX"],
         )
         db.add(msg)
         db.commit()

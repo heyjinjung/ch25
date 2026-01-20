@@ -5,7 +5,7 @@ import {
   getSurveys,
   getSurveyResults,
   toggleSurvey,
-  type SendMessageRequest
+  type SendMessageRequest,
 } from "../api/adminApi";
 
 // ============================================================================
@@ -24,7 +24,9 @@ export function useSendMessage() {
   return useMutation({
     mutationFn: (data: SendMessageRequest) => sendAdminMessage(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "marketing", "messages"] });
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "marketing", "messages"],
+      });
     },
   });
 }
@@ -51,10 +53,17 @@ export function useSurveyResults(surveyId: number) {
 export function useToggleSurvey() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ surveyId, isActive }: { surveyId: number; isActive: boolean }) =>
-      toggleSurvey(surveyId, isActive),
+    mutationFn: ({
+      surveyId,
+      isActive,
+    }: {
+      surveyId: number;
+      isActive: boolean;
+    }) => toggleSurvey(surveyId, isActive),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "marketing", "surveys"] });
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "marketing", "surveys"],
+      });
     },
   });
 }

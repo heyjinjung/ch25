@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import { useAdminLevels, useAdminUpdateLevel } from "../../../hooks/useAdminGame";
 import { type AdminLevelDto } from "../../../api/adminApi";
 import { Input } from "../../../components/ui/input";

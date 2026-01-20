@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAdminTicketLogs, useAdminGrantItem } from "../../../hooks/useV2Admin"; // Updated hook path
-import { type TicketLogDto } from "../../../api/adminApi";
+import { type TicketLogDto, getAdminUserList } from "../../../api/adminApi";
 import { Input } from "../../../components/ui/input";
 import { Button } from "../../../components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../components/ui/table";
@@ -29,11 +29,32 @@ export default function TicketInventoryPage() {
   const { data: logs = [], isLoading } = useAdminTicketLogs(searchUserId, startDate, endDate);
   const grantMutation = useAdminGrantItem();
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     if (!inputValue) {
         setSearchUserId(undefined);
-    } else {
-        setSearchUserId(parseInt(inputValue) || undefined);
+        return;
+    }
+
+    // Try to parse as integer (User ID)
+    const numericId = parseInt(inputValue);
+    // If it's a number and looks like an ID (e.g., all digits), use it directly
+    if (!isNaN(numericId) && /^\d+$/.test(inputValue)) {
+        setSearchUserId(numericId);
+        return;
+    }
+
+    // Otherwise, treat as Nickname and search
+    try {
+        const response = await getAdminUserList({ search: inputValue, limit: 1 });
+        if (response.users && response.users.length > 0) {
+            setSearchUserId(response.users[0].id);
+        } else {
+            alert("해당 닉네임의 유저를 찾을 수 없습니다.");
+            setSearchUserId(undefined);
+        }
+    } catch (error) {
+        console.error("User search failed", error);
+        alert("유저 검색 중 오류가 발생했습니다.");
     }
   };
 
@@ -118,9 +139,9 @@ export default function TicketInventoryPage() {
                     </div>
                 </div>
                 <DialogFooter>
-                    <Button variant="ghost" onClick={() => setGrantOpen(false)}>Cancel</Button>
+                    <Button variant="ghost" onClick={() => setGrantOpen(false)}>취소</Button>
                     <Button onClick={handleGrant} disabled={grantMutation.isPending} className="bg-emerald-500 text-black">
-                        {grantMutation.isPending ? "Sending..." : "Confirm Grant"}
+                        {grantMutation.isPending ? "처리중..." : "지급 확인"}
                     </Button>
                 </DialogFooter>
             </DialogContent>
@@ -129,11 +150,11 @@ export default function TicketInventoryPage() {
 
       <div className="flex flex-col md:flex-row gap-4 items-end">
           <div className="w-full max-w-sm space-y-2">
-              <label className="text-xs text-zinc-400 font-medium ml-1">Search User Logs</label>
+              <label className="text-xs text-zinc-400 font-medium ml-1">로그 검색 (유저)</label>
               <div className="relative">
                   <Search className="absolute left-3 top-2.5 w-4 h-4 text-zinc-500" />
                   <Input 
-                    placeholder="Enter User ID (ex. 1001)" 
+                    placeholder="닉네임 또는 ID 입력" 
                     className="pl-9 bg-black/50 border-white/10 h-10 text-white" 
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
@@ -145,7 +166,7 @@ export default function TicketInventoryPage() {
           {/* Date Range Picker Fallback */}
           <div className="flex gap-2 items-center">
              <div className="space-y-2">
-                  <label className="text-xs text-zinc-400 font-medium ml-1">Start Date</label>
+                  <label className="text-xs text-zinc-400 font-medium ml-1">시작일</label>
                   <Input 
                       type="date"
                       className="bg-black/50 border-white/10 h-10 text-white w-[150px]"
@@ -155,7 +176,7 @@ export default function TicketInventoryPage() {
              </div>
              <span className="text-zinc-500 pb-2">~</span>
              <div className="space-y-2">
-                  <label className="text-xs text-zinc-400 font-medium ml-1">End Date</label>
+                  <label className="text-xs text-zinc-400 font-medium ml-1">종료일</label>
                   <Input 
                       type="date"
                       className="bg-black/50 border-white/10 h-10 text-white w-[150px]"
@@ -165,37 +186,37 @@ export default function TicketInventoryPage() {
              </div>
           </div>
 
-          <Button variant="secondary" onClick={handleSearch} className="h-10">Search</Button>
+          <Button variant="secondary" onClick={handleSearch} className="h-10">검색</Button>
       </div>
 
       <Card className="bg-[#18181B] border-white/5">
          <CardHeader>
              <CardTitle className="flex items-center gap-2">
                  <History className="w-5 h-5 text-zinc-400" />
-                 Inventory Logs
+                 아이템 로그 목록 (Inventory Logs)
              </CardTitle>
          </CardHeader>
          <CardContent>
              <Table>
                  <TableHeader>
                      <TableRow className="border-white/5 hover:bg-transparent">
-                         <TableHead>Time</TableHead>
-                         <TableHead>User ID</TableHead>
-                         <TableHead>Type</TableHead>
-                         <TableHead>Item</TableHead>
-                         <TableHead>Amount</TableHead>
-                         <TableHead>Balance</TableHead>
-                         <TableHead>Reason</TableHead>
+                         <TableHead>시간</TableHead>
+                         <TableHead>유저 ID</TableHead>
+                         <TableHead>구분</TableHead>
+                         <TableHead>아이템</TableHead>
+                         <TableHead>수량</TableHead>
+                         <TableHead>잔액</TableHead>
+                         <TableHead>사유</TableHead>
                      </TableRow>
                  </TableHeader>
                  <TableBody>
                      {isLoading ? (
                          <TableRow>
-                             <TableCell colSpan={7} className="text-center py-10 text-zinc-500">Loading Logs...</TableCell>
+                             <TableCell colSpan={7} className="text-center py-10 text-zinc-500">로그를 불러오는 중입니다...</TableCell>
                          </TableRow>
                      ) : logs.length === 0 ? (
                          <TableRow>
-                             <TableCell colSpan={7} className="text-center py-10 text-zinc-500">No logs found.</TableCell>
+                             <TableCell colSpan={7} className="text-center py-10 text-zinc-500">검색된 로그가 없습니다.</TableCell>
                          </TableRow>
                      ) : (
                          logs.map((log: TicketLogDto) => (

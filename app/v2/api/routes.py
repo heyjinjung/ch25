@@ -18,6 +18,7 @@ from app.schemas.dice import DicePlayResponse, DiceStatusResponse
 from app.schemas.lottery import LotteryPlayResponse, LotteryStatusResponse
 from app.schemas.mission import MissionListResponse
 from app.schemas.roulette import RoulettePlayRequest, RoulettePlayResponse, RouletteStatusResponse
+from app.schemas.survey import SurveyCompleteRequest, SurveyListResponse, SurveyResponseUpdateRequest
 from app.services.inventory_service import InventoryService
 from app.services.mission_service import MissionService
 from app.services.feature_service import FeatureService
@@ -821,6 +822,118 @@ def mark_inbox_read(
     )
 
     return V2MarkInboxReadResponse(marked_count=marked_count, remaining_unread=remaining_unread)
+
+
+# ============================================================================
+# Survey API (User-facing, V2 alias)
+# ============================================================================
+
+
+@router.get("/surveys/active", tags=["v2-user"])
+def v2_list_active_surveys(
+    db: Session = Depends(get_db),
+    user_id: int = Depends(get_current_user_id),
+):
+    """Compat: V2 alias for legacy `/api/surveys/active`."""
+    from sqlalchemy import select
+    from app.models.survey import SurveyResponse, SurveyResponseStatus
+    from app.services.survey_service import SurveyService
+
+    service = SurveyService()
+    surveys = service.get_active_surveys(db=db, user_id=user_id)
+    response_map: dict[int, int | None] = {}
+    completed_map: dict[int, bool] = {}
+
+    if surveys:
+        survey_ids = [s.id for s in surveys]
+        stmt = (
+            select(SurveyResponse)
+            .where(
+                SurveyResponse.survey_id.in_(survey_ids),
+                SurveyResponse.user_id == user_id,
+            )
+            .order_by(SurveyResponse.id.desc())
+        )
+        seen_pending = set()
+        for resp in db.execute(stmt).scalars().all():
+            if resp.status == SurveyResponseStatus.COMPLETED:
+                completed_map[resp.survey_id] = True
+            if resp.survey_id not in seen_pending:
+                if resp.status in [SurveyResponseStatus.PENDING, SurveyResponseStatus.IN_PROGRESS]:
+                    response_map[resp.survey_id] = resp.id
+                    seen_pending.add(resp.survey_id)
+
+    items = []
+    for s in surveys:
+        items.append(
+            {
+                "id": s.id,
+                "title": s.title,
+                "description": s.description,
+                "channel": s.channel,
+                "status": s.status,
+                "reward_json": s.reward_json,
+                "pending_response_id": response_map.get(s.id),
+                "is_completed": completed_map.get(s.id, False),
+            }
+        )
+    return SurveyListResponse(items=items)
+
+
+@router.post("/surveys/{survey_id}/responses", tags=["v2-user"])
+def v2_get_or_create_survey_response(
+    survey_id: int,
+    db: Session = Depends(get_db),
+    user_id: int = Depends(get_current_user_id),
+):
+    """Compat: V2 alias for legacy `/api/surveys/{survey_id}/responses`."""
+    from app.services.survey_service import SurveyService
+
+    service = SurveyService()
+    return service.get_survey_session(db=db, survey_id=survey_id, user_id=user_id)
+
+
+@router.patch("/surveys/{survey_id}/responses/{response_id}", tags=["v2-user"])
+def v2_save_survey_answers(
+    survey_id: int,
+    response_id: int,
+    payload: SurveyResponseUpdateRequest,
+    db: Session = Depends(get_db),
+    user_id: int = Depends(get_current_user_id),
+):
+    """Compat: V2 alias for legacy survey answer save."""
+    from app.services.survey_service import SurveyService
+
+    service = SurveyService()
+    service.save_answers(
+        db=db,
+        response_id=response_id,
+        user_id=user_id,
+        payload=payload.answers,
+        last_question_id=payload.last_question_id,
+    )
+    return service.get_survey_session(db=db, survey_id=survey_id, user_id=user_id)
+
+
+@router.post("/surveys/{survey_id}/responses/{response_id}/complete", tags=["v2-user"])
+def v2_complete_survey_response(
+    survey_id: int,
+    response_id: int,
+    payload: SurveyCompleteRequest,
+    db: Session = Depends(get_db),
+    user_id: int = Depends(get_current_user_id),
+):
+    """Compat: V2 alias for legacy survey completion."""
+    from app.services.survey_service import SurveyService
+
+    _ = survey_id
+    service = SurveyService()
+    return service.complete_with_reward(
+        db=db,
+        response_id=response_id,
+        user_id=user_id,
+        force_submit=payload.force_submit or False,
+    )
 
 # --- Stubs for SoT Compliance ---
 

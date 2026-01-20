@@ -495,47 +495,23 @@ export const createV2AdminMessage = async (
 // ============================================================================
 
 export const getAdminMissions = async (): Promise<AdminMissionDto[]> => {
-  // Mock Data
-  return [
-    {
-      id: 1,
-      category: "DAILY",
-      title: "출석체크",
-      condition: "로그인 1회",
-      rewardType: "TICKET",
-      rewardAmount: 1,
-      isActive: true,
-    },
-    {
-      id: 2,
-      category: "DAILY",
-      title: "룰렛 돌리기",
-      condition: "룰렛 3회 참여",
-      rewardType: "POINT",
-      rewardAmount: 100,
-      isActive: true,
-    },
-    {
-      id: 3,
-      category: "NEW_USER",
-      title: "첫 입금",
-      condition: "1만원 이상 충전",
-      rewardType: "BUNDLE",
-      rewardAmount: 1,
-      isActive: true,
-    },
-  ];
+  const response = await v2Client.get<AdminMissionDto[]>(
+    "/api/v2/admin/game/missions",
+  );
+  return response.data;
 };
 
 export const updateMission = async (
   id: number,
   data: Partial<AdminMissionDto>,
 ): Promise<void> => {
-  await v2Client.put(`/admin/api/game/missions/${id}`, data);
+  await v2Client.put(`/api/v2/admin/game/missions/${id}`, data);
 };
 
 export const getAdminLevels = async (): Promise<AdminLevelDto[]> => {
-  const response = await v2Client.get<AdminLevelDto[]>("/api/v2/admin/game/levels");
+  const response = await v2Client.get<AdminLevelDto[]>(
+    "/api/v2/admin/game/levels",
+  );
   return response.data;
 };
 
@@ -634,7 +610,6 @@ export interface SendMessageRequest {
   title: string;
   content: string;
   targetSegment: string;
-  messageType: "PUSH" | "INBOX" | "BOTH";
   scheduledAt?: string;
 }
 
@@ -738,12 +713,8 @@ export const sendAdminMessage = async (
   const target_type = data.targetSegment === "ALL" ? "ALL" : "SEGMENT";
   const target_value = data.targetSegment === "ALL" ? null : data.targetSegment;
 
-  // 현재는 안전하게 INBOX 팬아웃을 기본 보장한다.
-  const channels = (() => {
-    if (data.messageType === "BOTH") return ["PUSH", "INBOX"];
-    if (data.messageType === "PUSH") return ["PUSH", "INBOX"];
-    return ["INBOX"];
-  })();
+  // PUSH 기능은 제거됨: 관리자 메시지는 INBOX만 사용한다.
+  const channels = ["INBOX"];
 
   await v2Client.post("/api/v2/admin/marketing/messages", {
     title: data.title,

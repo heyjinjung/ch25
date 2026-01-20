@@ -62,8 +62,7 @@ export default function UserListPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
-  const [selectedDrawerTab, setSelectedDrawerTab] =
-    useState<string>("overview");
+  const [selectedDrawerTab, setSelectedDrawerTab] = useState<string>("overview");
 
   // Filters
   const [statusFilter, setStatusFilter] = useState<string>("");
@@ -128,8 +127,7 @@ export default function UserListPage() {
             회원 관리
           </h1>
           <p className="text-sm text-zinc-400">
-            총 {total.toLocaleString()}명의 회원을 관리하고 상세 정보를
-            조회합니다.
+            총 {total.toLocaleString()}명의 회원을 관리하고 상세 정보를 조회합니다.
           </p>
         </div>
         <Button className="bg-[#D2FD9C] text-black hover:bg-[#D2FD9C]/90 font-bold">
@@ -169,7 +167,9 @@ export default function UserListPage() {
           <PopoverContent className="w-80 bg-[#18181B] border-white/10 text-white">
             <div className="space-y-4">
               <div>
-                <label className="text-sm text-zinc-400 mb-2 block">상태</label>
+                <label className="text-sm text-zinc-400 mb-2 block">
+                  상태
+                </label>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="bg-zinc-900 border-zinc-800">
                     <SelectValue placeholder="전체" />
@@ -296,9 +296,7 @@ export default function UserListPage() {
                     <ArrowUpDown className="w-3 h-3" />
                   </button>
                 </TableHead>
-                <TableHead className="text-center text-zinc-400 w-[80px]">
-                  관리
-                </TableHead>
+                <TableHead className="text-center text-zinc-400 w-[80px]">관리</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -363,8 +361,8 @@ export default function UserListPage() {
       {/* Pagination */}
       <div className="flex items-center justify-between px-4 py-3 bg-[#18181B] rounded-xl border border-white/5">
         <div className="text-sm text-zinc-400">
-          {(page - 1) * limit + 1}~{Math.min(page * limit, total)} / 총 {total}
-          개
+          {(page - 1) * limit + 1}~{Math.min(page * limit, total)} / 총{" "}
+          {total}개
         </div>
         <div className="flex items-center gap-2">
           <Button
