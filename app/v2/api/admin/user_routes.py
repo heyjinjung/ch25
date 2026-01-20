@@ -164,7 +164,7 @@ def get_admin_user_detail(
         elif retention.churn_probability_score > 0.5:
             risk_level = "MEDIUM"
 
-    total_charge = user.total_charge_amount or 0
+    total_charge = int(user.total_charge_amount or 0)
     if total_charge > 10000000:
         risk_level = "HIGH"
         risk_reason = "High Value Account"
@@ -195,22 +195,22 @@ def get_admin_user_detail(
             )
         ]
 
-    playbook = InterventionPlaybookDto(risk_level=risk_level, suggested_actions=suggested_actions)
+    playbook = InterventionPlaybookDto(riskLevel=risk_level, suggestedActions=suggested_actions)
 
     return AdminUserDetailDto(
         id=user.id,
-        nickname=user.nickname,
-        telegram_id=user.telegram_id,
-        created_at=user.created_at,
-        total_deposit=int(user.total_charge_amount or 0),
-        current_assets=current_assets,
-        vault_balance=vault_balance,
-        ticket_balance=ticket_balance,
-        level=user.level,
-        vip_level="VIP" if user.total_charge_amount > 5000000 else "COMMON",
-        is_active=(user.status == "ACTIVE"),
-        risk_level=risk_level,
-        risk_reason=risk_reason,
+        nickname=user.nickname or "(미설정)",
+        telegramId=user.telegram_id,
+        createdAt=user.created_at,
+        totalDeposit=total_charge,
+        currentAssets=current_assets,
+        vaultBalance=vault_balance,
+        ticketBalance=ticket_balance,
+        level=int(user.level or 1),
+        vipLevel="VIP" if total_charge > 5000000 else "COMMON",
+        isActive=(user.status == "ACTIVE"),
+        riskLevel=risk_level,
+        riskReason=risk_reason,
         playbook=playbook if suggested_actions else None,
     )
 

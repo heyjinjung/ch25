@@ -16,6 +16,7 @@ import {
   AlertCircle,
   Trophy,
   MoreHorizontal,
+  Save,
 } from "lucide-react";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
@@ -37,13 +38,45 @@ export default function LevelConfigPage() {
   const [filterLevel, setFilterLevel] = useState("");
   const [isGlobalConfigOpen, setIsGlobalConfigOpen] = useState(false);
 
-  const handleUpdate = (
+  // Local state for each level's edits
+  const [localLevels, setLocalLevels] = useState<Record<number, AdminLevelDto>>({});
+
+  useEffect(() => {
+    if (levels.length > 0) {
+      const levelMap: Record<number, AdminLevelDto> = {};
+      levels.forEach(level => {
+        levelMap[level.level] = { ...level };
+      });
+      setLocalLevels(levelMap);
+    }
+  }, [levels]);
+
+  const handleLocalChange = (
     level: number,
     field: keyof AdminLevelDto,
     value: string | number,
   ) => {
-    // For rewardType (string) or numbers
-    updateMutation.mutate({ level, data: { [field]: value } });
+    setLocalLevels(prev => ({
+      ...prev,
+      [level]: {
+        ...prev[level],
+        [field]: value,
+      },
+    }));
+  };
+
+  const handleSaveLevel = (level: number) => {
+    const localData = localLevels[level];
+    if (!localData) return;
+
+    updateMutation.mutate({
+      level,
+      data: {
+        requiredXp: localData.requiredXp,
+        rewardType: localData.rewardType,
+        rewardAmount: localData.rewardAmount,
+      }
+    });
   };
 
   const filteredLevels = useMemo(() => {
@@ -196,136 +229,153 @@ export default function LevelConfigPage() {
 
       {/* --- Grid Layout --- */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
-        {filteredLevels.map((level) => (
-          <div
-            key={level.level}
-            className="group relative bg-[#1e1e24] rounded-2xl border border-zinc-800 hover:border-indigo-500/50 hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col"
-          >
-            {/* Level Progress Bar (Visual) */}
-            <progress
-              value={level.level}
-              max={levelSummary.maxLevel || 1}
-              className="absolute top-0 left-0 h-1.5 w-full appearance-none overflow-hidden bg-zinc-800 opacity-75 group-hover:opacity-100 [&::-webkit-progress-bar]:bg-zinc-800 [&::-webkit-progress-value]:bg-indigo-500 [&::-moz-progress-bar]:bg-indigo-500"
-            />
+        {filteredLevels.map((level) => {
+          const localLevel = localLevels[level.level] || level;
+          const hasChanges = localLevel.requiredXp !== level.requiredXp ||
+                            localLevel.rewardType !== level.rewardType ||
+                            localLevel.rewardAmount !== level.rewardAmount;
 
-            <div className="p-6 flex flex-col h-full bg-gradient-to-b from-white/[0.02] to-transparent">
-              {/* Header */}
-              <div className="flex justify-between items-start mb-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-[#09090b] flex items-center justify-center border border-zinc-700 text-2xl font-black text-white font-mono shadow-inner relative overflow-hidden group-hover:border-indigo-500/40 transition-colors">
-                    <span className="z-10 relative">{level.level}</span>
-                    <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">
-                      LEVEL CONFIG
-                    </span>
-                    <h3 className="text-lg text-zinc-100 font-bold tracking-tight">
-                      Lv.{level.level}
-                    </h3>
-                  </div>
-                </div>
-              </div>
+          return (
+            <div
+              key={level.level}
+              className="group relative bg-[#1e1e24] rounded-2xl border border-zinc-800 hover:border-indigo-500/50 hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col"
+            >
+              {/* Level Progress Bar (Visual) */}
+              <progress
+                value={level.level}
+                max={levelSummary.maxLevel || 1}
+                className="absolute top-0 left-0 h-1.5 w-full appearance-none overflow-hidden bg-zinc-800 opacity-75 group-hover:opacity-100 [&::-webkit-progress-bar]:bg-zinc-800 [&::-webkit-progress-value]:bg-indigo-500 [&::-moz-progress-bar]:bg-indigo-500"
+              />
 
-              <div className="space-y-6 flex-1">
-                {/* XP Requirement */}
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Zap className="w-4 h-4 text-amber-500" />
-                    <Label className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
-                      필요 경험치 (Required XP)
-                    </Label>
-                  </div>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      defaultValue={level.requiredXp}
-                      onBlur={(e) =>
-                        handleUpdate(
-                          level.level,
-                          "requiredXp",
-                          parseInt(e.target.value),
-                        )
-                      }
-                      className={`${inputClass} text-right font-bold text-lg h-11 pr-12`}
-                    />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 text-xs font-bold pointer-events-none">
-                      XP
-                    </span>
+              <div className="p-6 flex flex-col h-full bg-gradient-to-b from-white/[0.02] to-transparent">
+                {/* Header */}
+                <div className="flex justify-between items-start mb-6">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-2xl bg-[#09090b] flex items-center justify-center border border-zinc-700 text-2xl font-black text-white font-mono shadow-inner relative overflow-hidden group-hover:border-indigo-500/40 transition-colors">
+                      <span className="z-10 relative">{level.level}</span>
+                      <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">
+                        LEVEL CONFIG
+                      </span>
+                      <h3 className="text-lg text-zinc-100 font-bold tracking-tight">
+                        Lv.{level.level}
+                      </h3>
+                    </div>
                   </div>
                 </div>
 
-                <div className="w-full h-px bg-white/5 my-4" />
-
-                {/* Rewards Config */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center gap-2">
-                      <Trophy className="w-4 h-4 text-emerald-400" />
+                <div className="space-y-6 flex-1">
+                  {/* XP Requirement */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Zap className="w-4 h-4 text-amber-500" />
                       <Label className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
-                        달성 보상 (Reward)
+                        필요 경험치 (Required XP)
                       </Label>
                     </div>
-                  </div>
-
-                  <div className="grid grid-cols-[1.5fr_1fr] gap-2">
-                    {/* Type Select */}
-                    <div className="relative">
-                      <select
-                        className="w-full h-10 bg-zinc-900 border border-zinc-700 rounded-lg px-3 text-xs font-medium text-zinc-300 focus:border-indigo-500 outline-none appearance-none"
-                        value={level.rewardType || "POINT"}
-                        onChange={(e) =>
-                          handleUpdate(
-                            level.level,
-                            "rewardType",
-                            e.target.value,
-                          )
-                        }
-                      >
-                        {REWARD_ITEMS.map((item) => (
-                          <option key={item.value} value={item.value}>
-                            {item.label}
-                          </option>
-                        ))}
-                      </select>
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-500">
-                        <MoreHorizontal size={14} />
-                      </div>
-                    </div>
-
-                    {/* Amount Input */}
                     <div className="relative">
                       <input
                         type="number"
-                        defaultValue={level.rewardAmount}
-                        onBlur={(e) =>
-                          handleUpdate(
+                        value={localLevel.requiredXp}
+                        onChange={(e) =>
+                          handleLocalChange(
                             level.level,
-                            "rewardAmount",
-                            parseInt(e.target.value),
+                            "requiredXp",
+                            parseInt(e.target.value) || 0,
                           )
                         }
-                        className="w-full h-10 bg-zinc-900 border border-zinc-700 rounded-lg px-3 text-sm font-bold text-white text-center focus:border-indigo-500 outline-none"
+                        className={`${inputClass} text-right font-bold text-lg h-11 pr-12`}
                       />
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 text-xs font-bold pointer-events-none">
+                        XP
+                      </span>
                     </div>
                   </div>
-                  <p className="text-[10px] text-zinc-500 text-right mt-1">
-                    * 보상은 1회 자동 지급됩니다.
-                  </p>
-                </div>
-              </div>
 
-              {/* Footer / Status */}
-              <div className="mt-6 pt-4 border-t border-white/5 flex justify-between items-center text-[10px] font-mono">
-                <span className="text-zinc-500">Auto-save enabled</span>
-                <div className="flex items-center gap-1.5 text-emerald-500/80 bg-emerald-500/10 px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-all duration-500">
-                  <Check size={12} />
-                  <span className="font-bold">SYNCED</span>
+                  <div className="w-full h-px bg-white/5 my-4" />
+
+                  {/* Rewards Config */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2">
+                        <Trophy className="w-4 h-4 text-emerald-400" />
+                        <Label className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
+                          달성 보상 (Reward)
+                        </Label>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-[1.5fr_1fr] gap-2">
+                      {/* Type Select */}
+                      <div className="relative">
+                        <select
+                          className="w-full h-10 bg-zinc-900 border border-zinc-700 rounded-lg px-3 text-xs font-medium text-zinc-300 focus:border-indigo-500 outline-none appearance-none"
+                          value={localLevel.rewardType || "POINT"}
+                          onChange={(e) =>
+                            handleLocalChange(
+                              level.level,
+                              "rewardType",
+                              e.target.value,
+                            )
+                          }
+                        >
+                          {REWARD_ITEMS.map((item) => (
+                            <option key={item.value} value={item.value}>
+                              {item.label}
+                            </option>
+                          ))}
+                        </select>
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-500">
+                          <MoreHorizontal size={14} />
+                        </div>
+                      </div>
+
+                      {/* Amount Input */}
+                      <div className="relative">
+                        <input
+                          type="number"
+                          value={localLevel.rewardAmount}
+                          onChange={(e) =>
+                            handleLocalChange(
+                              level.level,
+                              "rewardAmount",
+                              parseInt(e.target.value) || 0,
+                            )
+                          }
+                          className="w-full h-10 bg-zinc-900 border border-zinc-700 rounded-lg px-3 text-sm font-bold text-white text-center focus:border-indigo-500 outline-none"
+                        />
+                      </div>
+                    </div>
+                    <p className="text-[10px] text-zinc-500 text-right mt-1">
+                      * 보상은 1회 자동 지급됩니다.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Footer with Save Button */}
+                <div className="mt-6 pt-4 border-t border-white/5 flex justify-between items-center gap-2">
+                  {hasChanges ? (
+                    <Button
+                      onClick={() => handleSaveLevel(level.level)}
+                      disabled={updateMutation.isPending}
+                      className="w-full bg-indigo-600 hover:bg-indigo-700 text-white h-9 text-sm font-bold"
+                    >
+                      <Save className="w-4 h-4 mr-2" />
+                      {updateMutation.isPending ? "저장 중..." : "변경사항 저장"}
+                    </Button>
+                  ) : (
+                    <div className="w-full flex items-center justify-center gap-1.5 text-emerald-500/80 bg-emerald-500/10 px-2 py-2 rounded">
+                      <Check size={14} />
+                      <span className="font-bold text-xs">저장됨</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
 
         {filteredLevels.length === 0 && (
           <div className="col-span-full h-80 flex flex-col items-center justify-center gap-6 text-zinc-500 bg-[#18181b] rounded-3xl border border-white/5 border-dashed">

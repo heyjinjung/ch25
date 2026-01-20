@@ -67,6 +67,47 @@ V2 Admin API 연동 과정에서 백엔드가 재시작/런타임 에러를 발�
     2.  **조치**: `docker compose up -d --build frontend` 명령어로 프론트엔드 컨테이너 재빌드/재시작 필요.
 - **상태**: 해결됨
 
+### 2.9 Admin User 지갑/금고 수정 500 (wallet/adjust)
+- **증상**: `/api/v2/admin/users/{id}/wallet/adjust` 요청이 500으로 실패 (Admin UI: 유저 디테일 드로우 → 지갑/금고 강제 수정)
+- **원인**:
+    1. `amount == 0` 또는 금고 출금 시 잔액 부족 등으로 `ValueError`가 그대로 전파
+    2. 토큰 타입이 `SAEnum(GameTokenType)`에 매핑되지 않아 Enum 변환 예외 발생 가능
+- **해결**:
+    1. `amount == 0`은 400으로 명확히 거절
+    2. `VAULT` deposit/withdraw의 `ValueError`를 400으로 변환(잔액 부족은 별도 코드)
+    3. `token_type`은 `GameTokenType`로 안전 변환 후 조회/생성
+- **상태**: 해결됨
+
+### 2.10 RouletteConfigDto grade ValidationError (roulette/configs 500)
+- **증상**: `/api/v2/admin/game/roulette/configs` 요청이 간헐적으로 500으로 실패
+- **원인**: DB의 `roulette_config.grade`가 스키마 허용값(`COMMON|VIP|WHALE|AT_RISK`)과 불일치할 경우, `response_model` 직렬화 단계에서 ValidationError 발생
+- **해결**: grade 정규화 로직 추가(legacy 값은 허용 범위로 매핑) + 직렬화 실패 시 `logger.exception`으로 스택 로그 남김
+- **상태**: 해결됨(데이터 정합성 관찰 필요)
+
+### 2.11 Admin Mission update rewardType Enum mismatch (missions PUT 500)
+- **증상**: `PUT /api/v2/admin/game/missions/{id}` 요청이 500으로 실패
+- **원인**: `mission.reward_type(SAEnum)`에 `payload.rewardType` 문자열을 그대로 대입하여 Enum 변환 실패(유효하지 않은 값)
+- **해결**: `MissionRewardType`로 사전 검증/변환 후 저장. invalid면 400(`INVALID_REWARD_TYPE`) 반환 + 예외는 `logger.exception`으로 기록
+- **상태**: 해결됨
+
+### 2.12 Withdrawal Approve/Reject API 404 에러
+- **증상**: Admin Vault 페이지에서 출금 승인/반려 시도 시 `404 Not Found` 에러 발생. 프론트엔드는 `/api/v2/admin/withdrawals/{id}/approve|reject`를 호출하나 백엔드에 해당 엔드포인트 없음.
+- **원인**:
+    1. 기존 프론트엔드가 사용하는 경로(`/withdrawals/{id}/approve|reject`)에 대한 백엔드 구현이 누락됨
+    2. `vault_routes.py`에 잘못된 경로(`/vault/withdrawals/...`)로 구현되어 있었으나, admin router 구조상 실제 경로는 `/api/v2/admin/vault/withdrawals/...`가 되어 프론트와 불일치
+- **해결**:
+    1. `app/v2/api/admin/economy_routes.py`에 `/withdrawals/{withdrawal_id}/approve` (POST) 추가
+    2. `app/v2/api/admin/economy_routes.py`에 `/withdrawals/{withdrawal_id}/reject` (POST) 추가
+    3. reject 엔드포인트는 `AdminWithdrawalRejectRequest` 스키마를 사용하여 JSON body로 `reason` 수신
+    4. 승인 시 `withdrawal.status = "APPROVED"`, `approved_at`, `approved_by` 설정
+    5. 반려 시 `withdrawal.status = "REJECTED"`, `rejected_at`, `rejection_reason` 설정
+    6. 모든 변경사항은 `AdminAuditService.log`로 감사 로그 기록
+- **프론트엔드 개선**:
+    1. `VaultControlPage.tsx`에서 `SlideToApprove` 컴포넌트 제거
+    2. 일반 `Button` 컴포넌트로 교체하여 UX 개선 (로딩 상태 표시 추가)
+    3. 출금 상세 내역 모달 추가 (금고 통계 카드 클릭 시 PENDING/APPROVED/REJECTED 내역 테이블 표시)
+- **상태**: 해결됨
+
 ---
 
 ## 3. 관찰 필요 (Known Issues)

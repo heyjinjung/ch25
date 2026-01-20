@@ -1,13 +1,16 @@
 from typing import List
+import logging
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_admin_info, get_db
-from app.models.mission import Mission
+from app.models.mission import Mission, MissionRewardType
 
 router = APIRouter()
+
+logger = logging.getLogger(__name__)
 
 
 class AdminMissionDto(BaseModel):
@@ -61,12 +64,25 @@ def update_admin_mission(
         raise HTTPException(status_code=404, detail="MISSION_NOT_FOUND")
 
     if payload.rewardType is not None:
-        m.reward_type = payload.rewardType
+        try:
+            m.reward_type = MissionRewardType(payload.rewardType)
+        except Exception:
+            raise HTTPException(status_code=400, detail="INVALID_REWARD_TYPE")
 
     if payload.rewardAmount is not None:
         m.reward_amount = payload.rewardAmount
     if payload.isActive is not None:
         m.is_active = payload.isActive
 
-    db.commit()
+    try:
+        db.commit()
+    except HTTPException:
+        raise
+    except Exception:
+        logger.exception(
+            "Failed to update mission",
+            extra={"mission_id": mission_id},
+        )
+        raise HTTPException(status_code=500, detail="MISSION_UPDATE_FAILED")
+
     return {"success": True}

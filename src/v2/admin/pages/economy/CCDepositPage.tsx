@@ -75,11 +75,32 @@ export default function CCDepositPage() {
     setSortConfig({ key: direction ? key : null, direction });
   };
 
+  // Group logs by userId and aggregate
   const sortedLogs = [...logs].sort((a, b) => {
     if (!sortConfig.key || !sortConfig.direction) return 0;
 
-    const aVal = a[sortConfig.key];
-    const bVal = b[sortConfig.key];
+    let aVal: any;
+    let bVal: any;
+
+    // Map sortConfig.key to logs data
+    if (sortConfig.key === "id") {
+      aVal = a.id;
+      bVal = b.id;
+    } else if (sortConfig.key === "nickname") {
+      aVal = a.nickname;
+      bVal = b.nickname;
+    } else if (sortConfig.key === "amount") {
+      aVal = a.amount;
+      bVal = b.amount;
+    } else if (sortConfig.key === "kstDate") {
+      aVal = a.kstDate;
+      bVal = b.kstDate;
+    } else if (sortConfig.key === "createdAt") {
+      aVal = a.createdAt;
+      bVal = b.createdAt;
+    } else {
+      return 0;
+    }
 
     if (aVal === null || aVal === undefined) return 1;
     if (bVal === null || bVal === undefined) return -1;

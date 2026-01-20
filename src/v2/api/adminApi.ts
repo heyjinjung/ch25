@@ -1487,3 +1487,33 @@ export const forceEditVault = async (
   );
   return response.data;
 };
+
+
+export interface WithdrawalDetailDto {
+  id: number;
+  user_id: number;
+  nickname: string;
+  telegram_username: string | null;
+  amount: number;
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  created_at: string;
+  approved_at: string | null;
+  rejected_at: string | null;
+  rejection_reason: string | null;
+}
+
+export interface WithdrawalDetailsResponse {
+  status: string;
+  count: number;
+  total_amount: number;
+  withdrawals: WithdrawalDetailDto[];
+}
+
+export const getWithdrawalDetails = async (
+  status: string
+): Promise<WithdrawalDetailsResponse> => {
+  const response = await v2Client.get<WithdrawalDetailsResponse>(
+    `/api/v2/admin/vault/withdrawals/${status}`
+  );
+  return response.data;
+};

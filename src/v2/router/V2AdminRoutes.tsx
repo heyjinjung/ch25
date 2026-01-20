@@ -4,21 +4,18 @@ import { Outlet } from "react-router-dom";
 import AdminLayout from "../admin/layouts/AdminLayout";
 import OpsDashboard from "../admin/pages/dashboard/OpsDashboard";
 import MarketingCenterPage from "../admin/pages/dashboard/MarketingCenterPage";
-import UserListPage from "../admin/pages/users/UserListPage";
 import CrisisRadarPage from "../admin/pages/dashboard/CrisisRadarPage";
 
 import VaultControlPage from "../admin/pages/economy/VaultControlPage";
 import CCDepositPage from "../admin/pages/economy/CCDepositPage";
-import ShopManagerPage from "../admin/pages/economy/ShopManagerPage";
-import MissionManagerPage from "../admin/pages/game/MissionManagerPage";
+import ShopMissionTabPage from "../admin/pages/economy/ShopMissionTabPage";
 import LevelConfigPage from "../admin/pages/game/LevelConfigPage";
 import RouletteConfigPage from "../admin/pages/game/RouletteConfigPage";
 import DiceConfigPage from "../admin/pages/game/DiceConfigPage";
 import LotteryConfigPage from "../admin/pages/game/LotteryConfigPage";
 import TicketInventoryPage from "../admin/pages/economy/TicketInventoryPage";
-import MessageSenderPage from "../admin/pages/marketing/MessageSenderPage";
-import UserSegmentPage from "../admin/pages/users/UserSegmentPage";
-import SurveyPage from "../admin/pages/marketing/SurveyPage";
+import MarketingTabPage from "../admin/pages/marketing/MarketingTabPage";
+import UserManagementTabPage from "../admin/pages/users/UserManagementTabPage";
 import HealthPage from "../admin/pages/system/HealthPage";
 import ModalControlPage from "../admin/pages/system/ModalControlPage";
 import {
@@ -42,14 +39,18 @@ const V2AdminRoutes: React.FC = () => {
           <Route path="dashboard" element={<OpsDashboard />} />
           <Route path="dashboard/radar" element={<CrisisRadarPage />} />
           <Route path="marketing" element={<MarketingCenterPage />} />
-          <Route path="users" element={<UserListPage />} />
+
+          {/* Users - Tabbed */}
+          <Route path="users" element={<UserManagementTabPage />} />
+
           {/* Economy */}
           <Route path="economy/vault" element={<VaultControlPage />} />
           <Route path="economy/deposits" element={<CCDepositPage />} />
-          <Route path="economy/shop" element={<ShopManagerPage />} />
+
+          {/* Shop & Mission - Tabbed */}
+          <Route path="economy/shop" element={<ShopMissionTabPage />} />
 
           {/* Game Ops */}
-          <Route path="game/missions" element={<MissionManagerPage />} />
           <Route path="game/level" element={<LevelConfigPage />} />
           <Route path="game/roulette" element={<RouletteConfigPage />} />
           <Route path="game/dice" element={<DiceConfigPage />} />
@@ -60,10 +61,8 @@ const V2AdminRoutes: React.FC = () => {
           {/* Inventory */}
           <Route path="inventory/tickets" element={<TicketInventoryPage />} />
 
-          {/* Marketing */}
-          <Route path="marketing/messages" element={<MessageSenderPage />} />
-          <Route path="users/segments" element={<UserSegmentPage />} />
-          <Route path="marketing/surveys" element={<SurveyPage />} />
+          {/* Marketing - Tabbed */}
+          <Route path="marketing/messages" element={<MarketingTabPage />} />
 
           {/* System */}
           <Route path="system/health" element={<HealthPage />} />

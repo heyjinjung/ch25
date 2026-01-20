@@ -41,14 +41,14 @@ class AdminProductDto(BaseModel):
 
 class AdminWithdrawalDto(BaseModel):
     id: int
-    user_id: int
+    userId: int = Field(..., validation_alias="user_id")
     nickname: str
     amount: int
-    request_time: datetime
-    risk_level: RiskLevel = "LOW"
+    requestTime: datetime = Field(..., validation_alias="request_time")
+    riskLevel: RiskLevel = Field("LOW", validation_alias="risk_level")
     status: WithdrawalStatus
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
 
 class AdminDepositDto(BaseModel):
