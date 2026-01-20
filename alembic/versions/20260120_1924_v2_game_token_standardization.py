@@ -20,8 +20,8 @@ from sqlalchemy.sql import text
 
 
 # revision identifiers, used by Alembic.
-revision = 'v2_game_token_standardization'
-down_revision = None  # TODO: 이전 마이그레이션 ID로 변경
+revision = '20260120_1924_v2_game_token_standardization'
+down_revision = '20260120_1410_add_dice_config_probability_columns'
 branch_labels = None
 depends_on = None
 
@@ -29,10 +29,29 @@ depends_on = None
 def upgrade():
     """V1 → V2 명칭으로 변환"""
     
-    # user_game_wallet 테이블의 token_type 컬럼 값 변경
     connection = op.get_bind()
     
-    # 변환 매핑 (V1 → V2)
+    # 0. Enum 컬럼 확장 (V1 + V2 모든 값 포함)
+    # 기존 값들과 새로운 값들을 모두 포함하도록 ENUM 변경
+    # 주의: MySQL에서는 ENUM 변경 시 전체 테이블 재구성이 발생할 수 있음
+    all_enums = [
+        # V1 (Legacy)
+        'ROULETTE_COIN', 'DICE_TOKEN', 'TRIAL_TOKEN', 'LOTTERY_TICKET',
+        'GOLD_KEY', 'DIAMOND_KEY', 'GOLD_KEY_FRAGMENT', 'DIAMOND_KEY_FRAGMENT',
+        'PUZZLE_C', 'PUZZLE_C1', 'PUZZLE_C2', 'PUZZLE_J', 'PUZZLE_M',
+        'DIAMOND', 'VAULT', 'NONE',
+        # V2 (New)
+        'ROULETTE_TICKET', 'DICE_TICKET', 'GOLD_KEY_TICKET', 
+        'DIAMOND_TICKET', 'DIAMOND_FRAGMENT'
+    ]
+    
+    enum_str = ", ".join([f"'{e}'" for e in all_enums])
+    
+    connection.execute(
+        text(f"ALTER TABLE user_game_wallet MODIFY COLUMN token_type ENUM({enum_str}) NOT NULL")
+    )
+    
+    # 1. 데이터 변환 (V1 → V2)
     mappings = [
         ('ROULETTE_COIN', 'ROULETTE_TICKET'),
         ('DICE_TOKEN', 'DICE_TICKET'),
@@ -42,7 +61,6 @@ def upgrade():
     ]
     
     for old_value, new_value in mappings:
-        # 1. user_game_wallet 테이블
         connection.execute(
             text("""
                 UPDATE user_game_wallet 
@@ -51,9 +69,6 @@ def upgrade():
             """),
             {"old_value": old_value, "new_value": new_value}
         )
-        
-        # 2. 다른 테이블들도 필요시 추가 (예: 로그 테이블 등)
-        # 주의: reward_type 등 문자열 필드도 확인 필요
     
     print(f"✅ V1 → V2 GameTokenType migration completed")
     print(f"   Converted mappings: {len(mappings)}")

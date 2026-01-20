@@ -69,6 +69,27 @@
 - V2 DB 관리자 메시지 인박스: docs/v2_specs/04_db/v2_db_admin_message_inbox_ko.md
 - V2 DB 스냅샷 재생성 정책: docs/v2_specs/04_db/v2_db_snapshot_regeneration_policy_ko.md
 
+## 5. Troubleshooting
+- (DB/Alembic) docs/v2_specs/90_troubleshooting/v2_troubleshooting_20260120_alembic_legacy_ko.md
+- (Backend Runtime) docs/v2_specs/90_troubleshooting/v2_troubleshooting_20260120_backend_runtime_ko.md
+- (Frontend Startup) docs/v2_specs/90_troubleshooting/v2_troubleshooting_20260120_frontend_startup_ko.md
+- (Admin UI Undefined Error) docs/v2_specs/90_troubleshooting/v2_troubleshooting_20260120_undefined_error_ko.md
+
+## 5.1 V2 Admin 라우터 모듈(코드 맵)
+- 라우터 엔트리: app/v2/api/routes.py (admin_router include)
+- Admin 라우터 집계: app/v2/api/admin/__init__.py (prefix=/admin)
+- 모듈 라우터
+	- app/v2/api/admin/economy_routes.py
+	- app/v2/api/admin/game_config_routes.py
+	- app/v2/api/admin/inventory_routes.py
+	- app/v2/api/admin/level_routes.py
+	- app/v2/api/admin/marketing_routes.py
+	- app/v2/api/admin/mission_routes.py
+	- app/v2/api/admin/ops_routes.py
+	- app/v2/api/admin/segment_routes.py
+	- app/v2/api/admin/user_routes.py
+	- app/v2/api/admin/vault_routes.py
+
 ## 6. 운영/검증 (QA)
 - 프론트엔드 마스터 플랜: docs/v2_specs/06_design/v2_frontend_master_plan_ko.md
 - 어드민 마스터 플랜: docs/v2_specs/06_design/v2_admin_master_plan_ko.md
@@ -94,3 +115,4 @@
 - v1.2 (2026-01-19, GitHub Copilot): V2 DB 진행 상태 업데이트 반영
 - v1.1 (2026-01-19, GitHub Copilot): V2 DB 로그/ops 문서 링크 추가
 - v1.0 (2026-01-18, GitHub Copilot): 최초 작성
+- v2.3 (2026-01-20, GitHub Copilot): Troubleshooting 섹션 및 V2 Admin 라우터 모듈(코드 맵) 링크 추가

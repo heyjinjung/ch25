@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from typing import Any
 from zoneinfo import ZoneInfo
 
-from pydantic import BaseModel, model_serializer
+from pydantic import BaseModel, ConfigDict, model_serializer
 
 KST = ZoneInfo("Asia/Seoul")
 
@@ -46,6 +46,12 @@ def _convert_datetimes(obj: Any) -> Any:
 
 class KstBaseModel(BaseModel):
     """Base model that serializes all datetime fields as KST in JSON."""
+
+    model_config = ConfigDict(
+        json_encoders={
+            datetime: to_kst_iso,
+        }
+    )
 
     @model_serializer(mode="wrap")
     def _serialize_kst(self, handler):
