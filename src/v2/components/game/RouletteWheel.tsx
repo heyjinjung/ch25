@@ -17,7 +17,7 @@ const getIconForRewardType = (rewardType?: string) => {
   if (rewardType === "DIAMOND_KEY_FRAGMENT")
     return "/assets/icons/diamond_key_fragment.png";
   if (rewardType === "CC_COIN") return "/assets/logo_cc_v2.png";
-  if (rewardType === "ROULETTE_COIN") return "/assets/asset_ticket_green.png";
+  if (rewardType === "ROULETTE_TICKET") return "/assets/asset_ticket_green.png";
   if (rewardType === "TRIAL_TOKEN") return "/assets/asset_ticket_trial.png";
   return null;
 };

@@ -10,6 +10,20 @@ import type {
 } from "../types/gameAction";
 import type { GameTokenType } from "../../types/gameTokens";
 
+export interface VaultStatusResponse {
+  readonly eligible: boolean;
+  readonly vaultBalance: number;
+  readonly lockedBalance?: number;
+  readonly availableBalance?: number;
+  readonly ticketCount?: number;
+  readonly protocol_key?: string | null;
+  readonly is_golden_hour_active?: boolean;
+  readonly golden_hour_multiplier?: number;
+  readonly golden_hour_remaining_seconds?: number;
+  readonly showModalOverride?: string | null;
+  readonly segment?: string | null;
+}
+
 // ============================================================================
 // V2 Token Mapping
 // ============================================================================

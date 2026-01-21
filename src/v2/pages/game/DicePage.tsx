@@ -5,6 +5,7 @@ import confetti from "canvas-confetti";
 import { getV2DiceStatus, playV2Dice } from "../../api/v1CompatAdapter";
 import DiceRoll from "../../components/game/DiceRoll";
 import { ThemeProvider, useTheme } from "../../contexts/ThemeContext";
+import "./GamePages.css";
 import { triggerHaptic, triggerNotification } from "../../utils/haptic";
 import PremiumParticles from "../../components/effects/PremiumParticles";
 
@@ -13,7 +14,7 @@ import PremiumParticles from "../../components/effects/PremiumParticles";
 // ============================================================================
 
 const DicePageContent = () => {
-  const { theme } = useTheme();
+  const { theme, themeType } = useTheme();
   const [isRolling, setIsRolling] = useState(false);
   const [userDice, setUserDice] = useState<number[]>([]);
   const [dealerDice, setDealerDice] = useState<number[]>([]);
@@ -80,7 +81,7 @@ const DicePageContent = () => {
         setResult(outcome as "WIN" | "LOSE" | "DRAW");
         setRewardAmount(reward);
 
-        handleRollComplete(outcome as "WIN" | "LOSE" | "DRAW", reward);
+        handleRollComplete(outcome as "WIN" | "LOSE" | "DRAW");
       }, theme.animations.diceRollDuration);
     } catch (err) {
       console.error("[DicePage] Play error:", err);
@@ -92,10 +93,7 @@ const DicePageContent = () => {
   // Result Handler
   // ============================================================================
 
-  const handleRollComplete = (
-    outcome: "WIN" | "LOSE" | "DRAW",
-    _reward: number,
-  ) => {
+  const handleRollComplete = (outcome: "WIN" | "LOSE" | "DRAW") => {
     if (outcome === "WIN") {
       triggerNotification("success");
       triggerHaptic("heavy");
@@ -167,14 +165,7 @@ const DicePageContent = () => {
   return (
     <div
       ref={containerRef}
-      className="min-h-screen text-white overflow-hidden relative"
-      style={{
-        background: theme.assets.background
-          ? `linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)), url(${theme.assets.background})`
-          : theme.colors.background,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-      }}
+      className={`game-page dice-page theme-${themeType} min-h-screen text-white overflow-hidden relative`}
     >
       {/* Background Particles */}
       {theme.assets.particleType !== "default" && (
@@ -260,10 +251,7 @@ const DicePageContent = () => {
               <div className="w-full border-t border-white/10" />
             </div>
             <div className="relative bg-black/80 px-4 py-2 rounded-full border border-white/20">
-              <span
-                className="text-xl font-black tracking-wider"
-                style={{ color: theme.colors.accent }}
-              >
+              <span className="dice-vs-text text-xl font-black tracking-wider">
                 VS
               </span>
             </div>
@@ -316,21 +304,13 @@ const DicePageContent = () => {
               transition={{ duration: 0.4, ease: "back.out(2)" }}
             >
               <div
-                className="inline-flex items-center gap-2 rounded-full px-6 py-3 border-2 shadow-2xl"
-                style={{
-                  backgroundColor:
-                    result === "WIN"
-                      ? `${theme.colors.win}20`
-                      : result === "LOSE"
-                        ? `${theme.colors.lose}20`
-                        : `${theme.colors.draw}20`,
-                  borderColor:
-                    result === "WIN"
-                      ? theme.colors.win
-                      : result === "LOSE"
-                        ? theme.colors.lose
-                        : theme.colors.draw,
-                }}
+                className={`dice-result-badge inline-flex items-center gap-2 rounded-full px-6 py-3 border-2 shadow-2xl ${
+                  result === "WIN"
+                    ? "is-win"
+                    : result === "LOSE"
+                      ? "is-lose"
+                      : ""
+                }`}
               >
                 <span className="text-2xl">
                   {result === "WIN" ? "🎉" : result === "LOSE" ? "😢" : "🤝"}
@@ -359,11 +339,7 @@ const DicePageContent = () => {
           disabled={
             isRolling || playMutation.isPending || data.token_balance <= 0
           }
-          className="w-full rounded-2xl py-5 text-lg font-black transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 shadow-2xl"
-          style={{
-            background: `linear-gradient(135deg, ${theme.colors.primary}, ${theme.colors.secondary})`,
-            color: theme.colors.text,
-          }}
+          className="dice-play-button w-full rounded-2xl py-5 text-lg font-black transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 shadow-2xl"
         >
           {isRolling
             ? "주사위 굴리는 중..."
@@ -382,10 +358,7 @@ const DicePageContent = () => {
           </div>
           <div className="rounded-xl bg-black/40 border border-white/10 p-3 backdrop-blur">
             <p className="text-white/60 mb-1">남은 횟수</p>
-            <p
-              className="text-lg font-bold"
-              style={{ color: theme.colors.primary }}
-            >
+            <p className="dice-remaining text-lg font-bold">
               {data.remaining_plays}
             </p>
           </div>

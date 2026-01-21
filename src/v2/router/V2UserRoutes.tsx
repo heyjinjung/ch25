@@ -1,13 +1,18 @@
 import { lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
+import V2AppLayout from "../components/layout/V2AppLayout";
 
 // Lazy load pages
 const LoginPage = lazy(() => import("../pages/auth/V2UserLoginPage"));
-const HomePage = lazy(() => import("../pages/home/HomePage"));
-const GameHubPage = lazy(() => import("../pages/game/GameHubPage"));
+const HomePage = lazy(() => import("../pages/home/PokemonHomePage"));
+const DashboardPage = lazy(() => import("../pages/dashboard/DashboardPage"));
+const VaultPage = lazy(() => import("../pages/vault/VaultPage"));
 const RoulettePage = lazy(() => import("../pages/game/RoulettePage"));
 const DicePage = lazy(() => import("../pages/game/DicePage"));
 const LotteryPage = lazy(() => import("../pages/game/LotteryPage"));
+const ExchangePage = lazy(() => import("../pages/shop/ExchangePage"));
+const InventoryPage = lazy(() => import("../pages/inventory/InventoryPage"));
+const MissionsPage = lazy(() => import("../pages/missions/MissionsPage"));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -26,16 +31,25 @@ export const V2UserRoutes = () => {
         {/* Auth */}
         <Route path="/login" element={<LoginPage />} />
 
-        {/* Home */}
-        <Route path="/home" element={<HomePage />} />
+        {/* App Layout (V1-style bottom nav) */}
+        <Route element={<V2AppLayout />}>
+          {/* Home */}
+          <Route path="/home" element={<HomePage />} />
 
-        {/* Game Hub */}
-        <Route path="/game" element={<GameHubPage />} />
+          {/* Game Dashboard */}
+          <Route path="/game" element={<DashboardPage />} />
+          <Route path="/vault" element={<VaultPage />} />
+          <Route path="/shop" element={<ExchangePage />} />
+          <Route path="/inventory" element={<InventoryPage />} />
 
-        {/* Game Routes */}
-        <Route path="/game/roulette" element={<RoulettePage />} />
-        <Route path="/game/dice" element={<DicePage />} />
-        <Route path="/game/lottery" element={<LotteryPage />} />
+          {/* Game Routes */}
+          <Route path="/game/roulette" element={<RoulettePage />} />
+          <Route path="/game/dice" element={<DicePage />} />
+          <Route path="/game/lottery" element={<LotteryPage />} />
+          
+          {/* Missions & Events */}
+          <Route path="/missions" element={<MissionsPage />} />
+        </Route>
 
         {/* Default redirect to Home */}
         <Route path="/" element={<Navigate to="/home" replace />} />

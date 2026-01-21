@@ -68,8 +68,14 @@ v2Client.interceptors.request.use((config) => {
 v2Client.interceptors.response.use(
   (response) => response,
   (error) => {
-    // eslint-disable-next-line no-console
-    console.error("[v2Client] response error", error);
+    const code = error?.response?.data?.error?.code;
+    const detail = error?.response?.data?.detail;
+    const isNoFeatureToday =
+      code === "NO_FEATURE_TODAY" || detail === "NO_FEATURE_TODAY";
+    if (!isNoFeatureToday) {
+      // eslint-disable-next-line no-console
+      console.error("[v2Client] response error", error);
+    }
 
     const status = error?.response?.status;
 

@@ -12,6 +12,8 @@ import diceEffect from "../../../assets/svg/7.svg";
 import lotteryMain from "../../../assets/svg/8.svg";
 import lotteryFixed from "../../../assets/svg/9.svg";
 import lotteryEffect from "../../../assets/svg/10.svg";
+import teamBattleFixed from "../../../assets/svg/11.svg";
+import teamBattleMain from "../../../assets/svg/12.svg";
 
 // 게임 데이터
 const GAMES: ComponentProps<typeof GameCard>[] = [
@@ -20,17 +22,14 @@ const GAMES: ComponentProps<typeof GameCard>[] = [
     title: "룰렛경품",
     icon: "🎰",
     gradientClass: "bg-transparent",
-    badge: "HOT",
-    badgeClass: "bg-[#C41E3A]",
     href: "/v2/game/roulette",
     layers: {
       main: rouletteMain,
       fixed: rouletteFixed,
       effect: rouletteEffect,
-      effectMotion: "fixed",
+      mainMotion: "none",
+      effectMotion: "expand",
     },
-    bgMain: rouletteEffect,
-    bgAccent: diceEffect,
   },
   {
     id: "dice",
@@ -42,25 +41,26 @@ const GAMES: ComponentProps<typeof GameCard>[] = [
       main: diceMain,
       fixed: diceFixed,
       effect: diceEffect,
-      effectMotion: "fixed",
+      mainMotion: "none",
+      effectMotion: "floatX",
     },
-    bgMain: diceEffect,
-    bgAccent: lotteryEffect,
   },
   {
     id: "lottery",
     title: "복권",
     icon: "🎟️",
     gradientClass: "bg-transparent",
+    badge: "HOT",
+    badgeClass: "bg-[#C41E3A]",
+    badgePosition: "top-right",
     href: "/v2/game/lottery",
     layers: {
       main: lotteryMain,
       fixed: lotteryFixed,
       effect: lotteryEffect,
-      effectMotion: "fixed",
+      mainMotion: "bounce",
+      effectMotion: "sparkle",
     },
-    bgMain: lotteryEffect,
-    bgAccent: rouletteEffect,
   },
   {
     id: "team-battle",
@@ -71,10 +71,10 @@ const GAMES: ComponentProps<typeof GameCard>[] = [
     badgeClass: "bg-[#22C55E]",
     href: "/v2/team-battle",
     layers: {
-      main: lotteryMain,
-      fixed: "/assets/11.svg",
-      effect: "/assets/12.svg",
-      effectMotion: "floatX",
+      main: teamBattleMain,
+      fixed: teamBattleFixed,
+      fixedScale: 1.3,
+      mainMotion: "floatX",
     },
   },
 ];

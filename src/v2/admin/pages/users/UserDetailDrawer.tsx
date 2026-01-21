@@ -62,7 +62,7 @@ export function UserDetailDrawer({
   const contentRef = useRef<HTMLDivElement>(null);
   const [isWalletEditorOpen, setIsWalletEditorOpen] = useState(false);
   const [walletEditorInitialType, setWalletEditorInitialType] =
-    useState<string>("ROULETTE_COIN");
+    useState<string>("ROULETTE_TICKET");
   const [walletEditorCategories, setWalletEditorCategories] = useState<
     RewardCategory[]
   >(["GAME_TICKET"]);

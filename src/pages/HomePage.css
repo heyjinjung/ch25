@@ -1,0 +1,24 @@
+.tilt-card__surface {
+  --tilt-x: 0deg;
+  --tilt-y: 0deg;
+  --tilt-brightness: 1;
+  transform-style: preserve-3d;
+  transform: rotateX(var(--tilt-x)) rotateY(var(--tilt-y));
+  filter: brightness(var(--tilt-brightness));
+}
+
+.tilt-depth-0 {
+  transform: translateZ(0px);
+}
+
+.tilt-depth-10 {
+  transform: translateZ(10px);
+}
+
+.tilt-depth-20 {
+  transform: translateZ(20px);
+}
+
+.tilt-depth-30 {
+  transform: translateZ(30px);
+}

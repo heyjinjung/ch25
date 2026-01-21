@@ -68,10 +68,12 @@ _wallet_service = GameWalletService()
 from app.v2.api.admin import router as admin_router
 from app.v2.api.activity_routes import router as activity_router
 from app.v2.api.v1_auth_user_alias import router as v1_auth_user_alias_router
+from app.v2.api.vault_routes import router as vault_router
 
 router.include_router(admin_router)
 router.include_router(activity_router)
 router.include_router(v1_auth_user_alias_router)
+router.include_router(vault_router)
 
 
 class V2InventoryUseRequest(BaseModel):

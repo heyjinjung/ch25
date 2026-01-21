@@ -6,6 +6,7 @@ import { getV2LotteryStatus, playV2Lottery } from "../../api/v1CompatAdapter";
 import LotteryCard from "../../components/game/LotteryCard";
 import LotteryCollectionModal from "../../components/lottery/LotteryCollectionModal";
 import { ThemeProvider, useTheme } from "../../contexts/ThemeContext";
+import "./GamePages.css";
 import { triggerHaptic, triggerNotification } from "../../utils/haptic";
 import PremiumParticles from "../../components/effects/PremiumParticles";
 
@@ -25,7 +26,7 @@ interface Prize {
 // ============================================================================
 
 const LotteryPageContent = () => {
-  const { theme } = useTheme();
+  const { theme, themeType } = useTheme();
   const [isScratching, setIsScratching] = useState(false);
   const [isRevealed, setIsRevealed] = useState(false);
   const [revealedPrize, setRevealedPrize] = useState<Prize | null>(null);
@@ -158,14 +159,7 @@ const LotteryPageContent = () => {
 
   return (
     <div
-      className="min-h-screen text-white overflow-hidden relative"
-      style={{
-        background: theme.assets.background
-          ? `linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)), url(${theme.assets.background})`
-          : theme.colors.background,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-      }}
+      className={`game-page lottery-page theme-${themeType} min-h-screen text-white overflow-hidden relative`}
     >
       {/* Background Particles */}
       {theme.assets.particleType !== "default" && (
@@ -214,14 +208,8 @@ const LotteryPageContent = () => {
             {/* Notification Badge */}
             {canCraft && (
               <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                <span
-                  className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
-                  style={{ backgroundColor: theme.colors.accent }}
-                />
-                <span
-                  className="relative inline-flex rounded-full h-3 w-3"
-                  style={{ backgroundColor: theme.colors.accent }}
-                />
+                <span className="lottery-accent-bg animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" />
+                <span className="lottery-accent-bg relative inline-flex rounded-full h-3 w-3" />
               </span>
             )}
           </button>
@@ -240,13 +228,7 @@ const LotteryPageContent = () => {
         {/* Action Button */}
         <div className="max-w-sm mx-auto w-full">
           {isOutOfTokens && (
-            <div
-              className="mb-4 p-4 rounded-xl border bg-red-500/10 text-center text-sm font-bold"
-              style={{
-                borderColor: theme.colors.lose + "20",
-                color: theme.colors.lose,
-              }}
-            >
+            <div className="lottery-error-banner mb-4 p-4 rounded-xl border bg-red-500/10 text-center text-sm font-bold">
               로또볼이 부족합니다! Vault에서 충전하세요.
             </div>
           )}
@@ -255,11 +237,7 @@ const LotteryPageContent = () => {
             type="button"
             onClick={() => (isRevealed ? handleReset() : handleScratch())}
             disabled={!canPlay && !isRevealed}
-            className="w-full rounded-2xl py-5 text-lg font-black transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 shadow-2xl"
-            style={{
-              background: `linear-gradient(135deg, ${theme.colors.primary}, ${theme.colors.secondary})`,
-              color: theme.colors.text,
-            }}
+            className="lottery-play-button w-full rounded-2xl py-5 text-lg font-black transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 shadow-2xl"
           >
             {isRevealed
               ? "다음 복권 확인"
@@ -274,10 +252,7 @@ const LotteryPageContent = () => {
         {/* Prize List */}
         <div className="mt-6">
           <div className="flex items-center justify-between mb-3">
-            <h3
-              className="text-sm font-black italic tracking-[0.2em] uppercase"
-              style={{ color: theme.colors.accent }}
-            >
+            <h3 className="lottery-accent-text text-sm font-black italic tracking-[0.2em] uppercase">
               당첨 가능 경품 리스트
             </h3>
             <span className="text-[10px] font-bold text-white/20 uppercase tracking-widest">
@@ -325,10 +300,7 @@ const LotteryPageContent = () => {
 
                 {prize.stock !== null && (
                   <div className="absolute top-1.5 right-1.5 flex items-center gap-0.5">
-                    <span
-                      className="w-1 h-1 rounded-full animate-pulse"
-                      style={{ backgroundColor: theme.colors.accent }}
-                    />
+                    <span className="lottery-accent-bg w-1 h-1 rounded-full animate-pulse" />
                     <span className="text-[7px] font-black text-white/30 uppercase tracking-widest">
                       {prize.stock}
                     </span>

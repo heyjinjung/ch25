@@ -1,0 +1,1431 @@
+# yaml-language-server: $schema=https://spec.openapis.org/oas/3.0/schema/2021-09-28
+openapi: 3.0.3
+info:
+  title: XMAS Event System V2 API
+  version: v1.0
+  description: |
+    V2 API 전체 스웨거(OpenAPI) 스펙. 계약 문서 기준으로 최소 필드만 포함.
+    근거: docs/v2_specs/03_api/*.md
+servers:
+  - url: /
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: System
+  - name: Auth
+  - name: Activity
+  - name: Telegram
+  - name: NewUser
+  - name: Dev
+  - name: Game
+  - name: Mission
+  - name: Inventory
+  - name: Shop
+  - name: TeamBattle
+  - name: Survey
+  - name: Feed
+  - name: User
+  - name: Vault
+  - name: Ops
+  - name: Admin
+  - name: TicketZero
+  - name: Golden
+  - name: Vault
+
+paths:
+  /api/v2/health:
+    get:
+      tags: [System]
+      summary: 헬스 체크
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+
+  /api/v2/today-feature:
+    get:
+      tags: [System]
+      summary: 오늘의 기능
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TodayFeatureResponse"
+
+  /api/v2/metrics:
+    get:
+      tags: [System]
+      summary: 메트릭
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/auth/token:
+    post:
+      tags: [Auth]
+      summary: 토큰 발급
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthTokenRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthTokenResponse"
+
+  /api/v2/auth/login:
+    post:
+      tags: [Auth]
+      summary: 로그인 (alias)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthTokenRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthTokenResponse"
+
+  /api/v2/auth/refresh:
+    post:
+      tags: [Auth]
+      summary: 토큰 갱신 (placeholder)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthTokenResponse"
+
+  /api/v2/auth/logout:
+    post:
+      tags: [Auth]
+      summary: 로그아웃
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LogoutResponse"
+
+  /api/v2/user/me:
+    get:
+      tags: [User]
+      summary: 내 정보
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserMeResponse"
+
+  /api/v2/user/balance:
+    get:
+      tags: [User]
+      summary: 내 잔액
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserBalanceResponse"
+
+  /api/v2/vault/status:
+    get:
+      tags: [Vault]
+      summary: 금고 상태 (V2)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VaultStatusResponse"
+
+  /api/v2/activity/record:
+    post:
+      tags: [Activity]
+      summary: 활동 기록
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ActivityRecordRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActivityRecordResponse"
+
+  /api/v2/telegram/auth:
+    post:
+      tags: [Telegram]
+      summary: 텔레그램 연동
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TelegramAuthRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TelegramAuthResponse"
+
+  /api/v2/telegram/link-token:
+    post:
+      tags: [Telegram]
+      summary: 텔레그램 링크용 토큰 발급
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TelegramLinkTokenResponse"
+
+  /api/v2/telegram/unlink-request:
+    post:
+      tags: [Telegram]
+      summary: 텔레그램 연결 해제 요청
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TelegramUnlinkRequest"
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/new-user/status:
+    get:
+      tags: [NewUser]
+      summary: 신규 유저 상태
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/new-user/claim-welcome:
+    post:
+      tags: [NewUser]
+      summary: 웰컴 보상 수령
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/dev/login:
+    post:
+      tags: [Dev]
+      summary: DevLogin (개발환경)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DevLoginRequest"
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/roulette/status:
+    get:
+      tags: [Game]
+      summary: 룰렛 상태 조회
+      parameters:
+        - in: query
+          name: ticket_type
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RouletteStatusResponse"
+
+  /api/v2/roulette/play:
+    post:
+      tags: [Game]
+      summary: 룰렛 플레이
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RoulettePlayRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GamePlayResponse"
+
+  /api/v2/dice/status:
+    get:
+      tags: [Game]
+      summary: 주사위 상태 조회
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiceStatusResponse"
+
+  /api/v2/dice/play:
+    post:
+      tags: [Game]
+      summary: 주사위 플레이
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DicePlayRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GamePlayResponse"
+
+  /api/v2/dice/double-up:
+    post:
+      tags: [Game]
+      summary: 주사위 더블업
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DiceDoubleUpRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiceDoubleUpResponse"
+
+  /api/v2/lottery/status:
+    get:
+      tags: [Game]
+      summary: 복권 상태 조회
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LotteryStatusResponse"
+
+  /api/v2/lottery/play:
+    post:
+      tags: [Game]
+      summary: 복권 플레이
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LotteryPlayRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GamePlayResponse"
+
+  /api/v2/exchange/craft:
+    post:
+      tags: [Game]
+      summary: 퍼즐 합체 제작
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CraftRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CraftResponse"
+
+  /api/v2/mission/:
+    get:
+      tags: [Mission]
+      summary: 미션 목록/진행도
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MissionListResponse"
+
+  /api/v2/mission/{mission_id}/claim:
+    post:
+      tags: [Mission]
+      summary: 미션 보상 수령
+      parameters:
+        - in: path
+          name: mission_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/mission/daily-gift:
+    post:
+      tags: [Mission]
+      summary: 데일리 선물 수령
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/mission/streak/rules:
+    get:
+      tags: [Mission]
+      summary: 스트릭 규칙 조회
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/mission/streak/claim:
+    post:
+      tags: [Mission]
+      summary: 스트릭 보상 수령
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/streak/status:
+    get:
+      tags: [Mission]
+      summary: 스트릭 상태
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericObject"
+
+  /api/v2/mission/list:
+    get:
+      tags: [Mission]
+      summary: 미션 목록 (alias)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericObject"
+
+  /api/v2/mission/claim:
+    post:
+      tags: [Mission]
+      summary: 미션 보상 수령 (alias)
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/inventory:
+    get:
+      tags: [Inventory]
+      summary: 인벤토리 조회
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InventoryResponse"
+
+  /api/v2/inventory/use:
+    post:
+      tags: [Inventory]
+      summary: 인벤토리 아이템 사용
+      parameters:
+        - in: header
+          name: Idempotency-Key
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InventoryUseRequest"
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/shop/products:
+    get:
+      tags: [Shop]
+      summary: 상점 상품 목록
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/shop/purchase:
+    post:
+      tags: [Shop]
+      summary: 상점 상품 구매
+      parameters:
+        - in: header
+          name: Idempotency-Key
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ShopPurchaseRequest"
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/team-battle/seasons/active:
+    get:
+      tags: [TeamBattle]
+      summary: 현재 시즌 조회
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/team-battle/teams:
+    get:
+      tags: [TeamBattle]
+      summary: 팀 목록
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/team-battle/teams/join:
+    post:
+      tags: [TeamBattle]
+      summary: 팀 가입
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TeamJoinRequest"
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/team-battle/teams/leave:
+    post:
+      tags: [TeamBattle]
+      summary: 팀 탈퇴
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/team-battle/teams/me:
+    get:
+      tags: [TeamBattle]
+      summary: 내 팀 정보
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/team-battle/teams/leaderboard:
+    get:
+      tags: [TeamBattle]
+      summary: 팀 리더보드
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/team-battle/status:
+    get:
+      tags: [TeamBattle]
+      summary: 팀 배틀 상태
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericObject"
+
+  /api/v2/team-battle/rankings:
+    get:
+      tags: [TeamBattle]
+      summary: 팀 배틀 랭킹
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericObject"
+
+  /api/v2/team-battle/join:
+    post:
+      tags: [TeamBattle]
+      summary: 팀 배틀 가입 (alias)
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/segments/run:
+    post:
+      tags: [Ops]
+      summary: 세그먼트 배치 실행
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SegmentsRunResponse"
+
+  /api/v2/messages:
+    post:
+      tags: [Ops]
+      summary: 운영 메시지 생성/팬아웃
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminMessageRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminMessageResponse"
+
+  /api/v2/inbox:
+    get:
+      tags: [Ops]
+      summary: 인박스 조회
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+        - in: query
+          name: offset
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InboxListResponse"
+
+  /api/v2/inbox/read:
+    patch:
+      tags: [Ops]
+      summary: 인박스 읽음 처리
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InboxReadRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InboxReadResponse"
+
+  /api/v2/admin/ops/status:
+    get:
+      tags: [Admin]
+      summary: 위기 레이더 상태 조회
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpsStatusResponse"
+
+  /api/v2/admin/users/{user_id}:
+    get:
+      tags: [Admin]
+      summary: 유저 상세
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/admin/ops/tasks/{task_id}/execution-result:
+    post:
+      tags: [Admin]
+      summary: Ops 실행 결과 저장
+      parameters:
+        - in: path
+          name: task_id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+    get:
+      tags: [Admin]
+      summary: Ops 실행 결과 조회
+      parameters:
+        - in: path
+          name: task_id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/ticket-zero/status:
+    get:
+      tags: [TicketZero]
+      summary: 티켓 제로 상태 조회
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TicketZeroStatusResponse"
+
+  /api/v2/ticket-zero/bailout:
+    post:
+      tags: [TicketZero]
+      summary: 티켓 제로 구조 요청
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TicketZeroBailoutResponse"
+
+  /api/v2/golden/intervention/resolve:
+    post:
+      tags: [Golden]
+      summary: 개입 결정
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GoldenInterventionRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GoldenInterventionResponse"
+
+  /api/v2/golden/reengagement/queue:
+    post:
+      tags: [Golden]
+      summary: 재참여 큐
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GoldenReengagementRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GoldenReengagementResponse"
+
+  /api/v2/vault/withdraw:
+    post:
+      tags: [Vault]
+      summary: 금고 출금 신청
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VaultWithdrawRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VaultWithdrawResponse"
+
+  /api/v2/inventory/items:
+    get:
+      tags: [Inventory]
+      summary: 인벤토리 아이템 목록
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericObject"
+
+  /api/v2/surveys/active:
+    get:
+      tags: [Survey]
+      summary: 활성 설문 조회
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericObject"
+
+  /api/v2/surveys/{survey_id}/responses:
+    post:
+      tags: [Survey]
+      summary: 설문 응답 생성
+      parameters:
+        - in: path
+          name: survey_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericObject"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericObject"
+
+  /api/v2/surveys/{survey_id}/responses/{response_id}:
+    patch:
+      tags: [Survey]
+      summary: 설문 응답 수정
+      parameters:
+        - in: path
+          name: survey_id
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: response_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericObject"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericObject"
+
+  /api/v2/surveys/{survey_id}/responses/{response_id}/complete:
+    post:
+      tags: [Survey]
+      summary: 설문 응답 완료
+      parameters:
+        - in: path
+          name: survey_id
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: response_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericObject"
+
+  /api/v2/golden/status:
+    get:
+      tags: [Golden]
+      summary: 골든 상태
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericObject"
+
+  /api/v2/golden/history:
+    get:
+      tags: [Golden]
+      summary: 골든 히스토리
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericObject"
+
+  /api/v2/feed/list:
+    get:
+      tags: [Feed]
+      summary: 피드 목록
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericObject"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    GenericObject:
+      type: object
+      additionalProperties: true
+
+    HealthResponse:
+      type: object
+      properties:
+        status: { type: string }
+
+    TodayFeatureResponse:
+      type: object
+      properties:
+        feature_type: { type: string, nullable: true }
+        user_id: { type: integer, nullable: true }
+
+    LogoutResponse:
+      type: object
+      properties:
+        success: { type: boolean }
+
+    UserMeResponse:
+      type: object
+      properties:
+        id: { type: integer }
+        nickname: { type: string }
+
+    UserBalanceResponse:
+      type: object
+      properties:
+        vault_locked: { type: integer }
+        vault_available: { type: integer }
+
+    VaultStatusResponse:
+      type: object
+      properties:
+        eligible: { type: boolean }
+        vault_balance: { type: integer }
+        locked_balance: { type: integer }
+        available_balance: { type: integer }
+        vault_amount_total: { type: integer }
+        vault_amount_reserved: { type: integer }
+        vault_amount_available: { type: integer }
+        ticket_count: { type: integer }
+        vault_fill_used_at: { type: string, format: date-time, nullable: true }
+        seeded: { type: boolean }
+        expires_at: { type: string, format: date-time, nullable: true }
+        recommended_action: { type: string, nullable: true }
+        cta_payload:
+          type: object
+          additionalProperties: true
+          nullable: true
+        program_key: { type: string, nullable: true }
+        unlock_rules_json:
+          type: object
+          additionalProperties: true
+          nullable: true
+        accrual_multiplier: { type: number, nullable: true }
+        ui_copy_json:
+          type: object
+          additionalProperties: true
+          nullable: true
+        total_charge_amount: { type: integer }
+        segment: { type: string, nullable: true }
+        daily_play_count: { type: integer }
+        daily_play_target: { type: integer }
+        daily_deposit_confirmed: { type: boolean }
+        daily_vault_spent: { type: integer }
+        daily_vault_spent_target: { type: integer }
+        withdrawal_count: { type: integer }
+        is_golden_hour_active: { type: boolean }
+        golden_hour_remaining_seconds: { type: integer }
+        golden_hour_multiplier: { type: number }
+        show_modal_override: { type: string, nullable: true }
+        deposit_status: { type: string }
+        vault_max_limit: { type: integer }
+        benefits_suspended: { type: boolean }
+
+    AuthTokenRequest:
+      type: object
+      required: [user_id]
+      properties:
+        user_id:
+          type: integer
+        external_id:
+          type: string
+        password:
+          type: string
+    AuthTokenResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        token_type:
+          type: string
+        user:
+          $ref: "#/components/schemas/UserSummary"
+    UserSummary:
+      type: object
+      properties:
+        id: { type: integer }
+        external_id: { type: string }
+        nickname: { type: string }
+        status: { type: string }
+        level: { type: integer }
+        segment: { type: string }
+        telegram_id: { type: integer }
+        login_streak: { type: integer }
+
+    ActivityRecordRequest:
+      type: object
+      properties:
+        event_type: { type: string }
+        event_id: { type: string }
+        value: { type: integer }
+        meta_json:
+          type: object
+          additionalProperties: true
+    ActivityRecordResponse:
+      type: object
+      properties:
+        user_id: { type: integer }
+        updated_at: { type: string, format: date-time }
+
+    TelegramAuthRequest:
+      type: object
+      properties:
+        init_data: { type: string }
+        start_param: { type: string }
+    TelegramAuthResponse:
+      type: object
+      properties:
+        access_token: { type: string }
+        token_type: { type: string }
+        is_new_user: { type: boolean }
+        linked_to_existing: { type: boolean }
+        user:
+          $ref: "#/components/schemas/UserSummary"
+
+    TelegramLinkTokenResponse:
+      type: object
+      properties:
+        expires_at_utc: { type: string, format: date-time }
+        start_param: { type: string }
+        open_url: { type: string }
+
+    TelegramUnlinkRequest:
+      type: object
+      properties:
+        init_data: { type: string }
+
+    DevLoginRequest:
+      type: object
+      properties:
+        external_id: { type: string }
+        nickname: { type: string }
+        create_if_missing: { type: boolean }
+
+    RouletteStatusResponse:
+      type: object
+      properties:
+        config_id: { type: integer }
+        name: { type: string }
+        max_daily_spins: { type: integer }
+        today_spins: { type: integer }
+        remaining_spins: { type: integer }
+        token_type: { type: string }
+        token_balance: { type: integer }
+        segments:
+          type: array
+          items:
+            $ref: "#/components/schemas/RouletteSegment"
+        feature_type: { type: string }
+    RouletteSegment:
+      type: object
+      properties:
+        id: { type: integer }
+        label: { type: string }
+        reward_type: { type: string }
+        reward_amount: { type: integer }
+        slot_index: { type: integer }
+        is_fever_reward: { type: boolean }
+
+    RoulettePlayRequest:
+      type: object
+      properties:
+        ticket_type: { type: string }
+        bet_multiplier: { type: integer }
+
+    DiceStatusResponse:
+      type: object
+      properties:
+        config_id: { type: integer }
+        name: { type: string }
+        max_daily_plays: { type: integer }
+        today_plays: { type: integer }
+        remaining_plays: { type: integer }
+        token_type: { type: string }
+        token_balance: { type: integer }
+        feature_type: { type: string }
+        event_active: { type: boolean }
+        event_plays_done: { type: integer, nullable: true }
+        event_plays_max: { type: integer, nullable: true }
+        event_ineligible_reason: { type: string, nullable: true }
+
+    DicePlayRequest:
+      type: object
+      properties:
+        bet_amount: { type: integer }
+        prediction: { type: string }
+
+    DiceDoubleUpRequest:
+      type: object
+      properties:
+        previous_game_id: { type: string }
+        choice: { type: string }
+
+    DiceDoubleUpResponse:
+      type: object
+      properties:
+        result: { type: string }
+        final_amount: { type: integer }
+        is_bust: { type: boolean }
+
+    LotteryStatusResponse:
+      type: object
+      properties:
+        config_id: { type: integer }
+        name: { type: string }
+        max_daily_tickets: { type: integer }
+        today_tickets: { type: integer }
+        remaining_tickets: { type: integer }
+        token_type: { type: string }
+        token_balance: { type: integer }
+        prize_preview:
+          type: array
+          items:
+            $ref: "#/components/schemas/LotteryPrize"
+        feature_type: { type: string }
+        collection_progress:
+          type: object
+          additionalProperties: true
+    LotteryPrize:
+      type: object
+      properties:
+        id: { type: integer }
+        label: { type: string }
+        reward_type: { type: string }
+        reward_amount: { type: integer }
+
+    LotteryPlayRequest:
+      type: object
+      properties:
+        ticket_type: { type: string }
+        selection_numbers:
+          type: array
+          items: { type: integer }
+
+    CraftRequest:
+      type: object
+      properties:
+        target_token_type: { type: string }
+    CraftResponse:
+      type: object
+      properties:
+        result: { type: string }
+        reward_token: { type: string }
+        reward_amount: { type: integer }
+        used_token: { type: string }
+        used_amount: { type: integer }
+
+    GamePlayResponse:
+      type: object
+      properties:
+        result: { type: string }
+        game_data:
+          type: object
+          additionalProperties: true
+        vault_earn: { type: integer }
+        season_pass: { type: object, nullable: true }
+        streak_info: { type: object, nullable: true }
+        fever_gauge: { type: object, nullable: true }
+        next_action_available:
+          type: array
+          items: { type: string }
+
+    MissionListResponse:
+      type: object
+      properties:
+        missions:
+          type: array
+          items:
+            type: object
+            properties:
+              mission:
+                type: object
+                additionalProperties: true
+              progress:
+                type: object
+                additionalProperties: true
+        streak_info:
+          type: object
+          additionalProperties: true
+
+    InventoryResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              item_type: { type: string }
+              quantity: { type: integer }
+              created_at: { type: string, format: date-time }
+        wallet:
+          type: object
+          additionalProperties: true
+
+    InventoryUseRequest:
+      type: object
+      properties:
+        item_type: { type: string }
+        amount: { type: integer }
+
+    ShopPurchaseRequest:
+      type: object
+      properties:
+        sku: { type: string }
+
+    TeamJoinRequest:
+      type: object
+      properties:
+        team_id: { type: integer }
+
+    SegmentsRunResponse:
+      type: object
+      properties:
+        processed: { type: integer }
+        changed: { type: integer }
+
+    AdminMessageRequest:
+      type: object
+      properties:
+        title: { type: string }
+        content: { type: string }
+        target_type: { type: string }
+        target_value: { type: string, nullable: true }
+        channels:
+          type: array
+          items: { type: string }
+
+    AdminMessageResponse:
+      type: object
+      properties:
+        id: { type: integer }
+        sender_admin_id: { type: integer }
+        title: { type: string }
+        content: { type: string }
+        target_type: { type: string }
+        target_value: { type: string, nullable: true }
+        channels:
+          type: array
+          items: { type: string }
+        recipient_count: { type: integer }
+        read_count: { type: integer }
+        created_at: { type: string, format: date-time }
+
+    InboxListResponse:
+      type: object
+      properties:
+        messages:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: integer }
+              message_id: { type: integer }
+              title: { type: string }
+              content: { type: string }
+              is_read: { type: boolean }
+              read_at: { type: string, format: date-time, nullable: true }
+              created_at: { type: string, format: date-time }
+        unread_count: { type: integer }
+
+    InboxReadRequest:
+      type: object
+      properties:
+        inbox_ids:
+          type: array
+          items: { type: integer }
+
+    InboxReadResponse:
+      type: object
+      properties:
+        marked_count: { type: integer }
+        remaining_unread: { type: integer }
+
+    OpsStatusResponse:
+      type: object
+      properties:
+        system_status: { type: string }
+        active_users_24h: { type: integer }
+        high_value_whales: { type: integer }
+        golden_radar:
+          type: object
+          additionalProperties: true
+
+    TicketZeroStatusResponse:
+      type: object
+      properties:
+        bailout_available: { type: boolean }
+
+    TicketZeroBailoutResponse:
+      type: object
+      properties:
+        granted: { type: boolean }
+        ticket_type: { type: string }
+        ticket_amount: { type: integer }
+
+    GoldenInterventionRequest:
+      type: object
+      properties:
+        event_type: { type: string }
+        data:
+          type: object
+          additionalProperties: true
+
+    GoldenInterventionResponse:
+      type: object
+      properties:
+        eligible: { type: boolean }
+        experiment_group: { type: string }
+        reward_type: { type: string }
+        reward_amount: { type: integer }
+        capped_amount: { type: integer }
+        cmax: { type: integer }
+        predicted_ltv: { type: integer }
+        roi_percent: { type: number }
+        meta:
+          type: object
+          additionalProperties: true
+
+    GoldenReengagementRequest:
+      type: object
+      properties:
+        reason: { type: string }
+        channel: { type: string }
+
+    GoldenReengagementResponse:
+      type: object
+      properties:
+        queued: { type: boolean }
+        created: { type: boolean }
+        reason: { type: string }
+        meta:
+          type: object
+          additionalProperties: true
+
+    VaultWithdrawRequest:
+      type: object
+      required: [amount]
+      properties:
+        amount: { type: integer }
+        protocol_key: { type: string, nullable: true }
+
+    VaultWithdrawResponse:
+      type: object
+      properties:
+        request_id: { type: integer }
+        status: { type: string }
+        amount: { type: integer }
+        balance_after: { type: integer }

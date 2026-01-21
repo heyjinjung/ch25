@@ -1,0 +1,129 @@
+.game-page {
+  background-size: cover;
+  background-position: center;
+}
+
+.theme-default,
+.theme-halloween,
+.theme-christmas {
+  --theme-primary: #30ff75;
+  --theme-secondary: #00d4aa;
+  --theme-accent: #ffd700;
+  --theme-text: #ffffff;
+  --theme-win: #30ff75;
+  --theme-lose: #ff4444;
+  --theme-draw: #ffa500;
+  --theme-win-bg: rgba(48, 255, 117, 0.12);
+  --theme-lose-bg: rgba(255, 68, 68, 0.12);
+  --theme-draw-bg: rgba(255, 165, 0, 0.12);
+  --theme-accent-bg: rgba(255, 215, 0, 0.3);
+  --theme-background: #000000;
+}
+
+.theme-lunar-new-year {
+  --theme-primary: #ff4444;
+  --theme-secondary: #ffd700;
+  --theme-accent: #ff6b6b;
+  --theme-text: #ffffff;
+  --theme-win: #ffd700;
+  --theme-lose: #ff4444;
+  --theme-draw: #ffa500;
+  --theme-win-bg: rgba(255, 215, 0, 0.12);
+  --theme-lose-bg: rgba(255, 68, 68, 0.12);
+  --theme-draw-bg: rgba(255, 165, 0, 0.12);
+  --theme-accent-bg: rgba(255, 107, 107, 0.3);
+  --theme-background: #1a0000;
+}
+
+.theme-premium {
+  --theme-primary: #ffd700;
+  --theme-secondary: #ffa500;
+  --theme-accent: #ffeb3b;
+  --theme-text: #ffffff;
+  --theme-win: #ffd700;
+  --theme-lose: #ff6b6b;
+  --theme-draw: #00bfff;
+  --theme-win-bg: rgba(255, 215, 0, 0.12);
+  --theme-lose-bg: rgba(255, 107, 107, 0.12);
+  --theme-draw-bg: rgba(0, 191, 255, 0.12);
+  --theme-accent-bg: rgba(255, 235, 59, 0.3);
+  --theme-background: #0a0a0a;
+}
+
+.theme-default .dice-page,
+.theme-halloween .dice-page,
+.theme-christmas .dice-page {
+  background: var(--theme-background);
+}
+
+.theme-lunar-new-year .dice-page {
+  background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.9)),
+    url("/assets/bg_lunar_new_year.jpg");
+}
+
+.theme-premium .dice-page {
+  background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.9)),
+    url("/assets/bg_premium.jpg");
+}
+
+.theme-default .lottery-page,
+.theme-halloween .lottery-page,
+.theme-christmas .lottery-page {
+  background: var(--theme-background);
+}
+
+.theme-lunar-new-year .lottery-page {
+  background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.9)),
+    url("/assets/bg_lunar_new_year.jpg");
+}
+
+.theme-premium .lottery-page {
+  background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.9)),
+    url("/assets/bg_premium.jpg");
+}
+
+.dice-vs-text {
+  color: var(--theme-accent);
+}
+
+.dice-result-badge {
+  background-color: var(--theme-draw-bg);
+  border-color: var(--theme-draw);
+}
+
+.dice-result-badge.is-win {
+  background-color: var(--theme-win-bg);
+  border-color: var(--theme-win);
+}
+
+.dice-result-badge.is-lose {
+  background-color: var(--theme-lose-bg);
+  border-color: var(--theme-lose);
+}
+
+.dice-play-button {
+  background: linear-gradient(135deg, var(--theme-primary), var(--theme-secondary));
+  color: var(--theme-text);
+}
+
+.dice-remaining {
+  color: var(--theme-primary);
+}
+
+.lottery-accent-text {
+  color: var(--theme-accent);
+}
+
+.lottery-accent-bg {
+  background-color: var(--theme-accent-bg);
+}
+
+.lottery-error-banner {
+  border-color: var(--theme-lose-bg);
+  color: var(--theme-lose);
+}
+
+.lottery-play-button {
+  background: linear-gradient(135deg, var(--theme-primary), var(--theme-secondary));
+  color: var(--theme-text);
+}

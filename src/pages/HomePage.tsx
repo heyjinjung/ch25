@@ -1,4 +1,4 @@
-﻿import React, { useState } from "react";
+﻿import React, { useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
@@ -13,7 +13,8 @@ import { useMissionStore } from "../stores/missionStore";
 import { useToast } from "../components/common/ToastProvider";
 import { useAuth } from "../auth/authStore";
 import { Zap } from "lucide-react";
-import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { motion } from "framer-motion";
+import "./HomePage.css";
 
 // --- Components ---
 
@@ -36,16 +37,7 @@ const TiltCard: React.FC<GameCardProps> = ({
   bgImage,
   badge,
 }) => {
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-
-  const mouseX = useSpring(x, { stiffness: 500, damping: 30 });
-  const mouseY = useSpring(y, { stiffness: 500, damping: 30 });
-
-  // Increased Tilt 7deg -> 12deg for prominent 3D
-  const rotateX = useTransform(mouseY, [-0.5, 0.5], ["12deg", "-12deg"]);
-  const rotateY = useTransform(mouseX, [-0.5, 0.5], ["-12deg", "12deg"]);
-  const brightness = useTransform(mouseY, [-0.5, 0.5], [1.1, 0.9]);
+  const surfaceRef = useRef<HTMLDivElement>(null);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -55,13 +47,31 @@ const TiltCard: React.FC<GameCardProps> = ({
     const mouseYVal = e.clientY - rect.top;
     const xPct = mouseXVal / width - 0.5;
     const yPct = mouseYVal / height - 0.5;
-    x.set(xPct);
-    y.set(yPct);
+    const rotateX = -yPct * 24;
+    const rotateY = xPct * 24;
+    const brightness = 1 - yPct * 0.2;
+    if (surfaceRef.current) {
+      surfaceRef.current.style.setProperty(
+        "--tilt-x",
+        `${rotateX.toFixed(2)}deg`,
+      );
+      surfaceRef.current.style.setProperty(
+        "--tilt-y",
+        `${rotateY.toFixed(2)}deg`,
+      );
+      surfaceRef.current.style.setProperty(
+        "--tilt-brightness",
+        `${brightness.toFixed(2)}`,
+      );
+    }
   };
 
   const handleMouseLeave = () => {
-    x.set(0);
-    y.set(0);
+    if (surfaceRef.current) {
+      surfaceRef.current.style.setProperty("--tilt-x", "0deg");
+      surfaceRef.current.style.setProperty("--tilt-y", "0deg");
+      surfaceRef.current.style.setProperty("--tilt-brightness", "1");
+    }
   };
 
   return (
@@ -73,15 +83,11 @@ const TiltCard: React.FC<GameCardProps> = ({
       )}
     >
       <motion.div
+        ref={surfaceRef}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
-        style={{
-          rotateX,
-          rotateY,
-          transformStyle: "preserve-3d",
-          filter: `brightness(${brightness})`,
-        }}
         className={clsx(
+          "tilt-card__surface",
           "relative h-full w-full rounded-[24px] border border-white/10 transition-all duration-300",
           // Hover Neon Glow
           "shadow-lg hover:shadow-[0_0_25px_rgba(255,255,255,0.2)] hover:border-white/30",
@@ -89,10 +95,7 @@ const TiltCard: React.FC<GameCardProps> = ({
         )}
       >
         {/* Background Layer (Clipped) */}
-        <div
-          className="absolute inset-0 overflow-hidden rounded-[24px]"
-          style={{ transform: "translateZ(0px)" }}
-        >
+        <div className="tilt-depth-0 absolute inset-0 overflow-hidden rounded-[24px]">
           {/* Inner Glow */}
           <div className="absolute inset-0 z-10 bg-gradient-to-br from-white/10 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 mix-blend-overlay" />
 
@@ -110,24 +113,15 @@ const TiltCard: React.FC<GameCardProps> = ({
         </div>
 
         {/* Floating Content (Visible Depth) */}
-        <div
-          className="relative z-20 flex h-full flex-col justify-between p-4"
-          style={{ transform: "translateZ(30px)" }}
-        >
+        <div className="tilt-depth-30 relative z-20 flex h-full flex-col justify-between p-4">
           <div className="flex justify-between items-start">
             {badge && (
-              <motion.span
-                className="absolute top-0 right-0 rounded-bl-xl bg-red-600 px-3 py-1 text-[10px] font-black text-white shadow-lg"
-                style={{ transform: "translateZ(20px)" }} // Pop badge
-              >
+              <motion.span className="absolute top-0 right-0 rounded-bl-xl bg-red-600 px-3 py-1 text-[10px] font-black text-white shadow-lg tilt-depth-20">
                 {badge}
               </motion.span>
             )}
             {!bgImage && (
-              <span
-                className="text-4xl drop-shadow-md"
-                style={{ transform: "translateZ(10px)" }}
-              >
+              <span className="text-4xl drop-shadow-md tilt-depth-10">
                 {icon}
               </span>
             )}

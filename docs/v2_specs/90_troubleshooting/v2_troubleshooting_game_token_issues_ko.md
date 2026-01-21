@@ -1,7 +1,11 @@
 # V2 게임 토큰 관련 트러블슈팅 가이드
 
-**작성일:** 2026-01-21
-**대상:** 백엔드/프론트엔드 개발자, DevOps
+문서 타입: 가이드
+버전: v1.1
+작성일: 2026-01-21
+작성자: GitHub Copilot
+대상 독자: 백엔드/프론트엔드 개발자, DevOps
+
 **우선순위:** P0 (Critical)
 
 ---
@@ -13,6 +17,7 @@
 3. [룰렛 Config 조회 실패](#3-룰렛-config-조회-실패)
 4. [Premium 룰렛 접근 제어 오류](#4-premium-룰렛-접근-제어-오류)
 5. [예방 가이드라인](#5-예방-가이드라인)
+6. [V2 룰렛/주사위/복권 상태 404 (NO_FEATURE_TODAY)](#6-v2-룰렛주사위복권-상태-404-no_feature_today)
 
 ---
 
@@ -310,6 +315,44 @@ if ticket_type in PREMIUM_TICKETS:
 
 ---
 
+## 6. V2 룰렛/주사위/복권 상태 404 (NO_FEATURE_TODAY)
+
+### 증상
+
+- V2 페이지에서 룰렛/주사위/복권 상태 요청이 404로 실패
+- 콘솔에 `NO_FEATURE_TODAY`와 함께 에러 로그가 반복 출력
+- V1 폴백도 같은 404를 반환해 화면이 깨지거나 상태가 비어 보임
+
+### 원인
+
+- V2 상태 엔드포인트가 비활성일 때 `NO_FEATURE_TODAY`를 404로 반환
+- V1 상태 엔드포인트도 동일하게 비활성 → 폴백 체인이 실패
+
+### 해결 방법
+
+#### 6.1 V2 → V1 폴백 + 빈 상태 반환
+
+**파일:** `src/v2/api/v1CompatAdapter.ts`
+
+- V2가 `NO_FEATURE_TODAY` 또는 404일 때 V1로 폴백
+- V1도 `NO_FEATURE_TODAY`면 빈 상태를 반환해 UI 깨짐 방지
+
+#### 6.2 에러 로그 억제
+
+**파일:**
+- `src/v2/api/client.ts`
+- `src/api/httpClient.ts`
+
+- `NO_FEATURE_TODAY` 응답은 경고 수준으로 처리하거나 로그 억제
+
+### 검증 방법
+
+1) `/v2/game/roulette`, `/v2/game/dice`, `/v2/game/lottery` 진입
+2) 콘솔에서 404 에러 로그 반복 출력이 없는지 확인
+3) 상태가 빈 값(remaining 0, segment/prize empty)으로 정상 렌더되는지 확인
+
+---
+
 ## 참고 문서
 
 - [V2 아이템/인벤토리 SoT](../01_core/v2_item_inventory_sot_ko.md)
@@ -356,3 +399,10 @@ if ticket_type in PREMIUM_TICKETS:
 - **기술 지원:** DevOps 팀
 - **버그 리포트:** [GitHub Issues](https://github.com/your-org/your-repo/issues)
 - **긴급 문의:** Slack #dev-emergency
+
+---
+
+## 변경 이력
+
+- v1.1 (2026-01-21, GitHub Copilot): V2 룰렛/주사위/복권 상태 404(NO_FEATURE_TODAY) 폴백/빈 상태 처리 및 로그 억제 항목 추가
+- v1.0 (2026-01-21, GitHub Copilot): 최초 작성
