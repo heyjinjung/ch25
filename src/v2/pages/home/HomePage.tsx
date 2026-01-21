@@ -4,8 +4,6 @@ import { useRef, useEffect } from "react";
 import gsap from "gsap";
 import { SeollalHeroBanner } from "./components/SeollalHeroBanner";
 import { GameCardGrid } from "./components/GameCardGrid";
-import { AssetButtons } from "./components/AssetButtons";
-import V2AppHeader from "../../components/layout/V2AppHeader";
 
 export default function HomePage() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -18,22 +16,6 @@ export default function HomePage() {
       });
 
       tl
-        // Step 1: 헤더 슬라이드 다운
-        .from(".app-header", {
-          y: -60,
-          opacity: 0,
-          duration: 0.4,
-        })
-        // Step 2: 자산 버튼 스케일 팝
-        .from(
-          ".asset-buttons",
-          {
-            scale: 0.9,
-            opacity: 0,
-            duration: 0.3,
-          },
-          "-=0.2",
-        )
         // Step 3: 히어로 배너 페이드 + 슬라이드
         .from(
           ".hero-banner",
@@ -78,19 +60,9 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div ref={containerRef} className="min-h-screen bg-[#0A0A0C]">
-      {/* 앱 헤더 */}
-      <div className="app-header sticky top-0 z-50">
-        <V2AppHeader />
-      </div>
-
+    <div ref={containerRef} className="min-h-full bg-[#0A0A0C]">
       {/* 메인 콘텐츠 */}
-      <main className="px-4 pb-24 space-y-4">
-        {/* 자산 버튼 (금고/티켓) */}
-        <div className="asset-buttons">
-          <AssetButtons />
-        </div>
-
+      <div className="px-4 pb-0 space-y-4">
         {/* 설날 히어로 배너 */}
         <div className="hero-banner">
           <SeollalHeroBanner />
@@ -118,7 +90,7 @@ export default function HomePage() {
 
         {/* 게임 카드 그리드 */}
         <GameCardGrid />
-      </main>
+      </div>
 
       {/* 하단 탭 네비게이션 (V2AppLayout에서 처리) */}
     </div>

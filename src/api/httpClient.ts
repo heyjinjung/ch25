@@ -66,8 +66,14 @@ userApi.interceptors.request.use((config) => {
 userApi.interceptors.response.use(
   (response) => response,
   (error) => {
-    // eslint-disable-next-line no-console
-    console.error("[userApi] response error", error);
+    const code = error?.response?.data?.error?.code;
+    const detail = error?.response?.data?.detail;
+    const isNoFeatureToday =
+      code === "NO_FEATURE_TODAY" || detail === "NO_FEATURE_TODAY";
+    if (!isNoFeatureToday) {
+      // eslint-disable-next-line no-console
+      console.error("[userApi] response error", error);
+    }
     // Handle 401/403 by redirecting to home or login (when login page exists)
     const status = error?.response?.status;
     // NOTE: 403 can be a valid "business/authorization" denial (e.g., segment-gated premium roulette).

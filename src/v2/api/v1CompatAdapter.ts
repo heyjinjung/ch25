@@ -5,12 +5,26 @@
  * Uses v2Client for proper authentication handling.
  */
 
+import axios from "axios";
 import { v2Client } from "./client"; // V2 apiClient
+import {
+  getRouletteStatus as getV1RouletteStatus,
+  type RouletteStatusResponse as V1RouletteStatusResponse,
+} from "../../api/rouletteApi";
+import {
+  getDiceStatus as getV1DiceStatus,
+  type DiceStatusResponse as V1DiceStatusResponse,
+} from "../../api/diceApi";
+import {
+  getLotteryStatus as getV1LotteryStatus,
+  type LotteryStatusResponse as V1LotteryStatusResponse,
+} from "../../api/lotteryApi";
 import type {
   RouletteStatusResponse,
   DiceStatusResponse,
   LotteryStatusResponse,
   LotteryPrizeDto,
+  VaultStatusResponse,
 } from "./gameApi";
 import type {
   DicePlayResponse,
@@ -19,6 +33,163 @@ import type {
   RoulettePlayRequest,
   RoulettePlayResponse,
 } from "../types/gameAction";
+
+const isNoFeatureToday = (error: unknown): boolean => {
+  if (!axios.isAxiosError(error)) return false;
+  const code = error.response?.data?.error?.code;
+  const detail = error.response?.data?.detail;
+  return code === "NO_FEATURE_TODAY" || detail === "NO_FEATURE_TODAY";
+};
+
+const toNumber = (value: unknown, fallback = 0): number => {
+  if (typeof value === "number" && !Number.isNaN(value)) return value;
+  if (typeof value === "string") {
+    const parsed = Number(value);
+    return Number.isNaN(parsed) ? fallback : parsed;
+  }
+  return fallback;
+};
+
+const mapV1RouletteToV2 = (
+  data: V1RouletteStatusResponse,
+): RouletteStatusResponse => {
+  const segments = (data.segments || []).map((seg, index) => ({
+    id: index + 1,
+    label: seg.label,
+    reward_type: seg.reward_type ?? "UNKNOWN",
+    reward_amount: toNumber(seg.reward_amount, 0),
+    slot_index: seg.slot_index ?? index,
+    is_fever_reward: false,
+  }));
+
+  return {
+    config_id: 1,
+    name: "Roulette",
+    max_daily_spins: data.remaining_spins ?? 0,
+    today_spins: 0,
+    remaining_spins: data.remaining_spins ?? 0,
+    token_type: data.token_type,
+    token_balance: data.token_balance ?? 0,
+    segments,
+  };
+};
+
+const mapV1DiceToV2 = (data: V1DiceStatusResponse): DiceStatusResponse => ({
+  config_id: 1,
+  name: "Dice",
+  max_daily_plays: data.remaining_plays ?? 0,
+  today_plays: 0,
+  remaining_plays: data.remaining_plays ?? 0,
+  token_type: data.token_type,
+  token_balance: data.token_balance ?? 0,
+  event_active: data.event_active ?? false,
+  event_plays_done: data.event_plays_done ?? 0,
+  event_plays_max: data.event_plays_max ?? 0,
+  event_ineligible_reason: data.event_ineligible_reason,
+});
+
+const mapV1LotteryToV2 = (
+  data: V1LotteryStatusResponse,
+): LotteryStatusResponse => ({
+  config_id: 1,
+  name: "Lottery",
+  max_daily_tickets: data.remaining_plays ?? 0,
+  today_tickets: 0,
+  remaining_tickets: data.remaining_plays ?? 0,
+  token_type: data.token_type,
+  token_balance: data.token_balance ?? 0,
+  prizes: (data.prizes || []).map((prize) => ({
+    id: prize.id,
+    label: prize.label,
+    reward_type: prize.reward_type,
+    reward_amount: toNumber(prize.reward_amount, 0),
+    stock: prize.stock ?? null,
+    is_active: prize.is_active ?? true,
+  })),
+  collectionProgress: data.collectionProgress,
+});
+
+const emptyRouletteStatus = (ticketType?: string): RouletteStatusResponse => ({
+  config_id: 1,
+  name: "Roulette",
+  max_daily_spins: 0,
+  today_spins: 0,
+  remaining_spins: 0,
+  token_type: ticketType || "ROULETTE_TICKET",
+  token_balance: 0,
+  segments: [],
+});
+
+const emptyDiceStatus = (): DiceStatusResponse => ({
+  config_id: 1,
+  name: "Dice",
+  max_daily_plays: 0,
+  today_plays: 0,
+  remaining_plays: 0,
+  token_type: "DICE_TICKET",
+  token_balance: 0,
+  event_active: false,
+  event_plays_done: 0,
+  event_plays_max: 0,
+  event_ineligible_reason: "NO_FEATURE_TODAY",
+});
+
+const emptyLotteryStatus = (): LotteryStatusResponse => ({
+  config_id: 1,
+  name: "Lottery",
+  max_daily_tickets: 0,
+  today_tickets: 0,
+  remaining_tickets: 0,
+  token_type: "LOTTERY_TICKET",
+  token_balance: 0,
+  prizes: [],
+  collectionProgress: {},
+});
+
+// ============================================================================
+// User / Vault Adapter
+// ============================================================================
+
+export const getV2VaultStatus = async (): Promise<VaultStatusResponse> => {
+  try {
+    const response = await v2Client.get<any>("/api/v2/vault/status");
+    const data = response.data;
+
+    return {
+      eligible: data.eligible ?? true,
+      vaultBalance: data.vault_balance ?? data.vault_locked_balance ?? 0,
+      lockedBalance: data.vault_locked_balance ?? 0,
+      availableBalance: data.vault_available_balance ?? 0,
+      ticketCount: data.ticket_count ?? 0,
+      is_golden_hour_active: data.is_golden_hour_active ?? false,
+      golden_hour_multiplier: data.golden_hour_multiplier ?? 1.0,
+      golden_hour_remaining_seconds: data.golden_hour_remaining_seconds ?? 0,
+      showModalOverride: data.show_modal_override ?? null,
+      segment: data.segment ?? null,
+    } as any;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.status === 404) {
+      console.warn(
+        "[V2Adapter] V2 vault status 404; falling back to V1 alias check",
+      );
+    }
+    // Fallback to V1 if V2 endpoint is not yet active
+    const response = await v2Client.get<any>("/api/vault/status");
+    const data = response.data;
+    return {
+      eligible: data.eligible,
+      vaultBalance: data.vault_balance ?? 0,
+      lockedBalance: data.vault_locked_balance ?? 0,
+      availableBalance: data.vault_available_balance ?? 0,
+      ticketCount: data.ticket_count ?? 0,
+      is_golden_hour_active: data.is_golden_hour_active ?? false,
+      golden_hour_multiplier: data.golden_hour_multiplier ?? 1.0,
+      golden_hour_remaining_seconds: data.golden_hour_remaining_seconds ?? 0,
+      showModalOverride: data.show_modal_override ?? null,
+      segment: data.segment ?? null,
+    } as any;
+  }
+};
 
 // ============================================================================
 // Roulette Adapter
@@ -52,6 +223,32 @@ export const getV2RouletteStatus = async (
       })),
     };
   } catch (error) {
+    if (isNoFeatureToday(error)) {
+      console.warn(
+        "[V2Adapter] V2 roulette unavailable (NO_FEATURE_TODAY); falling back to V1",
+      );
+      try {
+        const v1Data = await getV1RouletteStatus(ticketType);
+        return mapV1RouletteToV2(v1Data);
+      } catch (fallbackError) {
+        if (isNoFeatureToday(fallbackError)) {
+          return emptyRouletteStatus(ticketType);
+        }
+        throw fallbackError;
+      }
+    }
+    if (axios.isAxiosError(error) && error.response?.status === 404) {
+      console.warn("[V2Adapter] V2 roulette status 404; falling back to V1");
+      try {
+        const v1Data = await getV1RouletteStatus(ticketType);
+        return mapV1RouletteToV2(v1Data);
+      } catch (fallbackError) {
+        if (isNoFeatureToday(fallbackError)) {
+          return emptyRouletteStatus(ticketType);
+        }
+        throw fallbackError;
+      }
+    }
     console.error("[V2Adapter] Failed to fetch roulette status", error);
     throw error;
   }
@@ -120,6 +317,32 @@ export const getV2DiceStatus = async (): Promise<DiceStatusResponse> => {
       event_ineligible_reason: data.event_ineligible_reason,
     };
   } catch (error) {
+    if (isNoFeatureToday(error)) {
+      console.warn(
+        "[V2Adapter] V2 dice unavailable (NO_FEATURE_TODAY); falling back to V1",
+      );
+      try {
+        const v1Data = await getV1DiceStatus();
+        return mapV1DiceToV2(v1Data);
+      } catch (fallbackError) {
+        if (isNoFeatureToday(fallbackError)) {
+          return emptyDiceStatus();
+        }
+        throw fallbackError;
+      }
+    }
+    if (axios.isAxiosError(error) && error.response?.status === 404) {
+      console.warn("[V2Adapter] V2 dice status 404; falling back to V1");
+      try {
+        const v1Data = await getV1DiceStatus();
+        return mapV1DiceToV2(v1Data);
+      } catch (fallbackError) {
+        if (isNoFeatureToday(fallbackError)) {
+          return emptyDiceStatus();
+        }
+        throw fallbackError;
+      }
+    }
     console.error("[V2Adapter] Failed to fetch dice status", error);
     throw error;
   }
@@ -181,6 +404,32 @@ export const getV2LotteryStatus = async (): Promise<LotteryStatusResponse> => {
         data.collectionProgress || data.collection_progress || {},
     };
   } catch (error) {
+    if (isNoFeatureToday(error)) {
+      console.warn(
+        "[V2Adapter] V2 lottery unavailable (NO_FEATURE_TODAY); falling back to V1",
+      );
+      try {
+        const v1Data = await getV1LotteryStatus();
+        return mapV1LotteryToV2(v1Data);
+      } catch (fallbackError) {
+        if (isNoFeatureToday(fallbackError)) {
+          return emptyLotteryStatus();
+        }
+        throw fallbackError;
+      }
+    }
+    if (axios.isAxiosError(error) && error.response?.status === 404) {
+      console.warn("[V2Adapter] V2 lottery status 404; falling back to V1");
+      try {
+        const v1Data = await getV1LotteryStatus();
+        return mapV1LotteryToV2(v1Data);
+      } catch (fallbackError) {
+        if (isNoFeatureToday(fallbackError)) {
+          return emptyLotteryStatus();
+        }
+        throw fallbackError;
+      }
+    }
     console.error("[V2Adapter] Failed to fetch lottery status", error);
     throw error;
   }
