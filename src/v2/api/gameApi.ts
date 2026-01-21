@@ -14,7 +14,7 @@ import type { GameTokenType } from "../../types/gameTokens";
 // V2 Token Mapping
 // ============================================================================
 // V1 Legacy Token -> V2 Standard Ticket
-const TOKEN_MAPPING: Record<GameTokenType, string> = {
+const TOKEN_MAPPING: Partial<Record<GameTokenType, string>> = {
   ROULETTE_COIN: "ROULETTE_TICKET",
   DICE_TOKEN: "DICE_TICKET",
   LOTTERY_TICKET: "LOTTERY_TICKET",
@@ -56,10 +56,17 @@ export interface RouletteStatusResponse {
   readonly segments: RouletteSegmentDto[];
 }
 
-export const getV2RouletteStatus = async (ticketType?: string): Promise<RouletteStatusResponse> => {
+export const getV2RouletteStatus = async (
+  ticketType?: string,
+): Promise<RouletteStatusResponse> => {
   try {
-    const params = ticketType ? { ticket_type: mapTokenToV2(ticketType as GameTokenType) } : undefined;
-    const response = await v2Client.get<RouletteStatusResponse>("/api/v2/roulette/status", { params });
+    const params = ticketType
+      ? { ticket_type: mapTokenToV2(ticketType as GameTokenType) }
+      : undefined;
+    const response = await v2Client.get<RouletteStatusResponse>(
+      "/api/v2/roulette/status",
+      { params },
+    );
     return response.data;
   } catch (error) {
     console.error("[gameApi] Failed to fetch V2 roulette status", error);
@@ -67,13 +74,18 @@ export const getV2RouletteStatus = async (ticketType?: string): Promise<Roulette
   }
 };
 
-export const playV2Roulette = async (request: RoulettePlayRequest): Promise<RoulettePlayResponse> => {
+export const playV2Roulette = async (
+  request: RoulettePlayRequest,
+): Promise<RoulettePlayResponse> => {
   try {
     const payload = {
       ticket_type: mapTokenToV2(request.ticket_type as string),
       bet_multiplier: request.bet_multiplier || 1,
     };
-    const response = await v2Client.post<RoulettePlayResponse>("/api/v2/roulette/play", payload);
+    const response = await v2Client.post<RoulettePlayResponse>(
+      "/api/v2/roulette/play",
+      payload,
+    );
     return response.data;
   } catch (error) {
     console.error("[gameApi] Failed to play V2 roulette", error);
@@ -101,7 +113,9 @@ export interface DiceStatusResponse {
 
 export const getV2DiceStatus = async (): Promise<DiceStatusResponse> => {
   try {
-    const response = await v2Client.get<DiceStatusResponse>("/api/v2/dice/status");
+    const response = await v2Client.get<DiceStatusResponse>(
+      "/api/v2/dice/status",
+    );
     return response.data;
   } catch (error) {
     console.error("[gameApi] Failed to fetch V2 dice status", error);
@@ -109,13 +123,18 @@ export const getV2DiceStatus = async (): Promise<DiceStatusResponse> => {
   }
 };
 
-export const playV2Dice = async (request: DiceRollRequest): Promise<DicePlayResponse> => {
+export const playV2Dice = async (
+  request: DiceRollRequest,
+): Promise<DicePlayResponse> => {
   try {
     const payload = {
       bet_amount: request.bet_amount,
       prediction: request.prediction || null,
     };
-    const response = await v2Client.post<DicePlayResponse>("/api/v2/dice/play", payload);
+    const response = await v2Client.post<DicePlayResponse>(
+      "/api/v2/dice/play",
+      payload,
+    );
     return response.data;
   } catch (error) {
     console.error("[gameApi] Failed to play V2 dice", error);
@@ -123,9 +142,14 @@ export const playV2Dice = async (request: DiceRollRequest): Promise<DicePlayResp
   }
 };
 
-export const playV2DiceDoubleUp = async (request: DiceDoubleUpRequest): Promise<DiceDoubleUpResponse> => {
+export const playV2DiceDoubleUp = async (
+  request: DiceDoubleUpRequest,
+): Promise<DiceDoubleUpResponse> => {
   try {
-    const response = await v2Client.post<DiceDoubleUpResponse>("/api/v2/dice/double-up", request);
+    const response = await v2Client.post<DiceDoubleUpResponse>(
+      "/api/v2/dice/double-up",
+      request,
+    );
     return response.data;
   } catch (error) {
     console.error("[gameApi] Failed to play V2 dice double-up", error);
@@ -161,7 +185,9 @@ export interface LotteryStatusResponse {
 
 export const getV2LotteryStatus = async (): Promise<LotteryStatusResponse> => {
   try {
-    const response = await v2Client.get<LotteryStatusResponse>("/api/v2/lottery/status");
+    const response = await v2Client.get<LotteryStatusResponse>(
+      "/api/v2/lottery/status",
+    );
     return response.data;
   } catch (error) {
     console.error("[gameApi] Failed to fetch V2 lottery status", error);
@@ -170,6 +196,9 @@ export const getV2LotteryStatus = async (): Promise<LotteryStatusResponse> => {
 };
 
 export const playV2Lottery = async (): Promise<LotteryPlayResponse> => {
-  const response = await v2Client.post<LotteryPlayResponse>("/api/v2/lottery/play", {});
+  const response = await v2Client.post<LotteryPlayResponse>(
+    "/api/v2/lottery/play",
+    {},
+  );
   return response.data;
 };

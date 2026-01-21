@@ -17,6 +17,7 @@ import LotteryConfigPage from "../admin/pages/game/LotteryConfigPage";
 import TicketInventoryTabPage from "../admin/pages/economy/TicketInventoryTabPage";
 import MarketingTabPage from "../admin/pages/marketing/MarketingTabPage";
 import UserManagementTabPage from "../admin/pages/users/UserManagementTabPage";
+import ModalControlPage from "../admin/pages/game/ModalControlPage";
 import {
   AdminTeamBattlePage,
   AdminGoldenHourPage,
@@ -57,6 +58,7 @@ const V2AdminRoutes: React.FC = () => {
           <Route path="game/lottery" element={<LotteryConfigPage />} />
           <Route path="game/team-battle" element={<AdminTeamBattlePage />} />
           <Route path="game/golden-hour" element={<AdminGoldenHourPage />} />
+          <Route path="game/modals" element={<ModalControlPage />} />
 
           {/* Inventory */}
           <Route path="inventory/tickets" element={<TicketInventoryTabPage />} />
