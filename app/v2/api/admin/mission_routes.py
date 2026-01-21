@@ -191,3 +191,31 @@ def update_admin_mission(
         raise HTTPException(status_code=500, detail="MISSION_UPDATE_FAILED")
 
     return {"success": True}
+
+
+@router.delete("/game/missions/{mission_id}")
+def delete_admin_mission(
+    mission_id: int,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    _, admin_role = admin_info
+
+    if admin_role not in ["ADMIN", "OPERATOR", "SUPER_ADMIN"]:
+        raise HTTPException(status_code=403, detail="NOT_AUTHORIZED")
+
+    m = db.query(Mission).filter(Mission.id == mission_id).first()
+    if not m:
+        raise HTTPException(status_code=404, detail="MISSION_NOT_FOUND")
+
+    try:
+        db.delete(m)
+        db.commit()
+    except Exception:
+        logger.exception(
+            "Failed to delete mission",
+            extra={"mission_id": mission_id},
+        )
+        raise HTTPException(status_code=500, detail="MISSION_DELETE_FAILED")
+
+    return {"success": True}

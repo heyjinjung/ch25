@@ -8,7 +8,7 @@ import GoldenHourPopup from "../../../components/events/GoldenHourPopup";
 import VipPromotionModal from "../../../components/modal/VipPromotionModal";
 import VipEligibilityModal from "../../../components/modal/VipEligibilityModal";
 import { AnimatePresence } from "framer-motion";
-import { useModalVisibility } from "../../../hooks/useModalVisibility";
+import { useModalVisibility } from "../../hooks/useModalVisibility";
 import { V2StreakModalContainer } from "../mission";
 import { useV2Missions } from "../../hooks/useV2Mission";
 
