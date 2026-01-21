@@ -7,7 +7,6 @@ import type {
   DiceRollRequest,
   DiceDoubleUpRequest,
   DiceDoubleUpResponse,
-  LotteryScratchRequest,
 } from "../types/gameAction";
 import type { GameTokenType } from "../../types/gameTokens";
 
@@ -71,7 +70,7 @@ export const getV2RouletteStatus = async (ticketType?: string): Promise<Roulette
 export const playV2Roulette = async (request: RoulettePlayRequest): Promise<RoulettePlayResponse> => {
   try {
     const payload = {
-      ticket_type: mapTokenToV2(request.ticket_type),
+      ticket_type: mapTokenToV2(request.ticket_type as string),
       bet_multiplier: request.bet_multiplier || 1,
     };
     const response = await v2Client.post<RoulettePlayResponse>("/api/v2/roulette/play", payload);
@@ -143,6 +142,9 @@ export interface LotteryPrizeDto {
   readonly label: string;
   readonly reward_type: string;
   readonly reward_amount: number;
+  readonly stock?: number | null;
+  readonly is_active?: boolean;
+  readonly weight?: number;
 }
 
 export interface LotteryStatusResponse {
@@ -153,8 +155,8 @@ export interface LotteryStatusResponse {
   readonly remaining_tickets: number;
   readonly token_type: string;
   readonly token_balance: number;
-  readonly prize_preview: LotteryPrizeDto[];
-  readonly collection_progress: Record<string, number>;
+  readonly prizes: LotteryPrizeDto[];
+  readonly collectionProgress?: Record<string, number>;
 }
 
 export const getV2LotteryStatus = async (): Promise<LotteryStatusResponse> => {
@@ -167,11 +169,7 @@ export const getV2LotteryStatus = async (): Promise<LotteryStatusResponse> => {
   }
 };
 
-export const playV2Lottery = async (request: LotteryScratchRequest): Promise<LotteryPlayResponse> => {
-  const payload = {
-    ticket_type: mapTokenToV2(request.ticket_type),
-    selection_numbers: request.selection_numbers || null,
-  };
-  const response = await v2Client.post<LotteryPlayResponse>("/api/v2/lottery/play", payload);
+export const playV2Lottery = async (): Promise<LotteryPlayResponse> => {
+  const response = await v2Client.post<LotteryPlayResponse>("/api/v2/lottery/play", {});
   return response.data;
 };

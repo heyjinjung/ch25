@@ -293,6 +293,17 @@ export interface CreateUserNoteRequest {
   content: string;
 }
 
+// UI Config Types
+export interface AdminUiConfigResponse {
+  readonly key: string;
+  readonly value: Record<string, any> | null;
+  readonly updated_at: string | null;
+}
+
+export interface AdminUiConfigUpsertRequest {
+  readonly value: Record<string, any> | null;
+}
+
 // ============================================================================
 // User List & Search API
 // ============================================================================
@@ -446,6 +457,30 @@ export const getInterventionLogs = async (
     {
       params: { user_id: userId, limit },
     },
+  );
+  return response.data;
+};
+
+// ============================================================================
+// UI Config API
+// ============================================================================
+
+export const getAdminUiConfig = async (
+  key: string,
+): Promise<AdminUiConfigResponse> => {
+  const response = await v2Client.get<AdminUiConfigResponse>(
+    `/api/v2/admin/ui-config/${encodeURIComponent(key)}`,
+  );
+  return response.data;
+};
+
+export const updateAdminUiConfig = async (
+  key: string,
+  payload: AdminUiConfigUpsertRequest,
+): Promise<AdminUiConfigResponse> => {
+  const response = await v2Client.put<AdminUiConfigResponse>(
+    `/api/v2/admin/ui-config/${encodeURIComponent(key)}`,
+    payload,
   );
   return response.data;
 };

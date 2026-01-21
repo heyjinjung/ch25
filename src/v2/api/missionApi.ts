@@ -54,7 +54,8 @@ export interface ClaimStreakResponse {
 
 export const getV2Missions = async (): Promise<MissionListResponse> => {
   try {
-    const response = await v2Client.get<MissionListResponse>("/api/v2/mission/");
+    const response =
+      await v2Client.get<MissionListResponse>("/api/v2/mission/");
     return response.data;
   } catch (error) {
     console.error("[missionApi] Failed to fetch V2 missions", error);
@@ -62,9 +63,13 @@ export const getV2Missions = async (): Promise<MissionListResponse> => {
   }
 };
 
-export const claimV2Mission = async (missionId: string): Promise<ClaimMissionResponse> => {
+export const claimV2Mission = async (
+  missionId: string,
+): Promise<ClaimMissionResponse> => {
   try {
-    const response = await v2Client.post<ClaimMissionResponse>(`/api/v2/mission/${missionId}/claim`);
+    const response = await v2Client.post<ClaimMissionResponse>(
+      `/api/v2/mission/${missionId}/claim`,
+    );
     return response.data;
   } catch (error) {
     console.error("[missionApi] Failed to claim V2 mission", error);
@@ -74,7 +79,9 @@ export const claimV2Mission = async (missionId: string): Promise<ClaimMissionRes
 
 export const claimV2DailyGift = async (): Promise<ClaimMissionResponse> => {
   try {
-    const response = await v2Client.post<ClaimMissionResponse>("/api/v2/mission/daily-gift");
+    const response = await v2Client.post<ClaimMissionResponse>(
+      "/api/v2/mission/daily-gift",
+    );
     return response.data;
   } catch (error) {
     console.error("[missionApi] Failed to claim V2 daily gift", error);
@@ -82,9 +89,23 @@ export const claimV2DailyGift = async (): Promise<ClaimMissionResponse> => {
   }
 };
 
-export const getV2StreakRules = async (): Promise<any[]> => {
+// V2 Streak Rule Schema (matches backend response)
+export interface V2StreakRule {
+  readonly day: number;
+  readonly enabled: boolean;
+  readonly grants: Array<{
+    readonly kind: "WALLET" | "INVENTORY";
+    readonly token_type?: string;
+    readonly item_type?: string;
+    readonly amount: number;
+  }>;
+}
+
+export const getV2StreakRules = async (): Promise<V2StreakRule[]> => {
   try {
-    const response = await v2Client.get<any[]>("/api/v2/mission/streak/rules");
+    const response = await v2Client.get<V2StreakRule[]>(
+      "/api/v2/mission/streak/rules",
+    );
     return response.data;
   } catch (error) {
     console.error("[missionApi] Failed to fetch V2 streak rules", error);
@@ -94,7 +115,9 @@ export const getV2StreakRules = async (): Promise<any[]> => {
 
 export const claimV2StreakReward = async (): Promise<ClaimStreakResponse> => {
   try {
-    const response = await v2Client.post<ClaimStreakResponse>("/api/v2/mission/streak/claim");
+    const response = await v2Client.post<ClaimStreakResponse>(
+      "/api/v2/mission/streak/claim",
+    );
     return response.data;
   } catch (error) {
     console.error("[missionApi] Failed to claim V2 streak reward", error);

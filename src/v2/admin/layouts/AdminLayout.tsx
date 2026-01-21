@@ -135,6 +135,10 @@ export default function AdminLayout() {
           icon: Settings,
           label: "이벤트페이지(골든아워관리)",
           path: "/v2/admin/game/golden-hour",
+          submenu: [
+            { label: "골든아워 관리", path: "/v2/admin/game/golden-hour" },
+            { label: "모달 제어", path: "/v2/admin/game/modals" },
+          ],
         },
       ],
     },

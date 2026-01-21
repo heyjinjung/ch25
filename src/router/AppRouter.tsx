@@ -4,6 +4,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import UserRoutes from "./UserRoutes";
 import AdminRoutes from "./AdminRoutes";
 import V2AdminRoutes from "@/v2/router/V2AdminRoutes";
+import V2UserRoutes from "@/v2/router/V2UserRoutes";
 
 const AppRouter: React.FC = () => {
   return (
@@ -11,6 +12,7 @@ const AppRouter: React.FC = () => {
       <Route path="/*" element={<UserRoutes />} />
       <Route path="/admin/*" element={<AdminRoutes />} />
       <Route path="/v2/admin/*" element={<V2AdminRoutes />} />
+      <Route path="/v2/*" element={<V2UserRoutes />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

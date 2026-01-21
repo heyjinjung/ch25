@@ -92,7 +92,7 @@ v2Client.interceptors.response.use(
         if (typeof window !== "undefined") {
           const pathname = window.location.pathname || "";
           const isV2AdminPath = pathname.startsWith("/v2/admin");
-          const target = isV2AdminPath ? "/v2/admin/login" : "/login";
+          const target = isV2AdminPath ? "/v2/admin/login" : "/v2/login";
           if (pathname !== target) {
             // Basic redirect for now, maybe use a custom event or router later
             window.location.href = target;
