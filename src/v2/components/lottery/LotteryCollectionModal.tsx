@@ -2,9 +2,16 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
 import { X, Check } from 'lucide-react';
-import { useTheme } from '../../contexts/ThemeContext';
 import { triggerHaptic, triggerNotification } from '../../utils/haptic';
 import confetti from 'canvas-confetti';
+
+// 기본 테마 색상 (ThemeProvider 없이 사용)
+const THEME_COLORS = {
+  accent: '#30E3AA',
+  primary: '#30E3AA',
+  secondary: '#14D49E',
+  text: '#000000',
+};
 
 interface LotteryCollectionModalProps {
   open: boolean;
@@ -24,7 +31,6 @@ interface PuzzlePieceProps {
 }
 
 const PuzzlePiece = ({ char, count, required }: PuzzlePieceProps) => {
-  const { theme } = useTheme();
   const isAcquired = count >= required;
 
   // Map char to image file name
@@ -57,7 +63,7 @@ const PuzzlePiece = ({ char, count, required }: PuzzlePieceProps) => {
               : 'bg-white/5 border border-white/5 shadow-inner'
           )}
           style={{
-            borderColor: isAcquired ? theme.colors.accent + '30' : 'rgba(255,255,255,0.05)',
+            borderColor: isAcquired ? THEME_COLORS.accent + '30' : 'rgba(255,255,255,0.05)',
           }}
         >
           {imgSrc ? (
@@ -75,7 +81,7 @@ const PuzzlePiece = ({ char, count, required }: PuzzlePieceProps) => {
                 'text-3xl font-black drop-shadow-md pb-1',
                 isAcquired ? '' : 'text-white/10'
               )}
-              style={{ color: isAcquired ? theme.colors.accent : undefined }}
+              style={{ color: isAcquired ? THEME_COLORS.accent : undefined }}
             >
               {char}
             </span>
@@ -87,7 +93,7 @@ const PuzzlePiece = ({ char, count, required }: PuzzlePieceProps) => {
               initial={{ opacity: 0, scale: 0 }}
               animate={{ opacity: 1, scale: 1 }}
               className="absolute pointer-events-none inset-0 border-2 rounded-2xl"
-              style={{ borderColor: theme.colors.accent + '50' }}
+              style={{ borderColor: THEME_COLORS.accent + '50' }}
             />
           )}
         </motion.div>
@@ -99,7 +105,7 @@ const PuzzlePiece = ({ char, count, required }: PuzzlePieceProps) => {
               animate={{ scale: 1 }}
               className="w-6 h-6 rounded-full flex items-center justify-center shadow-lg border border-white/20"
               style={{
-                background: `linear-gradient(135deg, ${theme.colors.accent}, ${theme.colors.secondary})`,
+                background: `linear-gradient(135deg, ${THEME_COLORS.accent}, ${THEME_COLORS.secondary})`,
               }}
             >
               <Check size={14} className="text-black stroke-[3px]" />
@@ -115,9 +121,9 @@ const PuzzlePiece = ({ char, count, required }: PuzzlePieceProps) => {
           isAcquired ? 'border-white/10' : 'bg-white/5 text-white/20 border-white/5'
         )}
         style={{
-          backgroundColor: isAcquired ? theme.colors.accent + '20' : undefined,
-          color: isAcquired ? theme.colors.accent : undefined,
-          borderColor: isAcquired ? theme.colors.accent + '30' : undefined,
+          backgroundColor: isAcquired ? THEME_COLORS.accent + '20' : undefined,
+          color: isAcquired ? THEME_COLORS.accent : undefined,
+          borderColor: isAcquired ? THEME_COLORS.accent + '30' : undefined,
         }}
       >
         {count} / {required}
@@ -136,7 +142,6 @@ const LotteryCollectionModal = ({
   collection,
   onCraft,
 }: LotteryCollectionModalProps) => {
-  const { theme } = useTheme();
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isCrafting, setIsCrafting] = useState(false);
 
@@ -164,7 +169,7 @@ const LotteryCollectionModal = ({
         particleCount: 100,
         spread: 70,
         origin: { y: 0.6 },
-        colors: [theme.colors.accent, theme.colors.primary, theme.colors.secondary],
+        colors: [THEME_COLORS.accent, THEME_COLORS.primary, THEME_COLORS.secondary],
       });
 
       setSuccessMessage('황금열쇠 교환 성공!');
@@ -202,12 +207,12 @@ const LotteryCollectionModal = ({
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.95, opacity: 0, y: 10 }}
             className="relative w-full max-w-md overflow-hidden rounded-[32px] border bg-[#121212] p-8 shadow-2xl"
-            style={{ borderColor: theme.colors.accent + '20' }}
+            style={{ borderColor: THEME_COLORS.accent + '20' }}
           >
             {/* Background Gradients */}
             <div
               className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-40 blur-[60px] pointer-events-none"
-              style={{ backgroundColor: theme.colors.accent + '10' }}
+              style={{ backgroundColor: THEME_COLORS.accent + '10' }}
             />
 
             {/* Header */}
@@ -215,13 +220,13 @@ const LotteryCollectionModal = ({
               <div
                 className="inline-block px-3 py-1 rounded-full border mb-3"
                 style={{
-                  backgroundColor: theme.colors.accent + '10',
-                  borderColor: theme.colors.accent + '20',
+                  backgroundColor: THEME_COLORS.accent + '10',
+                  borderColor: THEME_COLORS.accent + '20',
                 }}
               >
                 <span
                   className="text-[10px] font-black tracking-widest uppercase"
-                  style={{ color: theme.colors.accent }}
+                  style={{ color: THEME_COLORS.accent }}
                 >
                   Secret Puzzle
                 </span>
@@ -233,7 +238,7 @@ const LotteryCollectionModal = ({
                 퍼즐을 모아{' '}
                 <span
                   className="font-bold underline decoration-amber-500/30 underline-offset-4"
-                  style={{ color: theme.colors.accent }}
+                  style={{ color: THEME_COLORS.accent }}
                 >
                   황금열쇠
                 </span>
@@ -257,11 +262,11 @@ const LotteryCollectionModal = ({
                   animate={{ opacity: 1, scale: 1 }}
                   className="rounded-xl py-4 text-center border"
                   style={{
-                    background: `linear-gradient(to right, ${theme.colors.accent}20, ${theme.colors.secondary}20)`,
-                    borderColor: theme.colors.accent + '30',
+                    background: `linear-gradient(to right, ${THEME_COLORS.accent}20, ${THEME_COLORS.secondary}20)`,
+                    borderColor: THEME_COLORS.accent + '30',
                   }}
                 >
-                  <p className="text-lg font-black" style={{ color: theme.colors.accent }}>
+                  <p className="text-lg font-black" style={{ color: THEME_COLORS.accent }}>
                     🎉 {successMessage}
                   </p>
                 </motion.div>
@@ -275,10 +280,10 @@ const LotteryCollectionModal = ({
                   )}
                   style={{
                     background: canCraft
-                      ? `linear-gradient(135deg, ${theme.colors.primary}, ${theme.colors.secondary})`
+                      ? `linear-gradient(135deg, ${THEME_COLORS.primary}, ${THEME_COLORS.secondary})`
                       : 'rgba(255,255,255,0.05)',
-                    color: canCraft ? theme.colors.text : 'rgba(255,255,255,0.3)',
-                    boxShadow: canCraft ? `0 0 20px ${theme.colors.accent}20` : undefined,
+                    color: canCraft ? THEME_COLORS.text : 'rgba(255,255,255,0.3)',
+                    boxShadow: canCraft ? `0 0 20px ${THEME_COLORS.accent}20` : undefined,
                   }}
                 >
                   {isCrafting ? '교환 중...' : canCraft ? '🔑 황금열쇠 교환하기' : '조각이 부족합니다'}

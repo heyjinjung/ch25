@@ -67,7 +67,7 @@ const StreakOverviewPage: React.FC = () => {
             <div className="p-4 space-y-6">
                  {/* Summary Card */}
                  <div className="p-8 rounded-[2rem] bg-gradient-to-br from-zinc-900 to-black border border-white/10 relative overflow-hidden flex flex-col items-center gap-2 shadow-2xl">
-                    <div className="absolute inset-0 bg-[url('/assets/effects/noise.png')] opacity-10 mix-blend-overlay" />
+
                     <span className="relative z-10 text-xs font-black text-white/30 uppercase tracking-[0.2em]">Current Streak</span>
                     <div className="relative z-10 text-7xl font-black text-white tabular-nums tracking-tighter drop-shadow-[0_0_20px_rgba(255,255,255,0.2)]">
                         {currentStreak}
