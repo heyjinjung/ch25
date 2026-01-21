@@ -1,0 +1,84 @@
+._4,
+._4 * {
+  box-sizing: border-box;
+}
+._4 {
+  background: #0c0a16;
+  height: 678px;
+  position: relative;
+  transform-origin: 0 0;
+  transform: rotate(0deg) scale(1, 1);
+  overflow: hidden;
+}
+.ellipse-126 {
+  background: #131217;
+  border-radius: 50%;
+  width: 350px;
+  height: 666px;
+  position: absolute;
+  left: 0.17px;
+  top: -3px;
+  transform-origin: 0 0;
+  transform: rotate(0deg) scale(1, 1);
+  filter: blur(39.86px);
+}
+.frame-1000003119 {
+  width: 95px;
+  height: 95px;
+  position: absolute;
+  left: 64px;
+  top: 164px;
+  box-shadow: 0px 0px 22px -97px rgba(0, 0, 0, 0.55);
+  transform-origin: 0 0;
+  transform: rotate(0deg) scale(1, 1);
+  overflow: hidden;
+  object-fit: cover;
+}
+.frame-1000003120 {
+  width: 95px;
+  height: 95px;
+  position: absolute;
+  left: 184px;
+  top: 164px;
+  box-shadow: 0px 0px 22px -97px rgba(0, 0, 0, 0.55);
+  transform-origin: 0 0;
+  transform: rotate(0deg) scale(1, 1);
+  overflow: hidden;
+  object-fit: cover;
+}
+.frame-1000003121 {
+  width: 95px;
+  height: 95px;
+  position: absolute;
+  left: 66px;
+  top: 352px;
+  box-shadow: 0px 0px 22px -97px rgba(0, 0, 0, 0.55);
+  transform-origin: 0 0;
+  transform: rotate(0deg) scale(1, 1);
+  overflow: hidden;
+  object-fit: cover;
+}
+.frame-1000003122 {
+  width: 95px;
+  height: 95px;
+  position: absolute;
+  left: 184px;
+  top: 352px;
+  box-shadow: 0px 0px 22px -97px rgba(0, 0, 0, 0.55);
+  transform-origin: 0 0;
+  transform: rotate(0deg) scale(1, 1);
+  overflow: hidden;
+  object-fit: cover;
+}
+.frame-1000003125 {
+  width: 84px;
+  height: 52px;
+  position: absolute;
+  left: 129px;
+  top: 281px;
+  transform-origin: 0 0;
+  transform: rotate(0deg) scale(1, 1);
+  overflow: hidden;
+  object-fit: cover;
+}
+/* variant styles */

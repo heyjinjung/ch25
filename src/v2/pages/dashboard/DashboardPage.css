@@ -1,270 +1,152 @@
 /* ========================================
-   GAME DASHBOARD PAGE - CSS VARIABLES & STYLES
+   DASHBOARD PAGE - REDESIGNED
    ======================================== */
 
 /* CSS Variables */
 :root {
-    --dashboard-bg: #0a0a0c;
-    --dashboard-card-bg: #18181b;
+    --dashboard-bg: #000000;
     --dashboard-text-primary: #ffffff;
-    --dashboard-text-secondary: #a1a1aa;
-    --dashboard-accent: #ffb444;
-    --dashboard-green: #22c55e;
-    --dashboard-blue: #3b82f6;
-    --dashboard-purple: #a855f7;
+    --dashboard-accent-blue: #3b82f6;
+    --dashboard-accent-orange: #ff7a00;
 }
 
 /* Main Container */
 .dashboard-page {
-    min-height: 100vh;
+    position: relative;
+    width: 400px;
+    max-width: 400px;
+    height: 800px;
+    max-height: 800px;
     background: var(--dashboard-bg);
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 16px;
+    overflow: hidden;
+    padding: 0;
+    /* 패딩 제거로 공간 최대 활용 */
+    margin: 0 auto;
 }
 
 .dashboard-frame {
     position: relative;
-    width: min(92vw, 390px);
-    min-height: 844px;
+    width: 100%;
+    /* 화면 꽉 차게 확장 */
+    height: 100%;
     background: #000;
-    border-radius: 36px;
+    border-radius: 0;
+    /* 모서리를 직각으로 하여 공간 활용 극대화 */
     overflow: hidden;
-    box-shadow: 0 28px 80px rgba(0, 0, 0, 0.65);
-    padding: 20px;
+    box-shadow: none;
+    /* 그림자 제거 */
+    padding: 8px;
+    /* 패딩 최소화 */
 }
 
-/* Background Highlight */
-.dashboard-bg-highlight {
+/* ========================================
+   BACKGROUND LAYERS
+   ======================================== */
+.dashboard-bg {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background: #000;
+}
+
+.dashboard-bg__main {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    /* 배경 이미지 전체가 보이도록 축소 */
+    object-position: center;
+}
+
+/* ========================================
+   GAME GRID - ABSOLUTE POSITIONING
+   ======================================== */
+.dashboard-grid {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
-    height: auto;
-    opacity: 0.6;
-    pointer-events: none;
-    z-index: 0;
-}
-
-/* ========================================
-   APP HEADER
-   ======================================== */
-.dashboard-header {
-    position: relative;
-    z-index: 10;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 32px;
-}
-
-.dashboard-back {
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 10px;
-    cursor: pointer;
-    transition: background 0.2s ease;
-}
-
-.dashboard-back:hover {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.dashboard-back img {
-    width: 20px;
-    height: 20px;
-}
-
-.dashboard-header__user {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex: 1;
-    margin-left: 12px;
-}
-
-.dashboard-header__avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--dashboard-accent), #ff7a00);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-}
-
-.dashboard-header__info {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-.dashboard-header__nickname {
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--dashboard-text-primary);
-}
-
-.dashboard-header__level {
-    font-size: 10px;
-    font-weight: 600;
-    color: var(--dashboard-text-secondary);
-}
-
-.dashboard-header__balances {
-    display: flex;
-    gap: 12px;
-}
-
-.dashboard-header__balance {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 12px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.dashboard-header__balance img {
-    width: 16px;
-    height: 16px;
-}
-
-.dashboard-header__balance span {
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--dashboard-text-primary);
-}
-
-/* ========================================
-   HERO BANNER
-   ======================================== */
-.dashboard-hero {
-    position: relative;
-    z-index: 5;
-    margin-bottom: 24px;
-}
-
-.dashboard-title {
-    font-size: 32px;
-    font-weight: 900;
-    color: var(--dashboard-text-primary);
-    margin: 0 0 8px;
-    letter-spacing: -0.5px;
-}
-
-.dashboard-subtitle {
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--dashboard-text-secondary);
-    margin: 0;
-}
-
-/* ========================================
-   GAME GRID
-   ======================================== */
-.dashboard-grid {
-    position: relative;
+    height: 100%;
     z-index: 5;
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
-    margin-bottom: 24px;
+    grid-template-rows: auto auto;
+    gap: 0;
+    padding: 0;
 }
 
-.dashboard-card {
-    position: relative;
-    aspect-ratio: 1;
-    border-radius: 20px;
-    overflow: hidden;
-    text-decoration: none;
-    cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-}
-
-.dashboard-card:active {
-    transform: scale(0.98);
-}
-
-.dashboard-card--mission {
-    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-    box-shadow: 0 8px 24px rgba(251, 191, 36, 0.3);
-}
-
-.dashboard-card--roulette {
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-    box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
-}
-
-.dashboard-card--dice {
-    background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
-    box-shadow: 0 8px 24px rgba(168, 85, 247, 0.3);
-}
-
-.dashboard-card--lottery {
-    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-    box-shadow: 0 8px 24px rgba(34, 197, 94, 0.3);
-}
-
-.dashboard-card__content {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.dashboard-card__icon {
-    width: 48px;
-    height: 48px;
-    object-fit: contain;
-    margin-bottom: 8px;
-}
-
-.dashboard-card__title {
-    font-size: 18px;
-    font-weight: 800;
-    color: #ffffff;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.dashboard-card__subtitle {
-    font-size: 11px;
-    font-weight: 500;
-    color: rgba(255, 255, 255, 0.8);
-}
-
-.dashboard-card__decoration {
+.dashboard-game-card {
     position: absolute;
-    bottom: -10px;
-    right: -10px;
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: none;
+    border-radius: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+/* 개별 아이콘 위치 지정 */
+.dashboard-game-card:nth-child(1) {
+    /* 룰렛 - 좌상단 */
+    top: 650px;
+    left: 5%;
+    width: 45%;
+}
+
+.dashboard-game-card:nth-child(2) {
+    /* 복권 - 우상단 */
+    top: 650px;
+    right: 5%;
+    width: 45%;
+}
+
+.dashboard-game-card:nth-child(3) {
+    /* 주사위 - 좌하단 */
+    top: 740px;
+    left: 5%;
+    width: 45%;
+}
+
+.dashboard-game-card:nth-child(4) {
+    /* 미션 - 우하단 */
+    top: 740px;
+    right: 5%;
+    width: 45%;
+}
+
+.dashboard-game-card:active {
+    transform: scale(0.95);
+}
+
+.dashboard-game-card__icon-wrap {
     width: 80px;
     height: 80px;
-    opacity: 0.3;
-    pointer-events: none;
+    margin-bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-/* ========================================
-   FOOTER
-   ======================================== */
-.dashboard-footer {
-    position: relative;
-    z-index: 5;
+.dashboard-game-card__icon {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.5));
+}
+
+.dashboard-game-card__title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #ffffff;
     text-align: center;
-    padding: 20px 0;
-}
-
-.dashboard-footer__text {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--dashboard-text-secondary);
+    word-break: keep-all;
 }
