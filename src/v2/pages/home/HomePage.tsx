@@ -60,7 +60,7 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div ref={containerRef} className="min-h-full bg-[#0A0A0C]">
+    <div ref={containerRef} className="min-h-full bg-[#0A0A0C] pt-20 -mb-30">
       {/* 메인 콘텐츠 */}
       <div className="px-4 pb-0 space-y-4">
         {/* 설날 히어로 배너 */}

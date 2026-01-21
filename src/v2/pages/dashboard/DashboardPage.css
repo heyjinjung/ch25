@@ -55,12 +55,12 @@
 
 .dashboard-bg__main {
     width: 100%;
-    height: calc(100% + 70px);
-    /* 상단 30px + 하단 40px = 70px 확대 */
+    height: calc(100% + 120px);
+    /* 상단 80px + 하단 40px = 120px 확대 */
     object-fit: cover;
     object-position: center top;
-    margin-top: -30px;
-    /* 상단 30px 줄임 */
+    margin-top: -80px;
+    /* 상단 여백 50px 더 줄임 (기존 -30px -> -80px) */
 }
 
 /* ========================================
@@ -99,32 +99,28 @@
 /* 개별 아이콘 위치 지정 */
 .dashboard-game-card:nth-child(1) {
     /* 룰렛 - 좌상단 */
-    top: 480px;
-    /* 600px에서 120px 감소 */
+    top: 520px;
     left: 5%;
     width: 45%;
 }
 
 .dashboard-game-card:nth-child(2) {
     /* 복권 - 우상단 */
-    top: 480px;
-    /* 600px에서 120px 감소 */
+    top: 520px;
     right: 5%;
     width: 45%;
 }
 
 .dashboard-game-card:nth-child(3) {
     /* 주사위 - 좌하단 */
-    top: 570px;
-    /* 690px에서 120px 감소 */
+    top: 680px;
     left: 5%;
     width: 45%;
 }
 
 .dashboard-game-card:nth-child(4) {
     /* 미션 - 우하단 */
-    top: 570px;
-    /* 690px에서 120px 감소 */
+    top: 680px;
     right: 5%;
     width: 45%;
 }

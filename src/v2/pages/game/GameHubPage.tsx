@@ -168,7 +168,7 @@ export default function GameHubPage() {
   return (
     <motion.div
       ref={containerRef}
-      className="min-h-full px-4 py-6 bg-[#0A0A0C] overflow-hidden"
+      className="min-h-full px-4 pb-6 bg-[#0A0A0C] overflow-hidden"
       initial="hidden"
       animate="visible"
       variants={containerVariants}

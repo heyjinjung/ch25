@@ -10,7 +10,8 @@
 
 .pokemon-home-page-v4 {
   width: 380px;
-  height: 560px; /* 기존 680px - 120px */
+  height: 680px;
+  /* 하단 여백 120px 줄임 (높이 560px -> 680px) */
   background: black;
   margin: 0 auto;
   overflow: hidden;
@@ -34,12 +35,14 @@
 
 ._1-v4 {
   width: 363px;
-  height: 544px; /* 기존 664px - 120px */
+  height: 664px;
+  /* 높이 복구 */
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  top: -164px; /* 기존 -284px + 120px */
-  /* 하단 여백 120px 삭제 */
+  top: 60px;
+  /* 기존 -244px + 150px + 154px(조정) = 60px (캐릭터 보임) */
+  /* 상단 여백 150px 늘림 */
   overflow: hidden;
 }
 

@@ -68,31 +68,42 @@ const VaultPage: React.FC = () => {
 
   return (
     <div className="relative w-[380px] max-w-[380px] h-[680px] max-h-[680px] overflow-hidden bg-black mx-auto">
-      {/* 배경 글로우 */}
-      <div
-        ref={glowRef}
-        className="absolute top-[5%] left-1/2 -translate-x-1/2 w-[340px] h-[320px] rounded-full opacity-25 pointer-events-none"
-        style={{
-          background: "rgba(255, 180, 68, 0.15)",
-          filter: "blur(40px)",
-        }}
-      />
+      {/* 스크롤바 숨기기 스타일 */}
+      <style>{`
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
 
-      {/* 스파클 이미지 */}
-      <img
-        src={sparkles}
-        alt=""
-        className="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] h-[400px] object-contain opacity-60 pointer-events-none"
-        style={{ transform: "translateX(-50%) rotate(180deg)" }}
-      />
+      {/* 고정 배경 레이어 */}
+      <div className="absolute inset-0 pointer-events-none">
+        {/* 배경 글로우 */}
+        <div
+          ref={glowRef}
+          className="absolute top-[5%] left-1/2 -translate-x-1/2 w-[340px] h-[320px] rounded-full opacity-25 pointer-events-none"
+          style={{
+            background: "rgba(255, 180, 68, 0.15)",
+            filter: "blur(40px)",
+          }}
+        />
 
-      {/* 금고 다이얼 */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.8, y: 30 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: "backOut" }}
-        className="relative z-10 flex justify-center pt-8"
-      >
+        {/* 스파클 이미지 */}
+        <img
+          src={sparkles}
+          alt=""
+          className="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] h-[400px] object-contain opacity-60 pointer-events-none"
+          style={{ transform: "translateX(-50%) rotate(180deg)" }}
+        />
+      </div>
+
+      {/* 스크롤 가능한 콘텐츠 레이어 */}
+      <div className="absolute inset-0 overflow-y-auto overflow-x-hidden scrollbar-hide">
+        {/* 금고 다이얼 */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8, y: 30 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "backOut" }}
+          className="relative z-10 flex justify-center pt-8"
+        >
         <img
           ref={dialRef}
           src={vaultDial}
@@ -160,7 +171,7 @@ const VaultPage: React.FC = () => {
                 WebkitTextFillColor: "transparent",
               }}
             >
-              {vault.vaultBalance.toLocaleString()}
+              {(vault.vaultBalance || 0).toLocaleString()}
               <span className="text-lg ml-1">CC</span>
             </p>
           </div>
@@ -175,7 +186,7 @@ const VaultPage: React.FC = () => {
                 Available
               </p>
               <p className="text-xl font-black text-emerald-400">
-                {vault.availableBalance.toLocaleString()}
+                {(vault.availableBalance || 0).toLocaleString()}
               </p>
             </div>
             <div
@@ -186,7 +197,7 @@ const VaultPage: React.FC = () => {
                 Locked
               </p>
               <p className="text-xl font-black text-orange-400">
-                {vault.lockedBalance.toLocaleString()}
+                {(vault.lockedBalance || 0).toLocaleString()}
               </p>
             </div>
           </div>
@@ -241,16 +252,16 @@ const VaultPage: React.FC = () => {
               <div className="flex justify-between items-center mb-1">
                 <span className="text-xs text-white/60">게임 플레이</span>
                 <span className="text-xs font-bold text-white/80">
-                  {vault.daily_play_count}/{vault.daily_play_target}
+                  {vault.daily_play_count || 0}/{vault.daily_play_target || 0}
                 </span>
               </div>
               <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
                 <div
                   className="h-full rounded-full transition-all duration-500"
                   style={{
-                    width: `${Math.min((vault.daily_play_count / vault.daily_play_target) * 100, 100)}%`,
+                    width: `${Math.min(((vault.daily_play_count || 0) / (vault.daily_play_target || 1)) * 100, 100)}%`,
                     background:
-                      vault.daily_play_count >= vault.daily_play_target
+                      (vault.daily_play_count || 0) >= (vault.daily_play_target || 1)
                         ? "linear-gradient(90deg, #10b981, #34d399)"
                         : "linear-gradient(90deg, #f59e0b, #fbbf24)",
                   }}
@@ -263,17 +274,17 @@ const VaultPage: React.FC = () => {
               <div className="flex justify-between items-center mb-1">
                 <span className="text-xs text-white/60">금고 소비</span>
                 <span className="text-xs font-bold text-white/80">
-                  {vault.daily_vault_spent.toLocaleString()}/
-                  {vault.daily_vault_spent_target.toLocaleString()}
+                  {(vault.daily_vault_spent || 0).toLocaleString()}/
+                  {(vault.daily_vault_spent_target || 0).toLocaleString()}
                 </span>
               </div>
               <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
                 <div
                   className="h-full rounded-full transition-all duration-500"
                   style={{
-                    width: `${Math.min((vault.daily_vault_spent / vault.daily_vault_spent_target) * 100, 100)}%`,
+                    width: `${Math.min(((vault.daily_vault_spent || 0) / (vault.daily_vault_spent_target || 1)) * 100, 100)}%`,
                     background:
-                      vault.daily_vault_spent >= vault.daily_vault_spent_target
+                      (vault.daily_vault_spent || 0) >= (vault.daily_vault_spent_target || 1)
                         ? "linear-gradient(90deg, #10b981, #34d399)"
                         : "linear-gradient(90deg, #f59e0b, #fbbf24)",
                   }}
@@ -293,6 +304,7 @@ const VaultPage: React.FC = () => {
           </div>
         </div>
       </motion.div>
+      </div>
     </div>
   );
 };
