@@ -374,7 +374,7 @@ const LotteryPage: React.FC = () => {
               <p className="text-[10px] font-bold text-white/50 uppercase tracking-wider">
                 보유 티켓
               </p>
-              <p className="text-xl font-black text-white">{data.token_balance.toLocaleString()}</p>
+              <p className="text-xl font-black text-white">{(data.token_balance ?? 0).toLocaleString()}</p>
             </div>
           </div>
 
@@ -424,7 +424,7 @@ const LotteryPage: React.FC = () => {
               <p className="text-2xl font-black text-white mb-1">{revealedPrize.label}</p>
               {revealedPrize.reward_type !== "NONE" && (
                 <p className="text-lg font-bold" style={{ color: "#30E3AA" }}>
-                  +{Number(revealedPrize.reward_amount).toLocaleString()}
+                  +{(Number(revealedPrize.reward_amount) || 0).toLocaleString()}
                 </p>
               )}
             </motion.div>

@@ -535,7 +535,7 @@ const RoulettePage = () => {
                         {data.token_type}
                       </span>
                       <span className="font-mono text-2xl font-bold text-white">
-                        {data.token_balance.toLocaleString()}
+                        {(data.token_balance ?? 0).toLocaleString()}
                       </span>
                     </div>
                   </div>

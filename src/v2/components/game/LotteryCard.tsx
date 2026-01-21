@@ -45,7 +45,7 @@ const LotteryCard = ({ prize, isRevealed, isScratching, onScratch }: LotteryCard
   // Format reward display
   const formatRewardText = (rewardType: string, amount: string | number): string => {
     const upper = rewardType.toUpperCase();
-    const val = Number(amount);
+    const val = Number(amount) || 0;
 
     if (upper.includes('POINT') || upper === 'CASH' || upper === 'CURRENCY') {
       return `${val.toLocaleString()} 원`;
