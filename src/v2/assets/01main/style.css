@@ -1,0 +1,110 @@
+.main,
+.main * {
+  box-sizing: border-box;
+}
+.main {
+  background: #000000;
+  height: 680px;
+  position: relative;
+  overflow: hidden;
+}
+._1 {
+  width: 363px;
+  height: 664px;
+  position: absolute;
+  left: 50%;
+  translate: -50%;
+  top: 16px;
+  overflow: hidden;
+}
+.div {
+  width: 81.21%;
+  height: 81.91%;
+  position: absolute;
+  right: -71.13%;
+  left: 89.93%;
+  bottom: -75.96%;
+  top: 94.05%;
+  transform-origin: 0 0;
+  transform: rotate(-179.586deg) scale(1, 1);
+  filter: blur(1.23px);
+  object-fit: cover;
+}
+._12 {
+  background: linear-gradient(
+    -0.62deg,
+    rgba(134, 163, 120, 0.2) 0%,
+    rgba(0, 0, 0, 0.14) 42.307692766189575%,
+    rgba(233, 27, 27, 0) 100%
+  );
+  width: 59.87%;
+  height: 50.46%;
+  position: absolute;
+  right: 26.63%;
+  left: 13.5%;
+  bottom: 7.25%;
+  top: 42.28%;
+  box-shadow: 0px 0px 54px 0px rgba(0, 0, 0, 0.25);
+  transform-origin: 0 0;
+  transform: rotate(-7.653deg) scale(0.989, 1.01);
+  object-fit: cover;
+}
+._3 {
+  width: 19.98%;
+  height: 7.81%;
+  position: absolute;
+  right: 9.16%;
+  left: 70.87%;
+  bottom: 22.55%;
+  top: 69.64%;
+  box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
+  object-fit: cover;
+}
+._4 {
+  background: linear-gradient(
+    187.96deg,
+    rgba(217, 217, 217, 0.2) 4.406311362981796%,
+    rgba(199, 211, 106, 0.2) 50%,
+    rgba(11, 98, 50, 0.2) 65.76156616210938%
+  );
+  border-radius: 79px;
+  opacity: 0.11;
+  width: 313px;
+  height: 680px;
+  position: absolute;
+  left: 37px;
+  top: 0px;
+}
+.vector-1672 {
+  width: 338.67px;
+  height: 0px;
+  position: absolute;
+  left: 36px;
+  top: 248px;
+  transform: translate(-1px, -3.33px);
+  overflow: visible;
+}
+._5 {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(153, 153, 153, 1) 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-align: left;
+  font-family: "NotoSansBengaliUi-ExtraBold", sans-serif;
+  font-size: 32px;
+  font-weight: 800;
+  position: absolute;
+  left: 66px;
+  top: 157px;
+  width: 212px;
+  height: 60px;
+  transform-origin: 0 0;
+  transform: rotate(0deg) scale(1, 1);
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
