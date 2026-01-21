@@ -3,16 +3,15 @@ import { Link } from "react-router-dom";
 import gsap from "gsap";
 import "./DashboardPage.css";
 
-// Dashboard Game Icons
-import imgRouletteRocket from "../../assets/home/source/rocket-dynamic-color.png";
-import imgDiceIcon from "../../assets/dashboard/source/maindice.png";
-import imgLotteryIcon from "../../assets/dashboard/source/lottory.png";
-import imgGiftBoxIcon from "../../assets/home/source/gift box.png";
-
 // Background Assets
 import imgBackground from "../../assets/gamehub.png";
 
-// Icons
+// Game Icons
+import imgRouletteRocket from "../../assets/home/source/rocket-dynamic-color.png";
+import imgLotteryIcon from "../../assets/home/dashboard/source/lottory.png";
+import imgDiceIcon from "../../assets/home/dashboard/source/maindice.png";
+import imgGiftBoxIcon from "../../assets/home/dashboard/source/gift box.png";
+
 
 export default function DashboardPage() {
   const rouletteRef = useRef(null);
