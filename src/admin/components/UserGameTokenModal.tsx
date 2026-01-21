@@ -8,17 +8,20 @@ import {
   Minus,
   Plus,
   RefreshCw,
-  X
+  X,
 } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useToast } from "../../components/common/ToastProvider";
-import { fetchAdminUserInventory, fetchAdminUserInventoryByIdentifier } from "../api/adminInventoryApi";
+import {
+  fetchAdminUserInventory,
+  fetchAdminUserInventoryByIdentifier,
+} from "../api/adminInventoryApi";
 import {
   fetchLedgerByUserId,
   fetchWalletsByUserId,
   grantGameTokens,
-  revokeGameTokens
+  revokeGameTokens,
 } from "../api/adminGameTokenApi";
 import { GameTokenType } from "../../types/gameTokens";
 
@@ -34,13 +37,16 @@ type ActionMode = "grant" | "revoke";
 type ActiveTab = "grant" | "history";
 
 const TOKEN_GROUPS: Array<{ label: string; keys: GameTokenType[] }> = [
-  { label: "게임 토큰", keys: ["ROULETTE_COIN", "DICE_TOKEN", "LOTTERY_TICKET", "TRIAL_TOKEN"] },
+  {
+    label: "게임 토큰",
+    keys: ["ROULETTE_COIN", "DICE_TOKEN", "LOTTERY_TICKET", "TRIAL_TOKEN"],
+  },
   { label: "금고 열쇠", keys: ["GOLD_KEY", "DIAMOND_KEY"] },
   { label: "재화", keys: ["DIAMOND"] },
   { label: "퍼즐", keys: ["PUZZLE_C1", "PUZZLE_C2", "PUZZLE_J", "PUZZLE_M"] },
 ];
 
-const TOKEN_LABELS: Record<GameTokenType, string> = {
+const TOKEN_LABELS: Partial<Record<GameTokenType, string>> = {
   ROULETTE_COIN: "룰렛 코인",
   DICE_TOKEN: "주사위 토큰",
   LOTTERY_TICKET: "복권 티켓",
@@ -54,7 +60,13 @@ const TOKEN_LABELS: Record<GameTokenType, string> = {
   PUZZLE_M: "퍼즐 M",
 };
 
-const UserGameTokenModal: React.FC<UserGameTokenModalProps> = ({ memberId, isOpen, onClose, nickname, defaultTab }) => {
+const UserGameTokenModal: React.FC<UserGameTokenModalProps> = ({
+  memberId,
+  isOpen,
+  onClose,
+  nickname,
+  defaultTab,
+}) => {
   const queryClient = useQueryClient();
   const { addToast } = useToast();
 
@@ -77,19 +89,24 @@ const UserGameTokenModal: React.FC<UserGameTokenModalProps> = ({ memberId, isOpe
 
   const walletsQuery = useQuery({
     queryKey: ["admin", "game-tokens", "wallets", memberId],
-    queryFn: () => (isNumericId ? fetchWalletsByUserId(userId, 100, 0) : Promise.resolve([])),
+    queryFn: () =>
+      isNumericId ? fetchWalletsByUserId(userId, 100, 0) : Promise.resolve([]),
     enabled: isOpen && isNumericId,
   });
 
   const inventoryQuery = useQuery({
     queryKey: ["user-inventory", memberId],
-    queryFn: () => (isNumericId ? fetchAdminUserInventory(userId, 50) : fetchAdminUserInventoryByIdentifier(identifier, 50)),
+    queryFn: () =>
+      isNumericId
+        ? fetchAdminUserInventory(userId, 50)
+        : fetchAdminUserInventoryByIdentifier(identifier, 50),
     enabled: isOpen,
   });
 
   const ledgerQuery = useQuery({
     queryKey: ["admin", "game-tokens", "ledger", memberId],
-    queryFn: () => (isNumericId ? fetchLedgerByUserId(userId, 200, 0) : Promise.resolve([])),
+    queryFn: () =>
+      isNumericId ? fetchLedgerByUserId(userId, 200, 0) : Promise.resolve([]),
     enabled: isOpen && activeTab === "history" && isNumericId,
   });
 
@@ -106,7 +123,8 @@ const UserGameTokenModal: React.FC<UserGameTokenModalProps> = ({ memberId, isOpe
     return items.find((item) => item.item_type === "DIAMOND")?.quantity ?? 0;
   }, [inventoryQuery.data?.items]);
 
-  const formatTokenLabel = (key: GameTokenType) => `${key} (${TOKEN_LABELS[key] ?? key})`;
+  const formatTokenLabel = (key: GameTokenType) =>
+    `${key} (${TOKEN_LABELS[key] ?? key})`;
 
   const getTokenBalance = (key: GameTokenType) => {
     if (key === "DIAMOND") return diamondBalance;
@@ -139,16 +157,25 @@ const UserGameTokenModal: React.FC<UserGameTokenModalProps> = ({ memberId, isOpe
       }));
 
     const merged = [...walletLogs, ...diamondLogs];
-    merged.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    merged.sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    );
     if (!ledgerFilter) return merged;
     return merged.filter((entry) => entry.token_type === ledgerFilter);
   }, [inventoryQuery.data?.ledger, ledgerFilter, ledgerQuery.data]);
 
   const invalidateAll = () => {
     queryClient.invalidateQueries({ queryKey: ["admin", "game-tokens"] });
-    queryClient.invalidateQueries({ queryKey: ["admin", "game-tokens", "wallets"] });
-    queryClient.invalidateQueries({ queryKey: ["admin", "game-tokens", "ledger"] });
-    queryClient.invalidateQueries({ queryKey: ["user-token-ledger", memberId] });
+    queryClient.invalidateQueries({
+      queryKey: ["admin", "game-tokens", "wallets"],
+    });
+    queryClient.invalidateQueries({
+      queryKey: ["admin", "game-tokens", "ledger"],
+    });
+    queryClient.invalidateQueries({
+      queryKey: ["user-token-ledger", memberId],
+    });
     queryClient.invalidateQueries({ queryKey: ["user-inventory", memberId] });
   };
 
@@ -172,7 +199,7 @@ const UserGameTokenModal: React.FC<UserGameTokenModalProps> = ({ memberId, isOpe
     },
     onError: (err: any) => {
       addToast(err.response?.data?.detail || "지급 실패", "error");
-    }
+    },
   });
 
   const revokeMutation = useMutation({
@@ -195,7 +222,7 @@ const UserGameTokenModal: React.FC<UserGameTokenModalProps> = ({ memberId, isOpe
     },
     onError: (err: any) => {
       addToast(err.response?.data?.detail || "회수 실패", "error");
-    }
+    },
   });
 
   const isSubmitting = grantMutation.isPending || revokeMutation.isPending;
@@ -206,7 +233,6 @@ const UserGameTokenModal: React.FC<UserGameTokenModalProps> = ({ memberId, isOpe
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
       <div className="admin-card w-full max-w-3xl max-h-[90vh] flex flex-col shadow-admin-glow border-admin-brand/20">
-
         {/* Header */}
         <div className="p-6 border-b border-admin-border flex items-center justify-between bg-admin-sidebar/50">
           <div className="flex items-center gap-3">
@@ -214,8 +240,12 @@ const UserGameTokenModal: React.FC<UserGameTokenModalProps> = ({ memberId, isOpe
               <Coins size={24} />
             </div>
             <div>
-              <h2 className="text-admin-subtitle text-admin-text-primary">게임 코드/토큰 제어</h2>
-              <p className="text-admin-meta text-admin-text-muted">{nickname || memberId} 회원 자산 관리</p>
+              <h2 className="text-admin-subtitle text-admin-text-primary">
+                게임 코드/토큰 제어
+              </h2>
+              <p className="text-admin-meta text-admin-text-muted">
+                {nickname || memberId} 회원 자산 관리
+              </p>
             </div>
           </div>
           <button
@@ -252,11 +282,24 @@ const UserGameTokenModal: React.FC<UserGameTokenModalProps> = ({ memberId, isOpe
                 ledgerQuery.refetch();
               }}
               className="btn-admin-secondary text-admin-meta px-3 py-1.5"
-              disabled={walletsQuery.isFetching || inventoryQuery.isFetching || ledgerQuery.isFetching}
+              disabled={
+                walletsQuery.isFetching ||
+                inventoryQuery.isFetching ||
+                ledgerQuery.isFetching
+              }
               title="새로고침"
               aria-label="새로고침"
             >
-              <RefreshCw size={14} className={walletsQuery.isFetching || inventoryQuery.isFetching || ledgerQuery.isFetching ? "animate-spin" : ""} />
+              <RefreshCw
+                size={14}
+                className={
+                  walletsQuery.isFetching ||
+                  inventoryQuery.isFetching ||
+                  ledgerQuery.isFetching
+                    ? "animate-spin"
+                    : ""
+                }
+              />
             </button>
           </div>
         </div>
@@ -265,18 +308,28 @@ const UserGameTokenModal: React.FC<UserGameTokenModalProps> = ({ memberId, isOpe
         <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
           {!isNumericId && (
             <div className="mb-6 rounded-xl border border-admin-danger/30 bg-admin-danger/10 p-4 text-admin-danger text-sm">
-              숫자 회원 ID를 확인할 수 없습니다. 회원 식별자를 다시 확인해 주세요.
+              숫자 회원 ID를 확인할 수 없습니다. 회원 식별자를 다시 확인해
+              주세요.
             </div>
           )}
 
           {/* Balance Summary */}
           <div className="mb-6 grid grid-cols-2 md:grid-cols-4 gap-3">
             {TOKEN_GROUPS.flatMap((group) => group.keys).map((key) => (
-              <div key={key} className="rounded-xl border border-admin-border/60 bg-admin-sidebar/40 p-3">
-                <div className="text-[10px] text-admin-text-muted font-bold uppercase tracking-widest">{TOKEN_LABELS[key]}</div>
+              <div
+                key={key}
+                className="rounded-xl border border-admin-border/60 bg-admin-sidebar/40 p-3"
+              >
+                <div className="text-[10px] text-admin-text-muted font-bold uppercase tracking-widest">
+                  {TOKEN_LABELS[key]}
+                </div>
                 <div className="mt-2 flex items-center justify-between">
-                  <span className="text-[11px] text-admin-text-secondary font-mono">{key}</span>
-                  <span className="text-base font-black text-admin-brand">{getTokenBalance(key).toLocaleString()}</span>
+                  <span className="text-[11px] text-admin-text-secondary font-mono">
+                    {key}
+                  </span>
+                  <span className="text-base font-black text-admin-brand">
+                    {getTokenBalance(key).toLocaleString()}
+                  </span>
                 </div>
               </div>
             ))}
@@ -303,11 +356,18 @@ const UserGameTokenModal: React.FC<UserGameTokenModalProps> = ({ memberId, isOpe
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label htmlFor={`user-game-token-type-${memberId}`} className="admin-label">토큰 유형</label>
+                  <label
+                    htmlFor={`user-game-token-type-${memberId}`}
+                    className="admin-label"
+                  >
+                    토큰 유형
+                  </label>
                   <select
                     id={`user-game-token-type-${memberId}`}
                     value={tokenType}
-                    onChange={(e) => setTokenType(e.target.value as GameTokenType)}
+                    onChange={(e) =>
+                      setTokenType(e.target.value as GameTokenType)
+                    }
                     aria-label="토큰 유형"
                     title="토큰 유형"
                     className="w-full h-11 bg-admin-sidebar/50 border border-admin-border rounded-admin-lg px-4 text-admin-text-primary focus:ring-2 focus:ring-admin-brand/40 outline-none appearance-none"
@@ -351,7 +411,9 @@ const UserGameTokenModal: React.FC<UserGameTokenModalProps> = ({ memberId, isOpe
               <div className="p-4 rounded-xl bg-admin-brand/5 border border-admin-brand/10 flex items-start gap-3">
                 <AlertCircle size={18} className="text-admin-brand mt-0.5" />
                 <p className="text-admin-meta text-admin-text-secondary leading-relaxed">
-                  토큰을 {actionLabel}하면 즉시 회원의 지갑/인벤토리에 반영되며, 운영 트랜잭션 전적에 영구히 기록됩니다. 신중하게 작업해 주세요.
+                  토큰을 {actionLabel}하면 즉시 회원의 지갑/인벤토리에 반영되며,
+                  운영 트랜잭션 전적에 영구히 기록됩니다. 신중하게 작업해
+                  주세요.
                 </p>
               </div>
             </div>
@@ -365,7 +427,9 @@ const UserGameTokenModal: React.FC<UserGameTokenModalProps> = ({ memberId, isOpe
                 <div className="ml-auto">
                   <select
                     value={ledgerFilter}
-                    onChange={(e) => setLedgerFilter(e.target.value as GameTokenType | "")}
+                    onChange={(e) =>
+                      setLedgerFilter(e.target.value as GameTokenType | "")
+                    }
                     className="admin-input h-9 text-xs"
                     aria-label="토큰 필터"
                   >
@@ -382,8 +446,13 @@ const UserGameTokenModal: React.FC<UserGameTokenModalProps> = ({ memberId, isOpe
               <div className="space-y-3">
                 {ledgerQuery.isLoading ? (
                   <div className="flex flex-col items-center justify-center py-16 text-admin-text-muted gap-3">
-                    <Loader2 size={32} className="animate-spin text-admin-brand" />
-                    <p className="text-admin-meta">변경 이력을 불러오는 중입니다...</p>
+                    <Loader2
+                      size={32}
+                      className="animate-spin text-admin-brand"
+                    />
+                    <p className="text-admin-meta">
+                      변경 이력을 불러오는 중입니다...
+                    </p>
                   </div>
                 ) : combinedLedger.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-16 text-admin-text-muted border-2 border-dashed border-admin-border rounded-2xl">
@@ -392,19 +461,36 @@ const UserGameTokenModal: React.FC<UserGameTokenModalProps> = ({ memberId, isOpe
                   </div>
                 ) : (
                   combinedLedger.map((entry) => (
-                    <div key={entry.id} className="p-4 rounded-xl bg-admin-sidebar/40 border border-admin-border flex items-center justify-between hover:bg-admin-hover transition-colors">
+                    <div
+                      key={entry.id}
+                      className="p-4 rounded-xl bg-admin-sidebar/40 border border-admin-border flex items-center justify-between hover:bg-admin-hover transition-colors"
+                    >
                       <div className="flex items-center gap-4">
-                        <div className={`p-2 rounded-lg ${entry.delta > 0 ? "bg-admin-accent/10 text-admin-accent" : "bg-admin-danger/10 text-admin-danger"}`}>
-                          {entry.delta > 0 ? <Plus size={16} /> : <Minus size={16} />}
+                        <div
+                          className={`p-2 rounded-lg ${entry.delta > 0 ? "bg-admin-accent/10 text-admin-accent" : "bg-admin-danger/10 text-admin-danger"}`}
+                        >
+                          {entry.delta > 0 ? (
+                            <Plus size={16} />
+                          ) : (
+                            <Minus size={16} />
+                          )}
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className="text-admin-body font-bold text-admin-text-primary">{formatTokenLabel(entry.token_type)}</span>
-                            <span className={`text-admin-body font-black ${entry.delta > 0 ? "text-admin-accent" : "text-admin-danger"}`}>
-                              {entry.delta > 0 ? `+${entry.delta}` : entry.delta}
+                            <span className="text-admin-body font-bold text-admin-text-primary">
+                              {formatTokenLabel(entry.token_type)}
+                            </span>
+                            <span
+                              className={`text-admin-body font-black ${entry.delta > 0 ? "text-admin-accent" : "text-admin-danger"}`}
+                            >
+                              {entry.delta > 0
+                                ? `+${entry.delta}`
+                                : entry.delta}
                             </span>
                             <span className="text-[10px] text-admin-text-muted bg-admin-bg/40 px-1.5 py-0.5 rounded">
-                              {entry.source === "wallet" ? "WALLET" : "INVENTORY"}
+                              {entry.source === "wallet"
+                                ? "WALLET"
+                                : "INVENTORY"}
                             </span>
                           </div>
                           <p className="text-admin-meta text-admin-text-muted leading-tight mt-0.5">
@@ -413,7 +499,9 @@ const UserGameTokenModal: React.FC<UserGameTokenModalProps> = ({ memberId, isOpe
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-admin-meta text-admin-text-primary mb-1">잔액: {entry.balance_after.toLocaleString()}</p>
+                        <p className="text-admin-meta text-admin-text-primary mb-1">
+                          잔액: {entry.balance_after.toLocaleString()}
+                        </p>
                         <p className="text-[11px] text-admin-text-muted font-mono">
                           {new Date(entry.created_at).toLocaleString("ko-KR", {
                             year: "numeric",

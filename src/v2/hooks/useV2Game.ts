@@ -13,7 +13,6 @@ import type {
   RoulettePlayRequest,
   DiceRollRequest,
   DiceDoubleUpRequest,
-  LotteryScratchRequest,
 } from "../types/gameAction";
 
 // ============================================================================
@@ -106,7 +105,7 @@ export function useV2LotteryPlay() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (request: LotteryScratchRequest) => playV2Lottery(request),
+    mutationFn: () => playV2Lottery(),
     onSuccess: () => {
       // Invalidate lottery status queries
       queryClient.invalidateQueries({ queryKey: ["v2", "lottery", "status"] });
