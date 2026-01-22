@@ -6,11 +6,11 @@ import {
 import { useV2Vault } from "../../hooks/useV2Vault";
 import "./InventoryPage.css";
 
-// 06shop assets (reusing same images as shop)
-const ASSET_PATH = "/v2/assets/06shop";
+// inventory assets (08inventory)
+const ASSET_PATH = "/v2/assets/08inventory";
 const imgFrame127 = `${ASSET_PATH}/Frame 9-1.png`;
-const imgFrame129 = `${ASSET_PATH}/Frame 9.png`;
-const imgFrame130 = `${ASSET_PATH}/Frame 9-2.png`;
+const imgFrame129 = `${ASSET_PATH}/Frame 9-2.png`;
+const imgFrame130 = `${ASSET_PATH}/Frame 9-3.png`;
 
 export default function InventoryPage() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -57,6 +57,26 @@ export default function InventoryPage() {
       ref={containerRef}
       className="inventory-page-v2 scrollbar-hide overflow-y-auto"
     >
+      {/* App Header */}
+      <div className="app-header">
+        <div className="app-title">제목 없음</div>
+        <div className="info-pill">안내</div>
+      </div>
+
+      {/* Hidden shop / inventory tabs */}
+      <div className="tabs">
+        <button className="tab-button">히딘 상점</button>
+        <button className="tab-button active">인벤토리</button>
+      </div>
+
+      {/* Main Card */}
+      <div className="main-card">
+        <div className="main-card-content">
+          <div className="main-card-title">가방 요약</div>
+          <div className="main-card-sub">아이템 보유 현황</div>
+        </div>
+      </div>
+
       {/* Wallet Balance Display */}
       <div className="exchange-wallet-strip px-4 mt-4 mb-6">
         <div className="flex justify-between items-center bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-md">

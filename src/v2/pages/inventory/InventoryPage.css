@@ -1,99 +1,163 @@
-/* Inventory Page Design v2 - Based on 06shop assets */
-
-/* Inventory Page Design v3 - Orange & Red Premium */
+/* Inventory Page - Figma v2 redesign */
 
 .inventory-page-v2 {
-    width: 380px;
-    height: 680px;
-    background: radial-gradient(circle at 50% 0%, #1a0a05 0%, #000000 100%);
-    margin: 0 auto;
-    overflow: hidden;
-    position: relative;
-    padding-top: 40px;
-}
-
-.inventory-items-container {
-    width: 100%;
-    padding: 0 16px;
-}
-
-.inventory-items-grid {
-    display: flex;
-    gap: 12px;
-    overflow-x: auto;
-    padding-bottom: 20px;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-    scroll-snap-type: x mandatory;
-}
-
-.inventory-items-grid::-webkit-scrollbar {
-    display: none;
-}
-
-.inventory-item-card {
-    flex-shrink: 0;
-    width: 108px;
-    height: 160px;
-    position: relative;
-    scroll-snap-align: start;
-    border-radius: 20px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
     display: flex;
     flex-direction: column;
+    justify-content: flex-start;
     align-items: center;
-    padding: 12px 8px;
-    transition: all 0.3s ease;
+    width: 390px;
+    height: 769px;
+    margin: 0 auto;
+    background: radial-gradient(circle at 50% 0%, #1a0a05 0%, #000000 100%);
+    padding-top: 16px;
+    overflow: auto;
 }
 
-.inventory-item-card:active {
-    transform: scale(0.95);
-    background: rgba(255, 122, 0, 0.1);
-}
-
-.inventory-item-name {
-    color: white;
-    font-size: 12px;
-    font-weight: 800;
-    text-align: center;
-    margin-bottom: 4px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    width: 100%;
-}
-
-.inventory-item-quantity {
-    font-size: 9px;
-    font-weight: 700;
-    color: #FF7A00;
-    background: rgba(255, 122, 0, 0.1);
-    padding: 2px 6px;
-    border-radius: 6px;
-    margin-bottom: 10px;
-}
-
-.inventory-item-image-container {
-    width: 60px;
+/* App Header */
+.app-header {
+    display: flex;
+    width: 320px;
     height: 60px;
-    background: radial-gradient(circle, rgba(255, 122, 0, 0.2) 0%, transparent 70%);
+    padding: 7px 87px 6px 0;
+    align-items: center;
+    justify-content: space-between;
+    color: white;
+}
+
+.app-title {
+    font-weight: 800;
+    font-size: 16px;
+    opacity: 0.9;
+}
+
+.info-pill {
+    width: 68px;
+    height: 20px;
+    border-radius: 59px;
+    background: rgba(225, 255, 128, 0.51);
+    box-shadow: 0 2px 0 0 rgba(0, 0, 0, 0.20);
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 8px;
+    font-weight: 800;
+    font-size: 12px;
+    color: #081900;
+}
+
+/* Tabs */
+.tabs {
+    display: flex;
+    width: 320px;
+    height: 48px;
+    padding: 6px 39px 6px 38px;
+    align-items: center;
+    gap: 38px;
+    align-self: stretch;
+}
+
+.tab-button {
+    background: transparent;
+    border: none;
+    color: rgba(255,255,255,0.6);
+    font-weight: 800;
+}
+
+.tab-button.active {
+    color: #FFFFFF;
+}
+
+/* Main Card */
+.main-card {
+    width: 360px;
+    height: 122px;
+    border-radius: 50px;
+    background: rgba(98, 91, 113, 0.38);
+    mix-blend-mode: plus-lighter;
+    display: flex;
+    align-items: center;
+    padding: 20px;
+    margin: 8px 0 16px 0;
+    color: white;
+}
+
+.main-card-title {
+    font-weight: 900;
+    font-size: 18px;
+}
+
+.main-card-sub {
+    font-size: 12px;
+    opacity: 0.8;
+}
+
+/* Inventory grid */
+.inventory-items-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.inventory-items-grid {
+    display: grid;
+    width: 274px;
+    height: 260px;
+    row-gap: 11px;
+    column-gap: 20px;
+    grid-template-rows: repeat(3, fit-content(100%));
+    grid-template-columns: repeat(3, fit-content(100%));
+    justify-items: center;
+    align-items: center;
+}
+
+.inventory-items-grid > .inventory-item-card {
+    margin: 0;
+}
+
+/* Individual small card */
+.inventory-item-card {
+    width: 73.995px;
+    height: 75.198px;
+    position: relative;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.10) 0%, rgba(42, 91, 46, 0.05) 100%);
+    filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.25));
+    transition: transform 0.12s ease;
+}
+
+.inventory-item-card:active {
+    transform: translateY(2px);
+}
+
+/* small image container inside card */
+.inventory-item-image-container {
+    width: 46px;
+    height: 46px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    overflow: hidden;
 }
 
 .inventory-item-image {
-    width: 48px;
-    height: 48px;
+    width: 40px;
+    height: 40px;
     object-fit: contain;
-    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
+}
+
+/* Keep name hidden in small layout */
+.inventory-item-name {
+    display: none;
+}
+
+.inventory-item-quantity {
+    display: none;
 }
 
 .inventory-item-use-hint {
-    margin-top: auto;
-    font-size: 10px;
-    font-weight: 900;
-    color: #FFD700;
+    display: none;
 }

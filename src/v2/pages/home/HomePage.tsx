@@ -1,36 +1,34 @@
+// src/v2/pages/home/HomePage.tsx
 import "./HomeRedesign.css";
-
-const ASSET_PATH = "/v2/assets/01home";
 
 export default function HomePage() {
   return (
-    <div className="home-content-container pt-4">
-      {/* 32px Notice Bar moved to V2AppLayout */}
+    <div className="home-container-v2">
+      <div className="home-bg-overlay" />
 
       {/* Hero Section */}
-      <section className="hero-section">
-        <div className="hero-main-title">
-          <h2 className="hero-title-text">MAIN TITLE</h2>
-          <button className="hero-button">BUTTON</button>
-        </div>
-      </section>
-
-      {/* Quick Action Slots */}
-      <div className="quick-actions my-6">
-        {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="action-slot flex items-center justify-center">
-             <img src={`${ASSET_PATH}/Vector-${i}.svg`} alt={`icon-${i}`} className="w-8 h-8 opacity-40" />
-          </div>
-        ))}
+      <div className="home-hero-card">
+        <h1 className="hero-title">
+          WELCOME TO<br />THE GAME
+        </h1>
+        <div className="hero-cta">PLAY NOW</div>
       </div>
 
-      {/* Feature Section */}
-      <section className="feature-section">
-        <div className="today-label">today / 18pt</div>
-        <div className="feature-card">
-          {/* Main feature content here */}
+      {/* Quick Access Tiles */}
+      <div className="home-quick-grid">
+        <div className="quick-card" />
+        <div className="quick-card" />
+        <div className="quick-card" />
+        <div className="quick-card" />
+      </div>
+
+      {/* Featured Section */}
+      <div className="home-featured-section">
+        <div className="featured-header">
+          <span className="featured-label">today / 18pt</span>
         </div>
-      </section>
+        <div className="featured-card" />
+      </div>
     </div>
   );
 }

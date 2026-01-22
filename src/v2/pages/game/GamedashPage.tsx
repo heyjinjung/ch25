@@ -5,42 +5,49 @@ import "./GamedashPage.css";
 const ASSET_PATH = "/v2/assets/02gamedash";
 
 const GAMES = [
-  { id: "dice", to: "/v2/game/dice", icon: `${ASSET_PATH}/Vector-1.svg` },
-  { id: "rocket", to: "/v2/game/lottery", icon: `${ASSET_PATH}/Vector-2.svg` }, // Assuming lottery for rocket
-  { id: "ball", to: "/v2/game/roulette", icon: `${ASSET_PATH}/Vector.svg` }, // Assuming roulette for ball
-  { id: "crown", to: "/v2/team-battle", icon: `${ASSET_PATH}/Vector-4.svg` }, // Assuming team-battle for crown
+  { id: "dice", to: "/v2/game/dice", icon: `${ASSET_PATH}/Vector-8.svg` },
+  { id: "rocket", to: "/v2/game/lottery", icon: `${ASSET_PATH}/Vector-6.svg` },
+  { id: "ball", to: "/v2/game/roulette", icon: `${ASSET_PATH}/Vector-7.svg` },
+  { id: "crown", to: "/v2/team-battle", icon: `${ASSET_PATH}/Vector-5.svg` },
 ];
 
 export default function GamedashPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="gamedash-container !pt-4">
-      {/* Background SVG Overlay */}
-      <img src={`${ASSET_PATH}/gamedash.svg`} className="gamedash-bg-overlay" alt="" />
+    <div className="gamedash-container">
+      {/* Background SVG from Figma */}
+      <svg className="gamedash-bg-svg" xmlns="http://www.w3.org/2000/svg" width="390" height="755" viewBox="0 0 388 750" fill="none">
+        <path d="M331.273 -1.02637H54.7273C23.3977 -1.02637 -2 21.6029 -2 49.5176V703.43C-2 731.344 23.3977 753.974 54.7273 753.974H331.273C362.602 753.974 388 731.344 388 703.43V49.5176C388 21.6029 362.602 -1.02637 331.273 -1.02637Z" fill="url(#paint0_linear_9_277)" fillOpacity="0.6"/>
+        <defs>
+          <linearGradient id="paint0_linear_9_277" x1="193" y1="-1.02637" x2="193" y2="753.974" gradientUnits="userSpaceOnUse">
+            <stop stopColor="#EBFF8F" stopOpacity="0.2"/>
+            <stop offset="0.375" stopColor="#F0FFBD" stopOpacity="0.62"/>
+            <stop offset="0.9999" stopColor="#BBCD80" stopOpacity="0.23"/>
+            <stop offset="1" stopColor="#BDE9BD" stopOpacity="0.67"/>
+          </linearGradient>
+        </defs>
+      </svg>
 
-      {/* 32px Live Feed moved to V2AppLayout */}
-
-      <div className="hero-notice-section">
-        {/* Hero Notice Card */}
+      <div className="gamedash-main-content">
+        {/* Main Card (Notice Card) */}
         <div className="hero-card-container">
-          <img src={`${ASSET_PATH}/Vector-5.svg`} className="character-img" alt="character" />
+          <img src={`${ASSET_PATH}/Ellipse 374.svg`} className="character-img" alt="character" />
           <div className="notice-labels">
-            <div className="notice-pill">notice</div>
-            <div className="notice-pill">notice</div>
-            <div className="notice-pill">notice</div>
+            <div className="notice-pill">NOTICE</div>
+            <div className="notice-pill">NOTICE</div>
+            <div className="notice-pill">NOTICE</div>
           </div>
         </div>
 
-        {/* Game Selection Grid */}
-        <div className="game-action-grid mt-4">
+        {/* Game Selection Grid (2x2) */}
+        <div className="game-action-grid">
           {GAMES.map((game) => (
             <div 
               key={game.id} 
               className="game-action-card"
               onClick={() => navigate(game.to)}
             >
-              <div className="game-card-bg" />
               <img src={game.icon} className="game-card-icon" alt={game.id} />
             </div>
           ))}

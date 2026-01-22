@@ -1,6 +1,6 @@
 /* src/v2/pages/home/HomeRedesign.css */
 
-.home-container {
+.home-container-v2 {
     background-color: #000;
     min-height: 100vh;
     width: 100%;
@@ -9,132 +9,112 @@
     position: relative;
     overflow-x: hidden;
     color: #fff;
-    font-family: 'Inter', sans-serif;
+    padding-top: 96px;
+    /* Header + LiveFeed */
+    padding-bottom: 90px;
 }
 
-/* 64px Header */
-.home-header {
-    height: 64px;
-    display: flex;
-    align-items: center;
-    padding: 0 16px;
-    gap: 12px;
-}
-
-.avatar {
-    width: 20px;
-    height: 20px;
-    border-radius: 12px;
-    background-color: #333;
-}
-
-.user-info {
-    display: grid;
-    grid-template-columns: auto auto;
-    gap: 4px 16px;
-    font-size: 11px;
-}
-
-/* 32px Notice Bar */
-.notice-bar {
-    height: 32px;
+.home-bg-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
     width: 100%;
-    background-color: rgba(82, 82, 82, 0.17);
-    display: flex;
-    align-items: center;
-    padding: 0 16px;
-    font-size: 13px;
-    color: #fff;
+    height: 100%;
+    background: url('/v2/assets/01home/home.svg') center/cover no-repeat;
+    opacity: 0.4;
+    z-index: -1;
+    pointer-events: none;
 }
 
-/* Hero Section */
-.hero-section {
-    padding: 16px;
-}
-
-.hero-main-title {
-    height: 180px;
-    /* Estimated from visual */
-    border-radius: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+/* Premium Main Card */
+.home-hero-card {
+    margin: 0 16px;
+    height: 220px;
+    border-radius: 32px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    padding: 32px;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    padding: 24px;
     position: relative;
+    overflow: hidden;
 }
 
-.hero-title-text {
-    font-size: 24px;
-    font-weight: 800;
+.home-hero-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(37, 173, 130, 0.1) 0%, transparent 70%);
+    pointer-events: none;
 }
 
-.hero-button {
+.hero-title {
+    font-size: 28px;
+    font-weight: 900;
+    line-height: 1.1;
+    margin-bottom: 16px;
+    background: linear-gradient(180deg, #FFFFFF 0%, rgba(255, 255, 255, 0.6) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-transform: uppercase;
+}
+
+.hero-cta {
     width: fit-content;
-    padding: 6px 16px;
-    border-radius: 20px;
-    background-color: rgba(255, 255, 255, 0.1);
-    font-size: 12px;
-    font-weight: 600;
-    margin-top: 12px;
+    padding: 10px 24px;
+    background: #25AD82;
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
 }
 
-/* Quick Action Slots */
-.quick-actions {
-    display: flex;
-    padding: 0 16px;
-    gap: 16px;
-    justify-content: center;
-}
-
-.action-slot {
-    width: 80px;
-    height: 80px;
-    background-color: rgba(255, 255, 255, 0.05);
-    border-radius: 20px;
-}
-
-/* 160px Feature Card */
-.feature-section {
+/* Game Quick Entry Grid */
+.home-quick-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
     padding: 24px 16px;
 }
 
-.feature-card {
-    height: 160px;
-    border-radius: 24px;
-    background-color: rgba(109, 117, 143, 0.16);
-    padding: 20px;
-}
-
-.today-label {
-    font-size: 18px;
-    font-weight: 400;
-    margin-bottom: 8px;
-    text-align: right;
-    opacity: 0.8;
-}
-
-/* 86.8px Bottom Nav */
-.bottom-nav {
-    height: 86.87px;
-    background-color: rgba(255, 255, 255, 0.05);
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+.quick-card {
+    aspect-ratio: 1;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
     display: flex;
-    justify-content: space-around;
     align-items: center;
-    padding-bottom: env(safe-area-inset-bottom);
-    position: fixed;
-    bottom: 0;
+    justify-content: center;
+}
+
+/* Bottom Large Card */
+.home-featured-section {
+    padding: 16px;
+}
+
+.featured-header {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 8px;
+}
+
+.featured-label {
+    font-size: 16px;
+    font-weight: 400;
+    opacity: 0.9;
+}
+
+.featured-card {
     width: 100%;
-    max-width: 390px;
-}
-
-.nav-icon {
-    width: 24px;
-    height: 24px;
-    opacity: 0.6;
-}
-
-.nav-icon.active {
-    opacity: 1;
+    height: 260px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 32px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    position: relative;
+    overflow: hidden;
 }
