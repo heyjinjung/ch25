@@ -13,8 +13,9 @@ const VaultPage: React.FC = () => {
   const { data: vault, isLoading, error } = useVaultStatus();
   const dialRef = useRef<HTMLImageElement>(null);
   const glowRef = useRef<HTMLDivElement>(null);
+  const balanceDisplayRef = useRef<HTMLSpanElement>(null);
+  const counterObj = useRef({ value: 0 });
 
-  // 금고 다이얼 회전 + 글로우 애니메이션
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
       // 다이얼 느린 회전
@@ -38,10 +39,25 @@ const VaultPage: React.FC = () => {
           ease: "power1.inOut",
         });
       }
+
+      // 잔액 카운트업 애니메이션
+      if (vault && balanceDisplayRef.current) {
+        const targetValue = vault.vaultBalance || 0;
+        gsap.to(counterObj.current, {
+          value: targetValue,
+          duration: 1.5,
+          ease: "power2.out",
+          onUpdate: () => {
+            if (balanceDisplayRef.current) {
+              balanceDisplayRef.current.innerText = Math.floor(counterObj.current.value).toLocaleString();
+            }
+          },
+        });
+      }
     });
 
     return () => ctx.revert();
-  }, []);
+  }, [vault?.vaultBalance]);
 
   if (isLoading) {
     return (
@@ -122,12 +138,12 @@ const VaultPage: React.FC = () => {
         transition={{ delay: 0.3, duration: 0.5 }}
         className="relative z-10 text-center mt-4"
       >
-        <h1 className="text-5xl font-black text-white tracking-tight">
+        <h1 className="text-4xl font-black text-white tracking-tight">
           CC금고
         </h1>
         {vault.is_golden_hour_active && (
           <div
-            className="inline-flex items-center gap-2 mt-3 px-4 py-2 rounded-full"
+            className="inline-flex items-center gap-2 mt-3 px-2 py-2 rounded-full"
             style={{
               background: "#ffe4dd",
               border: "1px solid #ff4210",
@@ -148,22 +164,13 @@ const VaultPage: React.FC = () => {
         transition={{ delay: 0.5, duration: 0.5 }}
         className="relative z-10 mx-4 mt-8"
       >
-        <div
-          className="rounded-3xl p-6 backdrop-blur-xl"
-          style={{
-            background:
-              "linear-gradient(135deg, rgba(255,180,68,0.15) 0%, rgba(255,140,0,0.08) 100%)",
-            border: "1px solid rgba(255,180,68,0.25)",
-            boxShadow: "0 20px 40px rgba(0,0,0,0.4)",
-          }}
-        >
-          {/* 총 잔액 */}
+        {/* 총 잔액 */}
           <div className="text-center mb-6">
             <p className="text-xs font-bold text-white/40 uppercase tracking-widest mb-2">
-              Total Balance
+              춝금 예정액
             </p>
             <p
-              className="text-4xl font-black"
+              className="text-3xl font-black"
               style={{
                 background:
                   "linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF8C00 100%)",
@@ -171,7 +178,7 @@ const VaultPage: React.FC = () => {
                 WebkitTextFillColor: "transparent",
               }}
             >
-              {(vault.vaultBalance || 0).toLocaleString()}
+              <span ref={balanceDisplayRef}>0</span>
               <span className="text-lg ml-1">CC</span>
             </p>
           </div>
@@ -179,29 +186,9 @@ const VaultPage: React.FC = () => {
           {/* 상세 잔액 */}
           <div className="grid grid-cols-2 gap-3">
             <div
-              className="rounded-2xl p-4 text-center"
-              style={{ background: "rgba(255,255,255,0.05)" }}
-            >
-              <p className="text-[10px] font-bold text-white/30 uppercase tracking-wider mb-1">
-                Available
-              </p>
-              <p className="text-xl font-black text-emerald-400">
-                {(vault.availableBalance || 0).toLocaleString()}
-              </p>
-            </div>
-            <div
-              className="rounded-2xl p-4 text-center"
-              style={{ background: "rgba(255,255,255,0.05)" }}
-            >
-              <p className="text-[10px] font-bold text-white/30 uppercase tracking-wider mb-1">
-                Locked
-              </p>
-              <p className="text-xl font-black text-orange-400">
-                {(vault.lockedBalance || 0).toLocaleString()}
-              </p>
-            </div>
+              className="rounded-2xl p-4 text-center col-span-2"
+          ></div>      
           </div>
-        </div>
       </motion.div>
 
       {/* 액션 버튼 */}
@@ -209,19 +196,10 @@ const VaultPage: React.FC = () => {
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.7, duration: 0.5 }}
-        className="relative z-10 mx-4 mt-6 grid grid-cols-2 gap-3"
+        className="relative z-8 mx-4 mt-6 grid grid-cols-2 gap-3"
       >
         <button
-          className="h-14 rounded-2xl font-black text-white transition-all active:scale-95"
-          style={{
-            background: "rgba(255,255,255,0.08)",
-            border: "1px solid rgba(255,255,255,0.15)",
-          }}
-        >
-          입금하기
-        </button>
-        <button
-          className="h-14 rounded-2xl font-black text-black transition-all active:scale-95"
+          className="h-14 rounded-2xl font-black text-black transition-all active:scale-95 col-span-2"
           style={{
             background:
               "linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF8C00 100%)",
