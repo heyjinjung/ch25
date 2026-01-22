@@ -4,7 +4,7 @@ import { useV2Vault } from "../../hooks/useV2Vault";
 import gsap from "gsap";
 import "./VaultRedesign.css";
 
-const ASSET_PATH = "/src/v2/public/assets/05valut";
+const ASSET_PATH = "/v2/assets/05valut";
 
 const VaultPage: React.FC = () => {
   const { useVaultStatus } = useV2Vault();

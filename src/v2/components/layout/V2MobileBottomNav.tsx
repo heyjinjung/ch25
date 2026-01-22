@@ -3,7 +3,7 @@ import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import clsx from "clsx";
 
-const ASSET_PATH = "/src/v2/public/assets/01home";
+const ASSET_PATH = "/v2/assets/01home";
 
 const V2MobileBottomNav: React.FC = () => {
   const location = useLocation();

@@ -5,7 +5,7 @@ import { useV2Vault } from "../../hooks/useV2Vault";
 import "./ExchangeRedesign.css";
 import { triggerHaptic } from "../../utils/haptic";
 
-const ASSET_PATH = "/src/v2/public/assets/06shop";
+const ASSET_PATH = "/v2/assets/06shop";
 
 export default function ExchangePage() {
   const containerRef = useRef<HTMLDivElement>(null);
