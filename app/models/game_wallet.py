@@ -9,54 +9,38 @@ from app.db.base_class import Base
 
 
 class GameTokenType(str, Enum):
-    """V2 Standard Game Token Types (SoT Compliant)
-    
-    Migration from V1:
-    - ROULETTE_COIN → ROULETTE_TICKET
-    - DICE_TOKEN → DICE_TICKET  
-    - GOLD_KEY → GOLD_KEY_TICKET
-    - DIAMOND_KEY → DIAMOND_TICKET
-    - DIAMOND_KEY_FRAGMENT → DIAMOND_FRAGMENT
+    """V2 Standard Game Token Types (SoT Compliant) with V1 Compatibility.
     
     Reference: docs/v2_specs/01_core/v2_item_inventory_sot_ko.md
     """
-    # ==== Game Tickets (V2 Standard) ====
+    # ==== V2 Standard Names (Preferred) ====
     ROULETTE_TICKET = "ROULETTE_TICKET"
     DICE_TICKET = "DICE_TICKET"
     LOTTERY_TICKET = "LOTTERY_TICKET"
-    
-    # Legacy V1 Aliases (Deprecated - For Migration Compatibility)
-    ROULETTE_COIN = "ROULETTE_COIN"  # [DEPRECATED] Use ROULETTE_TICKET
-    DICE_TOKEN = "DICE_TOKEN"  # [DEPRECATED] Use DICE_TICKET
-    TRIAL_TICKET = "TRIAL_TICKET"
-    TRIAL_TOKEN = "TRIAL_TOKEN"  # [DEPRECATED] Use TRIAL_TICKET 
-    
-    # ==== Premium Tickets (V2 Standard) ====
     GOLD_KEY_TICKET = "GOLD_KEY_TICKET"
     DIAMOND_TICKET = "DIAMOND_TICKET"
-    
-    # Legacy Premium Aliases (Deprecated)
-    GOLD_KEY = "GOLD_KEY"  # [DEPRECATED] Use GOLD_KEY_TICKET
-    DIAMOND_KEY = "DIAMOND_KEY"  # [DEPRECATED] Use DIAMOND_TICKET
-    
-    # ==== Fragments (V2 Standard) ====
     GOLD_KEY_FRAGMENT = "GOLD_KEY_FRAGMENT"
     DIAMOND_FRAGMENT = "DIAMOND_FRAGMENT"
+    TRIAL_TICKET = "TRIAL_TICKET"
+    DIAMOND = "DIAMOND"
     
-    # Legacy Fragment Aliases (Deprecated)
-    DIAMOND_KEY_FRAGMENT = "DIAMOND_KEY_FRAGMENT"  # [DEPRECATED] Use DIAMOND_FRAGMENT
-
+    # ==== Legacy V1 Compatibility (Required for existing DB entries and constructors) ====
+    ROULETTE_COIN = "ROULETTE_COIN"
+    DICE_TOKEN = "DICE_TOKEN"
+    GOLD_KEY = "GOLD_KEY"
+    DIAMOND_KEY = "DIAMOND_KEY"
+    DIAMOND_KEY_FRAGMENT = "DIAMOND_KEY_FRAGMENT"
+    TRIAL_TOKEN = "TRIAL_TOKEN"
+    
     # ==== Puzzle Pieces (Lottery) ====
-    PUZZLE_C = "PUZZLE_C"  # [DEPRECATED] Kept for safety
+    PUZZLE_C = "PUZZLE_C" 
     PUZZLE_C1 = "PUZZLE_C1"
     PUZZLE_C2 = "PUZZLE_C2"
     PUZZLE_J = "PUZZLE_J"
     PUZZLE_M = "PUZZLE_M"
     
-    # ==== Currency & Special ====
-    DIAMOND = "DIAMOND"  # Mission Reward Currency
-    VAULT = "VAULT"      # Vault Balance (Virtual Token for Buy-in)
-
+    # ==== Special ====
+    VAULT = "VAULT"
 
 
 class UserGameWallet(Base):

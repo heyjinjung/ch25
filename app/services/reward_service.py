@@ -123,13 +123,15 @@ class RewardService:
         """
 
         if token_type == "DIAMOND" or token_type == GameTokenType.DIAMOND:
-            InventoryService.grant_item(
-                db, 
-                user_id, 
-                "DIAMOND", 
-                amount, 
+            # [MIGRATED] DIAMOND is now a GameWallet token (SoT v1.1)
+            self.wallet_service.grant_tokens(
+                db,
+                user_id=user_id,
+                token_type=GameTokenType.DIAMOND,
+                amount=amount,
                 reason=(meta or {}).get("reason") or "REWARD",
-                related_id=(meta or {}).get("related_id"),
+                label=(meta or {}).get("label") or "AUTO_GRANT",
+                meta=meta,
                 auto_commit=commit
             )
             return
@@ -282,15 +284,8 @@ class RewardService:
             return
         
         if reward_type == "DIAMOND":
-            InventoryService.grant_item(
-                db, 
-                user_id, 
-                "DIAMOND", 
-                reward_amount, 
-                reason=(meta or {}).get("reason") or "REWARD",
-                related_id=(meta or {}).get("related_id"),
-                auto_commit=commit
-            )
+            # [MIGRATED] DIAMOND handled via grant_ticket (Wallet)
+            self.grant_ticket(db, user_id=user_id, token_type=GameTokenType.DIAMOND, amount=reward_amount, meta=meta, commit=commit)
             return
 
         if reward_type == "COUPON":

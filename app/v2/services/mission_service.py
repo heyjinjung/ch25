@@ -173,7 +173,7 @@ class V2MissionService:
             },
             {
                 "day": 7, "enabled": True, "grants": [
-                    {"kind": "INVENTORY", "item_type": "DIAMOND", "amount": 1}
+                    {"kind": "WALLET", "token_type": "DIAMOND", "amount": 1}
                 ]
             }
         ]

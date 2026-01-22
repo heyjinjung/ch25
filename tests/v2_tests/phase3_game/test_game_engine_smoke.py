@@ -169,7 +169,7 @@ def _seed_lottery_config(db: Session) -> LotteryConfig:
 def _seed_roulette_config(db: Session) -> RouletteConfig:
     config = RouletteConfig(
         name="Phase3 Roulette Config",
-        ticket_type=GameTokenType.ROULETTE_COIN.value,
+        ticket_type=GameTokenType.ROULETTE_TICKET,
         is_active=True,
         max_daily_spins=0,
         grade="COMMON",
@@ -202,8 +202,8 @@ def _seed_roulette_config(db: Session) -> RouletteConfig:
 
 def _grant_game_tickets(db: Session, user_id: int) -> None:
     wallet = GameWalletService()
-    wallet.grant_tokens(db, user_id, GameTokenType.ROULETTE_COIN, 10, reason="TEST")
-    wallet.grant_tokens(db, user_id, GameTokenType.DICE_TOKEN, 10, reason="TEST")
+    wallet.grant_tokens(db, user_id, GameTokenType.ROULETTE_TICKET, 10, reason="TEST")
+    wallet.grant_tokens(db, user_id, GameTokenType.DICE_TICKET, 10, reason="TEST")
     wallet.grant_tokens(db, user_id, GameTokenType.LOTTERY_TICKET, 10, reason="TEST")
 
 

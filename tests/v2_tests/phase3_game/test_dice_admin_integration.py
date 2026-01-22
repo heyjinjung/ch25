@@ -110,9 +110,21 @@ def test_dice_play_and_vault_routing(db_session, test_user, dice_config):
 def test_golden_hour_multiplier_applied(db_session, test_user, dice_config, monkeypatch):
     """골든아워 배율이 적용되는지 검증 (mock 방식)"""
     service = DiceService()
-    # 골든아워 배율 mock: 2.0x
-    monkeypatch.setattr("app.services.dice_service.get_settings", lambda: type("S", (), {"GOLDEN_HOUR_MULTIPLIER": 2.0, "GOLDEN_HOUR_ENABLED": True})())
-    # 실제 배율 적용 여부는 서비스 내부 정책에 따라 다를 수 있음(여기선 mock만)
+    # Mock settings to include all required attributes for DiceService and game_common
+    class MockSettings:
+        golden_hour_enabled = True
+        ch25_dda_enabled = False
+        ch25_intervention_enabled = False
+        ch25_internal_stream_enabled = False
+        dice_bet_value = 1000
+        roulette_bet_value = 1000
+        lottery_bet_value = 1000
+
+    monkeypatch.setattr("app.services.dice_service.get_settings", lambda: MockSettings())
+    monkeypatch.setattr("app.services.game_common.get_settings", lambda: MockSettings())
+    
+    # Ensure EventService also sees golden hour as active
+    monkeypatch.setattr("app.services.event_service.EventService.is_golden_hour", lambda self, db: True)
     result = service.play(db_session, user_id=100, now=datetime.utcnow())
     # 골든아워면 보상 배율이 곱해진 값이어야 함(예: 1000*2=2000)
     if result.game.outcome == "WIN":
@@ -130,7 +142,7 @@ def test_win_rate_statistical(db_session, test_user, dice_config):
             win += 1
     win_rate = win / n_trials
     assert 0.25 <= win_rate <= 0.55
-    return config
+    return dice_config
 
 
 @pytest.fixture(autouse=True)
@@ -205,8 +217,9 @@ def test_golden_hour_multiplier(db_session, test_user, dice_config):
         log = db_session.query(DiceLog).filter(
             DiceLog.user_id == 100,
             DiceLog.result == "WIN"
-        ).first()
-        assert log.reward_amount in [1000, 2500], f"Expected 1000 or 2500 but got {log.reward_amount}"
+        ).order_by(DiceLog.id.desc()).first()
+        print(f"\n[DEBUG] Latest WIN log: id={log.id}, result={log.result}, reward={log.reward_amount}, config_id={log.config_id}")
+        assert log.reward_amount in [1000, 2500], f"Expected 1000 or 2500 but got {log.reward_amount} (log_id={log.id})"
 
 
 def test_win_rate_statistical_verification(db_session, test_user, dice_config):

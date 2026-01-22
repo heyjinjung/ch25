@@ -350,7 +350,7 @@ class MissionService:
                      {"kind": "WALLET", "token_type": GameTokenType.LOTTERY_TICKET, "amount": 1},
                  ]
              elif target_day == 7:
-                 grants = [{"kind": "INVENTORY", "item_type": "DIAMOND", "amount": 1}]
+                 grants = [{"kind": "WALLET", "token_type": GameTokenType.DIAMOND, "amount": 1}]
 
         from app.services.game_wallet_service import GameWalletService
         from app.services.inventory_service import InventoryService

@@ -7,11 +7,31 @@ from app.services.exchange_service import ExchangeService
 from app.services.game_wallet_service import GameWalletService
 from app.models.game_wallet import GameTokenType
 
+from app.models.user import User
+from sqlalchemy import select
+
 def test_exchange():
     db = SessionLocal()
     exchange_svc = ExchangeService()
     wallet_svc = GameWalletService()
     user_id = 998899
+    
+    # [SEED] Ensure test user exists
+    user = db.get(User, user_id)
+    if not user:
+        user = User(id=user_id, external_id=f"test-{user_id}", nickname="ExchangeTester")
+        db.add(user)
+        db.commit()
+    
+    # [SEED] Ensure user has enough puzzle pieces for exchange
+    # Use standard puzzle piece names PUZZLE_C1, etc.
+    for token_type in [GameTokenType.PUZZLE_C1, GameTokenType.PUZZLE_C2, GameTokenType.PUZZLE_J, GameTokenType.PUZZLE_M]:
+        try:
+            if wallet_svc.get_balance(db, user_id, token_type) < 1:
+                wallet_svc.grant_tokens(db, user_id, token_type, 1, reason="SEED_FOR_TEST")
+        except Exception as seed_err:
+            print(f"⚠️ SEED WARNING: Failed to grant {token_type}: {seed_err}")
+    db.commit()
     
     print("\n=== Testing C1+C2+J+M -> GOLD_KEY Exchange ===\n")
     
