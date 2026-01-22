@@ -1,6 +1,6 @@
 문서 타입: 체크리스트/가이드
-버전: v1.7
-작성일: 2026-01-19
+버전: v1.8
+작성일: 2026-01-22
 작성자: GitHub Copilot
 대상: BE/FE/운영
 상태: SoT
@@ -55,13 +55,15 @@ V1 레거시 API 리포트의 구조를 참고하되, **현재 구현된 기능�
   - [x] FE 훅 구현 (`src/v2/hooks/useV2TicketZero.ts`)
 
 ### 4.3 미션/스트릭
-- SoT: `v2_mission_glossary_sot_ko.md`, 스트릭 정책
+- SoT: `v2_mission_glossary_sot_ko.md`, 스트릭 정책, **운용일(9AM 리셋)**
 - 체크
   - [x] 미션 상태 조회
   - [x] 보상 Claim
   - [x] 스트릭 규칙/보상 Claim
+  - [x] **Timezone Safety & 9AM Reset Alignment** (BE/Logic)
   - [x] FE API 클라이언트 구현 (`src/v2/api/missionApi.ts`)
   - [x] FE 훅 구현 (`src/v2/hooks/useV2Mission.ts`)
+  - [x] **FE UI 컴포넌트 통합** (`MissionsPage.tsx`)
 
 ### 4.4 상점/인벤토리/교환소
 - SoT: `v2_shop_exchange_policy_sot_ko.md`, `v2_item_inventory_sot_ko.md`

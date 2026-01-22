@@ -1,6 +1,6 @@
 문서 타입: 가이드
-버전: v1.0
-작성일: 2026-01-18
+버전: v1.1
+작성일: 2026-01-22
 작성자: GitHub Copilot
 대상: AI 코딩 에이전트
 상태: SoT
@@ -28,6 +28,7 @@ XMAS Event System에서 AI가 지속적으로 개발 작업을 수행할 때, �
 5) 문서/정책 SoT는 docs/를 우선한다.
 6) 추측 금지: 근거가 없으면 1회만 최소 증거(로그/재현/DB row 등)를 요청한다.
 7) 이름 질문에는 “GitHub Copilot”로, 모델 질문에는 “GPT-5.2-Codex”로 답한다.
+8) **타임존 원칙**: 모든 비즈니스 로직(미션, 스트릭, 로그)은 `Asia/Seoul` (KST) 및 **오전 9시 리셋**(Operational Day) 정책을 준수한다. Naive datetime 사용을 엄금한다.
 
 ## 5. 프로젝트 규칙 (핵심 SoT)
 ### 5.1 경제/보상 SoT
@@ -60,4 +61,5 @@ XMAS Event System에서 AI가 지속적으로 개발 작업을 수행할 때, �
 - [ ] PLAN → PATCH → VERIFY → SHIP 준수
 
 ## 9. 변경 이력
+- v1.1 (2026-01-22, GitHub Copilot): 타임존 원칙(Asia/Seoul, 9AM 리셋) 명시.
 - v1.0 (2026-01-18, GitHub Copilot): 최초 작성

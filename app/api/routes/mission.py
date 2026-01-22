@@ -75,23 +75,23 @@ def read_missions(
     # [Lazy Daily Check] For users with persistent sessions who don't hit /auth/token
     try:
         from app.services.mission_service import MissionService
-        from zoneinfo import ZoneInfo
         from datetime import datetime, timezone
-        kst = ZoneInfo("Asia/Seoul")
-        now_kst = datetime.now(kst)
-        today_kst_date = now_kst.date()
+        
+        service = MissionService(db)
+        now_tz = service._now_tz()
+        op_date = service._operational_play_date(now_tz)  # Use operational day (9AM KST reset)
         should_update = False
 
         if current_user.last_login_at:
             last_login_utc = current_user.last_login_at.replace(tzinfo=timezone.utc)
-            last_login_kst = last_login_utc.astimezone(kst)
-            if last_login_kst.date() < today_kst_date:
+            last_login_kst = last_login_utc.astimezone(now_tz.tzinfo)
+            if last_login_kst.date() < op_date:  # Compare against operational day, not calendar day
                 should_update = True
         else:
             should_update = True
         
         if should_update:
-            MissionService(db).update_progress(current_user.id, "LOGIN", delta=1)
+            service.update_progress(current_user.id, "LOGIN", delta=1)
             current_user.last_login_at = datetime.now(timezone.utc)
             db.commit()
     except Exception:
