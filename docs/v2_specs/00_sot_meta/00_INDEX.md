@@ -76,6 +76,7 @@
 - (Frontend Startup) docs/v2_specs/90_troubleshooting/v2_troubleshooting_20260120_frontend_startup_ko.md
 - (Admin UI Undefined Error) docs/v2_specs/90_troubleshooting/v2_troubleshooting_20260120_undefined_error_ko.md
 - (Ticket/Inventory Search) docs/v2_specs/90_troubleshooting/v2_troubleshooting_20260121_ticket_inventory_search_ko.md
+- (CSV Import) docs/v2_specs/90_troubleshooting/v2_csv_import_pipeline_guide_ko.md
 
 ## 5.1 V2 Admin 라우터 모듈(코드 맵)
 - 라우터 엔트리: app/v2/api/routes.py (admin_router include)
@@ -91,6 +92,9 @@
 	- app/v2/api/admin/segment_routes.py
 	- app/v2/api/admin/user_routes.py
 	- app/v2/api/admin/vault_routes.py
+	- app/v2/api/admin/csv_import_routes.py
+	- app/v2/api/admin_cc_deposit.py
+	- app/v2/api/admin_ops_plan.py
 
 ## 6. 운영/검증 (QA)
 - 프론트엔드 마스터 플랜: docs/v2_specs/06_design/v2_frontend_master_plan_ko.md
@@ -118,3 +122,4 @@
 - v1.1 (2026-01-19, GitHub Copilot): V2 DB 로그/ops 문서 링크 추가
 - v1.0 (2026-01-18, GitHub Copilot): 최초 작성
 - v2.3 (2026-01-20, GitHub Copilot): Troubleshooting 섹션 및 V2 Admin 라우터 모듈(코드 맵) 링크 추가
+- v2.4 (2026-01-22, GitHub Copilot): CSV 임포트 가이드 및 신규 어드민 라우터(CSV, CC Deposit, Ops Plan) 링크 추가

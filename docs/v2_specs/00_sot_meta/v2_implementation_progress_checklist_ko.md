@@ -131,18 +131,38 @@ V1 레거시 API 리포트의 구조를 참고하되, **현재 구현된 기능�
   - [x] FE API 클라이언트 구현 (`src/v2/api/teamBattleApi.ts`)
   - [x] FE 훅 구현 (`src/v2/hooks/useV2TeamBattle.ts`)
 
-### 4.8 Admin/Ops
-- SoT: `v2_ops_plan_execution_schema_sot_ko.md`
+### 4.9 CSV 임포트 시스템
+- SoT: `v2_csv_import_pipeline_guide_ko.md`
+- API: `/api/v2/admin/csv-import/*`
 - 체크
-  - [x] Ops 실행 결과 저장
-  - [x] 어드민 조회/필터
-  - [x] 세그먼트 배치 실행 API
-  - [x] 관리자 메시지 생성 API
-  - [x] FE API 클라이언트 구현 완료 (`src/v2/api/adminApi.ts`)
-  - [x] FE 훅 구현 완료 (`src/v2/hooks/useV2Admin.ts`)
-  - [x] 운영 메시지 정책 완전 반영
-  - [x] RBAC(권한 관리) 및 어드민 전용 보호 라우트 구현 완료
-  - [x] 위기 레이더(Crisis Radar) 및 개입 플레이북 UI 구현 완료
+  - [x] SoT 문서 최신 (`90_troubleshooting/v2_csv_import_pipeline_guide_ko.md`)
+  - [x] API 라우트 구현 완료 (`app/v2/api/admin/csv_import_routes.py`)
+  - [x] 서비스 로직 구현 완료 (`app/v2/services/csv_import_service.py`, `csv_to_redis_service.py`)
+  - [x] Pydantic 스키마 정의 (`app/v2/schemas/v2_csv_import.py`)
+
+### 4.10 외부 CC 입금 & 랭킹
+- SoT: `v2_cc_deposit_sot_ko.md`
+- API: `/api/v2/admin/api/external-ranking/*`
+- 체크
+  - [x] SoT 문서 최신
+  - [x] API 라우트 구현 완료 (`app/v2/api/admin_cc_deposit.py`)
+  - [x] 서비스 로직 구현 완료 (`app/v2/services/admin_cc_deposit_service.py`)
+
+### 4.11 실시간 이벤트 & 액티비티
+- SoT: `v2_golden_v2_realtime_architecture.md`
+- API: `/api/v2/events/*`, `/api/v2/activity/*`
+- 체크
+  - [x] 실시간 Pub/Sub API 구현 (`app/v2/api/events.py`)
+  - [x] 액티비티 상태/로그 API 구현 (`app/v2/api/activity_routes.py`)
+  - [x] 골든 분석 워커 연동 (`app/v2/workers/`)
+
+### 4.12 Vault V2 (강력한 금고 정책)
+- SoT: `v2_strict_vault_policy_sot_ko.md`
+- API: `/api/v2/admin/vault/*`
+- 체크
+  - [x] 신규 금고 서비스 분리 (`app/v2/services/vault2_service.py`)
+  - [x] 관리자 금고 제어 API (`app/v2/api/admin/vault_routes.py`)
+  - [x] 금고 잠금/해제 및 트랜잭션 로직 반영
 
 ---
 
@@ -157,6 +177,10 @@ V1 레거시 API 리포트의 구조를 참고하되, **현재 구현된 기능�
 | Golden | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 100% |
 | Team Battle | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 100% |
 | Admin/Ops | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 100% |
+| CSV Import | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ | 80% |
+| CC Deposit | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ | 80% |
+| Real-time Event| ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ | 80% |
+| Vault V2 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 100% |
 
 **범례**:
 - ✅ 완료
@@ -166,6 +190,7 @@ V1 레거시 API 리포트의 구조를 참고하되, **현재 구현된 기능�
 ---
 
 ## 6. 변경 이력
+- v1.9 (2026-01-22, GitHub Copilot): 백엔드 코드 실사 기반 CSV 임포트, CC 입금, 실시간 이벤트, Vault V2 도메인 추가 및 현행화
 - v1.8 (2026-01-19, GitHub Copilot): Admin/Ops 전 구간 완료 반영 (RBAC, Crisis Radar, Playbook UI)
 - v1.7 (2026-01-19, GitHub Copilot): Golden 실시간 검증 시도 결과(운영 404/Redis 채널 미확인) 메모 추가
 - v1.6 (2026-01-19, GitHub Copilot): Ticket Zero/미션/스트릭/상점/인벤토리 FE 훅 구현 상태 재확인

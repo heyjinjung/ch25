@@ -312,13 +312,14 @@ class ShopService:
             # 1. Deduct verify & execute
             # Phase 2: If cost_token is DIAMOND, consume from Inventory
             if product.cost_token == GameTokenType.DIAMOND:
-                InventoryService.consume_item(
+                # [MIGRATED] DIAMOND consumed from Wallet (SoT v1.1)
+                wallet_service = GameWalletService()
+                wallet_service.require_and_consume_token(
                     db,
                     user_id,
-                    "DIAMOND",
+                    GameTokenType.DIAMOND,
                     product.cost_amount,
                     reason=f"SHOP_PURCHASE:{sku}",
-                    related_id=sku,
                     auto_commit=False
                 )
             elif product.cost_token == GameTokenType.VAULT:

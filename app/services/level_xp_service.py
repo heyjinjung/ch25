@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.models.game_wallet import GameTokenType
 from app.models.level_xp import UserLevelProgress, UserLevelRewardLog, UserXpEventLog
+from app.v2.models.v2_level_reward import V2LevelRewardTable
 from app.services.reward_service import RewardService
 
 
@@ -51,12 +52,30 @@ class LevelXPService:
     ]
 
     def _effective_levels(self, db: Session) -> List[Dict[str, Any]]:
+        """Determine level requirements from DB (SoT) or hardcoded fallback."""
         try:
+            # 1. Try V2LevelRewardTable (Dynamic SoT)
+            rows = db.execute(select(V2LevelRewardTable).order_by(V2LevelRewardTable.level)).scalars().all()
+            if rows:
+                return [
+                    {
+                        "level": r.level,
+                        "required_xp": r.required_xp,
+                        "reward_type": r.reward_type,
+                        "reward_payload": r.reward_payload or {},
+                        "auto_grant": True # V2 standard defaults to auto
+                    }
+                    for r in rows
+                ]
+            
+            # 2. SQLite specific test levels
             bind = db.get_bind()
             if bind is not None and getattr(bind.dialect, "name", "") == "sqlite":
                 return self.TEST_LEVELS
         except Exception:
             pass
+        
+        # 3. Hardcoded Fallback
         return self.LEVELS
 
     def __init__(self) -> None:
@@ -92,11 +111,20 @@ class LevelXPService:
 
         # Determine newly achieved levels
         achieved = []
+        possible_levels = self._effective_levels(db)
+        
+        # Sort levels to ensure we process them in order
+        possible_levels.sort(key=lambda x: x["level"])
+        
         current_level = progress.level
-        for row in self._effective_levels(db):
+        for row in possible_levels:
             if progress.xp < row["required_xp"]:
-                break
-            current_level = max(current_level, row["level"])
+                continue
+            
+            # Update current_level to the highest achieved level
+            if row["level"] > current_level:
+                current_level = row["level"]
+                
             # Check duplicate reward
             existing = db.execute(
                 select(UserLevelRewardLog).where(
@@ -104,8 +132,10 @@ class LevelXPService:
                     UserLevelRewardLog.level == row["level"],
                 )
             ).scalar_one_or_none()
+            
             if existing:
                 continue
+                
             reward_log = UserLevelRewardLog(
                 user_id=user_id,
                 level=row["level"],
