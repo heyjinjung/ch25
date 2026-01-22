@@ -5,7 +5,7 @@ import V2AppLayout from "../components/layout/V2AppLayout";
 // Lazy load pages
 const LoginPage = lazy(() => import("../pages/auth/V2UserLoginPage"));
 const HomePage = lazy(() => import("../pages/home/PokemonHomePage"));
-const DashboardPage = lazy(() => import("../pages/dashboard/DashboardPage"));
+const GamedashPage = lazy(() => import("../pages/game/GamedashPage"));
 const VaultPage = lazy(() => import("../pages/vault/VaultPage"));
 const RoulettePage = lazy(() => import("../pages/game/RoulettePage"));
 const DicePage = lazy(() => import("../pages/game/DicePage"));
@@ -37,7 +37,7 @@ export const V2UserRoutes = () => {
           <Route path="/home" element={<HomePage />} />
 
           {/* Game Dashboard */}
-          <Route path="/game" element={<DashboardPage />} />
+          <Route path="/game" element={<GamedashPage />} />
           <Route path="/vault" element={<VaultPage />} />
           <Route path="/shop" element={<ExchangePage />} />
           <Route path="/inventory" element={<InventoryPage />} />
