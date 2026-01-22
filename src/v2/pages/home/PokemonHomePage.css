@@ -10,7 +10,7 @@
 
 .pokemon-home-page-v4 {
   width: 380px;
-  height: 680px;
+  height: 640px;
   /* 하단 여백 120px 줄임 (높이 560px -> 680px) */
   background: black;
   margin: 0 auto;
@@ -109,25 +109,4 @@
   top: 248px;
   transform: translate(-1px, -3.33px);
   overflow: visible;
-}
-
-._5-v4 {
-  background: linear-gradient(90deg,
-      rgba(255, 255, 255, 1) 0%,
-      rgba(153, 153, 153, 1) 100%);
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-align: left;
-  font-family: "Noto Sans Kr", sans-serif;
-  font-size: 32px;
-  line-height: 1.3;
-  font-weight: 800;
-  position: absolute;
-  left: 66px;
-  top: 157px;
-  width: 250px;
-  height: auto;
-  transform-origin: 0 0;
-  transform: rotate(0deg) scale(1, 1);
 }

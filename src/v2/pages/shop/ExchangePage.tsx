@@ -6,9 +6,6 @@ import "./ExchangePage.css";
 import imgFrame127 from "../../assets/06shop/frame-10000031270.png";
 import imgFrame129 from "../../assets/06shop/frame-10000031290.png";
 import imgFrame130 from "../../assets/06shop/frame-10000031300.png";
-import svgFire from "../../assets/06shop/noto-fire0.svg";
-import svgStar1 from "../../assets/06shop/vector0.svg";
-import svgStar2 from "../../assets/06shop/vector1.svg";
 
 export default function ExchangePage() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -42,53 +39,58 @@ export default function ExchangePage() {
   }
 
   return (
-    <div ref={containerRef} className="exchange-page-v2">
-      {/* Top filter tabs */}
+    <div ref={containerRef} className="exchange-page-v2 scrollbar-hide overflow-y-auto">
+      {/* Category Tabs */}
       <div className="exchange-tabs">
-        <div className="exchange-tab"></div>
-        <div className="exchange-tab"></div>
-        <div className="exchange-tab"></div>
-        <div className="exchange-tab"></div>
+        <div className="exchange-tab active">전체</div>
+        <div className="exchange-tab">게임키</div>
+        <div className="exchange-tab">티켓</div>
+        <div className="exchange-tab">선물</div>
       </div>
 
-      {/* Product grid */}
-      <div className="exchange-products-container">
-        <div className="exchange-products-grid">
-          {/* Card 1: Diamond Key / Premium Roulette */}
-          <div className="exchange-product-card" onClick={() => sortedProducts[0] && handlePurchase(sortedProducts[0].id)}>
-            <div className="exchange-card-bg"></div>
-            <div className="exchange-card-title">다이아열쇠</div>
-            <img className="exchange-card-icon-fire" src={svgFire} alt="" />
-            <div className="exchange-card-badge">최고 고액룰렛</div>
-            <div className="exchange-card-image-container">
-              <div className="exchange-card-image-bg"></div>
-            </div>
-            <img className="exchange-card-image" src={imgFrame129} alt="" />
+      {/* Featured Section */}
+      <div className="mb-8">
+        <div className="section-header px-4">
+          <h2 className="section-title">인기 상품</h2>
+          <span className="section-more">더보기</span>
+        </div>
+        
+        <div className="exchange-products-container">
+          <div className="exchange-products-grid">
+            {sortedProducts.map((product, idx) => (
+              <div 
+                key={product.id} 
+                className="exchange-product-card" 
+                onClick={() => handlePurchase(product.id)}
+              >
+                <div className="exchange-card-title">{product.name || (idx === 0 ? "다이아열쇠" : idx === 1 ? "티켓패키지" : "치킨 깁콘")}</div>
+                <div className="exchange-card-badge">{idx === 0 ? "최고 인기" : idx === 1 ? "10+2장" : "베스트"}</div>
+                
+                <div className="exchange-card-image-container">
+                  <img 
+                    className="exchange-card-image" 
+                    src={idx === 0 ? imgFrame129 : idx === 1 ? imgFrame127 : imgFrame130} 
+                    alt="" 
+                  />
+                </div>
+                
+                <div className="exchange-card-price">
+                  <img src="/assets/asset_coin_gold.png" className="w-3 h-3" alt="" />
+                  {(product.cost_amount || 0).toLocaleString()}
+                </div>
+              </div>
+            ))}
           </div>
+        </div>
+      </div>
 
-          {/* Card 2: Ticket Package */}
-          <div className="exchange-product-card" onClick={() => sortedProducts[1] && handlePurchase(sortedProducts[1].id)}>
-            <div className="exchange-card-bg"></div>
-            <div className="exchange-card-title">티켓패키지</div>
-            <div className="exchange-card-badge">10+2장 더!</div>
-            <img className="exchange-card-icon-star" src={svgStar1} alt="" />
-            <div className="exchange-card-rating">4.4</div>
-            <div className="exchange-card-image-container">
-              <div className="exchange-card-image-bg"></div>
-            </div>
-            <img className="exchange-card-image-alt" src={imgFrame127} alt="" />
-          </div>
-
-          {/* Card 3: Chicken Gift */}
-          <div className="exchange-product-card" onClick={() => sortedProducts[2] && handlePurchase(sortedProducts[2].id)}>
-            <div className="exchange-card-bg"></div>
-            <div className="exchange-card-title">치킨 깁콘</div>
-            <img className="exchange-card-icon-star" src={svgStar2} alt="" />
-            <div className="exchange-card-rating">4.5</div>
-            <div className="exchange-card-badge">치킨먹쟝!</div>
-            <div className="exchange-card-image-bg-alt"></div>
-            <img className="exchange-card-image-third" src={imgFrame130} alt="" />
-          </div>
+      {/* Another Section (Simulation) */}
+      <div className="mb-32">
+        <div className="section-header px-4">
+          <h2 className="section-title">추천 상품</h2>
+        </div>
+        <div className="exchange-products-container text-white/20 text-xs px-4">
+          새로운 상품들이 준비 중입니다...
         </div>
       </div>
     </div>

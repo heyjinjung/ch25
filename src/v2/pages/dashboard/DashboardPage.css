@@ -99,28 +99,32 @@
 /* 개별 아이콘 위치 지정 */
 .dashboard-game-card:nth-child(1) {
     /* 룰렛 - 좌상단 */
-    top: 520px;
+    top: 420px;
+    /* 기존 520px -> 420px 상향 조정 */
     left: 5%;
     width: 45%;
 }
 
 .dashboard-game-card:nth-child(2) {
     /* 복권 - 우상단 */
-    top: 520px;
+    top: 420px;
+    /* 기존 520px -> 420px 상향 조정 */
     right: 5%;
     width: 45%;
 }
 
 .dashboard-game-card:nth-child(3) {
     /* 주사위 - 좌하단 */
-    top: 680px;
+    top: 560px;
+    /* 기존 680px -> 560px 상향 조정 */
     left: 5%;
     width: 45%;
 }
 
 .dashboard-game-card:nth-child(4) {
     /* 미션 - 우하단 */
-    top: 680px;
+    top: 560px;
+    /* 기존 680px -> 560px 상향 조정 */
     right: 5%;
     width: 45%;
 }

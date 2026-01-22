@@ -148,8 +148,13 @@ export default {
         'shimmer': 'shimmer 2.5s linear infinite',
         'shine': 'shine 4s ease-in-out infinite',
         'bounce-subtle': 'bounce-subtle 2.4s ease-in-out infinite',
+        'marquee': 'marquee 15s linear infinite',
       },
       keyframes: {
+        'marquee': {
+          '0%': { transform: 'translateX(0%)' },
+          '100%': { transform: 'translateX(-100%)' },
+        },
         'pulse-glow': {
           '0%, 100%': { boxShadow: '0 0 5px #22c55e, 0 0 10px #22c55e' },
           '50%': { boxShadow: '0 0 20px #22c55e, 0 0 30px #22c55e' },

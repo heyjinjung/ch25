@@ -43,19 +43,16 @@ export default function InventoryPage() {
   };
 
   return (
-    <div ref={containerRef} className="inventory-page-v2">
-      {/* Items grid */}
+    <div ref={containerRef} className="inventory-page-v2 scrollbar-hide overflow-y-auto">
+      <div className="section-header px-4 pt-4 mb-6">
+        <h2 className="section-title">나의 가방</h2>
+        <span className="text-white/40 text-[10px] font-bold uppercase">{items.length} Items</span>
+      </div>
+
       <div className="inventory-items-container">
         <div className="inventory-items-grid">
           {items.length === 0 && (
-            <div style={{ 
-              color: 'white', 
-              fontSize: '14px',
-              position: 'absolute',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              top: '50px'
-            }}>
+            <div className="w-full text-center py-20 text-white/30 text-sm font-bold">
               보유 아이템이 없습니다
             </div>
           )}
@@ -65,15 +62,30 @@ export default function InventoryPage() {
               className="inventory-item-card"
               onClick={() => handleUseItem(item.item_type)}
             >
-              <div className="inventory-card-bg"></div>
               <div className="inventory-item-name">{item.item_type}</div>
               <div className="inventory-item-quantity">수량: {item.quantity}</div>
+              
               <div className="inventory-item-image-container">
-                <div className="inventory-item-image-bg"></div>
+                <img 
+                  className="inventory-item-image" 
+                  src={getItemImage(index)} 
+                  alt={item.item_type} 
+                />
               </div>
-              <img className="inventory-item-image" src={getItemImage(index)} alt="" />
+              
+              <div className="inventory-item-use-hint">사용하기</div>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* Placeholder for future sections */}
+      <div className="px-4 mt-8 pb-32">
+        <div className="rounded-2xl bg-white/5 border border-white/5 p-4">
+          <p className="text-[10px] font-bold text-white/40 uppercase mb-1">Tip</p>
+          <p className="text-xs text-white/60 leading-relaxed">
+            아이템을 사용하여 게임에서 특별한 보너스를 받을 수 있습니다.
+          </p>
         </div>
       </div>
     </div>
