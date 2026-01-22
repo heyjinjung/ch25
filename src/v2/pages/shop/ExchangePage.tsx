@@ -1,12 +1,11 @@
+// src/v2/pages/shop/ExchangePage.tsx
 import { useRef } from "react";
 import { useV2ShopProducts, useV2PurchaseProduct } from "../../hooks/useV2Shop";
 import { useV2Vault } from "../../hooks/useV2Vault";
-import "./ExchangePage.css";
+import "./ExchangeRedesign.css";
+import { triggerHaptic } from "../../utils/haptic";
 
-// 06shop assets
-import imgFrame127 from "../../assets/06shop/frame-10000031270.png";
-import imgFrame129 from "../../assets/06shop/frame-10000031290.png";
-import imgFrame130 from "../../assets/06shop/frame-10000031300.png";
+const ASSET_PATH = "/src/v2/public/assets/06shop";
 
 export default function ExchangePage() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -16,104 +15,97 @@ export default function ExchangePage() {
   const { useVaultStatus } = useV2Vault();
   const { data: vaultStatus } = useVaultStatus();
 
-  const sortedProducts = products ? [...products].sort(
-    (a, b) => (a.display_order ?? 0) - (b.display_order ?? 0)
-  ) : [];
-
   const handlePurchase = (sku: string) => {
+    triggerHaptic("medium");
     purchaseMutation.mutate({ sku });
   };
 
   if (isLoading) {
     return (
-      <div className="exchange-page-v2">
-        <div style={{ 
-          position: 'absolute', 
-          top: '50%', 
-          left: '50%', 
-          transform: 'translate(-50%, -50%)',
-          color: 'white',
-          fontSize: '14px'
-        }}>
-          Loading...
-        </div>
+      <div className="exchange-redesign-container flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
       </div>
     );
   }
 
+  // Assets mapping for demo/simulation based on display order or name
+  // In a real app, these would come from the product metadata
+  const getProductImage = (idx: number) => {
+    if (idx === 0) return `${ASSET_PATH}/Frame 9.png`;    // Gift
+    if (idx === 1) return `${ASSET_PATH}/Frame 9-1.png`;  // Key
+    if (idx === 2) return `${ASSET_PATH}/Frame 9-2.png`;  // Tickets
+    return `${ASSET_PATH}/Frame 9-3.png`;
+  };
+
   return (
-    <div ref={containerRef} className="exchange-page-v2 scrollbar-hide overflow-y-auto">
-      {/* Wallet Balance Display */}
-      <div className="exchange-wallet-strip px-4 mb-6">
-        <div className="flex justify-between items-center bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-md">
-          <div className="flex flex-col">
-            <span className="text-[10px] text-white/40 font-bold uppercase tracking-wider mb-1">보관금 (VAULT)</span>
-            <span className="text-lg font-black text-white italic">
-              {(vaultStatus?.vaultBalance || 0).toLocaleString()} <span className="text-[10px] not-italic opacity-50 ml-0.5">P</span>
+    <div ref={containerRef} className="exchange-redesign-container scrollbar-hide">
+      {/* Wallet Strip */}
+      <div className="shop-wallet-strip">
+        <div className="shop-wallet-card">
+          <div className="wallet-item">
+            <span className="wallet-label">Vault Balance</span>
+            <span className="wallet-value">
+              {(vaultStatus?.vaultBalance || 0).toLocaleString()} <span className="text-[10px] opacity-40">P</span>
             </span>
           </div>
-          <div className="w-px h-8 bg-white/10 mx-2" />
-          <div className="flex flex-col items-end">
-            <span className="text-[10px] text-white/40 font-bold uppercase tracking-wider mb-1">보유 토큰</span>
-            <span className="text-lg font-black text-[#FF7A00] italic">
-              {(vaultStatus?.ticketCount || 0).toLocaleString()} <span className="text-[10px] not-italic opacity-50 ml-0.5">T</span>
+          <div className="w-px h-8 bg-white/10" />
+          <div className="wallet-item">
+            <span className="wallet-label">My Tickets</span>
+            <span className="wallet-value tokens">
+              {(vaultStatus?.ticketCount || 0).toLocaleString()} <span className="text-[10px] opacity-40">T</span>
             </span>
           </div>
         </div>
       </div>
 
-      {/* Category Tabs */}
-      <div className="exchange-tabs">
-        <div className="exchange-tab active">전체</div>
-        <div className="exchange-tab">게임키</div>
-        <div className="exchange-tab">티켓</div>
-        <div className="exchange-tab">선물</div>
-      </div>
-
-      {/* Featured Section */}
-      <div className="mb-8">
-        <div className="section-header px-4">
-          <h2 className="section-title">인기 상품</h2>
-          <span className="section-more">더보기</span>
+      {/* Main Products Section */}
+      <div className="shop-products-section mt-4">
+        <div className="shop-grid-header">
+            <h2 className="shop-grid-title uppercase tracking-widest text-[11px] opacity-60">Featured Items</h2>
+            <span className="text-[10px] opacity-40">View All</span>
         </div>
-        
-        <div className="exchange-products-container">
-          <div className="exchange-products-grid">
-            {sortedProducts.map((product, idx) => (
-              <div 
-                key={product.id} 
-                className="exchange-product-card" 
-                onClick={() => handlePurchase(product.id)}
-              >
-                <div className="exchange-card-title">{product.name || (idx === 0 ? "다이아열쇠" : idx === 1 ? "티켓패키지" : "치킨 깁콘")}</div>
-                <div className="exchange-card-badge">{idx === 0 ? "최고 인기" : idx === 1 ? "10+2장" : "베스트"}</div>
-                
-                <div className="exchange-card-image-container">
-                  <img 
-                    className="exchange-card-image" 
-                    src={idx === 0 ? imgFrame129 : idx === 1 ? imgFrame127 : imgFrame130} 
-                    alt="" 
-                  />
-                </div>
-                
-                <div className="exchange-card-price">
-                  <img src="/assets/asset_coin_gold.png" className="w-3 h-3" alt="" />
-                  {(product.cost_amount || 0).toLocaleString()}
-                </div>
+
+        <div className="shop-grid">
+          {products?.map((product, idx) => (
+            <div 
+              key={product.id} 
+              className="shop-product-card"
+              onClick={() => handlePurchase(product.id)}
+            >
+              <span className="product-name-label">{product.name}</span>
+              <img 
+                src={getProductImage(idx)} 
+                className="product-item-img" 
+                alt="" 
+              />
+              <div className="product-buy-btn">
+                {(product.cost_amount || 0).toLocaleString()} P
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* Another Section (Simulation) */}
-      <div className="mb-32">
-        <div className="section-header px-4">
-          <h2 className="section-title">추천 상품</h2>
-        </div>
-        <div className="exchange-products-container text-white/20 text-xs px-4">
-          새로운 상품들이 준비 중입니다...
-        </div>
+      {/* Category Quick Row (Icons) */}
+      <div className="shop-categories-row">
+        {[
+          { icon: "Vector.svg", label: "Key" },
+          { icon: "Vector-1.svg", label: "Coffee" },
+          { icon: "Vector-2.svg", label: "Secret" },
+          { icon: "Vector-3.svg", label: "Bag" }
+        ].map((cat, i) => (
+          <div key={i} className="category-quick-item">
+            <div className="category-icon-circle">
+              <img src={`${ASSET_PATH}/${cat.icon}`} className="category-icon-img" alt="" />
+            </div>
+            <span className="text-[10px] opacity-40 uppercase tracking-tighter">{cat.label}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Decorative Vectors or Banners can go here as per Figma */}
+      <div className="mt-auto items-center justify-center flex pb-8 opacity-10">
+         <img src={`${ASSET_PATH}/Element.svg`} className="w-48" alt="" />
       </div>
     </div>
   );
