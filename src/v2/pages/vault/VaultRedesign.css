@@ -1,0 +1,178 @@
+/* src/v2/pages/vault/VaultRedesign.css */
+
+.vault-redesign-container {
+    min-height: 100%;
+    width: 100%;
+    max-width: 391px;
+    margin: 0 auto;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    color: #fff;
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
+}
+
+/* Background SVG Overlay */
+.vault-bg-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 1;
+    /* Match the svg asset depth */
+}
+
+/* Tiered Safes Display */
+.vault-safes-arena {
+    position: relative;
+    width: 100%;
+    height: 300px;
+    /* Estimated height for the tiered display */
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 15px;
+    padding-bottom: 20px;
+}
+
+.vault-safe-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    transition: transform 0.3s ease;
+}
+
+.vault-safe-item.vip {
+    width: 172.6px;
+}
+
+.vault-safe-item.lv5 {
+    width: 120.35px;
+}
+
+.vault-safe-item.lv1 {
+    width: 80.23px;
+}
+
+.vault-safe-img {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+}
+
+.vault-label {
+    font-size: 14px;
+    font-weight: 500;
+    opacity: 0.8;
+}
+
+/* Progress Section */
+.vault-progress-section {
+    width: 100%;
+    padding: 0 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.section-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: #9AFFFA;
+    text-transform: uppercase;
+}
+
+.vault-progress-card {
+    width: 355px;
+    height: 100px;
+    background: rgba(120, 120, 128, 0.16);
+    border-radius: 21px;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 12px;
+    position: relative;
+}
+
+.card-header-icon {
+    width: 48px;
+    height: 48px;
+}
+
+.card-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.progress-labels {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    font-size: 12px;
+    opacity: 0.6;
+}
+
+.custom-progress-bar-container {
+    width: 227px;
+    height: 16px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    overflow: hidden;
+    position: relative;
+}
+
+.custom-progress-fill {
+    height: 100%;
+    border-radius: 24px;
+    background: linear-gradient(90deg, #FFFFFF 0%, #9AFFFA 50%, #509995 100%);
+    transition: width 0.5s ease-out;
+}
+
+.chevron-icon {
+    width: 24px;
+    height: 24px;
+}
+
+/* Action Footer */
+.vault-action-footer {
+    margin-top: auto;
+    width: 100%;
+    padding: 20px 18px 30px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.casino-logo {
+    width: 104px;
+    height: 34px;
+    object-fit: contain;
+}
+
+.vault-action-button {
+    width: 160px;
+    height: 45px;
+    border-radius: 62px;
+    background: rgba(60, 60, 67, 0.29);
+    /* Fallback */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    cursor: pointer;
+    transition: transform 0.2s, background 0.2s;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.vault-action-button:active {
+    transform: scale(0.96);
+}

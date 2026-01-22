@@ -1,98 +1,36 @@
-// src/v2/pages/home/HomePage.tsx
-// V2 홈 화면 - 설날(Seollal) 테마
-import { useRef, useEffect } from "react";
-import gsap from "gsap";
-import { SeollalHeroBanner } from "./components/SeollalHeroBanner";
-import { GameCardGrid } from "./components/GameCardGrid";
+import "./HomeRedesign.css";
+
+const ASSET_PATH = "/src/v2/public/assets/01home";
 
 export default function HomePage() {
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  // 페이지 진입 애니메이션
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      const tl = gsap.timeline({
-        defaults: { ease: "power2.out" },
-      });
-
-      tl
-        // Step 3: 히어로 배너 페이드 + 슬라이드
-        .from(
-          ".hero-banner",
-          {
-            y: 30,
-            opacity: 0,
-            duration: 0.5,
-          },
-          "-=0.1",
-        )
-        // Step 4: CTA 버튼 stagger
-        .from(
-          ".cta-buttons button",
-          {
-            y: 20,
-            opacity: 0,
-            duration: 0.3,
-            stagger: 0.1,
-          },
-          "-=0.2",
-        )
-        // Step 5: 게임 카드 그리드 stagger (핵심!)
-        .from(
-          ".game-card",
-          {
-            y: 40,
-            opacity: 0,
-            scale: 0.95,
-            duration: 0.4,
-            stagger: {
-              each: 0.1,
-              from: "start",
-              grid: [2, 3],
-            },
-            ease: "back.out(1.2)",
-          },
-          "-=0.2",
-        );
-    }, containerRef);
-
-    return () => ctx.revert();
-  }, []);
-
   return (
-    <div ref={containerRef} className="min-h-full bg-[#0A0A0C] pt-20 -mb-30">
-      {/* 메인 콘텐츠 */}
-      <div className="px-4 pb-0 space-y-4">
-        {/* 설날 히어로 배너 */}
-        <div className="hero-banner">
-          <SeollalHeroBanner />
-        </div>
+    <div className="home-content-container pt-4">
+      {/* 32px Notice Bar moved to V2AppLayout */}
 
-        {/* CTA 버튼 */}
-        <div className="cta-buttons flex gap-2 justify-center">
-          <button className="flex items-center gap-2 px-4 py-2 rounded-full border border-zinc-700 bg-zinc-900/50 text-zinc-300 text-sm hover:bg-zinc-800 transition-colors">
-            <img
-              src="/assets/logo_cc_v2.png"
-              alt="CC"
-              className="h-5 w-5 object-contain"
-            />
-            씨씨카지노
-          </button>
-          <button className="flex items-center gap-2 px-4 py-2 rounded-full border border-zinc-700 bg-zinc-900/50 text-zinc-300 text-sm hover:bg-zinc-800 transition-colors">
-            <img
-              src="/assets/logo_cc_v2.png"
-              alt="CC"
-              className="h-5 w-5 object-contain"
-            />
-            씨씨 공식채널
-          </button>
+      {/* Hero Section */}
+      <section className="hero-section">
+        <div className="hero-main-title">
+          <h2 className="hero-title-text">MAIN TITLE</h2>
+          <button className="hero-button">BUTTON</button>
         </div>
+      </section>
 
-        {/* 게임 카드 그리드 */}
-        <GameCardGrid />
+      {/* Quick Action Slots */}
+      <div className="quick-actions my-6">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="action-slot flex items-center justify-center">
+             <img src={`${ASSET_PATH}/Vector-${i}.svg`} alt={`icon-${i}`} className="w-8 h-8 opacity-40" />
+          </div>
+        ))}
       </div>
 
-      {/* 하단 탭 네비게이션 (V2AppLayout에서 처리) */}
+      {/* Feature Section */}
+      <section className="feature-section">
+        <div className="today-label">today / 18pt</div>
+        <div className="feature-card">
+          {/* Main feature content here */}
+        </div>
+      </section>
     </div>
   );
 }
