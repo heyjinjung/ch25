@@ -3,7 +3,7 @@ import { useV2Missions, useV2ClaimMission } from "../../hooks/useV2Mission";
 import { triggerHaptic, triggerNotification } from "../../utils/haptic";
 import "./MissionRedesign.css";
 
-const ASSET_PATH = "/src/v2/public/assets/07mission";
+const ASSET_PATH = "/v2/assets/07mission";
 
 export default function MissionsPage() {
   const { data, isLoading, error, refetch } = useV2Missions();

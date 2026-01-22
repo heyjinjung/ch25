@@ -8,7 +8,7 @@ import LotteryCollectionModal from "../../components/lottery/LotteryCollectionMo
 import { triggerHaptic, triggerNotification } from "../../utils/haptic";
 import "./LotteryRedesign.css";
 
-const ASSET_PATH = "/src/v2/public/assets/04lotto";
+const ASSET_PATH = "/v2/assets/04lotto";
 
 const LotteryPage: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState(false);

@@ -5,7 +5,7 @@ import { getV2DiceStatus, playV2Dice } from "../../api/v1CompatAdapter";
 import "./DiceRedesign.css";
 import { triggerHaptic, triggerNotification } from "../../utils/haptic";
 
-const ASSET_PATH = "/src/v2/public/assets/03dice";
+const ASSET_PATH = "/v2/assets/03dice";
 
 const DicePage = () => {
   const [isRolling, setIsRolling] = useState(false);

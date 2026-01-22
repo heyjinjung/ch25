@@ -2,7 +2,7 @@
 import { useNavigate } from "react-router-dom";
 import "./GamedashPage.css";
 
-const ASSET_PATH = "/src/v2/public/assets/02gamedash";
+const ASSET_PATH = "/v2/assets/02gamedash";
 
 const GAMES = [
   { id: "dice", to: "/v2/game/dice", icon: `${ASSET_PATH}/Vector-1.svg` },

@@ -1,6 +1,6 @@
 import "./HomeRedesign.css";
 
-const ASSET_PATH = "/src/v2/public/assets/01home";
+const ASSET_PATH = "/v2/assets/01home";
 
 export default function HomePage() {
   return (

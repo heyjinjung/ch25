@@ -1,6 +1,6 @@
 문서 타입: 체크리스트/가이드
-버전: v1.8
-작성일: 2026-01-22
+버전: v2.0
+작성일: 2026-01-23
 작성자: GitHub Copilot
 대상: BE/FE/운영
 상태: SoT
@@ -41,7 +41,7 @@ V1 레거시 API 리포트의 구조를 참고하되, **현재 구현된 기능�
   - [x] 응답 스키마 일치
   - [x] FE API 클라이언트 구현 (`src/v2/api/gameApi.ts`)
   - [x] FE 훅 구현 (`src/v2/hooks/useV2Game.ts`)
-  - [ ] FE UI 컴포넌트 통합 (미착수)
+  - [x] **FE UI 컴포넌트 통합** (Dice, Lottery 완료 / Roulette 추후 반영)
 
 ### 4.2 Ticket Zero (긴급 구호)
 - SoT: `v2_ticket_zero_policy_sot_ko.md`
@@ -76,6 +76,7 @@ V1 레거시 API 리포트의 구조를 참고하되, **현재 구현된 기능�
   - [x] FE 인벤토리 API 클라이언트 구현 (`src/v2/api/inventoryApi.ts`)
   - [x] FE 상점 훅 구현 (`src/v2/hooks/useV2Shop.ts`)
   - [x] FE 인벤토리 훅 구현 (`src/v2/hooks/useV2Inventory.ts`)
+  - [x] **FE UI 컴포넌트 통합** (ExchangePage.tsx 완료 / InventoryPage.tsx 완료)
 
 ### 4.5 세그먼트/메시지
 - SoT: `v2_user_segment_policy_sot_ko.md`, `v2_admin_message_policy_sot_ko.md`
@@ -165,10 +166,11 @@ V1 레거시 API 리포트의 구조를 참고하되, **현재 구현된 기능�
   - [x] 신규 금고 서비스 분리 (`app/v2/services/vault2_service.py`)
   - [x] 관리자 금고 제어 API (`app/v2/api/admin/vault_routes.py`)
   - [x] 금고 잠금/해제 및 트랜잭션 로직 반영
+  - [x] **FE UI 컴포넌트 통합** (VaultPage.tsx 완료)
 
 ---
 
-## 5. 진행도 기록 표 (2026-01-19 최종 업데이트)
+## 5. 진행도 기록 표 (2026-01-23 최종 업데이트)
 | 도메인 | SoT | API | 서비스 | DB | FE API | FE 훅 | 검증 | 진행도 |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
 | 게임|  ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 100% |
@@ -192,6 +194,7 @@ V1 레거시 API 리포트의 구조를 참고하되, **현재 구현된 기능�
 ---
 
 ## 6. 변경 이력
+- v2.0 (2026-01-23, GitHub Copilot): 7개 주요 유저 페이지(Home, Gamedash, Dice, Lotto, Vault, Shop, Missions) 고해상도 리디자인 및 FE UI 통합 완료 반영
 - v1.9 (2026-01-22, GitHub Copilot): 백엔드 코드 실사 기반 CSV 임포트, CC 입금, 실시간 이벤트, Vault V2 도메인 추가 및 현행화
 - v1.8 (2026-01-19, GitHub Copilot): Admin/Ops 전 구간 완료 반영 (RBAC, Crisis Radar, Playbook UI)
 - v1.7 (2026-01-19, GitHub Copilot): Golden 실시간 검증 시도 결과(운영 404/Redis 채널 미확인) 메모 추가
