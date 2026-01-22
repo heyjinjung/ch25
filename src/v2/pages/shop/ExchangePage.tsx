@@ -1,111 +1,81 @@
 // src/v2/pages/shop/ExchangePage.tsx
-import { useRef } from "react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useV2ShopProducts, useV2PurchaseProduct } from "../../hooks/useV2Shop";
-import { useV2Vault } from "../../hooks/useV2Vault";
+import type { ShopProductDto } from "../../api/shopApi";
 import "./ExchangeRedesign.css";
-import { triggerHaptic } from "../../utils/haptic";
 
 const ASSET_PATH = "/v2/assets/06shop";
 
+const StarRating = () => (
+  <div className="shop-card-stars">
+    {[...Array(5)].map((_, i) => (
+      <svg key={i} className="star-icon" xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10" fill="none">
+        <path d="M9.99998 3.99907C9.99507 4.12198 9.9328 4.26235 9.81198 4.3732C9.32833 4.81661 8.84441 5.2596 8.36023 5.70218C8.13416 5.9092 7.90778 6.11589 7.68109 6.32227C7.6487 6.35164 7.64047 6.37769 7.65042 6.42328C7.82445 7.21689 7.99705 8.01083 8.16824 8.80509C8.20289 8.96471 8.23702 9.12462 8.27446 9.28369C8.32903 9.51925 8.25932 9.75205 8.0834 9.88382C7.88981 10.0288 7.68428 10.0382 7.47968 9.91153C6.82794 9.5072 6.17704 9.10125 5.52698 8.69368C5.37522 8.59904 5.2216 8.50662 5.07236 8.40851C5.02244 8.37567 4.98619 8.37539 4.93494 8.40754C4.14441 8.90278 3.35215 9.39496 2.56254 9.89006C2.39485 9.99509 2.22357 10.0346 2.03822 9.95518C1.79299 9.85015 1.66486 9.58105 1.72581 9.30143C1.89815 8.50994 2.07075 7.71845 2.24362 6.92697C2.28 6.76069 2.31253 6.59316 2.35197 6.42813C2.36338 6.38046 2.35542 6.35233 2.32076 6.32088C2.02371 6.05123 1.7274 5.78066 1.43185 5.50916C1.01772 5.12977 0.602011 4.75301 0.19028 4.37084C0.0221892 4.2151 -0.0415421 4.01625 0.0273673 3.78887C0.0962768 3.56148 0.250294 3.42458 0.479992 3.39991C0.887076 3.3564 1.29482 3.31996 1.7023 3.28102C2.10541 3.2425 2.50851 3.20426 2.91161 3.16629C3.04597 3.15368 3.18034 3.13955 3.31484 3.12888C3.35812 3.12555 3.38123 3.10574 3.39742 3.06458C3.76255 2.16917 4.1283 1.27413 4.49466 0.379457C4.59584 0.132117 4.77654 -0.00603314 5.00624 0.00020232C5.23594 0.00643778 5.40164 0.123526 5.49272 0.343707C5.74061 0.942727 5.98531 1.54313 6.23108 2.14326C6.35615 2.44811 6.48149 2.75378 6.60443 3.06001C6.62329 3.10712 6.65024 3.12541 6.69738 3.12929C7.02134 3.15793 7.34522 3.18795 7.66901 3.21936C8.14045 3.26407 8.61184 3.30915 9.08318 3.3546C9.23295 3.36846 9.38285 3.38232 9.53222 3.39977C9.80388 3.43331 10.0021 3.66984 9.99998 3.99907Z" fill="#B7C0D2"/>
+      </svg>
+    ))}
+  </div>
+);
+
 export default function ExchangePage() {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+  const { data: products } = useV2ShopProducts();
+  const buyMutation = useV2PurchaseProduct();
+  const [activeTab, setActiveTab] = useState("shop");
 
-  const { data: products, isLoading } = useV2ShopProducts();
-  const purchaseMutation = useV2PurchaseProduct();
-  const { useVaultStatus } = useV2Vault();
-  const { data: vaultStatus } = useVaultStatus();
-
-  const handlePurchase = (sku: string) => {
-    triggerHaptic("medium");
-    purchaseMutation.mutate({ sku });
-  };
-
-  if (isLoading) {
-    return (
-      <div className="exchange-redesign-container flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  // Assets mapping for demo/simulation based on display order or name
-  // In a real app, these would come from the product metadata
-  const getProductImage = (idx: number) => {
-    if (idx === 0) return `${ASSET_PATH}/Frame 9.png`;    // Gift
-    if (idx === 1) return `${ASSET_PATH}/Frame 9-1.png`;  // Key
-    if (idx === 2) return `${ASSET_PATH}/Frame 9-2.png`;  // Tickets
-    return `${ASSET_PATH}/Frame 9-3.png`;
+  const getItemImage = (type: string) => {
+    switch (type) {
+      case "gold_key": return `${ASSET_PATH}/Frame 9-1.png`;
+      case "diamond_key": return `${ASSET_PATH}/Frame 9.png`;
+      case "premium_ticket": return `${ASSET_PATH}/Frame 9-2.png`;
+      default: return `${ASSET_PATH}/Frame 9-3.png`;
+    }
   };
 
   return (
-    <div ref={containerRef} className="exchange-redesign-container scrollbar-hide">
-      {/* Wallet Strip */}
-      <div className="shop-wallet-strip">
-        <div className="shop-wallet-card">
-          <div className="wallet-item">
-            <span className="wallet-label">Vault Balance</span>
-            <span className="wallet-value">
-              {(vaultStatus?.vaultBalance || 0).toLocaleString()} <span className="text-[10px] opacity-40">P</span>
-            </span>
-          </div>
-          <div className="w-px h-8 bg-white/10" />
-          <div className="wallet-item">
-            <span className="wallet-label">My Tickets</span>
-            <span className="wallet-value tokens">
-              {(vaultStatus?.ticketCount || 0).toLocaleString()} <span className="text-[10px] opacity-40">T</span>
-            </span>
-          </div>
+    <div className="exchange-page-v2">
+      <img src={`${ASSET_PATH}/shop.svg`} className="shop-bg-overlay" alt="" />
+      
+      <div className="shop-tabs-container">
+        <div 
+          className={`shop-tab-item ${activeTab === 'shop' ? 'active' : ''}`}
+          onClick={() => setActiveTab('shop')}
+        >
+          상점
+        </div>
+        <div 
+          className={`shop-tab-item ${activeTab === 'inventory' ? 'active' : ''}`}
+          onClick={() => navigate('/v2/inventory')}
+        >
+          인벤토리
         </div>
       </div>
 
-      {/* Main Products Section */}
-      <div className="shop-products-section mt-4">
-        <div className="shop-grid-header">
-            <h2 className="shop-grid-title uppercase tracking-widest text-[11px] opacity-60">Featured Items</h2>
-            <span className="text-[10px] opacity-40">View All</span>
+      <div className="shop-main-area">
+        {/* Event Banner */}
+        <div className="shop-event-banner">
+          <img src="/assets/hero_event_banner.png" className="event-banner-img" alt="event" />
         </div>
 
-        <div className="shop-grid">
-          {products?.map((product, idx) => (
-            <div 
-              key={product.id} 
-              className="shop-product-card"
-              onClick={() => handlePurchase(product.id)}
-            >
-              <span className="product-name-label">{product.name}</span>
-              <img 
-                src={getProductImage(idx)} 
-                className="product-item-img" 
-                alt="" 
-              />
-              <div className="product-buy-btn">
-                {(product.cost_amount || 0).toLocaleString()} P
+        {/* Products Grid */}
+        <div className="shop-products-section">
+          <div className="products-grid-v2">
+            {products?.map((product: ShopProductDto) => (
+              <div key={product.id} className="shop-card-v2" onClick={() => buyMutation.mutate({ sku: product.id })}>
+                <div className="shop-card-img-container">
+                  <img src={getItemImage(product.reward_type)} className="shop-card-img" alt={product.name} />
+                </div>
+                <div className="shop-card-info">
+                  <div className="shop-card-title">{product.name}</div>
+                  <StarRating />
+                </div>
+                <div className="shop-card-footer">
+                  <div className="shop-buy-btn">{product.cost_amount.toLocaleString()} P</div>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Category Quick Row (Icons) */}
-      <div className="shop-categories-row">
-        {[
-          { icon: "Vector.svg", label: "Key" },
-          { icon: "Vector-1.svg", label: "Coffee" },
-          { icon: "Vector-2.svg", label: "Secret" },
-          { icon: "Vector-3.svg", label: "Bag" }
-        ].map((cat, i) => (
-          <div key={i} className="category-quick-item">
-            <div className="category-icon-circle">
-              <img src={`${ASSET_PATH}/${cat.icon}`} className="category-icon-img" alt="" />
-            </div>
-            <span className="text-[10px] opacity-40 uppercase tracking-tighter">{cat.label}</span>
+            ))}
           </div>
-        ))}
-      </div>
-
-      {/* Decorative Vectors or Banners can go here as per Figma */}
-      <div className="mt-auto items-center justify-center flex pb-8 opacity-10">
-         <img src={`${ASSET_PATH}/Element.svg`} className="w-48" alt="" />
+        </div>
       </div>
     </div>
   );
