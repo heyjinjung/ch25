@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import { useV2ShopProducts, useV2PurchaseProduct } from "../../hooks/useV2Shop";
+import { useV2Vault } from "../../hooks/useV2Vault";
 import "./ExchangePage.css";
 
 // 06shop assets
@@ -12,6 +13,8 @@ export default function ExchangePage() {
 
   const { data: products, isLoading } = useV2ShopProducts();
   const purchaseMutation = useV2PurchaseProduct();
+  const { useVaultStatus } = useV2Vault();
+  const { data: vaultStatus } = useVaultStatus();
 
   const sortedProducts = products ? [...products].sort(
     (a, b) => (a.display_order ?? 0) - (b.display_order ?? 0)
@@ -40,6 +43,25 @@ export default function ExchangePage() {
 
   return (
     <div ref={containerRef} className="exchange-page-v2 scrollbar-hide overflow-y-auto">
+      {/* Wallet Balance Display */}
+      <div className="exchange-wallet-strip px-4 mb-6">
+        <div className="flex justify-between items-center bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-md">
+          <div className="flex flex-col">
+            <span className="text-[10px] text-white/40 font-bold uppercase tracking-wider mb-1">보관금 (VAULT)</span>
+            <span className="text-lg font-black text-white italic">
+              {(vaultStatus?.vaultBalance || 0).toLocaleString()} <span className="text-[10px] not-italic opacity-50 ml-0.5">P</span>
+            </span>
+          </div>
+          <div className="w-px h-8 bg-white/10 mx-2" />
+          <div className="flex flex-col items-end">
+            <span className="text-[10px] text-white/40 font-bold uppercase tracking-wider mb-1">보유 토큰</span>
+            <span className="text-lg font-black text-[#FF7A00] italic">
+              {(vaultStatus?.ticketCount || 0).toLocaleString()} <span className="text-[10px] not-italic opacity-50 ml-0.5">T</span>
+            </span>
+          </div>
+        </div>
+      </div>
+
       {/* Category Tabs */}
       <div className="exchange-tabs">
         <div className="exchange-tab active">전체</div>

@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import { useV2Inventory, useV2UseInventoryItem } from "../../hooks/useV2Inventory";
+import { useV2Vault } from "../../hooks/useV2Vault";
 import "./InventoryPage.css";
 
 // 06shop assets (reusing same images as shop)
@@ -12,6 +13,8 @@ export default function InventoryPage() {
 
   const { data, isLoading } = useV2Inventory();
   const useItemMutation = useV2UseInventoryItem();
+  const { useVaultStatus } = useV2Vault();
+  const { data: vaultStatus } = useVaultStatus();
 
   const items = data?.items ?? [];
 
@@ -44,7 +47,26 @@ export default function InventoryPage() {
 
   return (
     <div ref={containerRef} className="inventory-page-v2 scrollbar-hide overflow-y-auto">
-      <div className="section-header px-4 pt-4 mb-6">
+      {/* Wallet Balance Display */}
+      <div className="exchange-wallet-strip px-4 mt-4 mb-6">
+        <div className="flex justify-between items-center bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-md">
+          <div className="flex flex-col">
+            <span className="text-[10px] text-white/40 font-bold uppercase tracking-wider mb-1">보관금 (VAULT)</span>
+            <span className="text-lg font-black text-white italic">
+              {(vaultStatus?.vaultBalance || 0).toLocaleString()} <span className="text-[10px] not-italic opacity-50 ml-0.5">P</span>
+            </span>
+          </div>
+          <div className="w-px h-8 bg-white/10 mx-2" />
+          <div className="flex flex-col items-end">
+            <span className="text-[10px] text-white/40 font-bold uppercase tracking-wider mb-1">보유 토큰</span>
+            <span className="text-lg font-black text-[#FF7A00] italic">
+              {(vaultStatus?.ticketCount || 0).toLocaleString()} <span className="text-[10px] not-italic opacity-50 ml-0.5">T</span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div className="section-header px-4 mb-6">
         <h2 className="section-title">나의 가방</h2>
         <span className="text-white/40 text-[10px] font-bold uppercase">{items.length} Items</span>
       </div>

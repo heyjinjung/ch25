@@ -309,6 +309,16 @@ const V2AppHeader: React.FC = () => {
                     </div>
                     교환소
                   </Link>
+                  <Link
+                    to="/v2/inventory"
+                    onClick={() => setIsTicketMenuOpen(false)}
+                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-bold text-white/70 hover:bg-white/5 hover:text-emerald-400 transition-all"
+                  >
+                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/5 border border-white/5 overflow-hidden p-0.5">
+                      <span className="text-sm">🎒</span>
+                    </div>
+                    인벤토리
+                  </Link>
                   <button
                     onClick={() =>
                       handleMenuNavigation("https://ccc-010.com", true)
@@ -414,6 +424,16 @@ const V2AppHeader: React.FC = () => {
                     />
                   </div>
                   교환소
+                </Link>
+                <Link
+                  to="/v2/inventory"
+                  onClick={() => setIsTicketMenuOpen(false)}
+                  className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-bold text-white/70 active:bg-white/10 border-t border-white/5"
+                >
+                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/5 border border-white/5 overflow-hidden p-0.5">
+                    <span className="text-sm">🎒</span>
+                  </div>
+                  인벤토리
                 </Link>
                 <button
                   onClick={() =>

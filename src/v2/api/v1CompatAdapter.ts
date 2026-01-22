@@ -166,6 +166,7 @@ export const getV2VaultStatus = async (): Promise<VaultStatusResponse> => {
       golden_hour_remaining_seconds: data.golden_hour_remaining_seconds ?? 0,
       showModalOverride: data.show_modal_override ?? null,
       segment: data.segment ?? null,
+      balances: data.balances ?? {},
     } as any;
   } catch (error) {
     if (axios.isAxiosError(error) && error.response?.status === 404) {
@@ -187,6 +188,7 @@ export const getV2VaultStatus = async (): Promise<VaultStatusResponse> => {
       golden_hour_remaining_seconds: data.golden_hour_remaining_seconds ?? 0,
       showModalOverride: data.show_modal_override ?? null,
       segment: data.segment ?? null,
+      balances: {},
     } as any;
   }
 };

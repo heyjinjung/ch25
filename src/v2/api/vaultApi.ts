@@ -17,6 +17,7 @@ export interface VaultStatusResponse {
   daily_vault_spent_target: number;
   daily_deposit_confirmed: boolean;
   withdrawal_count: number;
+  balances: Record<string, number>;
 }
 
 export interface WithdrawRequest {

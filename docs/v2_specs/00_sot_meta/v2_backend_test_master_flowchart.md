@@ -178,8 +178,9 @@ graph TD
     - Response Schema Consistency (프론트엔드 타입과 일치 여부)
 - [ ] **3-3. Mission & Engagement (Game Loop)**
     - **New User**: Welcome(2종)/Starter(4종) 미션 발동, 72시간 만료, 보상 수령 로직 검증.
-    - **Daily/Weekly**: 자정(00:00 KST) 초기화, 진행도(Progress) 업데이트, 완료 후 보상 지급 확인.
-    - **Streak**: 출석 연속 카운팅, 결석 시 초기화, 7일 보상 사이클 루프 확인.
+    - **Daily/Weekly**: **오전 9시(09:00 KST) 상시 초기화** (Operational Day 정책), 진행도(Progress) 업데이트, 완료 후 보상 지급 확인.
+    - **Streak (Backtest Verified)**: 출석 연속 카운팅, **새벽 2시/자정 넘김 안전성** 및 결석 시 초기화 확인.
+    - **Backtest**: `backtest_streak_continuity.py`를 통한 시나리오별 무결성 검증 완료.
 - [ ] **3-4. Golden Hour & Event**
     - **Trigger**: `manual_override=FORCE_ON` 및 `Time Schedule`에 따른 활성화 확인.
     - **Multiplier**: 골든아워 적용 시 `POINT`/`XP` 보상에 배율(x2.0 등) 정상 적용 검증.

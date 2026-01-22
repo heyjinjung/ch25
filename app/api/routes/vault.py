@@ -43,17 +43,20 @@ def status(db: Session = Depends(get_db), user_id: int = Depends(get_current_use
     expires_at = getattr(user, "vault_locked_expires_at", None)
     locked_unexpired = locked_balance > 0 and (expires_at is None or expires_at > now)
 
-    ticket_token_types = (GameTokenType.DICE_TOKEN, GameTokenType.ROULETTE_COIN, GameTokenType.LOTTERY_TICKET, GameTokenType.TRIAL_TOKEN)
-    wallet_rows = (
+    # Fetch all wallet balances for V2 UI SoT
+    all_wallet_rows = (
         db.query(UserGameWallet)
-        .filter(UserGameWallet.user_id == user_id, UserGameWallet.token_type.in_(ticket_token_types))
+        .filter(UserGameWallet.user_id == user_id)
         .all()
     )
-    balances = {row.token_type: int(row.balance or 0) for row in wallet_rows}
-    total_tickets = sum(balances.values())
+    all_balances = {row.token_type.value: int(row.balance or 0) for row in all_wallet_rows}
+    
+    # [LEGACY] Keep ticket_count for backward compatibility
+    ticket_token_types = (GameTokenType.DICE_TOKEN, GameTokenType.ROULETTE_COIN, GameTokenType.LOTTERY_TICKET, GameTokenType.TRIAL_TOKEN)
+    total_tickets = sum(all_balances.get(tk.value, 0) for tk in ticket_token_types)
 
     if eligible and locked_unexpired:
-        ticket_zero = all(balances.get(token_type, 0) <= 0 for token_type in ticket_token_types)
+        ticket_zero = all(all_balances.get(tk.value, 0) <= 0 for tk in ticket_token_types)
         if ticket_zero:
             recommended_action = "OPEN_VAULT_MODAL"
             cta_payload = {
@@ -116,6 +119,7 @@ def status(db: Session = Depends(get_db), user_id: int = Depends(get_current_use
         deposit_status=policy["status"],
         vault_max_limit=policy["vault_max_limit"],
         benefits_suspended=policy["benefits_suspended"],
+        balances=all_balances,
     )
 
     # Golden Hour Status Injection

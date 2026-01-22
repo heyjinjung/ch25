@@ -63,6 +63,7 @@ class VaultStatusResponse(BaseModel):
     deposit_status: str = "ACTIVE"  # ACTIVE, WARNING, INACTIVE
     vault_max_limit: int = 0  # 0 means no limit (or default cap), 30000 for zero-deposit
     benefits_suspended: bool = False
+    balances: dict[str, int] = {}
 
     # Withdrawal Conditions (Phase 2)
     daily_play_count: int = 0

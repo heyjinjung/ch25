@@ -13,10 +13,39 @@ from app.models.feature import UserEventLog
 from app.core.config import get_settings
 from zoneinfo import ZoneInfo
 
+# Action type aliases for backward compatibility
+# Maps canonical action types to their legacy/alternative names
+ACTION_TYPE_ALIASES = {
+    "JOIN_CHANNEL": ["SUBSCRIBE_CHANNEL", "CHANNEL_JOIN"],
+    "SHARE_STORY": ["SHARE", "STORY_SHARE"],
+    "PLAY_GAME": ["PLAY"],
+}
+
 class MissionService:
     def __init__(self, db: Session):
         self.db = db
         self.settings = get_settings()
+    
+    def _normalize_action_type(self, action: str) -> list[str]:
+        """
+        Normalize an action type to include all its aliases.
+        Returns a list of action type strings that should all be considered equivalent.
+        
+        Example:
+            _normalize_action_type("JOIN_CHANNEL") 
+            -> ["JOIN_CHANNEL", "SUBSCRIBE_CHANNEL", "CHANNEL_JOIN"]
+        """
+        # Direct match - return canonical + aliases
+        if action in ACTION_TYPE_ALIASES:
+            return [action] + ACTION_TYPE_ALIASES[action]
+        
+        # Reverse lookup - if action is an alias, return canonical + all aliases
+        for canonical, aliases in ACTION_TYPE_ALIASES.items():
+            if action in aliases:
+                return [canonical] + aliases
+        
+        # No match - return action as-is
+        return [action]
 
     def _is_golden_hour_mission(self, mission: Mission) -> bool:
         logic_key = (mission.logic_key or "").lower()
@@ -539,15 +568,11 @@ class MissionService:
     def update_progress(self, user_id: int, action_type: str, delta: int = 1) -> List[UserMissionProgress]:
         """
         Updates progress for ALL active missions matching the action_type (e.g., 'PLAY_GAME').
-        Also falls back to logic_key for legacy support.
+        Uses normalized action matching to support legacy/mismatched action names.
         Returns list of updated progress objects.
         """
-        # [COMPATIBILITY] Handle 'PLAY' as 'PLAY_GAME'
-        query_action_types = [action_type]
-        if action_type == "PLAY_GAME":
-            query_action_types.append("PLAY")
-        elif action_type == "PLAY":
-            query_action_types.append("PLAY_GAME")
+        # Normalize action type to include all aliases
+        query_action_types = self._normalize_action_type(action_type)
 
         missions = self.db.query(Mission).filter(
             or_(
