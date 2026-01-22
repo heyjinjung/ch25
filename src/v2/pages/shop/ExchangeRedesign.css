@@ -1,0 +1,173 @@
+/* src/v2/pages/shop/ExchangeRedesign.css */
+
+.exchange-redesign-container {
+    min-height: 100%;
+    width: 100%;
+    max-width: 391px;
+    margin: 0 auto;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    color: #fff;
+    font-family: 'Inter', sans-serif;
+
+    /* Deep Green Gradient Background */
+    background: linear-gradient(180deg, rgba(80, 153, 149, 0.00) 0%, rgba(68, 127, 72, 0.24) 50.96%, #396664 100%),
+        rgba(242, 244, 252, 0.10);
+    background-attachment: fixed;
+}
+
+/* Wallet Strip (Premium Glassmorphism) */
+.shop-wallet-strip {
+    width: 100%;
+    padding: 16px;
+    z-index: 10;
+}
+
+.shop-wallet-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 16px;
+    padding: 12px 20px;
+}
+
+.wallet-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.wallet-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.6);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+
+.wallet-value {
+    font-size: 16px;
+    font-weight: 900;
+    color: #fff;
+}
+
+.wallet-value.tokens {
+    color: #FF7A00;
+}
+
+/* Featured Products Grid */
+.shop-products-section {
+    width: 100%;
+    padding: 0 16px;
+    flex: 1;
+}
+
+.shop-grid-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 0 4px;
+}
+
+.shop-grid-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+}
+
+.shop-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    width: 100%;
+}
+
+.shop-product-card {
+    width: 100.56px;
+    /* Matches Figma ratio for 3-col */
+    height: 140.9px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.05) 100%);
+    border-radius: 12px;
+    padding: 12px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: transform 0.2s ease;
+}
+
+.shop-product-card:active {
+    transform: scale(0.96);
+}
+
+.product-item-img {
+    width: 100%;
+    height: 60px;
+    object-fit: contain;
+    margin-top: 8px;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+}
+
+.product-name-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.8);
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+}
+
+.product-buy-btn {
+    margin-top: auto;
+    width: 100%;
+    height: 24px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 900;
+    color: #fff;
+    text-transform: uppercase;
+}
+
+/* Category Quick Row */
+.shop-categories-row {
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+    padding: 24px 16px;
+    margin-top: 20px;
+}
+
+.category-quick-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.category-icon-circle {
+    width: 50px;
+    height: 50px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.category-icon-img {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+}

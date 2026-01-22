@@ -1,0 +1,160 @@
+/* src/v2/pages/missions/MissionRedesign.css */
+
+.mission-redesign-container {
+    min-height: 100%;
+    width: 100%;
+    max-width: 391px;
+    margin: 0 auto;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    color: #fff;
+    font-family: 'Inter', sans-serif;
+    overflow: hidden;
+}
+
+/* Background SVG Overlay */
+.mission-bg-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+/* Half-circle Chart Area */
+.mission-header-arena {
+    width: 100%;
+    padding-top: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    height: 240px;
+}
+
+.half-circle-chart-container {
+    position: relative;
+    width: 174.5px;
+    height: 164.6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(86, 96, 86, 0.09);
+    border-radius: 174.5px 174.5px 0 0;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.chart-ellipse-bg {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.casino-logo-chart {
+    width: 100px;
+    z-index: 5;
+    filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.5));
+}
+
+.character-frame-img {
+    position: absolute;
+    right: 20px;
+    top: 40px;
+    width: 117px;
+    height: 135px;
+    object-fit: contain;
+}
+
+.mission-progress-label {
+    position: absolute;
+    left: 50%;
+    bottom: 10px;
+    transform: translateX(-50%);
+    font-size: 14px;
+    font-weight: 700;
+    color: #25AD82;
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+/* 7-Day Streak Grid */
+.streak-grid-container {
+    width: 100%;
+    padding: 0 16px;
+    margin-top: -10px;
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+}
+
+.streak-day-box {
+    width: 45px;
+    height: 22px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.streak-day-box.complete {
+    background: #25AD82;
+}
+
+.streak-day-box.current {
+    background: #FF4D4D;
+}
+
+/* Scrollable Mission Content (570px container) */
+.mission-list-scrollarea {
+    width: 100%;
+    height: 570px;
+    margin-top: 15px;
+    padding: 0 15px 100px 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    overflow-y: auto;
+}
+
+.mission-list-scrollarea::-webkit-scrollbar {
+    display: none;
+}
+
+.mission-promo-card {
+    width: 100%;
+    height: 80px;
+    background: rgba(134, 134, 134, 0.22);
+    border-radius: 16px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.mission-text-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.mission-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+}
+
+.mission-desc {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.mission-claim-btn {
+    width: 45px;
+    height: 75px;
+    cursor: pointer;
+}

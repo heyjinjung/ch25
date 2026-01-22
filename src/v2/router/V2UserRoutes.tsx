@@ -4,7 +4,7 @@ import V2AppLayout from "../components/layout/V2AppLayout";
 
 // Lazy load pages
 const LoginPage = lazy(() => import("../pages/auth/V2UserLoginPage"));
-const HomePage = lazy(() => import("../pages/home/PokemonHomePage"));
+const HomePage = lazy(() => import("../pages/home/HomePage"));
 const GamedashPage = lazy(() => import("../pages/game/GamedashPage"));
 const VaultPage = lazy(() => import("../pages/vault/VaultPage"));
 const RoulettePage = lazy(() => import("../pages/game/RoulettePage"));

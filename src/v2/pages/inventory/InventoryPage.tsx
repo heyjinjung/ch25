@@ -4,9 +4,10 @@ import { useV2Vault } from "../../hooks/useV2Vault";
 import "./InventoryPage.css";
 
 // 06shop assets (reusing same images as shop)
-import imgFrame127 from "../../assets/06shop/frame-10000031270.png";
-import imgFrame129 from "../../assets/06shop/frame-10000031290.png";
-import imgFrame130 from "../../assets/06shop/frame-10000031300.png";
+// 누락된 06shop 이미지 대신 placeholder 사용
+const imgFrame127 = "https://placehold.co/80x80?text=No+Image";
+const imgFrame129 = "https://placehold.co/80x80?text=No+Image";
+const imgFrame130 = "https://placehold.co/80x80?text=No+Image";
 
 export default function InventoryPage() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -41,6 +42,7 @@ export default function InventoryPage() {
 
   // Map item types to images (simple mapping for v2)
   const getItemImage = (index: number) => {
+    // 누락된 이미지 대신 placeholder 배열 사용
     const images = [imgFrame129, imgFrame127, imgFrame130];
     return images[index % images.length];
   };
