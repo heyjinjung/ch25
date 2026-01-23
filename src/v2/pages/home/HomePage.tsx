@@ -120,13 +120,21 @@ export default function HomePage() {
       </div>
 
       <div className="home-content">
-        {/* Hero Section */}
-        <div className="home-hero-card">
-          <img
-            src="/v2/assets/01home/main01.png"
-            alt="메인 히어로 이미지"
-            className="hero-bg-img"
-          />
+        {/* Featured Section (Now at top) */}
+        <div className="home-featured-section">
+          <div className="featured-header">
+            {/* STREAK EVENT label removed */}
+          </div>
+          <div className="featured-card">
+            <div className="featured-content-inner">
+              <span className="featured-sub-text">EXCLUSIVE EVENT</span>
+              <h2 className="featured-main-title">
+                STREAK
+                <br />
+                CHALLENGE
+              </h2>
+            </div>
+          </div>
         </div>
 
         {/* Quick Access Tiles */}
@@ -182,23 +190,6 @@ export default function HomePage() {
               alt="quick access 4"
               className="quick-card-img"
             />
-          </div>
-        </div>
-
-        {/* Featured Section */}
-        <div className="home-featured-section">
-          <div className="featured-header">
-            <span className="featured-label">STREAK EVENT</span>
-          </div>
-          <div className="featured-card">
-            <div className="featured-content-inner">
-              <span className="featured-sub-text">EXCLUSIVE EVENT</span>
-              <h2 className="featured-main-title">
-                STREAK
-                <br />
-                CHALLENGE
-              </h2>
-            </div>
           </div>
         </div>
       </div>
