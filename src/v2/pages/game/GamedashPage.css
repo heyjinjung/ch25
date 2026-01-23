@@ -1,7 +1,7 @@
 /* src/v2/pages/game/GamedashPage.css */
 
- .gamedash-container {
-    background: linear-gradient(180deg, rgba(235, 255, 143, 0.12) 0%, rgba(240, 255, 189, 0.37) 37.5%, rgba(187, 205, 128, 0.14) 99.99%, rgba(189, 233, 189, 0.40) 100%);
+.gamedash-container {
+    background: linear-gradient(180deg, rgba(80, 153, 110, 0.4) 0%, rgba(68, 127, 85, 0.5) 100%);
     flex: 1;
     min-height: 0;
     width: 100%;
@@ -152,6 +152,22 @@
     background: linear-gradient(165deg, rgba(255, 255, 255, 0.08) 0%, rgba(31, 205, 135, 0.28) 55%, rgba(35, 134, 145, 0.10) 100%);
     animation: dashboard-float 4.8s ease-in-out infinite;
     will-change: transform;
+}
+
+/* Shimmer (Shine) Effect */
+.card-shine {
+    position: absolute;
+    top: 0;
+    left: -150%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(90deg,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 0.2) 50%,
+            rgba(255, 255, 255, 0) 100%);
+    z-index: 5;
+    pointer-events: none;
+    transform: skewX(-20deg);
 }
 
 .game-card-badge {

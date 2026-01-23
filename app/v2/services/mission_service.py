@@ -144,6 +144,9 @@ class V2MissionService:
 
         for m_day in achieved_milestones:
              # Check if claimed for the current 'hit date'
+             if not user.last_play_date:
+                 continue
+                 
              hit_date = user.last_play_date - timedelta(days=(streak_days - m_day))
              event_name = f"streak.reward_grant.{m_day}.{hit_date.isoformat()}"
              

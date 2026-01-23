@@ -1,9 +1,11 @@
 // src/v2/components/layout/V2MobileBottomNav.tsx
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
+import { useSound } from "../../../hooks/useSound";
 import clsx from "clsx";
 
 const V2MobileBottomNav: React.FC = () => {
+  const { playTabTouch } = useSound();
   const location = useLocation();
   const currentPath = location.pathname;
 
@@ -44,9 +46,9 @@ const V2MobileBottomNav: React.FC = () => {
       )
     },
     {
-      label: "보관함",
-      to: "/v2/inventory",
-      isActive: isActive("/v2/inventory"),
+      label: "상점",
+      to: "/v2/shop",
+      isActive: isActive("/v2/shop"),
       icon: (active: boolean) => (
         <svg xmlns="http://www.w3.org/2000/svg" className={clsx("w-6 h-6 mb-1 transition-transform", active ? "scale-110" : "opacity-60")} fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={active ? 2.5 : 2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
@@ -68,7 +70,12 @@ const V2MobileBottomNav: React.FC = () => {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-[100] h-[86.87px] bg-black/90 backdrop-blur-md border-t border-white/10 flex justify-around items-center px-4 pb-[env(safe-area-inset-bottom)] w-full max-w-[390px] mx-auto">
       {navItems.map((item, idx) => (
-        <Link key={idx} to={item.to} className="flex flex-col items-center justify-center p-2 transition-all active:scale-95">
+        <Link 
+          key={idx} 
+          to={item.to} 
+          className="flex flex-col items-center justify-center p-2 transition-all active:scale-95"
+          onClick={() => playTabTouch()}
+        >
           <div className={clsx(item.isActive ? "text-[#25AD82]" : "text-white/40")}>
             {item.icon(item.isActive)}
           </div>

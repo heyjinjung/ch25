@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import gsap from "gsap";
 import { getV2LotteryStatus, playV2Lottery } from "../../api/v1CompatAdapter";
+import { useSound } from "../../../hooks/useSound";
 import LotteryCollectionModal from "../../components/lottery/LotteryCollectionModal";
 import { triggerHaptic, triggerNotification } from "../../utils/haptic";
 import "./LotteryRedesign.css";
@@ -11,6 +12,7 @@ import "./LotteryRedesign.css";
 const ASSET_PATH = "/v2/assets/04lotto";
 
 const LotteryPage: React.FC = () => {
+  const { playLotteryScratch, stopLotteryScratch, playLotteryWin } = useSound();
   const [isPlaying, setIsPlaying] = useState(false);
   const [isRevealed, setIsRevealed] = useState(false);
   const [revealedPrize, setRevealedPrize] = useState<any | null>(null);
@@ -108,6 +110,7 @@ const LotteryPage: React.FC = () => {
 
     try {
       triggerHaptic("heavy");
+      playLotteryScratch();
       setIsPlaying(true);
 
       // Intensive mixing animation
@@ -128,6 +131,7 @@ const LotteryPage: React.FC = () => {
       const result = await playMutation.mutateAsync();
 
       setTimeout(() => {
+        stopLotteryScratch();
         setIsPlaying(false);
         setIsRevealed(true);
 
@@ -136,6 +140,7 @@ const LotteryPage: React.FC = () => {
           setRevealedPrize(prize);
           if (prize.reward_type !== "NONE") {
             triggerNotification("success");
+            playLotteryWin();
           }
         }
 

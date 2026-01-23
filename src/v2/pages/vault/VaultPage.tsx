@@ -1,6 +1,7 @@
 // src/v2/pages/vault/VaultPage.tsx
 import { useLayoutEffect, useRef, useState } from "react";
 import { useV2Vault } from "../../hooks/useV2Vault";
+import { useSound } from "../../../hooks/useSound";
 import gsap from "gsap";
 import "./VaultRedesign.css";
 import V2WithdrawalGuideModal from "../../components/vault/V2WithdrawalGuideModal";
@@ -9,6 +10,7 @@ const ASSET_PATH = "/v2/assets/05valut";
 
 const VaultPage: React.FC = () => {
   const { useVaultStatus, useWithdraw } = useV2Vault();
+  const { playVaultJingle } = useSound();
   const { data: vault, isLoading, error } = useVaultStatus();
   const withdrawMutation = useWithdraw();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -18,6 +20,7 @@ const VaultPage: React.FC = () => {
 
   useLayoutEffect(() => {
     if (!vault) return;
+    playVaultJingle();
     const percent = Math.min(((vault.vaultBalance || 0) / 10000) * 100, 100);
     if (progressFillRef.current) {
       progressFillRef.current.style.width = `${percent}%`;
@@ -90,11 +93,6 @@ const VaultPage: React.FC = () => {
         <div className="vault-safes-arena">
           <div className="vault-safe-item lv1">
             <img
-              src={`${ASSET_PATH}/9.png`}
-              className="vault-bubble-bg"
-              alt=""
-            />
-            <img
               src={`${ASSET_PATH}/Frame 7.png`}
               className="vault-safe-img"
               alt="Lv.1 Safe"
@@ -103,12 +101,7 @@ const VaultPage: React.FC = () => {
           </div>
           <div className="vault-safe-item lv5">
             <img
-              src={`${ASSET_PATH}/10.png`}
-              className="vault-bubble-bg"
-              alt=""
-            />
-            <img
-              src={`${ASSET_PATH}/Frame 5.png`}
+              src={`${ASSET_PATH}/Frame 6.png`}
               className="vault-safe-img"
               alt="Lv.5 Safe"
             />
@@ -116,12 +109,7 @@ const VaultPage: React.FC = () => {
           </div>
           <div className="vault-safe-item vip">
             <img
-              src={`${ASSET_PATH}/11.png`}
-              className="vault-bubble-bg"
-              alt=""
-            />
-            <img
-              src={`${ASSET_PATH}/Frame 6.png`}
+              src={`${ASSET_PATH}/Frame 5.png`}
               className="vault-safe-img"
               alt="VIP Safe"
             />

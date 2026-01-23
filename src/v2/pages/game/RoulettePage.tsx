@@ -10,6 +10,7 @@ import { getV2RouletteStatus, playV2Roulette } from "../../api/v1CompatAdapter";
 import type { RouletteSegmentDto } from "../../api/gameApi";
 import type { GameTokenType } from "../../../types/gameTokens";
 import { triggerHaptic, triggerNotification } from "../../utils/haptic";
+import { useSound } from "../../../hooks/useSound";
 
 // ============================================================================
 // Types
@@ -129,6 +130,7 @@ const triggerJackpotExplosion = () => {
 // ============================================================================
 
 const RoulettePage = () => {
+  const { playRouletteSpin, stopRouletteSpin, playRouletteStop, playSmallWin, playBigWin, playRouletteLose } = useSound();
   const [activeTab, setActiveTab] = useState<GameTokenType>("ROULETTE_TICKET");
   const [isSpinning, setIsSpinning] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState<number | undefined>();
@@ -215,6 +217,7 @@ const RoulettePage = () => {
       const winIndex = result.game_data?.segment?.slot_index ?? 0;
       setSelectedIndex(winIndex);
       setIsSpinning(true);
+      playRouletteSpin();
 
       // Spin haptic sequence
       const spinHapticInterval = setInterval(() => {
@@ -232,6 +235,8 @@ const RoulettePage = () => {
 
   const handleSpinEnd = () => {
     setIsSpinning(false);
+    stopRouletteSpin();
+    playRouletteStop();
 
     if (!playMutation.data) return;
 
@@ -291,12 +296,15 @@ const RoulettePage = () => {
       // Confetti based on reward value and tier
       if (rewardValue >= 50000 || activeTab === "DIAMOND_TICKET") {
         triggerJackpotExplosion();
+        playBigWin();
       } else {
         triggerFireworks();
+        playSmallWin();
       }
     } else {
       // Light haptic for no win
       triggerHaptic("light");
+      playRouletteLose();
     }
 
     // Invalidate queries to refresh data
