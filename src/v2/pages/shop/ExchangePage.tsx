@@ -76,24 +76,68 @@ export default function ExchangePage() {
   const subProducts = products?.slice(3, 11) ?? [];
 
   const SubCardBg = () => (
-    <svg className="sub-card-bg-svg" xmlns="http://www.w3.org/2000/svg" width="82" height="82" viewBox="0 0 82 82" fill="none">
+    <svg
+      className="sub-card-bg-svg"
+      xmlns="http://www.w3.org/2000/svg"
+      width="82"
+      height="82"
+      viewBox="0 0 82 82"
+      fill="none"
+    >
       <g filter="url(#filter0_d_10_314)">
-        <path d="M61.8415 0H20.1539C11.2324 0 4 7.23281 4 16.1549V57.8451C4 66.7672 11.2324 74 20.1539 74H61.8415C70.7631 74 77.9954 66.7672 77.9954 57.8451V16.1549C77.9954 7.23281 70.7631 0 61.8415 0Z" fill="url(#paint0_linear_10_314)" fillOpacity="0.5" shapeRendering="crispEdges"/>
+        <path
+          d="M61.8415 0H20.1539C11.2324 0 4 7.23281 4 16.1549V57.8451C4 66.7672 11.2324 74 20.1539 74H61.8415C70.7631 74 77.9954 66.7672 77.9954 57.8451V16.1549C77.9954 7.23281 70.7631 0 61.8415 0Z"
+          fill="url(#paint0_linear_10_314)"
+          fillOpacity="0.5"
+          shapeRendering="crispEdges"
+        />
       </g>
       <defs>
-        <filter id="filter0_d_10_314" x="0" y="0" width="81.9951" height="82" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
-          <feFlood floodOpacity="0" result="BackgroundImageFix"/>
-          <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-          <feOffset dy="4"/>
-          <feGaussianBlur stdDeviation="2"/>
-          <feComposite in2="hardAlpha" operator="out"/>
-          <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"/>
-          <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_10_314"/>
-          <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_10_314" result="shape"/>
+        <filter
+          id="filter0_d_10_314"
+          x="0"
+          y="0"
+          width="81.9951"
+          height="82"
+          filterUnits="userSpaceOnUse"
+          colorInterpolationFilters="sRGB"
+        >
+          <feFlood floodOpacity="0" result="BackgroundImageFix" />
+          <feColorMatrix
+            in="SourceAlpha"
+            type="matrix"
+            values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+            result="hardAlpha"
+          />
+          <feOffset dy="4" />
+          <feGaussianBlur stdDeviation="2" />
+          <feComposite in2="hardAlpha" operator="out" />
+          <feColorMatrix
+            type="matrix"
+            values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"
+          />
+          <feBlend
+            mode="normal"
+            in2="BackgroundImageFix"
+            result="effect1_dropShadow_10_314"
+          />
+          <feBlend
+            mode="normal"
+            in="SourceGraphic"
+            in2="effect1_dropShadow_10_314"
+            result="shape"
+          />
         </filter>
-        <linearGradient id="paint0_linear_10_314" x1="40.9977" y1="0" x2="40.9977" y2="74" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#E1FF80" stopOpacity="0.2"/>
-          <stop offset="1" stopColor="#2A5B2E" stopOpacity="0.1"/>
+        <linearGradient
+          id="paint0_linear_10_314"
+          x1="40.9977"
+          y1="0"
+          x2="40.9977"
+          y2="74"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop stopColor="#E1FF80" stopOpacity="0.2" />
+          <stop offset="1" stopColor="#2A5B2E" stopOpacity="0.1" />
         </linearGradient>
       </defs>
     </svg>
@@ -103,7 +147,7 @@ export default function ExchangePage() {
     <div className="exchange-page-v2" ref={containerRef}>
       {/* Background Dot Pattern (Parallax) */}
       <div className="shop-dot-pattern" ref={dotRef} />
-      
+
       <div className="shop-tabs-container">
         <div
           className={`shop-tab-item ${activeTab === "shop" ? "active" : ""}`}
@@ -123,9 +167,9 @@ export default function ExchangePage() {
         {/* Event Banner */}
         <div className="shop-event-banner">
           <img
-            src="/assets/hero_event_banner.png"
+            src="/v2/assets/06shop/banner.png"
             className="event-banner-img"
-            alt="event"
+            alt="상점 메인 배너"
           />
           <div className="banner-info-btn">안내버튼</div>
         </div>

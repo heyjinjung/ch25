@@ -283,7 +283,7 @@ const SeasonPassPage: React.FC = () => {
                           </div>
                           <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/5 relative">
                             <div
-                              className={clsx("h-full rounded-full transition-all duration-[2s] ease-out shadow-lg", isClaimed ? "bg-emerald-500" : isCurrent ? "bg-figma-accent" : "bg-white/10")}
+                              className={clsx("h-full rounded-full transition-all duration-[2000ms] ease-out shadow-lg", isClaimed ? "bg-emerald-500" : isCurrent ? "bg-figma-accent" : "bg-white/10")}
                               style={{ width: isClaimed ? '100%' : isCurrent ? `${seasonLevelSummary.progressPct}%` : '0%' }}
                             />
                           </div>
