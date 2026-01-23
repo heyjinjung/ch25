@@ -1,9 +1,14 @@
-// src/v2/pages/shop/ExchangePage.tsx
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useV2ShopProducts, useV2PurchaseProduct } from "../../hooks/useV2Shop";
 import type { ShopProductDto } from "../../api/shopApi";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import "./ExchangeRedesign.css";
+
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(ScrollTrigger);
+}
 
 const ASSET_PATH = "/v2/assets/06shop";
 
@@ -33,6 +38,58 @@ export default function ExchangePage() {
   const { data: products } = useV2ShopProducts();
   const buyMutation = useV2PurchaseProduct();
   const [activeTab, setActiveTab] = useState("shop");
+  const containerRef = useRef<HTMLDivElement>(null);
+  const dotRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const ctx = gsap.context(() => {
+      // Parallax Dots
+      const handleMove = (e: MouseEvent) => {
+        const { clientX, clientY } = e;
+        const x = (clientX / window.innerWidth - 0.5) * 20;
+        const y = (clientY / window.innerHeight - 0.5) * 20;
+        gsap.to(dotRef.current, { x, y, duration: 1.5, ease: "power2.out" });
+      };
+      window.addEventListener("mousemove", handleMove);
+
+      // Stagger Entrance
+      gsap.from(".shop-card-v2", {
+        y: 40,
+        opacity: 0,
+        scale: 0.8,
+        stagger: 0.1,
+        duration: 0.8,
+        ease: "elastic.out(1, 0.75)",
+        delay: 0.2
+      });
+
+      // Banner Animation
+      gsap.from(".shop-event-banner", {
+        y: -20,
+        opacity: 0,
+        duration: 1,
+        ease: "power3.out"
+      });
+
+      // Scroll Fade-in for sub-products
+      gsap.from(".shop-sub-card", {
+        scrollTrigger: {
+          trigger: ".shop-sub-grid",
+          start: "top 80%",
+        },
+        opacity: 0,
+        scale: 0.9,
+        stagger: 0.05,
+        duration: 0.6,
+        ease: "power2.out"
+      });
+
+      return () => {
+        window.removeEventListener("mousemove", handleMove);
+      };
+    }, containerRef);
+    return () => ctx.revert();
+  }, [products]);
 
   const getItemImage = (type: string) => {
     switch (type) {
@@ -75,7 +132,10 @@ export default function ExchangePage() {
   );
 
   return (
-    <div className="exchange-page-v2">
+    <div className="exchange-page-v2" ref={containerRef}>
+      {/* Background Dot Pattern (Parallax) */}
+      <div className="shop-dot-pattern" ref={dotRef} />
+      
       <img src={`${ASSET_PATH}/shop.svg`} className="shop-bg-overlay" alt="" />
 
       <div className="shop-tabs-container">

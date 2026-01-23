@@ -1,11 +1,13 @@
 // src/v2/pages/missions/MissionsPage.tsx
 import { useV2Missions, useV2ClaimMission } from "../../hooks/useV2Mission";
+import { useSound } from "../../../hooks/useSound";
 import { triggerHaptic, triggerNotification } from "../../utils/haptic";
 import "./MissionRedesign.css";
 
 const ASSET_PATH = "/v2/assets/07mission";
 
 export default function MissionsPage() {
+  const { playSmallWin } = useSound();
   const { data, isLoading, error, refetch } = useV2Missions();
   const claimMutation = useV2ClaimMission();
 
@@ -14,6 +16,7 @@ export default function MissionsPage() {
       triggerHaptic("medium");
       await claimMutation.mutateAsync(missionId);
       triggerNotification("success");
+      playSmallWin();
       refetch();
     } catch {
       triggerNotification("error");

@@ -1,9 +1,11 @@
 import { useLayoutEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSound } from "../../../hooks/useSound";
 import gsap from "gsap";
 import "./HomeRedesign.css";
 
 export default function HomePage() {
+  const { playTabTouch } = useSound();
   const gridRef = useRef<HTMLDivElement>(null);
 
   const gridCols = 18;
@@ -130,7 +132,7 @@ export default function HomePage() {
 
         {/* Quick Access Tiles */}
         <div className="home-quick-grid">
-          <div className="quick-card" onClick={() => navigate("/v2/game/dice")}>
+          <div className="quick-card" onClick={() => { playTabTouch(); navigate("/v2/game/dice"); }}>
             <img
               src="/v2/assets/01home/1.png"
               alt="quick access 1"
@@ -139,7 +141,7 @@ export default function HomePage() {
           </div>
           <div
             className="quick-card"
-            onClick={() => navigate("/v2/game/roulette")}
+            onClick={() => { playTabTouch(); navigate("/v2/game/roulette"); }}
           >
             <img
               src="/v2/assets/01home/2.png"
@@ -149,7 +151,7 @@ export default function HomePage() {
           </div>
           <div
             className="quick-card"
-            onClick={() => navigate("/v2/game/lottery")}
+            onClick={() => { playTabTouch(); navigate("/v2/game/lottery"); }}
           >
             <img
               src="/v2/assets/01home/3.png"
@@ -157,7 +159,7 @@ export default function HomePage() {
               className="quick-card-img"
             />
           </div>
-          <div className="quick-card" onClick={() => navigate("/v2/game")}>
+          <div className="quick-card" onClick={() => { playTabTouch(); navigate("/v2/game"); }}>
             <img
               src="/v2/assets/01home/8.png"
               alt="quick access 4"

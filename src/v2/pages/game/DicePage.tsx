@@ -3,6 +3,7 @@ import { useMemo, useState, useRef, useLayoutEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getV2DiceStatus, playV2Dice } from "../../api/v1CompatAdapter";
 import { triggerHaptic, triggerNotification } from "../../utils/haptic";
+import { useSound } from "../../../hooks/useSound";
 import { useAuth } from "../../../auth/authStore";
 import gsap from "gsap";
 import "./DiceRedesign.css";
@@ -11,6 +12,7 @@ const ASSET_PATH = "/v2/assets/03dice";
 
 const DicePage = () => {
   const { user } = useAuth();
+  const { playDiceShake, playDiceThrow, playDiceReveal, playSmallWin, playBigWin, playDiceLose } = useSound();
   const [playerDice, setPlayerDice] = useState(1);
   const [opponentDice, setOpponentDice] = useState(1);
   const [isRolling, setIsRolling] = useState(false);
@@ -79,6 +81,7 @@ const DicePage = () => {
     setIsRolling(true);
     setResultText("ROLLING...");
     triggerHaptic("medium");
+    playDiceShake();
 
     // GSAP Animation Sequence
     const tl = gsap.timeline({ repeat: -1 });
@@ -99,6 +102,7 @@ const DicePage = () => {
       const game = result.game_data;
 
       tl.kill(); // Stop the fast rolling
+      playDiceThrow();
 
       if (game) {
         // Final "Land" Animation
@@ -109,6 +113,7 @@ const DicePage = () => {
           duration: 0.4,
           ease: "back.out(1.7)",
           onComplete: () => {
+            playDiceReveal();
             setPlayerDice(game.user_dice[0]);
             setOpponentDice(game.dealer_dice[0]);
             setResultText(
@@ -118,6 +123,13 @@ const DicePage = () => {
                   ? "DRAW"
                   : "LOSE",
             );
+            
+            if (game.outcome === "WIN") {
+              if (result.vault_earn > 50000) playBigWin();
+              else playSmallWin();
+            } else if (game.outcome === "LOSE") {
+              playDiceLose();
+            }
           },
         });
       } else {

@@ -1,20 +1,33 @@
-// src/v2/pages/game/GamedashPage.tsx
-import { useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import gsap from "gsap";
 import "./GamedashPage.css";
 
 const ASSET_PATH = "/v2/assets/02gamedash";
 
 const GAMES = [
   { id: "dice", to: "/v2/game/dice", icon: `${ASSET_PATH}/Group 12.png` },
-  { id: "rocket", to: "/v2/game/lottery", icon: `${ASSET_PATH}/Group 13.png` },
-  { id: "ball", to: "/v2/game/roulette", icon: `${ASSET_PATH}/Group 14.png` },
+  { id: "rocket", to: "/v2/game/roulette", icon: `${ASSET_PATH}/Group 13.png` },
+  { id: "ball", to: "/v2/game/lottery", icon: `${ASSET_PATH}/Group 14.png` },
   { id: "crown", to: "/v2/team-battle", icon: `${ASSET_PATH}/Group 15.png` },
 ];
 
 export default function GamedashPage() {
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const ctx = gsap.context(() => {
+      // Shimmer Effect Timeline
+      const tl = gsap.timeline({ repeat: -1, repeatDelay: 3 });
+      tl.fromTo(".card-shine", 
+        { x: "-150%", skewX: -20 }, 
+        { x: "400%", duration: 1.5, ease: "power2.inOut", stagger: 0.1 }
+      );
+    }, containerRef);
+
+    return () => ctx.revert();
+  }, []);
 
   return (
     <div className="gamedash-container" ref={containerRef}>
@@ -23,6 +36,7 @@ export default function GamedashPage() {
       <div className="gamedash-main-content">
         {/* Main Card (Notice Card) */}
         <div className="hero-card-container">
+          <div className="card-shine" />
           <img
             src={`${ASSET_PATH}/Ellipse 374.svg`}
             className="character-img"
@@ -43,6 +57,7 @@ export default function GamedashPage() {
               className="game-action-card"
               onClick={() => navigate(game.to)}
             >
+              <div className="card-shine" />
               {game.id === "ball" && (
                 <span className="game-card-badge badge-hot">HOT</span>
               )}

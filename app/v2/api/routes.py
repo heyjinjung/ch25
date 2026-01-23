@@ -16,7 +16,7 @@ from app.models.inventory import UserInventoryItem
 from app.models.user import User
 from app.schemas.dice import DicePlayResponse, DiceStatusResponse
 from app.schemas.lottery import LotteryPlayResponse, LotteryStatusResponse
-from app.schemas.mission import MissionListResponse
+from app.v2.schemas.v2_mission import MissionListResponse
 from app.schemas.roulette import RoulettePlayRequest, RoulettePlayResponse, RouletteStatusResponse
 from app.schemas.survey import SurveyCompleteRequest, SurveyListResponse, SurveyResponseUpdateRequest
 from app.services.inventory_service import InventoryService

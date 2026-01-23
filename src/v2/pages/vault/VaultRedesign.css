@@ -102,31 +102,7 @@
     align-self: center;
 }
 
-/* Bubble Background (rotates with vault card) */
-.vault-bubble-bg {
-    position: absolute;
-    opacity: 0.45;
-    pointer-events: none;
-    z-index: -1;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-}
 
-.vault-safe-item.lv1 .vault-bubble-bg {
-    width: 70px;
-    height: 70px;
-}
-
-.vault-safe-item.lv5 .vault-bubble-bg {
-    width: 103px;
-    height: 103px;
-}
-
-.vault-safe-item.vip .vault-bubble-bg {
-    width: 149px;
-    height: 149px;
-}
 
 .vault-safe-item {
     display: flex;
@@ -135,7 +111,6 @@
     gap: 8px;
     transition: transform 0.3s ease;
     position: relative;
-    z-index: 1;
 }
 
 .vault-safe-item.lv1 {
