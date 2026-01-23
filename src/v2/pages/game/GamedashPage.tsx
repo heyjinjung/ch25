@@ -19,11 +19,29 @@ export default function GamedashPage() {
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
       // Shimmer Effect Timeline
-      const tl = gsap.timeline({ repeat: -1, repeatDelay: 3 });
-      tl.fromTo(".card-shine", 
+      const tlShimmer = gsap.timeline({ repeat: -1, repeatDelay: 3 });
+      tlShimmer.fromTo(".card-shine", 
         { x: "-150%", skewX: -20 }, 
         { x: "400%", duration: 1.5, ease: "power2.inOut", stagger: 0.1 }
       );
+
+      // Vertical Notice Animation (3 lines visible, rotating)
+      const itemHeight = 32; // Changed to match css
+      const totalItems = 3;
+      const tlNotice = gsap.timeline({ repeat: -1 });
+
+      // Animate up by one item at a time
+      for (let i = 1; i <= totalItems; i++) {
+        tlNotice.to(".notice-wrapper", {
+          y: -itemHeight * i,
+          duration: 1,
+          ease: "power2.inOut",
+          delay: 2
+        });
+      }
+
+      // Seamless reset to top (items are duplicated in JSX)
+      tlNotice.set(".notice-wrapper", { y: 0 });
     }, containerRef);
 
     return () => ctx.revert();
@@ -42,10 +60,17 @@ export default function GamedashPage() {
             className="character-img"
             alt="character"
           />
-          <div className="notice-labels">
-            <div className="notice-pill">NOTICE</div>
-            <div className="notice-pill">NOTICE</div>
-            <div className="notice-pill">NOTICE</div>
+          <div className="notice-container">
+            <div className="notice-wrapper">
+              {/* Original 3 items */}
+              <div className="notice-item"> 이번주 럭키찬스 추가 티켓증정</div>
+              <div className="notice-item"> 업데이트! 🎰달라진그래픽</div>
+              <div className="notice-item"> 💎골드키를 잡아라! 고액룰렛</div>
+              {/* Duplicated for seamless loop (since 3 are visible, we need them to follow) */}
+              <div className="notice-item"> 이번주 럭키찬스 추가 티켓증정</div>
+              <div className="notice-item"> [HOT] 🎰 업데이트</div>
+              <div className="notice-item">💎골드키를 잡아라! 고액룰렛</div>
+            </div>
           </div>
         </div>
 
