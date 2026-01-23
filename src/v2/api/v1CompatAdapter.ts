@@ -157,10 +157,15 @@ export const getV2VaultStatus = async (): Promise<VaultStatusResponse> => {
 
     return {
       eligible: data.eligible ?? true,
-      vaultBalance: data.vault_balance ?? data.vault_locked_balance ?? 0,
-      lockedBalance: data.vault_locked_balance ?? 0,
-      availableBalance: data.vault_available_balance ?? 0,
-      ticketCount: data.ticket_count ?? 0,
+      vaultBalance:
+        data.vaultBalance ??
+        data.vault_balance ??
+        data.vault_locked_balance ??
+        0,
+      lockedBalance: data.lockedBalance ?? data.vault_locked_balance ?? 0,
+      availableBalance:
+        data.availableBalance ?? data.vault_available_balance ?? 0,
+      ticketCount: data.ticketCount ?? data.ticket_count ?? 0,
       is_golden_hour_active: data.is_golden_hour_active ?? false,
       golden_hour_multiplier: data.golden_hour_multiplier ?? 1.0,
       golden_hour_remaining_seconds: data.golden_hour_remaining_seconds ?? 0,

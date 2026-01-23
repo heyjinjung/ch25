@@ -58,7 +58,6 @@ const TABS: TicketTab[] = [
   },
 ];
 
-
 // ============================================================================
 // Confetti Effects
 // ============================================================================
@@ -130,7 +129,14 @@ const triggerJackpotExplosion = () => {
 // ============================================================================
 
 const RoulettePage = () => {
-  const { playRouletteSpin, stopRouletteSpin, playRouletteStop, playSmallWin, playBigWin, playRouletteLose } = useSound();
+  const {
+    playRouletteSpin,
+    stopRouletteSpin,
+    playRouletteStop,
+    playSmallWin,
+    playBigWin,
+    playRouletteLose,
+  } = useSound();
   const [activeTab, setActiveTab] = useState<GameTokenType>("ROULETTE_TICKET");
   const [isSpinning, setIsSpinning] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState<number | undefined>();
@@ -189,17 +195,19 @@ const RoulettePage = () => {
     if (normalized.length === 6) return normalized;
 
     // fallback if API doesn't provide segments
-    const fallback = Array.from({ length: 6 }).map((_, i) => ({
-      slot_index: i,
-      label: `Slot ${i + 1}`,
-      reward_type: 'NONE' as const,
-      reward_amount: 0,
-      weight: 1,
-      isJackpot: false,
-    }));
+    const fallback: RouletteSegmentDto[] = Array.from({ length: 6 }).map(
+      (_, i) => ({
+        id: i,
+        slot_index: i,
+        label: `Slot ${i + 1}`,
+        reward_type: "NONE",
+        reward_amount: 0,
+        is_fever_reward: false,
+      }),
+    );
 
     // fill missing slots deterministically
-    const byIndex = new Map<number, (typeof fallback)[number]>();
+    const byIndex = new Map<number, RouletteSegmentDto>();
     for (const seg of normalized) byIndex.set(seg.slot_index, seg);
     return fallback.map((seg) => byIndex.get(seg.slot_index) ?? seg);
   }, [data?.segments]);
@@ -422,7 +430,6 @@ const RoulettePage = () => {
 
       <div className="relative z-10 container mx-auto px-4 py-8 max-w-6xl">
         {/* Header */}
-
 
         {/* Tabs */}
         <div className="mb-6 flex justify-center">
