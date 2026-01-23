@@ -215,6 +215,7 @@ V2 배포 전/후 필수 검증 항목을 표준화한다.
 
 버전: v1.30 (2026-01-24, GitHub Copilot): 주사위 패배 골든아워 배수 적용 검증 추가
 ## 5. 변경 이력
+- v1.31 (2026-01-24, Antigravity): XP Exploit/CC Deposit Critical Fix 검증 완료
 - v1.30 (2026-01-24, GitHub Copilot): 주사위 패배 골든아워 배수 적용 검증 추가
 - v1.29 (2026-01-24, GitHub Copilot): Mission 목록/클레임/중복 차단 검증 기록 추가
 - v1.28 (2026-01-24, GitHub Copilot): Mission API/클레임 검증 불가 및 Admin 미션 관리 검증 기록 추가

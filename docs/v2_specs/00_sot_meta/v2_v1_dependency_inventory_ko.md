@@ -43,23 +43,21 @@ V2 코드베이스에서 V1 서비스/라우트/모델 경유 지점을 정리�
 - app/v2/api/admin/game_config_routes.py
   - app.services.admin_audit_service.AdminAuditService
 - app/v2/api/admin/inventory_routes.py
-  - app.services.admin_audit_service.AdminAuditService
+  - (Migrated to V2 Services) V1 Model Usage: `app.models.game_wallet`, `app.models.inventory`, `app.models.user`
 - app/v2/api/admin_cc_deposit.py
-  - app.services.admin_external_ranking_service.AdminExternalRankingService
-  - app.services.admin_user_identity_service.build_admin_user_summary
+  - (Migrated to V2 Services) V1 Model Usage: `app.models.user`
 - app/v2/api/admin_ops_plan.py
-  - app.services.ops_plan_service.OpsPlanService
+  - (Migrated to V2 Services) V1 Model Usage: `app.models.ops_plan`, `app.models.ops_target`
+- app/v2/api/admin/inventory_routes.py
+  - (Migrated to V2 Services) V1 Model Usage: `app.models.game_wallet`, `app.models.inventory`, `app.models.user`
 - app/v2/api/admin/economy_routes.py
-  - app.services.admin_audit_service.AdminAuditService
-  - app.services.admin_external_ranking_service.AdminExternalRankingService
+  - (Migrated to V2 Services) V1 Model Usage: `app.models.game_wallet`, `app.models.inventory`, `app.models.user`
 - app/v2/api/admin/level_routes.py
-  - app.services.admin_audit_service.AdminAuditService
+  - (Migrated to V2 Services) V1 Model Usage: Shared Models
 - app/v2/api/admin/user_routes.py
-  - app.services.admin_audit_service.AdminAuditService
-  - app.services.admin_user_service.AdminUserService
+  - (Migrated to V2 Services) V1 Model Usage: `app.models.user`, `app.models.game_wallet`
 - app/v2/api/admin/segment_routes.py
-  - app.services.admin_segment_rule_service.AdminSegmentRuleService
-  - app.services.user_segment_service.UserSegmentService
+  - (Migrated to V2 Services) V1 Model Usage: None (Clean)
 - app/v2/api/admin/vault_routes.py
   - app.v2.services.vault_service.V2VaultService
   - app.v2.services.admin_economy_service.V2AdminEconomyService
@@ -194,6 +192,7 @@ id | route | HTTP | v1_service | v2_service | status | owner | risk | tests | mi
 
 ## 15. 변경 이력
 - v1.4 (2026-01-23, GitHub Copilot): Game Play 라우트(`/roulette/play`, `/dice/play`, `/lottery/play`)를 V2 게임 서비스로 정리 및 라우트 내 V1 인스턴스 제거; 검증 테스트 통과
+- v1.3 (2026-01-24, Antigravity): Admin CC Deposit Service V2 이관 완료 (V1 VaultShim 제거, V2VaultService.handle_deposit_increase_signal 사용)
 - v1.3 (2026-01-23, Antigravity): Vault 및 CC Deposit 영역 v2-only 이관 및 V1 서비스 의존 제거 반영
 - v1.2 (2026-01-23, GitHub Copilot): V2 MissionService의 V1 RewardService 의존 제거 반영
 - v1.1 (2026-01-23, GitHub Copilot): v1 호출 CSV, 라우팅 맵, 경로 충돌/예시/우선순위 섹션 추가
