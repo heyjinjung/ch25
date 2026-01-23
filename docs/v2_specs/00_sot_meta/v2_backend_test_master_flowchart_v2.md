@@ -1,7 +1,7 @@
 # V2 Backend Master Test Flowchart & Checklist (V2 전용)
 
 문서 타입: 가이드
-버전: v2.3
+버전: v2.7
 작성일: 2026-01-24
 작성자: Antigravity (User Request Based)
 상태: Draft
@@ -147,10 +147,26 @@ graph TD
 - 실행 환경: 로컬 Docker Compose (backend/db/redis/nginx)
 - 실행 커맨드:
   - `pytest -q tests/v2_tests/phase2_core/test_vault2_service.py tests/v2_tests/phase2_core/test_vault_withdrawal_logic.py`
+  - `pytest -q tests/v2_tests/phase2_core/test_shop_inventory_logic.py`
+  - `pytest -q tests/v2_tests/phase2_core/test_v2_mission_service.py`
   - `Invoke-WebRequest -Uri "http://localhost:8000/api/v2/vault/status" -Headers @{Authorization="Bearer <redacted>"} -UseBasicParsing | Select-Object -ExpandProperty Content`
+  - `Invoke-WebRequest -Uri "http://localhost:8000/api/v2/shop/products" -Headers @{Authorization="Bearer <redacted>"} -UseBasicParsing`
+  - `Invoke-WebRequest -Uri "http://localhost:8000/api/v2/shop/purchase" -Headers @{Authorization="Bearer <redacted>"} -Method Post -ContentType "application/json" -Body '{"sku":"SOT_DIAMOND_FRAGMENT"}'`
+  - `Invoke-WebRequest -Uri "http://localhost:8000/api/v2/shop/purchase" -Headers @{Authorization="Bearer <redacted>"} -Method Post -ContentType "application/json" -Body '{"sku":"SOT_CHICKEN_GIFTICON_10000"}'`
+  - `Invoke-WebRequest -Uri "http://localhost:8000/api/v2/inventory" -Headers @{Authorization="Bearer <redacted>"} -UseBasicParsing`
+  - `Invoke-WebRequest -Uri "http://localhost:8000/api/v2/inventory/use" -Headers @{Authorization="Bearer <redacted>"} -Method Post -ContentType "application/json" -Body '{"item_type":"VOUCHER_DICE_TOKEN_1","amount":1,"idempotency_key":"edge-inv-use-20260124-1"}'`
+  - `Invoke-WebRequest -Uri "http://localhost:8000/api/v2/mission/" -Headers @{Authorization="Bearer <redacted>"} -UseBasicParsing`
+  - `Invoke-WebRequest -Uri "http://localhost:8000/api/v2/mission/{mission_id}/claim" -Headers @{Authorization="Bearer <redacted>";"X-Idempotency-Key"="mission-claim-20260124-1"} -Method Post`
 - 결과 요약:
   - Phase 2 pytest (Vault): 5 passed (warnings 1)
+  - Phase 2 pytest (Shop/Inventory): 3 passed
+  - Phase 2 pytest (Mission): 3 passed
   - /api/v2/vault/status 응답: 200 OK (body: null)
+  - /api/v2/shop/products, /api/v2/shop/purchase 응답: 200 OK
+  - /api/v2/inventory, /api/v2/inventory/use 응답: 200 OK
+  - /api/v2/mission/ 응답: 신규 유저 미션 6종 반환
+  - /api/v2/mission/{mission_id}/claim 응답: 200 OK, 중복 클레임 ALREADY_CLAIMED 차단
+  - 미션 보상: user.vault_locked_balance 증가 확인 (vault_ledger 미기록)
   - DB 스냅샷: user/v2_user 기록, vault_ledger Empty set (0 rows)
 - **증거**: [v2_verification_test_logs_20260124.md](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md)
 
@@ -164,12 +180,28 @@ graph TD
     - API: `POST /api/v2/roulette/play`
   - **Dice Play**: Status **200 OK**, Outcome: LOSE, Dice: [2, 1]
     - API: `POST /api/v2/dice/play`
+  - **Dice Lose (Golden Hour)**: `vault_earn=-100` (base -50, multiplier 2.0 적용)
   - **Lottery Play**: Status **200 OK**, Prize ID: 2, Prize: P3 V2 Prize B
     - API: `POST /api/v2/lottery/play`
   - 원장 분리 검증: 4 passed
 - **증거**: [v2_verification_test_logs_20260124.md](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md)
 
+## 4.4 Phase 4 실행 로그 (2026-01-24)
+- 실행 환경: Local Test Engine (SQLite In-Memory)
+- 실행 커맨드:
+  - `python tests/v2_tests/phase4_admin/verify_admin_ops_v2.py`
+- 결과 요약:
+  - **RBAC**: User blocked (403), Admin allowed (200).
+  - **Ops Plan**: Creation and DB persistence verified.
+  - **Shop Config**: Sync default products and update price verified.
+  - **Inventory**: Admin grant item API verified.
+- **증거**: [v2_verification_test_logs_20260124_phase4.md](docs/08_changelog/v2_verification_test_logs_20260124_phase4.md)
+
 ## 5. 변경 이력
+- v2.7 (2026-01-24, GitHub Copilot): 주사위 패배 골든아워 배수 적용 로그 추가
+- v2.6 (2026-01-24, GitHub Copilot): Phase 2 Mission 실응답/클레임/중복 차단 로그 추가
+- v2.5 (2026-01-24, Antigravity): Phase 4 Admin & Ops 실행 로그 추가
+- v2.4 (2026-01-24, GitHub Copilot): Phase 2 Shop/Inventory 실응답 로그 추가
 - v2.3 (2026-01-24, GitHub Copilot): Phase 3 원장 분리 검증 로그 추가
 - v2.2 (2026-01-24, GitHub Copilot): Phase 2 실행 로그 추가
 - v2.1 (2026-01-24, GitHub Copilot): Phase 1 실행 로그 추가

@@ -36,9 +36,6 @@ class V2AdminCCDepositService:
     MAX_STEPS_PER_DAY = 50
 
 
-class AdminExternalRankingService(V2AdminCCDepositService):
-    """Backward-compatible alias for legacy import paths."""
-    pass
 
 
     @staticmethod
@@ -277,7 +274,7 @@ class AdminExternalRankingService(V2AdminCCDepositService):
                     deposit_delta,
                 )
 
-                # Whale Check (First 500k + 7D 3M累计)
+                # Whale Check (First 500k + 7D 3M�??)
                 user = db.query(User).filter(User.id == row.user_id).first()
                 if user:
                     V2AdminCCDepositService._check_whale_qualification(
@@ -356,7 +353,7 @@ class AdminExternalRankingService(V2AdminCCDepositService):
                     row.deposit_remainder = remainder
                     continue
 
-            if deposit_steps > 0 and xp_per_step > 0:
+            if deposit_steps > 0 and xp_per_step > 0 and deposit_delta > 0:
                 xp_to_add = deposit_steps * xp_per_step
                 season_pass.add_bonus_xp(db, user_id=row.user_id, xp_amount=xp_to_add, now=today)
                 level_xp.add_xp(
@@ -465,10 +462,16 @@ class AdminExternalRankingService(V2AdminCCDepositService):
                 db.add(profile)
                 
                 msg = (
-                    f"🐋 **CC Deposit Whale Detected!**\n"
+                    f"?�� **CC Deposit Whale Detected!**\n"
                     f"- UserID: `{user.id}` (Nickname: `{user.nickname or user.external_id}`)\n"
-                    f"- First CC Deposit: `{user.first_deposit_amount or 0:,}원`\n"
-                    f"- Current Total: `{current_external_total:,}원`\n"
-                    f"- Action: VIP 라운지 케어 필요 (+500 XP 지급됨)"
+                    f"- First CC Deposit: `{user.first_deposit_amount or 0:,}??\n"
+                    f"- Current Total: `{current_external_total:,}??\n"
+                    f"- Action: VIP ?�운지 케???�요 (+500 XP 지급됨)"
                 )
                 send_ops_notification(msg, channel="admin")
+
+
+class AdminExternalRankingService(V2AdminCCDepositService):
+    "Backward-compatible alias."
+    pass
+

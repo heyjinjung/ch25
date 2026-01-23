@@ -23,9 +23,16 @@ from app.models.app_ui_config import AppUiConfig
 from app.v2.services.v2_admin_ops_plan_service import V2AdminOpsPlanService
 from app.models.ops_plan import OpsPlan, OpsPlanTask, OpsCampaign
 
+from sqlalchemy.pool import StaticPool
+
 # In-memory SQLite for verification
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
-engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}, echo=False)
+engine = create_engine(
+    SQLALCHEMY_DATABASE_URL, 
+    connect_args={"check_same_thread": False}, 
+    poolclass=StaticPool,
+    echo=False
+)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def override_get_db():
@@ -150,24 +157,31 @@ def verify_admin_ops_v2():
     
     # 4. Admin Inventory Control
     print_banner("4. Admin Inventory Control")
-    # Verify inventory endpoints
-    # Use existing user (seeded in Step 0)
     user_id = user.id
     
-    # Need to seed inventory item first?
-    # Or use admin endpoint to give item?
-    # /api/v2/admin/inventory/users/{user_id}/items (POST) ?
-    # Let's check inventory_routes.py or just use DB directly for now
+    # Grant Item via API
+    inv_payload = {
+        "user_id": user_id,
+        "item_type": "DIAMOND",
+        "item_name": "Diamond",
+        "quantity": 10,
+        "reason": "Test Grant"
+    }
+    r_inv = client.post("/api/v2/admin/inventory/items", json=inv_payload)
+    print(f"Inventory Grant Status: {r_inv.status_code}")
+    if r_inv.status_code != 200:
+         print(f"Inventory Grant Error: {r_inv.text}")
+    assert r_inv.status_code == 200
+    
+    # Verify in DB
     from app.models.inventory import UserInventoryItem
-    inv_item = UserInventoryItem(user_id=user_id, item_type="DIAMOND", quantity=5)
-    db.add(inv_item)
-    db.commit()
-    
-    # Verify Admin List Inventory
-    # Path: /api/v2/admin/inventory/users/{user_id}/items ? checking inventory_routes.py would be best but let's guess standard
-    # Based on files list: app/v2/api/admin/inventory_routes.py exists.
-    
-    pass 
+    item = db.query(UserInventoryItem).filter(
+        UserInventoryItem.user_id == user_id, 
+        UserInventoryItem.item_type == "DIAMOND"
+    ).first()
+    assert item is not None
+    assert item.quantity == 10
+    print(f"Success: Granted 10 DIAMOND to User {user_id}")
 
 if __name__ == "__main__":
     try:

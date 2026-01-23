@@ -125,6 +125,48 @@
   - `Vault Earn`: 700 (200 * 3.5 = 700 정확히 계산)
   - **검증 성공**: 관리자 설정 실시간 반영 및 페이오프 배수(Golden Hour) 로직 정상 작동.
 
+### [CASE 3.12] 주사위 패배 금고 차감 + 골든아워 배수 적용
+- **테스트 일시**: 2026-01-24 01:38 KST
+- **사전 설정**:
+  - `vault_program.config_json.golden_hour_config`: `enabled=true`, `manual_override=FORCE_ON`, `multiplier=2.0`
+  - `v2_dice_config`: `lose_reward_type=POINT`, `lose_reward_amount=-50`, `lose_probability=1.0`
+- **Endpoint**:
+  - `GET /api/events/status` (Golden Hour 활성 확인)
+  - `POST /api/v2/dice/play`
+- **HTTP Status**: `200 OK`
+- **이벤트 상태 (Response JSON)**:
+```json
+{
+  "is_golden_hour": true,
+  "multiplier": 2.0,
+  "active_events": [
+    {
+      "event_type": "GOLDEN_HOUR",
+      "multiplier": 2.0,
+      "start_time": "21:30:00",
+      "end_time": "22:30:00",
+      "meta": {"override": "FORCE_ON"}
+    }
+  ]
+}
+```
+- **주사위 플레이 응답 (Response JSON)**:
+```json
+{
+  "result": "OK",
+  "game_data": {
+    "outcome": "LOSE",
+    "reward_amount": -50
+  },
+  "vault_earn": -100
+}
+```
+- **DB 스냅샷**:
+  - `v2_dice_log`: `result=LOSE, reward_type=POINT, reward_amount=-50`
+  - `vault_earn_event`: `amount=-100, vault_total_multiplier=2.0, amount_before_multiplier=-50`
+  - `user`: `vault_locked_balance` 2900 → 2800 (차감 -100)
+- **판정**: 패배 차감(-50)에 골든아워 배수(2.0x)가 적용되어 -100으로 반영됨
+
 ### [CASE 3.6] 복권 퍼즐 조각 드랍 검증
 - **Scenario**: 퍼즐 드랍 확률 100% 설정 시, 복권 플레이 결과로 퍼즐 조각(`C`, `J`, `M` 중 하나)을 수령하는지 확인.
 - **결과**:
@@ -480,8 +522,137 @@ null
 
 ---
 
+### [CASE 4.9] 미션 조회/클레임 및 중복 클레임 차단
+- **테스트 일시**: 2026-01-24 01:30 KST
+- **Endpoint**:
+  - `GET /api/v2/mission/`
+  - `POST /api/v2/mission/{mission_id}/claim`
+- **HTTP Status**: `200 OK` (목록/클레임), `400` (중복 클레임)
+- **요청 헤더**:
+  - `Authorization: Bearer <redacted>`
+- **응답 데이터 (Response JSON)**:
+```json
+{
+  "missions": [
+    {
+      "mission": {
+        "id": 2,
+        "title": "가입 축하금",
+        "category": "NEW_USER",
+        "logic_key": "welcome_signup",
+        "target_value": 1,
+        "reward_type": "POINT",
+        "reward_amount": 3000
+      },
+      "progress": {
+        "current_value": 0,
+        "is_completed": false,
+        "is_claimed": false,
+        "approval_status": "NONE"
+      }
+    },
+    {
+      "mission": {
+        "id": 3,
+        "title": "텔레그램 연동",
+        "category": "NEW_USER",
+        "logic_key": "welcome_telegram",
+        "target_value": 1,
+        "reward_type": "TICKET_ROULETTE",
+        "reward_amount": 1
+      },
+      "progress": {
+        "current_value": 0,
+        "is_completed": false,
+        "is_claimed": false,
+        "approval_status": "NONE"
+      }
+    }
+  ],
+  "streak_info": {
+    "streak_days": 0,
+    "current_multiplier": 1.0,
+    "is_hot": false,
+    "is_legend": false,
+    "next_milestone": 3,
+    "claimable_day": null
+  }
+}
+```
+- **클레임 응답 (Response JSON)**:
+```json
+{
+  "success": true,
+  "reward_type": "MissionRewardType.POINT",
+  "amount": 3000
+}
+```
+- **중복 클레임 응답 (Response JSON)**:
+```json
+{
+  "detail": "ALREADY_CLAIMED",
+  "error": {
+    "code": "ALREADY_CLAIMED",
+    "message": "ALREADY_CLAIMED"
+  }
+}
+```
+- **판정**:
+  - 신규 유저 미션 6종 목록 정상 반환
+  - 클레임 1회 성공 후 **중복 클레임 차단(ALREADY_CLAIMED)** 확인
+- **DB 스냅샷**:
+  - `mission`: `COUNT(*) = 6`, category=NEW_USER
+  - `user_mission_progress`: `user_id=9, mission_id=2, current_value=1, is_completed=1, is_claimed=1, reset_date=NON_RESET`
+  - `user`: `id=9, vault_locked_balance=3000`
+  - `vault_ledger`: user_id=9 기준 0 rows (미션 보상 지급 후 미기록)
+- **추가 메모**:
+  - 미수령 상태에서 `ALREADY_CLAIMED` 발생 제보가 있어 재현 로그 확보 필요
+
+---
+
+### [CASE 4.10] 어드민 미션 관리 (생성/수정/삭제)
+- **테스트 일시**: 2026-01-24 01:30 KST
+- **Endpoint**:
+  - `GET /api/v2/admin/game/missions`
+  - `POST /api/v2/admin/game/missions`
+  - `PUT /api/v2/admin/game/missions/{mission_id}`
+  - `DELETE /api/v2/admin/game/missions/{mission_id}`
+- **HTTP Status**: `200 OK`
+- **요청 헤더**:
+  - `Authorization: Bearer <redacted>`
+- **응답 데이터 (Response JSON)**:
+```json
+[]
+```
+```json
+{
+  "success": true,
+  "id": 1
+}
+```
+```json
+{
+  "success": true
+}
+```
+```json
+{
+  "success": true
+}
+```
+- **DB 스냅샷**:
+  - `mission`: `id=2~7, category=NEW_USER, logic_key=welcome_signup, welcome_telegram, start_play_roulette, start_play_dice, start_first_win, start_first_deposit`
+  - `admin_audit_log`:
+    - `id=192~197, action=MISSION_CREATE, target_type=MISSION, target_id=2~7`
+    - `id=189, action=MISSION_CREATE, target_type=MISSION, target_id=1`
+    - `id=190, action=MISSION_UPDATE, target_type=MISSION, target_id=1`
+    - `id=191, action=MISSION_DELETE, target_type=MISSION, target_id=1`
+
+---
+
 ## 5. 결론 (최종)
 - **Phase 3 검증 완료**: 기본 API 연결(200 OK)부터 심화 비즈니스 로직(등급 매핑, 티켓 소모, 페이오프 배수, 퍼즐 드랍)까지 V2 게임 엔진의 모든 핵심 로직이 SoT 명세에 따라 완벽히 작동함을 확인하였습니다.
 - **V2 Standard 준수**: 모든 로직은 Legacy(V1) 의존성을 배제하고 `app.v2` 표준에 따라 처리되었습니다.
 - **Phase 2 Vault 확인**: Vault 상태 API 200 OK 응답과 SoT(user/v2_user) 스냅샷을 기록하였습니다.
+- **미션 검증 보류**: `mission` 테이블 0건으로 미션 목록/클레임 검증 불가 (데일리/주간/신규용 미션 6종 미시드)
 
