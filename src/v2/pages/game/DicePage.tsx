@@ -1,5 +1,5 @@
 // src/v2/pages/game/DicePage.tsx
-import { useMemo, useState, useRef } from "react";
+import { useMemo, useState, useRef, useLayoutEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getV2DiceStatus, playV2Dice } from "../../api/v1CompatAdapter";
 import { triggerHaptic, triggerNotification } from "../../utils/haptic";
@@ -18,8 +18,38 @@ const DicePage = () => {
 
   const playerDiceRef = useRef<HTMLImageElement>(null);
   const opponentDiceRef = useRef<HTMLImageElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const auroraRef = useRef<HTMLDivElement>(null);
 
   const queryClient = useQueryClient();
+
+  useLayoutEffect(() => {
+    if (!containerRef.current || !auroraRef.current) return;
+
+    const ctx = gsap.context(() => {
+      gsap.to(containerRef.current, {
+        "--aurora-1": "#ff2a6d",
+        "--aurora-2": "#b1002a",
+        "--aurora-3": "#120006",
+        duration: 10,
+        repeat: -1,
+        yoyo: true,
+        ease: "sine.inOut",
+      });
+
+      gsap.to(".dice-aurora-blob", {
+        x: 20,
+        y: -20,
+        duration: 12,
+        repeat: -1,
+        yoyo: true,
+        ease: "sine.inOut",
+        stagger: 1,
+      });
+    }, containerRef);
+
+    return () => ctx.revert();
+  }, []);
 
   const { data } = useQuery({
     queryKey: ["v2-dice-status"],
@@ -61,15 +91,15 @@ const DicePage = () => {
       onRepeat: () => {
         setPlayerDice(Math.floor(Math.random() * 6) + 1);
         setOpponentDice(Math.floor(Math.random() * 6) + 1);
-      }
+      },
     });
 
     try {
       const result = await playMutation.mutateAsync();
       const game = result.game_data;
-      
+
       tl.kill(); // Stop the fast rolling
-      
+
       if (game) {
         // Final "Land" Animation
         gsap.to([playerDiceRef.current, opponentDiceRef.current], {
@@ -86,9 +116,9 @@ const DicePage = () => {
                 ? "WIN"
                 : game.outcome === "DRAW"
                   ? "DRAW"
-                  : "LOSE"
+                  : "LOSE",
             );
-          }
+          },
         });
       } else {
         setResultText("NO RESULT");
@@ -104,8 +134,13 @@ const DicePage = () => {
   };
 
   return (
-    <div className="dice-page-v2">
+    <div className="dice-page-v2" ref={containerRef}>
       <div className="dice-bg-overlay" />
+      <div className="dice-aurora-bg" ref={auroraRef}>
+        <div className="dice-aurora-blob blob-1" />
+        <div className="dice-aurora-blob blob-2" />
+        <div className="dice-aurora-blob blob-3" />
+      </div>
 
       <div className="dice-main-container">
         {/* Battle Section */}
@@ -146,9 +181,7 @@ const DicePage = () => {
         </div>
 
         {/* Status/Outcome Display */}
-        <div className="dice-outcome-badge">
-           {resultText}
-        </div>
+        <div className="dice-outcome-badge">{resultText}</div>
 
         {/* Action Buttons */}
         <div className="dice-action-area">

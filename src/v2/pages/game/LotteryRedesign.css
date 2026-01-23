@@ -1,7 +1,8 @@
 /* src/v2/pages/game/LotteryRedesign.css */
 
 .lottery-redesign-container {
-    min-height: 100%;
+    height: auto;
+    min-height: 600px;
     width: 100%;
     max-width: 391px;
     margin: 0 auto;
@@ -9,11 +10,53 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 20px;
-    padding: 48px 0 0;
+    gap: 12px;
+    padding: 36px 16px 10px 16px;
     color: #fff;
     font-family: 'Inter', sans-serif;
     overflow: hidden;
+    --aurora-1: #37EBFF;
+    --aurora-2: #1C6EFF;
+    --aurora-3: #06102F;
+}
+
+.lottery-aurora-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.6;
+    overflow: hidden;
+}
+
+.lottery-aurora-blob {
+    position: absolute;
+    width: 320px;
+    height: 320px;
+    border-radius: 50%;
+    filter: blur(52px);
+    background: radial-gradient(circle at 30% 30%, var(--aurora-1), transparent 70%);
+    mix-blend-mode: screen;
+}
+
+.lottery-aurora-blob.blob-1 {
+    top: -70px;
+    left: -50px;
+    background: radial-gradient(circle at 30% 30%, var(--aurora-1), transparent 70%);
+}
+
+.lottery-aurora-blob.blob-2 {
+    top: 130px;
+    right: -70px;
+    background: radial-gradient(circle at 50% 50%, var(--aurora-2), transparent 70%);
+}
+
+.lottery-aurora-blob.blob-3 {
+    bottom: -90px;
+    left: 40px;
+    width: 350px;
+    height: 350px;
+    background: radial-gradient(circle at 50% 50%, var(--aurora-3), transparent 70%);
 }
 
 /* Main Background Overlay */
@@ -25,28 +68,63 @@
     height: 100%;
     z-index: -1;
     pointer-events: none;
-    opacity: 0.6;
+    opacity: 0.3;
 }
 
-/* Ball Mixing Arena (310x310) */
+/* Ball Mixing Arena (275x275) */
 .ball-arena-container {
-    width: 310px;
-    height: 310px;
+    width: 275px;
+    height: 275px;
     border-radius: 200px;
-    background: radial-gradient(circle, rgba(77, 37, 255, 0.18) 0%, rgba(55, 235, 255, 0.24) 100%);
-    box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
+    background:
+        radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0) 45%),
+        radial-gradient(circle at 70% 80%, rgba(28, 110, 255, 0.20) 0%, rgba(6, 16, 47, 0) 55%),
+        radial-gradient(circle, rgba(77, 37, 255, 0.16) 0%, rgba(55, 235, 255, 0.22) 100%);
+    box-shadow:
+        0 18px 40px rgba(0, 0, 0, 0.45),
+        0 6px 16px rgba(0, 0, 0, 0.28),
+        inset 0 1px 0 rgba(255, 255, 255, 0.22),
+        inset 0 -22px 36px rgba(0, 0, 0, 0.35);
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    z-index: 1;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
     overflow: hidden;
+}
+
+.ball-arena-container::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background:
+        radial-gradient(circle at 32% 22%, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 48%),
+        radial-gradient(circle at 65% 55%, rgba(55, 235, 255, 0.18) 0%, rgba(55, 235, 255, 0) 58%);
+    mix-blend-mode: screen;
+    opacity: 0.75;
+}
+
+.ball-arena-container::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background:
+        radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0) 56%, rgba(255, 255, 255, 0.18) 62%, rgba(255, 255, 255, 0) 72%);
+    opacity: 0.55;
 }
 
 .mixing-ball {
     position: absolute;
     object-fit: contain;
     transition: transform 0.1s linear;
+    filter: drop-shadow(0 12px 18px rgba(0, 0, 0, 0.35)) drop-shadow(0 1px 0 rgba(255, 255, 255, 0.18));
 }
 
 .mixing-ball.ball-1 {

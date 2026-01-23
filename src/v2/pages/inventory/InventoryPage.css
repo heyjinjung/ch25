@@ -1,72 +1,41 @@
-/* Inventory Page - Figma v2 redesign */
+/* src/v2/pages/inventory/InventoryPage.css */
 
-.inventory-page-v2 {
+/* Mirroring Shop/ExchangeRedesign.css styling but with 3x3 grid for inventory */
+
+.exchange-page-v2.inventory-specific {
+    background: linear-gradient(180deg, rgba(80, 153, 149, 0.00) 0%, rgba(68, 127, 72, 0.24) 50.96%, #396664 100%), rgba(242, 244, 252, 0.10);
+    width: 390px;
+    height: 100%;
+    min-height: 100dvh;
+    margin: 0 auto;
+    position: relative;
     display: flex;
     flex-direction: column;
-    justify-content: flex-start;
     align-items: center;
-    width: 390px;
-    height: 769px;
-    margin: 0 auto;
-    background: radial-gradient(circle at 50% 0%, #1a0a05 0%, #000000 100%);
-    padding-top: 16px;
-    overflow: auto;
-}
-
-/* App Header */
-.app-header {
-    display: flex;
-    width: 320px;
-    height: 60px;
-    padding: 7px 87px 6px 0;
-    align-items: center;
-    justify-content: space-between;
-    color: white;
-}
-
-.app-title {
-    font-weight: 800;
-    font-size: 16px;
-    opacity: 0.9;
-}
-
-.info-pill {
-    width: 68px;
-    height: 20px;
-    border-radius: 59px;
-    background: #E1FF80;
-    /* Match shop spec */
-    box-shadow: 0 2px 0 0 rgba(0, 0, 0, 0.20);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 800;
-    font-size: 10px;
-    /* Match shop spec */
-    color: #1E1E1E;
-    cursor: pointer;
-}
-
-/* Tabs */
-.tabs {
-    display: flex;
-    width: 390px;
-    /* Standardize width to container */
-    height: 48px;
-    padding: 6px 39px 6px 38px;
-    align-items: center;
-    gap: 38px;
-    align-self: stretch;
-    border-bottom: 0.5px solid rgba(255, 255, 255, 0.1);
+    overflow-x: hidden;
+    color: #fff;
+    padding-top: 100px;
     box-sizing: border-box;
 }
 
-.tab-button {
-    background: transparent;
-    border: none;
-    color: rgba(255, 255, 255, 0.4);
-    font-weight: 700;
+/* Shop/Inventory Tabs Mirror */
+.shop-tabs-container {
+    display: flex;
+    height: 48px;
+    padding: 6px 0;
+    align-items: center;
+    gap: 38px;
+    justify-content: center;
+    align-self: stretch;
+    border-bottom: 0.5px solid rgba(255, 255, 255, 0.1);
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.shop-tab-item {
     font-size: 14px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.4);
     cursor: pointer;
     height: 100%;
     display: flex;
@@ -75,11 +44,11 @@
     white-space: nowrap;
 }
 
-.tab-button.active {
-    color: #FFFFFF;
+.shop-tab-item.active {
+    color: #fff;
 }
 
-.tab-button.active::after {
+.shop-tab-item.active::after {
     content: '';
     position: absolute;
     bottom: 0;
@@ -89,98 +58,98 @@
     background: #25AD82;
 }
 
-/* Main Card */
-.main-card {
-    width: 360px;
-    height: 122px;
-    border-radius: 50px;
-    background: rgba(98, 91, 113, 0.38);
-    mix-blend-mode: plus-lighter;
-    display: flex;
-    align-items: center;
-    padding: 20px;
-    margin: 8px 0 16px 0;
-    color: white;
-}
-
-.main-card-title {
-    font-weight: 900;
-    font-size: 18px;
-}
-
-.main-card-sub {
-    font-size: 12px;
-    opacity: 0.8;
-}
-
-/* Inventory grid */
-.inventory-items-container {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-}
-
-.inventory-items-grid {
+/* Inventory specific sub-grid: 3x3 */
+.inventory-sub-grid {
     display: grid;
-    width: 274px;
-    height: 260px;
-    row-gap: 11px;
-    column-gap: 20px;
-    grid-template-rows: repeat(3, fit-content(100%));
-    grid-template-columns: repeat(3, fit-content(100%));
-    justify-items: center;
+    grid-template-columns: repeat(3, 74px);
+    grid-template-rows: repeat(3, 74px);
+    width: 360px;
     align-items: center;
+    gap: 32px 24px;
+    /* Increased gap to fill area since no main cards */
+    justify-content: center;
+    margin-top: 40px;
 }
 
-.inventory-items-grid>.inventory-item-card {
-    margin: 0;
-}
-
-/* Individual small card */
-.inventory-item-card {
+/* Individual Item Card (Mirroring .shop-sub-card) */
+.inventory-item-card-v2 {
     width: 73.995px;
-    height: 75.198px;
+    height: 74px;
     position: relative;
     border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 6px;
-    background: linear-gradient(180deg, rgba(0, 0, 0, 0.10) 0%, rgba(42, 91, 46, 0.05) 100%);
-    filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.25));
-    transition: transform 0.12s ease;
+    padding: 0;
+    background: transparent !important;
+    cursor: pointer;
+    transition: transform 0.2s;
+    box-sizing: border-box;
 }
 
-.inventory-item-card:active {
-    transform: translateY(2px);
+.inventory-item-card-v2:active {
+    transform: scale(0.98);
 }
 
-/* small image container inside card */
-.inventory-item-image-container {
-    width: 46px;
-    height: 46px;
+.inventory-item-img-container {
+    width: 100%;
+    height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 8px;
-    overflow: hidden;
+    position: relative;
+    z-index: 1;
 }
 
-.inventory-item-image {
-    width: 40px;
-    height: 40px;
+.inventory-item-img {
+    max-width: 100%;
+    max-height: 100%;
     object-fit: contain;
 }
 
-/* Keep name hidden in small layout */
-.inventory-item-name {
-    display: none;
+/* Reuse SubCardBg styling */
+.sub-card-bg-svg {
+    position: absolute;
+    inset: -4px;
+    width: calc(100% + 8px);
+    height: calc(100% + 8px);
+    z-index: 0;
+    pointer-events: none;
 }
 
-.inventory-item-quantity {
-    display: none;
+/* Wallet Strip Styling (Shared with Shop) */
+.exchange-wallet-strip {
+    width: 360px;
+    margin-top: 24px;
 }
 
-.inventory-item-use-hint {
-    display: none;
+.inventory-summary-banner {
+    width: 360px;
+    height: 110px;
+    border-radius: 50px;
+    background: rgba(98, 91, 113, 0.38);
+    mix-blend-mode: plus-lighter;
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.summary-banner-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.inventory-bg-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.3;
 }

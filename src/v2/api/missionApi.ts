@@ -17,6 +17,50 @@ export interface MissionDto {
   readonly is_claimed: boolean;
 }
 
+interface BackendMissionSchema {
+  readonly id: number;
+  readonly title: string;
+  readonly description?: string | null;
+  readonly category: string;
+  readonly logic_key: string;
+  readonly action_type?: string | null;
+  readonly target_value: number;
+  readonly reward_type: string;
+  readonly reward_amount: number;
+  readonly xp_reward?: number;
+  readonly requires_approval?: boolean;
+  readonly start_time?: string | null;
+  readonly end_time?: string | null;
+  readonly auto_claim?: boolean;
+  readonly is_active?: boolean;
+}
+
+interface BackendMissionProgressSchema {
+  readonly current_value: number;
+  readonly is_completed: boolean;
+  readonly is_claimed: boolean;
+  readonly approval_status?: string;
+}
+
+interface BackendMissionWithProgress {
+  readonly mission: BackendMissionSchema;
+  readonly progress: BackendMissionProgressSchema;
+}
+
+interface BackendStreakInfoSchema {
+  readonly streak_days: number;
+  readonly current_multiplier: number;
+  readonly is_hot: boolean;
+  readonly is_legend: boolean;
+  readonly next_milestone: number;
+  readonly claimable_day: number | null;
+}
+
+interface BackendMissionListResponse {
+  readonly missions: BackendMissionWithProgress[];
+  readonly streak_info: BackendStreakInfoSchema;
+}
+
 export interface StreakRuleDto {
   readonly day: number;
   readonly reward_type: string;
@@ -52,11 +96,34 @@ export interface ClaimStreakResponse {
   }>;
 }
 
+const mapBackendMission = (item: BackendMissionWithProgress): MissionDto => ({
+  id: String(item.mission.id),
+  title: item.mission.title,
+  description: item.mission.description ?? "",
+  reward_type: item.mission.reward_type,
+  reward_amount: item.mission.reward_amount,
+  progress: item.progress.current_value,
+  target: item.mission.target_value,
+  is_completed: item.progress.is_completed,
+  is_claimed: item.progress.is_claimed,
+});
+
+const mapBackendStreakInfo = (
+  info: BackendStreakInfoSchema,
+): StreakInfoDto => ({
+  current_streak: info.streak_days,
+  today_completed: false,
+  last_completed_date: null,
+  claimable_rewards: info.claimable_day ? [info.claimable_day] : [],
+});
+
 export const getV2Missions = async (): Promise<MissionListResponse> => {
   try {
     const response =
-      await v2Client.get<MissionListResponse>("/api/v2/mission/");
-    return response.data;
+      await v2Client.get<BackendMissionListResponse>("/api/v2/mission/");
+    const missions = response.data.missions.map(mapBackendMission);
+    const streak_info = mapBackendStreakInfo(response.data.streak_info);
+    return { missions, streak_info };
   } catch (error) {
     console.error("[missionApi] Failed to fetch V2 missions", error);
     throw error;
@@ -69,6 +136,12 @@ export const claimV2Mission = async (
   try {
     const response = await v2Client.post<ClaimMissionResponse>(
       `/api/v2/mission/${missionId}/claim`,
+      null,
+      {
+        headers: {
+          "X-Idempotency-Key": crypto.randomUUID(),
+        },
+      },
     );
     return response.data;
   } catch (error) {

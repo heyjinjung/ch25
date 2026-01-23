@@ -1,8 +1,9 @@
 /* src/v2/pages/vault/VaultRedesign.css */
 
 .vault-redesign-container {
-    min-height: 100dvh;
     height: auto;
+    min-height: 600px;
+    /* Compact height */
     width: 390px;
     margin: 0 auto;
     position: relative;
@@ -13,11 +14,14 @@
     overflow-x: hidden;
     padding-top: 72px;
     /* Header Offset */
+    --aurora-1: #0f2f25;
+    --aurora-2: #0b3c2d;
+    --aurora-3: #0a2a21;
 }
 
 /* Background SVG Overlay */
 .vault-bg-overlay {
-    position: fixed;
+    position: absolute;
     top: 0;
     left: 0;
     width: 100%;
@@ -25,7 +29,46 @@
     z-index: -1;
     pointer-events: none;
     opacity: 1;
-    /* Match the svg asset depth */
+    /* Move to very background */
+}
+
+.vault-aurora-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.5;
+    overflow: hidden;
+}
+
+.vault-aurora-blob {
+    position: absolute;
+    width: 340px;
+    height: 340px;
+    border-radius: 50%;
+    filter: blur(56px);
+    background: radial-gradient(circle at 30% 30%, var(--aurora-1), transparent 70%);
+    mix-blend-mode: screen;
+}
+
+.vault-aurora-blob.blob-1 {
+    top: -90px;
+    left: -70px;
+    background: radial-gradient(circle at 30% 30%, var(--aurora-1), transparent 70%);
+}
+
+.vault-aurora-blob.blob-2 {
+    top: 140px;
+    right: -90px;
+    background: radial-gradient(circle at 50% 50%, var(--aurora-2), transparent 70%);
+}
+
+.vault-aurora-blob.blob-3 {
+    bottom: -110px;
+    left: 30px;
+    width: 380px;
+    height: 380px;
+    background: radial-gradient(circle at 50% 50%, var(--aurora-3), transparent 70%);
 }
 
 /* Main Content Spec */
@@ -33,20 +76,22 @@
     display: flex;
     width: 100%;
     max-width: 360px;
-    min-height: 0;
     flex-direction: column;
     align-items: center;
     /* Centered */
-    gap: 28px;
-    padding-top: 12px;
+    gap: 12px;
+    padding: 10px 8px;
     margin: 0 auto;
     box-sizing: border-box;
+    position: relative;
+    z-index: 1;
 }
 
 /* Tiered Safes Display */
 .vault-safes-arena {
     position: relative;
-    width: 364.363px;
+    width: 100%;
+    max-width: 364.363px;
     height: 195px;
     flex-shrink: 0;
     display: flex;
@@ -57,12 +102,40 @@
     align-self: center;
 }
 
+/* Bubble Background (rotates with vault card) */
+.vault-bubble-bg {
+    position: absolute;
+    opacity: 0.45;
+    pointer-events: none;
+    z-index: -1;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.vault-safe-item.lv1 .vault-bubble-bg {
+    width: 70px;
+    height: 70px;
+}
+
+.vault-safe-item.lv5 .vault-bubble-bg {
+    width: 103px;
+    height: 103px;
+}
+
+.vault-safe-item.vip .vault-bubble-bg {
+    width: 149px;
+    height: 149px;
+}
+
 .vault-safe-item {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 8px;
     transition: transform 0.3s ease;
+    position: relative;
+    z-index: 1;
 }
 
 .vault-safe-item.lv1 {
@@ -108,7 +181,7 @@
     align-items: flex-start;
     gap: 8px;
     width: 100%;
-    padding: 0 16px;
+    padding: 0 8px;
     box-sizing: border-box;
 }
 
@@ -187,20 +260,26 @@
 /* Action Footer Specced */
 .vault-action-footer {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    /* Centered together */
     gap: 12px;
     width: 100%;
-    padding: 20px 0 0 0;
+    padding: 10px 16px 24px;
     box-sizing: border-box;
-    margin-top: 20px;
+    margin-top: auto;
+    position: relative;
+    z-index: 1;
 }
 
-.vault-home-link,
-.vault-action-button {
+.footer-top-row {
     display: flex;
-    width: 160px;
+    width: 100%;
+    gap: 12px;
+    justify-content: center;
+}
+
+.vault-footer-btn {
+    display: flex;
     height: 48px;
     padding: 13px 0;
     justify-content: center;
@@ -208,17 +287,39 @@
     gap: 10px;
     flex-shrink: 0;
     border-radius: 62px;
-    background: rgba(60, 60, 67, 0.29);
+    background: rgba(60, 60, 67, 0.45);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 700;
     color: #fff;
     cursor: pointer;
-    transition: transform 0.2s, background 0.2s;
+    transition: transform 0.2s, background 0.2s, box-shadow 0.2s;
     text-decoration: none;
     box-sizing: border-box;
     overflow: hidden;
     outline: none;
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+}
+
+.vault-home-link,
+.vault-guide-button {
+    flex: 1;
+    max-width: 170px;
+}
+
+.vault-withdraw-main-btn {
+    width: 100%;
+    max-width: 352px;
+    background: linear-gradient(135deg, rgba(37, 173, 130, 0.6) 0%, rgba(18, 92, 72, 0.4) 100%);
+    border: 1px solid rgba(154, 255, 250, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+}
+
+.vault-withdraw-main-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: rgba(60, 60, 67, 0.2);
 }
 
 .casino-logo {
@@ -227,9 +328,8 @@
     object-fit: contain;
 }
 
-.vault-home-link:active,
-.vault-action-button:active {
-    transform: scale(0.96);
+.vault-footer-btn:active {
+    transform: scale(0.97);
 }
 
 @keyframes safe-rotate-1 {

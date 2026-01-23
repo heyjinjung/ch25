@@ -4,10 +4,10 @@
     display: flex;
     width: 390px;
     height: auto;
-    min-height: 600px;
-    /* More compact than 100vh */
-    padding: 20px 0 20px 0;
-    /* Reduced top padding */
+    min-height: 500px;
+    /* Reduced for compact view */
+    padding: 80px 0 0 0;
+    /* Clear Live Feed and handle user request */
     flex-direction: column;
     justify-content: flex-start;
     align-items: center;
@@ -17,6 +17,9 @@
     color: #fff;
     position: relative;
     overflow-x: hidden;
+    --aurora-1: #ff2a6d;
+    --aurora-2: #b1002a;
+    --aurora-3: #120006;
 }
 
 .dice-bg-overlay {
@@ -26,9 +29,48 @@
     width: 100%;
     height: 100%;
     background: url('/v2/assets/03dice/bg_removal [Background removed].png') center/cover no-repeat;
-    opacity: 0.3;
-    z-index: -1;
+    opacity: 0.2;
+    z-index: -2;
     pointer-events: none;
+}
+
+.dice-aurora-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.7;
+    overflow: hidden;
+}
+
+.dice-aurora-blob {
+    position: absolute;
+    width: 320px;
+    height: 320px;
+    border-radius: 50%;
+    filter: blur(50px);
+    background: radial-gradient(circle at 30% 30%, var(--aurora-1), transparent 70%);
+    mix-blend-mode: screen;
+}
+
+.dice-aurora-blob.blob-1 {
+    top: -60px;
+    left: -40px;
+    background: radial-gradient(circle at 30% 30%, var(--aurora-1), transparent 70%);
+}
+
+.dice-aurora-blob.blob-2 {
+    top: 100px;
+    right: -60px;
+    background: radial-gradient(circle at 50% 50%, var(--aurora-2), transparent 70%);
+}
+
+.dice-aurora-blob.blob-3 {
+    bottom: -80px;
+    left: 40px;
+    width: 340px;
+    height: 340px;
+    background: radial-gradient(circle at 50% 50%, var(--aurora-3), transparent 70%);
 }
 
 .dice-main-container {
@@ -39,6 +81,8 @@
     align-items: center;
     gap: 12px;
     /* Tight gap */
+    position: relative;
+    z-index: 1;
 }
 
 /* Battle Cards Grid */

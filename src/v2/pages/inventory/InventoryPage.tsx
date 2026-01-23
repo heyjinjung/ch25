@@ -1,3 +1,5 @@
+// src/v2/pages/inventory/InventoryPage.tsx
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   useV2Inventory,
@@ -6,17 +8,14 @@ import {
 import { useV2Vault } from "../../hooks/useV2Vault";
 import "./InventoryPage.css";
 
-// inventory assets (08inventory)
-const ASSET_PATH = "/v2/assets/08inventory";
-const imgFrame127 = `${ASSET_PATH}/Frame 9-1.png`;
-const imgFrame129 = `${ASSET_PATH}/Frame 9-2.png`;
-const imgFrame130 = `${ASSET_PATH}/Frame 9-3.png`;
+const ASSET_PATH = "/v2/assets/06shop";
 
 export default function InventoryPage() {
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
+  const [activeTab, setActiveTab] = useState("inventory");
 
-  const { data, isLoading } = useV2Inventory();
+  const { data, isLoading, error } = useV2Inventory();
   const useItemMutation = useV2UseInventoryItem();
   const { useVaultStatus } = useV2Vault();
   const { data: vaultStatus } = useVaultStatus();
@@ -24,137 +23,157 @@ export default function InventoryPage() {
   const items = data?.items ?? [];
 
   const handleUseItem = (itemType: string) => {
-    useItemMutation.mutate({ item_type: itemType, quantity: 1 });
+    if (window.confirm("아이템을 사용하시겠습니까?")) {
+      useItemMutation.mutate({ item_type: itemType, quantity: 1 });
+    }
   };
+
+  const getItemImage = (type: string) => {
+    switch (type) {
+      case "gold_key":
+        return `${ASSET_PATH}/Frame 9-1.png`;
+      case "diamond_key":
+        return `${ASSET_PATH}/Frame 9.png`;
+      case "premium_ticket":
+        return `${ASSET_PATH}/Frame 9-2.png`;
+      default:
+        return `${ASSET_PATH}/Frame 9-3.png`;
+    }
+  };
+
+  const SubCardBg = () => (
+    <svg className="sub-card-bg-svg" xmlns="http://www.w3.org/2000/svg" width="82" height="82" viewBox="0 0 82 82" fill="none">
+      <g filter="url(#filter0_d_10_314)">
+        <path d="M61.8415 0H20.1539C11.2324 0 4 7.23281 4 16.1549V57.8451C4 66.7672 11.2324 74 20.1539 74H61.8415C70.7631 74 77.9954 66.7672 77.9954 57.8451V16.1549C77.9954 7.23281 70.7631 0 61.8415 0Z" fill="url(#paint0_linear_10_314)" fillOpacity="0.5" shapeRendering="crispEdges"/>
+      </g>
+      <defs>
+        <filter id="filter0_d_10_314" x="0" y="0" width="81.9951" height="82" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
+          <feFlood floodOpacity="0" result="BackgroundImageFix"/>
+          <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+          <feOffset dy="4"/>
+          <feGaussianBlur stdDeviation="2"/>
+          <feComposite in2="hardAlpha" operator="out"/>
+          <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"/>
+          <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_10_314"/>
+          <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_10_314" result="shape"/>
+        </filter>
+        <linearGradient id="paint0_linear_10_314" x1="40.9977" y1="0" x2="40.9977" y2="74" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#E1FF80" stopOpacity="0.2"/>
+          <stop offset="1" stopColor="#2A5B2E" stopOpacity="0.1"/>
+        </linearGradient>
+      </defs>
+    </svg>
+  );
 
   if (isLoading) {
     return (
-      <div className="inventory-page-v2">
-        <div
-          style={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            color: "white",
-            fontSize: "14px",
-          }}
-        >
-          Loading...
-        </div>
+      <div className="exchange-page-v2 inventory-specific items-center justify-center">
+        <div className="w-10 h-10 border-2 border-[#9AFFFA] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
-  // Map item types to images (simple mapping for v2)
-  const getItemImage = (index: number) => {
-    // 누락된 이미지 대신 placeholder 배열 사용
-    const images = [imgFrame129, imgFrame127, imgFrame130];
-    return images[index % images.length];
-  };
+  if (error) {
+    return (
+      <div className="exchange-page-v2 inventory-specific items-center justify-center px-6 text-center">
+        <p className="text-white/40">오류가 발생했습니다.</p>
+      </div>
+    );
+  }
 
   return (
-    <div
-      ref={containerRef}
-      className="inventory-page-v2 scrollbar-hide overflow-y-auto"
-    >
-      {/* App Header */}
-      <div className="app-header">
-        <div className="app-title">제목 없음</div>
-        <div className="info-pill">안내</div>
-      </div>
+    <div className="exchange-page-v2 inventory-specific" ref={containerRef}>
+      <img src={`${ASSET_PATH}/shop.svg`} className="inventory-bg-overlay" alt="" />
 
-      {/* Hidden shop / inventory tabs */}
-      <div className="tabs">
-        <button className="tab-button" onClick={() => navigate('/v2/shop')}>상점</button>
-        <button className="tab-button active">인벤토리</button>
-      </div>
-
-      {/* Main Card */}
-      <div className="main-card">
-        <div className="main-card-content">
-          <div className="main-card-title">가방 요약</div>
-          <div className="main-card-sub">아이템 보유 현황</div>
+      <div className="shop-tabs-container">
+        <div
+          className={`shop-tab-item ${activeTab === "shop" ? "active" : ""}`}
+          onClick={() => navigate("/v2/shop")}
+        >
+          상점
+        </div>
+        <div
+          className={`shop-tab-item ${activeTab === "inventory" ? "active" : ""}`}
+          onClick={() => setActiveTab("inventory")}
+        >
+          인벤토리
         </div>
       </div>
 
-      {/* Wallet Balance Display */}
-      <div className="exchange-wallet-strip px-4 mt-4 mb-6">
-        <div className="flex justify-between items-center bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-md">
-          <div className="flex flex-col">
-            <span className="text-[10px] text-white/40 font-bold uppercase tracking-wider mb-1">
-              보관금 (VAULT)
-            </span>
-            <span className="text-lg font-black text-white italic">
-              {(vaultStatus?.vaultBalance || 0).toLocaleString()}{" "}
-              <span className="text-[10px] not-italic opacity-50 ml-0.5">
-                P
+      <div className="inventory-main-area">
+        {/* Summary Banner (Mirrors shop banner style) */}
+        <div className="inventory-summary-banner">
+          <img
+            src="/assets/hero_event_banner.png"
+            className="summary-banner-img"
+            alt="inventory summary"
+          />
+          <div className="banner-info-btn">내 인벤토리</div>
+        </div>
+
+        {/* Wallet Strip */}
+        <div className="exchange-wallet-strip">
+          <div className="flex justify-between items-center bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-md">
+            <div className="flex flex-col">
+              <span className="text-[10px] text-white/40 font-bold uppercase tracking-wider mb-1">
+                보관금 (VAULT)
               </span>
-            </span>
-          </div>
-          <div className="w-px h-8 bg-white/10 mx-2" />
-          <div className="flex flex-col items-end">
-            <span className="text-[10px] text-white/40 font-bold uppercase tracking-wider mb-1">
-              보유 토큰
-            </span>
-            <span className="text-lg font-black text-[#FF7A00] italic">
-              {(vaultStatus?.ticketCount || 0).toLocaleString()}{" "}
-              <span className="text-[10px] not-italic opacity-50 ml-0.5">
-                T
+              <span className="text-lg font-black text-white italic">
+                {(vaultStatus?.vaultBalance || 0).toLocaleString()} <span className="text-[10px] not-italic opacity-50 ml-0.5">P</span>
               </span>
-            </span>
+            </div>
+            <div className="w-px h-8 bg-white/10 mx-2" />
+            <div className="flex flex-col items-end">
+              <span className="text-[10px] text-white/40 font-bold uppercase tracking-wider mb-1">
+                보유 토큰
+              </span>
+              <span className="text-lg font-black text-[#FF7A00] italic">
+                {(vaultStatus?.ticketCount || 0).toLocaleString()} <span className="text-[10px] not-italic opacity-50 ml-0.5">T</span>
+              </span>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="section-header px-4 mb-6">
-        <h2 className="section-title">나의 가방</h2>
-        <span className="text-white/40 text-[10px] font-bold uppercase">
-          {items.length} Items
-        </span>
-      </div>
-
-      <div className="inventory-items-container">
-        <div className="inventory-items-grid">
+        {/* Inventory Items Section */}
+        <div className="inventory-sub-grid">
           {items.length === 0 && (
-            <div className="w-full text-center py-20 text-white/30 text-sm font-bold">
-              보유 아이템이 없습니다
+            <div className="col-span-3 text-center py-20 text-white/30 text-xs font-bold uppercase tracking-widest">
+              No Items Found
             </div>
           )}
-          {items.map((item, index) => (
+          {items.slice(0, 9).map((item) => (
             <div
               key={item.item_type}
-              className="inventory-item-card"
+              className="inventory-item-card-v2"
               onClick={() => handleUseItem(item.item_type)}
             >
-              <div className="inventory-item-name">{item.item_type}</div>
-              <div className="inventory-item-quantity">
-                수량: {item.quantity}
-              </div>
-
-              <div className="inventory-item-image-container">
+              <SubCardBg />
+              <div className="inventory-item-img-container">
                 <img
-                  className="inventory-item-image"
-                  src={getItemImage(index)}
+                  className="inventory-item-img"
+                  src={getItemImage(item.item_type)}
                   alt={item.item_type}
                 />
               </div>
-
-              <div className="inventory-item-use-hint">사용하기</div>
+              {/* Quantity Indicator */}
+              <div className="absolute top-1 right-1 bg-black/60 px-1.5 py-0.5 rounded-full border border-white/10 text-[8px] font-black text-white z-20">
+                x{item.quantity}
+              </div>
             </div>
           ))}
         </div>
-      </div>
 
-      {/* Placeholder for future sections */}
-      <div className="px-4 mt-8 pb-32">
-        <div className="rounded-2xl bg-white/5 border border-white/5 p-4">
-          <p className="text-[10px] font-bold text-white/40 uppercase mb-1">
-            Tip
-          </p>
-          <p className="text-xs text-white/60 leading-relaxed">
-            아이템을 사용하여 게임에서 특별한 보너스를 받을 수 있습니다.
-          </p>
+        {/* Tip Section */}
+        <div className="w-full max-w-[360px] mt-10 pb-32">
+          <div className="rounded-2xl bg-white/5 border border-white/5 p-4 backdrop-blur-sm">
+            <p className="text-[10px] font-bold text-white/40 uppercase mb-1 tracking-widest">
+              Inventory Tip
+            </p>
+            <p className="text-[11px] text-white/60 leading-relaxed">
+              아이템을 사용하여 게임에서 특별한 보너스를 받을 수 있습니다.<br />
+              사용된 아이템은 즉시 소모되며 효과가 발생합니다.
+            </p>
+          </div>
         </div>
       </div>
     </div>
