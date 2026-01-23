@@ -174,11 +174,6 @@ const LotteryPage: React.FC = () => {
 
   return (
     <div className="lottery-redesign-container" ref={containerRef}>
-      <img
-        src={`${ASSET_PATH}/game-L.svg`}
-        className="lottery-bg-overlay"
-        alt=""
-      />
       <div className="lottery-aurora-bg">
         <div className="lottery-aurora-blob blob-1" />
         <div className="lottery-aurora-blob blob-2" />
@@ -241,6 +236,48 @@ const LotteryPage: React.FC = () => {
           {isRevealed ? "NEXT GAME" : isPlaying ? "MIXING..." : "PLAY NOW"}
         </button>
       </div>
+
+      {/* Prize List Section */}
+      {data && data.prizes && (
+        <div className="lottery-prize-section">
+          <div className="lottery-prize-header">
+            <h3>당첨 가능 경품 리스트</h3>
+            <span className="lottery-prize-count">Total {data.prizes.length} Items</span>
+          </div>
+
+          <div className="lottery-prize-grid">
+            {data.prizes.slice(0, 12).map((prize: any) => (
+              <div
+                key={prize.id}
+                className={`lottery-prize-item ${prize.is_active === false ? "inactive" : ""}`}
+              >
+                <div className="prize-item-bg">
+                  <img src="/v2/assets/04lotto/Mix balls 1.png" className="w-full h-full object-cover" alt="" />
+                </div>
+
+                <div className="prize-icon-container">
+                  <img src="/v2/assets/04lotto/Mix balls 2.png" className="prize-icon" alt="" />
+                </div>
+
+                <div className="prize-info">
+                  <span className="prize-label">{prize.label}</span>
+                  <span className="prize-reward">
+                    {prize.reward_amount.toLocaleString()} 
+                    {prize.reward_type.includes("POINT") ? "P" : " XP"}
+                  </span>
+                </div>
+
+                {prize.stock !== null && (
+                  <div className="prize-stock-badge">
+                    <div className="stock-dot" />
+                    <span className="stock-count">{prize.stock}</span>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Result Layer */}
       <AnimatePresence>

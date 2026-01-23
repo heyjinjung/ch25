@@ -413,14 +413,7 @@ const RoulettePage = () => {
 
       <div className="relative z-10 container mx-auto px-4 py-8 max-w-6xl">
         {/* Header */}
-        <div className="text-center mb-6">
-          <h1 className="text-3xl font-black text-white tracking-tight mb-2">
-            V2 럭셔리 CC룰렛
-          </h1>
-          <p className="text-sm text-white/60">
-            골드와 다이아 룰렛으로 프리미엄 보상을 노려보세요
-          </p>
-        </div>
+
 
         {/* Tabs */}
         <div className="mb-6 flex justify-center">

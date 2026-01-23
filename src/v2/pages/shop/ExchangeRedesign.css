@@ -188,38 +188,6 @@
     box-shadow: 0 0 20px rgba(183, 255, 0, 0.3), inset 0 0 10px rgba(183, 255, 0, 0.1);
 }
 
-/* Shimmer (Shine) Effect for Main Cards */
-.shop-main-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -150%;
-    width: 60%;
-    height: 100%;
-    background: linear-gradient(90deg,
-            rgba(255, 255, 255, 0) 0%,
-            rgba(255, 255, 255, 0.15) 50%,
-            rgba(255, 255, 255, 0) 100%);
-    z-index: 5;
-    pointer-events: none;
-    transform: skewX(-20deg);
-    animation: shop-shimmer 4s infinite;
-}
-
-@keyframes shop-shimmer {
-    0% {
-        left: -150%;
-    }
-
-    30% {
-        left: 200%;
-    }
-
-    100% {
-        left: 200%;
-    }
-}
-
 .shop-sub-card {
     width: 73.995px;
     height: 74px;

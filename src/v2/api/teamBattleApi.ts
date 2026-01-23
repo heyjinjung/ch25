@@ -134,3 +134,14 @@ export const getV2TeamLeaderboard = async (params?: LeaderboardParams): Promise<
     throw error;
   }
 };
+
+export const autoAssignV2Team = async (): Promise<JoinTeamResponse> => {
+  try {
+    const response = await v2Client.post<JoinTeamResponse>("/api/v2/team-battle/teams/auto-assign");
+    return response.data;
+  } catch (error) {
+    console.error("[teamBattleApi] Failed to auto-assign V2 team", error);
+    throw error;
+  }
+};
+

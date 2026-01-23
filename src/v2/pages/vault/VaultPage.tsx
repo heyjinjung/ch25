@@ -82,11 +82,6 @@ const VaultPage: React.FC = () => {
         <div className="vault-aurora-blob blob-2" />
         <div className="vault-aurora-blob blob-3" />
       </div>
-      <img
-        src={`${ASSET_PATH}/valut (1).svg`}
-        className="vault-bg-overlay"
-        alt=""
-      />
 
       <div className="vault-main-area">
         {/* Tiered Safes Display */}

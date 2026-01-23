@@ -7,6 +7,7 @@ import {
   leaveV2Team,
   getV2MyTeamMembership,
   getV2TeamLeaderboard,
+  autoAssignV2Team,
   type JoinTeamRequest,
   type LeaderboardParams,
 } from "../api/teamBattleApi";
@@ -78,3 +79,17 @@ export function useV2LeaveTeam() {
     },
   });
 }
+
+export function useV2AutoAssignTeam() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => autoAssignV2Team(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["v2", "team-battle", "membership", "me"] });
+      queryClient.invalidateQueries({ queryKey: ["v2", "team-battle", "teams", "joinable"] });
+      queryClient.invalidateQueries({ queryKey: ["v2", "team-battle", "leaderboard"] });
+    },
+  });
+}
+
