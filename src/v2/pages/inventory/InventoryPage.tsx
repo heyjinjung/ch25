@@ -102,7 +102,7 @@ export default function InventoryPage() {
         {/* Summary Banner (Mirrors shop banner style) */}
         <div className="inventory-summary-banner">
           <img
-            src="/assets/hero_event_banner.png"
+            src="/v2/assets/06shop/banner.png"
             className="summary-banner-img"
             alt="inventory summary"
           />

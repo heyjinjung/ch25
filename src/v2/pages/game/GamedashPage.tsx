@@ -64,11 +64,11 @@ export default function GamedashPage() {
             <div className="notice-wrapper">
               {/* Original 3 items */}
               <div className="notice-item"> 이번주 럭키찬스 추가 티켓증정</div>
-              <div className="notice-item"> 업데이트! 🎰달라진그래픽</div>
+              <div className="notice-item"> 업데이트! 🎰 달라진그래픽</div>
               <div className="notice-item"> 💎골드키를 잡아라! 고액룰렛</div>
               {/* Duplicated for seamless loop (since 3 are visible, we need them to follow) */}
               <div className="notice-item"> 이번주 럭키찬스 추가 티켓증정</div>
-              <div className="notice-item"> [HOT] 🎰 업데이트</div>
+              <div className="notice-item"> 업데이트! 🎰 달라진그래픽</div>
               <div className="notice-item">💎골드키를 잡아라! 고액룰렛</div>
             </div>
           </div>

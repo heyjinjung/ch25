@@ -3,7 +3,7 @@
 /* Mirroring Shop/ExchangeRedesign.css styling but with 3x3 grid for inventory */
 
 .exchange-page-v2.inventory-specific {
-    background: linear-gradient(180deg, rgba(80, 153, 149, 0.00) 0%, rgba(68, 127, 72, 0.24) 50.96%, #396664 100%), rgba(242, 244, 252, 0.10);
+    background: linear-gradient(180deg, rgba(80, 153, 149, 0.00) 0%, rgba(68, 127, 72, 0.24) 50.96%, #396664 100%);
     width: 390px;
     height: 100%;
     min-height: 100dvh;
@@ -128,7 +128,7 @@
     height: 110px;
     border-radius: 50px;
     background: rgba(98, 91, 113, 0.38);
-    mix-blend-mode: plus-lighter;
+    /* Removed mix-blend-mode: plus-lighter to reduce brightness */
     margin-top: 16px;
     display: flex;
     align-items: center;
@@ -151,5 +151,5 @@
     height: 100%;
     z-index: -1;
     pointer-events: none;
-    opacity: 0.3;
+    opacity: 0.1;
 }

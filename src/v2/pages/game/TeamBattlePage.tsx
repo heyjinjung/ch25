@@ -43,7 +43,7 @@ const TeamBattlePage: React.FC = () => {
 
   const myTeam = myTeamQuery.data?.team;
   const teams = teamsQuery.data || [];
-  const entries = Array.isArray(leaderboardQuery.data?.entries) ? leaderboardQuery.data.entries : [];
+  const entries = leaderboardQuery.data?.entries ?? [];
   const [showGameModal, setShowGameModal] = React.useState(false);
 
   const loading = seasonQuery.isLoading || myTeamQuery.isLoading || teamsQuery.isLoading;
