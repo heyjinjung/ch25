@@ -6,6 +6,8 @@ from app.v2.services.ticket_zero_service import V2TicketZeroService
 from app.v2.services.game_config_service import V2GameConfigService
 from app.v2.services.segment_service import V2SegmentService
 from app.v2.services.admin_message_service import V2AdminMessageService
+from app.v2.services.v2_roulette_game_service import V2RouletteGameService
+from app.v2.services.v2_dice_game_service import V2DiceGameService
 
 __all__ = [
 	"V2VaultService",
@@ -15,4 +17,6 @@ __all__ = [
 	"V2GameConfigService",
 	"V2SegmentService",
 	"V2AdminMessageService",
+	"V2RouletteGameService",
+	"V2DiceGameService",
 ]

@@ -61,7 +61,7 @@ v2Client.interceptors.request.use((config) => {
   const url = String(config.url ?? "");
 
   // Skip auth for public endpoints if any (currently mostly auth'd)
-  if (url.endsWith("/api/auth/token")) {
+  if (url.endsWith("/api/auth/token") || url.endsWith("/api/v2/auth/token")) {
     return config;
   }
 

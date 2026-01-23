@@ -179,9 +179,9 @@ export default function ExchangePage() {
           <div className="shop-main-cards-row">
             {mainProducts.map((product: ShopProductDto) => (
               <div
-                key={product.id}
+                key={product.sku}
                 className="shop-card-v2 shop-main-card"
-                onClick={() => buyMutation.mutate({ sku: product.id })}
+                onClick={() => buyMutation.mutate({ sku: product.sku })}
               >
                 <div className="shop-card-img-container">
                   <img
@@ -206,9 +206,9 @@ export default function ExchangePage() {
           <div className="shop-sub-grid">
             {subProducts.map((product: ShopProductDto) => (
               <div
-                key={product.id}
+                key={product.sku}
                 className="shop-card-v2 shop-sub-card"
-                onClick={() => buyMutation.mutate({ sku: product.id })}
+                onClick={() => buyMutation.mutate({ sku: product.sku })}
               >
                 <SubCardBg />
                 <div className="shop-card-img-container">

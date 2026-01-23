@@ -31,7 +31,7 @@ const V2UserLoginPage: FC = () => {
   });
 
   const loginWithCredentials = async (username: string, password: string) => {
-    const res = await v2Client.post("/api/auth/token", {
+    const res = await v2Client.post("/api/v2/auth/token", {
       external_id: username,
       password,
     });

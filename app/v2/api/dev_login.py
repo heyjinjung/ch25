@@ -8,7 +8,8 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_db
 from app.core.config import get_settings
 from app.core.security import create_access_token
-from app.models.user import User
+from app.v2.models.user import V2User
+from app.v2.services.user_service import V2UserService
 
 router = APIRouter(prefix="/api/v2/dev", tags=["dev"])
 
@@ -21,11 +22,10 @@ class DevLoginRequest(BaseModel):
 
 class DevLoginUser(BaseModel):
     id: int
-    external_id: str
+    cc_id: str
     nickname: str | None = None
-    level: int | None = None
-    status: str | None = None
     telegram_id: int | None = None
+    telegram_username: str | None = None
 
 
 class DevLoginResponse(BaseModel):
@@ -44,24 +44,20 @@ def dev_login(payload: DevLoginRequest, request: Request, db: Session = Depends(
     if not external_id:
         raise HTTPException(status_code=400, detail="MISSING_EXTERNAL_ID")
 
-    user = db.query(User).filter(User.external_id == external_id).one_or_none()
+    user = V2UserService.get_by_cc_id(db, external_id)
     if user is None:
         if not payload.create_if_missing:
             raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
-        user = User(
-            external_id=external_id,
+        user = V2UserService.create_user(
+            db,
+            cc_id=external_id,
             nickname=payload.nickname or "Web Dev User",
-            level=1,
         )
-        db.add(user)
-        db.commit()
-        db.refresh(user)
     elif payload.nickname:
         user.nickname = payload.nickname
 
     client_ip = request.client.host if request.client else None
-    user.last_login_at = datetime.utcnow()
-    user.last_login_ip = client_ip
+    _ = client_ip
 
     try:
         db.commit()
@@ -74,10 +70,9 @@ def dev_login(payload: DevLoginRequest, request: Request, db: Session = Depends(
         access_token=token,
         user=DevLoginUser(
             id=int(user.id),
-            external_id=user.external_id,
+            cc_id=user.cc_id,
             nickname=user.nickname,
-            level=user.level,
-            status=user.status,
             telegram_id=user.telegram_id,
+            telegram_username=user.telegram_username,
         ),
     )

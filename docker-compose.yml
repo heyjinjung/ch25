@@ -76,6 +76,8 @@ services:
     volumes:
       - ./logs:/app/logs
       - ./app:/app/app
+      - ./alembic:/app/alembic
+      - ./alembic.ini:/app/alembic.ini
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8000/" ]
 

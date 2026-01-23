@@ -21,7 +21,7 @@ class V2ShopService:
     ) -> V2ShopOrder:
         if cost_amount <= 0:
             raise ValueError("cost_amount must be > 0")
-        if reward_amount <= 0:
+        if reward_type != "NONE" and reward_amount <= 0:
             raise ValueError("reward_amount must be > 0")
 
         user = db.get(V2User, user_id)

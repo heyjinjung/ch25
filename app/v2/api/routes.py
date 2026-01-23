@@ -9,11 +9,12 @@ from pydantic import BaseModel
 from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_admin_info, get_current_user_id, get_db
+from app.api.deps import get_current_admin_info, get_db
+from app.v2.api.deps import get_current_user_id
 from app.models.admin_message import AdminMessageInbox
 from app.models.game_wallet import GameTokenType
 from app.models.inventory import UserInventoryItem
-from app.models.user import User
+from app.v2.models.user import V2User
 from app.schemas.dice import DicePlayResponse, DiceStatusResponse
 from app.schemas.lottery import LotteryPlayResponse, LotteryStatusResponse
 from app.v2.schemas.v2_mission import MissionListResponse
@@ -67,12 +68,14 @@ _wallet_service = GameWalletService()
 
 from app.v2.api.admin import router as admin_router
 from app.v2.api.activity_routes import router as activity_router
-from app.v2.api.v1_auth_user_alias import router as v1_auth_user_alias_router
+from app.v2.api.auth_routes import router as auth_router
+from app.v2.api.user_routes import router as user_router
 from app.v2.api.vault_routes import router as vault_router
 
 router.include_router(admin_router)
 router.include_router(activity_router)
-router.include_router(v1_auth_user_alias_router)
+router.include_router(auth_router)
+router.include_router(user_router)
 router.include_router(vault_router)
 
 
@@ -548,7 +551,7 @@ def purchase_shop_product(
         if reward_type == "NONE" or reward_amount == 0:
             pass
         elif reward_type in {"POINT", "CC_POINT", "VAULT"}:
-            user = db.query(User).filter(User.id == user_id).first()
+            user = db.query(V2User).filter(V2User.id == user_id).first()
             if not user:
                 raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
             user.vault_locked_balance = int(user.vault_locked_balance or 0) + reward_amount
