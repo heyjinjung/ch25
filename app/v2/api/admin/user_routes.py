@@ -15,11 +15,9 @@ from app.models.mission import UserMissionProgress
 from app.models.user import User
 from app.models.user_retention_state import UserRetentionState
 from app.models.user_segment import UserSegment
-from app.v2.services import V2AdminAuditService
-from app.services.game_wallet_service import GameWalletService
+from app.v2.services import V2AdminAuditService, V2AdminInventoryService
 from app.core.exceptions import NotEnoughTokensError
 from app.services.admin_user_service import AdminUserService
-from app.services.inventory_service import InventoryService
 from app.v2.schemas.v2_admin_user import (
     AdminUserCreate,
     AdminUserDetailDto,
@@ -349,10 +347,9 @@ def adjust_user_wallet(
             token_enum = GameTokenType(payload.token_type)
         except Exception:
             raise HTTPException(status_code=400, detail="INVALID_TOKEN_TYPE")
-        service = GameWalletService()
         try:
             if payload.amount > 0:
-                service.grant_tokens(
+                V2AdminInventoryService.grant_tokens(
                     db,
                     user_id=user_id,
                     token_type=token_enum,
@@ -361,7 +358,7 @@ def adjust_user_wallet(
                     label=f"ADMIN:{admin_id}",
                 )
             else:
-                service.revoke_tokens(
+                V2AdminInventoryService.revoke_tokens(
                     db,
                     user_id=user_id,
                     token_type=token_enum,
@@ -499,7 +496,7 @@ def adjust_user_inventory(
     before_qty = int(getattr(before_item, "quantity", 0) or 0)
 
     if delta > 0:
-        item = InventoryService.grant_item(
+        item = V2AdminInventoryService.grant_item(
             db,
             user_id=user_id,
             item_type=clean_item_type,
@@ -513,7 +510,7 @@ def adjust_user_inventory(
         if before_qty < abs(delta):
              raise HTTPException(status_code=400, detail="INSUFFICIENT_INVENTORY_BALANCE")
              
-        item = InventoryService.consume_item(
+        item = V2AdminInventoryService.consume_item(
             db,
             user_id=user_id,
             item_type=clean_item_type,

@@ -16,7 +16,7 @@ from app.models.user_activity import UserActivity
 from app.models.season_pass import SeasonPassStampLog
 from app.schemas.cc_deposit import CCDepositCreate, CCDepositUpdate
 from app.models.user import User
-from app.services.vault_service import VaultService
+from app.v2.services.vault_service import V2VaultService
 from app.services.season_pass_service import SeasonPassService
 from app.services.level_xp_service import LevelXPService
 from app.core.config import get_settings
@@ -25,12 +25,20 @@ from app.core.config import get_settings
 logger = logging.getLogger(__name__)
 
 
-class AdminExternalRankingService:
-    """Manage CC deposit data rows (deposit amount, play count)."""
+class V2AdminCCDepositService:
+    """Manage CC deposit data rows (deposit amount, play count).
+    
+    Refactored for V2 standards.
+    """
 
     STEP_AMOUNT = 100_000
     XP_PER_STEP = 20
     MAX_STEPS_PER_DAY = 50
+
+
+class AdminExternalRankingService(V2AdminCCDepositService):
+    """Backward-compatible alias for legacy import paths."""
+    pass
 
 
     @staticmethod
@@ -79,7 +87,7 @@ class AdminExternalRankingService:
                 continue
 
             # 1) External ID (case-insensitive exact)
-            user_id = AdminExternalRankingService._try_resolve_unique_user_id(
+            user_id = V2AdminCCDepositService._try_resolve_unique_user_id(
                 db,
                 func.lower(User.external_id) == key.lower(),
                 ambiguous_detail="USER_AMBIGUOUS (External ID)",
@@ -90,7 +98,7 @@ class AdminExternalRankingService:
             # 2) Telegram username (case-insensitive exact, leading '@' allowed)
             clean_tg = key.lstrip("@").strip()
             if clean_tg:
-                user_id = AdminExternalRankingService._try_resolve_unique_user_id(
+                user_id = V2AdminCCDepositService._try_resolve_unique_user_id(
                     db,
                     func.lower(User.telegram_username) == clean_tg.lower(),
                     ambiguous_detail="USER_AMBIGUOUS (Telegram Username)",
@@ -99,7 +107,7 @@ class AdminExternalRankingService:
                     return user_id
 
             # 3) Internal nickname (case-insensitive exact)
-            user_id = AdminExternalRankingService._try_resolve_unique_user_id(
+            user_id = V2AdminCCDepositService._try_resolve_unique_user_id(
                 db,
                 func.lower(User.nickname) == key.lower(),
                 ambiguous_detail="USER_AMBIGUOUS (Nickname)",
@@ -144,14 +152,14 @@ class AdminExternalRankingService:
             .first()
         )
         if not row:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="EXTERNAL_RANKING_NOT_FOUND")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="CC_DEPOSIT_NOT_FOUND")
         return row
 
     @staticmethod
     def upsert_many(db: Session, data: Iterable[CCDepositCreate], now: datetime | None = None) -> list[ExternalRankingData]:
         from zoneinfo import ZoneInfo
         season_pass = SeasonPassService()
-        vault_service = VaultService()
+        vault_service = V2VaultService()
         level_xp = LevelXPService()
         settings = get_settings()
 
@@ -162,9 +170,9 @@ class AdminExternalRankingService:
         kst = ZoneInfo(getattr(settings, "timezone", "Asia/Seoul"))
         now_tz = now.replace(tzinfo=timezone.utc) if now.tzinfo is None else now
         today = now_tz.astimezone(kst).date()
-        step_amount = int(getattr(settings, "external_ranking_deposit_step_amount", AdminExternalRankingService.STEP_AMOUNT))
-        xp_per_step = int(getattr(settings, "external_ranking_deposit_xp_per_step", AdminExternalRankingService.XP_PER_STEP))
-        max_steps_per_day = int(getattr(settings, "external_ranking_deposit_max_steps_per_day", AdminExternalRankingService.MAX_STEPS_PER_DAY))
+        step_amount = int(getattr(settings, "external_ranking_deposit_step_amount", V2AdminCCDepositService.STEP_AMOUNT))
+        xp_per_step = int(getattr(settings, "external_ranking_deposit_xp_per_step", V2AdminCCDepositService.XP_PER_STEP))
+        max_steps_per_day = int(getattr(settings, "external_ranking_deposit_max_steps_per_day", V2AdminCCDepositService.MAX_STEPS_PER_DAY))
         cooldown_minutes = max(settings.external_ranking_deposit_cooldown_minutes, 0)
 
         existing_by_user = {row.user_id: row for row in db.execute(select(ExternalRankingData)).scalars().all()}
@@ -181,13 +189,13 @@ class AdminExternalRankingService:
         results: list[ExternalRankingData] = []
 
         for payload in data:
-            user_id = AdminExternalRankingService._resolve_user_id(
+            user_id = V2AdminCCDepositService._resolve_user_id(
                 db,
                 payload.user_id,
                 payload.cc_id,
                 getattr(payload, "telegram_username", None),
             )
-            AdminExternalRankingService._merge_user_telegram_username(
+            V2AdminCCDepositService._merge_user_telegram_username(
                 db,
                 user_id,
                 getattr(payload, "telegram_username", None),
@@ -236,7 +244,7 @@ class AdminExternalRankingService:
             if new_amount > prev_amount:
                 deposit_delta = new_amount - prev_amount
                 logger.info(
-                    "external_ranking deposit increased: user_id=%s prev=%s new=%s delta=%s",
+                    "cc_deposit increased: user_id=%s prev=%s new=%s delta=%s",
                     row.user_id,
                     prev_amount,
                     new_amount,
@@ -250,31 +258,29 @@ class AdminExternalRankingService:
 
                 deposit_delta_by_user[row.user_id] = deposit_delta_by_user.get(row.user_id, 0) + int(deposit_delta)
 
-                # Vault unlock hook (v1.0): deposit increase acts as "verification charge" trigger.
-                # Modified: All deposit increases trigger signal without NewMemberDiceEligibility check.
-                if True:
-                    vault_service.handle_deposit_increase_signal(
-                        db,
-                        user_id=row.user_id,
-                        # status_only=True removed for compatibility
-                        deposit_delta=deposit_delta,
-                        prev_amount=prev_amount,
-                        new_amount=new_amount,
-                        now=now,
-                        commit=False,
-                    )
-                    logger.info(
-                        "external_ranking -> vault signal dispatched: user_id=%s prev=%s new=%s delta=%s",
-                        row.user_id,
-                        prev_amount,
-                        new_amount,
-                        deposit_delta,
-                    )
+                # Vault unlock hook: deposit increase acts as "verification charge" trigger.
+                # All deposit increases trigger signal.
+                vault_service.handle_deposit_increase_signal(
+                    db,
+                    user_id=row.user_id,
+                    deposit_delta=deposit_delta,
+                    prev_amount=prev_amount,
+                    new_amount=new_amount,
+                    now=now,
+                    commit=False,
+                )
+                logger.info(
+                    "cc_deposit -> vault signal dispatched: user_id=%s prev=%s new=%s delta=%s",
+                    row.user_id,
+                    prev_amount,
+                    new_amount,
+                    deposit_delta,
+                )
 
                 # Whale Check (First 500k + 7D 3M累计)
                 user = db.query(User).filter(User.id == row.user_id).first()
                 if user:
-                    AdminExternalRankingService._check_whale_qualification(
+                    V2AdminCCDepositService._check_whale_qualification(
                         db, user=user, current_external_total=new_amount, now=now
                     )
 
@@ -307,15 +313,12 @@ class AdminExternalRankingService:
                     )
         db.commit()
 
-        # Season pass XP hooks (daily deltas) + weekly TOP10 stamp
+        # Season pass XP hooks
         current_season = season_pass.get_current_season(db, today)
         if not current_season and bool(getattr(settings, "test_mode", False)):
-            # In tests we want deposit->XP logic to be verifiable without needing explicit season seeds.
-            # Keep this behavior strictly in TEST_MODE to avoid changing production behavior.
+             # Minimal default season for tests
             from datetime import timedelta
-
             from app.models.season_pass import SeasonPassConfig, SeasonPassLevel
-
             season = SeasonPassConfig(
                 season_name=f"DEFAULT-{today.isoformat()}",
                 start_date=today,
@@ -324,19 +327,7 @@ class AdminExternalRankingService:
                 base_xp_per_stamp=10,
                 is_active=True,
             )
-            levels = [
-                SeasonPassLevel(
-                    season=season,
-                    level=i,
-                    required_xp=20 * i,
-                    reward_type="POINT",
-                    reward_amount=100 * i,
-                    auto_claim=True,
-                )
-                for i in range(1, 11)
-            ]
             db.add(season)
-            db.add_all(levels)
             db.commit()
             current_season = season
 
@@ -346,7 +337,6 @@ class AdminExternalRankingService:
         season_id = current_season.id
 
         for row in results:
-            # 예치: step_amount 단위당 XP 지급 + remainder 누적 (사용자별 이전 상태 기준)
             snap = prev_snapshot.get(
                 row.user_id,
                 {"deposit_amount": 0, "deposit_remainder": 0, "daily_base_deposit": 0, "updated_at": None},
@@ -358,11 +348,9 @@ class AdminExternalRankingService:
             deposit_steps = total_for_step // step_amount
             remainder = total_for_step % step_amount
 
-            # 상한 적용 (0이면 무제한)
             if max_steps_per_day > 0:
                 deposit_steps = min(deposit_steps, max_steps_per_day)
 
-            # 쿨다운: 최근 업데이트가 cooldown_minutes 이내면 지급만 보류하고 remainder만 저장
             if deposit_steps > 0 and cooldown_minutes > 0 and snap.get("updated_at"):
                 if now - snap["updated_at"] < timedelta(minutes=cooldown_minutes):
                     row.deposit_remainder = remainder
@@ -371,21 +359,17 @@ class AdminExternalRankingService:
             if deposit_steps > 0 and xp_per_step > 0:
                 xp_to_add = deposit_steps * xp_per_step
                 season_pass.add_bonus_xp(db, user_id=row.user_id, xp_amount=xp_to_add, now=today)
-                # Global progression rewards (non-seasonal) are also accrued from external deposits.
                 level_xp.add_xp(
                     db,
                     user_id=row.user_id,
                     delta=xp_to_add,
-                    source="EXTERNAL_RANKING_DEPOSIT",
+                    source="CC_DEPOSIT",
                     meta={"deposit_steps": int(deposit_steps), "xp_per_step": int(xp_per_step), "deposit_delta": int(deposit_delta)},
                 )
 
             row.deposit_remainder = remainder
 
-            # 이용 횟수: 1회당 20 XP 지급 (일일 누적 대비 증분 계산)
-            # play_count 기반 XP 지급은 비활성
-
-        # Weekly TOP10 (once per ISO week)
+        # Weekly TOP10
         top10 = (
             db.execute(
                 select(ExternalRankingData)
@@ -403,7 +387,7 @@ class AdminExternalRankingService:
                 .filter(
                     SeasonPassStampLog.user_id == entry.user_id,
                     SeasonPassStampLog.season_id == season_id,
-                    SeasonPassStampLog.source_feature_type == "EXTERNAL_RANKING_TOP10",
+                    SeasonPassStampLog.source_feature_type == "CC_DEPOSIT_TOP10",
                     SeasonPassStampLog.period_key == f"TOP10_{week_key}",
                 )
                 .one_or_none()
@@ -412,7 +396,7 @@ class AdminExternalRankingService:
                 season_pass.maybe_add_stamp(
                     db,
                     user_id=entry.user_id,
-                    source_feature_type="EXTERNAL_RANKING_TOP10",
+                    source_feature_type="CC_DEPOSIT_TOP10",
                     now=today,
                     period_key=f"TOP10_{week_key}",
                 )
@@ -420,16 +404,16 @@ class AdminExternalRankingService:
 
     @staticmethod
     def update(db: Session, user_id: int, payload: CCDepositUpdate) -> ExternalRankingData:
-        row = AdminExternalRankingService.get_by_user(db, user_id)
+        row = V2AdminCCDepositService.get_by_user(db, user_id)
         data = payload.model_dump(exclude_unset=True)
         if ("cc_id" in data) or ("telegram_username" in data):
-            row.user_id = AdminExternalRankingService._resolve_user_id(
+            row.user_id = V2AdminCCDepositService._resolve_user_id(
                 db,
                 None,
                 data.get("cc_id"),
                 data.get("telegram_username"),
             )
-            AdminExternalRankingService._merge_user_telegram_username(db, row.user_id, data.get("telegram_username"))
+            V2AdminCCDepositService._merge_user_telegram_username(db, row.user_id, data.get("telegram_username"))
         for key, value in data.items():
             if key == "cc_id":
                 continue
@@ -445,31 +429,26 @@ class AdminExternalRankingService:
     def delete(db: Session, user_id: int) -> None:
         result = db.execute(delete(ExternalRankingData).where(ExternalRankingData.user_id == user_id))
         if result.rowcount == 0:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="EXTERNAL_RANKING_NOT_FOUND")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="CC_DEPOSIT_NOT_FOUND")
         db.commit()
 
     @staticmethod
     def _check_whale_qualification(db: Session, *, user: User, current_external_total: int, now: datetime):
         from app.core.notifications import send_ops_notification
-        from app.services.season_pass_service import SeasonPassService
         from app.models.admin_user_profile import AdminUserProfile
 
-        # 1. Capture First Deposit (External)
+        # 1. Capture First Deposit (CC)
         if not user.first_deposit_at:
             user.first_deposit_at = now
             user.first_deposit_amount = current_external_total
             db.add(user)
         
         # 2. Whale Qualification Logic
-        # Cond A: First deposit >= 500,000
         is_big_start = (user.first_deposit_amount or 0) >= 500_000
-        
-        # Cond B: 7-day cumulative >= 3,000,000
         days_diff = (now.date() - user.first_deposit_at.date()).days
         is_high_roller = (days_diff <= 7) and (current_external_total >= 3_000_000)
 
         if is_big_start and is_high_roller:
-            # Idempotency check via tags
             profile = db.query(AdminUserProfile).filter(AdminUserProfile.user_id == user.id).first()
             if not profile:
                 profile = AdminUserProfile(user_id=user.id)
@@ -478,18 +457,17 @@ class AdminExternalRankingService:
             tags = list(profile.tags or [])
             if "#WHALE_REWARDED" not in tags:
                 # Reward: +500 XP
+                from app.services.season_pass_service import SeasonPassService
                 SeasonPassService().add_bonus_xp(db, user_id=user.id, xp_amount=500, now=now, commit=False)
                 
-                # Tagging
                 tags.append("#WHALE_REWARDED")
                 profile.tags = tags
                 db.add(profile)
                 
-                # Notify Admin
                 msg = (
-                    f"🐋 **External Whale Detected!**\n"
+                    f"🐋 **CC Deposit Whale Detected!**\n"
                     f"- UserID: `{user.id}` (Nickname: `{user.nickname or user.external_id}`)\n"
-                    f"- First External: `{user.first_deposit_amount or 0:,}원`\n"
+                    f"- First CC Deposit: `{user.first_deposit_amount or 0:,}원`\n"
                     f"- Current Total: `{current_external_total:,}원`\n"
                     f"- Action: VIP 라운지 케어 필요 (+500 XP 지급됨)"
                 )

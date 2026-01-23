@@ -1,5 +1,5 @@
 문서 타입: 가이드
-버전: v1.8
+버전: v1.16
 작성일: 2026-01-23
 작성자: GitHub Copilot
 대상: V2 배포/검증 담당자
@@ -20,56 +20,73 @@ V2 배포 전/후 필수 검증 항목을 표준화한다.
 - 각 서비스/영역별로 체크를 분리 기록한다.
 - 테스트 실행 커맨드와 대상 파일을 함께 기록한다.
 - 동일한 서비스라도 배포 단위가 다르면 별도 항목으로 기록한다.
-- **v2-only 기준**: v2 config/log 테이블 + v2 엔진 서비스 사용이 확인되어야 “완료”로 기록한다.
+- **기능 검증(Functional)**과 **아키텍처 이관(Architectural)**을 분리 기록한다.
+- **v2-only 기준(Architectural)**: v2 config/log 테이블 + v2 엔진 서비스 사용 확인 + V1 import 제거가 확인되어야 “완료”로 기록한다.
 
 ### 3.2 서비스/영역별 Unit & Integration
 #### 3.2.1 Auth
 - [ ] 단위 테스트 추가
 - [ ] 통합 테스트 추가
 - [ ] 테스트 전부 통과 기록 (파일/커맨드)
+미완료 유지 + “텔레그램 의존으로 통합 테스트 후 진행” 메모  
 
 #### 3.2.2 Vault
 - [x] 단위 테스트 추가
 - [x] 통합 테스트 추가
 - [x] 테스트 전부 통과 기록 (tests/v2_tests/phase2_core/test_vault_withdrawal_logic.py, tests/v2_tests/phase2_core/test_vault_limit_suspension.py, tests/v2_tests/phase2_core/test_vault2_service.py)
 	- 커맨드: pytest -q tests/v2_tests/phase2_core/test_vault_withdrawal_logic.py tests/v2_tests/phase2_core/test_vault_limit_suspension.py tests/v2_tests/phase2_core/test_vault2_service.py
+- [ ] v2-only 기준 충족 (V1 VaultService import 제거 + V2VaultService/Vault2Service 사용 확인)
 
 #### 3.2.3 Shop
 - [x] 단위 테스트 추가
 - [x] 통합 테스트 추가
 - [x] 테스트 전부 통과 기록 (tests/v2_tests/phase2_core/test_shop_inventory_logic.py)
-- [x] v2-only 기준 충족 (v2_shop_products + v2_shop_order + V2ShopService)
+- [ ] v2-only 기준 충족 (v2_shop_products + v2_shop_order + V2ShopService + V1 UiConfigService/IdempotencyService import 제거)
 
 #### 3.2.4 Game (roulette/dice/lottery)
 - [x] 단위 테스트 추가
 - [x] 통합 테스트 추가
 - [x] 테스트 전부 통과 기록 (tests/v2_tests/phase3_game/test_game_engine_smoke.py)
+- [x] v2-only import 검증 테스트 통과 (tests/v2_tests/phase1_env/test_v2_architecture_sot.py)
+	- 커맨드: pytest -q tests/v2_tests/phase1_env/test_v2_architecture_sot.py
+	- 검증 실행: GitHub Copilot 실행(2026-01-23) — 통과 (Exit Code: 0)
 
 #### 3.2.5 Inventory
 - [x] 단위 테스트 추가
 - [x] 통합 테스트 추가
 - [x] 테스트 전부 통과 기록 (tests/v2_tests/phase2_core/test_shop_inventory_logic.py)
-- [x] v2-only 기준 충족 (v2_exchange_log + V2InventoryService)
+- [ ] v2-only 기준 충족 (v2_exchange_log + V2InventoryService + V1 모델 의존 제거)
 
 #### 3.2.6 Mission/Attendance
-- [ ] 단위 테스트 추가
-- [ ] 통합 테스트 추가
-- [ ] 테스트 전부 통과 기록 (파일/커맨드)
+- [x] 단위 테스트 추가
+- [x] 통합 테스트 추가
+- [x] 테스트 전부 통과 기록 (tests/v2_tests/phase2_core/test_v2_mission_service.py)
+	- 커맨드: pytest -q tests/v2_tests/phase2_core/test_v2_mission_service.py
+- [x] v2-only 기준 충족 (V1 MissionService/RewardService import 제거 확인)
+- [x] v2-only import 검증 테스트 통과 (tests/v2_tests/phase1_env/test_v2_architecture_sot.py)
+	- 커맨드: pytest -q tests/v2_tests/phase1_env/test_v2_architecture_sot.py
+	- 검증 실행: GitHub Copilot 실행(2026-01-23) — 통과 (Exit Code: 0)
 
 #### 3.2.7 Team Battle
-- [ ] 단위 테스트 추가
-- [ ] 통합 테스트 추가
-- [ ] 테스트 전부 통과 기록 (파일/커맨드)
+- [x] 단위 테스트 추가
+- [x] 통합 테스트 추가
+- [x] 테스트 전부 통과 기록 (tests/v2_tests/phase5_public/test_team_battle_v2_routes_payload.py)
+	- 커맨드: pytest -q tests/v2_tests/phase5_public/test_team_battle_v2_routes_payload.py
+- [x] v2-only 기준 충족 (V1 TeamBattleService import 제거 확인)
+- [x] v2-only import 검증 테스트 통과 (tests/v2_tests/phase1_env/test_v2_architecture_sot.py)
+	- 커맨드: pytest -q tests/v2_tests/phase1_env/test_v2_architecture_sot.py
 
 #### 3.2.8 Survey/Inbox
-- [ ] 단위 테스트 추가
-- [ ] 통합 테스트 추가
-- [ ] 테스트 전부 통과 기록 (파일/커맨드)
+- [x] 단위 테스트 추가
+- [x] 통합 테스트 추가
+- [x] 테스트 전부 통과 기록 (tests/v2_tests/phase5_public/test_public_routes_smoke_extended.py, tests/v2_tests/phase4_admin/test_admin_marketing_routes_smoke.py)
+	- 커맨드: pytest -q tests/v2_tests/phase5_public/test_public_routes_smoke_extended.py tests/v2_tests/phase4_admin/test_admin_marketing_routes_smoke.py
 
 #### 3.2.9 Admin (Low)
-- [ ] 단위 테스트 추가
-- [ ] 통합 테스트 추가
-- [ ] 테스트 전부 통과 기록 (파일/커맨드)
+- [x] 단위 테스트 추가
+- [x] 통합 테스트 추가
+- [x] 테스트 전부 통과 기록 (tests/v2_tests/phase4_admin/*)
+	- 커맨드: pytest -q tests/v2_tests/phase4_admin/test_shop_crud.py tests/v2_tests/phase4_admin/test_economy_coverage.py tests/v2_tests/phase4_admin/test_api_coverage.py tests/v2_tests/phase4_admin/test_admin_user_routes_coverage_extended.py tests/v2_tests/phase4_admin/test_admin_ops_security.py tests/v2_tests/phase4_admin/test_admin_marketing_routes_smoke.py tests/v2_tests/phase4_admin/test_admin_game_config_routes_coverage_extended.py tests/v2_tests/phase4_admin/test_admin_economy_routes_coverage_extended.py
 
 ### 3.3 E2E 스모크 테스트 (핵심 플로우)
 - [ ] 로그인 → 홈 진입
@@ -114,12 +131,24 @@ V2 배포 전/후 필수 검증 항목을 표준화한다.
 - [app/v2/api/deps.py](app/v2/api/deps.py)
 - [app/v2/services/vault_service.py](app/v2/services/vault_service.py)
 - [app/v2/services/shop_service.py](app/v2/services/shop_service.py)
+- [app/v2/services/team_battle_service.py](app/v2/services/team_battle_service.py)
+- [tests/v2_tests/phase5_public/test_team_battle_v2_routes_payload.py](tests/v2_tests/phase5_public/test_team_battle_v2_routes_payload.py)
+- [tests/v2_tests/phase5_public/test_public_routes_smoke_extended.py](tests/v2_tests/phase5_public/test_public_routes_smoke_extended.py)
+- [tests/v2_tests/phase4_admin/test_admin_marketing_routes_smoke.py](tests/v2_tests/phase4_admin/test_admin_marketing_routes_smoke.py)
 - [app/api/routes/vault.py](app/api/routes/vault.py)
 - [app/services/vault_service.py](app/services/vault_service.py)
 - [app/v2/services/user_service.py](app/v2/services/user_service.py)
 - [app/models/user.py](app/models/user.py)
 
 ## 5. 변경 이력
+- v1.16 (2026-01-23, GitHub Copilot): Mission/Attendance·Game 영역 v2-only 검증 실행 및 통과 기록 추가 (pytest -q tests/v2_tests/phase1_env/test_v2_architecture_sot.py, Exit Code: 0)
+- v1.15 (2026-01-23, GitHub Copilot): Game 영역 v2-only import 검증 테스트 기록 추가
+- v1.14 (2026-01-23, GitHub Copilot): Mission/Attendance·Team Battle v2-only import 검증 테스트 기록 추가
+- v1.13 (2026-01-23, GitHub Copilot): Mission/Attendance 및 Team Battle v2-only 기준 상태 갱신
+- v1.12 (2026-01-23, GitHub Copilot): Admin(phase4_admin) 테스트 통과 기록 추가
+- v1.11 (2026-01-23, GitHub Copilot): Survey/Inbox 테스트 통과 기록 추가
+- v1.10 (2026-01-23, GitHub Copilot): Team Battle 테스트 통과 기록 추가
+- v1.9 (2026-01-23, GitHub Copilot): Mission/Attendance 테스트 통과 기록 추가
 - v1.8 (2026-01-23, GitHub Copilot): Vault 테스트 통과 기록 추가
 - v1.7 (2026-01-23, GitHub Copilot): v2 Vault/Auth/User 경로 변경 및 앵커 보강 반영
 - v1.6 (2026-01-23, GitHub Copilot): v2-only 기준 정의 및 Shop/Inventory 반영

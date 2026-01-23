@@ -13,15 +13,15 @@ from sqlalchemy.orm import Session, joinedload
 from app.api.deps import get_db
 from app.models.user import User
 from app.schemas.cc_deposit import CCDepositCreate, CCDepositEntry, CCDepositListResponse, CCDepositUpdate
-from app.services.admin_external_ranking_service import AdminExternalRankingService
+from app.v2.services.admin_cc_deposit_service import V2AdminCCDepositService
 from app.services.admin_user_identity_service import build_admin_user_summary
 
-router = APIRouter(prefix="/admin/api/external-ranking", tags=["admin-cc-deposit"])
+router = APIRouter(prefix="/admin/api/external-ranking", tags=["Admin (CC Deposit)"])
 
 
 @router.get("/", response_model=CCDepositListResponse)
-def list_external_ranking(db: Session = Depends(get_db)) -> CCDepositListResponse:
-    rows = AdminExternalRankingService.list_all(db)
+def list_cc_deposit(db: Session = Depends(get_db)) -> CCDepositListResponse:
+    rows = V2AdminCCDepositService.list_all(db)
     user_ids = [r.user_id for r in rows]
     users = (
         db.query(User)
@@ -59,11 +59,11 @@ def list_external_ranking(db: Session = Depends(get_db)) -> CCDepositListRespons
 
 
 @router.post("/", response_model=CCDepositListResponse)
-def upsert_external_ranking(
+def upsert_cc_deposit_batch(
     payloads: List[CCDepositCreate],
     db: Session = Depends(get_db),
 ) -> CCDepositListResponse:
-    rows = AdminExternalRankingService.upsert_many(db, payloads)
+    rows = V2AdminCCDepositService.upsert_many(db, payloads)
     user_ids = [r.user_id for r in rows]
     users = (
         db.query(User)
@@ -101,12 +101,12 @@ def upsert_external_ranking(
 
 
 @router.put("/{user_id}", response_model=CCDepositEntry)
-def update_external_ranking(
+def update_cc_deposit(
     user_id: int,
     payload: CCDepositUpdate,
     db: Session = Depends(get_db),
 ) -> CCDepositEntry:
-    row = AdminExternalRankingService.update(db, user_id, payload)
+    row = V2AdminCCDepositService.update(db, user_id, payload)
     user = (
         db.query(User)
         .options(joinedload(User.admin_profile))
@@ -131,14 +131,14 @@ def update_external_ranking(
 
 
 @router.put("/by-identifier/{identifier}", response_model=CCDepositEntry)
-def update_external_ranking_by_identifier(
+def update_cc_deposit_by_identifier(
     identifier: str,
     payload: CCDepositUpdate,
     db: Session = Depends(get_db),
 ) -> CCDepositEntry:
     # Accept external_id / telegram_username / nickname in a single string.
-    resolved_user_id = AdminExternalRankingService._resolve_user_id(db, None, identifier, identifier)
-    row = AdminExternalRankingService.update(db, resolved_user_id, payload)
+    resolved_user_id = V2AdminCCDepositService._resolve_user_id(db, None, identifier, identifier)
+    row = V2AdminCCDepositService.update(db, resolved_user_id, payload)
 
     user = (
         db.query(User)
@@ -164,13 +164,13 @@ def update_external_ranking_by_identifier(
 
 
 @router.delete("/{user_id}")
-def delete_external_ranking(user_id: int, db: Session = Depends(get_db)) -> dict:
-    AdminExternalRankingService.delete(db, user_id)
+def delete_cc_deposit(user_id: int, db: Session = Depends(get_db)) -> dict:
+    V2AdminCCDepositService.delete(db, user_id)
     return {"ok": True}
 
 
 @router.delete("/by-identifier/{identifier}")
-def delete_external_ranking_by_identifier(identifier: str, db: Session = Depends(get_db)) -> dict:
-    resolved_user_id = AdminExternalRankingService._resolve_user_id(db, None, identifier, identifier)
-    AdminExternalRankingService.delete(db, resolved_user_id)
+def delete_cc_deposit_by_identifier(identifier: str, db: Session = Depends(get_db)) -> dict:
+    resolved_user_id = V2AdminCCDepositService._resolve_user_id(db, None, identifier, identifier)
+    V2AdminCCDepositService.delete(db, resolved_user_id)
     return {"ok": True}

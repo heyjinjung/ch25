@@ -36,8 +36,6 @@ from app.v2.schemas.v2_admin_economy import (
 from app.models.game_wallet import UserGameWallet, GameTokenType
 from app.models.game_wallet_ledger import UserGameWalletLedger
 from app.models.inventory import UserInventoryItem, UserInventoryLedger
-from app.services.game_wallet_service import GameWalletService
-from app.services.inventory_service import InventoryService
 from sqlalchemy import desc, text
 
 router = APIRouter()
@@ -144,20 +142,11 @@ def _build_sot_shop_catalog_defaults() -> list[dict]:
 
 
 def _load_v2_shop_products(db: Session) -> list[dict]:
-    from app.services.ui_config_service import UiConfigService
-
-    row = UiConfigService.get(db, "v2_shop_products")
-    value = row.value_json if row and isinstance(row.value_json, dict) else {}
-    products = value.get("products", []) if isinstance(value, dict) else []
-    if not isinstance(products, list):
-        return []
-    return [p for p in products if isinstance(p, dict)]
+    return V2AdminEconomyService.load_shop_products(db)
 
 
 def _save_v2_shop_products(db: Session, products: list[dict], *, admin_id: int) -> None:
-    from app.services.ui_config_service import UiConfigService
-
-    UiConfigService.upsert(db, "v2_shop_products", {"products": products}, admin_id=admin_id)
+    V2AdminEconomyService.save_shop_products(db, products, admin_id=admin_id)
 
 
 class _AdminProductStatusPayload(BaseModel):
@@ -462,9 +451,8 @@ def list_pending_deposits(
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
     admin_id, admin_role = admin_info
-    from app.services.admin_external_ranking_service import AdminExternalRankingService
-
-    rows = AdminExternalRankingService.list_all(db)
+    from app.v2.services.admin_cc_deposit_service import V2AdminCCDepositService
+    rows = V2AdminCCDepositService.list_all(db)
 
     user_ids = [r.user_id for r in rows]
     user_map = {}

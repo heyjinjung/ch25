@@ -23,11 +23,11 @@ from app.schemas.roulette import (
     RouletteStatusResponse,
 )
 from app.services.feature_service import FeatureService
-from app.services.game_wallet_service import GameWalletService
-from app.services.reward_service import RewardService
+from app.v2.services.inventory_service import V2InventoryService
+from app.v2.services.reward_service import V2RewardService
 from app.services.vault_service import VaultService
 from app.services.game_common import GamePlayContext, log_game_play
-from app.services.mission_service import MissionService
+from app.v2.services.mission_service import V2MissionService
 from app.v2.models.v2_roulette import V2RouletteLog, V2RouletteSegment
 from app.v2.services.game_config_service import V2GameConfigService
 
@@ -38,8 +38,7 @@ _KST = ZoneInfo("Asia/Seoul")
 class V2RouletteGameService:
     def __init__(self) -> None:
         self.feature_service = FeatureService()
-        self.wallet_service = GameWalletService()
-        self.reward_service = RewardService()
+        self.reward_service = V2RewardService()
         self.vault_service = VaultService()
 
     @staticmethod
@@ -131,13 +130,13 @@ class V2RouletteGameService:
                 token_type_for_balance = GameTokenType(candidate)
             except Exception:
                 continue
-            token_balance = self.wallet_service.get_balance(db, user_id, token_type_for_balance)
+            token_balance = V2InventoryService.get_wallet_balance(db, user_id, token_type_for_balance)
             if token_balance:
                 break
 
         if token_type_for_balance is None:
             token_type_for_balance = GameTokenType.ROULETTE_TICKET
-            token_balance = self.wallet_service.get_balance(db, user_id, token_type_for_balance)
+            token_balance = V2InventoryService.get_wallet_balance(db, user_id, token_type_for_balance)
 
         today_spins = db.execute(
             select(func.count())
@@ -204,7 +203,7 @@ class V2RouletteGameService:
                 continue
             last_token_type = token_type_enum
             try:
-                self.wallet_service.require_and_consume_token(
+                V2InventoryService.require_and_consume_wallet_token(
                     db,
                     user_id,
                     token_type_enum,
@@ -223,7 +222,7 @@ class V2RouletteGameService:
             # Fall back to strict v2 standard.
             token_type_enum = GameTokenType.ROULETTE_TICKET
             last_token_type = token_type_enum
-            self.wallet_service.require_and_consume_token(
+            V2InventoryService.require_and_consume_wallet_token(
                 db,
                 user_id,
                 token_type_enum,
@@ -246,7 +245,7 @@ class V2RouletteGameService:
         db.refresh(log_entry)
 
         # [Mission] Keep the existing mission/streak flow for consistency.
-        mission_service = MissionService(db)
+        mission_service = V2MissionService(db)
         mission_service.update_progress(user_id, "PLAY_GAME")
         streak_info = mission_service.get_streak_info(user_id)
 
@@ -292,5 +291,5 @@ class V2RouletteGameService:
             segment=segment_payload,
             season_pass=None,
             vault_earn=int(total_earn or 0),
-            streak_info=streak_info,
+            streak_info=(streak_info.model_dump() if streak_info else None),
         )
