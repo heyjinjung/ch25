@@ -462,7 +462,7 @@ export default function DiceConfigPage() {
                   일일 누적 획득 한도
                 </Label>
                 <span className="text-2xl font-mono font-black text-indigo-400 tracking-tighter">
-                  {localConfig.dailyGainCap.toLocaleString()}
+                  {(localConfig.dailyGainCap ?? 0).toLocaleString()}
                 </span>
               </div>
               <Input

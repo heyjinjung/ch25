@@ -177,22 +177,31 @@ const RoulettePage = () => {
   // ============================================================================
 
   const segments = useMemo(() => {
-    if (!data?.segments || data.segments.length === 0) {
-      return Array.from({ length: 12 }).map((_, idx) => ({
-        label: `BONUS ${idx + 1}`,
-        reward_type: "NONE",
-        reward_amount: 0,
-        slot_index: idx,
-      }));
-    }
+    // SoT: 6 segments fixed (slot_index 0~5)
+    const incoming = data?.segments ?? [];
+    if (incoming.length === 6) return incoming;
 
-    return data.segments.map((seg: RouletteSegmentDto) => ({
-      label: seg.label,
-      reward_type: seg.reward_type,
-      reward_amount: seg.reward_amount,
-      slot_index: seg.slot_index,
-      is_fever_reward: seg.is_fever_reward,
+    const normalized = incoming
+      .slice()
+      .sort((a, b) => a.slot_index - b.slot_index)
+      .slice(0, 6);
+
+    if (normalized.length === 6) return normalized;
+
+    // fallback if API doesn't provide segments
+    const fallback = Array.from({ length: 6 }).map((_, i) => ({
+      slot_index: i,
+      label: `Slot ${i + 1}`,
+      reward_type: 'NONE' as const,
+      reward_amount: 0,
+      weight: 1,
+      isJackpot: false,
     }));
+
+    // fill missing slots deterministically
+    const byIndex = new Map<number, (typeof fallback)[number]>();
+    for (const seg of normalized) byIndex.set(seg.slot_index, seg);
+    return fallback.map((seg) => byIndex.get(seg.slot_index) ?? seg);
   }, [data?.segments]);
 
   // ============================================================================

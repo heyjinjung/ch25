@@ -66,13 +66,15 @@ export interface DicePlayResponse {
 
 export const getDiceStatus = async (): Promise<DiceStatusResponse> => {
   try {
-    const response = await userApi.get<BackendDiceStatusResponse>("/api/dice/status");
+    const response =
+      await userApi.get<BackendDiceStatusResponse>("/api/dice/status");
     const data = response.data;
     return {
       feature_type: data.feature_type,
       remaining_plays: data.remaining_plays,
       token_type: data.token_type,
-      token_balance: data.token_balance,
+      token_balance:
+        typeof data.token_balance === "number" ? data.token_balance : 0,
       event_active: data.event_active,
       event_plays_done: data.event_plays_done,
       event_plays_max: data.event_plays_max,
@@ -92,7 +94,8 @@ export const getDiceStatus = async (): Promise<DiceStatusResponse> => {
 
 export const playDice = async (): Promise<DicePlayResponse> => {
   try {
-    const response = await userApi.post<BackendDicePlayResponse>("/api/dice/play");
+    const response =
+      await userApi.post<BackendDicePlayResponse>("/api/dice/play");
     const data = response.data;
     return {
       user_dice: data.game.user_dice,

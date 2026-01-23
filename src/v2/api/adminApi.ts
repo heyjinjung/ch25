@@ -293,6 +293,19 @@ export interface CreateUserNoteRequest {
   content: string;
 }
 
+export interface AdminUserCreateRequest {
+  externalId: string;
+  nickname?: string;
+  level?: number;
+  status?: "ACTIVE" | "INACTIVE" | "SUSPENDED";
+  xp?: number;
+  seasonLevel?: number;
+  password?: string;
+  userId?: number;
+  telegramId?: number;
+  telegramUsername?: string;
+}
+
 // UI Config Types
 export interface AdminUiConfigResponse {
   readonly key: string;
@@ -346,6 +359,31 @@ export const createUserNote = async (
   data: CreateUserNoteRequest,
 ): Promise<void> => {
   await v2Client.post("/api/v2/admin/users/notes", data);
+};
+
+export const createAdminUser = async (
+  data: AdminUserCreateRequest,
+): Promise<AdminUserListDto> => {
+  const payload: Record<string, unknown> = {
+    external_id: data.externalId,
+  };
+
+  if (data.nickname !== undefined) payload.nickname = data.nickname;
+  if (data.level !== undefined) payload.level = data.level;
+  if (data.status !== undefined) payload.status = data.status;
+  if (data.xp !== undefined) payload.xp = data.xp;
+  if (data.seasonLevel !== undefined) payload.season_level = data.seasonLevel;
+  if (data.password !== undefined) payload.password = data.password;
+  if (data.userId !== undefined) payload.user_id = data.userId;
+  if (data.telegramId !== undefined) payload.telegram_id = data.telegramId;
+  if (data.telegramUsername !== undefined)
+    payload.telegram_username = data.telegramUsername;
+
+  const response = await v2Client.post<AdminUserListDto>(
+    "/api/v2/admin/users",
+    payload,
+  );
+  return response.data;
 };
 
 export const getUserMissionHistory = async (
@@ -786,9 +824,10 @@ export const getInventoryLogs = async (
   if (startDate) params.start_date = startDate;
   if (endDate) params.end_date = endDate;
 
-  const response = await v2Client.get<TicketLogDto[]>("/api/v2/admin/ticket/logs", {
-    params,
-  });
+  const response = await v2Client.get<TicketLogDto[]>(
+    "/api/v2/admin/inventory/logs",
+    { params },
+  );
   return response.data;
 };
 
@@ -908,29 +947,17 @@ export const updateAdminLevelGlobalConfig = async (
 // Inventory Ops API
 // ============================================================================
 
-const toKstIso = (dateStr: string, isEnd: boolean) => {
-  const [y, m, d] = dateStr.split("-").map(Number);
-  if (!y || !m || !d) return dateStr;
-  const end = isEnd
-    ? { h: 23, min: 59, s: 59, ms: 999 }
-    : { h: 0, min: 0, s: 0, ms: 0 };
-  const kst = new Date(
-    Date.UTC(y, m - 1, d, end.h, end.min, end.s, end.ms) - 9 * 60 * 60 * 1000,
-  );
-  return kst.toISOString();
-};
-
 export const getTicketLogs = async (
   userId?: number,
   startDate?: string,
   endDate?: string,
   limit?: number,
 ): Promise<TicketLogDto[]> => {
-  const params: any = {};
-  if (userId) params.userId = userId;
-  if (startDate) params.startDate = toKstIso(startDate, false);
-  if (endDate) params.endDate = toKstIso(endDate, true);
-  if (limit) params.limit = limit;
+  const params: Record<string, string | number> = {};
+  if (userId !== undefined) params.user_id = userId;
+  if (startDate) params.start_date = startDate;
+  if (endDate) params.end_date = endDate;
+  if (limit !== undefined) params.limit = limit;
 
   const response = await v2Client.get<TicketLogDto[]>(
     "/api/v2/admin/inventory/logs",
@@ -1296,7 +1323,7 @@ export interface AdminDiceConfigDto {
 
   // Daily gain cap
   dailyGainCap: number;
-  
+
   // Golden Hour Multiplier Settings
   enableGoldenHour: boolean;
   goldenHourMultiplier: number;
@@ -1323,22 +1350,31 @@ export interface AdminLotteryConfigDto {
 }
 
 // Roulette API
-// Backend response type (snake_case)
+// Backend response type
+// - SoT(OpenAPI): camelCase (ticketType, maxDailySpins, isActive, slotIndex, rewardType, ...)
+// - Fallback(legacy): snake_case (ticket_type, max_daily_spins, is_active, slot_index, reward_type, ...)
 interface RouletteConfigBackend {
   id: number;
   name: string;
   grade: RouletteGrade;
-  ticket_type: string;
-  max_daily_spins: number;
-  is_active: boolean;
+  ticketType?: string;
+  maxDailySpins?: number;
+  isActive?: boolean;
+  ticket_type?: string;
+  max_daily_spins?: number;
+  is_active?: boolean;
   segments: Array<{
     id?: number;
-    slot_index: number;
+    slotIndex?: number;
+    rewardType?: string;
+    rewardAmount?: number;
+    isJackpot?: boolean;
+    slot_index?: number;
     label: string;
     weight: number;
-    reward_type: string;
-    reward_amount: number;
-    is_jackpot: boolean;
+    reward_type?: string;
+    reward_amount?: number;
+    is_jackpot?: boolean;
   }>;
 }
 
@@ -1364,17 +1400,22 @@ export const getRouletteConfigs = async (): Promise<
     gameType: "ROULETTE" as const,
     name: config.name,
     grade: config.grade,
-    ticketType: config.ticket_type,
-    maxDailySpins: config.max_daily_spins,
-    isActive: config.is_active,
+    ticketType: config.ticketType ?? config.ticket_type ?? "ROULETTE_TICKET",
+    maxDailySpins: config.maxDailySpins ?? config.max_daily_spins ?? 0,
+    isActive: config.isActive ?? config.is_active ?? false,
     segments: config.segments.map((seg) => ({
-      slotIndex: seg.slot_index,
+      slotIndex: seg.slotIndex ?? seg.slot_index ?? 0,
       label: seg.label,
       weight: seg.weight,
-      rewardType: seg.reward_type,
-      rewardAmount: seg.reward_amount,
-      isJackpot: seg.is_jackpot,
-      color: SEGMENT_COLORS[seg.slot_index % SEGMENT_COLORS.length],
+      rewardType: seg.rewardType ?? seg.reward_type ?? "NONE",
+      rewardAmount: seg.rewardAmount ?? seg.reward_amount ?? 0,
+      isJackpot: seg.isJackpot ?? seg.is_jackpot ?? false,
+      color:
+        SEGMENT_COLORS[
+          (((seg.slotIndex ?? seg.slot_index ?? 0) % SEGMENT_COLORS.length) +
+            SEGMENT_COLORS.length) %
+            SEGMENT_COLORS.length
+        ],
     })),
   }));
 };
@@ -1408,20 +1449,40 @@ export const updateRouletteConfig = async (
 interface DiceConfigBackend {
   id: number;
   name: string;
-  is_active: boolean;
-  max_daily_plays: number;
-  win_probability: number;
-  draw_probability: number;
-  lose_probability: number;
-  win_reward_type: string;
-  win_reward_amount: number;
-  draw_reward_type: string;
-  draw_reward_amount: number;
-  lose_reward_type: string;
-  lose_reward_amount: number;
-  daily_gain_cap: number;
-  enable_golden_hour: boolean;
-  golden_hour_multiplier: number;
+
+  // Support both camelCase (v2 DTO) and snake_case (legacy) responses
+  isActive?: boolean;
+  is_active?: boolean;
+  maxDailyPlays?: number;
+  max_daily_plays?: number;
+
+  winProbability?: number;
+  win_probability?: number;
+  drawProbability?: number;
+  draw_probability?: number;
+  loseProbability?: number;
+  lose_probability?: number;
+
+  winRewardType?: string;
+  win_reward_type?: string;
+  winRewardAmount?: number;
+  win_reward_amount?: number;
+  drawRewardType?: string;
+  draw_reward_type?: string;
+  drawRewardAmount?: number;
+  draw_reward_amount?: number;
+  loseRewardType?: string;
+  lose_reward_type?: string;
+  loseRewardAmount?: number;
+  lose_reward_amount?: number;
+
+  dailyGainCap?: number;
+  daily_gain_cap?: number;
+
+  enableGoldenHour?: boolean;
+  enable_golden_hour?: boolean;
+  goldenHourMultiplier?: number;
+  golden_hour_multiplier?: number;
 }
 
 export const getDiceConfig = async (): Promise<AdminDiceConfigDto> => {
@@ -1434,20 +1495,22 @@ export const getDiceConfig = async (): Promise<AdminDiceConfigDto> => {
     id: config.id,
     gameType: "DICE",
     name: config.name,
-    isActive: config.is_active,
-    maxDailyPlays: config.max_daily_plays,
-    winProbability: config.win_probability,
-    drawProbability: config.draw_probability,
-    loseProbability: config.lose_probability,
-    winRewardType: config.win_reward_type,
-    winRewardAmount: config.win_reward_amount,
-    drawRewardType: config.draw_reward_type,
-    drawRewardAmount: config.draw_reward_amount,
-    loseRewardType: config.lose_reward_type,
-    loseRewardAmount: config.lose_reward_amount,
-    dailyGainCap: config.daily_gain_cap,
-    enableGoldenHour: config.enable_golden_hour ?? true,
-    goldenHourMultiplier: config.golden_hour_multiplier ?? 2.0,
+    isActive: config.isActive ?? config.is_active ?? false,
+    maxDailyPlays: config.maxDailyPlays ?? config.max_daily_plays ?? 0,
+    winProbability: config.winProbability ?? config.win_probability ?? 0,
+    drawProbability: config.drawProbability ?? config.draw_probability ?? 0,
+    loseProbability: config.loseProbability ?? config.lose_probability ?? 0,
+    winRewardType: config.winRewardType ?? config.win_reward_type ?? "NONE",
+    winRewardAmount: config.winRewardAmount ?? config.win_reward_amount ?? 0,
+    drawRewardType: config.drawRewardType ?? config.draw_reward_type ?? "NONE",
+    drawRewardAmount: config.drawRewardAmount ?? config.draw_reward_amount ?? 0,
+    loseRewardType: config.loseRewardType ?? config.lose_reward_type ?? "NONE",
+    loseRewardAmount: config.loseRewardAmount ?? config.lose_reward_amount ?? 0,
+    dailyGainCap: config.dailyGainCap ?? config.daily_gain_cap ?? 0,
+    enableGoldenHour:
+      config.enableGoldenHour ?? config.enable_golden_hour ?? true,
+    goldenHourMultiplier:
+      config.goldenHourMultiplier ?? config.golden_hour_multiplier ?? 2.0,
   };
 };
 

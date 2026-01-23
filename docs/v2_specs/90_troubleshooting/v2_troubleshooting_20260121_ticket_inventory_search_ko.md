@@ -31,6 +31,15 @@
 - `TicketLogDto` 응답 필드를 `type/amount/timestamp`로 정렬하여 스키마와 일치.
 - 로그 응답에 `nickname` 포함(유저 조인 후 채움).
 
+## 5.1 추가 시도 (2026-01-23)
+- `/api/v2/admin/inventory/logs`에서 지갑(UserGameWalletLedger)+인벤(UserInventoryLedger) 합산 반환으로 확장.
+- 결과: **티켓 로그 검색은 여전히 실패** (UI에서 test002 기준 미표시).
+
+## 5.2 추가 원인 후보
+- `getAdminUserList` 검색 성공 → 티켓 지급 모달의 유저 조회와 로그 조회가 **다른 데이터 경로**를 사용.
+- `/inventory/logs`가 **중복 라우트**(economy_routes, inventory_routes)로 선언되어 실제 핸들러가 의도와 다르게 선택될 가능성.
+- `UserGameWalletLedger`에 **티켓 지급 로그가 기록되지 않는 경로** 존재 가능(지갑 잔액만 갱신).
+
 ## 6. 재발 방지
 - FE↔BE 파라미터 계약 불일치 시 즉시 통일.
 - 라우터 중복 경로 사용 시 실제 매칭 핸들러의 파라미터 규칙 확인.
@@ -38,3 +47,4 @@
 ## 7. 변경 이력
 - v1.0 (2026-01-21, GitHub Copilot): 최초 작성
 - v1.1 (2026-01-21, GitHub Copilot): 닉네임 표시 누락/티켓 지급 500 원인 및 해결 추가
+- v1.2 (2026-01-23, GitHub Copilot): 지갑+인벤 합산 로그 시도 기록 및 추가 원인 후보 정리

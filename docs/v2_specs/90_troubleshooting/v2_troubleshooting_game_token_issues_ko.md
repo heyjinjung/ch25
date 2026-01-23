@@ -328,6 +328,12 @@ if ticket_type in PREMIUM_TICKETS:
 - V2 상태 엔드포인트가 비활성일 때 `NO_FEATURE_TODAY`를 404로 반환
 - V1 상태 엔드포인트도 동일하게 비활성 → 폴백 체인이 실패
 
+추가로, 로컬/신규 DB에서 아래 케이스가 자주 발생합니다:
+
+- **`feature_config` 시드 누락**: today-feature 스케줄 게이트를 아카이브(OFF)로 두더라도, 게임 status는 `feature_config`의 `is_enabled`/존재 여부를 요구합니다.
+    - `feature_config`에 `DICE/ROULETTE/LOTTERY` row가 없으면 `NO_FEATURE_TODAY`로 차단될 수 있습니다.
+- **Alembic 리비전 꼬임**: DB의 `alembic_version`이 레포에 없는 리비전을 가리키면(`Can't locate revision ...`) 마이그레이션/시드 적용 자체가 막힙니다.
+
 ### 해결 방법
 
 #### 6.1 V2 → V1 폴백 + 빈 상태 반환
@@ -344,6 +350,16 @@ if ticket_type in PREMIUM_TICKETS:
 - `src/api/httpClient.ts`
 
 - `NO_FEATURE_TODAY` 응답은 경고 수준으로 처리하거나 로그 억제
+
+#### 6.3 DB 시드(권장)
+
+- `feature_config`에 최소 3개 row(DICE/ROULETTE/LOTTERY)를 upsert
+- 로컬에서는 `scripts/seed_test_data.py`로 한번에 시드할 수도 있지만, 운영/재현성을 위해 Alembic 마이그레이션으로 보장하는 방식을 권장합니다.
+
+#### 6.4 마이그레이션 리비전 복구(shim) / stamp
+
+- `alembic current`가 `Can't locate revision ...`로 실패하면, 누락된 revision id에 대해 **no-op shim 마이그레이션**을 복구하여 그래프를 정상화합니다.
+- 스키마가 이미 최신인데 `alembic_version`만 뒤쳐진 경우, `alembic stamp <head>`로 버전만 정렬한 뒤 새 마이그레이션을 적용합니다.
 
 ### 검증 방법
 

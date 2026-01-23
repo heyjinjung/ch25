@@ -23,6 +23,7 @@ import {
   getUserInventory,
   getUserNotes,
   createUserNote,
+  createAdminUser,
   getUserMissionHistory,
   forceCompleteMission,
   getUserSegment,
@@ -31,6 +32,7 @@ import {
   UserInventoryItemDto,
   UserNoteDto,
   CreateUserNoteRequest,
+  AdminUserCreateRequest,
   UserMissionHistoryDto,
   getAdminSegmentStats,
   getAdminSegmentRules,
@@ -454,6 +456,18 @@ export function useAdminUserList(params: UserSearchParams = {}) {
     queryKey: ADMIN_KEYS.userList(params),
     queryFn: () => getAdminUserList(params),
     staleTime: 1000 * 60, // 1 min
+  });
+}
+
+export function useCreateAdminUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: AdminUserCreateRequest) => createAdminUser(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "users", "list"],
+      });
+    },
   });
 }
 

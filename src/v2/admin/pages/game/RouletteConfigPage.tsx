@@ -50,10 +50,22 @@ export default function RouletteConfigPage() {
   const rewardOptions = REWARD_ITEMS;
 
   useEffect(() => {
-    if (configs.length > 0) {
-      const target = configs.find((c) => c.grade === selectedGrade);
-      if (target) setActiveConfig(target);
+    if (configs.length === 0) {
+      setActiveConfig(null);
+      return;
     }
+
+    const target = configs.find((c) => c.grade === selectedGrade) ?? null;
+    if (!target) {
+      setActiveConfig(null);
+      return;
+    }
+
+    // Detach from react-query cache objects to avoid cross-grade accidental mutation.
+    setActiveConfig({
+      ...target,
+      segments: target.segments.map((s) => ({ ...s })),
+    });
   }, [configs, selectedGrade]);
 
   const handleConfigChange = (
@@ -105,6 +117,10 @@ export default function RouletteConfigPage() {
         No configuration found for {selectedGrade}
       </div>
     );
+
+  const sortedSegments = activeConfig.segments
+    .slice()
+    .sort((a, b) => a.slotIndex - b.slotIndex);
 
   const totalWeight =
     activeConfig.segments.reduce((sum, s) => sum + s.weight, 0) || 1;
@@ -275,108 +291,106 @@ export default function RouletteConfigPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {activeConfig.segments
-                  .sort((a, b) => a.slotIndex - b.slotIndex)
-                  .map((segment) => {
-                    const probability = (
-                      (segment.weight / totalWeight) *
-                      100
-                    ).toFixed(1);
-                    return (
-                      <TableRow
-                        key={segment.slotIndex}
-                        className="border-white/5 hover:bg-white/5 group"
-                      >
-                        <TableCell className="font-mono text-zinc-500 text-center bg-black/20">
-                          {segment.slotIndex}
-                        </TableCell>
-                        <TableCell>
-                          <Input
-                            value={segment.label}
-                            onChange={(e) =>
-                              handleSegmentChange(
-                                segment.slotIndex,
-                                "label",
-                                e.target.value,
-                              )
-                            }
-                            className="h-8 bg-transparent border-transparent hover:bg-black/50 hover:border-white/10 focus:bg-black/50 focus:border-indigo-500 transition-all w-full"
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Select
-                            value={segment.rewardType}
-                            onValueChange={(val) =>
-                              handleSegmentChange(
-                                segment.slotIndex,
-                                "rewardType",
-                                val,
-                              )
-                            }
-                          >
-                            <SelectTrigger className="h-8 bg-black/40 border-white/5 text-xs">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent className="bg-[#18181B] border-white/10 text-white max-h-[260px]">
-                              {rewardOptions.map((opt) => (
-                                <SelectItem key={opt.value} value={opt.value}>
-                                  {opt.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-                        <TableCell>
+                {sortedSegments.map((segment) => {
+                  const probability = (
+                    (segment.weight / totalWeight) *
+                    100
+                  ).toFixed(1);
+                  return (
+                    <TableRow
+                      key={segment.slotIndex}
+                      className="border-white/5 hover:bg-white/5 group"
+                    >
+                      <TableCell className="font-mono text-zinc-500 text-center bg-black/20">
+                        {segment.slotIndex}
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          value={segment.label}
+                          onChange={(e) =>
+                            handleSegmentChange(
+                              segment.slotIndex,
+                              "label",
+                              e.target.value,
+                            )
+                          }
+                          className="h-8 bg-transparent border-transparent hover:bg-black/50 hover:border-white/10 focus:bg-black/50 focus:border-indigo-500 transition-all w-full"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Select
+                          value={segment.rewardType}
+                          onValueChange={(val) =>
+                            handleSegmentChange(
+                              segment.slotIndex,
+                              "rewardType",
+                              val,
+                            )
+                          }
+                        >
+                          <SelectTrigger className="h-8 bg-black/40 border-white/5 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="bg-[#18181B] border-white/10 text-white max-h-[260px]">
+                            {rewardOptions.map((opt) => (
+                              <SelectItem key={opt.value} value={opt.value}>
+                                {opt.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          type="number"
+                          value={segment.rewardAmount}
+                          onChange={(e) =>
+                            handleSegmentChange(
+                              segment.slotIndex,
+                              "rewardAmount",
+                              parseFloat(e.target.value),
+                            )
+                          }
+                          className="h-8 bg-transparent border-transparent hover:bg-black/50 hover:border-white/10 focus:bg-black/50 focus:border-indigo-500 transition-all w-[80px]"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <div className="relative">
                           <Input
                             type="number"
-                            value={segment.rewardAmount}
+                            value={segment.weight}
                             onChange={(e) =>
                               handleSegmentChange(
                                 segment.slotIndex,
-                                "rewardAmount",
-                                parseFloat(e.target.value),
+                                "weight",
+                                parseInt(e.target.value),
                               )
                             }
-                            className="h-8 bg-transparent border-transparent hover:bg-black/50 hover:border-white/10 focus:bg-black/50 focus:border-indigo-500 transition-all w-[80px]"
+                            className="h-8 bg-black/20 border-white/5 w-[80px] font-bold text-emerald-400 text-center focus:border-emerald-500"
                           />
-                        </TableCell>
-                        <TableCell>
-                          <div className="relative">
-                            <Input
-                              type="number"
-                              value={segment.weight}
-                              onChange={(e) =>
-                                handleSegmentChange(
-                                  segment.slotIndex,
-                                  "weight",
-                                  parseInt(e.target.value),
-                                )
-                              }
-                              className="h-8 bg-black/20 border-white/5 w-[80px] font-bold text-emerald-400 text-center focus:border-emerald-500"
-                            />
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <span className="text-sm font-mono text-zinc-300">
-                            {probability}%
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <Switch
-                            checked={segment.isJackpot}
-                            onCheckedChange={(checked) =>
-                              handleSegmentChange(
-                                segment.slotIndex,
-                                "isJackpot",
-                                checked,
-                              )
-                            }
-                            className="scale-75 data-[state=checked]:bg-yellow-500"
-                          />
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm font-mono text-zinc-300">
+                          {probability}%
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Switch
+                          checked={segment.isJackpot}
+                          onCheckedChange={(checked) =>
+                            handleSegmentChange(
+                              segment.slotIndex,
+                              "isJackpot",
+                              checked,
+                            )
+                          }
+                          className="scale-75 data-[state=checked]:bg-yellow-500"
+                        />
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
 

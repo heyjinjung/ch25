@@ -1,4 +1,5 @@
 from datetime import datetime
+import logging
 from typing import List, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException
@@ -15,8 +16,12 @@ from app.models.user import User
 from app.models.user_retention_state import UserRetentionState
 from app.models.user_segment import UserSegment
 from app.services.admin_audit_service import AdminAuditService
+from app.services.game_wallet_service import GameWalletService
+from app.core.exceptions import NotEnoughTokensError
+from app.services.admin_user_service import AdminUserService
 from app.services.inventory_service import InventoryService
 from app.v2.schemas.v2_admin_user import (
+    AdminUserCreate,
     AdminUserDetailDto,
     AdminUserListDto,
     AdminWalletAdjustmentRequest,
@@ -34,6 +39,7 @@ from app.v2.schemas.v2_admin_user import (
 from app.v2.services.vault_service import V2VaultService
 
 router = APIRouter()
+logger = logging.getLogger("uvicorn.error")
 
 
 @router.get("/users", response_model=UserListResponse)
@@ -55,11 +61,15 @@ def get_admin_users_list(
 
     if search:
         search_pattern = f"%{search}%"
-        query = query.filter(
+        filters = (
             (User.nickname.ilike(search_pattern))
             | (User.telegram_username.ilike(search_pattern))
             | (User.external_id.ilike(search_pattern))
         )
+        if search.isdigit():
+            numeric = int(search)
+            filters = filters | (User.id == numeric) | (User.telegram_id == numeric)
+        query = query.filter(filters)
 
     if status:
         query = query.filter(User.status == status)
@@ -88,6 +98,15 @@ def get_admin_users_list(
     total = query.count()
     offset = (page - 1) * limit
     users = query.offset(offset).limit(limit).all()
+
+    if search:
+        logger.warning(
+            "admin.users.search term=%s total=%s page=%s limit=%s",
+            search,
+            total,
+            page,
+            limit,
+        )
 
     user_list = []
     for user in users:
@@ -126,6 +145,51 @@ def get_admin_users_list(
         page=page,
         limit=limit,
         totalPages=total_pages,
+    )
+
+
+@router.post("/users", response_model=AdminUserListDto, status_code=201)
+def create_admin_user(
+    payload: AdminUserCreate,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    admin_id, admin_role = admin_info
+
+    user = AdminUserService.create_user(db, payload)
+
+    vault_balance = int(user.vault_available_balance or 0) + int(user.vault_locked_balance or 0)
+    total_charge = int(getattr(user, "total_charge_amount", 0) or 0)
+    tier = "COMMON"
+    if total_charge >= 10000000:
+        tier = "VVIP"
+    elif total_charge >= 5000000:
+        tier = "VIP"
+
+    status_str = "Active" if user.status == "ACTIVE" else "Inactive" if user.status == "INACTIVE" else "Suspended"
+    last_active = user.updated_at.strftime("%Y-%m-%d %H:%M") if user.updated_at else "-"
+
+    AdminAuditService.log(
+        db,
+        admin_id,
+        "USER_CREATE",
+        "USER",
+        str(user.id),
+        before={},
+        after={"external_id": user.external_id, "nickname": user.nickname},
+    )
+
+    return AdminUserListDto(
+        id=user.id,
+        cc_id=user.id,
+        nickname=user.nickname or "(미설정)",
+        telegram_id=user.telegram_id,
+        telegram_username=user.telegram_username,
+        tier=tier,
+        level=user.level or 1,
+        vaultBalance=vault_balance,
+        last_active=last_active,
+        status=status_str,
     )
 
 
@@ -285,17 +349,27 @@ def adjust_user_wallet(
             token_enum = GameTokenType(payload.token_type)
         except Exception:
             raise HTTPException(status_code=400, detail="INVALID_TOKEN_TYPE")
-
-        wallet = db.query(UserGameWallet).filter(
-            UserGameWallet.user_id == user_id,
-            UserGameWallet.token_type == token_enum,
-        ).first()
-        if not wallet:
-            wallet = UserGameWallet(user_id=user_id, token_type=token_enum, balance=0)
-            db.add(wallet)
-
-        wallet.balance = int(wallet.balance or 0) + payload.amount
-        if wallet.balance < 0:
+        service = GameWalletService()
+        try:
+            if payload.amount > 0:
+                service.grant_tokens(
+                    db,
+                    user_id=user_id,
+                    token_type=token_enum,
+                    amount=payload.amount,
+                    reason=payload.reason,
+                    label=f"ADMIN:{admin_id}",
+                )
+            else:
+                service.revoke_tokens(
+                    db,
+                    user_id=user_id,
+                    token_type=token_enum,
+                    amount=abs(payload.amount),
+                    reason=payload.reason,
+                    label=f"ADMIN:{admin_id}",
+                )
+        except NotEnoughTokensError:
             raise HTTPException(status_code=400, detail="INSUFFICIENT_TOKEN_BALANCE")
 
     db.commit()

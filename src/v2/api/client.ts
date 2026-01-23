@@ -44,12 +44,20 @@ export const v2Client = axios.create({
 
 // Request Interceptor: Attach Token
 v2Client.interceptors.request.use((config) => {
-  const token =
-    getAdminToken() ||
-    getAuthToken() ||
-    (typeof localStorage !== "undefined"
-      ? localStorage.getItem("token")
-      : null);
+  const pathname =
+    typeof window !== "undefined" ? window.location.pathname : "";
+  const isV2AdminPath = pathname.startsWith("/v2/admin");
+
+  const token = isV2AdminPath
+    ? getAdminToken() ||
+      getAuthToken() ||
+      (typeof localStorage !== "undefined"
+        ? localStorage.getItem("token")
+        : null)
+    : getAuthToken() ||
+      (typeof localStorage !== "undefined"
+        ? localStorage.getItem("token")
+        : null);
   const url = String(config.url ?? "");
 
   // Skip auth for public endpoints if any (currently mostly auth'd)

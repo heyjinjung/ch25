@@ -69,6 +69,8 @@ const formatKst = (value: string) => {
   return parsed.toLocaleString("ko-KR", { timeZone: "Asia/Seoul" });
 };
 
+const normalizeSearchValue = (value: string) => value.trim();
+
 export default function TicketManagementTab() {
   const [searchUserId, setSearchUserId] = useState<number | undefined>(
     undefined,
@@ -134,13 +136,14 @@ export default function TicketManagementTab() {
 
   const handleUserSearch = async (val: string) => {
     setInputValue(val);
-    if (!val) {
+    const normalized = normalizeSearchValue(val);
+    if (!normalized) {
       setSearchUserId(undefined);
       return;
     }
 
-    const numericId = parseInt(val);
-    if (!isNaN(numericId) && /^\d+$/.test(val)) {
+    const numericId = parseInt(normalized);
+    if (!isNaN(numericId) && /^\d+$/.test(normalized)) {
       setSearchUserId(numericId);
       return;
     }
@@ -149,12 +152,17 @@ export default function TicketManagementTab() {
   };
 
   const resolveUserId = async (value: string) => {
-    const numericId = parseInt(value);
-    if (!isNaN(numericId) && /^\d+$/.test(value)) {
+    const normalized = normalizeSearchValue(value);
+    if (!normalized) {
+      return undefined;
+    }
+
+    const numericId = parseInt(normalized);
+    if (!isNaN(numericId) && /^\d+$/.test(normalized)) {
       return numericId;
     }
 
-    const response = await getAdminUserList({ search: value, limit: 1 });
+    const response = await getAdminUserList({ search: normalized, limit: 1 });
     if (response.users && response.users.length > 0) {
       return response.users[0].id;
     }
@@ -162,13 +170,14 @@ export default function TicketManagementTab() {
   };
 
   const handleSearchCommit = async () => {
-    if (!inputValue) {
+    const normalized = normalizeSearchValue(inputValue);
+    if (!normalized) {
       setSearchUserId(undefined);
       return;
     }
 
     try {
-      const resolved = await resolveUserId(inputValue);
+      const resolved = await resolveUserId(normalized);
       if (resolved) {
         setSearchUserId(resolved);
         return;
@@ -182,10 +191,11 @@ export default function TicketManagementTab() {
   };
 
   const lookupUserInForm = async () => {
-    if (!targetUserId) return;
+    const normalized = normalizeSearchValue(targetUserId);
+    if (!normalized) return;
     setIsSearchingUser(true);
     try {
-      const resolved = await resolveUserId(targetUserId);
+      const resolved = await resolveUserId(normalized);
       if (!resolved) {
         setTargetUserNickname("유저를 찾을 수 없음");
         return;

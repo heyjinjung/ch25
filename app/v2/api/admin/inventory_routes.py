@@ -1,13 +1,15 @@
 from datetime import datetime
+import logging
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_admin_info, get_db
 from app.models.game_wallet import UserGameWallet, GameTokenType
+from app.models.game_wallet_ledger import UserGameWalletLedger
 from app.models.inventory import UserInventoryItem, UserInventoryLedger
 from app.models.user import User
 from app.v2.schemas.v2_admin_user import TicketLogDto
@@ -22,6 +24,7 @@ from app.services.game_wallet_service import GameWalletService
 from app.services.admin_audit_service import AdminAuditService
 
 router = APIRouter()
+logger = logging.getLogger("uvicorn.error")
 
 
 def check_admin_permission(role: str):
@@ -72,9 +75,9 @@ class UserInventoryDto(BaseModel):
 
 @router.get("/inventory/logs", response_model=List[TicketLogDto])
 def get_inventory_logs(
-    userId: Optional[int] = None,
-    startDate: Optional[str] = None,
-    endDate: Optional[str] = None,
+    user_id: Optional[int] = Query(None, alias="user_id"),
+    start_date: Optional[str] = Query(None, alias="start_date"),
+    end_date: Optional[str] = Query(None, alias="end_date"),
     limit: int = 200,
     db: Session = Depends(get_db),
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
@@ -88,35 +91,84 @@ def get_inventory_logs(
             parsed = parsed.replace(tzinfo=None)
         return parsed
 
-    query = db.query(UserInventoryLedger, User).outerjoin(User, UserInventoryLedger.user_id == User.id)
-    if userId is not None:
-        query = query.filter(UserInventoryLedger.user_id == userId)
-    if startDate:
-        query = query.filter(UserInventoryLedger.created_at >= parse_iso_dt(startDate))
-    if endDate:
-        query = query.filter(UserInventoryLedger.created_at <= parse_iso_dt(endDate))
+    clamped_limit = max(1, min(limit, 1000))
 
-    results = (
-        query.order_by(UserInventoryLedger.created_at.desc())
-        .limit(max(1, min(limit, 1000)))
+    wallet_query = db.query(UserGameWalletLedger, User).outerjoin(
+        User, UserGameWalletLedger.user_id == User.id
+    )
+    if user_id is not None:
+        wallet_query = wallet_query.filter(UserGameWalletLedger.user_id == user_id)
+    if start_date:
+        wallet_query = wallet_query.filter(UserGameWalletLedger.created_at >= parse_iso_dt(start_date))
+    if end_date:
+        wallet_query = wallet_query.filter(UserGameWalletLedger.created_at <= parse_iso_dt(end_date))
+
+    wallet_results = (
+        wallet_query.order_by(UserGameWalletLedger.created_at.desc())
+        .limit(clamped_limit)
         .all()
     )
 
-    return [
-        TicketLogDto(
-            id=log.id,
-            userId=log.user_id,
-            nickname=user.nickname if user else "",  # Safe handling for None user
-            type="GRANT" if log.change_amount > 0 else "USE",
-            itemType=log.item_type,
-            amount=abs(log.change_amount),
-            balanceAfter=log.balance_after,
-            reason=log.reason,
-            timestamp=log.created_at,
-            adminId=log.related_id,
+    inventory_query = db.query(UserInventoryLedger, User).outerjoin(
+        User, UserInventoryLedger.user_id == User.id
+    )
+    if user_id is not None:
+        inventory_query = inventory_query.filter(UserInventoryLedger.user_id == user_id)
+    if start_date:
+        inventory_query = inventory_query.filter(UserInventoryLedger.created_at >= parse_iso_dt(start_date))
+    if end_date:
+        inventory_query = inventory_query.filter(UserInventoryLedger.created_at <= parse_iso_dt(end_date))
+
+    inventory_results = (
+        inventory_query.order_by(UserInventoryLedger.created_at.desc())
+        .limit(clamped_limit)
+        .all()
+    )
+
+    logger.info(
+        "admin.inventory_logs fetched user_id=%s start_date=%s end_date=%s wallet_count=%s inventory_count=%s",
+        user_id,
+        start_date,
+        end_date,
+        len(wallet_results),
+        len(inventory_results),
+    )
+
+    combined = []
+    for log, user in wallet_results:
+        combined.append(
+            TicketLogDto(
+                id=log.id,
+                userId=log.user_id,
+                nickname=user.nickname if user else "",
+                type="GRANT" if log.delta > 0 else "USE",
+                itemType=log.token_type.value if hasattr(log.token_type, "value") else str(log.token_type),
+                amount=abs(log.delta),
+                balanceAfter=log.balance_after,
+                reason=log.reason or "",
+                timestamp=log.created_at,
+                adminId=log.label,
+            )
         )
-        for log, user in results
-    ]
+
+    for log, user in inventory_results:
+        combined.append(
+            TicketLogDto(
+                id=log.id,
+                userId=log.user_id,
+                nickname=user.nickname if user else "",
+                type="GRANT" if log.change_amount > 0 else "USE",
+                itemType=log.item_type,
+                amount=abs(log.change_amount),
+                balanceAfter=log.balance_after,
+                reason=log.reason,
+                timestamp=log.created_at,
+                adminId=log.related_id,
+            )
+        )
+
+    combined.sort(key=lambda item: item.timestamp, reverse=True)
+    return combined[:clamped_limit]
 
 
 
@@ -130,42 +182,35 @@ def create_ticket_log(
     check_admin_permission(admin_role)
 
     try:
-        # 1. Determine if it's a Wallet token or an Inventory item
-        # We'll treat common tokens (ROULETTE_COIN, etc.) as wallet tokens
-        wallet_token = None
+        # 1. Ticket grants must be wallet tokens (V2 SoT)
         try:
             wallet_token = GameTokenType(payload.ticket_type)
-        except ValueError:
-            pass
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail="INVALID_TICKET_TYPE") from exc
 
-        balance_after = 0
-        if wallet_token:
-            # Sync UserGameWallet
-            game_wallet_service = GameWalletService()
-            balance_after = game_wallet_service.grant_tokens(
-                db, 
-                payload.user_id, 
-                wallet_token, 
-                payload.amount, 
-                reason=payload.reason,
-                auto_commit=False
-            )
-        else:
-            # Sync UserInventoryItem
-            item = InventoryService.grant_item(
-                db, 
-                payload.user_id, 
-                payload.ticket_type, 
-                payload.amount, 
-                reason=payload.reason,
-                auto_commit=False
-            )
-            balance_after = item.quantity
+        logger.warning(
+            "admin.ticket_grant payload_type=%s wallet_token=%s user_id=%s amount=%s",
+            payload.ticket_type,
+            wallet_token.value,
+            payload.user_id,
+            payload.amount,
+        )
+
+        # Sync UserGameWallet
+        game_wallet_service = GameWalletService()
+        balance_after = game_wallet_service.grant_tokens(
+            db,
+            payload.user_id,
+            wallet_token,
+            payload.amount,
+            reason=payload.reason,
+            auto_commit=False,
+        )
 
         # 2. Record in UserInventoryLedger (Source of Truth for the Admin UI Table)
         log = UserInventoryLedger(
             user_id=payload.user_id,
-            item_type=payload.ticket_type,
+            item_type=wallet_token.value,
             change_amount=payload.amount,
             balance_after=balance_after,
             reason=payload.reason,
@@ -221,29 +266,19 @@ def update_ticket_log(
         log.change_amount = payload.amount
         log.reason = payload.reason
 
-        # Sync Balance
-        wallet_token = None
+        # Sync Balance (wallet-only)
         try:
             wallet_token = GameTokenType(log.item_type)
-        except ValueError:
-            pass
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail="INVALID_TICKET_TYPE") from exc
 
-        if wallet_token:
-            wallet = db.query(UserGameWallet).filter(
-                UserGameWallet.user_id == log.user_id,
-                UserGameWallet.token_type == wallet_token
-            ).first()
-            if wallet:
-                wallet.balance += delta
-                log.balance_after = wallet.balance
-        else:
-            item = db.query(UserInventoryItem).filter(
-                UserInventoryItem.user_id == log.user_id,
-                UserInventoryItem.item_type == log.item_type
-            ).first()
-            if item:
-                item.quantity += delta
-                log.balance_after = item.quantity
+        wallet = db.query(UserGameWallet).filter(
+            UserGameWallet.user_id == log.user_id,
+            UserGameWallet.token_type == wallet_token
+        ).first()
+        if wallet:
+            wallet.balance += delta
+            log.balance_after = wallet.balance
 
         AdminAuditService.log(
             db, admin_id, "TICKET_LOG_UPDATE", "ECONOMY", "TICKET",
@@ -284,27 +319,18 @@ def delete_ticket_log(
         raise HTTPException(status_code=404, detail="TICKET_LOG_NOT_FOUND")
 
     try:
-        # Revert Balance
-        wallet_token = None
+        # Revert Balance (wallet-only)
         try:
             wallet_token = GameTokenType(log.item_type)
-        except ValueError:
-            pass
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail="INVALID_TICKET_TYPE") from exc
 
-        if wallet_token:
-            wallet = db.query(UserGameWallet).filter(
-                UserGameWallet.user_id == log.user_id,
-                UserGameWallet.token_type == wallet_token
-            ).first()
-            if wallet:
-                wallet.balance -= log.change_amount
-        else:
-            item = db.query(UserInventoryItem).filter(
-                UserInventoryItem.user_id == log.user_id,
-                UserInventoryItem.item_type == log.item_type
-            ).first()
-            if item:
-                item.quantity -= log.change_amount
+        wallet = db.query(UserGameWallet).filter(
+            UserGameWallet.user_id == log.user_id,
+            UserGameWallet.token_type == wallet_token
+        ).first()
+        if wallet:
+            wallet.balance -= log.change_amount
 
         AdminAuditService.log(
             db, admin_id, "TICKET_LOG_DELETE", "ECONOMY", "TICKET",

@@ -30,10 +30,12 @@ import {
   useAdjustUserWallet,
   useAdjustUserInventory,
   useAdminUserDetail,
+  useAdminTicketLogs,
   useUserInventory,
 } from "../../../hooks/useV2Admin";
 import {
   getInventoryRewardItems,
+  getWalletRewardItems,
   getRewardItemLabel,
   type RewardCategory,
 } from "../../../constants/rewardItems";
@@ -52,6 +54,12 @@ interface UserDetailDrawerProps {
   userId: number | null;
   defaultTab?: string;
 }
+
+const formatKst = (value: string) => {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return parsed.toLocaleString("ko-KR", { timeZone: "Asia/Seoul" });
+};
 
 export function UserDetailDrawer({
   isOpen,
@@ -73,11 +81,27 @@ export function UserDetailDrawer({
     useState<string>(defaultInventoryItem);
   const [inventoryAdjustDelta, setInventoryAdjustDelta] = useState<string>("");
   const [inventoryAdjustNote, setInventoryAdjustNote] = useState<string>("");
+  const walletItems = useMemo(() => getWalletRewardItems(), []);
+  const walletItemValues = useMemo(
+    () => new Set(walletItems.map((item) => item.value)),
+    [walletItems],
+  );
 
   const { data: user, isLoading } = useAdminUserDetail(userId);
   const { data: inventory } = useUserInventory(userId);
+  const { data: ticketLogs = [] } = useAdminTicketLogs(
+    userId ?? undefined,
+    undefined,
+    undefined,
+    50,
+    { enabled: Boolean(userId) },
+  );
   const adjustWallet = useAdjustUserWallet();
   const adjustInventory = useAdjustUserInventory();
+  const walletLogs = useMemo(
+    () => ticketLogs.filter((log) => walletItemValues.has(log.itemType)),
+    [ticketLogs, walletItemValues],
+  );
   // GSAP Animation for Tab Content
   useEffect(() => {
     if (isOpen && contentRef.current && user) {
@@ -188,6 +212,56 @@ export function UserDetailDrawer({
                         티켓 지급/회수
                       </Button>
                     </div>
+
+                    <Card className="bg-[#18181B] border-white/5">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-sm font-bold text-zinc-200">
+                          최근 티켓 로그
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-2">
+                        {walletLogs.length > 0 ? (
+                          walletLogs.slice(0, 10).map((log) => (
+                            <div
+                              key={log.id}
+                              className="flex flex-col gap-1 rounded-lg border border-white/5 bg-black/40 px-3 py-2 text-xs"
+                            >
+                              <div className="flex items-center justify-between text-zinc-500">
+                                <span>{formatKst(log.timestamp)}</span>
+                                <Badge
+                                  variant="outline"
+                                  className={
+                                    log.type === "GRANT"
+                                      ? "border-none bg-emerald-500/10 text-emerald-400"
+                                      : log.type === "REVOKE"
+                                        ? "border-none bg-red-500/10 text-red-400"
+                                        : "border-none bg-blue-500/10 text-blue-400"
+                                  }
+                                >
+                                  {log.type}
+                                </Badge>
+                              </div>
+                              <div className="flex items-center justify-between text-zinc-200">
+                                <span>{getRewardItemLabel(log.itemType)}</span>
+                                <span className="font-mono">
+                                  {log.type === "GRANT" ? "+" : "-"}
+                                  {(log.amount ?? 0).toLocaleString()}
+                                </span>
+                              </div>
+                              {log.reason && (
+                                <div className="text-[11px] text-zinc-500">
+                                  {log.reason}
+                                </div>
+                              )}
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-xs text-zinc-500">
+                            표시할 로그가 없습니다.
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
                   </TabsContent>
 
                   {/* 2. 인벤토리 (Inventory) */}

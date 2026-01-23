@@ -1,4 +1,5 @@
 from datetime import datetime
+import logging
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -40,6 +41,7 @@ from app.services.inventory_service import InventoryService
 from sqlalchemy import desc, text
 
 router = APIRouter()
+logger = logging.getLogger("uvicorn.error")
 
 
 def _product_id_from_sku(sku: str) -> int:
@@ -1150,6 +1152,15 @@ def get_ticket_logs(
         i_query = i_query.filter(func.date(UserInventoryLedger.created_at) <= end_date)
         
     i_logs = i_query.order_by(UserInventoryLedger.created_at.desc()).limit(100).all()
+
+    logger.info(
+        "admin.inventory_logs(economy_routes) user_id=%s start_date=%s end_date=%s wallet_count=%s inventory_count=%s",
+        user_id,
+        start_date,
+        end_date,
+        len(w_logs),
+        len(i_logs),
+    )
     
     # Merge
     combined = []

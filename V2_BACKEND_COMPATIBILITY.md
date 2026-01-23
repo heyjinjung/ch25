@@ -50,8 +50,12 @@ The adapter in `src/v2/api/v1CompatAdapter.ts` now acts as a bridge to the V2 Ba
 
 ### 1. 404 Not Found (Error: `NO_FEATURE_TODAY`)
 - **Symptoms**: Axios error 404, response body `{"detail":"NO_FEATURE_TODAY"}`.
-- **Cause**: The backend's `FeatureService` cannot find an active schedule for the game on the current date.
-- **Solution**: Check the Admin Panel (`/v2/admin/game/*`) and ensure a "Feature Schedule" is created and active for today.
+- **Cause**: The backend's `FeatureService` rejects the request because the game feature is not active in DB.
+  - If `FEATURE_GATE_ENABLED=true`, an active `feature_schedule` for today may be required.
+  - Even when schedule gating is OFF (archived/default), **missing `feature_config` rows** (or `is_enabled=false`) can still cause `NO_FEATURE_TODAY`.
+- **Solution**:
+  - Ensure `feature_config` has rows for `DICE/ROULETTE/LOTTERY` with `is_enabled=true`.
+  - If schedule gating is enabled, also ensure a "Feature Schedule" exists and is active for today.
 - **Dev Bypass**: 로컬에서만 `FEATURE_GATE_ENABLED=false`, `TEST_MODE=true`로 우회 가능.
 
 ### 2. 401 Unauthorized
