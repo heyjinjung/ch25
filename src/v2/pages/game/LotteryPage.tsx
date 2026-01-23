@@ -1,5 +1,5 @@
 // src/v2/pages/game/LotteryPage.tsx
-import React, { useState, useRef, useLayoutEffect } from "react";
+import React, { useEffect, useState, useRef, useLayoutEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import gsap from "gsap";
@@ -21,6 +21,7 @@ const LotteryPage: React.FC = () => {
   const ball2Ref = useRef<HTMLImageElement>(null);
   const ball3Ref = useRef<HTMLImageElement>(null);
   const ball4Ref = useRef<HTMLImageElement>(null);
+  const idleTweensRef = useRef<gsap.core.Tween[]>([]);
 
   const queryClient = useQueryClient();
 
@@ -51,24 +52,52 @@ const LotteryPage: React.FC = () => {
     if (!containerRef.current) return;
 
     const ctx = gsap.context(() => {
-      const balls = [ball1Ref, ball2Ref, ball3Ref, ball4Ref];
-      balls.forEach((ref, idx) => {
-        if (!ref.current) return;
-
-        gsap.to(ref.current, {
-          x: `+=${8 + idx * 2}`,
-          y: `-=${6 + idx}`,
-          rotation: `+=${12 + idx * 3}`,
-          duration: 1.6 + idx * 0.4,
-          repeat: -1,
-          yoyo: true,
-          ease: "sine.inOut",
-        });
+      // Aurora Background Animation
+      gsap.to(containerRef.current, {
+        "--aurora-1": "#37EBFF",
+        "--aurora-2": "#1C6EFF",
+        "--aurora-3": "#06102F",
+        duration: 10,
+        repeat: -1,
+        yoyo: true,
+        ease: "sine.inOut",
       });
+
+      gsap.to(".lottery-aurora-blob", {
+        x: -20,
+        y: 20,
+        duration: 15,
+        repeat: -1,
+        yoyo: true,
+        ease: "sine.inOut",
+        stagger: 0.9,
+      });
+
+      const balls = [ball1Ref, ball2Ref, ball3Ref, ball4Ref];
+      idleTweensRef.current = balls
+        .map((ref, idx) => {
+          if (!ref.current) return;
+
+          return gsap.to(ref.current, {
+            x: `+=${8 + idx * 2}`,
+            y: `-=${6 + idx}`,
+            rotation: `+=${12 + idx * 3}`,
+            scale: 1.02 + idx * 0.005,
+            duration: 1.6 + idx * 0.4,
+            repeat: -1,
+            yoyo: true,
+            ease: "sine.inOut",
+          });
+        })
+        .filter(Boolean) as gsap.core.Tween[];
     });
 
     return () => ctx.revert();
   }, []);
+
+  useEffect(() => {
+    idleTweensRef.current.forEach((tween) => tween.paused(isPlaying));
+  }, [isPlaying]);
 
   // ============================================================================
   // Play Handler
@@ -145,31 +174,36 @@ const LotteryPage: React.FC = () => {
         className="lottery-bg-overlay"
         alt=""
       />
+      <div className="lottery-aurora-bg">
+        <div className="lottery-aurora-blob blob-1" />
+        <div className="lottery-aurora-blob blob-2" />
+        <div className="lottery-aurora-blob blob-3" />
+      </div>
 
       {/* Ball Arena Section */}
       <div className="ball-arena-container mt-4">
         <img
           ref={ball1Ref}
           src={`${ASSET_PATH}/Mix balls 3.png`}
-          className="mixing-ball ball-1 w-[173px]"
+          className="mixing-ball ball-1 w-[192px]"
           alt=""
         />
         <img
           ref={ball2Ref}
           src={`${ASSET_PATH}/Mix balls 1.png`}
-          className="mixing-ball ball-2 w-[128px]"
+          className="mixing-ball ball-2 w-[144px]"
           alt=""
         />
         <img
           ref={ball3Ref}
           src={`${ASSET_PATH}/Mix balls 4.png`}
-          className="mixing-ball ball-3 w-[77px]"
+          className="mixing-ball ball-3 w-[88px]"
           alt=""
         />
         <img
           ref={ball4Ref}
-          src={`${ASSET_PATH}/Mix balls 2.png`}
-          className="mixing-ball ball-4 w-[100px]"
+          src="/v2/assets/01home/5.png"
+          className="mixing-ball ball-4 w-[100px] h-[100px]"
           alt=""
         />
       </div>

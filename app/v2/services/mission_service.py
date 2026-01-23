@@ -6,7 +6,7 @@ from datetime import date, datetime, timedelta, timezone
 from typing import List, Optional, Tuple, Dict, Any
 from zoneinfo import ZoneInfo
 
-from sqlalchemy import and_, func, select
+from sqlalchemy import and_, func, select, or_
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
