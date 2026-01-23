@@ -34,8 +34,19 @@ import {
   Ban,
 } from "lucide-react";
 import { UserDetailDrawer } from "./UserDetailDrawer";
-import { useAdminUserList } from "../../../hooks/useV2Admin";
+import {
+  useAdminUserList,
+  useCreateAdminUser,
+} from "../../../hooks/useV2Admin";
 import { AdminUserListDto, UserSearchParams } from "../../../api/adminApi";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../../../components/ui/dialog";
 
 // Simple Checkbox component (temporary)
 const Checkbox = ({
@@ -62,7 +73,17 @@ export default function UserListPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
-  const [selectedDrawerTab, setSelectedDrawerTab] = useState<string>("overview");
+  const [selectedDrawerTab, setSelectedDrawerTab] =
+    useState<string>("overview");
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [createExternalId, setCreateExternalId] = useState("");
+  const [createNickname, setCreateNickname] = useState("");
+  const [createTelegramId, setCreateTelegramId] = useState("");
+  const [createTelegramUsername, setCreateTelegramUsername] = useState("");
+  const [createLevel, setCreateLevel] = useState("1");
+  const [createStatus, setCreateStatus] = useState<
+    "ACTIVE" | "INACTIVE" | "SUSPENDED"
+  >("ACTIVE");
 
   // Filters
   const [statusFilter, setStatusFilter] = useState<string>("");
@@ -88,6 +109,7 @@ export default function UserListPage() {
   };
 
   const { data: userListData, isLoading } = useAdminUserList(searchParams);
+  const createUserMutation = useCreateAdminUser();
   const users = userListData?.users || [];
   const total = userListData?.total || 0;
   const totalPages = Math.ceil(total / limit);
@@ -119,6 +141,31 @@ export default function UserListPage() {
     }
   };
 
+  const handleCreateUser = async () => {
+    const externalId = createExternalId.trim();
+    if (!externalId) return;
+
+    const level = Number.parseInt(createLevel, 10);
+    const telegramId = Number.parseInt(createTelegramId, 10);
+
+    await createUserMutation.mutateAsync({
+      externalId,
+      nickname: createNickname.trim() || undefined,
+      level: Number.isFinite(level) ? level : undefined,
+      status: createStatus,
+      telegramId: Number.isFinite(telegramId) ? telegramId : undefined,
+      telegramUsername: createTelegramUsername.trim() || undefined,
+    });
+
+    setIsCreateOpen(false);
+    setCreateExternalId("");
+    setCreateNickname("");
+    setCreateTelegramId("");
+    setCreateTelegramUsername("");
+    setCreateLevel("1");
+    setCreateStatus("ACTIVE");
+  };
+
   return (
     <div className="space-y-6 h-full text-[#E4E4E7]">
       <div className="flex justify-between items-center">
@@ -127,10 +174,14 @@ export default function UserListPage() {
             회원 관리
           </h1>
           <p className="text-sm text-zinc-400">
-            총 {total.toLocaleString()}명의 회원을 관리하고 상세 정보를 조회합니다.
+            총 {total.toLocaleString()}명의 회원을 관리하고 상세 정보를
+            조회합니다.
           </p>
         </div>
-        <Button className="bg-[#D2FD9C] text-black hover:bg-[#D2FD9C]/90 font-bold">
+        <Button
+          className="bg-[#D2FD9C] text-black hover:bg-[#D2FD9C]/90 font-bold"
+          onClick={() => setIsCreateOpen(true)}
+        >
           <UserPlus className="w-4 h-4 mr-2" />
           회원 등록
         </Button>
@@ -167,9 +218,7 @@ export default function UserListPage() {
           <PopoverContent className="w-80 bg-[#18181B] border-white/10 text-white">
             <div className="space-y-4">
               <div>
-                <label className="text-sm text-zinc-400 mb-2 block">
-                  상태
-                </label>
+                <label className="text-sm text-zinc-400 mb-2 block">상태</label>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="bg-zinc-900 border-zinc-800">
                     <SelectValue placeholder="전체" />
@@ -296,7 +345,9 @@ export default function UserListPage() {
                     <ArrowUpDown className="w-3 h-3" />
                   </button>
                 </TableHead>
-                <TableHead className="text-center text-zinc-400 w-[80px]">관리</TableHead>
+                <TableHead className="text-center text-zinc-400 w-[80px]">
+                  관리
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -361,8 +412,8 @@ export default function UserListPage() {
       {/* Pagination */}
       <div className="flex items-center justify-between px-4 py-3 bg-[#18181B] rounded-xl border border-white/5">
         <div className="text-sm text-zinc-400">
-          {(page - 1) * limit + 1}~{Math.min(page * limit, total)} / 총{" "}
-          {total}개
+          {(page - 1) * limit + 1}~{Math.min(page * limit, total)} / 총 {total}
+          개
         </div>
         <div className="flex items-center gap-2">
           <Button
@@ -397,6 +448,110 @@ export default function UserListPage() {
         userId={selectedUserId}
         defaultTab={selectedDrawerTab}
       />
+
+      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+        <DialogContent className="bg-[#121214] border border-white/10 text-white">
+          <DialogHeader>
+            <DialogTitle className="text-white">회원 등록</DialogTitle>
+            <DialogDescription className="text-zinc-400">
+              external_id는 필수입니다. 나머지는 선택 입력입니다.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm text-zinc-300">external_id</label>
+              <Input
+                value={createExternalId}
+                onChange={(e) => setCreateExternalId(e.target.value)}
+                className="bg-zinc-900 border-zinc-800 text-zinc-200"
+                placeholder="예: user_001"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm text-zinc-300">닉네임</label>
+              <Input
+                value={createNickname}
+                onChange={(e) => setCreateNickname(e.target.value)}
+                className="bg-zinc-900 border-zinc-800 text-zinc-200"
+                placeholder="예: 홍길동"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <label className="text-sm text-zinc-300">레벨</label>
+                <Input
+                  type="number"
+                  value={createLevel}
+                  onChange={(e) => setCreateLevel(e.target.value)}
+                  className="bg-zinc-900 border-zinc-800 text-zinc-200"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm text-zinc-300">상태</label>
+                <Select
+                  value={createStatus}
+                  onValueChange={(v) =>
+                    setCreateStatus(v as "ACTIVE" | "INACTIVE" | "SUSPENDED")
+                  }
+                >
+                  <SelectTrigger className="bg-zinc-900 border-zinc-800">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-zinc-900 border-zinc-800">
+                    <SelectItem value="ACTIVE">ACTIVE</SelectItem>
+                    <SelectItem value="INACTIVE">INACTIVE</SelectItem>
+                    <SelectItem value="SUSPENDED">SUSPENDED</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <label className="text-sm text-zinc-300">telegram_id</label>
+                <Input
+                  type="number"
+                  value={createTelegramId}
+                  onChange={(e) => setCreateTelegramId(e.target.value)}
+                  className="bg-zinc-900 border-zinc-800 text-zinc-200"
+                  placeholder="선택"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm text-zinc-300">
+                  telegram_username
+                </label>
+                <Input
+                  value={createTelegramUsername}
+                  onChange={(e) => setCreateTelegramUsername(e.target.value)}
+                  className="bg-zinc-900 border-zinc-800 text-zinc-200"
+                  placeholder="@username"
+                />
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              className="border-zinc-700 text-zinc-300"
+              onClick={() => setIsCreateOpen(false)}
+              disabled={createUserMutation.isPending}
+            >
+              취소
+            </Button>
+            <Button
+              className="bg-[#D2FD9C] text-black hover:bg-[#D2FD9C]/90 font-bold"
+              onClick={handleCreateUser}
+              disabled={
+                createUserMutation.isPending || !createExternalId.trim()
+              }
+            >
+              {createUserMutation.isPending ? "등록 중..." : "등록"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

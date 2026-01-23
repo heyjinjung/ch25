@@ -69,6 +69,8 @@ import {
 } from "../../../constants/rewardItems";
 
 export default function TicketInventoryPage() {
+  const normalizeSearchValue = (value: string) => value.trim();
+
   const [searchUserId, setSearchUserId] = useState<number | undefined>(
     undefined,
   );
@@ -141,31 +143,36 @@ export default function TicketInventoryPage() {
 
   const handleUserSearch = async (val: string) => {
     setInputValue(val);
-    if (!val) {
+    const normalized = normalizeSearchValue(val);
+    if (!normalized) {
       setSearchUserId(undefined);
       return;
     }
 
-    const numericId = parseInt(val);
-    if (!isNaN(numericId) && /^\d+$/.test(val)) {
+    const numericId = parseInt(normalized);
+    if (!isNaN(numericId) && /^\d+$/.test(normalized)) {
       setSearchUserId(numericId);
     }
   };
 
   const handleSearchCommit = async () => {
-    if (!inputValue) {
+    const normalized = normalizeSearchValue(inputValue);
+    if (!normalized) {
       setSearchUserId(undefined);
       return;
     }
 
-    const numericId = parseInt(inputValue);
-    if (!isNaN(numericId) && /^\d+$/.test(inputValue)) {
+    const numericId = parseInt(normalized);
+    if (!isNaN(numericId) && /^\d+$/.test(normalized)) {
       setSearchUserId(numericId);
       return;
     }
 
     try {
-      const response = await getAdminUserList({ search: inputValue, limit: 1 });
+      const response = await getAdminUserList({
+        search: normalized,
+        limit: 1,
+      });
       if (response.users && response.users.length > 0) {
         setSearchUserId(response.users[0].id);
       } else {
@@ -179,11 +186,12 @@ export default function TicketInventoryPage() {
   };
 
   const lookupUserInForm = async () => {
-    if (!targetUserId) return;
+    const normalized = normalizeSearchValue(targetUserId);
+    if (!normalized) return;
     setIsSearchingUser(true);
     try {
       const response = await getAdminUserList({
-        search: targetUserId,
+        search: normalized,
         limit: 1,
       });
       if (response.users && response.users.length > 0) {

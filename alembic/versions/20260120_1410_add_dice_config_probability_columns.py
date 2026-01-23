@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = "20260120_1410_add_dice_config_probability_columns"
-down_revision = "20260120_1200_add_mission_reward_gifticon"
+down_revision = "c684cc7541f7"
 branch_labels = None
 depends_on = None
 

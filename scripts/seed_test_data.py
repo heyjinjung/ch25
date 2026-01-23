@@ -206,12 +206,16 @@ def seed_dice(db):
         "name": "Christmas Dice",
         "is_active": True,
         "max_daily_plays": 0,
+        "win_probability": 0.4,
+        "draw_probability": 0.1,
+        "lose_probability": 0.5,
         "win_reward_type": "POINT",
         "win_reward_amount": 200,
         "draw_reward_type": "POINT",
         "draw_reward_amount": 50,
         "lose_reward_type": "NONE",
         "lose_reward_amount": 0,
+        "daily_gain_cap": 20000,
     }
 
     if cfg_id:
@@ -222,12 +226,16 @@ def seed_dice(db):
                 SET name=:name,
                     is_active=:is_active,
                     max_daily_plays=:max_daily_plays,
+                    win_probability=:win_probability,
+                    draw_probability=:draw_probability,
+                    lose_probability=:lose_probability,
                     win_reward_type=:win_reward_type,
                     win_reward_amount=:win_reward_amount,
                     draw_reward_type=:draw_reward_type,
                     draw_reward_amount=:draw_reward_amount,
                     lose_reward_type=:lose_reward_type,
                     lose_reward_amount=:lose_reward_amount,
+                    daily_gain_cap=:daily_gain_cap,
                     updated_at=NOW()
                 WHERE id=:id
                 """
@@ -241,16 +249,20 @@ def seed_dice(db):
                 """
                 INSERT INTO dice_config (
                     name, is_active, max_daily_plays,
+                    win_probability, draw_probability, lose_probability,
                     win_reward_type, win_reward_amount,
                     draw_reward_type, draw_reward_amount,
                     lose_reward_type, lose_reward_amount,
+                    daily_gain_cap,
                     created_at, updated_at
                 )
                 VALUES (
                     :name, :is_active, :max_daily_plays,
+                    :win_probability, :draw_probability, :lose_probability,
                     :win_reward_type, :win_reward_amount,
                     :draw_reward_type, :draw_reward_amount,
                     :lose_reward_type, :lose_reward_amount,
+                    :daily_gain_cap,
                     NOW(), NOW()
                 )
                 """

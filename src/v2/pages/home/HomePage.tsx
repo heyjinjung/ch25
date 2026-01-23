@@ -11,6 +11,44 @@ export default function HomePage() {
   const gridCols = 18;
   const gridRows = 14;
 
+  const verticalLinePositions = [
+    "left-[0%]",
+    "left-[5.88%]",
+    "left-[11.76%]",
+    "left-[17.65%]",
+    "left-[23.53%]",
+    "left-[29.41%]",
+    "left-[35.29%]",
+    "left-[41.18%]",
+    "left-[47.06%]",
+    "left-[52.94%]",
+    "left-[58.82%]",
+    "left-[64.71%]",
+    "left-[70.59%]",
+    "left-[76.47%]",
+    "left-[82.35%]",
+    "left-[88.24%]",
+    "left-[94.12%]",
+    "left-[100%]",
+  ];
+
+  const horizontalLinePositions = [
+    "top-[0%]",
+    "top-[7.69%]",
+    "top-[15.38%]",
+    "top-[23.08%]",
+    "top-[30.77%]",
+    "top-[38.46%]",
+    "top-[46.15%]",
+    "top-[53.85%]",
+    "top-[61.54%]",
+    "top-[69.23%]",
+    "top-[76.92%]",
+    "top-[84.62%]",
+    "top-[92.31%]",
+    "top-[100%]",
+  ];
+
   const verticalLines = useMemo(
     () => Array.from({ length: gridCols }, (_, idx) => idx),
     [],
@@ -106,15 +144,13 @@ export default function HomePage() {
         {verticalLines.map((idx) => (
           <div
             key={`v-${idx}`}
-            className="gridwave-line gridwave-line--v"
-            style={{ left: `${(idx / (gridCols - 1)) * 100}%` }}
+            className={`gridwave-line gridwave-line--v ${verticalLinePositions[idx]}`}
           />
         ))}
         {horizontalLines.map((idx) => (
           <div
             key={`h-${idx}`}
-            className="gridwave-line gridwave-line--h"
-            style={{ top: `${(idx / (gridRows - 1)) * 100}%` }}
+            className={`gridwave-line gridwave-line--h ${horizontalLinePositions[idx]}`}
           />
         ))}
       </div>
@@ -127,12 +163,8 @@ export default function HomePage() {
           </div>
           <div className="featured-card">
             <div className="featured-content-inner">
-              <span className="featured-sub-text">EXCLUSIVE EVENT</span>
-              <h2 className="featured-main-title">
-                STREAK
-                <br />
-                CHALLENGE
-              </h2>
+              <span className="featured-sub-text">CC CASINO</span>
+              <h2 className="featured-main-title">NEW UPDATE 2026 FEB</h2>
             </div>
           </div>
         </div>
