@@ -23,7 +23,7 @@ from app.schemas.roulette import RoulettePlayRequest, RoulettePlayResponse, Roul
 from app.schemas.survey import SurveyCompleteRequest, SurveyListResponse, SurveyResponseUpdateRequest
 from app.v2.services.inventory_service import V2InventoryService
 from app.v2.services.mission_service import V2MissionService
-from app.services.feature_service import FeatureService
+from app.v2.services.feature_service import FeatureService
 from app.v2.services.retention_intervention_service import V2RetentionInterventionService
 from app.services.shop_service import ShopService
 from app.services.game_wallet_service import GameWalletService

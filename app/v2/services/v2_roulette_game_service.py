@@ -22,11 +22,11 @@ from app.schemas.roulette import (
     RouletteSegmentSchema,
     RouletteStatusResponse,
 )
-from app.v2.services.feature_service import FeatureService
+from app.services.feature_service import FeatureService
 from app.v2.services.inventory_service import V2InventoryService
 from app.v2.services.reward_service import V2RewardService
-from app.v2.services.vault_service import V2VaultService
-from app.v2.services.game_common import GamePlayContext, log_game_play
+from app.services.vault_service import VaultService
+from app.services.game_common import GamePlayContext, log_game_play
 from app.v2.services.mission_service import V2MissionService
 from app.v2.models.v2_roulette import V2RouletteLog, V2RouletteSegment
 from app.v2.services.game_config_service import V2GameConfigService
@@ -39,7 +39,7 @@ class V2RouletteGameService:
     def __init__(self) -> None:
         self.feature_service = FeatureService()
         self.reward_service = V2RewardService()
-        self.vault_service = V2VaultService()
+        self.vault_service = VaultService()
 
     @staticmethod
     def _operational_date_kst(now: datetime) -> date:

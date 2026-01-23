@@ -23,8 +23,14 @@ __all__ = [
 	"V2AdminInventoryService",
 	"V2AdminEconomyService",
 	"V2AdminUserService",
+	"V2AdminCCDepositService",
 	"V2RewardService",
 ]
+
+
+def __dir__():
+	# help() visibility
+	return list(globals().keys())
 
 
 def __getattr__(name: str):
@@ -47,6 +53,7 @@ def __getattr__(name: str):
 		"V2AdminInventoryService": ("app.v2.services.admin_inventory_service", "V2AdminInventoryService"),
 		"V2AdminEconomyService": ("app.v2.services.admin_economy_service", "V2AdminEconomyService"),
 		"V2AdminUserService": ("app.v2.services.admin_user_service", "V2AdminUserService"),
+		"V2AdminCCDepositService": ("app.v2.services.admin_cc_deposit_service", "V2AdminCCDepositService"),
 		"V2RewardService": ("app.v2.services.reward_service", "V2RewardService"),
 	}
 	if name not in mapping:

@@ -110,12 +110,12 @@ id | route | HTTP | v1_service | v2_service | status | owner | risk | tests | mi
 005 | /api/v2/vault/status | GET | - | app.v2.api.vault_routes.get_v2_vault_status | v2-only | backend | Low | pytest | v2 vault 전용 서비스 교체 | 이관 완료
 006 | /api/v2/vault/withdraw | POST | - | app.v2.api.vault_routes.v2_withdraw | v2-only | backend | Low | pytest | v2 withdraw 전용 서비스 교체 | 이관 완료
 007 | /api/v2/activity/ingest | POST | app.api.routes.activity.record_activity | app.v2.api.activity_routes.ingest_activity | mixed | backend | Medium | none | v2 이벤트 저장 구현 | 현재 mock 응답
-008 | /api/v2/roulette/status | GET | app.services.roulette_service.RouletteService | app.v2.api.routes.roulette_status | mixed | backend | Medium | none | v2 전용 서비스로 분리 | v1 서비스 재사용
-009 | /api/v2/roulette/play | POST | app.services.roulette_service.RouletteService | app.v2.api.routes.roulette_play | mixed | backend | High | none | v2 전용 서비스로 분리 | 재화 차감 포함
-010 | /api/v2/dice/status | GET | app.services.dice_service.DiceService | app.v2.api.routes.dice_status | mixed | backend | Medium | none | v2 전용 서비스로 분리 | v1 서비스 재사용
-011 | /api/v2/dice/play | POST | app.services.dice_service.DiceService | app.v2.api.routes.dice_play | mixed | backend | High | none | v2 전용 서비스로 분리 | 재화 차감 포함
-012 | /api/v2/lottery/status | GET | app.services.lottery_service.LotteryService | app.v2.api.routes.lottery_status | mixed | backend | Medium | none | v2 전용 서비스로 분리 | v1 서비스 재사용
-013 | /api/v2/lottery/play | POST | app.services.lottery_service.LotteryService | app.v2.api.routes.lottery_play | mixed | backend | High | none | v2 전용 서비스로 분리 | 재화 차감 포함
+008 | /api/v2/roulette/status | GET | app.services.roulette_service.RouletteService | app.v2.api.routes.roulette_status | v2-only | backend | Medium | tests/v2_tests/phase3_game/test_game_engine_smoke.py | v2 전용 서비스로 분리 | v2 서비스 사용
+009 | /api/v2/roulette/play | POST | app.services.roulette_service.RouletteService | app.v2.api.routes.roulette_play | v2-only | backend | High | tests/v2_tests/phase3_game/test_game_engine_smoke.py | v2 전용 서비스로 분리 | v2 서비스 사용, 라우트 내 v1 인스턴스 제거
+010 | /api/v2/dice/status | GET | app.services.dice_service.DiceService | app.v2.api.routes.dice_status | v2-only | backend | Medium | tests/v2_tests/phase3_game/test_game_engine_smoke.py | v2 전용 서비스로 분리 | v2 서비스 사용
+011 | /api/v2/dice/play | POST | app.services.dice_service.DiceService | app.v2.api.routes.dice_play | v2-only | backend | High | tests/v2_tests/phase3_game/test_game_engine_smoke.py | v2 전용 서비스로 분리 | v2 service 사용, 라우트 내 v1 인스턴스 제거
+012 | /api/v2/lottery/status | GET | app.services.lottery_service.LotteryService | app.v2.api.routes.lottery_status | v2-only | backend | Medium | tests/v2_tests/phase3_game/test_game_engine_smoke.py | v2 전용 서비스로 분리 | v2 서비스 사용
+013 | /api/v2/lottery/play | POST | app.services.lottery_service.LotteryService | app.v2.api.routes.lottery_play | v2-only | backend | High | tests/v2_tests/phase3_game/test_game_engine_smoke.py | v2 전용 서비스로 분리 | v2 service 사용, 라우트 내 v1 인스턴스 제거
 014 | /api/v2/inventory | GET | app.services.inventory_service.InventoryService | app.v2.api.routes.get_inventory | mixed | backend | High | none | v2 인벤토리 SoT 전환 | 재화/아이템 조회
 015 | /api/v2/inventory/use | POST | app.services.inventory_service.InventoryService | app.v2.api.routes.use_inventory_item | mixed | backend | High | none | v2 인벤토리 SoT 전환 | 데이터 쓰기
 016 | /api/v2/shop/products | GET | app.services.ui_config_service.UiConfigService | app.v2.api.routes.list_shop_products | mixed | backend | Medium | none | v2 config 분리 | v1 서비스 호출
@@ -187,7 +187,13 @@ id | route | HTTP | v1_service | v2_service | status | owner | risk | tests | mi
 - 자동 스캔 스크립트: scripts에 v2↔v1 의존 스캐너 추가 (PR 리포트용)
 - 작은 PR 진행: Top10(High) 엔드포인트부터 Plan → Patch → Verify → Ship
 
+### 2026-01-23 정리 노트
+- 핵심 테스트(아키텍처 SOT / 게임 스모크 / 상점·인벤토리 / 미션) 로컬 실행 및 통과 확인(출력 스니펫은 `docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260123.md` 참조).
+
+버전: v1.4 (2026-01-23, GitHub Copilot): 문서에 검증 로그 스니펫 링크 추가 및 최종 정리 노트 반영
+
 ## 15. 변경 이력
+- v1.4 (2026-01-23, GitHub Copilot): Game Play 라우트(`/roulette/play`, `/dice/play`, `/lottery/play`)를 V2 게임 서비스로 정리 및 라우트 내 V1 인스턴스 제거; 검증 테스트 통과
 - v1.3 (2026-01-23, Antigravity): Vault 및 CC Deposit 영역 v2-only 이관 및 V1 서비스 의존 제거 반영
 - v1.2 (2026-01-23, GitHub Copilot): V2 MissionService의 V1 RewardService 의존 제거 반영
 - v1.1 (2026-01-23, GitHub Copilot): v1 호출 CSV, 라우팅 맵, 경로 충돌/예시/우선순위 섹션 추가

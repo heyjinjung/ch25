@@ -8,9 +8,8 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_current_admin_info, get_db
 from app.models.mission import Mission, MissionRewardType
 
-router = APIRouter()
-
-logger = logging.getLogger(__name__)
+from app.v2.services.v2_admin_mission_service import V2AdminMissionService
+from app.v2.services import V2AdminAuditService
 
 
 class AdminMissionDto(BaseModel):
@@ -73,7 +72,7 @@ def get_admin_missions(
     db: Session = Depends(get_db),
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
-    missions = db.query(Mission).order_by(Mission.id).all()
+    missions = V2AdminMissionService.list_missions(db)
 
     result = []
     for m in missions:
@@ -99,8 +98,7 @@ def create_admin_mission(
     db: Session = Depends(get_db),
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
-    _, admin_role = admin_info
-
+    admin_id, admin_role = admin_info
     if admin_role not in ["ADMIN", "OPERATOR", "SUPER_ADMIN"]:
         raise HTTPException(status_code=403, detail="NOT_AUTHORIZED")
 
@@ -110,31 +108,28 @@ def create_admin_mission(
     except Exception:
         raise HTTPException(status_code=400, detail="INVALID_CATEGORY")
 
+    # Duplicate check in service or route? Move to service ideally but keep it here for now if needed.
     if db.query(Mission).filter(Mission.logic_key == payload.logicKey).first():
         raise HTTPException(status_code=400, detail="DUPLICATE_LOGIC_KEY")
 
     reward_type = _normalize_mission_reward_type(payload.rewardType)
 
-    mission = Mission(
-        title=payload.title,
-        description=payload.condition or f"Target: {payload.targetValue}",
-        category=category_enum,
-        logic_key=payload.logicKey,
-        action_type=payload.logicKey,
-        target_value=int(payload.targetValue),
-        reward_type=reward_type,
-        reward_amount=int(payload.rewardAmount),
-        is_active=bool(payload.isActive),
+    data = {
+        "title": payload.title,
+        "description": payload.condition or f"Target: {payload.targetValue}",
+        "category": category_enum,
+        "logic_key": payload.logicKey,
+        "target_value": int(payload.targetValue),
+        "reward_type": reward_type,
+        "reward_amount": int(payload.rewardAmount),
+        "is_active": bool(payload.isActive),
+    }
+    
+    mission = V2AdminMissionService.create_mission(db, data)
+    V2AdminAuditService.log(
+        db, admin_id, "MISSION_CREATE", "MISSION", str(mission.id),
+        after=data
     )
-    db.add(mission)
-
-    try:
-        db.commit()
-        db.refresh(mission)
-    except Exception:
-        logger.exception("Failed to create mission")
-        raise HTTPException(status_code=500, detail="MISSION_CREATE_FAILED")
-
     return {"success": True, "id": mission.id}
 
 
@@ -145,51 +140,30 @@ def update_admin_mission(
     db: Session = Depends(get_db),
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
-    m = db.query(Mission).filter(Mission.id == mission_id).first()
-    if not m:
-        raise HTTPException(status_code=404, detail="MISSION_NOT_FOUND")
-
+    admin_id, _ = admin_info
+    m = V2AdminMissionService.get_mission(db, mission_id)
+    
+    patch = {}
     if payload.category is not None:
         category_raw = _normalize_mission_category(payload.category)
         try:
-            m.category = Mission.category.type.enum_class(category_raw)
+            patch["category"] = Mission.category.type.enum_class(category_raw)
         except Exception:
             raise HTTPException(status_code=400, detail="INVALID_CATEGORY")
 
-    if payload.title is not None:
-        m.title = payload.title
+    if payload.title is not None: patch["title"] = payload.title
+    if payload.condition is not None: patch["description"] = payload.condition
+    if payload.logicKey is not None: patch["logic_key"] = payload.logicKey
+    if payload.targetValue is not None: patch["target_value"] = payload.targetValue
+    if payload.rewardType is not None: patch["reward_type"] = _normalize_mission_reward_type(payload.rewardType)
+    if payload.rewardAmount is not None: patch["reward_amount"] = payload.rewardAmount
+    if payload.isActive is not None: patch["is_active"] = payload.isActive
 
-    if payload.condition is not None:
-        m.description = payload.condition
-
-    if payload.logicKey is not None:
-        if payload.logicKey != m.logic_key and db.query(Mission).filter(Mission.logic_key == payload.logicKey).first():
-            raise HTTPException(status_code=400, detail="DUPLICATE_LOGIC_KEY")
-        m.logic_key = payload.logicKey
-        m.action_type = payload.logicKey
-
-    if payload.targetValue is not None:
-        m.target_value = payload.targetValue
-
-    if payload.rewardType is not None:
-        m.reward_type = _normalize_mission_reward_type(payload.rewardType)
-
-    if payload.rewardAmount is not None:
-        m.reward_amount = payload.rewardAmount
-    if payload.isActive is not None:
-        m.is_active = payload.isActive
-
-    try:
-        db.commit()
-    except HTTPException:
-        raise
-    except Exception:
-        logger.exception(
-            "Failed to update mission",
-            extra={"mission_id": mission_id},
-        )
-        raise HTTPException(status_code=500, detail="MISSION_UPDATE_FAILED")
-
+    V2AdminMissionService.update_mission(db, mission_id, patch)
+    V2AdminAuditService.log(
+        db, admin_id, "MISSION_UPDATE", "MISSION", str(mission_id),
+        after=patch
+    )
     return {"success": True}
 
 
@@ -199,23 +173,13 @@ def delete_admin_mission(
     db: Session = Depends(get_db),
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
-    _, admin_role = admin_info
+    admin_id, admin_role = admin_info
 
     if admin_role not in ["ADMIN", "OPERATOR", "SUPER_ADMIN"]:
         raise HTTPException(status_code=403, detail="NOT_AUTHORIZED")
 
-    m = db.query(Mission).filter(Mission.id == mission_id).first()
-    if not m:
-        raise HTTPException(status_code=404, detail="MISSION_NOT_FOUND")
-
-    try:
-        db.delete(m)
-        db.commit()
-    except Exception:
-        logger.exception(
-            "Failed to delete mission",
-            extra={"mission_id": mission_id},
-        )
-        raise HTTPException(status_code=500, detail="MISSION_DELETE_FAILED")
-
+    V2AdminMissionService.delete_mission(db, mission_id)
+    V2AdminAuditService.log(
+        db, admin_id, "MISSION_DELETE", "MISSION", str(mission_id)
+    )
     return {"success": True}

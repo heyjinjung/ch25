@@ -16,20 +16,9 @@ from app.schemas.admin_streak_rewards import (
     StreakRewardUserInfo,
 )
 
+from app.v2.services.v2_admin_mission_service import V2AdminMissionService
+
 router = APIRouter(prefix="/streak-rewards", tags=["v2-admin-streak"])
-
-
-def _count_event(db: Session, *, event_name: str) -> int:
-    return int(
-        db.query(func.count())
-        .select_from(UserEventLog)
-        .filter(
-            UserEventLog.feature_type == "STREAK",
-            UserEventLog.event_name == event_name,
-        )
-        .scalar()
-        or 0
-    )
 
 
 @router.get("/daily-counts", response_model=StreakRewardDailyCountsResponse)
@@ -41,10 +30,10 @@ def get_streak_daily_counts(
     day_str = day.isoformat()
     return StreakRewardDailyCountsResponse(
         day=day,
-        grant_day3=_count_event(db, event_name=f"streak.reward_grant.3.{day_str}"),
-        grant_day7=_count_event(db, event_name=f"streak.reward_grant.7.{day_str}"),
-        skip_day3=_count_event(db, event_name=f"streak.reward_skip.3.{day_str}"),
-        skip_day7=_count_event(db, event_name=f"streak.reward_skip.7.{day_str}"),
+        grant_day3=V2AdminMissionService.count_streak_events(db, event_name=f"streak.reward_grant.3.{day_str}"),
+        grant_day7=V2AdminMissionService.count_streak_events(db, event_name=f"streak.reward_grant.7.{day_str}"),
+        skip_day3=V2AdminMissionService.count_streak_events(db, event_name=f"streak.reward_skip.3.{day_str}"),
+        skip_day7=V2AdminMissionService.count_streak_events(db, event_name=f"streak.reward_skip.7.{day_str}"),
     )
 
 

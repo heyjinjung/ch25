@@ -53,8 +53,12 @@ V2 배포 전/후 필수 검증 항목을 표준화한다.
 	- 커맨드: pytest -q tests/v2_tests/phase1_env/test_v2_architecture_sot.py
 	- 검증 실행: GitHub Copilot 실행(2026-01-23) — 통과 (Exit Code: 0)
 	- 추가 조치: `V2VaultService.record_game_play_earn_event` shim 추가로 게임 엔진의 `record_game_play_earn_event` 호출을 `V2VaultService`로 안전하게 위임함 (Merge: 2026-01-23)
+	- 추가 조치: `game_common`을 v2 shim으로 이관(위임) — `app/v2/services/game_common.py`에서 `app.services.game_common`으로 delegate 처리함 (2026-01-23)
+	- 추가 조치: `FeatureService`를 v2 shim으로 교체하여 게임 엔진이 v1 서비스를 직접 참조하지 않도록 정리함 (Merge: 2026-01-23)
 
-	- 집중 스캔(2026-01-23): Shop/Inventory/Mission/Vault은 v2 네임스페이스로 전환되었으며 관련 테스트 통과 확인(Exit Code: 0). 게임 엔진들(`v2_dice_game_service.py`, `v2_lottery_game_service.py`, `v2_roulette_game_service.py`)은 `VaultService` 의존을 `V2VaultService`로 대체 완료했고 `FeatureService` / `game_common`을 v2 no-op로 대체했습니다 (우선순위: Medium).
+	- 집중 스캔(2026-01-23): Shop/Inventory/Mission/Vault은 v2 네임스페이스로 전환되었으며 관련 테스트 통과 확인(Exit Code: 0). 게임 엔진들(`v2_dice_game_service.py`, `v2_lottery_game_service.py`, `v2_roulette_game_service.py`)은 `VaultService` 의존을 `V2VaultService`로 대체 완료했고 `FeatureService` / `game_common`을 v2으로 이관(위임) 처리함(우선순위: Medium).
+
+	- API 정리: `/api/v2/roulette/play`, `/api/v2/dice/play`, `/api/v2/lottery/play` 라우트가 이제 V2 게임 서비스(`app.v2.services.v2_*_game_service`)를 직접 호출하도록 정리되었으며, 라우트 내의 V1 서비스 인스턴스 사용이 제거되었습니다 (검증: game engine smoke + architecture SOT, 실행(2026-01-23) 통과).
 
 #### 3.2.5 Inventory
 - [x] 단위 테스트 추가
@@ -130,6 +134,7 @@ V2 배포 전/후 필수 검증 항목을 표준화한다.
 ## 4. 관련 파일 앵커
 - [docs/v2_specs/00_sot_meta/v2_v1_dependency_inventory_ko.md](docs/v2_specs/00_sot_meta/v2_v1_dependency_inventory_ko.md)
 - [docs/v2_specs/00_sot_meta/v2_verification_log_template_ko.md](docs/v2_specs/00_sot_meta/v2_verification_log_template_ko.md)
+- **검증 로그(스니펫)**: [docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260123.md](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260123.md)
 - [app/v2/api/auth_routes.py](app/v2/api/auth_routes.py)
 - [app/v2/api/user_routes.py](app/v2/api/user_routes.py)
 - [app/v2/api/vault_routes.py](app/v2/api/vault_routes.py)
@@ -146,6 +151,9 @@ V2 배포 전/후 필수 검증 항목을 표준화한다.
 - [app/v2/services/user_service.py](app/v2/services/user_service.py)
 - [app/models/user.py](app/models/user.py)
 
+---
+
+버전: v1.20 (2026-01-23, GitHub Copilot): 핵심 테스트 스니펫 문서 추가 및 검증 로그 참조 링크 추가
 ## 5. 변경 이력
 - v1.17 (2026-01-23, Antigravity): Vault 영역 v2-only 기준 충족 및 Admin 관련 서비스 이관 결과 반영
 - v1.18 (2026-01-23, GitHub Copilot): Game/Shop/Inventory v2-only 검증 실행 및 통과 기록 추가 (pytest -q tests/v2_tests/phase3_game/test_game_engine_smoke.py, pytest -q tests/v2_tests/phase2_core/test_shop_inventory_logic.py, pytest -q tests/v2_tests/phase1_env/test_v2_architecture_sot.py, Exit Code: 0)

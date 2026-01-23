@@ -62,11 +62,16 @@ V2 코드에서 V1 서비스/라우트 import를 제거하는 절차와 기록 �
   - `app/v2/services/shop_service.py` — `GameTokenType` import 경로 `app.v2.models`로 대체됨.
   - `app/v2/services/mission_service.py` — `UiConfigService` import 경로 `app.v2.services.ui_config_service`로 대체됨.
   - `app/v2/services/v2_dice_game_service.py`, `app/v2/services/v2_lottery_game_service.py`, `app/v2/services/v2_roulette_game_service.py` — `VaultService` 의존을 `V2VaultService`로 교체 및 `V2VaultService.record_game_play_earn_event` shim 추가로 게임-금고 연동 보장됨.
-  - `app/v2/services/v2_dice_game_service.py`, `app/v2/services/v2_lottery_game_service.py`, `app/v2/services/v2_roulette_game_service.py` — `FeatureService`와 `game_common`을 v2 no-op로 대체하여 기능 게이팅/로그를 비활성화함(요청에 따라 아카이브 처리).
+  - `app/v2/services/v2_dice_game_service.py`, `app/v2/services/v2_lottery_game_service.py`, `app/v2/services/v2_roulette_game_service.py` — `FeatureService`와 `game_common`을 v2로 이관(초기: `FeatureService` no-op; `game_common`은 v2 shim → V1 위임) 처리함(요청에 따라 아카이브/위임 병행 처리).
 - 남아있는 v1 참조(의도적/후속작업 대상):
   - `app/v2/services/*` : 일부 admin 서비스에서 여전히 `app.services.*` import가 존재함(우선순위: Low/후속 스캔로 분류)
 
 - 조치: 문서(본 가이드 및 v2 검증 체크리스트)에 집중 스캔 결과 반영 및 개선 작업 백로그 등록 권고.
+
+### 검증 로그(스니펫)
+- 참조: [docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260123.md](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260123.md)
+
+버전: v1.5 (2026-01-23, GitHub Copilot): 검증 로그 스니펫 문서 추가 및 문서 링크 반영
 
 ## 7. QA/검증
 - 기능 검증: 기존 테스트 또는 스모크 테스트 통과 여부 확인
