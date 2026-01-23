@@ -255,7 +255,24 @@
   - `Authorization: Bearer <redacted>`
 - **프론트 수신 데이터 (Response JSON)**:
 ```json
-null
+{
+  "eligible": true,
+  "vaultBalance": 50000,
+  "lockedBalance": 50000,
+  "availableBalance": 50000,
+  "ticketCount": 0,
+  "is_golden_hour_active": true,
+  "golden_hour_multiplier": 2.0,
+  "golden_hour_remaining_seconds": 0,
+  "showModalOverride": null,
+  "segment": null,
+  "daily_play_count": 0,
+  "daily_play_target": 30,
+  "daily_vault_spent": 0,
+  "daily_vault_spent_target": 10000,
+  "daily_deposit_confirmed": false,
+  "withdrawal_count": 0
+}
 ```
 
 ---
@@ -455,6 +472,31 @@ null
   - `user_game_wallet`: `user_id=8, token_type=DIAMOND_FRAGMENT, balance=2`
   - `user_game_wallet_ledger`: `user_id=8, token_type=DIAMOND_FRAGMENT, delta=1, reason=V2_SHOP_PURCHASE`
 
+- **추가 검증 (2026-01-24 08:46 KST)**:
+  - **구매 응답 (Response JSON)**:
+```json
+{
+  "order_id": 5,
+  "sku": "SOT_DIAMOND_FRAGMENT",
+  "reward_type": "DIAMOND_FRAGMENT",
+  "reward_amount": 1
+}
+```
+  - **인벤토리 조회 (Response JSON)**:
+```json
+{
+  "items": [],
+  "wallet": {
+    "DIAMOND_FRAGMENT": 2
+  }
+}
+```
+  - **DB 스냅샷**:
+    - `v2_shop_order`: `id=5, user_id=10, sku=SOT_DIAMOND_FRAGMENT, reward_type=DIAMOND_FRAGMENT, reward_amount=1`
+    - `user_game_wallet`: `user_id=10, token_type=DIAMOND_FRAGMENT, balance=2`
+    - `user_game_wallet_ledger`: `id=25, user_id=10, token_type=DIAMOND_FRAGMENT, delta=1, balance_after=2, reason=V2_SHOP_PURCHASE`
+    - `user_game_wallet_ledger`: `id=24, user_id=10, token_type=DIAMOND_FRAGMENT, delta=1, balance_after=1, reason=V2_SHOP_PURCHASE`
+
 ---
 
 ### [CASE 4.7] 인벤토리 사용(바우처) 및 지갑 토큰 적립
@@ -605,6 +647,10 @@ null
   - `user_mission_progress`: `user_id=9, mission_id=2, current_value=1, is_completed=1, is_claimed=1, reset_date=NON_RESET`
   - `user`: `id=9, vault_locked_balance=3000`
   - `vault_ledger`: user_id=9 기준 0 rows (미션 보상 지급 후 미기록)
+- **추가 스냅샷 (2026-01-24 08:46 KST)**:
+  - `mission`: `id=2, reward_type=POINT, reward_amount=3000`
+  - `user_mission_progress`: `user_id=10, mission_id=2, is_completed=1, is_claimed=1, reset_date=NON_RESET`
+  - `user`: `id=10, vault_locked_balance=53000`
 - **추가 메모**:
   - 미수령 상태에서 `ALREADY_CLAIMED` 발생 제보가 있어 재현 로그 확보 필요
 
@@ -654,5 +700,25 @@ null
 - **Phase 3 검증 완료**: 기본 API 연결(200 OK)부터 심화 비즈니스 로직(등급 매핑, 티켓 소모, 페이오프 배수, 퍼즐 드랍)까지 V2 게임 엔진의 모든 핵심 로직이 SoT 명세에 따라 완벽히 작동함을 확인하였습니다.
 - **V2 Standard 준수**: 모든 로직은 Legacy(V1) 의존성을 배제하고 `app.v2` 표준에 따라 처리되었습니다.
 - **Phase 2 Vault 확인**: Vault 상태 API 200 OK 응답과 SoT(user/v2_user) 스냅샷을 기록하였습니다.
-- **미션 검증 보류**: `mission` 테이블 0건으로 미션 목록/클레임 검증 불가 (데일리/주간/신규용 미션 6종 미시드)
+- **미션 검증 완료**: 신규 유저 미션 6종 생성 후 조회/클레임/중복 차단 로그 확보 완료
 
+
+## 6. Critical Fixes: XP Exploit & CC Deposit Logic
+- **�׽�Ʈ �Ͻ�**: 2026-01-24 08:25 KST
+- **���� ���**: `AdminCCDepositService.upsert_many` & `LevelXPService.add_xp` 
+- **���� ����**: `pytest tests/v2_tests/phase2_core/test_cc_deposit_logic.py`, `pytest tests/v2_tests/phase2_core/test_xp_cap.py` 
+- **���**: **ALL PASSED**
+
+### [CASE 6.1] XP Exploit Mitigation (Infinite Level-up)
+- **Scenario**: �������̰ų� �Ǽ��� 1,000,000 XP�� �� ���� ���� �õ�
+- **Result**: `LevelXPService.add_xp`���� `MAX_SAFE_DELTA=100,000` ���� ����Ǿ� ��� ����. (1,000,000 -> 100,000 applied)
+
+### [CASE 6.2] CC Deposit Delta Logic (Infinite Loop)
+- **Scenario**: ���� �ݾ� �Ա� �ݺ� �� Delta�� 0�ӿ��� XP ���� ������ ���� �ݰ�/XP�� ���� �����ϴ� ����
+- **Fix**: `AdminCCDepositService`���� `if deposit_delta > 0` ���� �߰�.
+- **Result**: ���� �ݾ� ������ �� `deposit_delta=0` Ȯ�� -> Vault/XP ���� ���� ���� Ȯ��.
+
+### [CASE 6.3] V2VaultService Regression Fix
+- **Issue**: `AdminCCDepositService`�� `V2VaultService.handle_deposit_increase_signal`�� ȣ���ϳ� �ش� �޼ҵ尡 ���ŵǾ�����(Regressions).
+- **Fix**: `V2VaultService`�� `handle_deposit_increase_signal` Shim �޼ҵ� ����.
+- **Result**: `AttributeError` �ذ� �� ���� ȣ�� Ȯ��.

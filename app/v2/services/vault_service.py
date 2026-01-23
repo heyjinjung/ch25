@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.models.user import User
+from app.models.game_wallet import GameTokenType
 from app.v2.models.user import V2User
 from app.models.vault_withdrawal_request import VaultWithdrawalRequest
 from app.models.external_ranking import ExternalRankingData

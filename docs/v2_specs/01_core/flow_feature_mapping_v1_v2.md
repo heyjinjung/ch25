@@ -26,8 +26,7 @@
 | 보상 항목 | 상태 | 백엔드 (v2) | 근거 / 비고 |
 | :--- | :---: | :--- | :--- |
 | **티켓** | ✅ 완료 | `V2InventoryService` | Roulette/Dice/Lottery 소모 확인 |
-| **코인** | ✅ 완료 | `V2VaultService` | 금고(Vault) 적립 확인 |
-| **금고** | ✅ 완료 | `V2VaultService` | 실시간 장부(Ledger) 동기화 확인 |
+| **금고 포인트(POINT/CC_POINT)** | ✅ 완료 | `V2VaultService` | Vault 상태 응답 및 SoT 반영 확인 ([상세 로그](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md)) |
 | **조각** | ✅ 완료 | `V2InventoryService` | 복권 조각 모음 로직 확인, 룰렛 골드키/다이아키 조각모음 로직확인 |
 | **미션 보상** | ✅ 완료 | `V2MissionService` | 클레임 시 즉시 지급 확인 |
 | **상점 교환** | ✅ 완료 | `V2ShopService` | 상품권/아이템 교환 로직 확인 |

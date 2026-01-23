@@ -1,4 +1,4 @@
-"""Admin CRUD for CC deposit data and season-pass hooks.
+﻿"""Admin CRUD for CC deposit data and season-pass hooks.
 
 V2 location (Source of Truth). Legacy import paths should re-export from here.
 """
@@ -274,7 +274,7 @@ class V2AdminCCDepositService:
                     deposit_delta,
                 )
 
-                # Whale Check (First 500k + 7D 3M�??)
+                # Whale Check (First 500k + 7D 3M累计)
                 user = db.query(User).filter(User.id == row.user_id).first()
                 if user:
                     V2AdminCCDepositService._check_whale_qualification(
@@ -462,11 +462,11 @@ class V2AdminCCDepositService:
                 db.add(profile)
                 
                 msg = (
-                    f"?�� **CC Deposit Whale Detected!**\n"
+                    f"🐋 **CC Deposit Whale Detected!**\n"
                     f"- UserID: `{user.id}` (Nickname: `{user.nickname or user.external_id}`)\n"
-                    f"- First CC Deposit: `{user.first_deposit_amount or 0:,}??\n"
-                    f"- Current Total: `{current_external_total:,}??\n"
-                    f"- Action: VIP ?�운지 케???�요 (+500 XP 지급됨)"
+                    f"- First CC Deposit: `{user.first_deposit_amount or 0:,}원`\n"
+                    f"- Current Total: `{current_external_total:,}원`\n"
+                    f"- Action: VIP 라운지 케어 필요 (+500 XP 지급됨)"
                 )
                 send_ops_notification(msg, channel="admin")
 
@@ -474,4 +474,3 @@ class V2AdminCCDepositService:
 class AdminExternalRankingService(V2AdminCCDepositService):
     "Backward-compatible alias."
     pass
-

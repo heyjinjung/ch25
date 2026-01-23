@@ -8,6 +8,7 @@ from starlette.types import ASGIApp
 from app.api.routes import api_router
 from app.core.config import get_settings
 from app.core.error_handlers import register_exception_handlers
+from app.core.kst_response import KstJSONResponse
 from app.workers.ops_outbox_worker import run_ops_outbox_worker
 from app.workers.ch25_event_worker import run_ch25_event_worker
 from app.v2.workers.golden_event_worker import run_golden_event_worker
@@ -15,7 +16,7 @@ from app.v2.workers.golden_intervention_worker import run_golden_intervention_wo
 
 settings = get_settings()
 
-app = FastAPI(title="XMAS 1Week Event System")
+app = FastAPI(title="XMAS 1Week Event System", default_response_class=KstJSONResponse)
 
 
 class LegacyAdminPathAliasMiddleware(BaseHTTPMiddleware):
