@@ -22,6 +22,7 @@ __all__ = [
 	"V2AdminAuditService",
 	"V2AdminInventoryService",
 	"V2AdminEconomyService",
+	"V2AdminUserService",
 	"V2RewardService",
 ]
 
@@ -45,6 +46,7 @@ def __getattr__(name: str):
 		"V2AdminAuditService": ("app.v2.services.admin_audit_service", "V2AdminAuditService"),
 		"V2AdminInventoryService": ("app.v2.services.admin_inventory_service", "V2AdminInventoryService"),
 		"V2AdminEconomyService": ("app.v2.services.admin_economy_service", "V2AdminEconomyService"),
+		"V2AdminUserService": ("app.v2.services.admin_user_service", "V2AdminUserService"),
 		"V2RewardService": ("app.v2.services.reward_service", "V2RewardService"),
 	}
 	if name not in mapping:

@@ -15,9 +15,8 @@ from app.models.mission import UserMissionProgress
 from app.models.user import User
 from app.models.user_retention_state import UserRetentionState
 from app.models.user_segment import UserSegment
-from app.v2.services import V2AdminAuditService, V2AdminInventoryService
+from app.v2.services import V2AdminAuditService, V2AdminInventoryService, V2AdminUserService
 from app.core.exceptions import NotEnoughTokensError
-from app.services.admin_user_service import AdminUserService
 from app.v2.schemas.v2_admin_user import (
     AdminUserCreate,
     AdminUserDetailDto,

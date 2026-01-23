@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_admin_info, get_db
 from app.models.v2_level_reward import V2LevelRewardTable
-from app.services.admin_audit_service import AdminAuditService
+from app.v2.services.admin_audit_service import V2AdminAuditService
 
 router = APIRouter()
 
@@ -100,7 +100,7 @@ def update_admin_level_global_config(
 
     db.commit()
 
-    AdminAuditService.log(
+    V2AdminAuditService.log(
         db,
         admin_id,
         "LEVEL_CONFIG_GLOBAL_UPDATE",
