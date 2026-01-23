@@ -98,7 +98,7 @@ const VaultVisual: React.FC<{ eligible: boolean }> = React.memo(({ eligible }) =
             <div className="relative w-[38%] aspect-square mt-[2%]">
               <img
                 src="/assets/vault/vault_dial.jpg"
-                className="w-full h-full object-contain animate-spin-slow group-hover:rotate-180 transition-transform duration-[2s] ease-in-out"
+                className="w-full h-full object-contain animate-spin-slow group-hover:rotate-180 transition-transform duration-[2000ms] ease-in-out"
                 style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.5))', mixBlendMode: 'screen' }}
                 alt="다이얼"
               />

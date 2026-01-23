@@ -122,17 +122,22 @@ export default function HomePage() {
       <div className="home-content">
         {/* Hero Section */}
         <div className="home-hero-card">
-          <h1 className="hero-title">
-            WELCOME TO
-            <br />
-            THE GAME
-          </h1>
-          <div className="hero-cta">PLAY NOW</div>
+          <img
+            src="/v2/assets/01home/main01.png"
+            alt="메인 히어로 이미지"
+            className="hero-bg-img"
+          />
         </div>
 
         {/* Quick Access Tiles */}
         <div className="home-quick-grid">
-          <div className="quick-card" onClick={() => { playTabTouch(); navigate("/v2/game/dice"); }}>
+          <div
+            className="quick-card"
+            onClick={() => {
+              playTabTouch();
+              navigate("/v2/game/dice");
+            }}
+          >
             <img
               src="/v2/assets/01home/1.png"
               alt="quick access 1"
@@ -141,7 +146,10 @@ export default function HomePage() {
           </div>
           <div
             className="quick-card"
-            onClick={() => { playTabTouch(); navigate("/v2/game/roulette"); }}
+            onClick={() => {
+              playTabTouch();
+              navigate("/v2/game/roulette");
+            }}
           >
             <img
               src="/v2/assets/01home/2.png"
@@ -151,7 +159,10 @@ export default function HomePage() {
           </div>
           <div
             className="quick-card"
-            onClick={() => { playTabTouch(); navigate("/v2/game/lottery"); }}
+            onClick={() => {
+              playTabTouch();
+              navigate("/v2/game/lottery");
+            }}
           >
             <img
               src="/v2/assets/01home/3.png"
@@ -159,7 +170,13 @@ export default function HomePage() {
               className="quick-card-img"
             />
           </div>
-          <div className="quick-card" onClick={() => { playTabTouch(); navigate("/v2/game"); }}>
+          <div
+            className="quick-card"
+            onClick={() => {
+              playTabTouch();
+              navigate("/v2/game");
+            }}
+          >
             <img
               src="/v2/assets/01home/8.png"
               alt="quick access 4"
@@ -171,12 +188,16 @@ export default function HomePage() {
         {/* Featured Section */}
         <div className="home-featured-section">
           <div className="featured-header">
-            {/* today / 18pt label removed */}
+            <span className="featured-label">STREAK EVENT</span>
           </div>
           <div className="featured-card">
             <div className="featured-content-inner">
               <span className="featured-sub-text">EXCLUSIVE EVENT</span>
-              <h2 className="featured-main-title">STREAK<br/>CHALLENGE</h2>
+              <h2 className="featured-main-title">
+                STREAK
+                <br />
+                CHALLENGE
+              </h2>
             </div>
           </div>
         </div>
