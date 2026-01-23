@@ -5,8 +5,10 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
+from app.models.user import User
 from app.v2.schemas.v2_auth import AuthTokenRequest, AuthTokenResponse, AuthUser
 from app.v2.services.auth_service import V2AuthService
+from app.v2.services.user_service import V2UserService
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -30,6 +32,10 @@ def v2_issue_token(
         detail = str(exc) if str(exc) else "USER_NOT_FOUND"
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=detail) from exc
 
+    legacy_user_id = V2UserService.ensure_legacy_user_id(db, int(user.id))
+    legacy_user = db.get(User, legacy_user_id)
+    vault_balance = int(legacy_user.vault_locked_balance or 0) if legacy_user else int(user.vault_locked_balance or 0)
+
     return AuthTokenResponse(
         access_token=token,
         user=AuthUser(
@@ -39,7 +45,7 @@ def v2_issue_token(
             nickname=user.nickname,
             telegram_id=user.telegram_id,
             telegram_username=user.telegram_username,
-            vault_locked_balance=int(user.vault_locked_balance or 0),
+            vault_locked_balance=vault_balance,
         ),
     )
 

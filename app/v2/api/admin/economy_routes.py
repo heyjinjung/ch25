@@ -12,7 +12,7 @@ from app.api.deps import get_current_admin_info, get_db
 from app.models.external_ranking_daily_deposit_delta import ExternalRankingDailyDepositDelta
 from app.models.user import User
 from app.models.vault_withdrawal_request import VaultWithdrawalRequest
-from app.services.admin_audit_service import AdminAuditService
+from app.v2.services import V2AdminAuditService, V2AdminEconomyService, V2AdminInventoryService
 from app.v2.schemas.v2_admin_economy import (
     AdminDepositCreateRequest,
     AdminDepositDto,
@@ -329,7 +329,7 @@ def create_deposit_log(
 
     user = db.query(User).filter(User.id == payload.user_id).first()
 
-    AdminAuditService.log(
+    V2AdminAuditService.log(
         db,
         admin_id,
         "CC_DEPOSIT_CREATE",
@@ -380,7 +380,7 @@ def update_deposit_log(
 
     _sync_cumulative_deposit(db, user_id)
 
-    AdminAuditService.log(
+    V2AdminAuditService.log(
         db,
         admin_id,
         "CC_DEPOSIT_UPDATE",
@@ -424,7 +424,7 @@ def delete_deposit_log(
 
     _sync_cumulative_deposit(db, user_id)
 
-    AdminAuditService.log(
+    V2AdminAuditService.log(
         db,
         admin_id,
         "CC_DEPOSIT_DELETE",
@@ -651,7 +651,7 @@ def create_admin_shop_product(
     products.append(new_product)
     _save_v2_shop_products(db, products, admin_id=admin_id)
 
-    AdminAuditService.log(
+    V2AdminAuditService.log(
         db,
         admin_id,
         "SHOP_PRODUCT_CREATE",
@@ -715,7 +715,7 @@ def update_admin_shop_product(
                 p["description"] = payload.description
             updated = True
 
-            AdminAuditService.log(
+            V2AdminAuditService.log(
                 db,
                 admin_id,
                 "SHOP_PRODUCT_UPDATE",
@@ -775,7 +775,7 @@ def delete_admin_shop_product(
     logger.info(f"[DELETE] Successfully deleted product with SKU={deleted_product.get('sku')}")
 
     if deleted_product:
-        AdminAuditService.log(
+        V2AdminAuditService.log(
             db,
             admin_id,
             "SHOP_PRODUCT_DELETE",
@@ -806,11 +806,9 @@ def approve_withdrawal(
     if withdrawal.status != "PENDING":
         raise HTTPException(status_code=400, detail="WITHDRAWAL_ALREADY_PROCESSED")
     
-    withdrawal.status = "APPROVED"
-    withdrawal.approved_at = datetime.utcnow()
-    withdrawal.approved_by = admin_id
+    withdrawal = V2AdminEconomyService.approve_withdrawal(db, withdrawal_id, admin_id)
     
-    AdminAuditService.log(
+    V2AdminAuditService.log(
         db,
         admin_id,
         "WITHDRAWAL_APPROVE",
@@ -844,11 +842,9 @@ def reject_withdrawal(
     if withdrawal.status != "PENDING":
         raise HTTPException(status_code=400, detail="WITHDRAWAL_ALREADY_PROCESSED")
     
-    withdrawal.status = "REJECTED"
-    withdrawal.rejected_at = datetime.utcnow()
-    withdrawal.rejection_reason = payload.reason
+    V2AdminEconomyService.reject_withdrawal(db, withdrawal_id, admin_id, payload.reason)
     
-    AdminAuditService.log(
+    V2AdminAuditService.log(
         db,
         admin_id,
         "WITHDRAWAL_REJECT",
@@ -943,18 +939,10 @@ def create_ticket(
     admin_info: tuple[int, str] = Depends(get_current_admin_info)
 ):
     admin_id, _ = admin_info
-    service = GameWalletService()
-    
-    try:
-        from app.models.game_wallet import GameTokenType
-        token_enum = GameTokenType(payload.ticket_type)
-    except ValueError:
-        raise HTTPException(status_code=400, detail="INVALID_TICKET_TYPE")
-        
-    service.grant_tokens(
+    V2AdminInventoryService.grant_tokens(
         db, 
         user_id=payload.user_id, 
-        token_type=token_enum, 
+        token_type=payload.ticket_type, 
         amount=payload.amount, 
         reason=payload.reason,
         label=f"ADMIN:{admin_id}"
@@ -1071,21 +1059,17 @@ def create_inventory_item(
         raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
 
     try:
-        InventoryService.grant_item(
+        V2AdminInventoryService.grant_item(
             db, 
             user_id=payload.user_id, 
             item_type=payload.item_type, 
             amount=payload.quantity, 
-            reason=payload.reason,
-            expires_at=None # Expire logic omitted for now as per schema
+            reason=payload.reason
         )
         return {"success": True}
     except ValueError as exc:
         db.rollback()
         raise HTTPException(status_code=400, detail=str(exc))
-    except IntegrityError:
-        db.rollback()
-        raise HTTPException(status_code=400, detail="INVENTORY_CONSTRAINT_VIOLATION")
 
 @router.put("/inventory/items/{id}")
 def update_inventory_item(

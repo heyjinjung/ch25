@@ -5,9 +5,11 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
+from app.models.user import User
 from app.v2.api.deps import get_current_user
 from app.v2.schemas.v2_auth import UserMeResponse, UserBalanceResponse
 from app.v2.models.user import V2User
+from app.v2.services.user_service import V2UserService
 
 router = APIRouter(prefix="/user", tags=["User"])
 
@@ -29,5 +31,8 @@ def v2_user_balance(
     db: Session = Depends(get_db),
     current_user: V2User = Depends(get_current_user),
 ) -> UserBalanceResponse:
-    _ = db
-    return UserBalanceResponse(vault_locked_balance=int(current_user.vault_locked_balance or 0))
+    legacy_user_id = V2UserService.ensure_legacy_user_id(db, int(current_user.id))
+    legacy_user = db.get(User, legacy_user_id)
+    if legacy_user is None:
+        return UserBalanceResponse(vault_locked_balance=int(current_user.vault_locked_balance or 0))
+    return UserBalanceResponse(vault_locked_balance=int(legacy_user.vault_locked_balance or 0))

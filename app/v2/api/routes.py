@@ -21,16 +21,15 @@ from app.schemas.lottery import LotteryPlayResponse, LotteryStatusResponse
 from app.v2.schemas.v2_mission import MissionListResponse
 from app.schemas.roulette import RoulettePlayRequest, RoulettePlayResponse, RouletteStatusResponse
 from app.schemas.survey import SurveyCompleteRequest, SurveyListResponse, SurveyResponseUpdateRequest
-from app.services.inventory_service import InventoryService
+from app.v2.services.inventory_service import V2InventoryService
 from app.v2.services.mission_service import V2MissionService
 from app.services.feature_service import FeatureService
 from app.v2.services.retention_intervention_service import V2RetentionInterventionService
 from app.services.shop_service import ShopService
-from app.services.team_battle_service import TeamBattleService
 from app.services.game_wallet_service import GameWalletService
-from app.services.dice_service import DiceService
-from app.services.lottery_service import LotteryService
-from app.services.roulette_service import RouletteService
+from app.v2.services.v2_roulette_game_service import V2RouletteGameService
+from app.v2.services.v2_dice_game_service import V2DiceGameService
+from app.v2.services.v2_lottery_game_service import V2LotteryGameService
 from app.v2.schemas.v2_admin_message import (
     V2MessageCreate,
     V2MessageResponse,
@@ -61,12 +60,15 @@ router = APIRouter(tags=["v2-games"])
 _feature_service = FeatureService()
 _bearer_scheme = HTTPBearer(auto_error=False)
 
-_roulette_service = RouletteService()
-_dice_service = DiceService()
-_lottery_service = LotteryService()
+_v2_roulette_game_service = V2RouletteGameService()
+_v2_dice_game_service = V2DiceGameService()
+_v2_lottery_game_service = V2LotteryGameService()
 _retention_service = V2RetentionInterventionService()
-_team_battle_service = TeamBattleService()
 _wallet_service = GameWalletService()
+
+from app.v2.services.team_battle_service import V2TeamBattleService
+
+_team_battle_service = V2TeamBattleService()
 
 from app.v2.api.admin import router as admin_router
 from app.v2.api.activity_routes import router as activity_router
@@ -165,9 +167,8 @@ def roulette_status(
     db: Session = Depends(get_db),
     user_id: int = Depends(get_current_user_id),
 ) -> RouletteStatusResponse:
-    today = date.today()
     legacy_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
-    return _roulette_service.get_status(db=db, user_id=legacy_user_id, today=today, ticket_type=ticket_type)
+    return _v2_roulette_game_service.get_status(db=db, user_id=legacy_user_id, ticket_type=ticket_type)
 
 
 @router.post("/roulette/play", response_model=RoulettePlayResponse)
@@ -176,10 +177,9 @@ def roulette_play(
     db: Session = Depends(get_db),
     user_id: int = Depends(get_current_user_id),
 ) -> RoulettePlayResponse:
-    today = date.today()
     legacy_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
     ticket_type = payload.ticket_type if payload else GameTokenType.ROULETTE_COIN.value
-    return _roulette_service.play(db=db, user_id=legacy_user_id, now=today, ticket_type=ticket_type)
+    return _v2_roulette_game_service.play(db=db, user_id=legacy_user_id, ticket_type=ticket_type)
 
 
 @router.get("/dice/status", response_model=DiceStatusResponse)
@@ -187,9 +187,8 @@ def dice_status(
     db: Session = Depends(get_db),
     user_id: int = Depends(get_current_user_id),
 ) -> DiceStatusResponse:
-    today = date.today()
     legacy_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
-    return _dice_service.get_status(db=db, user_id=legacy_user_id, today=today)
+    return _v2_dice_game_service.get_status(db=db, user_id=legacy_user_id)
 
 
 @router.post("/dice/play", response_model=DicePlayResponse)
@@ -197,9 +196,8 @@ def dice_play(
     db: Session = Depends(get_db),
     user_id: int = Depends(get_current_user_id),
 ) -> DicePlayResponse:
-    today = date.today()
     legacy_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
-    return _dice_service.play(db=db, user_id=legacy_user_id, now=today)
+    return _v2_dice_game_service.play(db=db, user_id=legacy_user_id)
 
 
 @router.get("/lottery/status", response_model=LotteryStatusResponse)
@@ -207,9 +205,8 @@ def lottery_status(
     db: Session = Depends(get_db),
     user_id: int = Depends(get_current_user_id),
 ) -> LotteryStatusResponse:
-    today = date.today()
     legacy_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
-    return _lottery_service.get_status(db=db, user_id=legacy_user_id, today=today)
+    return _v2_lottery_game_service.get_status(db=db, user_id=legacy_user_id)
 
 
 @router.post("/lottery/play", response_model=LotteryPlayResponse)
@@ -217,9 +214,8 @@ def lottery_play(
     db: Session = Depends(get_db),
     user_id: int = Depends(get_current_user_id),
 ) -> LotteryPlayResponse:
-    today = date.today()
     legacy_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
-    return _lottery_service.play(db=db, user_id=legacy_user_id, now=today)
+    return _v2_lottery_game_service.play(db=db, user_id=legacy_user_id)
 
 
 @router.post("/segments/run", response_model=V2SegmentBatchResponse, tags=["v2-admin"])
@@ -402,35 +398,20 @@ def get_inventory(
     db: Session = Depends(get_db),
     user_id: int = Depends(get_current_user_id),
 ):
-    from app.models.user import User
-
-    legacy_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
-    current_user = db.query(User).filter(User.id == legacy_user_id).first()
-    if not current_user:
-        raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
-
-    items = InventoryService.get_inventory(db, current_user.id)
-    wallet_data: dict[str, int] = {}
-    legacy_diamond_balance: int | None = None
-    if current_user.game_wallets:
-        for w in current_user.game_wallets:
-            if w.token_type.value == "DIAMOND":
-                legacy_diamond_balance = int(w.balance or 0)
-                continue
-            wallet_data[_map_legacy_token_to_v2(w.token_type.value)] = int(w.balance or 0)
+    items = V2InventoryService.get_inventory(db, user_id)
+    wallet_data = V2InventoryService.get_wallet_balances(db, user_id)
 
     items_payload = [
         {"item_type": item.item_type, "quantity": item.quantity, "created_at": item.created_at}
         for item in items
     ]
-    if (legacy_diamond_balance or 0) > 0 and not any(p.get("item_type") == "DIAMOND" for p in items_payload):
-        from datetime import datetime
 
-        items_payload.append(
-            {"item_type": "DIAMOND", "quantity": legacy_diamond_balance, "created_at": datetime.utcnow()}
-        )
+    normalized_wallet = {
+        _map_legacy_token_to_v2(token_type): int(balance or 0)
+        for token_type, balance in wallet_data.items()
+    }
 
-    return {"items": items_payload, "wallet": wallet_data}
+    return {"items": items_payload, "wallet": normalized_wallet}
 
 
 @router.post("/inventory/use", tags=["v2-inventory"])
@@ -450,9 +431,9 @@ def use_inventory_item(
     if not resolved_key:
         raise HTTPException(status_code=400, detail="IDEMPOTENCY_KEY_REQUIRED")
 
-    result = InventoryService.use_voucher(
+    result = V2InventoryService.use_voucher(
         db,
-        V2UserService.ensure_legacy_user_id(db, user_id),
+        user_id,
         item_type,
         amount,
         idempotency_key=resolved_key,
@@ -480,10 +461,11 @@ def list_shop_products(
     for raw in products:
         if not isinstance(raw, dict):
             continue
-        if raw.get("is_visible") is False:
+        if raw.get("is_visible") is False or raw.get("visible") is False:
             continue
-        sku = raw.get("sku")
-        name = raw.get("name")
+        sku = raw.get("sku") or raw.get("product_id")
+        name = raw.get("name") or raw.get("title")
+        cost_type = raw.get("cost_type") or "VAULT"
         cost_amount = raw.get("cost_amount")
         reward_type = raw.get("reward_type")
         reward_amount = raw.get("reward_amount")
@@ -493,7 +475,7 @@ def list_shop_products(
             {
                 "sku": sku,
                 "name": name,
-                "cost_type": "VAULT",
+                "cost_type": str(cost_type).upper(),
                 "cost_amount": int(cost_amount),
                 "reward_type": reward_type,
                 "reward_amount": int(reward_amount),
@@ -544,6 +526,10 @@ def purchase_shop_product(
     if reward_type != "NONE" and reward_amount <= 0:
         raise HTTPException(status_code=400, detail="INVALID_REWARD_AMOUNT")
 
+    cost_type = str(product.get("cost_type") or "VAULT").upper()
+    if cost_type not in {"VAULT", "DIAMOND"}:
+        raise HTTPException(status_code=400, detail="INVALID_COST_TYPE")
+
     # Deduct vault balance (SoT) and record order.
     from app.v2.services.shop_service import V2ShopService
 
@@ -553,76 +539,26 @@ def purchase_shop_product(
             user_id=user_id,
             sku=sku,
             name=str(product.get("name")),
+            cost_type=cost_type,
             cost_amount=cost_amount,
             reward_type=reward_type,
             reward_amount=reward_amount,
         )
 
-        # Grant reward (single transaction)
-        if reward_type == "NONE" or reward_amount == 0:
-            pass
-        elif reward_type in {"POINT", "CC_POINT", "VAULT"}:
-            user = db.query(V2User).filter(V2User.id == user_id).first()
-            if not user:
-                raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
-            user.vault_locked_balance = int(user.vault_locked_balance or 0) + reward_amount
-            db.add(user)
-        elif reward_type == "DIAMOND":
-            # Phase 2 rule in this codebase: DIAMOND is inventory SoT
-            legacy_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
-            InventoryService.grant_item(
-                db,
-                user_id=legacy_user_id,
-                item_type="DIAMOND",
-                amount=reward_amount,
-                reason="V2_SHOP_PURCHASE",
-                auto_commit=False,
-            )
-        else:
-            def _resolve_wallet_token_type(token_value: str) -> GameTokenType | None:
-                mapping = {
-                    "ROULETTE_TICKET": GameTokenType.ROULETTE_COIN,
-                    "DICE_TICKET": GameTokenType.DICE_TOKEN,
-                    "LOTTERY_TICKET": GameTokenType.LOTTERY_TICKET,
-                    "GOLD_KEY_TICKET": GameTokenType.GOLD_KEY,
-                    "DIAMOND_TICKET": GameTokenType.DIAMOND_KEY,
-                    "TRIAL_TICKET": GameTokenType.TRIAL_TOKEN,
-                    "DIAMOND_FRAGMENT": GameTokenType.DIAMOND_KEY_FRAGMENT,
-                }
-                if token_value in mapping:
-                    return mapping[token_value]
-                try:
-                    return GameTokenType(token_value)
-                except Exception:
-                    return None
-
-            token_type = _resolve_wallet_token_type(reward_type)
-            if token_type is not None and token_type != GameTokenType.VAULT:
-                legacy_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
-                _wallet_service.grant_tokens(
-                    db,
-                    user_id=legacy_user_id,
-                    token_type=token_type,
-                    amount=reward_amount,
-                    reason="V2_SHOP_PURCHASE",
-                    auto_commit=False,
-                )
-            else:
-                # Default to inventory for non-wallet reward types (e.g., gifticons)
-                legacy_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
-                InventoryService.grant_item(
-                    db,
-                    user_id=legacy_user_id,
-                    item_type=reward_type,
-                    amount=reward_amount,
-                    reason="V2_SHOP_PURCHASE",
-                    auto_commit=False,
-                )
+        V2ShopService.grant_reward(
+            db,
+            user_id=user_id,
+            reward_type=reward_type,
+            reward_amount=reward_amount,
+        )
 
         response = {"order_id": order.id, "sku": sku, "reward_type": reward_type, "reward_amount": reward_amount}
         IdempotencyService.complete(db, record=idem_record, response_payload=response)
         db.commit()
         return response
+    except ValueError as exc:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception:
         db.rollback()
         raise

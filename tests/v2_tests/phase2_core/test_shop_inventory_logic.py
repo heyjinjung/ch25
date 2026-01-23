@@ -97,10 +97,15 @@ def test_shop_purchase_integrity(db_session):
     db_session.refresh(user)
     assert user.vault_locked_balance == 10000 
     
-    # Check Wallet
-    wallet = db_session.query(UserGameWallet).filter_by(user_id=1, token_type=GameTokenType.ROULETTE_COIN).first()
+    # Check Wallet (V2 token)
+    wallet = db_session.query(UserGameWallet).filter_by(user_id=1, token_type=GameTokenType.ROULETTE_TICKET).first()
     assert wallet is not None
     assert wallet.balance == 1
+
+    # Check V2 Shop Order Log
+    order = db_session.query(V2ShopOrder).filter_by(user_id=1, sku="TICKET_ROULETTE_1").first()
+    assert order is not None
+    assert order.cost_type == "VAULT"
 
 def test_shop_purchase_idempotency(db_session):
     """
