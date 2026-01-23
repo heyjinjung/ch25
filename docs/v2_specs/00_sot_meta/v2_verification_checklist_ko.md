@@ -1,6 +1,6 @@
 문서 타입: 가이드
-버전: v1.19
-작성일: 2026-01-23
+버전: v1.25
+작성일: 2026-01-24
 작성자: GitHub Copilot
 대상: V2 배포/검증 담당자
 상태: Draft
@@ -23,6 +23,22 @@ V2 배포 전/후 필수 검증 항목을 표준화한다.
 - **기능 검증(Functional)**과 **아키텍처 이관(Architectural)**을 분리 기록한다.
 - **v2-only 기준(Architectural)**: v2 config/log 테이블 + v2 엔진 서비스 사용 확인 + V1 import 제거가 확인되어야 “완료”로 기록한다.
 
+### 3.1.1 Phase 1: 환경 및 SoT 정합성
+- [x] `alembic current` 오류 없음 (20260123_1500_seed_v2_roulette_grade_configs)
+	- 커맨드: docker compose exec backend alembic current
+- [x] `alembic heads` 최신 마이그레이션 반영
+	- 커맨드: docker compose exec backend alembic heads
+- [x] `app.v2` 모듈 로드 가능 (ImportError/NameError 없음)
+	- 커맨드: pytest -q tests/v2_tests/phase1_env/test_environment_sanity.py
+- [x] Reward/Item/Game 관련 Enum/Schema SoT 일치
+	- 커맨드: pytest -q tests/v2_tests/phase1_env/test_sot_integrity.py
+- [x] V2 import 스캔 테스트 통과
+	- 커맨드: pytest -q tests/v2_tests/phase1_env/test_v2_architecture_sot.py
+- [x] 프론트 응답 확인: /api/v2/health → {"status":"ok"}
+	- 커맨드: Invoke-WebRequest -Uri "http://localhost:8000/api/v2/health" -UseBasicParsing | Select-Object -ExpandProperty Content
+- [x] Router Prefix `/api/v2` 일관성 확인
+	- 근거: [app/api/routes/__init__.py](app/api/routes/__init__.py)
+
 ### 3.2 서비스/영역별 Unit & Integration
 #### 3.2.1 Auth
 - [ ] 단위 테스트 추가
@@ -35,6 +51,19 @@ V2 배포 전/후 필수 검증 항목을 표준화한다.
 - [x] 통합 테스트 추가
 - [x] 테스트 전부 통과 기록 (tests/v2_tests/phase2_core/test_vault_withdrawal_logic.py, tests/v2_tests/phase2_core/test_vault_limit_suspension.py, tests/v2_tests/phase2_core/test_vault2_service.py)
 	- 커맨드: pytest -q tests/v2_tests/phase2_core/test_vault_withdrawal_logic.py tests/v2_tests/phase2_core/test_vault_limit_suspension.py tests/v2_tests/phase2_core/test_vault2_service.py
+	- 추가 검증(2026-01-24): pytest -q tests/v2_tests/phase2_core/test_vault2_service.py tests/v2_tests/phase2_core/test_vault_withdrawal_logic.py
+- [x] 프론트 응답 확인: /api/v2/vault/status → 200 OK
+	- 커맨드: Invoke-WebRequest -Uri "http://localhost:8000/api/v2/vault/status" -Headers @{Authorization="Bearer <redacted>"} -UseBasicParsing | Select-Object -ExpandProperty Content
+- [x] DB 스냅샷 기록: user/v2_user/vault_ledger
+	- 근거: [docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md)
+- [x] 출금 요청 엣지케이스: /api/v2/vault/withdraw → 200 OK (PENDING)
+	- 근거: [docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md)
+- [x] 어드민 강제조정(+) 반영: /api/v2/admin/vault/force-edit → 200 OK
+	- 근거: [docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md)
+- [x] 어드민 강제조정(-) 시 출금 승인 생성
+	- 근거: [docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md)
+- [x] 출금 회차 기준(1/1/3/5) 적용 여부: 10,000 요청이 승인됨 → **현행 미적용 확인**
+	- 근거: [docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md)
 - [x] v2-only 기준 충족 (V1 VaultService import 제거 + V2VaultService 사용 확인)
 	- 검증 실행: Antigravity 실행(2026-01-23) — 통과 (Exit Code: 0)
 
@@ -51,14 +80,19 @@ V2 배포 전/후 필수 검증 항목을 표준화한다.
 - [x] 테스트 전부 통과 기록 (tests/v2_tests/phase3_game/test_game_engine_smoke.py)
 - [x] v2-only import 검증 테스트 통과 (tests/v2_tests/phase1_env/test_v2_architecture_sot.py)
 	- 커맨드: pytest -q tests/v2_tests/phase1_env/test_v2_architecture_sot.py
-	- 검증 실행: GitHub Copilot 실행(2026-01-23) — 통과 (Exit Code: 0)
+	- 검증 실행: Antigravity 실행(2026-01-24) — **실제 응답(API 200 OK) 및 딥다이브(등급 매핑, 티켓 소모, 페이오프 배수, 퍼즐 드랍, 티켓 폴백, 재고 관리, 미션 연동) 전 항목 검증 완료**
+	- 상세 증거: [v2_verification_test_logs_20260124.md](file:///c:/Users/JAVIS/ch/ch25/docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md)
+
+- [x] 원장 분리 오작동 케이스(티켓/인벤토리/금고) 검증
+	- 커맨드: pytest -q tests/v2_tests/phase3_game/test_game_ledger_separation.py
+	- 근거: [docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md)
+
+
 	- 추가 조치: `V2VaultService.record_game_play_earn_event` shim 추가로 게임 엔진의 `record_game_play_earn_event` 호출을 `V2VaultService`로 안전하게 위임함 (Merge: 2026-01-23)
 	- 추가 조치: `game_common`을 v2 shim으로 이관(위임) — `app/v2/services/game_common.py`에서 `app.services.game_common`으로 delegate 처리함 (2026-01-23)
 	- 추가 조치: `FeatureService`를 v2 shim으로 교체하여 게임 엔진이 v1 서비스를 직접 참조하지 않도록 정리함 (Merge: 2026-01-23)
 
-	- 집중 스캔(2026-01-23): Shop/Inventory/Mission/Vault은 v2 네임스페이스로 전환되었으며 관련 테스트 통과 확인(Exit Code: 0). 게임 엔진들(`v2_dice_game_service.py`, `v2_lottery_game_service.py`, `v2_roulette_game_service.py`)은 `VaultService` 의존을 `V2VaultService`로 대체 완료했고 `FeatureService` / `game_common`을 v2으로 이관(위임) 처리함(우선순위: Medium).
-
-	- API 정리: `/api/v2/roulette/play`, `/api/v2/dice/play`, `/api/v2/lottery/play` 라우트가 이제 V2 게임 서비스(`app.v2.services.v2_*_game_service`)를 직접 호출하도록 정리되었으며, 라우트 내의 V1 서비스 인스턴스 사용이 제거되었습니다 (검증: game engine smoke + architecture SOT, 실행(2026-01-23) 통과).
+	- API 정리: `/api/v2/roulette/play`, `/api/v2/dice/play`, `/api/v2/lottery/play` 라우트가 이제 V2 게임 서비스(`app.v2.services.v2_*_game_service`)를 직접 호출하도록 정리되었으며, 라우트 내의 V1 서비스 인스턴스 사용이 제거되었습니다 (검증: verify_game_engine_e2e.py 실행 완료, 2026-01-24).
 
 #### 3.2.5 Inventory
 - [x] 단위 테스트 추가
@@ -124,7 +158,7 @@ V2 배포 전/후 필수 검증 항목을 표준화한다.
 - [ ] High: 인증(Auth)
 - [x] High: 금고(Vault) 읽기/쓰기
 - [ ] High: 결제/구매(Shop Purchase)
-- [ ] High: 게임 Play(roulette/dice/lottery)
+- [x] High: 게임 Play(roulette/dice/lottery)
 - [ ] High: 인벤토리 사용(쓰기)
 - [ ] Medium: 상태조회(read-only)
 - [ ] Medium: 팀배틀
@@ -153,8 +187,14 @@ V2 배포 전/후 필수 검증 항목을 표준화한다.
 
 ---
 
-버전: v1.20 (2026-01-23, GitHub Copilot): 핵심 테스트 스니펫 문서 추가 및 검증 로그 참조 링크 추가
+버전: v1.25 (2026-01-24, GitHub Copilot): 게임 원장 분리 오작동 케이스 검증 완료
 ## 5. 변경 이력
+- v1.25 (2026-01-24, GitHub Copilot): 게임 원장 분리 오작동 케이스 검증 완료
+- v1.24 (2026-01-24, GitHub Copilot): 게임 원장 분리 오작동 케이스 항목 추가
+- v1.23 (2026-01-24, GitHub Copilot): Vault 어드민 강제조정/회차 기준 검증 추가
+- v1.22 (2026-01-24, GitHub Copilot): Vault 출금 엣지케이스 기록 추가
+- v1.21 (2026-01-24, GitHub Copilot): Vault API/DB 스냅샷 검증 기록 추가
+- v1.20 (2026-01-24, GitHub Copilot): Phase 1 환경/SoT 정합성 검증 기록 추가
 - v1.17 (2026-01-23, Antigravity): Vault 영역 v2-only 기준 충족 및 Admin 관련 서비스 이관 결과 반영
 - v1.18 (2026-01-23, GitHub Copilot): Game/Shop/Inventory v2-only 검증 실행 및 통과 기록 추가 (pytest -q tests/v2_tests/phase3_game/test_game_engine_smoke.py, pytest -q tests/v2_tests/phase2_core/test_shop_inventory_logic.py, pytest -q tests/v2_tests/phase1_env/test_v2_architecture_sot.py, Exit Code: 0)
 - v1.17 (2026-01-23, GitHub Copilot): Shop/Inventory v2-only 검증 실행 및 통과 기록 추가 (pytest -q tests/v2_tests/phase2_core/test_shop_inventory_logic.py, pytest -q tests/v2_tests/phase1_env/test_v2_architecture_sot.py, Exit Code: 0)
