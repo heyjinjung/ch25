@@ -194,3 +194,172 @@ class V2TeamBattleService:
             .order_by(Team.id.asc())
         )
         return db.execute(stmt).scalars().all()
+
+    def list_joinable_teams_view(self, db: Session, now: datetime | None = None) -> list[dict]:
+        season = self.get_active_season(db, now)
+        season_id = int(season.id) if season else None
+
+        from app.models.user import User
+
+        member_count = func.count(func.distinct(User.id)).label("member_count")
+        total_score = func.coalesce(TeamScore.points, 0).label("total_score")
+
+        stmt = (
+            select(
+                Team.id,
+                Team.name,
+                member_count,
+                total_score,
+            )
+            .where(Team.is_active == True)  # noqa: E712
+            .outerjoin(TeamMember, TeamMember.team_id == Team.id)
+            .outerjoin(User, and_(User.id == TeamMember.user_id, User.status == "ACTIVE"))
+            .outerjoin(
+                TeamScore,
+                and_(
+                    TeamScore.team_id == Team.id,
+                    TeamScore.season_id == season_id,
+                ),
+            )
+            .group_by(Team.id, Team.name, TeamScore.points)
+            .having(member_count < self.TEAM_MAX_MEMBERS)
+            .order_by(Team.id.asc())
+        )
+
+        rows = db.execute(stmt).all()
+        return [
+            {
+                "id": int(team_id),
+                "name": name,
+                "description": None,
+                "member_count": int(mc or 0),
+                "max_members": int(self.TEAM_MAX_MEMBERS),
+                "total_score": int(score or 0),
+            }
+            for (team_id, name, mc, score) in rows
+        ]
+
+    def get_membership_view(self, db: Session, user_id: int, now: datetime | None = None) -> dict:
+        member = db.get(TeamMember, user_id)
+        if not member:
+            return {"team": None, "membership": None, "has_team": False}
+
+        season = self.get_active_season(db, now)
+        season_id = int(season.id) if season else None
+
+        from app.models.user import User
+
+        member_count = func.count(func.distinct(User.id)).label("member_count")
+        total_score = func.coalesce(TeamScore.points, 0).label("total_score")
+
+        stmt = (
+            select(
+                Team.id,
+                Team.name,
+                member_count,
+                total_score,
+            )
+            .where(Team.id == member.team_id)
+            .outerjoin(TeamMember, TeamMember.team_id == Team.id)
+            .outerjoin(User, and_(User.id == TeamMember.user_id, User.status == "ACTIVE"))
+            .outerjoin(
+                TeamScore,
+                and_(
+                    TeamScore.team_id == Team.id,
+                    TeamScore.season_id == season_id,
+                ),
+            )
+            .group_by(Team.id, Team.name, TeamScore.points)
+        )
+        row = db.execute(stmt).first()
+        team_payload = None
+        if row:
+            team_id, name, mc, score = row
+            team_payload = {
+                "id": int(team_id),
+                "name": name,
+                "description": None,
+                "member_count": int(mc or 0),
+                "max_members": int(self.TEAM_MAX_MEMBERS),
+                "total_score": int(score or 0),
+            }
+
+        membership_payload = {
+            "team_id": int(member.team_id),
+            "user_id": int(member.user_id),
+            "role": member.role,
+            "joined_at": member.joined_at.isoformat() if member.joined_at else None,
+            "contribution_score": 0,
+        }
+
+        return {"team": team_payload, "membership": membership_payload, "has_team": True}
+
+    def get_leaderboard_view(
+        self,
+        db: Session,
+        season_id: Optional[int],
+        limit: int,
+        offset: int,
+        now: datetime | None = None,
+    ) -> dict:
+        season = db.get(TeamSeason, season_id) if season_id else self.get_active_season(db, now)
+        if not season:
+            return {"entries": [], "season_id": 0, "total_count": 0}
+
+        raw_rows = self.leaderboard(db, season_id=season.id, limit=limit, offset=offset)
+        entries: list[dict] = []
+        for idx, row in enumerate(raw_rows):
+            team_id, team_name, points, member_count, _latest_event_at = row
+            entries.append(
+                {
+                    "team": {
+                        "id": int(team_id),
+                        "name": team_name,
+                        "description": None,
+                        "member_count": int(member_count or 0),
+                        "max_members": int(self.TEAM_MAX_MEMBERS),
+                        "total_score": int(points or 0),
+                        "rank": int(offset + idx + 1),
+                    },
+                    "rank": int(offset + idx + 1),
+                    "season_score": int(points or 0),
+                }
+            )
+
+        return {"entries": entries, "season_id": int(season.id), "total_count": int(len(entries))}
+
+    def auto_assign_team(self, db: Session, user_id: int, now: datetime | None = None) -> TeamMember:
+        existing = db.get(TeamMember, user_id)
+        if existing:
+            return existing
+
+        now = now or self._now_utc()
+        season = self._get_active_or_current(db, now)
+        self._assert_selection_window_open(season, now)
+
+        from app.models.user import User
+
+        member_count = func.count(func.distinct(User.id)).label("member_count")
+        stmt = (
+            select(Team.id)
+            .where(Team.is_active == True)  # noqa: E712
+            .outerjoin(TeamMember, TeamMember.team_id == Team.id)
+            .outerjoin(User, and_(User.id == TeamMember.user_id, User.status == "ACTIVE"))
+            .group_by(Team.id)
+            .having(member_count < self.TEAM_MAX_MEMBERS)
+            .order_by(member_count.asc(), Team.id.asc())
+        )
+        candidate_team_ids = [int(tid) for (tid,) in db.execute(stmt).all()]
+
+        last_error: HTTPException | None = None
+        for team_id in candidate_team_ids:
+            try:
+                return self.join_team(db, team_id=team_id, user_id=user_id, now=now)
+            except HTTPException as exc:
+                # Try next team if it filled up between select and join.
+                if exc.detail == "TEAM_FULL":
+                    last_error = exc
+                    continue
+                raise
+
+        raise last_error or HTTPException(status_code=status.HTTP_409_CONFLICT, detail="NO_JOINABLE_TEAM")

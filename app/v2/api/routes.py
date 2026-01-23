@@ -566,32 +566,51 @@ def purchase_shop_product(
 
 @router.get("/team-battle/seasons/active", tags=["v2-team-battle"])
 def team_battle_active_season(db: Session = Depends(get_db)):
-    return _team_battle_service.get_active_season(db)
+    season = _team_battle_service.get_active_season(db)
+    if not season:
+        return None
+    return {
+        "id": int(season.id),
+        "name": season.name,
+        "start_date": season.starts_at.isoformat() if season.starts_at else None,
+        "end_date": season.ends_at.isoformat() if season.ends_at else None,
+        "is_active": bool(season.is_active),
+    }
 
 
 @router.get("/team-battle/teams", tags=["v2-team-battle"])
 def team_battle_list_teams(db: Session = Depends(get_db)):
-    return _team_battle_service.list_joinable_teams(db)
+    return _team_battle_service.list_joinable_teams_view(db)
 
 
 @router.post("/team-battle/teams/join", tags=["v2-team-battle"])
-def team_battle_join(payload: dict, db: Session = Depends(get_db), user_id: int = Depends(get_current_user_id)):
+def team_battle_join(payload: dict, db: Session = Depends(get_db), v2_user_id: int = Depends(get_current_user_id)):
     team_id = payload.get("team_id")
     if not team_id:
         raise HTTPException(status_code=400, detail="TEAM_ID_REQUIRED")
-    member = _team_battle_service.join_team(db, team_id=int(team_id), user_id=user_id)
+    legacy_user_id = V2UserService.ensure_legacy_user_id(db, v2_user_id)
+    member = _team_battle_service.join_team(db, team_id=int(team_id), user_id=legacy_user_id)
     return {"team_id": member.team_id, "user_id": member.user_id, "role": member.role}
 
 
 @router.post("/team-battle/teams/leave", tags=["v2-team-battle"])
-def team_battle_leave(db: Session = Depends(get_db), user_id: int = Depends(get_current_user_id)):
-    _team_battle_service.leave_team(db, user_id=user_id)
+def team_battle_leave(db: Session = Depends(get_db), v2_user_id: int = Depends(get_current_user_id)):
+    legacy_user_id = V2UserService.ensure_legacy_user_id(db, v2_user_id)
+    _team_battle_service.leave_team(db, user_id=legacy_user_id)
     return {"left": True}
 
 
 @router.get("/team-battle/teams/me", tags=["v2-team-battle"])
-def team_battle_me(db: Session = Depends(get_db), user_id: int = Depends(get_current_user_id)):
-    return _team_battle_service.get_membership(db, user_id=user_id)
+def team_battle_me(db: Session = Depends(get_db), v2_user_id: int = Depends(get_current_user_id)):
+    legacy_user_id = V2UserService.ensure_legacy_user_id(db, v2_user_id)
+    return _team_battle_service.get_membership_view(db, user_id=legacy_user_id)
+
+
+@router.post("/team-battle/teams/auto-assign", tags=["v2-team-battle"])
+def team_battle_auto_assign(db: Session = Depends(get_db), v2_user_id: int = Depends(get_current_user_id)):
+    legacy_user_id = V2UserService.ensure_legacy_user_id(db, v2_user_id)
+    member = _team_battle_service.auto_assign_team(db, user_id=legacy_user_id)
+    return {"team_id": member.team_id, "user_id": member.user_id, "role": member.role}
 
 
 @router.get("/team-battle/teams/leaderboard", tags=["v2-team-battle"])
@@ -601,7 +620,12 @@ def team_battle_leaderboard(
     offset: int = 0,
     db: Session = Depends(get_db),
 ):
-    return _team_battle_service.leaderboard(db, season_id=season_id, limit=min(limit, 100), offset=max(offset, 0))
+    return _team_battle_service.get_leaderboard_view(
+        db,
+        season_id=season_id,
+        limit=min(limit, 100),
+        offset=max(offset, 0),
+    )
 
 
 @router.get("/ticket-zero/status", response_model=V2TicketZeroStatusResponse, tags=["v2-ticket-zero"])
@@ -655,7 +679,7 @@ def ticket_zero_status(
         pass
 
     if not has_pending_rewards:
-        service = MissionService(db)
+        service = V2MissionService(db)
         missions = service.get_user_missions(user_id)
         has_pending_rewards = any(
             m.progress.is_completed and not m.progress.is_claimed for m in missions

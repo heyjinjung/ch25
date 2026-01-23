@@ -1,5 +1,5 @@
 문서 타입: 가이드
-버전: v1.1
+버전: v1.2
 작성일: 2026-01-23
 작성자: GitHub Copilot
 대상: V2 마이그레이션 작업자
@@ -24,8 +24,6 @@ V2 코드베이스에서 V1 서비스/라우트/모델 경유 지점을 정리�
   - app.api.routes.activity (v1_activity)
   - app.api.routes.new_user_onboarding (v1_new_user)
   - app.api.routes.telegram (v1_telegram)
-- app/v2/api/vault_routes.py
-  - app.api.routes.vault (v1_vault)
 
 ### 4.2 V2 API 라우트에서 V1 서비스 호출
 - app/v2/api/routes.py
@@ -45,8 +43,6 @@ V2 코드베이스에서 V1 서비스/라우트/모델 경유 지점을 정리�
 - app/v2/api/admin/game_config_routes.py
   - app.services.admin_audit_service.AdminAuditService
 - app/v2/api/admin/inventory_routes.py
-  - app.services.inventory_service.InventoryService
-  - app.services.game_wallet_service.GameWalletService
   - app.services.admin_audit_service.AdminAuditService
 - app/v2/api/admin_cc_deposit.py
   - app.services.admin_external_ranking_service.AdminExternalRankingService
@@ -55,17 +51,12 @@ V2 코드베이스에서 V1 서비스/라우트/모델 경유 지점을 정리�
   - app.services.ops_plan_service.OpsPlanService
 - app/v2/api/admin/economy_routes.py
   - app.services.admin_audit_service.AdminAuditService
-  - app.services.game_wallet_service.GameWalletService
-  - app.services.inventory_service.InventoryService
-  - app.services.ui_config_service.UiConfigService
   - app.services.admin_external_ranking_service.AdminExternalRankingService
 - app/v2/api/admin/level_routes.py
   - app.services.admin_audit_service.AdminAuditService
 - app/v2/api/admin/user_routes.py
   - app.services.admin_audit_service.AdminAuditService
-  - app.services.game_wallet_service.GameWalletService
   - app.services.admin_user_service.AdminUserService
-  - app.services.inventory_service.InventoryService
 - app/v2/api/admin/segment_routes.py
   - app.services.admin_segment_rule_service.AdminSegmentRuleService
   - app.services.user_segment_service.UserSegmentService
@@ -74,9 +65,7 @@ V2 코드베이스에서 V1 서비스/라우트/모델 경유 지점을 정리�
 
 ## 5. V2 서비스에서 V1 서비스 경유
 - app/v2/services/mission_service.py
-  - app.services.reward_service.RewardService
   - app.services.ui_config_service.UiConfigService
-  - app.services.mission_service.MissionService (V1MissionService)
 - app/v2/services/retention_intervention_service.py
   - app.services.ops_log_service.OpsLogService
   - app.services.reward_scheduler.RewardScheduler
@@ -198,5 +187,6 @@ id | route | HTTP | v1_service | v2_service | status | owner | risk | tests | mi
 - 작은 PR 진행: Top10(High) 엔드포인트부터 Plan → Patch → Verify → Ship
 
 ## 15. 변경 이력
+- v1.2 (2026-01-23, GitHub Copilot): V2 MissionService의 V1 RewardService 의존 제거 반영
 - v1.1 (2026-01-23, GitHub Copilot): v1 호출 CSV, 라우팅 맵, 경로 충돌/예시/우선순위 섹션 추가
 - v1.0 (2026-01-23, GitHub Copilot): v2 → v1 경유 범위 및 v2 서비스 목록 초안 작성

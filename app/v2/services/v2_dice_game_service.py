@@ -19,9 +19,9 @@ from app.models.game_wallet import GameTokenType
 from app.schemas.dice import DiceGameData, DicePlayResponse, DiceStatusResponse
 from app.services.feature_service import FeatureService
 from app.services.game_common import GamePlayContext, log_game_play
-from app.services.game_wallet_service import GameWalletService
-from app.services.mission_service import MissionService
-from app.services.reward_service import RewardService
+from app.v2.services.inventory_service import V2InventoryService
+from app.v2.services.mission_service import V2MissionService
+from app.v2.services.reward_service import V2RewardService
 from app.services.vault_service import VaultService
 from app.v2.models.v2_dice import V2DiceLog
 from app.v2.services.game_config_service import V2GameConfigService
@@ -33,8 +33,7 @@ _KST = ZoneInfo("Asia/Seoul")
 class V2DiceGameService:
     def __init__(self) -> None:
         self.feature_service = FeatureService()
-        self.wallet_service = GameWalletService()
-        self.reward_service = RewardService()
+        self.reward_service = V2RewardService()
         self.vault_service = VaultService()
 
     @staticmethod
@@ -119,13 +118,13 @@ class V2DiceGameService:
                 token_type_for_balance = GameTokenType(candidate)
             except Exception:
                 continue
-            token_balance = self.wallet_service.get_balance(db, user_id, token_type_for_balance)
+            token_balance = V2InventoryService.get_wallet_balance(db, user_id, token_type_for_balance)
             if token_balance:
                 break
 
         if token_type_for_balance is None:
             token_type_for_balance = GameTokenType.DICE_TICKET
-            token_balance = self.wallet_service.get_balance(db, user_id, token_type_for_balance)
+            token_balance = V2InventoryService.get_wallet_balance(db, user_id, token_type_for_balance)
 
         today_plays = db.execute(
             select(func.count())
@@ -205,7 +204,7 @@ class V2DiceGameService:
                 continue
             last_token_type = token_type_enum
             try:
-                self.wallet_service.require_and_consume_token(
+                V2InventoryService.require_and_consume_wallet_token(
                     db,
                     user_id,
                     token_type_enum,
@@ -223,7 +222,7 @@ class V2DiceGameService:
         if not consumed:
             token_type_enum = GameTokenType.DICE_TICKET
             last_token_type = token_type_enum
-            self.wallet_service.require_and_consume_token(
+            V2InventoryService.require_and_consume_wallet_token(
                 db,
                 user_id,
                 token_type_enum,
@@ -251,7 +250,7 @@ class V2DiceGameService:
         db.commit()
         db.refresh(log_entry)
 
-        mission_service = MissionService(db)
+        mission_service = V2MissionService(db)
         mission_service.update_progress(user_id, "PLAY_GAME")
         streak_info = mission_service.get_streak_info(user_id)
 
@@ -312,7 +311,7 @@ class V2DiceGameService:
             game=game_data,
             season_pass=None,
             vault_earn=int(total_earn or 0),
-            streak_info=streak_info,
+            streak_info=(streak_info.model_dump() if streak_info else None),
             event_seeded=False,
             event_seed_amount=0,
         )

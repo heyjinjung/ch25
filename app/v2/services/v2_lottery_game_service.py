@@ -21,9 +21,9 @@ from app.models.game_wallet import GameTokenType
 from app.schemas.lottery import LotteryPlayResponse, LotteryPrizeSchema, LotteryStatusResponse
 from app.services.feature_service import FeatureService
 from app.services.game_common import GamePlayContext, log_game_play
-from app.services.game_wallet_service import GameWalletService
-from app.services.mission_service import MissionService
-from app.services.reward_service import RewardService
+from app.v2.services.inventory_service import V2InventoryService
+from app.v2.services.mission_service import V2MissionService
+from app.v2.services.reward_service import V2RewardService
 from app.services.vault_service import VaultService
 from app.v2.models.v2_lottery import V2LotteryLog, V2LotteryPrize
 from app.v2.services.game_config_service import V2GameConfigService
@@ -35,8 +35,7 @@ _KST = ZoneInfo("Asia/Seoul")
 class V2LotteryGameService:
     def __init__(self) -> None:
         self.feature_service = FeatureService()
-        self.wallet_service = GameWalletService()
-        self.reward_service = RewardService()
+        self.reward_service = V2RewardService()
         self.vault_service = VaultService()
 
     @staticmethod
@@ -112,13 +111,13 @@ class V2LotteryGameService:
                 token_type_for_balance = GameTokenType(candidate)
             except Exception:
                 continue
-            token_balance = self.wallet_service.get_balance(db, user_id, token_type_for_balance)
+            token_balance = V2InventoryService.get_wallet_balance(db, user_id, token_type_for_balance)
             if token_balance:
                 break
 
         if token_type_for_balance is None:
             token_type_for_balance = GameTokenType.LOTTERY_TICKET
-            token_balance = self.wallet_service.get_balance(db, user_id, token_type_for_balance)
+            token_balance = V2InventoryService.get_wallet_balance(db, user_id, token_type_for_balance)
 
         prizes = self._eligible_prizes(db, config.id)
 
@@ -136,11 +135,11 @@ class V2LotteryGameService:
         remaining = 0
 
         # Collection progress (kept compatible with v1 schema)
-        c_total = self.wallet_service.get_balance(db, user_id, GameTokenType.PUZZLE_C)
+        c_total = V2InventoryService.get_wallet_balance(db, user_id, GameTokenType.PUZZLE_C)
         c1_count = 1 if int(c_total or 0) >= 1 else 0
         c2_count = 1 if int(c_total or 0) >= 2 else 0
-        j_count = self.wallet_service.get_balance(db, user_id, GameTokenType.PUZZLE_J)
-        m_count = self.wallet_service.get_balance(db, user_id, GameTokenType.PUZZLE_M)
+        j_count = V2InventoryService.get_wallet_balance(db, user_id, GameTokenType.PUZZLE_J)
+        m_count = V2InventoryService.get_wallet_balance(db, user_id, GameTokenType.PUZZLE_M)
 
         return LotteryStatusResponse(
             config_id=config.id,
@@ -199,7 +198,7 @@ class V2LotteryGameService:
                 continue
             last_token_type = token_type_enum
             try:
-                self.wallet_service.require_and_consume_token(
+                V2InventoryService.require_and_consume_wallet_token(
                     db,
                     user_id,
                     token_type_enum,
@@ -217,7 +216,7 @@ class V2LotteryGameService:
         if not consumed:
             token_type_enum = GameTokenType.LOTTERY_TICKET
             last_token_type = token_type_enum
-            self.wallet_service.require_and_consume_token(
+            V2InventoryService.require_and_consume_wallet_token(
                 db,
                 user_id,
                 token_type_enum,
@@ -243,7 +242,7 @@ class V2LotteryGameService:
         db.commit()
         db.refresh(log_entry)
 
-        mission_service = MissionService(db)
+        mission_service = V2MissionService(db)
         mission_service.update_progress(user_id, "PLAY_GAME")
         streak_info = mission_service.get_streak_info(user_id)
 
@@ -283,7 +282,7 @@ class V2LotteryGameService:
             prob = float(getattr(config, "puzzle_piece_probability", 0.0) or 0.0)
             if prob > 0 and random.random() < prob:
                 token = random.choice([GameTokenType.PUZZLE_C, GameTokenType.PUZZLE_J, GameTokenType.PUZZLE_M])
-                self.wallet_service.grant_tokens(
+                V2InventoryService.grant_wallet_tokens(
                     db,
                     user_id,
                     token,
@@ -313,6 +312,6 @@ class V2LotteryGameService:
             prize=LotteryPrizeSchema.model_validate(chosen),
             season_pass=None,
             vault_earn=int(total_earn or 0),
-            streak_info=streak_info,
+            streak_info=(streak_info.model_dump() if streak_info else None),
             game_data={"collection_piece": collection_piece},
         )

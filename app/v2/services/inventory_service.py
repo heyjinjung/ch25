@@ -7,9 +7,12 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, select
 
+from app.core.config import get_settings
+from app.core.exceptions import InvalidConfigError, NotEnoughTokensError
 from app.models.game_wallet import GameTokenType, UserGameWallet
 from app.models.game_wallet_ledger import UserGameWalletLedger
 from app.models.inventory import UserInventoryItem, UserInventoryLedger
+from app.models.trial_token_bucket import TrialTokenBucket
 from app.services.idempotency_service import IdempotencyService
 from app.v2.models.v2_exchange_log import V2ExchangeLog
 from app.v2.services.user_service import V2UserService
@@ -42,6 +45,29 @@ class V2InventoryService:
             else:
                 db.flush()
         return wallet
+
+    @staticmethod
+    def _get_or_create_trial_bucket(
+        db: Session,
+        user_id: int,
+        token_type: GameTokenType,
+        *,
+        auto_commit: bool = True,
+    ) -> TrialTokenBucket:
+        bucket = (
+            db.query(TrialTokenBucket)
+            .filter(TrialTokenBucket.user_id == user_id, TrialTokenBucket.token_type == token_type)
+            .one_or_none()
+        )
+        if bucket is None:
+            bucket = TrialTokenBucket(user_id=user_id, token_type=token_type, balance=0)
+            db.add(bucket)
+            if auto_commit:
+                db.commit()
+                db.refresh(bucket)
+            else:
+                db.flush()
+        return bucket
 
     @staticmethod
     def _log_wallet_ledger(
@@ -77,6 +103,14 @@ class V2InventoryService:
         for row in rows:
             result[str(row.token_type.value)] = int(row.balance or 0)
         return result
+
+    @classmethod
+    def get_wallet_balance(cls, db: Session, v2_user_id: int, token_type: GameTokenType | str) -> int:
+        if isinstance(token_type, str):
+            token_type = GameTokenType(token_type)
+        storage_user_id = cls._resolve_storage_user_id(db, v2_user_id)
+        wallet = cls._get_or_create_wallet(db, storage_user_id, token_type, auto_commit=True)
+        return int(wallet.balance or 0)
 
     @classmethod
     def grant_wallet_tokens(
@@ -149,6 +183,73 @@ class V2InventoryService:
             auto_commit=auto_commit,
         )
         return int(wallet.balance)
+
+    @classmethod
+    def require_and_consume_wallet_token(
+        cls,
+        db: Session,
+        v2_user_id: int,
+        token_type: GameTokenType | str,
+        amount: int = 1,
+        *,
+        reason: str | None = None,
+        label: str | None = None,
+        meta: dict | None = None,
+        auto_commit: bool = True,
+    ) -> tuple[int, bool]:
+        if amount <= 0:
+            raise InvalidConfigError("INVALID_TOKEN_AMOUNT")
+        if isinstance(token_type, str):
+            token_type = GameTokenType(token_type)
+
+        settings = get_settings()
+        storage_user_id = cls._resolve_storage_user_id(db, v2_user_id)
+        wallet = cls._get_or_create_wallet(db, storage_user_id, token_type, auto_commit=auto_commit)
+
+        if getattr(settings, "test_mode", False) and wallet.balance < amount:
+            wallet.balance = max(wallet.balance, amount)
+            db.add(wallet)
+            if auto_commit:
+                db.commit()
+                db.refresh(wallet)
+            else:
+                db.flush()
+
+        if int(wallet.balance or 0) < int(amount):
+            raise NotEnoughTokensError("NOT_ENOUGH_TOKENS")
+
+        consumed_trial_count = 0
+        try:
+            bucket = cls._get_or_create_trial_bucket(db, storage_user_id, token_type, auto_commit=auto_commit)
+            if int(bucket.balance or 0) > 0:
+                consumed_trial_count = min(int(bucket.balance), int(amount))
+                bucket.balance = max(int(bucket.balance) - consumed_trial_count, 0)
+                db.add(bucket)
+        except Exception:
+            consumed_trial_count = 0
+
+        wallet.balance -= int(amount)
+        db.add(wallet)
+        if auto_commit:
+            db.commit()
+            db.refresh(wallet)
+        else:
+            db.flush()
+
+        ledger_meta = dict(meta or {})
+        ledger_meta["consumed_trial"] = bool(consumed_trial_count > 0)
+        cls._log_wallet_ledger(
+            db,
+            user_id=storage_user_id,
+            token_type=token_type,
+            delta=-int(amount),
+            balance_after=int(wallet.balance),
+            reason=reason or "CONSUME",
+            label=label,
+            meta=ledger_meta,
+            auto_commit=auto_commit,
+        )
+        return int(wallet.balance), bool(consumed_trial_count > 0)
 
     @classmethod
     def get_inventory(cls, db: Session, v2_user_id: int) -> list[UserInventoryItem]:
