@@ -361,7 +361,7 @@ def get_streak_rules(
     user_id: int = Depends(get_current_user_id),
 ):
     _ = user_id
-    from app.services.ui_config_service import UiConfigService
+    from app.v2.services.ui_config_service import UiConfigService
 
     row = UiConfigService.get(db, "streak_reward_rules")
     if row and row.value_json:
@@ -450,7 +450,7 @@ def list_shop_products(
     user_id: int = Depends(get_current_user_id),
 ):
     _ = user_id
-    from app.services.ui_config_service import UiConfigService
+    from app.v2.services.ui_config_service import UiConfigService
 
     row = UiConfigService.get(db, "v2_shop_products")
     value = row.value_json if row and isinstance(row.value_json, dict) else {}
@@ -500,7 +500,7 @@ def purchase_shop_product(
     if not resolved_key:
         raise HTTPException(status_code=400, detail="IDEMPOTENCY_KEY_REQUIRED")
 
-    from app.services.idempotency_service import IdempotencyService
+    from app.v2.services.idempotency_service import IdempotencyService
 
     idem_record, existing = IdempotencyService.begin(
         db,

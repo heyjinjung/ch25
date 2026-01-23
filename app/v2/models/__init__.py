@@ -15,6 +15,11 @@ from app.v2.models.v2_user_retention_state import V2UserRetentionState
 from app.v2.models.v2_retention_roi_log import V2RetentionRoiLog
 from app.v2.models.user import V2User
 
+# Aliases for backward compatibility: expose v1 models via v2 models namespace so
+# v2 code can import from `app.v2.models` while relying on existing v1 DB models.
+from app.models.game_wallet import UserGameWallet, GameTokenType
+from app.models.game_wallet_ledger import UserGameWalletLedger
+
 __all__ = [
     "V2LevelRewardTable",
     "V2TicketConversionPolicy",
@@ -37,4 +42,8 @@ __all__ = [
     "V2UserRetentionState",
     "V2RetentionRoiLog",
     "V2User",
+    # v1 model aliases
+    "UserGameWallet",
+    "UserGameWalletLedger",
+    "GameTokenType",
 ]

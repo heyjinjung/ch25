@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Any, List, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import select
-from app.services.ui_config_service import UiConfigService
+from app.v2.services.ui_config_service import UiConfigService
 from app.models.vault_withdrawal_request import VaultWithdrawalRequest
 
 class V2AdminEconomyService:

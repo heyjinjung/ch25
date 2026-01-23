@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from sqlalchemy.orm import Session
 
-from app.models.game_wallet import GameTokenType
+from app.v2.models import GameTokenType
 from app.v2.models.user import V2User
 from app.v2.models.v2_shop_order import V2ShopOrder
 from app.v2.services.inventory_service import V2InventoryService

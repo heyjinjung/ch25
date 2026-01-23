@@ -61,7 +61,8 @@ V2 코드베이스에서 V1 서비스/라우트/모델 경유 지점을 정리�
   - app.services.admin_segment_rule_service.AdminSegmentRuleService
   - app.services.user_segment_service.UserSegmentService
 - app/v2/api/admin/vault_routes.py
-  - app.services.admin_audit_service.AdminAuditService
+  - app.v2.services.vault_service.V2VaultService
+  - app.v2.services.admin_economy_service.V2AdminEconomyService
 
 ## 5. V2 서비스에서 V1 서비스 경유
 - app/v2/services/mission_service.py
@@ -75,7 +76,7 @@ V2 코드베이스에서 V1 서비스/라우트/모델 경유 지점을 정리�
   - app.services.audit_service.AuditService
   - app.models.user_cash_ledger.UserCashLedger (v1 모델 의존)
 - app/v2/services/admin_cc_deposit_service.py
-  - app.services.vault_service.VaultService
+  - app.v2.services.vault_service.V2VaultService
   - app.services.season_pass_service.SeasonPassService
   - app.services.level_xp_service.LevelXPService
 
@@ -105,9 +106,9 @@ id | route | HTTP | v1_service | v2_service | status | owner | risk | tests | mi
 001 | /api/v2/auth/token | POST | app.api.routes.auth.issue_token | app.v2.api.auth_routes.v2_issue_token | mixed | backend | High | none | 1) v2 auth 완성 2) v1 alias 제거 | v1 auth 토큰 로직 대체 진행 중
 002 | /api/v2/auth/login | POST | app.api.routes.auth.issue_token | app.v2.api.auth_routes.v2_login | mixed | backend | High | none | 1) v2 auth 완성 2) v1 alias 제거 | v1 login alias 제거 필요
 003 | /api/v2/user/me | GET | app.api.routes.auth.issue_token | app.v2.api.user_routes.v2_user_me | mixed | backend | Medium | none | v2 user/me 완성 후 v1 alias 제거 | v1_auth_user_alias 중복 경로 존재
-004 | /api/v2/user/balance | GET | app.api.routes.vault.status | app.v2.api.user_routes.v2_user_balance | mixed | backend | High | none | v2 balance 완성 후 v1 alias 제거 | 금고 SoT 이관 필요
-005 | /api/v2/vault/status | GET | app.api.routes.vault.status | app.v2.api.vault_routes.get_v2_vault_status | mixed | backend | High | none | v2 vault 로직으로 교체 | v1 로직 재사용
-006 | /api/v2/vault/withdraw | POST | app.api.routes.vault.request_withdraw | app.v2.api.vault_routes.v2_withdraw | mixed | backend | High | none | v2 withdraw 로직으로 교체 | v1 로직 재사용
+004 | /api/v2/user/balance | GET | - | app.v2.api.user_routes.v2_user_balance | v2-only | backend | Low | pytest | v2 balance 완성 | 이관 완료
+005 | /api/v2/vault/status | GET | - | app.v2.api.vault_routes.get_v2_vault_status | v2-only | backend | Low | pytest | v2 vault 전용 서비스 교체 | 이관 완료
+006 | /api/v2/vault/withdraw | POST | - | app.v2.api.vault_routes.v2_withdraw | v2-only | backend | Low | pytest | v2 withdraw 전용 서비스 교체 | 이관 완료
 007 | /api/v2/activity/ingest | POST | app.api.routes.activity.record_activity | app.v2.api.activity_routes.ingest_activity | mixed | backend | Medium | none | v2 이벤트 저장 구현 | 현재 mock 응답
 008 | /api/v2/roulette/status | GET | app.services.roulette_service.RouletteService | app.v2.api.routes.roulette_status | mixed | backend | Medium | none | v2 전용 서비스로 분리 | v1 서비스 재사용
 009 | /api/v2/roulette/play | POST | app.services.roulette_service.RouletteService | app.v2.api.routes.roulette_play | mixed | backend | High | none | v2 전용 서비스로 분리 | 재화 차감 포함
@@ -134,11 +135,11 @@ id | route | HTTP | v1_service | v2_service | status | owner | risk | tests | mi
 102 | /api/v2/auth/token | POST | - | app.v2.api.auth_routes.v2_issue_token | v2 | backend | High | none | v2 유지 | 인증 핵심
 103 | /api/v2/auth/login | POST | - | app.v2.api.auth_routes.v2_login | v2 | backend | High | none | v2 유지 | 인증 alias
 104 | /api/v2/user/me | GET | - | app.v2.api.user_routes.v2_user_me | v2 | backend | Medium | none | v2 유지 | 유저 조회
-105 | /api/v2/user/balance | GET | - | app.v2.api.user_routes.v2_user_balance | v2 | backend | High | none | v2 유지 | 금고 잔액
+105 | /api/v2/user/balance | GET | - | app.v2.api.user_routes.v2_user_balance | v2-only | backend | Low | pytest | 유지 | 금고 잔석
 106 | /api/v2/dev/login | POST | - | app.v2.api.dev_login.dev_login | v2 | backend | Medium | none | dev only | 개발용 로그인
 107 | /api/events/status | GET | app.api.routes.events.get_event_status | app.v2.api.events.get_event_status | mixed | backend | Medium | none | 단일 경로로 정리 | v1/v2 동일 경로 사용
-108 | /api/v2/vault/status | GET | app.api.routes.vault.status | app.v2.api.vault_routes.get_v2_vault_status | mixed | backend | High | none | v2 전용으로 교체 | v1 로직 재사용
-109 | /api/v2/vault/withdraw | POST | app.api.routes.vault.request_withdraw | app.v2.api.vault_routes.v2_withdraw | mixed | backend | High | none | v2 전용으로 교체 | v1 로직 재사용
+108 | /api/v2/vault/status | GET | - | app.v2.api.vault_routes.get_v2_vault_status | v2-only | backend | Low | pytest | v2 전용으로 교체 | 이관 완료
+109 | /api/v2/vault/withdraw | POST | - | app.v2.api.vault_routes.v2_withdraw | v2-only | backend | Low | pytest | v2 전용으로 교체 | 이관 완료
 110 | /api/v2/roulette/status | GET | app.services.roulette_service.RouletteService | app.v2.api.routes.roulette_status | mixed | backend | Medium | none | v2 서비스 분리 | 게임 조회
 111 | /api/v2/roulette/play | POST | app.services.roulette_service.RouletteService | app.v2.api.routes.roulette_play | mixed | backend | High | none | v2 서비스 분리 | 게임 실행
 112 | /api/v2/dice/status | GET | app.services.dice_service.DiceService | app.v2.api.routes.dice_status | mixed | backend | Medium | none | v2 서비스 분리 | 게임 조회
@@ -187,6 +188,7 @@ id | route | HTTP | v1_service | v2_service | status | owner | risk | tests | mi
 - 작은 PR 진행: Top10(High) 엔드포인트부터 Plan → Patch → Verify → Ship
 
 ## 15. 변경 이력
+- v1.3 (2026-01-23, Antigravity): Vault 및 CC Deposit 영역 v2-only 이관 및 V1 서비스 의존 제거 반영
 - v1.2 (2026-01-23, GitHub Copilot): V2 MissionService의 V1 RewardService 의존 제거 반영
 - v1.1 (2026-01-23, GitHub Copilot): v1 호출 CSV, 라우팅 맵, 경로 충돌/예시/우선순위 섹션 추가
 - v1.0 (2026-01-23, GitHub Copilot): v2 → v1 경유 범위 및 v2 서비스 목록 초안 작성

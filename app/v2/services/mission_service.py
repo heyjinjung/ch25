@@ -14,7 +14,7 @@ from app.models.mission import Mission, UserMissionProgress, MissionCategory, Mi
 from app.models.user import User
 from app.models.feature import UserEventLog
 from app.v2.services.reward_service import V2RewardService
-from app.services.ui_config_service import UiConfigService
+from app.v2.services.ui_config_service import UiConfigService
 from app.v2.schemas.v2_mission import MissionSchema, MissionProgressSchema, MissionWithProgress, StreakInfoSchema
 
 # Action type aliases for backward compatibility
