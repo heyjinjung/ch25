@@ -166,8 +166,37 @@ id | route | HTTP | v1_service | v2_service | status | owner | risk | tests | mi
 |---|---|---|---|---|
 | /api/events/status | app.api.routes.events.get_event_status | app.v2.api.events.get_event_status | mixed | v2 전용 경로로 이동하거나 v1 라우트 제거 |
 
-## 11. 변경 이력
-- v1.1 (2026-01-23, GitHub Copilot): v1 호출 CSV, 라우팅 맵, 경로 충돌 섹션 추가
+## 11. 구체적 발견(예시)
+- app/v2/api/routes.py: v1 서비스 다수 직접 호출
+  - [app/v2/api/routes.py](app/v2/api/routes.py#L23-L32)
+- app/v2/api/admin_cc_deposit.py: v1 서비스 호출
+  - [app/v2/api/admin_cc_deposit.py](app/v2/api/admin_cc_deposit.py#L16-L17)
+- app/v2/api/admin_ops_plan.py: v1 서비스 호출
+  - [app/v2/api/admin_ops_plan.py](app/v2/api/admin_ops_plan.py#L34)
+- app/v2/api/admin/inventory_routes.py: v1 모델/서비스 참조
+  - [app/v2/api/admin/inventory_routes.py](app/v2/api/admin/inventory_routes.py#L14)
+  - [app/v2/api/admin/inventory_routes.py](app/v2/api/admin/inventory_routes.py#L22-L24)
+- app/v2/api/admin/economy_routes.py: v1 모델/서비스 참조
+  - [app/v2/api/admin/economy_routes.py](app/v2/api/admin/economy_routes.py#L13)
+  - [app/v2/api/admin/economy_routes.py](app/v2/api/admin/economy_routes.py#L34-L38)
 
-## 8. 변경 이력
+## 12. 아직 v1 경로에 남아있는 핵심 엔드포인트
+- /api/retention/intervention/resolve
+  - [app/api/routes/retention_intervention.py](app/api/routes/retention_intervention.py#L17-L28)
+- /api/retention/reengagement/queue
+  - [app/api/routes/retention_intervention.py](app/api/routes/retention_intervention.py#L30-L41)
+
+## 13. 우선 순위(권장)
+- High: 인증(Auth), 금고(Vault) 읽기/쓰기, 결제/구매(Shop Purchase), 게임 Play(roulette/dice/lottery), 인벤토리 사용(쓰기)
+- Medium: 상태조회(read-only), 팀배틀, 설문
+- Low: 어드민 전용/저트래픽 경로
+
+## 14. 제안하는 다음 행동
+- 문서 보강: v2_v1_dependency_inventory_ko.md에 파일 레벨 증거(파일명:라인) 유지/확장
+- 소유권/ETA 지정: mixed 항목에 owner + 우선순위 + 작업 방식(Migrate/Shim/Keep) 추가
+- 자동 스캔 스크립트: scripts에 v2↔v1 의존 스캐너 추가 (PR 리포트용)
+- 작은 PR 진행: Top10(High) 엔드포인트부터 Plan → Patch → Verify → Ship
+
+## 15. 변경 이력
+- v1.1 (2026-01-23, GitHub Copilot): v1 호출 CSV, 라우팅 맵, 경로 충돌/예시/우선순위 섹션 추가
 - v1.0 (2026-01-23, GitHub Copilot): v2 → v1 경유 범위 및 v2 서비스 목록 초안 작성

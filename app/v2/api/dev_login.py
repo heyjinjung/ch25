@@ -58,6 +58,7 @@ def dev_login(payload: DevLoginRequest, request: Request, db: Session = Depends(
 
     client_ip = request.client.host if request.client else None
     _ = client_ip
+    _ = V2UserService.ensure_legacy_user_id(db, int(user.id))
 
     try:
         db.commit()

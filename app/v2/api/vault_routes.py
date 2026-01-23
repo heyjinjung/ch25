@@ -7,6 +7,9 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_db
 from app.v2.api.deps import get_current_user_id
 from app.api.routes import vault as v1_vault
+from app.models.user import User
+from app.v2.models.user import V2User
+from app.v2.services.user_service import V2UserService
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/vault", tags=["Vault"])
@@ -20,10 +23,15 @@ def get_v2_vault_status(
     db: Session = Depends(get_db),
     user_id: int = Depends(get_current_user_id)
 ):
-    # Reuse V1 status logic
-    # Note: v1_vault.status() returns a VaultStatusResponse object
     try:
-        res = v1_vault.status(db=db, user_id=user_id)
+        legacy_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
+        v2_user = db.get(V2User, user_id)
+        legacy_user = db.get(User, legacy_user_id)
+        if v2_user and legacy_user:
+            legacy_user.vault_locked_balance = int(v2_user.vault_locked_balance or 0)
+            db.add(legacy_user)
+            db.flush()
+        res = v1_vault.status(db=db, user_id=legacy_user_id)
         # Convert to a dict and ensure it matches V2 OpenAPI or just return as is if fields match
         # V2 OpenAPI fields: vaultBalance, lockedBalance, availableBalance (camelCase)
         # V1 Response fields: vault_balance, locked_balance, available_balance (snake_case)
@@ -59,7 +67,18 @@ def v2_withdraw(
     # Reuse V1 withdrawal logic
     v1_payload = v1_vault.WithdrawRequestPayload(amount=payload.amount)
     try:
-        res = v1_vault.request_withdraw(payload=v1_payload, db=db, user_id=user_id)
+        legacy_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
+        v2_user = db.get(V2User, user_id)
+        legacy_user = db.get(User, legacy_user_id)
+        if v2_user and legacy_user:
+            legacy_user.vault_locked_balance = int(v2_user.vault_locked_balance or 0)
+            db.add(legacy_user)
+            db.flush()
+        res = v1_vault.request_withdraw(payload=v1_payload, db=db, user_id=legacy_user_id)
+        if v2_user and legacy_user:
+            v2_user.vault_locked_balance = int(legacy_user.vault_locked_balance or 0)
+            db.add(v2_user)
+            db.commit()
         return res
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

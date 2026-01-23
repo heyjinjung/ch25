@@ -14,6 +14,7 @@ from app.v2.api.deps import get_current_user_id
 from app.models.admin_message import AdminMessageInbox
 from app.models.game_wallet import GameTokenType
 from app.models.inventory import UserInventoryItem
+from app.models.user import User
 from app.v2.models.user import V2User
 from app.schemas.dice import DicePlayResponse, DiceStatusResponse
 from app.schemas.lottery import LotteryPlayResponse, LotteryStatusResponse
@@ -47,6 +48,7 @@ from app.v2.schemas.v2_golden import (
 )
 from app.v2.schemas.v2_ticket_zero import V2TicketZeroBailoutResponse, V2TicketZeroStatusResponse
 from app.v2.services.ticket_zero_service import TicketZeroEligibilityInput, V2TicketZeroService
+from app.v2.services.user_service import V2UserService
 from app.v2.services.admin_message_service import V2AdminMessageService
 from app.v2.services.segment_service import V2SegmentService
 from app.v2.models.v2_admin_message import V2AdminMessageInbox
@@ -164,7 +166,8 @@ def roulette_status(
     user_id: int = Depends(get_current_user_id),
 ) -> RouletteStatusResponse:
     today = date.today()
-    return _roulette_service.get_status(db=db, user_id=user_id, today=today, ticket_type=ticket_type)
+    legacy_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
+    return _roulette_service.get_status(db=db, user_id=legacy_user_id, today=today, ticket_type=ticket_type)
 
 
 @router.post("/roulette/play", response_model=RoulettePlayResponse)
@@ -174,8 +177,9 @@ def roulette_play(
     user_id: int = Depends(get_current_user_id),
 ) -> RoulettePlayResponse:
     today = date.today()
+    legacy_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
     ticket_type = payload.ticket_type if payload else GameTokenType.ROULETTE_COIN.value
-    return _roulette_service.play(db=db, user_id=user_id, now=today, ticket_type=ticket_type)
+    return _roulette_service.play(db=db, user_id=legacy_user_id, now=today, ticket_type=ticket_type)
 
 
 @router.get("/dice/status", response_model=DiceStatusResponse)
@@ -184,7 +188,8 @@ def dice_status(
     user_id: int = Depends(get_current_user_id),
 ) -> DiceStatusResponse:
     today = date.today()
-    return _dice_service.get_status(db=db, user_id=user_id, today=today)
+    legacy_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
+    return _dice_service.get_status(db=db, user_id=legacy_user_id, today=today)
 
 
 @router.post("/dice/play", response_model=DicePlayResponse)
@@ -193,7 +198,8 @@ def dice_play(
     user_id: int = Depends(get_current_user_id),
 ) -> DicePlayResponse:
     today = date.today()
-    return _dice_service.play(db=db, user_id=user_id, now=today)
+    legacy_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
+    return _dice_service.play(db=db, user_id=legacy_user_id, now=today)
 
 
 @router.get("/lottery/status", response_model=LotteryStatusResponse)
@@ -202,7 +208,8 @@ def lottery_status(
     user_id: int = Depends(get_current_user_id),
 ) -> LotteryStatusResponse:
     today = date.today()
-    return _lottery_service.get_status(db=db, user_id=user_id, today=today)
+    legacy_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
+    return _lottery_service.get_status(db=db, user_id=legacy_user_id, today=today)
 
 
 @router.post("/lottery/play", response_model=LotteryPlayResponse)
@@ -211,7 +218,8 @@ def lottery_play(
     user_id: int = Depends(get_current_user_id),
 ) -> LotteryPlayResponse:
     today = date.today()
-    return _lottery_service.play(db=db, user_id=user_id, now=today)
+    legacy_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
+    return _lottery_service.play(db=db, user_id=legacy_user_id, now=today)
 
 
 @router.post("/segments/run", response_model=V2SegmentBatchResponse, tags=["v2-admin"])
@@ -394,7 +402,10 @@ def get_inventory(
     db: Session = Depends(get_db),
     user_id: int = Depends(get_current_user_id),
 ):
-    current_user = db.query(User).filter(User.id == user_id).first()
+    from app.models.user import User
+
+    legacy_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
+    current_user = db.query(User).filter(User.id == legacy_user_id).first()
     if not current_user:
         raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
 
@@ -441,7 +452,7 @@ def use_inventory_item(
 
     result = InventoryService.use_voucher(
         db,
-        user_id,
+        V2UserService.ensure_legacy_user_id(db, user_id),
         item_type,
         amount,
         idempotency_key=resolved_key,
@@ -558,9 +569,10 @@ def purchase_shop_product(
             db.add(user)
         elif reward_type == "DIAMOND":
             # Phase 2 rule in this codebase: DIAMOND is inventory SoT
+            legacy_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
             InventoryService.grant_item(
                 db,
-                user_id=user_id,
+                user_id=legacy_user_id,
                 item_type="DIAMOND",
                 amount=reward_amount,
                 reason="V2_SHOP_PURCHASE",
@@ -586,9 +598,10 @@ def purchase_shop_product(
 
             token_type = _resolve_wallet_token_type(reward_type)
             if token_type is not None and token_type != GameTokenType.VAULT:
+                legacy_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
                 _wallet_service.grant_tokens(
                     db,
-                    user_id=user_id,
+                    user_id=legacy_user_id,
                     token_type=token_type,
                     amount=reward_amount,
                     reason="V2_SHOP_PURCHASE",
@@ -596,9 +609,10 @@ def purchase_shop_product(
                 )
             else:
                 # Default to inventory for non-wallet reward types (e.g., gifticons)
+                legacy_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
                 InventoryService.grant_item(
                     db,
-                    user_id=user_id,
+                    user_id=legacy_user_id,
                     item_type=reward_type,
                     amount=reward_amount,
                     reason="V2_SHOP_PURCHASE",
@@ -866,9 +880,9 @@ def v2_list_active_surveys(
     """Compat: V2 alias for legacy `/api/surveys/active`."""
     from sqlalchemy import select
     from app.models.survey import SurveyResponse, SurveyResponseStatus
-    from app.services.survey_service import SurveyService
+    from app.v2.services.survey_service import V2SurveyService
 
-    service = SurveyService()
+    service = V2SurveyService()
     surveys = service.get_active_surveys(db=db, user_id=user_id)
     response_map: dict[int, int | None] = {}
     completed_map: dict[int, bool] = {}
@@ -916,9 +930,9 @@ def v2_get_or_create_survey_response(
     user_id: int = Depends(get_current_user_id),
 ):
     """Compat: V2 alias for legacy `/api/surveys/{survey_id}/responses`."""
-    from app.services.survey_service import SurveyService
+    from app.v2.services.survey_service import V2SurveyService
 
-    service = SurveyService()
+    service = V2SurveyService()
     return service.get_survey_session(db=db, survey_id=survey_id, user_id=user_id)
 
 
@@ -931,9 +945,9 @@ def v2_save_survey_answers(
     user_id: int = Depends(get_current_user_id),
 ):
     """Compat: V2 alias for legacy survey answer save."""
-    from app.services.survey_service import SurveyService
+    from app.v2.services.survey_service import V2SurveyService
 
-    service = SurveyService()
+    service = V2SurveyService()
     service.save_answers(
         db=db,
         response_id=response_id,
@@ -953,10 +967,10 @@ def v2_complete_survey_response(
     user_id: int = Depends(get_current_user_id),
 ):
     """Compat: V2 alias for legacy survey completion."""
-    from app.services.survey_service import SurveyService
+    from app.v2.services.survey_service import V2SurveyService
 
     _ = survey_id
-    service = SurveyService()
+    service = V2SurveyService()
     return service.complete_with_reward(
         db=db,
         response_id=response_id,
