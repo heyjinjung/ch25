@@ -15,7 +15,7 @@ from app.models.mission import UserMissionProgress
 from app.models.user import User
 from app.models.user_retention_state import UserRetentionState
 from app.models.user_segment import UserSegment
-from app.services.admin_audit_service import AdminAuditService
+from app.v2.services import V2AdminAuditService
 from app.services.game_wallet_service import GameWalletService
 from app.core.exceptions import NotEnoughTokensError
 from app.services.admin_user_service import AdminUserService
@@ -169,7 +169,7 @@ def create_admin_user(
     status_str = "Active" if user.status == "ACTIVE" else "Inactive" if user.status == "INACTIVE" else "Suspended"
     last_active = user.updated_at.strftime("%Y-%m-%d %H:%M") if user.updated_at else "-"
 
-    AdminAuditService.log(
+    V2AdminAuditService.log(
         db,
         admin_id,
         "USER_CREATE",
@@ -295,7 +295,7 @@ def execute_intervention_action(
         V2VaultService.deposit(db, user_id, 1000)
         db.commit()
 
-        AdminAuditService.log(
+        V2AdminAuditService.log(
             db,
             admin_id,
             "EXECUTE_INTERVENTION",
@@ -374,7 +374,7 @@ def adjust_user_wallet(
 
     db.commit()
 
-    AdminAuditService.log(
+    V2AdminAuditService.log(
         db,
         admin_id,
         "WALLET_ADJUST",
@@ -523,7 +523,7 @@ def adjust_user_inventory(
             auto_commit=False,
         )
 
-    AdminAuditService.log(
+    V2AdminAuditService.log(
         db,
         admin_id,
         "INVENTORY_ADMIN_ADJUST",
@@ -585,7 +585,7 @@ def create_user_note(
 ):
     admin_id, _ = admin_info
 
-    AdminAuditService.log(
+    V2AdminAuditService.log(
         db,
         admin_id,
         "USER_NOTE",

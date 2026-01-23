@@ -7,15 +7,18 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app.api.deps import get_current_user_id, get_db
+from app.api.deps import get_db
 from app.main import app
-from app.models.dice import DiceConfig
 from app.models.feature import FeatureConfig, FeatureType
 from app.models.game_wallet import GameTokenType
-from app.models.lottery import LotteryConfig, LotteryPrize
-from app.models.roulette import RouletteConfig, RouletteSegment
 from app.models.user import User
 from app.services.game_wallet_service import GameWalletService
+from app.v2.api.deps import get_current_user_id
+from app.v2.models.user import V2User
+from app.v2.models.v2_dice import V2DiceConfig
+from app.v2.models.v2_lottery import V2LotteryConfig, V2LotteryPrize
+from app.v2.models.v2_roulette import V2RouletteConfig, V2RouletteSegment
+from app.v2.services.user_service import V2UserService
 
 
 @pytest.fixture()
@@ -35,6 +38,7 @@ def test_engine():
 
     from app.db.base_class import Base
     import app.db.base  # noqa: F401
+    import app.v2.db.base  # noqa: F401
 
     Base.metadata.create_all(bind=engine)
 
@@ -102,10 +106,21 @@ def _seed_user(db: Session) -> User:
     return user
 
 
-def _seed_dice_config(db: Session) -> DiceConfig:
-    # Keep existing configs untouched; just add an active one for this test.
-    config = DiceConfig(
-        name="Phase3 Dice Config",
+def _seed_v2_user(db: Session) -> V2User:
+    v2_user = V2User(
+        cc_id=f"test-{uuid.uuid4().hex}",
+        nickname="Phase3 V2 Test User",
+        vault_locked_balance=10000,
+    )
+    db.add(v2_user)
+    db.flush()
+    return v2_user
+
+
+def _seed_dice_config(db: Session) -> V2DiceConfig:
+    config = V2DiceConfig(
+        name="Phase3 V2 Dice Config",
+        ticket_type="DICE_TICKET",
         is_active=True,
         max_daily_plays=0,
         win_probability=0.4,
@@ -118,47 +133,41 @@ def _seed_dice_config(db: Session) -> DiceConfig:
         lose_reward_type="NONE",
         lose_reward_amount=0,
         daily_gain_cap=20000,
-        created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow(),
     )
     db.add(config)
     db.flush()
     return config
 
 
-def _seed_lottery_config(db: Session) -> LotteryConfig:
-    config = LotteryConfig(
-        name="Phase3 Lottery Config",
+def _seed_lottery_config(db: Session) -> V2LotteryConfig:
+    config = V2LotteryConfig(
+        name="Phase3 V2 Lottery Config",
+        ticket_type="LOTTERY_TICKET",
         is_active=True,
         max_daily_tickets=0,
-        created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow(),
+        puzzle_piece_probability=0.0,
     )
     db.add(config)
     db.flush()
 
     prizes = [
-        LotteryPrize(
+        V2LotteryPrize(
             config_id=config.id,
-            label="P3 Prize A",
+            label="P3 V2 Prize A",
             reward_type="NONE",
             reward_amount=0,
             weight=1,
             stock=None,
             is_active=True,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow(),
         ),
-        LotteryPrize(
+        V2LotteryPrize(
             config_id=config.id,
-            label="P3 Prize B",
+            label="P3 V2 Prize B",
             reward_type="NONE",
             reward_amount=0,
             weight=1,
             stock=None,
             is_active=True,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow(),
         ),
     ]
     db.add_all(prizes)
@@ -166,15 +175,13 @@ def _seed_lottery_config(db: Session) -> LotteryConfig:
     return config
 
 
-def _seed_roulette_config(db: Session) -> RouletteConfig:
-    config = RouletteConfig(
-        name="Phase3 Roulette Config",
-        ticket_type=GameTokenType.ROULETTE_TICKET,
+def _seed_roulette_config(db: Session) -> V2RouletteConfig:
+    config = V2RouletteConfig(
+        name="Phase3 V2 Roulette Config",
+        ticket_type="ROULETTE_TICKET",
         is_active=True,
         max_daily_spins=0,
         grade="COMMON",
-        created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow(),
     )
     db.add(config)
     db.flush()
@@ -182,16 +189,14 @@ def _seed_roulette_config(db: Session) -> RouletteConfig:
     segments = []
     for i in range(6):
         segments.append(
-            RouletteSegment(
+            V2RouletteSegment(
                 config_id=config.id,
                 slot_index=i,
-                label=f"P3 Slot {i}",
+                label=f"P3 V2 Slot {i}",
                 reward_type="NONE",
                 reward_amount=0,
                 weight=1,
                 is_jackpot=False,
-                created_at=datetime.utcnow(),
-                updated_at=datetime.utcnow(),
             )
         )
 
@@ -237,18 +242,20 @@ def test_phase3_game_endpoints_smoke(client: TestClient, seed_session: Session, 
     for feature in (FeatureType.ROULETTE, FeatureType.DICE, FeatureType.LOTTERY):
         _ensure_feature_config(seed_session, feature)
 
-    # Ensure deterministic config selection for services that use scalar_one_or_none().
-    seed_session.query(DiceConfig).filter(DiceConfig.is_active.is_(True)).update({"is_active": False})
-    seed_session.query(LotteryConfig).filter(LotteryConfig.is_active.is_(True)).update({"is_active": False})
+    v2_user = _seed_v2_user(seed_session)
+    legacy_user_id = V2UserService.ensure_legacy_user_id(seed_session, v2_user.id)
 
-    user = _seed_user(seed_session)
+    user = seed_session.get(User, legacy_user_id)
+    if user is None:
+        user = _seed_user(seed_session)
+
     _seed_roulette_config(seed_session)
     _seed_dice_config(seed_session)
     _seed_lottery_config(seed_session)
-    _grant_game_tickets(seed_session, user.id)
+    _grant_game_tickets(seed_session, legacy_user_id)
     seed_session.commit()
 
-    _override_auth(user.id)
+    _override_auth(int(v2_user.id))
     try:
         # Roulette
         r = client.get("/api/v2/roulette/status")

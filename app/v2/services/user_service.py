@@ -29,7 +29,7 @@ class V2UserService:
         return user
 
     @staticmethod
-    def ensure_legacy_user_id(db: Session, v2_user_id: int) -> int:
+    def ensure_legacy_user_id(db: Session, v2_user_id: int, *, sync_vault: bool = False) -> int:
         v2_user = db.get(V2User, v2_user_id)
         if v2_user is None:
             raise ValueError("v2 user not found")
@@ -46,7 +46,8 @@ class V2UserService:
             )
             db.add(legacy_user)
             db.flush()
-        legacy_user.vault_locked_balance = int(v2_user.vault_locked_balance or 0)
-        db.add(legacy_user)
-        db.flush()
+        if sync_vault:
+            legacy_user.vault_locked_balance = int(v2_user.vault_locked_balance or 0)
+            db.add(legacy_user)
+            db.flush()
         return int(legacy_user.id)

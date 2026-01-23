@@ -8,7 +8,7 @@ from app.api.deps import get_current_admin_info, get_db
 from app.v2.models.v2_dice import V2DiceConfig as DiceConfig
 from app.v2.models.v2_lottery import V2LotteryConfig as LotteryConfig, V2LotteryPrize as LotteryPrize
 from app.v2.models.v2_roulette import V2RouletteConfig as RouletteConfig, V2RouletteSegment as RouletteSegment
-from app.services.admin_audit_service import AdminAuditService
+from app.v2.services import V2AdminAuditService
 from app.v2.schemas.v2_admin_game import (
     DiceConfigDto,
     DiceConfigUpdateRequest,
@@ -280,7 +280,7 @@ def update_roulette_config(
         "max_daily_spins": config.max_daily_spins,
         "is_active": config.is_active,
     }
-    AdminAuditService.log(
+    V2AdminAuditService.log(
         db,
         admin_id,
         "ROULETTE_CONFIG_UPDATE",
@@ -434,7 +434,7 @@ def update_dice_config(
         "enable_golden_hour": config.enable_golden_hour,
         "golden_hour_multiplier": config.golden_hour_multiplier,
     }
-    AdminAuditService.log(
+    V2AdminAuditService.log(
         db,
         admin_id,
         "DICE_CONFIG_UPDATE",
@@ -592,7 +592,7 @@ def update_lottery_config(
         "is_active": config.is_active,
         "max_daily_tickets": config.max_daily_tickets,
     }
-    AdminAuditService.log(
+    V2AdminAuditService.log(
         db,
         admin_id,
         "LOTTERY_CONFIG_UPDATE",
@@ -660,7 +660,7 @@ def update_lottery_prize(
     prize.is_active = payload.is_active
     prize.updated_at = datetime.utcnow()
 
-    AdminAuditService.log(
+    V2AdminAuditService.log(
         db,
         admin_id,
         "LOTTERY_PRIZE_UPDATE",
@@ -711,7 +711,7 @@ def create_lottery_prize(
     )
     db.add(new_prize)
 
-    AdminAuditService.log(
+    V2AdminAuditService.log(
         db,
         admin_id,
         "LOTTERY_PRIZE_CREATE",
@@ -758,7 +758,7 @@ def delete_lottery_prize(
     label = prize.label
     db.delete(prize)
 
-    AdminAuditService.log(
+    V2AdminAuditService.log(
         db,
         admin_id,
         "LOTTERY_PRIZE_DELETE",

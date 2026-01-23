@@ -19,9 +19,7 @@ from app.v2.schemas.v2_admin_economy import (
     InventoryItemCreateRequest,
     InventoryItemUpdateRequest,
 )
-from app.services.inventory_service import InventoryService
-from app.services.game_wallet_service import GameWalletService
-from app.services.admin_audit_service import AdminAuditService
+from app.v2.services import V2AdminAuditService, V2AdminInventoryService
 
 router = APIRouter()
 logger = logging.getLogger("uvicorn.error")
@@ -197,8 +195,7 @@ def create_ticket_log(
         )
 
         # Sync UserGameWallet
-        game_wallet_service = GameWalletService()
-        balance_after = game_wallet_service.grant_tokens(
+        balance_after = V2AdminInventoryService.grant_tokens(
             db,
             payload.user_id,
             wallet_token,
@@ -220,7 +217,7 @@ def create_ticket_log(
         db.flush()
 
         # 3. Audit Log
-        AdminAuditService.log(
+        V2AdminAuditService.log(
             db, admin_id, "TICKET_GRANT", "ECONOMY", "TICKET",
             after={"user_id": payload.user_id, "type": payload.ticket_type, "amount": payload.amount, "reason": payload.reason}
         )
@@ -280,7 +277,7 @@ def update_ticket_log(
             wallet.balance += delta
             log.balance_after = wallet.balance
 
-        AdminAuditService.log(
+        V2AdminAuditService.log(
             db, admin_id, "TICKET_LOG_UPDATE", "ECONOMY", "TICKET",
             before=before,
             after={"amount": payload.amount, "reason": payload.reason}
@@ -332,7 +329,7 @@ def delete_ticket_log(
         if wallet:
             wallet.balance -= log.change_amount
 
-        AdminAuditService.log(
+        V2AdminAuditService.log(
             db, admin_id, "TICKET_LOG_DELETE", "ECONOMY", "TICKET",
             before={"user_id": log.user_id, "type": log.item_type, "amount": log.change_amount}
         )
@@ -356,7 +353,7 @@ def create_inventory_item_log(
 
     try:
         # Sync UserInventoryItem
-        item = InventoryService.grant_item(
+        item = V2AdminInventoryService.grant_item(
             db, 
             payload.user_id, 
             payload.item_type, 
@@ -379,7 +376,7 @@ def create_inventory_item_log(
         db.add(log)
         db.flush()
 
-        AdminAuditService.log(
+        V2AdminAuditService.log(
             db, admin_id, "ITEM_LOG_CREATE", "ECONOMY", "INVENTORY",
             after={"user_id": payload.user_id, "type": payload.item_type, "amount": payload.quantity, "reason": payload.reason}
         )
@@ -436,7 +433,7 @@ def update_inventory_item_log(
                 item.expires_at = payload.expires_at
             log.balance_after = item.quantity
 
-        AdminAuditService.log(
+        V2AdminAuditService.log(
             db, admin_id, "ITEM_LOG_UPDATE", "ECONOMY", "INVENTORY",
             before=before,
             after={"amount": payload.quantity, "reason": payload.reason}
@@ -483,7 +480,7 @@ def delete_inventory_item_log(
         if item:
             item.quantity -= log.change_amount
 
-        AdminAuditService.log(
+        V2AdminAuditService.log(
             db, admin_id, "ITEM_LOG_DELETE", "ECONOMY", "INVENTORY",
             before={"user_id": log.user_id, "type": log.item_type, "amount": log.change_amount}
         )

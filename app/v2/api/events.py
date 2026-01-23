@@ -14,7 +14,7 @@ from app.api.deps import get_db
 from app.v2.api.deps import get_current_user_id
 from app.models.user_segment import UserSegment
 from app.schemas.event import ActiveEventOut, EventStatusResponse
-from app.services.event_service import EventService
+from app.v2.services.event_service import V2EventService
 
 router = APIRouter(prefix="/api/events", tags=["events"])
 
@@ -24,7 +24,7 @@ def get_event_status(
     db: Session = Depends(get_db),
     user_id: int = Depends(get_current_user_id),
 ) -> EventStatusResponse:
-    service = EventService()
+    service = V2EventService()
     now = datetime.utcnow()
 
     gh_status = service.get_golden_hour_status(db, now=now)

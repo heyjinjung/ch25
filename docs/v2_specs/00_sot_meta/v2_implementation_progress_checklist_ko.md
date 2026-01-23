@@ -1,5 +1,5 @@
 문서 타입: 체크리스트/가이드
-버전: v2.0
+버전: v2.1
 작성일: 2026-01-23
 작성자: GitHub Copilot
 대상: BE/FE/운영
@@ -194,6 +194,7 @@ V1 레거시 API 리포트의 구조를 참고하되, **현재 구현된 기능�
 ---
 
 ## 6. 변경 이력
+- v2.1 (2026-01-23, GitHub Copilot): Shop/Inventory v2-only 정합화 완료 반영
 - v2.0 (2026-01-23, GitHub Copilot): 7개 주요 유저 페이지(Home, Gamedash, Dice, Lotto, Vault, Shop, Missions) 고해상도 리디자인 및 FE UI 통합 완료 반영
 - v1.9 (2026-01-22, GitHub Copilot): 백엔드 코드 실사 기반 CSV 임포트, CC 입금, 실시간 이벤트, Vault V2 도메인 추가 및 현행화
 - v1.8 (2026-01-19, GitHub Copilot): Admin/Ops 전 구간 완료 반영 (RBAC, Crisis Radar, Playbook UI)
