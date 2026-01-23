@@ -83,8 +83,6 @@ export default function InventoryPage() {
 
   return (
     <div className="exchange-page-v2 inventory-specific" ref={containerRef}>
-      <img src={`${ASSET_PATH}/shop.svg`} className="inventory-bg-overlay" alt="" />
-
       <div className="shop-tabs-container">
         <div
           className={`shop-tab-item ${activeTab === "shop" ? "active" : ""}`}

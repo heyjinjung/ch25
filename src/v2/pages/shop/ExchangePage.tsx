@@ -52,38 +52,6 @@ export default function ExchangePage() {
       };
       window.addEventListener("mousemove", handleMove);
 
-      // Stagger Entrance
-      gsap.from(".shop-card-v2", {
-        y: 40,
-        opacity: 0,
-        scale: 0.8,
-        stagger: 0.1,
-        duration: 0.8,
-        ease: "elastic.out(1, 0.75)",
-        delay: 0.2
-      });
-
-      // Banner Animation
-      gsap.from(".shop-event-banner", {
-        y: -20,
-        opacity: 0,
-        duration: 1,
-        ease: "power3.out"
-      });
-
-      // Scroll Fade-in for sub-products
-      gsap.from(".shop-sub-card", {
-        scrollTrigger: {
-          trigger: ".shop-sub-grid",
-          start: "top 80%",
-        },
-        opacity: 0,
-        scale: 0.9,
-        stagger: 0.05,
-        duration: 0.6,
-        ease: "power2.out"
-      });
-
       return () => {
         window.removeEventListener("mousemove", handleMove);
       };
@@ -136,8 +104,6 @@ export default function ExchangePage() {
       {/* Background Dot Pattern (Parallax) */}
       <div className="shop-dot-pattern" ref={dotRef} />
       
-      <img src={`${ASSET_PATH}/shop.svg`} className="shop-bg-overlay" alt="" />
-
       <div className="shop-tabs-container">
         <div
           className={`shop-tab-item ${activeTab === "shop" ? "active" : ""}`}

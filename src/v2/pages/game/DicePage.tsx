@@ -147,7 +147,6 @@ const DicePage = () => {
 
   return (
     <div className="dice-page-v2" ref={containerRef}>
-      <div className="dice-bg-overlay" />
       <div className="dice-aurora-bg" ref={auroraRef}>
         <div className="dice-aurora-blob blob-1" />
         <div className="dice-aurora-blob blob-2" />

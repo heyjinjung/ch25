@@ -13,6 +13,7 @@ const LotteryPage = lazy(() => import("../pages/game/LotteryPage"));
 const ExchangePage = lazy(() => import("../pages/shop/ExchangePage"));
 const InventoryPage = lazy(() => import("../pages/inventory/InventoryPage"));
 const MissionsPage = lazy(() => import("../pages/missions/MissionsPage"));
+const TeamBattlePage = lazy(() => import("../pages/game/TeamBattlePage"));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -49,6 +50,7 @@ export const V2UserRoutes = () => {
           
           {/* Missions & Events */}
           <Route path="/missions" element={<MissionsPage />} />
+          <Route path="/team-battle" element={<TeamBattlePage />} />
         </Route>
 
         {/* Default redirect to Home */}

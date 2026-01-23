@@ -173,7 +173,12 @@ export default function HomePage() {
           <div className="featured-header">
             {/* today / 18pt label removed */}
           </div>
-          <div className="featured-card" />
+          <div className="featured-card">
+            <div className="featured-content-inner">
+              <span className="featured-sub-text">EXCLUSIVE EVENT</span>
+              <h2 className="featured-main-title">STREAK<br/>CHALLENGE</h2>
+            </div>
+          </div>
         </div>
       </div>
     </div>
