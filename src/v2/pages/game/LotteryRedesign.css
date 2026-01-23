@@ -10,7 +10,7 @@
     flex-direction: column;
     align-items: center;
     gap: 20px;
-    padding: 16px 0;
+    padding: 48px 0 0;
     color: #fff;
     font-family: 'Inter', sans-serif;
     overflow: hidden;
@@ -49,6 +49,26 @@
     transition: transform 0.1s linear;
 }
 
+.mixing-ball.ball-1 {
+    top: 20%;
+    left: 10%;
+}
+
+.mixing-ball.ball-2 {
+    top: 10%;
+    right: 15%;
+}
+
+.mixing-ball.ball-3 {
+    bottom: 25%;
+    left: 20%;
+}
+
+.mixing-ball.ball-4 {
+    bottom: 20%;
+    right: 20%;
+}
+
 /* Logo & Labels */
 .lotto-logo-img {
     width: 275px;
@@ -64,7 +84,30 @@
     align-items: center;
     gap: 16px;
     margin-top: auto;
-    padding-bottom: 20px;
+    padding-bottom: 0;
+}
+
+.lotto-collection-button {
+    width: 100%;
+    height: 40px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.7);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.10) 0%, rgba(255, 255, 255, 0.04) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), inset 0 -6px 14px rgba(0, 0, 0, 0.28);
+    transition: transform 0.2s, box-shadow 0.2s, color 0.2s;
+}
+
+.lotto-collection-button:hover {
+    transform: translateY(-2px);
+    color: rgba(255, 255, 255, 0.85);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .lotto-play-button {
@@ -79,8 +122,15 @@
     font-weight: 700;
     color: #fff;
     cursor: pointer;
-    transition: transform 0.2s, opacity 0.2s;
+    transition: transform 0.2s, opacity 0.2s, box-shadow 0.2s, filter 0.2s;
     border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), inset 0 -6px 14px rgba(0, 0, 0, 0.28);
+}
+
+.lotto-play-button:hover {
+    transform: translateY(-2px) scale(1.01);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    filter: saturate(1.05);
 }
 
 .lotto-play-button:active {

@@ -1,9 +1,9 @@
 /* src/v2/pages/vault/VaultRedesign.css */
 
 .vault-redesign-container {
-    min-height: 100%;
-    width: 100%;
-    max-width: 391px;
+    min-height: 100dvh;
+    height: auto;
+    width: 390px;
     margin: 0 auto;
     position: relative;
     display: flex;
@@ -11,6 +11,8 @@
     color: #fff;
     font-family: 'Inter', sans-serif;
     overflow-x: hidden;
+    padding-top: 72px;
+    /* Header Offset */
 }
 
 /* Background SVG Overlay */
@@ -26,17 +28,33 @@
     /* Match the svg asset depth */
 }
 
+/* Main Content Spec */
+.vault-main-area {
+    display: flex;
+    width: 100%;
+    max-width: 360px;
+    min-height: 0;
+    flex-direction: column;
+    align-items: center;
+    /* Centered */
+    gap: 28px;
+    padding-top: 12px;
+    margin: 0 auto;
+    box-sizing: border-box;
+}
+
 /* Tiered Safes Display */
 .vault-safes-arena {
     position: relative;
-    width: 100%;
-    height: 300px;
-    /* Estimated height for the tiered display */
+    width: 364.363px;
+    height: 195px;
+    flex-shrink: 0;
     display: flex;
     align-items: flex-end;
     justify-content: center;
     gap: 15px;
     padding-bottom: 20px;
+    align-self: center;
 }
 
 .vault-safe-item {
@@ -47,16 +65,28 @@
     transition: transform 0.3s ease;
 }
 
-.vault-safe-item.vip {
-    width: 172.6px;
+.vault-safe-item.lv1 {
+    width: 80.23px;
 }
 
 .vault-safe-item.lv5 {
     width: 120.35px;
 }
 
-.vault-safe-item.lv1 {
-    width: 80.23px;
+.vault-safe-item.vip {
+    width: 172.6px;
+}
+
+.vault-safe-item.lv1 .vault-safe-img {
+    animation: safe-rotate-1 12s linear infinite;
+}
+
+.vault-safe-item.lv5 .vault-safe-img {
+    animation: safe-rotate-2 15s linear infinite reverse;
+}
+
+.vault-safe-item.vip .vault-safe-img {
+    animation: safe-rotate-3 20s linear infinite;
 }
 
 .vault-safe-img {
@@ -73,35 +103,46 @@
 
 /* Progress Section */
 .vault-progress-section {
-    width: 100%;
-    padding: 0 18px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    align-items: flex-start;
+    gap: 8px;
+    width: 100%;
+    padding: 0 16px;
+    box-sizing: border-box;
 }
 
 .section-title {
-    font-size: 14px;
+    font-family: 'Roboto', sans-serif;
+    font-size: 12px;
     font-weight: 500;
     color: #9AFFFA;
     text-transform: uppercase;
+    padding-left: 2px;
 }
 
 .vault-progress-card {
-    width: 355px;
+    width: 100%;
     height: 100px;
-    background: rgba(120, 120, 128, 0.16);
+    background: rgba(43, 43, 43, 0.45);
+    /* Glass Background */
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 21px;
     display: flex;
     align-items: center;
-    padding: 0 16px;
+    padding: 16px 22px;
     gap: 12px;
     position: relative;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
 .card-header-icon {
     width: 48px;
     height: 48px;
+    flex-shrink: 0;
 }
 
 .card-content {
@@ -109,6 +150,7 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
+    min-width: 0;
 }
 
 .progress-labels {
@@ -120,12 +162,13 @@
 }
 
 .custom-progress-bar-container {
-    width: 227px;
+    width: 100%;
     height: 16px;
     background: rgba(255, 255, 255, 0.1);
     border-radius: 24px;
     overflow: hidden;
     position: relative;
+    box-sizing: border-box;
 }
 
 .custom-progress-fill {
@@ -138,41 +181,83 @@
 .chevron-icon {
     width: 24px;
     height: 24px;
+    flex-shrink: 0;
 }
 
-/* Action Footer */
+/* Action Footer Specced */
 .vault-action-footer {
-    margin-top: auto;
-    width: 100%;
-    padding: 20px 18px 30px 18px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.casino-logo {
-    width: 104px;
-    height: 34px;
-    object-fit: contain;
-}
-
-.vault-action-button {
-    width: 160px;
-    height: 45px;
-    border-radius: 62px;
-    background: rgba(60, 60, 67, 0.29);
-    /* Fallback */
     display: flex;
     align-items: center;
     justify-content: center;
+    /* Centered together */
+    gap: 12px;
+    width: 100%;
+    padding: 20px 0 0 0;
+    box-sizing: border-box;
+    margin-top: 20px;
+}
+
+.vault-home-link,
+.vault-action-button {
+    display: flex;
+    width: 160px;
+    height: 48px;
+    padding: 13px 0;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    border-radius: 62px;
+    background: rgba(60, 60, 67, 0.29);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     font-size: 16px;
     font-weight: 700;
     color: #fff;
     cursor: pointer;
     transition: transform 0.2s, background 0.2s;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    text-decoration: none;
+    box-sizing: border-box;
+    overflow: hidden;
+    outline: none;
 }
 
+.casino-logo {
+    width: 80px;
+    height: auto;
+    object-fit: contain;
+}
+
+.vault-home-link:active,
 .vault-action-button:active {
     transform: scale(0.96);
+}
+
+@keyframes safe-rotate-1 {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes safe-rotate-2 {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes safe-rotate-3 {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }

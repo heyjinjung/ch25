@@ -1,31 +1,106 @@
 // src/v2/pages/game/DicePage.tsx
-import { useState } from "react";
+import { useMemo, useState, useRef } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { getV2DiceStatus, playV2Dice } from "../../api/v1CompatAdapter";
+import { triggerHaptic, triggerNotification } from "../../utils/haptic";
+import { useAuth } from "../../../auth/authStore";
+import gsap from "gsap";
 import "./DiceRedesign.css";
 
 const ASSET_PATH = "/v2/assets/03dice";
 
 const DicePage = () => {
+  const { user } = useAuth();
   const [playerDice, setPlayerDice] = useState(1);
   const [opponentDice, setOpponentDice] = useState(1);
   const [isRolling, setIsRolling] = useState(false);
+  const [resultText, setResultText] = useState("WAITING...");
+
+  const playerDiceRef = useRef<HTMLImageElement>(null);
+  const opponentDiceRef = useRef<HTMLImageElement>(null);
+
+  const queryClient = useQueryClient();
+
+  const { data } = useQuery({
+    queryKey: ["v2-dice-status"],
+    queryFn: () => getV2DiceStatus(),
+    staleTime: 10000,
+    refetchOnWindowFocus: true,
+  });
+
+  const playMutation = useMutation({
+    mutationFn: () => playV2Dice({ bet_amount: 1 }),
+    onError: () => {
+      triggerNotification("error");
+      setIsRolling(false);
+    },
+  });
+
+  const isPlayable = useMemo(() => {
+    if (!data) return false;
+    return (data.token_balance ?? 0) > 0;
+  }, [data]);
 
   const getDiceImage = (val: number) =>
     `${ASSET_PATH}/img_dice_side_{[${val}]}.png`;
 
-  const rollDice = () => {
-    if (isRolling) return;
+  const rollDice = async () => {
+    if (isRolling || !isPlayable) return;
     setIsRolling(true);
+    setResultText("ROLLING...");
+    triggerHaptic("medium");
 
-    let iterations = 0;
-    const interval = setInterval(() => {
-      setPlayerDice(Math.floor(Math.random() * 6) + 1);
-      setOpponentDice(Math.floor(Math.random() * 6) + 1);
-      iterations++;
-      if (iterations > 15) {
-        clearInterval(interval);
-        setIsRolling(false);
+    // GSAP Animation Sequence
+    const tl = gsap.timeline({ repeat: -1 });
+    tl.to([playerDiceRef.current, opponentDiceRef.current], {
+      rotation: "+=360",
+      y: -20,
+      scale: 1.1,
+      duration: 0.15,
+      ease: "power1.inOut",
+      onRepeat: () => {
+        setPlayerDice(Math.floor(Math.random() * 6) + 1);
+        setOpponentDice(Math.floor(Math.random() * 6) + 1);
       }
-    }, 80);
+    });
+
+    try {
+      const result = await playMutation.mutateAsync();
+      const game = result.game_data;
+      
+      tl.kill(); // Stop the fast rolling
+      
+      if (game) {
+        // Final "Land" Animation
+        gsap.to([playerDiceRef.current, opponentDiceRef.current], {
+          rotation: 0,
+          y: 0,
+          scale: 1,
+          duration: 0.4,
+          ease: "back.out(1.7)",
+          onComplete: () => {
+            setPlayerDice(game.user_dice[0]);
+            setOpponentDice(game.dealer_dice[0]);
+            setResultText(
+              game.outcome === "WIN"
+                ? "WIN"
+                : game.outcome === "DRAW"
+                  ? "DRAW"
+                  : "LOSE"
+            );
+          }
+        });
+      } else {
+        setResultText("NO RESULT");
+      }
+      queryClient.invalidateQueries({ queryKey: ["v2-dice-status"] });
+      triggerNotification("success");
+    } catch {
+      tl.kill();
+      setResultText("ERROR");
+    } finally {
+      setIsRolling(false);
+    }
   };
 
   return (
@@ -39,18 +114,22 @@ const DicePage = () => {
           <div className="battle-card">
             <div className="dice-display">
               <img
+                ref={playerDiceRef}
                 src={getDiceImage(playerDice)}
                 alt="player dice"
                 className="dice-img"
               />
             </div>
-            <div className="dice-sub-button">WAITING...</div>
+            <div className="dice-sub-button">
+              <span className="player-nick">{user?.nickname || "YOU"}</span>
+            </div>
           </div>
 
           {/* Opponent Card */}
           <div className="battle-card">
             <div className="dice-display">
               <img
+                ref={opponentDiceRef}
                 src={getDiceImage(opponentDice)}
                 alt="opponent dice"
                 className="dice-img"
@@ -58,7 +137,7 @@ const DicePage = () => {
             </div>
             <div className="dice-sub-button">
               <img
-                src={`${ASSET_PATH}/Frame 37.png`}
+                src={`${ASSET_PATH}/Frame 38.png`}
                 alt="opponent"
                 className="dice-character-small"
               />
@@ -66,12 +145,17 @@ const DicePage = () => {
           </div>
         </div>
 
+        {/* Status/Outcome Display */}
+        <div className="dice-outcome-badge">
+           {resultText}
+        </div>
+
         {/* Action Buttons */}
         <div className="dice-action-area">
           <button
             className="spin-button-v2"
             onClick={rollDice}
-            disabled={isRolling}
+            disabled={isRolling || !isPlayable}
           >
             {isRolling ? "ROLLING..." : "SPIN"}
           </button>

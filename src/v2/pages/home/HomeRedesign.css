@@ -9,7 +9,7 @@
     position: relative;
     overflow-x: hidden;
     color: #fff;
-    padding-top: 96px;
+    padding-top: 100px;
     /* Header + LiveFeed */
     padding-bottom: 90px;
 }
@@ -33,6 +33,7 @@
     border-radius: 32px;
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.1);
+    -webkit-backdrop-filter: blur(20px);
     backdrop-filter: blur(20px);
     padding: 32px;
     display: flex;
