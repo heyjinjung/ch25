@@ -11,7 +11,7 @@
     align-items: center;
     overflow-x: hidden;
     color: #fff;
-    padding-top: 96px;
+    padding-top: 100px;
     /* Header + LiveFeed */
 }
 
@@ -34,6 +34,7 @@
     gap: 38px;
     align-self: stretch;
     border-bottom: 0.5px solid rgba(255, 255, 255, 0.1);
+    box-sizing: border-box;
 }
 
 .shop-tab-item {
@@ -45,6 +46,7 @@
     display: flex;
     align-items: center;
     position: relative;
+    white-space: nowrap;
 }
 
 .shop-tab-item.active {
@@ -68,10 +70,13 @@
     border-radius: 50px;
     background: rgba(98, 91, 113, 0.38);
     mix-blend-mode: plus-lighter;
-    margin-top: 20px;
+    margin-top: 16px;
+    /* 16px padding from top main */
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
+    /* For Info Button */
     overflow: hidden;
 }
 
@@ -81,22 +86,45 @@
     object-fit: cover;
 }
 
+.banner-info-btn {
+    position: absolute;
+    bottom: 15px;
+    /* Adjust according to Figma visual */
+    right: 18px;
+    width: 68px;
+    height: 20px;
+    border-radius: 59px;
+    background: #E1FF80;
+    box-shadow: 0 2px 0 0 rgba(0, 0, 0, 0.20);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #000;
+    font-size: 10px;
+    font-weight: 800;
+    cursor: pointer;
+    z-index: 10;
+}
+
 /* Products Grid Section */
 .shop-products-section {
     display: flex;
     width: 360px;
-    padding-top: 10px;
+    padding-top: 0;
     flex-direction: column;
     align-items: flex-start;
     gap: 26px;
-    margin-top: 20px;
+    /* 26px vertical gaps from title area */
+    margin-top: 26px;
+    /* 26px from banner */
 }
 
 .products-grid-v2 {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     column-gap: 16px;
-    row-gap: 24px;
+    row-gap: 26px;
+    /* 26px vertical gaps between rows */
     width: 100%;
 }
 

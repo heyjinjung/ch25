@@ -55,6 +55,7 @@ export default function ExchangePage() {
         {/* Event Banner */}
         <div className="shop-event-banner">
           <img src="/assets/hero_event_banner.png" className="event-banner-img" alt="event" />
+          <div className="banner-info-btn">안내버튼</div>
         </div>
 
         {/* Products Grid */}

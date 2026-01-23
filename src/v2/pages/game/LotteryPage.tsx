@@ -51,19 +51,19 @@ const LotteryPage: React.FC = () => {
     if (!containerRef.current) return;
 
     const ctx = gsap.context(() => {
-      // Idle floating for balls
-      [ball1Ref, ball2Ref, ball3Ref, ball4Ref].forEach((ref, idx) => {
-        if (ref.current) {
-          gsap.to(ref.current, {
-            y: "random(-20, 20)",
-            x: "random(-20, 20)",
-            rotation: "random(-15, 15)",
-            duration: 2 + idx * 0.5,
-            repeat: -1,
-            yoyo: true,
-            ease: "sine.inOut",
-          });
-        }
+      const balls = [ball1Ref, ball2Ref, ball3Ref, ball4Ref];
+      balls.forEach((ref, idx) => {
+        if (!ref.current) return;
+
+        gsap.to(ref.current, {
+          x: `+=${8 + idx * 2}`,
+          y: `-=${6 + idx}`,
+          rotation: `+=${12 + idx * 3}`,
+          duration: 1.6 + idx * 0.4,
+          repeat: -1,
+          yoyo: true,
+          ease: "sine.inOut",
+        });
       });
     });
 
@@ -82,14 +82,14 @@ const LotteryPage: React.FC = () => {
       setIsPlaying(true);
 
       // Intensive mixing animation
-      [ball1Ref, ball2Ref, ball3Ref, ball4Ref].forEach((ref) => {
+      [ball1Ref, ball2Ref, ball3Ref, ball4Ref].forEach((ref, idx) => {
         if (ref.current) {
           gsap.to(ref.current, {
-            y: "random(-100, 100)",
-            x: "random(-80, 80)",
-            rotation: "random(-180, 180)",
-            duration: 0.15,
-            repeat: 12,
+            y: "random(-60, 60)",
+            x: "random(-70, 70)",
+            rotation: `random(-${120 + idx * 20}, ${120 + idx * 20})`,
+            duration: 0.12,
+            repeat: 14,
             yoyo: true,
             ease: "power2.inOut",
           });
@@ -140,34 +140,62 @@ const LotteryPage: React.FC = () => {
 
   return (
     <div className="lottery-redesign-container" ref={containerRef}>
-      <img src={`${ASSET_PATH}/game-L.svg`} className="lottery-bg-overlay" alt="" />
+      <img
+        src={`${ASSET_PATH}/game-L.svg`}
+        className="lottery-bg-overlay"
+        alt=""
+      />
 
       {/* Ball Arena Section */}
       <div className="ball-arena-container mt-4">
-        <img ref={ball1Ref} src={`${ASSET_PATH}/Mix balls 3.png`} className="mixing-ball w-[173px]" alt="" style={{ top: '20%', left: '10%' }} />
-        <img ref={ball2Ref} src={`${ASSET_PATH}/Mix balls 1.png`} className="mixing-ball w-[128px]" alt="" style={{ top: '10%', right: '15%' }} />
-        <img ref={ball3Ref} src={`${ASSET_PATH}/Mix balls 4.png`} className="mixing-ball w-[77px]" alt="" style={{ bottom: '25%', left: '20%' }} />
-        <img ref={ball4Ref} src={`${ASSET_PATH}/Mix balls 2.png`} className="mixing-ball w-[100px]" alt="" style={{ bottom: '20%', right: '20%' }} />
+        <img
+          ref={ball1Ref}
+          src={`${ASSET_PATH}/Mix balls 3.png`}
+          className="mixing-ball ball-1 w-[173px]"
+          alt=""
+        />
+        <img
+          ref={ball2Ref}
+          src={`${ASSET_PATH}/Mix balls 1.png`}
+          className="mixing-ball ball-2 w-[128px]"
+          alt=""
+        />
+        <img
+          ref={ball3Ref}
+          src={`${ASSET_PATH}/Mix balls 4.png`}
+          className="mixing-ball ball-3 w-[77px]"
+          alt=""
+        />
+        <img
+          ref={ball4Ref}
+          src={`${ASSET_PATH}/Mix balls 2.png`}
+          className="mixing-ball ball-4 w-[100px]"
+          alt=""
+        />
       </div>
 
       {/* Lotto Logo Area */}
       <div className="flex flex-col items-center gap-4 mt-4">
-        <img src={`${ASSET_PATH}/Lotto_Horizontal 1.png`} className="lotto-logo-img" alt="LOTTO" />
+        <img
+          src={`${ASSET_PATH}/Lotto_Horizontal 1.png`}
+          className="lotto-logo-img"
+          alt="LOTTO"
+        />
       </div>
 
       {/* Action Area */}
       <div className="lottery-action-section">
         <div className="flex w-full justify-center px-8">
-            <button
-                onClick={() => setCollectionModalOpen(true)}
-                className="w-full bg-white/5 border border-white/10 h-10 rounded-xl text-xs font-bold text-white/60 tracking-widest uppercase"
-            >
-                View Collection
-            </button>
+          <button
+            onClick={() => setCollectionModalOpen(true)}
+            className="lotto-collection-button"
+          >
+            View Collection
+          </button>
         </div>
 
         <button
-          className={`lotto-play-button ${isPlaying || (data?.token_balance ?? 0) <= 0 ? 'disabled' : ''}`}
+          className={`lotto-play-button ${isPlaying || (data?.token_balance ?? 0) <= 0 ? "disabled" : ""}`}
           onClick={isRevealed ? handleReset : handlePlay}
           disabled={isPlaying}
         >
@@ -184,10 +212,14 @@ const LotteryPage: React.FC = () => {
             exit={{ opacity: 0, scale: 0.5 }}
             className="fixed inset-0 z-[200] flex items-center justify-center pointer-events-none"
           >
-             <div className="bg-black/80 backdrop-blur-xl px-10 py-6 rounded-3xl border border-white/10 flex flex-col items-center gap-2">
-                <span className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Game Result</span>
-                <span className="text-3xl font-black text-white text-center">{revealedPrize.label}</span>
-             </div>
+            <div className="bg-black/80 backdrop-blur-xl px-10 py-6 rounded-3xl border border-white/10 flex flex-col items-center gap-2">
+              <span className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">
+                Game Result
+              </span>
+              <span className="text-3xl font-black text-white text-center">
+                {revealedPrize.label}
+              </span>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

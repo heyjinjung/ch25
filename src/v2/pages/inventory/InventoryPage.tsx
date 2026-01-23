@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   useV2Inventory,
   useV2UseInventoryItem,
@@ -13,6 +13,7 @@ const imgFrame129 = `${ASSET_PATH}/Frame 9-2.png`;
 const imgFrame130 = `${ASSET_PATH}/Frame 9-3.png`;
 
 export default function InventoryPage() {
+  const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
 
   const { data, isLoading } = useV2Inventory();
@@ -65,7 +66,7 @@ export default function InventoryPage() {
 
       {/* Hidden shop / inventory tabs */}
       <div className="tabs">
-        <button className="tab-button">히딘 상점</button>
+        <button className="tab-button" onClick={() => navigate('/v2/shop')}>상점</button>
         <button className="tab-button active">인벤토리</button>
       </div>
 
