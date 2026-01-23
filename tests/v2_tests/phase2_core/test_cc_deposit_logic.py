@@ -46,7 +46,7 @@ def test_cc_deposit_idempotency(db_session):
     )
     
     # We patch internal services to track calls
-    with patch("app.v2.services.admin_cc_deposit_service.VaultService") as MockVaultService, \
+    with patch("app.v2.services.admin_cc_deposit_service.V2VaultService") as MockVaultService, \
          patch("app.v2.services.admin_cc_deposit_service.SeasonPassService") as MockSeasonService, \
          patch("app.v2.services.admin_cc_deposit_service.LevelXPService") as MockXPService, \
          patch("app.v2.services.admin_cc_deposit_service.get_settings") as MockSettings:
@@ -108,7 +108,7 @@ def test_cc_deposit_delta_logic(db_session):
         play_count=15
     )
 
-    with patch("app.v2.services.admin_cc_deposit_service.VaultService") as MockVaultService, \
+    with patch("app.v2.services.admin_cc_deposit_service.V2VaultService") as MockVaultService, \
          patch("app.v2.services.admin_cc_deposit_service.SeasonPassService") as MockSeasonService, \
          patch("app.v2.services.admin_cc_deposit_service.get_settings") as MockSettings:
 

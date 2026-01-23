@@ -1,5 +1,5 @@
 문서 타입: 가이드
-버전: v1.25
+버전: v1.30
 작성일: 2026-01-24
 작성자: GitHub Copilot
 대상: V2 배포/검증 담당자
@@ -38,6 +38,8 @@ V2 배포 전/후 필수 검증 항목을 표준화한다.
 	- 커맨드: Invoke-WebRequest -Uri "http://localhost:8000/api/v2/health" -UseBasicParsing | Select-Object -ExpandProperty Content
 - [x] Router Prefix `/api/v2` 일관성 확인
 	- 근거: [app/api/routes/__init__.py](app/api/routes/__init__.py)
+- [x] KST 변환 기준 확인(서버 UTC 가정 시 KST 일자 산출)
+	- 근거: [app/v2/services/admin_cc_deposit_service.py](app/v2/services/admin_cc_deposit_service.py)
 
 ### 3.2 서비스/영역별 Unit & Integration
 #### 3.2.1 Auth
@@ -73,6 +75,10 @@ V2 배포 전/후 필수 검증 항목을 표준화한다.
 - [x] 테스트 전부 통과 기록 (tests/v2_tests/phase2_core/test_shop_inventory_logic.py)
 - [x] v2-only 기준 충족 (v2_shop_products + v2_shop_order + V2ShopService + V1 UiConfigService/IdempotencyService import 제거)
 	- 검증 실행: `pytest -q tests/v2_tests/phase2_core/test_shop_inventory_logic.py` & `pytest -q tests/v2_tests/phase1_env/test_v2_architecture_sot.py` — 실행(2026-01-23) 통과 (Exit Code: 0)
+- [x] 프론트 응답 확인: /api/v2/shop/products, /api/v2/shop/purchase → 200 OK
+	- 근거: [docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md)
+- [x] DB 스냅샷 기록: v2_shop_order/user_game_wallet/user_game_wallet_ledger
+	- 근거: [docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md)
 
 #### 3.2.4 Game (roulette/dice/lottery)
 - [x] 단위 테스트 추가
@@ -85,6 +91,9 @@ V2 배포 전/후 필수 검증 항목을 표준화한다.
 
 - [x] 원장 분리 오작동 케이스(티켓/인벤토리/금고) 검증
 	- 커맨드: pytest -q tests/v2_tests/phase3_game/test_game_ledger_separation.py
+	- 근거: [docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md)
+
+- [x] 주사위 패배 금고 차감 + 골든아워 배수 적용 확인
 	- 근거: [docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md)
 
 
@@ -100,6 +109,10 @@ V2 배포 전/후 필수 검증 항목을 표준화한다.
 - [x] 테스트 전부 통과 기록 (tests/v2_tests/phase2_core/test_shop_inventory_logic.py)
 - [x] v2-only 기준 충족 (v2_exchange_log + V2InventoryService + V1 모델 의존 제거)
 	- 검증 실행: `pytest -q tests/v2_tests/phase2_core/test_shop_inventory_logic.py` & `pytest -q tests/v2_tests/phase1_env/test_v2_architecture_sot.py` — 실행(2026-01-23) 통과 (Exit Code: 0)
+- [x] 프론트 응답 확인: /api/v2/inventory, /api/v2/inventory/items → 200 OK
+	- 근거: [docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md)
+- [x] 아이템 사용(바우처) → 지갑 토큰 적립 확인
+	- 근거: [docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md)
 
 #### 3.2.6 Mission/Attendance
 - [x] 단위 테스트 추가
@@ -110,6 +123,14 @@ V2 배포 전/후 필수 검증 항목을 표준화한다.
 - [x] v2-only import 검증 테스트 통과 (tests/v2_tests/phase1_env/test_v2_architecture_sot.py)
 	- 커맨드: pytest -q tests/v2_tests/phase1_env/test_v2_architecture_sot.py
 	- 검증 실행: GitHub Copilot 실행(2026-01-23) — 통과 (Exit Code: 0)
+- [x] 프론트 응답 확인: /api/v2/mission/ → 신규 유저 미션 6종 반환
+	- 근거: [docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md)
+- [x] 미션 보상 클레임: /api/v2/mission/{mission_id}/claim → 200 OK
+	- 근거: [docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md)
+- [x] 중복 클레임 차단: ALREADY_CLAIMED
+	- 근거: [docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md)
+- [ ] 미수령 상태에서 중복 방지 오탐 재현/로그 확보
+	- 근거 필요 (운영 로그/재현 스크립트/티켓)
 
 #### 3.2.7 Team Battle
 - [x] 단위 테스트 추가
@@ -131,12 +152,17 @@ V2 배포 전/후 필수 검증 항목을 표준화한다.
 - [x] 통합 테스트 추가
 - [x] 테스트 전부 통과 기록 (tests/v2_tests/phase4_admin/*)
 	- 커맨드: pytest -q tests/v2_tests/phase4_admin/test_shop_crud.py tests/v2_tests/phase4_admin/test_economy_coverage.py tests/v2_tests/phase4_admin/test_api_coverage.py tests/v2_tests/phase4_admin/test_admin_user_routes_coverage_extended.py tests/v2_tests/phase4_admin/test_admin_ops_security.py tests/v2_tests/phase4_admin/test_admin_marketing_routes_smoke.py tests/v2_tests/phase4_admin/test_admin_game_config_routes_coverage_extended.py tests/v2_tests/phase4_admin/test_admin_economy_routes_coverage_extended.py
+- [x] v2-only 기준 충족 (Ops/Shop/Inventory Admin API)
+	- 검증 실행: Antigravity 실행(2026-01-24) — RBAC, Ops Plan, Shop Config, Admin Inventory 기능 검증 완료
+	- 상세 증거: [v2_verification_test_logs_20260124_phase4.md](docs/08_changelog/v2_verification_test_logs_20260124_phase4.md)
+- [x] 어드민 미션 관리(목록/생성/수정/삭제) 검증
+	- 근거: [docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md)
 
 ### 3.3 E2E 스모크 테스트 (핵심 플로우)
 - [ ] 로그인 → 홈 진입
-- [ ] 상점 조회 → 구매
-- [ ] 인벤토리 조회 → 아이템 사용
-- [ ] 미션 조회 → 클레임
+- [x] 상점 조회 → 구매
+- [x] 인벤토리 조회 → 아이템 사용
+- [x] 미션 조회 → 클레임
 - [x] 금고 상태 조회
 
 ### 3.4 로컬/스테이징 트래픽 샘플
@@ -157,9 +183,9 @@ V2 배포 전/후 필수 검증 항목을 표준화한다.
 ### 3.7 우선순위 구현 체크리스트
 - [ ] High: 인증(Auth)
 - [x] High: 금고(Vault) 읽기/쓰기
-- [ ] High: 결제/구매(Shop Purchase)
+- [x] High: 결제/구매(Shop Purchase)
 - [x] High: 게임 Play(roulette/dice/lottery)
-- [ ] High: 인벤토리 사용(쓰기)
+- [x] High: 인벤토리 사용(쓰기)
 - [ ] Medium: 상태조회(read-only)
 - [ ] Medium: 팀배틀
 - [ ] Medium: 설문
@@ -187,8 +213,13 @@ V2 배포 전/후 필수 검증 항목을 표준화한다.
 
 ---
 
-버전: v1.25 (2026-01-24, GitHub Copilot): 게임 원장 분리 오작동 케이스 검증 완료
+버전: v1.30 (2026-01-24, GitHub Copilot): 주사위 패배 골든아워 배수 적용 검증 추가
 ## 5. 변경 이력
+- v1.30 (2026-01-24, GitHub Copilot): 주사위 패배 골든아워 배수 적용 검증 추가
+- v1.29 (2026-01-24, GitHub Copilot): Mission 목록/클레임/중복 차단 검증 기록 추가
+- v1.28 (2026-01-24, GitHub Copilot): Mission API/클레임 검증 불가 및 Admin 미션 관리 검증 기록 추가
+- v1.27 (2026-01-24, Antigravity): Phase 4 Admin & Ops 검증 완료 기록 추가
+- v1.26 (2026-01-24, GitHub Copilot): Shop/Inventory 실응답 및 KST 변환 검증 기록 추가
 - v1.25 (2026-01-24, GitHub Copilot): 게임 원장 분리 오작동 케이스 검증 완료
 - v1.24 (2026-01-24, GitHub Copilot): 게임 원장 분리 오작동 케이스 항목 추가
 - v1.23 (2026-01-24, GitHub Copilot): Vault 어드민 강제조정/회차 기준 검증 추가

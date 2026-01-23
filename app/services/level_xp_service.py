@@ -103,6 +103,11 @@ class LevelXPService:
         if delta <= 0:
             return {"added_xp": 0, "new_rewards": []}
 
+        MAX_SAFE_DELTA = 100_000
+        if delta > MAX_SAFE_DELTA:
+             # Safety cap to prevent unintentional infinite level usage or exploit
+             delta = MAX_SAFE_DELTA
+
         progress = self._get_or_create_progress(db, user_id)
         self._log_event(db, user_id=user_id, source=source, delta=delta, meta=meta)
 
