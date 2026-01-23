@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from sqlalchemy.orm import Session
 
+from app.models.user import User
 from app.v2.models.user import V2User
 
 
@@ -26,3 +27,26 @@ class V2UserService:
         db.add(user)
         db.flush()
         return user
+
+    @staticmethod
+    def ensure_legacy_user_id(db: Session, v2_user_id: int) -> int:
+        v2_user = db.get(V2User, v2_user_id)
+        if v2_user is None:
+            raise ValueError("v2 user not found")
+        cc_id = (v2_user.cc_id or "").strip()
+        if not cc_id:
+            raise ValueError("v2 user missing cc_id")
+
+        legacy_user = db.query(User).filter(User.external_id == cc_id).first()
+        if legacy_user is None:
+            legacy_user = User(
+                external_id=cc_id,
+                nickname=v2_user.nickname or "V2 User",
+                level=1,
+            )
+            db.add(legacy_user)
+            db.flush()
+        legacy_user.vault_locked_balance = int(v2_user.vault_locked_balance or 0)
+        db.add(legacy_user)
+        db.flush()
+        return int(legacy_user.id)

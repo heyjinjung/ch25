@@ -8,6 +8,8 @@ from app.v2.services.segment_service import V2SegmentService
 from app.v2.services.admin_message_service import V2AdminMessageService
 from app.v2.services.v2_roulette_game_service import V2RouletteGameService
 from app.v2.services.v2_dice_game_service import V2DiceGameService
+from app.v2.services.survey_service import V2SurveyService
+from app.v2.services.survey_reward_service import V2SurveyRewardService
 
 __all__ = [
 	"V2VaultService",
@@ -19,4 +21,6 @@ __all__ = [
 	"V2AdminMessageService",
 	"V2RouletteGameService",
 	"V2DiceGameService",
+	"V2SurveyService",
+	"V2SurveyRewardService",
 ]

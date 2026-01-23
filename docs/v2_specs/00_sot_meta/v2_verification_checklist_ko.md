@@ -1,5 +1,5 @@
 문서 타입: 가이드
-버전: v1.0
+버전: v1.1
 작성일: 2026-01-23
 작성자: GitHub Copilot
 대상: V2 배포/검증 담당자
@@ -43,5 +43,28 @@ V2 배포 전/후 필수 검증 항목을 표준화한다.
 - [ ] 롤백 커밋/이미지 태그 기록
 - [ ] 롤백 실행 체크리스트 작성
 
-## 4. 변경 이력
+### 3.6 우선순위 구현 체크리스트
+- [ ] High: 인증(Auth)
+- [ ] High: 금고(Vault) 읽기/쓰기
+- [ ] High: 결제/구매(Shop Purchase)
+- [ ] High: 게임 Play(roulette/dice/lottery)
+- [ ] High: 인벤토리 사용(쓰기)
+- [ ] Medium: 상태조회(read-only)
+- [ ] Medium: 팀배틀
+- [ ] Medium: 설문
+- [ ] Low: 어드민 전용/저트래픽 경로
+
+## 4. 관련 파일 앵커
+- [docs/v2_specs/00_sot_meta/v2_v1_dependency_inventory_ko.md](docs/v2_specs/00_sot_meta/v2_v1_dependency_inventory_ko.md)
+- [docs/v2_specs/00_sot_meta/v2_verification_log_template_ko.md](docs/v2_specs/00_sot_meta/v2_verification_log_template_ko.md)
+- [app/v2/api/auth_routes.py](app/v2/api/auth_routes.py)
+- [app/v2/api/user_routes.py](app/v2/api/user_routes.py)
+- [app/v2/api/vault_routes.py](app/v2/api/vault_routes.py)
+- [app/v2/api/routes.py](app/v2/api/routes.py)
+- [app/v2/api/deps.py](app/v2/api/deps.py)
+- [app/v2/services/vault_service.py](app/v2/services/vault_service.py)
+- [app/v2/services/shop_service.py](app/v2/services/shop_service.py)
+
+## 5. 변경 이력
+- v1.1 (2026-01-23, GitHub Copilot): 우선순위 체크리스트 및 파일 앵커 추가
 - v1.0 (2026-01-23, GitHub Copilot): 검증 체크리스트 문서 초안 작성
