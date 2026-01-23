@@ -13,8 +13,7 @@ from sqlalchemy.orm import Session, joinedload
 from app.api.deps import get_db
 from app.models.user import User
 from app.schemas.cc_deposit import CCDepositCreate, CCDepositEntry, CCDepositListResponse, CCDepositUpdate
-from app.v2.services.admin_cc_deposit_service import V2AdminCCDepositService
-from app.services.admin_user_identity_service import build_admin_user_summary
+from app.v2.services import V2AdminAuditService, V2AdminCCDepositService, V2AdminUserService
 
 router = APIRouter(prefix="/admin/api/external-ranking", tags=["Admin (CC Deposit)"])
 
@@ -31,7 +30,7 @@ def list_cc_deposit(db: Session = Depends(get_db)) -> CCDepositListResponse:
         if user_ids
         else []
     )
-    user_summary_by_id = {u.id: build_admin_user_summary(u) for u in users}
+    user_summary_by_id = {u.id: V2AdminUserService.build_summary(u) for u in users}
     items = [
         CCDepositEntry(
             id=row.id,
@@ -73,7 +72,7 @@ def upsert_cc_deposit_batch(
         if user_ids
         else []
     )
-    user_summary_by_id = {u.id: build_admin_user_summary(u) for u in users}
+    user_summary_by_id = {u.id: V2AdminUserService.build_summary(u) for u in users}
     items = [
         CCDepositEntry(
             id=row.id,
@@ -113,7 +112,7 @@ def update_cc_deposit(
         .filter(User.id == row.user_id)
         .first()
     )
-    summary = build_admin_user_summary(user) if user else None
+    summary = V2AdminUserService.build_summary(user) if user else None
     external_id = summary.external_id if summary else None
     telegram_username = summary.tg_username if summary else None
     return CCDepositEntry(
@@ -137,7 +136,7 @@ def update_cc_deposit_by_identifier(
     db: Session = Depends(get_db),
 ) -> CCDepositEntry:
     # Accept external_id / telegram_username / nickname in a single string.
-    resolved_user_id = V2AdminCCDepositService._resolve_user_id(db, None, identifier, identifier)
+    resolved_user_id = V2AdminUserService.resolve_user_id(db, identifier)
     row = V2AdminCCDepositService.update(db, resolved_user_id, payload)
 
     user = (
@@ -171,6 +170,6 @@ def delete_cc_deposit(user_id: int, db: Session = Depends(get_db)) -> dict:
 
 @router.delete("/by-identifier/{identifier}")
 def delete_cc_deposit_by_identifier(identifier: str, db: Session = Depends(get_db)) -> dict:
-    resolved_user_id = V2AdminCCDepositService._resolve_user_id(db, None, identifier, identifier)
+    resolved_user_id = V2AdminUserService.resolve_user_id(db, identifier)
     V2AdminCCDepositService.delete(db, resolved_user_id)
     return {"ok": True}

@@ -153,7 +153,7 @@ def create_admin_user(
 ):
     admin_id, admin_role = admin_info
 
-    user = AdminUserService.create_user(db, payload)
+    user = V2AdminUserService.create_user(db, payload)
 
     vault_balance = int(user.vault_available_balance or 0) + int(user.vault_locked_balance or 0)
     total_charge = int(getattr(user, "total_charge_amount", 0) or 0)

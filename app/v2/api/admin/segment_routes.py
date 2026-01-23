@@ -8,8 +8,7 @@ from app.v2.schemas.v2_admin_segment_rule import (
     AdminSegmentRuleCreateRequest,
     AdminSegmentRuleUpdateRequest,
 )
-from app.services.admin_segment_rule_service import AdminSegmentRuleService
-from app.services.user_segment_service import UserSegmentService
+from app.v2.services import V2SegmentService
 
 router = APIRouter()
 
@@ -19,9 +18,7 @@ def run_segment_batch(
     db: Session = Depends(get_db),
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
-    from app.services.user_segment_service import UserSegmentService
-
-    return {"status": "ok", "message": "Batch started"}
+    return V2SegmentService.segment_all_users(db)
 
 
 @router.get("/segments/stats")
@@ -29,7 +26,7 @@ def get_segment_stats(
     db: Session = Depends(get_db),
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
-    stats = UserSegmentService.get_overall_stats(db)
+    stats = V2SegmentService.get_overall_stats(db)
 
     segment_data = stats.get("segments", {})
 
@@ -83,7 +80,7 @@ def list_segment_rules(
     db: Session = Depends(get_db),
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
-    rules = AdminSegmentRuleService.list_rules(db)
+    rules = V2SegmentService.list_rules(db)
 
     result = []
     for r in rules:
@@ -128,7 +125,7 @@ def create_segment_rule_endpoint(
         enabled=True,
     )
 
-    rule = AdminSegmentRuleService.create_rule(db, payload=rule_req)
+    rule = V2SegmentService.create_rule(db, payload=rule_req)
     return {"id": rule.id, "message": "created"}
 
 
@@ -150,7 +147,7 @@ def update_segment_rule_endpoint(
         update_data["enabled"] = payload["status"] == "Active"
 
     update_req = AdminSegmentRuleUpdateRequest(**update_data)
-    rule = AdminSegmentRuleService.update_rule(db, rule_id=rule_id, payload=update_req)
+    rule = V2SegmentService.update_rule(db, rule_id=rule_id, payload=update_req)
     return {"id": rule.id, "message": "updated"}
 
 
@@ -160,5 +157,5 @@ def delete_segment_rule_endpoint(
     db: Session = Depends(get_db),
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
-    AdminSegmentRuleService.delete_rule(db, rule_id=rule_id)
+    V2SegmentService.delete_rule(db, rule_id=rule_id)
     return {"message": "deleted"}
