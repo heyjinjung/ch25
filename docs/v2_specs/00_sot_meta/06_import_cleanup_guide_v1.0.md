@@ -1,7 +1,7 @@
 # V2 Import Cleanup Guide
 
 문서 타입: 가이드
-버전: v1.1
+버전: v1.2
 작성일: 2026-01-23
 작성자: GitHub Copilot
 대상 독자: V2 마이그레이션 작업자, V2 검증 담당자
@@ -52,6 +52,7 @@ V2 코드에서 V1 서비스/라우트 import를 제거하는 절차와 기록 �
 - [ ] app/v2/** 에서 app.services.* import 없음
 - [ ] app/v2/** 에서 app.api.routes.* import 없음
 - [ ] v2-only 기준을 만족하는 서비스/라우트만 완료 처리
+- [x] Vault v1 import 제거 확인 — 검증: pytest -q tests/v2_tests/phase1_env/test_v2_architecture_sot.py (실행: 2026-01-23, Exit Code: 0)
 - [x] Game(roulette/dice/lottery) v1 import 제거 확인 — 검증: pytest -q tests/v2_tests/phase1_env/test_v2_architecture_sot.py (실행: 2026-01-23, Exit Code: 0)
 - [x] Mission/Attendance v1 import 제거 확인 — 검증: pytest -q tests/v2_tests/phase2_core/test_v2_mission_service.py && pytest -q tests/v2_tests/phase1_env/test_v2_architecture_sot.py (실행: 2026-01-23, Exit Code: 0)
 
@@ -71,16 +72,19 @@ grep -R "from app.api.routes" app/v2
 - V2 auth/user 경로가 단독으로 동작하는지 확인
 - 현재 텔레그램 인증 이슈로 이후 진행예정 
 
-### 5.2 Vault
-- V1 VaultService import 제거
-- V2VaultService/Vault2Service 단독 사용 확인
+### 5.2 Vault ✅
+- V1 VaultService import 제거 완료
+- V2VaultService 단독 사용 및 Admin 관련 로직 이관 완료
+- 검증: pytest -q tests/v2_tests/phase1_env/test_v2_architecture_sot.py (통과 확인)
 
-### 5.3 Shop
-- V1 UiConfigService/IdempotencyService import 제거
+### 5.3 Shop ✅
+- V1 UiConfigService/IdempotencyService import 제거 확인
+- 검증 실행: `pytest -q tests/v2_tests/phase2_core/test_shop_inventory_logic.py` & `pytest -q tests/v2_tests/phase1_env/test_v2_architecture_sot.py` — 실행(2026-01-23) 통과 (Exit Code: 0)
 - v2_shop_products/v2_shop_order 경유 확인
 
-### 5.4 Inventory
-- V1 모델(UserGameWallet/UserGameWalletLedger) 의존 제거
+### 5.4 Inventory ✅
+- V1 모델(UserGameWallet/UserGameWalletLedger) 의존 제거 확인
+- 검증 실행: `pytest -q tests/v2_tests/phase2_core/test_shop_inventory_logic.py` & `pytest -q tests/v2_tests/phase1_env/test_v2_architecture_sot.py` — 실행(2026-01-23) 통과 (Exit Code: 0)
 - V2 전용 모델/로그 경유 확인
 
 ### 5.5 Mission/Attendance ✅
@@ -100,9 +104,11 @@ grep -R "from app.api.routes" app/v2
 ### 5.8 Admin []
 - 어드민 라우트에서 V1 서비스 import 제거
 - V2Admin*Service 단독 사용 확인
-   - 상태: [app/v2/api/admin/economy_routes.py](app/v2/api/admin/economy_routes.py#L454-L456) 등에서는 `app.services.*` 경로를 그대로 사용 중이며, V2Admin*Service 업그레이드는 완료되지 않음 (economy/segment/user/vault/level routes 참조).
+   - 상태: [app/v2/api/admin/vault_routes.py](app/v2/api/admin/vault_routes.py) 및 [app/v2/api/admin_cc_deposit.py](app/v2/api/admin_cc_deposit.py)의 V2 이관 완료.
+   - [app/v2/api/admin/economy_routes.py](app/v2/api/admin/economy_routes.py#L454-L456) 등에서는 `app.services.*` 경로를 그대로 사용 중이나, 미션/리워드 병렬 작업 진행을 위해 이 영역은 최후순위로 미루고 작업 진행 예정.
 
 ## 10. 변경 이력
+- v1.2 (2026-01-23, GitHub Copilot): Shop/Inventory V1 import 제거 검증 실행 및 통과 기록 추가
 - v1.1 (2026-01-23, GitHub Copilot): Mission/Attendance 및 Game 영역 V1 import 제거 검증 실행 및 통과 기록 추가
 - v1.1 (2026-01-23, GitHub Copilot): 영역별 카테고리 앵커 및 체크 포인트 추가
 - v1.0 (2026-01-23, GitHub Copilot): 최초 작성

@@ -4,8 +4,7 @@ from typing import Any, List, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import select, and_
 from fastapi import HTTPException
-from app.models.game_wallet import UserGameWallet, GameTokenType
-from app.models.game_wallet_ledger import UserGameWalletLedger
+from app.v2.models import UserGameWallet, GameTokenType, UserGameWalletLedger
 from app.models.inventory import UserInventoryItem, UserInventoryLedger
 from app.core.exceptions import NotEnoughTokensError
 

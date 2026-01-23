@@ -1,5 +1,5 @@
 문서 타입: 가이드
-버전: v1.16
+버전: v1.17
 작성일: 2026-01-23
 작성자: GitHub Copilot
 대상: V2 배포/검증 담당자
@@ -35,13 +35,15 @@ V2 배포 전/후 필수 검증 항목을 표준화한다.
 - [x] 통합 테스트 추가
 - [x] 테스트 전부 통과 기록 (tests/v2_tests/phase2_core/test_vault_withdrawal_logic.py, tests/v2_tests/phase2_core/test_vault_limit_suspension.py, tests/v2_tests/phase2_core/test_vault2_service.py)
 	- 커맨드: pytest -q tests/v2_tests/phase2_core/test_vault_withdrawal_logic.py tests/v2_tests/phase2_core/test_vault_limit_suspension.py tests/v2_tests/phase2_core/test_vault2_service.py
-- [ ] v2-only 기준 충족 (V1 VaultService import 제거 + V2VaultService/Vault2Service 사용 확인)
+- [x] v2-only 기준 충족 (V1 VaultService import 제거 + V2VaultService 사용 확인)
+	- 검증 실행: Antigravity 실행(2026-01-23) — 통과 (Exit Code: 0)
 
 #### 3.2.3 Shop
 - [x] 단위 테스트 추가
 - [x] 통합 테스트 추가
 - [x] 테스트 전부 통과 기록 (tests/v2_tests/phase2_core/test_shop_inventory_logic.py)
-- [ ] v2-only 기준 충족 (v2_shop_products + v2_shop_order + V2ShopService + V1 UiConfigService/IdempotencyService import 제거)
+- [x] v2-only 기준 충족 (v2_shop_products + v2_shop_order + V2ShopService + V1 UiConfigService/IdempotencyService import 제거)
+	- 검증 실행: `pytest -q tests/v2_tests/phase2_core/test_shop_inventory_logic.py` & `pytest -q tests/v2_tests/phase1_env/test_v2_architecture_sot.py` — 실행(2026-01-23) 통과 (Exit Code: 0)
 
 #### 3.2.4 Game (roulette/dice/lottery)
 - [x] 단위 테스트 추가
@@ -55,7 +57,8 @@ V2 배포 전/후 필수 검증 항목을 표준화한다.
 - [x] 단위 테스트 추가
 - [x] 통합 테스트 추가
 - [x] 테스트 전부 통과 기록 (tests/v2_tests/phase2_core/test_shop_inventory_logic.py)
-- [ ] v2-only 기준 충족 (v2_exchange_log + V2InventoryService + V1 모델 의존 제거)
+- [x] v2-only 기준 충족 (v2_exchange_log + V2InventoryService + V1 모델 의존 제거)
+	- 검증 실행: `pytest -q tests/v2_tests/phase2_core/test_shop_inventory_logic.py` & `pytest -q tests/v2_tests/phase1_env/test_v2_architecture_sot.py` — 실행(2026-01-23) 통과 (Exit Code: 0)
 
 #### 3.2.6 Mission/Attendance
 - [x] 단위 테스트 추가
@@ -93,7 +96,7 @@ V2 배포 전/후 필수 검증 항목을 표준화한다.
 - [ ] 상점 조회 → 구매
 - [ ] 인벤토리 조회 → 아이템 사용
 - [ ] 미션 조회 → 클레임
-- [ ] 금고 상태 조회
+- [x] 금고 상태 조회
 
 ### 3.4 로컬/스테이징 트래픽 샘플
 - [ ] 핵심 API 요청 50~100건 샘플 수집
@@ -112,7 +115,7 @@ V2 배포 전/후 필수 검증 항목을 표준화한다.
 
 ### 3.7 우선순위 구현 체크리스트
 - [ ] High: 인증(Auth)
-- [ ] High: 금고(Vault) 읽기/쓰기
+- [x] High: 금고(Vault) 읽기/쓰기
 - [ ] High: 결제/구매(Shop Purchase)
 - [ ] High: 게임 Play(roulette/dice/lottery)
 - [ ] High: 인벤토리 사용(쓰기)
@@ -141,6 +144,8 @@ V2 배포 전/후 필수 검증 항목을 표준화한다.
 - [app/models/user.py](app/models/user.py)
 
 ## 5. 변경 이력
+- v1.17 (2026-01-23, Antigravity): Vault 영역 v2-only 기준 충족 및 Admin 관련 서비스 이관 결과 반영
+- v1.17 (2026-01-23, GitHub Copilot): Shop/Inventory v2-only 검증 실행 및 통과 기록 추가 (pytest -q tests/v2_tests/phase2_core/test_shop_inventory_logic.py, pytest -q tests/v2_tests/phase1_env/test_v2_architecture_sot.py, Exit Code: 0)
 - v1.16 (2026-01-23, GitHub Copilot): Mission/Attendance·Game 영역 v2-only 검증 실행 및 통과 기록 추가 (pytest -q tests/v2_tests/phase1_env/test_v2_architecture_sot.py, Exit Code: 0)
 - v1.15 (2026-01-23, GitHub Copilot): Game 영역 v2-only import 검증 테스트 기록 추가
 - v1.14 (2026-01-23, GitHub Copilot): Mission/Attendance·Team Battle v2-only import 검증 테스트 기록 추가
