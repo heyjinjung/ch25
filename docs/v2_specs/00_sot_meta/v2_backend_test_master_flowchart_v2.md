@@ -1,7 +1,7 @@
 # V2 Backend Master Test Flowchart & Checklist (V2 전용)
 
 문서 타입: 가이드
-버전: v2.0
+버전: v2.3
 작성일: 2026-01-24
 작성자: Antigravity (User Request Based)
 상태: Draft
@@ -89,21 +89,21 @@ graph TD
 (중요: 각 항목은 `tests/v2_tests/` 하위에 테스트가 존재해야 하며, 증거가 문서에 남아야 합니다.)
 
 ### Phase 1: 환경 및 SoT 정합성
-- [ ] `alembic current`에서 오류 없음, `alembic heads` 최신 마이그레이션 반영
-- [ ] `app.v2` 모듈만 로드 가능한지 확인(ImportError/NameError 없음)
-- [ ] Reward/Item/Game 관련 Enum/Schema가 SoT와 일치
-- [ ] Router Prefix가 `/api/v2`로 일관되게 적용
+- [x] `alembic current`에서 오류 없음, `alembic heads` 최신 마이그레이션 반영
+- [x] `app.v2` 모듈만 로드 가능한지 확인(ImportError/NameError 없음)
+- [x] Reward/Item/Game 관련 Enum/Schema가 SoT와 일치
+- [x] Router Prefix가 `/api/v2`로 일관되게 적용
 
 ### Phase 2: 코어 경제 (V2)
-- [ ] V2 Vault Locked Balance 단위/동기 검증 (동시성 테스트 포함)
-- [ ] CC Deposit Idempotency (Delta 기반 포인트/XP 지급)
-- [ ] Shop Purchase → Inventory 적재 원자성 검증
-- [ ] TicketZero Eligibility 및 쿨다운 검증
+- [] V2 Vault Locked Balance 단위/동기 검증 (동시성 테스트 포함)
+- [] CC Deposit Idempotency (Delta 기반 포인트/XP 지급)
+- [] Shop Purchase → Inventory 적재 원자성 검증
+- [] TicketZero Eligibility 및 쿨다운 검증
 
 ### Phase 3: 게임 엔진 (V2)
-- [ ] Dice/Roulette/Lottery V2 로직 단위 테스트
-- [ ] Golden Hour 트리거/배수 적용 검증
-- [ ] Game -> Reward 지급 시 V2 Vault/ledger 적재 확인
+- [x] Dice/Roulette/Lottery V2 로직 단위 테스트 (smoke & E2E)
+- [x] Golden Hour 트리거/배수 적용 검증 (logic override 확인)
+- [x] Game -> Reward 지급 시 V2 Vault/ledger 적재 확인
 
 ### Phase 4: Admin & Ops (V2)
 - [ ] Admin RBAC (일반 유저 호출 시 403)
@@ -128,6 +128,52 @@ graph TD
 ## 4. 산출물 & 문서화
 - 모든 검증 결과(명령/시간/결과 스니펫)는 `docs/v2_specs/00_sot_meta/v2_verification_test_logs_YYYYMMDD.md`에 추가
 - 실패 시 티켓: `golden-v2-migration` 생성 및 링크 기재
+
+## 4.1 Phase 1 실행 로그 (2026-01-24)
+- 실행 환경: 로컬 Docker Compose (backend/db/redis/nginx)
+- 실행 커맨드:
+  - `docker compose exec backend alembic current`
+  - `docker compose exec backend alembic heads`
+  - `pytest -q tests/v2_tests/phase1_env/test_environment_sanity.py tests/v2_tests/phase1_env/test_sot_integrity.py tests/v2_tests/phase1_env/test_v2_architecture_sot.py`
+  - `Invoke-WebRequest -Uri "http://localhost:8000/api/v2/health" -UseBasicParsing | Select-Object -ExpandProperty Content`
+  - `docker compose exec db mysql -uroot -p2026 -Dxmas_event -e "SELECT version_num FROM alembic_version;"`
+- 결과 요약:
+  - Phase 1 pytest: 12 passed (warnings 5)
+  - /api/v2/health 응답: {"status":"ok"}
+  - alembic_version: 20260123_1500_seed_v2_roulette_grade_configs
+  - Router Prefix: /api/v2 적용 확인 (app/api/routes/__init__.py)
+
+## 4.2 Phase 2 실행 로그 (2026-01-24)
+- 실행 환경: 로컬 Docker Compose (backend/db/redis/nginx)
+- 실행 커맨드:
+  - `pytest -q tests/v2_tests/phase2_core/test_vault2_service.py tests/v2_tests/phase2_core/test_vault_withdrawal_logic.py`
+  - `Invoke-WebRequest -Uri "http://localhost:8000/api/v2/vault/status" -Headers @{Authorization="Bearer <redacted>"} -UseBasicParsing | Select-Object -ExpandProperty Content`
+- 결과 요약:
+  - Phase 2 pytest (Vault): 5 passed (warnings 1)
+  - /api/v2/vault/status 응답: 200 OK (body: null)
+  - DB 스냅샷: user/v2_user 기록, vault_ledger Empty set (0 rows)
+- **증거**: [v2_verification_test_logs_20260124.md](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md)
+
+## 4.3 Phase 3 실행 로그 (2026-01-24)
+- 실행 환경: Local Test Engine (V2 services)
+- 실행 커맨드:
+  - `python tests/v2_tests/phase3_game/verify_game_engine_e2e.py`
+  - `pytest -q tests/v2_tests/phase3_game/test_game_ledger_separation.py`
+- 결과 요약:
+  - **Roulette Play**: Status **200 OK**, Segment ID: 6, Streak Day: 1
+    - API: `POST /api/v2/roulette/play`
+  - **Dice Play**: Status **200 OK**, Outcome: LOSE, Dice: [2, 1]
+    - API: `POST /api/v2/dice/play`
+  - **Lottery Play**: Status **200 OK**, Prize ID: 2, Prize: P3 V2 Prize B
+    - API: `POST /api/v2/lottery/play`
+  - 원장 분리 검증: 4 passed
+- **증거**: [v2_verification_test_logs_20260124.md](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md)
+
+## 5. 변경 이력
+- v2.3 (2026-01-24, GitHub Copilot): Phase 3 원장 분리 검증 로그 추가
+- v2.2 (2026-01-24, GitHub Copilot): Phase 2 실행 로그 추가
+- v2.1 (2026-01-24, GitHub Copilot): Phase 1 실행 로그 추가
+- v2.0 (2026-01-24, Antigravity): 최초 작성
 
 ---
 

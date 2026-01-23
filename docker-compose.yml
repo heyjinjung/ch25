@@ -78,6 +78,7 @@ services:
       - ./app:/app/app
       - ./alembic:/app/alembic
       - ./alembic.ini:/app/alembic.ini
+      - ./docs:/app/docs
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8000/" ]
 

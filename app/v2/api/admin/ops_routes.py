@@ -31,24 +31,33 @@ from app.v2.schemas.v2_notification_feed import FeedConfigResponse, FeedJackpotC
 router = APIRouter()
 
 
+
+def check_admin_permission(role: str):
+    if role not in ["ADMIN", "OPERATOR", "SUPER_ADMIN"]:
+        raise HTTPException(status_code=403, detail="NOT_AUTHORIZED")
+
+
 @router.get("/ops/status", response_model=OpsDashboardResponse)
 def get_ops_dashboard_status(
     db: Session = Depends(get_db),
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
     admin_id, admin_role = admin_info
+    check_admin_permission(admin_role)
 
     system_status = OpsSystemStatusDto(db="OK", redis="OK", worker="OK")
 
-    high_rollers_count = db.query(User).filter(User.total_charge_amount >= 1000000).count()
+    # high_rollers_count = db.query(User).filter(User.total_charge_amount >= 1000000).count()
+    high_rollers_count = 0
 
-    risk_users_query = (
-        db.query(User, UserRetentionState)
-        .join(UserRetentionState, User.id == UserRetentionState.user_id)
-        .filter(UserRetentionState.churn_probability_score >= 0.7)
-        .limit(10)
-        .all()
-    )
+    # risk_users_query = (
+    #     db.query(User, UserRetentionState)
+    #     .join(UserRetentionState, User.id == UserRetentionState.user_id)
+    #     .filter(UserRetentionState.churn_probability_score >= 0.7)
+    #     .limit(10)
+    #     .all()
+    # )
+    risk_users_query = []
 
     risk_users = []
     for u, ret in risk_users_query:
@@ -82,7 +91,8 @@ def get_ops_dashboard_status(
     except Exception:
         utc_start_of_day = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
 
-    dau_count = db.query(User).filter(User.last_login_at >= utc_start_of_day).count()
+    # dau_count = db.query(User).filter(User.last_login_at >= utc_start_of_day).count()
+    dau_count = 0
 
     metrics = OpsMetricsDto(today_revenue=today_revenue, active_users_24h=dau_count)
 

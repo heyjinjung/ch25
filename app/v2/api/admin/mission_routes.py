@@ -12,6 +12,9 @@ from app.v2.services.v2_admin_mission_service import V2AdminMissionService
 from app.v2.services import V2AdminAuditService
 
 
+router = APIRouter()
+
+
 class AdminMissionDto(BaseModel):
     id: int
     category: str
