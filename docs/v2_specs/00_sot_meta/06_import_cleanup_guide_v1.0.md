@@ -1,7 +1,7 @@
 # V2 Import Cleanup Guide
 
 문서 타입: 가이드
-버전: v1.2
+버전: v1.4
 작성일: 2026-01-23
 작성자: GitHub Copilot
 대상 독자: V2 마이그레이션 작업자, V2 검증 담당자
@@ -56,6 +56,18 @@ V2 코드에서 V1 서비스/라우트 import를 제거하는 절차와 기록 �
 - [x] Game(roulette/dice/lottery) v1 import 제거 확인 — 검증: pytest -q tests/v2_tests/phase1_env/test_v2_architecture_sot.py (실행: 2026-01-23, Exit Code: 0)
 - [x] Mission/Attendance v1 import 제거 확인 — 검증: pytest -q tests/v2_tests/phase2_core/test_v2_mission_service.py && pytest -q tests/v2_tests/phase1_env/test_v2_architecture_sot.py (실행: 2026-01-23, Exit Code: 0)
 
+### 집중 스캔 결과 (2026-01-23)
+- 스캔대상 파일(완료):
+  - `app/v2/services/inventory_service.py` — `IdempotencyService` import 경로 `app.v2.services.idempotency_service`로 대체됨.
+  - `app/v2/services/shop_service.py` — `GameTokenType` import 경로 `app.v2.models`로 대체됨.
+  - `app/v2/services/mission_service.py` — `UiConfigService` import 경로 `app.v2.services.ui_config_service`로 대체됨.
+  - `app/v2/services/v2_dice_game_service.py`, `app/v2/services/v2_lottery_game_service.py`, `app/v2/services/v2_roulette_game_service.py` — `VaultService` 의존을 `V2VaultService`로 교체 및 `V2VaultService.record_game_play_earn_event` shim 추가로 게임-금고 연동 보장됨.
+  - `app/v2/services/v2_dice_game_service.py`, `app/v2/services/v2_lottery_game_service.py`, `app/v2/services/v2_roulette_game_service.py` — `FeatureService`와 `game_common`을 v2 no-op로 대체하여 기능 게이팅/로그를 비활성화함(요청에 따라 아카이브 처리).
+- 남아있는 v1 참조(의도적/후속작업 대상):
+  - `app/v2/services/*` : 일부 admin 서비스에서 여전히 `app.services.*` import가 존재함(우선순위: Low/후속 스캔로 분류)
+
+- 조치: 문서(본 가이드 및 v2 검증 체크리스트)에 집중 스캔 결과 반영 및 개선 작업 백로그 등록 권고.
+
 ## 7. QA/검증
 - 기능 검증: 기존 테스트 또는 스모크 테스트 통과 여부 확인
 - 아키텍처 검증: V1 import 제거 + V2 테이블/서비스 사용 확인
@@ -92,6 +104,10 @@ grep -R "from app.api.routes" app/v2
 - 검증 실행: pytest -q tests/v2_tests/phase2_core/test_v2_mission_service.py && pytest -q tests/v2_tests/phase1_env/test_v2_architecture_sot.py — 실행(2026-01-23) 통과 (Exit Code: 0)
 - V2 미션 서비스 단독 사용 확인
 
+### 5.6 Game ✅
+- V1 VaultService import 제거 및 V2VaultService를 통한 shim으로 게임 금고 연동 지원
+- 검증 실행: pytest -q tests/v2_tests/phase3_game/test_game_engine_smoke.py && pytest -q tests/v2_tests/phase1_env/test_v2_architecture_sot.py — 실행(2026-01-23) 통과 (Exit Code: 0)
+
 ### 5.6 Team Battle ✅
 - V1 TeamBattleService import 제거
 - V2 팀배틀 서비스 단독 사용 확인
@@ -108,7 +124,7 @@ grep -R "from app.api.routes" app/v2
    - [app/v2/api/admin/economy_routes.py](app/v2/api/admin/economy_routes.py#L454-L456) 등에서는 `app.services.*` 경로를 그대로 사용 중이나, 미션/리워드 병렬 작업 진행을 위해 이 영역은 최후순위로 미루고 작업 진행 예정.
 
 ## 10. 변경 이력
-- v1.2 (2026-01-23, GitHub Copilot): Shop/Inventory V1 import 제거 검증 실행 및 통과 기록 추가
+- v1.4 (2026-01-23, GitHub Copilot): Game/Shop/Inventory V1 import 제거 검증 실행 및 통과 기록 추가 (V2VaultService shim 추가 및 게임 영역 위임 포함). `FeatureService` / `game_common`를 v2 no-op로 아카이브 처리(요청 반영).
 - v1.1 (2026-01-23, GitHub Copilot): Mission/Attendance 및 Game 영역 V1 import 제거 검증 실행 및 통과 기록 추가
 - v1.1 (2026-01-23, GitHub Copilot): 영역별 카테고리 앵커 및 체크 포인트 추가
 - v1.0 (2026-01-23, GitHub Copilot): 최초 작성

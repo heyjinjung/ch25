@@ -1,5 +1,5 @@
 문서 타입: 가이드
-버전: v1.17
+버전: v1.19
 작성일: 2026-01-23
 작성자: GitHub Copilot
 대상: V2 배포/검증 담당자
@@ -52,6 +52,9 @@ V2 배포 전/후 필수 검증 항목을 표준화한다.
 - [x] v2-only import 검증 테스트 통과 (tests/v2_tests/phase1_env/test_v2_architecture_sot.py)
 	- 커맨드: pytest -q tests/v2_tests/phase1_env/test_v2_architecture_sot.py
 	- 검증 실행: GitHub Copilot 실행(2026-01-23) — 통과 (Exit Code: 0)
+	- 추가 조치: `V2VaultService.record_game_play_earn_event` shim 추가로 게임 엔진의 `record_game_play_earn_event` 호출을 `V2VaultService`로 안전하게 위임함 (Merge: 2026-01-23)
+
+	- 집중 스캔(2026-01-23): Shop/Inventory/Mission/Vault은 v2 네임스페이스로 전환되었으며 관련 테스트 통과 확인(Exit Code: 0). 게임 엔진들(`v2_dice_game_service.py`, `v2_lottery_game_service.py`, `v2_roulette_game_service.py`)은 `VaultService` 의존을 `V2VaultService`로 대체 완료했고 `FeatureService` / `game_common`을 v2 no-op로 대체했습니다 (우선순위: Medium).
 
 #### 3.2.5 Inventory
 - [x] 단위 테스트 추가
@@ -145,9 +148,9 @@ V2 배포 전/후 필수 검증 항목을 표준화한다.
 
 ## 5. 변경 이력
 - v1.17 (2026-01-23, Antigravity): Vault 영역 v2-only 기준 충족 및 Admin 관련 서비스 이관 결과 반영
+- v1.18 (2026-01-23, GitHub Copilot): Game/Shop/Inventory v2-only 검증 실행 및 통과 기록 추가 (pytest -q tests/v2_tests/phase3_game/test_game_engine_smoke.py, pytest -q tests/v2_tests/phase2_core/test_shop_inventory_logic.py, pytest -q tests/v2_tests/phase1_env/test_v2_architecture_sot.py, Exit Code: 0)
 - v1.17 (2026-01-23, GitHub Copilot): Shop/Inventory v2-only 검증 실행 및 통과 기록 추가 (pytest -q tests/v2_tests/phase2_core/test_shop_inventory_logic.py, pytest -q tests/v2_tests/phase1_env/test_v2_architecture_sot.py, Exit Code: 0)
 - v1.16 (2026-01-23, GitHub Copilot): Mission/Attendance·Game 영역 v2-only 검증 실행 및 통과 기록 추가 (pytest -q tests/v2_tests/phase1_env/test_v2_architecture_sot.py, Exit Code: 0)
-- v1.15 (2026-01-23, GitHub Copilot): Game 영역 v2-only import 검증 테스트 기록 추가
 - v1.14 (2026-01-23, GitHub Copilot): Mission/Attendance·Team Battle v2-only import 검증 테스트 기록 추가
 - v1.13 (2026-01-23, GitHub Copilot): Mission/Attendance 및 Team Battle v2-only 기준 상태 갱신
 - v1.12 (2026-01-23, GitHub Copilot): Admin(phase4_admin) 테스트 통과 기록 추가

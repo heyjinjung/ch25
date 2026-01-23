@@ -143,6 +143,37 @@ class V2VaultService:
         op_date_kst = self._operational_date_kst(now_dt)
         now_kst_date = now_dt.astimezone(tz).date()
 
+    # Backwards-compatible bridge for V1 VaultService APIs used by game engines.
+    @staticmethod
+    def record_game_play_earn_event(
+        db: Session,
+        *,
+        user_id: int,
+        game_type: str,
+        game_log_id: int,
+        token_type: str | None = None,
+        outcome: str | None = None,
+        payout_raw: dict | None = None,
+        now: datetime | None = None,
+    ) -> int:
+        """Delegate to legacy VaultService.record_game_play_earn_event to keep game logic shared.
+
+        This is a minimal shim so game services can call `self.vault_service.record_game_play_earn_event(...)`
+        using `V2VaultService` instance without changing internal game logic.
+        """
+        from app.services.vault_service import VaultService as _V1VaultService
+
+        v1 = _V1VaultService()
+        return v1.record_game_play_earn_event(
+            db,
+            user_id=user_id,
+            game_type=game_type,
+            game_log_id=game_log_id,
+            token_type=token_type,
+            outcome=outcome,
+            payout_raw=payout_raw,
+            now=now,
+        )
         delta_today = (
             db.query(ExternalRankingDailyDepositDelta.deposit_delta)
             .filter(

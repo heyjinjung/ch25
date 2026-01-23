@@ -19,12 +19,12 @@ from app.core.exceptions import LockAcquisitionError
 from app.models.feature import FeatureType
 from app.models.game_wallet import GameTokenType
 from app.schemas.lottery import LotteryPlayResponse, LotteryPrizeSchema, LotteryStatusResponse
-from app.services.feature_service import FeatureService
-from app.services.game_common import GamePlayContext, log_game_play
+from app.v2.services.feature_service import FeatureService
+from app.v2.services.game_common import GamePlayContext, log_game_play
 from app.v2.services.inventory_service import V2InventoryService
 from app.v2.services.mission_service import V2MissionService
 from app.v2.services.reward_service import V2RewardService
-from app.services.vault_service import VaultService
+from app.v2.services.vault_service import V2VaultService
 from app.v2.models.v2_lottery import V2LotteryLog, V2LotteryPrize
 from app.v2.services.game_config_service import V2GameConfigService
 
@@ -36,7 +36,7 @@ class V2LotteryGameService:
     def __init__(self) -> None:
         self.feature_service = FeatureService()
         self.reward_service = V2RewardService()
-        self.vault_service = VaultService()
+        self.vault_service = V2VaultService()
 
     @staticmethod
     def _operational_date_kst(now: datetime) -> date:
