@@ -36,7 +36,7 @@ import {
   TableRow,
 } from "../../../components/ui/table";
 import { Badge } from "../../../components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "../../../components/ui/tabs";
 import { Loader2, Save, RefreshCw, AlertTriangle } from "lucide-react";
 
 export default function RouletteConfigPage() {

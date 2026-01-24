@@ -2,7 +2,6 @@
 import axios from "axios";
 import { GameTokenType } from "../types/gameTokens";
 import { isDemoFallbackEnabled } from "../config/featureFlags";
-import { getFallbackLotteryStatus, playFallbackLottery } from "./fallbackData";
 import userApi from "./httpClient";
 import type { StreakInfo } from "../types/streak";
 
@@ -78,7 +77,6 @@ export const getLotteryStatus = async (): Promise<LotteryStatusResponse> => {
     if (axios.isAxiosError(error)) {
       if (isDemoFallbackEnabled) {
         console.warn("[lotteryApi] Falling back to demo data", error.message);
-        return getFallbackLotteryStatus();
       }
       throw error;
     }
@@ -109,7 +107,6 @@ export const playLottery = async (): Promise<LotteryPlayResponse> => {
     if (axios.isAxiosError(error)) {
       if (isDemoFallbackEnabled) {
         console.warn("[lotteryApi] Falling back to demo play", error.message);
-        return playFallbackLottery();
       }
       throw error;
     }

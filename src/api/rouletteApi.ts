@@ -2,7 +2,6 @@
 import axios from "axios";
 import { GameTokenType } from "../types/gameTokens";
 import { isDemoFallbackEnabled } from "../config/featureFlags";
-import { getFallbackRouletteStatus, playFallbackRoulette } from "./fallbackData";
 import userApi from "./httpClient";
 import type { StreakInfo } from "../types/streak";
 
@@ -104,7 +103,6 @@ export const getRouletteStatus = async (ticketType?: string): Promise<RouletteSt
     if (axios.isAxiosError(error)) {
       if (isDemoFallbackEnabled) {
         console.warn("[rouletteApi] Falling back to demo data", error.message);
-        return getFallbackRouletteStatus();
       }
       throw error;
     }
@@ -145,7 +143,7 @@ export const playRoulette = async (ticketType?: string): Promise<RoulettePlayRes
     if (axios.isAxiosError(error)) {
       if (isDemoFallbackEnabled) {
         console.warn("[rouletteApi] Falling back to demo play", error.message);
-        return playFallbackRoulette();
+      
       }
       throw error;
     }

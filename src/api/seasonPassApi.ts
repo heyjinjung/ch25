@@ -1,7 +1,6 @@
 // src/api/seasonPassApi.ts
 import axios from "axios";
 import userApi from "./httpClient";
-import { claimFallbackSeasonReward, getFallbackSeasonPassStatus } from "./fallbackData";
 import { isDemoFallbackEnabled } from "../config/featureFlags";
 
 export interface SeasonPassLevelDto {
@@ -41,14 +40,14 @@ const formatRewardLabel = (rewardType?: string, rewardAmount?: number, rewardLab
   const type = String(rewardType ?? "").toUpperCase();
   const amount = rewardAmount ?? null;
   if (rewardLabel) return rewardLabel;
-  if (!type) return "º¸»ó";
+  if (!type) return "ï¿½ï¿½ï¿½ï¿½";
 
   const formattedAmount = typeof amount === "number" && !Number.isNaN(amount) ? amount.toLocaleString() : null;
-  if (type === "POINT" || type === "CC_POINT") return `±Ý°í ${formattedAmount ?? ""}`.trim();
-  if (type === "GAME_XP" || type === "XP") return `½ÃÁð XP ${formattedAmount ?? ""}`.trim();
-  if (type === "DIAMOND") return `´ÙÀÌ¾Æ ${formattedAmount ?? ""}`.trim();
-  if (type.includes("TICKET")) return `Æ¼ÄÏ ${formattedAmount ?? ""}`.trim();
-  if (type.includes("GIFTICON")) return `±âÇÁÆ¼ÄÜ ${formattedAmount ?? ""}`.trim();
+  if (type === "POINT" || type === "CC_POINT") return `ï¿½Ý°ï¿½ ${formattedAmount ?? ""}`.trim();
+  if (type === "GAME_XP" || type === "XP") return `ï¿½ï¿½ï¿½ï¿½ XP ${formattedAmount ?? ""}`.trim();
+  if (type === "DIAMOND") return `ï¿½ï¿½ï¿½Ì¾ï¿½ ${formattedAmount ?? ""}`.trim();
+  if (type.includes("TICKET")) return `Æ¼ï¿½ï¿½ ${formattedAmount ?? ""}`.trim();
+  if (type.includes("GIFTICON")) return `ï¿½ï¿½ï¿½ï¿½Æ¼ï¿½ï¿½ ${formattedAmount ?? ""}`.trim();
   return `${type}${formattedAmount ? ` ${formattedAmount}` : ""}`.trim();
 };
 
@@ -108,7 +107,6 @@ export const getSeasonPassStatus = async (): Promise<SeasonPassStatusResponse> =
     if (axios.isAxiosError(error)) {
       if (isDemoFallbackEnabled) {
         console.warn("[seasonPassApi] Falling back to demo data", error.message);
-        return getFallbackSeasonPassStatus();
       }
       throw error;
     }
@@ -129,7 +127,7 @@ export const claimSeasonReward = async (level: number): Promise<ClaimSeasonRewar
     if (axios.isAxiosError(error)) {
       if (isDemoFallbackEnabled) {
         console.warn("[seasonPassApi] Falling back to demo claim", error.message);
-        return claimFallbackSeasonReward(level);
+        
       }
       throw error;
     }
