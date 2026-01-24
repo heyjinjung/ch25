@@ -1532,9 +1532,12 @@ export const getDiceConfig = async (): Promise<AdminDiceConfigDto> => {
     name: config.name,
     isActive: config.isActive ?? config.is_active ?? false,
     maxDailyPlays: config.maxDailyPlays ?? config.max_daily_plays ?? 0,
-    winProbability: config.winProbability ?? config.win_probability ?? 0,
-    drawProbability: config.drawProbability ?? config.draw_probability ?? 0,
-    loseProbability: config.loseProbability ?? config.lose_probability ?? 0,
+    winProbability:
+      (config.winProbability ?? config.win_probability ?? 0) * 100,
+    drawProbability:
+      (config.drawProbability ?? config.draw_probability ?? 0) * 100,
+    loseProbability:
+      (config.loseProbability ?? config.lose_probability ?? 0) * 100,
     winRewardType: config.winRewardType ?? config.win_reward_type ?? "NONE",
     winRewardAmount: config.winRewardAmount ?? config.win_reward_amount ?? 0,
     drawRewardType: config.drawRewardType ?? config.draw_reward_type ?? "NONE",
@@ -1559,11 +1562,11 @@ export const updateDiceConfig = async (
   if (data.maxDailyPlays !== undefined)
     payload.max_daily_plays = data.maxDailyPlays;
   if (data.winProbability !== undefined)
-    payload.win_probability = data.winProbability;
+    payload.win_probability = data.winProbability / 100;
   if (data.drawProbability !== undefined)
-    payload.draw_probability = data.drawProbability;
+    payload.draw_probability = data.drawProbability / 100;
   if (data.loseProbability !== undefined)
-    payload.lose_probability = data.loseProbability;
+    payload.lose_probability = data.loseProbability / 100;
   if (data.winRewardType !== undefined)
     payload.win_reward_type = data.winRewardType;
   if (data.winRewardAmount !== undefined)

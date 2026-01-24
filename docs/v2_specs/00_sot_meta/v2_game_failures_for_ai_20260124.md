@@ -175,6 +175,108 @@
 
 문서를 저장했습니다: `docs/v2_specs/00_sot_meta/v2_game_failures_for_ai_20260124.md` ✅
 
+### 업데이트 (2026-01-24)
+- User Frontend(HomePage/Gamedash)에서 v2 게임 상태/알림 요약 연동 완료.
+- **본 문서의 500 장애 이슈 범위에는 영향 없음** (백엔드 원인/대응은 동일).
+
+---
+
+## 9) 트러블슈팅 기록 (2026-01-24)
+
+### 9.1 주사위 상태 500 (GET /api/v2/dice/status)
+- **증상**: 500 Internal Server Error (ASGI Traceback)
+- **원인**: V2 라우터가 V2 게임 서비스에 **legacy_user_id**를 전달하여,
+  `V2InventoryService` 내부에서 `V2UserService.ensure_legacy_user_id()`가 `v2 user not found`로 실패.
+- **근거 로그**: `ValueError: v2 user not found` in `app/v2/services/user_service.py`
+- **해결**:
+  - V2 라우터에서 `user_id`(v2)를 그대로 전달하도록 수정
+  - 룰렛 등급 조회는 legacy user id로 변환하도록 `V2RouletteGameService` 내부 처리
+- **수정 파일**:
+  - app/v2/api/routes.py
+  - app/v2/services/v2_roulette_game_service.py
+- **검증**:
+  - `/api/v2/dice/status` 200 OK
+  - `/api/v2/roulette/status`, `/api/v2/lottery/status` 200 OK
+
+  ### 9.2 룰렛 페이지 useTheme 오류 (RoulettePage)
+  - **증상**: `useTheme must be used within ThemeProvider`
+  - **원인**: 루트에 `ThemeProvider` 미등록으로 `useTheme` 훅이 컨텍스트 미존재 상태에서 호출됨.
+  - **해결**: [src/main.tsx](src/main.tsx) 최상위에 `ThemeProvider` 추가.
+  - **검증**:
+    - 룰렛 페이지 진입 시 오류 없음
+    - 복권/주사위 페이지에서도 동일 오류 재발 없음
+
+  ### 9.3 팀배틀 페이지 slice 오류 (TeamBattlePage)
+  - **증상**: `n.slice is not a function` at `TeamBattlePage.tsx`
+  - **원인**: 리더보드 응답이 배열이 아닌 값일 때 `slice()` 호출
+  - **해결**:
+    - `entries`를 `Array.isArray`로 안전 변환
+    - v1 TeamBattle 디자인을 v2 페이지로 이식하고 v2 데이터 구조에 매핑
+  - **수정 파일**:
+    - src/v2/pages/game/TeamBattlePage.tsx
+  - **검증**:
+    - 팀배틀 페이지 진입 시 콘솔 오류 없음
+    - 리더보드/팀 상태 정상 렌더
+
+  ### 9.4 어드민 로그인 후 즉시 리다이렉트 (Admin Login Loop)
+  - **증상**: `/admin/login`에서 로그인 직후 1초 내 재로그인 화면으로 이동
+  - **원인**: v2 API 클라이언트가 어드민 경로를 `/v2/admin`으로만 판별하여
+    `/admin/*` 경로에서 **admin 토큰이 Authorization에 첨부되지 않음** → 401 응답 → 토큰 제거 및 `/admin/login` 강제 이동.
+  - **해결**: [src/v2/api/client.ts](src/v2/api/client.ts)에서 어드민 경로 판별을 `/admin` 기준으로 수정.
+  - **검증**:
+    - 로그인 후 `/admin/dashboard` 유지
+    - 어드민 API 호출 시 401 루프 재발 없음
+
+  ### 9.5 어드민 404 (segments/stats, segments/rules, game/levels)
+  - **증상**: 어드민 화면에서 세그먼트/레벨 관련 API가 404 응답
+  - **원인**: 프론트가 `/api/admin/*`(v1 경로)로 호출하여 v2 라우터(`/api/v2/admin/*`)와 불일치
+  - **해결**: [src/v2/api/adminApi.ts](src/v2/api/adminApi.ts)에서 세그먼트/레벨 엔드포인트를 `/api/v2/admin/*`로 정합화
+  - **검증**:
+    - `/api/v2/admin/segments/stats` 200 OK
+    - `/api/v2/admin/segments/rules` 200 OK
+    - `/api/v2/admin/game/levels` 200 OK
+
+  ### 9.6 어드민 유저목록 미표시 + Select.Item 에러
+  - **증상**: `/admin/users`에서 목록 미표시, 콘솔에 `Select.Item value prop` 에러 발생
+  - **원인**:
+    1) 유저관리 API가 `/api/admin/users`(v1 경로)로 호출됨
+    2) 상태 필터 `SelectItem`에 빈 문자열 value 사용
+  - **해결**:
+    - [src/v2/api/adminApi.ts](src/v2/api/adminApi.ts) 유저관리 엔드포인트를 `/api/v2/admin/users*`로 정합화
+    - [src/v2/admin/pages/users/UserListPage.tsx](src/v2/admin/pages/users/UserListPage.tsx)에서 상태 필터 옵션을 `ALL/ACTIVE/INACTIVE/SUSPENDED`로 수정하고 빈 값 제거
+  - **검증**:
+    - `/api/v2/admin/users?sortBy=last_active&sortOrder=desc&page=1&limit=20` 200 OK
+    - 콘솔 에러(`Select.Item value prop`) 제거
+
+  ### 9.7 룰렛 상태 400 (INVALID_CONFIG/FEATURE_NOT_ACTIVE)
+  - **증상**: `/api/v2/roulette/status?ticket_type=ROULETTE_TICKET` 400 Bad Request
+  - **원인**: v2 룰렛 설정 누락/유효성 실패 또는 당일 Feature 비활성으로 400 반환
+  - **해결**: [src/v2/api/v1CompatAdapter.ts](src/v2/api/v1CompatAdapter.ts)에서 400(설정/활성화 오류)도 v1 상태로 fallback 처리
+  - **검증**:
+    - 룰렛 페이지 진입 시 상태 로드됨
+    - 콘솔의 `[V2Adapter] Failed to fetch roulette status` 오류 재발 없음
+
+  ### 9.8 어드민 게임 보상 SoT 불일치
+  - **증상**: 룰렛/주사위/복권 보상 타입이 변경되어 어드민 화면에 잘못 표시
+  - **원인**: [src/v2/constants/rewardItems.ts](src/v2/constants/rewardItems.ts)에서 SoT 외 값(`GOLDEN_TICKET`, `XP`) 사용 및 SoT 항목 누락
+  - **해결**: v2 SoT([docs/v2_specs/01_core/v2_reward_type_standard_sot_ko.md](docs/v2_specs/01_core/v2_reward_type_standard_sot_ko.md), [docs/v2_specs/01_core/v2_ticket_enum_sot_ko.md](docs/v2_specs/01_core/v2_ticket_enum_sot_ko.md)) 기준으로 보상 목록 전면 정합화
+  - **검증**:
+    - 룰렛/주사위/복권/미션/레벨 보상 셀렉트가 SoT 항목으로만 표시
+
+  ### 9.8 어드민 금고/입금/티켓·토큰/상점/미션/게임설정 라우팅 오류
+  - **증상**:
+    - `/api/admin/vault/users` 422 (path 파싱 오류)
+    - `/api/admin/economy/deposits` 404
+    - `/api/admin/withdrawals` 404
+    - 티켓/토큰/상점/미션/게임설정 페이지 다수 API 실패
+  - **원인**: 프론트 어드민 API가 v1 경로(`/api/admin/*`)로 호출되어 v2 라우터(`/api/v2/admin/*`)와 불일치
+  - **해결**: [src/v2/api/adminApi.ts](src/v2/api/adminApi.ts)에서 금고/입금/티켓·토큰/상점/미션/게임설정/마케팅 설문/출금 관련 엔드포인트를 `/api/v2/admin/*`로 정합화
+  - **검증**:
+    - `/api/v2/admin/vault/users` 200 OK
+    - `/api/v2/admin/economy/deposits` 200 OK
+    - `/api/v2/admin/withdrawals` 200 OK
+    - `/api/v2/admin/inventory/*`, `/api/v2/admin/shop/*`, `/api/v2/admin/game/*` 200 OK
+
 ### 추가: Raw Console / Stack Snippets (Admin Mission)
 - Accessibility warning (console):
   - index.mjs:309 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.

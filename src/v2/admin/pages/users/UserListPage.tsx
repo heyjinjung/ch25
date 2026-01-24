@@ -171,10 +171,10 @@ export default function UserListPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white mb-1">
-            ?�원 관�?
+            회원 관리
           </h1>
           <p className="text-sm text-zinc-400">
-            �?{total.toLocaleString()}명의 ?�원??관리하�??�세 ?�보�? 조회?�니??
+            총 {total.toLocaleString()}명의 회원을 관리하고 상세 정보를 조회합니다.
           </p>
         </div>
         <Button
@@ -182,7 +182,7 @@ export default function UserListPage() {
           onClick={() => setIsCreateOpen(true)}
         >
           <UserPlus className="w-4 h-4 mr-2" />
-          ?�원 ?�록
+          회원 등록
         </Button>
       </div>
 
@@ -191,7 +191,7 @@ export default function UserListPage() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-zinc-500" />
           <Input
-            placeholder="?�네?? CC_id, telegram_id, telegram_username 검??.."
+                        placeholder="닉네임, CC ID, Telegram ID, Telegram Username 검색..."
             className="pl-9 bg-zinc-900 border-zinc-800 text-zinc-200 focus:ring-[#D2FD9C]"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -206,7 +206,7 @@ export default function UserListPage() {
               className="border-zinc-700 text-zinc-300 hover:text-white hover:bg-zinc-800 gap-2"
             >
               <Filter className="h-4 w-4" />
-              ?�터
+              필터
               {(statusFilter || minLevel || maxLevel) && (
                 <Badge className="ml-1 h-5 px-1.5 bg-[#D2FD9C] text-black">
                   {[statusFilter, minLevel, maxLevel].filter(Boolean).length}
@@ -217,10 +217,10 @@ export default function UserListPage() {
           <PopoverContent className="w-80 bg-[#18181B] border-white/10 text-white">
             <div className="space-y-4">
               <div>
-                <label className="text-sm text-zinc-400 mb-2 block">?�태</label>
+                <label className="text-sm text-zinc-400 mb-2 block">상태</label>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="bg-zinc-900 border-zinc-800">
-                    <SelectValue placeholder="?�체" />
+                    <SelectValue placeholder="전체" />
                   </SelectTrigger>
                   <SelectContent className="bg-zinc-900 border-zinc-800">
                     <SelectItem value="ALL">전체</SelectItem>
@@ -232,7 +232,7 @@ export default function UserListPage() {
               </div>
               <div>
                 <label className="text-sm text-zinc-400 mb-2 block">
-                  ?�벨 범위
+                  레벨 범위
                 </label>
                 <div className="flex items-center gap-2">
                   <Input
@@ -262,7 +262,7 @@ export default function UserListPage() {
                   setMaxLevel("");
                 }}
               >
-                ?�터 초기??
+                필터 초기화
               </Button>
             </div>
           </PopoverContent>
@@ -272,7 +272,7 @@ export default function UserListPage() {
         {selectedUserIds.length > 0 && (
           <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
             <span className="text-sm text-indigo-400 font-medium">
-              {selectedUserIds.length}�??�택
+              {selectedUserIds.length}개 선택
             </span>
             <Button
               size="sm"
@@ -288,7 +288,7 @@ export default function UserListPage() {
               className="h-7 text-xs text-red-400 hover:text-red-300"
             >
               <Ban className="w-3 h-3 mr-1" />
-              ?��?
+              차단
             </Button>
           </div>
         )}
@@ -316,13 +316,13 @@ export default function UserListPage() {
                 </TableHead>
                 <TableHead className="w-[100px] text-zinc-400">UID</TableHead>
                 <TableHead className="text-zinc-400">닉네임</TableHead>
-                <TableHead className="text-zinc-400">?�레그램 ID</TableHead>
+                <TableHead className="text-zinc-400">텔레그램 ID</TableHead>
                 <TableHead className="text-zinc-400">
                   <button
                     className="flex items-center gap-1 hover:text-white transition-colors"
                     onClick={() => handleSort("level")}
                   >
-                    ?�벨
+                    레벨
                     <ArrowUpDown className="w-3 h-3" />
                   </button>
                 </TableHead>
@@ -331,7 +331,7 @@ export default function UserListPage() {
                     className="flex items-center gap-1 hover:text-white transition-colors"
                     onClick={() => handleSort("vault_balance")}
                   >
-                    금고 ?�액
+                    금고 잔액
                     <ArrowUpDown className="w-3 h-3" />
                   </button>
                 </TableHead>
@@ -340,12 +340,12 @@ export default function UserListPage() {
                     className="flex items-center gap-1 hover:text-white transition-colors"
                     onClick={() => handleSort("last_active")}
                   >
-                    최근 ?�속??
+                    최근 접속일
                     <ArrowUpDown className="w-3 h-3" />
                   </button>
                 </TableHead>
                 <TableHead className="text-center text-zinc-400 w-[80px]">
-                  관�?
+                  관리
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -398,7 +398,7 @@ export default function UserListPage() {
                         setSelectedDrawerTab("overview");
                       }}
                     >
-                      관�?
+                      관리
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -411,8 +411,8 @@ export default function UserListPage() {
       {/* Pagination */}
       <div className="flex items-center justify-between px-4 py-3 bg-[#18181B] rounded-xl border border-white/5">
         <div className="text-sm text-zinc-400">
-          {(page - 1) * limit + 1}~{Math.min(page * limit, total)} / �?{total}
-          �?
+                    {(page - 1) * limit + 1}~{Math.min(page * limit, total)} / 총 {total}
+                    명
         </div>
         <div className="flex items-center gap-2">
           <Button

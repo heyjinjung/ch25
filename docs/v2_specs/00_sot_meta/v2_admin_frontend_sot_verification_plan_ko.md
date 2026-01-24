@@ -88,4 +88,7 @@
 - **V1 의존성 제거**: 모든 주요 Hook이 `v2/hooks/*`를 참조하며, 레거시 API(`adminApi`) 직접 호출이 발견되지 않음.
 - **예외 사항**: `ModalControlPage`는 백엔드 전용 API 미비로 인해 일부 Config 훅을 공유하거나 Mock 상태임 (운영 치명도 낮음).
 
+## 5. 업데이트 노트 (2026-01-24)
+- User Frontend(HomePage/Gamedash) API 연동 작업이 완료되었으나, **Admin SoT 범위에는 영향 없음**.
+
 **승인 여부**: ✅ **V2 Admin 배포 및 운영 이관 가능** (Ready for Production, 미구현 페이지 제외)

@@ -205,7 +205,7 @@ const DicePage = () => {
           </button>
 
           <div className="item-board-card">
-            <span className="item-board-text">?�이??준비중</span>
+            <span className="item-board-text">아이템준비중</span>
           </div>
         </div>
       </div>

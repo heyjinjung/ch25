@@ -30,8 +30,8 @@
 | 페이지 (Component) | 경로 (Route) | API / Hook 상태 | V2 SoT 준수 여부 | 발견된 이슈 |
 | :--- | :--- | :--- | :---: | :--- |
 | **LoginPage** (`V2UserLoginPage`) | `/login` | `useV2Auth` / `/api/v2/auth/token` | ✅ **PASS** | `dev/login` 포함 확인됨. |
-| **HomePage** (`HomePage`) | `/home` | (Only Animation & Sound) | ❌ **MISSING** | **API 연동 없음**. 단순 하드코딩 UI. 실시간 공지/이벤트 데이터 부재. |
-| **GameDash** (`GamedashPage`) | `/game` | (Only Animation & Nav) | ❌ **MISSING** | **API 연동 없음**. 배지(HOT/NEW) 하드코딩. |
+| **HomePage** (`HomePage`) | `/home` | `useV2Inbox`, `useV2Vault` | ✅ **PASS** | 금고/알림 요약 연동 확인. |
+| **GameDash** (`GamedashPage`) | `/game` | `useV2RouletteStatus`, `useV2DiceStatus`, `useV2LotteryStatus` | ✅ **PASS** | 배지/공지 데이터 연동 확인. |
 | **Vault** (`VaultPage`) | `/vault` | `useV2Vault` | ✅ **PASS** | `withdrawMutation` 사용 확인. |
 | **Shop** (`ExchangePage`) | `/shop` | `useV2ShopProducts`, `useV2BuyShopItem` | ✅ **PASS** | `/api/v2/shop/*` 연동 확인. |
 | **Inventory** (`InventoryPage`) | `/inventory` | `useV2Inventory`, `useV2UseInventoryItem` | ✅ **PASS** | `/api/v2/inventory/*` 연동 확인. |
@@ -42,13 +42,11 @@
 
 ## 3. 발견된 이슈 및 조치 사항 (Action Items)
 
-### 🔴 Critical Issues (Must Fix Before Design)
-1.  **HomePage (Logic Missing)**:
-    - 현재 API 호출 로직이 전혀 없이 `gsap` 애니메이션만 존재함.
-    - **조치**: `useV2HomeData` (또는 유사 hook)를 생성하여 공지사항, 배너, 유저 요약 정보를 불러오게 해야 함.
-2.  **GameHub (Logic Missing)**:
-    - 게임 목록 및 배지 상태가 하드코딩됨.
-    - **조치**: `useV2GameConfig` 등을 통해 게임 활성화 여부나 HOT/NEW 배지를 동적으로 제어해야 함.
+### ✅ Resolved (2026-01-24)
+1. **HomePage (Logic Bound)**:
+    - `useV2Inbox`, `useV2Vault` 연동으로 요약 데이터 표시.
+2. **GameDash (Logic Bound)**:
+    - `useV2RouletteStatus`, `useV2DiceStatus`, `useV2LotteryStatus` 연동으로 공지/배지 동적화.
 
 ### 🟢 Verified Areas (Ready for Design)
 - **Auth, Games, Economy, Features**: 모든 기능 페이지가 V2 전용 Hook을 사용하고 있어 논리적 무결성이 확보됨. 디자인 개편 시 기존 Hook을 그대로 재사용하면 됨.
@@ -56,5 +54,5 @@
 ## 4. 결론 (Conclusion)
 - **User Frontend 로직 검증 완료**.
 - 핵심 기능(게임, 경제)은 V2 SoT를 준수하고 있음.
-- **HomePage**와 **GameDash**는 단순히 "껍데기" 상태이므로, 디자인 작업과 동시에 **데이터 바인딩(Data Binding) 작업**이 병행되어야 함.
+- **HomePage, GameDash 모두 데이터 바인딩 완료**.
 - 그 외 페이지는 **"기능은 유지하되 껍데기만 교체(Reskinning)"**하는 전략이 유효함.

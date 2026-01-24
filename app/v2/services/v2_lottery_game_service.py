@@ -5,6 +5,7 @@ This service uses V2 config/log tables.
 
 from __future__ import annotations
 
+import logging
 import random
 import time
 from datetime import date, datetime
@@ -30,6 +31,7 @@ from app.v2.services.game_config_service import V2GameConfigService
 
 
 _KST = ZoneInfo("Asia/Seoul")
+logger = logging.getLogger(__name__)
 
 
 class V2LotteryGameService:
@@ -67,7 +69,14 @@ class V2LotteryGameService:
         if not eligible or total_weight <= 0:
             from app.core.exceptions import InvalidConfigError
 
-            raise InvalidConfigError("INVALID_V2_LOTTERY_CONFIG")
+            logger.warning(
+                "Invalid lottery config (no eligible prizes or zero weight). config_id=%s prizes=%s eligible=%s total_weight=%s",
+                config_id,
+                len(prizes),
+                len(eligible),
+                total_weight,
+            )
+            raise InvalidConfigError("INVALID_LOTTERY_CONFIG")
         return eligible
 
     @staticmethod

@@ -111,7 +111,7 @@ export default function TicketInventoryPage() {
 
   const [itemType, setItemType] = useState(defaultItemType);
   const [amount, setAmount] = useState("1");
-    const [reason, setReason] = useState("이벤트 보상");
+  const [reason, setReason] = useState("이벤트 보상");
   const [expiresAt, setExpiresAt] = useState("");
 
   // Selected Log for Edit/Delete
@@ -180,12 +180,12 @@ export default function TicketInventoryPage() {
       if (response.users && response.users.length > 0) {
         setSearchUserId(response.users[0].id);
       } else {
-                alert("해당 닉네임의 유저를 찾을 수 없습니다.");
+        alert("해당 닉네임의 유저를 찾을 수 없습니다.");
         setSearchUserId(undefined);
       }
     } catch (error) {
       console.error("User search failed", error);
-            alert("유저 검색 중 오류가 발생했습니다.");
+      alert("유저 검색 중 오류가 발생했습니다.");
     }
   };
 
@@ -203,10 +203,10 @@ export default function TicketInventoryPage() {
         setTargetUserNickname(foundUser.nickname || "");
         setTargetUserId(foundUser.id.toString()); // Auto-fill ID
       } else {
-                setTargetUserNickname("유저를 찾을 수 없음");
+        setTargetUserNickname("유저를 찾을 수 없음");
       }
     } catch {
-            setTargetUserNickname("검색 오류");
+      setTargetUserNickname("검색 오류");
     } finally {
       setIsSearchingUser(false);
     }
@@ -323,7 +323,7 @@ export default function TicketInventoryPage() {
     setTargetUserNickname("");
     setItemType(defaultItemType);
     setAmount("1");
-        setReason("이벤트 보상");
+    setReason("이벤트 보상");
     setExpiresAt("");
     setSelectedLog(null);
   };
@@ -345,10 +345,10 @@ export default function TicketInventoryPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight mb-1">
-                        티켓/인벤토리 관리(Inventory Ops)
+            티켓/인벤토리 관리(Inventory Ops)
           </h1>
           <p className="text-sm text-zinc-400">
-                        유저 아이템 지급/회수 로그를 관리하고 보상을 지급합니다.
+            유저 아이템 지급/회수 로그를 관리하고 보상을 지급합니다.
           </p>
         </div>
 
@@ -488,7 +488,7 @@ export default function TicketInventoryPage() {
             <div className="text-2xl font-bold text-zinc-300">
               {stats.totalUsed.toLocaleString()}
             </div>
-                          사용자가 소모한 건수
+            사용자가 소모한 건수
           </CardContent>
         </Card>
       </div>
@@ -541,7 +541,7 @@ export default function TicketInventoryPage() {
           onClick={handleSearchCommit}
           className="h-11 px-8 font-semibold"
         >
-                    조회하기
+          조회하기
         </Button>
 
         <Button
@@ -563,21 +563,21 @@ export default function TicketInventoryPage() {
         <CardHeader className="bg-white/[0.02]">
           <CardTitle className="flex items-center gap-2 text-lg">
             <History className="w-5 h-5 text-zinc-400" />
-                        아이템 로그 목록 (Inventory Logs)
+            아이템 로그 목록 (Inventory Logs)
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <Table>
             <TableHeader className="bg-black/20">
               <TableRow className="border-white/5 hover:bg-transparent">
-                                <TableHead className="w-[180px]">시간</TableHead>
-                                <TableHead>유저 ID</TableHead>
+                <TableHead className="w-[180px]">시간</TableHead>
+                <TableHead>유저 ID</TableHead>
                 <TableHead>구분</TableHead>
                 <TableHead>아이템</TableHead>
-                                <TableHead>수량</TableHead>
-                                <TableHead>잔액 (After)</TableHead>
-                                <TableHead className="max-w-[300px]">사유</TableHead>
-                                <TableHead className="text-right">액션</TableHead>
+                <TableHead>수량</TableHead>
+                <TableHead>잔액 (After)</TableHead>
+                <TableHead className="max-w-[300px]">사유</TableHead>
+                <TableHead className="text-right">액션</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -586,7 +586,7 @@ export default function TicketInventoryPage() {
                   <TableCell colSpan={8} className="text-center py-20">
                     <div className="flex flex-col items-center gap-2 text-zinc-500">
                       <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
-                                            로그를 불러오는 중입니다...
+                      로그를 불러오는 중입니다...
                     </div>
                   </TableCell>
                 </TableRow>
@@ -595,7 +595,7 @@ export default function TicketInventoryPage() {
                   <TableCell colSpan={8} className="text-center py-20">
                     <div className="flex flex-col items-center gap-2 text-zinc-600">
                       <AlertCircle className="w-8 h-8" />
-                                            검색된 로그가 없습니다.
+                      검색된 로그가 없습니다.
                     </div>
                   </TableCell>
                 </TableRow>
@@ -671,11 +671,11 @@ export default function TicketInventoryPage() {
                           className="bg-[#18181B] border-white/10 text-white"
                         >
                           <DropdownMenuLabel className="text-zinc-500 text-xs">
-                                                        관리 액션
+                            관리 액션
                           </DropdownMenuLabel>
                           <DropdownMenuItem onClick={() => openEditModal(log)}>
                             <Edit2 className="w-4 h-4 mr-2" />
-                                                        수정 (Edit)
+                            수정 (Edit)
                           </DropdownMenuItem>
                           <DropdownMenuSeparator className="bg-white/5" />
                           <DropdownMenuItem
@@ -683,7 +683,7 @@ export default function TicketInventoryPage() {
                             className="text-red-400 focus:text-red-400"
                           >
                             <Trash2 className="w-4 h-4 mr-2" />
-                                                        삭제 (Delete)
+                            삭제 (Delete)
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -701,23 +701,22 @@ export default function TicketInventoryPage() {
         <DialogContent className="bg-[#18181B] border-white/10 text-white sm:max-w-[450px] shadow-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Plus className="w-5 h-5 text-emerald-500" />
-                            새 아이템 보상 지급
+              <Plus className="w-5 h-5 text-emerald-500" />새 아이템 보상 지급
             </DialogTitle>
             <DialogDescription className="text-zinc-400">
-                              유저에게 티켓이나 아이템을 수동으로 지급합니다. 지급 즉시
+              유저에게 티켓이나 아이템을 수동으로 지급합니다. 지급 즉시
               반영?�니??
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="userId" className="text-zinc-400">
-                                지급 대상(User ID)
+                지급 대상(User ID)
               </Label>
               <div className="flex gap-2">
                 <Input
                   id="userId"
-                                    placeholder="유저 ID 입력"
+                  placeholder="유저 ID 입력"
                   className="bg-black/50 border-white/10 text-white"
                   value={targetUserId}
                   onChange={(e) => setTargetUserId(e.target.value)}
@@ -733,13 +732,13 @@ export default function TicketInventoryPage() {
               {targetUserNickname && (
                 <div className="text-[10px] text-emerald-500 font-medium ml-1">
                   검??결과:{" "}
-                                    <span className="underline">{targetUserNickname}</span> 유저
+                  <span className="underline">{targetUserNickname}</span> 유저
                 </div>
               )}
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                                <Label className="text-zinc-400">종류 (Type)</Label>
+                <Label className="text-zinc-400">종류 (Type)</Label>
                 <Select value={itemType} onValueChange={setItemType}>
                   <SelectTrigger className="bg-black/50 border-white/10">
                     <SelectValue />
@@ -754,7 +753,7 @@ export default function TicketInventoryPage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                                <Label className="text-zinc-400">수량 (Amount)</Label>
+                <Label className="text-zinc-400">수량 (Amount)</Label>
                 <Input
                   type="number"
                   className="bg-black/50 border-white/10"
@@ -764,7 +763,7 @@ export default function TicketInventoryPage() {
               </div>
             </div>
             <div className="space-y-2">
-                            <Label className="text-zinc-400">지급 사유 (Reason)</Label>
+              <Label className="text-zinc-400">지급 사유 (Reason)</Label>
               <Input
                 placeholder="사유를 입력하세요"
                 className="bg-black/50 border-white/10"
@@ -774,7 +773,7 @@ export default function TicketInventoryPage() {
             </div>
             {itemType === "TICKET" && (
               <div className="space-y-2">
-                                <Label className="text-zinc-400">만료일 (Optional)</Label>
+                <Label className="text-zinc-400">만료일 (Optional)</Label>
                 <Input
                   type="datetime-local"
                   className="bg-black/50 border-white/10 color-scheme-dark"
@@ -796,8 +795,8 @@ export default function TicketInventoryPage() {
                 !targetUserId
               }
               className="bg-emerald-500 text-black font-bold"
-                          지급 실행
-              지�??�행
+            >
+              지급 실행
             </Button>
           </DialogFooter>
         </DialogContent>

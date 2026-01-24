@@ -72,6 +72,42 @@ export default function ExchangePage() {
     }
   };
 
+  const getErrorDetail = (error: unknown) =>
+    (error as { response?: { data?: { detail?: string } } })?.response?.data
+      ?.detail;
+
+  const handlePurchase = (sku: string) => {
+    buyMutation.mutate(
+      { sku },
+      {
+        onError: (error) => {
+          const detail = getErrorDetail(error);
+          if (detail === "INSUFFICIENT_BALANCE") {
+            alert("잔액이 부족합니다.");
+            return;
+          }
+          if (detail === "PRODUCT_NOT_FOUND") {
+            alert("상품을 찾을 수 없습니다.");
+            return;
+          }
+          if (
+            detail === "INVALID_COST_AMOUNT" ||
+            detail === "INVALID_REWARD_AMOUNT" ||
+            detail === "INVALID_COST_TYPE"
+          ) {
+            alert("상품 정보가 올바르지 않습니다.");
+            return;
+          }
+          if (detail === "IDEMPOTENCY_KEY_REQUIRED") {
+            alert("요청 키가 없습니다. 새로고침 후 다시 시도하세요.");
+            return;
+          }
+          alert("구매에 실패했습니다. 잠시 후 다시 시도하세요.");
+        },
+      },
+    );
+  };
+
   const mainProducts = products?.slice(0, 3) ?? [];
   const subProducts = products?.slice(3, 11) ?? [];
 
@@ -153,13 +189,13 @@ export default function ExchangePage() {
           className={`shop-tab-item ${activeTab === "shop" ? "active" : ""}`}
           onClick={() => setActiveTab("shop")}
         >
-          ?�점
+          ?�점
         </div>
         <div
           className={`shop-tab-item ${activeTab === "inventory" ? "active" : ""}`}
           onClick={() => navigate("/inventory")}
         >
-          ?�벤?�리
+          ?�벤?�리
         </div>
       </div>
 
@@ -169,9 +205,9 @@ export default function ExchangePage() {
           <img
             src="/assets/06shop/banner.png"
             className="event-banner-img"
-            alt="?�점 메인 배너"
+            alt="?�점 메인 배너"
           />
-          <div className="banner-info-btn">?�내버튼</div>
+          <div className="banner-info-btn">?�내버튼</div>
         </div>
 
         {/* Products Grid */}
@@ -181,7 +217,7 @@ export default function ExchangePage() {
               <div
                 key={product.sku}
                 className="shop-card-v2 shop-main-card"
-                onClick={() => buyMutation.mutate({ sku: product.sku })}
+                onClick={() => handlePurchase(product.sku)}
               >
                 <div className="shop-card-img-container">
                   <img
@@ -208,7 +244,7 @@ export default function ExchangePage() {
               <div
                 key={product.sku}
                 className="shop-card-v2 shop-sub-card"
-                onClick={() => buyMutation.mutate({ sku: product.sku })}
+                onClick={() => handlePurchase(product.sku)}
               >
                 <SubCardBg />
                 <div className="shop-card-img-container">

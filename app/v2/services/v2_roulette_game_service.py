@@ -55,13 +55,14 @@ class V2RouletteGameService:
 
     @staticmethod
     def _normalize_ticket_type(ticket_type: str) -> str:
+        raw = str(ticket_type or "").strip().upper()
         mapping = {
             "ROULETTE_COIN": "ROULETTE_TICKET",
             "GOLD_KEY": "GOLD_KEY_TICKET",
             "DIAMOND_KEY": "DIAMOND_TICKET",
             "TRIAL_TOKEN": "TRIAL_TICKET",
         }
-        return mapping.get(ticket_type, ticket_type)
+        return mapping.get(raw, raw)
 
     @staticmethod
     def _ticket_type_aliases(ticket_type: str) -> list[str]:

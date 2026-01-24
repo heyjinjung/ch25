@@ -1,10 +1,10 @@
-// src/pages/missions/MissionsPage.tsx
 import { useV2Missions, useV2ClaimMission } from "../../hooks/useV2Mission";
 import { useSound } from "../../../hooks/useSound";
 import { triggerHaptic, triggerNotification } from "../../utils/haptic";
-import "./MissionRedesign.css";
-
-const ASSET_PATH = "/assets/07mission";
+import { DailyStreakBoard } from "../../components/mission/DailyStreakBoard";
+import { MissionCard } from "../../components/mission/MissionCard";
+import { Loader2, AlertCircle } from "lucide-react";
+import "./MissionRedesign.css"; // Keeping it for any specific animations not covered by Tailwind, but relying mostly on Tailwind
 
 export default function MissionsPage() {
   const { playSmallWin } = useSound();
@@ -25,84 +25,85 @@ export default function MissionsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex h-full items-center justify-center bg-black">
-        <div className="w-10 h-10 border-2 border-[#25AD82] border-t-transparent rounded-full animate-spin" />
+      <div className="flex h-tg items-center justify-center bg-[#121214]">
+        <Loader2 className="w-10 h-10 text-emerald-500 animate-spin" />
       </div>
     );
   }
 
   if (error || !data) {
     return (
-      <div className="flex h-full items-center justify-center bg-black px-6 text-center">
-        <p className="text-white/40">미션??불러?????�습?�다. ?�시 ???�시 ?�도?�주?�요.</p>
+      <div className="flex h-tg flex-col items-center justify-center bg-[#121214] px-6 text-center gap-4">
+        <AlertCircle className="w-12 h-12 text-zinc-600" />
+        <p className="text-zinc-400">미션을 불러올 수 없습니다. 잠시 후 다시 시도해주세요.</p>
+        <button 
+            onClick={() => refetch()}
+            className="px-4 py-2 bg-white/5 rounded-lg text-sm text-white hover:bg-white/10"
+        >
+            다시 시도
+        </button>
       </div>
     );
   }
 
   const { missions = [], streak_info } = data;
 
+  // Use CSS variable for safe area offset - standard 100px top, 120px bottom
   return (
-    <div className="mission-redesign-container">
-      <img src={`${ASSET_PATH}/mission (1).svg`} className="mission-bg-overlay" alt="" />
+    <div className="relative min-h-tg w-full bg-[#121214] overflow-hidden text-white">
+      {/* Background Ambience */}
+      <div className="fixed inset-0 pointer-events-none">
+          <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-emerald-500/5 rounded-full blur-[120px]" />
+          <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-indigo-500/5 rounded-full blur-[120px]" />
+      </div>
 
-      {/* Header Arena: Half-circle Chart & Character */}
-      <div className="mission-header-arena mt-8">
-        <div className="half-circle-chart-container">
-          <img src={`${ASSET_PATH}/Ellipse 1.svg`} className="chart-ellipse-bg" alt="" />
-          <img src={`${ASSET_PATH}/icon.svg`} className="casino-logo-chart" alt="CC" />
-          <span className="mission-progress-label">미션 진행</span>
-        </div>
+      {/* Main Scrollable Content */}
+      <div className="relative h-full overflow-y-auto px-4 pt-[var(--header-offset)] pb-[var(--nav-offset)] space-y-6">
         
-        <img src={`${ASSET_PATH}/Frame 2.png`} className="character-frame-img" alt="Character" />
-      </div>
+        {/* Header Title */}
+        <div className="space-y-1 pt-2">
+            <h1 className="text-2xl font-black tracking-tight text-white">
+                Mission Center
+            </h1>
+            <p className="text-sm text-zinc-400">
+                일일 미션을 완료하고 특별한 보상을 받으세요.
+            </p>
+        </div>
 
-      {/* 7-Day Streak Grid */}
-      <div className="streak-grid-container">
-        {[1, 2, 3, 4, 5, 6, 7].map((num) => {
-          const isComplete = (streak_info?.current_streak || 0) >= num;
-          const isToday = (streak_info?.current_streak || 0) + 1 === num;
-          return (
-            <div 
-              key={num} 
-              className={`streak-day-box ${isComplete ? 'complete' : isToday ? 'current' : ''}`}
-            >
-              {/* Optional: Add icon.svg if streak is active */}
-              {isComplete && <img src={`${ASSET_PATH}/icon.svg`} className="w-3" alt="" />}
+        {/* 1. Daily Streak Board - Premium Glass Panel */}
+        <section>
+             <DailyStreakBoard currentStreak={streak_info?.current_streak || 0} />
+        </section>
+
+        {/* 2. Mission List - Bento Grid Style */}
+        <section className="space-y-4">
+            <div className="flex items-center justify-between">
+                <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                    <span className="w-1 h-5 bg-emerald-500 rounded-full" />
+                    Today's Missions
+                </h2>
+                <span className="text-xs text-zinc-500 font-mono">
+                    {missions.filter(m => m.is_completed).length} / {missions.length} Complete
+                </span>
             </div>
-          );
-        })}
-      </div>
 
-      {/* Scrollable Mission Container (570px) */}
-      <div className="mission-list-scrollarea">
-        {missions.map((mission) => (
-          <div key={mission.id} className="mission-promo-card">
-            <div className="mission-text-content">
-              <span className="mission-title">{mission.title}</span>
-              <span className="mission-desc">진행?? {mission.progress || 0}/{mission.target}</span>
+            <div className="grid grid-cols-1 gap-4 pb-10">
+                {missions.length === 0 ? (
+                    <div className="py-20 text-center border border-dashed border-zinc-800 rounded-2xl bg-white/[0.02]">
+                        <p className="text-zinc-500 text-sm">현재 진행 가능한 미션이 없습니다.</p>
+                    </div>
+                ) : (
+                    missions.map((mission) => (
+                        <MissionCard
+                            key={mission.id}
+                            mission={mission}
+                            onClaim={handleClaim}
+                            isClaiming={claimMutation.isPending}
+                        />
+                    ))
+                )}
             </div>
-            
-            {!mission.is_claimed && mission.is_completed ? (
-               <img 
-                 src={`${ASSET_PATH}/button.svg`} 
-                 className="mission-claim-btn" 
-                 alt="Claim"
-                 onClick={() => handleClaim(mission.id)}
-               />
-            ) : (
-               <div className="w-[45px] h-[75px] opacity-20 flex items-center justify-center">
-                 <img src={`${ASSET_PATH}/Vector-1.svg`} className="w-4 h-4" alt="" />
-               </div>
-            )}
-          </div>
-        ))}
-
-        {/* Empty State */}
-        {missions.length === 0 && (
-          <div className="py-12 text-center opacity-30 italic text-xs">
-            ?�재 진행 가?�한 미션???�습?�다.
-          </div>
-        )}
+        </section>
       </div>
     </div>
   );

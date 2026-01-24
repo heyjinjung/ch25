@@ -467,7 +467,7 @@ export default function TicketManagementTab() {
             <History className="w-5 h-5 text-zinc-400" />
             티켓 로그 목록 (Ticket Logs)
           </CardTitle>
-                              티켓을 불러오는 중입니다...
+        </CardHeader>
         <CardContent className="p-0">
           <Table>
             <TableHeader className="bg-black/20">
@@ -476,7 +476,6 @@ export default function TicketManagementTab() {
                 <TableHead>사용자 닉네임</TableHead>
                 <TableHead>구분</TableHead>
                 <TableHead>티켓 종류</TableHead>
-                                      검색된 티켓이 없습니다.
                 <TableHead>잔액 (After)</TableHead>
                 <TableHead className="max-w-[300px]">사유</TableHead>
                 <TableHead className="text-right">액션</TableHead>
@@ -548,19 +547,19 @@ export default function TicketManagementTab() {
                       {(log.balanceAfter ?? 0).toLocaleString()}
                     </TableCell>
                     <TableCell className="text-zinc-500 max-w-[300px] truncate group border-l border-white/5 pl-4 ml-4">
-                                                  관리 액션
+                      관리 액션
                     </TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
-                                                    수정 (Edit)
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 hover:bg-white/10"
-                          >
-                            <MoreHorizontal className="w-4 h-4 text-zinc-400" />
-                          </Button>
-                                                    삭제 (Delete)
+                        수정 (Edit)
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 hover:bg-white/10"
+                        >
+                          <MoreHorizontal className="w-4 h-4 text-zinc-400" />
+                        </Button>
+                        삭제 (Delete)
                         <DropdownMenuContent
                           align="end"
                           className="bg-[#18181B] border-white/10 text-white"

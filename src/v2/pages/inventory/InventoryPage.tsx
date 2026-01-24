@@ -9,6 +9,13 @@ import { useV2Vault } from "../../hooks/useV2Vault";
 import "./InventoryPage.css";
 
 const ASSET_PATH = "/assets/06shop";
+const VOUCHER_ITEM_TYPES = new Set([
+  "VOUCHER_GOLD_KEY_1",
+  "VOUCHER_DIAMOND_KEY_1",
+  "VOUCHER_ROULETTE_COIN_1",
+  "VOUCHER_DICE_TOKEN_1",
+  "VOUCHER_LOTTERY_TICKET_1",
+]);
 
 export default function InventoryPage() {
   const navigate = useNavigate();
@@ -22,9 +29,37 @@ export default function InventoryPage() {
 
   const items = data?.items ?? [];
 
+  const getErrorDetail = (error: unknown) =>
+    (error as { response?: { data?: { detail?: string } } })?.response?.data
+      ?.detail;
+
   const handleUseItem = (itemType: string) => {
-    if (window.confirm("?�이?�을 ?�용?�시겠습?�까?")) {
-      useItemMutation.mutate({ item_type: itemType, quantity: 1 });
+    if (!VOUCHER_ITEM_TYPES.has(itemType)) {
+      alert("사용할 수 없는 아이템입니다.");
+      return;
+    }
+    if (window.confirm("?�이?�을 ?�용?�시겠습?�까?")) {
+      useItemMutation.mutate(
+        { item_type: itemType, quantity: 1 },
+        {
+          onError: (error) => {
+            const detail = getErrorDetail(error);
+            if (detail === "INVALID_VOUCHER_TYPE") {
+              alert("사용할 수 없는 아이템입니다.");
+              return;
+            }
+            if (detail === "INSUFFICIENT_ITEM_QUANTITY") {
+              alert("수량이 부족합니다.");
+              return;
+            }
+            if (detail === "IDEMPOTENCY_KEY_REQUIRED") {
+              alert("요청 키가 없습니다. 다시 시도하세요.");
+              return;
+            }
+            alert("아이템 사용에 실패했습니다. 잠시 후 다시 시도하세요.");
+          },
+        },
+      );
     }
   };
 
@@ -42,24 +77,68 @@ export default function InventoryPage() {
   };
 
   const SubCardBg = () => (
-    <svg className="sub-card-bg-svg" xmlns="http://www.w3.org/2000/svg" width="82" height="82" viewBox="0 0 82 82" fill="none">
+    <svg
+      className="sub-card-bg-svg"
+      xmlns="http://www.w3.org/2000/svg"
+      width="82"
+      height="82"
+      viewBox="0 0 82 82"
+      fill="none"
+    >
       <g filter="url(#filter0_d_10_314)">
-        <path d="M61.8415 0H20.1539C11.2324 0 4 7.23281 4 16.1549V57.8451C4 66.7672 11.2324 74 20.1539 74H61.8415C70.7631 74 77.9954 66.7672 77.9954 57.8451V16.1549C77.9954 7.23281 70.7631 0 61.8415 0Z" fill="url(#paint0_linear_10_314)" fillOpacity="0.5" shapeRendering="crispEdges"/>
+        <path
+          d="M61.8415 0H20.1539C11.2324 0 4 7.23281 4 16.1549V57.8451C4 66.7672 11.2324 74 20.1539 74H61.8415C70.7631 74 77.9954 66.7672 77.9954 57.8451V16.1549C77.9954 7.23281 70.7631 0 61.8415 0Z"
+          fill="url(#paint0_linear_10_314)"
+          fillOpacity="0.5"
+          shapeRendering="crispEdges"
+        />
       </g>
       <defs>
-        <filter id="filter0_d_10_314" x="0" y="0" width="81.9951" height="82" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
-          <feFlood floodOpacity="0" result="BackgroundImageFix"/>
-          <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-          <feOffset dy="4"/>
-          <feGaussianBlur stdDeviation="2"/>
-          <feComposite in2="hardAlpha" operator="out"/>
-          <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"/>
-          <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_10_314"/>
-          <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_10_314" result="shape"/>
+        <filter
+          id="filter0_d_10_314"
+          x="0"
+          y="0"
+          width="81.9951"
+          height="82"
+          filterUnits="userSpaceOnUse"
+          colorInterpolationFilters="sRGB"
+        >
+          <feFlood floodOpacity="0" result="BackgroundImageFix" />
+          <feColorMatrix
+            in="SourceAlpha"
+            type="matrix"
+            values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+            result="hardAlpha"
+          />
+          <feOffset dy="4" />
+          <feGaussianBlur stdDeviation="2" />
+          <feComposite in2="hardAlpha" operator="out" />
+          <feColorMatrix
+            type="matrix"
+            values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"
+          />
+          <feBlend
+            mode="normal"
+            in2="BackgroundImageFix"
+            result="effect1_dropShadow_10_314"
+          />
+          <feBlend
+            mode="normal"
+            in="SourceGraphic"
+            in2="effect1_dropShadow_10_314"
+            result="shape"
+          />
         </filter>
-        <linearGradient id="paint0_linear_10_314" x1="40.9977" y1="0" x2="40.9977" y2="74" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#E1FF80" stopOpacity="0.2"/>
-          <stop offset="1" stopColor="#2A5B2E" stopOpacity="0.1"/>
+        <linearGradient
+          id="paint0_linear_10_314"
+          x1="40.9977"
+          y1="0"
+          x2="40.9977"
+          y2="74"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop stopColor="#E1FF80" stopOpacity="0.2" />
+          <stop offset="1" stopColor="#2A5B2E" stopOpacity="0.1" />
         </linearGradient>
       </defs>
     </svg>
@@ -76,7 +155,7 @@ export default function InventoryPage() {
   if (error) {
     return (
       <div className="exchange-page-v2 inventory-specific items-center justify-center px-6 text-center">
-        <p className="text-white/40">?�류가 발생?�습?�다.</p>
+        <p className="text-white/40">?�류가 발생?�습?�다.</p>
       </div>
     );
   }
@@ -88,13 +167,13 @@ export default function InventoryPage() {
           className={`shop-tab-item ${activeTab === "shop" ? "active" : ""}`}
           onClick={() => navigate("/shop")}
         >
-          ?�점
+          ?�점
         </div>
         <div
           className={`shop-tab-item ${activeTab === "inventory" ? "active" : ""}`}
           onClick={() => setActiveTab("inventory")}
         >
-          ?�벤?�리
+          ?�벤?�리
         </div>
       </div>
 
@@ -106,7 +185,7 @@ export default function InventoryPage() {
             className="summary-banner-img"
             alt="inventory summary"
           />
-          <div className="banner-info-btn">???�벤?�리</div>
+          <div className="banner-info-btn">???�벤?�리</div>
         </div>
 
         {/* Wallet Strip */}
@@ -114,19 +193,25 @@ export default function InventoryPage() {
           <div className="flex justify-between items-center bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-md">
             <div className="flex flex-col">
               <span className="text-[10px] text-white/40 font-bold uppercase tracking-wider mb-1">
-                보�?�?(VAULT)
+                보�?�?(VAULT)
               </span>
               <span className="text-lg font-black text-white italic">
-                {(vaultStatus?.vaultBalance || 0).toLocaleString()} <span className="text-[10px] not-italic opacity-50 ml-0.5">P</span>
+                {(vaultStatus?.vaultBalance || 0).toLocaleString()}{" "}
+                <span className="text-[10px] not-italic opacity-50 ml-0.5">
+                  P
+                </span>
               </span>
             </div>
             <div className="w-px h-8 bg-white/10 mx-2" />
             <div className="flex flex-col items-end">
               <span className="text-[10px] text-white/40 font-bold uppercase tracking-wider mb-1">
-                보유 ?�큰
+                보유 ?�큰
               </span>
               <span className="text-lg font-black text-[#FF7A00] italic">
-                {(vaultStatus?.ticketCount || 0).toLocaleString()} <span className="text-[10px] not-italic opacity-50 ml-0.5">T</span>
+                {(vaultStatus?.ticketCount || 0).toLocaleString()}{" "}
+                <span className="text-[10px] not-italic opacity-50 ml-0.5">
+                  T
+                </span>
               </span>
             </div>
           </div>
@@ -168,8 +253,9 @@ export default function InventoryPage() {
               Inventory Tip
             </p>
             <p className="text-[11px] text-white/60 leading-relaxed">
-              ?�이?�을 ?�용?�여 게임?�서 ?�별??보너?��? 받을 ???�습?�다.<br />
-              ?�용???�이?��? 즉시 ?�모?�며 ?�과가 발생?�니??
+              ?�이?�을 ?�용?�여 게임?�서 ?�별??보너?��? 받을 ???�습?�다.
+              <br />
+              ?�용???�이?��? 즉시 ?�모?�며 ?�과가 발생?�니??
             </p>
           </div>
         </div>
