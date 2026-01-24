@@ -86,7 +86,7 @@ export default function ShopManagerPage() {
   };
 
   const handleDelete = (productId: number, productName: string) => {
-    if (confirm(`"${productName}" ?�품????��?�시겠습?�까?`)) {
+    if (confirm(`"${productName}" 상품을 삭제하시겠습니까?`)) {
       deleteMutation.mutate(productId);
     }
   };
@@ -163,10 +163,10 @@ export default function ShopManagerPage() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight mb-1">
-          ?�점 관�?(Shop Manager)
+          상점 관리 (Shop Manager)
         </h1>
         <p className="text-sm text-zinc-400">
-          ?�매 ?�품???�록?�고 교환??비율??관리합?�다.
+          판매 상품을 등록하고 교환소 비율을 관리합니다.
         </p>
       </div>
 
@@ -220,7 +220,7 @@ export default function ShopManagerPage() {
             ))
           ) : (
             <div className="col-span-full py-10 text-center text-zinc-500 border border-dashed border-white/10 rounded-xl">
-              ?�율 ?�보가 ?�습?�다. Mock ?�이?��? ?�인?�주?�요.
+              환율 정보가 없습니다. Mock 데이터를 확인해주세요.
             </div>
           )}
         </div>
@@ -268,12 +268,12 @@ export default function ShopManagerPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-white mb-4">
-                  ??{(product.costAmount || 0).toLocaleString()}
+                  ₩ {(product.costAmount || 0).toLocaleString()}
                 </div>
                 <div className="flex gap-2 items-center">
                   <div className="relative flex-1">
                     <span className="absolute left-3 top-2.5 text-zinc-500 text-sm">
-                      ??
+                      ₩
                     </span>
                     <Input
                       className="bg-black/50 border-white/10 pl-8"
@@ -323,9 +323,9 @@ export default function ShopManagerPage() {
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent className="bg-zinc-900 border-white/10 text-white max-w-2xl">
           <DialogHeader>
-            <DialogTitle>???�품 ?�성</DialogTitle>
+            <DialogTitle>새 상품 생성</DialogTitle>
             <DialogDescription className="text-zinc-400">
-              20�?SoT ?�화�??�용??교환 ?�품??추�??�니??
+              20개 SoT 재화를 활용한 교환 상품을 추가합니다.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -341,19 +341,19 @@ export default function ShopManagerPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="name">?�품�?*</Label>
+                <Label htmlFor="name">상품명 *</Label>
                 <Input
                   id="name"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="bg-black/50 border-white/10"
-                  placeholder="?�별 ?�품"
+                  placeholder="특별 상품"
                 />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>결제 ?�화 (Cost Type) *</Label>
+                <Label>결제 재화 (Cost Type) *</Label>
                 <Select
                   value={formData.cost_type}
                   onValueChange={(value) => setFormData({ ...formData, cost_type: value })}
@@ -362,16 +362,16 @@ export default function ShopManagerPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-zinc-900 border-white/10">
-                    {SOT_REWARD_TYPES.map((type) => (
-                      <SelectItem key={type.value} value={type.value}>
-                        {type.label}
+                    {Object.values(SOT_REWARD_TYPES).map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {type}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="cost_amount">결제 ?�량 *</Label>
+                <Label htmlFor="cost_amount">결제 수량 *</Label>
                 <Input
                   id="cost_amount"
                   type="number"
@@ -385,7 +385,7 @@ export default function ShopManagerPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>?�득 ?�화 (Reward Type) *</Label>
+                <Label>획득 재화 (Reward Type) *</Label>
                 <Select
                   value={formData.reward_type}
                   onValueChange={(value) => setFormData({ ...formData, reward_type: value })}
@@ -394,16 +394,16 @@ export default function ShopManagerPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-zinc-900 border-white/10">
-                    {SOT_REWARD_TYPES.map((type) => (
-                      <SelectItem key={type.value} value={type.value}>
-                        {type.label}
+                    {Object.values(SOT_REWARD_TYPES).map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {type}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="reward_amount">?�득 ?�량 *</Label>
+                <Label htmlFor="reward_amount">획득 수량 *</Label>
                 <Input
                   id="reward_amount"
                   type="number"
@@ -429,7 +429,7 @@ export default function ShopManagerPage() {
               disabled={createMutation.isPending || !formData.sku || !formData.name}
               className="bg-blue-600 hover:bg-blue-700"
             >
-              ?�성
+              생성
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -439,14 +439,14 @@ export default function ShopManagerPage() {
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent className="bg-zinc-900 border-white/10 text-white max-w-2xl">
           <DialogHeader>
-            <DialogTitle>?�품 ?�정</DialogTitle>
+            <DialogTitle>상품 수정</DialogTitle>
             <DialogDescription className="text-zinc-400">
               SKU: {editingProduct?.sku}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="edit_name">?�품�?*</Label>
+              <Label htmlFor="edit_name">상품명 *</Label>
               <Input
                 id="edit_name"
                 value={formData.name}
@@ -456,7 +456,7 @@ export default function ShopManagerPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>결제 ?�화 (Cost Type) *</Label>
+                <Label>결제 재화 (Cost Type) *</Label>
                 <Select
                   value={formData.cost_type}
                   onValueChange={(value) => setFormData({ ...formData, cost_type: value })}
@@ -465,16 +465,16 @@ export default function ShopManagerPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-zinc-900 border-white/10">
-                    {SOT_REWARD_TYPES.map((type) => (
-                      <SelectItem key={type.value} value={type.value}>
-                        {type.label}
+                    {Object.values(SOT_REWARD_TYPES).map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {type}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit_cost_amount">결제 ?�량 *</Label>
+                <Label htmlFor="edit_cost_amount">결제 수량 *</Label>
                 <Input
                   id="edit_cost_amount"
                   type="number"
@@ -488,7 +488,7 @@ export default function ShopManagerPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>?�득 ?�화 (Reward Type) *</Label>
+                <Label>획득 재화 (Reward Type) *</Label>
                 <Select
                   value={formData.reward_type}
                   onValueChange={(value) => setFormData({ ...formData, reward_type: value })}
@@ -497,16 +497,16 @@ export default function ShopManagerPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-zinc-900 border-white/10">
-                    {SOT_REWARD_TYPES.map((type) => (
-                      <SelectItem key={type.value} value={type.value}>
-                        {type.label}
+                    {Object.values(SOT_REWARD_TYPES).map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {type}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit_reward_amount">?�득 ?�량 *</Label>
+                <Label htmlFor="edit_reward_amount">획득 수량 *</Label>
                 <Input
                   id="edit_reward_amount"
                   type="number"
@@ -532,7 +532,7 @@ export default function ShopManagerPage() {
               disabled={updateMutation.isPending || !formData.name}
               className="bg-blue-600 hover:bg-blue-700"
             >
-              ?�??
+              저장
             </Button>
           </DialogFooter>
         </DialogContent>

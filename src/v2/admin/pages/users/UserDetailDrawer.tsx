@@ -25,7 +25,7 @@ import {
 import { Ticket, Edit, Package, Vault } from "lucide-react";
 import { useRef, useEffect, useState, useMemo } from "react";
 import gsap from "gsap";
-import { WalletEditor } from "../../components/users/WalletEditor";
+import WalletEditor from "../../components/users/WalletEditor";
 import {
   useAdjustUserWallet,
   useAdjustUserInventory,
@@ -417,7 +417,7 @@ export function UserDetailDrawer({
                 currentVaultBalance={user.vaultBalance}
                 initialTokenType={walletEditorInitialType}
                 allowedCategories={walletEditorCategories}
-                onUpdate={async (amt, reason, type) => {
+                onUpdate={async (amt: number, reason: string, type: string) => {
                   if (user) {
                     await adjustWallet.mutateAsync({
                       userId: user.id,

@@ -1,5 +1,30 @@
 // src/api/ticketZeroApi.ts
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { v2Client } from "./client";
+
+export const useAdminUserTickets = (userId: string) => {
+  return useQuery({
+    queryKey: ["adminUserTickets", userId],
+    queryFn: async () => {
+      const response = await v2Client.get(`/api/v2/admin/users/${userId}/tickets`);
+      return response.data;
+    },
+    enabled: !!userId,
+  });
+};
+
+export const useAdminUpdateUserTickets = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { userId: string; ticketType: string; amount: number; reason: string }) => {
+      const response = await v2Client.post("/api/v2/admin/tickets/adjustment", data);
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["adminUserTickets", variables.userId] });
+    },
+  });
+};
 
 // ============================================================================
 // Ticket Zero (Bailout) API

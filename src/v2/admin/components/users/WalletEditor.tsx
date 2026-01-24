@@ -1,8 +1,4 @@
-import { useState, useEffect } from "react";
-import {
-  getRewardItemsByCategories,
-  type RewardCategory,
-} from "../../../constants/rewardItems";
+import { useEffect, useMemo, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -22,14 +18,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../../components/ui/select";
-import { Coins } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { type RewardCategory } from "../../../constants/rewardItems";
 
 interface WalletEditorProps {
   isOpen: boolean;
   onClose: () => void;
   userId: number;
-  currentTickets: number; // Optional reference
-  currentVaultBalance: number; // [NEW]
+  currentTickets: number;
+  currentVaultBalance: number;
   initialTokenType?: string;
   allowedCategories?: RewardCategory[];
   onUpdate: (
@@ -39,7 +36,7 @@ interface WalletEditorProps {
   ) => Promise<void>;
 }
 
-export function WalletEditor({
+export default function WalletEditor({
   isOpen,
   onClose,
   userId,
@@ -49,191 +46,174 @@ export function WalletEditor({
   allowedCategories,
   onUpdate,
 }: WalletEditorProps) {
+  const [selectedType, setSelectedType] = useState<string>("ROULETTE_TICKET");
   const [amount, setAmount] = useState<string>("");
   const [reason, setReason] = useState<string>("");
-  const [selectedType, setSelectedType] = useState<string>(
-    initialTokenType || "ROULETTE_TICKET",
-  );
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
 
-  const walletTypes = getRewardItemsByCategories(
-    allowedCategories ?? ["GAME_TICKET", "CURRENCY", "VAULT"],
-  );
+  const walletTypes = useMemo(() => {
+    const all = [
+      { label: "포인트 (Vault)", value: "VAULT", category: "VAULT" as const },
+      {
+        label: "일반 룰렛 티켓",
+        value: "ROULETTE_TICKET",
+        category: "GAME_TICKET" as const,
+      },
+      {
+        label: "다이아 티켓",
+        value: "DIAMOND_TICKET",
+        category: "GAME_TICKET" as const,
+      },
+      {
+        label: "황금 티켓",
+        value: "GOLDEN_TICKET",
+        category: "GAME_TICKET" as const,
+      },
+      {
+        label: "복권 티켓",
+        value: "LOTTERY_TICKET",
+        category: "GAME_TICKET" as const,
+      },
+      {
+        label: "주사위 티켓",
+        value: "DICE_TICKET",
+        category: "GAME_TICKET" as const,
+      },
+    ];
 
-  // Reset or update selected type when modal opens or prop changes
+    if (!allowedCategories || allowedCategories.length === 0) return all;
+    return all.filter((item) => allowedCategories.includes(item.category));
+  }, [allowedCategories]);
+
   useEffect(() => {
     if (!isOpen) {
       setErrorMessage("");
       return;
     }
+
+    setAmount("");
+    setReason("");
+    setErrorMessage("");
+
     const allowedTypes = new Set(walletTypes.map((item) => item.value));
     const nextType =
       initialTokenType && allowedTypes.has(initialTokenType)
         ? initialTokenType
         : walletTypes[0]?.value || "ROULETTE_TICKET";
+
     setSelectedType(nextType);
-  }, [isOpen, initialTokenType]);
+  }, [isOpen, initialTokenType, walletTypes]);
 
   const handleSubmit = async () => {
     if (!amount || !reason) return;
 
-    const delta = Number.parseInt(amount, 10);
-    if (!Number.isFinite(delta) || delta === 0) return;
+    const delta = parseInt(amount, 10);
+    if (isNaN(delta) || delta === 0) {
+      setErrorMessage("유효한 수량을 입력해주세요.");
+      return;
+    }
 
     setIsLoading(true);
     setErrorMessage("");
+
     try {
-      // Pass the selected type and amount directly (Delta)
       await onUpdate(delta, reason, selectedType);
       onClose();
       setAmount("");
       setReason("");
-    } catch (e) {
-      const detail = (e as any)?.response?.data?.detail;
-      const nextMessage =
-        detail === "INVALID_TOKEN_TYPE"
-          ? "지?�하지 ?�는 ?�화 ?�?�입?�다."
-          : detail === "INVALID_AMOUNT"
-            ? "?�량???�바르�? ?�습?�다."
-            : detail === "INSUFFICIENT_TOKEN_BALANCE"
-              ? "보유?�이 부족합?�다."
-              : detail === "INSUFFICIENT_VAULT_BALANCE"
-                ? "금고 ?�액??부족합?�다."
-                : "?�청???�패?�습?�다. ?�력값과 ?�액???�인?�세??";
-      setErrorMessage(nextMessage);
-      console.error("Failed to update wallet", e);
+    } catch (e: any) {
+      const msg = e.response?.data?.detail || e.message || "업데이트 실패";
+      setErrorMessage(msg);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-[#18181B] border-white/10 text-white sm:max-w-[425px]">
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="bg-zinc-900 border-white/10 text-white max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-indigo-400">
-            <Coins className="w-5 h-5" />
-            ?�산/?�화 강제 ?�정
-          </DialogTitle>
+          <DialogTitle>사용자 지갑 관리 (Wallet Admin)</DialogTitle>
           <DialogDescription className="text-zinc-400">
-            User #{userId}???�산??강제�?변경합?�다. <br />
-            <span className="text-red-400 text-xs">
-              주의: ???�업?� 로그???�구?�으�?기록?�니??
-            </span>
+            User #{userId} 자산을 강제로 변경합니다.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-4 py-4">
+        <div className="space-y-4 py-4">
           {errorMessage && (
-            <div className="rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-300">
+            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
               {errorMessage}
             </div>
           )}
+
           <div className="space-y-2">
-            <Label>?�???�화 (Asset Type)</Label>
+            <Label>재화 종류</Label>
             <Select value={selectedType} onValueChange={setSelectedType}>
-              <SelectTrigger className="bg-black/60 border-white/10 text-zinc-100">
-                <SelectValue placeholder="?�화 ?�택" />
+              <SelectTrigger className="bg-black/50 border-white/10">
+                <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-[#18181B] border-white/10 text-white">
-                {walletTypes.map((item) => {
-                  const balance =
-                    item.value === "VAULT"
-                      ? `${(currentVaultBalance || 0).toLocaleString()} P`
-                      : `${(currentTickets || 0).toLocaleString()} T`;
-                  return (
-                    <SelectItem
-                      key={item.value}
-                      value={item.value}
-                      className="text-zinc-100 focus:bg-zinc-800"
-                    >
-                      {item.label} (?�재: {balance})
-                    </SelectItem>
-                  );
-                })}
+              <SelectContent className="bg-zinc-900 border-white/10">
+                {walletTypes.map((t) => (
+                  <SelectItem key={t.value} value={t.value}>
+                    {t.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
-          </div>
-
-          {selectedType === "VAULT" ? (
-            <div className="bg-emerald-500/10 p-3 rounded-lg border border-emerald-500/20 flex justify-between items-center">
-              <span className="text-xs text-emerald-300">금고?�액 (참고)</span>
-              <span className="text-sm font-mono font-bold text-emerald-100">
-                ??{(currentVaultBalance || 0).toLocaleString()}
+            <div className="mt-2 text-right text-xs text-zinc-500">
+              현재 보유량 (참고):{" "}
+              <span className="font-mono font-bold text-white">
+                {selectedType === "VAULT"
+                  ? `${currentVaultBalance.toLocaleString()} P`
+                  : `${(currentTickets || 0).toLocaleString()} T`}
               </span>
             </div>
-          ) : (
-            (selectedType === "ROULETTE_COIN" ||
-              selectedType === "ROULETTE_TICKET" ||
-              selectedType === "DICE_TICKET" ||
-              selectedType === "LOTTERY_TICKET") && (
-              <div className="bg-indigo-500/10 p-3 rounded-lg border border-indigo-500/20 flex justify-between items-center">
-                <span className="text-xs text-indigo-300">
-                  ?�재 보유??(참고)
-                </span>
-                <span className="text-sm font-mono font-bold text-indigo-100">
-                  {(currentTickets || 0).toLocaleString()} T
-                </span>
-              </div>
-            )
-          )}
+          </div>
 
           <div className="space-y-2">
-            <Label htmlFor="amount">변???�량 (+ 지�? - 차감)</Label>
-            <div className="relative">
-              <Input
-                id="amount"
-                type="number"
-                placeholder="?? 50 ?�는 -50"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                className="bg-black/50 border-white/10 text-white font-mono h-11"
-              />
-              {amount && !isNaN(parseInt(amount)) && (
-                <div className="mt-2 p-2 rounded bg-indigo-500/10 border border-indigo-500/20">
-                  <p className="text-[11px] text-indigo-300 flex justify-between">
-                    <span>?�정 ???�상 ?�액:</span>
-                    <span className="font-bold font-mono">
-                      {selectedType === "VAULT" ? "??" : ""}
-                      {(
-                        (selectedType === "VAULT"
-                          ? currentVaultBalance
-                          : currentTickets) + parseInt(amount)
-                      ).toLocaleString()}
-                      {selectedType === "VAULT" ? " P" : " T"}
-                    </span>
-                  </p>
-                </div>
-              )}
-            </div>
+            <Label htmlFor="amount">변경 수량 (+ 지급, - 차감)</Label>
+            <Input
+              id="amount"
+              type="number"
+              placeholder="Ex. 100 or -50"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className="bg-black/50 border-white/10 font-mono"
+            />
             <p className="text-[10px] text-zinc-500">
-              * ?�수 ?�력 ??지�? ?�수 ?�력 ??차감?�니??
+              * 양수 입력 시 지급, 음수 입력 시 차감됩니다.
             </p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="reason">변�??�유 (?�수)</Label>
+            <Label htmlFor="reason">변경 사유 (필수)</Label>
             <Textarea
               id="reason"
-              placeholder="?? 보상 미�?�?�?처리"
+              placeholder="Ex. 이벤트 보상 미지급 건 처리"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              className="bg-black/50 border-white/10 text-white min-h-[80px]"
+              className="bg-black/50 border-white/10 min-h-[80px]"
             />
           </div>
         </div>
 
         <DialogFooter>
-          <Button variant="ghost" onClick={onClose} disabled={isLoading}>
+          <Button
+            variant="ghost"
+            onClick={onClose}
+            disabled={isLoading}
+            className="hover:bg-white/5"
+          >
             취소
           </Button>
           <Button
-            className="bg-indigo-600 hover:bg-indigo-700 text-white h-11 px-6"
+            className="bg-indigo-600 hover:bg-indigo-700"
             onClick={handleSubmit}
             disabled={!amount || !reason || isLoading}
           >
-            {isLoading ? "처리 �?.." : "?�정 ?�행 (Force Modification)"}
+            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            수정 실행
           </Button>
         </DialogFooter>
       </DialogContent>

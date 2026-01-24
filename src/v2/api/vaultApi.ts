@@ -1,4 +1,25 @@
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { v2Client } from "./client";
+
+export const useVaultBalance = () => {
+  return useQuery({
+    queryKey: ["vaultStatus"],
+    queryFn: vaultApi.getStatus,
+  });
+};
+
+export const useUpdateVaultBalance = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { userId: string; amount: number; reason: string; type: string }) => {
+       const response = await v2Client.post("/api/v2/admin/vault/adjustment", data);
+       return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["vaultStatus"] });
+    },
+  });
+};
 
 export interface VaultStatusResponse {
   eligible: boolean;

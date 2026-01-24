@@ -2,7 +2,7 @@ import React from "react";
 import { X, CheckCircle2, Star, Zap, Gift } from "lucide-react";
 import { motion } from "framer-motion";
 import clsx from "clsx";
-import Button from "../../../components/common/Button";
+import Button from "../common/Button";
 import { tryHaptic } from "../../utils/haptics";
 
 import type { V2StreakRule } from "../../api/missionApi";

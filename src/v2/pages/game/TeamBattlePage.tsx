@@ -175,8 +175,7 @@ const TeamBattlePage: React.FC = () => {
               )}
             >
               <div
-                className="relative mb-4 h-28 w-28 animate-float-slow"
-                style={{ animationDelay: "1s" }}
+                className="relative mb-4 h-28 w-28 animate-float-slow delay-1000"
               >
                 <img
                   src={AVATAR_BLUE}
@@ -205,21 +204,20 @@ const TeamBattlePage: React.FC = () => {
               <span>{bluePercent}% Domination</span>
             </div>
             <div className="relative h-4 w-full overflow-hidden rounded-full bg-black/50 ring-1 ring-white/10">
-              <div
-                className="absolute left-0 top-0 h-full bg-gradient-to-r from-red-600 to-red-500 transition-all duration-1000"
-                style={{ width: `${redPercent}%` }}
+            <div
+                className="absolute left-0 top-0 h-full bg-gradient-to-r from-red-600 to-red-500 transition-all duration-1000 w-[var(--red-w)]"
+                style={{ "--red-w": `${redPercent}%` } as React.CSSProperties}
               />
               <div
-                className="absolute right-0 top-0 h-full bg-gradient-to-l from-blue-600 to-blue-500 transition-all duration-1000"
-                style={{ width: `${bluePercent}%` }}
+                className="absolute right-0 top-0 h-full bg-gradient-to-l from-blue-600 to-blue-500 transition-all duration-1000 w-[var(--blue-w)]"
+                style={{ "--blue-w": `${bluePercent}%` } as React.CSSProperties}
               />
               {/* Center Spark */}
               <div
-                className="absolute top-0 bottom-0 w-1 bg-white blur-[2px]"
+                className="absolute top-0 bottom-0 w-1 bg-white blur-[2px] transition-all duration-1000 ease-in-out left-[var(--red-w)]"
                 style={{
-                  left: `${redPercent}%`,
-                  transition: "left 1s ease-in-out",
-                }}
+                  "--red-w": `${redPercent}%`,
+                } as React.CSSProperties}
               />
             </div>
           </div>

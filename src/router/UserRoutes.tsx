@@ -1,96 +1,16 @@
 ﻿// src/router/UserRoutes.tsx
 import React, { Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import UserLayout from "../components/layout/UserLayout";
-import SidebarAppLayout from "../components/layout/SidebarAppLayout";
-import RequireAuth from "../components/routing/RequireAuth";
 
-
-// Lazy load heavy pages for performance optimization
-const LoginPage = React.lazy(() => import("../pages/LoginPage"));
-const RoulettePage = React.lazy(() => import("../pages/RoulettePage"));
-const DicePage = React.lazy(() => import("../pages/DicePage"));
-const LotteryPage = React.lazy(() => import("../pages/LotteryPage"));
-const RankingPage = React.lazy(() => import("../pages/RankingPage"));
-const SurveyListPage = React.lazy(() => import("../pages/SurveyListPage"));
-const SurveyRunnerPage = React.lazy(() => import("../pages/SurveyRunnerPage"));
-const ConnectPage = React.lazy(() => import("../pages/ConnectPage"));
-const HomePage = React.lazy(() => import("../pages/HomePage"));
-const FigmaLandingTablet = React.lazy(() => import("../pages/FigmaLandingTablet"));
-const FigmaLandingMobile = React.lazy(() => import("../pages/FigmaLandingMobile"));
-const LevelTowerPage = React.lazy(() => import("../pages/LevelTowerPage"));
-const GuidePage = React.lazy(() => import("../pages/GuidePage"));
-const TeamBattlePage = React.lazy(() => import("../pages/TeamBattlePage"));
-const GameLobbyPage = React.lazy(() => import("../pages/GameLobbyPage"));
-const VaultPage = React.lazy(() => import("../pages/VaultPage"));
-const MissionPage = React.lazy(() => import("../pages/MissionPage"));
-const EventDashboardPage = React.lazy(() => import("../pages/EventDashboardPage"));
-const EventModalsPage = React.lazy(() => import("../pages/EventModalsPage"));
-const InventoryPage = React.lazy(() => import("../pages/InventoryPage"));
-const ExchangePage = React.lazy(() => import("../pages/ExchangePage"));
-
-
-// Simple loading fallback
-const PageLoader = () => (
-  <div className="flex items-center justify-center min-h-[100dvh] bg-black text-white">
-    <div className="flex flex-col items-center gap-3">
-      <div className="w-8 h-8 border-4 border-white/10 border-t-[var(--figma-accent-green)] rounded-full animate-spin" />
-      <p className="text-sm text-white/40 font-medium">Loading...</p>
-    </div>
-  </div>
-);
-
+// Cleaned up for V2 - No V1 dependencies
+// Redirects specific legacy paths to new V2 paths
 const UserRoutes: React.FC = () => {
   return (
-    <Suspense fallback={<PageLoader />}>
+    <Suspense fallback={<div className="bg-black text-white h-screen flex items-center justify-center">Loading...</div>}>
       <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/connect" element={<ConnectPage />} />
-
-        {/* Primary experience starts at landing/home */}
-        <Route path="/" element={<Navigate to="/v1/landing" replace />} />
-        <Route path="/tablet" element={<Navigate to="/landing/tablet" replace />} />
-        <Route path="/mobile" element={<Navigate to="/landing/mobile" replace />} />
-
-        {/* Primary user experience with sidebar */}
-        <Route element={<SidebarAppLayout />}>
-          <Route element={<RequireAuth />}>
-            <Route path="/landing" element={<HomePage />} />
-            <Route path="/landing/tablet" element={<FigmaLandingTablet />} />
-            <Route path="/landing/mobile" element={<FigmaLandingMobile />} />
-            <Route path="/vault" element={<VaultPage />} />
-            <Route path="/rewards" element={<InventoryPage />} />
-            <Route path="/events" element={<EventDashboardPage />} />
-            <Route path="/events/modals" element={<EventModalsPage />} />
-            <Route path="/events/streaks" element={<Navigate to="/events/modals" replace />} />
-            <Route path="/season-pass" element={<LevelTowerPage />} />
-            <Route path="/missions" element={<MissionPage />} />
-            <Route path="/team-battle" element={<TeamBattlePage />} />
-            <Route path="/games" element={<GameLobbyPage />} />
-            <Route path="/roulette" element={<RoulettePage />} />
-            <Route path="/dice" element={<DicePage />} />
-            <Route path="/lottery" element={<LotteryPage />} />
-
-            <Route path="/guide" element={<GuidePage />} />
-            <Route path="/inventory" element={<Navigate to="/rewards" replace />} />
-            <Route path="/shop" element={<ExchangePage />} />
-          </Route>
-        </Route>
-
-        <Route element={<UserLayout />}>
-          <Route element={<RequireAuth />}>
-            <Route path="/home" element={<Navigate to="/v1/landing" replace />} />
-            <Route path="/ranking" element={<RankingPage />} />
-            <Route path="/surveys" element={<SurveyListPage />} />
-            <Route path="/surveys/:surveyId" element={<SurveyRunnerPage />} />
-            <Route path="/app" element={<Navigate to="/v1/landing" replace />} />
-          </Route>
-        </Route>
-
-        <Route path="*" element={<Navigate to="/v1/landing" replace />} />
+        <Route path="*" element={<Navigate to="/home" replace />} />
       </Routes>
     </Suspense>
   );
 };
-
 export default UserRoutes;
