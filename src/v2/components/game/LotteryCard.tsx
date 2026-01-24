@@ -1,8 +1,5 @@
-import { motion, AnimatePresence } from 'framer-motion';
-import { useEffect, useRef } from 'react';
-import gsap from 'gsap';
-import clsx from 'clsx';
-import { useTheme } from '../../contexts/ThemeContext';
+import { motion, AnimatePresence } from "framer-motion";
+import { useTheme } from "../../contexts/ThemeContext";
 
 interface Prize {
   readonly id: number;
@@ -18,286 +15,199 @@ interface LotteryCardProps {
   readonly onScratch: () => void;
 }
 
-// ============================================================================
-// Lottery Card Component
-// ============================================================================
-
-const LotteryCard = ({ prize, isRevealed, isScratching, onScratch }: LotteryCardProps) => {
+const LotteryCard: React.FC<LotteryCardProps> = ({
+  prize,
+  isRevealed,
+  isScratching,
+  onScratch,
+}) => {
   const { theme } = useTheme();
-  const cardRef = useRef<HTMLDivElement>(null);
-  const disabled = isScratching || isRevealed;
+  const primaryGlowClass =
+    {
+      "#4F46E5": "bg-[#4F46E5]",
+      "#D4AF37": "bg-[#D4AF37]",
+      "#C41E3A": "bg-[#C41E3A]",
+    }[theme.colors.primary] ?? "bg-[#4F46E5]";
+  const accentGlowClass =
+    {
+      "#FACC15": "bg-[#FACC15]",
+      "#FFFFFF": "bg-white",
+      "#FFD700": "bg-[#FFD700]",
+    }[theme.colors.accent] ?? "bg-[#FACC15]";
+  const primaryTextClass =
+    {
+      "#4F46E5": "text-[#4F46E5]",
+      "#D4AF37": "text-[#D4AF37]",
+      "#C41E3A": "text-[#C41E3A]",
+    }[theme.colors.primary] ?? "text-[#4F46E5]";
+  const accentTextClass =
+    {
+      "#FACC15": "text-[#FACC15]",
+      "#FFFFFF": "text-white",
+      "#FFD700": "text-[#FFD700]",
+    }[theme.colors.accent] ?? "text-[#FACC15]";
 
-  // GSAP Animation for unrevealed state glow
-  useEffect(() => {
-    if (!isRevealed && cardRef.current) {
-      const glow = gsap.timeline({ repeat: -1, yoyo: true });
-      glow.to(cardRef.current, {
-        boxShadow: '0 0 40px rgba(255, 215, 0, 0.3)',
-        duration: 2,
-        ease: 'sine.inOut',
-      });
-      return () => {
-        glow.kill();
-      };
-    }
-  }, [isRevealed]);
-
-  // Format reward display
-  const formatRewardText = (rewardType: string, amount: string | number): string => {
-    const upper = rewardType.toUpperCase();
-    const val = Number(amount) || 0;
-
-    if (upper.includes('POINT') || upper === 'CASH' || upper === 'CURRENCY') {
-      return `${val.toLocaleString()} ??;
-    }
-    if (upper.includes('GAME_XP')) {
-      return `${val.toLocaleString()} XP`;
-    }
-    if (upper.includes('TICKET')) {
-      return `${val.toLocaleString()} ?∞Ïºì`;
-    }
-    return `${val.toLocaleString()}`;
+  const getRewardLabel = (
+    rewardType: string,
+    amount: string | number,
+  ): string => {
+    const cleanType = rewardType.toUpperCase();
+    if (cleanType.includes("TICKET")) return `${amount} Tickets`;
+    if (cleanType === "VAULT" || cleanType === "POINT")
+      return `‚Ç©${Number(amount).toLocaleString()}`;
+    if (cleanType.includes("FRAGMENT")) return `${amount}pcs`;
+    if (cleanType.includes("PUZZLE")) return "Puzzle Piece";
+    return `${amount} Reward`;
   };
 
-  const isPuzzlePiece = prize?.reward_type.startsWith('PUZZLE_');
-  const isNoReward =
-    prize?.reward_type === 'NONE' ||
-    (Number(prize?.reward_amount) === 0 && prize?.reward_type.includes('POINT'));
+  const getPuzzleCode = (type: string) => {
+    return type.replace("PUZZLE_", "");
+  };
 
   return (
-    <div className="relative mx-auto w-full max-w-sm">
-      {/* Premium Outer Frame */}
-      <div
-        ref={cardRef}
-        className="relative overflow-hidden rounded-[2.25rem] border bg-black/60 p-2 shadow-2xl backdrop-blur-3xl group transition-all duration-500"
-        style={{
-          borderColor: isRevealed
-            ? theme.colors.primary + '40'
-            : 'rgba(255, 255, 255, 0.2)',
-        }}
-      >
-        {/* Animated Background Glows */}
+    <div className="w-full max-w-[300px] mx-auto">
+      <div className="relative aspect-[4/5] w-full rounded-[2.5rem] border border-white/5 bg-zinc-900/40 p-3 shadow-2xl backdrop-blur-md overflow-hidden">
+        {/* Decorative elements */}
         <div
-          className="pointer-events-none absolute -left-20 -top-20 h-64 w-64 rounded-full blur-[100px] animate-pulse"
-          style={{ backgroundColor: theme.colors.accent + '10' }}
+          className={`absolute -top-24 -left-24 w-48 h-48 rounded-full blur-[80px] opacity-20 ${primaryGlowClass}`}
         />
         <div
-          className="pointer-events-none absolute -right-20 -bottom-20 h-64 w-64 rounded-full blur-[100px]"
-          style={{ backgroundColor: theme.colors.secondary + '05' }}
+          className={`absolute -bottom-24 -right-24 w-48 h-48 rounded-full blur-[80px] opacity-20 ${accentGlowClass}`}
         />
 
-        {/* The Card Body */}
-        <div className="relative aspect-[5/6] sm:aspect-[4/5] w-full rounded-[2rem] border border-white/10 bg-gradient-to-br from-slate-900 to-black overflow-hidden shadow-2xl">
-          <motion.div
-            className={clsx(
-              'relative h-full w-full flex flex-col items-center justify-center transition-all duration-700 focus:outline-none',
-              !disabled && 'cursor-pointer hover:scale-[1.02]',
-              disabled && 'cursor-default'
-            )}
-            role="button"
-            tabIndex={0}
-            onClick={() => {
-              if (!disabled) onScratch();
-            }}
-            whileHover={!disabled ? { scale: 1.02 } : undefined}
-            whileTap={!disabled ? { scale: 0.98 } : undefined}
-          >
-            {/* 1. UNREVEALED STATE (Gold Foil) */}
-            <AnimatePresence>
-              {!isRevealed && (
-                <motion.div
-                  className="absolute inset-0 z-20"
-                  initial={{ opacity: 1 }}
-                  exit={{ opacity: 0, scale: 1.1 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <img
-                    src="/assets/lottery/gold_foil.jpg"
-                    className="h-full w-full object-cover brightness-110 saturate-[1.2]"
-                    alt="Gold Foil"
-                  />
-                  {/* Overlay Text */}
-                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-[1px]">
+        <motion.div
+          className="relative h-full w-full rounded-[2rem] bg-zinc-950 border border-white/5 overflow-hidden group cursor-pointer"
+          onClick={!isRevealed && !isScratching ? onScratch : undefined}
+          whileTap={!isRevealed ? { scale: 0.98 } : {}}
+        >
+          <AnimatePresence mode="wait">
+            {!isRevealed ? (
+              <motion.div
+                key="scratch-cover"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0, scale: 1.1 }}
+                className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center z-20"
+              >
+                {/* Premium Texture Layer */}
+                <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_2px_2px,rgba(255,255,255,0.05)_1px,transparent_0)] bg-[length:16px_16px]" />
+
+                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-zinc-800 to-zinc-900 border border-white/10 flex items-center justify-center mb-6 shadow-xl">
+                  <motion.div
+                    animate={
+                      isScratching
+                        ? { rotate: [0, -10, 10, -10, 10, 0] }
+                        : { y: [0, -5, 0] }
+                    }
+                    transition={
+                      isScratching
+                        ? { duration: 0.5, repeat: Infinity }
+                        : { duration: 2, repeat: Infinity }
+                    }
+                    className="text-4xl"
+                  >
+                    üß§
+                  </motion.div>
+                </div>
+                <h3 className="text-xl font-black text-white/80 tracking-tight uppercase italic mb-2">
+                  Scratch Here
+                </h3>
+                <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest px-4 py-2 bg-white/5 rounded-full border border-white/5">
+                  Gold Pass Edition
+                </p>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="prize-reveal"
+                initial={{ scale: 0.8, opacity: 0, rotateY: 90 }}
+                animate={{ scale: 1, opacity: 1, rotateY: 0 }}
+                className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-gradient-to-b from-transparent to-zinc-900/50"
+              >
+                {prize ? (
+                  <div className="flex flex-col items-center">
                     <motion.div
-                      className="w-16 h-16 rounded-full bg-white/10 border border-white/20 flex items-center justify-center mb-3 backdrop-blur-md"
-                      animate={
-                        isScratching
-                          ? { scale: [1, 1.1, 1], rotate: [0, 360] }
-                          : { y: [0, -10, 0] }
-                      }
-                      transition={{
-                        duration: isScratching ? 1 : 2,
-                        repeat: Infinity,
-                        ease: 'easeInOut',
-                      }}
+                      key={prize.id}
+                      initial={{ y: 20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: 0.2 }}
+                      className="flex flex-col items-center gap-4"
                     >
-                      <img
-                        src="/assets/lottery/icon_lotto_ball.png"
-                        className="w-12 h-12 object-contain filter drop-shadow-lg"
-                        alt=""
-                      />
+                      <div className="w-24 h-24 rounded-3xl bg-white/5 border border-white/10 shadow-inner flex items-center justify-center overflow-hidden relative group">
+                        <div className="absolute inset-0 bg-white/5 group-hover:bg-white/10 transition-colors" />
+                        <span className="text-5xl drop-shadow-lg z-10">
+                          {prize.reward_type.includes("PUZZLE")
+                            ? "üß©"
+                            : prize.reward_type.includes("TICKET")
+                              ? "üéüÔ∏è"
+                              : prize.reward_type.includes("VAULT")
+                                ? "üí∞"
+                                : "üéÅ"}
+                        </span>
+                      </div>
+
+                      <div className="space-y-1">
+                        <h4 className="text-xs font-black text-white/40 uppercase tracking-[0.2em]">
+                          You Won
+                        </h4>
+                        <div className="text-2xl sm:text-3xl font-black text-white tracking-tight drop-shadow-md">
+                          {prize.reward_type.includes("PUZZLE") ? (
+                            <span
+                              className={`flex items-center gap-2 ${accentTextClass}`}
+                            >
+                              PUZZLE {getPuzzleCode(prize.reward_type)}
+                            </span>
+                          ) : (
+                            <span className={primaryTextClass}>
+                              {getRewardLabel(
+                                prize.reward_type,
+                                prize.reward_amount,
+                              )}
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </motion.div>
-                    <h3 className="text-white text-2xl font-black italic tracking-tighter uppercase drop-shadow-lg">
-                      {isScratching ? '?¥Î¶¨??Ï§?..' : '??ïò???ïÏù∏'}
+
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 1 }}
+                      className="mt-8 flex flex-col items-center"
+                    >
+                      <div className="h-px w-8 bg-white/10 mb-4" />
+                      <p className="text-[10px] font-bold text-zinc-500 uppercase italic">
+                        Reward sent to inbox
+                      </p>
+                    </motion.div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center opacity-50">
+                    <span className="text-5xl mb-4">üí®</span>
+                    <h3 className="text-xl font-black text-white tracking-tight uppercase italic">
+                      No Luck
                     </h3>
-                    <p className="mt-1.5 text-amber-200/90 text-[9px] font-black tracking-[0.2em] uppercase drop-shadow-md">
-                      {theme.name} PREMIUM TICKET
+                    <p className="text-[10px] font-bold text-zinc-500 uppercase">
+                      Better luck next time
                     </p>
                   </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      </div>
 
-            {/* 2. REVEALED PRIZE STATE */}
-            <AnimatePresence>
-              {isRevealed && prize && (
-                <motion.div
-                  className="relative z-10 w-full h-full flex flex-col items-center justify-center p-4 text-center"
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.5, ease: 'backOut' }}
-                >
-                  {/* Simplified Visual Effects */}
-                  <div
-                    className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-transparent opacity-50"
-                    style={{
-                      backgroundImage: `linear-gradient(to bottom, ${theme.colors.accent}10, transparent, ${theme.colors.primary}10)`,
-                    }}
-                  />
-
-                  <div className="relative z-20 flex flex-col items-center">
-                    <motion.span
-                      className="inline-block px-3 py-1 rounded-full border text-[10px] font-black tracking-widest uppercase mb-4 shadow-lg"
-                      style={{
-                        backgroundColor: theme.colors.win + '20',
-                        borderColor: theme.colors.win + '30',
-                        color: theme.colors.win,
-                      }}
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ delay: 0.2, type: 'spring', stiffness: 300 }}
-                    >
-                      Ï∂ïÌïò?©Îãà??
-                    </motion.span>
-
-                    {/* No Reward */}
-                    {isNoReward ? (
-                      <>
-                        <motion.span
-                          className="text-6xl mb-4"
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.3 }}
-                        >
-                          ?í®
-                        </motion.span>
-                        <h2 className="text-white text-2xl font-black tracking-tight uppercase italic">
-                          {prize.label}
-                        </h2>
-                        <p className="mt-2 text-white/40 font-bold uppercase tracking-widest text-[10px]">
-                          ?§Ïùå Í∏∞Ìöå??
-                        </p>
-                      </>
-                    ) : (
-                      <motion.div
-                        className="flex flex-col items-center"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.3 }}
-                      >
-                        <h2 className="text-white font-black tracking-tight uppercase mb-2 text-2xl sm:text-3xl italic">
-                          {prize.label}
-                        </h2>
-
-                        {/* Puzzle Piece Render */}
-                        {isPuzzlePiece && (
-                          <motion.div
-                            className="my-2 relative"
-                            initial={{ rotateY: -180, scale: 0 }}
-                            animate={{ rotateY: 0, scale: 1 }}
-                            transition={{ delay: 0.5, duration: 0.8, type: 'spring' }}
-                          >
-                            <div
-                              className="relative w-20 h-24 rounded-xl flex items-center justify-center text-5xl font-black shadow-2xl bg-gradient-to-br from-amber-300 via-amber-500 to-amber-700 text-white"
-                              style={{
-                                boxShadow:
-                                  '0 10px 20px rgba(0,0,0,0.5), inset 0 2px 0 rgba(255,255,255,0.4), inset 0 -4px 0 rgba(0,0,0,0.2)',
-                              }}
-                            >
-                              <span className="drop-shadow-md pb-1">
-                                {prize.reward_type.replace('PUZZLE_', '')}
-                              </span>
-                            </div>
-                          </motion.div>
-                        )}
-
-                        {/* Standard Reward */}
-                        {!isPuzzlePiece && (
-                          <motion.div
-                            className="flex flex-col items-center"
-                            initial={{ opacity: 0, scale: 0.5 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ delay: 0.5, type: 'spring' }}
-                          >
-                            <div
-                              className="text-2xl sm:text-3xl font-black tracking-tight"
-                              style={{ color: theme.colors.accent }}
-                            >
-                              {formatRewardText(prize.reward_type, prize.reward_amount)}
-                            </div>
-                          </motion.div>
-                        )}
-                      </motion.div>
-                    )}
-
-                    <div className="h-px w-12 bg-white/20 mx-auto my-4" />
-
-                    <p
-                      className="text-[10px] font-black tracking-[0.3em] uppercase opacity-70"
-                      style={{ color: theme.colors.accent }}
-                    >
-                      {isNoReward ? 'TRY AGAIN' : 'ÏßÄÍ∏??ÑÎ£å'}
-                    </p>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* 3. EMPTY STATE */}
-            <AnimatePresence>
-              {isRevealed && !prize && (
-                <motion.div
-                  className="flex flex-col items-center text-center p-5"
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <span className="text-5xl mb-4">?å™Ô∏?/span>
-                  <h3 className="text-white text-xl sm:text-2xl font-black tracking-tight uppercase italic">
-                    ?§Ïùå???§Ïãú!
-                  </h3>
-                  <p className="mt-2 text-white/40 font-bold text-sm">?¥Ïù¥ ?∞Î•¥ÏßÄ ?äÏïò?§Ïöî.</p>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
-        </div>
-
-        {/* Bottom Card Info */}
-        <div className="mt-3 flex items-center justify-between px-2">
-          <div className="flex items-center gap-2">
-            <div
-              className="w-2 h-2 rounded-full animate-pulse"
-              style={{ backgroundColor: theme.colors.accent }}
-            />
-            <span className="text-[10px] font-black text-white/30 tracking-widest uppercase">
-              Premium System
-            </span>
-          </div>
-          <span className="text-[10px] font-black text-white/30 tracking-widest uppercase">
-            V2-2026-{theme.name.toUpperCase()}
+      {/* Bottom info */}
+      <div className="mt-4 flex items-center justify-between px-4">
+        <div className="flex items-center gap-2">
+          <div className={`w-1.5 h-1.5 rounded-full ${primaryGlowClass}`} />
+          <span className="text-[10px] font-black text-white/30 uppercase tracking-widest">
+            Scratch & Win
           </span>
         </div>
+        <span className="text-[11px] font-mono font-bold text-white/20">
+          2026-V2
+        </span>
       </div>
     </div>
   );

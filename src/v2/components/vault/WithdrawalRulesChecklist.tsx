@@ -1,5 +1,5 @@
 import React from "react";
-import { CheckCircle2, Circle, Gamepad2, Coins, Wallet, Landmark } from "lucide-react";
+import { CheckCircle2, Gamepad2, Coins, Wallet } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { motion } from "framer-motion";
 import {
@@ -18,155 +18,149 @@ interface RuleItemProps {
   percent: number;
 }
 
-const RuleItem: React.FC<RuleItemProps> = ({ 
-  title, 
-  description, 
-  icon: Icon, 
-  status, 
-  progressText, 
-  percent 
+const RuleItem: React.FC<RuleItemProps> = ({
+  title,
+  description,
+  icon: Icon,
+  status,
+  progressText,
+  percent,
 }) => {
   return (
-    <div className={cn(
-      "flex flex-col p-4 rounded-2xl border transition-all duration-300",
-      status
-        ? "bg-orange-500/[0.03] border-orange-500/30 shadow-[inset_0_0_20px_rgba(212,175,55,0.05)]"
-        : "bg-white/[0.02] border-white/5"
-    )}>
-      {/* Top Row */}
-      <div className="flex items-center gap-3.5 mb-3">
-        <div className={cn(
-          "w-9 h-9 rounded-xl flex items-center justify-center shadow-inner",
+    <div className="flex gap-4">
+      <div
+        className={cn(
+          "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all",
           status
-            ? "bg-orange-500/10 text-orange-400"
-            : "bg-black/40 text-zinc-500"
-        )}>
-          <Icon size={18} />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between">
-            <span className={cn(
-              "text-sm font-bold truncate pr-2",
-              status ? "text-white" : "text-white/70"
-            )}>{title}</span>
-            {status ? (
-              <div className="flex items-center gap-1 text-orange-400">
-                <span className="text-[10px] font-bold uppercase">?�료</span>
-                <CheckCircle2 size={14} className="fill-orange-500/20" />
-              </div>
-            ) : (
-              <Circle size={14} className="text-white/10" />
-            )}
-          </div>
-          <div className="text-[11px] text-white/30 truncate mt-0.5">{description}</div>
-        </div>
+            ? "bg-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.3)]"
+            : "bg-zinc-800",
+        )}
+      >
+        <Icon
+          className={cn(
+            "w-5 h-5",
+            status ? "text-emerald-400" : "text-zinc-500",
+          )}
+        />
       </div>
-
-      {/* Progress Bar */}
-      <div className="mt-1">
-        <div className="flex justify-between items-center text-[10px] font-bold mb-1.5 uppercase">
-          <span className={status ? "text-orange-500/70" : "text-zinc-600"}>
-            Progress
-          </span>
-          <span className={status ? "text-orange-400" : "text-zinc-500"}>
-            {progressText}
-          </span>
+      <div className="flex-1 space-y-1.5 min-w-0">
+        <div className="flex items-center justify-between gap-2">
+          <h4
+            className={cn(
+              "text-xs font-black tracking-tight",
+              status ? "text-white" : "text-zinc-400",
+            )}
+          >
+            {title}
+          </h4>
+          {status ? (
+            <div className="flex items-center gap-1 text-emerald-400">
+              <span className="text-[10px] font-black uppercase">CLEAR</span>
+              <CheckCircle2 className="w-3.5 h-3.5" />
+            </div>
+          ) : (
+            <span className="text-[10px] font-bold text-zinc-500 font-mono italic">
+              {progressText}
+            </span>
+          )}
         </div>
-        <div className="h-1.5 bg-black/40 rounded-full overflow-hidden border border-white/5">
+        <div className="h-1.5 w-full bg-black/40 rounded-full overflow-hidden">
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${percent}%` }}
+            transition={{ duration: 1, ease: "easeOut" }}
             className={cn(
-              "h-full rounded-full transition-all duration-500 shadow-[0_0_10px_rgba(212,175,55,0.6)]",
-              status ? "bg-gradient-to-r from-orange-400 to-red-500" : "bg-white/10"
+              "h-full rounded-full",
+              status
+                ? "bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"
+                : "bg-zinc-600",
             )}
           />
         </div>
+        <p className="text-[10px] text-zinc-500 font-medium truncate uppercase tracking-tighter">
+          {description}
+        </p>
       </div>
     </div>
   );
 };
 
 interface WithdrawalRulesChecklistProps {
-  vaultBalance: number;
   playCount: number;
   playTarget: number;
+  isPlayMet: boolean;
   spendAmount: number;
   spendTarget: number;
-  depositConfirmed: boolean;
+  isSpendMet: boolean;
+  isAccountVerified: boolean;
 }
 
-export const WithdrawalRulesChecklist: React.FC<WithdrawalRulesChecklistProps> = ({
-  vaultBalance,
+export const WithdrawalRulesChecklist: React.FC<
+  WithdrawalRulesChecklistProps
+> = ({
   playCount,
   playTarget,
+  isPlayMet,
   spendAmount,
   spendTarget,
-  depositConfirmed,
+  isSpendMet,
+  isAccountVerified,
 }) => {
-  const minWithdrawal = 10000;
-  const isBalanceMet = vaultBalance >= minWithdrawal;
-  const isPlayMet = playCount >= playTarget;
-  const isSpentMet = spendAmount >= spendTarget;
-  const isDepositMet = depositConfirmed;
-
   const conditions = [
     {
-      id: "min-balance",
-      title: "최소 출금 가?�액",
-      description: `보유 금액 ${(minWithdrawal ?? 0).toLocaleString()}???�상`,
-      status: isBalanceMet,
-      icon: Wallet,
-      progressText: `${(vaultBalance ?? 0).toLocaleString()} / ${(minWithdrawal ?? 0).toLocaleString()}`,
-      percent: Math.min(100, (vaultBalance / (minWithdrawal || 1)) * 100)
-    },
-    {
-      id: "deposit",
-      title: "금일 ?�금 ?�역",
-      description: "?�일 ?�금 기록 ?�요",
-      status: isDepositMet,
-      icon: Landmark,
-      progressText: isDepositMet ? "?�료" : "미완�?,
-      percent: isDepositMet ? 100 : 0
-    },
-    {
-      id: "plays",
-      title: "게임 ?�레??,
-      description: `최근 3???�내 게임 ${(playTarget ?? 0).toLocaleString()}???�상 ?�레??,
-      status: isPlayMet,
+      id: "play",
+      title: "게임 플레이 횟수",
+      description: `최근 24시간 내 게임 ${playTarget.toLocaleString()}회 이상 플레이`,
       icon: Gamepad2,
-      progressText: `${playCount ?? 0} / ${playTarget ?? 0}??,
-      percent: Math.min(100, (playCount / (playTarget || 1)) * 100)
+      status: isPlayMet,
+      progressText: `${playCount} / ${playTarget}`,
+      percent: Math.min(100, (playCount / (playTarget || 1)) * 100),
     },
     {
       id: "spent",
-      title: "금고 ?�용 ?�적",
-      description: `금고 ?�일 ?�용??${(spendTarget ?? 0).toLocaleString()}???�상`,
-      status: isSpentMet,
+      title: "누적 사용 금액",
+      description: `누적 ${spendTarget.toLocaleString()} 포인트 이상 사용`,
       icon: Coins,
-      progressText: `${(spendAmount ?? 0).toLocaleString()} / ${(spendTarget ?? 0).toLocaleString()}??,
-      percent: Math.min(100, (spendAmount / (spendTarget || 1)) * 100)
-    }
+      status: isSpendMet,
+      progressText: `${spendAmount.toLocaleString()} / ${spendTarget.toLocaleString()}`,
+      percent: Math.min(100, (spendAmount / (spendTarget || 1)) * 100),
+    },
+    {
+      id: "verify",
+      title: "계좌 점유인증",
+      description: "입금 계좌 실명 확인 및 0원 인증 완료",
+      icon: Wallet,
+      status: isAccountVerified,
+      progressText: isAccountVerified ? "100%" : "0%",
+      percent: isAccountVerified ? 100 : 0,
+    },
   ];
 
-
   return (
-    <Accordion type="single" collapsible className="w-full border-none">
-      <AccordionItem value="checklist" className="border-none">
-        <AccordionTrigger className="hover:no-underline py-4">
-          <div className="flex items-center justify-between w-full pr-4">
-            <h3 className="text-sm font-bold text-white/60 tracking-tight uppercase">출금 ?�청 조건</h3>
+    <Accordion
+      type="single"
+      collapsible
+      className="w-full border-none"
+      defaultValue="list"
+    >
+      <AccordionItem value="list" className="border-none">
+        <AccordionTrigger className="hover:no-underline py-0">
+          <div className="flex items-center justify-between w-full py-2">
+            <h3 className="text-[11px] font-black text-white/40 tracking-tighter uppercase flex items-center gap-2">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              Withdrawal Requirements
+            </h3>
           </div>
         </AccordionTrigger>
-        <AccordionContent className="pt-4 pb-0">
-          <div className="space-y-3">
+        <AccordionContent className="pt-4 pb-2">
+          <div className="space-y-5">
             {conditions.map((item) => (
               <RuleItem
                 key={item.id}
                 title={item.title}
                 description={item.description}
-                status={item.status}
                 icon={item.icon}
+                status={item.status}
                 progressText={item.progressText}
                 percent={item.percent}
               />

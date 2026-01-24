@@ -1,4 +1,13 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  getAdminSegmentRules,
+  createSegmentRule,
+  deleteSegmentRule,
+  getAdminSegmentStats,
+  runV2SegmentBatch,
+  type CreateSegmentRuleRequest,
+} from "../../../api/adminApi";
 import {
   Card,
   CardContent,
@@ -6,42 +15,8 @@ import {
   CardTitle,
   CardDescription,
 } from "../../../components/ui/card";
-import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
-import {
-  Users,
-  Play,
-  ShieldCheck,
-  AlertCircle,
-  BrainCircuit,
-  Loader2,
-  Plus,
-  MoreHorizontal,
-  Pencil,
-  Trash2,
-  ToggleLeft,
-  ToggleRight,
-} from "lucide-react";
-import {
-  useRunSegmentBatch,
-  useAdminSegmentStats,
-  useAdminSegmentRules,
-  useCreateSegmentRule,
-  useUpdateSegmentRule,
-  useDeleteSegmentRule,
-} from "../../../hooks/useV2Admin";
-import { useToast } from "../../../../components/common/ToastProvider";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "../../../components/ui/dialog";
-import { Label } from "../../../components/ui/label";
 import { Input } from "../../../components/ui/input";
-import { Textarea } from "../../../components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -50,490 +25,282 @@ import {
   SelectValue,
 } from "../../../components/ui/select";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "../../components/ui/dropdown-menu";
-import { SegmentRuleDto } from "../../../api/adminApi";
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../../../components/ui/table";
+import { Badge } from "../../../components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "../../../components/ui/dialog";
+import { Label } from "../../../components/ui/label";
+import { Plus, Trash2, RefreshCw, Play, Users } from "lucide-react";
+import { format } from "date-fns";
 
 export default function UserSegmentPage() {
-  const {
-    data: stats,
-    isLoading: isStatsLoading,
-    refetch: refetchStats,
-  } = useAdminSegmentStats();
-  const {
-    data: rules,
-    isLoading: isRulesLoading,
-    refetch: refetchRules,
-  } = useAdminSegmentRules();
-  const runBatch = useRunSegmentBatch();
-  const createRule = useCreateSegmentRule();
-  const updateRule = useUpdateSegmentRule();
-  const deleteRule = useDeleteSegmentRule();
-  const { addToast } = useToast();
-
-  const [isRuleDialogOpen, setIsRuleDialogOpen] = useState(false);
-  const [editingRule, setEditingRule] = useState<SegmentRuleDto | null>(null);
-  const [formData, setFormData] = useState<{
-    label: string;
-    rule: string;
-    targetSegment: string;
-    description: string;
-  }>({
+  const queryClient = useQueryClient();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [newRule, setNewRule] = useState<CreateSegmentRuleRequest>({
     label: "",
     rule: "",
-    targetSegment: "",
+    targetSegment: "VIP_Potential",
     description: "",
   });
 
-  const segmentOptions = useMemo(() => {
-    const map = new Map<string, string>();
-    stats?.segments.forEach((seg) => {
-      map.set(seg.name, seg.label || seg.name);
-    });
-    rules?.forEach((rule) => {
-      if (!map.has(rule.targetSegment)) {
-        map.set(rule.targetSegment, rule.targetSegment);
-      }
-    });
-    return Array.from(map.entries()).map(([value, label]) => ({
-      value,
-      label,
-    }));
-  }, [stats?.segments, rules]);
+  // Queries
+  const { data: rules = [], isLoading: isLoadingRules } = useQuery({
+    queryKey: ["admin", "segments", "rules"],
+    queryFn: getAdminSegmentRules,
+  });
 
-  const handleRunBatch = async () => {
-    try {
-      await runBatch.mutateAsync();
-      addToast("AI ?�그먼트 배치�??�작?�습?�다.", "success");
-    } catch (e) {
-      console.error("Batch failed", e);
-      addToast("배치 ?�행 �??�류가 발생?�습?�다.", "error");
-    }
-  };
+  const { data: stats, isLoading: isLoadingStats } = useQuery({
+    queryKey: ["admin", "segments", "stats"],
+    queryFn: getAdminSegmentStats,
+  });
 
-  const handleSyncCheck = async () => {
-    try {
-      await Promise.all([refetchStats(), refetchRules()]);
-      addToast("?�역 ?�기???�태�??�인?�습?�다.", "success");
-    } catch (e) {
-      console.error("Sync check failed", e);
-      addToast("?�기???�인 �??�류가 발생?�습?�다.", "error");
-    }
-  };
-
-  const handleOpenCreateDialog = () => {
-    setEditingRule(null);
-    const defaultSegment = segmentOptions[0]?.value ?? "";
-    setFormData({
-      label: "",
-      rule: "",
-      targetSegment: defaultSegment,
-      description: "",
-    });
-    setIsRuleDialogOpen(true);
-  };
-
-  const handleOpenEditDialog = (rule: SegmentRuleDto) => {
-    setEditingRule(rule);
-    setFormData({
-      label: rule.label,
-      rule: rule.rule,
-      targetSegment: rule.targetSegment || segmentOptions[0]?.value || "",
-      description: rule.description || "",
-    });
-    setIsRuleDialogOpen(true);
-  };
-
-  const handleSubmitRule = async () => {
-    try {
-      if (editingRule) {
-        await updateRule.mutateAsync({ id: editingRule.id, data: formData });
-        addToast("규칙???�정?�었?�니??", "success");
-      } else {
-        await createRule.mutateAsync(formData);
-        addToast("??규칙???�성?�었?�니??", "success");
-      }
-      setIsRuleDialogOpen(false);
-      setIsRuleDialogOpen(false);
-    } catch {
-      addToast("규칙 ?�?�에 ?�패?�습?�다.", "error");
-    }
-  };
-
-  const handleDeleteRule = async (id: number) => {
-    if (!confirm("?�말 ??규칙????��?�시겠습?�까?")) return;
-    try {
-      await deleteRule.mutateAsync(id);
-      addToast("규칙????��?�었?�니??", "success");
-    } catch {
-      addToast("규칙 ??��???�패?�습?�다.", "error");
-    }
-  };
-
-  const handleToggleStatus = async (rule: SegmentRuleDto) => {
-    const newStatus = rule.status === "Active" ? "Inactive" : "Active";
-    try {
-      await updateRule.mutateAsync({
-        id: rule.id,
-        data: { status: newStatus },
+  // Mutations
+  const createMutation = useMutation({
+    mutationFn: createSegmentRule,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "segments", "rules"] });
+      setIsDialogOpen(false);
+      setNewRule({
+        label: "",
+        rule: "",
+        targetSegment: "VIP_Potential",
+        description: "",
       });
-      addToast(`규칙 ?�태가 ${newStatus}�?변경되?�습?�다.`, "success");
-    } catch {
-      addToast("?�태 변경에 ?�패?�습?�다.", "error");
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteSegmentRule,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "segments", "rules"] });
+    },
+  });
+
+  const runBatchMutation = useMutation({
+    mutationFn: runV2SegmentBatch,
+    onSuccess: () => {
+      alert("배치 작업이 시작되었습니다.");
+      queryClient.invalidateQueries({ queryKey: ["admin", "segments", "stats"] });
+    },
+  });
+
+  const handleDelete = async (id: number) => {
+    if (confirm("정말 이 규칙을 삭제하시겠습니까?")) {
+      await deleteMutation.mutateAsync(id);
     }
   };
-
-  const isLoading = isStatsLoading || isRulesLoading;
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-[#121214] text-zinc-500">
-        <Loader2 className="w-8 h-8 animate-spin mr-3" />
-        분석 ?�진 ?�이?��? 불러?�는 �?..
-      </div>
-    );
-  }
 
   return (
-    <div className="p-6 space-y-8 bg-[#121214] min-h-screen text-white">
+    <div className="space-y-8 p-6 pb-20 max-w-[1600px] mx-auto text-white">
       {/* Header */}
-      <div className="flex justify-between items-start">
+      <div className="flex justify-between items-center">
         <div>
-          <div className="flex items-center gap-2 text-indigo-400 mb-2">
-            <BrainCircuit className="w-4 h-4" />
-            <span className="text-xs font-bold uppercase tracking-wider">
-              AI ?�그먼트 ?�진
-            </span>
-          </div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            ?��? ?�그먼트 (User Segments)
+          <h1 className="text-3xl font-black text-white tracking-tight mb-2">
+            유저 세그먼트 (Segmentation)
           </h1>
-          <p className="text-sm text-zinc-400 mt-1">
-            ?�용???�동 ?�이?��? 분석?�여 마�???�??�영 ?��?그룹??분류?�니??
+          <p className="text-zinc-400">
+            유저 등급 및 행동 패턴에 따른 분류 규칙을 관리합니다.
           </p>
         </div>
-        <div className="flex flex-col items-end gap-3">
-          <Button
-            variant="secondary"
-            className="bg-zinc-900 border border-white/10 text-zinc-300 h-9 px-4 text-xs hover:bg-zinc-800"
-            onClick={handleSyncCheck}
+        <div className="flex gap-2">
+           <Button
+            variant="outline"
+            className="border-white/10 hover:bg-white/5"
+            onClick={() => {
+                queryClient.invalidateQueries({ queryKey: ["admin", "segments"] });
+            }}
           >
-            ?�역 ?�기???��?
+            <RefreshCw className="w-4 h-4 mr-2" />
+            새로고침
           </Button>
           <Button
-            className="bg-[#D2FD9C] hover:bg-[#D2FD9C]/90 text-black font-bold h-10 px-6"
-            onClick={handleRunBatch}
-            disabled={runBatch.isPending}
+            className="bg-indigo-600 hover:bg-indigo-700"
+            disabled={runBatchMutation.isPending}
+            onClick={() => runBatchMutation.mutate()}
           >
             <Play className="w-4 h-4 mr-2" />
-            {runBatch.isPending ? "배치 �?.." : "배치 즉시 ?�행"}
+            세그먼트 배치 실행
           </Button>
-          {stats?.lastBatchTime && (
-            <span className="text-[10px] text-zinc-500 font-mono uppercase">
-              마�?�?분석: {stats.lastBatchTime}
-            </span>
-          )}
         </div>
       </div>
 
-      {/* Stats Overview */}
-      <div className="grid gap-4 md:grid-cols-4">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {stats?.segments.map((seg) => (
-          <Card
-            key={seg.name}
-            className={`bg-[#18181B] border-white/5 ${seg.border} hover:bg-zinc-800/50 transition-all cursor-default`}
-          >
-            <CardHeader className="pb-2">
-              <div className="flex justify-between items-start">
-                <CardTitle
-                  className={`text-xs font-bold uppercase tracking-widest ${seg.color}`}
+          <Card key={seg.name} className="bg-zinc-900 border-white/10">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-2">
+                <Badge 
+                    variant="outline" 
+                    className="bg-black/20"
+                    style={{ borderColor: seg.color || '#555', color: seg.color || '#ccc' }}
                 >
-                  {seg.name}
-                </CardTitle>
-                <Users className="w-4 h-4 text-zinc-600" />
+                    {seg.label}
+                </Badge>
+                <Users className="w-4 h-4 text-zinc-500" />
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold mb-1">
+              <div className="text-2xl font-bold text-white mb-1">
                 {seg.count.toLocaleString()}
               </div>
-              <p className="text-[10px] text-zinc-400 leading-tight min-h-[2.5em]">
-                {seg.desc}
-              </p>
-              <div className="mt-4 pt-3 border-t border-white/5">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 text-[10px] w-full text-zinc-400 hover:text-white hover:bg-white/5"
-                >
-                  ?�그먼트 ?��? ?�세 보기
-                </Button>
-              </div>
+              <p className="text-xs text-zinc-500">{seg.desc}</p>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Segment Rules */}
-        <Card className="bg-[#18181B] border-white/8 shadow-2xl">
-          <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-white/5 mb-4">
+       {/* Rules Table */}
+      <Card className="bg-zinc-900 border-white/10">
+        <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle className="text-base font-bold">
-                분류 규칙 (규칙 ?�진)
-              </CardTitle>
-              <CardDescription className="text-zinc-500 text-xs mt-1">
-                ?�동 분류 ?�스?�의 ?�심 로직?�니??
-              </CardDescription>
+                <CardTitle className="text-white">세그먼트 규칙 목록</CardTitle>
+                <CardDescription>
+                    각 세그먼트에 유저를 할당하는 SQL 기반 규칙입니다.
+                </CardDescription>
             </div>
-            <Button
-              variant="secondary"
-              size="sm"
-              className="h-8 bg-zinc-800 text-white border-white/5 text-xs hover:bg-zinc-700"
-              onClick={handleOpenCreateDialog}
-            >
-              <Plus className="w-3 h-3 mr-2" /> 규칙 추�?
-            </Button>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <div className="space-y-2">
-              {rules?.map((rule) => (
-                <div
-                  key={rule.id}
-                  className="group flex justify-between items-start p-3 rounded-lg bg-zinc-900/50 border border-white/5 hover:border-zinc-700 transition-colors"
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm font-bold text-zinc-200">
-                        {rule.label}
-                      </span>
-                      <Badge
-                        variant="outline"
-                        className="text-[10px] h-4 px-1 text-zinc-500 border-zinc-700"
-                      >
-                        {rule.targetSegment}
-                      </Badge>
+             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogTrigger asChild>
+                    <Button className="bg-emerald-600 hover:bg-emerald-700">
+                        <Plus className="w-4 h-4 mr-2" />
+                        규칙 추가
+                    </Button>
+                </DialogTrigger>
+                <DialogContent className="bg-zinc-900 border-white/10 text-white">
+                    <DialogHeader>
+                        <DialogTitle>새 규칙 추가</DialogTitle>
+                        <DialogDescription>
+                            새로운 세그먼트 분류 규칙을 생성합니다. (SQL WHERE 절 형태)
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <Label>규칙 이름 (Label)</Label>
+                            <Input 
+                                value={newRule.label}
+                                onChange={(e) => setNewRule({...newRule, label: e.target.value})}
+                                placeholder="예: 고액 입금자"
+                                className="bg-black/20 border-white/10"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>SQL 조건 (WHERE Clause)</Label>
+                            <Input 
+                                value={newRule.rule}
+                                onChange={(e) => setNewRule({...newRule, rule: e.target.value})}
+                                placeholder="예: total_deposit >= 1000000"
+                                className="bg-black/20 border-white/10 font-mono text-xs"
+                            />
+                        </div>
+                         <div className="space-y-2">
+                            <Label>대상 세그먼트</Label>
+                            <Select
+                                value={newRule.targetSegment}
+                                onValueChange={(v) => setNewRule({...newRule, targetSegment: v})}
+                            >
+                                <SelectTrigger className="bg-black/20 border-white/10">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="bg-zinc-800 border-zinc-700">
+                                    <SelectItem value="VIP_Potential">VIP 잠재</SelectItem>
+                                    <SelectItem value="Churn_Risk">이탈 위험</SelectItem>
+                                    <SelectItem value="New_User">신규 유저</SelectItem>
+                                    {/* Add other segments dynamically if possible, or hardcode common ones */}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                         <div className="space-y-2">
+                            <Label>설명 (Optional)</Label>
+                            <Input 
+                                value={newRule.description || ""}
+                                onChange={(e) => setNewRule({...newRule, description: e.target.value})}
+                                className="bg-black/20 border-white/10"
+                            />
+                        </div>
                     </div>
-                    <div className="text-xs text-indigo-400 font-mono bg-indigo-950/30 px-2 py-1 rounded w-fit mb-1">
-                      {rule.rule}
-                    </div>
-                    {rule.description && (
-                      <p className="text-[10px] text-zinc-500">
-                        {rule.description}
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge
-                      className={`border-none h-5 text-[10px] cursor-pointer ${rule.status === "Active" ? "bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20" : "bg-zinc-500/10 text-zinc-500 hover:bg-zinc-500/20"}`}
-                      onClick={() => handleToggleStatus(rule)}
-                    >
-                      {rule.status === "Active" ? "Active" : "Inactive"}
-                    </Badge>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6 text-zinc-500 hover:text-white"
+                    <DialogFooter>
+                        <Button variant="ghost" onClick={() => setIsDialogOpen(false)}>취소</Button>
+                        <Button 
+                            onClick={() => createMutation.mutate(newRule)}
+                            disabled={createMutation.isPending || !newRule.label || !newRule.rule}
                         >
-                          <MoreHorizontal className="w-4 h-4" />
+                            {createMutation.isPending ? "저장 중..." : "저장"}
                         </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent
-                        align="end"
-                        className="bg-[#18181B] border-white/10 text-zinc-200"
-                      >
-                        <DropdownMenuItem
-                          onClick={() => handleOpenEditDialog(rule)}
-                          className="text-xs cursor-pointer focus:bg-zinc-800 focus:text-white"
-                        >
-                          <Pencil className="w-3 h-3 mr-2" /> ?�정
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handleToggleStatus(rule)}
-                          className="text-xs cursor-pointer focus:bg-zinc-800 focus:text-white"
-                        >
-                          {rule.status === "Active" ? (
-                            <ToggleLeft className="w-3 h-3 mr-2" />
-                          ) : (
-                            <ToggleRight className="w-3 h-3 mr-2" />
-                          )}
-                          {rule.status === "Active" ? "비활?�화" : "?�성??}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handleDeleteRule(rule.id)}
-                          className="text-xs text-red-400 cursor-pointer focus:bg-red-950/30 focus:text-red-400"
-                        >
-                          <Trash2 className="w-3 h-3 mr-2" /> ??��
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
-              ))}
-              {(!rules || rules.length === 0) && (
-                <div className="text-center py-8 text-zinc-500 text-xs">
-                  ?�록??규칙???�습?�다.
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </CardHeader>
+        <CardContent>
+            <Table>
+                <TableHeader className="bg-white/5">
+                    <TableRow className="border-white/5 hover:bg-transparent">
+                        <TableHead className="text-zinc-400 w-[50px]">ID</TableHead>
+                        <TableHead className="text-zinc-400 w-[200px]">이름</TableHead>
+                        <TableHead className="text-zinc-400">규칙 (SQL)</TableHead>
+                        <TableHead className="text-zinc-400 w-[150px]">대상 세그먼트</TableHead>
+                         <TableHead className="text-zinc-400 w-[100px]">상태</TableHead>
+                        <TableHead className="text-zinc-400 w-[80px] text-right">삭제</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {isLoadingRules ? (
+                        <TableRow>
+                            <TableCell colSpan={6} className="text-center py-10 text-zinc-500">로딩중...</TableCell>
+                        </TableRow>
+                    ) : rules.length === 0 ? (
+                        <TableRow>
+                             <TableCell colSpan={6} className="text-center py-10 text-zinc-500">등록된 규칙이 없습니다.</TableCell>
+                        </TableRow>
+                    ) : (
+                        rules.map((rule) => (
+                            <TableRow key={rule.id} className="border-white/5 hover:bg-white/5">
+                                <TableCell className="text-zinc-500">{rule.id}</TableCell>
+                                <TableCell className="font-medium text-white">{rule.label}</TableCell>
+                                <TableCell className="font-mono text-xs text-indigo-300 bg-indigo-950/30 px-2 py-1 rounded">
+                                    {rule.rule}
+                                </TableCell>
+                                <TableCell>
+                                    <Badge variant="outline" className="text-zinc-300 border-zinc-700">
+                                        {rule.targetSegment}
+                                    </Badge>
+                                </TableCell>
+                                <TableCell>
+                                    <Badge className={rule.status === 'Active' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-zinc-500/20 text-zinc-400'}>
+                                        {rule.status}
+                                    </Badge>
+                                </TableCell>
+                                <TableCell className="text-right">
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-8 w-8 p-0 text-zinc-500 hover:text-red-400"
+                                        onClick={() => handleDelete(rule.id)}
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                </TableCell>
+                            </TableRow>
+                        ))
+                    )}
+                </TableBody>
+            </Table>
+        </CardContent>
+      </Card>
 
-        {/* Targeted Actions */}
-        <Card className="bg-[#18181B] border-white/8">
-          <CardHeader className="pb-4 border-b border-white/5 mb-4">
-            <CardTitle className="text-base font-bold">
-              ?�토메이??& 마�???
-            </CardTitle>
-            <CardDescription className="text-zinc-500 text-xs mt-1">
-              ?�그먼트 감�? ???�동 ?�행?�는 ?�리거입?�다.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pt-0 space-y-3">
-            <div className="p-4 rounded-xl border border-indigo-500/10 bg-indigo-500/5 flex items-start gap-3">
-              <div className="h-8 w-8 rounded-lg bg-indigo-500/10 flex items-center justify-center shrink-0">
-                <ShieldCheck className="w-4 h-4 text-indigo-500" />
-              </div>
-              <div>
-                <h4 className="text-sm font-bold text-indigo-400 mb-1">
-                  ?�면 ?��? 복�? ?�동 쿠폰
-                </h4>
-                <p className="text-xs text-zinc-400">
-                  DORMANT ?�태 진입 즉시 ?�레그램 메세지 �?복�? ?�택 발송.
-                </p>
-              </div>
-            </div>
-            <div className="p-4 rounded-xl border border-red-500/10 bg-red-500/5 flex items-start gap-3">
-              <div className="h-8 w-8 rounded-lg bg-red-500/10 flex items-center justify-center shrink-0">
-                <AlertCircle className="w-4 h-4 text-red-500" />
-              </div>
-              <div>
-                <h4 className="text-sm font-bold text-red-400 mb-1">
-                  고위?�군 VIP ?�담 ?�적 배정
-                </h4>
-                <p className="text-xs text-zinc-400">
-                  HIGH_RISK VIP 감�? ???�영?� ?�용 관?�실???�시�??�림 ?�송.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="text-right text-xs text-zinc-500">
+          마지막 배치 실행: {stats?.lastBatchTime ? format(new Date(stats.lastBatchTime), "yyyy-MM-dd HH:mm:ss") : "-"}
       </div>
-
-      <Dialog open={isRuleDialogOpen} onOpenChange={setIsRuleDialogOpen}>
-        <DialogContent className="bg-[#18181B] border-white/10 text-white sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-bold">
-              {editingRule ? "규칙 ?�정" : "??규칙 추�?"}
-            </DialogTitle>
-            <DialogDescription className="text-zinc-400 text-xs">
-              ?��?�??�동?�로 분류??조건???�의?�니??
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label className="text-xs font-bold text-zinc-400">
-                규칙 ?�름 (Label)
-              </Label>
-              <Input
-                placeholder="?? 7?�간 미접???��?"
-                value={formData.label}
-                onChange={(e) =>
-                  setFormData({ ...formData, label: e.target.value })
-                }
-                className="bg-zinc-900 border-white/10"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-xs font-bold text-zinc-400">
-                ?��??�그먼트
-              </Label>
-              <Select
-                value={formData.targetSegment}
-                onValueChange={(val) =>
-                  setFormData({ ...formData, targetSegment: val })
-                }
-              >
-                <SelectTrigger className="bg-zinc-900 border-white/10">
-                  <SelectValue placeholder="?�그먼트 ?�택" />
-                </SelectTrigger>
-                <SelectContent className="bg-[#18181B] border-white/10 text-white">
-                  {segmentOptions.length === 0 ? (
-                    <SelectItem value="__empty" disabled>
-                      ?�그먼트 ?�음
-                    </SelectItem>
-                  ) : (
-                    segmentOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label className="text-xs font-bold text-zinc-400">
-                조건??(Rule Condition)
-              </Label>
-              <div className="relative">
-                <Input
-                  placeholder="?? last_login_days > 7"
-                  value={formData.rule}
-                  onChange={(e) =>
-                    setFormData({ ...formData, rule: e.target.value })
-                  }
-                  className="bg-zinc-900 border-white/10 font-mono text-xs text-indigo-300 pr-20"
-                />
-                <div className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-zinc-500">
-                  SQL ?�사
-                </div>
-              </div>
-              <p className="text-[10px] text-zinc-500">
-                ?�용 가?�한 변?�는 백엔??규칙 ?�진 기�??�로 ?�동 ?�기?�됩?�다.
-              </p>
-            </div>
-            <div className="space-y-2">
-              <Label className="text-xs font-bold text-zinc-400">
-                ?�명 (Description)
-              </Label>
-              <Textarea
-                placeholder="규칙???�???�세 ?�명???�력?�세??"
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
-                className="bg-zinc-900 border-white/10 min-h-[80px]"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="ghost"
-              onClick={() => setIsRuleDialogOpen(false)}
-              className="text-zinc-400 hover:text-white"
-            >
-              취소
-            </Button>
-            <Button
-              onClick={handleSubmitRule}
-              className="bg-[#D2FD9C] text-black font-bold hover:bg-[#D2FD9C]/90"
-              disabled={createRule.isPending || updateRule.isPending}
-            >
-              {createRule.isPending || updateRule.isPending ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                "?�??
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
