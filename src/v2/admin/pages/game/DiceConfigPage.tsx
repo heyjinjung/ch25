@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useState, useEffect } from "react";
 import {
   useDiceConfig,
   useUpdateDiceConfig,
@@ -23,466 +23,333 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../../components/ui/select";
-import {
-  Dice5,
-  Save,
-  TriangleAlert,
-  Settings2,
-  Zap,
-  TrendingUp,
-  Trophy,
-  Info,
-} from "lucide-react";
+import { Badge } from "../../../components/ui/badge";
+import { Loader2, Save, RefreshCw, TriangleAlert } from "lucide-react";
 
 export default function DiceConfigPage() {
-  const { data: config, isLoading } = useDiceConfig();
-  const updateMutation = useUpdateDiceConfig();
+  const { data: config, isLoading, refetch } = useDiceConfig();
+  const updateConfig = useUpdateDiceConfig();
 
-  const [localConfig, setLocalConfig] = useState<AdminDiceConfigDto | null>(
-    null,
-  );
-  const winBarRef = useRef<HTMLDivElement | null>(null);
-  const drawBarRef = useRef<HTMLDivElement | null>(null);
-  const loseBarRef = useRef<HTMLDivElement | null>(null);
+  const [localConfig, setLocalConfig] = useState<AdminDiceConfigDto | null>(null);
+  const [isDirty, setIsDirty] = useState(false);
 
   useEffect(() => {
     if (config) {
-      setLocalConfig({
-        ...config,
-        enableGoldenHour: config.enableGoldenHour ?? true,
-        goldenHourMultiplier: config.goldenHourMultiplier ?? 2.0,
-      });
+      setLocalConfig(config);
+      setIsDirty(false);
     }
   }, [config]);
 
-  useEffect(() => {
+  const handleConfigChange = (
+    field: keyof AdminDiceConfigDto,
+    value: any,
+  ) => {
+    setLocalConfig((prev) => {
+      if (!prev) return null;
+      return { ...prev, [field]: value };
+    });
+    setIsDirty(true);
+  };
+
+  const handleSave = async () => {
     if (!localConfig) return;
-    if (winBarRef.current) {
-      winBarRef.current.style.width = `${localConfig.winProbability * 100}%`;
+    
+    // Validation: Probabilities sum check
+    const sum = 
+      (localConfig.winProbability || 0) + 
+      (localConfig.drawProbability || 0) + 
+      (localConfig.loseProbability || 0);
+    
+    // Float comparison tolerance
+    if (Math.abs(sum - 100) > 0.01) {
+      if(!confirm(`확률의 합이 ${sum.toFixed(2)}% 입니다. 100%가 아니어도 저장하시겠습니까?`)) {
+        return;
+      }
     }
-    if (drawBarRef.current) {
-      drawBarRef.current.style.width = `${localConfig.drawProbability * 100}%`;
-    }
-    if (loseBarRef.current) {
-      loseBarRef.current.style.width = `${localConfig.loseProbability * 100}%`;
-    }
-  }, [localConfig]);
 
-  const handleChange = (field: keyof AdminDiceConfigDto, value: any) => {
-    if (localConfig) {
-      setLocalConfig({ ...localConfig, [field]: value });
-    }
+    await updateConfig.mutateAsync(localConfig);
+    setIsDirty(false);
+    await refetch();
   };
 
-  const handleSave = () => {
-    if (localConfig) {
-      updateMutation.mutate(localConfig);
-    }
-  };
-
-  if (isLoading)
+  if (isLoading) {
     return (
-      <div className="text-center py-20 text-zinc-500 animate-pulse">
-        Loading config...
+      <div className="flex items-center justify-center h-96">
+        <Loader2 className="w-8 h-8 animate-spin text-white" />
       </div>
     );
-  if (!localConfig)
-    return (
-      <div className="text-center py-20 text-zinc-500">Config Load Failed</div>
-    );
+  }
+
+  if (!localConfig) {
+      return (
+          <div className="flex items-center justify-center h-96 text-zinc-500">
+              설정을 불러올 수 없습니다.
+          </div>
+      )
+  }
 
   return (
-    <div className="admin-page-container custom-scrollbar">
-      <div className="flex justify-between items-end mb-8">
+    <div className="space-y-8 p-6 pb-20 max-w-[1600px] mx-auto text-white">
+      {/* Header */}
+      <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight flex items-center gap-3 text-white">
-            <div className="p-2 bg-indigo-500/10 rounded-xl border border-indigo-500/20">
-              <Dice5 className="w-8 h-8 text-indigo-400" />
-            </div>
-            주사??게임 ?�정
+          <h1 className="text-3xl font-black text-white tracking-tight mb-2">
+            주사위(Dice) 설정
           </h1>
-          <p className="text-zinc-400 mt-2 ml-1">
-            ?�역 ?�략, ?�률 �?보상 ?�스?�을 관리합?�다.
+          <p className="text-zinc-400">
+            주사위 게임의 승률, 보상 및 골든 아워 설정을 관리합니다.
           </p>
         </div>
-        <Button
-          onClick={handleSave}
-          disabled={updateMutation.isPending}
-          className="btn-admin-primary px-8 h-12 shadow-indigo-500/10"
-        >
-          <Save className="w-4 h-4 mr-2" />
-          {updateMutation.isPending ? "?�??�?.." : "?�정 변경사???�??}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            className="border-white/10 hover:bg-white/5"
+            onClick={() => refetch()}
+          >
+            <RefreshCw className="w-4 h-4 mr-2" />
+            새로고침
+          </Button>
+          <Button
+            className="bg-indigo-600 hover:bg-indigo-700"
+            disabled={!isDirty}
+            onClick={handleSave}
+          >
+            <Save className="w-4 h-4 mr-2" />
+            저장
+          </Button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-12 gap-6 pb-20">
-        {/* Row 1: Basic (4) + Probability (8) */}
-        <Card className="col-span-12 lg:col-span-4 admin-card-premium flex flex-col">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-zinc-100">
-              <Settings2 className="w-5 h-5 text-zinc-400" />
-              기본 ?�영 ?�정
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6 flex-1">
-            <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5 group hover:border-white/10 transition-colors">
-              <div className="space-y-0.5">
-                <Label className="text-base text-zinc-200">
-                  게임 ?�비???�성??
-                </Label>
-                <p className="text-xs text-zinc-500">
-                  비활?�화 ??모든 ?��???진입??차단?�니??
-                </p>
+      <div className="space-y-6">
+          {/* Basic Settings */}
+          <Card className="bg-zinc-900 border-white/10">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                기본 설정
+                {isDirty && (
+                  <Badge variant="outline" className="text-amber-400 border-amber-500/50">
+                    변경사항 있음
+                  </Badge>
+                )}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+              <div className="space-y-2">
+                <Label className="text-zinc-400">활성화 상태</Label>
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    checked={localConfig.isActive}
+                    onCheckedChange={(checked) => handleConfigChange("isActive", checked)}
+                  />
+                  <span className={localConfig.isActive ? "text-emerald-400 font-bold" : "text-zinc-500"}>
+                    {localConfig.isActive ? "운영중 (Active)" : "중지됨 (Inactive)"}
+                  </span>
+                </div>
               </div>
-              <Switch
-                checked={localConfig.isActive}
-                onCheckedChange={(c) => handleChange("isActive", c)}
-              />
-            </div>
 
-            <div className="space-y-3">
-              <Label className="admin-label">?�략 ?�정�?/Label>
-              <Input
-                value={localConfig.name}
-                onChange={(e) => handleChange("name", e.target.value)}
-                className="admin-input w-full"
-                placeholder="?? 2026 ?�년 ?�벤???�략"
-              />
-            </div>
+              <div className="space-y-2">
+                <Label className="text-zinc-400">이름</Label>
+                <Input
+                  value={localConfig.name}
+                  onChange={(e) => handleConfigChange("name", e.target.value)}
+                  className="bg-black/20 border-white/10"
+                />
+              </div>
 
-            <div className="space-y-3">
-              <Label className="admin-label">?�일 최�? ?�레???�수</Label>
-              <div className="relative">
+              <div className="space-y-2">
+                <Label className="text-zinc-400">일일 최대 이용 횟수</Label>
                 <Input
                   type="number"
                   value={localConfig.maxDailyPlays}
-                  onChange={(e) =>
-                    handleChange("maxDailyPlays", parseInt(e.target.value))
-                  }
-                  className="admin-input w-full pr-12"
-                />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-zinc-500 font-mono">
-                  ??
-                </span>
-              </div>
-              <p className="text-[11px] text-zinc-500 italic">
-                * 0?�로 ?�력 ??무제???�레?��? 가?�합?�다.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="col-span-12 lg:col-span-8 admin-card-premium">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2 text-zinc-100">
-                <Zap className="w-5 h-5 text-amber-400" />
-                ?�률 ?�략 (Probability System)
-              </CardTitle>
-              <CardDescription className="text-zinc-500 mt-1">
-                ?�률 총합??1.0(100%)???�도�??��??�게 조정?�세??
-              </CardDescription>
-            </div>
-            <div className="px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-full text-[10px] text-amber-400 font-bold uppercase tracking-wider">
-              Simulation Mode
-            </div>
-          </CardHeader>
-          <CardContent className="grid grid-cols-3 gap-6">
-            {/* Probability Inputs - No more heavy backgrounds */}
-            <div className="space-y-3 group">
-              <div className="flex justify-between items-center px-1">
-                <Label className="text-emerald-400 font-bold text-xs uppercase tracking-tighter">
-                  Win Rate
-                </Label>
-                <span className="text-xl font-mono font-black text-emerald-400">
-                  {(localConfig.winProbability * 100).toFixed(0)}%
-                </span>
-              </div>
-              <Input
-                type="number"
-                step="0.01"
-                min="0"
-                max="1"
-                value={localConfig.winProbability}
-                onChange={(e) =>
-                  handleChange("winProbability", parseFloat(e.target.value))
-                }
-                className="admin-input border-emerald-500/20 focus:ring-emerald-500/30 text-emerald-400 font-mono text-center text-lg"
-              />
-              <div className="h-1 w-full bg-zinc-800 rounded-full overflow-hidden">
-                <div
-                  ref={winBarRef}
-                  className="h-full bg-emerald-500 transition-all duration-500"
+                  onChange={(e) => handleConfigChange("maxDailyPlays", parseInt(e.target.value))}
+                  className="bg-black/20 border-white/10"
                 />
               </div>
-            </div>
 
-            <div className="space-y-3">
-              <div className="flex justify-between items-center px-1">
-                <Label className="text-zinc-400 font-bold text-xs uppercase tracking-tighter">
-                  Draw Rate
-                </Label>
-                <span className="text-xl font-mono font-black text-zinc-400">
-                  {(localConfig.drawProbability * 100).toFixed(0)}%
-                </span>
+              <div className="space-y-2">
+                 <Label className="text-zinc-400">일일 최대 수익 제한 (Point)</Label>
+                 <Input 
+                    type="number"
+                    value={localConfig.dailyGainCap}
+                    onChange={(e) => handleConfigChange("dailyGainCap", parseInt(e.target.value))}
+                    className="bg-black/20 border-white/10 font-mono"
+                 />
               </div>
-              <Input
-                type="number"
-                step="0.01"
-                min="0"
-                max="1"
-                value={localConfig.drawProbability}
-                onChange={(e) =>
-                  handleChange("drawProbability", parseFloat(e.target.value))
-                }
-                className="admin-input border-white/5 focus:ring-zinc-500/30 text-zinc-300 font-mono text-center text-lg"
-              />
-              <div className="h-1 w-full bg-zinc-800 rounded-full overflow-hidden">
-                <div
-                  ref={drawBarRef}
-                  className="h-full bg-zinc-500 transition-all duration-500"
-                />
-              </div>
-            </div>
+            </CardContent>
+          </Card>
 
-            <div className="space-y-3">
-              <div className="flex justify-between items-center px-1">
-                <Label className="text-red-400 font-bold text-xs uppercase tracking-tighter">
-                  Lose Rate
-                </Label>
-                <span className="text-xl font-mono font-black text-red-400">
-                  {(localConfig.loseProbability * 100).toFixed(0)}%
-                </span>
-              </div>
-              <Input
-                type="number"
-                step="0.01"
-                min="0"
-                max="1"
-                value={localConfig.loseProbability}
-                onChange={(e) =>
-                  handleChange("loseProbability", parseFloat(e.target.value))
-                }
-                className="admin-input border-red-500/20 focus:ring-red-500/30 text-red-400 font-mono text-center text-lg"
-              />
-              <div className="h-1 w-full bg-zinc-800 rounded-full overflow-hidden">
-                <div
-                  ref={loseBarRef}
-                  className="h-full bg-red-500 transition-all duration-500"
-                />
-              </div>
-            </div>
-
-            <div className="col-span-3 mt-4">
-              <div
-                className={`p-4 rounded-xl border flex items-center gap-3 transition-all ${
-                  Math.abs(
-                    localConfig.winProbability +
-                      localConfig.drawProbability +
-                      localConfig.loseProbability -
-                      1.0,
-                  ) < 0.001
-                    ? "bg-emerald-500/5 border-emerald-500/20 text-emerald-400"
-                    : "bg-red-500/5 border-red-500/20 text-red-400 animate-pulse"
-                }`}
-              >
-                <TriangleAlert className="w-5 h-5 shrink-0" />
-                <div className="text-sm">
-                  ?�재 ?�률 총합:{" "}
-                  <span className="font-mono font-bold">
-                    {(
-                      localConfig.winProbability +
-                      localConfig.drawProbability +
-                      localConfig.loseProbability
-                    ).toFixed(2)}
-                  </span>
-                  {Math.abs(
-                    localConfig.winProbability +
-                      localConfig.drawProbability +
-                      localConfig.loseProbability -
-                      1.0,
-                  ) < 0.001
-                    ? " - ?�벽??비율?�니??"
-                    : " - 총합??1.0???�도�?조정???�요?�니??"}
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Row 2: Rewards (8) + Caps (4) */}
-        <Card className="col-span-12 lg:col-span-8 admin-card-premium">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-zinc-100">
-              <Trophy className="w-5 h-5 text-emerald-400" />
-              결과�?보상 매트�?��
-            </CardTitle>
-            <CardDescription className="text-zinc-500">
-              게임 결과???�른 보상 ?�이?�과 ?�량???�정?�니??
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Reward Row - Refined with Mono colors and glass look */}
-            {[
-              {
-                label: "?�리 (WIN)",
-                typeField: "winRewardType" as const,
-                amountField: "winRewardAmount" as const,
-                color: "emerald",
-              },
-              {
-                label: "무승부 (DRAW)",
-                typeField: "drawRewardType" as const,
-                amountField: "drawRewardAmount" as const,
-                color: "zinc",
-              },
-              {
-                label: "?�배 (LOSE)",
-                typeField: "loseRewardType" as const,
-                amountField: "loseRewardAmount" as const,
-                color: "red",
-              },
-            ].map((row) => (
-              <div
-                key={row.label}
-                className={`flex items-center gap-6 p-4 rounded-2xl bg-[#1c1c20] border border-white/5 transition-all hover:bg-[#222226]`}
-              >
-                <div className="w-32">
-                  <Label
-                    className={`text-${row.color}-400 font-black text-sm uppercase tracking-tight`}
-                  >
-                    {row.label}
-                  </Label>
-                </div>
-                <div className="flex-1 grid grid-cols-2 gap-4">
-                  <Select
-                    value={localConfig[row.typeField]}
-                    onValueChange={(v) => handleChange(row.typeField, v)}
-                  >
-                    <SelectTrigger className="admin-input border-white/5 bg-black/40 h-10">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-zinc-900 border-white/10 text-white">
-                      {REWARD_ITEMS.map((item) => (
-                        <SelectItem key={item.value} value={item.value}>
-                          {item.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <div className="relative">
-                    <Input
-                      type="number"
-                      value={localConfig[row.amountField]}
-                      onChange={(e) =>
-                        handleChange(row.amountField, parseInt(e.target.value))
-                      }
-                      className={`admin-input border-white/5 bg-black/40 h-10 text-right pr-12 font-bold text-${row.color}-400`}
-                    />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] text-zinc-600 font-bold uppercase">
-                      Value
-                    </span>
+          {/* Probabilities */}
+          <Card className="bg-zinc-900 border-white/10">
+              <CardHeader>
+                  <CardTitle className="text-white">확률 설정 (%)</CardTitle>
+                  <CardDescription>승리, 무승부, 패배 확률의 합은 100%가 되어야 합니다.</CardDescription>
+              </CardHeader>
+              <CardContent className="grid gap-6 md:grid-cols-3">
+                   <div className="space-y-2">
+                      <Label className="text-emerald-400 font-bold">승리 (Win)</Label>
+                      <div className="relative">
+                          <Input 
+                              type="number"
+                              value={localConfig.winProbability}
+                              onChange={(e) => handleConfigChange("winProbability", parseFloat(e.target.value))}
+                              className="bg-black/20 border-emerald-500/30 text-emerald-400 font-mono"
+                          />
+                          <span className="absolute right-3 top-2.5 text-emerald-500/50">%</span>
+                      </div>
                   </div>
+                  <div className="space-y-2">
+                      <Label className="text-amber-400 font-bold">무승부 (Draw)</Label>
+                       <div className="relative">
+                          <Input 
+                              type="number"
+                              value={localConfig.drawProbability}
+                              onChange={(e) => handleConfigChange("drawProbability", parseFloat(e.target.value))}
+                              className="bg-black/20 border-amber-500/30 text-amber-400 font-mono"
+                          />
+                          <span className="absolute right-3 top-2.5 text-amber-500/50">%</span>
+                      </div>
+                  </div>
+                  <div className="space-y-2">
+                      <Label className="text-red-400 font-bold">패배 (Lose)</Label>
+                       <div className="relative">
+                          <Input 
+                              type="number"
+                              value={localConfig.loseProbability}
+                              onChange={(e) => handleConfigChange("loseProbability", parseFloat(e.target.value))}
+                              className="bg-black/20 border-red-500/30 text-red-400 font-mono"
+                          />
+                          <span className="absolute right-3 top-2.5 text-red-500/50">%</span>
+                      </div>
+                  </div>
+              </CardContent>
+          </Card>
+
+          {/* Rewards */}
+          <Card className="bg-zinc-900 border-white/10">
+              <CardHeader>
+                  <CardTitle className="text-white">보상 설정</CardTitle>
+              </CardHeader>
+              <CardContent className="grid gap-6 md:grid-cols-1">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {/* Win Reward */}
+                      <div className="p-4 border border-emerald-500/20 bg-emerald-500/5 rounded-xl space-y-3">
+                          <Label className="text-emerald-400">승리 보상</Label>
+                           <Select 
+                                value={localConfig.winRewardType} 
+                                onValueChange={(v) => handleConfigChange("winRewardType", v)}
+                            >
+                                <SelectTrigger className="bg-black/20 border-white/10">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="bg-zinc-800 border-zinc-700">
+                                    {REWARD_ITEMS.map(item => (
+                                        <SelectItem key={item.value} value={item.value}>
+                                            {item.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <Input 
+                                type="number"
+                                value={localConfig.winRewardAmount}
+                                onChange={(e) => handleConfigChange("winRewardAmount", parseInt(e.target.value))}
+                                className="bg-black/20 border-white/10"
+                                placeholder="Amount"
+                            />
+                      </div>
+
+                       {/* Draw Reward */}
+                      <div className="p-4 border border-amber-500/20 bg-amber-500/5 rounded-xl space-y-3">
+                          <Label className="text-amber-400">무승부 보상</Label>
+                           <Select 
+                                value={localConfig.drawRewardType} 
+                                onValueChange={(v) => handleConfigChange("drawRewardType", v)}
+                            >
+                                <SelectTrigger className="bg-black/20 border-white/10">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="bg-zinc-800 border-zinc-700">
+                                    {REWARD_ITEMS.map(item => (
+                                        <SelectItem key={item.value} value={item.value}>
+                                            {item.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <Input 
+                                type="number"
+                                value={localConfig.drawRewardAmount}
+                                onChange={(e) => handleConfigChange("drawRewardAmount", parseInt(e.target.value))}
+                                className="bg-black/20 border-white/10"
+                                placeholder="Amount"
+                            />
+                      </div>
+
+                       {/* Lose Reward */}
+                      <div className="p-4 border border-red-500/20 bg-red-500/5 rounded-xl space-y-3">
+                          <Label className="text-red-400">패배 보상 (위로금)</Label>
+                           <Select 
+                                value={localConfig.loseRewardType} 
+                                onValueChange={(v) => handleConfigChange("loseRewardType", v)}
+                            >
+                                <SelectTrigger className="bg-black/20 border-white/10">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="bg-zinc-800 border-zinc-700">
+                                    {REWARD_ITEMS.map(item => (
+                                        <SelectItem key={item.value} value={item.value}>
+                                            {item.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <Input 
+                                type="number"
+                                value={localConfig.loseRewardAmount}
+                                onChange={(e) => handleConfigChange("loseRewardAmount", parseInt(e.target.value))}
+                                className="bg-black/20 border-white/10"
+                                placeholder="Amount"
+                            />
+                      </div>
+                  </div>
+              </CardContent>
+          </Card>
+
+          {/* Golden Hour */}
+          <Card className="bg-zinc-900 border-white/10">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                골든 아워 (Golden Hour)
+                <Badge variant="outline" className="border-yellow-500 text-yellow-500">Event</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-6 md:grid-cols-2">
+               <div className="space-y-2">
+                <Label className="text-zinc-400">이벤트 활성화</Label>
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    checked={localConfig.enableGoldenHour}
+                    onCheckedChange={(checked) => handleConfigChange("enableGoldenHour", checked)}
+                  />
+                  <span className={localConfig.enableGoldenHour ? "text-yellow-400 font-bold" : "text-zinc-500"}>
+                    {localConfig.enableGoldenHour ? "골든 아워 켜짐" : "골든 아워 꺼짐"}
+                  </span>
                 </div>
               </div>
-            ))}
-          </CardContent>
-        </Card>
 
-        {/* Golden Hour Multiplier Card */}
-        <Card className="col-span-12 lg:col-span-4 admin-card-premium flex flex-col">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-zinc-100">
-              <Zap className="w-5 h-5 text-amber-400" />
-              골든?�워 배율 ?�정
-            </CardTitle>
-            <CardDescription className="text-zinc-500">
-              ?�정 ?�간?� 보상??배율만큼 증폭?�니??
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6 flex-1">
-            <div className="flex items-center justify-between p-4 bg-amber-500/5 rounded-xl border border-amber-500/10 group hover:border-amber-500/20 transition-colors">
-              <div className="space-y-0.5">
-                <Label className="text-base text-zinc-200">골든?�워 ?�용</Label>
-                <p className="text-xs text-zinc-500">
-                  비활?�화 ??배율???�용?��? ?�습?�다.
-                </p>
+               <div className="space-y-2">
+                <Label className="text-zinc-400">승리 보상 배율 (Multiplier)</Label>
+                <Input
+                  type="number"
+                  step="0.1"
+                  value={localConfig.goldenHourMultiplier}
+                  onChange={(e) => handleConfigChange("goldenHourMultiplier", parseFloat(e.target.value))}
+                  className="bg-black/20 border-white/10 font-mono text-yellow-400"
+                />
+                <p className="text-xs text-zinc-500">골든 아워 기간 동안 승리 보상에 적용될 배율입니다.</p>
               </div>
-              <Switch
-                checked={localConfig.enableGoldenHour}
-                onCheckedChange={(c) => handleChange("enableGoldenHour", c)}
-              />
-            </div>
-
-            <div className="p-5 rounded-2xl bg-amber-500/5 border border-amber-500/10 space-y-4">
-              <div className="flex justify-between items-end">
-                <Label className="text-zinc-300 text-xs font-bold">
-                  보상 배율 (Multiplier)
-                </Label>
-                <span className="text-3xl font-mono font-black text-amber-400 tracking-tighter">
-                  ×{localConfig.goldenHourMultiplier.toFixed(1)}
-                </span>
-              </div>
-              <Input
-                type="number"
-                step="0.1"
-                min="1.0"
-                max="5.0"
-                value={localConfig.goldenHourMultiplier}
-                onChange={(e) =>
-                  handleChange(
-                    "goldenHourMultiplier",
-                    parseFloat(e.target.value),
-                  )
-                }
-                className="admin-input border-amber-500/20 bg-black/30 w-full h-12 text-center text-xl font-mono"
-              />
-              <div className="flex items-start gap-2 p-3 bg-amber-500/10 rounded-lg">
-                <Info className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-                <p className="text-[11px] text-amber-300/80 leading-relaxed">
-                  골든?�워 ?�성????모든 주사??보상????배율??곱해집니??
-                  (?? 100P × 2.0 = 200P)
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="col-span-12 lg:col-span-4 admin-card-premium flex flex-col">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-zinc-100">
-              <TrendingUp className="w-5 h-5 text-indigo-400" />
-              경제 ?�정??(Global Caps)
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6 flex-1">
-            <div className="p-5 rounded-2xl bg-indigo-500/5 border border-indigo-500/10 space-y-4">
-              <div className="flex justify-between items-end">
-                <Label className="text-zinc-300 text-xs font-bold">
-                  ?�일 ?�적 ?�득 ?�도
-                </Label>
-                <span className="text-2xl font-mono font-black text-indigo-400 tracking-tighter">
-                  {(localConfig.dailyGainCap ?? 0).toLocaleString()}
-                </span>
-              </div>
-              <Input
-                type="number"
-                value={localConfig.dailyGainCap}
-                onChange={(e) =>
-                  handleChange("dailyGainCap", parseInt(e.target.value))
-                }
-                className="admin-input border-indigo-500/20 bg-black/30 w-full h-12 text-center text-xl font-mono"
-              />
-              <div className="flex items-start gap-2 p-3 bg-indigo-500/10 rounded-lg">
-                <Info className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
-                <p className="text-[11px] text-indigo-300/80 leading-relaxed">
-                  ?��?가 24?�간 ?�에 ?�득 가?�한 총량?�니?? 초과 ??보상??
-                  지급되지 ?�습?�다.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
       </div>
     </div>
   );

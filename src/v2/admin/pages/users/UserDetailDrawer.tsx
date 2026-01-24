@@ -138,7 +138,9 @@ export function UserDetailDrawer({
           <div className="h-full flex flex-col items-center justify-center text-zinc-500 gap-4">
             <SheetHeader className="sr-only">
               <SheetTitle>Loading User Details</SheetTitle>
-              <SheetDescription>?��? ?�보�?불러?�는 중입?�다.</SheetDescription>
+              <SheetDescription>
+                사용자 정보를 불러오는 중입니다.
+              </SheetDescription>
             </SheetHeader>
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" />
             <span>Loading User Details...</span>
@@ -161,8 +163,8 @@ export function UserDetailDrawer({
                       )}
                     </SheetTitle>
                     <SheetDescription className="text-zinc-400 text-xs">
-                      가?�일 {new Date(user.createdAt).toLocaleDateString()} ??
-                      ?�벨 {user.level || 1}
+                      가입일 {new Date(user.createdAt).toLocaleDateString()} |
+                      레벨 {user.level || 1}
                     </SheetDescription>
                   </div>
                 </div>
@@ -175,10 +177,10 @@ export function UserDetailDrawer({
             <Tabs defaultValue={defaultTab} className="h-full">
               <TabsList className="w-full grid grid-cols-3 gap-2 bg-[#18181B] p-4 h-auto">
                 <TabsTrigger value="wallet" className="tab-trigger">
-                  ?�켓
+                  티켓
                 </TabsTrigger>
                 <TabsTrigger value="inventory" className="tab-trigger">
-                  ?�벤?�리
+                  인벤토리
                 </TabsTrigger>
                 <TabsTrigger value="vault" className="tab-trigger">
                   금고
@@ -187,7 +189,7 @@ export function UserDetailDrawer({
 
               <ScrollArea className="h-[calc(100vh-160px)] bg-[#121214]">
                 <div className="p-6 space-y-6" ref={contentRef}>
-                  {/* 1. ?�켓 (Wallet) */}
+                  {/* 1. 티켓 (Wallet) */}
                   <TabsContent value="wallet" className="m-0 space-y-4">
                     <div className="flex justify-between items-center bg-[#18181B] p-4 rounded-xl border border-white/5">
                       <div>
