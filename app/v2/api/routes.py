@@ -317,12 +317,13 @@ def list_missions(
     db: Session = Depends(get_db),
     user_id: int = Depends(get_current_user_id),
 ) -> MissionListResponse:
-    user = db.query(User).filter(User.id == user_id).first()
+    legacy_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
+    user = db.query(User).filter(User.id == legacy_user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
     service = V2MissionService(db)
-    missions = service.get_user_missions(user_id)
-    streak_info = service.get_streak_info(user_id)
+    missions = service.get_user_missions(legacy_user_id)
+    streak_info = service.get_streak_info(legacy_user_id)
     return MissionListResponse(missions=missions, streak_info=streak_info)
 
 
@@ -335,8 +336,9 @@ def claim_mission(
 ):
     if not idempotency_key:
         raise HTTPException(status_code=400, detail="X-Idempotency-Key header required")
+    legacy_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
     service = V2MissionService(db)
-    success, reward_type, amount = service.claim_reward(user_id, mission_id)
+    success, reward_type, amount = service.claim_reward(legacy_user_id, mission_id)
     if not success:
         raise HTTPException(status_code=400, detail=reward_type)
     return {"success": True, "reward_type": reward_type, "amount": amount}
@@ -348,7 +350,8 @@ def claim_daily_gift(
     user_id: int = Depends(get_current_user_id),
 ):
     service = V2MissionService(db)
-    success, reward_type, amount = service.claim_daily_gift(user_id)
+    legacy_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
+    success, reward_type, amount = service.claim_daily_gift(legacy_user_id)
     if not success:
         raise HTTPException(status_code=400, detail=reward_type)
     return {"success": True, "reward_type": reward_type, "amount": amount}
@@ -385,10 +388,11 @@ def claim_streak_reward(
     user_id: int = Depends(get_current_user_id),
 ):
     service = V2MissionService(db)
-    result = service.claim_streak_reward(user_id)
+    legacy_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
+    result = service.claim_streak_reward(legacy_user_id)
     if not result.get("success"):
         raise HTTPException(status_code=400, detail=result.get("message"))
-    streak_info = service.get_streak_info(user_id)
+    streak_info = service.get_streak_info(legacy_user_id)
     return {"success": True, "streak_info": streak_info, "grants": result.get("grants")}
 
 

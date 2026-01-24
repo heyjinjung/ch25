@@ -1,0 +1,90 @@
+﻿[
+    {
+        "id":  2,
+        "category":  "NEW_USER",
+        "title":  "?? ???",
+        "condition":  "?? ?? ??",
+        "targetValue":  1,
+        "logicKey":  "welcome_signup",
+        "rewardType":  "POINT",
+        "rewardAmount":  3000,
+        "isActive":  true
+    },
+    {
+        "id":  3,
+        "category":  "NEW_USER",
+        "title":  "???? ??",
+        "condition":  "???? ?? ?? ??",
+        "targetValue":  1,
+        "logicKey":  "welcome_telegram",
+        "rewardType":  "TICKET_ROULETTE",
+        "rewardAmount":  1,
+        "isActive":  true
+    },
+    {
+        "id":  4,
+        "category":  "NEW_USER",
+        "title":  "?? 1? ???",
+        "condition":  "?? ?? 1? ??",
+        "targetValue":  1,
+        "logicKey":  "start_play_roulette",
+        "rewardType":  "GAME_XP",
+        "rewardAmount":  100,
+        "isActive":  true
+    },
+    {
+        "id":  5,
+        "category":  "NEW_USER",
+        "title":  "??? 1? ???",
+        "condition":  "??? ?? 1? ??",
+        "targetValue":  1,
+        "logicKey":  "start_play_dice",
+        "rewardType":  "TICKET_DICE",
+        "rewardAmount":  1,
+        "isActive":  true
+    },
+    {
+        "id":  6,
+        "category":  "NEW_USER",
+        "title":  "? ??? ??",
+        "condition":  "?? ?? ?? 1? ??",
+        "targetValue":  1,
+        "logicKey":  "start_first_win",
+        "rewardType":  "POINT",
+        "rewardAmount":  1000,
+        "isActive":  true
+    },
+    {
+        "id":  7,
+        "category":  "NEW_USER",
+        "title":  "? ?? ??",
+        "condition":  "?? ? ?? ?? (?? ??)",
+        "targetValue":  1,
+        "logicKey":  "start_first_deposit",
+        "rewardType":  "BUNDLE",
+        "rewardAmount":  1,
+        "isActive":  true
+    },
+    {
+        "id":  8,
+        "category":  "DAILY",
+        "title":  "SOT Daily Mission",
+        "condition":  "SOT daily test",
+        "targetValue":  1,
+        "logicKey":  "sot_daily_20260124152412",
+        "rewardType":  "POINT",
+        "rewardAmount":  10,
+        "isActive":  true
+    },
+    {
+        "id":  9,
+        "category":  "WEEKLY",
+        "title":  "SOT Weekly Mission",
+        "condition":  "SOT weekly test",
+        "targetValue":  1,
+        "logicKey":  "sot_weekly_20260124152412",
+        "rewardType":  "POINT",
+        "rewardAmount":  20,
+        "isActive":  true
+    }
+]
