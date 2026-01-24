@@ -7,6 +7,7 @@ import time
 from typing import Iterable
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from app.services.ch25_event_service import normalize_stream_payload
 
 from app.api.deps import get_current_admin_id
 from app.services.ch25_event_service import Ch25EventService
@@ -55,7 +56,9 @@ def import_raw_logs(
         if file.filename:
             payload["file_name"] = file.filename
         try:
-            client.xadd("stream:raw_logs", payload)
+            normalized = normalize_stream_payload(payload)
+            logger.info("Normalized payload for admin raw logs xadd", extra={"file": file.filename, "payload_types": {k: type(v).__name__ for k, v in normalized.items()}})
+            client.xadd("stream:raw_logs", normalized)
             pushed_chunks += 1
         except Exception as exc:  # noqa: BLE001
             logger.error("raw_log_ingest_failed", exc_info=exc, extra={"file": file.filename})

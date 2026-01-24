@@ -104,3 +104,143 @@ xmas-backend  | Failed to publish internal game result: Invalid input of type: '
 
 ---
 
+## Golden Pub/Sub verification - 2026-01-24T00:28:49.570013Z
+
+
+**Payload**:
+
+```
+{"user_id": 123, "result": "LOSE"}
+```
+
+**Publish output**:
+
+```
+1
+```
+
+**Backend logs (filtered snippet)**:
+
+```
+xmas-backend  | Failed to publish internal game result: Invalid input of type: 'dict'. Convert to a bytes, string, int or float first.
+xmas-backend  | Failed to publish internal game result: Invalid input of type: 'dict'. Convert to a bytes, string, int or float first.
+xmas-backend  | Failed to publish internal game result: Invalid input of type: 'dict'. Convert to a bytes, string, int or float first.
+```
+
+**DB query results (intervention log / roi log)**:
+
+```
+-- v2_golden_intervention_log --
+(no output)
+
+-- v2_retention_roi_log --
+(no output)
+```
+
+---
+
+## Golden Pub/Sub verification - 2026-01-24T00:29:43.591339Z
+
+
+**Payload**:
+
+```
+{"user_id": 123, "result": "LOSE"}
+```
+
+**Publish output**:
+
+```
+1
+```
+
+**Backend logs (filtered snippet)**:
+
+```
+xmas-backend  | Failed to publish internal game result: Invalid input of type: 'dict'. Convert to a bytes, string, int or float first.
+xmas-backend  | Failed to publish internal game result: Invalid input of type: 'dict'. Convert to a bytes, string, int or float first.
+xmas-backend  | Failed to publish internal game result: Invalid input of type: 'dict'. Convert to a bytes, string, int or float first.
+```
+
+**DB query results (intervention log / roi log)**:
+
+```
+-- v2_golden_intervention_log --
+(no output)
+
+-- v2_retention_roi_log --
+(no output)
+```
+
+---
+
+## Golden Pub/Sub verification - 2026-01-24T00:33:31.591998Z
+
+
+**Payload**:
+
+```
+{"user_id": 123, "result": "LOSE"}
+```
+
+**Publish output**:
+
+```
+1
+```
+
+**Backend logs (filtered snippet)**:
+
+```
+xmas-backend  | Failed to publish internal game result: Invalid input of type: 'dict'. Convert to a bytes, string, int or float first.
+xmas-backend  | Failed to publish internal game result: Invalid input of type: 'dict'. Convert to a bytes, string, int or float first.
+xmas-backend  | Failed to publish internal game result: Invalid input of type: 'dict'. Convert to a bytes, string, int or float first.
+```
+
+**DB query results (intervention log / roi log)**:
+
+```
+-- v2_golden_intervention_log --
+(no output)
+
+-- v2_retention_roi_log --
+(no output)
+```
+
+---
+
+## Golden Pub/Sub verification - 2026-01-24T00:41:39.763474Z
+
+
+**Payload**:
+
+```
+{"user_id": 123, "result": "LOSE"}
+```
+
+**Publish output**:
+
+```
+1
+```
+
+**Backend logs (filtered snippet)**:
+
+```
+s-backend  | INFO:     127.0.0.1:52480 - "GET / HTTP/1.1" 200 OK
+xmas-backend  | INFO:     127.0.0.1:40302 - "GET / HTTP/1.1" 200 OK
+xmas-backend  | INFO:     127.0.0.1:45244 - "GET / HTTP/1.1" 200 OK
+```
+
+**DB query results (intervention log / roi log)**:
+
+```
+-- v2_golden_intervention_log --
+(no output)
+
+-- v2_retention_roi_log --
+(no output)
+```
+
+---
+

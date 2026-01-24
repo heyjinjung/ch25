@@ -95,6 +95,12 @@ _golden_intervention_stop = None
 
 @app.on_event("startup")
 async def startup_event():
+    from app.core.config import get_settings
+    settings = get_settings()
+    if settings.test_mode:
+        print("Startup: test_mode detected. Skipping background workers.", flush=True)
+        return
+
     print(f"Startup: CORS origins loaded: {cors_origins}", flush=True)
     global _outbox_task, _outbox_stop, _ch25_task, _ch25_stop, _golden_task, _golden_stop
     global _golden_intervention_task, _golden_intervention_stop

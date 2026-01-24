@@ -20,7 +20,7 @@ from app.models.team_battle import Team, TeamEventLog, TeamMember, TeamScore, Te
 
 
 class V2TeamBattleService:
-    TEAM_SELECTION_WINDOW_HOURS = 24
+    TEAM_SELECTION_WINDOW_HOURS = 48
     TEAM_MAX_MEMBERS = 7
 
     def _now_utc(self) -> datetime:

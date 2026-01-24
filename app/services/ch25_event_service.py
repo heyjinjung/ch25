@@ -115,18 +115,73 @@ class Ch25EventService:
         return "MISSION"
 
     def publish_internal_game_result(self, data: dict[str, Any]) -> bool:
-        """Publish internal game result into Redis stream for worker ingestion."""
+        """Publish internal game result into Redis stream for worker ingestion.
+
+        Ensure payload fields are stringified because Redis streams require string/bytes values.
+        """
         client = self.get_redis_client()
         if not client:
             return False
 
         payload = {
             "event_type": "INTERNAL_GAME_RESULT",
-            "data": data,
+            # store data as JSON string to maintain shape and make worker parsing deterministic
+            "data": json.dumps(data, ensure_ascii=False),
         }
         try:
-            client.xadd("stream:raw_logs", payload)
+            normalized = normalize_stream_payload(payload)
+            logger.info("Normalized payload for stream:raw_logs", extra={"payload_types": {k: type(v).__name__ for k, v in normalized.items()}, "user_id": data.get("user_id")})
+
+            # Final safety pass: ensure no dict/list remains and all values are strings
+            final_payload: dict[str, str] = {}
+            for k, v in normalized.items():
+                if isinstance(v, dict) or isinstance(v, list):
+                    logger.error("Found non-string in normalized payload; JSON-dumping before xadd", extra={"key": k, "value_repr": repr(v)})
+                    final_payload[k] = json.dumps(v, ensure_ascii=False)
+                elif isinstance(v, bytes):
+                    final_payload[k] = v.decode("utf-8", errors="replace")
+                elif v is None:
+                    final_payload[k] = ""
+                else:
+                    final_payload[k] = str(v)
+
+            logger.info("Final payload prepared for xadd", extra={"payload_types": {k: type(v).__name__ for k, v in final_payload.items()}, "user_id": data.get("user_id")})
+            client.xadd("stream:raw_logs", final_payload)
+            logger.info("Published internal game result to stream:raw_logs", extra={"user_id": data.get("user_id")})
             return True
         except Exception as e:
-            logger.error(f"Failed to publish internal game result: {e}")
+            try:
+                info_types = {k: type(v).__name__ for k, v in (normalized.items() if 'normalized' in locals() else payload.items())}
+            except Exception:
+                info_types = {}
+            logger.error(f"Failed to publish internal game result: {e} | payload_types={info_types} | payload_repr={repr(normalized) if 'normalized' in locals() else repr(payload)}")
             return False
+
+
+def normalize_stream_payload(payload: dict[str, Any]) -> dict[str, str]:
+    """Normalize a Redis stream payload so all values are strings (or decodable).
+
+    Rules:
+    - str: keep
+    - bytes: decode as utf-8 (replace errors)
+    - dict/list: JSON-dump with ensure_ascii=False
+    - None: empty string
+    - other: str(...)
+    """
+    normalized: dict[str, str] = {}
+    for k, v in payload.items():
+        try:
+            if isinstance(v, str):
+                normalized[k] = v
+            elif isinstance(v, bytes):
+                normalized[k] = v.decode("utf-8", errors="replace")
+            elif isinstance(v, (dict, list)):
+                normalized[k] = json.dumps(v, ensure_ascii=False)
+            elif v is None:
+                normalized[k] = ""
+            else:
+                normalized[k] = str(v)
+        except Exception:
+            # Fallback to string repr to avoid passing non-string types to xadd
+            normalized[k] = str(v)
+    return normalized

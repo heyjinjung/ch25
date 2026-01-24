@@ -232,6 +232,7 @@ export default function AdminLayout() {
                             <button
                               type="button"
                               onClick={() => navigate(item.path)}
+                              data-testid={`admin-nav:${item.path.split("/").pop() || "dashboard"}`}
                               className={cn(
                                 "flex w-full items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200",
                                 activeItemPath === item.path ||
@@ -339,6 +340,7 @@ export default function AdminLayout() {
               type="button"
               key={item.path}
               onClick={() => navigate(item.path)}
+              data-testid={`admin-nav-mobile:${item.path.split("/").pop() || "dashboard"}`}
               className={cn(
                 "flex flex-col items-center justify-center gap-1 rounded-xl px-4 py-2 transition-all",
                 activeItemPath === item.path

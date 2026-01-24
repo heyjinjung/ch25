@@ -370,6 +370,7 @@ async def run_ch25_event_worker(stop_event: Optional[asyncio.Event] = None) -> N
                             internal_event = _extract_internal_event(fields)
                             parsed_events: list[dict[str, Any]] = []
                             if internal_event:
+                                logger.info("Worker extracted internal_event", extra={"internal_event": internal_event})
                                 parsed_events.append(internal_event)
                             else:
                                 raw_lines = _extract_lines_from_fields(fields)
@@ -662,10 +663,11 @@ async def run_ch25_event_worker(stop_event: Optional[asyncio.Event] = None) -> N
                             await client.xack(STREAM_KEY, GROUP_NAME, message_id)
                         except Exception as exc:  # noqa: BLE001
                             logger.error("ch25_event_worker_message_failed", exc_info=exc)
-                            await client.xadd(
-                                "stream:dead_letters",
-                                {"source": "ch25_event_worker", "payload": json.dumps(fields, ensure_ascii=False)},
-                            )
+                            from app.services.ch25_event_service import normalize_stream_payload
+                            payload = {"source": "ch25_event_worker", "payload": json.dumps(fields, ensure_ascii=False)}
+                            normalized = normalize_stream_payload(payload)
+                            logger.info("Normalized payload for dead_letters xadd", extra={"payload_types": {k: type(v).__name__ for k, v in normalized.items()}})
+                            await client.xadd("stream:dead_letters", normalized)
                             await client.xack(STREAM_KEY, GROUP_NAME, message_id)
             except asyncio.CancelledError:
                 raise

@@ -248,6 +248,14 @@
 
 ---
 
+## 6. Team Battle (V2) - 설정값 정합성/테스트
+- **테스트 일시**: 2026-01-24
+- **변경 사항**: 팀 선택 가능 시간 48시간 적용 (`V2TeamBattleService.TEAM_SELECTION_WINDOW_HOURS = 48`)
+- **검증 커맨드**: `pytest -q tests/v2_tests/phase5_public/test_team_battle_v2_routes_payload.py`
+- **결과**: 1 passed
+
+---
+
 ### [CASE 4.1] 금고 상태 (Vault Status)
 - **Endpoint**: `GET /api/v2/vault/status`
 - **HTTP Status**: `200 OK`
@@ -410,6 +418,29 @@
 - **vault_ledger**:
   - `id=3, user_id=8, amount=-3000, balance_after=22000, reason=EDGE_ADMIN_NEG, ref_type=ADMIN_FORCE_EDIT`
   - `id=2, user_id=8, amount=5000, balance_after=25000, reason=EDGE_ADMIN_POS, ref_type=ADMIN_FORCE_EDIT`
+
+---
+
+## 부록: Phase 5 완료 및 테스트 환경 최적화 (2026-01-24)
+
+- **요약**: 요청에 따라 Phase 5 E2E 시나리오를 완료하고, 테스트 실행 환경을 경량화하는 최적화를 적용했습니다.
+
+- **적용된 최적화**:
+  - `app/main.py`: `test_mode` 환경일 경우 백그라운드 워커(Outbox, Golden, Ch25 event) 생성을 건너뛰도록 변경하였습니다. 이로 인해 테스트 종료 시 Redis 블로킹 대기(예: brpop)에 따른 지연이 제거되어 E2E 속도가 개선되었습니다.
+  - `verify_full_scenario_v2.py`: `pytest.ini`에 이미 정의된 중복 `sys.path` 설정 코드를 제거하여 스크립트를 경량화했습니다.
+
+- **검증 상태**:
+  - Phase 5 E2E 시나리오(통합 경로)는 로컬/스테이징 수준에서 완료되었습니다(시나리오별 로그 및 DB 증거는 본 문서 상단의 각 케이스 섹션 참조).
+  - 단, **골든(실시간 Redis 파이프라인)** 관련한 운영 환경 동기성(실시간성/로드/네트워크) 검증은 프로덕션 배포 이후 운영 환경에서 추가 검증을 권장합니다. 배포 후 `scripts/verify_golden_pubsub.py` 실행 및 Redis consumer group/워커 로그/DB 레코드 생성을 통해 최종 확인하세요.
+
+- **참고 문서(갱신됨)**:
+  - `docs/flow_feature_mapping_v1_v2.md` (매핑/정리 문서)
+  - `docs/v2_verification_checklist_ko.md` (검증 체크리스트, 한국어)
+  - `docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md` (본 문서)
+  - `docs/v2_specs/00_sot_meta/v2_backend_test_master_flowchart_v2.md` (테스트 마스터 플로우차트)
+
+---
+
 
 ---
 
