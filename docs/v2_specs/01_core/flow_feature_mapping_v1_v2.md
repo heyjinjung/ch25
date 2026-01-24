@@ -13,7 +13,7 @@
 | **가입/인증** | 회원가입 / 로그인 / 2FA | 🟡 진행중 | `tests/v2/test_auth_v2.py` | `/api/v2/auth/*` <br> `user_v2`, `user_auth_v2` |
 | **게임진행** | 룰렛 / 주사위 / 복권 | ✅ 완료 | **[2026-01-24] verify_game_engine_e2e.py** <br> Roulette/Dice/Lottery **Status 200** 응답 확인 <br> `pytest -q tests/v2_tests/phase3_game/test_game_ledger_separation.py` (원장 분리 검증) <br> [상세 로그](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md) | `/api/v2/*/play` <br> `v2_roulette`, `v2_dice`, `v2_lottery` |
 | **환경/SoT** | Phase 1 환경/SoT 정합성 | ✅ 완료 | `pytest -q tests/v2_tests/phase1_env/test_environment_sanity.py` <br> `pytest -q tests/v2_tests/phase1_env/test_sot_integrity.py` <br> `pytest -q tests/v2_tests/phase1_env/test_v2_architecture_sot.py` <br> /api/v2/health **200 OK** 확인 <br> [상세 로그](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md) | `/api/v2/health` <br> `alembic_version` |
-| **코어경제** | 금고(Vault) & 장부(Ledger) | ✅ 완료 | `pytest -q tests/v2_tests/phase2_core/test_vault2_service.py tests/v2_tests/phase2_core/test_vault_withdrawal_logic.py` <br> /api/v2/vault/status **200 OK** 확인 <br> [상세 로그](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md) | `/api/v2/vault/status` <br> `user`, `v2_user`, `vault_ledger` |
+| **코어경제** | 금고(Vault) & 장부(Ledger) | ✅ 완료 | `pytest -q tests/v2_tests/phase2_core/test_vault2_service.py tests/v2_tests/phase2_core/test_vault_withdrawal_logic.py` <br> `pytest -q tests/v2_tests/phase2_core/test_v2_vault_withdrawal_tiers.py` <br> /api/v2/vault/status **200 OK** 확인 <br> [상세 로그](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md) | `/api/v2/vault/status` <br> `user`, `v2_user`, `vault_ledger` |
 | **상점** | 상품 조회 / 구매 / 교환 | ✅ 완료 | `tests/v2_tests/phase2_core/test_shop_inventory_logic.py` <br> /api/v2/shop/products, /api/v2/shop/purchase **200 OK** <br> [상세 로그](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md) | `/api/v2/shop/*` <br> `v2_shop_order`, `v2_inventory` |
 | **인벤토리** | 아이템 적립 / 사용 / 잔액 | ✅ 완료 | `tests/v2_tests/phase2_core/test_shop_inventory_logic.py` <br> /api/v2/inventory, /api/v2/inventory/use **200 OK** <br> [상세 로그](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md) | `/api/v2/inventory/*` |
 | **팀배틀** | 랭킹 / 보상 / 조회 |  | `tests/v2_tests/phase5_public/test_team_battle_v2_routes_payload.py` | `/api/v2/team-battle/*` |
@@ -30,7 +30,7 @@
 | **조각** | ✅ 완료 | `V2InventoryService` | 복권 조각 모음 로직 확인, 룰렛 골드키/다이아키 조각모음 로직확인 |
 | **미션 보상** | ✅ 완료 | `V2MissionService` | 클레임 시 즉시 지급 확인 |
 | **상점 교환** | ✅ 완료 | `V2ShopService` | 상품권/아이템 교환 로직 확인 |
-| **레벨업 보상**| ⚪ 미확인 | 미확인 | Phase 4/5 진행 시 검증 예정 |
+| **레벨업 보상**| ✅ 완료 | `LevelXPService` + `V2LevelRewardTable` | Phase 5 E2E에서 CC Deposit → XP 적립 → 레벨 보상 로그 확인 ([상세 로그](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md)) |
 
 ---
 
