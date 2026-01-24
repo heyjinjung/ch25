@@ -1,0 +1,260 @@
+문서 타입: 가이드
+버전: v1.32
+작성일: 2026-01-24
+작성자: GitHub Copilot
+대상: V2 배포/검증 담당자
+상태: Draft
+
+## 1. 목적
+V2 배포 전/후 필수 검증 항목을 표준화한다.
+
+## 2. 범위
+- Unit/Integration 테스트
+- E2E 스모크 테스트
+- 로컬/스테이징 로그 샘플 확인
+- 모니터링 관찰
+- 롤백 절차 문서화
+
+## 3. 검증(VERIFY) 체크리스트
+### 3.1 공통 규칙
+- 각 서비스/영역별로 체크를 분리 기록한다.
+- 테스트 실행 커맨드와 대상 파일을 함께 기록한다.
+- 동일한 서비스라도 배포 단위가 다르면 별도 항목으로 기록한다.
+- **기능 검증(Functional)**과 **아키텍처 이관(Architectural)**을 분리 기록한다.
+- **v2-only 기준(Architectural)**: v2 config/log 테이블 + v2 엔진 서비스 사용 확인 + V1 import 제거가 확인되어야 “완료”로 기록한다.
+
+### 3.1.1 Phase 1: 환경 및 SoT 정합성
+- [x] `alembic current` 오류 없음 (20260123_1500_seed_v2_roulette_grade_configs)
+	- 커맨드: docker compose exec backend alembic current
+- [x] `alembic heads` 최신 마이그레이션 반영
+	- 커맨드: docker compose exec backend alembic heads
+- [x] `app.v2` 모듈 로드 가능 (ImportError/NameError 없음)
+	- 커맨드: pytest -q tests/v2_tests/phase1_env/test_environment_sanity.py
+- [x] Reward/Item/Game 관련 Enum/Schema SoT 일치
+	- 커맨드: pytest -q tests/v2_tests/phase1_env/test_sot_integrity.py
+- [x] V2 import 스캔 테스트 통과
+	- 커맨드: pytest -q tests/v2_tests/phase1_env/test_v2_architecture_sot.py
+- [x] 프론트 응답 확인: /api/v2/health → {"status":"ok"}
+	- 커맨드: Invoke-WebRequest -Uri "http://localhost:8000/api/v2/health" -UseBasicParsing | Select-Object -ExpandProperty Content
+- [x] Router Prefix `/api/v2` 일관성 확인
+	- 근거: [app/api/routes/__init__.py](app/api/routes/__init__.py)
+- [x] KST 변환 기준 확인(서버 UTC 가정 시 KST 일자 산출)
+	- 근거: [app/v2/services/admin_cc_deposit_service.py](app/v2/services/admin_cc_deposit_service.py)
+
+### 3.2 서비스/영역별 Unit & Integration
+#### 3.2.1 Auth
+- [ ] 단위 테스트 추가
+- [ ] 통합 테스트 추가
+- [ ] 테스트 전부 통과 기록 (파일/커맨드)
+미완료 유지 + “텔레그램 의존으로 통합 테스트 후 진행” 메모  
+
+#### 3.2.2 Vault
+- [x] 단위 테스트 추가
+- [x] 통합 테스트 추가
+- [x] 테스트 전부 통과 기록 (tests/v2_tests/phase2_core/test_vault_withdrawal_logic.py, tests/v2_tests/phase2_core/test_vault_limit_suspension.py, tests/v2_tests/phase2_core/test_vault2_service.py)
+	- 커맨드: pytest -q tests/v2_tests/phase2_core/test_vault_withdrawal_logic.py tests/v2_tests/phase2_core/test_vault_limit_suspension.py tests/v2_tests/phase2_core/test_vault2_service.py
+	- 추가 검증(2026-01-24): pytest -q tests/v2_tests/phase2_core/test_vault2_service.py tests/v2_tests/phase2_core/test_vault_withdrawal_logic.py
+- [x] 프론트 응답 확인: /api/v2/vault/status → 200 OK
+	- 커맨드: Invoke-WebRequest -Uri "http://localhost:8000/api/v2/vault/status" -Headers @{Authorization="Bearer <redacted>"} -UseBasicParsing | Select-Object -ExpandProperty Content
+- [x] DB 스냅샷 기록: user/v2_user/vault_ledger
+	- 근거: [docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md)
+- [x] 출금 요청 엣지케이스: /api/v2/vault/withdraw → 200 OK (PENDING)
+	- 근거: [docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md)
+- [x] 어드민 강제조정(+) 반영: /api/v2/admin/vault/force-edit → 200 OK
+	- 근거: [docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md)
+- [x] 어드민 강제조정(-) 시 출금 승인 생성
+	- 근거: [docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md)
+- [x] 출금 회차 기준(1/1/3/5) 적용 여부: 3건 승인 상태에서 50,000 미만 차단 확인
+	- 커맨드: Invoke-WebRequest -Uri "http://localhost:8000/api/v2/vault/withdraw" -Method Post -Headers @{Authorization="Bearer <redacted>"} -ContentType "application/json" -Body '{"amount":10000}'
+	- 근거: [docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md)
+- [x] v2-only 기준 충족 (V1 VaultService import 제거 + V2VaultService 사용 확인)
+	- 검증 실행: Antigravity 실행(2026-01-23) — 통과 (Exit Code: 0)
+
+#### 3.2.3 Shop
+- [x] 단위 테스트 추가
+- [x] 통합 테스트 추가
+- [x] 테스트 전부 통과 기록 (tests/v2_tests/phase2_core/test_shop_inventory_logic.py)
+- [x] v2-only 기준 충족 (v2_shop_products + v2_shop_order + V2ShopService + V1 UiConfigService/IdempotencyService import 제거)
+	- 검증 실행: `pytest -q tests/v2_tests/phase2_core/test_shop_inventory_logic.py` & `pytest -q tests/v2_tests/phase1_env/test_v2_architecture_sot.py` — 실행(2026-01-23) 통과 (Exit Code: 0)
+- [x] 프론트 응답 확인: /api/v2/shop/products, /api/v2/shop/purchase → 200 OK
+	- 근거: [docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md)
+- [x] DB 스냅샷 기록: v2_shop_order/user_game_wallet/user_game_wallet_ledger
+	- 근거: [docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md)
+
+#### 3.2.4 Game (roulette/dice/lottery)
+- [x] 단위 테스트 추가
+- [x] 통합 테스트 추가
+- [x] 테스트 전부 통과 기록 (tests/v2_tests/phase3_game/test_game_engine_smoke.py)
+- [x] v2-only import 검증 테스트 통과 (tests/v2_tests/phase1_env/test_v2_architecture_sot.py)
+	- 커맨드: pytest -q tests/v2_tests/phase1_env/test_v2_architecture_sot.py
+	- 검증 실행: Antigravity 실행(2026-01-24) — **실제 응답(API 200 OK) 및 딥다이브(등급 매핑, 티켓 소모, 페이오프 배수, 퍼즐 드랍, 티켓 폴백, 재고 관리, 미션 연동) 전 항목 검증 완료**
+	- 상세 증거: [v2_verification_test_logs_20260124.md](file:///c:/Users/JAVIS/ch/ch25/docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md)
+
+- [x] 원장 분리 오작동 케이스(티켓/인벤토리/금고) 검증
+	- 커맨드: pytest -q tests/v2_tests/phase3_game/test_game_ledger_separation.py
+	- 근거: [docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md)
+
+- [x] 주사위 패배 금고 차감 + 골든아워 배수 적용 확인
+	- 근거: [docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md)
+
+
+	- 추가 조치: `V2VaultService.record_game_play_earn_event` shim 추가로 게임 엔진의 `record_game_play_earn_event` 호출을 `V2VaultService`로 안전하게 위임함 (Merge: 2026-01-23)
+	- 추가 조치: `game_common`을 v2 shim으로 이관(위임) — `app/v2/services/game_common.py`에서 `app.services.game_common`으로 delegate 처리함 (2026-01-23)
+	- 추가 조치: `FeatureService`를 v2 shim으로 교체하여 게임 엔진이 v1 서비스를 직접 참조하지 않도록 정리함 (Merge: 2026-01-23)
+
+	- API 정리: `/api/v2/roulette/play`, `/api/v2/dice/play`, `/api/v2/lottery/play` 라우트가 이제 V2 게임 서비스(`app.v2.services.v2_*_game_service`)를 직접 호출하도록 정리되었으며, 라우트 내의 V1 서비스 인스턴스 사용이 제거되었습니다 (검증: verify_game_engine_e2e.py 실행 완료, 2026-01-24).
+
+#### 3.2.5 Inventory
+- [x] 단위 테스트 추가
+- [x] 통합 테스트 추가
+- [x] 테스트 전부 통과 기록 (tests/v2_tests/phase2_core/test_shop_inventory_logic.py)
+- [x] v2-only 기준 충족 (v2_exchange_log + V2InventoryService + V1 모델 의존 제거)
+	- 검증 실행: `pytest -q tests/v2_tests/phase2_core/test_shop_inventory_logic.py` & `pytest -q tests/v2_tests/phase1_env/test_v2_architecture_sot.py` — 실행(2026-01-23) 통과 (Exit Code: 0)
+- [x] 프론트 응답 확인: /api/v2/inventory, /api/v2/inventory/items → 200 OK
+	- 근거: [docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md)
+- [x] 아이템 사용(바우처) → 지갑 토큰 적립 확인
+	- 근거: [docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md)
+
+#### 3.2.6 Mission/Attendance
+- [x] 단위 테스트 추가
+- [x] 통합 테스트 추가
+- [x] 테스트 전부 통과 기록 (tests/v2_tests/phase2_core/test_v2_mission_service.py)
+	- 커맨드: pytest -q tests/v2_tests/phase2_core/test_v2_mission_service.py
+- [x] v2-only 기준 충족 (V1 MissionService/RewardService import 제거 확인)
+- [x] v2-only import 검증 테스트 통과 (tests/v2_tests/phase1_env/test_v2_architecture_sot.py)
+	- 커맨드: pytest -q tests/v2_tests/phase1_env/test_v2_architecture_sot.py
+	- 검증 실행: GitHub Copilot 실행(2026-01-23) — 통과 (Exit Code: 0)
+- [x] 프론트 응답 확인: /api/v2/mission/ → 신규 유저 미션 6종 반환
+	- 근거: [docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md)
+- [x] 미션 보상 클레임: /api/v2/mission/{mission_id}/claim → 200 OK
+	- 근거: [docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md)
+- [x] 중복 클레임 차단: ALREADY_CLAIMED
+	- 근거: [docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md)
+- [ ] 미수령 상태에서 중복 방지 오탐 재현/로그 확보
+	- 근거 필요 (운영 로그/재현 스크립트/티켓)
+
+#### 3.2.10 Progression/Level XP
+- [x] 레벨 XP 적립 및 레벨 보상 로그 생성
+	- 커맨드: python -m pytest -q tests/v2_tests/phase5_public/test_verify_full_scenario_v2.py -s
+	- 근거: [docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md)
+
+#### 3.2.7 Team Battle
+- [x] 단위 테스트 추가
+- [x] 통합 테스트 추가
+- [x] 테스트 전부 통과 기록 (tests/v2_tests/phase5_public/test_team_battle_v2_routes_payload.py)
+	- 커맨드: pytest -q tests/v2_tests/phase5_public/test_team_battle_v2_routes_payload.py
+- [x] v2-only 기준 충족 (V1 TeamBattleService import 제거 확인)
+- [x] v2-only import 검증 테스트 통과 (tests/v2_tests/phase1_env/test_v2_architecture_sot.py)
+	- 커맨드: pytest -q tests/v2_tests/phase1_env/test_v2_architecture_sot.py
+- [x] 팀 선택 윈도우 48h 반영 확인 (V2TeamBattleService)
+	- 근거: [docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md)
+
+#### 3.2.8 Survey/Inbox
+- [x] 단위 테스트 추가
+- [x] 통합 테스트 추가
+- [x] 테스트 전부 통과 기록 (tests/v2_tests/phase5_public/test_public_routes_smoke_extended.py, tests/v2_tests/phase4_admin/test_admin_marketing_routes_smoke.py)
+	- 커맨드: pytest -q tests/v2_tests/phase5_public/test_public_routes_smoke_extended.py tests/v2_tests/phase4_admin/test_admin_marketing_routes_smoke.py
+
+#### 3.2.9 Admin (Low)
+- [x] 단위 테스트 추가
+- [x] 통합 테스트 추가
+- [x] 테스트 전부 통과 기록 (tests/v2_tests/phase4_admin/*)
+	- 커맨드: pytest -q tests/v2_tests/phase4_admin/test_shop_crud.py tests/v2_tests/phase4_admin/test_economy_coverage.py tests/v2_tests/phase4_admin/test_api_coverage.py tests/v2_tests/phase4_admin/test_admin_user_routes_coverage_extended.py tests/v2_tests/phase4_admin/test_admin_ops_security.py tests/v2_tests/phase4_admin/test_admin_marketing_routes_smoke.py tests/v2_tests/phase4_admin/test_admin_game_config_routes_coverage_extended.py tests/v2_tests/phase4_admin/test_admin_economy_routes_coverage_extended.py
+- [x] v2-only 기준 충족 (Ops/Shop/Inventory Admin API)
+	- 검증 실행: Antigravity 실행(2026-01-24) — RBAC, Ops Plan, Shop Config, Admin Inventory 기능 검증 완료
+	- 상세 증거: [v2_verification_test_logs_20260124_phase4.md](docs/08_changelog/v2_verification_test_logs_20260124_phase4.md)
+- [x] 어드민 미션 관리(목록/생성/수정/삭제) 검증
+	- 근거: [docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md)
+
+### 3.3 E2E 스모크 테스트 (핵심 플로우)
+- [ ] 로그인 → 홈 진입
+- [x] 상점 조회 → 구매
+- [x] 인벤토리 조회 → 아이템 사용
+- [x] 미션 조회 → 클레임
+- [x] 금고 상태 조회
+- [x] Phase 5 Full Scenario (New User / Gambler's Loop / Admin Intervention)
+	- 커맨드: python -m pytest -q tests/v2_tests/phase5_public/test_verify_full_scenario_v2.py -s
+	- 근거: [docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md)
+
+### 3.4 로컬/스테이징 트래픽 샘플
+- [ ] 핵심 API 요청 50~100건 샘플 수집
+- [ ] 오류 로그 없음 확인
+- [ ] 지연/타임아웃 징후 없음 확인
+
+### 3.5 모니터링
+- [ ] 에러율 추적 (릴리즈 후 24h)
+- [ ] 응답시간 P95/P99 추적
+- [ ] 핵심 엔드포인트 알람 설정 확인
+
+### 3.6 롤백 절차 문서화
+- [ ] 롤백 기준 정의(에러율, SLA)
+- [ ] 롤백 커밋/이미지 태그 기록
+- [ ] 롤백 실행 체크리스트 작성
+
+### 3.7 우선순위 구현 체크리스트
+- [ ] High: 인증(Auth)
+- [x] High: 금고(Vault) 읽기/쓰기
+- [x] High: 결제/구매(Shop Purchase)
+- [x] High: 게임 Play(roulette/dice/lottery)
+- [x] High: 인벤토리 사용(쓰기)
+- [ ] Medium: 상태조회(read-only)
+- [ ] Medium: 팀배틀
+- [ ] Medium: 설문
+- [ ] Low: 어드민 전용/저트래픽 경로
+
+## 4. 관련 파일 앵커
+- [docs/v2_specs/00_sot_meta/v2_v1_dependency_inventory_ko.md](docs/v2_specs/00_sot_meta/v2_v1_dependency_inventory_ko.md)
+- [docs/v2_specs/00_sot_meta/v2_verification_log_template_ko.md](docs/v2_specs/00_sot_meta/v2_verification_log_template_ko.md)
+- **검증 로그(스니펫)**: [docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260123.md](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260123.md)
+- [app/v2/api/auth_routes.py](app/v2/api/auth_routes.py)
+- [app/v2/api/user_routes.py](app/v2/api/user_routes.py)
+- [app/v2/api/vault_routes.py](app/v2/api/vault_routes.py)
+- [app/v2/api/routes.py](app/v2/api/routes.py)
+- [app/v2/api/deps.py](app/v2/api/deps.py)
+- [app/v2/services/vault_service.py](app/v2/services/vault_service.py)
+- [app/v2/services/shop_service.py](app/v2/services/shop_service.py)
+- [app/v2/services/team_battle_service.py](app/v2/services/team_battle_service.py)
+- [tests/v2_tests/phase5_public/test_team_battle_v2_routes_payload.py](tests/v2_tests/phase5_public/test_team_battle_v2_routes_payload.py)
+- [tests/v2_tests/phase5_public/test_public_routes_smoke_extended.py](tests/v2_tests/phase5_public/test_public_routes_smoke_extended.py)
+- [tests/v2_tests/phase4_admin/test_admin_marketing_routes_smoke.py](tests/v2_tests/phase4_admin/test_admin_marketing_routes_smoke.py)
+- [app/api/routes/vault.py](app/api/routes/vault.py)
+- [app/services/vault_service.py](app/services/vault_service.py)
+- [app/v2/services/user_service.py](app/v2/services/user_service.py)
+- [app/models/user.py](app/models/user.py)
+
+---
+
+## 5. 변경 이력
+- v1.33 (2026-01-24, GitHub Copilot): 출금 회차 기준 적용 재검증 반영
+- v1.32 (2026-01-24, GitHub Copilot): Phase 5 시나리오/레벨 XP 검증 항목 추가
+- v1.31 (2026-01-24, Antigravity): XP Exploit/CC Deposit Critical Fix 검증 완료
+- v1.30 (2026-01-24, GitHub Copilot): 주사위 패배 골든아워 배수 적용 검증 추가
+- v1.29 (2026-01-24, GitHub Copilot): Mission 목록/클레임/중복 차단 검증 기록 추가
+- v1.28 (2026-01-24, GitHub Copilot): Mission API/클레임 검증 불가 및 Admin 미션 관리 검증 기록 추가
+- v1.27 (2026-01-24, Antigravity): Phase 4 Admin & Ops 검증 완료 기록 추가
+- v1.26 (2026-01-24, GitHub Copilot): Shop/Inventory 실응답 및 KST 변환 검증 기록 추가
+- v1.25 (2026-01-24, GitHub Copilot): 게임 원장 분리 오작동 케이스 검증 완료
+- v1.24 (2026-01-24, GitHub Copilot): 게임 원장 분리 오작동 케이스 항목 추가
+- v1.23 (2026-01-24, GitHub Copilot): Vault 어드민 강제조정/회차 기준 검증 추가
+- v1.22 (2026-01-24, GitHub Copilot): Vault 출금 엣지케이스 기록 추가
+- v1.21 (2026-01-24, GitHub Copilot): Vault API/DB 스냅샷 검증 기록 추가
+- v1.20 (2026-01-24, GitHub Copilot): Phase 1 환경/SoT 정합성 검증 기록 추가
+- v1.17 (2026-01-23, Antigravity): Vault 영역 v2-only 기준 충족 및 Admin 관련 서비스 이관 결과 반영
+- v1.18 (2026-01-23, GitHub Copilot): Game/Shop/Inventory v2-only 검증 실행 및 통과 기록 추가 (pytest -q tests/v2_tests/phase3_game/test_game_engine_smoke.py, pytest -q tests/v2_tests/phase2_core/test_shop_inventory_logic.py, pytest -q tests/v2_tests/phase1_env/test_v2_architecture_sot.py, Exit Code: 0)
+- v1.17 (2026-01-23, GitHub Copilot): Shop/Inventory v2-only 검증 실행 및 통과 기록 추가 (pytest -q tests/v2_tests/phase2_core/test_shop_inventory_logic.py, pytest -q tests/v2_tests/phase1_env/test_v2_architecture_sot.py, Exit Code: 0)
+- v1.16 (2026-01-23, GitHub Copilot): Mission/Attendance·Game 영역 v2-only 검증 실행 및 통과 기록 추가 (pytest -q tests/v2_tests/phase1_env/test_v2_architecture_sot.py, Exit Code: 0)
+- v1.14 (2026-01-23, GitHub Copilot): Mission/Attendance·Team Battle v2-only import 검증 테스트 기록 추가
+- v1.13 (2026-01-23, GitHub Copilot): Mission/Attendance 및 Team Battle v2-only 기준 상태 갱신
+- v1.12 (2026-01-23, GitHub Copilot): Admin(phase4_admin) 테스트 통과 기록 추가
+- v1.11 (2026-01-23, GitHub Copilot): Survey/Inbox 테스트 통과 기록 추가
+- v1.10 (2026-01-23, GitHub Copilot): Team Battle 테스트 통과 기록 추가
+- v1.9 (2026-01-23, GitHub Copilot): Mission/Attendance 테스트 통과 기록 추가
+- v1.8 (2026-01-23, GitHub Copilot): Vault 테스트 통과 기록 추가
+- v1.7 (2026-01-23, GitHub Copilot): v2 Vault/Auth/User 경로 변경 및 앵커 보강 반영
+- v1.6 (2026-01-23, GitHub Copilot): v2-only 기준 정의 및 Shop/Inventory 반영
+- v1.5 (2026-01-23, GitHub Copilot): Shop/Inventory v2-only 정합화 및 테스트 통과 기록 반영
+- v1.4 (2026-01-23, GitHub Copilot): Shop/Game/Inventory 테스트 진행도 업데이트
+- v1.3 (2026-01-23, GitHub Copilot): 서비스/영역별 체크리스트로 개편
+- v1.2 (2026-01-23, GitHub Copilot): 테스트 통과 항목 체크
+- v1.1 (2026-01-23, GitHub Copilot): 우선순위 체크리스트 및 파일 앵커 추가
+- v1.0 (2026-01-23, GitHub Copilot): 검증 체크리스트 문서 초안 작성
