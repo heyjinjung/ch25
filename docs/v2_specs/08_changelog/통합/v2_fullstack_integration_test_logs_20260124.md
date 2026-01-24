@@ -76,8 +76,10 @@ npx cypress run --spec "cypress/e2e/admin_nav_smoke.cy.ts"
 | Vault (Withdraw) | /vault | POST /api/v2/vault/withdraw | passed ✅ | artifacts/20260124/api/vault_withdraw_response_v2.json | 출금 요청 성공 |
 | Mission (Daily) | /missions | POST /api/v2/mission/{id}/claim | passed ✅ | artifacts/20260124/api/mission_daily_claim_response_v2.json | X-Idempotency-Key 사용 |
 | Mission (Weekly) | /missions | POST /api/v2/mission/{id}/claim | passed ✅ | artifacts/20260124/api/mission_weekly_claim_response_v2.json | X-Idempotency-Key 사용 |
+| Survey (Active) | /surveys | GET /api/v2/surveys/active | passed ✅ | artifacts/20260124/api/survey_active_response_v2.json | v2 경로 호출 확인 |
 
 ## 6. 변경 이력
+- v1.6 (2026-01-24, GitHub Copilot): Survey v2 경로 검증 증거 추가
 - v1.5 (2026-01-24, GitHub Copilot): Public Area PASS 반영
 - v1.4 (2026-01-24, GitHub Copilot): Vault/Mission PASS 반영
 - v1.3 (2026-01-24, GitHub Copilot): Shop/Inventory PASS 반영

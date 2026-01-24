@@ -327,6 +327,17 @@ class V2MissionService:
             target_reward_type = "GIFTICON_BAEMIN"
         elif mission.reward_type == MissionRewardType.GIFTICON_COMPOSE:
             target_reward_type = "GIFTICON_COMPOSE"
+        elif mission.reward_type in {
+            MissionRewardType.CHICKEN_GIFTICON_5000,
+            MissionRewardType.CHICKEN_GIFTICON_10000,
+            MissionRewardType.STARBUCKS_GIFTICON_2000,
+            MissionRewardType.STARBUCKS_GIFTICON_10000,
+            MissionRewardType.PIZZA_GIFTICON_5000,
+            MissionRewardType.PIZZA_GIFTICON_10000,
+            MissionRewardType.GOOGLE_GIFTICON_5000,
+            MissionRewardType.GOOGLE_GIFTICON_10000,
+        }:
+            target_reward_type = str(mission.reward_type)
 
         if target_reward_type and target_amount > 0:
             reward_service.deliver(

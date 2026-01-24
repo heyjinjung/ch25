@@ -80,7 +80,7 @@ export type SurveyCompleteResult = {
 
 export async function fetchActiveSurveys(): Promise<SurveySummary[]> {
   const res = await userApi.get<{ items: SurveySummary[] }>(
-    "/api/surveys/active",
+    "/api/v2/surveys/active",
   );
   return res.data.items;
 }
@@ -89,7 +89,7 @@ export async function createOrGetSession(
   surveyId: number,
 ): Promise<SurveySession> {
   const res = await userApi.post<SurveySession>(
-    `/api/surveys/${surveyId}/responses`,
+    `/api/v2/surveys/${surveyId}/responses`,
   );
   return res.data;
 }
@@ -100,7 +100,7 @@ export async function saveSurveyAnswers(
   payload: { answers: SurveyAnswerPayload[]; last_question_id?: number | null },
 ): Promise<SurveySession> {
   const res = await userApi.patch<SurveySession>(
-    `/api/surveys/${surveyId}/responses/${responseId}`,
+    `/api/v2/surveys/${surveyId}/responses/${responseId}`,
     payload,
   );
   return res.data;
@@ -112,7 +112,7 @@ export async function completeSurvey(
   payload: { force_submit?: boolean },
 ): Promise<SurveyCompleteResult> {
   const res = await userApi.post<SurveyCompleteResult>(
-    `/api/surveys/${surveyId}/responses/${responseId}/complete`,
+    `/api/v2/surveys/${surveyId}/responses/${responseId}/complete`,
     payload,
   );
   return res.data;

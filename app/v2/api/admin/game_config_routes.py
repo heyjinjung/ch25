@@ -2,6 +2,7 @@ from datetime import datetime
 import logging
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import ValidationError
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
 
 from app.api.deps import get_current_admin_info, get_db
@@ -24,6 +25,17 @@ from app.v2.schemas.v2_admin_game import (
 router = APIRouter()
 
 logger = logging.getLogger(__name__)
+
+
+def _map_lottery_prize_integrity_error(exc: IntegrityError) -> str:
+    raw = str(getattr(exc, "orig", exc))
+    if "uq_v2_lottery_prize_label" in raw or "Duplicate entry" in raw:
+        return "DUPLICATE_PRIZE_LABEL"
+    if "ck_v2_lottery_prize_weight_non_negative" in raw:
+        return "INVALID_LOTTERY_WEIGHT"
+    if "ck_v2_lottery_prize_stock_non_negative" in raw:
+        return "INVALID_LOTTERY_STOCK"
+    return "INVALID_LOTTERY_CONFIG"
 
 
 def _normalize_reward_type_for_dto(value: object) -> str:
@@ -652,26 +664,31 @@ def update_lottery_prize(
     if not prize:
         raise HTTPException(status_code=404, detail="LOTTERY_PRIZE_NOT_FOUND")
 
-    prize.label = payload.label
-    prize.weight = payload.weight
-    prize.stock = payload.stock
-    prize.reward_type = _normalize_reward_type_for_write(payload.reward_type)
-    prize.reward_amount = payload.reward_amount
-    prize.is_active = payload.is_active
-    prize.updated_at = datetime.utcnow()
+    try:
+        prize.label = payload.label
+        prize.weight = payload.weight
+        prize.stock = payload.stock
+        prize.reward_type = _normalize_reward_type_for_write(payload.reward_type)
+        prize.reward_amount = payload.reward_amount
+        prize.is_active = payload.is_active
+        prize.updated_at = datetime.utcnow()
 
-    V2AdminAuditService.log(
-        db,
-        admin_id,
-        "LOTTERY_PRIZE_UPDATE",
-        "GAME_CONFIG",
-        f"{config_id}/{prize_id}",
-        before={},
-        after={"label": prize.label, "weight": prize.weight, "reward": f"{prize.reward_type}:{prize.reward_amount}"},
-    )
+        V2AdminAuditService.log(
+            db,
+            admin_id,
+            "LOTTERY_PRIZE_UPDATE",
+            "GAME_CONFIG",
+            f"{config_id}/{prize_id}",
+            before={},
+            after={"label": prize.label, "weight": prize.weight, "reward": f"{prize.reward_type}:{prize.reward_amount}"},
+        )
 
-    db.commit()
-    db.refresh(prize)
+        db.commit()
+        db.refresh(prize)
+    except IntegrityError as exc:
+        db.rollback()
+        detail = _map_lottery_prize_integrity_error(exc)
+        raise HTTPException(status_code=400, detail=detail) from exc
 
     return LotteryPrizeDto(
         id=prize.id,
@@ -700,28 +717,33 @@ def create_lottery_prize(
     if not config:
         raise HTTPException(status_code=404, detail="LOTTERY_CONFIG_NOT_FOUND")
 
-    new_prize = LotteryPrize(
-        config_id=config_id,
-        label=payload.label,
-        weight=payload.weight,
-        stock=payload.stock,
-        reward_type=_normalize_reward_type_for_write(payload.reward_type),
-        reward_amount=payload.reward_amount,
-        is_active=payload.is_active,
-    )
-    db.add(new_prize)
+    try:
+        new_prize = LotteryPrize(
+            config_id=config_id,
+            label=payload.label,
+            weight=payload.weight,
+            stock=payload.stock,
+            reward_type=_normalize_reward_type_for_write(payload.reward_type),
+            reward_amount=payload.reward_amount,
+            is_active=payload.is_active,
+        )
+        db.add(new_prize)
 
-    V2AdminAuditService.log(
-        db,
-        admin_id,
-        "LOTTERY_PRIZE_CREATE",
-        "GAME_CONFIG",
-        str(config_id),
-        after={"label": new_prize.label, "weight": new_prize.weight},
-    )
+        V2AdminAuditService.log(
+            db,
+            admin_id,
+            "LOTTERY_PRIZE_CREATE",
+            "GAME_CONFIG",
+            str(config_id),
+            after={"label": new_prize.label, "weight": new_prize.weight},
+        )
 
-    db.commit()
-    db.refresh(new_prize)
+        db.commit()
+        db.refresh(new_prize)
+    except IntegrityError as exc:
+        db.rollback()
+        detail = _map_lottery_prize_integrity_error(exc)
+        raise HTTPException(status_code=400, detail=detail) from exc
 
     return LotteryPrizeDto(
         id=new_prize.id,

@@ -103,11 +103,24 @@ class V2GameConfigService:
         ticket_type: str = "ROULETTE_TICKET",
         grade: str = "COMMON",
     ) -> tuple[V2RouletteConfig, list[V2RouletteSegment]]:
+        ticket_aliases = {ticket_type}
+        legacy_aliases = {
+            "ROULETTE_TICKET": "ROULETTE_COIN",
+            "GOLD_KEY_TICKET": "GOLD_KEY",
+            "DIAMOND_TICKET": "DIAMOND_KEY",
+            "TRIAL_TICKET": "TRIAL_TOKEN",
+        }
+        reverse_aliases = {v: k for k, v in legacy_aliases.items()}
+        if ticket_type in legacy_aliases:
+            ticket_aliases.add(legacy_aliases[ticket_type])
+        if ticket_type in reverse_aliases:
+            ticket_aliases.add(reverse_aliases[ticket_type])
+
         config = (
             db.query(V2RouletteConfig)
             .filter(
                 V2RouletteConfig.is_active.is_(True),
-                V2RouletteConfig.ticket_type == ticket_type,
+                V2RouletteConfig.ticket_type.in_(ticket_aliases),
                 V2RouletteConfig.grade == grade,
             )
             .order_by(V2RouletteConfig.id.desc())
@@ -118,7 +131,7 @@ class V2GameConfigService:
                 db.query(V2RouletteConfig)
                 .filter(
                     V2RouletteConfig.is_active.is_(True),
-                    V2RouletteConfig.ticket_type == ticket_type,
+                    V2RouletteConfig.ticket_type.in_(ticket_aliases),
                     V2RouletteConfig.grade == "COMMON",
                 )
                 .order_by(V2RouletteConfig.id.desc())

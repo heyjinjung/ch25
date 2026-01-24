@@ -20,7 +20,7 @@ class InvalidConfigError(HTTPException):
     """Raised for invalid game configurations (weights, segments, etc.)."""
 
     def __init__(self, message: str = "INVALID_CONFIG"):
-        super().__init__(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message)
+        super().__init__(status_code=status.HTTP_400_BAD_REQUEST, detail=message)
 
 
 class DailyLimitReachedError(HTTPException):

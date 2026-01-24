@@ -59,9 +59,12 @@ def _normalize_mission_category(value: str) -> str:
 def _normalize_mission_reward_type(value: str) -> MissionRewardType:
     reward_type_raw = str(value or "").strip().upper()
     legacy_map = {
+        "VAULT": "POINT",
         "ROULETTE_TICKET": "TICKET_ROULETTE",
         "DICE_TICKET": "TICKET_DICE",
         "LOTTERY_TICKET": "TICKET_LOTTERY",
+        "GOLD_KEY_TICKET": "GOLD_KEY",
+        "DIAMOND_TICKET": "DIAMOND_KEY",
     }
     reward_type_norm = legacy_map.get(reward_type_raw, reward_type_raw)
     try:
